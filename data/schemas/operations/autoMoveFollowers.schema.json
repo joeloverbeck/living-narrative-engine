@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://example.com/schemas/operations/autoMoveFollowers.schema.json",
+  "title": "AUTO_MOVE_FOLLOWERS Operation",
+  "type": "object",
+  "properties": {
+    "type": { "const": "AUTO_MOVE_FOLLOWERS" },
+    "comment": {
+      "type": "string",
+      "description": "Optional note for modders; ignored at runtime."
+    },
+    "condition": {
+      "$ref": "../json-logic.schema.json#",
+      "description": "Optional. If present, this operation only executes if the JSON-Logic condition evaluates to true."
+    },
+    "parameters": { "$ref": "#/$defs/Parameters" }
+  },
+  "required": ["type", "parameters"],
+  "additionalProperties": false,
+  "$defs": {
+    "Parameters": {
+      "type": "object",
+      "description": "Moves followers of a leader to a destination location.",
+      "properties": {
+        "leader_id": { "type": "string", "minLength": 1 },
+        "destination_id": { "type": "string", "minLength": 1 }
+      },
+      "required": ["leader_id", "destination_id"],
+      "additionalProperties": false
+    }
+  }
+}

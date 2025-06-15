@@ -327,6 +327,7 @@ export const tokens = freeze({
   ModifyContextArrayHandler: 'ModifyContextArrayHandler',
   IfCoLocatedHandler: 'IfCoLocatedHandler',
   MathHandler: 'MathHandler',
+  AutoMoveFollowersHandler: 'AutoMoveFollowersHandler',
 
   // --- Actions ---
   TurnActionChoicePipeline: 'TurnActionChoicePipeline',
