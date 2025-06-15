@@ -151,7 +151,11 @@ function init(entities) {
     DISPATCH_EVENT: new DispatchEventHandler({ dispatcher: eventBus, logger }),
     END_TURN: new EndTurnHandler({ dispatcher: eventBus, logger }),
     GET_TIMESTAMP: new GetTimestampHandler({ logger }),
-    GET_NAME: new GetNameHandler({ entityManager, logger }),
+    GET_NAME: new GetNameHandler({
+      entityManager,
+      logger,
+      safeEventDispatcher: safeDispatcher,
+    }),
   };
 
   for (const [type, handler] of Object.entries(handlers)) {
