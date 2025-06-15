@@ -2,7 +2,7 @@
  * @file Helper function to build the speech metadata block (thoughts, notes icons).
  */
 
-import { THOUGHT_SVG, NOTES_SVG } from '../icons.js';
+import { getIcon } from '../icons.js';
 
 /**
  * @typedef {import('../domElementFactory.js').default} DomElementFactory
@@ -37,7 +37,7 @@ export function buildSpeechMeta(document, domFactory, { thoughts, notes }) {
       attrs: { 'aria-label': 'View inner thoughts' },
     });
     btn.style.setProperty('--clr', 'var(--thoughts-icon-color)');
-    btn.innerHTML = THOUGHT_SVG;
+    btn.innerHTML = getIcon('thoughts');
 
     const tooltip = domFactory.create('div', { cls: 'meta-tooltip' });
     tooltip.textContent = thoughts;
@@ -52,7 +52,7 @@ export function buildSpeechMeta(document, domFactory, { thoughts, notes }) {
       attrs: { 'aria-label': 'View private notes' },
     });
     btn.style.setProperty('--clr', 'var(--notes-icon-color)');
-    btn.innerHTML = NOTES_SVG;
+    btn.innerHTML = getIcon('notes');
 
     const tooltip = domFactory.create('div', { cls: 'meta-tooltip' });
     tooltip.textContent = notes;
