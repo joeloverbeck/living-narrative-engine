@@ -97,6 +97,8 @@ export class PerceptionLogRenderer extends BaseListDisplayComponent {
       validatedEventDispatcher,
       domElementFactory,
       elementsConfig,
+      scrollContainerKey: 'listContainerElement',
+      contentContainerKey: 'listContainerElement',
       entityManager,
     });
 
@@ -306,7 +308,7 @@ export class PerceptionLogRenderer extends BaseListDisplayComponent {
     this.logger.debug(
       `${this._logPrefix} _onListRendered called. Scrolling to bottom.`
     );
-    this.#scrollToBottom();
+    this.scrollToBottom();
   }
 
   /**
@@ -365,45 +367,6 @@ export class PerceptionLogRenderer extends BaseListDisplayComponent {
    */
   #handleTurnStarted(event) {
     return this['#handleTurnStarted'](event);
-  }
-
-  /**
-   * Scrolls the log list element to the bottom.
-   * Made available for testing.
-   *
-   * @returns {void}
-   */
-  '#scrollToBottom'() {
-    if (this.elements.listContainerElement) {
-      if (
-        this.elements.listContainerElement.scrollHeight >
-        this.elements.listContainerElement.clientHeight
-      ) {
-        this.elements.listContainerElement.scrollTop =
-          this.elements.listContainerElement.scrollHeight;
-        this.logger.debug(
-          `${this._logPrefix} Scrolled perception log to bottom.`
-        );
-      } else {
-        this.logger.debug(
-          `${this._logPrefix} Perception log does not require scrolling or is not scrollable.`
-        );
-      }
-    } else {
-      this.logger.warn(
-        `${this._logPrefix} Cannot scroll to bottom: listContainerElement not found in this.elements.`
-      );
-    }
-  }
-
-  /**
-   * Private method that actually scrolls to bottom.
-   *
-   * @private
-   * @returns {void}
-   */
-  #scrollToBottom() {
-    return this['#scrollToBottom']();
   }
 
   /**

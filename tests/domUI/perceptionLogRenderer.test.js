@@ -344,7 +344,7 @@ describe('PerceptionLogRenderer', () => {
   });
 
   describe('_onListRendered', () => {
-    it('should effectively call #scrollToBottom (test by effect)', () => {
+    it('should effectively call scrollToBottom (test by effect)', () => {
       const renderer = createRenderer({ autoRefresh: false });
       renderer.elements.listContainerElement = listContainerElementInDom; // Ensure it's set
       Object.defineProperty(listContainerElementInDom, 'scrollHeight', {
@@ -431,42 +431,6 @@ describe('PerceptionLogRenderer', () => {
           mockDomElementFactoryInstance.p.mock.results[0].value
         );
       }
-    });
-  });
-
-  describe('#scrollToBottom', () => {
-    let renderer;
-    beforeEach(() => {
-      renderer = createRenderer();
-      renderer.elements.listContainerElement = listContainerElementInDom;
-    });
-
-    it('should set scrollTop if scrollHeight > clientHeight', () => {
-      Object.defineProperty(listContainerElementInDom, 'scrollHeight', {
-        value: 200,
-        configurable: true,
-      });
-      Object.defineProperty(listContainerElementInDom, 'clientHeight', {
-        value: 100,
-        configurable: true,
-      });
-      listContainerElementInDom.scrollTop = 0;
-      renderer['#scrollToBottom']();
-      expect(listContainerElementInDom.scrollTop).toBe(200);
-    });
-
-    it('should not set scrollTop if not scrollable', () => {
-      Object.defineProperty(listContainerElementInDom, 'scrollHeight', {
-        value: 100,
-        configurable: true,
-      });
-      Object.defineProperty(listContainerElementInDom, 'clientHeight', {
-        value: 100,
-        configurable: true,
-      });
-      listContainerElementInDom.scrollTop = 0;
-      renderer['#scrollToBottom']();
-      expect(listContainerElementInDom.scrollTop).toBe(0);
     });
   });
 
