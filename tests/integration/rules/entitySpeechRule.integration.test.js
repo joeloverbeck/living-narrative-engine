@@ -13,7 +13,7 @@ import SystemLogicInterpreter from '../../../src/logic/systemLogicInterpreter.js
 import OperationInterpreter from '../../../src/logic/operationInterpreter.js';
 import OperationRegistry from '../../../src/logic/operationRegistry.js';
 import JsonLogicEvaluationService from '../../../src/logic/jsonLogicEvaluationService.js';
-import QueryComponentOptionalHandler from '../../../src/logic/operationHandlers/queryComponentOptionalHandler.js';
+import QueryComponentHandler from '../../../src/logic/operationHandlers/queryComponentHandler.js';
 import GetTimestampHandler from '../../../src/logic/operationHandlers/getTimestampHandler.js';
 import DispatchEventHandler from '../../../src/logic/operationHandlers/dispatchEventHandler.js';
 import DispatchPerceptibleEventHandler from '../../../src/logic/operationHandlers/dispatchPerceptibleEventHandler.js';
@@ -76,7 +76,7 @@ function init(entities) {
   };
 
   const handlers = {
-    QUERY_COMPONENT_OPTIONAL: new QueryComponentOptionalHandler({
+    QUERY_COMPONENT: new QueryComponentHandler({
       entityManager,
       logger,
       safeEventDispatcher: safeDispatcher,

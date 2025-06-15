@@ -13,12 +13,13 @@
   },
   "actions": [
     {
-      "type": "QUERY_COMPONENT_OPTIONAL",
+      "type": "QUERY_COMPONENT",
       "comment": "Step 1: Attempt to get the actor's core:following component.",
       "parameters": {
         "entity_ref": "actor",
         "component_type": "core:following",
-        "result_variable": "oldFollowingData"
+        "result_variable": "oldFollowingData",
+        "missing_value": null
       }
     },
     {

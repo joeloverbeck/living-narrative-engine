@@ -19,6 +19,8 @@ import { safeDispatchError } from '../../utils/safeDispatchError.js';
  * @property {'actor' | 'target' | string | EntityRefObject} entity_ref - Reference to the target entity.
  * @property {string} component_type - The namespaced ID of the component type.
  * @property {string} result_variable - Variable name in `executionContext.evaluationContext.context`.
+ * @property {*} [missing_value] - Optional value to store when the component is
+ *   missing or an error occurs. Defaults to `undefined` if not provided.
  */
 
 import storeResult from '../../utils/contextVariableUtils.js';
@@ -83,7 +85,8 @@ class QueryComponentHandler {
       return;
     }
 
-    const { entity_ref, component_type, result_variable } = params;
+    const { entity_ref, component_type, result_variable, missing_value } =
+      params;
 
     if (!entity_ref) {
       safeDispatchError(
@@ -146,9 +149,11 @@ class QueryComponentHandler {
         trimmedComponentType
       );
 
+      const valueToStore = result === undefined ? missing_value : result;
+
       storeResult(
         trimmedResultVariable,
-        result,
+        valueToStore,
         executionContext,
         this.#dispatcher,
         logger
@@ -165,8 +170,16 @@ class QueryComponentHandler {
           `QueryComponentHandler: Successfully queried component "${trimmedComponentType}" from entity "${entityId}". Result stored in "${trimmedResultVariable}": ${resultString}`
         );
       } else {
+        const missingString =
+          missing_value === null
+            ? 'null'
+            : missing_value === undefined
+              ? 'undefined'
+              : typeof missing_value === 'object'
+                ? JSON.stringify(missing_value)
+                : missing_value;
         logger.debug(
-          `QueryComponentHandler: Component "${trimmedComponentType}" not found on entity "${entityId}". Stored 'undefined' in "${trimmedResultVariable}".`
+          `QueryComponentHandler: Component "${trimmedComponentType}" not found on entity "${entityId}". Stored '${missingString}' in "${trimmedResultVariable}".`
         );
       }
     } catch (error) {
@@ -181,14 +194,22 @@ class QueryComponentHandler {
       });
       const stored = storeResult(
         trimmedResultVariable,
-        undefined,
+        missing_value,
         executionContext,
         this.#dispatcher,
         logger
       );
       if (stored) {
+        const missingString =
+          missing_value === null
+            ? 'null'
+            : missing_value === undefined
+              ? 'undefined'
+              : typeof missing_value === 'object'
+                ? JSON.stringify(missing_value)
+                : missing_value;
         logger.warn(
-          `QueryComponentHandler: Stored 'undefined' in "${trimmedResultVariable}" due to EntityManager error.`
+          `QueryComponentHandler: Stored '${missingString}' in "${trimmedResultVariable}" due to EntityManager error.`
         );
       }
     }
