@@ -7,6 +7,7 @@ import { encode, decode } from '@msgpack/msgpack';
 import { PersistenceErrorCodes } from '../../src/persistence/persistenceErrors.js';
 import pako from 'pako';
 import { webcrypto } from 'crypto';
+import { createMockSaveValidationService } from '../testUtils.js';
 
 beforeAll(() => {
   if (typeof window !== 'undefined') {
@@ -40,20 +41,23 @@ function makeDeps() {
       fileExists: jest.fn(),
       ensureDirectoryExists: jest.fn(),
     },
+    saveValidationService: createMockSaveValidationService(),
   };
 }
 
 describe('SaveLoadService additional coverage', () => {
   let logger;
   let storageProvider;
+  let saveValidationService;
   let service;
 
   beforeEach(() => {
-    ({ logger, storageProvider } = makeDeps());
+    ({ logger, storageProvider, saveValidationService } = makeDeps());
     service = new SaveLoadService({
       logger,
       storageProvider,
       crypto: webcrypto,
+      saveValidationService,
     });
   });
 

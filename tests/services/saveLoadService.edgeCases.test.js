@@ -11,6 +11,8 @@ import { encode } from '@msgpack/msgpack';
 import { PersistenceErrorCodes } from '../../src/persistence/persistenceErrors.js';
 import pako from 'pako';
 import { webcrypto } from 'crypto';
+import SaveValidationService from '../../src/persistence/saveValidationService.js';
+import GameStateSerializer from '../../src/persistence/gameStateSerializer.js';
 
 beforeAll(() => {
   if (typeof window !== 'undefined') {
@@ -29,35 +31,41 @@ beforeAll(() => {
  *
  */
 function makeDeps() {
-  return {
-    logger: {
-      info: jest.fn(),
-      debug: jest.fn(),
-      warn: jest.fn(),
-      error: jest.fn(),
-    },
-    storageProvider: {
-      listFiles: jest.fn(),
-      readFile: jest.fn(),
-      writeFileAtomically: jest.fn(),
-      deleteFile: jest.fn(),
-      fileExists: jest.fn(),
-      ensureDirectoryExists: jest.fn(),
-    },
+  const logger = {
+    info: jest.fn(),
+    debug: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
   };
+  const storageProvider = {
+    listFiles: jest.fn(),
+    readFile: jest.fn(),
+    writeFileAtomically: jest.fn(),
+    deleteFile: jest.fn(),
+    fileExists: jest.fn(),
+    ensureDirectoryExists: jest.fn(),
+  };
+  const serializer = new GameStateSerializer({ logger, crypto: webcrypto });
+  const saveValidationService = new SaveValidationService({
+    logger,
+    gameStateSerializer: serializer,
+  });
+  return { logger, storageProvider, saveValidationService };
 }
 
 describe('SaveLoadService edge cases', () => {
   let logger;
   let storageProvider;
+  let saveValidationService;
   let service;
 
   beforeEach(() => {
-    ({ logger, storageProvider } = makeDeps());
+    ({ logger, storageProvider, saveValidationService } = makeDeps());
     service = new SaveLoadService({
       logger,
       storageProvider,
       crypto: webcrypto,
+      saveValidationService,
     });
   });
 
