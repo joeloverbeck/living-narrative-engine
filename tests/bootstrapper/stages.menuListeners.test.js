@@ -36,23 +36,25 @@ describe('setupMenuButtonListenersStage', () => {
     const showLoadGameUI = jest.fn();
     const gameEngine = { showSaveGameUI, showLoadGameUI };
 
-    await setupMenuButtonListenersStage(gameEngine, logger, document);
-
+    const result = await setupMenuButtonListenersStage(gameEngine, logger, document);
+    
     document.getElementById('open-save-game-button').click();
     document.getElementById('open-load-game-button').click();
 
     expect(showSaveGameUI).toHaveBeenCalledTimes(1);
     expect(showLoadGameUI).toHaveBeenCalledTimes(1);
+    expect(result.success).toBe(true);
   });
 
   it('logs warnings when buttons or gameEngine are missing', async () => {
     setDom('');
     const logger = createLogger();
 
-    await setupMenuButtonListenersStage(null, logger, document);
+    const result = await setupMenuButtonListenersStage(null, logger, document);
 
     // four warnings: two for missing buttons, two for missing gameEngine
     expect(logger.warn).toHaveBeenCalledTimes(4);
+    expect(result.success).toBe(true);
   });
 
   it('wraps unexpected errors with phase', async () => {
@@ -63,9 +65,9 @@ describe('setupMenuButtonListenersStage', () => {
       }),
     };
 
-    await expect(
-      setupMenuButtonListenersStage({}, logger, fakeDoc)
-    ).rejects.toMatchObject({ phase: 'Menu Button Listeners Setup' });
+    const result = await setupMenuButtonListenersStage({}, logger, fakeDoc);
+    expect(result.success).toBe(false);
+    expect(result.error.phase).toBe('Menu Button Listeners Setup');
     expect(logger.error).toHaveBeenCalled();
   });
 });

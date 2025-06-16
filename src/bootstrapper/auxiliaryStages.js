@@ -181,8 +181,7 @@ export function initProcessingIndicatorController({
  * @param {GameEngineInstance} gameEngine
  * @param {ILogger} logger
  * @param {TokensObject} tokens
- * @returns {Promise<void>} Resolves when all auxiliary services initialize successfully.
- * @throws {Error} Aggregated error with `failures` array if critical services fail.
+ * @returns {Promise<import('./../types/stageResult.js').StageResult>} Result object indicating if all services initialized.
  */
 export async function initializeAuxiliaryServicesStage(
   container,
@@ -271,8 +270,9 @@ export async function initializeAuxiliaryServicesStage(
       `Bootstrap Stage: ${stageName} encountered failures: ${failList}`,
       aggregatedError
     );
-    throw aggregatedError;
+    return { success: false, error: aggregatedError };
   }
 
   logger.debug(`Bootstrap Stage: ${stageName} completed.`);
+  return { success: true };
 }

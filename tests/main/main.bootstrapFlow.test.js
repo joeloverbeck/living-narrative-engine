@@ -59,14 +59,14 @@ describe('main.js bootstrap extended coverage', () => {
     };
     const logger = { info: jest.fn(), error: jest.fn(), debug: jest.fn() };
 
-    mockEnsure.mockResolvedValue(uiElements);
-    mockSetupDI.mockResolvedValue({});
-    mockResolveCore.mockResolvedValue({ logger });
-    mockInitEngine.mockResolvedValue({});
-    mockInitAux.mockResolvedValue();
-    mockMenu.mockResolvedValue();
-    mockGlobal.mockResolvedValue();
-    mockStartGame.mockResolvedValue();
+    mockEnsure.mockResolvedValue({ success: true, payload: uiElements });
+    mockSetupDI.mockResolvedValue({ success: true, payload: {} });
+    mockResolveCore.mockResolvedValue({ success: true, payload: { logger } });
+    mockInitEngine.mockResolvedValue({ success: true, payload: {} });
+    mockInitAux.mockResolvedValue({ success: true });
+    mockMenu.mockResolvedValue({ success: true });
+    mockGlobal.mockResolvedValue({ success: true });
+    mockStartGame.mockResolvedValue({ success: true });
 
     const main = await import('../../src/main.js');
     await main.bootstrapApp();
@@ -110,10 +110,10 @@ describe('main.js bootstrap extended coverage', () => {
     };
     const logger = { info: jest.fn(), error: jest.fn(), debug: jest.fn() };
 
-    mockEnsure.mockResolvedValue(uiElements);
-    mockSetupDI.mockResolvedValue({});
-    mockResolveCore.mockResolvedValue({ logger });
-    mockInitEngine.mockResolvedValue(null);
+    mockEnsure.mockResolvedValue({ success: true, payload: uiElements });
+    mockSetupDI.mockResolvedValue({ success: true, payload: {} });
+    mockResolveCore.mockResolvedValue({ success: true, payload: { logger } });
+    mockInitEngine.mockResolvedValue({ success: true, payload: null });
 
     const main = await import('../../src/main.js');
     await main.bootstrapApp();
