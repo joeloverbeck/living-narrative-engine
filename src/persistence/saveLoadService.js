@@ -7,6 +7,7 @@ import {
   buildManualFileName,
   manualSavePath,
   FULL_MANUAL_SAVE_DIRECTORY_PATH,
+  MANUAL_SAVE_PATTERN,
 } from './savePathUtils.js';
 import { deserializeAndDecompress, parseManualSaveFile } from './saveFileIO.js';
 import { setupService } from '../utils/serviceInitializer.js';
@@ -32,8 +33,7 @@ import {
 // --- Constants ---
 // const MAX_MANUAL_SAVES = 10; // Not directly enforced by list/load, but by save UI/logic
 // Constants defining the manual save directory live in savePathUtils
-const MANUAL_SAVE_PATTERN = /^manual_save_.*\.sav$/; // Pattern to identify potential manual save files
-// const TEMP_SAVE_SUFFIX = '.tmp'; // // Defined in writeFileAtomically in IStorageProvider context
+// const TEMP_SAVE_SUFFIX = '.tmp'; // Defined in writeFileAtomically in IStorageProvider context
 
 /**
  * @implements {ISaveLoadService}

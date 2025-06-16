@@ -22,6 +22,13 @@ export const MANUAL_SAVES_SUBDIRECTORY = 'manual_saves';
 export const FULL_MANUAL_SAVE_DIRECTORY_PATH = `${BASE_SAVE_DIRECTORY}/${MANUAL_SAVES_SUBDIRECTORY}`;
 
 /**
+ * Regular expression to match manual save filenames.
+ *
+ * @type {RegExp}
+ */
+export const MANUAL_SAVE_PATTERN = /^manual_save_.*\.sav$/;
+
+/**
  * Builds a sanitized manual save filename.
  *
  * @param {string} saveName - Raw save name input.
