@@ -12,7 +12,8 @@ import { manualSavePath, extractSaveName } from './savePathUtils.js';
 /** @typedef {import('./gameStateSerializer.js').default} GameStateSerializer */
 
 /**
- * Reads a file using the provided storage provider.
+ * Reads a file using the provided storage provider. On success the raw file
+ * bytes are returned in the {@link PersistenceResult.data} field.
  *
  * @param {IStorageProvider} storage - Storage provider instance.
  * @param {string} filePath - Path to the file.
@@ -49,7 +50,8 @@ export async function readSaveFile(storage, filePath, logger) {
 }
 
 /**
- * Reads, decompresses and deserializes a save file.
+ * Reads, decompresses and deserializes a save file. The deserialized object is
+ * returned in the {@link PersistenceResult.data} property when successful.
  *
  * @param {IStorageProvider} storage - Storage provider.
  * @param {GameStateSerializer} serializer - Serializer instance.
@@ -77,7 +79,10 @@ export async function deserializeAndDecompress(
 }
 
 /**
- * Parses a manual save file and extracts metadata.
+ * Parses a manual save file and extracts metadata. The resulting metadata is
+ * provided in the {@link PersistenceResult.data} field. If the file is corrupt
+ * or missing a metadata section, a fallback metadata object is returned and the
+ * result's {@link PersistenceResult.success} will be `false`.
  *
  * @param {string} fileName - File name within manual saves directory.
  * @param {IStorageProvider} storage - Storage provider.
