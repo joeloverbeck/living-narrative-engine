@@ -122,6 +122,12 @@ export async function bootstrapApp() {
       bootstrapError
     );
 
+    if (Array.isArray(bootstrapError.failures)) {
+      bootstrapError.failures.forEach((f) => {
+        logFn(`main.js: Failed to init ${f.service}`, f.error);
+      });
+    }
+
     displayFatalStartupError(
       uiElements || {
         // Provide default UI elements if uiElements is undefined

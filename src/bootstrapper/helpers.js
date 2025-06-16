@@ -18,7 +18,7 @@
  * @param {string} initFnName - Name of the initialization method to invoke.
  * @param {ILogger} logger - Logger used for debug/warn/error output.
  * @param {...any} args - Arguments forwarded to the initialization method.
- * @returns {void}
+ * @returns {{success: boolean, error?: Error}} Result object describing success or failure.
  */
 export function resolveAndInitialize(
   container,
@@ -32,8 +32,9 @@ export function resolveAndInitialize(
     logger.debug(`${stage}: Resolving ${token}...`);
     const service = container.resolve(token);
     if (!service) {
-      logger.warn(`${stage}: ${token} could not be resolved.`);
-      return;
+      const err = new Error(`${token} could not be resolved.`);
+      logger.warn(`${stage}: ${err.message}`);
+      return { success: false, error: err };
     }
     const initFn = service[initFnName];
     if (typeof initFn !== 'function') {
@@ -41,8 +42,10 @@ export function resolveAndInitialize(
     }
     initFn.apply(service, args);
     logger.debug(`${stage}: Initialized successfully.`);
+    return { success: true };
   } catch (err) {
     logger.error(`${stage}: Failed to initialize.`, err);
+    return { success: false, error: err };
   }
 }
 

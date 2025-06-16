@@ -118,4 +118,41 @@ describe('main.js bootstrap process', () => {
     expect(mockResolveCore).not.toHaveBeenCalled();
     expect(mockStartGame).not.toHaveBeenCalled();
   });
+
+  it('handles aggregated auxiliary service failures', async () => {
+    window.history.pushState({}, '', '?start=false');
+    document.body.innerHTML = `<div id="outputDiv"></div>`;
+    const uiElements = {
+      outputDiv: document.querySelector('#outputDiv'),
+      errorDiv: null,
+      inputElement: null,
+      titleElement: null,
+      document,
+    };
+    const logger = { info: jest.fn(), error: jest.fn(), debug: jest.fn() };
+
+    const aggError = new Error('Aux fail');
+    aggError.phase = 'Auxiliary Services Initialization';
+    aggError.failures = [
+      { service: 'EngineUIManager', error: new Error('bad') },
+    ];
+
+    mockEnsure.mockResolvedValue(uiElements);
+    mockSetupDI.mockResolvedValue({});
+    mockResolveCore.mockResolvedValue({ logger });
+    mockInitEngine.mockResolvedValue({});
+    mockInitAux.mockRejectedValue(aggError);
+
+    let main;
+    await jest.isolateModulesAsync(async () => {
+      main = await import('../../src/main.js');
+    });
+    await main.bootstrapApp();
+    await new Promise((r) => setTimeout(r, 0));
+
+    expect(mockDisplayFatal).toHaveBeenCalledTimes(1);
+    const [, details] = mockDisplayFatal.mock.calls[0];
+    expect(details.errorObject).toBe(aggError);
+    expect(details.phase).toBe(aggError.phase);
+  });
 });
