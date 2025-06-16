@@ -6,16 +6,15 @@ import { createMockLogger } from '../testUtils.js';
 describe('GameStateCaptureService', () => {
   let logger;
   let entityManager;
-  let dataRegistry;
   let playtimeTracker;
   let componentCleaningService;
   let metadataBuilder;
+  let activeModsManifestBuilder;
   let captureService;
 
   beforeEach(() => {
     logger = createMockLogger();
     entityManager = { activeEntities: new Map() };
-    dataRegistry = { getAll: jest.fn().mockReturnValue([]) };
     playtimeTracker = { getTotalPlaytime: jest.fn().mockReturnValue(0) };
     componentCleaningService = { clean: jest.fn() };
     metadataBuilder = {
@@ -28,13 +27,14 @@ describe('GameStateCaptureService', () => {
         saveName: '',
       })),
     };
+    activeModsManifestBuilder = { build: jest.fn().mockReturnValue([]) };
     captureService = new GameStateCaptureService({
       logger,
       entityManager,
-      dataRegistry,
       playtimeTracker,
       componentCleaningService,
       metadataBuilder,
+      activeModsManifestBuilder,
     });
   });
 

@@ -209,6 +209,7 @@ export const tokens = freeze({
   PlaytimeTracker: 'PlaytimeTracker',
   ComponentCleaningService: 'ComponentCleaningService',
   SaveMetadataBuilder: 'SaveMetadataBuilder',
+  ActiveModsManifestBuilder: 'ActiveModsManifestBuilder',
   GameStateCaptureService: 'GameStateCaptureService',
   GamePersistenceService: 'GamePersistenceService',
   EntityDisplayDataProvider: 'EntityDisplayDataProvider',

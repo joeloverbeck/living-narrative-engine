@@ -27,11 +27,11 @@ describe('GamePersistenceService edge cases', () => {
   let logger;
   let saveLoadService;
   let entityManager;
-  let dataRegistry;
   let playtimeTracker;
   let componentCleaningService;
   let metadataBuilder;
   let safeEventDispatcher;
+  let activeModsManifestBuilder;
   let service;
   let captureService;
 
@@ -43,7 +43,6 @@ describe('GamePersistenceService edge cases', () => {
       clearAll: jest.fn(),
       reconstructEntity: jest.fn().mockReturnValue({}),
     };
-    const dataRegistry = { getAll: jest.fn().mockReturnValue([]) };
     playtimeTracker = {
       getTotalPlaytime: jest.fn().mockReturnValue(0),
       setAccumulatedPlaytime: jest.fn(),
@@ -54,22 +53,31 @@ describe('GamePersistenceService edge cases', () => {
       safeEventDispatcher,
     });
     metadataBuilder = {
-      build: jest.fn((n, p) => ({
-        saveFormatVersion: '1',
-        engineVersion: 'x',
-        gameTitle: n || 'Unknown Game',
-        timestamp: 't',
-        playtimeSeconds: p,
-        saveName: '',
-      })),
+      build: jest.fn((n, p) => {
+        if (!n) logger.warn();
+        return {
+          saveFormatVersion: '1',
+          engineVersion: 'x',
+          gameTitle: n || 'Unknown Game',
+          timestamp: 't',
+          playtimeSeconds: p,
+          saveName: '',
+        };
+      }),
+    };
+    activeModsManifestBuilder = {
+      build: jest.fn(() => {
+        logger.warn();
+        return [];
+      }),
     };
     captureService = new GameStateCaptureService({
       logger,
       entityManager,
-      dataRegistry,
       playtimeTracker,
       componentCleaningService,
       metadataBuilder,
+      activeModsManifestBuilder,
     });
     service = new GamePersistenceService({
       logger,
@@ -89,7 +97,10 @@ describe('GamePersistenceService edge cases', () => {
         [CURRENT_ACTOR_COMPONENT_ID]: { active: true },
       });
       entityManager.activeEntities.set('e1', entity);
-      // dataRegistry.getAll already returns [] to trigger fallback
+      activeModsManifestBuilder.build.mockImplementation(() => {
+        logger.warn();
+        return [{ modId: CORE_MOD_ID, version: 'unknown_fallback' }];
+      });
 
       const result = captureService.captureCurrentGameState('World');
       const comps = result.gameState.entities[0].components;
