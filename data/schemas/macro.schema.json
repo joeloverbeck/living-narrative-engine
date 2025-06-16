@@ -9,7 +9,7 @@
       "type": "string",
       "description": "Optional schema reference for tooling."
     },
-    "macro_id": {
+    "id": {
       "type": "string",
       "description": "Unique identifier for this macro."
     },
@@ -26,6 +26,6 @@
       "description": "Optional note for modders. Ignored at runtime."
     }
   },
-  "required": ["macro_id", "actions"],
+  "required": ["id", "actions"],
   "additionalProperties": false
 }
