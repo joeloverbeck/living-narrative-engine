@@ -323,7 +323,7 @@ describe('ProcessingCommandState', () => {
         .mockResolvedValue(undefined);
       await processingState.enterState(mockHandler, null);
       expect(mockLogger.error).toHaveBeenCalledWith(
-        'ProcessingCommandState: Turn context is null on enter. Attempting to reset and idle.'
+        'ProcessingCommandState: No ITurnContext available. Resetting to idle.'
       );
       expect(mockHandler._resetTurnStateAndResources).toHaveBeenCalledWith(
         `critical-no-context-${processingState.getStateName()}`

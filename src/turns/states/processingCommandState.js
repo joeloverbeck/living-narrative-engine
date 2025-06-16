@@ -52,7 +52,12 @@ export class ProcessingCommandState extends AbstractTurnState {
    * @param {ITurnState_Interface} [previousState]
    */
   async enterState(handler, previousState) {
-    const turnCtx = this._getTurnContext();
+    const turnCtx = await this._ensureContext(
+      `critical-no-context-${this.getStateName()}`,
+      handler
+    );
+
+    if (!turnCtx) return;
 
     if (this._isProcessing) {
       const logger = this._resolveLogger(turnCtx);
@@ -65,15 +70,6 @@ export class ProcessingCommandState extends AbstractTurnState {
 
     await super.enterState(this._handler, previousState);
     const logger = this._resolveLogger(turnCtx);
-
-    if (!turnCtx) {
-      logger.error(
-        `${this.getStateName()}: Turn context is null on enter. Attempting to reset and idle.`
-      );
-      await this._resetToIdle(`critical-no-context-${this.getStateName()}`);
-      this._isProcessing = false;
-      return;
-    }
 
     const actor = turnCtx.getActor();
     if (!actor) {

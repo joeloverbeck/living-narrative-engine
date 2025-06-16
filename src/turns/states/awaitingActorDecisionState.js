@@ -27,15 +27,11 @@ export class AwaitingActorDecisionState extends AbstractTurnState {
   async enterState(handler, previousState) {
     await super.enterState(handler, previousState);
 
-    const turnContext = this._getTurnContext();
-    if (!turnContext) {
-      const logger = this._resolveLogger(null);
-      logger.error(
-        `${this.name}: Critical error - TurnContext is not available. Attempting to reset and idle.`
-      );
-      await this._resetToIdle(`critical-no-context-${this.name}`);
-      return;
-    }
+    const turnContext = await this._ensureContext(
+      `critical-no-context-${this.name}`,
+      handler
+    );
+    if (!turnContext) return;
 
     const logger = turnContext.getLogger();
     const actor = turnContext.getActor();
@@ -166,17 +162,12 @@ export class AwaitingActorDecisionState extends AbstractTurnState {
 
   /* --------------------------------------------------------------------- */
   async handleSubmittedCommand(handlerInstance, commandString, actorEntity) {
-    const turnContext = this._getTurnContext();
-
-    if (!turnContext) {
-      const logger = this._resolveLogger(null);
-      const actorIdForLog = actorEntity?.id ?? 'unknown actor';
-      logger.error(
-        `${this.name}: handleSubmittedCommand (for actor ${actorIdForLog}, cmd: "${commandString}") called, but no ITurnContext. Forcing handler reset.`
-      );
-      await this._resetToIdle(`no-context-submission-${this.name}`);
-      return;
-    }
+    const handler = handlerInstance || this._handler;
+    const turnContext = await this._ensureContext(
+      `no-context-submission-${this.name}`,
+      handler
+    );
+    if (!turnContext) return;
 
     const logger = turnContext.getLogger();
     const actorInCtx = turnContext.getActor();

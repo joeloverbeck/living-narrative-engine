@@ -52,16 +52,9 @@ export class AwaitingExternalTurnEndState extends AbstractTurnState {
 
   //─────────────────────────────────────────────────────────────────────────────
   async enterState(handler, prev) {
-    const ctx = this._getTurnContext();
     await super.enterState(handler, prev);
-
-    if (!ctx) {
-      this._resolveLogger(null, handler).error(
-        `${this.getStateName()}: entered with no ITurnContext; aborting`
-      );
-      await this._resetToIdle('enter-no-context');
-      return;
-    }
+    const ctx = await this._ensureContext('enter-no-context', handler);
+    if (!ctx) return;
 
     // remember actionId purely for clearer error text
     this.#awaitingActionId =

@@ -169,7 +169,7 @@ describe('AwaitingExternalTurnEndState', () => {
 
       // Assert
       expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining('entered with no ITurnContext')
+        'AwaitingExternalTurnEndState: No ITurnContext available. Resetting to idle.'
       );
       expect(mockHandler.requestIdleStateTransition).toHaveBeenCalledTimes(1);
     });

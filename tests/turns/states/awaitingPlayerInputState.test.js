@@ -255,7 +255,7 @@ describe('AwaitingActorDecisionState (PTH-REFACTOR-003.5.7)', () => {
         mockPreviousState
       );
       expect(specificHandlerLogger.error).toHaveBeenCalledWith(
-        'AwaitingActorDecisionState: Critical error - TurnContext is not available. Attempting to reset and idle.'
+        'AwaitingActorDecisionState: No ITurnContext available. Resetting to idle.'
       );
       expect(mockHandler._resetTurnStateAndResources).toHaveBeenCalledWith(
         'critical-no-context-AwaitingActorDecisionState'
@@ -499,9 +499,7 @@ describe('AwaitingActorDecisionState (PTH-REFACTOR-003.5.7)', () => {
       );
 
       expect(specificHandlerLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining(
-          `AwaitingActorDecisionState: handleSubmittedCommand (for actor ${testActor.id}, cmd: "${command}") called, but no ITurnContext. Forcing handler reset.`
-        )
+        'AwaitingActorDecisionState: No ITurnContext available. Resetting to idle.'
       );
       expect(mockHandler._resetTurnStateAndResources).toHaveBeenCalledWith(
         'no-context-submission-AwaitingActorDecisionState'
@@ -523,9 +521,7 @@ describe('AwaitingActorDecisionState (PTH-REFACTOR-003.5.7)', () => {
       );
 
       expect(consoleErrorSpy).toHaveBeenCalledWith(
-        expect.stringContaining(
-          `AwaitingActorDecisionState: handleSubmittedCommand (for actor ${testActor.id}, cmd: "${command}") called, but no ITurnContext. Forcing handler reset.`
-        )
+        'AwaitingActorDecisionState: No ITurnContext available. Resetting to idle.'
       );
       expect(consoleErrorSpy).not.toHaveBeenCalledWith(
         expect.stringContaining('CRITICAL - No ITurnContext or handler methods')
