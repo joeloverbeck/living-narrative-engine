@@ -385,7 +385,7 @@ class SaveLoadService extends ISaveLoadService {
    * @private
    */
   async #parseManualSaveMetadata(fileName) {
-    const { success, metadata } = await parseManualSaveFile(
+    const { success, data: metadata } = await parseManualSaveFile(
       fileName,
       this.#storageProvider,
       this.#serializer,
