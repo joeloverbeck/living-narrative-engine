@@ -1,9 +1,7 @@
 // src/logic/jsonLogicEvaluationService.js
 import jsonLogic from 'json-logic-js';
-import {
-  setupService,
-  validateServiceDeps,
-} from '../utils/serviceInitializerUtils.js';
+import { validateServiceDeps } from '../utils/serviceInitializerUtils.js';
+import BaseService from '../utils/baseService.js';
 
 // --- JSDoc Imports for Type Hinting ---
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
@@ -45,7 +43,7 @@ function warnOnBracketPaths(rule, logger) {
  * @class JsonLogicEvaluationService
  * Encapsulates the evaluation of JSON Logic rules, including resolving condition_ref references.
  */
-class JsonLogicEvaluationService {
+class JsonLogicEvaluationService extends BaseService {
   /** @private @type {ILogger} */
   #logger;
   /** @private @type {IGameDataRepository} */
@@ -60,7 +58,8 @@ class JsonLogicEvaluationService {
    * @throws {Error} If required dependencies are missing or invalid.
    */
   constructor({ logger, gameDataRepository } = {}) {
-    this.#logger = setupService('JsonLogicEvaluationService', logger);
+    super();
+    this.#logger = this._init('JsonLogicEvaluationService', logger);
 
     if (!gameDataRepository) {
       this.#logger.warn(

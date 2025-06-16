@@ -4,7 +4,7 @@
 // -----------------------------------------------------------------------------
 
 import { resolvePlaceholders } from '../utils/contextUtils.js';
-import { setupService } from '../utils/serviceInitializerUtils.js';
+import BaseService from '../utils/baseService.js';
 
 /** @typedef {import('../../data/schemas/operation.schema.json').Operation} Operation */
 /** @typedef {import('./defs.js').ExecutionContext}                               ExecutionContext */
@@ -13,12 +13,13 @@ import { setupService } from '../utils/serviceInitializerUtils.js';
 
 const ACTION_ARRAY_KEYS = new Set(['then_actions', 'else_actions', 'actions']);
 
-class OperationInterpreter {
+class OperationInterpreter extends BaseService {
   /** @type {ILogger} */ #logger;
   /** @type {OperationRegistry} */ #registry;
 
   constructor({ logger, operationRegistry }) {
-    this.#logger = setupService('OperationInterpreter', logger, {
+    super();
+    this.#logger = this._init('OperationInterpreter', logger, {
       operationRegistry: {
         value: operationRegistry,
         requiredMethods: ['getHandler'],
