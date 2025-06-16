@@ -10,7 +10,7 @@ jest.mock('../../src/engine/gameEngine.js', () => {
 import GameEngine from '../../src/engine/gameEngine.js';
 import {
   setupDIContainerStage,
-  resolveCoreServicesStage,
+  resolveLoggerStage,
   initializeGameEngineStage,
   setupGlobalEventListenersStage,
   startGameStage,
@@ -45,12 +45,12 @@ describe('setupDIContainerStage', () => {
   });
 });
 
-describe('resolveCoreServicesStage', () => {
+describe('resolveLoggerStage', () => {
   it('resolves logger from container', async () => {
     const logger = createLogger();
     const container = { resolve: jest.fn().mockReturnValue(logger) };
     const tokens = { ILogger: 'LOGGER' };
-    const result = await resolveCoreServicesStage(container, tokens);
+    const result = await resolveLoggerStage(container, tokens);
     expect(container.resolve).toHaveBeenCalledWith(tokens.ILogger);
     expect(result.logger).toBe(logger);
   });
@@ -62,9 +62,9 @@ describe('resolveCoreServicesStage', () => {
       }),
     };
     const tokens = { ILogger: 'LOGGER' };
-    await expect(
-      resolveCoreServicesStage(container, tokens)
-    ).rejects.toMatchObject({ phase: 'Core Services Resolution' });
+    await expect(resolveLoggerStage(container, tokens)).rejects.toMatchObject({
+      phase: 'Core Services Resolution',
+    });
   });
 });
 

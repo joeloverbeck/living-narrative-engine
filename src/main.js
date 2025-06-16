@@ -10,7 +10,7 @@ import GameEngine from './engine/gameEngine.js';
 import {
   ensureCriticalDOMElementsStage,
   setupDIContainerStage,
-  resolveCoreServicesStage,
+  resolveLoggerStage,
   initializeGameEngineStage,
   setupMenuButtonListenersStage,
   setupGlobalEventListenersStage,
@@ -56,7 +56,7 @@ export async function bootstrapApp() {
 
     // STAGE 3: Resolve Core Services (Logger)
     currentPhaseForError = 'Core Services Resolution';
-    const coreServices = await resolveCoreServicesStage(container, tokens);
+    const coreServices = await resolveLoggerStage(container, tokens);
     logger = coreServices.logger; // Assign the resolved logger
     logger.debug(
       `main.js: ${currentPhaseForError} stage completed. Logger is now available.`
