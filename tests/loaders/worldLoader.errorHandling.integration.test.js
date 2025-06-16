@@ -62,6 +62,8 @@ describe('WorldLoader Integration Test Suite - Error Handling (TEST-LOADER-7.4)'
   let mockActionLoader;
   /** @type {jest.Mocked<EventLoader>} */
   let mockEventLoader;
+  /** @type {jest.Mocked<import('../../src/loaders/conditionLoader.js').default>} */
+  let mockConditionLoader;
   /** @type {jest.Mocked<EntityLoader>} */
   let mockEntityLoader;
   /** @type {jest.Mocked<ISchemaValidator>} */
@@ -189,6 +191,7 @@ describe('WorldLoader Integration Test Suite - Error Handling (TEST-LOADER-7.4)'
     mockActionLoader = { loadItemsForMod: jest.fn() };
     mockComponentLoader = { loadItemsForMod: jest.fn() }; // This will throw for badMod
     mockEventLoader = { loadItemsForMod: jest.fn() };
+    mockConditionLoader = { loadItemsForMod: jest.fn() };
     mockRuleLoader = { loadItemsForMod: jest.fn() };
     mockEntityLoader = { loadItemsForMod: jest.fn() };
 
@@ -233,6 +236,7 @@ describe('WorldLoader Integration Test Suite - Error Handling (TEST-LOADER-7.4)'
         'schema:actions', // <-- WAS MISSING
         'schema:events', // <-- WAS MISSING
         'schema:rules', // <-- WAS MISSING
+        'schema:conditions',
       ];
       // You might want to dynamically get these from mockConfiguration if needed,
       // but hardcoding based on WorldLoader's current `essentials` list is fine for the test.
@@ -325,6 +329,11 @@ describe('WorldLoader Integration Test Suite - Error Handling (TEST-LOADER-7.4)'
       overrides: 0,
       errors: 0,
     });
+    mockConditionLoader.loadItemsForMod.mockResolvedValue({
+      count: 0,
+      overrides: 0,
+      errors: 0,
+    });
     mockEntityLoader.loadItemsForMod.mockResolvedValue({
       count: 0,
       overrides: 0,
@@ -337,6 +346,7 @@ describe('WorldLoader Integration Test Suite - Error Handling (TEST-LOADER-7.4)'
       logger: mockLogger,
       schemaLoader: mockSchemaLoader,
       componentLoader: mockComponentLoader,
+      conditionLoader: mockConditionLoader,
       ruleLoader: mockRuleLoader,
       actionLoader: mockActionLoader,
       eventLoader: mockEventLoader,
@@ -446,7 +456,7 @@ describe('WorldLoader Integration Test Suite - Error Handling (TEST-LOADER-7.4)'
           `Requested Mods (raw): [${CORE_MOD_ID}, ${badModId}]`
         ),
         expect.stringContaining(
-          `Final Load Order    : [${CORE_MOD_ID}, ${badModId}]`
+          `Final Load Order     : [${CORE_MOD_ID}, ${badModId}]`
         ),
         expect.stringContaining(`Content Loading Summary (Totals):`),
         expect.stringMatching(/actions\s+: C:1, O:0, E:0/),
