@@ -278,8 +278,7 @@ describe('PerceptionLogRenderer', () => {
       };
       const li = renderer._renderListItem(logEntry, 0, [logEntry]);
       expect(mockDomElementFactoryInstance.li).toHaveBeenCalledWith(
-        undefined,
-        'Test Log'
+        'log-generic'
       );
       expect(li.textContent).toBe('Test Log');
       expect(li.setAttribute).toHaveBeenCalledWith(
@@ -294,7 +293,7 @@ describe('PerceptionLogRenderer', () => {
         renderer._renderListItem(malformedEntry, 0, [malformedEntry])
       ).toBeNull();
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('Malformed log entry'),
+        expect.stringContaining('malformed log entry'),
         expect.any(Object)
       );
     });
