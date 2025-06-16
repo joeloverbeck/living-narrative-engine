@@ -48,6 +48,57 @@
   color: var(--input-placeholder-color);
 }
 
+/* === Parchment Fantasy theme === */
+
+#perception-log-list {
+  background: #fff8e6;
+  background-image: radial-gradient(rgba(0, 0, 0, 0.04) 8%, transparent 8%);
+  background-size: 6px 6px; /* subtle paper grain */
+  color: #5b4a24;
+  font-family: 'Merriweather', serif;
+  border: 2px solid #d6b97d;
+}
+
+#perception-log-list li {
+  border-bottom: 1px dotted #d6b97d;
+  padding: var(--spacing-xs) var(--spacing-sm);
+}
+
+#perception-log-list li:last-child {
+  border-bottom: none;
+}
+
+/* Speech lines */
+.log-speech .speaker-cue {
+  color: #4b3b9b;
+  font-variant: small-caps;
+  margin-right: 0.25em;
+}
+
+.log-speech {
+  color: #3b2e10;
+}
+
+/* Action lines */
+.log-action .action-text {
+  color: #c87137;
+  font-style: italic;
+}
+
+.log-action::before,
+.log-action::after {
+  content: '❧';
+  color: #c87137;
+  margin: 0 0.25em;
+}
+
+/* Generic lines just inherit base colours */
+
+/* Scrollbar matches parchment */
+#perception-log-list::-webkit-scrollbar-thumb {
+  background: #d6b97d;
+}
+
 /* Responsive adjustments for #perception-log-list max-height */
 @media (max-width: 768px) {
   #perception-log-list {

@@ -203,49 +203,71 @@ export class PerceptionLogRenderer extends BaseListDisplayComponent {
   }
 
   /**
-   * Renders a single log entry as an HTML list item.
-   * This method is called by `BaseListDisplayComponent.renderList()` for each item from `_getListItemsData`.
-   *
-   * @protected
-   * @override
-   * @param {LogEntryObject} logEntry - The data for the current item to render (renamed from itemData for clarity).
-   * @param {number} _itemIndex - The index of the current item in the `listData` array.
-   * @param {Array<LogEntryObject>} _listData - The complete array of data items being rendered.
-   * @returns {HTMLLIElement | null} The created list item element, or null to skip rendering this item.
+   * Renders a single perception-log entry with Parchment-Fantasy markup.
+   * Distinguishes three kinds of lines:
+   *   – SPEECH: `<Name> says:` prefix
+   *   – ACTION: whole line wrapped in *asterisks*
+   *   – GENERIC: everything else
+   * Each gets a class so CSS can paint it pretty.
    */
   _renderListItem(logEntry, _itemIndex, _listData) {
-    // <-- Corrected signature
-    // listData parameter is available if needed, though not used in this specific implementation
     if (
       !logEntry ||
       typeof logEntry !== 'object' ||
       typeof logEntry.descriptionText !== 'string'
     ) {
       this.logger.warn(
-        `${this._logPrefix} Malformed log entry at index ${_itemIndex}. Skipping.`,
-        { logEntry }
+        `${this._logPrefix} malformed log entry, skipped:`,
+        logEntry
       );
       return null;
     }
 
-    if (!this.domElementFactory) {
-      this.logger.error(
-        `${this._logPrefix} DomElementFactory not available in _renderListItem. Cannot create <li>.`
-      );
-      return null;
-    }
+    const text = logEntry.descriptionText.trim();
+    let liClass = 'log-generic';
+    let innerFragments = [];
 
-    const li = this.domElementFactory.li(undefined, logEntry.descriptionText);
-    if (li) {
-      let title = `Time: ${logEntry.timestamp}\nType: ${logEntry.perceptionType}\nActor: ${logEntry.actorId}`;
-      if (logEntry.targetId) title += `\nTarget: ${logEntry.targetId}`;
-      li.title = title;
+    // 1️⃣ Speech («Alice says: Hello»)
+    const speechMatch = text.match(/^([^:]+?)\s+says:\s*(.+)$/i);
+    if (speechMatch) {
+      liClass = 'log-speech';
+      const [_, speaker, utterance] = speechMatch;
+      innerFragments.push(
+        `<span class="speaker-cue">${speaker} says:</span> ${this.#escapeHtml(
+          utterance
+        )}`
+      );
+    } else if (/^\*[^*]+\*$/.test(text)) {
+      // 2️⃣ Pure action line («*Draws sword*»)
+      liClass = 'log-action';
+      innerFragments.push(
+        `<span class="action-text">${this.#escapeHtml(
+          text.replace(/^\*|\*$/g, '')
+        )}</span>`
+      );
     } else {
-      this.logger.warn(
-        `${this._logPrefix} Failed to create <li> element for log entry via domElementFactory.`
-      );
+      // 3️⃣ Generic line («Jon has arrived at Tavern»)
+      innerFragments.push(this.#escapeHtml(text));
     }
+
+    const li =
+      this.domElementFactory?.li?.(liClass) ??
+      this.documentContext.create('li');
+    li.classList.add(liClass);
+    li.innerHTML = innerFragments.join('');
+    li.title = `Time: ${logEntry.timestamp}`;
+
     return li;
+  }
+
+  /**
+   * Mildly paranoid HTML escape helper.
+   */
+  #escapeHtml(str) {
+    return str
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
   }
 
   /**

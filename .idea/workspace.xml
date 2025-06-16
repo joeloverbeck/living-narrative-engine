@@ -4,7 +4,25 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="9bb199df-dcfd-4da4-888d-c661f61552c0" name="Changes" comment="Formatting." />
+    <list default="true" id="9bb199df-dcfd-4da4-888d-c661f61552c0" name="Changes" comment="Formatting.">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/css/components/_perception-log.css" beforeDir="false" afterPath="$PROJECT_DIR$/css/components/_perception-log.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/domUI/perceptionLogRenderer.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/domUI/perceptionLogRenderer.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/logic/jsonLogicEvaluationService.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/logic/jsonLogicEvaluationService.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/loaders/worldLoader.dependencyError.integration.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/loaders/worldLoader.dependencyError.integration.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/loaders/worldLoader.preLoopErrors.integration.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/loaders/worldLoader.preLoopErrors.integration.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/logic/jsonLogicEvaluationService.complex.e2e.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/logic/jsonLogicEvaluationService.complex.e2e.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/logic/jsonLogicEvaluationService.errorHandling.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/logic/jsonLogicEvaluationService.errorHandling.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/logic/jsonLogicEvaluationService.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/logic/jsonLogicEvaluationService.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/logic/jsonLogicEvaluationService.unit.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/logic/jsonLogicEvaluationService.unit.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/logic/jsonLogicEvaluationService.varPathWarning.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/logic/jsonLogicEvaluationService.varPathWarning.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/logic/jsonLogicPatterns.component.e2e.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/logic/jsonLogicPatterns.component.e2e.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/logic/jsonLogicPatterns.compound.e2e.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/logic/jsonLogicPatterns.compound.e2e.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/schemas/adjustClothing.schema.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/schemas/adjustClothing.schema.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/schemas/stopFollowing.schema.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/schemas/stopFollowing.schema.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/schemas/thumbWipeCheek.schema.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/schemas/thumbWipeCheek.schema.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/schemas/wait.schema.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/schemas/wait.schema.test.js" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -65,7 +83,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1750084404817</updated>
-      <workItem from="1750084406230" duration="3799000" />
+      <workItem from="1750084406230" duration="7665000" />
     </task>
     <task id="LOCAL-00001" summary="Uploaded stuff from the office.">
       <option name="closed" value="true" />
@@ -91,7 +109,15 @@
       <option name="project" value="LOCAL" />
       <updated>1750089464258</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="Formatting.">
+      <option name="closed" value="true" />
+      <created>1750090987416</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1750090987416</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
