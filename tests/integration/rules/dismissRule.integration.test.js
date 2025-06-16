@@ -11,6 +11,8 @@ import operationSchema from '../../../data/schemas/operation.schema.json';
 import jsonLogicSchema from '../../../data/schemas/json-logic.schema.json';
 import loadOperationSchemas from '../../helpers/loadOperationSchemas.js';
 import dismissRule from '../../../data/mods/core/rules/dismiss.rule.json';
+import displaySuccessAndEndTurn from '../../../data/mods/core/macros/displaySuccessAndEndTurn.macro.json';
+import { expandMacros } from '../../../src/utils/macroUtils.js';
 import SystemLogicInterpreter from '../../../src/logic/systemLogicInterpreter.js';
 import OperationInterpreter from '../../../src/logic/operationInterpreter.js';
 import OperationRegistry from '../../../src/logic/operationRegistry.js';
@@ -244,8 +246,20 @@ describe('core_handle_dismiss rule integration', () => {
       }),
     };
 
+    const macroRegistry = {
+      get: (type, id) =>
+        type === 'macros'
+          ? { 'core:displaySuccessAndEndTurn': displaySuccessAndEndTurn }[id]
+          : undefined,
+    };
+
+    const expandedRule = {
+      ...dismissRule,
+      actions: expandMacros(dismissRule.actions, macroRegistry),
+    };
+
     dataRegistry = {
-      getAllSystemRules: jest.fn().mockReturnValue([dismissRule]),
+      getAllSystemRules: jest.fn().mockReturnValue([expandedRule]),
     };
 
     init([]);

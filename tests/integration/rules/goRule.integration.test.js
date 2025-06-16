@@ -10,6 +10,8 @@ import operationSchema from '../../../data/schemas/operation.schema.json';
 import jsonLogicSchema from '../../../data/schemas/json-logic.schema.json';
 import loadOperationSchemas from '../../helpers/loadOperationSchemas.js';
 import goRule from '../../../data/mods/core/rules/go.rule.json';
+import displaySuccessAndEndTurn from '../../../data/mods/core/macros/displaySuccessAndEndTurn.macro.json';
+import { expandMacros } from '../../../src/utils/macroUtils.js';
 import SystemLogicInterpreter from '../../../src/logic/systemLogicInterpreter.js';
 import OperationInterpreter from '../../../src/logic/operationInterpreter.js';
 import OperationRegistry from '../../../src/logic/operationRegistry.js';
@@ -254,8 +256,20 @@ describe('core_handle_go rule integration', () => {
       listenerCount: jest.fn().mockReturnValue(1),
     };
 
+    const macroRegistry = {
+      get: (type, id) =>
+        type === 'macros'
+          ? { 'core:displaySuccessAndEndTurn': displaySuccessAndEndTurn }[id]
+          : undefined,
+    };
+
+    const expandedRule = {
+      ...goRule,
+      actions: expandMacros(goRule.actions, macroRegistry),
+    };
+
     dataRegistry = {
-      getAllSystemRules: jest.fn().mockReturnValue([goRule]),
+      getAllSystemRules: jest.fn().mockReturnValue([expandedRule]),
     };
 
     init([]);

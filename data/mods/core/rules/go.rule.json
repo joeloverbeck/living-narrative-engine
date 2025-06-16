@@ -166,23 +166,14 @@
                   }
                 },
                 {
-                  "type": "DISPATCH_EVENT",
-                  "comment": "Dispatch a UI event indicating the successful move.",
+                  "type": "SET_VARIABLE",
+                  "comment": "Prepare success message for the UI.",
                   "parameters": {
-                    "eventType": "core:display_successful_action_result",
-                    "payload": {
-                      "message": "{context.actorNameComponent.text} arrives at {context.targetLocationNameComponent.text}."
-                    }
+                    "variable_name": "successMessage",
+                    "value": "{context.actorNameComponent.text} arrives at {context.targetLocationNameComponent.text}."
                   }
                 },
-                {
-                  "type": "END_TURN",
-                  "comment": "End the turn successfully.",
-                  "parameters": {
-                    "entityId": "{event.payload.actorId}",
-                    "success": true
-                  }
-                }
+                { "macro": "core:displaySuccessAndEndTurn" }
               ],
               "else_actions": [
                 {
