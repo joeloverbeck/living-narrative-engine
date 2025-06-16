@@ -4,10 +4,25 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="f2176490-fa0e-405e-af38-7bec8f5491f5" name="Changes" comment="Fixed nasty issue with schemas.">
+    <list default="true" id="f2176490-fa0e-405e-af38-7bec8f5491f5" name="Changes" comment="Uploading with errors for Codex to fix.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/data/mods/core/macros/autoMoveFollower.macro.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/core/macros/autoMoveFollower.macro.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/data/mods/core/macros/logSuccessAndEndTurn.macro.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/core/macros/logSuccessAndEndTurn.macro.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/mods/intimacy/rules/adjust_clothing.rule.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/intimacy/rules/adjust_clothing.rule.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/mods/intimacy/rules/thumb_wipe_cheek.rule.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/intimacy/rules/thumb_wipe_cheek.rule.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/prompts/corePromptText.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/prompts/corePromptText.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/mods/mod_manifest_format.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/mods/mod_manifest_format.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/domUI/helpers/createMessageElement.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/domUI/helpers/createMessageElement.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/loaders/uiAssetsLoader.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/loaders/uiAssetsLoader.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/persistence/gameStateCaptureService.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/persistence/gameStateCaptureService.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/prompting/promptStaticContentService.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/prompting/promptStaticContentService.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/accessibility/indext.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/accessibility/index.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/domUI/helpers/createMessageElement.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/domUI/helpers/createMessageElement.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/integration/EndToEndMemoryFlow.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/integration/EndToEndMemoryFlow.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/integration/EndToEndNotesPersistence.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/integration/EndToEndNotesPersistence.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/loaders/uiAssetsLoader.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/loaders/uiAssetsLoader.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/prompting/promptStaticContentService.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/prompting/promptStaticContentService.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/services/gameStateCaptureService.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/services/gameStateCaptureService.test.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -55,6 +70,7 @@
     "Jest.actionDiscoveryService.locationRetrieval.test.js.executor": "Run",
     "Jest.actionIndexerAdapter.test.js.executor": "Run",
     "Jest.adjustClothing.schema.test.js.executor": "Run",
+    "Jest.autoMoveFollowerMacro.schema.test.js.executor": "Run",
     "Jest.awaitTurnEndState.test.js.executor": "Run",
     "Jest.buildSpeechMeta.test.js.executor": "Run",
     "Jest.closeness.schema.test.js.executor": "Run",
@@ -77,6 +93,7 @@
     "Jest.interpreterRegistrations.addPerceptionLogEntryHandler.test.js.executor": "Run",
     "Jest.interpreterRegistrations.handlers.test.js.executor": "Run",
     "Jest.llmDecisionProvider.test.js.executor": "Run",
+    "Jest.logSuccessAndEndTurnMacro.schema.test.js.executor": "Run",
     "Jest.modManifestLoader.validation.test.js.executor": "Run",
     "Jest.modifyArrayFieldHandler.pushUnique.test.js.executor": "Run",
     "Jest.nestedPlaceholderResolution.integration.test.js.executor": "Run",
@@ -196,15 +213,7 @@
       <workItem from="1749876741387" duration="32751000" />
       <workItem from="1749913762946" duration="28307000" />
       <workItem from="1749963238113" duration="51858000" />
-      <workItem from="1750034820504" duration="2833000" />
-    </task>
-    <task id="LOCAL-00111" summary="Implementing base intimacy system.">
-      <option name="closed" value="true" />
-      <created>1749984252791</created>
-      <option name="number" value="00111" />
-      <option name="presentableId" value="LOCAL-00111" />
-      <option name="project" value="LOCAL" />
-      <updated>1749984252791</updated>
+      <workItem from="1750034820504" duration="3925000" />
     </task>
     <task id="LOCAL-00112" summary="Implementing base intimacy system.">
       <option name="closed" value="true" />
@@ -590,7 +599,15 @@
       <option name="project" value="LOCAL" />
       <updated>1750037151735</updated>
     </task>
-    <option name="localTasksCounter" value="160" />
+    <task id="LOCAL-00160" summary="Uploading with errors for Codex to fix.">
+      <option name="closed" value="true" />
+      <created>1750037976739</created>
+      <option name="number" value="00160" />
+      <option name="presentableId" value="LOCAL-00160" />
+      <option name="project" value="LOCAL" />
+      <updated>1750037976739</updated>
+    </task>
+    <option name="localTasksCounter" value="161" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -612,7 +629,6 @@
     <MESSAGE value="Returning the app to normal." />
     <MESSAGE value="Implemented base of intimacy system." />
     <MESSAGE value="Implemented focused handlers to deal with follower-related issues." />
-    <MESSAGE value="Uploading with errors for Codex to fix." />
     <MESSAGE value="Fixed test issues." />
     <MESSAGE value="Trying to integrate macros." />
     <MESSAGE value="Uploaded for Codex to fix." />
@@ -622,6 +638,7 @@
     <MESSAGE value="Weird issue with imports." />
     <MESSAGE value="Implemented &quot;adjust clothing&quot; action." />
     <MESSAGE value="Fixed nasty issue with schemas." />
-    <option name="LAST_COMMIT_MESSAGE" value="Fixed nasty issue with schemas." />
+    <MESSAGE value="Uploading with errors for Codex to fix." />
+    <option name="LAST_COMMIT_MESSAGE" value="Uploading with errors for Codex to fix." />
   </component>
 </project>

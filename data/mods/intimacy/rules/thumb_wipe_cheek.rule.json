@@ -1,6 +1,6 @@
 {
   "$schema": "http://example.com/schemas/rule.schema.json",
-  "rule_id": "intimacy:handle_thumb_wipe_cheek",
+  "rule_id": "handle_thumb_wipe_cheek",
   "comment": "Handles the 'intimacy:thumb_wipe_cheek' action. This rule generates descriptive text for the event, dispatches it for others to see and for the actor's UI, and ends the turn.",
   "event_type": "core:attempt_action",
   "condition": {
@@ -67,6 +67,8 @@
         "value": "{event.payload.targetId}"
       }
     },
-    { "macro": "core:logSuccessAndEndTurn" }
+    {
+      "macro": "core:logSuccessAndEndTurn"
+    }
   ]
 }

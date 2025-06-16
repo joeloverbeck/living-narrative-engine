@@ -1,6 +1,6 @@
 {
   "$schema": "http://example.com/schemas/rule.schema.json",
-  "rule_id": "intimacy:handle_adjust_clothing",
+  "rule_id": "handle_adjust_clothing",
   "comment": "Handles the 'intimacy:adjust_clothing' action. This rule generates and dispatches distinct descriptive text for the perceptible log and the actor's success UI, then ends the turn.",
   "event_type": "core:attempt_action",
   "condition": {
