@@ -97,12 +97,22 @@ describe('End-to-End Notes Persistence Flow', () => {
     logger = makeLogger();
     actor = createActor('actor1');
 
+    const promptService = new PromptStaticContentService({
+      logger,
+      promptTextLoader: {
+        loadPromptText: jest.fn().mockResolvedValue({
+          coreTaskDescriptionText: 'c',
+          characterPortrayalGuidelinesTemplate: 'g {{name}}',
+          nc21ContentPolicyText: 'p',
+          finalLlmInstructionText: 'f',
+        }),
+      },
+    });
+    await promptService.initialize();
+
     provider = new AIPromptContentProvider({
       logger,
-      promptStaticContentService: new PromptStaticContentService({
-        logger,
-        promptTextLoader: { loadPromptText: jest.fn() },
-      }),
+      promptStaticContentService: promptService,
       perceptionLogFormatter: { format: jest.fn().mockReturnValue([]) },
       gameStateValidationService: {
         validate: jest
