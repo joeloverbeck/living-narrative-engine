@@ -21,7 +21,10 @@ describe('JsonLogicEvaluationService bracket path warnings', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    service = new JsonLogicEvaluationService({ logger: mockLogger });
+    service = new JsonLogicEvaluationService({
+      logger: mockLogger,
+      gameDataRepository: { getConditionDefinition: () => null },
+    });
     mockLogger.info.mockClear();
   });
 
