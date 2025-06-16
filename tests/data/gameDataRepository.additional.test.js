@@ -19,6 +19,9 @@ const createRegistry = () => ({
   getAllEventDefinitions: jest.fn(() => [{ id: 'ev1' }]),
   getComponentDefinition: jest.fn((id) => ({ id })),
   getAllComponentDefinitions: jest.fn(() => [{ id: 'c1' }]),
+  // Added condition registry methods for new ConditionLoader feature
+  getConditionDefinition: jest.fn((id) => ({ id })),
+  getAllConditionDefinitions: jest.fn(() => [{ id: 'cond1' }]),
   getContentSource: jest.fn(() => 'modA'),
   listContentByMod: jest.fn(() => ({ actions: ['a1'] })),
   get: jest.fn(),
