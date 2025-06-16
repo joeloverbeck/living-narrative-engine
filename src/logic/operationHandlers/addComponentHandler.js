@@ -14,11 +14,7 @@
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../constants/eventIds.js';
 import { resolveEntityId } from '../../utils/entityRefUtils.js';
-import {
-  initHandlerLogger,
-  validateDeps,
-  getExecLogger,
-} from '../../utils/handlerUtils/service.js';
+import BaseOperationHandler from './baseOperationHandler.js';
 import { assertParamsObject } from '../../utils/handlerUtils/params.js';
 
 /**
@@ -33,8 +29,7 @@ import { assertParamsObject } from '../../utils/handlerUtils/params.js';
 // -----------------------------------------------------------------------------
 //  Handler implementation
 // -----------------------------------------------------------------------------
-class AddComponentHandler {
-  /** @type {ILogger} */ #logger;
+class AddComponentHandler extends BaseOperationHandler {
   /** @type {EntityManager} */ #entityManager;
   /** @type {ISafeEventDispatcher} */ #dispatcher;
 
@@ -48,8 +43,8 @@ class AddComponentHandler {
    * @throws {Error} If required dependencies are missing or invalid.
    */
   constructor({ entityManager, logger, safeEventDispatcher }) {
-    this.#logger = initHandlerLogger('AddComponentHandler', logger);
-    validateDeps('AddComponentHandler', this.#logger, {
+    super('AddComponentHandler', {
+      logger: { value: logger },
       entityManager: {
         value: entityManager,
         requiredMethods: ['addComponent'],
@@ -73,7 +68,7 @@ class AddComponentHandler {
    * @implements {OperationHandler}
    */
   execute(params, executionContext) {
-    const log = getExecLogger(this.#logger, executionContext);
+    const log = this.getLogger(executionContext);
 
     // 1. Validate Parameters
     if (!assertParamsObject(params, log, 'ADD_COMPONENT')) {

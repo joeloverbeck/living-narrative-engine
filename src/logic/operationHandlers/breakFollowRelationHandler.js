@@ -14,10 +14,9 @@ import { DISPLAY_ERROR_ID } from '../../constants/eventIds.js';
 import { safeDispatchError } from '../../utils/safeDispatchError.js';
 import { FOLLOWING_COMPONENT_ID } from '../../constants/componentIds.js';
 import { assertParamsObject } from '../../utils/handlerUtils';
+import BaseOperationHandler from './baseOperationHandler.js';
 
-class BreakFollowRelationHandler {
-  /** @type {ILogger} */
-  #logger;
+class BreakFollowRelationHandler extends BaseOperationHandler {
   /** @type {EntityManager} */
   #entityManager;
   /** @type {RebuildLeaderListCacheHandler} */
@@ -62,11 +61,25 @@ class BreakFollowRelationHandler {
         'BreakFollowRelationHandler requires a valid ISafeEventDispatcher'
       );
     }
-    this.#logger = logger;
+    super('BreakFollowRelationHandler', {
+      logger: { value: logger },
+      entityManager: {
+        value: entityManager,
+        requiredMethods: ['removeComponent', 'getComponentData'],
+      },
+      rebuildLeaderListCacheHandler: {
+        value: rebuildLeaderListCacheHandler,
+        requiredMethods: ['execute'],
+      },
+      safeEventDispatcher: {
+        value: safeEventDispatcher,
+        requiredMethods: ['dispatch'],
+      },
+    });
     this.#entityManager = entityManager;
     this.#rebuildHandler = rebuildLeaderListCacheHandler;
     this.#dispatcher = safeEventDispatcher;
-    this.#logger.debug('[BreakFollowRelationHandler] Initialized');
+    this.logger.debug('[BreakFollowRelationHandler] Initialized');
   }
 
   /**
@@ -74,7 +87,7 @@ class BreakFollowRelationHandler {
    * @param {ExecutionContext} execCtx
    */
   execute(params, execCtx) {
-    const logger = execCtx?.logger ?? this.#logger;
+    const logger = this.getLogger(execCtx);
     if (!assertParamsObject(params, logger, 'BREAK_FOLLOW_RELATION')) return;
 
     const { follower_id } = params;
@@ -92,7 +105,7 @@ class BreakFollowRelationHandler {
       FOLLOWING_COMPONENT_ID
     );
     if (!currentData) {
-      this.#logger.debug(
+      this.logger.debug(
         `[BreakFollowRelationHandler] ${fid} is not following anyone.`
       );
       return;

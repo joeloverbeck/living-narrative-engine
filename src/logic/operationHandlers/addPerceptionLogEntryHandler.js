@@ -7,6 +7,7 @@ import { PERCEPTION_LOG_COMPONENT_ID } from '../../constants/componentIds.js';
 import { DISPLAY_ERROR_ID } from '../../constants/eventIds.js';
 import { assertParamsObject } from '../../utils/handlerUtils/params.js';
 import { safeDispatchError } from '../../utils/safeDispatchError.js';
+import BaseOperationHandler from './baseOperationHandler.js';
 
 const DEFAULT_MAX_LOG_ENTRIES = 50;
 
@@ -16,21 +17,27 @@ const DEFAULT_MAX_LOG_ENTRIES = 50;
  * @property {object} entry                 – Required. Log entry (descriptionText, timestamp, perceptionType, actorId…).
  * @property {string=} originating_actor_id – Optional. Actor who raised the event (auditing only).
  */
-class AddPerceptionLogEntryHandler {
-  /** @type {import('../../interfaces/coreServices.js').ILogger}      */ #logger;
+class AddPerceptionLogEntryHandler extends BaseOperationHandler {
   /** @type {import('../../entities/entityManager.js').default}       */ #entityManager;
   /** @type {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} */ #dispatcher;
 
   constructor({ logger, entityManager, safeEventDispatcher }) {
-    if (!logger?.debug)
-      throw new Error('AddPerceptionLogEntryHandler needs ILogger');
-    if (!entityManager?.getEntitiesInLocation)
-      throw new Error('AddPerceptionLogEntryHandler needs IEntityManager');
-    if (!safeEventDispatcher?.dispatch)
-      throw new Error(
-        'AddPerceptionLogEntryHandler needs ISafeEventDispatcher'
-      );
-    this.#logger = logger;
+    super('AddPerceptionLogEntryHandler', {
+      logger: { value: logger },
+      entityManager: {
+        value: entityManager,
+        requiredMethods: [
+          'getEntitiesInLocation',
+          'hasComponent',
+          'getComponentData',
+          'addComponent',
+        ],
+      },
+      safeEventDispatcher: {
+        value: safeEventDispatcher,
+        requiredMethods: ['dispatch'],
+      },
+    });
     this.#entityManager = entityManager;
     this.#dispatcher = safeEventDispatcher;
   }
@@ -40,7 +47,7 @@ class AddPerceptionLogEntryHandler {
    * @param {import('../defs.js').ExecutionContext} _ctx – Unused for now.
    */
   execute(params, _ctx) {
-    const log = this.#logger;
+    const log = this.getLogger(_ctx);
 
     /* ── validation ─────────────────────────────────────────────── */
     if (
