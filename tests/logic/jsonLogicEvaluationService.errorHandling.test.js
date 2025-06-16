@@ -29,6 +29,11 @@ const mockLogger = {
   debug: jest.fn(),
 };
 
+// Minimal IGameDataRepository mock required by the service
+const mockGameDataRepository = {
+  getConditionDefinition: jest.fn(),
+};
+
 // --- Helper Functions for Assertions ---
 // (Keep these helpers as they are used in logging assertions for other test cases)
 /**
@@ -84,7 +89,11 @@ describe('JsonLogicEvaluationService - Error Handling (Ticket 2.6.5)', () => {
 
   beforeEach(() => {
     jest.clearAllMocks(); // Clear mocks before each test
-    service = new JsonLogicEvaluationService({ logger: mockLogger });
+    mockGameDataRepository.getConditionDefinition.mockReset();
+    service = new JsonLogicEvaluationService({
+      logger: mockLogger,
+      gameDataRepository: mockGameDataRepository,
+    });
     mockLogger.info.mockClear();
     applySpy = jest.spyOn(jsonLogic, 'apply');
   });
