@@ -39,7 +39,7 @@ Optional array of mod IDs that cannot be loaded alongside this mod.
 
 ## `content`
 
-Object mapping content categories to arrays of JSON definition files. Paths are relative to the mod's root directory. Predefined categories include `actions`, `characters`, `components`, `items`, `locations`, `rules`, `macros`, and `events`. Additional categories are allowed for custom systems.
+Object mapping content categories to arrays of JSON definition files. Paths are relative to the mod's root directory. Allowed categories are `actions`, `characters`, `components`, `items`, `locations`, `rules`, `macros`, `events`, and `ui`.
 
 ### Sample Manifest
 
