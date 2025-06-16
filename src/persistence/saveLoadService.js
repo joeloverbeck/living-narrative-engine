@@ -6,15 +6,14 @@ import GameStateSerializer from './gameStateSerializer.js';
 import {
   buildManualFileName,
   manualSavePath,
-  extractSaveName,
   FULL_MANUAL_SAVE_DIRECTORY_PATH,
 } from './savePathUtils.js';
 import {
-  readSaveFile,
   deserializeAndDecompress,
   parseManualSaveFile,
 } from './saveFileIO.js';
 import { setupService } from '../utils/serviceInitializer.js';
+import { deepClone } from '../utils/objectUtils.js';
 import {
   PersistenceError,
   PersistenceErrorCodes,
@@ -230,6 +229,123 @@ class SaveLoadService extends ISaveLoadService {
   }
 
   /**
+   * Ensures the manual save directory exists if the storage provider supports it.
+   *
+   * @returns {Promise<import('./persistenceTypes.js').PersistenceResult<null>>}
+   *   Result of the directory creation attempt.
+   * @private
+   */
+  async #ensureSaveDirectory() {
+    if (typeof this.#storageProvider.ensureDirectoryExists !== 'function') {
+      return { success: true };
+    }
+
+    try {
+      await this.#storageProvider.ensureDirectoryExists(
+        FULL_MANUAL_SAVE_DIRECTORY_PATH
+      );
+      this.#logger.debug(
+        `Ensured directory exists: ${FULL_MANUAL_SAVE_DIRECTORY_PATH}`
+      );
+      return { success: true };
+    } catch (dirError) {
+      this.#logger.error(
+        `Failed to ensure directory ${FULL_MANUAL_SAVE_DIRECTORY_PATH} exists:`,
+        dirError
+      );
+      return {
+        success: false,
+        error: new PersistenceError(
+          PersistenceErrorCodes.DIRECTORY_CREATION_FAILED,
+          `Failed to create save directory: ${dirError.message}`
+        ),
+      };
+    }
+  }
+
+  /**
+   * Deep clones and augments the provided game state for saving.
+   *
+   * @param {string} saveName - Name of the save slot.
+   * @param {SaveGameStructure} obj - Original game state object.
+   * @returns {import('./persistenceTypes.js').PersistenceResult<SaveGameStructure>}
+   *   Result containing the cloned object or error.
+   * @private
+   */
+  #cloneAndPrepareState(saveName, obj) {
+    try {
+      /** @type {SaveGameStructure} */
+      const cloned = deepClone(obj);
+      cloned.metadata = { ...(cloned.metadata || {}), saveName };
+      cloned.integrityChecks = { ...(cloned.integrityChecks || {}) };
+      return { success: true, data: cloned };
+    } catch (cloneError) {
+      this.#logger.error(
+        'Failed to deep clone object for manual save:',
+        cloneError
+      );
+      return {
+        success: false,
+        error: new PersistenceError(
+          PersistenceErrorCodes.DEEP_CLONE_FAILED,
+          'Failed to deep clone object for saving.'
+        ),
+      };
+    }
+  }
+
+  /**
+   * Writes compressed save data to disk and handles common error cases.
+   *
+   * @param {string} filePath - Path to write the save file.
+   * @param {Uint8Array} data - Serialized and compressed data.
+   * @returns {Promise<import('./persistenceTypes.js').PersistenceResult<null>>}
+   *   Result of the write operation.
+   * @private
+   */
+  async #writeSaveFile(filePath, data) {
+    try {
+      const writeResult = await this.#storageProvider.writeFileAtomically(
+        filePath,
+        data
+      );
+      if (writeResult.success) {
+        return { success: true };
+      }
+
+      this.#logger.error(
+        `Failed to write manual save to ${filePath}: ${writeResult.error}`
+      );
+      let userError = `Failed to save game: ${writeResult.error}`;
+      if (
+        writeResult.error &&
+        writeResult.error.toLowerCase().includes('disk full')
+      ) {
+        userError = 'Failed to save game: Not enough disk space.';
+      }
+      return {
+        success: false,
+        error: new PersistenceError(
+          PersistenceErrorCodes.WRITE_ERROR,
+          userError
+        ),
+      };
+    } catch (error) {
+      this.#logger.error(`Error writing save file ${filePath}:`, error);
+      return {
+        success: false,
+        error:
+          error instanceof PersistenceError
+            ? error
+            : new PersistenceError(
+                PersistenceErrorCodes.UNEXPECTED_ERROR,
+                `An unexpected error occurred while saving: ${error.message}`
+              ),
+      };
+    }
+  }
+
+  /**
    * @inheritdoc
    * @returns {Promise<Array<SaveFileMetadata>>} Parsed metadata entries.
    */
@@ -406,89 +522,23 @@ class SaveLoadService extends ISaveLoadService {
     }
 
     const fileName = buildManualFileName(saveName);
-    // Ensure the directory structure exists before writing.
-    // Some IStorageProvider implementations might handle this in writeFileAtomically,
-    // others might need an explicit ensureDirectoryExists call.
-    // Example: await this.#storageProvider.ensureDirectoryExists(FULL_MANUAL_SAVE_DIRECTORY_PATH);
     const filePath = manualSavePath(fileName);
 
+    const dirResult = await this.#ensureSaveDirectory();
+    if (!dirResult.success) {
+      return dirResult;
+    }
+
+    const cloneResult = this.#cloneAndPrepareState(saveName, gameStateObject);
+    if (!cloneResult.success || !cloneResult.data) {
+      return { success: false, error: cloneResult.error };
+    }
+
+    let compressedData;
     try {
-      // Potentially create the directory if it doesn't exist.
-      // This is important for the first save.
-      // Check if storageProvider has a method like ensureDirectoryExists
-      if (typeof this.#storageProvider.ensureDirectoryExists === 'function') {
-        try {
-          await this.#storageProvider.ensureDirectoryExists(
-            FULL_MANUAL_SAVE_DIRECTORY_PATH
-          );
-          this.#logger.debug(
-            `Ensured directory exists: ${FULL_MANUAL_SAVE_DIRECTORY_PATH}`
-          );
-        } catch (dirError) {
-          this.#logger.error(
-            `Failed to ensure directory ${FULL_MANUAL_SAVE_DIRECTORY_PATH} exists:`,
-            dirError
-          );
-          return {
-            success: false,
-            error: new PersistenceError(
-              PersistenceErrorCodes.DIRECTORY_CREATION_FAILED,
-              `Failed to create save directory: ${dirError.message}`
-            ),
-          };
-        }
-      }
-
-      // Avoid mutating the provided state object. serializeAndCompress
-      // performs a deep clone internally, so only a shallow copy is
-      // needed here to attach save metadata before serialization.
-      const objectForSave = {
-        ...gameStateObject,
-        metadata: {
-          ...(gameStateObject.metadata || {}),
-          saveName,
-        },
-        integrityChecks: {
-          ...(gameStateObject.integrityChecks || {}),
-        },
-      };
-
-      const { compressedData } =
-        await this.#serializer.serializeAndCompress(objectForSave);
-
-      const writeResult = await this.#storageProvider.writeFileAtomically(
-        filePath,
-        compressedData
-      );
-
-      if (writeResult.success) {
-        this.#logger.debug(
-          `Manual game "${saveName}" saved successfully to ${filePath}.`
-        );
-        return {
-          success: true,
-          message: `Game saved as "${saveName}".`,
-          filePath: filePath,
-        };
-      } else {
-        this.#logger.error(
-          `Failed to write manual save "${saveName}" to ${filePath}: ${writeResult.error}`
-        );
-        let userError = `Failed to save game: ${writeResult.error}`;
-        if (
-          writeResult.error &&
-          writeResult.error.toLowerCase().includes('disk full')
-        ) {
-          userError = 'Failed to save game: Not enough disk space.';
-        }
-        return {
-          success: false,
-          error: new PersistenceError(
-            PersistenceErrorCodes.WRITE_ERROR,
-            userError
-          ),
-        };
-      }
+      ({ compressedData } = await this.#serializer.serializeAndCompress(
+        cloneResult.data
+      ));
     } catch (error) {
       this.#logger.error(
         `Error during manual save process for "${saveName}":`,
@@ -505,6 +555,20 @@ class SaveLoadService extends ISaveLoadService {
               ),
       };
     }
+
+    const writeResult = await this.#writeSaveFile(filePath, compressedData);
+    if (!writeResult.success) {
+      return writeResult;
+    }
+
+    this.#logger.debug(
+      `Manual game "${saveName}" saved successfully to ${filePath}.`
+    );
+    return {
+      success: true,
+      message: `Game saved as "${saveName}".`,
+      filePath,
+    };
   }
 
   /**

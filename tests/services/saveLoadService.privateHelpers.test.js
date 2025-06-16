@@ -130,3 +130,67 @@ describe('SaveLoadService helper functions', () => {
     expect(slots[0].saveName).toBe('TestFile (Corrupted)');
   });
 });
+
+describe('SaveLoadService new private helper error paths', () => {
+  let logger;
+  let storageProvider;
+  let service;
+
+  beforeEach(() => {
+    ({ logger, storageProvider } = makeDeps());
+    service = new SaveLoadService({
+      logger,
+      storageProvider,
+      crypto: webcrypto,
+    });
+  });
+
+  it('fails when ensureDirectoryExists rejects', async () => {
+    storageProvider.ensureDirectoryExists.mockRejectedValue(
+      new Error('mkdir fail')
+    );
+    const obj = {
+      metadata: {},
+      modManifest: {},
+      gameState: {},
+      integrityChecks: {},
+    };
+    const res = await service.saveManualGame('Slot', obj);
+    expect(res.success).toBe(false);
+    expect(res.error.message).toMatch(/Failed to create save directory/);
+    expect(logger.error).toHaveBeenCalled();
+  });
+
+  it('fails when deep clone throws', async () => {
+    storageProvider.ensureDirectoryExists.mockResolvedValue();
+    const cyc = {
+      metadata: {},
+      modManifest: {},
+      gameState: {},
+      integrityChecks: {},
+    };
+    cyc.self = cyc;
+    const res = await service.saveManualGame('Loop', cyc);
+    expect(res.success).toBe(false);
+    expect(res.error.message).toMatch(/deep clone/);
+    expect(logger.error).toHaveBeenCalled();
+  });
+
+  it('fails when writeFileAtomically returns failure', async () => {
+    storageProvider.ensureDirectoryExists.mockResolvedValue();
+    storageProvider.writeFileAtomically.mockResolvedValue({
+      success: false,
+      error: 'disk full',
+    });
+    const obj = {
+      metadata: {},
+      modManifest: {},
+      gameState: {},
+      integrityChecks: {},
+    };
+    const res = await service.saveManualGame('Disk', obj);
+    expect(res.success).toBe(false);
+    expect(res.error.message).toMatch(/Not enough disk space/);
+    expect(logger.error).toHaveBeenCalled();
+  });
+});
