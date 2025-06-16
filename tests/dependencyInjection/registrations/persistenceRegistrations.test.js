@@ -25,6 +25,7 @@ import GamePersistenceService from '../../../src/persistence/gamePersistenceServ
 import GameStateCaptureService from '../../../src/persistence/gameStateCaptureService.js';
 import ReferenceResolver from '../../../src/initializers/services/referenceResolver.js';
 import SaveMetadataBuilder from '../../../src/persistence/saveMetadataBuilder.js';
+import ActiveModsManifestBuilder from '../../../src/persistence/activeModsManifestBuilder.js';
 import SaveLoadService from '../../../src/persistence/saveLoadService.js';
 import { BrowserStorageProvider } from '../../../src/storage/browserStorageProvider.js';
 
@@ -80,6 +81,9 @@ describe('registerPersistence', () => {
       `Persistence Registration: Registered ${String(tokens.SaveMetadataBuilder)}.`
     );
     expect(logs).toContain(
+      `Persistence Registration: Registered ${String(tokens.ActiveModsManifestBuilder)}.`
+    );
+    expect(logs).toContain(
       `Persistence Registration: Registered ${String(tokens.GameStateCaptureService)}.`
     );
     expect(logs).toContain(
@@ -122,6 +126,12 @@ describe('registerPersistence', () => {
         Class: SaveMetadataBuilder,
         lifecycle: 'singleton',
         deps: [tokens.ILogger],
+      },
+      {
+        token: tokens.ActiveModsManifestBuilder,
+        Class: ActiveModsManifestBuilder,
+        lifecycle: 'singleton',
+        deps: [tokens.ILogger, tokens.IDataRegistry],
       },
       {
         token: tokens.GameStateCaptureService,

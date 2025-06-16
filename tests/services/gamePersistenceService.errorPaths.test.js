@@ -23,6 +23,7 @@ describe('GamePersistenceService error paths', () => {
   let playtimeTracker;
   let componentCleaningService;
   let metadataBuilder;
+  let activeModsManifestBuilder;
   let safeEventDispatcher;
   let service;
   let captureService;
@@ -35,7 +36,6 @@ describe('GamePersistenceService error paths', () => {
       clearAll: jest.fn(),
       reconstructEntity: jest.fn().mockReturnValue({}),
     };
-    const dataRegistry = { getAll: jest.fn().mockReturnValue([]) };
     playtimeTracker = {
       getTotalPlaytime: jest.fn().mockReturnValue(0),
       setAccumulatedPlaytime: jest.fn(),
@@ -55,13 +55,14 @@ describe('GamePersistenceService error paths', () => {
         saveName: '',
       })),
     };
+    activeModsManifestBuilder = { build: jest.fn().mockReturnValue([]) };
     captureService = new GameStateCaptureService({
       logger,
       entityManager,
-      dataRegistry,
       playtimeTracker,
       componentCleaningService,
       metadataBuilder,
+      activeModsManifestBuilder,
     });
     service = new GamePersistenceService({
       logger,

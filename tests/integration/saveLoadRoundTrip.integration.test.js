@@ -61,7 +61,6 @@ describe('Persistence round-trip', () => {
   let storageProvider;
   let saveLoadService;
   let entityManager;
-  let dataRegistry;
   let playtimeTracker;
   let componentCleaningService;
   let metadataBuilder;
@@ -98,9 +97,6 @@ describe('Persistence round-trip', () => {
       }),
     };
 
-    dataRegistry = {
-      getAll: jest.fn().mockReturnValue([{ id: 'core', version: '1.0.0' }]),
-    };
     playtimeTracker = {
       getTotalPlaytime: jest.fn().mockReturnValue(0),
       setAccumulatedPlaytime: jest.fn(),
@@ -121,13 +117,16 @@ describe('Persistence round-trip', () => {
       })),
     };
 
+    const activeModsManifestBuilder = {
+      build: jest.fn().mockReturnValue([{ modId: 'core', version: '1.0.0' }]),
+    };
     const captureService = new GameStateCaptureService({
       logger,
       entityManager,
-      dataRegistry,
       playtimeTracker,
       componentCleaningService,
       metadataBuilder,
+      activeModsManifestBuilder,
     });
     persistence = new GamePersistenceService({
       logger,

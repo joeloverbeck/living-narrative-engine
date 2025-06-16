@@ -1,7 +1,6 @@
 // src/persistence/gameStateCaptureService.js
 
 import { CURRENT_ACTOR_COMPONENT_ID } from '../constants/componentIds.js';
-import { CORE_MOD_ID } from '../constants/core.js';
 import { setupService } from '../utils/serviceInitializerUtils.js';
 
 /**
@@ -11,6 +10,7 @@ import { setupService } from '../utils/serviceInitializerUtils.js';
  * @typedef {import('../engine/playtimeTracker.js').default} PlaytimeTracker
  * @typedef {import('./componentCleaningService.js').default} ComponentCleaningService
  * @typedef {import('./saveMetadataBuilder.js').default} SaveMetadataBuilder
+ * @typedef {import('./activeModsManifestBuilder.js').default} ActiveModsManifestBuilder
  * @typedef {import('../entities/entity.js').default} Entity
  */
 
@@ -23,14 +23,14 @@ class GameStateCaptureService {
   #logger;
   /** @type {EntityManager} */
   #entityManager;
-  /** @type {IDataRegistry} */
-  #dataRegistry;
   /** @type {PlaytimeTracker} */
   #playtimeTracker;
   /** @type {ComponentCleaningService} */
   #componentCleaningService;
   /** @type {SaveMetadataBuilder} */
   #metadataBuilder;
+  /** @type {ActiveModsManifestBuilder} */
+  #activeModsManifestBuilder;
 
   /**
    * Creates a new GameStateCaptureService instance.
@@ -38,22 +38,21 @@ class GameStateCaptureService {
    * @param {object} deps - Constructor dependencies.
    * @param {ILogger} deps.logger - Logging service.
    * @param {EntityManager} deps.entityManager - Entity manager.
-   * @param {IDataRegistry} deps.dataRegistry - Data registry.
    * @param {PlaytimeTracker} deps.playtimeTracker - Playtime tracker.
    * @param {ComponentCleaningService} deps.componentCleaningService - Component cleaning service.
    * @param {SaveMetadataBuilder} deps.metadataBuilder - Builder for save metadata.
+   * @param {ActiveModsManifestBuilder} deps.activeModsManifestBuilder - Builder for active mods manifest.
    */
   constructor({
     logger,
     entityManager,
-    dataRegistry,
     playtimeTracker,
     componentCleaningService,
     metadataBuilder,
+    activeModsManifestBuilder,
   }) {
     this.#logger = setupService('GameStateCaptureService', logger, {
       entityManager: { value: entityManager },
-      dataRegistry: { value: dataRegistry, requiredMethods: ['getAll'] },
       playtimeTracker: {
         value: playtimeTracker,
         requiredMethods: ['getTotalPlaytime'],
@@ -63,12 +62,16 @@ class GameStateCaptureService {
         requiredMethods: ['clean'],
       },
       metadataBuilder: { value: metadataBuilder, requiredMethods: ['build'] },
+      activeModsManifestBuilder: {
+        value: activeModsManifestBuilder,
+        requiredMethods: ['build'],
+      },
     });
     this.#entityManager = entityManager;
-    this.#dataRegistry = dataRegistry;
     this.#playtimeTracker = playtimeTracker;
     this.#componentCleaningService = componentCleaningService;
     this.#metadataBuilder = metadataBuilder;
+    this.#activeModsManifestBuilder = activeModsManifestBuilder;
     this.#logger.debug('GameStateCaptureService: Instance created.');
   }
 
@@ -141,47 +144,6 @@ class GameStateCaptureService {
   }
 
   /**
-   * Builds the active mods manifest section for the save data.
-   *
-   * @returns {{modId: string, version: string}[]} Array of active mod info.
-   * @private
-   */
-  #buildActiveModsManifest() {
-    /** @type {import('../../data/schemas/mod.manifest.schema.json').ModManifest[]} */
-    const loadedManifestObjects = this.#dataRegistry.getAll('mod_manifests');
-    let activeModsManifest = [];
-    if (loadedManifestObjects && loadedManifestObjects.length > 0) {
-      activeModsManifest = loadedManifestObjects.map((manifest) => ({
-        modId: manifest.id,
-        version: manifest.version,
-      }));
-      this.#logger.debug(
-        `GameStateCaptureService: Captured ${activeModsManifest.length} active mods from 'mod_manifests' type in registry.`
-      );
-    } else {
-      this.#logger.warn(
-        'GameStateCaptureService: No mod manifests found in registry under "mod_manifests" type. Mod manifest may be incomplete. Using fallback.'
-      );
-      const coreModManifest = loadedManifestObjects?.find(
-        (m) => m.id === CORE_MOD_ID
-      );
-      if (coreModManifest) {
-        activeModsManifest = [
-          { modId: CORE_MOD_ID, version: coreModManifest.version },
-        ];
-      } else {
-        activeModsManifest = [
-          { modId: CORE_MOD_ID, version: 'unknown_fallback' },
-        ];
-      }
-      this.#logger.debug(
-        'GameStateCaptureService: Used fallback for mod manifest.'
-      );
-    }
-    return activeModsManifest;
-  }
-
-  /**
    * Captures the current game state.
    *
    * @param {string | null | undefined} activeWorldName - The name of the currently active world.
@@ -194,8 +156,6 @@ class GameStateCaptureService {
 
     if (!this.#entityManager)
       throw new Error('EntityManager not available for capturing game state.');
-    if (!this.#dataRegistry)
-      throw new Error('DataRegistry not available for capturing mod manifest.');
     if (!this.#playtimeTracker)
       throw new Error(
         'PlaytimeTracker not available for capturing game state.'
@@ -209,7 +169,7 @@ class GameStateCaptureService {
       `GameStateCaptureService: Captured ${entitiesData.length} entities.`
     );
 
-    const activeModsManifest = this.#buildActiveModsManifest();
+    const activeModsManifest = this.#activeModsManifestBuilder.build();
 
     const currentTotalPlaytime = this.#playtimeTracker.getTotalPlaytime();
     this.#logger.debug(

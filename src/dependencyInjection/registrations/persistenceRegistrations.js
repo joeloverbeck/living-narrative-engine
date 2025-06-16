@@ -25,6 +25,7 @@ import ComponentCleaningService from '../../persistence/componentCleaningService
 import GamePersistenceService from '../../persistence/gamePersistenceService.js';
 import GameStateCaptureService from '../../persistence/gameStateCaptureService.js';
 import SaveMetadataBuilder from '../../persistence/saveMetadataBuilder.js';
+import ActiveModsManifestBuilder from '../../persistence/activeModsManifestBuilder.js';
 import ReferenceResolver from '../../initializers/services/referenceResolver.js';
 import SaveLoadService from '../../persistence/saveLoadService.js';
 import { BrowserStorageProvider } from '../../storage/browserStorageProvider.js';
@@ -77,14 +78,22 @@ export function registerPersistence(container) {
     `Persistence Registration: Registered ${String(tokens.SaveMetadataBuilder)}.`
   );
 
+  r.single(tokens.ActiveModsManifestBuilder, ActiveModsManifestBuilder, [
+    tokens.ILogger,
+    tokens.IDataRegistry,
+  ]);
+  logger.debug(
+    `Persistence Registration: Registered ${String(tokens.ActiveModsManifestBuilder)}.`
+  );
+
   r.singletonFactory(tokens.GameStateCaptureService, (c) => {
     return new GameStateCaptureService({
       logger: c.resolve(tokens.ILogger),
       entityManager: c.resolve(tokens.IEntityManager),
-      dataRegistry: c.resolve(tokens.IDataRegistry),
       playtimeTracker: c.resolve(tokens.PlaytimeTracker),
       componentCleaningService: c.resolve(tokens.ComponentCleaningService),
       metadataBuilder: c.resolve(tokens.SaveMetadataBuilder),
+      activeModsManifestBuilder: c.resolve(tokens.ActiveModsManifestBuilder),
     });
   });
   logger.debug(

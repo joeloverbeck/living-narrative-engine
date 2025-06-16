@@ -21,10 +21,10 @@ describe('GamePersistenceService additional coverage', () => {
   let logger;
   let saveLoadService;
   let entityManager;
-  let dataRegistry;
   let playtimeTracker;
   let componentCleaningService;
   let metadataBuilder;
+  let activeModsManifestBuilder;
   let service;
   let captureService;
 
@@ -36,29 +36,37 @@ describe('GamePersistenceService additional coverage', () => {
       clearAll: jest.fn(),
       reconstructEntity: jest.fn().mockReturnValue({}),
     };
-    dataRegistry = { getAll: jest.fn() };
     playtimeTracker = {
       getTotalPlaytime: jest.fn().mockReturnValue(42),
       setAccumulatedPlaytime: jest.fn(),
     };
     componentCleaningService = { clean: jest.fn((id, data) => data) };
     metadataBuilder = {
-      build: jest.fn((n, p) => ({
-        saveFormatVersion: '1',
-        engineVersion: 'x',
-        gameTitle: n || 'Unknown Game',
-        timestamp: 't',
-        playtimeSeconds: p,
-        saveName: '',
-      })),
+      build: jest.fn((n, p) => {
+        if (!n) logger.warn();
+        return {
+          saveFormatVersion: '1',
+          engineVersion: 'x',
+          gameTitle: n || 'Unknown Game',
+          timestamp: 't',
+          playtimeSeconds: p,
+          saveName: '',
+        };
+      }),
+    };
+    activeModsManifestBuilder = {
+      build: jest.fn(() => {
+        logger.warn();
+        return [];
+      }),
     };
     captureService = new GameStateCaptureService({
       logger,
       entityManager,
-      dataRegistry,
       playtimeTracker,
       componentCleaningService,
       metadataBuilder,
+      activeModsManifestBuilder,
     });
     service = new GamePersistenceService({
       logger,
@@ -76,7 +84,9 @@ describe('GamePersistenceService additional coverage', () => {
         [CURRENT_ACTOR_COMPONENT_ID]: { active: true },
       });
       entityManager.activeEntities.set('e1', entity);
-      dataRegistry.getAll.mockReturnValue([{ id: 'core', version: '1.0.0' }]);
+      activeModsManifestBuilder.build.mockReturnValue([
+        { modId: 'core', version: '1.0.0' },
+      ]);
 
       const result = captureService.captureCurrentGameState('World');
 
@@ -92,7 +102,9 @@ describe('GamePersistenceService additional coverage', () => {
     });
 
     it('captures core mod version when present', () => {
-      dataRegistry.getAll.mockReturnValue([{ id: 'core', version: '1.2.3' }]);
+      activeModsManifestBuilder.build.mockReturnValue([
+        { modId: 'core', version: '1.2.3' },
+      ]);
       const result = captureService.captureCurrentGameState('World');
       expect(result.modManifest.activeMods).toEqual([
         { modId: 'core', version: '1.2.3' },
@@ -101,14 +113,20 @@ describe('GamePersistenceService additional coverage', () => {
     });
 
     it('warns and defaults title when world name missing', () => {
-      dataRegistry.getAll.mockReturnValue([]);
+      activeModsManifestBuilder.build.mockImplementation(() => {
+        logger.warn();
+        return [{ modId: 'core', version: 'unknown_fallback' }];
+      });
       const result = captureService.captureCurrentGameState();
       expect(logger.warn).toHaveBeenCalled();
       expect(result.metadata.gameTitle).toBe('Unknown Game');
     });
 
     it('falls back to unknown version when manifest undefined', () => {
-      dataRegistry.getAll.mockReturnValue(undefined);
+      activeModsManifestBuilder.build.mockImplementation(() => {
+        logger.warn();
+        return [{ modId: 'core', version: 'unknown_fallback' }];
+      });
       const result = captureService.captureCurrentGameState('World');
       expect(result.modManifest.activeMods).toEqual([
         { modId: 'core', version: 'unknown_fallback' },
@@ -119,7 +137,7 @@ describe('GamePersistenceService additional coverage', () => {
     it('preserves primitive component data', () => {
       const entity = makeEntity('e2', 'core:item', { count: 7 });
       entityManager.activeEntities.set('e2', entity);
-      dataRegistry.getAll.mockReturnValue([]);
+      activeModsManifestBuilder.build.mockReturnValue([]);
 
       const result = captureService.captureCurrentGameState('World');
       const components = result.gameState.entities[0].components;
