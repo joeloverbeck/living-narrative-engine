@@ -25,6 +25,11 @@ const mockLogger = {
   debug: jest.fn(),
 };
 
+// Minimal mock for the required game data repository dependency
+const mockGameDataRepository = {
+  getConditionDefinition: jest.fn(),
+};
+
 // Mock EntityManager (Required by Context Assembler)
 // Note: This is a fresh mock setup for this test file.
 /** @type {jest.Mocked<EntityManager>} */
@@ -61,7 +66,10 @@ describe('JsonLogicEvaluationService - Complex E2E Tests (Ticket 2.6.4)', () => 
 
     // Instantiate the service with the mock logger
     // Uses the REAL json-logic-js library (no mocking of 'apply')
-    service = new JsonLogicEvaluationService({ logger: mockLogger });
+    service = new JsonLogicEvaluationService({
+      logger: mockLogger,
+      gameDataRepository: mockGameDataRepository,
+    });
     mockLogger.info.mockClear(); // Clear constructor log call
 
     // Reset EntityManager mocks to a clean default state

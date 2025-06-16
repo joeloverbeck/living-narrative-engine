@@ -42,6 +42,11 @@ const mockLogger = {
   debug: jest.fn(),
 };
 
+// Minimal mock for the game data repository dependency
+const mockGameDataRepository = {
+  getConditionDefinition: jest.fn(),
+};
+
 // --- Task 2: Implement mock for EntityManager (Ticket 2.6.3) ---
 /** @type {jest.Mocked<EntityManager>} */
 const mockEntityManager = {
@@ -68,8 +73,11 @@ describe('JsonLogicEvaluationService', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    // Instantiate service with the mock logger
-    service = new JsonLogicEvaluationService({ logger: mockLogger });
+    // Instantiate service with the mock logger and game data repository
+    service = new JsonLogicEvaluationService({
+      logger: mockLogger,
+      gameDataRepository: mockGameDataRepository,
+    });
     mockLogger.info.mockClear(); // Clear constructor log call
 
     // Reset EntityManager mocks before each test
@@ -97,7 +105,10 @@ describe('JsonLogicEvaluationService', () => {
   describe('Constructor', () => {
     test('should instantiate successfully with a valid logger', () => {
       expect(() => {
-        new JsonLogicEvaluationService({ logger: mockLogger });
+        new JsonLogicEvaluationService({
+          logger: mockLogger,
+          gameDataRepository: mockGameDataRepository,
+        });
       }).not.toThrow();
     });
 
