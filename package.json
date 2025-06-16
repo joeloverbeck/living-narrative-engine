@@ -49,7 +49,6 @@
     "lint": "eslint . --fix",
     "test": "jest --env=jsdom --updateSnapshot --silent --coverage",
     "test:single": "jest --env=jsdom --updateSnapshot",
-    "validate-mods": "node scripts/validateMods.mjs",
     "create-mod": "node scripts/createMod.mjs",
     "build": "esbuild src/main.js --bundle --outfile=dist/bundle.js --platform=browser --sourcemap && cpy index.html game.html dist && cpy css dist && cpy data dist && cpy config dist && cpy favicon.ico dist",
     "start": "npm run build && http-server dist -o",

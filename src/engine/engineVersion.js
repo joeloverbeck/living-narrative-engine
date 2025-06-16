@@ -1,11 +1,11 @@
 // src/engine/engineVersion.js
 /* eslint-env browser */
 
-import pkg from '../../package.json';
 import semver from 'semver';
 import { freeze } from '../utils/objectUtils.js';
 
-const versionFromPackage = pkg.version;
+// NOTE: Keep this string in sync with package.json "version".
+const versionFromPackage = '0.0.1';
 
 // Validate the version on startup (when this module is first imported)
 if (!semver.valid(versionFromPackage)) {
@@ -17,7 +17,8 @@ if (!semver.valid(versionFromPackage)) {
 }
 
 /**
- * The canonical engine version string, sourced directly from package.json.
+ * The canonical engine version string. This should match the version
+ * specified in package.json.
  *
  * This constant is validated as a SemVer string when the module is first loaded.
  * Attempting to run the application with an invalid version string in package.json
