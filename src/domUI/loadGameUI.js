@@ -148,13 +148,7 @@ class LoadGameUI extends SlotModalBase {
         event.preventDefault()
       );
     }
-    if (this.elements.listContainerElement) {
-      this._addDomListener(
-        this.elements.listContainerElement,
-        'keydown',
-        this._handleSlotNavigation.bind(this)
-      );
-    }
+    // Keyboard navigation is now handled by SlotModalBase
   }
 
   /**
@@ -286,7 +280,7 @@ class LoadGameUI extends SlotModalBase {
       slotData.identifier,
       metadata,
       (evt) => {
-        this._handleSlotSelection(
+        this._onItemSelected(
           /** @type {HTMLElement} */ (evt.currentTarget),
           slotData
         );
@@ -343,7 +337,7 @@ class LoadGameUI extends SlotModalBase {
       'Loading saved games...'
     );
 
-    this._handleSlotSelection(null, null); // Update button states
+    this._onItemSelected(null, null); // Update button states
     this.logger.debug(`${this._logPrefix} Load slots list populated.`);
   }
 
@@ -354,7 +348,11 @@ class LoadGameUI extends SlotModalBase {
    * @param {LoadSlotDisplayData | null} slotData - Associated slot information.
    * @private
    */
-  _handleSlotSelection(selectedSlotElement, slotData) {
+  /**
+   * @protected
+   * @override
+   */
+  _onItemSelected(selectedSlotElement, slotData) {
     super._onItemSelected(selectedSlotElement, slotData);
 
     const canLoad = !!(slotData && !slotData.isCorrupted);
@@ -400,7 +398,7 @@ class LoadGameUI extends SlotModalBase {
             (s) => String(s[this._datasetKey]) === String(value)
           );
         }
-        if (slotData) this._handleSlotSelection(el, slotData);
+        if (slotData) this._onItemSelected(el, slotData);
       }
     );
 
@@ -421,7 +419,7 @@ class LoadGameUI extends SlotModalBase {
           (s) => String(s[this._datasetKey]) === String(value)
         );
       }
-      if (slotData) this._handleSlotSelection(target, slotData);
+      if (slotData) this._onItemSelected(target, slotData);
     }
   }
 
@@ -590,13 +588,13 @@ class LoadGameUI extends SlotModalBase {
           (s) => s.identifier === firstSlotIdentifier
         );
         if (firstSlotData)
-          this._handleSlotSelection(
+          this._onItemSelected(
             /** @type {HTMLElement} */ (firstSlot),
             firstSlotData
           );
-        else this._handleSlotSelection(null, null);
+        else this._onItemSelected(null, null);
       } else {
-        this._handleSlotSelection(null, null);
+        this._onItemSelected(null, null);
       }
     }
   }
