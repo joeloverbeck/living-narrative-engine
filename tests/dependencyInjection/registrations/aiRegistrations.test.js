@@ -10,6 +10,7 @@ import { registerAI } from '../../../src/dependencyInjection/registrations/aiReg
 // --- Dependencies for Mocking & Testing ---
 import AppContainer from '../../../src/dependencyInjection/appContainer.js';
 import { tokens } from '../../../src/dependencyInjection/tokens.js';
+import { INITIALIZABLE } from '../../../src/dependencyInjection/tags.js';
 import { LLM_TURN_ACTION_RESPONSE_SCHEMA_ID } from '../../../src/turns/schemas/llmOutputSchemas.js';
 
 // --- Concrete Classes for `instanceof` checks ---
@@ -206,6 +207,19 @@ describe('registerAI', () => {
       expect(loggerSpies.debug).toHaveBeenCalledWith(
         expect.stringContaining('Registered Prompting Engine services')
       );
+    });
+
+    it('registers IPromptStaticContentService as INITIALIZABLE singletonFactory', () => {
+      const registerSpy = jest.spyOn(container, 'register');
+      registerAI(container);
+      const registrationCall = registerSpy.mock.calls.find(
+        (call) => call[0] === tokens.IPromptStaticContentService
+      );
+      expect(registrationCall).toBeDefined();
+      const options = registrationCall[2] || {};
+      expect(options.lifecycle).toBe('singletonFactory');
+      expect(options.tags).toEqual(INITIALIZABLE);
+      registerSpy.mockRestore();
     });
   });
 

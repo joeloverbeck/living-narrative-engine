@@ -89,7 +89,7 @@ import { AIPromptContentProvider } from '../../prompting/AIPromptContentProvider
 import { LLMResponseProcessor } from '../../turns/services/LLMResponseProcessor.js';
 import { AIFallbackActionFactory } from '../../turns/services/AIFallbackActionFactory.js';
 import { AIPromptPipeline } from '../../prompting/AIPromptPipeline.js';
-import { SHUTDOWNABLE } from '../tags.js';
+import { SHUTDOWNABLE, INITIALIZABLE } from '../tags.js';
 import {
   INDEXED_CHOICES_KEY,
   IndexedChoicesAssembler,
@@ -160,7 +160,7 @@ export function registerAI(container) {
 
   // --- PROMPTING ENGINE SERVICES ---
 
-  r.singletonFactory(
+  r.tagged(INITIALIZABLE).singletonFactory(
     tokens.IPromptStaticContentService,
     (c) =>
       new PromptStaticContentService({
