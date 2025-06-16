@@ -343,41 +343,31 @@ class SaveLoadService extends ISaveLoadService {
   }
 
   /**
-   * @inheritdoc
-   * @returns {Promise<Array<SaveFileMetadata>>} Parsed metadata entries.
+   * Retrieves manual save file names from the storage provider.
+   * Handles missing directory or listing errors gracefully.
+   *
+   * @returns {Promise<Array<string>>} List of file names.
+   * @private
    */
-  async listManualSaveSlots() {
-    this.#logger.debug(
-      `Listing manual save slots from ${FULL_MANUAL_SAVE_DIRECTORY_PATH}...`
-    );
-    const collectedMetadata = [];
-
-    let files;
+  async #getManualSaveFiles() {
     try {
-      // Ensure the base 'saves' directory and 'manual_saves' subdirectory exist
-      // Some storage providers might require directories to be explicitly created or
-      // handle it gracefully. Assuming listFiles can target nested paths.
-      // If IStorageProvider.ensureDirectoryExists is available, it could be called here:
-      // await this.#storageProvider.ensureDirectoryExists(FULL_MANUAL_SAVE_DIRECTORY_PATH);
-
-      files = await this.#storageProvider.listFiles(
+      const files = await this.#storageProvider.listFiles(
         FULL_MANUAL_SAVE_DIRECTORY_PATH,
         MANUAL_SAVE_PATTERN.source
       );
       this.#logger.debug(
         `Found ${files.length} potential manual save files in ${FULL_MANUAL_SAVE_DIRECTORY_PATH}.`
       );
+      return files;
     } catch (listError) {
-      // Check if the error is because the directory doesn't exist
       if (
         listError.message &&
         listError.message.toLowerCase().includes('not found')
       ) {
-        // Example check
         this.#logger.debug(
           `${FULL_MANUAL_SAVE_DIRECTORY_PATH} not found. Assuming no manual saves yet.`
         );
-        return []; // No directory means no saves
+        return [];
       }
       this.#logger.error(
         `Error listing files in ${FULL_MANUAL_SAVE_DIRECTORY_PATH}:`,
@@ -385,53 +375,75 @@ class SaveLoadService extends ISaveLoadService {
       );
       return [];
     }
+  }
+
+  /**
+   * Parses and validates metadata for a single manual save file.
+   *
+   * @param {string} fileName - File name within the manual saves directory.
+   * @returns {Promise<SaveFileMetadata>} Parsed metadata object.
+   * @private
+   */
+  async #parseManualSaveMetadata(fileName) {
+    const { success, metadata } = await parseManualSaveFile(
+      fileName,
+      this.#storageProvider,
+      this.#serializer,
+      this.#logger
+    );
+
+    if (!success) {
+      return metadata;
+    }
+
+    const { identifier, saveName, timestamp, playtimeSeconds } = metadata;
+
+    if (
+      typeof saveName !== 'string' ||
+      !saveName ||
+      typeof timestamp !== 'string' ||
+      !timestamp ||
+      typeof playtimeSeconds !== 'number' ||
+      isNaN(playtimeSeconds)
+    ) {
+      this.#logger.warn(
+        `Essential metadata missing or malformed in ${identifier}. Contents: ${JSON.stringify(
+          metadata
+        )}. Flagging as corrupted for listing.`
+      );
+      return {
+        identifier,
+        saveName:
+          saveName ||
+          fileName.replace(/\.sav$/, '').replace(/^manual_save_/, '') +
+            ' (Bad Metadata)',
+        timestamp: timestamp || 'N/A',
+        playtimeSeconds:
+          typeof playtimeSeconds === 'number' ? playtimeSeconds : 0,
+        isCorrupted: true,
+      };
+    }
+
+    this.#logger.debug(
+      `Successfully parsed metadata for ${identifier}: Name="${saveName}", Timestamp="${timestamp}"`
+    );
+    return metadata;
+  }
+
+  /**
+   * @inheritdoc
+   * @returns {Promise<Array<SaveFileMetadata>>} Parsed metadata entries.
+   */
+  async listManualSaveSlots() {
+    this.#logger.debug(
+      `Listing manual save slots from ${FULL_MANUAL_SAVE_DIRECTORY_PATH}...`
+    );
+    const files = await this.#getManualSaveFiles();
+    const collectedMetadata = [];
 
     for (const fileName of files) {
-      const { success, metadata } = await parseManualSaveFile(
-        fileName,
-        this.#storageProvider,
-        this.#serializer,
-        this.#logger
-      );
-
-      if (!success) {
-        collectedMetadata.push(metadata);
-        continue;
-      }
-
-      const { identifier, saveName, timestamp, playtimeSeconds } = metadata;
-
-      if (
-        typeof saveName !== 'string' ||
-        !saveName ||
-        typeof timestamp !== 'string' ||
-        !timestamp ||
-        typeof playtimeSeconds !== 'number' ||
-        isNaN(playtimeSeconds)
-      ) {
-        this.#logger.warn(
-          `Essential metadata missing or malformed in ${identifier}. Contents: ${JSON.stringify(
-            metadata
-          )}. Flagging as corrupted for listing.`
-        );
-        collectedMetadata.push({
-          identifier,
-          saveName:
-            saveName ||
-            fileName.replace(/\.sav$/, '').replace(/^manual_save_/, '') +
-              ' (Bad Metadata)',
-          timestamp: timestamp || 'N/A',
-          playtimeSeconds:
-            typeof playtimeSeconds === 'number' ? playtimeSeconds : 0,
-          isCorrupted: true,
-        });
-        continue;
-      }
-
+      const metadata = await this.#parseManualSaveMetadata(fileName);
       collectedMetadata.push(metadata);
-      this.#logger.debug(
-        `Successfully parsed metadata for ${identifier}: Name="${saveName}", Timestamp="${timestamp}"`
-      );
     }
 
     this.#logger.debug(
