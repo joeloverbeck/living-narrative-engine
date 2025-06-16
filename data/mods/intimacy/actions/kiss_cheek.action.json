@@ -1,0 +1,17 @@
+{
+  "$schema": "http://example.com/schemas/action-definition.schema.json",
+  "id": "intimacy:kiss_cheek",
+  "commandVerb": "kiss-cheek",
+  "name": "Kiss Cheek",
+  "description": "Lean in and softly kiss the target on the cheek.",
+  "target_domain": "environment",
+  "template": "kiss {target}'s cheek",
+  "prerequisites": [
+    {
+      "logic": {
+        "condition_ref": "intimacy:target-is-actors-closeness-partner"
+      },
+      "failure_message": "You can only do that with the person you are currently close to."
+    }
+  ]
+}

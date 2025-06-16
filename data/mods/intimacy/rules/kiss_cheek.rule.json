@@ -1,0 +1,54 @@
+{
+  "$schema": "http://example.com/schemas/rule.schema.json",
+  "rule_id": "handle_kiss_cheek",
+  "comment": "Handles the 'intimacy:kiss_cheek' action. Dispatches descriptive text and ends the turn.",
+  "event_type": "core:attempt_action",
+  "condition": { "condition_ref": "intimacy:event-is-action-kiss-cheek" },
+  "actions": [
+    {
+      "type": "GET_NAME",
+      "parameters": { "entity_ref": "actor", "result_variable": "actorName" }
+    },
+    {
+      "type": "GET_NAME",
+      "parameters": { "entity_ref": "target", "result_variable": "targetName" }
+    },
+    {
+      "type": "QUERY_COMPONENT",
+      "parameters": {
+        "entity_ref": "actor",
+        "component_type": "core:position",
+        "result_variable": "actorPosition"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "logMessage",
+        "value": "{context.actorName} leans in to kiss {context.targetName}'s cheek softly."
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "perceptionType",
+        "value": "action_target_general"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "locationId",
+        "value": "{context.actorPosition.locationId}"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "parameters": {
+        "variable_name": "targetId",
+        "value": "{event.payload.targetId}"
+      }
+    },
+    { "macro": "core:logSuccessAndEndTurn" }
+  ]
+}
