@@ -19,7 +19,8 @@
           "timestamp": "{context.nowIso}",
           "perceptionType": "{context.perceptionType}",
           "actorId": "{event.payload.actorId}",
-          "targetId": "{context.targetId}"
+          "targetId": "{context.targetId}",
+          "involvedEntities": []
         }
       }
     },

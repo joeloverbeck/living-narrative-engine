@@ -60,4 +60,16 @@ describe("Macro Definition: 'core:logSuccessAndEndTurn'", () => {
 
     expect(isValid).toBe(true);
   });
+
+  test('perceptible_event payload includes involvedEntities array', () => {
+    const dispatchAction = macroData.actions.find(
+      (a) =>
+        a.type === 'DISPATCH_EVENT' &&
+        a.parameters?.eventType === 'core:perceptible_event'
+    );
+    expect(dispatchAction).toBeDefined();
+    expect(
+      Array.isArray(dispatchAction.parameters.payload.involvedEntities)
+    ).toBe(true);
+  });
 });
