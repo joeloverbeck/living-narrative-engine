@@ -37,6 +37,7 @@ jest.mock('../../src/modding/modLoadOrderResolver.js', () => ({
 /** @typedef {import('../../src/loaders/entityLoader.js').default} EntityLoader */
 /** @typedef {import('../../../interfaces/manifestItems.js').ModManifest} ModManifest */
 /** @typedef {import('../../../services/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
+/** @typedef {import('../../src/loaders/conditionLoader.js').default} ConditionLoader */
 
 describe('WorldLoader Integration Test Suite - Performance Timing Logs (Sub-Ticket 9)', () => {
   /** @type {WorldLoader} */
@@ -51,6 +52,8 @@ describe('WorldLoader Integration Test Suite - Performance Timing Logs (Sub-Tick
   let mockSchemaLoader;
   /** @type {jest.Mocked<ComponentLoader>} */
   let mockComponentLoader;
+  /** @type {jest.Mocked<ConditionLoader>} */
+  let mockConditionLoader;
   /** @type {jest.Mocked<RuleLoader>} */
   let mockRuleLoader;
   /** @type {jest.Mocked<ActionLoader>} */
@@ -171,6 +174,9 @@ describe('WorldLoader Integration Test Suite - Performance Timing Logs (Sub-Tick
     mockComponentLoader = {
       loadItemsForMod: jest.fn().mockResolvedValue(mockLoadResult),
     };
+    mockConditionLoader = {
+      loadItemsForMod: jest.fn().mockResolvedValue(mockLoadResult),
+    };
     mockEventLoader = {
       loadItemsForMod: jest.fn().mockResolvedValue(mockLoadResult),
     };
@@ -188,7 +194,10 @@ describe('WorldLoader Integration Test Suite - Performance Timing Logs (Sub-Tick
       name: 'Core',
       gameVersion: '^1.0.0',
       // Define some content to ensure loaders are called
-      content: { components: ['core_comp.json'] },
+      content: {
+        components: ['core_comp.json'],
+        conditions: ['core_condition.json'],
+      },
     };
     mockFooManifest = {
       id: fooModId,
@@ -196,7 +205,10 @@ describe('WorldLoader Integration Test Suite - Performance Timing Logs (Sub-Tick
       name: 'Foo Mod',
       gameVersion: '^1.0.0',
       // Define some content for foo mod
-      content: { items: ['foo_item.json'] },
+      content: {
+        items: ['foo_item.json'],
+        conditions: ['foo_condition.json'],
+      },
     };
 
     mockManifestMap = new Map();
@@ -227,6 +239,7 @@ describe('WorldLoader Integration Test Suite - Performance Timing Logs (Sub-Tick
       logger: mockLogger,
       schemaLoader: mockSchemaLoader,
       componentLoader: mockComponentLoader,
+      conditionLoader: mockConditionLoader,
       ruleLoader: mockRuleLoader,
       actionLoader: mockActionLoader,
       eventLoader: mockEventLoader,
@@ -297,6 +310,13 @@ describe('WorldLoader Integration Test Suite - Performance Timing Logs (Sub-Tick
       'components',
       'components'
     );
+    expect(mockConditionLoader.loadItemsForMod).toHaveBeenCalledWith(
+      CORE_MOD_ID,
+      mockCoreManifest,
+      'conditions',
+      'conditions',
+      'conditions'
+    );
     // Foo mod has items (handled by EntityLoader)
     expect(mockEntityLoader.loadItemsForMod).toHaveBeenCalledWith(
       fooModId,
@@ -304,6 +324,13 @@ describe('WorldLoader Integration Test Suite - Performance Timing Logs (Sub-Tick
       'items',
       'items',
       'items'
+    );
+    expect(mockConditionLoader.loadItemsForMod).toHaveBeenCalledWith(
+      fooModId,
+      mockFooManifest,
+      'conditions',
+      'conditions',
+      'conditions'
     );
 
     // Ensure the final summary block is also logged
