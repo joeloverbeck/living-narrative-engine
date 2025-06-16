@@ -30,6 +30,16 @@
     animation: actionsFadeOut 250ms ease-in both;
   }
 
+  #action-buttons.actions-fade-in button.action-button {
+    animation: actionButtonIntro 250ms ease-out both;
+    animation-delay: calc(var(--i, 0) * 70ms);
+  }
+
+  #action-buttons.actions-fade-out button.action-button {
+    animation: actionButtonOutro 250ms ease-in both;
+    animation-delay: calc(var(--i, 0) * 70ms);
+  }
+
   @keyframes actionsFadeIn {
     from {
       opacity: 0;
@@ -49,6 +59,28 @@
     to {
       opacity: 0;
       transform: scale(0.96);
+    }
+  }
+
+  @keyframes actionButtonIntro {
+    from {
+      opacity: 0;
+      transform: scale(0.5);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  @keyframes actionButtonOutro {
+    from {
+      opacity: 1;
+      transform: scale(1);
+    }
+    to {
+      opacity: 0;
+      transform: scale(0.5);
     }
   }
 }

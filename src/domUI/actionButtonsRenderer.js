@@ -300,6 +300,13 @@ export class ActionButtonsRenderer extends BaseListDisplayComponent {
         },
         { once: true }
       );
+
+      const buttons = container.querySelectorAll('button.action-button');
+      buttons.forEach((btn, idx) => {
+        if (btn?.style?.setProperty) {
+          btn.style.setProperty('--i', idx.toString());
+        }
+      });
     }
 
     const childCount = container.querySelectorAll(
