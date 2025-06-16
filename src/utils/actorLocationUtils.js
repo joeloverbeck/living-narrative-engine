@@ -8,7 +8,10 @@
 
 import { POSITION_COMPONENT_ID } from '../constants/componentIds.js';
 import { isNonBlankString } from './textUtils.js';
-import { getComponentFromManager } from './componentAccessUtils.js';
+import {
+  getComponentFromManager,
+  resolveEntityInstance,
+} from './componentAccessUtils.js';
 
 /**
  * Retrieves the current location for the given actor entity.
@@ -28,10 +31,7 @@ export function getActorLocation(entityId, entityManager) {
     entityManager
   );
   if (pos && isNonBlankString(pos.locationId)) {
-    const locationEntity =
-      typeof entityManager?.getEntityInstance === 'function'
-        ? entityManager.getEntityInstance(pos.locationId)
-        : null;
+    const locationEntity = resolveEntityInstance(pos.locationId, entityManager);
     return locationEntity ?? pos.locationId;
   }
   return null;

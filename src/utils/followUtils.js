@@ -9,6 +9,7 @@
 
 import { FOLLOWING_COMPONENT_ID } from '../constants/componentIds.js';
 import { isValidEntityManager } from './entityValidationUtils.js';
+import { resolveEntityInstance } from './componentAccessUtils.js';
 
 /**
  * @description
@@ -58,7 +59,7 @@ export function wouldCreateCycle(
     }
     visited.add(currentId);
 
-    const currentEntity = entityManager.getEntityInstance(currentId);
+    const currentEntity = resolveEntityInstance(currentId, entityManager);
     if (!currentEntity) {
       // The leader doesn't exist, so the chain is broken. No cycle.
       return false;

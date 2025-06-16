@@ -1,7 +1,8 @@
-import { describe, it, expect } from '@jest/globals';
+import { describe, it, expect, jest } from '@jest/globals';
 import {
   getComponent,
   getComponentFromManager,
+  resolveEntityInstance,
 } from '../../src/utils/componentAccessUtils.js';
 
 class MockEntity {
@@ -87,5 +88,33 @@ describe('getComponentFromManager', () => {
       },
     };
     expect(getComponentFromManager('e1', 'foo', mgr)).toBeNull();
+  });
+});
+
+describe('resolveEntityInstance', () => {
+  it('resolves entity from id with valid manager', () => {
+    const ent = new MockEntity();
+    const mgr = {
+      getEntityInstance: jest.fn().mockReturnValue(ent),
+      getComponentData: jest.fn(),
+    };
+    expect(resolveEntityInstance('e1', mgr)).toBe(ent);
+    expect(mgr.getEntityInstance).toHaveBeenCalledWith('e1');
+  });
+
+  it('returns same entity when passed instance directly', () => {
+    const ent = new MockEntity();
+    expect(resolveEntityInstance(ent, null)).toBe(ent);
+  });
+
+  it('returns null for invalid id or manager', () => {
+    const entMgrInvalid = { getEntityInstance: jest.fn() }; // missing getComponentData
+    expect(resolveEntityInstance('e1', entMgrInvalid)).toBeNull();
+
+    const mgr = {
+      getEntityInstance: jest.fn().mockReturnValue(null),
+      getComponentData: jest.fn(),
+    };
+    expect(resolveEntityInstance('missing', mgr)).toBeNull();
   });
 });

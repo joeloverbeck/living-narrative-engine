@@ -9,7 +9,7 @@ import { getActorLocation } from '../../src/utils/actorLocationUtils.js';
  * @param id
  */
 function createMockEntity(id) {
-  return { id };
+  return { id, getComponentData: jest.fn() };
 }
 
 describe('getActorLocation', () => {
