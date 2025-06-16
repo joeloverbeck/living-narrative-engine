@@ -3,6 +3,7 @@
 import { BaseListDisplayComponent } from './baseListDisplayComponent.js';
 import { PERCEPTION_LOG_COMPONENT_ID } from '../constants/componentIds.js';
 import { TURN_STARTED_ID } from '../constants/eventIds.js';
+import createMessageElement from './helpers/createMessageElement.js';
 
 /**
  * @typedef {import('../interfaces/coreServices.js').ILogger} ILogger
@@ -340,15 +341,14 @@ export class PerceptionLogRenderer extends BaseListDisplayComponent {
         `${this._logPrefix} Error during refreshList in #handleTurnStarted:`,
         error
       );
-      if (this.elements.listContainerElement && this.domElementFactory) {
-        const pError = this.domElementFactory.p(
+      if (this.elements.listContainerElement) {
+        const pError = createMessageElement(
+          this.domElementFactory,
           'error-message',
           'Error updating perception log.'
         );
-        if (pError) {
-          this.elements.listContainerElement.innerHTML = '';
-          this.elements.listContainerElement.appendChild(pError);
-        }
+        this.elements.listContainerElement.innerHTML = '';
+        this.elements.listContainerElement.appendChild(pError);
       }
     });
   }

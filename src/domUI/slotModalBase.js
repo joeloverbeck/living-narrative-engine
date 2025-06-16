@@ -7,6 +7,7 @@
 import { BaseModalRenderer } from './baseModalRenderer.js';
 import { setupRadioListNavigation } from '../utils/listNavigation.js';
 import { DomUtils } from '../utils/domUtils.js';
+import createMessageElement from './helpers/createMessageElement.js';
 
 /**
  * @class SlotModalBase
@@ -218,14 +219,9 @@ export class SlotModalBase extends BaseModalRenderer {
     if (this.currentSlotsDisplayData.length === 0) {
       const emptyMessage = getEmptyMessageFn();
       if (typeof emptyMessage === 'string') {
-        if (this.domElementFactory) {
-          const p =
-            this.domElementFactory.p(undefined, emptyMessage) ||
-            this.documentContext.document.createTextNode(emptyMessage);
-          this.elements.listContainerElement?.appendChild(p);
-        } else if (this.elements.listContainerElement) {
-          this.elements.listContainerElement.textContent = emptyMessage;
-        }
+        this.elements.listContainerElement?.appendChild(
+          createMessageElement(this.domElementFactory, undefined, emptyMessage)
+        );
       } else if (
         emptyMessage instanceof
         this.documentContext.document.defaultView.HTMLElement
