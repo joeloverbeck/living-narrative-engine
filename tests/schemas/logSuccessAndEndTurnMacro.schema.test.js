@@ -15,6 +15,7 @@ import macroSchema from '../../data/schemas/macro.schema.json';
 import commonSchema from '../../data/schemas/common.schema.json';
 import operationSchema from '../../data/schemas/operation.schema.json';
 import jsonLogicSchema from '../../data/schemas/json-logic.schema.json';
+import conditionContainerSchema from '../../data/schemas/condition-container.schema.json';
 
 // Helpers
 // This test assumes a helper function exists at this path that loads all
@@ -40,6 +41,10 @@ describe("Macro Definition: 'core:logSuccessAndEndTurn'", () => {
     ajv.addSchema(
       jsonLogicSchema,
       'http://example.com/schemas/json-logic.schema.json'
+    );
+    ajv.addSchema(
+      conditionContainerSchema,
+      'http://example.com/schemas/condition-container.schema.json'
     );
 
     // The main operation schema references individual schemas for each operation type.
