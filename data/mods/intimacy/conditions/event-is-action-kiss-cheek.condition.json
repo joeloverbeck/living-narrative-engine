@@ -1,0 +1,8 @@
+{
+  "$schema": "http://example.com/schemas/condition.schema.json",
+  "id": "intimacy:event-is-action-kiss-cheek",
+  "description": "Checks if the triggering event is for the 'intimacy:kiss_cheek' action.",
+  "logic": {
+    "==": [{ "var": "event.payload.actionId" }, "intimacy:kiss_cheek"]
+  }
+}
