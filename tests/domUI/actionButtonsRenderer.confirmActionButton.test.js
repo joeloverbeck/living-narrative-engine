@@ -165,6 +165,15 @@ describe('ActionButtonsRenderer', () => {
     actionButtonsContainer = currentDocument.getElementById('action-buttons');
     jest.spyOn(actionButtonsContainer.classList, 'add');
     jest.spyOn(actionButtonsContainer.classList, 'remove');
+    actionButtonsContainer._listeners = {};
+    jest
+      .spyOn(actionButtonsContainer, 'addEventListener')
+      .mockImplementation((event, cb) => {
+        if (!actionButtonsContainer._listeners[event]) {
+          actionButtonsContainer._listeners[event] = [];
+        }
+        actionButtonsContainer._listeners[event].push(cb);
+      });
 
     globalMockSendButton = currentDocument.getElementById(
       'player-confirm-turn-button'
@@ -276,6 +285,18 @@ describe('ActionButtonsRenderer', () => {
       expect(actionButtonsContainer.classList.add).toHaveBeenCalledWith(
         'actions-fade-out'
       );
+
+      // Simulate animation end to trigger cleanup logic
+      const animationCallbacks =
+        actionButtonsContainer._listeners['animationend'] || [];
+      for (const cb of animationCallbacks) {
+        cb();
+      }
+
+      expect(actionButtonsContainer.classList.add).toHaveBeenCalledWith(
+        'actions-disabled'
+      );
+      expect(actionButtonsContainer.children.length).toBe(0);
     });
 
     it('should dispatch event with speech: null if speech input is empty', async () => {

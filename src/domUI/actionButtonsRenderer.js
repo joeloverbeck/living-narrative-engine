@@ -65,6 +65,7 @@ export class ActionButtonsRenderer extends BaseListDisplayComponent {
 
   static FADE_IN_CLASS = 'actions-fade-in';
   static FADE_OUT_CLASS = 'actions-fade-out';
+  static DISABLED_CLASS = 'actions-disabled';
 
   /** @type {ActionComposite | null} */
   selectedAction = null;
@@ -289,6 +290,7 @@ export class ActionButtonsRenderer extends BaseListDisplayComponent {
     if (this.#isDisposed) return;
 
     if (container) {
+      container.classList.remove(ActionButtonsRenderer.DISABLED_CLASS);
       container.classList.remove(ActionButtonsRenderer.FADE_OUT_CLASS);
       container.classList.add(ActionButtonsRenderer.FADE_IN_CLASS);
       container.addEventListener(
@@ -483,17 +485,23 @@ export class ActionButtonsRenderer extends BaseListDisplayComponent {
             selectedButton.classList.remove('selected');
           }
 
-          // 2. Play fade-out animation
+          // 2. Play fade-out animation then clear actions and disable
           container.classList.remove(ActionButtonsRenderer.FADE_IN_CLASS);
           container.classList.add(ActionButtonsRenderer.FADE_OUT_CLASS);
           container.addEventListener(
             'animationend',
             () => {
               container.classList.remove(ActionButtonsRenderer.FADE_OUT_CLASS);
+              while (container.firstChild) {
+                container.removeChild(container.firstChild);
+              }
+              container.classList.add(ActionButtonsRenderer.DISABLED_CLASS);
             },
             { once: true }
           );
         }
+
+        this.availableActions = [];
 
         // 3. Clear internal state
         this.selectedAction = null;
