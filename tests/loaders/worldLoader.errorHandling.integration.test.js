@@ -58,6 +58,8 @@ describe('WorldLoader Integration Test Suite - Error Handling (TEST-LOADER-7.4)'
   let mockComponentLoader;
   /** @type {jest.Mocked<RuleLoader>} */
   let mockRuleLoader;
+  /** @type {jest.Mocked<import('../../src/loaders/conditionLoader.js').default>} */
+  let mockConditionLoader;
   /** @type {jest.Mocked<ActionLoader>} */
   let mockActionLoader;
   /** @type {jest.Mocked<EventLoader>} */
@@ -190,6 +192,7 @@ describe('WorldLoader Integration Test Suite - Error Handling (TEST-LOADER-7.4)'
     mockComponentLoader = { loadItemsForMod: jest.fn() }; // This will throw for badMod
     mockEventLoader = { loadItemsForMod: jest.fn() };
     mockRuleLoader = { loadItemsForMod: jest.fn() };
+    mockConditionLoader = { loadItemsForMod: jest.fn() };
     mockEntityLoader = { loadItemsForMod: jest.fn() };
 
     mockValidatedEventDispatcher = {
@@ -230,6 +233,7 @@ describe('WorldLoader Integration Test Suite - Error Handling (TEST-LOADER-7.4)'
         'schema:components',
         'schema:mod-manifest',
         'schema:entities',
+        'schema:conditions',
         'schema:actions', // <-- WAS MISSING
         'schema:events', // <-- WAS MISSING
         'schema:rules', // <-- WAS MISSING
@@ -319,6 +323,12 @@ describe('WorldLoader Integration Test Suite - Error Handling (TEST-LOADER-7.4)'
       }
     );
 
+    mockConditionLoader.loadItemsForMod.mockResolvedValue({
+      count: 0,
+      overrides: 0,
+      errors: 0,
+    });
+
     // Other loaders are mocked but won't be called based on manifests
     mockEventLoader.loadItemsForMod.mockResolvedValue({
       count: 0,
@@ -337,6 +347,7 @@ describe('WorldLoader Integration Test Suite - Error Handling (TEST-LOADER-7.4)'
       logger: mockLogger,
       schemaLoader: mockSchemaLoader,
       componentLoader: mockComponentLoader,
+      conditionLoader: mockConditionLoader,
       ruleLoader: mockRuleLoader,
       actionLoader: mockActionLoader,
       eventLoader: mockEventLoader,
@@ -437,24 +448,23 @@ describe('WorldLoader Integration Test Suite - Error Handling (TEST-LOADER-7.4)'
     );
     expect(summaryStart).toBeGreaterThan(-1);
     const summaryLines = infoCalls.slice(summaryStart).map((call) => call[0]);
-    expect(summaryLines).toEqual(
-      expect.arrayContaining([
-        expect.stringContaining(
-          `WorldLoader Load Summary (World: '${worldName}')`
-        ),
-        expect.stringContaining(
-          `Requested Mods (raw): [${CORE_MOD_ID}, ${badModId}]`
-        ),
-        expect.stringContaining(
-          `Final Load Order    : [${CORE_MOD_ID}, ${badModId}]`
-        ),
-        expect.stringContaining(`Content Loading Summary (Totals):`),
-        expect.stringMatching(/actions\s+: C:1, O:0, E:0/),
-        expect.stringMatching(/components\s+: C:0, O:0, E:1/),
-        expect.stringMatching(/rules\s+: C:1, O:0, E:0/),
-        expect.stringMatching(/TOTAL\s+: C:2, O:0, E:1/),
-        expect.stringContaining('———————————————————————————————————————————'),
-      ])
+    const summaryText = summaryLines.join('\n');
+    expect(summaryText).toContain(
+      `WorldLoader Load Summary (World: '${worldName}')`
+    );
+    expect(summaryText).toContain(
+      `Requested Mods (raw): [${CORE_MOD_ID}, ${badModId}]`
+    );
+    expect(summaryText).toMatch(
+      new RegExp(`Final Load Order\\s+: \\[${CORE_MOD_ID}, ${badModId}\\]`)
+    );
+    expect(summaryText).toContain('Content Loading Summary (Totals):');
+    expect(summaryText).toMatch(/actions\s+: C:1, O:0, E:0/);
+    expect(summaryText).toMatch(/components\s+: C:0, O:0, E:1/);
+    expect(summaryText).toMatch(/rules\s+: C:1, O:0, E:0/);
+    expect(summaryText).toMatch(/TOTAL\s+: C:2, O:0, E:1/);
+    expect(summaryText).toContain(
+      '———————————————————————————————————————————'
     );
     expect(summaryLines.some((line) => /events\s+:/.test(line))).toBe(false); // Ensure others are not present
 
