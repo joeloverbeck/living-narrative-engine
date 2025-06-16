@@ -5,7 +5,7 @@
   "name": "Get Close",
   "description": "Initiate physical and emotional closeness with another character, locking you both in place as you focus on each other.",
   "target_domain": "environment",
-  "template": "approach {target}",
+  "template": "get close to {target}",
   "prerequisites": [
     {
       "logic": {

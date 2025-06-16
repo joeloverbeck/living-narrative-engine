@@ -14,6 +14,7 @@
     "actions": [
       "adjust_clothing.action.json",
       "get_close.action.json",
+      "kiss_cheek.action.json",
       "step_back.action.json",
       "thumb_wipe_cheek.action.json"
     ],
@@ -21,6 +22,7 @@
       "adjust_clothing.rule.json",
       "get_close.rule.json",
       "intimacy_show_onlookers.rule.json",
+      "kiss_cheek.rule.json",
       "step_back.rule.json",
       "thumb_wipe_cheek.rule.json"
     ],
@@ -31,6 +33,7 @@
       "actor-is-in-closeness.condition.json",
       "event-is-action-adjust-clothing.condition.json",
       "event-is-action-get-close.condition.json",
+      "event-is-action-kiss-cheek.condition.json",
       "event-is-action-step-back.condition.json",
       "event-is-action-thumb-wipe-cheek.condition.json",
       "target-is-actors-closeness-partner.condition.json",
