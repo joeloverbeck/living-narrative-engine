@@ -60,8 +60,6 @@ describe('WorldLoader Integration Test Suite - EntityLoader Multi-Key Handling (
   let mockActionLoader;
   /** @type {jest.Mocked<EventLoader>} */
   let mockEventLoader;
-  /** @type {jest.Mocked<import('../../src/loaders/conditionLoader.js').default>} */
-  let mockConditionLoader;
   /** @type {jest.Mocked<EntityLoader>} */
   let mockEntityLoader; // The primary focus of this test
   /** @type {jest.Mocked<ISchemaValidator>} */
@@ -212,9 +210,6 @@ describe('WorldLoader Integration Test Suite - EntityLoader Multi-Key Handling (
       loadItemsForMod: jest.fn().mockResolvedValue(mockLoadResult),
     };
     mockEventLoader = {
-      loadItemsForMod: jest.fn().mockResolvedValue(mockLoadResult),
-    };
-    mockConditionLoader = {
       loadItemsForMod: jest.fn().mockResolvedValue(mockLoadResult),
     };
     mockRuleLoader = {
