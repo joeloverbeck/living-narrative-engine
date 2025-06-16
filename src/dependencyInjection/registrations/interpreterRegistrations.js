@@ -44,6 +44,7 @@ import IfCoLocatedHandler from '../../logic/operationHandlers/ifCoLocatedHandler
 import ModifyContextArrayHandler from '../../logic/operationHandlers/modifyContextArrayHandler.js';
 import AutoMoveFollowersHandler from '../../logic/operationHandlers/autoMoveFollowersHandler.js';
 import MergeClosenessCircleHandler from '../../logic/operationHandlers/mergeClosenessCircleHandler.js';
+import RemoveFromClosenessCircleHandler from '../../logic/operationHandlers/removeFromClosenessCircleHandler.js';
 
 /**
  * Registers all interpreter-layer services in the DI container.
@@ -334,6 +335,16 @@ export function registerInterpreters(container) {
     [
       tokens.MergeClosenessCircleHandler,
       MergeClosenessCircleHandler,
+      (c, Handler) =>
+        new Handler({
+          logger: c.resolve(tokens.ILogger),
+          entityManager: c.resolve(tokens.IEntityManager),
+          safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+        }),
+    ],
+    [
+      tokens.RemoveFromClosenessCircleHandler,
+      RemoveFromClosenessCircleHandler,
       (c, Handler) =>
         new Handler({
           logger: c.resolve(tokens.ILogger),
