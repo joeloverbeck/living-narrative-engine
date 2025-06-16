@@ -57,6 +57,8 @@ describe('WorldLoader Integration Test Suite - Mod Overrides and Load Order (Sub
   let mockActionLoader;
   /** @type {jest.Mocked<EventLoader>} */
   let mockEventLoader;
+  /** @type {jest.Mocked<import('../../src/loaders/conditionLoader.js').default>} */
+  let mockConditionLoader;
   /** @type {jest.Mocked<EntityLoader>} */
   let mockEntityLoader;
   /** @type {jest.Mocked<ISchemaValidator>} */
@@ -226,6 +228,11 @@ describe('WorldLoader Integration Test Suite - Mod Overrides and Load Order (Sub
         .fn()
         .mockResolvedValue({ count: 0, overrides: 0, errors: 0 }),
     };
+    mockConditionLoader = {
+      loadItemsForMod: jest
+        .fn()
+        .mockResolvedValue({ count: 0, overrides: 0, errors: 0 }),
+    };
     mockRuleLoader = {
       loadItemsForMod: jest
         .fn()
@@ -278,6 +285,7 @@ describe('WorldLoader Integration Test Suite - Mod Overrides and Load Order (Sub
         'schema:actions',
         'schema:events',
         'schema:rules',
+        'schema:conditions',
       ];
       return essentials.includes(schemaId);
     });
@@ -362,6 +370,7 @@ describe('WorldLoader Integration Test Suite - Mod Overrides and Load Order (Sub
       logger: mockLogger,
       schemaLoader: mockSchemaLoader,
       componentLoader: mockComponentLoader,
+      conditionLoader: mockConditionLoader,
       ruleLoader: mockRuleLoader,
       actionLoader: mockActionLoader,
       eventLoader: mockEventLoader,
