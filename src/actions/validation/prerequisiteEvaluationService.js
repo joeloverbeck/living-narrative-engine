@@ -1,6 +1,6 @@
 // src/actions/validation/prerequisiteEvaluationService.js
 
-import { setupService } from '../../utils/serviceInitializer.js';
+import { setupService } from '../../utils/serviceInitializerUtils.js';
 
 /* type-only imports */
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */

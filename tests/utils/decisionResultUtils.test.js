@@ -1,5 +1,5 @@
 import { describe, test, expect } from '@jest/globals';
-import { buildDecisionResult } from '../../src/utils/decisionResult.js';
+import { buildDecisionResult } from '../../src/utils/decisionResultUtils.js';
 
 describe('buildDecisionResult utility', () => {
   test('defaults all extractedData fields to null when meta is empty', () => {

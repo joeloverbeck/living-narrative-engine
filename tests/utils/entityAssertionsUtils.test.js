@@ -1,5 +1,5 @@
 import { describe, test, expect, jest } from '@jest/globals';
-import { assertValidEntity } from '../../src/utils/entityAssertions.js';
+import { assertValidEntity } from '../../src/utils/entityAssertionsUtils.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../src/constants/eventIds.js';
 
 describe('assertValidEntity', () => {

@@ -12,8 +12,8 @@ import {
   SYSTEM_ERROR_OCCURRED_ID,
 } from '../../constants/eventIds.js';
 
-import { assertParamsObject } from '../../utils/handlerUtils';
-import { safeDispatchError } from '../../utils/safeDispatchError.js';
+import { assertParamsObject } from '../../utils/handlerUtils/indexUtils.js';
+import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 
 /**
  * Parameters for {@link EndTurnHandler#execute}.

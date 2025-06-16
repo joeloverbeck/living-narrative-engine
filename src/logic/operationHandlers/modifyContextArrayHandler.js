@@ -10,7 +10,7 @@
 import { resolvePath } from '../../utils/objectUtils.js';
 import { setContextValue } from '../../utils/contextVariableUtils.js';
 import { cloneDeep } from 'lodash';
-import { assertParamsObject } from '../../utils/handlerUtils';
+import { assertParamsObject } from '../../utils/handlerUtils/indexUtils.js';
 
 /**
  * Safely sets a value on a nested object using a dot-notation path.

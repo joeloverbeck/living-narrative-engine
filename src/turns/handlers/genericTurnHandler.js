@@ -6,7 +6,7 @@
 
 import { BaseTurnHandler } from './baseTurnHandler.js';
 import { AwaitTurnEndState } from '../valueObjects/awaitTurnEndState.js';
-import { assertValidEntity } from '../../utils/entityAssertions.js';
+import { assertValidEntity } from '../../utils/entityAssertionsUtils.js';
 
 /** @typedef {import('../../entities/entity.js').default} Entity */
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */

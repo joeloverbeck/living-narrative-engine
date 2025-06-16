@@ -1,5 +1,5 @@
 // src/utils/validationUtils.js
-import { safeDispatchError } from './safeDispatchError.js';
+import { safeDispatchError } from './safeDispatchErrorUtils.js';
 /**
  * Validates a dependency instance, checking for its existence and, optionally,
  * required methods or if it's expected to be a function.

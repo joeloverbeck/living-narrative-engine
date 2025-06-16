@@ -15,7 +15,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import { cloneDeep } from 'lodash';
 import Entity from './entity.js';
-import MapManager from '../utils/mapManager.js';
+import MapManager from '../utils/mapManagerUtils.js';
 import {
   ACTOR_COMPONENT_ID,
   POSITION_COMPONENT_ID,

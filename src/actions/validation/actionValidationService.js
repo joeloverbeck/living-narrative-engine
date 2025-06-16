@@ -11,7 +11,7 @@
 
 import { ActionTargetContext } from '../../models/actionTargetContext.js';
 import { PrerequisiteEvaluationService } from './prerequisiteEvaluationService.js';
-import { setupService } from '../../utils/serviceInitializer.js';
+import { setupService } from '../../utils/serviceInitializerUtils.js';
 // --- Refactor-AVS-3.4: Remove dependency ---
 // REMOVED: import { ActionValidationContextBuilder } from './actionValidationContextBuilder.js';
 // --- End Refactor-AVS-3.4 ---

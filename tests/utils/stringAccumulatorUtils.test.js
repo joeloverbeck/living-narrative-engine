@@ -1,6 +1,6 @@
 // tests/utils/stringAccumulator.test.js
 
-import { StringAccumulator } from '../../src/utils/stringAccumulator.js';
+import { StringAccumulator } from '../../src/utils/stringAccumulatorUtils.js';
 import { describe, test, expect } from '@jest/globals';
 
 describe('StringAccumulator', () => {

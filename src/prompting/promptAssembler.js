@@ -1,10 +1,10 @@
 // src/prompting/promptAssembler.js
 
-import { StringAccumulator } from '../utils/stringAccumulator.js';
+import { StringAccumulator } from '../utils/stringAccumulatorUtils.js';
 
 /**
  * @typedef {import('../interfaces/IPromptElementAssembler.js').IPromptElementAssembler} IPromptElementAssembler
- * @typedef {import('../utils/placeholderResolver.js').PlaceholderResolver} PlaceholderResolver
+ * @typedef {import('../utils/placeholderResolverUtils.js').PlaceholderResolver} PlaceholderResolver
  */
 
 /**

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
-import { validateAgainstSchema } from '../../src/utils/schemaValidation.js';
+import { validateAgainstSchema } from '../../src/utils/schemaValidationUtils.js';
 import { createMockLogger } from '../testUtils.js';
 
 /** @typedef {import('../../src/interfaces/coreServices.js').ValidationResult} ValidationResult */

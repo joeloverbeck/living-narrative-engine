@@ -8,7 +8,7 @@ import {
   beforeEach,
   afterEach,
 } from '@jest/globals';
-import { PlaceholderResolver } from '../../src/utils/placeholderResolver.js'; // Adjust path as needed
+import { PlaceholderResolver } from '../../src/utils/placeholderResolverUtils.js'; // Adjust path as needed
 import { createMockLogger } from '../testUtils.js'; // Adjust path as needed (assuming testUtils.js from previous adjustment)
 
 describe('PlaceholderResolver', () => {

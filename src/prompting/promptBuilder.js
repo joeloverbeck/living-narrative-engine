@@ -13,7 +13,7 @@
 
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../llms/llmConfigService.js').LLMConfigService} LLMConfigService */
-/** @typedef {import('../utils/placeholderResolver.js').PlaceholderResolver} PlaceholderResolver */
+/** @typedef {import('../utils/placeholderResolverUtils.js').PlaceholderResolver} PlaceholderResolver */
 /** @typedef {import('../interfaces/IPromptBuilder.js').IPromptBuilder} IPromptBuilder */
 /** @typedef {import('../prompting/assemblerRegistry.js').AssemblerRegistry} AssemblerRegistry */
 /** @typedef {import('../prompting/elementConditionEvaluator.js')} ConditionEvaluatorModule */

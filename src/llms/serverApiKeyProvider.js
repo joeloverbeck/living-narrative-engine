@@ -7,7 +7,7 @@ import {
   IFileSystemReader,
   IEnvironmentVariableReader,
 } from '../../llm-proxy-server/src/interfaces/IServerUtils.js';
-import { safeDispatchError } from '../utils/safeDispatchError.js';
+import { safeDispatchError } from '../utils/safeDispatchErrorUtils.js';
 
 /**
  * @typedef {import('./environmentContext.js').EnvironmentContext} EnvironmentContext

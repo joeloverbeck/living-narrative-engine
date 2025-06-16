@@ -25,8 +25,10 @@ function setup(
   jest.resetModules();
   const setupService = jest.fn(() => mockLogger);
   const baseInitLogger = jest.fn(() => mockLogger);
-  jest.doMock('../../src/utils/serviceInitializer.js', () => {
-    const actual = jest.requireActual('../../src/utils/serviceInitializer.js');
+  jest.doMock('../../src/utils/serviceInitializerUtils.js', () => {
+    const actual = jest.requireActual(
+      '../../src/utils/serviceInitializerUtils.js'
+    );
     return { ...actual, setupService };
   });
   jest.doMock('../../src/utils/loggerUtils.js', () => {
@@ -49,7 +51,7 @@ function setup(
     );
   }
   jest.dontMock('../../src/utils/loggerUtils.js');
-  jest.dontMock('../../src/utils/serviceInitializer.js');
+  jest.dontMock('../../src/utils/serviceInitializerUtils.js');
 }
 
 describe('initLogger usage in constructors', () => {
@@ -80,9 +82,9 @@ describe('initLogger usage in constructors', () => {
   it('createJsonLogicContext uses initLogger', () => {
     jest.resetModules();
     const setupService = jest.fn(() => mockLogger);
-    jest.doMock('../../src/utils/serviceInitializer.js', () => {
+    jest.doMock('../../src/utils/serviceInitializerUtils.js', () => {
       const actual = jest.requireActual(
-        '../../src/utils/serviceInitializer.js'
+        '../../src/utils/serviceInitializerUtils.js'
       );
       return { ...actual, setupService };
     });
@@ -109,15 +111,15 @@ describe('initLogger usage in constructors', () => {
     expect(call[0]).toBe('createJsonLogicContext');
     expect(call[1]).toBe(mockLogger);
     jest.dontMock('../../src/utils/loggerUtils.js');
-    jest.dontMock('../../src/utils/serviceInitializer.js');
+    jest.dontMock('../../src/utils/serviceInitializerUtils.js');
   });
 
   it('AddComponentHandler uses initHandlerLogger', () => {
     jest.resetModules();
     const initHandlerLogger = jest.fn(() => mockLogger);
-    jest.doMock('../../src/utils/handlerUtils/service.js', () => {
+    jest.doMock('../../src/utils/handlerUtils/serviceUtils.js', () => {
       const actual = jest.requireActual(
-        '../../src/utils/handlerUtils/service.js'
+        '../../src/utils/handlerUtils/serviceUtils.js'
       );
       return { ...actual, initHandlerLogger };
     });
@@ -132,6 +134,6 @@ describe('initLogger usage in constructors', () => {
       'AddComponentHandler',
       mockLogger
     );
-    jest.dontMock('../../src/utils/handlerUtils/service.js');
+    jest.dontMock('../../src/utils/handlerUtils/serviceUtils.js');
   });
 });

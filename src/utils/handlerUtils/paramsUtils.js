@@ -1,4 +1,4 @@
-// src/utils/handlerUtils/params.js
+// src/utils/handlerUtils/paramsUtils.js
 
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../constants/eventIds.js';
 

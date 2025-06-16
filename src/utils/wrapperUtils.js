@@ -7,7 +7,7 @@
  * Resolves the prefix and suffix strings using the provided resolver and context.
  *
  * @param {{prefix?: string, suffix?: string}} wrappers - Raw prefix/suffix.
- * @param {import('./placeholderResolver.js').PlaceholderResolver} resolver - Placeholder resolver.
+ * @param {import('./placeholderResolverUtils.js').PlaceholderResolver} resolver - Placeholder resolver.
  * @param {object} ctx - Context for resolution.
  * @returns {{ prefix: string, suffix: string }} Resolved prefix & suffix.
  */

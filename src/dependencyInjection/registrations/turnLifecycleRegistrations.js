@@ -24,7 +24,7 @@ import {
 } from '../../constants/componentIds.js';
 import { HumanDecisionProvider } from '../../turns/providers/humanDecisionProvider.js';
 import { TurnContextBuilder } from '../../turns/builders/turnContextBuilder.js';
-import { assertValidEntity } from '../../utils/entityAssertions.js';
+import { assertValidEntity } from '../../utils/entityAssertionsUtils.js';
 import { registerGenericStrategy } from './registerGenericStrategy.js';
 
 /**

@@ -1,5 +1,5 @@
 import { describe, it, expect, jest } from '@jest/globals';
-import { safeDispatchError } from '../../src/utils/safeDispatchError.js';
+import { safeDispatchError } from '../../src/utils/safeDispatchErrorUtils.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../src/constants/eventIds.js';
 
 describe('safeDispatchError', () => {

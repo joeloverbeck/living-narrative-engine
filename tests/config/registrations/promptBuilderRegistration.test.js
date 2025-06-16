@@ -2,7 +2,7 @@
 // --- JSDoc Imports for Type Hinting ---
 /** @typedef {import('../../../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../../../services/llmConfigService.js').LLMConfigService} LLMConfigService_Concrete */
-/** @typedef {import('../../../../utils/placeholderResolver.js').PlaceholderResolver} PlaceholderResolver_Concrete */
+/** @typedef {import('../../../../utils/placeholderResolverUtils.js').PlaceholderResolver} PlaceholderResolver_Concrete */
 /** @typedef {import('../../../../services/promptElementAssemblers/standardElementAssembler.js').StandardElementAssembler} StandardElementAssembler_Concrete */
 /** @typedef {import('../../../../services/promptElementAssemblers/perceptionLogAssembler.js').PerceptionLogAssembler} PerceptionLogAssembler_Concrete */
 /** @typedef {import('../../../../services/promptElementAssemblers/thoughtsSectionAssembler.js').default} ThoughtsSectionAssembler_Concrete */
@@ -32,7 +32,7 @@ jest.mock('../../../src/llms/llmConfigService.js', () => ({
     .fn()
     .mockImplementation(() => mockLLMConfigServiceInstance),
 }));
-jest.mock('../../../src/utils/placeholderResolver.js', () => ({
+jest.mock('../../../src/utils/placeholderResolverUtils.js', () => ({
   PlaceholderResolver: jest
     .fn()
     .mockImplementation(() => mockPlaceholderResolverInstance),
@@ -74,7 +74,7 @@ jest.mock('../../../src/prompting/promptBuilder.js', () => ({
 
 // --- Import classes after mocking ---
 import { LLMConfigService } from '../../../src/llms/llmConfigService.js';
-import { PlaceholderResolver } from '../../../src/utils/placeholderResolver.js';
+import { PlaceholderResolver } from '../../../src/utils/placeholderResolverUtils.js';
 import { StandardElementAssembler } from '../../../src/prompting/assembling/standardElementAssembler.js';
 import { PerceptionLogAssembler } from '../../../src/prompting/assembling/perceptionLogAssembler.js';
 import ThoughtsSectionAssembler from '../../../src/prompting/assembling/thoughtsSectionAssembler.js';

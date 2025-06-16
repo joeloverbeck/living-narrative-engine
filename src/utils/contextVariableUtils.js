@@ -1,7 +1,7 @@
 // src/utils/contextVariableUtils.js
 
 import { getPrefixedLogger } from './loggerUtils.js';
-import { safeDispatchError } from './safeDispatchError.js';
+import { safeDispatchError } from './safeDispatchErrorUtils.js';
 import { SafeEventDispatcher } from '../events/safeEventDispatcher.js';
 
 /**

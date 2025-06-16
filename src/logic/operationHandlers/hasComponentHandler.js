@@ -11,10 +11,10 @@
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 /** @typedef {import('./modifyComponentHandler.js').EntityRefObject} EntityRefObject */
 
-import { safeDispatchError } from '../../utils/safeDispatchError.js';
+import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 import { resolveEntityId } from '../../utils/entityRefUtils.js';
 import { setContextValue } from '../../utils/contextVariableUtils.js';
-import { assertParamsObject } from '../../utils/handlerUtils';
+import { assertParamsObject } from '../../utils/handlerUtils/indexUtils.js';
 
 /**
  * Parameters accepted by {@link HasComponentHandler#execute}.

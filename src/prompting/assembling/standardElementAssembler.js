@@ -2,7 +2,7 @@
 import { IPromptElementAssembler } from '../../interfaces/IPromptElementAssembler.js';
 import { snakeToCamel } from '../../utils/textUtils.js';
 import { resolveWrapper } from '../../utils/wrapperUtils.js';
-import { safeDispatchError } from '../../utils/safeDispatchError.js';
+import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 
 /**
  * @class StandardElementAssembler

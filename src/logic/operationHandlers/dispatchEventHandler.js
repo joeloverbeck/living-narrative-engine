@@ -4,7 +4,7 @@
 /** @typedef {import('../defs.js').ExecutionContext} ExecutionContext */ // ** Corrected type for 2nd arg **
 /** @typedef {import('../../events/eventBus.js').default} EventBus */
 /** @typedef {import('../../events/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
-import { assertParamsObject } from '../../utils/handlerUtils';
+import { assertParamsObject } from '../../utils/handlerUtils/indexUtils.js';
 
 // --- Handler Implementation ---
 /**

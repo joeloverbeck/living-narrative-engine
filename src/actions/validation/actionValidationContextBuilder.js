@@ -11,7 +11,7 @@
 
 // --- FIX: Import necessary functions and constants ---
 
-import { setupService } from '../../utils/serviceInitializer.js';
+import { setupService } from '../../utils/serviceInitializerUtils.js';
 import {
   buildActorContext,
   buildDirectionContext,

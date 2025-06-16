@@ -2,7 +2,7 @@
 
 import { CURRENT_ACTOR_COMPONENT_ID } from '../constants/componentIds.js';
 import { CORE_MOD_ID } from '../constants/core.js';
-import { setupService } from '../utils/serviceInitializer.js';
+import { setupService } from '../utils/serviceInitializerUtils.js';
 
 /**
  * @typedef {import('../interfaces/coreServices.js').ILogger} ILogger

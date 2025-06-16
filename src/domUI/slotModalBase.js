@@ -5,7 +5,7 @@
  */
 
 import { BaseModalRenderer } from './baseModalRenderer.js';
-import { setupRadioListNavigation } from '../utils/listNavigation.js';
+import { setupRadioListNavigation } from '../utils/listNavigationUtils.js';
 import { DomUtils } from '../utils/domUtils.js';
 import createMessageElement from './helpers/createMessageElement.js';
 

@@ -1,6 +1,6 @@
 // src/entities/entity.js
 
-import MapManager from '../utils/mapManager.js';
+import MapManager from '../utils/mapManagerUtils.js';
 
 /**
  * Represents a game entity (player, NPC, item, etc.).

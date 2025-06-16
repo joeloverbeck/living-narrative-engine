@@ -2,7 +2,7 @@
 // --- FILE START ---
 
 import { IApiKeyProvider } from './interfaces/IApiKeyProvider.js';
-import { safeDispatchError } from '../utils/safeDispatchError.js';
+import { safeDispatchError } from '../utils/safeDispatchErrorUtils.js';
 
 /**
  * @typedef {import('./environmentContext.js').EnvironmentContext} EnvironmentContext

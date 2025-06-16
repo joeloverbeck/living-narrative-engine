@@ -4,7 +4,7 @@
 // -----------------------------------------------------------------------------
 
 import { resolvePlaceholders } from '../utils/contextUtils.js';
-import { setupService } from '../utils/serviceInitializer.js';
+import { setupService } from '../utils/serviceInitializerUtils.js';
 
 /** @typedef {import('../../data/schemas/operation.schema.json').Operation} Operation */
 /** @typedef {import('./defs.js').ExecutionContext}                               ExecutionContext */

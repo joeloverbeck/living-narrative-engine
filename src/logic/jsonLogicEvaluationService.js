@@ -1,6 +1,6 @@
 // src/logic/jsonLogicEvaluationService.js
 import jsonLogic from 'json-logic-js';
-import { setupService } from '../utils/serviceInitializer.js';
+import { setupService } from '../utils/serviceInitializerUtils.js';
 
 // -----------------------------------------------------------------------------
 // Ensure the alias "not" behaves the same as the built‑in "!" operator.

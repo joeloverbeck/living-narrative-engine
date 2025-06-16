@@ -1,4 +1,4 @@
-// src/utils/safeDispatchError.js
+// src/utils/safeDispatchErrorUtils.js
 
 /**
  * @file Utility to safely dispatch a standardized error event using an

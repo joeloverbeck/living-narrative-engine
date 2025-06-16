@@ -4,7 +4,7 @@
 import { ILLMResponseProcessor } from '../interfaces/ILLMResponseProcessor.js';
 import { parseAndRepairJson } from '../../utils/llmUtils.js';
 import { LLM_TURN_ACTION_RESPONSE_SCHEMA_ID } from '../schemas/llmOutputSchemas.js';
-import { safeDispatchError } from '../../utils/safeDispatchError.js';
+import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 
 /**
  * Custom error for LLM response processing failures.

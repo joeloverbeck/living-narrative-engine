@@ -10,7 +10,7 @@
 
 // <<< ADDED Import: jsonLogic directly >>>
 import jsonLogic from 'json-logic-js';
-import { assertParamsObject } from '../../utils/handlerUtils/params.js';
+import { assertParamsObject } from '../../utils/handlerUtils/paramsUtils.js';
 import { setContextValue } from '../../utils/contextVariableUtils.js';
 
 /**

@@ -1,7 +1,7 @@
 // src/utils/apiUtils.js
 // --- FILE START ---
 import { getPrefixedLogger } from './loggerUtils.js';
-import { safeDispatchError } from './safeDispatchError.js';
+import { safeDispatchError } from './safeDispatchErrorUtils.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../constants/eventIds.js';
 
 const RETRYABLE_HTTP_STATUS_CODES = [408, 429, 500, 502, 503, 504];

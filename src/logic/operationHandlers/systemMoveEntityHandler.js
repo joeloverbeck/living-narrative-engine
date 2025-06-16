@@ -12,9 +12,9 @@
 
 import { resolveEntityId } from '../../utils/entityRefUtils.js';
 
-import { assertParamsObject } from '../../utils/handlerUtils';
+import { assertParamsObject } from '../../utils/handlerUtils/indexUtils.js';
 
-import { safeDispatchError } from '../../utils/safeDispatchError.js';
+import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 
 class SystemMoveEntityHandler {
   /** @type {ILogger} */ #logger;

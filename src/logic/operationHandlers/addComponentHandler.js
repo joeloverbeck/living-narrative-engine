@@ -15,7 +15,7 @@
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../constants/eventIds.js';
 import { resolveEntityId } from '../../utils/entityRefUtils.js';
 import BaseOperationHandler from './baseOperationHandler.js';
-import { assertParamsObject } from '../../utils/handlerUtils/params.js';
+import { assertParamsObject } from '../../utils/handlerUtils/paramsUtils.js';
 
 /**
  * Parameters accepted by {@link AddComponentHandler#execute}.
