@@ -198,6 +198,7 @@ describe('ActionButtonsRenderer', () => {
     const actions = [actionToSubmit];
     let renderer;
     let actionButtonInstance;
+    let updateActionsHandler;
 
     beforeEach(async () => {
       actionButtonInstance = undefined;
@@ -227,7 +228,7 @@ describe('ActionButtonsRenderer', () => {
       if (!subscribeCall || !subscribeCall[1]) {
         throw new Error('Test setup failed: Renderer did not subscribe.');
       }
-      const updateActionsHandler = subscribeCall[1];
+      updateActionsHandler = subscribeCall[1];
 
       await updateActionsHandler({
         type: 'core:update_available_actions',
@@ -297,6 +298,32 @@ describe('ActionButtonsRenderer', () => {
         'actions-disabled'
       );
       expect(actionButtonsContainer.children.length).toBe(0);
+    });
+
+    it('should not disable container if new actions arrive before fade-out ends', async () => {
+      mockVed.dispatch.mockResolvedValue(true);
+
+      await globalMockSendButton.click();
+
+      // New actions for next player before animation end
+      await updateActionsHandler({
+        type: 'core:update_available_actions',
+        payload: { actorId: 'next-player', actions: [actionToSubmit] },
+      });
+
+      const animationCallbacks =
+        actionButtonsContainer._listeners['animationend'] || [];
+      for (const cb of animationCallbacks) {
+        cb();
+      }
+
+      expect(actionButtonsContainer.classList.add).toHaveBeenCalledWith(
+        'actions-fade-out'
+      );
+      expect(actionButtonsContainer.classList.add).not.toHaveBeenCalledWith(
+        'actions-disabled'
+      );
+      expect(actionButtonsContainer.children.length).toBeGreaterThan(0);
     });
 
     it('should dispatch event with speech: null if speech input is empty', async () => {

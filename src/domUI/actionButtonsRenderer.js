@@ -492,10 +492,12 @@ export class ActionButtonsRenderer extends BaseListDisplayComponent {
             'animationend',
             () => {
               container.classList.remove(ActionButtonsRenderer.FADE_OUT_CLASS);
-              while (container.firstChild) {
-                container.removeChild(container.firstChild);
+              if (this.availableActions.length === 0) {
+                while (container.firstChild) {
+                  container.removeChild(container.firstChild);
+                }
+                container.classList.add(ActionButtonsRenderer.DISABLED_CLASS);
               }
-              container.classList.add(ActionButtonsRenderer.DISABLED_CLASS);
             },
             { once: true }
           );
