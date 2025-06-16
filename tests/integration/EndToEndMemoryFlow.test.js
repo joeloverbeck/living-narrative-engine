@@ -82,12 +82,22 @@ describe('End-to-End Short-Term Memory Flow', () => {
     logger = mockLogger();
     character = createNewCharacter('char1');
 
+    const promptService = new PromptStaticContentService({
+      logger,
+      promptTextLoader: {
+        loadPromptText: jest.fn().mockResolvedValue({
+          coreTaskDescriptionText: 'c',
+          characterPortrayalGuidelinesTemplate: 'g {{name}}',
+          nc21ContentPolicyText: 'p',
+          finalLlmInstructionText: 'f',
+        }),
+      },
+    });
+    await promptService.initialize();
+
     provider = new AIPromptContentProvider({
       logger,
-      promptStaticContentService: new PromptStaticContentService({
-        logger,
-        promptTextLoader: { loadPromptText: jest.fn() },
-      }),
+      promptStaticContentService: promptService,
       perceptionLogFormatter: { format: jest.fn().mockReturnValue([]) },
       gameStateValidationService: {
         validate: jest
