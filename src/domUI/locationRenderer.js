@@ -27,7 +27,7 @@ import {
  * @typedef {object} CoreTurnStartedPayload
  * @property {import('../interfaces/CommonTypes').NamespacedId} entityId - ID of the entity starting the turn.
  * @property {'player'|'ai'} entityType - Whether the actor is player-controlled or AI.
-/**
+ /**
  * Represents a character to be displayed.
  * @typedef {import('../entities/entityDisplayDataProvider.js').CharacterDisplayInfo} CharacterDisplayData
  */
@@ -66,15 +66,15 @@ export class LocationRenderer extends BoundDomRendererBase {
   _EVENT_TYPE_SUBSCRIBED = 'core:turn_started';
 
   constructor({
-    logger,
-    documentContext,
-    safeEventDispatcher,
-    domElementFactory,
-    entityManager,
-    entityDisplayDataProvider,
-    dataRegistry,
-    containerElement,
-  }) {
+                logger,
+                documentContext,
+                safeEventDispatcher,
+                domElementFactory,
+                entityManager,
+                entityDisplayDataProvider,
+                dataRegistry,
+                containerElement,
+              }) {
     const elementsConfig = {
       nameDisplay: { selector: '#location-name-display', required: true },
       // NEW: Add location portrait elements
@@ -147,7 +147,7 @@ export class LocationRenderer extends BoundDomRendererBase {
       this.dataRegistry = dataRegistry;
     } else {
       this.logger.warn(
-        `${this._logPrefix} 'dataRegistry' dependency is missing.`
+        `${this._logPrefix} 'dataRegistry' dependency is missing.`,
       );
     }
 
@@ -161,7 +161,7 @@ export class LocationRenderer extends BoundDomRendererBase {
     this.baseContainerElement = containerElement;
     this.logger.debug(
       `${this._logPrefix} Attached to base container element:`,
-      this.baseContainerElement
+      this.baseContainerElement,
     );
 
     // Check for new portrait elements after super() and _bindElements() have run
@@ -177,22 +177,22 @@ export class LocationRenderer extends BoundDomRendererBase {
 
     this._subscribe(
       this._EVENT_TYPE_SUBSCRIBED,
-      this.#handleTurnStarted.bind(this)
+      this.#handleTurnStarted.bind(this),
     );
     this.logger.debug(
-      `${this._logPrefix} Subscribed to VED event '${this._EVENT_TYPE_SUBSCRIBED}'.`
+      `${this._logPrefix} Subscribed to VED event '${this._EVENT_TYPE_SUBSCRIBED}'.`,
     );
   }
 
   #handleTurnStarted(event) {
     this.logger.debug(
       `${this._logPrefix} Received '${event.type}' event. Payload:`,
-      event.payload
+      event.payload,
     );
 
     if (!event.payload || !event.payload.entityId) {
       this.logger.warn(
-        `${this._logPrefix} '${event.type}' event is missing entityId. Cannot update location display.`
+        `${this._logPrefix} '${event.type}' event is missing entityId. Cannot update location display.`,
       );
       this.#clearAllDisplaysOnErrorWithMessage('No entity specified for turn.');
       return;
@@ -203,21 +203,21 @@ export class LocationRenderer extends BoundDomRendererBase {
     try {
       const currentLocationInstanceId =
         this.entityDisplayDataProvider.getEntityLocationId(
-          currentActorEntityId
+          currentActorEntityId,
         );
 
       if (!currentLocationInstanceId) {
         this.logger.warn(
-          `${this._logPrefix} Entity '${currentActorEntityId}' has no valid position or locationId.`
+          `${this._logPrefix} Entity '${currentActorEntityId}' has no valid position or locationId.`,
         );
         this.#clearAllDisplaysOnErrorWithMessage(
-          `Location for ${currentActorEntityId} is unknown.`
+          `Location for ${currentActorEntityId} is unknown.`,
         );
         return;
       }
 
       const locationDetails = this.entityDisplayDataProvider.getLocationDetails(
-        currentLocationInstanceId
+        currentLocationInstanceId,
       );
 
       if (!locationDetails) {
@@ -225,7 +225,7 @@ export class LocationRenderer extends BoundDomRendererBase {
           message: `${this._logPrefix} Location details for ID '${currentLocationInstanceId}' not found.`,
         });
         this.#clearAllDisplaysOnErrorWithMessage(
-          `Location data for '${currentLocationInstanceId}' missing.`
+          `Location data for '${currentLocationInstanceId}' missing.`,
         );
         return;
       }
@@ -233,13 +233,13 @@ export class LocationRenderer extends BoundDomRendererBase {
       // NEW: Fetch location portrait data
       const portraitData =
         this.entityDisplayDataProvider.getLocationPortraitData(
-          currentLocationInstanceId
+          currentLocationInstanceId,
         );
       // portraitData is expected to be { imagePath: string, altText?: string } | null
 
       const charactersInLocation = [];
       const entityIdsInLocation = this.entityManager.getEntitiesInLocation(
-        currentLocationInstanceId
+        currentLocationInstanceId,
       );
 
       for (const entityIdInLoc of entityIdsInLocation) {
@@ -248,19 +248,19 @@ export class LocationRenderer extends BoundDomRendererBase {
         if (entity && entity.hasComponent(ACTOR_COMPONENT_ID)) {
           const characterInfo =
             this.entityDisplayDataProvider.getCharacterDisplayInfo(
-              entityIdInLoc
+              entityIdInLoc,
             );
           if (characterInfo) {
             charactersInLocation.push(characterInfo);
           } else {
             this.logger.warn(
-              `${this._logPrefix} Could not get display info for character '${entityIdInLoc}'.`
+              `${this._logPrefix} Could not get display info for character '${entityIdInLoc}'.`,
             );
           }
         }
       }
       this.logger.debug(
-        `${this._logPrefix} Found ${charactersInLocation.length} other characters.`
+        `${this._logPrefix} Found ${charactersInLocation.length} other characters.`,
       );
 
       const displayPayload = {
@@ -281,7 +281,7 @@ export class LocationRenderer extends BoundDomRendererBase {
         details: { stack: error.stack },
       });
       this.#clearAllDisplaysOnErrorWithMessage(
-        'Error retrieving location details.'
+        'Error retrieving location details.',
       );
     }
   }
@@ -303,12 +303,12 @@ export class LocationRenderer extends BoundDomRendererBase {
         const pError = createMessageElement(
           this.domElementFactory,
           'error-message',
-          text
+          text,
         );
         element.appendChild(pError);
       } else {
         this.logger.warn(
-          `${this._logPrefix} Could not find element this.elements.${key} to clear on error.`
+          `${this._logPrefix} Could not find element this.elements.${key} to clear on error.`,
         );
       }
     }
@@ -323,111 +323,111 @@ export class LocationRenderer extends BoundDomRendererBase {
     }
   }
 
+  /* -----------------------------------------------------------------------
+   *  PRIVATE - render any data list (exits, characters, etc.)
+   * --------------------------------------------------------------------- */
+  /**
+   * Renders a data list.  Heading is optional: we *skip* it for
+   * Exits and Characters because the accordion summary already
+   * names the section.
+   */
   _renderList(
     dataArray,
     targetElement,
     title,
     itemTextProperty,
     emptyText,
-    itemClassName = 'list-item'
+    itemClassName = 'list-item',
   ) {
-    // ... (implementation of _renderList remains largely the same as you provided)
-    // Ensure it correctly uses this.domElementFactory.create for h4
-    // and handles potential null returns from factory methods gracefully.
-
     DomUtils.clearElement(targetElement);
 
-    const titleEl = this.domElementFactory.create('h4', { text: `${title}:` });
-    if (titleEl) {
-      targetElement.appendChild(titleEl);
-    } else {
-      this.logger.warn(
-        `${this._logPrefix} Failed to create title H4 for ${title}.`
-      );
-      targetElement.appendChild(
-        this.documentContext.document.createTextNode(`${title}: `)
-      ); // Fallback
+    /** omit heading for "Exits"/"Characters" — summary tag is enough */
+    const skipHeading = title === 'Exits' || title === 'Characters';
+    if (!skipHeading) {
+      const heading =
+        this.domElementFactory.h4?.(undefined, `${title}:`) ??
+        this.documentContext.document.createTextNode(`${title}:`);
+      targetElement.appendChild(heading);
     }
 
-    if (!dataArray || dataArray.length === 0) {
+    /* empty state */
+    if (!Array.isArray(dataArray) || dataArray.length === 0) {
       targetElement.appendChild(
         createMessageElement(
           this.domElementFactory,
           'empty-list-message',
-          emptyText
-        )
+          emptyText,
+        ),
       );
-    } else {
-      const ul = this.domElementFactory.ul(undefined, 'location-detail-list');
-      if (!ul) {
-        this.safeEventDispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
-          message: `${this._logPrefix} Failed to create UL for ${title}.`,
-        });
-        // Simplified fallback: render as paragraphs directly in targetElement
-        dataArray.forEach((item) => {
-          const text =
-            item && typeof item === 'object' && item[itemTextProperty]
-              ? String(item[itemTextProperty])
-              : '(Invalid item)';
-          targetElement.appendChild(
-            createMessageElement(this.domElementFactory, itemClassName, text)
-          );
-        });
+      return;
+    }
+
+    /* build list */
+    const ul =
+      this.domElementFactory.ul?.(undefined, 'location-detail-list') ??
+      this.documentContext.document.createElement('ul');
+    targetElement.appendChild(ul);
+
+    dataArray.forEach((item) => {
+      const text =
+        item && typeof item === 'object' && item[itemTextProperty]
+          ? String(item[itemTextProperty])
+          : `(Invalid ${itemTextProperty})`;
+
+      const li =
+        this.domElementFactory.li?.(itemClassName) ??
+        this.documentContext.document.createElement('li');
+      ul.appendChild(li);
+
+      // SPECIAL-CASE: Characters (portrait + tooltip) ----------------
+      if (title === 'Characters' && item && typeof item === 'object') {
+        /* portrait */
+        if (item.portraitPath) {
+          const img =
+            this.domElementFactory.img?.(
+              item.portraitPath,
+              `Portrait of ${text}`,
+              'character-portrait',
+            ) ?? this.documentContext.document.createElement('img');
+          if (!img.src) {
+            img.src = item.portraitPath;
+            img.alt = `Portrait of ${text}`;
+            img.className = 'character-portrait';
+          }
+          li.appendChild(img);
+        }
+
+        /* name */
+        const nameSpan =
+          this.domElementFactory.span?.('character-name', text) ??
+          this.documentContext.document.createTextNode(text);
+        li.appendChild(nameSpan);
+
+        /* description → tooltip */
+        if (item.description?.trim()) {
+          const tooltip = this.#createCharacterTooltip(item.description);
+          li.appendChild(tooltip);
+          this._addDomListener(li, 'click', () => li.classList.toggle('tooltip-open'));
+        }
         return;
       }
 
-      dataArray.forEach((item) => {
-        const primaryText =
-          item && typeof item === 'object' && item[itemTextProperty]
-            ? String(item[itemTextProperty])
-            : `(Invalid ${itemTextProperty})`;
-        const li = this.domElementFactory.li(itemClassName);
-        if (!li) {
-          this.logger.warn(
-            `${this._logPrefix} Failed to create LI for ${title}.`
-          );
-          ul.appendChild(
-            createMessageElement(
-              this.domElementFactory,
-              itemClassName,
-              primaryText
-            )
-          );
-          return;
-        }
+      /* generic list item */
+      li.appendChild(this.documentContext.document.createTextNode(text));
+    });
+  }
 
-        const nameSpan = this.domElementFactory.span(undefined, primaryText);
-        if (nameSpan) {
-          li.appendChild(nameSpan);
-        } else {
-          li.appendChild(
-            createMessageElement(this.domElementFactory, undefined, primaryText)
-          );
-        }
+  /* ---------------------------------------------------------------------
+ *  HELPER – builds the hidden tooltip block for character descriptions
+ * ------------------------------------------------------------------- */
+  #createCharacterTooltip(text) {
+    const span =
+      this.domElementFactory.span?.('character-tooltip', text) ??
+      this.documentContext.document.createElement('span');
 
-        if (
-          title === 'Characters' &&
-          item &&
-          typeof item === 'object' &&
-          'description' in item &&
-          typeof item.description === 'string' &&
-          item.description.trim() !== ''
-        ) {
-          const descP = createMessageElement(
-            this.domElementFactory,
-            'character-description',
-            item.description
-          );
-          if (descP instanceof HTMLElement) {
-            li.appendChild(descP);
-          } else if (nameSpan) {
-            li.appendChild(descP);
-          }
-        }
-        ul.appendChild(li);
-      });
-      targetElement.appendChild(ul);
-    }
+    if (!span.textContent) span.textContent = text;
+    span.classList.add('character-tooltip');
+    return span;
   }
 
   render(locationDto) {
@@ -458,21 +458,21 @@ export class LocationRenderer extends BoundDomRendererBase {
 
     if (!locationDto) {
       this.logger.warn(
-        `${this._logPrefix} Received null location DTO. Clearing display.`
+        `${this._logPrefix} Received null location DTO. Clearing display.`,
       );
       this.#clearAllDisplaysOnErrorWithMessage('(No location data to display)');
       return;
     }
 
     this.logger.debug(
-      `${this._logPrefix} Rendering location: "${locationDto.name}".`
+      `${this._logPrefix} Rendering location: "${locationDto.name}".`,
     );
 
     // Name
     DomUtils.clearElement(this.elements.nameDisplay);
     const h3Name = this.domElementFactory.h3(
       undefined,
-      locationDto.name || DEFAULT_LOCATION_NAME
+      locationDto.name || DEFAULT_LOCATION_NAME,
     );
     if (h3Name) {
       this.elements.nameDisplay.appendChild(h3Name);
@@ -488,7 +488,7 @@ export class LocationRenderer extends BoundDomRendererBase {
       this.elements.locationPortraitVisualsElement
     ) {
       this.logger.debug(
-        `${this._logPrefix} Setting location portrait to ${locationDto.portraitPath}`
+        `${this._logPrefix} Setting location portrait to ${locationDto.portraitPath}`,
       );
       this.elements.locationPortraitImageElement.src = locationDto.portraitPath;
       this.elements.locationPortraitImageElement.alt =
@@ -501,7 +501,7 @@ export class LocationRenderer extends BoundDomRendererBase {
       this.elements.locationPortraitImageElement
     ) {
       this.logger.debug(
-        `${this._logPrefix} No portrait path for location. Hiding portrait elements.`
+        `${this._logPrefix} No portrait path for location. Hiding portrait elements.`,
       );
       this.elements.locationPortraitVisualsElement.style.display = 'none';
       this.elements.locationPortraitImageElement.style.display = 'none';
@@ -513,7 +513,7 @@ export class LocationRenderer extends BoundDomRendererBase {
     DomUtils.clearElement(this.elements.descriptionDisplay);
     const pDesc = this.domElementFactory.p(
       undefined,
-      locationDto.description || DEFAULT_LOCATION_DESCRIPTION
+      locationDto.description || DEFAULT_LOCATION_DESCRIPTION,
     );
     if (pDesc) {
       this.elements.descriptionDisplay.appendChild(pDesc);
@@ -528,18 +528,18 @@ export class LocationRenderer extends BoundDomRendererBase {
       this.elements.exitsDisplay,
       'Exits',
       'description',
-      '(None visible)'
+      '(None visible)',
     );
     this._renderList(
       locationDto.characters,
       this.elements.charactersDisplay,
       'Characters',
       'name',
-      '(None else here)'
+      '(None else here)',
     );
 
     this.logger.debug(
-      `${this._logPrefix} Location "${locationDto.name}" display updated.`
+      `${this._logPrefix} Location "${locationDto.name}" display updated.`,
     );
   }
 

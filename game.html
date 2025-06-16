@@ -1,297 +1,306 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Adventure Game Platform - Storyteller's Desk</title>
     <link
-      href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,400;0,700;1,400&family=Open+Sans:wght@400;600;700&family=Roboto+Mono:wght@400;500&display=swap"
-      rel="stylesheet"
+            href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,400;0,700;1,400&family=Open+Sans:wght@400;600;700&family=Roboto+Mono:wght@400;500&display=swap"
+            rel="stylesheet"
     />
-    <link rel="stylesheet" href="css/style.css" />
-  </head>
-  <body>
-    <h1 id="title-element">Adventure Game</h1>
+    <link rel="stylesheet" href="css/style.css"/>
+</head>
+<body>
+<h1 id="title-element">Adventure Game</h1>
 
-    <div id="app-layout-container">
-      <aside id="left-pane" class="panel">
+<div id="app-layout-container">
+    <aside id="left-pane" class="panel">
         <div
-          id="current-turn-actor-panel"
-          class="widget"
-          role="region"
-          aria-labelledby="current-turn-actor-heading"
+                id="current-turn-actor-panel"
+                class="widget"
+                role="region"
+                aria-labelledby="current-turn-actor-heading"
         >
-          <h3 id="current-turn-actor-heading">Current Turn</h3>
-          <div class="actor-visuals">
-            <img
-              id="current-actor-image"
-              src=""
-              alt="Current Actor Portrait"
-              style="display: none"
-            />
-          </div>
-          <p id="current-actor-name" class="actor-name-display">N/A</p>
+            <h3 id="current-turn-actor-heading">Current Turn</h3>
+            <div class="actor-visuals">
+                <img
+                        id="current-actor-image"
+                        src=""
+                        alt="Current Actor Portrait"
+                        style="display: none"
+                />
+            </div>
+            <p id="current-actor-name" class="actor-name-display">N/A</p>
         </div>
         <div
-          id="perception-log-widget"
-          role="region"
-          aria-labelledby="perception-log-heading"
-          aria-live="polite"
+                id="perception-log-widget"
+                role="region"
+                aria-labelledby="perception-log-heading"
+                aria-live="polite"
         >
-          <h3 id="perception-log-heading">Perception Log</h3>
-          <ul id="perception-log-list"></ul>
+            <h3 id="perception-log-heading">Perception Log</h3>
+            <ul id="perception-log-list"></ul>
         </div>
-      </aside>
+    </aside>
 
-      <main
-        id="center-pane"
-        class="panel"
-        role="main"
-        aria-label="Main content area"
-      >
+    <main
+            id="center-pane"
+            class="panel"
+            role="main"
+            aria-label="Main content area"
+    >
         <div id="outputDiv">
-          <ul id="message-list" aria-live="polite"></ul>
-          <div
-            id="processing-indicator"
-            class="processing-indicator"
-            aria-live="polite"
-            aria-label="Processing turn"
-          >
-            <span class="dot"></span><span class="dot"></span
+            <ul id="message-list" aria-live="polite"></ul>
+            <div
+                    id="processing-indicator"
+                    class="processing-indicator"
+                    aria-live="polite"
+                    aria-label="Processing turn"
+            >
+                <span class="dot"></span><span class="dot"></span
             ><span class="dot"></span>
-          </div>
+            </div>
         </div>
         <div
-          id="actions-widget"
-          role="region"
-          aria-labelledby="actions-heading"
+                id="actions-widget"
+                role="region"
+                aria-labelledby="actions-heading"
         >
-          <h3 id="actions-heading">Actions</h3>
-          <div id="action-buttons"></div>
+            <h3 id="actions-heading">Actions</h3>
+            <div id="action-buttons"></div>
         </div>
-      </main>
+    </main>
 
-      <aside id="right-pane" class="panel">
+    <aside id="right-pane" class="panel">
+        <!-- LOCATION INFO -->
         <div
-          id="location-info-container"
-          role="region"
-          aria-labelledby="location-name-display"
-          aria-live="polite"
-          aria-atomic="true"
+                id="location-info-container"
+                role="region"
+                aria-labelledby="location-name-display"
+                aria-live="polite"
+                aria-atomic="true"
         >
-          <h2 id="location-name-display"></h2>
+            <!-- Card 1 · Name + Summary (portrait+description share the same card) -->
+            <section id="location-summary-card" class="location-card non-collapsible">
+                <h2 id="location-name-display"></h2>
 
-          <div id="location-portrait-visuals" class="location-visuals">
-            <img
-              id="location-portrait-image"
-              src=""
-              alt="Location Image"
-              style="display: none"
-            />
-          </div>
-          <p id="location-description-display"></p>
-          <div id="location-exits-display"></div>
-          <div id="location-characters-display"></div>
+                <!-- portrait (hidden if none) -->
+                <div id="location-portrait-visuals" class="location-visuals">
+                    <img
+                            id="location-portrait-image"
+                            src=""
+                            alt="Location Image"
+                            style="display:none"
+                    />
+                    <!-- tooltip will be injected here by JS -->
+                </div>
+
+                <!-- description paragraph (shown only when no portrait) -->
+                <p id="location-description-display"></p>
+            </section>
+
+            <!-- Card 2 · Exits (accordion) -->
+            <details id="location-exits-card" class="location-card" open>
+                <summary>Exits</summary>
+                <div id="location-exits-display"></div>
+            </details>
+
+            <!-- Card 3 · Characters (accordion) -->
+            <details id="location-characters-card" class="location-card" open>
+                <summary>Characters</summary>
+                <div id="location-characters-display"></div>
+            </details>
         </div>
 
-        <div
-          id="game-actions-widget"
-          role="region"
-          aria-labelledby="game-actions-heading"
-        >
-          <h3 id="game-actions-heading">Game Menu</h3>
-          <button type="button" id="open-save-game-button" class="menu-button">
-            Save Game
-          </button>
-          <button type="button" id="open-load-game-button" class="menu-button">
-            Load Game
-          </button>
-          <button type="button" id="change-llm-button" class="menu-button">
-            Change LLM
-          </button>
+        <!-- GAME-ACTIONS widget (unchanged) -->
+        <div id="game-actions-widget" role="region" aria-labelledby="game-actions-heading">
+            <h3 id="game-actions-heading">Game Menu</h3>
+            <button type="button" id="open-save-game-button" class="menu-button">Save Game</button>
+            <button type="button" id="open-load-game-button" class="menu-button">Load Game</button>
+            <button type="button" id="change-llm-button" class="menu-button">Change LLM</button>
         </div>
-      </aside>
-    </div>
+    </aside>
+</div>
 
-    <footer id="bottom-input-bar">
-      <div id="input-container">
+<footer id="bottom-input-bar">
+    <div id="input-container">
         <label for="speech-input" class="visually-hidden">Enter command</label>
         <input
-          type="text"
-          id="speech-input"
-          placeholder="Loading..."
-          disabled
+                type="text"
+                id="speech-input"
+                placeholder="Loading..."
+                disabled
         />
-      </div>
-      <button type="button" id="player-confirm-turn-button">
+    </div>
+    <button type="button" id="player-confirm-turn-button">
         Confirm Action
-      </button>
-    </footer>
+    </button>
+</footer>
 
-    <div
-      id="error-output"
-      class="error"
-      role="alert"
-      aria-live="assertive"
-    ></div>
+<div
+        id="error-output"
+        class="error"
+        role="alert"
+        aria-live="assertive"
+></div>
 
-    <div
-      id="save-game-screen"
-      class="modal-overlay"
-      role="dialog"
-      aria-labelledby="save-game-title"
-      aria-modal="true"
-      style="display: none"
-    >
-      <div class="modal-content">
+<div
+        id="save-game-screen"
+        class="modal-overlay"
+        role="dialog"
+        aria-labelledby="save-game-title"
+        aria-modal="true"
+        style="display: none"
+>
+    <div class="modal-content">
         <h2 id="save-game-title" class="modal-title">Save Game</h2>
 
         <div
-          id="save-slots-container"
-          role="radiogroup"
-          aria-labelledby="save-slots-group-label"
+                id="save-slots-container"
+                role="radiogroup"
+                aria-labelledby="save-slots-group-label"
         >
-          <p id="save-slots-group-label" class="visually-hidden">
-            Select a save slot
-          </p>
+            <p id="save-slots-group-label" class="visually-hidden">
+                Select a save slot
+            </p>
         </div>
 
         <div class="save-details-section">
-          <label for="save-name-input">Save Name:</label>
-          <input
-            type="text"
-            id="save-name-input"
-            placeholder="Enter save name..."
-            disabled
-          />
+            <label for="save-name-input">Save Name:</label>
+            <input
+                    type="text"
+                    id="save-name-input"
+                    placeholder="Enter save name..."
+                    disabled
+            />
         </div>
 
         <div
-          id="save-game-status-message"
-          class="status-message-area"
-          role="status"
-          aria-live="polite"
+                id="save-game-status-message"
+                class="status-message-area"
+                role="status"
+                aria-live="polite"
         ></div>
 
         <div class="modal-actions save-actions">
-          <button
-            type="button"
-            id="confirm-save-button"
-            class="button-primary"
-            disabled
-          >
-            Save
-          </button>
-          <button
-            type="button"
-            id="cancel-save-button"
-            class="button-secondary"
-          >
-            Cancel
-          </button>
+            <button
+                    type="button"
+                    id="confirm-save-button"
+                    class="button-primary"
+                    disabled
+            >
+                Save
+            </button>
+            <button
+                    type="button"
+                    id="cancel-save-button"
+                    class="button-secondary"
+            >
+                Cancel
+            </button>
         </div>
-      </div>
     </div>
+</div>
 
-    <div
-      id="load-game-screen"
-      class="modal-overlay"
-      role="dialog"
-      aria-labelledby="load-game-title"
-      aria-modal="true"
-      style="display: none"
-    >
-      <div class="modal-content">
+<div
+        id="load-game-screen"
+        class="modal-overlay"
+        role="dialog"
+        aria-labelledby="load-game-title"
+        aria-modal="true"
+        style="display: none"
+>
+    <div class="modal-content">
         <h2 id="load-game-title" class="modal-title">Load Game</h2>
 
         <div
-          id="load-slots-container"
-          role="radiogroup"
-          aria-labelledby="load-slots-group-label"
+                id="load-slots-container"
+                role="radiogroup"
+                aria-labelledby="load-slots-group-label"
         >
-          <p id="load-slots-group-label" class="visually-hidden">
-            Select a game to load
-          </p>
+            <p id="load-slots-group-label" class="visually-hidden">
+                Select a game to load
+            </p>
         </div>
 
         <div
-          id="load-game-status-message"
-          class="status-message-area"
-          role="status"
-          aria-live="polite"
+                id="load-game-status-message"
+                class="status-message-area"
+                role="status"
+                aria-live="polite"
         ></div>
 
         <div class="modal-actions load-actions">
-          <button
-            type="button"
-            id="confirm-load-button"
-            class="button-primary"
-            disabled
-          >
-            Load
-          </button>
-          <button type="button" id="delete-save-button" class="button-danger">
-            Delete
-          </button>
-          <button
-            type="button"
-            id="cancel-load-button"
-            class="button-secondary"
-          >
-            Cancel
-          </button>
+            <button
+                    type="button"
+                    id="confirm-load-button"
+                    class="button-primary"
+                    disabled
+            >
+                Load
+            </button>
+            <button type="button" id="delete-save-button" class="button-danger">
+                Delete
+            </button>
+            <button
+                    type="button"
+                    id="cancel-load-button"
+                    class="button-secondary"
+            >
+                Cancel
+            </button>
         </div>
-      </div>
     </div>
+</div>
 
-    <div
-      id="llm-selection-modal"
-      class="modal-overlay"
-      role="dialog"
-      aria-labelledby="llm-selection-modal-title"
-      aria-modal="true"
-      style="display: none"
-    >
-      <div class="modal-content">
+<div
+        id="llm-selection-modal"
+        class="modal-overlay"
+        role="dialog"
+        aria-labelledby="llm-selection-modal-title"
+        aria-modal="true"
+        style="display: none"
+>
+    <div class="modal-content">
         <h2 id="llm-selection-modal-title" class="modal-title">
-          Select Language Model
+            Select Language Model
         </h2>
         <div
-          id="llm-selection-list-container"
-          role="radiogroup"
-          aria-labelledby="llm-selection-list-label"
+                id="llm-selection-list-container"
+                role="radiogroup"
+                aria-labelledby="llm-selection-list-label"
         >
-          <p id="llm-selection-list-label" class="visually-hidden">
-            Available Language Models
-          </p>
-          <ul id="llm-selection-list"></ul>
+            <p id="llm-selection-list-label" class="visually-hidden">
+                Available Language Models
+            </p>
+            <ul id="llm-selection-list"></ul>
         </div>
         <div
-          id="llm-selection-status-message"
-          class="status-message-area"
-          role="status"
-          aria-live="polite"
+                id="llm-selection-status-message"
+                class="status-message-area"
+                role="status"
+                aria-live="polite"
         ></div>
         <div class="modal-actions">
-          <button
-            type="button"
-            id="llm-selection-modal-close-button"
-            class="button-secondary"
-          >
-            Cancel
-          </button>
+            <button
+                    type="button"
+                    id="llm-selection-modal-close-button"
+                    class="button-secondary"
+            >
+                Cancel
+            </button>
         </div>
-      </div>
     </div>
+</div>
 
-    <script src="bundle.js"></script>
-    <script>
-      window.bootstrapApp().then(() => {
+<script src="bundle.js"></script>
+<script>
+    window.bootstrapApp().then(() => {
         const params = new URLSearchParams(window.location.search);
         if (params.get('start') !== 'false') {
-          window.beginGame(params.get('load') === 'true');
+            window.beginGame(params.get('load') === 'true');
         }
-      });
-    </script>
-  </body>
+    });
+</script>
+</body>
 </html>

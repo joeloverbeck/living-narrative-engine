@@ -4,24 +4,13 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="9bb199df-dcfd-4da4-888d-c661f61552c0" name="Changes" comment="Formatting.">
+    <list default="true" id="9bb199df-dcfd-4da4-888d-c661f61552c0" name="Changes" comment="Styling.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/css/components/_perception-log.css" beforeDir="false" afterPath="$PROJECT_DIR$/css/components/_perception-log.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/domUI/perceptionLogRenderer.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/domUI/perceptionLogRenderer.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/logic/jsonLogicEvaluationService.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/logic/jsonLogicEvaluationService.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/loaders/worldLoader.dependencyError.integration.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/loaders/worldLoader.dependencyError.integration.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/loaders/worldLoader.preLoopErrors.integration.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/loaders/worldLoader.preLoopErrors.integration.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/logic/jsonLogicEvaluationService.complex.e2e.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/logic/jsonLogicEvaluationService.complex.e2e.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/logic/jsonLogicEvaluationService.errorHandling.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/logic/jsonLogicEvaluationService.errorHandling.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/logic/jsonLogicEvaluationService.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/logic/jsonLogicEvaluationService.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/logic/jsonLogicEvaluationService.unit.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/logic/jsonLogicEvaluationService.unit.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/logic/jsonLogicEvaluationService.varPathWarning.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/logic/jsonLogicEvaluationService.varPathWarning.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/logic/jsonLogicPatterns.component.e2e.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/logic/jsonLogicPatterns.component.e2e.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/logic/jsonLogicPatterns.compound.e2e.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/logic/jsonLogicPatterns.compound.e2e.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/schemas/adjustClothing.schema.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/schemas/adjustClothing.schema.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/schemas/stopFollowing.schema.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/schemas/stopFollowing.schema.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/schemas/thumbWipeCheek.schema.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/schemas/thumbWipeCheek.schema.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/schemas/wait.schema.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/schemas/wait.schema.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/css/components/_location-info.css" beforeDir="false" afterPath="$PROJECT_DIR$/css/components/_location-info.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/css/layout/_panes.css" beforeDir="false" afterPath="$PROJECT_DIR$/css/layout/_panes.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/css/pages/_main-page.css" beforeDir="false" afterPath="$PROJECT_DIR$/css/pages/_main-page.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/game.html" beforeDir="false" afterPath="$PROJECT_DIR$/game.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/domUI/locationRenderer.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/domUI/locationRenderer.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -31,44 +20,44 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
-  "lastFilter": {
-    "state": "OPEN",
-    "assignee": "joeloverbeck"
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;joeloverbeck&quot;
   }
-}]]></component>
-  <component name="GithubPullRequestsUISettings"><![CDATA[{
-  "selectedUrlAndAccountId": {
-    "url": "https://github.com/joeloverbeck/living-narrative-engine.git",
-    "accountId": "e87db63c-2fda-4154-8e23-63c0c53d7f35"
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/joeloverbeck/living-narrative-engine.git&quot;,
+    &quot;accountId&quot;: &quot;e87db63c-2fda-4154-8e23-63c0c53d7f35&quot;
   }
-}]]></component>
-  <component name="ProjectColorInfo"><![CDATA[{
-  "customColor": "",
-  "associatedIndex": 0
-}]]></component>
+}</component>
+  <component name="ProjectColorInfo">{
+  &quot;customColor&quot;: &quot;&quot;,
+  &quot;associatedIndex&quot;: 0
+}</component>
   <component name="ProjectId" id="2yatEv29U4k2jpraPE4RxpNynQ1" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "main",
-    "ignore.virus.scanning.warn.message": "true",
-    "junie.onboarding.icon.badge.shown": "true",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "settings.editor.selected.configurable": "web-ide.project.structure",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
+    &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;web-ide.project.structure&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
@@ -83,7 +72,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1750084404817</updated>
-      <workItem from="1750084406230" duration="7665000" />
+      <workItem from="1750084406230" duration="13182000" />
     </task>
     <task id="LOCAL-00001" summary="Uploaded stuff from the office.">
       <option name="closed" value="true" />
@@ -117,7 +106,15 @@
       <option name="project" value="LOCAL" />
       <updated>1750090987416</updated>
     </task>
-    <option name="localTasksCounter" value="5" />
+    <task id="LOCAL-00005" summary="Styling.">
+      <option name="closed" value="true" />
+      <created>1750095682299</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1750095682299</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -126,6 +123,7 @@
   <component name="VcsManagerConfiguration">
     <MESSAGE value="Uploaded stuff from the office." />
     <MESSAGE value="Formatting." />
-    <option name="LAST_COMMIT_MESSAGE" value="Formatting." />
+    <MESSAGE value="Styling." />
+    <option name="LAST_COMMIT_MESSAGE" value="Styling." />
   </component>
 </project>
