@@ -63,22 +63,6 @@
         "target_id": "{event.payload.targetId}"
       }
     },
-    {
-      "type": "DISPATCH_EVENT",
-      "comment": "Dispatch the success message to the actor's UI.",
-      "parameters": {
-        "eventType": "core:display_successful_action_result",
-        "payload": {
-          "message": "{context.successMessage}"
-        }
-      }
-    },
-    {
-      "type": "END_TURN",
-      "parameters": {
-        "entityId": "{event.payload.actorId}",
-        "success": true
-      }
-    }
+    { "macro": "core:displaySuccessAndEndTurn" }
   ]
 }

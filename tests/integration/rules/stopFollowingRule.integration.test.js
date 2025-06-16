@@ -12,7 +12,9 @@ import jsonLogicSchema from '../../../data/schemas/json-logic.schema.json';
 import loadOperationSchemas from '../../helpers/loadOperationSchemas.js';
 import stopFollowingRule from '../../../data/mods/core/rules/stop_following.rule.json';
 import logFailureAndEndTurn from '../../../data/mods/core/macros/logFailureAndEndTurn.macro.json';
+import displaySuccessAndEndTurn from '../../../data/mods/core/macros/displaySuccessAndEndTurn.macro.json';
 import { expandMacros } from '../../../src/utils/macroUtils.js';
+import SetVariableHandler from '../../../src/logic/operationHandlers/setVariableHandler.js';
 import SystemLogicInterpreter from '../../../src/logic/systemLogicInterpreter.js';
 import OperationInterpreter from '../../../src/logic/operationInterpreter.js';
 import OperationRegistry from '../../../src/logic/operationRegistry.js';
@@ -171,6 +173,7 @@ function init(entities) {
       safeEventDispatcher: safeDispatcher,
     }),
     GET_TIMESTAMP: new GetTimestampHandler({ logger }),
+    SET_VARIABLE: new SetVariableHandler({ logger }),
     DISPATCH_EVENT: new DispatchEventHandler({ dispatcher: eventBus, logger }),
     END_TURN: new EndTurnHandler({
       safeEventDispatcher: safeDispatcher,
@@ -248,7 +251,10 @@ describe('core_handle_stop_following rule integration', () => {
     const macroRegistry = {
       get: (type, id) =>
         type === 'macros'
-          ? { 'core:logFailureAndEndTurn': logFailureAndEndTurn }[id]
+          ? {
+              'core:logFailureAndEndTurn': logFailureAndEndTurn,
+              'core:displaySuccessAndEndTurn': displaySuccessAndEndTurn,
+            }[id]
           : undefined,
     };
 

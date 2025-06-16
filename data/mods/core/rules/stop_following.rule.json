@@ -97,23 +97,14 @@
             }
           },
           {
-            "type": "DISPATCH_EVENT",
-            "comment": "Dispatch a UI event indicating the successful unfollow action.",
+            "type": "SET_VARIABLE",
+            "comment": "Prepare success message for the UI.",
             "parameters": {
-              "eventType": "core:display_successful_action_result",
-              "payload": {
-                "message": "{context.actorName.text} stops following {context.oldLeaderName.text}."
-              }
+              "variable_name": "successMessage",
+              "value": "{context.actorName.text} stops following {context.oldLeaderName.text}."
             }
           },
-          {
-            "type": "END_TURN",
-            "comment": "Signal to the Turn Manager that the actor's turn is over.",
-            "parameters": {
-              "entityId": "{event.payload.actorId}",
-              "success": true
-            }
-          }
+          { "macro": "core:displaySuccessAndEndTurn" }
         ],
         "else_actions": [
           {
