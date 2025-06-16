@@ -9,13 +9,16 @@
       }
     },
     {
-      "type": "DISPATCH_PERCEPTIBLE_EVENT",
+      "type": "ADD_PERCEPTION_LOG_ENTRY",
       "parameters": {
         "location_id": "{context.locationId}",
-        "description_text": "{context.logMessage}",
-        "perception_type": "{context.perceptionType}",
-        "actor_id": "{event.payload.actorId}",
-        "target_id": "{context.targetId}"
+        "entry": {
+          "timestamp": "{context.nowIso}",
+          "description_text": "{context.logMessage}",
+          "perception_type": "{context.perceptionType}",
+          "actor_id": "{event.payload.actorId}",
+          "target_id": "{context.targetId}"
+        }
       }
     },
     {
