@@ -77,4 +77,18 @@ describe('GameStateSerializer', () => {
     expect(typeof checksum1).toBe('string');
     expect(checksum1.length).toBeGreaterThan(0);
   });
+
+  it('throws PersistenceError when deep cloning fails', async () => {
+    const cyc = {
+      metadata: {},
+      modManifest: {},
+      gameState: {},
+      integrityChecks: {},
+    };
+    cyc.self = cyc;
+
+    await expect(serializer.serializeAndCompress(cyc)).rejects.toThrow(
+      /deep clone/i
+    );
+  });
 });

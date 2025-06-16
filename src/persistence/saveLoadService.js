@@ -11,7 +11,7 @@ import {
 } from './savePathUtils.js';
 import { deserializeAndDecompress, parseManualSaveFile } from './saveFileIO.js';
 import { setupService } from '../utils/serviceInitializer.js';
-import { deepClone } from '../utils/objectUtils.js';
+import { safeDeepClone } from '../utils/objectUtils.js';
 import {
   PersistenceError,
   PersistenceErrorCodes,
@@ -270,25 +270,16 @@ class SaveLoadService extends ISaveLoadService {
    * @private
    */
   #cloneAndPrepareState(saveName, obj) {
-    try {
-      /** @type {SaveGameStructure} */
-      const cloned = deepClone(obj);
-      cloned.metadata = { ...(cloned.metadata || {}), saveName };
-      cloned.integrityChecks = { ...(cloned.integrityChecks || {}) };
-      return { success: true, data: cloned };
-    } catch (cloneError) {
-      this.#logger.error(
-        'Failed to deep clone object for manual save:',
-        cloneError
-      );
-      return {
-        success: false,
-        error: new PersistenceError(
-          PersistenceErrorCodes.DEEP_CLONE_FAILED,
-          'Failed to deep clone object for saving.'
-        ),
-      };
+    const cloneResult = safeDeepClone(obj, this.#logger);
+    if (!cloneResult.success || !cloneResult.data) {
+      return { success: false, error: cloneResult.error };
     }
+
+    /** @type {SaveGameStructure} */
+    const cloned = cloneResult.data;
+    cloned.metadata = { ...(cloned.metadata || {}), saveName };
+    cloned.integrityChecks = { ...(cloned.integrityChecks || {}) };
+    return { success: true, data: cloned };
   }
 
   /**
