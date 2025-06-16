@@ -50,7 +50,9 @@ describe('PrerequisiteEvaluationService', () => {
   /** @type {jest.Mocked<JsonLogicEvaluationService>} */
   let mockJsonLogicServiceInstance;
   /** @type {jest.Mocked<ActionValidationContextBuilder>} */
-  let mockBuilderInstance;
+let mockBuilderInstance;
+  /** @type {{getConditionDefinition: jest.Mock}} */
+  let mockGameDataRepository;
 
   // Reusable mock objects
   let mockActionDefinition;
@@ -70,6 +72,9 @@ describe('PrerequisiteEvaluationService', () => {
     mockBuilderInstance = new ActionValidationContextBuilder({
       logger: mockLogger,
     });
+    mockGameDataRepository = {
+      getConditionDefinition: jest.fn(),
+    };
 
     // Define default mock inputs and builder output
     mockActionDefinition = { id: 'testActionGeneral' };
@@ -89,6 +94,7 @@ describe('PrerequisiteEvaluationService', () => {
       logger: mockLogger,
       jsonLogicEvaluationService: mockJsonLogicServiceInstance,
       actionValidationContextBuilder: mockBuilderInstance,
+      gameDataRepository: mockGameDataRepository,
     });
     mockLogger.debug.mockClear();
   });
@@ -262,7 +268,7 @@ describe('PrerequisiteEvaluationService', () => {
         expect(mockLogger.error).toHaveBeenCalledTimes(1);
         expect(mockLogger.error).toHaveBeenCalledWith(
           expect.stringContaining(
-            `PrereqEval[${invalidItemActionDef.id}]: ← FAILED (Rule 1/1): Prerequisite item is not a valid object: ${JSON.stringify(value)}`
+            `PrereqEval[${invalidItemActionDef.id}]: ← FAILED (Rule 1/1): Prerequisite item is invalid or missing 'logic' property: ${JSON.stringify(value)}`
           )
         );
         expect(mockJsonLogicServiceInstance.evaluate).not.toHaveBeenCalled();
@@ -281,10 +287,7 @@ describe('PrerequisiteEvaluationService', () => {
         prereq: { failure_message: 'No logic here' },
         description: "missing 'logic' property",
       },
-      { prereq: { logic: 'true' }, description: "'logic' property is string" },
       { prereq: { logic: null }, description: "'logic' property is null" },
-      { prereq: { logic: true }, description: "'logic' property is boolean" },
-      { prereq: { logic: 123 }, description: "'logic' property is number" },
     ])('should return false and log error if $description', ({ prereq }) => {
       const prerequisites = [prereq];
       const result = service.evaluate(
@@ -304,10 +307,39 @@ describe('PrerequisiteEvaluationService', () => {
       expect(mockLogger.error).toHaveBeenCalledTimes(1);
       expect(mockLogger.error).toHaveBeenCalledWith(
         expect.stringContaining(
-          `PrereqEval[${invalidLogicActionDef.id}]: ← FAILED (Rule 1/1): Prerequisite object is missing the required 'logic' property or it's not an object: ${JSON.stringify(prereq)}`
+          `PrereqEval[${invalidLogicActionDef.id}]: ← FAILED (Rule 1/1): Prerequisite item is invalid or missing 'logic' property: ${JSON.stringify(prereq)}`
         )
       );
       expect(mockJsonLogicServiceInstance.evaluate).not.toHaveBeenCalled();
+    });
+
+    test.each([
+      { prereq: { logic: 'true' }, description: "'logic' property is string" },
+      { prereq: { logic: true }, description: "'logic' property is boolean" },
+      { prereq: { logic: 123 }, description: "'logic' property is number" },
+    ])('should return false and log failure when $description', ({ prereq }) => {
+      const prerequisites = [prereq];
+      const result = service.evaluate(
+        prerequisites,
+        invalidLogicActionDef,
+        mockActor,
+        mockTargetContext
+      );
+
+      expect(result).toBe(false);
+      expect(mockBuilderInstance.buildContext).toHaveBeenCalledTimes(1);
+      expect(mockBuilderInstance.buildContext).toHaveBeenCalledWith(
+        invalidLogicActionDef,
+        mockActor,
+        mockTargetContext
+      );
+      expect(mockLogger.error).not.toHaveBeenCalled();
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining(
+          `PrereqEval[${invalidLogicActionDef.id}]: ← FAILED (Rule 1/1): Prerequisite check FAILED.`
+        )
+      );
+      expect(mockJsonLogicServiceInstance.evaluate).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -345,7 +377,7 @@ describe('PrerequisiteEvaluationService', () => {
     expect(mockLogger.error).toHaveBeenCalledTimes(1);
     expect(mockLogger.error).toHaveBeenCalledWith(
       expect.stringContaining(
-        `PrereqEval[${jsonLogicErrorActionDef.id}]: ← FAILED (Rule 1/1): Error during JsonLogic evaluation. Rule: ${JSON.stringify(prerequisites[0])}`
+        `PrereqEval[${jsonLogicErrorActionDef.id}]: ← FAILED (Rule 1/1): Error during rule resolution or evaluation. Rule: ${JSON.stringify(prerequisites[0])}`
       ),
       expect.objectContaining({
         error: mockError.message,
