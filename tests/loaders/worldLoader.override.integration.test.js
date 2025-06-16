@@ -20,6 +20,9 @@ jest.mock('../../src/modding/modVersionValidator.js', () => jest.fn()); // Mock 
 import * as ModLoadOrderResolverModule from '../../src/modding/modLoadOrderResolver.js';
 import { CORE_MOD_ID } from '../../src/constants/core';
 
+// Type-only import for the new ConditionLoader dependency
+/** @typedef {import('../../src/loaders/conditionLoader.js').default} ConditionLoader */
+
 jest.mock('../../src/modding/modLoadOrderResolver.js', () => ({
   resolveOrder: jest.fn(),
 }));
@@ -53,6 +56,8 @@ describe('WorldLoader Integration Test Suite - Overrides (TEST-LOADER-7.2)', () 
   let mockSchemaLoader;
   /** @type {jest.Mocked<ComponentLoader>} */
   let mockComponentLoader;
+  /** @type {jest.Mocked<ConditionLoader>} */
+  let mockConditionLoader;
   /** @type {jest.Mocked<RuleLoader>} */
   let mockRuleLoader;
   /** @type {jest.Mocked<ActionLoader>} */
@@ -210,6 +215,7 @@ describe('WorldLoader Integration Test Suite - Overrides (TEST-LOADER-7.2)', () 
     // Mock individual content loaders
     mockActionLoader = { loadItemsForMod: jest.fn() };
     mockComponentLoader = { loadItemsForMod: jest.fn() };
+    mockConditionLoader = { loadItemsForMod: jest.fn() };
     mockEventLoader = { loadItemsForMod: jest.fn() };
     mockRuleLoader = { loadItemsForMod: jest.fn() };
     mockEntityLoader = { loadItemsForMod: jest.fn() };
@@ -287,6 +293,7 @@ describe('WorldLoader Integration Test Suite - Overrides (TEST-LOADER-7.2)', () 
         'schema:entities',
         'schema:actions',
         'schema:events',
+        'schema:conditions',
         'schema:rules',
       ];
       return essentialSchemas.includes(schemaId);
@@ -430,6 +437,7 @@ describe('WorldLoader Integration Test Suite - Overrides (TEST-LOADER-7.2)', () 
       logger: mockLogger,
       schemaLoader: mockSchemaLoader,
       componentLoader: mockComponentLoader,
+      conditionLoader: mockConditionLoader,
       ruleLoader: mockRuleLoader,
       actionLoader: mockActionLoader,
       eventLoader: mockEventLoader,
@@ -606,13 +614,19 @@ describe('WorldLoader Integration Test Suite - Overrides (TEST-LOADER-7.2)', () 
         expect.stringContaining(
           `• Requested Mods (raw): [${CORE_MOD_ID}, ${overrideModId}]`
         ), // Added bullet, space, brackets
-        expect.stringContaining(
-          `• Final Load Order    : [${CORE_MOD_ID}, ${overrideModId}]`
-        ), // Added bullet, space, brackets
+        expect.stringContaining('• Final Load Order'),
         expect.stringContaining(`• Content Loading Summary (Totals):`), // Added bullet, space
         expect.stringContaining('———————————————————————————————————————————'), // Separator line
       ])
     );
+
+    expect(
+      summaryLines.some(
+        (line) =>
+          line.includes('Final Load Order') &&
+          line.includes(`[${CORE_MOD_ID}, ${overrideModId}]`)
+      )
+    ).toBe(true);
 
     // Specific counts based on mock return values - Use regex for flexibility with padding
     // Actions: C:3, O:1, E:0
