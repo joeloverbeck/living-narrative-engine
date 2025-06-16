@@ -1,5 +1,10 @@
 // src/utils/objectUtils.js
 
+import {
+  PersistenceError,
+  PersistenceErrorCodes,
+} from '../persistence/persistenceErrors.js';
+
 /**
  * @file Utility functions for working with plain JavaScript objects.
  */
@@ -87,6 +92,32 @@ export function deepClone(value) {
   }
 
   return JSON.parse(JSON.stringify(value));
+}
+
+/**
+ * Safely deep clones a value, logging and returning a PersistenceError on
+ * failure.
+ *
+ * @param {any} value - The value to clone.
+ * @param {import('../interfaces/coreServices.js').ILogger} logger - Logger for diagnostics.
+ * @returns {import('../persistence/persistenceTypes.js').PersistenceResult<any>}
+ *   Result containing the cloned value or an error.
+ */
+export function safeDeepClone(value, logger) {
+  try {
+    return { success: true, data: deepClone(value) };
+  } catch (error) {
+    if (logger && typeof logger.error === 'function') {
+      logger.error('safeDeepClone failed:', error);
+    }
+    return {
+      success: false,
+      error: new PersistenceError(
+        PersistenceErrorCodes.DEEP_CLONE_FAILED,
+        'Failed to deep clone object.'
+      ),
+    };
+  }
 }
 
 // Add other generic object utilities here in the future if needed.

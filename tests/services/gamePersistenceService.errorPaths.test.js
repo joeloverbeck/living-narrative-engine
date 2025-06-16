@@ -82,6 +82,7 @@ describe('GamePersistenceService error paths', () => {
       expect(() => captureService.captureCurrentGameState('World')).toThrow(
         'Failed to deep clone object data.'
       );
+      expect(logger.error).toHaveBeenCalled();
       expect(safeEventDispatcher.dispatch).toHaveBeenCalledWith(
         'core:display_error',
         expect.objectContaining({

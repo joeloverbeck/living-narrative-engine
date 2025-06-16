@@ -1,6 +1,6 @@
 // src/persistence/componentCleaningService.js
 
-import { deepClone } from '../utils/objectUtils.js';
+import { safeDeepClone } from '../utils/objectUtils.js';
 import { setupService } from '../utils/serviceInitializer.js';
 /** @typedef {import('../interfaces/IComponentCleaningService.js').IComponentCleaningService} IComponentCleaningService */
 import {
@@ -82,20 +82,19 @@ class ComponentCleaningService {
    * @returns {any} The cleaned data.
    */
   clean(componentId, componentData) {
-    let dataToSave;
-    try {
-      dataToSave = deepClone(componentData);
-    } catch (e) {
+    const cloneResult = safeDeepClone(componentData, this.#logger);
+    if (!cloneResult.success) {
       this.#safeEventDispatcher.dispatch(DISPLAY_ERROR_ID, {
         message: 'ComponentCleaningService.clean deepClone failed',
         details: {
           componentId,
-          error: e.message,
-          stack: e.stack,
+          error: cloneResult.error.message,
+          stack: cloneResult.error.stack,
         },
       });
       throw new Error('Failed to deep clone object data.');
     }
+    let dataToSave = cloneResult.data;
 
     const cleaner = this.#cleaners.get(componentId);
     if (cleaner) {

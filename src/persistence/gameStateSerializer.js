@@ -2,7 +2,7 @@
 
 import { encode, decode } from '@msgpack/msgpack';
 import pako from 'pako';
-import { deepClone } from '../utils/objectUtils.js';
+import { safeDeepClone } from '../utils/objectUtils.js';
 import {
   PersistenceError,
   PersistenceErrorCodes,
@@ -102,16 +102,11 @@ class GameStateSerializer {
    * @returns {Promise<{compressedData: Uint8Array, finalSaveObject: object}>} Resulting data and mutated object.
    */
   async serializeAndCompress(gameStateObject) {
-    let finalSaveObject;
-    try {
-      finalSaveObject = deepClone(gameStateObject);
-    } catch (e) {
-      this.#logger.error('DeepClone failed:', e);
-      throw new PersistenceError(
-        PersistenceErrorCodes.DEEP_CLONE_FAILED,
-        'Failed to deep clone object for saving.'
-      );
+    const cloneResult = safeDeepClone(gameStateObject, this.#logger);
+    if (!cloneResult.success) {
+      throw cloneResult.error;
     }
+    let finalSaveObject = cloneResult.data;
 
     if (
       !finalSaveObject.gameState ||

@@ -63,6 +63,7 @@ describe('ComponentCleaningService', () => {
         details: expect.objectContaining({ componentId: 'loop' }),
       })
     );
+    expect(logger.error).toHaveBeenCalled();
   });
 
   it('warns when registering a cleaner twice', () => {
