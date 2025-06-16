@@ -39,6 +39,9 @@
           "$ref": "./operations/queryComponent.schema.json"
         },
         {
+          "$ref": "./operations/queryComponents.schema.json"
+        },
+        {
           "$ref": "./operations/modifyComponent.schema.json"
         },
         {

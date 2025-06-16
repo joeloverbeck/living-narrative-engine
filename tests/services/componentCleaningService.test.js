@@ -32,7 +32,7 @@ describe('ComponentCleaningService', () => {
   });
 
   it('allows registering and executing custom cleaners', () => {
-    service.registerCleaner('test:comp', (d) => ({ cleaned: true }));
+    service.registerCleaner('test:comp', () => ({ cleaned: true }));
     const result = service.clean('test:comp', { foo: 'bar' });
     expect(result).toEqual({ cleaned: true });
   });
@@ -63,5 +63,21 @@ describe('ComponentCleaningService', () => {
         details: expect.objectContaining({ componentId: 'loop' }),
       })
     );
+  });
+
+  it('warns when registering a cleaner twice', () => {
+    const firstCleaner = jest.fn(() => ({ first: true }));
+    const secondCleaner = jest.fn(() => ({ second: true }));
+
+    service.registerCleaner('dup:comp', firstCleaner);
+    logger.warn.mockClear();
+    service.registerCleaner('dup:comp', secondCleaner);
+
+    expect(logger.warn).toHaveBeenCalledWith(
+      "ComponentCleaningService: Cleaner for component 'dup:comp' already registered. Overwriting."
+    );
+
+    const result = service.clean('dup:comp', {});
+    expect(result).toEqual({ second: true });
   });
 });

@@ -4,7 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="f2176490-fa0e-405e-af38-7bec8f5491f5" name="Changes" comment="Making implementations." />
+    <list default="true" id="f2176490-fa0e-405e-af38-7bec8f5491f5" name="Changes" comment="Weird issue with imports." />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -189,23 +189,7 @@
       <workItem from="1749839406228" duration="17547000" />
       <workItem from="1749876741387" duration="32751000" />
       <workItem from="1749913762946" duration="28307000" />
-      <workItem from="1749963238113" duration="49127000" />
-    </task>
-    <task id="LOCAL-00105" summary="Formatting.">
-      <option name="closed" value="true" />
-      <created>1749977876622</created>
-      <option name="number" value="00105" />
-      <option name="presentableId" value="LOCAL-00105" />
-      <option name="project" value="LOCAL" />
-      <updated>1749977876622</updated>
-    </task>
-    <task id="LOCAL-00106" summary="Formatting.">
-      <option name="closed" value="true" />
-      <created>1749979332081</created>
-      <option name="number" value="00106" />
-      <option name="presentableId" value="LOCAL-00106" />
-      <option name="project" value="LOCAL" />
-      <updated>1749979332082</updated>
+      <workItem from="1749963238113" duration="51602000" />
     </task>
     <task id="LOCAL-00107" summary="Formatting.">
       <option name="closed" value="true" />
@@ -583,14 +567,29 @@
       <option name="project" value="LOCAL" />
       <updated>1750018049658</updated>
     </task>
-    <option name="localTasksCounter" value="154" />
+    <task id="LOCAL-00154" summary="Weird issue with imports.">
+      <option name="closed" value="true" />
+      <created>1750018893144</created>
+      <option name="number" value="00154" />
+      <option name="presentableId" value="LOCAL-00154" />
+      <option name="project" value="LOCAL" />
+      <updated>1750018893144</updated>
+    </task>
+    <task id="LOCAL-00155" summary="Weird issue with imports.">
+      <option name="closed" value="true" />
+      <created>1750021059833</created>
+      <option name="number" value="00155" />
+      <option name="presentableId" value="LOCAL-00155" />
+      <option name="project" value="LOCAL" />
+      <updated>1750021059833</updated>
+    </task>
+    <option name="localTasksCounter" value="156" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Implemented awaitTurnEndState.js." />
     <MESSAGE value="Fixed HumanTurnHandler's dependencies." />
     <MESSAGE value="Refactoring HumanTurnHandler." />
     <MESSAGE value="Chores." />
@@ -615,6 +614,7 @@
     <MESSAGE value="Fixed integration suite for wiping thumb on someone's cheek." />
     <MESSAGE value="Formatting." />
     <MESSAGE value="Making implementations." />
-    <option name="LAST_COMMIT_MESSAGE" value="Making implementations." />
+    <MESSAGE value="Weird issue with imports." />
+    <option name="LAST_COMMIT_MESSAGE" value="Weird issue with imports." />
   </component>
 </project>

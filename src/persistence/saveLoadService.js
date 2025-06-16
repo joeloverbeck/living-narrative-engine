@@ -209,6 +209,27 @@ class SaveLoadService extends ISaveLoadService {
   }
 
   /**
+   * Ensures the provided save identifier is valid.
+   *
+   * @param {*} id - Candidate save identifier.
+   * @returns {import('./persistenceTypes.js').PersistenceResult<null>} Result.
+   * @private
+   */
+  #assertValidIdentifier(id) {
+    if (!validateSaveIdentifier(id)) {
+      this.#logger.error('Invalid saveIdentifier provided.');
+      return {
+        success: false,
+        error: new PersistenceError(
+          PersistenceErrorCodes.INVALID_SAVE_IDENTIFIER,
+          'A valid save file identifier must be provided.'
+        ),
+      };
+    }
+    return { success: true };
+  }
+
+  /**
    * @inheritdoc
    * @returns {Promise<Array<SaveFileMetadata>>} Parsed metadata entries.
    */
@@ -317,18 +338,9 @@ class SaveLoadService extends ISaveLoadService {
       `Attempting to load game data from: "${saveIdentifier}"`
     );
 
-    if (!validateSaveIdentifier(saveIdentifier)) {
-      const errorMsg = 'Invalid saveIdentifier provided for loading.';
-      const userMsg = 'Cannot load game: No save file was specified.';
-      this.#logger.error(errorMsg);
-      return {
-        success: false,
-        error: new PersistenceError(
-          PersistenceErrorCodes.INVALID_SAVE_IDENTIFIER,
-          userMsg
-        ),
-        data: null,
-      };
+    const idResult = this.#assertValidIdentifier(saveIdentifier);
+    if (!idResult.success) {
+      return { success: false, error: idResult.error, data: null };
     }
 
     // saveIdentifier is expected to be the full path including "saves/manual_saves/"
@@ -501,17 +513,9 @@ class SaveLoadService extends ISaveLoadService {
    */
   async deleteManualSave(saveIdentifier) {
     this.#logger.debug(`Attempting to delete manual save: "${saveIdentifier}"`);
-    if (!validateSaveIdentifier(saveIdentifier)) {
-      const msg = 'Invalid saveIdentifier provided for deletion.';
-      const userMsg = 'Cannot delete: No save file specified.';
-      this.#logger.error(msg);
-      return {
-        success: false,
-        error: new PersistenceError(
-          PersistenceErrorCodes.INVALID_SAVE_IDENTIFIER,
-          userMsg
-        ),
-      };
+    const idResult = this.#assertValidIdentifier(saveIdentifier);
+    if (!idResult.success) {
+      return idResult;
     }
 
     // saveIdentifier is expected to be the full path, e.g., "saves/manual_saves/file.sav"

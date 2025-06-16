@@ -1,0 +1,84 @@
+{
+  "$schema": "http://example.com/schemas/rule.schema.json",
+  "rule_id": "intimacy:handle_adjust_clothing",
+  "comment": "Handles the 'intimacy:adjust_clothing' action. This rule generates and dispatches distinct descriptive text for the perceptible log and the actor's success UI, then ends the turn.",
+  "event_type": "core:attempt_action",
+  "condition": {
+    "==": [
+      {
+        "var": "event.payload.actionId"
+      },
+      "intimacy:adjust_clothing"
+    ]
+  },
+  "actions": [
+    {
+      "type": "GET_NAME",
+      "comment": "Get names for the messages.",
+      "parameters": {
+        "entity_ref": "actor",
+        "result_variable": "actorName"
+      }
+    },
+    {
+      "type": "GET_NAME",
+      "parameters": {
+        "entity_ref": "target",
+        "result_variable": "targetName"
+      }
+    },
+    {
+      "type": "QUERY_COMPONENT",
+      "comment": "Get location for the perceptible event.",
+      "parameters": {
+        "entity_ref": "actor",
+        "component_type": "core:position",
+        "result_variable": "actorPosition"
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "comment": "Construct the perceptible log message for observers.",
+      "parameters": {
+        "variable_name": "perceptibleLogMessage",
+        "value": "{context.actorName} has smoothed {context.targetName}'s displaced garment with possessive care."
+      }
+    },
+    {
+      "type": "SET_VARIABLE",
+      "comment": "Construct the success message for the actor's UI.",
+      "parameters": {
+        "variable_name": "successMessage",
+        "value": "{context.actorName} smooths {context.targetName}'s displaced garment with possessive care."
+      }
+    },
+    {
+      "type": "DISPATCH_PERCEPTIBLE_EVENT",
+      "comment": "Dispatch the event for observers.",
+      "parameters": {
+        "location_id": "{context.actorPosition.locationId}",
+        "description_text": "{context.perceptibleLogMessage}",
+        "perception_type": "action_target_general",
+        "actor_id": "{event.payload.actorId}",
+        "target_id": "{event.payload.targetId}"
+      }
+    },
+    {
+      "type": "DISPATCH_EVENT",
+      "comment": "Dispatch the success message to the actor's UI.",
+      "parameters": {
+        "eventType": "core:display_successful_action_result",
+        "payload": {
+          "message": "{context.successMessage}"
+        }
+      }
+    },
+    {
+      "type": "END_TURN",
+      "parameters": {
+        "entityId": "{event.payload.actorId}",
+        "success": true
+      }
+    }
+  ]
+}

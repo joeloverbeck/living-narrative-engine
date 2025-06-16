@@ -3,6 +3,9 @@
 import { configureContainer } from './dependencyInjection/containerConfig.js';
 import { tokens } from './dependencyInjection/tokens.js';
 import { displayFatalStartupError } from './bootstrapper/errorUtils.js';
+import { UIBootstrapper } from './bootstrapper/UIBootstrapper.js';
+import AppContainer from './dependencyInjection/appContainer.js';
+import GameEngine from './engine/gameEngine.js';
 // Import all necessary stages
 import {
   ensureCriticalDOMElementsStage,
@@ -38,11 +41,18 @@ export async function bootstrapApp() {
   try {
     // STAGE 1: Ensure Critical DOM Elements
     currentPhaseForError = 'UI Element Validation';
-    uiElements = await ensureCriticalDOMElementsStage(document);
+    uiElements = await ensureCriticalDOMElementsStage(
+      document,
+      () => new UIBootstrapper()
+    );
 
     // STAGE 2: Setup DI Container
     currentPhaseForError = 'DI Container Setup';
-    container = await setupDIContainerStage(uiElements, configureContainer);
+    container = await setupDIContainerStage(
+      uiElements,
+      configureContainer,
+      () => new AppContainer()
+    );
 
     // STAGE 3: Resolve Core Services (Logger)
     currentPhaseForError = 'Core Services Resolution';
@@ -55,7 +65,7 @@ export async function bootstrapApp() {
     // STAGE 4: Initialize Game Engine
     currentPhaseForError = 'Game Engine Initialization';
     logger.debug(`main.js: Executing ${currentPhaseForError} stage...`);
-    gameEngine = await initializeGameEngineStage(container, logger);
+    gameEngine = await initializeGameEngineStage(container, logger, GameEngine);
     logger.debug(`main.js: ${currentPhaseForError} stage completed.`);
 
     // STAGE 5: Initialize Auxiliary Services

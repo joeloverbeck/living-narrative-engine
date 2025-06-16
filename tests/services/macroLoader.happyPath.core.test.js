@@ -1,6 +1,7 @@
 import MacroLoader from '../../src/loaders/macroLoader.js';
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { CORE_MOD_ID } from '../../src/constants/core';
+import StaticConfiguration from '../../src/configuration/staticConfiguration.js';
 
 const createMockConfiguration = (overrides = {}) => ({
   getModsBasePath: jest.fn(() => './data/mods'),
@@ -108,5 +109,26 @@ describe('MacroLoader (Happy Path - Core Mod)', () => {
     );
 
     expect(mockLogger.error).not.toHaveBeenCalled();
+  });
+
+  it('uses StaticConfiguration to obtain the macro schema ID', () => {
+    const realConfig = new StaticConfiguration();
+    const tempLogger = createMockLogger();
+
+    const loader = new MacroLoader(
+      realConfig,
+      createMockPathResolver(),
+      createMockDataFetcher({}),
+      createMockSchemaValidator(),
+      mockRegistry,
+      tempLogger
+    );
+
+    const expectedId = realConfig.getContentTypeSchemaId('macros');
+    expect(loader._primarySchemaId).toBe(expectedId);
+    expect(tempLogger.warn).not.toHaveBeenCalled();
+    expect(tempLogger.debug).toHaveBeenCalledWith(
+      `MacroLoader: Primary schema ID for content type 'macros' found: '${expectedId}'`
+    );
   });
 });
