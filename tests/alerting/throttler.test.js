@@ -116,14 +116,11 @@ describe('Throttler', () => {
 
     // Assert
     expect(mockDispatcher.dispatch).toHaveBeenCalledTimes(1);
-    expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
-      'core:display_error',
-      {
-        message:
-          "Error: 'Critical failure' occurred 1 more times in the last 10 seconds.",
-        details: errorPayload.details,
-      }
-    );
+    expect(mockDispatcher.dispatch).toHaveBeenCalledWith('core:display_error', {
+      message:
+        "Error: 'Critical failure' occurred 1 more times in the last 10 seconds.",
+      details: errorPayload.details,
+    });
   });
 
   /**

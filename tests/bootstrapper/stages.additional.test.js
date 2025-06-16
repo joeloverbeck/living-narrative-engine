@@ -148,7 +148,11 @@ describe('setupGlobalEventListenersStage', () => {
       stop,
     };
     const logger = createLogger();
-    const result = await setupGlobalEventListenersStage(gameEngine, logger, windowRef);
+    const result = await setupGlobalEventListenersStage(
+      gameEngine,
+      logger,
+      windowRef
+    );
     expect(windowRef.addEventListener).toHaveBeenCalledWith(
       'beforeunload',
       expect.any(Function)

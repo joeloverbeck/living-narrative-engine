@@ -36,8 +36,12 @@ describe('setupMenuButtonListenersStage', () => {
     const showLoadGameUI = jest.fn();
     const gameEngine = { showSaveGameUI, showLoadGameUI };
 
-    const result = await setupMenuButtonListenersStage(gameEngine, logger, document);
-    
+    const result = await setupMenuButtonListenersStage(
+      gameEngine,
+      logger,
+      document
+    );
+
     document.getElementById('open-save-game-button').click();
     document.getElementById('open-load-game-button').click();
 
