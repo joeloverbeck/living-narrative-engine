@@ -8,10 +8,7 @@ import {
   manualSavePath,
   FULL_MANUAL_SAVE_DIRECTORY_PATH,
 } from './savePathUtils.js';
-import {
-  deserializeAndDecompress,
-  parseManualSaveFile,
-} from './saveFileIO.js';
+import { deserializeAndDecompress, parseManualSaveFile } from './saveFileIO.js';
 import { setupService } from '../utils/serviceInitializer.js';
 import { deepClone } from '../utils/objectUtils.js';
 import {
