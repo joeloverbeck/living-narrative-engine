@@ -8,6 +8,8 @@ import ruleSchema from '../../../data/schemas/rule.schema.json';
 import commonSchema from '../../../data/schemas/common.schema.json';
 import operationSchema from '../../../data/schemas/operation.schema.json';
 import jsonLogicSchema from '../../../data/schemas/json-logic.schema.json';
+import conditionSchema from '../../../data/schemas/condition.schema.json';
+import conditionContainerSchema from '../../../data/schemas/condition-container.schema.json';
 import loadOperationSchemas from '../../helpers/loadOperationSchemas.js';
 import getCloseRule from '../../../data/mods/intimacy/rules/get_close.rule.json';
 import SystemLogicInterpreter from '../../../src/logic/systemLogicInterpreter.js';
@@ -117,11 +119,6 @@ function init(entities) {
       logger,
       safeEventDispatcher: safeDispatcher,
     }),
-    QUERY_COMPONENT: new QueryComponentHandler({
-      entityManager,
-      logger,
-      safeEventDispatcher: safeDispatcher,
-    }),
     GET_TIMESTAMP: new GetTimestampHandler({ logger }),
     DISPATCH_EVENT: new DispatchEventHandler({ dispatcher: eventBus, logger }),
     END_TURN: new EndTurnHandler({
@@ -223,6 +220,14 @@ describe('intimacy_handle_get_close rule integration', () => {
     ajv.addSchema(
       jsonLogicSchema,
       'http://example.com/schemas/json-logic.schema.json'
+    );
+    ajv.addSchema(
+      conditionContainerSchema,
+      'http://example.com/schemas/condition-container.schema.json'
+    );
+    ajv.addSchema(
+      conditionSchema,
+      'http://example.com/schemas/condition.schema.json'
     );
     const valid = ajv.validate(ruleSchema, getCloseRule);
     if (!valid) console.error(ajv.errors);
