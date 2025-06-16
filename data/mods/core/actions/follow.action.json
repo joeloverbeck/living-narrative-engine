@@ -9,59 +9,13 @@
   "prerequisites": [
     {
       "logic": {
-        "==": [
-          {
-            "var": "actor.components.core:movement.locked"
-          },
-          false
-        ]
+        "condition_ref": "core:actor-is-not-rooted"
       },
       "failure_message": "You are rooted and cannot move."
     },
     {
       "logic": {
-        "and": [
-          {
-            "!!": {
-              "var": "target.components.core:actor"
-            }
-          },
-          {
-            "!=": [
-              {
-                "var": "actor.id"
-              },
-              {
-                "var": "target.id"
-              }
-            ]
-          },
-          {
-            "==": [
-              {
-                "var": "actor.components.core:position.locationId"
-              },
-              {
-                "var": "target.components.core:position.locationId"
-              }
-            ]
-          },
-          {
-            "!": {
-              "var": "actor.components.core:following"
-            }
-          },
-          {
-            "!==": [
-              {
-                "var": "actor.id"
-              },
-              {
-                "var": "target.components.core:following.leaderId"
-              }
-            ]
-          }
-        ]
+        "condition_ref": "core:actor-can-follow-target"
       },
       "failure_message": "You cannot follow that target right now."
     }

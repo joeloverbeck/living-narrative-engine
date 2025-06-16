@@ -4,12 +4,7 @@
   "comment": "Checks for follow cycles, then adds core:following to the actor, ensures core:leading exists on the leader, updates follower lists, emits a perceptible ‘follow’ event, and informs the UI.",
   "event_type": "core:attempt_action",
   "condition": {
-    "==": [
-      {
-        "var": "event.payload.actionId"
-      },
-      "core:follow"
-    ]
+    "condition_ref": "core:event-is-action-follow"
   },
   "actions": [
     {
@@ -120,9 +115,7 @@
               "value": "{event.payload.targetId}"
             }
           },
-          {
-            "macro": "core:logSuccessAndEndTurn"
-          }
+          { "macro": "core:logSuccessAndEndTurn" }
         ]
       }
     }

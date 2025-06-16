@@ -12,8 +12,8 @@
       "description": "Optional. A human-readable description or note for developers or modders; ignored by the interpreter at runtime."
     },
     "condition": {
-      "$ref": "../json-logic.schema.json#",
-      "description": "Optional. If present, this operation only executes if the JSON-Logic condition evaluates to true."
+      "$ref": "../condition-container.schema.json#",
+      "description": "Optional. If present, this operation only executes if the condition evaluates to true. Can be an inline JSON-Logic rule or a 'condition_ref'."
     },
     "parameters": {
       "$ref": "#/$defs/Parameters"

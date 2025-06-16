@@ -4,12 +4,7 @@
   "comment": "Handles the 'intimacy:get_close' action. Implements algorithm §5.1 from the spec. It merges actor, target, and their existing partners into a new, single, fully-connected closeness circle, then locks movement for all members.",
   "event_type": "core:attempt_action",
   "condition": {
-    "==": [
-      {
-        "var": "event.payload.actionId"
-      },
-      "intimacy:get_close"
-    ]
+    "condition_ref": "intimacy:event-is-action-get-close"
   },
   "actions": [
     {

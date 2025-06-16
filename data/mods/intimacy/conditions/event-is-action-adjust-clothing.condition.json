@@ -1,0 +1,13 @@
+{
+  "$schema": "http://example.com/schemas/condition.schema.json",
+  "id": "intimacy:event-is-action-adjust-clothing",
+  "description": "Checks if the triggering event is for the 'intimacy:adjust_clothing' action.",
+  "logic": {
+    "==": [
+      {
+        "var": "event.payload.actionId"
+      },
+      "intimacy:adjust_clothing"
+    ]
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "$schema": "http://example.com/schemas/condition.schema.json",
+  "id": "core:actor-is-following",
+  "description": "Checks if the actor has the 'following' component, meaning they are following another entity.",
+  "logic": {
+    "!!": {
+      "var": "actor.components.core:following"
+    }
+  }
+}

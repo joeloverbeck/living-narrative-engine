@@ -1,0 +1,15 @@
+{
+  "$schema": "http://example.com/schemas/condition.schema.json",
+  "id": "intimacy:target-is-actors-closeness-partner",
+  "description": "Checks if the actor is in a state of closeness with the specific target.",
+  "logic": {
+    "and": [
+      {
+        "condition_ref": "intimacy:actor-is-in-closeness"
+      },
+      {
+        "condition_ref": "intimacy:target-is-in-actors-closeness-partners-list"
+      }
+    ]
+  }
+}

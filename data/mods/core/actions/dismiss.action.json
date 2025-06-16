@@ -9,33 +9,7 @@
   "prerequisites": [
     {
       "logic": {
-        "and": [
-          {
-            "!!": {
-              "var": "actor.components.core:leading"
-            }
-          },
-          {
-            "in": [
-              {
-                "var": "target.id"
-              },
-              {
-                "var": "actor.components.core:leading.followers"
-              }
-            ]
-          },
-          {
-            "==": [
-              {
-                "var": "target.components.core:following.leaderId"
-              },
-              {
-                "var": "actor.id"
-              }
-            ]
-          }
-        ]
+        "condition_ref": "core:target-is-follower-of-actor"
       },
       "failure_message": "You cannot dismiss that target."
     }

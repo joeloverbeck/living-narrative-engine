@@ -4,12 +4,7 @@
   "comment": "Handles the 'intimacy:thumb_wipe_cheek' action. This rule generates descriptive text for the event, dispatches it for others to see and for the actor's UI, and ends the turn.",
   "event_type": "core:attempt_action",
   "condition": {
-    "==": [
-      {
-        "var": "event.payload.actionId"
-      },
-      "intimacy:thumb_wipe_cheek"
-    ]
+    "condition_ref": "intimacy:event-is-action-thumb-wipe-cheek"
   },
   "actions": [
     {
@@ -67,8 +62,6 @@
         "value": "{event.payload.targetId}"
       }
     },
-    {
-      "macro": "core:logSuccessAndEndTurn"
-    }
+    { "macro": "core:logSuccessAndEndTurn" }
   ]
 }

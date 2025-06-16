@@ -1,5 +1,3 @@
-// Filename: src/dependencyInjection/registrations/loaderRegistrations.js
-
 /**
  * @file Registers data loading services and their core dependencies.
  */
@@ -15,6 +13,7 @@
 /** @typedef {import('../../loaders/schemaLoader.js').default} SchemaLoader */
 /** @typedef {import('../../loaders/ruleLoader.js').default} RuleLoader */
 /** @typedef {import('../../loaders/componentLoader.js').default} ComponentDefinitionLoader */
+/** @typedef {import('../../loaders/conditionLoader.js').default} ConditionLoader */
 /** @typedef {import('../../loaders/gameConfigLoader.js').default} GameConfigLoader */ // <<< ADDED
 /** @typedef {import('../../modding/modManifestLoader.js').default} ModManifestLoader */ // <<< ADDED: MODLOADER-005 A
 /** @typedef {import('../../loaders/actionLoader.js').default} ActionLoader */ // <<< ADDED: LOADER-001
@@ -37,6 +36,7 @@ import WorkspaceDataFetcher from '../../data/workspaceDataFetcher.js';
 import SchemaLoader from '../../loaders/schemaLoader.js';
 import RuleLoader from '../../loaders/ruleLoader.js';
 import ComponentLoader from '../../loaders/componentLoader.js';
+import ConditionLoader from '../../loaders/conditionLoader.js';
 import GameConfigLoader from '../../loaders/gameConfigLoader.js';
 import ModManifestLoader from '../../modding/modManifestLoader.js';
 import ActionLoader from '../../loaders/actionLoader.js';
@@ -151,6 +151,21 @@ export function registerLoaders(container) {
   logger.debug(
     `Loaders Registration: Registered ${tokens.ComponentDefinitionLoader}.`
   );
+
+  // ConditionLoader depends on IConfiguration, IPathResolver, IDataFetcher, ISchemaValidator, IDataRegistry, ILogger
+  registrar.singletonFactory(
+    tokens.ConditionLoader,
+    (c) =>
+      new ConditionLoader(
+        c.resolve(tokens.IConfiguration),
+        c.resolve(tokens.IPathResolver),
+        c.resolve(tokens.IDataFetcher),
+        c.resolve(tokens.ISchemaValidator),
+        c.resolve(tokens.IDataRegistry),
+        c.resolve(tokens.ILogger)
+      )
+  );
+  logger.debug(`Loaders Registration: Registered ${tokens.ConditionLoader}.`);
 
   // GameConfigLoader depends on IConfiguration, IPathResolver, IDataFetcher, ISchemaValidator, ILogger
   registrar.singletonFactory(

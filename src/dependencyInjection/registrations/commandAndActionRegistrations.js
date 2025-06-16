@@ -74,6 +74,7 @@ export function registerCommandAndAction(container) {
       tokens.ILogger,
       tokens.JsonLogicEvaluationService,
       tokens.ActionValidationContextBuilder,
+      tokens.IGameDataRepository, // <<< CORRECTED: Changed to use the interface token
     ]
   );
   r.single(

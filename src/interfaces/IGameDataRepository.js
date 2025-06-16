@@ -1,10 +1,13 @@
-// src/interfaces/IGameDataRepository.js
+/**
+ * @typedef {import('../../../data/schemas/action-definition.schema.json').ActionDefinition} ActionDefinition
+ * @typedef {import('../../../data/schemas/condition.schema.json').ConditionDefinition} ConditionDefinition
+ */
 
 /**
  * @interface IGameDataRepository
  * @description Defines the contract for accessing game data definitions.
- * This interface specifies the methods that CommandProcessor.js and its created
- * ActionContext rely upon for retrieving game data, particularly action definitions.
+ * This interface specifies the methods that various services rely upon for
+ * retrieving game data definitions like actions and conditions.
  */
 export class IGameDataRepository {
   /**
@@ -25,6 +28,29 @@ export class IGameDataRepository {
   getAllActionDefinitions() {
     throw new Error(
       'IGameDataRepository.getAllActionDefinitions not implemented.'
+    );
+  }
+
+  /**
+   * Retrieves a specific ConditionDefinition by its ID.
+   *
+   * @param {string} conditionId The fully qualified ID of the condition (e.g., 'core:actor-is-not-rooted').
+   * @returns {ConditionDefinition | null} The condition definition if found, otherwise null.
+   */
+  getConditionDefinition(conditionId) {
+    throw new Error(
+      'IGameDataRepository.getConditionDefinition not implemented.'
+    );
+  }
+
+  /**
+   * Returns all ConditionDefinition objects currently available.
+   *
+   * @returns {ConditionDefinition[]} An array of all condition definitions.
+   */
+  getAllConditionDefinitions() {
+    throw new Error(
+      'IGameDataRepository.getAllConditionDefinitions not implemented.'
     );
   }
 

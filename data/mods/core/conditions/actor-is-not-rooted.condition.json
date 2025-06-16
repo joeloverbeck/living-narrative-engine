@@ -1,0 +1,13 @@
+{
+  "$schema": "http://example.com/schemas/condition.schema.json",
+  "id": "core:actor-is-not-rooted",
+  "description": "Checks if the actor is able to move (i.e., not rooted or movement-locked).",
+  "logic": {
+    "==": [
+      {
+        "var": "actor.components.core:movement.locked"
+      },
+      false
+    ]
+  }
+}

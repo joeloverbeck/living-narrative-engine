@@ -1,0 +1,10 @@
+{
+  "$schema": "http://example.com/schemas/condition.schema.json",
+  "id": "intimacy:actor-is-in-closeness",
+  "description": "Checks if the actor is in a state of 'closeness' with another entity.",
+  "logic": {
+    "!!": {
+      "var": "actor.components.intimacy:closeness"
+    }
+  }
+}

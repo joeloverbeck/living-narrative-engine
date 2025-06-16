@@ -17,6 +17,7 @@ const createMockConfiguration = (overrides = {}) => ({
     if (t === 'mod-manifest')
       return 'http://example.com/schemas/mod.manifest.schema.json';
     if (t === 'game') return 'http://example.com/schemas/game.schema.json';
+    if (t === 'conditions') return 'http://example.com/schemas/condition.schema.json';
     if (t === 'components')
       return 'http://example.com/schemas/components.schema.json';
     // Add mappings for other types if needed by mocks/test, otherwise keep generic
@@ -197,6 +198,7 @@ describe('WorldLoader → ModDependencyValidator integration (missing dependency
   let registry;
   let logger; // Declared here
   let schemaLoader;
+  let conditionLoader;
   let componentDefinitionLoader; // Variable name in test scope
   let ruleLoader;
   let actionLoader;
@@ -211,6 +213,8 @@ describe('WorldLoader → ModDependencyValidator integration (missing dependency
   const MOD_MANIFEST_SCHEMA_ID =
     'http://example.com/schemas/mod.manifest.schema.json';
   const GAME_SCHEMA_ID = 'http://example.com/schemas/game.schema.json';
+  const CONDITION_SCHEMA_ID = 'http://example.com/schemas/condition.schema.json';
+  const CONDITION_CONTAINER_SCHEMA_ID = 'http://example.com/schemas/condition-container.schema.json';
   const COMPONENTS_SCHEMA_ID =
     'http://example.com/schemas/components.schema.json';
   const ENTITY_SCHEMA_ID = 'http://example.com/schemas/entity.schema.json'; // <<< ADDED
@@ -270,6 +274,16 @@ describe('WorldLoader → ModDependencyValidator integration (missing dependency
     },
     additionalProperties: true,
   };
+  const conditionSchema = {
+    $id: CONDITION_SCHEMA_ID,
+    type: 'object',
+    additionalProperties: true,
+  }
+  const conditionContainerSchema = {
+    $id: CONDITION_CONTAINER_SCHEMA_ID,
+    type: 'object',
+    additionalProperties: true,
+  }
   const componentsSchema = {
     $id: COMPONENTS_SCHEMA_ID,
     type: 'object',
@@ -309,6 +323,10 @@ describe('WorldLoader → ModDependencyValidator integration (missing dependency
         try {
           if (!validator.isSchemaLoaded(GAME_SCHEMA_ID))
             await validator.addSchema(gameSchema, GAME_SCHEMA_ID);
+          if (!validator.isSchemaLoaded(CONDITION_SCHEMA_ID))
+            await validator.addSchema(conditionSchema, CONDITION_SCHEMA_ID);
+          if (!validator.isSchemaLoaded(CONDITION_CONTAINER_SCHEMA_ID))
+            await validator.addSchema(conditionContainerSchema, CONDITION_CONTAINER_SCHEMA_ID);
           if (!validator.isSchemaLoaded(COMPONENTS_SCHEMA_ID))
             await validator.addSchema(componentsSchema, COMPONENTS_SCHEMA_ID);
           if (!validator.isSchemaLoaded(MOD_MANIFEST_SCHEMA_ID))
@@ -354,6 +372,9 @@ describe('WorldLoader → ModDependencyValidator integration (missing dependency
 
     /* -------------------- Auxiliary loaders ------------------------------ */
     ruleLoader = { loadItemsForMod: jest.fn().mockResolvedValue(0) };
+    conditionLoader = {
+      loadItemsForMod: jest.fn().mockResolvedValue(0),
+    };
     componentDefinitionLoader = {
       loadItemsForMod: jest.fn().mockResolvedValue(0),
     }; // Keep test variable name
@@ -387,6 +408,7 @@ describe('WorldLoader → ModDependencyValidator integration (missing dependency
       registry, // Property name matches variable name
       logger, // Property name matches variable name
       schemaLoader, // Property name matches variable name
+      conditionLoader,
       componentLoader: componentDefinitionLoader, // Map test variable to constructor property 'componentLoader'
       ruleLoader, // Property name matches variable name
       actionLoader, // Property name matches variable name

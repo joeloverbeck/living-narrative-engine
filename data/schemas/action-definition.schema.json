@@ -47,8 +47,8 @@
         "required": ["logic"],
         "properties": {
           "logic": {
-            "$ref": "./json-logic.schema.json#",
-            "description": "The actual JSON Logic rule object that defines the condition."
+            "$ref": "./condition-container.schema.json#",
+            "description": "The condition to evaluate. Can be an inline JSON-Logic rule or a reference to a named Condition definition via 'condition_ref'."
           },
           "failure_message": {
             "type": "string",

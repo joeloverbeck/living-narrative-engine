@@ -2,36 +2,13 @@
 import jsonLogic from 'json-logic-js';
 import { setupService } from '../utils/serviceInitializerUtils.js';
 
-// -----------------------------------------------------------------------------
-// Ensure the alias "not" behaves the same as the built‑in "!" operator.
-// Some builds of json-logic-js expose the internal `operations` map only after
-// the first custom operation is registered.  Use optional chaining to probe
-// safely, and fall back to a try/catch approach so we never throw during
-// module evaluation inside the test runner.
-// -----------------------------------------------------------------------------
-try {
-  if (jsonLogic?.operations?.not === undefined) {
-    jsonLogic.add_operation('not', (a) => !a);
-  }
-} catch (_e) {
-  // In the unlikely event `add_operation` throws because the op already exists
-  // or the library structure is different, we silently ignore – the goal is
-  // simply to guarantee that a "not" alias is present.
-}
-
 // --- JSDoc Imports for Type Hinting ---
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
-
+/** @typedef {import('../interfaces/IGameDataRepository.js').IGameDataRepository} IGameDataRepository */
 /** @typedef {import('./defs.js').JsonLogicEvaluationContext} JsonLogicEvaluationContext */
 
-/**
- * Recursively scans a JSON Logic rule for {"var": "<path>"} patterns and logs a
- * warning if the path contains square bracket characters.
- *
- * @param {*} rule - The JSON Logic rule or value to inspect.
- * @param {ILogger} logger - Logger used to emit warnings.
- * @private
- */
+// --- REMOVED: The module-level registration attempt has been removed from here ---
+
 function warnOnBracketPaths(rule, logger) {
   if (Array.isArray(rule)) {
     rule.forEach((item) => warnOnBracketPaths(item, logger));
@@ -58,47 +35,91 @@ function warnOnBracketPaths(rule, logger) {
 
 /**
  * @class JsonLogicEvaluationService
- * Encapsulates the evaluation of JSON Logic rules using the 'json-logic-js' library.
- * This service provides a dedicated method to evaluate a given rule (typically a SystemRule condition)
- * against a specific data context, returning a boolean result based on the truthiness
- * of the JSON Logic output.
- * It relies on an injected ILogger for diagnostics.
+ * Encapsulates the evaluation of JSON Logic rules, including resolving condition_ref references.
  */
 class JsonLogicEvaluationService {
-  /**
-   * @private
-   * @type {ILogger}
-   */
+  /** @private @type {ILogger} */
   #logger;
+  /** @private @type {IGameDataRepository} */
+  #gameDataRepository;
 
   /**
    * Creates an instance of JsonLogicEvaluationService.
    *
    * @param {object} dependencies - The required services.
    * @param {ILogger} dependencies.logger - Logging service.
+   * @param {IGameDataRepository} dependencies.gameDataRepository - Repository for accessing condition definitions.
    * @throws {Error} If required dependencies are missing or invalid.
    */
-  constructor({ logger }) {
-    this.#logger = setupService('JsonLogicEvaluationService', logger);
+  constructor({ logger, gameDataRepository }) {
+    this.#logger = setupService('JsonLogicEvaluationService', logger, {
+      gameDataRepository: {
+        value: gameDataRepository,
+        requiredMethods: ['getConditionDefinition'],
+      },
+    });
+    this.#gameDataRepository = gameDataRepository;
+
+    // --- ADDED: Register the 'not' operator alias upon instantiation ---
+    this.addOperation('not', (a) => !a);
+
     this.#logger.debug('JsonLogicEvaluationService initialized.');
+  }
+
+  /**
+   * Recursively resolves all `condition_ref` properties within a rule object
+   * into their corresponding logic definitions.
+   *
+   * @private
+   * @param {object | any} rule - The rule or sub-rule to resolve.
+   * @returns {object | any} The fully resolved rule.
+   */
+  #resolveRule(rule) {
+    if (!rule || typeof rule !== 'object') {
+      return rule;
+    }
+
+    if ('condition_ref' in rule) {
+      const refId = rule.condition_ref;
+
+      const conditionDef = this.#gameDataRepository.getConditionDefinition(refId);
+
+      if (!conditionDef) {
+        this.#logger.error(`Condition reference "${refId}" not found in data registry.`);
+        return { '==': [true, false] };
+      }
+
+      return this.#resolveRule(conditionDef.logic);
+    }
+
+    const resolvedRule = {};
+    for (const key in rule) {
+      if (Object.prototype.hasOwnProperty.call(rule, key)) {
+        const value = rule[key];
+        if (Array.isArray(value)) {
+          resolvedRule[key] = value.map((item) => this.#resolveRule(item));
+        } else {
+          resolvedRule[key] = this.#resolveRule(value);
+        }
+      }
+    }
+    return resolvedRule;
   }
 
   /**
    * Evaluates a JSON Logic rule against a given data context using json-logic-js,
    * returning a strict boolean based on the truthiness of the result.
    *
-   * @param {object} rule - The JSON Logic rule object to evaluate.
+   * @param {object} rule - The JSON Logic rule object to evaluate. Can contain `condition_ref`s.
    * @param {JsonLogicEvaluationContext} context - The data context against which the rule is evaluated.
-   * @returns {boolean} - The boolean result derived from the rule evaluation's truthiness. Returns false on error.
+   * @returns {boolean} - The boolean result. Returns false on error.
    */
   evaluate(rule, context) {
-    // ── Vacuous truth / falsity for empty composites ───────────────────
-    // Parent-ticket spec: an AND with zero operands is true; an OR with
-    // zero operands is false.  json-logic-js returns `undefined` for both,
-    // so we short-circuit here to honour the contract *before* evaluating.
-    if (rule && typeof rule === 'object' && !Array.isArray(rule)) {
-      const [op] = Object.keys(rule);
-      const args = rule[op];
+    const resolvedRule = this.#resolveRule(rule);
+
+    if (resolvedRule && typeof resolvedRule === 'object' && !Array.isArray(resolvedRule)) {
+      const [op] = Object.keys(resolvedRule);
+      const args = resolvedRule[op];
       if (op === 'and' && Array.isArray(args) && args.length === 0) {
         this.#logger.debug('Special-case {and: []} ⇒ true (vacuous truth)');
         return true;
@@ -109,42 +130,28 @@ class JsonLogicEvaluationService {
       }
     }
 
-    // Scan for any var paths using unsupported bracket notation
-    warnOnBracketPaths(rule, this.#logger);
+    warnOnBracketPaths(resolvedRule, this.#logger);
 
     const ruleSummary =
-      JSON.stringify(rule).substring(0, 150) +
-      (JSON.stringify(rule).length > 150 ? '...' : '');
+      JSON.stringify(resolvedRule).substring(0, 150) +
+      (JSON.stringify(resolvedRule).length > 150 ? '...' : '');
     this.#logger.debug(
       `Evaluating rule: ${ruleSummary}. Context keys: ${Object.keys(context || {}).join(', ')}`
     );
-    // console.log("Context for evaluation:"); // Uncomment for deep debugging if needed
-    // console.dir(context, {depth: 5}); // Uncomment for deep debugging if needed
 
     try {
-      const rawResult = jsonLogic.apply(rule, context);
-
-      // --- DEBUG LOGGING ---
-      // console.log(`[DEBUG] Rule: ${JSON.stringify(rule)}`);
-      // console.log(`[DEBUG] Raw jsonLogic.apply result:`, rawResult);
-      // console.log(`[DEBUG] typeof result: ${typeof rawResult}`);
-      // --- END DEBUG LOGGING ---
-
-      // Convert the raw result (which might not be boolean) to its boolean equivalent
-      // based on JavaScript's truthiness rules (0, "", null, undefined, false, [] are falsy).
-      const finalBooleanResult = !!rawResult; // <-- FIX APPLIED HERE
+      const rawResult = jsonLogic.apply(resolvedRule, context);
+      const finalBooleanResult = !!rawResult;
 
       this.#logger.debug(
         `Rule evaluation raw result: ${JSON.stringify(rawResult)}, Final boolean: ${finalBooleanResult}`
       );
       return finalBooleanResult;
     } catch (error) {
-      // Log actual errors from the library execution
       this.#logger.error(
         `Error evaluating JSON Logic rule: ${ruleSummary}. Context keys: ${Object.keys(context || {}).join(', ')}`,
         error
       );
-      // Return false to prevent actions from running when condition evaluation fails critically
       return false;
     }
   }
@@ -152,7 +159,7 @@ class JsonLogicEvaluationService {
   /**
    * Allows adding custom operations to the underlying json-logic-js instance.
    *
-   * @param {string} name - The name of the custom operator (e.g., "hasComponent").
+   * @param {string} name - The name of the custom operator.
    * @param {Function} func - The function implementing the operator logic.
    */
   addOperation(name, func) {
@@ -182,7 +189,7 @@ export default JsonLogicEvaluationService;
  * @param {ILogger} logger - Logger for debug/error messages.
  * @param {string} label - Prefix for log statements.
  * @returns {{result: boolean, errored: boolean, error: Error|undefined}} Outcome
- *          of the evaluation.
+ * of the evaluation.
  */
 export function evaluateConditionWithLogging(
   service,

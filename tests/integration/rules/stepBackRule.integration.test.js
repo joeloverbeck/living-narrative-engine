@@ -8,6 +8,8 @@ import ruleSchema from '../../../data/schemas/rule.schema.json';
 import commonSchema from '../../../data/schemas/common.schema.json';
 import operationSchema from '../../../data/schemas/operation.schema.json';
 import jsonLogicSchema from '../../../data/schemas/json-logic.schema.json';
+import conditionSchema from '../../../data/schemas/condition.schema.json';
+import conditionContainerSchema from '../../../data/schemas/condition-container.schema.json';
 import loadOperationSchemas from '../../helpers/loadOperationSchemas.js';
 import stepBackRule from '../../../data/mods/intimacy/rules/step_back.rule.json';
 import logSuccessMacro from '../../../data/mods/core/macros/logSuccessAndEndTurn.macro.json';
@@ -267,6 +269,8 @@ describe('intimacy_handle_step_back rule integration', () => {
       jsonLogicSchema,
       'http://example.com/schemas/json-logic.schema.json'
     );
+    ajv.addSchema(conditionSchema, 'http://example.com/schemas/condition.schema.json');
+    ajv.addSchema(conditionContainerSchema, 'http://example.com/schemas/condition-container.schema.json');
     const macros = { 'core:logSuccessAndEndTurn': logSuccessMacro };
     const expanded = expandMacros(stepBackRule.actions, {
       get: (type, id) => (type === 'macros' ? macros[id] : undefined),

@@ -9,20 +9,13 @@
   "prerequisites": [
     {
       "logic": {
-        "==": [
-          {
-            "var": "actor.components.core:movement.locked"
-          },
-          false
-        ]
+        "condition_ref": "core:actor-is-not-rooted"
       },
       "failure_message": "You are rooted and cannot stop following."
     },
     {
       "logic": {
-        "!!": {
-          "var": "actor.components.core:following"
-        }
+        "condition_ref": "core:actor-is-following"
       },
       "failure_message": "You are not following anyone."
     }

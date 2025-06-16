@@ -1,14 +1,13 @@
-// Filename: src/loaders/worldLoader.js
-
 // --- Type‑only JSDoc imports ────────────────────────────────────────────────
-/** @typedef {import('../interfaces/coreServices.js').ILogger}             ILogger */
+/** @typedef {import('../interfaces/coreServices.js').ILogger}               ILogger */
 /** @typedef {import('../interfaces/coreServices.js').ISchemaValidator}    ISchemaValidator */
-/** @typedef {import('../interfaces/coreServices.js').IDataRegistry}       IDataRegistry */
-/** @typedef {import('../interfaces/coreServices.js').IConfiguration}      IConfiguration */
+/** @typedef {import('../interfaces/coreServices.js').IDataRegistry}         IDataRegistry */
+/** @typedef {import('../interfaces/coreServices.js').IConfiguration}       IConfiguration */
 /** @typedef {import('../interfaces/coreServices.js').BaseManifestItemLoaderInterface} BaseManifestItemLoaderInterface */ // Assuming an interface exists for loaders
 /** @typedef {import('./actionLoader.js').default} ActionLoader */
 /** @typedef {import('./eventLoader.js').default} EventLoader */
 /** @typedef {import('./componentLoader.js').default} ComponentLoader */
+/** @typedef {import('./conditionLoader.js').default} ConditionLoader */
 /** @typedef {import('./ruleLoader.js').default} RuleLoader */
 /** @typedef {import('./macroLoader.js').default} MacroLoader */
 /** @typedef {import('./schemaLoader.js').default} SchemaLoader */
@@ -24,7 +23,6 @@ import ModDependencyValidator from '../modding/modDependencyValidator.js';
 import validateModEngineVersions from '../modding/modVersionValidator.js';
 import ModDependencyError from '../errors/modDependencyError.js';
 import WorldLoaderError from '../errors/worldLoaderError.js';
-// import {ENGINE_VERSION} from '../engineVersion.js'; // Not directly used in this logic, commented out
 import { resolveOrder } from '../modding/modLoadOrderResolver.js';
 import AbstractLoader from './abstractLoader.js';
 
@@ -71,6 +69,7 @@ class WorldLoader extends AbstractLoader {
   /** @type {IConfiguration} */ #configuration;
   /** @type {SchemaLoader}   */ #schemaLoader;
   /** @type {ComponentLoader}*/ #componentDefinitionLoader;
+  /** @type {ConditionLoader}*/ #conditionLoader;
   /** @type {RuleLoader}     */ #ruleLoader;
   /** @type {MacroLoader}    */ #macroLoader;
   /** @type {ActionLoader}   */ #actionLoader;
@@ -99,6 +98,7 @@ class WorldLoader extends AbstractLoader {
    * @param {ILogger} dependencies.logger - The logging service.
    * @param {SchemaLoader} dependencies.schemaLoader - Loader for JSON schemas.
    * @param {ComponentLoader} dependencies.componentLoader - Loader for component definitions.
+   * @param {ConditionLoader} dependencies.conditionLoader - Loader for condition definitions.
    * @param {RuleLoader} dependencies.ruleLoader - Loader for system rules.
    * @param {MacroLoader} [dependencies.macroLoader] - Loader for macro definitions.
    * @param {ActionLoader} dependencies.actionLoader - Loader for action definitions.
@@ -113,22 +113,23 @@ class WorldLoader extends AbstractLoader {
    * @throws {Error} If any required dependency is missing or invalid.
    */
   constructor({
-    registry,
-    logger,
-    schemaLoader,
-    componentLoader,
-    ruleLoader,
-    macroLoader,
-    actionLoader,
-    eventLoader,
-    entityLoader,
-    validator,
-    configuration,
-    gameConfigLoader,
-    promptTextLoader,
-    modManifestLoader,
-    validatedEventDispatcher,
-  }) {
+                registry,
+                logger,
+                schemaLoader,
+                componentLoader,
+                conditionLoader,
+                ruleLoader,
+                macroLoader,
+                actionLoader,
+                eventLoader,
+                entityLoader,
+                validator,
+                configuration,
+                gameConfigLoader,
+                promptTextLoader,
+                modManifestLoader,
+                validatedEventDispatcher,
+              }) {
     super(logger, [
       {
         dependency: registry,
@@ -143,6 +144,11 @@ class WorldLoader extends AbstractLoader {
       {
         dependency: componentLoader,
         name: 'ComponentLoader',
+        methods: ['loadItemsForMod'],
+      },
+      {
+        dependency: conditionLoader,
+        name: 'ConditionLoader',
         methods: ['loadItemsForMod'],
       },
       {
@@ -203,6 +209,7 @@ class WorldLoader extends AbstractLoader {
     this.#registry = registry;
     this.#schemaLoader = schemaLoader;
     this.#componentDefinitionLoader = componentLoader;
+    this.#conditionLoader = conditionLoader;
     this.#ruleLoader = ruleLoader;
     this.#macroLoader = macroLoader || {
       loadItemsForMod: async () => ({ count: 0, overrides: 0, errors: 0 }),
@@ -230,6 +237,12 @@ class WorldLoader extends AbstractLoader {
         contentKey: 'events',
         contentTypeDir: 'events',
         typeName: 'events',
+      },
+      {
+        loader: this.#conditionLoader,
+        contentKey: 'conditions',
+        contentTypeDir: 'conditions',
+        typeName: 'conditions',
       },
       {
         loader: this.#macroLoader,
@@ -327,6 +340,7 @@ class WorldLoader extends AbstractLoader {
         this.#configuration.getContentTypeSchemaId('actions'),
         this.#configuration.getContentTypeSchemaId('events'),
         this.#configuration.getContentTypeSchemaId('rules'),
+        this.#configuration.getContentTypeSchemaId('conditions'),
       ];
       this.#logger.debug(
         `WorldLoader: Checking for essential schemas: [${essentials.filter((id) => !!id).join(', ')}]`
@@ -711,7 +725,7 @@ class WorldLoader extends AbstractLoader {
     this.#logger.info(
       `  • Requested Mods (raw): [${requestedModIds.join(', ')}]`
     );
-    this.#logger.info(`  • Final Load Order    : [${finalOrder.join(', ')}]`);
+    this.#logger.info(`  • Final Load Order     : [${finalOrder.join(', ')}]`);
     if (incompatibilityCount > 0) {
       // Logged as warning because it indicates potential issues, even if loading continued
       this.#logger.warn(
@@ -726,7 +740,7 @@ class WorldLoader extends AbstractLoader {
         const paddedTypeName = typeName.padEnd(20, ' ');
         // Display Totals: C=Count, O=Overrides, E=Errors during load
         const details = `C:${counts.count}, O:${counts.overrides}, E:${counts.errors}`;
-        this.#logger.info(`    - ${paddedTypeName}: ${details}`);
+        this.#logger.info(`     - ${paddedTypeName}: ${details}`);
       }
       // Calculate grand totals
       const grandTotalCount = Object.values(totalCounts).reduce(
@@ -742,14 +756,14 @@ class WorldLoader extends AbstractLoader {
         0
       );
       this.#logger.info(
-        `    - ${''.padEnd(20, '-')}--------------------------`
+        `     - ${''.padEnd(20, '-')}--------------------------`
       );
       this.#logger.info(
-        `    - ${'TOTAL'.padEnd(20, ' ')}: C:${grandTotalCount}, O:${grandTotalOverrides}, E:${grandTotalErrors}`
+        `     - ${'TOTAL'.padEnd(20, ' ')}: C:${grandTotalCount}, O:${grandTotalOverrides}, E:${grandTotalErrors}`
       );
     } else {
       this.#logger.info(
-        `    - No specific content items were processed by loaders in this run.`
+        `     - No specific content items were processed by loaders in this run.`
       );
     }
     this.#logger.info('———————————————————————————————————————————');

@@ -8,6 +8,8 @@ import ruleSchema from '../../../data/schemas/rule.schema.json';
 import commonSchema from '../../../data/schemas/common.schema.json';
 import operationSchema from '../../../data/schemas/operation.schema.json';
 import jsonLogicSchema from '../../../data/schemas/json-logic.schema.json';
+import conditionSchema from '../../../data/schemas/condition.schema.json';
+import conditionContainerSchema from '../../../data/schemas/condition-container.schema.json';
 import loadOperationSchemas from '../../helpers/loadOperationSchemas.js';
 import goRule from '../../../data/mods/core/rules/go.rule.json';
 import displaySuccessAndEndTurn from '../../../data/mods/core/macros/displaySuccessAndEndTurn.macro.json';
@@ -289,6 +291,14 @@ describe('core_handle_go rule integration', () => {
     ajv.addSchema(
       jsonLogicSchema,
       'http://example.com/schemas/json-logic.schema.json'
+    );
+    ajv.addSchema(
+      conditionContainerSchema,
+      'http://example.com/schemas/condition-container.schema.json'
+    );
+    ajv.addSchema(
+      conditionSchema,
+      'http://example.com/schemas/condition.schema.json'
     );
     const valid = ajv.validate(ruleSchema, goRule);
     if (!valid) console.error(ajv.errors);

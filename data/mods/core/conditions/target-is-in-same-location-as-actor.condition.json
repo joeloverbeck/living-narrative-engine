@@ -1,0 +1,15 @@
+{
+  "$schema": "http://example.com/schemas/condition.schema.json",
+  "id": "core:target-is-in-same-location-as-actor",
+  "description": "Checks if the target and actor share the same locationId.",
+  "logic": {
+    "==": [
+      {
+        "var": "actor.components.core:position.locationId"
+      },
+      {
+        "var": "target.components.core:position.locationId"
+      }
+    ]
+  }
+}

@@ -93,6 +93,7 @@ export function registerInfrastructure(container) {
         registry: c.resolve(tokens.IDataRegistry),
         logger: c.resolve(tokens.ILogger),
         schemaLoader: c.resolve(tokens.SchemaLoader),
+        conditionLoader: c.resolve(tokens.ConditionLoader),
         componentLoader: c.resolve(tokens.ComponentDefinitionLoader),
         macroLoader: c.resolve(tokens.MacroLoader),
         ruleLoader: c.resolve(tokens.RuleLoader),

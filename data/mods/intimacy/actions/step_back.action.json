@@ -9,9 +9,7 @@
   "prerequisites": [
     {
       "logic": {
-        "!!": {
-          "var": "actor.components.intimacy:closeness"
-        }
+        "condition_ref": "intimacy:actor-is-in-closeness"
       },
       "failure_message": "You are not in a state of closeness to step back from."
     }

@@ -4,12 +4,7 @@
   "comment": "Handles the 'core:dismiss' action. Removes the component from the TARGET, updates the ACTOR's (leader's) cache, dispatches a conditional perceptible event and a success UI event, and ends the turn.",
   "event_type": "core:attempt_action",
   "condition": {
-    "==": [
-      {
-        "var": "event.payload.actionId"
-      },
-      "core:dismiss"
-    ]
+    "condition_ref": "core:event-is-action-dismiss"
   },
   "actions": [
     {

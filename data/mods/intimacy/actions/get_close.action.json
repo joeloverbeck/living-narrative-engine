@@ -9,49 +9,7 @@
   "prerequisites": [
     {
       "logic": {
-        "and": [
-          {
-            "!!": {
-              "var": "target.components.core:actor"
-            }
-          },
-          {
-            "!=": [
-              {
-                "var": "actor.id"
-              },
-              {
-                "var": "target.id"
-              }
-            ]
-          },
-          {
-            "==": [
-              {
-                "var": "actor.components.core:position.locationId"
-              },
-              {
-                "var": "target.components.core:position.locationId"
-              }
-            ]
-          },
-          {
-            "==": [
-              {
-                "var": "actor.components.core:movement.locked"
-              },
-              false
-            ]
-          },
-          {
-            "==": [
-              {
-                "var": "target.components.core:movement.locked"
-              },
-              false
-            ]
-          }
-        ]
+        "condition_ref": "intimacy:actor-and-target-can-get-close"
       },
       "failure_message": "You cannot get close with that target right now."
     }

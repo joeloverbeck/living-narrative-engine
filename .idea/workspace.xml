@@ -1,99 +1,256 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="AutoImportSettings">
-    <option name="autoReloadType" value="SELECTIVE" />
-  </component>
   <component name="ChangeListManager">
-    <list default="true" id="f2176490-fa0e-405e-af38-7bec8f5491f5" name="Changes" comment="Formatting.">
+    <list default="true" id="9bb199df-dcfd-4da4-888d-c661f61552c0" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/jsonSchemas.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/living-narrative-engine.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/living-narrative-engine.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/css/components/_actions-widget.css" beforeDir="false" afterPath="$PROJECT_DIR$/css/components/_actions-widget.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/mods/core/actions/dismiss.action.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/core/actions/dismiss.action.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/mods/core/actions/follow.action.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/core/actions/follow.action.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/mods/core/actions/go.action.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/core/actions/go.action.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/mods/core/actions/stop_following.action.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/core/actions/stop_following.action.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/mods/core/mod.manifest.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/core/mod.manifest.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/mods/core/rules/dismiss.rule.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/core/rules/dismiss.rule.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/mods/core/rules/follow.rule.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/core/rules/follow.rule.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/mods/core/rules/follow_auto_move.rule.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/core/rules/follow_auto_move.rule.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/mods/core/rules/go.rule.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/core/rules/go.rule.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/mods/core/rules/stop_following.rule.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/core/rules/stop_following.rule.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/mods/core/rules/wait.rule.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/core/rules/wait.rule.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/mods/intimacy/actions/adjust_clothing.action.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/intimacy/actions/adjust_clothing.action.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/mods/intimacy/actions/get_close.action.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/intimacy/actions/get_close.action.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/mods/intimacy/actions/step_back.action.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/intimacy/actions/step_back.action.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/mods/intimacy/actions/thumb_wipe_cheek.action.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/intimacy/actions/thumb_wipe_cheek.action.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/mods/intimacy/mod.manifest.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/intimacy/mod.manifest.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/mods/intimacy/rules/adjust_clothing.rule.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/intimacy/rules/adjust_clothing.rule.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/mods/intimacy/rules/get_close.rule.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/intimacy/rules/get_close.rule.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/mods/intimacy/rules/step_back.rule.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/intimacy/rules/step_back.rule.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/mods/intimacy/rules/thumb_wipe_cheek.rule.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/intimacy/rules/thumb_wipe_cheek.rule.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/mods/isekai/mod.manifest.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/isekai/mod.manifest.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/schemas/action-definition.schema.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/schemas/action-definition.schema.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/schemas/json-logic.schema.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/schemas/json-logic.schema.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/schemas/mod.manifest.schema.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/schemas/mod.manifest.schema.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/schemas/operations/addComponent.schema.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/schemas/operations/addComponent.schema.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/schemas/operations/addPerceptionLogEntry.schema.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/schemas/operations/addPerceptionLogEntry.schema.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/schemas/operations/autoMoveFollowers.schema.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/schemas/operations/autoMoveFollowers.schema.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/schemas/operations/breakFollowRelation.schema.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/schemas/operations/breakFollowRelation.schema.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/schemas/operations/checkFollowCycle.schema.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/schemas/operations/checkFollowCycle.schema.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/schemas/operations/dispatchEvent.schema.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/schemas/operations/dispatchEvent.schema.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/schemas/operations/dispatchPerceptibleEvent.schema.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/schemas/operations/dispatchPerceptibleEvent.schema.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/schemas/operations/dispatchSpeech.schema.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/schemas/operations/dispatchSpeech.schema.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/schemas/operations/endTurn.schema.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/schemas/operations/endTurn.schema.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/schemas/operations/establishFollowRelation.schema.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/schemas/operations/establishFollowRelation.schema.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/schemas/operations/forEach.schema.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/schemas/operations/forEach.schema.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/schemas/operations/getName.schema.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/schemas/operations/getName.schema.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/schemas/operations/getTimestamp.schema.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/schemas/operations/getTimestamp.schema.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/schemas/operations/hasComponent.schema.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/schemas/operations/hasComponent.schema.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/schemas/operations/if.schema.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/schemas/operations/if.schema.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/schemas/operations/ifCoLocated.schema.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/schemas/operations/ifCoLocated.schema.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/schemas/operations/log.schema.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/schemas/operations/log.schema.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/schemas/operations/math.schema.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/schemas/operations/math.schema.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/schemas/operations/mergeClosenessCircle.schema.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/schemas/operations/mergeClosenessCircle.schema.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/schemas/operations/modifyArrayField.schema.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/schemas/operations/modifyArrayField.schema.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/schemas/operations/modifyComponent.schema.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/schemas/operations/modifyComponent.schema.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/schemas/operations/modifyContextArray.schema.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/schemas/operations/modifyContextArray.schema.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/schemas/operations/queryComponent.schema.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/schemas/operations/queryComponent.schema.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/schemas/operations/queryComponents.schema.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/schemas/operations/queryComponents.schema.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/schemas/operations/queryEntities.schema.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/schemas/operations/queryEntities.schema.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/schemas/operations/rebuildLeaderListCache.schema.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/schemas/operations/rebuildLeaderListCache.schema.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/schemas/operations/removeComponent.schema.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/schemas/operations/removeComponent.schema.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/schemas/operations/removeFromClosenessCircle.schema.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/schemas/operations/removeFromClosenessCircle.schema.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/schemas/operations/resolveDirection.schema.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/schemas/operations/resolveDirection.schema.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/schemas/operations/setVariable.schema.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/schemas/operations/setVariable.schema.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/schemas/operations/systemMoveEntity.schema.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/schemas/operations/systemMoveEntity.schema.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/schemas/rule.schema.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/schemas/rule.schema.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dependencies.svg" beforeDir="false" afterPath="$PROJECT_DIR$/dependencies.svg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/json-logic/json-logic for modders.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/json-logic/json-logic for modders.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/mods/namespaced_ids_and_resolveFields.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/mods/namespaced_ids_and_resolveFields.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/jest.config.js" beforeDir="false" afterPath="$PROJECT_DIR$/jest.config.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/actions/actionDiscoveryService.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/actions/actionDiscoveryService.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/actions/actionFormatter.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/actions/actionFormatter.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/actions/validation/actionValidationContextBuilder.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/actions/validation/actionValidationContextBuilder.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/actions/validation/actionValidationService.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/actions/validation/actionValidationService.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/actions/validation/prerequisiteEvaluationService.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/actions/validation/prerequisiteEvaluationService.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/configuration/staticConfiguration.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/configuration/staticConfiguration.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/data/gameDataRepository.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/data/gameDataRepository.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/data/inMemoryDataRegistry.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/data/inMemoryDataRegistry.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/dependencyInjection/registrations/aiRegistrations.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/registrations/aiRegistrations.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/dependencyInjection/registrations/commandAndActionRegistrations.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/registrations/commandAndActionRegistrations.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/dependencyInjection/registrations/infrastructureRegistrations.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/registrations/infrastructureRegistrations.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/dependencyInjection/registrations/loadersRegistrations.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/registrations/loadersRegistrations.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/dependencyInjection/registrations/turnLifecycleRegistrations.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/registrations/turnLifecycleRegistrations.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/dependencyInjection/registrations/worldAndEntityRegistrations.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/registrations/worldAndEntityRegistrations.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/dependencyInjection/tokens.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/tokens.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/domUI/actionButtonsRenderer.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/domUI/actionButtonsRenderer.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/domUI/chatAlertRenderer.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/domUI/chatAlertRenderer.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/domUI/llmSelectionModal.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/domUI/llmSelectionModal.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/domUI/loadGameUI.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/domUI/loadGameUI.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/domUI/saveGameUI.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/domUI/saveGameUI.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/domUI/selectableListDisplayComponent.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/domUI/selectableListDisplayComponent.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/domUI/slotModalBase.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/domUI/slotModalBase.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/entities/entity.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/entities/entity.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/entities/entityManager.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/entities/entityManager.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/entities/spatialIndexManager.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/entities/spatialIndexManager.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/interfaces/IGameDataRepository.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/interfaces/IGameDataRepository.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/interfaces/IPromptElementAssembler.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/interfaces/IPromptElementAssembler.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/interfaces/coreServices.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/interfaces/coreServices.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/llms/clientApiKeyProvider.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/llms/clientApiKeyProvider.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/llms/serverApiKeyProvider.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/llms/serverApiKeyProvider.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/loaders/baseManifestItemLoader.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/loaders/baseManifestItemLoader.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/loaders/gameConfigLoader.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/loaders/gameConfigLoader.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/loaders/worldLoader.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/loaders/worldLoader.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/logic/contextAssembler.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/logic/contextAssembler.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/logic/jsonLogicEvaluationService.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/logic/jsonLogicEvaluationService.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/logic/operationHandlers/addComponentHandler.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/logic/operationHandlers/addComponentHandler.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/logic/operationHandlers/addPerceptionLogEntryHandler.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/logic/operationHandlers/addPerceptionLogEntryHandler.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/logic/operationHandlers/autoMoveFollowersHandler.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/logic/operationHandlers/autoMoveFollowersHandler.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/logic/operationHandlers/baseOperationHandler.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/logic/operationHandlers/baseOperationHandler.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/logic/operationHandlers/breakFollowRelationHandler.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/logic/operationHandlers/breakFollowRelationHandler.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/logic/operationHandlers/checkFollowCycleHandler.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/logic/operationHandlers/checkFollowCycleHandler.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/logic/operationHandlers/dispatchEventHandler.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/logic/operationHandlers/dispatchEventHandler.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/logic/operationHandlers/dispatchPerceptibleEventHandler.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/logic/operationHandlers/dispatchPerceptibleEventHandler.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/logic/operationHandlers/dispatchSpeechHandler.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/logic/operationHandlers/dispatchSpeechHandler.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/logic/operationHandlers/endTurnHandler.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/logic/operationHandlers/endTurnHandler.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/logic/operationHandlers/establishFollowRelationHandler.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/logic/operationHandlers/establishFollowRelationHandler.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/logic/operationHandlers/getNameHandler.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/logic/operationHandlers/getNameHandler.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/logic/operationHandlers/getTimestampHandler.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/logic/operationHandlers/getTimestampHandler.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/logic/operationHandlers/hasComponentHandler.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/logic/operationHandlers/hasComponentHandler.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/logic/operationHandlers/ifCoLocatedHandler.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/logic/operationHandlers/ifCoLocatedHandler.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/logic/operationHandlers/logHandler.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/logic/operationHandlers/logHandler.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/logic/operationHandlers/mathHandler.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/logic/operationHandlers/mathHandler.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/logic/operationHandlers/mergeClosenessCircleHandler.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/logic/operationHandlers/mergeClosenessCircleHandler.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/logic/operationHandlers/modifyArrayFieldHandler.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/logic/operationHandlers/modifyArrayFieldHandler.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/logic/operationHandlers/modifyComponentHandler.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/logic/operationHandlers/modifyComponentHandler.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/logic/operationHandlers/modifyContextArrayHandler.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/logic/operationHandlers/modifyContextArrayHandler.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/logic/operationHandlers/queryComponentHandler.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/logic/operationHandlers/queryComponentHandler.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/logic/operationHandlers/queryComponentsHandler.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/logic/operationHandlers/queryComponentsHandler.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/logic/operationHandlers/queryEntitiesHandler.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/logic/operationHandlers/queryEntitiesHandler.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/logic/operationHandlers/rebuildLeaderListCacheHandler.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/logic/operationHandlers/rebuildLeaderListCacheHandler.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/logic/operationHandlers/removeComponentHandler.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/logic/operationHandlers/removeComponentHandler.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/logic/operationHandlers/removeFromClosenessCircleHandler.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/logic/operationHandlers/removeFromClosenessCircleHandler.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/logic/operationHandlers/resolveDirectionHandler.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/logic/operationHandlers/resolveDirectionHandler.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/logic/operationHandlers/setVariableHandler.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/logic/operationHandlers/setVariableHandler.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/logic/operationHandlers/systemMoveEntityHandler.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/logic/operationHandlers/systemMoveEntityHandler.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/logic/operationInterpreter.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/logic/operationInterpreter.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/logic/operationRegistry.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/logic/operationRegistry.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/logic/systemLogicInterpreter.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/logic/systemLogicInterpreter.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/persistence/componentCleaningService.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/persistence/componentCleaningService.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/persistence/gamePersistenceService.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/persistence/gamePersistenceService.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/persistence/gameStateCaptureService.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/persistence/gameStateCaptureService.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/persistence/gameStateSerializer.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/persistence/gameStateSerializer.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/persistence/saveFileIO.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/persistence/saveFileIO.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/persistence/saveLoadService.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/persistence/saveLoadService.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/persistence/saveValidationService.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/persistence/saveValidationService.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/prompting/assembling/standardElementAssembler.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/prompting/assembling/standardElementAssembler.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/prompting/promptAssembler.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/prompting/promptAssembler.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/prompting/promptBuilder.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/prompting/promptBuilder.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/turns/handlers/genericTurnHandler.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/handlers/genericTurnHandler.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/turns/services/LLMResponseProcessor.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/services/LLMResponseProcessor.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/turns/states/helpers/getServiceFromContext.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/states/helpers/getServiceFromContext.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/turns/strategies/genericTurnStrategy.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/strategies/genericTurnStrategy.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/utils/apiUtils.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils/apiUtils.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/utils/contextUtils.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils/contextUtils.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/utils/contextVariableUtils.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils/contextVariableUtils.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/utils/decisionResultUtils.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils/decisionResultUtils.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/utils/entityAssertionsUtils.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils/entityAssertionsUtils.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/utils/errorUtils.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils/errorUtils.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/utils/handlerUtils/indexUtils.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils/handlerUtils/indexUtils.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/utils/handlerUtils/paramsUtils.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils/handlerUtils/paramsUtils.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/utils/handlerUtils/serviceUtils.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils/handlerUtils/serviceUtils.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/utils/listNavigationUtils.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils/listNavigationUtils.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/utils/locationUtils.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils/locationUtils.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/utils/mapManagerUtils.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils/mapManagerUtils.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/utils/objectUtils.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils/objectUtils.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/utils/placeholderResolverUtils.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils/placeholderResolverUtils.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/utils/processEnvReaderUtils.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils/processEnvReaderUtils.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/utils/safeDispatchErrorUtils.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils/safeDispatchErrorUtils.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/utils/savePathUtils.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils/savePathUtils.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/utils/schemaValidationUtils.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils/schemaValidationUtils.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/utils/serviceInitializerUtils.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils/serviceInitializerUtils.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/utils/stringAccumulatorUtils.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils/stringAccumulatorUtils.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/utils/throttleUtils.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils/throttleUtils.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/utils/validationUtils.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils/validationUtils.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/utils/wrapperUtils.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils/wrapperUtils.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/alerting/throttleUtils.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/alerting/throttleUtils.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/bootstrapper/errorUtils.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/bootstrapper/errorUtils.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/bootstrapper/stages.additional.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/bootstrapper/stages.additional.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/bootstrapper/stages.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/bootstrapper/stages.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/config/registrations/infrastructureRegistrations.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/config/registrations/infrastructureRegistrations.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/config/registrations/loadersRegistrations.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/config/registrations/loadersRegistrations.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/config/registrations/promptBuilderRegistration.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/config/registrations/promptBuilderRegistration.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/dependencyInjection/registrations/aiRegistrations.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/dependencyInjection/registrations/aiRegistrations.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/domUI/actionButtonsRenderer.confirmActionButton.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/domUI/actionButtonsRenderer.confirmActionButton.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/domUI/helpers/createMessageElement.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/domUI/helpers/createMessageElement.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/integration/EndToEndMemoryFlow.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/integration/EndToEndMemoryFlow.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/integration/EndToEndNotesPersistence.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/integration/EndToEndNotesPersistence.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/integration/modLoadDependencyFail.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/integration/modLoadDependencyFail.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/integration/promptBuilder.integration.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/integration/promptBuilder.integration.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/integration/rules/goRule.integration.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/integration/rules/goRule.integration.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/integration/rules/stepBackRule.integration.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/integration/rules/stepBackRule.integration.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/integration/saveLoadRoundTrip.integration.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/integration/saveLoadRoundTrip.integration.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/logic/contextUtils.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/logic/contextUtils.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/logic/jsonLogicEvaluationService.varPathWarning.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/logic/jsonLogicEvaluationService.varPathWarning.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/main/main.bootstrapFlow.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/main/main.bootstrapFlow.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/main/main.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/main/main.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/prompting/PromptAssembly.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/prompting/PromptAssembly.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/services/gameStateSerializer.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/services/gameStateSerializer.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/services/promptElementAssemblers/perceptionLogAssembler.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/services/promptElementAssemblers/perceptionLogAssembler.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/services/promptElementAssemblers/standardElementAssembler.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/services/promptElementAssemblers/standardElementAssembler.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/services/saveLoadService.additional.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/services/saveLoadService.additional.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/services/saveLoadService.constructor.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/services/saveLoadService.constructor.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/services/saveLoadService.edgeCases.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/services/saveLoadService.edgeCases.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/services/saveLoadService.errorPaths.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/services/saveLoadService.errorPaths.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/services/saveLoadService.noEnsureDirectoryExists.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/services/saveLoadService.noEnsureDirectoryExists.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/services/saveLoadService.privateHelpers.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/services/saveLoadService.privateHelpers.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/services/saveValidationService.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/services/saveValidationService.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/testUtils.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/testUtils.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/utils/decisionResultUtils.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/utils/decisionResultUtils.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/utils/entityAssertionsUtils.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/utils/entityAssertionsUtils.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/utils/handlerUtils.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/utils/handlerUtils.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/utils/listNavigationUtils.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/utils/listNavigationUtils.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/utils/loggerInitUsage.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/utils/loggerInitUsage.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/utils/mapManagerUtils.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/utils/mapManagerUtils.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/utils/placeholderResolverUtils.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/utils/placeholderResolverUtils.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/utils/processEnvReaderUtils.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/utils/processEnvReaderUtils.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/utils/safeDispatchErrorUtils.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/utils/safeDispatchErrorUtils.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/utils/schemaValidationUtils.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/utils/schemaValidationUtils.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/utils/serviceInitializerUtils.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/utils/serviceInitializerUtils.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/utils/stringAccumulatorUtils.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/utils/stringAccumulatorUtils.test.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
-  <component name="FileTemplateManagerImpl">
-    <option name="RECENT_TEMPLATES">
-      <list>
-        <option value="JavaScript File" />
-      </list>
-    </option>
-  </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="GitHubPullRequestSearchHistory">{
-  &quot;lastFilter&quot;: {
-    &quot;state&quot;: &quot;OPEN&quot;,
-    &quot;assignee&quot;: &quot;joeloverbeck&quot;
+  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
+  "lastFilter": {
+    "state": "OPEN",
+    "assignee": "joeloverbeck"
   }
-}</component>
-  <component name="GithubPullRequestsUISettings">{
-  &quot;selectedUrlAndAccountId&quot;: {
-    &quot;url&quot;: &quot;https://github.com/joeloverbeck/living-narrative-engine.git&quot;,
-    &quot;accountId&quot;: &quot;e87db63c-2fda-4154-8e23-63c0c53d7f35&quot;
+}]]></component>
+  <component name="GithubPullRequestsUISettings"><![CDATA[{
+  "selectedUrlAndAccountId": {
+    "url": "https://github.com/joeloverbeck/living-narrative-engine.git",
+    "accountId": "e87db63c-2fda-4154-8e23-63c0c53d7f35"
   }
-}</component>
-  <component name="ProjectColorInfo">{
-  &quot;customColor&quot;: &quot;&quot;,
-  &quot;associatedIndex&quot;: 0
-}</component>
-  <component name="ProjectId" id="2ySOLZsW8IlwYEr51W14KWZicLV" />
-  <component name="ProjectLevelVcsManager">
-    <ConfirmationsSetting value="2" id="Add" />
-  </component>
+}]]></component>
+  <component name="ProjectColorInfo"><![CDATA[{
+  "customColor": "",
+  "associatedIndex": 0
+}]]></component>
+  <component name="ProjectId" id="2yatEv29U4k2jpraPE4RxpNynQ1" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
-    "Jest.Tests in tests\\.executor": "Run",
-    "Jest.actionDecided.schema.test.js.executor": "Run",
-    "Jest.actionDiscoveryService.locationRetrieval.test.js.executor": "Run",
-    "Jest.actionIndexerAdapter.test.js.executor": "Run",
-    "Jest.adjustClothing.schema.test.js.executor": "Run",
-    "Jest.autoMoveFollowerMacro.schema.test.js.executor": "Run",
-    "Jest.awaitTurnEndState.test.js.executor": "Run",
-    "Jest.buildSpeechMeta.test.js.executor": "Run",
-    "Jest.closeness.schema.test.js.executor": "Run",
-    "Jest.closenessCircleService.test.js.executor": "Run",
-    "Jest.containerConfig.test.js.executor": "Run",
-    "Jest.decisionResult.test.js.executor": "Run",
-    "Jest.entity.schema.test.js.executor": "Run",
-    "Jest.entityMoved.schema.test.js.executor": "Run",
-    "Jest.genericTurnHandler.passingThis.test.js.executor": "Run",
-    "Jest.genericTurnHandler.test.js.executor": "Run",
-    "Jest.genericTurnStrategy.test.js.executor": "Run",
-    "Jest.genericTurnStrategyFactory.test.js.executor": "Run",
-    "Jest.getCloseRule.integration.test.js.executor": "Run",
-    "Jest.humanDecisionProvider.indexUse.test.js.executor": "Run",
-    "Jest.humanDecisionProvider.test.js.executor": "Run",
-    "Jest.humanTurnHandler.awaitTurnEndPromise.test.js.executor": "Run",
-    "Jest.humanTurnHandler.getTurnEndPort.test.js.executor": "Run",
-    "Jest.humanTurnHandler.invalidActor.test.js.executor": "Run",
-    "Jest.humanTurnHandler.startTurn.test.js.executor": "Run",
-    "Jest.interpreterRegistrations.addPerceptionLogEntryHandler.test.js.executor": "Run",
-    "Jest.interpreterRegistrations.handlers.test.js.executor": "Run",
-    "Jest.llmDecisionProvider.test.js.executor": "Run",
-    "Jest.logSuccessAndEndTurnMacro.schema.test.js.executor": "Run",
-    "Jest.modManifestLoader.validation.test.js.executor": "Run",
-    "Jest.modifyArrayFieldHandler.pushUnique.test.js.executor": "Run",
-    "Jest.nestedPlaceholderResolution.integration.test.js.executor": "Run",
-    "Jest.playerTurnHandler.fixes.test.js.executor": "Run",
-    "Jest.playerTurnPrompt.schema.test.js.executor": "Run",
-    "Jest.playerTurnSubmitted.schema.test.js.executor": "Run",
-    "Jest.promptBuilder.integration.test.js.executor": "Run",
-    "Jest.promptCoordinator.integration.test.js.executor": "Run",
-    "Jest.promptSession.indexOnly.test.js.executor": "Run",
-    "Jest.promptSession.test.js.executor": "Run",
-    "Jest.scope.integration.test.js.executor": "Run",
-    "Jest.stopFollowingRule.integration.test.js.executor": "Run",
-    "Jest.thumbWipeCheek.schema.test.js.executor": "Run",
-    "Jest.thumbWipeCheekRule.integration.test.js.executor": "Run",
-    "Jest.turnActionChoicePipeline.test.js.executor": "Run",
-    "Jest.turnIdleState.test.js.executor": "Run",
-    "Jest.updateAvailableActions.schema.test.js.executor": "Run",
     "ModuleVcsDetector.initialDetectionPerformed": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.git.unshallow": "true",
@@ -104,79 +261,11 @@
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
     "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs.jest.jest_package": "G:/Projects/programming/javascript/living-narrative-engine/node_modules/jest",
     "nodejs_package_manager_path": "npm",
-    "prettierjs.PrettierConfiguration.Package": "G:\\Projects\\programming\\javascript\\living-narrative-engine\\node_modules\\prettier",
     "settings.editor.selected.configurable": "web-ide.project.structure",
-    "ts.external.directory.path": "F:\\Programas\\Programación\\WebStorm 2024.3.5\\plugins\\javascript-plugin\\jsLanguageServicesImpl\\external",
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
-  <component name="RecentsManager">
-    <key name="MoveFile.RECENT_KEYS">
-      <recent name="G:\Projects\programming\javascript\living-narrative-engine\data\mods" />
-      <recent name="G:\Projects\programming\javascript\living-narrative-engine\tests\integration" />
-      <recent name="G:\Projects\programming\javascript\living-narrative-engine\tests\integration\rules" />
-      <recent name="G:\Projects\programming\javascript\living-narrative-engine\src\turns\providers" />
-      <recent name="G:\Projects\programming\javascript\living-narrative-engine\src" />
-    </key>
-  </component>
-  <component name="RunManager" selected="Jest.autoMoveFollowerMacro.schema.test.js">
-    <configuration name="Tests in tests\" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
-      <node-interpreter value="project" />
-      <jest-package value="$PROJECT_DIR$/node_modules/jest" />
-      <working-dir value="$PROJECT_DIR$" />
-      <envs />
-      <scope-kind value="DIRECTORY" />
-      <test-directory value="$PROJECT_DIR$/tests" />
-      <method v="2" />
-    </configuration>
-    <configuration name="adjustClothing.schema.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
-      <node-interpreter value="project" />
-      <jest-package value="$PROJECT_DIR$/node_modules/jest" />
-      <working-dir value="$PROJECT_DIR$" />
-      <envs />
-      <scope-kind value="TEST_FILE" />
-      <test-file value="$PROJECT_DIR$/tests/schemas/adjustClothing.schema.test.js" />
-      <method v="2" />
-    </configuration>
-    <configuration name="autoMoveFollowerMacro.schema.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
-      <node-interpreter value="project" />
-      <jest-package value="$PROJECT_DIR$/node_modules/jest" />
-      <working-dir value="$PROJECT_DIR$" />
-      <envs />
-      <scope-kind value="TEST_FILE" />
-      <test-file value="$PROJECT_DIR$/tests/schemas/autoMoveFollowerMacro.schema.test.js" />
-      <method v="2" />
-    </configuration>
-    <configuration name="logSuccessAndEndTurnMacro.schema.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
-      <node-interpreter value="project" />
-      <jest-package value="$PROJECT_DIR$/node_modules/jest" />
-      <working-dir value="$PROJECT_DIR$" />
-      <envs />
-      <scope-kind value="TEST_FILE" />
-      <test-file value="$PROJECT_DIR$/tests/schemas/logSuccessAndEndTurnMacro.schema.test.js" />
-      <method v="2" />
-    </configuration>
-    <configuration name="thumbWipeCheek.schema.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
-      <node-interpreter value="project" />
-      <jest-package value="$PROJECT_DIR$/node_modules/jest" />
-      <working-dir value="$PROJECT_DIR$" />
-      <envs />
-      <scope-kind value="TEST_FILE" />
-      <test-file value="$PROJECT_DIR$/tests/schemas/thumbWipeCheek.schema.test.js" />
-      <method v="2" />
-    </configuration>
-    <recent_temporary>
-      <list>
-        <item itemvalue="Jest.autoMoveFollowerMacro.schema.test.js" />
-        <item itemvalue="Jest.logSuccessAndEndTurnMacro.schema.test.js" />
-        <item itemvalue="Jest.adjustClothing.schema.test.js" />
-        <item itemvalue="Jest.thumbWipeCheek.schema.test.js" />
-        <item itemvalue="Jest.Tests in tests\" />
-      </list>
-    </recent_temporary>
-  </component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
@@ -186,442 +275,16 @@
   </component>
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
-      <changelist id="f2176490-fa0e-405e-af38-7bec8f5491f5" name="Changes" comment="" />
-      <created>1749824452963</created>
+      <changelist id="9bb199df-dcfd-4da4-888d-c661f61552c0" name="Changes" comment="" />
+      <created>1750084404817</created>
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
-      <updated>1749824452963</updated>
-      <workItem from="1749824454676" duration="14714000" />
-      <workItem from="1749839406228" duration="17547000" />
-      <workItem from="1749876741387" duration="32751000" />
-      <workItem from="1749913762946" duration="28307000" />
-      <workItem from="1749963238113" duration="51858000" />
-      <workItem from="1750034820504" duration="10216000" />
+      <updated>1750084404817</updated>
+      <workItem from="1750084406230" duration="347000" />
     </task>
-    <task id="LOCAL-00116" summary="Implementing base intimacy system.">
-      <option name="closed" value="true" />
-      <created>1749989285934</created>
-      <option name="number" value="00116" />
-      <option name="presentableId" value="LOCAL-00116" />
-      <option name="project" value="LOCAL" />
-      <updated>1749989285934</updated>
-    </task>
-    <task id="LOCAL-00117" summary="Implementing base intimacy system.">
-      <option name="closed" value="true" />
-      <created>1749989650401</created>
-      <option name="number" value="00117" />
-      <option name="presentableId" value="LOCAL-00117" />
-      <option name="project" value="LOCAL" />
-      <updated>1749989650401</updated>
-    </task>
-    <task id="LOCAL-00118" summary="Implementing base intimacy system.">
-      <option name="closed" value="true" />
-      <created>1749990020994</created>
-      <option name="number" value="00118" />
-      <option name="presentableId" value="LOCAL-00118" />
-      <option name="project" value="LOCAL" />
-      <updated>1749990020994</updated>
-    </task>
-    <task id="LOCAL-00119" summary="Implementing base intimacy system.">
-      <option name="closed" value="true" />
-      <created>1749991048746</created>
-      <option name="number" value="00119" />
-      <option name="presentableId" value="LOCAL-00119" />
-      <option name="project" value="LOCAL" />
-      <updated>1749991048746</updated>
-    </task>
-    <task id="LOCAL-00120" summary="Implementing base intimacy system.">
-      <option name="closed" value="true" />
-      <created>1749991448781</created>
-      <option name="number" value="00120" />
-      <option name="presentableId" value="LOCAL-00120" />
-      <option name="project" value="LOCAL" />
-      <updated>1749991448781</updated>
-    </task>
-    <task id="LOCAL-00121" summary="Made changes to the mod manifest schema.">
-      <option name="closed" value="true" />
-      <created>1749992233384</created>
-      <option name="number" value="00121" />
-      <option name="presentableId" value="LOCAL-00121" />
-      <option name="project" value="LOCAL" />
-      <updated>1749992233384</updated>
-    </task>
-    <task id="LOCAL-00122" summary="Made changes to the mod manifest schema.">
-      <option name="closed" value="true" />
-      <created>1749992376841</created>
-      <option name="number" value="00122" />
-      <option name="presentableId" value="LOCAL-00122" />
-      <option name="project" value="LOCAL" />
-      <updated>1749992376841</updated>
-    </task>
-    <task id="LOCAL-00123" summary="Returning the app to normal.">
-      <option name="closed" value="true" />
-      <created>1749992632111</created>
-      <option name="number" value="00123" />
-      <option name="presentableId" value="LOCAL-00123" />
-      <option name="project" value="LOCAL" />
-      <updated>1749992632111</updated>
-    </task>
-    <task id="LOCAL-00124" summary="Returning the app to normal.">
-      <option name="closed" value="true" />
-      <created>1749993596075</created>
-      <option name="number" value="00124" />
-      <option name="presentableId" value="LOCAL-00124" />
-      <option name="project" value="LOCAL" />
-      <updated>1749993596075</updated>
-    </task>
-    <task id="LOCAL-00125" summary="Returning the app to normal.">
-      <option name="closed" value="true" />
-      <created>1749994989649</created>
-      <option name="number" value="00125" />
-      <option name="presentableId" value="LOCAL-00125" />
-      <option name="project" value="LOCAL" />
-      <updated>1749994989649</updated>
-    </task>
-    <task id="LOCAL-00126" summary="Returning the app to normal.">
-      <option name="closed" value="true" />
-      <created>1749995079496</created>
-      <option name="number" value="00126" />
-      <option name="presentableId" value="LOCAL-00126" />
-      <option name="project" value="LOCAL" />
-      <updated>1749995079496</updated>
-    </task>
-    <task id="LOCAL-00127" summary="Returning the app to normal.">
-      <option name="closed" value="true" />
-      <created>1749995539850</created>
-      <option name="number" value="00127" />
-      <option name="presentableId" value="LOCAL-00127" />
-      <option name="project" value="LOCAL" />
-      <updated>1749995539850</updated>
-    </task>
-    <task id="LOCAL-00128" summary="Returning the app to normal.">
-      <option name="closed" value="true" />
-      <created>1749996079759</created>
-      <option name="number" value="00128" />
-      <option name="presentableId" value="LOCAL-00128" />
-      <option name="project" value="LOCAL" />
-      <updated>1749996079759</updated>
-    </task>
-    <task id="LOCAL-00129" summary="Returning the app to normal.">
-      <option name="closed" value="true" />
-      <created>1749997161187</created>
-      <option name="number" value="00129" />
-      <option name="presentableId" value="LOCAL-00129" />
-      <option name="project" value="LOCAL" />
-      <updated>1749997161187</updated>
-    </task>
-    <task id="LOCAL-00130" summary="Returning the app to normal.">
-      <option name="closed" value="true" />
-      <created>1749997627083</created>
-      <option name="number" value="00130" />
-      <option name="presentableId" value="LOCAL-00130" />
-      <option name="project" value="LOCAL" />
-      <updated>1749997627083</updated>
-    </task>
-    <task id="LOCAL-00131" summary="Implemented base of intimacy system.">
-      <option name="closed" value="true" />
-      <created>1749998439438</created>
-      <option name="number" value="00131" />
-      <option name="presentableId" value="LOCAL-00131" />
-      <option name="project" value="LOCAL" />
-      <updated>1749998439438</updated>
-    </task>
-    <task id="LOCAL-00132" summary="Implemented focused handlers to deal with follower-related issues.">
-      <option name="closed" value="true" />
-      <created>1749998676692</created>
-      <option name="number" value="00132" />
-      <option name="presentableId" value="LOCAL-00132" />
-      <option name="project" value="LOCAL" />
-      <updated>1749998676692</updated>
-    </task>
-    <task id="LOCAL-00133" summary="Implemented focused handlers to deal with follower-related issues.">
-      <option name="closed" value="true" />
-      <created>1749998976674</created>
-      <option name="number" value="00133" />
-      <option name="presentableId" value="LOCAL-00133" />
-      <option name="project" value="LOCAL" />
-      <updated>1749998976674</updated>
-    </task>
-    <task id="LOCAL-00134" summary="Implemented focused handlers to deal with follower-related issues.">
-      <option name="closed" value="true" />
-      <created>1749999655383</created>
-      <option name="number" value="00134" />
-      <option name="presentableId" value="LOCAL-00134" />
-      <option name="project" value="LOCAL" />
-      <updated>1749999655383</updated>
-    </task>
-    <task id="LOCAL-00135" summary="Formatting.">
-      <option name="closed" value="true" />
-      <created>1749999733362</created>
-      <option name="number" value="00135" />
-      <option name="presentableId" value="LOCAL-00135" />
-      <option name="project" value="LOCAL" />
-      <updated>1749999733362</updated>
-    </task>
-    <task id="LOCAL-00136" summary="Formatting.">
-      <option name="closed" value="true" />
-      <created>1750000854579</created>
-      <option name="number" value="00136" />
-      <option name="presentableId" value="LOCAL-00136" />
-      <option name="project" value="LOCAL" />
-      <updated>1750000854579</updated>
-    </task>
-    <task id="LOCAL-00137" summary="Formatting.">
-      <option name="closed" value="true" />
-      <created>1750002105564</created>
-      <option name="number" value="00137" />
-      <option name="presentableId" value="LOCAL-00137" />
-      <option name="project" value="LOCAL" />
-      <updated>1750002105564</updated>
-    </task>
-    <task id="LOCAL-00138" summary="Uploading with errors for Codex to fix.">
-      <option name="closed" value="true" />
-      <created>1750003164018</created>
-      <option name="number" value="00138" />
-      <option name="presentableId" value="LOCAL-00138" />
-      <option name="project" value="LOCAL" />
-      <updated>1750003164018</updated>
-    </task>
-    <task id="LOCAL-00139" summary="Uploading with errors for Codex to fix.">
-      <option name="closed" value="true" />
-      <created>1750003363956</created>
-      <option name="number" value="00139" />
-      <option name="presentableId" value="LOCAL-00139" />
-      <option name="project" value="LOCAL" />
-      <updated>1750003363956</updated>
-    </task>
-    <task id="LOCAL-00140" summary="Fixed test issues.">
-      <option name="closed" value="true" />
-      <created>1750004945170</created>
-      <option name="number" value="00140" />
-      <option name="presentableId" value="LOCAL-00140" />
-      <option name="project" value="LOCAL" />
-      <updated>1750004945170</updated>
-    </task>
-    <task id="LOCAL-00141" summary="Trying to integrate macros.">
-      <option name="closed" value="true" />
-      <created>1750005742348</created>
-      <option name="number" value="00141" />
-      <option name="presentableId" value="LOCAL-00141" />
-      <option name="project" value="LOCAL" />
-      <updated>1750005742348</updated>
-    </task>
-    <task id="LOCAL-00142" summary="Trying to integrate macros.">
-      <option name="closed" value="true" />
-      <created>1750006995417</created>
-      <option name="number" value="00142" />
-      <option name="presentableId" value="LOCAL-00142" />
-      <option name="project" value="LOCAL" />
-      <updated>1750006995417</updated>
-    </task>
-    <task id="LOCAL-00143" summary="Uploaded for Codex to fix.">
-      <option name="closed" value="true" />
-      <created>1750008773464</created>
-      <option name="number" value="00143" />
-      <option name="presentableId" value="LOCAL-00143" />
-      <option name="project" value="LOCAL" />
-      <updated>1750008773464</updated>
-    </task>
-    <task id="LOCAL-00144" summary="Fixed integration suite for wiping thumb on someone's cheek.">
-      <option name="closed" value="true" />
-      <created>1750009673333</created>
-      <option name="number" value="00144" />
-      <option name="presentableId" value="LOCAL-00144" />
-      <option name="project" value="LOCAL" />
-      <updated>1750009673333</updated>
-    </task>
-    <task id="LOCAL-00145" summary="Fixed integration suite for wiping thumb on someone's cheek.">
-      <option name="closed" value="true" />
-      <created>1750009918743</created>
-      <option name="number" value="00145" />
-      <option name="presentableId" value="LOCAL-00145" />
-      <option name="project" value="LOCAL" />
-      <updated>1750009918743</updated>
-    </task>
-    <task id="LOCAL-00146" summary="Fixed integration suite for wiping thumb on someone's cheek.">
-      <option name="closed" value="true" />
-      <created>1750010399379</created>
-      <option name="number" value="00146" />
-      <option name="presentableId" value="LOCAL-00146" />
-      <option name="project" value="LOCAL" />
-      <updated>1750010399379</updated>
-    </task>
-    <task id="LOCAL-00147" summary="Fixed integration suite for wiping thumb on someone's cheek.">
-      <option name="closed" value="true" />
-      <created>1750010614154</created>
-      <option name="number" value="00147" />
-      <option name="presentableId" value="LOCAL-00147" />
-      <option name="project" value="LOCAL" />
-      <updated>1750010614154</updated>
-    </task>
-    <task id="LOCAL-00148" summary="Fixed integration suite for wiping thumb on someone's cheek.">
-      <option name="closed" value="true" />
-      <created>1750011447597</created>
-      <option name="number" value="00148" />
-      <option name="presentableId" value="LOCAL-00148" />
-      <option name="project" value="LOCAL" />
-      <updated>1750011447597</updated>
-    </task>
-    <task id="LOCAL-00149" summary="Formatting.">
-      <option name="closed" value="true" />
-      <created>1750011569713</created>
-      <option name="number" value="00149" />
-      <option name="presentableId" value="LOCAL-00149" />
-      <option name="project" value="LOCAL" />
-      <updated>1750011569713</updated>
-    </task>
-    <task id="LOCAL-00150" summary="Formatting.">
-      <option name="closed" value="true" />
-      <created>1750013129528</created>
-      <option name="number" value="00150" />
-      <option name="presentableId" value="LOCAL-00150" />
-      <option name="project" value="LOCAL" />
-      <updated>1750013129528</updated>
-    </task>
-    <task id="LOCAL-00151" summary="Making implementations.">
-      <option name="closed" value="true" />
-      <created>1750014178335</created>
-      <option name="number" value="00151" />
-      <option name="presentableId" value="LOCAL-00151" />
-      <option name="project" value="LOCAL" />
-      <updated>1750014178335</updated>
-    </task>
-    <task id="LOCAL-00152" summary="Making implementations.">
-      <option name="closed" value="true" />
-      <created>1750017491999</created>
-      <option name="number" value="00152" />
-      <option name="presentableId" value="LOCAL-00152" />
-      <option name="project" value="LOCAL" />
-      <updated>1750017491999</updated>
-    </task>
-    <task id="LOCAL-00153" summary="Making implementations.">
-      <option name="closed" value="true" />
-      <created>1750018049658</created>
-      <option name="number" value="00153" />
-      <option name="presentableId" value="LOCAL-00153" />
-      <option name="project" value="LOCAL" />
-      <updated>1750018049658</updated>
-    </task>
-    <task id="LOCAL-00154" summary="Weird issue with imports.">
-      <option name="closed" value="true" />
-      <created>1750018893144</created>
-      <option name="number" value="00154" />
-      <option name="presentableId" value="LOCAL-00154" />
-      <option name="project" value="LOCAL" />
-      <updated>1750018893144</updated>
-    </task>
-    <task id="LOCAL-00155" summary="Weird issue with imports.">
-      <option name="closed" value="true" />
-      <created>1750021059833</created>
-      <option name="number" value="00155" />
-      <option name="presentableId" value="LOCAL-00155" />
-      <option name="project" value="LOCAL" />
-      <updated>1750021059833</updated>
-    </task>
-    <task id="LOCAL-00156" summary="Implemented &quot;adjust clothing&quot; action.">
-      <option name="closed" value="true" />
-      <created>1750021318866</created>
-      <option name="number" value="00156" />
-      <option name="presentableId" value="LOCAL-00156" />
-      <option name="project" value="LOCAL" />
-      <updated>1750021318866</updated>
-    </task>
-    <task id="LOCAL-00157" summary="Fixed nasty issue with schemas.">
-      <option name="closed" value="true" />
-      <created>1750036302253</created>
-      <option name="number" value="00157" />
-      <option name="presentableId" value="LOCAL-00157" />
-      <option name="project" value="LOCAL" />
-      <updated>1750036302254</updated>
-    </task>
-    <task id="LOCAL-00158" summary="Fixed nasty issue with schemas.">
-      <option name="closed" value="true" />
-      <created>1750036461816</created>
-      <option name="number" value="00158" />
-      <option name="presentableId" value="LOCAL-00158" />
-      <option name="project" value="LOCAL" />
-      <updated>1750036461816</updated>
-    </task>
-    <task id="LOCAL-00159" summary="Fixed nasty issue with schemas.">
-      <option name="closed" value="true" />
-      <created>1750037151735</created>
-      <option name="number" value="00159" />
-      <option name="presentableId" value="LOCAL-00159" />
-      <option name="project" value="LOCAL" />
-      <updated>1750037151735</updated>
-    </task>
-    <task id="LOCAL-00160" summary="Uploading with errors for Codex to fix.">
-      <option name="closed" value="true" />
-      <created>1750037976739</created>
-      <option name="number" value="00160" />
-      <option name="presentableId" value="LOCAL-00160" />
-      <option name="project" value="LOCAL" />
-      <updated>1750037976739</updated>
-    </task>
-    <task id="LOCAL-00161" summary="Formatting.">
-      <option name="closed" value="true" />
-      <created>1750038819448</created>
-      <option name="number" value="00161" />
-      <option name="presentableId" value="LOCAL-00161" />
-      <option name="project" value="LOCAL" />
-      <updated>1750038819448</updated>
-    </task>
-    <task id="LOCAL-00162" summary="Fixed small test.">
-      <option name="closed" value="true" />
-      <created>1750039582517</created>
-      <option name="number" value="00162" />
-      <option name="presentableId" value="LOCAL-00162" />
-      <option name="project" value="LOCAL" />
-      <updated>1750039582517</updated>
-    </task>
-    <task id="LOCAL-00163" summary="Small changes.">
-      <option name="closed" value="true" />
-      <created>1750040399543</created>
-      <option name="number" value="00163" />
-      <option name="presentableId" value="LOCAL-00163" />
-      <option name="project" value="LOCAL" />
-      <updated>1750040399543</updated>
-    </task>
-    <task id="LOCAL-00164" summary="Formatting.">
-      <option name="closed" value="true" />
-      <created>1750043831529</created>
-      <option name="number" value="00164" />
-      <option name="presentableId" value="LOCAL-00164" />
-      <option name="project" value="LOCAL" />
-      <updated>1750043831529</updated>
-    </task>
-    <option name="localTasksCounter" value="165" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
-  </component>
-  <component name="VcsManagerConfiguration">
-    <MESSAGE value="Unified human and AI paths regarding decision-making." />
-    <MESSAGE value="Ensuring that the king returns." />
-    <MESSAGE value="The Return of the King." />
-    <MESSAGE value="Implementing thoughts and notes tooltips." />
-    <MESSAGE value="Implemented thoughts and notes tooltips." />
-    <MESSAGE value="Fixed issue with the dismiss rule." />
-    <MESSAGE value="Improved OperationInterpreter." />
-    <MESSAGE value="Minor changes." />
-    <MESSAGE value="Implementing base intimacy system." />
-    <MESSAGE value="Made changes to the mod manifest schema." />
-    <MESSAGE value="Returning the app to normal." />
-    <MESSAGE value="Implemented base of intimacy system." />
-    <MESSAGE value="Implemented focused handlers to deal with follower-related issues." />
-    <MESSAGE value="Fixed test issues." />
-    <MESSAGE value="Trying to integrate macros." />
-    <MESSAGE value="Uploaded for Codex to fix." />
-    <MESSAGE value="Fixed integration suite for wiping thumb on someone's cheek." />
-    <MESSAGE value="Making implementations." />
-    <MESSAGE value="Weird issue with imports." />
-    <MESSAGE value="Implemented &quot;adjust clothing&quot; action." />
-    <MESSAGE value="Fixed nasty issue with schemas." />
-    <MESSAGE value="Uploading with errors for Codex to fix." />
-    <MESSAGE value="Fixed small test." />
-    <MESSAGE value="Small changes." />
-    <MESSAGE value="Formatting." />
-    <option name="LAST_COMMIT_MESSAGE" value="Formatting." />
   </component>
 </project>

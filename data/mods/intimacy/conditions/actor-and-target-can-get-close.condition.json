@@ -1,0 +1,24 @@
+{
+  "$schema": "http://example.com/schemas/condition.schema.json",
+  "id": "intimacy:actor-and-target-can-get-close",
+  "description": "Checks prerequisites for initiating closeness: target is an actor, they aren't the same entity, they are in the same location, and neither is rooted.",
+  "logic": {
+    "and": [
+      {
+        "condition_ref": "core:target-is-actor"
+      },
+      {
+        "condition_ref": "core:target-is-not-self"
+      },
+      {
+        "condition_ref": "core:target-is-in-same-location-as-actor"
+      },
+      {
+        "condition_ref": "core:actor-is-not-rooted"
+      },
+      {
+        "condition_ref": "core:target-is-not-rooted"
+      }
+    ]
+  }
+}

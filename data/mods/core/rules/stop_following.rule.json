@@ -4,12 +4,7 @@
   "comment": "Handles the 'core:stop_following' action. Removes the follower's component, updates the old leader's cache, dispatches a conditional perceptible event, and ends the turn.",
   "event_type": "core:attempt_action",
   "condition": {
-    "==": [
-      {
-        "var": "event.payload.actionId"
-      },
-      "core:stop_following"
-    ]
+    "condition_ref": "core:event-is-action-stop-following"
   },
   "actions": [
     {

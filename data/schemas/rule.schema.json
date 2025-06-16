@@ -19,10 +19,8 @@
       "description": "Required. Specifies the namespaced ID of the event that triggers this rule's evaluation."
     },
     "condition": {
-      "type": "object",
-      "description": "Optional. Specifies the condition (using JSON Logic format) that must evaluate to true for the `actions` to execute. If omitted, the actions are always executed upon event trigger.",
-      "$ref": "./json-logic.schema.json#",
-      "$comment": "References the standard JSON Logic structure."
+      "$ref": "./condition-container.schema.json#",
+      "description": "Optional. A condition that must evaluate to true for the `actions` to execute. Can be an inline JSON-Logic rule or a reference to a named Condition definition via 'condition_ref'. If omitted, the actions are always executed."
     },
     "actions": {
       "type": "array",

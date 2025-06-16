@@ -260,6 +260,7 @@ describe('registerLoaders (with Mock DI Container)', () => {
       tokens.IDataFetcher,
       // Specific Loaders
       tokens.SchemaLoader,
+      tokens.ConditionLoader,
       tokens.RuleLoader,
       tokens.ComponentDefinitionLoader,
       tokens.GameConfigLoader,

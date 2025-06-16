@@ -51,6 +51,7 @@ import { freeze } from '../utils/objectUtils.js';
  * @property {DiToken} ManifestLoader - Token for the manifest loading service (deprecated?).
  * @property {DiToken} RuleLoader - Token for the rule loading service.
  * @property {DiToken} ComponentDefinitionLoader - Token for loading component definitions.
+ * @property {DiToken} ConditionLoader - Token for loading reusable condition definitions.
  * @property {DiToken} ActionLoader - Token for the action loading service.
  * @property {DiToken} EventLoader - Token for the event loading service.
  * @property {DiToken} MacroLoader - Token for the macro loading service.
@@ -181,6 +182,7 @@ export const tokens = freeze({
   SchemaLoader: 'SchemaLoader',
   RuleLoader: 'RuleLoader',
   ComponentDefinitionLoader: 'ComponentDefinitionLoader',
+  ConditionLoader: 'ConditionLoader',
   ActionLoader: 'ActionLoader',
   EventLoader: 'EventLoader',
   MacroLoader: 'MacroLoader',

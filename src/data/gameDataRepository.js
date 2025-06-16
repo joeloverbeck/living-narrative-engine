@@ -1,6 +1,16 @@
 // src/services/gameDataRepository.js
 // --- FILE START ---
-import { IGameDataRepository } from '../interfaces/IGameDataRepository.js'; // Ensure this path is correct
+import { IGameDataRepository } from '../interfaces/IGameDataRepository.js';
+
+/**
+ * @typedef {import('../interfaces/coreServices.js').IDataRegistry} IDataRegistry
+ * @typedef {import('../interfaces/coreServices.js').ILogger} ILogger
+ * @typedef {import('../../../data/schemas/action-definition.schema.json').ActionDefinition} ActionDefinition
+ * @typedef {import('../../../data/schemas/entity-definition.schema.json').EntityDefinition} EntityDefinition
+ * @typedef {import('../../../data/schemas/event-definition.schema.json').EventDefinition} EventDefinition
+ * @typedef {import('../../../data/schemas/component.schema.json').ComponentDefinition} ComponentDefinition
+ * @typedef {import('../../../data/schemas/condition.schema.json').ConditionDefinition} ConditionDefinition
+ */
 
 /**
  * @class GameDataRepository
@@ -10,10 +20,6 @@ import { IGameDataRepository } from '../interfaces/IGameDataRepository.js'; // E
  * Lightweight façade over an IDataRegistry implementation.
  * This class does not cache anything internally; every getter reflects the
  * current contents of the registry.
- * @typedef {import('../interfaces/coreServices.js').IDataRegistry} IDataRegistry
- * @typedef {import('../interfaces/coreServices.js').ILogger} ILogger
- * @typedef {object} ComponentDefinition // Assuming a basic object type for now, or import a more specific typedef if available
- * @property
  */
 export class GameDataRepository extends IGameDataRepository {
   /** @type {IDataRegistry} */
@@ -34,7 +40,6 @@ export class GameDataRepository extends IGameDataRepository {
       );
     }
 
-    // Extended to include component definition methods
     const requiredRegistryMethods = [
       'getStartingPlayerId',
       'getStartingLocationId',
@@ -45,11 +50,13 @@ export class GameDataRepository extends IGameDataRepository {
       'getEventDefinition',
       'getAllEventDefinitions',
       'getComponentDefinition',
-      'getAllComponentDefinitions', // Added
+      'getAllComponentDefinitions',
+      'getConditionDefinition', // Added
+      'getAllConditionDefinitions', // Added
       'get',
       'getAll',
       'clear',
-      'store', // Basic IDataRegistry methods
+      'store',
     ];
     const missingMethods = requiredRegistryMethods.filter(
       (method) => typeof registry?.[method] !== 'function'
@@ -77,24 +84,15 @@ export class GameDataRepository extends IGameDataRepository {
   // ────────────────────────────────────────────────────────────────────────────
 
   getWorldName() {
-    // Consider if this should also come from registry or a manifest object within it
-    return 'DEMO_WORLD'; // Placeholder, as in original
+    return 'DEMO_WORLD';
   }
 
   getStartingPlayerId() {
-    const playerId = this.#registry.getStartingPlayerId();
-    // if (!playerId) { // Logging can be verbose, IDataRegistry might log this
-    //     this.#logger.warn('GameDataRepository: getStartingPlayerId called, but no ID found in registry.');
-    // }
-    return playerId;
+    return this.#registry.getStartingPlayerId();
   }
 
   getStartingLocationId() {
-    const locationId = this.#registry.getStartingLocationId();
-    // if (!locationId) { // Logging can be verbose
-    //     this.#logger.warn('GameDataRepository: getStartingLocationId called, but no ID found in registry.');
-    // }
-    return locationId;
+    return this.#registry.getStartingLocationId();
   }
 
   // ────────────────────────────────────────────────────────────────────────────
@@ -170,14 +168,12 @@ export class GameDataRepository extends IGameDataRepository {
   }
 
   // ────────────────────────────────────────────────────────────────────────────
-  //  Component definitions (NEW SECTION)
+  //  Component definitions
   // ────────────────────────────────────────────────────────────────────────────
 
   /**
-   * Retrieves a specific ComponentDefinition by its ID from the registry.
-   *
-   * @param {string} id The fully qualified ID (e.g., 'core:position').
-   * @returns {ComponentDefinition | null} The component definition, or null if not found.
+   * @param {string} id
+   * @returns {ComponentDefinition | null}
    */
   getComponentDefinition(id) {
     if (typeof id !== 'string' || !id.trim()) {
@@ -186,22 +182,48 @@ export class GameDataRepository extends IGameDataRepository {
       );
       return null;
     }
-    // `getComponentDefinition` should exist on IDataRegistry per interface contract
     const definition = this.#registry.getComponentDefinition(id);
-    // Optionally log if not found, but can be noisy if checks are frequent
-    // if (!definition) this.#logger.debug(`GameDataRepository: Component definition not found for ID: ${id}`);
+    return definition ?? null;
+  }
+
+  /** @returns {ComponentDefinition[]} */
+  getAllComponentDefinitions() {
+    return this.#registry.getAllComponentDefinitions();
+  }
+
+  // ────────────────────────────────────────────────────────────────────────────
+  //  Condition definitions (NEW SECTION)
+  // ────────────────────────────────────────────────────────────────────────────
+
+  /**
+   * Retrieves a specific ConditionDefinition by its ID from the registry.
+   *
+   * @param {string} id The fully qualified ID (e.g., 'core:actor-is-not-rooted').
+   * @returns {ConditionDefinition | null} The condition definition, or null if not found.
+   */
+  getConditionDefinition(id) {
+    if (typeof id !== 'string' || !id.trim()) {
+      this.#logger.warn(
+        `GameDataRepository: getConditionDefinition called with invalid ID: ${id}`
+      );
+      return null;
+    }
+    const definition = this.#registry.getConditionDefinition(id);
     return definition ?? null;
   }
 
   /**
-   * Retrieves all ComponentDefinition objects currently stored in the registry.
+   * Retrieves all ConditionDefinition objects currently stored in the registry.
    *
-   * @returns {ComponentDefinition[]} An array of all component definitions.
+   * @returns {ConditionDefinition[]} An array of all condition definitions.
    */
-  getAllComponentDefinitions() {
-    // `getAllComponentDefinitions` should exist on IDataRegistry per interface contract
-    return this.#registry.getAllComponentDefinitions();
+  getAllConditionDefinitions() {
+    return this.#registry.getAllConditionDefinitions();
   }
+
+  // ────────────────────────────────────────────────────────────────────────────
+  //  Mod & Content Info
+  // ────────────────────────────────────────────────────────────────────────────
 
   /**
    * Retrieves the mod ID responsible for a given content item.
@@ -238,4 +260,3 @@ export class GameDataRepository extends IGameDataRepository {
 }
 
 export default GameDataRepository;
-// --- FILE END ---

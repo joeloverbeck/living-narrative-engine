@@ -1,0 +1,10 @@
+{
+  "$schema": "http://example.com/schemas/condition.schema.json",
+  "id": "core:actor-is-leading",
+  "description": "Checks if the actor has the 'core:leading' component.",
+  "logic": {
+    "!!": {
+      "var": "actor.components.core:leading"
+    }
+  }
+}

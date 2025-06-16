@@ -1,0 +1,13 @@
+{
+  "$schema": "http://example.com/schemas/condition.schema.json",
+  "id": "core:actor-is-not-null",
+  "description": "Checks that the 'actor' variable in the current context is not null.",
+  "logic": {
+    "!==": [
+      {
+        "var": "actor"
+      },
+      null
+    ]
+  }
+}

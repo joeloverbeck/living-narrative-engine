@@ -66,6 +66,9 @@
         "blockers": {
           "$ref": "#/definitions/contentFileList"
         },
+        "conditions": {
+          "$ref": "#/definitions/contentFileList"
+        },
         "components": {
           "$ref": "#/definitions/contentFileList"
         },

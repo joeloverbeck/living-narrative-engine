@@ -1,0 +1,13 @@
+{
+  "$schema": "http://example.com/schemas/condition.schema.json",
+  "id": "core:way-is-not-blocked",
+  "description": "Checks if the path in the target direction is clear (target's blocker property is null).",
+  "logic": {
+    "==": [
+      {
+        "var": "target.blocker"
+      },
+      null
+    ]
+  }
+}

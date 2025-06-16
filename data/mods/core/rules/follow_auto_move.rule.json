@@ -4,7 +4,7 @@
   "comment": "After a leader moves, find co-located followers using QUERY_ENTITIES and move them, dispatching events to log the auto-move and inform the UI.",
   "event_type": "core:entity_moved",
   "condition": {
-    "!==": [{ "var": "actor" }, null]
+    "condition_ref": "core:actor-is-not-null"
   },
   "actions": [
     {

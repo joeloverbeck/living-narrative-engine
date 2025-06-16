@@ -4,12 +4,7 @@
   "comment": "Handles the 'intimacy:step_back' action. Implements algorithm §5.2 from the spec. It removes the actor from their circle, cleans up their components, and unlocks any partners who are now alone.",
   "event_type": "core:attempt_action",
   "condition": {
-    "==": [
-      {
-        "var": "event.payload.actionId"
-      },
-      "intimacy:step_back"
-    ]
+    "condition_ref": "intimacy:event-is-action-step-back"
   },
   "actions": [
     {
@@ -68,8 +63,6 @@
         "value": null
       }
     },
-    {
-      "macro": "core:logSuccessAndEndTurn"
-    }
+    { "macro": "core:logSuccessAndEndTurn" }
   ]
 }

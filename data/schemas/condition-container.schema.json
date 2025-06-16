@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://example.com/schemas/condition-container.schema.json",
+  "title": "Condition Container",
+  "description": "Defines a container that can hold either an inline JSON-Logic rule or a reference to a named Condition definition.",
+  "oneOf": [
+    {
+      "$ref": "./json-logic.schema.json#",
+      "description": "An inline JSON-Logic object."
+    },
+    {
+      "type": "object",
+      "properties": {
+        "condition_ref": {
+          "$ref": "./common.schema.json#/definitions/namespacedId",
+          "description": "A reference to a named condition definition ID (e.g., 'core:actor-is-not-rooted')."
+        }
+      },
+      "required": ["condition_ref"],
+      "additionalProperties": false
+    }
+  ]
+}

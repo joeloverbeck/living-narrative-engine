@@ -1,0 +1,13 @@
+{
+  "$schema": "http://example.com/schemas/condition.schema.json",
+  "id": "core:event-is-action-stop-following",
+  "description": "Checks if the triggering event is for the 'core:stop_following' action.",
+  "logic": {
+    "==": [
+      {
+        "var": "event.payload.actionId"
+      },
+      "core:stop_following"
+    ]
+  }
+}

@@ -5,30 +5,24 @@ import { setupService } from '../../utils/serviceInitializerUtils.js';
 /* type-only imports */
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../logic/jsonLogicEvaluationService.js').default} JsonLogicEvaluationService */
+/** @typedef {import('../../data/gameDataRepository.js').GameDataRepository} GameDataRepository */ // ADDED
 /** @typedef {import('../../logic/defs.js').JsonLogicEvaluationContext} JsonLogicEvaluationContext */
 /** @typedef {import('../../entities/entity.js').default} Entity */
 /** @typedef {import('../../../data/schemas/action-definition.schema.json').ActionDefinition} ActionDefinition */
 /** @typedef {import('../../models/actionTargetContext.js').ActionTargetContext} ActionTargetContext */
-// --- START: Refactor-AVS-3.3.1 ---
-// No change needed here for 3.3.2
 /** @typedef {import('./actionValidationContextBuilder.js').ActionValidationContextBuilder} ActionValidationContextBuilder */
-
-// --- END: Refactor-AVS-3.3.1 ---
 
 /**
  * @class PrerequisiteEvaluationService
  * @description Service dedicated to evaluating prerequisite rules (typically JsonLogic) for actions.
- * It first builds the necessary evaluation context using the ActionValidationContextBuilder
- * and then uses the JsonLogicEvaluationService to evaluate the rules against that context.
+ * It resolves any `condition_ref` instances within the rules, builds the necessary evaluation context,
+ * and then uses the JsonLogicEvaluationService to evaluate the final, resolved rules.
  */
 export class PrerequisiteEvaluationService {
   #logger;
   #jsonLogicEvaluationService;
-  // --- START: Refactor-AVS-3.3.1 ---
-  // No change needed here for 3.3.2
   #actionValidationContextBuilder;
-
-  // --- END: Refactor-AVS-3.3.1 ---
+  #gameDataRepository; // ADDED
 
   /**
    * Creates an instance of PrerequisiteEvaluationService.
@@ -37,13 +31,15 @@ export class PrerequisiteEvaluationService {
    * @param {ILogger} dependencies.logger - Logger instance.
    * @param {JsonLogicEvaluationService} dependencies.jsonLogicEvaluationService - Service for JsonLogic evaluation.
    * @param {ActionValidationContextBuilder} dependencies.actionValidationContextBuilder - Builder for evaluation contexts.
+   * @param {GameDataRepository} dependencies.gameDataRepository - Repository for accessing game data like condition definitions.
    * @throws {Error} If dependencies are missing or invalid.
    */
   constructor({
-    logger,
-    jsonLogicEvaluationService,
-    actionValidationContextBuilder,
-  }) {
+                logger,
+                jsonLogicEvaluationService,
+                actionValidationContextBuilder,
+                gameDataRepository, // ADDED
+              }) {
     this.#logger = setupService('PrerequisiteEvaluationService', logger, {
       jsonLogicEvaluationService: {
         value: jsonLogicEvaluationService,
@@ -53,49 +49,116 @@ export class PrerequisiteEvaluationService {
         value: actionValidationContextBuilder,
         requiredMethods: ['buildContext'],
       },
+      // ADDED: Validate the new dependency
+      gameDataRepository: {
+        value: gameDataRepository,
+        requiredMethods: ['getConditionDefinition'], // Assuming this method exists
+      },
     });
 
     this.#jsonLogicEvaluationService = jsonLogicEvaluationService;
     this.#actionValidationContextBuilder = actionValidationContextBuilder;
+    this.#gameDataRepository = gameDataRepository; // ADDED
 
     this.#logger.debug(
-      'PrerequisiteEvaluationService initialised (with ActionValidationContextBuilder).'
+      'PrerequisiteEvaluationService initialised (with ActionValidationContextBuilder and GameDataRepository).'
     );
   }
 
   /**
-   * Evaluates an array of prerequisite rules for a given action context.
-   * It first builds the evaluation context using the provided action details
-   * and then applies the JsonLogic rules.
+   * Recursively traverses a JSON Logic rule and replaces all `condition_ref`
+   * objects with the actual logic from the referenced condition definition.
    *
-   * @param {object[]} prerequisites - The array of prerequisite rule objects. Should conform to expected structure (e.g., { logic: {...}, failure_message?: "..." }).
+   * @private
+   * @param {object | any} logic - The JSON Logic rule or sub-rule to resolve.
+   * @param {string} actionId - The ID of the action being validated (for logging).
+   * @param {Set<string>} visited - A set to track visited condition IDs and prevent infinite recursion.
+   * @returns {object | any} The resolved logic tree.
+   * @throws {Error} If a condition reference cannot be found or if a circular reference is detected.
+   */
+  _resolveConditionReferences(logic, actionId, visited = new Set()) {
+    if (!logic || typeof logic !== 'object' || logic === null) {
+      return logic; // Not a resolvable object, return as-is
+    }
+
+    if (Array.isArray(logic)) {
+      // If it's an array of rules (e.g., in 'and'/'or'), resolve each one
+      return logic.map((item) =>
+        this._resolveConditionReferences(item, actionId, new Set(visited))
+      );
+    }
+
+    // Base case: This is a condition reference object like {"condition_ref": "..."}
+    if (Object.prototype.hasOwnProperty.call(logic, 'condition_ref')) {
+      const conditionId = logic.condition_ref;
+      if (typeof conditionId !== 'string') {
+        throw new Error(`Invalid condition_ref value: not a string.`);
+      }
+
+      if (visited.has(conditionId)) {
+        throw new Error(
+          `Circular reference detected in prerequisites for action '${actionId}'. Path: ${[...visited, conditionId].join(' -> ')}`
+        );
+      }
+      visited.add(conditionId);
+
+      this.#logger.debug(
+        `PrereqEval[${actionId}]: Resolving reference to '${conditionId}'...`
+      );
+
+      // Assumes GameDataRepository has this method
+      const conditionDef = this.#gameDataRepository.getConditionDefinition(conditionId);
+
+      if (!conditionDef || !conditionDef.logic) {
+        throw new Error(
+          `Could not resolve condition_ref '${conditionId}'. Definition or its logic property not found.`
+        );
+      }
+
+      // Recursively resolve the logic from the definition itself, in case it also contains references.
+      return this._resolveConditionReferences(
+        conditionDef.logic,
+        actionId,
+        new Set(visited)
+      );
+    }
+
+    // Recursive step: This is a logic block (e.g., {"var": ...}, {"!": ...}). Resolve its contents.
+    const resolvedLogic = {};
+    for (const operator in logic) {
+      if (Object.prototype.hasOwnProperty.call(logic, operator)) {
+        resolvedLogic[operator] = this._resolveConditionReferences(
+          logic[operator],
+          actionId,
+          new Set(visited)
+        );
+      }
+    }
+    return resolvedLogic;
+  }
+
+  /**
+   * Evaluates an array of prerequisite rules for a given action context.
+   * It first builds the evaluation context, then resolves all `condition_ref`
+   * instances in the rules, and finally applies the JsonLogic rules.
+   *
+   * @param {object[]} prerequisites - The array of prerequisite rule objects.
    * @param {ActionDefinition} actionDefinition - The definition of the action being evaluated.
    * @param {Entity} actor - The entity performing the action.
    * @param {ActionTargetContext} targetContext - The context of the action's target.
-   * @returns {boolean} True if all prerequisites pass (or if the list is empty), false if any rule fails, if there's an evaluation error, or if context building fails.
+   * @returns {boolean} True if all prerequisites pass, false otherwise.
    */
   evaluate(prerequisites, actionDefinition, actor, targetContext) {
-    // Signature updated in 3.3.1
-    // --- START: Refactor-AVS-3.3.2 ---
-    // Task: Derive actionId at the beginning
-    const actionId = actionDefinition?.id ?? 'unknown_action'; // AC1
-    const actorId = actor?.id ?? 'unknown_actor'; // Needed for logging context in case of error
-    // --- END: Refactor-AVS-3.3.2 ---
+    const actionId = actionDefinition?.id ?? 'unknown_action';
+    const actorId = actor?.id ?? 'unknown_actor';
 
-    // ─── 1 If there are no rules, we’re done (validation passed) ────────
     if (!prerequisites || prerequisites.length === 0) {
-      // --- START: Refactor-AVS-3.3.2 ---
-      // Task: Update Logging (Use local actionId)
       this.#logger.debug(
         `PrereqEval[${actionId}]: → PASSED (No prerequisites to evaluate).`
-      ); // AC6
-      // Task: Remove old logs (None existed for checking passed-in evalCtx) // AC7 (N/A)
-      // --- END: Refactor-AVS-3.3.2 ---
-      return true; // No rules means prerequisites are met.
+      );
+      return true;
     }
 
-    // --- START: Refactor-AVS-3.3.2 ---
-    // ─── 2 Build the Evaluation Context (NEW STEP) ───────────────────────
     let evalCtx;
     try {
       evalCtx = this.#actionValidationContextBuilder.buildContext(
@@ -106,119 +169,80 @@ export class PrerequisiteEvaluationService {
       this.#logger.debug(
         `PrereqEval[${actionId}]: Evaluation Context Built Successfully.`
       );
-
-      // =================================================================
-      // ===> ADD THIS LINE HERE <===
       this.#logger.debug(
         `PrereqEval[${actionId}] Context:`,
         JSON.stringify(evalCtx, null, 2)
       );
-      // =================================================================
     } catch (buildError) {
-      // Task: Wrap in try...catch, Handle errors in catch(err) // AC3
-      // Task: Log error detailing failure (include required context) and return false // AC4
       this.#logger.error(
-        `PrereqEval[${actionId}]: ← FAILED (Internal Error: Failed to build evaluation context via ActionValidationContextBuilder). Error: ${buildError.message}`,
+        `PrereqEval[${actionId}]: ← FAILED (Internal Error: Failed to build evaluation context). Error: ${buildError.message}`,
         {
           actorId: actorId,
-          targetContext: targetContext, // Include the target context object
-          // buildError.message is already in the main string
-          stack: buildError.stack, // Include stack trace
+          targetContext: targetContext,
+          stack: buildError.stack,
         }
-      ); // AC6 (log uses actionId)
-      return false; // Context building failed
+      );
+      return false;
     }
 
-    // Task: Handle Missing Context (Post-Build Check) - Self-correction applied: Removed redundant check as builder throws on failure. The catch block handles it.
-    // --- END: Refactor-AVS-3.3.2 ---
-
-    // ─── 3 Evaluate prerequisite rules ──────────────────────────────────
-    // --- START: Refactor-AVS-3.3.2 ---
-    // Task: Update Logging (Use local actionId)
     this.#logger.debug(
       `PrereqEval[${actionId}]: Evaluating ${prerequisites.length} prerequisite rule(s)...`
-    ); // AC6
-    // --- END: Refactor-AVS-3.3.2 ---
+    );
+
     for (const [index, prereqObject] of prerequisites.entries()) {
       const ruleNumber = index + 1;
 
-      // Basic structural check of the prerequisite object itself
-      if (
-        !prereqObject ||
-        typeof prereqObject !== 'object' ||
-        Array.isArray(prereqObject)
-      ) {
-        // --- START: Refactor-AVS-3.3.2 ---
-        // Task: Update Logging (Use local actionId)
+      if (!prereqObject || typeof prereqObject !== 'object' || !prereqObject.logic) {
         this.#logger.error(
-          `PrereqEval[${actionId}]: ← FAILED (Rule ${ruleNumber}/${prerequisites.length}): Prerequisite item is not a valid object: ${JSON.stringify(prereqObject)}` // AC6
+          `PrereqEval[${actionId}]: ← FAILED (Rule ${ruleNumber}/${prerequisites.length}): Prerequisite item is invalid or missing 'logic' property: ${JSON.stringify(prereqObject)}`
         );
-        // --- END: Refactor-AVS-3.3.2 ---
-        return false; // Invalid structure fails validation
+        return false;
       }
 
-      const ruleLogic = prereqObject.logic;
-      // Check for the presence and basic type of the 'logic' property
-      if (!ruleLogic || typeof ruleLogic !== 'object') {
-        // JsonLogic rules are objects
-        // --- START: Refactor-AVS-3.3.2 ---
-        // Task: Update Logging (Use local actionId)
-        this.#logger.error(
-          `PrereqEval[${actionId}]: ← FAILED (Rule ${ruleNumber}/${prerequisites.length}): Prerequisite object is missing the required 'logic' property or it's not an object: ${JSON.stringify(prereqObject)}` // AC6
-        );
-        // --- END: Refactor-AVS-3.3.2 ---
-        return false; // Invalid structure fails validation
-      }
-
-      let pass = false; // Default to false
+      let pass = false;
       try {
-        // --- START: Refactor-AVS-3.3.2 ---
-        // Task: Update Rule Evaluation (Ensure local evalCtx is used)
-        // Use the service's injected JsonLogicEvaluationService instance with the locally built context
-        pass = this.#jsonLogicEvaluationService.evaluate(ruleLogic, evalCtx); // AC5
-        // --- END: Refactor-AVS-3.3.2 ---
+        // Step 1: Resolve any condition references into a final, evaluatable rule.
+        const resolvedLogic = this._resolveConditionReferences(
+          prereqObject.logic,
+          actionId
+        );
+
+        this.#logger.debug(
+          `PrereqEval[${actionId}]:   - Evaluating resolved rule ${ruleNumber}: ${JSON.stringify(resolvedLogic)}`
+        );
+
+        // Step 2: Evaluate the fully resolved rule.
+        pass = this.#jsonLogicEvaluationService.evaluate(resolvedLogic, evalCtx);
+
       } catch (evalError) {
-        // --- START: Refactor-AVS-3.3.2 ---
-        // Task: Update Logging (Use local actionId)
         this.#logger.error(
-          `PrereqEval[${actionId}]: ← FAILED (Rule ${ruleNumber}/${prerequisites.length}): Error during JsonLogic evaluation. Rule: ${JSON.stringify(prereqObject)}`,
+          `PrereqEval[${actionId}]: ← FAILED (Rule ${ruleNumber}/${prerequisites.length}): Error during rule resolution or evaluation. Rule: ${JSON.stringify(prereqObject)}`,
           {
             error: evalError.message,
             stack: evalError.stack,
           }
-        ); // AC6
-        // --- END: Refactor-AVS-3.3.2 ---
-        return false; // Evaluation error means failure
+        );
+        return false;
       }
 
       if (!pass) {
-        // --- START: Refactor-AVS-3.3.2 ---
-        // Task: Update Logging (Use local actionId)
         this.#logger.debug(
           `PrereqEval[${actionId}]: ← FAILED (Rule ${ruleNumber}/${prerequisites.length}): Prerequisite check FAILED. Rule: ${JSON.stringify(prereqObject)}`
-        ); // AC6
-        // --- END: Refactor-AVS-3.3.2 ---
+        );
         if (prereqObject.failure_message) {
-          this.#logger.debug(`   Reason: ${prereqObject.failure_message}`); // Log message doesn't contain actionId, so no change needed
+          this.#logger.debug(`   Reason: ${prereqObject.failure_message}`);
         }
-        return false; // First failure stops the process
+        return false;
       } else {
-        // --- START: Refactor-AVS-3.3.2 ---
-        // Task: Update Logging (Use local actionId)
         this.#logger.debug(
-          `PrereqEval[${actionId}]:   - Prerequisite Rule ${ruleNumber}/${prerequisites.length} PASSED: ${JSON.stringify(prereqObject)}`
-        ); // AC6
-        // --- END: Refactor-AVS-3.3.2 ---
+          `PrereqEval[${actionId}]:   - Prerequisite Rule ${ruleNumber}/${prerequisites.length} PASSED.`
+        );
       }
     }
 
-    // ─── 4 All prerequisites passed ────────────────────────────────────
-    // --- START: Refactor-AVS-3.3.2 ---
-    // Task: Update Logging (Use local actionId)
     this.#logger.debug(
       `PrereqEval[${actionId}]: → PASSED (All ${prerequisites.length} prerequisite rules evaluated successfully).`
-    ); // AC6
-    // --- END: Refactor-AVS-3.3.2 ---
-    return true; // All rules passed
+    );
+    return true;
   }
 }

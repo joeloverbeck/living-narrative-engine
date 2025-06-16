@@ -1,5 +1,3 @@
-// src/data/inMemoryDataRegistry.js
-
 /**
  * @file Provides an in-memory implementation for storing and retrieving
  * loaded game data definitions (like entities, actions, components, etc.), fulfilling the
@@ -38,10 +36,6 @@ class InMemoryDataRegistry {
      * @type {Map<string, Map<string, string>>}
      */
     this.contentOrigins = new Map();
-
-    // Manifest property removed - no longer used.
-
-    // console.log("InMemoryDataRegistry: Instance created.");
   }
 
   /**
@@ -53,24 +47,23 @@ class InMemoryDataRegistry {
    * @param {object} data - The data object to store. Must be a non-null object.
    */
   store(type, id, data) {
-    // Basic input validation
     if (typeof type !== 'string' || type.trim() === '') {
       console.error(
         'InMemoryDataRegistry.store: Invalid or empty type provided.'
       );
-      return; // Or throw new Error('Invalid type');
+      return;
     }
     if (typeof id !== 'string' || id.trim() === '') {
       console.error(
         `InMemoryDataRegistry.store: Invalid or empty id provided for type '${type}'.`
       );
-      return; // Or throw new Error('Invalid id');
+      return;
     }
     if (typeof data !== 'object' || data === null) {
       console.error(
         `InMemoryDataRegistry.store: Invalid data provided for type '${type}', id '${id}'. Must be an object.`
       );
-      return; // Or throw new Error('Invalid data object');
+      return;
     }
 
     if (!this.data.has(type)) {
@@ -127,10 +120,6 @@ class InMemoryDataRegistry {
     return this.get('entities', id);
   }
 
-  // getItemDefinition removed
-  // getLocationDefinition removed
-  // getConnectionDefinition removed
-  // getBlockerDefinition removed
   getActionDefinition(id) {
     return this.get('actions', id);
   }
@@ -143,14 +132,14 @@ class InMemoryDataRegistry {
     return this.get('components', id);
   }
 
+  getConditionDefinition(id) {
+    return this.get('conditions', id);
+  }
+
   getAllEntityDefinitions() {
     return this.getAll('entities');
   }
 
-  // getAllItemDefinitions removed
-  // getAllLocationDefinitions removed
-  // getAllConnectionDefinitions removed
-  // getAllBlockerDefinitions removed
   getAllActionDefinitions() {
     return this.getAll('actions');
   }
@@ -161,6 +150,10 @@ class InMemoryDataRegistry {
 
   getAllComponentDefinitions() {
     return this.getAll('components');
+  }
+
+  getAllConditionDefinitions() {
+    return this.getAll('conditions');
   }
 
   /**
@@ -207,12 +200,7 @@ class InMemoryDataRegistry {
   clear() {
     this.data.clear();
     this.contentOrigins.clear();
-    // Manifest removed, no need to clear it.
-    // console.log("InMemoryDataRegistry: Cleared all data.");
   }
-
-  // getManifest method removed.
-  // setManifest method removed.
 
   // ===============================================================================
   // --- Dynamically Discovered Starting Player and Location ID Implementations ---
@@ -227,33 +215,25 @@ class InMemoryDataRegistry {
    * 'core:player' component, or null if no such entity is found.
    */
   getStartingPlayerId() {
-    // Verify: Uses 'entities' category via this.data.get('entities')
     const entityMap = this.data.get('entities');
     if (!entityMap) {
-      // Log adjusted slightly to avoid implying 'type' is the problem when it might just be empty
       console.warn(
         "InMemoryDataRegistry.getStartingPlayerId: No 'entities' data found in registry."
       );
-      return null; // No entities loaded at all
+      return null;
     }
 
     for (const [id, definition] of entityMap.entries()) {
-      // Check if definition is a valid object and has the components property,
-      // and if the 'core:player' component exists within components.
       if (
         definition &&
         typeof definition === 'object' &&
         definition.components &&
         typeof definition.components['core:player'] === 'object'
       ) {
-        // Found the first entity definition with the player component.
-        // console.log(`InMemoryDataRegistry.getStartingPlayerId: Found starting player ID: ${id}`);
         return id;
       }
     }
-
-    // console.warn("InMemoryDataRegistry.getStartingPlayerId: Could not find any entity definition with a 'core:player' component.");
-    return null; // No entity with the player component found
+    return null;
   }
 
   /**
@@ -267,15 +247,12 @@ class InMemoryDataRegistry {
    * or locationId property cannot be found.
    */
   getStartingLocationId() {
-    // Verify: Uses 'entities' category indirectly via getStartingPlayerId() and getEntityDefinition()
     const playerId = this.getStartingPlayerId();
     if (!playerId) {
-      // Warning already logged by getStartingPlayerId if applicable
-      return null; // Cannot determine location without a player
+      return null;
     }
 
-    // Retrieve the definition for the found player ID using the verified getter
-    const playerDef = this.getEntityDefinition(playerId); // Uses this.get('entities', playerId)
+    const playerDef = this.getEntityDefinition(playerId);
     if (!playerDef || typeof playerDef !== 'object') {
       console.warn(
         `InMemoryDataRegistry.getStartingLocationId: Could not retrieve definition for starting player ID: ${playerId}`
@@ -283,7 +260,6 @@ class InMemoryDataRegistry {
       return null;
     }
 
-    // Safely access the position component data
     const positionComponent = playerDef.components?.['core:position'];
     if (!positionComponent || typeof positionComponent !== 'object') {
       console.warn(
@@ -292,7 +268,6 @@ class InMemoryDataRegistry {
       return null;
     }
 
-    // Safely access the locationId property within the position component
     const locationId = positionComponent.locationId;
     if (typeof locationId !== 'string' || locationId.trim() === '') {
       console.warn(
@@ -301,19 +276,12 @@ class InMemoryDataRegistry {
       return null;
     }
 
-    // console.log(`InMemoryDataRegistry.getStartingLocationId: Found starting location ID from player ${playerId}: ${locationId}`);
     return locationId;
   }
-
-  // =======================================================
-  // --- END ADDED METHODS ---
-  // =======================================================
 }
 
-// Export the class as the default export of this module
 export default InMemoryDataRegistry;
 
-// JSDoc type import for interface reference - ensures tools can understand the @implements tag
 /**
  * @typedef {import('../interfaces/coreServices.js').IDataRegistry} IDataRegistry
  */

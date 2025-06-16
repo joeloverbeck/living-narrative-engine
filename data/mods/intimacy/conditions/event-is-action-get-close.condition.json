@@ -1,0 +1,13 @@
+{
+  "$schema": "http://example.com/schemas/condition.schema.json",
+  "id": "intimacy:event-is-action-get-close",
+  "description": "Checks if the triggering event is for the 'intimacy:get_close' action.",
+  "logic": {
+    "==": [
+      {
+        "var": "event.payload.actionId"
+      },
+      "intimacy:get_close"
+    ]
+  }
+}

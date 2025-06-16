@@ -1,4 +1,4 @@
-// src/utils/listNavigation.js
+// src/utils/listNavigationUtils.js
 
 /**
  * @file Utility for handling keyboard navigation within radio-style lists.

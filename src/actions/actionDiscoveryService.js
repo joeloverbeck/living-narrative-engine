@@ -16,7 +16,6 @@ import { IActionDiscoveryService } from '../interfaces/IActionDiscoveryService.j
 import { getAvailableExits } from '../utils/locationUtils.js';
 import { setupService } from '../utils/serviceInitializerUtils.js';
 import { getActorLocation } from '../utils/actorLocationUtils.js';
-import { POSITION_COMPONENT_ID } from '../constants/componentIds.js';
 import { safeDispatchError } from '../utils/safeDispatchErrorUtils.js';
 
 // ────────────────────────────────────────────────────────────────────────────────

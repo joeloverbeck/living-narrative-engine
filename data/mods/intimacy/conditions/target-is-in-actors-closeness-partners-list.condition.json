@@ -1,0 +1,15 @@
+{
+  "$schema": "http://example.com/schemas/condition.schema.json",
+  "id": "intimacy:target-is-in-actors-closeness-partners-list",
+  "description": "Checks if the target's ID is in the actor's 'closeness.partners' list.",
+  "logic": {
+    "in": [
+      {
+        "var": "target.id"
+      },
+      {
+        "var": "actor.components.intimacy:closeness.partners"
+      }
+    ]
+  }
+}

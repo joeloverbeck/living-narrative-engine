@@ -4,12 +4,7 @@
   "comment": "Handles the 'core:go' action. It prioritizes a pre-resolved targetId from the event, but falls back to resolving a direction string if needed. It moves the actor, dispatches perceptible events, and ends the turn.",
   "event_type": "core:attempt_action",
   "condition": {
-    "==": [
-      {
-        "var": "event.payload.actionId"
-      },
-      "core:go"
-    ]
+    "condition_ref": "core:event-is-action-go"
   },
   "actions": [
     {

@@ -4,12 +4,7 @@
   "comment": "Handles the 'intimacy:adjust_clothing' action. This rule generates and dispatches distinct descriptive text for the perceptible log and the actor's success UI, then ends the turn.",
   "event_type": "core:attempt_action",
   "condition": {
-    "==": [
-      {
-        "var": "event.payload.actionId"
-      },
-      "intimacy:adjust_clothing"
-    ]
+    "condition_ref": "intimacy:event-is-action-adjust-clothing"
   },
   "actions": [
     {

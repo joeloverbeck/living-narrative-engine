@@ -5,29 +5,19 @@
   "name": "Go",
   "description": "Moves your character in the specified direction, if the way is clear.",
   "target_domain": "direction",
+  "template": "go {direction}",
   "prerequisites": [
     {
       "logic": {
-        "==": [
-          {
-            "var": "actor.components.core:movement.locked"
-          },
-          false
-        ]
+        "condition_ref": "core:actor-is-not-rooted"
       },
       "failure_message": "You are rooted and cannot move."
     },
     {
       "logic": {
-        "==": [
-          {
-            "var": "target.blocker"
-          },
-          null
-        ]
+        "condition_ref": "core:way-is-not-blocked"
       },
       "failure_message": "The way is blocked."
     }
-  ],
-  "template": "go {direction}"
+  ]
 }

@@ -2,15 +2,15 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "http://example.com/schemas/json-logic.schema.json",
   "title": "JSON Logic Rule",
-  "description": "A JSON Schema representing a JSON Logic rule object with explicit support for composite logical operators (and, or, not, !). It validates the standard {\"operator\": [arguments...]} structure while enforcing arrays for \"and\"/\"or\", and a single nested rule for \"not\"/\"!\". Other JSON‑Logic operators remain unrestricted and may accept primitives or arrays of nested rules.",
-  "$comment": "Updated for Ticket: Schema: Define Composite Logical Operators (and, or, not) for Conditions. Ensures recursive validation of composite logic while preserving existing operator flexibility. Also adapted patternProperties to allow nested rule objects as arguments.",
+  "description": "A JSON Schema representing a JSON Logic rule object. It supports composite logical operators (and, or, not) and allows for nesting of condition references.",
+  "$comment": "This version has been updated to allow condition references ('condition_ref') to be nested within the logic, enabling composite conditions.",
   "definitions": {
     "primitive": {
       "description": "Allowed primitive types in JSON Logic arguments.",
       "type": ["boolean", "string", "number", "null"]
     },
     "rule_logic": {
-      "description": "Represents a potential argument or nested rule within JSON Logic. Can be a primitive value, a literal array of arguments, or a nested rule object.",
+      "description": "Represents a potential argument or nested rule within JSON Logic. Can be a primitive value, a literal array of arguments, or a condition container (which can be either a nested rule or a condition reference).",
       "anyOf": [
         {
           "$ref": "#/definitions/primitive"
@@ -22,7 +22,7 @@
           }
         },
         {
-          "$ref": "#"
+          "$ref": "./condition-container.schema.json#"
         }
       ]
     }
@@ -57,22 +57,9 @@
     }
   },
   "patternProperties": {
-    "^(?!(and|or|not|!)$).+$": {
+    "^(?!(and|or|not|!|condition_ref)$).+$": {
       "description": "Arguments for any non‑composite operator. Can be a primitive, an array of arguments, or a nested rule object (e.g., for 'var', '!!', '<', etc.).",
-      "anyOf": [
-        {
-          "$ref": "#/definitions/primitive"
-        },
-        {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/rule_logic"
-          }
-        },
-        {
-          "$ref": "#"
-        }
-      ]
+      "$ref": "#/definitions/rule_logic"
     }
   },
   "additionalProperties": false

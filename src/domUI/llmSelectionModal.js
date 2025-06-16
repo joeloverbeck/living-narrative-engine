@@ -4,7 +4,7 @@
 import { SlotModalBase } from './slotModalBase.js';
 import { createSelectableItem } from './helpers/createSelectableItem.js';
 import { buildModalElementsConfig } from './helpers/buildModalElementsConfig.js';
-import { setupRadioListNavigation } from '../utils/listNavigation.js';
+import { setupRadioListNavigation } from '../utils/listNavigationUtils.js';
 
 /**
  * @typedef {import('../interfaces/coreServices.js').ILogger} ILogger

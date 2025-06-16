@@ -1,5 +1,3 @@
-// src/configuration/staticConfiguration.js
-
 /** @typedef {import('../interfaces/coreServices.js').IConfiguration} IConfiguration */
 
 /**
@@ -101,6 +99,8 @@ class StaticConfiguration {
       'action-definition.schema.json',
       'action-result.schema.json',
       'component-definition.schema.json',
+      'condition.schema.json',
+      'condition-container.schema.json',
       'entity.schema.json',
       'event-definition.schema.json',
       'game.schema.json',
@@ -121,7 +121,7 @@ class StaticConfiguration {
   /**
    * Maps logical content-type names to their canonical $id values.
    *
-   * @param   {string} typeName
+   * @param    {string} typeName
    * @returns {string|undefined}
    */
   getContentTypeSchemaId(typeName) {
@@ -129,6 +129,7 @@ class StaticConfiguration {
       actions: 'http://example.com/schemas/action-definition.schema.json',
       blockers: 'http://example.com/schemas/entity.schema.json',
       components: 'http://example.com/schemas/component-definition.schema.json',
+      conditions: 'http://example.com/schemas/condition.schema.json',
       connections: 'http://example.com/schemas/entity.schema.json',
       entities: 'http://example.com/schemas/entity.schema.json',
       events: 'http://example.com/schemas/event-definition.schema.json',

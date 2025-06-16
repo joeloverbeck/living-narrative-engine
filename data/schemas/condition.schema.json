@@ -1,0 +1,28 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://example.com/schemas/condition.schema.json",
+  "title": "Condition Definition",
+  "description": "Defines a reusable, named JSON-Logic condition that can be referenced by actions, rules, and operations.",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "format": "uri",
+      "description": "Optional. A URI reference to the schema that this document conforms to."
+    },
+    "id": {
+      "$ref": "./common.schema.json#/definitions/namespacedId",
+      "description": "Required. Unique, namespaced ID for the condition definition (e.g., 'core:actor-is-not-rooted', 'combat:target-is-vulnerable')."
+    },
+    "description": {
+      "type": "string",
+      "description": "Required. A human-readable explanation of what this condition checks."
+    },
+    "logic": {
+      "$ref": "./json-logic.schema.json#",
+      "description": "Required. The JSON-Logic object that defines the condition's evaluation."
+    }
+  },
+  "required": ["id", "description", "logic"],
+  "additionalProperties": false
+}
