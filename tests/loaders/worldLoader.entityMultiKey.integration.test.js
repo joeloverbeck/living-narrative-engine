@@ -34,6 +34,7 @@ jest.mock('../../src/modding/modLoadOrderResolver.js', () => ({
 /** @typedef {import('../../src/loaders/gameConfigLoader.js').default} GameConfigLoader */
 /** @typedef {import('../../src/modding/modManifestLoader.js').default} ModManifestLoader */
 /** @typedef {import('../../src/loaders/entityLoader.js').default} EntityLoader */
+/** @typedef {import('../../src/loaders/conditionLoader.js').default} ConditionLoader */
 /** @typedef {import('../../../core/interfaces/manifestItems.js').ModManifest} ModManifest */
 /** @typedef {import('../../../core/services/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
 
@@ -56,6 +57,8 @@ describe('WorldLoader Integration Test Suite - EntityLoader Multi-Key Handling (
   let mockActionLoader;
   /** @type {jest.Mocked<EventLoader>} */
   let mockEventLoader;
+  /** @type {jest.Mocked<import('../../src/loaders/conditionLoader.js').default>} */
+  let mockConditionLoader;
   /** @type {jest.Mocked<EntityLoader>} */
   let mockEntityLoader; // The primary focus of this test
   /** @type {jest.Mocked<ISchemaValidator>} */
@@ -205,6 +208,9 @@ describe('WorldLoader Integration Test Suite - EntityLoader Multi-Key Handling (
     mockEventLoader = {
       loadItemsForMod: jest.fn().mockResolvedValue(mockLoadResult),
     };
+    mockConditionLoader = {
+      loadItemsForMod: jest.fn().mockResolvedValue(mockLoadResult),
+    };
     mockRuleLoader = {
       loadItemsForMod: jest.fn().mockResolvedValue(mockLoadResult),
     };
@@ -330,6 +336,7 @@ describe('WorldLoader Integration Test Suite - EntityLoader Multi-Key Handling (
       logger: mockLogger,
       schemaLoader: mockSchemaLoader,
       componentLoader: mockComponentLoader,
+      conditionLoader: mockConditionLoader,
       ruleLoader: mockRuleLoader,
       actionLoader: mockActionLoader,
       eventLoader: mockEventLoader,
