@@ -29,6 +29,7 @@ jest.mock('../../src/modding/modLoadOrderResolver.js', () => ({
 /** @typedef {import('../../src/loaders/actionLoader.js').default} ActionLoader */
 /** @typedef {import('../../src/loaders/eventLoader.js').default} EventLoader */
 /** @typedef {import('../../src/loaders/componentLoader.js').default} ComponentLoader */
+/** @typedef {import('../../src/loaders/conditionLoader.js').default} ConditionLoader */
 /** @typedef {import('../../src/loaders/ruleLoader.js').default} RuleLoader */
 /** @typedef {import('../../src/loaders/schemaLoader.js').default} SchemaLoader */
 /** @typedef {import('../../src/loaders/gameConfigLoader.js').default} GameConfigLoader */
@@ -50,6 +51,8 @@ describe('WorldLoader Integration Test Suite - Log Verification (TEST-LOADER-7.7
   let mockSchemaLoader;
   /** @type {jest.Mocked<ComponentLoader>} */
   let mockComponentLoader;
+  /** @type {jest.Mocked<ConditionLoader>} */
+  let mockConditionLoader;
   /** @type {jest.Mocked<RuleLoader>} */
   let mockRuleLoader;
   /** @type {jest.Mocked<ActionLoader>} */
@@ -168,6 +171,11 @@ describe('WorldLoader Integration Test Suite - Log Verification (TEST-LOADER-7.7
         .fn()
         .mockResolvedValue({ count: 0, overrides: 0, errors: 0 }),
     };
+    mockConditionLoader = {
+      loadItemsForMod: jest
+        .fn()
+        .mockResolvedValue({ count: 0, overrides: 0, errors: 0 }),
+    };
     mockEventLoader = {
       loadItemsForMod: jest
         .fn()
@@ -231,6 +239,7 @@ describe('WorldLoader Integration Test Suite - Log Verification (TEST-LOADER-7.7
         'schema:actions', // Essential schema
         'schema:events', // Essential schema
         'schema:rules', // Essential schema
+        'schema:conditions', // Essential schema
       ].includes(schemaId);
     });
 
@@ -250,6 +259,7 @@ describe('WorldLoader Integration Test Suite - Log Verification (TEST-LOADER-7.7
       logger: mockLogger,
       schemaLoader: mockSchemaLoader,
       componentLoader: mockComponentLoader,
+      conditionLoader: mockConditionLoader,
       ruleLoader: mockRuleLoader,
       actionLoader: mockActionLoader,
       eventLoader: mockEventLoader,
@@ -348,19 +358,19 @@ describe('WorldLoader Integration Test Suite - Log Verification (TEST-LOADER-7.7
     const summaryBlock = summaryLines.join('\n');
 
     expect(summaryBlock).toContain(`• Requested Mods (raw): [${CORE_MOD_ID}]`);
-    expect(summaryBlock).toContain(`• Final Load Order    : [${CORE_MOD_ID}]`);
+    expect(summaryBlock).toContain(`• Final Load Order     : [${CORE_MOD_ID}]`);
     expect(summaryBlock).toContain(`• Content Loading Summary (Totals):`);
 
     // Check for specific counts and alphabetical order
     const actionLine = summaryLines.find((line) =>
-      line.startsWith('    - actions')
-    ); // Check untrimmed line
+      line.trimStart().startsWith('- actions')
+    );
     const componentLine = summaryLines.find((line) =>
-      line.startsWith('    - components')
-    ); // Check untrimmed line
+      line.trimStart().startsWith('- components')
+    );
     const ruleLine = summaryLines.find((line) =>
-      line.startsWith('    - rules')
-    ); // Check untrimmed line
+      line.trimStart().startsWith('- rules')
+    );
 
     expect(actionLine).toBeDefined();
     expect(componentLine).toBeDefined();
@@ -374,7 +384,7 @@ describe('WorldLoader Integration Test Suite - Log Verification (TEST-LOADER-7.7
     // Verify alphabetical sorting (actions, components, rules) - Filter UNTRIMMED lines
     const countLines = summaryLines.filter(
       (line) =>
-        line.startsWith('    - ') &&
+        line.trimStart().startsWith('- ') &&
         !line.includes('------') &&
         !line.includes('TOTAL')
     );
@@ -490,17 +500,17 @@ describe('WorldLoader Integration Test Suite - Log Verification (TEST-LOADER-7.7
       `• Requested Mods (raw): [${CORE_MOD_ID}, ${overrideModId}]`
     );
     expect(summaryBlock).toContain(
-      `• Final Load Order    : [${CORE_MOD_ID}, ${overrideModId}]`
+      `• Final Load Order     : [${CORE_MOD_ID}, ${overrideModId}]`
     );
     expect(summaryBlock).toContain(`• Content Loading Summary (Totals):`);
 
     // Check aggregated counts and alphabetical order
     const actionLine = summaryLines.find((line) =>
-      line.startsWith('    - actions')
-    ); // Check untrimmed line
+      line.trimStart().startsWith('- actions')
+    );
     const componentLine = summaryLines.find((line) =>
-      line.startsWith('    - components')
-    ); // Check untrimmed line
+      line.trimStart().startsWith('- components')
+    );
 
     expect(actionLine).toBeDefined();
     expect(componentLine).toBeDefined();
@@ -520,7 +530,7 @@ describe('WorldLoader Integration Test Suite - Log Verification (TEST-LOADER-7.7
     // Verify alphabetical sorting (actions, components) - Filter UNTRIMMED lines
     const countLines = summaryLines.filter(
       (line) =>
-        line.startsWith('    - ') &&
+        line.trimStart().startsWith('- ') &&
         !line.includes('------') &&
         !line.includes('TOTAL')
     );
@@ -646,20 +656,20 @@ describe('WorldLoader Integration Test Suite - Log Verification (TEST-LOADER-7.7
       `• Requested Mods (raw): [${CORE_MOD_ID}, ${modAId}, ${modBId}]`
     );
     expect(summaryBlock).toContain(
-      `• Final Load Order    : [${CORE_MOD_ID}, ${modAId}, ${modBId}]`
+      `• Final Load Order     : [${CORE_MOD_ID}, ${modAId}, ${modBId}]`
     );
     expect(summaryBlock).toContain(`• Content Loading Summary (Totals):`);
 
     // Check counts ONLY for loaded types (actions, components, rules)
     const actionLine = summaryLines.find((line) =>
-      line.startsWith('    - actions')
-    ); // Check untrimmed line
+      line.trimStart().startsWith('- actions')
+    );
     const componentLine = summaryLines.find((line) =>
-      line.startsWith('    - components')
-    ); // Check untrimmed line
+      line.trimStart().startsWith('- components')
+    );
     const ruleLine = summaryLines.find((line) =>
-      line.startsWith('    - rules')
-    ); // Check untrimmed line
+      line.trimStart().startsWith('- rules')
+    );
 
     expect(actionLine).toBeDefined();
     expect(componentLine).toBeDefined();
@@ -673,7 +683,7 @@ describe('WorldLoader Integration Test Suite - Log Verification (TEST-LOADER-7.7
     // Verify alphabetical sorting (actions, components, rules) - Filter UNTRIMMED lines
     const countLines = summaryLines.filter(
       (line) =>
-        line.startsWith('    - ') &&
+        line.trimStart().startsWith('- ') &&
         !line.includes('------') &&
         !line.includes('TOTAL')
     );
