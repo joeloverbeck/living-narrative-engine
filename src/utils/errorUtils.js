@@ -1,4 +1,4 @@
-// src/bootstrapper/errorUtils.js
+// src/utils/errorUtils.js
 /* eslint-disable no-console */
 
 /**

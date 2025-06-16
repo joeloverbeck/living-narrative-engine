@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, jest } from '@jest/globals';
-import { displayFatalStartupError } from '../../src/bootstrapper/errorUtils.js';
+import { displayFatalStartupError } from '../../src/utils/errorUtils.js';
 
 /**
  * Helper to set HTML content for each test.

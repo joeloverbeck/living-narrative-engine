@@ -1,5 +1,5 @@
 import { describe, it, expect } from '@jest/globals';
-import { generateKey } from '../../src/alerting/throttleUtils.js';
+import { generateKey } from '../../src/utils/throttleUtils.js';
 
 describe('generateKey', () => {
   it('creates key with status and url when provided', () => {

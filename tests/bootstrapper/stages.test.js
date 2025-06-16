@@ -28,7 +28,8 @@ describe('ensureCriticalDOMElementsStage', () => {
 
     expect(factory).toHaveBeenCalled();
     expect(gatherSpy).toHaveBeenCalledWith(document);
-    expect(result).toBe(mockElements);
+    expect(result.success).toBe(true);
+    expect(result.payload).toBe(mockElements);
   });
 
   it('instantiates default UIBootstrapper when not provided', async () => {
@@ -40,7 +41,8 @@ describe('ensureCriticalDOMElementsStage', () => {
     const result = await ensureCriticalDOMElementsStage(document);
 
     expect(gatherSpy).toHaveBeenCalledWith(document);
-    expect(result).toBe(mockElements);
+    expect(result.success).toBe(true);
+    expect(result.payload).toBe(mockElements);
   });
 
   it('wraps errors with phase', async () => {

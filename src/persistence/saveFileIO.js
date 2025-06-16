@@ -4,7 +4,7 @@ import {
   PersistenceError,
   PersistenceErrorCodes,
 } from './persistenceErrors.js';
-import { manualSavePath, extractSaveName } from './savePathUtils.js';
+import { manualSavePath, extractSaveName } from '../utils/savePathUtils.js';
 
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../interfaces/IStorageProvider.js').IStorageProvider} IStorageProvider */

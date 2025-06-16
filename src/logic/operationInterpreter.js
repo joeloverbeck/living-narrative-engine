@@ -3,7 +3,7 @@
 //  (v1.2.0 — defers placeholder resolution inside nested action-arrays)
 // -----------------------------------------------------------------------------
 
-import { resolvePlaceholders } from './contextUtils.js';
+import { resolvePlaceholders } from '../utils/contextUtils.js';
 import { setupService } from '../utils/serviceInitializer.js';
 
 /** @typedef {import('../../data/schemas/operation.schema.json').Operation} Operation */

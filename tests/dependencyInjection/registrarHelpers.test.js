@@ -12,13 +12,17 @@ beforeEach(() => {
 
 describe('Registrar basic behaviors', () => {
   it('throws if constructed with invalid container', () => {
-    expect(() => new Registrar({})).toThrow('Registrar requires a valid AppContainer instance.');
+    expect(() => new Registrar({})).toThrow(
+      'Registrar requires a valid AppContainer instance.'
+    );
   });
 
   it('register applies tags and resets them', () => {
     const registrar = new Registrar(mockContainer);
     registrar.tagged('a').register('tok', 1);
-    expect(mockContainer.register).toHaveBeenCalledWith('tok', 1, { tags: ['a'] });
+    expect(mockContainer.register).toHaveBeenCalledWith('tok', 1, {
+      tags: ['a'],
+    });
     registrar.register('tok2', 2);
     expect(mockContainer.register).toHaveBeenLastCalledWith('tok2', 2, {});
   });
@@ -26,7 +30,10 @@ describe('Registrar basic behaviors', () => {
   it('instance registers with isInstance flag', () => {
     const registrar = new Registrar(mockContainer);
     registrar.instance('tok', 3);
-    expect(mockContainer.register).toHaveBeenCalledWith('tok', 3, { lifecycle: 'singleton', isInstance: true });
+    expect(mockContainer.register).toHaveBeenCalledWith('tok', 3, {
+      lifecycle: 'singleton',
+      isInstance: true,
+    });
   });
 
   it('value registers a factory with singletonFactory lifecycle', () => {
@@ -47,17 +54,27 @@ describe('Registrar basic behaviors', () => {
     const registrar = new Registrar(mockContainer);
     registrar.single('s', C, ['d']);
     registrar.transient('t', C, ['d2']);
-    expect(mockContainer.register).toHaveBeenNthCalledWith(1, 's', C, { lifecycle: 'singleton', dependencies: ['d'] });
-    expect(mockContainer.register).toHaveBeenNthCalledWith(2, 't', C, { lifecycle: 'transient', dependencies: ['d2'] });
+    expect(mockContainer.register).toHaveBeenNthCalledWith(1, 's', C, {
+      lifecycle: 'singleton',
+      dependencies: ['d'],
+    });
+    expect(mockContainer.register).toHaveBeenNthCalledWith(2, 't', C, {
+      lifecycle: 'transient',
+      dependencies: ['d2'],
+    });
   });
 
   it('singletonFactory throws for non-function', () => {
     const registrar = new Registrar(mockContainer);
-    expect(() => registrar.singletonFactory('tok', 1)).toThrow('Registrar.singletonFactory requires a function');
+    expect(() => registrar.singletonFactory('tok', 1)).toThrow(
+      'Registrar.singletonFactory requires a function'
+    );
   });
 
   it('transientFactory throws for non-function', () => {
     const registrar = new Registrar(mockContainer);
-    expect(() => registrar.transientFactory('tok', 1)).toThrow('Registrar.transientFactory requires a function');
+    expect(() => registrar.transientFactory('tok', 1)).toThrow(
+      'Registrar.transientFactory requires a function'
+    );
   });
 });

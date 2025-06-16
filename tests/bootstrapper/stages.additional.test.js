@@ -54,7 +54,8 @@ describe('setupDIContainerStage', () => {
 
     expect(factory).toHaveBeenCalled();
     expect(configFn).toHaveBeenCalledWith(cont, {});
-    expect(result).toBe(cont);
+    expect(result.success).toBe(true);
+    expect(result.payload).toBe(cont);
   });
 });
 
@@ -85,9 +86,9 @@ describe('resolveLoggerStage', () => {
     const container = { resolve: jest.fn().mockReturnValue(null) };
     const tokens = { ILogger: 'LOGGER' };
 
-    await expect(resolveLoggerStage(container, tokens)).rejects.toMatchObject({
-      phase: 'Core Services Resolution',
-    });
+    const result = await resolveLoggerStage(container, tokens);
+    expect(result.success).toBe(false);
+    expect(result.error.phase).toBe('Core Services Resolution');
   });
 });
 
@@ -120,7 +121,8 @@ describe('initializeGameEngineStage', () => {
     const result = await initializeGameEngineStage(container, logger, factory);
 
     expect(factory).toHaveBeenCalledWith({ container });
-    expect(result).toBe(engine);
+    expect(result.success).toBe(true);
+    expect(result.payload).toBe(engine);
   });
 
   it('throws when factory returns null', async () => {
@@ -128,9 +130,9 @@ describe('initializeGameEngineStage', () => {
     const factory = jest.fn(() => null);
     factory.prototype = undefined;
 
-    await expect(
-      initializeGameEngineStage({}, logger, factory)
-    ).rejects.toMatchObject({ phase: 'GameEngine Initialization' });
+    const result = await initializeGameEngineStage({}, logger, factory);
+    expect(result.success).toBe(false);
+    expect(result.error.phase).toBe('GameEngine Initialization');
   });
 });
 
@@ -148,7 +150,11 @@ describe('setupGlobalEventListenersStage', () => {
       stop,
     };
     const logger = createLogger();
-    const result = await setupGlobalEventListenersStage(gameEngine, logger, windowRef);
+    const result = await setupGlobalEventListenersStage(
+      gameEngine,
+      logger,
+      windowRef
+    );
     expect(windowRef.addEventListener).toHaveBeenCalledWith(
       'beforeunload',
       expect.any(Function)

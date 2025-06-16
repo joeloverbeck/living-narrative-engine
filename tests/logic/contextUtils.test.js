@@ -7,7 +7,7 @@ import { describe, expect, test, jest, beforeEach } from '@jest/globals';
 import {
   resolvePlaceholders,
   resolveEntityNameFallback,
-} from '../../src/logic/contextUtils.js';
+} from '../../src/utils/contextUtils.js';
 import { NAME_COMPONENT_ID } from '../../src/constants/componentIds.js';
 
 /** @typedef {import('../../src/interfaces/coreServices.js').ILogger} ILogger */
