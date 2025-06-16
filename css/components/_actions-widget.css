@@ -53,6 +53,25 @@
   }
 }
 
+#action-buttons.actions-disabled {
+  background-color: var(--secondary-bg-color);
+  opacity: 0.6;
+  pointer-events: none;
+  position: relative;
+  min-height: 3rem;
+}
+
+#action-buttons.actions-disabled::after {
+  content: 'WAIT FOR YOUR TURN';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: var(--secondary-text-color);
+  font-weight: 600;
+  pointer-events: none;
+}
+
 /* Note: Styles for specific button states within #action-buttons
    (e.g., #action-buttons button.selected, #action-buttons button.selected:hover)
    should remain in the main style.css or be moved to _buttons.css
