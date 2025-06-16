@@ -9,7 +9,7 @@ describe('Accessibility: <ul id="message-list">', () => {
 
   beforeAll(() => {
     // Adjust path if your game.html lives elsewhere
-    const htmlPath = path.resolve(__dirname, '../../game.html');
+    const htmlPath = path.join(__dirname, '..', '..', 'game.html');
     const html = fs.readFileSync(htmlPath, 'utf-8');
     const dom = new JSDOM(html);
     document = dom.window.document;

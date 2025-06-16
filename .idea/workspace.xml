@@ -4,26 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="f2176490-fa0e-405e-af38-7bec8f5491f5" name="Changes" comment="Uploading with errors for Codex to fix.">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/mods/core/macros/autoMoveFollower.macro.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/core/macros/autoMoveFollower.macro.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/mods/core/macros/logSuccessAndEndTurn.macro.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/core/macros/logSuccessAndEndTurn.macro.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/mods/intimacy/rules/adjust_clothing.rule.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/intimacy/rules/adjust_clothing.rule.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/mods/intimacy/rules/thumb_wipe_cheek.rule.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/intimacy/rules/thumb_wipe_cheek.rule.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/prompts/corePromptText.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/prompts/corePromptText.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/mods/mod_manifest_format.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/mods/mod_manifest_format.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/domUI/helpers/createMessageElement.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/domUI/helpers/createMessageElement.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/loaders/uiAssetsLoader.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/loaders/uiAssetsLoader.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/persistence/gameStateCaptureService.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/persistence/gameStateCaptureService.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/prompting/promptStaticContentService.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/prompting/promptStaticContentService.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/accessibility/indext.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/accessibility/index.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/domUI/helpers/createMessageElement.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/domUI/helpers/createMessageElement.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/integration/EndToEndMemoryFlow.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/integration/EndToEndMemoryFlow.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/integration/EndToEndNotesPersistence.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/integration/EndToEndNotesPersistence.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/loaders/uiAssetsLoader.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/loaders/uiAssetsLoader.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/prompting/promptStaticContentService.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/prompting/promptStaticContentService.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/services/gameStateCaptureService.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/services/gameStateCaptureService.test.js" afterDir="false" />
-    </list>
+    <list default="true" id="f2176490-fa0e-405e-af38-7bec8f5491f5" name="Changes" comment="Formatting." />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -213,15 +194,7 @@
       <workItem from="1749876741387" duration="32751000" />
       <workItem from="1749913762946" duration="28307000" />
       <workItem from="1749963238113" duration="51858000" />
-      <workItem from="1750034820504" duration="3925000" />
-    </task>
-    <task id="LOCAL-00112" summary="Implementing base intimacy system.">
-      <option name="closed" value="true" />
-      <created>1749984910876</created>
-      <option name="number" value="00112" />
-      <option name="presentableId" value="LOCAL-00112" />
-      <option name="project" value="LOCAL" />
-      <updated>1749984910876</updated>
+      <workItem from="1750034820504" duration="4299000" />
     </task>
     <task id="LOCAL-00113" summary="Implementing base intimacy system.">
       <option name="closed" value="true" />
@@ -607,7 +580,15 @@
       <option name="project" value="LOCAL" />
       <updated>1750037976739</updated>
     </task>
-    <option name="localTasksCounter" value="161" />
+    <task id="LOCAL-00161" summary="Formatting.">
+      <option name="closed" value="true" />
+      <created>1750038819448</created>
+      <option name="number" value="00161" />
+      <option name="presentableId" value="LOCAL-00161" />
+      <option name="project" value="LOCAL" />
+      <updated>1750038819448</updated>
+    </task>
+    <option name="localTasksCounter" value="162" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -633,12 +614,12 @@
     <MESSAGE value="Trying to integrate macros." />
     <MESSAGE value="Uploaded for Codex to fix." />
     <MESSAGE value="Fixed integration suite for wiping thumb on someone's cheek." />
-    <MESSAGE value="Formatting." />
     <MESSAGE value="Making implementations." />
     <MESSAGE value="Weird issue with imports." />
     <MESSAGE value="Implemented &quot;adjust clothing&quot; action." />
     <MESSAGE value="Fixed nasty issue with schemas." />
     <MESSAGE value="Uploading with errors for Codex to fix." />
-    <option name="LAST_COMMIT_MESSAGE" value="Uploading with errors for Codex to fix." />
+    <MESSAGE value="Formatting." />
+    <option name="LAST_COMMIT_MESSAGE" value="Formatting." />
   </component>
 </project>
