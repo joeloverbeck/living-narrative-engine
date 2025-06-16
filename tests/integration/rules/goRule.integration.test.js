@@ -11,6 +11,8 @@ import jsonLogicSchema from '../../../data/schemas/json-logic.schema.json';
 import conditionSchema from '../../../data/schemas/condition.schema.json';
 import conditionContainerSchema from '../../../data/schemas/condition-container.schema.json';
 import loadOperationSchemas from '../../helpers/loadOperationSchemas.js';
+import loadConditionSchemas from '../../helpers/loadConditionSchemas.js';
+import eventIsActionGo from '../../../data/mods/core/conditions/event-is-action-go.condition.json';
 import goRule from '../../../data/mods/core/rules/go.rule.json';
 import displaySuccessAndEndTurn from '../../../data/mods/core/macros/displaySuccessAndEndTurn.macro.json';
 import { expandMacros } from '../../../src/utils/macroUtils.js';
@@ -209,7 +211,10 @@ function init(entities) {
     operationRegistry,
   });
 
-  jsonLogic = new JsonLogicEvaluationService({ logger });
+  jsonLogic = new JsonLogicEvaluationService({
+    logger,
+    gameDataRepository: dataRegistry,
+  });
 
   interpreter = new SystemLogicInterpreter({
     logger,
@@ -272,6 +277,9 @@ describe('core_handle_go rule integration', () => {
 
     dataRegistry = {
       getAllSystemRules: jest.fn().mockReturnValue([expandedRule]),
+      getConditionDefinition: jest.fn((id) =>
+        id === 'core:event-is-action-go' ? eventIsActionGo : undefined
+      ),
     };
 
     init([]);
@@ -288,17 +296,10 @@ describe('core_handle_go rule integration', () => {
       'http://example.com/schemas/operation.schema.json'
     );
     loadOperationSchemas(ajv);
+    loadConditionSchemas(ajv);
     ajv.addSchema(
       jsonLogicSchema,
       'http://example.com/schemas/json-logic.schema.json'
-    );
-    ajv.addSchema(
-      conditionContainerSchema,
-      'http://example.com/schemas/condition-container.schema.json'
-    );
-    ajv.addSchema(
-      conditionSchema,
-      'http://example.com/schemas/condition.schema.json'
     );
     const valid = ajv.validate(ruleSchema, goRule);
     if (!valid) console.error(ajv.errors);
