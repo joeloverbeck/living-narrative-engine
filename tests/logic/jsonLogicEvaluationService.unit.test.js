@@ -32,6 +32,7 @@ import JsonLogicEvaluationService from '../../src/logic/jsonLogicEvaluationServi
 /** @typedef {import('../../src/entities/entityManager.js').default} EntityManager */ // Adjust path as needed
 /** @typedef {import('../../src/logic/defs.js').JsonLogicEvaluationContext} JsonLogicEvaluationContext */ // Adjust path as needed
 /** @typedef {import('../../src/logic/defs.js').GameEvent} GameEvent */ // Adjust path as needed
+/** @typedef {import('../../src/interfaces/IGameDataRepository.js').IGameDataRepository} IGameDataRepository */
 
 // --- Mock Dependencies ---
 
@@ -64,6 +65,11 @@ const mockEntityManager = {
   activeEntities: new Map(), // Provide a default empty map if accessed
 };
 
+/** @type {jest.Mocked<IGameDataRepository>} */
+const mockGameDataRepository = {
+  getConditionDefinition: jest.fn().mockReturnValue(undefined),
+};
+
 // --- Test Suite ---
 
 describe('JsonLogicEvaluationService Unit Tests', () => {
@@ -77,8 +83,13 @@ describe('JsonLogicEvaluationService Unit Tests', () => {
     // Task: Clear all mocks before each test
     jest.clearAllMocks();
 
-    // Task: Instantiate JsonLogicEvaluationService using the mockLogger
-    service = new JsonLogicEvaluationService({ logger: mockLogger });
+    mockGameDataRepository.getConditionDefinition.mockReset();
+
+    // Task: Instantiate JsonLogicEvaluationService using the mockLogger and stub repository
+    service = new JsonLogicEvaluationService({
+      logger: mockLogger,
+      gameDataRepository: mockGameDataRepository,
+    });
 
     // Task: Reset mockEntityManager methods (even if not used directly in *all* tests)
     mockEntityManager.getEntityInstance.mockReset();
