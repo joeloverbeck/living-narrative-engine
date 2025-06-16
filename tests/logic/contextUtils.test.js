@@ -458,6 +458,27 @@ describe('resolvePlaceholders (contextUtils.js)', () => {
     });
   });
 
+  describe('7. skipKeys behavior', () => {
+    test('7.1 should leave values for skipped keys unresolved', () => {
+      const context = createMockExecutionContext({ other: 'unused' });
+      const input = {
+        key1: '{context.varA}',
+        skip: '{context.other}',
+      };
+      const result = resolvePlaceholders(
+        input,
+        context,
+        mockLogger,
+        '',
+        new Set(['skip'])
+      );
+      expect(result).toEqual({
+        key1: 'valueA',
+        skip: '{context.other}',
+      });
+    });
+  });
+
   describe('resolveEntityNameFallback helper', () => {
     test('should return actor name from NAME_COMPONENT_ID component', () => {
       const actorData = {

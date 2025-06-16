@@ -74,21 +74,13 @@ class OperationInterpreter extends BaseService {
     let paramsForHandler;
     try {
       if (operation.parameters && typeof operation.parameters === 'object') {
-        paramsForHandler = {};
-
-        for (const [key, value] of Object.entries(operation.parameters)) {
-          if (ACTION_ARRAY_KEYS.has(key) && Array.isArray(value)) {
-            // Defer interpolation – pass through unchanged
-            paramsForHandler[key] = value;
-          } else {
-            // Interpolate normally
-            paramsForHandler[key] = resolvePlaceholders(
-              value,
-              executionContext,
-              this.#logger
-            );
-          }
-        }
+        paramsForHandler = resolvePlaceholders(
+          operation.parameters,
+          executionContext,
+          this.#logger,
+          '',
+          ACTION_ARRAY_KEYS
+        );
       } else {
         paramsForHandler = operation.parameters;
       }
