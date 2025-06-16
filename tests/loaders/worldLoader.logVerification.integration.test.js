@@ -369,7 +369,6 @@ describe('WorldLoader Integration Test Suite - Log Verification (TEST-LOADER-7.7
     // Check for specific counts and alphabetical order
     const actionLine = summaryLines.find((line) =>
       line.trimStart().startsWith('- actions')
-
     ); // Check with flexible spacing
     const componentLine = summaryLines.find((line) =>
       line.trimStart().startsWith('- components')
@@ -513,12 +512,10 @@ describe('WorldLoader Integration Test Suite - Log Verification (TEST-LOADER-7.7
     // Check aggregated counts and alphabetical order
     const actionLine = summaryLines.find((line) =>
       line.trimStart().startsWith('- actions')
-
     ); // Check with flexible spacing
     const componentLine = summaryLines.find((line) =>
       line.trimStart().startsWith('- components')
     ); // Check with flexible spacing
-
 
     expect(actionLine).toBeDefined();
     expect(componentLine).toBeDefined();
@@ -671,7 +668,6 @@ describe('WorldLoader Integration Test Suite - Log Verification (TEST-LOADER-7.7
     // Check counts ONLY for loaded types (actions, components, rules)
     const actionLine = summaryLines.find((line) =>
       line.trimStart().startsWith('- actions')
-
     ); // Check with flexible spacing
     const componentLine = summaryLines.find((line) =>
       line.trimStart().startsWith('- components')
@@ -679,7 +675,6 @@ describe('WorldLoader Integration Test Suite - Log Verification (TEST-LOADER-7.7
     const ruleLine = summaryLines.find((line) =>
       line.trimStart().startsWith('- rules')
     ); // Check with flexible spacing
-
 
     expect(actionLine).toBeDefined();
     expect(componentLine).toBeDefined();

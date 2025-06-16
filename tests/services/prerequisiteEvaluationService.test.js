@@ -50,7 +50,7 @@ describe('PrerequisiteEvaluationService', () => {
   /** @type {jest.Mocked<JsonLogicEvaluationService>} */
   let mockJsonLogicServiceInstance;
   /** @type {jest.Mocked<ActionValidationContextBuilder>} */
-let mockBuilderInstance;
+  let mockBuilderInstance;
   /** @type {{getConditionDefinition: jest.Mock}} */
   let mockGameDataRepository;
 
@@ -317,30 +317,33 @@ let mockBuilderInstance;
       { prereq: { logic: 'true' }, description: "'logic' property is string" },
       { prereq: { logic: true }, description: "'logic' property is boolean" },
       { prereq: { logic: 123 }, description: "'logic' property is number" },
-    ])('should return false and log failure when $description', ({ prereq }) => {
-      const prerequisites = [prereq];
-      const result = service.evaluate(
-        prerequisites,
-        invalidLogicActionDef,
-        mockActor,
-        mockTargetContext
-      );
+    ])(
+      'should return false and log failure when $description',
+      ({ prereq }) => {
+        const prerequisites = [prereq];
+        const result = service.evaluate(
+          prerequisites,
+          invalidLogicActionDef,
+          mockActor,
+          mockTargetContext
+        );
 
-      expect(result).toBe(false);
-      expect(mockBuilderInstance.buildContext).toHaveBeenCalledTimes(1);
-      expect(mockBuilderInstance.buildContext).toHaveBeenCalledWith(
-        invalidLogicActionDef,
-        mockActor,
-        mockTargetContext
-      );
-      expect(mockLogger.error).not.toHaveBeenCalled();
-      expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining(
-          `PrereqEval[${invalidLogicActionDef.id}]: ← FAILED (Rule 1/1): Prerequisite check FAILED.`
-        )
-      );
-      expect(mockJsonLogicServiceInstance.evaluate).toHaveBeenCalledTimes(1);
-    });
+        expect(result).toBe(false);
+        expect(mockBuilderInstance.buildContext).toHaveBeenCalledTimes(1);
+        expect(mockBuilderInstance.buildContext).toHaveBeenCalledWith(
+          invalidLogicActionDef,
+          mockActor,
+          mockTargetContext
+        );
+        expect(mockLogger.error).not.toHaveBeenCalled();
+        expect(mockLogger.debug).toHaveBeenCalledWith(
+          expect.stringContaining(
+            `PrereqEval[${invalidLogicActionDef.id}]: ← FAILED (Rule 1/1): Prerequisite check FAILED.`
+          )
+        );
+        expect(mockJsonLogicServiceInstance.evaluate).toHaveBeenCalledTimes(1);
+      }
+    );
   });
 
   /**
