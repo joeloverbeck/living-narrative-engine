@@ -10,7 +10,6 @@ import {
 } from '@jest/globals';
 import { JSDOM } from 'jsdom';
 import { PerceptionLogRenderer } from '../../src/domUI/perceptionLogRenderer.js';
-import { PERCEPTION_LOG_COMPONENT_ID } from '../../src/constants/componentIds.js';
 import { TURN_STARTED_ID } from '../../src/constants/eventIds.js';
 
 jest.mock('../../src/logging/consoleLogger.js');
@@ -108,7 +107,9 @@ describe('PerceptionLogRenderer', () => {
         );
         Object.defineProperty(li, 'title', {
           get: () => li.getAttribute('title') || '',
-          set: (value) => li.setAttribute('title', value),
+          set: (value) => {
+            li.setAttribute('title', value);
+          },
           configurable: true,
         });
         return li;
