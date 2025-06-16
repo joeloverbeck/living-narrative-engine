@@ -8,6 +8,7 @@ import StaticConfiguration from '../../src/configuration/staticConfiguration.js'
 const EXPECTED_BASE_DATA_PATH = './data';
 
 // Source: const SCHEMA_FILES = [...]
+// This list now reflects that operation schemas are in a subdirectory.
 const EXPECTED_SCHEMA_FILES = [
   'common.schema.json',
   'action-definition.schema.json',
@@ -25,34 +26,35 @@ const EXPECTED_SCHEMA_FILES = [
   'macro.schema.json',
   'ui-icons.schema.json',
   'ui-labels.schema.json',
-  'addComponent.schema.json',
-  'addPerceptionLogEntry.schema.json',
-  'autoMoveFollowers.schema.json',
-  'breakFollowRelation.schema.json',
-  'checkFollowCycle.schema.json',
-  'dispatchEvent.schema.json',
-  'dispatchPerceptibleEvent.schema.json',
-  'dispatchSpeech.schema.json',
-  'endTurn.schema.json',
-  'establishFollowRelation.schema.json',
-  'forEach.schema.json',
-  'getName.schema.json',
-  'getTimestamp.schema.json',
-  'hasComponent.schema.json',
-  'if.schema.json',
-  'ifCoLocated.schema.json',
-  'log.schema.json',
-  'math.schema.json',
-  'modifyArrayField.schema.json',
-  'modifyComponent.schema.json',
-  'modifyContextArray.schema.json',
-  'queryComponent.schema.json',
-  'queryEntities.schema.json',
-  'rebuildLeaderListCache.schema.json',
-  'removeComponent.schema.json',
-  'resolveDirection.schema.json',
-  'setVariable.schema.json',
-  'systemMoveEntity.schema.json',
+  'operations/addComponent.schema.json',
+  'operations/addPerceptionLogEntry.schema.json',
+  'operations/autoMoveFollowers.schema.json',
+  'operations/breakFollowRelation.schema.json',
+  'operations/checkFollowCycle.schema.json',
+  'operations/dispatchEvent.schema.json',
+  'operations/dispatchPerceptibleEvent.schema.json',
+  'operations/dispatchSpeech.schema.json',
+  'operations/endTurn.schema.json',
+  'operations/establishFollowRelation.schema.json',
+  'operations/forEach.schema.json',
+  'operations/getName.schema.json',
+  'operations/getTimestamp.schema.json',
+  'operations/hasComponent.schema.json',
+  'operations/if.schema.json',
+  'operations/ifCoLocated.schema.json',
+  'operations/log.schema.json',
+  'operations/math.schema.json',
+  'operations/modifyArrayField.schema.json',
+  'operations/modifyComponent.schema.json',
+  'operations/modifyContextArray.schema.json',
+  'operations/queryComponent.schema.json',
+  'operations/queryComponents.schema.json',
+  'operations/queryEntities.schema.json',
+  'operations/rebuildLeaderListCache.schema.json',
+  'operations/removeComponent.schema.json',
+  'operations/resolveDirection.schema.json',
+  'operations/setVariable.schema.json',
+  'operations/systemMoveEntity.schema.json',
 ];
 
 // Source: const CONTENT_TYPE_SCHEMAS = {...}
@@ -104,13 +106,15 @@ describe('StaticConfiguration', () => {
 
   // --- Test getSchemaFiles() ---
   describe('getSchemaFiles()', () => {
-    it('should return an array containing the expected schema filenames', () => {
+    it('should return an array containing the expected schema filenames with correct paths', () => {
       const files = config.getSchemaFiles();
       expect(Array.isArray(files)).toBe(true);
       expect(files).toEqual(EXPECTED_SCHEMA_FILES);
       // Verify order as well (toEqual checks order for arrays)
       expect(files[0]).toBe('common.schema.json');
-      expect(files[files.length - 1]).toBe('systemMoveEntity.schema.json');
+      expect(files[files.length - 1]).toBe(
+        'operations/systemMoveEntity.schema.json'
+      );
     });
 
     it('should return a *copy* of the internal schema files array', () => {

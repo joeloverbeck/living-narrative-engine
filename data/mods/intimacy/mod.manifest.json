@@ -7,9 +7,7 @@
   "author": "joeloverbeck",
   "gameVersion": ">=0.0.1",
   "content": {
-    "components": [
-      "closeness.component.json"
-    ],
+    "components": ["closeness.component.json"],
     "characters": [],
     "items": [],
     "locations": [],
@@ -27,9 +25,6 @@
       "adjust_clothing.rule.json"
     ],
     "events": [],
-    "ui": [
-      "icons.json",
-      "labels.json"
-    ]
+    "ui": ["icons.json", "labels.json"]
   }
 }

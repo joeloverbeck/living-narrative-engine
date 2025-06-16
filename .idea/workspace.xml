@@ -4,7 +4,12 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="f2176490-fa0e-405e-af38-7bec8f5491f5" name="Changes" comment="Weird issue with imports." />
+    <list default="true" id="f2176490-fa0e-405e-af38-7bec8f5491f5" name="Changes" comment="Implemented &quot;adjust clothing&quot; action.">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/configuration/staticConfiguration.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/configuration/staticConfiguration.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/integration/browserBuild.integration.test.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/services/staticConfiguration.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/services/staticConfiguration.test.js" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -44,68 +49,68 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "Jest.Tests in tests\\.executor": "Run",
-    "Jest.actionDecided.schema.test.js.executor": "Run",
-    "Jest.actionDiscoveryService.locationRetrieval.test.js.executor": "Run",
-    "Jest.actionIndexerAdapter.test.js.executor": "Run",
-    "Jest.awaitTurnEndState.test.js.executor": "Run",
-    "Jest.buildSpeechMeta.test.js.executor": "Run",
-    "Jest.closeness.schema.test.js.executor": "Run",
-    "Jest.closenessCircleService.test.js.executor": "Run",
-    "Jest.containerConfig.test.js.executor": "Run",
-    "Jest.decisionResult.test.js.executor": "Run",
-    "Jest.entity.schema.test.js.executor": "Run",
-    "Jest.entityMoved.schema.test.js.executor": "Run",
-    "Jest.genericTurnHandler.passingThis.test.js.executor": "Run",
-    "Jest.genericTurnHandler.test.js.executor": "Run",
-    "Jest.genericTurnStrategy.test.js.executor": "Run",
-    "Jest.genericTurnStrategyFactory.test.js.executor": "Run",
-    "Jest.getCloseRule.integration.test.js.executor": "Run",
-    "Jest.humanDecisionProvider.indexUse.test.js.executor": "Run",
-    "Jest.humanDecisionProvider.test.js.executor": "Run",
-    "Jest.humanTurnHandler.awaitTurnEndPromise.test.js.executor": "Run",
-    "Jest.humanTurnHandler.getTurnEndPort.test.js.executor": "Run",
-    "Jest.humanTurnHandler.invalidActor.test.js.executor": "Run",
-    "Jest.humanTurnHandler.startTurn.test.js.executor": "Run",
-    "Jest.interpreterRegistrations.addPerceptionLogEntryHandler.test.js.executor": "Run",
-    "Jest.interpreterRegistrations.handlers.test.js.executor": "Run",
-    "Jest.llmDecisionProvider.test.js.executor": "Run",
-    "Jest.modManifestLoader.validation.test.js.executor": "Run",
-    "Jest.modifyArrayFieldHandler.pushUnique.test.js.executor": "Run",
-    "Jest.nestedPlaceholderResolution.integration.test.js.executor": "Run",
-    "Jest.playerTurnHandler.fixes.test.js.executor": "Run",
-    "Jest.playerTurnPrompt.schema.test.js.executor": "Run",
-    "Jest.playerTurnSubmitted.schema.test.js.executor": "Run",
-    "Jest.promptBuilder.integration.test.js.executor": "Run",
-    "Jest.promptCoordinator.integration.test.js.executor": "Run",
-    "Jest.promptSession.indexOnly.test.js.executor": "Run",
-    "Jest.promptSession.test.js.executor": "Run",
-    "Jest.scope.integration.test.js.executor": "Run",
-    "Jest.stopFollowingRule.integration.test.js.executor": "Run",
-    "Jest.thumbWipeCheekRule.integration.test.js.executor": "Run",
-    "Jest.turnActionChoicePipeline.test.js.executor": "Run",
-    "Jest.turnIdleState.test.js.executor": "Run",
-    "Jest.updateAvailableActions.schema.test.js.executor": "Run",
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "main",
-    "ignore.virus.scanning.warn.message": "true",
-    "junie.onboarding.icon.badge.shown": "true",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs.jest.jest_package": "G:/Projects/programming/javascript/living-narrative-engine/node_modules/jest",
-    "nodejs_package_manager_path": "npm",
-    "prettierjs.PrettierConfiguration.Package": "G:\\Projects\\programming\\javascript\\living-narrative-engine\\node_modules\\prettier",
-    "settings.editor.selected.configurable": "web-ide.project.structure",
-    "ts.external.directory.path": "F:\\Programas\\Programación\\WebStorm 2024.3.5\\plugins\\javascript-plugin\\jsLanguageServicesImpl\\external",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Jest.Tests in tests\\.executor&quot;: &quot;Run&quot;,
+    &quot;Jest.actionDecided.schema.test.js.executor&quot;: &quot;Run&quot;,
+    &quot;Jest.actionDiscoveryService.locationRetrieval.test.js.executor&quot;: &quot;Run&quot;,
+    &quot;Jest.actionIndexerAdapter.test.js.executor&quot;: &quot;Run&quot;,
+    &quot;Jest.awaitTurnEndState.test.js.executor&quot;: &quot;Run&quot;,
+    &quot;Jest.buildSpeechMeta.test.js.executor&quot;: &quot;Run&quot;,
+    &quot;Jest.closeness.schema.test.js.executor&quot;: &quot;Run&quot;,
+    &quot;Jest.closenessCircleService.test.js.executor&quot;: &quot;Run&quot;,
+    &quot;Jest.containerConfig.test.js.executor&quot;: &quot;Run&quot;,
+    &quot;Jest.decisionResult.test.js.executor&quot;: &quot;Run&quot;,
+    &quot;Jest.entity.schema.test.js.executor&quot;: &quot;Run&quot;,
+    &quot;Jest.entityMoved.schema.test.js.executor&quot;: &quot;Run&quot;,
+    &quot;Jest.genericTurnHandler.passingThis.test.js.executor&quot;: &quot;Run&quot;,
+    &quot;Jest.genericTurnHandler.test.js.executor&quot;: &quot;Run&quot;,
+    &quot;Jest.genericTurnStrategy.test.js.executor&quot;: &quot;Run&quot;,
+    &quot;Jest.genericTurnStrategyFactory.test.js.executor&quot;: &quot;Run&quot;,
+    &quot;Jest.getCloseRule.integration.test.js.executor&quot;: &quot;Run&quot;,
+    &quot;Jest.humanDecisionProvider.indexUse.test.js.executor&quot;: &quot;Run&quot;,
+    &quot;Jest.humanDecisionProvider.test.js.executor&quot;: &quot;Run&quot;,
+    &quot;Jest.humanTurnHandler.awaitTurnEndPromise.test.js.executor&quot;: &quot;Run&quot;,
+    &quot;Jest.humanTurnHandler.getTurnEndPort.test.js.executor&quot;: &quot;Run&quot;,
+    &quot;Jest.humanTurnHandler.invalidActor.test.js.executor&quot;: &quot;Run&quot;,
+    &quot;Jest.humanTurnHandler.startTurn.test.js.executor&quot;: &quot;Run&quot;,
+    &quot;Jest.interpreterRegistrations.addPerceptionLogEntryHandler.test.js.executor&quot;: &quot;Run&quot;,
+    &quot;Jest.interpreterRegistrations.handlers.test.js.executor&quot;: &quot;Run&quot;,
+    &quot;Jest.llmDecisionProvider.test.js.executor&quot;: &quot;Run&quot;,
+    &quot;Jest.modManifestLoader.validation.test.js.executor&quot;: &quot;Run&quot;,
+    &quot;Jest.modifyArrayFieldHandler.pushUnique.test.js.executor&quot;: &quot;Run&quot;,
+    &quot;Jest.nestedPlaceholderResolution.integration.test.js.executor&quot;: &quot;Run&quot;,
+    &quot;Jest.playerTurnHandler.fixes.test.js.executor&quot;: &quot;Run&quot;,
+    &quot;Jest.playerTurnPrompt.schema.test.js.executor&quot;: &quot;Run&quot;,
+    &quot;Jest.playerTurnSubmitted.schema.test.js.executor&quot;: &quot;Run&quot;,
+    &quot;Jest.promptBuilder.integration.test.js.executor&quot;: &quot;Run&quot;,
+    &quot;Jest.promptCoordinator.integration.test.js.executor&quot;: &quot;Run&quot;,
+    &quot;Jest.promptSession.indexOnly.test.js.executor&quot;: &quot;Run&quot;,
+    &quot;Jest.promptSession.test.js.executor&quot;: &quot;Run&quot;,
+    &quot;Jest.scope.integration.test.js.executor&quot;: &quot;Run&quot;,
+    &quot;Jest.stopFollowingRule.integration.test.js.executor&quot;: &quot;Run&quot;,
+    &quot;Jest.thumbWipeCheekRule.integration.test.js.executor&quot;: &quot;Run&quot;,
+    &quot;Jest.turnActionChoicePipeline.test.js.executor&quot;: &quot;Run&quot;,
+    &quot;Jest.turnIdleState.test.js.executor&quot;: &quot;Run&quot;,
+    &quot;Jest.updateAvailableActions.schema.test.js.executor&quot;: &quot;Run&quot;,
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
+    &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs.jest.jest_package&quot;: &quot;G:/Projects/programming/javascript/living-narrative-engine/node_modules/jest&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;prettierjs.PrettierConfiguration.Package&quot;: &quot;G:\\Projects\\programming\\javascript\\living-narrative-engine\\node_modules\\prettier&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;web-ide.project.structure&quot;,
+    &quot;ts.external.directory.path&quot;: &quot;F:\\Programas\\Programación\\WebStorm 2024.3.5\\plugins\\javascript-plugin\\jsLanguageServicesImpl\\external&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
       <recent name="G:\Projects\programming\javascript\living-narrative-engine\data\mods" />
@@ -189,15 +194,8 @@
       <workItem from="1749839406228" duration="17547000" />
       <workItem from="1749876741387" duration="32751000" />
       <workItem from="1749913762946" duration="28307000" />
-      <workItem from="1749963238113" duration="51602000" />
-    </task>
-    <task id="LOCAL-00107" summary="Formatting.">
-      <option name="closed" value="true" />
-      <created>1749980136865</created>
-      <option name="number" value="00107" />
-      <option name="presentableId" value="LOCAL-00107" />
-      <option name="project" value="LOCAL" />
-      <updated>1749980136865</updated>
+      <workItem from="1749963238113" duration="51858000" />
+      <workItem from="1750034820504" duration="1400000" />
     </task>
     <task id="LOCAL-00108" summary="Formatting.">
       <option name="closed" value="true" />
@@ -583,14 +581,21 @@
       <option name="project" value="LOCAL" />
       <updated>1750021059833</updated>
     </task>
-    <option name="localTasksCounter" value="156" />
+    <task id="LOCAL-00156" summary="Implemented &quot;adjust clothing&quot; action.">
+      <option name="closed" value="true" />
+      <created>1750021318866</created>
+      <option name="number" value="00156" />
+      <option name="presentableId" value="LOCAL-00156" />
+      <option name="project" value="LOCAL" />
+      <updated>1750021318866</updated>
+    </task>
+    <option name="localTasksCounter" value="157" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Fixed HumanTurnHandler's dependencies." />
     <MESSAGE value="Refactoring HumanTurnHandler." />
     <MESSAGE value="Chores." />
     <MESSAGE value="Unifying paths." />
@@ -615,6 +620,7 @@
     <MESSAGE value="Formatting." />
     <MESSAGE value="Making implementations." />
     <MESSAGE value="Weird issue with imports." />
-    <option name="LAST_COMMIT_MESSAGE" value="Weird issue with imports." />
+    <MESSAGE value="Implemented &quot;adjust clothing&quot; action." />
+    <option name="LAST_COMMIT_MESSAGE" value="Implemented &quot;adjust clothing&quot; action." />
   </component>
 </project>

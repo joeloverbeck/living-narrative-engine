@@ -165,11 +165,14 @@ function init(entities) {
       logger,
       safeEventDispatcher: safeDispatcher,
     }),
-    QUERY_COMPONENTS: new (require('../../../src/logic/operationHandlers/queryComponentsHandler.js').default)({
-      entityManager,
-      logger,
-      safeEventDispatcher: safeDispatcher,
-    }),
+    QUERY_COMPONENTS:
+      new (require('../../../src/logic/operationHandlers/queryComponentsHandler.js').default)(
+        {
+          entityManager,
+          logger,
+          safeEventDispatcher: safeDispatcher,
+        }
+      ),
     GET_TIMESTAMP: new GetTimestampHandler({ logger }),
     SET_VARIABLE: new SetVariableHandler({ logger }),
     RESOLVE_DIRECTION: new ResolveDirectionHandler({

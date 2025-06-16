@@ -320,7 +320,6 @@ class SystemLogicInterpreter {
       this.#operationInterpreter
     );
   }
-
 }
 
 export default SystemLogicInterpreter;

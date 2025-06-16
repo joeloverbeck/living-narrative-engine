@@ -32,6 +32,7 @@ const OPERATION_SCHEMA_FILES = [
   'modifyComponent.schema.json',
   'modifyContextArray.schema.json',
   'queryComponent.schema.json',
+  'queryComponents.schema.json',
   'queryEntities.schema.json',
   'rebuildLeaderListCache.schema.json',
   'removeComponent.schema.json',
@@ -88,6 +89,7 @@ class StaticConfiguration {
 
   /**
    * Enumerates every JSON-Schema file that must be pre-compiled.
+   * It returns the path relative to the schema base path.
    *
    * @returns {string[]}
    */
@@ -109,7 +111,8 @@ class StaticConfiguration {
       'macro.schema.json',
       'ui-icons.schema.json',
       'ui-labels.schema.json',
-      ...OPERATION_SCHEMA_FILES,
+      // Prepend the 'operations/' subdirectory to each operation schema file
+      ...OPERATION_SCHEMA_FILES.map((file) => `operations/${file}`),
     ];
   }
 

@@ -66,12 +66,20 @@ function handleIf(node, nestedCtx, logger, operationInterpreter) {
  * @param {OperationInterpreter} operationInterpreter
  */
 function handleForEach(node, nestedCtx, logger, operationInterpreter) {
-  const { collection: path, item_variable: varName, actions } =
-    node.parameters || {};
+  const {
+    collection: path,
+    item_variable: varName,
+    actions,
+  } = node.parameters || {};
 
   const { scopeLabel, jsonLogic, ...baseCtx } = nestedCtx;
 
-  if (!path?.trim() || !varName?.trim() || !Array.isArray(actions) || actions.length === 0) {
+  if (
+    !path?.trim() ||
+    !varName?.trim() ||
+    !Array.isArray(actions) ||
+    actions.length === 0
+  ) {
     logger.warn(`${scopeLabel}: invalid parameters.`);
     return;
   }
@@ -90,7 +98,11 @@ function handleForEach(node, nestedCtx, logger, operationInterpreter) {
       store[varName] = collection[i];
       executeActionSequence(
         actions,
-        { ...baseCtx, scopeLabel: `${scopeLabel} > Item ${i + 1}/${collection.length}`, jsonLogic },
+        {
+          ...baseCtx,
+          scopeLabel: `${scopeLabel} > Item ${i + 1}/${collection.length}`,
+          jsonLogic,
+        },
         logger,
         operationInterpreter
       );
@@ -110,7 +122,12 @@ function handleForEach(node, nestedCtx, logger, operationInterpreter) {
  * @param {OperationInterpreter} operationInterpreter - Interpreter used to
  *   execute individual operations.
  */
-export function executeActionSequence(actions, nestedCtx, logger, operationInterpreter) {
+export function executeActionSequence(
+  actions,
+  nestedCtx,
+  logger,
+  operationInterpreter
+) {
   const { scopeLabel = 'ActionSequence', jsonLogic, ...baseCtx } = nestedCtx;
   const total = actions.length;
 
@@ -154,7 +171,11 @@ export function executeActionSequence(actions, nestedCtx, logger, operationInter
       } else if (opType === 'FOR_EACH') {
         handleForEach(
           nodeToOperation(op),
-          { ...baseCtx, scopeLabel: `${scopeLabel} FOR_EACH#${opIndex}`, jsonLogic },
+          {
+            ...baseCtx,
+            scopeLabel: `${scopeLabel} FOR_EACH#${opIndex}`,
+            jsonLogic,
+          },
           logger,
           operationInterpreter
         );
@@ -162,7 +183,10 @@ export function executeActionSequence(actions, nestedCtx, logger, operationInter
         operationInterpreter.execute(op, baseCtx);
       }
     } catch (err) {
-      logger.error(`${tag} CRITICAL error during execution of Operation ${opType}`, err);
+      logger.error(
+        `${tag} CRITICAL error during execution of Operation ${opType}`,
+        err
+      );
       const idMatch = scopeLabel.match(/Rule '(.+?)'/);
       const ruleIdForLog = idMatch ? idMatch[1] : 'UNKNOWN_RULE';
       logger.error(`rule '${ruleIdForLog}' threw:`, err);
