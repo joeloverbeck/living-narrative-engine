@@ -10,6 +10,7 @@ import {
   ensureValidLogger,
   createPrefixedLogger,
   getPrefixedLogger,
+  getModuleLogger,
   initLogger,
 } from '../../src/utils/loggerUtils.js';
 import { validateDependency } from '../../src/utils/validationUtils.js';
@@ -60,6 +61,18 @@ describe('loggerUtils', () => {
     const prefixed = createPrefixedLogger(valid, 'X: ');
     prefixed.info('hello');
     expect(valid.info).toHaveBeenCalledWith('X: hello');
+  });
+
+  it('getModuleLogger prefixes messages with module name', () => {
+    const mod = getModuleLogger('modX', valid);
+    mod.info('ping');
+    expect(valid.info).toHaveBeenCalledWith('[modX] ping');
+  });
+
+  it('getModuleLogger falls back to console when logger missing', () => {
+    const log = getModuleLogger('modY', null);
+    log.warn('oops');
+    expect(consoleSpies.warn).toHaveBeenCalledWith('[modY] : ', '[modY] oops');
   });
 
   it('getPrefixedLogger returns prefixed fallback when logger missing', () => {

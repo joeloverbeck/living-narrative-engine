@@ -84,6 +84,18 @@ export function getPrefixedLogger(logger, prefix) {
 }
 
 /**
+ * @description Convenience wrapper for creating a logger prefixed with the
+ * module name in square brackets. Falls back to the console when the base
+ * logger is missing.
+ * @param {string} moduleName - Name of the module using the logger.
+ * @param {ILogger | undefined | null} logger - Optional logger instance.
+ * @returns {ILogger} Logger instance that prefixes messages with `[moduleName]`.
+ */
+export function getModuleLogger(moduleName, logger) {
+  return getPrefixedLogger(logger, `[${moduleName}] `);
+}
+
+/**
  * @description Validates a logger using {@link validateDependency} and returns
  * a safe logger instance via {@link ensureValidLogger}. When `optional` is
  * true, missing loggers are allowed and will result in a console-based
