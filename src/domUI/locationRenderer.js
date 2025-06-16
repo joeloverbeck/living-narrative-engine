@@ -2,6 +2,7 @@
 // --- FILE START ---
 import { BoundDomRendererBase } from './boundDomRendererBase.js';
 import { DomUtils } from '../utils/domUtils.js';
+import createMessageElement from './helpers/createMessageElement.js';
 import { DISPLAY_ERROR_ID } from '../constants/eventIds.js';
 import {
   // POSITION_COMPONENT_ID, // No longer directly used for current location logic
@@ -295,12 +296,12 @@ export class LocationRenderer extends BoundDomRendererBase {
       if (element) {
         DomUtils.clearElement(element);
         const text = key === 'descriptionDisplay' ? message : defaultText;
-        const pError = this.domElementFactory.p('error-message', text);
-        if (pError) {
-          element.appendChild(pError);
-        } else {
-          element.textContent = text;
-        }
+        const pError = createMessageElement(
+          this.domElementFactory,
+          'error-message',
+          text
+        );
+        element.appendChild(pError);
       } else {
         this.logger.warn(
           `${this._logPrefix} Could not find element this.elements.${key} to clear on error.`
@@ -345,14 +346,13 @@ export class LocationRenderer extends BoundDomRendererBase {
     }
 
     if (!dataArray || dataArray.length === 0) {
-      const pEmpty = this.domElementFactory.p('empty-list-message', emptyText);
-      if (pEmpty) {
-        targetElement.appendChild(pEmpty);
-      } else {
-        targetElement.appendChild(
-          this.documentContext.document.createTextNode(emptyText)
-        );
-      }
+      targetElement.appendChild(
+        createMessageElement(
+          this.domElementFactory,
+          'empty-list-message',
+          emptyText
+        )
+      );
     } else {
       const ul = this.domElementFactory.ul(undefined, 'location-detail-list');
       if (!ul) {
@@ -365,12 +365,9 @@ export class LocationRenderer extends BoundDomRendererBase {
             item && typeof item === 'object' && item[itemTextProperty]
               ? String(item[itemTextProperty])
               : '(Invalid item)';
-          const pItem = this.domElementFactory.p(itemClassName, text);
-          if (pItem) targetElement.appendChild(pItem);
-          else
-            targetElement.appendChild(
-              this.documentContext.document.createTextNode(text)
-            );
+          targetElement.appendChild(
+            createMessageElement(this.domElementFactory, itemClassName, text)
+          );
         });
         return;
       }
@@ -386,8 +383,12 @@ export class LocationRenderer extends BoundDomRendererBase {
             `${this._logPrefix} Failed to create LI for ${title}.`
           );
           ul.appendChild(
-            this.documentContext.document.createTextNode(primaryText)
-          ); // Fallback text in UL
+            createMessageElement(
+              this.domElementFactory,
+              itemClassName,
+              primaryText
+            )
+          );
           return;
         }
 
@@ -396,8 +397,8 @@ export class LocationRenderer extends BoundDomRendererBase {
           li.appendChild(nameSpan);
         } else {
           li.appendChild(
-            this.documentContext.document.createTextNode(primaryText)
-          ); // Fallback text in LI
+            createMessageElement(this.domElementFactory, undefined, primaryText)
+          );
         }
 
         if (
@@ -408,19 +409,15 @@ export class LocationRenderer extends BoundDomRendererBase {
           typeof item.description === 'string' &&
           item.description.trim() !== ''
         ) {
-          const descP = this.domElementFactory.p(
+          const descP = createMessageElement(
+            this.domElementFactory,
             'character-description',
             item.description
           );
-          if (descP) {
+          if (descP instanceof HTMLElement) {
             li.appendChild(descP);
           } else if (nameSpan) {
-            // Fallback: append to nameSpan's parent (li)
-            li.appendChild(
-              this.documentContext.document.createTextNode(
-                ` (${item.description})`
-              )
-            );
+            li.appendChild(descP);
           }
         }
         ul.appendChild(li);

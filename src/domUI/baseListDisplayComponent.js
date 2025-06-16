@@ -2,6 +2,7 @@
 
 import { BoundDomRendererBase } from './boundDomRendererBase.js';
 import { DomUtils } from '../utils/domUtils.js';
+import createMessageElement from './helpers/createMessageElement.js';
 
 /**
  * @typedef {import('../interfaces/ILogger.js').ILogger} ILogger
@@ -190,14 +191,11 @@ export class BaseListDisplayComponent extends BoundDomRendererBase {
         error
       );
       DomUtils.clearElement(this.elements.listContainerElement);
-      const errorMsg =
-        this.domElementFactory?.p(
-          'error-message',
-          'Error loading list data.'
-        ) ||
-        this.documentContext.document.createTextNode(
-          'Error loading list data.'
-        );
+      const errorMsg = createMessageElement(
+        this.domElementFactory,
+        'error-message',
+        'Error loading list data.'
+      );
       this.elements.listContainerElement.appendChild(errorMsg);
       this._onListRendered(null, this.elements.listContainerElement);
       return;
@@ -213,16 +211,13 @@ export class BaseListDisplayComponent extends BoundDomRendererBase {
       const emptyMessage = this._getEmptyListMessage();
       if (typeof emptyMessage === 'string') {
         if (this.domElementFactory) {
-          const pEmpty = this.domElementFactory.p(
-            'empty-list-message',
-            emptyMessage
+          this.elements.listContainerElement.appendChild(
+            createMessageElement(
+              this.domElementFactory,
+              'empty-list-message',
+              emptyMessage
+            )
           );
-          if (pEmpty) {
-            this.elements.listContainerElement.appendChild(pEmpty);
-          } else {
-            // Fallback if p creation fails
-            this.elements.listContainerElement.textContent = emptyMessage;
-          }
         } else {
           this.elements.listContainerElement.textContent = emptyMessage;
         }
@@ -233,10 +228,16 @@ export class BaseListDisplayComponent extends BoundDomRendererBase {
           `${this._logPrefix} _getEmptyListMessage() returned an invalid type. Expected string or HTMLElement.`,
           { type: typeof emptyMessage }
         );
-        const fallbackEmptyMsg =
-          this.domElementFactory?.p('empty-list-message', 'List is empty.') ||
-          this.documentContext.document.createTextNode('List is empty.');
-        this.elements.listContainerElement.appendChild(fallbackEmptyMsg);
+        if (this.domElementFactory) {
+          const fallbackEmptyMsg = createMessageElement(
+            this.domElementFactory,
+            'empty-list-message',
+            'List is empty.'
+          );
+          this.elements.listContainerElement.appendChild(fallbackEmptyMsg);
+        } else {
+          this.elements.listContainerElement.textContent = 'List is empty.';
+        }
       }
       this.logger.debug(`${this._logPrefix} Empty list message displayed.`);
     } else {
