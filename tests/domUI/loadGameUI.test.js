@@ -189,12 +189,12 @@ describe('LoadGameUI basic behaviors', () => {
     loadGameUI.elements.deleteSaveButtonEl =
       document.getElementById('delete-save-button');
 
-    loadGameUI._handleSlotSelection(slot1, slotData1);
+    loadGameUI._onItemSelected(slot1, slotData1);
     expect(slot1.classList.contains('selected')).toBe(true);
     expect(loadGameUI.elements.confirmLoadButtonEl.disabled).toBe(false);
     expect(loadGameUI.elements.deleteSaveButtonEl.disabled).toBe(false);
 
-    loadGameUI._handleSlotSelection(null, null);
+    loadGameUI._onItemSelected(null, null);
     expect(slot1.classList.contains('selected')).toBe(false);
     expect(loadGameUI.elements.confirmLoadButtonEl.disabled).toBe(true);
   });

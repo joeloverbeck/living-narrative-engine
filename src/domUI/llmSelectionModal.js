@@ -99,13 +99,7 @@ export class LlmSelectionModal extends SlotModalBase {
         `${this._logPrefix} Could not find #change-llm-button element. Modal cannot be opened by this button.`
       );
     }
-    if (this.elements.listContainerElement) {
-      this._addDomListener(
-        this.elements.listContainerElement,
-        'keydown',
-        this._handleSlotNavigation.bind(this)
-      );
-    }
+    // Keyboard navigation is now handled by SlotModalBase
     // Note: #bindDomElements and #attachEventListeners for modal's own elements are handled by BaseModalRenderer/BoundDomRendererBase
 
     this.logger.debug(`${this._logPrefix} Initialized successfully.`);

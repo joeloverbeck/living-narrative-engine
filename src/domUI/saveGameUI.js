@@ -121,13 +121,7 @@ export class SaveGameUI extends SlotModalBase {
         event.preventDefault()
       );
     }
-    if (this.elements.listContainerElement) {
-      this._addDomListener(
-        this.elements.listContainerElement,
-        'keydown',
-        this._handleSlotNavigation.bind(this)
-      );
-    }
+    // Keyboard navigation is now handled by SlotModalBase
     if (this.elements.saveNameInputEl) {
       this._addDomListener(
         this.elements.saveNameInputEl,
@@ -299,7 +293,7 @@ export class SaveGameUI extends SlotModalBase {
       slotData.slotId,
       metadata,
       (evt) => {
-        this._handleSlotSelection(
+        this._onItemSelected(
           /** @type {HTMLElement} */ (evt.currentTarget),
           slotData
         );
@@ -399,7 +393,7 @@ export class SaveGameUI extends SlotModalBase {
             (s) => String(s[this._datasetKey]) === String(value)
           );
         }
-        if (slotData) this._handleSlotSelection(el, slotData);
+        if (slotData) this._onItemSelected(el, slotData);
       }
     );
 
@@ -420,7 +414,7 @@ export class SaveGameUI extends SlotModalBase {
           (s) => String(s[this._datasetKey]) === String(value)
         );
       }
-      if (slotData) this._handleSlotSelection(target, slotData);
+      if (slotData) this._onItemSelected(target, slotData);
     }
   }
 
@@ -429,7 +423,11 @@ export class SaveGameUI extends SlotModalBase {
    * @param slotData
    * @private
    */
-  _handleSlotSelection(selectedSlotElement, slotData) {
+  /**
+   * @protected
+   * @override
+   */
+  _onItemSelected(selectedSlotElement, slotData) {
     this.logger.debug(
       `${this._logPrefix} Slot selected: ID ${slotData.slotId}`,
       slotData
@@ -570,7 +568,7 @@ export class SaveGameUI extends SlotModalBase {
             )
           );
           if (slotElement) {
-            this._handleSlotSelection(slotElement, newlySavedSlotData);
+            this._onItemSelected(slotElement, newlySavedSlotData);
           } else {
             this.logger.warn(
               `${this._logPrefix} Could not find DOM element for newly saved slot ID ${newlySavedSlotData.slotId} to re-select.`
