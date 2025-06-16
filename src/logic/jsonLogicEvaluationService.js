@@ -96,6 +96,10 @@ class JsonLogicEvaluationService {
       return rule;
     }
 
+    if (Array.isArray(rule)) {
+      return rule.map((item) => this.#resolveRule(item));
+    }
+
     if ('condition_ref' in rule) {
       const refId = rule.condition_ref;
 
