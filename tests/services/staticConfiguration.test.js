@@ -52,6 +52,7 @@ const EXPECTED_SCHEMA_FILES = [
   'operations/queryEntities.schema.json',
   'operations/rebuildLeaderListCache.schema.json',
   'operations/removeComponent.schema.json',
+  'operations/removeFromClosenessCircle.schema.json',
   'operations/resolveDirection.schema.json',
   'operations/setVariable.schema.json',
   'operations/systemMoveEntity.schema.json',
