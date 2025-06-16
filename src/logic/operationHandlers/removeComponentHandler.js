@@ -14,7 +14,6 @@
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 
 import { resolveEntityId } from '../../utils/entityRefUtils.js';
-import { DISPLAY_ERROR_ID } from '../../constants/eventIds.js';
 import { safeDispatchError } from '../../utils/safeDispatchError.js';
 import {
   initHandlerLogger,

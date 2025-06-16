@@ -8,7 +8,7 @@ import {
   SHORT_TERM_MEMORY_COMPONENT_ID,
   PERCEPTION_LOG_COMPONENT_ID,
 } from '../constants/componentIds.js';
-import { DISPLAY_ERROR_ID } from '../constants/eventIds.js';
+import { SYSTEM_ERROR_OCCURRED_ID } from '../constants/eventIds.js';
 
 /**
  * @class ComponentCleaningService
@@ -86,7 +86,7 @@ class ComponentCleaningService {
     try {
       dataToSave = deepClone(componentData);
     } catch (e) {
-      this.#safeEventDispatcher.dispatch(DISPLAY_ERROR_ID, {
+      this.#safeEventDispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
         message: 'ComponentCleaningService.clean deepClone failed',
         details: {
           componentId,

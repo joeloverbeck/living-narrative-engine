@@ -2,7 +2,7 @@ import { describe, test, expect, jest } from '@jest/globals';
 import storeResult, {
   setContextValue,
 } from '../../src/utils/contextVariableUtils.js';
-import { DISPLAY_ERROR_ID } from '../../src/constants/eventIds.js';
+import { SYSTEM_ERROR_OCCURRED_ID } from '../../src/constants/eventIds.js';
 
 describe('storeResult', () => {
   test('stores value when context exists', () => {
@@ -27,7 +27,7 @@ describe('storeResult', () => {
     const success = storeResult('bar', 5, ctx, dispatcher, logger);
     expect(success).toBe(false);
     expect(dispatcher.dispatch).toHaveBeenCalledWith(
-      DISPLAY_ERROR_ID,
+      SYSTEM_ERROR_OCCURRED_ID,
       expect.objectContaining({ message: expect.any(String) })
     );
   });
@@ -52,7 +52,7 @@ describe('storeResult', () => {
     await Promise.resolve();
     expect(success).toBe(false);
     expect(validated.dispatch).toHaveBeenCalledWith(
-      DISPLAY_ERROR_ID,
+      SYSTEM_ERROR_OCCURRED_ID,
       expect.objectContaining({ message: expect.any(String) }),
       expect.any(Object)
     );
@@ -77,7 +77,7 @@ describe('setContextValue', () => {
     const success = setContextValue('   ', 1, ctx, dispatcher, logger);
     expect(success).toBe(false);
     expect(dispatcher.dispatch).toHaveBeenCalledWith(
-      DISPLAY_ERROR_ID,
+      SYSTEM_ERROR_OCCURRED_ID,
       expect.objectContaining({ message: expect.any(String) })
     );
     expect(Object.keys(ctx.evaluationContext.context)).toHaveLength(0);

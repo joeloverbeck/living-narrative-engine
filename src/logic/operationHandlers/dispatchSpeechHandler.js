@@ -6,10 +6,7 @@
 /** @typedef {import('../defs.js').ExecutionContext} ExecutionContext */
 /** @typedef {import('../../events/safeEventDispatcher.js').SafeEventDispatcher} SafeEventDispatcher */
 
-import {
-  DISPLAY_SPEECH_ID,
-  DISPLAY_ERROR_ID,
-} from '../../constants/eventIds.js';
+import { DISPLAY_SPEECH_ID } from '../../constants/eventIds.js';
 
 import { assertParamsObject } from '../../utils/handlerUtils';
 import { safeDispatchError } from '../../utils/safeDispatchError.js';

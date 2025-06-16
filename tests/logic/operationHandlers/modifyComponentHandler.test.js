@@ -5,7 +5,7 @@
  */
 import { describe, expect, test, jest, beforeEach } from '@jest/globals';
 import ModifyComponentHandler from '../../../src/logic/operationHandlers/modifyComponentHandler.js';
-import { DISPLAY_ERROR_ID } from '../../../src/constants/eventIds.js';
+import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/eventIds.js';
 
 // --- Type-hints (for editors only) ------------------------------------------
 /** @typedef {import('../../../src/interfaces/coreServices.js').ILogger} ILogger */
@@ -388,7 +388,7 @@ describe('ModifyComponentHandler', () => {
       { stats: { hp: 25 } }
     );
     expect(dispatcher.dispatch).toHaveBeenCalledWith(
-      DISPLAY_ERROR_ID,
+      SYSTEM_ERROR_OCCURRED_ID,
       expect.objectContaining({
         details: expect.objectContaining({ error: testError.message }),
       })

@@ -26,7 +26,7 @@ import { TurnEndingState } from '../../../src/turns/states/turnEndingState.js';
 // Dependencies
 import { TurnIdleState } from '../../../src/turns/states/turnIdleState.js';
 import { AbstractTurnState } from '../../../src/turns/states/abstractTurnState.js';
-import { DISPLAY_ERROR_ID } from '../../../src/constants/eventIds.js';
+import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/eventIds.js';
 
 // --- Mocks & Test Utilities ---
 
@@ -312,7 +312,7 @@ describe('TurnEndingState', () => {
       await turnEndingState.enterState(mockHandler, null);
 
       expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
-        DISPLAY_ERROR_ID,
+        SYSTEM_ERROR_OCCURRED_ID,
         expect.objectContaining({
           message: `TurnEndingState: Failed notifying TurnEndPort for actor ${actorId}: ${notifyError.message}`,
         })
@@ -398,7 +398,7 @@ describe('TurnEndingState', () => {
       await turnEndingState.destroy(mockHandler);
 
       expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
-        DISPLAY_ERROR_ID,
+        SYSTEM_ERROR_OCCURRED_ID,
         expect.objectContaining({
           message: expect.stringContaining(
             `Failed forced transition to TurnIdleState during destroy for actor ${actorId}: ${transitionError.message}`

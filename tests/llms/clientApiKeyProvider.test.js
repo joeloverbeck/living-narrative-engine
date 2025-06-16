@@ -4,7 +4,7 @@
 import { jest, describe, beforeEach, test, expect } from '@jest/globals';
 import { ClientApiKeyProvider } from '../../src/llms/clientApiKeyProvider.js';
 import { EnvironmentContext } from '../../src/llms/environmentContext.js';
-import { DISPLAY_ERROR_ID } from '../../src/constants/eventIds.js';
+import { SYSTEM_ERROR_OCCURRED_ID } from '../../src/constants/eventIds.js';
 
 /**
  * @typedef {import('../../src/llms/interfaces/ILogger.js').ILogger} ILogger
@@ -110,7 +110,7 @@ describe('ClientApiKeyProvider', () => {
       );
       // Ensure no other checks (like api key var) are made if not client
       expect(dispatcher.dispatch).not.toHaveBeenCalledWith(
-        DISPLAY_ERROR_ID,
+        SYSTEM_ERROR_OCCURRED_ID,
         expect.objectContaining({
           message: expect.stringContaining('missing both'),
         })
@@ -121,7 +121,7 @@ describe('ClientApiKeyProvider', () => {
       const key = await provider.getKey(llmConfig, null);
       expect(key).toBeNull();
       expect(dispatcher.dispatch).toHaveBeenCalledWith(
-        DISPLAY_ERROR_ID,
+        SYSTEM_ERROR_OCCURRED_ID,
         expect.objectContaining({
           message:
             'ClientApiKeyProvider.getKey (test-llm): Invalid environmentContext provided.',
@@ -140,7 +140,7 @@ describe('ClientApiKeyProvider', () => {
       );
       expect(key).toBeNull();
       expect(dispatcher.dispatch).toHaveBeenCalledWith(
-        DISPLAY_ERROR_ID,
+        SYSTEM_ERROR_OCCURRED_ID,
         expect.objectContaining({
           message:
             'ClientApiKeyProvider.getKey (test-llm): Invalid environmentContext provided.',
@@ -152,7 +152,7 @@ describe('ClientApiKeyProvider', () => {
       const key = await provider.getKey(null, environmentContext);
       expect(key).toBeNull();
       expect(dispatcher.dispatch).toHaveBeenCalledWith(
-        DISPLAY_ERROR_ID,
+        SYSTEM_ERROR_OCCURRED_ID,
         expect.objectContaining({
           message:
             'ClientApiKeyProvider.getKey (UnknownLLM): llmConfig is null or undefined.',
@@ -172,7 +172,7 @@ describe('ClientApiKeyProvider', () => {
           const key = await provider.getKey(llmConfig, environmentContext);
           expect(key).toBeNull();
           expect(dispatcher.dispatch).not.toHaveBeenCalledWith(
-            DISPLAY_ERROR_ID,
+            SYSTEM_ERROR_OCCURRED_ID,
             expect.objectContaining({
               message: expect.stringContaining('missing both'),
             })
@@ -192,7 +192,7 @@ describe('ClientApiKeyProvider', () => {
           const key = await provider.getKey(llmConfig, environmentContext);
           expect(key).toBeNull();
           expect(dispatcher.dispatch).not.toHaveBeenCalledWith(
-            DISPLAY_ERROR_ID,
+            SYSTEM_ERROR_OCCURRED_ID,
             expect.objectContaining({
               message: expect.stringContaining('missing both'),
             })
@@ -212,7 +212,7 @@ describe('ClientApiKeyProvider', () => {
           const key = await provider.getKey(llmConfig, environmentContext);
           expect(key).toBeNull();
           expect(dispatcher.dispatch).not.toHaveBeenCalledWith(
-            DISPLAY_ERROR_ID,
+            SYSTEM_ERROR_OCCURRED_ID,
             expect.objectContaining({
               message: expect.stringContaining('missing both'),
             })
@@ -232,7 +232,7 @@ describe('ClientApiKeyProvider', () => {
           const key = await provider.getKey(llmConfig, environmentContext);
           expect(key).toBeNull();
           expect(dispatcher.dispatch).toHaveBeenCalledWith(
-            DISPLAY_ERROR_ID,
+            SYSTEM_ERROR_OCCURRED_ID,
             expect.objectContaining({
               message: `ClientApiKeyProvider.getKey (test-llm): Configuration for cloud service '${apiType}' is missing both 'apiKeyEnvVar' and 'apiKeyFileName'. The proxy server will be unable to retrieve the API key. This is a configuration issue.`,
             })
@@ -247,7 +247,7 @@ describe('ClientApiKeyProvider', () => {
           const key = await provider.getKey(llmConfig, environmentContext);
           expect(key).toBeNull();
           expect(dispatcher.dispatch).toHaveBeenCalledWith(
-            DISPLAY_ERROR_ID,
+            SYSTEM_ERROR_OCCURRED_ID,
             expect.objectContaining({
               message: `ClientApiKeyProvider.getKey (test-llm): Configuration for cloud service '${apiType}' is missing both 'apiKeyEnvVar' and 'apiKeyFileName'. The proxy server will be unable to retrieve the API key. This is a configuration issue.`,
             })
@@ -262,7 +262,7 @@ describe('ClientApiKeyProvider', () => {
           const key = await provider.getKey(llmConfig, environmentContext);
           expect(key).toBeNull();
           expect(dispatcher.dispatch).toHaveBeenCalledWith(
-            DISPLAY_ERROR_ID,
+            SYSTEM_ERROR_OCCURRED_ID,
             expect.objectContaining({
               message: `ClientApiKeyProvider.getKey (test-llm): Configuration for cloud service '${apiType}' is missing both 'apiKeyEnvVar' and 'apiKeyFileName'. The proxy server will be unable to retrieve the API key. This is a configuration issue.`,
             })
@@ -282,7 +282,7 @@ describe('ClientApiKeyProvider', () => {
           const key = await provider.getKey(llmConfig, environmentContext);
           expect(key).toBeNull();
           expect(dispatcher.dispatch).not.toHaveBeenCalledWith(
-            DISPLAY_ERROR_ID,
+            SYSTEM_ERROR_OCCURRED_ID,
             expect.objectContaining({
               message: expect.stringContaining('missing both'),
             })
@@ -300,7 +300,7 @@ describe('ClientApiKeyProvider', () => {
           const key = await provider.getKey(llmConfig, environmentContext);
           expect(key).toBeNull();
           expect(dispatcher.dispatch).not.toHaveBeenCalledWith(
-            DISPLAY_ERROR_ID,
+            SYSTEM_ERROR_OCCURRED_ID,
             expect.objectContaining({
               message: expect.stringContaining('missing both'),
             })

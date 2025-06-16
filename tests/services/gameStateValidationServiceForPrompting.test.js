@@ -3,7 +3,7 @@
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { GameStateValidationServiceForPrompting } from '../../src/validation/gameStateValidationServiceForPrompting.js';
 import { ERROR_FALLBACK_CRITICAL_GAME_STATE_MISSING } from '../../src/constants/textDefaults.js';
-import { DISPLAY_ERROR_ID } from '../../src/constants/eventIds.js';
+import { SYSTEM_ERROR_OCCURRED_ID } from '../../src/constants/eventIds.js';
 
 // Mock ILogger dependency
 const mockLogger = {
@@ -77,11 +77,14 @@ describe('GameStateValidationServiceForPrompting', () => {
       expect(result.errorContent).toBe(
         ERROR_FALLBACK_CRITICAL_GAME_STATE_MISSING
       );
-      expect(mockDispatcher.dispatch).toHaveBeenCalledWith(DISPLAY_ERROR_ID, {
-        message:
-          'GameStateValidationServiceForPrompting.validate: AIGameStateDTO is null or undefined.',
-        details: {},
-      });
+      expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
+        SYSTEM_ERROR_OCCURRED_ID,
+        {
+          message:
+            'GameStateValidationServiceForPrompting.validate: AIGameStateDTO is null or undefined.',
+          details: {},
+        }
+      );
     });
 
     it('should return invalid if gameStateDto is undefined', () => {
@@ -90,11 +93,14 @@ describe('GameStateValidationServiceForPrompting', () => {
       expect(result.errorContent).toBe(
         ERROR_FALLBACK_CRITICAL_GAME_STATE_MISSING
       );
-      expect(mockDispatcher.dispatch).toHaveBeenCalledWith(DISPLAY_ERROR_ID, {
-        message:
-          'GameStateValidationServiceForPrompting.validate: AIGameStateDTO is null or undefined.',
-        details: {},
-      });
+      expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
+        SYSTEM_ERROR_OCCURRED_ID,
+        {
+          message:
+            'GameStateValidationServiceForPrompting.validate: AIGameStateDTO is null or undefined.',
+          details: {},
+        }
+      );
     });
 
     it('should return valid and warn if actorState is missing', () => {

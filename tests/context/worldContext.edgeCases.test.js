@@ -33,7 +33,7 @@ import {
   POSITION_COMPONENT_ID,
   CURRENT_ACTOR_COMPONENT_ID,
 } from '../../src/constants/componentIds.js';
-import { DISPLAY_ERROR_ID } from '../../src/constants/eventIds.js';
+import { SYSTEM_ERROR_OCCURRED_ID } from '../../src/constants/eventIds.js';
 
 describe('WorldContext Edge Cases', () => {
   let worldContext;
@@ -89,7 +89,7 @@ describe('WorldContext Edge Cases', () => {
     // #assertSingleCurrentActor logs the error in production mode
     expect(dispatcher.dispatch).toHaveBeenCalledTimes(1);
     expect(dispatcher.dispatch).toHaveBeenCalledWith(
-      DISPLAY_ERROR_ID,
+      SYSTEM_ERROR_OCCURRED_ID,
       expect.objectContaining({
         message: expect.stringContaining(
           `Expected exactly one entity with component '${CURRENT_ACTOR_COMPONENT_ID}', but found 0.`
@@ -123,7 +123,7 @@ describe('WorldContext Edge Cases', () => {
     // #assertSingleCurrentActor logs the error in production mode
     expect(dispatcher.dispatch).toHaveBeenCalledTimes(1);
     expect(dispatcher.dispatch).toHaveBeenCalledWith(
-      DISPLAY_ERROR_ID,
+      SYSTEM_ERROR_OCCURRED_ID,
       expect.objectContaining({
         message: expect.stringContaining(
           `Expected exactly one entity with component '${CURRENT_ACTOR_COMPONENT_ID}', but found 2.`
@@ -168,7 +168,7 @@ describe('WorldContext Edge Cases', () => {
     );
     expect(dispatcher.dispatch).toHaveBeenCalledTimes(1);
     expect(dispatcher.dispatch).toHaveBeenCalledWith(
-      DISPLAY_ERROR_ID,
+      SYSTEM_ERROR_OCCURRED_ID,
       expect.objectContaining({
         message: expect.stringContaining(
           `Current actor 'player1' is missing a valid '${POSITION_COMPONENT_ID}' component or locationId.`
@@ -209,7 +209,7 @@ describe('WorldContext Edge Cases', () => {
     );
     expect(dispatcher.dispatch).toHaveBeenCalledTimes(1);
     expect(dispatcher.dispatch).toHaveBeenCalledWith(
-      DISPLAY_ERROR_ID,
+      SYSTEM_ERROR_OCCURRED_ID,
       expect.objectContaining({
         message: expect.stringContaining(
           `Current actor 'player1' is missing a valid '${POSITION_COMPONENT_ID}' component or locationId.`

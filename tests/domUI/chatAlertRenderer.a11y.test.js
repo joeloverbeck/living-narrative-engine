@@ -76,7 +76,10 @@ describe('ChatAlertRenderer ARIA behavior', () => {
   });
 
   it('renders error bubble with proper aria attributes and icon label', () => {
-    fire(dispatcher, 'core:display_error', { message: 'Boom', details: {} });
+    fire(dispatcher, 'core:display_error', {
+      message: 'Boom',
+      details: {},
+    });
     const bubble = chatPanel.firstElementChild;
     expect(bubble.getAttribute('role')).toBe('alert');
     expect(bubble.getAttribute('aria-live')).toBe('assertive');

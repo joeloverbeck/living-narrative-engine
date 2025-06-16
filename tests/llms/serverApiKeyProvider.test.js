@@ -4,7 +4,7 @@
 import { jest, describe, beforeEach, test, expect } from '@jest/globals';
 import { ServerApiKeyProvider } from '../../src/llms/serverApiKeyProvider.js';
 import { EnvironmentContext } from '../../src/llms/environmentContext.js';
-import { DISPLAY_ERROR_ID } from '../../src/constants/eventIds.js';
+import { SYSTEM_ERROR_OCCURRED_ID } from '../../src/constants/eventIds.js';
 // Import the actual interfaces to ensure mocks align if needed, though not strictly used for type in JS tests
 // import { IFileSystemReader, IEnvironmentVariableReader } from '../../src/llms/interfaces/IServerUtils.js';
 
@@ -195,7 +195,7 @@ describe('ServerApiKeyProvider', () => {
       const key = await provider.getKey(llmConfig, null);
       expect(key).toBeNull();
       expect(dispatcher.dispatch).toHaveBeenCalledWith(
-        DISPLAY_ERROR_ID,
+        SYSTEM_ERROR_OCCURRED_ID,
         expect.objectContaining({
           message:
             'ServerApiKeyProvider.getKey (test-llm): Invalid environmentContext provided.',
@@ -280,7 +280,7 @@ describe('ServerApiKeyProvider', () => {
 
         expect(key).toBe('file_key_after_env_error');
         expect(dispatcher.dispatch).toHaveBeenCalledWith(
-          DISPLAY_ERROR_ID,
+          SYSTEM_ERROR_OCCURRED_ID,
           expect.objectContaining({
             message:
               "ServerApiKeyProvider.getKey (test-llm): Error while reading environment variable 'ERROR_KEY_ENV'. Error: Hypothetical permission denied reading env",
@@ -338,7 +338,7 @@ describe('ServerApiKeyProvider', () => {
 
         expect(key).toBeNull();
         expect(dispatcher.dispatch).toHaveBeenCalledWith(
-          DISPLAY_ERROR_ID,
+          SYSTEM_ERROR_OCCURRED_ID,
           expect.objectContaining({
             message:
               "ServerApiKeyProvider.getKey (test-llm): Cannot retrieve key from file 'keyfile.txt' because projectRootPath is missing or invalid in EnvironmentContext.",
@@ -403,7 +403,7 @@ describe('ServerApiKeyProvider', () => {
 
         expect(key).toBeNull();
         expect(dispatcher.dispatch).toHaveBeenCalledWith(
-          DISPLAY_ERROR_ID,
+          SYSTEM_ERROR_OCCURRED_ID,
           expect.objectContaining({
             message:
               "ServerApiKeyProvider.getKey (test-llm): Unexpected error while reading API key file '/project/root/error_file.txt'. Error: Disk read error (unexpected)",

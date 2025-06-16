@@ -1,6 +1,6 @@
 // src/domUI/inputStateController.js
 import { RendererBase } from './rendererBase.js';
-import { DISPLAY_ERROR_ID } from '../constants/eventIds.js';
+import { SYSTEM_ERROR_OCCURRED_ID } from '../constants/eventIds.js';
 
 /**
  * @typedef {import('../interfaces/ILogger').ILogger} ILogger
@@ -48,7 +48,7 @@ export class InputStateController extends RendererBase {
     // --- Validate specific inputElement dependency ---
     if (!inputElement || inputElement.nodeType !== 1) {
       const errMsg = `${this._logPrefix} 'inputElement' dependency is missing or not a valid DOM element.`;
-      this.validatedEventDispatcher.dispatch(DISPLAY_ERROR_ID, {
+      this.validatedEventDispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
         message: errMsg,
         details: { inputElement },
       });
@@ -57,7 +57,7 @@ export class InputStateController extends RendererBase {
     // Check specifically if it's an INPUT element
     if (inputElement.tagName !== 'INPUT') {
       const errMsg = `${this._logPrefix} 'inputElement' must be an HTMLInputElement (<input>), but received '${inputElement.tagName}'.`;
-      this.validatedEventDispatcher.dispatch(DISPLAY_ERROR_ID, {
+      this.validatedEventDispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
         message: errMsg,
         details: { element: inputElement },
       });
@@ -182,7 +182,7 @@ export class InputStateController extends RendererBase {
   setEnabled(enabled, placeholderText = '') {
     if (!this.#inputElement) {
       const errMsg = `${this._logPrefix} Cannot set input state, internal #inputElement reference is missing.`;
-      this.validatedEventDispatcher.dispatch(DISPLAY_ERROR_ID, {
+      this.validatedEventDispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
         message: errMsg,
         details: { element: this.#inputElement },
       });

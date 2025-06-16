@@ -2,7 +2,7 @@
 // --- FILE START ---
 import { getPrefixedLogger } from './loggerUtils.js';
 import { safeDispatchError } from './safeDispatchError.js';
-import { DISPLAY_ERROR_ID } from '../constants/eventIds.js';
+import { SYSTEM_ERROR_OCCURRED_ID } from '../constants/eventIds.js';
 
 const RETRYABLE_HTTP_STATUS_CODES = [408, 429, 500, 502, 503, 504];
 
@@ -35,7 +35,7 @@ function _calculateRetryDelay(currentAttempt, baseDelayMs, maxDelayMs) {
  * @param {number} maxRetries Maximum number of retry attempts before failing.
  * @param {number} baseDelayMs Initial delay in milliseconds for the first retry.
  * @param {number} maxDelayMs Maximum delay in milliseconds between retries, capping the exponential backoff.
- * @param {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} safeEventDispatcher Dispatcher for DISPLAY_ERROR_ID events.
+ * @param {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} safeEventDispatcher Dispatcher for SYSTEM_ERROR_OCCURRED_ID events.
  * @param {import('../interfaces/coreServices.js').ILogger} [logger] Optional logger instance.
  * @returns {Promise<any>} A promise that resolves with the parsed JSON response on success.
  * @throws {Error} Throws an error if all retries fail, a non-retryable HTTP error occurs,
@@ -119,7 +119,7 @@ export async function Workspace_retry(
         } else {
           // Non-retryable HTTP error or max retries reached for an HTTP error
           const errorMessage = `API request to ${url} failed after ${currentAttempt} attempt(s) with status ${response.status}: ${errorBodyText}`;
-          await safeEventDispatcher.dispatch(DISPLAY_ERROR_ID, {
+          await safeEventDispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
             message: `Workspace_retry: ${errorMessage} (Attempt ${currentAttempt}/${maxRetries}, Non-retryable or max retries reached)`,
             details: {
               status: response.status,
@@ -173,7 +173,7 @@ export async function Workspace_retry(
         } else {
           finalErrorMessage = `Workspace_retry: Failed for ${url} after ${currentAttempt} attempt(s). Unexpected error: ${error.message}`;
         }
-        await safeEventDispatcher.dispatch(DISPLAY_ERROR_ID, {
+        await safeEventDispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
           message: finalErrorMessage,
           details: {
             originalErrorName: error.name,

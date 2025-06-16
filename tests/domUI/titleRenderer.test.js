@@ -1,7 +1,7 @@
 // tests/domUI/titleRenderer.test.js
 import { beforeEach, describe, expect, it, jest } from '@jest/globals'; // Use if needed for mocking
 import { TitleRenderer } from '../../src/domUI/index.js'; // Adjust path as necessary
-import { DISPLAY_ERROR_ID } from '../../src/constants/eventIds.js';
+import { SYSTEM_ERROR_OCCURRED_ID } from '../../src/constants/eventIds.js';
 
 // Mock dependencies
 const mockLogger = {
@@ -63,7 +63,7 @@ describe('TitleRenderer', () => {
       expect.stringContaining('[TitleRenderer] Attached to H1 element.')
     );
     expect(mockSafeEventDispatcher.dispatch).not.toHaveBeenCalledWith(
-      DISPLAY_ERROR_ID,
+      SYSTEM_ERROR_OCCURRED_ID,
       expect.any(Object)
     );
   });
@@ -80,7 +80,7 @@ describe('TitleRenderer', () => {
       "'titleElement' dependency is missing or not a valid DOM element."
     );
     expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
-      DISPLAY_ERROR_ID,
+      SYSTEM_ERROR_OCCURRED_ID,
       expect.objectContaining({
         message: expect.stringContaining('missing or not a valid DOM element'),
       })
@@ -100,7 +100,7 @@ describe('TitleRenderer', () => {
       "'titleElement' dependency is missing or not a valid DOM element."
     );
     expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
-      DISPLAY_ERROR_ID,
+      SYSTEM_ERROR_OCCURRED_ID,
       expect.objectContaining({
         message: expect.stringContaining('missing or not a valid DOM element'),
       })
@@ -118,7 +118,7 @@ describe('TitleRenderer', () => {
       });
     }).toThrow("'titleElement' must be an H1 element, but received 'DIV'.");
     expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
-      DISPLAY_ERROR_ID,
+      SYSTEM_ERROR_OCCURRED_ID,
       expect.objectContaining({
         message: expect.stringContaining('must be an H1 element'),
       })

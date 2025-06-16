@@ -7,7 +7,10 @@
 /** @typedef {import('../defs.js').ExecutionContext} ExecutionContext */
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 
-import { TURN_ENDED_ID, DISPLAY_ERROR_ID } from '../../constants/eventIds.js';
+import {
+  TURN_ENDED_ID,
+  SYSTEM_ERROR_OCCURRED_ID,
+} from '../../constants/eventIds.js';
 
 import { assertParamsObject } from '../../utils/handlerUtils';
 import { safeDispatchError } from '../../utils/safeDispatchError.js';
@@ -59,7 +62,7 @@ class EndTurnHandler {
     if (!assertParamsObject(params, logger, 'END_TURN')) return;
 
     if (typeof params.entityId !== 'string' || !params.entityId.trim()) {
-      this.#safeEventDispatcher.dispatch(DISPLAY_ERROR_ID, {
+      this.#safeEventDispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
         message: 'END_TURN: Invalid or missing "entityId" parameter.',
         details: { params },
       });

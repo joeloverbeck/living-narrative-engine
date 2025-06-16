@@ -7,7 +7,7 @@
 /** @typedef {import('../interfaces/IGameStateValidationServiceForPrompting.js').IGameStateValidationServiceForPrompting} IGameStateValidationServiceForPrompting_Interface */
 
 import { ERROR_FALLBACK_CRITICAL_GAME_STATE_MISSING } from '../constants/textDefaults.js';
-import { DISPLAY_ERROR_ID } from '../constants/eventIds.js';
+import { SYSTEM_ERROR_OCCURRED_ID } from '../constants/eventIds.js';
 import { IGameStateValidationServiceForPrompting } from '../interfaces/IGameStateValidationServiceForPrompting.js';
 
 /**
@@ -57,7 +57,7 @@ export class GameStateValidationServiceForPrompting extends IGameStateValidation
    */
   validate(gameStateDto) {
     if (!gameStateDto) {
-      this.#dispatcher.dispatch(DISPLAY_ERROR_ID, {
+      this.#dispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
         message:
           'GameStateValidationServiceForPrompting.validate: AIGameStateDTO is null or undefined.',
         details: {},

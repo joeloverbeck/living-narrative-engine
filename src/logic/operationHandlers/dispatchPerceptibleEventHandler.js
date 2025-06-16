@@ -9,7 +9,6 @@
 /** @typedef {import('../defs.js').ExecutionContext} ExecutionContext */
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 
-import { DISPLAY_ERROR_ID } from '../../constants/eventIds.js';
 import { assertParamsObject } from '../../utils/handlerUtils/params.js';
 import { safeDispatchError } from '../../utils/safeDispatchError.js';
 

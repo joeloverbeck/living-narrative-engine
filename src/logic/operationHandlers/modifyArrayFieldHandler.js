@@ -11,7 +11,6 @@
 
 import { resolvePath } from '../../utils/objectUtils.js';
 import { cloneDeep } from 'lodash';
-import { DISPLAY_ERROR_ID } from '../../constants/eventIds.js';
 import { safeDispatchError } from '../../utils/safeDispatchError.js';
 import { resolveEntityId } from '../../utils/entityRefUtils.js';
 import { setContextValue } from '../../utils/contextVariableUtils.js';

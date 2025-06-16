@@ -12,7 +12,7 @@ import {
   jest,
 } from '@jest/globals';
 import SystemMoveEntityHandler from '../../../src/logic/operationHandlers/systemMoveEntityHandler.js';
-import { DISPLAY_ERROR_ID } from '../../../src/constants/eventIds.js';
+import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/eventIds.js';
 
 // --- Mocks ---
 
@@ -324,7 +324,7 @@ describe('SystemMoveEntityHandler', () => {
       // Assert
       expect(execCtx.logger.error).not.toHaveBeenCalled();
       expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
-        DISPLAY_ERROR_ID,
+        SYSTEM_ERROR_OCCURRED_ID,
         expect.objectContaining({
           message: `SYSTEM_MOVE_ENTITY: Failed to move entity "player". Error: ${error.message}`,
         })
@@ -349,7 +349,7 @@ describe('SystemMoveEntityHandler', () => {
       // Assert
       expect(execCtx.logger.error).not.toHaveBeenCalled();
       expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
-        DISPLAY_ERROR_ID,
+        SYSTEM_ERROR_OCCURRED_ID,
         expect.objectContaining({
           message: `SYSTEM_MOVE_ENTITY: Failed to move entity "player". Error: ${error.message}`,
         })

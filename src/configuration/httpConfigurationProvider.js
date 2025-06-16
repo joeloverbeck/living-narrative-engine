@@ -2,7 +2,7 @@
 // --- FILE START ---
 
 import { IConfigurationProvider } from '../interfaces/IConfigurationProvider.js';
-import { DISPLAY_ERROR_ID } from '../constants/eventIds.js';
+import { SYSTEM_ERROR_OCCURRED_ID } from '../constants/eventIds.js';
 
 /**
  * @typedef {import('../interfaces/coreServices.js').ILogger} ILogger
@@ -73,7 +73,9 @@ export class HttpConfigurationProvider extends IConfigurationProvider {
     ) {
       const errorMessage =
         'HttpConfigurationProvider: sourceUrl must be a non-empty string.';
-      this.#dispatcher.dispatch(DISPLAY_ERROR_ID, { message: errorMessage });
+      this.#dispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
+        message: errorMessage,
+      });
       throw new Error(errorMessage);
     }
 
@@ -87,7 +89,7 @@ export class HttpConfigurationProvider extends IConfigurationProvider {
       if (!response.ok) {
         const errorStatusText =
           response.statusText || `HTTP status ${response.status}`;
-        this.#dispatcher.dispatch(DISPLAY_ERROR_ID, {
+        this.#dispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
           message: `HttpConfigurationProvider: Failed to fetch configuration from ${sourceUrl}. Status: ${response.status} ${errorStatusText}`,
           details: { status: response.status, statusText: errorStatusText },
         });
@@ -101,7 +103,7 @@ export class HttpConfigurationProvider extends IConfigurationProvider {
       try {
         jsonData = await response.json();
       } catch (parseError) {
-        this.#dispatcher.dispatch(DISPLAY_ERROR_ID, {
+        this.#dispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
           message: `HttpConfigurationProvider: Failed to parse JSON response from ${sourceUrl}.`,
           details: {
             error:
@@ -136,7 +138,7 @@ export class HttpConfigurationProvider extends IConfigurationProvider {
 
       const errorMessage =
         error instanceof Error ? error.message : String(error);
-      this.#dispatcher.dispatch(DISPLAY_ERROR_ID, {
+      this.#dispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
         message: `HttpConfigurationProvider: Error loading or parsing configuration from ${sourceUrl}. Detail: ${errorMessage}`,
         details: {
           error: error instanceof Error ? error.message : String(error),

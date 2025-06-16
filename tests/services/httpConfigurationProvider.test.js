@@ -10,7 +10,7 @@ import {
 } from '@jest/globals';
 import { HttpConfigurationProvider } from '../../src/configuration/httpConfigurationProvider.js'; // Adjust path as needed
 import { createMockLogger } from '../testUtils.js'; // Path updated as per your usage
-import { DISPLAY_ERROR_ID } from '../../src/constants/eventIds.js';
+import { SYSTEM_ERROR_OCCURRED_ID } from '../../src/constants/eventIds.js';
 
 describe('HttpConfigurationProvider', () => {
   let mockLogger;
@@ -92,7 +92,7 @@ describe('HttpConfigurationProvider', () => {
         'HttpConfigurationProvider: sourceUrl must be a non-empty string.'
       );
       expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
-        DISPLAY_ERROR_ID,
+        SYSTEM_ERROR_OCCURRED_ID,
         expect.objectContaining({
           message:
             'HttpConfigurationProvider: sourceUrl must be a non-empty string.',
@@ -113,7 +113,7 @@ describe('HttpConfigurationProvider', () => {
         'HttpConfigurationProvider: sourceUrl must be a non-empty string.'
       );
       expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
-        DISPLAY_ERROR_ID,
+        SYSTEM_ERROR_OCCURRED_ID,
         expect.objectContaining({
           message:
             'HttpConfigurationProvider: sourceUrl must be a non-empty string.',
@@ -141,7 +141,7 @@ describe('HttpConfigurationProvider', () => {
         'Failed to fetch configuration file from http://example.com/nonexistent.json: Not Found'
       );
       expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
-        DISPLAY_ERROR_ID,
+        SYSTEM_ERROR_OCCURRED_ID,
         expect.objectContaining({
           message: `HttpConfigurationProvider: Failed to fetch configuration from ${url}. Status: 404 Not Found`,
         })
@@ -168,7 +168,7 @@ describe('HttpConfigurationProvider', () => {
         `Failed to fetch configuration file from ${url}: Internal Server Error`
       );
       expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
-        DISPLAY_ERROR_ID,
+        SYSTEM_ERROR_OCCURRED_ID,
         expect.objectContaining({
           message: `HttpConfigurationProvider: Failed to fetch configuration from ${url}. Status: 500 Internal Server Error`,
         })
@@ -197,7 +197,7 @@ describe('HttpConfigurationProvider', () => {
         `Failed to parse configuration data from ${url} as JSON: ${parseError.message}`
       );
       expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
-        DISPLAY_ERROR_ID,
+        SYSTEM_ERROR_OCCURRED_ID,
         expect.objectContaining({
           message: `HttpConfigurationProvider: Failed to parse JSON response from ${url}.`,
         })
@@ -219,7 +219,7 @@ describe('HttpConfigurationProvider', () => {
         `Could not load configuration from ${url}: ${networkError.message}`
       );
       expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
-        DISPLAY_ERROR_ID,
+        SYSTEM_ERROR_OCCURRED_ID,
         expect.objectContaining({
           message: `HttpConfigurationProvider: Error loading or parsing configuration from ${url}. Detail: ${networkError.message}`,
         })

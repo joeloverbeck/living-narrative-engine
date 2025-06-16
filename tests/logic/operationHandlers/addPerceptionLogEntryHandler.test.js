@@ -19,7 +19,7 @@ import {
 // ─── Function Under Test ──────────────────────────────────────────────────────
 import AddPerceptionLogEntryHandler from '../../../src/logic/operationHandlers/addPerceptionLogEntryHandler.js';
 import { PERCEPTION_LOG_COMPONENT_ID } from '../../../src/constants/componentIds.js';
-import { DISPLAY_ERROR_ID } from '../../../src/constants/eventIds.js';
+import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/eventIds.js';
 
 // ─── JSDoc Types (optional) ───────────────────────────────────────────────────
 /** @typedef {import('../../src/interfaces/coreServices.js').ILogger}  ILogger */
@@ -140,7 +140,7 @@ describe('AddPerceptionLogEntryHandler', () => {
       [null, undefined, 42, 'str'].forEach((bad) => {
         h.execute(/** @type {any} */ (bad));
         expect(dispatcher.dispatch).toHaveBeenLastCalledWith(
-          DISPLAY_ERROR_ID,
+          SYSTEM_ERROR_OCCURRED_ID,
           expect.objectContaining({
             message: 'ADD_PERCEPTION_LOG_ENTRY: params missing or invalid.',
           })
@@ -156,7 +156,7 @@ describe('AddPerceptionLogEntryHandler', () => {
           entry: makeEntry(),
         });
         expect(dispatcher.dispatch).toHaveBeenLastCalledWith(
-          DISPLAY_ERROR_ID,
+          SYSTEM_ERROR_OCCURRED_ID,
           expect.objectContaining({
             message: 'ADD_PERCEPTION_LOG_ENTRY: location_id is required',
           })
@@ -169,7 +169,7 @@ describe('AddPerceptionLogEntryHandler', () => {
       [null, undefined, 999, 'bad'].forEach((ent) => {
         h.execute({ location_id: 'loc:test', entry: /** @type {any} */ (ent) });
         expect(dispatcher.dispatch).toHaveBeenLastCalledWith(
-          DISPLAY_ERROR_ID,
+          SYSTEM_ERROR_OCCURRED_ID,
           expect.objectContaining({
             message: 'ADD_PERCEPTION_LOG_ENTRY: entry object is required',
           })

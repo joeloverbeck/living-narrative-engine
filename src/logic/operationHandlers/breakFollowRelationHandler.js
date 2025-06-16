@@ -10,7 +10,6 @@
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 /** @typedef {import('./rebuildLeaderListCacheHandler.js').default} RebuildLeaderListCacheHandler */
 
-import { DISPLAY_ERROR_ID } from '../../constants/eventIds.js';
 import { safeDispatchError } from '../../utils/safeDispatchError.js';
 import { FOLLOWING_COMPONENT_ID } from '../../constants/componentIds.js';
 import { assertParamsObject } from '../../utils/handlerUtils';

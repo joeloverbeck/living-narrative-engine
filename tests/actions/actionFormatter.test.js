@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { formatActionCommand } from '../../src/actions/actionFormatter.js';
 import { getEntityDisplayName } from '../../src/utils/entityUtils.js';
-import { DISPLAY_ERROR_ID } from '../../src/constants/eventIds.js';
+import { SYSTEM_ERROR_OCCURRED_ID } from '../../src/constants/eventIds.js';
 
 jest.mock('../../src/utils/entityUtils.js', () => ({
   getEntityDisplayName: jest.fn(),
@@ -82,7 +82,7 @@ describe('formatActionCommand', () => {
     );
     expect(result).toBeNull();
     expect(dispatcher.dispatch).toHaveBeenCalledWith(
-      DISPLAY_ERROR_ID,
+      SYSTEM_ERROR_OCCURRED_ID,
       expect.objectContaining({
         message:
           'formatActionCommand: Invalid or missing actionDefinition or template.',

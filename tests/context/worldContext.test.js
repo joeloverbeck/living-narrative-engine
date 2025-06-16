@@ -15,7 +15,7 @@ import {
   POSITION_COMPONENT_ID,
   CURRENT_ACTOR_COMPONENT_ID,
 } from '../../src/constants/componentIds.js';
-import { DISPLAY_ERROR_ID } from '../../src/constants/eventIds.js';
+import { SYSTEM_ERROR_OCCURRED_ID } from '../../src/constants/eventIds.js';
 
 const createMockEntityManager = () => ({
   getEntitiesWithComponent: jest.fn(),
@@ -144,7 +144,7 @@ describe('WorldContext (Stateless)', () => {
       process.env.NODE_ENV = 'test';
       expect(() => worldContext.getCurrentActor()).toThrow(`but found 0`);
       expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
-        DISPLAY_ERROR_ID,
+        SYSTEM_ERROR_OCCURRED_ID,
         expect.objectContaining({
           message: expect.stringContaining('found 0'),
         })
@@ -152,7 +152,7 @@ describe('WorldContext (Stateless)', () => {
       process.env.NODE_ENV = 'production';
       expect(worldContext.getCurrentActor()).toBeNull();
       expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
-        DISPLAY_ERROR_ID,
+        SYSTEM_ERROR_OCCURRED_ID,
         expect.objectContaining({
           message: expect.stringContaining('found 0'),
         })
@@ -167,7 +167,7 @@ describe('WorldContext (Stateless)', () => {
       process.env.NODE_ENV = 'test';
       expect(() => worldContext.getCurrentActor()).toThrow(`but found 2`);
       expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
-        DISPLAY_ERROR_ID,
+        SYSTEM_ERROR_OCCURRED_ID,
         expect.objectContaining({
           message: expect.stringContaining('found 2'),
         })
@@ -175,7 +175,7 @@ describe('WorldContext (Stateless)', () => {
       process.env.NODE_ENV = 'production';
       expect(worldContext.getCurrentActor()).toBeNull();
       expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
-        DISPLAY_ERROR_ID,
+        SYSTEM_ERROR_OCCURRED_ID,
         expect.objectContaining({
           message: expect.stringContaining('found 2'),
         })
@@ -226,7 +226,7 @@ describe('WorldContext (Stateless)', () => {
       const location = worldContext.getCurrentLocation();
       expect(location).toBeNull();
       expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
-        DISPLAY_ERROR_ID,
+        SYSTEM_ERROR_OCCURRED_ID,
         expect.objectContaining({
           message: expect.stringContaining(
             `Current actor '${PLAYER_ID}' is missing a valid '${POSITION_COMPONENT_ID}' component`
@@ -242,7 +242,7 @@ describe('WorldContext (Stateless)', () => {
       const location = worldContext.getCurrentLocation();
       expect(location).toBeNull();
       expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
-        DISPLAY_ERROR_ID,
+        SYSTEM_ERROR_OCCURRED_ID,
         expect.objectContaining({
           message: expect.stringContaining(
             `Current actor '${PLAYER_ID}' is missing a valid '${POSITION_COMPONENT_ID}' component or locationId`

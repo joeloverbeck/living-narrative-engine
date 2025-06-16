@@ -5,7 +5,7 @@ import { describe, beforeEach, test, expect, jest } from '@jest/globals';
 import EndTurnHandler from '../../../src/logic/operationHandlers/endTurnHandler.js';
 import {
   TURN_ENDED_ID,
-  DISPLAY_ERROR_ID,
+  SYSTEM_ERROR_OCCURRED_ID,
 } from '../../../src/constants/eventIds.js';
 
 const makeLogger = () => ({
@@ -49,7 +49,7 @@ describe('EndTurnHandler', () => {
 
   test('execute logs error and does not dispatch when entityId is invalid', () => {
     handler.execute({ entityId: '   ', success: true }, {});
-    expect(dispatcher.dispatch).toHaveBeenCalledWith(DISPLAY_ERROR_ID, {
+    expect(dispatcher.dispatch).toHaveBeenCalledWith(SYSTEM_ERROR_OCCURRED_ID, {
       message: 'END_TURN: Invalid or missing "entityId" parameter.',
       details: { params: { entityId: '   ', success: true } },
     });

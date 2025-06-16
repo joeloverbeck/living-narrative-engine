@@ -8,7 +8,7 @@ import {
   LLMResponseProcessor,
   LLMProcessingError,
 } from '../../src/turns/services/LLMResponseProcessor.js';
-import { DISPLAY_ERROR_ID } from '../../src/constants/eventIds.js';
+import { SYSTEM_ERROR_OCCURRED_ID } from '../../src/constants/eventIds.js';
 
 // Mocked logger for capturing logs
 const makeLogger = () => ({
@@ -122,7 +122,7 @@ describe('LLMResponseProcessor', () => {
     });
 
     expect(safeEventDispatcher.dispatch).toHaveBeenCalledWith(
-      DISPLAY_ERROR_ID,
+      SYSTEM_ERROR_OCCURRED_ID,
       {
         message: `LLMResponseProcessor: schema invalid for actor ${actorId}`,
         details: { errors: mockErrors, parsed: JSON.parse(invalidJson) },
@@ -150,7 +150,7 @@ describe('LLMResponseProcessor', () => {
     await processor.processResponse(nonJson, actorId).catch(() => {});
 
     expect(safeEventDispatcher.dispatch).toHaveBeenCalledWith(
-      DISPLAY_ERROR_ID,
+      SYSTEM_ERROR_OCCURRED_ID,
       expect.objectContaining({
         message: expect.stringContaining(
           `LLMResponseProcessor: JSON could not be parsed for actor ${actorId}`

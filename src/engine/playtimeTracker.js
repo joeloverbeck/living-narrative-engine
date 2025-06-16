@@ -1,7 +1,7 @@
 // src/services/playtimeTracker.js
 
 import IPlaytimeTracker from '../interfaces/IPlaytimeTracker.js';
-import { DISPLAY_ERROR_ID } from '../constants/eventIds.js';
+import { SYSTEM_ERROR_OCCURRED_ID } from '../constants/eventIds.js';
 import { ISafeEventDispatcher } from '../interfaces/ISafeEventDispatcher.js';
 
 /**
@@ -166,7 +166,7 @@ class PlaytimeTracker extends IPlaytimeTracker {
   setAccumulatedPlaytime(seconds) {
     if (typeof seconds !== 'number') {
       const errorMessage = `PlaytimeTracker: setAccumulatedPlaytime expects a number, but received ${typeof seconds}.`;
-      this.#safeEventDispatcher.dispatch(DISPLAY_ERROR_ID, {
+      this.#safeEventDispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
         message: errorMessage,
         details: { receivedType: typeof seconds },
       });
@@ -174,7 +174,7 @@ class PlaytimeTracker extends IPlaytimeTracker {
     }
     if (seconds < 0) {
       const errorMessage = `PlaytimeTracker: setAccumulatedPlaytime expects a non-negative number, but received ${seconds}.`;
-      this.#safeEventDispatcher.dispatch(DISPLAY_ERROR_ID, {
+      this.#safeEventDispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
         message: errorMessage,
         details: { seconds },
       });

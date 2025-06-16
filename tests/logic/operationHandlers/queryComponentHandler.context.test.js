@@ -2,7 +2,7 @@
 
 import QueryComponentHandler from '../../../src/logic/operationHandlers/queryComponentHandler.js';
 import { beforeEach, describe, expect, jest, test } from '@jest/globals';
-import { DISPLAY_ERROR_ID } from '../../../src/constants/eventIds.js';
+import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/eventIds.js';
 
 const getLoggerMock = () => ({
   info: jest.fn(),
@@ -155,7 +155,7 @@ describe('QueryComponentHandler (Context Alignment Test Suite)', () => {
     handler.execute(params, executionContext);
 
     expect(dispatcherMock.dispatch).toHaveBeenCalledWith(
-      DISPLAY_ERROR_ID,
+      SYSTEM_ERROR_OCCURRED_ID,
       expect.objectContaining({
         message: expect.stringContaining(
           'executionContext.evaluationContext.context is missing'
@@ -179,7 +179,7 @@ describe('QueryComponentHandler (Context Alignment Test Suite)', () => {
     handler.execute(params, executionContext);
 
     expect(dispatcherMock.dispatch).toHaveBeenCalledWith(
-      DISPLAY_ERROR_ID,
+      SYSTEM_ERROR_OCCURRED_ID,
       expect.objectContaining({
         message: expect.stringContaining(
           'executionContext.evaluationContext.context is missing'
@@ -200,7 +200,7 @@ describe('QueryComponentHandler (Context Alignment Test Suite)', () => {
     };
     handler.execute(params, executionContext);
     expect(dispatcherMock.dispatch).toHaveBeenCalledWith(
-      DISPLAY_ERROR_ID,
+      SYSTEM_ERROR_OCCURRED_ID,
       expect.objectContaining({
         message: expect.stringContaining('Missing required "entity_ref"'),
       })
@@ -217,7 +217,7 @@ describe('QueryComponentHandler (Context Alignment Test Suite)', () => {
     };
     handler.execute(params, executionContext);
     expect(dispatcherMock.dispatch).toHaveBeenCalledWith(
-      DISPLAY_ERROR_ID,
+      SYSTEM_ERROR_OCCURRED_ID,
       expect.objectContaining({
         message: expect.stringContaining('"component_type"'),
       })
@@ -234,7 +234,7 @@ describe('QueryComponentHandler (Context Alignment Test Suite)', () => {
     };
     handler.execute(params, executionContext);
     expect(dispatcherMock.dispatch).toHaveBeenCalledWith(
-      DISPLAY_ERROR_ID,
+      SYSTEM_ERROR_OCCURRED_ID,
       expect.objectContaining({
         message: expect.stringContaining('"result_variable"'),
       })
@@ -263,7 +263,7 @@ describe('QueryComponentHandler (Context Alignment Test Suite)', () => {
     handler.execute(params, executionContext);
 
     expect(dispatcherMock.dispatch).toHaveBeenCalledWith(
-      DISPLAY_ERROR_ID,
+      SYSTEM_ERROR_OCCURRED_ID,
       expect.objectContaining({
         message: expect.stringContaining(
           'Error during EntityManager.getComponentData'
@@ -289,7 +289,7 @@ describe('QueryComponentHandler (Context Alignment Test Suite)', () => {
     };
     handler.execute(params, executionContext);
     expect(dispatcherMock.dispatch).toHaveBeenCalledWith(
-      DISPLAY_ERROR_ID,
+      SYSTEM_ERROR_OCCURRED_ID,
       expect.objectContaining({
         message: expect.stringContaining('Could not resolve entity id'),
       })

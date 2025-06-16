@@ -4,7 +4,6 @@
 import { ILLMResponseProcessor } from '../interfaces/ILLMResponseProcessor.js';
 import { parseAndRepairJson } from '../../utils/llmUtils.js';
 import { LLM_TURN_ACTION_RESPONSE_SCHEMA_ID } from '../schemas/llmOutputSchemas.js';
-import { DISPLAY_ERROR_ID } from '../../constants/eventIds.js';
 import { safeDispatchError } from '../../utils/safeDispatchError.js';
 
 /**

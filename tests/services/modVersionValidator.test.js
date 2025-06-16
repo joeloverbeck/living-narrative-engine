@@ -8,7 +8,7 @@ import { cloneDeep } from 'lodash'; // Using lodash cloneDeep as requested
 import validateModEngineVersions from '../../src/modding/modVersionValidator.js';
 import ModDependencyError from '../../src/errors/modDependencyError.js';
 import { ENGINE_VERSION } from '../../src/engine/engineVersion.js'; // Use the actual engine version
-import { DISPLAY_ERROR_ID } from '../../src/constants/eventIds.js';
+import { SYSTEM_ERROR_OCCURRED_ID } from '../../src/constants/eventIds.js';
 
 // Mock Logger Factory
 const createMockLogger = () => ({
@@ -148,7 +148,7 @@ describe('ModVersionValidator Service: validateModEngineVersions', () => {
       expect(mockDispatcher.dispatch).toHaveBeenCalledTimes(1);
       // Assertion 3: dispatcher called with correct payload
       expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
-        DISPLAY_ERROR_ID,
+        SYSTEM_ERROR_OCCURRED_ID,
         expect.objectContaining({ message: expectedErrorMsg })
       );
       // Assertion 4: Logger info not called
@@ -186,7 +186,7 @@ describe('ModVersionValidator Service: validateModEngineVersions', () => {
       expect(mockDispatcher.dispatch).toHaveBeenCalledTimes(1);
       // Assertion 3: dispatcher called with correct payload
       expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
-        DISPLAY_ERROR_ID,
+        SYSTEM_ERROR_OCCURRED_ID,
         expect.objectContaining({ message: expectedFullErrorMsg })
       );
       // Assertion 4: Logger info not called
@@ -206,7 +206,7 @@ describe('ModVersionValidator Service: validateModEngineVersions', () => {
         validateModEngineVersions(manifests, mockLogger, mockDispatcher)
       ).toThrow(new ModDependencyError(expectedErrorMsg));
       expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
-        DISPLAY_ERROR_ID,
+        SYSTEM_ERROR_OCCURRED_ID,
         expect.objectContaining({ message: expectedErrorMsg })
       );
       expect.assertions(2);

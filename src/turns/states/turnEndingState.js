@@ -11,7 +11,7 @@
  */
 
 import { AbstractTurnState } from './abstractTurnState.js';
-import { DISPLAY_ERROR_ID } from '../../constants/eventIds.js';
+import { SYSTEM_ERROR_OCCURRED_ID } from '../../constants/eventIds.js';
 
 export class TurnEndingState extends AbstractTurnState {
   /** @type {string}     */ #actorToEndId;
@@ -28,7 +28,7 @@ export class TurnEndingState extends AbstractTurnState {
     if (!actorToEndId) {
       const message =
         'TurnEndingState Constructor: actorToEndId must be provided.';
-      dispatcher?.dispatch(DISPLAY_ERROR_ID, {
+      dispatcher?.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
         message,
         details: { providedActorId: actorToEndId ?? null },
       });
@@ -63,7 +63,7 @@ export class TurnEndingState extends AbstractTurnState {
       try {
         await ctx.getTurnEndPort().notifyTurnEnded(this.#actorToEndId, success);
       } catch (err) {
-        ctx.getSafeEventDispatcher?.().dispatch(DISPLAY_ERROR_ID, {
+        ctx.getSafeEventDispatcher?.().dispatch(SYSTEM_ERROR_OCCURRED_ID, {
           message: `TurnEndingState: Failed notifying TurnEndPort for actor ${this.#actorToEndId}: ${err.message}`,
           details: {
             actorId: this.#actorToEndId,
@@ -146,7 +146,7 @@ export class TurnEndingState extends AbstractTurnState {
       try {
         await ctx.requestIdleStateTransition();
       } catch (err) {
-        ctx.getSafeEventDispatcher?.().dispatch(DISPLAY_ERROR_ID, {
+        ctx.getSafeEventDispatcher?.().dispatch(SYSTEM_ERROR_OCCURRED_ID, {
           message: `TurnEndingState: Failed forced transition to TurnIdleState during destroy for actor ${this.#actorToEndId}: ${err.message}`,
           details: {
             actorId: this.#actorToEndId,

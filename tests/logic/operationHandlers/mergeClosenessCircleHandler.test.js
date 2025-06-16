@@ -1,6 +1,6 @@
 import { describe, beforeEach, test, expect, jest } from '@jest/globals';
 import MergeClosenessCircleHandler from '../../../src/logic/operationHandlers/mergeClosenessCircleHandler.js';
-import { DISPLAY_ERROR_ID } from '../../../src/constants/eventIds.js';
+import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/eventIds.js';
 
 const makeLogger = () => ({
   debug: jest.fn(),
@@ -72,7 +72,7 @@ describe('MergeClosenessCircleHandler', () => {
   test('validates parameters', () => {
     handler.execute({}, execCtx);
     expect(dispatcher.dispatch).toHaveBeenCalledWith(
-      DISPLAY_ERROR_ID,
+      SYSTEM_ERROR_OCCURRED_ID,
       expect.objectContaining({ message: expect.stringContaining('actor_id') })
     );
   });

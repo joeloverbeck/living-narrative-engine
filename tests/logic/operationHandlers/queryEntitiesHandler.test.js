@@ -12,7 +12,7 @@ import {
   jest,
 } from '@jest/globals';
 import QueryEntitiesHandler from '../../../src/logic/operationHandlers/queryEntitiesHandler.js';
-import { DISPLAY_ERROR_ID } from '../../../src/constants/eventIds.js';
+import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/eventIds.js';
 
 // 1. Test Harness Setup
 /**
@@ -381,7 +381,7 @@ describe('QueryEntitiesHandler', () => {
       handler.execute(params, mockExecutionContext);
 
       expect(dispatcher.dispatch).toHaveBeenCalledWith(
-        DISPLAY_ERROR_ID,
+        SYSTEM_ERROR_OCCURRED_ID,
         expect.objectContaining({
           message: expect.stringContaining('Cannot store result'),
           details: { resultVariable: 'x' },

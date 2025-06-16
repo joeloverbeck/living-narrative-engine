@@ -10,7 +10,6 @@
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 
 import { POSITION_COMPONENT_ID } from '../../constants/componentIds.js';
-import { DISPLAY_ERROR_ID } from '../../constants/eventIds.js';
 import { resolveEntityId } from '../../utils/entityRefUtils.js';
 import { safeDispatchError } from '../../utils/safeDispatchError.js';
 import { assertParamsObject } from '../../utils/handlerUtils/params.js';

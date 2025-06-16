@@ -5,7 +5,7 @@
  */
 import { describe, expect, test, jest, beforeEach } from '@jest/globals';
 import QueryComponentHandler from '../../../src/logic/operationHandlers/queryComponentHandler.js'; // Adjust path
-import { DISPLAY_ERROR_ID } from '../../../src/constants/eventIds.js';
+import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/eventIds.js';
 
 // --- JSDoc Imports ---
 /** @typedef {import('../../../src/interfaces/coreServices.js').ILogger} ILogger */
@@ -276,7 +276,7 @@ describe('QueryComponentHandler', () => {
     const context = getMockContext({ evaluationContext: { actor: null } }); // Actor missing
     handler.execute(params, context);
     expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
-      DISPLAY_ERROR_ID,
+      SYSTEM_ERROR_OCCURRED_ID,
       expect.objectContaining({
         message: expect.stringContaining('Could not resolve entity id'),
       })
@@ -296,7 +296,7 @@ describe('QueryComponentHandler', () => {
     }); // Target ID missing
     handler.execute(params, context);
     expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
-      DISPLAY_ERROR_ID,
+      SYSTEM_ERROR_OCCURRED_ID,
       expect.objectContaining({
         message: expect.stringContaining('Could not resolve entity id'),
       })
@@ -314,7 +314,7 @@ describe('QueryComponentHandler', () => {
     const context = getMockContext();
     handler.execute(params, context);
     expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
-      DISPLAY_ERROR_ID,
+      SYSTEM_ERROR_OCCURRED_ID,
       expect.objectContaining({
         message: expect.stringContaining('Could not resolve entity id'),
       })
@@ -332,7 +332,7 @@ describe('QueryComponentHandler', () => {
     const context = getMockContext();
     handler.execute(params, context);
     expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
-      DISPLAY_ERROR_ID,
+      SYSTEM_ERROR_OCCURRED_ID,
       expect.objectContaining({
         message: expect.stringContaining('Could not resolve entity id'),
       })
@@ -350,7 +350,7 @@ describe('QueryComponentHandler', () => {
     const context = getMockContext();
     handler.execute(params, context);
     expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
-      DISPLAY_ERROR_ID,
+      SYSTEM_ERROR_OCCURRED_ID,
       expect.objectContaining({
         message: expect.stringContaining('Could not resolve entity id'),
       })
@@ -364,7 +364,7 @@ describe('QueryComponentHandler', () => {
     const context = getMockContext();
     handler.execute(null, context);
     expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
-      DISPLAY_ERROR_ID,
+      SYSTEM_ERROR_OCCURRED_ID,
       expect.objectContaining({
         message: 'QueryComponentHandler: params missing or invalid.',
       })
@@ -374,7 +374,7 @@ describe('QueryComponentHandler', () => {
 
     handler.execute('invalid', context);
     expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
-      DISPLAY_ERROR_ID,
+      SYSTEM_ERROR_OCCURRED_ID,
       expect.objectContaining({
         message: 'QueryComponentHandler: params missing or invalid.',
       })
@@ -385,7 +385,7 @@ describe('QueryComponentHandler', () => {
     const context = getMockContext();
     handler.execute({ entity_ref: 'actor', result_variable: 'res' }, context);
     expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
-      DISPLAY_ERROR_ID,
+      SYSTEM_ERROR_OCCURRED_ID,
       expect.objectContaining({
         message: expect.stringContaining('"component_type" parameter'),
       })
@@ -398,7 +398,7 @@ describe('QueryComponentHandler', () => {
       context
     );
     expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
-      DISPLAY_ERROR_ID,
+      SYSTEM_ERROR_OCCURRED_ID,
       expect.objectContaining({
         message: expect.stringContaining('"component_type" parameter'),
       })
@@ -414,7 +414,7 @@ describe('QueryComponentHandler', () => {
       context
     );
     expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
-      DISPLAY_ERROR_ID,
+      SYSTEM_ERROR_OCCURRED_ID,
       expect.objectContaining({
         message: expect.stringContaining('"result_variable" parameter'),
       })
@@ -431,7 +431,7 @@ describe('QueryComponentHandler', () => {
       context
     );
     expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
-      DISPLAY_ERROR_ID,
+      SYSTEM_ERROR_OCCURRED_ID,
       expect.objectContaining({
         message: expect.stringContaining('"result_variable" parameter'),
       })
@@ -451,7 +451,7 @@ describe('QueryComponentHandler', () => {
 
     handler.execute(params, context);
     expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
-      DISPLAY_ERROR_ID,
+      SYSTEM_ERROR_OCCURRED_ID,
       expect.objectContaining({
         message: expect.stringContaining(
           'evaluationContext.context is missing'
@@ -639,7 +639,7 @@ describe('QueryComponentHandler', () => {
 
     expect(mockEntityManager.getComponentData).toHaveBeenCalledTimes(1);
     expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
-      DISPLAY_ERROR_ID,
+      SYSTEM_ERROR_OCCURRED_ID,
       expect.objectContaining({
         message: expect.stringContaining(
           'Error during EntityManager.getComponentData'
@@ -671,7 +671,7 @@ describe('QueryComponentHandler', () => {
     );
 
     expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
-      DISPLAY_ERROR_ID,
+      SYSTEM_ERROR_OCCURRED_ID,
       expect.anything()
     );
     expect(specificLogger.error).not.toHaveBeenCalled();

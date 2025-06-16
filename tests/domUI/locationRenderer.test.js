@@ -31,7 +31,7 @@ import {
   EXITS_COMPONENT_ID,
   ACTOR_COMPONENT_ID,
 } from '../../src/constants/componentIds.js';
-import { DISPLAY_ERROR_ID } from '../../src/constants/eventIds.js';
+import { SYSTEM_ERROR_OCCURRED_ID } from '../../src/constants/eventIds.js';
 
 /** @returns {import('../../src/interfaces/ILogger.js').ILogger} */
 const createMockLogger = () => ({
@@ -535,7 +535,7 @@ describe('LocationRenderer', () => {
         mockEntityDisplayDataProvider.getLocationDetails
       ).toHaveBeenCalledWith(MOCK_LOCATION_ID);
       expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
-        DISPLAY_ERROR_ID,
+        SYSTEM_ERROR_OCCURRED_ID,
         expect.objectContaining({
           message: expect.stringContaining(
             `Location details for ID '${MOCK_LOCATION_ID}' not found.`
@@ -895,10 +895,13 @@ describe('LocationRenderer', () => {
           );
         }
       }
-      expect(specificMockVed.dispatch).toHaveBeenCalledWith(DISPLAY_ERROR_ID, {
-        message:
-          "[LocationRenderer] Cannot render, required DOM element 'charactersDisplay' is missing.",
-      });
+      expect(specificMockVed.dispatch).toHaveBeenCalledWith(
+        SYSTEM_ERROR_OCCURRED_ID,
+        {
+          message:
+            "[LocationRenderer] Cannot render, required DOM element 'charactersDisplay' is missing.",
+        }
+      );
       mockDocumentContext.query = originalQuery; // Restore original mock
     });
   });

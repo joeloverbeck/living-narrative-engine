@@ -14,7 +14,7 @@ import {
 import CheckFollowCycleHandler from '../../../src/logic/operationHandlers/checkFollowCycleHandler.js';
 // Assuming the constant is exported from a known path
 import { FOLLOWING_COMPONENT_ID } from '../../../src/constants/componentIds.js';
-import { DISPLAY_ERROR_ID } from '../../../src/constants/eventIds.js';
+import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/eventIds.js';
 
 /**
  * Creates a mock ILogger.
@@ -173,7 +173,7 @@ describe('CheckFollowCycleHandler', () => {
       (paramName, params) => {
         handler.execute(params, mockExecutionContext);
         expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
-          DISPLAY_ERROR_ID,
+          SYSTEM_ERROR_OCCURRED_ID,
           expect.objectContaining({
             message: `CHECK_FOLLOW_CYCLE: Invalid "${paramName}" parameter`,
           })
@@ -370,7 +370,7 @@ describe('CheckFollowCycleHandler', () => {
 
       // Assert
       expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
-        DISPLAY_ERROR_ID,
+        SYSTEM_ERROR_OCCURRED_ID,
         expect.objectContaining({
           message: expect.stringContaining('cannot store result'),
         })
