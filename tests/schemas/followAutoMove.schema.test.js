@@ -9,6 +9,7 @@ const ruleSchema = require('../../data/schemas/rule.schema.json');
 const commonSchema = require('../../data/schemas/common.schema.json');
 const operationSchema = require('../../data/schemas/operation.schema.json');
 const jsonLogicSchema = require('../../data/schemas/json-logic.schema.json');
+const conditionContainerSchema = require('../../data/schemas/condition-container.schema.json');
 const loadOperationSchemas = require('../helpers/loadOperationSchemas.js');
 
 // and your rule under test
@@ -46,6 +47,10 @@ describe('core_follow_auto_move.rule.json', () => {
       operationSchema,
       'http://example.com/schemas/operation.schema.json'
     );
+    ajv.addSchema(
+      conditionContainerSchema,
+      'http://example.com/schemas/condition-container.schema.json'
+    );
     loadOperationSchemas(ajv);
     ajv.addSchema(
       jsonLogicSchema,
@@ -62,12 +67,12 @@ describe('core_follow_auto_move.rule.json', () => {
   test('happy path: two co-located followers trigger two ATTEMPT_ACTION_ID events', () => {
     const positions = { f1: prevLoc, f2: prevLoc, f3: 'otherLoc' };
 
-    // JSON-Logic check
-    const conditionMet = jsonLogic.apply(rule.condition, {
-      actor,
-      event: baseEvent,
-    });
-    expect(conditionMet).toBe(true);
+    // New behavior: the condition references a named condition definition.
+    // Ensure the rule points to the expected condition reference.
+    expect(rule).toHaveProperty(
+      'condition.condition_ref',
+      'core:actor-is-not-null'
+    );
 
     // simulate the FOR_EACH → IF → DISPATCH_EVENT logic
     const dispatched = [];
