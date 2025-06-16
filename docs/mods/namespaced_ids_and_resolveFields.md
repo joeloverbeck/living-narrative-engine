@@ -65,3 +65,7 @@ When both mods load, the engine creates instances for `modA:castle` and `modB:kn
 - Only fields declared in a component's `resolveFields` array are processed. Other strings that look like IDs remain unchanged.
 
 Using namespaced IDs consistently and declaring `resolveFields` correctly allows the engine to keep mods isolated yet interoperable.
+
+### Runtime IDs in memory components
+
+Some components are designed to store the **runtime instance IDs** produced when the world loads. Examples include `core:perception_log`, `core:following`, and `core:leading`. These components intentionally omit `resolveFields` because their fields don’t reference other definitions during initialization. If you pre-populate them with namespaced IDs, those values will remain raw strings unless your game introduces custom logic to resolve them later.
