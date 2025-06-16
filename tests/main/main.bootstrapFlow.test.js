@@ -14,7 +14,7 @@ jest.mock('../../src/bootstrapper/stages.js', () => ({
   __esModule: true,
   ensureCriticalDOMElementsStage: (...args) => mockEnsure(...args),
   setupDIContainerStage: (...args) => mockSetupDI(...args),
-  resolveCoreServicesStage: (...args) => mockResolveCore(...args),
+  resolveLoggerStage: (...args) => mockResolveCore(...args),
   initializeGameEngineStage: (...args) => mockInitEngine(...args),
   setupMenuButtonListenersStage: (...args) => mockMenu(...args),
   setupGlobalEventListenersStage: (...args) => mockGlobal(...args),

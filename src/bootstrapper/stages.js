@@ -103,7 +103,12 @@ export async function setupDIContainerStage(
 }
 
 /**
- * Bootstrap Stage: Resolves essential core services, particularly the logger.
+ * Bootstrap Stage: Resolves core services.
+ * Currently only the logger is required, but additional core services will be added soon.
+ *
+ * Upcoming core services:
+ * - Event bus
+ * - Configuration access
  *
  * @async
  * @param {AppContainer} container - The configured AppContainer instance.
@@ -111,8 +116,8 @@ export async function setupDIContainerStage(
  * @returns {Promise<{logger: ILogger}>} An object containing the resolved logger.
  * @throws {Error} If the ILogger service cannot be resolved or is invalid. The error will have a `phase` property set to 'Core Services Resolution'.
  */
-export async function resolveCoreServicesStage(container, diTokens) {
-  console.log('Bootstrap Stage: Resolving core services (Logger)...');
+export async function resolveLoggerStage(container, diTokens) {
+  console.log('Bootstrap Stage: Resolving logger service...');
   /** @type {ILogger} */
   let logger;
 
@@ -126,13 +131,13 @@ export async function resolveCoreServicesStage(container, diTokens) {
     const stageError = new Error(errorMsg, { cause: resolveError });
     stageError.phase = 'Core Services Resolution';
     console.error(
-      `Bootstrap Stage: resolveCoreServicesStage failed. ${errorMsg}`,
+      `Bootstrap Stage: resolveLoggerStage failed. ${errorMsg}`,
       resolveError
     );
     throw stageError;
   }
   logger.debug(
-    'Bootstrap Stage: Resolving core services (Logger)... DONE. Logger resolved successfully.'
+    'Bootstrap Stage: Resolving logger service... DONE. Logger resolved successfully.'
   );
   return { logger };
 }
