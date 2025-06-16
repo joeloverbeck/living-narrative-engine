@@ -17,7 +17,7 @@ import { manualSavePath, extractSaveName } from './savePathUtils.js';
  * @param {IStorageProvider} storage - Storage provider instance.
  * @param {string} filePath - Path to the file.
  * @param {ILogger} logger - Logger for diagnostics.
- * @returns {Promise<{success:boolean,data?:Uint8Array,error?:PersistenceError,userFriendlyError?:string}>}
+ * @returns {Promise<import('./persistenceTypes.js').PersistenceResult<Uint8Array>>} Result of the read operation.
  */
 export async function readSaveFile(storage, filePath, logger) {
   try {
@@ -55,7 +55,7 @@ export async function readSaveFile(storage, filePath, logger) {
  * @param {GameStateSerializer} serializer - Serializer instance.
  * @param {string} filePath - File path to read.
  * @param {ILogger} logger - Logger for diagnostics.
- * @returns {Promise<{success:boolean,data?:object,error?:PersistenceError,userFriendlyError?:string}>}
+ * @returns {Promise<import('./persistenceTypes.js').PersistenceResult<object>>} Result of decompression and deserialization.
  */
 export async function deserializeAndDecompress(
   storage,
@@ -83,7 +83,7 @@ export async function deserializeAndDecompress(
  * @param {IStorageProvider} storage - Storage provider.
  * @param {GameStateSerializer} serializer - Serializer instance.
  * @param {ILogger} logger - Logger for diagnostics.
- * @returns {Promise<{success:boolean,metadata:SaveFileMetadata}>}
+ * @returns {Promise<import('./persistenceTypes.js').PersistenceResult<SaveFileMetadata>>} Parsed metadata or corruption info.
  */
 export async function parseManualSaveFile(
   fileName,
@@ -107,7 +107,7 @@ export async function parseManualSaveFile(
     );
     return {
       success: false,
-      metadata: {
+      data: {
         identifier: filePath,
         saveName: extractSaveName(fileName) + ' (Corrupted)',
         timestamp: 'N/A',
@@ -132,7 +132,7 @@ export async function parseManualSaveFile(
     );
     return {
       success: false,
-      metadata: {
+      data: {
         identifier: filePath,
         saveName: extractSaveName(fileName) + ' (No Metadata)',
         timestamp: 'N/A',
@@ -144,7 +144,7 @@ export async function parseManualSaveFile(
 
   return {
     success: true,
-    metadata: {
+    data: {
       identifier: filePath,
       saveName: saveObject.metadata.saveName,
       timestamp: saveObject.metadata.timestamp,
