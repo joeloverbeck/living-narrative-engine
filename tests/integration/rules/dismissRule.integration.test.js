@@ -9,7 +9,11 @@ import ruleSchema from '../../../data/schemas/rule.schema.json';
 import commonSchema from '../../../data/schemas/common.schema.json';
 import operationSchema from '../../../data/schemas/operation.schema.json';
 import jsonLogicSchema from '../../../data/schemas/json-logic.schema.json';
+import conditionSchema from '../../../data/schemas/condition.schema.json';
+import conditionContainerSchema from '../../../data/schemas/condition-container.schema.json';
 import loadOperationSchemas from '../../helpers/loadOperationSchemas.js';
+import loadConditionSchemas from '../../helpers/loadConditionSchemas.js';
+import eventIsActionDismiss from '../../../data/mods/core/conditions/event-is-action-dismiss.condition.json';
 import dismissRule from '../../../data/mods/core/rules/dismiss.rule.json';
 import displaySuccessAndEndTurn from '../../../data/mods/core/macros/displaySuccessAndEndTurn.macro.json';
 import { expandMacros } from '../../../src/utils/macroUtils.js';
@@ -190,7 +194,10 @@ function init(entities) {
     operationRegistry.register(type, handler.execute.bind(handler));
   }
 
-  jsonLogic = new JsonLogicEvaluationService({ logger });
+  jsonLogic = new JsonLogicEvaluationService({
+    logger,
+    gameDataRepository: dataRegistry,
+  });
 
   interpreter = new SystemLogicInterpreter({
     logger,
@@ -260,6 +267,9 @@ describe('core_handle_dismiss rule integration', () => {
 
     dataRegistry = {
       getAllSystemRules: jest.fn().mockReturnValue([expandedRule]),
+      getConditionDefinition: jest.fn((id) =>
+        id === 'core:event-is-action-dismiss' ? eventIsActionDismiss : undefined
+      ),
     };
 
     init([]);
@@ -276,6 +286,7 @@ describe('core_handle_dismiss rule integration', () => {
       'http://example.com/schemas/operation.schema.json'
     );
     loadOperationSchemas(ajv);
+    loadConditionSchemas(ajv);
     ajv.addSchema(
       jsonLogicSchema,
       'http://example.com/schemas/json-logic.schema.json'

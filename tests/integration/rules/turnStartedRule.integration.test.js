@@ -8,7 +8,10 @@ import ruleSchema from '../../../data/schemas/rule.schema.json';
 import commonSchema from '../../../data/schemas/common.schema.json';
 import operationSchema from '../../../data/schemas/operation.schema.json';
 import jsonLogicSchema from '../../../data/schemas/json-logic.schema.json';
+import conditionSchema from '../../../data/schemas/condition.schema.json';
+import conditionContainerSchema from '../../../data/schemas/condition-container.schema.json';
 import loadOperationSchemas from '../../helpers/loadOperationSchemas.js';
+import loadConditionSchemas from '../../helpers/loadConditionSchemas.js';
 import turnStartedRule from '../../../data/mods/core/rules/turn_started.rule.json';
 import SystemLogicInterpreter from '../../../src/logic/systemLogicInterpreter.js';
 import OperationInterpreter from '../../../src/logic/operationInterpreter.js';
@@ -181,6 +184,7 @@ describe('turn_started rule integration', () => {
       'http://example.com/schemas/operation.schema.json'
     );
     loadOperationSchemas(ajv);
+    loadConditionSchemas(ajv);
     ajv.addSchema(
       jsonLogicSchema,
       'http://example.com/schemas/json-logic.schema.json'

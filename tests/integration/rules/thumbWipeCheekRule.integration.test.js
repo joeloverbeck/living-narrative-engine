@@ -9,7 +9,11 @@ import ruleSchema from '../../../data/schemas/rule.schema.json';
 import commonSchema from '../../../data/schemas/common.schema.json';
 import operationSchema from '../../../data/schemas/operation.schema.json';
 import jsonLogicSchema from '../../../data/schemas/json-logic.schema.json';
+import conditionSchema from '../../../data/schemas/condition.schema.json';
+import conditionContainerSchema from '../../../data/schemas/condition-container.schema.json';
 import loadOperationSchemas from '../../helpers/loadOperationSchemas.js';
+import loadConditionSchemas from '../../helpers/loadConditionSchemas.js';
+import eventIsActionThumbWipeCheek from '../../../data/mods/intimacy/conditions/event-is-action-thumb-wipe-cheek.condition.json';
 import thumbWipeCheekRule from '../../../data/mods/intimacy/rules/thumb_wipe_cheek.rule.json';
 import logSuccessMacro from '../../../data/mods/core/macros/logSuccessAndEndTurn.macro.json';
 import SystemLogicInterpreter from '../../../src/logic/systemLogicInterpreter.js';
@@ -123,7 +127,10 @@ function init(entities) {
     operationRegistry.register(type, handler.execute.bind(handler));
   }
 
-  jsonLogic = new JsonLogicEvaluationService({ logger });
+  jsonLogic = new JsonLogicEvaluationService({
+    logger,
+    gameDataRepository: dataRegistry,
+  });
 
   interpreter = new SystemLogicInterpreter({
     logger,
@@ -185,6 +192,11 @@ describe('intimacy:handle_thumb_wipe_cheek rule integration', () => {
 
     dataRegistry = {
       getAllSystemRules: jest.fn().mockReturnValue([expandedRule]),
+      getConditionDefinition: jest.fn((id) =>
+        id === 'intimacy:event-is-action-thumb-wipe-cheek'
+          ? eventIsActionThumbWipeCheek
+          : undefined
+      ),
     };
 
     init([]);
@@ -201,6 +213,7 @@ describe('intimacy:handle_thumb_wipe_cheek rule integration', () => {
       'http://example.com/schemas/operation.schema.json'
     );
     loadOperationSchemas(ajv);
+    loadConditionSchemas(ajv);
     ajv.addSchema(
       jsonLogicSchema,
       'http://example.com/schemas/json-logic.schema.json'

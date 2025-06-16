@@ -6,6 +6,7 @@ import { describe, it, beforeEach, expect, jest } from '@jest/globals';
 import getCloseRule from '../../../data/mods/intimacy/rules/get_close.rule.json';
 import adjustClothingAction from '../../../data/mods/intimacy/actions/adjust_clothing.action.json';
 import thumbWipeCheekAction from '../../../data/mods/intimacy/actions/thumb_wipe_cheek.action.json';
+import eventIsActionGetClose from '../../../data/mods/intimacy/conditions/event-is-action-get-close.condition.json';
 import logSuccessMacro from '../../../data/mods/core/macros/logSuccessAndEndTurn.macro.json';
 
 import SystemLogicInterpreter from '../../../src/logic/systemLogicInterpreter.js';
@@ -126,7 +127,10 @@ function init(entities) {
     operationRegistry,
   });
 
-  jsonLogic = new JsonLogicEvaluationService({ logger });
+  jsonLogic = new JsonLogicEvaluationService({
+    logger,
+    gameDataRepository: dataRegistry,
+  });
 
   interpreter = new SystemLogicInterpreter({
     logger,
@@ -180,6 +184,11 @@ beforeEach(() => {
   };
   dataRegistry = {
     getAllSystemRules: jest.fn().mockReturnValue([expandedRule]),
+    getConditionDefinition: jest.fn((id) =>
+      id === 'intimacy:event-is-action-get-close'
+        ? eventIsActionGetClose
+        : undefined
+    ),
   };
 
   init([]);

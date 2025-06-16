@@ -11,6 +11,8 @@ import jsonLogicSchema from '../../../data/schemas/json-logic.schema.json';
 import conditionSchema from '../../../data/schemas/condition.schema.json';
 import conditionContainerSchema from '../../../data/schemas/condition-container.schema.json';
 import loadOperationSchemas from '../../helpers/loadOperationSchemas.js';
+import loadConditionSchemas from '../../helpers/loadConditionSchemas.js';
+import eventIsActionStepBack from '../../../data/mods/intimacy/conditions/event-is-action-step-back.condition.json';
 import stepBackRule from '../../../data/mods/intimacy/rules/step_back.rule.json';
 import logSuccessMacro from '../../../data/mods/core/macros/logSuccessAndEndTurn.macro.json';
 import { expandMacros } from '../../../src/utils/macroUtils.js';
@@ -186,7 +188,10 @@ function init(entities) {
     operationRegistry,
   });
 
-  jsonLogic = new JsonLogicEvaluationService({ logger });
+  jsonLogic = new JsonLogicEvaluationService({
+    logger,
+    gameDataRepository: dataRegistry,
+  });
 
   interpreter = new SystemLogicInterpreter({
     logger,
@@ -249,6 +254,11 @@ describe('intimacy_handle_step_back rule integration', () => {
       getAllSystemRules: jest
         .fn()
         .mockReturnValue([{ ...stepBackRule, actions: expanded }]),
+      getConditionDefinition: jest.fn((id) =>
+        id === 'intimacy:event-is-action-step-back'
+          ? eventIsActionStepBack
+          : undefined
+      ),
     };
 
     init([]);
@@ -265,17 +275,10 @@ describe('intimacy_handle_step_back rule integration', () => {
       'http://example.com/schemas/operation.schema.json'
     );
     loadOperationSchemas(ajv);
+    loadConditionSchemas(ajv);
     ajv.addSchema(
       jsonLogicSchema,
       'http://example.com/schemas/json-logic.schema.json'
-    );
-    ajv.addSchema(
-      conditionSchema,
-      'http://example.com/schemas/condition.schema.json'
-    );
-    ajv.addSchema(
-      conditionContainerSchema,
-      'http://example.com/schemas/condition-container.schema.json'
     );
     const macros = { 'core:logSuccessAndEndTurn': logSuccessMacro };
     const expanded = expandMacros(stepBackRule.actions, {
