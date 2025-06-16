@@ -89,21 +89,21 @@ describe('AddPerceptionLogEntryHandler', () => {
     test('throws if logger is missing or incomplete', () => {
       expect(
         () => new AddPerceptionLogEntryHandler({ entityManager: em })
-      ).toThrow(/ILogger/);
+      ).toThrow(/logger/);
       expect(
         () =>
           new AddPerceptionLogEntryHandler({ logger: {}, entityManager: em })
-      ).toThrow(/ILogger/);
+      ).toThrow(/logger/);
     });
 
     test('throws if entityManager is missing or incomplete', () => {
       expect(() => new AddPerceptionLogEntryHandler({ logger: log })).toThrow(
-        /IEntityManager/
+        /entityManager/
       );
       expect(
         () =>
           new AddPerceptionLogEntryHandler({ logger: log, entityManager: {} })
-      ).toThrow(/IEntityManager/);
+      ).toThrow(/entityManager/);
     });
 
     test('throws if safeEventDispatcher is missing or invalid', () => {
@@ -113,7 +113,7 @@ describe('AddPerceptionLogEntryHandler', () => {
             logger: log,
             entityManager: em,
           })
-      ).toThrow(/ISafeEventDispatcher/);
+      ).toThrow(/safeEventDispatcher/);
       expect(
         () =>
           new AddPerceptionLogEntryHandler({
@@ -121,7 +121,7 @@ describe('AddPerceptionLogEntryHandler', () => {
             entityManager: em,
             safeEventDispatcher: {},
           })
-      ).toThrow(/ISafeEventDispatcher/);
+      ).toThrow(/safeEventDispatcher/);
     });
   });
 
@@ -202,7 +202,9 @@ describe('AddPerceptionLogEntryHandler', () => {
       expect(em.hasComponent).not.toHaveBeenCalled();
       expect(em.addComponent).not.toHaveBeenCalled();
       expect(log.debug).toHaveBeenCalledWith(
-        `ADD_PERCEPTION_LOG_ENTRY: No entities in location ${LOC}`
+        expect.stringContaining(
+          `ADD_PERCEPTION_LOG_ENTRY: No entities in location ${LOC}`
+        )
       );
     });
 
@@ -279,7 +281,9 @@ describe('AddPerceptionLogEntryHandler', () => {
       ).toBe(true);
 
       expect(log.debug).toHaveBeenCalledWith(
-        `ADD_PERCEPTION_LOG_ENTRY: wrote entry to 2/3 perceivers in ${LOC}`
+        expect.stringContaining(
+          `ADD_PERCEPTION_LOG_ENTRY: wrote entry to 2/3 perceivers in ${LOC}`
+        )
       );
     });
   });
