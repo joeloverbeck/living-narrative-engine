@@ -4,7 +4,6 @@ import actionData from '../../data/mods/core/actions/wait.action.json';
 import actionSchema from '../../data/schemas/action-definition.schema.json';
 import commonSchema from '../../data/schemas/common.schema.json';
 import jsonLogicSchema from '../../data/schemas/json-logic.schema.json';
-import conditionContainerSchema from '../../data/schemas/condition-container.schema.json';
 
 describe("Action Definition: 'core:wait'", () => {
   /** @type {import('ajv').ValidateFunction} */
