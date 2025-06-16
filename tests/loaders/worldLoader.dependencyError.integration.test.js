@@ -34,6 +34,7 @@ jest.mock('../../src/modding/modLoadOrderResolver.js', () => ({
 /** @typedef {import('../../src/loaders/actionLoader.js').default} ActionLoader */
 /** @typedef {import('../../src/loaders/eventLoader.js').default} EventLoader */
 /** @typedef {import('../../src/loaders/componentLoader.js').default} ComponentLoader */
+/** @typedef {import('../../src/loaders/conditionLoader.js').default} ConditionLoader */
 /** @typedef {import('../../src/loaders/ruleLoader.js').default} RuleLoader */
 /** @typedef {import('../../src/loaders/schemaLoader.js').default} SchemaLoader */
 /** @typedef {import('../../src/loaders/gameConfigLoader.js').default} GameConfigLoader */
@@ -58,6 +59,8 @@ describe('WorldLoader Integration Test Suite - Error Handling: Dependency and Ve
   let mockSchemaLoader;
   /** @type {jest.Mocked<ComponentLoader>} */
   let mockComponentLoader;
+  /** @type {jest.Mocked<ConditionLoader>} */
+  let mockConditionLoader;
   /** @type {jest.Mocked<RuleLoader>} */
   let mockRuleLoader;
   /** @type {jest.Mocked<ActionLoader>} */
@@ -159,6 +162,11 @@ describe('WorldLoader Integration Test Suite - Error Handling: Dependency and Ve
         .fn()
         .mockResolvedValue({ count: 0, overrides: 0, errors: 0 }),
     };
+    mockConditionLoader = {
+      loadItemsForMod: jest
+        .fn()
+        .mockResolvedValue({ count: 0, overrides: 0, errors: 0 }),
+    };
     mockEventLoader = {
       loadItemsForMod: jest
         .fn()
@@ -190,6 +198,7 @@ describe('WorldLoader Integration Test Suite - Error Handling: Dependency and Ve
         'schema:actions',
         'schema:events',
         'schema:rules',
+        'schema:conditions',
       ];
       return essentials.includes(schemaId);
     });
@@ -218,6 +227,7 @@ describe('WorldLoader Integration Test Suite - Error Handling: Dependency and Ve
       logger: mockLogger,
       schemaLoader: mockSchemaLoader,
       componentLoader: mockComponentLoader,
+      conditionLoader: mockConditionLoader,
       ruleLoader: mockRuleLoader,
       actionLoader: mockActionLoader,
       eventLoader: mockEventLoader,
