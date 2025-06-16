@@ -12,7 +12,7 @@
         "and": [
           {
             "!!": {
-              "var": "actor.components['intimacy:closeness']"
+              "var": "actor.components.intimacy:closeness"
             }
           },
           {
@@ -21,7 +21,7 @@
                 "var": "target.id"
               },
               {
-                "var": "actor.components['intimacy:closeness'].partners"
+                "var": "actor.components.intimacy:closeness.partners"
               }
             ]
           }
