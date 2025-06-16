@@ -37,6 +37,7 @@ import { CORE_MOD_ID } from '../../src/constants/core';
 /** @typedef {import('../../src/loaders/gameConfigLoader.js').default} GameConfigLoader */
 /** @typedef {import('../../src/modding/modManifestLoader.js').default} ModManifestLoader */
 /** @typedef {import('../../src/loaders/entityLoader.js').default} EntityLoader */
+/** @typedef {import('../../src/loaders/conditionLoader.js').default} ConditionLoader */
 /** @typedef {import('../../interfaces/manifestItems.js').ModManifest} ModManifest */
 /** @typedef {import('../../src/events/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
 
@@ -59,6 +60,8 @@ describe('WorldLoader Integration Test Suite - Error Handling: Manifest Schema, 
   let mockActionLoader;
   /** @type {jest.Mocked<EventLoader>} */
   let mockEventLoader;
+  /** @type {jest.Mocked<ConditionLoader>} */
+  let mockConditionLoader;
   /** @type {jest.Mocked<EntityLoader>} */
   let mockEntityLoader;
   /** @type {jest.Mocked<ISchemaValidator>} */
@@ -156,6 +159,7 @@ describe('WorldLoader Integration Test Suite - Error Handling: Manifest Schema, 
     mockModManifestLoader = { loadRequestedManifests: jest.fn() };
     mockActionLoader = { loadItemsForMod: jest.fn() };
     mockComponentLoader = { loadItemsForMod: jest.fn() };
+    mockConditionLoader = { loadItemsForMod: jest.fn() };
     mockEventLoader = { loadItemsForMod: jest.fn() };
     mockRuleLoader = { loadItemsForMod: jest.fn() };
     mockEntityLoader = { loadItemsForMod: jest.fn() };
@@ -230,6 +234,7 @@ describe('WorldLoader Integration Test Suite - Error Handling: Manifest Schema, 
       logger: mockLogger,
       schemaLoader: mockSchemaLoader,
       componentLoader: mockComponentLoader,
+      conditionLoader: mockConditionLoader,
       ruleLoader: mockRuleLoader,
       actionLoader: mockActionLoader,
       eventLoader: mockEventLoader,
