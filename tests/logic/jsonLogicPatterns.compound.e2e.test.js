@@ -25,6 +25,11 @@ const mockLogger = {
   debug: jest.fn(),
 };
 
+// Minimal mock for the required game data repository dependency
+const mockGameDataRepository = {
+  getConditionDefinition: jest.fn(),
+};
+
 // Mock EntityManager (Required by Context Assembler)
 /** @type {jest.Mocked<EntityManager>} */
 const mockEntityManager = {
@@ -60,7 +65,10 @@ describe('TEST-109: Validate JSON-LOGIC-PATTERNS.MD - Compound Logic (Patterns 1
 
   beforeEach(() => {
     jest.clearAllMocks();
-    service = new JsonLogicEvaluationService({ logger: mockLogger });
+    service = new JsonLogicEvaluationService({
+      logger: mockLogger,
+      gameDataRepository: mockGameDataRepository,
+    });
     mockLogger.info.mockClear();
     mockEntityManager.getEntityInstance.mockReset();
     mockEntityManager.getComponentData.mockReset();

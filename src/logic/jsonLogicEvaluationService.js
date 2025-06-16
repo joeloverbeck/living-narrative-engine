@@ -1,6 +1,9 @@
 // src/logic/jsonLogicEvaluationService.js
 import jsonLogic from 'json-logic-js';
-import { setupService } from '../utils/serviceInitializerUtils.js';
+import {
+  setupService,
+  validateServiceDeps,
+} from '../utils/serviceInitializerUtils.js';
 
 // --- JSDoc Imports for Type Hinting ---
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
@@ -9,6 +12,11 @@ import { setupService } from '../utils/serviceInitializerUtils.js';
 
 // --- REMOVED: The module-level registration attempt has been removed from here ---
 
+/**
+ *
+ * @param rule
+ * @param logger
+ */
 function warnOnBracketPaths(rule, logger) {
   if (Array.isArray(rule)) {
     rule.forEach((item) => warnOnBracketPaths(item, logger));
@@ -46,19 +54,28 @@ class JsonLogicEvaluationService {
   /**
    * Creates an instance of JsonLogicEvaluationService.
    *
-   * @param {object} dependencies - The required services.
+   * @param {object} [dependencies] - The injected services.
    * @param {ILogger} dependencies.logger - Logging service.
-   * @param {IGameDataRepository} dependencies.gameDataRepository - Repository for accessing condition definitions.
+   * @param {IGameDataRepository} [dependencies.gameDataRepository] - Repository for accessing condition definitions. Optional for tests.
    * @throws {Error} If required dependencies are missing or invalid.
    */
-  constructor({ logger, gameDataRepository }) {
-    this.#logger = setupService('JsonLogicEvaluationService', logger, {
-      gameDataRepository: {
-        value: gameDataRepository,
-        requiredMethods: ['getConditionDefinition'],
-      },
-    });
-    this.#gameDataRepository = gameDataRepository;
+  constructor({ logger, gameDataRepository } = {}) {
+    this.#logger = setupService('JsonLogicEvaluationService', logger);
+
+    if (!gameDataRepository) {
+      this.#logger.warn(
+        'No gameDataRepository provided; condition_ref resolution disabled.'
+      );
+      this.#gameDataRepository = { getConditionDefinition: () => null };
+    } else {
+      validateServiceDeps('JsonLogicEvaluationService', this.#logger, {
+        gameDataRepository: {
+          value: gameDataRepository,
+          requiredMethods: ['getConditionDefinition'],
+        },
+      });
+      this.#gameDataRepository = gameDataRepository;
+    }
 
     // --- ADDED: Register the 'not' operator alias upon instantiation ---
     this.addOperation('not', (a) => !a);
