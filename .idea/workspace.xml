@@ -4,7 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="f2176490-fa0e-405e-af38-7bec8f5491f5" name="Changes" comment="Formatting." />
+    <list default="true" id="f2176490-fa0e-405e-af38-7bec8f5491f5" name="Changes" comment="Fixed small test.">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/jest.config.js" beforeDir="false" afterPath="$PROJECT_DIR$/jest.config.js" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -194,15 +197,7 @@
       <workItem from="1749876741387" duration="32751000" />
       <workItem from="1749913762946" duration="28307000" />
       <workItem from="1749963238113" duration="51858000" />
-      <workItem from="1750034820504" duration="4299000" />
-    </task>
-    <task id="LOCAL-00113" summary="Implementing base intimacy system.">
-      <option name="closed" value="true" />
-      <created>1749985224549</created>
-      <option name="number" value="00113" />
-      <option name="presentableId" value="LOCAL-00113" />
-      <option name="project" value="LOCAL" />
-      <updated>1749985224549</updated>
+      <workItem from="1750034820504" duration="5483000" />
     </task>
     <task id="LOCAL-00114" summary="Implementing base intimacy system.">
       <option name="closed" value="true" />
@@ -588,14 +583,21 @@
       <option name="project" value="LOCAL" />
       <updated>1750038819448</updated>
     </task>
-    <option name="localTasksCounter" value="162" />
+    <task id="LOCAL-00162" summary="Fixed small test.">
+      <option name="closed" value="true" />
+      <created>1750039582517</created>
+      <option name="number" value="00162" />
+      <option name="presentableId" value="LOCAL-00162" />
+      <option name="project" value="LOCAL" />
+      <updated>1750039582517</updated>
+    </task>
+    <option name="localTasksCounter" value="163" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Chores." />
     <MESSAGE value="Unifying paths." />
     <MESSAGE value="Unified human and AI paths regarding decision-making." />
     <MESSAGE value="Ensuring that the king returns." />
@@ -620,6 +622,7 @@
     <MESSAGE value="Fixed nasty issue with schemas." />
     <MESSAGE value="Uploading with errors for Codex to fix." />
     <MESSAGE value="Formatting." />
-    <option name="LAST_COMMIT_MESSAGE" value="Formatting." />
+    <MESSAGE value="Fixed small test." />
+    <option name="LAST_COMMIT_MESSAGE" value="Fixed small test." />
   </component>
 </project>
