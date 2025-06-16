@@ -6,6 +6,7 @@ export { RendererBase } from './rendererBase.js'; // Ensure RendererBase export 
 export { BoundDomRendererBase } from './boundDomRendererBase.js'; // Added BoundDomRendererBase
 export * from './chatAlertRenderer.js';
 export { BaseListDisplayComponent } from './baseListDisplayComponent.js'; // Added BaseListDisplayComponent
+export { SelectableListDisplayComponent } from './selectableListDisplayComponent.js';
 export { BaseModalRenderer } from './baseModalRenderer.js'; // Added BaseModalRenderer
 export { SlotModalBase } from './slotModalBase.js';
 
