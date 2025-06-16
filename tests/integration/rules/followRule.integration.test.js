@@ -9,8 +9,11 @@ import ruleSchema from '../../../data/schemas/rule.schema.json';
 import commonSchema from '../../../data/schemas/common.schema.json';
 import operationSchema from '../../../data/schemas/operation.schema.json';
 import jsonLogicSchema from '../../../data/schemas/json-logic.schema.json';
+import conditionSchema from '../../../data/schemas/condition.schema.json';
+import conditionContainerSchema from '../../../data/schemas/condition-container.schema.json';
 import loadOperationSchemas from '../../helpers/loadOperationSchemas.js';
 import followRule from '../../../data/mods/core/rules/follow.rule.json';
+import eventIsActionFollow from '../../../data/mods/core/conditions/event-is-action-follow.condition.json';
 import SystemLogicInterpreter from '../../../src/logic/systemLogicInterpreter.js';
 import OperationInterpreter from '../../../src/logic/operationInterpreter.js';
 import OperationRegistry from '../../../src/logic/operationRegistry.js';
@@ -217,6 +220,7 @@ describe('core_handle_follow rule integration', () => {
     };
     const expandedRule = {
       ...followRule,
+      condition: eventIsActionFollow.logic,
       actions: expandMacros(
         JSON.parse(JSON.stringify(followRule.actions)),
         macroRegistry
@@ -243,6 +247,14 @@ describe('core_handle_follow rule integration', () => {
     ajv.addSchema(
       jsonLogicSchema,
       'http://example.com/schemas/json-logic.schema.json'
+    );
+    ajv.addSchema(
+      conditionContainerSchema,
+      'http://example.com/schemas/condition-container.schema.json'
+    );
+    ajv.addSchema(
+      conditionSchema,
+      'http://example.com/schemas/condition.schema.json'
     );
     const valid = ajv.validate(ruleSchema, followRule);
     if (!valid) console.error(ajv.errors);
