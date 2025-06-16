@@ -1,6 +1,6 @@
 {
   "$schema": "http://example.com/schemas/macro.schema.json",
-  "macro_id": "core:autoMoveFollower",
+  "id": "core:autoMoveFollower",
   "actions": [
     {
       "type": "SYSTEM_MOVE_ENTITY",

@@ -1,6 +1,6 @@
 {
   "$schema": "http://example.com/schemas/macro.schema.json",
-  "macro_id": "core:logFailureAndEndTurn",
+  "id": "core:logFailureAndEndTurn",
   "actions": [
     {
       "type": "DISPATCH_EVENT",

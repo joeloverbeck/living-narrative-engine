@@ -68,7 +68,7 @@ class MacroLoader extends BaseManifestItemLoader {
 
     const { qualifiedId, didOverride } = this._parseIdAndStoreItem(
       data,
-      'macro_id',
+      'id',
       'macros',
       modId,
       filename,

@@ -9,7 +9,7 @@ Create a file in your mod's `macros/` folder:
 ```json
 {
   "$schema": "http://example.com/schemas/macro.schema.json",
-  "macro_id": "core:say_hello",
+  "id": "core:say_hello",
   "actions": [{ "type": "DISPATCH_SPEECH", "parameters": { "text": "Hello!" } }]
 }
 ```
