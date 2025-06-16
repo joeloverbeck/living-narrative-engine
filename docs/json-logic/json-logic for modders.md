@@ -45,6 +45,7 @@ Visually, you can think of it like this:
 
 Now that you know what data is available, how do you get it? You use the `var` operator. The `var` operator's job is to retrieve a piece of data from the context using a "path" to the value you want. The path is written as a string with dots separating each step.
 
+> **Note:** JsonLogic variable paths must always use dot notation, even when keys contain colons (e.g., `components.core:quest_log`).
 The basic syntax looks like this:
 
 ```json
@@ -191,8 +192,8 @@ Rule:
 ```json
 {
   "and": [
-    { "!!": { "var": "target.components.['game:lockable']" } },
-    { "==": [{ "var": "target.components.['game:lockable'].state" }, "locked"] }
+    { "!!": { "var": "target.components.game:lockable" } },
+    { "==": [{ "var": "target.components.game:lockable.state" }, "locked"] }
   ]
 }
 ```
@@ -213,10 +214,7 @@ When the second argument is an array (a list), the `in` operator checks if the f
 
 ```json
 {
-  "in": [
-    "quest_1",
-    { "var": "actor.components.['core:quest_log'].active_quests" }
-  ]
+  "in": ["quest_1", { "var": "actor.components.core:quest_log.active_quests" }]
 }
 ```
 
@@ -278,7 +276,7 @@ Often, the mere presence of a component is enough to signal a state (e.g., the a
 **Pattern:**
 
 ```json
-{ "!!": { "var": "actor.components.['effect:poisoned']" } }
+{ "!!": { "var": "actor.components.effect:poisoned" } }
 ```
 
 Result: true if the component exists, false if it does not.
@@ -337,7 +335,7 @@ The most concise way to check that a component is not on an entity is to use the
 
 **Goal:** A rule should apply only if the actor is not burdened.
 
-**Pattern:** `{ "!": { "var": "actor.components.['status:burdened']" } }`
+**Pattern:** `{ "!": { "var": "actor.components.status:burdened" } }`
 
 **How it Works:**
 
@@ -359,7 +357,7 @@ To verify that an item is not in a list (e.g., a quest has not been completed), 
   "!": {
     "in": [
       "quest_2",
-      { "var": "actor.components.['core:quest_log'].completed_quests" }
+      { "var": "actor.components.core:quest_log.completed_quests" }
     ]
   }
 }
