@@ -41,23 +41,28 @@ export async function bootstrapApp() {
   try {
     // STAGE 1: Ensure Critical DOM Elements
     currentPhaseForError = 'UI Element Validation';
-    uiElements = await ensureCriticalDOMElementsStage(
+    const uiResult = await ensureCriticalDOMElementsStage(
       document,
       () => new UIBootstrapper()
     );
+    if (!uiResult.success) throw uiResult.error;
+    uiElements = uiResult.payload;
 
     // STAGE 2: Setup DI Container
     currentPhaseForError = 'DI Container Setup';
-    container = await setupDIContainerStage(
+    const diResult = await setupDIContainerStage(
       uiElements,
       configureContainer,
       () => new AppContainer()
     );
+    if (!diResult.success) throw diResult.error;
+    container = diResult.payload;
 
     // STAGE 3: Resolve Core Services (Logger)
     currentPhaseForError = 'Core Services Resolution';
     const coreServices = await resolveLoggerStage(container, tokens);
-    logger = coreServices.logger; // Assign the resolved logger
+    if (!coreServices.success) throw coreServices.error;
+    logger = coreServices.payload.logger; // Assign the resolved logger
     logger.debug(
       `main.js: ${currentPhaseForError} stage completed. Logger is now available.`
     );
@@ -65,24 +70,36 @@ export async function bootstrapApp() {
     // STAGE 4: Initialize Game Engine
     currentPhaseForError = 'Game Engine Initialization';
     logger.debug(`main.js: Executing ${currentPhaseForError} stage...`);
-    gameEngine = await initializeGameEngineStage(container, logger, GameEngine);
+    const engineResult = await initializeGameEngineStage(
+      container,
+      logger,
+      GameEngine
+    );
+    if (!engineResult.success) throw engineResult.error;
+    gameEngine = engineResult.payload;
     logger.debug(`main.js: ${currentPhaseForError} stage completed.`);
 
     // STAGE 5: Initialize Auxiliary Services
     currentPhaseForError = 'Auxiliary Services Initialization';
     logger.debug(`main.js: Executing ${currentPhaseForError} stage...`);
-    await initializeAuxiliaryServicesStage(
+    const auxResult = await initializeAuxiliaryServicesStage(
       container,
       gameEngine,
       logger,
       tokens
     );
+    if (!auxResult.success) throw auxResult.error;
     logger.debug(`main.js: ${currentPhaseForError} stage completed.`);
 
     // STAGE 6: Setup Menu Button Event Listeners
     currentPhaseForError = 'Menu Button Listeners Setup';
     logger.debug(`main.js: Executing ${currentPhaseForError} stage...`);
-    await setupMenuButtonListenersStage(gameEngine, logger, document);
+    const menuResult = await setupMenuButtonListenersStage(
+      gameEngine,
+      logger,
+      document
+    );
+    if (!menuResult.success) throw menuResult.error;
     // The stage itself logs its completion.
     logger.debug(`main.js: ${currentPhaseForError} stage call completed.`);
 
@@ -90,7 +107,12 @@ export async function bootstrapApp() {
     currentPhaseForError = 'Global Event Listeners Setup';
     logger.debug(`main.js: Executing ${currentPhaseForError} stage...`);
     // Pass gameEngine, logger, and the global window object
-    await setupGlobalEventListenersStage(gameEngine, logger, window);
+    const globalResult = await setupGlobalEventListenersStage(
+      gameEngine,
+      logger,
+      window
+    );
+    if (!globalResult.success) throw globalResult.error;
     // The stage itself logs its completion.
     logger.debug(`main.js: ${currentPhaseForError} stage call completed.`);
 
@@ -165,7 +187,8 @@ export async function beginGame(showLoadUI = false) {
   }
 
   try {
-    await startGameStage(gameEngine, ACTIVE_WORLD, logger);
+    const startResult = await startGameStage(gameEngine, ACTIVE_WORLD, logger);
+    if (!startResult.success) throw startResult.error;
     if (showLoadUI && typeof gameEngine.showLoadGameUI === 'function') {
       gameEngine.showLoadGameUI();
     }

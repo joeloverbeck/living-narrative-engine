@@ -25,9 +25,13 @@ describe('initializeAuxiliaryServicesStage', () => {
       resolve: jest.fn(() => ({ init: jest.fn(), initialize: jest.fn() })),
     };
 
-    await expect(
-      initializeAuxiliaryServicesStage(container, {}, logger, tokens)
-    ).resolves.toBeUndefined();
+    const result = await initializeAuxiliaryServicesStage(
+      container,
+      {},
+      logger,
+      tokens
+    );
+    expect(result.success).toBe(true);
   });
 
   it('throws aggregated error when a helper fails', async () => {
@@ -39,11 +43,14 @@ describe('initializeAuxiliaryServicesStage', () => {
       }),
     };
 
-    await expect(
-      initializeAuxiliaryServicesStage(container, {}, logger, tokens)
-    ).rejects.toMatchObject({
-      phase: 'Auxiliary Services Initialization',
-      failures: expect.any(Array),
-    });
+    const result = await initializeAuxiliaryServicesStage(
+      container,
+      {},
+      logger,
+      tokens
+    );
+    expect(result.success).toBe(false);
+    expect(result.error.phase).toBe('Auxiliary Services Initialization');
+    expect(Array.isArray(result.error.failures)).toBe(true);
   });
 });

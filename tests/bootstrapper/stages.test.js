@@ -12,7 +12,8 @@ describe('ensureCriticalDOMElementsStage', () => {
     const uiBoot = new UIBootstrapper();
     jest.spyOn(uiBoot, 'gatherEssentialElements').mockReturnValue(mockElements);
     const result = await ensureCriticalDOMElementsStage(document, uiBoot);
-    expect(result).toBe(mockElements);
+    expect(result.success).toBe(true);
+    expect(result.payload).toBe(mockElements);
   });
 
   it('wraps errors with phase', async () => {
@@ -21,8 +22,10 @@ describe('ensureCriticalDOMElementsStage', () => {
     jest.spyOn(uiBoot, 'gatherEssentialElements').mockImplementation(() => {
       throw error;
     });
-    await expect(
-      ensureCriticalDOMElementsStage(document, uiBoot)
-    ).rejects.toMatchObject({ phase: 'UI Element Validation' });
+    const result = await ensureCriticalDOMElementsStage(document, uiBoot);
+    expect(result.success).toBe(false);
+    expect(result.error).toBeInstanceOf(Error);
+    expect(result.error.message).toContain('fail');
+    expect(result.error.phase).toBe('UI Element Validation');
   });
 });

@@ -59,14 +59,14 @@ describe('main.js bootstrap process', () => {
     };
     const logger = { info: jest.fn(), error: jest.fn() };
 
-    mockEnsure.mockResolvedValue(uiElements);
-    mockSetupDI.mockResolvedValue({});
-    mockResolveCore.mockResolvedValue({ logger });
-    mockInitEngine.mockResolvedValue({});
-    mockInitAux.mockResolvedValue();
-    mockMenu.mockResolvedValue();
-    mockGlobal.mockResolvedValue();
-    mockStartGame.mockResolvedValue();
+    mockEnsure.mockResolvedValue({ success: true, payload: uiElements });
+    mockSetupDI.mockResolvedValue({ success: true, payload: {} });
+    mockResolveCore.mockResolvedValue({ success: true, payload: { logger } });
+    mockInitEngine.mockResolvedValue({ success: true, payload: {} });
+    mockInitAux.mockResolvedValue({ success: true });
+    mockMenu.mockResolvedValue({ success: true });
+    mockGlobal.mockResolvedValue({ success: true });
+    mockStartGame.mockResolvedValue({ success: true });
 
     let main;
     await jest.isolateModulesAsync(async () => {
@@ -99,8 +99,8 @@ describe('main.js bootstrap process', () => {
     const stageError = new Error('DI failed');
     stageError.phase = 'DI Container Setup';
 
-    mockEnsure.mockResolvedValue(uiElements);
-    mockSetupDI.mockRejectedValue(stageError);
+    mockEnsure.mockResolvedValue({ success: true, payload: uiElements });
+    mockSetupDI.mockResolvedValue({ success: false, error: stageError });
 
     let main;
     await jest.isolateModulesAsync(async () => {
@@ -137,11 +137,11 @@ describe('main.js bootstrap process', () => {
       { service: 'EngineUIManager', error: new Error('bad') },
     ];
 
-    mockEnsure.mockResolvedValue(uiElements);
-    mockSetupDI.mockResolvedValue({});
-    mockResolveCore.mockResolvedValue({ logger });
-    mockInitEngine.mockResolvedValue({});
-    mockInitAux.mockRejectedValue(aggError);
+    mockEnsure.mockResolvedValue({ success: true, payload: uiElements });
+    mockSetupDI.mockResolvedValue({ success: true, payload: {} });
+    mockResolveCore.mockResolvedValue({ success: true, payload: { logger } });
+    mockInitEngine.mockResolvedValue({ success: true, payload: {} });
+    mockInitAux.mockResolvedValue({ success: false, error: aggError });
 
     let main;
     await jest.isolateModulesAsync(async () => {

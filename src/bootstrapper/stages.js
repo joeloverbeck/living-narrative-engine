@@ -2,7 +2,7 @@
 /* eslint-disable no-console */
 // --- FILE START ---
 import { UIBootstrapper } from './UIBootstrapper.js';
-import AppContainer from '../dependencyInjection/appContainer.js'; // Corrected path assuming appContainer.js is in ../dependencyInjection/
+import AppContainer from '../dependencyInjection/appContainer.js';
 import GameEngine from '../engine/gameEngine.js';
 
 import { initializeAuxiliaryServicesStage } from './auxiliaryStages.js';
@@ -27,6 +27,7 @@ import { tokens } from '../dependencyInjection/tokens.js'; // Corrected path ass
 /** @typedef {typeof tokens} TokensObject */
 
 /** @typedef {import('../engine/gameEngine.js').default} GameEngineInstance */
+/** @typedef {import('../types/stageResult.js').StageResult} StageResult */
 
 /**
  * Bootstrap Stage: Ensures critical DOM elements are present.
@@ -35,10 +36,10 @@ import { tokens } from '../dependencyInjection/tokens.js'; // Corrected path ass
  * This stage catches that error and re-throws it with a specific phase.
  *
  * @async
- * @param uiBootstrapperOrFactory
  * @param {Document} doc - The global document object.
- * @returns {Promise<EssentialUIElements>} A promise that resolves with an object containing references to the DOM elements if found.
- * @throws {Error} If `gatherEssentialElements` (called internally) fails because elements are missing. The error will have a `phase` property set to 'UI Element Validation'.
+ * @param {(UIBootstrapper|function(): UIBootstrapper)} [uiBootstrapperOrFactory]
+ *  - Instance or factory for a UIBootstrapper.
+ * @returns {Promise<StageResult>} Result object with gathered DOM elements on success.
  */
 export async function ensureCriticalDOMElementsStage(
   doc,
@@ -50,7 +51,7 @@ export async function ensureCriticalDOMElementsStage(
       : uiBootstrapperOrFactory;
   try {
     const essentialUIElements = uiBootstrapper.gatherEssentialElements(doc);
-    return essentialUIElements;
+    return { success: true, payload: essentialUIElements };
   } catch (error) {
     const stageError = new Error(
       `UI Element Validation Failed: ${error.message}`,
@@ -61,7 +62,7 @@ export async function ensureCriticalDOMElementsStage(
       `Bootstrap Stage: ensureCriticalDOMElementsStage failed. ${stageError.message}`,
       error
     );
-    throw stageError;
+    return { success: false, error: stageError };
   }
 }
 
@@ -71,10 +72,10 @@ export async function ensureCriticalDOMElementsStage(
  *
  * @async
  * @param {EssentialUIElements} uiReferences - The object containing DOM element references.
- * @param containerOrFactory
  * @param {ConfigureContainerFunction} containerConfigFunc - A reference to the configureContainer function.
- * @returns {Promise<AppContainer>} A promise that resolves with the configured AppContainer instance.
- * @throws {Error} If DI container configuration fails. The error will have a `phase` property set to 'DI Container Setup'.
+ * @param {(AppContainer|function(): AppContainer)} [containerOrFactory]
+ *  - Instance or factory for an AppContainer.
+ * @returns {Promise<StageResult>} Result object with the configured AppContainer on success.
  */
 export async function setupDIContainerStage(
   uiReferences,
@@ -96,10 +97,9 @@ export async function setupDIContainerStage(
       `Bootstrap Stage: setupDIContainerStage failed. ${errorMsg}`,
       registrationError
     );
-    throw stageError;
+    return { success: false, error: stageError };
   }
-
-  return container;
+  return { success: true, payload: container };
 }
 
 /**
@@ -113,8 +113,7 @@ export async function setupDIContainerStage(
  * @async
  * @param {AppContainer} container - The configured AppContainer instance.
  * @param {TokensObject} diTokens - The DI tokens object.
- * @returns {Promise<{logger: ILogger}>} An object containing the resolved logger.
- * @throws {Error} If the ILogger service cannot be resolved or is invalid. The error will have a `phase` property set to 'Core Services Resolution'.
+ * @returns {Promise<StageResult>} Result object with the resolved logger on success.
  */
 export async function resolveLoggerStage(container, diTokens) {
   console.log('Bootstrap Stage: Resolving logger service...');
@@ -134,12 +133,12 @@ export async function resolveLoggerStage(container, diTokens) {
       `Bootstrap Stage: resolveLoggerStage failed. ${errorMsg}`,
       resolveError
     );
-    throw stageError;
+    return { success: false, error: stageError };
   }
   logger.debug(
     'Bootstrap Stage: Resolving logger service... DONE. Logger resolved successfully.'
   );
-  return { logger };
+  return { success: true, payload: { logger } };
 }
 
 /**
@@ -148,10 +147,10 @@ export async function resolveLoggerStage(container, diTokens) {
  *
  * @async
  * @param {AppContainer} container - The configured AppContainer instance.
- * @param GameEngineCtorOrFactory
  * @param {ILogger} logger - The resolved ILogger instance.
- * @returns {Promise<GameEngineInstance>} A promise that resolves with the GameEngine instance.
- * @throws {Error} If GameEngine instantiation fails. The error will have a `phase` property set to 'GameEngine Initialization'.
+ * @param {(function(new:GameEngine,object):GameEngine)|function(object):GameEngine|typeof GameEngine} [GameEngineCtorOrFactory]
+ *  - GameEngine class or factory to instantiate.
+ * @returns {Promise<StageResult>} Result object with the GameEngine instance on success.
  */
 export async function initializeGameEngineStage(
   container,
@@ -185,12 +184,12 @@ export async function initializeGameEngineStage(
     const errorMsg = `Fatal Error during GameEngine instantiation: ${engineCreationError.message}.`;
     const stageError = new Error(errorMsg, { cause: engineCreationError });
     stageError.phase = currentPhase;
-    throw stageError;
+    return { success: false, error: stageError };
   }
   logger.debug(
     `Bootstrap Stage: Initializing GameEngine... DONE. GameEngine instance available.`
   );
-  return gameEngine;
+  return { success: true, payload: gameEngine };
 }
 /**
  * Bootstrap Stage: Initializes auxiliary services (imported from auxiliaryStages.js).
@@ -203,7 +202,7 @@ export async function initializeGameEngineStage(
  * @param {GameEngineInstance} gameEngine - The instantiated GameEngine instance.
  * @param {ILogger} logger - The resolved ILogger instance.
  * @param {Document} documentRef - A reference to the global document object.
- * @returns {Promise<void>} A promise that resolves when the listeners are set up.
+ * @returns {Promise<StageResult>} Result object indicating success of listener setup.
  */
 export async function setupMenuButtonListenersStage(
   gameEngine,
@@ -259,6 +258,7 @@ export async function setupMenuButtonListenersStage(
       );
     }
     logger.debug(`Bootstrap Stage: ${stageName} completed successfully.`);
+    return { success: true };
   } catch (error) {
     logger.error(
       `Bootstrap Stage: ${stageName} encountered an unexpected error during listener setup.`,
@@ -269,7 +269,7 @@ export async function setupMenuButtonListenersStage(
       { cause: error }
     );
     stageError.phase = stageName;
-    throw stageError;
+    return { success: false, error: stageError };
   }
 }
 
@@ -280,7 +280,7 @@ export async function setupMenuButtonListenersStage(
  * @param {GameEngineInstance} gameEngine - The instantiated GameEngine instance.
  * @param {ILogger} logger - The resolved ILogger instance.
  * @param {Window} windowRef - A reference to the global window object.
- * @returns {Promise<void>} A promise that resolves when the listener is set up.
+ * @returns {Promise<StageResult>} Result object indicating success of listener setup.
  */
 export async function setupGlobalEventListenersStage(
   gameEngine,
@@ -333,6 +333,7 @@ export async function setupGlobalEventListenersStage(
       `${stageName}: '${eventName}' event listener attached successfully.`
     );
     logger.debug(`Bootstrap Stage: ${stageName} completed.`);
+    return { success: true };
   } catch (error) {
     logger.error(
       `Bootstrap Stage: ${stageName} encountered an unexpected error during '${eventName}' listener setup.`,
@@ -343,7 +344,7 @@ export async function setupGlobalEventListenersStage(
       { cause: error }
     );
     stageError.phase = stageName;
-    throw stageError;
+    return { success: false, error: stageError };
   }
 }
 
@@ -355,7 +356,7 @@ export async function setupGlobalEventListenersStage(
  * @param {GameEngineInstance} gameEngine - The instantiated GameEngine instance.
  * @param {string} activeWorldName - The name of the world to start (e.g., from AppConfig.ACTIVE_WORLD).
  * @param {ILogger} logger - The resolved ILogger instance.
- * @returns {Promise<void>} A promise that resolves if the game starts successfully.
+ * @returns {Promise<StageResult>} Result object indicating if the game was started.
  */
 export async function startGameStage(gameEngine, activeWorldName, logger) {
   const stageName = 'Start Game';
@@ -371,7 +372,7 @@ export async function startGameStage(gameEngine, activeWorldName, logger) {
       'GameEngine not initialized before attempting to start game.'
     );
     criticalError.phase = stageName;
-    throw criticalError;
+    return { success: false, error: criticalError };
   }
   if (typeof activeWorldName !== 'string' || activeWorldName.trim() === '') {
     logger.error(
@@ -381,7 +382,7 @@ export async function startGameStage(gameEngine, activeWorldName, logger) {
       'activeWorldName is invalid or empty, cannot start game.'
     );
     criticalError.phase = stageName;
-    throw criticalError;
+    return { success: false, error: criticalError };
   }
 
   try {
@@ -399,9 +400,10 @@ export async function startGameStage(gameEngine, activeWorldName, logger) {
       { cause: startGameError }
     );
     stageError.phase = stageName;
-    throw stageError;
+    return { success: false, error: stageError };
   }
   logger.debug(`Bootstrap Stage: ${stageName} completed.`);
+  return { success: true };
 }
 
 // --- FILE END ---

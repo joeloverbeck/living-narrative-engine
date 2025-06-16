@@ -30,18 +30,19 @@ afterEach(() => {
 describe('setupDIContainerStage', () => {
   it('configures the container using provided function', async () => {
     const configFn = jest.fn();
-    const container = await setupDIContainerStage({}, configFn);
-    expect(configFn).toHaveBeenCalledWith(container, {});
-    expect(container).toBeInstanceOf(AppContainer);
+    const result = await setupDIContainerStage({}, configFn);
+    expect(result.success).toBe(true);
+    expect(configFn).toHaveBeenCalledWith(result.payload, {});
+    expect(result.payload).toBeInstanceOf(AppContainer);
   });
 
   it('wraps errors with phase', async () => {
     const configFn = jest.fn(() => {
       throw new Error('fail');
     });
-    await expect(setupDIContainerStage({}, configFn)).rejects.toMatchObject({
-      phase: 'DI Container Setup',
-    });
+    const result = await setupDIContainerStage({}, configFn);
+    expect(result.success).toBe(false);
+    expect(result.error.phase).toBe('DI Container Setup');
   });
 });
 
@@ -52,7 +53,8 @@ describe('resolveLoggerStage', () => {
     const tokens = { ILogger: 'LOGGER' };
     const result = await resolveLoggerStage(container, tokens);
     expect(container.resolve).toHaveBeenCalledWith(tokens.ILogger);
-    expect(result.logger).toBe(logger);
+    expect(result.success).toBe(true);
+    expect(result.payload.logger).toBe(logger);
   });
 
   it('wraps errors with phase', async () => {
@@ -62,9 +64,9 @@ describe('resolveLoggerStage', () => {
       }),
     };
     const tokens = { ILogger: 'LOGGER' };
-    await expect(resolveLoggerStage(container, tokens)).rejects.toMatchObject({
-      phase: 'Core Services Resolution',
-    });
+    const result = await resolveLoggerStage(container, tokens);
+    expect(result.success).toBe(false);
+    expect(result.error.phase).toBe('Core Services Resolution');
   });
 });
 
@@ -74,7 +76,8 @@ describe('initializeGameEngineStage', () => {
     const container = {};
     const result = await initializeGameEngineStage(container, logger);
     expect(GameEngine).toHaveBeenCalledWith({ container });
-    expect(result).toEqual({ mocked: true });
+    expect(result.success).toBe(true);
+    expect(result.payload).toEqual({ mocked: true });
   });
 
   it('wraps constructor errors with phase', async () => {
@@ -82,9 +85,9 @@ describe('initializeGameEngineStage', () => {
       throw new Error('bad');
     });
     const logger = createLogger();
-    await expect(initializeGameEngineStage({}, logger)).rejects.toMatchObject({
-      phase: 'GameEngine Initialization',
-    });
+    const result = await initializeGameEngineStage({}, logger);
+    expect(result.success).toBe(false);
+    expect(result.error.phase).toBe('GameEngine Initialization');
   });
 });
 
@@ -102,20 +105,21 @@ describe('setupGlobalEventListenersStage', () => {
       stop,
     };
     const logger = createLogger();
-    await setupGlobalEventListenersStage(gameEngine, logger, windowRef);
+    const result = await setupGlobalEventListenersStage(gameEngine, logger, windowRef);
     expect(windowRef.addEventListener).toHaveBeenCalledWith(
       'beforeunload',
       expect.any(Function)
     );
     await cb();
     expect(stop).toHaveBeenCalled();
+    expect(result.success).toBe(true);
   });
 
   it('throws when windowRef missing', async () => {
     const logger = createLogger();
-    await expect(
-      setupGlobalEventListenersStage({}, logger, null)
-    ).rejects.toMatchObject({ phase: 'Global Event Listeners Setup' });
+    const result = await setupGlobalEventListenersStage({}, logger, null);
+    expect(result.success).toBe(false);
+    expect(result.error.phase).toBe('Global Event Listeners Setup');
   });
 });
 
@@ -124,22 +128,23 @@ describe('startGameStage', () => {
     const logger = createLogger();
     const startNewGame = jest.fn().mockResolvedValue();
     const gameEngine = { startNewGame };
-    await startGameStage(gameEngine, 'world1', logger);
+    const result = await startGameStage(gameEngine, 'world1', logger);
     expect(startNewGame).toHaveBeenCalledWith('world1');
+    expect(result.success).toBe(true);
   });
 
   it('throws when engine is missing', async () => {
     const logger = createLogger();
-    await expect(startGameStage(null, 'w', logger)).rejects.toMatchObject({
-      phase: 'Start Game',
-    });
+    const resultMissing = await startGameStage(null, 'w', logger);
+    expect(resultMissing.success).toBe(false);
+    expect(resultMissing.error.phase).toBe('Start Game');
   });
 
   it('throws when world name invalid', async () => {
     const logger = createLogger();
-    await expect(startGameStage({}, '', logger)).rejects.toMatchObject({
-      phase: 'Start Game',
-    });
+    const resultInvalid = await startGameStage({}, '', logger);
+    expect(resultInvalid.success).toBe(false);
+    expect(resultInvalid.error.phase).toBe('Start Game');
   });
 
   it('wraps errors from startNewGame', async () => {
@@ -147,8 +152,8 @@ describe('startGameStage', () => {
     const gameEngine = {
       startNewGame: jest.fn(() => Promise.reject(new Error('oops'))),
     };
-    await expect(startGameStage(gameEngine, 'w', logger)).rejects.toMatchObject(
-      { phase: 'Start Game' }
-    );
+    const resultError = await startGameStage(gameEngine, 'w', logger);
+    expect(resultError.success).toBe(false);
+    expect(resultError.error.phase).toBe('Start Game');
   });
 });
