@@ -79,3 +79,7 @@ Example snippet:
 ```
 
 The UiLoader validates these files against their schemas and merges the results across all mods. When multiple mods provide the same icon or label key, the version from the mod loaded last overrides earlier ones.
+
+### UiAssetsLoader Storage
+
+The `UiAssetsLoader` persists validated UI resources in the engine's data registry. Icon files are stored under the `ui_icons` key, while label files are stored under `ui_labels`. The loader chooses which schema to validate against based on the filename: include the word `"icon"` for files following `ui-icons.schema.json` and `"label"` for those following `ui-labels.schema.json`.
