@@ -7,6 +7,7 @@
 
 import { describe, test, expect, beforeAll } from '@jest/globals';
 import Ajv from 'ajv';
+import conditionContainerSchema from '../../data/schemas/condition-container.schema.json';
 
 // Import the data to be tested
 import actionData from '../../data/mods/intimacy/actions/thumb_wipe_cheek.action.json';
@@ -21,7 +22,9 @@ describe("Action Definition: 'intimacy:thumb_wipe_cheek'", () => {
   let validate;
 
   beforeAll(() => {
-    const ajv = new Ajv({ schemas: [commonSchema, jsonLogicSchema] });
+    const ajv = new Ajv({
+      schemas: [commonSchema, jsonLogicSchema, conditionContainerSchema],
+    });
     validate = ajv.compile(actionSchema);
   });
 

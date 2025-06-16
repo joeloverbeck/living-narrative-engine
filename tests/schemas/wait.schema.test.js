@@ -1,5 +1,6 @@
 import { describe, test, expect, beforeAll } from '@jest/globals';
 import Ajv from 'ajv';
+import conditionContainerSchema from '../../data/schemas/condition-container.schema.json';
 import actionData from '../../data/mods/core/actions/wait.action.json';
 import actionSchema from '../../data/schemas/action-definition.schema.json';
 import commonSchema from '../../data/schemas/common.schema.json';
@@ -10,7 +11,9 @@ describe("Action Definition: 'core:wait'", () => {
   let validate;
 
   beforeAll(() => {
-    const ajv = new Ajv({ schemas: [commonSchema, jsonLogicSchema] });
+    const ajv = new Ajv({
+      schemas: [commonSchema, jsonLogicSchema, conditionContainerSchema],
+    });
     validate = ajv.compile(actionSchema);
   });
 

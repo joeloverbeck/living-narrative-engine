@@ -4,13 +4,13 @@ import { test, expect, describe, beforeAll } from '@jest/globals';
 
 const Ajv = require('ajv');
 const addFormats = require('ajv-formats');
-const path = require('path');
 
 // Schemas
 const ruleSchema = require('../../data/schemas/rule.schema.json');
 const commonSchema = require('../../data/schemas/common.schema.json');
 const operationSchema = require('../../data/schemas/operation.schema.json');
 const jsonLogicSchema = require('../../data/schemas/json-logic.schema.json');
+const conditionContainerSchema = require('../../data/schemas/condition-container.schema.json');
 const loadOperationSchemas = require('../helpers/loadOperationSchemas.js');
 
 // Rule under test
@@ -31,6 +31,10 @@ describe('core/rules/log_perceptible_events.rule.json', () => {
     ajv.addSchema(
       operationSchema,
       'http://example.com/schemas/operation.schema.json'
+    );
+    ajv.addSchema(
+      conditionContainerSchema,
+      'http://example.com/schemas/condition-container.schema.json'
     );
     loadOperationSchemas(ajv);
     ajv.addSchema(
