@@ -161,7 +161,6 @@ The `game.json` file must be a JSON object containing a single required property
     {
       "mods": [
         "core",
-        "core",
         "base_adventure_mechanics",
         "my_custom_story_mod"
       ]
