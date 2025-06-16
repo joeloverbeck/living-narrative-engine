@@ -92,11 +92,12 @@
         },
         "macros": {
           "$ref": "#/definitions/contentFileList"
+        },
+        "ui": {
+          "$ref": "#/definitions/contentFileList"
         }
       },
-      "additionalProperties": {
-        "$ref": "#/definitions/contentFileList"
-      }
+      "additionalProperties": false
     }
   },
   "required": ["id", "version", "name"],
