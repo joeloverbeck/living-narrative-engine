@@ -83,9 +83,10 @@ const EXPECTED_CONTENT_TYPE_SCHEMAS = {
   'ui-labels': 'http://example.com/schemas/ui-labels.schema.json',
 };
 
-// Source: this.#manifestSchemaId = CONTENT_TYPE_SCHEMAS.manifest;
+// Source: this.#manifestSchemaId = CONTENT_TYPE_SCHEMAS['mod-manifest'];
 // eslint-disable-next-line no-unused-vars
-const EXPECTED_MANIFEST_SCHEMA_ID = EXPECTED_CONTENT_TYPE_SCHEMAS.manifest;
+const EXPECTED_MANIFEST_SCHEMA_ID =
+  EXPECTED_CONTENT_TYPE_SCHEMAS['mod-manifest'];
 
 // Expected derived paths
 // eslint-disable-next-line no-unused-vars
