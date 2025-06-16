@@ -277,6 +277,7 @@ describe('WorldLoader Integration Test Suite - Partial/Empty Content (TEST-LOADE
         'schema:actions', // <-- Added
         'schema:events', // <-- Added
         'schema:rules', // <-- Added
+        'schema:conditions',
       ];
       return loadedSchemas.includes(schemaId);
     });
@@ -531,8 +532,10 @@ describe('WorldLoader Integration Test Suite - Partial/Empty Content (TEST-LOADE
         expect.stringContaining(
           `Requested Mods (raw): [${CORE_MOD_ID}, ${modAId}, ${modBId}]`
         ),
-        expect.stringContaining(
-          `Final Load Order    : [${CORE_MOD_ID}, ${modAId}, ${modBId}]`
+        expect.stringMatching(
+          new RegExp(
+            `Final\\s+Load\\s+Order\\s+: \\[${CORE_MOD_ID}, ${modAId}, ${modBId}\\]`
+          )
         ),
         expect.stringContaining(`Content Loading Summary (Totals):`),
         // Counts should match the return values of the mocks (C:1, O:0, E:0 for each)
