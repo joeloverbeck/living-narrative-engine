@@ -43,6 +43,18 @@ describe('setupDIContainerStage', () => {
       phase: 'DI Container Setup',
     });
   });
+
+  it('uses provided factory for container creation', async () => {
+    const configFn = jest.fn();
+    const cont = new AppContainer();
+    const factory = jest.fn(() => cont);
+
+    const result = await setupDIContainerStage({}, configFn, factory);
+
+    expect(factory).toHaveBeenCalled();
+    expect(configFn).toHaveBeenCalledWith(cont, {});
+    expect(result).toBe(cont);
+  });
 });
 
 describe('resolveLoggerStage', () => {
@@ -66,6 +78,15 @@ describe('resolveLoggerStage', () => {
       phase: 'Core Services Resolution',
     });
   });
+
+  it('fails when logger resolves to null', async () => {
+    const container = { resolve: jest.fn().mockReturnValue(null) };
+    const tokens = { ILogger: 'LOGGER' };
+
+    await expect(resolveLoggerStage(container, tokens)).rejects.toMatchObject({
+      phase: 'Core Services Resolution',
+    });
+  });
 });
 
 describe('initializeGameEngineStage', () => {
@@ -85,6 +106,28 @@ describe('initializeGameEngineStage', () => {
     await expect(initializeGameEngineStage({}, logger)).rejects.toMatchObject({
       phase: 'GameEngine Initialization',
     });
+  });
+
+  it('supports custom factory function', async () => {
+    const logger = createLogger();
+    const container = {};
+    const engine = { custom: true };
+    const factory = jest.fn(() => engine);
+
+    const result = await initializeGameEngineStage(container, logger, factory);
+
+    expect(factory).toHaveBeenCalledWith({ container });
+    expect(result).toBe(engine);
+  });
+
+  it('throws when factory returns null', async () => {
+    const logger = createLogger();
+    const factory = jest.fn(() => null);
+    factory.prototype = undefined;
+
+    await expect(
+      initializeGameEngineStage({}, logger, factory)
+    ).rejects.toMatchObject({ phase: 'GameEngine Initialization' });
   });
 });
 
@@ -116,6 +159,26 @@ describe('setupGlobalEventListenersStage', () => {
     await expect(
       setupGlobalEventListenersStage({}, logger, null)
     ).rejects.toMatchObject({ phase: 'Global Event Listeners Setup' });
+  });
+
+  it('does not stop engine when loop not running', async () => {
+    let cb;
+    const windowRef = {
+      addEventListener: jest.fn((evt, fn) => {
+        cb = fn;
+      }),
+    };
+    const stop = jest.fn();
+    const gameEngine = {
+      getEngineStatus: () => ({ isLoopRunning: false }),
+      stop,
+    };
+    const logger = createLogger();
+
+    await setupGlobalEventListenersStage(gameEngine, logger, windowRef);
+    await cb();
+
+    expect(stop).not.toHaveBeenCalled();
   });
 });
 

@@ -15,6 +15,33 @@ describe('ensureCriticalDOMElementsStage', () => {
     expect(result).toBe(mockElements);
   });
 
+  it('uses factory function when provided', async () => {
+    const mockElements = { root: document.body };
+    const inst = new UIBootstrapper();
+    const gatherSpy = jest
+      .spyOn(inst, 'gatherEssentialElements')
+      .mockReturnValue(mockElements);
+    const factory = jest.fn(() => inst);
+
+    const result = await ensureCriticalDOMElementsStage(document, factory);
+
+    expect(factory).toHaveBeenCalled();
+    expect(gatherSpy).toHaveBeenCalledWith(document);
+    expect(result).toBe(mockElements);
+  });
+
+  it('instantiates default UIBootstrapper when not provided', async () => {
+    const mockElements = { root: document.body };
+    const gatherSpy = jest
+      .spyOn(UIBootstrapper.prototype, 'gatherEssentialElements')
+      .mockReturnValue(mockElements);
+
+    const result = await ensureCriticalDOMElementsStage(document);
+
+    expect(gatherSpy).toHaveBeenCalledWith(document);
+    expect(result).toBe(mockElements);
+  });
+
   it('wraps errors with phase', async () => {
     const error = new Error('fail');
     const uiBoot = new UIBootstrapper();
