@@ -8,6 +8,7 @@ import {
   isValidEntityManager,
   isValidEntity,
 } from './entityValidationUtils.js';
+import { resolveEntityInstance } from './componentAccessUtils.js';
 
 /** @typedef {import('../entities/entity.js').default} Entity */
 /** @typedef {import('../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
@@ -42,27 +43,28 @@ function _getExitsComponentData(
   dispatcher
 ) {
   const log = getPrefixedLogger(logger, '[locationUtils] ');
-  let locationEntity = locationEntityOrId;
+  if (
+    typeof locationEntityOrId === 'string' &&
+    !isValidEntityManager(entityManager)
+  ) {
+    const message =
+      "_getExitsComponentData: EntityManager is required when passing location ID, but it's invalid.";
+    const details = {
+      locationId: locationEntityOrId,
+      entityManagerValid:
+        !!entityManager &&
+        typeof entityManager.getEntityInstance === 'function',
+    };
+    safeDispatchError(dispatcher, message, details);
 
-  if (typeof locationEntityOrId === 'string') {
-    if (!isValidEntityManager(entityManager)) {
-      const message =
-        "_getExitsComponentData: EntityManager is required when passing location ID, but it's invalid.";
-      const details = {
-        locationId:
-          typeof locationEntityOrId === 'string'
-            ? locationEntityOrId
-            : locationEntityOrId?.id,
-        entityManagerValid:
-          !!entityManager &&
-          typeof entityManager.getEntityInstance === 'function',
-      };
-      safeDispatchError(dispatcher, message, details);
-
-      return null;
-    }
-    locationEntity = entityManager.getEntityInstance(locationEntityOrId);
+    return null;
   }
+
+  const locationEntity = resolveEntityInstance(
+    locationEntityOrId,
+    entityManager,
+    log
+  );
 
   if (!isValidEntity(locationEntity)) {
     const id =
