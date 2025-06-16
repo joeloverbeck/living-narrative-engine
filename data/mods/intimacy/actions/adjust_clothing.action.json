@@ -11,13 +11,11 @@
       "logic": {
         "and": [
           {
-            "comment": "Actor must be in a state of closeness, established by the 'get_close' action.",
             "!!": {
               "var": "actor.components['intimacy:closeness']"
             }
           },
           {
-            "comment": "The target of the action must be a partner in the current closeness circle.",
             "in": [
               {
                 "var": "target.id"

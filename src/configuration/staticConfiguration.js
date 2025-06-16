@@ -28,6 +28,7 @@ const OPERATION_SCHEMA_FILES = [
   'ifCoLocated.schema.json',
   'log.schema.json',
   'math.schema.json',
+  'mergeClosenessCircle.schema.json',
   'modifyArrayField.schema.json',
   'modifyComponent.schema.json',
   'modifyContextArray.schema.json',

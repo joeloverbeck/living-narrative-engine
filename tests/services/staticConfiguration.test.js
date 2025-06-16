@@ -44,6 +44,7 @@ const EXPECTED_SCHEMA_FILES = [
   'operations/ifCoLocated.schema.json',
   'operations/log.schema.json',
   'operations/math.schema.json',
+  'operations/mergeClosenessCircle.schema.json',
   'operations/modifyArrayField.schema.json',
   'operations/modifyComponent.schema.json',
   'operations/modifyContextArray.schema.json',

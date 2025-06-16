@@ -4,10 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="f2176490-fa0e-405e-af38-7bec8f5491f5" name="Changes" comment="Implemented &quot;adjust clothing&quot; action.">
+    <list default="true" id="f2176490-fa0e-405e-af38-7bec8f5491f5" name="Changes" comment="Fixed nasty issue with schemas.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/configuration/staticConfiguration.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/configuration/staticConfiguration.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/integration/browserBuild.integration.test.js" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/tests/services/staticConfiguration.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/services/staticConfiguration.test.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -120,7 +119,7 @@
       <recent name="G:\Projects\programming\javascript\living-narrative-engine\src" />
     </key>
   </component>
-  <component name="RunManager" selected="Jest.Tests in tests\">
+  <component name="RunManager" selected="Jest.thumbWipeCheek.schema.test.js">
     <configuration name="Tests in tests\" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
       <node-interpreter value="project" />
       <jest-package value="$PROJECT_DIR$/node_modules/jest" />
@@ -128,15 +127,6 @@
       <envs />
       <scope-kind value="DIRECTORY" />
       <test-directory value="$PROJECT_DIR$/tests" />
-      <method v="2" />
-    </configuration>
-    <configuration name="containerConfig.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
-      <node-interpreter value="project" />
-      <jest-package value="$PROJECT_DIR$/node_modules/jest" />
-      <working-dir value="$PROJECT_DIR$" />
-      <envs />
-      <scope-kind value="TEST_FILE" />
-      <test-file value="$PROJECT_DIR$/tests/dependencyInjection/containerConfig.test.js" />
       <method v="2" />
     </configuration>
     <configuration name="entity.schema.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
@@ -166,13 +156,22 @@
       <test-file value="$PROJECT_DIR$/tests/integration/rules/thumbWipeCheekRule.integration.test.js" />
       <method v="2" />
     </configuration>
+    <configuration name="thumbWipeCheek.schema.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
+      <node-interpreter value="project" />
+      <jest-package value="$PROJECT_DIR$/node_modules/jest" />
+      <working-dir value="$PROJECT_DIR$" />
+      <envs />
+      <scope-kind value="TEST_FILE" />
+      <test-file value="$PROJECT_DIR$/tests/schemas/thumbWipeCheek.schema.test.js" />
+      <method v="2" />
+    </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Jest.thumbWipeCheek.schema.test.js" />
         <item itemvalue="Jest.Tests in tests\" />
         <item itemvalue="Jest.thumbWipeCheekRule.integration.test.js" />
         <item itemvalue="Jest.stopFollowingRule.integration.test.js" />
         <item itemvalue="Jest.entity.schema.test.js" />
-        <item itemvalue="Jest.containerConfig.test.js" />
       </list>
     </recent_temporary>
   </component>
@@ -195,23 +194,7 @@
       <workItem from="1749876741387" duration="32751000" />
       <workItem from="1749913762946" duration="28307000" />
       <workItem from="1749963238113" duration="51858000" />
-      <workItem from="1750034820504" duration="1400000" />
-    </task>
-    <task id="LOCAL-00108" summary="Formatting.">
-      <option name="closed" value="true" />
-      <created>1749981048267</created>
-      <option name="number" value="00108" />
-      <option name="presentableId" value="LOCAL-00108" />
-      <option name="project" value="LOCAL" />
-      <updated>1749981048267</updated>
-    </task>
-    <task id="LOCAL-00109" summary="Formatting.">
-      <option name="closed" value="true" />
-      <created>1749983510167</created>
-      <option name="number" value="00109" />
-      <option name="presentableId" value="LOCAL-00109" />
-      <option name="project" value="LOCAL" />
-      <updated>1749983510167</updated>
+      <workItem from="1750034820504" duration="2144000" />
     </task>
     <task id="LOCAL-00110" summary="Formatting.">
       <option name="closed" value="true" />
@@ -589,14 +572,29 @@
       <option name="project" value="LOCAL" />
       <updated>1750021318866</updated>
     </task>
-    <option name="localTasksCounter" value="157" />
+    <task id="LOCAL-00157" summary="Fixed nasty issue with schemas.">
+      <option name="closed" value="true" />
+      <created>1750036302253</created>
+      <option name="number" value="00157" />
+      <option name="presentableId" value="LOCAL-00157" />
+      <option name="project" value="LOCAL" />
+      <updated>1750036302254</updated>
+    </task>
+    <task id="LOCAL-00158" summary="Fixed nasty issue with schemas.">
+      <option name="closed" value="true" />
+      <created>1750036461816</created>
+      <option name="number" value="00158" />
+      <option name="presentableId" value="LOCAL-00158" />
+      <option name="project" value="LOCAL" />
+      <updated>1750036461816</updated>
+    </task>
+    <option name="localTasksCounter" value="159" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Refactoring HumanTurnHandler." />
     <MESSAGE value="Chores." />
     <MESSAGE value="Unifying paths." />
     <MESSAGE value="Unified human and AI paths regarding decision-making." />
@@ -621,6 +619,7 @@
     <MESSAGE value="Making implementations." />
     <MESSAGE value="Weird issue with imports." />
     <MESSAGE value="Implemented &quot;adjust clothing&quot; action." />
-    <option name="LAST_COMMIT_MESSAGE" value="Implemented &quot;adjust clothing&quot; action." />
+    <MESSAGE value="Fixed nasty issue with schemas." />
+    <option name="LAST_COMMIT_MESSAGE" value="Fixed nasty issue with schemas." />
   </component>
 </project>
