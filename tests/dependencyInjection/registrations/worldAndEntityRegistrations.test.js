@@ -43,6 +43,7 @@ describe('registerWorldAndEntity', () => {
     container.register(tokens.ISafeEventDispatcher, () => ({
       dispatch: jest.fn().mockResolvedValue(true),
     }));
+    container.register(tokens.IGameDataRepository, () => ({}));
   });
 
   afterEach(() => {
@@ -80,7 +81,7 @@ describe('registerWorldAndEntity', () => {
       token: tokens.JsonLogicEvaluationService,
       Class: JsonLogicEvaluationService,
       lifecycle: 'singleton',
-      deps: [tokens.ILogger],
+      deps: [tokens.ILogger, tokens.IGameDataRepository],
     },
     {
       token: tokens.EntityDisplayDataProvider,
@@ -106,11 +107,8 @@ describe('registerWorldAndEntity', () => {
       expect(call).toBeDefined();
       const options = call[2] || {};
       expect(options.lifecycle).toBe(lifecycle);
-      if (deps) {
-        expect(options.dependencies).toEqual(deps);
-      } else {
-        expect(options.dependencies).toBeUndefined();
-      }
+      const expectedDeps = deps || undefined;
+      expect(options.dependencies).toEqual(expectedDeps);
     }
   );
 });
