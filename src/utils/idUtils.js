@@ -91,3 +91,46 @@ export function parseAndValidateId(
 
   return { fullId: trimmedId, baseId };
 }
+
+/**
+ * Extracts a base identifier from a filename by removing directory segments,
+ * the final extension, and an optional list of suffixes.
+ *
+ * @param {string} filename - The filename to parse.
+ * @param {string[]} suffixes - Suffixes to strip from the filename.
+ * @returns {string} The base identifier or an empty string if it cannot be derived.
+ */
+export function extractBaseIdFromFilename(filename, suffixes = []) {
+  if (typeof filename !== 'string') {
+    return '';
+  }
+
+  let name = filename.trim();
+  if (name === '') {
+    return '';
+  }
+
+  // Normalize separators and remove directory segments
+  name = name.replace(/\\/g, '/');
+  if (name.includes('/')) {
+    name = name.substring(name.lastIndexOf('/') + 1);
+  }
+
+  // Strip the final extension
+  if (name.includes('.')) {
+    name = name.substring(0, name.lastIndexOf('.'));
+  }
+
+  // Remove any provided suffix
+  for (const suffix of suffixes) {
+    if (
+      typeof suffix === 'string' &&
+      name.toLowerCase().endsWith(suffix.toLowerCase())
+    ) {
+      name = name.substring(0, name.length - suffix.length);
+      break;
+    }
+  }
+
+  return name;
+}
