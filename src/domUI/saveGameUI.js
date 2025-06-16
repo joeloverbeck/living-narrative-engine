@@ -2,7 +2,7 @@
 
 import { SlotModalBase } from './slotModalBase.js';
 import { DomUtils } from '../utils/domUtils.js';
-import { setupRadioListNavigation } from '../utils/listNavigation.js';
+import { setupRadioListNavigation } from '../utils/listNavigationUtils.js';
 import {
   formatSaveFileMetadata,
   formatEmptySlot,
