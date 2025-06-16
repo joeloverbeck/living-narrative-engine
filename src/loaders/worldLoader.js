@@ -113,23 +113,23 @@ class WorldLoader extends AbstractLoader {
    * @throws {Error} If any required dependency is missing or invalid.
    */
   constructor({
-                registry,
-                logger,
-                schemaLoader,
-                componentLoader,
-                conditionLoader,
-                ruleLoader,
-                macroLoader,
-                actionLoader,
-                eventLoader,
-                entityLoader,
-                validator,
-                configuration,
-                gameConfigLoader,
-                promptTextLoader,
-                modManifestLoader,
-                validatedEventDispatcher,
-              }) {
+    registry,
+    logger,
+    schemaLoader,
+    componentLoader,
+    conditionLoader,
+    ruleLoader,
+    macroLoader,
+    actionLoader,
+    eventLoader,
+    entityLoader,
+    validator,
+    configuration,
+    gameConfigLoader,
+    promptTextLoader,
+    modManifestLoader,
+    validatedEventDispatcher,
+  }) {
     super(logger, [
       {
         dependency: registry,

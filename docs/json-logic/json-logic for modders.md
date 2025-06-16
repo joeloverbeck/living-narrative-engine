@@ -46,7 +46,7 @@ Visually, you can think of it like this:
 Now that you know what data is available, how do you get it? You use the `var` operator. The `var` operator's job is to retrieve a piece of data from the context using a "path" to the value you want. The path is written as a string with dots separating each step.
 
 > **Note:** JsonLogic variable paths must always use dot notation, even when keys contain colons (e.g., `components.core:quest_log`).
-The basic syntax looks like this:
+> The basic syntax looks like this:
 
 ```json
 { "var": "object.property.nested_property" }

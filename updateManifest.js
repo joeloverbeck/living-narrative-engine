@@ -17,7 +17,6 @@ const MANIFEST_FILENAME = 'mod.manifest.json';
 // List of directories to ignore when auto-discovering content folders.
 const IGNORE_DIRS = new Set(['.git', '.idea', 'node_modules']);
 
-
 /**
  * Main function to run the script logic.
  */
@@ -55,7 +54,9 @@ async function main() {
       if (dirent.isDirectory() && !IGNORE_DIRS.has(dirent.name)) {
         // If this directory is not already a key in manifest.content, add it!
         if (!manifest.content.hasOwnProperty(dirent.name)) {
-          console.log(`  - Discovered new content directory: "${dirent.name}". Adding to manifest.`);
+          console.log(
+            `  - Discovered new content directory: "${dirent.name}". Adding to manifest.`
+          );
           manifest.content[dirent.name] = []; // Initialize with an empty array.
         }
       }
@@ -71,19 +72,24 @@ async function main() {
       let files = [];
 
       try {
-        const dirEntries = await fs.readdir(contentDirPath, { withFileTypes: true });
+        const dirEntries = await fs.readdir(contentDirPath, {
+          withFileTypes: true,
+        });
 
         files = dirEntries
-          .filter(dirent => dirent.isFile() && dirent.name.endsWith('.json'))
-          .map(dirent => dirent.name);
+          .filter((dirent) => dirent.isFile() && dirent.name.endsWith('.json'))
+          .map((dirent) => dirent.name);
 
-        console.log(`  - Scanned "${contentType}": Found ${files.length} file(s).`);
-
+        console.log(
+          `  - Scanned "${contentType}": Found ${files.length} file(s).`
+        );
       } catch (error) {
         if (error.code === 'ENOENT') {
           // This can happen if a key exists in the manifest but the folder was deleted.
           // We will clear its entry in the manifest.
-          console.log(`  - Directory not found for "${contentType}", ensuring it is empty in manifest.`);
+          console.log(
+            `  - Directory not found for "${contentType}", ensuring it is empty in manifest.`
+          );
         } else {
           throw error;
         }
@@ -98,7 +104,6 @@ async function main() {
 
     console.log('\n✅ Manifest update complete!');
     console.log(`Successfully updated: ${manifestPath}`);
-
   } catch (error) {
     if (error.code === 'ENOENT') {
       console.error(`\nError: Could not find mod directory or manifest file.`);

@@ -89,10 +89,7 @@
       "ui_stopped.event.json",
       "update_available_actions.event.json"
     ],
-    "ui": [
-      "icons.json",
-      "labels.json"
-    ],
+    "ui": ["icons.json", "labels.json"],
     "conditions": [
       "actor-can-follow-target.condition.json",
       "actor-is-following.condition.json",

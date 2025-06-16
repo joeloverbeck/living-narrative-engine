@@ -269,8 +269,14 @@ describe('intimacy_handle_step_back rule integration', () => {
       jsonLogicSchema,
       'http://example.com/schemas/json-logic.schema.json'
     );
-    ajv.addSchema(conditionSchema, 'http://example.com/schemas/condition.schema.json');
-    ajv.addSchema(conditionContainerSchema, 'http://example.com/schemas/condition-container.schema.json');
+    ajv.addSchema(
+      conditionSchema,
+      'http://example.com/schemas/condition.schema.json'
+    );
+    ajv.addSchema(
+      conditionContainerSchema,
+      'http://example.com/schemas/condition-container.schema.json'
+    );
     const macros = { 'core:logSuccessAndEndTurn': logSuccessMacro };
     const expanded = expandMacros(stepBackRule.actions, {
       get: (type, id) => (type === 'macros' ? macros[id] : undefined),

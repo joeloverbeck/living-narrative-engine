@@ -35,11 +35,11 @@ export class PrerequisiteEvaluationService {
    * @throws {Error} If dependencies are missing or invalid.
    */
   constructor({
-                logger,
-                jsonLogicEvaluationService,
-                actionValidationContextBuilder,
-                gameDataRepository, // ADDED
-              }) {
+    logger,
+    jsonLogicEvaluationService,
+    actionValidationContextBuilder,
+    gameDataRepository, // ADDED
+  }) {
     this.#logger = setupService('PrerequisiteEvaluationService', logger, {
       jsonLogicEvaluationService: {
         value: jsonLogicEvaluationService,
@@ -107,7 +107,8 @@ export class PrerequisiteEvaluationService {
       );
 
       // Assumes GameDataRepository has this method
-      const conditionDef = this.#gameDataRepository.getConditionDefinition(conditionId);
+      const conditionDef =
+        this.#gameDataRepository.getConditionDefinition(conditionId);
 
       if (!conditionDef || !conditionDef.logic) {
         throw new Error(
@@ -192,7 +193,11 @@ export class PrerequisiteEvaluationService {
     for (const [index, prereqObject] of prerequisites.entries()) {
       const ruleNumber = index + 1;
 
-      if (!prereqObject || typeof prereqObject !== 'object' || !prereqObject.logic) {
+      if (
+        !prereqObject ||
+        typeof prereqObject !== 'object' ||
+        !prereqObject.logic
+      ) {
         this.#logger.error(
           `PrereqEval[${actionId}]: ← FAILED (Rule ${ruleNumber}/${prerequisites.length}): Prerequisite item is invalid or missing 'logic' property: ${JSON.stringify(prereqObject)}`
         );
@@ -212,8 +217,10 @@ export class PrerequisiteEvaluationService {
         );
 
         // Step 2: Evaluate the fully resolved rule.
-        pass = this.#jsonLogicEvaluationService.evaluate(resolvedLogic, evalCtx);
-
+        pass = this.#jsonLogicEvaluationService.evaluate(
+          resolvedLogic,
+          evalCtx
+        );
       } catch (evalError) {
         this.#logger.error(
           `PrereqEval[${actionId}]: ← FAILED (Rule ${ruleNumber}/${prerequisites.length}): Error during rule resolution or evaluation. Rule: ${JSON.stringify(prereqObject)}`,

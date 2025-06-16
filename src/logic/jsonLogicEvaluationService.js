@@ -82,10 +82,13 @@ class JsonLogicEvaluationService {
     if ('condition_ref' in rule) {
       const refId = rule.condition_ref;
 
-      const conditionDef = this.#gameDataRepository.getConditionDefinition(refId);
+      const conditionDef =
+        this.#gameDataRepository.getConditionDefinition(refId);
 
       if (!conditionDef) {
-        this.#logger.error(`Condition reference "${refId}" not found in data registry.`);
+        this.#logger.error(
+          `Condition reference "${refId}" not found in data registry.`
+        );
         return { '==': [true, false] };
       }
 
@@ -117,7 +120,11 @@ class JsonLogicEvaluationService {
   evaluate(rule, context) {
     const resolvedRule = this.#resolveRule(rule);
 
-    if (resolvedRule && typeof resolvedRule === 'object' && !Array.isArray(resolvedRule)) {
+    if (
+      resolvedRule &&
+      typeof resolvedRule === 'object' &&
+      !Array.isArray(resolvedRule)
+    ) {
       const [op] = Object.keys(resolvedRule);
       const args = resolvedRule[op];
       if (op === 'and' && Array.isArray(args) && args.length === 0) {
