@@ -10,7 +10,7 @@ import {
   MANUAL_SAVE_PATTERN,
 } from '../utils/savePathUtils.js';
 import { deserializeAndDecompress, parseManualSaveFile } from './saveFileIO.js';
-import { setupService } from '../utils/serviceInitializer.js';
+import { setupService } from '../utils/serviceInitializerUtils.js';
 import { safeDeepClone } from '../utils/objectUtils.js';
 import {
   PersistenceError,

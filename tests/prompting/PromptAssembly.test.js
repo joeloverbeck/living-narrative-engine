@@ -1,7 +1,7 @@
 import { describe, beforeEach, test, expect, jest } from '@jest/globals';
 import { AIPromptContentProvider } from '../../src/prompting/AIPromptContentProvider.js';
 import { PromptBuilder } from '../../src/prompting/promptBuilder.js';
-import { PlaceholderResolver } from '../../src/utils/placeholderResolver.js';
+import { PlaceholderResolver } from '../../src/utils/placeholderResolverUtils.js';
 import { ThoughtsSectionAssembler } from '../../src/prompting/assembling/thoughtsSectionAssembler.js';
 import NotesSectionAssembler from '../../src/prompting/assembling/notesSectionAssembler.js';
 import { GoalsSectionAssembler } from '../../src/prompting/assembling/goalsSectionAssembler.js';

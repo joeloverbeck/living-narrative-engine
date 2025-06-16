@@ -20,7 +20,7 @@ import { PerceptionLogFormatter } from '../../../src/formatting/perceptionLogFor
 import { GameStateValidationServiceForPrompting } from '../../../src/validation/gameStateValidationServiceForPrompting.js';
 import { HttpConfigurationProvider } from '../../../src/configuration/httpConfigurationProvider.js';
 import { LLMConfigService } from '../../../src/llms/llmConfigService.js';
-import { PlaceholderResolver } from '../../../src/utils/placeholderResolver.js';
+import { PlaceholderResolver } from '../../../src/utils/placeholderResolverUtils.js';
 import { StandardElementAssembler } from '../../../src/prompting/assembling/standardElementAssembler.js';
 import { PerceptionLogAssembler } from '../../../src/prompting/assembling/perceptionLogAssembler.js';
 import ThoughtsSectionAssembler from '../../../src/prompting/assembling/thoughtsSectionAssembler.js';

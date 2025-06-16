@@ -12,7 +12,7 @@ import {
   initHandlerLogger,
   validateDeps,
   getExecLogger,
-} from '../../utils/handlerUtils/service.js';
+} from '../../utils/handlerUtils/serviceUtils.js';
 
 /**
  * @class BaseOperationHandler

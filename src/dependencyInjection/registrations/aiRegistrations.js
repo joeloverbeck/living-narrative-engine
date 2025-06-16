@@ -34,7 +34,7 @@
 /** @typedef {import('../../interfaces/IGameStateValidationServiceForPrompting.js').IGameStateValidationServiceForPrompting} IGameStateValidationServiceForPrompting */
 /** @typedef {import('../../interfaces/IConfigurationProvider.js').IConfigurationProvider} IConfigurationProvider */
 /** @typedef {import('../../llms/llmConfigService.js').LLMConfigService} LLMConfigService_Concrete */
-/** @typedef {import('../../utils/placeholderResolver.js').PlaceholderResolver} PlaceholderResolver_Concrete */
+/** @typedef {import('../../utils/placeholderResolverUtils.js').PlaceholderResolver} PlaceholderResolver_Concrete */
 /** @typedef {import('../../prompting/assembling/standardElementAssembler.js').StandardElementAssembler} StandardElementAssembler_Concrete */
 /** @typedef {import('../../prompting/assembling/perceptionLogAssembler.js').PerceptionLogAssembler} PerceptionLogAssembler_Concrete */
 /** @typedef {import('../../prompting/assembling/thoughtsSectionAssembler.js').default} ThoughtsSectionAssembler_Concrete */
@@ -62,7 +62,7 @@ import { PerceptionLogFormatter } from '../../formatting/perceptionLogFormatter.
 import { GameStateValidationServiceForPrompting } from '../../validation/gameStateValidationServiceForPrompting.js';
 import { HttpConfigurationProvider } from '../../configuration/httpConfigurationProvider.js';
 import { LLMConfigService } from '../../llms/llmConfigService.js';
-import { PlaceholderResolver } from '../../utils/placeholderResolver.js';
+import { PlaceholderResolver } from '../../utils/placeholderResolverUtils.js';
 import { StandardElementAssembler } from '../../prompting/assembling/standardElementAssembler.js';
 import {
   PERCEPTION_LOG_WRAPPER_KEY,

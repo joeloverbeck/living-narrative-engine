@@ -11,7 +11,7 @@ import {
   initLogger,
   validateServiceDeps,
   setupService,
-} from '../../src/utils/serviceInitializer.js';
+} from '../../src/utils/serviceInitializerUtils.js';
 import {
   createPrefixedLogger,
   initLogger as baseInitLogger,

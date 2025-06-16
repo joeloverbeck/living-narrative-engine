@@ -1,7 +1,7 @@
 // src/utils/locationUtils.js
 
 import { EXITS_COMPONENT_ID } from '../constants/componentIds.js';
-import { safeDispatchError } from './safeDispatchError.js';
+import { safeDispatchError } from './safeDispatchErrorUtils.js';
 import { isNonBlankString } from './textUtils.js';
 import { getPrefixedLogger } from './loggerUtils.js';
 import {

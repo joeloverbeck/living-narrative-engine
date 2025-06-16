@@ -20,7 +20,7 @@ const mockPlaceholderResolverInstance = {
 };
 
 // Mock class to instantiate PlaceholderResolver if needed, though we'll pass the mocked instance directly
-jest.mock('../../../src/utils/placeholderResolver.js', () => ({
+jest.mock('../../../src/utils/placeholderResolverUtils.js', () => ({
   PlaceholderResolver: jest.fn(() => mockPlaceholderResolverInstance),
 }));
 

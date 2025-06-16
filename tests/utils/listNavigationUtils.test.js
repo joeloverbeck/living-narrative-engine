@@ -1,5 +1,5 @@
 import { JSDOM } from 'jsdom';
-import { setupRadioListNavigation } from '../../src/utils/listNavigation.js';
+import { setupRadioListNavigation } from '../../src/utils/listNavigationUtils.js';
 import { describe, it, expect, beforeEach } from '@jest/globals';
 
 describe('setupRadioListNavigation', () => {

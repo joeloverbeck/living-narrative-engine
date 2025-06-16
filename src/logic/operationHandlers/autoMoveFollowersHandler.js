@@ -13,10 +13,10 @@ import {
   POSITION_COMPONENT_ID,
   LEADING_COMPONENT_ID,
 } from '../../constants/componentIds.js';
-import { safeDispatchError } from '../../utils/safeDispatchError.js';
+import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 import SystemMoveEntityHandler from './systemMoveEntityHandler.js';
 import BaseOperationHandler from './baseOperationHandler.js';
-import { assertParamsObject } from '../../utils/handlerUtils';
+import { assertParamsObject } from '../../utils/handlerUtils/indexUtils.js';
 
 class AutoMoveFollowersHandler extends BaseOperationHandler {
   /** @type {EntityManager} */ #entityManager;

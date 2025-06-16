@@ -10,14 +10,14 @@
 /** @typedef {import('../../entities/entityManager.js').default} EntityManager */
 /** @typedef {import('../defs.js').ExecutionContext} ExecutionContext */
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
-import { safeDispatchError } from '../../utils/safeDispatchError.js';
+import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 import { resolveEntityId } from '../../utils/entityRefUtils.js';
 import {
   initHandlerLogger,
   validateDeps,
   getExecLogger,
-} from '../../utils/handlerUtils/service.js';
-import { assertParamsObject } from '../../utils/handlerUtils/params.js';
+} from '../../utils/handlerUtils/serviceUtils.js';
+import { assertParamsObject } from '../../utils/handlerUtils/paramsUtils.js';
 
 /**
  * @typedef {object} EntityRefObject

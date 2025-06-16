@@ -2,7 +2,7 @@
 // --- NEW FILE START ---
 
 import { describe, beforeEach, afterEach, test, expect } from '@jest/globals';
-import { ProcessEnvReader } from '../../src/utils/processEnvReader.js';
+import { ProcessEnvReader } from '../../src/utils/processEnvReaderUtils.js';
 
 describe('ProcessEnvReader', () => {
   /** @type {ProcessEnvReader} */

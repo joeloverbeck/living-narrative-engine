@@ -14,10 +14,10 @@
 import { ActionTargetContext } from '../models/actionTargetContext.js';
 import { IActionDiscoveryService } from '../interfaces/IActionDiscoveryService.js';
 import { getAvailableExits } from '../utils/locationUtils.js';
-import { setupService } from '../utils/serviceInitializer.js';
+import { setupService } from '../utils/serviceInitializerUtils.js';
 import { getActorLocation } from '../utils/actorLocationUtils.js';
 import { POSITION_COMPONENT_ID } from '../constants/componentIds.js';
-import { safeDispatchError } from '../utils/safeDispatchError.js';
+import { safeDispatchError } from '../utils/safeDispatchErrorUtils.js';
 
 // ────────────────────────────────────────────────────────────────────────────────
 export class ActionDiscoveryService extends IActionDiscoveryService {

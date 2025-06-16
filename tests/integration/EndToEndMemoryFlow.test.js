@@ -6,7 +6,7 @@
 import { describe, beforeEach, test, expect, jest } from '@jest/globals';
 import { AIPromptContentProvider } from '../../src/prompting/AIPromptContentProvider.js';
 import { PromptBuilder } from '../../src/prompting/promptBuilder.js';
-import { PlaceholderResolver } from '../../src/utils/placeholderResolver.js';
+import { PlaceholderResolver } from '../../src/utils/placeholderResolverUtils.js';
 import { PromptStaticContentService } from '../../src/prompting/promptStaticContentService.js';
 import AjvSchemaValidator from '../../src/validation/ajvSchemaValidator.js';
 import { LLMResponseProcessor } from '../../src/turns/services/LLMResponseProcessor.js';

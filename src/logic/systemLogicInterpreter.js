@@ -8,7 +8,7 @@ import { createJsonLogicContext } from './contextAssembler.js';
 import { ATTEMPT_ACTION_ID } from '../constants/eventIds.js';
 import { REQUIRED_ENTITY_MANAGER_METHODS } from '../constants/entityManager.js';
 import { evaluateConditionWithLogging } from './jsonLogicEvaluationService.js';
-import { setupService } from '../utils/serviceInitializer.js';
+import { setupService } from '../utils/serviceInitializerUtils.js';
 import { executeActionSequence } from './actionSequence.js';
 
 /* ---------------------------------------------------------------------------

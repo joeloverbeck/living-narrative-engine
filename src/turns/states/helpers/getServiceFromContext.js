@@ -8,7 +8,7 @@
  */
 
 import { handleProcessingException } from './handleProcessingException.js';
-import { safeDispatchError } from '../../../utils/safeDispatchError.js';
+import { safeDispatchError } from '../../../utils/safeDispatchErrorUtils.js';
 
 /**
  * Safely obtains a service from the turn context.

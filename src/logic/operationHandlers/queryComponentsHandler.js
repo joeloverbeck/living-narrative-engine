@@ -12,8 +12,8 @@
 
 import { resolveEntityId } from '../../utils/entityRefUtils.js';
 import { setContextValue } from '../../utils/contextVariableUtils.js';
-import { safeDispatchError } from '../../utils/safeDispatchError.js';
-import { assertParamsObject } from '../../utils/handlerUtils/params.js';
+import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
+import { assertParamsObject } from '../../utils/handlerUtils/paramsUtils.js';
 
 /**
  * Parameters for the QUERY_COMPONENTS operation.

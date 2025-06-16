@@ -17,7 +17,7 @@ const mockPlaceholderResolverInstance = {
 };
 
 // Mock the PlaceholderResolver module
-jest.mock('../../../src/utils/placeholderResolver.js', () => ({
+jest.mock('../../../src/utils/placeholderResolverUtils.js', () => ({
   PlaceholderResolver: jest.fn(() => mockPlaceholderResolverInstance),
 }));
 

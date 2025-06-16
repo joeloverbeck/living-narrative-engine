@@ -10,7 +10,7 @@
 import closenessCircleService from '../services/closenessCircleService.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../constants/eventIds.js';
 import { setContextValue } from '../../utils/contextVariableUtils.js';
-import { safeDispatchError } from '../../utils/safeDispatchError.js';
+import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 
 /**
  * @class MergeClosenessCircleHandler

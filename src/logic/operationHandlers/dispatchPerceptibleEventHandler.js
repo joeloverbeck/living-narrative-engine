@@ -9,8 +9,8 @@
 /** @typedef {import('../defs.js').ExecutionContext} ExecutionContext */
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 
-import { assertParamsObject } from '../../utils/handlerUtils/params.js';
-import { safeDispatchError } from '../../utils/safeDispatchError.js';
+import { assertParamsObject } from '../../utils/handlerUtils/paramsUtils.js';
+import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 
 const EVENT_ID = 'core:perceptible_event';
 

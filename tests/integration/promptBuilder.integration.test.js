@@ -5,7 +5,7 @@ import { PromptBuilder } from '../../src/prompting/promptBuilder.js';
 import { AssemblerRegistry } from '../../src/prompting/assemblerRegistry.js';
 import { StandardElementAssembler } from '../../src/prompting/assembling/standardElementAssembler.js';
 import { IndexedChoicesAssembler } from '../../src/prompting/assembling/indexedChoicesAssembler.js';
-import { PlaceholderResolver } from '../../src/utils/placeholderResolver.js';
+import { PlaceholderResolver } from '../../src/utils/placeholderResolverUtils.js';
 
 // Mock dependencies
 const mockLogger = {

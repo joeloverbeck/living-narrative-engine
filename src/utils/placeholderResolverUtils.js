@@ -1,4 +1,4 @@
-// src/utils/placeholderResolver.js
+// src/utils/placeholderResolverUtils.js
 // --- FILE START ---
 
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */

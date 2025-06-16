@@ -13,7 +13,7 @@
 
 import AbstractLoader from './abstractLoader.js';
 import { parseAndValidateId } from '../utils/idUtils.js';
-import { validateAgainstSchema } from '../utils/schemaValidation.js';
+import { validateAgainstSchema } from '../utils/schemaValidationUtils.js';
 
 // --- Add LoadItemsResult typedef here for clarity ---
 /**

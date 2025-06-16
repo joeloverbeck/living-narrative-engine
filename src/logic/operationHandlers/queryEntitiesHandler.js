@@ -9,10 +9,10 @@
 /** @typedef {import('../defs.js').ExecutionContext} ExecutionContext */
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 
-import { safeDispatchError } from '../../utils/safeDispatchError.js';
+import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 import BaseOperationHandler from './baseOperationHandler.js';
 import { setContextValue } from '../../utils/contextVariableUtils.js';
-import { assertParamsObject } from '../../utils/handlerUtils';
+import { assertParamsObject } from '../../utils/handlerUtils/indexUtils.js';
 
 /**
  * @class QueryEntitiesHandler

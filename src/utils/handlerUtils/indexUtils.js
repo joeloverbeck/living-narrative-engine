@@ -1,5 +1,9 @@
-import { assertParamsObject } from './params.js';
-import { initHandlerLogger, validateDeps, getExecLogger } from './service.js';
+import { assertParamsObject } from './paramsUtils.js';
+import {
+  initHandlerLogger,
+  validateDeps,
+  getExecLogger,
+} from './serviceUtils.js';
 
 export { assertParamsObject, initHandlerLogger, validateDeps, getExecLogger };
 

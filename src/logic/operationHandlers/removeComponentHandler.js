@@ -14,13 +14,13 @@
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 
 import { resolveEntityId } from '../../utils/entityRefUtils.js';
-import { safeDispatchError } from '../../utils/safeDispatchError.js';
+import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 import {
   initHandlerLogger,
   validateDeps,
   getExecLogger,
-} from '../../utils/handlerUtils/service.js';
-import { assertParamsObject } from '../../utils/handlerUtils/params.js';
+} from '../../utils/handlerUtils/serviceUtils.js';
+import { assertParamsObject } from '../../utils/handlerUtils/paramsUtils.js';
 
 /**
  * Parameters accepted by {@link RemoveComponentHandler#execute}.

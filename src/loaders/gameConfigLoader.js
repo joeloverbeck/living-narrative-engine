@@ -14,7 +14,7 @@
 import { CORE_MOD_ID } from '../constants/core';
 import AbstractLoader from './abstractLoader.js';
 import { formatAjvErrors } from '../utils/ajvUtils.js';
-import { validateAgainstSchema } from '../utils/schemaValidation.js';
+import { validateAgainstSchema } from '../utils/schemaValidationUtils.js';
 
 /**
  * Service responsible for locating, fetching, validating, and parsing the game configuration file (e.g., game.json).

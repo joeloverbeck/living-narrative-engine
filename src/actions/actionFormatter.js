@@ -9,7 +9,7 @@
 
 // --- Dependency Imports ---
 import { getEntityDisplayName } from '../utils/entityUtils.js';
-import { safeDispatchError } from '../utils/safeDispatchError.js';
+import { safeDispatchError } from '../utils/safeDispatchErrorUtils.js';
 
 /**
  * Formats a validated action and target into a user-facing command string.

@@ -3,10 +3,10 @@
  */
 
 import jsonLogic from 'json-logic-js';
-import { safeDispatchError } from '../../utils/safeDispatchError.js';
+import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 import { setContextValue } from '../../utils/contextVariableUtils.js';
 import storeResult from '../../utils/contextVariableUtils.js';
-import { assertParamsObject } from '../../utils/handlerUtils/params.js';
+import { assertParamsObject } from '../../utils/handlerUtils/paramsUtils.js';
 
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 

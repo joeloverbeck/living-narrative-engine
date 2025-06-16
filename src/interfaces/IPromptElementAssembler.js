@@ -13,7 +13,7 @@
  */
 
 /**
- * @typedef {import('../utils/placeholderResolver.js').PlaceholderResolver} PlaceholderResolver
+ * @typedef {import('../utils/placeholderResolverUtils.js').PlaceholderResolver} PlaceholderResolver
  * @description An instance of the PlaceholderResolver utility.
  */
 

@@ -11,8 +11,8 @@
 
 import { POSITION_COMPONENT_ID } from '../../constants/componentIds.js';
 import { resolveEntityId } from '../../utils/entityRefUtils.js';
-import { safeDispatchError } from '../../utils/safeDispatchError.js';
-import { assertParamsObject } from '../../utils/handlerUtils/params.js';
+import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
+import { assertParamsObject } from '../../utils/handlerUtils/paramsUtils.js';
 
 class IfCoLocatedHandler {
   /** @type {ILogger} */

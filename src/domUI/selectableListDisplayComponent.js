@@ -1,7 +1,7 @@
 // src/domUI/selectableListDisplayComponent.js
 
 import { BaseListDisplayComponent } from './baseListDisplayComponent.js';
-import { setupRadioListNavigation } from '../utils/listNavigation.js';
+import { setupRadioListNavigation } from '../utils/listNavigationUtils.js';
 
 /**
  * @typedef {import('../interfaces/ILogger.js').ILogger} ILogger

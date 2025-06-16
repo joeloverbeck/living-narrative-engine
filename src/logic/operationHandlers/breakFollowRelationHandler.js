@@ -10,9 +10,9 @@
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 /** @typedef {import('./rebuildLeaderListCacheHandler.js').default} RebuildLeaderListCacheHandler */
 
-import { safeDispatchError } from '../../utils/safeDispatchError.js';
+import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 import { FOLLOWING_COMPONENT_ID } from '../../constants/componentIds.js';
-import { assertParamsObject } from '../../utils/handlerUtils';
+import { assertParamsObject } from '../../utils/handlerUtils/indexUtils.js';
 import BaseOperationHandler from './baseOperationHandler.js';
 
 class BreakFollowRelationHandler extends BaseOperationHandler {

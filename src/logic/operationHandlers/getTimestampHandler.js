@@ -4,7 +4,7 @@
  */
 
 import { setContextValue } from '../../utils/contextVariableUtils.js';
-import { assertParamsObject } from '../../utils/handlerUtils';
+import { assertParamsObject } from '../../utils/handlerUtils/indexUtils.js';
 
 class GetTimestampHandler {
   #logger;

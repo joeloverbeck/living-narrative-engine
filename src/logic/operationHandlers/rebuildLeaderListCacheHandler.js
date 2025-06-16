@@ -5,8 +5,8 @@
  */
 import { isNonBlankString } from '../../utils/textUtils.js';
 
-import { assertParamsObject } from '../../utils/handlerUtils';
-import { safeDispatchError } from '../../utils/safeDispatchError.js';
+import { assertParamsObject } from '../../utils/handlerUtils/indexUtils.js';
+import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 
 /**
  * @class RebuildLeaderListCacheHandler

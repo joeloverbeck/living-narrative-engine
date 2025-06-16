@@ -10,7 +10,7 @@
 /** @typedef {import('../entities/entity.js').default} Entity */
 /** @typedef {import('../models/actionTargetContext.js').ActionTargetContext} ActionTargetContext */
 
-import { setupService } from '../utils/serviceInitializer.js';
+import { setupService } from '../utils/serviceInitializerUtils.js';
 import { REQUIRED_ENTITY_MANAGER_METHODS } from '../constants/entityManager.js';
 import { createComponentAccessor } from './componentAccessor.js';
 

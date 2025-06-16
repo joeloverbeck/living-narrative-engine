@@ -1,4 +1,4 @@
-// src/utils/serviceInitializer.js
+// src/utils/serviceInitializerUtils.js
 
 /**
  * @typedef {object} DependencySpec

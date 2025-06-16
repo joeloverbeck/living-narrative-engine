@@ -1,5 +1,5 @@
 import { IActorTurnStrategy } from '../interfaces/IActorTurnStrategy.js';
-import { buildDecisionResult } from '../../utils/decisionResult.js';
+import { buildDecisionResult } from '../../utils/decisionResultUtils.js';
 
 /**
  * @class GenericTurnStrategy

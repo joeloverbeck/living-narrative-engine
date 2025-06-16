@@ -4,8 +4,8 @@
  */
 
 import { PERCEPTION_LOG_COMPONENT_ID } from '../../constants/componentIds.js';
-import { assertParamsObject } from '../../utils/handlerUtils/params.js';
-import { safeDispatchError } from '../../utils/safeDispatchError.js';
+import { assertParamsObject } from '../../utils/handlerUtils/paramsUtils.js';
+import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 import BaseOperationHandler from './baseOperationHandler.js';
 
 const DEFAULT_MAX_LOG_ENTRIES = 50;
