@@ -2,29 +2,22 @@
 //  OperationRegistry  – test-compliant, DI-friendly implementation
 // -----------------------------------------------------------------------------
 
-/** @typedef {import('./defs.js').OperationHandler}           OperationHandler */
+/** @typedef {import('./defs.js').OperationHandler} OperationHandler */
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
-import { initLogger } from '../utils/serviceInitializer.js';
-import { initLogger as baseInitLogger } from '../utils/loggerUtils.js';
+import { setupService } from '../utils/serviceInitializer.js';
 
 class OperationRegistry {
   /** @type {Map<string, OperationHandler>} */ #registry = new Map();
   /** @type {ILogger|null}                  */ #logger = null;
 
   /**
-   * @param {{logger?: ILogger}|ILogger|null|undefined} [arg]
-   *        Supports historical call-sites:
-   *        • new OperationRegistry({ logger })
-   *        • new OperationRegistry(logger)
-   *        • new OperationRegistry()
+   * Creates a new OperationRegistry instance.
+   *
+   * @param {{ logger: ILogger }} [options] - Constructor options.
+   * @param {ILogger} [options.logger] - Logging service.
    */
-  constructor(arg = null) {
-    const maybeLogger =
-      arg && typeof arg === 'object' && 'logger' in arg ? arg.logger : arg;
-    const validated = baseInitLogger('OperationRegistry', maybeLogger, {
-      optional: true,
-    });
-    this.#logger = initLogger('OperationRegistry', validated);
+  constructor({ logger } = {}) {
+    this.#logger = setupService('OperationRegistry', logger);
     this.#logger.info('OperationRegistry initialized.');
   }
 

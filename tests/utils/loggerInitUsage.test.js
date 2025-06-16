@@ -61,13 +61,11 @@ describe('initLogger usage in constructors', () => {
     );
   });
 
-  it('OperationRegistry uses initLogger', () => {
+  it('OperationRegistry uses setupService', () => {
     setup(
       '../../src/logic/operationRegistry.js',
       { logger: mockLogger },
-      'OperationRegistry',
-      true,
-      false
+      'OperationRegistry'
     );
   });
 

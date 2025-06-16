@@ -31,9 +31,10 @@ describe('OperationRegistry', () => {
     );
   });
 
-  test('constructor works without logger', () => {
-    const registry = new OperationRegistry();
-    expect(registry).toBeInstanceOf(OperationRegistry);
+  test('constructor throws without logger', () => {
+    expect(() => new OperationRegistry()).toThrow(
+      'Missing required dependency: logger.'
+    );
   });
 
   describe('register()', () => {
