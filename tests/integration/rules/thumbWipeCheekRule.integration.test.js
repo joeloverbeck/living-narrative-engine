@@ -9,7 +9,9 @@ import ruleSchema from '../../../data/schemas/rule.schema.json';
 import commonSchema from '../../../data/schemas/common.schema.json';
 import operationSchema from '../../../data/schemas/operation.schema.json';
 import jsonLogicSchema from '../../../data/schemas/json-logic.schema.json';
+import loadOperationSchemas from '../../helpers/loadOperationSchemas.js';
 import thumbWipeCheekRule from '../../../data/mods/intimacy/rules/thumb_wipe_cheek.rule.json';
+import logSuccessMacro from '../../../data/mods/core/macros/logSuccessAndEndTurn.macro.json';
 import SystemLogicInterpreter from '../../../src/logic/systemLogicInterpreter.js';
 import OperationInterpreter from '../../../src/logic/operationInterpreter.js';
 import OperationRegistry from '../../../src/logic/operationRegistry.js';
@@ -21,6 +23,7 @@ import GetTimestampHandler from '../../../src/logic/operationHandlers/getTimesta
 import EndTurnHandler from '../../../src/logic/operationHandlers/endTurnHandler.js';
 import GetNameHandler from '../../../src/logic/operationHandlers/getNameHandler.js';
 import SetVariableHandler from '../../../src/logic/operationHandlers/setVariableHandler.js'; // Import the new handler
+import { expandMacros } from '../../../src/utils/macroUtils.js';
 import {
   NAME_COMPONENT_ID,
   POSITION_COMPONENT_ID,
@@ -135,7 +138,7 @@ function init(entities) {
   interpreter.initialize();
 }
 
-describe.skip('intimacy:handle_thumb_wipe_cheek rule integration', () => {
+describe('intimacy:handle_thumb_wipe_cheek rule integration', () => {
   beforeEach(() => {
     logger = {
       debug: jest.fn(),
@@ -164,8 +167,24 @@ describe.skip('intimacy:handle_thumb_wipe_cheek rule integration', () => {
       }),
     };
 
+    const macroRegistry = {
+      get: (type, id) =>
+        type === 'macros' && id === 'core:logSuccessAndEndTurn'
+          ? logSuccessMacro
+          : undefined,
+    };
+
+    const expandedRule = {
+      ...thumbWipeCheekRule,
+      actions: expandMacros(
+        JSON.parse(JSON.stringify(thumbWipeCheekRule.actions)),
+        macroRegistry,
+        logger
+      ),
+    };
+
     dataRegistry = {
-      getAllSystemRules: jest.fn().mockReturnValue([thumbWipeCheekRule]),
+      getAllSystemRules: jest.fn().mockReturnValue([expandedRule]),
     };
 
     init([]);
@@ -186,7 +205,6 @@ describe.skip('intimacy:handle_thumb_wipe_cheek rule integration', () => {
       jsonLogicSchema,
       'http://example.com/schemas/json-logic.schema.json'
     );
-    loadOperationSchemas(ajv);
 
     const valid = ajv.validate(ruleSchema, thumbWipeCheekRule);
     if (!valid) {
@@ -195,7 +213,7 @@ describe.skip('intimacy:handle_thumb_wipe_cheek rule integration', () => {
     expect(valid).toBe(true);
   });
 
-  it.skip('should dispatch correct third-person events for actor and observers', () => {
+  it('should dispatch correct third-person events for actor and observers', () => {
     // 1. Setup: Create an actor and a target with all necessary components.
     interpreter.shutdown();
     init([
@@ -224,6 +242,9 @@ describe.skip('intimacy:handle_thumb_wipe_cheek rule integration', () => {
         targetId: 'friend',
       },
     });
+
+    const expectedMessage =
+      "Hero gently brushes their thumb across Friend's cheek.";
 
     // 3. Assert: Check that the correct events were dispatched with the correct payloads.
     const eventTypes = events.map((e) => e.eventType);
@@ -257,7 +278,7 @@ describe.skip('intimacy:handle_thumb_wipe_cheek rule integration', () => {
     expect(turnEvent.payload).toEqual({ entityId: 'hero', success: true });
   });
 
-  it.skip('should function gracefully if name or position components are missing', () => {
+  it('should function gracefully if name or position components are missing', () => {
     // 1. Setup: Actor is missing a name, target is missing a position.
     interpreter.shutdown();
     init([
