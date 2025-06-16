@@ -2,7 +2,7 @@
 
 import { configureContainer } from './dependencyInjection/containerConfig.js';
 import { tokens } from './dependencyInjection/tokens.js';
-import { displayFatalStartupError } from './bootstrapper/errorUtils.js';
+import { displayFatalStartupError } from './utils/errorUtils.js';
 import { UIBootstrapper } from './bootstrapper/UIBootstrapper.js';
 import AppContainer from './dependencyInjection/appContainer.js';
 import GameEngine from './engine/gameEngine.js';

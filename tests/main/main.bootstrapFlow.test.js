@@ -25,7 +25,7 @@ jest.mock('../../src/bootstrapper/auxiliaryStages.js', () => ({
   initializeAuxiliaryServicesStage: (...args) => mockInitAux(...args),
 }));
 
-jest.mock('../../src/bootstrapper/errorUtils.js', () => ({
+jest.mock('../../src/utils/errorUtils.js', () => ({
   __esModule: true,
   displayFatalStartupError: (...args) => mockDisplayFatal(...args),
 }));

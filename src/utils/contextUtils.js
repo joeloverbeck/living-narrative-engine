@@ -1,6 +1,6 @@
-// src/logic/contextUtils.js
-import { resolvePath } from '../utils/objectUtils.js';
-import { NAME_COMPONENT_ID } from '../constants/componentIds'; // Adjust path as needed
+// src/utils/contextUtils.js
+import { resolvePath } from './objectUtils.js';
+import { NAME_COMPONENT_ID } from '../constants/componentIds.js';
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 
 // Regex to find placeholders like {path.to.value} within a string.

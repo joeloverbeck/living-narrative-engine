@@ -5,7 +5,7 @@
 
 import { BoundDomRendererBase } from './boundDomRendererBase.js';
 import { Throttler } from '../alerting/throttler.js';
-import { generateKey } from '../alerting/throttleUtils.js';
+import { generateKey } from '../utils/throttleUtils.js';
 // Import the centralized utility function.
 import { getUserFriendlyMessage } from '../alerting/statusCodeMapper.js';
 

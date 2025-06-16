@@ -1,4 +1,4 @@
-// src/persistence/savePathUtils.js
+// src/utils/savePathUtils.js
 
 /**
  * Directory name for all saved games.
