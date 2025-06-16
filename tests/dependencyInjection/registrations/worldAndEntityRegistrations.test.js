@@ -43,7 +43,9 @@ describe('registerWorldAndEntity', () => {
     container.register(tokens.ISafeEventDispatcher, () => ({
       dispatch: jest.fn().mockResolvedValue(true),
     }));
-    container.register(tokens.IGameDataRepository, () => ({}));
+    container.register(tokens.IGameDataRepository, () => ({
+      getConditionDefinition: jest.fn(),
+    }));
   });
 
   afterEach(() => {
