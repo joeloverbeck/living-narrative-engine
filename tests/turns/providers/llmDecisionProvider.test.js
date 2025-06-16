@@ -1,6 +1,6 @@
 import { jest, describe, expect } from '@jest/globals';
 import { LLMDecisionProvider } from '../../../src/turns/providers/llmDecisionProvider.js';
-import { DISPLAY_ERROR_ID } from '../../../src/constants/eventIds.js';
+import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/eventIds.js';
 
 const mockLogger = {
   error: jest.fn(),
@@ -58,7 +58,7 @@ describe('LLMDecisionProvider', () => {
       provider.decide('actor', 'context', ['a'], null)
     ).rejects.toThrow('Could not resolve the chosen action to a valid index.');
     expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
-      DISPLAY_ERROR_ID,
+      SYSTEM_ERROR_OCCURRED_ID,
       expect.any(Object)
     );
   });

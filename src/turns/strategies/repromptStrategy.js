@@ -11,7 +11,7 @@
 import { ITurnDirectiveStrategy } from '../interfaces/ITurnDirectiveStrategy.js';
 import TurnDirective from '../constants/turnDirectives.js';
 import { AwaitingActorDecisionState } from '../states/awaitingActorDecisionState.js';
-import { DISPLAY_ERROR_ID } from '../../constants/eventIds.js';
+import { SYSTEM_ERROR_OCCURRED_ID } from '../../constants/eventIds.js';
 
 /**
  * Handles TurnDirective.RE_PROMPT by requesting a transition to AwaitingActorDecisionState.
@@ -41,7 +41,7 @@ export default class RepromptStrategy extends ITurnDirectiveStrategy {
 
     if (directive !== TurnDirective.RE_PROMPT) {
       const errorMsg = `${className}: Received non-RE_PROMPT directive (${directive}). Aborting.`;
-      safeEventDispatcher?.dispatch(DISPLAY_ERROR_ID, {
+      safeEventDispatcher?.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
         message: errorMsg,
         details: { directive },
       });
@@ -54,7 +54,7 @@ export default class RepromptStrategy extends ITurnDirectiveStrategy {
 
     if (!contextActor) {
       const errorMsg = `${className}: No actor found in ITurnContext. Cannot re-prompt.`;
-      safeEventDispatcher?.dispatch(DISPLAY_ERROR_ID, {
+      safeEventDispatcher?.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
         message: errorMsg,
         details: { directive },
       });
@@ -83,7 +83,7 @@ export default class RepromptStrategy extends ITurnDirectiveStrategy {
       );
     } catch (transitionError) {
       const errorMsg = `${className}: Failed to request transition to AwaitingActorDecisionState for actor ${contextActor.id}. Error: ${transitionError.message}`;
-      safeEventDispatcher?.dispatch(DISPLAY_ERROR_ID, {
+      safeEventDispatcher?.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
         message: errorMsg,
         details: {
           actorId: contextActor.id,

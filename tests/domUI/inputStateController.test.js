@@ -11,7 +11,7 @@ import { JSDOM } from 'jsdom';
 import { InputStateController } from '../../src/domUI'; // Assuming index exports it
 import DocumentContext from '../../src/domUI/documentContext.js';
 import ConsoleLogger from '../../src/logging/consoleLogger.js';
-import { DISPLAY_ERROR_ID } from '../../src/constants/eventIds.js';
+import { SYSTEM_ERROR_OCCURRED_ID } from '../../src/constants/eventIds.js';
 
 // Mock dependencies
 jest.mock('../../src/logging/consoleLogger.js');
@@ -109,7 +109,7 @@ describe('InputStateController', () => {
         "'inputElement' dependency is missing or not a valid DOM element."
       );
       expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
-        DISPLAY_ERROR_ID,
+        SYSTEM_ERROR_OCCURRED_ID,
         expect.objectContaining({
           message: expect.stringContaining(
             "'inputElement' dependency is missing or not a valid DOM element."
@@ -128,7 +128,7 @@ describe('InputStateController', () => {
         "'inputElement' dependency is missing or not a valid DOM element."
       );
       expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
-        DISPLAY_ERROR_ID,
+        SYSTEM_ERROR_OCCURRED_ID,
         expect.objectContaining({
           message: expect.stringContaining(
             "'inputElement' dependency is missing or not a valid DOM element."
@@ -143,7 +143,7 @@ describe('InputStateController', () => {
         "'inputElement' must be an HTMLInputElement (<input>), but received 'DIV'."
       );
       expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
-        DISPLAY_ERROR_ID,
+        SYSTEM_ERROR_OCCURRED_ID,
         expect.objectContaining({
           message: expect.stringContaining(
             "'inputElement' must be an HTMLInputElement (<input>), but received 'DIV'."

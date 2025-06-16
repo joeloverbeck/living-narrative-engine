@@ -83,7 +83,7 @@ describe('GamePersistenceService error paths', () => {
         'Failed to deep clone object data.'
       );
       expect(safeEventDispatcher.dispatch).toHaveBeenCalledWith(
-        'core:display_error',
+        'core:system_error_occurred',
         expect.objectContaining({
           message: 'ComponentCleaningService.clean deepClone failed',
           details: expect.objectContaining({ componentId: 'loop' }),

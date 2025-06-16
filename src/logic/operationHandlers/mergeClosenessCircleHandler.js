@@ -8,7 +8,7 @@
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 
 import closenessCircleService from '../services/closenessCircleService.js';
-import { DISPLAY_ERROR_ID } from '../../constants/eventIds.js';
+import { SYSTEM_ERROR_OCCURRED_ID } from '../../constants/eventIds.js';
 import { setContextValue } from '../../utils/contextVariableUtils.js';
 import { safeDispatchError } from '../../utils/safeDispatchError.js';
 
@@ -113,7 +113,7 @@ class MergeClosenessCircleHandler {
           partners,
         });
       } catch (err) {
-        this.#dispatcher.dispatch(DISPLAY_ERROR_ID, {
+        this.#dispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
           message: 'MERGE_CLOSENESS_CIRCLE: failed updating closeness',
           details: { id, error: err.message, stack: err.stack },
         });
@@ -126,7 +126,7 @@ class MergeClosenessCircleHandler {
           locked: true,
         });
       } catch (err) {
-        this.#dispatcher.dispatch(DISPLAY_ERROR_ID, {
+        this.#dispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
           message: 'MERGE_CLOSENESS_CIRCLE: failed locking movement',
           details: { id, error: err.message, stack: err.stack },
         });

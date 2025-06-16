@@ -7,7 +7,6 @@
 /** @typedef {import('../defs.js').ExecutionContext} ExecutionContext */
 /** @typedef {import('../defs.js').OperationParams} OperationParams */
 import { resolveEntityId } from '../../utils/entityRefUtils.js';
-import { DISPLAY_ERROR_ID } from '../../constants/eventIds.js';
 import { safeDispatchError } from '../../utils/safeDispatchError.js';
 import { assertParamsObject } from '../../utils/handlerUtils/params.js';
 

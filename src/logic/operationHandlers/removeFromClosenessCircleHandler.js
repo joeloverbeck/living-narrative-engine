@@ -9,7 +9,7 @@
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 
 import ClosenessCircleService from '../services/closenessCircleService.js';
-import { DISPLAY_ERROR_ID } from '../../constants/eventIds.js';
+import { SYSTEM_ERROR_OCCURRED_ID } from '../../constants/eventIds.js';
 import {
   initHandlerLogger,
   validateDeps,
@@ -69,7 +69,7 @@ class RemoveFromClosenessCircleHandler {
     const { actor_id, result_variable } = params;
 
     if (typeof actor_id !== 'string' || !actor_id.trim()) {
-      this.#dispatcher.dispatch(DISPLAY_ERROR_ID, {
+      this.#dispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
         message: 'REMOVE_FROM_CLOSENESS_CIRCLE: Invalid "actor_id" parameter',
         details: { params },
       });

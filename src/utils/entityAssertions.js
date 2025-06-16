@@ -11,7 +11,7 @@
 
 import { isNonBlankString } from './textUtils.js';
 import { getPrefixedLogger } from './loggerUtils.js';
-import { DISPLAY_ERROR_ID } from '../constants/eventIds.js';
+import { SYSTEM_ERROR_OCCURRED_ID } from '../constants/eventIds.js';
 
 /**
  * Throws an error if the provided entity is invalid.
@@ -20,7 +20,7 @@ import { DISPLAY_ERROR_ID } from '../constants/eventIds.js';
  * @param {Entity} entity - The entity to validate.
  * @param {ILogger} [logger] - Optional logger for warnings.
  * @param {string} [contextName] - Name of the calling context.
- * @param {ISafeEventDispatcher} [safeEventDispatcher] - Optional dispatcher for DISPLAY_ERROR_ID events.
+ * @param {ISafeEventDispatcher} [safeEventDispatcher] - Optional dispatcher for SYSTEM_ERROR_OCCURRED_ID events.
  * @throws {Error} If the entity is invalid.
  */
 export function assertValidEntity(
@@ -37,7 +37,7 @@ export function assertValidEntity(
       details: { contextName, entityId: entity?.id ?? null, entity },
     };
     if (safeEventDispatcher?.dispatch) {
-      safeEventDispatcher.dispatch(DISPLAY_ERROR_ID, payload);
+      safeEventDispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, payload);
     } else {
       log.warn(`${errMsg} - SafeEventDispatcher missing.`, { entity });
     }
@@ -51,7 +51,7 @@ export function assertValidEntity(
  * @param {Entity} actor - Actor entity being validated.
  * @param {ILogger} [logger] - Logger used for warnings when dispatcher missing.
  * @param {string} [contextName] - Calling context for clearer error messages.
- * @param {ISafeEventDispatcher} [safeEventDispatcher] - Dispatcher for DISPLAY_ERROR_ID events.
+ * @param {ISafeEventDispatcher} [safeEventDispatcher] - Dispatcher for SYSTEM_ERROR_OCCURRED_ID events.
  * @deprecated Use {@link assertValidEntity} instead.
  * @throws {Error}
  */

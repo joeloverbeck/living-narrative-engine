@@ -9,7 +9,6 @@
 
 // --- Dependency Imports ---
 import { getEntityDisplayName } from '../utils/entityUtils.js';
-import { DISPLAY_ERROR_ID } from '../constants/eventIds.js';
 import { safeDispatchError } from '../utils/safeDispatchError.js';
 
 /**

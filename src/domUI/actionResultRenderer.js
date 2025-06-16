@@ -26,7 +26,7 @@ import DomElementFactory from './domElementFactory.js';
 // Runtime imports
 // ────────────────────────────────────────────────────────────────────────────────
 import { BoundDomRendererBase } from './boundDomRendererBase.js';
-import { DISPLAY_ERROR_ID } from '../constants/eventIds.js';
+import { SYSTEM_ERROR_OCCURRED_ID } from '../constants/eventIds.js';
 
 /**
  * @typedef {object} ActionResultPayload
@@ -165,7 +165,7 @@ export class ActionResultRenderer extends BoundDomRendererBase {
     const listEl = this.elements.listContainerElement;
 
     if (!listEl) {
-      this.validatedEventDispatcher.dispatch(DISPLAY_ERROR_ID, {
+      this.validatedEventDispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
         message: `${this._logPrefix} listContainerElement not found – cannot render bubble.`,
         details: { message, cssClass },
       });
@@ -174,7 +174,7 @@ export class ActionResultRenderer extends BoundDomRendererBase {
 
     const li = this.domElementFactory?.li(cssClass);
     if (!li) {
-      this.validatedEventDispatcher.dispatch(DISPLAY_ERROR_ID, {
+      this.validatedEventDispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
         message: `${this._logPrefix} DomElementFactory.li() returned null – cannot render bubble.`,
         details: { message, cssClass },
       });

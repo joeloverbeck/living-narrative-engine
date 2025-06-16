@@ -5,7 +5,7 @@ import { describe, beforeEach, test, expect, jest } from '@jest/globals';
 import DispatchSpeechHandler from '../../../src/logic/operationHandlers/dispatchSpeechHandler.js';
 import {
   DISPLAY_SPEECH_ID,
-  DISPLAY_ERROR_ID,
+  SYSTEM_ERROR_OCCURRED_ID,
 } from '../../../src/constants/eventIds.js';
 
 const makeLogger = () => ({
@@ -95,7 +95,7 @@ describe('DispatchSpeechHandler', () => {
     const params = { entity_id: 'e1', speech_content: 'oops' };
     handler.execute(params, {});
     expect(safeDispatcher.dispatch).toHaveBeenCalledWith(
-      DISPLAY_ERROR_ID,
+      SYSTEM_ERROR_OCCURRED_ID,
       expect.objectContaining({
         message: 'DISPATCH_SPEECH: Error dispatching display_speech.',
       })

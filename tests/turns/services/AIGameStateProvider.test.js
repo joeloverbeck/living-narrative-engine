@@ -14,7 +14,7 @@ import {
   POSITION_COMPONENT_ID,
   PERCEPTION_LOG_COMPONENT_ID,
 } from '../../../src/constants/componentIds.js';
-import { DISPLAY_ERROR_ID } from '../../../src/constants/eventIds.js';
+import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/eventIds.js';
 import {
   DEFAULT_FALLBACK_LOCATION_NAME,
   DEFAULT_FALLBACK_CHARACTER_NAME,
@@ -225,7 +225,7 @@ describe('AIGameStateProvider Integration Tests', () => {
         );
         expect(currentLocation).toBeNull();
         expect(safeEventDispatcher.dispatch).toHaveBeenCalledWith(
-          DISPLAY_ERROR_ID,
+          SYSTEM_ERROR_OCCURRED_ID,
           expect.any(Object)
         );
       });
@@ -303,7 +303,7 @@ describe('AIGameStateProvider Integration Tests', () => {
         );
         expect(perceptionLog).toEqual([]);
         expect(safeEventDispatcher.dispatch).toHaveBeenCalledWith(
-          DISPLAY_ERROR_ID,
+          SYSTEM_ERROR_OCCURRED_ID,
           expect.objectContaining({
             message: expect.stringContaining('Test error'),
           })

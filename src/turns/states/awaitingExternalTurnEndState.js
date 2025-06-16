@@ -11,7 +11,10 @@
 
 import { AbstractTurnState } from './abstractTurnState.js';
 
-import { TURN_ENDED_ID, DISPLAY_ERROR_ID } from '../../constants/eventIds.js';
+import {
+  TURN_ENDED_ID,
+  SYSTEM_ERROR_OCCURRED_ID,
+} from '../../constants/eventIds.js';
 
 /* global process */
 
@@ -147,7 +150,7 @@ export class AwaitingExternalTurnEndState extends AbstractTurnState {
     );
 
     // 1) tell the UI / console
-    ctx.getSafeEventDispatcher?.().dispatch(DISPLAY_ERROR_ID, {
+    ctx.getSafeEventDispatcher?.().dispatch(SYSTEM_ERROR_OCCURRED_ID, {
       message: msg,
       details: {
         code: err.code,

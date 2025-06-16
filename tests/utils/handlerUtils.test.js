@@ -1,6 +1,6 @@
 import { describe, it, expect, jest } from '@jest/globals';
 import { assertParamsObject } from '../../src/utils/handlerUtils/params.js';
-import { DISPLAY_ERROR_ID } from '../../src/constants/eventIds.js';
+import { SYSTEM_ERROR_OCCURRED_ID } from '../../src/constants/eventIds.js';
 
 describe('assertParamsObject', () => {
   it('logs a warning and returns false when params are invalid', () => {
@@ -17,7 +17,7 @@ describe('assertParamsObject', () => {
     const dispatcher = { dispatch: jest.fn() };
     const result = assertParamsObject(undefined, dispatcher, 'TEST_OP');
     expect(result).toBe(false);
-    expect(dispatcher.dispatch).toHaveBeenCalledWith(DISPLAY_ERROR_ID, {
+    expect(dispatcher.dispatch).toHaveBeenCalledWith(SYSTEM_ERROR_OCCURRED_ID, {
       message: 'TEST_OP: params missing or invalid.',
       details: { params: undefined },
     });

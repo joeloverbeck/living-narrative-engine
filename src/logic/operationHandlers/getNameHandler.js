@@ -16,7 +16,6 @@ import { NAME_COMPONENT_ID } from '../../constants/componentIds.js';
 import { DEFAULT_FALLBACK_CHARACTER_NAME } from '../../constants/textDefaults.js';
 import { resolveEntityId } from '../../utils/entityRefUtils.js';
 import { setContextValue } from '../../utils/contextVariableUtils.js';
-import { DISPLAY_ERROR_ID } from '../../constants/eventIds.js';
 import { assertParamsObject } from '../../utils/handlerUtils/params.js';
 import { safeDispatchError } from '../../utils/safeDispatchError.js';
 import BaseOperationHandler from './baseOperationHandler.js';

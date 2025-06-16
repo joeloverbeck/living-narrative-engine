@@ -12,7 +12,7 @@ import {
   jest,
 } from '@jest/globals';
 import RebuildLeaderListCacheHandler from '../../../src/logic/operationHandlers/rebuildLeaderListCacheHandler.js';
-import { DISPLAY_ERROR_ID } from '../../../src/constants/eventIds.js';
+import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/eventIds.js';
 
 // --- Constants ---
 const FOLLOWING_COMPONENT_ID = 'core:following';
@@ -476,7 +476,7 @@ describe('RebuildLeaderListCacheHandler', () => {
       // Assert
       expect(dispatcher.dispatch).toHaveBeenCalledTimes(1);
       expect(dispatcher.dispatch).toHaveBeenCalledWith(
-        DISPLAY_ERROR_ID,
+        SYSTEM_ERROR_OCCURRED_ID,
         expect.objectContaining({
           message:
             "[RebuildLeaderListCacheHandler] Failed updating 'core:leading' for 'leader1': EntityManager failed",
@@ -517,7 +517,7 @@ describe('RebuildLeaderListCacheHandler', () => {
       // Assert
       expect(dispatcher.dispatch).toHaveBeenCalledTimes(1);
       expect(dispatcher.dispatch).toHaveBeenCalledWith(
-        DISPLAY_ERROR_ID,
+        SYSTEM_ERROR_OCCURRED_ID,
         expect.objectContaining({
           message:
             "[RebuildLeaderListCacheHandler] Failed updating 'core:leading' for 'leader1': EntityManager remove failed",

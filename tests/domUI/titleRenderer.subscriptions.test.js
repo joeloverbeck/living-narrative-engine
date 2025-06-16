@@ -2,10 +2,7 @@
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { TitleRenderer } from '../../src/domUI/index.js'; // Corrected import path if needed
 import { RendererBase } from '../../src/domUI/index.js';
-import {
-  SYSTEM_ERROR_OCCURRED_ID,
-  DISPLAY_ERROR_ID,
-} from '../../src/constants/eventIds.js'; // Needed for checking super.dispose
+import { SYSTEM_ERROR_OCCURRED_ID } from '../../src/constants/eventIds.js'; // Needed for checking super.dispose
 
 // --- Mock Dependencies ---
 
@@ -114,7 +111,7 @@ describe('TitleRenderer', () => {
       );
       expect(mockSafeEventDispatcher.subscribe).toHaveBeenCalledTimes(14);
       expect(mockSafeEventDispatcher.dispatch).not.toHaveBeenCalledWith(
-        DISPLAY_ERROR_ID,
+        SYSTEM_ERROR_OCCURRED_ID,
         expect.any(Object)
       );
     });
@@ -131,7 +128,7 @@ describe('TitleRenderer', () => {
         "[TitleRenderer] 'titleElement' dependency is missing or not a valid DOM element."
       );
       expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
-        DISPLAY_ERROR_ID,
+        SYSTEM_ERROR_OCCURRED_ID,
         expect.objectContaining({
           message: expect.stringContaining(
             'missing or not a valid DOM element'
@@ -153,7 +150,7 @@ describe('TitleRenderer', () => {
         "[TitleRenderer] 'titleElement' dependency is missing or not a valid DOM element."
       );
       expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
-        DISPLAY_ERROR_ID,
+        SYSTEM_ERROR_OCCURRED_ID,
         expect.objectContaining({
           message: expect.stringContaining(
             'missing or not a valid DOM element'
@@ -175,7 +172,7 @@ describe('TitleRenderer', () => {
         "[TitleRenderer] 'titleElement' must be an H1 element, but received 'DIV'."
       );
       expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
-        DISPLAY_ERROR_ID,
+        SYSTEM_ERROR_OCCURRED_ID,
         expect.objectContaining({
           message: expect.stringContaining('must be an H1 element'),
         })
@@ -243,7 +240,7 @@ describe('TitleRenderer', () => {
       );
       expect(mockLogger.warn).not.toHaveBeenCalled();
       expect(mockSafeEventDispatcher.dispatch).not.toHaveBeenCalledWith(
-        DISPLAY_ERROR_ID,
+        SYSTEM_ERROR_OCCURRED_ID,
         expect.any(Object)
       );
     });
@@ -367,7 +364,7 @@ describe('TitleRenderer', () => {
         'Initialization Failed (World: BrokenWorld)'
       );
       expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
-        DISPLAY_ERROR_ID,
+        SYSTEM_ERROR_OCCURRED_ID,
         expect.objectContaining({
           message: expect.stringContaining('Overall initialization failed'),
         })
@@ -404,7 +401,7 @@ describe('TitleRenderer', () => {
       simulateEvent('initialization:world_loader:failed', payload);
       expect(renderer.set).toHaveBeenCalledWith('world loader Failed');
       expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
-        DISPLAY_ERROR_ID,
+        SYSTEM_ERROR_OCCURRED_ID,
         expect.objectContaining({
           message: expect.stringContaining(
             'world loader Failed. Error: File not found'
@@ -418,7 +415,7 @@ describe('TitleRenderer', () => {
       simulateEvent('initialization:input_setup_service:failed', payload);
       expect(renderer.set).toHaveBeenCalledWith('input setup service Failed');
       expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
-        DISPLAY_ERROR_ID,
+        SYSTEM_ERROR_OCCURRED_ID,
         expect.objectContaining({
           message: expect.stringContaining(
             'input setup service Failed. Error: Keybindings conflict'

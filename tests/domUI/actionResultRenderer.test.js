@@ -14,7 +14,7 @@ import {
 
 // Class under test
 import { ActionResultRenderer } from '../../src/domUI/actionResultRenderer.js';
-import { DISPLAY_ERROR_ID } from '../../src/constants/eventIds.js';
+import { SYSTEM_ERROR_OCCURRED_ID } from '../../src/constants/eventIds.js';
 
 // Mock dependencies
 const mockLogger = {
@@ -258,7 +258,7 @@ describe('ActionResultRenderer', () => {
   });
 
   describe('Test Case: Error dispatching', () => {
-    it('dispatches core:display_error when message list is missing', () => {
+    it('dispatches core:system_error_occurred when message list is missing', () => {
       // Reconfigure DocumentContext to omit the message list element
       mockDocumentContext.query = jest.fn((selector) => {
         if (selector === '#outputDiv') {
@@ -280,7 +280,7 @@ describe('ActionResultRenderer', () => {
       handler({ payload: { message: 'hi' } });
 
       expect(mockValidatedEventDispatcher.dispatch).toHaveBeenCalledWith(
-        DISPLAY_ERROR_ID,
+        SYSTEM_ERROR_OCCURRED_ID,
         expect.objectContaining({
           message: expect.stringContaining('listContainerElement not found'),
         })
@@ -288,14 +288,14 @@ describe('ActionResultRenderer', () => {
       expect(mockDomElementFactory.li).not.toHaveBeenCalled();
     });
 
-    it('dispatches core:display_error when DomElementFactory returns null', () => {
+    it('dispatches core:system_error_occurred when DomElementFactory returns null', () => {
       mockDomElementFactory.li.mockReturnValue(null);
 
       const handler = eventListeners['core:display_successful_action_result'];
       handler({ payload: { message: 'Boom' } });
 
       expect(mockValidatedEventDispatcher.dispatch).toHaveBeenCalledWith(
-        DISPLAY_ERROR_ID,
+        SYSTEM_ERROR_OCCURRED_ID,
         expect.objectContaining({
           message: expect.stringContaining(
             'DomElementFactory.li() returned null'

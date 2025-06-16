@@ -11,7 +11,6 @@
 /** @typedef {import('../defs.js').EntityRefObject} EntityRefObject */
 
 import { resolveEntityId } from '../../utils/entityRefUtils.js';
-import { DISPLAY_ERROR_ID } from '../../constants/eventIds.js';
 
 import { assertParamsObject } from '../../utils/handlerUtils';
 

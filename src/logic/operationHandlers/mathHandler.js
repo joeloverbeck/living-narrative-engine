@@ -3,7 +3,6 @@
  */
 
 import jsonLogic from 'json-logic-js';
-import { DISPLAY_ERROR_ID } from '../../constants/eventIds.js';
 import { safeDispatchError } from '../../utils/safeDispatchError.js';
 import { setContextValue } from '../../utils/contextVariableUtils.js';
 import storeResult from '../../utils/contextVariableUtils.js';

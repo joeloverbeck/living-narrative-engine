@@ -11,7 +11,7 @@ import {
   afterEach,
   test,
 } from '@jest/globals';
-import { DISPLAY_ERROR_ID } from '../../src/constants/eventIds.js';
+import { SYSTEM_ERROR_OCCURRED_ID } from '../../src/constants/eventIds.js';
 import { BrowserStorageProvider } from '../../src/storage/browserStorageProvider'; // Adjust path as needed
 
 // --- Mock ILogger ---
@@ -313,7 +313,7 @@ describe('BrowserStorageProvider - writeFileAtomically', () => {
       'Failed to write to temporary file: Failed to create temp writable'
     );
     expect(storageProvider._testDispatcher.dispatch).toHaveBeenCalledWith(
-      DISPLAY_ERROR_ID,
+      SYSTEM_ERROR_OCCURRED_ID,
       expect.objectContaining({
         message: expect.stringContaining(
           `Error writing to temporary file ${tempFilePath}`
@@ -368,7 +368,7 @@ describe('BrowserStorageProvider - writeFileAtomically', () => {
     );
     expect(mockTempStreamWithError.write).toHaveBeenCalledWith(data);
     expect(storageProvider._testDispatcher.dispatch).toHaveBeenCalledWith(
-      DISPLAY_ERROR_ID,
+      SYSTEM_ERROR_OCCURRED_ID,
       expect.objectContaining({
         message: expect.stringContaining(
           `Error writing to temporary file ${tempFilePath}`
@@ -441,7 +441,7 @@ describe('BrowserStorageProvider - writeFileAtomically', () => {
     ); // Crucial check
 
     expect(storageProvider._testDispatcher.dispatch).toHaveBeenCalledWith(
-      DISPLAY_ERROR_ID,
+      SYSTEM_ERROR_OCCURRED_ID,
       expect.objectContaining({
         message: expect.stringContaining(
           `Error writing to final file ${filePath} (replacing original): Final write failed`

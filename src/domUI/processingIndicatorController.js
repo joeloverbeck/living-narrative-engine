@@ -6,7 +6,7 @@ import {
   AI_TURN_PROCESSING_ENDED,
   PLAYER_TURN_SUBMITTED_ID,
   // TEXT_UI_DISPLAY_SPEECH_ID // Not directly used for hiding in this version
-  DISPLAY_ERROR_ID,
+  SYSTEM_ERROR_OCCURRED_ID,
 } from '../constants/eventIds.js'; // Assuming these constants are correctly named and exported
 
 /**
@@ -144,13 +144,13 @@ export class ProcessingIndicatorController extends BoundDomRendererBase {
           );
         } else {
           const errMsg = `${this._logPrefix} Failed to create #processing-indicator element using DomElementFactory.`;
-          this.safeEventDispatcher.dispatch(DISPLAY_ERROR_ID, {
+          this.safeEventDispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
             message: errMsg,
           });
         }
       } else {
         const errMsg = `${this._logPrefix} Cannot create #processing-indicator: DomElementFactory or #outputDiv element missing.`;
-        this.safeEventDispatcher.dispatch(DISPLAY_ERROR_ID, {
+        this.safeEventDispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
           message: errMsg,
         });
       }

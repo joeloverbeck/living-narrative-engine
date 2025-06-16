@@ -6,7 +6,7 @@
 import { LLMResponseProcessor } from '../../../src/turns/services/LLMResponseProcessor.js';
 import { beforeEach, describe, expect, jest, test } from '@jest/globals';
 import { LLMProcessingError } from '../../../src/turns/services/LLMResponseProcessor.js';
-import { DISPLAY_ERROR_ID } from '../../../src/constants/eventIds.js';
+import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/eventIds.js';
 
 // --- Mocks & Helpers ---
 
@@ -122,7 +122,7 @@ describe('LLMResponseProcessor - notes data extraction', () => {
     // We need to run it again because the `expect().rejects` consumes the error.
     await processor.processResponse(jsonString, actorId).catch(() => {});
     expect(safeEventDispatcher.dispatch).toHaveBeenCalledWith(
-      DISPLAY_ERROR_ID,
+      SYSTEM_ERROR_OCCURRED_ID,
       {
         message: `LLMResponseProcessor: schema invalid for actor ${actorId}`,
         details: {

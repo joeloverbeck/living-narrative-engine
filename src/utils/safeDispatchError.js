@@ -7,10 +7,10 @@
 
 /** @typedef {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 
-import { DISPLAY_ERROR_ID } from '../constants/eventIds.js';
+import { SYSTEM_ERROR_OCCURRED_ID } from '../constants/eventIds.js';
 
 /**
- * Sends a `core:display_error` event with a consistent payload structure.
+ * Sends a `core:system_error_occurred` event with a consistent payload structure.
  * The dispatcher is validated before dispatching.
  *
  * @param {ISafeEventDispatcher} dispatcher - Dispatcher used to emit the event.
@@ -30,7 +30,7 @@ export function safeDispatchError(dispatcher, message, details = {}) {
     throw new Error(errorMsg);
   }
 
-  dispatcher.dispatch(DISPLAY_ERROR_ID, { message, details });
+  dispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, { message, details });
 }
 
 // --- FILE END ---

@@ -4,7 +4,7 @@
 
 import { describe, beforeEach, test, expect, jest } from '@jest/globals';
 import DispatchPerceptibleEventHandler from '../../../src/logic/operationHandlers/dispatchPerceptibleEventHandler.js';
-import { DISPLAY_ERROR_ID } from '../../../src/constants/eventIds.js';
+import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/eventIds.js';
 
 const makeLogger = () => ({
   debug: jest.fn(),
@@ -75,7 +75,7 @@ describe('DispatchPerceptibleEventHandler', () => {
   test('dispatches error when params missing', () => {
     handler.execute(null, {});
     expect(dispatcher.dispatch).toHaveBeenCalledWith(
-      DISPLAY_ERROR_ID,
+      SYSTEM_ERROR_OCCURRED_ID,
       expect.objectContaining({
         message: expect.stringContaining('params missing'),
       })

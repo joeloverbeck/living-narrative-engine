@@ -4,7 +4,7 @@
  */
 
 import HasComponentHandler from '../../../src/logic/operationHandlers/hasComponentHandler.js';
-import { DISPLAY_ERROR_ID } from '../../../src/constants/eventIds.js';
+import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/eventIds.js';
 import {
   jest,
   describe,
@@ -239,7 +239,7 @@ describe('HasComponentHandler', () => {
       'core:failing_component'
     );
     expect(dispatcher.dispatch).toHaveBeenCalledWith(
-      DISPLAY_ERROR_ID,
+      SYSTEM_ERROR_OCCURRED_ID,
       expect.objectContaining({
         message: expect.stringContaining(
           'An error occurred while checking for component "core:failing_component"'

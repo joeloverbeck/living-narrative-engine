@@ -12,7 +12,7 @@ import { StandardElementAssembler } from '../../../src/prompting/assembling/stan
 import { createMockLogger } from '../../testUtils.js'; // Adjust path for your test utils
 // We will use the actual snakeToCamel from textUtils since it's a utility function
 import { snakeToCamel } from '../../../src/utils/textUtils.js';
-import { DISPLAY_ERROR_ID } from '../../../src/constants/eventIds.js';
+import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/eventIds.js';
 
 // Mock PlaceholderResolver
 const mockPlaceholderResolverInstance = {
@@ -53,7 +53,7 @@ describe('StandardElementAssembler', () => {
       // Indirectly check dispatcher by causing an error in assemble
       assembler.assemble(null, {}, activeMockPlaceholderResolver);
       expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
-        DISPLAY_ERROR_ID,
+        SYSTEM_ERROR_OCCURRED_ID,
         expect.any(Object)
       );
     });
@@ -76,7 +76,7 @@ describe('StandardElementAssembler', () => {
       );
       expect(result).toBe('');
       expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
-        DISPLAY_ERROR_ID,
+        SYSTEM_ERROR_OCCURRED_ID,
         expect.objectContaining({
           message: expect.any(String),
           details: expect.objectContaining({ elementConfigProvided: false }),
@@ -94,7 +94,7 @@ describe('StandardElementAssembler', () => {
       );
       expect(result).toBe('');
       expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
-        DISPLAY_ERROR_ID,
+        SYSTEM_ERROR_OCCURRED_ID,
         expect.objectContaining({
           message: expect.any(String),
           details: expect.objectContaining({ promptDataProvider: false }),
@@ -112,7 +112,7 @@ describe('StandardElementAssembler', () => {
       );
       expect(result).toBe('');
       expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
-        DISPLAY_ERROR_ID,
+        SYSTEM_ERROR_OCCURRED_ID,
         expect.objectContaining({
           message: expect.any(String),
           details: expect.objectContaining({

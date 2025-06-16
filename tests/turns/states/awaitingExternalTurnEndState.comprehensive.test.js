@@ -33,7 +33,7 @@ jest.mock('../../../src/turns/states/turnIdleState.js', () => ({
 import { AwaitingExternalTurnEndState } from '../../../src/turns/states/awaitingExternalTurnEndState.js';
 import { TurnIdleState } from '../../../src/turns/states/turnIdleState.js'; // This resolves to our mock above.
 import {
-  DISPLAY_ERROR_ID,
+  SYSTEM_ERROR_OCCURRED_ID,
   TURN_ENDED_ID,
 } from '../../../src/constants/eventIds.js';
 
@@ -347,7 +347,7 @@ describe('AwaitingExternalTurnEndState', () => {
       // 1. A display error event is dispatched.
       expect(mockEventDispatcher.dispatch).toHaveBeenCalledTimes(1);
       expect(mockEventDispatcher.dispatch).toHaveBeenCalledWith(
-        DISPLAY_ERROR_ID,
+        SYSTEM_ERROR_OCCURRED_ID,
         {
           message:
             "No rule ended the turn for actor player-1 after action 'test-action'. The engine timed out after 3000 ms.",

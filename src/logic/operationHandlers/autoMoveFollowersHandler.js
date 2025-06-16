@@ -13,7 +13,6 @@ import {
   POSITION_COMPONENT_ID,
   LEADING_COMPONENT_ID,
 } from '../../constants/componentIds.js';
-import { DISPLAY_ERROR_ID } from '../../constants/eventIds.js';
 import { safeDispatchError } from '../../utils/safeDispatchError.js';
 import SystemMoveEntityHandler from './systemMoveEntityHandler.js';
 import BaseOperationHandler from './baseOperationHandler.js';

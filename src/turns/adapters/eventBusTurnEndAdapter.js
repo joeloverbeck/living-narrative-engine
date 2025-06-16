@@ -5,7 +5,6 @@ import { ITurnEndPort } from '../ports/ITurnEndPort.js';
 import {
   TURN_ENDED_ID,
   SYSTEM_ERROR_OCCURRED_ID,
-  DISPLAY_ERROR_ID,
 } from '../../constants/eventIds.js';
 
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeDispatcher */
@@ -58,7 +57,7 @@ export default class EventBusTurnEndAdapter extends ITurnEndPort {
           },
         });
       } catch (dispatchErr) {
-        await this.#dispatcher.dispatch(DISPLAY_ERROR_ID, {
+        await this.#dispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
           message: `EventBusTurnEndAdapter: Error dispatching ${SYSTEM_ERROR_OCCURRED_ID} about invalid entityId.`,
           details: {
             error: dispatchErr.message,
@@ -103,7 +102,7 @@ export default class EventBusTurnEndAdapter extends ITurnEndPort {
           },
         });
       } catch (dispatchErr) {
-        await this.#dispatcher.dispatch(DISPLAY_ERROR_ID, {
+        await this.#dispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
           message: `EventBusTurnEndAdapter: Error dispatching ${SYSTEM_ERROR_OCCURRED_ID} after failing ${TURN_ENDED_ID} for ${entityId}.`,
           details: {
             error: dispatchErr.message,

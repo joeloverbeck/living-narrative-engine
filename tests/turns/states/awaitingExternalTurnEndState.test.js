@@ -2,7 +2,7 @@
 // ****** MODIFIED FILE ******
 
 import { AwaitingExternalTurnEndState } from '../../../src/turns/states/awaitingExternalTurnEndState.js';
-import { DISPLAY_ERROR_ID } from '../../../src/constants/eventIds.js';
+import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/eventIds.js';
 import {
   afterEach,
   beforeEach,
@@ -75,7 +75,7 @@ describe('AwaitingExternalTurnEndState – action-definition propagation', () =>
     jest.clearAllTimers();
   });
 
-  it('dispatches core:display_error with the *definition* id on timeout', async () => {
+  it('dispatches core:system_error_occurred with the *definition* id on timeout', async () => {
     // prime the state
     await state.enterState(mockHandler, /* prev */ null);
 
@@ -83,7 +83,7 @@ describe('AwaitingExternalTurnEndState – action-definition propagation', () =>
     jest.advanceTimersByTime(TIMEOUT_MS + 1);
 
     expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
-      DISPLAY_ERROR_ID,
+      SYSTEM_ERROR_OCCURRED_ID,
       expect.objectContaining({
         details: expect.objectContaining({
           actorId: 'hero-123',
@@ -102,7 +102,7 @@ describe('AwaitingExternalTurnEndState – action-definition propagation', () =>
     jest.advanceTimersByTime(TIMEOUT_MS + 1);
 
     expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
-      DISPLAY_ERROR_ID,
+      SYSTEM_ERROR_OCCURRED_ID,
       expect.objectContaining({
         details: expect.objectContaining({
           actionId: 'use-potion',

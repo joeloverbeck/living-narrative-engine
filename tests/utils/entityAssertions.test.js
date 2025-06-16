@@ -1,6 +1,6 @@
 import { describe, test, expect, jest } from '@jest/globals';
 import { assertValidEntity } from '../../src/utils/entityAssertions.js';
-import { DISPLAY_ERROR_ID } from '../../src/constants/eventIds.js';
+import { SYSTEM_ERROR_OCCURRED_ID } from '../../src/constants/eventIds.js';
 
 describe('assertValidEntity', () => {
   test('dispatches error and throws when actor invalid', () => {
@@ -16,7 +16,7 @@ describe('assertValidEntity', () => {
       assertValidEntity(badActor, logger, 'TestCtx', dispatcher)
     ).toThrow('TestCtx: entity is required and must have a valid id.');
     expect(dispatcher.dispatch).toHaveBeenCalledWith(
-      DISPLAY_ERROR_ID,
+      SYSTEM_ERROR_OCCURRED_ID,
       expect.objectContaining({
         message: expect.any(String),
         details: expect.objectContaining({ contextName: 'TestCtx' }),

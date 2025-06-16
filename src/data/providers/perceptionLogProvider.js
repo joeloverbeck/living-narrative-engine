@@ -6,7 +6,7 @@
 import { IPerceptionLogProvider } from '../../interfaces/IPerceptionLogProvider.js';
 import { PERCEPTION_LOG_COMPONENT_ID } from '../../constants/componentIds.js';
 import { DEFAULT_FALLBACK_EVENT_DESCRIPTION_RAW } from '../../constants/textDefaults.js';
-import { DISPLAY_ERROR_ID } from '../../constants/eventIds.js';
+import { SYSTEM_ERROR_OCCURRED_ID } from '../../constants/eventIds.js';
 
 /** @typedef {import('../../entities/entity.js').default} Entity */
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
@@ -43,7 +43,7 @@ export class PerceptionLogProvider extends IPerceptionLogProvider {
         }
       }
     } catch (perceptionError) {
-      dispatcher?.dispatch(DISPLAY_ERROR_ID, {
+      dispatcher?.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
         message: `PerceptionLogProvider: Error retrieving perception log for ${actor.id}: ${perceptionError.message}`,
         details: { error: perceptionError },
       });

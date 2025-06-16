@@ -2,7 +2,7 @@
 
 import { describe, beforeEach, test, expect, jest } from '@jest/globals';
 import QueryComponentsHandler from '../../../src/logic/operationHandlers/queryComponentsHandler.js';
-import { DISPLAY_ERROR_ID } from '../../../src/constants/eventIds.js';
+import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/eventIds.js';
 
 const makeLogger = () => ({
   info: jest.fn(),
@@ -88,7 +88,7 @@ describe('QueryComponentsHandler', () => {
   test('logs error when params invalid', () => {
     handler.execute(null, execCtx);
     expect(dispatcher.dispatch).toHaveBeenCalledWith(
-      DISPLAY_ERROR_ID,
+      SYSTEM_ERROR_OCCURRED_ID,
       expect.objectContaining({
         message: expect.stringContaining('params missing'),
       })
