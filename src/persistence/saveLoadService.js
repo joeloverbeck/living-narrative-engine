@@ -1,8 +1,8 @@
 // src/services/saveLoadService.js
 
 import { ISaveLoadService } from '../interfaces/ISaveLoadService.js';
-import { encode } from '@msgpack/msgpack';
 import GameStateSerializer from './gameStateSerializer.js';
+import SaveValidationService from './saveValidationService.js';
 import {
   buildManualFileName,
   manualSavePath,
@@ -42,6 +42,7 @@ class SaveLoadService extends ISaveLoadService {
   #logger;
   #storageProvider;
   #serializer;
+  #validationService;
 
   /**
    * Creates a new SaveLoadService instance.
@@ -57,9 +58,18 @@ class SaveLoadService extends ISaveLoadService {
     storageProvider,
     crypto = globalThis.crypto,
     gameStateSerializer = null,
+    saveValidationService = null,
   }) {
     // <<< MODIFIED SIGNATURE with destructuring
     super();
+    this.#serializer =
+      gameStateSerializer || new GameStateSerializer({ logger, crypto });
+    this.#validationService =
+      saveValidationService ||
+      new SaveValidationService({
+        logger,
+        gameStateSerializer: this.#serializer,
+      });
     this.#logger = setupService('SaveLoadService', logger, {
       storageProvider: {
         value: storageProvider,
@@ -71,139 +81,18 @@ class SaveLoadService extends ISaveLoadService {
           'fileExists',
         ],
       },
+      saveValidationService: {
+        value: this.#validationService,
+        requiredMethods: [
+          'validateStructure',
+          'verifyChecksum',
+          'validateLoadedSaveObject',
+        ],
+      },
     });
     this.#storageProvider = storageProvider;
-    this.#serializer =
-      gameStateSerializer || new GameStateSerializer({ logger, crypto });
     this.#logger.debug('SaveLoadService initialized.');
   }
-
-  /**
-   * Builds a sanitized manual save filename.
-   *
-   * @param {string} saveName - Raw save name input.
-   * @returns {string} Sanitized filename including prefix and extension.
-   * @private
-   */
-
-  /**
-   * Verifies that the loaded save object contains all required sections.
-   *
-   * @param {SaveGameStructure} obj - The deserialized save object.
-   * @param {string} identifier - Identifier used for logging.
-   * @returns {import('./persistenceTypes.js').PersistenceResult<null>} Result.
-   * @private
-   */
-  #validateStructure(obj, identifier) {
-    const requiredSections = [
-      'metadata',
-      'modManifest',
-      'gameState',
-      'integrityChecks',
-    ];
-    for (const section of requiredSections) {
-      if (
-        !(section in obj) ||
-        typeof obj[section] !== 'object' ||
-        obj[section] === null
-      ) {
-        const devMsg = `Save file ${identifier} is missing or has invalid section: '${section}'.`;
-        const userMsg =
-          'The save file is incomplete or has an unknown format. It might be corrupted or from an incompatible game version.';
-        this.#logger.error(devMsg + ` User message: "${userMsg}"`);
-        return {
-          success: false,
-          error: new PersistenceError(
-            PersistenceErrorCodes.INVALID_GAME_STATE,
-            userMsg
-          ),
-        };
-      }
-    }
-    this.#logger.debug(
-      `Basic structure validation passed for ${identifier}. All required sections present.`
-    );
-    return { success: true };
-  }
-
-  /**
-   * Recalculates and compares the checksum against the stored value.
-   *
-   * @param {SaveGameStructure} obj - The deserialized save object.
-   * @param {string} identifier - Identifier used for logging.
-   * @returns {Promise<import('./persistenceTypes.js').PersistenceResult<null>>} Result.
-   * @private
-   */
-  async #verifyChecksum(obj, identifier) {
-    const storedChecksum = obj.integrityChecks.gameStateChecksum;
-    if (!storedChecksum || typeof storedChecksum !== 'string') {
-      const devMsg = `Save file ${identifier} is missing gameStateChecksum.`;
-      const userMsg =
-        'The save file is missing integrity information and cannot be safely loaded. It might be corrupted or from an incompatible older version.';
-      this.#logger.error(devMsg + ` User message: "${userMsg}"`);
-      return {
-        success: false,
-        error: new PersistenceError(
-          PersistenceErrorCodes.INVALID_GAME_STATE,
-          userMsg
-        ),
-      };
-    }
-
-    let recalculatedChecksum;
-    try {
-      const gameStateMessagePack = encode(obj.gameState);
-      recalculatedChecksum =
-        await this.#serializer.generateChecksum(gameStateMessagePack);
-    } catch (checksumError) {
-      const devMsg = `Error calculating checksum for gameState in ${identifier}: ${checksumError.message}.`;
-      const userMsg =
-        'Could not verify the integrity of the save file due to an internal error. The file might be corrupted.';
-      this.#logger.error(devMsg + ` User message: "${userMsg}"`, checksumError);
-      return {
-        success: false,
-        error: new PersistenceError(
-          PersistenceErrorCodes.CHECKSUM_CALCULATION_ERROR,
-          userMsg
-        ),
-      };
-    }
-
-    if (storedChecksum !== recalculatedChecksum) {
-      const devMsg = `Checksum mismatch for ${identifier}. Stored: ${storedChecksum}, Calculated: ${recalculatedChecksum}.`;
-      const userMsg =
-        'The save file appears to be corrupted (integrity check failed). Please try another save or a backup.';
-      this.#logger.error(devMsg + ` User message: "${userMsg}"`);
-      return {
-        success: false,
-        error: new PersistenceError(
-          PersistenceErrorCodes.CHECKSUM_MISMATCH,
-          userMsg
-        ),
-      };
-    }
-    this.#logger.debug(`Checksum VERIFIED for ${identifier}.`);
-    return { success: true };
-  }
-
-  /**
-   * Validates that a loaded save object contains required sections and that the
-   * stored checksum matches the recalculated checksum.
-   *
-   * @param {SaveGameStructure} obj - The deserialized save object.
-   * @param {string} identifier - Identifier used for logging.
-   * @returns {Promise<import('./persistenceTypes.js').PersistenceResult<null>>} Result.
-   * @private
-   */
-  async #validateLoadedSaveObject(obj, identifier) {
-    const structureResult = this.#validateStructure(obj, identifier);
-    if (!structureResult.success) {
-      return structureResult;
-    }
-
-    return this.#verifyChecksum(obj, identifier);
-  }
-
   /**
    * Ensures the provided save identifier is valid.
    *
@@ -489,10 +378,11 @@ class SaveLoadService extends ISaveLoadService {
       deserializationResult.data
     );
 
-    const validationResult = await this.#validateLoadedSaveObject(
-      loadedObject,
-      saveIdentifier
-    );
+    const validationResult =
+      await this.#validationService.validateLoadedSaveObject(
+        loadedObject,
+        saveIdentifier
+      );
     if (!validationResult.success) {
       return { success: false, error: validationResult.error, data: null };
     }

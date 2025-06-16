@@ -5,6 +5,7 @@ import GameStateCaptureService from '../../src/persistence/gameStateCaptureServi
 import ComponentCleaningService from '../../src/persistence/componentCleaningService.js';
 import receptionistDef from '../../data/mods/isekai/characters/receptionist.character.json';
 import { webcrypto } from 'crypto';
+import { createMockSaveValidationService } from '../testUtils.js';
 
 beforeAll(() => {
   if (typeof window !== 'undefined') {
@@ -72,10 +73,12 @@ describe('Persistence round-trip', () => {
   beforeEach(() => {
     logger = makeLogger();
     storageProvider = createMemoryStorageProvider();
+    const saveValidationService = createMockSaveValidationService();
     saveLoadService = new SaveLoadService({
       logger,
       storageProvider,
       crypto: webcrypto,
+      saveValidationService,
     });
 
     entity = makeEntity('e1', receptionistDef);

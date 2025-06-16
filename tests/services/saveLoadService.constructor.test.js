@@ -1,6 +1,7 @@
 import { describe, test, expect, jest } from '@jest/globals';
 import SaveLoadService from '../../src/persistence/saveLoadService.js';
 import { webcrypto } from 'crypto';
+import { createMockSaveValidationService } from '../testUtils.js';
 
 /**
  *
@@ -20,6 +21,7 @@ function makeDeps() {
       deleteFile: jest.fn(),
       fileExists: jest.fn(),
     },
+    saveValidationService: createMockSaveValidationService(),
   };
 }
 
@@ -31,6 +33,7 @@ describe('SaveLoadService constructor validation', () => {
         new SaveLoadService({
           storageProvider: deps.storageProvider,
           crypto: webcrypto,
+          saveValidationService: deps.saveValidationService,
         })
     ).toThrow();
   });
@@ -38,7 +41,12 @@ describe('SaveLoadService constructor validation', () => {
   test('throws if storageProvider missing', () => {
     const deps = makeDeps();
     expect(
-      () => new SaveLoadService({ logger: deps.logger, crypto: webcrypto })
+      () =>
+        new SaveLoadService({
+          logger: deps.logger,
+          crypto: webcrypto,
+          saveValidationService: deps.saveValidationService,
+        })
     ).toThrow();
   });
 });

@@ -43,3 +43,16 @@ export function createMockLogger() {
     error: jest.fn(),
   };
 }
+
+/**
+ * Creates a mock SaveValidationService with noop methods.
+ *
+ * @returns {{validateStructure: jest.Mock, verifyChecksum: jest.Mock, validateLoadedSaveObject: jest.Mock}}
+ */
+export function createMockSaveValidationService() {
+  return {
+    validateStructure: jest.fn().mockReturnValue({ success: true }),
+    verifyChecksum: jest.fn().mockResolvedValue({ success: true }),
+    validateLoadedSaveObject: jest.fn().mockResolvedValue({ success: true }),
+  };
+}

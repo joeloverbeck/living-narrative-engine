@@ -25,6 +25,38 @@ try {
 /** @typedef {import('./defs.js').JsonLogicEvaluationContext} JsonLogicEvaluationContext */
 
 /**
+ * Recursively scans a JSON Logic rule for {"var": "<path>"} patterns and logs a
+ * warning if the path contains square bracket characters.
+ *
+ * @param {*} rule - The JSON Logic rule or value to inspect.
+ * @param {ILogger} logger - Logger used to emit warnings.
+ * @private
+ */
+function warnOnBracketPaths(rule, logger) {
+  if (Array.isArray(rule)) {
+    rule.forEach((item) => warnOnBracketPaths(item, logger));
+    return;
+  }
+  if (rule && typeof rule === 'object') {
+    if (Object.prototype.hasOwnProperty.call(rule, 'var')) {
+      const value = rule.var;
+      const path =
+        typeof value === 'string'
+          ? value
+          : Array.isArray(value) && typeof value[0] === 'string'
+            ? value[0]
+            : null;
+      if (path && (path.includes('[') || path.includes(']'))) {
+        logger.warn(
+          `Invalid var path "${path}" contains unsupported brackets.`
+        );
+      }
+    }
+    Object.values(rule).forEach((v) => warnOnBracketPaths(v, logger));
+  }
+}
+
+/**
  * @class JsonLogicEvaluationService
  * Encapsulates the evaluation of JSON Logic rules using the 'json-logic-js' library.
  * This service provides a dedicated method to evaluate a given rule (typically a SystemRule condition)
@@ -76,6 +108,9 @@ class JsonLogicEvaluationService {
         return false;
       }
     }
+
+    // Scan for any var paths using unsupported bracket notation
+    warnOnBracketPaths(rule, this.#logger);
 
     const ruleSummary =
       JSON.stringify(rule).substring(0, 150) +

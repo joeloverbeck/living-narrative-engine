@@ -24,14 +24,10 @@ describe('createMessageElement', () => {
     expect(el.textContent).toBe('hello');
   });
 
-  it('returns text node when factory is missing', () => {
-    const node = createMessageElement(undefined, 'x', 'msg');
-    expect(node.nodeType).toBe(Node.TEXT_NODE);
-    expect(node.textContent).toBe('msg');
-  });
-
-  it('returns text node when factory fails to create', () => {
-    const badFactory = { p: () => null };
+  it.each([
+    ['factory is null', null],
+    ['p method returns null', { p: () => null }],
+  ])('falls back to text node when %s', (_desc, badFactory) => {
     const node = createMessageElement(badFactory, 'x', 'msg');
     expect(node.nodeType).toBe(Node.TEXT_NODE);
     expect(node.textContent).toBe('msg');

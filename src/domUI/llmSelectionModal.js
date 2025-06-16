@@ -4,6 +4,7 @@
 import { SlotModalBase } from './slotModalBase.js';
 import { createSelectableItem } from './helpers/createSelectableItem.js';
 import { buildModalElementsConfig } from './helpers/buildModalElementsConfig.js';
+import { setupRadioListNavigation } from '../utils/listNavigation.js';
 
 /**
  * @typedef {import('../interfaces/coreServices.js').ILogger} ILogger
@@ -306,6 +307,40 @@ export class LlmSelectionModal extends SlotModalBase {
   }
 
   /**
+   * Keyboard navigation handler for the LLM list.
+   *
+   * @param {KeyboardEvent} event - Key event to process.
+   * @private
+   */
+  _handleSlotNavigation(event) {
+    if (!this.elements.listContainerElement) return;
+
+    const arrowHandler = setupRadioListNavigation(
+      this.elements.listContainerElement,
+      'li.llm-item[role="radio"]',
+      this._datasetKey,
+      (el, value) => {
+        const slotData = this.currentSlotsDisplayData.find(
+          (s) => String(s[this._datasetKey]) === String(value)
+        );
+        if (slotData) this._onItemSelected(el, slotData);
+      }
+    );
+
+    arrowHandler(event);
+
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      const target = /** @type {HTMLElement} */ (event.target);
+      const value = target.dataset[this._datasetKey];
+      const slotData = this.currentSlotsDisplayData.find(
+        (s) => String(s[this._datasetKey]) === String(value)
+      );
+      if (slotData) this._onItemSelected(target, slotData);
+    }
+  }
+
+  /**
    * Orchestrates rendering the LLM list: fetches data, clears container,
    * renders items or empty message, and calls post-render hook.
    *
@@ -382,7 +417,7 @@ export class LlmSelectionModal extends SlotModalBase {
     const selectedData = this.currentSlotsDisplayData.find(
       (o) => String(o.configId) === String(selectedLlmId)
     ) || { configId: selectedLlmId };
-    this._handleSlotSelection(clickedItem, selectedData);
+    this._onItemSelected(clickedItem, selectedData);
     this._setOperationInProgress(true);
 
     try {

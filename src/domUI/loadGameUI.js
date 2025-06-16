@@ -2,6 +2,7 @@
 
 import { SlotModalBase } from './slotModalBase.js';
 import { DomUtils } from '../utils/domUtils.js';
+import { setupRadioListNavigation } from '../utils/listNavigation.js';
 import { formatSaveFileMetadata } from './helpers/slotDataFormatter.js';
 import { renderSlotItem } from './helpers/renderSlotItem.js';
 import { buildModalElementsConfig } from './helpers/buildModalElementsConfig.js';
@@ -354,7 +355,7 @@ class LoadGameUI extends SlotModalBase {
    * @private
    */
   _handleSlotSelection(selectedSlotElement, slotData) {
-    super._handleSlotSelection(selectedSlotElement, slotData);
+    super._onItemSelected(selectedSlotElement, slotData);
 
     const canLoad = !!(slotData && !slotData.isCorrupted);
     const canDelete = !!slotData;
@@ -371,6 +372,56 @@ class LoadGameUI extends SlotModalBase {
       );
     } else {
       this.logger.debug(`${this._logPrefix} Slot selection cleared.`);
+    }
+  }
+
+  /**
+   * Keyboard navigation handler for the slot list.
+   *
+   * @param {KeyboardEvent} event - Key event to process.
+   * @private
+   */
+  _handleSlotNavigation(event) {
+    if (!this.elements.listContainerElement) return;
+
+    const arrowHandler = setupRadioListNavigation(
+      this.elements.listContainerElement,
+      '.save-slot[role="radio"]',
+      this._datasetKey,
+      (el, value) => {
+        let slotData;
+        if (this._datasetKey === 'slotId') {
+          const slotId = parseInt(value || '-1', 10);
+          slotData = this.currentSlotsDisplayData.find(
+            (s) => s.slotId === slotId
+          );
+        } else {
+          slotData = this.currentSlotsDisplayData.find(
+            (s) => String(s[this._datasetKey]) === String(value)
+          );
+        }
+        if (slotData) this._handleSlotSelection(el, slotData);
+      }
+    );
+
+    arrowHandler(event);
+
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      const target = /** @type {HTMLElement} */ (event.target);
+      const value = target.dataset[this._datasetKey];
+      let slotData;
+      if (this._datasetKey === 'slotId') {
+        const slotId = parseInt(value || '-1', 10);
+        slotData = this.currentSlotsDisplayData.find(
+          (s) => s.slotId === slotId
+        );
+      } else {
+        slotData = this.currentSlotsDisplayData.find(
+          (s) => String(s[this._datasetKey]) === String(value)
+        );
+      }
+      if (slotData) this._handleSlotSelection(target, slotData);
     }
   }
 

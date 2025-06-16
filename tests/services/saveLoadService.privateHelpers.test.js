@@ -9,6 +9,7 @@ import {
 import SaveLoadService from '../../src/persistence/saveLoadService.js';
 import pako from 'pako';
 import { webcrypto } from 'crypto';
+import { createMockSaveValidationService } from '../testUtils.js';
 
 /**
  * @typedef {import('../../src/persistence/persistenceTypes.js').PersistenceResult<any>} PersistenceResult
@@ -48,20 +49,23 @@ function makeDeps() {
       fileExists: jest.fn(),
       ensureDirectoryExists: jest.fn(),
     },
+    saveValidationService: createMockSaveValidationService(),
   };
 }
 
 describe('SaveLoadService private helper error propagation', () => {
   let logger;
   let storageProvider;
+  let saveValidationService;
   let service;
 
   beforeEach(() => {
-    ({ logger, storageProvider } = makeDeps());
+    ({ logger, storageProvider, saveValidationService } = makeDeps());
     service = new SaveLoadService({
       logger,
       storageProvider,
       crypto: webcrypto,
+      saveValidationService,
     });
   });
 
@@ -102,14 +106,16 @@ describe('SaveLoadService private helper error propagation', () => {
 describe('SaveLoadService helper functions', () => {
   let logger;
   let storageProvider;
+  let saveValidationService;
   let service;
 
   beforeEach(() => {
-    ({ logger, storageProvider } = makeDeps());
+    ({ logger, storageProvider, saveValidationService } = makeDeps());
     service = new SaveLoadService({
       logger,
       storageProvider,
       crypto: webcrypto,
+      saveValidationService,
     });
   });
 
@@ -134,14 +140,16 @@ describe('SaveLoadService helper functions', () => {
 describe('SaveLoadService new private helper error paths', () => {
   let logger;
   let storageProvider;
+  let saveValidationService;
   let service;
 
   beforeEach(() => {
-    ({ logger, storageProvider } = makeDeps());
+    ({ logger, storageProvider, saveValidationService } = makeDeps());
     service = new SaveLoadService({
       logger,
       storageProvider,
       crypto: webcrypto,
+      saveValidationService,
     });
   });
 

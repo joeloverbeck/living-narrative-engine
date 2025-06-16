@@ -35,6 +35,7 @@ Purpose: Chronological log of events the character perceives (e.g., “Player X 
 Lifecycle: Capped by maxEntries (default 50).  
 Included in Prompt: Under “Perception Log”.  
 Schema ID: core:perception_log → `./data/mods/core/perception_log.component.json`
+Entries reference runtime entity IDs and aren’t resolved to instances.
 
 core:notes
 
@@ -160,7 +161,6 @@ The `game.json` file must be a JSON object containing a single required property
 
     {
       "mods": [
-        "core",
         "core",
         "base_adventure_mechanics",
         "my_custom_story_mod"
