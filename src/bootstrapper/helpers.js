@@ -77,4 +77,27 @@ export function setupButtonListener(
   }
 }
 
+/**
+ * @description Determines if the game engine should be stopped based on its current status.
+ * @param {import('../engine/gameEngine.js').default} gameEngine - The game engine instance to inspect.
+ * @returns {boolean} True if the engine is running and should be stopped.
+ */
+export function shouldStopEngine(gameEngine) {
+  return (
+    !!gameEngine &&
+    typeof gameEngine.getEngineStatus === 'function' &&
+    gameEngine.getEngineStatus().isLoopRunning === true
+  );
+}
+
+/**
+ * @description Attaches a 'beforeunload' event handler to the provided window reference.
+ * @param {Window} windowRef - The window object on which to listen for 'beforeunload'.
+ * @param {Function} handler - The event handler function.
+ * @returns {void}
+ */
+export function attachBeforeUnload(windowRef, handler) {
+  windowRef.addEventListener('beforeunload', handler);
+}
+
 // --- FILE END ---

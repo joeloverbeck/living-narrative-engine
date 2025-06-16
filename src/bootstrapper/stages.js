@@ -6,7 +6,11 @@ import AppContainer from '../dependencyInjection/appContainer.js'; // Corrected 
 import GameEngine from '../engine/gameEngine.js';
 
 import { initializeAuxiliaryServicesStage } from './auxiliaryStages.js';
-import { setupButtonListener } from './helpers.js';
+import {
+  setupButtonListener,
+  shouldStopEngine,
+  attachBeforeUnload,
+} from './helpers.js';
 export { initializeAuxiliaryServicesStage };
 // eslint-disable-next-line no-unused-vars
 import { tokens } from '../dependencyInjection/tokens.js'; // Corrected path assuming tokens.js is in ../dependencyInjection/
@@ -294,36 +298,30 @@ export async function setupGlobalEventListenersStage(
       );
     }
 
-    windowRef.addEventListener(eventName, () => {
-      if (
-        gameEngine &&
-        gameEngine.getEngineStatus &&
-        typeof gameEngine.getEngineStatus === 'function' &&
-        gameEngine.getEngineStatus().isLoopRunning
-      ) {
-        logger.debug(
-          `${stageName}: '${eventName}' event triggered. Attempting to stop game engine.`
-        );
-        gameEngine.stop().catch((stopError) => {
-          logger.error(
-            `${stageName}: Error during gameEngine.stop() in '${eventName}':`,
-            stopError
-          );
-        });
-      } else if (
-        gameEngine &&
-        gameEngine.getEngineStatus &&
-        typeof gameEngine.getEngineStatus === 'function' &&
-        !gameEngine.getEngineStatus().isLoopRunning
-      ) {
-        logger.debug(
-          `${stageName}: '${eventName}' event triggered, but game engine loop is not running. No action taken to stop.`
-        );
-      } else if (!gameEngine) {
+    attachBeforeUnload(windowRef, () => {
+      if (!gameEngine) {
         logger.warn(
           `${stageName}: '${eventName}' event triggered, but gameEngine instance is not available. Cannot attempt graceful shutdown.`
         );
+        return;
       }
+
+      if (!shouldStopEngine(gameEngine)) {
+        logger.debug(
+          `${stageName}: '${eventName}' event triggered, but game engine loop is not running. No action taken to stop.`
+        );
+        return;
+      }
+
+      logger.debug(
+        `${stageName}: '${eventName}' event triggered. Attempting to stop game engine.`
+      );
+      gameEngine.stop().catch((stopError) => {
+        logger.error(
+          `${stageName}: Error during gameEngine.stop() in '${eventName}':`,
+          stopError
+        );
+      });
     });
 
     logger.debug(
