@@ -4,9 +4,9 @@
 
 /** @typedef {import('./defs.js').OperationHandler} OperationHandler */
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
-import { setupService } from '../utils/serviceInitializerUtils.js';
+import BaseService from '../utils/baseService.js';
 
-class OperationRegistry {
+class OperationRegistry extends BaseService {
   /** @type {Map<string, OperationHandler>} */ #registry = new Map();
   /** @type {ILogger|null}                  */ #logger = null;
 
@@ -17,7 +17,8 @@ class OperationRegistry {
    * @param {ILogger} [options.logger] - Logging service.
    */
   constructor({ logger } = {}) {
-    this.#logger = setupService('OperationRegistry', logger);
+    super();
+    this.#logger = this._init('OperationRegistry', logger);
     this.#logger.info('OperationRegistry initialized.');
   }
 

@@ -8,7 +8,7 @@ import { createJsonLogicContext } from './contextAssembler.js';
 import { ATTEMPT_ACTION_ID } from '../constants/eventIds.js';
 import { REQUIRED_ENTITY_MANAGER_METHODS } from '../constants/entityManager.js';
 import { evaluateConditionWithLogging } from './jsonLogicEvaluationService.js';
-import { setupService } from '../utils/serviceInitializerUtils.js';
+import BaseService from '../utils/baseService.js';
 import { executeActionSequence } from './actionSequence.js';
 
 /* ---------------------------------------------------------------------------
@@ -27,7 +27,7 @@ import { executeActionSequence } from './actionSequence.js';
 /* ---------------------------------------------------------------------------
  * Class
  * ------------------------------------------------------------------------- */
-class SystemLogicInterpreter {
+class SystemLogicInterpreter extends BaseService {
   /** @type {ILogger} */ #logger;
   /** @type {EventBus} */ #eventBus;
   /** @type {IDataRegistry} */ #dataRegistry;
@@ -47,7 +47,8 @@ class SystemLogicInterpreter {
     entityManager,
     operationInterpreter,
   }) {
-    this.#logger = setupService('SystemLogicInterpreter', logger, {
+    super();
+    this.#logger = this._init('SystemLogicInterpreter', logger, {
       eventBus: {
         value: eventBus,
         requiredMethods: ['subscribe', 'unsubscribe'],
