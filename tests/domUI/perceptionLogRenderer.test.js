@@ -11,6 +11,7 @@ import {
 import { JSDOM } from 'jsdom';
 import { PerceptionLogRenderer } from '../../src/domUI/perceptionLogRenderer.js';
 import { TURN_STARTED_ID } from '../../src/constants/eventIds.js';
+import * as createMessageElementModule from '../../src/domUI/helpers/createMessageElement.js';
 
 jest.mock('../../src/logging/consoleLogger.js');
 jest.mock('../../src/events/validatedEventDispatcher.js');
@@ -26,6 +27,8 @@ describe('PerceptionLogRenderer', () => {
   let mockLogger;
   let mockVed;
   let mockDomElementFactoryInstance;
+  /** @type {jest.SpiedFunction<typeof createMessageElementModule.createMessageElement>} */
+  let createMessageElementSpy;
   let mockEntityManager;
   let mockDocumentContext;
   let listContainerElementInDom;
@@ -121,6 +124,8 @@ describe('PerceptionLogRenderer', () => {
         return p;
       }),
     };
+
+    createMessageElementSpy = jest.spyOn(createMessageElementModule, 'default');
 
     mockEntityManager = {
       getEntityInstance: jest.fn(),
@@ -401,7 +406,7 @@ describe('PerceptionLogRenderer', () => {
         .mockRejectedValue(new Error('Simulated refreshList failure'));
 
       mockLogger.error.mockClear(); // Clear previous logs
-      mockDomElementFactoryInstance.p.mockClear();
+      createMessageElementSpy.mockClear();
       if (listContainerElementInDom)
         listContainerElementInDom.appendChild.mockClear();
 
@@ -420,16 +425,17 @@ describe('PerceptionLogRenderer', () => {
         ),
         expect.objectContaining({ message: 'Simulated refreshList failure' })
       );
-      expect(mockDomElementFactoryInstance.p).toHaveBeenCalledWith(
+      expect(createMessageElementSpy).toHaveBeenCalledWith(
+        mockDomElementFactoryInstance,
         'error-message',
         'Error updating perception log.'
       );
       if (
         listContainerElementInDom &&
-        mockDomElementFactoryInstance.p.mock.results[0]
+        createMessageElementSpy.mock.results[0]
       ) {
         expect(listContainerElementInDom.appendChild).toHaveBeenCalledWith(
-          mockDomElementFactoryInstance.p.mock.results[0].value
+          createMessageElementSpy.mock.results[0].value
         );
       }
     });
@@ -479,16 +485,17 @@ describe('PerceptionLogRenderer', () => {
       createRenderer();
       await flushPromises();
 
-      expect(mockDomElementFactoryInstance.p).toHaveBeenCalledWith(
+      expect(createMessageElementSpy).toHaveBeenCalledWith(
+        mockDomElementFactoryInstance,
         'empty-list-message',
         'No actor selected.'
       );
       if (
         listContainerElementInDom &&
-        mockDomElementFactoryInstance.p.mock.results[0]
+        createMessageElementSpy.mock.results[0]
       ) {
         expect(listContainerElementInDom.appendChild).toHaveBeenCalledWith(
-          mockDomElementFactoryInstance.p.mock.results[0].value
+          createMessageElementSpy.mock.results[0].value
         );
       }
     });

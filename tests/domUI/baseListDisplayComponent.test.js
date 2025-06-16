@@ -14,6 +14,7 @@ import { DomUtils } from '../../src/utils/domUtils.js';
 import DocumentContext from '../../src/domUI/documentContext.js';
 import DomElementFactory from '../../src/domUI/domElementFactory.js';
 import { BoundDomRendererBase } from '../../src/domUI/boundDomRendererBase.js'; // For spyOn prototype
+import * as createMessageElementModule from '../../src/domUI/helpers/createMessageElement.js';
 
 // Mock DomUtils
 jest.mock('../../src/utils/domUtils.js', () => ({
@@ -40,6 +41,8 @@ describe('BaseListDisplayComponent', () => {
   let mockDocumentContext;
   let mockValidatedEventDispatcher;
   let mockDomElementFactory;
+  /** @type {jest.SpiedFunction<typeof createMessageElementModule.createMessageElement>} */
+  let createMessageElementSpy;
   let listContainerElement;
   let dom;
   let mockWindow; // Added
@@ -76,6 +79,7 @@ describe('BaseListDisplayComponent', () => {
     mockDomElementFactory = new DomElementFactory(mockDocumentContext);
     jest.spyOn(mockDomElementFactory, 'p');
     jest.spyOn(mockDomElementFactory, 'create');
+    createMessageElementSpy = jest.spyOn(createMessageElementModule, 'default');
 
     // Reset DomUtils mocks
     DomUtils.clearElement.mockClear();
@@ -83,6 +87,9 @@ describe('BaseListDisplayComponent', () => {
 
   afterEach(() => {
     jest.clearAllMocks();
+    if (createMessageElementSpy) {
+      createMessageElementSpy.mockRestore();
+    }
     // ---- START Global Cleanup ----
     if (mockWindow) mockWindow.close();
     global.window = undefined;
@@ -190,12 +197,13 @@ describe('BaseListDisplayComponent', () => {
 
         const mockParagraph = dom.window.document.createElement('p');
         mockParagraph.textContent = emptyMsg;
-        mockDomElementFactory.p.mockReturnValue(mockParagraph);
+        createMessageElementSpy.mockReturnValue(mockParagraph);
 
         await instance.renderList();
 
         expect(instance._getEmptyListMessage).toHaveBeenCalledTimes(1);
-        expect(mockDomElementFactory.p).toHaveBeenCalledWith(
+        expect(createMessageElementSpy).toHaveBeenCalledWith(
+          mockDomElementFactory,
           'empty-list-message',
           emptyMsg
         );
