@@ -9,7 +9,9 @@ import commonSchema from '../../../data/schemas/common.schema.json';
 import operationSchema from '../../../data/schemas/operation.schema.json';
 import jsonLogicSchema from '../../../data/schemas/json-logic.schema.json';
 import loadOperationSchemas from '../../helpers/loadOperationSchemas.js';
+import loadConditionSchemas from '../../helpers/loadConditionSchemas.js';
 import getCloseRule from '../../../data/mods/intimacy/rules/get_close.rule.json';
+import eventIsActionGetClose from '../../../data/mods/intimacy/conditions/event-is-action-get-close.condition.json';
 import SystemLogicInterpreter from '../../../src/logic/systemLogicInterpreter.js';
 import OperationInterpreter from '../../../src/logic/operationInterpreter.js';
 import OperationRegistry from '../../../src/logic/operationRegistry.js';
@@ -139,7 +141,10 @@ function init(entities) {
     operationRegistry,
   });
 
-  jsonLogic = new JsonLogicEvaluationService({ logger });
+  jsonLogic = new JsonLogicEvaluationService({
+    logger,
+    gameDataRepository: dataRegistry,
+  });
 
   interpreter = new SystemLogicInterpreter({
     logger,
@@ -193,12 +198,15 @@ describe('intimacy_handle_get_close rule integration', () => {
           ? logSuccessAndEndTurn
           : undefined,
     };
-    const expandedRule = {
+  const expandedRule = {
       ...getCloseRule,
       actions: expandMacros(getCloseRule.actions, macroRegistry, logger),
     };
     dataRegistry = {
       getAllSystemRules: jest.fn().mockReturnValue([expandedRule]),
+      getConditionDefinition: jest.fn((id) =>
+        id === 'intimacy:event-is-action-get-close' ? eventIsActionGetClose : undefined
+      ),
     };
 
     // The context-aware mocks are no longer needed, so they are removed.
@@ -220,6 +228,7 @@ describe('intimacy_handle_get_close rule integration', () => {
       'http://example.com/schemas/operation.schema.json'
     );
     loadOperationSchemas(ajv);
+    loadConditionSchemas(ajv);
     ajv.addSchema(
       jsonLogicSchema,
       'http://example.com/schemas/json-logic.schema.json'
