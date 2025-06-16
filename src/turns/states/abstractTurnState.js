@@ -100,6 +100,30 @@ export class AbstractTurnState extends ITurnState {
     }
   }
 
+  /**
+   * Ensures a valid ITurnContext exists. If not, logs an error and resets
+   * the handler to an idle state.
+   *
+   * @protected
+   * @async
+   * @param {string} reason - Reason passed to the idle reset helper.
+   * @param {BaseTurnHandler} [handler] - Optional handler for
+   *   resolving a logger.
+   * @returns {Promise<ITurnContext | null>} The current ITurnContext or null if
+   *   none is available.
+   */
+  async _ensureContext(reason, handler = this._handler) {
+    const ctx = this._getTurnContext();
+    if (!ctx) {
+      this._resolveLogger(null, handler).error(
+        `${this.getStateName()}: No ITurnContext available. Resetting to idle.`
+      );
+      await this._resetToIdle(reason);
+      return null;
+    }
+    return ctx;
+  }
+
   /* Resolves a logger using the provided context or handler.
    *
    * @protected
