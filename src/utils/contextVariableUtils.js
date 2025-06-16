@@ -1,6 +1,6 @@
 // src/utils/contextVariableUtils.js
 
-import { getPrefixedLogger } from './loggerUtils.js';
+import { getModuleLogger } from './loggerUtils.js';
 import { safeDispatchError } from './safeDispatchErrorUtils.js';
 import { SafeEventDispatcher } from '../events/safeEventDispatcher.js';
 
@@ -18,7 +18,7 @@ import { SafeEventDispatcher } from '../events/safeEventDispatcher.js';
  * @returns {boolean} `true` if the value was stored successfully, otherwise `false`.
  */
 export function storeResult(variableName, value, execCtx, dispatcher, logger) {
-  const log = getPrefixedLogger(logger, '[contextVariableUtils] ');
+  const log = getModuleLogger('contextVariableUtils', logger);
 
   let safeDispatcher = dispatcher;
   if (!safeDispatcher && execCtx?.validatedEventDispatcher) {
@@ -86,7 +86,7 @@ export function setContextValue(
 ) {
   const trimmedName =
     typeof variableName === 'string' ? variableName.trim() : '';
-  const log = getPrefixedLogger(logger, '[contextVariableUtils] ');
+  const log = getModuleLogger('contextVariableUtils', logger);
 
   if (!trimmedName) {
     let safeDispatcher = dispatcher;

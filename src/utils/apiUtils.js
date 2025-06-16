@@ -1,6 +1,6 @@
 // src/utils/apiUtils.js
 // --- FILE START ---
-import { getPrefixedLogger } from './loggerUtils.js';
+import { getModuleLogger } from './loggerUtils.js';
 import { safeDispatchError } from './safeDispatchErrorUtils.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../constants/eventIds.js';
 
@@ -61,7 +61,7 @@ export async function Workspace_retry(
   safeEventDispatcher,
   logger
 ) {
-  const log = getPrefixedLogger(logger, '[Workspace_retry] ');
+  const log = getModuleLogger('Workspace_retry', logger);
   // This internal recursive function handles the actual fetch attempts and retry logic.
   // It's called by Workspace_retry with the initial attempt number.
   /**

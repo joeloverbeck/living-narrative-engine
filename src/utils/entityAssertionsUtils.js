@@ -10,7 +10,7 @@
  */
 
 import { isNonBlankString } from './textUtils.js';
-import { getPrefixedLogger } from './loggerUtils.js';
+import { getModuleLogger } from './loggerUtils.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../constants/eventIds.js';
 
 /**
@@ -29,7 +29,7 @@ export function assertValidEntity(
   contextName = 'UnknownContext',
   safeEventDispatcher
 ) {
-  const log = getPrefixedLogger(logger, '[EntityValidation] ');
+  const log = getModuleLogger('EntityValidation', logger);
   if (!entity || !isNonBlankString(entity.id)) {
     const errMsg = `${contextName}: entity is required and must have a valid id.`;
     const payload = {
