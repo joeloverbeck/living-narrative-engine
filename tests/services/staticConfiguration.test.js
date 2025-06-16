@@ -14,6 +14,8 @@ const EXPECTED_SCHEMA_FILES = [
   'action-definition.schema.json',
   'action-result.schema.json',
   'component-definition.schema.json',
+  'condition.schema.json',
+  'condition-container.schema.json',
   'entity.schema.json',
   'event-definition.schema.json',
   'game.schema.json',
@@ -64,22 +66,27 @@ const EXPECTED_CONTENT_TYPE_SCHEMAS = {
   actions: 'http://example.com/schemas/action-definition.schema.json',
   blockers: 'http://example.com/schemas/entity.schema.json',
   components: 'http://example.com/schemas/component-definition.schema.json',
+  conditions: 'http://example.com/schemas/condition.schema.json',
   connections: 'http://example.com/schemas/entity.schema.json',
   entities: 'http://example.com/schemas/entity.schema.json',
   events: 'http://example.com/schemas/event-definition.schema.json',
+  game: 'http://example.com/schemas/game.schema.json',
   items: 'http://example.com/schemas/entity.schema.json',
   locations: 'http://example.com/schemas/entity.schema.json',
+  'mod-manifest': 'http://example.com/schemas/mod.manifest.schema.json',
   macros: 'http://example.com/schemas/macro.schema.json',
   operations: 'http://example.com/schemas/operation.schema.json',
   rules: 'http://example.com/schemas/rule.schema.json',
+  'llm-configs': 'http://example.com/schemas/llm-configs.schema.json',
   'prompt-text': 'http://example.com/schemas/prompt-text.schema.json',
   'ui-icons': 'http://example.com/schemas/ui-icons.schema.json',
   'ui-labels': 'http://example.com/schemas/ui-labels.schema.json',
 };
 
-// Source: this.#manifestSchemaId = CONTENT_TYPE_SCHEMAS.manifest;
+// Source: this.#manifestSchemaId = CONTENT_TYPE_SCHEMAS['mod-manifest'];
 // eslint-disable-next-line no-unused-vars
-const EXPECTED_MANIFEST_SCHEMA_ID = EXPECTED_CONTENT_TYPE_SCHEMAS.manifest;
+const EXPECTED_MANIFEST_SCHEMA_ID =
+  EXPECTED_CONTENT_TYPE_SCHEMAS['mod-manifest'];
 
 // Expected derived paths
 // eslint-disable-next-line no-unused-vars
