@@ -141,13 +141,15 @@ function resolvePlaceholderPath(
  * @param {object} executionContext - The top-level context object (e.g., finalNestedExecutionContext) to resolve paths against.
  * @param {ILogger} [logger] - Optional logger for warnings.
  * @param {string} [currentPath] - Internal use for logging nested resolution issues.
+ * @param {Iterable<string>} [skipKeys] - Keys to skip when resolving object properties at the current level.
  * @returns {*} A new structure with placeholders resolved, or the original input if no placeholders were found or resolution failed.
  */
 export function resolvePlaceholders(
   input,
   executionContext,
   logger,
-  currentPath = ''
+  currentPath = '',
+  skipKeys = []
 ) {
   if (typeof input === 'string') {
     const fullMatch = input.match(FULL_STRING_PLACEHOLDER_REGEX);
@@ -277,16 +279,23 @@ export function resolvePlaceholders(
     for (const key in input) {
       if (Object.prototype.hasOwnProperty.call(input, key)) {
         const originalValue = input[key];
-        const resolvedValue = resolvePlaceholders(
-          originalValue,
-          executionContext,
-          logger,
-          `${currentPath}.${key}`
-        );
-        if (resolvedValue !== originalValue) {
-          changed = true;
+        if (
+          (skipKeys instanceof Set && skipKeys.has(key)) ||
+          (Array.isArray(skipKeys) && skipKeys.includes(key))
+        ) {
+          resolvedObj[key] = originalValue;
+        } else {
+          const resolvedValue = resolvePlaceholders(
+            originalValue,
+            executionContext,
+            logger,
+            `${currentPath}.${key}`
+          );
+          if (resolvedValue !== originalValue) {
+            changed = true;
+          }
+          resolvedObj[key] = resolvedValue;
         }
-        resolvedObj[key] = resolvedValue;
       }
     }
     return changed ? resolvedObj : input;
