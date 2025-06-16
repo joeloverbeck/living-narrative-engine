@@ -32,6 +32,7 @@ jest.mock('../../src/modding/modLoadOrderResolver.js', () => ({
 /** @typedef {import('../../src/loaders/actionLoader.js').default} ActionLoader */
 /** @typedef {import('../../src/loaders/eventLoader.js').default} EventLoader */
 /** @typedef {import('../../src/loaders/componentLoader.js').default} ComponentLoader */
+/** @typedef {import('../../src/loaders/conditionLoader.js').default} ConditionLoader */
 /** @typedef {import('../../src/loaders/ruleLoader.js').default} RuleLoader */
 /** @typedef {import('../../src/loaders/schemaLoader.js').default} SchemaLoader */
 /** @typedef {import('../../src/loaders/gameConfigLoader.js').default} GameConfigLoader */
@@ -53,6 +54,8 @@ describe('WorldLoader Integration Test Suite - Partial/Empty Content (TEST-LOADE
   let mockSchemaLoader;
   /** @type {jest.Mocked<ComponentLoader>} */
   let mockComponentLoader;
+  /** @type {jest.Mocked<ConditionLoader>} */
+  let mockConditionLoader;
   /** @type {jest.Mocked<RuleLoader>} */
   let mockRuleLoader;
   /** @type {jest.Mocked<ActionLoader>} */
@@ -210,6 +213,7 @@ describe('WorldLoader Integration Test Suite - Partial/Empty Content (TEST-LOADE
     // Mock individual content loaders
     mockActionLoader = { loadItemsForMod: jest.fn() };
     mockComponentLoader = { loadItemsForMod: jest.fn() };
+    mockConditionLoader = { loadItemsForMod: jest.fn() };
     mockEventLoader = { loadItemsForMod: jest.fn() }; // Will assert this isn't called
     mockRuleLoader = { loadItemsForMod: jest.fn() };
     mockEntityLoader = { loadItemsForMod: jest.fn() };
@@ -382,6 +386,7 @@ describe('WorldLoader Integration Test Suite - Partial/Empty Content (TEST-LOADE
       logger: mockLogger,
       schemaLoader: mockSchemaLoader,
       componentLoader: mockComponentLoader,
+      conditionLoader: mockConditionLoader,
       ruleLoader: mockRuleLoader,
       actionLoader: mockActionLoader,
       eventLoader: mockEventLoader,
