@@ -10,6 +10,7 @@ import SaveLoadService from '../../src/persistence/saveLoadService.js';
 import pako from 'pako';
 import { webcrypto } from 'crypto';
 import { TextEncoder, TextDecoder } from 'util';
+import { createMockSaveValidationService } from '../testUtils.js';
 
 /**
  * @typedef {import('../../src/persistence/persistenceTypes.js').PersistenceResult<any>} PersistenceResult
@@ -56,20 +57,23 @@ function makeDeps() {
       fileExists: jest.fn(),
       ensureDirectoryExists: jest.fn(),
     },
+    saveValidationService: createMockSaveValidationService(),
   };
 }
 
 describe('SaveLoadService error paths', () => {
   let logger;
   let storageProvider;
+  let saveValidationService;
   let service;
 
   beforeEach(() => {
-    ({ logger, storageProvider } = makeDeps());
+    ({ logger, storageProvider, saveValidationService } = makeDeps());
     service = new SaveLoadService({
       logger,
       storageProvider,
       crypto: webcrypto,
+      saveValidationService,
     });
     global.encodeMock = jest.fn();
     global.decodeMock = jest.fn();

@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeAll, jest } from '@jest/globals';
 import SaveLoadService from '../../src/persistence/saveLoadService.js';
 import { webcrypto } from 'crypto';
+import { createMockSaveValidationService } from '../testUtils.js';
 
 beforeAll(() => {
   if (typeof window !== 'undefined') {
@@ -34,16 +35,18 @@ function makeDeps() {
       fileExists: jest.fn(),
       // intentionally no ensureDirectoryExists
     },
+    saveValidationService: createMockSaveValidationService(),
   };
 }
 
 describe('SaveLoadService without ensureDirectoryExists', () => {
   it('saves successfully when directory helper is absent', async () => {
-    const { logger, storageProvider } = makeDeps();
+    const { logger, storageProvider, saveValidationService } = makeDeps();
     const service = new SaveLoadService({
       logger,
       storageProvider,
       crypto: webcrypto,
+      saveValidationService,
     });
 
     storageProvider.writeFileAtomically.mockResolvedValue({ success: true });
