@@ -8,8 +8,6 @@ import ruleSchema from '../../../data/schemas/rule.schema.json';
 import commonSchema from '../../../data/schemas/common.schema.json';
 import operationSchema from '../../../data/schemas/operation.schema.json';
 import jsonLogicSchema from '../../../data/schemas/json-logic.schema.json';
-import conditionSchema from '../../../data/schemas/condition.schema.json';
-import conditionContainerSchema from '../../../data/schemas/condition-container.schema.json';
 import loadOperationSchemas from '../../helpers/loadOperationSchemas.js';
 import loadConditionSchemas from '../../helpers/loadConditionSchemas.js';
 import getCloseRule from '../../../data/mods/intimacy/rules/get_close.rule.json';
@@ -84,8 +82,10 @@ class SimpleEntityManager {
 }
 
 /**
+ * Initializes core services and registers operation handlers for tests.
  *
- * @param entities
+ * @param {Array<object>} entities - Initial entity definitions
+ * @returns {void}
  */
 function init(entities) {
   operationRegistry = new OperationRegistry({ logger });
@@ -195,14 +195,16 @@ describe('intimacy_handle_get_close rule integration', () => {
           ? logSuccessAndEndTurn
           : undefined,
     };
-  const expandedRule = {
+    const expandedRule = {
       ...getCloseRule,
       actions: expandMacros(getCloseRule.actions, macroRegistry, logger),
     };
     dataRegistry = {
       getAllSystemRules: jest.fn().mockReturnValue([expandedRule]),
       getConditionDefinition: jest.fn((id) =>
-        id === 'intimacy:event-is-action-get-close' ? eventIsActionGetClose : undefined
+        id === 'intimacy:event-is-action-get-close'
+          ? eventIsActionGetClose
+          : undefined
       ),
     };
 
@@ -229,14 +231,6 @@ describe('intimacy_handle_get_close rule integration', () => {
     ajv.addSchema(
       jsonLogicSchema,
       'http://example.com/schemas/json-logic.schema.json'
-    );
-    ajv.addSchema(
-      conditionContainerSchema,
-      'http://example.com/schemas/condition-container.schema.json'
-    );
-    ajv.addSchema(
-      conditionSchema,
-      'http://example.com/schemas/condition.schema.json'
     );
     const valid = ajv.validate(ruleSchema, getCloseRule);
     if (!valid) console.error(ajv.errors);
