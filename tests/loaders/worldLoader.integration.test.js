@@ -29,6 +29,7 @@ jest.mock('../../src/modding/modLoadOrderResolver.js', () => ({
 /** @typedef {import('../../src/loaders/macroLoader.js').default} MacroLoader */
 /** @typedef {import('../../src/loaders/componentLoader.js').default} ComponentLoader */
 /** @typedef {import('../../src/loaders/ruleLoader.js').default} RuleLoader */
+/** @typedef {import('../../src/loaders/conditionLoader.js').default} ConditionLoader */
 /** @typedef {import('../../src/loaders/schemaLoader.js').default} SchemaLoader */
 /** @typedef {import('../../src/loaders/gameConfigLoader.js').default} GameConfigLoader */
 /** @typedef {import('../../src/modding/modManifestLoader.js').default} ModManifestLoader */
@@ -51,6 +52,8 @@ describe('WorldLoader Integration Test Suite (TEST-LOADER-7.1)', () => {
   let mockComponentLoader;
   /** @type {jest.Mocked<RuleLoader>} */
   let mockRuleLoader;
+  /** @type {jest.Mocked<ConditionLoader>} */
+  let mockConditionLoader;
   /** @type {jest.Mocked<ActionLoader>} */
   let mockActionLoader;
   /** @type {jest.Mocked<EventLoader>} */
@@ -151,6 +154,7 @@ describe('WorldLoader Integration Test Suite (TEST-LOADER-7.1)', () => {
     mockEventLoader = { loadItemsForMod: jest.fn() };
     mockMacroLoader = { loadItemsForMod: jest.fn() };
     mockRuleLoader = { loadItemsForMod: jest.fn() };
+    mockConditionLoader = { loadItemsForMod: jest.fn() };
     mockEntityLoader = { loadItemsForMod: jest.fn() };
 
     mockValidatedEventDispatcher = {
@@ -204,6 +208,7 @@ describe('WorldLoader Integration Test Suite (TEST-LOADER-7.1)', () => {
         'schema:actions', // <<< Required by WorldLoader
         'schema:events', // <<< Required by WorldLoader
         'schema:rules', // <<< Required by WorldLoader
+        'schema:conditions', // <<< Newly required by WorldLoader
       ];
       const isLoaded = essentialSchemas.includes(schemaId);
       // Optional: Add logging here to see exactly which schemas are being checked
@@ -284,6 +289,7 @@ describe('WorldLoader Integration Test Suite (TEST-LOADER-7.1)', () => {
       logger: mockLogger,
       schemaLoader: mockSchemaLoader,
       componentLoader: mockComponentLoader,
+      conditionLoader: mockConditionLoader,
       macroLoader: mockMacroLoader,
       ruleLoader: mockRuleLoader,
       actionLoader: mockActionLoader,
@@ -326,6 +332,9 @@ describe('WorldLoader Integration Test Suite (TEST-LOADER-7.1)', () => {
     expect(mockValidator.isSchemaLoaded).toHaveBeenCalledWith('schema:actions'); // <<< Added check
     expect(mockValidator.isSchemaLoaded).toHaveBeenCalledWith('schema:events'); // <<< Added check
     expect(mockValidator.isSchemaLoaded).toHaveBeenCalledWith('schema:rules'); // <<< Added check
+    expect(mockValidator.isSchemaLoaded).toHaveBeenCalledWith(
+      'schema:conditions'
+    ); // <<< Added check
 
     // 4. Verify gameConfigLoader.loadConfig was called.
     expect(mockGameConfigLoader.loadConfig).toHaveBeenCalledTimes(1);
@@ -421,6 +430,7 @@ describe('WorldLoader Integration Test Suite (TEST-LOADER-7.1)', () => {
     // Check loaders for types NOT in manifest were NOT called
     expect(mockEventLoader.loadItemsForMod).not.toHaveBeenCalled();
     expect(mockRuleLoader.loadItemsForMod).not.toHaveBeenCalled();
+    expect(mockConditionLoader.loadItemsForMod).not.toHaveBeenCalled();
     // Check EntityLoader wasn't called for other keys it handles but aren't in manifest
     expect(mockEntityLoader.loadItemsForMod).not.toHaveBeenCalledWith(
       expect.anything(),
@@ -483,6 +493,11 @@ describe('WorldLoader Integration Test Suite (TEST-LOADER-7.1)', () => {
       expect.any(String),
       expect.any(Object)
     );
+    expect(mockRegistry.store).not.toHaveBeenCalledWith(
+      'conditions',
+      expect.any(String),
+      expect.any(Object)
+    );
 
     // 14. Verify final load summary log.
     const infoCalls = mockLogger.info.mock.calls;
@@ -493,25 +508,48 @@ describe('WorldLoader Integration Test Suite (TEST-LOADER-7.1)', () => {
 
     const summaryLines = infoCalls.slice(summaryStart).map((call) => call[0]);
 
-    // Use toEqual(expect.arrayContaining(...)) for flexibility in log order/content
-    expect(summaryLines).toEqual(
-      expect.arrayContaining([
-        expect.stringContaining(
-          `WorldLoader Load Summary (World: '${worldName}')`
-        ),
-        expect.stringContaining(`Requested Mods (raw): [${CORE_MOD_ID}]`),
-        expect.stringContaining(`Final Load Order    : [${CORE_MOD_ID}]`),
-        expect.stringContaining(`Content Loading Summary (Totals):`),
-        // Adjust regex to match the new C:X, O:Y, E:Z format from WorldLoader
-        expect.stringMatching(/actions\s+: C:2, O:0, E:0/),
-        expect.stringMatching(/characters\s+: C:1, O:0, E:0/),
-        expect.stringMatching(/components\s+: C:1, O:0, E:0/),
-        expect.stringContaining('———————————————————————————————————————————'),
-      ])
+    // Verify key summary lines are present
+    expect(
+      summaryLines.some((l) =>
+        l.includes(`WorldLoader Load Summary (World: '${worldName}')`)
+      )
+    ).toBe(true);
+    expect(
+      summaryLines.some((l) =>
+        l.includes(`Requested Mods (raw): [${CORE_MOD_ID}]`)
+      )
+    ).toBe(true);
+    expect(
+      summaryLines.some((l) =>
+        l.includes(`Final Load Order     : [${CORE_MOD_ID}]`)
+      )
+    ).toBe(true);
+    expect(
+      summaryLines.some((l) => l.includes(`Content Loading Summary (Totals):`))
+    ).toBe(true);
+    expect(summaryLines.some((l) => /actions\s+: C:2, O:0, E:0/.test(l))).toBe(
+      true
     );
+    expect(
+      summaryLines.some((l) => /characters\s+: C:1, O:0, E:0/.test(l))
+    ).toBe(true);
+    expect(
+      summaryLines.some((l) => /components\s+: C:1, O:0, E:0/.test(l))
+    ).toBe(true);
+    expect(summaryLines.some((l) => /macros\s+: C:2, O:0, E:0/.test(l))).toBe(
+      true
+    );
+    expect(
+      summaryLines.some((l) =>
+        l.includes('———————————————————————————————————————————')
+      )
+    ).toBe(true);
     // Ensure types not loaded aren't in the summary counts
     expect(summaryLines.some((line) => /events\s+:/.test(line))).toBe(false);
     expect(summaryLines.some((line) => /rules\s+:/.test(line))).toBe(false);
+    expect(summaryLines.some((line) => /conditions\s+:/.test(line))).toBe(
+      false
+    );
     expect(summaryLines.some((line) => /entities\s+:/.test(line))).toBe(false); // Check old key isn't present
 
     // 15. Verify registry.clear was not called again.
