@@ -4,7 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="f2176490-fa0e-405e-af38-7bec8f5491f5" name="Changes" comment="Small changes.">
+    <list default="true" id="f2176490-fa0e-405e-af38-7bec8f5491f5" name="Changes" comment="Formatting.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -196,15 +196,7 @@
       <workItem from="1749876741387" duration="32751000" />
       <workItem from="1749913762946" duration="28307000" />
       <workItem from="1749963238113" duration="51858000" />
-      <workItem from="1750034820504" duration="8633000" />
-    </task>
-    <task id="LOCAL-00115" summary="Implementing base intimacy system.">
-      <option name="closed" value="true" />
-      <created>1749988806000</created>
-      <option name="number" value="00115" />
-      <option name="presentableId" value="LOCAL-00115" />
-      <option name="project" value="LOCAL" />
-      <updated>1749988806000</updated>
+      <workItem from="1750034820504" duration="10216000" />
     </task>
     <task id="LOCAL-00116" summary="Implementing base intimacy system.">
       <option name="closed" value="true" />
@@ -590,7 +582,15 @@
       <option name="project" value="LOCAL" />
       <updated>1750040399543</updated>
     </task>
-    <option name="localTasksCounter" value="164" />
+    <task id="LOCAL-00164" summary="Formatting.">
+      <option name="closed" value="true" />
+      <created>1750043831529</created>
+      <option name="number" value="00164" />
+      <option name="presentableId" value="LOCAL-00164" />
+      <option name="project" value="LOCAL" />
+      <updated>1750043831529</updated>
+    </task>
+    <option name="localTasksCounter" value="165" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -619,9 +619,9 @@
     <MESSAGE value="Implemented &quot;adjust clothing&quot; action." />
     <MESSAGE value="Fixed nasty issue with schemas." />
     <MESSAGE value="Uploading with errors for Codex to fix." />
-    <MESSAGE value="Formatting." />
     <MESSAGE value="Fixed small test." />
     <MESSAGE value="Small changes." />
-    <option name="LAST_COMMIT_MESSAGE" value="Small changes." />
+    <MESSAGE value="Formatting." />
+    <option name="LAST_COMMIT_MESSAGE" value="Formatting." />
   </component>
 </project>
