@@ -73,6 +73,20 @@ class GameStateCaptureService {
   }
 
   /**
+   * Determines if cleaned component data should be saved.
+   *
+   * @param {*} data - Component data after cleaning.
+   * @returns {boolean} True if data is non-null and either not an object or an
+   *   object with at least one key.
+   * @private
+   */
+  #hasMeaningfulData(data) {
+    return (
+      data != null && (typeof data !== 'object' || Object.keys(data).length > 0)
+    );
+  }
+
+  /**
    * Cleans and prepares component data for serialization.
    *
    * @param {Map<string, any>} componentEntries - Raw component map from the entity.
@@ -95,9 +109,7 @@ class GameStateCaptureService {
         componentData
       );
 
-      if (dataToSave !== null && typeof dataToSave !== 'object') {
-        components[componentTypeId] = dataToSave;
-      } else if (Object.keys(dataToSave).length > 0) {
+      if (this.#hasMeaningfulData(dataToSave)) {
         components[componentTypeId] = dataToSave;
       } else {
         this.#logger.debug(
