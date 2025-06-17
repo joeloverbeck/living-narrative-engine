@@ -264,9 +264,7 @@ describe('OperationInterpreter', () => {
     expect(actualParams).toEqual({ message: undefined });
 
     expect(mockLogger.warn).toHaveBeenCalledWith(
-      expect.stringContaining(
-        'Placeholder path "invalid.path.that.does.not.exist"'
-      )
+      'OperationInterpreter: PlaceholderResolver: Placeholder "{invalid.path.that.does.not.exist}" not found in provided data sources. Replacing with empty string.'
     );
     expect(mockLogger.error).not.toHaveBeenCalledWith(
       expect.stringContaining('Error resolving placeholders')

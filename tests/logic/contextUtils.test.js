@@ -140,14 +140,34 @@ describe('resolvePlaceholders (contextUtils.js)', () => {
       expect(resolvePlaceholders(input, context, mockLogger)).toBe(100);
     });
 
+    test('1.9a should resolve actor.name via NAME_COMPONENT_ID when property missing', () => {
+      const actorData = {
+        id: 'a1',
+        components: { [NAME_COMPONENT_ID]: { text: 'HeroName' } },
+      };
+      const context = createMockExecutionContext({}, {}, actorData);
+      const input = '{actor.name}';
+      expect(resolvePlaceholders(input, context, mockLogger)).toBe('HeroName');
+    });
+
+    test('1.9b should resolve target.name via NAME_COMPONENT_ID when property missing', () => {
+      const targetData = {
+        id: 't1',
+        components: { [NAME_COMPONENT_ID]: { text: 'TargetName' } },
+      };
+      const context = createMockExecutionContext({}, {}, null, targetData);
+      const input = '{target.name}';
+      expect(resolvePlaceholders(input, context, mockLogger)).toBe(
+        'TargetName'
+      );
+    });
+
     test('1.10 should return undefined if `context.` path is not found and log warning', () => {
       const context = createMockExecutionContext();
       const input = '{context.nonExistentVar}';
       expect(resolvePlaceholders(input, context, mockLogger)).toBeUndefined();
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining(
-          'Placeholder path "context.nonExistentVar" from {context.nonExistentVar} could not be resolved.'
-        )
+        'PlaceholderResolver: Placeholder "{context.nonExistentVar}" not found in provided data sources. Replacing with empty string.'
       );
     });
 
@@ -156,9 +176,7 @@ describe('resolvePlaceholders (contextUtils.js)', () => {
       const input = '{event.nonExistentKey}';
       expect(resolvePlaceholders(input, context, mockLogger)).toBeUndefined();
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining(
-          'Placeholder path "event.nonExistentKey" from {event.nonExistentKey} could not be resolved.'
-        )
+        'PlaceholderResolver: Placeholder "{event.nonExistentKey}" not found in provided data sources. Replacing with empty string.'
       );
     });
 
@@ -180,15 +198,20 @@ describe('resolvePlaceholders (contextUtils.js)', () => {
       expect(mockLogger.warn).toHaveBeenCalledTimes(2);
     });
 
-    test('1.14 should return original string if executionContext itself is not an object, and log warning', () => {
+    test('1.14 should return undefined if executionContext itself is not an object, and log warning', () => {
       const input = '{context.varA}';
-      expect(resolvePlaceholders(input, null, mockLogger)).toBe(
-        '{context.varA}'
-      );
-      expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining(
-          'Cannot resolve placeholder path "context.varA" from {context.varA}: executionContext is not a valid object.'
-        )
+      expect(resolvePlaceholders(input, null, mockLogger)).toBeUndefined();
+      expect(mockLogger.warn.mock.calls).toEqual(
+        expect.arrayContaining([
+          [
+            'PlaceholderResolver: Placeholder "{context.varA}" not found in provided data sources. Replacing with empty string.',
+          ],
+          [
+            expect.stringContaining(
+              'Cannot resolve placeholder path "context.varA" at {context.varA}: executionContext is not a valid object.'
+            ),
+          ],
+        ])
       );
     });
 
@@ -235,9 +258,7 @@ describe('resolvePlaceholders (contextUtils.js)', () => {
     test('2.3 should resolve embedded `context.` placeholder that is null', () => {
       const context = createMockExecutionContext();
       const input = 'This is {context.nullVar}.';
-      expect(resolvePlaceholders(input, context, mockLogger)).toBe(
-        'This is null.'
-      );
+      expect(resolvePlaceholders(input, context, mockLogger)).toBe('This is .');
     });
 
     test('2.4 should resolve embedded `context.` placeholder that is an object (stringifies to [object Object])', () => {
@@ -263,12 +284,10 @@ describe('resolvePlaceholders (contextUtils.js)', () => {
       const input =
         'Found: {context.varA}, Missing: {context.nonExistent}, Event: {event.type}.';
       expect(resolvePlaceholders(input, context, mockLogger)).toBe(
-        'Found: valueA, Missing: {context.nonExistent}, Event: mockEvent.'
+        'Found: valueA, Missing: , Event: mockEvent.'
       );
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining(
-          'Embedded placeholder path "context.nonExistent" from {context.nonExistent} could not be resolved.'
-        )
+        'PlaceholderResolver: Placeholder "{context.nonExistent}" not found in provided data sources. Replacing with empty string.'
       );
     });
 
@@ -279,16 +298,11 @@ describe('resolvePlaceholders (contextUtils.js)', () => {
       const placeholderSyntaxInLog = '{context.varA}'; // The syntax part of the log
       const fullLogPathForEmbedded = `${placeholderSyntaxInLog} (within string)`;
 
-      expect(resolvePlaceholders(input, context, mockLogger)).toBe(
-        'Value: {context.varA}.'
-      );
+      expect(resolvePlaceholders(input, context, mockLogger)).toBe('Value: .');
 
-      expect(mockLogger.warn).toHaveBeenCalledTimes(2); // Ensure exactly two warnings
+      expect(mockLogger.warn).toHaveBeenCalledTimes(1);
       expect(mockLogger.warn.mock.calls[0][0]).toBe(
-        `Placeholder "context.varA" uses "context." prefix, but executionContext.evaluationContext.context is missing or invalid. Path: ${fullLogPathForEmbedded}`
-      );
-      expect(mockLogger.warn.mock.calls[1][0]).toBe(
-        `Embedded placeholder path "context.varA" from ${placeholderSyntaxInLog} could not be resolved. Path: ${fullLogPathForEmbedded}`
+        'PlaceholderResolver: Placeholder "{context.varA}" not found in provided data sources. Replacing with empty string.'
       );
     });
 
@@ -307,7 +321,7 @@ describe('resolvePlaceholders (contextUtils.js)', () => {
       const context = createMockExecutionContext();
       const input = 'Thoughts: {context.nonExistent?}';
       expect(resolvePlaceholders(input, context, mockLogger)).toBe(
-        'Thoughts: {context.nonExistent?}'
+        'Thoughts: '
       );
       expect(mockLogger.warn).not.toHaveBeenCalled();
     });
