@@ -350,7 +350,7 @@ describe('ActionButtonsRenderer', () => {
 
         // The SUT now sets `data-action-index`.
         expect(renderedButton.getAttribute('data-action-index')).toBe(
-          actionObject.index
+          String(actionObject.index)
         );
         const mockButtonFromFactory =
           mockDomElementFactoryInstance.button.mock.results[index].value;

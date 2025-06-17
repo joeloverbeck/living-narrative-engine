@@ -243,12 +243,11 @@ describe('ActionButtonsRenderer', () => {
 
       // --- Prepare for individual 'it' blocks ---
       jest.clearAllMocks(mockLogger, mockVed.dispatch);
+      const spy = jest.spyOn(renderer, '_onItemSelected');
       await actionButtonInstance.click();
+      expect(spy).toHaveBeenCalledWith(actionButtonInstance, actionToSubmit);
       expect(renderer.selectedAction).toEqual(actionToSubmit);
       expect(globalMockSendButton.disabled).toBe(false);
-      expect(actionButtonInstance.classList.add).toHaveBeenCalledWith(
-        'selected'
-      );
 
       jest.clearAllMocks(
         mockLogger,
@@ -263,6 +262,7 @@ describe('ActionButtonsRenderer', () => {
       commandInputElement.value = 'Player says this';
       mockVed.dispatch.mockResolvedValue(true);
 
+      const spyDispatch = jest.spyOn(renderer, '_onItemSelected');
       await globalMockSendButton.click();
 
       expect(mockVed.dispatch).toHaveBeenCalledTimes(1);
@@ -280,9 +280,8 @@ describe('ActionButtonsRenderer', () => {
       expect(commandInputElement.value).toBe('');
       expect(renderer.selectedAction).toBeNull();
       expect(globalMockSendButton.disabled).toBe(true);
-      expect(actionButtonInstance.classList.remove).toHaveBeenCalledWith(
-        'selected'
-      );
+      expect(spyDispatch).toHaveBeenCalledWith(null, null);
+      expect(actionButtonInstance.classList.contains('selected')).toBe(false);
       expect(actionButtonsContainer.classList.add).toHaveBeenCalledWith(
         'actions-fade-out'
       );
@@ -361,6 +360,7 @@ describe('ActionButtonsRenderer', () => {
       commandInputElement.value = 'Test speech';
       mockVed.dispatch.mockResolvedValue(false);
 
+      const spyDispatch = jest.spyOn(renderer, '_onItemSelected');
       await globalMockSendButton.click();
 
       expect(mockVed.dispatch).toHaveBeenCalledTimes(1);
@@ -371,7 +371,7 @@ describe('ActionButtonsRenderer', () => {
       expect(commandInputElement.value).toBe('Test speech');
       expect(renderer.selectedAction).toEqual(actionToSubmit);
       expect(globalMockSendButton.disabled).toBe(false);
-      expect(actionButtonInstance.classList.remove).not.toHaveBeenCalled();
+      expect(spyDispatch).not.toHaveBeenCalled();
     });
 
     it('should log error and not change UI state if dispatch throws an error', async () => {
@@ -379,6 +379,7 @@ describe('ActionButtonsRenderer', () => {
       const dispatchError = new Error('Network Error');
       mockVed.dispatch.mockRejectedValue(dispatchError);
 
+      const spyDispatch = jest.spyOn(renderer, '_onItemSelected');
       await globalMockSendButton.click();
 
       expect(mockVed.dispatch).toHaveBeenCalledTimes(1);
@@ -389,7 +390,7 @@ describe('ActionButtonsRenderer', () => {
       expect(commandInputElement.value).toBe('Test speech again');
       expect(renderer.selectedAction).toEqual(actionToSubmit);
       expect(globalMockSendButton.disabled).toBe(false);
-      expect(actionButtonInstance.classList.remove).not.toHaveBeenCalled();
+      expect(spyDispatch).not.toHaveBeenCalled();
     });
 
     it('should do nothing and log warning if no action is selected when send button clicked', async () => {

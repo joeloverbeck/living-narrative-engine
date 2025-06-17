@@ -4,7 +4,7 @@
  * @see src/domUI/actionButtonsRenderer.js
  */
 
-import { BaseListDisplayComponent } from './baseListDisplayComponent.js';
+import { SelectableListDisplayComponent } from './selectableListDisplayComponent.js';
 import { PLAYER_TURN_SUBMITTED_ID } from '../constants/eventIds.js';
 
 /**
@@ -58,9 +58,9 @@ import { PLAYER_TURN_SUBMITTED_ID } from '../constants/eventIds.js';
  * Renders available actions as buttons from an array of `ActionComposite` objects.
  * Handles action selection and dispatches the chosen action.
  *
- * @augments {BaseListDisplayComponent<ActionComposite>}
+ * @augments {SelectableListDisplayComponent<ActionComposite>}
  */
-export class ActionButtonsRenderer extends BaseListDisplayComponent {
+export class ActionButtonsRenderer extends SelectableListDisplayComponent {
   _EVENT_TYPE_SUBSCRIBED = 'core:update_available_actions';
 
   static FADE_IN_CLASS = 'actions-fade-in';
@@ -126,6 +126,7 @@ export class ActionButtonsRenderer extends BaseListDisplayComponent {
     };
 
     super({
+      datasetKey: 'actionIndex',
       logger,
       documentContext,
       validatedEventDispatcher,
@@ -223,7 +224,8 @@ export class ActionButtonsRenderer extends BaseListDisplayComponent {
     }
 
     button.title = buttonTooltip;
-    button.setAttribute('data-action-index', actionIndex);
+    button.setAttribute('role', 'radio');
+    button.setAttribute('data-action-index', String(actionIndex));
 
     button.addEventListener('click', () => {
       if (this.#isDisposed) return;
@@ -240,38 +242,33 @@ export class ActionButtonsRenderer extends BaseListDisplayComponent {
         return;
       }
 
-      if (
-        this.selectedAction &&
-        this.selectedAction.index === clickedAction.index
-      ) {
-        button.classList.remove('selected');
-        this.selectedAction = null;
-        this.logger.debug(
-          `${this._logPrefix} Action deselected: '${clickedAction.commandString}' (Index: ${clickedAction.index})`
-        );
-      } else {
-        if (this.selectedAction && this.elements.listContainerElement) {
-          const previousButton =
-            this.elements.listContainerElement.querySelector(
-              `button.action-button.selected[data-action-index="${this.selectedAction.index}"]`
-            );
-          if (previousButton) {
-            previousButton.classList.remove('selected');
-          }
-        }
-        button.classList.add('selected');
-        this.selectedAction = clickedAction;
-        this.logger.debug(
-          `${this._logPrefix} Action selected: '${this.selectedAction.commandString}' (Index: ${this.selectedAction.index}, ID: ${this.selectedAction.actionId})`
-        );
-      }
-
-      if (this.elements.sendButtonElement) {
-        this.elements.sendButtonElement.disabled = !this.selectedAction;
-      }
+      this._onItemSelected(button, clickedAction);
     });
 
     return button;
+  }
+
+  /**
+   * Handles selection updates when a list item is clicked.
+   *
+   * @protected
+   * @param {HTMLElement|null} selectedElement - The clicked button element.
+   * @param {ActionComposite|null} actionData - The action data associated with the element.
+   * @returns {void}
+   */
+  _onItemSelected(selectedElement, actionData) {
+    super._handleItemSelection(selectedElement, actionData);
+    this.selectedAction = actionData;
+    if (this.elements.sendButtonElement) {
+      this.elements.sendButtonElement.disabled = !actionData;
+    }
+    if (actionData) {
+      this.logger.debug(
+        `${this._logPrefix} Action selected: '${actionData.commandString}' (Index: ${actionData.index}, ID: ${actionData.actionId})`
+      );
+    } else {
+      this.logger.debug(`${this._logPrefix} Action deselected.`);
+    }
   }
 
   /**
@@ -288,6 +285,8 @@ export class ActionButtonsRenderer extends BaseListDisplayComponent {
    */
   _onListRendered(actionsData, container) {
     if (this.#isDisposed) return;
+
+    super._onListRendered(actionsData, container);
 
     if (container) {
       container.classList.remove(ActionButtonsRenderer.DISABLED_CLASS);
@@ -327,14 +326,13 @@ export class ActionButtonsRenderer extends BaseListDisplayComponent {
       );
     }
 
-    // Ensure the selected button has the .selected class after a re-render
     if (this.selectedAction) {
       const selectedButton = container.querySelector(
         `button.action-button[data-action-index="${this.selectedAction.index}"]`
       );
-      if (selectedButton && !selectedButton.classList.contains('selected')) {
-        selectedButton.classList.add('selected');
-      }
+      this._handleItemSelection(selectedButton, this.selectedAction);
+    } else {
+      this._onItemSelected(null, null);
     }
 
     if (this.elements.sendButtonElement) {
@@ -484,15 +482,7 @@ export class ActionButtonsRenderer extends BaseListDisplayComponent {
         if (this.elements.listContainerElement) {
           const container = this.elements.listContainerElement;
 
-          // 1. Remove the visual selection from the clicked button
-          const selectedButton = container.querySelector(
-            `button.action-button.selected[data-action-index="${this.selectedAction.index}"]`
-          );
-          if (selectedButton) {
-            selectedButton.classList.remove('selected');
-          }
-
-          // 2. Play fade-out animation then clear actions and disable
+          // Play fade-out animation then clear actions and disable
           container.classList.remove(ActionButtonsRenderer.FADE_IN_CLASS);
           container.classList.add(ActionButtonsRenderer.FADE_OUT_CLASS);
           container.addEventListener(
@@ -513,10 +503,7 @@ export class ActionButtonsRenderer extends BaseListDisplayComponent {
         this.availableActions = [];
 
         // 3. Clear internal state
-        this.selectedAction = null;
-        if (this.elements.sendButtonElement) {
-          this.elements.sendButtonElement.disabled = true;
-        }
+        this._onItemSelected(null, null);
       } else {
         this.logger.error(
           `${this._logPrefix} Failed to dispatch '${PLAYER_TURN_SUBMITTED_ID}' for action index '${index}'.`,
