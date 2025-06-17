@@ -18,6 +18,7 @@ import {
   getExecLogger,
 } from '../../utils/handlerUtils/serviceUtils.js';
 import { assertParamsObject } from '../../utils/handlerUtils/paramsUtils.js';
+import { deepClone } from '../../utils/objectUtils.js';
 
 /**
  * @typedef {object} EntityRefObject
@@ -143,7 +144,7 @@ class ModifyComponentHandler {
       return;
     }
 
-    const next = JSON.parse(JSON.stringify(current)); // deep clone
+    const next = deepClone(current);
 
     // ── apply “set” mutation ───────────────────────────────────────
     const ok = setByPath(next, field.trim(), value);
