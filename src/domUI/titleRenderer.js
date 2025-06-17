@@ -1,5 +1,6 @@
 // src/dom-ui/titleRenderer.js
 import { RendererBase } from './rendererBase.js';
+import { safeDispatchError } from '../utils/safeDispatchErrorUtils.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../constants/eventIds.js';
 
 /**
@@ -44,16 +45,13 @@ export class TitleRenderer extends RendererBase {
     // --- Validate specific titleElement dependency ---
     if (!titleElement || titleElement.nodeType !== 1) {
       const errMsg = `${this._logPrefix} 'titleElement' dependency is missing or not a valid DOM element.`;
-      this.validatedEventDispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
-        message: errMsg,
-      });
+      safeDispatchError(this.validatedEventDispatcher, errMsg);
       throw new Error(errMsg);
     }
     if (titleElement.tagName !== 'H1') {
       const errMsg = `${this._logPrefix} 'titleElement' must be an H1 element, but received '${titleElement.tagName}'.`;
-      this.validatedEventDispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
-        message: errMsg,
-        details: { element: titleElement },
+      safeDispatchError(this.validatedEventDispatcher, errMsg, {
+        element: titleElement,
       });
       throw new Error(errMsg);
     }
@@ -218,10 +216,11 @@ export class TitleRenderer extends RendererBase {
     const title = `Initialization Failed${payload?.worldName ? ` (World: ${payload.worldName})` : ''}`;
     this.set(title);
     // Dispatch error event for UI display
-    this.validatedEventDispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
-      message: `${this._logPrefix} Overall initialization failed. Error: ${payload?.error}`,
-      details: payload,
-    });
+    safeDispatchError(
+      this.validatedEventDispatcher,
+      `${this._logPrefix} Overall initialization failed. Error: ${payload?.error}`,
+      payload
+    );
   }
 
   /**
@@ -241,10 +240,11 @@ export class TitleRenderer extends RendererBase {
     }
     const title = `${stepName} Failed`;
     this.set(title);
-    this.validatedEventDispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
-      message: `${this._logPrefix} ${title}. Error: ${payload?.error}`,
-      details: payload,
-    });
+    safeDispatchError(
+      this.validatedEventDispatcher,
+      `${this._logPrefix} ${title}. Error: ${payload?.error}`,
+      payload
+    );
   }
 
   /**
@@ -287,9 +287,10 @@ export class TitleRenderer extends RendererBase {
       }
     } else {
       // Should not happen if constructor validation passed
-      this.validatedEventDispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
-        message: `${this._logPrefix} Cannot set title, internal #titleElement reference is lost.`,
-      });
+      safeDispatchError(
+        this.validatedEventDispatcher,
+        `${this._logPrefix} Cannot set title, internal #titleElement reference is lost.`
+      );
     }
   }
 

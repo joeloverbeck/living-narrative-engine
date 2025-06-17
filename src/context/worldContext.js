@@ -10,7 +10,7 @@ import {
   POSITION_COMPONENT_ID,
   CURRENT_ACTOR_COMPONENT_ID,
 } from '../constants/componentIds.js';
-import { SYSTEM_ERROR_OCCURRED_ID } from '../constants/eventIds.js';
+import { safeDispatchError } from '../utils/safeDispatchErrorUtils.js';
 import { ISafeEventDispatcher } from '../interfaces/ISafeEventDispatcher.js';
 
 /**
@@ -106,10 +106,7 @@ class WorldContext extends IWorldContext {
 
     const errorMessage = `WorldContext: Expected exactly one entity with component '${CURRENT_ACTOR_COMPONENT_ID}', but found ${actorCount}.`;
 
-    this.#safeEventDispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
-      message: errorMessage,
-      details: { actorCount },
-    });
+    safeDispatchError(this.#safeEventDispatcher, errorMessage, { actorCount });
 
     if (
       typeof globalThis !== 'undefined' &&
@@ -163,9 +160,7 @@ class WorldContext extends IWorldContext {
       !positionData.locationId
     ) {
       const msg = `WorldContext.getCurrentLocation: Current actor '${actor.id}' is missing a valid '${POSITION_COMPONENT_ID}' component or locationId.`;
-      this.#safeEventDispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
-        message: msg,
-      });
+      safeDispatchError(this.#safeEventDispatcher, msg);
       return null;
     }
 
