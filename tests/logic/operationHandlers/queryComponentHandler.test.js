@@ -114,7 +114,7 @@ describe('QueryComponentHandler', () => {
           logger: mockLogger,
           safeEventDispatcher: mockDispatcher,
         })
-    ).toThrow(/EntityManager/);
+    ).toThrow(/entityManager/);
     expect(
       () =>
         new QueryComponentHandler({
@@ -136,7 +136,7 @@ describe('QueryComponentHandler', () => {
   test('constructor should throw if ILogger is missing or invalid', () => {
     expect(
       () => new QueryComponentHandler({ entityManager: mockEntityManager })
-    ).toThrow(/ILogger/);
+    ).toThrow(/logger/);
     expect(
       () =>
         new QueryComponentHandler({
@@ -144,7 +144,7 @@ describe('QueryComponentHandler', () => {
           logger: {},
           safeEventDispatcher: mockDispatcher,
         })
-    ).toThrow(/ILogger/);
+    ).toThrow(/logger/);
     expect(
       () =>
         new QueryComponentHandler({
@@ -152,7 +152,7 @@ describe('QueryComponentHandler', () => {
           logger: { error: 'not-a-func' },
           safeEventDispatcher: mockDispatcher,
         })
-    ).toThrow(/ILogger/);
+    ).toThrow(/logger/);
   });
 
   test('constructor should initialize successfully with valid dependencies', () => {

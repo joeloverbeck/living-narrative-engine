@@ -13,13 +13,8 @@
 /** @typedef {import('./modifyComponentHandler.js').EntityRefObject} EntityRefObject */ // Reuse definition
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 
-import { resolveEntityId } from '../../utils/entityRefUtils.js';
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
-import {
-  initHandlerLogger,
-  validateDeps,
-  getExecLogger,
-} from '../../utils/handlerUtils/serviceUtils.js';
+import ComponentOperationHandler from './componentOperationHandler.js';
 import { assertParamsObject } from '../../utils/handlerUtils/paramsUtils.js';
 
 /**
@@ -33,8 +28,7 @@ import { assertParamsObject } from '../../utils/handlerUtils/paramsUtils.js';
 // -----------------------------------------------------------------------------
 //  Handler implementation
 // -----------------------------------------------------------------------------
-class RemoveComponentHandler {
-  /** @type {ILogger}        */ #logger;
+class RemoveComponentHandler extends ComponentOperationHandler {
   /** @type {EntityManager} */ #entityManager;
   /** @type {ISafeEventDispatcher} */ #dispatcher;
 
@@ -48,8 +42,8 @@ class RemoveComponentHandler {
    * @throws {Error} If entityManager or logger are missing or invalid.
    */
   constructor({ entityManager, logger, safeEventDispatcher }) {
-    this.#logger = initHandlerLogger('RemoveComponentHandler', logger);
-    validateDeps('RemoveComponentHandler', this.#logger, {
+    super('RemoveComponentHandler', {
+      logger: { value: logger },
       entityManager: {
         value: entityManager,
         requiredMethods: ['removeComponent'],
@@ -83,7 +77,7 @@ class RemoveComponentHandler {
    * @implements {OperationHandler}
    */
   execute(params, executionContext) {
-    const log = getExecLogger(this.#logger, executionContext);
+    const log = this.getLogger(executionContext);
 
     // 1. Validate Parameters
     if (!assertParamsObject(params, log, 'REMOVE_COMPONENT')) {
@@ -97,17 +91,16 @@ class RemoveComponentHandler {
       log.warn('REMOVE_COMPONENT: "entity_ref" parameter is required.');
       return;
     }
-    if (typeof component_type !== 'string' || !component_type.trim()) {
+    const trimmedComponentType = this.validateComponentType(component_type);
+    if (!trimmedComponentType) {
       log.warn(
         'REMOVE_COMPONENT: Invalid or missing "component_type" parameter (must be non-empty string).'
       );
       return;
     }
 
-    const trimmedComponentType = component_type.trim();
-
     // 2. Resolve Entity ID
-    const entityId = resolveEntityId(entity_ref, executionContext);
+    const entityId = this.resolveEntity(entity_ref, executionContext);
     if (!entityId) {
       log.warn(
         `REMOVE_COMPONENT: Could not resolve entity id from entity_ref.`,

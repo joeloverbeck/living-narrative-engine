@@ -10,10 +10,10 @@
 /** @typedef {import('../defs.js').ExecutionContext} ExecutionContext */
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 
-import { resolveEntityId } from '../../utils/entityRefUtils.js';
 import { setContextValue } from '../../utils/contextVariableUtils.js';
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 import { assertParamsObject } from '../../utils/handlerUtils/paramsUtils.js';
+import ComponentOperationHandler from './componentOperationHandler.js';
 
 /**
  * Parameters for the QUERY_COMPONENTS operation.
@@ -25,9 +25,8 @@ import { assertParamsObject } from '../../utils/handlerUtils/paramsUtils.js';
  *   Array of component/result variable pairs.
  */
 
-class QueryComponentsHandler {
+class QueryComponentsHandler extends ComponentOperationHandler {
   /** @type {IEntityManager} */ #entityManager;
-  /** @type {ILogger} */ #logger;
   /** @type {ISafeEventDispatcher} */ #dispatcher;
 
   /**
@@ -37,17 +36,18 @@ class QueryComponentsHandler {
    * @param {ISafeEventDispatcher} deps.safeEventDispatcher
    */
   constructor({ entityManager, logger, safeEventDispatcher }) {
-    if (!entityManager?.getComponentData) {
-      throw new Error('QueryComponentsHandler requires a valid IEntityManager');
-    }
-    if (!logger || typeof logger.debug !== 'function') {
-      throw new Error('QueryComponentsHandler requires a valid ILogger');
-    }
-    if (!safeEventDispatcher?.dispatch) {
-      throw new Error('QueryComponentsHandler requires ISafeEventDispatcher');
-    }
+    super('QueryComponentsHandler', {
+      logger: { value: logger },
+      entityManager: {
+        value: entityManager,
+        requiredMethods: ['getComponentData'],
+      },
+      safeEventDispatcher: {
+        value: safeEventDispatcher,
+        requiredMethods: ['dispatch'],
+      },
+    });
     this.#entityManager = entityManager;
-    this.#logger = logger;
     this.#dispatcher = safeEventDispatcher;
   }
 
@@ -58,7 +58,7 @@ class QueryComponentsHandler {
    * @param {ExecutionContext} executionContext
    */
   execute(params, executionContext) {
-    const logger = executionContext?.logger ?? this.#logger;
+    const logger = this.getLogger(executionContext);
 
     if (
       !assertParamsObject(params, this.#dispatcher, 'QueryComponentsHandler')
@@ -97,7 +97,7 @@ class QueryComponentsHandler {
       return;
     }
 
-    const entityId = resolveEntityId(entity_ref, executionContext);
+    const entityId = this.resolveEntity(entity_ref, executionContext);
     if (!entityId) {
       safeDispatchError(
         this.#dispatcher,
@@ -110,11 +110,8 @@ class QueryComponentsHandler {
     for (const pair of pairs) {
       if (!pair || typeof pair !== 'object') continue;
       const { component_type, result_variable } = pair;
-      if (
-        !component_type ||
-        typeof component_type !== 'string' ||
-        !component_type.trim()
-      ) {
+      const trimmedType = this.validateComponentType(component_type);
+      if (!trimmedType) {
         safeDispatchError(
           this.#dispatcher,
           'QueryComponentsHandler: Invalid component_type in pair.',
@@ -134,7 +131,6 @@ class QueryComponentsHandler {
         );
         continue;
       }
-      const trimmedType = component_type.trim();
       const trimmedVar = result_variable.trim();
       let result;
       try {

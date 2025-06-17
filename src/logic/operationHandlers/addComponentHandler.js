@@ -13,8 +13,7 @@
 /** @typedef {import('./modifyComponentHandler.js').EntityRefObject} EntityRefObject */ // Reuse definition
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../constants/eventIds.js';
-import { resolveEntityId } from '../../utils/entityRefUtils.js';
-import BaseOperationHandler from './baseOperationHandler.js';
+import ComponentOperationHandler from './componentOperationHandler.js';
 import { assertParamsObject } from '../../utils/handlerUtils/paramsUtils.js';
 
 /**
@@ -29,7 +28,7 @@ import { assertParamsObject } from '../../utils/handlerUtils/paramsUtils.js';
 // -----------------------------------------------------------------------------
 //  Handler implementation
 // -----------------------------------------------------------------------------
-class AddComponentHandler extends BaseOperationHandler {
+class AddComponentHandler extends ComponentOperationHandler {
   /** @type {EntityManager} */ #entityManager;
   /** @type {ISafeEventDispatcher} */ #dispatcher;
 
@@ -81,7 +80,9 @@ class AddComponentHandler extends BaseOperationHandler {
       log.warn('ADD_COMPONENT: "entity_ref" parameter is required.');
       return;
     }
-    if (typeof component_type !== 'string' || !component_type.trim()) {
+
+    const trimmedComponentType = this.validateComponentType(component_type);
+    if (!trimmedComponentType) {
       log.warn(
         'ADD_COMPONENT: Invalid or missing "component_type" parameter (must be non-empty string).'
       );
@@ -95,10 +96,8 @@ class AddComponentHandler extends BaseOperationHandler {
       return;
     }
 
-    const trimmedComponentType = component_type.trim();
-
     // 2. Resolve Entity ID
-    const entityId = resolveEntityId(entity_ref, executionContext);
+    const entityId = this.resolveEntity(entity_ref, executionContext);
     if (!entityId) {
       log.warn(`ADD_COMPONENT: Could not resolve entity id from entity_ref.`, {
         entity_ref,

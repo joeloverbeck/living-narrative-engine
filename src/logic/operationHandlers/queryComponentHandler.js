@@ -6,9 +6,9 @@
 /** @typedef {import('../defs.js').OperationHandler} OperationHandler */
 /** @typedef {import('../defs.js').ExecutionContext} ExecutionContext */
 /** @typedef {import('../defs.js').OperationParams} OperationParams */
-import { resolveEntityId } from '../../utils/entityRefUtils.js';
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 import { assertParamsObject } from '../../utils/handlerUtils/paramsUtils.js';
+import ComponentOperationHandler from './componentOperationHandler.js';
 
 /**
  * @typedef {import('./modifyComponentHandler.js').EntityRefObject} EntityRefObject
@@ -25,43 +25,29 @@ import { assertParamsObject } from '../../utils/handlerUtils/paramsUtils.js';
 
 import { setContextValue } from '../../utils/contextVariableUtils.js';
 
-class QueryComponentHandler {
+class QueryComponentHandler extends ComponentOperationHandler {
   #entityManager;
-  #logger;
   /** @type {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} */
   #dispatcher;
 
   constructor({ entityManager, logger, safeEventDispatcher }) {
-    if (
-      !entityManager ||
-      typeof entityManager.getComponentData !== 'function'
-    ) {
-      throw new Error(
-        'QueryComponentHandler requires a valid EntityManager instance with a getComponentData method.'
-      );
-    }
-    if (
-      !logger ||
-      typeof logger.error !== 'function' ||
-      typeof logger.warn !== 'function' ||
-      typeof logger.debug !== 'function'
-    ) {
-      throw new Error(
-        'QueryComponentHandler requires a valid ILogger instance.'
-      );
-    }
+    super('QueryComponentHandler', {
+      logger: { value: logger },
+      entityManager: {
+        value: entityManager,
+        requiredMethods: ['getComponentData'],
+      },
+      safeEventDispatcher: {
+        value: safeEventDispatcher,
+        requiredMethods: ['dispatch'],
+      },
+    });
     this.#entityManager = entityManager;
-    this.#logger = logger;
-    if (!safeEventDispatcher?.dispatch) {
-      throw new Error(
-        'QueryComponentHandler requires an ISafeEventDispatcher.'
-      );
-    }
     this.#dispatcher = safeEventDispatcher;
   }
 
   execute(params, executionContext) {
-    const logger = executionContext?.logger ?? this.#logger;
+    const logger = this.getLogger(executionContext);
 
     if (
       !assertParamsObject(params, this.#dispatcher, 'QueryComponentHandler')
@@ -93,7 +79,8 @@ class QueryComponentHandler {
       );
       return;
     }
-    if (typeof component_type !== 'string' || !component_type.trim()) {
+    const trimmedComponentType = this.validateComponentType(component_type);
+    if (!trimmedComponentType) {
       safeDispatchError(
         this.#dispatcher,
         'QueryComponentHandler: Missing or invalid required "component_type" parameter (must be non-empty string).',
@@ -101,7 +88,6 @@ class QueryComponentHandler {
       );
       return;
     }
-    const trimmedComponentType = component_type.trim();
 
     if (typeof result_variable !== 'string' || !result_variable.trim()) {
       safeDispatchError(
@@ -113,7 +99,7 @@ class QueryComponentHandler {
     }
     const trimmedResultVariable = result_variable.trim();
 
-    const entityId = resolveEntityId(entity_ref, executionContext);
+    const entityId = this.resolveEntity(entity_ref, executionContext);
     if (!entityId) {
       safeDispatchError(
         this.#dispatcher,
