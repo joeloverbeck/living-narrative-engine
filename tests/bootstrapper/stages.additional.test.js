@@ -14,7 +14,7 @@ import {
   initializeGameEngineStage,
   setupGlobalEventListenersStage,
   startGameStage,
-} from '../../src/bootstrapper/stages.js';
+} from '../../src/bootstrapper/stages/index.js';
 import AppContainer from '../../src/dependencyInjection/appContainer.js';
 
 const createLogger = () => ({

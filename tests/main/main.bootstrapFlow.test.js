@@ -10,7 +10,7 @@ const mockGlobal = jest.fn();
 const mockStartGame = jest.fn();
 const mockDisplayFatal = jest.fn();
 
-jest.mock('../../src/bootstrapper/stages.js', () => ({
+jest.mock('../../src/bootstrapper/stages/index.js', () => ({
   __esModule: true,
   ensureCriticalDOMElementsStage: (...args) => mockEnsure(...args),
   setupDIContainerStage: (...args) => mockSetupDI(...args),

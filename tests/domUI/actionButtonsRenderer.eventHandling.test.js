@@ -212,7 +212,10 @@ beforeEach(() => {
       if (child) child.parentNode = null;
     }),
     querySelectorAll: jest.fn((selector) => {
-      if (selector === 'button.action-button' || selector === '[role="radio"]') {
+      if (
+        selector === 'button.action-button' ||
+        selector === '[role="radio"]'
+      ) {
         return mockContainer.children.filter(
           (c) => c.tagName === 'BUTTON' && c.classList.contains('action-button')
         );

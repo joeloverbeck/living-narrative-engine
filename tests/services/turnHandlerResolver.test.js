@@ -21,12 +21,12 @@ const createMockLogger = () => ({
   error: jest.fn(),
 });
 
-// Simple mock instance forHumanTurnHandler (or any ITurnHandler)
+// Simple mock instance for the player rule (or any ITurnHandler)
 const createMockPlayerHandlerInstance = () => ({
   startTurn: jest.fn().mockResolvedValue(undefined),
 });
 
-// Simple mock instance for AITurnHandler (or any ITurnHandler)
+// Simple mock instance for the AI rule (or any ITurnHandler)
 const createMockAIHandlerInstance = () => ({
   startTurn: jest.fn().mockResolvedValue(undefined),
 });
@@ -35,8 +35,8 @@ describe('TurnHandlerResolver', () => {
   let mockLogger;
   let mockPlayerHandlerInstance;
   let mockAIHandlerInstance;
-  let mockCreateHumanTurnHandler;
-  let mockCreateAITurnHandler;
+  let mockCreatePlayerHandler;
+  let mockCreateAIHandler;
   let handlerRules;
   let resolver;
 
@@ -45,8 +45,8 @@ describe('TurnHandlerResolver', () => {
     mockLogger = createMockLogger();
     mockPlayerHandlerInstance = createMockPlayerHandlerInstance();
     mockAIHandlerInstance = createMockAIHandlerInstance();
-    mockCreateHumanTurnHandler = jest.fn(() => mockPlayerHandlerInstance);
-    mockCreateAITurnHandler = jest.fn(() => mockAIHandlerInstance);
+    mockCreatePlayerHandler = jest.fn(() => mockPlayerHandlerInstance);
+    mockCreateAIHandler = jest.fn(() => mockAIHandlerInstance);
 
     // Define the handler rules array, which the new resolver expects.
     // The order is important: Player rule should come first to have priority.
@@ -54,12 +54,12 @@ describe('TurnHandlerResolver', () => {
       {
         name: 'Player',
         predicate: (actor) => actor.hasComponent(PLAYER_COMPONENT_ID),
-        factory: mockCreateHumanTurnHandler,
+        factory: mockCreatePlayerHandler,
       },
       {
         name: 'AI',
         predicate: (actor) => actor.hasComponent(ACTOR_COMPONENT_ID),
-        factory: mockCreateAITurnHandler,
+        factory: mockCreateAIHandler,
       },
     ];
 
@@ -120,7 +120,7 @@ describe('TurnHandlerResolver', () => {
 
   // --- resolveHandler Tests ---
   describe('Player Actor Handling', () => {
-    test('should resolveHumanTurnHandler for an entity with PLAYER_COMPONENT_ID', async () => {
+    test('should resolve ActorTurnHandler for an entity with PLAYER_COMPONENT_ID', async () => {
       const playerEntity = new Entity('player1', 'dummy');
       playerEntity.hasComponent = jest.fn(
         (componentId) => componentId === PLAYER_COMPONENT_ID
@@ -129,8 +129,8 @@ describe('TurnHandlerResolver', () => {
 
       const handler = await resolver.resolveHandler(playerEntity);
 
-      expect(mockCreateHumanTurnHandler).toHaveBeenCalledTimes(1);
-      expect(mockCreateAITurnHandler).not.toHaveBeenCalled();
+      expect(mockCreatePlayerHandler).toHaveBeenCalledTimes(1);
+      expect(mockCreateAIHandler).not.toHaveBeenCalled();
       expect(handler).toBe(mockPlayerHandlerInstance);
 
       expect(mockLogger.debug).toHaveBeenCalledWith(
@@ -155,7 +155,7 @@ describe('TurnHandlerResolver', () => {
   });
 
   describe('AI Actor Handling', () => {
-    test('should resolve AITurnHandler for an entity with ACTOR_COMPONENT_ID but not PLAYER_COMPONENT_ID', async () => {
+    test('should resolve ActorTurnHandler for an entity with ACTOR_COMPONENT_ID but not PLAYER_COMPONENT_ID', async () => {
       const aiEntity = new Entity('ai1', 'dummy');
       aiEntity.hasComponent = jest.fn((componentId) => {
         return componentId === ACTOR_COMPONENT_ID;
@@ -164,8 +164,8 @@ describe('TurnHandlerResolver', () => {
 
       const handler = await resolver.resolveHandler(aiEntity);
 
-      expect(mockCreateAITurnHandler).toHaveBeenCalledTimes(1);
-      expect(mockCreateHumanTurnHandler).not.toHaveBeenCalled();
+      expect(mockCreateAIHandler).toHaveBeenCalledTimes(1);
+      expect(mockCreatePlayerHandler).not.toHaveBeenCalled();
       expect(handler).toBe(mockAIHandlerInstance);
 
       expect(mockLogger.debug).toHaveBeenCalledWith(
@@ -191,8 +191,8 @@ describe('TurnHandlerResolver', () => {
 
       const handler = await resolver.resolveHandler(nonActorEntity);
 
-      expect(mockCreateHumanTurnHandler).not.toHaveBeenCalled();
-      expect(mockCreateAITurnHandler).not.toHaveBeenCalled();
+      expect(mockCreatePlayerHandler).not.toHaveBeenCalled();
+      expect(mockCreateAIHandler).not.toHaveBeenCalled();
       expect(handler).toBeNull();
 
       expect(mockLogger.debug).toHaveBeenCalledWith(
@@ -210,7 +210,7 @@ describe('TurnHandlerResolver', () => {
       );
     });
 
-    test('should resolveHumanTurnHandler for an entity with both PLAYER_COMPONENT_ID and ACTOR_COMPONENT_ID', async () => {
+    test('should resolve ActorTurnHandler for an entity with both PLAYER_COMPONENT_ID and ACTOR_COMPONENT_ID', async () => {
       const playerActorEntity = new Entity('playerActor', 'dummy');
       playerActorEntity.hasComponent = jest.fn((componentId) => {
         return (
@@ -223,8 +223,8 @@ describe('TurnHandlerResolver', () => {
 
       const handler = await resolver.resolveHandler(playerActorEntity);
 
-      expect(mockCreateHumanTurnHandler).toHaveBeenCalledTimes(1);
-      expect(mockCreateAITurnHandler).not.toHaveBeenCalled();
+      expect(mockCreatePlayerHandler).toHaveBeenCalledTimes(1);
+      expect(mockCreateAIHandler).not.toHaveBeenCalled();
       expect(handler).toBe(mockPlayerHandlerInstance);
 
       expect(mockLogger.debug).toHaveBeenCalledWith(
@@ -246,8 +246,8 @@ describe('TurnHandlerResolver', () => {
 
       const handler = await resolver.resolveHandler(sceneryEntity);
 
-      expect(mockCreateHumanTurnHandler).not.toHaveBeenCalled();
-      expect(mockCreateAITurnHandler).not.toHaveBeenCalled();
+      expect(mockCreatePlayerHandler).not.toHaveBeenCalled();
+      expect(mockCreateAIHandler).not.toHaveBeenCalled();
       expect(handler).toBeNull();
 
       expect(mockLogger.debug).toHaveBeenCalledWith(
@@ -269,8 +269,8 @@ describe('TurnHandlerResolver', () => {
     test('should return null and log warning for invalid actor input (null)', async () => {
       const handler = await resolver.resolveHandler(null);
 
-      expect(mockCreateHumanTurnHandler).not.toHaveBeenCalled();
-      expect(mockCreateAITurnHandler).not.toHaveBeenCalled();
+      expect(mockCreatePlayerHandler).not.toHaveBeenCalled();
+      expect(mockCreateAIHandler).not.toHaveBeenCalled();
       expect(handler).toBeNull();
       expect(mockLogger.warn).toHaveBeenCalledWith(
         'TurnHandlerResolver: Attempted to resolve handler for invalid or null actor.'
@@ -284,8 +284,8 @@ describe('TurnHandlerResolver', () => {
       const invalidEntity = { name: 'invalid', hasComponent: jest.fn() };
       const handler = await resolver.resolveHandler(invalidEntity);
 
-      expect(mockCreateHumanTurnHandler).not.toHaveBeenCalled();
-      expect(mockCreateAITurnHandler).not.toHaveBeenCalled();
+      expect(mockCreatePlayerHandler).not.toHaveBeenCalled();
+      expect(mockCreateAIHandler).not.toHaveBeenCalled();
       expect(handler).toBeNull();
       expect(mockLogger.warn).toHaveBeenCalledWith(
         'TurnHandlerResolver: Attempted to resolve handler for invalid or null actor.'
@@ -296,8 +296,8 @@ describe('TurnHandlerResolver', () => {
     test('should return null and log warning for invalid actor input (undefined)', async () => {
       const handler = await resolver.resolveHandler(undefined);
 
-      expect(mockCreateHumanTurnHandler).not.toHaveBeenCalled();
-      expect(mockCreateAITurnHandler).not.toHaveBeenCalled();
+      expect(mockCreatePlayerHandler).not.toHaveBeenCalled();
+      expect(mockCreateAIHandler).not.toHaveBeenCalled();
       expect(handler).toBeNull();
       expect(mockLogger.warn).toHaveBeenCalledWith(
         'TurnHandlerResolver: Attempted to resolve handler for invalid or null actor.'

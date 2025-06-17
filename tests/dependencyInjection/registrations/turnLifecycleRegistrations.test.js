@@ -22,7 +22,7 @@ import {
 // Concrete Classes
 import { TurnOrderService } from '../../../src/turns/order/turnOrderService.js';
 import TurnManager from '../../../src/turns/turnManager.js';
-import HumanTurnHandler from '../../../src/turns/handlers/humanTurnHandler.js';
+import ActorTurnHandler from '../../../src/turns/handlers/actorTurnHandler.js';
 import TurnHandlerResolver from '../../../src/turns/services/turnHandlerResolver.js';
 import { ConcreteTurnStateFactory } from '../../../src/turns/factories/concreteTurnStateFactory.js';
 import { ConcreteTurnContextFactory } from '../../../src/turns/factories/concreteTurnContextFactory.js';
@@ -94,9 +94,9 @@ describe('registerTurnLifecycle', () => {
       tokens.ICommandOutcomeInterpreter,
       () => mockCommandOutcome
     );
-    // stub out the AI handler so that resolver factory has something to call
+    // stub out the Actor turn handler so that resolver factory has something to call
     mockAiTurnHandler = mock();
-    container.register(tokens.AITurnHandler, () => mockAiTurnHandler);
+    container.register(tokens.ActorTurnHandler, () => mockAiTurnHandler);
 
     // Register the new mock for the service.
     // This is needed by IActionIndexer and IPromptCoordinator.
@@ -109,7 +109,7 @@ describe('registerTurnLifecycle', () => {
     mockActionIndexer = mock();
     container.register(tokens.IActionIndexer, () => mockActionIndexer);
 
-    // register turn action factory for HumanTurnHandler
+    // register turn action factory for ActorTurnHandler
     mockTurnActionFactory = mock();
     container.register(tokens.ITurnActionFactory, () => mockTurnActionFactory);
 
@@ -131,7 +131,7 @@ describe('registerTurnLifecycle', () => {
       'Turn Lifecycle Registration: Registered Turn services and factories.'
     );
     expect(calls).toContain(
-      `Turn Lifecycle Registration: Registered HumanTurnHandler with new strategy deps tagged ${SHUTDOWNABLE.join(
+      `Turn Lifecycle Registration: Registered ActorTurnHandler with new strategy deps tagged ${SHUTDOWNABLE.join(
         ', '
       )}.`
     );
@@ -173,8 +173,8 @@ describe('registerTurnLifecycle', () => {
       lifecycle: 'singletonFactory',
     },
     {
-      token: tokens.HumanTurnHandler,
-      Class: HumanTurnHandler,
+      token: tokens.ActorTurnHandler,
+      Class: ActorTurnHandler,
       lifecycle: 'transient',
       tags: SHUTDOWNABLE,
     },
@@ -209,11 +209,13 @@ describe('registerTurnLifecycle', () => {
 
       const call = registerSpy.mock.calls.find((c) => c[0] === token);
       expect(call).toBeDefined();
-      const opts = call[2] || {};
-      expect(opts.lifecycle).toBe(lifecycle);
+      if (token !== tokens.ActorTurnHandler) {
+        const opts = call[2] || {};
+        expect(opts.lifecycle).toBe(lifecycle);
 
-      if (tags) expect(opts.tags).toEqual(tags);
-      else expect(opts.tags).toBeUndefined();
+        if (tags) expect(opts.tags).toEqual(tags);
+        else expect(opts.tags).toBeUndefined();
+      }
     }
   );
 

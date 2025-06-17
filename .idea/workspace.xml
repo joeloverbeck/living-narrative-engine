@@ -4,7 +4,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="b413f82f-63d4-4e9a-b873-a56870c7c928" name="Changes" comment="Uploading stuff from the office." />
+    <list default="true" id="b413f82f-63d4-4e9a-b873-a56870c7c928" name="Changes" comment="Losing my fucking mind here.">
+      <change afterPath="$PROJECT_DIR$/tests/configuration/essentialSchemas.integrity.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/configuration/staticConfiguration.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/configuration/staticConfiguration.js" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -20,7 +24,7 @@
   <component name="Git.Settings">
     <option name="RECENT_BRANCH_BY_REPOSITORY">
       <map>
-        <entry key="$PROJECT_DIR$" value="upload-office-files" />
+        <entry key="$PROJECT_DIR$" value="main" />
       </map>
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -60,27 +64,37 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;Jest.eventLoader.fix.test.js.executor&quot;: &quot;Run&quot;,
-    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
-    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
-    &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs.jest.jest_package&quot;: &quot;G:/Projects/programming/javascript/living-narrative-engine/node_modules/jest&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;prettierjs.PrettierConfiguration.Package&quot;: &quot;G:\\Projects\\programming\\javascript\\living-narrative-engine\\node_modules\\prettier&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;web-ide.project.structure&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Jest.essentialSchemas.integrity.test.js.executor": "Run",
+    "Jest.eventLoader.fix.test.js.executor": "Run",
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "git-widget-placeholder": "fixes-to-schema-name-changes",
+    "ignore.virus.scanning.warn.message": "true",
+    "junie.onboarding.icon.badge.shown": "true",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs.jest.jest_package": "G:/Projects/programming/javascript/living-narrative-engine/node_modules/jest",
+    "nodejs_package_manager_path": "npm",
+    "prettierjs.PrettierConfiguration.Package": "G:\\Projects\\programming\\javascript\\living-narrative-engine\\node_modules\\prettier",
+    "settings.editor.selected.configurable": "web-ide.project.structure",
+    "vue.rearranger.settings.migration": "true"
   }
-}</component>
-  <component name="RunManager">
+}]]></component>
+  <component name="RunManager" selected="Jest.essentialSchemas.integrity.test.js">
+    <configuration name="essentialSchemas.integrity.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
+      <node-interpreter value="project" />
+      <jest-package value="$PROJECT_DIR$/node_modules/jest" />
+      <working-dir value="$PROJECT_DIR$" />
+      <envs />
+      <scope-kind value="TEST_FILE" />
+      <test-file value="$PROJECT_DIR$/tests/configuration/essentialSchemas.integrity.test.js" />
+      <method v="2" />
+    </configuration>
     <configuration name="eventLoader.fix.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
       <node-interpreter value="project" />
       <jest-package value="$PROJECT_DIR$/node_modules/jest" />
@@ -92,6 +106,7 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Jest.essentialSchemas.integrity.test.js" />
         <item itemvalue="Jest.eventLoader.fix.test.js" />
       </list>
     </recent_temporary>
@@ -177,7 +192,31 @@
       <option name="project" value="LOCAL" />
       <updated>1750175945334</updated>
     </task>
-    <option name="localTasksCounter" value="9" />
+    <task id="LOCAL-00009" summary="Losing my fucking mind here.">
+      <option name="closed" value="true" />
+      <created>1750176613496</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1750176613496</updated>
+    </task>
+    <task id="LOCAL-00010" summary="Losing my fucking mind here.">
+      <option name="closed" value="true" />
+      <created>1750176660228</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1750176660228</updated>
+    </task>
+    <task id="LOCAL-00011" summary="Losing my fucking mind here.">
+      <option name="closed" value="true" />
+      <created>1750177941977</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1750177941977</updated>
+    </task>
+    <option name="localTasksCounter" value="12" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -196,6 +235,7 @@
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="Uploading stuff from the office." />
-    <option name="LAST_COMMIT_MESSAGE" value="Uploading stuff from the office." />
+    <MESSAGE value="Losing my fucking mind here." />
+    <option name="LAST_COMMIT_MESSAGE" value="Losing my fucking mind here." />
   </component>
 </project>

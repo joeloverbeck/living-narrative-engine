@@ -1,0 +1,92 @@
+// src/bootstrapper/stages/containerStages.js
+/* eslint-disable no-console */
+
+import AppContainer from '../../dependencyInjection/appContainer.js';
+
+// eslint-disable-next-line no-unused-vars
+import { tokens } from '../../dependencyInjection/tokens.js';
+
+/**
+ * @typedef {import('../UIBootstrapper.js').EssentialUIElements} EssentialUIElements
+ */
+/**
+ * @typedef {import('../../dependencyInjection/containerConfig.js').ConfigureContainerFunction} ConfigureContainerFunction
+ */
+/** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
+/** @typedef {typeof tokens} TokensObject */
+/** @typedef {import('../../types/stageResult.js').StageResult} StageResult */
+
+/**
+ * Bootstrap Stage: Sets up the Dependency Injection (DI) container.
+ * This function instantiates AppContainer and calls the provided configuration function.
+ *
+ * @async
+ * @param {EssentialUIElements} uiReferences - The object containing DOM element references.
+ * @param {ConfigureContainerFunction} containerConfigFunc - A reference to the configureContainer function.
+ * @param {(AppContainer|function(): AppContainer)} [containerOrFactory]
+ *  - Instance or factory for an AppContainer.
+ * @returns {Promise<StageResult>} Result object with the configured AppContainer on success.
+ */
+export async function setupDIContainerStage(
+  uiReferences,
+  containerConfigFunc,
+  containerOrFactory = () => new AppContainer()
+) {
+  const container =
+    typeof containerOrFactory === 'function'
+      ? containerOrFactory()
+      : containerOrFactory;
+
+  try {
+    containerConfigFunc(container, uiReferences);
+  } catch (registrationError) {
+    const errorMsg = `Fatal Error during service registration: ${registrationError.message}.`;
+    const stageError = new Error(errorMsg, { cause: registrationError });
+    stageError.phase = 'DI Container Setup';
+    console.error(
+      `Bootstrap Stage: setupDIContainerStage failed. ${errorMsg}`,
+      registrationError
+    );
+    return { success: false, error: stageError };
+  }
+  return { success: true, payload: container };
+}
+
+/**
+ * Bootstrap Stage: Resolves core services.
+ * Currently only the logger is required, but additional core services will be added soon.
+ *
+ * Upcoming core services:
+ * - Event bus
+ * - Configuration access
+ *
+ * @async
+ * @param {AppContainer} container - The configured AppContainer instance.
+ * @param {TokensObject} diTokens - The DI tokens object.
+ * @returns {Promise<StageResult>} Result object with the resolved logger on success.
+ */
+export async function resolveLoggerStage(container, diTokens) {
+  console.log('Bootstrap Stage: Resolving logger service...');
+  /** @type {ILogger} */
+  let logger;
+
+  try {
+    logger = container.resolve(diTokens.ILogger);
+    if (!logger) {
+      throw new Error('ILogger resolved to an invalid object.');
+    }
+  } catch (resolveError) {
+    const errorMsg = `Fatal Error: Could not resolve essential ILogger service: ${resolveError.message}.`;
+    const stageError = new Error(errorMsg, { cause: resolveError });
+    stageError.phase = 'Core Services Resolution';
+    console.error(
+      `Bootstrap Stage: resolveLoggerStage failed. ${errorMsg}`,
+      resolveError
+    );
+    return { success: false, error: stageError };
+  }
+  logger.debug(
+    'Bootstrap Stage: Resolving logger service... DONE. Logger resolved successfully.'
+  );
+  return { success: true, payload: { logger } };
+}

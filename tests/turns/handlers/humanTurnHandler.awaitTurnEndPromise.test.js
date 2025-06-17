@@ -6,13 +6,13 @@ import {
   beforeEach,
   afterEach,
 } from '@jest/globals';
-import HumanTurnHandler from '../../../src/turns/handlers/humanTurnHandler.js';
+import ActorTurnHandler from '../../../src/turns/handlers/actorTurnHandler.js';
 import { BaseTurnHandler } from '../../../src/turns/handlers/baseTurnHandler.js';
 import { ActorMismatchError } from '../../../src/errors/actorMismatchError.js';
 
 // New test to verify that handleSubmittedCommand awaits _handleTurnEnd
 
-describe('HumanTurnHandler handleSubmittedCommand awaiting _handleTurnEnd', () => {
+describe('ActorTurnHandler handleSubmittedCommand awaiting _handleTurnEnd', () => {
   let deps;
   let mockLogger;
   let mockTurnStateFactory;
@@ -85,7 +85,7 @@ describe('HumanTurnHandler handleSubmittedCommand awaiting _handleTurnEnd', () =
   });
 
   it('awaits _handleTurnEnd when no context exists', async () => {
-    const handler = new HumanTurnHandler(deps);
+    const handler = new ActorTurnHandler(deps);
     const actor = { id: 'actor1' };
 
     jest.spyOn(handler, 'getTurnContext').mockReturnValue(null);

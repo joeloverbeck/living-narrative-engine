@@ -19,7 +19,7 @@
 //  NOTE: This project is plain JavaScript – we rely on JSDoc for intellisense.
 // ────────────────────────────────────────────────────────────────────────────
 
-/** @typedef {import('../handlers/humanTurnHandler.js').default} HumanTurnHandler */
+/** @typedef {import('../handlers/actorTurnHandler.js').default} ActorTurnHandler */
 /** @typedef {import('../../entities/entity.js').default}        Entity */
 /** @typedef {import('../constants/turnDirectives.js').default}    TurnDirective */
 /** @typedef {import('../interfaces/ITurnDirectiveStrategy.js').ITurnDirectiveStrategy} ITurnDirectiveStrategy */
