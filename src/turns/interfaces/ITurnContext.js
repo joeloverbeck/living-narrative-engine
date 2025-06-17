@@ -31,7 +31,7 @@
  * @description
  * Defines the contract for turn-specific data and services. This interface's
  * primary role is to decouple turn logic (like states and strategies) from
- * concrete handler implementations (e.g. HumanTurnHandler, AITurnHandler).
+ * concrete handler implementations (e.g. ActorTurnHandler).
  *
  * By interacting with ITurnContext, turn states and actor strategies can
  * access essential information (current actor, game state) and functionalities

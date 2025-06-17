@@ -1,5 +1,5 @@
 /**
- * @file Contains the base class for the base turn handler (used by AITurnHandler, HumanTurnHandler, etc.)
+ * @file Contains the base class for the base turn handler (used by ActorTurnHandler, etc.)
  * @see src/turns/handlers/baseTurnHandler.js
  */
 
