@@ -206,7 +206,7 @@ describe('WorldLoader Integration Test Suite - Performance Timing Logs (Sub-Tick
       gameVersion: '^1.0.0',
       // Define some content for foo mod
       content: {
-        items: ['foo_item.json'],
+        entityDefinitions: ['items/foo_item.json'],
         conditions: ['foo_condition.json'],
       },
     };
@@ -317,13 +317,13 @@ describe('WorldLoader Integration Test Suite - Performance Timing Logs (Sub-Tick
       'conditions',
       'conditions'
     );
-    // Foo mod has items (handled by EntityDefinitionLoader)
+    // Foo mod has entity definitions (handled by EntityDefinitionLoader)
     expect(mockEntityLoader.loadItemsForMod).toHaveBeenCalledWith(
       fooModId,
       mockFooManifest,
-      'items',
-      'entities/definitions/items',
-      'items'
+      'entityDefinitions',
+      'entities/definitions',
+      'entityDefinitions'
     );
     expect(mockConditionLoader.loadItemsForMod).toHaveBeenCalledWith(
       fooModId,

@@ -248,7 +248,10 @@ beforeEach(() => {
   // Ensure calls to _storeItemInRegistry invoke the real implementation so the
   // returned object includes the calculated qualifiedId.
   entityLoader._storeItemInRegistry.mockImplementation((...args) =>
-    EntityDefinitionLoader.prototype._storeItemInRegistry.apply(entityLoader, args)
+    EntityDefinitionLoader.prototype._storeItemInRegistry.apply(
+      entityLoader,
+      args
+    )
   );
 });
 
@@ -312,7 +315,8 @@ describe('EntityLoader', () => {
 
       // --- [LOADER-REFACTOR-04 Test Change START] ---
       // --- CORRECTION: Updated expected warning message ---
-      const expectedBaseWarning = `EntityLoader: Primary schema ID for content type 'entities' not found in configuration. Primary validation might be skipped.`;
+      const expectedBaseWarning =
+        "EntityDefinitionLoader: Primary schema ID for content type 'entities' not found in configuration. Primary validation might be skipped.";
 
       // Expect only ONE warning call total (from the base class)
       expect(warnLogger.warn).toHaveBeenCalledTimes(1);
@@ -398,7 +402,7 @@ describe('EntityLoader', () => {
         )
       ).rejects.toThrow(loadError);
       expect(mockLogger.info).toHaveBeenCalledWith(
-        `EntityLoader: Loading ${GENERIC_TYPE_NAME} definitions for mod '${TEST_MOD_ID}'.`
+        `EntityDefinitionLoader: Loading ${GENERIC_TYPE_NAME} definitions for mod '${TEST_MOD_ID}'.`
       );
       // Error should be logged by _loadItemsInternal or its callees, check base class logging if needed
     });
@@ -468,7 +472,10 @@ describe('EntityLoader', () => {
       // --- [LOADER-REFACTOR-04 Test Change]: Mock base class methods called within/around _processFetchedItem ---
       entityLoader._storeItemInRegistry.mockClear(); // Clear spy calls from beforeEach
       entityLoader._storeItemInRegistry.mockImplementation((...args) =>
-        EntityDefinitionLoader.prototype._storeItemInRegistry.apply(entityLoader, args)
+        EntityDefinitionLoader.prototype._storeItemInRegistry.apply(
+          entityLoader,
+          args
+        )
       );
     });
 
