@@ -3,7 +3,7 @@ import SaveLoadService from '../../src/persistence/saveLoadService.js';
 import GamePersistenceService from '../../src/persistence/gamePersistenceService.js';
 import GameStateCaptureService from '../../src/persistence/gameStateCaptureService.js';
 import ComponentCleaningService from '../../src/persistence/componentCleaningService.js';
-import receptionistDef from '../../data/mods/isekai/characters/receptionist.character.json';
+import receptionistDef from '../../data/mods/isekai/entities/definitions/receptionist.character.json';
 import { webcrypto } from 'crypto';
 import { createMockSaveValidationService } from '../testUtils.js';
 

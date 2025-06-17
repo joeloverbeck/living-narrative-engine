@@ -13,7 +13,7 @@
 /** @typedef {import('./schemaLoader.js').default} SchemaLoader */
 /** @typedef {import('./gameConfigLoader.js').default} GameConfigLoader */
 /** @typedef {import('../modding/modManifestLoader.js').default} ModManifestLoader */
-/** @typedef {import('./entityLoader.js').default} EntityLoader */
+/** @typedef {import('./entityDefinitionLoader.js').default} EntityLoader */
 /** @typedef {import('./entityInstanceLoader.js').default} EntityInstanceLoader */
 /** @typedef {import('./promptTextLoader.js').default} PromptTextLoader */
 /** @typedef {import('../../data/schemas/mod.manifest.schema.json').ModManifest} ModManifest */
@@ -273,40 +273,16 @@ class WorldLoader extends AbstractLoader {
         typeName: 'rules',
       },
       {
+        loader: this.#entityDefinitionLoader,
+        contentKey: 'entityDefinitions',
+        contentTypeDir: 'entities/definitions',
+        typeName: 'entityDefinitions',
+      },
+      {
         loader: this.#entityInstanceLoader,
         contentKey: 'entityInstances',
         contentTypeDir: 'entities/instances',
         typeName: 'entityInstances',
-      },
-      {
-        loader: this.#entityDefinitionLoader,
-        contentKey: 'items',
-        contentTypeDir: 'entities/definitions/items',
-        typeName: 'items',
-      },
-      {
-        loader: this.#entityDefinitionLoader,
-        contentKey: 'locations',
-        contentTypeDir: 'entities/definitions/locations',
-        typeName: 'locations',
-      },
-      {
-        loader: this.#entityDefinitionLoader,
-        contentKey: 'characters',
-        contentTypeDir: 'entities/definitions/characters',
-        typeName: 'characters',
-      },
-      {
-        loader: this.#entityDefinitionLoader,
-        contentKey: 'blockers',
-        contentTypeDir: 'entities/definitions/blockers',
-        typeName: 'blockers',
-      },
-      {
-        loader: this.#entityDefinitionLoader,
-        contentKey: 'connections',
-        contentTypeDir: 'entities/definitions/connections',
-        typeName: 'connections',
       },
     ];
 

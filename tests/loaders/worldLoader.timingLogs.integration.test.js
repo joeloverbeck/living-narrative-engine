@@ -34,7 +34,7 @@ jest.mock('../../src/modding/modLoadOrderResolver.js', () => ({
 /** @typedef {import('../../src/loaders/schemaLoader.js').default} SchemaLoader */
 /** @typedef {import('../../src/loaders/gameConfigLoader.js').default} GameConfigLoader */
 /** @typedef {import('../../src/modding/modManifestLoader.js').default} ModManifestLoader */
-/** @typedef {import('../../src/loaders/entityLoader.js').default} EntityLoader */
+/** @typedef {import('../../src/loaders/entityDefinitionLoader.js').default} EntityLoader */
 /** @typedef {import('../../../interfaces/manifestItems.js').ModManifest} ModManifest */
 /** @typedef {import('../../../services/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
 /** @typedef {import('../../src/loaders/conditionLoader.js').default} ConditionLoader */
@@ -317,7 +317,7 @@ describe('WorldLoader Integration Test Suite - Performance Timing Logs (Sub-Tick
       'conditions',
       'conditions'
     );
-    // Foo mod has items (handled by EntityLoader)
+    // Foo mod has items (handled by EntityDefinitionLoader)
     expect(mockEntityLoader.loadItemsForMod).toHaveBeenCalledWith(
       fooModId,
       mockFooManifest,

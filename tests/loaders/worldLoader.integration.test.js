@@ -33,7 +33,7 @@ jest.mock('../../src/modding/modLoadOrderResolver.js', () => ({
 /** @typedef {import('../../src/loaders/schemaLoader.js').default} SchemaLoader */
 /** @typedef {import('../../src/loaders/gameConfigLoader.js').default} GameConfigLoader */
 /** @typedef {import('../../src/modding/modManifestLoader.js').default} ModManifestLoader */
-/** @typedef {import('../../src/loaders/entityLoader.js').default} EntityLoader */
+/** @typedef {import('../../src/loaders/entityDefinitionLoader.js').default} EntityLoader */
 /** @typedef {import('../../data/schemas/mod.manifest.schema.json').ModManifest} ModManifest */
 /** @typedef {import('../../services/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
 
@@ -431,7 +431,7 @@ describe('WorldLoader Integration Test Suite (TEST-LOADER-7.1)', () => {
     expect(mockEventLoader.loadItemsForMod).not.toHaveBeenCalled();
     expect(mockRuleLoader.loadItemsForMod).not.toHaveBeenCalled();
     expect(mockConditionLoader.loadItemsForMod).not.toHaveBeenCalled();
-    // Check EntityLoader wasn't called for other keys it handles but aren't in manifest
+    // Check EntityDefinitionLoader wasn't called for other keys it handles but aren't in manifest
     expect(mockEntityLoader.loadItemsForMod).not.toHaveBeenCalledWith(
       expect.anything(),
       expect.anything(),

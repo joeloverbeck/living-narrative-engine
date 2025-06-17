@@ -18,7 +18,7 @@
 /** @typedef {import('../../modding/modManifestLoader.js').default} ModManifestLoader */ // <<< ADDED: MODLOADER-005 A
 /** @typedef {import('../../loaders/actionLoader.js').default} ActionLoader */ // <<< ADDED: LOADER-001
 /** @typedef {import('../../loaders/eventLoader.js').default} EventLoader */ // <<< ADDED: LOADER-003
-/** @typedef {import('../../loaders/entityLoader.js').default} EntityLoader */ // <<< ADDED: LOADER-004-F
+/** @typedef {import('../../loaders/entityDefinitionLoader.js').default} EntityLoader */ // <<< ADDED: LOADER-004-F
 /** @typedef {import('../../configuration/staticConfiguration.js').default} StaticConfiguration */
 /** @typedef {import('../../pathing/defaultPathResolver.js').default} DefaultPathResolver */
 /** @typedef {import('../../validation/ajvSchemaValidator.js').default} AjvSchemaValidator */
@@ -42,7 +42,7 @@ import ModManifestLoader from '../../modding/modManifestLoader.js';
 import ActionLoader from '../../loaders/actionLoader.js';
 import EventLoader from '../../loaders/eventLoader.js';
 import MacroLoader from '../../loaders/macroLoader.js';
-import EntityLoader from '../../loaders/entityLoader.js';
+import EntityDefinitionLoader from '../../loaders/entityDefinitionLoader.js';
 
 // --- DI & Helper Imports ---
 import { tokens } from '../tokens.js';
@@ -246,7 +246,7 @@ export function registerLoaders(container) {
   registrar.singletonFactory(
     tokens.EntityLoader,
     (c) =>
-      new EntityLoader(
+      new EntityDefinitionLoader(
         c.resolve(tokens.IConfiguration),
         c.resolve(tokens.IPathResolver),
         c.resolve(tokens.IDataFetcher),

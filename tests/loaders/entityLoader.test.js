@@ -1,7 +1,7 @@
 // Filename: src/tests/loaders/entityLoader.test.js
 
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
-import EntityLoader from '../../src/loaders/entityLoader.js'; // Adjust path as needed
+import EntityDefinitionLoader from '../../src/loaders/entityDefinitionLoader.js'; // Adjust path as needed
 import { BaseManifestItemLoader } from '../../src/loaders/baseManifestItemLoader.js'; // Base class
 
 // --- Mock Service Factories (Simplified and Corrected) ---
@@ -190,7 +190,7 @@ let mockValidator;
 let mockRegistry;
 /** @type {ILogger} */
 let mockLogger;
-/** @type {EntityLoader} */
+/** @type {EntityDefinitionLoader} */
 let entityLoader;
 
 beforeEach(() => {
@@ -202,9 +202,9 @@ beforeEach(() => {
   mockRegistry = createMockDataRegistry();
   mockLogger = createMockLogger();
 
-  // Instantiate the EntityLoader WITH the fresh mocks
+  // Instantiate the EntityDefinitionLoader WITH the fresh mocks
   // The constructor signature itself hasn't changed, but its internal super() call has.
-  entityLoader = new EntityLoader(
+  entityLoader = new EntityDefinitionLoader(
     mockConfig,
     mockResolver,
     mockFetcher,
@@ -235,20 +235,20 @@ beforeEach(() => {
 
   // Bind the actual _processFetchedItem method if needed for deep testing, but often testing via the wrapper is sufficient.
   // The current tests seem to call _processFetchedItem directly, so binding it ensures we use the real implementation.
-  if (EntityLoader.prototype._processFetchedItem) {
+  if (EntityDefinitionLoader.prototype._processFetchedItem) {
     entityLoader._processFetchedItem =
-      EntityLoader.prototype._processFetchedItem.bind(entityLoader);
+      EntityDefinitionLoader.prototype._processFetchedItem.bind(entityLoader);
   }
   // Also bind the component validation method if called directly in tests (it is)
   // --- Correction: Remove binding for private method ---
-  // if (EntityLoader.prototype['_validateEntityComponents']) { // Access private method for testing
-  //     entityLoader['_validateEntityComponents'] = EntityLoader.prototype['_validateEntityComponents'].bind(entityLoader);
+  // if (EntityDefinitionLoader.prototype['_validateEntityComponents']) { // Access private method for testing
+  //     entityLoader['_validateEntityComponents'] = EntityDefinitionLoader.prototype['_validateEntityComponents'].bind(entityLoader);
   // }
 
   // Ensure calls to _storeItemInRegistry invoke the real implementation so the
   // returned object includes the calculated qualifiedId.
   entityLoader._storeItemInRegistry.mockImplementation((...args) =>
-    EntityLoader.prototype._storeItemInRegistry.apply(entityLoader, args)
+    EntityDefinitionLoader.prototype._storeItemInRegistry.apply(entityLoader, args)
   );
 });
 
@@ -263,7 +263,7 @@ describe('EntityLoader', () => {
       const tempConfig = createMockConfiguration(); // Uses the updated factory
 
       // Instantiate with the temporary mocks
-      const loader = new EntityLoader(
+      const loader = new EntityDefinitionLoader(
         tempConfig,
         mockResolver,
         mockFetcher,
@@ -272,7 +272,7 @@ describe('EntityLoader', () => {
         tempLogger
       );
 
-      expect(loader).toBeInstanceOf(EntityLoader);
+      expect(loader).toBeInstanceOf(EntityDefinitionLoader);
       expect(loader).toBeInstanceOf(BaseManifestItemLoader);
 
       // --- [LOADER-REFACTOR-04 Test Change START] ---
@@ -301,7 +301,7 @@ describe('EntityLoader', () => {
       });
 
       // Instantiate with the temporary logger and bad dependencyInjection
-      new EntityLoader(
+      new EntityDefinitionLoader(
         badConfig,
         mockResolver,
         mockFetcher,
@@ -318,17 +318,17 @@ describe('EntityLoader', () => {
       expect(warnLogger.warn).toHaveBeenCalledTimes(1);
       expect(warnLogger.warn).toHaveBeenCalledWith(expectedBaseWarning); // Check against the corrected explicit message
 
-      // Ensure the EntityLoader-specific warning is NOT logged
+      // Ensure the EntityDefinitionLoader-specific warning is NOT logged
       expect(warnLogger.warn).not.toHaveBeenCalledWith(
         expect.stringContaining(
-          "EntityLoader: Schema ID for 'entities' is missing."
+          "EntityDefinitionLoader: Schema ID for 'entities' is missing."
         )
       );
       // --- [LOADER-REFACTOR-04 Test Change END] ---
 
       // Debug log from AbstractLoader should still happen
       expect(warnLogger.debug).toHaveBeenCalledWith(
-        'EntityLoader: Initialized.'
+        'EntityDefinitionLoader: Initialized.'
       );
       expect(warnLogger.debug).toHaveBeenCalledTimes(1); // Only AbstractLoader logs initialization now
     });
@@ -404,7 +404,7 @@ describe('EntityLoader', () => {
     });
   });
 
-  // --- _processFetchedItem Tests (Core EntityLoader Logic AFTER base validation) ---
+  // --- _processFetchedItem Tests (Core EntityDefinitionLoader Logic AFTER base validation) ---
   describe('_processFetchedItem', () => {
     const filename = 'test_entity.json';
     const resolvedPath = `./data/mods/${TEST_MOD_ID}/${GENERIC_CONTENT_DIR}/${filename}`;
@@ -468,7 +468,7 @@ describe('EntityLoader', () => {
       // --- [LOADER-REFACTOR-04 Test Change]: Mock base class methods called within/around _processFetchedItem ---
       entityLoader._storeItemInRegistry.mockClear(); // Clear spy calls from beforeEach
       entityLoader._storeItemInRegistry.mockImplementation((...args) =>
-        EntityLoader.prototype._storeItemInRegistry.apply(entityLoader, args)
+        EntityDefinitionLoader.prototype._storeItemInRegistry.apply(entityLoader, args)
       );
     });
 

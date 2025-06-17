@@ -4,14 +4,35 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="b413f82f-63d4-4e9a-b873-a56870c7c928" name="Changes" comment="Losing my fucking mind here.">
-      <change afterPath="$PROJECT_DIR$/data/schemas/entity-definition.schema.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/data/schemas/entity-instance.schema.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/loaders/entityInstanceLoader.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tests/loaders/entityInstanceLoader.test.js" afterDir="false" />
+    <list default="true" id="b413f82f-63d4-4e9a-b873-a56870c7c928" name="Changes" comment="Fixed static configuration issue.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/data/mods/core/mod.manifest.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/core/mod.manifest.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/mods/intimacy/mod.manifest.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/intimacy/mod.manifest.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/mods/isekai/characters/hero.character.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/isekai/entities/definitions/hero.character.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/mods/isekai/characters/ninja.character.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/isekai/entities/definitions/ninja.character.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/mods/isekai/characters/receptionist.character.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/isekai/entities/definitions/receptionist.character.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/mods/isekai/characters/sidekick.character.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/isekai/entities/definitions/sidekick.character.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/mods/isekai/locations/adventurers_guild.location.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/isekai/entities/definitions/adventurers_guild.location.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/mods/isekai/locations/town.location.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/isekai/entities/definitions/town.location.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/mods/isekai/mod.manifest.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/isekai/mod.manifest.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/schemas/mod.manifest.schema.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/schemas/mod.manifest.schema.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/dependencyInjection/registrations/infrastructureRegistrations.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/registrations/infrastructureRegistrations.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/dependencyInjection/registrations/loadersRegistrations.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/registrations/loadersRegistrations.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/loaders/entityLoader.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/loaders/entityDefinitionLoader.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/loaders/worldLoader.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/loaders/worldLoader.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/config/registrations/loadersRegistrations.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/config/registrations/loadersRegistrations.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/integration/saveLoadRoundTrip.integration.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/integration/saveLoadRoundTrip.integration.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/loaders/entityLoader.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/loaders/entityLoader.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/loaders/worldLoader.dependencyError.integration.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/loaders/worldLoader.dependencyError.integration.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/loaders/worldLoader.entityMultiKey.integration.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/loaders/worldLoader.entityMultiKey.integration.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/loaders/worldLoader.errorHandling.integration.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/loaders/worldLoader.errorHandling.integration.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/loaders/worldLoader.integration.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/loaders/worldLoader.integration.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/loaders/worldLoader.logVerification.integration.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/loaders/worldLoader.logVerification.integration.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/loaders/worldLoader.override.integration.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/loaders/worldLoader.override.integration.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/loaders/worldLoader.overrides.integration.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/loaders/worldLoader.overrides.integration.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/loaders/worldLoader.partialContent.integration.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/loaders/worldLoader.partialContent.integration.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/loaders/worldLoader.preLoopErrors.integration.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/loaders/worldLoader.preLoopErrors.integration.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/loaders/worldLoader.timingLogs.integration.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/loaders/worldLoader.timingLogs.integration.test.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -90,6 +111,11 @@
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="G:\Projects\programming\javascript\living-narrative-engine\data\mods\isekai\entities\definitions" />
+    </key>
+  </component>
   <component name="RunManager" selected="Jest.entityInstanceLoader.test.js">
     <configuration name="entityInstanceLoader.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
       <node-interpreter value="project" />
@@ -231,7 +257,15 @@
       <option name="project" value="LOCAL" />
       <updated>1750177941977</updated>
     </task>
-    <option name="localTasksCounter" value="12" />
+    <task id="LOCAL-00012" summary="Fixed static configuration issue.">
+      <option name="closed" value="true" />
+      <created>1750181646585</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1750181646585</updated>
+    </task>
+    <option name="localTasksCounter" value="13" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -251,6 +285,7 @@
   <component name="VcsManagerConfiguration">
     <MESSAGE value="Uploading stuff from the office." />
     <MESSAGE value="Losing my fucking mind here." />
-    <option name="LAST_COMMIT_MESSAGE" value="Losing my fucking mind here." />
+    <MESSAGE value="Fixed static configuration issue." />
+    <option name="LAST_COMMIT_MESSAGE" value="Fixed static configuration issue." />
   </component>
 </project>

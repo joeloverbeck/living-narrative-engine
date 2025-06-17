@@ -7,6 +7,13 @@
   "author": "joeloverbeck",
   "gameVersion": ">=0.0.1",
   "content": {
+    "actions": [
+      "dismiss.action.json",
+      "follow.action.json",
+      "go.action.json",
+      "stop_following.action.json",
+      "wait.action.json"
+    ],
     "components": [
       "actor.component.json",
       "current_actor.component.json",
@@ -31,35 +38,29 @@
       "short_term_memory.component.json",
       "speech_patterns.component.json"
     ],
-    "characters": [],
-    "items": [],
-    "locations": [],
-    "actions": [
-      "dismiss.action.json",
-      "follow.action.json",
-      "go.action.json",
-      "stop_following.action.json",
-      "wait.action.json"
+    "conditions": [
+      "actor-can-follow-target.condition.json",
+      "actor-is-following.condition.json",
+      "actor-is-leading.condition.json",
+      "actor-is-not-null.condition.json",
+      "actor-is-not-rooted.condition.json",
+      "event-is-action-dismiss.condition.json",
+      "event-is-action-follow.condition.json",
+      "event-is-action-go.condition.json",
+      "event-is-action-stop-following.condition.json",
+      "event-is-action-wait.condition.json",
+      "target-is-actor.condition.json",
+      "target-is-follower-of-actor.condition.json",
+      "target-is-following-actor.condition.json",
+      "target-is-in-actors-follower-list.condition.json",
+      "target-is-in-same-location-as-actor.condition.json",
+      "target-is-not-rooted.condition.json",
+      "target-is-not-self.condition.json",
+      "way-is-not-blocked.condition.json",
+      "actor-has-name-and-position.condition.json"
     ],
-    "rules": [
-      "dismiss.rule.json",
-      "entity_speech.rule.json",
-      "follow.rule.json",
-      "follow_auto_move.rule.json",
-      "go.rule.json",
-      "log_perceptible_events.rule.json",
-      "player_turn_prompt.rule.json",
-      "stop_following.rule.json",
-      "turn_ended.rule.json",
-      "turn_started.rule.json",
-      "wait.rule.json"
-    ],
-    "macros": [
-      "autoMoveFollower.macro.json",
-      "displaySuccessAndEndTurn.macro.json",
-      "logFailureAndEndTurn.macro.json",
-      "logSuccessAndEndTurn.macro.json"
-    ],
+    "entityDefinitions": [],
+    "entityInstances": [],
     "events": [
       "action_decided.event.json",
       "ai_turn_processing_ended.event.json",
@@ -91,30 +92,28 @@
       "ui_stopped.event.json",
       "update_available_actions.event.json"
     ],
+    "macros": [
+      "autoMoveFollower.macro.json",
+      "displaySuccessAndEndTurn.macro.json",
+      "logFailureAndEndTurn.macro.json",
+      "logSuccessAndEndTurn.macro.json"
+    ],
+    "rules": [
+      "dismiss.rule.json",
+      "entity_speech.rule.json",
+      "follow.rule.json",
+      "follow_auto_move.rule.json",
+      "go.rule.json",
+      "log_perceptible_events.rule.json",
+      "player_turn_prompt.rule.json",
+      "stop_following.rule.json",
+      "turn_ended.rule.json",
+      "turn_started.rule.json",
+      "wait.rule.json"
+    ],
     "ui": [
       "icons.json",
       "labels.json"
-    ],
-    "conditions": [
-      "actor-can-follow-target.condition.json",
-      "actor-is-following.condition.json",
-      "actor-is-leading.condition.json",
-      "actor-is-not-null.condition.json",
-      "actor-is-not-rooted.condition.json",
-      "event-is-action-dismiss.condition.json",
-      "event-is-action-follow.condition.json",
-      "event-is-action-go.condition.json",
-      "event-is-action-stop-following.condition.json",
-      "event-is-action-wait.condition.json",
-      "target-is-actor.condition.json",
-      "target-is-follower-of-actor.condition.json",
-      "target-is-following-actor.condition.json",
-      "target-is-in-actors-follower-list.condition.json",
-      "target-is-in-same-location-as-actor.condition.json",
-      "target-is-not-rooted.condition.json",
-      "target-is-not-self.condition.json",
-      "way-is-not-blocked.condition.json",
-      "actor-has-name-and-position.condition.json"
     ]
   }
 }
