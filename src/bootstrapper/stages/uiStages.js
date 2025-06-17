@@ -1,7 +1,6 @@
 // src/bootstrapper/stages/uiStages.js
 /* eslint-disable no-console */
 
-import { UIBootstrapper } from '../UIBootstrapper.js';
 import { setupButtonListener } from '../helpers.js';
 
 // eslint-disable-next-line no-unused-vars
@@ -10,6 +9,7 @@ import { tokens } from '../../dependencyInjection/tokens.js';
 /**
  * @typedef {import('../UIBootstrapper.js').EssentialUIElements} EssentialUIElements
  */
+/** @typedef {import('../UIBootstrapper.js').UIBootstrapper} UIBootstrapper */
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../engine/gameEngine.js').default} GameEngineInstance */
 /** @typedef {import('../../types/stageResult.js').StageResult} StageResult */
@@ -22,18 +22,15 @@ import { tokens } from '../../dependencyInjection/tokens.js';
  *
  * @async
  * @param {Document} doc - The global document object.
- * @param {(UIBootstrapper|function(): UIBootstrapper)} [uiBootstrapperOrFactory]
- *  - Instance or factory for a UIBootstrapper.
+ * @param {{ createUIBootstrapper: function(): UIBootstrapper }} options
+ *  - Factory provider for a UIBootstrapper instance.
  * @returns {Promise<StageResult>} Result object with gathered DOM elements on success.
  */
 export async function ensureCriticalDOMElementsStage(
   doc,
-  uiBootstrapperOrFactory = () => new UIBootstrapper()
+  { createUIBootstrapper }
 ) {
-  const uiBootstrapper =
-    typeof uiBootstrapperOrFactory === 'function'
-      ? uiBootstrapperOrFactory()
-      : uiBootstrapperOrFactory;
+  const uiBootstrapper = createUIBootstrapper();
   try {
     const essentialUIElements = uiBootstrapper.gatherEssentialElements(doc);
     return { success: true, payload: essentialUIElements };

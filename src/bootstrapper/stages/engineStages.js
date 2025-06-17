@@ -1,11 +1,10 @@
 // src/bootstrapper/stages/engineStages.js
 
-import GameEngine from '../../engine/gameEngine.js';
-import AppContainer from '../../dependencyInjection/appContainer.js';
-
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../types/stageResult.js').StageResult} StageResult */
 /** @typedef {import('../../engine/gameEngine.js').default} GameEngineInstance */
+/** @typedef {import('../../engine/gameEngine.js').default} GameEngine */
+/** @typedef {import('../../dependencyInjection/appContainer.js').default} AppContainer */
 
 /**
  * Bootstrap Stage: Initializes the GameEngine.
@@ -14,14 +13,14 @@ import AppContainer from '../../dependencyInjection/appContainer.js';
  * @async
  * @param {AppContainer} container - The configured AppContainer instance.
  * @param {ILogger} logger - The resolved ILogger instance.
- * @param {(function(new:GameEngine,object):GameEngine)|function(object):GameEngine|typeof GameEngine} [GameEngineCtorOrFactory]
- *  - GameEngine class or factory to instantiate.
+ * @param {{ createGameEngine: function(object): GameEngine }} options
+ *  - Factory provider for a GameEngine instance.
  * @returns {Promise<StageResult>} Result object with the GameEngine instance on success.
  */
 export async function initializeGameEngineStage(
   container,
   logger,
-  GameEngineCtorOrFactory = GameEngine
+  { createGameEngine }
 ) {
   logger.debug('Bootstrap Stage: Initializing GameEngine...');
   const currentPhase = 'GameEngine Initialization';
@@ -29,15 +28,7 @@ export async function initializeGameEngineStage(
   let gameEngine;
   try {
     logger.debug('GameEngine Stage: Creating GameEngine instance...');
-    if (
-      GameEngineCtorOrFactory &&
-      GameEngineCtorOrFactory.prototype &&
-      GameEngineCtorOrFactory.prototype.constructor
-    ) {
-      gameEngine = new GameEngineCtorOrFactory({ container });
-    } else {
-      gameEngine = GameEngineCtorOrFactory({ container });
-    }
+    gameEngine = createGameEngine({ container });
     if (!gameEngine) {
       throw new Error('GameEngine constructor returned null or undefined.');
     }
