@@ -23,7 +23,10 @@ export class TurnEndingState extends AbstractTurnState {
 
     const log = this._resolveLogger(null, handler);
 
-    const dispatcher = handler.getTurnContext?.()?.getSafeEventDispatcher?.();
+    const dispatcher = this._getSafeEventDispatcher(
+      handler.getTurnContext?.(),
+      handler
+    );
 
     if (!actorToEndId) {
       const message =
@@ -63,14 +66,17 @@ export class TurnEndingState extends AbstractTurnState {
       try {
         await ctx.getTurnEndPort().notifyTurnEnded(this.#actorToEndId, success);
       } catch (err) {
-        ctx.getSafeEventDispatcher?.().dispatch(SYSTEM_ERROR_OCCURRED_ID, {
-          message: `TurnEndingState: Failed notifying TurnEndPort for actor ${this.#actorToEndId}: ${err.message}`,
-          details: {
-            actorId: this.#actorToEndId,
-            stack: err.stack,
-            error: err.message,
-          },
-        });
+        this._getSafeEventDispatcher(ctx, handler)?.dispatch(
+          SYSTEM_ERROR_OCCURRED_ID,
+          {
+            message: `TurnEndingState: Failed notifying TurnEndPort for actor ${this.#actorToEndId}: ${err.message}`,
+            details: {
+              actorId: this.#actorToEndId,
+              stack: err.stack,
+              error: err.message,
+            },
+          }
+        );
       }
     } else {
       const reason = !ctx
@@ -146,14 +152,17 @@ export class TurnEndingState extends AbstractTurnState {
       try {
         await ctx.requestIdleStateTransition();
       } catch (err) {
-        ctx.getSafeEventDispatcher?.().dispatch(SYSTEM_ERROR_OCCURRED_ID, {
-          message: `TurnEndingState: Failed forced transition to TurnIdleState during destroy for actor ${this.#actorToEndId}: ${err.message}`,
-          details: {
-            actorId: this.#actorToEndId,
-            stack: err.stack,
-            error: err.message,
-          },
-        });
+        this._getSafeEventDispatcher(ctx, handler)?.dispatch(
+          SYSTEM_ERROR_OCCURRED_ID,
+          {
+            message: `TurnEndingState: Failed forced transition to TurnIdleState during destroy for actor ${this.#actorToEndId}: ${err.message}`,
+            details: {
+              actorId: this.#actorToEndId,
+              stack: err.stack,
+              error: err.message,
+            },
+          }
+        );
       }
     }
 

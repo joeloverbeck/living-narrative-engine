@@ -48,21 +48,11 @@ export async function handleProcessingException(
     error
   );
 
-  /** @type {ISafeEventDispatcher | undefined} */
-  let systemErrorDispatcher;
-  if (turnCtx && typeof turnCtx.getSafeEventDispatcher === 'function') {
-    systemErrorDispatcher = turnCtx.getSafeEventDispatcher();
-  } else if (
-    state._handler &&
-    typeof state._handler.safeEventDispatcher === 'object' &&
-    state._handler.safeEventDispatcher !== null &&
-    typeof state._handler.safeEventDispatcher.dispatch === 'function'
-  ) {
-    logger.warn(
-      `${state.getStateName()}: SafeEventDispatcher not found on TurnContext for actor ${currentActorIdForLog}. Attempting to use this._handler.safeEventDispatcher.`
-    );
-    systemErrorDispatcher = state._handler.safeEventDispatcher;
-  }
+  /** @type {ISafeEventDispatcher | null} */
+  const systemErrorDispatcher = state._getSafeEventDispatcher(
+    turnCtx,
+    state._handler
+  );
 
   if (systemErrorDispatcher) {
     try {

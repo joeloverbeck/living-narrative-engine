@@ -37,15 +37,7 @@ export async function getServiceFromContext(
     return null;
   }
   const logger = turnCtx.getLogger();
-  let dispatcher = null;
-  if (typeof turnCtx.getSafeEventDispatcher === 'function') {
-    dispatcher = turnCtx.getSafeEventDispatcher();
-  } else if (
-    state._handler?.safeEventDispatcher &&
-    typeof state._handler.safeEventDispatcher.dispatch === 'function'
-  ) {
-    dispatcher = state._handler.safeEventDispatcher;
-  }
+  const dispatcher = state._getSafeEventDispatcher(turnCtx);
   try {
     if (typeof turnCtx[methodName] !== 'function') {
       throw new Error(

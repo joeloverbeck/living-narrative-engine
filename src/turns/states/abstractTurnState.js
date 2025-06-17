@@ -152,6 +152,51 @@ export class AbstractTurnState extends ITurnState {
     return console;
   }
 
+  /**
+   * Safely resolves a SafeEventDispatcher using the provided context or handler.
+   * Falls back to this._handler.safeEventDispatcher when necessary.
+   *
+   * @protected
+   * @param {ITurnContext | null} turnCtx - The current ITurnContext, if any.
+   * @param {BaseTurnHandler} [handler] - Optional handler override.
+   * @returns {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher|null}
+   *   The resolved dispatcher or null if unavailable.
+   */
+  _getSafeEventDispatcher(turnCtx, handler = this._handler) {
+    let dispatcher = null;
+
+    if (turnCtx && typeof turnCtx.getSafeEventDispatcher === 'function') {
+      try {
+        const d = turnCtx.getSafeEventDispatcher();
+        if (d && typeof d.dispatch === 'function') {
+          dispatcher = d;
+        }
+      } catch (err) {
+        this._resolveLogger(turnCtx, handler).error(
+          `${this.getStateName()}: Error calling turnCtx.getSafeEventDispatcher(): ${err.message}`,
+          err
+        );
+      }
+    }
+
+    if (!dispatcher && handler?.safeEventDispatcher) {
+      if (typeof handler.safeEventDispatcher.dispatch === 'function') {
+        this._resolveLogger(turnCtx, handler).warn(
+          `${this.getStateName()}: SafeEventDispatcher not found on ITurnContext. Falling back to handler.safeEventDispatcher.`
+        );
+        dispatcher = handler.safeEventDispatcher;
+      }
+    }
+
+    if (!dispatcher) {
+      this._resolveLogger(turnCtx, handler).warn(
+        `${this.getStateName()}: SafeEventDispatcher unavailable.`
+      );
+    }
+
+    return dispatcher;
+  }
+
   // --- Interface Methods with Default Implementations ---
 
   /** @override */
