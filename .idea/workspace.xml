@@ -5,9 +5,13 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="b413f82f-63d4-4e9a-b873-a56870c7c928" name="Changes" comment="Losing my fucking mind here.">
-      <change afterPath="$PROJECT_DIR$/tests/configuration/essentialSchemas.integrity.test.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/schemas/entity-definition.schema.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/schemas/entity-instance.schema.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/loaders/entityInstanceLoader.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tests/loaders/entityInstanceLoader.test.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/configuration/staticConfiguration.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/configuration/staticConfiguration.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/mods/core/mod.manifest.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/core/mod.manifest.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/loaders/worldLoader.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/loaders/worldLoader.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -66,12 +70,13 @@
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
+    "Jest.entityInstanceLoader.test.js.executor": "Run",
     "Jest.essentialSchemas.integrity.test.js.executor": "Run",
     "Jest.eventLoader.fix.test.js.executor": "Run",
     "ModuleVcsDetector.initialDetectionPerformed": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "fixes-to-schema-name-changes",
+    "git-widget-placeholder": "new-entity-definitions",
     "ignore.virus.scanning.warn.message": "true",
     "junie.onboarding.icon.badge.shown": "true",
     "node.js.detected.package.eslint": "true",
@@ -85,7 +90,16 @@
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
-  <component name="RunManager" selected="Jest.essentialSchemas.integrity.test.js">
+  <component name="RunManager" selected="Jest.entityInstanceLoader.test.js">
+    <configuration name="entityInstanceLoader.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
+      <node-interpreter value="project" />
+      <jest-package value="$PROJECT_DIR$/node_modules/jest" />
+      <working-dir value="$PROJECT_DIR$" />
+      <envs />
+      <scope-kind value="TEST_FILE" />
+      <test-file value="$PROJECT_DIR$/tests/loaders/entityInstanceLoader.test.js" />
+      <method v="2" />
+    </configuration>
     <configuration name="essentialSchemas.integrity.test.js" type="JavaScriptTestRunnerJest" temporary="true" nameIsGenerated="true">
       <node-interpreter value="project" />
       <jest-package value="$PROJECT_DIR$/node_modules/jest" />
@@ -106,6 +120,7 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Jest.entityInstanceLoader.test.js" />
         <item itemvalue="Jest.essentialSchemas.integrity.test.js" />
         <item itemvalue="Jest.eventLoader.fix.test.js" />
       </list>

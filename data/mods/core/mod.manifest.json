@@ -80,6 +80,8 @@
       "set_title.event.json",
       "system_error_occurred.event.json",
       "system_warning_occurred.event.json",
+      "turn_processing_started.event.json",
+      "turn_processing_ended.event.json",
       "turn_ended.event.json",
       "turn_started.event.json",
       "ui_operation_in_progress.event.json",
@@ -89,7 +91,10 @@
       "ui_stopped.event.json",
       "update_available_actions.event.json"
     ],
-    "ui": ["icons.json", "labels.json"],
+    "ui": [
+      "icons.json",
+      "labels.json"
+    ],
     "conditions": [
       "actor-can-follow-target.condition.json",
       "actor-is-following.condition.json",
