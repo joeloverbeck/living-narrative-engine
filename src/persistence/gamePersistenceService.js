@@ -12,6 +12,7 @@ import { setupService } from '../utils/serviceInitializerUtils.js';
 /** @typedef {import('../dependencyInjection/appContainer.js').default} AppContainer */
 /** @typedef {import('../turns/interfaces/ITurnManager.js').ITurnManager} ITurnManager */
 /** @typedef {import('../loaders/worldLoader.js').default} WorldLoader */
+/** @typedef {import('./gameStateCaptureService.js').default} GameStateCaptureService */
 
 // --- Import Tokens ---
 // tokens import removed as not used after refactor
@@ -86,7 +87,7 @@ class GamePersistenceService extends IGamePersistenceService {
    * @returns {void}
    * @private
    */
-  #restoreEntity(savedEntityData) {
+  _restoreEntity(savedEntityData) {
     try {
       const restoredEntity =
         this.#entityManager.reconstructEntity(savedEntityData);
@@ -109,7 +110,7 @@ class GamePersistenceService extends IGamePersistenceService {
    * @returns {{success: false, error: PersistenceError} | null} Failure object or null if validation passes.
    * @private
    */
-  #validateRestoreData(data) {
+  _validateRestoreData(data) {
     if (!data?.gameState) {
       const errorMsg =
         'Invalid save data structure provided (missing gameState).';
@@ -139,7 +140,7 @@ class GamePersistenceService extends IGamePersistenceService {
    * @returns {{success: false, error: PersistenceError} | null} Failure object or null on success.
    * @private
    */
-  #clearExistingEntities() {
+  _clearExistingEntities() {
     try {
       this.#entityManager.clearAll();
       this.#logger.debug(
@@ -165,7 +166,7 @@ class GamePersistenceService extends IGamePersistenceService {
    * @returns {void}
    * @private
    */
-  #restoreEntities(entitiesArray) {
+  _restoreEntities(entitiesArray) {
     const entitiesToRestore = entitiesArray;
     if (!Array.isArray(entitiesToRestore)) {
       this.#logger.warn(
@@ -180,7 +181,7 @@ class GamePersistenceService extends IGamePersistenceService {
         );
         continue;
       }
-      this.#restoreEntity(savedEntityData);
+      this._restoreEntity(savedEntityData);
     }
     this.#logger.debug(
       'GamePersistenceService.restoreGameState: Entity restoration complete.'
@@ -193,7 +194,7 @@ class GamePersistenceService extends IGamePersistenceService {
    * @returns {void}
    * @private
    */
-  #restorePlaytime(playtimeSeconds) {
+  _restorePlaytime(playtimeSeconds) {
     if (typeof playtimeSeconds === 'number') {
       try {
         this.#playtimeTracker.setAccumulatedPlaytime(playtimeSeconds);
@@ -213,6 +214,42 @@ class GamePersistenceService extends IGamePersistenceService {
       );
       this.#playtimeTracker.setAccumulatedPlaytime(0);
     }
+  }
+
+  /**
+   * @description Captures the current game state via GameStateCaptureService.
+   * @param {string | null | undefined} activeWorldName - Name of the currently active world.
+   * @returns {SaveGameStructure} Captured game state object.
+   * @private
+   */
+  _captureGameState(activeWorldName) {
+    return this.#gameStateCaptureService.captureCurrentGameState(
+      activeWorldName
+    );
+  }
+
+  /**
+   * @description Ensures metadata is present and sets the save name.
+   * @param {SaveGameStructure} state - Game state object to update.
+   * @param {string} saveName - Desired save name.
+   * @returns {void}
+   * @private
+   */
+  _setSaveMetadata(state, saveName) {
+    if (!state.metadata) state.metadata = {};
+    state.metadata.saveName = saveName;
+  }
+
+  /**
+   * @description Persists game state via SaveLoadService.
+   * @param {string} saveName - Name of the save slot.
+   * @param {SaveGameStructure} state - Game state to persist.
+   * @returns {Promise<{success: boolean, message?: string, error?: string, filePath?: string}>}
+   *   Result from SaveLoadService.
+   * @private
+   */
+  async _delegateManualSave(saveName, state) {
+    return this.#saveLoadService.saveManualGame(saveName, state);
   }
 
   /**
@@ -271,21 +308,12 @@ class GamePersistenceService extends IGamePersistenceService {
       this.#logger.debug(
         `GamePersistenceService.saveGame: Capturing current game state for save "${saveName}".`
       );
-      const gameStateObject =
-        this.#gameStateCaptureService.captureCurrentGameState(activeWorldName);
-      if (!gameStateObject.metadata) gameStateObject.metadata = {};
-      gameStateObject.metadata.saveName = saveName;
-      this.#logger.debug(
-        `GamePersistenceService.saveGame: Set saveName "${saveName}" in gameStateObject.metadata.`
-      );
-
+      const gameStateObject = this._captureGameState(activeWorldName);
+      this._setSaveMetadata(gameStateObject, saveName);
       this.#logger.debug(
         `GamePersistenceService.saveGame: Delegating to ISaveLoadService.saveManualGame for "${saveName}".`
       );
-      const result = await this.#saveLoadService.saveManualGame(
-        saveName,
-        gameStateObject
-      );
+      const result = await this._delegateManualSave(saveName, gameStateObject);
 
       if (result.success) {
         this.#logger.debug(
@@ -318,18 +346,18 @@ class GamePersistenceService extends IGamePersistenceService {
       'GamePersistenceService.restoreGameState: Starting game state restoration...'
     );
 
-    const validationError = this.#validateRestoreData(deserializedSaveData);
+    const validationError = this._validateRestoreData(deserializedSaveData);
     if (validationError) return validationError;
 
-    const clearingResult = this.#clearExistingEntities();
+    const clearingResult = this._clearExistingEntities();
     if (clearingResult) return clearingResult;
 
     this.#logger.debug(
       'GamePersistenceService.restoreGameState: Restoring entities...'
     );
 
-    this.#restoreEntities(deserializedSaveData.gameState.entities);
-    this.#restorePlaytime(deserializedSaveData.metadata?.playtimeSeconds);
+    this._restoreEntities(deserializedSaveData.gameState.entities);
+    this._restorePlaytime(deserializedSaveData.metadata?.playtimeSeconds);
 
     this.#logger.debug(
       'GamePersistenceService.restoreGameState: Skipping turn count restoration as TurnManager is restarted on load.'
