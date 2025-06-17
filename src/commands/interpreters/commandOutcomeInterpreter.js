@@ -17,7 +17,7 @@
 import TurnDirective from '../../turns/constants/turnDirectives.js';
 // --- Interface Imports ---
 import { ICommandOutcomeInterpreter } from '../interfaces/ICommandOutcomeInterpreter.js';
-import { SYSTEM_ERROR_OCCURRED_ID } from '../../constants/eventIds.js';
+import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 
 /**
  * @class CommandOutcomeInterpreter
@@ -53,14 +53,15 @@ class CommandOutcomeInterpreter extends ICommandOutcomeInterpreter {
     if (!turnContext || typeof turnContext.getActor !== 'function') {
       const errorMsg = `CommandOutcomeInterpreter: Invalid turnContext provided.`;
       this.#logger.error(errorMsg, { receivedContextType: typeof turnContext });
-      await this.#dispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
-        message: 'Invalid turn context received by CommandOutcomeInterpreter.',
-        details: {
+      await safeDispatchError(
+        this.#dispatcher,
+        'Invalid turn context received by CommandOutcomeInterpreter.',
+        {
           raw: `turnContext was ${turnContext === null ? 'null' : typeof turnContext}. Expected ITurnContext object.`,
           stack: new Error().stack,
           timestamp: new Date().toISOString(),
-        },
-      });
+        }
+      );
       throw new Error(errorMsg);
     }
 
@@ -68,14 +69,15 @@ class CommandOutcomeInterpreter extends ICommandOutcomeInterpreter {
     if (!actor || !actor.id) {
       const errorMsg = `CommandOutcomeInterpreter: Could not retrieve a valid actor or actor ID from turnContext.`;
       this.#logger.error(errorMsg, { actorInContext: actor });
-      await this.#dispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
-        message: 'Invalid actor in turn context for CommandOutcomeInterpreter.',
-        details: {
+      await safeDispatchError(
+        this.#dispatcher,
+        'Invalid actor in turn context for CommandOutcomeInterpreter.',
+        {
           raw: `Actor object in context was ${JSON.stringify(actor)}.`,
           stack: new Error().stack,
           timestamp: new Date().toISOString(),
-        },
-      });
+        }
+      );
       throw new Error(errorMsg);
     }
     const actorId = actor.id;
@@ -84,13 +86,10 @@ class CommandOutcomeInterpreter extends ICommandOutcomeInterpreter {
     if (!result || typeof result.success !== 'boolean') {
       const baseErrorMsg = `CommandOutcomeInterpreter: Invalid CommandResult - 'success' boolean is missing. Actor: ${actorId}.`;
       this.#logger.error(baseErrorMsg, { receivedResult: result });
-      await this.#dispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
-        message: baseErrorMsg,
-        details: {
-          raw: `Actor ${actorId}, Received Result: ${JSON.stringify(result)}`,
-          stack: new Error().stack,
-          timestamp: new Date().toISOString(),
-        },
+      await safeDispatchError(this.#dispatcher, baseErrorMsg, {
+        raw: `Actor ${actorId}, Received Result: ${JSON.stringify(result)}`,
+        stack: new Error().stack,
+        timestamp: new Date().toISOString(),
       });
       throw new Error(baseErrorMsg);
     }

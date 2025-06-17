@@ -5,7 +5,7 @@
 
 import NotesService from './notesService.js';
 import { NOTES_COMPONENT_ID } from '../constants/componentIds.js';
-import { SYSTEM_ERROR_OCCURRED_ID } from '../constants/eventIds.js';
+import { safeDispatchError } from '../utils/safeDispatchErrorUtils.js';
 import { isNonBlankString } from '../utils/textUtils.js';
 
 /**
@@ -27,11 +27,13 @@ export function persistNotes(action, actorEntity, logger, dispatcher) {
 
   // If the 'notes' key exists but is not an array, dispatch an error and stop.
   if (!Array.isArray(notesArray)) {
-    dispatcher?.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
-      message:
+    if (dispatcher) {
+      safeDispatchError(
+        dispatcher,
         "NotesPersistenceHook: 'notes' field is not an array; skipping merge",
-      details: { actorId: actorEntity?.id ?? 'UNKNOWN_ACTOR' },
-    });
+        { actorId: actorEntity?.id ?? 'UNKNOWN_ACTOR' }
+      );
+    }
     return;
   }
 
@@ -45,11 +47,14 @@ export function persistNotes(action, actorEntity, logger, dispatcher) {
   for (const noteText of notesArray) {
     if (isNonBlankString(noteText)) {
       validNotes.push(noteText);
-    } else {
-      dispatcher?.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
-        message: 'NotesPersistenceHook: Invalid note skipped',
-        details: { note: noteText },
-      });
+    } else if (dispatcher) {
+      safeDispatchError(
+        dispatcher,
+        'NotesPersistenceHook: Invalid note skipped',
+        {
+          note: noteText,
+        }
+      );
     }
   }
 
