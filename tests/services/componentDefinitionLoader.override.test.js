@@ -12,7 +12,7 @@ const createMockConfiguration = (overrides = {}) => ({
   getContentBasePath: jest.fn((typeName) => `./data/mods/test-mod/${typeName}`),
   getContentTypeSchemaId: jest.fn((typeName) => {
     if (typeName === 'components') {
-      return 'http://example.com/schemas/component-definition.schema.json';
+      return 'http://example.com/schemas/component.schema.json';
     }
     if (typeName === 'game')
       return 'http://example.com/schemas/game.schema.json';
@@ -238,7 +238,7 @@ describe('ComponentLoader (Sub-Ticket 6.3: Override Behavior)', () => {
   const fooModId = 'foo';
   const sharedFilename = 'position.component.json';
   const componentDefSchemaId =
-    'http://example.com/schemas/component-definition.schema.json';
+    'http://example.com/schemas/component.schema.json';
   const registryCategory = 'components';
   const coreQualifiedId = `${CORE_MOD_ID}:${baseComponentId}`;
   const fooQualifiedId = `${fooModId}:${baseComponentId}`;

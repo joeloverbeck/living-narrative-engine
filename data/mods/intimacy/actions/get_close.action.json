@@ -1,5 +1,5 @@
 {
-  "$schema": "http://example.com/schemas/action-definition.schema.json",
+  "$schema": "http://example.com/schemas/action.schema.json",
   "id": "intimacy:get_close",
   "commandVerb": "approach",
   "name": "Get Close",

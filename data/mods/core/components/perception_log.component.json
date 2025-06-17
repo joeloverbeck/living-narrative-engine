@@ -1,5 +1,5 @@
 {
-  "$schema": "http://example.com/schemas/component-definition.schema.json",
+  "$schema": "http://example.com/schemas/component.schema.json",
   "id": "core:perception_log",
   "description": "Stores a chronological log of recent perceptible events witnessed by or occurring around the entity. Used to provide context and a summary of recent happenings.",
   "dataSchema": {

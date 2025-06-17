@@ -28,7 +28,7 @@ const createMockConfiguration = (overrides = {}) => ({
   getContentBasePath: jest.fn((typeName) => `./data/mods/test-mod/${typeName}`),
   getContentTypeSchemaId: jest.fn((typeName) => {
     if (typeName === 'components') {
-      return 'http://example.com/schemas/component-definition.schema.json';
+      return 'http://example.com/schemas/component.schema.json';
     }
     if (typeName === 'game')
       return 'http://example.com/schemas/game.schema.json';

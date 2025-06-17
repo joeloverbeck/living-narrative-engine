@@ -1,5 +1,5 @@
 {
-  "$schema": "http://example.com/schemas/component-definition.schema.json",
+  "$schema": "http://example.com/schemas/component.schema.json",
   "id": "core:short_term_memory",
   "description": "Short-term private thoughts.",
   "dataSchema": {

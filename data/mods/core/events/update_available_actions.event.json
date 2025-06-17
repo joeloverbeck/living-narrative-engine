@@ -1,5 +1,5 @@
 {
-  "$schema": "http://example.com/schemas/event-definition.schema.json",
+  "$schema": "http://example.com/schemas/component.schema.json",
   "id": "core:update_available_actions",
   "description": "Tells the UI to refresh the action-bar for a given actor, using the fully formatted and indexed action list.",
   "payloadSchema": {

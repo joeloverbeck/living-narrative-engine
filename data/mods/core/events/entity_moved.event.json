@@ -1,5 +1,5 @@
 {
-  "$schema": "http://example.com/schemas/event-definition.schema.json",
+  "$schema": "http://example.com/schemas/component.schema.json",
   "id": "core:entity_moved",
   "description": "Dispatched when an entity has successfully moved from one location to another. This event triggers follower movement.",
   "payloadSchema": {

@@ -16,7 +16,7 @@ const createMockConfiguration = (overrides = {}) => ({
   getContentBasePath: jest.fn((typeName) => `./data/mods/test-mod/${typeName}`),
   getContentTypeSchemaId: jest.fn((typeName) => {
     if (typeName === 'components') {
-      return 'http://example.com/schemas/component-definition.schema.json';
+      return 'http://example.com/schemas/component.schema.json';
     }
     return `http://example.com/schemas/${typeName}.schema.json`;
   }),
@@ -300,7 +300,7 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.9: Registry Storage Failure)',
   const finalRegistryKey = `${modId}:${baseComponentId}`; // = "storeFailMod:store_fail"
 
   const componentDefSchemaId =
-    'http://example.com/schemas/component-definition.schema.json';
+    'http://example.com/schemas/component.schema.json';
   // Use ID from file when creating the mock definition data
   const validDef = createMockComponentDefinition(componentIdFromFile, {
     type: 'object',

@@ -1,5 +1,5 @@
 {
-  "$schema": "http://example.com/schemas/component-definition.schema.json",
+  "$schema": "http://example.com/schemas/component.schema.json",
   "id": "core:name",
   "description": "The primary display name or title of the entity (e.g., 'Player', 'Goblin Sentry', 'Iron Key').",
   "dataSchema": {

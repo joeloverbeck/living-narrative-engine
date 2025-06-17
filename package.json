@@ -40,6 +40,7 @@
     "http-server": "^14.1.1",
     "jest": "^29.7.0",
     "jest-environment-jsdom": "^29.7.0",
+    "jest-extended": "^6.0.0",
     "prettier": "^3.5.3",
     "whatwg-fetch": "^3.6.20",
     "yargs": "^17.7.2"
@@ -47,8 +48,10 @@
   "scripts": {
     "format": "prettier --write . --ignore-unknown --log-level error",
     "lint": "eslint . --fix",
-    "test": "jest --env=jsdom --updateSnapshot --silent --coverage",
-    "test:single": "jest --env=jsdom --updateSnapshot",
+    "test": "jest --env=jsdom --silent --coverage",
+    "test:single": "jest --env=jsdom",
+    "test:ci": "jest --env=jsdom --ci --silent --coverage",
+    "test:update": "jest --env=jsdom --updateSnapshot",
     "create-mod": "node scripts/createMod.mjs",
     "build": "esbuild src/main.js --bundle --outfile=dist/bundle.js --platform=browser --sourcemap && cpy index.html game.html dist && cpy css dist && cpy data dist && cpy config dist && cpy favicon.ico dist",
     "start": "npm run build && http-server dist -o",

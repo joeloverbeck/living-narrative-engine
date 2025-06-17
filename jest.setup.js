@@ -2,6 +2,7 @@
 /* eslint-disable no-console */
 
 // jest.setup.js
+import 'jest-extended/all';
 
 // --- Polyfills for Jest Node environment ---
 

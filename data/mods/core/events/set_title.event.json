@@ -1,5 +1,5 @@
 {
-  "$schema": "http://example.com/schemas/event-definition.schema.json",
+  "$schema": "http://example.com/schemas/component.schema.json",
   "id": "core:set_title",
   "description": "Signals a request to update the main title display in the user interface, often used to indicate game state, loading progress, or the current world/area name.",
   "payloadSchema": {

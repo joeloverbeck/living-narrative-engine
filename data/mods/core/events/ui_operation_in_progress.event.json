@@ -1,5 +1,5 @@
 {
-  "$schema": "http://example.com/schemas/event-definition.schema.json",
+  "$schema": "http://example.com/schemas/component.schema.json",
   "id": "core:ui_operation_in_progress",
   "description": "Signals a potentially blocking engine operation is underway. UI should indicate status and typically disable input.",
   "payloadSchema": {

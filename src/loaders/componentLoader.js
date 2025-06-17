@@ -21,7 +21,7 @@ import { parseAndValidateId } from '../utils/idUtils.js';
  * Loads component definitions from mods, validates them against the component definition schema (handled by base class),
  * extracts metadata, registers the component's `dataSchema` with the validator, and stores
  * the definition metadata in the registry using a prefixed ID. It extends {@link BaseManifestItemLoader}
- * and implements the component-definition-specific processing logic in `_processFetchedItem`.
+ * and implements the component-specific processing logic in `_processFetchedItem`.
  *
  * @class ComponentLoader
  * @augments BaseInlineSchemaLoader

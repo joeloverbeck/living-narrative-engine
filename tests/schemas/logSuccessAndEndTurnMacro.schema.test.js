@@ -7,6 +7,7 @@
 
 import { describe, test, expect, beforeAll } from '@jest/globals';
 import Ajv from 'ajv';
+import addFormats from 'ajv-formats';
 
 // Schemas and data
 // Note: This test will fail if the JSON file has not been corrected as per our previous discussion.
@@ -28,6 +29,7 @@ describe("Macro Definition: 'core:logSuccessAndEndTurn'", () => {
 
   beforeAll(() => {
     const ajv = new Ajv({ allErrors: true });
+    addFormats(ajv); // <-- FIX: Add format validators
 
     // Add schemas that other schemas depend on. Using the full $id as the key is crucial.
     ajv.addSchema(

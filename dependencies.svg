@@ -42,7 +42,7 @@
 <!-- data/schemas/action&#45;definition.schema.json -->
 <g id="node1" class="node">
 <title>data/schemas/action&#45;definition.schema.json</title>
-<g id="a_node1"><a xlink:href="data/schemas/action-definition.schema.json" xlink:title="action&#45;definition.schema.json">
+<g id="a_node1"><a xlink:href="data/schemas/action.schema.json" xlink:title="action&#45;definition.schema.json">
 <path fill="#ffee44" stroke="black" d="M1072.08,-220.25C1072.08,-220.25 949.17,-220.25 949.17,-220.25 946.08,-220.25 943,-217.17 943,-214.08 943,-214.08 943,-207.92 943,-207.92 943,-204.83 946.08,-201.75 949.17,-201.75 949.17,-201.75 1072.08,-201.75 1072.08,-201.75 1075.17,-201.75 1078.25,-204.83 1078.25,-207.92 1078.25,-207.92 1078.25,-214.08 1078.25,-214.08 1078.25,-217.17 1075.17,-220.25 1072.08,-220.25"/>
 <text xml:space="preserve" text-anchor="start" x="951" y="-207.7" font-family="Helvetica,sans-Serif" font-size="9.00">action&#45;definition.schema.json</text>
 </a>

@@ -1,5 +1,5 @@
 {
-  "$schema": "http://example.com/schemas/component-definition.schema.json",
+  "$schema": "http://example.com/schemas/component.schema.json",
   "id": "core:exits",
   "description": "Signifies the possible exits from a location entity. Each exit defines a direction, a target location, and an optional entity that might block the path. Target and blocker IDs will be resolved to instance IDs during world initialization.",
   "dataSchema": {

@@ -1,5 +1,5 @@
 {
-  "$schema": "http://example.com/schemas/event-definition.schema.json",
+  "$schema": "http://example.com/schemas/component.schema.json",
   "id": "core:turn_ended",
   "description": "Fired when an entity's turn ends.",
   "payloadSchema": {

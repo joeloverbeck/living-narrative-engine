@@ -1,0 +1,28 @@
+# .github/workflows/build.yml
+
+name: Build Verification
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build-client:
+    name: Build HTTP Client
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run build script
+        # This executes the 'build' script in your root package.json
+        run: npm run build

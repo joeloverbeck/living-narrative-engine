@@ -1,0 +1,64 @@
+# .github/workflows/tests.yml
+
+# A descriptive name for your workflow
+name: Run Tests
+
+# Controls when the workflow will run.
+# It runs on push events for all branches and on pull request events targeting the main branch.
+on:
+  push:
+  pull_request:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This job tests the code in the root directory
+  test-http-client:
+    runs-on: ubuntu-latest # Use the latest version of Ubuntu as the runner
+    steps:
+      # Step 1: Check out your repository's code so the job can access it
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Step 2: Set up the correct version of Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20' # You can specify your desired Node.js version
+          cache: 'npm' # Cache npm dependencies for faster runs
+
+      # Step 3: Install the dependencies from your package.json
+      - name: Install dependencies
+        run: npm install
+
+      # Step 4: Run the test command defined in your package.json
+      - name: Run tests
+        run: npm run test:ci
+
+  # This job tests the code in the llm-proxy-server directory
+  test-proxy-server:
+    runs-on: ubuntu-latest
+    # Specifies the working directory for all run steps in this job
+    defaults:
+      run:
+        working-directory: ./llm-proxy-server
+    steps:
+      # Step 1: Check out the code
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Step 2: Set up Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          # Cache dependencies specific to this sub-directory
+          cache: 'npm'
+          cache-dependency-path: llm-proxy-server/package-lock.json
+
+      # Step 3: Install dependencies (will run in ./llm-proxy-server)
+      - name: Install dependencies
+        run: npm install
+
+      # Step 4: Run tests (will run in ./llm-proxy-server)
+      - name: Run tests
+        run: npm run test:ci

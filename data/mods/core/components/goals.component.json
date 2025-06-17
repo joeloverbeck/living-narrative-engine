@@ -1,5 +1,5 @@
 {
-  "$schema": "http://example.com/schemas/component-definition.schema.json",
+  "$schema": "http://example.com/schemas/component.schema.json",
   "id": "core:goals",
   "description": "Stores an array of goals (each with non-empty text and an ISO-8601 timestamp) on an entity.",
   "dataSchema": {

@@ -12,7 +12,7 @@ import {
   jest,
 } from '@jest/globals';
 
-describe('AwaitingExternalTurnEndState – action-definition propagation', () => {
+describe('AwaitingExternalTurnEndState – action propagation', () => {
   // In the implementation TIMEOUT_MS is 3 000 ms when NODE_ENV === "test"
   const TIMEOUT_MS = 3_000;
 

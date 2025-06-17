@@ -1,5 +1,5 @@
 /**
- * @typedef {import('../../../data/schemas/action-definition.schema.json').ActionDefinition} ActionDefinition
+ * @typedef {import('../../../data/schemas/action.schema.json').ActionDefinition} ActionDefinition
  * @typedef {import('../../../data/schemas/condition.schema.json').ConditionDefinition} ConditionDefinition
  */
 

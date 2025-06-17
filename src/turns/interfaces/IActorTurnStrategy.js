@@ -114,7 +114,7 @@ export class IActorTurnStrategy {
    * - The current actor (via `context.getActor()`).
    * - The current game state (via `context.getGame()`).
    * - Available action definitions (potentially via a service in the context that
-   * allows querying possible actions based on `action-definition.schema.json`).
+   * allows querying possible actions based on `action.schema.json`).
    * - Any available services, such as logging (`context.getLogger()`),
    * player prompting (`context.getPlayerPromptService()`), etc.
    *

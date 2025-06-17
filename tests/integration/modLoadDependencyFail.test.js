@@ -22,10 +22,9 @@ const createMockConfiguration = (overrides = {}) => ({
     if (t === 'components')
       return 'http://example.com/schemas/components.schema.json';
     // Add mappings for other types if needed by mocks/test, otherwise keep generic
-    if (t === 'actions')
-      return 'http://example.com/schemas/action-definition.schema.json';
+    if (t === 'actions') return 'http://example.com/schemas/action.schema.json';
     if (t === 'events')
-      return 'http://example.com/schemas/event-definition.schema.json';
+      return 'http://example.com/schemas/component.schema.json';
     if (t === 'entities')
       return 'http://example.com/schemas/entity.schema.json'; // Required for WorldLoader essentials check
     if (t === 'rules') return 'http://example.com/schemas/rule.schema.json';
@@ -116,15 +115,15 @@ const createMockFetcher = (idToResponse = {}, errorIds = []) => ({
       };
     }
     // Add other schemas handled by fetcher if validator needs them
-    if (path.includes('/schemas/action-definition.schema.json')) {
+    if (path.includes('/schemas/action.schema.json')) {
       return {
-        $id: 'http://example.com/schemas/action-definition.schema.json',
+        $id: 'http://example.com/schemas/action.schema.json',
         type: 'object',
       };
     }
-    if (path.includes('/schemas/event-definition.schema.json')) {
+    if (path.includes('/schemas/component.schema.json')) {
       return {
-        $id: 'http://example.com/schemas/event-definition.schema.json',
+        $id: 'http://example.com/schemas/component.schema.json',
         type: 'object',
       };
     }
@@ -221,10 +220,9 @@ describe('WorldLoader → ModDependencyValidator integration (missing dependency
   const COMPONENTS_SCHEMA_ID =
     'http://example.com/schemas/components.schema.json';
   const ENTITY_SCHEMA_ID = 'http://example.com/schemas/entity.schema.json'; // <<< ADDED
-  const ACTION_SCHEMA_ID =
-    'http://example.com/schemas/action-definition.schema.json';
+  const ACTION_SCHEMA_ID = 'http://example.com/schemas/action.schema.json';
   const EVENT_SCHEMA_ID =
-    'http://example.com/schemas/event-definition.schema.json';
+    'http://example.com/schemas/component.schema.json';
   const RULE_SCHEMA_ID = 'http://example.com/schemas/rule.schema.json';
 
   // Define minimal schemas

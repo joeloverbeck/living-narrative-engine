@@ -1,6 +1,7 @@
 {
   "$schema": "http://example.com/schemas/macro.schema.json",
   "id": "core:logFailureAndEndTurn",
+  "description": "Logs failure and ends the player turn.",
   "actions": [
     {
       "type": "DISPATCH_EVENT",

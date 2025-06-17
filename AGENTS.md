@@ -91,7 +91,7 @@ For more details on the project structure and coding standards associated with t
 
 We use **ESLint** with Prettier integration, Jest rules, and JSDoc checks.  
 Note: currently lint shows a huge amount of issues due to having started using lint very late in the project, so only
-try to fix lint issues in the files you're working with. See CONTRIBUTING.md for policy.
+try to fix lint issues in the files you modify. See CONTRIBUTING.md for policy.
 
 ```bash
 npm run lint              # root

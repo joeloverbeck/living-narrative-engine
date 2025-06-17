@@ -1,5 +1,5 @@
 {
-  "$schema": "http://example.com/schemas/event-definition.schema.json",
+  "$schema": "http://example.com/schemas/component.schema.json",
   "id": "core:display_warning",
   "description": "Signals the UI to display a non-critical warning message to the user. This event is often used for recoverable issues or important notifications that do not halt application functionality.",
   "payloadSchema": {

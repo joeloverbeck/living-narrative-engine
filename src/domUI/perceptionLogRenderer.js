@@ -205,10 +205,14 @@ export class PerceptionLogRenderer extends BaseListDisplayComponent {
   /**
    * Renders a single perception-log entry with Parchment-Fantasy markup.
    * Distinguishes three kinds of lines:
-   *   – SPEECH: `<Name> says:` prefix
-   *   – ACTION: whole line wrapped in *asterisks*
-   *   – GENERIC: everything else
+   * – SPEECH: `<Name> says:` prefix
+   * – ACTION: whole line wrapped in *asterisks*
+   * – GENERIC: everything else
    * Each gets a class so CSS can paint it pretty.
+   *
+   * @param logEntry
+   * @param _itemIndex
+   * @param _listData
    */
   _renderListItem(logEntry, _itemIndex, _listData) {
     if (
@@ -262,6 +266,8 @@ export class PerceptionLogRenderer extends BaseListDisplayComponent {
 
   /**
    * Mildly paranoid HTML escape helper.
+   *
+   * @param str
    */
   #escapeHtml(str) {
     return str

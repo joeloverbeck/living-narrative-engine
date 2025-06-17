@@ -1,5 +1,5 @@
 {
-  "$schema": "http://example.com/schemas/component-definition.schema.json",
+  "$schema": "http://example.com/schemas/component.schema.json",
   "id": "core:notes",
   "description": "Stores an array of notes (text + ISO-8601 timestamp) on an entity.",
   "dataSchema": {

@@ -1,5 +1,5 @@
 {
-  "$schema": "http://example.com/schemas/action-definition.schema.json",
+  "$schema": "http://example.com/schemas/action.schema.json",
   "id": "core:wait",
   "commandVerb": "wait",
   "name": "Wait",

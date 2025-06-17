@@ -1,22 +1,18 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "http://example.com/schemas/component-definition.schema.json",
+  "$id": "http://example.com/schemas/component.schema.json",
   "title": "Component Definition",
   "description": "Defines the structure for a single component type definition file, specifying its ID, an optional schema declaration for itself, the schema for its data payload, and metadata for resolving definition IDs to instance IDs.",
   "type": "object",
   "properties": {
     "$schema": {
-      "type": "string",
-      "format": "uri",
-      "description": "The URI reference to the JSON Schema that this component definition document conforms to. Allows this document to declare its own schema (which should be this very schema: http://example.com/schemas/component-definition.schema.json)."
+      "$ref": "./common.schema.json#/definitions/BaseDefinition/properties/$schema"
     },
     "id": {
-      "$ref": "common.schema.json#/definitions/namespacedId",
-      "description": "The unique, namespaced identifier for this component type (e.g., 'core:health', 'game:openable'). This is used as the key in an entity's component map."
+      "$ref": "./common.schema.json#/definitions/BaseDefinition/properties/id"
     },
     "description": {
-      "type": "string",
-      "description": "A human-readable description of what this component represents or does."
+      "$ref": "./common.schema.json#/definitions/BaseDefinition/properties/description"
     },
     "dataSchema": {
       "type": "object",
@@ -77,6 +73,6 @@
       "default": []
     }
   },
-  "required": ["id", "dataSchema"],
+  "required": ["id", "description", "dataSchema"],
   "additionalProperties": false
 }

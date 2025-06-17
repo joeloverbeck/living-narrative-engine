@@ -1,5 +1,5 @@
 {
-  "$schema": "http://example.com/schemas/component-definition.schema.json",
+  "$schema": "http://example.com/schemas/component.schema.json",
   "id": "core:portrait",
   "description": "Provides portrait image information for an entity, used for UI display in the 'Current Turn' panel and potentially elsewhere.",
   "dataSchema": {

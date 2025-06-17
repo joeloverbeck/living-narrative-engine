@@ -1,5 +1,5 @@
 {
-  "$schema": "http://example.com/schemas/component-definition.schema.json",
+  "$schema": "http://example.com/schemas/component.schema.json",
   "id": "core:profile",
   "description": "Stores a detailed textual profile or background of the character.",
   "dataSchema": {

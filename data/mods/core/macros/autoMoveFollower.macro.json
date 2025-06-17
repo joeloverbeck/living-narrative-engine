@@ -1,6 +1,7 @@
 {
   "$schema": "http://example.com/schemas/macro.schema.json",
   "id": "core:autoMoveFollower",
+  "description": "A sequence of operations to automatically move a follower to the leader's new location and dispatch the relevant events.",
   "actions": [
     {
       "type": "SYSTEM_MOVE_ENTITY",

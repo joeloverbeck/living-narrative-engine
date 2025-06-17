@@ -330,6 +330,13 @@ export class LocationRenderer extends BoundDomRendererBase {
    * Renders a data list.  Heading is optional: we *skip* it for
    * Exits and Characters because the accordion summary already
    * names the section.
+   *
+   * @param dataArray
+   * @param targetElement
+   * @param title
+   * @param itemTextProperty
+   * @param emptyText
+   * @param itemClassName
    */
   _renderList(
     dataArray,

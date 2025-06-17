@@ -1,5 +1,5 @@
 {
-  "$schema": "http://example.com/schemas/component-definition.schema.json",
+  "$schema": "http://example.com/schemas/component.schema.json",
   "id": "core:leading",
   "description": "Derived cache component that lists the followers of a leader. This component's data is non-authoritative and is rebuilt automatically by SystemRules. It MUST NOT be mutated directly.",
   "dataSchema": {

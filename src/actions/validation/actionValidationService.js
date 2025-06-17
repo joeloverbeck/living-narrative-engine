@@ -4,7 +4,7 @@
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../entities/entityManager.js').default} EntityManager */
 /** @typedef {import('../../entities/entity.js').default} Entity */
-/** @typedef {import('../../../data/schemas/action-definition.schema.json').ActionDefinition} ActionDefinition */
+/** @typedef {import('../../../data/schemas/action.schema.json').ActionDefinition} ActionDefinition */
 /** @typedef {import('../../validation/domainContextCompatibilityChecker.js').DomainContextCompatibilityChecker} DomainContextCompatibilityChecker */
 /** @typedef {import('../actionTypes.js').ActionAttemptPseudoEvent} ActionAttemptPseudoEvent */
 /** @typedef {import('./prerequisiteEvaluationService.js').PrerequisiteEvaluationService} PrerequisiteEvaluationService */

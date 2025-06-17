@@ -8,7 +8,7 @@ import Ajv from 'ajv';
 import addFormats from 'ajv-formats';
 
 // Direct import of JSON files, as supported by Jest's transformer.
-import componentDefinitionSchema from '../../data/schemas/component-definition.schema.json';
+import componentDefinitionSchema from '../../data/schemas/component.schema.json';
 import commonSchema from '../../data/schemas/common.schema.json';
 import closenessComponent from '../../data/mods/intimacy/components/closeness.component.json';
 

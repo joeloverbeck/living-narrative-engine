@@ -1,6 +1,6 @@
 import Ajv from 'ajv';
 import commonSchema from '../../data/schemas/common.schema.json';
-import eventDefSchema from '../../data/schemas/event-definition.schema.json';
+import eventDefSchema from '../../data/schemas/event.schema.json';
 import failedEventSchema from '../../data/mods/core/events/display_failed_action_result.event.json';
 import { describe, beforeAll, test, expect } from '@jest/globals';
 
@@ -14,7 +14,7 @@ describe('core:display_failed_action_result schema', () => {
     validateDef = ajv.compile(eventDefSchema);
   });
 
-  test('event definition is valid against event-definition.schema.json', () => {
+  test('event definition is valid against event.schema.json', () => {
     const valid = validateDef(failedEventSchema);
     if (!valid) console.error(validateDef.errors);
     expect(valid).toBe(true);

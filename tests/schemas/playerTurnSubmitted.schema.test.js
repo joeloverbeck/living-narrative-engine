@@ -1,6 +1,6 @@
 import Ajv from 'ajv';
 import commonSchema from '../../data/schemas/common.schema.json';
-import eventDefSchema from '../../data/schemas/event-definition.schema.json';
+import eventDefSchema from '../../data/schemas/event.schema.json';
 import eventFile from '../../data/mods/core/events/player_turn_submitted.event.json';
 import { describe, beforeAll, test, expect } from '@jest/globals';
 
@@ -14,7 +14,7 @@ describe('PLAYER_TURN_SUBMITTED_ID schema', () => {
     validateDef = ajv.compile(eventDefSchema);
   });
 
-  test('event definition is valid against event-definition.schema.json', () => {
+  test('event definition is valid against event.schema.json', () => {
     const valid = validateDef(eventFile);
     if (!valid) console.error(validateDef.errors);
     expect(valid).toBe(true);

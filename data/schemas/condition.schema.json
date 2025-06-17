@@ -6,17 +6,13 @@
   "type": "object",
   "properties": {
     "$schema": {
-      "type": "string",
-      "format": "uri",
-      "description": "Optional. A URI reference to the schema that this document conforms to."
+      "$ref": "./common.schema.json#/definitions/BaseDefinition/properties/$schema"
     },
     "id": {
-      "$ref": "./common.schema.json#/definitions/namespacedId",
-      "description": "Required. Unique, namespaced ID for the condition definition (e.g., 'core:actor-is-not-rooted', 'combat:target-is-vulnerable')."
+      "$ref": "./common.schema.json#/definitions/BaseDefinition/properties/id"
     },
     "description": {
-      "type": "string",
-      "description": "Required. A human-readable explanation of what this condition checks."
+      "$ref": "./common.schema.json#/definitions/BaseDefinition/properties/description"
     },
     "logic": {
       "$ref": "./json-logic.schema.json#",

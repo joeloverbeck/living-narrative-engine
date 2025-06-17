@@ -1,5 +1,5 @@
 {
-  "$schema": "http://example.com/schemas/event-definition.schema.json",
+  "$schema": "http://example.com/schemas/component.schema.json",
   "id": "core:ui_ready",
   "description": "Signals the engine has initialized (or loaded) and is ready for user input. The UI can use this to update its state, set the game title, and enable input.",
   "payloadSchema": {

@@ -33,7 +33,7 @@ const createMockConfiguration = (overrides = {}) => ({
   getContentTypeSchemaId: jest.fn((typeName) => {
     if (typeName === 'components') {
       // Matches the schema provided in the ticket
-      return 'http://example.com/schemas/component-definition.schema.json';
+      return 'http://example.com/schemas/component.schema.json';
     }
     // Default fallback for other types if needed in future tests
     return `http://example.com/schemas/${typeName}.schema.json`;

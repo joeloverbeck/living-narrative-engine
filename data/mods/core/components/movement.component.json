@@ -1,5 +1,5 @@
 {
-  "$schema": "http://example.com/schemas/component-definition.schema.json",
+  "$schema": "http://example.com/schemas/component.schema.json",
   "id": "core:movement",
   "description": "Controls an entity's ability to perform voluntary movement. Contains a lock that can be set by other systems (like the intimacy mod) to temporarily prevent actions such as 'go' or 'follow'.",
   "dataSchema": {
