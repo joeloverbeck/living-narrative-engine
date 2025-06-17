@@ -245,8 +245,11 @@ describe('ActionButtonsRenderer', () => {
       jest.clearAllMocks(mockLogger, mockVed.dispatch);
       const spy = jest.spyOn(renderer, '_onItemSelected');
       await actionButtonInstance.click();
+      // eslint-disable-next-line jest/no-standalone-expect
       expect(spy).toHaveBeenCalledWith(actionButtonInstance, actionToSubmit);
+      // eslint-disable-next-line jest/no-standalone-expect
       expect(renderer.selectedAction).toEqual(actionToSubmit);
+      // eslint-disable-next-line jest/no-standalone-expect
       expect(globalMockSendButton.disabled).toBe(false);
 
       jest.clearAllMocks(

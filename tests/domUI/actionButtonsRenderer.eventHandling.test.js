@@ -5,7 +5,6 @@ import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 // --- Mock Dependencies ---
 // Standard Mocks (re-initialized in global beforeEach)
 let mockLogger;
-let mockDocumentContext;
 let capturedEventHandler;
 let mockUnsubscribeFn;
 let mockValidatedEventDispatcher;
@@ -142,12 +141,6 @@ beforeEach(() => {
     warn: jest.fn(),
     error: jest.fn(),
   };
-
-  mockDocumentContext = {
-    query: jest.fn(),
-    create: jest.fn(),
-  };
-
   capturedEventHandler = null;
   mockUnsubscribeFn = jest.fn();
 
@@ -557,7 +550,7 @@ describe('ActionButtonsRenderer', () => {
       mockContainer.children = [mockActionButton];
 
       // Scenario 1: No action selected
-      const spy = jest.spyOn(instance, '_onItemSelected');
+      const spy = jest.spyOn(instance, '_selectItem');
       instance.selectedAction = null;
       instance._onListRendered(instance.availableActions, mockContainer);
       expect(mockSendButton.disabled).toBe(true);
@@ -574,8 +567,10 @@ describe('ActionButtonsRenderer', () => {
       instance._onListRendered(instance.availableActions, mockContainer);
 
       expect(mockSendButton.disabled).toBe(false);
-      expect(mockActionButton.classList.contains('selected')).toBe(true);
-      expect(spy).not.toHaveBeenCalledWith(null, null);
+      expect(spy).toHaveBeenCalledWith(
+        mockActionButton,
+        instance.availableActions[0]
+      );
       expect(mockContainer.classList.add).toHaveBeenCalledWith(
         'actions-fade-in'
       );
