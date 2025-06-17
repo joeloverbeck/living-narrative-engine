@@ -15,6 +15,7 @@ import {
   TURN_ENDED_ID,
   SYSTEM_ERROR_OCCURRED_ID,
 } from '../../constants/eventIds.js';
+import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 
 /* global process */
 
@@ -143,14 +144,13 @@ export class AwaitingExternalTurnEndState extends AbstractTurnState {
 
     // 1) tell the UI / console
     const dispatcher = this._getSafeEventDispatcher(ctx, handler);
-    dispatcher?.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
-      message: msg,
-      details: {
+    if (dispatcher) {
+      safeDispatchError(dispatcher, msg, {
         code: err.code,
         actorId: ctx.getActor().id,
         actionId: this.#awaitingActionId,
-      },
-    });
+      });
+    }
 
     // 2) close the turn
     try {
