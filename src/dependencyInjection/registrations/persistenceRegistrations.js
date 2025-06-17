@@ -28,6 +28,8 @@ import SaveMetadataBuilder from '../../persistence/saveMetadataBuilder.js';
 import ActiveModsManifestBuilder from '../../persistence/activeModsManifestBuilder.js';
 import ReferenceResolver from '../../initializers/services/referenceResolver.js';
 import SaveLoadService from '../../persistence/saveLoadService.js';
+import GameStateSerializer from '../../persistence/gameStateSerializer.js';
+import SaveFileRepository from '../../persistence/saveFileRepository.js';
 import { BrowserStorageProvider } from '../../storage/browserStorageProvider.js';
 
 /**
@@ -49,9 +51,22 @@ export function registerPersistence(container) {
     `Persistence Registration: Registered ${String(tokens.IStorageProvider)}.`
   );
 
+  r.singletonFactory(tokens.SaveFileRepository, (c) => {
+    return new SaveFileRepository({
+      logger: c.resolve(tokens.ILogger),
+      storageProvider: c.resolve(tokens.IStorageProvider),
+      serializer: new GameStateSerializer({
+        logger: c.resolve(tokens.ILogger),
+      }),
+    });
+  });
+  logger.debug(
+    `Persistence Registration: Registered ${String(tokens.SaveFileRepository)}.`
+  );
+
   r.single(tokens.ISaveLoadService, SaveLoadService, [
     tokens.ILogger,
-    tokens.IStorageProvider,
+    tokens.SaveFileRepository,
   ]);
   logger.debug(
     `Persistence Registration: Registered ${String(tokens.ISaveLoadService)}.`

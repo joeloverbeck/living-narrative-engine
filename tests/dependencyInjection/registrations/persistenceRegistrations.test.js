@@ -27,6 +27,7 @@ import ReferenceResolver from '../../../src/initializers/services/referenceResol
 import SaveMetadataBuilder from '../../../src/persistence/saveMetadataBuilder.js';
 import ActiveModsManifestBuilder from '../../../src/persistence/activeModsManifestBuilder.js';
 import SaveLoadService from '../../../src/persistence/saveLoadService.js';
+import SaveFileRepository from '../../../src/persistence/saveFileRepository.js';
 import { BrowserStorageProvider } from '../../../src/storage/browserStorageProvider.js';
 
 describe('registerPersistence', () => {
@@ -69,6 +70,9 @@ describe('registerPersistence', () => {
       `Persistence Registration: Registered ${String(tokens.IStorageProvider)}.`
     );
     expect(logs).toContain(
+      `Persistence Registration: Registered ${String(tokens.SaveFileRepository)}.`
+    );
+    expect(logs).toContain(
       `Persistence Registration: Registered ${String(tokens.ISaveLoadService)}.`
     );
     expect(logs).toContain(
@@ -104,10 +108,15 @@ describe('registerPersistence', () => {
         deps: [tokens.ILogger, tokens.ISafeEventDispatcher],
       },
       {
+        token: tokens.SaveFileRepository,
+        Class: SaveFileRepository,
+        lifecycle: 'singletonFactory',
+      },
+      {
         token: tokens.ISaveLoadService,
         Class: SaveLoadService,
         lifecycle: 'singleton',
-        deps: [tokens.ILogger, tokens.IStorageProvider],
+        deps: [tokens.ILogger, tokens.SaveFileRepository],
       },
       {
         token: tokens.PlaytimeTracker,
