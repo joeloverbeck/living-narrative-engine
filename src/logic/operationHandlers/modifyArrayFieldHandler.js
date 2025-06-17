@@ -12,20 +12,18 @@
 import { resolvePath } from '../../utils/objectUtils.js';
 import { cloneDeep } from 'lodash';
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
-import { resolveEntityId } from '../../utils/entityRefUtils.js';
 import { setContextValue } from '../../utils/contextVariableUtils.js';
 import { assertParamsObject } from '../../utils/handlerUtils/indexUtils.js';
+import ComponentOperationHandler from './componentOperationHandler.js';
 
 /**
  * @class ModifyArrayFieldHandler
  * @description Handles the 'MODIFY_ARRAY_FIELD' operation. It provides safe, atomic
  * operations on an array field inside a component using a clone-and-replace strategy.
  */
-class ModifyArrayFieldHandler {
+class ModifyArrayFieldHandler extends ComponentOperationHandler {
   /** @type {IEntityManager} */
   #entityManager;
-  /** @type {ILogger} */
-  #logger;
   /** @type {ISafeEventDispatcher} */
   #dispatcher;
 
@@ -36,28 +34,18 @@ class ModifyArrayFieldHandler {
    * @param {ISafeEventDispatcher} deps.safeEventDispatcher - Dispatcher for error events.
    */
   constructor({ entityManager, logger, safeEventDispatcher }) {
-    if (
-      !entityManager ||
-      typeof entityManager.getComponentData !== 'function' ||
-      typeof entityManager.addComponent !== 'function'
-    ) {
-      throw new Error(
-        "Dependency 'IEntityManager' with getComponentData and addComponent methods is required."
-      );
-    }
-    if (!logger || typeof logger.warn !== 'function') {
-      throw new Error("Dependency 'ILogger' with a 'warn' method is required.");
-    }
-    if (
-      !safeEventDispatcher ||
-      typeof safeEventDispatcher.dispatch !== 'function'
-    ) {
-      throw new Error(
-        "Dependency 'ISafeEventDispatcher' with dispatch method is required."
-      );
-    }
+    super('ModifyArrayFieldHandler', {
+      logger: { value: logger },
+      entityManager: {
+        value: entityManager,
+        requiredMethods: ['getComponentData', 'addComponent'],
+      },
+      safeEventDispatcher: {
+        value: safeEventDispatcher,
+        requiredMethods: ['dispatch'],
+      },
+    });
     this.#entityManager = entityManager;
-    this.#logger = logger;
     this.#dispatcher = safeEventDispatcher;
   }
 
@@ -74,12 +62,12 @@ class ModifyArrayFieldHandler {
    * @param {ExecutionContext} executionContext - The current execution context.
    */
   execute(params, executionContext) {
-    const log = executionContext?.logger ?? this.#logger;
+    const log = this.getLogger(executionContext);
     if (!assertParamsObject(params, log, 'MODIFY_ARRAY_FIELD')) {
       return;
     }
     // 1. Resolve Entity ID
-    const entityId = resolveEntityId(params.entity_ref, executionContext);
+    const entityId = this.resolveEntity(params.entity_ref, executionContext);
     if (!entityId) {
       log.warn(
         `MODIFY_ARRAY_FIELD: Could not resolve entity_ref: ${JSON.stringify(
@@ -91,7 +79,8 @@ class ModifyArrayFieldHandler {
 
     // 2. Validate Parameters
     const { component_type, field, mode, result_variable } = params;
-    if (!component_type || !field || !mode) {
+    const compType = this.validateComponentType(component_type);
+    if (!compType || !field || !mode) {
       log.warn(
         `MODIFY_ARRAY_FIELD: Missing required parameters (component_type, field, or mode) for entity ${entityId}.`
       );
@@ -101,11 +90,11 @@ class ModifyArrayFieldHandler {
     // 3. Fetch and Clone Component
     const originalComponentData = this.#entityManager.getComponentData(
       entityId,
-      component_type
+      compType
     );
     if (!originalComponentData) {
       log.warn(
-        `MODIFY_ARRAY_FIELD: Component '${component_type}' not found on entity '${entityId}'.`
+        `MODIFY_ARRAY_FIELD: Component '${compType}' not found on entity '${entityId}'.`
       );
       return;
     }
@@ -115,7 +104,7 @@ class ModifyArrayFieldHandler {
     const targetArray = resolvePath(clonedComponentData, field);
     if (!Array.isArray(targetArray)) {
       log.warn(
-        `MODIFY_ARRAY_FIELD: Field path '${field}' in component '${component_type}' on entity '${entityId}' does not point to an array.`
+        `MODIFY_ARRAY_FIELD: Field path '${field}' in component '${compType}' on entity '${entityId}' does not point to an array.`
       );
       return;
     }
@@ -220,13 +209,9 @@ class ModifyArrayFieldHandler {
 
     // 6. Commit Changes via Clone-and-Replace
     try {
-      this.#entityManager.addComponent(
-        entityId,
-        component_type,
-        clonedComponentData
-      );
+      this.#entityManager.addComponent(entityId, compType, clonedComponentData);
       log.debug(
-        `MODIFY_ARRAY_FIELD: Successfully committed changes to component '${component_type}' on entity '${entityId}'.`
+        `MODIFY_ARRAY_FIELD: Successfully committed changes to component '${compType}' on entity '${entityId}'.`
       );
     } catch (error) {
       safeDispatchError(
@@ -235,7 +220,7 @@ class ModifyArrayFieldHandler {
         {
           error: error.message,
           entityId,
-          componentType: component_type,
+          componentType: compType,
         }
       );
       return; // Abort if the update fails

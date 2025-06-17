@@ -82,9 +82,7 @@ describe('ModifyArrayFieldHandler', () => {
             logger: mockLogger,
             safeEventDispatcher: mockDispatcher,
           })
-      ).toThrow(
-        "Dependency 'IEntityManager' with getComponentData and addComponent methods is required."
-      );
+      ).toThrow(/entityManager/);
     });
 
     test("constructor should throw an error if 'logger' dependency is missing", () => {
@@ -94,7 +92,7 @@ describe('ModifyArrayFieldHandler', () => {
             entityManager: mockEntityManager,
             safeEventDispatcher: mockDispatcher,
           })
-      ).toThrow("Dependency 'ILogger' with a 'warn' method is required.");
+      ).toThrow(/logger/);
     });
 
     test('constructor should throw an error if dependencies are malformed', () => {
