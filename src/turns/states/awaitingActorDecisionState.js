@@ -7,6 +7,7 @@
 
 import { AbstractTurnState } from './abstractTurnState.js';
 import { ACTION_DECIDED_ID } from '../../constants/eventIds.js';
+import { getActorType } from '../utils/actorTypeUtils.js';
 
 /**
  * State in which the engine waits for the current actor’s turn-strategy to
@@ -87,7 +88,7 @@ export class AwaitingActorDecisionState extends AbstractTurnState {
       }
 
       // Determine actor type: 'ai' or 'human'
-      const actorType = actor.isAi === true ? 'ai' : 'human';
+      const actorType = getActorType(actor);
 
       // Dispatch the standardized action_decided event
       const payload = {
