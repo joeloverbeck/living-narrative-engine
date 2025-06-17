@@ -12,6 +12,7 @@
 
 import { AbstractTurnState } from './abstractTurnState.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../constants/eventIds.js';
+import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 
 export class TurnEndingState extends AbstractTurnState {
   /** @type {string}     */ #actorToEndId;
@@ -31,10 +32,11 @@ export class TurnEndingState extends AbstractTurnState {
     if (!actorToEndId) {
       const message =
         'TurnEndingState Constructor: actorToEndId must be provided.';
-      dispatcher?.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
-        message,
-        details: { providedActorId: actorToEndId ?? null },
-      });
+      if (dispatcher) {
+        safeDispatchError(dispatcher, message, {
+          providedActorId: actorToEndId ?? null,
+        });
+      }
       this.#actorToEndId =
         handler.getCurrentActor()?.id ?? 'UNKNOWN_ACTOR_CONSTRUCTOR_FALLBACK';
       log.warn(
@@ -66,17 +68,18 @@ export class TurnEndingState extends AbstractTurnState {
       try {
         await ctx.getTurnEndPort().notifyTurnEnded(this.#actorToEndId, success);
       } catch (err) {
-        this._getSafeEventDispatcher(ctx, handler)?.dispatch(
-          SYSTEM_ERROR_OCCURRED_ID,
-          {
-            message: `TurnEndingState: Failed notifying TurnEndPort for actor ${this.#actorToEndId}: ${err.message}`,
-            details: {
+        const dispatcher = this._getSafeEventDispatcher(ctx, handler);
+        if (dispatcher) {
+          safeDispatchError(
+            dispatcher,
+            `TurnEndingState: Failed notifying TurnEndPort for actor ${this.#actorToEndId}: ${err.message}`,
+            {
               actorId: this.#actorToEndId,
               stack: err.stack,
               error: err.message,
-            },
-          }
-        );
+            }
+          );
+        }
       }
     } else {
       const reason = !ctx
@@ -152,17 +155,18 @@ export class TurnEndingState extends AbstractTurnState {
       try {
         await ctx.requestIdleStateTransition();
       } catch (err) {
-        this._getSafeEventDispatcher(ctx, handler)?.dispatch(
-          SYSTEM_ERROR_OCCURRED_ID,
-          {
-            message: `TurnEndingState: Failed forced transition to TurnIdleState during destroy for actor ${this.#actorToEndId}: ${err.message}`,
-            details: {
+        const dispatcher = this._getSafeEventDispatcher(ctx, handler);
+        if (dispatcher) {
+          safeDispatchError(
+            dispatcher,
+            `TurnEndingState: Failed forced transition to TurnIdleState during destroy for actor ${this.#actorToEndId}: ${err.message}`,
+            {
               actorId: this.#actorToEndId,
               stack: err.stack,
               error: err.message,
-            },
-          }
-        );
+            }
+          );
+        }
       }
     }
 

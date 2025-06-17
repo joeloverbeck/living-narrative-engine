@@ -26,7 +26,11 @@ import { TurnEndingState } from '../../../src/turns/states/turnEndingState.js';
 // Dependencies
 import { TurnIdleState } from '../../../src/turns/states/turnIdleState.js';
 import { AbstractTurnState } from '../../../src/turns/states/abstractTurnState.js';
-import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/eventIds.js';
+import { safeDispatchError } from '../../../src/utils/safeDispatchErrorUtils.js';
+
+jest.mock('../../../src/utils/safeDispatchErrorUtils.js', () => ({
+  safeDispatchError: jest.fn(),
+}));
 
 // --- Mocks & Test Utilities ---
 
@@ -311,11 +315,10 @@ describe('TurnEndingState', () => {
       turnEndingState = createTestState(actorId, null);
       await turnEndingState.enterState(mockHandler, null);
 
-      expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
-        SYSTEM_ERROR_OCCURRED_ID,
-        expect.objectContaining({
-          message: `TurnEndingState: Failed notifying TurnEndPort for actor ${actorId}: ${notifyError.message}`,
-        })
+      expect(safeDispatchError).toHaveBeenCalledWith(
+        mockSafeEventDispatcher,
+        `TurnEndingState: Failed notifying TurnEndPort for actor ${actorId}: ${notifyError.message}`,
+        expect.any(Object)
       );
       expect(mockHandler.signalNormalApparentTermination).toHaveBeenCalled();
       expect(mockHandler._resetTurnStateAndResources).toHaveBeenCalled();
@@ -397,13 +400,12 @@ describe('TurnEndingState', () => {
 
       await turnEndingState.destroy(mockHandler);
 
-      expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
-        SYSTEM_ERROR_OCCURRED_ID,
-        expect.objectContaining({
-          message: expect.stringContaining(
-            `Failed forced transition to TurnIdleState during destroy for actor ${actorId}: ${transitionError.message}`
-          ),
-        })
+      expect(safeDispatchError).toHaveBeenCalledWith(
+        mockSafeEventDispatcher,
+        expect.stringContaining(
+          `Failed forced transition to TurnIdleState during destroy for actor ${actorId}: ${transitionError.message}`
+        ),
+        expect.any(Object)
       );
     });
   });

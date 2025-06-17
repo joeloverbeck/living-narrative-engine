@@ -9,6 +9,7 @@
  */
 
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../../constants/eventIds.js';
+import { safeDispatchError } from '../../../utils/safeDispatchErrorUtils.js';
 import { TurnIdleState } from '../turnIdleState.js';
 
 /**
@@ -56,14 +57,15 @@ export async function handleProcessingException(
 
   if (systemErrorDispatcher) {
     try {
-      await systemErrorDispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
-        message: `System error in ${state.getStateName()} for actor ${currentActorIdForLog}: ${error.message}`,
-        details: {
+      safeDispatchError(
+        systemErrorDispatcher,
+        `System error in ${state.getStateName()} for actor ${currentActorIdForLog}: ${error.message}`,
+        {
           raw: `OriginalError: ${error.name} - ${error.message}`,
           stack: error.stack,
           timestamp: new Date().toISOString(),
-        },
-      });
+        }
+      );
     } catch (dispatchError) {
       logger.error(
         `${state.getStateName()}: Unexpected error dispatching SYSTEM_ERROR_OCCURRED_ID via SafeEventDispatcher for ${currentActorIdForLog}: ${dispatchError.message}`,
