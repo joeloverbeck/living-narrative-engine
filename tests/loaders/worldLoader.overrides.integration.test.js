@@ -247,21 +247,21 @@ describe('WorldLoader Integration Test Suite - Mod Overrides and Load Order (Sub
       version: '1.0.0',
       name: 'Core',
       gameVersion: '^1.0.0',
-      content: { items: [itemFilename] },
+      content: { entityDefinitions: [itemFilename] },
     };
     mockFooManifest = {
       id: fooModId,
       version: '1.0.0',
       name: 'Foo Mod',
       gameVersion: '^1.0.0',
-      content: { items: [itemFilename] },
+      content: { entityDefinitions: [itemFilename] },
     };
     mockBarManifest = {
       id: barModId,
       version: '1.0.0',
       name: 'Bar Mod',
       gameVersion: '^1.0.0',
-      content: { items: [itemFilename] },
+      content: { entityDefinitions: [itemFilename] },
     };
 
     mockManifestMap = new Map();
@@ -322,7 +322,10 @@ describe('WorldLoader Integration Test Suite - Mod Overrides and Load Order (Sub
         contentTypeDirArg,
         typeNameArg
       ) => {
-        if (typeNameArg === 'items' && contentKeyArg === 'items') {
+        if (
+          typeNameArg === 'entityDefinitions' &&
+          contentKeyArg === 'entityDefinitions'
+        ) {
           // Determine which data to "load" and store based on the modId
           let itemData;
           if (modIdArg === CORE_MOD_ID) {
@@ -407,25 +410,25 @@ describe('WorldLoader Integration Test Suite - Mod Overrides and Load Order (Sub
       1,
       CORE_MOD_ID,
       mockCoreManifest,
-      'items',
-      'entities/definitions/items',
-      'items'
+      'entityDefinitions',
+      'entities/definitions',
+      'entityDefinitions'
     );
     expect(mockEntityLoader.loadItemsForMod).toHaveBeenNthCalledWith(
       2,
       fooModId,
       mockFooManifest,
-      'items',
-      'entities/definitions/items',
-      'items'
+      'entityDefinitions',
+      'entities/definitions',
+      'entityDefinitions'
     );
     expect(mockEntityLoader.loadItemsForMod).toHaveBeenNthCalledWith(
       3,
       barModId,
       mockBarManifest,
-      'items',
-      'entities/definitions/items',
-      'items'
+      'entityDefinitions',
+      'entities/definitions',
+      'entityDefinitions'
     );
 
     // 3. Verify Registry Storage - check that store was called with the correct prefixed keys and data
@@ -504,7 +507,7 @@ describe('WorldLoader Integration Test Suite - Mod Overrides and Load Order (Sub
     expect(barPotionFinal).toBeDefined();
     expect(barPotionFinal.description).toContain('Bar potion effect');
 
-    // 6. Verify Summary Log reflects loading items (EntityDefinitionLoader covers 'items')
+    // 6. Verify Summary Log reflects loading entity definitions
     const infoCalls = mockLogger.info.mock.calls;
     const summaryStart = infoCalls.findIndex((call) =>
       call[0].includes(`WorldLoader Load Summary (World: '${worldName}')`)
@@ -514,7 +517,7 @@ describe('WorldLoader Integration Test Suite - Mod Overrides and Load Order (Sub
     const summaryLines = infoCalls.slice(summaryStart).map((call) => call[0]);
     expect(summaryLines).toEqual(
       expect.arrayContaining([
-        expect.stringMatching(/items\s+: C:3, O:0, E:0/), // 3 items loaded (1 per mod)
+        expect.stringMatching(/entityDefinitions\s+: C:3, O:0, E:0/), // 3 items loaded (1 per mod)
         expect.stringMatching(/TOTAL\s+: C:3, O:0, E:0/), // Grand Total
       ])
     );
