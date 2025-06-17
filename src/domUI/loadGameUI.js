@@ -2,7 +2,6 @@
 
 import { SlotModalBase } from './slotModalBase.js';
 import { DomUtils } from '../utils/domUtils.js';
-import { setupRadioListNavigation } from '../utils/listNavigationUtils.js';
 import { formatSaveFileMetadata } from './helpers/slotDataFormatter.js';
 import { renderSlotItem } from './helpers/renderSlotItem.js';
 import { buildModalElementsConfig } from './helpers/buildModalElementsConfig.js';
@@ -380,47 +379,7 @@ class LoadGameUI extends SlotModalBase {
    * @private
    */
   _handleSlotNavigation(event) {
-    if (!this.elements.listContainerElement) return;
-
-    const arrowHandler = setupRadioListNavigation(
-      this.elements.listContainerElement,
-      '.save-slot[role="radio"]',
-      this._datasetKey,
-      (el, value) => {
-        let slotData;
-        if (this._datasetKey === 'slotId') {
-          const slotId = parseInt(value || '-1', 10);
-          slotData = this.currentSlotsDisplayData.find(
-            (s) => s.slotId === slotId
-          );
-        } else {
-          slotData = this.currentSlotsDisplayData.find(
-            (s) => String(s[this._datasetKey]) === String(value)
-          );
-        }
-        if (slotData) this._onItemSelected(el, slotData);
-      }
-    );
-
-    arrowHandler(event);
-
-    if (event.key === 'Enter' || event.key === ' ') {
-      event.preventDefault();
-      const target = /** @type {HTMLElement} */ (event.target);
-      const value = target.dataset[this._datasetKey];
-      let slotData;
-      if (this._datasetKey === 'slotId') {
-        const slotId = parseInt(value || '-1', 10);
-        slotData = this.currentSlotsDisplayData.find(
-          (s) => s.slotId === slotId
-        );
-      } else {
-        slotData = this.currentSlotsDisplayData.find(
-          (s) => String(s[this._datasetKey]) === String(value)
-        );
-      }
-      if (slotData) this._onItemSelected(target, slotData);
-    }
+    super._handleSlotNavigation(event);
   }
 
   /**

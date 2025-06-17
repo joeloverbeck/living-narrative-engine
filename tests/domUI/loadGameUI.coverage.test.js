@@ -548,14 +548,14 @@ describe('LoadGameUI', () => {
       // We cannot directly test the private method, so we check the dependency was called
       // in a scenario where it *would* be used. A better test would refactor the handler
       // creation to be more accessible if needed.
-      instance._handleSlotNavigation(
+      SlotModalBase.prototype._handleSlotNavigation.call(
+        instance,
         new mockWindow.KeyboardEvent('keydown', { key: 'ArrowDown' })
       );
       expect(listNavigationUtils.setupRadioListNavigation).toHaveBeenCalled();
       expect(mockHandler).toHaveBeenCalled();
     });
   });
-
 
   describe('dispose()', () => {
     it('should nullify gameEngine and clear data arrays', () => {

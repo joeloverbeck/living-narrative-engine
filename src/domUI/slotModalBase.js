@@ -6,6 +6,7 @@
 
 import { BaseModalRenderer } from './baseModalRenderer.js';
 import { DomUtils } from '../utils/domUtils.js';
+import { setupRadioListNavigation } from '../utils/listNavigationUtils.js';
 import createMessageElement from './helpers/createMessageElement.js';
 
 /**
@@ -138,6 +139,58 @@ export class SlotModalBase extends BaseModalRenderer {
     }
 
     this._updateButtonStates(slotData);
+  }
+
+  /**
+   * Handles keyboard navigation within the slot list.
+   * Uses arrow keys for navigation and Enter/Space for selection.
+   *
+   * @protected
+   * @param {KeyboardEvent} event - Key event to process.
+   * @returns {void}
+   */
+  _handleSlotNavigation(event) {
+    if (!this.elements.listContainerElement) return;
+
+    const arrowHandler = setupRadioListNavigation(
+      this.elements.listContainerElement,
+      '[role="radio"]',
+      this._datasetKey,
+      (el, value) => {
+        let slotData;
+        if (this._datasetKey === 'slotId') {
+          const slotId = parseInt(value || '-1', 10);
+          slotData = this.currentSlotsDisplayData.find(
+            (s) => s.slotId === slotId
+          );
+        } else {
+          slotData = this.currentSlotsDisplayData.find(
+            (s) => String(s[this._datasetKey]) === String(value)
+          );
+        }
+        if (slotData) this._onItemSelected(el, slotData);
+      }
+    );
+
+    arrowHandler(event);
+
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      const target = /** @type {HTMLElement} */ (event.target);
+      const value = target.dataset[this._datasetKey];
+      let slotData;
+      if (this._datasetKey === 'slotId') {
+        const slotId = parseInt(value || '-1', 10);
+        slotData = this.currentSlotsDisplayData.find(
+          (s) => s.slotId === slotId
+        );
+      } else {
+        slotData = this.currentSlotsDisplayData.find(
+          (s) => String(s[this._datasetKey]) === String(value)
+        );
+      }
+      if (slotData) this._onItemSelected(target, slotData);
+    }
   }
 
   /**

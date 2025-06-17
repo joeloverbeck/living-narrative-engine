@@ -4,7 +4,6 @@
 import { SlotModalBase } from './slotModalBase.js';
 import { createSelectableItem } from './helpers/createSelectableItem.js';
 import { buildModalElementsConfig } from './helpers/buildModalElementsConfig.js';
-import { setupRadioListNavigation } from '../utils/listNavigationUtils.js';
 
 /**
  * @typedef {import('../interfaces/coreServices.js').ILogger} ILogger
@@ -307,31 +306,7 @@ export class LlmSelectionModal extends SlotModalBase {
    * @private
    */
   _handleSlotNavigation(event) {
-    if (!this.elements.listContainerElement) return;
-
-    const arrowHandler = setupRadioListNavigation(
-      this.elements.listContainerElement,
-      'li.llm-item[role="radio"]',
-      this._datasetKey,
-      (el, value) => {
-        const slotData = this.currentSlotsDisplayData.find(
-          (s) => String(s[this._datasetKey]) === String(value)
-        );
-        if (slotData) this._onItemSelected(el, slotData);
-      }
-    );
-
-    arrowHandler(event);
-
-    if (event.key === 'Enter' || event.key === ' ') {
-      event.preventDefault();
-      const target = /** @type {HTMLElement} */ (event.target);
-      const value = target.dataset[this._datasetKey];
-      const slotData = this.currentSlotsDisplayData.find(
-        (s) => String(s[this._datasetKey]) === String(value)
-      );
-      if (slotData) this._onItemSelected(target, slotData);
-    }
+    super._handleSlotNavigation(event);
   }
 
   /**
