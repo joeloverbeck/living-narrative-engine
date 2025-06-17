@@ -80,7 +80,7 @@ export default class TurnDirectiveStrategyResolver {
       default: {
         // Unknown, null, or undefined directive – choose a safe default.
         // Design choice: We treat it as WAIT_FOR_EVENT because that mirrors
-        // the legacy behaviour inside HumanTurnHandler.
+        // the legacy behaviour inside the ActorTurnHandler.
 
         /* istanbul ignore next */
         if (

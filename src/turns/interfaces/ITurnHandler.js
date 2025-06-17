@@ -6,8 +6,8 @@
 /**
  * @interface ITurnHandler
  * @classdesc Defines the contract for handling the specific logic required during a single
- * entity's turn. Implementations will vary based on the type of entity (e.g., HumanTurnHandler,
- * AITurnHandler). It receives the actor and is responsible for initiating their action(s)
+ * entity's turn. Implementations will vary based on the type of entity (e.g., actor-specific handlers).
+ * It receives the actor and is responsible for initiating their action(s)
  * for that turn. Turn completion is signaled externally (e.g., via an event port), not
  * by the resolution of the promise returned by `startTurn`.
  */

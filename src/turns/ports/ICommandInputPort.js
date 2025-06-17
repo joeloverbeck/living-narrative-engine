@@ -19,7 +19,7 @@
  * @description An interface representing the input boundary for player commands.
  * Implementations (Adapters) will bridge specific input mechanisms
  * (like an EventBus subscription, WebSocket message, etc.) to this port,
- * allowing the HumanTurnHandler to remain agnostic to the command source.
+ * allowing the ActorTurnHandler to remain agnostic to the command source.
  */
 export class ICommandInputPort {
   /**

@@ -37,7 +37,7 @@ import { POSITION_COMPONENT_ID } from '../../constants/componentIds.js'; // ⬅ 
  * NO LONGER knows about *any* concrete state classes – it delegates
  * all transitions to its owning BaseTurnHandler instance.
  * This breaks the dependency-cruiser cycle:
- * TurnContext → ProcessingCommandState → … → HumanTurnHandler → TurnContext
+ * TurnContext → ProcessingCommandState → … → ActorTurnHandler → TurnContext
  */
 export class TurnContext extends ITurnContext {
   /** @type {Entity}              */ #actor;
