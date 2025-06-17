@@ -1,5 +1,3 @@
-// src/services/saveLoadService.js
-
 import { ISaveLoadService } from '../interfaces/ISaveLoadService.js';
 import GameStateSerializer from './gameStateSerializer.js';
 import SaveValidationService from './saveValidationService.js';
@@ -19,7 +17,6 @@ import {
   validateSaveName,
   validateSaveIdentifier,
 } from './saveInputValidators.js';
-// REMOVED: import {createHash} from 'crypto';
 
 // --- Type Imports ---
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
@@ -186,7 +183,6 @@ class SaveLoadService extends ISaveLoadService {
    * @returns {Promise<LoadGameResult>} Loaded game data or error info.
    */
   async loadGameData(saveIdentifier) {
-    //
     this.#logger.debug(
       `Attempting to load game data from: "${saveIdentifier}"`
     );
