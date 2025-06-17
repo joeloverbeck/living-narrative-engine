@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://example.com/schemas/event-definition.schema.json",
+  "title": "Event Definition Schema",
+  "description": "Defines the structure for an individual event definition file. Specifies the event's unique ID, an optional description, and an optional schema defining the structure of the event's payload.",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "format": "uri",
+      "description": "Optional. URI reference to the schema this document conforms to."
+    },
+    "id": {
+      "$ref": "./common.schema.json#/definitions/namespacedId",
+      "description": "Required. The unique, namespaced identifier for this event type (e.g., 'event:apply_heal_requested', 'ui:display_message')."
+    },
+    "description": {
+      "type": "string",
+      "description": "Optional. A human-readable explanation of what this event signifies or when it is typically dispatched."
+    },
+    "payloadSchema": {
+      "description": "Optional. A JSON Schema object defining the structure of the data payload associated with this event. If the event has no payload, this property should be omitted or set to null.",
+      "type": ["object", "null"],
+      "properties": {
+        "type": {
+          "type": "string"
+        },
+        "properties": {
+          "type": "object"
+        },
+        "required": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "items": {
+          "type": ["object", "boolean"]
+        },
+        "additionalProperties": {
+          "type": ["object", "boolean"]
+        }
+      },
+      "additionalProperties": true,
+      "default": null,
+      "$comment": "This structure allows standard JSON Schema properties (type, properties, required, etc.) within payloadSchema. Setting 'type' to ['object', 'null'] allows events with no payload. The 'additionalProperties: true' ensures flexibility for various schema structures within the payload definition."
+    }
+  },
+  "required": ["id"],
+  "additionalProperties": false
+}
