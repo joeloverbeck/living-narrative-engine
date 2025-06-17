@@ -10,7 +10,7 @@ import { freeze } from '../../utils/objectUtils.js';
  * @enum {string}
  * @readonly
  * @description Directives indicating the result of interpreting a command outcome.
- * Used to guide the HumanTurnHandler on whether to end the turn, re-prompt,
+ * Used to guide the ActorTurnHandler on whether to end the turn, re-prompt,
  * or wait for an external event.
  */
 const TurnDirective = {
