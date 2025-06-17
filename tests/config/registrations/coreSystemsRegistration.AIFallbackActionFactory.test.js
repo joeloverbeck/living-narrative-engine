@@ -97,7 +97,7 @@ describe('Core Systems Registrations: Turn Handler Creation', () => {
     expect(handler).toBeInstanceOf(ActorTurnHandler);
   });
 
-  it('should throw an error if AITurnHandler constructor dependencies are manually misconfigured', () => {
+  it('should throw an error if ActorTurnHandler constructor dependencies are manually misconfigured', () => {
     // Arrange
     const brokenContainer = new AppContainer();
     configureContainer(brokenContainer, {
