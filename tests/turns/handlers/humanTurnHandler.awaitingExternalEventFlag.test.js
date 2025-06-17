@@ -6,7 +6,7 @@ import {
   beforeEach,
   afterEach,
 } from '@jest/globals';
-import HumanTurnHandler from '../../../src/turns/handlers/humanTurnHandler.js';
+import ActorTurnHandler from '../../../src/turns/handlers/actorTurnHandler.js';
 import { BaseTurnHandler } from '../../../src/turns/handlers/baseTurnHandler.js';
 
 /** Sets up minimal dependency mocks */
@@ -90,7 +90,7 @@ afterEach(() => {
 
 describe('TurnContext awaiting external event flag propagation', () => {
   it('forwards awaiting flag changes to the handler', async () => {
-    const handler = new HumanTurnHandler(deps);
+    const handler = new ActorTurnHandler(deps);
     const actor = { id: 'actor1' };
     const markSpy = jest.spyOn(handler, '_markAwaitingTurnEnd');
 

@@ -6,11 +6,11 @@ import {
   beforeEach,
   afterEach,
 } from '@jest/globals';
-import HumanTurnHandler from '../../../src/turns/handlers/humanTurnHandler.js';
+import ActorTurnHandler from '../../../src/turns/handlers/actorTurnHandler.js';
 import { BaseTurnHandler } from '../../../src/turns/handlers/baseTurnHandler.js';
 import { ActorMismatchError } from '../../../src/errors/actorMismatchError.js';
 
-describe('HumanTurnHandler.handleSubmittedCommand with invalid actor', () => {
+describe('ActorTurnHandler.handleSubmittedCommand with invalid actor', () => {
   let deps;
   let mockLogger;
   let mockTurnStateFactory;
@@ -83,7 +83,7 @@ describe('HumanTurnHandler.handleSubmittedCommand with invalid actor', () => {
   });
 
   it('ends the turn when actorEntity is null without throwing', async () => {
-    const handler = new HumanTurnHandler(deps);
+    const handler = new ActorTurnHandler(deps);
     jest.spyOn(handler, 'getTurnContext').mockReturnValue(null);
 
     const endSpy = jest
@@ -103,7 +103,7 @@ describe('HumanTurnHandler.handleSubmittedCommand with invalid actor', () => {
   });
 
   it('awaits endTurn when actorEntity is null but context exists', async () => {
-    const handler = new HumanTurnHandler(deps);
+    const handler = new ActorTurnHandler(deps);
     let resolveEnd;
     const endPromise = new Promise((res) => {
       resolveEnd = res;
@@ -137,7 +137,7 @@ describe('HumanTurnHandler.handleSubmittedCommand with invalid actor', () => {
   });
 
   it('ends the turn when actorEntity has invalid id and no context', async () => {
-    const handler = new HumanTurnHandler(deps);
+    const handler = new ActorTurnHandler(deps);
     jest.spyOn(handler, 'getTurnContext').mockReturnValue(null);
 
     const endSpy = jest
@@ -157,7 +157,7 @@ describe('HumanTurnHandler.handleSubmittedCommand with invalid actor', () => {
   });
 
   it('awaits endTurn when actorEntity has invalid id and context exists', async () => {
-    const handler = new HumanTurnHandler(deps);
+    const handler = new ActorTurnHandler(deps);
     let resolveEnd;
     const endPromise = new Promise((res) => {
       resolveEnd = res;

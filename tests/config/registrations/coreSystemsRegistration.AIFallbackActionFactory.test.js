@@ -9,7 +9,7 @@ import { tokens } from '../../../src/dependencyInjection/tokens.js';
 
 // --- Components Under Test & Mocks ---
 import TurnHandlerResolver from '../../../src/turns/services/turnHandlerResolver.js';
-import AITurnHandler from '../../../src/turns/handlers/aiTurnHandler.js';
+import ActorTurnHandler from '../../../src/turns/handlers/actorTurnHandler.js';
 import {
   PLAYER_COMPONENT_ID,
   ACTOR_COMPONENT_ID,
@@ -52,7 +52,7 @@ describe('Core Systems Registrations: Turn Handler Creation', () => {
       lifecycle: 'singletonFactory',
     });
 
-    // Stub out TurnContextBuilder so AITurnHandler constructor passes
+    // Stub out TurnContextBuilder so ActorTurnHandler constructor passes
     container.register(tokens.TurnContextBuilder, () => ({}), {
       lifecycle: 'singletonFactory',
     });
@@ -69,7 +69,7 @@ describe('Core Systems Registrations: Turn Handler Creation', () => {
     );
   });
 
-  it('should successfully create an AITurnHandler via the TurnHandlerResolver', async () => {
+  it('should successfully create an ActorTurnHandler via the TurnHandlerResolver', async () => {
     // Arrange
     const mockAiActor = {
       id: 'ai-actor-123',
@@ -94,7 +94,7 @@ describe('Core Systems Registrations: Turn Handler Creation', () => {
 
     // Assert
     expect(handler).toBeDefined();
-    expect(handler).toBeInstanceOf(AITurnHandler);
+    expect(handler).toBeInstanceOf(ActorTurnHandler);
   });
 
   it('should throw an error if AITurnHandler constructor dependencies are manually misconfigured', () => {
@@ -140,11 +140,11 @@ describe('Core Systems Registrations: Turn Handler Creation', () => {
       { lifecycle: 'singletonFactory' }
     );
 
-    // Override AITurnHandler without turnContextFactory
+    // Override ActorTurnHandler without turnContextFactory
     brokenContainer.register(
-      tokens.AITurnHandler,
+      tokens.ActorTurnHandler,
       (c) =>
-        new AITurnHandler({
+        new ActorTurnHandler({
           logger: c.resolve(tokens.ILogger),
           turnStateFactory: c.resolve(tokens.ITurnStateFactory),
           turnEndPort: c.resolve(tokens.ITurnEndPort),
@@ -155,7 +155,7 @@ describe('Core Systems Registrations: Turn Handler Creation', () => {
     );
 
     // Act & Assert
-    expect(() => brokenContainer.resolve(tokens.AITurnHandler)).toThrow(
+    expect(() => brokenContainer.resolve(tokens.ActorTurnHandler)).toThrow(
       'GenericTurnHandler: turnContextBuilder is required'
     );
   });

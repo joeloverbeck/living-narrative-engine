@@ -2,16 +2,14 @@ import { describe, it, expect } from '@jest/globals';
 import fs from 'fs';
 
 /**
- * Ensures that humanTurnHandler.js declares the IPromptCoordinator typedef.
+ * Ensures that actorTurnHandler.js defines the ActorTurnHandler class.
  */
-describe('humanTurnHandler JSDoc', () => {
-  it('includes IPromptCoordinator typedef', () => {
+describe('actorTurnHandler file', () => {
+  it('defines the ActorTurnHandler class', () => {
     const contents = fs.readFileSync(
-      'src/turns/handlers/humanTurnHandler.js',
+      'src/turns/handlers/actorTurnHandler.js',
       'utf8'
     );
-    expect(contents).toMatch(
-      /import\('\.\.\/\.\.\/interfaces\/IPromptCoordinator\.js'\)\.IPromptCoordinator/
-    );
+    expect(contents).toMatch(/class ActorTurnHandler/);
   });
 });

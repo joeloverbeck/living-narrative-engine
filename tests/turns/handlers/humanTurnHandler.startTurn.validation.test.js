@@ -6,7 +6,7 @@ import {
   beforeEach,
   afterEach,
 } from '@jest/globals';
-import HumanTurnHandler from '../../../src/turns/handlers/humanTurnHandler.js';
+import ActorTurnHandler from '../../../src/turns/handlers/actorTurnHandler.js';
 import { BaseTurnHandler } from '../../../src/turns/handlers/baseTurnHandler.js';
 
 let deps;
@@ -80,18 +80,18 @@ afterEach(() => {
   jest.restoreAllMocks();
 });
 
-describe('HumanTurnHandler.startTurn validation', () => {
+describe('ActorTurnHandler.startTurn validation', () => {
   it('throws when actor is null or lacks a valid id', async () => {
-    const handler = new HumanTurnHandler(deps);
+    const handler = new ActorTurnHandler(deps);
     const errorMsg =
-      'HumanTurnHandler.startTurn: entity is required and must have a valid id.';
+      'ActorTurnHandler.startTurn: entity is required and must have a valid id.';
     await expect(handler.startTurn(null)).rejects.toThrow(errorMsg);
     await expect(handler.startTurn({})).rejects.toThrow(errorMsg);
     await expect(handler.startTurn({ id: ' ' })).rejects.toThrow(errorMsg);
   });
 
   it('does not throw for a valid actor', async () => {
-    const handler = new HumanTurnHandler(deps);
+    const handler = new ActorTurnHandler(deps);
     const actor = { id: 'actor1' };
     const state = { startTurn: jest.fn() };
     handler._currentState = state;

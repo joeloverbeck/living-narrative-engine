@@ -6,7 +6,7 @@ import {
   beforeEach,
   afterEach,
 } from '@jest/globals';
-import HumanTurnHandler from '../../../src/turns/handlers/humanTurnHandler.js';
+import ActorTurnHandler from '../../../src/turns/handlers/actorTurnHandler.js';
 import { BaseTurnHandler } from '../../../src/turns/handlers/baseTurnHandler.js';
 
 let deps;
@@ -80,9 +80,9 @@ afterEach(() => {
   jest.restoreAllMocks();
 });
 
-describe('HumanTurnHandler.handleTurnEndedEvent with no context', () => {
+describe('ActorTurnHandler.handleTurnEndedEvent with no context', () => {
   it('clears awaiting flags when no context exists', async () => {
-    const handler = new HumanTurnHandler(deps);
+    const handler = new ActorTurnHandler(deps);
     // simulate awaiting external event
     handler._markAwaitingTurnEnd(true, 'actor1');
 

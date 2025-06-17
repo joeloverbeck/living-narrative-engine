@@ -93,7 +93,7 @@ export class EventBusPromptAdapter extends IPromptOutputPort {
       );
     }
 
-    /** @type {import('../handlers/humanTurnHandler.js').PlayerTurnPromptPayload} */
+    /** @type {{entityId: string, availableActions: any[], error?: string}} */
     const payload = {
       entityId,
       availableActions,

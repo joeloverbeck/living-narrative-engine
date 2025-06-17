@@ -102,6 +102,7 @@ describe('StaticConfiguration', () => {
     config = new StaticConfiguration();
   });
 
+  it('should create a StaticConfiguration instance', () => {
     expect(config).toBeInstanceOf(StaticConfiguration);
   });
 

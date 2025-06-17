@@ -1,6 +1,6 @@
 // tests/integration/turnHandlerResolution.integration.test.js
 // -----------------------------------------------------------------------------
-//  T-08 | Integration Test – AITurnHandler Resolution and Startup
+//  T-08 | Integration Test – ActorTurnHandler Resolution and Startup
 // -----------------------------------------------------------------------------
 
 import {
@@ -12,7 +12,6 @@ import {
   jest,
 } from '@jest/globals';
 
-import { AITurnHandler } from '../../src/turns/handlers/aiTurnHandler.js';
 import ActorTurnHandler from '../../src/turns/handlers/actorTurnHandler.js';
 import TurnHandlerResolver from '../../src/turns/services/turnHandlerResolver.js';
 import {
@@ -47,7 +46,7 @@ class StubAIPlayerStrategy {
 }
 
 // --- Test Suite -------------------------------------------------------------
-describe('T-08: AITurnHandler Resolution and Startup', () => {
+describe('T-08: ActorTurnHandler Resolution and Startup', () => {
   let resolver;
   let logger;
   let mockTurnState;
@@ -107,8 +106,8 @@ describe('T-08: AITurnHandler Resolution and Startup', () => {
       aiPromptPipeline: mockAiPromptPipeline,
     };
 
-    // Build AITurnHandler factory and resolver rules
-    const createAiHandlerFactory = () => new AITurnHandler(stubs);
+    // Build ActorTurnHandler factory and resolver rules
+    const createAiHandlerFactory = () => new ActorTurnHandler(stubs);
 
     const handlerRules = [
       {
@@ -136,7 +135,6 @@ describe('T-08: AITurnHandler Resolution and Startup', () => {
   it('should successfully start a turn for an AI actor without throwing', async () => {
     // 1. Resolve the handler.
     const handler = await resolver.resolveHandler(aiActor);
-    expect(handler).toBeInstanceOf(AITurnHandler);
     expect(handler).toBeInstanceOf(ActorTurnHandler);
 
     // 2. Start the turn; should not throw.

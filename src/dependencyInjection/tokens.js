@@ -73,6 +73,7 @@ import { freeze } from '../utils/objectUtils.js';
  * @property {DiToken} ActionValidationService - Token for validating actions.
  * @property {DiToken} PayloadValueResolverService - Token for resolving payload values.
  * @property {DiToken} TurnHandlerResolver - Token for the service that resolves the correct turn handler.
+ * @property {DiToken} ActorTurnHandler - Token for the unified actor turn handler implementation.
  * @property {DiToken} HumanTurnHandler - Token for the player-specific turn handler implementation.
  * @property {DiToken} AITurnHandler - Token for the AI-specific turn handler implementation.
  * @property {DiToken} SystemServiceRegistry - Token for the registry mapping system IDs to services.
@@ -202,6 +203,7 @@ export const tokens = freeze({
   DomainContextCompatibilityChecker: 'DomainContextCompatibilityChecker',
   ActionValidationService: 'ActionValidationService',
   TurnHandlerResolver: 'TurnHandlerResolver',
+  ActorTurnHandler: 'ActorTurnHandler',
   HumanTurnHandler: 'HumanTurnHandler',
   AITurnHandler: 'AITurnHandler',
   PlayerPromptService: 'PlayerPromptService',
