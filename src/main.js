@@ -41,10 +41,9 @@ export async function bootstrapApp() {
   try {
     // STAGE 1: Ensure Critical DOM Elements
     currentPhaseForError = 'UI Element Validation';
-    const uiResult = await ensureCriticalDOMElementsStage(
-      document,
-      () => new UIBootstrapper()
-    );
+    const uiResult = await ensureCriticalDOMElementsStage(document, {
+      createUIBootstrapper: () => new UIBootstrapper(),
+    });
     if (!uiResult.success) throw uiResult.error;
     uiElements = uiResult.payload;
 
@@ -53,7 +52,9 @@ export async function bootstrapApp() {
     const diResult = await setupDIContainerStage(
       uiElements,
       configureContainer,
-      () => new AppContainer()
+      {
+        createAppContainer: () => new AppContainer(),
+      }
     );
     if (!diResult.success) throw diResult.error;
     container = diResult.payload;
@@ -70,11 +71,9 @@ export async function bootstrapApp() {
     // STAGE 4: Initialize Game Engine
     currentPhaseForError = 'Game Engine Initialization';
     logger.debug(`main.js: Executing ${currentPhaseForError} stage...`);
-    const engineResult = await initializeGameEngineStage(
-      container,
-      logger,
-      GameEngine
-    );
+    const engineResult = await initializeGameEngineStage(container, logger, {
+      createGameEngine: (opts) => new GameEngine(opts),
+    });
     if (!engineResult.success) throw engineResult.error;
     gameEngine = engineResult.payload;
     logger.debug(`main.js: ${currentPhaseForError} stage completed.`);

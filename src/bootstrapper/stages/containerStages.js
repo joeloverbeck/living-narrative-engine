@@ -1,8 +1,6 @@
 // src/bootstrapper/stages/containerStages.js
 /* eslint-disable no-console */
 
-import AppContainer from '../../dependencyInjection/appContainer.js';
-
 // eslint-disable-next-line no-unused-vars
 import { tokens } from '../../dependencyInjection/tokens.js';
 
@@ -15,6 +13,7 @@ import { tokens } from '../../dependencyInjection/tokens.js';
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {typeof tokens} TokensObject */
 /** @typedef {import('../../types/stageResult.js').StageResult} StageResult */
+/** @typedef {import('../../dependencyInjection/appContainer.js').default} AppContainer */
 
 /**
  * Bootstrap Stage: Sets up the Dependency Injection (DI) container.
@@ -23,19 +22,16 @@ import { tokens } from '../../dependencyInjection/tokens.js';
  * @async
  * @param {EssentialUIElements} uiReferences - The object containing DOM element references.
  * @param {ConfigureContainerFunction} containerConfigFunc - A reference to the configureContainer function.
- * @param {(AppContainer|function(): AppContainer)} [containerOrFactory]
- *  - Instance or factory for an AppContainer.
+ * @param {{ createAppContainer: function(): AppContainer }} options
+ *  - Factory provider for an AppContainer instance.
  * @returns {Promise<StageResult>} Result object with the configured AppContainer on success.
  */
 export async function setupDIContainerStage(
   uiReferences,
   containerConfigFunc,
-  containerOrFactory = () => new AppContainer()
+  { createAppContainer }
 ) {
-  const container =
-    typeof containerOrFactory === 'function'
-      ? containerOrFactory()
-      : containerOrFactory;
+  const container = createAppContainer();
 
   try {
     containerConfigFunc(container, uiReferences);
