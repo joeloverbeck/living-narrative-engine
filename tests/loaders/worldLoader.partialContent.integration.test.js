@@ -278,6 +278,7 @@ describe('WorldLoader Integration Test Suite - Partial/Empty Content (TEST-LOADE
         'schema:events', // <-- Added
         'schema:rules', // <-- Added
         'schema:conditions',
+        'schema:entityInstances',
       ];
       return loadedSchemas.includes(schemaId);
     });
