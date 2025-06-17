@@ -16,6 +16,7 @@ import {
   PersistenceError,
   PersistenceErrorCodes,
 } from './persistenceErrors.js';
+import { createPersistenceFailure } from './persistenceResultUtils.js';
 import {
   validateSaveName,
   validateSaveIdentifier,
@@ -103,13 +104,10 @@ class SaveLoadService extends ISaveLoadService {
   #assertValidIdentifier(id) {
     if (!validateSaveIdentifier(id)) {
       this.#logger.error('Invalid saveIdentifier provided.');
-      return {
-        success: false,
-        error: new PersistenceError(
-          PersistenceErrorCodes.INVALID_SAVE_IDENTIFIER,
-          'A valid save file identifier must be provided.'
-        ),
-      };
+      return createPersistenceFailure(
+        PersistenceErrorCodes.INVALID_SAVE_IDENTIFIER,
+        'A valid save file identifier must be provided.'
+      );
     }
     return { success: true };
   }
@@ -139,13 +137,10 @@ class SaveLoadService extends ISaveLoadService {
         `Failed to ensure directory ${FULL_MANUAL_SAVE_DIRECTORY_PATH} exists:`,
         dirError
       );
-      return {
-        success: false,
-        error: new PersistenceError(
-          PersistenceErrorCodes.DIRECTORY_CREATION_FAILED,
-          `Failed to create save directory: ${dirError.message}`
-        ),
-      };
+      return createPersistenceFailure(
+        PersistenceErrorCodes.DIRECTORY_CREATION_FAILED,
+        `Failed to create save directory: ${dirError.message}`
+      );
     }
   }
 
@@ -200,25 +195,18 @@ class SaveLoadService extends ISaveLoadService {
       ) {
         userError = 'Failed to save game: Not enough disk space.';
       }
-      return {
-        success: false,
-        error: new PersistenceError(
-          PersistenceErrorCodes.WRITE_ERROR,
-          userError
-        ),
-      };
+      return createPersistenceFailure(
+        PersistenceErrorCodes.WRITE_ERROR,
+        userError
+      );
     } catch (error) {
       this.#logger.error(`Error writing save file ${filePath}:`, error);
-      return {
-        success: false,
-        error:
-          error instanceof PersistenceError
-            ? error
-            : new PersistenceError(
-                PersistenceErrorCodes.UNEXPECTED_ERROR,
-                `An unexpected error occurred while saving: ${error.message}`
-              ),
-      };
+      return error instanceof PersistenceError
+        ? { success: false, error }
+        : createPersistenceFailure(
+            PersistenceErrorCodes.UNEXPECTED_ERROR,
+            `An unexpected error occurred while saving: ${error.message}`
+          );
     }
   }
 
@@ -361,15 +349,13 @@ class SaveLoadService extends ISaveLoadService {
         `Failed to deserialize ${saveIdentifier}: ${deserializationResult.error}`
       );
       return {
-        success: false,
-        error:
-          deserializationResult.error instanceof PersistenceError
-            ? deserializationResult.error
-            : new PersistenceError(
-                PersistenceErrorCodes.DESERIALIZATION_ERROR,
-                deserializationResult.userFriendlyError ||
-                  'Unknown deserialization error'
-              ),
+        ...(deserializationResult.error instanceof PersistenceError
+          ? { success: false, error: deserializationResult.error }
+          : createPersistenceFailure(
+              PersistenceErrorCodes.DESERIALIZATION_ERROR,
+              deserializationResult.userFriendlyError ||
+                'Unknown deserialization error'
+            )),
         data: null,
       };
     }
@@ -402,13 +388,10 @@ class SaveLoadService extends ISaveLoadService {
     if (!validateSaveName(saveName)) {
       const userMsg = 'Invalid save name provided. Please enter a valid name.';
       this.#logger.error('Invalid saveName provided for manual save.');
-      return {
-        success: false,
-        error: new PersistenceError(
-          PersistenceErrorCodes.INVALID_SAVE_NAME,
-          userMsg
-        ),
-      };
+      return createPersistenceFailure(
+        PersistenceErrorCodes.INVALID_SAVE_NAME,
+        userMsg
+      );
     }
 
     const fileName = buildManualFileName(saveName);
@@ -434,16 +417,12 @@ class SaveLoadService extends ISaveLoadService {
         `Error during manual save process for "${saveName}":`,
         error
       );
-      return {
-        success: false,
-        error:
-          error instanceof PersistenceError
-            ? error
-            : new PersistenceError(
-                PersistenceErrorCodes.UNEXPECTED_ERROR,
-                `An unexpected error occurred while saving: ${error.message}`
-              ),
-      };
+      return error instanceof PersistenceError
+        ? { success: false, error }
+        : createPersistenceFailure(
+            PersistenceErrorCodes.UNEXPECTED_ERROR,
+            `An unexpected error occurred while saving: ${error.message}`
+          );
     }
 
     const writeResult = await this.#writeSaveFile(filePath, compressedData);
@@ -481,13 +460,10 @@ class SaveLoadService extends ISaveLoadService {
         const msg = `Save file "${filePath}" not found for deletion.`;
         const userMsg = 'Cannot delete: Save file not found.';
         this.#logger.warn(msg);
-        return {
-          success: false,
-          error: new PersistenceError(
-            PersistenceErrorCodes.DELETE_FILE_NOT_FOUND,
-            userMsg
-          ),
-        };
+        return createPersistenceFailure(
+          PersistenceErrorCodes.DELETE_FILE_NOT_FOUND,
+          userMsg
+        );
       }
 
       const deleteResult = await this.#storageProvider.deleteFile(filePath);
@@ -500,28 +476,21 @@ class SaveLoadService extends ISaveLoadService {
       }
       return deleteResult.success
         ? deleteResult
-        : {
-            success: false,
-            error: new PersistenceError(
-              PersistenceErrorCodes.DELETE_FAILED,
-              deleteResult.error || 'Unknown delete error'
-            ),
-          };
+        : createPersistenceFailure(
+            PersistenceErrorCodes.DELETE_FAILED,
+            deleteResult.error || 'Unknown delete error'
+          );
     } catch (error) {
       this.#logger.error(
         `Error during manual save deletion process for "${filePath}":`,
         error
       );
-      return {
-        success: false,
-        error:
-          error instanceof PersistenceError
-            ? error
-            : new PersistenceError(
-                PersistenceErrorCodes.UNEXPECTED_ERROR,
-                `An unexpected error occurred during deletion: ${error.message}`
-              ),
-      };
+      return error instanceof PersistenceError
+        ? { success: false, error }
+        : createPersistenceFailure(
+            PersistenceErrorCodes.UNEXPECTED_ERROR,
+            `An unexpected error occurred during deletion: ${error.message}`
+          );
     }
   }
 }
