@@ -26,6 +26,7 @@ const mockValidatedEventDispatcher = {
 
 /**
  * A concrete implementation of the abstract BaseListDisplayComponent for testing.
+ *
  * @class TestableSelectableListComponent
  */
 class TestableSelectableListComponent extends SelectableListDisplayComponent {
@@ -69,9 +70,12 @@ describe('SelectableListDisplayComponent', () => {
 
   // Set up the DOM and component before each test
   beforeEach(async () => {
-    dom = new JSDOM('<!DOCTYPE html><html><body><ul id="list-container"></ul></body></html>', {
-      url: 'http://localhost',
-    });
+    dom = new JSDOM(
+      '<!DOCTYPE html><html><body><ul id="list-container"></ul></body></html>',
+      {
+        url: 'http://localhost',
+      }
+    );
     document = dom.window.document;
     container = document.getElementById('list-container');
 
@@ -103,13 +107,26 @@ describe('SelectableListDisplayComponent', () => {
   // These constructor tests don't need the async setup, but are fine here.
   describe('Constructor', () => {
     test('should throw an error if datasetKey is missing', () => {
-      expect(() => new SelectableListDisplayComponent({ logger: mockLogger, documentContext: mockDocumentContext })).toThrow(
+      expect(
+        () =>
+          new SelectableListDisplayComponent({
+            logger: mockLogger,
+            documentContext: mockDocumentContext,
+          })
+      ).toThrow(
         `[SelectableListDisplayComponent] 'datasetKey' is required and must be a string.`
       );
     });
 
     test('should throw an error if datasetKey is not a string', () => {
-      expect(() => new SelectableListDisplayComponent({ logger: mockLogger, documentContext: mockDocumentContext, datasetKey: 123 })).toThrow(
+      expect(
+        () =>
+          new SelectableListDisplayComponent({
+            logger: mockLogger,
+            documentContext: mockDocumentContext,
+            datasetKey: 123,
+          })
+      ).toThrow(
         `[SelectableListDisplayComponent] 'datasetKey' is required and must be a string.`
       );
     });
@@ -128,13 +145,18 @@ describe('SelectableListDisplayComponent', () => {
 
     test('constructor should throw if listContainerElement is not found in DOM', () => {
       const badContext = { ...mockDocumentContext, query: () => null };
-      expect(() => new SelectableListDisplayComponent({
-        logger: mockLogger,
-        documentContext: badContext,
-        validatedEventDispatcher: mockValidatedEventDispatcher,
-        elementsConfig: { listContainerElement: '#nonexistent' },
-        datasetKey: 'id',
-      })).toThrow(/'listContainerElement' is not defined or not found in the DOM/);
+      expect(
+        () =>
+          new SelectableListDisplayComponent({
+            logger: mockLogger,
+            documentContext: badContext,
+            validatedEventDispatcher: mockValidatedEventDispatcher,
+            elementsConfig: { listContainerElement: '#nonexistent' },
+            datasetKey: 'id',
+          })
+      ).toThrow(
+        /'listContainerElement' is not defined or not found in the DOM/
+      );
     });
   });
 
@@ -151,7 +173,9 @@ describe('SelectableListDisplayComponent', () => {
       const spy = jest.spyOn(itemToSelect, 'focus');
 
       // Simulate click
-      itemToSelect.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true }));
+      itemToSelect.dispatchEvent(
+        new dom.window.MouseEvent('click', { bubbles: true })
+      );
 
       expect(component.getSelectedItemData()).toBe(MOCK_DATA[1]);
       expect(itemToSelect.classList.contains('selected')).toBe(true);
@@ -164,13 +188,17 @@ describe('SelectableListDisplayComponent', () => {
       const secondItem = container.querySelector('#item-2');
 
       // First click
-      firstItem.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true }));
+      firstItem.dispatchEvent(
+        new dom.window.MouseEvent('click', { bubbles: true })
+      );
       expect(component.getSelectedItemData()).toBe(MOCK_DATA[0]);
       expect(firstItem.classList.contains('selected')).toBe(true);
       expect(secondItem.classList.contains('selected')).toBe(false);
 
       // Second click
-      secondItem.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true }));
+      secondItem.dispatchEvent(
+        new dom.window.MouseEvent('click', { bubbles: true })
+      );
       expect(component.getSelectedItemData()).toBe(MOCK_DATA[1]);
       expect(firstItem.classList.contains('selected')).toBe(false);
       expect(secondItem.classList.contains('selected')).toBe(true);
@@ -183,7 +211,9 @@ describe('SelectableListDisplayComponent', () => {
     beforeEach(() => {
       mockRadioNavHandler = jest.fn();
       // Spy on the setup utility to see if it's called correctly
-      jest.spyOn(listNavigationUtils, 'setupRadioListNavigation').mockImplementation(() => mockRadioNavHandler);
+      jest
+        .spyOn(listNavigationUtils, 'setupRadioListNavigation')
+        .mockImplementation(() => mockRadioNavHandler);
 
       // Re-render to apply the spy
       return component.refreshList();
@@ -211,9 +241,12 @@ describe('SelectableListDisplayComponent', () => {
     });
 
     test('should select an item when navigation callback is invoked', () => {
-      const navCallback = jest.spyOn(listNavigationUtils, 'setupRadioListNavigation').mock.calls[0][3];
+      const navCallback = jest.spyOn(
+        listNavigationUtils,
+        'setupRadioListNavigation'
+      ).mock.calls[0][3];
       const itemToSelect = container.querySelector('#item-3');
-      const spy = jest.spyOn(component, '_handleItemSelection');
+      const spy = jest.spyOn(component, '_selectItem');
 
       navCallback(itemToSelect, '3');
 
@@ -223,9 +256,12 @@ describe('SelectableListDisplayComponent', () => {
     test('should select focused item on "Enter" key press', () => {
       const itemToSelect = container.querySelector('#item-2');
       itemToSelect.focus(); // Set focus to simulate user navigation
-      const spy = jest.spyOn(component, '_handleItemSelection');
+      const spy = jest.spyOn(component, '_selectItem');
 
-      const event = new dom.window.KeyboardEvent('keydown', { key: 'Enter', bubbles: true });
+      const event = new dom.window.KeyboardEvent('keydown', {
+        key: 'Enter',
+        bubbles: true,
+      });
       const preventDefaultSpy = jest.spyOn(event, 'preventDefault');
 
       // Dispatch event from the item itself
@@ -238,9 +274,12 @@ describe('SelectableListDisplayComponent', () => {
     test('should select focused item on " " (Space) key press', () => {
       const itemToSelect = container.querySelector('#item-1');
       itemToSelect.focus();
-      const spy = jest.spyOn(component, '_handleItemSelection');
+      const spy = jest.spyOn(component, '_selectItem');
 
-      const event = new dom.window.KeyboardEvent('keydown', { key: ' ', bubbles: true });
+      const event = new dom.window.KeyboardEvent('keydown', {
+        key: ' ',
+        bubbles: true,
+      });
       const preventDefaultSpy = jest.spyOn(event, 'preventDefault');
 
       // Dispatch event from the item itself
@@ -254,7 +293,9 @@ describe('SelectableListDisplayComponent', () => {
   describe('Dispose', () => {
     test('should clear selection and list data on dispose', () => {
       const itemToSelect = container.querySelector('#item-2');
-      itemToSelect.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true }));
+      itemToSelect.dispatchEvent(
+        new dom.window.MouseEvent('click', { bubbles: true })
+      );
 
       expect(component.getSelectedItemData()).not.toBeNull();
       expect(component.getCurrentListData().length).toBe(MOCK_DATA.length);
@@ -270,7 +311,11 @@ describe('SelectableListDisplayComponent', () => {
       component.dispose();
       // The base class handles the removal, so we check if it was called.
       // We expect it to be called for 'keydown'.
-      expect(spy).toHaveBeenCalledWith('keydown', expect.any(Function), undefined);
+      expect(spy).toHaveBeenCalledWith(
+        'keydown',
+        expect.any(Function),
+        undefined
+      );
     });
   });
 });
