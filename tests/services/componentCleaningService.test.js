@@ -1,5 +1,7 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
-import ComponentCleaningService from '../../src/persistence/componentCleaningService.js';
+import ComponentCleaningService, {
+  buildDefaultComponentCleaners,
+} from '../../src/persistence/componentCleaningService.js';
 import {
   NOTES_COMPONENT_ID,
   SHORT_TERM_MEMORY_COMPONENT_ID,
@@ -28,6 +30,7 @@ describe('ComponentCleaningService', () => {
     service = new ComponentCleaningService({
       logger,
       safeEventDispatcher: dispatcher,
+      defaultCleaners: buildDefaultComponentCleaners(logger),
     });
   });
 

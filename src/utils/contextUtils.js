@@ -2,6 +2,8 @@
 import { resolvePath } from './objectUtils.js';
 import { NAME_COMPONENT_ID } from '../constants/componentIds.js';
 import { PlaceholderResolver } from './placeholderResolverUtils.js';
+import { getEntityDisplayName } from './entityUtils.js';
+
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 
 // Regex to find placeholders like {path.to.value} within a string.
@@ -42,8 +44,19 @@ export function resolveEntityNameFallback(
     return undefined; // Not a recognized shorthand, so no fallback applies.
   }
 
-  // Safely access the name component's text property using optional chaining.
-  const name = entity?.components?.[NAME_COMPONENT_ID]?.text;
+  if (!entity) return undefined;
+
+  // If entity lacks getComponentData, provide a simple adapter so
+  // getEntityDisplayName can still read from the components object.
+  const adaptedEntity =
+    typeof entity.getComponentData === 'function'
+      ? entity
+      : {
+          ...entity,
+          getComponentData: (type) => entity?.components?.[type],
+        };
+
+  const name = getEntityDisplayName(adaptedEntity, undefined, logger);
 
   if (typeof name === 'string') {
     logger?.debug(
