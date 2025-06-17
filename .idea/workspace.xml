@@ -4,9 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="b413f82f-63d4-4e9a-b873-a56870c7c928" name="Changes" comment="Uploading stuff from the office.">
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+    <list default="true" id="b413f82f-63d4-4e9a-b873-a56870c7c928" name="Changes" comment="Losing my fucking mind here.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/llm-proxy-server/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/llm-proxy-server/.gitignore" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -180,7 +180,23 @@
       <option name="project" value="LOCAL" />
       <updated>1750175945334</updated>
     </task>
-    <option name="localTasksCounter" value="9" />
+    <task id="LOCAL-00009" summary="Losing my fucking mind here.">
+      <option name="closed" value="true" />
+      <created>1750176613496</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1750176613496</updated>
+    </task>
+    <task id="LOCAL-00010" summary="Losing my fucking mind here.">
+      <option name="closed" value="true" />
+      <created>1750176660228</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1750176660228</updated>
+    </task>
+    <option name="localTasksCounter" value="11" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -199,6 +215,7 @@
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="Uploading stuff from the office." />
-    <option name="LAST_COMMIT_MESSAGE" value="Uploading stuff from the office." />
+    <MESSAGE value="Losing my fucking mind here." />
+    <option name="LAST_COMMIT_MESSAGE" value="Losing my fucking mind here." />
   </component>
 </project>
