@@ -21,6 +21,7 @@ import {
   PersistenceError,
   PersistenceErrorCodes,
 } from './persistenceErrors.js';
+import { createPersistenceFailure } from './persistenceResultUtils.js';
 // --- MODIFICATION END ---
 
 /**
@@ -115,30 +116,21 @@ class GamePersistenceService extends IGamePersistenceService {
       this.#logger.error(
         `GamePersistenceService.restoreGameState: ${errorMsg}`
       );
-      return {
-        success: false,
-        error: new PersistenceError(
-          PersistenceErrorCodes.INVALID_GAME_STATE,
-          errorMsg
-        ),
-      };
+      return createPersistenceFailure(
+        PersistenceErrorCodes.INVALID_GAME_STATE,
+        errorMsg
+      );
     }
     if (!this.#entityManager)
-      return {
-        success: false,
-        error: new PersistenceError(
-          PersistenceErrorCodes.UNEXPECTED_ERROR,
-          'EntityManager not available.'
-        ),
-      };
+      return createPersistenceFailure(
+        PersistenceErrorCodes.UNEXPECTED_ERROR,
+        'EntityManager not available.'
+      );
     if (!this.#playtimeTracker)
-      return {
-        success: false,
-        error: new PersistenceError(
-          PersistenceErrorCodes.UNEXPECTED_ERROR,
-          'PlaytimeTracker not available.'
-        ),
-      };
+      return createPersistenceFailure(
+        PersistenceErrorCodes.UNEXPECTED_ERROR,
+        'PlaytimeTracker not available.'
+      );
     return null;
   }
 
@@ -160,13 +152,10 @@ class GamePersistenceService extends IGamePersistenceService {
         `GamePersistenceService.restoreGameState: ${errorMsg}`,
         error
       );
-      return {
-        success: false,
-        error: new PersistenceError(
-          PersistenceErrorCodes.UNEXPECTED_ERROR,
-          `Critical error during state clearing: ${errorMsg}`
-        ),
-      };
+      return createPersistenceFailure(
+        PersistenceErrorCodes.UNEXPECTED_ERROR,
+        `Critical error during state clearing: ${errorMsg}`
+      );
     }
   }
 
@@ -261,13 +250,10 @@ class GamePersistenceService extends IGamePersistenceService {
     if (!this.#saveLoadService) {
       const errorMsg = 'SaveLoadService is not available. Cannot save game.';
       this.#logger.error(`GamePersistenceService.saveGame: ${errorMsg}`);
-      return {
-        success: false,
-        error: new PersistenceError(
-          PersistenceErrorCodes.UNEXPECTED_ERROR,
-          errorMsg
-        ),
-      };
+      return createPersistenceFailure(
+        PersistenceErrorCodes.UNEXPECTED_ERROR,
+        errorMsg
+      );
     }
 
     if (!this.isSavingAllowed(isEngineInitialized)) {
@@ -275,13 +261,10 @@ class GamePersistenceService extends IGamePersistenceService {
       this.#logger.warn(
         `GamePersistenceService.saveGame: Saving is not currently allowed.`
       );
-      return {
-        success: false,
-        error: new PersistenceError(
-          PersistenceErrorCodes.UNEXPECTED_ERROR,
-          errorMsg
-        ),
-      };
+      return createPersistenceFailure(
+        PersistenceErrorCodes.UNEXPECTED_ERROR,
+        errorMsg
+      );
     }
 
     try {
@@ -321,16 +304,12 @@ class GamePersistenceService extends IGamePersistenceService {
         `GamePersistenceService.saveGame: An unexpected error occurred during saveGame for "${saveName}": ${errorMessage}`,
         error
       );
-      return {
-        success: false,
-        error:
-          error instanceof PersistenceError
-            ? error
-            : new PersistenceError(
-                PersistenceErrorCodes.UNEXPECTED_ERROR,
-                `Unexpected error during save: ${errorMessage}`
-              ),
-      };
+      return error instanceof PersistenceError
+        ? { success: false, error }
+        : createPersistenceFailure(
+            PersistenceErrorCodes.UNEXPECTED_ERROR,
+            `Unexpected error during save: ${errorMessage}`
+          );
     }
   }
 
@@ -371,8 +350,7 @@ class GamePersistenceService extends IGamePersistenceService {
     );
     if (!this.#saveLoadService) {
       return {
-        success: false,
-        error: new PersistenceError(
+        ...createPersistenceFailure(
           PersistenceErrorCodes.UNEXPECTED_ERROR,
           'SaveLoadService is not available.'
         ),
@@ -390,8 +368,7 @@ class GamePersistenceService extends IGamePersistenceService {
         serviceError
       );
       return {
-        success: false,
-        error: new PersistenceError(
+        ...createPersistenceFailure(
           PersistenceErrorCodes.UNEXPECTED_ERROR,
           `Unexpected error during data loading: ${serviceError.message}`
         ),
@@ -405,14 +382,12 @@ class GamePersistenceService extends IGamePersistenceService {
         `GamePersistenceService.loadAndRestoreGame: Failed to load raw game data from ${saveIdentifier}. Reason: ${reason}`
       );
       return {
-        success: false,
-        error:
-          loadResult?.error instanceof PersistenceError
-            ? loadResult.error
-            : new PersistenceError(
-                PersistenceErrorCodes.UNEXPECTED_ERROR,
-                loadResult?.error || 'Failed to load raw game data.'
-              ),
+        ...(loadResult?.error instanceof PersistenceError
+          ? { success: false, error: loadResult.error }
+          : createPersistenceFailure(
+              PersistenceErrorCodes.UNEXPECTED_ERROR,
+              loadResult?.error || 'Failed to load raw game data.'
+            )),
         data: null,
       };
     }
@@ -435,14 +410,12 @@ class GamePersistenceService extends IGamePersistenceService {
         `GamePersistenceService.loadAndRestoreGame: Failed to restore game state for ${saveIdentifier}. Error: ${restoreResult.error}`
       );
       return {
-        success: false,
-        error:
-          restoreResult.error instanceof PersistenceError
-            ? restoreResult.error
-            : new PersistenceError(
-                PersistenceErrorCodes.UNEXPECTED_ERROR,
-                restoreResult.error || 'Failed to restore game state.'
-              ),
+        ...(restoreResult.error instanceof PersistenceError
+          ? { success: false, error: restoreResult.error }
+          : createPersistenceFailure(
+              PersistenceErrorCodes.UNEXPECTED_ERROR,
+              restoreResult.error || 'Failed to restore game state.'
+            )),
         data: null,
       };
     }
