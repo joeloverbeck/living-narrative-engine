@@ -1,6 +1,11 @@
 // src/bootstrapper/stages/eventStages.js
 
-import { shouldStopEngine, attachBeforeUnload } from '../helpers.js';
+import {
+  shouldStopEngine,
+  attachBeforeUnload,
+  stageSuccess,
+  stageFailure,
+} from '../helpers.js';
 
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../engine/gameEngine.js').default} GameEngineInstance */
@@ -66,17 +71,16 @@ export async function setupGlobalEventListenersStage(
       `${stageName}: '${eventName}' event listener attached successfully.`
     );
     logger.debug(`Bootstrap Stage: ${stageName} completed.`);
-    return { success: true };
+    return stageSuccess();
   } catch (error) {
     logger.error(
       `Bootstrap Stage: ${stageName} encountered an unexpected error during '${eventName}' listener setup.`,
       error
     );
-    const stageError = new Error(
+    return stageFailure(
+      stageName,
       `Unexpected error during ${stageName} for '${eventName}': ${error.message}`,
-      { cause: error }
+      error
     );
-    stageError.phase = stageName;
-    return { success: false, error: stageError };
   }
 }

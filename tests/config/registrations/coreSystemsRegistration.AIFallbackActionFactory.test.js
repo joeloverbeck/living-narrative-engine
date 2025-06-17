@@ -59,7 +59,7 @@ describe('Core Systems Registrations: Turn Handler Creation', () => {
 
     // Stub out IAIPlayerStrategyFactory so resolver can build the handler
     container.register(
-      tokens.AIStrategyFactory,
+      tokens.TurnStrategyFactory,
       () => ({
         create: () => ({
           // dummy strategy; TurnHandlerResolver doesn’t execute it here
@@ -131,7 +131,7 @@ describe('Core Systems Registrations: Turn Handler Creation', () => {
 
     // ── Stub IAIPlayerStrategyFactory properly ──
     brokenContainer.register(
-      tokens.AIStrategyFactory,
+      tokens.TurnStrategyFactory,
       () => ({
         create: () => ({
           // dummy strategy; not invoked here
@@ -148,7 +148,7 @@ describe('Core Systems Registrations: Turn Handler Creation', () => {
           logger: c.resolve(tokens.ILogger),
           turnStateFactory: c.resolve(tokens.ITurnStateFactory),
           turnEndPort: c.resolve(tokens.ITurnEndPort),
-          strategyFactory: c.resolve(tokens.AIStrategyFactory),
+          strategyFactory: c.resolve(tokens.TurnStrategyFactory),
           // turnContextBuilder intentionally omitted
         }),
       { lifecycle: 'transient' }

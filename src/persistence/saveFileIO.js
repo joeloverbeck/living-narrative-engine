@@ -4,6 +4,10 @@ import {
   PersistenceError,
   PersistenceErrorCodes,
 } from './persistenceErrors.js';
+import {
+  createPersistenceFailure,
+  createPersistenceSuccess,
+} from './persistenceResultUtils.js';
 import { manualSavePath, extractSaveName } from '../utils/savePathUtils.js';
 
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
@@ -27,19 +31,17 @@ export async function readSaveFile(storage, filePath, logger) {
         'The selected save file is empty or cannot be read. It might be corrupted or inaccessible.';
       logger.warn(`File is empty or could not be read: ${filePath}.`);
       return {
-        success: false,
-        error: new PersistenceError(PersistenceErrorCodes.EMPTY_FILE, userMsg),
+        ...createPersistenceFailure(PersistenceErrorCodes.EMPTY_FILE, userMsg),
         userFriendlyError: userMsg,
       };
     }
-    return { success: true, data: fileContent };
+    return createPersistenceSuccess(fileContent);
   } catch (error) {
     const userMsg =
       'Could not access or read the selected save file. Please check file permissions or try another save.';
     logger.error(`Error reading file ${filePath}:`, error);
     return {
-      success: false,
-      error: new PersistenceError(
+      ...createPersistenceFailure(
         PersistenceErrorCodes.FILE_READ_ERROR,
         userMsg
       ),
@@ -73,7 +75,7 @@ export async function deserializeAndDecompress(
   const deserializeRes = serializer.deserialize(decompressRes.data);
   if (!deserializeRes.success) return deserializeRes;
 
-  return { success: true, data: deserializeRes.data };
+  return createPersistenceSuccess(deserializeRes.data);
 }
 
 /**

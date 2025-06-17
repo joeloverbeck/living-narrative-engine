@@ -5,6 +5,7 @@
 /** @typedef {import('../../engine/gameEngine.js').default} GameEngineInstance */
 /** @typedef {import('../../engine/gameEngine.js').default} GameEngine */
 /** @typedef {import('../../dependencyInjection/appContainer.js').default} AppContainer */
+import { stageSuccess, stageFailure } from '../helpers.js';
 
 /**
  * Bootstrap Stage: Initializes the GameEngine.
@@ -39,14 +40,12 @@ export async function initializeGameEngineStage(
       engineCreationError
     );
     const errorMsg = `Fatal Error during GameEngine instantiation: ${engineCreationError.message}.`;
-    const stageError = new Error(errorMsg, { cause: engineCreationError });
-    stageError.phase = currentPhase;
-    return { success: false, error: stageError };
+    return stageFailure(currentPhase, errorMsg, engineCreationError);
   }
   logger.debug(
     `Bootstrap Stage: Initializing GameEngine... DONE. GameEngine instance available.`
   );
-  return { success: true, payload: gameEngine };
+  return stageSuccess(gameEngine);
 }
 
 /**
@@ -69,21 +68,19 @@ export async function startGameStage(gameEngine, activeWorldName, logger) {
     logger.error(
       `Bootstrap Stage: ${stageName} failed. GameEngine instance is not available.`
     );
-    const criticalError = new Error(
+    return stageFailure(
+      stageName,
       'GameEngine not initialized before attempting to start game.'
     );
-    criticalError.phase = stageName;
-    return { success: false, error: criticalError };
   }
   if (typeof activeWorldName !== 'string' || activeWorldName.trim() === '') {
     logger.error(
       `Bootstrap Stage: ${stageName} failed. activeWorldName is invalid or empty.`
     );
-    const criticalError = new Error(
+    return stageFailure(
+      stageName,
       'activeWorldName is invalid or empty, cannot start game.'
     );
-    criticalError.phase = stageName;
-    return { success: false, error: criticalError };
   }
 
   try {
@@ -96,13 +93,12 @@ export async function startGameStage(gameEngine, activeWorldName, logger) {
       `Bootstrap Stage: ${stageName}: Error during gameEngine.startNewGame for world "${activeWorldName}".`,
       startGameError
     );
-    const stageError = new Error(
+    return stageFailure(
+      stageName,
       `Failed to start new game with world "${activeWorldName}": ${startGameError.message}`,
-      { cause: startGameError }
+      startGameError
     );
-    stageError.phase = stageName;
-    return { success: false, error: stageError };
   }
   logger.debug(`Bootstrap Stage: ${stageName} completed.`);
-  return { success: true };
+  return stageSuccess();
 }

@@ -244,7 +244,9 @@ describe('OperationInterpreter', () => {
     const opMissingType = { parameters: {} };
     interpreter.execute(opMissingType, mockExecutionContext);
     expect(mockRegistry.getHandler).not.toHaveBeenCalled();
-    expect(mockLogger.error).toHaveBeenCalled();
+    expect(mockLogger.error).toHaveBeenCalledWith(
+      'OperationInterpreter: OperationInterpreter.execute: operationType must be a non-empty string.'
+    );
   });
 
   /* ────────────────────────────────────────────────────────────────────────
@@ -264,9 +266,7 @@ describe('OperationInterpreter', () => {
     expect(actualParams).toEqual({ message: undefined });
 
     expect(mockLogger.warn).toHaveBeenCalledWith(
-      expect.stringContaining(
-        'Placeholder path "invalid.path.that.does.not.exist"'
-      )
+      'OperationInterpreter: PlaceholderResolver: Placeholder "{invalid.path.that.does.not.exist}" not found in provided data sources. Replacing with empty string.'
     );
     expect(mockLogger.error).not.toHaveBeenCalledWith(
       expect.stringContaining('Error resolving placeholders')

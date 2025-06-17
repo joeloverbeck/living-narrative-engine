@@ -154,7 +154,7 @@ describe('SaveLoadService edge cases', () => {
       storageProvider.readFile.mockResolvedValue(compressed);
       const slots = await service.listManualSaveSlots();
       expect(slots[0].isCorrupted).toBe(true);
-      expect(slots[0].saveName).toMatch(/No Metadata/);
+      expect(slots[0].saveName).toBe('slot1 (No Metadata)');
     });
 
     it('handles malformed metadata fields', async () => {
@@ -169,7 +169,7 @@ describe('SaveLoadService edge cases', () => {
       storageProvider.readFile.mockResolvedValue(compressed);
       const slots = await service.listManualSaveSlots();
       expect(slots[0].isCorrupted).toBe(true);
-      expect(slots[0].saveName).toMatch(/Bad Metadata/);
+      expect(slots[0].saveName).toBe('slot2 (Bad Metadata)');
     });
 
     it('marks slot corrupted when deserialization fails', async () => {

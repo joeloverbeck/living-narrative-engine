@@ -5,34 +5,136 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="b413f82f-63d4-4e9a-b873-a56870c7c928" name="Changes" comment="Fixed static configuration issue.">
+      <change afterPath="$PROJECT_DIR$/data/mods/core/conditions/follow-cycle-detected.condition.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/mods/core/conditions/followers-to-move-exist.condition.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/mods/core/conditions/following-leader-is-event-entity.condition.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/mods/core/conditions/resolved-target-location-null.condition.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/mods/intimacy/conditions/room-has-kissing-pair.condition.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/llm-proxy-server/tests/llmConfigService.test.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/llm-proxy-server/tests/llmRequestController.test.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/constants/persistence.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/dependencyInjection/registrations/registerActorAwareStrategy.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/domUI/helpers/renderListCommon.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/logic/ruleCacheUtils.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/logic/utils/jsonLogicUtils.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/logic/utils/operationTypeUtils.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/persistence/saveFileRepository.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/turns/factories/actorAwareStrategyFactory.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/turns/utils/actorTypeUtils.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tests/logic/jsonLogicUtils.test.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tests/logic/ruleCacheUtils.test.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tests/persistence/saveLoadService.test.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tests/services/gamePersistenceService.privateHelpers.test.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tests/turns/factories/actorAwareStrategyFactory.test.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tests/turns/utils/actorTypeUtils.test.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/mods/core/mod.manifest.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/core/mod.manifest.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/mods/core/events/ai_turn_processing_ended.event.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/mods/core/events/ai_turn_processing_started.event.json" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/data/mods/intimacy/mod.manifest.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/intimacy/mod.manifest.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/mods/isekai/characters/hero.character.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/isekai/entities/definitions/hero.character.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/mods/isekai/characters/ninja.character.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/isekai/entities/definitions/ninja.character.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/mods/isekai/characters/receptionist.character.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/isekai/entities/definitions/receptionist.character.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/mods/isekai/characters/sidekick.character.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/isekai/entities/definitions/sidekick.character.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/mods/isekai/locations/adventurers_guild.location.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/isekai/entities/definitions/adventurers_guild.location.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/mods/isekai/locations/town.location.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/isekai/entities/definitions/town.location.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/mods/isekai/mod.manifest.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/mods/isekai/mod.manifest.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/schemas/mod.manifest.schema.json" beforeDir="false" afterPath="$PROJECT_DIR$/data/schemas/mod.manifest.schema.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/dependencyInjection/registrations/infrastructureRegistrations.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/registrations/infrastructureRegistrations.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/dependencyInjection/registrations/loadersRegistrations.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/registrations/loadersRegistrations.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/loaders/entityLoader.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/loaders/entityDefinitionLoader.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/loaders/worldLoader.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/loaders/worldLoader.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/config/registrations/loadersRegistrations.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/config/registrations/loadersRegistrations.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/events/turn_processing_events.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs/events/turn_processing_events.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/llm-proxy-server/src/config/llmConfigService.js" beforeDir="false" afterPath="$PROJECT_DIR$/llm-proxy-server/src/config/llmConfigService.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/actions/actionFormatter.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/actions/actionFormatter.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/ai/notesPersistenceHook.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/ai/notesPersistenceHook.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bootstrapper/auxiliaryStages.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/bootstrapper/auxiliaryStages.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bootstrapper/helpers.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/bootstrapper/helpers.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bootstrapper/stages/containerStages.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/bootstrapper/stages/containerStages.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bootstrapper/stages/engineStages.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/bootstrapper/stages/engineStages.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bootstrapper/stages/eventStages.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/bootstrapper/stages/eventStages.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bootstrapper/stages/uiStages.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/bootstrapper/stages/uiStages.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/commands/commandProcessor.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/commands/commandProcessor.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/commands/interpreters/commandOutcomeInterpreter.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/commands/interpreters/commandOutcomeInterpreter.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/constants/eventIds.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/constants/eventIds.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/context/worldContext.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/context/worldContext.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/data/gameDataRepository.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/data/gameDataRepository.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/data/providers/actorStateProvider.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/data/providers/actorStateProvider.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/data/providers/locationSummaryProvider.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/data/providers/locationSummaryProvider.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/data/providers/perceptionLogProvider.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/data/providers/perceptionLogProvider.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/dependencyInjection/registrations/aiRegistrations.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/registrations/aiRegistrations.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/dependencyInjection/registrations/persistenceRegistrations.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/registrations/persistenceRegistrations.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/dependencyInjection/registrations/registerGenericStrategy.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/registrations/registerGenericStrategy.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/dependencyInjection/registrations/turnLifecycleRegistrations.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/registrations/turnLifecycleRegistrations.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/dependencyInjection/tokens.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencyInjection/tokens.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/domUI/actionButtonsRenderer.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/domUI/actionButtonsRenderer.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/domUI/baseListDisplayComponent.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/domUI/baseListDisplayComponent.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/domUI/llmSelectionModal.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/domUI/llmSelectionModal.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/domUI/loadGameUI.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/domUI/loadGameUI.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/domUI/locationRenderer.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/domUI/locationRenderer.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/domUI/processingIndicatorController.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/domUI/processingIndicatorController.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/domUI/saveGameUI.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/domUI/saveGameUI.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/domUI/selectableListDisplayComponent.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/domUI/selectableListDisplayComponent.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/domUI/slotModalBase.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/domUI/slotModalBase.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/domUI/titleRenderer.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/domUI/titleRenderer.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/engine/playtimeTracker.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/engine/playtimeTracker.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/interfaces/IGameDataRepository.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/interfaces/IGameDataRepository.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/llms/clientApiKeyProvider.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/llms/clientApiKeyProvider.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/llms/serverApiKeyProvider.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/llms/serverApiKeyProvider.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/logic/operationHandlers/modifyComponentHandler.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/logic/operationHandlers/modifyComponentHandler.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/logic/operationInterpreter.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/logic/operationInterpreter.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/logic/operationRegistry.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/logic/operationRegistry.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/logic/systemLogicInterpreter.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/logic/systemLogicInterpreter.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/modding/modVersionValidator.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/modding/modVersionValidator.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/persistence/componentCleaningService.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/persistence/componentCleaningService.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/persistence/gamePersistenceService.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/persistence/gamePersistenceService.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/persistence/gameStateCaptureService.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/persistence/gameStateCaptureService.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/persistence/gameStateSerializer.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/persistence/gameStateSerializer.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/persistence/persistenceResultUtils.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/persistence/persistenceResultUtils.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/persistence/saveFileIO.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/persistence/saveFileIO.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/persistence/saveLoadService.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/persistence/saveLoadService.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/persistence/saveValidationService.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/persistence/saveValidationService.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/storage/browserStorageProvider.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/storage/browserStorageProvider.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/turns/adapters/eventBusTurnEndAdapter.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/adapters/eventBusTurnEndAdapter.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/turns/constants/turnDirectives.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/constants/turnDirectives.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/turns/context/turnContext.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/context/turnContext.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/turns/handlers/baseTurnHandler.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/handlers/baseTurnHandler.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/turns/interfaces/ITurnContext.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/interfaces/ITurnContext.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/turns/interfaces/ITurnHandler.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/interfaces/ITurnHandler.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/turns/ports/ICommandInputPort.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/ports/ICommandInputPort.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/turns/ports/IPromptOutputPort.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/ports/IPromptOutputPort.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/turns/states/abstractTurnState.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/states/abstractTurnState.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/turns/states/awaitingActorDecisionState.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/states/awaitingActorDecisionState.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/turns/states/awaitingExternalTurnEndState.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/states/awaitingExternalTurnEndState.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/turns/states/helpers/getServiceFromContext.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/states/helpers/getServiceFromContext.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/turns/states/helpers/handleProcessingException.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/states/helpers/handleProcessingException.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/turns/states/turnEndingState.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/states/turnEndingState.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/turns/strategies/turnDirectiveStrategyResolver.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/strategies/turnDirectiveStrategyResolver.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/turns/strategies/waitForTurnEndEventStrategy.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/strategies/waitForTurnEndEventStrategy.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/turns/turnManager.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/turns/turnManager.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/utils/contextUtils.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils/contextUtils.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/utils/handlerUtils/paramsUtils.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils/handlerUtils/paramsUtils.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/utils/llmUtils.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils/llmUtils.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/utils/objectUtils.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils/objectUtils.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/utils/placeholderResolverUtils.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils/placeholderResolverUtils.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/utils/schemaUtils.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils/schemaUtils.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/utils/serviceInitializerUtils.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/utils/serviceInitializerUtils.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/config/registrations/coreSystemsRegistration.AIFallbackActionFactory.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/config/registrations/coreSystemsRegistration.AIFallbackActionFactory.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/context/worldContext.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/context/worldContext.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/dependencyInjection/registrations/aiRegistrations.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/dependencyInjection/registrations/aiRegistrations.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/dependencyInjection/registrations/persistenceRegistrations.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/dependencyInjection/registrations/persistenceRegistrations.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/dependencyInjection/registrations/turnLifecycleRegistrations.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/dependencyInjection/registrations/turnLifecycleRegistrations.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/domUI/actionButtonsRenderer.confirmActionButton.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/domUI/actionButtonsRenderer.confirmActionButton.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/domUI/actionButtonsRenderer.eventHandling.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/domUI/actionButtonsRenderer.eventHandling.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/domUI/baseListDisplayComponent.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/domUI/baseListDisplayComponent.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/domUI/loadGameUI.coverage.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/domUI/loadGameUI.coverage.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/domUI/selectableListDisplayComponent.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/domUI/selectableListDisplayComponent.test.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/tests/integration/saveLoadRoundTrip.integration.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/integration/saveLoadRoundTrip.integration.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/loaders/entityLoader.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/loaders/entityLoader.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/loaders/worldLoader.dependencyError.integration.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/loaders/worldLoader.dependencyError.integration.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/loaders/worldLoader.entityMultiKey.integration.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/loaders/worldLoader.entityMultiKey.integration.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/loaders/worldLoader.errorHandling.integration.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/loaders/worldLoader.errorHandling.integration.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/loaders/worldLoader.integration.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/loaders/worldLoader.integration.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/loaders/worldLoader.logVerification.integration.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/loaders/worldLoader.logVerification.integration.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/loaders/worldLoader.override.integration.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/loaders/worldLoader.override.integration.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/loaders/worldLoader.overrides.integration.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/loaders/worldLoader.overrides.integration.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/loaders/worldLoader.partialContent.integration.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/loaders/worldLoader.partialContent.integration.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/loaders/worldLoader.preLoopErrors.integration.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/loaders/worldLoader.preLoopErrors.integration.test.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/loaders/worldLoader.timingLogs.integration.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/loaders/worldLoader.timingLogs.integration.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/logic/contextUtils.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/logic/contextUtils.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/logic/operationInterpreter.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/logic/operationInterpreter.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/logic/operationRegistry.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/logic/operationRegistry.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/services/componentCleaningService.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/services/componentCleaningService.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/services/gamePersistenceService.edgeCases.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/services/gamePersistenceService.edgeCases.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/services/gamePersistenceService.errorPaths.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/services/gamePersistenceService.errorPaths.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/services/gameStateCaptureService.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/services/gameStateCaptureService.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/services/saveLoadService.additional.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/services/saveLoadService.additional.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/services/saveLoadService.edgeCases.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/services/saveLoadService.edgeCases.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/turns/states/awaitingExternalTurnEndState.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/states/awaitingExternalTurnEndState.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/turns/states/turnEndingState.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/states/turnEndingState.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/turns/turnManager.advanceTurn.queueNotEmpty.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/turnManager.advanceTurn.queueNotEmpty.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/turns/turnManager.advanceTurn.roundStart.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/turnManager.advanceTurn.roundStart.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/turns/turnManager.fixes.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/turnManager.fixes.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/turns/turnManager.getCurrentActor.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/turns/turnManager.getCurrentActor.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/utils/placeholderResolverUtils.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/utils/placeholderResolverUtils.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/utils/schemaUtils.registerSchema.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/utils/schemaUtils.registerSchema.test.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/utils/serviceInitializerUtils.test.js" beforeDir="false" afterPath="$PROJECT_DIR$/tests/utils/serviceInitializerUtils.test.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -97,7 +199,7 @@
     "ModuleVcsDetector.initialDetectionPerformed": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "new-entity-definitions",
+    "git-widget-placeholder": "Merging new-entity-definitions",
     "ignore.virus.scanning.warn.message": "true",
     "junie.onboarding.icon.badge.shown": "true",
     "node.js.detected.package.eslint": "true",
@@ -158,6 +260,9 @@
         <option value="bundled-js-predefined-d6986cc7102b-b26f3e71634d-JavaScript-WS-251.26094.131" />
       </set>
     </attachedChunks>
+  </component>
+  <component name="ShelveChangesManager">
+    <option name="remove_strategy" value="true" />
   </component>
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
@@ -285,6 +390,7 @@
   <component name="VcsManagerConfiguration">
     <MESSAGE value="Uploading stuff from the office." />
     <MESSAGE value="Losing my fucking mind here." />
+    <MESSAGE value="FUCK!" />
     <MESSAGE value="Fixed static configuration issue." />
     <option name="LAST_COMMIT_MESSAGE" value="Fixed static configuration issue." />
   </component>

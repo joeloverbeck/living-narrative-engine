@@ -7,6 +7,7 @@
 
 import { AbstractTurnState } from './abstractTurnState.js';
 import { ACTION_DECIDED_ID } from '../../constants/eventIds.js';
+import { getActorType } from '../utils/actorTypeUtils.js';
 
 /**
  * State in which the engine waits for the current actor’s turn-strategy to
@@ -87,7 +88,7 @@ export class AwaitingActorDecisionState extends AbstractTurnState {
       }
 
       // Determine actor type: 'ai' or 'human'
-      const actorType = actor.isAi === true ? 'ai' : 'human';
+      const actorType = getActorType(actor);
 
       // Dispatch the standardized action_decided event
       const payload = {
@@ -105,14 +106,20 @@ export class AwaitingActorDecisionState extends AbstractTurnState {
         };
       }
 
-      try {
-        const dispatcher = turnContext.getSafeEventDispatcher();
-        await dispatcher.dispatch(ACTION_DECIDED_ID, payload);
-        logger.debug(`Dispatched ${ACTION_DECIDED_ID} for actor ${actor.id}`);
-      } catch (e) {
+      const dispatcher = this._getSafeEventDispatcher(turnContext);
+      if (dispatcher) {
+        try {
+          await dispatcher.dispatch(ACTION_DECIDED_ID, payload);
+          logger.debug(`Dispatched ${ACTION_DECIDED_ID} for actor ${actor.id}`);
+        } catch (e) {
+          logger.error(
+            `Failed to dispatch ${ACTION_DECIDED_ID} event for actor ${actor.id}`,
+            e
+          );
+        }
+      } else {
         logger.error(
-          `Failed to dispatch ${ACTION_DECIDED_ID} event for actor ${actor.id}`,
-          e
+          `${this.name}: No SafeEventDispatcher available to dispatch ${ACTION_DECIDED_ID} for actor ${actor.id}.`
         );
       }
 

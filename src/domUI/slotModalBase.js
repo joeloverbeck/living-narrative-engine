@@ -5,8 +5,8 @@
  */
 
 import { BaseModalRenderer } from './baseModalRenderer.js';
-import { DomUtils } from '../utils/domUtils.js';
-import createMessageElement from './helpers/createMessageElement.js';
+import { setupRadioListNavigation } from '../utils/listNavigationUtils.js';
+import renderListCommon from './helpers/renderListCommon.js';
 
 /**
  * @class SlotModalBase
@@ -141,6 +141,58 @@ export class SlotModalBase extends BaseModalRenderer {
   }
 
   /**
+   * Handles keyboard navigation within the slot list.
+   * Uses arrow keys for navigation and Enter/Space for selection.
+   *
+   * @protected
+   * @param {KeyboardEvent} event - Key event to process.
+   * @returns {void}
+   */
+  _handleSlotNavigation(event) {
+    if (!this.elements.listContainerElement) return;
+
+    const arrowHandler = setupRadioListNavigation(
+      this.elements.listContainerElement,
+      '[role="radio"]',
+      this._datasetKey,
+      (el, value) => {
+        let slotData;
+        if (this._datasetKey === 'slotId') {
+          const slotId = parseInt(value || '-1', 10);
+          slotData = this.currentSlotsDisplayData.find(
+            (s) => s.slotId === slotId
+          );
+        } else {
+          slotData = this.currentSlotsDisplayData.find(
+            (s) => String(s[this._datasetKey]) === String(value)
+          );
+        }
+        if (slotData) this._onItemSelected(el, slotData);
+      }
+    );
+
+    arrowHandler(event);
+
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      const target = /** @type {HTMLElement} */ (event.target);
+      const value = target.dataset[this._datasetKey];
+      let slotData;
+      if (this._datasetKey === 'slotId') {
+        const slotId = parseInt(value || '-1', 10);
+        slotData = this.currentSlotsDisplayData.find(
+          (s) => s.slotId === slotId
+        );
+      } else {
+        slotData = this.currentSlotsDisplayData.find(
+          (s) => String(s[this._datasetKey]) === String(value)
+        );
+      }
+      if (slotData) this._onItemSelected(target, slotData);
+    }
+  }
+
+  /**
    * Generic helper to populate the slots list.
    *
    * @protected
@@ -160,31 +212,15 @@ export class SlotModalBase extends BaseModalRenderer {
     this._setOperationInProgress(true);
     this._displayStatusMessage(loadingMessage, 'info');
 
-    DomUtils.clearElement(this.elements.listContainerElement);
-
-    const slotsData = await fetchDataFn();
-    this.currentSlotsDisplayData = Array.isArray(slotsData) ? slotsData : [];
-
-    if (this.currentSlotsDisplayData.length === 0) {
-      const emptyMessage = getEmptyMessageFn();
-      if (typeof emptyMessage === 'string') {
-        this.elements.listContainerElement?.appendChild(
-          createMessageElement(this.domElementFactory, undefined, emptyMessage)
-        );
-      } else if (
-        emptyMessage instanceof
-        this.documentContext.document.defaultView.HTMLElement
-      ) {
-        this.elements.listContainerElement?.appendChild(emptyMessage);
-      }
-    } else {
-      this.currentSlotsDisplayData.forEach((slotData, index) => {
-        const el = renderItemFn(slotData, index);
-        if (el && this.elements.listContainerElement) {
-          this.elements.listContainerElement.appendChild(el);
-        }
-      });
-    }
+    const data = await renderListCommon(
+      fetchDataFn,
+      (item, index, list) => renderItemFn(item, index, list),
+      getEmptyMessageFn,
+      this.elements.listContainerElement,
+      this.logger,
+      this.domElementFactory
+    );
+    this.currentSlotsDisplayData = Array.isArray(data) ? data : [];
 
     this._clearStatusMessage();
     this._setOperationInProgress(false);

@@ -13,7 +13,6 @@ import TurnManager from '../../src/turns/turnManager.js';
 import { ACTOR_COMPONENT_ID } from '../../src/constants/componentIds.js';
 import {
   SYSTEM_ERROR_OCCURRED_ID,
-  AI_TURN_PROCESSING_STARTED,
   TURN_PROCESSING_STARTED,
 } from '../../src/constants/eventIds.js';
 
@@ -299,10 +298,6 @@ describe('TurnManager: advanceTurn() - Round Start (Queue Empty)', () => {
     expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
       TURN_PROCESSING_STARTED,
       { entityId: actor1.id, actorType: 'ai' }
-    );
-    expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
-      AI_TURN_PROCESSING_STARTED,
-      { entityId: actor1.id }
     );
     // It resolves the handler...
     expect(mockTurnHandlerResolver.resolveHandler).toHaveBeenCalledTimes(1);

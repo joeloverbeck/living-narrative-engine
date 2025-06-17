@@ -14,15 +14,11 @@ import { mock } from 'jest-mock-extended';
 import AppContainer from '../../../src/dependencyInjection/appContainer.js';
 import { registerTurnLifecycle } from '../../../src/dependencyInjection/registrations/turnLifecycleRegistrations.js';
 import { tokens } from '../../../src/dependencyInjection/tokens.js';
-import {
-  INITIALIZABLE,
-  SHUTDOWNABLE,
-} from '../../../src/dependencyInjection/tags.js';
+import { INITIALIZABLE } from '../../../src/dependencyInjection/tags.js';
 
 // Concrete Classes
 import { TurnOrderService } from '../../../src/turns/order/turnOrderService.js';
 import TurnManager from '../../../src/turns/turnManager.js';
-import ActorTurnHandler from '../../../src/turns/handlers/actorTurnHandler.js';
 import TurnHandlerResolver from '../../../src/turns/services/turnHandlerResolver.js';
 import { ConcreteTurnStateFactory } from '../../../src/turns/factories/concreteTurnStateFactory.js';
 import { ConcreteTurnContextFactory } from '../../../src/turns/factories/concreteTurnContextFactory.js';
@@ -42,7 +38,6 @@ describe('registerTurnLifecycle', () => {
     mockCommandProcessor,
     mockTurnEndPort,
     mockCommandOutcome,
-    mockCommandInput,
     mockAiTurnHandler,
     mockActionIndexer,
     mockTurnActionFactory,
@@ -64,7 +59,6 @@ describe('registerTurnLifecycle', () => {
     mockCommandProcessor = mock();
     mockTurnEndPort = mock();
     mockCommandOutcome = mock();
-    mockCommandInput = mock();
     mockAiTurnHandler = mock();
 
     mockActionIndexingService = {
@@ -131,11 +125,6 @@ describe('registerTurnLifecycle', () => {
       'Turn Lifecycle Registration: Registered Turn services and factories.'
     );
     expect(calls).toContain(
-      `Turn Lifecycle Registration: Registered ActorTurnHandler with new strategy deps tagged ${SHUTDOWNABLE.join(
-        ', '
-      )}.`
-    );
-    expect(calls).toContain(
       `Turn Lifecycle Registration: Registered ${tokens.TurnHandlerResolver} with singleton resolution.`
     );
     expect(calls).toContain(
@@ -173,12 +162,6 @@ describe('registerTurnLifecycle', () => {
       lifecycle: 'singletonFactory',
     },
     {
-      token: tokens.ActorTurnHandler,
-      Class: ActorTurnHandler,
-      lifecycle: 'transient',
-      tags: SHUTDOWNABLE,
-    },
-    {
       token: tokens.TurnHandlerResolver,
       Class: TurnHandlerResolver,
       lifecycle: 'singletonFactory',
@@ -199,23 +182,23 @@ describe('registerTurnLifecycle', () => {
       const instance = container.resolve(token);
       expect(instance).toBeInstanceOf(Class);
 
+      const instance2 = container.resolve(token);
+      expect(instance2).toBeInstanceOf(Class);
       if (lifecycle === 'transient') {
-        const instance2 = container.resolve(token);
-        expect(instance2).toBeInstanceOf(Class);
+        // eslint-disable-next-line jest/no-conditional-expect
         expect(instance2).not.toBe(instance);
       } else {
-        expect(container.resolve(token)).toBe(instance);
+        // eslint-disable-next-line jest/no-conditional-expect
+        expect(instance2).toBe(instance);
       }
 
       const call = registerSpy.mock.calls.find((c) => c[0] === token);
       expect(call).toBeDefined();
-      if (token !== tokens.ActorTurnHandler) {
-        const opts = call[2] || {};
-        expect(opts.lifecycle).toBe(lifecycle);
+      const opts = call[2] || {};
+      expect(opts.lifecycle).toBe(lifecycle);
 
-        if (tags) expect(opts.tags).toEqual(tags);
-        else expect(opts.tags).toBeUndefined();
-      }
+      const expectedTags = tags ?? undefined;
+      expect(opts.tags).toEqual(expectedTags);
     }
   );
 

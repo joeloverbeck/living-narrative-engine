@@ -10,6 +10,8 @@ import { REQUIRED_ENTITY_MANAGER_METHODS } from '../constants/entityManager.js';
 import { evaluateConditionWithLogging } from './jsonLogicEvaluationService.js';
 import BaseService from '../utils/baseService.js';
 import { executeActionSequence } from './actionSequence.js';
+import { buildRuleCache } from './ruleCacheUtils.js';
+import { isEmptyCondition } from './utils/jsonLogicUtils.js';
 
 /* ---------------------------------------------------------------------------
  * Internal types (JSDoc only)
@@ -122,50 +124,11 @@ class SystemLogicInterpreter extends BaseService {
   /* Rule caching                                                          */
 
   #loadAndCacheRules() {
-    this.#ruleCache.clear();
     const rules = /** @type {SystemRule[]} */ (
       this.#dataRegistry.getAllSystemRules() || []
     );
 
-    for (const rule of rules) {
-      if (!rule?.event_type) {
-        this.#logger.warn('Skipping rule with missing event_type', rule);
-        continue;
-      }
-
-      /** @type {RuleBucket} */
-      let bucket = this.#ruleCache.get(rule.event_type);
-      if (!bucket) {
-        bucket = { catchAll: [], byAction: new Map() };
-        this.#ruleCache.set(rule.event_type, bucket);
-      }
-
-      // detect `{ "==":[ { "var":"event.payload.actionId" }, "<CONST>" ] }`
-      let constId = null;
-      const c = rule.condition;
-      if (
-        c &&
-        typeof c === 'object' &&
-        '==' in c &&
-        Array.isArray(c['==']) &&
-        c['=='].length === 2 &&
-        typeof c['=='][1] === 'string' &&
-        c['=='][0]?.var === 'event.payload.actionId'
-      ) {
-        constId = c['=='][1];
-      }
-
-      if (rule.event_type === ATTEMPT_ACTION_ID && constId) {
-        (
-          bucket.byAction.get(constId) ??
-          bucket.byAction.set(constId, []).get(constId)
-        ).push(rule);
-      } else {
-        bucket.catchAll.push(rule);
-      }
-
-      this.#logger.debug(`Cached rule '${rule.rule_id}'`);
-    }
+    this.#ruleCache = buildRuleCache(rules, this.#logger);
 
     this.#logger.debug(
       `Finished caching rules. ${this.#ruleCache.size} event types have associated rules.`
@@ -177,7 +140,9 @@ class SystemLogicInterpreter extends BaseService {
   /* Event handling                                                        */
 
   /**
-   * @param {{type:string,payload:any}} event
+   * Handle an incoming event and execute matching rules.
+   *
+   * @param {{type:string,payload:any}} event - Event object with type and payload.
    */
   #handleEvent(event) {
     const bucket = this.#ruleCache.get(event.type);
@@ -262,12 +227,7 @@ class SystemLogicInterpreter extends BaseService {
     const ruleId = rule.rule_id || 'NO_ID';
 
     // no / empty condition → automatically passes
-    if (
-      !rule.condition ||
-      (typeof rule.condition === 'object' &&
-        !Array.isArray(rule.condition) &&
-        Object.keys(rule.condition).length === 0)
-    ) {
+    if (!rule.condition || isEmptyCondition(rule.condition)) {
       this.#logger.debug(
         `[Rule ${ruleId}] No condition defined or condition is empty. Defaulting to passed.`
       );

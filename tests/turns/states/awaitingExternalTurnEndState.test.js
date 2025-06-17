@@ -1,15 +1,20 @@
 // tests/turns/states/awaitingExternalTurnEndState.test.js
 // ****** MODIFIED FILE ******
 
+import { jest } from '@jest/globals';
+
+jest.mock('../../../src/utils/safeDispatchErrorUtils.js', () => ({
+  safeDispatchError: jest.fn(),
+}));
+
 import { AwaitingExternalTurnEndState } from '../../../src/turns/states/awaitingExternalTurnEndState.js';
-import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/eventIds.js';
+import { safeDispatchError } from '../../../src/utils/safeDispatchErrorUtils.js';
 import {
   afterEach,
   beforeEach,
   describe,
   expect,
   it,
-  jest,
 } from '@jest/globals';
 
 describe('AwaitingExternalTurnEndState – action propagation', () => {
@@ -82,14 +87,13 @@ describe('AwaitingExternalTurnEndState – action propagation', () => {
     // let the 3 s guard-rail fire
     jest.advanceTimersByTime(TIMEOUT_MS + 1);
 
-    expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
-      SYSTEM_ERROR_OCCURRED_ID,
+    expect(safeDispatchError).toHaveBeenCalledWith(
+      mockSafeEventDispatcher,
+      expect.stringContaining('No rule ended the turn for actor hero-123'),
       expect.objectContaining({
-        details: expect.objectContaining({
-          actorId: 'hero-123',
-          actionId: 'attack', // the definition id must be surfaced
-          code: 'TURN_END_TIMEOUT',
-        }),
+        actorId: 'hero-123',
+        actionId: 'attack',
+        code: 'TURN_END_TIMEOUT',
       })
     );
   });
@@ -101,12 +105,11 @@ describe('AwaitingExternalTurnEndState – action propagation', () => {
     await state.enterState(mockHandler, null);
     jest.advanceTimersByTime(TIMEOUT_MS + 1);
 
-    expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
-      SYSTEM_ERROR_OCCURRED_ID,
+    expect(safeDispatchError).toHaveBeenCalledWith(
+      mockSafeEventDispatcher,
+      expect.any(String),
       expect.objectContaining({
-        details: expect.objectContaining({
-          actionId: 'use-potion',
-        }),
+        actionId: 'use-potion',
       })
     );
   });

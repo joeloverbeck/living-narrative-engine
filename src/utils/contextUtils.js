@@ -1,6 +1,9 @@
 // src/utils/contextUtils.js
 import { resolvePath } from './objectUtils.js';
 import { NAME_COMPONENT_ID } from '../constants/componentIds.js';
+import { PlaceholderResolver } from './placeholderResolverUtils.js';
+import { getEntityDisplayName } from './entityUtils.js';
+
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 
 // Regex to find placeholders like {path.to.value} within a string.
@@ -41,8 +44,19 @@ export function resolveEntityNameFallback(
     return undefined; // Not a recognized shorthand, so no fallback applies.
   }
 
-  // Safely access the name component's text property using optional chaining.
-  const name = entity?.components?.[NAME_COMPONENT_ID]?.text;
+  if (!entity) return undefined;
+
+  // If entity lacks getComponentData, provide a simple adapter so
+  // getEntityDisplayName can still read from the components object.
+  const adaptedEntity =
+    typeof entity.getComponentData === 'function'
+      ? entity
+      : {
+          ...entity,
+          getComponentData: (type) => entity?.components?.[type],
+        };
+
+  const name = getEntityDisplayName(adaptedEntity, undefined, logger);
 
   if (typeof name === 'string') {
     logger?.debug(
@@ -154,8 +168,37 @@ export function resolvePlaceholders(
   if (typeof input === 'string') {
     const fullMatch = input.match(FULL_STRING_PLACEHOLDER_REGEX);
 
+    const resolver = new PlaceholderResolver(logger);
+    const contextSource = {
+      context:
+        executionContext?.evaluationContext?.context &&
+        typeof executionContext.evaluationContext.context === 'object'
+          ? executionContext.evaluationContext.context
+          : {},
+    };
+    const fallbackSource = {};
+    const actorName = resolveEntityNameFallback('actor.name', executionContext);
+    if (actorName !== undefined) {
+      fallbackSource.actor = { name: actorName };
+    }
+    const targetName = resolveEntityNameFallback(
+      'target.name',
+      executionContext
+    );
+    if (targetName !== undefined) {
+      if (!fallbackSource.target) fallbackSource.target = {};
+      fallbackSource.target.name = targetName;
+    }
+
+    const replacedString = resolver.resolve(
+      input,
+      contextSource,
+      executionContext ?? {},
+      fallbackSource
+    );
+
     if (fullMatch) {
-      let placeholderPath = fullMatch[1]; // Path like "context.someVar" or "event.type"
+      let placeholderPath = fullMatch[1];
       const isOptional = placeholderPath.endsWith('?');
       if (isOptional) {
         placeholderPath = placeholderPath.slice(0, -1);
@@ -165,99 +208,57 @@ export function resolvePlaceholders(
         ? `${currentPath} -> ${placeholderSyntax}`
         : placeholderSyntax;
 
-      if (!placeholderPath) {
-        logger?.warn(
-          `Failed to extract path from full string placeholder: "${input}"`
-        );
-        return input;
-      }
-
-      if (executionContext && typeof executionContext === 'object') {
-        const resolvedValue = resolvePlaceholderPath(
-          placeholderPath,
-          executionContext,
-          logger,
-          fullLogPath
-        );
-
-        if (resolvedValue === undefined) {
-          if (!isOptional) {
-            logger?.warn(
-              `Placeholder path "${placeholderPath}" from ${placeholderSyntax} could not be resolved. Path: ${fullLogPath}`
-            );
-          }
-          return undefined; // callers now see “no value”
-        }
-
-        logger?.debug(
-          `Resolved full string placeholder ${placeholderSyntax} to: ${
-            typeof resolvedValue === 'object'
-              ? JSON.stringify(resolvedValue)
-              : resolvedValue
-          }`
-        );
-        return resolvedValue;
-      } else {
-        logger?.warn(
-          `Cannot resolve placeholder path "${placeholderPath}" from ${placeholderSyntax}: executionContext is not a valid object. Path: ${fullLogPath}`
-        );
-        return input;
-      }
-    } else {
-      let replaced = false;
-      const resultString = input.replace(
-        PLACEHOLDER_FIND_REGEX,
-        (match, placeholderPath) => {
-          const placeholderSyntax = match;
-          const isOptional = placeholderPath.endsWith('?');
-          if (isOptional) {
-            placeholderPath = placeholderPath.slice(0, -1);
-          }
-          const fullLogPath = currentPath
-            ? `${currentPath} -> ${placeholderSyntax} (within string)`
-            : `${placeholderSyntax} (within string)`;
-
-          if (!placeholderPath) {
-            logger?.warn(
-              `Failed to extract path from placeholder match: "${match}" in string "${input}"`
-            );
-            return match;
-          }
-
-          if (executionContext && typeof executionContext === 'object') {
-            const resolvedValue = resolvePlaceholderPath(
-              placeholderPath,
-              executionContext,
-              logger,
-              fullLogPath
-            );
-
-            if (resolvedValue === undefined) {
-              if (!isOptional) {
-                logger?.warn(
-                  `Embedded placeholder path "${placeholderPath}" from ${placeholderSyntax} could not be resolved. Path: ${fullLogPath}`
-                );
-              }
-              return match;
-            }
-
-            replaced = true;
-            const stringValue =
-              resolvedValue === null ? 'null' : String(resolvedValue);
-            logger?.debug(
-              `Replaced embedded placeholder ${placeholderSyntax} with string: "${stringValue}"`
-            );
-            return stringValue;
-          } else {
-            logger?.warn(
-              `Cannot resolve embedded placeholder path "${placeholderPath}" from ${placeholderSyntax}: executionContext is not a valid object. Path: ${fullLogPath}`
-            );
-            return match;
-          }
-        }
+      const resolvedValue = resolvePlaceholderPath(
+        placeholderPath,
+        executionContext,
+        logger,
+        fullLogPath
       );
-      return replaced ? resultString : input;
+
+      if (resolvedValue === undefined) {
+        return undefined;
+      }
+
+      logger?.debug(
+        `Resolved full string placeholder ${placeholderSyntax} to: ${
+          typeof resolvedValue === 'object'
+            ? JSON.stringify(resolvedValue)
+            : resolvedValue
+        }`
+      );
+      return resolvedValue;
     }
+
+    // Embedded placeholders debug logging
+    let match;
+    PLACEHOLDER_FIND_REGEX.lastIndex = 0;
+    while ((match = PLACEHOLDER_FIND_REGEX.exec(input))) {
+      let placeholderPath = match[1];
+      const placeholderSyntax = match[0];
+      const isOptional = placeholderPath.endsWith('?');
+      if (isOptional) {
+        placeholderPath = placeholderPath.slice(0, -1);
+      }
+      const fullLogPath = currentPath
+        ? `${currentPath} -> ${placeholderSyntax} (within string)`
+        : `${placeholderSyntax} (within string)`;
+
+      const resolvedValue = resolvePlaceholderPath(
+        placeholderPath,
+        executionContext,
+        undefined,
+        fullLogPath
+      );
+      if (resolvedValue !== undefined) {
+        const stringValue =
+          resolvedValue === null ? 'null' : String(resolvedValue);
+        logger?.debug(
+          `Replaced embedded placeholder ${placeholderSyntax} with string: "${stringValue}"`
+        );
+      }
+    }
+
+    return replacedString;
   } else if (Array.isArray(input)) {
     let changed = false;
     const resolvedArray = input.map((item, index) => {

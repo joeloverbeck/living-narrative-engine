@@ -3,20 +3,18 @@
 import { ISaveLoadService } from '../interfaces/ISaveLoadService.js';
 import GameStateSerializer from './gameStateSerializer.js';
 import SaveValidationService from './saveValidationService.js';
-import {
-  buildManualFileName,
-  manualSavePath,
-  FULL_MANUAL_SAVE_DIRECTORY_PATH,
-  MANUAL_SAVE_PATTERN,
-} from '../utils/savePathUtils.js';
-import { deserializeAndDecompress, parseManualSaveFile } from './saveFileIO.js';
+import { buildManualFileName, manualSavePath } from '../utils/savePathUtils.js';
+import SaveFileRepository from './saveFileRepository.js';
 import { setupService } from '../utils/serviceInitializerUtils.js';
 import { safeDeepClone } from '../utils/objectUtils.js';
 import {
   PersistenceError,
   PersistenceErrorCodes,
 } from './persistenceErrors.js';
-import { createPersistenceFailure } from './persistenceResultUtils.js';
+import {
+  createPersistenceFailure,
+  createPersistenceSuccess,
+} from './persistenceResultUtils.js';
 import {
   validateSaveName,
   validateSaveIdentifier,
@@ -41,7 +39,7 @@ import {
  */
 class SaveLoadService extends ISaveLoadService {
   #logger;
-  #storageProvider;
+  #fileRepository;
   #serializer;
   #validationService;
 
@@ -60,9 +58,17 @@ class SaveLoadService extends ISaveLoadService {
     crypto = globalThis.crypto,
     gameStateSerializer = null,
     saveValidationService = null,
+    saveFileRepository = null,
   }) {
-    // <<< MODIFIED SIGNATURE with destructuring
     super();
+    if (!logger) {
+      throw new Error('SaveLoadService requires a logger.');
+    }
+    if (!saveFileRepository && !storageProvider) {
+      throw new Error(
+        'SaveLoadService requires a storageProvider or saveFileRepository.'
+      );
+    }
     this.#serializer =
       gameStateSerializer || new GameStateSerializer({ logger, crypto });
     this.#validationService =
@@ -71,15 +77,25 @@ class SaveLoadService extends ISaveLoadService {
         logger,
         gameStateSerializer: this.#serializer,
       });
+
+    this.#fileRepository =
+      saveFileRepository ||
+      new SaveFileRepository({
+        logger,
+        storageProvider,
+        serializer: this.#serializer,
+      });
+
     this.#logger = setupService('SaveLoadService', logger, {
-      storageProvider: {
-        value: storageProvider,
+      fileRepository: {
+        value: this.#fileRepository,
         requiredMethods: [
-          'writeFileAtomically',
-          'listFiles',
-          'readFile',
-          'deleteFile',
-          'fileExists',
+          'ensureSaveDirectory',
+          'writeSaveFile',
+          'listManualSaveFiles',
+          'parseManualSaveMetadata',
+          'readSaveFile',
+          'deleteSaveFile',
         ],
       },
       saveValidationService: {
@@ -91,7 +107,6 @@ class SaveLoadService extends ISaveLoadService {
         ],
       },
     });
-    this.#storageProvider = storageProvider;
     this.#logger.debug('SaveLoadService initialized.');
   }
   /**
@@ -113,38 +128,6 @@ class SaveLoadService extends ISaveLoadService {
   }
 
   /**
-   * Ensures the manual save directory exists if the storage provider supports it.
-   *
-   * @returns {Promise<import('./persistenceTypes.js').PersistenceResult<null>>}
-   *   Result of the directory creation attempt.
-   * @private
-   */
-  async #ensureSaveDirectory() {
-    if (typeof this.#storageProvider.ensureDirectoryExists !== 'function') {
-      return { success: true };
-    }
-
-    try {
-      await this.#storageProvider.ensureDirectoryExists(
-        FULL_MANUAL_SAVE_DIRECTORY_PATH
-      );
-      this.#logger.debug(
-        `Ensured directory exists: ${FULL_MANUAL_SAVE_DIRECTORY_PATH}`
-      );
-      return { success: true };
-    } catch (dirError) {
-      this.#logger.error(
-        `Failed to ensure directory ${FULL_MANUAL_SAVE_DIRECTORY_PATH} exists:`,
-        dirError
-      );
-      return createPersistenceFailure(
-        PersistenceErrorCodes.DIRECTORY_CREATION_FAILED,
-        `Failed to create save directory: ${dirError.message}`
-      );
-    }
-  }
-
-  /**
    * Deep clones and augments the provided game state for saving.
    *
    * @param {string} saveName - Name of the save slot.
@@ -156,14 +139,17 @@ class SaveLoadService extends ISaveLoadService {
   #cloneAndPrepareState(saveName, obj) {
     const cloneResult = safeDeepClone(obj, this.#logger);
     if (!cloneResult.success || !cloneResult.data) {
-      return { success: false, error: cloneResult.error };
+      return createPersistenceFailure(
+        cloneResult.error.code,
+        cloneResult.error.message
+      );
     }
 
     /** @type {SaveGameStructure} */
     const cloned = cloneResult.data;
     cloned.metadata = { ...(cloned.metadata || {}), saveName };
     cloned.integrityChecks = { ...(cloned.integrityChecks || {}) };
-    return { success: true, data: cloned };
+    return createPersistenceSuccess(cloned);
   }
 
   /**
@@ -175,149 +161,23 @@ class SaveLoadService extends ISaveLoadService {
    *   Result of the write operation.
    * @private
    */
-  async #writeSaveFile(filePath, data) {
-    try {
-      const writeResult = await this.#storageProvider.writeFileAtomically(
-        filePath,
-        data
-      );
-      if (writeResult.success) {
-        return { success: true };
-      }
-
-      this.#logger.error(
-        `Failed to write manual save to ${filePath}: ${writeResult.error}`
-      );
-      let userError = `Failed to save game: ${writeResult.error}`;
-      if (
-        writeResult.error &&
-        writeResult.error.toLowerCase().includes('disk full')
-      ) {
-        userError = 'Failed to save game: Not enough disk space.';
-      }
-      return createPersistenceFailure(
-        PersistenceErrorCodes.WRITE_ERROR,
-        userError
-      );
-    } catch (error) {
-      this.#logger.error(`Error writing save file ${filePath}:`, error);
-      return error instanceof PersistenceError
-        ? { success: false, error }
-        : createPersistenceFailure(
-            PersistenceErrorCodes.UNEXPECTED_ERROR,
-            `An unexpected error occurred while saving: ${error.message}`
-          );
-    }
-  }
-
-  /**
-   * Retrieves manual save file names from the storage provider.
-   * Handles missing directory or listing errors gracefully.
-   *
-   * @returns {Promise<Array<string>>} List of file names.
-   * @private
-   */
-  async #getManualSaveFiles() {
-    try {
-      const files = await this.#storageProvider.listFiles(
-        FULL_MANUAL_SAVE_DIRECTORY_PATH,
-        MANUAL_SAVE_PATTERN.source
-      );
-      this.#logger.debug(
-        `Found ${files.length} potential manual save files in ${FULL_MANUAL_SAVE_DIRECTORY_PATH}.`
-      );
-      return files;
-    } catch (listError) {
-      if (
-        listError.message &&
-        listError.message.toLowerCase().includes('not found')
-      ) {
-        this.#logger.debug(
-          `${FULL_MANUAL_SAVE_DIRECTORY_PATH} not found. Assuming no manual saves yet.`
-        );
-        return [];
-      }
-      this.#logger.error(
-        `Error listing files in ${FULL_MANUAL_SAVE_DIRECTORY_PATH}:`,
-        listError
-      );
-      return [];
-    }
-  }
-
-  /**
-   * Parses and validates metadata for a single manual save file.
-   *
-   * @param {string} fileName - File name within the manual saves directory.
-   * @returns {Promise<SaveFileMetadata>} Parsed metadata object.
-   * @private
-   */
-  async #parseManualSaveMetadata(fileName) {
-    const { success, data: metadata } = await parseManualSaveFile(
-      fileName,
-      this.#storageProvider,
-      this.#serializer,
-      this.#logger
-    );
-
-    if (!success) {
-      return metadata;
-    }
-
-    const { identifier, saveName, timestamp, playtimeSeconds } = metadata;
-
-    if (
-      typeof saveName !== 'string' ||
-      !saveName ||
-      typeof timestamp !== 'string' ||
-      !timestamp ||
-      typeof playtimeSeconds !== 'number' ||
-      isNaN(playtimeSeconds)
-    ) {
-      this.#logger.warn(
-        `Essential metadata missing or malformed in ${identifier}. Contents: ${JSON.stringify(
-          metadata
-        )}. Flagging as corrupted for listing.`
-      );
-      return {
-        identifier,
-        saveName:
-          saveName ||
-          fileName.replace(/\.sav$/, '').replace(/^manual_save_/, '') +
-            ' (Bad Metadata)',
-        timestamp: timestamp || 'N/A',
-        playtimeSeconds:
-          typeof playtimeSeconds === 'number' ? playtimeSeconds : 0,
-        isCorrupted: true,
-      };
-    }
-
-    this.#logger.debug(
-      `Successfully parsed metadata for ${identifier}: Name="${saveName}", Timestamp="${timestamp}"`
-    );
-    return metadata;
-  }
 
   /**
    * @inheritdoc
    * @returns {Promise<Array<SaveFileMetadata>>} Parsed metadata entries.
    */
   async listManualSaveSlots() {
-    this.#logger.debug(
-      `Listing manual save slots from ${FULL_MANUAL_SAVE_DIRECTORY_PATH}...`
-    );
-    const files = await this.#getManualSaveFiles();
-    const collectedMetadata = [];
+    this.#logger.debug('Listing manual save slots...');
+    const files = await this.#fileRepository.listManualSaveFiles();
 
-    for (const fileName of files) {
-      const metadata = await this.#parseManualSaveMetadata(fileName);
-      collectedMetadata.push(metadata);
-    }
+    const metadataList = await Promise.all(
+      files.map((name) => this.#fileRepository.parseManualSaveMetadata(name))
+    );
 
     this.#logger.debug(
-      `Finished listing manual save slots. Returning ${collectedMetadata.length} items.`
+      `Finished listing manual save slots. Returning ${metadataList.length} items.`
     );
-    return collectedMetadata;
+    return metadataList;
   }
 
   /**
@@ -337,12 +197,8 @@ class SaveLoadService extends ISaveLoadService {
     }
 
     // saveIdentifier is expected to be the full path including "saves/manual_saves/"
-    const deserializationResult = await deserializeAndDecompress(
-      this.#storageProvider,
-      this.#serializer,
-      saveIdentifier,
-      this.#logger
-    );
+    const deserializationResult =
+      await this.#fileRepository.readSaveFile(saveIdentifier);
 
     if (!deserializationResult.success || !deserializationResult.data) {
       this.#logger.warn(
@@ -376,7 +232,7 @@ class SaveLoadService extends ISaveLoadService {
     this.#logger.debug(
       `Game data loaded and validated successfully from: "${saveIdentifier}"`
     );
-    return { success: true, data: loadedObject, error: null };
+    return createPersistenceSuccess(loadedObject);
   }
 
   /**
@@ -397,7 +253,7 @@ class SaveLoadService extends ISaveLoadService {
     const fileName = buildManualFileName(saveName);
     const filePath = manualSavePath(fileName);
 
-    const dirResult = await this.#ensureSaveDirectory();
+    const dirResult = await this.#fileRepository.ensureSaveDirectory();
     if (!dirResult.success) {
       return dirResult;
     }
@@ -425,7 +281,10 @@ class SaveLoadService extends ISaveLoadService {
           );
     }
 
-    const writeResult = await this.#writeSaveFile(filePath, compressedData);
+    const writeResult = await this.#fileRepository.writeSaveFile(
+      filePath,
+      compressedData
+    );
     if (!writeResult.success) {
       return writeResult;
     }
@@ -451,47 +310,7 @@ class SaveLoadService extends ISaveLoadService {
       return idResult;
     }
 
-    // saveIdentifier is expected to be the full path, e.g., "saves/manual_saves/file.sav"
-    const filePath = saveIdentifier;
-
-    try {
-      const exists = await this.#storageProvider.fileExists(filePath);
-      if (!exists) {
-        const msg = `Save file "${filePath}" not found for deletion.`;
-        const userMsg = 'Cannot delete: Save file not found.';
-        this.#logger.warn(msg);
-        return createPersistenceFailure(
-          PersistenceErrorCodes.DELETE_FILE_NOT_FOUND,
-          userMsg
-        );
-      }
-
-      const deleteResult = await this.#storageProvider.deleteFile(filePath);
-      if (deleteResult.success) {
-        this.#logger.debug(`Manual save "${filePath}" deleted successfully.`);
-      } else {
-        this.#logger.error(
-          `Failed to delete manual save "${filePath}": ${deleteResult.error}`
-        );
-      }
-      return deleteResult.success
-        ? deleteResult
-        : createPersistenceFailure(
-            PersistenceErrorCodes.DELETE_FAILED,
-            deleteResult.error || 'Unknown delete error'
-          );
-    } catch (error) {
-      this.#logger.error(
-        `Error during manual save deletion process for "${filePath}":`,
-        error
-      );
-      return error instanceof PersistenceError
-        ? { success: false, error }
-        : createPersistenceFailure(
-            PersistenceErrorCodes.UNEXPECTED_ERROR,
-            `An unexpected error occurred during deletion: ${error.message}`
-          );
-    }
+    return this.#fileRepository.deleteSaveFile(saveIdentifier);
   }
 }
 

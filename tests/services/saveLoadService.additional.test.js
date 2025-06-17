@@ -119,7 +119,7 @@ describe('SaveLoadService additional coverage', () => {
     const res = await service.loadGameData(
       'saves/manual_saves/manual_save_Slot1.sav'
     );
-    expect(res).toEqual({ success: true, data: obj, error: null });
+    expect(res).toEqual({ success: true, data: obj });
   });
 
   it('saveManualGame validates name', async () => {

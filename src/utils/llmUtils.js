@@ -8,6 +8,7 @@
 
 // Import the chosen JSON repair library
 import { repairJson } from '@toolsycc/json-repair';
+import { ensureValidLogger } from './loggerUtils.js';
 
 /**
  * Custom error class for errors encountered during JSON processing,
@@ -120,13 +121,12 @@ export function cleanLLMJsonOutput(rawOutput) {
  * @throws {TypeError} If `jsonString` is not a string.
  */
 export async function parseAndRepairJson(jsonString, logger) {
+  const log = ensureValidLogger(logger, 'LLMUtils');
   if (typeof jsonString !== 'string') {
     const errorMessage = "Input 'jsonString' must be a string.";
-    if (logger && typeof logger.error === 'function') {
-      logger.error(
-        `parseAndRepairJson: ${errorMessage} Received type: ${typeof jsonString}`
-      );
-    }
+    log.error(
+      `parseAndRepairJson: ${errorMessage} Received type: ${typeof jsonString}`
+    );
     throw new TypeError(errorMessage);
   }
 
@@ -134,11 +134,9 @@ export async function parseAndRepairJson(jsonString, logger) {
 
   if (cleanedJsonString === null || cleanedJsonString.trim() === '') {
     const errorMessage = 'Cleaned JSON string is null or empty, cannot parse.';
-    if (logger && typeof logger.error === 'function') {
-      logger.error(`parseAndRepairJson: ${errorMessage}`, {
-        originalInput: jsonString,
-      });
-    }
+    log.error(`parseAndRepairJson: ${errorMessage}`, {
+      originalInput: jsonString,
+    });
     throw new JsonProcessingError(errorMessage, {
       stage: 'initial_clean',
       attemptedJsonString: jsonString,
@@ -148,34 +146,30 @@ export async function parseAndRepairJson(jsonString, logger) {
   try {
     // Attempt initial parsing
     const parsedObject = JSON.parse(cleanedJsonString); // [cite: 1, 997]
-    if (logger && typeof logger.debug === 'function') {
-      logger.debug(
-        'parseAndRepairJson: Successfully parsed JSON on first attempt after cleaning.',
-        {
-          inputLength: jsonString.length,
-          cleanedLength: cleanedJsonString.length,
-        }
-      );
-    }
+    log.debug(
+      'parseAndRepairJson: Successfully parsed JSON on first attempt after cleaning.',
+      {
+        inputLength: jsonString.length,
+        cleanedLength: cleanedJsonString.length,
+      }
+    );
     return parsedObject;
   } catch (initialParseError) {
-    if (logger && typeof logger.warn === 'function') {
-      logger.warn(
-        `parseAndRepairJson: Initial JSON.parse failed after cleaning. Attempting repair. Error: ${initialParseError.message}`,
-        {
-          // [cite: 1, 998]
-          originalInputLength: jsonString.length,
-          cleanedJsonStringLength: cleanedJsonString.length,
-          cleanedJsonPreview:
-            cleanedJsonString.substring(0, 100) +
-            (cleanedJsonString.length > 100 ? '...' : ''),
-          error: {
-            message: initialParseError.message,
-            name: initialParseError.name,
-          },
-        }
-      );
-    }
+    log.warn(
+      `parseAndRepairJson: Initial JSON.parse failed after cleaning. Attempting repair. Error: ${initialParseError.message}`,
+      {
+        // [cite: 1, 998]
+        originalInputLength: jsonString.length,
+        cleanedJsonStringLength: cleanedJsonString.length,
+        cleanedJsonPreview:
+          cleanedJsonString.substring(0, 100) +
+          (cleanedJsonString.length > 100 ? '...' : ''),
+        error: {
+          message: initialParseError.message,
+          name: initialParseError.name,
+        },
+      }
+    );
 
     try {
       // Attempt repair using the chosen library
@@ -183,38 +177,31 @@ export async function parseAndRepairJson(jsonString, logger) {
 
       // Attempt to parse the repaired string
       const repairedObject = JSON.parse(repairedString); // [cite: 1, 1000]
-      if (logger) {
-        logger.debug(
-          'parseAndRepairJson: Successfully parsed JSON after repair.',
-          {
-            // [cite: 1, 1000]
-            originalInputLength: jsonString.length,
-            cleanedLength: cleanedJsonString.length,
-            repairedLength: repairedString.length,
-          }
-        );
-      }
+      log.debug('parseAndRepairJson: Successfully parsed JSON after repair.', {
+        // [cite: 1, 1000]
+        originalInputLength: jsonString.length,
+        cleanedLength: cleanedJsonString.length,
+        repairedLength: repairedString.length,
+      });
       return repairedObject;
     } catch (repairAndParseError) {
       const errorMessage = `Failed to parse JSON even after repair attempt. Repair/Parse Error: ${repairAndParseError.message}`;
-      if (logger && typeof logger.error === 'function') {
-        logger.error(`parseAndRepairJson: ${errorMessage}`, {
-          // [cite: 1, 1000]
-          originalInputLength: jsonString.length,
-          cleanedJsonStringLength: cleanedJsonString.length,
-          cleanedJsonPreview:
-            cleanedJsonString.substring(0, 100) +
-            (cleanedJsonString.length > 100 ? '...' : ''),
-          initialParseError: {
-            message: initialParseError.message,
-            name: initialParseError.name,
-          },
-          repairAndParseError: {
-            message: repairAndParseError.message,
-            name: repairAndParseError.name,
-          },
-        });
-      }
+      log.error(`parseAndRepairJson: ${errorMessage}`, {
+        // [cite: 1, 1000]
+        originalInputLength: jsonString.length,
+        cleanedJsonStringLength: cleanedJsonString.length,
+        cleanedJsonPreview:
+          cleanedJsonString.substring(0, 100) +
+          (cleanedJsonString.length > 100 ? '...' : ''),
+        initialParseError: {
+          message: initialParseError.message,
+          name: initialParseError.name,
+        },
+        repairAndParseError: {
+          message: repairAndParseError.message,
+          name: repairAndParseError.name,
+        },
+      });
       throw new JsonProcessingError(errorMessage, {
         // [cite: 1, 1000]
         stage: 'final_parse_after_repair',

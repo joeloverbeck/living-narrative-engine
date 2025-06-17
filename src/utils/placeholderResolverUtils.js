@@ -2,6 +2,7 @@
 // --- FILE START ---
 
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
+import { resolvePath as objectResolvePath } from './objectUtils.js';
 
 /**
  * @class PlaceholderResolver
@@ -24,6 +25,25 @@ export class PlaceholderResolver {
    */
   constructor(logger = console) {
     this.#logger = logger;
+  }
+
+  /**
+   * Resolves a dotted path against a given object.
+   *
+   * @param {object} obj - Root object to resolve against.
+   * @param {string} path - Dot separated path.
+   * @returns {any|undefined} Resolved value or undefined if not found.
+   */
+  resolvePath(obj, path) {
+    try {
+      return objectResolvePath(obj, path);
+    } catch (err) {
+      this.#logger.error(
+        `PlaceholderResolver: Error resolving path "${path}"`,
+        err
+      );
+      return undefined;
+    }
   }
 
   /**
@@ -52,20 +72,42 @@ export class PlaceholderResolver {
     }
 
     return str.replace(/{([^{}]+)}/g, (match, placeholderKey) => {
-      const trimmedKey = placeholderKey.trim();
+      let trimmedKey = placeholderKey.trim();
+      const isOptional = trimmedKey.endsWith('?');
+      if (isOptional) {
+        trimmedKey = trimmedKey.slice(0, -1);
+      }
       for (const dataSource of dataSources) {
-        if (
-          dataSource &&
-          typeof dataSource === 'object' &&
-          Object.prototype.hasOwnProperty.call(dataSource, trimmedKey)
-        ) {
-          const value = dataSource[trimmedKey];
-          return value !== null && value !== undefined ? String(value) : '';
+        if (dataSource && typeof dataSource === 'object') {
+          const value = this.resolvePath(dataSource, trimmedKey);
+          if (value !== undefined) {
+            if (value === null) {
+              return '';
+            }
+            return String(value);
+          } else {
+            const parts = trimmedKey.split('.');
+            const last = parts.pop();
+            const parentPath = parts.join('.');
+            const parent =
+              parentPath === ''
+                ? dataSource
+                : this.resolvePath(dataSource, parentPath);
+            if (
+              parent &&
+              typeof parent === 'object' &&
+              Object.prototype.hasOwnProperty.call(parent, last)
+            ) {
+              return '';
+            }
+          }
         }
       }
-      this.#logger.warn(
-        `PlaceholderResolver: Placeholder "{${trimmedKey}}" not found in provided data sources. Replacing with empty string.`
-      );
+      if (!isOptional) {
+        this.#logger.warn(
+          `PlaceholderResolver: Placeholder "{${trimmedKey}}" not found in provided data sources. Replacing with empty string.`
+        );
+      }
       return '';
     });
   }

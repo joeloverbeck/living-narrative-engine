@@ -1,6 +1,7 @@
 // src/persistence/gameStateCaptureService.js
 
 import { CURRENT_ACTOR_COMPONENT_ID } from '../constants/componentIds.js';
+import { CHECKSUM_PENDING } from '../constants/persistence.js';
 import { setupService } from '../utils/serviceInitializerUtils.js';
 
 /**
@@ -193,7 +194,7 @@ class GameStateCaptureService {
         engineInternals: {},
       },
       integrityChecks: {
-        gameStateChecksum: 'PENDING_CALCULATION',
+        gameStateChecksum: CHECKSUM_PENDING,
       },
     };
 

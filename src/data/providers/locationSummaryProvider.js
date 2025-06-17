@@ -12,7 +12,7 @@ import {
   DEFAULT_FALLBACK_EXIT_DIRECTION,
   DEFAULT_FALLBACK_LOCATION_NAME,
 } from '../../constants/textDefaults.js';
-import { SYSTEM_ERROR_OCCURRED_ID } from '../../constants/eventIds.js';
+import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 
 /** @typedef {import('../../entities/entity.js').default} Entity */
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
@@ -73,10 +73,11 @@ export class LocationSummaryProvider extends ILocationSummaryProvider {
               targetSummary?.name || DEFAULT_FALLBACK_LOCATION_NAME,
           };
         } catch (err) {
-          this.#dispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
-            message: `LocationSummaryProvider: Error fetching exit target entity '${exitData.target}': ${err.message}`,
-            details: { error: err.message, stack: err.stack, exitData },
-          });
+          safeDispatchError(
+            this.#dispatcher,
+            `LocationSummaryProvider: Error fetching exit target entity '${exitData.target}': ${err.message}`,
+            { error: err.message, stack: err.stack, exitData }
+          );
           return null;
         }
       });
@@ -152,15 +153,16 @@ export class LocationSummaryProvider extends ILocationSummaryProvider {
         characters,
       };
     } catch (err) {
-      this.#dispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
-        message: `LocationSummaryProvider: Critical error generating summary for location '${position.locationId}': ${err.message}`,
-        details: {
+      safeDispatchError(
+        this.#dispatcher,
+        `LocationSummaryProvider: Critical error generating summary for location '${position.locationId}': ${err.message}`,
+        {
           error: err.message,
           stack: err.stack,
           locationId: position.locationId,
           actorId: actor.id,
-        },
-      });
+        }
+      );
       return null;
     }
   }

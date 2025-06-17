@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import GameStateCaptureService from '../../src/persistence/gameStateCaptureService.js';
 import { CURRENT_ACTOR_COMPONENT_ID } from '../../src/constants/componentIds.js';
+import { CHECKSUM_PENDING } from '../../src/constants/persistence.js';
 import { createMockLogger } from '../testUtils.js';
 
 describe('GameStateCaptureService', () => {
@@ -70,5 +71,10 @@ describe('GameStateCaptureService', () => {
     expect(comps).toHaveProperty('primitive', 7);
     expect(comps).not.toHaveProperty('nullComp');
     expect(comps).not.toHaveProperty(CURRENT_ACTOR_COMPONENT_ID);
+  });
+
+  it('uses CHECKSUM_PENDING in integrityChecks', () => {
+    const result = captureService.captureCurrentGameState('World');
+    expect(result.integrityChecks.gameStateChecksum).toBe(CHECKSUM_PENDING);
   });
 });

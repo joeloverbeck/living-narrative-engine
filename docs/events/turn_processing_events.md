@@ -13,5 +13,3 @@ Payload structure:
 
 - `entityId` – ID of the actor whose turn is being processed.
 - `actorType` – Indicates whether the actor is player controlled or AI controlled.
-
-These events complement the legacy `core:ai_turn_processing_started/ended` events, which remain for backward compatibility.

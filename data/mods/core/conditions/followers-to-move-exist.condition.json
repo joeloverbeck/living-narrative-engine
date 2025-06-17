@@ -1,0 +1,6 @@
+{
+  "$schema": "http://example.com/schemas/condition.schema.json",
+  "id": "core:followers-to-move-exist",
+  "description": "True when context.followersToMove contains at least one ID.",
+  "logic": { ">": [{ "var": "context.followersToMove.length" }, 0] }
+}

@@ -257,7 +257,7 @@ export class ActionButtonsRenderer extends SelectableListDisplayComponent {
    * @returns {void}
    */
   _onItemSelected(selectedElement, actionData) {
-    super._handleItemSelection(selectedElement, actionData);
+    super._selectItem(selectedElement, actionData);
     this.selectedAction = actionData;
     if (this.elements.sendButtonElement) {
       this.elements.sendButtonElement.disabled = !actionData;
@@ -330,9 +330,9 @@ export class ActionButtonsRenderer extends SelectableListDisplayComponent {
       const selectedButton = container.querySelector(
         `button.action-button[data-action-index="${this.selectedAction.index}"]`
       );
-      this._handleItemSelection(selectedButton, this.selectedAction);
+      this._selectItem(selectedButton, this.selectedAction);
     } else {
-      this._onItemSelected(null, null);
+      this._selectItem(null, null);
     }
 
     if (this.elements.sendButtonElement) {

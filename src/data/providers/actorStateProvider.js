@@ -19,6 +19,7 @@ import {
   DEFAULT_FALLBACK_CHARACTER_NAME,
   DEFAULT_FALLBACK_DESCRIPTION_RAW,
 } from '../../constants/textDefaults.js';
+import { deepClone } from '../../utils/objectUtils.js';
 
 /** @typedef {import('../../entities/entity.js').default} Entity */
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
@@ -37,7 +38,7 @@ export class ActorStateProvider extends IActorStateProvider {
     const actorState = { id: actor.id, components: {} };
 
     for (const [compId, compData] of actor.componentEntries) {
-      actorState.components[compId] = JSON.parse(JSON.stringify(compData));
+      actorState.components[compId] = deepClone(compData);
     }
 
     const surface = (compId, fallback = '') => {

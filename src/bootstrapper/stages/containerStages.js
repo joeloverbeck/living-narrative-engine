@@ -3,6 +3,7 @@
 
 // eslint-disable-next-line no-unused-vars
 import { tokens } from '../../dependencyInjection/tokens.js';
+import { stageSuccess, stageFailure } from '../helpers.js';
 
 /**
  * @typedef {import('../UIBootstrapper.js').EssentialUIElements} EssentialUIElements
@@ -37,15 +38,13 @@ export async function setupDIContainerStage(
     containerConfigFunc(container, uiReferences);
   } catch (registrationError) {
     const errorMsg = `Fatal Error during service registration: ${registrationError.message}.`;
-    const stageError = new Error(errorMsg, { cause: registrationError });
-    stageError.phase = 'DI Container Setup';
     console.error(
       `Bootstrap Stage: setupDIContainerStage failed. ${errorMsg}`,
       registrationError
     );
-    return { success: false, error: stageError };
+    return stageFailure('DI Container Setup', errorMsg, registrationError);
   }
-  return { success: true, payload: container };
+  return stageSuccess(container);
 }
 
 /**
@@ -73,16 +72,14 @@ export async function resolveLoggerStage(container, diTokens) {
     }
   } catch (resolveError) {
     const errorMsg = `Fatal Error: Could not resolve essential ILogger service: ${resolveError.message}.`;
-    const stageError = new Error(errorMsg, { cause: resolveError });
-    stageError.phase = 'Core Services Resolution';
     console.error(
       `Bootstrap Stage: resolveLoggerStage failed. ${errorMsg}`,
       resolveError
     );
-    return { success: false, error: stageError };
+    return stageFailure('Core Services Resolution', errorMsg, resolveError);
   }
   logger.debug(
     'Bootstrap Stage: Resolving logger service... DONE. Logger resolved successfully.'
   );
-  return { success: true, payload: { logger } };
+  return stageSuccess({ logger });
 }

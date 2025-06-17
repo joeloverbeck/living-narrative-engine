@@ -6,7 +6,7 @@ import {
   SYSTEM_ERROR_OCCURRED_ID,
 } from '../constants/eventIds.js';
 import { ICommandProcessor } from './interfaces/ICommandProcessor.js';
-import { validateDependency } from '../utils/validationUtils.js';
+import { resolveSafeDispatcher } from '../utils/dispatcherUtils.js';
 
 // --- Type Imports ---
 /** @typedef {import('../entities/entity.js').default} Entity */
@@ -32,21 +32,16 @@ class CommandProcessor extends ICommandProcessor {
 
     this.#logger = logger;
 
-    try {
-      validateDependency(
-        safeEventDispatcher,
-        'safeEventDispatcher',
-        this.#logger,
-        { requiredMethods: ['dispatch'] }
+    this.#safeEventDispatcher = resolveSafeDispatcher(
+      null,
+      safeEventDispatcher,
+      this.#logger
+    );
+    if (!this.#safeEventDispatcher) {
+      console.warn(
+        'CommandProcessor: safeEventDispatcher resolution failed; some events may not be dispatched.'
       );
-    } catch (error) {
-      this.#logger.error(
-        `CommandProcessor Constructor: Dependency validation failed. ${error.message}`
-      );
-      throw error;
     }
-
-    this.#safeEventDispatcher = safeEventDispatcher;
 
     this.#logger.debug(
       'CommandProcessor: Instance created and dependencies validated.'

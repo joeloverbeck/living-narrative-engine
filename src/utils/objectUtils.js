@@ -4,6 +4,11 @@ import {
   PersistenceError,
   PersistenceErrorCodes,
 } from '../persistence/persistenceErrors.js';
+import {
+  createPersistenceFailure,
+  createPersistenceSuccess,
+} from '../persistence/persistenceResultUtils.js';
+import { ensureValidLogger } from './loggerUtils.js';
 
 /**
  * @file Utility functions for working with plain JavaScript objects.
@@ -108,21 +113,19 @@ export function deepClone(value) {
  *   Clone result object.
  */
 export function safeDeepClone(value, logger) {
+  const log = ensureValidLogger(logger, 'ObjectUtils');
   try {
     /** @type {T} */
     const cloned = deepClone(value);
-    return { success: true, data: cloned };
+    return createPersistenceSuccess(cloned);
   } catch (error) {
     if (logger && typeof logger.error === 'function') {
       logger.error('DeepClone failed:', error);
     }
-    return {
-      success: false,
-      error: new PersistenceError(
-        PersistenceErrorCodes.DEEP_CLONE_FAILED,
-        'Failed to deep clone object.'
-      ),
-    };
+    return createPersistenceFailure(
+      PersistenceErrorCodes.DEEP_CLONE_FAILED,
+      'Failed to deep clone object.'
+    );
   }
 }
 

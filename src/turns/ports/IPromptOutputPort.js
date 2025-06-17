@@ -12,7 +12,7 @@
  * @description An interface representing the output boundary for prompting the player for their turn.
  * Implementations (Adapters) will bridge this port to specific output mechanisms
  * (like dispatching an EventBus event, sending a WebSocket message, updating UI state, etc.),
- * allowing the HumanTurnHandler to request a prompt without knowing the details of *how*
+ * allowing the ActorTurnHandler to request a prompt without knowing the details of *how*
  * the prompt is presented.
  */
 export class IPromptOutputPort {

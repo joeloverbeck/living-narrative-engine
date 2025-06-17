@@ -8,7 +8,7 @@ import {
 } from '@jest/globals';
 
 import {
-  initLogger,
+  initPrefixedLogger,
   validateServiceDeps,
   setupService,
 } from '../../src/utils/serviceInitializerUtils.js';
@@ -51,9 +51,9 @@ describe('serviceInitializer utilities', () => {
     jest.resetAllMocks();
   });
 
-  describe('initLogger', () => {
+  describe('initPrefixedLogger', () => {
     it('validates and returns a prefixed logger', () => {
-      const logger = initLogger('MyService', baseLogger);
+      const logger = initPrefixedLogger('MyService', baseLogger);
       expect(baseInitLogger).toHaveBeenCalledWith('MyService', baseLogger);
       expect(createPrefixedLogger).toHaveBeenCalledWith(
         baseLogger,
@@ -66,7 +66,7 @@ describe('serviceInitializer utilities', () => {
       baseInitLogger.mockImplementation(() => {
         throw new Error('bad');
       });
-      expect(() => initLogger('FailService', null)).toThrow('bad');
+      expect(() => initPrefixedLogger('FailService', null)).toThrow('bad');
     });
   });
 

@@ -243,9 +243,7 @@ describe('BaseListDisplayComponent', () => {
         await instance.renderList();
 
         expect(mockLogger.warn).toHaveBeenCalledWith(
-          expect.stringContaining(
-            '_getEmptyListMessage() returned an invalid type'
-          ),
+          expect.stringContaining('getEmptyMessage returned invalid type'),
           expect.any(Object)
         );
         expect(listContainerElement.textContent).toBe('List is empty.');
@@ -338,9 +336,7 @@ describe('BaseListDisplayComponent', () => {
         await instance.renderList();
 
         expect(mockLogger.warn).toHaveBeenCalledWith(
-          expect.stringContaining(
-            '_renderListItem for item at index 0 did not return an HTMLElement or null'
-          ),
+          expect.stringContaining('renderItem did not return an element'),
           expect.anything()
         );
         expect(listContainerElement.children.length).toBe(1); // Only the valid element
@@ -359,9 +355,7 @@ describe('BaseListDisplayComponent', () => {
         await instance.renderList();
 
         expect(mockLogger.error).toHaveBeenCalledWith(
-          expect.stringContaining(
-            'Error in _renderListItem for item at index 0:'
-          ),
+          expect.stringContaining('Error in renderItem'),
           error,
           expect.anything()
         );
@@ -402,7 +396,7 @@ describe('BaseListDisplayComponent', () => {
       await instance.renderList();
 
       expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining('Error fetching list items data'),
+        expect.stringContaining('Error fetching list data'),
         error
       );
       expect(DomUtils.clearElement).toHaveBeenCalledWith(listContainerElement);

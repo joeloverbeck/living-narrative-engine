@@ -191,13 +191,26 @@ describe('PlaceholderResolver', () => {
       expect(mockLogger.warn).not.toHaveBeenCalled();
     });
 
-    it('should handle placeholders that look like regex special characters but are valid keys', () => {
+    it('should resolve dotted paths using nested objects', () => {
+      const str = 'Name: {user.info.name}';
+      const data = { user: { info: { name: 'Alice' } } };
+      expect(resolver.resolve(str, data)).toBe('Name: Alice');
+    });
+
+    it('should handle placeholders that include dashes in keys', () => {
       const str = 'Weird: {key.with.dots} and {key-with-dashes}';
       const data = {
-        'key.with.dots': 'dots_ok',
+        key: { with: { dots: 'dots_ok' } },
         'key-with-dashes': 'dashes_ok',
       };
       expect(resolver.resolve(str, data)).toBe('Weird: dots_ok and dashes_ok');
+    });
+
+    it('should support optional placeholders with trailing ?', () => {
+      const str = 'Maybe {missing.value?}!';
+      const data = { greeting: 'hi' };
+      expect(resolver.resolve(str, data)).toBe('Maybe !');
+      expect(mockLogger.warn).not.toHaveBeenCalled();
     });
 
     it('should handle strings with only a placeholder', () => {
