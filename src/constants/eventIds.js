@@ -39,10 +39,6 @@ export const DISPLAY_SPEECH_ID = 'core:display_speech';
 export const TURN_PROCESSING_STARTED = 'core:turn_processing_started';
 export const TURN_PROCESSING_ENDED = 'core:turn_processing_ended';
 
-// Deprecated AI-specific events kept for backward compatibility
-export const AI_TURN_PROCESSING_STARTED = 'core:ai_turn_processing_started';
-export const AI_TURN_PROCESSING_ENDED = 'core:ai_turn_processing_ended';
-
 // New Event IDs for GameEngine to UI communication (GE-REFAC-006)
 
 /**

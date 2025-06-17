@@ -22,8 +22,6 @@ import {
   SYSTEM_ERROR_OCCURRED_ID,
   TURN_PROCESSING_STARTED,
   TURN_PROCESSING_ENDED,
-  AI_TURN_PROCESSING_STARTED,
-  AI_TURN_PROCESSING_ENDED,
 } from '../constants/eventIds.js';
 import { ITurnManager } from './interfaces/ITurnManager.js';
 
@@ -394,19 +392,6 @@ class TurnManager extends ITurnManager {
           );
         }
 
-        if (!isPlayer) {
-          try {
-            await this.#dispatcher.dispatch(AI_TURN_PROCESSING_STARTED, {
-              entityId: actorId,
-            });
-          } catch (dispatchError) {
-            this.#logger.error(
-              `Failed to dispatch ${AI_TURN_PROCESSING_STARTED} for ${actorId}: ${dispatchError.message}`,
-              dispatchError
-            );
-          }
-        }
-
         this.#logger.debug(`Resolving turn handler for entity ${actorId}...`);
         const handler = await this.#turnHandlerResolver.resolveHandler(
           this.#currentActor
@@ -647,17 +632,6 @@ class TurnManager extends ITurnManager {
           dispatchError
         )
       );
-
-    if (!endedIsPlayer) {
-      this.#dispatcher
-        .dispatch(AI_TURN_PROCESSING_ENDED, { entityId: endedActorId })
-        .catch((dispatchError) =>
-          this.#logger.error(
-            `Failed to dispatch ${AI_TURN_PROCESSING_ENDED} for ${endedActorId}: ${dispatchError.message}`,
-            dispatchError
-          )
-        );
-    }
 
     this.#logger.debug(
       `Turn for current actor ${endedActorId} confirmed ended (Internal Status from Event: Success=${successStatus === undefined ? 'N/A' : successStatus}). Advancing turn...`
