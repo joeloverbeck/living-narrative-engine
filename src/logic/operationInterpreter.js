@@ -5,6 +5,7 @@
 
 import { resolvePlaceholders } from '../utils/contextUtils.js';
 import BaseService from '../utils/baseService.js';
+import { getNormalizedOperationType } from './utils/operationTypeUtils.js';
 
 /** @typedef {import('../../data/schemas/operation.schema.json').Operation} Operation */
 /** @typedef {import('./defs.js').ExecutionContext}                               ExecutionContext */
@@ -39,21 +40,14 @@ class OperationInterpreter extends BaseService {
    * @param {ExecutionContext} executionContext
    */
   execute(operation, executionContext) {
-    if (!operation?.type || typeof operation.type !== 'string') {
-      this.#logger.error(
-        'OperationInterpreter received invalid operation object (missing type).',
-        { operation }
-      );
-      return;
-    }
-
-    const opType = operation.type.trim();
-
-    // FIX: Add a check for an empty string after trimming. This prevents
-    // the registry from being called with an empty type.
+    const opType = getNormalizedOperationType(
+      operation?.type,
+      this.#logger,
+      'OperationInterpreter.execute'
+    );
     if (!opType) {
       this.#logger.error(
-        'OperationInterpreter received an operation with a missing or empty type.',
+        'OperationInterpreter received invalid operation object (missing type).',
         { operation }
       );
       return;
