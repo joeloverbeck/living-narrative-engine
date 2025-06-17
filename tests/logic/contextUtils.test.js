@@ -495,12 +495,24 @@ describe('resolvePlaceholders (contextUtils.js)', () => {
       );
     });
 
-    test('should return undefined when component missing', () => {
+    test('should fall back to entity.name when component missing', () => {
       const context = createMockExecutionContext();
 
+      expect(resolveEntityNameFallback('actor.name', context, mockLogger)).toBe(
+        'ActorName'
+      );
+    });
+
+    test('should resolve target name via getEntityDisplayName', () => {
+      const targetData = {
+        id: 't1',
+        components: { [NAME_COMPONENT_ID]: { text: 'Villain' } },
+      };
+      const context = createMockExecutionContext({}, {}, null, targetData);
+
       expect(
-        resolveEntityNameFallback('actor.name', context, mockLogger)
-      ).toBeUndefined();
+        resolveEntityNameFallback('target.name', context, mockLogger)
+      ).toBe('Villain');
     });
   });
 });
