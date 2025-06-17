@@ -102,6 +102,7 @@ class StaticConfiguration {
       'condition.schema.json',
       'condition-container.schema.json',
       'entity.schema.json',
+      'event.schema.json',
       'component.schema.json',
       'game.schema.json',
       'json-logic.schema.json',
