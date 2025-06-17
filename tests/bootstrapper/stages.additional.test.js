@@ -30,7 +30,9 @@ afterEach(() => {
 describe('setupDIContainerStage', () => {
   it('configures the container using provided function', async () => {
     const configFn = jest.fn();
-    const result = await setupDIContainerStage({}, configFn);
+    const result = await setupDIContainerStage({}, configFn, {
+      createAppContainer: () => new AppContainer(),
+    });
     expect(result.success).toBe(true);
     expect(configFn).toHaveBeenCalledWith(result.payload, {});
     expect(result.payload).toBeInstanceOf(AppContainer);
@@ -40,7 +42,9 @@ describe('setupDIContainerStage', () => {
     const configFn = jest.fn(() => {
       throw new Error('fail');
     });
-    const result = await setupDIContainerStage({}, configFn);
+    const result = await setupDIContainerStage({}, configFn, {
+      createAppContainer: () => new AppContainer(),
+    });
     expect(result.success).toBe(false);
     expect(result.error.phase).toBe('DI Container Setup');
   });
@@ -50,7 +54,9 @@ describe('setupDIContainerStage', () => {
     const cont = new AppContainer();
     const factory = jest.fn(() => cont);
 
-    const result = await setupDIContainerStage({}, configFn, factory);
+    const result = await setupDIContainerStage({}, configFn, {
+      createAppContainer: factory,
+    });
 
     expect(factory).toHaveBeenCalled();
     expect(configFn).toHaveBeenCalledWith(cont, {});
@@ -96,7 +102,9 @@ describe('initializeGameEngineStage', () => {
   it('instantiates GameEngine with container', async () => {
     const logger = createLogger();
     const container = {};
-    const result = await initializeGameEngineStage(container, logger);
+    const result = await initializeGameEngineStage(container, logger, {
+      createGameEngine: (opts) => GameEngine(opts),
+    });
     expect(GameEngine).toHaveBeenCalledWith({ container });
     expect(result.success).toBe(true);
     expect(result.payload).toEqual({ mocked: true });
@@ -107,7 +115,9 @@ describe('initializeGameEngineStage', () => {
       throw new Error('bad');
     });
     const logger = createLogger();
-    const result = await initializeGameEngineStage({}, logger);
+    const result = await initializeGameEngineStage({}, logger, {
+      createGameEngine: (opts) => new GameEngine(opts),
+    });
     expect(result.success).toBe(false);
     expect(result.error.phase).toBe('GameEngine Initialization');
   });
@@ -118,7 +128,9 @@ describe('initializeGameEngineStage', () => {
     const engine = { custom: true };
     const factory = jest.fn(() => engine);
 
-    const result = await initializeGameEngineStage(container, logger, factory);
+    const result = await initializeGameEngineStage(container, logger, {
+      createGameEngine: factory,
+    });
 
     expect(factory).toHaveBeenCalledWith({ container });
     expect(result.success).toBe(true);
@@ -130,7 +142,9 @@ describe('initializeGameEngineStage', () => {
     const factory = jest.fn(() => null);
     factory.prototype = undefined;
 
-    const result = await initializeGameEngineStage({}, logger, factory);
+    const result = await initializeGameEngineStage({}, logger, {
+      createGameEngine: factory,
+    });
     expect(result.success).toBe(false);
     expect(result.error.phase).toBe('GameEngine Initialization');
   });

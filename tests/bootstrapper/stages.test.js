@@ -11,7 +11,9 @@ describe('ensureCriticalDOMElementsStage', () => {
     const mockElements = { root: document.body };
     const uiBoot = new UIBootstrapper();
     jest.spyOn(uiBoot, 'gatherEssentialElements').mockReturnValue(mockElements);
-    const result = await ensureCriticalDOMElementsStage(document, uiBoot);
+    const result = await ensureCriticalDOMElementsStage(document, {
+      createUIBootstrapper: () => uiBoot,
+    });
     expect(result.success).toBe(true);
     expect(result.payload).toBe(mockElements);
   });
@@ -24,7 +26,9 @@ describe('ensureCriticalDOMElementsStage', () => {
       .mockReturnValue(mockElements);
     const factory = jest.fn(() => inst);
 
-    const result = await ensureCriticalDOMElementsStage(document, factory);
+    const result = await ensureCriticalDOMElementsStage(document, {
+      createUIBootstrapper: factory,
+    });
 
     expect(factory).toHaveBeenCalled();
     expect(gatherSpy).toHaveBeenCalledWith(document);
@@ -32,13 +36,15 @@ describe('ensureCriticalDOMElementsStage', () => {
     expect(result.payload).toBe(mockElements);
   });
 
-  it('instantiates default UIBootstrapper when not provided', async () => {
+  it('uses provided createUIBootstrapper to instantiate', async () => {
     const mockElements = { root: document.body };
     const gatherSpy = jest
       .spyOn(UIBootstrapper.prototype, 'gatherEssentialElements')
       .mockReturnValue(mockElements);
 
-    const result = await ensureCriticalDOMElementsStage(document);
+    const result = await ensureCriticalDOMElementsStage(document, {
+      createUIBootstrapper: () => new UIBootstrapper(),
+    });
 
     expect(gatherSpy).toHaveBeenCalledWith(document);
     expect(result.success).toBe(true);
@@ -51,7 +57,9 @@ describe('ensureCriticalDOMElementsStage', () => {
     jest.spyOn(uiBoot, 'gatherEssentialElements').mockImplementation(() => {
       throw error;
     });
-    const result = await ensureCriticalDOMElementsStage(document, uiBoot);
+    const result = await ensureCriticalDOMElementsStage(document, {
+      createUIBootstrapper: () => uiBoot,
+    });
     expect(result.success).toBe(false);
     expect(result.error).toBeInstanceOf(Error);
     expect(result.error.message).toContain('fail');
