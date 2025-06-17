@@ -14,13 +14,15 @@ import {
 import { validateDependency } from './validationUtils.js';
 
 /**
- * Validates the provided logger and returns a prefixed logger instance.
+ * Validate the provided logger and return a prefixed logger instance.
  *
+ * @description Validates the provided logger and returns a prefixed logger
+ *   instance.
  * @param {string} serviceName - Name used for log prefix and error messages.
  * @param {import('../interfaces/coreServices.js').ILogger} logger - Logger to validate.
  * @returns {import('../interfaces/coreServices.js').ILogger} Prefixed logger.
  */
-export function initLogger(serviceName, logger) {
+export function initPrefixedLogger(serviceName, logger) {
   const validated = baseInitLogger(serviceName, logger);
   return createPrefixedLogger(validated, `${serviceName}: `);
 }
@@ -45,8 +47,10 @@ export function validateServiceDeps(serviceName, logger, deps) {
 }
 
 /**
- * @description Convenience helper that initializes a service logger and
- * validates its dependencies in one step.
+ * Initialize a service logger and validate dependencies.
+ *
+ * @description Convenience helper that initializes a service logger via
+ *   {@link initPrefixedLogger} and validates its dependencies in one step.
  * @param {string} serviceName - The service name used for logger prefixing and
  *   validation messages.
  * @param {import('../interfaces/coreServices.js').ILogger} logger - Logger to
@@ -57,7 +61,7 @@ export function validateServiceDeps(serviceName, logger, deps) {
  *   prefixed logger instance.
  */
 export function setupService(serviceName, logger, deps) {
-  const prefixedLogger = initLogger(serviceName, logger);
+  const prefixedLogger = initPrefixedLogger(serviceName, logger);
   validateServiceDeps(serviceName, prefixedLogger, deps);
   return prefixedLogger;
 }
