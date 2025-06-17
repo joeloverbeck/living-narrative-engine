@@ -3,6 +3,7 @@
 import { BoundDomRendererBase } from './boundDomRendererBase.js';
 import { DomUtils } from '../utils/domUtils.js';
 import createMessageElement from './helpers/createMessageElement.js';
+import renderListCommon from './helpers/renderListCommon.js';
 
 /**
  * @typedef {import('../interfaces/ILogger.js').ILogger} ILogger
@@ -45,14 +46,14 @@ export class BaseListDisplayComponent extends BoundDomRendererBase {
    * @throws {Error} If `elementsConfig` does not lead to a resolved `listContainerElement`.
    */
   constructor({
-                logger,
-                documentContext,
-                validatedEventDispatcher,
-                elementsConfig,
-                domElementFactory,
-                autoRefresh = true,
-                ...otherDeps
-              }) {
+    logger,
+    documentContext,
+    validatedEventDispatcher,
+    elementsConfig,
+    domElementFactory,
+    autoRefresh = true,
+    ...otherDeps
+  }) {
     super({
       logger,
       documentContext,
@@ -179,105 +180,14 @@ export class BaseListDisplayComponent extends BoundDomRendererBase {
       return;
     }
 
-    let itemsData = null;
-    try {
-      itemsData = await Promise.resolve(this._getListItemsData());
-      this.logger.debug(
-        `${this._logPrefix} Fetched list items data. Count: ${itemsData ? itemsData.length : 'null/undefined'}`
-      );
-    } catch (error) {
-      this.logger.error(
-        `${this._logPrefix} Error fetching list items data in _getListItemsData():`,
-        error
-      );
-      DomUtils.clearElement(this.elements.listContainerElement);
-      const errorMsg = createMessageElement(
-        this.domElementFactory,
-        'error-message',
-        'Error loading list data.'
-      );
-      this.elements.listContainerElement.appendChild(errorMsg);
-      this._onListRendered(null, this.elements.listContainerElement);
-      return;
-    }
-
-    DomUtils.clearElement(this.elements.listContainerElement);
-    this.logger.debug(`${this._logPrefix} Cleared list container.`);
-
-    if (!itemsData || !Array.isArray(itemsData) || itemsData.length === 0) {
-      this.logger.debug(
-        `${this._logPrefix} List data is empty or not an array. Displaying empty message.`
-      );
-      const emptyMessage = this._getEmptyListMessage();
-      if (typeof emptyMessage === 'string') {
-        if (this.domElementFactory) {
-          this.elements.listContainerElement.appendChild(
-            createMessageElement(
-              this.domElementFactory,
-              'empty-list-message',
-              emptyMessage
-            )
-          );
-        } else {
-          this.elements.listContainerElement.textContent = emptyMessage;
-        }
-      } else if (emptyMessage instanceof HTMLElement) {
-        this.elements.listContainerElement.appendChild(emptyMessage);
-      } else {
-        this.logger.warn(
-          `${this._logPrefix} _getEmptyListMessage() returned an invalid type. Expected string or HTMLElement.`,
-          { type: typeof emptyMessage }
-        );
-        if (this.domElementFactory) {
-          const fallbackEmptyMsg = createMessageElement(
-            this.domElementFactory,
-            'empty-list-message',
-            'List is empty.'
-          );
-          this.elements.listContainerElement.appendChild(fallbackEmptyMsg);
-        } else {
-          this.elements.listContainerElement.textContent = 'List is empty.';
-        }
-      }
-      this.logger.debug(`${this._logPrefix} Empty list message displayed.`);
-    } else {
-      this.logger.debug(
-        `${this._logPrefix} Populating list with ${itemsData.length} items.`
-      );
-      let renderedCount = 0;
-      itemsData.forEach((itemData, index) => {
-        try {
-          const listItemElement = this._renderListItem(
-            itemData,
-            index,
-            itemsData
-          );
-          // *** FIX: Changed `instanceof HTMLElement` to a check for nodeType, which is reliable in JSDOM. ***
-          if (listItemElement && listItemElement.nodeType === 1) {
-            this.elements.listContainerElement.appendChild(listItemElement);
-            renderedCount++;
-          } else if (listItemElement !== null) {
-            this.logger.warn(
-              `${this._logPrefix} _renderListItem for item at index ${index} did not return an HTMLElement or null. Skipping.`,
-              {
-                itemData,
-                returnedValue: listItemElement,
-              }
-            );
-          }
-        } catch (error) {
-          this.logger.error(
-            `${this._logPrefix} Error in _renderListItem for item at index ${index}:`,
-            error,
-            { itemData }
-          );
-          // Optionally render an error placeholder for this specific item
-        }
-      });
-      this.logger.debug(
-        `${this._logPrefix} Rendered ${renderedCount} out of ${itemsData.length} items into the list.`
-      );
-    }
+    const itemsData = await renderListCommon(
+      () => this._getListItemsData(),
+      (item, index, list) => this._renderListItem(item, index, list),
+      () => this._getEmptyListMessage(),
+      this.elements.listContainerElement,
+      this.logger,
+      this.domElementFactory
+    );
 
     try {
       this._onListRendered(itemsData, this.elements.listContainerElement);
