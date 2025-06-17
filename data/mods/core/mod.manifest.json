@@ -107,7 +107,11 @@
       "target-is-not-rooted.condition.json",
       "target-is-not-self.condition.json",
       "way-is-not-blocked.condition.json",
-      "actor-has-name-and-position.condition.json"
+      "actor-has-name-and-position.condition.json",
+      "follow-cycle-detected.condition.json",
+      "following-leader-is-event-entity.condition.json",
+      "followers-to-move-exist.condition.json",
+      "resolved-target-location-null.condition.json"
     ]
   }
 }
