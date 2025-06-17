@@ -11,7 +11,10 @@ import {
   PersistenceError,
   PersistenceErrorCodes,
 } from './persistenceErrors.js';
-import { createPersistenceFailure } from './persistenceResultUtils.js';
+import {
+  createPersistenceFailure,
+  createPersistenceSuccess,
+} from './persistenceResultUtils.js';
 import {
   validateSaveName,
   validateSaveIdentifier,
@@ -136,14 +139,17 @@ class SaveLoadService extends ISaveLoadService {
   #cloneAndPrepareState(saveName, obj) {
     const cloneResult = safeDeepClone(obj, this.#logger);
     if (!cloneResult.success || !cloneResult.data) {
-      return { success: false, error: cloneResult.error };
+      return createPersistenceFailure(
+        cloneResult.error.code,
+        cloneResult.error.message
+      );
     }
 
     /** @type {SaveGameStructure} */
     const cloned = cloneResult.data;
     cloned.metadata = { ...(cloned.metadata || {}), saveName };
     cloned.integrityChecks = { ...(cloned.integrityChecks || {}) };
-    return { success: true, data: cloned };
+    return createPersistenceSuccess(cloned);
   }
 
   /**
@@ -229,7 +235,7 @@ class SaveLoadService extends ISaveLoadService {
     this.#logger.debug(
       `Game data loaded and validated successfully from: "${saveIdentifier}"`
     );
-    return { success: true, data: loadedObject, error: null };
+    return createPersistenceSuccess(loadedObject);
   }
 
   /**

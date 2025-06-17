@@ -7,6 +7,10 @@ import {
   PersistenceError,
   PersistenceErrorCodes,
 } from './persistenceErrors.js';
+import {
+  createPersistenceFailure,
+  createPersistenceSuccess,
+} from './persistenceResultUtils.js';
 
 /**
  * @class GameStateSerializer
@@ -153,14 +157,13 @@ class GameStateSerializer {
       this.#logger.debug(
         `Decompressed data size: ${decompressed.byteLength} bytes`
       );
-      return { success: true, data: decompressed };
+      return createPersistenceSuccess(decompressed);
     } catch (error) {
       const userMsg =
         'The save file appears to be corrupted (could not decompress). Please try another save.';
       this.#logger.error('Gzip decompression failed:', error);
       return {
-        success: false,
-        error: new PersistenceError(
+        ...createPersistenceFailure(
           PersistenceErrorCodes.DECOMPRESSION_ERROR,
           userMsg
         ),
@@ -179,14 +182,13 @@ class GameStateSerializer {
     try {
       const obj = decode(buffer);
       this.#logger.debug('Successfully deserialized MessagePack');
-      return { success: true, data: obj };
+      return createPersistenceSuccess(obj);
     } catch (error) {
       const userMsg =
         'The save file appears to be corrupted (could not understand file content). Please try another save.';
       this.#logger.error('MessagePack deserialization failed:', error);
       return {
-        success: false,
-        error: new PersistenceError(
+        ...createPersistenceFailure(
           PersistenceErrorCodes.DESERIALIZATION_ERROR,
           userMsg
         ),
