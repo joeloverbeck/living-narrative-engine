@@ -62,8 +62,6 @@
     ],
     "events": [
       "action_decided.event.json",
-      "ai_turn_processing_ended.event.json",
-      "ai_turn_processing_started.event.json",
       "attempt_action.event.json",
       "disable_input.event.json",
       "display_error.event.json",

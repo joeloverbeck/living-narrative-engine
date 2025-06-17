@@ -6,10 +6,7 @@ import {
   ACTOR_COMPONENT_ID,
   PLAYER_COMPONENT_ID,
 } from '../../src/constants/componentIds.js';
-import {
-  AI_TURN_PROCESSING_STARTED,
-  TURN_PROCESSING_STARTED,
-} from '../../src/constants/eventIds.js';
+import { TURN_PROCESSING_STARTED } from '../../src/constants/eventIds.js';
 import {
   afterEach,
   beforeEach,
@@ -226,10 +223,6 @@ describe('TurnManager', () => {
         TURN_PROCESSING_STARTED,
         { entityId: mockActor.id, actorType: entityType }
       );
-      expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
-        AI_TURN_PROCESSING_STARTED,
-        { entityId: mockActor.id }
-      );
       expect(mockLogger.debug).toHaveBeenCalledWith(
         `Resolving turn handler for entity ${mockActor.id}...`
       );
@@ -274,10 +267,6 @@ describe('TurnManager', () => {
       expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
         TURN_PROCESSING_STARTED,
         { entityId: mockActor.id, actorType: 'ai' }
-      );
-      expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
-        AI_TURN_PROCESSING_STARTED,
-        { entityId: mockActor.id }
       );
       expect(mockDispatcher.subscribe).toHaveBeenCalledTimes(1); // Subscribed during start
 
