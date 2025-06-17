@@ -322,7 +322,7 @@ describe('WorldLoader Integration Test Suite - Performance Timing Logs (Sub-Tick
       fooModId,
       mockFooManifest,
       'items',
-      'items',
+      'entities/definitions/items',
       'items'
     );
     expect(mockConditionLoader.loadItemsForMod).toHaveBeenCalledWith(

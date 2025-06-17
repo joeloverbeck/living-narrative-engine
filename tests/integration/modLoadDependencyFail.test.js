@@ -27,6 +27,8 @@ const createMockConfiguration = (overrides = {}) => ({
       return 'http://example.com/schemas/component.schema.json';
     if (t === 'entities')
       return 'http://example.com/schemas/entity.schema.json'; // Required for WorldLoader essentials check
+    if (t === 'entityInstances')
+      return 'http://example.com/schemas/entityInstance.schema.json';
     if (t === 'rules') return 'http://example.com/schemas/rule.schema.json';
     return `http://example.com/schemas/${t}.schema.json`;
   }),
@@ -37,6 +39,7 @@ const createMockConfiguration = (overrides = {}) => ({
     'game.schema.json',
     'components.schema.json',
     'entity.schema.json',
+    'entityInstance.schema.json',
   ]), // Basic schemas for test
   getSchemaBasePath: jest.fn(() => 'schemas'),
   getContentBasePath: jest.fn((typeName) => typeName),
@@ -220,9 +223,10 @@ describe('WorldLoader → ModDependencyValidator integration (missing dependency
   const COMPONENTS_SCHEMA_ID =
     'http://example.com/schemas/components.schema.json';
   const ENTITY_SCHEMA_ID = 'http://example.com/schemas/entity.schema.json'; // <<< ADDED
+  const ENTITY_INSTANCE_SCHEMA_ID =
+    'http://example.com/schemas/entityInstance.schema.json';
   const ACTION_SCHEMA_ID = 'http://example.com/schemas/action.schema.json';
-  const EVENT_SCHEMA_ID =
-    'http://example.com/schemas/component.schema.json';
+  const EVENT_SCHEMA_ID = 'http://example.com/schemas/component.schema.json';
   const RULE_SCHEMA_ID = 'http://example.com/schemas/rule.schema.json';
 
   // Define minimal schemas
@@ -337,6 +341,8 @@ describe('WorldLoader → ModDependencyValidator integration (missing dependency
             await validator.addSchema(manifestSchema, MOD_MANIFEST_SCHEMA_ID);
           if (!validator.isSchemaLoaded(ENTITY_SCHEMA_ID))
             await validator.addSchema(entitySchema, ENTITY_SCHEMA_ID);
+          if (!validator.isSchemaLoaded(ENTITY_INSTANCE_SCHEMA_ID))
+            await validator.addSchema(entitySchema, ENTITY_INSTANCE_SCHEMA_ID);
           if (!validator.isSchemaLoaded(ACTION_SCHEMA_ID))
             await validator.addSchema(actionSchema, ACTION_SCHEMA_ID);
           if (!validator.isSchemaLoaded(EVENT_SCHEMA_ID))

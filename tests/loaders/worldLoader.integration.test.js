@@ -209,6 +209,7 @@ describe('WorldLoader Integration Test Suite (TEST-LOADER-7.1)', () => {
         'schema:events', // <<< Required by WorldLoader
         'schema:rules', // <<< Required by WorldLoader
         'schema:conditions', // <<< Newly required by WorldLoader
+        'schema:entityInstances',
       ];
       const isLoaded = essentialSchemas.includes(schemaId);
       // Optional: Add logging here to see exactly which schemas are being checked
@@ -335,6 +336,9 @@ describe('WorldLoader Integration Test Suite (TEST-LOADER-7.1)', () => {
     expect(mockValidator.isSchemaLoaded).toHaveBeenCalledWith(
       'schema:conditions'
     ); // <<< Added check
+    expect(mockValidator.isSchemaLoaded).toHaveBeenCalledWith(
+      'schema:entityInstances'
+    );
 
     // 4. Verify gameConfigLoader.loadConfig was called.
     expect(mockGameConfigLoader.loadConfig).toHaveBeenCalledTimes(1);
@@ -423,7 +427,7 @@ describe('WorldLoader Integration Test Suite (TEST-LOADER-7.1)', () => {
       CORE_MOD_ID,
       mockCoreManifest,
       'characters',
-      'characters',
+      'entities/definitions/characters',
       'characters'
     );
 
