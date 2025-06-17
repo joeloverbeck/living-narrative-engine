@@ -17,6 +17,7 @@ import {
 import {
   SYSTEM_ERROR_OCCURRED_ID,
   AI_TURN_PROCESSING_STARTED,
+  TURN_PROCESSING_STARTED,
 } from '../../src/constants/eventIds.js';
 
 // --- Mock Dependencies ---
@@ -188,6 +189,10 @@ describe('TurnManager: advanceTurn() - Turn Advancement (Queue Not Empty)', () =
       entityType: entityType,
     });
     expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
+      TURN_PROCESSING_STARTED,
+      { entityId: nextActor.id, actorType: entityType }
+    );
+    expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
       AI_TURN_PROCESSING_STARTED,
       { entityId: nextActor.id }
     );
@@ -325,6 +330,10 @@ describe('TurnManager: advanceTurn() - Turn Advancement (Queue Not Empty)', () =
       entityId: nonActorEntity.id,
       entityType: entityType,
     });
+    expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
+      TURN_PROCESSING_STARTED,
+      { entityId: nonActorEntity.id, actorType: entityType }
+    );
     expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
       AI_TURN_PROCESSING_STARTED,
       { entityId: nonActorEntity.id }

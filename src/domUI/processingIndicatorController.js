@@ -2,8 +2,8 @@
 
 import { BoundDomRendererBase } from './boundDomRendererBase.js';
 import {
-  AI_TURN_PROCESSING_STARTED,
-  AI_TURN_PROCESSING_ENDED,
+  TURN_PROCESSING_STARTED,
+  TURN_PROCESSING_ENDED,
   PLAYER_TURN_SUBMITTED_ID,
   // TEXT_UI_DISPLAY_SPEECH_ID // Not directly used for hiding in this version
   SYSTEM_ERROR_OCCURRED_ID,
@@ -177,17 +177,15 @@ export class ProcessingIndicatorController extends BoundDomRendererBase {
    * @private
    */
   #subscribeToEvents() {
-    // AI Processing Indicator
-    this._subscribe(AI_TURN_PROCESSING_STARTED, () =>
-      this.#showIndicator('ai')
-    );
+    // Generic Turn Processing Indicator
+    this._subscribe(TURN_PROCESSING_STARTED, () => this.#showIndicator('ai'));
     this.logger.debug(
-      `${this._logPrefix} Subscribed to ${AI_TURN_PROCESSING_STARTED}.`
+      `${this._logPrefix} Subscribed to ${TURN_PROCESSING_STARTED}.`
     );
 
-    this._subscribe(AI_TURN_PROCESSING_ENDED, () => this.#hideIndicator('ai'));
+    this._subscribe(TURN_PROCESSING_ENDED, () => this.#hideIndicator('ai'));
     this.logger.debug(
-      `${this._logPrefix} Subscribed to ${AI_TURN_PROCESSING_ENDED}.`
+      `${this._logPrefix} Subscribed to ${TURN_PROCESSING_ENDED}.`
     );
 
     // Player Composing Indicator (Optional Extension)

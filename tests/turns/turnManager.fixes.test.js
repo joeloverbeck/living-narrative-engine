@@ -12,6 +12,7 @@ import TurnManager from '../../src/turns/turnManager.js';
 import {
   TURN_ENDED_ID,
   AI_TURN_PROCESSING_ENDED,
+  TURN_PROCESSING_ENDED,
 } from '../../src/constants/eventIds.js';
 import { ACTOR_COMPONENT_ID } from '../../src/constants/componentIds.js';
 
@@ -177,6 +178,10 @@ describe('TurnManager', () => {
       await Promise.resolve(); // Flushes microtasks queue, including the Promise.resolve around destroy
 
       expect(mockResolvedHandler.destroy).toHaveBeenCalledTimes(1);
+      expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
+        TURN_PROCESSING_ENDED,
+        { entityId: 'actor1', actorType: 'ai' }
+      );
       expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
         AI_TURN_PROCESSING_ENDED,
         { entityId: 'actor1' }

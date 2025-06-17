@@ -4,8 +4,8 @@ import {
   DomElementFactory,
 } from '../../src/domUI/index.js';
 import {
-  AI_TURN_PROCESSING_STARTED,
-  AI_TURN_PROCESSING_ENDED,
+  TURN_PROCESSING_STARTED,
+  TURN_PROCESSING_ENDED,
 } from '../../src/constants/eventIds.js';
 import {
   beforeEach,
@@ -82,9 +82,9 @@ describe('ProcessingIndicatorController', () => {
     expect(indicator?.classList.contains('visible')).toBe(false);
   });
 
-  it('shows and hides indicator on AI processing events', () => {
-    const startHandler = getVedHandler(ved, AI_TURN_PROCESSING_STARTED);
-    const endHandler = getVedHandler(ved, AI_TURN_PROCESSING_ENDED);
+  it('shows and hides indicator on turn processing events', () => {
+    const startHandler = getVedHandler(ved, TURN_PROCESSING_STARTED);
+    const endHandler = getVedHandler(ved, TURN_PROCESSING_ENDED);
     const indicator = document.querySelector('#processing-indicator');
     expect(startHandler).toBeInstanceOf(Function);
     expect(endHandler).toBeInstanceOf(Function);

@@ -14,6 +14,7 @@ import { ACTOR_COMPONENT_ID } from '../../src/constants/componentIds.js';
 import {
   SYSTEM_ERROR_OCCURRED_ID,
   AI_TURN_PROCESSING_STARTED,
+  TURN_PROCESSING_STARTED,
 } from '../../src/constants/eventIds.js';
 
 // Mocks for dependencies
@@ -295,6 +296,10 @@ describe('TurnManager: advanceTurn() - Round Start (Queue Empty)', () => {
       entityId: actor1.id,
       entityType: 'ai',
     }); // Assuming AI
+    expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
+      TURN_PROCESSING_STARTED,
+      { entityId: actor1.id, actorType: 'ai' }
+    );
     expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
       AI_TURN_PROCESSING_STARTED,
       { entityId: actor1.id }
