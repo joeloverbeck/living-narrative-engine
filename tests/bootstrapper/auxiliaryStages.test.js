@@ -1,5 +1,6 @@
 import { describe, it, expect, jest } from '@jest/globals';
 import { initializeAuxiliaryServicesStage } from '../../src/bootstrapper/auxiliaryStages.js';
+import StageError from '../../src/bootstrapper/StageError.js';
 
 /**
  *
@@ -50,6 +51,7 @@ describe('initializeAuxiliaryServicesStage', () => {
       tokens
     );
     expect(result.success).toBe(false);
+    expect(result.error).toBeInstanceOf(StageError);
     expect(result.error.phase).toBe('Auxiliary Services Initialization');
     expect(Array.isArray(result.error.failures)).toBe(true);
   });

@@ -1,4 +1,5 @@
 import { ensureCriticalDOMElementsStage } from '../../src/bootstrapper/stages/index.js';
+import StageError from '../../src/bootstrapper/StageError.js';
 import { UIBootstrapper } from '../../src/bootstrapper/UIBootstrapper.js';
 import { describe, it, expect, jest, afterEach } from '@jest/globals';
 
@@ -61,7 +62,7 @@ describe('ensureCriticalDOMElementsStage', () => {
       createUIBootstrapper: () => uiBoot,
     });
     expect(result.success).toBe(false);
-    expect(result.error).toBeInstanceOf(Error);
+    expect(result.error).toBeInstanceOf(StageError);
     expect(result.error.message).toContain('fail');
     expect(result.error.phase).toBe('UI Element Validation');
   });

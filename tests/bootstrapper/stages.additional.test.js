@@ -16,6 +16,7 @@ import {
   startGameStage,
 } from '../../src/bootstrapper/stages/index.js';
 import AppContainer from '../../src/dependencyInjection/appContainer.js';
+import StageError from '../../src/bootstrapper/StageError.js';
 
 const createLogger = () => ({
   debug: jest.fn(),
@@ -46,6 +47,7 @@ describe('setupDIContainerStage', () => {
       createAppContainer: () => new AppContainer(),
     });
     expect(result.success).toBe(false);
+    expect(result.error).toBeInstanceOf(StageError);
     expect(result.error.phase).toBe('DI Container Setup');
   });
 
@@ -85,6 +87,7 @@ describe('resolveLoggerStage', () => {
     const tokens = { ILogger: 'LOGGER' };
     const result = await resolveLoggerStage(container, tokens);
     expect(result.success).toBe(false);
+    expect(result.error).toBeInstanceOf(StageError);
     expect(result.error.phase).toBe('Core Services Resolution');
   });
 
@@ -94,6 +97,7 @@ describe('resolveLoggerStage', () => {
 
     const result = await resolveLoggerStage(container, tokens);
     expect(result.success).toBe(false);
+    expect(result.error).toBeInstanceOf(StageError);
     expect(result.error.phase).toBe('Core Services Resolution');
   });
 });
@@ -119,6 +123,7 @@ describe('initializeGameEngineStage', () => {
       createGameEngine: (opts) => new GameEngine(opts),
     });
     expect(result.success).toBe(false);
+    expect(result.error).toBeInstanceOf(StageError);
     expect(result.error.phase).toBe('GameEngine Initialization');
   });
 
@@ -146,6 +151,7 @@ describe('initializeGameEngineStage', () => {
       createGameEngine: factory,
     });
     expect(result.success).toBe(false);
+    expect(result.error).toBeInstanceOf(StageError);
     expect(result.error.phase).toBe('GameEngine Initialization');
   });
 });
@@ -182,6 +188,7 @@ describe('setupGlobalEventListenersStage', () => {
     const logger = createLogger();
     const result = await setupGlobalEventListenersStage({}, logger, null);
     expect(result.success).toBe(false);
+    expect(result.error).toBeInstanceOf(StageError);
     expect(result.error.phase).toBe('Global Event Listeners Setup');
   });
 
@@ -220,6 +227,7 @@ describe('startGameStage', () => {
     const logger = createLogger();
     const resultMissing = await startGameStage(null, 'w', logger);
     expect(resultMissing.success).toBe(false);
+    expect(resultMissing.error).toBeInstanceOf(StageError);
     expect(resultMissing.error.phase).toBe('Start Game');
   });
 
@@ -227,6 +235,7 @@ describe('startGameStage', () => {
     const logger = createLogger();
     const resultInvalid = await startGameStage({}, '', logger);
     expect(resultInvalid.success).toBe(false);
+    expect(resultInvalid.error).toBeInstanceOf(StageError);
     expect(resultInvalid.error.phase).toBe('Start Game');
   });
 
@@ -237,6 +246,7 @@ describe('startGameStage', () => {
     };
     const resultError = await startGameStage(gameEngine, 'w', logger);
     expect(resultError.success).toBe(false);
+    expect(resultError.error).toBeInstanceOf(StageError);
     expect(resultError.error.phase).toBe('Start Game');
   });
 });

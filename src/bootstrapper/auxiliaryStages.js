@@ -5,12 +5,7 @@
  *
  * @module auxiliaryStages
  */
-import {
-  resolveAndInitialize,
-  stageSuccess,
-  stageFailure,
-  createStageError,
-} from './helpers.js';
+import { resolveAndInitialize, stageSuccess, stageFailure } from './helpers.js';
 
 /**
  * @typedef {import('../dependencyInjection/appContainer.js').default} AppContainer
