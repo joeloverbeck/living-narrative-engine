@@ -22,7 +22,10 @@ import {
   PersistenceError,
   PersistenceErrorCodes,
 } from './persistenceErrors.js';
-import { createPersistenceFailure } from './persistenceResultUtils.js';
+import {
+  createPersistenceFailure,
+  createPersistenceSuccess,
+} from './persistenceResultUtils.js';
 // --- MODIFICATION END ---
 
 /**
@@ -432,7 +435,7 @@ class GamePersistenceService extends IGamePersistenceService {
       this.#logger.debug(
         `GamePersistenceService.loadAndRestoreGame: Game state restored successfully for ${saveIdentifier}.`
       );
-      return { success: true, data: gameDataToRestore };
+      return createPersistenceSuccess(gameDataToRestore);
     } else {
       this.#logger.error(
         `GamePersistenceService.loadAndRestoreGame: Failed to restore game state for ${saveIdentifier}. Error: ${restoreResult.error}`
