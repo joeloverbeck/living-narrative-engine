@@ -65,7 +65,7 @@ beforeEach(() => {
     choicePipeline: mockChoicePipeline,
     humanDecisionProvider: mockHumanDecisionProvider,
     turnActionFactory: mockTurnActionFactory,
-    turnStrategyFactory: mockTurnStrategyFactory,
+    strategyFactory: mockTurnStrategyFactory,
     turnContextBuilder: mockTurnContextBuilder,
   };
 

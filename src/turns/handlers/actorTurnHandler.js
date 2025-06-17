@@ -27,24 +27,21 @@ class ActorTurnHandler extends GenericTurnHandler {
    * @param {ILogger} deps.logger
    * @param {ITurnStateFactory} deps.turnStateFactory
    * @param {ITurnEndPort} deps.turnEndPort
-   * @param {ITurnStrategyFactory} [deps.turnStrategyFactory]
-   * @param {ITurnStrategyFactory} [deps.strategyFactory]
+   * @param {ITurnStrategyFactory} deps.strategyFactory
    * @param {TurnContextBuilder} deps.turnContextBuilder
    */
   constructor({
     logger,
     turnStateFactory,
     turnEndPort,
-    turnStrategyFactory,
     strategyFactory,
     turnContextBuilder,
   }) {
-    const factory = turnStrategyFactory || strategyFactory;
     super({
       logger,
       turnStateFactory,
       turnEndPort,
-      strategyFactory: factory,
+      strategyFactory,
       turnContextBuilder,
     });
 

@@ -67,7 +67,7 @@ describe('ActorTurnHandler.handleSubmittedCommand with invalid actor', () => {
       choicePipeline: mockChoicePipeline,
       humanDecisionProvider: mockHumanDecisionProvider,
       turnActionFactory: mockTurnActionFactory,
-      turnStrategyFactory: mockTurnStrategyFactory,
+      strategyFactory: mockTurnStrategyFactory,
       turnContextBuilder: mockTurnContextBuilder,
     };
 

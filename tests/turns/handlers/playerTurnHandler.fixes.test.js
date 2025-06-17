@@ -65,7 +65,7 @@ describe('ActorTurnHandler Constructor', () => {
     logger: mockLogger,
     turnStateFactory: mockTurnStateFactory,
     turnEndPort: mockTurnEndPort,
-    turnStrategyFactory: mockTurnStrategyFactory,
+    strategyFactory: mockTurnStrategyFactory,
     turnContextBuilder: mockTurnContextBuilder,
     gameWorldAccess: mockGameWorldAccess,
   });
@@ -116,9 +116,9 @@ describe('ActorTurnHandler Constructor', () => {
   });
 
   // New test case for the new required dependency
-  it('should throw an error if turnStrategyFactory is not provided', () => {
+  it('should throw an error if strategyFactory is not provided', () => {
     const deps = getValidDependencies();
-    delete deps.turnStrategyFactory;
+    delete deps.strategyFactory;
     expect(() => new ActorTurnHandler(deps)).toThrow(
       'GenericTurnHandler: strategyFactory is required'
     );

@@ -84,7 +84,7 @@ describe('ActorTurnHandler', () => {
       promptCoordinator: mockPromptCoordinator,
       commandOutcomeInterpreter: mockCommandOutcomeInterpreter,
       safeEventDispatcher: mockSafeEventDispatcher,
-      turnStrategyFactory: mockTurnStrategyFactory,
+      strategyFactory: mockTurnStrategyFactory,
       turnContextBuilder: mockTurnContextBuilder,
     });
   };

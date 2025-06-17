@@ -17,19 +17,12 @@ import { GenericStrategyFactory } from '../../turns/factories/genericStrategyFac
  *
  * @param {AppContainer} container - The DI container.
  * @param {DiToken} decisionProviderToken - Token for the decision provider.
- * @param {DiToken} strategyFactoryToken - Token for the resulting strategy factory.
  * @returns {void}
  */
-export function registerGenericStrategy(
-  container,
-  decisionProviderToken,
-  strategyFactoryToken
-) {
+export function registerGenericStrategy(container, decisionProviderToken) {
   const r = new Registrar(container);
   const logger = container.resolve(tokens.ILogger);
-  logger.debug(
-    `[registerGenericStrategy] Starting for ${String(strategyFactoryToken)}...`
-  );
+  logger.debug('[registerGenericStrategy] Starting...');
 
   if (!container.isRegistered(tokens.TurnActionChoicePipeline)) {
     r.singletonFactory(tokens.TurnActionChoicePipeline, (c) => {
@@ -53,8 +46,8 @@ export function registerGenericStrategy(
     );
   }
 
-  if (!container.isRegistered(strategyFactoryToken)) {
-    r.singletonFactory(strategyFactoryToken, (c) => {
+  if (!container.isRegistered(tokens.GenericStrategyFactory)) {
+    r.singletonFactory(tokens.GenericStrategyFactory, (c) => {
       const opts = {
         choicePipeline: c.resolve(tokens.TurnActionChoicePipeline),
         decisionProvider: c.resolve(decisionProviderToken),
@@ -67,11 +60,9 @@ export function registerGenericStrategy(
       return new GenericStrategyFactory(opts);
     });
     logger.debug(
-      `[registerGenericStrategy] Registered ${String(strategyFactoryToken)}.`
+      `[registerGenericStrategy] Registered ${tokens.GenericStrategyFactory}.`
     );
   }
 
-  logger.debug(
-    `[registerGenericStrategy] Completed for ${String(strategyFactoryToken)}.`
-  );
+  logger.debug('[registerGenericStrategy] Completed.');
 }

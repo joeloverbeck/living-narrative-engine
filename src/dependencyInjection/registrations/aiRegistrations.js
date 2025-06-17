@@ -404,11 +404,7 @@ export function registerAI(container) {
     `AI Systems Registration: Registered ${tokens.ILLMDecisionProvider}.`
   );
 
-  registerGenericStrategy(
-    container,
-    tokens.ILLMDecisionProvider,
-    tokens.AIStrategyFactory
-  );
+  registerGenericStrategy(container, tokens.ILLMDecisionProvider);
 
   // --- AI TURN HANDLER (MODIFIED) ---
 
@@ -419,7 +415,7 @@ export function registerAI(container) {
         logger: c.resolve(tokens.ILogger),
         turnStateFactory: c.resolve(tokens.ITurnStateFactory),
         turnEndPort: c.resolve(tokens.ITurnEndPort),
-        strategyFactory: c.resolve(tokens.AIStrategyFactory), // <-- Updated
+        strategyFactory: c.resolve(tokens.GenericStrategyFactory),
         turnContextBuilder: c.resolve(tokens.TurnContextBuilder), // <-- Added
       })
   );

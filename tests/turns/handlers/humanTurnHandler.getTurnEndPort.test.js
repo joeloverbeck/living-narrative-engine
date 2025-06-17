@@ -51,7 +51,7 @@ beforeEach(() => {
     humanDecisionProvider: {},
     turnActionFactory: {},
 
-    turnStrategyFactory: {
+    strategyFactory: {
       createForHuman: jest.fn(() => ({ decideAction: jest.fn() })),
     },
 

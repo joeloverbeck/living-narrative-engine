@@ -68,7 +68,7 @@ describe('ActorTurnHandler method delegation', () => {
       choicePipeline: mockChoicePipeline,
       humanDecisionProvider: mockHumanDecisionProvider,
       turnActionFactory: mockTurnActionFactory,
-      turnStrategyFactory: mockTurnStrategyFactory,
+      strategyFactory: mockTurnStrategyFactory,
       turnContextBuilder: mockTurnContextBuilder,
     };
     jest
