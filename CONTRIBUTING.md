@@ -290,6 +290,7 @@ Given the engine's reliance on mods defined in the `data/` directory:
 - **README.md**: The primary source for understanding the project's architecture, modding system, data flow, and ECS
   principles.
 - **`docs/` directory**: Contains more specific documentation on various sub-systems like JSON Logic usage.
+- **Turn Processing Events ➜ docs/events/turn_processing_events.md**: Details on the events dispatched when any actor's turn starts or ends.
 - **Existing Code in `src/` and `data/`**: Reading existing modules and core mod data can provide valuable insight into
   how things work.
 

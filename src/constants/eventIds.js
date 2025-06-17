@@ -34,6 +34,12 @@ export const ENTITY_SPOKE_ID = 'core:entity_spoke';
  * @see {DisplaySpeechPayload}
  */
 export const DISPLAY_SPEECH_ID = 'core:display_speech';
+
+// Generic turn processing events fired for **any** actor type
+export const TURN_PROCESSING_STARTED = 'core:turn_processing_started';
+export const TURN_PROCESSING_ENDED = 'core:turn_processing_ended';
+
+// Deprecated AI-specific events kept for backward compatibility
 export const AI_TURN_PROCESSING_STARTED = 'core:ai_turn_processing_started';
 export const AI_TURN_PROCESSING_ENDED = 'core:ai_turn_processing_ended';
 

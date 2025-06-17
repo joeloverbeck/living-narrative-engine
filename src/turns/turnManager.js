@@ -20,6 +20,8 @@ import {
 import {
   TURN_ENDED_ID,
   SYSTEM_ERROR_OCCURRED_ID,
+  TURN_PROCESSING_STARTED,
+  TURN_PROCESSING_ENDED,
   AI_TURN_PROCESSING_STARTED,
   AI_TURN_PROCESSING_ENDED,
 } from '../constants/eventIds.js';
@@ -378,7 +380,18 @@ class TurnManager extends ITurnManager {
             `Failed to dispatch core:turn_started for ${actorId}: ${dispatchError.message}`,
             dispatchError
           );
-          // Continue processing the turn even if event dispatch fails
+        }
+
+        try {
+          await this.#dispatcher.dispatch(TURN_PROCESSING_STARTED, {
+            entityId: actorId,
+            actorType: entityType,
+          });
+        } catch (dispatchError) {
+          this.#logger.error(
+            `Failed to dispatch ${TURN_PROCESSING_STARTED} for ${actorId}: ${dispatchError.message}`,
+            dispatchError
+          );
         }
 
         if (!isPlayer) {
@@ -621,6 +634,20 @@ class TurnManager extends ITurnManager {
 
     const currentActor = this.#currentActor;
     const endedIsPlayer = currentActor?.hasComponent(PLAYER_COMPONENT_ID);
+
+    const actorType = endedIsPlayer ? 'player' : 'ai';
+    this.#dispatcher
+      .dispatch(TURN_PROCESSING_ENDED, {
+        entityId: endedActorId,
+        actorType,
+      })
+      .catch((dispatchError) =>
+        this.#logger.error(
+          `Failed to dispatch ${TURN_PROCESSING_ENDED} for ${endedActorId}: ${dispatchError.message}`,
+          dispatchError
+        )
+      );
+
     if (!endedIsPlayer) {
       this.#dispatcher
         .dispatch(AI_TURN_PROCESSING_ENDED, { entityId: endedActorId })
