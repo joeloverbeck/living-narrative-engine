@@ -296,12 +296,18 @@ describe('ActionButtonsRenderer', () => {
       expect(mockExamineButton).toBeDefined();
       if (!mockExamineButton) return;
 
+      const onItemSelectedSpy = jest.spyOn(renderer, '_onItemSelected');
       expect(renderer.elements.sendButtonElement.disabled).toBe(true);
       await mockExamineButton.click();
+      expect(onItemSelectedSpy).toHaveBeenCalledWith(
+        mockExamineButton,
+        actionToSelect
+      );
       expect(renderer.selectedAction).toEqual(actionToSelect);
       expect(renderer.elements.sendButtonElement.disabled).toBe(false);
       expect(mockVed.dispatch).not.toHaveBeenCalled();
-      expect(mockExamineButton.classList.add).toHaveBeenCalledWith('selected');
+      expect(mockExamineButton.getAttribute('role')).toBe('radio');
+      expect(mockExamineButton.getAttribute('data-action-index')).toBe('1');
     });
 
     it('should update selection and button states when a different action is clicked', async () => {
@@ -338,20 +344,20 @@ describe('ActionButtonsRenderer', () => {
       expect(mockButton2).toBeDefined();
       if (!mockButton1 || !mockButton2) return;
 
+      const spy = jest.spyOn(renderer, '_onItemSelected');
       await mockButton1.click();
+      expect(spy).toHaveBeenCalledWith(mockButton1, action1);
       expect(renderer.selectedAction).toEqual(action1);
-      expect(mockButton1.classList.add).toHaveBeenCalledWith('selected');
       expect(renderer.elements.sendButtonElement.disabled).toBe(false);
-      mockButton1.classList.add.mockClear();
+      spy.mockClear();
 
       await mockButton2.click();
+      expect(spy).toHaveBeenCalledWith(mockButton2, action2);
       expect(renderer.selectedAction).toEqual(action2);
-      expect(mockButton1.classList.remove).toHaveBeenCalledWith('selected');
-      expect(mockButton2.classList.add).toHaveBeenCalledWith('selected');
       expect(renderer.elements.sendButtonElement.disabled).toBe(false);
     });
 
-    it('should deselect action if the same selected action button is clicked again', async () => {
+    it('should keep selection when the same action button is clicked again', async () => {
       const actionToSelect = createTestComposite(
         1,
         'test:examine',
@@ -376,19 +382,17 @@ describe('ActionButtonsRenderer', () => {
       await simulateUpdateActionsEventForCurrentRenderer(testActorId, actions);
       expect(mockExamineButton).toBeDefined();
       if (!mockExamineButton) return;
+      const spy = jest.spyOn(renderer, '_onItemSelected');
       await mockExamineButton.click(); // First click - select
+      expect(spy).toHaveBeenCalledWith(mockExamineButton, actionToSelect);
       expect(renderer.selectedAction).toEqual(actionToSelect);
-      expect(mockExamineButton.classList.add).toHaveBeenCalledWith('selected');
       expect(renderer.elements.sendButtonElement.disabled).toBe(false);
+      spy.mockClear();
 
-      mockExamineButton.classList.remove.mockClear(); // Clear remove mock before second click
-
-      await mockExamineButton.click(); // Second click - deselect
-      expect(renderer.selectedAction).toBeNull();
-      expect(mockExamineButton.classList.remove).toHaveBeenCalledWith(
-        'selected'
-      );
-      expect(renderer.elements.sendButtonElement.disabled).toBe(true);
+      await mockExamineButton.click(); // Second click - remains selected
+      expect(spy).toHaveBeenCalledWith(mockExamineButton, actionToSelect);
+      expect(renderer.selectedAction).toEqual(actionToSelect);
+      expect(renderer.elements.sendButtonElement.disabled).toBe(false);
     });
 
     it('should call dispatch, then log error, when dispatch returns false (send button click)', async () => {
@@ -529,9 +533,11 @@ describe('ActionButtonsRenderer', () => {
       expect(mockActionButton.getAttribute('data-action-index')).toBe('1');
       expect(renderer.elements.sendButtonElement.disabled).toBe(true);
 
+      const spy = jest.spyOn(renderer, '_onItemSelected');
       mockActionButton.textContent = ''; // Simulate text content change
       await mockActionButton.click(); // Click the action button itself
 
+      expect(spy).toHaveBeenCalledWith(mockActionButton, action);
       expect(mockVed.dispatch).not.toHaveBeenCalled();
       expect(renderer.selectedAction).toEqual(action);
       expect(renderer.elements.sendButtonElement.disabled).toBe(false);

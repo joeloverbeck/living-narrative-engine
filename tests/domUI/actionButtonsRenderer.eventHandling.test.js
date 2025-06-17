@@ -53,11 +53,28 @@ function createButtonLikeMock(initialText = '') {
       contains: jest.fn(function (cls) {
         return this._classes.has(cls);
       }),
+      toggle: jest.fn(function (cls, force) {
+        if (force === undefined) {
+          if (this._classes.has(cls)) {
+            this._classes.delete(cls);
+            return false;
+          }
+          this._classes.add(cls);
+          return true;
+        }
+        if (force) {
+          this._classes.add(cls);
+          return true;
+        }
+        this._classes.delete(cls);
+        return false;
+      }),
       _reset: function () {
         this._classes.clear();
         this.add.mockClear();
         this.remove.mockClear();
         this.contains.mockClear();
+        this.toggle.mockClear();
       },
     },
     _clickHandlers: [],
@@ -81,6 +98,7 @@ function createButtonLikeMock(initialText = '') {
         await handler();
       }
     },
+    focus: jest.fn(),
     _reset: function () {
       this.setAttribute.mockClear();
       this.getAttribute.mockClear();
@@ -94,6 +112,7 @@ function createButtonLikeMock(initialText = '') {
       this.remove.mockClear();
       this.parentNode = null;
       this.title = '';
+      this.focus.mockClear();
       Object.keys(this)
         .filter((key) => key.startsWith('_attr_'))
         .forEach((key) => delete this[key]);
@@ -193,7 +212,7 @@ beforeEach(() => {
       if (child) child.parentNode = null;
     }),
     querySelectorAll: jest.fn((selector) => {
-      if (selector === 'button.action-button') {
+      if (selector === 'button.action-button' || selector === '[role="radio"]') {
         return mockContainer.children.filter(
           (c) => c.tagName === 'BUTTON' && c.classList.contains('action-button')
         );
@@ -482,7 +501,11 @@ describe('ActionButtonsRenderer', () => {
       );
       expect(button).toBeDefined();
       expect(button.title).toBe('This is the description.');
-      expect(button.setAttribute).toHaveBeenCalledWith('data-action-index', 1);
+      expect(button.setAttribute).toHaveBeenCalledWith('role', 'radio');
+      expect(button.setAttribute).toHaveBeenCalledWith(
+        'data-action-index',
+        '1'
+      );
       expect(button.addEventListener).toHaveBeenCalledWith(
         'click',
         expect.any(Function)
@@ -531,9 +554,11 @@ describe('ActionButtonsRenderer', () => {
       mockContainer.children = [mockActionButton];
 
       // Scenario 1: No action selected
+      const spy = jest.spyOn(instance, '_onItemSelected');
       instance.selectedAction = null;
       instance._onListRendered(instance.availableActions, mockContainer);
       expect(mockSendButton.disabled).toBe(true);
+      expect(spy).toHaveBeenCalledWith(null, null);
       expect(mockContainer.classList.add).toHaveBeenCalledWith(
         'actions-fade-in'
       );
@@ -542,11 +567,12 @@ describe('ActionButtonsRenderer', () => {
 
       // Scenario 2: Action is selected
       instance.selectedAction = instance.availableActions[0];
-      mockActionButton.classList.add.mockClear();
+      spy.mockClear();
       instance._onListRendered(instance.availableActions, mockContainer);
 
       expect(mockSendButton.disabled).toBe(false);
-      expect(mockActionButton.classList.add).toHaveBeenCalledWith('selected');
+      expect(mockActionButton.classList.contains('selected')).toBe(true);
+      expect(spy).not.toHaveBeenCalledWith(null, null);
       expect(mockContainer.classList.add).toHaveBeenCalledWith(
         'actions-fade-in'
       );
