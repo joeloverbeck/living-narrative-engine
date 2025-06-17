@@ -10,6 +10,7 @@
 // --- Dependency Imports ---
 import { getEntityDisplayName } from '../utils/entityUtils.js';
 import { safeDispatchError } from '../utils/safeDispatchErrorUtils.js';
+import { resolveSafeDispatcher } from '../utils/dispatcherUtils.js';
 
 /**
  * Formats a validated action and target into a user-facing command string.
@@ -31,18 +32,17 @@ export function formatActionCommand(
   options = {}
 ) {
   const { debug = false, logger = console, safeEventDispatcher } = options;
-
-  if (
-    !safeEventDispatcher ||
-    typeof safeEventDispatcher.dispatch !== 'function'
-  ) {
-    throw new Error('formatActionCommand requires ISafeEventDispatcher');
+  const dispatcher = resolveSafeDispatcher(null, safeEventDispatcher, logger);
+  if (!dispatcher) {
+    console.warn(
+      'formatActionCommand: safeEventDispatcher resolution failed; error events may not be dispatched.'
+    );
   }
 
   // --- 1. Input Validation ---
   if (!actionDefinition || !actionDefinition.template) {
     safeDispatchError(
-      safeEventDispatcher,
+      dispatcher,
       'formatActionCommand: Invalid or missing actionDefinition or template.',
       { actionDefinition }
     );
@@ -50,7 +50,7 @@ export function formatActionCommand(
   }
   if (!validatedTargetContext) {
     safeDispatchError(
-      safeEventDispatcher,
+      dispatcher,
       'formatActionCommand: Invalid or missing validatedTargetContext.',
       { validatedTargetContext }
     );
@@ -58,7 +58,7 @@ export function formatActionCommand(
   }
   if (!entityManager || typeof entityManager.getEntityInstance !== 'function') {
     safeDispatchError(
-      safeEventDispatcher,
+      dispatcher,
       'formatActionCommand: Invalid or missing entityManager.',
       { entityManager }
     );
@@ -68,7 +68,7 @@ export function formatActionCommand(
   }
   if (typeof getEntityDisplayName !== 'function') {
     safeDispatchError(
-      safeEventDispatcher,
+      dispatcher,
       'formatActionCommand: getEntityDisplayName utility function is not available.'
     );
     throw new Error(
@@ -162,7 +162,7 @@ export function formatActionCommand(
     }
   } catch (error) {
     safeDispatchError(
-      safeEventDispatcher,
+      dispatcher,
       `formatActionCommand: Error during placeholder substitution for action ${actionDefinition.id}:`,
       { error: error.message, stack: error.stack }
     );
