@@ -4,6 +4,7 @@ import { BoundDomRendererBase } from './boundDomRendererBase.js';
 import { DomUtils } from '../utils/domUtils.js';
 import createMessageElement from './helpers/createMessageElement.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../constants/eventIds.js';
+import { resolveSafeDispatcher } from '../utils/dispatcherUtils.js';
 import {
   // POSITION_COMPONENT_ID, // No longer directly used for current location logic
   // NAME_COMPONENT_ID, // Handled by EntityDisplayDataProvider
@@ -98,23 +99,26 @@ export class LocationRenderer extends BoundDomRendererBase {
       },
     };
 
-    if (
-      !safeEventDispatcher ||
-      typeof safeEventDispatcher.dispatch !== 'function'
-    ) {
-      const errMsg = `[LocationRenderer] ISafeEventDispatcher dependency is required.`;
-      throw new Error(errMsg);
+    const resolvedDispatcher = resolveSafeDispatcher(
+      null,
+      safeEventDispatcher,
+      logger
+    );
+    if (!resolvedDispatcher) {
+      console.warn(
+        '[LocationRenderer] safeEventDispatcher resolution failed; UI errors may not be reported.'
+      );
     }
 
     super({
       logger,
       documentContext,
-      validatedEventDispatcher: safeEventDispatcher,
+      validatedEventDispatcher: resolvedDispatcher,
       elementsConfig,
       domElementFactory,
     });
 
-    this.safeEventDispatcher = safeEventDispatcher;
+    this.safeEventDispatcher = resolvedDispatcher;
 
     if (
       !entityManager ||

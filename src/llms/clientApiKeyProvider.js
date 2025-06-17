@@ -3,6 +3,7 @@
 
 import { IApiKeyProvider } from './interfaces/IApiKeyProvider.js';
 import { safeDispatchError } from '../utils/safeDispatchErrorUtils.js';
+import { resolveSafeDispatcher } from '../utils/dispatcherUtils.js';
 
 /**
  * @typedef {import('./environmentContext.js').EnvironmentContext} EnvironmentContext
@@ -62,17 +63,17 @@ export class ClientApiKeyProvider extends IApiKeyProvider {
       console.error(errorMsg);
       throw new Error(errorMsg);
     }
-    if (
-      !safeEventDispatcher ||
-      typeof safeEventDispatcher.dispatch !== 'function'
-    ) {
-      const errorMsg =
-        'ClientApiKeyProvider: Constructor requires a valid ISafeEventDispatcher.';
-      console.error(errorMsg);
-      throw new Error(errorMsg);
-    }
     this.#logger = logger;
-    this.#dispatcher = safeEventDispatcher;
+    this.#dispatcher = resolveSafeDispatcher(
+      null,
+      safeEventDispatcher,
+      this.#logger
+    );
+    if (!this.#dispatcher) {
+      console.warn(
+        'ClientApiKeyProvider: safeEventDispatcher resolution failed; errors may not be reported.'
+      );
+    }
     this.#logger.debug('ClientApiKeyProvider: Instance created.');
   }
 
