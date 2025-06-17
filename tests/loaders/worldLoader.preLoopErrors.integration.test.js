@@ -94,6 +94,7 @@ describe('WorldLoader Integration Test Suite - Error Handling: Manifest Schema, 
   const actionsSchemaId = 'schema:actions'; // Added for consistency
   const eventsSchemaId = 'schema:events'; // Added for consistency
   const rulesSchemaId = 'schema:rules'; // Added for consistency
+  const entityInstancesSchemaId = 'schema:entityInstances';
 
   // --- Mocked Functions References ---
   const mockDependencyValidate = ModDependencyValidatorModule.validate;
@@ -402,6 +403,7 @@ describe('WorldLoader Integration Test Suite - Error Handling: Manifest Schema, 
       actionsSchemaId,
       eventsSchemaId,
       rulesSchemaId,
+      entityInstancesSchemaId,
     ];
     mockValidator.isSchemaLoaded.mockImplementation((id) => {
       const exists = essentialSchemas.includes(id) && id !== manifestSchemaId;
@@ -469,6 +471,7 @@ describe('WorldLoader Integration Test Suite - Error Handling: Manifest Schema, 
       actionsSchemaId,
       eventsSchemaId,
       rulesSchemaId,
+      entityInstancesSchemaId,
     ];
     mockValidator.isSchemaLoaded.mockImplementation((id) => {
       const exists = essentialSchemas.includes(id) && id !== entitySchemaId;

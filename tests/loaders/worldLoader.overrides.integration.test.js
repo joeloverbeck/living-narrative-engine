@@ -286,6 +286,7 @@ describe('WorldLoader Integration Test Suite - Mod Overrides and Load Order (Sub
         'schema:events',
         'schema:rules',
         'schema:conditions',
+        'schema:entityInstances',
       ];
       return essentials.includes(schemaId);
     });
@@ -407,7 +408,7 @@ describe('WorldLoader Integration Test Suite - Mod Overrides and Load Order (Sub
       CORE_MOD_ID,
       mockCoreManifest,
       'items',
-      'items',
+      'entities/definitions/items',
       'items'
     );
     expect(mockEntityLoader.loadItemsForMod).toHaveBeenNthCalledWith(
@@ -415,7 +416,7 @@ describe('WorldLoader Integration Test Suite - Mod Overrides and Load Order (Sub
       fooModId,
       mockFooManifest,
       'items',
-      'items',
+      'entities/definitions/items',
       'items'
     );
     expect(mockEntityLoader.loadItemsForMod).toHaveBeenNthCalledWith(
@@ -423,7 +424,7 @@ describe('WorldLoader Integration Test Suite - Mod Overrides and Load Order (Sub
       barModId,
       mockBarManifest,
       'items',
-      'items',
+      'entities/definitions/items',
       'items'
     );
 

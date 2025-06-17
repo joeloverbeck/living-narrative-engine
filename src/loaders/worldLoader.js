@@ -126,7 +126,16 @@ class WorldLoader extends AbstractLoader {
     actionLoader,
     eventLoader,
     entityLoader,
-    entityInstanceLoader,
+    entityInstanceLoader = {
+      /**
+       * Fallback implementation when no EntityInstanceLoader is supplied.
+       *
+       * @returns {Promise<{count:number, overrides:number, errors:number}>}
+       */
+      async loadItemsForMod() {
+        return { count: 0, overrides: 0, errors: 0 };
+      },
+    },
     validator,
     configuration,
     gameConfigLoader,

@@ -245,6 +245,7 @@ describe('WorldLoader Integration Test Suite - Log Verification (TEST-LOADER-7.7
         'schema:events', // Essential schema
         'schema:rules', // Essential schema
         'schema:conditions', // Essential schema
+        'schema:entityInstances',
       ].includes(schemaId);
     });
 

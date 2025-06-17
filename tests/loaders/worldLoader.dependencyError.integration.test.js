@@ -199,6 +199,7 @@ describe('WorldLoader Integration Test Suite - Error Handling: Dependency and Ve
         'schema:events',
         'schema:rules',
         'schema:conditions',
+        'schema:entityInstances',
       ];
       return essentials.includes(schemaId);
     });

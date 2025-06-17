@@ -237,6 +237,7 @@ describe('WorldLoader Integration Test Suite - Error Handling (TEST-LOADER-7.4)'
         'schema:actions', // <-- WAS MISSING
         'schema:events', // <-- WAS MISSING
         'schema:rules', // <-- WAS MISSING
+        'schema:entityInstances',
       ];
       // You might want to dynamically get these from mockConfiguration if needed,
       // but hardcoding based on WorldLoader's current `essentials` list is fine for the test.

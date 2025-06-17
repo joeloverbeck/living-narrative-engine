@@ -295,6 +295,7 @@ describe('WorldLoader Integration Test Suite - Overrides (TEST-LOADER-7.2)', () 
         'schema:events',
         'schema:conditions',
         'schema:rules',
+        'schema:entityInstances',
       ];
       return essentialSchemas.includes(schemaId);
     });

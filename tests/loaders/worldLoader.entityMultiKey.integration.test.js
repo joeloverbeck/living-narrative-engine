@@ -321,6 +321,7 @@ describe('WorldLoader Integration Test Suite - EntityDefinitionLoader Multi-Key 
         'schema:actions',
         'schema:events',
         'schema:rules',
+        'schema:entityInstances',
         'schema:items', // Although stored under entities, check if WorldLoader looks for these
         'schema:locations',
         'schema:characters',
@@ -366,21 +367,21 @@ describe('WorldLoader Integration Test Suite - EntityDefinitionLoader Multi-Key 
       testModId, // modId
       mockTestManifest, // manifest
       'locations', // contentKey
-      'locations', // contentTypeDir
+      'entities/definitions/locations', // contentTypeDir
       'locations' // typeName
     );
     expect(mockEntityLoader.loadItemsForMod).toHaveBeenCalledWith(
       testModId, // modId
       mockTestManifest, // manifest
       'items', // contentKey
-      'items', // contentTypeDir
+      'entities/definitions/items', // contentTypeDir
       'items' // typeName
     );
     expect(mockEntityLoader.loadItemsForMod).toHaveBeenCalledWith(
       testModId, // modId
       mockTestManifest, // manifest
       'characters', // contentKey
-      'characters', // contentTypeDir
+      'entities/definitions/characters', // contentTypeDir
       'characters' // typeName
     );
 
