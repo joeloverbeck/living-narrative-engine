@@ -1,0 +1,46 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://example.com/schemas/entity-instance.schema.json",
+  "title": "Entity Instance",
+  "description": "Represents a specific, unique occurrence of an entity within the game world. It links to a definition and specifies only the unique properties or changes for that particular instance.",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "format": "uri",
+      "description": "Optional. A URI reference to the schema that this document conforms to, enabling editor validation and autocompletion."
+    },
+    "instanceId": {
+      "$ref": "./common.schema.json#/definitions/namespacedId",
+      "description": "Required. The unique, namespaced identifier for this specific entity instance (e.g., 'world:player_character', 'dungeon1:goblin_sentry_01'). This ID must be unique across all instances in a loaded game world."
+    },
+    "definitionId": {
+      "$ref": "./common.schema.json#/definitions/namespacedId",
+      "description": "Required. The namespaced ID of the entity definition that this instance is based on."
+    },
+    "componentOverrides": {
+      "type": "object",
+      "description": "Optional. An object map of components that override the defaults from the referenced definition. If a component is listed here, its data completely replaces the corresponding component data from the definition for this instance only.",
+      "propertyNames": {
+        "$ref": "./common.schema.json#/definitions/namespacedId",
+        "description": "Component keys must be valid namespaced IDs referencing the component type to be overridden."
+      },
+      "additionalProperties": {
+        "oneOf": [
+          {
+            "type": "object"
+          },
+          {
+            "type": "array"
+          }
+        ],
+        "description": "The overriding data for a component. The structure must match the schema for that component type."
+      }
+    }
+  },
+  "required": [
+    "instanceId",
+    "definitionId"
+  ],
+  "additionalProperties": false
+}

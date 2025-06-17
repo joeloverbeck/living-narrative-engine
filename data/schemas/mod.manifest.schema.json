@@ -63,34 +63,25 @@
         "actions": {
           "$ref": "#/definitions/contentFileList"
         },
-        "blockers": {
+        "components": {
           "$ref": "#/definitions/contentFileList"
         },
         "conditions": {
           "$ref": "#/definitions/contentFileList"
         },
-        "components": {
+        "entityDefinitions": {
           "$ref": "#/definitions/contentFileList"
         },
-        "connections": {
-          "$ref": "#/definitions/contentFileList"
-        },
-        "characters": {
+        "entityInstances": {
           "$ref": "#/definitions/contentFileList"
         },
         "events": {
           "$ref": "#/definitions/contentFileList"
         },
-        "items": {
-          "$ref": "#/definitions/contentFileList"
-        },
-        "locations": {
+        "macros": {
           "$ref": "#/definitions/contentFileList"
         },
         "rules": {
-          "$ref": "#/definitions/contentFileList"
-        },
-        "macros": {
           "$ref": "#/definitions/contentFileList"
         },
         "ui": {
@@ -100,7 +91,11 @@
       "additionalProperties": false
     }
   },
-  "required": ["id", "version", "name"],
+  "required": [
+    "id",
+    "version",
+    "name"
+  ],
   "definitions": {
     "contentFileList": {
       "description": "Array of relative paths (using forward slashes '/') to .json definition files for a specific content type. Paths must not start with '/' or contain '..'.",
@@ -128,7 +123,10 @@
           "minLength": 1
         }
       },
-      "required": ["id", "version"]
+      "required": [
+        "id",
+        "version"
+      ]
     }
   }
 }

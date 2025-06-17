@@ -7,10 +7,6 @@
   "author": "joeloverbeck",
   "gameVersion": ">=0.0.1",
   "content": {
-    "components": ["closeness.component.json"],
-    "characters": [],
-    "items": [],
-    "locations": [],
     "actions": [
       "adjust_clothing.action.json",
       "get_close.action.json",
@@ -18,16 +14,9 @@
       "step_back.action.json",
       "thumb_wipe_cheek.action.json"
     ],
-    "rules": [
-      "adjust_clothing.rule.json",
-      "get_close.rule.json",
-      "intimacy_show_onlookers.rule.json",
-      "kiss_cheek.rule.json",
-      "step_back.rule.json",
-      "thumb_wipe_cheek.rule.json"
+    "components": [
+      "closeness.component.json"
     ],
-    "events": [],
-    "ui": ["icons.json", "labels.json"],
     "conditions": [
       "actor-and-target-can-get-close.condition.json",
       "actor-is-in-closeness.condition.json",
@@ -40,6 +29,21 @@
       "target-is-in-actors-closeness-partners-list.condition.json",
       "room-has-kissing-pair.condition.json"
     ],
-    "macros": []
+    "entityDefinitions": [],
+    "entityInstances": [],
+    "events": [],
+    "macros": [],
+    "rules": [
+      "adjust_clothing.rule.json",
+      "get_close.rule.json",
+      "intimacy_show_onlookers.rule.json",
+      "kiss_cheek.rule.json",
+      "step_back.rule.json",
+      "thumb_wipe_cheek.rule.json"
+    ],
+    "ui": [
+      "icons.json",
+      "labels.json"
+    ]
   }
 }

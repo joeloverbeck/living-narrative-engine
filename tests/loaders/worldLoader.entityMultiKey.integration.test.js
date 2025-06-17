@@ -1,5 +1,5 @@
 // Filename: src/tests/loaders/worldLoader.entityMultiKey.integration.test.js
-// Sub-Ticket 11: Test - Verify EntityLoader Multi-Key Handling
+// Sub-Ticket 11: Test - Verify EntityDefinitionLoader Multi-Key Handling
 
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 
@@ -34,12 +34,12 @@ jest.mock('../../src/modding/modLoadOrderResolver.js', () => ({
 /** @typedef {import('../../src/loaders/gameConfigLoader.js').default} GameConfigLoader */
 /** @typedef {import('../../src/loaders/conditionLoader.js').default} ConditionLoader */
 /** @typedef {import('../../src/modding/modManifestLoader.js').default} ModManifestLoader */
-/** @typedef {import('../../src/loaders/entityLoader.js').default} EntityLoader */
+/** @typedef {import('../../src/loaders/entityDefinitionLoader.js').default} EntityLoader */
 /** @typedef {import('../../src/loaders/conditionLoader.js').default} ConditionLoader */
 /** @typedef {import('../../../core/interfaces/manifestItems.js').ModManifest} ModManifest */
 /** @typedef {import('../../../core/services/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
 
-describe('WorldLoader Integration Test Suite - EntityLoader Multi-Key Handling (Sub-Ticket 11)', () => {
+describe('WorldLoader Integration Test Suite - EntityDefinitionLoader Multi-Key Handling (Sub-Ticket 11)', () => {
   /** @type {WorldLoader} */
   let worldLoader;
 
@@ -216,8 +216,8 @@ describe('WorldLoader Integration Test Suite - EntityLoader Multi-Key Handling (
       loadItemsForMod: jest.fn().mockResolvedValue(mockLoadResult),
     };
 
-    // --- Mock EntityLoader ---
-    // This is the key mock. It simulates the behavior of EntityLoader.
+    // --- Mock EntityDefinitionLoader ---
+    // This is the key mock. It simulates the behavior of EntityDefinitionLoader.
     // It needs to:
     // 1. Be called with the correct arguments from WorldLoader.
     // 2. Simulate storing the data under the 'entities' category in the mockRegistry.
@@ -233,50 +233,38 @@ describe('WorldLoader Integration Test Suite - EntityLoader Multi-Key Handling (
             contentTypeDirArg,
             typeNameArg
           ) => {
-            // Simulate loading the correct mock data based on typeName
-            let dataToStore = null;
-            let filename = '';
-            if (typeNameArg === 'locations') {
-              dataToStore = locationData;
-              filename = manifestArg.content.locations[0];
-            } else if (typeNameArg === 'items') {
-              dataToStore = itemData;
-              filename = manifestArg.content.items[0];
-            } else if (typeNameArg === 'characters') {
-              dataToStore = characterData;
-              filename = manifestArg.content.characters[0];
+            if (
+              typeNameArg === 'entityDefinitions' &&
+              contentKeyArg === 'entityDefinitions'
+            ) {
+              const files = manifestArg.content.entityDefinitions;
+              for (const file of files) {
+                let dataToStore;
+                if (file.includes('start_area')) {
+                  dataToStore = locationData;
+                } else if (file.includes('sword')) {
+                  dataToStore = itemData;
+                } else if (file.includes('guard')) {
+                  dataToStore = characterData;
+                } else {
+                  continue;
+                }
+                const baseId = dataToStore.id.split(':')[1];
+                const finalRegistryKey = `${modIdArg}:${baseId}`;
+                const finalData = {
+                  ...dataToStore,
+                  id: finalRegistryKey,
+                  modId: modIdArg,
+                  _sourceFile: file,
+                };
+                mockRegistry.store('entities', finalRegistryKey, finalData);
+                mockLogger.debug(
+                  `Mock EntityLoader: Stored ${finalRegistryKey} for ${modIdArg}`
+                );
+              }
+              return { count: files.length, overrides: 0, errors: 0 };
             }
-
-            if (dataToStore) {
-              // Simulate EntityLoader's logic: extract base ID, store under 'entities'
-              const fullIdFromFile = dataToStore.id; // e.g., "testMod:start_area"
-              const colonIndex = fullIdFromFile.indexOf(':');
-              const baseId =
-                colonIndex > -1
-                  ? fullIdFromFile.substring(colonIndex + 1)
-                  : fullIdFromFile;
-              const finalRegistryKey = `${modIdArg}:${baseId}`;
-
-              // Simulate the data augmentation done by _storeItemInRegistry
-              const finalData = {
-                ...dataToStore,
-                id: finalRegistryKey, // Store with the final prefixed ID
-                modId: modIdArg,
-                _sourceFile: filename,
-              };
-
-              // Store in the mock registry's internal store under 'entities'
-              mockRegistry.store('entities', finalRegistryKey, finalData);
-              mockLogger.debug(
-                `Mock EntityLoader: Stored ${finalRegistryKey} for ${modIdArg} (type: ${typeNameArg})`
-              );
-              return { count: 1, overrides: 0, errors: 0 }; // Simulate success
-            } else {
-              mockLogger.warn(
-                `Mock EntityLoader: No mock data configured for type ${typeNameArg}`
-              );
-              return { count: 0, overrides: 0, errors: 0 }; // Simulate failure/no items
-            }
+            return { count: 0, overrides: 0, errors: 0 };
           }
         ),
     };
@@ -288,9 +276,11 @@ describe('WorldLoader Integration Test Suite - EntityLoader Multi-Key Handling (
       name: 'Entity Multi-Key Test Mod',
       gameVersion: '^1.0.0',
       content: {
-        locations: ['start_area.json'], // Matches entityLoader mock logic
-        items: ['sword.json'], // Matches entityLoader mock logic
-        characters: ['guard.json'], // Matches entityLoader mock logic
+        entityDefinitions: [
+          'locations/start_area.json',
+          'items/sword.json',
+          'characters/guard.json',
+        ],
         // No other content types defined
       },
     };
@@ -317,15 +307,16 @@ describe('WorldLoader Integration Test Suite - EntityLoader Multi-Key Handling (
         'schema:game',
         'schema:components',
         'schema:mod-manifest',
-        'schema:entities', // Primary schema for EntityLoader
+        'schema:entities', // Primary schema for EntityDefinitionLoader
         'schema:actions',
         'schema:events',
         'schema:rules',
+        'schema:entityInstances',
         'schema:items', // Although stored under entities, check if WorldLoader looks for these
         'schema:locations',
         'schema:characters',
       ];
-      // Also check for the types EntityLoader handles if WorldLoader checks them individually (unlikely but safe)
+      // Also check for the types EntityDefinitionLoader handles if WorldLoader checks them individually (unlikely but safe)
       return (
         essentialSchemas.includes(schemaId) || schemaId.startsWith('schema:')
       ); // Allow any schema prefixed ID
@@ -351,37 +342,23 @@ describe('WorldLoader Integration Test Suite - EntityLoader Multi-Key Handling (
     });
   });
 
-  // ── Test Case: Verify EntityLoader Calls for Different Content Keys ──────
-  it('should invoke EntityLoader for locations, items, and characters and store results under entities', async () => {
+  // ── Test Case: Verify EntityDefinitionLoader Calls for Different Content Keys ──────
+  it('should invoke EntityDefinitionLoader for locations, items, and characters and store results under entities', async () => {
     // --- Action ---
     await expect(worldLoader.loadWorld(worldName)).resolves.not.toThrow();
 
     // --- Assertions ---
 
-    // 1. Verify EntityLoader.loadItemsForMod invocation count
-    expect(mockEntityLoader.loadItemsForMod).toHaveBeenCalledTimes(3);
+    // 1. Verify EntityDefinitionLoader.loadItemsForMod invocation count
+    expect(mockEntityLoader.loadItemsForMod).toHaveBeenCalledTimes(1);
 
-    // 2. Verify EntityLoader.loadItemsForMod arguments for each call
+    // 2. Verify EntityDefinitionLoader.loadItemsForMod arguments
     expect(mockEntityLoader.loadItemsForMod).toHaveBeenCalledWith(
-      testModId, // modId
-      mockTestManifest, // manifest
-      'locations', // contentKey
-      'locations', // contentTypeDir
-      'locations' // typeName
-    );
-    expect(mockEntityLoader.loadItemsForMod).toHaveBeenCalledWith(
-      testModId, // modId
-      mockTestManifest, // manifest
-      'items', // contentKey
-      'items', // contentTypeDir
-      'items' // typeName
-    );
-    expect(mockEntityLoader.loadItemsForMod).toHaveBeenCalledWith(
-      testModId, // modId
-      mockTestManifest, // manifest
-      'characters', // contentKey
-      'characters', // contentTypeDir
-      'characters' // typeName
+      testModId,
+      mockTestManifest,
+      'entityDefinitions',
+      'entities/definitions',
+      'entityDefinitions'
     );
 
     // 3. Verify data is stored correctly in the 'entities' category
@@ -391,7 +368,7 @@ describe('WorldLoader Integration Test Suite - EntityLoader Multi-Key Handling (
       ...locationData,
       id: 'testMod:start_area', // Ensure final ID is stored
       modId: testModId,
-      _sourceFile: 'start_area.json',
+      _sourceFile: 'locations/start_area.json',
     });
 
     const storedItem = mockRegistry.get('entities', 'testMod:sword');
@@ -400,7 +377,7 @@ describe('WorldLoader Integration Test Suite - EntityLoader Multi-Key Handling (
       ...itemData,
       id: 'testMod:sword', // Ensure final ID is stored
       modId: testModId,
-      _sourceFile: 'sword.json',
+      _sourceFile: 'items/sword.json',
     });
 
     const storedCharacter = mockRegistry.get('entities', 'testMod:guard');
@@ -409,7 +386,7 @@ describe('WorldLoader Integration Test Suite - EntityLoader Multi-Key Handling (
       ...characterData,
       id: 'testMod:guard', // Ensure final ID is stored
       modId: testModId,
-      _sourceFile: 'guard.json',
+      _sourceFile: 'characters/guard.json',
     });
 
     // 4. Verify other potential categories are empty (or don't exist in internal store)
@@ -430,18 +407,11 @@ describe('WorldLoader Integration Test Suite - EntityLoader Multi-Key Handling (
     );
     expect(summaryLine).toBeDefined();
 
-    // Expect lines for items, locations, characters in the summary
-    // Note: WorldLoader logs use the original typeName ('items', 'locations', 'characters')
-    // even though EntityLoader stores them all under 'entities'.
-    // The counts come from the *results* returned by EntityLoader.loadItemsForMod for each type.
+    // Expect a line for entityDefinitions in the summary
     expect(
-      infoCalls.some((call) => /items\s+: C:1, O:0, E:0/.test(call[0]))
-    ).toBe(true);
-    expect(
-      infoCalls.some((call) => /locations\s+: C:1, O:0, E:0/.test(call[0]))
-    ).toBe(true);
-    expect(
-      infoCalls.some((call) => /characters\s+: C:1, O:0, E:0/.test(call[0]))
+      infoCalls.some((call) =>
+        /entityDefinitions\s+: C:3, O:0, E:0/.test(call[0])
+      )
     ).toBe(true);
     // Verify the total count reflects the sum of these
     expect(

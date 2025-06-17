@@ -24,7 +24,7 @@ import { ActionIndexingService } from '../../turns/services/actionIndexingServic
  * @typedef {import('../../loaders/actionLoader.js').default} ActionLoader
  * @typedef {import('../../loaders/eventLoader.js').default} EventLoader
  * @typedef {import('../../loaders/macroLoader.js').default} MacroLoader
- * @typedef {import('../../loaders/entityLoader.js').default} EntityLoader
+ * @typedef {import('../../loaders/entityDefinitionLoader.js').default} EntityLoader
  * @typedef {import('../../loaders/gameConfigLoader.js').default} GameConfigLoader
  * @typedef {import('../../loaders/promptTextLoader.js').default} PromptTextLoader
  * @typedef {import('../../modding/modManifestLoader.js').default} ModManifestLoader

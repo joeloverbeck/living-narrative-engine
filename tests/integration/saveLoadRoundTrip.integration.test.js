@@ -5,7 +5,7 @@ import GameStateCaptureService from '../../src/persistence/gameStateCaptureServi
 import ComponentCleaningService, {
   buildDefaultComponentCleaners,
 } from '../../src/persistence/componentCleaningService.js';
-import receptionistDef from '../../data/mods/isekai/characters/receptionist.character.json';
+import receptionistDef from '../../data/mods/isekai/entities/definitions/receptionist.character.json';
 import { webcrypto } from 'crypto';
 import { createMockSaveValidationService } from '../testUtils.js';
 

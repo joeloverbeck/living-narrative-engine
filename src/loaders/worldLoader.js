@@ -13,7 +13,8 @@
 /** @typedef {import('./schemaLoader.js').default} SchemaLoader */
 /** @typedef {import('./gameConfigLoader.js').default} GameConfigLoader */
 /** @typedef {import('../modding/modManifestLoader.js').default} ModManifestLoader */
-/** @typedef {import('./entityLoader.js').default} EntityLoader */
+/** @typedef {import('./entityDefinitionLoader.js').default} EntityLoader */
+/** @typedef {import('./entityInstanceLoader.js').default} EntityInstanceLoader */
 /** @typedef {import('./promptTextLoader.js').default} PromptTextLoader */
 /** @typedef {import('../../data/schemas/mod.manifest.schema.json').ModManifest} ModManifest */
 /** @typedef {import('../events/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
@@ -75,6 +76,7 @@ class WorldLoader extends AbstractLoader {
   /** @type {ActionLoader}   */ #actionLoader;
   /** @type {EventLoader}    */ #eventLoader;
   /** @type {EntityLoader}   */ #entityDefinitionLoader;
+  /** @type {EntityInstanceLoader} */ #entityInstanceLoader;
   /** @type {GameConfigLoader}*/ #gameConfigLoader;
   /** @type {PromptTextLoader}*/ #promptTextLoader;
   /** @type {ModManifestLoader}*/ #modManifestLoader;
@@ -104,6 +106,7 @@ class WorldLoader extends AbstractLoader {
    * @param {ActionLoader} dependencies.actionLoader - Loader for action definitions.
    * @param {EventLoader} dependencies.eventLoader - Loader for event definitions.
    * @param {EntityLoader} dependencies.entityLoader - Loader for entity definitions.
+   * @param {EntityInstanceLoader} dependencies.entityInstanceLoader - Loader for entity instances.
    * @param {ISchemaValidator} dependencies.validator - Service for schema validation.
    * @param {IConfiguration} dependencies.configuration - Service for configuration access.
    * @param {GameConfigLoader} dependencies.gameConfigLoader - Loader for game configuration.
@@ -123,6 +126,16 @@ class WorldLoader extends AbstractLoader {
     actionLoader,
     eventLoader,
     entityLoader,
+    entityInstanceLoader = {
+      /**
+       * Fallback implementation when no EntityInstanceLoader is supplied.
+       *
+       * @returns {Promise<{count:number, overrides:number, errors:number}>}
+       */
+      async loadItemsForMod() {
+        return { count: 0, overrides: 0, errors: 0 };
+      },
+    },
     validator,
     configuration,
     gameConfigLoader,
@@ -172,6 +185,11 @@ class WorldLoader extends AbstractLoader {
         methods: ['loadItemsForMod'],
       },
       {
+        dependency: entityInstanceLoader,
+        name: 'EntityInstanceLoader',
+        methods: ['loadItemsForMod'],
+      },
+      {
         dependency: validator,
         name: 'ISchemaValidator',
         methods: ['isSchemaLoaded'],
@@ -217,6 +235,7 @@ class WorldLoader extends AbstractLoader {
     this.#actionLoader = actionLoader;
     this.#eventLoader = eventLoader;
     this.#entityDefinitionLoader = entityLoader;
+    this.#entityInstanceLoader = entityInstanceLoader;
     this.#validator = validator;
     this.#configuration = configuration;
     this.#gameConfigLoader = gameConfigLoader;
@@ -264,33 +283,15 @@ class WorldLoader extends AbstractLoader {
       },
       {
         loader: this.#entityDefinitionLoader,
-        contentKey: 'items',
-        contentTypeDir: 'items',
-        typeName: 'items',
+        contentKey: 'entityDefinitions',
+        contentTypeDir: 'entities/definitions',
+        typeName: 'entityDefinitions',
       },
       {
-        loader: this.#entityDefinitionLoader,
-        contentKey: 'locations',
-        contentTypeDir: 'locations',
-        typeName: 'locations',
-      },
-      {
-        loader: this.#entityDefinitionLoader,
-        contentKey: 'characters',
-        contentTypeDir: 'characters',
-        typeName: 'characters',
-      },
-      {
-        loader: this.#entityDefinitionLoader,
-        contentKey: 'blockers',
-        contentTypeDir: 'blockers',
-        typeName: 'blockers',
-      },
-      {
-        loader: this.#entityDefinitionLoader,
-        contentKey: 'connections',
-        contentTypeDir: 'connections',
-        typeName: 'connections',
+        loader: this.#entityInstanceLoader,
+        contentKey: 'entityInstances',
+        contentTypeDir: 'entities/instances',
+        typeName: 'entityInstances',
       },
     ];
 
@@ -337,6 +338,7 @@ class WorldLoader extends AbstractLoader {
         this.#configuration.getContentTypeSchemaId('components'),
         this.#configuration.getContentTypeSchemaId('mod-manifest'),
         this.#configuration.getContentTypeSchemaId('entities'),
+        this.#configuration.getContentTypeSchemaId('entityInstances'),
         this.#configuration.getContentTypeSchemaId('actions'),
         this.#configuration.getContentTypeSchemaId('events'),
         this.#configuration.getContentTypeSchemaId('rules'),

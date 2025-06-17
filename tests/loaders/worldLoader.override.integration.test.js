@@ -39,7 +39,7 @@ jest.mock('../../src/modding/modLoadOrderResolver.js', () => ({
 /** @typedef {import('../../src/loaders/schemaLoader.js').default} SchemaLoader */
 /** @typedef {import('../../src/loaders/gameConfigLoader.js').default} GameConfigLoader */
 /** @typedef {import('../../src/modding/modManifestLoader.js').default} ModManifestLoader */
-/** @typedef {import('../../src/loaders/entityLoader.js').default} EntityLoader */
+/** @typedef {import('../../src/loaders/entityDefinitionLoader.js').default} EntityLoader */
 /** @typedef {import('../../interfaces/manifestItems.js').ModManifest} ModManifest */
 /** @typedef {import('../../src/events/validatedEventDispatcher.js').default} ValidatedEventDispatcher */ // Added for the new dependency
 
@@ -295,6 +295,7 @@ describe('WorldLoader Integration Test Suite - Overrides (TEST-LOADER-7.2)', () 
         'schema:events',
         'schema:conditions',
         'schema:rules',
+        'schema:entityInstances',
       ];
       return essentialSchemas.includes(schemaId);
     });
@@ -556,7 +557,7 @@ describe('WorldLoader Integration Test Suite - Overrides (TEST-LOADER-7.2)', () 
       'rules'
     );
 
-    // EntityLoader: SHOULD NOT be called because NEITHER manifest lists any entity types
+    // EntityDefinitionLoader: SHOULD NOT be called because NEITHER manifest lists any entity types
     expect(mockEntityLoader.loadItemsForMod).toHaveBeenCalledTimes(0);
     // Spot check one type (redundant but harmless):
     expect(mockEntityLoader.loadItemsForMod).not.toHaveBeenCalledWith(

@@ -33,7 +33,7 @@ jest.mock('../../src/modding/modLoadOrderResolver.js', () => ({
 /** @typedef {import('../../src/loaders/schemaLoader.js').default} SchemaLoader */
 /** @typedef {import('../../src/loaders/gameConfigLoader.js').default} GameConfigLoader */
 /** @typedef {import('../../src/modding/modManifestLoader.js').default} ModManifestLoader */
-/** @typedef {import('../../src/loaders/entityLoader.js').default} EntityLoader */
+/** @typedef {import('../../src/loaders/entityDefinitionLoader.js').default} EntityLoader */
 /** @typedef {import('../../data/schemas/mod.manifest.schema.json').ModManifest} ModManifest */
 /** @typedef {import('../../services/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
 
@@ -170,7 +170,7 @@ describe('WorldLoader Integration Test Suite (TEST-LOADER-7.1)', () => {
       content: {
         actions: ['core/action_move.json', 'core/action_look.json'],
         components: ['core/comp_position.json'],
-        characters: ['core/entity_player_base.json'],
+        entityDefinitions: ['characters/core/entity_player_base.json'],
         macros: ['core/logSuccess.macro.json'],
       },
     };
@@ -209,6 +209,7 @@ describe('WorldLoader Integration Test Suite (TEST-LOADER-7.1)', () => {
         'schema:events', // <<< Required by WorldLoader
         'schema:rules', // <<< Required by WorldLoader
         'schema:conditions', // <<< Newly required by WorldLoader
+        'schema:entityInstances',
       ];
       const isLoaded = essentialSchemas.includes(schemaId);
       // Optional: Add logging here to see exactly which schemas are being checked
@@ -264,7 +265,9 @@ describe('WorldLoader Integration Test Suite (TEST-LOADER-7.1)', () => {
                 id: itemId,
                 data: `mock ${typeName} data ${i}`,
               };
-              mockRegistry.store(typeName, itemId, itemData); // Use typeName for registry storage
+              const storeType =
+                typeName === 'entityDefinitions' ? 'entities' : typeName;
+              mockRegistry.store(storeType, itemId, itemData);
             }
             // Simulate the expected return structure {count, overrides, errors}
             return { count: count, overrides: 0, errors: 0 };
@@ -281,7 +284,7 @@ describe('WorldLoader Integration Test Suite (TEST-LOADER-7.1)', () => {
     setupContentLoaderMock(mockActionLoader, 'actions', 2);
     setupContentLoaderMock(mockComponentLoader, 'components', 1);
     setupContentLoaderMock(mockMacroLoader, 'macros', 2);
-    setupContentLoaderMock(mockEntityLoader, 'characters', 1); // Use 'characters' as typeName
+    setupContentLoaderMock(mockEntityLoader, 'entityDefinitions', 1);
 
     // --- 4. Instantiate SUT ---
     worldLoader = new WorldLoader({
@@ -335,6 +338,9 @@ describe('WorldLoader Integration Test Suite (TEST-LOADER-7.1)', () => {
     expect(mockValidator.isSchemaLoaded).toHaveBeenCalledWith(
       'schema:conditions'
     ); // <<< Added check
+    expect(mockValidator.isSchemaLoaded).toHaveBeenCalledWith(
+      'schema:entityInstances'
+    );
 
     // 4. Verify gameConfigLoader.loadConfig was called.
     expect(mockGameConfigLoader.loadConfig).toHaveBeenCalledTimes(1);
@@ -422,16 +428,16 @@ describe('WorldLoader Integration Test Suite (TEST-LOADER-7.1)', () => {
     expect(mockEntityLoader.loadItemsForMod).toHaveBeenCalledWith(
       CORE_MOD_ID,
       mockCoreManifest,
-      'characters',
-      'characters',
-      'characters'
+      'entityDefinitions',
+      'entities/definitions',
+      'entityDefinitions'
     );
 
     // Check loaders for types NOT in manifest were NOT called
     expect(mockEventLoader.loadItemsForMod).not.toHaveBeenCalled();
     expect(mockRuleLoader.loadItemsForMod).not.toHaveBeenCalled();
     expect(mockConditionLoader.loadItemsForMod).not.toHaveBeenCalled();
-    // Check EntityLoader wasn't called for other keys it handles but aren't in manifest
+    // Check EntityDefinitionLoader wasn't called for other keys it handles but aren't in manifest
     expect(mockEntityLoader.loadItemsForMod).not.toHaveBeenCalledWith(
       expect.anything(),
       expect.anything(),
@@ -478,8 +484,8 @@ describe('WorldLoader Integration Test Suite (TEST-LOADER-7.1)', () => {
       expect.any(Object)
     );
     expect(mockRegistry.store).toHaveBeenCalledWith(
-      'characters',
-      'core:characters_item_0',
+      'entities',
+      'core:entityDefinitions_item_0',
       expect.any(Object)
     );
     // Ensure store wasn't called for types not loaded
@@ -531,7 +537,7 @@ describe('WorldLoader Integration Test Suite (TEST-LOADER-7.1)', () => {
       true
     );
     expect(
-      summaryLines.some((l) => /characters\s+: C:1, O:0, E:0/.test(l))
+      summaryLines.some((l) => /entityDefinitions\s+: C:1, O:0, E:0/.test(l))
     ).toBe(true);
     expect(
       summaryLines.some((l) => /components\s+: C:1, O:0, E:0/.test(l))
@@ -550,7 +556,7 @@ describe('WorldLoader Integration Test Suite (TEST-LOADER-7.1)', () => {
     expect(summaryLines.some((line) => /conditions\s+:/.test(line))).toBe(
       false
     );
-    expect(summaryLines.some((line) => /entities\s+:/.test(line))).toBe(false); // Check old key isn't present
+    expect(summaryLines.some((line) => /entities\s+:/.test(line))).toBe(false); // old key should not be present
 
     // 15. Verify registry.clear was not called again.
     expect(mockRegistry.clear).toHaveBeenCalledTimes(clearCalls); // Still 1

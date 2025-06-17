@@ -1,0 +1,47 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://example.com/schemas/entity-definition.schema.json",
+  "title": "Entity Definition",
+  "description": "Defines a template or 'prefab' for a game entity. It specifies the entity's type, its default components, and their initial state. This schema acts as a blueprint for creating entity instances.",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "format": "uri",
+      "description": "Optional. A URI reference to the schema that this document conforms to, enabling editor validation and autocompletion."
+    },
+    "id": {
+      "$ref": "./common.schema.json#/definitions/namespacedId",
+      "description": "Required. The unique, namespaced identifier for this entity definition (e.g., 'core:player', 'mod_monsters:goblin_warrior'). This ID is referenced by entity instances to specify their type."
+    },
+    "description": {
+      "type": "string",
+      "description": "Optional. A human-readable explanation of what this entity definition represents, primarily for documentation purposes."
+    },
+    "components": {
+      "type": "object",
+      "description": "Required. An object map containing the default components that constitute this entity. Keys are component type namespaced IDs (e.g., 'core:health'), and values are objects or arrays containing the data for that component type.",
+      "minProperties": 1,
+      "propertyNames": {
+        "$ref": "./common.schema.json#/definitions/namespacedId",
+        "description": "Component keys must be valid namespaced IDs referencing the component type."
+      },
+      "additionalProperties": {
+        "oneOf": [
+          {
+            "type": "object"
+          },
+          {
+            "type": "array"
+          }
+        ],
+        "description": "The data for a component. Its specific structure is validated at runtime against the schema associated with its corresponding component definition."
+      }
+    }
+  },
+  "required": [
+    "id",
+    "components"
+  ],
+  "additionalProperties": false
+}

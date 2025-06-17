@@ -7,6 +7,13 @@
   "author": "joeloverbeck",
   "gameVersion": ">=0.0.1",
   "content": {
+    "actions": [
+      "dismiss.action.json",
+      "follow.action.json",
+      "go.action.json",
+      "stop_following.action.json",
+      "wait.action.json"
+    ],
     "components": [
       "actor.component.json",
       "current_actor.component.json",
@@ -31,63 +38,6 @@
       "short_term_memory.component.json",
       "speech_patterns.component.json"
     ],
-    "characters": [],
-    "items": [],
-    "locations": [],
-    "actions": [
-      "dismiss.action.json",
-      "follow.action.json",
-      "go.action.json",
-      "stop_following.action.json",
-      "wait.action.json"
-    ],
-    "rules": [
-      "dismiss.rule.json",
-      "entity_speech.rule.json",
-      "follow.rule.json",
-      "follow_auto_move.rule.json",
-      "go.rule.json",
-      "log_perceptible_events.rule.json",
-      "player_turn_prompt.rule.json",
-      "stop_following.rule.json",
-      "turn_ended.rule.json",
-      "turn_started.rule.json",
-      "wait.rule.json"
-    ],
-    "macros": [
-      "autoMoveFollower.macro.json",
-      "displaySuccessAndEndTurn.macro.json",
-      "logFailureAndEndTurn.macro.json",
-      "logSuccessAndEndTurn.macro.json"
-    ],
-    "events": [
-      "action_decided.event.json",
-      "attempt_action.event.json",
-      "disable_input.event.json",
-      "display_error.event.json",
-      "display_failed_action_result.event.json",
-      "display_speech.event.json",
-      "display_successful_action_result.event.json",
-      "display_warning.event.json",
-      "enable_input.event.json",
-      "entity_moved.event.json",
-      "entity_spoke.event.json",
-      "perceptible_event.event.json",
-      "player_turn_prompt.event.json",
-      "player_turn_submitted.event.json",
-      "set_title.event.json",
-      "system_error_occurred.event.json",
-      "system_warning_occurred.event.json",
-      "turn_ended.event.json",
-      "turn_started.event.json",
-      "ui_operation_in_progress.event.json",
-      "ui_ready.event.json",
-      "ui_request_show_load_game.event.json",
-      "ui_request_show_save_game.event.json",
-      "ui_stopped.event.json",
-      "update_available_actions.event.json"
-    ],
-    "ui": ["icons.json", "labels.json"],
     "conditions": [
       "actor-can-follow-target.condition.json",
       "actor-is-following.condition.json",
@@ -107,11 +57,63 @@
       "target-is-not-rooted.condition.json",
       "target-is-not-self.condition.json",
       "way-is-not-blocked.condition.json",
-      "actor-has-name-and-position.condition.json",
-      "follow-cycle-detected.condition.json",
-      "following-leader-is-event-entity.condition.json",
-      "followers-to-move-exist.condition.json",
-      "resolved-target-location-null.condition.json"
+      "actor-has-name-and-position.condition.json"
+    ],
+    "entityDefinitions": [],
+    "entityInstances": [],
+    "events": [
+      "action_decided.event.json",
+      "ai_turn_processing_ended.event.json",
+      "ai_turn_processing_started.event.json",
+      "attempt_action.event.json",
+      "disable_input.event.json",
+      "display_error.event.json",
+      "display_failed_action_result.event.json",
+      "display_speech.event.json",
+      "display_successful_action_result.event.json",
+      "display_warning.event.json",
+      "enable_input.event.json",
+      "entity_moved.event.json",
+      "entity_spoke.event.json",
+      "perceptible_event.event.json",
+      "player_turn_prompt.event.json",
+      "player_turn_submitted.event.json",
+      "set_title.event.json",
+      "system_error_occurred.event.json",
+      "system_warning_occurred.event.json",
+      "turn_processing_started.event.json",
+      "turn_processing_ended.event.json",
+      "turn_ended.event.json",
+      "turn_started.event.json",
+      "ui_operation_in_progress.event.json",
+      "ui_ready.event.json",
+      "ui_request_show_load_game.event.json",
+      "ui_request_show_save_game.event.json",
+      "ui_stopped.event.json",
+      "update_available_actions.event.json"
+    ],
+    "macros": [
+      "autoMoveFollower.macro.json",
+      "displaySuccessAndEndTurn.macro.json",
+      "logFailureAndEndTurn.macro.json",
+      "logSuccessAndEndTurn.macro.json"
+    ],
+    "rules": [
+      "dismiss.rule.json",
+      "entity_speech.rule.json",
+      "follow.rule.json",
+      "follow_auto_move.rule.json",
+      "go.rule.json",
+      "log_perceptible_events.rule.json",
+      "player_turn_prompt.rule.json",
+      "stop_following.rule.json",
+      "turn_ended.rule.json",
+      "turn_started.rule.json",
+      "wait.rule.json"
+    ],
+    "ui": [
+      "icons.json",
+      "labels.json"
     ]
   }
 }
