@@ -2,7 +2,7 @@
 
 import { getModuleLogger } from './loggerUtils.js';
 import { safeDispatchError } from './safeDispatchErrorUtils.js';
-import { SafeEventDispatcher } from '../events/safeEventDispatcher.js';
+import { resolveSafeDispatcher } from './dispatcherUtils.js';
 
 /**
  * Safely stores a value into `execCtx.evaluationContext.context`. If the context
@@ -19,18 +19,7 @@ import { SafeEventDispatcher } from '../events/safeEventDispatcher.js';
  */
 export function storeResult(variableName, value, execCtx, dispatcher, logger) {
   const log = getModuleLogger('contextVariableUtils', logger);
-
-  let safeDispatcher = dispatcher;
-  if (!safeDispatcher && execCtx?.validatedEventDispatcher) {
-    try {
-      safeDispatcher = new SafeEventDispatcher({
-        validatedEventDispatcher: execCtx.validatedEventDispatcher,
-        logger: log,
-      });
-    } catch {
-      safeDispatcher = null;
-    }
-  }
+  const safeDispatcher = resolveSafeDispatcher(execCtx, dispatcher, log);
 
   const hasContext =
     execCtx?.evaluationContext &&
@@ -89,17 +78,7 @@ export function setContextValue(
   const log = getModuleLogger('contextVariableUtils', logger);
 
   if (!trimmedName) {
-    let safeDispatcher = dispatcher;
-    if (!safeDispatcher && execCtx?.validatedEventDispatcher) {
-      try {
-        safeDispatcher = new SafeEventDispatcher({
-          validatedEventDispatcher: execCtx.validatedEventDispatcher,
-          logger: log,
-        });
-      } catch {
-        safeDispatcher = null;
-      }
-    }
+    const safeDispatcher = resolveSafeDispatcher(execCtx, dispatcher, log);
 
     if (safeDispatcher) {
       safeDispatchError(
