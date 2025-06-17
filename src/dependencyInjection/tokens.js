@@ -248,6 +248,7 @@ export const tokens = freeze({
 
   // --- Turn System Factories ---
   ITurnStateFactory: 'ITurnStateFactory',
+  TurnStrategyFactory: 'TurnStrategyFactory',
   AIStrategyFactory: 'AIStrategyFactory',
   ITurnContextFactory: 'ITurnContextFactory',
   HumanStrategyFactory: 'HumanStrategyFactory',
