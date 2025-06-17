@@ -102,11 +102,7 @@ export function registerTurnLifecycle(container) {
   );
 
   // ────────────────── Turn Strategy Factory ──────────────────
-  registerGenericStrategy(
-    container,
-    tokens.IHumanDecisionProvider,
-    tokens.HumanStrategyFactory
-  );
+  registerGenericStrategy(container, tokens.IHumanDecisionProvider);
 
   // ──────────────────── Validation Utils ─────────────────────
   r.singletonFactory(
