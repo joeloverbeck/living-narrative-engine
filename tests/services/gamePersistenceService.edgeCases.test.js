@@ -1,7 +1,9 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import GamePersistenceService from '../../src/persistence/gamePersistenceService.js';
 import GameStateCaptureService from '../../src/persistence/gameStateCaptureService.js';
-import ComponentCleaningService from '../../src/persistence/componentCleaningService.js';
+import ComponentCleaningService, {
+  buildDefaultComponentCleaners,
+} from '../../src/persistence/componentCleaningService.js';
 import {
   NOTES_COMPONENT_ID,
   SHORT_TERM_MEMORY_COMPONENT_ID,
@@ -51,6 +53,7 @@ describe('GamePersistenceService edge cases', () => {
     componentCleaningService = new ComponentCleaningService({
       logger,
       safeEventDispatcher,
+      defaultCleaners: buildDefaultComponentCleaners(logger),
     });
     metadataBuilder = {
       build: jest.fn((n, p) => {

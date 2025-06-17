@@ -11,6 +11,56 @@ import {
 import { SYSTEM_ERROR_OCCURRED_ID } from '../constants/eventIds.js';
 
 /**
+ * Creates the built-in cleaners using the provided logger.
+ *
+ * @param {import('../interfaces/coreServices.js').ILogger} logger - Logging service.
+ * @returns {Record<string, (data: any) => any>} Map of default cleaners.
+ */
+export function buildDefaultComponentCleaners(logger) {
+  return {
+    [NOTES_COMPONENT_ID]: (data) => {
+      if (data.notes && Array.isArray(data.notes) && data.notes.length === 0) {
+        logger.debug(
+          `Omitting empty 'notes' array from component '${NOTES_COMPONENT_ID}'.`
+        );
+        delete data.notes;
+      }
+      return data;
+    },
+    [SHORT_TERM_MEMORY_COMPONENT_ID]: (data) => {
+      if (
+        data.thoughts &&
+        typeof data.thoughts === 'string' &&
+        !data.thoughts.trim()
+      ) {
+        logger.debug(
+          `Omitting blank 'thoughts' from component '${SHORT_TERM_MEMORY_COMPONENT_ID}'.`
+        );
+        delete data.thoughts;
+      }
+      return data;
+    },
+    [PERCEPTION_LOG_COMPONENT_ID]: (data) => {
+      if (data.log && Array.isArray(data.log)) {
+        data.log.forEach((entry) => {
+          if (
+            entry?.action?.speech &&
+            typeof entry.action.speech === 'string' &&
+            !entry.action.speech.trim()
+          ) {
+            logger.debug(
+              "Omitting blank 'speech' from a perception log entry."
+            );
+            delete entry.action.speech;
+          }
+        });
+      }
+      return data;
+    },
+  };
+}
+
+/**
  * @class ComponentCleaningService
  * @implements {IComponentCleaningService}
  * @description Provides registration and execution of component data cleaners.
@@ -32,7 +82,7 @@ class ComponentCleaningService {
    * @param {import('../interfaces/coreServices.js').ILogger} dependencies.logger - Logging service.
    * @param dependencies.safeEventDispatcher
    */
-  constructor({ logger, safeEventDispatcher }) {
+  constructor({ logger, safeEventDispatcher, defaultCleaners } = {}) {
     this.#logger = setupService('ComponentCleaningService', logger, {
       safeEventDispatcher: {
         value: safeEventDispatcher,
@@ -42,18 +92,15 @@ class ComponentCleaningService {
     this.#safeEventDispatcher = safeEventDispatcher;
     this.#cleaners = new Map();
 
-    this.registerCleaner(
-      NOTES_COMPONENT_ID,
-      this.#cleanNotesComponent.bind(this)
-    );
-    this.registerCleaner(
-      SHORT_TERM_MEMORY_COMPONENT_ID,
-      this.#cleanShortTermMemoryComponent.bind(this)
-    );
-    this.registerCleaner(
-      PERCEPTION_LOG_COMPONENT_ID,
-      this.#cleanPerceptionLogComponent.bind(this)
-    );
+    const entries = defaultCleaners
+      ? defaultCleaners instanceof Map
+        ? defaultCleaners.entries()
+        : Object.entries(defaultCleaners)
+      : [];
+
+    for (const [componentId, cleanerFn] of entries) {
+      this.registerCleaner(componentId, cleanerFn);
+    }
 
     this.#logger.debug('ComponentCleaningService: Instance created.');
   }
@@ -102,69 +149,6 @@ class ComponentCleaningService {
       dataToSave = cleaner(dataToSave);
     }
     return dataToSave;
-  }
-
-  /**
-   * Removes empty notes arrays from notes components.
-   *
-   * @param {any} data - Component data.
-   * @returns {any} Cleaned data.
-   * @private
-   */
-  #cleanNotesComponent(data) {
-    if (data.notes && Array.isArray(data.notes) && data.notes.length === 0) {
-      this.#logger.debug(
-        `Omitting empty 'notes' array from component '${NOTES_COMPONENT_ID}'.`
-      );
-      delete data.notes;
-    }
-    return data;
-  }
-
-  /**
-   * Removes blank thoughts from short-term memory components.
-   *
-   * @param {any} data - Component data.
-   * @returns {any} Cleaned data.
-   * @private
-   */
-  #cleanShortTermMemoryComponent(data) {
-    if (
-      data.thoughts &&
-      typeof data.thoughts === 'string' &&
-      !data.thoughts.trim()
-    ) {
-      this.#logger.debug(
-        `Omitting blank 'thoughts' from component '${SHORT_TERM_MEMORY_COMPONENT_ID}'.`
-      );
-      delete data.thoughts;
-    }
-    return data;
-  }
-
-  /**
-   * Cleans perception log entries of blank speech fields.
-   *
-   * @param {any} data - Component data.
-   * @returns {any} Cleaned data.
-   * @private
-   */
-  #cleanPerceptionLogComponent(data) {
-    if (data.log && Array.isArray(data.log)) {
-      data.log.forEach((entry) => {
-        if (
-          entry?.action?.speech &&
-          typeof entry.action.speech === 'string' &&
-          !entry.action.speech.trim()
-        ) {
-          this.#logger.debug(
-            "Omitting blank 'speech' from a perception log entry."
-          );
-          delete entry.action.speech;
-        }
-      });
-    }
-    return data;
   }
 }
 
