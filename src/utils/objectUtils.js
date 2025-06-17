@@ -8,6 +8,7 @@ import {
   createPersistenceFailure,
   createPersistenceSuccess,
 } from '../persistence/persistenceResultUtils.js';
+import { ensureValidLogger } from './loggerUtils.js';
 
 /**
  * @file Utility functions for working with plain JavaScript objects.
@@ -112,6 +113,7 @@ export function deepClone(value) {
  *   Clone result object.
  */
 export function safeDeepClone(value, logger) {
+  const log = ensureValidLogger(logger, 'ObjectUtils');
   try {
     /** @type {T} */
     const cloned = deepClone(value);
