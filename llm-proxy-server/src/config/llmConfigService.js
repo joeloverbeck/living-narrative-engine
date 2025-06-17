@@ -2,7 +2,6 @@
 // --- FILE START ---
 
 import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import {
   LOCAL_API_TYPES_REQUIRING_NO_PROXY_KEY,
   DEFAULT_ENCODING_UTF8,
@@ -62,9 +61,6 @@ import {
  * @property {Error} [originalError] - The original error object (primarily for internal logging, not direct client exposure).
  */
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
 /**
  *
  */
@@ -109,8 +105,8 @@ export class LlmConfigService {
     this.#appConfig = appConfig;
 
     this.#_defaultLlmConfigPath = path.resolve(
-      __dirname,
-      '../../../config/llm-configs.json'
+      process.cwd(),
+      'config/llm-configs.json'
     );
 
     this.#logger.debug('LlmConfigService: Instance created.');
