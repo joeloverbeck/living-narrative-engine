@@ -102,7 +102,6 @@ describe('StaticConfiguration', () => {
     config = new StaticConfiguration();
   });
 
-  it('should instantiate without errors', () => {
     expect(config).toBeInstanceOf(StaticConfiguration);
   });
 
