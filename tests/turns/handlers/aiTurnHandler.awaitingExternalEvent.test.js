@@ -1,14 +1,14 @@
 /**
  * @file Test suite that proves state isolation within the TurnContext.
  * @description This test verifies that per-turn state, such as waiting for an external event,
- * is managed by the TurnContext and does not leak between turns handled by the same AITurnHandler instance.
+ * is managed by the TurnContext and does not leak between turns handled by the same ActorTurnHandler instance.
  * This confirms a key benefit of the refactoring.
  * @see tests/turns/handlers/aiTurnHandler.awaitingExternalEvent.test.js
  */
 
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 
-import AITurnHandler from '../../../src/turns/handlers/aiTurnHandler.js';
+import ActorTurnHandler from '../../../src/turns/handlers/actorTurnHandler.js';
 
 /**
  * @typedef {import('../../../src/entities/entity.js').default} Entity
@@ -22,7 +22,7 @@ describe('TurnContext State Isolation', () => {
   let mockTurnEndPort;
 
   beforeEach(() => {
-    // Mock primary dependencies required by AITurnHandler and its factories
+    // Mock primary dependencies required by ActorTurnHandler and its factories
     mockLogger = {
       debug: jest.fn(),
       info: jest.fn(),
@@ -84,10 +84,10 @@ describe('TurnContext State Isolation', () => {
 
   it('should ensure `isAwaitingExternalEvent` state is isolated between turns', async () => {
     // --- Arrange ---
-    // CORRECTED: The AITurnHandler is now instantiated with only its direct dependencies.
+    // CORRECTED: The ActorTurnHandler is now instantiated with only its direct dependencies.
     // The long list of services has been removed as they are now encapsulated
     // within the factories.
-    const handler = new AITurnHandler({
+    const handler = new ActorTurnHandler({
       logger: mockLogger,
       turnStateFactory: mockTurnStateFactory,
       turnEndPort: mockTurnEndPort,

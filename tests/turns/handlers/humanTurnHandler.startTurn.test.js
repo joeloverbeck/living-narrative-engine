@@ -1,10 +1,10 @@
 /**
- * @file Test suite for the startTurn behavior of HumanTurnHandler.
+ * @file Test suite for the startTurn behavior of ActorTurnHandler.
  * @see tests/turns/handlers/humanTurnHandler.startTurn.test.js
  */
 
 import { jest, describe, beforeEach, expect, it } from '@jest/globals';
-import HumanTurnHandler from '../../../src/turns/handlers/humanTurnHandler.js';
+import ActorTurnHandler from '../../../src/turns/handlers/actorTurnHandler.js';
 
 /**
  * Creates a mock object with specified methods, which are all Jest mock functions.
@@ -18,7 +18,7 @@ const createMock = (methods) =>
     return mock;
   }, {});
 
-describe('HumanTurnHandler', () => {
+describe('ActorTurnHandler', () => {
   let mockLogger;
   let mockTurnStateFactory;
   let mockCommandProcessor;
@@ -71,12 +71,12 @@ describe('HumanTurnHandler', () => {
   });
 
   /**
-   * Helper to create a HumanTurnHandler instance with all mocks.
+   * Helper to create a ActorTurnHandler instance with all mocks.
    *
-   * @returns {HumanTurnHandler}
+   * @returns {ActorTurnHandler}
    */
   const createInstance = () => {
-    return new HumanTurnHandler({
+    return new ActorTurnHandler({
       logger: mockLogger,
       turnStateFactory: mockTurnStateFactory,
       commandProcessor: mockCommandProcessor,

@@ -1,14 +1,14 @@
 /**
- * @file Test suite for AITurnHandler.
- * @description These tests verify the orchestration logic of AITurnHandler, ensuring it correctly
+ * @file Test suite for ActorTurnHandler.
+ * @description These tests verify the orchestration logic of ActorTurnHandler, ensuring it correctly
  * uses its dependencies (factories) to start and manage an AI's turn without containing business logic itself.
  * @see tests/turns/handlers/aiTurnHandler.test.js
  */
 
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
-import { AITurnHandler } from '../../../src/turns/handlers/aiTurnHandler.js';
+import { ActorTurnHandler } from '../../../src/turns/handlers/actorTurnHandler.js';
 
-// Create mocks for all direct dependencies of AITurnHandler.
+// Create mocks for all direct dependencies of ActorTurnHandler.
 const mockLogger = {
   debug: jest.fn(),
   info: jest.fn(),
@@ -52,7 +52,7 @@ const mockTurnContextBuilder = {
 
 const mockActor = { id: 'ai-actor-1', name: 'Test AI' };
 
-describe('AITurnHandler', () => {
+describe('ActorTurnHandler', () => {
   let handler;
   const dependencies = {
     logger: mockLogger,
@@ -67,14 +67,14 @@ describe('AITurnHandler', () => {
     jest.clearAllMocks();
 
     // Re-create the handler before each test
-    handler = new AITurnHandler(dependencies);
+    handler = new ActorTurnHandler(dependencies);
   });
 
   describe('Constructor', () => {
     it('should throw an error if the logger dependency is missing', () => {
       const deps = { ...dependencies, logger: undefined };
       // BaseTurnHandler is responsible for this check
-      expect(() => new AITurnHandler(deps)).toThrow(
+      expect(() => new ActorTurnHandler(deps)).toThrow(
         'BaseTurnHandler: logger is required.'
       );
     });
@@ -82,28 +82,28 @@ describe('AITurnHandler', () => {
     it('should throw an error if the turnStateFactory dependency is missing', () => {
       const deps = { ...dependencies, turnStateFactory: undefined };
       // BaseTurnHandler is responsible for this check
-      expect(() => new AITurnHandler(deps)).toThrow(
+      expect(() => new ActorTurnHandler(deps)).toThrow(
         'BaseTurnHandler: turnStateFactory is required.'
       );
     });
 
     it('should throw an error if the turnEndPort dependency is missing', () => {
       const deps = { ...dependencies, turnEndPort: undefined };
-      expect(() => new AITurnHandler(deps)).toThrow(
+      expect(() => new ActorTurnHandler(deps)).toThrow(
         'GenericTurnHandler: turnEndPort is required'
       );
     });
 
     it('should throw an error if the strategyFactory is missing', () => {
       const deps = { ...dependencies, strategyFactory: undefined };
-      expect(() => new AITurnHandler(deps)).toThrow(
+      expect(() => new ActorTurnHandler(deps)).toThrow(
         'GenericTurnHandler: strategyFactory is required'
       );
     });
 
     it('should throw an error if the turnContextBuilder is missing', () => {
       const deps = { ...dependencies, turnContextBuilder: undefined };
-      expect(() => new AITurnHandler(deps)).toThrow(
+      expect(() => new ActorTurnHandler(deps)).toThrow(
         'GenericTurnHandler: turnContextBuilder is required'
       );
     });
@@ -111,7 +111,7 @@ describe('AITurnHandler', () => {
     it('should create and set an initial state using the turnStateFactory', () => {
       expect(mockTurnStateFactory.createInitialState).toHaveBeenCalledTimes(1);
       expect(mockTurnStateFactory.createInitialState).toHaveBeenCalledWith(
-        expect.any(AITurnHandler)
+        expect.any(ActorTurnHandler)
       );
       // Expose internal property for testing purposes.
       expect(handler._currentState).toBe(mockTurnState);
@@ -121,7 +121,7 @@ describe('AITurnHandler', () => {
   describe('startTurn', () => {
     it('should throw an error if the actor is null or invalid', async () => {
       const expectedError =
-        'AITurnHandler.startTurn: entity is required and must have a valid id.';
+        'ActorTurnHandler.startTurn: entity is required and must have a valid id.';
       await expect(handler.startTurn(null)).rejects.toThrow(expectedError);
       await expect(handler.startTurn({ id: ' ' })).rejects.toThrow(
         expectedError

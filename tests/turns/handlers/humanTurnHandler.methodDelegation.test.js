@@ -6,12 +6,12 @@ import {
   beforeEach,
   afterEach,
 } from '@jest/globals';
-import HumanTurnHandler from '../../../src/turns/handlers/humanTurnHandler.js';
+import ActorTurnHandler from '../../../src/turns/handlers/actorTurnHandler.js';
 import { BaseTurnHandler } from '../../../src/turns/handlers/baseTurnHandler.js';
 
 // reusing constructor setup from existing tests
 
-describe('HumanTurnHandler method delegation', () => {
+describe('ActorTurnHandler method delegation', () => {
   let deps;
   let mockLogger;
   let mockTurnStateFactory;
@@ -83,7 +83,7 @@ describe('HumanTurnHandler method delegation', () => {
   });
 
   it('delegates handleSubmittedCommand to current state', async () => {
-    const handler = new HumanTurnHandler(deps);
+    const handler = new ActorTurnHandler(deps);
     const actor = { id: 'a1' };
     const mockState = {
       getStateName: () => 'state',
@@ -105,7 +105,7 @@ describe('HumanTurnHandler method delegation', () => {
   });
 
   it('delegates handleTurnEndedEvent to current state', async () => {
-    const handler = new HumanTurnHandler(deps);
+    const handler = new ActorTurnHandler(deps);
     const actor = { id: 'a2' };
     const mockState = {
       getStateName: () => 'state',

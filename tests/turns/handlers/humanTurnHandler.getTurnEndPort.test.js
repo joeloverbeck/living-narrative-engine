@@ -6,7 +6,7 @@ import {
   beforeEach,
   afterEach,
 } from '@jest/globals';
-import HumanTurnHandler from '../../../src/turns/handlers/humanTurnHandler.js';
+import ActorTurnHandler from '../../../src/turns/handlers/actorTurnHandler.js';
 import { BaseTurnHandler } from '../../../src/turns/handlers/baseTurnHandler.js';
 
 // Minimal dependency mocks
@@ -68,9 +68,9 @@ afterEach(() => {
   jest.restoreAllMocks();
 });
 
-describe('HumanTurnHandler.getTurnEndPort', () => {
+describe('ActorTurnHandler.getTurnEndPort', () => {
   it('returns the injected turnEndPort instance', () => {
-    const handler = new HumanTurnHandler(deps);
+    const handler = new ActorTurnHandler(deps);
     expect(handler.getTurnEndPort()).toBe(deps.turnEndPort);
   });
 });

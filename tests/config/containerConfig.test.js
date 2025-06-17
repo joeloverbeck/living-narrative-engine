@@ -15,7 +15,6 @@ import {
   it,
   jest,
 } from '@jest/globals';
-import HumanTurnHandler from '../../src/turns/handlers/humanTurnHandler';
 import ActorTurnHandler from '../../src/turns/handlers/actorTurnHandler.js';
 
 // Mock external dependencies (DOM elements, document)
@@ -71,15 +70,14 @@ describe('Dependency Injection Container Configuration', () => {
     expect(typeof instance.interpret).toBe('function'); // public API check
   });
 
-  // Test 2: VerifyHumanTurnHandler (which depends on CommandOutcomeInterpreter) can be resolved
-  it('should resolveHumanTurnHandler successfully', () => {
-    const instance = container.resolve(tokens.HumanTurnHandler);
-    expect(instance).toBeInstanceOf(HumanTurnHandler);
+  // Test 2: Verify ActorTurnHandler (which depends on CommandOutcomeInterpreter) can be resolved
+  it('should resolve ActorTurnHandler successfully', () => {
+    const instance = container.resolve(tokens.ActorTurnHandler);
     expect(instance).toBeInstanceOf(ActorTurnHandler);
     expect(typeof instance.startTurn).toBe('function'); // public API check
   });
 
-  // Test 3: Verify ITurnManager (which depends onHumanTurnHandler via Resolver) can be resolved
+  // Test 3: Verify ITurnManager (which depends on ActorTurnHandler via Resolver) can be resolved
   it('should resolve ITurnManager successfully', () => {
     const instance = container.resolve(tokens.ITurnManager);
     expect(instance).toBeInstanceOf(TurnManager);

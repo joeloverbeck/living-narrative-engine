@@ -9,9 +9,9 @@ import {
   afterEach,
 } from '@jest/globals';
 import { BaseTurnHandler } from '../../../src/turns/handlers/baseTurnHandler.js';
-import HumanTurnHandler from '../../../src/turns/handlers/humanTurnHandler.js';
+import ActorTurnHandler from '../../../src/turns/handlers/actorTurnHandler.js';
 
-describe('HumanTurnHandler Constructor', () => {
+describe('ActorTurnHandler Constructor', () => {
   let mockLogger;
   let mockTurnStateFactory;
   let mockTurnEndPort;
@@ -75,13 +75,13 @@ describe('HumanTurnHandler Constructor', () => {
     let handler;
 
     expect(() => {
-      handler = new HumanTurnHandler(deps);
+      handler = new ActorTurnHandler(deps);
     }).not.toThrow();
 
-    expect(handler).toBeInstanceOf(HumanTurnHandler);
+    expect(handler).toBeInstanceOf(ActorTurnHandler);
     expect(mockLogger.debug).toHaveBeenCalledWith(
       expect.stringContaining(
-        'HumanTurnHandler initialised. Dependencies assigned. Initial state set.'
+        'ActorTurnHandler initialised. Dependencies assigned. Initial state set.'
       )
     );
     expect(mockTurnStateFactory.createInitialState).toHaveBeenCalledWith(
@@ -94,7 +94,7 @@ describe('HumanTurnHandler Constructor', () => {
   it('should throw an error if logger is not provided', () => {
     const deps = getValidDependencies();
     delete deps.logger;
-    expect(() => new HumanTurnHandler(deps)).toThrow(
+    expect(() => new ActorTurnHandler(deps)).toThrow(
       'BaseTurnHandler: logger is required.'
     );
   });
@@ -102,7 +102,7 @@ describe('HumanTurnHandler Constructor', () => {
   it('should throw an error if turnStateFactory is not provided', () => {
     const deps = getValidDependencies();
     delete deps.turnStateFactory;
-    expect(() => new HumanTurnHandler(deps)).toThrow(
+    expect(() => new ActorTurnHandler(deps)).toThrow(
       'BaseTurnHandler: turnStateFactory is required.'
     );
   });
@@ -110,7 +110,7 @@ describe('HumanTurnHandler Constructor', () => {
   it('should throw an error if turnEndPort is not provided', () => {
     const deps = getValidDependencies();
     delete deps.turnEndPort;
-    expect(() => new HumanTurnHandler(deps)).toThrow(
+    expect(() => new ActorTurnHandler(deps)).toThrow(
       'GenericTurnHandler: turnEndPort is required'
     );
   });
@@ -119,7 +119,7 @@ describe('HumanTurnHandler Constructor', () => {
   it('should throw an error if turnStrategyFactory is not provided', () => {
     const deps = getValidDependencies();
     delete deps.turnStrategyFactory;
-    expect(() => new HumanTurnHandler(deps)).toThrow(
+    expect(() => new ActorTurnHandler(deps)).toThrow(
       'GenericTurnHandler: strategyFactory is required'
     );
   });
@@ -130,15 +130,15 @@ describe('HumanTurnHandler Constructor', () => {
 
     let handler;
     expect(() => {
-      handler = new HumanTurnHandler(deps);
+      handler = new ActorTurnHandler(deps);
     }).not.toThrow();
-    expect(handler).toBeInstanceOf(HumanTurnHandler);
+    expect(handler).toBeInstanceOf(ActorTurnHandler);
   });
 
   it('should call _setInitialState with the state from the factory', () => {
     const deps = getValidDependencies();
 
-    const handler = new HumanTurnHandler(deps);
+    const handler = new ActorTurnHandler(deps);
 
     expect(mockTurnStateFactory.createInitialState).toHaveBeenCalledTimes(1);
     expect(mockTurnStateFactory.createInitialState).toHaveBeenCalledWith(

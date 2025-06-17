@@ -6,13 +6,13 @@ import {
   beforeEach,
   afterEach,
 } from '@jest/globals';
-import HumanTurnHandler from '../../../src/turns/handlers/humanTurnHandler.js';
+import ActorTurnHandler from '../../../src/turns/handlers/actorTurnHandler.js';
 import { BaseTurnHandler } from '../../../src/turns/handlers/baseTurnHandler.js';
 import { ActorMismatchError } from '../../../src/errors/actorMismatchError.js';
 
 // New test verifying handleSubmittedCommand awaits endTurn on actor mismatch
 
-describe('HumanTurnHandler handleSubmittedCommand actor mismatch', () => {
+describe('ActorTurnHandler handleSubmittedCommand actor mismatch', () => {
   let deps;
   let mockLogger;
   let mockTurnStateFactory;
@@ -85,7 +85,7 @@ describe('HumanTurnHandler handleSubmittedCommand actor mismatch', () => {
   });
 
   it('awaits endTurn when actor mismatches the active context', async () => {
-    const handler = new HumanTurnHandler(deps);
+    const handler = new ActorTurnHandler(deps);
     const actorInContext = { id: 'actorA' };
     const actorSubmitting = { id: 'actorB' };
 

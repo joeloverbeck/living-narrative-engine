@@ -1,6 +1,6 @@
 /* eslint-env node */
 /**
- * @file Registers all AI-related services, including the LLM adapter, prompting pipeline, and the AITurnHandler.
+ * @file Registers all AI-related services, including the LLM adapter, prompting pipeline, and the ActorTurnHandler.
  * @see src/dependencyInjection/registrations/aiRegistrations.js
  */
 
@@ -39,7 +39,7 @@
 /** @typedef {import('../../prompting/assembling/perceptionLogAssembler.js').PerceptionLogAssembler} PerceptionLogAssembler_Concrete */
 /** @typedef {import('../../prompting/assembling/thoughtsSectionAssembler.js').default} ThoughtsSectionAssembler_Concrete */
 /** @typedef {import('../../prompting/assembling/notesSectionAssembler.js').default} NotesSectionAssembler_Concrete */
-/** @typedef {import('../../turns/handlers/aiTurnHandler.js').default} AITurnHandler_Concrete */
+/** @typedef {import('../../turns/handlers/actorTurnHandler.js').default} ActorTurnHandler_Concrete */
 /** @typedef {import('../../llms/LLMStrategyFactory.js').LLMStrategyFactory} LLMStrategyFactory_Concrete */
 
 // --- DI & Helper Imports ---
@@ -54,7 +54,7 @@ import { RetryHttpClient } from '../../llms/retryHttpClient.js';
 import { LLMStrategyFactory } from '../../llms/LLMStrategyFactory.js';
 
 // --- AI Turn Handler Import ---
-import AITurnHandler from '../../turns/handlers/aiTurnHandler.js';
+import ActorTurnHandler from '../../turns/handlers/actorTurnHandler.js';
 
 // --- Prompting & AI Service Imports ---
 import { PromptStaticContentService } from '../../prompting/promptStaticContentService.js';
@@ -413,9 +413,9 @@ export function registerAI(container) {
   // --- AI TURN HANDLER (MODIFIED) ---
 
   r.tagged(SHUTDOWNABLE).transientFactory(
-    tokens.AITurnHandler,
+    tokens.ActorTurnHandler,
     (c) =>
-      new AITurnHandler({
+      new ActorTurnHandler({
         logger: c.resolve(tokens.ILogger),
         turnStateFactory: c.resolve(tokens.ITurnStateFactory),
         turnEndPort: c.resolve(tokens.ITurnEndPort),
@@ -424,7 +424,7 @@ export function registerAI(container) {
       })
   );
   logger.debug(
-    `AI Systems Registration: Registered refactored ${tokens.AITurnHandler}.`
+    `AI Systems Registration: Registered refactored ${tokens.ActorTurnHandler}.`
   );
 
   logger.debug('AI Systems Registration: All registrations complete.');
