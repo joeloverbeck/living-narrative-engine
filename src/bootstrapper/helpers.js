@@ -4,6 +4,8 @@
  * @file Utility helpers used during application bootstrap stages.
  */
 
+import StageError from './StageError.js';
+
 /**
  * @typedef {import('../dependencyInjection/appContainer.js').default} AppContainer
  * @typedef {import('../interfaces/coreServices.js').ILogger} ILogger
@@ -101,6 +103,37 @@ export function shouldStopEngine(gameEngine) {
  */
 export function attachBeforeUnload(windowRef, handler) {
   windowRef.addEventListener('beforeunload', handler);
+}
+
+/**
+ * @description Creates an Error annotated with the bootstrap phase and optional cause.
+ * @param {string} phase - Name of the bootstrap phase where the error occurred.
+ * @param {string} message - Error message.
+ * @param {Error} [cause] - Optional underlying cause.
+ * @returns {Error} The constructed Error instance.
+ */
+export function createStageError(phase, message, cause) {
+  return new StageError(phase, message, cause);
+}
+
+/**
+ * @description Helper to create a successful StageResult.
+ * @param {any} [payload] - Optional payload to include in the result.
+ * @returns {import('../types/stageResult.js').StageResult}
+ */
+export function stageSuccess(payload) {
+  return { success: true, payload };
+}
+
+/**
+ * @description Helper to create a failed StageResult with a StageError.
+ * @param {string} phase - Name of the bootstrap phase where the failure occurred.
+ * @param {string} message - Error message.
+ * @param {Error} [cause] - Optional underlying cause.
+ * @returns {import('../types/stageResult.js').StageResult}
+ */
+export function stageFailure(phase, message, cause) {
+  return { success: false, error: createStageError(phase, message, cause) };
 }
 
 // --- FILE END ---

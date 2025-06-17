@@ -34,7 +34,7 @@ jest.mock('../../src/modding/modLoadOrderResolver.js', () => ({
 /** @typedef {import('../../src/loaders/schemaLoader.js').default} SchemaLoader */
 /** @typedef {import('../../src/loaders/gameConfigLoader.js').default} GameConfigLoader */
 /** @typedef {import('../../src/modding/modManifestLoader.js').default} ModManifestLoader */
-/** @typedef {import('../../src/loaders/entityLoader.js').default} EntityLoader */
+/** @typedef {import('../../src/loaders/entityDefinitionLoader.js').default} EntityLoader */
 /** @typedef {import('../../../interfaces/manifestItems.js').ModManifest} ModManifest */
 /** @typedef {import('../../../services/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
 
@@ -212,7 +212,7 @@ describe('WorldLoader Integration Test Suite - Mod Overrides and Load Order (Sub
       dispatch: jest.fn().mockResolvedValue(undefined),
     };
 
-    // Mock individual content loaders (only EntityLoader is relevant here)
+    // Mock individual content loaders (only EntityDefinitionLoader is relevant here)
     mockActionLoader = {
       loadItemsForMod: jest
         .fn()
@@ -247,21 +247,21 @@ describe('WorldLoader Integration Test Suite - Mod Overrides and Load Order (Sub
       version: '1.0.0',
       name: 'Core',
       gameVersion: '^1.0.0',
-      content: { items: [itemFilename] },
+      content: { entityDefinitions: [itemFilename] },
     };
     mockFooManifest = {
       id: fooModId,
       version: '1.0.0',
       name: 'Foo Mod',
       gameVersion: '^1.0.0',
-      content: { items: [itemFilename] },
+      content: { entityDefinitions: [itemFilename] },
     };
     mockBarManifest = {
       id: barModId,
       version: '1.0.0',
       name: 'Bar Mod',
       gameVersion: '^1.0.0',
-      content: { items: [itemFilename] },
+      content: { entityDefinitions: [itemFilename] },
     };
 
     mockManifestMap = new Map();
@@ -286,6 +286,7 @@ describe('WorldLoader Integration Test Suite - Mod Overrides and Load Order (Sub
         'schema:events',
         'schema:rules',
         'schema:conditions',
+        'schema:entityInstances',
       ];
       return essentials.includes(schemaId);
     });
@@ -311,7 +312,7 @@ describe('WorldLoader Integration Test Suite - Mod Overrides and Load Order (Sub
     });
     mockedResolveOrder.mockReturnValue(finalOrder); // IMPORTANT: Return the desired load order
 
-    // Configure EntityLoader mock to simulate storage behavior
+    // Configure EntityDefinitionLoader mock to simulate storage behavior
     // It should call registry.store with the correct prefixed ID and data based on the mod being processed.
     mockEntityLoader.loadItemsForMod.mockImplementation(
       async (
@@ -321,7 +322,10 @@ describe('WorldLoader Integration Test Suite - Mod Overrides and Load Order (Sub
         contentTypeDirArg,
         typeNameArg
       ) => {
-        if (typeNameArg === 'items' && contentKeyArg === 'items') {
+        if (
+          typeNameArg === 'entityDefinitions' &&
+          contentKeyArg === 'entityDefinitions'
+        ) {
           // Determine which data to "load" and store based on the modId
           let itemData;
           if (modIdArg === CORE_MOD_ID) {
@@ -374,7 +378,7 @@ describe('WorldLoader Integration Test Suite - Mod Overrides and Load Order (Sub
       ruleLoader: mockRuleLoader,
       actionLoader: mockActionLoader,
       eventLoader: mockEventLoader,
-      entityLoader: mockEntityLoader, // Pass the mocked EntityLoader
+      entityLoader: mockEntityLoader, // Pass the mocked EntityDefinitionLoader
       validator: mockValidator,
       configuration: mockConfiguration,
       gameConfigLoader: mockGameConfigLoader,
@@ -399,32 +403,32 @@ describe('WorldLoader Integration Test Suite - Mod Overrides and Load Order (Sub
       finalOrder
     );
 
-    // 2. Verify EntityLoader.loadItemsForMod was called sequentially for each mod in finalOrder
+    // 2. Verify EntityDefinitionLoader.loadItemsForMod was called sequentially for each mod in finalOrder
     expect(mockEntityLoader.loadItemsForMod).toHaveBeenCalledTimes(3);
     // Check calls with correct arguments in the expected order
     expect(mockEntityLoader.loadItemsForMod).toHaveBeenNthCalledWith(
       1,
       CORE_MOD_ID,
       mockCoreManifest,
-      'items',
-      'items',
-      'items'
+      'entityDefinitions',
+      'entities/definitions',
+      'entityDefinitions'
     );
     expect(mockEntityLoader.loadItemsForMod).toHaveBeenNthCalledWith(
       2,
       fooModId,
       mockFooManifest,
-      'items',
-      'items',
-      'items'
+      'entityDefinitions',
+      'entities/definitions',
+      'entityDefinitions'
     );
     expect(mockEntityLoader.loadItemsForMod).toHaveBeenNthCalledWith(
       3,
       barModId,
       mockBarManifest,
-      'items',
-      'items',
-      'items'
+      'entityDefinitions',
+      'entities/definitions',
+      'entityDefinitions'
     );
 
     // 3. Verify Registry Storage - check that store was called with the correct prefixed keys and data
@@ -503,7 +507,7 @@ describe('WorldLoader Integration Test Suite - Mod Overrides and Load Order (Sub
     expect(barPotionFinal).toBeDefined();
     expect(barPotionFinal.description).toContain('Bar potion effect');
 
-    // 6. Verify Summary Log reflects loading items (EntityLoader covers 'items')
+    // 6. Verify Summary Log reflects loading entity definitions
     const infoCalls = mockLogger.info.mock.calls;
     const summaryStart = infoCalls.findIndex((call) =>
       call[0].includes(`WorldLoader Load Summary (World: '${worldName}')`)
@@ -513,7 +517,7 @@ describe('WorldLoader Integration Test Suite - Mod Overrides and Load Order (Sub
     const summaryLines = infoCalls.slice(summaryStart).map((call) => call[0]);
     expect(summaryLines).toEqual(
       expect.arrayContaining([
-        expect.stringMatching(/items\s+: C:3, O:0, E:0/), // 3 items loaded (1 per mod)
+        expect.stringMatching(/entityDefinitions\s+: C:3, O:0, E:0/), // 3 items loaded (1 per mod)
         expect.stringMatching(/TOTAL\s+: C:3, O:0, E:0/), // Grand Total
       ])
     );

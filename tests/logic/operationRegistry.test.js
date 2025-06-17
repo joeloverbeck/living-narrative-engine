@@ -105,10 +105,10 @@ describe('OperationRegistry', () => {
       );
     });
 
-    test('logs warn for non-string type', () => {
+    test('logs error for non-string type via helper', () => {
       registry.getHandler(123);
-      expect(mockLogger.warn).toHaveBeenCalledWith(
-        'OperationRegistry: OperationRegistry.getHandler: Received non-string operationType: number. Returning undefined.'
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'OperationRegistry: OperationRegistry.getHandler: operationType must be a non-empty string.'
       );
     });
   });

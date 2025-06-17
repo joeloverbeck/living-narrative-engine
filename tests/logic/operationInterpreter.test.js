@@ -244,7 +244,9 @@ describe('OperationInterpreter', () => {
     const opMissingType = { parameters: {} };
     interpreter.execute(opMissingType, mockExecutionContext);
     expect(mockRegistry.getHandler).not.toHaveBeenCalled();
-    expect(mockLogger.error).toHaveBeenCalled();
+    expect(mockLogger.error).toHaveBeenCalledWith(
+      'OperationInterpreter: OperationInterpreter.execute: operationType must be a non-empty string.'
+    );
   });
 
   /* ────────────────────────────────────────────────────────────────────────

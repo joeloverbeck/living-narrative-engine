@@ -2,6 +2,7 @@
  * @module SchemaUtils
  * @description Utility helpers for working with schemas.
  */
+import { ensureValidLogger } from './loggerUtils.js';
 
 /**
  * Registers a schema with the provided validator, removing any existing schema
@@ -22,12 +23,11 @@ export async function registerSchema(
   logger,
   warnMessage
 ) {
+  const log = ensureValidLogger(logger, 'SchemaUtils');
   if (validator.isSchemaLoaded(schemaId)) {
-    if (logger && typeof logger.warn === 'function') {
-      logger.warn(
-        warnMessage || `Schema '${schemaId}' already loaded. Overwriting.`
-      );
-    }
+    log.warn(
+      warnMessage || `Schema '${schemaId}' already loaded. Overwriting.`
+    );
     validator.removeSchema(schemaId);
   }
   await validator.addSchema(schema, schemaId);
@@ -56,6 +56,7 @@ export async function registerInlineSchema(
   logger,
   messages = {}
 ) {
+  const log = ensureValidLogger(logger, 'SchemaUtils');
   const {
     warnMessage,
     successDebugMessage,
@@ -65,27 +66,25 @@ export async function registerInlineSchema(
   } = messages;
 
   try {
-    await registerSchema(validator, schema, schemaId, logger, warnMessage);
-    if (successDebugMessage && logger && typeof logger.debug === 'function') {
-      logger.debug(successDebugMessage);
+    await registerSchema(validator, schema, schemaId, log, warnMessage);
+    if (successDebugMessage) {
+      log.debug(successDebugMessage);
     }
   } catch (error) {
-    if (logger && typeof logger.error === 'function') {
-      let context;
-      if (typeof errorContext === 'function') {
-        context = errorContext(error) || {};
-      } else {
-        context = { ...(errorContext || {}) };
-      }
-      if (!('error' in context)) {
-        context.error = error?.message || error;
-      }
-      logger.error(
-        errorLogMessage || `Error registering inline schema '${schemaId}'.`,
-        context,
-        error
-      );
+    let context;
+    if (typeof errorContext === 'function') {
+      context = errorContext(error) || {};
+    } else {
+      context = { ...(errorContext || {}) };
     }
+    if (!('error' in context)) {
+      context.error = error?.message || error;
+    }
+    log.error(
+      errorLogMessage || `Error registering inline schema '${schemaId}'.`,
+      context,
+      error
+    );
     if (throwErrorMessage) {
       throw new Error(throwErrorMessage);
     }

@@ -10,8 +10,9 @@ import {
   POSITION_COMPONENT_ID,
   CURRENT_ACTOR_COMPONENT_ID,
 } from '../constants/componentIds.js';
-import { SYSTEM_ERROR_OCCURRED_ID } from '../constants/eventIds.js';
+import { safeDispatchError } from '../utils/safeDispatchErrorUtils.js';
 import { ISafeEventDispatcher } from '../interfaces/ISafeEventDispatcher.js';
+import { resolveSafeDispatcher } from '../utils/dispatcherUtils.js';
 
 /**
  * Provides a stateless view of the world context, deriving information directly
@@ -73,17 +74,18 @@ class WorldContext extends IWorldContext {
         'WorldContext requires a valid ILogger instance with info, error, debug and warn methods.'
       );
     }
-    if (
-      !safeEventDispatcher ||
-      typeof safeEventDispatcher.dispatch !== 'function'
-    ) {
-      throw new Error(
-        'WorldContext requires a valid ISafeEventDispatcher instance.'
+    this.#safeEventDispatcher = resolveSafeDispatcher(
+      null,
+      safeEventDispatcher,
+      logger
+    );
+    if (!this.#safeEventDispatcher) {
+      console.warn(
+        'WorldContext: safeEventDispatcher resolution failed; some errors may not be dispatched.'
       );
     }
     this.#entityManager = entityManager;
     this.#logger = logger;
-    this.#safeEventDispatcher = safeEventDispatcher;
     this.#logger.debug(
       'WorldContext: Initialized (Stateless, backed by EntityManager).'
     );
@@ -106,10 +108,7 @@ class WorldContext extends IWorldContext {
 
     const errorMessage = `WorldContext: Expected exactly one entity with component '${CURRENT_ACTOR_COMPONENT_ID}', but found ${actorCount}.`;
 
-    this.#safeEventDispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
-      message: errorMessage,
-      details: { actorCount },
-    });
+    safeDispatchError(this.#safeEventDispatcher, errorMessage, { actorCount });
 
     if (
       typeof globalThis !== 'undefined' &&
@@ -163,9 +162,7 @@ class WorldContext extends IWorldContext {
       !positionData.locationId
     ) {
       const msg = `WorldContext.getCurrentLocation: Current actor '${actor.id}' is missing a valid '${POSITION_COMPONENT_ID}' component or locationId.`;
-      this.#safeEventDispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
-        message: msg,
-      });
+      safeDispatchError(this.#safeEventDispatcher, msg);
       return null;
     }
 

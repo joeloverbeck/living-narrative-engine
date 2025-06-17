@@ -11,6 +11,7 @@ import { evaluateConditionWithLogging } from './jsonLogicEvaluationService.js';
 import BaseService from '../utils/baseService.js';
 import { executeActionSequence } from './actionSequence.js';
 import { buildRuleCache } from './ruleCacheUtils.js';
+import { isEmptyCondition } from './utils/jsonLogicUtils.js';
 
 /* ---------------------------------------------------------------------------
  * Internal types (JSDoc only)
@@ -139,7 +140,9 @@ class SystemLogicInterpreter extends BaseService {
   /* Event handling                                                        */
 
   /**
-   * @param {{type:string,payload:any}} event
+   * Handle an incoming event and execute matching rules.
+   *
+   * @param {{type:string,payload:any}} event - Event object with type and payload.
    */
   #handleEvent(event) {
     const bucket = this.#ruleCache.get(event.type);
@@ -224,12 +227,7 @@ class SystemLogicInterpreter extends BaseService {
     const ruleId = rule.rule_id || 'NO_ID';
 
     // no / empty condition → automatically passes
-    if (
-      !rule.condition ||
-      (typeof rule.condition === 'object' &&
-        !Array.isArray(rule.condition) &&
-        Object.keys(rule.condition).length === 0)
-    ) {
+    if (!rule.condition || isEmptyCondition(rule.condition)) {
       this.#logger.debug(
         `[Rule ${ruleId}] No condition defined or condition is empty. Defaulting to passed.`
       );

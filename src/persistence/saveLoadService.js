@@ -1,5 +1,3 @@
-// src/services/saveLoadService.js
-
 import { ISaveLoadService } from '../interfaces/ISaveLoadService.js';
 import GameStateSerializer from './gameStateSerializer.js';
 import SaveValidationService from './saveValidationService.js';
@@ -11,12 +9,14 @@ import {
   PersistenceError,
   PersistenceErrorCodes,
 } from './persistenceErrors.js';
-import { createPersistenceFailure } from './persistenceResultUtils.js';
+import {
+  createPersistenceFailure,
+  createPersistenceSuccess,
+} from './persistenceResultUtils.js';
 import {
   validateSaveName,
   validateSaveIdentifier,
 } from './saveInputValidators.js';
-// REMOVED: import {createHash} from 'crypto';
 
 // --- Type Imports ---
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
@@ -136,14 +136,17 @@ class SaveLoadService extends ISaveLoadService {
   #cloneAndPrepareState(saveName, obj) {
     const cloneResult = safeDeepClone(obj, this.#logger);
     if (!cloneResult.success || !cloneResult.data) {
-      return { success: false, error: cloneResult.error };
+      return createPersistenceFailure(
+        cloneResult.error.code,
+        cloneResult.error.message
+      );
     }
 
     /** @type {SaveGameStructure} */
     const cloned = cloneResult.data;
     cloned.metadata = { ...(cloned.metadata || {}), saveName };
     cloned.integrityChecks = { ...(cloned.integrityChecks || {}) };
-    return { success: true, data: cloned };
+    return createPersistenceSuccess(cloned);
   }
 
   /**
@@ -163,18 +166,15 @@ class SaveLoadService extends ISaveLoadService {
   async listManualSaveSlots() {
     this.#logger.debug('Listing manual save slots...');
     const files = await this.#fileRepository.listManualSaveFiles();
-    const collectedMetadata = [];
 
-    for (const fileName of files) {
-      const metadata =
-        await this.#fileRepository.parseManualSaveMetadata(fileName);
-      collectedMetadata.push(metadata);
-    }
+    const metadataList = await Promise.all(
+      files.map((name) => this.#fileRepository.parseManualSaveMetadata(name))
+    );
 
     this.#logger.debug(
-      `Finished listing manual save slots. Returning ${collectedMetadata.length} items.`
+      `Finished listing manual save slots. Returning ${metadataList.length} items.`
     );
-    return collectedMetadata;
+    return metadataList;
   }
 
   /**
@@ -183,7 +183,6 @@ class SaveLoadService extends ISaveLoadService {
    * @returns {Promise<LoadGameResult>} Loaded game data or error info.
    */
   async loadGameData(saveIdentifier) {
-    //
     this.#logger.debug(
       `Attempting to load game data from: "${saveIdentifier}"`
     );
@@ -229,7 +228,7 @@ class SaveLoadService extends ISaveLoadService {
     this.#logger.debug(
       `Game data loaded and validated successfully from: "${saveIdentifier}"`
     );
-    return { success: true, data: loadedObject, error: null };
+    return createPersistenceSuccess(loadedObject);
   }
 
   /**

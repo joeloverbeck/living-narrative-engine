@@ -5,6 +5,7 @@
 /** @typedef {import('./defs.js').OperationHandler} OperationHandler */
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 import BaseService from '../utils/baseService.js';
+import { getNormalizedOperationType } from './utils/operationTypeUtils.js';
 
 class OperationRegistry extends BaseService {
   /** @type {Map<string, OperationHandler>} */ #registry = new Map();
@@ -32,14 +33,16 @@ class OperationRegistry extends BaseService {
    */
   register(operationType, handler) {
     // --- validate ------------------------------------------------------------
-    if (typeof operationType !== 'string' || !operationType.trim()) {
+    const trimmed = getNormalizedOperationType(
+      operationType,
+      this.#logger,
+      'OperationRegistry.register'
+    );
+    if (!trimmed) {
       const msg =
         'OperationRegistry.register: operationType must be a non-empty string.';
-      this.#logger.error(msg);
       throw new Error(msg);
     }
-
-    const trimmed = operationType.trim();
 
     if (typeof handler !== 'function') {
       const msg = `OperationRegistry.register: handler for type "${trimmed}" must be a function.`;
@@ -70,14 +73,14 @@ class OperationRegistry extends BaseService {
    * @returns {OperationHandler|undefined}
    */
   getHandler(operationType) {
-    if (typeof operationType !== 'string') {
-      this.#logger.warn(
-        `OperationRegistry.getHandler: Received non-string operationType: ${typeof operationType}. Returning undefined.`
-      );
+    const trimmed = getNormalizedOperationType(
+      operationType,
+      this.#logger,
+      'OperationRegistry.getHandler'
+    );
+    if (!trimmed) {
       return undefined;
     }
-
-    const trimmed = operationType.trim();
     const handler = this.#registry.get(trimmed);
 
     if (!handler) {

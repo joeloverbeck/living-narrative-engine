@@ -44,6 +44,7 @@ export class SelectableListDisplayComponent extends BaseListDisplayComponent {
 
   /**
    * Stores the handler for arrow key navigation created by the utility.
+   *
    * @private
    * @type {((event: KeyboardEvent) => void) | null}
    */
@@ -51,6 +52,7 @@ export class SelectableListDisplayComponent extends BaseListDisplayComponent {
 
   /**
    * Stores the bound keydown handler to ensure it's only attached once.
+   *
    * @private
    * @type {((event: KeyboardEvent) => void) | null}
    */
@@ -122,8 +124,21 @@ export class SelectableListDisplayComponent extends BaseListDisplayComponent {
   }
 
   /**
+   * Programmatically selects an item.
+   *
+   * @protected
+   * @param {HTMLElement|null} selectedElement - The element representing the item to select.
+   * @param {any|null} itemData - The data associated with the item.
+   * @returns {void}
+   */
+  _selectItem(selectedElement, itemData) {
+    this._handleItemSelection(selectedElement, itemData);
+  }
+
+  /**
    * The single handler for all keydown events on the list container.
    * It delegates to the arrow key handler and also checks for selection keys.
+   *
    * @param {KeyboardEvent} event The keyboard event.
    * @private
    */
@@ -144,7 +159,7 @@ export class SelectableListDisplayComponent extends BaseListDisplayComponent {
         const data = this.currentListData.find(
           (d) => String(d[this._datasetKey]) === String(value)
         );
-        if (data) this._handleItemSelection(target, data);
+        if (data) this._selectItem(target, data);
       }
     }
   }
@@ -170,7 +185,7 @@ export class SelectableListDisplayComponent extends BaseListDisplayComponent {
         const data = this.currentListData.find(
           (d) => String(d[this._datasetKey]) === String(value)
         );
-        if (data) this._handleItemSelection(el, data);
+        if (data) this._selectItem(el, data);
       }
     );
 
@@ -181,7 +196,7 @@ export class SelectableListDisplayComponent extends BaseListDisplayComponent {
         const data = this.currentListData.find(
           (d) => String(d[this._datasetKey]) === String(value)
         );
-        if (data) this._handleItemSelection(el, data);
+        if (data) this._selectItem(el, data);
       });
     });
 

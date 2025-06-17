@@ -16,7 +16,12 @@ describe('registerSchema', () => {
       removeSchema: jest.fn(),
       addSchema: jest.fn().mockResolvedValue(undefined),
     };
-    logger = { warn: jest.fn() };
+    logger = {
+      debug: jest.fn(),
+      info: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+    };
   });
 
   it('adds schema when not already loaded', async () => {

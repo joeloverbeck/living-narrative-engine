@@ -37,7 +37,7 @@ jest.mock('../../src/modding/modLoadOrderResolver.js', () => ({
 /** @typedef {import('../../src/loaders/schemaLoader.js').default} SchemaLoader */
 /** @typedef {import('../../src/loaders/gameConfigLoader.js').default} GameConfigLoader */
 /** @typedef {import('../../src/modding/modManifestLoader.js').default} ModManifestLoader */
-/** @typedef {import('../../src/loaders/entityLoader.js').default} EntityLoader */
+/** @typedef {import('../../src/loaders/entityDefinitionLoader.js').default} EntityLoader */
 /** @typedef {import('../../interfaces/manifestItems.js').ModManifest} ModManifest */
 /** @typedef {import('../../services/validatedEventDispatcher.js').default} ValidatedEventDispatcher */ // Added missing import
 
@@ -278,6 +278,7 @@ describe('WorldLoader Integration Test Suite - Partial/Empty Content (TEST-LOADE
         'schema:events', // <-- Added
         'schema:rules', // <-- Added
         'schema:conditions',
+        'schema:entityInstances',
       ];
       return loadedSchemas.includes(schemaId);
     });
@@ -373,7 +374,7 @@ describe('WorldLoader Integration Test Suite - Partial/Empty Content (TEST-LOADE
       overrides: 0,
       errors: 0,
     });
-    // EntityLoader should not be called (no entity defs in manifests)
+    // EntityDefinitionLoader should not be called (no entity defs in manifests)
     mockEntityLoader.loadItemsForMod.mockResolvedValue({
       count: 0,
       overrides: 0,

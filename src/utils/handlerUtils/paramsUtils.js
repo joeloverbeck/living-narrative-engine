@@ -1,6 +1,6 @@
 // src/utils/handlerUtils/paramsUtils.js
 
-import { SYSTEM_ERROR_OCCURRED_ID } from '../../constants/eventIds.js';
+import { safeDispatchError } from '../safeDispatchErrorUtils.js';
 
 /**
  * @description Ensures an operation handler received a valid parameters object.
@@ -22,7 +22,7 @@ export function assertParamsObject(params, logger, opName) {
   if (logger && typeof logger.warn === 'function') {
     logger.warn(message, { params });
   } else if (logger && typeof logger.dispatch === 'function') {
-    logger.dispatch(SYSTEM_ERROR_OCCURRED_ID, { message, details: { params } });
+    safeDispatchError(logger, message, { params });
   } else {
     console.warn(message, { params });
   }

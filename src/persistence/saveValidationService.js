@@ -5,6 +5,10 @@ import {
   PersistenceError,
   PersistenceErrorCodes,
 } from './persistenceErrors.js';
+import {
+  createPersistenceFailure,
+  createPersistenceSuccess,
+} from './persistenceResultUtils.js';
 
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('./gameStateSerializer.js').default} GameStateSerializer */
@@ -57,13 +61,10 @@ class SaveValidationService {
         const userMsg =
           'The save file is incomplete or has an unknown format. It might be corrupted or from an incompatible game version.';
         this.#logger.error(devMsg + ` User message: "${userMsg}"`);
-        return {
-          success: false,
-          error: new PersistenceError(
-            PersistenceErrorCodes.INVALID_GAME_STATE,
-            userMsg
-          ),
-        };
+        return createPersistenceFailure(
+          PersistenceErrorCodes.INVALID_GAME_STATE,
+          userMsg
+        );
       }
     }
     this.#logger.debug(
@@ -86,13 +87,10 @@ class SaveValidationService {
       const userMsg =
         'The save file is missing integrity information and cannot be safely loaded. It might be corrupted or from an incompatible older version.';
       this.#logger.error(devMsg + ` User message: "${userMsg}"`);
-      return {
-        success: false,
-        error: new PersistenceError(
-          PersistenceErrorCodes.INVALID_GAME_STATE,
-          userMsg
-        ),
-      };
+      return createPersistenceFailure(
+        PersistenceErrorCodes.INVALID_GAME_STATE,
+        userMsg
+      );
     }
 
     let recalculatedChecksum;
@@ -105,13 +103,10 @@ class SaveValidationService {
       const userMsg =
         'Could not verify the integrity of the save file due to an internal error. The file might be corrupted.';
       this.#logger.error(devMsg + ` User message: "${userMsg}"`, checksumError);
-      return {
-        success: false,
-        error: new PersistenceError(
-          PersistenceErrorCodes.CHECKSUM_CALCULATION_ERROR,
-          userMsg
-        ),
-      };
+      return createPersistenceFailure(
+        PersistenceErrorCodes.CHECKSUM_CALCULATION_ERROR,
+        userMsg
+      );
     }
 
     if (storedChecksum !== recalculatedChecksum) {
@@ -119,13 +114,10 @@ class SaveValidationService {
       const userMsg =
         'The save file appears to be corrupted (integrity check failed). Please try another save or a backup.';
       this.#logger.error(devMsg + ` User message: "${userMsg}"`);
-      return {
-        success: false,
-        error: new PersistenceError(
-          PersistenceErrorCodes.CHECKSUM_MISMATCH,
-          userMsg
-        ),
-      };
+      return createPersistenceFailure(
+        PersistenceErrorCodes.CHECKSUM_MISMATCH,
+        userMsg
+      );
     }
     this.#logger.debug(`Checksum VERIFIED for ${identifier}.`);
     return { success: true };

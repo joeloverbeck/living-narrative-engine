@@ -3,6 +3,7 @@
 import {
   FULL_MANUAL_SAVE_DIRECTORY_PATH,
   MANUAL_SAVE_PATTERN,
+  extractSaveName,
 } from '../utils/savePathUtils.js';
 import { deserializeAndDecompress, parseManualSaveFile } from './saveFileIO.js';
 import {
@@ -187,10 +188,7 @@ export default class SaveFileRepository {
       );
       return {
         identifier,
-        saveName:
-          saveName ||
-          fileName.replace(/\.sav$/, '').replace(/^manual_save_/, '') +
-            ' (Bad Metadata)',
+        saveName: saveName || `${extractSaveName(fileName)} (Bad Metadata)`,
         timestamp: timestamp || 'N/A',
         playtimeSeconds:
           typeof playtimeSeconds === 'number' ? playtimeSeconds : 0,

@@ -12,9 +12,9 @@
 /** @typedef {import('./modifyComponentHandler.js').EntityRefObject} EntityRefObject */
 
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
-import { resolveEntityId } from '../../utils/entityRefUtils.js';
 import { setContextValue } from '../../utils/contextVariableUtils.js';
 import { assertParamsObject } from '../../utils/handlerUtils/indexUtils.js';
+import ComponentOperationHandler from './componentOperationHandler.js';
 
 /**
  * Parameters accepted by {@link HasComponentHandler#execute}.
@@ -29,11 +29,9 @@ import { assertParamsObject } from '../../utils/handlerUtils/indexUtils.js';
 // Handler implementation
 // -----------------------------------------------------------------------------
 
-class HasComponentHandler {
+class HasComponentHandler extends ComponentOperationHandler {
   /** @type {IEntityManager} */
   #entityManager;
-  /** @type {ILogger} */
-  #logger;
   /** @type {ISafeEventDispatcher} */
   #dispatcher;
 
@@ -47,22 +45,18 @@ class HasComponentHandler {
    * @throws {Error} If required dependencies are missing or invalid.
    */
   constructor({ entityManager, logger, safeEventDispatcher }) {
-    if (!logger || typeof logger.warn !== 'function') {
-      throw new Error('HasComponentHandler requires a valid ILogger instance.');
-    }
-    if (!entityManager || typeof entityManager.hasComponent !== 'function') {
-      throw new Error(
-        'HasComponentHandler requires a valid IEntityManager instance with a hasComponent method.'
-      );
-    }
-    if (
-      !safeEventDispatcher ||
-      typeof safeEventDispatcher.dispatch !== 'function'
-    ) {
-      throw new Error('HasComponentHandler requires ISafeEventDispatcher.');
-    }
+    super('HasComponentHandler', {
+      logger: { value: logger },
+      entityManager: {
+        value: entityManager,
+        requiredMethods: ['hasComponent'],
+      },
+      safeEventDispatcher: {
+        value: safeEventDispatcher,
+        requiredMethods: ['dispatch'],
+      },
+    });
     this.#entityManager = entityManager;
-    this.#logger = logger;
     this.#dispatcher = safeEventDispatcher;
   }
 
@@ -84,7 +78,7 @@ class HasComponentHandler {
    * @returns {void}
    */
   execute(params, executionContext) {
-    const log = executionContext?.logger ?? this.#logger;
+    const log = this.getLogger(executionContext);
 
     // 1. Validate Parameters
     if (!assertParamsObject(params, log, 'HAS_COMPONENT')) {
@@ -97,7 +91,8 @@ class HasComponentHandler {
       log.warn('HAS_COMPONENT: "entity_ref" parameter is required.');
       return;
     }
-    if (typeof component_type !== 'string' || !component_type.trim()) {
+    const trimmedComponentType = this.validateComponentType(component_type);
+    if (!trimmedComponentType) {
       log.warn(
         'HAS_COMPONENT: "component_type" parameter must be a non-empty string.'
       );
@@ -111,10 +106,9 @@ class HasComponentHandler {
     }
 
     const trimmedResultVar = result_variable.trim();
-    const trimmedComponentType = component_type.trim();
 
     // 2. Resolve Entity ID
-    const entityId = resolveEntityId(entity_ref, executionContext);
+    const entityId = this.resolveEntity(entity_ref, executionContext);
 
     // 3. Perform check and store result
     let result = false; // Default to false

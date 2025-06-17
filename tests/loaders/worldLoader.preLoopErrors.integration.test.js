@@ -36,7 +36,7 @@ import { CORE_MOD_ID } from '../../src/constants/core';
 /** @typedef {import('../../src/loaders/schemaLoader.js').default} SchemaLoader */
 /** @typedef {import('../../src/loaders/gameConfigLoader.js').default} GameConfigLoader */
 /** @typedef {import('../../src/modding/modManifestLoader.js').default} ModManifestLoader */
-/** @typedef {import('../../src/loaders/entityLoader.js').default} EntityLoader */
+/** @typedef {import('../../src/loaders/entityDefinitionLoader.js').default} EntityLoader */
 /** @typedef {import('../../src/loaders/conditionLoader.js').default} ConditionLoader */
 /** @typedef {import('../../interfaces/manifestItems.js').ModManifest} ModManifest */
 /** @typedef {import('../../src/events/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
@@ -94,6 +94,7 @@ describe('WorldLoader Integration Test Suite - Error Handling: Manifest Schema, 
   const actionsSchemaId = 'schema:actions'; // Added for consistency
   const eventsSchemaId = 'schema:events'; // Added for consistency
   const rulesSchemaId = 'schema:rules'; // Added for consistency
+  const entityInstancesSchemaId = 'schema:entityInstances';
 
   // --- Mocked Functions References ---
   const mockDependencyValidate = ModDependencyValidatorModule.validate;
@@ -402,6 +403,7 @@ describe('WorldLoader Integration Test Suite - Error Handling: Manifest Schema, 
       actionsSchemaId,
       eventsSchemaId,
       rulesSchemaId,
+      entityInstancesSchemaId,
     ];
     mockValidator.isSchemaLoaded.mockImplementation((id) => {
       const exists = essentialSchemas.includes(id) && id !== manifestSchemaId;
@@ -469,6 +471,7 @@ describe('WorldLoader Integration Test Suite - Error Handling: Manifest Schema, 
       actionsSchemaId,
       eventsSchemaId,
       rulesSchemaId,
+      entityInstancesSchemaId,
     ];
     mockValidator.isSchemaLoaded.mockImplementation((id) => {
       const exists = essentialSchemas.includes(id) && id !== entitySchemaId;

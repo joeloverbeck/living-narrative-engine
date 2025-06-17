@@ -99,7 +99,7 @@ import * as ConditionEvaluator from '../../prompting/elementConditionEvaluator.j
 import { LLMChooser } from '../../turns/adapters/llmChooser.js';
 import { ActionIndexerAdapter } from '../../turns/adapters/actionIndexerAdapter.js';
 import { LLMDecisionProvider } from '../../turns/providers/llmDecisionProvider.js';
-import { registerGenericStrategy } from './registerGenericStrategy.js';
+import { registerActorAwareStrategy } from './registerActorAwareStrategy.js';
 
 /**
  * Registers AI, LLM, and Prompting services.
@@ -404,11 +404,7 @@ export function registerAI(container) {
     `AI Systems Registration: Registered ${tokens.ILLMDecisionProvider}.`
   );
 
-  registerGenericStrategy(
-    container,
-    tokens.ILLMDecisionProvider,
-    tokens.AIStrategyFactory
-  );
+  registerActorAwareStrategy(container);
 
   // --- AI TURN HANDLER (MODIFIED) ---
 
@@ -419,7 +415,7 @@ export function registerAI(container) {
         logger: c.resolve(tokens.ILogger),
         turnStateFactory: c.resolve(tokens.ITurnStateFactory),
         turnEndPort: c.resolve(tokens.ITurnEndPort),
-        strategyFactory: c.resolve(tokens.AIStrategyFactory), // <-- Updated
+        strategyFactory: c.resolve(tokens.TurnStrategyFactory),
         turnContextBuilder: c.resolve(tokens.TurnContextBuilder), // <-- Added
       })
   );

@@ -14,4 +14,16 @@ export function createPersistenceFailure(code, message) {
   return { success: false, error: new PersistenceError(code, message) };
 }
 
+/**
+ * Creates a standardized success result object for persistence operations.
+ *
+ * @description Mirrors {@link createPersistenceFailure} for success cases.
+ * @template T
+ * @param {T} data - Data to return on success.
+ * @returns {{success: true, data: T}} Success result.
+ */
+export function createPersistenceSuccess(data) {
+  return { success: true, data };
+}
+
 export default createPersistenceFailure;

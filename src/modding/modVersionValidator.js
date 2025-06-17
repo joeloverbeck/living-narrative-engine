@@ -3,7 +3,7 @@
 import engineVersionSatisfies from '../engine/engineVersionSatisfies.js';
 import ModDependencyError from '../errors/modDependencyError.js';
 import { ENGINE_VERSION } from '../engine/engineVersion.js'; // Import the actual engine version
-import { SYSTEM_ERROR_OCCURRED_ID } from '../constants/eventIds.js';
+import { safeDispatchError } from '../utils/safeDispatchErrorUtils.js';
 
 /**
  * @typedef {import('../interfaces/coreServices.js').ILogger} ILogger
@@ -111,9 +111,9 @@ export default function validateModEngineVersions(
   // --- Acceptance: Throws only ModDependencyError on failure (for incompatibility) ---
   if (fatals.length) {
     const errorMessage = fatals.join('\n');
-    safeEventDispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
-      message: errorMessage,
-      details: { incompatibilities: fatals, engineVersion: ENGINE_VERSION },
+    safeDispatchError(safeEventDispatcher, errorMessage, {
+      incompatibilities: fatals,
+      engineVersion: ENGINE_VERSION,
     });
     throw new ModDependencyError(errorMessage);
   }

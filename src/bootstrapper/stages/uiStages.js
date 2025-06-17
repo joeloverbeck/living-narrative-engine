@@ -1,7 +1,7 @@
 // src/bootstrapper/stages/uiStages.js
 /* eslint-disable no-console */
 
-import { setupButtonListener } from '../helpers.js';
+import { setupButtonListener, stageSuccess, stageFailure } from '../helpers.js';
 
 // eslint-disable-next-line no-unused-vars
 import { tokens } from '../../dependencyInjection/tokens.js';
@@ -33,18 +33,14 @@ export async function ensureCriticalDOMElementsStage(
   const uiBootstrapper = createUIBootstrapper();
   try {
     const essentialUIElements = uiBootstrapper.gatherEssentialElements(doc);
-    return { success: true, payload: essentialUIElements };
+    return stageSuccess(essentialUIElements);
   } catch (error) {
-    const stageError = new Error(
-      `UI Element Validation Failed: ${error.message}`,
-      { cause: error }
-    );
-    stageError.phase = 'UI Element Validation';
+    const message = `UI Element Validation Failed: ${error.message}`;
     console.error(
-      `Bootstrap Stage: ensureCriticalDOMElementsStage failed. ${stageError.message}`,
+      `Bootstrap Stage: ensureCriticalDOMElementsStage failed. ${message}`,
       error
     );
-    return { success: false, error: stageError };
+    return stageFailure('UI Element Validation', message, error);
   }
 }
 
@@ -66,29 +62,7 @@ export async function setupMenuButtonListenersStage(
   logger.debug(`Bootstrap Stage: Starting ${stageName}...`);
 
   try {
-    if (gameEngine) {
-      setupButtonListener(
-        documentRef,
-        'open-save-game-button',
-        () => {
-          logger.debug(`${stageName}: "Open Save Game UI" button clicked.`);
-          gameEngine.showSaveGameUI();
-        },
-        logger,
-        stageName
-      );
-
-      setupButtonListener(
-        documentRef,
-        'open-load-game-button',
-        () => {
-          logger.debug(`${stageName}: "Open Load Game UI" button clicked.`);
-          gameEngine.showLoadGameUI();
-        },
-        logger,
-        stageName
-      );
-    } else {
+    if (!gameEngine) {
       setupButtonListener(
         documentRef,
         'open-save-game-button',
@@ -109,19 +83,43 @@ export async function setupMenuButtonListenersStage(
       logger.warn(
         `${stageName}: GameEngine not available for #open-load-game-button listener.`
       );
+      logger.debug(`Bootstrap Stage: ${stageName} completed successfully.`);
+      return { success: true };
     }
+
+    setupButtonListener(
+      documentRef,
+      'open-save-game-button',
+      () => {
+        logger.debug(`${stageName}: "Open Save Game UI" button clicked.`);
+        gameEngine.showSaveGameUI();
+      },
+      logger,
+      stageName
+    );
+
+    setupButtonListener(
+      documentRef,
+      'open-load-game-button',
+      () => {
+        logger.debug(`${stageName}: "Open Load Game UI" button clicked.`);
+        gameEngine.showLoadGameUI();
+      },
+      logger,
+      stageName
+    );
+
     logger.debug(`Bootstrap Stage: ${stageName} completed successfully.`);
-    return { success: true };
+    return stageSuccess();
   } catch (error) {
     logger.error(
       `Bootstrap Stage: ${stageName} encountered an unexpected error during listener setup.`,
       error
     );
-    const stageError = new Error(
+    return stageFailure(
+      stageName,
       `Unexpected error during ${stageName}: ${error.message}`,
-      { cause: error }
+      error
     );
-    stageError.phase = stageName;
-    return { success: false, error: stageError };
   }
 }

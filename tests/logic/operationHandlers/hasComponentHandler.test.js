@@ -26,6 +26,7 @@ describe('HasComponentHandler', () => {
       hasComponent: jest.fn(),
     };
     mockLogger = {
+      info: jest.fn(),
       warn: jest.fn(),
       error: jest.fn(),
       debug: jest.fn(),

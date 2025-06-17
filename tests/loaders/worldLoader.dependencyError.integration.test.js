@@ -39,7 +39,7 @@ jest.mock('../../src/modding/modLoadOrderResolver.js', () => ({
 /** @typedef {import('../../src/loaders/schemaLoader.js').default} SchemaLoader */
 /** @typedef {import('../../src/loaders/gameConfigLoader.js').default} GameConfigLoader */
 /** @typedef {import('../../src/modding/modManifestLoader.js').default} ModManifestLoader */
-/** @typedef {import('../../src/loaders/entityLoader.js').default} EntityLoader */
+/** @typedef {import('../../src/loaders/entityDefinitionLoader.js').default} EntityLoader */
 /** @typedef {import('../../interfaces/manifestItems.js').ModManifest} ModManifest */
 /** @typedef {import('../../services/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
 
@@ -199,6 +199,7 @@ describe('WorldLoader Integration Test Suite - Error Handling: Dependency and Ve
         'schema:events',
         'schema:rules',
         'schema:conditions',
+        'schema:entityInstances',
       ];
       return essentials.includes(schemaId);
     });
@@ -524,7 +525,7 @@ describe('WorldLoader Integration Test Suite - Error Handling: Dependency and Ve
     expect(mockEventLoader.loadItemsForMod).not.toHaveBeenCalled();
     expect(mockActionLoader.loadItemsForMod).not.toHaveBeenCalled();
     expect(mockRuleLoader.loadItemsForMod).not.toHaveBeenCalled();
-    // EntityLoader loads multiple types, check its method was not called
+    // EntityDefinitionLoader loads multiple types, check its method was not called
     expect(mockEntityLoader.loadItemsForMod).not.toHaveBeenCalled();
 
     // Verify registry cleared twice

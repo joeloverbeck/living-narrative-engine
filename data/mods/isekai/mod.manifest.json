@@ -7,13 +7,22 @@
   "author": "joeloverbeck",
   "gameVersion": ">=0.0.1",
   "content": {
-    "components": [],
-    "characters": ["hero.character.json", "sidekick.character.json"],
-    "items": [],
-    "locations": ["adventurers_guild.location.json", "town.location.json"],
     "actions": [],
-    "rules": [],
+    "components": [],
+    "conditions": [],
+    "entityDefinitions": [
+      "hero.definition.json",
+      "sidekick.definition.json",
+      "adventurers_guild.definition.json",
+      "town.definition.json"
+    ],
+    "entityInstances": [],
     "events": [],
-    "ui": ["icons.json", "labels.json"]
+    "macros": [],
+    "rules": [],
+    "ui": [
+      "icons.json",
+      "labels.json"
+    ]
   }
 }

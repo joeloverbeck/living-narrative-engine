@@ -16,7 +16,7 @@
 /** @typedef {import('../../../src/modding/modManifestLoader.js').default} ModManifestLoader */
 /** @typedef {import('../../../src/loaders/actionLoader.js').default} ActionLoader */
 /** @typedef {import('../../../src/loaders/eventLoader.js').default} EventLoader */
-/** @typedef {import('../../../src/loaders/entityLoader.js').default} EntityLoader */ // Corrected path
+/** @typedef {import('../../../src/loaders/entityDefinitionLoader.js').default} EntityLoader */ // Corrected path
 /** @typedef {any} AppContainer */
 
 // --- Jest Imports ---
@@ -42,7 +42,7 @@ import GameConfigLoader from '../../../src/loaders/gameConfigLoader.js';
 import ModManifestLoader from '../../../src/modding/modManifestLoader.js';
 import ActionLoader from '../../../src/loaders/actionLoader.js';
 import EventLoader from '../../../src/loaders/eventLoader.js';
-import EntityLoader from '../../../src/loaders/entityLoader.js';
+import EntityDefinitionLoader from '../../../src/loaders/entityDefinitionLoader.js';
 import StaticConfiguration from '../../../src/configuration/staticConfiguration.js';
 import DefaultPathResolver from '../../../src/pathing/defaultPathResolver.js';
 import AjvSchemaValidator from '../../../src/validation/ajvSchemaValidator.js';
@@ -68,7 +68,7 @@ const mockConfiguration = {
       components: 'http://example.com/schemas/component.schema.json',
       actions: 'http://example.com/schemas/action.schema.json',
       events: 'http://example.com/schemas/component.schema.json',
-      entities: 'http://example.com/schemas/entity.schema.json', // Needed by EntityLoader
+      entities: 'http://example.com/schemas/entity.schema.json', // Needed by EntityDefinitionLoader
       rules: 'http://example.com/schemas/rule.schema.json',
       game: 'http://example.com/schemas/game.schema.json',
       'mod-manifest': 'http://example.com/schemas/mod.manifest.schema.json',
@@ -342,7 +342,7 @@ describe('registerLoaders (with Mock DI Container)', () => {
     ).toBe(2);
   });
 
-  it('should resolve EntityLoader successfully and respect singleton lifecycle', () => {
+  it('should resolve EntityDefinitionLoader successfully and respect singleton lifecycle', () => {
     // Arrange
     registerLoaders(mockContainer);
 
@@ -352,7 +352,7 @@ describe('registerLoaders (with Mock DI Container)', () => {
 
     // Assert
     expect(loader1).toBeDefined();
-    expect(loader1).toBeInstanceOf(EntityLoader);
+    expect(loader1).toBeInstanceOf(EntityDefinitionLoader);
     // This should now pass because the mock resolve handles singletonFactory correctly
     expect(loader1).toBe(loader2); // Singleton check
 
@@ -367,7 +367,7 @@ describe('registerLoaders (with Mock DI Container)', () => {
     expect(resolvedTokens).toContain(tokens.IDataRegistry);
     expect(resolvedTokens).toContain(tokens.ILogger);
 
-    // Check EntityLoader itself was resolved twice
+    // Check EntityDefinitionLoader itself was resolved twice
     expect(
       mockContainer.resolve.mock.calls.filter(
         (call) => call[0] === tokens.EntityLoader

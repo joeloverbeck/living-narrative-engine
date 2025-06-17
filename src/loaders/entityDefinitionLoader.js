@@ -1,7 +1,7 @@
-// Filename: src/loaders/entityLoader.js
+// Filename: src/loaders/entityDefinitionLoader.js
 
 /**
- * @file Defines the EntityLoader class, responsible for loading
+ * @file Defines the EntityDefinitionLoader class, responsible for loading
  * entity definitions (like players, NPCs, items, locations, blockers, connections) from mods.
  */
 
@@ -26,17 +26,17 @@ import { parseAndValidateId } from '../utils/idUtils.js';
  * Extends {@link BaseManifestItemLoader} to leverage common file processing logic,
  * including primary schema validation based on the 'entities' content type.
  *
- * @class EntityLoader
+ * @class EntityDefinitionLoader
  * @augments BaseManifestItemLoader
  */
-class EntityLoader extends BaseManifestItemLoader {
+class EntityDefinitionLoader extends BaseManifestItemLoader {
   // --- [LOADER-REFACTOR-04 Change START]: Removed private field #entitySchemaId ---
   // No longer needed as the base class handles the primary schema ID.
   // #entitySchemaId;
   // --- [LOADER-REFACTOR-04 Change END] ---
 
   /**
-   * Creates an instance of EntityLoader.
+   * Creates an instance of EntityDefinitionLoader.
    *
    * @param {IConfiguration} config - Configuration service instance.
    * @param {IPathResolver} pathResolver - Path resolution service instance.
@@ -73,7 +73,7 @@ class EntityLoader extends BaseManifestItemLoader {
     // const retrievedSchemaId = this._getContentTypeSchemaId('entities'); // Removed
     // this.#entitySchemaId = retrievedSchemaId; // Removed
     // if (this.#entitySchemaId === null) { // Removed block
-    //     this._logger.warn(`EntityLoader: Schema ID for 'entities' is missing. Entity validation will be skipped or may fail.`);
+    //     this._logger.warn(`EntityDefinitionLoader: Schema ID for 'entities' is missing. Entity validation will be skipped or may fail.`);
     // }
     // --- [LOADER-REFACTOR-04 Change END] ---
   }
@@ -236,4 +236,4 @@ class EntityLoader extends BaseManifestItemLoader {
   }
 }
 
-export default EntityLoader;
+export default EntityDefinitionLoader;

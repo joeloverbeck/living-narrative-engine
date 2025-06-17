@@ -34,7 +34,7 @@ jest.mock('../../src/modding/modLoadOrderResolver.js', () => ({
 /** @typedef {import('../../src/loaders/schemaLoader.js').default} SchemaLoader */
 /** @typedef {import('../../src/loaders/gameConfigLoader.js').default} GameConfigLoader */
 /** @typedef {import('../../src/modding/modManifestLoader.js').default} ModManifestLoader */
-/** @typedef {import('../../src/loaders/entityLoader.js').default} EntityLoader */
+/** @typedef {import('../../src/loaders/entityDefinitionLoader.js').default} EntityLoader */
 /** @typedef {import('../../interfaces/manifestItems.js').ModManifest} ModManifest */
 /** @typedef {import('../../services/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
 
@@ -245,6 +245,7 @@ describe('WorldLoader Integration Test Suite - Log Verification (TEST-LOADER-7.7
         'schema:events', // Essential schema
         'schema:rules', // Essential schema
         'schema:conditions', // Essential schema
+        'schema:entityInstances',
       ].includes(schemaId);
     });
 

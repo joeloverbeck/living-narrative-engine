@@ -11,13 +11,10 @@
 /** @typedef {import('../defs.js').ExecutionContext} ExecutionContext */
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
-import { resolveEntityId } from '../../utils/entityRefUtils.js';
-import {
-  initHandlerLogger,
-  validateDeps,
-  getExecLogger,
-} from '../../utils/handlerUtils/serviceUtils.js';
+
+import ComponentOperationHandler from './componentOperationHandler.js';
 import { assertParamsObject } from '../../utils/handlerUtils/paramsUtils.js';
+import { deepClone } from '../../utils/objectUtils.js';
 
 /**
  * @typedef {object} EntityRefObject
@@ -57,14 +54,13 @@ function setByPath(root, path, value) {
 }
 
 // ── handler ───────────────────────────────────────────────────────────────────
-class ModifyComponentHandler {
-  /** @type {ILogger}        */ #logger;
+class ModifyComponentHandler extends ComponentOperationHandler {
   /** @type {EntityManager} */ #entityManager;
   /** @type {ISafeEventDispatcher} */ #dispatcher;
 
   constructor({ entityManager, logger, safeEventDispatcher }) {
-    this.#logger = initHandlerLogger('ModifyComponentHandler', logger);
-    validateDeps('ModifyComponentHandler', this.#logger, {
+    super('ModifyComponentHandler', {
+      logger: { value: logger },
       entityManager: {
         value: entityManager,
         requiredMethods: ['getComponentData', 'addComponent'],
@@ -85,7 +81,7 @@ class ModifyComponentHandler {
    * @param {ExecutionContext} execCtx
    */
   execute(params, execCtx) {
-    const log = getExecLogger(this.#logger, execCtx);
+    const log = this.getLogger(execCtx);
 
     // ── validate base params ───────────────────────────────────────
     if (!assertParamsObject(params, log, 'MODIFY_COMPONENT')) {
@@ -97,7 +93,8 @@ class ModifyComponentHandler {
       log.warn('MODIFY_COMPONENT: "entity_ref" required.');
       return;
     }
-    if (typeof component_type !== 'string' || !component_type.trim()) {
+    const compType = this.validateComponentType(component_type);
+    if (!compType) {
       log.warn('MODIFY_COMPONENT: invalid "component_type".');
       return;
     }
@@ -118,7 +115,7 @@ class ModifyComponentHandler {
     }
 
     // ── resolve entity ─────────────────────────────────────────────
-    const entityId = resolveEntityId(entity_ref, execCtx);
+    const entityId = this.resolveEntity(entity_ref, execCtx);
     if (!entityId) {
       log.warn('MODIFY_COMPONENT: could not resolve entity id.', {
         entity_ref,
@@ -127,7 +124,7 @@ class ModifyComponentHandler {
     }
 
     // ── fetch & clone component data ───────────────────────────────
-    const compType = component_type.trim();
+    // compType was validated earlier
     const current = this.#entityManager.getComponentData(entityId, compType);
 
     if (current === undefined) {
@@ -143,7 +140,7 @@ class ModifyComponentHandler {
       return;
     }
 
-    const next = JSON.parse(JSON.stringify(current)); // deep clone
+    const next = deepClone(current);
 
     // ── apply “set” mutation ───────────────────────────────────────
     const ok = setByPath(next, field.trim(), value);
