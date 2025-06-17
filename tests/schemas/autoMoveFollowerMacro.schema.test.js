@@ -7,9 +7,9 @@
 
 import { describe, test, expect, beforeAll } from '@jest/globals';
 import Ajv from 'ajv';
+import addFormats from 'ajv-formats';
 
 // Schemas and data
-// Note: This test will fail if the JSON file has not been corrected as per our previous discussion.
 import macroData from '../../data/mods/core/macros/autoMoveFollower.macro.json';
 import macroSchema from '../../data/schemas/macro.schema.json';
 import commonSchema from '../../data/schemas/common.schema.json';
@@ -18,8 +18,6 @@ import jsonLogicSchema from '../../data/schemas/json-logic.schema.json';
 import conditionContainerSchema from '../../data/schemas/condition-container.schema.json';
 
 // Helpers
-// This test assumes a helper function exists at this path that loads all
-// individual operation schemas into the AJV instance.
 import loadOperationSchemas from '../helpers/loadOperationSchemas.js';
 
 describe("Macro Definition: 'core:autoMoveFollower'", () => {
@@ -28,6 +26,7 @@ describe("Macro Definition: 'core:autoMoveFollower'", () => {
 
   beforeAll(() => {
     const ajv = new Ajv({ allErrors: true });
+    addFormats(ajv); // <-- FIX: Add format validators
 
     // Add schemas that other schemas depend on. Using the full $id as the key is crucial.
     ajv.addSchema(
@@ -48,7 +47,6 @@ describe("Macro Definition: 'core:autoMoveFollower'", () => {
     );
 
     // The main operation schema references individual schemas for each operation type.
-    // This helper function, as seen in your example tests, pre-loads all of them into the AJV instance.
     loadOperationSchemas(ajv);
 
     // Compile the main schema to create a validation function.

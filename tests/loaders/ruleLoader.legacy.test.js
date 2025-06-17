@@ -37,7 +37,7 @@ const createMockConfiguration = (overrides = {}) => ({
       return 'http://example.com/schemas/rule.schema.json';
     }
     if (typeName === 'components') {
-      return 'http://example.com/schemas/component-definition.schema.json';
+      return 'http://example.com/schemas/component.schema.json';
     }
     return `http://example.com/schemas/${typeName}.schema.json`; // Generic fallback
   }),

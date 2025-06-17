@@ -43,6 +43,20 @@ export class SelectableListDisplayComponent extends BaseListDisplayComponent {
   _datasetKey;
 
   /**
+   * Stores the handler for arrow key navigation created by the utility.
+   * @private
+   * @type {((event: KeyboardEvent) => void) | null}
+   */
+  _arrowKeyHandler = null;
+
+  /**
+   * Stores the bound keydown handler to ensure it's only attached once.
+   * @private
+   * @type {((event: KeyboardEvent) => void) | null}
+   */
+  _boundKeyDownHandler = null;
+
+  /**
    * Creates a SelectableListDisplayComponent instance.
    *
    * @param {object} params - Constructor parameters.
@@ -53,13 +67,36 @@ export class SelectableListDisplayComponent extends BaseListDisplayComponent {
    * @param {DomElementFactory} [params.domElementFactory] - DOM element factory.
    * @param {...any} params.otherDeps - Additional dependencies forwarded to the base class.
    */
-  constructor({ datasetKey, ...rest }) {
+  constructor(params) {
+    const {
+      datasetKey,
+      logger,
+      documentContext,
+      validatedEventDispatcher,
+      elementsConfig,
+      domElementFactory,
+      autoRefresh,
+      ...otherDeps
+    } = params;
+
     if (!datasetKey || typeof datasetKey !== 'string') {
       throw new Error(
         `[SelectableListDisplayComponent] 'datasetKey' is required and must be a string.`
       );
     }
-    super(rest);
+
+    // Explicitly forward all expected dependencies to the base class constructor.
+    // This is the most robust way to handle dependency injection through inheritance.
+    super({
+      logger,
+      documentContext,
+      validatedEventDispatcher,
+      elementsConfig,
+      domElementFactory,
+      autoRefresh,
+      ...otherDeps,
+    });
+
     this._datasetKey = datasetKey;
   }
 
@@ -85,34 +122,30 @@ export class SelectableListDisplayComponent extends BaseListDisplayComponent {
   }
 
   /**
-   * Keydown handler enabling arrow navigation and activation via Enter/Space.
-   *
-   * @protected
-   * @param {KeyboardEvent} event - The keydown event.
-   * @returns {void}
+   * The single handler for all keydown events on the list container.
+   * It delegates to the arrow key handler and also checks for selection keys.
+   * @param {KeyboardEvent} event The keyboard event.
+   * @private
    */
-  _handleItemNavigation(event) {
-    if (!this.elements.listContainerElement) return;
-    const arrowHandler = setupRadioListNavigation(
-      this.elements.listContainerElement,
-      '[role="radio"]',
-      this._datasetKey,
-      (el, value) => {
-        const data = this.currentListData.find(
-          (d) => String(d[this._datasetKey]) === String(value)
-        );
-        if (data) this._handleItemSelection(el, data);
-      }
-    );
-    arrowHandler(event);
+  _handleKeyDown(event) {
+    // Delegate arrow, home, end key navigation to the specialized handler.
+    if (this._arrowKeyHandler) {
+      this._arrowKeyHandler(event);
+    }
+
+    // Handle selection confirmation keys (Enter, Space).
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault();
       const target = /** @type {HTMLElement} */ (event.target);
-      const value = target.dataset[this._datasetKey];
-      const data = this.currentListData.find(
-        (d) => String(d[this._datasetKey]) === String(value)
-      );
-      if (data) this._handleItemSelection(target, data);
+
+      // Ensure the event target is a list item.
+      if (target?.matches('[role="radio"]')) {
+        const value = target.dataset[this._datasetKey];
+        const data = this.currentListData.find(
+          (d) => String(d[this._datasetKey]) === String(value)
+        );
+        if (data) this._handleItemSelection(target, data);
+      }
     }
   }
 
@@ -127,8 +160,23 @@ export class SelectableListDisplayComponent extends BaseListDisplayComponent {
    */
   _onListRendered(listData, container) {
     this.currentListData = Array.isArray(listData) ? listData : [];
+
+    // Create the handler for arrow key navigation. This is what the test expects on render.
+    this._arrowKeyHandler = setupRadioListNavigation(
+      container,
+      '[role="radio"]',
+      this._datasetKey,
+      (el, value) => {
+        const data = this.currentListData.find(
+          (d) => String(d[this._datasetKey]) === String(value)
+        );
+        if (data) this._handleItemSelection(el, data);
+      }
+    );
+
+    // Set up click listeners for each rendered item.
     container.querySelectorAll('[role="radio"]').forEach((el) => {
-      el.addEventListener('click', () => {
+      this._addDomListener(el, 'click', () => {
         const value = el.dataset[this._datasetKey];
         const data = this.currentListData.find(
           (d) => String(d[this._datasetKey]) === String(value)
@@ -136,9 +184,12 @@ export class SelectableListDisplayComponent extends BaseListDisplayComponent {
         if (data) this._handleItemSelection(el, data);
       });
     });
-    container.addEventListener('keydown', (evt) =>
-      this._handleItemNavigation(evt)
-    );
+
+    // Add the keydown listener only ONCE.
+    if (!this._boundKeyDownHandler) {
+      this._boundKeyDownHandler = this._handleKeyDown.bind(this);
+      this._addDomListener(container, 'keydown', this._boundKeyDownHandler);
+    }
   }
 
   /**
@@ -150,5 +201,7 @@ export class SelectableListDisplayComponent extends BaseListDisplayComponent {
     super.dispose();
     this.selectedItemData = null;
     this.currentListData = [];
+    this._arrowKeyHandler = null;
+    this._boundKeyDownHandler = null;
   }
 }

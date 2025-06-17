@@ -8,7 +8,7 @@ import { setupService } from '../../utils/serviceInitializerUtils.js';
 /** @typedef {import('../../data/gameDataRepository.js').GameDataRepository} GameDataRepository */ // ADDED
 /** @typedef {import('../../logic/defs.js').JsonLogicEvaluationContext} JsonLogicEvaluationContext */
 /** @typedef {import('../../entities/entity.js').default} Entity */
-/** @typedef {import('../../../data/schemas/action-definition.schema.json').ActionDefinition} ActionDefinition */
+/** @typedef {import('../../../data/schemas/action.schema.json').ActionDefinition} ActionDefinition */
 /** @typedef {import('../../models/actionTargetContext.js').ActionTargetContext} ActionTargetContext */
 /** @typedef {import('./actionValidationContextBuilder.js').ActionValidationContextBuilder} ActionValidationContextBuilder */
 

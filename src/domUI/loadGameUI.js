@@ -556,6 +556,29 @@ class LoadGameUI extends SlotModalBase {
         );
         this.selectedSlotData = null;
         await this._populateLoadSlotsList(); // Refresh list
+
+        // After refreshing, update state and focus
+        this._setOperationInProgress(false);
+        const firstSlot =
+          this.elements.listContainerElement?.querySelector('.save-slot');
+        if (firstSlot) {
+          /** @type {HTMLElement} */ (firstSlot).focus();
+          const firstSlotIdentifier = /** @type {HTMLElement} */ (firstSlot)
+            .dataset.slotIdentifier;
+          const firstSlotData = this.currentSlotsDisplayData.find(
+            (s) => s.identifier === firstSlotIdentifier
+          );
+          if (firstSlotData) {
+            this._onItemSelected(
+              /** @type {HTMLElement} */ (firstSlot),
+              firstSlotData
+            );
+          } else {
+            this._onItemSelected(null, null);
+          }
+        } else {
+          this._onItemSelected(null, null);
+        }
       } else {
         const errorMsg =
           result?.error || 'An unknown error occurred while deleting the save.';
@@ -563,6 +586,7 @@ class LoadGameUI extends SlotModalBase {
         this.logger.error(
           `${this._logPrefix} Failed to delete save ${slotToDelete.identifier}: ${errorMsg}`
         );
+        this._setOperationInProgress(false);
       }
     } catch (error) {
       const exceptionMsg =
@@ -575,27 +599,7 @@ class LoadGameUI extends SlotModalBase {
         `Delete failed: ${exceptionMsg || 'An unexpected error occurred.'}`,
         'error'
       );
-    } finally {
       this._setOperationInProgress(false);
-      // Re-focus or update button states as necessary after list re-render
-      const firstSlot =
-        this.elements.listContainerElement?.querySelector('.save-slot');
-      if (firstSlot) {
-        /** @type {HTMLElement} */ (firstSlot).focus();
-        const firstSlotIdentifier = /** @type {HTMLElement} */ (firstSlot)
-          .dataset.slotIdentifier;
-        const firstSlotData = this.currentSlotsDisplayData.find(
-          (s) => s.identifier === firstSlotIdentifier
-        );
-        if (firstSlotData)
-          this._onItemSelected(
-            /** @type {HTMLElement} */ (firstSlot),
-            firstSlotData
-          );
-        else this._onItemSelected(null, null);
-      } else {
-        this._onItemSelected(null, null);
-      }
     }
   }
 

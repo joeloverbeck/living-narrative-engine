@@ -45,14 +45,14 @@ export class BaseListDisplayComponent extends BoundDomRendererBase {
    * @throws {Error} If `elementsConfig` does not lead to a resolved `listContainerElement`.
    */
   constructor({
-    logger,
-    documentContext,
-    validatedEventDispatcher,
-    elementsConfig,
-    domElementFactory,
-    autoRefresh = true,
-    ...otherDeps
-  }) {
+                logger,
+                documentContext,
+                validatedEventDispatcher,
+                elementsConfig,
+                domElementFactory,
+                autoRefresh = true,
+                ...otherDeps
+              }) {
     super({
       logger,
       documentContext,
@@ -252,7 +252,8 @@ export class BaseListDisplayComponent extends BoundDomRendererBase {
             index,
             itemsData
           );
-          if (listItemElement instanceof HTMLElement) {
+          // *** FIX: Changed `instanceof HTMLElement` to a check for nodeType, which is reliable in JSDOM. ***
+          if (listItemElement && listItemElement.nodeType === 1) {
             this.elements.listContainerElement.appendChild(listItemElement);
             renderedCount++;
           } else if (listItemElement !== null) {

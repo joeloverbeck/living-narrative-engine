@@ -21,7 +21,7 @@ const createMockConfiguration = (overrides = {}) => ({
     if (typeName === 'actions')
       return 'http://example.com/schemas/action.schema.json';
     if (typeName === 'components')
-      return 'http://example.com/schemas/component-definition.schema.json';
+      return 'http://example.com/schemas/component.schema.json';
     // Add other types as needed for tests
     return `http://example.com/schemas/${typeName}.schema.json`; // Default fallback
   }),
@@ -304,7 +304,7 @@ describe('Integration: Loaders, Registry State, and Overrides (REFACTOR-8.6)', (
       {}
     );
     mockValidator._setSchemaLoaded(
-      'http://example.com/schemas/component-definition.schema.json',
+      'http://example.com/schemas/component.schema.json',
       {}
     );
     // If components define data schemas that need registering during load,

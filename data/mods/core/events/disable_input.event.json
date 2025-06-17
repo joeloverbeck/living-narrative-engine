@@ -1,5 +1,5 @@
 {
-  "$schema": "http://example.com/schemas/event-definition.schema.json",
+  "$schema": "http://example.com/schemas/component.schema.json",
   "id": "core:disable_input",
   "description": "Signals that the primary text command input element should be disabled, preventing the user from typing commands. The payload includes a message that should typically be displayed as the input field's placeholder text while disabled.",
   "payloadSchema": {

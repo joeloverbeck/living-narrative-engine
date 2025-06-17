@@ -1,6 +1,7 @@
 {
   "$schema": "http://example.com/schemas/macro.schema.json",
   "id": "core:displaySuccessAndEndTurn",
+  "description": "Displays success and ends the player's turn.",
   "actions": [
     {
       "type": "DISPATCH_EVENT",

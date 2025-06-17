@@ -5,9 +5,9 @@ import { IGameDataRepository } from '../interfaces/IGameDataRepository.js';
 /**
  * @typedef {import('../interfaces/coreServices.js').IDataRegistry} IDataRegistry
  * @typedef {import('../interfaces/coreServices.js').ILogger} ILogger
- * @typedef {import('../../../data/schemas/action-definition.schema.json').ActionDefinition} ActionDefinition
+ * @typedef {import('../../../data/schemas/action.schema.json').ActionDefinition} ActionDefinition
  * @typedef {import('../../../data/schemas/entity-definition.schema.json').EntityDefinition} EntityDefinition
- * @typedef {import('../../../data/schemas/event-definition.schema.json').EventDefinition} EventDefinition
+ * @typedef {import('../../../data/schemas/component.schema.json').EventDefinition} EventDefinition
  * @typedef {import('../../../data/schemas/component.schema.json').ComponentDefinition} ComponentDefinition
  * @typedef {import('../../../data/schemas/condition.schema.json').ConditionDefinition} ConditionDefinition
  */

@@ -1,6 +1,12 @@
+/**
+ * @file Test suite to validate display_successful_action_result
+ * @see tests/schemas/displaySuccessfulActionResult.schema.test.js
+ */
+
 import Ajv from 'ajv';
+import addFormats from 'ajv-formats'; // Import ajv-formats
 import commonSchema from '../../data/schemas/common.schema.json';
-import eventDefSchema from '../../data/schemas/event-definition.schema.json';
+import eventDefSchema from '../../data/schemas/event.schema.json';
 import successEventSchema from '../../data/mods/core/events/display_successful_action_result.event.json';
 import { describe, beforeAll, test, expect } from '@jest/globals';
 
@@ -11,12 +17,13 @@ describe('core:display_successful_action_result schema', () => {
   beforeAll(() => {
     // Allow external $refs and non-strict mode for formats
     ajv = new Ajv({ strict: false });
+    addFormats(ajv); // Add formats to the Ajv instance
     // Register common definitions so "$ref": "./common.schema.json#/definitions/..." resolves
     ajv.addSchema(commonSchema, 'common.schema.json');
     validateDef = ajv.compile(eventDefSchema);
   });
 
-  test('schema is valid against event-definition.schema.json', () => {
+  test('schema is valid against event.schema.json', () => {
     const valid = validateDef(successEventSchema);
     if (!valid) console.error(validateDef.errors);
     expect(valid).toBe(true);

@@ -1,5 +1,5 @@
 {
-  "$schema": "http://example.com/schemas/event-definition.schema.json",
+  "$schema": "http://example.com/schemas/component.schema.json",
   "id": "core:ai_turn_processing_started",
   "description": "Fired just before the game begins processing an AI entity's turn.",
   "payloadSchema": {

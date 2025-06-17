@@ -1,5 +1,5 @@
 {
-  "$schema": "http://example.com/schemas/event-definition.schema.json",
+  "$schema": "http://example.com/schemas/component.schema.json",
   "id": "core:attempt_action",
   "description": "Defines the structure for the 'core:attempt_action' event, dispatched when an actor tries to perform an action.",
   "payloadSchema": {

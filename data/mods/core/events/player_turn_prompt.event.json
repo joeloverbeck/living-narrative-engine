@@ -1,5 +1,5 @@
 {
-  "$schema": "http://example.com/schemas/event-definition.schema.json",
+  "$schema": "http://example.com/schemas/component.schema.json",
   "id": "core:player_turn_prompt",
   "description": "Fired when the game engine needs input from a player entity for their turn.",
   "payloadSchema": {

@@ -16,7 +16,7 @@ const createMockConfiguration = (overrides = {}) => ({
   getContentBasePath: jest.fn((typeName) => `./data/mods/test-mod/${typeName}`),
   getContentTypeSchemaId: jest.fn((typeName) => {
     if (typeName === 'components') {
-      return 'http://example.com/schemas/component-definition.schema.json';
+      return 'http://example.com/schemas/component.schema.json';
     }
     return `http://example.com/schemas/${typeName}.schema.json`;
   }),
@@ -265,7 +265,7 @@ describe('ComponentLoader (Internal Definition Errors)', () => {
   // --- Shared Test Data ---
   const modId = 'internalErrorMod';
   const componentDefSchemaId =
-    'http://example.com/schemas/component-definition.schema.json';
+    'http://example.com/schemas/component.schema.json';
 
   // --- Setup ---
   beforeEach(() => {

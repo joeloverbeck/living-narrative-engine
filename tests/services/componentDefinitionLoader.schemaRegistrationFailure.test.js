@@ -16,7 +16,7 @@ const createMockConfiguration = (overrides = {}) => ({
   getContentBasePath: jest.fn((typeName) => `./data/mods/test-mod/${typeName}`),
   getContentTypeSchemaId: jest.fn((typeName) => {
     if (typeName === 'components') {
-      return 'http://example.com/schemas/component-definition.schema.json';
+      return 'http://example.com/schemas/component.schema.json';
     }
     if (typeName === 'mod-manifest') {
       return 'http://example.com/schemas/mod.manifest.schema.json';
@@ -221,7 +221,7 @@ describe('ComponentLoader (Sub-Ticket 6.8: Data Schema Registration Failure)', (
   // --- Shared Test Data ---
   const modId = 'regFailMod';
   const componentDefSchemaId =
-    'http://example.com/schemas/component-definition.schema.json';
+    'http://example.com/schemas/component.schema.json';
 
   // --- Setup ---
   beforeEach(() => {

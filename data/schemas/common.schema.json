@@ -3,6 +3,25 @@
   "$id": "http://example.com/schemas/common.schema.json",
   "title": "Common Definitions",
   "definitions": {
+    "BaseDefinition": {
+      "type": "object",
+      "properties": {
+        "$schema": {
+          "type": "string",
+          "format": "uri",
+          "description": "Optional. A URI reference to the schema that this document conforms to."
+        },
+        "id": {
+          "$ref": "#/definitions/namespacedId",
+          "description": "Required. Unique, namespaced ID for the definition (e.g., 'core:player', 'combat:action_attack')."
+        },
+        "description": {
+          "type": "string",
+          "description": "Required. A human-readable explanation of what this definition represents or does."
+        }
+      },
+      "required": ["id", "description"]
+    },
     "namespacedId": {
       "description": "A unique identifier string, typically namespaced using a colon (e.g., 'core:player', 'mod_combat:action_attack'). Allows alphanumeric characters, underscore, hyphen, and colon.",
       "type": "string",

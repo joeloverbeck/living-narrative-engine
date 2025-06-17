@@ -33,7 +33,7 @@ const createMockConfiguration = (overrides = {}) => ({
     }
     // Add other types if needed for different loaders tested in the same context potentially
     if (typeName === 'components') {
-      return 'http://example.com/schemas/component-definition.schema.json';
+      return 'http://example.com/schemas/component.schema.json';
     }
     return `http://example.com/schemas/${typeName}.schema.json`; // Generic fallback
   }),

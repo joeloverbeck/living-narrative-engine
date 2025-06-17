@@ -1,14 +1,19 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "http://example.com/schemas/action-definition.schema.json",
-  "title": "Action Definition Schema",
+  "$id": "http://example.com/schemas/action.schema.json",
+  "title": "Action Schema",
   "description": "Defines the structure for an Action Definition, used by the Dynamic Action Discovery system to determine valid commands based on game state. It specifies targeting and JSON Logic prerequisites, and output format. Prerequisites are now handled solely by JSON Logic.",
   "type": "object",
   "definitions": {},
   "properties": {
+    "$schema": {
+      "$ref": "./common.schema.json#/definitions/BaseDefinition/properties/$schema"
+    },
     "id": {
-      "$ref": "./common.schema.json#/definitions/namespacedId",
-      "description": "Required. Unique, namespaced ID for the action definition (e.g., 'core:action_eat', 'combat:action_attack')."
+      "$ref": "./common.schema.json#/definitions/BaseDefinition/properties/id"
+    },
+    "description": {
+      "$ref": "./common.schema.json#/definitions/BaseDefinition/properties/description"
     },
     "commandVerb": {
       "type": "string",
@@ -20,10 +25,6 @@
     "name": {
       "type": "string",
       "description": "Optional. Human-readable name or verb for the action (e.g., 'Eat', 'Attack', 'Go'). This is the primary display name for the action in UI elements like buttons and tooltips."
-    },
-    "description": {
-      "type": "string",
-      "description": "Optional. A detailed description of what the action does. Used for tooltips and can be leveraged by LLMs for contextual understanding."
     },
     "target_domain": {
       "type": "string",
@@ -66,9 +67,9 @@
   },
   "required": [
     "id",
+    "description",
     "commandVerb",
     "name",
-    "description",
     "target_domain",
     "template"
   ],

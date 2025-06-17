@@ -1,5 +1,5 @@
 {
-  "$schema": "http://example.com/schemas/component-definition.schema.json",
+  "$schema": "http://example.com/schemas/component.schema.json",
   "id": "core:dislikes",
   "description": "Stores a list of things the character dislikes, typically as a delimited string.",
   "dataSchema": {

@@ -22,7 +22,7 @@
 const fs = require('fs');
 const path = require('path');
 
-/* ── Load the two event-definition JSON files directly via require() ───────── */
+/* ── Load the two component JSON files directly via require() ───────── */
 const warningEventDef = require('../../data/mods/core/events/system_warning_occurred.event.json');
 const errorEventDef = require('../../data/mods/core/events/system_error_occurred.event.json');
 

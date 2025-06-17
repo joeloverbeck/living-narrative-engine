@@ -1,5 +1,5 @@
 {
-  "$schema": "http://example.com/schemas/component-definition.schema.json",
+  "$schema": "http://example.com/schemas/component.schema.json",
   "id": "core:speech_patterns",
   "description": "Stores distinctive examples of the character's speech patterns and signature phrases. This component aims to define a unique verbal style that reflects their core personality, background, education, and any linguistic idiosyncrasies, enabling an LLM to generate dialogue that is not only in-character but also memorable and individual.",
   "dataSchema": {

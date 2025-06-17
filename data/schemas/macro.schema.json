@@ -6,12 +6,13 @@
   "type": "object",
   "properties": {
     "$schema": {
-      "type": "string",
-      "description": "Optional schema reference for tooling."
+      "$ref": "./common.schema.json#/definitions/BaseDefinition/properties/$schema"
     },
     "id": {
-      "type": "string",
-      "description": "Unique identifier for this macro."
+      "$ref": "./common.schema.json#/definitions/BaseDefinition/properties/id"
+    },
+    "description": {
+      "$ref": "./common.schema.json#/definitions/BaseDefinition/properties/description"
     },
     "actions": {
       "type": "array",
@@ -26,6 +27,6 @@
       "description": "Optional note for modders. Ignored at runtime."
     }
   },
-  "required": ["id", "actions"],
+  "required": ["id", "description", "actions"],
   "additionalProperties": false
 }

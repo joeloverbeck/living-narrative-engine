@@ -1,3 +1,8 @@
+/**
+ * @file Test suite to validate the goals component schema.
+ * @see tests/schemas/core.goals.schema.test.js
+ */
+
 import Ajv from 'ajv';
 import addFormats from 'ajv-formats';
 

@@ -1,5 +1,5 @@
 {
-  "$schema": "http://example.com/schemas/component-definition.schema.json",
+  "$schema": "http://example.com/schemas/component.schema.json",
   "id": "core:personality",
   "description": "Stores the character's personality traits, typically as a delimited string.",
   "dataSchema": {

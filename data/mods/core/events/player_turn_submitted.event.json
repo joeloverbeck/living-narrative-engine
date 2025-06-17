@@ -1,5 +1,5 @@
 {
-  "$schema": "http://example.com/schemas/event-definition.schema.json",
+  "$schema": "http://example.com/schemas/component.schema.json",
   "id": "core:player_turn_submitted",
   "description": "Signals that the player has finalized their action choice for the current turn by submitting it from the UI. The payload now uses an integer index instead of a string actionId.",
   "payloadSchema": {

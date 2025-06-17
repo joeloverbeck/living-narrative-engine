@@ -1,5 +1,5 @@
 {
-  "$schema": "http://example.com/schemas/event-definition.schema.json",
+  "$schema": "http://example.com/schemas/component.schema.json",
   "id": "core:perceptible_event",
   "description": "Dispatched when an action or occurrence happens that should be perceptible to entities within a specific location. This event is intended to be logged by observers for creating a history of local happenings.",
   "payloadSchema": {

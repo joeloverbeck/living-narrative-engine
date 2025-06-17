@@ -65,9 +65,9 @@ const mockConfiguration = {
   getContentTypeSchemaId: jest.fn((typeName) => {
     const map = {
       /* map based on actual dependencyInjection if needed */
-      components: 'http://example.com/schemas/component-definition.schema.json',
-      actions: 'http://example.com/schemas/action-definition.schema.json',
-      events: 'http://example.com/schemas/event-definition.schema.json',
+      components: 'http://example.com/schemas/component.schema.json',
+      actions: 'http://example.com/schemas/action.schema.json',
+      events: 'http://example.com/schemas/component.schema.json',
       entities: 'http://example.com/schemas/entity.schema.json', // Needed by EntityLoader
       rules: 'http://example.com/schemas/rule.schema.json',
       game: 'http://example.com/schemas/game.schema.json',

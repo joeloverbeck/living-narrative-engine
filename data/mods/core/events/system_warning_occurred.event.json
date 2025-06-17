@@ -1,5 +1,5 @@
 {
-  "$schema": "http://example.com/schemas/event-definition.schema.json",
+  "$schema": "http://example.com/schemas/component.schema.json",
   "id": "core:system_warning_occurred",
   "description": "Fired when a general system‐level warning occurs that isn’t tied to a specific action failure.",
   "payloadSchema": {

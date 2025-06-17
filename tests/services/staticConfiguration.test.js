@@ -11,13 +11,13 @@ const EXPECTED_BASE_DATA_PATH = './data';
 // This list now reflects that operation schemas are in a subdirectory.
 const EXPECTED_SCHEMA_FILES = [
   'common.schema.json',
-  'action-definition.schema.json',
+  'action.schema.json',
   'action-result.schema.json',
-  'component-definition.schema.json',
+  'component.schema.json',
   'condition.schema.json',
   'condition-container.schema.json',
   'entity.schema.json',
-  'event-definition.schema.json',
+  'component.schema.json',
   'game.schema.json',
   'json-logic.schema.json',
   'mod.manifest.schema.json',
@@ -63,13 +63,13 @@ const EXPECTED_SCHEMA_FILES = [
 
 // Source: const CONTENT_TYPE_SCHEMAS = {...}
 const EXPECTED_CONTENT_TYPE_SCHEMAS = {
-  actions: 'http://example.com/schemas/action-definition.schema.json',
+  actions: 'http://example.com/schemas/action.schema.json',
   blockers: 'http://example.com/schemas/entity.schema.json',
-  components: 'http://example.com/schemas/component-definition.schema.json',
+  components: 'http://example.com/schemas/component.schema.json',
   conditions: 'http://example.com/schemas/condition.schema.json',
   connections: 'http://example.com/schemas/entity.schema.json',
   entities: 'http://example.com/schemas/entity.schema.json',
-  events: 'http://example.com/schemas/event-definition.schema.json',
+  events: 'http://example.com/schemas/event.schema.json',
   game: 'http://example.com/schemas/game.schema.json',
   items: 'http://example.com/schemas/entity.schema.json',
   locations: 'http://example.com/schemas/entity.schema.json',

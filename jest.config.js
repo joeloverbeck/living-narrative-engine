@@ -50,9 +50,9 @@ module.exports = {
   // Optional: Enforce coverage levels. Uncomment and adjust as needed.
   coverageThreshold: {
     global: {
-      branches: 0,
-      functions: 0,
-      lines: 0,
+      branches: 80,
+      functions: 80,
+      lines: 80,
       statements: -2000,
     },
   },

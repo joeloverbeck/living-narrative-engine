@@ -17,7 +17,7 @@ const createMockConfiguration = (overrides = {}) => ({
   getContentBasePath: jest.fn((typeName) => `./data/mods/test-mod/${typeName}`),
   getContentTypeSchemaId: jest.fn((typeName) => {
     if (typeName === 'components') {
-      return 'http://example.com/schemas/component-definition.schema.json';
+      return 'http://example.com/schemas/component.schema.json';
     }
     return `http://example.com/schemas/${typeName}.schema.json`;
   }),
@@ -244,7 +244,7 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.7: Path/Fetch Errors)', () => 
   const filename = 'file.component.json';
   const errorManifest = createMockModManifest(modId, [filename]); // Manifest with one file
   const componentDefinitionSchemaId =
-    'http://example.com/schemas/component-definition.schema.json';
+    'http://example.com/schemas/component.schema.json';
 
   // --- Setup ---
   beforeEach(() => {
