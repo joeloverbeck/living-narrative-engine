@@ -24,7 +24,6 @@ import {
 import { HumanDecisionProvider } from '../../turns/providers/humanDecisionProvider.js';
 import { TurnContextBuilder } from '../../turns/builders/turnContextBuilder.js';
 import { assertValidEntity } from '../../utils/entityAssertionsUtils.js';
-import { registerGenericStrategy } from './registerGenericStrategy.js';
 
 /**
  * @param {import('../appContainer.js').default} container
@@ -100,9 +99,6 @@ export function registerTurnLifecycle(container) {
         safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
       })
   );
-
-  // ────────────────── Turn Strategy Factory ──────────────────
-  registerGenericStrategy(container, tokens.IHumanDecisionProvider);
 
   // ──────────────────── Validation Utils ─────────────────────
   r.singletonFactory(
