@@ -5,7 +5,12 @@
  *
  * @module auxiliaryStages
  */
-import { resolveAndInitialize } from './helpers.js';
+import {
+  resolveAndInitialize,
+  stageSuccess,
+  stageFailure,
+  createStageError,
+} from './helpers.js';
 
 /**
  * @typedef {import('../dependencyInjection/appContainer.js').default} AppContainer
@@ -84,14 +89,13 @@ export function initLlmSelectionModal({ container, logger, tokens }) {
     const modal = container.resolve(tokens.LlmSelectionModal);
     if (modal) {
       logger.debug(`${stage}: Resolved successfully.`);
-      return { success: true };
+      return stageSuccess();
     }
-    const err = new Error('LlmSelectionModal could not be resolved.');
-    logger.warn(`${stage}: ${err.message}`);
-    return { success: false, error: err };
+    logger.warn(`${stage}: LlmSelectionModal could not be resolved.`);
+    return stageFailure(stage, 'LlmSelectionModal could not be resolved.');
   } catch (err) {
     logger.error(`${stage}: Error during resolution.`, err);
-    return { success: false, error: err };
+    return stageFailure(stage, err.message, err);
   }
 }
 
@@ -108,14 +112,16 @@ export function initCurrentTurnActorRenderer({ container, logger, tokens }) {
     const renderer = container.resolve(tokens.CurrentTurnActorRenderer);
     if (renderer) {
       logger.debug(`${stage}: Resolved successfully.`);
-      return { success: true };
+      return stageSuccess();
     }
-    const err = new Error('CurrentTurnActorRenderer could not be resolved.');
-    logger.warn(`${stage}: ${err.message}`);
-    return { success: false, error: err };
+    logger.warn(`${stage}: CurrentTurnActorRenderer could not be resolved.`);
+    return stageFailure(
+      stage,
+      'CurrentTurnActorRenderer could not be resolved.'
+    );
   } catch (err) {
     logger.error(`${stage}: Error during resolution.`, err);
-    return { success: false, error: err };
+    return stageFailure(stage, err.message, err);
   }
 }
 
@@ -132,14 +138,13 @@ export function initSpeechBubbleRenderer({ container, logger, tokens }) {
     const renderer = container.resolve(tokens.SpeechBubbleRenderer);
     if (renderer) {
       logger.debug(`${stage}: Resolved successfully.`);
-      return { success: true };
+      return stageSuccess();
     }
-    const err = new Error('SpeechBubbleRenderer could not be resolved.');
-    logger.warn(`${stage}: ${err.message}`);
-    return { success: false, error: err };
+    logger.warn(`${stage}: SpeechBubbleRenderer could not be resolved.`);
+    return stageFailure(stage, 'SpeechBubbleRenderer could not be resolved.');
   } catch (err) {
     logger.error(`${stage}: Error during resolution.`, err);
-    return { success: false, error: err };
+    return stageFailure(stage, err.message, err);
   }
 }
 
@@ -160,16 +165,18 @@ export function initProcessingIndicatorController({
     const ctrl = container.resolve(tokens.ProcessingIndicatorController);
     if (ctrl) {
       logger.debug(`${stage}: Resolved successfully.`);
-      return { success: true };
+      return stageSuccess();
     }
-    const err = new Error(
+    logger.warn(
+      `${stage}: ProcessingIndicatorController could not be resolved.`
+    );
+    return stageFailure(
+      stage,
       'ProcessingIndicatorController could not be resolved.'
     );
-    logger.warn(`${stage}: ${err.message}`);
-    return { success: false, error: err };
   } catch (err) {
     logger.error(`${stage}: Error during resolution.`, err);
-    return { success: false, error: err };
+    return stageFailure(stage, err.message, err);
   }
 }
 
@@ -263,16 +270,15 @@ export async function initializeAuxiliaryServicesStage(
 
   if (failures.length > 0) {
     const failList = failures.map((f) => f.service).join(', ');
-    const aggregatedError = new Error(`Failed to initialize: ${failList}`);
-    aggregatedError.phase = stageName;
-    aggregatedError.failures = failures;
+    const result = stageFailure(stageName, `Failed to initialize: ${failList}`);
+    result.error.failures = failures;
     logger.error(
       `Bootstrap Stage: ${stageName} encountered failures: ${failList}`,
-      aggregatedError
+      result.error
     );
-    return { success: false, error: aggregatedError };
+    return result;
   }
 
   logger.debug(`Bootstrap Stage: ${stageName} completed.`);
-  return { success: true };
+  return stageSuccess();
 }
