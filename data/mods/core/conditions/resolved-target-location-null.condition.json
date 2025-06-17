@@ -1,0 +1,6 @@
+{
+  "$schema": "http://example.com/schemas/condition.schema.json",
+  "id": "core:resolved-target-location-null",
+  "description": "True when context.resolvedTargetLocationId is null.",
+  "logic": { "==": [{ "var": "context.resolvedTargetLocationId" }, null] }
+}

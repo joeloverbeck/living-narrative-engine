@@ -1,0 +1,6 @@
+{
+  "$schema": "http://example.com/schemas/condition.schema.json",
+  "id": "core:following-leader-is-event-entity",
+  "description": "Matches when a core:following component's leaderId equals the event entity.",
+  "logic": { "==": [{ "var": "leaderId" }, "{event.payload.entityId}"] }
+}

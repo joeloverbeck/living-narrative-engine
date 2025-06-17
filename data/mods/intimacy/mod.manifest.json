@@ -37,7 +37,8 @@
       "event-is-action-step-back.condition.json",
       "event-is-action-thumb-wipe-cheek.condition.json",
       "target-is-actors-closeness-partner.condition.json",
-      "target-is-in-actors-closeness-partners-list.condition.json"
+      "target-is-in-actors-closeness-partners-list.condition.json",
+      "room-has-kissing-pair.condition.json"
     ],
     "macros": []
   }
