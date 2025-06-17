@@ -7,7 +7,9 @@
   "scripts": {
     "start": "node src/core/server.js",
     "dev": "node --watch src/core/server.js",
-    "test": "jest --coverage",
+    "test": "jest --env=jsdom --silent --coverage",
+    "test:single": "jest --env=jsdom",
+    "test:ci": "jest --env=jsdom --ci --silent --coverage",
     "format": "prettier --write \"**/*.{js,json,md,cjs}\" --log-level error",
     "format:check": "prettier --check \"**/*.{js,json,md,cjs}\" --log-level error",
     "lint": "eslint . --ext .js,.cjs --fix"
