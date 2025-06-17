@@ -4,6 +4,8 @@
  * @file Utility helpers used during application bootstrap stages.
  */
 
+import StageError from './StageError.js';
+
 /**
  * @typedef {import('../dependencyInjection/appContainer.js').default} AppContainer
  * @typedef {import('../interfaces/coreServices.js').ILogger} ILogger
@@ -111,9 +113,7 @@ export function attachBeforeUnload(windowRef, handler) {
  * @returns {Error} The constructed Error instance.
  */
 export function createStageError(phase, message, cause) {
-  const error = new Error(message, cause ? { cause } : undefined);
-  error.phase = phase;
-  return error;
+  return new StageError(phase, message, cause);
 }
 
 /**

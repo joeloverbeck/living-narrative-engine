@@ -1,5 +1,6 @@
 import { describe, it, expect, jest, afterEach } from '@jest/globals';
 import { setupMenuButtonListenersStage } from '../../src/bootstrapper/stages/index.js';
+import StageError from '../../src/bootstrapper/StageError.js';
 
 /**
  *
@@ -71,6 +72,7 @@ describe('setupMenuButtonListenersStage', () => {
 
     const result = await setupMenuButtonListenersStage({}, logger, fakeDoc);
     expect(result.success).toBe(false);
+    expect(result.error).toBeInstanceOf(StageError);
     expect(result.error.phase).toBe('Menu Button Listeners Setup');
     expect(logger.error).toHaveBeenCalled();
   });
