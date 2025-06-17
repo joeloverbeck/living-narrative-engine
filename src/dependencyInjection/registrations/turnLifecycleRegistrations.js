@@ -6,7 +6,6 @@
  */
 
 import TurnManager from '../../turns/turnManager.js';
-import ActorTurnHandler from '../../turns/handlers/actorTurnHandler.js';
 import TurnHandlerResolver from '../../turns/services/turnHandlerResolver.js';
 import { TurnOrderService } from '../../turns/order/turnOrderService.js';
 import PromptCoordinator from '../../turns/prompting/promptCoordinator.js';
@@ -17,7 +16,7 @@ import { ConcreteTurnStateFactory } from '../../turns/factories/concreteTurnStat
 
 import { tokens } from '../tokens.js';
 import { Registrar } from '../registrarHelpers.js';
-import { INITIALIZABLE, SHUTDOWNABLE } from '../tags.js';
+import { INITIALIZABLE } from '../tags.js';
 import {
   PLAYER_COMPONENT_ID,
   ACTOR_COMPONENT_ID,
@@ -130,29 +129,6 @@ export function registerTurnLifecycle(container) {
         turnContextFactory: c.resolve(tokens.ITurnContextFactory),
         assertValidEntity: c.resolve(tokens.assertValidEntity),
       })
-  );
-
-  // ─────────────────── Player handler ────────────────────
-  r.tagged(SHUTDOWNABLE).transientFactory(
-    tokens.ActorTurnHandler,
-    (c) =>
-      new ActorTurnHandler({
-        logger: c.resolve(tokens.ILogger),
-        turnStateFactory: c.resolve(tokens.ITurnStateFactory),
-        commandProcessor: c.resolve(tokens.ICommandProcessor),
-        turnEndPort: c.resolve(tokens.ITurnEndPort),
-        promptCoordinator: c.resolve(tokens.IPromptCoordinator),
-        commandOutcomeInterpreter: c.resolve(tokens.ICommandOutcomeInterpreter),
-        safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
-        turnStrategyFactory: c.resolve(tokens.HumanStrategyFactory), // <-- Injected factory
-        entityManager: c.resolve(tokens.IEntityManager),
-        turnContextBuilder: c.resolve(tokens.TurnContextBuilder), // <-- Injected builder
-      })
-  );
-  logger.debug(
-    `Turn Lifecycle Registration: Registered ActorTurnHandler with new strategy deps tagged ${SHUTDOWNABLE.join(
-      ', '
-    )}.`
   );
 
   // ────────────────── Resolver & manager ──────────────────
