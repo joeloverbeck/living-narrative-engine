@@ -169,18 +169,15 @@ class SaveLoadService extends ISaveLoadService {
   async listManualSaveSlots() {
     this.#logger.debug('Listing manual save slots...');
     const files = await this.#fileRepository.listManualSaveFiles();
-    const collectedMetadata = [];
 
-    for (const fileName of files) {
-      const metadata =
-        await this.#fileRepository.parseManualSaveMetadata(fileName);
-      collectedMetadata.push(metadata);
-    }
+    const metadataList = await Promise.all(
+      files.map((name) => this.#fileRepository.parseManualSaveMetadata(name))
+    );
 
     this.#logger.debug(
-      `Finished listing manual save slots. Returning ${collectedMetadata.length} items.`
+      `Finished listing manual save slots. Returning ${metadataList.length} items.`
     );
-    return collectedMetadata;
+    return metadataList;
   }
 
   /**
