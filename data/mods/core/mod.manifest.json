@@ -108,7 +108,8 @@
       "target-is-in-same-location-as-actor.condition.json",
       "target-is-not-rooted.condition.json",
       "target-is-not-self.condition.json",
-      "way-is-not-blocked.condition.json"
+      "way-is-not-blocked.condition.json",
+      "actor-has-name-and-position.condition.json"
     ]
   }
 }
