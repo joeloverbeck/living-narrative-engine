@@ -24,12 +24,19 @@ function setPath(obj, path, value) {
   let current = obj;
   for (let i = 0; i < pathParts.length - 1; i++) {
     const part = pathParts[i];
+    if (part === "__proto__" || part === "constructor") {
+      throw new Error(`Unsafe property name detected: ${part}`);
+    }
     if (current[part] === undefined || typeof current[part] !== 'object') {
       current[part] = {};
     }
     current = current[part];
   }
-  current[pathParts[pathParts.length - 1]] = value;
+  const lastPart = pathParts[pathParts.length - 1];
+  if (lastPart === "__proto__" || lastPart === "constructor") {
+    throw new Error(`Unsafe property name detected: ${lastPart}`);
+  }
+  current[lastPart] = value;
 }
 
 /**
