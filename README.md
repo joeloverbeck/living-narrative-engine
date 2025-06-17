@@ -369,6 +369,8 @@ Details of every allowed field with a sample manifest.
 Overview of the `ui/` folder and how icons/labels are merged.
 **Display Error Event Payload ➜ docs/events/display_error_payload.md**
 Overview of the payload structure emitted when dispatching `core:display_error` events.
+**Turn Processing Events ➜ docs/events/turn_processing_events.md**
+Overview of the events fired when any actor's turn processing begins and ends.
 
 **Namespaced IDs & resolveFields ➜ docs/mods/namespaced_ids_and_resolveFields.md**
 Explains how identifiers are namespaced and how reference resolution works across mods.
