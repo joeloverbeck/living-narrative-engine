@@ -65,11 +65,10 @@ export class AwaitingExternalTurnEndState extends AbstractTurnState {
     // --- REFACTORED: Use SafeEventDispatcher directly ---
     // The context now provides the dispatcher directly, bypassing the problematic manager.
     // The returned unsubscribe function is stored and used identically to before.
-    this.#unsubscribeFn = ctx
-      .getSafeEventDispatcher()
-      .subscribe(TURN_ENDED_ID, (event) =>
-        this.handleTurnEndedEvent(handler, event)
-      );
+    const dispatcher = this._getSafeEventDispatcher(ctx);
+    this.#unsubscribeFn = dispatcher?.subscribe(TURN_ENDED_ID, (event) =>
+      this.handleTurnEndedEvent(handler, event)
+    );
 
     // mark context
     ctx.setAwaitingExternalEvent(true, ctx.getActor().id);
@@ -143,7 +142,8 @@ export class AwaitingExternalTurnEndState extends AbstractTurnState {
     );
 
     // 1) tell the UI / console
-    ctx.getSafeEventDispatcher?.().dispatch(SYSTEM_ERROR_OCCURRED_ID, {
+    const dispatcher = this._getSafeEventDispatcher(ctx, handler);
+    dispatcher?.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
       message: msg,
       details: {
         code: err.code,
