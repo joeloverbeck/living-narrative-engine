@@ -189,20 +189,11 @@ export default class SaveFileRepository {
    * Deletes a manual save file.
    *
    * @param {string} filePath - Full path to the save file.
-   * @param path
    * @returns {Promise<import('./persistenceTypes.js').PersistenceResult<null>>} Result of deletion.
    */
-  async #fileExists(path) {
-    return this.#storageProvider.fileExists(path);
-  }
-
-  async #deleteFile(path) {
-    return this.#storageProvider.deleteFile(path);
-  }
-
   async deleteSaveFile(filePath) {
     return wrapPersistenceOperation(this.#logger, async () => {
-      const exists = await this.#fileExists(filePath);
+      const exists = await this.#storageProvider.fileExists(filePath);
       if (!exists) {
         const msg = `Save file "${filePath}" not found for deletion.`;
         const userMsg = 'Cannot delete: Save file not found.';
@@ -213,7 +204,7 @@ export default class SaveFileRepository {
         );
       }
 
-      const deleteResult = await this.#deleteFile(filePath);
+      const deleteResult = await this.#storageProvider.deleteFile(filePath);
       if (deleteResult.success) {
         this.#logger.debug(`Manual save "${filePath}" deleted successfully.`);
         return deleteResult;
