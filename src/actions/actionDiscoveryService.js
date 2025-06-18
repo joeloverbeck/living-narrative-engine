@@ -83,6 +83,155 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
   }
 
   /**
+   * Handles discovery for actions targeting 'self' or having no target.
+   *
+   * @param {import('../data/gameDataRepository.js').ActionDefinition} actionDef
+   * @param {Entity} actorEntity
+   * @param {object} formatterOptions
+   * @returns {import('../interfaces/IActionDiscoveryService.js').DiscoveredActionInfo[]}
+   */
+  #discoverSelfOrNone(actionDef, actorEntity, formatterOptions) {
+    const targetCtx =
+      actionDef.target_domain === 'self'
+        ? ActionTargetContext.forEntity(actorEntity.id)
+        : ActionTargetContext.noTarget();
+
+    if (
+      this.#actionValidationService.isValid(actionDef, actorEntity, targetCtx)
+    ) {
+      const cmd = this.#formatActionCommandFn(
+        actionDef,
+        targetCtx,
+        this.#entityManager,
+        formatterOptions
+      );
+      if (cmd !== null) {
+        return [
+          {
+            id: actionDef.id,
+            name: actionDef.name || actionDef.commandVerb,
+            command: cmd,
+            description: actionDef.description || '',
+            params: {},
+          },
+        ];
+      }
+    }
+    return [];
+  }
+
+  /**
+   * Handles discovery for actions targeting a direction.
+   *
+   * @param {import('../data/gameDataRepository.js').ActionDefinition} actionDef
+   * @param {Entity} actorEntity
+   * @param {Entity|string|null} currentLocation
+   * @param {string} locIdForLog
+   * @param {object} formatterOptions
+   * @returns {import('../interfaces/IActionDiscoveryService.js').DiscoveredActionInfo[]}
+   */
+  #discoverDirectionalActions(
+    actionDef,
+    actorEntity,
+    currentLocation,
+    locIdForLog,
+    formatterOptions
+  ) {
+    if (!currentLocation) {
+      this.#logger.debug(
+        `No location for actor ${actorEntity.id}; skipping direction-based actions.`
+      );
+      return [];
+    }
+
+    const exits = getAvailableExits(
+      currentLocation,
+      this.#entityManager,
+      this.#safeEventDispatcher,
+      this.#logger
+    );
+    this.#logger.debug(
+      `Found ${exits.length} available exits for location: ${locIdForLog} via getAvailableExits.`
+    );
+
+    /** @type {import('../interfaces/IActionDiscoveryService.js').DiscoveredActionInfo[]} */
+    const discovered = [];
+
+    for (const exit of exits) {
+      const targetCtx = ActionTargetContext.forDirection(exit.direction);
+
+      if (
+        this.#actionValidationService.isValid(actionDef, actorEntity, targetCtx)
+      ) {
+        const cmd = this.#formatActionCommandFn(
+          actionDef,
+          targetCtx,
+          this.#entityManager,
+          formatterOptions
+        );
+        if (cmd !== null) {
+          discovered.push({
+            id: actionDef.id,
+            name: actionDef.name || actionDef.commandVerb,
+            command: cmd,
+            description: actionDef.description || '',
+            params: { targetId: exit.target },
+          });
+        }
+      }
+    }
+
+    return discovered;
+  }
+
+  /**
+   * Handles discovery for actions targeting entities via scope domains.
+   *
+   * @param {import('../data/gameDataRepository.js').ActionDefinition} actionDef
+   * @param {Entity} actorEntity
+   * @param {string} domain
+   * @param {ActionContext} context
+   * @param {object} formatterOptions
+   * @returns {import('../interfaces/IActionDiscoveryService.js').DiscoveredActionInfo[]}
+   */
+  #discoverScopedEntityActions(
+    actionDef,
+    actorEntity,
+    domain,
+    context,
+    formatterOptions
+  ) {
+    const ids = this.#getEntityIdsForScopesFn([domain], context) ?? new Set();
+    /** @type {import('../interfaces/IActionDiscoveryService.js').DiscoveredActionInfo[]} */
+    const discovered = [];
+
+    for (const targetId of ids) {
+      const targetCtx = ActionTargetContext.forEntity(targetId);
+      if (
+        this.#actionValidationService.isValid(actionDef, actorEntity, targetCtx)
+      ) {
+        const cmd = this.#formatActionCommandFn(
+          actionDef,
+          targetCtx,
+          this.#entityManager,
+          formatterOptions
+        );
+        if (cmd !== null) {
+          discovered.push({
+            id: actionDef.id,
+            name: actionDef.name || actionDef.commandVerb,
+            command: cmd,
+            description: actionDef.description || '',
+            params: { targetId },
+          });
+        }
+      }
+    }
+
+    return discovered;
+  }
+
+  /**
    * @param {Entity} actorEntity
    * @param {ActionContext} context
    * @returns {Promise<import('../interfaces/IActionDiscoveryService.js').DiscoveredActionInfo[]>}
@@ -94,6 +243,12 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
     const allDefs = this.#gameDataRepository.getAllActionDefinitions();
     /** @type {import('../interfaces/IActionDiscoveryService.js').DiscoveredActionInfo[]} */
     const validActions = [];
+
+    const formatterOptions = {
+      logger: this.#logger,
+      debug: true,
+      safeEventDispatcher: this.#safeEventDispatcher,
+    };
 
     /* ── Resolve actor location via utility ───────── */
     let currentLocation = getActorLocation(actorEntity.id, this.#entityManager);
@@ -107,127 +262,35 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
     for (const actionDef of allDefs) {
       const domain = actionDef.target_domain;
       try {
-        /* 1) none / self */
-        if (domain === 'none' || domain === 'self') {
-          const targetCtx =
-            domain === 'self'
-              ? ActionTargetContext.forEntity(actorEntity.id)
-              : ActionTargetContext.noTarget();
-
-          if (
-            this.#actionValidationService.isValid(
+        let discovered = [];
+        switch (domain) {
+          case 'none':
+          case 'self':
+            discovered = this.#discoverSelfOrNone(
               actionDef,
               actorEntity,
-              targetCtx
-            )
-          ) {
-            const cmd = this.#formatActionCommandFn(
+              formatterOptions
+            );
+            break;
+          case 'direction':
+            discovered = this.#discoverDirectionalActions(
               actionDef,
-              targetCtx,
-              this.#entityManager,
-              {
-                logger: this.#logger,
-                debug: true,
-                safeEventDispatcher: this.#safeEventDispatcher,
-              }
+              actorEntity,
+              currentLocation,
+              locIdForLog,
+              formatterOptions
             );
-            if (cmd !== null) {
-              validActions.push({
-                id: actionDef.id,
-                name: actionDef.name || actionDef.commandVerb,
-                command: cmd,
-                description: actionDef.description || '',
-                params: {},
-              });
-            }
-          }
-
-          /* 2) direction */
-        } else if (domain === 'direction') {
-          if (!currentLocation) {
-            this.#logger.debug(
-              `No location for actor ${actorEntity.id}; skipping direction-based actions.`
+            break;
+          default:
+            discovered = this.#discoverScopedEntityActions(
+              actionDef,
+              actorEntity,
+              domain,
+              context,
+              formatterOptions
             );
-            continue;
-          }
-
-          const exits = getAvailableExits(
-            currentLocation,
-            this.#entityManager,
-            this.#safeEventDispatcher,
-            this.#logger
-          );
-          this.#logger.debug(
-            `Found ${exits.length} available exits for location: ${locIdForLog} via getAvailableExits.`
-          );
-
-          for (const exit of exits) {
-            const targetCtx = ActionTargetContext.forDirection(exit.direction);
-
-            if (
-              this.#actionValidationService.isValid(
-                actionDef,
-                actorEntity,
-                targetCtx
-              )
-            ) {
-              const cmd = this.#formatActionCommandFn(
-                actionDef,
-                targetCtx,
-                this.#entityManager,
-                {
-                  logger: this.#logger,
-                  debug: true,
-                  safeEventDispatcher: this.#safeEventDispatcher,
-                }
-              );
-              if (cmd !== null) {
-                validActions.push({
-                  id: actionDef.id,
-                  name: actionDef.name || actionDef.commandVerb,
-                  command: cmd,
-                  description: actionDef.description || '',
-                  params: { targetId: exit.target },
-                });
-              }
-            }
-          }
-
-          /* 3) other scopes / entity */
-        } else {
-          const ids =
-            this.#getEntityIdsForScopesFn([domain], context) ?? new Set();
-          for (const targetId of ids) {
-            const targetCtx = ActionTargetContext.forEntity(targetId);
-            if (
-              this.#actionValidationService.isValid(
-                actionDef,
-                actorEntity,
-                targetCtx
-              )
-            ) {
-              const cmd = this.#formatActionCommandFn(
-                actionDef,
-                targetCtx,
-                this.#entityManager,
-                {
-                  logger: this.#logger,
-                  debug: true,
-                  safeEventDispatcher: this.#safeEventDispatcher,
-                }
-              );
-              if (cmd !== null) {
-                validActions.push({
-                  id: actionDef.id,
-                  name: actionDef.name || actionDef.commandVerb,
-                  command: cmd,
-                  description: actionDef.description || '',
-                  params: { targetId },
-                });
-              }
-            }
-          }
         }
+        validActions.push(...discovered);
       } catch (err) {
         safeDispatchError(
           this.#safeEventDispatcher,
