@@ -142,7 +142,7 @@ describe('GamePersistenceService error paths', () => {
       saveLoadService.loadGameData.mockRejectedValue(new Error('load fail'));
       const result = await service.loadAndRestoreGame('slot');
       expect(result.success).toBe(false);
-      expect(result.error.message).toMatch('Unexpected error');
+      expect(result.error.message).toBe('load fail');
       expect(logger.error).toHaveBeenCalled();
     });
   });

@@ -219,23 +219,9 @@ class GamePersistenceService extends IGamePersistenceService {
       };
     }
 
-    let loadResult;
-    try {
-      loadResult = await this.#saveLoadService.loadGameData(saveIdentifier);
-    } catch (serviceError) {
-      const errorMsg = `Unexpected error calling SaveLoadService.loadGameData for "${saveIdentifier}": ${serviceError.message}`;
-      this.#logger.error(
-        `GamePersistenceService.loadAndRestoreGame: ${errorMsg}`,
-        serviceError
-      );
-      return {
-        ...createPersistenceFailure(
-          PersistenceErrorCodes.UNEXPECTED_ERROR,
-          `Unexpected error during data loading: ${serviceError.message}`
-        ),
-        data: null,
-      };
-    }
+    const loadResult = await wrapPersistenceOperation(this.#logger, async () =>
+      this.#saveLoadService.loadGameData(saveIdentifier)
+    );
 
     if (!loadResult?.success || !loadResult?.data) {
       const reason = loadResult?.error || 'Load failed or no data returned.';
