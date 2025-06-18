@@ -176,18 +176,13 @@ export function getExitByDirection(
     return null;
   }
 
-  const locationEntity = _resolveLocationEntity(
+  const exitsData = _getExitsComponentData(
     locationEntityOrId,
     entityManager,
     log,
     dispatcher
   );
 
-  if (!locationEntity) {
-    return null;
-  }
-
-  const exitsData = _readExitsComponent(locationEntity, log);
   if (!exitsData || exitsData.length === 0) {
     return null;
   }
@@ -236,17 +231,12 @@ export function getAvailableExits(
   logger
 ) {
   const log = getModuleLogger('locationUtils', logger);
-  const locationEntity = _resolveLocationEntity(
+  const exitsData = _getExitsComponentData(
     locationEntityOrId,
     entityManager,
     log,
     dispatcher
   );
-  if (!locationEntity) {
-    return [];
-  }
-
-  const exitsData = _readExitsComponent(locationEntity, log);
   if (!exitsData || exitsData.length === 0) {
     return [];
   }
@@ -273,5 +263,3 @@ export function getAvailableExits(
   }
   return validExits;
 }
-
-export { _getExitsComponentData };
