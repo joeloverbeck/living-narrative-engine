@@ -161,31 +161,20 @@ export default class SaveFileRepository {
    * @returns {Promise<import('../interfaces/ISaveLoadService.js').SaveFileMetadata>} Parsed metadata.
    */
   async parseManualSaveMetadata(fileName) {
-    const { success, data: metadata } = await parseManualSaveFile(
+    const { data: metadata } = await parseManualSaveFile(
       fileName,
       this.#storageProvider,
       this.#serializer,
       this.#logger
     );
 
-    if (!success) {
-      return metadata;
+    if (!metadata.isCorrupted) {
+      this.#logger.debug(
+        `Successfully parsed metadata for ${metadata.identifier}: Name="${metadata.saveName}", Timestamp="${metadata.timestamp}"`
+      );
     }
 
-    const validated = validateSaveMetadataFields(
-      metadata,
-      fileName,
-      this.#logger
-    );
-
-    if (validated.isCorrupted) {
-      return validated;
-    }
-
-    this.#logger.debug(
-      `Successfully parsed metadata for ${validated.identifier}: Name="${validated.saveName}", Timestamp="${validated.timestamp}"`
-    );
-    return validated;
+    return metadata;
   }
 
   /**
