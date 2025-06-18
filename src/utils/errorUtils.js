@@ -25,6 +25,7 @@ import { getModuleLogger } from './loggerUtils.js';
  *
  * @param {FatalErrorUIElements} uiElements - References to key UI elements.
  * @param {FatalErrorDetails} errorDetails - Details about the error.
+ * @param {import('../interfaces/coreServices.js').ILogger} [logger] - Optional logger instance.
  */
 export function displayFatalStartupError(uiElements, errorDetails, logger) {
   const log = getModuleLogger('errorUtils', logger);

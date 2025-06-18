@@ -70,6 +70,9 @@ export function createPrefixedLogger(baseLogger, prefix) {
 }
 
 /**
+ * Convenience wrapper that validates the provided logger and returns a new logger that
+ * automatically prefixes all messages. Useful for utilities that consistently tag their log output.
+ *
  * @description Convenience wrapper that validates the provided logger and
  * returns a new logger that automatically prefixes all messages. Useful for
  * utilities that consistently tag their log output.
@@ -84,6 +87,9 @@ export function getPrefixedLogger(logger, prefix) {
 }
 
 /**
+ * Convenience wrapper for creating a logger prefixed with the module name in square brackets.
+ * Falls back to the console when the base logger is missing.
+ *
  * @description Convenience wrapper for creating a logger prefixed with the
  * module name in square brackets. Falls back to the console when the base
  * logger is missing.
@@ -96,14 +102,17 @@ export function getModuleLogger(moduleName, logger) {
 }
 
 /**
+ * Validates a logger using {@link validateDependency} and returns a safe logger instance via
+ * {@link ensureValidLogger}. When `optional` is true, missing loggers are allowed and will
+ * result in a console-based fallback.
+ *
  * @description Validates a logger using {@link validateDependency} and returns
  * a safe logger instance via {@link ensureValidLogger}. When `optional` is
  * true, missing loggers are allowed and will result in a console-based
  * fallback.
- * @param {string} serviceName - Name used for fallback prefix and error
- *   messages.
+ * @param {string} serviceName - Name used for fallback prefix and error messages.
  * @param {ILogger | undefined | null} logger - Logger instance to validate.
- * @param {object} [options]
+ * @param {object} [options] - Additional options.
  * @param {boolean} [options.optional] - Whether the logger is optional.
  * @returns {ILogger} A valid logger instance.
  */
