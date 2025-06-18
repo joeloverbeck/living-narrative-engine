@@ -163,142 +163,64 @@ export function resolvePlaceholders(
   currentPath = '',
   skipKeys = []
 ) {
-  if (typeof input === 'string') {
-    const fullMatch = input.match(FULL_STRING_PLACEHOLDER_REGEX);
+  const resolver = new PlaceholderResolver(logger);
+  const contextSource = {
+    context:
+      executionContext?.evaluationContext?.context &&
+      typeof executionContext.evaluationContext.context === 'object'
+        ? executionContext.evaluationContext.context
+        : {},
+  };
+  const fallbackSource = {};
+  const actorName = resolveEntityNameFallback('actor.name', executionContext);
+  if (actorName !== undefined) {
+    fallbackSource.actor = { name: actorName };
+  }
+  const targetName = resolveEntityNameFallback('target.name', executionContext);
+  if (targetName !== undefined) {
+    if (!fallbackSource.target) fallbackSource.target = {};
+    fallbackSource.target.name = targetName;
+  }
 
-    const resolver = new PlaceholderResolver(logger);
-    const contextSource = {
-      context:
-        executionContext?.evaluationContext?.context &&
-        typeof executionContext.evaluationContext.context === 'object'
-          ? executionContext.evaluationContext.context
-          : {},
-    };
-    const fallbackSource = {};
-    const actorName = resolveEntityNameFallback('actor.name', executionContext);
-    if (actorName !== undefined) {
-      fallbackSource.actor = { name: actorName };
-    }
-    const targetName = resolveEntityNameFallback(
-      'target.name',
-      executionContext
-    );
-    if (targetName !== undefined) {
-      if (!fallbackSource.target) fallbackSource.target = {};
-      fallbackSource.target.name = targetName;
-    }
+  const baseSource = { ...(executionContext ?? {}) };
+  delete baseSource.context;
+  const rootContextSource =
+    executionContext &&
+    Object.prototype.hasOwnProperty.call(executionContext, 'context')
+      ? { context: executionContext.context }
+      : {};
+  const sources = [rootContextSource, baseSource, contextSource];
 
-    const replacedString = resolver.resolve(
-      input,
-      contextSource,
-      executionContext ?? {},
-      fallbackSource
-    );
-
-    if (fullMatch) {
-      let placeholderPath = fullMatch[1];
-      const isOptional = placeholderPath.endsWith('?');
-      if (isOptional) {
-        placeholderPath = placeholderPath.slice(0, -1);
-      }
-      const placeholderSyntax = `{${placeholderPath}${isOptional ? '?' : ''}}`;
-      const fullLogPath = currentPath
-        ? `${currentPath} -> ${placeholderSyntax}`
-        : placeholderSyntax;
-
-      const resolvedValue = resolvePlaceholderPath(
-        placeholderPath,
-        executionContext,
-        logger,
-        fullLogPath
-      );
-
-      if (resolvedValue === undefined) {
-        return undefined;
-      }
-
-      logger?.debug(
-        `Resolved full string placeholder ${placeholderSyntax} to: ${
-          typeof resolvedValue === 'object'
-            ? JSON.stringify(resolvedValue)
-            : resolvedValue
-        }`
-      );
-      return resolvedValue;
-    }
-
-    // Embedded placeholders debug logging
-    let match;
-    PLACEHOLDER_FIND_REGEX.lastIndex = 0;
-    while ((match = PLACEHOLDER_FIND_REGEX.exec(input))) {
-      let placeholderPath = match[1];
-      const placeholderSyntax = match[0];
-      const isOptional = placeholderPath.endsWith('?');
-      if (isOptional) {
-        placeholderPath = placeholderPath.slice(0, -1);
-      }
-      const fullLogPath = currentPath
-        ? `${currentPath} -> ${placeholderSyntax} (within string)`
-        : `${placeholderSyntax} (within string)`;
-
-      const resolvedValue = resolvePlaceholderPath(
-        placeholderPath,
-        executionContext,
-        undefined,
-        fullLogPath
-      );
-      if (resolvedValue !== undefined) {
-        const stringValue =
-          resolvedValue === null ? 'null' : String(resolvedValue);
-        logger?.debug(
-          `Replaced embedded placeholder ${placeholderSyntax} with string: "${stringValue}"`
-        );
-      }
-    }
-
-    return replacedString;
-  } else if (Array.isArray(input)) {
-    let changed = false;
-    const resolvedArray = input.map((item, index) => {
-      const resolvedItem = resolvePlaceholders(
-        item,
-        executionContext,
-        logger,
-        `${currentPath}[${index}]`
-      );
-      if (resolvedItem !== item) {
-        changed = true;
-      }
-      return resolvedItem;
-    });
-    return changed ? resolvedArray : input;
-  } else if (input && typeof input === 'object' && !(input instanceof Date)) {
+  if (
+    input &&
+    typeof input === 'object' &&
+    !Array.isArray(input) &&
+    !(input instanceof Date)
+  ) {
     let changed = false;
     const resolvedObj = {};
     for (const key in input) {
       if (Object.prototype.hasOwnProperty.call(input, key)) {
-        const originalValue = input[key];
         if (
           (skipKeys instanceof Set && skipKeys.has(key)) ||
           (Array.isArray(skipKeys) && skipKeys.includes(key))
         ) {
-          resolvedObj[key] = originalValue;
+          resolvedObj[key] = input[key];
         } else {
-          const resolvedValue = resolvePlaceholders(
-            originalValue,
-            executionContext,
-            logger,
-            `${currentPath}.${key}`
+          const resolvedVal = resolver.resolveStructure(
+            input[key],
+            sources,
+            fallbackSource
           );
-          if (resolvedValue !== originalValue) {
+          if (resolvedVal !== input[key]) {
             changed = true;
           }
-          resolvedObj[key] = resolvedValue;
+          resolvedObj[key] = resolvedVal;
         }
       }
     }
     return changed ? resolvedObj : input;
-  } else {
-    return input;
   }
+
+  return resolver.resolveStructure(input, sources, fallbackSource);
 }

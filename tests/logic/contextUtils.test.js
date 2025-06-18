@@ -186,7 +186,7 @@ describe('resolvePlaceholders (contextUtils.js)', () => {
       const input = '{context.varA}';
 
       expect(resolvePlaceholders(input, context, mockLogger)).toBeUndefined();
-      expect(mockLogger.warn).toHaveBeenCalledTimes(2);
+      expect(mockLogger.warn).toHaveBeenCalledTimes(1);
     });
 
     test('1.13 should return undefined if `context.` path used but `evaluationContext` is missing, and log warning', () => {
@@ -195,7 +195,7 @@ describe('resolvePlaceholders (contextUtils.js)', () => {
       const input = '{context.varA}';
 
       expect(resolvePlaceholders(input, context, mockLogger)).toBeUndefined();
-      expect(mockLogger.warn).toHaveBeenCalledTimes(2);
+      expect(mockLogger.warn).toHaveBeenCalledTimes(1);
     });
 
     test('1.14 should return undefined if executionContext itself is not an object, and log warning', () => {
@@ -205,11 +205,6 @@ describe('resolvePlaceholders (contextUtils.js)', () => {
         expect.arrayContaining([
           [
             'PlaceholderResolver: Placeholder "{context.varA}" not found in provided data sources. Replacing with empty string.',
-          ],
-          [
-            expect.stringContaining(
-              'Cannot resolve placeholder path "context.varA" at {context.varA}: executionContext is not a valid object.'
-            ),
           ],
         ])
       );
