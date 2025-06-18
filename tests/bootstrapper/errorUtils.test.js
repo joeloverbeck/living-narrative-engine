@@ -31,21 +31,28 @@ describe('displayFatalStartupError', () => {
     };
 
     const alertSpy = jest.spyOn(global, 'alert').mockImplementation(() => {});
-    const consoleErrorSpy = jest
-      .spyOn(console, 'error')
-      .mockImplementation(() => {});
+    const logger = {
+      error: jest.fn(),
+      info: jest.fn(),
+      warn: jest.fn(),
+      debug: jest.fn(),
+    };
 
-    displayFatalStartupError(uiElements, {
-      userMessage: 'Oops',
-      consoleMessage: 'Bad things',
-      errorObject: new Error('fail'),
-      pageTitle: 'Error',
-      inputPlaceholder: 'halt',
-      phase: 'Test',
-    });
+    displayFatalStartupError(
+      uiElements,
+      {
+        userMessage: 'Oops',
+        consoleMessage: 'Bad things',
+        errorObject: new Error('fail'),
+        pageTitle: 'Error',
+        inputPlaceholder: 'halt',
+        phase: 'Test',
+      },
+      logger
+    );
 
-    expect(consoleErrorSpy).toHaveBeenCalledWith(
-      '[Bootstrapper Error - Phase: Test] Bad things',
+    expect(logger.error).toHaveBeenCalledWith(
+      '[errorUtils] [Bootstrapper Error - Phase: Test] Bad things',
       expect.any(Error)
     );
     const errorDiv = uiElements.errorDiv;
@@ -63,19 +70,28 @@ describe('displayFatalStartupError', () => {
     const uiElements = { outputDiv };
 
     const alertSpy = jest.spyOn(global, 'alert').mockImplementation(() => {});
-    const logSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const logger = {
+      error: jest.fn(),
+      info: jest.fn(),
+      warn: jest.fn(),
+      debug: jest.fn(),
+    };
 
-    displayFatalStartupError(uiElements, {
-      userMessage: 'Oops',
-      consoleMessage: 'Bad',
-    });
+    displayFatalStartupError(
+      uiElements,
+      {
+        userMessage: 'Oops',
+        consoleMessage: 'Bad',
+      },
+      logger
+    );
 
     const tempEl = outputDiv.nextElementSibling;
     expect(tempEl).not.toBeNull();
     expect(tempEl.id).toBe('temp-startup-error');
     expect(tempEl.textContent).toBe('Oops');
-    expect(logSpy).toHaveBeenCalledWith(
-      'displayFatalStartupError: Displayed error in a dynamically created element near outputDiv.'
+    expect(logger.info).toHaveBeenCalledWith(
+      '[errorUtils] displayFatalStartupError: Displayed error in a dynamically created element near outputDiv.'
     );
     expect(alertSpy).not.toHaveBeenCalled();
   });
@@ -83,19 +99,25 @@ describe('displayFatalStartupError', () => {
   it('falls back to alert when no DOM targets', () => {
     setDom('');
     const alertSpy = jest.spyOn(global, 'alert').mockImplementation(() => {});
-    const logSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const logger = {
+      error: jest.fn(),
+      info: jest.fn(),
+      warn: jest.fn(),
+      debug: jest.fn(),
+    };
 
     displayFatalStartupError(
       {},
       {
         userMessage: 'Oops',
         consoleMessage: 'Bad',
-      }
+      },
+      logger
     );
 
     expect(alertSpy).toHaveBeenCalledWith('Oops');
-    expect(logSpy).toHaveBeenCalledWith(
-      'displayFatalStartupError: Displayed error using alert() as a fallback.'
+    expect(logger.info).toHaveBeenCalledWith(
+      '[errorUtils] displayFatalStartupError: Displayed error using alert() as a fallback.'
     );
   });
 });

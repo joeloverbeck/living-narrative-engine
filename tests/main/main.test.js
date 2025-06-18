@@ -111,10 +111,11 @@ describe('main.js bootstrap process', () => {
 
     expect(mockSetupDI).toHaveBeenCalled();
     expect(mockDisplayFatal).toHaveBeenCalledTimes(1);
-    const [elements, details] = mockDisplayFatal.mock.calls[0];
+    const [elements, details, passedLogger] = mockDisplayFatal.mock.calls[0];
     expect(elements.outputDiv).toBe(uiElements.outputDiv);
     expect(details.errorObject).toBe(stageError);
     expect(details.phase).toBe(stageError.phase);
+    expect(passedLogger).toBeNull();
     expect(mockResolveCore).not.toHaveBeenCalled();
     expect(mockStartGame).not.toHaveBeenCalled();
   });
@@ -151,8 +152,9 @@ describe('main.js bootstrap process', () => {
     await new Promise((r) => setTimeout(r, 0));
 
     expect(mockDisplayFatal).toHaveBeenCalledTimes(1);
-    const [, details] = mockDisplayFatal.mock.calls[0];
+    const [, details, passedLogger] = mockDisplayFatal.mock.calls[0];
     expect(details.errorObject).toBe(aggError);
     expect(details.phase).toBe(aggError.phase);
+    expect(passedLogger).toBe(logger);
   });
 });

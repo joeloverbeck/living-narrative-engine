@@ -1,5 +1,6 @@
 // src/utils/errorUtils.js
-/* eslint-disable no-console */
+
+import { getModuleLogger } from './loggerUtils.js';
 
 /**
  * @typedef {object} FatalErrorUIElements
@@ -25,7 +26,8 @@
  * @param {FatalErrorUIElements} uiElements - References to key UI elements.
  * @param {FatalErrorDetails} errorDetails - Details about the error.
  */
-export function displayFatalStartupError(uiElements, errorDetails) {
+export function displayFatalStartupError(uiElements, errorDetails, logger) {
+  const log = getModuleLogger('errorUtils', logger);
   const { outputDiv, errorDiv, titleElement, inputElement } = uiElements;
   const {
     userMessage,
@@ -36,8 +38,8 @@ export function displayFatalStartupError(uiElements, errorDetails) {
     phase = 'Unknown Phase',
   } = errorDetails;
 
-  // 1. Log to console.error
-  console.error(
+  // 1. Log to logger.error
+  log.error(
     `[Bootstrapper Error - Phase: ${phase}] ${consoleMessage}`,
     errorObject || ''
   );
@@ -50,7 +52,7 @@ export function displayFatalStartupError(uiElements, errorDetails) {
       errorDiv.style.display = 'block'; // Ensure it's visible
       displayedInErrorDiv = true;
     } catch (e) {
-      console.error(
+      log.error(
         'displayFatalStartupError: Failed to set textContent on errorDiv.',
         e
       );
@@ -68,12 +70,12 @@ export function displayFatalStartupError(uiElements, errorDetails) {
       temporaryErrorElement.style.border = '1px solid red';
       temporaryErrorElement.style.marginTop = '10px';
       outputDiv.insertAdjacentElement('afterend', temporaryErrorElement); // Append near outputDiv
-      console.log(
+      log.info(
         'displayFatalStartupError: Displayed error in a dynamically created element near outputDiv.'
       );
       displayedInErrorDiv = true; // Consider this as having displayed the error in a DOM element
     } catch (e) {
-      console.error(
+      log.error(
         'displayFatalStartupError: Failed to create or append temporary error element.',
         e
       );
@@ -83,7 +85,7 @@ export function displayFatalStartupError(uiElements, errorDetails) {
   // 4. Ultimate fallback to alert if no DOM display was feasible
   if (!displayedInErrorDiv) {
     alert(userMessage);
-    console.log(
+    log.info(
       'displayFatalStartupError: Displayed error using alert() as a fallback.'
     );
   }
@@ -93,7 +95,7 @@ export function displayFatalStartupError(uiElements, errorDetails) {
     try {
       titleElement.textContent = pageTitle;
     } catch (e) {
-      console.error(
+      log.error(
         'displayFatalStartupError: Failed to set textContent on titleElement.',
         e
       );
@@ -106,7 +108,7 @@ export function displayFatalStartupError(uiElements, errorDetails) {
       inputElement.disabled = true;
       inputElement.placeholder = inputPlaceholder;
     } catch (e) {
-      console.error(
+      log.error(
         'displayFatalStartupError: Failed to disable or set placeholder on inputElement.',
         e
       );
