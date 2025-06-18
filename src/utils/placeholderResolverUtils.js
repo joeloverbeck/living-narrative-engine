@@ -5,6 +5,23 @@
 import { resolvePath as objectResolvePath } from './objectUtils.js';
 
 /**
+ * Regex to find placeholders like {path.to.value} within a string.
+ * Group 1 captures the path without braces.
+ * The global flag ensures all occurrences are matched.
+ *
+ * @type {RegExp}
+ */
+export const PLACEHOLDER_FIND_REGEX = /{\s*([^}\s]+)\s*}/g;
+
+/**
+ * Regex to check if an entire string is only a placeholder.
+ * Group 1 captures the path within the braces.
+ *
+ * @type {RegExp}
+ */
+export const FULL_STRING_PLACEHOLDER_REGEX = /^{\s*([^}\s]+)\s*}$/;
+
+/**
  * @class PlaceholderResolver
  * @description A utility class dedicated to resolving placeholders in strings.
  * It replaces placeholders (e.g., `{key}`) with values from provided data objects.
@@ -71,7 +88,7 @@ export class PlaceholderResolver {
       return '';
     }
 
-    return str.replace(/{([^{}]+)}/g, (match, placeholderKey) => {
+    return str.replace(PLACEHOLDER_FIND_REGEX, (match, placeholderKey) => {
       let trimmedKey = placeholderKey.trim();
       const isOptional = trimmedKey.endsWith('?');
       if (isOptional) {

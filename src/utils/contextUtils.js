@@ -1,19 +1,17 @@
 // src/utils/contextUtils.js
 import { resolvePath } from './objectUtils.js';
 import { NAME_COMPONENT_ID } from '../constants/componentIds.js';
-import { PlaceholderResolver } from './placeholderResolverUtils.js';
+import {
+  PlaceholderResolver,
+  PLACEHOLDER_FIND_REGEX,
+  FULL_STRING_PLACEHOLDER_REGEX,
+} from './placeholderResolverUtils.js';
 import { getEntityDisplayName } from './entityUtils.js';
 
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 
-// Regex to find placeholders like {path.to.value} within a string.
-// Group 1: Captures the brace style path (excluding braces).
-// The 'g' flag ensures it finds *all* occurrences.
-const PLACEHOLDER_FIND_REGEX = /{\s*([^}\s]+)\s*}/g; // Only matches {...}
-
-// Regex to check if the entire string is *only* a placeholder ({...})
-// Group 1: Captures the path within braces.
-const FULL_STRING_PLACEHOLDER_REGEX = /^{\s*([^}\s]+)\s*}$/; // Only matches {...}
+// PLACEHOLDER_FIND_REGEX and FULL_STRING_PLACEHOLDER_REGEX are imported from
+// placeholderResolverUtils.js to keep placeholder matching logic consistent.
 
 /**
  * Provides a fallback to resolve common placeholders such as `actor.name` or
