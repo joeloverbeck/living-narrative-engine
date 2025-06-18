@@ -2,6 +2,7 @@
 import jsonLogic from 'json-logic-js';
 import { validateServiceDeps } from '../utils/serviceInitializerUtils.js';
 import BaseService from '../utils/baseService.js';
+import { warnOnBracketPaths } from './utils/jsonLogicUtils.js';
 
 // --- JSDoc Imports for Type Hinting ---
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
@@ -9,35 +10,6 @@ import BaseService from '../utils/baseService.js';
 /** @typedef {import('./defs.js').JsonLogicEvaluationContext} JsonLogicEvaluationContext */
 
 // --- REMOVED: The module-level registration attempt has been removed from here ---
-
-/**
- *
- * @param rule
- * @param logger
- */
-function warnOnBracketPaths(rule, logger) {
-  if (Array.isArray(rule)) {
-    rule.forEach((item) => warnOnBracketPaths(item, logger));
-    return;
-  }
-  if (rule && typeof rule === 'object') {
-    if (Object.prototype.hasOwnProperty.call(rule, 'var')) {
-      const value = rule.var;
-      const path =
-        typeof value === 'string'
-          ? value
-          : Array.isArray(value) && typeof value[0] === 'string'
-            ? value[0]
-            : null;
-      if (path && (path.includes('[') || path.includes(']'))) {
-        logger.warn(
-          `Invalid var path "${path}" contains unsupported brackets.`
-        );
-      }
-    }
-    Object.values(rule).forEach((v) => warnOnBracketPaths(v, logger));
-  }
-}
 
 /**
  * @class JsonLogicEvaluationService
