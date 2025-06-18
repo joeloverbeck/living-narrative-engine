@@ -41,17 +41,26 @@ function _isValidManager(mgr) {
  * @param {Entity | any} entity - The entity instance to query. Must expose a
  *   `getComponentData` method.
  * @param {string} componentId - The component type ID to retrieve.
+ * @param {import('../interfaces/ILogger.js').ILogger} [logger] - Optional logger
+ *   for debug messages.
  * @returns {any | null} The component data if available, otherwise `null`.
  */
-export function getComponentFromEntity(entity, componentId) {
+export function getComponentFromEntity(entity, componentId, logger) {
+  const log = getPrefixedLogger(logger, '[componentAccessUtils] ');
+
   if (!_isValidId(componentId) || !_isValidManager(entity)) {
+    log.debug('getComponentFromEntity: invalid entity or componentId.');
     return null;
   }
 
   try {
     const data = entity.getComponentData(componentId);
     return data ?? null;
-  } catch {
+  } catch (error) {
+    log.debug(
+      'getComponentFromEntity: error retrieving component data.',
+      error
+    );
     return null;
   }
 }
@@ -68,21 +77,35 @@ export function getComponentFromEntity(entity, componentId) {
  * @param {string} entityId - The ID of the entity instance to query.
  * @param {string} componentId - The component type ID to retrieve.
  * @param {IEntityManager} entityManager - Manager used to access component data.
+ * @param logger
  * @returns {any | null} The component data if available, otherwise `null`.
  */
-export function getComponentFromManager(entityId, componentId, entityManager) {
+export function getComponentFromManager(
+  entityId,
+  componentId,
+  entityManager,
+  logger
+) {
+  const log = getPrefixedLogger(logger, '[componentAccessUtils] ');
+
   if (!_isValidId(entityId) || !_isValidId(componentId)) {
+    log.debug('getComponentFromManager: invalid entityId or componentId.');
     return null;
   }
 
   if (!_isValidManager(entityManager)) {
+    log.debug('getComponentFromManager: invalid entityManager provided.');
     return null;
   }
 
   try {
     const data = entityManager.getComponentData(entityId, componentId);
     return data ?? null;
-  } catch {
+  } catch (error) {
+    log.debug(
+      `getComponentFromManager: error retrieving '${componentId}' for entity '${entityId}'.`,
+      error
+    );
     return null;
   }
 }
