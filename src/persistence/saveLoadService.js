@@ -45,43 +45,34 @@ class SaveLoadService extends ISaveLoadService {
    *
    * @param {object} dependencies - The dependencies object.
    * @param {ILogger} dependencies.logger - The logging service.
-   * @param {IStorageProvider} dependencies.storageProvider - The storage provider service.
-   * @param {Crypto} [dependencies.crypto] - Web Crypto implementation.
-   * @param {GameStateSerializer} [dependencies.gameStateSerializer] - Optional serializer instance.
+   * @param {SaveFileRepository} dependencies.saveFileRepository - Repository for save files.
+   * @param {GameStateSerializer} dependencies.gameStateSerializer - Serializer instance.
+   * @param {SaveValidationService} dependencies.saveValidationService - Validation service.
    */
   constructor({
     logger,
-    storageProvider,
-    crypto = globalThis.crypto,
-    gameStateSerializer = null,
-    saveValidationService = null,
-    saveFileRepository = null,
+    saveFileRepository,
+    gameStateSerializer,
+    saveValidationService,
   }) {
     super();
     if (!logger) {
       throw new Error('SaveLoadService requires a logger.');
     }
-    if (!saveFileRepository && !storageProvider) {
-      throw new Error(
-        'SaveLoadService requires a storageProvider or saveFileRepository.'
-      );
+    if (!saveFileRepository) {
+      throw new Error('SaveLoadService requires a saveFileRepository.');
     }
-    this.#serializer =
-      gameStateSerializer || new GameStateSerializer({ logger, crypto });
-    this.#validationService =
-      saveValidationService ||
-      new SaveValidationService({
-        logger,
-        gameStateSerializer: this.#serializer,
-      });
+    if (!gameStateSerializer) {
+      throw new Error('SaveLoadService requires a gameStateSerializer.');
+    }
+    if (!saveValidationService) {
+      throw new Error('SaveLoadService requires a saveValidationService.');
+    }
 
-    this.#fileRepository =
-      saveFileRepository ||
-      new SaveFileRepository({
-        logger,
-        storageProvider,
-        serializer: this.#serializer,
-      });
+    this.#serializer = gameStateSerializer;
+    this.#validationService = saveValidationService;
+
+    this.#fileRepository = saveFileRepository;
 
     this.#logger = setupService('SaveLoadService', logger, {
       fileRepository: {
@@ -307,6 +298,38 @@ class SaveLoadService extends ISaveLoadService {
     }
 
     return this.#fileRepository.deleteSaveFile(saveIdentifier);
+  }
+
+  /**
+   * Creates a SaveLoadService with default dependencies.
+   *
+   * @param {object} deps - Factory dependencies.
+   * @param {ILogger} deps.logger - Logger instance.
+   * @param {IStorageProvider} deps.storageProvider - Storage provider for files.
+   * @param {Crypto} [deps.crypto] - Optional Web Crypto implementation.
+   * @returns {SaveLoadService} Configured SaveLoadService instance.
+   */
+  static createDefault({
+    logger,
+    storageProvider,
+    crypto = globalThis.crypto,
+  }) {
+    const serializer = new GameStateSerializer({ logger, crypto });
+    const validationService = new SaveValidationService({
+      logger,
+      gameStateSerializer: serializer,
+    });
+    const repository = new SaveFileRepository({
+      logger,
+      storageProvider,
+      serializer,
+    });
+    return new SaveLoadService({
+      logger,
+      saveFileRepository: repository,
+      gameStateSerializer: serializer,
+      saveValidationService: validationService,
+    });
   }
 }
 

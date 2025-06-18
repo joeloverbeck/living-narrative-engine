@@ -232,7 +232,7 @@ describe('WorldLoader Integration Test Suite - Error Handling (TEST-LOADER-7.4)'
         'schema:game',
         'schema:components',
         'schema:mod-manifest',
-        'schema:entities',
+        'schema:entityDefinitions',
         'schema:conditions',
         'schema:actions', // <-- WAS MISSING
         'schema:events', // <-- WAS MISSING

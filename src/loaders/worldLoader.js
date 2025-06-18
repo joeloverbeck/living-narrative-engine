@@ -337,7 +337,7 @@ class WorldLoader extends AbstractLoader {
         this.#configuration.getContentTypeSchemaId('game'),
         this.#configuration.getContentTypeSchemaId('components'),
         this.#configuration.getContentTypeSchemaId('mod-manifest'),
-        this.#configuration.getContentTypeSchemaId('entities'),
+        this.#configuration.getContentTypeSchemaId('entityDefinitions'),
         this.#configuration.getContentTypeSchemaId('entityInstances'),
         this.#configuration.getContentTypeSchemaId('actions'),
         this.#configuration.getContentTypeSchemaId('events'),

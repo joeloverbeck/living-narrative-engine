@@ -123,6 +123,17 @@ class GameStateSerializer {
   }
 
   /**
+   * Calculates the checksum for the provided game state object.
+   *
+   * @param {object} gameState - The game state to encode and hash.
+   * @returns {Promise<string>} Hexadecimal checksum.
+   */
+  async calculateGameStateChecksum(gameState) {
+    const encoded = encode(gameState);
+    return this.#generateChecksum(encoded);
+  }
+
+  /**
    * Serializes the game state to MessagePack and compresses it with Gzip.
    * Embeds a checksum of the gameState section.
    *
@@ -149,9 +160,8 @@ class GameStateSerializer {
       );
     }
 
-    const gameStateMessagePack = encode(finalSaveObject.gameState);
     finalSaveObject.integrityChecks.gameStateChecksum =
-      await this.#generateChecksum(gameStateMessagePack);
+      await this.calculateGameStateChecksum(finalSaveObject.gameState);
     this.#logger.debug(
       `Calculated gameStateChecksum: ${finalSaveObject.integrityChecks.gameStateChecksum}`
     );

@@ -14,32 +14,29 @@ import ModDependencyError from '../../src/errors/modDependencyError.js';
 
 const createMockConfiguration = (overrides = {}) => ({
   getContentTypeSchemaId: jest.fn((t) => {
-    if (t === 'mod-manifest')
-      return 'http://example.com/schemas/mod.manifest.schema.json';
-    if (t === 'game') return 'http://example.com/schemas/game.schema.json';
-    if (t === 'conditions')
-      return 'http://example.com/schemas/condition.schema.json';
-    if (t === 'components')
-      return 'http://example.com/schemas/components.schema.json';
-    // Add mappings for other types if needed by mocks/test, otherwise keep generic
-    if (t === 'actions') return 'http://example.com/schemas/action.schema.json';
-    if (t === 'events')
-      return 'http://example.com/schemas/component.schema.json';
-    if (t === 'entities')
-      return 'http://example.com/schemas/entity.schema.json'; // Required for WorldLoader essentials check
-    if (t === 'entityInstances')
-      return 'http://example.com/schemas/entityInstance.schema.json';
-    if (t === 'rules') return 'http://example.com/schemas/rule.schema.json';
-    return `http://example.com/schemas/${t}.schema.json`;
+    // This map now reflects the current essential schema requirements of WorldLoader
+    const schemaMap = {
+      'mod-manifest': 'http://example.com/schemas/mod.manifest.schema.json',
+      game: 'http://example.com/schemas/game.schema.json',
+      conditions: 'http://example.com/schemas/condition.schema.json',
+      components: 'http://example.com/schemas/component.schema.json',
+      actions: 'http://example.com/schemas/action.schema.json',
+      events: 'http://example.com/schemas/event.schema.json',
+      entityDefinitions:
+        'http://example.com/schemas/entity-definition.schema.json', // <<< CORRECTED
+      entityInstances: 'http://example.com/schemas/entity-instance.schema.json', // <<< CORRECTED
+      rules: 'http://example.com/schemas/rule.schema.json',
+    };
+    return schemaMap[t] || `http://example.com/schemas/${t}.schema.json`;
   }),
   // Unused in this harness but required by ModManifestLoader interface
   getBaseDataPath: jest.fn(() => './data'),
   getSchemaFiles: jest.fn(() => [
     'mod.manifest.schema.json',
     'game.schema.json',
-    'components.schema.json',
-    'entity.schema.json',
-    'entityInstance.schema.json',
+    'component.schema.json',
+    'entity-definition.schema.json', // <<< CORRECTED
+    'entity-instance.schema.json',
   ]), // Basic schemas for test
   getSchemaBasePath: jest.fn(() => 'schemas'),
   getContentBasePath: jest.fn((typeName) => typeName),
@@ -53,9 +50,8 @@ const createMockPathResolver = (overrides = {}) => ({
   resolveModManifestPath: jest.fn(
     (id) => `./data/mods/${id}/mod.manifest.json`
   ),
-  // Add other required resolver methods if WorldLoader uses them directly (unlikely based on code)
   resolveSchemaPath: jest.fn((filename) => `./data/schemas/${filename}`),
-  resolveGameConfigPath: jest.fn(() => './data/game.json'), // Still useful for GameConfigLoader's potential *real* impl
+  resolveGameConfigPath: jest.fn(() => './data/game.json'),
   resolveModContentPath: jest.fn(
     (modId, typeName, filename) =>
       `./data/mods/${modId}/${typeName}/${filename}`
@@ -66,7 +62,6 @@ const createMockPathResolver = (overrides = {}) => ({
 // Generic programmable fetcher
 const createMockFetcher = (idToResponse = {}, errorIds = []) => ({
   fetch: jest.fn(async (path) => {
-    // Make mock async to match real fetcher
     // Match manifest fetch requests
     const manifestMatch = path.match(/mods\/([^/]+)\/mod\.manifest\.json/);
     if (manifestMatch) {
@@ -75,75 +70,43 @@ const createMockFetcher = (idToResponse = {}, errorIds = []) => ({
         throw new Error(`Fetch failed for ${modId} manifest`);
       }
       if (idToResponse.hasOwnProperty(modId)) {
-        // IMPORTANT: Return a deep copy to prevent modification bugs if the test modifies the returned object
         return JSON.parse(JSON.stringify(idToResponse[modId]));
       }
     }
 
-    // Match schema fetch requests (return the schema objects defined in the test)
-    // Use minimal schemas here, real schemas defined in test scope
-    if (path.includes('/schemas/mod.manifest.schema.json')) {
-      return {
-        $id: 'http://example.com/schemas/mod.manifest.schema.json',
-        type: 'object',
-        properties: {
-          id: { type: 'string' },
-          name: { type: 'string' },
-          version: { type: 'string' },
-          content: { type: 'object' },
-          dependencies: { type: 'array' },
-        },
-        required: ['id', 'name', 'version'],
+    // Match schema fetch requests
+    const schemaMatch = path.match(/\/schemas\/([^/]+)/);
+    if (schemaMatch) {
+      const schemaName = schemaMatch[1];
+      const schemaIdMap = {
+        'mod.manifest.schema.json':
+          'http://example.com/schemas/mod.manifest.schema.json',
+        'game.schema.json': 'http://example.com/schemas/game.schema.json',
+        'component.schema.json':
+          'http://example.com/schemas/component.schema.json',
+        'entity-definition.schema.json':
+          'http://example.com/schemas/entity-definition.schema.json',
+        'entity-instance.schema.json':
+          'http://example.com/schemas/entity-instance.schema.json',
+        'action.schema.json': 'http://example.com/schemas/action.schema.json',
+        'event.schema.json': 'http://example.com/schemas/event.schema.json',
+        'rule.schema.json': 'http://example.com/schemas/rule.schema.json',
+        'condition.schema.json':
+          'http://example.com/schemas/condition.schema.json',
       };
-    }
-    if (path.includes('/schemas/game.schema.json')) {
-      return {
-        $id: 'http://example.com/schemas/game.schema.json',
-        type: 'object',
-        properties: { mods: { type: 'array', items: { type: 'string' } } },
-        required: ['mods'],
-      };
-    }
-    if (path.includes('/schemas/components.schema.json')) {
-      return {
-        $id: 'http://example.com/schemas/components.schema.json',
-        type: 'object',
-      };
-    }
-    // Add entity schema fetch mock
-    if (path.includes('/schemas/entity.schema.json')) {
-      return {
-        $id: 'http://example.com/schemas/entity.schema.json',
-        type: 'object',
-      };
-    }
-    // Add other schemas handled by fetcher if validator needs them
-    if (path.includes('/schemas/action.schema.json')) {
-      return {
-        $id: 'http://example.com/schemas/action.schema.json',
-        type: 'object',
-      };
-    }
-    if (path.includes('/schemas/component.schema.json')) {
-      return {
-        $id: 'http://example.com/schemas/component.schema.json',
-        type: 'object',
-      };
-    }
-    if (path.includes('/schemas/rule.schema.json')) {
-      return {
-        $id: 'http://example.com/schemas/rule.schema.json',
-        type: 'object',
-      };
+      const schemaId = Object.values(schemaIdMap).find((id) =>
+        path.includes(id.split('/').pop())
+      );
+      if (schemaId) {
+        return { $id: schemaId, type: 'object', properties: {}, required: [] };
+      }
     }
 
-    // Match game dependencyInjection fetch - THIS SHOULD NOT BE HIT IN THIS TEST due to gameConfigLoader mock
     if (path.includes('/game.json')) {
-      console.warn('Fetcher mock was unexpectedly asked to fetch game.json!'); // Add warning
-      return { mods: ['basegame', 'badmod'] }; // Return something valid anyway
+      console.warn('Fetcher mock was unexpectedly asked to fetch game.json!');
+      return { mods: ['basegame', 'badmod'] };
     }
 
-    // Simulate a 404 or specific fetch error for any other path
     console.error(`Fetcher mock received unexpected path: ${path}`);
     throw new Error(`404 Not Found or invalid path: ${path}`);
   }),
@@ -153,18 +116,15 @@ const createMockRegistry = () => {
   const data = new Map(); // type -> Map
   const store = jest.fn((type, id, obj) => {
     if (!data.has(type)) data.set(type, new Map());
-    // Store a deep copy to prevent modifications affecting the registry state unexpectedly
     data.get(type).set(id, JSON.parse(JSON.stringify(obj)));
   });
   const get = jest.fn((type, id) => {
     const typeMap = data.get(type);
     const storedObj = typeMap ? typeMap.get(id) : undefined;
-    // Return a deep copy to simulate real retrieval
     return storedObj ? JSON.parse(JSON.stringify(storedObj)) : undefined;
   });
   const getAll = jest.fn((type) => {
     const typeMap = data.get(type);
-    // Return deep copies
     return typeMap
       ? Array.from(typeMap.values()).map((obj) =>
           JSON.parse(JSON.stringify(obj))
@@ -177,8 +137,8 @@ const createMockRegistry = () => {
     store,
     get,
     getAll,
-    setManifest: jest.fn(), // Keep if needed by other parts (unlikely here)
-    getManifest: jest.fn(), // Keep if needed
+    setManifest: jest.fn(),
+    getManifest: jest.fn(),
   };
 };
 
@@ -199,161 +159,67 @@ describe('WorldLoader → ModDependencyValidator integration (missing dependency
   let pathResolver;
   let fetcher;
   let registry;
-  let logger; // Declared here
+  let logger;
   let schemaLoader;
   let conditionLoader;
-  let componentDefinitionLoader; // Variable name in test scope
+  let componentDefinitionLoader;
   let ruleLoader;
   let actionLoader;
   let eventLoader;
   let entityLoader;
+  let entityInstanceLoader;
   let gameConfigLoader;
-  let modManifestLoader; // The real instance will be created here
-  let validatedEventDispatcher; // <<< ADDED: Declare mock validatedEventDispatcher
+  let modManifestLoader;
+  let validatedEventDispatcher;
   let worldLoader;
 
-  // Lean JSON schemas (just enough to satisfy the loader)
-  const MOD_MANIFEST_SCHEMA_ID =
-    'http://example.com/schemas/mod.manifest.schema.json';
-  const GAME_SCHEMA_ID = 'http://example.com/schemas/game.schema.json';
-  const CONDITION_SCHEMA_ID =
-    'http://example.com/schemas/condition.schema.json';
-  const CONDITION_CONTAINER_SCHEMA_ID =
-    'http://example.com/schemas/condition-container.schema.json';
-  const COMPONENTS_SCHEMA_ID =
-    'http://example.com/schemas/components.schema.json';
-  const ENTITY_SCHEMA_ID = 'http://example.com/schemas/entity.schema.json'; // <<< ADDED
-  const ENTITY_INSTANCE_SCHEMA_ID =
-    'http://example.com/schemas/entityInstance.schema.json';
-  const ACTION_SCHEMA_ID = 'http://example.com/schemas/action.schema.json';
-  const EVENT_SCHEMA_ID = 'http://example.com/schemas/component.schema.json';
-  const RULE_SCHEMA_ID = 'http://example.com/schemas/rule.schema.json';
-
-  // Define minimal schemas
-  const manifestSchema = {
-    $id: MOD_MANIFEST_SCHEMA_ID,
-    type: 'object',
-    required: ['id', 'name', 'version'],
-    properties: {
-      id: { type: 'string', minLength: 1 },
-      name: { type: 'string', minLength: 1 },
-      version: { type: 'string', pattern: '^\\d+\\.\\d+\\.\\d+$' },
-      dependencies: {
-        type: 'array',
-        default: [],
-        items: {
-          type: 'object',
-          required: ['id', 'version'],
-          properties: {
-            id: { type: 'string', minLength: 1 },
-            version: { type: 'string', minLength: 1 },
-            required: { type: 'boolean' },
-          },
-        },
-      },
-      conflicts: {
-        type: 'array',
-        default: [],
-        items: { type: 'string', minLength: 1 },
-      },
-      gameVersion: { type: 'string', minLength: 1 },
-      content: {
-        type: 'object',
-        default: {},
-        additionalProperties: { type: 'array', items: { type: 'string' } },
-      },
+  const schemaDefs = {
+    MOD_MANIFEST: {
+      id: 'http://example.com/schemas/mod.manifest.schema.json',
+      required: ['id', 'name', 'version'],
+      props: { id: { type: 'string' } },
     },
-    additionalProperties: false,
+    GAME: {
+      id: 'http://example.com/schemas/game.schema.json',
+      required: ['mods'],
+      props: { mods: { type: 'array' } },
+    },
+    CONDITION: { id: 'http://example.com/schemas/condition.schema.json' },
+    COMPONENT: { id: 'http://example.com/schemas/component.schema.json' },
+    ENTITY_DEFINITION: {
+      id: 'http://example.com/schemas/entity-definition.schema.json',
+    },
+    ENTITY_INSTANCE: {
+      id: 'http://example.com/schemas/entity-instance.schema.json',
+    },
+    ACTION: { id: 'http://example.com/schemas/action.schema.json' },
+    EVENT: { id: 'http://example.com/schemas/event.schema.json' },
+    RULE: { id: 'http://example.com/schemas/rule.schema.json' },
   };
 
-  const gameSchema = {
-    $id: GAME_SCHEMA_ID,
+  const buildSchema = ({ id, required = [], props = {} }) => ({
+    $id: id,
     type: 'object',
-    required: ['mods'],
-    properties: {
-      mods: {
-        type: 'array',
-        items: { type: 'string', minLength: 1 },
-        uniqueItems: true,
-      },
-    },
+    required: required,
+    properties: props,
     additionalProperties: true,
-  };
-  const conditionSchema = {
-    $id: CONDITION_SCHEMA_ID,
-    type: 'object',
-    additionalProperties: true,
-  };
-  const conditionContainerSchema = {
-    $id: CONDITION_CONTAINER_SCHEMA_ID,
-    type: 'object',
-    additionalProperties: true,
-  };
-  const componentsSchema = {
-    $id: COMPONENTS_SCHEMA_ID,
-    type: 'object',
-    additionalProperties: true,
-  };
-  const entitySchema = {
-    $id: ENTITY_SCHEMA_ID,
-    type: 'object',
-    additionalProperties: true,
-  }; // <<< ADDED
-  const actionSchema = {
-    $id: ACTION_SCHEMA_ID,
-    type: 'object',
-    additionalProperties: true,
-  };
-  const eventSchema = {
-    $id: EVENT_SCHEMA_ID,
-    type: 'object',
-    additionalProperties: true,
-  };
-  const ruleSchema = {
-    $id: RULE_SCHEMA_ID,
-    type: 'object',
-    additionalProperties: true,
-  };
+  });
 
   beforeEach(async () => {
     jest.clearAllMocks();
 
     /* -------------------- Core plumbing ---------------------------------- */
     logger = createMockLogger();
-    validator = new AjvSchemaValidator(logger); // Use REAL validator
+    validator = new AjvSchemaValidator(logger);
 
     schemaLoader = {
       loadAndCompileAllSchemas: jest.fn().mockImplementation(async () => {
-        // Add schemas needed by the loading process to the REAL validator
-        try {
-          if (!validator.isSchemaLoaded(GAME_SCHEMA_ID))
-            await validator.addSchema(gameSchema, GAME_SCHEMA_ID);
-          if (!validator.isSchemaLoaded(CONDITION_SCHEMA_ID))
-            await validator.addSchema(conditionSchema, CONDITION_SCHEMA_ID);
-          if (!validator.isSchemaLoaded(CONDITION_CONTAINER_SCHEMA_ID))
-            await validator.addSchema(
-              conditionContainerSchema,
-              CONDITION_CONTAINER_SCHEMA_ID
-            );
-          if (!validator.isSchemaLoaded(COMPONENTS_SCHEMA_ID))
-            await validator.addSchema(componentsSchema, COMPONENTS_SCHEMA_ID);
-          if (!validator.isSchemaLoaded(MOD_MANIFEST_SCHEMA_ID))
-            await validator.addSchema(manifestSchema, MOD_MANIFEST_SCHEMA_ID);
-          if (!validator.isSchemaLoaded(ENTITY_SCHEMA_ID))
-            await validator.addSchema(entitySchema, ENTITY_SCHEMA_ID);
-          if (!validator.isSchemaLoaded(ENTITY_INSTANCE_SCHEMA_ID))
-            await validator.addSchema(entitySchema, ENTITY_INSTANCE_SCHEMA_ID);
-          if (!validator.isSchemaLoaded(ACTION_SCHEMA_ID))
-            await validator.addSchema(actionSchema, ACTION_SCHEMA_ID);
-          if (!validator.isSchemaLoaded(EVENT_SCHEMA_ID))
-            await validator.addSchema(eventSchema, EVENT_SCHEMA_ID);
-          if (!validator.isSchemaLoaded(RULE_SCHEMA_ID))
-            await validator.addSchema(ruleSchema, RULE_SCHEMA_ID);
-          logger.debug('Mock SchemaLoader: Added schemas to REAL validator.');
-        } catch (err) {
-          logger.error('Error adding schema in mock SchemaLoader:', err);
-          throw err; // Prevent test from continuing if schemas fail
+        for (const schemaDef of Object.values(schemaDefs)) {
+          if (!validator.isSchemaLoaded(schemaDef.id)) {
+            await validator.addSchema(buildSchema(schemaDef), schemaDef.id);
+          }
         }
+        logger.debug('Mock SchemaLoader: Added schemas to REAL validator.');
       }),
     };
     configuration = createMockConfiguration();
@@ -370,7 +236,7 @@ describe('WorldLoader → ModDependencyValidator integration (missing dependency
       id: 'badmod',
       name: 'Bad Mod',
       version: '0.1.0',
-      dependencies: [{ id: 'MissingMod', version: '^1.0.0', required: true }], // Explicitly required
+      dependencies: [{ id: 'MissingMod', version: '^1.0.0', required: true }],
       content: {},
     };
 
@@ -381,25 +247,32 @@ describe('WorldLoader → ModDependencyValidator integration (missing dependency
     registry = createMockRegistry();
 
     /* -------------------- Auxiliary loaders ------------------------------ */
-    ruleLoader = { loadItemsForMod: jest.fn().mockResolvedValue(0) };
+    ruleLoader = { loadItemsForMod: jest.fn().mockResolvedValue({ count: 0 }) };
     conditionLoader = {
-      loadItemsForMod: jest.fn().mockResolvedValue(0),
+      loadItemsForMod: jest.fn().mockResolvedValue({ count: 0 }),
     };
     componentDefinitionLoader = {
-      loadItemsForMod: jest.fn().mockResolvedValue(0),
-    }; // Keep test variable name
-    actionLoader = { loadItemsForMod: jest.fn().mockResolvedValue(0) };
-    eventLoader = { loadItemsForMod: jest.fn().mockResolvedValue(0) };
-    entityLoader = { loadItemsForMod: jest.fn().mockResolvedValue(0) };
+      loadItemsForMod: jest.fn().mockResolvedValue({ count: 0 }),
+    };
+    actionLoader = {
+      loadItemsForMod: jest.fn().mockResolvedValue({ count: 0 }),
+    };
+    eventLoader = {
+      loadItemsForMod: jest.fn().mockResolvedValue({ count: 0 }),
+    };
+    entityLoader = {
+      loadItemsForMod: jest.fn().mockResolvedValue({ count: 0 }),
+    };
+    entityInstanceLoader = {
+      loadItemsForMod: jest.fn().mockResolvedValue({ count: 0 }),
+    };
 
-    // Mock GameConfigLoader to return the *list* of mod IDs
     gameConfigLoader = {
       loadConfig: jest.fn().mockResolvedValue(['basegame', 'badmod']),
     };
 
-    // <<< ADDED: Mock ValidatedEventDispatcher >>>
     validatedEventDispatcher = {
-      dispatch: jest.fn().mockResolvedValue(), // Simple mock returning a resolved promise
+      dispatch: jest.fn().mockResolvedValue(),
     };
 
     /* -------------------- Real ModManifestLoader ------------------------- */
@@ -407,29 +280,29 @@ describe('WorldLoader → ModDependencyValidator integration (missing dependency
       configuration,
       pathResolver,
       fetcher,
-      validator, // Pass REAL validator
+      validator,
       registry,
       logger
     );
 
     /* -------------------- System under test ------------------------------ */
-    // <<< FIXED: Pass a single object with named properties >>>
     worldLoader = new WorldLoader({
-      registry, // Property name matches variable name
-      logger, // Property name matches variable name
-      schemaLoader, // Property name matches variable name
+      registry,
+      logger,
+      schemaLoader,
       conditionLoader,
-      componentLoader: componentDefinitionLoader, // Map test variable to constructor property 'componentLoader'
-      ruleLoader, // Property name matches variable name
-      actionLoader, // Property name matches variable name
-      eventLoader, // Property name matches variable name
-      entityLoader, // Property name matches variable name
-      validator, // Property name matches variable name
-      configuration, // Property name matches variable name
-      gameConfigLoader, // Property name matches variable name
+      componentLoader: componentDefinitionLoader,
+      ruleLoader,
+      actionLoader,
+      eventLoader,
+      entityLoader,
+      entityInstanceLoader,
+      validator,
+      configuration,
+      gameConfigLoader,
       promptTextLoader: { loadPromptText: jest.fn() },
-      modManifestLoader, // Property name matches variable name
-      validatedEventDispatcher, // <<< Pass the new mock >>>
+      modManifestLoader,
+      validatedEventDispatcher,
     });
   });
 
@@ -464,11 +337,10 @@ describe('WorldLoader → ModDependencyValidator integration (missing dependency
     );
 
     // Check that NO content files were fetched
-    const contentFetches = fetcher.fetch.mock.calls.filter(
-      ([p]) =>
-        /\/mods\/[^/]+\/(actions|components|events|system-rules|items|entities|blockers|connections|locations)\//.test(
-          p
-        ) // Added entity types
+    const contentFetches = fetcher.fetch.mock.calls.filter(([p]) =>
+      /\/mods\/[^/]+\/(actions|components|events|rules|entityDefinitions|entityInstances)\//.test(
+        p
+      )
     );
     expect(contentFetches).toHaveLength(0);
 
@@ -490,27 +362,26 @@ describe('WorldLoader → ModDependencyValidator integration (missing dependency
     expect(componentDefinitionLoader.loadItemsForMod).not.toHaveBeenCalled();
     expect(actionLoader.loadItemsForMod).not.toHaveBeenCalled();
     expect(eventLoader.loadItemsForMod).not.toHaveBeenCalled();
-    expect(entityLoader.loadItemsForMod).not.toHaveBeenCalled(); // <<< ADDED Check
+    expect(entityLoader.loadItemsForMod).not.toHaveBeenCalled();
+    expect(entityInstanceLoader.loadItemsForMod).not.toHaveBeenCalled();
 
     // Logger assertions
     const errorLogCallArgs = logger.error.mock.calls[0];
     expect(logger.error).toHaveBeenCalledTimes(1);
     expect(errorLogCallArgs[0]).toBe(
       'WorldLoader: CRITICAL load failure during world/mod loading sequence.'
-    ); // Message
+    );
     expect(errorLogCallArgs[1]).toEqual(
       expect.objectContaining({
-        // Payload object
         error: expect.any(ModDependencyError),
       })
     );
     expect(errorLogCallArgs[1].error.message).toMatch(
       /Mod 'badmod' requires missing dependency 'MissingMod'/
-    ); // Check nested error
+    );
 
     // Registry assertions
-    expect(registry.clear).toHaveBeenCalledTimes(2); // Start and catch block
-    // Manifests *should* have been stored by ModManifestLoader *before* the dependency check caused the throw
+    expect(registry.clear).toHaveBeenCalledTimes(2);
     expect(registry.store).toHaveBeenCalledWith(
       'mod_manifests',
       'basegame',
@@ -521,7 +392,6 @@ describe('WorldLoader → ModDependencyValidator integration (missing dependency
       'badmod',
       expect.objectContaining({ id: 'badmod' })
     );
-    // Final mod order shouldn't be stored
     expect(registry.store).not.toHaveBeenCalledWith(
       'meta',
       'final_mod_order',

@@ -38,9 +38,6 @@
       }
     }
   },
-  "required": [
-    "instanceId",
-    "definitionId"
-  ],
+  "required": ["instanceId", "definitionId"],
   "additionalProperties": false
 }

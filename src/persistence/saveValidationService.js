@@ -1,14 +1,7 @@
 // src/persistence/saveValidationService.js
 
-import { encode } from '@msgpack/msgpack';
-import {
-  PersistenceError,
-  PersistenceErrorCodes,
-} from './persistenceErrors.js';
-import {
-  createPersistenceFailure,
-  createPersistenceSuccess,
-} from './persistenceResultUtils.js';
+import { PersistenceErrorCodes } from './persistenceErrors.js';
+import { createPersistenceFailure } from './persistenceResultUtils.js';
 
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('./gameStateSerializer.js').default} GameStateSerializer */
@@ -95,9 +88,9 @@ class SaveValidationService {
 
     let recalculatedChecksum;
     try {
-      const gameStateMessagePack = encode(obj.gameState);
-      recalculatedChecksum =
-        await this.#serializer.generateChecksum(gameStateMessagePack);
+      recalculatedChecksum = await this.#serializer.calculateGameStateChecksum(
+        obj.gameState
+      );
     } catch (checksumError) {
       const devMsg = `Error calculating checksum for gameState in ${identifier}: ${checksumError.message}.`;
       const userMsg =

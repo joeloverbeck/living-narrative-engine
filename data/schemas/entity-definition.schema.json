@@ -39,9 +39,6 @@
       }
     }
   },
-  "required": [
-    "id",
-    "components"
-  ],
+  "required": ["id", "components"],
   "additionalProperties": false
 }
