@@ -4,7 +4,7 @@
 import { describe, it, expect, beforeAll, beforeEach } from '@jest/globals';
 import GameStateSerializer from '../../src/persistence/gameStateSerializer.js';
 import { PersistenceErrorCodes } from '../../src/persistence/persistenceErrors.js';
-import { encode } from '@msgpack/msgpack';
+import * as msgpack from '@msgpack/msgpack';
 import pako from 'pako';
 import { webcrypto } from 'crypto';
 import { createMockLogger } from '../testUtils.js';
@@ -37,7 +37,7 @@ describe('GameStateSerializer', () => {
 
   it('decompress/deserialize round-trip succeeds', () => {
     const obj = { a: 1, nested: { b: 'c' } };
-    const compressed = pako.gzip(encode(obj));
+    const compressed = pako.gzip(msgpack.encode(obj));
 
     /** @type {PersistenceResult<Uint8Array>} */
     const decResult = serializer.decompress(compressed);
@@ -80,7 +80,9 @@ describe('GameStateSerializer', () => {
 
   it('calculateGameStateChecksum encodes and hashes the game state', async () => {
     const gameState = { level: 1, score: 10 };
-    const expected = await serializer.generateChecksum(encode(gameState));
+    const expected = await serializer.generateChecksum(
+      msgpack.encode(gameState)
+    );
     const actual = await serializer.calculateGameStateChecksum(gameState);
     expect(actual).toBe(expected);
   });
@@ -97,5 +99,68 @@ describe('GameStateSerializer', () => {
     await expect(serializer.serializeAndCompress(cyc)).rejects.toThrow(
       /deep clone/i
     );
+  });
+
+  it('throws PersistenceError when gameState is invalid', async () => {
+    const obj = {
+      metadata: {},
+      modManifest: {},
+      gameState: null,
+      integrityChecks: {},
+    };
+    await expect(serializer.serializeAndCompress(obj)).rejects.toMatchObject({
+      code: PersistenceErrorCodes.INVALID_GAME_STATE,
+    });
+  });
+
+  it('propagates errors from checksum calculation', async () => {
+    jest
+      .spyOn(serializer, 'calculateGameStateChecksum')
+      .mockRejectedValue(new Error('hash failed'));
+    const obj = {
+      metadata: {},
+      modManifest: {},
+      gameState: {},
+      integrityChecks: {},
+    };
+    await expect(serializer.serializeAndCompress(obj)).rejects.toThrow(
+      /hash failed/
+    );
+  });
+
+  it('throws when MessagePack encode fails', async () => {
+    jest.spyOn(pako, 'gzip').mockImplementation(() => new Uint8Array());
+    jest.spyOn(msgpack, 'encode').mockImplementation(() => {
+      throw new Error('encode boom');
+    });
+    const obj = {
+      metadata: {},
+      modManifest: {},
+      gameState: {},
+      integrityChecks: {},
+    };
+    await expect(serializer.serializeAndCompress(obj)).rejects.toThrow(
+      /encode boom/
+    );
+    pako.gzip.mockRestore();
+    msgpack.encode.mockRestore();
+  });
+
+  it('throws when gzip compression fails', async () => {
+    jest.spyOn(msgpack, 'encode').mockReturnValue(new Uint8Array([1, 2]));
+    jest.spyOn(pako, 'gzip').mockImplementation(() => {
+      throw new Error('gzip boom');
+    });
+    const obj = {
+      metadata: {},
+      modManifest: {},
+      gameState: {},
+      integrityChecks: {},
+    };
+    await expect(serializer.serializeAndCompress(obj)).rejects.toThrow(
+      /gzip boom/
+    );
+    pako.gzip.mockRestore();
+    msgpack.encode.mockRestore();
   });
 });
