@@ -10,11 +10,8 @@ export const GOALS_WRAPPER_KEY = 'goals_wrapper';
  * @description Renders the goals section when `promptData.goalsArray` is supplied.
  */
 export class GoalsSectionAssembler extends IPromptElementAssembler {
-  #logger;
-
-  constructor({ logger = console } = {}) {
+  constructor() {
     super();
-    this.#logger = logger;
   }
 
   /** @inheritdoc */

@@ -304,7 +304,9 @@ export class AIPromptContentProvider extends IAIPromptContentProvider {
 
     const characterInfo = [];
     characterInfo.push(
-      `YOU ARE ${actorPromptData.name || DEFAULT_FALLBACK_CHARACTER_NAME}\.\nThis is your identity. All thoughts, actions, and words must stem from this core truth.`
+      `YOU ARE ${
+        actorPromptData.name || DEFAULT_FALLBACK_CHARACTER_NAME
+      }.\nThis is your identity. All thoughts, actions, and words must stem from this core truth.`
     );
 
     if (actorPromptData.description) {

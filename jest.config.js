@@ -1,6 +1,7 @@
 // jest.config.js
 
 /* eslint-env node */
+/* global module */
 
 /**
  * @description Jest configuration for the root project.

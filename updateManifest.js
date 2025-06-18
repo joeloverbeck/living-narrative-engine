@@ -1,4 +1,6 @@
 // updateManifest.js (Version 2)
+/* eslint-env node */
+/* global process, __filename */
 //
 // Description:
 // A Node.js script to automatically scan the content directories of a mod
@@ -53,7 +55,9 @@ async function main() {
       // Check if it's a directory and not in the ignore list.
       if (dirent.isDirectory() && !IGNORE_DIRS.has(dirent.name)) {
         // If this directory is not already a key in manifest.content, add it!
-        if (!manifest.content.hasOwnProperty(dirent.name)) {
+        if (
+          !Object.prototype.hasOwnProperty.call(manifest.content, dirent.name)
+        ) {
           console.log(
             `  - Discovered new content directory: "${dirent.name}". Adding to manifest.`
           );

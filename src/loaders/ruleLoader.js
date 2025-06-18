@@ -113,22 +113,13 @@ class RuleLoader extends BaseManifestItemLoader {
       `RuleLoader [${modId}]: Delegating storage for rule (base ID: '${baseRuleId}') from ${filename} to base helper.`
     );
 
-    let qualifiedId;
-    let didOverride = false;
-    try {
-      const result = this._storeItemInRegistry(
-        'rules',
-        modId,
-        baseRuleId,
-        data,
-        filename
-      );
-      qualifiedId = result.qualifiedId;
-      didOverride = result.didOverride;
-    } catch (storageError) {
-      // Error logging happens in helper, re-throw
-      throw storageError;
-    }
+    const { qualifiedId, didOverride } = this._storeItemInRegistry(
+      'rules',
+      modId,
+      baseRuleId,
+      data,
+      filename
+    );
 
     // --- End Storage ---
 

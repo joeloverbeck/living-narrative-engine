@@ -175,7 +175,7 @@ function createMinHeap(keyFn) {
  */
 function resolveOrder(requestedIds, manifestsMap, logger) {
   /* Input checks */
-  if (requestedIds == null)
+  if (requestedIds === null || requestedIds === undefined)
     throw new Error(
       'modLoadOrderResolver.resolveOrder: `requestedIds` null/undefined.'
     );

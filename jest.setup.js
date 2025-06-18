@@ -1,8 +1,9 @@
 /* eslint-env node */
 /* eslint-disable no-console */
+/* global jest */
 
 // jest.setup.js
-import 'jest-extended/all';
+require('jest-extended/all');
 
 // --- Polyfills for Jest Node environment ---
 
