@@ -3,12 +3,16 @@
  */
 
 /**
+ * Base error for failures during interaction with a Large Language Model service.
+ *
  * @class LLMInteractionError
  * @augments Error
  * @description Base error for failures during interaction with a Large Language Model service.
  */
 export class LLMInteractionError extends Error {
   /**
+   * Creates a new LLMInteractionError instance.
+   *
    * @param {string} message - The error message.
    * @param {object} [details] - Optional contextual details.
    * @param {number} [details.status] - HTTP status code associated with the failure.
