@@ -225,5 +225,34 @@ describe('PlaceholderResolver', () => {
       expect(resolver.resolve(str, data)).toBe('part1part2');
     });
   });
+
+  describe('resolveStructure', () => {
+    it('should recursively resolve placeholders in objects and arrays', () => {
+      const input = {
+        greeting: 'Hello {name}',
+        age: '{age}',
+        nested: ['{name}', { deep: '{age}' }],
+      };
+      const result = resolver.resolveStructure(input, { name: 'Bob', age: 42 });
+      expect(result).toEqual({
+        greeting: 'Hello Bob',
+        age: 42,
+        nested: ['Bob', { deep: 42 }],
+      });
+    });
+
+    it('should return undefined for unresolved full placeholders', () => {
+      const input = '{missing}';
+      const result = resolver.resolveStructure(input, { present: 'yes' });
+      expect(result).toBeUndefined();
+    });
+
+    it('should support optional placeholders with trailing ?', () => {
+      const input = '{missing?}';
+      const result = resolver.resolveStructure(input, { value: 1 });
+      expect(result).toBeUndefined();
+      expect(mockLogger.warn).not.toHaveBeenCalled();
+    });
+  });
 });
 // --- FILE END ---
