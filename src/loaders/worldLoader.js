@@ -693,18 +693,6 @@ class WorldLoader extends AbstractLoader {
     );
   }
 
-  /**
-   * Placeholder for any additional post-load processing.
-   *
-   * @private
-   * @returns {void}
-   */
-  #postLoadProcessing() {
-    this.#logger.debug(
-      'WorldLoader: Post-load processing step (if any) reached.'
-    );
-  }
-
   // ── Public API ──────────────────────────────────────────────────────────
 
   /**
@@ -775,8 +763,6 @@ class WorldLoader extends AbstractLoader {
         totalCounts
       );
 
-      this.#postLoadProcessing();
-
       this.#logLoadSummary(
         worldName,
         requestedModIds,
@@ -815,19 +801,6 @@ class WorldLoader extends AbstractLoader {
       }
       // --- END REVISED CATCH BLOCK ---
     }
-  }
-
-  // ── Helper: per-mod summary logger (OLD - Replaced by inline logic above) ──
-  /**
-   * @private
-   * @deprecated Use inline summary logging logic after the mod processing loop instead.
-   */
-  // eslint-disable-next-line no-unused-private-class-members
-  #logModLoadSummary /* modId, modResults, durationMs */() {
-    // This method is intentionally left empty as the logic is now inline above.
-    this.#logger.warn(
-      'WorldLoader: #logModLoadSummary is deprecated and should not be called.'
-    );
   }
 
   // ── Helper: final summary logger ────────────────────────────────────────
