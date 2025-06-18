@@ -147,15 +147,16 @@ class SchemaLoader extends AbstractLoader {
       `SchemaLoader: Processing ${schemaFiles.length} schemas listed in configuration...`
     );
 
-    const schemaPromises = schemaFiles.map((filename) =>
-      this.#loadAndAddSingleSchema(filename)
-    );
-
     try {
-      const results = await Promise.all(schemaPromises);
-      const loadedSchemaCount = results.filter(
-        (result) => result === true
-      ).length;
+      let loadedSchemaCount = 0;
+
+      for (const filename of schemaFiles) {
+        const added = await this.#loadAndAddSingleSchema(filename);
+        if (added) {
+          loadedSchemaCount += 1;
+        }
+      }
+
       this.#logger.debug(
         `SchemaLoader: Schema processing complete. Added ${loadedSchemaCount} new schemas to the validator (others may have been skipped).`
       );

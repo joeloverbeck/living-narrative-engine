@@ -29,7 +29,6 @@ const mockLogger = {
 const commonSchemaFile = 'common.schema.json';
 const entityDefinitionSchemaFile = 'entity-definition.schema.json';
 const entityInstanceSchemaFile = 'entity-instance.schema.json';
-const manifestSchemaId = 'test://schemas/manifest'; // Needed for initial check bypass
 const commonSchemaPath = `./test/schemas/${commonSchemaFile}`;
 const entityDefinitionSchemaPath = `./test/schemas/${entityDefinitionSchemaFile}`;
 const entityInstanceSchemaPath = `./test/schemas/${entityInstanceSchemaFile}`;
@@ -37,9 +36,19 @@ const commonSchemaId = 'test://schemas/common';
 const entityDefinitionSchemaId = 'test://schemas/entity-definition';
 const entityInstanceSchemaId = 'test://schemas/entity-instance';
 const commonSchemaData = { $id: commonSchemaId, title: 'Common Test' };
-const entityDefinitionSchemaData = { $id: entityDefinitionSchemaId, title: 'Entity Definition Test' };
-const entityInstanceSchemaData = { $id: entityInstanceSchemaId, title: 'Entity Instance Test' };
-const defaultSchemaFiles = [commonSchemaFile, entityDefinitionSchemaFile, entityInstanceSchemaFile];
+const entityDefinitionSchemaData = {
+  $id: entityDefinitionSchemaId,
+  title: 'Entity Definition Test',
+};
+const entityInstanceSchemaData = {
+  $id: entityInstanceSchemaId,
+  title: 'Entity Instance Test',
+};
+const defaultSchemaFiles = [
+  commonSchemaFile,
+  entityDefinitionSchemaFile,
+  entityInstanceSchemaFile,
+];
 
 // --- Isolated Error Test Suite ---
 describe('SchemaLoader - Error Handling', () => {
@@ -83,11 +92,15 @@ describe('SchemaLoader - Error Handling', () => {
         return commonSchemaData;
       }
       if (path === entityDefinitionSchemaPath) {
-        console.log(`[Fetcher Mock] fetch resolving for: ${entityDefinitionSchemaPath}`);
+        console.log(
+          `[Fetcher Mock] fetch resolving for: ${entityDefinitionSchemaPath}`
+        );
         return entityDefinitionSchemaData;
       }
       if (path === entityInstanceSchemaPath) {
-        console.log(`[Fetcher Mock] fetch resolving for: ${entityInstanceSchemaPath}`);
+        console.log(
+          `[Fetcher Mock] fetch resolving for: ${entityInstanceSchemaPath}`
+        );
         return entityInstanceSchemaData;
       }
       console.error(`[Fetcher Mock] fetch throwing: Unknown path ${path}`);
@@ -145,8 +158,8 @@ describe('SchemaLoader - Error Handling', () => {
     console.log('[Fetch Error] Rejection confirmed.');
 
     // Assertions
-    expect(mockPathResolver.resolveSchemaPath).toHaveBeenCalledTimes(defaultSchemaFiles.length);
-    expect(mockDataFetcher.fetch).toHaveBeenCalledTimes(defaultSchemaFiles.length);
+    expect(mockPathResolver.resolveSchemaPath).toHaveBeenCalledTimes(2);
+    expect(mockDataFetcher.fetch).toHaveBeenCalledTimes(2);
 
     // addSchema only called for the successful one(s) before failure
     console.log(
@@ -213,19 +226,19 @@ describe('SchemaLoader - Error Handling', () => {
     console.log('[Missing $id] Rejection confirmed.');
 
     // Assertions
-    expect(mockPathResolver.resolveSchemaPath).toHaveBeenCalledTimes(defaultSchemaFiles.length);
-    expect(mockDataFetcher.fetch).toHaveBeenCalledTimes(defaultSchemaFiles.length);
+    expect(mockPathResolver.resolveSchemaPath).toHaveBeenCalledTimes(2);
+    expect(mockDataFetcher.fetch).toHaveBeenCalledTimes(2);
 
     // addSchema only called for the valid one
     console.log(
       `[Missing $id] Checking addSchema calls. Count: ${mockSchemaValidator.addSchema.mock.calls.length}`
     );
-    expect(mockSchemaValidator.addSchema).toHaveBeenCalledTimes(2);
+    expect(mockSchemaValidator.addSchema).toHaveBeenCalledTimes(1);
     expect(mockSchemaValidator.addSchema).toHaveBeenCalledWith(
       commonSchemaData,
       commonSchemaId
     );
-    expect(mockSchemaValidator.addSchema).toHaveBeenCalledWith(
+    expect(mockSchemaValidator.addSchema).not.toHaveBeenCalledWith(
       entityInstanceSchemaData,
       entityInstanceSchemaId
     );
@@ -284,14 +297,14 @@ describe('SchemaLoader - Error Handling', () => {
     console.log('[addSchema Error] Rejection confirmed.');
 
     // Assertions
-    expect(mockPathResolver.resolveSchemaPath).toHaveBeenCalledTimes(defaultSchemaFiles.length);
-    expect(mockDataFetcher.fetch).toHaveBeenCalledTimes(defaultSchemaFiles.length);
+    expect(mockPathResolver.resolveSchemaPath).toHaveBeenCalledTimes(2);
+    expect(mockDataFetcher.fetch).toHaveBeenCalledTimes(2);
 
     // addSchema attempted for all
     console.log(
       `[addSchema Error] Checking addSchema calls. Count: ${mockSchemaValidator.addSchema.mock.calls.length}`
     );
-    expect(mockSchemaValidator.addSchema).toHaveBeenCalledTimes(defaultSchemaFiles.length);
+    expect(mockSchemaValidator.addSchema).toHaveBeenCalledTimes(2);
 
     // Check logs
     expect(mockLogger.error).toHaveBeenCalledTimes(2);
