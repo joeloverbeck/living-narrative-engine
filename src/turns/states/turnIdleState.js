@@ -45,32 +45,72 @@ export class TurnIdleState extends AbstractTurnState {
       `${this.getStateName()}: Received startTurn for actor ${actorIdForLog}.`
     );
 
-    // Validate actorEntity
+    this._validateActorEntity(handler, actorEntity, logger);
+    this._validateTurnContext(handler, turnCtx, actorIdForLog, logger);
+    const contextActor = this._validateActorMatch(
+      handler,
+      turnCtx,
+      actorEntity,
+      logger
+    );
+
+    logger.debug(
+      `${this.getStateName()}: ITurnContext confirmed for actor ${contextActor.id}. Transitioning to AwaitingActorDecisionState.`
+    );
+
+    await this._requestAwaitingInput(turnCtx, contextActor, handler, logger);
+  }
+
+  /**
+   * @description Validates the provided actor entity.
+   * @param {BaseTurnHandler} handler - Owning handler.
+   * @param {Entity} actorEntity - Actor entity provided.
+   * @param {import('../../utils/logger.js').Logger} logger - Logger instance.
+   */
+  _validateActorEntity(handler, actorEntity, logger) {
     if (!actorEntity || typeof actorEntity.id === 'undefined') {
       const errorMsg = `${this.getStateName()}: startTurn called with invalid actorEntity.`;
       logger.error(errorMsg);
       handler._resetTurnStateAndResources(
         `invalid-actor-${this.getStateName()}`
       );
-      await handler._transitionToState(
+      handler._transitionToState(
         handler._turnStateFactory.createIdleState(handler)
       );
       throw new Error(errorMsg);
     }
+  }
 
-    // Validate ITurnContext
+  /**
+   * @description Ensures a valid ITurnContext is present.
+   * @param {BaseTurnHandler} handler - Owning handler.
+   * @param {ITurnContext} turnCtx - Current turn context.
+   * @param {string} actorIdForLog - Actor ID for logging.
+   * @param {import('../../utils/logger.js').Logger} logger - Logger instance.
+   */
+  _validateTurnContext(handler, turnCtx, actorIdForLog, logger) {
     if (!turnCtx) {
       const errorMsg = `${this.getStateName()}: ITurnContext is missing or invalid. Expected concrete handler to set it up. Actor: ${actorIdForLog}.`;
       logger.error(errorMsg);
       handler._resetTurnStateAndResources(
         `missing-context-${this.getStateName()}`
       );
-      await handler._transitionToState(
+      handler._transitionToState(
         handler._turnStateFactory.createIdleState(handler)
       );
       throw new Error(errorMsg);
     }
+  }
 
+  /**
+   * @description Validates that the context actor matches the provided actor.
+   * @param {BaseTurnHandler} handler - Owning handler.
+   * @param {ITurnContext} turnCtx - Current turn context.
+   * @param {Entity} actorEntity - Actor entity provided.
+   * @param {import('../../utils/logger.js').Logger} logger - Logger instance.
+   * @returns {Entity} The actor from context.
+   */
+  _validateActorMatch(handler, turnCtx, actorEntity, logger) {
     const contextActor = turnCtx.getActor();
     if (!contextActor || contextActor.id !== actorEntity.id) {
       const errorMsg = `${this.getStateName()}: Actor in ITurnContext ('${contextActor?.id}') does not match actor provided to state's startTurn ('${actorEntity.id}').`;
@@ -78,26 +118,31 @@ export class TurnIdleState extends AbstractTurnState {
       handler._resetTurnStateAndResources(
         `actor-mismatch-${this.getStateName()}`
       );
-      await handler._transitionToState(
+      handler._transitionToState(
         handler._turnStateFactory.createIdleState(handler)
       );
       throw new Error(errorMsg);
     }
+    return contextActor;
+  }
 
-    logger.debug(
-      `${this.getStateName()}: ITurnContext confirmed for actor ${contextActor.id}. Transitioning to AwaitingActorDecisionState.`
-    );
-
+  /**
+   * @description Requests transition to AwaitingActorDecisionState via the context.
+   * @param {ITurnContext} turnCtx - Current turn context.
+   * @param {Entity} actor - Actor whose turn has started.
+   * @param {BaseTurnHandler} handler - Owning handler.
+   * @param {import('../../utils/logger.js').Logger} logger - Logger instance.
+   * @returns {Promise<void>} Resolves when the transition is complete.
+   */
+  async _requestAwaitingInput(turnCtx, actor, handler, logger) {
     try {
-      // Use ITurnContext to request the transition
       await turnCtx.requestAwaitingInputStateTransition();
-
       logger.debug(
-        `${this.getStateName()}: Successfully transitioned to AwaitingActorDecisionState for actor ${contextActor.id}.`
+        `${this.getStateName()}: Successfully transitioned to AwaitingActorDecisionState for actor ${actor.id}.`
       );
     } catch (error) {
       logger.error(
-        `${this.getStateName()}: Failed to transition to AwaitingActorDecisionState for ${contextActor.id}. Error: ${error.message}`,
+        `${this.getStateName()}: Failed to transition to AwaitingActorDecisionState for ${actor.id}. Error: ${error.message}`,
         error
       );
       handler._resetTurnStateAndResources(

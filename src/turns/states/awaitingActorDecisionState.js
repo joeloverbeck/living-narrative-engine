@@ -35,114 +35,38 @@ export class AwaitingActorDecisionState extends AbstractTurnState {
     if (!turnContext) return;
 
     const logger = turnContext.getLogger();
-    const actor = turnContext.getActor();
 
-    if (!actor) {
-      logger.error(`${this.name}: No actor found in TurnContext. Ending turn.`);
-      await turnContext.endTurn(
-        new Error('No actor in context during AwaitingActorDecisionState.')
-      );
-      return;
-    }
+    const validation = await this._validateActorAndStrategy(turnContext);
+    if (!validation) return;
+    const { actor, strategy } = validation;
 
-    logger.debug(
-      `${this.name}: Actor ${actor.id}. Attempting to retrieve turn strategy.`
-    );
-
-    if (typeof turnContext.getStrategy !== 'function') {
-      const msg = `${this.name}: turnContext.getStrategy() is not a function for actor ${actor.id}.`;
-      logger.error(msg);
-      await turnContext.endTurn(new Error(msg));
-      return;
-    }
-
-    const strategy = turnContext.getStrategy();
-    if (!strategy || typeof strategy.decideAction !== 'function') {
-      const msg = `${this.name}: No valid IActorTurnStrategy found for actor ${actor.id} or strategy is malformed (missing decideAction).`;
-      logger.error(msg, { strategyReceived: strategy });
-      await turnContext.endTurn(new Error(msg));
-      return;
-    }
-
-    const strategyName = strategy.constructor?.name ?? 'Object';
-    logger.debug(
-      `${this.name}: Strategy ${strategyName} obtained for actor ${actor.id}. Requesting action decision.`
-    );
-
-    let decision, action, extractedData;
     try {
-      decision = await strategy.decideAction(turnContext);
-      action = decision ? decision.action || decision : null;
-      extractedData = decision?.extractedData ?? null;
-
-      if (typeof turnContext.setDecisionMeta === 'function') {
-        const metaFrozen = extractedData ? Object.freeze(extractedData) : null;
-        turnContext.setDecisionMeta(metaFrozen);
-      }
+      const { action, extractedData } = await this._decideAction(
+        strategy,
+        turnContext,
+        actor
+      );
 
       if (!action || typeof action.actionDefinitionId !== 'string') {
         const warnMsg = `${this.name}: Strategy for actor ${actor.id} returned an invalid or null ITurnAction (must have actionDefinitionId).`;
-        logger.warn(warnMsg, { receivedAction: action });
+        turnContext.getLogger().warn(warnMsg, { receivedAction: action });
         await turnContext.endTurn(new Error(warnMsg));
         return;
       }
 
-      // Determine actor type: 'ai' or 'human'
-      const actorType = getActorType(actor);
-
-      // Dispatch the standardized action_decided event
-      const payload = {
-        actorId: actor.id,
-        actorType,
-      };
-
-      // Sanitize the extractedData before adding it to the payload to ensure
-      // it conforms to the event schema (e.g., no nulls for string/array types).
-      if (extractedData) {
-        payload.extractedData = {
-          ...extractedData,
-          thoughts: extractedData.thoughts ?? '',
-          notes: extractedData.notes ?? [],
-        };
-      }
-
-      const dispatcher = this._getSafeEventDispatcher(turnContext);
-      if (dispatcher) {
-        try {
-          await dispatcher.dispatch(ACTION_DECIDED_ID, payload);
-          logger.debug(`Dispatched ${ACTION_DECIDED_ID} for actor ${actor.id}`);
-        } catch (e) {
-          logger.error(
-            `Failed to dispatch ${ACTION_DECIDED_ID} event for actor ${actor.id}`,
-            e
-          );
-        }
-      } else {
-        logger.error(
-          `${this.name}: No SafeEventDispatcher available to dispatch ${ACTION_DECIDED_ID} for actor ${actor.id}.`
-        );
-      }
-
-      logger.debug(
-        `${this.name}: Actor ${actor.id} decided action: ${action.actionDefinitionId}. Storing action.`
-      );
-
-      if (typeof turnContext.setChosenAction === 'function') {
-        turnContext.setChosenAction(action);
-      } else {
-        logger.warn(
-          `${this.name}: ITurnContext.setChosenAction() not found. Cannot store action in context.`
-        );
-      }
+      this._recordDecision(turnContext, action, extractedData);
+      await this._emitActionDecided(turnContext, actor, extractedData);
 
       const cmdStr =
         action.commandString && action.commandString.trim().length > 0
           ? action.commandString
           : action.actionDefinitionId;
 
-      logger.debug(
-        `${this.getStateName()}: Requesting transition to ProcessingCommandState for actor ${actor.id}.`
-      );
+      turnContext
+        .getLogger()
+        .debug(
+          `${this.getStateName()}: Requesting transition to ProcessingCommandState for actor ${actor.id}.`
+        );
       await turnContext.requestProcessingCommandStateTransition(cmdStr, action);
     } catch (error) {
       if (error?.name === 'AbortError') {
@@ -155,6 +79,132 @@ export class AwaitingActorDecisionState extends AbstractTurnState {
         logger.error(errMsg, { originalError: error });
         await turnContext.endTurn(new Error(errMsg, { cause: error }));
       }
+    }
+  }
+
+  /**
+   * @description Validates actor existence and retrieves a usable strategy.
+   * @param {ITurnContext} turnContext - Current turn context.
+   * @returns {Promise<{actor: Entity, strategy: import('../interfaces/IActorTurnStrategy.js').IActorTurnStrategy} | null>}
+   * Returns `null` if validation fails.
+   */
+  async _validateActorAndStrategy(turnContext) {
+    const logger = turnContext.getLogger();
+    const actor = turnContext.getActor();
+    if (!actor) {
+      logger.error(`${this.name}: No actor found in TurnContext. Ending turn.`);
+      await turnContext.endTurn(
+        new Error('No actor in context during AwaitingActorDecisionState.')
+      );
+      return null;
+    }
+
+    logger.debug(
+      `${this.name}: Actor ${actor.id}. Attempting to retrieve turn strategy.`
+    );
+
+    if (typeof turnContext.getStrategy !== 'function') {
+      const msg = `${this.name}: turnContext.getStrategy() is not a function for actor ${actor.id}.`;
+      logger.error(msg);
+      await turnContext.endTurn(new Error(msg));
+      return null;
+    }
+
+    const strategy = turnContext.getStrategy();
+    if (!strategy || typeof strategy.decideAction !== 'function') {
+      const msg = `${this.name}: No valid IActorTurnStrategy found for actor ${actor.id} or strategy is malformed (missing decideAction).`;
+      logger.error(msg, { strategyReceived: strategy });
+      await turnContext.endTurn(new Error(msg));
+      return null;
+    }
+
+    const strategyName = strategy.constructor?.name ?? 'Object';
+    logger.debug(
+      `${this.name}: Strategy ${strategyName} obtained for actor ${actor.id}. Requesting action decision.`
+    );
+    return { actor, strategy };
+  }
+
+  /**
+   * @description Invokes the strategy to decide an action.
+   * @param {import('../interfaces/IActorTurnStrategy.js').IActorTurnStrategy} strategy - Actor strategy.
+   * @param {ITurnContext} turnContext - Current turn context.
+   * @param {Entity} actor - Actor deciding the action.
+   * @returns {Promise<{action: ITurnAction|null, extractedData: object|null}>} Decision result.
+   */
+  async _decideAction(strategy, turnContext, actor) {
+    const decision = await strategy.decideAction(turnContext);
+    return {
+      action: decision ? decision.action || decision : null,
+      extractedData: decision?.extractedData ?? null,
+    };
+  }
+
+  /**
+   * @description Stores decision metadata and chosen action in the context.
+   * @param {ITurnContext} turnContext - Current turn context.
+   * @param {ITurnAction} action - Chosen action.
+   * @param {?object} extractedData - Additional metadata from strategy.
+   */
+  _recordDecision(turnContext, action, extractedData) {
+    if (typeof turnContext.setDecisionMeta === 'function') {
+      const metaFrozen = extractedData ? Object.freeze(extractedData) : null;
+      turnContext.setDecisionMeta(metaFrozen);
+    }
+
+    turnContext
+      .getLogger()
+      .debug(
+        `${this.name}: Actor ${action?.actorId ?? turnContext.getActor().id} decided action: ${action.actionDefinitionId}. Storing action.`
+      );
+
+    if (typeof turnContext.setChosenAction === 'function') {
+      turnContext.setChosenAction(action);
+    } else {
+      turnContext
+        .getLogger()
+        .warn(
+          `${this.name}: ITurnContext.setChosenAction() not found. Cannot store action in context.`
+        );
+    }
+  }
+
+  /**
+   * @description Emits the ACTION_DECIDED_ID event using SafeEventDispatcher.
+   * @param {ITurnContext} turnContext - Current turn context.
+   * @param {Entity} actor - Actor who decided.
+   * @param {?object} extractedData - Metadata from the decision.
+   * @returns {Promise<void>} Resolves when dispatch completes.
+   */
+  async _emitActionDecided(turnContext, actor, extractedData) {
+    const payload = {
+      actorId: actor.id,
+      actorType: getActorType(actor),
+    };
+    if (extractedData) {
+      payload.extractedData = {
+        ...extractedData,
+        thoughts: extractedData.thoughts ?? '',
+        notes: extractedData.notes ?? [],
+      };
+    }
+
+    const dispatcher = this._getSafeEventDispatcher(turnContext);
+    const logger = turnContext.getLogger();
+    if (dispatcher) {
+      try {
+        await dispatcher.dispatch(ACTION_DECIDED_ID, payload);
+        logger.debug(`Dispatched ${ACTION_DECIDED_ID} for actor ${actor.id}`);
+      } catch (e) {
+        logger.error(
+          `Failed to dispatch ${ACTION_DECIDED_ID} event for actor ${actor.id}`,
+          e
+        );
+      }
+    } else {
+      logger.error(
+        `${this.name}: No SafeEventDispatcher available to dispatch ${ACTION_DECIDED_ID} for actor ${actor.id}.`
+      );
     }
   }
 
