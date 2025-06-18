@@ -1,5 +1,5 @@
 import { describe, it, expect, jest, afterEach } from '@jest/globals';
-import { setupMenuButtonListenersStage } from '../../src/bootstrapper/stages/index.js';
+import { setupMenuButtonListenersStage } from '../../src/bootstrapper/stages';
 import StageError from '../../src/bootstrapper/StageError.js';
 
 /**

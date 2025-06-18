@@ -1,5 +1,5 @@
 import { describe, it, expect, jest } from '@jest/globals';
-import { initializeAuxiliaryServicesStage } from '../../src/bootstrapper/auxiliaryStages.js';
+import { initializeAuxiliaryServicesStage } from '../../src/bootstrapper/stages/index.js';
 import StageError from '../../src/bootstrapper/StageError.js';
 
 /**
