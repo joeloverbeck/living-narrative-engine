@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import GamePersistenceService from '../../src/persistence/gamePersistenceService.js';
+import GameStateRestorer from '../../src/persistence/gameStateRestorer.js';
 
 const makeLogger = () => ({
   info: jest.fn(),
@@ -31,9 +32,15 @@ function makeService() {
     playtimeTracker,
     gameStateCaptureService: captureService,
   });
+  const restorer = new GameStateRestorer({
+    logger,
+    entityManager,
+    playtimeTracker,
+  });
 
   return {
     service,
+    restorer,
     captureService,
     saveLoadService,
     entityManager,
@@ -78,12 +85,12 @@ describe('GamePersistenceService private helpers', () => {
   });
 
   it('_validateRestoreData fails when gameState missing', () => {
-    const res = context.service._validateRestoreData({});
+    const res = context.restorer._validateRestoreData({});
     expect(res.success).toBe(false);
   });
 
   it('_validateRestoreData passes with required fields', () => {
-    const res = context.service._validateRestoreData({ gameState: {} });
+    const res = context.restorer._validateRestoreData({ gameState: {} });
     expect(res).toBeNull();
   });
 
@@ -91,19 +98,19 @@ describe('GamePersistenceService private helpers', () => {
     context.entityManager.clearAll.mockImplementation(() => {
       throw new Error('x');
     });
-    const res = context.service._clearExistingEntities();
+    const res = context.restorer._clearExistingEntities();
     expect(res.success).toBe(false);
   });
 
   it('_restoreEntities skips invalid data and restores valid', () => {
     const valid = { instanceId: 'e1', definitionId: 'd1', components: {} };
-    context.service._restoreEntities([valid, {}]);
+    context.restorer._restoreEntities([valid, {}]);
     expect(context.entityManager.reconstructEntity).toHaveBeenCalledWith(valid);
     expect(context.entityManager.reconstructEntity).toHaveBeenCalledTimes(1);
   });
 
   it('_restorePlaytime handles missing value', () => {
-    context.service._restorePlaytime();
+    context.restorer._restorePlaytime();
     expect(context.playtimeTracker.setAccumulatedPlaytime).toHaveBeenCalledWith(
       0
     );
