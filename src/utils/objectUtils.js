@@ -12,6 +12,8 @@ import { ensureValidLogger } from './loggerUtils.js';
 
 /**
  * @file Utility functions for working with plain JavaScript objects.
+ * @description Re-exported from {@link src/utils/index.js}. Import from there
+ * for convenience.
  */
 
 /**
