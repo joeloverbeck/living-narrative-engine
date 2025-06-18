@@ -101,9 +101,9 @@ class StaticConfiguration {
       'component.schema.json',
       'condition.schema.json',
       'condition-container.schema.json',
-      'entity.schema.json',
+      'entity-definition.schema.json', // CORRECTED
+      'entity-instance.schema.json',   // CORRECTED
       'event.schema.json',
-      'component.schema.json',
       'game.schema.json',
       'json-logic.schema.json',
       'mod.manifest.schema.json',
@@ -127,20 +127,24 @@ class StaticConfiguration {
    */
   getContentTypeSchemaId(typeName) {
     const map = {
+      // --- CORE ---
+      'mod-manifest': 'http://example.com/schemas/mod.manifest.schema.json',
+      game: 'http://example.com/schemas/game.schema.json',
+
+      // --- CONTENT TYPES ---
       actions: 'http://example.com/schemas/action.schema.json',
-      blockers: 'http://example.com/schemas/entity.schema.json',
       components: 'http://example.com/schemas/component.schema.json',
       conditions: 'http://example.com/schemas/condition.schema.json',
-      connections: 'http://example.com/schemas/entity.schema.json',
-      entities: 'http://example.com/schemas/entity.schema.json',
       events: 'http://example.com/schemas/event.schema.json',
-      game: 'http://example.com/schemas/game.schema.json',
-      items: 'http://example.com/schemas/entity.schema.json',
-      locations: 'http://example.com/schemas/entity.schema.json',
-      'mod-manifest': 'http://example.com/schemas/mod.manifest.schema.json',
       macros: 'http://example.com/schemas/macro.schema.json',
-      operations: 'http://example.com/schemas/operation.schema.json',
       rules: 'http://example.com/schemas/rule.schema.json',
+
+      // --- ENTITY TYPES (CORRECTED) ---
+      entityDefinitions: 'http://example.com/schemas/entity-definition.schema.json',
+      entityInstances: 'http://example.com/schemas/entity-instance.schema.json',
+
+      // --- MISC ---
+      operations: 'http://example.com/schemas/operation.schema.json',
       'llm-configs': 'http://example.com/schemas/llm-configs.schema.json',
       'prompt-text': 'http://example.com/schemas/prompt-text.schema.json',
       'ui-icons': 'http://example.com/schemas/ui-icons.schema.json',

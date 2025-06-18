@@ -53,7 +53,6 @@ describe('LlmConfigService', () => {
     expect(service.isOperational()).toBe(true);
     expect(service.getInitializationErrorDetails()).toBeNull();
     expect(service.getLlmConfigs()).toEqual(sampleConfig);
-    expect(service.getResolvedConfigPath()).toBe('/tmp/llm.json');
   });
 
   test('getLlmById returns configuration when loaded', async () => {

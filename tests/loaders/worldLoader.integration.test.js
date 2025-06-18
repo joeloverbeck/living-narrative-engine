@@ -191,7 +191,7 @@ describe('WorldLoader Integration Test Suite (TEST-LOADER-7.1)', () => {
         case 'mod-manifest':
           return 'schema:mod-manifest';
         case 'entities':
-          return 'schema:entities';
+          return 'schema:entityDefinitions';
         // Let others fall through to default
         default:
           return `schema:${typeName}`;
@@ -204,7 +204,7 @@ describe('WorldLoader Integration Test Suite (TEST-LOADER-7.1)', () => {
         'schema:game',
         'schema:components',
         'schema:mod-manifest',
-        'schema:entities',
+        'schema:entityDefinitions',
         'schema:actions', // <<< Required by WorldLoader
         'schema:events', // <<< Required by WorldLoader
         'schema:rules', // <<< Required by WorldLoader
@@ -330,7 +330,7 @@ describe('WorldLoader Integration Test Suite (TEST-LOADER-7.1)', () => {
       'schema:mod-manifest'
     );
     expect(mockValidator.isSchemaLoaded).toHaveBeenCalledWith(
-      'schema:entities'
+      'schema:entityDefinitions'
     );
     expect(mockValidator.isSchemaLoaded).toHaveBeenCalledWith('schema:actions'); // <<< Added check
     expect(mockValidator.isSchemaLoaded).toHaveBeenCalledWith('schema:events'); // <<< Added check

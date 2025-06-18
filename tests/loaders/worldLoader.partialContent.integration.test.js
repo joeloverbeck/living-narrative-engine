@@ -273,7 +273,7 @@ describe('WorldLoader Integration Test Suite - Partial/Empty Content (TEST-LOADE
         'schema:game',
         'schema:components',
         'schema:mod-manifest',
-        'schema:entities',
+        'schema:entityDefinitions',
         'schema:actions', // <-- Added
         'schema:events', // <-- Added
         'schema:rules', // <-- Added

@@ -307,7 +307,7 @@ describe('WorldLoader Integration Test Suite - EntityDefinitionLoader Multi-Key 
         'schema:game',
         'schema:components',
         'schema:mod-manifest',
-        'schema:entities', // Primary schema for EntityDefinitionLoader
+        'schema:entityDefinitions', // Primary schema for EntityDefinitionLoader
         'schema:actions',
         'schema:events',
         'schema:rules',

@@ -116,33 +116,33 @@ class WorldLoader extends AbstractLoader {
    * @throws {Error} If any required dependency is missing or invalid.
    */
   constructor({
-    registry,
-    logger,
-    schemaLoader,
-    componentLoader,
-    conditionLoader,
-    ruleLoader,
-    macroLoader,
-    actionLoader,
-    eventLoader,
-    entityLoader,
-    entityInstanceLoader = {
-      /**
-       * Fallback implementation when no EntityInstanceLoader is supplied.
-       *
-       * @returns {Promise<{count:number, overrides:number, errors:number}>}
-       */
-      async loadItemsForMod() {
-        return { count: 0, overrides: 0, errors: 0 };
-      },
-    },
-    validator,
-    configuration,
-    gameConfigLoader,
-    promptTextLoader,
-    modManifestLoader,
-    validatedEventDispatcher,
-  }) {
+                registry,
+                logger,
+                schemaLoader,
+                componentLoader,
+                conditionLoader,
+                ruleLoader,
+                macroLoader,
+                actionLoader,
+                eventLoader,
+                entityLoader,
+                entityInstanceLoader = {
+                  /**
+                   * Fallback implementation when no EntityInstanceLoader is supplied.
+                   *
+                   * @returns {Promise<{count:number, overrides:number, errors:number}>}
+                   */
+                  async loadItemsForMod() {
+                    return { count: 0, overrides: 0, errors: 0 };
+                  },
+                },
+                validator,
+                configuration,
+                gameConfigLoader,
+                promptTextLoader,
+                modManifestLoader,
+                validatedEventDispatcher,
+              }) {
     super(logger, [
       {
         dependency: registry,
@@ -337,7 +337,7 @@ class WorldLoader extends AbstractLoader {
         this.#configuration.getContentTypeSchemaId('game'),
         this.#configuration.getContentTypeSchemaId('components'),
         this.#configuration.getContentTypeSchemaId('mod-manifest'),
-        this.#configuration.getContentTypeSchemaId('entities'),
+        this.#configuration.getContentTypeSchemaId('entityDefinitions'),
         this.#configuration.getContentTypeSchemaId('entityInstances'),
         this.#configuration.getContentTypeSchemaId('actions'),
         this.#configuration.getContentTypeSchemaId('events'),

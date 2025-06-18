@@ -272,7 +272,7 @@ describe('WorldLoader Integration Test Suite - Overrides (TEST-LOADER-7.2)', () 
         case 'mod-manifest':
           return 'schema:mod-manifest';
         case 'entities':
-          return 'schema:entities';
+          return 'schema:entityDefinitions';
         case 'actions':
           return 'schema:actions';
         case 'events':
@@ -290,7 +290,7 @@ describe('WorldLoader Integration Test Suite - Overrides (TEST-LOADER-7.2)', () 
         'schema:game',
         'schema:components',
         'schema:mod-manifest',
-        'schema:entities',
+        'schema:entityDefinitions',
         'schema:actions',
         'schema:events',
         'schema:conditions',

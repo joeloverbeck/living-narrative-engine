@@ -194,7 +194,7 @@ describe('WorldLoader Integration Test Suite - Error Handling: Dependency and Ve
         'schema:game',
         'schema:components',
         'schema:mod-manifest',
-        'schema:entities',
+        'schema:entityDefinitions',
         'schema:actions',
         'schema:events',
         'schema:rules',
