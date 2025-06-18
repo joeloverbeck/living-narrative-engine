@@ -18,6 +18,8 @@ import { getEntityIdsForScopes as getEntityIdsForScopesFn } from '../../src/enti
 // --- Helper Mocks/Types ---
 import { ActionTargetContext } from '../../src/models/actionTargetContext.js';
 import Entity from '../../src/entities/entity.js';
+import EntityDefinition from '../../src/entities/EntityDefinition.js';
+import EntityInstanceData from '../../src/entities/EntityInstanceData.js';
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 /** @typedef {import('../../src/logging/consoleLogger.js').default} ILogger */
 
@@ -50,6 +52,13 @@ describe('ActionDiscoveryService - Wait Action Tests', () => {
   const LOCATION_INSTANCE_ID = 'location1-instance-wait';
   const DUMMY_DEFINITION_ID = 'def:dummy-wait-test';
 
+  // Helper function to create entity instances for testing
+  const createTestEntity = (instanceId, definitionId, defComponents = {}, instanceOverrides = {}) => {
+    const definition = new EntityDefinition(definitionId, { description: `Test Definition ${definitionId}`, components: defComponents });
+    const instanceData = new EntityInstanceData(instanceId, definition, instanceOverrides);
+    return new Entity(instanceData);
+  };
+
   /** @type {Entity} */
   let mockActorEntity;
   /** @type {Entity} */
@@ -74,8 +83,8 @@ describe('ActionDiscoveryService - Wait Action Tests', () => {
     mockGetEntityIdsForScopesFn = getEntityIdsForScopesFn;
     mockSafeEventDispatcher = { dispatch: jest.fn() };
 
-    mockActorEntity = new Entity(ACTOR_INSTANCE_ID, DUMMY_DEFINITION_ID);
-    mockLocationEntity = new Entity(LOCATION_INSTANCE_ID, DUMMY_DEFINITION_ID);
+    mockActorEntity = createTestEntity(ACTOR_INSTANCE_ID, DUMMY_DEFINITION_ID);
+    mockLocationEntity = createTestEntity(LOCATION_INSTANCE_ID, DUMMY_DEFINITION_ID);
 
     mockGameDataRepo.getAllActionDefinitions.mockReturnValue([
       coreWaitActionDefinition,

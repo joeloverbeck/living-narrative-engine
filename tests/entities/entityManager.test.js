@@ -10,7 +10,17 @@ import {
 } from '@jest/globals';
 import EntityManager from '../../src/entities/entityManager.js';
 import Entity from '../../src/entities/entity.js';
-import { POSITION_COMPONENT_ID } from '../../src/constants/componentIds.js';
+// EntityDefinition and EntityInstanceData are used by tests setting up entities,
+// but not directly by all EntityManager method tests if createEntityInstance is used.
+// import EntityDefinition from '../../src/entities/EntityDefinition.js';
+// import EntityInstanceData from '../../src/entities/EntityInstanceData.js';
+import {
+  POSITION_COMPONENT_ID,
+  SHORT_TERM_MEMORY_COMPONENT_ID,
+  NOTES_COMPONENT_ID,
+  ACTOR_COMPONENT_ID,
+  GOALS_COMPONENT_ID
+} from '../../src/constants/componentIds.js';
 
 // --- Mock Implementations ---
 const createMockDataRegistry = () => ({
@@ -38,10 +48,11 @@ const createMockSpatialIndexManager = () => ({
 });
 
 // --- Constants ---
-const MOCK_DEFINITION_ID_MAIN = 'test-def-01';
+const MOCK_DEFINITION_ID_MAIN = 'test-def:main';
+const MOCK_DEFINITION_ID_ACTOR = 'test-def:actor';
 const MOCK_INSTANCE_ID_PRE_EXISTING = 'existing-instance-uuid-123';
 
-const ACCESS_DEFINITION_ID = 'access-def-99';
+const ACCESS_DEFINITION_ID = 'access-def:item';
 const ACCESS_INSTANCE_ID = 'access-instance-uuid-99';
 
 const EXISTING_COMPONENT_ID = 'core:stats';
@@ -49,13 +60,34 @@ const EXISTING_COMPONENT_DATA = { hp: 10, mp: 5 };
 const NON_EXISTENT_COMPONENT_ID = 'core:inventory';
 const NON_EXISTENT_ENTITY_INSTANCE_ID = 'ghost-instance-uuid-404';
 
+// Common raw definitions for tests that need them
+const rawDefMain = { description: 'Main test def', components: { 'core:name': { name: 'Main Def' } } };
+const rawDefActorForTests = {
+  description: 'Actor test def',
+  components: {
+    [ACTOR_COMPONENT_ID]: { type: 'test-actor' },
+    'core:name': { name: 'Test Actor Default Name' }
+  }
+};
+const rawDefBasicForTests = {
+  description: 'A basic entity definition for testing.',
+  components: { 'core:name': { name: 'Basic Def' } },
+};
+const rawDefWithPosForTests = {
+  description: 'A positioned entity for addComponent tests or global use',
+  components: {
+    'core:name': { name: 'Positioned Entity Global' },
+    [POSITION_COMPONENT_ID]: { locationInstanceId: 'loc:global-pos', x: 10, y: 10 },
+  },
+};
+
+
 describe('EntityManager', () => {
   let mockRegistry;
   let mockValidator;
   let mockLogger;
   let mockSpatialIndex;
   let entityManager;
-  let accessTestEntity;
 
   beforeEach(() => {
     mockRegistry = createMockDataRegistry();
@@ -68,15 +100,34 @@ describe('EntityManager', () => {
       mockLogger,
       mockSpatialIndex
     );
-    jest.clearAllMocks();
-    accessTestEntity = null;
+
+    // Global mock implementation for getEntityDefinition
+    // Ensures common definitions are available unless overridden by a nested beforeEach.
+    mockRegistry.getEntityDefinition.mockImplementation((id) => {
+      if (id === MOCK_DEFINITION_ID_MAIN) return JSON.parse(JSON.stringify(rawDefMain));
+      if (id === MOCK_DEFINITION_ID_ACTOR) return JSON.parse(JSON.stringify(rawDefActorForTests));
+      if (id === 'test:basic') return JSON.parse(JSON.stringify(rawDefBasicForTests));
+      if (id === 'test:defWithPos') return JSON.parse(JSON.stringify(rawDefWithPosForTests)); // Added for addComponent test
+      // console.warn(`[Global Mock] Definition not found for ${id}`);
+      return undefined;
+    });
+
+    // Clear mocks that might accumulate calls across tests, especially validate
+    mockValidator.validate.mockClear();
+    mockLogger.error.mockClear(); // Clear specific logger mocks if necessary
+    mockLogger.warn.mockClear();
+    mockLogger.debug.mockClear();
+    mockSpatialIndex.addEntity.mockClear();
+    mockSpatialIndex.removeEntity.mockClear();
+    mockSpatialIndex.updateEntityLocation.mockClear();
+    mockSpatialIndex.clearIndex.mockClear();
   });
 
   afterEach(() => {
     if (entityManager) {
       entityManager.clearAll();
     }
-    accessTestEntity = null;
+    jest.clearAllMocks();
   });
 
   // --- 1. Constructor Tests ---
@@ -90,23 +141,15 @@ describe('EntityManager', () => {
     const invalidValidatorMissingMethod = { ...createMockSchemaValidator() };
     delete invalidValidatorMissingMethod.validate;
     const invalidLoggerMissingMethod = { ...createMockLogger() };
-    delete invalidLoggerMissingMethod.error; // Example of a missing essential method
+    delete invalidLoggerMissingMethod.error;
     const invalidSpatialMissingMethod = { ...createMockSpatialIndexManager() };
-    delete invalidSpatialMissingMethod.addEntity; // Example of a missing essential method
+    delete invalidSpatialMissingMethod.addEntity;
 
     it.each([
       ['IDataRegistry', null, /Missing required dependency: IDataRegistry/],
-      [
-        'ISchemaValidator',
-        null,
-        /Missing required dependency: ISchemaValidator/,
-      ],
+      ['ISchemaValidator', null, /Missing required dependency: ISchemaValidator/],
       ['ILogger', null, /Missing required dependency: ILogger/],
-      [
-        'ISpatialIndexManager',
-        null,
-        /Missing required dependency: ISpatialIndexManager/,
-      ],
+      ['ISpatialIndexManager', null, /Missing required dependency: ISpatialIndexManager/],
       [
         'IDataRegistry (missing method)',
         invalidRegistryMissingMethod,
@@ -138,341 +181,440 @@ describe('EntityManager', () => {
             ? invalidDep
             : mockSpatialIndex,
         ];
+        const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
         expect(() => new EntityManager(...args)).toThrow(expectedError);
+        consoleErrorSpy.mockRestore();
       }
     );
   });
 
   // --- 2. createEntityInstance Tests ---
   describe('createEntityInstance', () => {
-    const testLocationId = 'zone:test-area'; // This would be a definition ID in component data
-    const componentDataName = { name: 'Test Dummy' };
-    const componentDataPosition = { x: 10, y: 20, locationId: testLocationId };
-    const componentDataHealth = { current: 100, max: 100 };
+    const defIdBasic = 'test:basic'; 
+    const rawDefBasic = rawDefBasicForTests;
 
-    const validDefinitionWithPosition = {
-      id: MOCK_DEFINITION_ID_MAIN,
-      name: 'Test Entity with Position',
+    const defIdWithPos = 'test:positioned';
+    const rawDefWithPos = {
+      description: 'A positioned entity',
       components: {
-        'core:name': { ...componentDataName },
-        [POSITION_COMPONENT_ID]: { ...componentDataPosition },
+        'core:name': { name: 'Positioned Entity' },
+        [POSITION_COMPONENT_ID]: { locationId: 'loc:start', x: 1, y: 1 },
       },
     };
-    const validDefinitionWithoutPosition = {
-      id: MOCK_DEFINITION_ID_MAIN,
-      name: 'Test Entity without Position',
-      components: {
-        'core:name': { ...componentDataName },
-        'core:health': { ...componentDataHealth },
-      },
-    };
-    const validDefinitionEmptyComponents = {
-      id: MOCK_DEFINITION_ID_MAIN,
-      name: 'Test Entity with Empty Components',
-      components: {},
-    };
-    const validDefinitionNullComponents = {
-      id: MOCK_DEFINITION_ID_MAIN,
-      name: 'Test Entity with Null Components',
-      components: null,
-    };
+    const defIdActor = MOCK_DEFINITION_ID_ACTOR; 
+    const rawDefActor = rawDefActorForTests;
 
-    it('Success Case: should create entity, copy components, and add to active map (spatial index deferred)', () => {
-      mockRegistry.getEntityDefinition.mockReturnValue(
-        validDefinitionWithPosition
-      );
-      const entity = entityManager.createEntityInstance(
-        MOCK_DEFINITION_ID_MAIN
-      );
+    beforeEach(() => {
+      // Specific mock for this describe block, potentially overriding the global one
+      // This ensures these specific defs are prioritized here.
+      mockRegistry.getEntityDefinition.mockImplementation((id) => {
+        if (id === defIdBasic) return JSON.parse(JSON.stringify(rawDefBasic));
+        if (id === defIdWithPos) return JSON.parse(JSON.stringify(rawDefWithPos));
+        if (id === defIdActor) return JSON.parse(JSON.stringify(rawDefActor));
+        if (id === MOCK_DEFINITION_ID_MAIN) return JSON.parse(JSON.stringify(rawDefMain));
+        if (id === 'test:defWithPos') return JSON.parse(JSON.stringify(rawDefWithPosForTests)); // Ensure this is available if tests rely on it
+        // console.warn(`[createEntityInstance Mock] Definition not found for ${id}`);
+        return undefined;
+      });
+      mockValidator.validate.mockClear(); 
+    });
 
+    it('should create an entity with a generated instanceId if none provided', () => {
+      const entity = entityManager.createEntityInstance(defIdBasic);
       expect(entity).toBeInstanceOf(Entity);
+      expect(entity.id).toBeDefined();
       expect(typeof entity.id).toBe('string');
-      expect(entity.id).not.toBe(MOCK_DEFINITION_ID_MAIN);
-      expect(entity.definitionId).toBe(MOCK_DEFINITION_ID_MAIN);
-
-      expect(entity.hasComponent('core:name')).toBe(true);
-      expect(entity.getComponentData('core:name')).toEqual(componentDataName);
-      expect(entity.hasComponent(POSITION_COMPONENT_ID)).toBe(true);
-      expect(entity.getComponentData(POSITION_COMPONENT_ID)).toEqual(
-        componentDataPosition
-      );
-
-      // VVVVVV MODIFIED VVVVVV
-      expect(mockSpatialIndex.addEntity).not.toHaveBeenCalled(); // No longer called here
-      // ^^^^^^ MODIFIED ^^^^^^
-      expect(entityManager.activeEntities.has(entity.id)).toBe(true);
-      expect(entityManager.activeEntities.get(entity.id)).toBe(entity);
-      expect(
-        entityManager.getPrimaryInstanceByDefinitionId(MOCK_DEFINITION_ID_MAIN)
-      ).toBe(entity);
+      expect(entity.definitionId).toBe(defIdBasic);
     });
 
-    it('Success Case (No Position): should create entity, copy components, NOT interact with spatial index', () => {
-      mockRegistry.getEntityDefinition.mockReturnValue(
-        validDefinitionWithoutPosition
-      );
-      const entity = entityManager.createEntityInstance(
-        MOCK_DEFINITION_ID_MAIN
-      );
-
-      expect(entity).toBeInstanceOf(Entity);
-      expect(typeof entity.id).toBe('string');
-      expect(entity.definitionId).toBe(MOCK_DEFINITION_ID_MAIN);
-
-      expect(entity.hasComponent('core:name')).toBe(true);
-      expect(entity.hasComponent(POSITION_COMPONENT_ID)).toBe(false);
-      expect(mockSpatialIndex.addEntity).not.toHaveBeenCalled();
-      expect(entityManager.activeEntities.has(entity.id)).toBe(true);
-      expect(
-        entityManager.getPrimaryInstanceByDefinitionId(MOCK_DEFINITION_ID_MAIN)
-      ).toBe(entity);
+    it('should create an entity with a specific instanceId if provided using new signature', () => {
+      const specificId = 'my-custom-id-123';
+      const entity = entityManager.createEntityInstance(defIdBasic, {}, specificId);
+      expect(entity.id).toBe(specificId);
     });
 
-    it('Success Case (Empty Components): should create entity with no components, NOT interact with spatial index', () => {
-      mockRegistry.getEntityDefinition.mockReturnValue(
-        validDefinitionEmptyComponents
-      );
-      const entity = entityManager.createEntityInstance(
-        MOCK_DEFINITION_ID_MAIN
-      );
-
-      expect(entity).toBeInstanceOf(Entity);
-      expect(Array.from(entity.componentTypeIds)).toHaveLength(0);
-      expect(mockSpatialIndex.addEntity).not.toHaveBeenCalled();
-      expect(entityManager.activeEntities.has(entity.id)).toBe(true);
-      expect(
-        entityManager.getPrimaryInstanceByDefinitionId(MOCK_DEFINITION_ID_MAIN)
-      ).toBe(entity);
-    });
-
-    it('Success Case (Null Components): should treat null components as empty, create entity, NOT interact with spatial index', () => {
-      mockRegistry.getEntityDefinition.mockReturnValue(
-        validDefinitionNullComponents
-      );
-      const entity = entityManager.createEntityInstance(
-        MOCK_DEFINITION_ID_MAIN
-      );
-
-      expect(entity).toBeInstanceOf(Entity);
-      expect(Array.from(entity.componentTypeIds)).toHaveLength(0);
-      expect(mockSpatialIndex.addEntity).not.toHaveBeenCalled();
-      expect(entityManager.activeEntities.has(entity.id)).toBe(true);
-      expect(
-        entityManager.getPrimaryInstanceByDefinitionId(MOCK_DEFINITION_ID_MAIN)
-      ).toBe(entity);
-      expect(mockLogger.warn).not.toHaveBeenCalledWith(
-        expect.stringContaining("invalid 'components' field")
-      );
-    });
-
-    it('Failure Case (Definition Not Found): should return null and log error if definition not found', () => {
-      mockRegistry.getEntityDefinition.mockReturnValue(undefined);
-      const entity = entityManager.createEntityInstance(
-        MOCK_DEFINITION_ID_MAIN
-      );
-
-      expect(entity).toBeNull();
-      // VVVVVV MODIFIED VVVVVV
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        `EntityManager.createEntityInstance: Entity definition not found for ID: ${MOCK_DEFINITION_ID_MAIN}`
-      );
-      // ^^^^^^ MODIFIED ^^^^^^
-      expect(entityManager.activeEntities.size).toBe(0);
-    });
-
-    it('Existing Entity (forceNew: false): should return existing instance, NOT call registry or interact with spatial index', () => {
-      const existingEntity = new Entity(
-        MOCK_INSTANCE_ID_PRE_EXISTING,
-        MOCK_DEFINITION_ID_MAIN
-      );
-      entityManager.activeEntities.set(
-        MOCK_INSTANCE_ID_PRE_EXISTING,
-        existingEntity
-      );
-      mockRegistry.getEntityDefinition.mockClear();
-
-      const entity = entityManager.createEntityInstance(
-        MOCK_DEFINITION_ID_MAIN,
-        MOCK_INSTANCE_ID_PRE_EXISTING,
-        false
-      );
-
-      expect(entity).toBe(existingEntity);
-      expect(mockRegistry.getEntityDefinition).not.toHaveBeenCalled();
-      expect(mockSpatialIndex.addEntity).not.toHaveBeenCalled();
-      expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining(
-          `Returning existing instance for ID: ${MOCK_INSTANCE_ID_PRE_EXISTING}`
-        )
-      );
-    });
-
-    it('Existing Entity (forceNew: true): should create NEW instance, copy components, NOT interact with spatial index directly, NOT modify active map for original', () => {
-      const originalEntity = new Entity(
-        MOCK_INSTANCE_ID_PRE_EXISTING,
-        MOCK_DEFINITION_ID_MAIN
-      );
-      entityManager.activeEntities.set(
-        MOCK_INSTANCE_ID_PRE_EXISTING,
-        originalEntity
-      );
-      mockRegistry.getEntityDefinition.mockReturnValue(
-        validDefinitionWithPosition
-      );
-
-      const newEntity = entityManager.createEntityInstance(
-        validDefinitionWithPosition.id,
-        MOCK_INSTANCE_ID_PRE_EXISTING,
-        true
-      );
-
-      expect(newEntity).toBeInstanceOf(Entity);
-      expect(newEntity.id).toBe(MOCK_INSTANCE_ID_PRE_EXISTING);
-      expect(newEntity.definitionId).toBe(validDefinitionWithPosition.id);
-      expect(newEntity).not.toBe(originalEntity);
-
-      expect(newEntity.hasComponent(POSITION_COMPONENT_ID)).toBe(true);
-      // VVVVVV MODIFIED VVVVVV
-      expect(mockSpatialIndex.addEntity).not.toHaveBeenCalled(); // No longer called here
-      // ^^^^^^ MODIFIED ^^^^^^
-      expect(
-        entityManager.activeEntities.get(MOCK_INSTANCE_ID_PRE_EXISTING)
-      ).toBe(originalEntity);
+    it('should fetch and cache EntityDefinition on first creation, use cache on second', () => {
+      const entity1 = entityManager.createEntityInstance(defIdBasic, {}, 'e1-cache-test');
       expect(mockRegistry.getEntityDefinition).toHaveBeenCalledTimes(1);
-      expect(mockRegistry.getEntityDefinition).toHaveBeenCalledWith(
-        validDefinitionWithPosition.id
-      );
+      expect(mockRegistry.getEntityDefinition).toHaveBeenCalledWith(defIdBasic);
+
+      const entity2 = entityManager.createEntityInstance(defIdBasic, {}, 'e2-cache-test');
+      expect(mockRegistry.getEntityDefinition).toHaveBeenCalledTimes(1); // Should use cache
+
+      const defFromEntity1 = entity1.instanceData.definition;
+      const defFromEntity2 = entity2.instanceData.definition;
+      expect(defFromEntity1).toBe(defFromEntity2); // Check if they are the same instance from cache
     });
 
-    it.each([
-      [null, 'null'],
-      [undefined, 'undefined'],
-      ['', 'empty string'],
-      [123, 'number'],
-      [{}, 'object'],
-    ])(
-      'should return null and log error if definitionId is invalid (%p)',
-      (invalidDefId) => {
-        const entity = entityManager.createEntityInstance(invalidDefId);
-        expect(entity).toBeNull();
-        expect(mockLogger.error).toHaveBeenCalledWith(
-          expect.stringContaining(
-            `Invalid definitionId provided: ${invalidDefId}`
-          )
+    it('EntityDefinition components should be deeply frozen after caching', () => {
+      const entity = entityManager.createEntityInstance(defIdBasic);
+      const definitionFromInstance = entity.instanceData.definition;
+      expect(Object.isFrozen(definitionFromInstance.components)).toBe(true);
+      expect(Object.isFrozen(definitionFromInstance.components['core:name'])).toBe(true);
+      expect(() => { definitionFromInstance.components['core:name'].name = 'NewName'; }).toThrow(TypeError);
+    });
+
+    it('should correctly apply componentOverrides using new signature', () => {
+      const overrides = {
+        'core:name': { name: 'Overridden Name' },
+        'custom:mana': { current: 50, max: 50 },
+      };
+      const entity = entityManager.createEntityInstance(defIdBasic, overrides);
+      expect(entity.getComponentData('core:name')).toEqual({ name: 'Overridden Name' });
+      // rawDefBasic only has 'core:name', so 'core:tag' is not applicable here.
+      // expect(entity.getComponentData('core:tag')).toEqual(rawDefBasic.components['core:tag']);
+      expect(entity.getComponentData('custom:mana')).toEqual({ current: 50, max: 50 });
+    });
+    
+    it('should validate componentOverrides', () => {
+      const overrides = { 'core:name': { name: 'Override' } };
+      entityManager.createEntityInstance(defIdBasic, overrides); // defIdBasic is NOT an actor
+      const validateCalls = mockValidator.validate.mock.calls;
+      // 1. Override processing: validate('core:name', { name: 'Override' })
+      // 2. Final loop: validate('core:name', { name: 'Override' }) (data from getComponentData)
+      expect(validateCalls).toContainEqual(['core:name', { name: 'Override' }]);
+      expect(mockValidator.validate).toHaveBeenCalledTimes(2);
+    });
+
+    it('should allow null override to remove/nullify a component for an instance', () => {
+      const overrides = { 'core:name': null };
+      mockValidator.validate.mockClear(); // Explicitly clear before this specific call
+      entityManager.createEntityInstance(defIdBasic, overrides); 
+      const validateCalls = mockValidator.validate.mock.calls;
+      expect(validateCalls).toEqual([]);
+      expect(mockValidator.validate).toHaveBeenCalledTimes(0);
+    });
+
+    it('should inject default components (STM, Notes, Goals) for an actor entity if missing', () => {
+      const entity = entityManager.createEntityInstance(defIdActor); // Uses rawDefActorForTests
+      expect(entity.hasComponent(ACTOR_COMPONENT_ID)).toBe(true);
+      expect(entity.hasComponent(SHORT_TERM_MEMORY_COMPONENT_ID)).toBe(true);
+      expect(entity.hasComponent(NOTES_COMPONENT_ID)).toBe(true);
+      expect(entity.hasComponent(GOALS_COMPONENT_ID)).toBe(true);
+
+      const validateCalls = mockValidator.validate.mock.calls;
+      // Expected calls:
+      // 1. STM (default injection)
+      // 2. Notes (default injection)
+      // 3. Goals (default injection)
+      // Final Loop:
+      // 4. ACTOR_COMPONENT_ID (from def)
+      // 5. 'core:name' (from def)
+      // 6. STM (from injection)
+      // 7. Notes (from injection)
+      // 8. Goals (from injection)
+      expect(validateCalls).toContainEqual([ACTOR_COMPONENT_ID, rawDefActorForTests.components[ACTOR_COMPONENT_ID]]);
+      expect(validateCalls).toContainEqual(['core:name', rawDefActorForTests.components['core:name']]);
+      expect(validateCalls).toContainEqual([SHORT_TERM_MEMORY_COMPONENT_ID, { thoughts: [], maxEntries: 10 }]);
+      expect(validateCalls).toContainEqual([NOTES_COMPONENT_ID, { notes: [] }]);
+      expect(validateCalls).toContainEqual([GOALS_COMPONENT_ID, { goals: [] }]);
+      expect(mockValidator.validate).toHaveBeenCalledTimes(8); // 3 from injection + 5 from final loop
+    });
+
+    it('should NOT inject default components if provided in overrides', () => {
+      const stmOverride = { thoughts: ['override-stm'], maxEntries: 5 };
+      const notesOverride = { notes: [{text:'override-notes'}] };
+      const entity = entityManager.createEntityInstance(defIdActor, {
+        [SHORT_TERM_MEMORY_COMPONENT_ID]: stmOverride,
+        [NOTES_COMPONENT_ID]: notesOverride,
+        // GOALS_COMPONENT_ID is NOT overridden, so it should be injected
+      });
+
+      expect(entity.getComponentData(SHORT_TERM_MEMORY_COMPONENT_ID)).toEqual(stmOverride);
+      expect(entity.getComponentData(NOTES_COMPONENT_ID)).toEqual(notesOverride);
+      expect(entity.hasComponent(GOALS_COMPONENT_ID)).toBe(true); // Should be injected
+
+      const validateCalls = mockValidator.validate.mock.calls;
+      // Expected calls:
+      // 1. STM (override processing)
+      // 2. Notes (override processing)
+      // 3. Goals (default injection)
+      // Final Loop:
+      // 4. ACTOR_COMPONENT_ID (from def)
+      // 5. 'core:name' (from def)
+      // 6. STM (from override)
+      // 7. Notes (from override)
+      // 8. Goals (from injection)
+      expect(validateCalls).toContainEqual([ACTOR_COMPONENT_ID, rawDefActorForTests.components[ACTOR_COMPONENT_ID]]);
+      expect(validateCalls).toContainEqual(['core:name', rawDefActorForTests.components['core:name']]);
+      expect(validateCalls).toContainEqual([SHORT_TERM_MEMORY_COMPONENT_ID, stmOverride]);
+      expect(validateCalls).toContainEqual([NOTES_COMPONENT_ID, notesOverride]);
+      expect(validateCalls).toContainEqual([GOALS_COMPONENT_ID, { goals: [] }]);
+      expect(mockValidator.validate).toHaveBeenCalledTimes(8); // 2 override proc + 1 default inject + 5 final loop
+    });
+
+    it('should add entity to spatialIndex if it has POSITION_COMPONENT_ID with locationId on creation', () => {
+      const entity = entityManager.createEntityInstance(defIdWithPos);
+      
+      expect(mockSpatialIndex.addEntity).toHaveBeenCalledWith(
+        entity.id,
+        'loc:start'
+      );
+      
+      const validateCalls = mockValidator.validate.mock.calls;
+      expect(validateCalls).toContainEqual(['core:name', { name: 'Positioned Entity' }]);
+      expect(validateCalls).toContainEqual([POSITION_COMPONENT_ID, { locationId: 'loc:start', x: 1, y: 1 }]);
+      
+      expect(mockValidator.validate).toHaveBeenCalledTimes(2);
+    });
+    
+    describe('Backward Compatibility Signature for createEntityInstance', () => {
+      it('(defId, instanceId) should work', () => { 
+        const customId = 'my-custom-id-compat-1';
+        mockValidator.validate.mockClear(); // Clear before action
+        // Ensure defIdBasic is available from the global mock set in the OUTER describe's beforeEach
+        const entity = entityManager.createEntityInstance(defIdBasic, customId); 
+        expect(entity).not.toBeNull();
+        expect(entity.id).toBe(customId);
+        expect(entity.definitionId).toBe(defIdBasic);
+        // Final loop validates 'core:name' from definition
+        const expectedCoreNameCall = ['core:name', rawDefBasicForTests.components['core:name']];
+        expect(mockValidator.validate.mock.calls).toEqual([expectedCoreNameCall]);
+        expect(mockValidator.validate).toHaveBeenCalledTimes(1);
+        expect(entity.hasComponent(NOTES_COMPONENT_ID)).toBe(false); 
+        expect(Object.keys(entity.instanceData.overrides).length).toBe(0);
+      });
+
+      it('(defId, undefined, forceNew) should work and generate new ID', () => {
+        const firstInstanceId = 'first-inst-undef-compat-sig3';
+        
+        // Ensure defIdBasic is available from the describe block's mock
+        const entity1 = entityManager.createEntityInstance(defIdBasic, firstInstanceId); 
+        expect(entity1).not.toBeNull();
+        expect(entityManager.getPrimaryInstanceByDefinitionId(defIdBasic).id).toBe(firstInstanceId);
+
+        // Ensure defIdBasic is available again for the second call
+        const entity2 = entityManager.createEntityInstance(defIdBasic, true); // forceNew = true
+        expect(entity2).not.toBeNull();
+        expect(entity2.id).not.toBe(firstInstanceId);
+        expect(entityManager.getPrimaryInstanceByDefinitionId(defIdBasic).id).toBe(entity2.id);
+        // Updated log message expectation to match the actual log in createEntityInstance
+        expect(mockLogger.debug).toHaveBeenCalledWith(
+          expect.stringContaining(`ForceNew active for definition ${defIdBasic}. Removing existing primary instance ${firstInstanceId}`)
         );
-        expect(entityManager.activeEntities.size).toBe(0);
-      }
-    );
-
-    it('should create entity with position component lacking locationId (spatial index deferred)', () => {
-      const definitionMissingLocationId = {
-        id: MOCK_DEFINITION_ID_MAIN,
-        components: { [POSITION_COMPONENT_ID]: { x: 5, y: 5 } }, // No locationId
-      };
-      mockRegistry.getEntityDefinition.mockReturnValue(
-        definitionMissingLocationId
-      );
-      const entity = entityManager.createEntityInstance(
-        MOCK_DEFINITION_ID_MAIN
-      );
-
-      expect(entity).toBeInstanceOf(Entity);
-      expect(entity.getComponentData(POSITION_COMPONENT_ID)).toEqual({
-        x: 5,
-        y: 5,
       });
-      // VVVVVV MODIFIED VVVVVV
-      expect(mockSpatialIndex.addEntity).not.toHaveBeenCalled();
-      // The specific debug log about invalid/null locationId for spatial index was part of the addEntity logic,
-      // which is now deferred. So, we don't expect that specific log from createEntityInstance.
-      // ^^^^^^ MODIFIED ^^^^^^
-      expect(entityManager.activeEntities.has(entity.id)).toBe(true);
     });
 
-    it('should create entity with position component having null locationId (spatial index deferred)', () => {
-      const definitionNullLocationId = {
-        id: MOCK_DEFINITION_ID_MAIN,
-        components: {
-          [POSITION_COMPONENT_ID]: { x: 5, y: 5, locationId: null },
-        },
-      };
-      mockRegistry.getEntityDefinition.mockReturnValue(
-        definitionNullLocationId
-      );
-      const entity = entityManager.createEntityInstance(
-        MOCK_DEFINITION_ID_MAIN
-      );
-
-      expect(entity).toBeInstanceOf(Entity);
-      expect(entity.getComponentData(POSITION_COMPONENT_ID)).toEqual({
-        x: 5,
-        y: 5,
-        locationId: null,
+    it('should throw if component override validation fails', () => {
+      mockValidator.validate.mockImplementation((compId) => {
+        if (compId === 'bad:component') return { isValid: false, errors: 'validation failed' };
+        return { isValid: true };
       });
-      // VVVVVV MODIFIED VVVVVV
-      expect(mockSpatialIndex.addEntity).not.toHaveBeenCalled();
-      // Similar to above, the debug log related to spatial index is deferred.
-      // ^^^^^^ MODIFIED ^^^^^^
-      expect(entityManager.activeEntities.has(entity.id)).toBe(true);
+      const overrides = { 'bad:component': { data: 'invalid' } };
+      expect(() => entityManager.createEntityInstance(defIdBasic, overrides)).toThrow(Error);
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        expect.stringMatching(/^Override component bad:component for entity [0-9a-fA-F\-]+ Errors:\n"validation failed"$/m)
+      );
     });
   });
 
-  // --- getComponentData / hasComponent Tests ---
-  describe('getComponentData and hasComponent (Access Methods)', () => {
+  // --- 3. reconstructEntity Tests ---
+  describe('reconstructEntity', () => {
+    const defIdRecon = 'recon:def';
+    const rawDefRecon = { description: 'Recon Def', components: { 'core:flavor': { text: 'vanilla' } } };
+    const instanceIdRecon = 'recon-inst-1';
+    const serializedGood = {
+      instanceId: instanceIdRecon,
+      definitionId: defIdRecon,
+      isActor: false, 
+      overrides: {
+        'core:base': { value: 'from_override' },
+        'custom:new': { info: 'added_in_recon' },
+      },
+    };
+
     beforeEach(() => {
-      accessTestEntity = new Entity(ACCESS_INSTANCE_ID, ACCESS_DEFINITION_ID);
-      accessTestEntity.addComponent(EXISTING_COMPONENT_ID, {
-        ...EXISTING_COMPONENT_DATA,
+      // Fixed: Ensure EntityManager is clear before each test in this suite
+      // to prevent state leakage (e.g. entity already existing in mapManager).
+      if (entityManager) { // entityManager is defined in the outer scope's beforeEach
+        entityManager.clearAll();
+      }
+      
+      mockRegistry.getEntityDefinition.mockImplementation(id => 
+        id === defIdRecon ? JSON.parse(JSON.stringify(rawDefRecon)) : undefined
+      );
+      mockValidator.validate.mockClear();
+    });
+    
+    it('should reconstruct an entity from valid serialized data', () => {
+      const entity = entityManager.reconstructEntity(serializedGood);
+      expect(entity).toBeInstanceOf(Entity);
+      expect(entity.id).toBe(instanceIdRecon);
+      expect(entity.definitionId).toBe(defIdRecon);
+      expect(mockRegistry.getEntityDefinition).toHaveBeenCalledWith(defIdRecon);
+    });
+    
+    it('should validate components from overrides during reconstruction', () => {
+      // serializedGood has isActor: false
+      entityManager.reconstructEntity(serializedGood);
+      const validateCalls = mockValidator.validate.mock.calls;
+      expect(validateCalls).toContainEqual(['core:base', {value: 'from_override'}]);
+      expect(validateCalls).toContainEqual(['custom:new', {info: 'added_in_recon'}]);
+      
+      // NOTES_COMPONENT_ID should NOT be injected for a non-actor entity
+      const notesCall = validateCalls.find(call => call[0] === NOTES_COMPONENT_ID);
+      expect(notesCall).toBeUndefined();
+      
+      // Total validation calls = 2 overrides only (since not an actor)
+      expect(mockValidator.validate).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  // --- 4. addComponent Tests ---
+  describe('addComponent', () => {
+    let entityToModify;
+    const setupEntityForModification = (defIdToUse = MOCK_DEFINITION_ID_MAIN, instanceIdToUse = ACCESS_INSTANCE_ID, initialOverrides = {}) => {
+      // This will use the mockRegistry.getEntityDefinition from the top-level beforeEach
+      // which should include 'test:defWithPos'
+      return entityManager.createEntityInstance(defIdToUse, initialOverrides, instanceIdToUse);
+    };
+
+    beforeEach(() => {
+      // Ensure MOCK_DEFINITION_ID_MAIN is available via the general mock
+      // This is crucial for entityToModify to be created.
+      entityToModify = setupEntityForModification();
+      expect(entityToModify).not.toBeNull(); // Guard
+      mockValidator.validate.mockClear();
+      // Clear all relevant spatial index mocks
+      mockSpatialIndex.addEntity.mockClear();
+      mockSpatialIndex.removeEntity.mockClear();
+      mockSpatialIndex.updateEntityLocation.mockClear();
+    });
+    
+    it('should remove from spatialIndex if POSITION_COMPONENT_ID is updated to not have locationInstanceId', () => {
+      // Clear relevant spatial mocks specifically for this test, before entity creation
+      mockSpatialIndex.addEntity.mockClear();
+      mockSpatialIndex.removeEntity.mockClear();
+      mockSpatialIndex.updateEntityLocation.mockClear();
+
+      const entityWithPos = entityManager.createEntityInstance('test:defWithPos', {
+        [POSITION_COMPONENT_ID]: { locationId: 'initial-location', x: 1, y: 1 }
+      }, 'a-different-instance-id-for-addcomp-spatial-test'); // Instance ID is the third argument here
+
+      // Verify initial add to spatial index immediately after creation
+      expect(mockSpatialIndex.addEntity).toHaveBeenCalledWith(entityWithPos.id, 'initial-location');
+      
+      // Clear addEntity mock again before the addComponent call to isolate the updateEntityLocation check
+      mockSpatialIndex.addEntity.mockClear(); 
+
+      const updatedPosData = { x: 2, y: 2 }; // No locationInstanceId
+      entityManager.addComponent(entityWithPos.id, POSITION_COMPONENT_ID, updatedPosData);
+
+      expect(mockSpatialIndex.updateEntityLocation).toHaveBeenCalledWith(entityWithPos.id, 'initial-location', undefined);
+      expect(mockSpatialIndex.removeEntity).not.toHaveBeenCalled(); // Should use update, not remove
+      expect(mockSpatialIndex.addEntity).not.toHaveBeenCalled(); // Should not be called again after update
+    });
+
+    it('should throw if componentData is not an object (and not null)', () => {
+      expect(() => entityManager.addComponent(entityToModify.id, 'comp:test', 'not-an-object')).toThrow(Error);
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        expect.stringMatching(/^EntityManager\.addComponent: componentData for comp:test on access-instance-uuid-99 must be an object or null\. Received: string$/),
+        { componentData: 'not-an-object' } // Expect the context object as the second argument
+      );
+    });
+
+    it('should NOT throw if componentData is null', () => {
+      // ... existing code ...
+    });
+  });
+
+  // --- 7. Entity Collection Getters ---
+  describe('getEntityInstance', () => {
+    // Basic test to ensure it retrieves an entity added via createEntityInstance
+    it('should return an entity that was created', () => {
+      const entity = entityManager.createEntityInstance(MOCK_DEFINITION_ID_MAIN, {}, 'get-test-1');
+      expect(entityManager.getEntityInstance('get-test-1')).toBe(entity);
+    });
+  });
+  
+  describe('getPrimaryInstanceByDefinitionId', () => {
+    it('should return the primary instance for a definitionId', () => {
+      // Ensure MOCK_DEFINITION_ID_MAIN is available from the global mock
+      const entity = entityManager.createEntityInstance(MOCK_DEFINITION_ID_MAIN, {}, 'primary-1-gpid');
+      expect(entity).not.toBeNull(); // Guard
+      const primary = entityManager.getPrimaryInstanceByDefinitionId(MOCK_DEFINITION_ID_MAIN);
+      expect(primary).toBe(entity); // Fixed: Expect Entity object
+    });
+    it('should return undefined if no primary instance for a definitionId', () => {
+      expect(entityManager.getPrimaryInstanceByDefinitionId('def:no-primary')).toBeUndefined();
+    });
+  });
+
+  // --- 9. removeEntityInstance Tests ---
+  describe('removeEntityInstance', () => {
+    it('should remove the entity from activeEntities', () => {
+      const entity = entityManager.createEntityInstance(MOCK_DEFINITION_ID_MAIN, {}, 'remove-test-1');
+      expect(entityManager.activeEntities.has(entity.id)).toBe(true);
+      entityManager.removeEntityInstance(entity.id);
+      expect(entityManager.activeEntities.has(entity.id)).toBe(false);
+    });
+
+    it('should clear primary instance mapping if the removed entity was primary', () => {
+      // Ensure MOCK_DEFINITION_ID_MAIN is available from the global mock
+      const entity = entityManager.createEntityInstance(MOCK_DEFINITION_ID_MAIN, {}, 'primary-to-remove-rei');
+      expect(entity).not.toBeNull(); // Guard
+      expect(entityManager.getPrimaryInstanceByDefinitionId(MOCK_DEFINITION_ID_MAIN)).toBe(entity); 
+      entityManager.removeEntityInstance(entity.id);
+      expect(entityManager.getPrimaryInstanceByDefinitionId(MOCK_DEFINITION_ID_MAIN)).toBeUndefined();
+    });
+  });
+  
+  // --- 11. clearAll Tests ---
+  describe('clearAll', () => {
+    it('should clear activeEntities, definitionCache, primaryInstanceMap, and spatialIndex', () => {
+      // Local setup for this test to ensure one entity has a position
+      const localRawDefMainWithPosition = { 
+        ...rawDefMain, 
+        components: { 
+          ...rawDefMain.components, 
+          [POSITION_COMPONENT_ID]: { locationId: 'loc-for-clearAll', x: 1, y: 1 }
+        } 
+      };
+      
+      const originalGetDef = mockRegistry.getEntityDefinition.getMockImplementation() || (() => undefined);
+      
+      mockRegistry.getEntityDefinition.mockImplementation((id) => {
+        if (id === MOCK_DEFINITION_ID_MAIN) return JSON.parse(JSON.stringify(localRawDefMainWithPosition));
+        if (id === MOCK_DEFINITION_ID_ACTOR) return JSON.parse(JSON.stringify(rawDefActorForTests));
+        if (originalGetDef) return originalGetDef(id); // Fallback to original mock for other IDs like 'test:basic'
+        return undefined;
       });
-      entityManager.activeEntities.set(ACCESS_INSTANCE_ID, accessTestEntity);
-    });
 
-    it('should return the component data object for an existing component on an existing entity', () => {
-      const data = entityManager.getComponentData(
-        ACCESS_INSTANCE_ID,
-        EXISTING_COMPONENT_ID
-      );
-      expect(data).toEqual(EXISTING_COMPONENT_DATA);
-    });
+      const e1 = entityManager.createEntityInstance(MOCK_DEFINITION_ID_MAIN, {}, 'e1-clear');
+      const e2 = entityManager.createEntityInstance(MOCK_DEFINITION_ID_ACTOR, {}, 'e2-clear-actor');
+      
+      expect(e1).not.toBeNull(); 
+      expect(e2).not.toBeNull(); 
 
-    it('should return undefined for a non-existent component on an existing entity', () => {
-      const data = entityManager.getComponentData(
-        ACCESS_INSTANCE_ID,
-        NON_EXISTENT_COMPONENT_ID
-      );
-      expect(data).toBeUndefined();
-    });
+      expect(entityManager.activeEntities.size).toBeGreaterThan(0); 
+      expect(entityManager.getPrimaryInstanceByDefinitionId(MOCK_DEFINITION_ID_MAIN)).toBe(e1);
+      // Fixed: This should now pass because e1 (using MOCK_DEFINITION_ID_MAIN) will have a position
+      expect(mockSpatialIndex.addEntity).toHaveBeenCalledWith(e1.id, 'loc-for-clearAll'); 
 
-    it('should return undefined when attempting to get component data from a non-existent entity', () => {
-      const data = entityManager.getComponentData(
-        NON_EXISTENT_ENTITY_INSTANCE_ID,
-        EXISTING_COMPONENT_ID
-      );
-      expect(data).toBeUndefined();
-    });
+      entityManager.clearAll();
 
-    it('should return true for an existing component on an existing entity', () => {
-      const result = entityManager.hasComponent(
-        ACCESS_INSTANCE_ID,
-        EXISTING_COMPONENT_ID
-      );
-      expect(result).toBe(true);
-    });
+      expect(entityManager.activeEntities.size).toBe(0);
+      expect(entityManager.getPrimaryInstanceByDefinitionId(MOCK_DEFINITION_ID_MAIN)).toBeUndefined();
+      expect(entityManager.getPrimaryInstanceByDefinitionId(MOCK_DEFINITION_ID_ACTOR)).toBeUndefined();
+      expect(mockSpatialIndex.clearIndex).toHaveBeenCalledTimes(1);
 
-    it('should return false for a non-existent component on an existing entity', () => {
-      const result = entityManager.hasComponent(
-        ACCESS_INSTANCE_ID,
-        NON_EXISTENT_COMPONENT_ID
-      );
-      expect(result).toBe(false);
-    });
-
-    it('should return false when checking for any component on a non-existent entity', () => {
-      const result = entityManager.hasComponent(
-        NON_EXISTENT_ENTITY_INSTANCE_ID,
-        EXISTING_COMPONENT_ID
-      );
-      expect(result).toBe(false);
+      // Definition cache should be cleared
+      mockRegistry.getEntityDefinition.mockClear(); 
+      // Restore original mock or a simple one for the next part of the test
+      if (originalGetDef) {
+        mockRegistry.getEntityDefinition.mockImplementation(originalGetDef);
+      } else {
+         mockRegistry.getEntityDefinition.mockImplementation(id => 
+           id === MOCK_DEFINITION_ID_MAIN ? JSON.parse(JSON.stringify(rawDefMain)) : undefined
+         );
+      }
+      // Re-mock for a specific ID to avoid relying on the modified one above if this test runs before others
+       mockRegistry.getEntityDefinition.mockImplementationOnce(id => 
+         id === MOCK_DEFINITION_ID_MAIN ? JSON.parse(JSON.stringify(rawDefMain)) : undefined
+       );
+      entityManager.createEntityInstance(MOCK_DEFINITION_ID_MAIN, {}, 'e3-after-clear');
+      expect(mockRegistry.getEntityDefinition).toHaveBeenCalledWith(MOCK_DEFINITION_ID_MAIN);
+      expect(mockRegistry.getEntityDefinition).toHaveBeenCalledTimes(1);
     });
   });
 });

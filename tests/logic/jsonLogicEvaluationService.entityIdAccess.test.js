@@ -29,6 +29,8 @@ import JsonLogicEvaluationService from '../../src/logic/jsonLogicEvaluationServi
 // --- Dependencies for Mocking & Context ---
 import { createJsonLogicContext } from '../../src/logic/contextAssembler.js'; // Adjust path as needed - Needed for entity access tests
 import Entity from '../../src/entities/entity.js'; // Adjust path as needed - Needed for mock context setup
+import EntityDefinition from '../../src/entities/EntityDefinition.js';
+import EntityInstanceData from '../../src/entities/EntityInstanceData.js';
 
 // --- JSDoc Imports for Type Hinting ---
 /** @typedef {import('../../src/interfaces/coreServices.js').ILogger} ILogger */ // Adjust path as needed
@@ -67,7 +69,14 @@ const mockEntityManager = {
 };
 
 // Helper to create a simple mock entity instance for testing
-const createMockEntity = (id) => new Entity(id, 'dummy');
+// const createMockEntity = (id) => new Entity(id, 'dummy'); // Replaced by standard createTestEntity
+
+// Standard helper function to create entity instances for testing
+const createTestEntity = (instanceId, definitionId = 'dummy-def', defComponents = {}, instanceOverrides = {}) => {
+  const definition = new EntityDefinition(definitionId, { description: `Test Definition ${definitionId}`, components: defComponents });
+  const instanceData = new EntityInstanceData(instanceId, definition, instanceOverrides);
+  return new Entity(instanceData);
+};
 
 // Define a base event structure for context creation
 /** @type {GameEvent} */
@@ -142,7 +151,7 @@ describe('JsonLogicEvaluationService Unit Tests', () => {
 
       test('should return true for actor.id match when entity exists', () => {
         const actorId = 'player1';
-        const mockEntity = createMockEntity(actorId);
+        const mockEntity = createTestEntity(actorId);
         mockEntityManager.getEntityInstance.mockImplementation((id) =>
           id === actorId ? mockEntity : undefined
         );
@@ -165,7 +174,7 @@ describe('JsonLogicEvaluationService Unit Tests', () => {
 
       test('should return false for actor.id mismatch when entity exists', () => {
         const actorId = 'otherPlayer'; // ID is different from the rule
-        const mockEntity = createMockEntity(actorId);
+        const mockEntity = createTestEntity(actorId);
         mockEntityManager.getEntityInstance.mockImplementation((id) =>
           id === actorId ? mockEntity : undefined
         );
@@ -233,7 +242,7 @@ describe('JsonLogicEvaluationService Unit Tests', () => {
 
       test('should return true checking actor.id is not null when entity exists', () => {
         const actorId = 'player1';
-        const mockEntity = createMockEntity(actorId);
+        const mockEntity = createTestEntity(actorId);
         mockEntityManager.getEntityInstance.mockImplementation((id) =>
           id === actorId ? mockEntity : undefined
         );
@@ -300,13 +309,13 @@ describe('JsonLogicEvaluationService Unit Tests', () => {
     }); // End describe actor.id Access
 
     describe('target.id Access', () => {
-      const targetIdMatchRule = { '==': [{ var: 'target.id' }, 'enemy1'] };
+      const targetIdMatchRule = { '==': [{ var: 'target.id' }, 'npc1'] };
       const targetIdNullRule = { '==': [{ var: 'target.id' }, null] };
       const targetIdNotNullRule = { '!=': [{ var: 'target.id' }, null] };
 
       test('should return true for target.id match when entity exists', () => {
-        const targetId = 'enemy1';
-        const mockEntity = createMockEntity(targetId);
+        const targetId = 'npc1';
+        const mockEntity = createTestEntity(targetId);
         mockEntityManager.getEntityInstance.mockImplementation((id) =>
           id === targetId ? mockEntity : undefined
         );
@@ -328,8 +337,8 @@ describe('JsonLogicEvaluationService Unit Tests', () => {
       });
 
       test('should return false for target.id mismatch when entity exists', () => {
-        const targetId = 'otherEnemy'; // ID is different from the rule
-        const mockEntity = createMockEntity(targetId);
+        const targetId = 'otherNpc'; // ID is different from the rule
+        const mockEntity = createTestEntity(targetId);
         mockEntityManager.getEntityInstance.mockImplementation((id) =>
           id === targetId ? mockEntity : undefined
         );
@@ -341,7 +350,7 @@ describe('JsonLogicEvaluationService Unit Tests', () => {
           mockEntityManager,
           mockLogger
         );
-        const result = service.evaluate(targetIdMatchRule, context); // Rule checks for "enemy1"
+        const result = service.evaluate(targetIdMatchRule, context); // Rule checks for "npc1"
 
         expect(result).toBe(false);
         expect(mockEntityManager.getEntityInstance).toHaveBeenCalledWith(
@@ -371,7 +380,7 @@ describe('JsonLogicEvaluationService Unit Tests', () => {
       });
 
       test('should return true comparing target.id to null when entity is not found by EntityManager', () => {
-        const targetId = 'enemy1';
+        const targetId = 'npc1';
         // Configure EM to *not* find the entity
         mockEntityManager.getEntityInstance.mockImplementation(
           (id) => undefined
@@ -395,8 +404,8 @@ describe('JsonLogicEvaluationService Unit Tests', () => {
       });
 
       test('should return true checking target.id is not null when entity exists', () => {
-        const targetId = 'enemy1';
-        const mockEntity = createMockEntity(targetId);
+        const targetId = 'npc1';
+        const mockEntity = createTestEntity(targetId);
         mockEntityManager.getEntityInstance.mockImplementation((id) =>
           id === targetId ? mockEntity : undefined
         );
@@ -438,7 +447,7 @@ describe('JsonLogicEvaluationService Unit Tests', () => {
       });
 
       test('should return false checking target.id is not null when entity is not found', () => {
-        const targetId = 'enemy1';
+        const targetId = 'npc1';
         // Configure EM to *not* find the entity
         mockEntityManager.getEntityInstance.mockImplementation(
           (id) => undefined

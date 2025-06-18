@@ -10,6 +10,8 @@ import {
 } from '@jest/globals';
 import EntityManager from '../../src/entities/entityManager.js';
 import Entity from '../../src/entities/entity.js';
+import EntityDefinition from '../../src/entities/EntityDefinition.js';
+import EntityInstanceData from '../../src/entities/EntityInstanceData.js';
 import { POSITION_COMPONENT_ID } from '../../src/constants/componentIds.js';
 
 // --- Mock Implementations ---
@@ -48,6 +50,13 @@ const POSITION_DATA = { x: 10, y: 20, locationId: TEST_LOCATION_ID };
 const OTHER_COMPONENT_ID = 'core:tag';
 const OTHER_COMPONENT_DATA = { tag: 'test' };
 
+// Helper function to create entity instances for testing
+const createTestEntity = (instanceId, definitionId, defComponents = {}, instanceOverrides = {}) => {
+  const definition = new EntityDefinition(definitionId, { description: `Test Definition ${definitionId}`, components: defComponents });
+  const instanceData = new EntityInstanceData(instanceId, definition, instanceOverrides);
+  return new Entity(instanceData);
+};
+
 // --- Test Suite ---
 describe('EntityManager - Auxiliary Methods (Lifecycle & Spatial Index)', () => {
   let mockRegistry;
@@ -71,13 +80,27 @@ describe('EntityManager - Auxiliary Methods (Lifecycle & Spatial Index)', () => 
     );
     jest.clearAllMocks();
 
-    // Setup common entities with both instanceId and definitionId
-    entity1 = new Entity(INSTANCE_ID_1, DEFINITION_ID_DUMMY);
-    entity1.addComponent(OTHER_COMPONENT_ID, { ...OTHER_COMPONENT_DATA });
+    // Setup common entities
+    // entity1 (no position) is created with just its definition.
+    // Components (OTHER_COMPONENT_ID) are added as instance overrides.
+    entity1 = createTestEntity(
+        INSTANCE_ID_1,
+        DEFINITION_ID_DUMMY,
+        {}, // No components on definition
+        { [OTHER_COMPONENT_ID]: { ...OTHER_COMPONENT_DATA } }
+    );
 
-    entity2_pos = new Entity(INSTANCE_ID_2_POS, DEFINITION_ID_DUMMY);
-    entity2_pos.addComponent(OTHER_COMPONENT_ID, { ...OTHER_COMPONENT_DATA });
-    entity2_pos.addComponent(POSITION_COMPONENT_ID, { ...POSITION_DATA });
+    // entity2_pos (with position) is also created from a base definition.
+    // Both OTHER_COMPONENT_ID and POSITION_COMPONENT_ID are added as instance overrides.
+    entity2_pos = createTestEntity(
+        INSTANCE_ID_2_POS,
+        DEFINITION_ID_DUMMY,
+        {}, // No components on definition
+        {
+            [OTHER_COMPONENT_ID]: { ...OTHER_COMPONENT_DATA },
+            [POSITION_COMPONENT_ID]: { ...POSITION_DATA }
+        }
+    );
   });
 
   afterEach(() => {
@@ -167,7 +190,12 @@ describe('EntityManager - Auxiliary Methods (Lifecycle & Spatial Index)', () => 
         entityManager.removeEntityInstance(INSTANCE_ID_2_POS);
         expect(mockLogger.debug).toHaveBeenCalledWith(
           expect.stringContaining(
-            `Removed entity ${INSTANCE_ID_2_POS} from spatial index (location instanceId: ${TEST_LOCATION_ID}).`
+            `Removed entity ${INSTANCE_ID_2_POS} from spatial index (old location was ${TEST_LOCATION_ID}).`
+          )
+        );
+        expect(mockLogger.info).toHaveBeenCalledWith(
+          expect.stringContaining(
+            `Removed entity instance: ${INSTANCE_ID_2_POS}`
           )
         );
       });
@@ -178,14 +206,13 @@ describe('EntityManager - Auxiliary Methods (Lifecycle & Spatial Index)', () => 
       let entityWithInvalidPos;
 
       beforeEach(() => {
-        entityWithInvalidPos = new Entity(
+        // Entity with position component but no locationId in it (invalid for spatial index)
+        entityWithInvalidPos = createTestEntity(
           instanceIdInvalidPos,
-          DEFINITION_ID_DUMMY
+          DEFINITION_ID_DUMMY,
+          {}, // No components on definition
+          { [POSITION_COMPONENT_ID]: { x: 0, y: 0 } } // Override with position data lacking locationId
         );
-        entityWithInvalidPos.addComponent(POSITION_COMPONENT_ID, {
-          x: 0,
-          y: 0,
-        }); // No locationId
         entityManager.activeEntities.set(
           instanceIdInvalidPos,
           entityWithInvalidPos

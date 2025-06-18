@@ -10,6 +10,8 @@ import {
 } from '@jest/globals';
 import EntityManager from '../../src/entities/entityManager.js';
 import Entity from '../../src/entities/entity.js';
+import EntityDefinition from '../../src/entities/EntityDefinition.js';
+import EntityInstanceData from '../../src/entities/EntityInstanceData.js';
 
 // --- Mock Implementations ---
 const createMockDataRegistry = () => ({ getEntityDefinition: jest.fn() });
@@ -50,6 +52,13 @@ describe('EntityManager.getEntitiesWithComponent', () => {
   const ENTITY_3_INSTANCE_ID = 'instance-3';
   const DUMMY_DEFINITION_ID = 'def:dummy'; // A common definition ID for these test entities
 
+  // Helper function to create entity instances for testing
+  const createTestEntity = (instanceId, definitionId, defComponents = {}, instanceOverrides = {}) => {
+    const definition = new EntityDefinition(definitionId, { description: `Test Definition ${definitionId}`, components: defComponents });
+    const instanceData = new EntityInstanceData(instanceId, definition, instanceOverrides);
+    return new Entity(instanceData);
+  };
+
   let entity1, entity2, entity3;
 
   beforeEach(() => {
@@ -67,16 +76,15 @@ describe('EntityManager.getEntitiesWithComponent', () => {
     jest.clearAllMocks();
     entityManager.activeEntities.clear();
 
-    // Create test entities with both instanceId and definitionId
-    entity1 = new Entity(ENTITY_1_INSTANCE_ID, DUMMY_DEFINITION_ID);
-    entity1.addComponent(COMPONENT_A, { value: 1 });
+    // Create test entities with components as instance overrides
+    entity1 = createTestEntity(ENTITY_1_INSTANCE_ID, DUMMY_DEFINITION_ID, {}, { [COMPONENT_A]: { value: 1 } });
 
-    entity2 = new Entity(ENTITY_2_INSTANCE_ID, DUMMY_DEFINITION_ID);
-    entity2.addComponent(COMPONENT_B, { text: 'hello' });
+    entity2 = createTestEntity(ENTITY_2_INSTANCE_ID, DUMMY_DEFINITION_ID, {}, { [COMPONENT_B]: { text: 'hello' } });
 
-    entity3 = new Entity(ENTITY_3_INSTANCE_ID, DUMMY_DEFINITION_ID);
-    entity3.addComponent(COMPONENT_A, { value: 3 });
-    entity3.addComponent(COMPONENT_B, { text: 'world' });
+    entity3 = createTestEntity(ENTITY_3_INSTANCE_ID, DUMMY_DEFINITION_ID, {}, {
+      [COMPONENT_A]: { value: 3 },
+      [COMPONENT_B]: { text: 'world' },
+    });
   });
 
   afterEach(() => {
@@ -228,8 +236,7 @@ describe('EntityManager.getEntitiesWithComponent', () => {
     entityManager.activeEntities.delete(entity1.id); // Modify source map
 
     const newEntity4InstanceId = 'instance-4';
-    const newEntity4 = new Entity(newEntity4InstanceId, DUMMY_DEFINITION_ID);
-    newEntity4.addComponent(COMPONENT_A, { value: 4 });
+    const newEntity4 = createTestEntity(newEntity4InstanceId, DUMMY_DEFINITION_ID, {}, { [COMPONENT_A]: { value: 4 } });
     entityManager.activeEntities.set(newEntity4.id, newEntity4);
 
     expect(initialResult).toHaveLength(2); // Original result unchanged

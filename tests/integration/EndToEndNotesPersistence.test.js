@@ -11,6 +11,8 @@ import { PromptStaticContentService } from '../../src/prompting/promptStaticCont
 import AjvSchemaValidator from '../../src/validation/ajvSchemaValidator.js';
 import { LLMResponseProcessor } from '../../src/turns/services/LLMResponseProcessor.js';
 import Entity from '../../src/entities/entity.js';
+import EntityDefinition from '../../src/entities/EntityDefinition.js';
+import EntityInstanceData from '../../src/entities/EntityInstanceData.js';
 import {
   NOTES_COMPONENT_ID,
   SHORT_TERM_MEMORY_COMPONENT_ID,
@@ -33,15 +35,25 @@ const makeLogger = () => ({
   debug: jest.fn(),
 });
 
+// Standard helper function to create entity instances for testing
+const createTestEntity = (instanceId, definitionId, defComponents = {}, instanceOverrides = {}) => {
+  const definition = new EntityDefinition(definitionId, { description: `Test Definition ${definitionId}`, components: defComponents });
+  const instanceData = new EntityInstanceData(instanceId, definition, instanceOverrides);
+  return new Entity(instanceData);
+};
+
 const createActor = (id) => {
-  const e = new Entity(id, 'test:actor');
-  e.addComponent(ACTOR_COMPONENT_ID, {});
-  e.addComponent(SHORT_TERM_MEMORY_COMPONENT_ID, {
-    thoughts: [],
-    maxEntries: 10,
-  });
-  e.addComponent(NOTES_COMPONENT_ID, { notes: [] });
-  return e;
+  const actorComponents = {
+    [ACTOR_COMPONENT_ID]: {},
+    [SHORT_TERM_MEMORY_COMPONENT_ID]: {
+      thoughts: [],
+      maxEntries: 10,
+    },
+    [NOTES_COMPONENT_ID]: { notes: [] },
+  };
+  // For this integration test, we create an entity with components directly as overrides,
+  // as we're not testing definition inheritance but the actor's immediate state.
+  return createTestEntity(id, 'test:actor-def', {}, actorComponents);
 };
 
 // Helper to build the final prompt from provider + builder + actor
@@ -180,12 +192,14 @@ describe('End-to-End Notes Persistence Flow', () => {
 
     // persist it on the entity
     if (processingResult.success && processingResult.extractedData.notes) {
-      const notesComp = actor.getComponentData(NOTES_COMPONENT_ID);
-      const newNotes = processingResult.extractedData.notes.map((text) => ({
+      const currentNotesData = actor.getComponentData(NOTES_COMPONENT_ID) || { notes: [] };
+      const newNoteObjects = processingResult.extractedData.notes.map((text) => ({
         text,
-        timestamp: new Date().toISOString(),
+        timestamp: new Date().toISOString(), // Consistent with potential schema
       }));
-      notesComp.notes.push(...newNotes);
+      
+      const updatedNotesArray = [...currentNotesData.notes, ...newNoteObjects];
+      actor.addComponent(NOTES_COMPONENT_ID, { notes: updatedNotesArray });
     }
 
     // now the entity has one note component

@@ -7,6 +7,8 @@ import { describe, expect, test, jest, beforeEach } from '@jest/globals';
 import JsonLogicEvaluationService from '../../src/logic/jsonLogicEvaluationService.js'; // Adjust path as needed
 import { createJsonLogicContext } from '../../src/logic/contextAssembler.js'; // Adjust path
 import Entity from '../../src/entities/entity.js'; // Adjust path - Needed for mock setup
+import EntityDefinition from '../../src/entities/EntityDefinition.js'; // Added
+import EntityInstanceData from '../../src/entities/EntityInstanceData.js'; // Added
 
 // --- JSDoc Imports for Type Hinting ---
 /** @typedef {import('../core/interfaces/coreServices.js').ILogger} ILogger */
@@ -46,13 +48,20 @@ const mockEntityManager = {
   buildInitialSpatialIndex: jest.fn(),
   clearAll: jest.fn(),
   activeEntities: new Map(),
+  // Added for completeness with new EntityManager structure
+  _definitionCache: new Map(), 
+  getPrimaryInstanceByDefinitionId: jest.fn(),
 };
 
+const DUMMY_DEFINITION_ID_FOR_MOCKS = 'def:mock-complex-e2e';
+
 // Helper to create mock entity instance for tests
-const createMockEntity = (id) => {
-  // Use the actual Entity class constructor but methods might need mocking if used by dependencies
-  const entity = new Entity(id, 'dummy');
-  // For these tests, we primarily rely on mocking EntityManager methods
+// Updated createMockEntity
+const createMockEntity = (instanceId, definitionId = DUMMY_DEFINITION_ID_FOR_MOCKS, initialComponents = {}) => {
+  const defIdToUse = definitionId.includes(':') ? definitionId : `test:${definitionId}`;
+  const genericDefinition = new EntityDefinition(defIdToUse, { components: {} });
+  const instanceData = new EntityInstanceData(instanceId, genericDefinition, initialComponents);
+  const entity = new Entity(instanceData);
   return entity;
 };
 

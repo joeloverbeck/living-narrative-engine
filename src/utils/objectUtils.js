@@ -129,4 +129,27 @@ export function safeDeepClone(value, logger) {
   }
 }
 
+/**
+ * Deeply freezes an object and all its nested properties that are objects.
+ * This makes the object and its content immutable.
+ *
+ * @template T
+ * @param {T} object - The object to deep freeze.
+ * @returns {Readonly<T>} The deeply frozen object.
+ */
+export function deepFreeze(object) {
+  if (object && typeof object === 'object') {
+    // Freeze properties before freezing self
+    Object.keys(object).forEach(key => {
+      const value = object[key];
+      // Recurse for nested objects
+      if (value && typeof value === 'object') {
+        deepFreeze(value);
+      }
+    });
+    Object.freeze(object);
+  }
+  return object;
+}
+
 // Add other generic object utilities here in the future if needed.

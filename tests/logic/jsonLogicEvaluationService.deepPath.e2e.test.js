@@ -7,6 +7,8 @@ import { describe, expect, test, jest, beforeEach } from '@jest/globals';
 import JsonLogicEvaluationService from '../../src/logic/jsonLogicEvaluationService.js'; // Adjust path if needed
 import { createJsonLogicContext } from '../../src/logic/contextAssembler.js'; // Adjust path if needed
 import Entity from '../../src/entities/entity.js'; // Adjust path if needed
+import EntityDefinition from '../../src/entities/EntityDefinition.js'; // Added
+import EntityInstanceData from '../../src/entities/EntityInstanceData.js'; // Added
 // No longer need direct import of jsonLogic here if only using service.evaluate
 
 // --- JSDoc Imports for Type Hinting ---
@@ -41,11 +43,20 @@ const mockEntityManager = {
   buildInitialSpatialIndex: jest.fn(),
   clearAll: jest.fn(),
   activeEntities: new Map(),
+  // Add mocks for new EntityManager properties/methods if necessary for these tests
+  _definitionCache: new Map(), // Mock internal for safety, though likely not directly used by these tests
+  getPrimaryInstanceByDefinitionId: jest.fn(),
 };
 
 // Helper to create mock entity instance for tests
-const createMockEntity = (id) => {
-  const entity = new Entity(id, 'dummy');
+// Updated createMockEntity
+const createMockEntity = (instanceId, definitionId = 'test:dummydef', initialComponents = {}) => {
+  // A generic definition used for mock entities in this test file
+  // Ensure the definitionId has a colon, or EntityDefinition.modId might be undefined.
+  const defIdToUse = definitionId.includes(':') ? definitionId : `test:${definitionId}`;
+  const genericDefinition = new EntityDefinition(defIdToUse, { components: {} }); // Base components can be passed if needed
+  const instanceData = new EntityInstanceData(instanceId, genericDefinition, initialComponents);
+  const entity = new Entity(instanceData);
   return entity;
 };
 
