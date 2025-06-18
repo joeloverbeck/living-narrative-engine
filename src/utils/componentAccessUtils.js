@@ -43,7 +43,7 @@ function _isValidManager(mgr) {
  * @param {string} componentId - The component type ID to retrieve.
  * @returns {any | null} The component data if available, otherwise `null`.
  */
-export function getComponent(entity, componentId) {
+export function getComponentFromEntity(entity, componentId) {
   if (!_isValidId(componentId) || !_isValidManager(entity)) {
     return null;
   }
