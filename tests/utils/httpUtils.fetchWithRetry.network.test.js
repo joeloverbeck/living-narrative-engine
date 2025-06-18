@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, jest, test } from '@jest/globals';
-import { Workspace_retry } from '../../src/utils/apiUtils.js';
+import { fetchWithRetry } from '../../src/utils/httpUtils.js';
 
 jest.useFakeTimers();
 
@@ -20,7 +20,7 @@ beforeEach(() => {
   dispatcher = { dispatch: jest.fn().mockResolvedValue(true) };
 });
 
-describe('Workspace_retry network errors', () => {
+describe('fetchWithRetry network errors', () => {
   const url = 'https://api.test.local';
   const opts = { method: 'GET' };
 
@@ -33,7 +33,7 @@ describe('Workspace_retry network errors', () => {
     const randomSpy = jest.spyOn(Math, 'random').mockReturnValue(0.5);
     const timeoutSpy = jest.spyOn(global, 'setTimeout');
 
-    const promise = Workspace_retry(url, opts, 2, 100, 1000, dispatcher);
+    const promise = fetchWithRetry(url, opts, 2, 100, 1000, dispatcher);
     await jest.runOnlyPendingTimersAsync();
     const result = await promise;
 
@@ -49,7 +49,7 @@ describe('Workspace_retry network errors', () => {
     fetch.mockRejectedValue(new TypeError('network request failed'));
     const randomSpy = jest.spyOn(Math, 'random').mockReturnValue(0.5);
 
-    const promise = Workspace_retry(url, opts, 2, 100, 1000, dispatcher).catch(
+    const promise = fetchWithRetry(url, opts, 2, 100, 1000, dispatcher).catch(
       (e) => e
     );
     await jest.runOnlyPendingTimersAsync();

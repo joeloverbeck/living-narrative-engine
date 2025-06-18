@@ -1,9 +1,9 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import { LoggerConfigLoader } from '../../src/configuration/loggerConfigLoader.js';
-import { Workspace_retry } from '../../src/utils/apiUtils.js';
+import { fetchWithRetry } from '../../src/utils/index.js';
 
-jest.mock('../../src/utils/apiUtils.js', () => ({
-  Workspace_retry: jest.fn(),
+jest.mock('../../src/utils/index.js', () => ({
+  fetchWithRetry: jest.fn(),
 }));
 
 const mockLogger = () => ({
@@ -30,12 +30,12 @@ describe('LoggerConfigLoader', () => {
   });
 
   it('loads configuration using default path', async () => {
-    Workspace_retry.mockResolvedValue({ logLevel: 'INFO' });
+    fetchWithRetry.mockResolvedValue({ logLevel: 'INFO' });
 
     const result = await loader.loadConfig();
 
     expect(result).toEqual({ logLevel: 'INFO' });
-    expect(Workspace_retry).toHaveBeenCalledWith(
+    expect(fetchWithRetry).toHaveBeenCalledWith(
       'config/logger-config.json',
       { method: 'GET', headers: { Accept: 'application/json' } },
       expect.any(Number),
@@ -47,7 +47,7 @@ describe('LoggerConfigLoader', () => {
   });
 
   it('returns empty object if config file is empty', async () => {
-    Workspace_retry.mockResolvedValue({});
+    fetchWithRetry.mockResolvedValue({});
 
     const result = await loader.loadConfig('custom.json');
 
@@ -55,7 +55,7 @@ describe('LoggerConfigLoader', () => {
   });
 
   it('returns error when parsed response is not an object', async () => {
-    Workspace_retry.mockResolvedValue('not-object');
+    fetchWithRetry.mockResolvedValue('not-object');
 
     const result = await loader.loadConfig('bad.json');
 
@@ -69,7 +69,7 @@ describe('LoggerConfigLoader', () => {
   });
 
   it('returns error when logLevel is not a string', async () => {
-    Workspace_retry.mockResolvedValue({ logLevel: 123 });
+    fetchWithRetry.mockResolvedValue({ logLevel: 123 });
 
     const result = await loader.loadConfig('badlog.json');
 
@@ -82,8 +82,8 @@ describe('LoggerConfigLoader', () => {
     );
   });
 
-  it('marks stage as "parse" when Workspace_retry throws parsing error', async () => {
-    Workspace_retry.mockRejectedValue(new Error('JSON parse error'));
+  it('marks stage as "parse" when fetchWithRetry throws parsing error', async () => {
+    fetchWithRetry.mockRejectedValue(new Error('JSON parse error'));
 
     const result = await loader.loadConfig('parse.json');
 
@@ -96,8 +96,8 @@ describe('LoggerConfigLoader', () => {
     );
   });
 
-  it('marks stage as "fetch" when Workspace_retry throws network error', async () => {
-    Workspace_retry.mockRejectedValue(
+  it('marks stage as "fetch" when fetchWithRetry throws network error', async () => {
+    fetchWithRetry.mockRejectedValue(
       new Error('Network failure: failed to fetch')
     );
 

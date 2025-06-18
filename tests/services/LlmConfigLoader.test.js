@@ -4,11 +4,11 @@
 import { jest, describe, beforeEach, test, expect } from '@jest/globals';
 // Using the import path from your test output
 import { LlmConfigLoader } from '../../src/llms/services/llmConfigLoader.js';
-import { Workspace_retry } from '../../src/utils/apiUtils.js';
+import { fetchWithRetry } from '../../src/utils/index.js';
 
-// Mock the Workspace_retry utility
-jest.mock('../../src/utils/apiUtils.js', () => ({
-  Workspace_retry: jest.fn(),
+// Mock the fetchWithRetry utility
+jest.mock('../../src/utils/index.js', () => ({
+  fetchWithRetry: jest.fn(),
 }));
 
 /**
@@ -166,12 +166,12 @@ describe('LlmConfigLoader', () => {
       configuration: configurationMock,
       safeEventDispatcher: dispatcherMock,
     });
-    Workspace_retry.mockReset();
+    fetchWithRetry.mockReset();
   });
 
   describe('constructor', () => {
     test('should use provided logger', () => {
-      Workspace_retry.mockResolvedValueOnce(
+      fetchWithRetry.mockResolvedValueOnce(
         JSON.parse(JSON.stringify(minimalValidRootConfigForPathTests))
       );
       const specificLogger = mockLoggerInstance();
@@ -212,18 +212,18 @@ describe('LlmConfigLoader', () => {
         configuration: configurationMock,
         safeEventDispatcher: dispatcherMock,
       });
-      Workspace_retry.mockResolvedValueOnce(
+      fetchWithRetry.mockResolvedValueOnce(
         JSON.parse(JSON.stringify(minimalValidRootConfigForPathTests))
       );
       loaderWithConsoleLogger.loadConfigs();
     });
 
     test('should use default dependencyInjection path if none provided (verified by loadConfigs call)', async () => {
-      Workspace_retry.mockResolvedValueOnce(
+      fetchWithRetry.mockResolvedValueOnce(
         JSON.parse(JSON.stringify(minimalValidRootConfigForPathTests))
       );
       await loader.loadConfigs();
-      expect(Workspace_retry).toHaveBeenCalledWith(
+      expect(fetchWithRetry).toHaveBeenCalledWith(
         defaultLlmConfigPath,
         expect.any(Object),
         expect.any(Number),
@@ -243,11 +243,11 @@ describe('LlmConfigLoader', () => {
         defaultConfigPath: customPath,
         safeEventDispatcher: dispatcherMock,
       });
-      Workspace_retry.mockResolvedValueOnce(
+      fetchWithRetry.mockResolvedValueOnce(
         JSON.parse(JSON.stringify(minimalValidRootConfigForPathTests))
       );
       await loaderWithCustomPath.loadConfigs();
-      expect(Workspace_retry).toHaveBeenCalledWith(
+      expect(fetchWithRetry).toHaveBeenCalledWith(
         customPath,
         expect.any(Object),
         expect.any(Number),
@@ -288,7 +288,7 @@ describe('LlmConfigLoader', () => {
       const expectedRootConfig = JSON.parse(
         JSON.stringify(mockValidRootLLMConfig)
       );
-      Workspace_retry.mockResolvedValueOnce(expectedRootConfig); // Provide the root object
+      fetchWithRetry.mockResolvedValueOnce(expectedRootConfig); // Provide the root object
       schemaValidatorMock.validate.mockReturnValueOnce({
         isValid: true,
         errors: null,
@@ -299,7 +299,7 @@ describe('LlmConfigLoader', () => {
       expect(result.error).toBeUndefined(); // Ensure it's not an error object
       expect(result).toEqual(expectedRootConfig); // Result should be the root object
 
-      expect(Workspace_retry).toHaveBeenCalledWith(
+      expect(fetchWithRetry).toHaveBeenCalledWith(
         defaultLlmConfigPath,
         { method: 'GET', headers: { Accept: 'application/json' } },
         3,
@@ -317,11 +317,11 @@ describe('LlmConfigLoader', () => {
       );
     });
 
-    test('AC2: should handle Workspace network errors (simulated by Workspace_retry rejecting)', async () => {
+    test('AC2: should handle Workspace network errors (simulated by fetchWithRetry rejecting)', async () => {
       const networkError = new Error(
         'Simulated Network Error: Failed to fetch'
       );
-      Workspace_retry.mockRejectedValueOnce(networkError);
+      fetchWithRetry.mockRejectedValueOnce(networkError);
 
       const result = await loader.loadConfigs(defaultLlmConfigPath);
 
@@ -349,7 +349,7 @@ describe('LlmConfigLoader', () => {
       const httpError = new Error(
         `API request to ${defaultLlmConfigPath} failed after 1 attempt(s) with status 404: {"error":"Not Found"}`
       );
-      Workspace_retry.mockRejectedValueOnce(httpError);
+      fetchWithRetry.mockRejectedValueOnce(httpError);
       const result = await loader.loadConfigs(defaultLlmConfigPath);
       expect(result.stage).toBe('fetch_not_found');
       // Further assertions as before...
@@ -359,24 +359,24 @@ describe('LlmConfigLoader', () => {
       const httpError = new Error(
         `API request to ${defaultLlmConfigPath} failed after 3 attempt(s) with status 500: {"error":"Server Issue"}`
       );
-      Workspace_retry.mockRejectedValueOnce(httpError);
+      fetchWithRetry.mockRejectedValueOnce(httpError);
       const result = await loader.loadConfigs(defaultLlmConfigPath);
       expect(result.stage).toBe('fetch_server_error');
       // Further assertions as before...
     });
 
-    test('AC4: should handle invalid JSON content (Workspace_retry throws JSON parsing error)', async () => {
+    test('AC4: should handle invalid JSON content (fetchWithRetry throws JSON parsing error)', async () => {
       const parsingError = new SyntaxError(
         'Unexpected token i in JSON at position 0'
       );
-      Workspace_retry.mockRejectedValueOnce(parsingError);
+      fetchWithRetry.mockRejectedValueOnce(parsingError);
       const result = await loader.loadConfigs(defaultLlmConfigPath);
       expect(result.stage).toBe('parse');
       // Further assertions as before...
     });
 
     test('should return error if schema ID cannot be retrieved from configuration', async () => {
-      Workspace_retry.mockResolvedValueOnce(
+      fetchWithRetry.mockResolvedValueOnce(
         JSON.parse(JSON.stringify(minimalValidRootConfigForPathTests))
       );
       configurationMock.getContentTypeSchemaId.mockReturnValueOnce(undefined);
@@ -399,7 +399,7 @@ describe('LlmConfigLoader', () => {
         params: { missingProperty: 'defaultConfigId' },
         message: "must have required property 'defaultConfigId'",
       };
-      Workspace_retry.mockResolvedValueOnce(malformedRootData);
+      fetchWithRetry.mockResolvedValueOnce(malformedRootData);
       schemaValidatorMock.validate.mockReturnValueOnce({
         isValid: false,
         errors: [mockedAjvError],
@@ -448,7 +448,7 @@ describe('LlmConfigLoader', () => {
           },
         },
       };
-      Workspace_retry.mockResolvedValueOnce(
+      fetchWithRetry.mockResolvedValueOnce(
         JSON.parse(JSON.stringify(semanticallyInvalidRoot))
       );
       schemaValidatorMock.validate.mockReturnValueOnce({
@@ -473,7 +473,7 @@ describe('LlmConfigLoader', () => {
         defaultConfigId: 'test',
         configs: ['this is an array, not an object map'], // Invalid type for configs
       };
-      Workspace_retry.mockResolvedValueOnce(rootWithInvalidConfigsType);
+      fetchWithRetry.mockResolvedValueOnce(rootWithInvalidConfigsType);
       // Assume schema validation for the root object passes, but the 'configs' type is wrong
       // This specific scenario tests the semantic validator's robustness against `configs` not being a map
       schemaValidatorMock.validate.mockReturnValueOnce({
@@ -502,11 +502,11 @@ describe('LlmConfigLoader', () => {
 
     test('should use custom file path if provided to loadConfigs method', async () => {
       const customPath = 'another/prompt-dependencyInjection.json';
-      Workspace_retry.mockResolvedValueOnce(
+      fetchWithRetry.mockResolvedValueOnce(
         JSON.parse(JSON.stringify(minimalValidRootConfigForPathTests))
       );
       await loader.loadConfigs(customPath);
-      expect(Workspace_retry).toHaveBeenCalledWith(
+      expect(fetchWithRetry).toHaveBeenCalledWith(
         customPath,
         expect.any(Object),
         expect.any(Number),
@@ -518,11 +518,11 @@ describe('LlmConfigLoader', () => {
     });
 
     test('should use default path if provided filePath to loadConfigs is empty or whitespace', async () => {
-      Workspace_retry.mockResolvedValueOnce(
+      fetchWithRetry.mockResolvedValueOnce(
         JSON.parse(JSON.stringify(minimalValidRootConfigForPathTests))
       );
       await loader.loadConfigs('   ');
-      expect(Workspace_retry).toHaveBeenCalledWith(
+      expect(fetchWithRetry).toHaveBeenCalledWith(
         defaultLlmConfigPath,
         expect.any(Object),
         expect.any(Number),

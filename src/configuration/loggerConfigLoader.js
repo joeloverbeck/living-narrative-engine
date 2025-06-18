@@ -1,7 +1,7 @@
 // src/configuration/loggerConfigLoader.js
 // --- FILE START ---
 
-import { Workspace_retry } from '../utils/apiUtils.js';
+import { fetchWithRetry } from '../utils/index.js';
 import { isNonBlankString } from '../utils/textUtils.js';
 
 /**
@@ -125,7 +125,7 @@ export class LoggerConfigLoader {
 
     let parsedResponse;
     try {
-      parsedResponse = await Workspace_retry(
+      parsedResponse = await fetchWithRetry(
         path,
         { method: 'GET', headers: { Accept: 'application/json' } },
         this.#defaultMaxRetries,
@@ -170,7 +170,7 @@ export class LoggerConfigLoader {
 
       return /** @type {LoggerConfigurationFile} */ (parsedResponse);
     } catch (error) {
-      // Errors from Workspace_retry (fetch/parse failures)
+      // Errors from fetchWithRetry (fetch/parse failures)
       logError(
         `[LoggerConfigLoader] Failed to load or parse logger configuration from ${path}. Error: ${error.message}`,
         {

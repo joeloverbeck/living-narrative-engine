@@ -1,7 +1,7 @@
 // src/llms/services/llmConfigLoader.js
 // --- FILE START ---
 
-import { Workspace_retry } from '../../utils/apiUtils.js';
+import { fetchWithRetry } from '../../utils/index.js';
 import { performSemanticValidations } from '../../validation/llmConfigSemanticValidator.js'; // Assuming this path is correct
 
 /**
@@ -302,7 +302,7 @@ export class LlmConfigLoader {
     /** @type {any} */
     let parsedResponse;
     try {
-      parsedResponse = await Workspace_retry(
+      parsedResponse = await fetchWithRetry(
         currentPath,
         { method: 'GET', headers: { Accept: 'application/json' } },
         this.#defaultMaxRetries,
