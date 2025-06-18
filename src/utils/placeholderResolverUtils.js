@@ -127,6 +127,124 @@ export class PlaceholderResolver {
   }
 
   /**
+   * Resolves a value from an array of source objects using a dotted path.
+   *
+   * @private
+   * @param {string} path - Dot separated lookup path.
+   * @param {object[]} sources - Ordered list of source objects.
+   * @returns {*} Resolved value or `undefined` if not found.
+   */
+  _resolveFromSources(path, sources) {
+    for (const source of sources) {
+      if (source && typeof source === 'object') {
+        const value = this.resolvePath(source, path);
+        if (value !== undefined) {
+          return value;
+        } else {
+          const parts = path.split('.');
+          const last = parts.pop();
+          const parentPath = parts.join('.');
+          const parent =
+            parentPath === '' ? source : this.resolvePath(source, parentPath);
+          if (
+            parent &&
+            typeof parent === 'object' &&
+            Object.prototype.hasOwnProperty.call(parent, last)
+          ) {
+            return parent[last];
+          }
+        }
+      }
+    }
+    return undefined;
+  }
+
+  /**
+   * Recursively resolves placeholders within a value using provided sources.
+   *
+   * @private
+   * @param {*} value - Value that may contain placeholders.
+   * @param {object[]} sources - Ordered list of source objects.
+   * @returns {*} Value with placeholders resolved.
+   */
+  _resolveValue(value, sources) {
+    if (typeof value === 'string') {
+      const fullMatch = value.match(FULL_STRING_PLACEHOLDER_REGEX);
+      const replaced = this.resolve(value, ...sources);
+      if (fullMatch) {
+        let placeholderPath = fullMatch[1];
+        const isOptional = placeholderPath.endsWith('?');
+        if (isOptional) {
+          placeholderPath = placeholderPath.slice(0, -1);
+        }
+        const resolved = this._resolveFromSources(placeholderPath, sources);
+        if (resolved !== undefined) {
+          this.#logger.debug(
+            `Resolved full string placeholder {${placeholderPath}${
+              isOptional ? '?' : ''
+            }} to: ${
+              typeof resolved === 'object' ? JSON.stringify(resolved) : resolved
+            }`
+          );
+          return resolved;
+        }
+        return undefined;
+      }
+
+      if (replaced !== value) {
+        let match;
+        PLACEHOLDER_FIND_REGEX.lastIndex = 0;
+        while ((match = PLACEHOLDER_FIND_REGEX.exec(value))) {
+          let placeholderPath = match[1];
+          const placeholderSyntax = match[0];
+          const isOptional = placeholderPath.endsWith('?');
+          if (isOptional) {
+            placeholderPath = placeholderPath.slice(0, -1);
+          }
+          const resolved = this._resolveFromSources(placeholderPath, sources);
+          if (resolved !== undefined) {
+            const stringValue = resolved === null ? 'null' : String(resolved);
+            this.#logger.debug(
+              `Replaced embedded placeholder ${placeholderSyntax} with string: "${stringValue}"`
+            );
+          }
+        }
+      }
+      return replaced;
+    }
+
+    if (Array.isArray(value)) {
+      let changed = false;
+      const resolvedArr = value.map((item) => {
+        const resolvedItem = this._resolveValue(item, sources);
+        if (resolvedItem !== item) {
+          changed = true;
+        }
+        return resolvedItem;
+      });
+      return changed ? resolvedArr : value;
+    }
+
+    if (value && typeof value === 'object' && !(value instanceof Date)) {
+      let changed = false;
+      const result = {};
+      for (const key in value) {
+        if (Object.prototype.hasOwnProperty.call(value, key)) {
+          const original = value[key];
+          const resolvedVal = this._resolveValue(original, sources);
+          if (resolvedVal !== original) {
+            changed = true;
+          }
+          result[key] = resolvedVal;
+        }
+      }
+      return changed ? result : value;
+    }
+
+    return value;
+  }
+
+  /**
    * Recursively resolves placeholders within a complex structure.
    *
    * @description Strings are processed with {@link PlaceholderResolver#resolve}.
@@ -149,111 +267,7 @@ export class PlaceholderResolver {
       sources.push(fallback);
     }
 
-    const resolveFromSources = (path) => {
-      for (const source of sources) {
-        if (source && typeof source === 'object') {
-          const value = this.resolvePath(source, path);
-          if (value !== undefined) {
-            return value;
-          } else {
-            const parts = path.split('.');
-            const last = parts.pop();
-            const parentPath = parts.join('.');
-            const parent =
-              parentPath === '' ? source : this.resolvePath(source, parentPath);
-            if (
-              parent &&
-              typeof parent === 'object' &&
-              Object.prototype.hasOwnProperty.call(parent, last)
-            ) {
-              return parent[last];
-            }
-          }
-        }
-      }
-      return undefined;
-    };
-
-    const recurse = (value) => {
-      if (typeof value === 'string') {
-        const fullMatch = value.match(FULL_STRING_PLACEHOLDER_REGEX);
-        const replaced = this.resolve(value, ...sources);
-        if (fullMatch) {
-          let placeholderPath = fullMatch[1];
-          const isOptional = placeholderPath.endsWith('?');
-          if (isOptional) {
-            placeholderPath = placeholderPath.slice(0, -1);
-          }
-          const resolved = resolveFromSources(placeholderPath);
-          if (resolved !== undefined) {
-            this.#logger.debug(
-              `Resolved full string placeholder {${placeholderPath}${
-                isOptional ? '?' : ''
-              }} to: ${
-                typeof resolved === 'object'
-                  ? JSON.stringify(resolved)
-                  : resolved
-              }`
-            );
-            return resolved;
-          }
-          return undefined;
-        }
-
-        if (replaced !== value) {
-          let match;
-          PLACEHOLDER_FIND_REGEX.lastIndex = 0;
-          while ((match = PLACEHOLDER_FIND_REGEX.exec(value))) {
-            let placeholderPath = match[1];
-            const placeholderSyntax = match[0];
-            const isOptional = placeholderPath.endsWith('?');
-            if (isOptional) {
-              placeholderPath = placeholderPath.slice(0, -1);
-            }
-            const resolved = resolveFromSources(placeholderPath);
-            if (resolved !== undefined) {
-              const stringValue = resolved === null ? 'null' : String(resolved);
-              this.#logger.debug(
-                `Replaced embedded placeholder ${placeholderSyntax} with string: "${stringValue}"`
-              );
-            }
-          }
-        }
-        return replaced;
-      }
-
-      if (Array.isArray(value)) {
-        let changed = false;
-        const resolvedArr = value.map((item) => {
-          const resolvedItem = recurse(item);
-          if (resolvedItem !== item) {
-            changed = true;
-          }
-          return resolvedItem;
-        });
-        return changed ? resolvedArr : value;
-      }
-
-      if (value && typeof value === 'object' && !(value instanceof Date)) {
-        let changed = false;
-        const result = {};
-        for (const key in value) {
-          if (Object.prototype.hasOwnProperty.call(value, key)) {
-            const original = value[key];
-            const resolvedVal = recurse(original);
-            if (resolvedVal !== original) {
-              changed = true;
-            }
-            result[key] = resolvedVal;
-          }
-        }
-        return changed ? result : value;
-      }
-
-      return value;
-    };
-
-    return recurse(input);
+    return this._resolveValue(input, sources);
   }
 }
 
