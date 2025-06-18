@@ -4,6 +4,7 @@ import {
   PersistenceError,
   PersistenceErrorCodes,
 } from './persistenceErrors.js';
+import { MSG_FILE_READ_ERROR, MSG_EMPTY_FILE } from './persistenceMessages.js';
 import {
   createPersistenceFailure,
   createPersistenceSuccess,
@@ -31,8 +32,7 @@ export async function readSaveFile(storage, filePath, logger) {
     try {
       fileContent = await storage.readFile(filePath);
     } catch (error) {
-      const userMsg =
-        'Could not access or read the selected save file. Please check file permissions or try another save.';
+      const userMsg = MSG_FILE_READ_ERROR;
       logger.error(`Error reading file ${filePath}:`, error);
       return {
         ...createPersistenceFailure(
@@ -44,8 +44,7 @@ export async function readSaveFile(storage, filePath, logger) {
     }
 
     if (!fileContent || fileContent.byteLength === 0) {
-      const userMsg =
-        'The selected save file is empty or cannot be read. It might be corrupted or inaccessible.';
+      const userMsg = MSG_EMPTY_FILE;
       logger.warn(`File is empty or could not be read: ${filePath}.`);
       return {
         ...createPersistenceFailure(PersistenceErrorCodes.EMPTY_FILE, userMsg),

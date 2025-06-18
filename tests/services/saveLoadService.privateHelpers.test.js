@@ -9,6 +9,12 @@ import {
 import SaveLoadService from '../../src/persistence/saveLoadService.js';
 import SaveFileRepository from '../../src/persistence/saveFileRepository.js';
 import GameStateSerializer from '../../src/persistence/gameStateSerializer.js';
+import {
+  MSG_FILE_READ_ERROR,
+  MSG_EMPTY_FILE,
+  MSG_DECOMPRESSION_FAILED,
+  MSG_DESERIALIZATION_FAILED,
+} from '../../src/persistence/persistenceMessages.js';
 import pako from 'pako';
 import { webcrypto } from 'crypto';
 import { createMockSaveValidationService } from '../testUtils.js';
@@ -94,7 +100,7 @@ describe('SaveLoadService private helper error propagation', () => {
     /** @type {PersistenceResult<any>} */
     const res = await service.loadGameData('saves/manual_saves/test.sav');
     expect(res.success).toBe(false);
-    expect(res.error.message).toMatch(/Could not access/);
+    expect(res.error.message).toBe(MSG_FILE_READ_ERROR);
   });
 
   it('propagates empty file error', async () => {
@@ -102,7 +108,7 @@ describe('SaveLoadService private helper error propagation', () => {
     /** @type {PersistenceResult<any>} */
     const res = await service.loadGameData('saves/manual_saves/test.sav');
     expect(res.success).toBe(false);
-    expect(res.error.message).toMatch(/empty or cannot be read/);
+    expect(res.error.message).toBe(MSG_EMPTY_FILE);
   });
 
   it('propagates decompression errors', async () => {
@@ -110,7 +116,7 @@ describe('SaveLoadService private helper error propagation', () => {
     /** @type {PersistenceResult<any>} */
     const res = await service.loadGameData('saves/manual_saves/test.sav');
     expect(res.success).toBe(false);
-    expect(res.error.message).toMatch(/could not decompress/);
+    expect(res.error.message).toBe(MSG_DECOMPRESSION_FAILED);
   });
 
   it('propagates deserialization errors', async () => {
@@ -119,7 +125,7 @@ describe('SaveLoadService private helper error propagation', () => {
     /** @type {PersistenceResult<any>} */
     const res = await service.loadGameData('saves/manual_saves/test.sav');
     expect(res.success).toBe(false);
-    expect(res.error.message).toMatch(/could not understand/);
+    expect(res.error.message).toBe(MSG_DESERIALIZATION_FAILED);
   });
 });
 
