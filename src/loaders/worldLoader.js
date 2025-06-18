@@ -24,6 +24,7 @@ import ModDependencyValidator from '../modding/modDependencyValidator.js';
 import validateModEngineVersions from '../modding/modVersionValidator.js';
 import ModDependencyError from '../errors/modDependencyError.js';
 import WorldLoaderError from '../errors/worldLoaderError.js';
+import MissingSchemaError from '../errors/missingSchemaError.js';
 import { resolveOrder } from '../modding/modLoadOrderResolver.js';
 import AbstractLoader from './abstractLoader.js';
 
@@ -341,7 +342,7 @@ class WorldLoader extends AbstractLoader {
    * Ensures that all essential schemas are configured and loaded.
    *
    * @private
-   * @returns {string|null} The ID of a missing schema or `null` if all are loaded.
+   * @throws {MissingSchemaError} If a required schema is missing.
    */
   #checkEssentialSchemas() {
     const essentials = [
@@ -364,11 +365,10 @@ class WorldLoader extends AbstractLoader {
         this.#logger.error(
           `WorldLoader: Essential schema missing or not configured: ${missing}`
         );
-        return missing;
+        throw new MissingSchemaError(missing);
       }
     }
     this.#logger.debug('WorldLoader: All essential schemas found.');
-    return null;
   }
 
   /**
@@ -742,8 +742,6 @@ class WorldLoader extends AbstractLoader {
 
     let requestedModIds = [];
     let incompatibilityCount = 0;
-    let essentialSchemaMissing = false;
-    let missingSchemaId = '';
     let loadedManifestsMap = new Map();
     /** @type {TotalResultsSummary} */
     const totalCounts = {}; // Object to store total counts per content type across all mods
@@ -752,13 +750,7 @@ class WorldLoader extends AbstractLoader {
       this.#clearRegistry();
       await this.#loadSchemas();
 
-      missingSchemaId = this.#checkEssentialSchemas();
-      if (missingSchemaId) {
-        essentialSchemaMissing = true;
-        throw new Error(
-          `Essential schema check failed for: ${missingSchemaId}`
-        );
-      }
+      this.#checkEssentialSchemas();
 
       await this.#loadPromptText(totalCounts);
 
@@ -798,9 +790,8 @@ class WorldLoader extends AbstractLoader {
           'Caught ModDependencyError, re-throwing original error.'
         );
         throw err; // Re-throw the specific dependency/version error
-      } else if (essentialSchemaMissing) {
-        // This condition should now primarily catch the error thrown if the flag was set in Step 3
-        const finalMessage = `WorldLoader failed: Essential schema '${missingSchemaId || 'unknown'}' missing or check failed – aborting world load. Original error: ${err.message}`;
+      } else if (err instanceof MissingSchemaError) {
+        const finalMessage = `WorldLoader failed: Essential schema '${err.schemaId || 'unknown'}' missing or check failed – aborting world load. Original error: ${err.message}`;
         this.#logger.error(finalMessage, err); // Log the combined info
         throw new WorldLoaderError(finalMessage, err); // Throw a new error, preserving the original cause
       } else {

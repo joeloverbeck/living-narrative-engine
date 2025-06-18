@@ -139,7 +139,7 @@ describe('WorldLoader Essential Schema Validation', () => {
       WorldLoaderError
     );
     await expect(worldLoader.loadWorld('test-world')).rejects.toThrow(
-      "WorldLoader failed: Essential schema 'Unknown Essential Schema ID' missing or check failed – aborting world load. Original error: Essential schema check failed for: Unknown Essential Schema ID"
+      "WorldLoader failed: Essential schema 'Unknown Essential Schema ID' missing or check failed – aborting world load. Original error: Missing essential schema: Unknown Essential Schema ID"
     );
 
     // Check that the specific internal error was logged.
@@ -177,7 +177,7 @@ describe('WorldLoader Essential Schema Validation', () => {
 
     // 2. Assert the error has the exact expected message.
     expect(caughtError.message).toBe(
-      `WorldLoader failed: Essential schema '${missingSchemaId}' missing or check failed – aborting world load. Original error: Essential schema check failed for: ${missingSchemaId}`
+      `WorldLoader failed: Essential schema '${missingSchemaId}' missing or check failed – aborting world load. Original error: Missing essential schema: ${missingSchemaId}`
     );
     // --- END CORRECTION ---
 
