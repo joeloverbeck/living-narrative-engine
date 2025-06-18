@@ -20,7 +20,7 @@ jest.mock('../../src/bootstrapper/stages/index.js', () => ({
   setupGlobalEventListenersStage: (...args) => mockGlobal(...args),
   startGameStage: (...args) => mockStartGame(...args),
 }));
-jest.mock('../../src/bootstrapper/auxiliaryStages.js', () => ({
+jest.mock('../../src/bootstrapper/stages/auxiliary', () => ({
   __esModule: true,
   initializeAuxiliaryServicesStage: (...args) => mockInitAux(...args),
 }));

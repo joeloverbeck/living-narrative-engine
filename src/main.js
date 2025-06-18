@@ -16,7 +16,7 @@ import {
   setupGlobalEventListenersStage,
   startGameStage,
 } from './bootstrapper/stages/index.js';
-import { initializeAuxiliaryServicesStage } from './bootstrapper/auxiliaryStages.js';
+import { initializeAuxiliaryServicesStage } from './bootstrapper/stages/auxiliary';
 
 const ACTIVE_WORLD = 'demo';
 
