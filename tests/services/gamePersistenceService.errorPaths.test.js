@@ -74,6 +74,7 @@ describe('GamePersistenceService error paths', () => {
       entityManager,
       playtimeTracker,
       gameStateCaptureService: captureService,
+      manualSaveCoordinator: { saveGame: jest.fn() },
     });
   });
 

@@ -24,6 +24,7 @@ function makeService() {
     getTotalPlaytime: jest.fn(),
     setAccumulatedPlaytime: jest.fn(),
   };
+  const manualSaveCoordinator = { saveGame: jest.fn() };
 
   const service = new GamePersistenceService({
     logger,
@@ -31,6 +32,7 @@ function makeService() {
     entityManager,
     playtimeTracker,
     gameStateCaptureService: captureService,
+    manualSaveCoordinator,
   });
   const restorer = new GameStateRestorer({
     logger,

@@ -13,6 +13,7 @@ import { setupService } from '../utils/serviceInitializerUtils.js';
 /** @typedef {import('../turns/interfaces/ITurnManager.js').ITurnManager} ITurnManager */
 /** @typedef {import('../loaders/worldLoader.js').default} WorldLoader */
 /** @typedef {import('./gameStateCaptureService.js').default} GameStateCaptureService */
+/** @typedef {import('./manualSaveCoordinator.js').default} ManualSaveCoordinator */
 
 // --- Import Tokens ---
 // tokens import removed as not used after refactor
@@ -41,6 +42,7 @@ class GamePersistenceService extends IGamePersistenceService {
   #playtimeTracker;
   #gameStateCaptureService;
   #gameStateRestorer;
+  #manualSaveCoordinator;
 
   /**
    * Creates a new GamePersistenceService instance.
@@ -51,6 +53,7 @@ class GamePersistenceService extends IGamePersistenceService {
    * @param {EntityManager} dependencies.entityManager - Entity manager.
    * @param {PlaytimeTracker} dependencies.playtimeTracker - Playtime tracker.
    * @param {GameStateCaptureService} dependencies.gameStateCaptureService - Service capturing current game state.
+   * @param {ManualSaveCoordinator} dependencies.manualSaveCoordinator - Coordinator for manual saves.
    */
   constructor({
     logger,
@@ -58,6 +61,7 @@ class GamePersistenceService extends IGamePersistenceService {
     entityManager,
     playtimeTracker,
     gameStateCaptureService,
+    manualSaveCoordinator,
   }) {
     super();
     this.#logger = setupService('GamePersistenceService', logger, {
@@ -77,11 +81,16 @@ class GamePersistenceService extends IGamePersistenceService {
         value: gameStateCaptureService,
         requiredMethods: ['captureCurrentGameState'],
       },
+      manualSaveCoordinator: {
+        value: manualSaveCoordinator,
+        requiredMethods: ['saveGame'],
+      },
     });
     this.#saveLoadService = saveLoadService;
     this.#entityManager = entityManager;
     this.#playtimeTracker = playtimeTracker;
     this.#gameStateCaptureService = gameStateCaptureService;
+    this.#manualSaveCoordinator = manualSaveCoordinator;
     this.#gameStateRestorer = new GameStateRestorer({
       logger: this.#logger,
       entityManager: this.#entityManager,
@@ -180,14 +189,12 @@ class GamePersistenceService extends IGamePersistenceService {
 
     return wrapPersistenceOperation(this.#logger, async () => {
       this.#logger.debug(
-        `GamePersistenceService.saveGame: Capturing current game state for save "${saveName}".`
+        `GamePersistenceService.saveGame: Delegating to ManualSaveCoordinator for "${saveName}".`
       );
-      const gameStateObject = this._captureGameState(activeWorldName);
-      this._setSaveMetadata(gameStateObject, saveName);
-      this.#logger.debug(
-        `GamePersistenceService.saveGame: Delegating to ISaveLoadService.saveManualGame for "${saveName}".`
+      const result = await this.#manualSaveCoordinator.saveGame(
+        saveName,
+        activeWorldName
       );
-      const result = await this._delegateManualSave(saveName, gameStateObject);
 
       if (result.success) {
         this.#logger.debug(

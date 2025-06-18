@@ -4,6 +4,7 @@ import SaveFileRepository from '../../src/persistence/saveFileRepository.js';
 import GameStateSerializer from '../../src/persistence/gameStateSerializer.js';
 import GamePersistenceService from '../../src/persistence/gamePersistenceService.js';
 import GameStateCaptureService from '../../src/persistence/gameStateCaptureService.js';
+import ManualSaveCoordinator from '../../src/persistence/manualSaveCoordinator.js';
 import ComponentCleaningService, {
   buildDefaultComponentCleaners,
 } from '../../src/persistence/componentCleaningService.js';
@@ -139,12 +140,18 @@ describe('Persistence round-trip', () => {
       metadataBuilder,
       activeModsManifestBuilder,
     });
+    const manualSaveCoordinator = new ManualSaveCoordinator({
+      logger,
+      gameStateCaptureService: captureService,
+      saveLoadService,
+    });
     persistence = new GamePersistenceService({
       logger,
       saveLoadService,
       entityManager,
       playtimeTracker,
       gameStateCaptureService: captureService,
+      manualSaveCoordinator,
     });
   });
 

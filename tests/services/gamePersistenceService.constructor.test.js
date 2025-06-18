@@ -16,6 +16,7 @@ function makeDeps() {
     entityManager: {},
     playtimeTracker: {},
     gameStateCaptureService: {},
+    manualSaveCoordinator: {},
   };
 }
 
@@ -26,6 +27,7 @@ describe('GamePersistenceService constructor validation', () => {
     'entityManager',
     'playtimeTracker',
     'gameStateCaptureService',
+    'manualSaveCoordinator',
   ];
 
   test.each(required)('throws if %s is missing', (prop) => {
