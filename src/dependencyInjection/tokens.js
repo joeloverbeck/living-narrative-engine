@@ -338,4 +338,5 @@ export const tokens = freeze({
   ITurnDecisionProvider: 'ITurnDecisionProvider',
   ILLMDecisionProvider: 'ILLMDecisionProvider',
   IHumanDecisionProvider: 'IHumanDecisionProvider',
+  IGoapDecisionProvider: 'IGoapDecisionProvider',
 });

@@ -48,7 +48,8 @@ export function registerActorAwareStrategy(container) {
       const opts = {
         providers: {
           human: c.resolve(tokens.IHumanDecisionProvider),
-          ai: c.resolve(tokens.ILLMDecisionProvider),
+          llm: c.resolve(tokens.ILLMDecisionProvider),
+          goap: c.resolve(tokens.IGoapDecisionProvider),
         },
         logger: c.resolve(tokens.ILogger),
         choicePipeline: c.resolve(tokens.TurnActionChoicePipeline),
@@ -59,6 +60,11 @@ export function registerActorAwareStrategy(container) {
       if (c.isRegistered(tokens.IAIFallbackActionFactory)) {
         opts.fallbackFactory = c.resolve(tokens.IAIFallbackActionFactory);
       }
+      opts.providerResolver = (actor) => {
+        const type = actor?.aiType ?? actor?.components?.ai?.type;
+        if (typeof type === 'string') return type.toLowerCase();
+        return actor?.isAi === true ? 'llm' : 'human';
+      };
       return new ActorAwareStrategyFactory(opts);
     });
     logger.debug(

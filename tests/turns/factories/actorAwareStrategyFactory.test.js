@@ -4,7 +4,8 @@ import { GenericTurnStrategy } from '../../../src/turns/strategies/genericTurnSt
 
 describe('ActorAwareStrategyFactory', () => {
   let humanProvider;
-  let aiProvider;
+  let llmProvider;
+  let goapProvider;
   let logger;
   let choicePipeline;
   let actionFactory;
@@ -14,17 +15,20 @@ describe('ActorAwareStrategyFactory', () => {
 
   beforeEach(() => {
     humanProvider = { name: 'human' };
-    aiProvider = { name: 'ai' };
+    llmProvider = { name: 'llm' };
+    goapProvider = { name: 'goap' };
     logger = { debug: jest.fn() };
     choicePipeline = {};
     actionFactory = {};
     actors = {
       human1: { id: 'human1' },
       ai1: { id: 'ai1', isAi: true },
+      llm1: { id: 'llm1', aiType: 'llm' },
+      goap1: { id: 'goap1', aiType: 'goap' },
       npc1: { id: 'npc1', type: 'npc' },
     };
     lookup = jest.fn((id) => actors[id]);
-    providers = { human: humanProvider, ai: aiProvider };
+    providers = { human: humanProvider, llm: llmProvider, goap: goapProvider };
   });
 
   it('returns strategy using human provider for non-AI actor', () => {
@@ -53,15 +57,43 @@ describe('ActorAwareStrategyFactory', () => {
 
     const strategy = factory.create('ai1');
     expect(strategy).toBeInstanceOf(GenericTurnStrategy);
-    expect(strategy.decisionProvider).toBe(aiProvider);
+    expect(strategy.decisionProvider).toBe(llmProvider);
     expect(lookup).toHaveBeenCalledWith('ai1');
+  });
+
+  it('uses aiType field to select llm provider', () => {
+    const factory = new ActorAwareStrategyFactory({
+      providers,
+      logger,
+      choicePipeline,
+      turnActionFactory: actionFactory,
+      actorLookup: lookup,
+    });
+
+    const strategy = factory.create('llm1');
+    expect(strategy.decisionProvider).toBe(llmProvider);
+    expect(lookup).toHaveBeenCalledWith('llm1');
+  });
+
+  it('uses aiType field to select goap provider', () => {
+    const factory = new ActorAwareStrategyFactory({
+      providers,
+      logger,
+      choicePipeline,
+      turnActionFactory: actionFactory,
+      actorLookup: lookup,
+    });
+
+    const strategy = factory.create('goap1');
+    expect(strategy.decisionProvider).toBe(goapProvider);
+    expect(lookup).toHaveBeenCalledWith('goap1');
   });
 
   it('uses a custom provider when resolver returns its key', () => {
     const npcProvider = { name: 'npc' };
     providers.npc = npcProvider;
     const resolver = (actor) =>
-      actor.type || (actor.isAi === true ? 'ai' : 'human');
+      actor.type || (actor.isAi === true ? 'llm' : 'human');
     const factory = new ActorAwareStrategyFactory({
       providers,
       providerResolver: resolver,

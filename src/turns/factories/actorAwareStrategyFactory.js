@@ -34,7 +34,8 @@ export class ActorAwareStrategyFactory extends ITurnStrategyFactory {
    * @param {Record<string, ITurnDecisionProvider>} [deps.providers]
    *        Map of provider keys to decision providers.
    * @param {(actor:any)=>string} [deps.providerResolver]
-   *        Resolves an actor to a provider key. Defaults to checking `actor.isAi`.
+   *        Resolves an actor to a provider key. Defaults to checking
+   *        `actor.aiType` or falling back to `actor.isAi`.
    * @param {ILogger} deps.logger
    * @param {TurnActionChoicePipeline} deps.choicePipeline
    * @param {ITurnActionFactory} deps.turnActionFactory
@@ -42,11 +43,15 @@ export class ActorAwareStrategyFactory extends ITurnStrategyFactory {
    * @param {(id:string)=>any} [deps.actorLookup]
    * @param {IEntityManager} [deps.entityManager]
    * @param {ITurnDecisionProvider} [deps.humanProvider] Legacy provider for humans.
-   * @param {ITurnDecisionProvider} [deps.aiProvider] Legacy provider for AI.
+   * @param {ITurnDecisionProvider} [deps.aiProvider] Legacy provider for AI (llm).
    */
   constructor({
     providers = null,
-    providerResolver = (actor) => (actor?.isAi === true ? 'ai' : 'human'),
+    providerResolver = (actor) => {
+      const type = actor?.aiType ?? actor?.components?.ai?.type;
+      if (typeof type === 'string') return type.toLowerCase();
+      return actor?.isAi === true ? 'llm' : 'human';
+    },
     logger,
     choicePipeline,
     turnActionFactory,
@@ -59,7 +64,7 @@ export class ActorAwareStrategyFactory extends ITurnStrategyFactory {
     super();
     if (!providers) {
       if (humanProvider && aiProvider) {
-        providers = { human: humanProvider, ai: aiProvider };
+        providers = { human: humanProvider, llm: aiProvider };
       } else {
         throw new Error('ActorAwareStrategyFactory: providers map is required');
       }
