@@ -100,27 +100,31 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
         : ActionTargetContext.noTarget();
 
     if (
-      this.#actionValidationService.isValid(actionDef, actorEntity, targetCtx)
+      !this.#actionValidationService.isValid(actionDef, actorEntity, targetCtx)
     ) {
-      const cmd = this.#formatActionCommandFn(
-        actionDef,
-        targetCtx,
-        this.#entityManager,
-        formatterOptions
-      );
-      if (cmd !== null) {
-        return [
-          {
-            id: actionDef.id,
-            name: actionDef.name || actionDef.commandVerb,
-            command: cmd,
-            description: actionDef.description || '',
-            params: {},
-          },
-        ];
-      }
+      return [];
     }
-    return [];
+
+    const formattedCommand = this.#formatActionCommandFn(
+      actionDef,
+      targetCtx,
+      this.#entityManager,
+      formatterOptions
+    );
+
+    if (formattedCommand === null) {
+      return [];
+    }
+
+    return [
+      {
+        id: actionDef.id,
+        name: actionDef.name || actionDef.commandVerb,
+        command: formattedCommand,
+        description: actionDef.description || '',
+        params: {},
+      },
+    ];
   }
 
   /**
@@ -164,24 +168,33 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
       const targetCtx = ActionTargetContext.forDirection(exit.direction);
 
       if (
-        this.#actionValidationService.isValid(actionDef, actorEntity, targetCtx)
-      ) {
-        const cmd = this.#formatActionCommandFn(
+        !this.#actionValidationService.isValid(
           actionDef,
-          targetCtx,
-          this.#entityManager,
-          formatterOptions
-        );
-        if (cmd !== null) {
-          discovered.push({
-            id: actionDef.id,
-            name: actionDef.name || actionDef.commandVerb,
-            command: cmd,
-            description: actionDef.description || '',
-            params: { targetId: exit.target },
-          });
-        }
+          actorEntity,
+          targetCtx
+        )
+      ) {
+        continue;
       }
+
+      const formattedCommand = this.#formatActionCommandFn(
+        actionDef,
+        targetCtx,
+        this.#entityManager,
+        formatterOptions
+      );
+
+      if (formattedCommand === null) {
+        continue;
+      }
+
+      discovered.push({
+        id: actionDef.id,
+        name: actionDef.name || actionDef.commandVerb,
+        command: formattedCommand,
+        description: actionDef.description || '',
+        params: { targetId: exit.target },
+      });
     }
 
     return discovered;
@@ -204,31 +217,41 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
     context,
     formatterOptions
   ) {
-    const ids = this.#getEntityIdsForScopesFn([domain], context) ?? new Set();
+    const targetIds =
+      this.#getEntityIdsForScopesFn([domain], context) ?? new Set();
     /** @type {import('../interfaces/IActionDiscoveryService.js').DiscoveredActionInfo[]} */
     const discovered = [];
 
-    for (const targetId of ids) {
+    for (const targetId of targetIds) {
       const targetCtx = ActionTargetContext.forEntity(targetId);
       if (
-        this.#actionValidationService.isValid(actionDef, actorEntity, targetCtx)
-      ) {
-        const cmd = this.#formatActionCommandFn(
+        !this.#actionValidationService.isValid(
           actionDef,
-          targetCtx,
-          this.#entityManager,
-          formatterOptions
-        );
-        if (cmd !== null) {
-          discovered.push({
-            id: actionDef.id,
-            name: actionDef.name || actionDef.commandVerb,
-            command: cmd,
-            description: actionDef.description || '',
-            params: { targetId },
-          });
-        }
+          actorEntity,
+          targetCtx
+        )
+      ) {
+        continue;
       }
+
+      const formattedCommand = this.#formatActionCommandFn(
+        actionDef,
+        targetCtx,
+        this.#entityManager,
+        formatterOptions
+      );
+
+      if (formattedCommand === null) {
+        continue;
+      }
+
+      discovered.push({
+        id: actionDef.id,
+        name: actionDef.name || actionDef.commandVerb,
+        command: formattedCommand,
+        description: actionDef.description || '',
+        params: { targetId },
+      });
     }
 
     return discovered;
