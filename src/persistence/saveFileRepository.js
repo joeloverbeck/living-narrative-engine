@@ -189,11 +189,20 @@ export default class SaveFileRepository {
    * Deletes a manual save file.
    *
    * @param {string} filePath - Full path to the save file.
+   * @param path
    * @returns {Promise<import('./persistenceTypes.js').PersistenceResult<null>>} Result of deletion.
    */
+  async #fileExists(path) {
+    return this.#storageProvider.fileExists(path);
+  }
+
+  async #deleteFile(path) {
+    return this.#storageProvider.deleteFile(path);
+  }
+
   async deleteSaveFile(filePath) {
-    try {
-      const exists = await this.#storageProvider.fileExists(filePath);
+    return wrapPersistenceOperation(this.#logger, async () => {
+      const exists = await this.#fileExists(filePath);
       if (!exists) {
         const msg = `Save file "${filePath}" not found for deletion.`;
         const userMsg = 'Cannot delete: Save file not found.';
@@ -204,31 +213,19 @@ export default class SaveFileRepository {
         );
       }
 
-      const deleteResult = await this.#storageProvider.deleteFile(filePath);
+      const deleteResult = await this.#deleteFile(filePath);
       if (deleteResult.success) {
         this.#logger.debug(`Manual save "${filePath}" deleted successfully.`);
-      } else {
-        this.#logger.error(
-          `Failed to delete manual save "${filePath}": ${deleteResult.error}`
-        );
+        return deleteResult;
       }
-      return deleteResult.success
-        ? deleteResult
-        : createPersistenceFailure(
-            PersistenceErrorCodes.DELETE_FAILED,
-            deleteResult.error || 'Unknown delete error'
-          );
-    } catch (error) {
+
       this.#logger.error(
-        `Error during manual save deletion process for "${filePath}":`,
-        error
+        `Failed to delete manual save "${filePath}": ${deleteResult.error}`
       );
-      return error instanceof PersistenceError
-        ? { success: false, error }
-        : createPersistenceFailure(
-            PersistenceErrorCodes.UNEXPECTED_ERROR,
-            `An unexpected error occurred during deletion: ${error.message}`
-          );
-    }
+      return createPersistenceFailure(
+        PersistenceErrorCodes.DELETE_FAILED,
+        deleteResult.error || 'Unknown delete error'
+      );
+    });
   }
 }
