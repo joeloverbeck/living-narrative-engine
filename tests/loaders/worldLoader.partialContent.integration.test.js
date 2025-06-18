@@ -399,6 +399,7 @@ describe('WorldLoader Integration Test Suite - Partial/Empty Content (TEST-LOADE
       promptTextLoader: { loadPromptText: jest.fn() },
       modManifestLoader: mockModManifestLoader,
       validatedEventDispatcher: mockValidatedEventDispatcher, // Pass the added mock
+      contentLoadersConfig: null,
     });
   });
 

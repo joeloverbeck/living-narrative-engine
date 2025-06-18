@@ -246,6 +246,7 @@ describe('WorldLoader Integration Test Suite - Error Handling: Manifest Schema, 
       promptTextLoader: { loadPromptText: jest.fn() },
       modManifestLoader: mockModManifestLoader,
       validatedEventDispatcher: mockValidatedEventDispatcher,
+      contentLoadersConfig: null,
     });
   });
 

@@ -304,6 +304,7 @@ describe('WorldLoader Integration Test Suite (TEST-LOADER-7.1)', () => {
       promptTextLoader: { loadPromptText: jest.fn() },
       modManifestLoader: mockModManifestLoader,
       validatedEventDispatcher: mockValidatedEventDispatcher,
+      contentLoadersConfig: null,
     });
   });
 

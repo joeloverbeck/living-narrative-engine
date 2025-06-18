@@ -17,14 +17,15 @@ const createMockConfiguration = (overrides = {}) => ({
     // This map now reflects the current essential schema requirements of WorldLoader
     const schemaMap = {
       'mod-manifest': 'http://example.com/schemas/mod.manifest.schema.json',
-      'game': 'http://example.com/schemas/game.schema.json',
-      'conditions': 'http://example.com/schemas/condition.schema.json',
-      'components': 'http://example.com/schemas/component.schema.json',
-      'actions': 'http://example.com/schemas/action.schema.json',
-      'events': 'http://example.com/schemas/event.schema.json',
-      'entityDefinitions': 'http://example.com/schemas/entity-definition.schema.json', // <<< CORRECTED
-      'entityInstances': 'http://example.com/schemas/entity-instance.schema.json', // <<< CORRECTED
-      'rules': 'http://example.com/schemas/rule.schema.json',
+      game: 'http://example.com/schemas/game.schema.json',
+      conditions: 'http://example.com/schemas/condition.schema.json',
+      components: 'http://example.com/schemas/component.schema.json',
+      actions: 'http://example.com/schemas/action.schema.json',
+      events: 'http://example.com/schemas/event.schema.json',
+      entityDefinitions:
+        'http://example.com/schemas/entity-definition.schema.json', // <<< CORRECTED
+      entityInstances: 'http://example.com/schemas/entity-instance.schema.json', // <<< CORRECTED
+      rules: 'http://example.com/schemas/rule.schema.json',
     };
     return schemaMap[t] || `http://example.com/schemas/${t}.schema.json`;
   }),
@@ -68,7 +69,7 @@ const createMockFetcher = (idToResponse = {}, errorIds = []) => ({
       if (errorIds.includes(modId)) {
         throw new Error(`Fetch failed for ${modId} manifest`);
       }
-      if (idToResponse.hasOwnProperty(modId)) {
+      if (Object.prototype.hasOwnProperty.call(idToResponse, modId)) {
         return JSON.parse(JSON.stringify(idToResponse[modId]));
       }
     }
@@ -76,20 +77,26 @@ const createMockFetcher = (idToResponse = {}, errorIds = []) => ({
     // Match schema fetch requests
     const schemaMatch = path.match(/\/schemas\/([^/]+)/);
     if (schemaMatch) {
-      const schemaName = schemaMatch[1];
       const schemaIdMap = {
-        'mod.manifest.schema.json': 'http://example.com/schemas/mod.manifest.schema.json',
+        'mod.manifest.schema.json':
+          'http://example.com/schemas/mod.manifest.schema.json',
         'game.schema.json': 'http://example.com/schemas/game.schema.json',
-        'component.schema.json': 'http://example.com/schemas/component.schema.json',
-        'entity-definition.schema.json': 'http://example.com/schemas/entity-definition.schema.json',
-        'entity-instance.schema.json': 'http://example.com/schemas/entity-instance.schema.json',
+        'component.schema.json':
+          'http://example.com/schemas/component.schema.json',
+        'entity-definition.schema.json':
+          'http://example.com/schemas/entity-definition.schema.json',
+        'entity-instance.schema.json':
+          'http://example.com/schemas/entity-instance.schema.json',
         'action.schema.json': 'http://example.com/schemas/action.schema.json',
         'event.schema.json': 'http://example.com/schemas/event.schema.json',
         'rule.schema.json': 'http://example.com/schemas/rule.schema.json',
-        'condition.schema.json': 'http://example.com/schemas/condition.schema.json'
+        'condition.schema.json':
+          'http://example.com/schemas/condition.schema.json',
       };
-      const schemaId = Object.values(schemaIdMap).find(id => path.includes(id.split('/').pop()));
-      if(schemaId) {
+      const schemaId = Object.values(schemaIdMap).find((id) =>
+        path.includes(id.split('/').pop())
+      );
+      if (schemaId) {
         return { $id: schemaId, type: 'object', properties: {}, required: [] };
       }
     }
@@ -119,8 +126,8 @@ const createMockRegistry = () => {
     const typeMap = data.get(type);
     return typeMap
       ? Array.from(typeMap.values()).map((obj) =>
-        JSON.parse(JSON.stringify(obj))
-      )
+          JSON.parse(JSON.stringify(obj))
+        )
       : [];
   });
 
@@ -166,25 +173,36 @@ describe('WorldLoader → ModDependencyValidator integration (missing dependency
   let worldLoader;
 
   const schemaDefs = {
-    MOD_MANIFEST: { id: 'http://example.com/schemas/mod.manifest.schema.json', required: ['id', 'name', 'version'], props: { id: { type: 'string' } } },
-    GAME: { id: 'http://example.com/schemas/game.schema.json', required: ['mods'], props: { mods: { type: 'array' } } },
+    MOD_MANIFEST: {
+      id: 'http://example.com/schemas/mod.manifest.schema.json',
+      required: ['id', 'name', 'version'],
+      props: { id: { type: 'string' } },
+    },
+    GAME: {
+      id: 'http://example.com/schemas/game.schema.json',
+      required: ['mods'],
+      props: { mods: { type: 'array' } },
+    },
     CONDITION: { id: 'http://example.com/schemas/condition.schema.json' },
     COMPONENT: { id: 'http://example.com/schemas/component.schema.json' },
-    ENTITY_DEFINITION: { id: 'http://example.com/schemas/entity-definition.schema.json' },
-    ENTITY_INSTANCE: { id: 'http://example.com/schemas/entity-instance.schema.json' },
+    ENTITY_DEFINITION: {
+      id: 'http://example.com/schemas/entity-definition.schema.json',
+    },
+    ENTITY_INSTANCE: {
+      id: 'http://example.com/schemas/entity-instance.schema.json',
+    },
     ACTION: { id: 'http://example.com/schemas/action.schema.json' },
     EVENT: { id: 'http://example.com/schemas/event.schema.json' },
     RULE: { id: 'http://example.com/schemas/rule.schema.json' },
   };
 
-  const buildSchema = ({id, required = [], props = {}}) => ({
+  const buildSchema = ({ id, required = [], props = {} }) => ({
     $id: id,
     type: 'object',
     required: required,
     properties: props,
-    additionalProperties: true
+    additionalProperties: true,
   });
-
 
   beforeEach(async () => {
     jest.clearAllMocks();
@@ -228,18 +246,25 @@ describe('WorldLoader → ModDependencyValidator integration (missing dependency
     registry = createMockRegistry();
 
     /* -------------------- Auxiliary loaders ------------------------------ */
-    ruleLoader = { loadItemsForMod: jest.fn().mockResolvedValue({count: 0}) };
+    ruleLoader = { loadItemsForMod: jest.fn().mockResolvedValue({ count: 0 }) };
     conditionLoader = {
-      loadItemsForMod: jest.fn().mockResolvedValue({count: 0}),
+      loadItemsForMod: jest.fn().mockResolvedValue({ count: 0 }),
     };
     componentDefinitionLoader = {
-      loadItemsForMod: jest.fn().mockResolvedValue({count: 0}),
+      loadItemsForMod: jest.fn().mockResolvedValue({ count: 0 }),
     };
-    actionLoader = { loadItemsForMod: jest.fn().mockResolvedValue({count: 0}) };
-    eventLoader = { loadItemsForMod: jest.fn().mockResolvedValue({count: 0}) };
-    entityLoader = { loadItemsForMod: jest.fn().mockResolvedValue({count: 0}) };
-    entityInstanceLoader = { loadItemsForMod: jest.fn().mockResolvedValue({count: 0}) };
-
+    actionLoader = {
+      loadItemsForMod: jest.fn().mockResolvedValue({ count: 0 }),
+    };
+    eventLoader = {
+      loadItemsForMod: jest.fn().mockResolvedValue({ count: 0 }),
+    };
+    entityLoader = {
+      loadItemsForMod: jest.fn().mockResolvedValue({ count: 0 }),
+    };
+    entityInstanceLoader = {
+      loadItemsForMod: jest.fn().mockResolvedValue({ count: 0 }),
+    };
 
     gameConfigLoader = {
       loadConfig: jest.fn().mockResolvedValue(['basegame', 'badmod']),
@@ -277,6 +302,7 @@ describe('WorldLoader → ModDependencyValidator integration (missing dependency
       promptTextLoader: { loadPromptText: jest.fn() },
       modManifestLoader,
       validatedEventDispatcher,
+      contentLoadersConfig: null,
     });
   });
 
@@ -311,9 +337,10 @@ describe('WorldLoader → ModDependencyValidator integration (missing dependency
     );
 
     // Check that NO content files were fetched
-    const contentFetches = fetcher.fetch.mock.calls.filter(
-      ([p]) =>
-        /\/mods\/[^/]+\/(actions|components|events|rules|entityDefinitions|entityInstances)\//.test(p)
+    const contentFetches = fetcher.fetch.mock.calls.filter(([p]) =>
+      /\/mods\/[^/]+\/(actions|components|events|rules|entityDefinitions|entityInstances)\//.test(
+        p
+      )
     );
     expect(contentFetches).toHaveLength(0);
 

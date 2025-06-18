@@ -276,6 +276,7 @@ describe('WorldLoader Integration Test Suite - Log Verification (TEST-LOADER-7.7
       promptTextLoader: { loadPromptText: jest.fn() },
       modManifestLoader: mockModManifestLoader,
       validatedEventDispatcher: mockValidatedEventDispatcher,
+      contentLoadersConfig: null,
     });
   });
 
