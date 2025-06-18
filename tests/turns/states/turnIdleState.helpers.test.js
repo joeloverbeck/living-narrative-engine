@@ -3,11 +3,18 @@ import { TurnIdleState } from '../../../src/turns/states/turnIdleState.js';
 
 const makeActor = (id = 'a1') => ({ id });
 
-const buildHandler = () => ({
-  _resetTurnStateAndResources: jest.fn(),
-  _transitionToState: jest.fn(),
-  _turnStateFactory: { createIdleState: jest.fn(() => ({})) },
-});
+const buildHandler = () => {
+  const handler = {
+    _resetTurnStateAndResources: jest.fn(),
+    resetStateAndResources: jest.fn((reason) => {
+      handler._resetTurnStateAndResources(reason);
+    }),
+    requestIdleStateTransition: jest.fn().mockResolvedValue(undefined),
+    _transitionToState: jest.fn(),
+    _turnStateFactory: { createIdleState: jest.fn(() => ({})) },
+  };
+  return handler;
+};
 
 const buildCtx = (actor) => ({
   getActor: () => actor,

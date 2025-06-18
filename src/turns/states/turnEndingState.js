@@ -103,7 +103,7 @@ export class TurnEndingState extends AbstractTurnState {
     }
 
     /* 3️⃣  Cleanup ----------------------------------------------------------- */
-    handler._resetTurnStateAndResources(
+    handler.resetStateAndResources(
       `enterState-TurnEndingState-actor-${this.#actorToEndId}`
     );
 
@@ -143,7 +143,7 @@ export class TurnEndingState extends AbstractTurnState {
     // Capture context *before* we clear resources so we can still use it
     const ctx = handler.getTurnContext?.();
 
-    handler._resetTurnStateAndResources(
+    handler.resetStateAndResources(
       `destroy-TurnEndingState-actor-${this.#actorToEndId}`
     );
 

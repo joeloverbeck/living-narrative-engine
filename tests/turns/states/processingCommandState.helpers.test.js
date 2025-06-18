@@ -5,6 +5,9 @@ const mockLogger = { debug: jest.fn(), warn: jest.fn(), error: jest.fn() };
 const mockHandler = {
   getTurnContext: jest.fn(),
   _resetTurnStateAndResources: jest.fn(),
+  resetStateAndResources: jest.fn(function (reason) {
+    mockHandler._resetTurnStateAndResources(reason);
+  }),
   _transitionToState: jest.fn(),
   getLogger: jest.fn(() => mockLogger),
   _turnStateFactory: { createIdleState: jest.fn(() => ({})) },

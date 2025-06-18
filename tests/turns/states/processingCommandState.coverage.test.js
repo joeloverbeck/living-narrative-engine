@@ -46,6 +46,9 @@ beforeEach(() => {
   mockHandler = {
     getTurnContext: jest.fn(),
     _resetTurnStateAndResources: jest.fn(),
+    resetStateAndResources: jest.fn(function (reason) {
+      mockHandler._resetTurnStateAndResources(reason);
+    }),
     _transitionToState: jest.fn().mockResolvedValue(undefined),
     requestIdleStateTransition: jest.fn().mockResolvedValue(undefined),
     getLogger: jest.fn().mockReturnValue(mockLogger),
