@@ -14,10 +14,10 @@ import { GenericTurnStrategy } from '../strategies/genericTurnStrategy.js';
 /** @typedef {import('../../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
 
 export class ActorAwareStrategyFactory extends ITurnStrategyFactory {
-  /** @type {ITurnDecisionProvider} */
-  #humanProvider;
-  /** @type {ITurnDecisionProvider} */
-  #aiProvider;
+  /** @type {Record<string, ITurnDecisionProvider>} */
+  #providers;
+  /** @type {(actor:any)=>string} */
+  #providerResolver;
   /** @type {ILogger} */
   #logger;
   /** @type {TurnActionChoicePipeline} */
@@ -31,30 +31,43 @@ export class ActorAwareStrategyFactory extends ITurnStrategyFactory {
 
   /**
    * @param {object} deps
-   * @param {ITurnDecisionProvider} deps.humanProvider
-   * @param {ITurnDecisionProvider} deps.aiProvider
+   * @param {Record<string, ITurnDecisionProvider>} [deps.providers]
+   *        Map of provider keys to decision providers.
+   * @param {(actor:any)=>string} [deps.providerResolver]
+   *        Resolves an actor to a provider key. Defaults to checking `actor.isAi`.
    * @param {ILogger} deps.logger
    * @param {TurnActionChoicePipeline} deps.choicePipeline
    * @param {ITurnActionFactory} deps.turnActionFactory
    * @param {import('../interfaces/IAIFallbackActionFactory.js').IAIFallbackActionFactory} [deps.fallbackFactory]
    * @param {(id:string)=>any} [deps.actorLookup]
    * @param {IEntityManager} [deps.entityManager]
+   * @param {ITurnDecisionProvider} [deps.humanProvider] Legacy provider for humans.
+   * @param {ITurnDecisionProvider} [deps.aiProvider] Legacy provider for AI.
    */
   constructor({
-    humanProvider,
-    aiProvider,
+    providers = null,
+    providerResolver = (actor) => (actor?.isAi === true ? 'ai' : 'human'),
     logger,
     choicePipeline,
     turnActionFactory,
     fallbackFactory = null,
     actorLookup = null,
     entityManager = null,
+    humanProvider = null,
+    aiProvider = null,
   }) {
     super();
-    if (!humanProvider)
-      throw new Error('ActorAwareStrategyFactory: humanProvider is required');
-    if (!aiProvider)
-      throw new Error('ActorAwareStrategyFactory: aiProvider is required');
+    if (!providers) {
+      if (humanProvider && aiProvider) {
+        providers = { human: humanProvider, ai: aiProvider };
+      } else {
+        throw new Error('ActorAwareStrategyFactory: providers map is required');
+      }
+    }
+    if (typeof providerResolver !== 'function')
+      throw new Error(
+        'ActorAwareStrategyFactory: providerResolver must be a function'
+      );
     if (!logger)
       throw new Error('ActorAwareStrategyFactory: logger is required');
     if (!choicePipeline)
@@ -64,8 +77,8 @@ export class ActorAwareStrategyFactory extends ITurnStrategyFactory {
         'ActorAwareStrategyFactory: turnActionFactory is required'
       );
 
-    this.#humanProvider = humanProvider;
-    this.#aiProvider = aiProvider;
+    this.#providers = providers;
+    this.#providerResolver = providerResolver;
     this.#logger = logger;
     this.#choicePipeline = choicePipeline;
     this.#turnActionFactory = turnActionFactory;
@@ -93,10 +106,15 @@ export class ActorAwareStrategyFactory extends ITurnStrategyFactory {
    */
   create(actorId) {
     const actor = this.#actorLookup(actorId);
-    const isAi = actor && actor.isAi === true;
-    const decisionProvider = isAi ? this.#aiProvider : this.#humanProvider;
+    const type = this.#providerResolver(actor);
+    const decisionProvider = this.#providers[type];
+    if (!decisionProvider) {
+      throw new Error(
+        `ActorAwareStrategyFactory: No decision provider for actor type "${type}"`
+      );
+    }
     this.#logger.debug(
-      `ActorAwareStrategyFactory: Creating GenericTurnStrategy for ${actorId} using ${isAi ? 'AI' : 'Human'} provider.`
+      `ActorAwareStrategyFactory: Creating GenericTurnStrategy for ${actorId} using provider type ${type}.`
     );
     return new GenericTurnStrategy({
       choicePipeline: this.#choicePipeline,
