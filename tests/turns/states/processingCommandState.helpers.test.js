@@ -1,5 +1,6 @@
 import { describe, test, expect, jest, beforeEach } from '@jest/globals';
 import { ProcessingCommandState } from '../../../src/turns/states/processingCommandState.js';
+import { ProcessingWorkflow } from '../../../src/turns/states/workflows/processingWorkflow.js';
 
 const mockLogger = { debug: jest.fn(), warn: jest.fn(), error: jest.fn() };
 const mockHandler = {
@@ -20,28 +21,31 @@ const makeCtx = (actor, extra = {}) => ({
 
 describe('ProcessingCommandState helpers', () => {
   let state;
+  let workflow;
   beforeEach(() => {
     jest.clearAllMocks();
     state = new ProcessingCommandState(mockHandler, null, null);
+    workflow = new ProcessingWorkflow(state, null, null, () => {});
   });
 
   test('_validateContextAndActor returns actor when valid', async () => {
     const actor = { id: 'a1' };
     const ctx = makeCtx(actor);
-    await expect(state._validateContextAndActor(ctx)).resolves.toBe(actor);
+    await expect(workflow._validateContextAndActor(ctx)).resolves.toBe(actor);
   });
 
   test('_validateContextAndActor returns null when actor missing', async () => {
     const ctx = makeCtx(null);
-    await expect(state._validateContextAndActor(ctx)).resolves.toBeNull();
+    await expect(workflow._validateContextAndActor(ctx)).resolves.toBeNull();
   });
 
   test('_resolveTurnAction uses constructor action', async () => {
     const actor = { id: 'a1' };
     const action = { actionDefinitionId: 'act' };
     state = new ProcessingCommandState(mockHandler, null, action);
+    workflow = new ProcessingWorkflow(state, null, action, (a) => {});
     const ctx = makeCtx(actor);
-    await expect(state._resolveTurnAction(ctx, actor)).resolves.toBe(action);
+    await expect(workflow._resolveTurnAction(ctx, actor)).resolves.toBe(action);
   });
 
   test('_dispatchSpeech dispatches when speech present', async () => {
@@ -59,7 +63,7 @@ describe('ProcessingCommandState helpers', () => {
     const spy = jest
       .spyOn(state, '_processCommandInternal')
       .mockResolvedValue(undefined);
-    await state._processAction(ctx, actor, action);
+    await workflow._processAction(ctx, actor, action);
     expect(spy).toHaveBeenCalledWith(ctx, actor, action);
   });
 });
