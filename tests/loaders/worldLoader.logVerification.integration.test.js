@@ -240,7 +240,7 @@ describe('WorldLoader Integration Test Suite - Log Verification (TEST-LOADER-7.7
         'schema:game',
         'schema:components',
         'schema:mod-manifest',
-        'schema:entities',
+        'schema:entityDefinitions',
         'schema:actions', // Essential schema
         'schema:events', // Essential schema
         'schema:rules', // Essential schema

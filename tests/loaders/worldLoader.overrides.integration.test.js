@@ -281,7 +281,7 @@ describe('WorldLoader Integration Test Suite - Mod Overrides and Load Order (Sub
         'schema:game',
         'schema:components',
         'schema:mod-manifest',
-        'schema:entities',
+        'schema:entityDefinitions',
         'schema:actions',
         'schema:events',
         'schema:rules',

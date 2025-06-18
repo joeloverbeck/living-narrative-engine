@@ -90,7 +90,7 @@ describe('WorldLoader Integration Test Suite - Error Handling: Manifest Schema, 
   const gameSchemaId = 'schema:game';
   const componentSchemaId = 'schema:components';
   const manifestSchemaId = 'schema:mod-manifest';
-  const entitySchemaId = 'schema:entities';
+  const entitySchemaId = 'schema:entityDefinitions';
   const actionsSchemaId = 'schema:actions'; // Added for consistency
   const eventsSchemaId = 'schema:events'; // Added for consistency
   const rulesSchemaId = 'schema:rules'; // Added for consistency
