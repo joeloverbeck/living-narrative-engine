@@ -5,7 +5,7 @@ import { buildManualFileName, manualSavePath } from '../utils/savePathUtils.js';
 import SaveFileRepository from './saveFileRepository.js';
 import { setupService } from '../utils/serviceInitializerUtils.js';
 import { prepareState } from './savePreparation.js';
-import { PersistenceErrorCodes } from './persistenceErrors.js';
+import PersistenceErrorCodes from './persistenceErrors.js';
 import BaseService from '../utils/serviceBase.js';
 import { cloneAndValidateSaveState } from '../utils/saveStateUtils.js';
 import {
