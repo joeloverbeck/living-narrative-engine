@@ -10,6 +10,18 @@ import {
 } from './entityValidationUtils.js';
 import { resolveEntityInstance } from './componentAccessUtils.js';
 
+/**
+ * Get the identifier string for a location entity or ID for logging.
+ *
+ * @param {Entity | string | null | undefined} locationEntityOrId - Location entity or ID.
+ * @returns {string} Identifier string for logs.
+ */
+export function getLocationIdForLog(locationEntityOrId) {
+  return typeof locationEntityOrId === 'string'
+    ? locationEntityOrId
+    : locationEntityOrId?.id || 'unknown';
+}
+
 /** @typedef {import('../entities/entity.js').default} Entity */
 /** @typedef {import('../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
 /** @typedef {import('../interfaces/ILogger.js').ILogger} ILogger */
@@ -75,10 +87,11 @@ function _resolveLocationEntity(
   );
 
   if (!isValidEntity(locationEntity)) {
-    const id =
+    const id = getLocationIdForLog(
       typeof locationEntityOrId === 'string'
         ? locationEntityOrId
-        : locationEntity?.id || 'unknown';
+        : locationEntity
+    );
     log.warn(
       `_resolveLocationEntity: Location entity not found or invalid for ID/object: ${id}`
     );
@@ -189,10 +202,7 @@ export function getExitByDirection(
       if (isNonBlankString(exit.target)) {
         return exit;
       }
-      const locId =
-        typeof locationEntityOrId === 'string'
-          ? locationEntityOrId
-          : locationEntityOrId?.id || 'unknown';
+      const locId = getLocationIdForLog(locationEntityOrId);
       log.warn(
         `getExitByDirection: Found exit for direction '${directionName}' in location '${locId}', but its target ID ('target' property) is invalid: ${JSON.stringify(
           // CHANGED warning message
@@ -202,10 +212,7 @@ export function getExitByDirection(
       return null; // Return null if target is invalid for the found direction
     }
   }
-  const locId =
-    typeof locationEntityOrId === 'string'
-      ? locationEntityOrId
-      : locationEntityOrId?.id || 'unknown';
+  const locId = getLocationIdForLog(locationEntityOrId);
   log.debug(
     `getExitByDirection: No exit found for direction '${directionName}' in location '${locId}'.`
   );
@@ -245,10 +252,7 @@ export function getAvailableExits(
   }
 
   const validExits = [];
-  const locIdForLog =
-    typeof locationEntityOrId === 'string'
-      ? locationEntityOrId
-      : locationEntityOrId?.id || 'unknown';
+  const locIdForLog = getLocationIdForLog(locationEntityOrId);
 
   for (const exit of exitsData) {
     if (
