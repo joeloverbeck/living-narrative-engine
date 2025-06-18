@@ -11,6 +11,28 @@ import {
   isValidEntity,
 } from './entityValidationUtils.js';
 
+/**
+ * Checks that the provided identifier is a non-blank string.
+ *
+ * @param {*} id - Value to validate.
+ * @returns {boolean} True when `id` is a non-empty string.
+ * @private
+ */
+function _isValidId(id) {
+  return typeof id === 'string' && id.trim() !== '';
+}
+
+/**
+ * Checks that the manager or entity exposes a `getComponentData` method.
+ *
+ * @param {*} mgr - Value to validate.
+ * @returns {boolean} True if `mgr.getComponentData` is a function.
+ * @private
+ */
+function _isValidManager(mgr) {
+  return !!mgr && typeof mgr.getComponentData === 'function';
+}
+
 /** @typedef {import('../entities/entity.js').default} Entity */
 
 /**
@@ -22,11 +44,7 @@ import {
  * @returns {any | null} The component data if available, otherwise `null`.
  */
 export function getComponent(entity, componentId) {
-  if (typeof componentId !== 'string' || componentId.trim() === '') {
-    return null;
-  }
-
-  if (!entity || typeof entity.getComponentData !== 'function') {
+  if (!_isValidId(componentId) || !_isValidManager(entity)) {
     return null;
   }
 
@@ -53,16 +71,11 @@ export function getComponent(entity, componentId) {
  * @returns {any | null} The component data if available, otherwise `null`.
  */
 export function getComponentFromManager(entityId, componentId, entityManager) {
-  if (
-    typeof entityId !== 'string' ||
-    entityId.trim() === '' ||
-    typeof componentId !== 'string' ||
-    componentId.trim() === ''
-  ) {
+  if (!_isValidId(entityId) || !_isValidId(componentId)) {
     return null;
   }
 
-  if (!entityManager || typeof entityManager.getComponentData !== 'function') {
+  if (!_isValidManager(entityManager)) {
     return null;
   }
 
