@@ -123,8 +123,9 @@ describe('main.js bootstrap extended coverage', () => {
 
     expect(mockStartGame).not.toHaveBeenCalled();
     expect(mockDisplayFatal).toHaveBeenCalledTimes(1);
-    const [elements, details] = mockDisplayFatal.mock.calls[0];
+    const [elements, details, passedLogger] = mockDisplayFatal.mock.calls[0];
     expect(elements.outputDiv).toBe(uiElements.outputDiv);
     expect(details.phase).toContain('Start Game');
+    expect(passedLogger).toBe(logger);
   });
 });
