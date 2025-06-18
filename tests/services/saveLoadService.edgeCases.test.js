@@ -338,7 +338,7 @@ describe('SaveLoadService edge cases', () => {
       };
       const res = await service.saveManualGame('Reject', obj);
       expect(res.success).toBe(false);
-      expect(res.error.message).toMatch(/unexpected error/i);
+      expect(res.error.message).toBe('fs fail');
       expect(logger.error).toHaveBeenCalled();
     });
   });

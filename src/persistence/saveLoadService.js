@@ -13,6 +13,7 @@ import {
   createPersistenceFailure,
   createPersistenceSuccess,
 } from '../utils/persistenceResultUtils.js';
+import { wrapPersistenceOperation } from '../utils/persistenceErrorUtils.js';
 import {
   validateSaveName,
   validateSaveIdentifier,
@@ -166,23 +167,12 @@ class SaveLoadService extends ISaveLoadService {
       return { success: false, error: cloneResult.error };
     }
 
-    try {
+    return wrapPersistenceOperation(this.#logger, async () => {
       const { compressedData } = await this.#serializer.serializeAndCompress(
         cloneResult.data
       );
       return { success: true, data: compressedData };
-    } catch (error) {
-      this.#logger.error(
-        `Error during manual save process for "${saveName}":`,
-        error
-      );
-      return error instanceof PersistenceError
-        ? { success: false, error }
-        : createPersistenceFailure(
-            PersistenceErrorCodes.UNEXPECTED_ERROR,
-            `An unexpected error occurred while saving: ${error.message}`
-          );
-    }
+    });
   }
 
   /**
