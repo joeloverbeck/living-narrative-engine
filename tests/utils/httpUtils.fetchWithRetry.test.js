@@ -111,4 +111,38 @@ describe('fetchWithRetry', () => {
     expect(cloneText).toHaveBeenCalled();
     expect(err.body).toBe('detailed error');
   });
+
+  test('retries retryable status codes until success', async () => {
+    const first = mockResponse(500, { msg: 'oops' }, false, {}, true);
+    first.json.mockResolvedValue({ msg: 'oops' });
+    const ok = mockResponse(200, { ok: true }, true, {}, true);
+    ok.json.mockResolvedValue({ ok: true });
+    fetch.mockResolvedValueOnce(first).mockResolvedValueOnce(ok);
+
+    const randomSpy = jest.spyOn(Math, 'random').mockReturnValue(0.5);
+    const timeoutSpy = jest.spyOn(global, 'setTimeout');
+    const promise = fetchWithRetry(url, opts, 2, 100, 1000, dispatcher);
+    await jest.runOnlyPendingTimersAsync();
+    const result = await promise;
+
+    expect(timeoutSpy).toHaveBeenCalledWith(expect.any(Function), 100);
+    expect(fetch).toHaveBeenCalledTimes(2);
+    expect(result).toEqual({ ok: true });
+
+    timeoutSpy.mockRestore();
+    randomSpy.mockRestore();
+  });
+
+  test('does not retry non-retryable status codes', async () => {
+    const resp = mockResponse(401, { error: 'auth' }, false, {}, true);
+    resp.json.mockResolvedValue({ error: 'auth' });
+    fetch.mockResolvedValueOnce(resp);
+
+    const err = await fetchWithRetry(url, opts, 3, 100, 1000, dispatcher).catch(
+      (e) => e
+    );
+
+    expect(fetch).toHaveBeenCalledTimes(1);
+    expect(err.status).toBe(401);
+  });
 });
