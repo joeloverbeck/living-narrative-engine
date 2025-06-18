@@ -1,4 +1,5 @@
 import { expandMacros } from '../../src/utils/macroUtils.js';
+import { freeze } from '../../src/utils/objectUtils.js';
 import { describe, it, expect, jest } from '@jest/globals';
 
 const createRegistry = (macros) => ({
@@ -81,5 +82,45 @@ describe('expandMacros', () => {
     expect(result[0].parameters.actions).toEqual([
       { type: 'LOG', parameters: { msg: 'item' } },
     ]);
+  });
+
+  describe('function purity', () => {
+    it('does not mutate the original actions array', () => {
+      const macros = {
+        'core:log': { actions: [{ type: 'LOG', parameters: { msg: 'X' } }] },
+      };
+      const actions = [
+        {
+          type: 'IF',
+          parameters: {
+            condition: { '==': [1, 1] },
+            then_actions: [{ macro: 'core:log' }],
+            else_actions: [],
+          },
+        },
+      ];
+
+      freeze(actions);
+      freeze(actions[0]);
+      freeze(actions[0].parameters);
+      freeze(actions[0].parameters.then_actions);
+      freeze(actions[0].parameters.else_actions);
+
+      const result = expandMacros(actions, createRegistry(macros), logger);
+
+      expect(result[0].parameters.then_actions).toEqual([
+        { type: 'LOG', parameters: { msg: 'X' } },
+      ]);
+      expect(actions).toEqual([
+        {
+          type: 'IF',
+          parameters: {
+            condition: { '==': [1, 1] },
+            then_actions: [{ macro: 'core:log' }],
+            else_actions: [],
+          },
+        },
+      ]);
+    });
   });
 });
