@@ -7,6 +7,7 @@
 import { BaseTurnHandler } from './baseTurnHandler.js';
 import { AwaitTurnEndState } from '../valueObjects/awaitTurnEndState.js';
 import { assertValidEntity } from '../../utils/entityAssertionsUtils.js';
+import { tokens } from '../../dependencyInjection/tokens.js';
 
 /** @typedef {import('../../entities/entity.js').default} Entity */
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
@@ -42,6 +43,7 @@ class GenericTurnHandler extends BaseTurnHandler {
    * @param {ITurnEndPort} deps.turnEndPort
    * @param {ITurnStrategyFactory} deps.strategyFactory
    * @param {TurnContextBuilder} deps.turnContextBuilder
+   * @param deps.container
    */
   constructor({
     logger,
@@ -49,6 +51,7 @@ class GenericTurnHandler extends BaseTurnHandler {
     turnEndPort,
     strategyFactory,
     turnContextBuilder,
+    container = null,
   }) {
     super({ logger, turnStateFactory });
 
@@ -62,6 +65,13 @@ class GenericTurnHandler extends BaseTurnHandler {
     this.#turnEndPort = turnEndPort;
     this.#strategyFactory = strategyFactory;
     this.#turnContextBuilder = turnContextBuilder;
+
+    /**
+     * Optional DI container for resolving per-turn services.
+     *
+     * @type {import('../../dependencyInjection/appContainer.js').default|null}
+     */
+    this._container = container;
   }
 
   /**
@@ -87,6 +97,17 @@ class GenericTurnHandler extends BaseTurnHandler {
     this._logger.debug(
       `${this.constructor.name}: Instantiated turn strategy for actor ${actor.id} via factory.`
     );
+
+    // Resolve the optional IActionIndexer and notify it that a new turn is starting.
+    try {
+      const indexer = this._container?.resolve?.(tokens.IActionIndexer);
+      indexer?.beginTurn?.(actor.id);
+    } catch (err) {
+      this._logger.warn(
+        `${this.constructor.name}.startTurn: Failed to resolve or notify IActionIndexer – ${err.message}`,
+        err
+      );
+    }
 
     const context = this.#turnContextBuilder.build({
       handlerInstance: this, // <<< FIX: Provide the handler instance here.
