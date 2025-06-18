@@ -5,16 +5,20 @@ import { persistNotes } from './notesPersistenceHook.js';
 /** @typedef {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 
 /**
- * Consumes ACTION_DECIDED_ID and merges generated notes into the
- * actor’s notes component.
+ * @class
+ * @description Consumes ACTION_DECIDED_ID events and merges generated notes into the
+ * actor's notes component.
  */
 export class NotesPersistenceListener {
   /**
+   * Creates an instance of the listener.
+   *
    * @param {{
    *   logger: import('../interfaces/coreServices.js').ILogger,
    *   entityManager: import('../interfaces/IEntityManager.js').IEntityManager,
    *   dispatcher: ISafeEventDispatcher
    * }} deps
+   *   Dependencies for the listener.
    */
   constructor({ logger, entityManager, dispatcher }) {
     this.logger = logger;
@@ -24,7 +28,10 @@ export class NotesPersistenceListener {
   }
 
   /**
-   * @param {{ type: string, payload: { actorId: string, extractedData?: { notes?: string[] } } }} event
+   * Handles events emitted after an action decision.
+   *
+   * @param {{ type: string, payload: { actorId: string, extractedData?: { notes?: string[] } } }} event -
+   * The event containing any notes produced by the actor's decision process.
    */
   handleEvent(event) {
     if (!event || !event.payload) return;

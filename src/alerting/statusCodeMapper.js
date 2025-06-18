@@ -24,8 +24,9 @@ export const statusCodeMap = new Map([
 ]);
 
 /**
- * @description Converts an event's details object, which may contain an HTTP status code,
- * into a user-friendly message and a set of developer details.
+ * Converts an event's details object, which may contain an HTTP status code,
+ * into a user-friendly message and developer-oriented details.
+ *
  * @param {object | null | undefined} details - The details object from the event payload. May contain `statusCode`, `url`, and `raw` properties.
  * @param {string} originalMessage - The original message from the event, used as a fallback if no status code logic applies.
  * @returns {FriendlyResult} An object containing the message to display and the developer details.
