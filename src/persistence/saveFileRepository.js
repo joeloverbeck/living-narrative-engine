@@ -14,13 +14,13 @@ import {
   createPersistenceSuccess,
 } from '../utils/persistenceResultUtils.js';
 import { wrapPersistenceOperation } from '../utils/persistenceErrorUtils.js';
-import { setupService } from '../utils/serviceInitializerUtils.js';
+import BaseService from '../utils/serviceBase.js';
 
 /**
  * @class SaveFileRepository
  * @description Handles file system interactions for manual save files.
  */
-export default class SaveFileRepository {
+export default class SaveFileRepository extends BaseService {
   /** @type {import('../interfaces/coreServices.js').ILogger} */
   #logger;
   /** @type {import('../interfaces/IStorageProvider.js').IStorageProvider} */
@@ -35,8 +35,9 @@ export default class SaveFileRepository {
    * @param {import('./gameStateSerializer.js').default} deps.serializer - Serializer used for reading/writing saves.
    */
   constructor({ logger, storageProvider, serializer }) {
+    super();
     this.#serializer = serializer;
-    this.#logger = setupService('SaveFileRepository', logger, {
+    this.#logger = this._init('SaveFileRepository', logger, {
       storageProvider: {
         value: storageProvider,
         requiredMethods: [

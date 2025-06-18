@@ -2,7 +2,7 @@
 
 import { CURRENT_ACTOR_COMPONENT_ID } from '../constants/componentIds.js';
 import { CHECKSUM_PENDING } from '../constants/persistence.js';
-import { setupService } from '../utils/serviceInitializerUtils.js';
+import BaseService from '../utils/serviceBase.js';
 
 /**
  * @typedef {import('../interfaces/coreServices.js').ILogger} ILogger
@@ -19,7 +19,7 @@ import { setupService } from '../utils/serviceInitializerUtils.js';
  * @class GameStateCaptureService
  * @description Captures the current game state for saving.
  */
-class GameStateCaptureService {
+class GameStateCaptureService extends BaseService {
   /** @type {ILogger} */
   #logger;
   /** @type {EntityManager} */
@@ -52,7 +52,8 @@ class GameStateCaptureService {
     metadataBuilder,
     activeModsManifestBuilder,
   }) {
-    this.#logger = setupService('GameStateCaptureService', logger, {
+    super();
+    this.#logger = this._init('GameStateCaptureService', logger, {
       entityManager: { value: entityManager },
       playtimeTracker: {
         value: playtimeTracker,

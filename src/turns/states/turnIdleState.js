@@ -23,9 +23,9 @@ export class TurnIdleState extends AbstractTurnState {
 
     const logger = this._resolveLogger(null, handler);
     logger.debug(
-      `${this.getStateName()}: Ensuring clean state by calling handler._resetTurnStateAndResources().`
+      `${this.getStateName()}: Ensuring clean state by calling handler.resetStateAndResources().`
     );
-    handler._resetTurnStateAndResources(`enterState-${this.getStateName()}`);
+    handler.resetStateAndResources(`enterState-${this.getStateName()}`);
     logger.debug(
       `${this.getStateName()}: Entry complete. Handler is now idle.`
     );
@@ -72,12 +72,8 @@ export class TurnIdleState extends AbstractTurnState {
     if (!actorEntity || typeof actorEntity.id === 'undefined') {
       const errorMsg = `${this.getStateName()}: startTurn called with invalid actorEntity.`;
       logger.error(errorMsg);
-      handler._resetTurnStateAndResources(
-        `invalid-actor-${this.getStateName()}`
-      );
-      handler._transitionToState(
-        handler._turnStateFactory.createIdleState(handler)
-      );
+      handler.resetStateAndResources(`invalid-actor-${this.getStateName()}`);
+      handler.requestIdleStateTransition();
       throw new Error(errorMsg);
     }
   }
@@ -93,12 +89,8 @@ export class TurnIdleState extends AbstractTurnState {
     if (!turnCtx) {
       const errorMsg = `${this.getStateName()}: ITurnContext is missing or invalid. Expected concrete handler to set it up. Actor: ${actorIdForLog}.`;
       logger.error(errorMsg);
-      handler._resetTurnStateAndResources(
-        `missing-context-${this.getStateName()}`
-      );
-      handler._transitionToState(
-        handler._turnStateFactory.createIdleState(handler)
-      );
+      handler.resetStateAndResources(`missing-context-${this.getStateName()}`);
+      handler.requestIdleStateTransition();
       throw new Error(errorMsg);
     }
   }
@@ -116,12 +108,8 @@ export class TurnIdleState extends AbstractTurnState {
     if (!contextActor || contextActor.id !== actorEntity.id) {
       const errorMsg = `${this.getStateName()}: Actor in ITurnContext ('${contextActor?.id}') does not match actor provided to state's startTurn ('${actorEntity.id}').`;
       logger.error(errorMsg);
-      handler._resetTurnStateAndResources(
-        `actor-mismatch-${this.getStateName()}`
-      );
-      handler._transitionToState(
-        handler._turnStateFactory.createIdleState(handler)
-      );
+      handler.resetStateAndResources(`actor-mismatch-${this.getStateName()}`);
+      handler.requestIdleStateTransition();
       throw new Error(errorMsg);
     }
     return contextActor;
@@ -146,12 +134,8 @@ export class TurnIdleState extends AbstractTurnState {
         `${this.getStateName()}: Failed to transition to AwaitingActorDecisionState for ${actor.id}. Error: ${error.message}`,
         error
       );
-      handler._resetTurnStateAndResources(
-        `transition-fail-${this.getStateName()}`
-      );
-      await handler._transitionToState(
-        handler._turnStateFactory.createIdleState(handler)
-      );
+      handler.resetStateAndResources(`transition-fail-${this.getStateName()}`);
+      await handler.requestIdleStateTransition();
       throw error;
     }
   }

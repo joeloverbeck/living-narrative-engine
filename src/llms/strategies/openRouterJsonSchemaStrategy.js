@@ -46,11 +46,8 @@ export class OpenRouterJsonSchemaStrategy extends BaseOpenRouterStrategy {
    * @throws {LLMStrategyError} if jsonSchema is missing or invalid in llmConfig.
    */
   _buildProviderRequestPayloadAdditions(baseMessagesPayload, llmConfig) {
-    // MODIFICATION START: Use llmConfig.configId for logging
     const llmId = llmConfig?.configId || 'UnknownLLM';
-    // MODIFICATION END
 
-    // MODIFICATION START: Use jsonSchema from llmConfig.jsonOutputStrategy
     const configuredJsonSchema = llmConfig.jsonOutputStrategy?.jsonSchema;
 
     if (
@@ -79,7 +76,6 @@ export class OpenRouterJsonSchemaStrategy extends BaseOpenRouterStrategy {
       type: 'json_schema',
       json_schema: configuredJsonSchema, // Use the schema from the configuration
     };
-    // MODIFICATION END
 
     this.logger.debug(
       `${this.constructor.name} (${llmId}): Using response_format with JSON schema from llmConfig.jsonOutputStrategy.jsonSchema.`,
@@ -106,9 +102,7 @@ export class OpenRouterJsonSchemaStrategy extends BaseOpenRouterStrategy {
    * @throws {LLMStrategyError} If JSON content cannot be extracted.
    */
   async _extractJsonOutput(responseData, llmConfig, providerRequestPayload) {
-    // MODIFICATION START: Use llmConfig.configId for logging
     const llmId = llmConfig?.configId || 'UnknownLLM';
-    // MODIFICATION END
     let extractedJsonString = null;
     const message = responseData?.choices?.[0]?.message;
 

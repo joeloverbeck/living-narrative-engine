@@ -6,6 +6,12 @@ import SaveFileRepository from './saveFileRepository.js';
 import { setupService } from '../utils/serviceInitializerUtils.js';
 import { prepareState } from './savePreparation.js';
 import { PersistenceErrorCodes } from './persistenceErrors.js';
+import BaseService from '../utils/serviceBase.js';
+import { cloneAndValidateSaveState } from '../utils/saveStateUtils.js';
+import {
+  PersistenceError,
+  PersistenceErrorCodes,
+} from './persistenceErrors.js';
 import {
   createPersistenceFailure,
   createPersistenceSuccess,
@@ -29,7 +35,7 @@ import { isValidSaveString } from './saveInputValidators.js';
 /**
  * @implements {ISaveLoadService}
  */
-class SaveLoadService extends ISaveLoadService {
+class SaveLoadService extends BaseService {
   #logger;
   #fileRepository;
   #serializer;
@@ -68,8 +74,7 @@ class SaveLoadService extends ISaveLoadService {
     this.#validationService = saveValidationService;
 
     this.#fileRepository = saveFileRepository;
-
-    this.#logger = setupService('SaveLoadService', logger, {
+    this.#logger = this._init('SaveLoadService', logger, {
       fileRepository: {
         value: this.#fileRepository,
         requiredMethods: [

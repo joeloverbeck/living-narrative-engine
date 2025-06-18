@@ -90,6 +90,9 @@ const makeMockTurnHandler = () => ({
   getLogger: jest.fn().mockReturnValue(makeMockLogger()),
   getTurnContext: jest.fn(),
   _resetTurnStateAndResources: jest.fn(),
+  resetStateAndResources: jest.fn(function (reason) {
+    this._resetTurnStateAndResources(reason);
+  }),
   requestIdleStateTransition: jest.fn().mockResolvedValue(undefined),
 });
 

@@ -92,6 +92,9 @@ const createMockBaseTurnHandler = (loggerInstance = mockLogger) => {
     getTurnContext: jest.fn().mockReturnValue(null),
     _transitionToState: jest.fn().mockResolvedValue(undefined),
     _resetTurnStateAndResources: jest.fn(),
+    resetStateAndResources: jest.fn(function (reason) {
+      handlerMock._resetTurnStateAndResources(reason);
+    }),
     getCurrentActor: jest.fn().mockReturnValue(null),
     // NEW: Add the new transition method used for recovery.
     requestIdleStateTransition: jest.fn().mockResolvedValue(undefined),
