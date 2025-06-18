@@ -1,59 +1,34 @@
 import { describe, it, expect, beforeEach } from '@jest/globals';
-import WorldLoader from '../../src/loaders/worldLoader.js';
+import LoadResultAggregator from '../../src/loaders/LoadResultAggregator.js';
 
-/**
- * Helper to create a bare WorldLoader instance without running the constructor.
- * This allows direct testing of private helper methods.
- *
- * @returns {WorldLoader}
- */
-function makeBareWorldLoader() {
-  return Object.create(WorldLoader.prototype);
-}
-
-describe('WorldLoader private helpers', () => {
-  let loader;
+describe('LoadResultAggregator utility', () => {
+  let aggregator;
 
   beforeEach(() => {
-    loader = makeBareWorldLoader();
+    aggregator = new LoadResultAggregator({});
   });
 
-  it('_aggregateLoaderResult updates mod and total counts', () => {
-    const modResults = {};
-    const totals = {};
+  it('aggregate updates mod and total counts', () => {
+    aggregator.aggregate({ count: 2, overrides: 1, errors: 0 }, 'actions');
 
-    loader._aggregateLoaderResult(modResults, totals, 'actions', {
-      count: 2,
-      overrides: 1,
-      errors: 0,
-    });
-
-    expect(modResults).toEqual({
+    expect(aggregator.modResults).toEqual({
       actions: { count: 2, overrides: 1, errors: 0 },
     });
-    expect(totals).toEqual({ actions: { count: 2, overrides: 1, errors: 0 } });
   });
 
-  it('_aggregateLoaderResult handles invalid results', () => {
-    const modResults = {};
-    const totals = {};
+  it('aggregate handles invalid results', () => {
+    aggregator.aggregate(null, 'rules');
 
-    loader._aggregateLoaderResult(modResults, totals, 'rules', null);
-
-    expect(modResults).toEqual({
+    expect(aggregator.modResults).toEqual({
       rules: { count: 0, overrides: 0, errors: 0 },
     });
-    expect(totals).toEqual({ rules: { count: 0, overrides: 0, errors: 0 } });
   });
 
-  it('_recordLoaderError increments error counts', () => {
-    const modResults = { events: { count: 5, overrides: 0, errors: 0 } };
-    const totals = { events: { count: 5, overrides: 0, errors: 0 } };
+  it('recordError increments error counts', () => {
+    aggregator.modResults = { events: { count: 5, overrides: 0, errors: 0 } };
+    aggregator.recordError('events');
+    aggregator.recordError('events');
 
-    loader._recordLoaderError(modResults, totals, 'events', 'boom');
-    loader._recordLoaderError(modResults, totals, 'events', 'boom again');
-
-    expect(modResults.events.errors).toBe(2);
-    expect(totals.events.errors).toBe(2);
+    expect(aggregator.modResults.events.errors).toBe(2);
   });
 });

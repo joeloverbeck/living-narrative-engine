@@ -20,13 +20,12 @@
 /** @typedef {import('../events/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
 
 // --- Implementation Imports -------------------------------------------------
-import ModDependencyValidator from '../modding/modDependencyValidator.js';
-import validateModEngineVersions from '../modding/modVersionValidator.js';
 import ModDependencyError from '../errors/modDependencyError.js';
 import WorldLoaderError from '../errors/worldLoaderError.js';
 import MissingSchemaError from '../errors/missingSchemaError.js';
-import { resolveOrder } from '../modding/modLoadOrderResolver.js';
 import AbstractLoader from './abstractLoader.js';
+import ModManifestProcessor from './ModManifestProcessor.js';
+import ContentLoadManager from './ContentLoadManager.js';
 
 // --- Type Definitions for Loader Results ---
 /**
@@ -82,6 +81,8 @@ class WorldLoader extends AbstractLoader {
   /** @type {PromptTextLoader}*/ #promptTextLoader;
   /** @type {ModManifestLoader}*/ #modManifestLoader;
   /** @type {ValidatedEventDispatcher} */ #validatedEventDispatcher;
+  /** @type {ModManifestProcessor} */ #modManifestProcessor;
+  /** @type {ContentLoadManager} */ #contentLoadManager;
   /** @type {string[]}       */ #finalOrder = [];
 
   /**
@@ -251,6 +252,19 @@ class WorldLoader extends AbstractLoader {
     this.#contentLoadersConfig =
       contentLoadersConfig ?? this.#createDefaultContentLoadersConfig();
 
+    this.#modManifestProcessor = new ModManifestProcessor({
+      modManifestLoader: this.#modManifestLoader,
+      logger: this.#logger,
+      registry: this.#registry,
+      validatedEventDispatcher: this.#validatedEventDispatcher,
+    });
+
+    this.#contentLoadManager = new ContentLoadManager({
+      logger: this.#logger,
+      validatedEventDispatcher: this.#validatedEventDispatcher,
+      contentLoadersConfig: this.#contentLoadersConfig,
+    });
+
     this.#logger.debug(
       'WorldLoader: Instance created with ALL loaders, order‑resolver, and ValidatedEventDispatcher.'
     );
@@ -417,291 +431,6 @@ class WorldLoader extends AbstractLoader {
     return modIds;
   }
 
-  /**
-   * Loads, validates and resolves the manifests for all requested mods.
-   *
-   * @private
-   * @param {string[]} requestedModIds IDs of mods requested by the game configuration.
-   * @returns {Promise<{loadedManifestsMap: Map<string, ModManifest>, finalOrder: string[], incompatibilityCount: number}>}
-   * Object containing the loaded manifests, resolved load order and count of version incompatibilities.
-   * @throws {ModDependencyError|Error} Propagates validation errors.
-   */
-  async #processModManifests(requestedModIds) {
-    const loadedManifestsRaw =
-      await this.#modManifestLoader.loadRequestedManifests(requestedModIds);
-    const loadedManifestsMap = new Map();
-    const manifestsForValidation = new Map();
-    for (const [modId, manifestObj] of loadedManifestsRaw.entries()) {
-      const lcModId = modId.toLowerCase();
-      this.#registry.store('mod_manifests', lcModId, manifestObj);
-      manifestsForValidation.set(lcModId, manifestObj);
-      loadedManifestsMap.set(lcModId, manifestObj);
-    }
-    this.#logger.debug(
-      `WorldLoader: Stored ${manifestsForValidation.size} mod manifests in the registry.`
-    );
-
-    ModDependencyValidator.validate(manifestsForValidation, this.#logger);
-    let incompatibilityCount = 0;
-    try {
-      validateModEngineVersions(
-        manifestsForValidation,
-        this.#logger,
-        this.#validatedEventDispatcher
-      );
-    } catch (e) {
-      if (e instanceof ModDependencyError) {
-        incompatibilityCount = (e.message.match(/\n/g) || []).length;
-        this.#logger.warn(
-          `WorldLoader: Encountered ${incompatibilityCount} engine version incompatibilities. Details:\n${e.message}`,
-          e
-        );
-        throw e;
-      }
-      throw e;
-    }
-
-    const finalOrder = resolveOrder(
-      requestedModIds,
-      manifestsForValidation,
-      this.#logger
-    );
-    this.#logger.debug(
-      `WorldLoader: Final mod order resolved: [${finalOrder.join(', ')}]`
-    );
-    this.#registry.store('meta', 'final_mod_order', finalOrder);
-
-    return { loadedManifestsMap, finalOrder, incompatibilityCount };
-  }
-
-  /**
-   * Aggregates a single loader result into per-mod and total summaries.
-   *
-   * @private
-   * @param {ModResultsSummary} modResults - Map collecting results for the current mod.
-   * @param {TotalResultsSummary} totalCounts - Overall totals across all mods.
-   * @param {string} typeName - The content type name being processed.
-   * @param {LoadItemsResult|null|undefined} loadResult - Result from the loader.
-   * @returns {void}
-   */
-  _aggregateLoaderResult(modResults, totalCounts, typeName, loadResult) {
-    const result =
-      loadResult && typeof loadResult.count === 'number'
-        ? {
-            count: loadResult.count || 0,
-            overrides: loadResult.overrides || 0,
-            errors: loadResult.errors || 0,
-          }
-        : { count: 0, overrides: 0, errors: 0 };
-
-    modResults[typeName] = result;
-
-    if (!totalCounts[typeName]) {
-      totalCounts[typeName] = { count: 0, overrides: 0, errors: 0 };
-    }
-    totalCounts[typeName].count += result.count;
-    totalCounts[typeName].overrides += result.overrides;
-    totalCounts[typeName].errors += result.errors;
-  }
-
-  /**
-   * Records an error occurrence for a specific loader.
-   *
-   * @private
-   * @param {ModResultsSummary} modResults - Map collecting results for the current mod.
-   * @param {TotalResultsSummary} totalCounts - Overall totals across all mods.
-   * @param {string} typeName - The content type name being processed.
-   * @param {string} errorMessage - Error description (unused, for caller context).
-   * @returns {void}
-   */
-  _recordLoaderError(modResults, totalCounts, typeName, errorMessage) {
-    // errorMessage is included for potential logging at the call site
-    if (!modResults[typeName]) {
-      modResults[typeName] = { count: 0, overrides: 0, errors: 0 };
-    }
-    modResults[typeName].errors += 1;
-
-    if (!totalCounts[typeName]) {
-      totalCounts[typeName] = { count: 0, overrides: 0, errors: 0 };
-    }
-    totalCounts[typeName].errors += 1;
-  }
-
-  /**
-   * Sequentially loads content for each mod according to the resolved order.
-   *
-   * @private
-   * @param {string[]} finalOrder Resolved load order of mods.
-   * @param {Map<string, ModManifest>} manifests Map of mod manifests keyed by ID.
-   * @param {TotalResultsSummary} totalCounts Aggregated result counters.
-   * @returns {Promise<void>} Resolves when all mod content has been processed.
-   */
-  async #loadContentForMods(finalOrder, manifests, totalCounts) {
-    this.#logger.debug(
-      `WorldLoader: Beginning content loading based on final order...`
-    );
-
-    for (const modId of finalOrder) {
-      this.#logger.debug(`--- Loading content for mod: ${modId} ---`);
-
-      let manifest = null;
-      /** @type {ModResultsSummary} */
-      const modResults = {};
-      let modDurationMs = 0;
-
-      try {
-        manifest = /** @type {ModManifest | null} */ (
-          manifests.get(modId.toLowerCase())
-        );
-
-        if (!manifest) {
-          const reason = `Manifest not found in registry for mod ID '${modId}'. Skipping content load.`;
-          this.#logger.error(`WorldLoader: ${reason}`);
-          await this.#validatedEventDispatcher
-            .dispatch(
-              'initialization:world_loader:mod_load_failed',
-              { modId, reason },
-              { allowSchemaNotFound: true }
-            )
-            .catch((dispatchError) =>
-              this.#logger.error(
-                `Failed dispatching mod_load_failed event for ${modId}: ${dispatchError.message}`,
-                dispatchError
-              )
-            );
-          continue;
-        }
-
-        this.#logger.debug(
-          `WorldLoader [${modId}]: Manifest retrieved successfully. Processing content types...`
-        );
-
-        const modStartTime = performance.now();
-
-        for (const config of this.#contentLoadersConfig) {
-          const { loader, contentKey, contentTypeDir, typeName } = config;
-          const hasContent =
-            manifest.content &&
-            Array.isArray(manifest.content[contentKey]) &&
-            manifest.content[contentKey].length > 0;
-
-          if (hasContent) {
-            this.#logger.debug(
-              `WorldLoader [${modId}]: Found content for '${contentKey}'. Invoking loader '${loader.constructor.name}'.`
-            );
-            try {
-              const result = /** @type {LoadItemsResult} */ (
-                await loader.loadItemsForMod(
-                  modId,
-                  manifest,
-                  contentKey,
-                  contentTypeDir,
-                  typeName
-                )
-              );
-
-              if (result && typeof result.count === 'number') {
-                this._aggregateLoaderResult(
-                  modResults,
-                  totalCounts,
-                  typeName,
-                  result
-                );
-              } else {
-                this.#logger.warn(
-                  `WorldLoader [${modId}]: Loader for '${typeName}' returned an unexpected result format. Assuming 0 counts.`,
-                  { result }
-                );
-                this._aggregateLoaderResult(
-                  modResults,
-                  totalCounts,
-                  typeName,
-                  null
-                );
-              }
-            } catch (loadError) {
-              const errorMessage = loadError?.message || String(loadError);
-              this.#logger.error(
-                `WorldLoader [${modId}]: Error loading content type '${typeName}'. Continuing...`,
-                { modId, typeName, error: errorMessage },
-                loadError
-              );
-              this._recordLoaderError(
-                modResults,
-                totalCounts,
-                typeName,
-                errorMessage
-              );
-              await this.#validatedEventDispatcher
-                .dispatch(
-                  'initialization:world_loader:content_load_failed',
-                  { modId, typeName, error: errorMessage },
-                  { allowSchemaNotFound: true }
-                )
-                .catch((e) =>
-                  this.#logger.error(
-                    `Failed dispatching content_load_failed event for ${modId}/${typeName}`,
-                    e
-                  )
-                );
-            }
-          } else {
-            this.#logger.debug(
-              `WorldLoader [${modId}]: Skipping content type '${typeName}' (key: '${contentKey}') as it's not defined or empty in the manifest.`
-            );
-          }
-        }
-
-        const modEndTime = performance.now();
-        modDurationMs = modEndTime - modStartTime;
-        this.#logger.debug(
-          `WorldLoader [${modId}]: Content loading loop took ${modDurationMs.toFixed(2)} ms.`
-        );
-      } catch (error) {
-        this.#logger.error(
-          `WorldLoader [${modId}]: Unexpected error during processing for mod '${modId}'. Skipping remaining content for this mod.`,
-          { modId, error: error?.message },
-          error
-        );
-        await this.#validatedEventDispatcher
-          .dispatch(
-            'initialization:world_loader:mod_load_failed',
-            { modId, reason: `Unexpected error: ${error?.message}` },
-            { allowSchemaNotFound: true }
-          )
-          .catch((dispatchError) =>
-            this.#logger.error(
-              `Failed dispatching mod_load_failed event for ${modId} after unexpected error: ${dispatchError.message}`,
-              dispatchError
-            )
-          );
-        continue;
-      }
-
-      const totalModOverrides = Object.values(modResults).reduce(
-        (sum, res) => sum + (res.overrides || 0),
-        0
-      );
-      const totalModErrors = Object.values(modResults).reduce(
-        (sum, res) => sum + (res.errors || 0),
-        0
-      );
-      const typeCountsString = Object.entries(modResults)
-        .filter(([, result]) => result.count > 0)
-        .map(([typeName, result]) => `${typeName}(${result.count})`)
-        .sort()
-        .join(', ');
-      const summaryMessage = `Mod '${modId}' loaded in ${modDurationMs.toFixed(2)}ms: ${typeCountsString.length > 0 ? typeCountsString : 'No items loaded'}${typeCountsString.length > 0 ? ' ' : ''}-> Overrides(${totalModOverrides}), Errors(${totalModErrors})`;
-      this.#logger.debug(summaryMessage);
-
-      this.#logger.debug(`--- Finished loading content for mod: ${modId} ---`);
-    }
-
-    this.#logger.debug(
-      `WorldLoader: Completed content loading loop for all mods in final order.`
-    );
-  }
-
   // ── Public API ──────────────────────────────────────────────────────────
 
   /**
@@ -753,12 +482,13 @@ class WorldLoader extends AbstractLoader {
 
       requestedModIds = await this.#loadGameConfig();
 
-      const manifestData = await this.#processModManifests(requestedModIds);
+      const manifestData =
+        await this.#modManifestProcessor.processManifests(requestedModIds);
       loadedManifestsMap = manifestData.loadedManifestsMap;
       this.#finalOrder = manifestData.finalOrder;
       incompatibilityCount = manifestData.incompatibilityCount;
 
-      await this.#loadContentForMods(
+      await this.#contentLoadManager.loadContent(
         this.#finalOrder,
         loadedManifestsMap,
         totalCounts

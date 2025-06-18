@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import WorldLoader from '../../src/loaders/worldLoader.js';
+import LoadResultAggregator from '../../src/loaders/LoadResultAggregator.js';
 import MissingSchemaError from '../../src/errors/missingSchemaError.js';
 
 /**
@@ -105,16 +106,12 @@ describe('WorldLoader helper methods', () => {
     });
   });
 
-  describe('_aggregateLoaderResult', () => {
+  describe('LoadResultAggregator', () => {
     it('aggregates counts into mod and total summaries', () => {
-      const modRes = {};
       const totals = {};
-      worldLoader._aggregateLoaderResult(modRes, totals, 'actions', {
-        count: 2,
-        overrides: 1,
-        errors: 0,
-      });
-      expect(modRes).toEqual({
+      const agg = new LoadResultAggregator(totals);
+      agg.aggregate({ count: 2, overrides: 1, errors: 0 }, 'actions');
+      expect(agg.modResults).toEqual({
         actions: { count: 2, overrides: 1, errors: 0 },
       });
       expect(totals).toEqual({
@@ -123,21 +120,22 @@ describe('WorldLoader helper methods', () => {
     });
 
     it('handles invalid result objects', () => {
-      const modRes = {};
       const totals = {};
-      worldLoader._aggregateLoaderResult(modRes, totals, 'events', null);
-      expect(modRes).toEqual({ events: { count: 0, overrides: 0, errors: 0 } });
+      const agg = new LoadResultAggregator(totals);
+      agg.aggregate(null, 'events');
+      expect(agg.modResults).toEqual({
+        events: { count: 0, overrides: 0, errors: 0 },
+      });
       expect(totals).toEqual({ events: { count: 0, overrides: 0, errors: 0 } });
     });
-  });
 
-  describe('_recordLoaderError', () => {
-    it('increments error counts for mod and total', () => {
-      const modRes = { rules: { count: 1, overrides: 0, errors: 0 } };
+    it('recordError increments error counts', () => {
       const totals = { rules: { count: 1, overrides: 0, errors: 0 } };
-      worldLoader._recordLoaderError(modRes, totals, 'rules', 'fail');
-      worldLoader._recordLoaderError(modRes, totals, 'rules', 'fail again');
-      expect(modRes.rules.errors).toBe(2);
+      const agg = new LoadResultAggregator(totals);
+      agg.modResults = { rules: { count: 1, overrides: 0, errors: 0 } };
+      agg.recordError('rules');
+      agg.recordError('rules');
+      expect(agg.modResults.rules.errors).toBe(2);
       expect(totals.rules.errors).toBe(2);
     });
   });
