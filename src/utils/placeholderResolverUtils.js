@@ -2,7 +2,7 @@
 // --- FILE START ---
 
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
-import { resolvePath as objectResolvePath } from './objectUtils.js';
+import { safeResolvePath } from './objectUtils.js';
 
 /**
  * Regex to find placeholders like {path.to.value} within a string.
@@ -52,15 +52,12 @@ export class PlaceholderResolver {
    * @returns {any|undefined} Resolved value or undefined if not found.
    */
   resolvePath(obj, path) {
-    try {
-      return objectResolvePath(obj, path);
-    } catch (err) {
-      this.#logger.error(
-        `PlaceholderResolver: Error resolving path "${path}"`,
-        err
-      );
-      return undefined;
-    }
+    return safeResolvePath(
+      obj,
+      path,
+      this.#logger,
+      'PlaceholderResolver.resolvePath'
+    );
   }
 
   /**
@@ -136,11 +133,10 @@ export class PlaceholderResolver {
    * If a string consists solely of a single placeholder, the resolved value is
    * returned with its original type. Arrays and objects are traversed
    * recursively.
-   *
    * @param {*} input - The value that may contain placeholders.
    * @param {object|object[]} context - Primary data source or array of sources
    *   used for resolution.
-   * @param {object} [fallback={}] - Optional fallback data source.
+   * @param {object} [fallback] - Optional fallback data source.
    * @returns {*} The input with all placeholders resolved.
    */
   resolveStructure(input, context, fallback = {}) {

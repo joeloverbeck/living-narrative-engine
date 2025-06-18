@@ -1,5 +1,5 @@
 // src/utils/contextUtils.js
-import { resolvePath } from './objectUtils.js';
+import { safeResolvePath } from './objectUtils.js';
 import { NAME_COMPONENT_ID } from '../constants/componentIds.js';
 import {
   PlaceholderResolver,
@@ -69,7 +69,7 @@ export function resolveEntityNameFallback(
 /**
  * Resolves a placeholder path against the provided execution context.
  *
- * @description Handles the `context.` prefix, uses {@link resolvePath}, and
+ * @description Handles the `context.` prefix, uses {@link safeResolvePath}, and
  * falls back to {@link resolveEntityNameFallback} when direct resolution fails.
  * @param {string} placeholderPath - Path from the placeholder (e.g.,
  *   `context.varA`).
@@ -116,16 +116,12 @@ function resolvePlaceholderPath(
     }
   }
 
-  let resolvedValue;
-  try {
-    resolvedValue = resolvePath(effectiveRoot, pathForResolvePath);
-  } catch (e) {
-    logger?.error(
-      `Error resolving path "${placeholderPath}" (interpreted as "${pathForResolvePath}") at ${logPath}`,
-      e
-    );
-    resolvedValue = undefined;
-  }
+  let resolvedValue = safeResolvePath(
+    effectiveRoot,
+    pathForResolvePath,
+    logger,
+    `resolvePlaceholderPath for "${placeholderPath}" at ${logPath}`
+  );
 
   if (resolvedValue === undefined) {
     resolvedValue = resolveEntityNameFallback(

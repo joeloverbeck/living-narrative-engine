@@ -64,6 +64,32 @@ export function resolvePath(obj, propertyPath) {
 }
 
 /**
+ * Safely resolves a path within an object and logs errors on failure.
+ *
+ * @description Wraps {@link resolvePath} in a try/catch block. When
+ * resolution throws an error, the error is logged using
+ * {@link ensureValidLogger} and `undefined` is returned.
+ * @param {Record<string, any> | any[] | null | undefined} obj - Root object to
+ *   resolve against.
+ * @param {string} propertyPath - Dot separated path.
+ * @param {import('../interfaces/coreServices.js').ILogger} [logger] - Logger for
+ *   error reporting.
+ * @param {string} [contextInfo] - Additional context included in log messages.
+ * @returns {any | undefined} The resolved value or `undefined` when resolution
+ *   fails.
+ */
+export function safeResolvePath(obj, propertyPath, logger, contextInfo = '') {
+  const log = ensureValidLogger(logger, 'ObjectUtils');
+  try {
+    return resolvePath(obj, propertyPath);
+  } catch (error) {
+    const info = contextInfo ? ` (${contextInfo})` : '';
+    log.error(`Error resolving path "${propertyPath}"${info}`, error);
+    return undefined;
+  }
+}
+
+/**
  * Freezes an object to make it immutable.
  *
  * @description
