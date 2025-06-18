@@ -115,6 +115,9 @@ class WorldLoader extends AbstractLoader {
    * @param {PromptTextLoader} dependencies.promptTextLoader - Loader for core prompt text.
    * @param {ModManifestLoader} dependencies.modManifestLoader - Loader for mod manifests.
    * @param {ValidatedEventDispatcher} dependencies.validatedEventDispatcher - Service for dispatching validated events.
+   * @param {typeof import('../modding/modDependencyValidator.js')} dependencies.modDependencyValidator - Helper for validating dependencies.
+   * @param {typeof import('../modding/modVersionValidator.js').default} dependencies.modVersionValidator - Helper for validating engine versions.
+   * @param {import('../modding/modLoadOrderResolver.js')} dependencies.modLoadOrderResolver - Helper for resolving load order.
    * @param {Array<{loader: BaseManifestItemLoaderInterface, contentKey: string, contentTypeDir: string, typeName: string}>} [dependencies.contentLoadersConfig] - Optional custom content loader configuration.
    * @throws {Error} If any required dependency is missing or invalid.
    */
@@ -146,6 +149,9 @@ class WorldLoader extends AbstractLoader {
     promptTextLoader,
     modManifestLoader,
     validatedEventDispatcher,
+    modDependencyValidator,
+    modVersionValidator,
+    modLoadOrderResolver,
     contentLoadersConfig = null,
   }) {
     super(logger, [
@@ -257,6 +263,9 @@ class WorldLoader extends AbstractLoader {
       logger: this.#logger,
       registry: this.#registry,
       validatedEventDispatcher: this.#validatedEventDispatcher,
+      modDependencyValidator,
+      modVersionValidator,
+      modLoadOrderResolver,
     });
 
     this.#contentLoadManager = new ContentLoadManager({

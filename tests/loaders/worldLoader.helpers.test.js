@@ -42,6 +42,9 @@ function createWorldLoader() {
     loadRequestedManifests: jest.fn().mockResolvedValue(new Map()),
   };
   const validatedEventDispatcher = { dispatch: jest.fn() };
+  const modDependencyValidator = { validate: jest.fn() };
+  const modVersionValidator = jest.fn();
+  const modLoadOrderResolver = { resolveOrder: jest.fn() };
 
   const worldLoader = new WorldLoader({
     registry,
@@ -61,6 +64,9 @@ function createWorldLoader() {
     promptTextLoader,
     modManifestLoader,
     validatedEventDispatcher,
+    modDependencyValidator,
+    modVersionValidator,
+    modLoadOrderResolver,
     contentLoadersConfig: null,
   });
 

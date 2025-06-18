@@ -10,18 +10,7 @@ import ModDependencyError from '../../src/errors/modDependencyError.js';
 import WorldLoaderError from '../../src/errors/worldLoaderError.js';
 
 // --- Mock Modules BEFORE they are potentially imported by SUT or other imports ---
-jest.mock('../../src/modding/modDependencyValidator.js', () => ({
-  validate: jest.fn(),
-}));
-import * as ModDependencyValidatorModule from '../../src/modding/modDependencyValidator.js';
-
-jest.mock('../../src/modding/modVersionValidator.js', () => jest.fn());
-import mockValidateModEngineVersions from '../../src/modding/modVersionValidator.js';
-
-jest.mock('../../src/modding/modLoadOrderResolver.js', () => ({
-  resolveOrder: jest.fn(),
-}));
-import * as ModLoadOrderResolverModule from '../../src/modding/modLoadOrderResolver.js';
+// Mocks will be injected via constructor
 import { CORE_MOD_ID } from '../../src/constants/core';
 
 // --- Type‑only JSDoc imports for Mocks ---
@@ -97,12 +86,19 @@ describe('WorldLoader Integration Test Suite - Error Handling: Manifest Schema, 
   const entityInstancesSchemaId = 'schema:entityInstances';
 
   // --- Mocked Functions References ---
-  const mockDependencyValidate = ModDependencyValidatorModule.validate;
-  const mockEngineVersionValidate = mockValidateModEngineVersions;
-  const mockResolveOrder = ModLoadOrderResolverModule.resolveOrder;
+  const mockModDependencyValidator = { validate: jest.fn() };
+  const mockModVersionValidator = jest.fn();
+  const mockModLoadOrderResolver = { resolveOrder: jest.fn() };
+
+  const mockDependencyValidate = mockModDependencyValidator.validate;
+  const mockEngineVersionValidate = mockModVersionValidator;
+  const mockResolveOrder = mockModLoadOrderResolver.resolveOrder;
 
   beforeEach(() => {
     jest.clearAllMocks();
+    mockModDependencyValidator.validate.mockReset();
+    mockModVersionValidator.mockReset();
+    mockModLoadOrderResolver.resolveOrder.mockReset();
 
     // --- 1. Create Mocks ---
     mockRegistry = {
@@ -246,6 +242,9 @@ describe('WorldLoader Integration Test Suite - Error Handling: Manifest Schema, 
       promptTextLoader: { loadPromptText: jest.fn() },
       modManifestLoader: mockModManifestLoader,
       validatedEventDispatcher: mockValidatedEventDispatcher,
+      modDependencyValidator: mockModDependencyValidator,
+      modVersionValidator: mockModVersionValidator,
+      modLoadOrderResolver: mockModLoadOrderResolver,
       contentLoadersConfig: null,
     });
   });

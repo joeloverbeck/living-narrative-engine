@@ -8,19 +8,8 @@ import WorldLoader from '../../src/loaders/worldLoader.js';
 
 // --- Dependencies to Mock ---
 // Mock static/imported functions BEFORE importing WorldLoader
-import * as ModDependencyValidatorModule from '../../src/modding/modDependencyValidator.js';
-jest.mock('../../src/modding/modDependencyValidator.js', () => ({
-  validate: jest.fn(),
-}));
-
-import * as ModVersionValidatorModule from '../../src/modding/modVersionValidator.js';
-jest.mock('../../src/modding/modVersionValidator.js', () => jest.fn()); // Mock the default export function
-
-import * as ModLoadOrderResolverModule from '../../src/modding/modLoadOrderResolver.js';
+// Mocks will be injected via constructor
 import { CORE_MOD_ID } from '../../src/constants/core';
-jest.mock('../../src/modding/modLoadOrderResolver.js', () => ({
-  resolveOrder: jest.fn(),
-}));
 
 // --- Type‑only JSDoc imports for Mocks ---
 /** @typedef {import('../../src/interfaces/coreServices.js').ILogger} ILogger */
@@ -84,13 +73,20 @@ describe('WorldLoader Integration Test Suite - Performance Timing Logs (Sub-Tick
   const worldName = 'timingTestWorld';
   const finalOrder = [CORE_MOD_ID, fooModId];
 
-  // --- Mocked Functions (from imports) ---
-  const mockedModDependencyValidator = ModDependencyValidatorModule.validate;
-  const mockedValidateModEngineVersions = ModVersionValidatorModule.default;
-  const mockedResolveOrder = ModLoadOrderResolverModule.resolveOrder;
+  // --- Mocked helper implementations ---
+  const mockModDependencyValidator = { validate: jest.fn() };
+  const mockModVersionValidator = jest.fn();
+  const mockModLoadOrderResolver = { resolveOrder: jest.fn() };
+
+  const mockedModDependencyValidator = mockModDependencyValidator.validate;
+  const mockedValidateModEngineVersions = mockModVersionValidator;
+  const mockedResolveOrder = mockModLoadOrderResolver.resolveOrder;
 
   beforeEach(() => {
     jest.clearAllMocks(); // Reset mocks between tests
+    mockModDependencyValidator.validate.mockReset();
+    mockModVersionValidator.mockReset();
+    mockModLoadOrderResolver.resolveOrder.mockReset();
 
     // --- 1. Create Mocks ---
     // Use a simple object for registry; complex interactions aren't the focus here
@@ -250,6 +246,9 @@ describe('WorldLoader Integration Test Suite - Performance Timing Logs (Sub-Tick
       promptTextLoader: { loadPromptText: jest.fn() },
       modManifestLoader: mockModManifestLoader,
       validatedEventDispatcher: mockValidatedEventDispatcher,
+      modDependencyValidator: mockModDependencyValidator,
+      modVersionValidator: mockModVersionValidator,
+      modLoadOrderResolver: mockModLoadOrderResolver,
       contentLoadersConfig: null,
     });
   });

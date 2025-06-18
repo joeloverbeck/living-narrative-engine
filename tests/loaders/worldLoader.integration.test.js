@@ -6,18 +6,8 @@ import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import WorldLoader from '../../src/loaders/worldLoader.js';
 
 // --- Dependencies to Mock ---
-import ModDependencyValidator from '../../src/modding/modDependencyValidator.js';
-import validateModEngineVersions from '../../src/modding/modVersionValidator.js';
-import * as ModLoadOrderResolver from '../../src/modding/modLoadOrderResolver.js';
+// mocks will be injected via constructor rather than jest.mock
 import { CORE_MOD_ID } from '../../src/constants/core';
-
-jest.mock('../../src/modding/modDependencyValidator.js', () => ({
-  validate: jest.fn(),
-}));
-jest.mock('../../src/modding/modVersionValidator.js', () => jest.fn());
-jest.mock('../../src/modding/modLoadOrderResolver.js', () => ({
-  resolveOrder: jest.fn(),
-}));
 
 // --- Type‑only JSDoc imports for Mocks ---
 /** @typedef {import('../../src/interfaces/coreServices.js').ILogger} ILogger */
@@ -80,13 +70,20 @@ describe('WorldLoader Integration Test Suite (TEST-LOADER-7.1)', () => {
   let mockManifestMap;
   const worldName = 'testWorldSimple';
 
-  // --- Mocked Functions (from imports) ---
-  const mockedModDependencyValidator = ModDependencyValidator.validate;
-  const mockedValidateModEngineVersions = validateModEngineVersions;
-  const mockedResolveOrder = ModLoadOrderResolver.resolveOrder;
+  // --- Mocked helper implementations ---
+  const mockModDependencyValidator = { validate: jest.fn() };
+  const mockModVersionValidator = jest.fn();
+  const mockModLoadOrderResolver = { resolveOrder: jest.fn() };
+
+  const mockedModDependencyValidator = mockModDependencyValidator.validate;
+  const mockedValidateModEngineVersions = mockModVersionValidator;
+  const mockedResolveOrder = mockModLoadOrderResolver.resolveOrder;
 
   beforeEach(() => {
     jest.clearAllMocks(); // Reset mocks between tests
+    mockModDependencyValidator.validate.mockReset();
+    mockModVersionValidator.mockReset();
+    mockModLoadOrderResolver.resolveOrder.mockReset();
 
     // --- 1. Create Mocks ---
     mockRegistry = {
@@ -304,6 +301,9 @@ describe('WorldLoader Integration Test Suite (TEST-LOADER-7.1)', () => {
       promptTextLoader: { loadPromptText: jest.fn() },
       modManifestLoader: mockModManifestLoader,
       validatedEventDispatcher: mockValidatedEventDispatcher,
+      modDependencyValidator: mockModDependencyValidator,
+      modVersionValidator: mockModVersionValidator,
+      modLoadOrderResolver: mockModLoadOrderResolver,
       contentLoadersConfig: null,
     });
   });
