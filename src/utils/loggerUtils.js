@@ -130,4 +130,20 @@ export function initLogger(serviceName, logger, { optional = false } = {}) {
   return ensureValidLogger(logger, serviceName);
 }
 
+/**
+ * Logs a truncated preview of `data` at the debug level.
+ * If `data` is not a string, it will be JSON stringified first.
+ *
+ * @param {ILogger} logger - Logger instance used to emit the preview.
+ * @param {string} label - Text to prepend to the preview message.
+ * @param {any} data - The data to preview.
+ * @param {number} [length] - Maximum number of characters to include.
+ * @returns {void}
+ */
+export function logPreview(logger, label, data, length = 100) {
+  const str = typeof data === 'string' ? data : JSON.stringify(data);
+  const preview = str.substring(0, length) + (str.length > length ? '...' : '');
+  logger.debug(`${label}${preview}`);
+}
+
 // --- FILE END ---

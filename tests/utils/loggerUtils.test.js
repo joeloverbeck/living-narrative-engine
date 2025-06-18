@@ -12,6 +12,7 @@ import {
   getPrefixedLogger,
   getModuleLogger,
   initLogger,
+  logPreview,
 } from '../../src/utils/loggerUtils.js';
 import { validateDependency } from '../../src/utils/validationUtils.js';
 
@@ -95,5 +96,19 @@ describe('loggerUtils', () => {
     expect(validateDependency).not.toHaveBeenCalled();
     logger.error('oops');
     expect(consoleSpies.error).toHaveBeenCalledWith('Svc: ', 'oops');
+  });
+
+  it('logPreview logs truncated preview for long strings', () => {
+    const logger = { debug: jest.fn() };
+    logPreview(logger, 'label: ', 'a'.repeat(120), 100);
+    expect(logger.debug).toHaveBeenCalledWith(
+      'label: ' + 'a'.repeat(100) + '...'
+    );
+  });
+
+  it('logPreview logs full string when shorter than limit', () => {
+    const logger = { debug: jest.fn() };
+    logPreview(logger, 'l: ', 'short', 100);
+    expect(logger.debug).toHaveBeenCalledWith('l: short');
   });
 });

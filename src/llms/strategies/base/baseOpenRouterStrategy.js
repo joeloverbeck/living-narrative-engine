@@ -3,6 +3,7 @@
 import { BaseChatLLMStrategy } from './baseChatLLMStrategy.js';
 import { ConfigurationError } from '../../../errors/configurationError';
 import { LLMStrategyError } from '../../errors/LLMStrategyError.js';
+import { logPreview } from '../../../utils/index.js';
 // Assuming HttpClientError might be a specific type, if not, general Error is caught.
 // For actual HttpClientError type, it would be imported from its definition:
 // import { HttpClientError } from '../../retryHttpClient.js'; // Example path
@@ -308,13 +309,11 @@ export class BaseOpenRouterStrategy extends BaseChatLLMStrategy {
         body: JSON.stringify(finalPayload),
       });
 
-      this.logger.debug(
-        `${this.constructor.name} (${llmId}): Raw API response received.`,
-        {
-          llmId,
-          responsePreview:
-            JSON.stringify(responseData)?.substring(0, 250) + '...',
-        }
+      logPreview(
+        this.logger,
+        `${this.constructor.name} (${llmId}): Raw API response received. Preview: `,
+        JSON.stringify(responseData),
+        250
       );
 
       const extractedJsonString = await this._extractJsonOutput(
