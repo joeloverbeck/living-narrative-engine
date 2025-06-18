@@ -48,7 +48,7 @@ describe('fetchWithRetry', () => {
 
     let caught;
     try {
-      await fetchWithRetry(url, opts, 1, 1, 1, dispatcher);
+      await fetchWithRetry(url, opts, 1, 1, 1, dispatcher, undefined, fetch);
     } catch (e) {
       caught = e;
     }
@@ -63,9 +63,16 @@ describe('fetchWithRetry', () => {
     resp.text.mockResolvedValue('bad text');
     fetch.mockResolvedValueOnce(resp);
 
-    const err = await fetchWithRetry(url, opts, 1, 1, 1, dispatcher).catch(
-      (e) => e
-    );
+    const err = await fetchWithRetry(
+      url,
+      opts,
+      1,
+      1,
+      1,
+      dispatcher,
+      undefined,
+      fetch
+    ).catch((e) => e);
     expect(err.body).toBe('bad text');
   });
 
@@ -83,7 +90,16 @@ describe('fetchWithRetry', () => {
     fetch.mockResolvedValueOnce(first).mockResolvedValueOnce(okResp);
 
     const timeoutSpy = jest.spyOn(global, 'setTimeout');
-    const promise = fetchWithRetry(url, opts, 2, 100, 1000, dispatcher);
+    const promise = fetchWithRetry(
+      url,
+      opts,
+      2,
+      100,
+      1000,
+      dispatcher,
+      undefined,
+      fetch
+    );
     await jest.runOnlyPendingTimersAsync();
     await promise;
     expect(timeoutSpy).toHaveBeenCalledWith(expect.any(Function), 2000);
@@ -103,9 +119,16 @@ describe('fetchWithRetry', () => {
     };
     fetch.mockResolvedValueOnce(resp);
 
-    const err = await fetchWithRetry(url, opts, 1, 1, 1, dispatcher).catch(
-      (e) => e
-    );
+    const err = await fetchWithRetry(
+      url,
+      opts,
+      1,
+      1,
+      1,
+      dispatcher,
+      undefined,
+      fetch
+    ).catch((e) => e);
 
     expect(resp.clone).toHaveBeenCalled();
     expect(cloneText).toHaveBeenCalled();
@@ -121,7 +144,16 @@ describe('fetchWithRetry', () => {
 
     const randomSpy = jest.spyOn(Math, 'random').mockReturnValue(0.5);
     const timeoutSpy = jest.spyOn(global, 'setTimeout');
-    const promise = fetchWithRetry(url, opts, 2, 100, 1000, dispatcher);
+    const promise = fetchWithRetry(
+      url,
+      opts,
+      2,
+      100,
+      1000,
+      dispatcher,
+      undefined,
+      fetch
+    );
     await jest.runOnlyPendingTimersAsync();
     const result = await promise;
 
@@ -138,9 +170,16 @@ describe('fetchWithRetry', () => {
     resp.json.mockResolvedValue({ error: 'auth' });
     fetch.mockResolvedValueOnce(resp);
 
-    const err = await fetchWithRetry(url, opts, 3, 100, 1000, dispatcher).catch(
-      (e) => e
-    );
+    const err = await fetchWithRetry(
+      url,
+      opts,
+      3,
+      100,
+      1000,
+      dispatcher,
+      undefined,
+      fetch
+    ).catch((e) => e);
 
     expect(fetch).toHaveBeenCalledTimes(1);
     expect(err.status).toBe(401);

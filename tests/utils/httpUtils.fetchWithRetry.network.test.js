@@ -33,7 +33,16 @@ describe('fetchWithRetry network errors', () => {
     const randomSpy = jest.spyOn(Math, 'random').mockReturnValue(0.5);
     const timeoutSpy = jest.spyOn(global, 'setTimeout');
 
-    const promise = fetchWithRetry(url, opts, 2, 100, 1000, dispatcher);
+    const promise = fetchWithRetry(
+      url,
+      opts,
+      2,
+      100,
+      1000,
+      dispatcher,
+      undefined,
+      fetch
+    );
     await jest.runOnlyPendingTimersAsync();
     const result = await promise;
 
@@ -49,9 +58,16 @@ describe('fetchWithRetry network errors', () => {
     fetch.mockRejectedValue(new TypeError('network request failed'));
     const randomSpy = jest.spyOn(Math, 'random').mockReturnValue(0.5);
 
-    const promise = fetchWithRetry(url, opts, 2, 100, 1000, dispatcher).catch(
-      (e) => e
-    );
+    const promise = fetchWithRetry(
+      url,
+      opts,
+      2,
+      100,
+      1000,
+      dispatcher,
+      undefined,
+      fetch
+    ).catch((e) => e);
     await jest.runOnlyPendingTimersAsync();
     await jest.runOnlyPendingTimersAsync();
     const err = await promise;
