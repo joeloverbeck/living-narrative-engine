@@ -14,7 +14,7 @@ import {
   initializeGameEngineStage,
   setupGlobalEventListenersStage,
   startGameStage,
-} from '../../src/bootstrapper/stages';
+} from '../../src/bootstrapper/stages/index.js';
 import AppContainer from '../../src/dependencyInjection/appContainer.js';
 import StageError from '../../src/bootstrapper/StageError.js';
 
