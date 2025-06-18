@@ -86,18 +86,22 @@ describe('LLMStrategyFactory', () => {
     });
 
     test('should throw error if logger is invalid or missing', () => {
-      const invalidLoggers = [null, undefined, {}, { info: 'not a function' }];
-      invalidLoggers.forEach((invalidLogger) => {
-        expect(
-          () =>
-            new LLMStrategyFactory({
-              httpClient,
-              logger: /** @type {any} */ (invalidLogger),
-            })
-        ).toThrow(
-          'LLMStrategyFactory: Constructor requires a valid logger instance with info, warn, error, and debug methods.'
-        );
-      });
+      expect(
+        () => new LLMStrategyFactory({ httpClient, logger: null })
+      ).toThrow('Missing required dependency: logger.');
+      expect(
+        () => new LLMStrategyFactory({ httpClient, logger: undefined })
+      ).toThrow('Missing required dependency: logger.');
+      expect(() => new LLMStrategyFactory({ httpClient, logger: {} })).toThrow(
+        "Invalid or missing method 'info' on dependency 'logger'."
+      );
+      expect(
+        () =>
+          new LLMStrategyFactory({
+            httpClient,
+            logger: { info: 'not a function' },
+          })
+      ).toThrow("Invalid or missing method 'info' on dependency 'logger'.");
     });
 
     test('should throw error if httpClient is invalid or missing', () => {

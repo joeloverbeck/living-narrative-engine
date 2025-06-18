@@ -9,6 +9,7 @@ import {
 } from '../../llm-proxy-server/src/utils/IServerUtils.js';
 import { safeDispatchError } from '../utils/safeDispatchErrorUtils.js';
 import { resolveSafeDispatcher } from '../utils/dispatcherUtils.js';
+import { initLogger } from '../utils/index.js';
 
 /**
  * @typedef {import('./environmentContext.js').EnvironmentContext} EnvironmentContext
@@ -150,20 +151,7 @@ export class ServerApiKeyProvider extends IApiKeyProvider {
     safeEventDispatcher,
   }) {
     super();
-    if (
-      !logger ||
-      typeof logger.warn !== 'function' ||
-      typeof logger.error !== 'function' ||
-      typeof logger.debug !== 'function'
-    ) {
-      const errorMsg =
-        'ServerApiKeyProvider: Constructor requires a valid logger instance.';
-      (logger && typeof logger.error === 'function' ? logger : console).error(
-        errorMsg
-      );
-      throw new Error(errorMsg);
-    }
-    this.#logger = logger;
+    this.#logger = initLogger('ServerApiKeyProvider', logger);
     this.#dispatcher = resolveSafeDispatcher(
       null,
       safeEventDispatcher,

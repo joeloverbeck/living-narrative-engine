@@ -90,9 +90,7 @@ describe('ServerApiKeyProvider', () => {
             environmentVariableReader,
             safeEventDispatcher: dispatcher,
           })
-      ).toThrow(
-        'ServerApiKeyProvider: Constructor requires a valid logger instance.'
-      );
+      ).toThrow('Missing required dependency: logger.');
     });
 
     test('should throw error if fileSystemReader is invalid', () => {

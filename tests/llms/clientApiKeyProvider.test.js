@@ -66,10 +66,10 @@ describe('ClientApiKeyProvider', () => {
 
     test('should throw error if logger is invalid or missing', () => {
       expect(() => new ClientApiKeyProvider({ logger: null })).toThrow(
-        'ClientApiKeyProvider: Constructor requires a valid logger instance.'
+        'Missing required dependency: logger.'
       );
       expect(() => new ClientApiKeyProvider({ logger: {} })).toThrow(
-        'ClientApiKeyProvider: Constructor requires a valid logger instance.'
+        "Invalid or missing method 'info' on dependency 'logger'."
       );
     });
   });
