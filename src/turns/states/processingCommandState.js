@@ -17,6 +17,7 @@ import { processCommandInternal } from './helpers/processCommandInternal.js';
 import { getServiceFromContext } from './helpers/getServiceFromContext.js';
 import { handleProcessingException } from './helpers/handleProcessingException.js';
 import { ProcessingWorkflow } from './workflows/processingWorkflow.js';
+import { buildSpeechPayload } from './helpers/buildSpeechPayload.js';
 
 /**
  * @class ProcessingCommandState
@@ -74,40 +75,18 @@ export class ProcessingCommandState extends AbstractTurnState {
   async _dispatchSpeech(turnCtx, actor, decisionMeta) {
     const logger = this._resolveLogger(turnCtx);
     const actorId = actor.id;
-    const {
-      speech: speechRaw,
-      thoughts: thoughtsRaw,
-      notes: notesRaw,
-    } = decisionMeta;
-    const speech =
-      typeof speechRaw === 'string' && speechRaw.trim()
-        ? speechRaw.trim()
-        : null;
+    const payloadBase = buildSpeechPayload(decisionMeta);
+    const speechRaw = decisionMeta?.speech;
 
-    if (speech) {
+    if (payloadBase) {
       logger.debug(
-        `${this.getStateName()}: Actor ${actorId} spoke: "${speech}". Dispatching ${ENTITY_SPOKE_ID}.`
+        `${this.getStateName()}: Actor ${actorId} spoke: "${payloadBase.speechContent}". Dispatching ${ENTITY_SPOKE_ID}.`
       );
 
       try {
         const eventDispatcher = turnCtx.getSafeEventDispatcher?.();
         if (eventDispatcher) {
-          const payload = { entityId: actorId, speechContent: speech };
-          if (typeof thoughtsRaw === 'string' && thoughtsRaw.trim()) {
-            payload.thoughts = thoughtsRaw.trim();
-          }
-          if (Array.isArray(notesRaw)) {
-            const joined = notesRaw
-              .map((n) => (typeof n === 'string' ? n.trim() : ''))
-              .filter(Boolean)
-              .join('\n');
-            if (joined) {
-              payload.notes = joined;
-            }
-          } else if (typeof notesRaw === 'string' && notesRaw.trim()) {
-            payload.notes = notesRaw.trim();
-          }
-
+          const payload = { entityId: actorId, ...payloadBase };
           await eventDispatcher.dispatch(ENTITY_SPOKE_ID, payload);
           logger.debug(
             `${this.getStateName()}: Attempted dispatch of ${ENTITY_SPOKE_ID} for actor ${actorId} via TurnContext's SafeEventDispatcher.`,
