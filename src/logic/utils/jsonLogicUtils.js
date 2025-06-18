@@ -18,4 +18,36 @@ export function isEmptyCondition(cond) {
   );
 }
 
+/**
+ * Recursively emit warnings for any `var` expressions using bracket
+ * notation in a JSON Logic rule.
+ *
+ * @param {object | any} rule - Rule object or value to inspect.
+ * @param {import('../../interfaces/coreServices.js').ILogger} logger - Logger for warnings.
+ * @returns {void}
+ */
+export function warnOnBracketPaths(rule, logger) {
+  if (Array.isArray(rule)) {
+    rule.forEach((item) => warnOnBracketPaths(item, logger));
+    return;
+  }
+  if (rule && typeof rule === 'object') {
+    if (Object.prototype.hasOwnProperty.call(rule, 'var')) {
+      const value = rule.var;
+      const path =
+        typeof value === 'string'
+          ? value
+          : Array.isArray(value) && typeof value[0] === 'string'
+            ? value[0]
+            : null;
+      if (path && (path.includes('[') || path.includes(']'))) {
+        logger.warn(
+          `Invalid var path "${path}" contains unsupported brackets.`
+        );
+      }
+    }
+    Object.values(rule).forEach((v) => warnOnBracketPaths(v, logger));
+  }
+}
+
 export default isEmptyCondition;
