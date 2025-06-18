@@ -4,10 +4,13 @@ import { SYSTEM_ERROR_OCCURRED_ID } from '../constants/eventIds.js';
 const RETRYABLE_HTTP_STATUS_CODES = [408, 429, 500, 502, 503, 504];
 
 /**
- *
- * @param currentAttempt
- * @param baseDelayMs
- * @param maxDelayMs
+ * @description Calculates an exponential backoff delay with jitter for retry
+ * attempts.
+ * @param {number} currentAttempt The current attempt number starting at 1.
+ * @param {number} baseDelayMs Base delay in milliseconds for the first retry.
+ * @param {number} maxDelayMs Maximum delay allowed between retries.
+ * @returns {number} Delay in milliseconds before the next retry.
+ * @private
  */
 function _calculateRetryDelay(currentAttempt, baseDelayMs, maxDelayMs) {
   const factor = Math.pow(2, currentAttempt - 1);
@@ -15,6 +18,44 @@ function _calculateRetryDelay(currentAttempt, baseDelayMs, maxDelayMs) {
   delay = Math.min(delay, maxDelayMs);
   const jitter = (Math.random() * 0.4 - 0.2) * delay;
   return Math.max(0, Math.floor(delay + jitter));
+}
+
+/**
+ * @description Parse an error HTTP response body, returning both the parsed
+ * JSON body (if possible) and the raw text.
+ * @param {Response} response The fetch Response to parse.
+ * @returns {Promise<{parsedBody: any, bodyText: string}>} Parsed body object and
+ *  body text.
+ * @private
+ */
+async function _parseErrorResponse(response) {
+  let bodyText = `Status: ${response.status}, StatusText: ${response.statusText}`;
+  let parsedBody = null;
+  try {
+    const text = await response.clone().text();
+    try {
+      parsedBody = JSON.parse(text);
+      bodyText = JSON.stringify(parsedBody);
+    } catch {
+      bodyText = text;
+    }
+  } catch {
+    // ignore body read failures
+  }
+  return { parsedBody, bodyText };
+}
+
+/**
+ * @description Determine whether the request should be retried based on status
+ * code and attempt count.
+ * @param {number} status HTTP status code from the response.
+ * @param {number} attempt Current attempt number.
+ * @param {number} maxRetries Maximum allowed retries.
+ * @returns {boolean} True if another retry should be attempted.
+ * @private
+ */
+function _shouldRetry(status, attempt, maxRetries) {
+  return RETRYABLE_HTTP_STATUS_CODES.includes(status) && attempt < maxRetries;
 }
 
 /**
@@ -58,24 +99,9 @@ export async function fetchWithRetry(
       const response = await fetch(url, options);
 
       if (!response.ok) {
-        let errorBodyText = `Status: ${response.status}, StatusText: ${response.statusText}`;
-        let parsedErrorBody = null;
-        try {
-          const bodyText = await response.clone().text();
-          try {
-            parsedErrorBody = JSON.parse(bodyText);
-            errorBodyText = JSON.stringify(parsedErrorBody);
-          } catch {
-            errorBodyText = bodyText;
-          }
-        } catch {
-          // ignore body read failures
-        }
+        const { parsedBody, bodyText } = await _parseErrorResponse(response);
 
-        const isRetryableStatusCode = RETRYABLE_HTTP_STATUS_CODES.includes(
-          response.status
-        );
-        if (isRetryableStatusCode && currentAttempt < maxRetries) {
+        if (_shouldRetry(response.status, currentAttempt, maxRetries)) {
           let waitTimeMs;
           if (response.status === 429) {
             const retryAfter = parseFloat(response.headers.get('Retry-After'));
@@ -92,23 +118,23 @@ export async function fetchWithRetry(
           }
 
           log.warn(
-            `Attempt ${currentAttempt}/${maxRetries} for ${url} failed with status ${response.status}. Retrying in ${waitTimeMs}ms... Error body preview: ${errorBodyText.substring(0, 100)}`
+            `Attempt ${currentAttempt}/${maxRetries} for ${url} failed with status ${response.status}. Retrying in ${waitTimeMs}ms... Error body preview: ${bodyText.substring(0, 100)}`
           );
           await new Promise((resolve) => setTimeout(resolve, waitTimeMs));
           return attemptFetchRecursive(currentAttempt + 1);
         }
 
-        const errorMessage = `API request to ${url} failed after ${currentAttempt} attempt(s) with status ${response.status}: ${errorBodyText}`;
+        const errorMessage = `API request to ${url} failed after ${currentAttempt} attempt(s) with status ${response.status}: ${bodyText}`;
         await safeEventDispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
           message: `fetchWithRetry: ${errorMessage} (Attempt ${currentAttempt}/${maxRetries}, Non-retryable or max retries reached)`,
           details: {
             status: response.status,
-            body: parsedErrorBody !== null ? parsedErrorBody : errorBodyText,
+            body: parsedBody !== null ? parsedBody : bodyText,
           },
         });
         const err = new Error(errorMessage);
         err.status = response.status;
-        err.body = parsedErrorBody !== null ? parsedErrorBody : errorBodyText;
+        err.body = parsedBody !== null ? parsedBody : bodyText;
         throw err;
       }
 
