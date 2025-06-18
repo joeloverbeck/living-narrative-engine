@@ -6,6 +6,7 @@ import {
   extractSaveName,
 } from '../utils/savePathUtils.js';
 import { deserializeAndDecompress, parseManualSaveFile } from './saveFileIO.js';
+import { validateSaveMetadataFields } from './saveMetadataUtils.js';
 import {
   PersistenceError,
   PersistenceErrorCodes,
@@ -171,35 +172,20 @@ export default class SaveFileRepository {
       return metadata;
     }
 
-    const { identifier, saveName, timestamp, playtimeSeconds } = metadata;
+    const validated = validateSaveMetadataFields(
+      metadata,
+      fileName,
+      this.#logger
+    );
 
-    if (
-      typeof saveName !== 'string' ||
-      !saveName ||
-      typeof timestamp !== 'string' ||
-      !timestamp ||
-      typeof playtimeSeconds !== 'number' ||
-      Number.isNaN(playtimeSeconds)
-    ) {
-      this.#logger.warn(
-        `Essential metadata missing or malformed in ${identifier}. Contents: ${JSON.stringify(
-          metadata
-        )}. Flagging as corrupted for listing.`
-      );
-      return {
-        identifier,
-        saveName: saveName || `${extractSaveName(fileName)} (Bad Metadata)`,
-        timestamp: timestamp || 'N/A',
-        playtimeSeconds:
-          typeof playtimeSeconds === 'number' ? playtimeSeconds : 0,
-        isCorrupted: true,
-      };
+    if (validated.isCorrupted) {
+      return validated;
     }
 
     this.#logger.debug(
-      `Successfully parsed metadata for ${identifier}: Name="${saveName}", Timestamp="${timestamp}"`
+      `Successfully parsed metadata for ${validated.identifier}: Name="${validated.saveName}", Timestamp="${validated.timestamp}"`
     );
-    return metadata;
+    return validated;
   }
 
   /**
