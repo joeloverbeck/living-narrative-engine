@@ -197,8 +197,12 @@ class SaveLoadService extends ISaveLoadService {
     }
 
     const files = fileListResult.data || [];
-    const metadataList = await Promise.all(
+    const parsedList = await Promise.all(
       files.map((name) => this.#fileRepository.parseManualSaveMetadata(name))
+    );
+
+    const metadataList = parsedList.map((res) =>
+      res.isCorrupted ? { ...res.metadata, isCorrupted: true } : res.metadata
     );
 
     this.#logger.debug(

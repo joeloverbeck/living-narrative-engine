@@ -157,18 +157,18 @@ export default class SaveFileRepository {
    * Parses and validates metadata from a manual save file.
    *
    * @param {string} fileName - File name within the manual save directory.
-   * @returns {Promise<import('../interfaces/ISaveLoadService.js').SaveFileMetadata>} Parsed metadata.
+   * @returns {Promise<import('./persistenceTypes.js').ParseSaveFileResult>} Parsed metadata result.
    */
   async parseManualSaveMetadata(fileName) {
-    const { data: metadata } = await this.#parseManualSaveFile(fileName);
+    const result = await this.#parseManualSaveFile(fileName);
 
-    if (!metadata.isCorrupted) {
+    if (!result.isCorrupted) {
       this.#logger.debug(
-        `Successfully parsed metadata for ${metadata.identifier}: Name="${metadata.saveName}", Timestamp="${metadata.timestamp}"`
+        `Successfully parsed metadata for ${result.metadata.identifier}: Name="${result.metadata.saveName}", Timestamp="${result.metadata.timestamp}"`
       );
     }
 
-    return metadata;
+    return result;
   }
 
   /**
@@ -251,10 +251,10 @@ export default class SaveFileRepository {
    * @returns {Promise<import('./persistenceTypes.js').PersistenceResult<import('../interfaces/ISaveLoadService.js').SaveFileMetadata>>}
    */
   async #parseManualSaveFile(fileName) {
-    return wrapPersistenceOperation(this.#logger, async () => {
-      const filePath = manualSavePath(fileName);
-      this.#logger.debug(`Processing file: ${filePath}`);
+    const filePath = manualSavePath(fileName);
+    this.#logger.debug(`Processing file: ${filePath}`);
 
+    try {
       const deserializationResult =
         await this.#deserializeAndDecompress(filePath);
 
@@ -263,14 +263,13 @@ export default class SaveFileRepository {
           `Failed to deserialize ${filePath}: ${deserializationResult.error}. Flagging as corrupted for listing.`
         );
         return {
-          success: false,
-          data: {
+          metadata: {
             identifier: filePath,
             saveName: extractSaveName(fileName) + ' (Corrupted)',
             timestamp: 'N/A',
             playtimeSeconds: 0,
-            isCorrupted: true,
           },
+          isCorrupted: true,
         };
       }
 
@@ -288,14 +287,13 @@ export default class SaveFileRepository {
           `No metadata section found in ${filePath}. Flagging as corrupted for listing.`
         );
         return {
-          success: false,
-          data: {
+          metadata: {
             identifier: filePath,
             saveName: extractSaveName(fileName) + ' (No Metadata)',
             timestamp: 'N/A',
             playtimeSeconds: 0,
-            isCorrupted: true,
           },
+          isCorrupted: true,
         };
       }
 
@@ -310,11 +308,23 @@ export default class SaveFileRepository {
         this.#logger
       );
 
+      const { isCorrupted = false, ...metadata } = validated;
       return {
-        success: !validated.isCorrupted,
-        data: validated,
+        metadata,
+        isCorrupted,
       };
-    });
+    } catch (error) {
+      this.#logger.error(`Unexpected error parsing ${filePath}:`, error);
+      return {
+        metadata: {
+          identifier: filePath,
+          saveName: extractSaveName(fileName) + ' (Corrupted)',
+          timestamp: 'N/A',
+          playtimeSeconds: 0,
+        },
+        isCorrupted: true,
+      };
+    }
   }
 
   /**

@@ -50,7 +50,7 @@ describe('SaveFileRepository.parseManualSaveMetadata', () => {
 
     const result = await repo.parseManualSaveMetadata('manual_save_Name.sav');
 
-    expect(result).toEqual(metadata);
+    expect(result).toEqual({ metadata, isCorrupted: false });
     expect(storageProvider.readFile).toHaveBeenCalledWith(
       manualSavePath('manual_save_Name.sav')
     );
