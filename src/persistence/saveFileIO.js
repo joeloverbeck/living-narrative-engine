@@ -9,6 +9,7 @@ import {
   createPersistenceSuccess,
 } from './persistenceResultUtils.js';
 import { manualSavePath, extractSaveName } from '../utils/savePathUtils.js';
+import { validateSaveMetadataFields } from './saveMetadataUtils.js';
 
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../interfaces/IStorageProvider.js').IStorageProvider} IStorageProvider */
@@ -144,13 +145,19 @@ export async function parseManualSaveFile(
     };
   }
 
-  return {
-    success: true,
-    data: {
+  const validated = validateSaveMetadataFields(
+    {
       identifier: filePath,
       saveName: saveObject.metadata.saveName,
       timestamp: saveObject.metadata.timestamp,
       playtimeSeconds: saveObject.metadata.playtimeSeconds,
     },
+    fileName,
+    logger
+  );
+
+  return {
+    success: !validated.isCorrupted,
+    data: validated,
   };
 }
