@@ -16,6 +16,7 @@ import { ENTITY_SPOKE_ID } from '../../constants/eventIds.js';
 import { processCommandInternal } from './helpers/processCommandInternal.js';
 import { getServiceFromContext } from './helpers/getServiceFromContext.js';
 import { handleProcessingException } from './helpers/handleProcessingException.js';
+import { ProcessingWorkflow } from './workflows/processingWorkflow.js';
 
 /**
  * @class ProcessingCommandState
@@ -52,130 +53,15 @@ export class ProcessingCommandState extends AbstractTurnState {
    * @param {ITurnState_Interface} [previousState]
    */
   async enterState(handler, previousState) {
-    const turnCtx = await this._ensureContext(
-      `critical-no-context-${this.getStateName()}`,
-      handler
-    );
-
-    if (!turnCtx) return;
-
-    if (this._isProcessing) {
-      const logger = this._resolveLogger(turnCtx);
-      logger.warn(
-        `${this.getStateName()}: enterState called while already processing. Actor: ${turnCtx?.getActor()?.id ?? 'N/A'}. Aborting re-entry.`
-      );
-      return;
-    }
-    this._isProcessing = true;
-
-    await super.enterState(this._handler, previousState);
-
-    const actor = await this._validateContextAndActor(turnCtx);
-    if (!actor) return;
-
-    const turnAction = await this._resolveTurnAction(turnCtx, actor);
-    if (!turnAction) return;
-
-    const decisionMeta = turnCtx.getDecisionMeta() ?? {};
-    await this._dispatchSpeech(turnCtx, actor, decisionMeta);
-
-    await this._processAction(turnCtx, actor, turnAction);
-  }
-
-  /**
-   * @description Validates the actor retrieved from the turn context and logs entry.
-   * @param {ITurnContext} turnCtx - Current turn context.
-   * @returns {Promise<Entity|null>} The actor entity or `null` if validation fails.
-   */
-  async _validateContextAndActor(turnCtx) {
-    const logger = this._resolveLogger(turnCtx);
-    const actor = turnCtx.getActor();
-    if (!actor) {
-      const noActorError = new Error(
-        'No actor present at the start of command processing.'
-      );
-      await this.#handleProcessingException(
-        turnCtx,
-        noActorError,
-        'NoActorOnEnter'
-      );
-      return null;
-    }
-
-    const actorId = actor.id;
-    logger.debug(`${this.getStateName()}: Entered for actor ${actorId}.`);
-    logger.debug(
-      `${this.getStateName()}: Entering with command: "${this.#commandStringForLog}" for actor: ${actorId}`
-    );
-    return actor;
-  }
-
-  /**
-   * @description Resolves the ITurnAction to process from constructor or context.
-   * @param {ITurnContext} turnCtx - Current turn context.
-   * @param {Entity} actor - Actor performing the action.
-   * @returns {Promise<ITurnAction|null>} The resolved ITurnAction or `null` on failure.
-   */
-  async _resolveTurnAction(turnCtx, actor) {
-    const logger = this._resolveLogger(turnCtx);
-    let turnAction = this.#turnActionToProcess;
-    const actorId = actor.id;
-    if (!turnAction) {
-      logger.debug(
-        `${this.getStateName()}: No turnAction passed via constructor. Retrieving from turnContext.getChosenAction() for actor ${actorId}.`
-      );
-      try {
-        turnAction = turnCtx.getChosenAction();
-      } catch (e) {
-        const errorMsg = `${this.getStateName()}: Error retrieving ITurnAction from context for actor ${actorId}: ${e.message}`;
-        logger.error(errorMsg, e);
-        await this.#handleProcessingException(
-          turnCtx,
-          new Error(errorMsg, { cause: e }),
-          actorId
-        );
-        return null;
+    const workflow = new ProcessingWorkflow(
+      this,
+      this.#commandStringForLog,
+      this.#turnActionToProcess,
+      (a) => {
+        this.#turnActionToProcess = a;
       }
-    }
-
-    if (!turnAction) {
-      const errorMsg = `${this.getStateName()}: No ITurnAction available for actor ${actorId}. Cannot process command.`;
-      logger.error(errorMsg);
-      await this.#handleProcessingException(
-        turnCtx,
-        new Error(errorMsg),
-        actorId
-      );
-      return null;
-    }
-
-    if (
-      typeof turnAction.actionDefinitionId !== 'string' ||
-      !turnAction.actionDefinitionId
-    ) {
-      const errorMsg = `${this.getStateName()}: ITurnAction for actor ${actorId} is invalid: missing or empty actionDefinitionId.`;
-      logger.error(errorMsg, { receivedAction: turnAction });
-      await this.#handleProcessingException(
-        turnCtx,
-        new Error(errorMsg),
-        actorId
-      );
-      return null;
-    }
-
-    const commandStringToLog =
-      turnAction.commandString ||
-      this.#commandStringForLog ||
-      '(no command string available)';
-    logger.debug(
-      `${this.getStateName()}: Actor ${actorId} processing action. ` +
-        `ID: "${turnAction.actionDefinitionId}". ` +
-        `Params: ${JSON.stringify(turnAction.resolvedParameters || {})}. ` +
-        `CommandString: "${commandStringToLog}".`
     );
-
-    this.#turnActionToProcess = turnAction;
-    return turnAction;
+    await workflow.run(handler, previousState);
   }
 
   /**
@@ -256,26 +142,7 @@ export class ProcessingCommandState extends AbstractTurnState {
    * @param {ITurnAction} turnAction - Action to process.
    * @returns {Promise<void>} Resolves when processing completes.
    */
-  async _processAction(turnCtx, actor, turnAction) {
-    try {
-      await this._processCommandInternal(turnCtx, actor, turnAction);
-    } catch (error) {
-      const currentTurnCtxForCatch = this._getTurnContext() ?? turnCtx;
-      const errorLogger =
-        currentTurnCtxForCatch?.getLogger?.() ?? this._resolveLogger(turnCtx);
-      errorLogger.error(
-        `${this.getStateName()}: Uncaught error from _processCommandInternal scope. Error: ${error.message}`,
-        error
-      );
-      const actorIdForHandler =
-        currentTurnCtxForCatch?.getActor?.()?.id ?? actor.id;
-      await this.#handleProcessingException(
-        currentTurnCtxForCatch || turnCtx,
-        error,
-        actorIdForHandler
-      );
-    }
-  }
+  // _processAction logic moved to ProcessingWorkflow
 
   async _processCommandInternal(turnCtx, actor, turnAction) {
     return processCommandInternal(this, turnCtx, actor, turnAction);
