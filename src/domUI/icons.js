@@ -41,7 +41,8 @@ const DEFAULT_ICONS = {
 let iconRegistry = null;
 
 /**
- * @description Retrieves an icon by name, falling back to defaults.
+ * Retrieves an icon by name, falling back to defaults.
+ *
  * @param {string} name - Icon identifier.
  * @returns {string} SVG markup for the icon.
  */

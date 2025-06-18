@@ -16,7 +16,8 @@ import { createSelectableItem } from './createSelectableItem.js';
  */
 
 /**
- * @description Creates a DOM element representing a save/load slot.
+ * Creates a DOM element representing a save/load slot.
+ *
  * @param {DomElementFactory} domFactory - Factory used to create elements.
  * @param {string} datasetKey - Name of the dataset property for identification.
  * @param {string|number} datasetValue - Value for the dataset property.

@@ -5,9 +5,10 @@
 /** @typedef {import('../domElementFactory.js').default} DomElementFactory */
 
 /**
- * @description Creates a paragraph element containing a message using the
- * provided {@link DomElementFactory}. Falls back to a Text node if the
- * factory is unavailable or fails to create the element.
+ * Creates a paragraph element containing a message using the provided
+ * {@link DomElementFactory}. Falls back to a Text node if the factory is
+ * unavailable or fails to create the element.
+ *
  * @param {DomElementFactory} [domFactory] - Optional DOM element factory.
  * @param {string} [cssClass] - CSS class to apply to the element.
  * @param {string} text - The message text content.
