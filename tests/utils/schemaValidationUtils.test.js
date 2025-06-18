@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { validateAgainstSchema } from '../../src/utils/schemaValidationUtils.js';
+import { formatAjvErrors } from '../../src/utils/ajvUtils.js';
 import { createMockLogger } from '../testUtils.js';
 
 /** @typedef {import('../../src/interfaces/coreServices.js').ValidationResult} ValidationResult */
@@ -56,17 +57,19 @@ describe('validateAgainstSchema', () => {
     validator.isSchemaLoaded.mockReturnValue(true);
     const errors = [{ instancePath: '/name', message: 'bad', params: {} }];
     validator.validate.mockReturnValue({ isValid: false, errors });
+    const formatted = formatAjvErrors(errors);
     expect(() =>
       validateAgainstSchema(validator, 'schema', {}, logger, {
         failureMessage: 'Invalid',
         failureContext: { stage: 'test' },
         failureThrowMessage: 'Failed',
       })
-    ).toThrow(/Failed[\s\S]*Path: \/name/);
+    ).toThrow(`Failed\nDetails:\n${formatted}`);
     expect(logger.error).toHaveBeenCalledWith('Invalid', {
       stage: 'test',
       schemaId: 'schema',
       validationErrors: errors,
+      validationErrorDetails: formatted,
     });
   });
 
@@ -74,6 +77,7 @@ describe('validateAgainstSchema', () => {
     validator.isSchemaLoaded.mockReturnValue(true);
     const errors = [{ instancePath: '', message: 'oops', params: {} }];
     validator.validate.mockReturnValue({ isValid: false, errors });
+    const formatted = formatAjvErrors(errors);
     expect(() =>
       validateAgainstSchema(validator, 'schema', {}, logger, {
         failureMessage: (errs) => `bad ${errs.length}`,
@@ -83,6 +87,7 @@ describe('validateAgainstSchema', () => {
     expect(logger.error).toHaveBeenCalledWith('bad 1', {
       schemaId: 'schema',
       validationErrors: errors,
+      validationErrorDetails: formatted,
     });
   });
 });

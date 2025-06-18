@@ -3,6 +3,7 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 // Adjust the import path as necessary
 import { BaseManifestItemLoader } from '../../src/loaders/baseManifestItemLoader.js';
+import { formatAjvErrors } from '../../src/utils/ajvUtils.js';
 // Assume ValidationResult type is available or mock it if needed for type checking in tests
 // import { ValidationResult } from '../../../src/interfaces/validation.js'; // Example import
 
@@ -284,6 +285,7 @@ describe('BaseManifestItemLoader _validatePrimarySchema', () => {
     mockValidator.isSchemaLoaded.mockReturnValue(true);
     mockValidator.validate.mockReturnValue(failureResult);
     const expectedBaseErrorMsg = `${loaderName} [${modId}]: Primary schema validation failed for '${filename}' using schema '${schemaId}'.`;
+    const formatted = formatAjvErrors(validationErrors);
 
     // Act & Assert
     expect(() =>
@@ -297,7 +299,7 @@ describe('BaseManifestItemLoader _validatePrimarySchema', () => {
       throw new Error('Test failed: Expected _validatePrimarySchema to throw');
     } catch (error) {
       // Match the exact error format including Details section
-      const expectedFullErrorMsg = `${expectedBaseErrorMsg}\nDetails:\n  - Path: /key | Message: should be integer | Params: {"type":"integer"}\n  - Path: /other | Message: is required | Params: {"missingProperty":"other"}`;
+      const expectedFullErrorMsg = `${expectedBaseErrorMsg}\nDetails:\n${formatted}`;
       expect(error.message).toBe(expectedFullErrorMsg);
     }
 
@@ -312,6 +314,7 @@ describe('BaseManifestItemLoader _validatePrimarySchema', () => {
         resolvedPath,
         schemaId,
         validationErrors: validationErrors,
+        validationErrorDetails: formatted,
       })
     );
     expect(mockLogger.debug).toHaveBeenCalledWith(
@@ -347,7 +350,10 @@ describe('BaseManifestItemLoader _validatePrimarySchema', () => {
 
     expect(mockLogger.error).toHaveBeenCalledWith(
       expectedBaseErrorMsg,
-      expect.objectContaining({ validationErrors: null }) // Check context object passed to logger
+      expect.objectContaining({
+        validationErrors: null,
+        validationErrorDetails: formatAjvErrors(null),
+      })
     );
     expect(mockLogger.debug).toHaveBeenCalledWith(
       `${loaderName} [${modId}]: Validating '${filename}' against primary schema '${schemaId}'.`

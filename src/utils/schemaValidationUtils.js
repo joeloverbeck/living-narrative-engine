@@ -6,6 +6,7 @@
 /** @typedef {import('../interfaces/coreServices.js').ISchemaValidator} ISchemaValidator */
 /** @typedef {import('../interfaces/coreServices.js').ValidationResult} ValidationResult */
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
+import { formatAjvErrors } from './ajvUtils.js';
 
 /**
  * Validates data against a schema using the provided validator.
@@ -79,23 +80,19 @@ export function validateAgainstSchema(
       typeof failureMessage === 'function'
         ? failureMessage(validationResult.errors)
         : failureMessage;
+    const errorDetails = formatAjvErrors(validationResult.errors);
     if (computedFailureMsg) {
       logger.error(computedFailureMsg, {
         ...failureContext,
         schemaId,
         validationErrors: validationResult.errors,
+        validationErrorDetails: errorDetails,
       });
     }
-    const errorDetails = validationResult.errors
-      ?.map(
-        (e) =>
-          `  - Path: ${e.instancePath || '/'} | Message: ${e.message} | Params: ${JSON.stringify(e.params)}`
-      )
-      .join('\n');
     const baseMessage =
       failureThrowMessage || computedFailureMsg || 'Schema validation failed.';
     const finalMessage = appendErrorDetails
-      ? `${baseMessage}\nDetails:\n${errorDetails || 'No specific error details provided.'}`
+      ? `${baseMessage}\nDetails:\n${errorDetails}`
       : baseMessage;
     throw new Error(finalMessage);
   }
