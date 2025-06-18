@@ -390,13 +390,7 @@ describe('WorldLoader Integration Test Suite (TEST-LOADER-7.1)', () => {
       CORE_MOD_ID,
     ]);
 
-    // 11. Verify registry.get was called for manifest lookup during content loading.
-    expect(mockRegistry.get).toHaveBeenCalledWith(
-      'mod_manifests',
-      CORE_MOD_ID.toLowerCase()
-    );
-
-    // 12. Verify Content Loader calls.
+    // 11. Verify Content Loader calls.
     expect(mockActionLoader.loadItemsForMod).toHaveBeenCalledTimes(1);
     expect(mockActionLoader.loadItemsForMod).toHaveBeenCalledWith(
       CORE_MOD_ID,
