@@ -11,6 +11,8 @@ import {
 } from '@jest/globals';
 import WorldContext from '../../src/context/worldContext.js';
 import Entity from '../../src/entities/entity.js';
+import EntityDefinition from '../../src/entities/EntityDefinition.js';
+import EntityInstanceData from '../../src/entities/EntityInstanceData.js';
 import {
   POSITION_COMPONENT_ID,
   CURRENT_ACTOR_COMPONENT_ID,
@@ -31,6 +33,13 @@ const createMockLogger = () => ({
   error: jest.fn(),
   debug: jest.fn(),
 });
+
+// Helper function to create entity instances for testing
+const createTestEntity = (instanceId, definitionId, defComponents = {}, instanceOverrides = {}) => {
+  const definition = new EntityDefinition(definitionId, { description: `Test Definition ${definitionId}`, components: defComponents });
+  const instanceData = new EntityInstanceData(instanceId, definition, instanceOverrides);
+  return new Entity(instanceData);
+};
 
 describe('WorldContext (Stateless)', () => {
   let mockEntityManager;
@@ -67,11 +76,11 @@ describe('WorldContext (Stateless)', () => {
       mockDispatcher
     );
 
-    playerEntity = new Entity(PLAYER_ID, 'player-def');
-    npcActorEntity = new Entity(NPC_ACTOR_ID, 'npc-def');
-    location1Entity = new Entity(LOCATION_1_ID, 'location-def-1');
-    location2Entity = new Entity(LOCATION_2_ID, 'location-def-2');
-    itemEntity = new Entity(ITEM_ID, 'item-def'); // itemEntity is a real Entity
+    playerEntity = createTestEntity(PLAYER_ID, 'player-def');
+    npcActorEntity = createTestEntity(NPC_ACTOR_ID, 'npc-def');
+    location1Entity = createTestEntity(LOCATION_1_ID, 'location-def-1');
+    location2Entity = createTestEntity(LOCATION_2_ID, 'location-def-2');
+    itemEntity = createTestEntity(ITEM_ID, 'item-def');
 
     jest.clearAllMocks();
 

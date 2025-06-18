@@ -65,16 +65,35 @@ describe('EntityManager.addComponent invalid componentData handling', () => {
     manager.clearAll();
   });
 
-  it.each([null, undefined, 'bad', 42, true, Symbol('sym')])(
-    'throws descriptive error when componentData is %p',
-    (badData) => {
+  it('handles null componentData correctly (sets override to null, no error, no validation)', () => {
+    expect(() =>
+      manager.addComponent(MOCK_INSTANCE_ID, COMPONENT_TYPE_ID, null)
+    ).not.toThrow();
+
+    expect(logger.error).not.toHaveBeenCalled();
+    expect(validator.validate).not.toHaveBeenCalled();
+    expect(manager.getComponentData(MOCK_INSTANCE_ID, COMPONENT_TYPE_ID)).toBeNull();
+    // Even if the data is null, the component is considered "on" the entity via an override
+    expect(manager.hasComponent(MOCK_INSTANCE_ID, COMPONENT_TYPE_ID)).toBe(true); 
+  });
+
+  it.each([
+    ['undefined', undefined],
+    ['"bad"', 'bad'],
+    ['42', 42],
+    ['true', true],
+    ['Symbol(sym)', Symbol('sym')],
+  ])(
+    'throws descriptive error when componentData is %s (and is not an object or null)',
+    (typeDescription, value) => {
+      const expectedErrorMessage = `EntityManager.addComponent: componentData for ${COMPONENT_TYPE_ID} on ${MOCK_INSTANCE_ID} must be an object or null. Received: ${typeof value}`;
       expect(() =>
-        manager.addComponent(MOCK_INSTANCE_ID, COMPONENT_TYPE_ID, badData)
-      ).toThrow(
-        `EntityManager.addComponent: Invalid component data for type '${COMPONENT_TYPE_ID}' on entity '${MOCK_INSTANCE_ID}'.`
-      );
+        manager.addComponent(MOCK_INSTANCE_ID, COMPONENT_TYPE_ID, value)
+      ).toThrow(expectedErrorMessage);
+
       expect(logger.error).toHaveBeenCalledWith(
-        `EntityManager.addComponent: Invalid component data for type '${COMPONENT_TYPE_ID}' on entity '${MOCK_INSTANCE_ID}'.`
+        expectedErrorMessage,
+        { componentData: value }
       );
       expect(validator.validate).not.toHaveBeenCalled();
     }

@@ -1,12 +1,13 @@
 // src/entities/spatialIndexManager.js
 
 import { POSITION_COMPONENT_ID } from '../constants/componentIds.js';
-import { ISpatialIndexManager } from '../interfaces/ISpatialIndexManager';
+import { ISpatialIndexManager } from '../interfaces/ISpatialIndexManager.js';
 import MapManager from '../utils/mapManagerUtils.js';
 
 /**
  * Manages a spatial index mapping location IDs to the entities present
  * based on their position data. Handles entities whose locationId might be null.
+ * @implements {ISpatialIndexManager}
  */
 class SpatialIndexManager extends MapManager {
   constructor() {
@@ -18,10 +19,13 @@ class SpatialIndexManager extends MapManager {
      *
      * @type {Map<string, Set<string>>}
      */
-    this.locationIndex = this.items;
+    this.locationIndex = this.items; // Inherits `items` from MapManager
     console.log('SpatialIndexManager initialized.');
   }
 
+  /**
+   * @override
+   */
   onInvalidId(id, operation) {
     console.warn(
       `SpatialIndexManager.${operation}: Invalid id (${id}). Skipping.`
@@ -44,7 +48,9 @@ class SpatialIndexManager extends MapManager {
       return;
     }
 
+    // Only proceed if locationId is a valid, non-empty string
     if (!MapManager.isValidId(locationId)) {
+      // console.debug(`SpatialIndexManager.addEntity: Invalid or null locationId (${locationId}) for entity ${entityId}. Skipping.`);
       return;
     }
 
@@ -60,7 +66,7 @@ class SpatialIndexManager extends MapManager {
   /**
    * Removes an entity from the index for a specific location.
    * If the location's set becomes empty after removal, the location entry is removed from the index.
-   * **Handles potentially null/undefined locationId gracefully by doing nothing.**
+   * **Handles potentially null/undefined locationId gracefully by doing nothing if locationId is invalid.**
    *
    * @param {string} entityId - The ID of the entity to remove.
    * @param {string | null | undefined} locationId - The location ID from which to remove the entity. Should typically be the entity's last valid location.
@@ -74,6 +80,7 @@ class SpatialIndexManager extends MapManager {
     }
 
     if (!MapManager.isValidId(locationId)) {
+      // console.debug(`SpatialIndexManager.removeEntity: Invalid or null locationId (${locationId}) for entity ${entityId}. Skipping.`);
       return;
     }
 
@@ -81,7 +88,7 @@ class SpatialIndexManager extends MapManager {
       const locationSet = this.get(locationId);
       const removed = locationSet.delete(entityId);
       if (removed && locationSet.size === 0) {
-        this.remove(locationId);
+        this.remove(locationId); // remove is from MapManager, acts on this.items (this.locationIndex)
       }
     }
   }
@@ -102,25 +109,17 @@ class SpatialIndexManager extends MapManager {
       return;
     }
 
-    // Normalize potential empty/whitespace strings to null for consistent comparison
-    const effectiveOldLocationId = MapManager.isValidId(oldLocationId)
-      ? oldLocationId.trim()
-      : null;
-    const effectiveNewLocationId = MapManager.isValidId(newLocationId)
-      ? newLocationId.trim()
-      : null;
+    const effectiveOldLocationId = MapManager.isValidId(oldLocationId) ? oldLocationId.trim() : null;
+    const effectiveNewLocationId = MapManager.isValidId(newLocationId) ? newLocationId.trim() : null;
 
-    // No actual change in indexed location, do nothing
     if (effectiveOldLocationId === effectiveNewLocationId) {
-      return;
+      return; // No change needed
     }
 
-    // If oldLocationId is valid (not null/undefined), remove entityId from its set.
     if (effectiveOldLocationId) {
       this.removeEntity(entityId, effectiveOldLocationId);
     }
 
-    // If newLocationId is valid, add the entityId to the set for newLocationId.
     if (effectiveNewLocationId) {
       this.addEntity(entityId, effectiveNewLocationId);
     }
@@ -135,74 +134,50 @@ class SpatialIndexManager extends MapManager {
    */
   getEntitiesInLocation(locationId) {
     if (!MapManager.isValidId(locationId)) {
-      return new Set(); // Return empty set for invalid/null locations
+      return new Set();
     }
 
     if (this.has(locationId)) {
-      // Return a copy to prevent external modification of the internal set
-      return new Set(this.get(locationId));
+      return new Set(this.get(locationId)); // Return a copy
     }
-    return new Set(); // Return an empty set if location doesn't exist.
+    return new Set();
   }
 
   /**
    * Builds the spatial index from scratch using all active entities
    * managed by the provided EntityManager. Assumes entities have their
    * position data correctly set. Clears the existing index first.
-   * Only entities with a valid, non-null `locationId` string in their
+   * Only entities with a valid, non-null, non-empty `locationId` string in their
    * position data will be indexed.
    *
    * @param {object} entityManager - The EntityManager instance holding active entities. Expected to have an `activeEntities` Map or similar iterable.
    */
   buildIndex(entityManager) {
-    console.log('SpatialIndexManager: Building index from active entities...');
-    this.clear(); // Start fresh
-
-    if (
-      !entityManager ||
-      typeof entityManager.activeEntities?.entries !== 'function'
-    ) {
-      console.error(
-        'SpatialIndexManager.buildIndex: Invalid EntityManager or missing activeEntities iterable provided.'
-      );
+    this.clearIndex();
+    if (!entityManager || typeof entityManager.activeEntities?.values !== 'function') {
+      console.error('SpatialIndexManager.buildIndex: Invalid entityManager provided.');
       return;
     }
-
-    let indexedCount = 0;
-    for (const [entityId, entity] of entityManager.activeEntities.entries()) {
-      // --- Correction: Check if entity is invalid OR if getComponentData is NOT a function ---
-      if (!entity || typeof entity.getComponentData !== 'function') {
-        console.warn(
-          `SpatialIndexManager.buildIndex: Skipping invalid entity object for ID ${entityId}.`
-        );
+    for (const entity of entityManager.activeEntities.values()) {
+      if (!entity || typeof entity.id === 'undefined' || typeof entity.getComponentData !== 'function') {
+        // console.warn(`[SpatialIndexManager.buildIndex] Skipping invalid entity object: ${JSON.stringify(entity)}`);
         continue;
       }
+      const positionComponent = entity.getComponentData(POSITION_COMPONENT_ID);
+      const locationId = positionComponent ? positionComponent.locationId : undefined;
 
-      const positionComp = entity.getComponentData(POSITION_COMPONENT_ID);
-      // addEntity internally checks if positionComp.locationId is a valid string
-      if (positionComp) {
-        // Let addEntity handle the null/invalid check for locationId
-        this.addEntity(entityId, positionComp.locationId);
-        // We only count if addEntity actually *could* have indexed it (i.e. locationId was valid)
-        if (
-          typeof positionComp.locationId === 'string' &&
-          positionComp.locationId.trim() !== ''
-        ) {
-          indexedCount++;
-        }
+      // Ensure locationId is a valid string before adding
+      if (positionComponent && locationId && typeof locationId === 'string' && locationId.trim()) {
+        this.addEntity(entity.id, locationId);
       }
     }
-    // Corrected log message: indexedCount reflects entities *successfully added* to the index.
-    console.log(
-      `SpatialIndexManager: Index build complete. Added ${indexedCount} entities with valid location IDs to the index.`
-    );
   }
 
   /**
-   * Clears the entire spatial index.
+   * Clears all entries from the spatial index.
    */
   clearIndex() {
-    this.clear();
+    this.clear(); // clear is from MapManager, acts on this.items (this.locationIndex)
     console.log('SpatialIndexManager: Index cleared.');
   }
 }

@@ -11,12 +11,16 @@
 /** @typedef {import('../../interfaces/IWorldContext.js').IWorldContext} IWorldContext */
 /** @typedef {import('../../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
+/** @typedef {import('../../interfaces/coreServices.js').IDataRegistry} IDataRegistry */
+/** @typedef {import('../../interfaces/coreServices.js').ISchemaValidator} ISchemaValidator */
+/** @typedef {import('../../interfaces/ISpatialIndexManager.js').ISpatialIndexManager} ISpatialIndexManager */
 
 // --- DI & Helper Imports ---
 import { tokens } from '../tokens.js';
 import { Registrar } from '../registrarHelpers.js';
 
 // --- Service Imports ---
+import EntityManager from '../../entities/entityManager.js';
 import WorldContext from '../../context/worldContext.js';
 import JsonLogicEvaluationService from '../../logic/jsonLogicEvaluationService.js';
 import { EntityDisplayDataProvider } from '../../entities/entityDisplayDataProvider.js';
@@ -31,6 +35,19 @@ export function registerWorldAndEntity(container) {
   /** @type {ILogger} */
   const logger = container.resolve(tokens.ILogger);
   logger.debug('World and Entity Registration: Starting...');
+
+  // --- IEntityManager (EntityManager implementation) ---
+  r.singletonFactory(tokens.IEntityManager, (c) => {
+    return new EntityManager(
+      /** @type {IDataRegistry} */ (c.resolve(tokens.IDataRegistry)),
+      /** @type {ISchemaValidator} */ (c.resolve(tokens.ISchemaValidator)),
+      /** @type {ILogger} */ (c.resolve(tokens.ILogger)),
+      /** @type {ISpatialIndexManager} */ (c.resolve(tokens.ISpatialIndexManager))
+    );
+  });
+  logger.debug(
+    `World and Entity Registration: Registered ${String(tokens.IEntityManager)}.`
+  );
 
   r.singletonFactory(
     tokens.IWorldContext,

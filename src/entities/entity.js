@@ -1,23 +1,34 @@
 // src/entities/entity.js
 
-import MapManager from '../utils/mapManagerUtils.js';
+// import MapManager from '../utils/mapManagerUtils.js'; // No longer extends MapManager
+import EntityInstanceData from './EntityInstanceData.js'; // Added import
 
 /**
  * Represents a game entity (player, NPC, item, etc.).
- * An entity is primarily an identifier associated with a collection of
- * raw component data objects, indexed by their unique component type ID string.
+ * This class is now a wrapper around EntityInstanceData, providing an API
+ * consistent with its previous role but backed by the new data structure.
  * It acts as a lightweight data container; component logic resides in Systems.
  *
  * @module core/entities/entity
  */
-class Entity extends MapManager {
+// class Entity extends MapManager { // No longer extends MapManager
+class Entity {
+  /**
+   * The underlying instance data for this entity.
+   * @type {EntityInstanceData}
+   * @private
+   */
+  _instanceData;
+
   /**
    * The unique runtime identifier (typically a UUID) for this entity instance.
    *
    * @type {string}
    * @readonly
    */
-  id;
+  get id() {
+    return this._instanceData.instanceId;
+  }
 
   /**
    * The identifier of the entity definition from which this instance was created
@@ -26,129 +37,154 @@ class Entity extends MapManager {
    * @type {string}
    * @readonly
    */
-  definitionId;
+  get definitionId() {
+    return this._instanceData.definition.id;
+  }
 
   /**
    * Creates a new Entity instance.
    *
-   * @param {string} instanceId - The unique runtime identifier (UUID) for this entity instance.
-   * @param {string} definitionId - The identifier of the entity definition (e.g., "isekai:hero").
-   * @throws {Error} If no instanceId is provided or is not a string.
-   * @throws {Error} If no definitionId is provided or is not a string.
+   * @param {EntityInstanceData} instanceData - The data object for this entity instance.
+   * @throws {Error} If no instanceData is provided or is not an instance of EntityInstanceData.
    */
-  constructor(instanceId, definitionId) {
-    if (!MapManager.isValidId(instanceId)) {
-      throw new Error('Entity must have a valid string instanceId.');
+  constructor(instanceData) {
+    // super({ throwOnInvalidId: false }); // Removed as no longer extending MapManager
+    if (!(instanceData instanceof EntityInstanceData)) {
+      throw new Error('Entity must be initialized with an EntityInstanceData object.');
     }
-    if (!MapManager.isValidId(definitionId)) {
-      // Depending on design, definitionId could be optional if entities can be created purely procedurally.
-      // For now, making it mandatory for clarity based on current usage.
-      throw new Error('Entity must have a valid string definitionId.');
-    }
-    super({ throwOnInvalidId: false });
-    this.id = instanceId;
-    this.definitionId = definitionId;
+    this._instanceData = instanceData;
     // console.log(`Entity created: ${this.id} (from definition: ${this.definitionId})`);
   }
 
   /**
-   * Adds or updates the raw data for a specific component type on this entity.
-   * If a component with the same typeId already exists, its data will be overwritten.
+   * Adds or updates a component override for this entity instance.
+   * This effectively customizes the component data for this specific instance.
    *
    * @param {string} componentTypeId - The unique string identifier for the component type (e.g., "core:position").
-   * @param {object} componentData - The plain JavaScript object containing the component's data.
+   * @param {object} componentData - The plain JavaScript object containing the component's data for this instance.
    * @throws {Error} If componentTypeId is not a non-empty string.
-   * @throws {Error} If componentData is not an object.
    */
   addComponent(componentTypeId, componentData) {
-    if (!MapManager.isValidId(componentTypeId)) {
+    if (typeof componentTypeId !== 'string' || !componentTypeId.trim()) {
       throw new Error(
         `Invalid componentTypeId provided to addComponent for entity ${this.id}. Expected non-empty string.`
       );
     }
-    if (typeof componentData !== 'object' || componentData === null) {
-      throw new Error(
-        `Invalid componentData provided for component ${componentTypeId} on entity ${this.id}. Expected an object.`
-      );
-    }
-
-    if (this.has(componentTypeId)) {
-      // Optional: Log overwrite, can be commented out for performance
-      // console.warn(`Entity ${this.id}: Overwriting component data for type ID "${componentTypeId}".`);
-    }
-    this.add(componentTypeId, componentData);
-    // console.log(`Entity ${this.id}: Added/Updated component "${componentTypeId}"`); // Keep or remove logging
+    // componentData validation (being an object) is implicitly handled by setComponentOverride or could be added here.
+    this._instanceData.setComponentOverride(componentTypeId, componentData);
+    // console.log(`Entity ${this.id}: Added/Updated component override for "${componentTypeId}"`);
+    return true; // Explicitly return true on success
   }
 
   /**
-   * Retrieves the raw data object for a specific component type.
+   * Retrieves the combined component data for a specific component type.
+   * This data is a result of merging the definition's component with instance-specific overrides.
    *
    * @param {string} componentTypeId - The unique string identifier for the component type.
    * @returns {object | undefined} The component data object if found, otherwise undefined.
    */
   getComponentData(componentTypeId) {
-    return this.get(componentTypeId);
+    return this._instanceData.getComponentData(componentTypeId);
   }
 
   /**
-   * Checks if the entity has data associated with a specific component type ID.
+   * Checks if the entity has data for a specific component type ID,
+   * considering both its definition and instance overrides.
    *
    * @param {string} componentTypeId - The unique string identifier for the component type.
    * @returns {boolean} True if the entity has data for this component type, false otherwise.
    */
   hasComponent(componentTypeId) {
-    return this.has(componentTypeId);
+    return this._instanceData.hasComponent(componentTypeId);
   }
 
   /**
-   * Removes the data associated with a specific component type ID from the entity.
+   * Removes a component override for this specific instance.
+   * After removal, calls to `getComponentData` for this `componentTypeId` will
+   * fall back to the data from the `EntityDefinition` (if any).
+   * Note: This does not remove the component from the definition, only the instance-specific override.
    *
-   * @param {string} componentTypeId - The unique string identifier for the component type to remove.
-   * @returns {boolean} True if component data was found and removed, false otherwise.
+   * @param {string} componentTypeId - The unique string identifier for the component type whose override is to be removed.
+   * @returns {boolean} True if an override was found and removed, false otherwise.
    */
   removeComponent(componentTypeId) {
-    const deleted = this.remove(componentTypeId);
-    // if (deleted) {
-    //     console.log(`Entity ${this.id}: Removed component "${componentTypeId}"`); // Keep or remove logging
-    // }
-    return deleted;
+    // This now refers to removing an *override*.
+    // The previous MapManager based remove is different.
+    return this._instanceData.removeComponentOverride(componentTypeId);
   }
 
   /**
-   * Returns a string representation of the entity, listing its component type IDs.
+   * Returns a string representation of the entity.
    *
    * @returns {string}
    */
   toString() {
-    const componentTypeIds = Array.from(this.keys()).join(', ');
+    const componentTypeIds = this._instanceData.allComponentTypeIds.join(', ');
     return `Entity[${this.id} (Def: ${this.definitionId})] Components: ${componentTypeIds || 'None'}`;
   }
 
   /**
-   * Gets an iterable of all component type IDs currently attached to the entity.
+   * Gets an iterable of all component type IDs effectively present on this entity
+   * (considering definition and overrides).
    *
    * @returns {IterableIterator<string>} An iterator over the component type IDs.
    */
   get componentTypeIds() {
-    return this.keys();
+    // Convert array to an iterator if strict API compatibility is needed,
+    // or change consuming code to expect an array. For now, returning array.
+    return this._instanceData.allComponentTypeIds[Symbol.iterator]();
   }
 
   /**
-   * Gets an iterable of all component data objects currently attached to the entity.
+   * Gets an iterable of all component data objects effectively present on this entity.
    *
    * @returns {IterableIterator<object>} An iterator over the component data objects.
    */
   get allComponentData() {
-    return this.values();
+    const instance = this; // to use 'this' inside map function of the generator
+    // This needs to be a generator because we resolve data on demand
+    // eslint-disable-next-line func-style
+    function* componentDataGenerator() {
+      for (const typeId of instance._instanceData.allComponentTypeIds) {
+        const data = instance.getComponentData(typeId);
+        if (data !== undefined && data !== null) { // Ensure component exists (e.g. override wasn't null)
+            yield data;
+        }
+      }
+    }
+    return componentDataGenerator();
   }
 
   /**
-   * Gets an iterable of [componentTypeId, componentData] pairs.
+   * Gets an iterable of [componentTypeId, componentData] pairs effectively present on this entity.
    *
    * @returns {IterableIterator<[string, object]>} An iterator over the [ID, data] pairs.
    */
   get componentEntries() {
-    return this.entries();
+    const instance = this; // to use 'this' inside map function of the generator
+    // This needs to be a generator because we resolve data on demand
+    // eslint-disable-next-line func-style
+    function* componentEntriesGenerator() {
+      for (const typeId of instance._instanceData.allComponentTypeIds) {
+        const data = instance.getComponentData(typeId);
+         if (data !== undefined && data !== null) { // Ensure component exists
+            yield [typeId, data];
+        }
+      }
+    }
+    return componentEntriesGenerator();
+  }
+
+  /**
+   * Provides direct access to the underlying EntityInstanceData.
+   * Use with caution; direct modification of overrides should generally
+   * go through entity.addComponent() or entity.removeComponent() if those
+   * involve additional logic or events in the future.
+   *
+   * @returns {EntityInstanceData}
+   */
+  get instanceData() {
+    return this._instanceData;
   }
 }
 

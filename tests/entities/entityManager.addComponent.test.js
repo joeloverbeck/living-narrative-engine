@@ -221,12 +221,12 @@ describe('EntityManager.addComponent', () => {
       );
       expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining(
-          `Old location for entity ${MOCK_INSTANCE_ID} was null/undefined.`
+          `Old location for entity '${MOCK_INSTANCE_ID}' was null/undefined.`
         )
       );
       expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining(
-          `New location for entity ${MOCK_INSTANCE_ID} is ${NEW_LOCATION_ID}.`
+          `New location for entity '${MOCK_INSTANCE_ID}' is '${NEW_LOCATION_ID}'.`
         )
       );
     });
@@ -235,7 +235,7 @@ describe('EntityManager.addComponent', () => {
       const result = entityManager.addComponent(
         MOCK_INSTANCE_ID,
         POSITION_COMPONENT_ID,
-        { ...POSITION_DATA_NO_LOCATION }
+        POSITION_DATA_NO_LOCATION
       );
 
       expect(result).toBe(true);
@@ -249,7 +249,12 @@ describe('EntityManager.addComponent', () => {
       );
       expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining(
-          `New location for entity ${MOCK_INSTANCE_ID} is null/undefined.`
+          `Old location for entity '${MOCK_INSTANCE_ID}' was null/undefined.`
+        )
+      );
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining(
+          `New location for entity '${MOCK_INSTANCE_ID}' is undefined.`
         )
       );
     });
@@ -258,7 +263,7 @@ describe('EntityManager.addComponent', () => {
       const result = entityManager.addComponent(
         MOCK_INSTANCE_ID,
         POSITION_COMPONENT_ID,
-        { ...POSITION_DATA_NULL_LOCATION }
+        POSITION_DATA_NULL_LOCATION
       );
 
       expect(result).toBe(true);
@@ -272,22 +277,23 @@ describe('EntityManager.addComponent', () => {
       );
       expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining(
-          `New location for entity ${MOCK_INSTANCE_ID} is null/undefined.`
+          `Old location for entity '${MOCK_INSTANCE_ID}' was null/undefined.`
+        )
+      );
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining(
+          `New location for entity '${MOCK_INSTANCE_ID}' is null.`
         )
       );
     });
 
     describe('With Initial Position Component', () => {
       beforeEach(() => {
-        entityManager.activeEntities.clear();
+        entityManager.clearAll();
         mockSpatialIndex.clearIndex();
         jest.clearAllMocks();
-        setupBaseEntity(true, POSITION_DATA_INITIAL); // Entity has 'core:name' and 'core:position'
+        setupBaseEntity(true, POSITION_DATA_INITIAL);
         mockValidator.validate.mockReturnValue({ isValid: true });
-        // Clear mocks from setupBaseEntity's createEntityInstance call
-        mockSpatialIndex.addEntity.mockClear();
-        mockSpatialIndex.updateEntityLocation.mockClear();
-        mockLogger.debug.mockClear();
       });
 
       it('Success Case (Update Position Component): should update position, return true, and update spatial index with old and new locationIds', () => {
@@ -311,12 +317,12 @@ describe('EntityManager.addComponent', () => {
         );
         expect(mockLogger.debug).toHaveBeenCalledWith(
           expect.stringContaining(
-            `Old location for entity ${MOCK_INSTANCE_ID} was ${INITIAL_LOCATION_ID}.`
+            `Old location for entity '${MOCK_INSTANCE_ID}' was '${INITIAL_LOCATION_ID}'.`
           )
         );
         expect(mockLogger.debug).toHaveBeenCalledWith(
           expect.stringContaining(
-            `New location for entity ${MOCK_INSTANCE_ID} is ${NEW_LOCATION_ID}.`
+            `New location for entity '${MOCK_INSTANCE_ID}' is '${NEW_LOCATION_ID}'.`
           )
         );
       });
@@ -340,6 +346,21 @@ describe('EntityManager.addComponent', () => {
           INITIAL_LOCATION_ID,
           null
         );
+        expect(mockLogger.debug).toHaveBeenCalledWith(
+          expect.stringContaining(
+            `Old location for entity '${MOCK_INSTANCE_ID}' was '${INITIAL_LOCATION_ID}'.`
+          )
+        );
+        expect(mockLogger.debug).toHaveBeenCalledWith(
+          expect.stringContaining(
+            `New location for entity '${MOCK_INSTANCE_ID}' is null.`
+          )
+        );
+        expect(mockLogger.debug).toHaveBeenCalledWith(
+          expect.stringContaining(
+            `Successfully added/updated component '${POSITION_COMPONENT_ID}' data on entity '${MOCK_INSTANCE_ID}'.`
+          )
+        );
       });
 
       it('Success Case (Update Position Component - To No LocationId): should update position, return true, update spatial index with old and undefined new locationId', () => {
@@ -360,6 +381,21 @@ describe('EntityManager.addComponent', () => {
           INITIAL_LOCATION_ID,
           undefined
         );
+        expect(mockLogger.debug).toHaveBeenCalledWith(
+          expect.stringContaining(
+            `Old location for entity '${MOCK_INSTANCE_ID}' was '${INITIAL_LOCATION_ID}'.`
+          )
+        );
+        expect(mockLogger.debug).toHaveBeenCalledWith(
+          expect.stringContaining(
+            `New location for entity '${MOCK_INSTANCE_ID}' is undefined.`
+          )
+        );
+        expect(mockLogger.debug).toHaveBeenCalledWith(
+          expect.stringContaining(
+            `Successfully added/updated component '${POSITION_COMPONENT_ID}' data on entity '${MOCK_INSTANCE_ID}'.`
+          )
+        );
       });
     });
   });
@@ -371,7 +407,7 @@ describe('EntityManager.addComponent', () => {
         ...NEW_COMPONENT_DATA,
       });
     }).toThrow(
-      `EntityManager.addComponent: Entity not found with ID: ${nonExistentInstanceId}`
+      `EntityManager: Entity not found with ID: ${nonExistentInstanceId}`
     );
     expect(mockLogger.error).toHaveBeenCalledWith(
       expect.stringContaining(
@@ -390,6 +426,7 @@ describe('EntityManager.addComponent', () => {
       errors: validationErrors,
     });
     const invalidHealthData = { current: 'one hundred', max: 100 }; // Data that would fail validation
+    const expectedErrorDetails = JSON.stringify(validationErrors, null, 2);
 
     // Ensure the component does not exist initially or has different data
     entityManager.removeComponent(MOCK_INSTANCE_ID, NEW_COMPONENT_TYPE_ID); // Ensure it's not there
@@ -401,13 +438,13 @@ describe('EntityManager.addComponent', () => {
         invalidHealthData
       );
     }).toThrow(
-      `EntityManager.addComponent: Component data validation failed for type '${NEW_COMPONENT_TYPE_ID}' on entity '${MOCK_INSTANCE_ID}'.`
+      `addComponent ${NEW_COMPONENT_TYPE_ID} to entity ${MOCK_INSTANCE_ID} Errors:\n${expectedErrorDetails}`
     );
 
     expect(mockLogger.error).toHaveBeenCalledTimes(1);
-    const expectedErrorDetails = JSON.stringify(validationErrors, null, 2);
+    // The logger is expected to be called with the exact same message as the error thrown
     expect(mockLogger.error).toHaveBeenCalledWith(
-      `EntityManager.addComponent: Component data validation failed for type '${NEW_COMPONENT_TYPE_ID}' on entity '${MOCK_INSTANCE_ID}'. Errors:\n${expectedErrorDetails}`
+      `addComponent ${NEW_COMPONENT_TYPE_ID} to entity ${MOCK_INSTANCE_ID} Errors:\n${expectedErrorDetails}`
     );
     expect(
       entityManager.hasComponent(MOCK_INSTANCE_ID, NEW_COMPONENT_TYPE_ID)
@@ -428,6 +465,7 @@ describe('EntityManager.addComponent', () => {
       errors: validationErrors,
     });
     const invalidPositionData = { x: 1, y: 1, locationId: 12345 };
+    const expectedErrorDetails = JSON.stringify(validationErrors, null, 2);
 
     entityManager.removeComponent(MOCK_INSTANCE_ID, POSITION_COMPONENT_ID); // Ensure not there
 
@@ -438,10 +476,14 @@ describe('EntityManager.addComponent', () => {
         invalidPositionData
       );
     }).toThrow(
-      `EntityManager.addComponent: Component data validation failed for type '${POSITION_COMPONENT_ID}' on entity '${MOCK_INSTANCE_ID}'.`
+      `addComponent ${POSITION_COMPONENT_ID} to entity ${MOCK_INSTANCE_ID} Errors:\n${expectedErrorDetails}`
     );
 
     expect(mockLogger.error).toHaveBeenCalledTimes(1);
+    // The logger is expected to be called with the exact same message as the error thrown
+    expect(mockLogger.error).toHaveBeenCalledWith(
+      `addComponent ${POSITION_COMPONENT_ID} to entity ${MOCK_INSTANCE_ID} Errors:\n${expectedErrorDetails}`
+    );
     expect(
       entityManager.hasComponent(MOCK_INSTANCE_ID, POSITION_COMPONENT_ID)
     ).toBe(false);

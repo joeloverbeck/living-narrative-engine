@@ -25,6 +25,8 @@ import {
 // --- Helper Mocks/Types ---
 import { ActionTargetContext } from '../../src/models/actionTargetContext.js';
 import Entity from '../../src/entities/entity.js';
+import EntityDefinition from '../../src/entities/EntityDefinition.js';
+import EntityInstanceData from '../../src/entities/EntityInstanceData.js';
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import {
   EXITS_COMPONENT_ID,
@@ -60,14 +62,20 @@ describe('ActionDiscoveryService - Go Action (Fixed State)', () => {
   const HERO_INSTANCE_ID = 'hero-instance-uuid-integration-1';
   const GUILD_INSTANCE_ID = 'guild-instance-uuid-integration-1';
 
-  const heroEntityDefinitionData = {
-    id: HERO_DEFINITION_ID,
-    components: {
-      'core:actor': {},
-      'core:player': {},
-      'core:name': { text: 'Hero' },
-      [POSITION_COMPONENT_ID]: { locationId: GUILD_INSTANCE_ID, x: 0, y: 0 },
-    },
+  // Helper function to create entity instances for testing
+  const createTestEntity = (instanceId, definitionId, defComponents = {}, instanceOverrides = {}) => {
+    // For this test, entities are created with base components on their definition
+    // and specific test data as instance overrides.
+    const definition = new EntityDefinition(definitionId, { description: `Test Definition ${definitionId}`, components: defComponents });      
+    const instanceData = new EntityInstanceData(instanceId, definition, instanceOverrides);
+    return new Entity(instanceData);
+  };
+
+  const heroEntityInitialComponents = {
+    'core:actor': {},
+    'core:player': {},
+    'core:name': { text: 'Hero' },
+    [POSITION_COMPONENT_ID]: { locationId: GUILD_INSTANCE_ID, x: 0, y: 0 },
   };
   const adventurersGuildEntityDefinitionData = {
     id: GUILD_DEFINITION_ID,
@@ -106,25 +114,9 @@ describe('ActionDiscoveryService - Go Action (Fixed State)', () => {
     mockGetLocationIdForLog = getLocationIdForLog;
     mockSafeEventDispatcher = { dispatch: jest.fn() };
 
-    mockHeroEntity = new Entity(HERO_INSTANCE_ID, HERO_DEFINITION_ID);
-    Object.entries(heroEntityDefinitionData.components).forEach(
-      ([typeId, data]) => {
-        mockHeroEntity.addComponent(typeId, JSON.parse(JSON.stringify(data)));
-      }
-    );
+    mockHeroEntity = createTestEntity(HERO_INSTANCE_ID, HERO_DEFINITION_ID, {}, heroEntityInitialComponents);
 
-    mockAdventurersGuildLocation = new Entity(
-      GUILD_INSTANCE_ID,
-      GUILD_DEFINITION_ID
-    );
-    Object.entries(adventurersGuildEntityDefinitionData.components).forEach(
-      ([typeId, data]) => {
-        mockAdventurersGuildLocation.addComponent(
-          typeId,
-          JSON.parse(JSON.stringify(data))
-        );
-      }
-    );
+    mockAdventurersGuildLocation = createTestEntity(GUILD_INSTANCE_ID, GUILD_DEFINITION_ID, {}, adventurersGuildEntityDefinitionData.components);
 
     mockGameDataRepo.getAllActionDefinitions.mockReturnValue([
       coreWaitActionDefinition,

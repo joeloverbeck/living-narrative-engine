@@ -13,6 +13,8 @@ import { ActionValidationService } from '../../src/actions/validation/actionVali
 // --- Mock Dependencies ---
 import { PrerequisiteEvaluationService } from '../../src/actions/validation/prerequisiteEvaluationService.js'; // Import PES
 import Entity from '../../src/entities/entity.js'; // Needed for test inputs
+import EntityDefinition from '../../src/entities/EntityDefinition.js';
+import EntityInstanceData from '../../src/entities/EntityInstanceData.js';
 import { ActionTargetContext } from '../../src/models/actionTargetContext.js';
 import { createMockPrerequisiteEvaluationService } from '../testUtils.js'; // Needed for test inputs
 
@@ -53,6 +55,13 @@ const mockDomainChecker = {
 /** @type {jest.Mocked<PrerequisiteEvaluationService>} */
 let mockPesInstance;
 
+// Helper function to create entity instances for testing
+const createTestEntity = (instanceId, definitionId, defComponents = {}, instanceOverrides = {}) => {
+  const definition = new EntityDefinition(definitionId, { description: `Test Definition ${definitionId}`, components: defComponents });
+  const instanceData = new EntityInstanceData(instanceId, definition, instanceOverrides);
+  return new Entity(instanceData);
+};
+
 // --- Test Suite ---
 
 describe('Integration Test: ActionValidationService - Prerequisite Validation Step (with PES)', () => {
@@ -92,7 +101,7 @@ describe('Integration Test: ActionValidationService - Prerequisite Validation St
     });
 
     // Define Mock Data (Same as before)
-    mockActorEntity = new Entity('player-1', 'dummy');
+    mockActorEntity = createTestEntity('player-1', 'dummy-def');
     mockTargetContext = ActionTargetContext.forEntity('target-1');
 
     mockActionDefWithPrereqs = {
@@ -127,7 +136,7 @@ describe('Integration Test: ActionValidationService - Prerequisite Validation St
     mockPesInstance.evaluate.mockReturnValue(true);
     mockEntityManager.getEntityInstance.mockImplementation((id) => {
       if (id === 'player-1') return mockActorEntity;
-      if (id === 'target-1') return new Entity('target-1', 'dummy');
+      if (id === 'target-1') return createTestEntity('target-1', 'dummy-def');
       return undefined;
     });
   });

@@ -28,6 +28,8 @@ jest.mock('../../src/entities/entityManager.js', () => {
 import WorldContext from '../../src/context/worldContext.js';
 import ConsoleLogger from '../../src/logging/consoleLogger.js';
 import Entity from '../../src/entities/entity.js';
+import EntityDefinition from '../../src/entities/EntityDefinition.js';
+import EntityInstanceData from '../../src/entities/EntityInstanceData.js';
 import EntityManager from '../../src/entities/entityManager.js'; // Mocked constructor
 import {
   POSITION_COMPONENT_ID,
@@ -42,6 +44,13 @@ describe('WorldContext Edge Cases', () => {
   let loggerWarnSpy;
   let dispatcher;
   let originalNodeEnv; // Variable to store original NODE_ENV
+
+  // Helper function to create entity instances for testing
+  const createTestEntity = (instanceId, definitionId, defComponents = {}, instanceOverrides = {}) => {
+    const definition = new EntityDefinition(definitionId, { description: `Test Definition ${definitionId}`, components: defComponents });
+    const instanceData = new EntityInstanceData(instanceId, definition, instanceOverrides);
+    return new Entity(instanceData);
+  };
 
   beforeEach(() => {
     // Store and set NODE_ENV to production for testing the non-throwing path
@@ -105,8 +114,8 @@ describe('WorldContext Edge Cases', () => {
 
   test('getCurrentLocation() returns null and logs error when two current actors found', () => {
     // Arrange: Mock EntityManager to return two actors
-    const actor1 = new Entity('actor1', 'dummy');
-    const actor2 = new Entity('actor2', 'dummy');
+    const actor1 = createTestEntity('actor1', 'dummy-def');
+    const actor2 = createTestEntity('actor2', 'dummy-def');
     mockEntityManagerInstance.getEntitiesWithComponent.mockReturnValue([
       actor1,
       actor2,
@@ -139,7 +148,7 @@ describe('WorldContext Edge Cases', () => {
 
   test('getCurrentLocation() returns null when the current actor has no position component', () => {
     // Arrange
-    const actor1 = new Entity('player1', 'dummy');
+    const actor1 = createTestEntity('player1', 'dummy-def');
     mockEntityManagerInstance.getEntitiesWithComponent.mockImplementation(
       (componentTypeId) => {
         return componentTypeId === CURRENT_ACTOR_COMPONENT_ID ? [actor1] : [];
@@ -180,7 +189,7 @@ describe('WorldContext Edge Cases', () => {
 
   test('getCurrentLocation() returns null when the current actor has position component but invalid locationId', () => {
     // Arrange
-    const actor1 = new Entity('player1', 'dummy');
+    const actor1 = createTestEntity('player1', 'dummy-def');
     mockEntityManagerInstance.getEntitiesWithComponent.mockImplementation(
       (componentTypeId) => {
         return componentTypeId === CURRENT_ACTOR_COMPONENT_ID ? [actor1] : [];
@@ -221,8 +230,8 @@ describe('WorldContext Edge Cases', () => {
 
   test('getCurrentLocation() returns location entity when actor and position are valid', () => {
     // Arrange
-    const actor1 = new Entity('player1', 'dummy');
-    const locationEntity = new Entity('loc1', 'dummy');
+    const actor1 = createTestEntity('player1', 'dummy-def');
+    const locationEntity = createTestEntity('loc1', 'dummy-def');
     const positionData = { locationId: 'loc1', x: 0, y: 0 };
 
     mockEntityManagerInstance.getEntitiesWithComponent.mockImplementation(
@@ -265,8 +274,8 @@ describe('WorldContext Edge Cases', () => {
 
   test('getCurrentLocation() returns null and warns when location entity referenced by position does not exist', () => {
     // Arrange
-    const actor1 = new Entity('player1', 'dummy');
-    const positionData = { locationId: 'nonexistent_loc', x: 0, y: 0 };
+    const actor1 = createTestEntity('player1', 'dummy-def');
+    const positionData = { locationId: 'nonexistent-loc', x: 0, y: 0 };
 
     // Ensure only one actor is returned
     mockEntityManagerInstance.getEntitiesWithComponent.mockImplementation(
@@ -299,14 +308,14 @@ describe('WorldContext Edge Cases', () => {
       POSITION_COMPONENT_ID
     );
     expect(mockEntityManagerInstance.getEntityInstance).toHaveBeenCalledWith(
-      'nonexistent_loc'
+      'nonexistent-loc'
     );
     expect(dispatcher.dispatch).not.toHaveBeenCalled(); // No error expected here
     expect(loggerWarnSpy).toHaveBeenCalledTimes(1); // Warning expected
     // VVVVVV UPDATED LOG MESSAGE CHECK VVVVVV
     expect(loggerWarnSpy).toHaveBeenCalledWith(
       expect.stringContaining(
-        `Could not find location entity INSTANCE with ID 'nonexistent_loc' referenced by actor 'player1'`
+        `Could not find location entity INSTANCE with ID 'nonexistent-loc' referenced by actor 'player1'`
       )
     );
     // ^^^^^^ UPDATED LOG MESSAGE CHECK ^^^^^^
