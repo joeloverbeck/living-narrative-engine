@@ -24,10 +24,10 @@ describe('LoadResultAggregator utility', () => {
     });
   });
 
-  it('recordError increments error counts', () => {
+  it('recordFailure increments error counts', () => {
     aggregator.modResults = { events: { count: 5, overrides: 0, errors: 0 } };
-    aggregator.recordError('events');
-    aggregator.recordError('events');
+    aggregator.recordFailure('events');
+    aggregator.recordFailure('events');
 
     expect(aggregator.modResults.events.errors).toBe(2);
   });

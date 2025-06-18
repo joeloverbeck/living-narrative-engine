@@ -78,16 +78,16 @@ describe('WorldLoader helper methods', () => {
     jest.clearAllMocks();
   });
 
-  describe('_checkEssentialSchemas', () => {
+  describe('checkEssentialSchemas', () => {
     it('passes when all schemas are loaded', () => {
-      expect(() => worldLoader._checkEssentialSchemas()).not.toThrow();
+      expect(() => worldLoader.checkEssentialSchemas()).not.toThrow();
     });
 
     it('throws MissingSchemaError when a schema id is undefined', () => {
       configuration.getContentTypeSchemaId.mockImplementation((type) =>
         type === 'actions' ? undefined : `id:${type}`
       );
-      expect(() => worldLoader._checkEssentialSchemas()).toThrow(
+      expect(() => worldLoader.checkEssentialSchemas()).toThrow(
         MissingSchemaError
       );
       expect(logger.error).toHaveBeenCalledWith(
@@ -97,7 +97,7 @@ describe('WorldLoader helper methods', () => {
 
     it('throws MissingSchemaError when a schema is not loaded', () => {
       validator.isSchemaLoaded.mockImplementation((id) => id !== 'id:actions');
-      expect(() => worldLoader._checkEssentialSchemas()).toThrow(
+      expect(() => worldLoader.checkEssentialSchemas()).toThrow(
         MissingSchemaError
       );
       expect(logger.error).toHaveBeenCalledWith(
@@ -129,12 +129,12 @@ describe('WorldLoader helper methods', () => {
       expect(totals).toEqual({ events: { count: 0, overrides: 0, errors: 0 } });
     });
 
-    it('recordError increments error counts', () => {
+    it('recordFailure increments error counts', () => {
       const totals = { rules: { count: 1, overrides: 0, errors: 0 } };
       const agg = new LoadResultAggregator(totals);
       agg.modResults = { rules: { count: 1, overrides: 0, errors: 0 } };
-      agg.recordError('rules');
-      agg.recordError('rules');
+      agg.recordFailure('rules');
+      agg.recordFailure('rules');
       expect(agg.modResults.rules.errors).toBe(2);
       expect(totals.rules.errors).toBe(2);
     });

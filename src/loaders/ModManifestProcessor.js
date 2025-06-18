@@ -59,10 +59,10 @@ export class ModManifestProcessor {
     const loadedManifestsMap = new Map();
     const manifestsForValidation = new Map();
     for (const [modId, manifestObj] of loadedManifestsRaw.entries()) {
-      const lcModId = modId.toLowerCase();
-      this.#registry.store('mod_manifests', lcModId, manifestObj);
-      manifestsForValidation.set(lcModId, manifestObj);
-      loadedManifestsMap.set(lcModId, manifestObj);
+      const lowerCaseModId = modId.toLowerCase();
+      this.#registry.store('mod_manifests', lowerCaseModId, manifestObj);
+      manifestsForValidation.set(lowerCaseModId, manifestObj);
+      loadedManifestsMap.set(lowerCaseModId, manifestObj);
     }
     this.#logger.debug(
       `WorldLoader: Stored ${manifestsForValidation.size} mod manifests in the registry.`

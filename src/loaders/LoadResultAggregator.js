@@ -74,12 +74,12 @@ export class LoadResultAggregator {
   }
 
   /**
-   * Records an error occurrence for a specific loader.
+   * Records a failure occurrence for a specific loader.
    *
-   * @param {string} typeName - Content type name for which an error occurred.
+   * @param {string} typeName - Content type name for which a failure occurred.
    * @returns {void}
    */
-  recordError(typeName) {
+  recordFailure(typeName) {
     if (!this.modResults[typeName]) {
       this.modResults[typeName] = { count: 0, overrides: 0, errors: 0 };
     }
