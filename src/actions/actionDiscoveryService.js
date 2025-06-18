@@ -20,6 +20,10 @@ import { getActorLocation } from '../utils/actorLocationUtils.js';
 import { safeDispatchError } from '../utils/safeDispatchErrorUtils.js';
 
 // ────────────────────────────────────────────────────────────────────────────────
+/**
+ * Service responsible for discovering which actions are available for an
+ * actor in a given context.
+ */
 export class ActionDiscoveryService extends IActionDiscoveryService {
   #gameDataRepository;
   #entityManager;
@@ -31,14 +35,16 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
   #safeEventDispatcher;
 
   /**
-   * @param {object} deps
-   * @param {GameDataRepository} deps.gameDataRepository
-   * @param {EntityManager}      deps.entityManager
-   * @param {ActionValidationService} deps.actionValidationService
-   * @param {ILogger}            deps.logger
-   * @param {formatActionCommandFn} deps.formatActionCommandFn
-   * @param {getEntityIdsForScopesFn} deps.getEntityIdsForScopesFn
-   * @param {ISafeEventDispatcher} deps.safeEventDispatcher
+   * Creates an instance of ActionDiscoveryService.
+   *
+   * @param {object} deps - Service dependencies.
+   * @param {GameDataRepository} deps.gameDataRepository - Repository exposing action definitions.
+   * @param {EntityManager} deps.entityManager - Entity manager used for lookups.
+   * @param {ActionValidationService} deps.actionValidationService - Validates whether actions are usable.
+   * @param {ILogger} deps.logger - Logger used for diagnostic output.
+   * @param {formatActionCommandFn} deps.formatActionCommandFn - Function that converts actions to commands.
+   * @param {getEntityIdsForScopesFn} deps.getEntityIdsForScopesFn - Resolves entity IDs from target scopes.
+   * @param {ISafeEventDispatcher} deps.safeEventDispatcher - Dispatcher used to emit error events.
    * @param {typeof getAvailableExits} [deps.getAvailableExitsFn] - Function to retrieve exits for a location.
    */
   constructor({
@@ -89,9 +95,11 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
   }
 
   /**
-   * @param {Entity} actorEntity
-   * @param {ActionContext} context
-   * @returns {Promise<import('../interfaces/IActionDiscoveryService.js').DiscoveredActionInfo[]>}
+   * Discover all actions that the given actor can perform in the supplied context.
+   *
+   * @param {Entity} actorEntity - The entity attempting to act.
+   * @param {ActionContext} context - Context such as current location and world state.
+   * @returns {Promise<import('../interfaces/IActionDiscoveryService.js').DiscoveredActionInfo[]>} Resolves with an array of discovered actions.
    */
   async getValidActions(actorEntity, context) {
     this.#logger.debug(
