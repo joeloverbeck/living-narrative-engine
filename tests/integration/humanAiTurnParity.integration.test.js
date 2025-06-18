@@ -24,6 +24,9 @@ function buildHandler(logger) {
     getLogger: () => logger,
     getTurnContext: () => null,
     _resetTurnStateAndResources: jest.fn(),
+    resetStateAndResources: jest.fn(function (reason) {
+      this._resetTurnStateAndResources(reason);
+    }),
     requestIdleStateTransition: jest.fn(),
     requestProcessingCommandStateTransition: jest.fn(),
   };

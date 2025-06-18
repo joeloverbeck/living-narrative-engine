@@ -227,6 +227,9 @@ describe('ProcessingCommandState', () => {
         }
       }),
       _resetTurnStateAndResources: jest.fn(),
+      resetStateAndResources: jest.fn(function (reason) {
+        mockHandler._resetTurnStateAndResources(reason);
+      }),
       requestIdleStateTransition: jest.fn().mockResolvedValue(undefined),
       getLogger: jest.fn().mockReturnValue(mockLogger),
       _currentState: null,

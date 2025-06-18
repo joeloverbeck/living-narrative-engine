@@ -101,6 +101,9 @@ const createMockBaseTurnHandler = (loggerInstance = mockSystemLogger) => {
       handlerMock._currentTurnContext = null;
       handlerMock._currentActor = null;
     }),
+    resetStateAndResources: jest.fn((reason) => {
+      handlerMock._resetTurnStateAndResources(reason);
+    }),
     signalNormalApparentTermination: jest.fn(),
     destroy: jest.fn(async () => {
       handlerMock._isDestroyed = true;

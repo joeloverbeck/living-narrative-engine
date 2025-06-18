@@ -39,6 +39,10 @@ const buildHandler = (ctx = null) => {
     getTurnContext: jest.fn().mockReturnValue(ctx),
     getLogger: jest.fn(() => logger),
     _resetTurnStateAndResources: jest.fn(),
+    resetStateAndResources: jest.fn(function (reason) {
+      handler._resetTurnStateAndResources(reason);
+    }),
+    requestIdleStateTransition: jest.fn().mockResolvedValue(undefined),
     _transitionToState: jest.fn().mockResolvedValue(undefined),
     // createIdleState just returns another TurnIdleState instance
     _turnStateFactory: {
@@ -78,7 +82,7 @@ describe('TurnIdleState.startTurn', () => {
 
     // No error handling paths should fire
     expect(handler._resetTurnStateAndResources).not.toHaveBeenCalled();
-    expect(handler._transitionToState).not.toHaveBeenCalled();
+    expect(handler.requestIdleStateTransition).not.toHaveBeenCalled();
   });
 
   it('throws & resets when actorEntity is null/invalid', async () => {
@@ -90,7 +94,7 @@ describe('TurnIdleState.startTurn', () => {
     );
 
     expect(handler._resetTurnStateAndResources).toHaveBeenCalledTimes(1);
-    expect(handler._transitionToState).toHaveBeenCalledTimes(1);
+    expect(handler.requestIdleStateTransition).toHaveBeenCalledTimes(1);
   });
 
   it('throws & recovers when ITurnContext is missing', async () => {
@@ -103,7 +107,7 @@ describe('TurnIdleState.startTurn', () => {
     );
 
     expect(handler._resetTurnStateAndResources).toHaveBeenCalledTimes(1);
-    expect(handler._transitionToState).toHaveBeenCalledTimes(1);
+    expect(handler.requestIdleStateTransition).toHaveBeenCalledTimes(1);
   });
 
   it('throws & recovers on actor/context mismatch', async () => {
@@ -117,7 +121,7 @@ describe('TurnIdleState.startTurn', () => {
     );
 
     expect(handler._resetTurnStateAndResources).toHaveBeenCalledTimes(1);
-    expect(handler._transitionToState).toHaveBeenCalledTimes(1);
+    expect(handler.requestIdleStateTransition).toHaveBeenCalledTimes(1);
   });
 });
 

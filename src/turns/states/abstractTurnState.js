@@ -93,8 +93,8 @@ export class AbstractTurnState extends ITurnState {
    * @returns {Promise<void>}
    */
   async _resetToIdle(reason) {
-    if (typeof this._handler?._resetTurnStateAndResources === 'function') {
-      this._handler._resetTurnStateAndResources(reason);
+    if (typeof this._handler?.resetStateAndResources === 'function') {
+      this._handler.resetStateAndResources(reason);
     }
     if (typeof this._handler?.requestIdleStateTransition === 'function') {
       await this._handler.requestIdleStateTransition();
