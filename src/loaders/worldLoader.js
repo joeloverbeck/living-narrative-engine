@@ -372,6 +372,15 @@ class WorldLoader extends AbstractLoader {
   }
 
   /**
+   * Wrapper exposing the essential schema check for testing.
+   *
+   * @returns {void}
+   */
+  _checkEssentialSchemas() {
+    return this.#checkEssentialSchemas();
+  }
+
+  /**
    * Loads core prompt text used by the engine UI.
    *
    * @private
