@@ -25,13 +25,18 @@ export function showErrorInElement(targetEl, msg) {
  * @description Creates a temporary error element after the provided base element.
  * @param {HTMLElement | null | undefined} baseEl - Element to insert after.
  * @param {string} msg - Message for the new element.
+ * @param {function(string): HTMLElement} [createElement] - Element creation function. Defaults to `document.createElement`.
  * @returns {HTMLElement | null} The created element, or null if not created.
  */
-export function createTemporaryErrorElement(baseEl, msg) {
+export function createTemporaryErrorElement(
+  baseEl,
+  msg,
+  createElement = (tag) => document.createElement(tag)
+) {
   if (!baseEl || !(baseEl instanceof HTMLElement)) {
     return null;
   }
-  const temporaryErrorElement = document.createElement('div');
+  const temporaryErrorElement = createElement('div');
   temporaryErrorElement.id = 'temp-startup-error';
   temporaryErrorElement.textContent = msg;
   temporaryErrorElement.style.color = 'red';
@@ -83,10 +88,19 @@ export function disableInput(el, placeholder) {
  * @param {FatalErrorUIElements} uiElements - References to key UI elements.
  * @param {FatalErrorDetails} errorDetails - Details about the error.
  * @param {import('../interfaces/coreServices.js').ILogger} [logger] - Optional logger instance.
+ * @param {{createElement?: function(string): HTMLElement, alert?: function(string): void}} [domAdapter] - DOM adapter for custom element creation and alerts.
  */
-export function displayFatalStartupError(uiElements, errorDetails, logger) {
+export function displayFatalStartupError(
+  uiElements,
+  errorDetails,
+  logger,
+  domAdapter
+) {
   const log = getModuleLogger('errorUtils', logger);
   const { outputDiv, errorDiv, titleElement, inputElement } = uiElements;
+  const create =
+    domAdapter?.createElement ?? ((tag) => document.createElement(tag));
+  const showAlert = domAdapter?.alert ?? alert;
   const {
     userMessage,
     consoleMessage,
@@ -116,7 +130,7 @@ export function displayFatalStartupError(uiElements, errorDetails, logger) {
   // 3. Fallback to dynamic creation if errorDiv not available/failed, but outputDiv is
   if (!displayedInErrorDiv) {
     try {
-      const tmpEl = createTemporaryErrorElement(outputDiv, userMessage);
+      const tmpEl = createTemporaryErrorElement(outputDiv, userMessage, create);
       if (tmpEl) {
         log.info(
           'displayFatalStartupError: Displayed error in a dynamically created element near outputDiv.'
@@ -133,7 +147,7 @@ export function displayFatalStartupError(uiElements, errorDetails, logger) {
 
   // 4. Ultimate fallback to alert if no DOM display was feasible
   if (!displayedInErrorDiv) {
-    alert(userMessage);
+    showAlert(userMessage);
     log.info(
       'displayFatalStartupError: Displayed error using alert() as a fallback.'
     );

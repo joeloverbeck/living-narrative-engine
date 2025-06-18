@@ -30,7 +30,11 @@ describe('displayFatalStartupError', () => {
       titleElement: document.querySelector('#title'),
     };
 
-    const alertSpy = jest.spyOn(global, 'alert').mockImplementation(() => {});
+    const alertSpy = jest.fn();
+    const domAdapter = {
+      createElement: document.createElement.bind(document),
+      alert: alertSpy,
+    };
     const logger = {
       error: jest.fn(),
       info: jest.fn(),
@@ -48,7 +52,8 @@ describe('displayFatalStartupError', () => {
         inputPlaceholder: 'halt',
         phase: 'Test',
       },
-      logger
+      logger,
+      domAdapter
     );
 
     expect(logger.error).toHaveBeenCalledWith(
@@ -69,7 +74,11 @@ describe('displayFatalStartupError', () => {
     const outputDiv = document.querySelector('#outputDiv');
     const uiElements = { outputDiv };
 
-    const alertSpy = jest.spyOn(global, 'alert').mockImplementation(() => {});
+    const alertSpy = jest.fn();
+    const domAdapter = {
+      createElement: document.createElement.bind(document),
+      alert: alertSpy,
+    };
     const logger = {
       error: jest.fn(),
       info: jest.fn(),
@@ -83,7 +92,8 @@ describe('displayFatalStartupError', () => {
         userMessage: 'Oops',
         consoleMessage: 'Bad',
       },
-      logger
+      logger,
+      domAdapter
     );
 
     const tempEl = outputDiv.nextElementSibling;
@@ -98,7 +108,11 @@ describe('displayFatalStartupError', () => {
 
   it('falls back to alert when no DOM targets', () => {
     setDom('');
-    const alertSpy = jest.spyOn(global, 'alert').mockImplementation(() => {});
+    const alertSpy = jest.fn();
+    const domAdapter = {
+      createElement: document.createElement.bind(document),
+      alert: alertSpy,
+    };
     const logger = {
       error: jest.fn(),
       info: jest.fn(),
@@ -112,7 +126,8 @@ describe('displayFatalStartupError', () => {
         userMessage: 'Oops',
         consoleMessage: 'Bad',
       },
-      logger
+      logger,
+      domAdapter
     );
 
     expect(alertSpy).toHaveBeenCalledWith('Oops');
