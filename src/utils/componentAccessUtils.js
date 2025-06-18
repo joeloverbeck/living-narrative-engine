@@ -113,7 +113,7 @@ export function resolveEntityInstance(entityOrId, entityManager, logger) {
     return null;
   }
 
-  if (entityOrId != null) {
+  if (entityOrId !== null && entityOrId !== undefined) {
     log.debug('resolveEntityInstance: provided value is not a valid entity.');
   }
 

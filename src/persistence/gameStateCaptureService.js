@@ -86,7 +86,9 @@ class GameStateCaptureService {
    */
   #hasMeaningfulData(data) {
     return (
-      data != null && (typeof data !== 'object' || Object.keys(data).length > 0)
+      data !== null &&
+      data !== undefined &&
+      (typeof data !== 'object' || Object.keys(data).length > 0)
     );
   }
 

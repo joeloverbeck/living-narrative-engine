@@ -10,11 +10,8 @@ export const THOUGHTS_WRAPPER_KEY = 'thoughts_wrapper';
  * @description Renders the recent-thoughts section when `promptData.thoughtsArray` is supplied.
  */
 export class ThoughtsSectionAssembler extends IPromptElementAssembler {
-  #logger;
-
-  constructor({ logger = console } = {}) {
+  constructor() {
     super();
-    this.#logger = logger;
   }
 
   /** @inheritdoc */
@@ -31,7 +28,7 @@ export class ThoughtsSectionAssembler extends IPromptElementAssembler {
     );
 
     const thoughtLines = arr
-      .filter((t) => t != null && t !== '')
+      .filter((t) => t !== null && t !== undefined && t !== '')
       .map((t) => `- ${String(t)}`)
       .join('\n');
 

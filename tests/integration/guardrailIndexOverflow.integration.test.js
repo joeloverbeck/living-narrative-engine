@@ -50,7 +50,7 @@ describe('Guardrail – index overflow', () => {
     expect(result.length).toBe(MAX_AVAILABLE_ACTIONS_PER_TURN);
     expect(logger.warn).toHaveBeenCalledTimes(2);
     const [serviceWarn, providerWarn] = logger.warn.mock.calls.map((c) => c[0]);
-    expect(serviceWarn).toContain(`actor \"${actor.id}\" truncated`);
+    expect(serviceWarn).toContain(`actor "${actor.id}" truncated`);
     expect(providerWarn).toContain(`[Overflow] actor=${actor.id}`);
   });
 });
