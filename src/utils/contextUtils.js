@@ -1,11 +1,7 @@
 // src/utils/contextUtils.js
 import { safeResolvePath } from './objectUtils.js';
 import { NAME_COMPONENT_ID } from '../constants/componentIds.js';
-import {
-  PlaceholderResolver,
-  PLACEHOLDER_FIND_REGEX,
-  FULL_STRING_PLACEHOLDER_REGEX,
-} from './placeholderResolverUtils.js';
+import { PlaceholderResolver } from './placeholderResolverUtils.js';
 import { getEntityDisplayName } from './entityUtils.js';
 
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
@@ -135,6 +131,95 @@ function resolvePlaceholderPath(
 }
 
 /**
+ * Builds the data sources for placeholder resolution.
+ *
+ * @private
+ * @description Creates the base, root context, and fallback sources used by
+ * {@link PlaceholderResolver}.
+ * @param {object} executionContext - Execution context supplying actor, target,
+ *   and evaluationContext data.
+ * @returns {{sources: object[], fallback: object}} Sources array and fallback
+ *   object for {@link PlaceholderResolver#resolveStructure}.
+ */
+function _buildResolutionSources(executionContext) {
+  const contextSource = {
+    context:
+      executionContext?.evaluationContext?.context &&
+      typeof executionContext.evaluationContext.context === 'object'
+        ? executionContext.evaluationContext.context
+        : {},
+  };
+
+  const fallback = {};
+  const actorName = resolveEntityNameFallback('actor.name', executionContext);
+  if (actorName !== undefined) {
+    fallback.actor = { name: actorName };
+  }
+  const targetName = resolveEntityNameFallback('target.name', executionContext);
+  if (targetName !== undefined) {
+    if (!fallback.target) fallback.target = {};
+    fallback.target.name = targetName;
+  }
+
+  const baseSource = { ...(executionContext ?? {}) };
+  delete baseSource.context;
+  const rootContextSource =
+    executionContext &&
+    Object.prototype.hasOwnProperty.call(executionContext, 'context')
+      ? { context: executionContext.context }
+      : {};
+  const sources = [rootContextSource, baseSource, contextSource];
+
+  return { sources, fallback };
+}
+
+/**
+ * Resolves placeholders within a structure using a provided resolver.
+ *
+ * @private
+ * @param {*} value - Value potentially containing placeholders.
+ * @param {PlaceholderResolver} resolver - Resolver instance.
+ * @param {object[]} sources - Primary data sources for resolution.
+ * @param {object} fallback - Fallback source for resolution.
+ * @param {Iterable<string>} [skipKeys] - Keys to skip when processing objects.
+ * @returns {*} Resolved value or the original input when unchanged.
+ */
+function _resolveStructure(value, resolver, sources, fallback, skipKeys = []) {
+  if (
+    value &&
+    typeof value === 'object' &&
+    !Array.isArray(value) &&
+    !(value instanceof Date)
+  ) {
+    let changed = false;
+    const resolvedObj = {};
+    for (const key in value) {
+      if (Object.prototype.hasOwnProperty.call(value, key)) {
+        if (
+          (skipKeys instanceof Set && skipKeys.has(key)) ||
+          (Array.isArray(skipKeys) && skipKeys.includes(key))
+        ) {
+          resolvedObj[key] = value[key];
+        } else {
+          const resolvedVal = resolver.resolveStructure(
+            value[key],
+            sources,
+            fallback
+          );
+          if (resolvedVal !== value[key]) {
+            changed = true;
+          }
+          resolvedObj[key] = resolvedVal;
+        }
+      }
+    }
+    return changed ? resolvedObj : value;
+  }
+
+  return resolver.resolveStructure(value, sources, fallback);
+}
+
+/**
  * Recursively resolves placeholder strings (e.g., "{actor.id}", "{context.variableName}") within an input structure
  * using values from the provided executionContext. Handles nested objects and arrays.
  * Replaces placeholders found within strings. If a string consists *only* of a placeholder
@@ -160,63 +245,7 @@ export function resolvePlaceholders(
   skipKeys = []
 ) {
   const resolver = new PlaceholderResolver(logger);
-  const contextSource = {
-    context:
-      executionContext?.evaluationContext?.context &&
-      typeof executionContext.evaluationContext.context === 'object'
-        ? executionContext.evaluationContext.context
-        : {},
-  };
-  const fallbackSource = {};
-  const actorName = resolveEntityNameFallback('actor.name', executionContext);
-  if (actorName !== undefined) {
-    fallbackSource.actor = { name: actorName };
-  }
-  const targetName = resolveEntityNameFallback('target.name', executionContext);
-  if (targetName !== undefined) {
-    if (!fallbackSource.target) fallbackSource.target = {};
-    fallbackSource.target.name = targetName;
-  }
+  const { sources, fallback } = _buildResolutionSources(executionContext);
 
-  const baseSource = { ...(executionContext ?? {}) };
-  delete baseSource.context;
-  const rootContextSource =
-    executionContext &&
-    Object.prototype.hasOwnProperty.call(executionContext, 'context')
-      ? { context: executionContext.context }
-      : {};
-  const sources = [rootContextSource, baseSource, contextSource];
-
-  if (
-    input &&
-    typeof input === 'object' &&
-    !Array.isArray(input) &&
-    !(input instanceof Date)
-  ) {
-    let changed = false;
-    const resolvedObj = {};
-    for (const key in input) {
-      if (Object.prototype.hasOwnProperty.call(input, key)) {
-        if (
-          (skipKeys instanceof Set && skipKeys.has(key)) ||
-          (Array.isArray(skipKeys) && skipKeys.includes(key))
-        ) {
-          resolvedObj[key] = input[key];
-        } else {
-          const resolvedVal = resolver.resolveStructure(
-            input[key],
-            sources,
-            fallbackSource
-          );
-          if (resolvedVal !== input[key]) {
-            changed = true;
-          }
-          resolvedObj[key] = resolvedVal;
-        }
-      }
-    }
-    return changed ? resolvedObj : input;
-  }
-
-  return resolver.resolveStructure(input, sources, fallbackSource);
+  return _resolveStructure(input, resolver, sources, fallback, skipKeys);
 }
