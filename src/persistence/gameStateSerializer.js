@@ -110,13 +110,14 @@ class GameStateSerializer {
   }
 
   /**
-   * Serializes the game state to MessagePack and compresses it with Gzip.
-   * Embeds a checksum of the gameState section.
+   * Deep clones the given object and validates the presence of a gameState section.
    *
-   * @param {object} gameStateObject - Game state object to serialize.
-   * @returns {Promise<{compressedData: Uint8Array, finalSaveObject: object}>} Resulting data and mutated object.
+   * @param {object} gameStateObject - Original game state structure.
+   * @returns {object} Cloned and validated save object.
+   * @throws {PersistenceError} When cloning fails or gameState is invalid.
+   * @private
    */
-  async serializeAndCompress(gameStateObject) {
+  #cloneForSerialization(gameStateObject) {
     const cloneResult = safeDeepClone(gameStateObject, this.#logger);
     if (!cloneResult.success || !cloneResult.data) {
       throw cloneResult.error;
@@ -136,14 +137,34 @@ class GameStateSerializer {
       );
     }
 
-    finalSaveObject.integrityChecks.gameStateChecksum =
-      await this.calculateGameStateChecksum(finalSaveObject.gameState);
-    this.#logger.debug(
-      `Calculated gameStateChecksum: ${finalSaveObject.integrityChecks.gameStateChecksum}`
-    );
+    return finalSaveObject;
+  }
 
+  /**
+   * Calculates and applies the checksum for the game state section of the object.
+   *
+   * @param {object} clonedObj - Cloned save object with a valid gameState.
+   * @returns {Promise<void>} Resolves when checksum is applied.
+   * @private
+   */
+  async #applyChecksum(clonedObj) {
+    clonedObj.integrityChecks.gameStateChecksum =
+      await this.calculateGameStateChecksum(clonedObj.gameState);
+    this.#logger.debug(
+      `Calculated gameStateChecksum: ${clonedObj.integrityChecks.gameStateChecksum}`
+    );
+  }
+
+  /**
+   * Encodes the object using MessagePack and compresses it with gzip.
+   *
+   * @param {object} obj - Object to encode and compress.
+   * @returns {{compressedData: Uint8Array, finalSaveObject: object}} Encoded data and original object.
+   * @private
+   */
+  #encodeAndCompress(obj) {
     this.#logger.debug('Serializing full game state object to MessagePack...');
-    const messagePackData = encode(finalSaveObject);
+    const messagePackData = encode(obj);
     this.#logger.debug(
       `MessagePack Raw Size: ${messagePackData.byteLength} bytes`
     );
@@ -152,7 +173,20 @@ class GameStateSerializer {
     const compressedData = pako.gzip(messagePackData);
     this.#logger.debug(`Gzipped Size: ${compressedData.byteLength} bytes`);
 
-    return { compressedData, finalSaveObject };
+    return { compressedData, finalSaveObject: obj };
+  }
+
+  /**
+   * Serializes the game state to MessagePack and compresses it with Gzip.
+   * Embeds a checksum of the gameState section.
+   *
+   * @param {object} gameStateObject - Game state object to serialize.
+   * @returns {Promise<{compressedData: Uint8Array, finalSaveObject: object}>} Resulting data and mutated object.
+   */
+  async serializeAndCompress(gameStateObject) {
+    const finalSaveObject = this.#cloneForSerialization(gameStateObject);
+    await this.#applyChecksum(finalSaveObject);
+    return this.#encodeAndCompress(finalSaveObject);
   }
 
   /**
