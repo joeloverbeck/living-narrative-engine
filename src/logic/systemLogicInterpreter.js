@@ -10,8 +10,8 @@ import { REQUIRED_ENTITY_MANAGER_METHODS } from '../constants/entityManager.js';
 import { evaluateConditionWithLogging } from './jsonLogicEvaluationService.js';
 import BaseService from '../utils/baseService.js';
 import { executeActionSequence } from './actionSequence.js';
-import { buildRuleCache } from './ruleCacheUtils.js';
-import { isEmptyCondition } from './utils/jsonLogicUtils.js';
+import { buildRuleCache } from '../utils/ruleCacheUtils.js';
+import { isEmptyCondition } from '../utils/jsonLogicUtils.js';
 
 /* ---------------------------------------------------------------------------
  * Internal types (JSDoc only)

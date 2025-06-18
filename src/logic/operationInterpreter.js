@@ -5,7 +5,7 @@
 
 import { resolvePlaceholders } from '../utils/contextUtils.js';
 import BaseService from '../utils/baseService.js';
-import { getNormalizedOperationType } from './utils/operationTypeUtils.js';
+import { getNormalizedOperationType } from '../utils/operationTypeUtils.js';
 
 /** @typedef {import('../../data/schemas/operation.schema.json').Operation} Operation */
 /** @typedef {import('./defs.js').ExecutionContext}                               ExecutionContext */

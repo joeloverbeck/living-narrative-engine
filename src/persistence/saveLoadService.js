@@ -12,7 +12,7 @@ import {
 import {
   createPersistenceFailure,
   createPersistenceSuccess,
-} from './persistenceResultUtils.js';
+} from '../utils/persistenceResultUtils.js';
 import {
   validateSaveName,
   validateSaveIdentifier,

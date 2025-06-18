@@ -7,9 +7,9 @@ import {
 import {
   createPersistenceFailure,
   createPersistenceSuccess,
-} from './persistenceResultUtils.js';
+} from '../utils/persistenceResultUtils.js';
 import { manualSavePath, extractSaveName } from '../utils/savePathUtils.js';
-import { validateSaveMetadataFields } from './saveMetadataUtils.js';
+import { validateSaveMetadataFields } from '../utils/saveMetadataUtils.js';
 
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../interfaces/IStorageProvider.js').IStorageProvider} IStorageProvider */

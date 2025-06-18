@@ -4,7 +4,7 @@
  * @jest-environment node
  */
 import { describe, test, expect, beforeEach, jest } from '@jest/globals';
-import { buildRuleCache } from '../../src/logic/ruleCacheUtils.js';
+import { buildRuleCache } from '../../src/utils/ruleCacheUtils.js';
 import { ATTEMPT_ACTION_ID } from '../../src/constants/eventIds.js';
 
 /** @typedef {import('../../data/schemas/rule.schema.json').SystemRule} SystemRule */

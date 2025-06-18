@@ -5,7 +5,7 @@
 /** @typedef {import('./defs.js').OperationHandler} OperationHandler */
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 import BaseService from '../utils/baseService.js';
-import { getNormalizedOperationType } from './utils/operationTypeUtils.js';
+import { getNormalizedOperationType } from '../utils/operationTypeUtils.js';
 
 class OperationRegistry extends BaseService {
   /** @type {Map<string, OperationHandler>} */ #registry = new Map();

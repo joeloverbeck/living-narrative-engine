@@ -1,5 +1,5 @@
 import { describe, it, expect } from '@jest/globals';
-import { getActorType } from '../../../src/turns/utils/actorTypeUtils.js';
+import { getActorType } from '../../../src/utils/actorTypeUtils.js';
 
 describe('getActorType', () => {
   it('returns "ai" when actor.isAi is true', () => {
