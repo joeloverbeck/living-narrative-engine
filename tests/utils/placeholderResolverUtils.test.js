@@ -227,6 +227,21 @@ describe('PlaceholderResolver', () => {
   });
 
   describe('resolveStructure', () => {
+    it('should resolve placeholders when input is a string', () => {
+      const result = resolver.resolveStructure('Hello {name}', {
+        name: 'Alice',
+      });
+      expect(result).toBe('Hello Alice');
+    });
+
+    it('should resolve placeholders when input is an array', () => {
+      const result = resolver.resolveStructure(['{a}', '{b}'], {
+        a: 1,
+        b: 'x',
+      });
+      expect(result).toEqual([1, 'x']);
+    });
+
     it('should recursively resolve placeholders in objects and arrays', () => {
       const input = {
         greeting: 'Hello {name}',
@@ -239,6 +254,11 @@ describe('PlaceholderResolver', () => {
         age: 42,
         nested: ['Bob', { deep: 42 }],
       });
+    });
+
+    it('should resolve placeholders when input is an object', () => {
+      const result = resolver.resolveStructure({ val: '{x}' }, { x: 'y' });
+      expect(result).toEqual({ val: 'y' });
     });
 
     it('should return undefined for unresolved full placeholders', () => {
