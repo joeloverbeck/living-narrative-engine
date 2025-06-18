@@ -82,7 +82,7 @@ export function registerTurnLifecycle(container) {
       new PromptCoordinator({
         logger: c.resolve(tokens.ILogger),
         promptOutputPort: c.resolve(tokens.IPromptOutputPort),
-        actionIndexingService: c.resolve(tokens.ActionIndexingService),
+        actionIndexingService: c.resolve(tokens.IActionIndexer),
         playerTurnEvents: c.resolve(tokens.IPlayerTurnEvents),
       })
   );

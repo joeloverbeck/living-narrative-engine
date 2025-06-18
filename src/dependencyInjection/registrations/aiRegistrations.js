@@ -309,7 +309,7 @@ export function registerAI(container) {
     (c) =>
       new AvailableActionsProvider({
         actionDiscoveryService: c.resolve(tokens.IActionDiscoveryService),
-        actionIndexingService: c.resolve(tokens.ActionIndexingService),
+        actionIndexingService: c.resolve(tokens.IActionIndexer),
         entityManager: c.resolve(tokens.IEntityManager),
       })
   );

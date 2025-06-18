@@ -40,8 +40,7 @@ describe('registerTurnLifecycle', () => {
     mockCommandOutcome,
     mockAiTurnHandler,
     mockActionIndexer,
-    mockTurnActionFactory,
-    mockActionIndexingService;
+    mockTurnActionFactory;
 
   beforeEach(() => {
     container = new AppContainer();
@@ -60,12 +59,6 @@ describe('registerTurnLifecycle', () => {
     mockTurnEndPort = mock();
     mockCommandOutcome = mock();
     mockAiTurnHandler = mock();
-
-    mockActionIndexingService = {
-      indexActions: jest.fn(),
-      getIndexedList: jest.fn(),
-      resolve: jest.fn(),
-    };
 
     // register the bare‐minimum dependencies
     container.register(tokens.ILogger, () => mockLogger);
@@ -92,12 +85,7 @@ describe('registerTurnLifecycle', () => {
     mockAiTurnHandler = mock();
     container.register(tokens.ActorTurnHandler, () => mockAiTurnHandler);
 
-    // Register the new mock for the service.
-    // This is needed by IActionIndexer and IPromptCoordinator.
-    container.register(
-      tokens.ActionIndexingService,
-      () => mockActionIndexingService
-    );
+    // Register a mock IActionIndexer for PromptCoordinator usage.
 
     // register action indexing interface for TurnActionChoicePipeline
     mockActionIndexer = mock();
