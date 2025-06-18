@@ -80,7 +80,7 @@ class WorldContext extends IWorldContext {
       logger
     );
     if (!this.#safeEventDispatcher) {
-      console.warn(
+      logger.warn(
         'WorldContext: safeEventDispatcher resolution failed; some errors may not be dispatched.'
       );
     }

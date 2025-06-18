@@ -6,6 +6,9 @@
 /** @typedef {import('../entities/entity.js').default} Entity */
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
+/**
+ * @typedef {import('../interfaces/IGameDataRepository.js').ActionDefinition} ActionDefinition
+ */
 
 // --- Dependency Imports ---
 import { getEntityDisplayName } from '../utils/entityUtils.js';
@@ -34,7 +37,7 @@ export function formatActionCommand(
   const { debug = false, logger = console, safeEventDispatcher } = options;
   const dispatcher = resolveSafeDispatcher(null, safeEventDispatcher, logger);
   if (!dispatcher) {
-    console.warn(
+    logger.warn(
       'formatActionCommand: safeEventDispatcher resolution failed; error events may not be dispatched.'
     );
   }
