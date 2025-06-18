@@ -26,4 +26,34 @@ export function createPersistenceSuccess(data) {
   return { success: true, data };
 }
 
+/**
+ * Normalizes the output of a persistence operation, ensuring failures always
+ * return a {@link PersistenceError} instance.
+ *
+ * @template T
+ * @param {{success: boolean, data?: T, error?: any}} result - Raw persistence
+ *   result object.
+ * @param {string} fallbackCode - Error code used when `result.error` is not a
+ *   {@link PersistenceError}.
+ * @param {string} defaultMsg - Message for the generated error when no
+ *   {@link PersistenceError} is present.
+ * @returns {{success: true, data: T} | {success: false, error: PersistenceError, data: null}}
+ *   Normalized result object.
+ */
+export function normalizePersistenceFailure(result, fallbackCode, defaultMsg) {
+  if (result.success) {
+    return { success: true, data: result.data };
+  }
+
+  if (result.error instanceof PersistenceError) {
+    return { success: false, error: result.error, data: null };
+  }
+
+  return {
+    success: false,
+    error: new PersistenceError(fallbackCode, defaultMsg),
+    data: null,
+  };
+}
+
 export default createPersistenceFailure;

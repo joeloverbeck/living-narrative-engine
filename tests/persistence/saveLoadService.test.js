@@ -146,6 +146,28 @@ describe('SaveLoadService', () => {
       );
       expect(validationService.validateLoadedSaveObject).not.toHaveBeenCalled();
     });
+
+    it('normalizes non-PersistenceError failures', async () => {
+      // Arrange
+      const path = 'saves/manual_saves/manual_save_bad.sav';
+      storageProvider.readFile.mockResolvedValue(new Uint8Array([1]));
+      serializer.deserialize.mockReturnValue({
+        success: false,
+        error: 'boom',
+        userFriendlyError: 'Boom!',
+      });
+
+      // Act
+      const result = await service.loadGameData(path);
+
+      // Assert
+      expect(result.success).toBe(false);
+      expect(result.error).toBeInstanceOf(PersistenceError);
+      expect(result.error.code).toBe(
+        PersistenceErrorCodes.DESERIALIZATION_ERROR
+      );
+      expect(result.error.message).toBe('Boom!');
+    });
   });
 
   describe('deleteManualSave', () => {

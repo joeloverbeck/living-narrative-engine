@@ -11,6 +11,7 @@ import {
   CURRENT_ACTOR_COMPONENT_ID,
 } from '../../src/constants/componentIds.js';
 import { CORE_MOD_ID } from '../../src/constants/core.js';
+import { PersistenceErrorCodes } from '../../src/persistence/persistenceErrors.js';
 
 const makeLogger = () => ({
   info: jest.fn(),
@@ -186,6 +187,7 @@ describe('GamePersistenceService edge cases', () => {
       const res = await service.loadAndRestoreGame('slot1');
       expect(res.success).toBe(false);
       expect(res.error.message).toBe('no');
+      expect(res.error.code).toBe(PersistenceErrorCodes.UNEXPECTED_ERROR);
     });
 
     it('returns failure when restoreGameState fails', async () => {
@@ -197,6 +199,7 @@ describe('GamePersistenceService edge cases', () => {
       const res = await service.loadAndRestoreGame('slot1');
       expect(res.success).toBe(false);
       expect(res.error.message).toBe('bad');
+      expect(res.error.code).toBe(PersistenceErrorCodes.UNEXPECTED_ERROR);
     });
   });
 });
