@@ -26,6 +26,89 @@ import { resolveEntityInstance } from './componentAccessUtils.js';
  */
 
 /**
+ * Resolve a location entity from an instance or its ID.
+ *
+ * @private
+ * @param {Entity | string} locationEntityOrId - Entity instance or ID.
+ * @param {IEntityManager} entityManager - Manager used when an ID is provided.
+ * @param {ILogger} [logger] - Optional logger for diagnostics.
+ * @param {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} dispatcher -
+ * Safe dispatcher for error events.
+ * @returns {Entity | null} The resolved location entity or `null`.
+ */
+function _resolveLocationEntity(
+  locationEntityOrId,
+  entityManager,
+  logger,
+  dispatcher
+) {
+  const log = getModuleLogger('locationUtils', logger);
+
+  if (
+    !locationEntityOrId ||
+    (typeof locationEntityOrId === 'string' && locationEntityOrId.trim() === '')
+  ) {
+    log.debug('_resolveLocationEntity: locationEntityOrId is invalid.');
+    return null;
+  }
+
+  if (
+    typeof locationEntityOrId === 'string' &&
+    !isValidEntityManager(entityManager)
+  ) {
+    const message =
+      "_resolveLocationEntity: EntityManager is required when passing location ID, but it's invalid.";
+    const details = {
+      locationId: locationEntityOrId,
+      entityManagerValid:
+        !!entityManager &&
+        typeof entityManager.getEntityInstance === 'function',
+    };
+    safeDispatchError(dispatcher, message, details);
+    return null;
+  }
+
+  const locationEntity = resolveEntityInstance(
+    locationEntityOrId,
+    entityManager,
+    log
+  );
+
+  if (!isValidEntity(locationEntity)) {
+    const id =
+      typeof locationEntityOrId === 'string'
+        ? locationEntityOrId
+        : locationEntity?.id || 'unknown';
+    log.warn(
+      `_resolveLocationEntity: Location entity not found or invalid for ID/object: ${id}`
+    );
+    return null;
+  }
+
+  return locationEntity;
+}
+
+/**
+ * Retrieve the exits component data from a location entity.
+ *
+ * @private
+ * @param {Entity} locationEntity - The resolved location entity.
+ * @param {ILogger} [logger] - Optional logger for diagnostics.
+ * @returns {ExitData[] | null} Array of exit objects or null when unavailable.
+ */
+function _readExitsComponent(locationEntity, logger) {
+  const log = getModuleLogger('locationUtils', logger);
+  const exitsData = locationEntity.getComponentData(EXITS_COMPONENT_ID);
+  if (!Array.isArray(exitsData)) {
+    log.debug(
+      `_readExitsComponent: Location '${locationEntity.id}' has no '${EXITS_COMPONENT_ID}' component, or it's not an array.`
+    );
+    return null;
+  }
+  return /** @type {ExitData[]} */ (exitsData);
+}
+
+/**
  * Retrieve the exits component data from a location entity.
  *
  * @private
@@ -42,49 +125,18 @@ function _getExitsComponentData(
   logger,
   dispatcher
 ) {
-  const log = getModuleLogger('locationUtils', logger);
-  if (
-    typeof locationEntityOrId === 'string' &&
-    !isValidEntityManager(entityManager)
-  ) {
-    const message =
-      "_getExitsComponentData: EntityManager is required when passing location ID, but it's invalid.";
-    const details = {
-      locationId: locationEntityOrId,
-      entityManagerValid:
-        !!entityManager &&
-        typeof entityManager.getEntityInstance === 'function',
-    };
-    safeDispatchError(dispatcher, message, details);
-
-    return null;
-  }
-
-  const locationEntity = resolveEntityInstance(
+  const locationEntity = _resolveLocationEntity(
     locationEntityOrId,
     entityManager,
-    log
+    logger,
+    dispatcher
   );
 
-  if (!isValidEntity(locationEntity)) {
-    const id =
-      typeof locationEntityOrId === 'string'
-        ? locationEntityOrId
-        : locationEntity?.id || 'unknown';
-    log.warn(
-      `_getExitsComponentData: Location entity not found or invalid for ID/object: ${id}`
-    );
+  if (!locationEntity) {
     return null;
   }
 
-  const exitsData = locationEntity.getComponentData(EXITS_COMPONENT_ID);
-  if (!Array.isArray(exitsData)) {
-    log.debug(
-      `_getExitsComponentData: Location '${locationEntity.id}' has no '${EXITS_COMPONENT_ID}' component, or it's not an array.`
-    );
-    return null;
-  }
-  return /** @type {ExitData[]} */ (exitsData);
+  return _readExitsComponent(locationEntity, logger);
 }
 
 /**
@@ -111,12 +163,18 @@ export function getExitByDirection(
     return null;
   }
 
-  const exitsData = _getExitsComponentData(
+  const locationEntity = _resolveLocationEntity(
     locationEntityOrId,
     entityManager,
     log,
     dispatcher
   );
+
+  if (!locationEntity) {
+    return null;
+  }
+
+  const exitsData = _readExitsComponent(locationEntity, log);
   if (!exitsData || exitsData.length === 0) {
     return null;
   }
@@ -171,12 +229,17 @@ export function getAvailableExits(
   logger
 ) {
   const log = getModuleLogger('locationUtils', logger);
-  const exitsData = _getExitsComponentData(
+  const locationEntity = _resolveLocationEntity(
     locationEntityOrId,
     entityManager,
     log,
     dispatcher
   );
+  if (!locationEntity) {
+    return [];
+  }
+
+  const exitsData = _readExitsComponent(locationEntity, log);
   if (!exitsData || exitsData.length === 0) {
     return [];
   }
