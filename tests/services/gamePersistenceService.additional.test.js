@@ -211,5 +211,23 @@ describe('GamePersistenceService additional coverage', () => {
       expect(service.restoreGameState).toHaveBeenCalledWith(data);
       expect(res).toEqual({ success: true, data });
     });
+
+    it('uses provided gameStateRestorer instance', async () => {
+      const mockRestorer = {
+        restoreGameState: jest.fn().mockResolvedValue({ success: true }),
+      };
+      const svc = new GamePersistenceService({
+        logger,
+        saveLoadService,
+        entityManager,
+        playtimeTracker,
+        gameStateCaptureService: captureService,
+        manualSaveCoordinator,
+        gameStateRestorer: mockRestorer,
+      });
+      const payload = { gameState: {}, metadata: {} };
+      await svc.restoreGameState(payload);
+      expect(mockRestorer.restoreGameState).toHaveBeenCalledWith(payload);
+    });
   });
 });
