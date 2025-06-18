@@ -1,4 +1,4 @@
-// src/logic/ruleCacheUtils.js
+// src/utils/ruleCacheUtils.js
 
 import { ATTEMPT_ACTION_ID } from '../constants/eventIds.js';
 

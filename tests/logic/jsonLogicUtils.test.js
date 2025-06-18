@@ -1,7 +1,7 @@
 // tests/logic/jsonLogicUtils.test.js
 
 import { describe, it, expect } from '@jest/globals';
-import { isEmptyCondition } from '../../src/logic/utils/jsonLogicUtils.js';
+import { isEmptyCondition } from '../../src/utils/jsonLogicUtils.js';
 
 describe('isEmptyCondition', () => {
   it('returns true for empty object', () => {

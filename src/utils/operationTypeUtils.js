@@ -1,4 +1,4 @@
-// src/logic/utils/operationTypeUtils.js
+// src/utils/operationTypeUtils.js
 
 /**
  * Normalize and validate an operation type string.

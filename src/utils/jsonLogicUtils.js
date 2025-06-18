@@ -1,4 +1,4 @@
-// src/logic/utils/jsonLogicUtils.js
+// src/utils/jsonLogicUtils.js
 
 /**
  * Determine if a condition object is "empty".

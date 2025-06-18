@@ -1,4 +1,4 @@
-// src/turns/utils/actorTypeUtils.js
+// src/utils/actorTypeUtils.js
 
 /**
  * @file Utility to determine the actor type string.

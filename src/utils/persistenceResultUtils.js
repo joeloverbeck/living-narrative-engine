@@ -1,6 +1,6 @@
-// src/persistence/persistenceResultUtils.js
+// src/utils/persistenceResultUtils.js
 
-import { PersistenceError } from './persistenceErrors.js';
+import { PersistenceError } from '../persistence/persistenceErrors.js';
 
 /**
  * Creates a standardized failure result object for persistence operations.

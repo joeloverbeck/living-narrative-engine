@@ -6,12 +6,12 @@ import {
   extractSaveName,
 } from '../utils/savePathUtils.js';
 import { deserializeAndDecompress, parseManualSaveFile } from './saveFileIO.js';
-import { validateSaveMetadataFields } from './saveMetadataUtils.js';
+import { validateSaveMetadataFields } from '../utils/saveMetadataUtils.js';
 import {
   PersistenceError,
   PersistenceErrorCodes,
 } from './persistenceErrors.js';
-import { createPersistenceFailure } from './persistenceResultUtils.js';
+import { createPersistenceFailure } from '../utils/persistenceResultUtils.js';
 import { setupService } from '../utils/serviceInitializerUtils.js';
 
 /**

@@ -7,7 +7,7 @@ import {
 import {
   createPersistenceFailure,
   createPersistenceSuccess,
-} from '../persistence/persistenceResultUtils.js';
+} from './persistenceResultUtils.js';
 import { ensureValidLogger } from './loggerUtils.js';
 
 /**

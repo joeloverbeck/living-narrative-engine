@@ -6,7 +6,7 @@ import * as path from 'node:path'; // Corrected import style
 import {
   IFileSystemReader,
   IEnvironmentVariableReader,
-} from '../../llm-proxy-server/src/interfaces/IServerUtils.js';
+} from '../../llm-proxy-server/src/utils/IServerUtils.js';
 import { safeDispatchError } from '../utils/safeDispatchErrorUtils.js';
 import { resolveSafeDispatcher } from '../utils/dispatcherUtils.js';
 

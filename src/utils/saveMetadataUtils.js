@@ -1,4 +1,4 @@
-// src/persistence/saveMetadataUtils.js
+// src/utils/saveMetadataUtils.js
 
 import { extractSaveName } from '../utils/savePathUtils.js';
 

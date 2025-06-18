@@ -1,4 +1,4 @@
-// llm-proxy-server/src/interfaces/IServerUtils.js
+// llm-proxy-server/src/utils/IServerUtils.js
 // --- FILE START ---
 
 /**

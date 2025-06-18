@@ -1,7 +1,7 @@
 // src/persistence/saveValidationService.js
 
 import { PersistenceErrorCodes } from './persistenceErrors.js';
-import { createPersistenceFailure } from './persistenceResultUtils.js';
+import { createPersistenceFailure } from '../utils/persistenceResultUtils.js';
 
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('./gameStateSerializer.js').default} GameStateSerializer */

@@ -2,7 +2,7 @@
 import jsonLogic from 'json-logic-js';
 import { validateServiceDeps } from '../utils/serviceInitializerUtils.js';
 import BaseService from '../utils/baseService.js';
-import { warnOnBracketPaths } from './utils/jsonLogicUtils.js';
+import { warnOnBracketPaths } from '../utils/jsonLogicUtils.js';
 
 // --- JSDoc Imports for Type Hinting ---
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
