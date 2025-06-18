@@ -17,7 +17,10 @@ import { ActionValidationService } from '../../src/actions/validation/actionVali
 import ConsoleLogger from '../../src/logging/consoleLogger.js';
 import { formatActionCommand as formatActionCommandFn } from '../../src/actions/actionFormatter.js';
 import { getEntityIdsForScopes as getEntityIdsForScopesFn } from '../../src/entities/entityScopeService.js';
-import { getAvailableExits } from '../../src/utils/locationUtils.js';
+import {
+  getAvailableExits,
+  getLocationIdForLog,
+} from '../../src/utils/locationUtils.js';
 
 // --- Helper Mocks/Types ---
 import { ActionTargetContext } from '../../src/models/actionTargetContext.js';
@@ -46,6 +49,7 @@ describe('ActionDiscoveryService - Go Action (Fixed State)', () => {
   let mockFormatActionCommandFn;
   let mockGetEntityIdsForScopesFn;
   let mockGetAvailableExits;
+  let mockGetLocationIdForLog;
   let availableExits;
   let mockSafeEventDispatcher;
 
@@ -99,6 +103,7 @@ describe('ActionDiscoveryService - Go Action (Fixed State)', () => {
     mockFormatActionCommandFn = formatActionCommandFn;
     mockGetEntityIdsForScopesFn = getEntityIdsForScopesFn;
     mockGetAvailableExits = getAvailableExits;
+    mockGetLocationIdForLog = getLocationIdForLog;
     mockSafeEventDispatcher = { dispatch: jest.fn() };
 
     mockHeroEntity = new Entity(HERO_INSTANCE_ID, HERO_DEFINITION_ID);
@@ -160,6 +165,9 @@ describe('ActionDiscoveryService - Go Action (Fixed State)', () => {
       { direction: 'out to town', target: TOWN_DEFINITION_ID, blocker: null },
     ];
     mockGetAvailableExits.mockReturnValue(availableExits);
+    mockGetLocationIdForLog.mockImplementation((loc) =>
+      typeof loc === 'string' ? loc : (loc?.id ?? 'unknown')
+    );
 
     mockValidationService.isValid.mockImplementation(
       (actionDef, actor, targetContext) => {
