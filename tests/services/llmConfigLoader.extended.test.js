@@ -5,10 +5,10 @@ import { jest, describe, beforeEach, test, expect } from '@jest/globals';
 // Correct the import path based on your actual project structure
 // Assuming LlmConfigLoader is now in 'src/services/' not 'src/llms/services/'
 import { LlmConfigLoader } from '../../src/llms/services/llmConfigLoader.js';
-import { Workspace_retry } from '../../src/utils/apiUtils.js';
+import { fetchWithRetry } from '../../src/utils/index.js';
 
-jest.mock('../../src/utils/apiUtils.js', () => ({
-  Workspace_retry: jest.fn(),
+jest.mock('../../src/utils/index.js', () => ({
+  fetchWithRetry: jest.fn(),
 }));
 
 const mockLoggerInstance = () => ({
@@ -123,7 +123,7 @@ describe('LlmConfigLoader - Extended Prompt Config Tests', () => {
       configuration: configurationMock,
       safeEventDispatcher: dispatcherMock,
     });
-    Workspace_retry.mockReset();
+    fetchWithRetry.mockReset();
   });
 
   describe('LLM Root Configuration Parsing', () => {
@@ -131,7 +131,7 @@ describe('LlmConfigLoader - Extended Prompt Config Tests', () => {
       const localMockValidRootConfig = JSON.parse(
         JSON.stringify(mockValidRootConfig)
       );
-      Workspace_retry.mockResolvedValueOnce(localMockValidRootConfig);
+      fetchWithRetry.mockResolvedValueOnce(localMockValidRootConfig);
       // Schema validation should pass for this valid root object
       schemaValidatorMock.validate.mockReturnValueOnce({
         isValid: true,
@@ -140,7 +140,7 @@ describe('LlmConfigLoader - Extended Prompt Config Tests', () => {
 
       const result = await loader.loadConfigs(defaultLlmConfigPath);
 
-      expect(Workspace_retry).toHaveBeenCalledWith(
+      expect(fetchWithRetry).toHaveBeenCalledWith(
         defaultLlmConfigPath,
         expect.any(Object),
         expect.any(Number),
@@ -182,7 +182,7 @@ describe('LlmConfigLoader - Extended Prompt Config Tests', () => {
         defaultConfigId: 'some_default_or_placeholder', // Schema requires defaultConfigId
         configs: {}, // Empty configs map
       };
-      Workspace_retry.mockResolvedValueOnce(
+      fetchWithRetry.mockResolvedValueOnce(
         JSON.parse(JSON.stringify(minimalRootConfig))
       );
       schemaValidatorMock.validate.mockReturnValueOnce({
@@ -217,7 +217,7 @@ describe('LlmConfigLoader - Extended Prompt Config Tests', () => {
           },
         },
       };
-      Workspace_retry.mockResolvedValueOnce(
+      fetchWithRetry.mockResolvedValueOnce(
         JSON.parse(JSON.stringify(singleEntryRootConfig))
       );
       schemaValidatorMock.validate.mockReturnValueOnce({
@@ -244,7 +244,7 @@ describe('LlmConfigLoader - Extended Prompt Config Tests', () => {
       const parsingError = new SyntaxError(
         "Unexpected token 'X' in JSON at position 0"
       );
-      Workspace_retry.mockRejectedValueOnce(parsingError);
+      fetchWithRetry.mockRejectedValueOnce(parsingError);
 
       const result = await loader.loadConfigs(defaultLlmConfigPath);
 
@@ -267,7 +267,7 @@ describe('LlmConfigLoader - Extended Prompt Config Tests', () => {
           someConf: { configId: 'someConf' /* ... other valid fields */ },
         },
       };
-      Workspace_retry.mockResolvedValueOnce(malformedRootObject);
+      fetchWithRetry.mockResolvedValueOnce(malformedRootObject);
 
       const rawSchemaError = {
         instancePath: '', // Or could be "/defaultConfigId" if schema identifies specific missing field
@@ -319,7 +319,7 @@ describe('LlmConfigLoader - Extended Prompt Config Tests', () => {
           },
         },
       };
-      Workspace_retry.mockResolvedValueOnce(
+      fetchWithRetry.mockResolvedValueOnce(
         JSON.parse(JSON.stringify(semanticallyInvalidRootConfig))
       );
       schemaValidatorMock.validate.mockReturnValueOnce({
@@ -358,7 +358,7 @@ describe('LlmConfigLoader - Extended Prompt Config Tests', () => {
         defaultConfigId: 'main',
         configs: ['this should be an object, not an array'], // Invalid: configs is an array
       };
-      Workspace_retry.mockResolvedValueOnce(malformedConfigsProperty);
+      fetchWithRetry.mockResolvedValueOnce(malformedConfigsProperty);
       // Schema validation should catch this if schema strictly defines configs as an object.
       // If schema is loose and allows array here (it shouldn't for the new structure),
       // then semantic validation will catch it.

@@ -5,6 +5,7 @@ import {
   SYSTEM_ERROR_OCCURRED_ID,
   SYSTEM_WARNING_OCCURRED_ID,
 } from '../constants/eventIds.js';
+import { fetchWithRetry } from '../utils/index.js';
 
 /**
  * @typedef {import('../interfaces/coreServices.js').ILogger} ILogger
@@ -130,26 +131,6 @@ export class RetryHttpClient extends IHttpClient {
     return Math.max(0, Math.floor(delay + jitter));
   }
 
-  async #tryReadResponseBody(response) {
-    try {
-      return await response.clone().json();
-    } catch (jsonErr) {
-      this.#logger.debug(
-        'RetryHttpClient: JSON parse failed, falling back to text.',
-        { causeMessage: jsonErr.message }
-      );
-      try {
-        const txt = await response.clone().text();
-        return txt.trim() === '' ? null : txt;
-      } catch (txtErr) {
-        this.#logger.warn(`RetryHttpClient: Unable to read response body.`, {
-          error: txtErr,
-        });
-        return `(Unreadable response body: ${txtErr.message})`;
-      }
-    }
-  }
-
   #emitWarning(message, { statusCode, url, raw }) {
     const details = {
       statusCode,
@@ -196,7 +177,6 @@ export class RetryHttpClient extends IHttpClient {
     let attempt = 0;
     let lastError = null;
 
-    /* ============ RETRY LOOP ============ */
     while (attempt <= this.#defaultMaxRetries) {
       attempt += 1;
       try {
@@ -205,101 +185,69 @@ export class RetryHttpClient extends IHttpClient {
             this.#defaultMaxRetries + 1
           } → ${url}`
         );
-        const response = await fetch(url, options);
+        const silentDispatcher = { dispatch: async () => true };
+        const result = await fetchWithRetry(
+          url,
+          options,
+          1,
+          this.#defaultBaseDelayMs,
+          this.#defaultMaxDelayMs,
+          silentDispatcher,
+          this.#logger
+        );
+        return result;
+      } catch (err) {
+        lastError = err;
+        const status = err.status;
+        const raw = err.body ?? err.message;
+        const isRetryable =
+          status === undefined || RETRYABLE_STATUS_CODES.includes(status);
 
-        if (response.ok) {
-          this.#logger.debug(
-            `RetryHttpClient.request: Success ${response.status} ${url}`
-          );
-          return await response.json();
+        if (isRetryable && attempt <= this.#defaultMaxRetries) {
+          const delay = this.#calculateDelay(attempt);
+          if (status !== undefined) {
+            this.#emitWarning(
+              `Retryable HTTP error ${status} on ${url} (attempt ${attempt}/${
+                this.#defaultMaxRetries + 1
+              })`,
+              {
+                statusCode: status,
+                url,
+                raw: typeof raw === 'string' ? raw.slice(0, 200) : raw,
+              }
+            );
+          } else {
+            this.#emitWarning(
+              `Network error contacting ${url} (attempt ${attempt}/${
+                this.#defaultMaxRetries + 1
+              })`,
+              { statusCode: undefined, url, raw }
+            );
+          }
+          await new Promise((res) => setTimeout(res, delay));
+          continue;
         }
 
-        const status = response.status;
-        const responseBody = await this.#tryReadResponseBody(response);
-        lastError = new HttpClientError(`HTTP error ${status} from ${url}`, {
-          url,
-          status,
-          responseBody,
-          attempts: attempt,
-          isRetryableFailure: RETRYABLE_STATUS_CODES.includes(status),
-        });
-
-        if (
-          RETRYABLE_STATUS_CODES.includes(status) &&
-          attempt <= this.#defaultMaxRetries
-        ) {
-          const delay = this.#calculateDelay(attempt);
-          this.#emitWarning(
-            `Retryable HTTP error ${status} on ${url} (attempt ${attempt}/${
-              this.#defaultMaxRetries + 1
-            })`,
+        if (status !== undefined) {
+          this.#emitError(
+            `HTTP error ${status} from ${url} after ${attempt} attempts`,
             {
               statusCode: status,
               url,
-              raw:
-                typeof responseBody === 'string'
-                  ? responseBody.slice(0, 200)
-                  : responseBody,
+              raw,
+              stack: err.stack,
             }
           );
-          await new Promise((res) => setTimeout(res, delay));
-          continue;
-        }
-
-        this.#emitError(
-          `HTTP error ${status} from ${url} after ${attempt} attempts`,
-          {
-            statusCode: status,
-            url,
-            raw: responseBody,
-            stack: new Error().stack,
-          }
-        );
-        throw lastError;
-      } catch (err) {
-        if (err instanceof HttpClientError) throw err;
-
-        lastError = new HttpClientError(
-          `Network error during request to ${url}: ${err.message}`,
-          {
-            url,
-            attempts: attempt,
-            cause: err,
-            isRetryableFailure: true,
-          }
-        );
-
-        if (attempt <= this.#defaultMaxRetries) {
-          const delay = this.#calculateDelay(attempt);
-          this.#emitWarning(
-            `Network error contacting ${url} (attempt ${attempt}/${
-              this.#defaultMaxRetries + 1
-            })`,
-            { statusCode: undefined, url, raw: err.message }
+        } else {
+          this.#emitError(
+            `Network failure contacting ${url} after ${attempt} attempts`,
+            { statusCode: undefined, url, raw, stack: err.stack }
           );
-          await new Promise((res) => setTimeout(res, delay));
-          continue;
         }
-
-        this.#emitError(
-          `Network failure contacting ${url} after ${attempt} attempts`,
-          { statusCode: undefined, url, raw: err.message, stack: err.stack }
-        );
         throw lastError;
       }
     }
 
-    /* Safeguard – should never reach */
-    const generic = new HttpClientError(
-      `Request to ${url} failed after ${this.#defaultMaxRetries + 1} attempts.`,
-      { url, attempts: this.#defaultMaxRetries + 1, isRetryableFailure: true }
-    );
-    this.#emitError(generic.message, {
-      statusCode: undefined,
-      url,
-      raw: '',
-      stack: generic.stack,
-    });
-    throw generic;
+    throw lastError;
   }
 }

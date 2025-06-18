@@ -3,12 +3,11 @@
 
 import { jest, describe, beforeEach, test, expect } from '@jest/globals';
 import { LlmConfigLoader } from '../../../src/llms/services/llmConfigLoader.js'; // Adjust path if needed
-import { Workspace_retry } from '../../../src/utils/apiUtils.js'; // Adjust path if needed
+import { fetchWithRetry } from '../../../src/utils/index.js';
 
-// Mock the Workspace_retry utility
-jest.mock('../../../src/utils/apiUtils.js', () => ({
-  // Adjust path if needed
-  Workspace_retry: jest.fn(),
+// Mock the fetchWithRetry utility
+jest.mock('../../../src/utils/index.js', () => ({
+  fetchWithRetry: jest.fn(),
 }));
 
 /**
@@ -85,7 +84,7 @@ describe('LlmConfigLoader - Initialization and Schema Handling', () => {
     dispatcherMock = { dispatch: jest.fn().mockResolvedValue(true) };
 
     // Default successful fetch for most tests
-    Workspace_retry.mockResolvedValue(
+    fetchWithRetry.mockResolvedValue(
       JSON.parse(JSON.stringify(MOCK_RAW_LLM_CONFIG_DATA))
     );
     configurationMock.getContentTypeSchemaId.mockReturnValue(
@@ -118,7 +117,7 @@ describe('LlmConfigLoader - Initialization and Schema Handling', () => {
     const result = await loader.loadConfigs(MOCK_LLM_CONFIG_PATH);
 
     // Assert
-    expect(Workspace_retry).toHaveBeenCalledWith(
+    expect(fetchWithRetry).toHaveBeenCalledWith(
       MOCK_LLM_CONFIG_PATH,
       expect.any(Object),
       expect.any(Number),
@@ -176,8 +175,8 @@ describe('LlmConfigLoader - Initialization and Schema Handling', () => {
       }
       return `http://example.com/schemas/${typeName}.schema.json`;
     });
-    // Workspace_retry will still be called as this check happens after fetch.
-    Workspace_retry.mockResolvedValue(
+    // fetchWithRetry will still be called as this check happens after fetch.
+    fetchWithRetry.mockResolvedValue(
       JSON.parse(JSON.stringify(MOCK_RAW_LLM_CONFIG_DATA))
     );
 
@@ -185,7 +184,7 @@ describe('LlmConfigLoader - Initialization and Schema Handling', () => {
     const result = await loader.loadConfigs(MOCK_LLM_CONFIG_PATH);
 
     // Assert
-    expect(Workspace_retry).toHaveBeenCalledTimes(1); // Ensure fetch was attempted
+    expect(fetchWithRetry).toHaveBeenCalledTimes(1); // Ensure fetch was attempted
     expect(configurationMock.getContentTypeSchemaId).toHaveBeenCalledWith(
       'llm-configs'
     );
