@@ -72,6 +72,7 @@ function _shouldRetry(status, attempt, maxRetries) {
  * @param {number} maxDelayMs Maximum delay in milliseconds between retries, capping the exponential backoff.
  * @param {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} safeEventDispatcher Dispatcher for SYSTEM_ERROR_OCCURRED_ID events.
  * @param {import('../interfaces/coreServices.js').ILogger} [logger] Optional logger instance.
+ * @param {typeof fetch} [fetchFn] The fetch implementation to use.
  * @returns {Promise<any>} A promise that resolves with the parsed JSON response on success.
  * @throws {Error} Throws an error if all retries fail, a non-retryable HTTP error occurs,
  * or another unhandled error arises during fetching.
@@ -83,7 +84,8 @@ export async function fetchWithRetry(
   baseDelayMs,
   maxDelayMs,
   safeEventDispatcher,
-  logger
+  logger,
+  fetchFn = fetch
 ) {
   const log = getModuleLogger('fetchWithRetry', logger);
 
@@ -96,7 +98,7 @@ export async function fetchWithRetry(
       log.debug(
         `Attempt ${currentAttempt}/${maxRetries} - Fetching ${options.method || 'GET'} ${url}`
       );
-      const response = await fetch(url, options);
+      const response = await fetchFn(url, options);
 
       if (!response.ok) {
         const { parsedBody, bodyText } = await _parseErrorResponse(response);
