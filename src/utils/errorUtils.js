@@ -25,14 +25,10 @@ export function showErrorInElement(targetEl, msg) {
  * @description Creates a temporary error element after the provided base element.
  * @param {HTMLElement | null | undefined} baseEl - Element to insert after.
  * @param {string} msg - Message for the new element.
- * @param {function(string): HTMLElement} [createElement] - Element creation function. Defaults to `document.createElement`.
+ * @param {function(string): HTMLElement} createElement - Element creation function.
  * @returns {HTMLElement | null} The created element, or null if not created.
  */
-export function createTemporaryErrorElement(
-  baseEl,
-  msg,
-  createElement = (tag) => document.createElement(tag)
-) {
+export function createTemporaryErrorElement(baseEl, msg, createElement) {
   if (!baseEl || !(baseEl instanceof HTMLElement)) {
     return null;
   }
@@ -201,7 +197,7 @@ function updateElements({
  * @param {FatalErrorUIElements} uiElements - References to key UI elements.
  * @param {FatalErrorDetails} errorDetails - Details about the error.
  * @param {import('../interfaces/coreServices.js').ILogger} [logger] - Optional logger instance.
- * @param {{createElement?: function(string): HTMLElement, alert?: function(string): void}} [domAdapter] - DOM adapter for custom element creation and alerts.
+ * @param {{createElement: function(string): HTMLElement, alert: function(string): void}} domAdapter - DOM adapter for custom element creation and alerts.
  */
 export function displayFatalStartupError(
   uiElements,
@@ -211,9 +207,8 @@ export function displayFatalStartupError(
 ) {
   const log = getModuleLogger('errorUtils', logger);
   const { outputDiv, errorDiv, titleElement, inputElement } = uiElements;
-  const create =
-    domAdapter?.createElement ?? ((tag) => document.createElement(tag));
-  const showAlert = domAdapter?.alert ?? alert;
+  const create = domAdapter.createElement;
+  const showAlert = domAdapter.alert;
   const {
     userMessage,
     consoleMessage,
