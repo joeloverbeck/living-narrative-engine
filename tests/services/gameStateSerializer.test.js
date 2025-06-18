@@ -87,6 +87,18 @@ describe('GameStateSerializer', () => {
     expect(actual).toBe(expected);
   });
 
+  it('does not mutate the original object during serialization', async () => {
+    const obj = {
+      metadata: {},
+      modManifest: {},
+      gameState: { foo: 'bar' },
+      integrityChecks: {},
+    };
+    const before = JSON.parse(JSON.stringify(obj));
+    await serializer.serializeAndCompress(obj);
+    expect(obj).toEqual(before);
+  });
+
   it('throws PersistenceError when deep cloning fails', async () => {
     const cyc = {
       metadata: {},

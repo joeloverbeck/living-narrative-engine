@@ -2,7 +2,7 @@
 
 import { encode, decode } from '@msgpack/msgpack';
 import pako from 'pako';
-import { safeDeepClone } from '../utils/objectUtils.js';
+import { cloneAndValidateSaveState } from '../utils/saveStateUtils.js';
 import {
   PersistenceError,
   PersistenceErrorCodes,
@@ -118,26 +118,15 @@ class GameStateSerializer {
    * @private
    */
   #cloneForSerialization(gameStateObject) {
-    const cloneResult = safeDeepClone(gameStateObject, this.#logger);
+    const cloneResult = cloneAndValidateSaveState(
+      gameStateObject,
+      this.#logger
+    );
     if (!cloneResult.success || !cloneResult.data) {
       throw cloneResult.error;
     }
-    const finalSaveObject = cloneResult.data;
 
-    if (
-      !finalSaveObject.gameState ||
-      typeof finalSaveObject.gameState !== 'object'
-    ) {
-      this.#logger.error(
-        'Invalid or missing gameState property in save object for checksum calculation.'
-      );
-      throw new PersistenceError(
-        PersistenceErrorCodes.INVALID_GAME_STATE,
-        'Invalid gameState for checksum calculation.'
-      );
-    }
-
-    return finalSaveObject;
+    return cloneResult.data;
   }
 
   /**

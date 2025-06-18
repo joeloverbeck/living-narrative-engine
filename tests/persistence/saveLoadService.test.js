@@ -105,6 +105,9 @@ describe('SaveLoadService', () => {
         expect.any(Uint8Array)
       );
       expect(serializer.serializeAndCompress).toHaveBeenCalledTimes(1);
+      const passedObj = serializer.serializeAndCompress.mock.calls[0][0];
+      expect(passedObj.metadata.saveName).toBe(name);
+      expect(passedObj.integrityChecks).toEqual({});
     });
 
     it('handles invalid save names', async () => {

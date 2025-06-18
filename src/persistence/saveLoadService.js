@@ -4,7 +4,7 @@ import SaveValidationService from './saveValidationService.js';
 import { buildManualFileName, manualSavePath } from '../utils/savePathUtils.js';
 import SaveFileRepository from './saveFileRepository.js';
 import { setupService } from '../utils/serviceInitializerUtils.js';
-import { safeDeepClone } from '../utils/objectUtils.js';
+import { cloneAndValidateSaveState } from '../utils/saveStateUtils.js';
 import {
   PersistenceError,
   PersistenceErrorCodes,
@@ -126,12 +126,9 @@ class SaveLoadService extends ISaveLoadService {
    * @private
    */
   #cloneAndPrepareState(saveName, obj) {
-    const cloneResult = safeDeepClone(obj, this.#logger);
+    const cloneResult = cloneAndValidateSaveState(obj, this.#logger);
     if (!cloneResult.success || !cloneResult.data) {
-      return createPersistenceFailure(
-        cloneResult.error.code,
-        cloneResult.error.message
-      );
+      return { success: false, error: cloneResult.error };
     }
 
     /** @type {SaveGameStructure} */
