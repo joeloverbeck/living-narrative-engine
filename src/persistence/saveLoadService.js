@@ -4,17 +4,13 @@ import SaveValidationService from './saveValidationService.js';
 import { buildManualFileName, manualSavePath } from '../utils/savePathUtils.js';
 import SaveFileRepository from './saveFileRepository.js';
 import { setupService } from '../utils/serviceInitializerUtils.js';
-import { cloneAndValidateSaveState } from '../utils/saveStateUtils.js';
-import {
-  PersistenceError,
-  PersistenceErrorCodes,
-} from './persistenceErrors.js';
+import { prepareState } from './savePreparation.js';
+import { PersistenceErrorCodes } from './persistenceErrors.js';
 import {
   createPersistenceFailure,
   createPersistenceSuccess,
   normalizePersistenceFailure,
 } from '../utils/persistenceResultUtils.js';
-import { wrapPersistenceOperation } from '../utils/persistenceErrorUtils.js';
 import { isValidSaveString } from './saveInputValidators.js';
 
 // --- Type Imports ---
@@ -115,28 +111,6 @@ class SaveLoadService extends ISaveLoadService {
   }
 
   /**
-   * Deep clones and augments the provided game state for saving.
-   *
-   * @param {string} saveName - Name of the save slot.
-   * @param {SaveGameStructure} obj - Original game state object.
-   * @returns {import('./persistenceTypes.js').PersistenceResult<SaveGameStructure>}
-   *   Result containing the cloned object or error.
-   * @private
-   */
-  #cloneAndPrepareState(saveName, obj) {
-    const cloneResult = cloneAndValidateSaveState(obj, this.#logger);
-    if (!cloneResult.success || !cloneResult.data) {
-      return { success: false, error: cloneResult.error };
-    }
-
-    /** @type {SaveGameStructure} */
-    const cloned = cloneResult.data;
-    cloned.metadata = { ...(cloned.metadata || {}), saveName };
-    cloned.integrityChecks = { ...(cloned.integrityChecks || {}) };
-    return createPersistenceSuccess(cloned);
-  }
-
-  /**
    * Ensures the manual save directory exists.
    *
    * @returns {Promise<import('./persistenceTypes.js').PersistenceResult<null>>}
@@ -145,29 +119,6 @@ class SaveLoadService extends ISaveLoadService {
    */
   async #ensureSaveDirectory() {
     return this.#fileRepository.ensureSaveDirectory();
-  }
-
-  /**
-   * Prepares and serializes game state data for saving.
-   *
-   * @param {string} saveName - Name of the save slot.
-   * @param {SaveGameStructure} gameStateObject - Raw game state object.
-   * @returns {Promise<import('./persistenceTypes.js').PersistenceResult<Uint8Array>>}
-   *   Result containing compressed data.
-   * @private
-   */
-  async #prepareState(saveName, gameStateObject) {
-    const cloneResult = this.#cloneAndPrepareState(saveName, gameStateObject);
-    if (!cloneResult.success || !cloneResult.data) {
-      return { success: false, error: cloneResult.error };
-    }
-
-    return wrapPersistenceOperation(this.#logger, async () => {
-      const { compressedData } = await this.#serializer.serializeAndCompress(
-        cloneResult.data
-      );
-      return { success: true, data: compressedData };
-    });
   }
 
   /**
@@ -284,7 +235,12 @@ class SaveLoadService extends ISaveLoadService {
       return dirResult;
     }
 
-    const prepResult = await this.#prepareState(saveName, gameStateObject);
+    const prepResult = await prepareState(
+      saveName,
+      gameStateObject,
+      this.#serializer,
+      this.#logger
+    );
     if (!prepResult.success || !prepResult.data) {
       return { success: false, error: prepResult.error };
     }

@@ -1,6 +1,7 @@
 import { describe, it, beforeEach, expect, jest } from '@jest/globals';
 import SaveLoadService from '../../src/persistence/saveLoadService.js';
 import SaveFileRepository from '../../src/persistence/saveFileRepository.js';
+import * as savePreparation from '../../src/persistence/savePreparation.js';
 import {
   PersistenceError,
   PersistenceErrorCodes,
@@ -69,6 +70,7 @@ describe('SaveLoadService', () => {
     serializer = createMockGameStateSerializer();
     validationService = createMockSaveValidationService();
     logger = createMockLogger();
+    jest.spyOn(savePreparation, 'prepareState');
     const saveFileRepository = new SaveFileRepository({
       logger,
       storageProvider,
@@ -80,6 +82,10 @@ describe('SaveLoadService', () => {
       gameStateSerializer: serializer,
       saveValidationService: validationService,
     });
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
 
   describe('saveManualGame', () => {
@@ -108,6 +114,17 @@ describe('SaveLoadService', () => {
       const passedObj = serializer.serializeAndCompress.mock.calls[0][0];
       expect(passedObj.metadata.saveName).toBe(name);
       expect(passedObj.integrityChecks).toEqual({});
+      expect(savePreparation.prepareState).toHaveBeenCalledWith(
+        name,
+        state,
+        serializer,
+        expect.objectContaining({
+          debug: expect.any(Function),
+          info: expect.any(Function),
+          warn: expect.any(Function),
+          error: expect.any(Function),
+        })
+      );
     });
 
     it('handles invalid save names', async () => {
@@ -120,6 +137,7 @@ describe('SaveLoadService', () => {
       expect(result.error.code).toBe(PersistenceErrorCodes.INVALID_SAVE_NAME);
       expect(storageProvider.writeFileAtomically).not.toHaveBeenCalled();
       expect(serializer.serializeAndCompress).not.toHaveBeenCalled();
+      expect(savePreparation.prepareState).not.toHaveBeenCalled();
     });
   });
 
