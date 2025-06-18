@@ -46,8 +46,10 @@ export function registerActorAwareStrategy(container) {
   if (!container.isRegistered(tokens.TurnStrategyFactory)) {
     r.singletonFactory(tokens.TurnStrategyFactory, (c) => {
       const opts = {
-        humanProvider: c.resolve(tokens.IHumanDecisionProvider),
-        aiProvider: c.resolve(tokens.ILLMDecisionProvider),
+        providers: {
+          human: c.resolve(tokens.IHumanDecisionProvider),
+          ai: c.resolve(tokens.ILLMDecisionProvider),
+        },
         logger: c.resolve(tokens.ILogger),
         choicePipeline: c.resolve(tokens.TurnActionChoicePipeline),
         turnActionFactory: c.resolve(tokens.ITurnActionFactory),
