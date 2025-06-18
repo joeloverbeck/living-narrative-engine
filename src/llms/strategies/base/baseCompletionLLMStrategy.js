@@ -2,6 +2,7 @@
 // --- UPDATED FILE START ---
 
 import { BaseLLMStrategy } from './baseLLMStrategy.js';
+import { logPreview } from '../../../utils/index.js';
 
 /**
  * @typedef {import('../../../interfaces/coreServices.js').ILogger} ILogger
@@ -45,8 +46,11 @@ export class BaseCompletionLLMStrategy extends BaseLLMStrategy {
     // unless the PromptBuilder is guaranteed to output perfectly trimmed strings.
     const finalPromptString = gameSummary.trim();
 
-    this.logger.debug(
-      `BaseCompletionLLMStrategy._constructPromptPayload: Using finalPromptString as the 'prompt'. Preview: ${finalPromptString.substring(0, 100) + (finalPromptString.length > 100 ? '...' : '')}`
+    logPreview(
+      this.logger,
+      "BaseCompletionLLMStrategy._constructPromptPayload: Using finalPromptString as the 'prompt'. Preview: ",
+      finalPromptString,
+      100
     );
     return { prompt: finalPromptString };
   }
