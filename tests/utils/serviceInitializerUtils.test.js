@@ -17,10 +17,10 @@ import {
   initLogger as baseInitLogger,
   ensureValidLogger,
 } from '../../src/utils/loggerUtils.js';
-import { validateDependency } from '../../src/utils/validationUtils.js';
+import { validateDependencies } from '../../src/utils/validationUtils.js';
 
 jest.mock('../../src/utils/validationUtils.js', () => ({
-  validateDependency: jest.fn(),
+  validateDependencies: jest.fn(),
 }));
 
 jest.mock('../../src/utils/loggerUtils.js', () => ({
@@ -71,32 +71,35 @@ describe('serviceInitializer utilities', () => {
   });
 
   describe('validateServiceDeps', () => {
-    it('runs validateDependency for each spec entry', () => {
+    it('runs validateDependencies with specs built from map', () => {
       const deps = {
         fnA: { value: () => {}, isFunction: true },
         objB: { value: {}, requiredMethods: ['x'] },
       };
       validateServiceDeps('Svc', baseLogger, deps);
-      expect(validateDependency).toHaveBeenCalledTimes(2);
-      expect(validateDependency).toHaveBeenNthCalledWith(
-        1,
-        deps.fnA.value,
-        'Svc: fnA',
-        baseLogger,
-        { requiredMethods: undefined, isFunction: true }
-      );
-      expect(validateDependency).toHaveBeenNthCalledWith(
-        2,
-        deps.objB.value,
-        'Svc: objB',
-        baseLogger,
-        { requiredMethods: ['x'], isFunction: undefined }
+      expect(validateDependencies).toHaveBeenCalledTimes(1);
+      expect(validateDependencies).toHaveBeenCalledWith(
+        [
+          {
+            dependency: deps.fnA.value,
+            name: 'Svc: fnA',
+            methods: undefined,
+            isFunction: true,
+          },
+          {
+            dependency: deps.objB.value,
+            name: 'Svc: objB',
+            methods: ['x'],
+            isFunction: undefined,
+          },
+        ],
+        baseLogger
       );
     });
 
     it('does nothing when deps is falsy', () => {
       validateServiceDeps('Svc', baseLogger, null);
-      expect(validateDependency).not.toHaveBeenCalled();
+      expect(validateDependencies).not.toHaveBeenCalled();
     });
 
     it('skips entries with falsy spec objects', () => {
@@ -105,12 +108,17 @@ describe('serviceInitializer utilities', () => {
         b: { value: {} },
       };
       validateServiceDeps('Svc', baseLogger, deps);
-      expect(validateDependency).toHaveBeenCalledTimes(1);
-      expect(validateDependency).toHaveBeenCalledWith(
-        deps.b.value,
-        'Svc: b',
-        baseLogger,
-        { requiredMethods: undefined, isFunction: undefined }
+      expect(validateDependencies).toHaveBeenCalledTimes(1);
+      expect(validateDependencies).toHaveBeenCalledWith(
+        [
+          {
+            dependency: deps.b.value,
+            name: 'Svc: b',
+            methods: undefined,
+            isFunction: undefined,
+          },
+        ],
+        baseLogger
       );
     });
   });
@@ -122,11 +130,16 @@ describe('serviceInitializer utilities', () => {
       };
       const logger = setupService('Svc', baseLogger, deps);
       expect(baseInitLogger).toHaveBeenCalledWith('Svc', baseLogger);
-      expect(validateDependency).toHaveBeenCalledWith(
-        deps.depA.value,
-        'Svc: depA',
-        expect.any(Object),
-        { requiredMethods: ['a'], isFunction: undefined }
+      expect(validateDependencies).toHaveBeenCalledWith(
+        [
+          {
+            dependency: deps.depA.value,
+            name: 'Svc: depA',
+            methods: ['a'],
+            isFunction: undefined,
+          },
+        ],
+        expect.any(Object)
       );
       expect(logger).toEqual({ prefix: 'Svc: ', logger: baseLogger });
     });

@@ -58,6 +58,26 @@ export function validateDependency(
 }
 
 /**
+ * Validate a list of dependencies using {@link validateDependency}.
+ *
+ * @description Iterates over each spec and validates the dependency.
+ * @param {Iterable<{dependency: *, name: string, methods?: string[], isFunction?: boolean}>} deps
+ *   Iterable of dependency specs.
+ * @param {import('../interfaces/coreServices.js').ILogger} logger - Logger used for validation errors.
+ * @returns {void}
+ */
+export function validateDependencies(deps, logger) {
+  if (!deps) return;
+
+  for (const { dependency, name, methods = [], isFunction = false } of deps) {
+    validateDependency(dependency, name, logger, {
+      requiredMethods: methods,
+      isFunction,
+    });
+  }
+}
+
+/**
  * @description Validates a set of loader dependencies using {@link validateDependency}.
  * The provided logger is validated first and then used for all subsequent checks.
  * @param {import('../interfaces/coreServices.js').ILogger} logger - Logger to record validation errors.
@@ -66,13 +86,16 @@ export function validateDependency(
  * @throws {Error} If any dependency fails validation.
  */
 export function validateLoaderDeps(logger, checks) {
-  validateDependency(logger, 'ILogger', console, {
-    requiredMethods: ['info', 'warn', 'error', 'debug'],
-  });
+  const deps = [
+    {
+      dependency: logger,
+      name: 'ILogger',
+      methods: ['info', 'warn', 'error', 'debug'],
+    },
+    ...(checks || []),
+  ];
 
-  for (const { dependency, name, methods = [] } of checks) {
-    validateDependency(dependency, name, logger, { requiredMethods: methods });
-  }
+  validateDependencies(deps, logger);
 }
 
 /**
