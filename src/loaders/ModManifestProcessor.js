@@ -5,9 +5,7 @@
  * mod manifests and resolving final mod load order.
  */
 
-import ModDependencyValidator from '../modding/modDependencyValidator.js';
-import validateModEngineVersions from '../modding/modVersionValidator.js';
-import { resolveOrder } from '../modding/modLoadOrderResolver.js';
+// Dependency implementations are injected via constructor
 import ModDependencyError from '../errors/modDependencyError.js';
 
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
@@ -25,6 +23,9 @@ export class ModManifestProcessor {
   #logger;
   #registry;
   #validatedEventDispatcher;
+  #modDependencyValidator;
+  #modVersionValidator;
+  #modLoadOrderResolver;
 
   /**
    * @param {object} deps - Constructor dependencies.
@@ -32,17 +33,26 @@ export class ModManifestProcessor {
    * @param {ILogger} deps.logger - Logging service.
    * @param {IDataRegistry} deps.registry - Registry for storing manifests.
    * @param {ValidatedEventDispatcher} deps.validatedEventDispatcher - Event dispatcher for validation errors.
+   * @param {typeof import('../modding/modDependencyValidator.js')} deps.modDependencyValidator - Dependency validator helper.
+   * @param {typeof import('../modding/modVersionValidator.js').default} deps.modVersionValidator - Version compatibility validator.
+   * @param {import('../modding/modLoadOrderResolver.js')} deps.modLoadOrderResolver - Load order resolver module.
    */
   constructor({
     modManifestLoader,
     logger,
     registry,
     validatedEventDispatcher,
+    modDependencyValidator,
+    modVersionValidator,
+    modLoadOrderResolver,
   }) {
     this.#modManifestLoader = modManifestLoader;
     this.#logger = logger;
     this.#registry = registry;
     this.#validatedEventDispatcher = validatedEventDispatcher;
+    this.#modDependencyValidator = modDependencyValidator;
+    this.#modVersionValidator = modVersionValidator;
+    this.#modLoadOrderResolver = modLoadOrderResolver;
   }
 
   /**
@@ -68,10 +78,10 @@ export class ModManifestProcessor {
       `WorldLoader: Stored ${manifestsForValidation.size} mod manifests in the registry.`
     );
 
-    ModDependencyValidator.validate(manifestsForValidation, this.#logger);
+    this.#modDependencyValidator.validate(manifestsForValidation, this.#logger);
     let incompatibilityCount = 0;
     try {
-      validateModEngineVersions(
+      this.#modVersionValidator(
         manifestsForValidation,
         this.#logger,
         this.#validatedEventDispatcher
@@ -88,7 +98,7 @@ export class ModManifestProcessor {
       throw e;
     }
 
-    const finalOrder = resolveOrder(
+    const finalOrder = this.#modLoadOrderResolver.resolveOrder(
       requestedIds,
       manifestsForValidation,
       this.#logger

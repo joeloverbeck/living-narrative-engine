@@ -8,6 +8,9 @@ import { GameDataRepository } from '../../data/gameDataRepository.js'; // Concre
 import EntityManager from '../../entities/entityManager.js'; // Concrete class
 import ValidatedEventDispatcher from '../../events/validatedEventDispatcher.js'; // Concrete Class Import
 import { SafeEventDispatcher } from '../../events/safeEventDispatcher.js';
+import ModDependencyValidator from '../../modding/modDependencyValidator.js';
+import validateModEngineVersions from '../../modding/modVersionValidator.js';
+import * as ModLoadOrderResolver from '../../modding/modLoadOrderResolver.js';
 import { tokens } from '../tokens.js';
 import { Registrar } from '../registrarHelpers.js';
 import { ActionIndexingService } from '../../turns/services/actionIndexingService';
@@ -106,6 +109,9 @@ export function registerInfrastructure(container) {
         promptTextLoader: c.resolve(tokens.PromptTextLoader),
         modManifestLoader: c.resolve(tokens.ModManifestLoader),
         validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
+        modDependencyValidator: ModDependencyValidator,
+        modVersionValidator: validateModEngineVersions,
+        modLoadOrderResolver: ModLoadOrderResolver,
       };
       return new WorldLoader(dependencies);
     },

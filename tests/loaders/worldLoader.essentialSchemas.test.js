@@ -36,6 +36,9 @@ const mockModManifestLoader = {
 const mockValidatedEventDispatcher = {
   dispatch: jest.fn().mockResolvedValue(),
 };
+const mockModDependencyValidator = { validate: jest.fn() };
+const mockModVersionValidator = jest.fn();
+const mockModLoadOrderResolver = { resolveOrder: jest.fn() };
 
 // Mocks for the specific services under test
 let mockConfiguration;
@@ -45,6 +48,12 @@ describe('WorldLoader Essential Schema Validation', () => {
   beforeEach(() => {
     // Reset mocks before each test to ensure isolation
     jest.clearAllMocks();
+    mockModDependencyValidator.validate.mockReset();
+    mockModDependencyValidator.validate.mockReturnValue();
+    mockModVersionValidator.mockReset();
+    mockModVersionValidator.mockReturnValue();
+    mockModLoadOrderResolver.resolveOrder.mockReset();
+    mockModLoadOrderResolver.resolveOrder.mockReturnValue([]);
 
     // Define schema IDs for a successful run, reflecting the fix
     const schemaIds = {
@@ -93,6 +102,9 @@ describe('WorldLoader Essential Schema Validation', () => {
       promptTextLoader: mockPromptTextLoader,
       modManifestLoader: mockModManifestLoader,
       validatedEventDispatcher: mockValidatedEventDispatcher,
+      modDependencyValidator: mockModDependencyValidator,
+      modVersionValidator: mockModVersionValidator,
+      modLoadOrderResolver: mockModLoadOrderResolver,
       contentLoadersConfig: null,
     });
   };

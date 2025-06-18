@@ -170,6 +170,9 @@ describe('WorldLoader → ModDependencyValidator integration (missing dependency
   let gameConfigLoader;
   let modManifestLoader;
   let validatedEventDispatcher;
+  let modDependencyValidator;
+  let modVersionValidator;
+  let modLoadOrderResolver;
   let worldLoader;
 
   const schemaDefs = {
@@ -206,6 +209,9 @@ describe('WorldLoader → ModDependencyValidator integration (missing dependency
 
   beforeEach(async () => {
     jest.clearAllMocks();
+    if (modDependencyValidator) modDependencyValidator.validate.mockReset();
+    if (modVersionValidator) modVersionValidator.mockReset();
+    if (modLoadOrderResolver) modLoadOrderResolver.resolveOrder.mockReset();
 
     /* -------------------- Core plumbing ---------------------------------- */
     logger = createMockLogger();
@@ -274,6 +280,14 @@ describe('WorldLoader → ModDependencyValidator integration (missing dependency
       dispatch: jest.fn().mockResolvedValue(),
     };
 
+    modDependencyValidator = { validate: jest.fn(() => {
+      throw new ModDependencyError(
+        "Mod 'badmod' requires missing dependency 'MissingMod'"
+      );
+    }) };
+    modVersionValidator = jest.fn();
+    modLoadOrderResolver = { resolveOrder: jest.fn(() => ['basegame', 'badmod']) };
+
     /* -------------------- Real ModManifestLoader ------------------------- */
     modManifestLoader = new ModManifestLoader(
       configuration,
@@ -302,6 +316,9 @@ describe('WorldLoader → ModDependencyValidator integration (missing dependency
       promptTextLoader: { loadPromptText: jest.fn() },
       modManifestLoader,
       validatedEventDispatcher,
+      modDependencyValidator,
+      modVersionValidator,
+      modLoadOrderResolver,
       contentLoadersConfig: null,
     });
   });
