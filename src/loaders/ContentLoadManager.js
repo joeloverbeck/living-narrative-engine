@@ -132,7 +132,7 @@ export class ContentLoadManager {
               { modId, typeName, error: errorMessage },
               loadError
             );
-            aggregator.recordError(typeName);
+            aggregator.recordFailure(typeName);
             await this.#validatedEventDispatcher
               .dispatch(
                 'initialization:world_loader:content_load_failed',

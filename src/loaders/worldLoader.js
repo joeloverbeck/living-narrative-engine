@@ -390,7 +390,7 @@ class WorldLoader extends AbstractLoader {
    *
    * @returns {void}
    */
-  _checkEssentialSchemas() {
+  checkEssentialSchemas() {
     return this.#checkEssentialSchemas();
   }
 
