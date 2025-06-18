@@ -11,10 +11,7 @@ import {
   MSG_DECOMPRESSION_FAILED,
   MSG_DESERIALIZATION_FAILED,
 } from './persistenceMessages.js';
-import {
-  createPersistenceFailure,
-  createPersistenceSuccess,
-} from '../utils/persistenceResultUtils.js';
+import { wrapSyncPersistenceOperation } from '../utils/persistenceErrorUtils.js';
 
 /**
  * @class GameStateSerializer
@@ -183,36 +180,14 @@ class GameStateSerializer {
   }
 
   /**
-   * Executes a persistence operation and standardizes success/failure handling.
-   *
-   * @param {Function} opFn - Operation function to execute.
-   * @param {string} errorCode - Error code for failures.
-   * @param {string} userMessage - User-friendly error message.
-   * @param {string} logContext - Context message for logging.
-   * @returns {import('./persistenceTypes.js').PersistenceResult<any>} Operation result.
-   * @private
-   */
-  #tryOperation(opFn, errorCode, userMessage, logContext) {
-    try {
-      const result = opFn();
-      return createPersistenceSuccess(result);
-    } catch (error) {
-      this.#logger.error(logContext, error);
-      return {
-        ...createPersistenceFailure(errorCode, userMessage),
-        userFriendlyError: userMessage,
-      };
-    }
-  }
-
-  /**
    * Decompresses Gzip-compressed data.
    *
    * @param {Uint8Array} data - Compressed data.
    * @returns {import('./persistenceTypes.js').PersistenceResult<Uint8Array>} Outcome of decompression.
    */
   decompress(data) {
-    const result = this.#tryOperation(
+    const result = wrapSyncPersistenceOperation(
+      this.#logger,
       () => pako.ungzip(data),
       PersistenceErrorCodes.DECOMPRESSION_ERROR,
       MSG_DECOMPRESSION_FAILED,
@@ -233,7 +208,8 @@ class GameStateSerializer {
    * @returns {import('./persistenceTypes.js').PersistenceResult<object>} Outcome of deserialization.
    */
   deserialize(buffer) {
-    const result = this.#tryOperation(
+    const result = wrapSyncPersistenceOperation(
+      this.#logger,
       () => decode(buffer),
       PersistenceErrorCodes.DESERIALIZATION_ERROR,
       MSG_DESERIALIZATION_FAILED,
