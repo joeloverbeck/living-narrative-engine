@@ -141,14 +141,62 @@ class SaveLoadService extends ISaveLoadService {
   }
 
   /**
-   * Writes compressed save data to disk and handles common error cases.
+   * Ensures the manual save directory exists.
    *
-   * @param {string} filePath - Path to write the save file.
-   * @param {Uint8Array} data - Serialized and compressed data.
+   * @returns {Promise<import('./persistenceTypes.js').PersistenceResult<null>>}
+   *   Result of the directory creation operation.
+   * @private
+   */
+  async #ensureSaveDirectory() {
+    return this.#fileRepository.ensureSaveDirectory();
+  }
+
+  /**
+   * Prepares and serializes game state data for saving.
+   *
+   * @param {string} saveName - Name of the save slot.
+   * @param {SaveGameStructure} gameStateObject - Raw game state object.
+   * @returns {Promise<import('./persistenceTypes.js').PersistenceResult<Uint8Array>>}
+   *   Result containing compressed data.
+   * @private
+   */
+  async #prepareState(saveName, gameStateObject) {
+    const cloneResult = this.#cloneAndPrepareState(saveName, gameStateObject);
+    if (!cloneResult.success || !cloneResult.data) {
+      return { success: false, error: cloneResult.error };
+    }
+
+    try {
+      const { compressedData } = await this.#serializer.serializeAndCompress(
+        cloneResult.data
+      );
+      return { success: true, data: compressedData };
+    } catch (error) {
+      this.#logger.error(
+        `Error during manual save process for "${saveName}":`,
+        error
+      );
+      return error instanceof PersistenceError
+        ? { success: false, error }
+        : createPersistenceFailure(
+            PersistenceErrorCodes.UNEXPECTED_ERROR,
+            `An unexpected error occurred while saving: ${error.message}`
+          );
+    }
+  }
+
+  /**
+   * Writes serialized data to disk.
+   *
+   * @param {string} filePath - Full path for the save file.
+   * @param {Uint8Array} compressedData - Serialized data buffer.
    * @returns {Promise<import('./persistenceTypes.js').PersistenceResult<null>>}
    *   Result of the write operation.
    * @private
    */
+  async #writeManualSave(filePath, compressedData) {
+    return this.#fileRepository.writeSaveFile(filePath, compressedData);
+  }
 
   /**
    * @inheritdoc
@@ -240,38 +288,17 @@ class SaveLoadService extends ISaveLoadService {
     const fileName = buildManualFileName(saveName);
     const filePath = manualSavePath(fileName);
 
-    const dirResult = await this.#fileRepository.ensureSaveDirectory();
+    const dirResult = await this.#ensureSaveDirectory();
     if (!dirResult.success) {
       return dirResult;
     }
 
-    const cloneResult = this.#cloneAndPrepareState(saveName, gameStateObject);
-    if (!cloneResult.success || !cloneResult.data) {
-      return { success: false, error: cloneResult.error };
+    const prepResult = await this.#prepareState(saveName, gameStateObject);
+    if (!prepResult.success || !prepResult.data) {
+      return { success: false, error: prepResult.error };
     }
 
-    let compressedData;
-    try {
-      ({ compressedData } = await this.#serializer.serializeAndCompress(
-        cloneResult.data
-      ));
-    } catch (error) {
-      this.#logger.error(
-        `Error during manual save process for "${saveName}":`,
-        error
-      );
-      return error instanceof PersistenceError
-        ? { success: false, error }
-        : createPersistenceFailure(
-            PersistenceErrorCodes.UNEXPECTED_ERROR,
-            `An unexpected error occurred while saving: ${error.message}`
-          );
-    }
-
-    const writeResult = await this.#fileRepository.writeSaveFile(
-      filePath,
-      compressedData
-    );
+    const writeResult = await this.#writeManualSave(filePath, prepResult.data);
     if (!writeResult.success) {
       return writeResult;
     }
