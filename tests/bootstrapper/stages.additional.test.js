@@ -31,9 +31,15 @@ afterEach(() => {
 describe('setupDIContainerStage', () => {
   it('configures the container using provided function', async () => {
     const configFn = jest.fn();
-    const result = await setupDIContainerStage({}, configFn, {
-      createAppContainer: () => new AppContainer(),
-    });
+    const logger = createLogger();
+    const result = await setupDIContainerStage(
+      {},
+      configFn,
+      {
+        createAppContainer: () => new AppContainer(),
+      },
+      logger
+    );
     expect(result.success).toBe(true);
     expect(configFn).toHaveBeenCalledWith(result.payload, {});
     expect(result.payload).toBeInstanceOf(AppContainer);
@@ -43,9 +49,15 @@ describe('setupDIContainerStage', () => {
     const configFn = jest.fn(() => {
       throw new Error('fail');
     });
-    const result = await setupDIContainerStage({}, configFn, {
-      createAppContainer: () => new AppContainer(),
-    });
+    const logger = createLogger();
+    const result = await setupDIContainerStage(
+      {},
+      configFn,
+      {
+        createAppContainer: () => new AppContainer(),
+      },
+      logger
+    );
     expect(result.success).toBe(false);
     expect(result.error).toBeInstanceOf(StageError);
     expect(result.error.phase).toBe('DI Container Setup');
@@ -56,9 +68,15 @@ describe('setupDIContainerStage', () => {
     const cont = new AppContainer();
     const factory = jest.fn(() => cont);
 
-    const result = await setupDIContainerStage({}, configFn, {
-      createAppContainer: factory,
-    });
+    const logger = createLogger();
+    const result = await setupDIContainerStage(
+      {},
+      configFn,
+      {
+        createAppContainer: factory,
+      },
+      logger
+    );
 
     expect(factory).toHaveBeenCalled();
     expect(configFn).toHaveBeenCalledWith(cont, {});
