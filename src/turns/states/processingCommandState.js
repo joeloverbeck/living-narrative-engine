@@ -69,8 +69,26 @@ export class ProcessingCommandState extends AbstractTurnState {
     this._isProcessing = true;
 
     await super.enterState(this._handler, previousState);
-    const logger = this._resolveLogger(turnCtx);
 
+    const actor = await this._validateContextAndActor(turnCtx);
+    if (!actor) return;
+
+    const turnAction = await this._resolveTurnAction(turnCtx, actor);
+    if (!turnAction) return;
+
+    const decisionMeta = turnCtx.getDecisionMeta() ?? {};
+    await this._dispatchSpeech(turnCtx, actor, decisionMeta);
+
+    await this._processAction(turnCtx, actor, turnAction);
+  }
+
+  /**
+   * @description Validates the actor retrieved from the turn context and logs entry.
+   * @param {ITurnContext} turnCtx - Current turn context.
+   * @returns {Promise<Entity|null>} The actor entity or `null` if validation fails.
+   */
+  async _validateContextAndActor(turnCtx) {
+    const logger = this._resolveLogger(turnCtx);
     const actor = turnCtx.getActor();
     if (!actor) {
       const noActorError = new Error(
@@ -81,7 +99,7 @@ export class ProcessingCommandState extends AbstractTurnState {
         noActorError,
         'NoActorOnEnter'
       );
-      return;
+      return null;
     }
 
     const actorId = actor.id;
@@ -89,8 +107,19 @@ export class ProcessingCommandState extends AbstractTurnState {
     logger.debug(
       `${this.getStateName()}: Entering with command: "${this.#commandStringForLog}" for actor: ${actorId}`
     );
+    return actor;
+  }
 
+  /**
+   * @description Resolves the ITurnAction to process from constructor or context.
+   * @param {ITurnContext} turnCtx - Current turn context.
+   * @param {Entity} actor - Actor performing the action.
+   * @returns {Promise<ITurnAction|null>} The resolved ITurnAction or `null` on failure.
+   */
+  async _resolveTurnAction(turnCtx, actor) {
+    const logger = this._resolveLogger(turnCtx);
     let turnAction = this.#turnActionToProcess;
+    const actorId = actor.id;
     if (!turnAction) {
       logger.debug(
         `${this.getStateName()}: No turnAction passed via constructor. Retrieving from turnContext.getChosenAction() for actor ${actorId}.`
@@ -105,7 +134,7 @@ export class ProcessingCommandState extends AbstractTurnState {
           new Error(errorMsg, { cause: e }),
           actorId
         );
-        return;
+        return null;
       }
     }
 
@@ -117,7 +146,7 @@ export class ProcessingCommandState extends AbstractTurnState {
         new Error(errorMsg),
         actorId
       );
-      return;
+      return null;
     }
 
     if (
@@ -131,34 +160,39 @@ export class ProcessingCommandState extends AbstractTurnState {
         new Error(errorMsg),
         actorId
       );
-      return;
+      return null;
     }
 
     const commandStringToLog =
       turnAction.commandString ||
       this.#commandStringForLog ||
       '(no command string available)';
-    // Logging `turnAction.resolvedParameters` here which is no longer expected from LLMResponseProcessor output.
-    // This log will show `Params: {}` if turnAction.resolvedParameters is undefined.
-    // The actual speech is in `turnAction.speech`.
     logger.debug(
       `${this.getStateName()}: Actor ${actorId} processing action. ` +
         `ID: "${turnAction.actionDefinitionId}". ` +
-        `Params: ${JSON.stringify(turnAction.resolvedParameters || {})}. ` + // This line shows resolvedParameters which should be undefined
+        `Params: ${JSON.stringify(turnAction.resolvedParameters || {})}. ` +
         `CommandString: "${commandStringToLog}".`
     );
 
     this.#turnActionToProcess = turnAction;
+    return turnAction;
+  }
 
-    // --- MODIFIED SECTION ---
-    // Get all relevant data from the persisted decision metadata.
-    const decisionMeta = turnCtx.getDecisionMeta() ?? {};
+  /**
+   * @description Dispatches ENTITY_SPOKE_ID if decision metadata contains speech.
+   * @param {ITurnContext} turnCtx - Current turn context.
+   * @param {Entity} actor - Actor speaking.
+   * @param {object} decisionMeta - Metadata from the actor decision.
+   * @returns {Promise<void>} Resolves when dispatch completes.
+   */
+  async _dispatchSpeech(turnCtx, actor, decisionMeta) {
+    const logger = this._resolveLogger(turnCtx);
+    const actorId = actor.id;
     const {
       speech: speechRaw,
       thoughts: thoughtsRaw,
       notes: notesRaw,
     } = decisionMeta;
-
     const speech =
       typeof speechRaw === 'string' && speechRaw.trim()
         ? speechRaw.trim()
@@ -170,21 +204,12 @@ export class ProcessingCommandState extends AbstractTurnState {
       );
 
       try {
-        /** @type {ISafeEventDispatcher | undefined} */
-        const eventDispatcher = turnCtx.getSafeEventDispatcher();
+        const eventDispatcher = turnCtx.getSafeEventDispatcher?.();
         if (eventDispatcher) {
-          // Construct the base payload
-          const payload = {
-            entityId: actorId,
-            speechContent: speech,
-          };
-
-          // Conditionally add thoughts if it is a valid string
+          const payload = { entityId: actorId, speechContent: speech };
           if (typeof thoughtsRaw === 'string' && thoughtsRaw.trim()) {
             payload.thoughts = thoughtsRaw.trim();
           }
-
-          // Normalize notes which may be an array from the LLM output
           if (Array.isArray(notesRaw)) {
             const joined = notesRaw
               .map((n) => (typeof n === 'string' ? n.trim() : ''))
@@ -214,41 +239,42 @@ export class ProcessingCommandState extends AbstractTurnState {
         );
       }
     } else if (speechRaw !== null && speechRaw !== undefined) {
-      // This covers cases where speechRaw was a non-string or an empty/whitespace string.
       logger.debug(
         `${this.getStateName()}: Actor ${actorId} had a non-string or empty speech field in decisionMeta. No ${ENTITY_SPOKE_ID} event dispatched. (Type: ${typeof speechRaw}, Value: "${String(speechRaw)}")`
       );
     } else {
-      // This covers speechRaw being null or undefined (i.e., not present in meta).
       logger.debug(
         `${this.getStateName()}: Actor ${actorId} has no 'speech' field in decisionMeta. No ${ENTITY_SPOKE_ID} event dispatched.`
       );
     }
-    // --- END MODIFIED SECTION ---
+  }
 
-    await (async () => {
-      try {
-        await this._processCommandInternal(
-          turnCtx,
-          actor,
-          this.#turnActionToProcess
-        );
-      } catch (error) {
-        const currentTurnCtxForCatch = this._getTurnContext() ?? turnCtx;
-        const errorLogger = currentTurnCtxForCatch?.getLogger?.() ?? logger;
-        errorLogger.error(
-          `${this.getStateName()}: Uncaught error from _processCommandInternal scope. Error: ${error.message}`,
-          error
-        );
-        const actorIdForHandler =
-          currentTurnCtxForCatch?.getActor?.()?.id ?? actorId;
-        await this.#handleProcessingException(
-          currentTurnCtxForCatch || turnCtx,
-          error,
-          actorIdForHandler
-        );
-      }
-    })();
+  /**
+   * @description Processes the resolved action and handles errors from the internal workflow.
+   * @param {ITurnContext} turnCtx - Current turn context.
+   * @param {Entity} actor - Actor performing the action.
+   * @param {ITurnAction} turnAction - Action to process.
+   * @returns {Promise<void>} Resolves when processing completes.
+   */
+  async _processAction(turnCtx, actor, turnAction) {
+    try {
+      await this._processCommandInternal(turnCtx, actor, turnAction);
+    } catch (error) {
+      const currentTurnCtxForCatch = this._getTurnContext() ?? turnCtx;
+      const errorLogger =
+        currentTurnCtxForCatch?.getLogger?.() ?? this._resolveLogger(turnCtx);
+      errorLogger.error(
+        `${this.getStateName()}: Uncaught error from _processCommandInternal scope. Error: ${error.message}`,
+        error
+      );
+      const actorIdForHandler =
+        currentTurnCtxForCatch?.getActor?.()?.id ?? actor.id;
+      await this.#handleProcessingException(
+        currentTurnCtxForCatch || turnCtx,
+        error,
+        actorIdForHandler
+      );
+    }
   }
 
   async _processCommandInternal(turnCtx, actor, turnAction) {
