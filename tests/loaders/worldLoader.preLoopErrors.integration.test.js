@@ -355,7 +355,7 @@ describe('WorldLoader Integration Test Suite - Error Handling: Manifest Schema, 
     ); // Fails only for game schema
 
     const essentialCheckErrorMessage = `WorldLoader: Essential schema missing or not configured: ${gameSchemaId}`;
-    const expectedInternalErrorMessage = `Essential schema check failed for: ${gameSchemaId}`;
+    const expectedInternalErrorMessage = `Missing essential schema: ${gameSchemaId}`;
     const expectedFinalErrorMessage = `WorldLoader failed: Essential schema '${gameSchemaId}' missing or check failed – aborting world load. Original error: ${expectedInternalErrorMessage}`;
 
     // Action & Assertions
@@ -412,7 +412,7 @@ describe('WorldLoader Integration Test Suite - Error Handling: Manifest Schema, 
     });
 
     const essentialCheckErrorMessage = `WorldLoader: Essential schema missing or not configured: ${manifestSchemaId}`;
-    const expectedInternalErrorMessage = `Essential schema check failed for: ${manifestSchemaId}`;
+    const expectedInternalErrorMessage = `Missing essential schema: ${manifestSchemaId}`;
     const expectedFinalErrorMessage = `WorldLoader failed: Essential schema '${manifestSchemaId}' missing or check failed – aborting world load. Original error: ${expectedInternalErrorMessage}`;
 
     // Action & Assertions
@@ -480,7 +480,7 @@ describe('WorldLoader Integration Test Suite - Error Handling: Manifest Schema, 
     });
 
     const essentialCheckErrorMessage = `WorldLoader: Essential schema missing or not configured: ${entitySchemaId}`;
-    const expectedInternalErrorMessage = `Essential schema check failed for: ${entitySchemaId}`;
+    const expectedInternalErrorMessage = `Missing essential schema: ${entitySchemaId}`;
     const expectedFinalErrorMessage = `WorldLoader failed: Essential schema '${entitySchemaId}' missing or check failed – aborting world load. Original error: ${expectedInternalErrorMessage}`;
 
     // Action & Assertions
