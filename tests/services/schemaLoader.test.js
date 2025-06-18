@@ -50,25 +50,28 @@ describe('SchemaLoader', () => {
 
   // Test Data
   const commonSchemaFile = 'common.schema.json';
-  const entitySchemaFile = 'entity.schema.json';
+  const entityDefinitionSchemaFile = 'entity-definition.schema.json';
+  const entityInstanceSchemaFile = 'entity-instance.schema.json';
   const manifestSchemaFile = 'manifest.schema.json'; // Added for verification tests
 
   const commonSchemaPath = `./test/schemas/${commonSchemaFile}`;
-  const entitySchemaPath = `./test/schemas/${entitySchemaFile}`;
+  const entityDefinitionSchemaPath = `./test/schemas/${entityDefinitionSchemaFile}`;
+  const entityInstanceSchemaPath = `./test/schemas/${entityInstanceSchemaFile}`;
   const manifestSchemaPath = `./test/schemas/${manifestSchemaFile}`;
 
   const commonSchemaId = 'test://schemas/common';
-  const entitySchemaId = 'test://schemas/entity';
+  const entityDefinitionSchemaId = 'test://schemas/entity-definition';
+  const entityInstanceSchemaId = 'test://schemas/entity-instance';
   const manifestSchemaId = 'test://schemas/manifest';
 
   const commonSchemaData = { $id: commonSchemaId, title: 'Common Test' };
-  const entitySchemaData = { $id: entitySchemaId, title: 'Entity Test' };
+  const entityDefinitionSchemaData = { $id: entityDefinitionSchemaId, title: 'Entity Definition Test' };
+  const entityInstanceSchemaData = { $id: entityInstanceSchemaId, title: 'Entity Instance Test' };
   const manifestSchemaData = { $id: manifestSchemaId, title: 'Manifest Test' };
 
   // Simpler setup, add more files/IDs if tests specifically require them
-  const defaultSchemaFiles = [commonSchemaFile, entitySchemaFile];
+  const defaultSchemaFiles = [commonSchemaFile, entityDefinitionSchemaFile, entityInstanceSchemaFile];
 
-  // Helper to reset mocks and setup default behaviors
   // Helper to reset mocks and setup default behaviors
   beforeEach(() => {
     jest.clearAllMocks();
@@ -86,7 +89,8 @@ describe('SchemaLoader', () => {
     mockSchemaValidator.isSchemaLoaded.mockReturnValue(false); // Assume not loaded by default
     mockDataFetcher.fetch.mockImplementation(async (path) => {
       if (path === commonSchemaPath) return commonSchemaData;
-      if (path === entitySchemaPath) return entitySchemaData;
+      if (path === entityDefinitionSchemaPath) return entityDefinitionSchemaData;
+      if (path === entityInstanceSchemaPath) return entityInstanceSchemaData;
       if (path === manifestSchemaPath) return manifestSchemaData;
       throw new Error(`Mock fetch error: Unknown path ${path}`);
     });
@@ -140,17 +144,17 @@ describe('SchemaLoader', () => {
 
   it('should not try to add a schema if it is already loaded', async () => {
     // Arrange
-    const filesToLoad = [commonSchemaFile, entitySchemaFile];
+    const filesToLoad = [commonSchemaFile, entityDefinitionSchemaFile];
     mockConfiguration.getSchemaFiles.mockReturnValue(filesToLoad);
 
-    // Setup mocks: commonSchema is loaded, entitySchema is not
+    // Setup mocks: commonSchema is loaded, entityDefinitionSchema is not
     mockSchemaValidator.isSchemaLoaded.mockImplementation((id) => {
       return id === commonSchemaId; // Only common is loaded
     });
     // Ensure fetch mock covers both files
     mockDataFetcher.fetch.mockImplementation(async (path) => {
       if (path === commonSchemaPath) return commonSchemaData;
-      if (path === entitySchemaPath) return entitySchemaData;
+      if (path === entityDefinitionSchemaPath) return entityDefinitionSchemaData;
       throw new Error(`Mock fetch error: Unknown path ${path}`);
     });
 
@@ -174,14 +178,14 @@ describe('SchemaLoader', () => {
       commonSchemaId
     );
     expect(mockSchemaValidator.isSchemaLoaded).toHaveBeenCalledWith(
-      entitySchemaId
+      entityDefinitionSchemaId
     );
 
     // Only adds the one not already loaded (entitySchema)
     expect(mockSchemaValidator.addSchema).toHaveBeenCalledTimes(1);
     expect(mockSchemaValidator.addSchema).toHaveBeenCalledWith(
-      entitySchemaData,
-      entitySchemaId
+      entityDefinitionSchemaData,
+      entityDefinitionSchemaId
     );
     expect(mockSchemaValidator.addSchema).not.toHaveBeenCalledWith(
       commonSchemaData,
