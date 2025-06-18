@@ -4,6 +4,7 @@
 import { IApiKeyProvider } from './interfaces/IApiKeyProvider.js';
 import { safeDispatchError } from '../utils/safeDispatchErrorUtils.js';
 import { resolveSafeDispatcher } from '../utils/dispatcherUtils.js';
+import { initLogger } from '../utils/index.js';
 import { CLOUD_API_TYPES } from './constants/llmConstants.js';
 
 /**
@@ -45,19 +46,7 @@ export class ClientApiKeyProvider extends IApiKeyProvider {
   constructor({ logger, safeEventDispatcher }) {
     super();
 
-    if (
-      !logger ||
-      typeof logger.warn !== 'function' ||
-      typeof logger.error !== 'function' ||
-      typeof logger.debug !== 'function'
-    ) {
-      const errorMsg =
-        'ClientApiKeyProvider: Constructor requires a valid logger instance.';
-      // Use console.error as a last resort if logger is completely unusable
-      console.error(errorMsg);
-      throw new Error(errorMsg);
-    }
-    this.#logger = logger;
+    this.#logger = initLogger('ClientApiKeyProvider', logger);
     this.#dispatcher = resolveSafeDispatcher(
       null,
       safeEventDispatcher,

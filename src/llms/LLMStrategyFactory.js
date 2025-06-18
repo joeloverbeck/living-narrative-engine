@@ -6,6 +6,7 @@ import { ILogger } from '../interfaces/ILogger.js'; // Assuming ILogger is in ..
 import { ILLMStrategy } from './interfaces/ILLMStrategy.js'; // Assuming ILLMStrategy is in ./interfaces/
 import { ConfigurationError } from '../errors/configurationError';
 import { LLMStrategyFactoryError } from './errors/LLMStrategyFactoryError.js';
+import { initLogger } from '../utils/index.js';
 
 // Import concrete strategy implementations
 import { OpenRouterJsonSchemaStrategy } from './strategies/openRouterJsonSchemaStrategy.js';
@@ -53,18 +54,7 @@ export class LLMStrategyFactory {
    * @throws {Error} If httpClient or logger dependencies are invalid.
    */
   constructor({ httpClient, logger }) {
-    if (
-      !logger ||
-      typeof logger.warn !== 'function' ||
-      typeof logger.error !== 'function' ||
-      typeof logger.debug !== 'function'
-    ) {
-      const errorMsg =
-        'LLMStrategyFactory: Constructor requires a valid logger instance with info, warn, error, and debug methods.';
-      // Throwing an error is sufficient here because logging is unavailable.
-      throw new Error(errorMsg);
-    }
-    this.#logger = logger;
+    this.#logger = initLogger('LLMStrategyFactory', logger);
 
     if (!httpClient || typeof httpClient.request !== 'function') {
       const errorMsg =

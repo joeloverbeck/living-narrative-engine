@@ -12,6 +12,7 @@
 
 const DEFAULT_PROXY_SERVER_URL = 'http://localhost:3001/api/llm-request';
 const VALID_EXECUTION_ENVIRONMENTS = ['client', 'server', 'unknown'];
+import { initLogger } from '../utils/index.js';
 
 /**
  * @class EnvironmentContext
@@ -78,20 +79,7 @@ export class EnvironmentContext {
    * @throws {Error} If logger is invalid.
    */
   #validateLogger(logger) {
-    if (
-      !logger ||
-      typeof logger.warn !== 'function' ||
-      typeof logger.error !== 'function' ||
-      typeof logger.debug !== 'function'
-    ) {
-      const errorMsg =
-        'EnvironmentContext: Constructor requires a valid logger instance with info, warn, error, and debug methods.';
-      (logger && typeof logger.error === 'function' ? logger : console).error(
-        errorMsg
-      );
-      throw new Error(errorMsg);
-    }
-    this.#logger = logger;
+    this.#logger = initLogger('EnvironmentContext', logger);
   }
 
   /**

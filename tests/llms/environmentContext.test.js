@@ -34,9 +34,7 @@ describe('EnvironmentContext', () => {
               logger: null,
               executionEnvironment: 'client',
             })
-        ).toThrow(
-          'EnvironmentContext: Constructor requires a valid logger instance with info, warn, error, and debug methods.'
-        );
+        ).toThrow('Missing required dependency: logger.');
       });
 
       test('should throw error if logger is an empty object', () => {
@@ -46,9 +44,7 @@ describe('EnvironmentContext', () => {
               logger: {},
               executionEnvironment: 'client',
             })
-        ).toThrow(
-          'EnvironmentContext: Constructor requires a valid logger instance with info, warn, error, and debug methods.'
-        );
+        ).toThrow("Invalid or missing method 'info' on dependency 'logger'.");
       });
 
       ['warn', 'error', 'debug'].forEach((method) => {
@@ -62,7 +58,7 @@ describe('EnvironmentContext', () => {
                 executionEnvironment: 'client',
               })
           ).toThrow(
-            'EnvironmentContext: Constructor requires a valid logger instance with info, warn, error, and debug methods.'
+            `Invalid or missing method '${method}' on dependency 'logger'.`
           );
         });
       });
@@ -85,7 +81,7 @@ describe('EnvironmentContext', () => {
           // Expected to throw
         }
         expect(consoleErrorSpy).toHaveBeenCalledWith(
-          'EnvironmentContext: Constructor requires a valid logger instance with info, warn, error, and debug methods.'
+          "Invalid or missing method 'error' on dependency 'logger'."
         );
         consoleErrorSpy.mockRestore();
       });
