@@ -1,6 +1,6 @@
 import { describe, it, expect, jest } from '@jest/globals';
 import {
-  getComponent,
+  getComponentFromEntity,
   getComponentFromManager,
   resolveEntityInstance,
 } from '../../src/utils/componentAccessUtils.js';
@@ -18,27 +18,27 @@ class MockEntity {
   }
 }
 
-describe('getComponent', () => {
+describe('getComponentFromEntity', () => {
   it('returns component data when present', () => {
     const ent = new MockEntity({ foo: { a: 1 } });
-    expect(getComponent(ent, 'foo')).toEqual({ a: 1 });
+    expect(getComponentFromEntity(ent, 'foo')).toEqual({ a: 1 });
   });
 
   it('returns null when component missing', () => {
     const ent = new MockEntity();
-    expect(getComponent(ent, 'foo')).toBeNull();
+    expect(getComponentFromEntity(ent, 'foo')).toBeNull();
   });
 
   it('returns null for invalid entity', () => {
-    expect(getComponent(null, 'foo')).toBeNull();
-    expect(getComponent({}, 'foo')).toBeNull();
+    expect(getComponentFromEntity(null, 'foo')).toBeNull();
+    expect(getComponentFromEntity({}, 'foo')).toBeNull();
   });
 
   it('returns null for invalid componentId', () => {
     const ent = new MockEntity({ foo: { a: 1 } });
-    expect(getComponent(ent, '')).toBeNull();
+    expect(getComponentFromEntity(ent, '')).toBeNull();
     // @ts-ignore - purposely pass non-string
-    expect(getComponent(ent, null)).toBeNull();
+    expect(getComponentFromEntity(ent, null)).toBeNull();
   });
 
   it('returns null when getComponentData throws', () => {
@@ -47,7 +47,7 @@ describe('getComponent', () => {
         throw new Error('boom');
       },
     };
-    expect(getComponent(ent, 'foo')).toBeNull();
+    expect(getComponentFromEntity(ent, 'foo')).toBeNull();
   });
 });
 
