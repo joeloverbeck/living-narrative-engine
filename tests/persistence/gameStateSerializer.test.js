@@ -3,7 +3,9 @@
 /* eslint-enable jsdoc/check-tag-names */
 import { describe, it, expect, beforeAll, beforeEach } from '@jest/globals';
 import GameStateSerializer from '../../src/persistence/gameStateSerializer.js';
+import { PersistenceErrorCodes } from '../../src/persistence/persistenceErrors.js';
 import { webcrypto } from 'crypto';
+import pako from 'pako';
 import { createMockLogger } from '../testUtils.js';
 
 beforeAll(() => {
@@ -43,6 +45,21 @@ describe('GameStateSerializer persistence tests', () => {
     const des = serializer.deserialize(dec.data);
     expect(des.success).toBe(true);
     expect(des.data).toEqual(finalSaveObject);
+  });
+
+  it('decompress fails on invalid gzip data', () => {
+    const result = serializer.decompress(new Uint8Array([1, 2, 3]));
+    expect(result.success).toBe(false);
+    expect(result.error.code).toBe(PersistenceErrorCodes.DECOMPRESSION_ERROR);
+  });
+
+  it('deserialize fails on malformed MessagePack', () => {
+    const malformed = pako.gzip(new Uint8Array([1, 2, 3]));
+    const dec = serializer.decompress(malformed);
+    expect(dec.success).toBe(true);
+    const des = serializer.deserialize(dec.data);
+    expect(des.success).toBe(false);
+    expect(des.error.code).toBe(PersistenceErrorCodes.DESERIALIZATION_ERROR);
   });
 
   it('generateChecksum is consistent for identical input', async () => {

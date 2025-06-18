@@ -183,29 +183,47 @@ class GameStateSerializer {
   }
 
   /**
+   * Executes a persistence operation and standardizes success/failure handling.
+   *
+   * @param {Function} opFn - Operation function to execute.
+   * @param {string} errorCode - Error code for failures.
+   * @param {string} userMessage - User-friendly error message.
+   * @param {string} logContext - Context message for logging.
+   * @returns {import('./persistenceTypes.js').PersistenceResult<any>} Operation result.
+   * @private
+   */
+  #tryOperation(opFn, errorCode, userMessage, logContext) {
+    try {
+      const result = opFn();
+      return createPersistenceSuccess(result);
+    } catch (error) {
+      this.#logger.error(logContext, error);
+      return {
+        ...createPersistenceFailure(errorCode, userMessage),
+        userFriendlyError: userMessage,
+      };
+    }
+  }
+
+  /**
    * Decompresses Gzip-compressed data.
    *
    * @param {Uint8Array} data - Compressed data.
    * @returns {import('./persistenceTypes.js').PersistenceResult<Uint8Array>} Outcome of decompression.
    */
   decompress(data) {
-    try {
-      const decompressed = pako.ungzip(data);
+    const result = this.#tryOperation(
+      () => pako.ungzip(data),
+      PersistenceErrorCodes.DECOMPRESSION_ERROR,
+      MSG_DECOMPRESSION_FAILED,
+      'Gzip decompression failed:'
+    );
+    if (result.success) {
       this.#logger.debug(
-        `Decompressed data size: ${decompressed.byteLength} bytes`
+        `Decompressed data size: ${result.data.byteLength} bytes`
       );
-      return createPersistenceSuccess(decompressed);
-    } catch (error) {
-      const userMsg = MSG_DECOMPRESSION_FAILED;
-      this.#logger.error('Gzip decompression failed:', error);
-      return {
-        ...createPersistenceFailure(
-          PersistenceErrorCodes.DECOMPRESSION_ERROR,
-          userMsg
-        ),
-        userFriendlyError: userMsg,
-      };
     }
+    return result;
   }
 
   /**
@@ -215,21 +233,16 @@ class GameStateSerializer {
    * @returns {import('./persistenceTypes.js').PersistenceResult<object>} Outcome of deserialization.
    */
   deserialize(buffer) {
-    try {
-      const obj = decode(buffer);
+    const result = this.#tryOperation(
+      () => decode(buffer),
+      PersistenceErrorCodes.DESERIALIZATION_ERROR,
+      MSG_DESERIALIZATION_FAILED,
+      'MessagePack deserialization failed:'
+    );
+    if (result.success) {
       this.#logger.debug('Successfully deserialized MessagePack');
-      return createPersistenceSuccess(obj);
-    } catch (error) {
-      const userMsg = MSG_DESERIALIZATION_FAILED;
-      this.#logger.error('MessagePack deserialization failed:', error);
-      return {
-        ...createPersistenceFailure(
-          PersistenceErrorCodes.DESERIALIZATION_ERROR,
-          userMsg
-        ),
-        userFriendlyError: userMsg,
-      };
     }
+    return result;
   }
 }
 
