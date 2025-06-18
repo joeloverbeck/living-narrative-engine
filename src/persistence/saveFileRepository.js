@@ -118,7 +118,8 @@ export default class SaveFileRepository {
   /**
    * Lists manual save filenames in the save directory.
    *
-   * @returns {Promise<Array<string>>} Array of file names.
+   * @returns {Promise<import('./persistenceTypes.js').PersistenceResult<string[]>>}
+   *   Array of file names wrapped in a PersistenceResult.
    */
   async listManualSaveFiles() {
     try {
@@ -129,7 +130,7 @@ export default class SaveFileRepository {
       this.#logger.debug(
         `Found ${files.length} potential manual save files in ${FULL_MANUAL_SAVE_DIRECTORY_PATH}.`
       );
-      return files;
+      return { success: true, data: files };
     } catch (listError) {
       if (
         listError.message &&
@@ -138,13 +139,17 @@ export default class SaveFileRepository {
         this.#logger.debug(
           `${FULL_MANUAL_SAVE_DIRECTORY_PATH} not found. Assuming no manual saves yet.`
         );
-        return [];
+        return { success: true, data: [] };
       }
+
       this.#logger.error(
         `Error listing files in ${FULL_MANUAL_SAVE_DIRECTORY_PATH}:`,
         listError
       );
-      return [];
+      return createPersistenceFailure(
+        PersistenceErrorCodes.FILE_READ_ERROR,
+        `Failed to list save files: ${listError.message}`
+      );
     }
   }
 

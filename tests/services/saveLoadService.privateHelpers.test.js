@@ -166,8 +166,8 @@ describe('SaveLoadService helper functions', () => {
   it('extracts save name for corrupted files', async () => {
     storageProvider.listFiles.mockResolvedValue(['manual_save_TestFile.sav']);
     storageProvider.readFile.mockResolvedValue(new Uint8Array([1, 2, 3]));
-    const slots = await service.listManualSaveSlots();
-    expect(slots[0].saveName).toBe('TestFile (Corrupted)');
+    const result = await service.listManualSaveSlots();
+    expect(result.data[0].saveName).toBe('TestFile (Corrupted)');
   });
 });
 

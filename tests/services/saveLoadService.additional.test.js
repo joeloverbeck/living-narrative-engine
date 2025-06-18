@@ -83,8 +83,8 @@ describe('SaveLoadService additional coverage', () => {
 
   it('returns empty list when directory missing', async () => {
     storageProvider.listFiles.mockRejectedValue(new Error('not found'));
-    const slots = await service.listManualSaveSlots();
-    expect(slots).toEqual([]);
+    const result = await service.listManualSaveSlots();
+    expect(result).toEqual({ success: true, data: [] });
     expect(logger.debug).toHaveBeenCalled();
   });
 
@@ -99,8 +99,8 @@ describe('SaveLoadService additional coverage', () => {
     storageProvider.listFiles.mockResolvedValue(['manual_save_Slot1.sav']);
     storageProvider.readFile.mockResolvedValue(compressed);
 
-    const slots = await service.listManualSaveSlots();
-    expect(slots).toEqual([
+    const result = await service.listManualSaveSlots();
+    expect(result.data).toEqual([
       {
         identifier: 'saves/manual_saves/manual_save_Slot1.sav',
         saveName: 'Slot1',

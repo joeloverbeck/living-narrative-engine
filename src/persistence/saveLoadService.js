@@ -184,12 +184,18 @@ class SaveLoadService extends ISaveLoadService {
 
   /**
    * @inheritdoc
-   * @returns {Promise<Array<SaveFileMetadata>>} Parsed metadata entries.
+   * @returns {Promise<import('./persistenceTypes.js').PersistenceResult<Array<SaveFileMetadata>>>}
+   *   Parsed metadata entries wrapped in a PersistenceResult.
    */
   async listManualSaveSlots() {
     this.#logger.debug('Listing manual save slots...');
-    const files = await this.#fileRepository.listManualSaveFiles();
+    const fileListResult = await this.#fileRepository.listManualSaveFiles();
 
+    if (!fileListResult.success) {
+      return fileListResult;
+    }
+
+    const files = fileListResult.data || [];
     const metadataList = await Promise.all(
       files.map((name) => this.#fileRepository.parseManualSaveMetadata(name))
     );
@@ -197,7 +203,7 @@ class SaveLoadService extends ISaveLoadService {
     this.#logger.debug(
       `Finished listing manual save slots. Returning ${metadataList.length} items.`
     );
-    return metadataList;
+    return { success: true, data: metadataList };
   }
 
   /**
