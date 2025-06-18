@@ -3,6 +3,63 @@
 import { getModuleLogger } from './loggerUtils.js';
 
 /**
+ * Sets an error message in a DOM element and makes it visible.
+ *
+ * @description Sets an error message in a DOM element and makes it visible.
+ * @param {HTMLElement | null | undefined} targetEl - Element to display the message in.
+ * @param {string} msg - Message to show.
+ * @returns {boolean} True if the message was displayed.
+ */
+export function showErrorInElement(targetEl, msg) {
+  if (!targetEl || !(targetEl instanceof HTMLElement)) {
+    return false;
+  }
+  targetEl.textContent = msg;
+  targetEl.style.display = 'block';
+  return true;
+}
+
+/**
+ * Creates a temporary error element after the provided base element.
+ *
+ * @description Creates a temporary error element after the provided base element.
+ * @param {HTMLElement | null | undefined} baseEl - Element to insert after.
+ * @param {string} msg - Message for the new element.
+ * @returns {HTMLElement | null} The created element, or null if not created.
+ */
+export function createTemporaryErrorElement(baseEl, msg) {
+  if (!baseEl || !(baseEl instanceof HTMLElement)) {
+    return null;
+  }
+  const temporaryErrorElement = document.createElement('div');
+  temporaryErrorElement.id = 'temp-startup-error';
+  temporaryErrorElement.textContent = msg;
+  temporaryErrorElement.style.color = 'red';
+  temporaryErrorElement.style.padding = '10px';
+  temporaryErrorElement.style.border = '1px solid red';
+  temporaryErrorElement.style.marginTop = '10px';
+  baseEl.insertAdjacentElement('afterend', temporaryErrorElement);
+  return temporaryErrorElement;
+}
+
+/**
+ * Disables an input element and sets a placeholder.
+ *
+ * @description Disables an input element and sets a placeholder.
+ * @param {HTMLInputElement | null | undefined} el - Input to disable.
+ * @param {string} placeholder - Placeholder text to set.
+ * @returns {boolean} True if the element was updated.
+ */
+export function disableInput(el, placeholder) {
+  if (!el || !(el instanceof HTMLInputElement)) {
+    return false;
+  }
+  el.disabled = true;
+  el.placeholder = placeholder;
+  return true;
+}
+
+/**
  * @typedef {object} FatalErrorUIElements
  * @property {HTMLElement | null | undefined} outputDiv - The main output area element.
  * @property {HTMLElement | null | undefined} errorDiv - The element for displaying errors.
@@ -47,34 +104,25 @@ export function displayFatalStartupError(uiElements, errorDetails, logger) {
 
   // 2. Attempt to display userMessage in errorDiv
   let displayedInErrorDiv = false;
-  if (errorDiv && errorDiv instanceof HTMLElement) {
-    try {
-      errorDiv.textContent = userMessage;
-      errorDiv.style.display = 'block'; // Ensure it's visible
-      displayedInErrorDiv = true;
-    } catch (e) {
-      log.error(
-        'displayFatalStartupError: Failed to set textContent on errorDiv.',
-        e
-      );
-    }
+  try {
+    displayedInErrorDiv = showErrorInElement(errorDiv, userMessage);
+  } catch (e) {
+    log.error(
+      'displayFatalStartupError: Failed to set textContent on errorDiv.',
+      e
+    );
   }
 
   // 3. Fallback to dynamic creation if errorDiv not available/failed, but outputDiv is
-  if (!displayedInErrorDiv && outputDiv && outputDiv instanceof HTMLElement) {
+  if (!displayedInErrorDiv) {
     try {
-      const temporaryErrorElement = document.createElement('div');
-      temporaryErrorElement.id = 'temp-startup-error';
-      temporaryErrorElement.textContent = userMessage;
-      temporaryErrorElement.style.color = 'red';
-      temporaryErrorElement.style.padding = '10px';
-      temporaryErrorElement.style.border = '1px solid red';
-      temporaryErrorElement.style.marginTop = '10px';
-      outputDiv.insertAdjacentElement('afterend', temporaryErrorElement); // Append near outputDiv
-      log.info(
-        'displayFatalStartupError: Displayed error in a dynamically created element near outputDiv.'
-      );
-      displayedInErrorDiv = true; // Consider this as having displayed the error in a DOM element
+      const tmpEl = createTemporaryErrorElement(outputDiv, userMessage);
+      if (tmpEl) {
+        log.info(
+          'displayFatalStartupError: Displayed error in a dynamically created element near outputDiv.'
+        );
+        displayedInErrorDiv = true;
+      }
     } catch (e) {
       log.error(
         'displayFatalStartupError: Failed to create or append temporary error element.',
@@ -92,27 +140,24 @@ export function displayFatalStartupError(uiElements, errorDetails, logger) {
   }
 
   // 5. If titleElement is available, set its textContent
-  if (titleElement && titleElement instanceof HTMLElement) {
-    try {
+  try {
+    if (titleElement && titleElement instanceof HTMLElement) {
       titleElement.textContent = pageTitle;
-    } catch (e) {
-      log.error(
-        'displayFatalStartupError: Failed to set textContent on titleElement.',
-        e
-      );
     }
+  } catch (e) {
+    log.error(
+      'displayFatalStartupError: Failed to set textContent on titleElement.',
+      e
+    );
   }
 
   // 6. If inputElement is available, disable it and set placeholder
-  if (inputElement && inputElement instanceof HTMLInputElement) {
-    try {
-      inputElement.disabled = true;
-      inputElement.placeholder = inputPlaceholder;
-    } catch (e) {
-      log.error(
-        'displayFatalStartupError: Failed to disable or set placeholder on inputElement.',
-        e
-      );
-    }
+  try {
+    disableInput(inputElement, inputPlaceholder);
+  } catch (e) {
+    log.error(
+      'displayFatalStartupError: Failed to disable or set placeholder on inputElement.',
+      e
+    );
   }
 }
