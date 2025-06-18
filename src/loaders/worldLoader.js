@@ -466,6 +466,59 @@ class WorldLoader extends AbstractLoader {
   }
 
   /**
+   * Aggregates a single loader result into per-mod and total summaries.
+   *
+   * @private
+   * @param {ModResultsSummary} modResults - Map collecting results for the current mod.
+   * @param {TotalResultsSummary} totalCounts - Overall totals across all mods.
+   * @param {string} typeName - The content type name being processed.
+   * @param {LoadItemsResult|null|undefined} loadResult - Result from the loader.
+   * @returns {void}
+   */
+  _aggregateLoaderResult(modResults, totalCounts, typeName, loadResult) {
+    const result =
+      loadResult && typeof loadResult.count === 'number'
+        ? {
+            count: loadResult.count || 0,
+            overrides: loadResult.overrides || 0,
+            errors: loadResult.errors || 0,
+          }
+        : { count: 0, overrides: 0, errors: 0 };
+
+    modResults[typeName] = result;
+
+    if (!totalCounts[typeName]) {
+      totalCounts[typeName] = { count: 0, overrides: 0, errors: 0 };
+    }
+    totalCounts[typeName].count += result.count;
+    totalCounts[typeName].overrides += result.overrides;
+    totalCounts[typeName].errors += result.errors;
+  }
+
+  /**
+   * Records an error occurrence for a specific loader.
+   *
+   * @private
+   * @param {ModResultsSummary} modResults - Map collecting results for the current mod.
+   * @param {TotalResultsSummary} totalCounts - Overall totals across all mods.
+   * @param {string} typeName - The content type name being processed.
+   * @param {string} errorMessage - Error description (unused, for caller context).
+   * @returns {void}
+   */
+  _recordLoaderError(modResults, totalCounts, typeName, errorMessage) {
+    // errorMessage is included for potential logging at the call site
+    if (!modResults[typeName]) {
+      modResults[typeName] = { count: 0, overrides: 0, errors: 0 };
+    }
+    modResults[typeName].errors += 1;
+
+    if (!totalCounts[typeName]) {
+      totalCounts[typeName] = { count: 0, overrides: 0, errors: 0 };
+    }
+    totalCounts[typeName].errors += 1;
+  }
+
+  /**
    * Sequentially loads content for each mod according to the resolved order.
    *
    * @private
@@ -539,28 +592,23 @@ class WorldLoader extends AbstractLoader {
               );
 
               if (result && typeof result.count === 'number') {
-                modResults[typeName] = {
-                  count: result.count || 0,
-                  overrides: result.overrides || 0,
-                  errors: result.errors || 0,
-                };
-
-                if (!totalCounts[typeName]) {
-                  totalCounts[typeName] = { count: 0, overrides: 0, errors: 0 };
-                }
-                totalCounts[typeName].count += modResults[typeName].count;
-                totalCounts[typeName].overrides +=
-                  modResults[typeName].overrides;
-                totalCounts[typeName].errors += modResults[typeName].errors;
+                this._aggregateLoaderResult(
+                  modResults,
+                  totalCounts,
+                  typeName,
+                  result
+                );
               } else {
                 this.#logger.warn(
                   `WorldLoader [${modId}]: Loader for '${typeName}' returned an unexpected result format. Assuming 0 counts.`,
                   { result }
                 );
-                modResults[typeName] = { count: 0, overrides: 0, errors: 0 };
-                if (!totalCounts[typeName]) {
-                  totalCounts[typeName] = { count: 0, overrides: 0, errors: 0 };
-                }
+                this._aggregateLoaderResult(
+                  modResults,
+                  totalCounts,
+                  typeName,
+                  null
+                );
               }
             } catch (loadError) {
               const errorMessage = loadError?.message || String(loadError);
@@ -569,14 +617,12 @@ class WorldLoader extends AbstractLoader {
                 { modId, typeName, error: errorMessage },
                 loadError
               );
-              if (!modResults[typeName]) {
-                modResults[typeName] = { count: 0, overrides: 0, errors: 0 };
-              }
-              modResults[typeName].errors += 1;
-              if (!totalCounts[typeName]) {
-                totalCounts[typeName] = { count: 0, overrides: 0, errors: 0 };
-              }
-              totalCounts[typeName].errors += 1;
+              this._recordLoaderError(
+                modResults,
+                totalCounts,
+                typeName,
+                errorMessage
+              );
               await this.#validatedEventDispatcher
                 .dispatch(
                   'initialization:world_loader:content_load_failed',
