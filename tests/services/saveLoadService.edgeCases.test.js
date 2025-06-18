@@ -7,6 +7,7 @@ import {
   beforeAll,
 } from '@jest/globals';
 import SaveLoadService from '../../src/persistence/saveLoadService.js';
+import SaveFileRepository from '../../src/persistence/saveFileRepository.js';
 import { encode } from '@msgpack/msgpack';
 import { PersistenceErrorCodes } from '../../src/persistence/persistenceErrors.js';
 import pako from 'pako';
@@ -46,25 +47,44 @@ function makeDeps() {
     ensureDirectoryExists: jest.fn(),
   };
   const serializer = new GameStateSerializer({ logger, crypto: webcrypto });
+  const saveFileRepository = new SaveFileRepository({
+    logger,
+    storageProvider,
+    serializer,
+  });
   const saveValidationService = new SaveValidationService({
     logger,
     gameStateSerializer: serializer,
   });
-  return { logger, storageProvider, saveValidationService };
+  return {
+    logger,
+    storageProvider,
+    serializer,
+    saveFileRepository,
+    saveValidationService,
+  };
 }
 
 describe('SaveLoadService edge cases', () => {
   let logger;
   let storageProvider;
+  let serializer;
+  let saveFileRepository;
   let saveValidationService;
   let service;
 
   beforeEach(() => {
-    ({ logger, storageProvider, saveValidationService } = makeDeps());
-    service = new SaveLoadService({
+    ({
       logger,
       storageProvider,
-      crypto: webcrypto,
+      serializer,
+      saveFileRepository,
+      saveValidationService,
+    } = makeDeps());
+    service = new SaveLoadService({
+      logger,
+      saveFileRepository,
+      gameStateSerializer: serializer,
       saveValidationService,
     });
   });

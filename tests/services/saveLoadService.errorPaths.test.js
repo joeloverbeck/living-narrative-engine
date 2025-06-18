@@ -7,6 +7,8 @@ import {
   beforeAll,
 } from '@jest/globals';
 import SaveLoadService from '../../src/persistence/saveLoadService.js';
+import SaveFileRepository from '../../src/persistence/saveFileRepository.js';
+import GameStateSerializer from '../../src/persistence/gameStateSerializer.js';
 import pako from 'pako';
 import { webcrypto } from 'crypto';
 import { TextEncoder, TextDecoder } from 'util';
@@ -42,21 +44,31 @@ beforeAll(() => {
  *
  */
 function makeDeps() {
+  const logger = {
+    info: jest.fn(),
+    debug: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+  };
+  const storageProvider = {
+    listFiles: jest.fn(),
+    readFile: jest.fn(),
+    writeFileAtomically: jest.fn(),
+    deleteFile: jest.fn(),
+    fileExists: jest.fn(),
+    ensureDirectoryExists: jest.fn(),
+  };
+  const serializer = new GameStateSerializer({ logger, crypto: webcrypto });
+  const saveFileRepository = new SaveFileRepository({
+    logger,
+    storageProvider,
+    serializer,
+  });
   return {
-    logger: {
-      info: jest.fn(),
-      debug: jest.fn(),
-      warn: jest.fn(),
-      error: jest.fn(),
-    },
-    storageProvider: {
-      listFiles: jest.fn(),
-      readFile: jest.fn(),
-      writeFileAtomically: jest.fn(),
-      deleteFile: jest.fn(),
-      fileExists: jest.fn(),
-      ensureDirectoryExists: jest.fn(),
-    },
+    logger,
+    storageProvider,
+    serializer,
+    saveFileRepository,
     saveValidationService: createMockSaveValidationService(),
   };
 }
@@ -64,15 +76,23 @@ function makeDeps() {
 describe('SaveLoadService error paths', () => {
   let logger;
   let storageProvider;
+  let serializer;
+  let saveFileRepository;
   let saveValidationService;
   let service;
 
   beforeEach(() => {
-    ({ logger, storageProvider, saveValidationService } = makeDeps());
-    service = new SaveLoadService({
+    ({
       logger,
       storageProvider,
-      crypto: webcrypto,
+      serializer,
+      saveFileRepository,
+      saveValidationService,
+    } = makeDeps());
+    service = new SaveLoadService({
+      logger,
+      saveFileRepository,
+      gameStateSerializer: serializer,
       saveValidationService,
     });
     global.encodeMock = jest.fn();

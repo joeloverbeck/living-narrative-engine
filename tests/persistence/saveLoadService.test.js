@@ -1,5 +1,6 @@
 import { describe, it, beforeEach, expect, jest } from '@jest/globals';
 import SaveLoadService from '../../src/persistence/saveLoadService.js';
+import SaveFileRepository from '../../src/persistence/saveFileRepository.js';
 import {
   PersistenceError,
   PersistenceErrorCodes,
@@ -68,9 +69,14 @@ describe('SaveLoadService', () => {
     serializer = createMockGameStateSerializer();
     validationService = createMockSaveValidationService();
     logger = createMockLogger();
-    service = new SaveLoadService({
+    const saveFileRepository = new SaveFileRepository({
       logger,
       storageProvider,
+      serializer,
+    });
+    service = new SaveLoadService({
+      logger,
+      saveFileRepository,
       gameStateSerializer: serializer,
       saveValidationService: validationService,
     });

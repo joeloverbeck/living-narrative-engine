@@ -66,10 +66,12 @@ export function registerPersistence(container) {
     `Persistence Registration: Registered ${String(tokens.SaveFileRepository)}.`
   );
 
-  r.single(tokens.ISaveLoadService, SaveLoadService, [
-    tokens.ILogger,
-    tokens.SaveFileRepository,
-  ]);
+  r.singletonFactory(tokens.ISaveLoadService, (c) =>
+    SaveLoadService.createDefault({
+      logger: c.resolve(tokens.ILogger),
+      storageProvider: c.resolve(tokens.IStorageProvider),
+    })
+  );
   logger.debug(
     `Persistence Registration: Registered ${String(tokens.ISaveLoadService)}.`
   );
