@@ -1,11 +1,7 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import SaveFileRepository from '../../src/persistence/saveFileRepository.js';
-import { parseManualSaveFile } from '../../src/persistence/saveFileIO.js';
+import { manualSavePath } from '../../src/utils/savePathUtils.js';
 import { createMockLogger } from '../testUtils.js';
-
-jest.mock('../../src/persistence/saveFileIO.js', () => ({
-  parseManualSaveFile: jest.fn(),
-}));
 
 /**
  *
@@ -33,28 +29,31 @@ describe('SaveFileRepository.parseManualSaveMetadata', () => {
 
   beforeEach(() => {
     ({ repo, logger, storageProvider, serializer } = makeDeps());
-    parseManualSaveFile.mockReset();
     logger.debug.mockReset();
   });
 
-  it('returns metadata from parseManualSaveFile unchanged and logs once', async () => {
+  it('returns parsed metadata and logs', async () => {
     const metadata = {
-      identifier: 'path',
+      identifier: manualSavePath('manual_save_Name.sav'),
       saveName: 'Name',
       timestamp: 'now',
       playtimeSeconds: 42,
     };
-    parseManualSaveFile.mockResolvedValue({ success: true, data: metadata });
+
+    storageProvider.readFile.mockResolvedValue(new Uint8Array([1]));
+    serializer.decompress = jest
+      .fn()
+      .mockReturnValue({ success: true, data: new Uint8Array([2]) });
+    serializer.deserialize = jest
+      .fn()
+      .mockReturnValue({ success: true, data: { metadata } });
 
     const result = await repo.parseManualSaveMetadata('manual_save_Name.sav');
 
-    expect(result).toBe(metadata);
-    expect(parseManualSaveFile).toHaveBeenCalledWith(
-      'manual_save_Name.sav',
-      storageProvider,
-      serializer,
-      expect.any(Object)
+    expect(result).toEqual(metadata);
+    expect(storageProvider.readFile).toHaveBeenCalledWith(
+      manualSavePath('manual_save_Name.sav')
     );
-    expect(logger.debug).toHaveBeenCalledTimes(1);
+    expect(logger.debug).toHaveBeenCalled();
   });
 });

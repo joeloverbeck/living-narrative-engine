@@ -4,14 +4,15 @@ import {
   FULL_MANUAL_SAVE_DIRECTORY_PATH,
   MANUAL_SAVE_PATTERN,
   extractSaveName,
+  manualSavePath,
 } from '../utils/savePathUtils.js';
-import { deserializeAndDecompress, parseManualSaveFile } from './saveFileIO.js';
 import { validateSaveMetadataFields } from '../utils/saveMetadataUtils.js';
+import { MSG_FILE_READ_ERROR, MSG_EMPTY_FILE } from './persistenceMessages.js';
+import { PersistenceErrorCodes } from './persistenceErrors.js';
 import {
-  PersistenceError,
-  PersistenceErrorCodes,
-} from './persistenceErrors.js';
-import { createPersistenceFailure } from '../utils/persistenceResultUtils.js';
+  createPersistenceFailure,
+  createPersistenceSuccess,
+} from '../utils/persistenceResultUtils.js';
 import { wrapPersistenceOperation } from '../utils/persistenceErrorUtils.js';
 import { setupService } from '../utils/serviceInitializerUtils.js';
 
@@ -154,12 +155,7 @@ export default class SaveFileRepository {
    * @returns {Promise<import('../interfaces/ISaveLoadService.js').SaveFileMetadata>} Parsed metadata.
    */
   async parseManualSaveMetadata(fileName) {
-    const { data: metadata } = await parseManualSaveFile(
-      fileName,
-      this.#storageProvider,
-      this.#serializer,
-      this.#logger
-    );
+    const { data: metadata } = await this.#parseManualSaveFile(fileName);
 
     if (!metadata.isCorrupted) {
       this.#logger.debug(
@@ -177,12 +173,143 @@ export default class SaveFileRepository {
    * @returns {Promise<import('./persistenceTypes.js').PersistenceResult<object>>} Deserialized save data.
    */
   async readSaveFile(filePath) {
-    return deserializeAndDecompress(
-      this.#storageProvider,
-      this.#serializer,
-      filePath,
-      this.#logger
-    );
+    return this.#deserializeAndDecompress(filePath);
+  }
+
+  /**
+   * Reads a file using the configured storage provider.
+   *
+   * @param {string} filePath - Path to the file.
+   * @returns {Promise<import('./persistenceTypes.js').PersistenceResult<Uint8Array>>}
+   */
+  async #readSaveFile(filePath) {
+    return wrapPersistenceOperation(this.#logger, async () => {
+      let fileContent;
+      try {
+        fileContent = await this.#storageProvider.readFile(filePath);
+      } catch (error) {
+        const userMsg = MSG_FILE_READ_ERROR;
+        this.#logger.error(`Error reading file ${filePath}:`, error);
+        return {
+          ...createPersistenceFailure(
+            PersistenceErrorCodes.FILE_READ_ERROR,
+            userMsg
+          ),
+          userFriendlyError: userMsg,
+        };
+      }
+
+      if (!fileContent || fileContent.byteLength === 0) {
+        const userMsg = MSG_EMPTY_FILE;
+        this.#logger.warn(`File is empty or could not be read: ${filePath}.`);
+        return {
+          ...createPersistenceFailure(
+            PersistenceErrorCodes.EMPTY_FILE,
+            userMsg
+          ),
+          userFriendlyError: userMsg,
+        };
+      }
+
+      return createPersistenceSuccess(fileContent);
+    });
+  }
+
+  /**
+   * Reads, decompresses and deserializes a save file.
+   *
+   * @param {string} filePath - File path to read.
+   * @returns {Promise<import('./persistenceTypes.js').PersistenceResult<object>>}
+   */
+  async #deserializeAndDecompress(filePath) {
+    return wrapPersistenceOperation(this.#logger, async () => {
+      this.#logger.debug(
+        `Attempting to read and deserialize file: ${filePath}`
+      );
+      const readRes = await this.#readSaveFile(filePath);
+      if (!readRes.success) return readRes;
+
+      const decompressRes = this.#serializer.decompress(readRes.data);
+      if (!decompressRes.success) return decompressRes;
+
+      const deserializeRes = this.#serializer.deserialize(decompressRes.data);
+      if (!deserializeRes.success) return deserializeRes;
+
+      return createPersistenceSuccess(deserializeRes.data);
+    });
+  }
+
+  /**
+   * Parses a manual save file and extracts metadata.
+   *
+   * @param {string} fileName - File name within manual saves directory.
+   * @returns {Promise<import('./persistenceTypes.js').PersistenceResult<import('../interfaces/ISaveLoadService.js').SaveFileMetadata>>}
+   */
+  async #parseManualSaveFile(fileName) {
+    return wrapPersistenceOperation(this.#logger, async () => {
+      const filePath = manualSavePath(fileName);
+      this.#logger.debug(`Processing file: ${filePath}`);
+
+      const deserializationResult =
+        await this.#deserializeAndDecompress(filePath);
+
+      if (!deserializationResult.success) {
+        this.#logger.warn(
+          `Failed to deserialize ${filePath}: ${deserializationResult.error}. Flagging as corrupted for listing.`
+        );
+        return {
+          success: false,
+          data: {
+            identifier: filePath,
+            saveName: extractSaveName(fileName) + ' (Corrupted)',
+            timestamp: 'N/A',
+            playtimeSeconds: 0,
+            isCorrupted: true,
+          },
+        };
+      }
+
+      const saveObject =
+        /** @type {import('../interfaces/ISaveLoadService.js').SaveGameStructure | undefined} */ (
+          deserializationResult.data
+        );
+
+      if (
+        !saveObject ||
+        typeof saveObject.metadata !== 'object' ||
+        saveObject.metadata === null
+      ) {
+        this.#logger.warn(
+          `No metadata section found in ${filePath}. Flagging as corrupted for listing.`
+        );
+        return {
+          success: false,
+          data: {
+            identifier: filePath,
+            saveName: extractSaveName(fileName) + ' (No Metadata)',
+            timestamp: 'N/A',
+            playtimeSeconds: 0,
+            isCorrupted: true,
+          },
+        };
+      }
+
+      const validated = validateSaveMetadataFields(
+        {
+          identifier: filePath,
+          saveName: saveObject.metadata.saveName,
+          timestamp: saveObject.metadata.timestamp,
+          playtimeSeconds: saveObject.metadata.playtimeSeconds,
+        },
+        fileName,
+        this.#logger
+      );
+
+      return {
+        success: !validated.isCorrupted,
+        data: validated,
+      };
+    });
   }
 
   /**
