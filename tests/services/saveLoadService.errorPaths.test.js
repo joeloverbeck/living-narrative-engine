@@ -9,6 +9,7 @@ import {
 import SaveLoadService from '../../src/persistence/saveLoadService.js';
 import SaveFileRepository from '../../src/persistence/saveFileRepository.js';
 import GameStateSerializer from '../../src/persistence/gameStateSerializer.js';
+import { PersistenceErrorCodes } from '../../src/persistence/persistenceErrors.js';
 import pako from 'pako';
 import { webcrypto } from 'crypto';
 import { TextEncoder, TextDecoder } from 'util';
@@ -112,7 +113,8 @@ describe('SaveLoadService error paths', () => {
     /** @type {PersistenceResult<any>} */
     const res = await service.deleteManualSave('saves/manual_saves/bad.sav');
     expect(res.success).toBe(false);
-    expect(res.error.message).toMatch(/unexpected error/i);
+    expect(res.error.code).toBe(PersistenceErrorCodes.UNEXPECTED_ERROR);
+    expect(res.error.message).toBe('fs failure');
     expect(logger.error).toHaveBeenCalled();
   });
 
