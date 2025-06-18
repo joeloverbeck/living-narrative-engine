@@ -84,7 +84,7 @@ export async function setupMenuButtonListenersStage(
         `${stageName}: GameEngine not available for #open-load-game-button listener.`
       );
       logger.debug(`Bootstrap Stage: ${stageName} completed successfully.`);
-      return { success: true };
+      return stageSuccess();
     }
 
     setupButtonListener(
