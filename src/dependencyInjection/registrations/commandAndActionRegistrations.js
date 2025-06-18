@@ -31,6 +31,7 @@ import CommandProcessor from '../../commands/commandProcessor.js';
 // --- Helper Function Imports ---
 import { formatActionCommand } from '../../actions/actionFormatter.js';
 import { getEntityIdsForScopes } from '../../entities/entityScopeService.js';
+import { getAvailableExits } from '../../utils/locationUtils.js';
 
 /**
  * Registers command and action related services.
@@ -55,6 +56,7 @@ export function registerCommandAndAction(container) {
         logger: c.resolve(tokens.ILogger),
         formatActionCommandFn: formatActionCommand,
         getEntityIdsForScopesFn: getEntityIdsForScopes,
+        getAvailableExitsFn: getAvailableExits,
         safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
       })
   );

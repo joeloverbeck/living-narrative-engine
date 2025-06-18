@@ -45,6 +45,7 @@ describe('ActionDiscoveryService - Wait Action Tests', () => {
   let mockFormatActionCommandFn;
   /** @type {jest.MockedFunction<typeof getEntityIdsForScopesFn>} */
   let mockGetEntityIdsForScopesFn;
+  let mockGetAvailableExits;
 
   const ACTOR_INSTANCE_ID = 'actor1-instance-wait';
   const LOCATION_INSTANCE_ID = 'location1-instance-wait';
@@ -72,6 +73,7 @@ describe('ActionDiscoveryService - Wait Action Tests', () => {
 
     mockFormatActionCommandFn = formatActionCommandFn;
     mockGetEntityIdsForScopesFn = getEntityIdsForScopesFn;
+    mockGetAvailableExits = jest.fn();
     mockSafeEventDispatcher = { dispatch: jest.fn() };
 
     mockActorEntity = new Entity(ACTOR_INSTANCE_ID, DUMMY_DEFINITION_ID);
@@ -118,6 +120,7 @@ describe('ActionDiscoveryService - Wait Action Tests', () => {
       logger: mockLogger,
       formatActionCommandFn: mockFormatActionCommandFn,
       getEntityIdsForScopesFn: mockGetEntityIdsForScopesFn,
+      getAvailableExitsFn: mockGetAvailableExits,
       safeEventDispatcher: mockSafeEventDispatcher,
     });
   });

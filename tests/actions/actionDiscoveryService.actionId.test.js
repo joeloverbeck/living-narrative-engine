@@ -31,6 +31,7 @@ describe('ActionDiscoveryService params exposure', () => {
       warn: jest.fn(),
     };
     const safeEventDispatcher = { dispatch: jest.fn() };
+    const getAvailableExitsFn = jest.fn();
 
     service = new ActionDiscoveryService({
       gameDataRepository: gameDataRepo,
@@ -38,6 +39,7 @@ describe('ActionDiscoveryService params exposure', () => {
       actionValidationService,
       formatActionCommandFn,
       getEntityIdsForScopesFn,
+      getAvailableExitsFn,
       logger,
       safeEventDispatcher,
     });

@@ -60,6 +60,10 @@ describe('ActionDiscoveryService – directional discovery', () => {
   const getEntityIdsForScopesFn = () => [];
 
   const safeEventDispatcher = { dispatch: jest.fn() };
+  const getAvailableExitsFn = jest.fn(() => [
+    { direction: 'north', target: 'loc-2' },
+    { direction: 'south', target: 'loc-3' },
+  ]);
 
   const service = new ActionDiscoveryService({
     gameDataRepository,
@@ -68,6 +72,7 @@ describe('ActionDiscoveryService – directional discovery', () => {
     logger,
     formatActionCommandFn,
     getEntityIdsForScopesFn,
+    getAvailableExitsFn,
     safeEventDispatcher,
   });
 

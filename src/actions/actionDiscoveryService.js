@@ -14,6 +14,7 @@
 import { ActionTargetContext } from '../models/actionTargetContext.js';
 import { IActionDiscoveryService } from '../interfaces/IActionDiscoveryService.js';
 import { getAvailableExits } from '../utils/locationUtils.js';
+import { getEntityDisplayName } from '../utils/entityUtils.js';
 import { setupService } from '../utils/serviceInitializerUtils.js';
 import { getActorLocation } from '../utils/actorLocationUtils.js';
 import { safeDispatchError } from '../utils/safeDispatchErrorUtils.js';
@@ -25,6 +26,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
   #actionValidationService;
   #formatActionCommandFn;
   #getEntityIdsForScopesFn;
+  #getAvailableExitsFn;
   #logger;
   #safeEventDispatcher;
 
@@ -37,6 +39,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
    * @param {formatActionCommandFn} deps.formatActionCommandFn
    * @param {getEntityIdsForScopesFn} deps.getEntityIdsForScopesFn
    * @param {ISafeEventDispatcher} deps.safeEventDispatcher
+   * @param {typeof getAvailableExits} [deps.getAvailableExitsFn] - Function to retrieve exits for a location.
    */
   constructor({
     gameDataRepository,
@@ -46,6 +49,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
     formatActionCommandFn,
     getEntityIdsForScopesFn,
     safeEventDispatcher,
+    getAvailableExitsFn = getAvailableExits,
   }) {
     super();
     this.#logger = setupService('ActionDiscoveryService', logger, {
@@ -66,6 +70,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
         value: getEntityIdsForScopesFn,
         isFunction: true,
       },
+      getAvailableExitsFn: { value: getAvailableExitsFn, isFunction: true },
       safeEventDispatcher: {
         value: safeEventDispatcher,
         requiredMethods: ['dispatch'],
@@ -77,6 +82,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
     this.#actionValidationService = actionValidationService;
     this.#formatActionCommandFn = formatActionCommandFn;
     this.#getEntityIdsForScopesFn = getEntityIdsForScopesFn;
+    this.#getAvailableExitsFn = getAvailableExitsFn;
     this.#safeEventDispatcher = safeEventDispatcher;
 
     this.#logger.debug('ActionDiscoveryService initialised.');
@@ -129,6 +135,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
                 logger: this.#logger,
                 debug: true,
                 safeEventDispatcher: this.#safeEventDispatcher,
+                getEntityDisplayNameFn: getEntityDisplayName,
               }
             );
             if (cmd !== null) {
@@ -151,7 +158,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
             continue;
           }
 
-          const exits = getAvailableExits(
+          const exits = this.#getAvailableExitsFn(
             currentLocation,
             this.#entityManager,
             this.#safeEventDispatcher,
@@ -179,6 +186,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
                   logger: this.#logger,
                   debug: true,
                   safeEventDispatcher: this.#safeEventDispatcher,
+                  getEntityDisplayNameFn: getEntityDisplayName,
                 }
               );
               if (cmd !== null) {
@@ -214,6 +222,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
                   logger: this.#logger,
                   debug: true,
                   safeEventDispatcher: this.#safeEventDispatcher,
+                  getEntityDisplayNameFn: getEntityDisplayName,
                 }
               );
               if (cmd !== null) {

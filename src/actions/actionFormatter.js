@@ -34,7 +34,12 @@ export function formatActionCommand(
   entityManager,
   options = {}
 ) {
-  const { debug = false, logger = console, safeEventDispatcher } = options;
+  const {
+    debug = false,
+    logger = console,
+    safeEventDispatcher,
+    getEntityDisplayNameFn = getEntityDisplayName,
+  } = options;
   const dispatcher = resolveSafeDispatcher(null, safeEventDispatcher, logger);
   if (!dispatcher) {
     logger.warn(
@@ -69,7 +74,7 @@ export function formatActionCommand(
       'formatActionCommand requires a valid EntityManager instance.'
     );
   }
-  if (typeof getEntityDisplayName !== 'function') {
+  if (typeof getEntityDisplayNameFn !== 'function') {
     safeDispatchError(
       dispatcher,
       'formatActionCommand: getEntityDisplayName utility function is not available.'
@@ -108,7 +113,7 @@ export function formatActionCommand(
 
         if (targetEntity) {
           // Use getEntityDisplayName utility with ID as fallback and pass logger
-          targetName = getEntityDisplayName(targetEntity, targetId, logger);
+          targetName = getEntityDisplayNameFn(targetEntity, targetId, logger);
           if (debug) {
             logger.debug(
               ` -> Found entity ${targetId}, display name: "${targetName}"`

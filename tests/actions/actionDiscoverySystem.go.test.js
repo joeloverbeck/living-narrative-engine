@@ -211,6 +211,7 @@ describe('ActionDiscoveryService - Go Action (Fixed State)', () => {
       logger: mockLogger,
       formatActionCommandFn: mockFormatActionCommandFn,
       getEntityIdsForScopesFn: mockGetEntityIdsForScopesFn,
+      getAvailableExitsFn: mockGetAvailableExits,
       safeEventDispatcher: mockSafeEventDispatcher,
     });
   });
