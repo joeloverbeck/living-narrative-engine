@@ -12,6 +12,7 @@ import {
 import {
   createPersistenceFailure,
   createPersistenceSuccess,
+  normalizePersistenceFailure,
 } from '../utils/persistenceResultUtils.js';
 import { wrapPersistenceOperation } from '../utils/persistenceErrorUtils.js';
 import { isValidSaveString } from './saveInputValidators.js';
@@ -223,16 +224,12 @@ class SaveLoadService extends ISaveLoadService {
       this.#logger.warn(
         `Failed to deserialize ${saveIdentifier}: ${deserializationResult.error}`
       );
-      return {
-        ...(deserializationResult.error instanceof PersistenceError
-          ? { success: false, error: deserializationResult.error }
-          : createPersistenceFailure(
-              PersistenceErrorCodes.DESERIALIZATION_ERROR,
-              deserializationResult.userFriendlyError ||
-                'Unknown deserialization error'
-            )),
-        data: null,
-      };
+      return normalizePersistenceFailure(
+        deserializationResult,
+        PersistenceErrorCodes.DESERIALIZATION_ERROR,
+        deserializationResult.userFriendlyError ||
+          'Unknown deserialization error'
+      );
     }
 
     const loadedObject = /** @type {SaveGameStructure} */ (

@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import GamePersistenceService from '../../src/persistence/gamePersistenceService.js';
 import GameStateCaptureService from '../../src/persistence/gameStateCaptureService.js';
 import { CURRENT_ACTOR_COMPONENT_ID } from '../../src/constants/componentIds.js';
+import { PersistenceErrorCodes } from '../../src/persistence/persistenceErrors.js';
 
 // Helpers to create minimal mocks
 const makeLogger = () => ({
@@ -197,6 +198,7 @@ describe('GamePersistenceService additional coverage', () => {
       const res = await service.loadAndRestoreGame('slot1');
       expect(res.success).toBe(false);
       expect(res.error.message).toBe('no');
+      expect(res.error.code).toBe(PersistenceErrorCodes.UNEXPECTED_ERROR);
     });
 
     it('loads and restores on success', async () => {

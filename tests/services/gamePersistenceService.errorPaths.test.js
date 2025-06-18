@@ -4,6 +4,7 @@ import GameStateCaptureService from '../../src/persistence/gameStateCaptureServi
 import ComponentCleaningService, {
   buildDefaultComponentCleaners,
 } from '../../src/persistence/componentCleaningService.js';
+import { PersistenceErrorCodes } from '../../src/persistence/persistenceErrors.js';
 
 const makeLogger = () => ({
   info: jest.fn(),
@@ -143,6 +144,7 @@ describe('GamePersistenceService error paths', () => {
       const result = await service.loadAndRestoreGame('slot');
       expect(result.success).toBe(false);
       expect(result.error.message).toBe('load fail');
+      expect(result.error.code).toBe(PersistenceErrorCodes.UNEXPECTED_ERROR);
       expect(logger.error).toHaveBeenCalled();
     });
   });

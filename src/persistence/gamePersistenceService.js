@@ -24,6 +24,7 @@ import {
 import {
   createPersistenceFailure,
   createPersistenceSuccess,
+  normalizePersistenceFailure,
 } from '../utils/persistenceResultUtils.js';
 import { wrapPersistenceOperation } from '../utils/persistenceErrorUtils.js';
 import GameStateRestorer from './gameStateRestorer.js';
@@ -228,15 +229,11 @@ class GamePersistenceService extends IGamePersistenceService {
       this.#logger.error(
         `GamePersistenceService.loadAndRestoreGame: Failed to load raw game data from ${saveIdentifier}. Reason: ${reason}`
       );
-      return {
-        ...(loadResult?.error instanceof PersistenceError
-          ? { success: false, error: loadResult.error }
-          : createPersistenceFailure(
-              PersistenceErrorCodes.UNEXPECTED_ERROR,
-              loadResult?.error || 'Failed to load raw game data.'
-            )),
-        data: null,
-      };
+      return normalizePersistenceFailure(
+        loadResult,
+        PersistenceErrorCodes.UNEXPECTED_ERROR,
+        loadResult?.error || 'Failed to load raw game data.'
+      );
     }
 
     this.#logger.debug(
@@ -256,15 +253,11 @@ class GamePersistenceService extends IGamePersistenceService {
       this.#logger.error(
         `GamePersistenceService.loadAndRestoreGame: Failed to restore game state for ${saveIdentifier}. Error: ${restoreResult.error}`
       );
-      return {
-        ...(restoreResult.error instanceof PersistenceError
-          ? { success: false, error: restoreResult.error }
-          : createPersistenceFailure(
-              PersistenceErrorCodes.UNEXPECTED_ERROR,
-              restoreResult.error || 'Failed to restore game state.'
-            )),
-        data: null,
-      };
+      return normalizePersistenceFailure(
+        restoreResult,
+        PersistenceErrorCodes.UNEXPECTED_ERROR,
+        restoreResult.error || 'Failed to restore game state.'
+      );
     }
   }
 }
