@@ -18,10 +18,6 @@ import { getActorType } from '../../utils/actorTypeUtils.js';
  * ● All other errors cause the turn to end with an error.
  */
 export class AwaitingActorDecisionState extends AbstractTurnState {
-  get name() {
-    return this.getStateName();
-  }
-
   /**
    * @override
    */
@@ -29,7 +25,7 @@ export class AwaitingActorDecisionState extends AbstractTurnState {
     await super.enterState(handler, previousState);
 
     const turnContext = await this._ensureContext(
-      `critical-no-context-${this.name}`,
+      `critical-no-context-${this.getStateName()}`,
       handler
     );
     if (!turnContext) return;
@@ -48,7 +44,7 @@ export class AwaitingActorDecisionState extends AbstractTurnState {
       );
 
       if (!action || typeof action.actionDefinitionId !== 'string') {
-        const warnMsg = `${this.name}: Strategy for actor ${actor.id} returned an invalid or null ITurnAction (must have actionDefinitionId).`;
+        const warnMsg = `${this.getStateName()}: Strategy for actor ${actor.id} returned an invalid or null ITurnAction (must have actionDefinitionId).`;
         turnContext.getLogger().warn(warnMsg, { receivedAction: action });
         await turnContext.endTurn(new Error(warnMsg));
         return;
@@ -71,11 +67,11 @@ export class AwaitingActorDecisionState extends AbstractTurnState {
     } catch (error) {
       if (error?.name === 'AbortError') {
         logger.debug(
-          `${this.name}: Action decision for actor ${actor.id} was cancelled (aborted). Ending turn gracefully.`
+          `${this.getStateName()}: Action decision for actor ${actor.id} was cancelled (aborted). Ending turn gracefully.`
         );
         await turnContext.endTurn(null);
       } else {
-        const errMsg = `${this.name}: Error during action decision, storage, or transition for actor ${actor.id}: ${error.message}`;
+        const errMsg = `${this.getStateName()}: Error during action decision, storage, or transition for actor ${actor.id}: ${error.message}`;
         logger.error(errMsg, { originalError: error });
         await turnContext.endTurn(new Error(errMsg, { cause: error }));
       }
@@ -92,7 +88,9 @@ export class AwaitingActorDecisionState extends AbstractTurnState {
     const logger = turnContext.getLogger();
     const actor = turnContext.getActor();
     if (!actor) {
-      logger.error(`${this.name}: No actor found in TurnContext. Ending turn.`);
+      logger.error(
+        `${this.getStateName()}: No actor found in TurnContext. Ending turn.`
+      );
       await turnContext.endTurn(
         new Error('No actor in context during AwaitingActorDecisionState.')
       );
@@ -100,11 +98,11 @@ export class AwaitingActorDecisionState extends AbstractTurnState {
     }
 
     logger.debug(
-      `${this.name}: Actor ${actor.id}. Attempting to retrieve turn strategy.`
+      `${this.getStateName()}: Actor ${actor.id}. Attempting to retrieve turn strategy.`
     );
 
     if (typeof turnContext.getStrategy !== 'function') {
-      const msg = `${this.name}: turnContext.getStrategy() is not a function for actor ${actor.id}.`;
+      const msg = `${this.getStateName()}: turnContext.getStrategy() is not a function for actor ${actor.id}.`;
       logger.error(msg);
       await turnContext.endTurn(new Error(msg));
       return null;
@@ -112,7 +110,7 @@ export class AwaitingActorDecisionState extends AbstractTurnState {
 
     const strategy = turnContext.getStrategy();
     if (!strategy || typeof strategy.decideAction !== 'function') {
-      const msg = `${this.name}: No valid IActorTurnStrategy found for actor ${actor.id} or strategy is malformed (missing decideAction).`;
+      const msg = `${this.getStateName()}: No valid IActorTurnStrategy found for actor ${actor.id} or strategy is malformed (missing decideAction).`;
       logger.error(msg, { strategyReceived: strategy });
       await turnContext.endTurn(new Error(msg));
       return null;
@@ -120,7 +118,7 @@ export class AwaitingActorDecisionState extends AbstractTurnState {
 
     const strategyName = strategy.constructor?.name ?? 'Object';
     logger.debug(
-      `${this.name}: Strategy ${strategyName} obtained for actor ${actor.id}. Requesting action decision.`
+      `${this.getStateName()}: Strategy ${strategyName} obtained for actor ${actor.id}. Requesting action decision.`
     );
     return { actor, strategy };
   }
@@ -155,7 +153,7 @@ export class AwaitingActorDecisionState extends AbstractTurnState {
     turnContext
       .getLogger()
       .debug(
-        `${this.name}: Actor ${action?.actorId ?? turnContext.getActor().id} decided action: ${action.actionDefinitionId}. Storing action.`
+        `${this.getStateName()}: Actor ${action?.actorId ?? turnContext.getActor().id} decided action: ${action.actionDefinitionId}. Storing action.`
       );
 
     if (typeof turnContext.setChosenAction === 'function') {
@@ -164,7 +162,7 @@ export class AwaitingActorDecisionState extends AbstractTurnState {
       turnContext
         .getLogger()
         .warn(
-          `${this.name}: ITurnContext.setChosenAction() not found. Cannot store action in context.`
+          `${this.getStateName()}: ITurnContext.setChosenAction() not found. Cannot store action in context.`
         );
     }
   }
@@ -203,7 +201,7 @@ export class AwaitingActorDecisionState extends AbstractTurnState {
       }
     } else {
       logger.error(
-        `${this.name}: No SafeEventDispatcher available to dispatch ${ACTION_DECIDED_ID} for actor ${actor.id}.`
+        `${this.getStateName()}: No SafeEventDispatcher available to dispatch ${ACTION_DECIDED_ID} for actor ${actor.id}.`
       );
     }
   }
@@ -213,7 +211,7 @@ export class AwaitingActorDecisionState extends AbstractTurnState {
     await super.exitState(handler, nextState);
     const l = this._resolveLogger(this._getTurnContext());
     l.debug(
-      `${this.name}: ExitState cleanup (if any) specific to AwaitingActorDecisionState complete.`
+      `${this.getStateName()}: ExitState cleanup (if any) specific to AwaitingActorDecisionState complete.`
     );
   }
 
@@ -221,7 +219,7 @@ export class AwaitingActorDecisionState extends AbstractTurnState {
   async handleSubmittedCommand(handlerInstance, commandString, actorEntity) {
     const handler = handlerInstance || this._handler;
     const turnContext = await this._ensureContext(
-      `no-context-submission-${this.name}`,
+      `no-context-submission-${this.getStateName()}`,
       handler
     );
     if (!turnContext) return;
@@ -231,11 +229,11 @@ export class AwaitingActorDecisionState extends AbstractTurnState {
     const actorId = actorInCtx ? actorInCtx.id : 'unknown actor in context';
 
     logger.warn(
-      `${this.name}: handleSubmittedCommand was called directly for actor ${actorId} with command "${commandString}". This is unexpected in the new strategy-driven workflow. Ending turn.`
+      `${this.getStateName()}: handleSubmittedCommand was called directly for actor ${actorId} with command "${commandString}". This is unexpected in the new strategy-driven workflow. Ending turn.`
     );
     await turnContext.endTurn(
       new Error(
-        `Unexpected direct command submission to ${this.name} for actor ${actorId}. Input should be strategy-driven.`
+        `Unexpected direct command submission to ${this.getStateName()} for actor ${actorId}. Input should be strategy-driven.`
       )
     );
   }
@@ -248,7 +246,7 @@ export class AwaitingActorDecisionState extends AbstractTurnState {
 
     if (!turnContext) {
       logger.warn(
-        `${this.name}: handleTurnEndedEvent received but no turn context. Payload: ${JSON.stringify(
+        `${this.getStateName()}: handleTurnEndedEvent received but no turn context. Payload: ${JSON.stringify(
           payload
         )}. Deferring to superclass.`
       );
@@ -260,12 +258,12 @@ export class AwaitingActorDecisionState extends AbstractTurnState {
 
     if (ctxActor && ctxActor.id === evtId) {
       logger.debug(
-        `${this.name}: core:turn_ended event received for current actor ${ctxActor.id}. Ending turn.`
+        `${this.getStateName()}: core:turn_ended event received for current actor ${ctxActor.id}. Ending turn.`
       );
       await turnContext.endTurn(payload.error || null);
     } else {
       logger.debug(
-        `${this.name}: core:turn_ended event for actor ${evtId} is not for current context actor ${
+        `${this.getStateName()}: core:turn_ended event for actor ${evtId} is not for current context actor ${
           ctxActor?.id
         }. Deferring to superclass.`
       );
@@ -283,27 +281,27 @@ export class AwaitingActorDecisionState extends AbstractTurnState {
     if (turnContext) {
       if (!actorInCtx) {
         logger.warn(
-          `${this.name}: Handler destroyed. Actor ID from context: N/A_in_context. No specific turn to end via context if actor is missing.`
+          `${this.getStateName()}: Handler destroyed. Actor ID from context: N/A_in_context. No specific turn to end via context if actor is missing.`
         );
       } else if (handler._isDestroying || handler._isDestroyed) {
         logger.debug(
-          `${this.name}: Handler (actor ${actorInCtx.id}) is already being destroyed. Skipping turnContext.endTurn().`
+          `${this.getStateName()}: Handler (actor ${actorInCtx.id}) is already being destroyed. Skipping turnContext.endTurn().`
         );
       } else {
         logger.debug(
-          `${this.name}: Handler destroyed while state was active for actor ${
+          `${this.getStateName()}: Handler destroyed while state was active for actor ${
             actorInCtx.id
           }. Ending turn via turnContext (may trigger AbortError if prompt was active).`
         );
         await turnContext.endTurn(
           new Error(
-            `Turn handler destroyed while actor ${actorInCtx.id} was in ${this.name}.`
+            `Turn handler destroyed while actor ${actorInCtx.id} was in ${this.getStateName()}.`
           )
         );
       }
     } else {
       logger.warn(
-        `${this.name}: Handler destroyed. Actor ID from context: N/A_no_context. No specific turn to end via context if actor is missing.`
+        `${this.getStateName()}: Handler destroyed. Actor ID from context: N/A_no_context. No specific turn to end via context if actor is missing.`
       );
     }
 
