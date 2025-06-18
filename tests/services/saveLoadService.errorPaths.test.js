@@ -102,8 +102,8 @@ describe('SaveLoadService error paths', () => {
 
   it('logs error when listFiles fails with non-not-found', async () => {
     storageProvider.listFiles.mockRejectedValue(new Error('permission'));
-    const slots = await service.listManualSaveSlots();
-    expect(slots).toEqual([]);
+    const result = await service.listManualSaveSlots();
+    expect(result.success).toBe(false);
     expect(logger.error).toHaveBeenCalled();
   });
 

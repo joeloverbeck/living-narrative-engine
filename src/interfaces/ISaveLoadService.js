@@ -57,7 +57,8 @@ export class ISaveLoadService {
   /**
    * Lists available manual save files and their parsed metadata.
    *
-   * @returns {Promise<Array<SaveFileMetadata>>} A list of metadata objects for discovered manual save files.
+   * @returns {Promise<import('../persistence/persistenceTypes.js').PersistenceResult<Array<SaveFileMetadata>>>}
+   *   A result containing a list of metadata objects for discovered manual save files.
    * @async
    */
   async listManualSaveSlots() {
