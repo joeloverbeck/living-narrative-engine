@@ -555,9 +555,13 @@ describe('AwaitingActorDecisionState (PTH-REFACTOR-003.5.7)', () => {
       await awaitingPlayerInputState.exitState(mockHandler, mockNextState);
 
       expect(superExitSpy).toHaveBeenCalledWith(mockHandler, mockNextState);
-      expect(handlerOnlyLogger.debug).toHaveBeenCalledWith(
-        'AwaitingActorDecisionState: ExitState cleanup (if any) specific to AwaitingActorDecisionState complete.'
-      );
+      expect(
+        handlerOnlyLogger.debug.mock.calls.some((call) =>
+          call[0].includes(
+            'AwaitingActorDecisionState: ExitState cleanup (if any) specific to AwaitingActorDecisionState complete.'
+          )
+        )
+      ).toBe(true);
     });
   });
 

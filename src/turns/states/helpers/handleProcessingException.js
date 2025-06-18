@@ -11,6 +11,7 @@
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../../constants/eventIds.js';
 import { safeDispatchError } from '../../../utils/safeDispatchErrorUtils.js';
 import { TurnIdleState } from '../turnIdleState.js';
+import { getSafeEventDispatcher } from '../../util/eventDispatcherUtils.js';
 
 /**
  * Handles exceptions that occur during command processing.
@@ -50,10 +51,7 @@ export async function handleProcessingException(
   );
 
   /** @type {ISafeEventDispatcher | null} */
-  const systemErrorDispatcher = state._getSafeEventDispatcher(
-    turnCtx,
-    state._handler
-  );
+  const systemErrorDispatcher = getSafeEventDispatcher(turnCtx, state._handler);
 
   if (systemErrorDispatcher) {
     try {

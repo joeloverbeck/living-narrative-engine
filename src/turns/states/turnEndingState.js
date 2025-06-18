@@ -14,6 +14,8 @@ import { AbstractTurnState } from './abstractTurnState.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../constants/eventIds.js';
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 import { UNKNOWN_ACTOR_ID } from '../../constants/unknownIds.js';
+import { resolveLogger } from '../util/loggerUtils.js';
+import { getSafeEventDispatcher } from '../util/eventDispatcherUtils.js';
 
 export class TurnEndingState extends AbstractTurnState {
   /** @type {string}     */ #actorToEndId;
@@ -23,9 +25,9 @@ export class TurnEndingState extends AbstractTurnState {
   constructor(handler, actorToEndId, turnError = null) {
     super(handler);
 
-    const log = this._resolveLogger(null, handler);
+    const log = resolveLogger(null, handler);
 
-    const dispatcher = this._getSafeEventDispatcher(
+    const dispatcher = getSafeEventDispatcher(
       handler.getTurnContext?.(),
       handler
     );
@@ -57,7 +59,7 @@ export class TurnEndingState extends AbstractTurnState {
   /** @override */
   async enterState(handler, previousState) {
     const ctx = this._getTurnContext();
-    const logger = this._resolveLogger(ctx, handler);
+    const logger = resolveLogger(ctx, handler);
     const sameActor = ctx?.getActor()?.id === this.#actorToEndId;
     const success = this.#turnError === null;
 
@@ -68,7 +70,7 @@ export class TurnEndingState extends AbstractTurnState {
       try {
         await ctx.getTurnEndPort().notifyTurnEnded(this.#actorToEndId, success);
       } catch (err) {
-        const dispatcher = this._getSafeEventDispatcher(ctx, handler);
+        const dispatcher = getSafeEventDispatcher(ctx, handler);
         if (dispatcher) {
           safeDispatchError(
             dispatcher,
@@ -124,7 +126,7 @@ export class TurnEndingState extends AbstractTurnState {
   /* ────────────────────────────────────────────────────────────────── */
   /** @override */
   async exitState(handler, nextState) {
-    this._resolveLogger(null, handler).debug(
+    resolveLogger(null, handler).debug(
       `TurnEndingState: Exiting for (intended) actor ${this.#actorToEndId}. ` +
         `Transitioning to ${nextState?.getStateName() ?? 'None'}. ITurnContext should be null.`
     );
@@ -134,7 +136,7 @@ export class TurnEndingState extends AbstractTurnState {
   /* ────────────────────────────────────────────────────────────────── */
   /** @override */
   async destroy(handler) {
-    const logger = this._resolveLogger(this._getTurnContext(), handler);
+    const logger = resolveLogger(this._getTurnContext(), handler);
 
     logger.warn(
       `TurnEndingState: Handler destroyed while in TurnEndingState for actor ${this.#actorToEndId}.`
@@ -155,7 +157,7 @@ export class TurnEndingState extends AbstractTurnState {
       try {
         await ctx.requestIdleStateTransition();
       } catch (err) {
-        const dispatcher = this._getSafeEventDispatcher(ctx, handler);
+        const dispatcher = getSafeEventDispatcher(ctx, handler);
         if (dispatcher) {
           safeDispatchError(
             dispatcher,

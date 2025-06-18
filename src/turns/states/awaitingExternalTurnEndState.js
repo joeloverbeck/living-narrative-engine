@@ -16,6 +16,8 @@ import {
   SYSTEM_ERROR_OCCURRED_ID,
 } from '../../constants/eventIds.js';
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
+import { resolveLogger } from '../util/loggerUtils.js';
+import { getSafeEventDispatcher } from '../util/eventDispatcherUtils.js';
 
 /* global process */
 
@@ -66,7 +68,7 @@ export class AwaitingExternalTurnEndState extends AbstractTurnState {
     // --- REFACTORED: Use SafeEventDispatcher directly ---
     // The context now provides the dispatcher directly, bypassing the problematic manager.
     // The returned unsubscribe function is stored and used identically to before.
-    const dispatcher = this._getSafeEventDispatcher(ctx);
+    const dispatcher = getSafeEventDispatcher(ctx);
     this.#unsubscribeFn = dispatcher?.subscribe(TURN_ENDED_ID, (event) =>
       this.handleTurnEndedEvent(handler, event)
     );
@@ -143,7 +145,7 @@ export class AwaitingExternalTurnEndState extends AbstractTurnState {
     );
 
     // 1) tell the UI / console
-    const dispatcher = this._getSafeEventDispatcher(ctx, handler);
+    const dispatcher = getSafeEventDispatcher(ctx, handler);
     if (dispatcher) {
       safeDispatchError(dispatcher, msg, {
         code: err.code,
@@ -156,7 +158,7 @@ export class AwaitingExternalTurnEndState extends AbstractTurnState {
     try {
       ctx.endTurn(err);
     } catch (e) {
-      this._resolveLogger(ctx, handler).error(
+      resolveLogger(ctx, handler).error(
         `${this.getStateName()}: failed to end turn after timeout – ${e.message}`,
         e
       );

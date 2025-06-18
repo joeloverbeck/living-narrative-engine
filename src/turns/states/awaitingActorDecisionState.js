@@ -8,6 +8,8 @@
 import { AbstractTurnState } from './abstractTurnState.js';
 import { ACTION_DECIDED_ID } from '../../constants/eventIds.js';
 import { getActorType } from '../../utils/actorTypeUtils.js';
+import { resolveLogger } from '../util/loggerUtils.js';
+import { getSafeEventDispatcher } from '../util/eventDispatcherUtils.js';
 
 /**
  * State in which the engine waits for the current actor’s turn-strategy to
@@ -187,7 +189,7 @@ export class AwaitingActorDecisionState extends AbstractTurnState {
       };
     }
 
-    const dispatcher = this._getSafeEventDispatcher(turnContext);
+    const dispatcher = getSafeEventDispatcher(turnContext);
     const logger = turnContext.getLogger();
     if (dispatcher) {
       try {
@@ -209,7 +211,7 @@ export class AwaitingActorDecisionState extends AbstractTurnState {
   /* --------------------------------------------------------------------- */
   async exitState(handler, nextState) {
     await super.exitState(handler, nextState);
-    const l = this._resolveLogger(this._getTurnContext());
+    const l = resolveLogger(this._getTurnContext(), handler);
     l.debug(
       `${this.getStateName()}: ExitState cleanup (if any) specific to AwaitingActorDecisionState complete.`
     );
@@ -242,7 +244,7 @@ export class AwaitingActorDecisionState extends AbstractTurnState {
   async handleTurnEndedEvent(handlerInstance, payload) {
     const handler = handlerInstance || this._handler;
     const turnContext = this._getTurnContext();
-    const logger = this._resolveLogger(turnContext, handler);
+    const logger = resolveLogger(turnContext, handler);
 
     if (!turnContext) {
       logger.warn(
@@ -275,7 +277,7 @@ export class AwaitingActorDecisionState extends AbstractTurnState {
   async destroy(handlerInstance) {
     const handler = handlerInstance || this._handler;
     const turnContext = handler?.getTurnContext?.();
-    const logger = this._resolveLogger(turnContext, handler);
+    const logger = resolveLogger(turnContext, handler);
     const actorInCtx = turnContext?.getActor();
 
     if (turnContext) {

@@ -9,13 +9,7 @@ jest.mock('../../../src/utils/safeDispatchErrorUtils.js', () => ({
 
 import { AwaitingExternalTurnEndState } from '../../../src/turns/states/awaitingExternalTurnEndState.js';
 import { safeDispatchError } from '../../../src/utils/safeDispatchErrorUtils.js';
-import {
-  afterEach,
-  beforeEach,
-  describe,
-  expect,
-  it,
-} from '@jest/globals';
+import { afterEach, beforeEach, describe, expect, it } from '@jest/globals';
 
 describe('AwaitingExternalTurnEndState – action propagation', () => {
   // In the implementation TIMEOUT_MS is 3 000 ms when NODE_ENV === "test"

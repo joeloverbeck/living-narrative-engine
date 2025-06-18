@@ -16,6 +16,7 @@ import { ENTITY_SPOKE_ID } from '../../constants/eventIds.js';
 import { processCommandInternal } from './helpers/processCommandInternal.js';
 import { getServiceFromContext } from './helpers/getServiceFromContext.js';
 import { handleProcessingException } from './helpers/handleProcessingException.js';
+import { resolveLogger } from '../util/loggerUtils.js';
 
 /**
  * @class ProcessingCommandState
@@ -40,7 +41,7 @@ export class ProcessingCommandState extends AbstractTurnState {
     this.#commandStringForLog =
       commandString || turnAction?.commandString || null;
 
-    const logger = this._resolveLogger(null);
+    const logger = resolveLogger(null, this._handler);
     logger.debug(
       `${this.getStateName()} constructed. Command string (arg): "${this.#commandStringForLog}". TurnAction ID (arg): ${turnAction ? `"${turnAction.actionDefinitionId}"` : 'null'}`
     );
@@ -60,7 +61,7 @@ export class ProcessingCommandState extends AbstractTurnState {
     if (!turnCtx) return;
 
     if (this._isProcessing) {
-      const logger = this._resolveLogger(turnCtx);
+      const logger = resolveLogger(turnCtx, this._handler);
       logger.warn(
         `${this.getStateName()}: enterState called while already processing. Actor: ${turnCtx?.getActor()?.id ?? 'N/A'}. Aborting re-entry.`
       );
@@ -88,7 +89,7 @@ export class ProcessingCommandState extends AbstractTurnState {
    * @returns {Promise<Entity|null>} The actor entity or `null` if validation fails.
    */
   async _validateContextAndActor(turnCtx) {
-    const logger = this._resolveLogger(turnCtx);
+    const logger = resolveLogger(turnCtx, this._handler);
     const actor = turnCtx.getActor();
     if (!actor) {
       const noActorError = new Error(
@@ -117,7 +118,7 @@ export class ProcessingCommandState extends AbstractTurnState {
    * @returns {Promise<ITurnAction|null>} The resolved ITurnAction or `null` on failure.
    */
   async _resolveTurnAction(turnCtx, actor) {
-    const logger = this._resolveLogger(turnCtx);
+    const logger = resolveLogger(turnCtx, this._handler);
     let turnAction = this.#turnActionToProcess;
     const actorId = actor.id;
     if (!turnAction) {
@@ -186,7 +187,7 @@ export class ProcessingCommandState extends AbstractTurnState {
    * @returns {Promise<void>} Resolves when dispatch completes.
    */
   async _dispatchSpeech(turnCtx, actor, decisionMeta) {
-    const logger = this._resolveLogger(turnCtx);
+    const logger = resolveLogger(turnCtx, this._handler);
     const actorId = actor.id;
     const {
       speech: speechRaw,
@@ -262,7 +263,8 @@ export class ProcessingCommandState extends AbstractTurnState {
     } catch (error) {
       const currentTurnCtxForCatch = this._getTurnContext() ?? turnCtx;
       const errorLogger =
-        currentTurnCtxForCatch?.getLogger?.() ?? this._resolveLogger(turnCtx);
+        currentTurnCtxForCatch?.getLogger?.() ??
+        resolveLogger(turnCtx, this._handler);
       errorLogger.error(
         `${this.getStateName()}: Uncaught error from _processCommandInternal scope. Error: ${error.message}`,
         error
@@ -317,7 +319,7 @@ export class ProcessingCommandState extends AbstractTurnState {
     this._isProcessing = false;
 
     const turnCtx = this._getTurnContext();
-    const logger = this._resolveLogger(turnCtx, handler);
+    const logger = resolveLogger(turnCtx, handler);
     const actorId = turnCtx?.getActor?.()?.id ?? 'N/A_on_exit';
 
     if (wasProcessing) {
@@ -334,7 +336,7 @@ export class ProcessingCommandState extends AbstractTurnState {
 
   async destroy(handler) {
     const turnCtx = this._getTurnContext(); // Get context before calling super, as super.destroy might clear it.
-    const logger = this._resolveLogger(turnCtx, handler);
+    const logger = resolveLogger(turnCtx, handler);
     const actorId = turnCtx?.getActor?.()?.id ?? 'N/A_at_destroy';
 
     logger.debug(
