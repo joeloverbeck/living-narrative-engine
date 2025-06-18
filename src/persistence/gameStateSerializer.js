@@ -99,6 +99,30 @@ class GameStateSerializer {
   }
 
   /**
+   * Executes a synchronous function and converts thrown errors into
+   * standardized persistence results.
+   *
+   * @template T
+   * @param {() => T} fn - Function to execute within the try/catch.
+   * @param {string} errorCode - Code from {@link PersistenceErrorCodes}.
+   * @param {string} userMsg - User friendly message for failures.
+   * @returns {import('./persistenceTypes.js').PersistenceResult<T>} Result of the operation.
+   * @private
+   */
+  #tryOperation(fn, errorCode, userMsg) {
+    try {
+      const data = fn();
+      return createPersistenceSuccess(data);
+    } catch (error) {
+      this.#logger.error(`${errorCode} operation failed:`, error);
+      return {
+        ...createPersistenceFailure(errorCode, userMsg),
+        userFriendlyError: userMsg,
+      };
+    }
+  }
+
+  /**
    * Serializes the game state to MessagePack and compresses it with Gzip.
    * Embeds a checksum of the gameState section.
    *
@@ -152,24 +176,19 @@ class GameStateSerializer {
    * @returns {import('./persistenceTypes.js').PersistenceResult<Uint8Array>} Outcome of decompression.
    */
   decompress(data) {
-    try {
-      const decompressed = pako.ungzip(data);
-      this.#logger.debug(
-        `Decompressed data size: ${decompressed.byteLength} bytes`
-      );
-      return createPersistenceSuccess(decompressed);
-    } catch (error) {
-      const userMsg =
-        'The save file appears to be corrupted (could not decompress). Please try another save.';
-      this.#logger.error('Gzip decompression failed:', error);
-      return {
-        ...createPersistenceFailure(
-          PersistenceErrorCodes.DECOMPRESSION_ERROR,
-          userMsg
-        ),
-        userFriendlyError: userMsg,
-      };
-    }
+    const userMsg =
+      'The save file appears to be corrupted (could not decompress). Please try another save.';
+    return this.#tryOperation(
+      () => {
+        const decompressed = pako.ungzip(data);
+        this.#logger.debug(
+          `Decompressed data size: ${decompressed.byteLength} bytes`
+        );
+        return decompressed;
+      },
+      PersistenceErrorCodes.DECOMPRESSION_ERROR,
+      userMsg
+    );
   }
 
   /**
@@ -179,22 +198,17 @@ class GameStateSerializer {
    * @returns {import('./persistenceTypes.js').PersistenceResult<object>} Outcome of deserialization.
    */
   deserialize(buffer) {
-    try {
-      const obj = decode(buffer);
-      this.#logger.debug('Successfully deserialized MessagePack');
-      return createPersistenceSuccess(obj);
-    } catch (error) {
-      const userMsg =
-        'The save file appears to be corrupted (could not understand file content). Please try another save.';
-      this.#logger.error('MessagePack deserialization failed:', error);
-      return {
-        ...createPersistenceFailure(
-          PersistenceErrorCodes.DESERIALIZATION_ERROR,
-          userMsg
-        ),
-        userFriendlyError: userMsg,
-      };
-    }
+    const userMsg =
+      'The save file appears to be corrupted (could not understand file content). Please try another save.';
+    return this.#tryOperation(
+      () => {
+        const obj = decode(buffer);
+        this.#logger.debug('Successfully deserialized MessagePack');
+        return obj;
+      },
+      PersistenceErrorCodes.DESERIALIZATION_ERROR,
+      userMsg
+    );
   }
 }
 

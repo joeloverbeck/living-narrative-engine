@@ -54,6 +54,7 @@ describe('GameStateSerializer', () => {
     const result = serializer.decompress(new Uint8Array([1, 2, 3]));
     expect(result.success).toBe(false);
     expect(result.error.code).toBe(PersistenceErrorCodes.DECOMPRESSION_ERROR);
+    expect(result.userFriendlyError).toMatch(/could not decompress/i);
   });
 
   it('deserialize fails on malformed MessagePack', () => {
@@ -66,6 +67,7 @@ describe('GameStateSerializer', () => {
     const desRes = serializer.deserialize(dec.data);
     expect(desRes.success).toBe(false);
     expect(desRes.error.code).toBe(PersistenceErrorCodes.DESERIALIZATION_ERROR);
+    expect(desRes.userFriendlyError).toMatch(/could not understand/i);
   });
 
   it('generateChecksum returns consistent output for same input', async () => {
