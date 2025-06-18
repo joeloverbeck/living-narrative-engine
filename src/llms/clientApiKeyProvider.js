@@ -73,9 +73,7 @@ export class ClientApiKeyProvider extends IApiKeyProvider {
    * @returns {Promise<string | null>} A Promise that always resolves to null.
    */
   async getKey(llmConfig, environmentContext) {
-    // MODIFICATION START: Use llmConfig.configId
     const llmId = llmConfig?.configId || 'UnknownLLM'; // For logging context
-    // MODIFICATION END
 
     if (
       !environmentContext ||
