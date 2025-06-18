@@ -160,7 +160,11 @@ export async function bootstrapApp() {
         document: document,
       },
       errorDetails,
-      logger
+      logger,
+      {
+        createElement: (tag) => document.createElement(tag),
+        alert,
+      }
     );
   }
 }
@@ -186,7 +190,11 @@ export async function beginGame(showLoadUI = false) {
         errorObject: errorObj,
         phase: currentPhaseForError,
       },
-      logger
+      logger,
+      {
+        createElement: (tag) => document.createElement(tag),
+        alert,
+      }
     );
     throw errorObj;
   }
@@ -206,7 +214,11 @@ export async function beginGame(showLoadUI = false) {
         errorObject: error,
         phase: currentPhaseForError,
       },
-      logger
+      logger,
+      {
+        createElement: (tag) => document.createElement(tag),
+        alert,
+      }
     );
     throw error;
   }
