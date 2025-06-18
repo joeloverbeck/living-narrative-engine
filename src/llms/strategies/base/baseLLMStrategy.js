@@ -1,61 +1,20 @@
 // src/llms/strategies/base/baseLLMStrategy.js
 // --- FILE START ---
 
-// Assuming ILLMStrategy is a class that can be extended, located at:
-// import { ILLMStrategy } from '../../interfaces/ILLMStrategy.js';
-// For the purpose of this example, if ILLMStrategy.js is not meant to be a concrete base,
-// this class can stand alone or extend a different abstract base if one exists.
-// We'll assume it can extend ILLMStrategy from the user-provided files.
-// If ILLMStrategy is more of an interface, this class might not need to extend it,
-// and concrete strategies would `implement` ILLMStrategy and `extend` BaseLLMStrategy.
-// Given the user's ILLMStrategy.js is a class, we extend it.
+import { ILLMStrategy } from '../../interfaces/ILLMStrategy.js';
 
 /**
  * @typedef {import('../../../interfaces/coreServices.js').ILogger} ILogger
  * @typedef {import('../../services/llmConfigLoader.js').LLMModelConfig} LLMModelConfig
  */
 
-// Try to get ILLMStrategy from the uploaded files.
-// This is a placeholder for actual import if the file structure was fully known
-// and if direct extension is the pattern.
-let ILLMStrategyBase;
-try {
-  // This is a conceptual dynamic import for the sake of the example,
-  // in a real scenario, you'd use static imports.
-  // import { ILLMStrategy } from '../../interfaces/ILLMStrategy.js'; // Adjust path as needed
-  // ILLMStrategyBase = ILLMStrategy;
-
-  // For now, let's define a simple base if ILLMStrategy is not available for extension here
-  ILLMStrategyBase = class {
-    /**
-     * @param {string} gameSummary
-     * @param {LLMModelConfig} llmConfig
-     * @param {string | null} apiKey
-     * @param {ILogger} logger
-     * @returns {Promise<string>}
-     */
-    async execute(gameSummary, llmConfig, apiKey, logger) {
-      throw new Error('ILLMStrategy.execute method not implemented by base.');
-    }
-  };
-} catch (e) {
-  console.warn(
-    'Failed to dynamically import ILLMStrategy, using a placeholder for BaseLLMStrategy extension.'
-  );
-  ILLMStrategyBase = class {
-    async execute(gameSummary, llmConfig, apiKey, logger) {
-      throw new Error('ILLMStrategy.execute method not implemented by base.');
-    }
-  };
-}
-
 /**
  * @class BaseLLMStrategy
- * @augments ILLMStrategyBase
+ * @augments ILLMStrategy
  * @description Abstract base class for LLM strategies, primarily to handle common
  * dependencies like the logger.
  */
-export class BaseLLMStrategy extends ILLMStrategyBase {
+export class BaseLLMStrategy extends ILLMStrategy {
   /**
    * @protected
    * @type {ILogger}
