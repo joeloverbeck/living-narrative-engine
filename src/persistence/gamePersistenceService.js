@@ -25,6 +25,7 @@ import {
   createPersistenceFailure,
   createPersistenceSuccess,
 } from '../utils/persistenceResultUtils.js';
+import { wrapPersistenceOperation } from '../utils/persistenceErrorUtils.js';
 
 /**
  * @class GamePersistenceService
@@ -305,7 +306,7 @@ class GamePersistenceService extends IGamePersistenceService {
       );
     }
 
-    try {
+    return wrapPersistenceOperation(this.#logger, async () => {
       this.#logger.debug(
         `GamePersistenceService.saveGame: Capturing current game state for save "${saveName}".`
       );
@@ -326,20 +327,7 @@ class GamePersistenceService extends IGamePersistenceService {
         );
       }
       return result;
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : 'An unknown error occurred.';
-      this.#logger.error(
-        `GamePersistenceService.saveGame: An unexpected error occurred during saveGame for "${saveName}": ${errorMessage}`,
-        error
-      );
-      return error instanceof PersistenceError
-        ? { success: false, error }
-        : createPersistenceFailure(
-            PersistenceErrorCodes.UNEXPECTED_ERROR,
-            `Unexpected error during save: ${errorMessage}`
-          );
-    }
+    });
   }
 
   async restoreGameState(deserializedSaveData) {

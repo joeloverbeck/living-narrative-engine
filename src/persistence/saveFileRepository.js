@@ -12,6 +12,7 @@ import {
   PersistenceErrorCodes,
 } from './persistenceErrors.js';
 import { createPersistenceFailure } from '../utils/persistenceResultUtils.js';
+import { wrapPersistenceOperation } from '../utils/persistenceErrorUtils.js';
 import { setupService } from '../utils/serviceInitializerUtils.js';
 
 /**
@@ -87,7 +88,7 @@ export default class SaveFileRepository {
    * @returns {Promise<import('./persistenceTypes.js').PersistenceResult<null>>} Result of the write operation.
    */
   async writeSaveFile(filePath, data) {
-    try {
+    return wrapPersistenceOperation(this.#logger, async () => {
       const writeResult = await this.#storageProvider.writeFileAtomically(
         filePath,
         data
@@ -110,15 +111,7 @@ export default class SaveFileRepository {
         PersistenceErrorCodes.WRITE_ERROR,
         userError
       );
-    } catch (error) {
-      this.#logger.error(`Error writing save file ${filePath}:`, error);
-      return error instanceof PersistenceError
-        ? { success: false, error }
-        : createPersistenceFailure(
-            PersistenceErrorCodes.UNEXPECTED_ERROR,
-            `An unexpected error occurred while saving: ${error.message}`
-          );
-    }
+    });
   }
 
   /**
