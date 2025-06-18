@@ -26,6 +26,7 @@ import ComponentCleaningService, {
 } from '../../persistence/componentCleaningService.js';
 import GamePersistenceService from '../../persistence/gamePersistenceService.js';
 import GameStateCaptureService from '../../persistence/gameStateCaptureService.js';
+import ManualSaveCoordinator from '../../persistence/manualSaveCoordinator.js';
 import SaveMetadataBuilder from '../../persistence/saveMetadataBuilder.js';
 import ActiveModsManifestBuilder from '../../persistence/activeModsManifestBuilder.js';
 import ReferenceResolver from '../../initializers/services/referenceResolver.js';
@@ -123,6 +124,17 @@ export function registerPersistence(container) {
     `Persistence Registration: Registered ${String(tokens.GameStateCaptureService)}.`
   );
 
+  r.singletonFactory(tokens.ManualSaveCoordinator, (c) => {
+    return new ManualSaveCoordinator({
+      logger: c.resolve(tokens.ILogger),
+      gameStateCaptureService: c.resolve(tokens.GameStateCaptureService),
+      saveLoadService: c.resolve(tokens.ISaveLoadService),
+    });
+  });
+  logger.debug(
+    `Persistence Registration: Registered ${String(tokens.ManualSaveCoordinator)}.`
+  );
+
   r.singletonFactory(tokens.GamePersistenceService, (c) => {
     return new GamePersistenceService({
       logger: c.resolve(tokens.ILogger),
@@ -130,6 +142,7 @@ export function registerPersistence(container) {
       entityManager: c.resolve(tokens.IEntityManager),
       playtimeTracker: c.resolve(tokens.PlaytimeTracker),
       gameStateCaptureService: c.resolve(tokens.GameStateCaptureService),
+      manualSaveCoordinator: c.resolve(tokens.ManualSaveCoordinator),
     });
   });
   logger.debug(

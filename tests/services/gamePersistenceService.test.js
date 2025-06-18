@@ -54,12 +54,14 @@ describe('GamePersistenceService', () => {
     const captureService = {
       captureCurrentGameState: jest.fn(),
     };
+    const manualSaveCoordinator = { saveGame: jest.fn() };
     service = new GamePersistenceService({
       logger: mockLogger,
       saveLoadService: mockSaveLoadService,
       entityManager: mockEntityManager,
       playtimeTracker: mockPlaytimeTracker,
       gameStateCaptureService: captureService,
+      manualSaveCoordinator,
     });
     // Clear the logger.info/debug calls made by the constructor, if any,
     // to not interfere with test-specific logger assertions.

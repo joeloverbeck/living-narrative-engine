@@ -26,6 +26,7 @@ describe('GamePersistenceService additional coverage', () => {
   let componentCleaningService;
   let metadataBuilder;
   let activeModsManifestBuilder;
+  let manualSaveCoordinator;
   let service;
   let captureService;
 
@@ -69,12 +70,14 @@ describe('GamePersistenceService additional coverage', () => {
       metadataBuilder,
       activeModsManifestBuilder,
     });
+    manualSaveCoordinator = { saveGame: jest.fn() };
     service = new GamePersistenceService({
       logger,
       saveLoadService,
       entityManager,
       playtimeTracker,
       gameStateCaptureService: captureService,
+      manualSaveCoordinator,
     });
   });
 
@@ -158,14 +161,11 @@ describe('GamePersistenceService additional coverage', () => {
       jest
         .spyOn(captureService, 'captureCurrentGameState')
         .mockReturnValue(state);
-      saveLoadService.saveManualGame.mockResolvedValue({ success: true });
+      manualSaveCoordinator.saveGame.mockResolvedValue({ success: true });
       const res = await service.saveGame('Save1', true, 'World');
-      expect(captureService.captureCurrentGameState).toHaveBeenCalledWith(
-        'World'
-      );
-      expect(saveLoadService.saveManualGame).toHaveBeenCalledWith(
+      expect(manualSaveCoordinator.saveGame).toHaveBeenCalledWith(
         'Save1',
-        state
+        'World'
       );
       expect(res.success).toBe(true);
     });

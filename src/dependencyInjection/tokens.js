@@ -79,6 +79,7 @@ import { freeze } from '../utils/objectUtils.js';
  * @property {DiToken} ComponentCleaningService - Token for the service cleaning component data.
  * @property {DiToken} SaveFileRepository - Token for the save file repository service.
  * @property {DiToken} GameStateCaptureService - Token for the service capturing game state.
+ * @property {DiToken} ManualSaveCoordinator - Token coordinating manual save preparation.
  * @property {DiToken} GamePersistenceService - Token for the game state persistence service.
  * @property {DiToken} EntityDisplayDataProvider - Token for the service providing entity display data.
  * @property {DiToken} AlertRouter - Token for the service that routes alerts to the UI or console.
@@ -207,6 +208,7 @@ export const tokens = freeze({
   SaveMetadataBuilder: 'SaveMetadataBuilder',
   ActiveModsManifestBuilder: 'ActiveModsManifestBuilder',
   GameStateCaptureService: 'GameStateCaptureService',
+  ManualSaveCoordinator: 'ManualSaveCoordinator',
   GamePersistenceService: 'GamePersistenceService',
   EntityDisplayDataProvider: 'EntityDisplayDataProvider',
   AlertRouter: 'AlertRouter',

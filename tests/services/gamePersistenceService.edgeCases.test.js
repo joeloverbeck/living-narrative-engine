@@ -35,6 +35,7 @@ describe('GamePersistenceService edge cases', () => {
   let metadataBuilder;
   let safeEventDispatcher;
   let activeModsManifestBuilder;
+  let manualSaveCoordinator;
   let service;
   let captureService;
 
@@ -83,12 +84,14 @@ describe('GamePersistenceService edge cases', () => {
       metadataBuilder,
       activeModsManifestBuilder,
     });
+    manualSaveCoordinator = { saveGame: jest.fn() };
     service = new GamePersistenceService({
       logger,
       saveLoadService,
       entityManager,
       playtimeTracker,
       gameStateCaptureService: captureService,
+      manualSaveCoordinator,
     });
   });
 
@@ -122,11 +125,11 @@ describe('GamePersistenceService edge cases', () => {
   });
 
   describe('saveGame error handling', () => {
-    it('returns failure when saveManualGame rejects', async () => {
+    it('returns failure when manual save rejects', async () => {
       jest
         .spyOn(captureService, 'captureCurrentGameState')
         .mockReturnValue({ metadata: {}, gameState: {}, modManifest: {} });
-      saveLoadService.saveManualGame.mockRejectedValue(new Error('boom'));
+      manualSaveCoordinator.saveGame.mockRejectedValue(new Error('boom'));
 
       const res = await service.saveGame('Save1', true, 'World');
       expect(res.success).toBe(false);
@@ -134,11 +137,11 @@ describe('GamePersistenceService edge cases', () => {
       expect(logger.error).toHaveBeenCalled();
     });
 
-    it('returns failure when saveManualGame resolves unsuccessfully', async () => {
+    it('returns failure when manual save resolves unsuccessfully', async () => {
       jest
         .spyOn(captureService, 'captureCurrentGameState')
         .mockReturnValue({ metadata: {}, gameState: {}, modManifest: {} });
-      saveLoadService.saveManualGame.mockResolvedValue({
+      manualSaveCoordinator.saveGame.mockResolvedValue({
         success: false,
         error: 'bad',
       });
