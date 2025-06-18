@@ -9,8 +9,15 @@ import WorldLoaderError from '../../src/errors/worldLoaderError.js';
 
 // Minimal mocks for all WorldLoader dependencies
 const mockRegistry = { store: jest.fn(), get: jest.fn(), clear: jest.fn() };
-const mockLogger = { debug: jest.fn(), info: jest.fn(), warn: jest.fn(), error: jest.fn() };
-const mockSchemaLoader = { loadAndCompileAllSchemas: jest.fn().mockResolvedValue() };
+const mockLogger = {
+  debug: jest.fn(),
+  info: jest.fn(),
+  warn: jest.fn(),
+  error: jest.fn(),
+};
+const mockSchemaLoader = {
+  loadAndCompileAllSchemas: jest.fn().mockResolvedValue(),
+};
 const mockComponentLoader = { loadItemsForMod: jest.fn() };
 const mockConditionLoader = { loadItemsForMod: jest.fn() };
 const mockRuleLoader = { loadItemsForMod: jest.fn() };
@@ -19,10 +26,16 @@ const mockActionLoader = { loadItemsForMod: jest.fn() };
 const mockEventLoader = { loadItemsForMod: jest.fn() };
 const mockEntityDefinitionLoader = { loadItemsForMod: jest.fn() };
 const mockEntityInstanceLoader = { loadItemsForMod: jest.fn() };
-const mockGameConfigLoader = { loadConfig: jest.fn().mockResolvedValue(['core']) };
+const mockGameConfigLoader = {
+  loadConfig: jest.fn().mockResolvedValue(['core']),
+};
 const mockPromptTextLoader = { loadPromptText: jest.fn().mockResolvedValue() };
-const mockModManifestLoader = { loadRequestedManifests: jest.fn().mockResolvedValue(new Map()) };
-const mockValidatedEventDispatcher = { dispatch: jest.fn().mockResolvedValue() };
+const mockModManifestLoader = {
+  loadRequestedManifests: jest.fn().mockResolvedValue(new Map()),
+};
+const mockValidatedEventDispatcher = {
+  dispatch: jest.fn().mockResolvedValue(),
+};
 
 // Mocks for the specific services under test
 let mockConfiguration;
@@ -35,15 +48,16 @@ describe('WorldLoader Essential Schema Validation', () => {
 
     // Define schema IDs for a successful run, reflecting the fix
     const schemaIds = {
-      'game': 'http://example.com/schemas/game.schema.json',
-      'components': 'http://example.com/schemas/component.schema.json',
+      game: 'http://example.com/schemas/game.schema.json',
+      components: 'http://example.com/schemas/component.schema.json',
       'mod-manifest': 'http://example.com/schemas/mod.manifest.schema.json',
-      'entityDefinitions': 'http://example.com/schemas/entity-definition.schema.json',
-      'entityInstances': 'http://example.com/schemas/entity-instance.schema.json',
-      'actions': 'http://example.com/schemas/action.schema.json',
-      'events': 'http://example.com/schemas/event.schema.json',
-      'rules': 'http://example.com/schemas/rule.schema.json',
-      'conditions': 'http://example.com/schemas/condition.schema.json',
+      entityDefinitions:
+        'http://example.com/schemas/entity-definition.schema.json',
+      entityInstances: 'http://example.com/schemas/entity-instance.schema.json',
+      actions: 'http://example.com/schemas/action.schema.json',
+      events: 'http://example.com/schemas/event.schema.json',
+      rules: 'http://example.com/schemas/rule.schema.json',
+      conditions: 'http://example.com/schemas/condition.schema.json',
     };
 
     mockConfiguration = {
@@ -57,6 +71,7 @@ describe('WorldLoader Essential Schema Validation', () => {
 
   /**
    * Helper function to create a new WorldLoader instance with the current mocks.
+   *
    * @returns {WorldLoader}
    */
   const createWorldLoaderInstance = () => {
@@ -78,6 +93,7 @@ describe('WorldLoader Essential Schema Validation', () => {
       promptTextLoader: mockPromptTextLoader,
       modManifestLoader: mockModManifestLoader,
       validatedEventDispatcher: mockValidatedEventDispatcher,
+      contentLoadersConfig: null,
     });
   };
 
@@ -102,14 +118,16 @@ describe('WorldLoader Essential Schema Validation', () => {
       }
       // Provide a valid ID for all other types.
       const schemaIds = {
-        'game': 'http://example.com/schemas/game.schema.json',
-        'components': 'http://example.com/schemas/component.schema.json',
+        game: 'http://example.com/schemas/game.schema.json',
+        components: 'http://example.com/schemas/component.schema.json',
         'mod-manifest': 'http://example.com/schemas/mod.manifest.schema.json',
-        'entityDefinitions': 'http://example.com/schemas/entity-definition.schema.json',
-        'entityInstances': 'http://example.com/schemas/entity-instance.schema.json',
-        'events': 'http://example.com/schemas/event.schema.json',
-        'rules': 'http://example.com/schemas/rule.schema.json',
-        'conditions': 'http://example.com/schemas/condition.schema.json',
+        entityDefinitions:
+          'http://example.com/schemas/entity-definition.schema.json',
+        entityInstances:
+          'http://example.com/schemas/entity-instance.schema.json',
+        events: 'http://example.com/schemas/event.schema.json',
+        rules: 'http://example.com/schemas/rule.schema.json',
+        conditions: 'http://example.com/schemas/condition.schema.json',
       };
       return schemaIds[typeName];
     });
@@ -117,7 +135,9 @@ describe('WorldLoader Essential Schema Validation', () => {
     const worldLoader = createWorldLoaderInstance();
 
     // The promise should be rejected with a specific error type and message.
-    await expect(worldLoader.loadWorld('test-world')).rejects.toThrow(WorldLoaderError);
+    await expect(worldLoader.loadWorld('test-world')).rejects.toThrow(
+      WorldLoaderError
+    );
     await expect(worldLoader.loadWorld('test-world')).rejects.toThrow(
       "WorldLoader failed: Essential schema 'Unknown Essential Schema ID' missing or check failed – aborting world load. Original error: Essential schema check failed for: Unknown Essential Schema ID"
     );
@@ -145,7 +165,9 @@ describe('WorldLoader Essential Schema Validation', () => {
     try {
       await worldLoader.loadWorld('test-world');
       // This line should not be reached; if it is, the test fails.
-      throw new Error('Test failed: worldLoader.loadWorld did not throw an error as expected.');
+      throw new Error(
+        'Test failed: worldLoader.loadWorld did not throw an error as expected.'
+      );
     } catch (error) {
       caughtError = error;
     }

@@ -339,6 +339,7 @@ describe('WorldLoader Integration Test Suite - EntityDefinitionLoader Multi-Key 
       promptTextLoader: { loadPromptText: jest.fn() },
       modManifestLoader: mockModManifestLoader,
       validatedEventDispatcher: mockValidatedEventDispatcher,
+      contentLoadersConfig: null,
     });
   });
 

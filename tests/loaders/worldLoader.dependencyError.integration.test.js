@@ -239,6 +239,7 @@ describe('WorldLoader Integration Test Suite - Error Handling: Dependency and Ve
       promptTextLoader: { loadPromptText: jest.fn() },
       modManifestLoader: mockModManifestLoader,
       validatedEventDispatcher: mockValidatedEventDispatcher,
+      contentLoadersConfig: null,
     });
   });
 

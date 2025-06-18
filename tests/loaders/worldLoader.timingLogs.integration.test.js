@@ -250,6 +250,7 @@ describe('WorldLoader Integration Test Suite - Performance Timing Logs (Sub-Tick
       promptTextLoader: { loadPromptText: jest.fn() },
       modManifestLoader: mockModManifestLoader,
       validatedEventDispatcher: mockValidatedEventDispatcher,
+      contentLoadersConfig: null,
     });
   });
 

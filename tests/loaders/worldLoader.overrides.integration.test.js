@@ -385,6 +385,7 @@ describe('WorldLoader Integration Test Suite - Mod Overrides and Load Order (Sub
       promptTextLoader: { loadPromptText: jest.fn() },
       modManifestLoader: mockModManifestLoader,
       validatedEventDispatcher: mockValidatedEventDispatcher,
+      contentLoadersConfig: null,
     });
   });
 

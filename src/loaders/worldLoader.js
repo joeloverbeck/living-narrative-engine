@@ -113,6 +113,7 @@ class WorldLoader extends AbstractLoader {
    * @param {PromptTextLoader} dependencies.promptTextLoader - Loader for core prompt text.
    * @param {ModManifestLoader} dependencies.modManifestLoader - Loader for mod manifests.
    * @param {ValidatedEventDispatcher} dependencies.validatedEventDispatcher - Service for dispatching validated events.
+   * @param {Array<{loader: BaseManifestItemLoaderInterface, contentKey: string, contentTypeDir: string, typeName: string}>} [dependencies.contentLoadersConfig] - Optional custom content loader configuration.
    * @throws {Error} If any required dependency is missing or invalid.
    */
   constructor({
@@ -143,6 +144,7 @@ class WorldLoader extends AbstractLoader {
     promptTextLoader,
     modManifestLoader,
     validatedEventDispatcher,
+    contentLoadersConfig = null,
   }) {
     super(logger, [
       {
@@ -244,8 +246,24 @@ class WorldLoader extends AbstractLoader {
     this.#modManifestLoader = modManifestLoader;
     this.#validatedEventDispatcher = validatedEventDispatcher;
 
-    // --- Initialize content loaders dependencyInjection ---
-    this.#contentLoadersConfig = [
+    // --- Initialize content loaders configuration ---
+    this.#contentLoadersConfig =
+      contentLoadersConfig ?? this.#createDefaultContentLoadersConfig();
+
+    this.#logger.debug(
+      'WorldLoader: Instance created with ALL loaders, order‑resolver, and ValidatedEventDispatcher.'
+    );
+  }
+
+  // ── Private Helper Methods ─────────────────────────────────────────────
+  /**
+   * Creates the default content loader configuration using built-in loaders.
+   *
+   * @private
+   * @returns {Array<{loader: BaseManifestItemLoaderInterface, contentKey: string, contentTypeDir: string, typeName: string}>} Default loader configuration.
+   */
+  #createDefaultContentLoadersConfig() {
+    return [
       {
         loader: this.#componentDefinitionLoader,
         contentKey: 'components',
@@ -295,13 +313,8 @@ class WorldLoader extends AbstractLoader {
         typeName: 'entityInstances',
       },
     ];
-
-    this.#logger.debug(
-      'WorldLoader: Instance created with ALL loaders, order‑resolver, and ValidatedEventDispatcher.'
-    );
   }
 
-  // ── Private Helper Methods ─────────────────────────────────────────────
   /**
    * Clears all entries from the data registry.
    *
@@ -618,9 +631,9 @@ class WorldLoader extends AbstractLoader {
         (sum, res) => sum + (res.errors || 0),
         0
       );
-        const typeCountsString = Object.entries(modResults)
-          .filter(([, result]) => result.count > 0)
-          .map(([typeName, result]) => `${typeName}(${result.count})`)
+      const typeCountsString = Object.entries(modResults)
+        .filter(([, result]) => result.count > 0)
+        .map(([typeName, result]) => `${typeName}(${result.count})`)
         .sort()
         .join(', ');
       const summaryMessage = `Mod '${modId}' loaded in ${modDurationMs.toFixed(2)}ms: ${typeCountsString.length > 0 ? typeCountsString : 'No items loaded'}${typeCountsString.length > 0 ? ' ' : ''}-> Overrides(${totalModOverrides}), Errors(${totalModErrors})`;
@@ -647,6 +660,26 @@ class WorldLoader extends AbstractLoader {
   }
 
   // ── Public API ──────────────────────────────────────────────────────────
+
+  /**
+   * Registers an additional content loader.
+   *
+   * @param {object} params - Loader configuration.
+   * @param {BaseManifestItemLoaderInterface} params.loader - Loader instance.
+   * @param {string} params.contentKey - Key in the manifest's content section.
+   * @param {string} params.contentTypeDir - Directory path for this content type.
+   * @param {string} params.typeName - Name used for logging and summary counts.
+   * @returns {void}
+   */
+  registerContentLoader({ loader, contentKey, contentTypeDir, typeName }) {
+    this.#contentLoadersConfig.push({
+      loader,
+      contentKey,
+      contentTypeDir,
+      typeName,
+    });
+  }
+
   /**
    * High‑level orchestration of the entire data‑load pipeline.
    * Orchestrates schema loading, game dependencyInjection loading, manifest processing,
