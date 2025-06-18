@@ -1,4 +1,4 @@
-import { setupService } from '../utils/serviceInitializerUtils.js';
+import BaseService from '../utils/serviceBase.js';
 
 /**
  * @typedef {import('../interfaces/coreServices.js').ILogger} ILogger
@@ -10,7 +10,7 @@ import { setupService } from '../utils/serviceInitializerUtils.js';
  * @class ManualSaveCoordinator
  * @description Prepares game state and delegates manual save requests to ISaveLoadService.
  */
-export default class ManualSaveCoordinator {
+export default class ManualSaveCoordinator extends BaseService {
   /** @type {ILogger} */
   #logger;
   /** @type {GameStateCaptureService} */
@@ -25,7 +25,8 @@ export default class ManualSaveCoordinator {
    * @param {ISaveLoadService} deps.saveLoadService - Save/load service.
    */
   constructor({ logger, gameStateCaptureService, saveLoadService }) {
-    this.#logger = setupService('ManualSaveCoordinator', logger, {
+    super();
+    this.#logger = this._init('ManualSaveCoordinator', logger, {
       gameStateCaptureService: {
         value: gameStateCaptureService,
         requiredMethods: ['captureCurrentGameState'],
