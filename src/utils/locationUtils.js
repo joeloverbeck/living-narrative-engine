@@ -122,7 +122,7 @@ function _readExitsComponent(locationEntity, logger) {
 }
 
 /**
- * Retrieve the exits component data from a location entity.
+ * Fetch and validate exits component data from a location entity.
  *
  * @private
  * @param {Entity | string} locationEntityOrId - Entity instance or ID to check.
@@ -130,9 +130,9 @@ function _readExitsComponent(locationEntity, logger) {
  * @param {ILogger} [logger] - Optional logger for debug messages.
  * @param {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} dispatcher -
  * Safe dispatcher for error events.
- * @returns {ExitData[] | null} Array of exit objects or null when unavailable.
+ * @returns {ExitData[] | null} Validated exit array or `null` when unavailable.
  */
-function _getExitsComponentData(
+function fetchValidExitData(
   locationEntityOrId,
   entityManager,
   logger,
@@ -176,7 +176,7 @@ export function getExitByDirection(
     return null;
   }
 
-  const exitsData = _getExitsComponentData(
+  const exitsData = fetchValidExitData(
     locationEntityOrId,
     entityManager,
     log,
@@ -231,7 +231,7 @@ export function getAvailableExits(
   logger
 ) {
   const log = getModuleLogger('locationUtils', logger);
-  const exitsData = _getExitsComponentData(
+  const exitsData = fetchValidExitData(
     locationEntityOrId,
     entityManager,
     log,
