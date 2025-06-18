@@ -68,9 +68,7 @@ export class BaseOpenRouterStrategy extends BaseChatLLMStrategy {
    */
   _buildProviderRequestPayloadAdditions(baseMessagesPayload, llmConfig) {
     const errorMessage = `${this.constructor.name}._buildProviderRequestPayloadAdditions: Method not implemented. Subclasses must override this method.`;
-    // MODIFICATION START: Use llmConfig.configId for logging
     const llmId = llmConfig?.configId || 'UnknownLLM';
-    // MODIFICATION END
     this.logger.error(errorMessage, { llmId });
     throw new Error(errorMessage); // Or potentially an LLMStrategyError
   }
@@ -91,9 +89,7 @@ export class BaseOpenRouterStrategy extends BaseChatLLMStrategy {
    */
   async _extractJsonOutput(responseData, llmConfig, _providerRequestPayload) {
     const errorMessage = `${this.constructor.name}._extractJsonOutput: Method not implemented. Subclasses must override this method.`;
-    // MODIFICATION START: Use llmConfig.configId for logging
     const llmId = llmConfig?.configId || 'UnknownLLM';
-    // MODIFICATION END
     this.logger.error(errorMessage, { llmId });
     throw new Error(errorMessage); // Or potentially an LLMStrategyError
   }
