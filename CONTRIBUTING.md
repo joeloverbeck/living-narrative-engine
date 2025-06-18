@@ -129,6 +129,7 @@ Familiarize yourself with the main project directories:
 
 - **Single Responsibility Principle (SRP)**: Functions and classes should be small, focused, and do one thing well.
 - **Modularity**: Adhere to the project structure. Create clear module interfaces using `export`.
+- **Centralized Utility Imports**: Use `src/utils/index.js` to import common utilities like logger helpers and object helpers.
 - **Minimize Side Effects**: Prefer pure functions where possible, especially for data transformation and game logic.
 - **Immutability**: Favor immutable data structures and updates where practical to simplify state management and
   debugging.

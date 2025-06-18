@@ -1,6 +1,11 @@
 // src/utils/loggerUtils.js
 // --- FILE START ---
 /* eslint-disable no-console */
+/**
+ * @file Utility functions for logging.
+ * @description Re-exported from {@link src/utils/index.js}. Prefer importing
+ * from the central index.
+ */
 
 import { validateDependency } from './validationUtils.js';
 
