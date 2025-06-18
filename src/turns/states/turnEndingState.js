@@ -13,6 +13,7 @@
 import { AbstractTurnState } from './abstractTurnState.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../constants/eventIds.js';
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
+import { UNKNOWN_ACTOR_ID } from '../../constants/unknownIds.js';
 
 export class TurnEndingState extends AbstractTurnState {
   /** @type {string}     */ #actorToEndId;
@@ -37,8 +38,7 @@ export class TurnEndingState extends AbstractTurnState {
           providedActorId: actorToEndId ?? null,
         });
       }
-      this.#actorToEndId =
-        handler.getCurrentActor()?.id ?? 'UNKNOWN_ACTOR_CONSTRUCTOR_FALLBACK';
+      this.#actorToEndId = handler.getCurrentActor()?.id ?? UNKNOWN_ACTOR_ID;
       log.warn(
         `TurnEndingState Constructor: actorToEndId was missing, fell back to '${this.#actorToEndId}'.`
       );
