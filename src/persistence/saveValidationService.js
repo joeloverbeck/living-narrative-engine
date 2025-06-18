@@ -2,6 +2,7 @@
 
 import { PersistenceErrorCodes } from './persistenceErrors.js';
 import { createPersistenceFailure } from '../utils/persistenceResultUtils.js';
+import { setupService } from '../utils/serviceInitializerUtils.js';
 import {
   MSG_INTEGRITY_CALCULATION_ERROR,
   MSG_CHECKSUM_MISMATCH,
@@ -30,8 +31,13 @@ class SaveValidationService {
    * @param {GameStateSerializer} dependencies.gameStateSerializer - Serializer used for checksum generation.
    */
   constructor({ logger, gameStateSerializer }) {
-    this.#logger = logger;
     this.#serializer = gameStateSerializer;
+    this.#logger = setupService('SaveValidationService', logger, {
+      gameStateSerializer: {
+        value: gameStateSerializer,
+        requiredMethods: ['calculateGameStateChecksum'],
+      },
+    });
   }
 
   /**
