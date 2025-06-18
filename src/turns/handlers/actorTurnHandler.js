@@ -30,6 +30,7 @@ class ActorTurnHandler extends GenericTurnHandler {
    * @param {ITurnStrategyFactory} [deps.turnStrategyFactory]
    * @param {ITurnStrategyFactory} [deps.strategyFactory]
    * @param {TurnContextBuilder} deps.turnContextBuilder
+   * @param deps.container
    */
   constructor({
     logger,
@@ -38,6 +39,7 @@ class ActorTurnHandler extends GenericTurnHandler {
     turnStrategyFactory,
     strategyFactory,
     turnContextBuilder,
+    container = null,
   }) {
     const factory = turnStrategyFactory || strategyFactory;
     super({
@@ -46,6 +48,7 @@ class ActorTurnHandler extends GenericTurnHandler {
       turnEndPort,
       strategyFactory: factory,
       turnContextBuilder,
+      container,
     });
 
     const initialState = this._turnStateFactory.createInitialState(this);
