@@ -32,9 +32,15 @@ export class AwaitingActorDecisionState extends AbstractTurnState {
 
     const logger = turnContext.getLogger();
 
-    const validation = await this._validateActorAndStrategy(turnContext);
-    if (!validation) return;
-    const { actor, strategy } = validation;
+    let actor;
+    let strategy;
+    try {
+      actor = this.validateActor(turnContext);
+      strategy = this.retrieveStrategy(turnContext, actor);
+    } catch (validationError) {
+      await turnContext.endTurn(validationError);
+      return;
+    }
 
     try {
       const { action, extractedData } = await this._decideAction(
@@ -79,48 +85,58 @@ export class AwaitingActorDecisionState extends AbstractTurnState {
   }
 
   /**
-   * @description Validates actor existence and retrieves a usable strategy.
+   * @description Validates that the turn context contains a valid actor.
    * @param {ITurnContext} turnContext - Current turn context.
-   * @returns {Promise<{actor: Entity, strategy: import('../interfaces/IActorTurnStrategy.js').IActorTurnStrategy} | null>}
-   * Returns `null` if validation fails.
+   * @returns {Entity} Actor entity from the context.
+   * @throws {Error} If no actor exists in the context.
    */
-  async _validateActorAndStrategy(turnContext) {
+  validateActor(turnContext) {
     const logger = turnContext.getLogger();
     const actor = turnContext.getActor();
     if (!actor) {
       logger.error(
         `${this.getStateName()}: No actor found in TurnContext. Ending turn.`
       );
-      await turnContext.endTurn(
-        new Error('No actor in context during AwaitingActorDecisionState.')
-      );
-      return null;
+      throw new Error('No actor in context during AwaitingActorDecisionState.');
     }
 
     logger.debug(
       `${this.getStateName()}: Actor ${actor.id}. Attempting to retrieve turn strategy.`
     );
 
+    return actor;
+  }
+
+  /**
+   * @description Retrieves and validates the actor's strategy from context.
+   * @param {ITurnContext} turnContext - Current turn context.
+   * @param {Entity} actor - Actor whose strategy is being retrieved.
+   * @returns {import('../interfaces/IActorTurnStrategy.js').IActorTurnStrategy}
+   * The resolved strategy.
+   * @throws {Error} If the strategy is missing or malformed.
+   */
+  retrieveStrategy(turnContext, actor) {
+    const logger = turnContext.getLogger();
+
     if (typeof turnContext.getStrategy !== 'function') {
       const msg = `${this.getStateName()}: turnContext.getStrategy() is not a function for actor ${actor.id}.`;
       logger.error(msg);
-      await turnContext.endTurn(new Error(msg));
-      return null;
+      throw new Error(msg);
     }
 
     const strategy = turnContext.getStrategy();
     if (!strategy || typeof strategy.decideAction !== 'function') {
       const msg = `${this.getStateName()}: No valid IActorTurnStrategy found for actor ${actor.id} or strategy is malformed (missing decideAction).`;
       logger.error(msg, { strategyReceived: strategy });
-      await turnContext.endTurn(new Error(msg));
-      return null;
+      throw new Error(msg);
     }
 
     const strategyName = strategy.constructor?.name ?? 'Object';
     logger.debug(
       `${this.getStateName()}: Strategy ${strategyName} obtained for actor ${actor.id}. Requesting action decision.`
     );
-    return { actor, strategy };
+
+    return strategy;
   }
 
   /**
