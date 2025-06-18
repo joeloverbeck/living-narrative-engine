@@ -13,6 +13,7 @@
  */
 
 import { ITurnState } from '../interfaces/ITurnState.js';
+import { UNKNOWN_ACTOR_ID } from '../../constants/unknownIds.js';
 
 /**
  * @class AbstractTurnState
@@ -247,7 +248,7 @@ export class AbstractTurnState extends ITurnState {
   async startTurn(handler, actorEntity) {
     const turnCtx = this._getTurnContext();
     const logger = this._resolveLogger(turnCtx, handler);
-    const actorIdForLog = actorEntity?.id ?? 'UNKNOWN_ACTOR';
+    const actorIdForLog = actorEntity?.id ?? UNKNOWN_ACTOR_ID;
     const warningMessage = `Method 'startTurn(actorId: ${actorIdForLog})' called on state ${this.getStateName()} where it is not expected or handled.`;
     logger.warn(warningMessage);
     throw new Error(
