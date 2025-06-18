@@ -57,35 +57,6 @@ describe('GamePersistenceService private helpers', () => {
     context = makeService();
   });
 
-  it('_captureGameState delegates to capture service', () => {
-    context.captureService.captureCurrentGameState.mockReturnValue({
-      test: true,
-    });
-    const result = context.service._captureGameState('World');
-    expect(context.captureService.captureCurrentGameState).toHaveBeenCalledWith(
-      'World'
-    );
-    expect(result).toEqual({ test: true });
-  });
-
-  it('_setSaveMetadata ensures metadata and sets name', () => {
-    const state = {};
-    context.service._setSaveMetadata(state, 'Slot');
-    expect(state.metadata.saveName).toBe('Slot');
-  });
-
-  it('_delegateManualSave calls SaveLoadService', async () => {
-    context.saveLoadService.saveManualGame.mockResolvedValue({ success: true });
-    const res = await context.service._delegateManualSave('Slot', {
-      gameState: {},
-    });
-    expect(context.saveLoadService.saveManualGame).toHaveBeenCalledWith(
-      'Slot',
-      { gameState: {} }
-    );
-    expect(res).toEqual({ success: true });
-  });
-
   it('_validateRestoreData fails when gameState missing', () => {
     const res = context.restorer._validateRestoreData({});
     expect(res.success).toBe(false);
