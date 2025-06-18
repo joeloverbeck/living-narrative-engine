@@ -5,19 +5,13 @@ import { IApiKeyProvider } from './interfaces/IApiKeyProvider.js';
 import { safeDispatchError } from '../utils/safeDispatchErrorUtils.js';
 import { resolveSafeDispatcher } from '../utils/dispatcherUtils.js';
 import { initLogger } from '../utils/index.js';
+import { CLOUD_API_TYPES } from './constants/llmConstants.js';
 
 /**
  * @typedef {import('./environmentContext.js').EnvironmentContext} EnvironmentContext
  * @typedef {import('./services/llmConfigLoader.js').LLMModelConfig} LLMModelConfig
  * @typedef {import('../interfaces/ILogger.js').ILogger} ILogger
  */
-
-/**
- * @description List of apiType values that are considered "cloud services" requiring proxy key handling.
- * This should be consistent with any other definitions (e.g., in ConfigurableLLMAdapter).
- * @type {string[]}
- */
-const CLOUD_API_TYPES = ['openrouter', 'openai', 'anthropic'];
 
 /**
  * @class ClientApiKeyProvider

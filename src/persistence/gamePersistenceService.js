@@ -100,49 +100,6 @@ class GamePersistenceService extends IGamePersistenceService {
   }
 
   /**
-   * @description Captures the current game state via GameStateCaptureService.
-   * @param {string | null | undefined} activeWorldName - Name of the currently active world.
-   * @returns {SaveGameStructure} Captured game state object.
-   * @private
-   */
-  _captureGameState(activeWorldName) {
-    return this.#gameStateCaptureService.captureCurrentGameState(
-      activeWorldName
-    );
-  }
-
-  /**
-   * @description Ensures metadata is present and sets the save name.
-   * @param {SaveGameStructure} state - Game state object to update.
-   * @param {string} saveName - Desired save name.
-   * @returns {void}
-   * @private
-   */
-  _setSaveMetadata(state, saveName) {
-    if (!state.metadata) state.metadata = {};
-    state.metadata.saveName = saveName;
-  }
-
-  /**
-   * @description Persists game state via SaveLoadService.
-   * @param {string} saveName - Name of the save slot.
-   * @param {SaveGameStructure} state - Game state to persist.
-   * @returns {Promise<{success: boolean, message?: string, error?: string, filePath?: string}>}
-   *   Result from SaveLoadService.
-   * @private
-   */
-  async _delegateManualSave(saveName, state) {
-    return this.#saveLoadService.saveManualGame(saveName, state);
-  }
-
-  /**
-   * Builds the active mods manifest section for the save data.
-   *
-   * @returns {{modId: string, version: string}[]} Array of active mod info.
-   * @private
-   */
-
-  /**
    * Captures the current game state.
    *
    * @param {string | null | undefined} activeWorldName - The name of the currently active world, passed from GameEngine.

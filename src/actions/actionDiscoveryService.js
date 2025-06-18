@@ -13,7 +13,10 @@
 
 import { ActionTargetContext } from '../models/actionTargetContext.js';
 import { IActionDiscoveryService } from '../interfaces/IActionDiscoveryService.js';
-import { getAvailableExits } from '../utils/locationUtils.js';
+import {
+  getAvailableExits,
+  getLocationIdForLog,
+} from '../utils/locationUtils.js';
 import { setupService } from '../utils/serviceInitializerUtils.js';
 import { getActorLocation } from '../utils/actorLocationUtils.js';
 import { safeDispatchError } from '../utils/safeDispatchErrorUtils.js';
@@ -253,10 +256,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
     /* ── Resolve actor location via utility ───────── */
     let currentLocation = getActorLocation(actorEntity.id, this.#entityManager);
 
-    const locIdForLog =
-      typeof currentLocation === 'string'
-        ? currentLocation
-        : (currentLocation?.id ?? 'unknown');
+    const locIdForLog = getLocationIdForLog(currentLocation);
 
     /* ── iterate over action definitions ─────────────────────────────────── */
     for (const actionDef of allDefs) {

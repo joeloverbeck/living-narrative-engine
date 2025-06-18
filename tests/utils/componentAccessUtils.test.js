@@ -4,6 +4,7 @@ import {
   getComponentFromManager,
   resolveEntityInstance,
 } from '../../src/utils/componentAccessUtils.js';
+import { createMockLogger } from '../testUtils.js';
 
 class MockEntity {
   constructor(data = {}) {
@@ -27,6 +28,25 @@ describe('getComponentFromEntity', () => {
   it('returns null when component missing', () => {
     const ent = new MockEntity();
     expect(getComponentFromEntity(ent, 'foo')).toBeNull();
+  });
+
+  it('logs debug for invalid entity', () => {
+    const logger = createMockLogger();
+    expect(getComponentFromEntity(null, 'foo', logger)).toBeNull();
+    expect(logger.debug).toHaveBeenCalledWith(
+      '[componentAccessUtils] getComponentFromEntity: invalid entity or componentId.'
+    );
+  });
+
+  it('logs debug when getComponentData throws', () => {
+    const logger = createMockLogger();
+    const ent = {
+      getComponentData() {
+        throw new Error('boom');
+      },
+    };
+    expect(getComponentFromEntity(ent, 'foo', logger)).toBeNull();
+    expect(logger.debug).toHaveBeenCalled();
   });
 
   it('returns null for invalid entity', () => {
@@ -81,13 +101,24 @@ describe('getComponentFromManager', () => {
     expect(getComponentFromManager('e1', 'foo', null)).toBeNull();
   });
 
+  it('logs debug for invalid parameters', () => {
+    const logger = createMockLogger();
+    const mgr = new MockManager();
+    expect(getComponentFromManager('', 'foo', mgr, logger)).toBeNull();
+    expect(logger.debug).toHaveBeenCalledWith(
+      '[componentAccessUtils] getComponentFromManager: invalid entityId or componentId.'
+    );
+  });
+
   it('returns null when getComponentData throws', () => {
     const mgr = {
       getComponentData() {
         throw new Error('boom');
       },
     };
-    expect(getComponentFromManager('e1', 'foo', mgr)).toBeNull();
+    const logger = createMockLogger();
+    expect(getComponentFromManager('e1', 'foo', mgr, logger)).toBeNull();
+    expect(logger.debug).toHaveBeenCalled();
   });
 });
 

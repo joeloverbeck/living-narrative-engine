@@ -2,7 +2,11 @@
 // --- FILE START ---
 
 import { fetchWithRetry } from '../../utils/index.js';
-import { performSemanticValidations } from '../../validation/llmConfigSemanticValidator.js'; // Assuming this path is correct
+import { performSemanticValidations } from '../../validation/llmConfigSemanticValidator.js';
+import {
+  formatAjvErrorToStandardizedError,
+  formatSemanticErrorToStandardizedError,
+} from './llmConfigErrorFormatter.js';
 
 /**
  * @typedef {object} ILogger
@@ -158,129 +162,149 @@ export class LlmConfigLoader {
   }
 
   /**
-   * Transforms an Ajv error object into a standardized format.
+   * Fetches the configuration file using {@link fetchWithRetry}.
    *
    * @private
-   * @param {import('ajv').ErrorObject} ajvError - The error object from Ajv.
-   * @param {LLMRootConfiguration | any} parsedRootData - The root parsed data.
-   * @returns {StandardizedValidationError} The standardized error object.
+   * @param {string} path - Location of the configuration file.
+   * @returns {Promise<any>} Parsed JSON response.
    */
-  #formatAjvErrorToStandardizedError(ajvError, parsedRootData) {
-    let standardizedConfigId = 'N/A';
-    let standardizedPath = ajvError.instancePath || '';
-
-    const instancePathStr = ajvError.instancePath || '';
-    const parts = instancePathStr.split('/').filter((p) => p.length > 0);
-
-    if (instancePathStr === '') {
-      standardizedConfigId = 'N/A (root data)';
-      standardizedPath = '(root)';
-    } else if (parts[0] === 'configs') {
-      if (parts.length === 1) {
-        standardizedConfigId = 'N/A (configs property)';
-        standardizedPath = 'configs';
-      } else if (parts.length > 1) {
-        standardizedConfigId = parts[1];
-        const relativePathParts = parts.slice(2);
-        standardizedPath =
-          `configs.${parts[1]}${relativePathParts.length > 0 ? '.' : ''}${relativePathParts.join('.')}`.replace(
-            /\.(\d+)(?=\.|$)/g,
-            '[$1]'
-          );
-      }
-    } else if (
-      parts.length > 0 &&
-      (parts[0] === 'defaultConfigId' ||
-        !parsedRootData ||
-        !parsedRootData.configs ||
-        parts[0] !== 'configs')
-    ) {
-      standardizedConfigId = 'N/A (root property)';
-      standardizedPath = parts.join('.').replace(/\.(\d+)(?=\.|$)/g, '[$1]');
-    } else {
-      standardizedConfigId = 'N/A (unknown path structure)';
-      standardizedPath = instancePathStr
-        .substring(1)
-        .replace(/\//g, '.')
-        .replace(/\.(\d+)(?=\.|$)/g, '[$1]');
-    }
-
-    standardizedPath = standardizedPath.replace(/^\.+|\.+$/g, '');
-
-    const standardizedError = {
-      errorType: 'SCHEMA_VALIDATION',
-      configId: standardizedConfigId,
-      path:
-        standardizedPath ||
-        (instancePathStr === '/' ? '(root)' : instancePathStr),
-      message: ajvError.message || 'Unknown schema validation error',
-      details: { ...ajvError },
-    };
-
-    if (ajvError.params) {
-      if (ajvError.params.allowedValues) {
-        standardizedError.expected = ajvError.params.allowedValues;
-      }
-      // @ts-ignore
-      if (ajvError.keyword === 'type' && ajvError.params.type) {
-        // @ts-ignore
-        standardizedError.expected = ajvError.params.type;
-      }
-      if (ajvError.keyword === 'additionalProperties') {
-        standardizedError.message =
-          `Object has an unexpected property: '${ajvError.params.additionalProperty}'. ${ajvError.message || ''}`.trim();
-      }
-    }
-    return standardizedError;
+  async #_fetchConfigFile(path) {
+    this.#logger.debug(
+      `LlmConfigLoader: Attempting to load LLM Prompt configurations from: ${path}`
+    );
+    const result = await fetchWithRetry(
+      path,
+      { method: 'GET', headers: { Accept: 'application/json' } },
+      this.#defaultMaxRetries,
+      this.#defaultBaseDelayMs,
+      this.#defaultMaxDelayMs,
+      this.#safeEventDispatcher,
+      this.#logger
+    );
+    this.#logger.debug(
+      `LlmConfigLoader: Successfully fetched and parsed LLM Prompt configurations from ${path}.`
+    );
+    return result;
   }
 
   /**
-   * Transforms an original semantic error object from performSemanticValidations into a standardized format.
+   * Validates configuration data against the registered schema.
    *
    * @private
-   * @param {OriginalSemanticValidationError} semanticError - The original semantic error.
-   * @returns {StandardizedValidationError} The standardized error object.
+   * @param {any} data - Parsed configuration data.
+   * @param {string} path - File path for logging.
+   * @returns {{error?: LoadConfigsErrorResult, config?: LLMRootConfiguration}}
    */
-  #formatSemanticErrorToStandardizedError(semanticError) {
-    let standardizedConfigId = semanticError.configId;
-    let standardizedPath = '';
-
-    const relativeSemanticPath = semanticError.path || '';
-
-    if (
-      semanticError.errorType ===
-      'SEMANTIC_VALIDATION_INVALID_CONFIGS_STRUCTURE'
-    ) {
-      standardizedConfigId = 'N/A (root property)';
-      standardizedPath = 'configs';
-    } else if (
-      standardizedConfigId &&
-      !standardizedConfigId.startsWith('N/A') &&
-      standardizedConfigId !== 'N/A - Root "configs" property'
-    ) {
-      standardizedPath = `configs.${standardizedConfigId}`;
-      if (
-        relativeSemanticPath &&
-        relativeSemanticPath !== '(dependencyInjection object root)'
-      ) {
-        standardizedPath += `.${relativeSemanticPath}`;
-      }
-    } else {
-      standardizedConfigId = semanticError.configId || 'N/A';
-      standardizedPath = relativeSemanticPath || '(path not specified)';
+  #_validateSchema(data, path) {
+    const schemaId = this.#configuration.getContentTypeSchemaId('llm-configs');
+    if (!schemaId) {
+      this.#logger.error(
+        `LlmConfigLoader: Could not retrieve schema ID for 'llm-configs' from IConfiguration.`
+      );
+      return {
+        error: this.#_buildErrorResult(
+          "LlmConfigLoader: Schema ID for 'llm-configs' is undefined. Cannot validate.",
+          'validation_setup',
+          path
+        ),
+      };
     }
 
-    standardizedPath = standardizedPath
-      .replace(/\.{2,}/g, '.')
-      .replace(/^\.+|\.+$/g, '');
+    this.#logger.debug(
+      `LlmConfigLoader: Validating against schema ID: ${schemaId}`
+    );
+    const validationResult = this.#schemaValidator.validate(schemaId, data);
 
-    return {
-      errorType: semanticError.errorType || 'SEMANTIC_VALIDATION',
-      configId: standardizedConfigId,
-      path: standardizedPath,
-      message: semanticError.message,
-      details: { ...semanticError },
-    };
+    if (!validationResult.isValid) {
+      const standardizedSchemaErrors = (validationResult.errors || []).map(
+        (err) => formatAjvErrorToStandardizedError(err, data)
+      );
+      this.#logger.error(
+        `LlmConfigLoader: LLM Prompt configuration file from ${path} failed schema validation. Count: ${standardizedSchemaErrors.length}`,
+        {
+          path,
+          schemaId,
+          validationErrors: standardizedSchemaErrors,
+        }
+      );
+      standardizedSchemaErrors.forEach((sError) =>
+        this.#logger.error(
+          `Schema Validation Error: Config ID: '${sError.configId}', Path: '${sError.path}', Message: ${sError.message}`,
+          { details: sError.details }
+        )
+      );
+      return {
+        error: this.#_buildErrorResult(
+          'LLM Prompt configuration schema validation failed.',
+          'validation',
+          path,
+          { validationErrors: standardizedSchemaErrors }
+        ),
+      };
+    }
+    this.#logger.debug(
+      `LlmConfigLoader: LLM Prompt configuration file from ${path} passed schema validation.`
+    );
+    return { config: /** @type {LLMRootConfiguration} */ (data) };
+  }
+
+  /**
+   * Runs semantic validation on the already schema-validated configuration.
+   *
+   * @private
+   * @param {LLMRootConfiguration} cfg - Validated configuration.
+   * @param {string} path - File path for logging.
+   * @returns {{error?: LoadConfigsErrorResult}}
+   */
+  #_validateSemantics(cfg, path) {
+    this.#logger.debug(
+      `LlmConfigLoader: Performing semantic validation for ${path}.`
+    );
+    const originalSemanticErrors = performSemanticValidations(cfg.configs);
+    if (originalSemanticErrors.length > 0) {
+      const standardizedSemanticErrors = originalSemanticErrors.map((err) =>
+        formatSemanticErrorToStandardizedError(err)
+      );
+      this.#logger.error(
+        `LlmConfigLoader: LLM Prompt configuration file from ${path} failed semantic validation. Count: ${standardizedSemanticErrors.length}`,
+        {
+          path,
+          semanticErrors: standardizedSemanticErrors,
+        }
+      );
+      standardizedSemanticErrors.forEach((sError) =>
+        this.#logger.error(
+          `Semantic Validation Error: Config ID: '${sError.configId}', Type: ${sError.errorType}, Path: '${sError.path}', Message: ${sError.message}`,
+          { details: sError.details }
+        )
+      );
+      return {
+        error: this.#_buildErrorResult(
+          'LLM Prompt configuration semantic validation failed.',
+          'semantic_validation',
+          path,
+          { semanticErrors: standardizedSemanticErrors }
+        ),
+      };
+    }
+    this.#logger.debug(
+      `LlmConfigLoader: Semantic validation passed for ${path}.`
+    );
+    return {};
+  }
+
+  /**
+   * Builds an error result object.
+   *
+   * @private
+   * @param {string} message - Error description.
+   * @param {string} stage - Stage where the error occurred.
+   * @param {string} path - Source file path.
+   * @param {object} [extras] - Additional error details.
+   * @returns {LoadConfigsErrorResult}
+   */
+  #_buildErrorResult(message, stage, path, extras = {}) {
+    return { error: true, message, stage, path, ...extras };
   }
 
   /**
@@ -295,124 +319,18 @@ export class LlmConfigLoader {
       typeof filePathValue === 'string' && filePathValue.trim() !== ''
         ? filePathValue.trim()
         : this.#defaultConfigPath;
-    this.#logger.debug(
-      `LlmConfigLoader: Attempting to load LLM Prompt configurations from: ${currentPath}`
-    );
-
-    /** @type {any} */
-    let parsedResponse;
     try {
-      parsedResponse = await fetchWithRetry(
-        currentPath,
-        { method: 'GET', headers: { Accept: 'application/json' } },
-        this.#defaultMaxRetries,
-        this.#defaultBaseDelayMs,
-        this.#defaultMaxDelayMs,
-        this.#safeEventDispatcher,
-        this.#logger
-      );
-      this.#logger.debug(
-        `LlmConfigLoader: Successfully fetched and parsed LLM Prompt configurations from ${currentPath}.`
-      );
+      const parsedResponse = await this.#_fetchConfigFile(currentPath);
 
-      const schemaId =
-        this.#configuration.getContentTypeSchemaId('llm-configs');
-      if (!schemaId) {
-        // Corrected logger message for schema ID retrieval failure
-        this.#logger.error(
-          `LlmConfigLoader: Could not retrieve schema ID for 'llm-configs' from IConfiguration.`
-        );
-        // @ts-ignore
-        return {
-          error: true,
-          message:
-            "LlmConfigLoader: Schema ID for 'llm-configs' is undefined. Cannot validate.",
-          stage: 'validation_setup',
-          path: currentPath,
-        };
-      }
+      const schemaResult = this.#_validateSchema(parsedResponse, currentPath);
+      if (schemaResult.error) return schemaResult.error;
+      const validatedRootConfig = schemaResult.config;
 
-      this.#logger.debug(
-        `LlmConfigLoader: Validating against schema ID: ${schemaId}`
+      const semanticResult = this.#_validateSemantics(
+        validatedRootConfig,
+        currentPath
       );
-      const validationResult = this.#schemaValidator.validate(
-        schemaId,
-        parsedResponse
-      );
-
-      if (!validationResult.isValid) {
-        const standardizedSchemaErrors = (validationResult.errors || []).map(
-          (err) => this.#formatAjvErrorToStandardizedError(err, parsedResponse)
-        );
-        // Corrected logger message for schema validation failure
-        this.#logger.error(
-          `LlmConfigLoader: LLM Prompt configuration file from ${currentPath} failed schema validation. Count: ${standardizedSchemaErrors.length}`,
-          {
-            path: currentPath,
-            schemaId,
-            validationErrors: standardizedSchemaErrors, // Changed 'errors' to 'validationErrors' to match test
-          }
-        );
-        standardizedSchemaErrors.forEach((sError) =>
-          this.#logger.error(
-            `Schema Validation Error: Config ID: '${sError.configId}', Path: '${sError.path}', Message: ${sError.message}`,
-            { details: sError.details }
-          )
-        );
-        // @ts-ignore
-        return {
-          error: true,
-          message: 'LLM Prompt configuration schema validation failed.',
-          stage: 'validation',
-          path: currentPath,
-          validationErrors: standardizedSchemaErrors,
-        };
-      }
-      this.#logger.debug(
-        `LlmConfigLoader: LLM Prompt configuration file from ${currentPath} passed schema validation.`
-      );
-      const validatedRootConfig = /** @type {LLMRootConfiguration} */ (
-        parsedResponse
-      );
-
-      this.#logger.debug(
-        `LlmConfigLoader: Performing semantic validation for ${currentPath}.`
-      ); // Test uses "on LLM Prompt configurations from"
-      const originalSemanticErrors = performSemanticValidations(
-        validatedRootConfig.configs
-      );
-
-      if (originalSemanticErrors.length > 0) {
-        const standardizedSemanticErrors = originalSemanticErrors.map((err) =>
-          this.#formatSemanticErrorToStandardizedError(err)
-        );
-        // Corrected logger message for semantic validation failure
-        this.#logger.error(
-          `LlmConfigLoader: LLM Prompt configuration file from ${currentPath} failed semantic validation. Count: ${standardizedSemanticErrors.length}`,
-          {
-            path: currentPath,
-            semanticErrors: standardizedSemanticErrors, // Changed 'errors' to 'semanticErrors'
-          }
-        );
-        standardizedSemanticErrors.forEach((sError) =>
-          this.#logger.error(
-            `Semantic Validation Error: Config ID: '${sError.configId}', Type: ${sError.errorType}, Path: '${sError.path}', Message: ${sError.message}`,
-            { details: sError.details }
-          )
-        );
-        // @ts-ignore
-        return {
-          error: true,
-          message: 'LLM Prompt configuration semantic validation failed.',
-          stage: 'semantic_validation',
-          path: currentPath,
-          semanticErrors: standardizedSemanticErrors,
-        };
-      }
-      this.#logger.debug(
-        `LlmConfigLoader: Semantic validation passed for ${currentPath}.`
-      ); // This should be "LLM Prompt configuration file from ${currentPath} passed semantic validation." for the other test suite.
-      // Let's keep "Semantic validation passed for..." for now as per LlmConfigLoader.extended.test.js passing.
+      if (semanticResult.error) return semanticResult.error;
 
       this.#logger.debug(
         `LlmConfigLoader: LLM Prompt configurations from ${currentPath} processed successfully.`
@@ -467,18 +385,18 @@ export class LlmConfigLoader {
       )
         stage = 'fetch_max_retries_exceeded';
 
-      // @ts-ignore
-      return {
-        error: true,
-        message: `Failed to load, parse, or validate LLM Prompt configurations from ${currentPath}: ${originalCaughtError.message}`,
+      return this.#_buildErrorResult(
+        `Failed to load, parse, or validate LLM Prompt configurations from ${currentPath}: ${originalCaughtError.message}`,
         stage,
-        originalError: originalCaughtError,
-        path: currentPath,
-        // @ts-ignore
-        validationErrors: error.validationErrors,
-        // @ts-ignore
-        semanticErrors: error.semanticErrors,
-      };
+        currentPath,
+        {
+          originalError: originalCaughtError,
+          // @ts-ignore
+          validationErrors: error.validationErrors,
+          // @ts-ignore
+          semanticErrors: error.semanticErrors,
+        }
+      );
     }
   }
 }
