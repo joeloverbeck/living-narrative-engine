@@ -61,14 +61,14 @@ const mockConfiguration = {
   getBaseDataPath: jest.fn().mockReturnValue('./data'),
   getSchemaFiles: jest
     .fn()
-    .mockReturnValue(['common.schema.json', 'entity.schema.json']),
+    .mockReturnValue(['common.schema.json', 'entity-definition.schema.json', 'entity-instance.schema.json']),
   getContentTypeSchemaId: jest.fn((typeName) => {
     const map = {
       /* map based on actual dependencyInjection if needed */
       components: 'http://example.com/schemas/component.schema.json',
       actions: 'http://example.com/schemas/action.schema.json',
       events: 'http://example.com/schemas/component.schema.json',
-      entities: 'http://example.com/schemas/entity.schema.json', // Needed by EntityDefinitionLoader
+      entities: 'http://example.com/schemas/entity-definition.schema.json',
       rules: 'http://example.com/schemas/rule.schema.json',
       game: 'http://example.com/schemas/game.schema.json',
       'mod-manifest': 'http://example.com/schemas/mod.manifest.schema.json',

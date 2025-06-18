@@ -2,7 +2,7 @@
 // --- TYPE IMPORTS ---
 /** @typedef {import('../../entities/entityManager.js').default} EntityManager */
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
-/** @typedef {import('../../../data/schemas/entity.schema.json').EntityDefinition} EntityDefinition */
+/** @typedef {import('../../../data/schemas/entity-definition.schema.json').EntityDefinition} EntityDefinition */
 /** @typedef {import('../../entities/entity.js').default} Entity */
 
 // --- LIBRARY IMPORTS ---

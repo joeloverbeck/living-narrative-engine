@@ -1,5 +1,5 @@
 {
-  "$schema": "http://example.com/schemas/entity.schema.json",
+  "$schema": "http://example.com/schemas/entity-definition.schema.json",
   "id": "isekai:ninja",
   "components": {
     "core:actor": {},

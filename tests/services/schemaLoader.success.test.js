@@ -5,7 +5,8 @@ import SchemaLoader from '../../src/loaders/schemaLoader.js'; // Adjust path REL
 
 // --- Test Constants (Copied from original file - Keep as is) ---
 const commonSchemaFile = 'common.schema.json';
-const entitySchemaFile = 'entity.schema.json';
+const entityDefinitionSchemaFile = 'entity-definition.schema.json';
+const entityInstanceSchemaFile = 'entity-instance.schema.json';
 const manifestSchemaFile = 'manifest.schema.json';
 const itemSchemaFile = 'items.schema.json';
 const locationSchemaFile = 'locations.schema.json';
@@ -13,7 +14,8 @@ const connectionSchemaFile = 'connections.schema.json';
 const triggerSchemaFile = 'triggers.schema.json';
 
 const commonSchemaPath = `./test/schemas/${commonSchemaFile}`;
-const entitySchemaPath = `./test/schemas/${entitySchemaFile}`;
+const entityDefinitionSchemaPath = `./test/schemas/${entityDefinitionSchemaFile}`;
+const entityInstanceSchemaPath = `./test/schemas/${entityInstanceSchemaFile}`;
 const manifestSchemaPath = `./test/schemas/${manifestSchemaFile}`;
 const itemSchemaPath = `./test/schemas/${itemSchemaFile}`;
 const locationSchemaPath = `./test/schemas/${locationSchemaFile}`;
@@ -21,7 +23,8 @@ const connectionSchemaPath = `./test/schemas/${connectionSchemaFile}`;
 const triggerSchemaPath = `./test/schemas/${triggerSchemaFile}`;
 
 const commonSchemaId = 'test://schemas/common';
-const entitySchemaId = 'test://schemas/entity';
+const entityDefinitionSchemaId = 'test://schemas/entity-definition';
+const entityInstanceSchemaId = 'test://schemas/entity-instance';
 const manifestSchemaId = 'test://schemas/manifest';
 const itemSchemaId = 'test://schemas/items';
 const locationSchemaId = 'test://schemas/locations';
@@ -29,7 +32,8 @@ const connectionSchemaId = 'test://schemas/connections';
 const triggerSchemaId = 'test://schemas/triggers';
 
 const commonSchemaData = { $id: commonSchemaId, title: 'Common Test' };
-const entitySchemaData = { $id: entitySchemaId, title: 'Entity Test' };
+const entityDefinitionSchemaData = { $id: entityDefinitionSchemaId, title: 'Entity Definition Test' };
+const entityInstanceSchemaData = { $id: entityInstanceSchemaId, title: 'Entity Instance Test' };
 const manifestSchemaData = { $id: manifestSchemaId, title: 'Manifest Test' };
 const itemSchemaData = { $id: itemSchemaId, title: 'Items Test' };
 const locationSchemaData = { $id: locationSchemaId, title: 'Locations Test' };
@@ -42,7 +46,8 @@ const triggerSchemaData = { $id: triggerSchemaId, title: 'Triggers Test' };
 // Keep Maps as they are
 const essentialSchemaIdsMap = {
   manifest: manifestSchemaId,
-  entities: entitySchemaId,
+  entityDefinitions: entityDefinitionSchemaId,
+  entityInstances: entityInstanceSchemaId,
   items: itemSchemaId,
   locations: locationSchemaId,
   connections: connectionSchemaId,
@@ -50,7 +55,8 @@ const essentialSchemaIdsMap = {
 };
 const idToFileMap = {
   [commonSchemaId]: commonSchemaFile,
-  [entitySchemaId]: entitySchemaFile,
+  [entityDefinitionSchemaId]: entityDefinitionSchemaFile,
+  [entityInstanceSchemaId]: entityInstanceSchemaFile,
   [manifestSchemaId]: manifestSchemaFile,
   [itemSchemaId]: itemSchemaFile,
   [locationSchemaId]: locationSchemaFile,
@@ -59,7 +65,8 @@ const idToFileMap = {
 };
 const pathToDataMap = {
   [commonSchemaPath]: commonSchemaData,
-  [entitySchemaPath]: entitySchemaData,
+  [entityDefinitionSchemaPath]: entityDefinitionSchemaData,
+  [entityInstanceSchemaPath]: entityInstanceSchemaData,
   [manifestSchemaPath]: manifestSchemaData,
   [itemSchemaPath]: itemSchemaData,
   [locationSchemaPath]: locationSchemaData,

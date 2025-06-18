@@ -1,18 +1,18 @@
-// tests/schemas/entity.schema.test.js
+// tests/schemas/entity-definition.schema.test.js
 // -----------------------------------------------------------------------------
-// Contract tests for the main entity schema.
+// Contract tests for the main entity definition schema.
 // Ensures that the schema correctly validates the fundamental structure of an
-// entity, including the allowance for the optional `$schema` property.
+// entity definition, including the allowance for the optional `$schema` property.
 // -----------------------------------------------------------------------------
 
 import { describe, test, expect, beforeAll } from '@jest/globals';
 import Ajv from 'ajv';
 import addFormats from 'ajv-formats';
 
-import entitySchema from '../../data/schemas/entity.schema.json';
+import entityDefinitionSchema from '../../data/schemas/entity-definition.schema.json';
 import commonSchema from '../../data/schemas/common.schema.json';
 
-describe('Schema – Game Entity contract', () => {
+describe('Schema – Game Entity Definition contract', () => {
   /** @type {import('ajv').ValidateFunction} */
   let validate;
 
@@ -22,14 +22,14 @@ describe('Schema – Game Entity contract', () => {
 
     // Add the common schema as a dependency so $ref works correctly
     ajv.addSchema(commonSchema, commonSchema.$id);
-    validate = ajv.compile(entitySchema);
+    validate = ajv.compile(entityDefinitionSchema);
   });
 
   /* ---------------------------------------------------------------------- */
   /* ✓ VALID payloads                                                      */
   /* ---------------------------------------------------------------------- */
 
-  test('should validate a basic entity without a $schema property', () => {
+  test('should validate a basic entity definition without a $schema property', () => {
     const validEntity = {
       id: 'core:player',
       components: {
@@ -41,9 +41,9 @@ describe('Schema – Game Entity contract', () => {
     expect(ok).toBe(true);
   });
 
-  test('should validate an entity that INCLUDES the $schema property', () => {
+  test('should validate an entity definition that INCLUDES the $schema property', () => {
     const validEntityWithSchema = {
-      $schema: 'http://example.com/schemas/entity.schema.json',
+      $schema: 'http://example.com/schemas/entity-definition.schema.json',
       id: 'core:adventurers_guild',
       components: {
         'core:name': { text: "Adventurers' Guild" },
@@ -59,7 +59,7 @@ describe('Schema – Game Entity contract', () => {
   /* ✗ INVALID payloads                                                    */
   /* ---------------------------------------------------------------------- */
 
-  test('should reject an entity with an unknown additional property', () => {
+  test('should reject an entity definition with an unknown additional property', () => {
     const invalidEntity = {
       id: 'core:player',
       components: { 'core:name': { text: 'Hero' } },
@@ -73,7 +73,7 @@ describe('Schema – Game Entity contract', () => {
     expect(error.params.additionalProperty).toBe('unknownProperty');
   });
 
-  test('should reject an entity missing the "id" property', () => {
+  test('should reject an entity definition missing the "id" property', () => {
     const invalidEntity = {
       components: { 'core:name': { text: 'Nameless' } },
     };
@@ -84,7 +84,7 @@ describe('Schema – Game Entity contract', () => {
     expect(error).toBeDefined();
   });
 
-  test('should reject an entity missing the "components" property', () => {
+  test('should reject an entity definition missing the "components" property', () => {
     const invalidEntity = {
       id: 'core:thing',
     };
@@ -96,7 +96,7 @@ describe('Schema – Game Entity contract', () => {
     expect(error).toBeDefined();
   });
 
-  test('should reject an entity with an invalid "id" format', () => {
+  test('should reject an entity definition with an invalid "id" format', () => {
     const invalidEntity = {
       id: 'invalid id with spaces',
       components: { 'core:name': { text: 'Invalid' } },
@@ -107,7 +107,7 @@ describe('Schema – Game Entity contract', () => {
     expect(error.keyword).toBe('pattern');
   });
 
-  test('should reject an entity with an invalid component key format', () => {
+  test('should reject an entity definition with an invalid component key format', () => {
     const invalidEntity = {
       id: 'core:test',
       components: {
@@ -118,4 +118,4 @@ describe('Schema – Game Entity contract', () => {
     const error = validate.errors.find((e) => e.keyword === 'propertyNames');
     expect(error).toBeDefined();
   });
-});
+}); 

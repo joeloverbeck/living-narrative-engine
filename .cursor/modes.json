@@ -1,0 +1,21 @@
+{
+    "js-test-runner": {
+        "name": "JS Test Runner",
+        "icon": "🧪",
+        "shortcut": "Ctrl+Alt+T",
+        "tools": [
+            "terminal"
+        ],
+        "instructions": "Use this mode to gate AI edits on passing tests.",
+        "autoRun": [
+            {
+                "cmd": "npm run test",
+                "cwd": "."
+            },
+            {
+                "cmd": "npm run test",
+                "cwd": "llm-proxy-server"
+            }
+        ]
+    }
+}

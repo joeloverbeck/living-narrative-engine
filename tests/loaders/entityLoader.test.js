@@ -18,7 +18,7 @@ import { BaseManifestItemLoader } from '../../src/loaders/baseManifestItemLoader
 // Assume these factories (createMockConfiguration, createMockPathResolver, etc.) are defined as before...
 
 // --- Constants ---
-const ENTITY_SCHEMA_ID = 'http://example.com/schemas/entity.schema.json';
+const ENTITY_DEFINITION_SCHEMA_ID = 'http://example.com/schemas/entity-definition.schema.json';
 const TEST_MOD_ID = 'test-entity-mod';
 const GENERIC_CONTENT_KEY = 'items'; // Example key in manifest.content
 const GENERIC_CONTENT_DIR = 'items'; // Example directory name
@@ -36,7 +36,7 @@ const createMockConfiguration = (overrides = {}) => {
     getModsBasePath: jest.fn().mockReturnValue('./data/mods'),
     // --- [LOADER-REFACTOR-04 Test Change]: Ensure this mock handles 'entities' ---
     getContentTypeSchemaId: jest.fn((typeName) => {
-      if (typeName === 'entities') return ENTITY_SCHEMA_ID;
+      if (typeName === 'entities') return ENTITY_DEFINITION_SCHEMA_ID;
       if (typeName === 'components') {
         // Example for component loading if needed
         if (overrides.componentSchemaId) return overrides.componentSchemaId;
@@ -130,7 +130,7 @@ const createMockSchemaValidator = (overrides = {}) => ({
   // --- [LOADER-REFACTOR-04 Test Change]: Ensure components can be marked as loaded ---
   isSchemaLoaded: jest.fn().mockImplementation((schemaId) => {
     if (
-      schemaId === ENTITY_SCHEMA_ID ||
+      schemaId === ENTITY_DEFINITION_SCHEMA_ID ||
       schemaId === COMPONENT_POSITION_ID ||
       schemaId === COMPONENT_HEALTH_ID
     ) {
@@ -284,7 +284,7 @@ describe('EntityLoader', () => {
       expect(tempConfig.getContentTypeSchemaId).toHaveBeenCalledWith(
         'entities'
       );
-      expect(loader._primarySchemaId).toBe(ENTITY_SCHEMA_ID); // Check protected base class field
+      expect(loader._primarySchemaId).toBe(ENTITY_DEFINITION_SCHEMA_ID); // Check protected base class field
       // --- [LOADER-REFACTOR-04 Test Change END] ---
 
       expect(loader._logger).toBe(tempLogger); // Check logger assignment
@@ -440,7 +440,7 @@ describe('EntityLoader', () => {
       // Default mock: primary and component validations pass
       mockValidator.validate.mockImplementation((schemaId, data) => {
         if (
-          schemaId === ENTITY_SCHEMA_ID ||
+          schemaId === ENTITY_DEFINITION_SCHEMA_ID ||
           schemaId === COMPONENT_POSITION_ID ||
           schemaId === COMPONENT_HEALTH_ID
         ) {
@@ -457,7 +457,7 @@ describe('EntityLoader', () => {
       // Default mock for isSchemaLoaded
       mockValidator.isSchemaLoaded.mockImplementation((schemaId) => {
         return (
-          schemaId === ENTITY_SCHEMA_ID ||
+          schemaId === ENTITY_DEFINITION_SCHEMA_ID ||
           schemaId === COMPONENT_POSITION_ID ||
           schemaId === COMPONENT_HEALTH_ID
         );

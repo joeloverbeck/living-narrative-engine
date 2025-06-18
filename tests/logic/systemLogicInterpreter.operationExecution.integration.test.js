@@ -8,7 +8,7 @@
 /** @typedef {import('../../src/entities/entityManager.js').default} EntityManager */
 /** @typedef {import('../../src/logic/operationInterpreter.js').default} OperationInterpreter */
 /** @typedef {import('../../data/schemas/rule.schema.json').SystemRule} SystemRule */
-/** @typedef {import('../../data/schemas/entity.schema.json').Entity} Entity */
+/** @typedef {import('../../data/schemas/entity-definition.schema.json').EntityDefinition} Entity */
 /** @typedef {import('../../src/logic/defs.js').JsonLogicEvaluationContext} JsonLogicEvaluationContext */
 /** @typedef {import('../../data/schemas/operation.schema.json').Operation} Operation */
 
