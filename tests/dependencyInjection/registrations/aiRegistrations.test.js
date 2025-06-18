@@ -89,9 +89,11 @@ describe('registerAI', () => {
     });
     container.register(tokens.IActionDiscoveryService, {});
     container.register(tokens.IEntityManager, {});
-    // FIX: The ActionIndexerAdapter constructor requires a service with an `indexActions` method.
+    // The ActionIndexerAdapter constructor requires the real service shape.
     container.register(tokens.ActionIndexingService, {
       indexActions: jest.fn(),
+      resolve: jest.fn(),
+      beginTurn: jest.fn(),
     });
 
     // Final Fix: The initial state object must have a `startTurn` method to be considered valid.
@@ -134,10 +136,11 @@ describe('registerAI', () => {
       fallbackContainer.register(tokens.IValidatedEventDispatcher, {
         dispatch: jest.fn(),
       });
-      // FIX: The fallback container also needs the ActionIndexingService mock
-      // with the `indexActions` method.
+      // Provide a minimal ActionIndexingService for the adapter.
       fallbackContainer.register(tokens.ActionIndexingService, {
         indexActions: jest.fn(),
+        resolve: jest.fn(),
+        beginTurn: jest.fn(),
       });
 
       registerAI(fallbackContainer);

@@ -11,7 +11,7 @@ import { MAX_AVAILABLE_ACTIONS_PER_TURN } from '../../constants/core.js';
 /** @typedef {import('../../turns/interfaces/ITurnContext.js').ITurnContext} ITurnContext */
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../turns/dtos/actionComposite.js').ActionComposite} ActionComposite */
-/** @typedef {import('../../turns/services/actionIndexingService.js').ActionIndexingService} IActionIndexingService */
+/** @typedef {import('../../turns/ports/IActionIndexer.js').IActionIndexer} IActionIndexer */
 /** @typedef {import('../../interfaces/IActionDiscoveryService.js').IActionDiscoveryService} IActionDiscoveryService */
 /** @typedef {import('../../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
 
@@ -26,7 +26,7 @@ import { MAX_AVAILABLE_ACTIONS_PER_TURN } from '../../constants/core.js';
  */
 export class AvailableActionsProvider extends IAvailableActionsProvider {
   #actionDiscoveryService;
-  #actionIndexingService;
+  #actionIndexer;
   #entityManager;
 
   // --- Turn-scoped Cache ---
@@ -36,17 +36,17 @@ export class AvailableActionsProvider extends IAvailableActionsProvider {
   /**
    * @param {object} dependencies
    * @param {IActionDiscoveryService} dependencies.actionDiscoveryService
-   * @param {IActionIndexingService} dependencies.actionIndexingService
+   * @param {IActionIndexer} dependencies.actionIndexingService
    * @param {IEntityManager} dependencies.entityManager
    */
   constructor({
     actionDiscoveryService,
-    actionIndexingService,
+    actionIndexingService: actionIndexer,
     entityManager,
   }) {
     super();
     this.#actionDiscoveryService = actionDiscoveryService;
-    this.#actionIndexingService = actionIndexingService;
+    this.#actionIndexer = actionIndexer;
     this.#entityManager = entityManager;
   }
 
@@ -102,9 +102,9 @@ export class AvailableActionsProvider extends IAvailableActionsProvider {
         await this.#actionDiscoveryService.getValidActions(actor, actionCtx);
 
       // Index the discovered actions to create the final, ordered list.
-      const indexedActions = this.#actionIndexingService.indexActions(
-        actor.id,
-        discoveredActions
+      const indexedActions = this.#actionIndexer.index(
+        discoveredActions,
+        actor.id
       );
 
       // When the indexing service caps the list, mirror its warning with richer context.

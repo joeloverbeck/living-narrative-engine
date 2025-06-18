@@ -28,10 +28,11 @@ export class ActionIndexerAdapter extends IActionIndexer {
     if (
       !actionIndexingService ||
       typeof actionIndexingService.indexActions !== 'function' ||
+      typeof actionIndexingService.resolve !== 'function' ||
       typeof actionIndexingService.beginTurn !== 'function'
     ) {
       throw new TypeError(
-        'ActionIndexerAdapter: constructor requires a valid actionIndexingService instance with indexActions and beginTurn methods.'
+        'ActionIndexerAdapter: constructor requires a valid actionIndexingService instance with indexActions, resolve, and beginTurn methods.'
       );
     }
 
@@ -76,5 +77,26 @@ export class ActionIndexerAdapter extends IActionIndexer {
     }
 
     return this._svc.indexActions(actorId, actions);
+  }
+
+  /**
+   * Resolves an indexed action choice for the actor.
+   *
+   * @param {string} actorId
+   * @param {number} chosenIndex
+   * @returns {import('../dtos/actionComposite.js').ActionComposite}
+   */
+  resolve(actorId, chosenIndex) {
+    if (typeof actorId !== 'string' || actorId.trim() === '') {
+      throw new TypeError(
+        `ActionIndexerAdapter.resolve: "actorId" parameter must be a non-empty string. Received: ${typeof actorId}`
+      );
+    }
+    if (!Number.isInteger(chosenIndex)) {
+      throw new TypeError(
+        `ActionIndexerAdapter.resolve: "chosenIndex" must be an integer. Received: ${typeof chosenIndex}`
+      );
+    }
+    return this._svc.resolve(actorId, chosenIndex);
   }
 }

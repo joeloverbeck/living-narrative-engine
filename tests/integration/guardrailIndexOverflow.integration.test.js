@@ -1,6 +1,7 @@
 import { describe, beforeEach, it, expect, jest } from '@jest/globals';
 import { AvailableActionsProvider } from '../../src/data/providers/availableActionsProvider.js';
 import { ActionIndexingService } from '../../src/turns/services/actionIndexingService.js';
+import { ActionIndexerAdapter } from '../../src/turns/adapters/actionIndexerAdapter.js';
 import { MAX_AVAILABLE_ACTIONS_PER_TURN } from '../../src/constants/core.js';
 
 /**
@@ -23,7 +24,9 @@ describe('Guardrail – index overflow', () => {
     };
     discoverySvc = { getValidActions: jest.fn() };
     entityManager = { getEntityInstance: jest.fn().mockResolvedValue(null) };
-    const indexingService = new ActionIndexingService({ logger });
+    const indexingService = new ActionIndexerAdapter(
+      new ActionIndexingService({ logger })
+    );
     provider = new AvailableActionsProvider({
       actionDiscoveryService: discoverySvc,
       actionIndexingService: indexingService,

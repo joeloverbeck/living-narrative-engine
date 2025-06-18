@@ -12,6 +12,7 @@ describe('ActionIndexerAdapter', () => {
         indexActions: jest
           .fn()
           .mockReturnValue([{ actionId: 'a', params: {} }]),
+        resolve: jest.fn(),
         beginTurn: jest.fn(),
       };
       const adapter = new ActionIndexerAdapter(mockService);
@@ -83,6 +84,7 @@ describe('ActionIndexerAdapter', () => {
         indexActions: jest.fn().mockImplementation(() => {
           throw error;
         }),
+        resolve: jest.fn(),
         beginTurn: jest.fn(),
       };
       const adapter = new ActionIndexerAdapter(mockService);

@@ -40,8 +40,8 @@ const mockActionDiscoveryService = () => ({
   getValidActions: jest.fn(),
 });
 
-const mockActionIndexingService = () => ({
-  indexActions: jest.fn(),
+const mockActionIndexer = () => ({
+  index: jest.fn(),
 });
 
 // --- Test Suite ---
@@ -55,14 +55,14 @@ describe('AvailableActionsProvider', () => {
   let mockActor;
   let entityManager;
   let actionDiscoveryService;
-  let actionIndexingService;
+  let actionIndexer;
 
   beforeEach(() => {
     // 1. Arrange: Instantiate all mocks
     logger = mockLogger();
     entityManager = mockEntityManager();
     actionDiscoveryService = mockActionDiscoveryService();
-    actionIndexingService = mockActionIndexingService();
+    actionIndexer = mockActionIndexer();
 
     mockActor = new MockEntity('actor-1', {
       [POSITION_COMPONENT_ID]: { locationId: 'location-1' },
@@ -71,7 +71,7 @@ describe('AvailableActionsProvider', () => {
     // 2. Arrange: Instantiate the SUT with mocked dependencies
     provider = new AvailableActionsProvider({
       actionDiscoveryService,
-      actionIndexingService,
+      actionIndexingService: actionIndexer,
       entityManager,
     });
 
@@ -102,7 +102,7 @@ describe('AvailableActionsProvider', () => {
       actionDiscoveryService.getValidActions.mockResolvedValue(
         discoveredActions
       );
-      actionIndexingService.indexActions.mockReturnValue(indexedActions);
+      actionIndexer.index.mockReturnValue(indexedActions);
 
       // Act: Call the provider twice within the same turn context
       const result1 = await provider.get(mockActor, turnContext1, logger);
@@ -110,7 +110,7 @@ describe('AvailableActionsProvider', () => {
 
       // Assert: Verify that caching prevented redundant service calls
       expect(actionDiscoveryService.getValidActions).toHaveBeenCalledTimes(1);
-      expect(actionIndexingService.indexActions).toHaveBeenCalledTimes(1);
+      expect(actionIndexer.index).toHaveBeenCalledTimes(1);
       expect(result1).toBe(indexedActions); // Should be the exact same object from cache
       expect(result2).toBe(indexedActions);
       expect(logger.debug).toHaveBeenCalledWith(
@@ -125,7 +125,7 @@ describe('AvailableActionsProvider', () => {
         discoveredActions
       );
       // The indexing service will be called for each turn, returning a fresh list
-      actionIndexingService.indexActions
+      actionIndexer.index
         .mockReturnValueOnce([{ index: 1, actionId: 'core:wait' }]) // Turn 1
         .mockReturnValueOnce([{ index: 1, actionId: 'core:wait' }]); // Turn 2 (indices restart)
 
@@ -138,7 +138,7 @@ describe('AvailableActionsProvider', () => {
         'New turn detected. Clearing AvailableActionsProvider cache.'
       );
       expect(actionDiscoveryService.getValidActions).toHaveBeenCalledTimes(2);
-      expect(actionIndexingService.indexActions).toHaveBeenCalledTimes(2);
+      expect(actionIndexer.index).toHaveBeenCalledTimes(2);
     });
 
     test('AC3: should cap the action list and log a warning on overflow', async () => {
@@ -158,7 +158,7 @@ describe('AvailableActionsProvider', () => {
       actionDiscoveryService.getValidActions.mockResolvedValue(
         discoveredActions
       );
-      actionIndexingService.indexActions.mockReturnValue(cappedActions);
+      actionIndexer.index.mockReturnValue(cappedActions);
 
       // Act
       const result = await provider.get(mockActor, turnContext1, logger);
@@ -190,16 +190,16 @@ describe('AvailableActionsProvider', () => {
       actionDiscoveryService.getValidActions.mockResolvedValue(
         duplicateDiscoveredActions
       );
-      actionIndexingService.indexActions.mockReturnValue(dedupedIndexedActions);
+      actionIndexer.index.mockReturnValue(dedupedIndexedActions);
 
       // Act
       const result = await provider.get(mockActor, turnContext1, logger);
 
       // Assert: Verify the final list is de-duplicated
       expect(result.length).toBe(2);
-      expect(actionIndexingService.indexActions).toHaveBeenCalledWith(
-        'actor-1',
-        duplicateDiscoveredActions
+      expect(actionIndexer.index).toHaveBeenCalledWith(
+        duplicateDiscoveredActions,
+        'actor-1'
       );
       expect(result).toEqual(dedupedIndexedActions);
     });
@@ -226,7 +226,7 @@ describe('AvailableActionsProvider', () => {
         ),
         discoveryError
       );
-      expect(actionIndexingService.indexActions).not.toHaveBeenCalled();
+      expect(actionIndexer.index).not.toHaveBeenCalled();
     });
 
     test('should NOT log an overflow warning if list is reduced but not capped', async () => {
@@ -243,7 +243,7 @@ describe('AvailableActionsProvider', () => {
       actionDiscoveryService.getValidActions.mockResolvedValue(
         discoveredActions
       );
-      actionIndexingService.indexActions.mockReturnValue(reducedActions);
+      actionIndexer.index.mockReturnValue(reducedActions);
 
       // Act
       await provider.get(mockActor, turnContext, logger);
