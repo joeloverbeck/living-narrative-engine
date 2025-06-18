@@ -78,6 +78,13 @@ describe('GameStateSerializer', () => {
     expect(checksum1.length).toBeGreaterThan(0);
   });
 
+  it('calculateGameStateChecksum encodes and hashes the game state', async () => {
+    const gameState = { level: 1, score: 10 };
+    const expected = await serializer.generateChecksum(encode(gameState));
+    const actual = await serializer.calculateGameStateChecksum(gameState);
+    expect(actual).toBe(expected);
+  });
+
   it('throws PersistenceError when deep cloning fails', async () => {
     const cyc = {
       metadata: {},
