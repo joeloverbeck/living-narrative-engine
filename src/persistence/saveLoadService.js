@@ -14,10 +14,7 @@ import {
   createPersistenceSuccess,
 } from '../utils/persistenceResultUtils.js';
 import { wrapPersistenceOperation } from '../utils/persistenceErrorUtils.js';
-import {
-  validateSaveName,
-  validateSaveIdentifier,
-} from './saveInputValidators.js';
+import { isValidSaveString } from './saveInputValidators.js';
 
 // --- Type Imports ---
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
@@ -106,7 +103,7 @@ class SaveLoadService extends ISaveLoadService {
    * @private
    */
   #assertValidIdentifier(id) {
-    if (!validateSaveIdentifier(id)) {
+    if (!isValidSaveString(id)) {
       this.#logger.error('Invalid saveIdentifier provided.');
       return createPersistenceFailure(
         PersistenceErrorCodes.INVALID_SAVE_IDENTIFIER,
@@ -263,7 +260,7 @@ class SaveLoadService extends ISaveLoadService {
   async saveManualGame(saveName, gameStateObject) {
     this.#logger.debug(`Attempting to save manual game: "${saveName}"`);
 
-    if (!validateSaveName(saveName)) {
+    if (!isValidSaveString(saveName)) {
       const userMsg = 'Invalid save name provided. Please enter a valid name.';
       this.#logger.error('Invalid saveName provided for manual save.');
       return createPersistenceFailure(
