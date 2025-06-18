@@ -15,3 +15,13 @@
  * @property {string} [userFriendlyError] - Message safe to display to users.
  */
 export {};
+
+/**
+ * Result returned when parsing a manual save file.
+ *
+ * @typedef {object} ParseSaveFileResult
+ * @property {import('../interfaces/ISaveLoadService.js').SaveFileMetadata} metadata
+ *   - Parsed metadata extracted from the save file.
+ * @property {boolean} isCorrupted - Indicates the save file was malformed or
+ *   metadata could not be properly validated.
+ */
