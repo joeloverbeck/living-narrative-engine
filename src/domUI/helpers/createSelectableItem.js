@@ -5,9 +5,10 @@
 /** @typedef {import('../domElementFactory.js').default} DomElementFactory */
 
 /**
- * @description Creates an element representing a selectable slot or list item.
- * The returned element has the standard classes and ARIA attributes used
- * throughout the save/load and LLM selection modals.
+ * Creates an element representing a selectable slot or list item. The returned
+ * element has the standard classes and ARIA attributes used throughout the
+ * save/load and LLM selection modals.
+ *
  * @param {DomElementFactory} domFactory - The DOM element factory.
  * @param {string} tagName - Tag name for the element (e.g., 'div', 'li').
  * @param {string} datasetKey - Name of the dataset property to set.

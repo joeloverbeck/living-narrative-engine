@@ -16,8 +16,9 @@ import { formatPlaytime, formatTimestamp } from '../../utils/textUtils.js';
  */
 
 /**
- * @description Converts a {@link SaveFileMetadata} record into the metadata object
- * expected by {@link renderSlotItem}.
+ * Converts a {@link SaveFileMetadata} record into the metadata object expected
+ * by the `renderSlotItem` helper.
+ *
  * @param {SaveFileMetadata} metadata - Save file metadata to convert.
  * @returns {SlotItemMetadata} Formatted slot item metadata.
  */
@@ -49,7 +50,8 @@ export function formatSaveFileMetadata(metadata) {
 }
 
 /**
- * @description Creates metadata representing an empty slot.
+ * Creates metadata representing an empty slot.
+ *
  * @param {string} name - Name label for the empty slot.
  * @returns {SlotItemMetadata} Metadata for an empty slot.
  */
