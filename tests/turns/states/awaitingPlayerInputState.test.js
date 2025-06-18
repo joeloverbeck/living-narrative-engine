@@ -350,7 +350,7 @@ describe('AwaitingActorDecisionState (PTH-REFACTOR-003.5.7)', () => {
         mockHandler,
         mockPreviousState
       );
-      const expectedLogMessage = `${awaitingPlayerInputState.name}: Error during action decision, storage, or transition for actor ${testActor.id}: ${strategyError.message}`;
+      const expectedLogMessage = `${awaitingPlayerInputState.getStateName()}: Error during action decision, storage, or transition for actor ${testActor.id}: ${strategyError.message}`;
       expect(mockLogger.error).toHaveBeenCalledWith(expectedLogMessage, {
         originalError: strategyError,
       });
@@ -421,7 +421,7 @@ describe('AwaitingActorDecisionState (PTH-REFACTOR-003.5.7)', () => {
       expect(mockTestTurnContext.setChosenAction).toHaveBeenCalledWith(
         mockAction
       );
-      const expectedLogMessage = `${awaitingPlayerInputState.name}: Error during action decision, storage, or transition for actor ${testActor.id}: ${transitionError.message}`;
+      const expectedLogMessage = `${awaitingPlayerInputState.getStateName()}: Error during action decision, storage, or transition for actor ${testActor.id}: ${transitionError.message}`;
       expect(mockLogger.error).toHaveBeenCalledWith(expectedLogMessage, {
         originalError: transitionError,
       });
