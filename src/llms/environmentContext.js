@@ -61,7 +61,23 @@ export class EnvironmentContext {
     projectRootPath = null,
     proxyServerUrl = null,
   }) {
-    // Validate logger
+    this.#validateLogger(logger);
+    this.#setExecutionEnvironment(executionEnvironment);
+    this.#setProjectRootPath(projectRootPath);
+    this.#configureProxyUrl(proxyServerUrl);
+    this.#logger.debug(
+      `EnvironmentContext: Instance created. Execution environment: ${this.#executionEnvironment}.`
+    );
+  }
+
+  /**
+   * Validates the provided logger and assigns it to the instance.
+   *
+   * @private
+   * @param {ILogger} logger - Logger implementation to validate.
+   * @throws {Error} If logger is invalid.
+   */
+  #validateLogger(logger) {
     if (
       !logger ||
       typeof logger.warn !== 'function' ||
@@ -70,106 +86,111 @@ export class EnvironmentContext {
     ) {
       const errorMsg =
         'EnvironmentContext: Constructor requires a valid logger instance with info, warn, error, and debug methods.';
-      // Use console.error as a last resort if logger is completely unusable
       (logger && typeof logger.error === 'function' ? logger : console).error(
         errorMsg
       );
       throw new Error(errorMsg);
     }
     this.#logger = logger;
+  }
 
-    // Validate and set executionEnvironment
+  /**
+   * Normalizes and stores the execution environment value.
+   * Defaults to 'unknown' if the provided value is invalid.
+   *
+   * @private
+   * @param {string} value - Raw execution environment input.
+   */
+  #setExecutionEnvironment(value) {
     if (
-      typeof executionEnvironment === 'string' &&
-      VALID_EXECUTION_ENVIRONMENTS.includes(executionEnvironment.toLowerCase())
+      typeof value === 'string' &&
+      VALID_EXECUTION_ENVIRONMENTS.includes(value.toLowerCase())
     ) {
-      this.#executionEnvironment = executionEnvironment.toLowerCase();
+      this.#executionEnvironment = value.toLowerCase();
     } else {
-      const warningMsg = `EnvironmentContext: Invalid executionEnvironment provided: '${executionEnvironment}'. Defaulting to 'unknown'. Valid options are: ${VALID_EXECUTION_ENVIRONMENTS.join(', ')}.`;
+      const warningMsg = `EnvironmentContext: Invalid executionEnvironment provided: '${value}'. Defaulting to 'unknown'. Valid options are: ${VALID_EXECUTION_ENVIRONMENTS.join(', ')}.`;
       this.#logger.warn(warningMsg);
       this.#executionEnvironment = 'unknown';
-      // As per ticket: "Log a warning and default to 'unknown' or throw an error" - choosing default.
     }
+  }
 
-    // Validate and set projectRootPath
-    this.#projectRootPath = null; // Initialize to null
+  /**
+   * Validates and assigns the project root path based on the execution environment.
+   *
+   * @private
+   * @param {string | null} path - Project root path to validate.
+   * @throws {Error} If required path is missing or invalid when running on the server.
+   */
+  #setProjectRootPath(path) {
+    this.#projectRootPath = null;
     if (this.#executionEnvironment === 'server') {
-      if (
-        !projectRootPath ||
-        typeof projectRootPath !== 'string' ||
-        projectRootPath.trim() === ''
-      ) {
+      if (!path || typeof path !== 'string' || path.trim() === '') {
         const errorMsg =
           "EnvironmentContext: Constructor requires 'projectRootPath' (non-empty string) when executionEnvironment is 'server'.";
         this.#logger.error(errorMsg);
         throw new Error(errorMsg);
       }
-      this.#projectRootPath = projectRootPath.trim();
+      this.#projectRootPath = path.trim();
       this.#logger.debug(
         `EnvironmentContext: Server-side projectRootPath set to: '${this.#projectRootPath}'`
       );
-    } else if (projectRootPath) {
+    } else if (path) {
       this.#logger.warn(
-        `EnvironmentContext: 'projectRootPath' ("${projectRootPath}") was provided, but executionEnvironment is '${this.#executionEnvironment}', not 'server'. It will be ignored.`
+        `EnvironmentContext: 'projectRootPath' ("${path}") was provided, but executionEnvironment is '${this.#executionEnvironment}', not 'server'. It will be ignored.`
       );
-      // this.#projectRootPath remains null as it's not applicable
     }
+  }
 
-    // Validate and set proxyServerUrl
+  /**
+   * Determines the proxy URL to use based on environment and input.
+   *
+   * @private
+   * @param {string | null} url - Proxy server URL from configuration.
+   */
+  #configureProxyUrl(url) {
     if (this.#executionEnvironment === 'client') {
-      if (
-        proxyServerUrl &&
-        typeof proxyServerUrl === 'string' &&
-        proxyServerUrl.trim() !== ''
-      ) {
+      if (url && typeof url === 'string' && url.trim() !== '') {
         try {
-          // Validate if it's a proper URL
-          new URL(proxyServerUrl.trim());
-          this.#proxyServerUrl = proxyServerUrl.trim();
+          new URL(url.trim());
+          this.#proxyServerUrl = url.trim();
           this.#logger.debug(
             `EnvironmentContext: Client-side proxy URL configured to: '${this.#proxyServerUrl}'.`
           );
         } catch (e) {
           this.#logger.warn(
-            `EnvironmentContext: Provided proxyServerUrl '${proxyServerUrl}' for client environment is not a valid URL. Falling back to default: '${DEFAULT_PROXY_SERVER_URL}'. Error: ${e.message}`
+            `EnvironmentContext: Provided proxyServerUrl '${url}' for client environment is not a valid URL. Falling back to default: '${DEFAULT_PROXY_SERVER_URL}'. Error: ${e.message}`
           );
           this.#proxyServerUrl = DEFAULT_PROXY_SERVER_URL;
         }
       } else {
         this.#proxyServerUrl = DEFAULT_PROXY_SERVER_URL;
-        if (proxyServerUrl === null || proxyServerUrl === undefined) {
+        if (url === null || url === undefined) {
           this.#logger.debug(
             `EnvironmentContext: Client-side proxyServerUrl not provided. Using default: '${this.#proxyServerUrl}'.`
           );
         } else {
           this.#logger.warn(
-            `EnvironmentContext: Client-side proxyServerUrl provided but was empty or invalid ('${proxyServerUrl}'). Using default: '${this.#proxyServerUrl}'.`
+            `EnvironmentContext: Client-side proxyServerUrl provided but was empty or invalid ('${url}'). Using default: '${this.#proxyServerUrl}'.`
           );
         }
       }
     } else {
-      // For 'server' or 'unknown' environments
-      if (
-        proxyServerUrl &&
-        typeof proxyServerUrl === 'string' &&
-        proxyServerUrl.trim() !== ''
-      ) {
+      if (url && typeof url === 'string' && url.trim() !== '') {
         try {
-          new URL(proxyServerUrl.trim()); // Validate if provided
-          this.#proxyServerUrl = proxyServerUrl.trim();
+          new URL(url.trim());
+          this.#proxyServerUrl = url.trim();
           this.#logger.debug(
             `EnvironmentContext: proxyServerUrl ('${this.#proxyServerUrl}') was provided for non-client environment ('${this.#executionEnvironment}'). It might not be used.`
           );
         } catch (e) {
           this.#logger.debug(
-            `EnvironmentContext: Provided proxyServerUrl '${proxyServerUrl}' for non-client environment is not a valid URL. Setting to default ('${DEFAULT_PROXY_SERVER_URL}'), but it might not be used. Error: ${e.message}`
+            `EnvironmentContext: Provided proxyServerUrl '${url}' for non-client environment is not a valid URL. Setting to default ('${DEFAULT_PROXY_SERVER_URL}'), but it might not be used. Error: ${e.message}`
           );
           this.#proxyServerUrl = DEFAULT_PROXY_SERVER_URL;
         }
       } else {
-        this.#proxyServerUrl = DEFAULT_PROXY_SERVER_URL; // Set a default even if not client, though it might not be used.
-        if (proxyServerUrl) {
-          // if it was provided but empty/invalid type
+        this.#proxyServerUrl = DEFAULT_PROXY_SERVER_URL;
+        if (url) {
           this.#logger.debug(
             `EnvironmentContext: proxyServerUrl was provided but invalid for non-client environment ('${this.#executionEnvironment}'). Defaulting to '${this.#proxyServerUrl}', though it might not be used.`
           );
@@ -180,9 +201,6 @@ export class EnvironmentContext {
         }
       }
     }
-    this.#logger.debug(
-      `EnvironmentContext: Instance created. Execution environment: ${this.#executionEnvironment}.`
-    );
   }
 
   /**
