@@ -115,8 +115,7 @@ describe('registerPersistence', () => {
       {
         token: tokens.ISaveLoadService,
         Class: SaveLoadService,
-        lifecycle: 'singleton',
-        deps: [tokens.ILogger, tokens.SaveFileRepository],
+        lifecycle: 'singletonFactory',
       },
       {
         token: tokens.PlaytimeTracker,
@@ -177,11 +176,8 @@ describe('registerPersistence', () => {
         expect(options.lifecycle).toBe(lifecycle);
 
         // 4. Dependencies metadata (for class registrations)
-        if (deps) {
-          expect(options.dependencies).toEqual(deps);
-        } else {
-          expect(options.dependencies).toBeUndefined();
-        }
+        const expectedDeps = deps || undefined;
+        expect(options.dependencies).toEqual(expectedDeps);
       }
     );
   });

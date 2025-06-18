@@ -1,5 +1,7 @@
 import { describe, beforeEach, test, expect, jest } from '@jest/globals';
 import SaveLoadService from '../../src/persistence/saveLoadService.js';
+import SaveFileRepository from '../../src/persistence/saveFileRepository.js';
+import GameStateSerializer from '../../src/persistence/gameStateSerializer.js';
 import GamePersistenceService from '../../src/persistence/gamePersistenceService.js';
 import GameStateCaptureService from '../../src/persistence/gameStateCaptureService.js';
 import ComponentCleaningService, {
@@ -75,10 +77,16 @@ describe('Persistence round-trip', () => {
     logger = makeLogger();
     storageProvider = createMemoryStorageProvider();
     const saveValidationService = createMockSaveValidationService();
-    saveLoadService = new SaveLoadService({
+    const serializer = new GameStateSerializer({ logger, crypto: webcrypto });
+    const saveFileRepository = new SaveFileRepository({
       logger,
       storageProvider,
-      crypto: webcrypto,
+      serializer,
+    });
+    saveLoadService = new SaveLoadService({
+      logger,
+      saveFileRepository,
+      gameStateSerializer: serializer,
       saveValidationService,
     });
 
