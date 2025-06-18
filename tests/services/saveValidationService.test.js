@@ -1,7 +1,6 @@
 import { describe, it, expect, beforeEach, beforeAll } from '@jest/globals';
 import SaveValidationService from '../../src/persistence/saveValidationService.js';
 import GameStateSerializer from '../../src/persistence/gameStateSerializer.js';
-import { encode } from '@msgpack/msgpack';
 import { PersistenceErrorCodes } from '../../src/persistence/persistenceErrors.js';
 import { webcrypto } from 'crypto';
 import { createMockLogger } from '../testUtils.js';
@@ -58,9 +57,8 @@ describe('SaveValidationService', () => {
       gameState: { a: 1 },
       integrityChecks: {},
     };
-    const buffer = encode(obj.gameState);
     obj.integrityChecks.gameStateChecksum =
-      await serializer.generateChecksum(buffer);
+      await serializer.calculateGameStateChecksum(obj.gameState);
     const result = await service.verifyChecksum(obj, 'id');
     expect(result).toEqual({ success: true });
   });
