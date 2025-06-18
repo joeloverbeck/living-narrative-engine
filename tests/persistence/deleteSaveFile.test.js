@@ -37,6 +37,7 @@ describe('SaveFileRepository.deleteSaveFile', () => {
     const result = await repo.deleteSaveFile('path.sav');
 
     expect(result.success).toBe(true);
+    expect(storageProvider.fileExists).toHaveBeenCalledWith('path.sav');
     expect(storageProvider.deleteFile).toHaveBeenCalledWith('path.sav');
     expect(logger.debug).toHaveBeenCalled();
   });
@@ -48,6 +49,7 @@ describe('SaveFileRepository.deleteSaveFile', () => {
 
     expect(result.success).toBe(false);
     expect(result.error.code).toBe(PersistenceErrorCodes.DELETE_FILE_NOT_FOUND);
+    expect(storageProvider.fileExists).toHaveBeenCalledWith('missing.sav');
     expect(storageProvider.deleteFile).not.toHaveBeenCalled();
   });
 
@@ -62,6 +64,7 @@ describe('SaveFileRepository.deleteSaveFile', () => {
 
     expect(result.success).toBe(false);
     expect(result.error.code).toBe(PersistenceErrorCodes.DELETE_FAILED);
+    expect(storageProvider.fileExists).toHaveBeenCalledWith('bad.sav');
     expect(logger.error).toHaveBeenCalled();
   });
 
@@ -73,6 +76,7 @@ describe('SaveFileRepository.deleteSaveFile', () => {
 
     expect(result.success).toBe(false);
     expect(result.error.code).toBe(PersistenceErrorCodes.UNEXPECTED_ERROR);
+    expect(storageProvider.fileExists).toHaveBeenCalledWith('boom.sav');
     expect(logger.error).toHaveBeenCalled();
   });
 });
