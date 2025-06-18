@@ -19,14 +19,17 @@ describe('AwaitingActorDecisionState helpers', () => {
     state = new AwaitingActorDecisionState({ getLogger: () => logger });
   });
 
-  test('_validateActorAndStrategy returns actor and strategy', async () => {
+  test('validateActor returns actor', () => {
+    const actor = { id: 'a1' };
+    const ctx = makeCtx({ actor });
+    expect(state.validateActor(ctx)).toBe(actor);
+  });
+
+  test('retrieveStrategy returns strategy', () => {
     const actor = { id: 'a1' };
     const strategy = { decideAction: jest.fn() };
     const ctx = makeCtx({ actor, strategy });
-    await expect(state._validateActorAndStrategy(ctx)).resolves.toEqual({
-      actor,
-      strategy,
-    });
+    expect(state.retrieveStrategy(ctx, actor)).toBe(strategy);
   });
 
   test('_decideAction returns action info', async () => {
