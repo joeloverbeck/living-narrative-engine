@@ -74,11 +74,7 @@ import { freeze } from '../utils/objectUtils.js';
  * @property {DiToken} PayloadValueResolverService - Token for resolving payload values.
  * @property {DiToken} TurnHandlerResolver - Token for the service that resolves the correct turn handler.
  * @property {DiToken} ActorTurnHandler - Token for the unified actor turn handler implementation.
- * @property {DiToken} HumanTurnHandler - Token for the player-specific actor turn handler implementation.
- * @property {DiToken} AITurnHandler - Token for the AI-specific actor turn handler implementation.
  * @property {DiToken} SystemServiceRegistry - Token for the registry mapping system IDs to services.
- * @property {DiToken} PlayerPromptService - Token for the service managing player action prompting (implementation).
- * @property {DiToken} CommandOutcomeInterpreter - Token for the service interpreting command outcomes (implementation).
  * @property {DiToken} PlaytimeTracker - Token for the service managing player playtime.
  * @property {DiToken} ComponentCleaningService - Token for the service cleaning component data.
  * @property {DiToken} SaveFileRepository - Token for the save file repository service.
@@ -205,10 +201,6 @@ export const tokens = freeze({
   ActionValidationService: 'ActionValidationService',
   TurnHandlerResolver: 'TurnHandlerResolver',
   ActorTurnHandler: 'ActorTurnHandler',
-  HumanTurnHandler: 'HumanTurnHandler',
-  AITurnHandler: 'AITurnHandler',
-  PlayerPromptService: 'PlayerPromptService',
-  CommandOutcomeInterpreter: 'CommandOutcomeInterpreter',
   PlaytimeTracker: 'PlaytimeTracker',
   ComponentCleaningService: 'ComponentCleaningService',
   SaveFileRepository: 'SaveFileRepository',
@@ -232,8 +224,8 @@ export const tokens = freeze({
   IPromptOutputPort: 'IPromptOutputPort',
   ITurnEndPort: 'ITurnEndPort',
   IPromptCoordinator: 'IPromptCoordinator',
-  IPlayerTurnEvents: 'IPlayerTurnEvents',
   ICommandOutcomeInterpreter: 'ICommandOutcomeInterpreter',
+  IPlayerTurnEvents: 'IPlayerTurnEvents',
   IEntityManager: 'IEntityManager',
   IGameDataRepository: 'IGameDataRepository',
   ISaveLoadService: 'ISaveLoadService',
