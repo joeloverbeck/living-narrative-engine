@@ -12,14 +12,12 @@ import {
 } from '@jest/globals';
 import EntityManager from '../../src/entities/entityManager.js';
 import Entity from '../../src/entities/entity.js';
-import EntityDefinition from '../../src/entities/EntityDefinition.js';
+import EntityDefinition from '../../src/entities/entityDefinition.js';
 import {
   POSITION_COMPONENT_ID,
   ACTOR_COMPONENT_ID,
 } from '../../src/constants/componentIds.js';
-import {
-  DefinitionNotFoundError
-} from '../../src/errors/definitionNotFoundError';
+import { DefinitionNotFoundError } from '../../src/errors/definitionNotFoundError';
 import { EntityNotFoundError } from '../../src/errors/entityNotFoundError';
 
 // --- Mock Implementations ---
@@ -147,7 +145,8 @@ describe('EntityManager', () => {
     );
     entityDefBasicReconstruct = new EntityDefinition(
       'test-def:basicReconstruct',
-      { // A simplified version of rawDefBasicForTests for reconstruction tests
+      {
+        // A simplified version of rawDefBasicForTests for reconstruction tests
         id: 'test-def:basicReconstruct',
         description: 'A basic entity definition for reconstruction testing.',
         components: {
@@ -363,7 +362,6 @@ describe('EntityManager', () => {
       ).toThrow("Invalid instanceId in serialized data: 'undefined'");
     });
 
-
     it('should throw error if entity with the same ID already exists', () => {
       // Create an entity with the same ID first
       entityManager.createEntityInstance(defIdForReconstruct, { instanceId });
@@ -391,7 +389,7 @@ describe('EntityManager', () => {
       const serializedWithUnknownDef = {
         instanceId: altInstanceId,
         definitionId: unknownDefId,
-        overrides: {}
+        overrides: {},
       };
 
       expect(() =>
@@ -422,7 +420,7 @@ describe('EntityManager', () => {
             x: 5,
             y: 5,
           },
-        }
+        },
       };
 
       entityManager.reconstructEntity(serializedWithPos);
@@ -438,7 +436,7 @@ describe('EntityManager', () => {
       const serializedWithNullComp = {
         instanceId: nullCompInstanceId,
         definitionId: defIdForReconstruct,
-        overrides: { 'core:custom': null }
+        overrides: { 'core:custom': null },
       };
 
       const entity = entityManager.reconstructEntity(serializedWithNullComp);
@@ -462,7 +460,7 @@ describe('EntityManager', () => {
       const serializedToFail = {
         instanceId: instanceIdFailRecon,
         definitionId: defIdForReconstruct,
-        overrides: { 'core:stats': { hp: 1 } }
+        overrides: { 'core:stats': { hp: 1 } },
       };
 
       expect(() => {
@@ -491,9 +489,9 @@ describe('EntityManager', () => {
     // --- FIXED TEST ---
     it('should throw EntityNotFoundError if entity does not exist', () => {
       const nonExistentId = 'non-existent-entity';
-      expect(() =>
-        entityManager.removeEntityInstance(nonExistentId)
-      ).toThrow(EntityNotFoundError);
+      expect(() => entityManager.removeEntityInstance(nonExistentId)).toThrow(
+        EntityNotFoundError
+      );
       expect(mockLogger.error).toHaveBeenCalledWith(
         `EntityManager.removeEntityInstance: Attempted to remove non-existent entity instance '${nonExistentId}'.`
       );
@@ -745,7 +743,9 @@ describe('EntityManager', () => {
 
         if (updatedEntity.instanceData) {
           expect(
-            updatedEntity.instanceData.overrides.hasOwnProperty(EXISTING_COMPONENT_ID)
+            updatedEntity.instanceData.overrides.hasOwnProperty(
+              EXISTING_COMPONENT_ID
+            )
           ).toBe(false);
           expect(updatedEntity.hasComponent(EXISTING_COMPONENT_ID, true)).toBe(
             false

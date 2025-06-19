@@ -49,7 +49,7 @@ describe('displayFatalStartupError', () => {
       debug: jest.fn(),
     };
 
-    displayFatalStartupError(
+    const result = displayFatalStartupError(
       uiElements,
       {
         userMessage: 'Oops',
@@ -62,6 +62,8 @@ describe('displayFatalStartupError', () => {
       logger,
       domAdapter
     );
+
+    expect(result).toEqual({ displayed: true });
 
     expect(logger.error).toHaveBeenCalledWith(
       '[errorUtils] [Bootstrapper Error - Phase: Test] Bad things',
@@ -100,7 +102,7 @@ describe('displayFatalStartupError', () => {
       debug: jest.fn(),
     };
 
-    displayFatalStartupError(
+    const result = displayFatalStartupError(
       uiElements,
       {
         userMessage: 'Oops',
@@ -118,6 +120,7 @@ describe('displayFatalStartupError', () => {
       '[errorUtils] displayFatalStartupError: Displayed error in a dynamically created element near outputDiv.'
     );
     expect(alertSpy).not.toHaveBeenCalled();
+    expect(result).toEqual({ displayed: true });
   });
 
   it('falls back to alert when no DOM targets', () => {
@@ -141,7 +144,7 @@ describe('displayFatalStartupError', () => {
       debug: jest.fn(),
     };
 
-    displayFatalStartupError(
+    const result = displayFatalStartupError(
       {},
       {
         userMessage: 'Oops',
@@ -155,5 +158,6 @@ describe('displayFatalStartupError', () => {
     expect(logger.info).toHaveBeenCalledWith(
       '[errorUtils] displayFatalStartupError: Displayed error using alert() as a fallback.'
     );
+    expect(result).toEqual({ displayed: false });
   });
 });
