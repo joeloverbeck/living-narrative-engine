@@ -70,7 +70,7 @@ describe('registerPersistence', () => {
       `Persistence Registration: Registered ${String(tokens.IStorageProvider)}.`
     );
     expect(logs).toContain(
-      `Persistence Registration: Registered ${String(tokens.SaveFileRepository)}.`
+      `Persistence Registration: Registered ${String(tokens.ISaveFileRepository)}.`
     );
     expect(logs).toContain(
       `Persistence Registration: Registered ${String(tokens.ISaveLoadService)}.`
@@ -108,7 +108,7 @@ describe('registerPersistence', () => {
         deps: [tokens.ILogger, tokens.ISafeEventDispatcher],
       },
       {
-        token: tokens.SaveFileRepository,
+        token: tokens.ISaveFileRepository,
         Class: SaveFileRepository,
         lifecycle: 'singletonFactory',
       },
