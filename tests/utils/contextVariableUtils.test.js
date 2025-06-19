@@ -1,11 +1,11 @@
 import { describe, test, expect, jest } from '@jest/globals';
-import storeResult, {
+import writeContextVariable, {
   setContextValue,
-  setContextValueResult,
+  tryWriteContextVariable,
 } from '../../src/utils/contextVariableUtils.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../src/constants/eventIds.js';
 
-describe('storeResult', () => {
+describe('writeContextVariable', () => {
   test('stores value when context exists', () => {
     const ctx = { evaluationContext: { context: {} } };
     const dispatcher = { dispatch: jest.fn() };
@@ -15,7 +15,7 @@ describe('storeResult', () => {
       info: jest.fn(),
       debug: jest.fn(),
     };
-    const result = storeResult('foo', 123, ctx, dispatcher, logger);
+    const result = writeContextVariable('foo', 123, ctx, dispatcher, logger);
     expect(result).toEqual({ success: true });
     expect(ctx.evaluationContext.context.foo).toBe(123);
     expect(dispatcher.dispatch).not.toHaveBeenCalled();
@@ -25,7 +25,7 @@ describe('storeResult', () => {
     const ctx = { evaluationContext: null };
     const dispatcher = { dispatch: jest.fn() };
     const logger = { error: jest.fn() };
-    const result = storeResult('bar', 5, ctx, dispatcher, logger);
+    const result = writeContextVariable('bar', 5, ctx, dispatcher, logger);
     expect(result.success).toBe(false);
     expect(result.error).toBeInstanceOf(Error);
     expect(dispatcher.dispatch).toHaveBeenCalledWith(
@@ -50,7 +50,7 @@ describe('storeResult', () => {
       info: jest.fn(),
       debug: jest.fn(),
     };
-    const result = storeResult('baz', 7, ctx, undefined, logger);
+    const result = writeContextVariable('baz', 7, ctx, undefined, logger);
     await Promise.resolve();
     expect(result.success).toBe(false);
     expect(result.error).toBeInstanceOf(Error);
@@ -87,12 +87,12 @@ describe('setContextValue', () => {
   });
 });
 
-describe('setContextValueResult', () => {
+describe('tryWriteContextVariable', () => {
   test('returns error object when evaluation context missing', () => {
     const ctx = { evaluationContext: null };
     const dispatcher = { dispatch: jest.fn() };
     const logger = { error: jest.fn() };
-    const result = setContextValueResult('foo', 1, ctx, dispatcher, logger);
+    const result = tryWriteContextVariable('foo', 1, ctx, dispatcher, logger);
     expect(result.success).toBe(false);
     expect(result.error).toBeInstanceOf(Error);
     expect(dispatcher.dispatch).toHaveBeenCalledWith(

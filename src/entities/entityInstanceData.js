@@ -33,7 +33,6 @@ class EntityInstanceData {
    * A shallow map of component data that overrides or supplements the definition's components.
    * Keys are componentTypeIds, values are component data objects.
    * This map only stores data that is different from or not present in the definition.
-   *
    * @type {Record<string, object>}
    */
   overrides;
@@ -44,6 +43,7 @@ class EntityInstanceData {
    * @param {string} instanceId - The unique runtime identifier for this instance.
    * @param {EntityDefinition} definition - The EntityDefinition this instance is based on.
    * @param {Record<string, object>} [initialOverrides] - Optional initial component overrides.
+   * @param {Record<string, object>} [initialOverrides={}] - Optional initial component overrides.
    * @throws {Error} If instanceId is not a valid string.
    * @throws {Error} If definition is not an instance of EntityDefinition.
    */
@@ -142,7 +142,7 @@ class EntityInstanceData {
    * A component explicitly overridden with `null` is considered not present for this instance via the override.
    *
    * @param {string} componentTypeId - The unique string identifier for the component type.
-   * @param {boolean} [checkOverrideOnly] - If true, only checks if a non-null override exists for this instance.
+   * @param {boolean} [checkOverrideOnly=false] - If true, only checks if a non-null override exists for this instance.
    * @returns {boolean} True if the instance has data for this component type under the specified condition.
    */
   hasComponent(componentTypeId, checkOverrideOnly = false) {

@@ -36,7 +36,7 @@ function _validateContextAndName(variableName, execCtx, _logger) {
     return {
       valid: false,
       error: new Error(
-        'storeResult: evaluationContext.context is missing; cannot store result'
+        'writeContextVariable: evaluationContext.context is missing; cannot store value'
       ),
     };
   }
@@ -57,7 +57,13 @@ function _validateContextAndName(variableName, execCtx, _logger) {
  * @param {import('../interfaces/coreServices.js').ILogger} [logger] - Optional logger used when no dispatcher is provided.
  * @returns {{success: boolean, error?: Error}} Result of the store operation.
  */
-export function storeResult(variableName, value, execCtx, dispatcher, logger) {
+export function writeContextVariable(
+  variableName,
+  value,
+  execCtx,
+  dispatcher,
+  logger
+) {
   const log = getModuleLogger('contextVariableUtils', logger);
   const safeDispatcher = resolveSafeDispatcher(execCtx, dispatcher, log);
   const { valid, error, name } = _validateContextAndName(
@@ -78,7 +84,7 @@ export function storeResult(variableName, value, execCtx, dispatcher, logger) {
     return { success: true };
   } catch (e) {
     const err = new Error(
-      `storeResult: Failed to write variable "${variableName}"`
+      `writeContextVariable: Failed to write variable "${variableName}"`
     );
     if (safeDispatcher) {
       safeDispatchError(safeDispatcher, err.message, {
@@ -92,7 +98,7 @@ export function storeResult(variableName, value, execCtx, dispatcher, logger) {
 }
 
 /**
- * Wrapper around {@link storeResult} that trims the variable name and validates
+ * Wrapper around {@link writeContextVariable} that trims the variable name and validates
  * it before storage.
  *
  * @param {string|null|undefined} variableName - Target context variable name.
@@ -103,7 +109,7 @@ export function storeResult(variableName, value, execCtx, dispatcher, logger) {
  * @param {import('../interfaces/coreServices.js').ILogger} [logger] - Logger used when no dispatcher is provided.
  * @returns {boolean} `true` when the value was successfully stored.
  */
-export function setContextValueResult(
+export function tryWriteContextVariable(
   variableName,
   value,
   execCtx,
@@ -124,7 +130,13 @@ export function setContextValueResult(
     return { success: false, error: validation.error };
   }
 
-  return storeResult(validation.name, value, execCtx, dispatcher, logger);
+  return writeContextVariable(
+    validation.name,
+    value,
+    execCtx,
+    dispatcher,
+    logger
+  );
 }
 
 /**
@@ -142,8 +154,13 @@ export function setContextValue(
   dispatcher,
   logger
 ) {
-  return setContextValueResult(variableName, value, execCtx, dispatcher, logger)
-    .success;
+  return tryWriteContextVariable(
+    variableName,
+    value,
+    execCtx,
+    dispatcher,
+    logger
+  ).success;
 }
 
-export default storeResult;
+export default writeContextVariable;

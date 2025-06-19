@@ -56,7 +56,6 @@ const MOCK_DEFINITION_ID_ACTOR = 'test-def:actor';
 const MOCK_DEFINITION_ID_ITEM = 'test-def:item';
 const DEF_ID_FOR_OVERRIDES = 'test-def:for-overrides'; // New definition ID
 
-
 const EXISTING_COMPONENT_ID = 'core:stats';
 
 // Common raw definitions for tests that need them - ensure they have an 'id' field
@@ -142,7 +141,8 @@ describe('EntityManager', () => {
     );
     entityDefBasicReconstruct = new EntityDefinition(
       'test-def:basicReconstruct',
-      { // A simplified version of rawDefBasicForTests for reconstruction tests
+      {
+        // A simplified version of rawDefBasicForTests for reconstruction tests
         id: 'test-def:basicReconstruct',
         description: 'A basic entity definition for reconstruction testing.',
         components: {

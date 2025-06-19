@@ -107,7 +107,7 @@ function logStartupError(log, phase, consoleMessage, errorObject) {
  * @param {function(string): void} params.showAlert - Alert function to display messages.
  * @param {import('../interfaces/coreServices.js').ILogger} params.log - Logger instance.
  * @param {string} params.userMessage - Message to display to the user.
- * @returns {void}
+ * @returns {{displayed: boolean}} Object indicating if the message was shown in the DOM.
  * @private
  */
 function displayErrorMessage({
@@ -151,6 +151,8 @@ function displayErrorMessage({
       'displayFatalStartupError: Displayed error using alert() as a fallback.'
     );
   }
+
+  return { displayed: displayedInErrorDiv };
 }
 
 /**
@@ -202,6 +204,7 @@ function updateElements({
  * @param {FatalErrorDetails} errorDetails - Details about the error.
  * @param {import('../interfaces/coreServices.js').ILogger} [logger] - Optional logger instance.
  * @param {import('../interfaces/DomAdapter.js').DomAdapter} domAdapter - DOM adapter for custom element creation and DOM updates.
+ * @returns {{displayed: boolean}} Whether the error was displayed in the DOM.
  */
 export function displayFatalStartupError(
   uiElements,
@@ -224,7 +227,7 @@ export function displayFatalStartupError(
 
   logStartupError(log, phase, consoleMessage, errorObject);
 
-  displayErrorMessage({
+  const { displayed } = displayErrorMessage({
     errorDiv,
     outputDiv,
     dom,
@@ -241,4 +244,6 @@ export function displayFatalStartupError(
     log,
     dom,
   });
+
+  return { displayed };
 }
