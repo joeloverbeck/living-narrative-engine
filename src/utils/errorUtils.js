@@ -8,14 +8,15 @@ import { getModuleLogger } from './loggerUtils.js';
  * @description Sets an error message in a DOM element and makes it visible.
  * @param {HTMLElement | null | undefined} targetEl - Element to display the message in.
  * @param {string} msg - Message to show.
+ * @param {import('../interfaces/DomAdapter.js').DomAdapter} dom - DOM adapter instance.
  * @returns {boolean} True if the message was displayed.
  */
-export function showErrorInElement(targetEl, msg) {
+export function showErrorInElement(targetEl, msg, dom) {
   if (!targetEl || !(targetEl instanceof HTMLElement)) {
     return false;
   }
-  targetEl.textContent = msg;
-  targetEl.style.display = 'block';
+  dom.setTextContent(targetEl, msg);
+  dom.setStyle(targetEl, 'display', 'block');
   return true;
 }
 
@@ -25,21 +26,21 @@ export function showErrorInElement(targetEl, msg) {
  * @description Creates a temporary error element after the provided base element.
  * @param {HTMLElement | null | undefined} baseEl - Element to insert after.
  * @param {string} msg - Message for the new element.
- * @param {function(string): HTMLElement} createElement - Element creation function.
+ * @param {import('../interfaces/DomAdapter.js').DomAdapter} dom - DOM adapter instance.
  * @returns {HTMLElement | null} The created element, or null if not created.
  */
-export function createTemporaryErrorElement(baseEl, msg, createElement) {
+export function createTemporaryErrorElement(baseEl, msg, dom) {
   if (!baseEl || !(baseEl instanceof HTMLElement)) {
     return null;
   }
-  const temporaryErrorElement = createElement('div');
+  const temporaryErrorElement = dom.createElement('div');
   temporaryErrorElement.id = 'temp-startup-error';
-  temporaryErrorElement.textContent = msg;
-  temporaryErrorElement.style.color = 'red';
-  temporaryErrorElement.style.padding = '10px';
-  temporaryErrorElement.style.border = '1px solid red';
-  temporaryErrorElement.style.marginTop = '10px';
-  baseEl.insertAdjacentElement('afterend', temporaryErrorElement);
+  dom.setTextContent(temporaryErrorElement, msg);
+  dom.setStyle(temporaryErrorElement, 'color', 'red');
+  dom.setStyle(temporaryErrorElement, 'padding', '10px');
+  dom.setStyle(temporaryErrorElement, 'border', '1px solid red');
+  dom.setStyle(temporaryErrorElement, 'marginTop', '10px');
+  dom.insertAfter(baseEl, temporaryErrorElement);
   return temporaryErrorElement;
 }
 
@@ -49,9 +50,10 @@ export function createTemporaryErrorElement(baseEl, msg, createElement) {
  * @description Disables an input element and sets a placeholder.
  * @param {HTMLInputElement | null | undefined} el - Input to disable.
  * @param {string} placeholder - Placeholder text to set.
+ * @param {import('../interfaces/DomAdapter.js').DomAdapter} dom - DOM adapter instance.
  * @returns {boolean} True if the element was updated.
  */
-export function disableInput(el, placeholder) {
+export function disableInput(el, placeholder, dom) {
   if (!el || !(el instanceof HTMLInputElement)) {
     return false;
   }
@@ -101,7 +103,7 @@ function logStartupError(log, phase, consoleMessage, errorObject) {
  * @param {object} params - Parameters object.
  * @param {HTMLElement | null | undefined} params.errorDiv - Element for displaying errors.
  * @param {HTMLElement | null | undefined} params.outputDiv - Main output area element.
- * @param {function(string): HTMLElement} params.create - Element creation function.
+ * @param {import('../interfaces/DomAdapter.js').DomAdapter} params.dom - DOM adapter instance.
  * @param {function(string): void} params.showAlert - Alert function to display messages.
  * @param {import('../interfaces/coreServices.js').ILogger} params.log - Logger instance.
  * @param {string} params.userMessage - Message to display to the user.
@@ -111,14 +113,14 @@ function logStartupError(log, phase, consoleMessage, errorObject) {
 function displayErrorMessage({
   errorDiv,
   outputDiv,
-  create,
+  dom,
   showAlert,
   log,
   userMessage,
 }) {
   let displayedInErrorDiv = false;
   try {
-    displayedInErrorDiv = showErrorInElement(errorDiv, userMessage);
+    displayedInErrorDiv = showErrorInElement(errorDiv, userMessage, dom);
   } catch (e) {
     log.error(
       'displayFatalStartupError: Failed to set textContent on errorDiv.',
@@ -128,7 +130,7 @@ function displayErrorMessage({
 
   if (!displayedInErrorDiv) {
     try {
-      const tmpEl = createTemporaryErrorElement(outputDiv, userMessage, create);
+      const tmpEl = createTemporaryErrorElement(outputDiv, userMessage, dom);
       if (tmpEl) {
         log.info(
           'displayFatalStartupError: Displayed error in a dynamically created element near outputDiv.'
@@ -160,6 +162,7 @@ function displayErrorMessage({
  * @param {string} params.pageTitle - Text to set for the title element.
  * @param {string} params.inputPlaceholder - Placeholder text for the input element.
  * @param {import('../interfaces/coreServices.js').ILogger} params.log - Logger instance.
+ * @param {import('../interfaces/DomAdapter.js').DomAdapter} params.dom - DOM adapter instance.
  * @returns {void}
  * @private
  */
@@ -169,10 +172,11 @@ function updateElements({
   pageTitle,
   inputPlaceholder,
   log,
+  dom,
 }) {
   try {
     if (titleElement && titleElement instanceof HTMLElement) {
-      titleElement.textContent = pageTitle;
+      dom.setTextContent(titleElement, pageTitle);
     }
   } catch (e) {
     log.error(
@@ -182,7 +186,7 @@ function updateElements({
   }
 
   try {
-    disableInput(inputElement, inputPlaceholder);
+    disableInput(inputElement, inputPlaceholder, dom);
   } catch (e) {
     log.error(
       'displayFatalStartupError: Failed to disable or set placeholder on inputElement.',
@@ -197,7 +201,7 @@ function updateElements({
  * @param {FatalErrorUIElements} uiElements - References to key UI elements.
  * @param {FatalErrorDetails} errorDetails - Details about the error.
  * @param {import('../interfaces/coreServices.js').ILogger} [logger] - Optional logger instance.
- * @param {{createElement: function(string): HTMLElement, alert: function(string): void}} domAdapter - DOM adapter for custom element creation and alerts.
+ * @param {import('../interfaces/DomAdapter.js').DomAdapter} domAdapter - DOM adapter for custom element creation and DOM updates.
  */
 export function displayFatalStartupError(
   uiElements,
@@ -207,7 +211,7 @@ export function displayFatalStartupError(
 ) {
   const log = getModuleLogger('errorUtils', logger);
   const { outputDiv, errorDiv, titleElement, inputElement } = uiElements;
-  const create = domAdapter.createElement;
+  const dom = domAdapter;
   const showAlert = domAdapter.alert;
   const {
     userMessage,
@@ -223,7 +227,7 @@ export function displayFatalStartupError(
   displayErrorMessage({
     errorDiv,
     outputDiv,
-    create,
+    dom,
     showAlert,
     log,
     userMessage,
@@ -235,5 +239,6 @@ export function displayFatalStartupError(
     pageTitle,
     inputPlaceholder,
     log,
+    dom,
   });
 }
