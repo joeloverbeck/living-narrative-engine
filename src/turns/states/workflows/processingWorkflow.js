@@ -45,7 +45,7 @@ export class ProcessingWorkflow {
       );
       return;
     }
-    this._state._isProcessing = true;
+    this._state._processingGuard.start();
 
     await AbstractTurnState.prototype.enterState.call(
       this._state,

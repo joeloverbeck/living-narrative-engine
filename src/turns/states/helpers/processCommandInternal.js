@@ -144,12 +144,20 @@ export async function processCommandInternal(
       logger.debug(
         `${state.getStateName()}: Directive strategy executed for ${actorId}, state remains ${state.getStateName()}. Processing complete for this state instance.`
       );
-      state._isProcessing = false;
+      if (state._processingGuard) {
+        state._processingGuard.finish();
+      } else {
+        state._isProcessing = false;
+      }
     } else if (state._isProcessing) {
       logger.debug(
         `${state.getStateName()}: Directive strategy executed for ${actorId}, but state changed from ${state.getStateName()} to ${state._handler._currentState?.getStateName() ?? 'Unknown'}. Processing considered complete for previous state instance.`
       );
-      state._isProcessing = false;
+      if (state._processingGuard) {
+        state._processingGuard.finish();
+      } else {
+        state._isProcessing = false;
+      }
     }
   } catch (error) {
     const errorHandlingCtx = state._getTurnContext() ?? turnCtx;
@@ -174,7 +182,11 @@ export async function processCommandInternal(
       finalLogger.warn(
         `${state.getStateName()}: _isProcessing was unexpectedly true at the end of _processCommandInternal for ${actorId}. Forcing to false.`
       );
-      state._isProcessing = false;
+      if (state._processingGuard) {
+        state._processingGuard.finish();
+      } else {
+        state._isProcessing = false;
+      }
     }
   }
 }

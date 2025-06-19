@@ -30,7 +30,11 @@ export async function handleProcessingException(
   shouldEndTurn = true
 ) {
   const wasProcessing = state._isProcessing;
-  state._isProcessing = false;
+  if (state._processingGuard) {
+    state._processingGuard.finish();
+  } else {
+    state._isProcessing = false;
+  }
 
   let logger = console;
   let currentActorIdForLog = actorIdContext;
