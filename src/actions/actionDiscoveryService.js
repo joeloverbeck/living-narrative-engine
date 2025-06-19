@@ -128,6 +128,59 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
   }
 
   /**
+   * Helper that validates and formats potential targets, returning
+   * structured {@link DiscoveredActionInfo} objects.
+   *
+   * @param {import('../data/gameDataRepository.js').ActionDefinition} actionDef
+   * @param {Entity} actorEntity
+   * @param {Array<{context: ActionTargetContext, params: object}>} targetContexts
+   * @param {object} formatterOptions
+   * @returns {import('../interfaces/IActionDiscoveryService.js').DiscoveredActionInfo[]}
+   */
+  #collectValidTargets(
+    actionDef,
+    actorEntity,
+    targetContexts,
+    formatterOptions
+  ) {
+    /** @type {import('../interfaces/IActionDiscoveryService.js').DiscoveredActionInfo[]} */
+    const discovered = [];
+
+    for (const { context: targetCtx, params } of targetContexts) {
+      if (
+        !this.#actionValidationService.isValid(
+          actionDef,
+          actorEntity,
+          targetCtx
+        )
+      ) {
+        continue;
+      }
+
+      const formattedCommand = this.#formatActionCommandFn(
+        actionDef,
+        targetCtx,
+        this.#entityManager,
+        formatterOptions
+      );
+
+      if (formattedCommand === null) {
+        continue;
+      }
+
+      discovered.push({
+        id: actionDef.id,
+        name: actionDef.name || actionDef.commandVerb,
+        command: formattedCommand,
+        description: actionDef.description || '',
+        params,
+      });
+    }
+
+    return discovered;
+  }
+
+  /**
    * Handles discovery for actions targeting a direction.
    *
    * @param {import('../data/gameDataRepository.js').ActionDefinition} actionDef
@@ -161,43 +214,17 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
       `Found ${exits.length} available exits for location: ${locIdForLog} via getAvailableExits.`
     );
 
-    /** @type {import('../interfaces/IActionDiscoveryService.js').DiscoveredActionInfo[]} */
-    const discovered = [];
+    const targetContexts = exits.map((exit) => ({
+      context: ActionTargetContext.forDirection(exit.direction),
+      params: { targetId: exit.target },
+    }));
 
-    for (const exit of exits) {
-      const targetCtx = ActionTargetContext.forDirection(exit.direction);
-
-      if (
-        !this.#actionValidationService.isValid(
-          actionDef,
-          actorEntity,
-          targetCtx
-        )
-      ) {
-        continue;
-      }
-
-      const formattedCommand = this.#formatActionCommandFn(
-        actionDef,
-        targetCtx,
-        this.#entityManager,
-        formatterOptions
-      );
-
-      if (formattedCommand === null) {
-        continue;
-      }
-
-      discovered.push({
-        id: actionDef.id,
-        name: actionDef.name || actionDef.commandVerb,
-        command: formattedCommand,
-        description: actionDef.description || '',
-        params: { targetId: exit.target },
-      });
-    }
-
-    return discovered;
+    return this.#collectValidTargets(
+      actionDef,
+      actorEntity,
+      targetContexts,
+      formatterOptions
+    );
   }
 
   /**
@@ -219,42 +246,17 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
   ) {
     const targetIds =
       this.#getEntityIdsForScopesFn([domain], context) ?? new Set();
-    /** @type {import('../interfaces/IActionDiscoveryService.js').DiscoveredActionInfo[]} */
-    const discovered = [];
+    const targetContexts = Array.from(targetIds).map((targetId) => ({
+      context: ActionTargetContext.forEntity(targetId),
+      params: { targetId },
+    }));
 
-    for (const targetId of targetIds) {
-      const targetCtx = ActionTargetContext.forEntity(targetId);
-      if (
-        !this.#actionValidationService.isValid(
-          actionDef,
-          actorEntity,
-          targetCtx
-        )
-      ) {
-        continue;
-      }
-
-      const formattedCommand = this.#formatActionCommandFn(
-        actionDef,
-        targetCtx,
-        this.#entityManager,
-        formatterOptions
-      );
-
-      if (formattedCommand === null) {
-        continue;
-      }
-
-      discovered.push({
-        id: actionDef.id,
-        name: actionDef.name || actionDef.commandVerb,
-        command: formattedCommand,
-        description: actionDef.description || '',
-        params: { targetId },
-      });
-    }
-
-    return discovered;
+    return this.#collectValidTargets(
+      actionDef,
+      actorEntity,
+      targetContexts,
+      formatterOptions
+    );
   }
 
   /**
