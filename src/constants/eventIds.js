@@ -86,7 +86,8 @@ export const ENGINE_READY_UI = 'core:ui_ready';
  * //   inputDisabledMessage: string  // Message to show when disabling input, explaining why.
  * // }
  */
-export const ENGINE_OPERATION_IN_PROGRESS_UI = 'core:ui_operation_in_progress';
+export const ENGINE_OPERATION_IN_PROGRESS_UI =
+  'core:ui_operation_in_progress';
 
 /**
  * Signals a significant engine operation has failed.
@@ -160,3 +161,66 @@ export const REQUEST_SHOW_LOAD_GAME_UI = 'core:ui_request_show_load_game';
  * // The UI manager is expected to provide the appropriate user feedback.
  */
 export const CANNOT_SAVE_GAME_INFO = 'core:ui_cannot_save_game_info';
+
+// --- EntityManager Event IDs (Ticket 8) ---
+
+/**
+ * @typedef {object} EntityCreatedPayload
+ * @property {string} instanceId - The unique instance ID of the created entity.
+ * @property {string} definitionId - The definition ID from which the entity was created.
+ * @property {boolean} wasReconstructed - True if the entity was reconstructed from save data, false if newly created.
+ */
+
+/**
+ * Fired when a new entity instance is successfully created or reconstructed by the EntityManager.
+ *
+ * @type {string}
+ * @constant
+ * @see {EntityCreatedPayload}
+ */
+export const ENTITY_CREATED_ID = 'core:entity_created';
+
+/**
+ * @typedef {object} EntityRemovedPayload
+ * @property {string} instanceId - The unique instance ID of the entity being removed.
+ */
+
+/**
+ * Fired just before an entity instance is removed from the EntityManager.
+ *
+ * @type {string}
+ * @constant
+ * @see {EntityRemovedPayload}
+ */
+export const ENTITY_REMOVED_ID = 'core:entity_removed';
+
+/**
+ * @typedef {object} ComponentAddedPayload
+ * @property {string} instanceId - The instance ID of the entity that received the component.
+ * @property {string} componentTypeId - The ID of the component that was added or updated.
+ * @property {object | null} componentData - The validated data of the added/updated component.
+ */
+
+/**
+ * Fired when a component is successfully added to or updated on an entity instance.
+ *
+ * @type {string}
+ * @constant
+ * @see {ComponentAddedPayload}
+ */
+export const COMPONENT_ADDED_ID = 'core:component_added';
+
+/**
+ * @typedef {object} ComponentRemovedPayload
+ * @property {string} instanceId - The instance ID of the entity from which the component was removed.
+ * @property {string} componentTypeId - The ID of the component that was removed.
+ */
+
+/**
+ * Fired when a component override is successfully removed from an entity instance.
+ *
+ * @type {string}
+ * @constant
+ * @see {ComponentRemovedPayload}
+ */
+export const COMPONENT_REMOVED_ID = 'core:component_removed';

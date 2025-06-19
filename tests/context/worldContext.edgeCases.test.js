@@ -15,7 +15,6 @@ const mockEntityManagerInstance = {
   getComponentData: jest.fn(),
   getEntityInstance: jest.fn(),
   // VVVVVV ADDED LINE VVVVVV
-  getPrimaryInstanceByDefinitionId: jest.fn(), // Add the new method to the mock
   // ^^^^^^ ADDED LINE ^^^^^^
 };
 
@@ -28,8 +27,8 @@ jest.mock('../../src/entities/entityManager.js', () => {
 import WorldContext from '../../src/context/worldContext.js';
 import ConsoleLogger from '../../src/logging/consoleLogger.js';
 import Entity from '../../src/entities/entity.js';
-import EntityDefinition from '../../src/entities/EntityDefinition.js';
-import EntityInstanceData from '../../src/entities/EntityInstanceData.js';
+import EntityDefinition from '../../src/entities/entityDefinition.js';
+import EntityInstanceData from '../../src/entities/entityInstanceData.js';
 import EntityManager from '../../src/entities/entityManager.js'; // Mocked constructor
 import {
   POSITION_COMPONENT_ID,
@@ -46,9 +45,21 @@ describe('WorldContext Edge Cases', () => {
   let originalNodeEnv; // Variable to store original NODE_ENV
 
   // Helper function to create entity instances for testing
-  const createTestEntity = (instanceId, definitionId, defComponents = {}, instanceOverrides = {}) => {
-    const definition = new EntityDefinition(definitionId, { description: `Test Definition ${definitionId}`, components: defComponents });
-    const instanceData = new EntityInstanceData(instanceId, definition, instanceOverrides);
+  const createTestEntity = (
+    instanceId,
+    definitionId,
+    defComponents = {},
+    instanceOverrides = {}
+  ) => {
+    const definition = new EntityDefinition(definitionId, {
+      description: `Test Definition ${definitionId}`,
+      components: defComponents,
+    });
+    const instanceData = new EntityInstanceData(
+      instanceId,
+      definition,
+      instanceOverrides
+    );
     return new Entity(instanceData);
   };
 

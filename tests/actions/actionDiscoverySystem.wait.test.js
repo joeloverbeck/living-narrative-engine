@@ -18,8 +18,8 @@ import { getEntityIdsForScopes as getEntityIdsForScopesFn } from '../../src/enti
 // --- Helper Mocks/Types ---
 import { ActionTargetContext } from '../../src/models/actionTargetContext.js';
 import Entity from '../../src/entities/entity.js';
-import EntityDefinition from '../../src/entities/EntityDefinition.js';
-import EntityInstanceData from '../../src/entities/EntityInstanceData.js';
+import EntityDefinition from '../../src/entities/entityDefinition.js';
+import EntityInstanceData from '../../src/entities/entityInstanceData.js';
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 /** @typedef {import('../../src/logging/consoleLogger.js').default} ILogger */
 

@@ -198,7 +198,7 @@ describe('WorldLoader Integration Test Suite - Error Handling: Manifest Schema, 
           return componentSchemaId;
         case 'mod-manifest':
           return manifestSchemaId;
-        case 'entities':
+        case 'entity_definitions':
           return entitySchemaId;
         case 'actions':
           return actionsSchemaId;

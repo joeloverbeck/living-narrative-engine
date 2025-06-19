@@ -118,4 +118,4 @@ describe('Schema – Game Entity Definition contract', () => {
     const error = validate.errors.find((e) => e.keyword === 'propertyNames');
     expect(error).toBeDefined();
   });
-}); 
+});

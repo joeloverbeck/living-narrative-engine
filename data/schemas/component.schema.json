@@ -23,54 +23,6 @@
         "properties": {},
         "additionalProperties": false
       }
-    },
-    "resolveFields": {
-      "type": "array",
-      "description": "An array of specifications for fields within this component's data that store definition IDs needing resolution to instance IDs during world initialization.",
-      "items": {
-        "type": "object",
-        "properties": {
-          "dataPath": {
-            "type": "string",
-            "description": "Dot-separated path to the data field (e.g., 'locationId', 'details.targetId', 'items'). Required unless dataPathIsSelf is true."
-          },
-          "dataPathIsSelf": {
-            "type": "boolean",
-            "description": "If true, the component's data itself is the target for resolution (e.g., the component data is an array of IDs or an array of objects containing IDs). 'dataPath' should typically be omitted or ignored if this is true.",
-            "default": false
-          },
-          "resolutionStrategy": {
-            "type": "object",
-            "description": "Defines how to interpret and resolve the data found at dataPath (or the component data itself if dataPathIsSelf is true).",
-            "properties": {
-              "type": {
-                "type": "string",
-                "enum": ["direct", "arrayOfDefinitionIds", "arrayOfObjects"],
-                "description": "- 'direct': The value is a single definition ID string.\n- 'arrayOfDefinitionIds': The value is an array of definition ID strings.\n- 'arrayOfObjects': The value is an array of objects, each potentially containing a definition ID."
-              },
-              "idField": {
-                "type": "string",
-                "description": "Required if resolutionStrategy.type is 'arrayOfObjects'. Specifies the property name within each object (in the array) that holds the definition ID string (e.g., 'target')."
-              }
-            },
-            "required": ["type"]
-          }
-        },
-        "required": ["resolutionStrategy"],
-        "if": {
-          "properties": {
-            "dataPathIsSelf": {
-              "not": {
-                "const": true
-              }
-            }
-          }
-        },
-        "then": {
-          "required": ["dataPath"]
-        }
-      },
-      "default": []
     }
   },
   "required": ["id", "description", "dataSchema"],

@@ -1,6 +1,5 @@
 // src/utils/contextUtils.js
 import { safeResolvePath } from './objectUtils.js';
-import { NAME_COMPONENT_ID } from '../constants/componentIds.js';
 import { PlaceholderResolver } from './placeholderResolverUtils.js';
 import { getEntityDisplayName } from './entityUtils.js';
 

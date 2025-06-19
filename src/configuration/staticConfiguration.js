@@ -102,7 +102,7 @@ class StaticConfiguration {
       'condition.schema.json',
       'condition-container.schema.json',
       'entity-definition.schema.json', // CORRECTED
-      'entity-instance.schema.json',   // CORRECTED
+      'entity-instance.schema.json', // CORRECTED
       'event.schema.json',
       'game.schema.json',
       'json-logic.schema.json',
@@ -140,7 +140,8 @@ class StaticConfiguration {
       rules: 'http://example.com/schemas/rule.schema.json',
 
       // --- ENTITY TYPES (CORRECTED) ---
-      entityDefinitions: 'http://example.com/schemas/entity-definition.schema.json',
+      entityDefinitions:
+        'http://example.com/schemas/entity-definition.schema.json',
       entityInstances: 'http://example.com/schemas/entity-instance.schema.json',
 
       // --- MISC ---

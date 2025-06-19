@@ -11,8 +11,8 @@ import {
 } from '@jest/globals';
 import WorldContext from '../../src/context/worldContext.js';
 import Entity from '../../src/entities/entity.js';
-import EntityDefinition from '../../src/entities/EntityDefinition.js';
-import EntityInstanceData from '../../src/entities/EntityInstanceData.js';
+import EntityDefinition from '../../src/entities/entityDefinition.js';
+import EntityInstanceData from '../../src/entities/entityInstanceData.js';
 import {
   POSITION_COMPONENT_ID,
   CURRENT_ACTOR_COMPONENT_ID,
@@ -23,7 +23,6 @@ const createMockEntityManager = () => ({
   getEntitiesWithComponent: jest.fn(),
   getComponentData: jest.fn(),
   getEntityInstance: jest.fn(),
-  getPrimaryInstanceByDefinitionId: jest.fn(),
   activeEntities: new Map(),
 });
 
@@ -35,9 +34,21 @@ const createMockLogger = () => ({
 });
 
 // Helper function to create entity instances for testing
-const createTestEntity = (instanceId, definitionId, defComponents = {}, instanceOverrides = {}) => {
-  const definition = new EntityDefinition(definitionId, { description: `Test Definition ${definitionId}`, components: defComponents });
-  const instanceData = new EntityInstanceData(instanceId, definition, instanceOverrides);
+const createTestEntity = (
+  instanceId,
+  definitionId,
+  defComponents = {},
+  instanceOverrides = {}
+) => {
+  const definition = new EntityDefinition(definitionId, {
+    description: `Test Definition ${definitionId}`,
+    components: defComponents,
+  });
+  const instanceData = new EntityInstanceData(
+    instanceId,
+    definition,
+    instanceOverrides
+  );
   return new Entity(instanceData);
 };
 
@@ -85,11 +96,8 @@ describe('WorldContext (Stateless)', () => {
     jest.clearAllMocks();
 
     mockEntityManager.getEntitiesWithComponent.mockReturnValue([]);
-    mockEntityManager.getComponentData.mockReturnValue(undefined); // General mock, may not be used by getLocationOfEntity path
+    mockEntityManager.getComponentData.mockReturnValue(undefined);
     mockEntityManager.getEntityInstance.mockReturnValue(undefined);
-    mockEntityManager.getPrimaryInstanceByDefinitionId.mockReturnValue(
-      undefined
-    );
   });
 
   afterEach(() => {
@@ -98,18 +106,24 @@ describe('WorldContext (Stateless)', () => {
 
   describe('Constructor', () => {
     it('should throw if EntityManager is invalid or missing key methods', () => {
+      const expectedErrorMessage =
+        'WorldContext requires a valid EntityManager instance with getEntitiesWithComponent and getEntityInstance methods.';
+
       expect(() => new WorldContext(null, mockLogger, mockDispatcher)).toThrow(
-        'WorldContext requires a valid EntityManager instance'
+        expectedErrorMessage
       );
+
       const incompleteEntityManager = {
+        // Simulating missing getEntityInstance
         getEntitiesWithComponent: jest.fn(),
-        getEntityInstance: jest.fn(),
+        // getEntityInstance: jest.fn(), // This was causing the test to incorrectly pass the constructor check
       };
       expect(
         () =>
           new WorldContext(incompleteEntityManager, mockLogger, mockDispatcher)
-      ).toThrow('getPrimaryInstanceByDefinitionId methods.');
-      const anotherIncompleteEntityManager = {};
+      ).toThrow(expectedErrorMessage);
+
+      const anotherIncompleteEntityManager = {}; // Missing both methods
       expect(
         () =>
           new WorldContext(
@@ -117,7 +131,7 @@ describe('WorldContext (Stateless)', () => {
             mockLogger,
             mockDispatcher
           )
-      ).toThrow('WorldContext requires a valid EntityManager instance');
+      ).toThrow(expectedErrorMessage);
     });
 
     it('should throw if Logger is invalid or missing', () => {
@@ -200,7 +214,6 @@ describe('WorldContext (Stateless)', () => {
     });
 
     it('should return the location entity when the current actor exists and has a valid position', () => {
-      // WorldContext calls entityManager.getComponentData for the actor
       mockEntityManager.getComponentData.mockReturnValue({
         locationId: LOCATION_1_ID,
       });
@@ -231,7 +244,7 @@ describe('WorldContext (Stateless)', () => {
     });
 
     it('should return null and log error if the current actor exists but lacks a POSITION component', () => {
-      mockEntityManager.getComponentData.mockReturnValue(undefined); // No position for player
+      mockEntityManager.getComponentData.mockReturnValue(undefined);
       const location = worldContext.getCurrentLocation();
       expect(location).toBeNull();
       expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
@@ -247,7 +260,7 @@ describe('WorldContext (Stateless)', () => {
     it('should return null and log error if the current actor exists but position data lacks a valid locationId', () => {
       mockEntityManager.getComponentData.mockReturnValue({
         someOtherProp: 'value',
-      }); // Position invalid
+      });
       const location = worldContext.getCurrentLocation();
       expect(location).toBeNull();
       expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
@@ -264,7 +277,7 @@ describe('WorldContext (Stateless)', () => {
       mockEntityManager.getComponentData.mockReturnValue({
         locationId: 'nonexistent-location',
       });
-      mockEntityManager.getEntityInstance.mockReturnValue(undefined); // Location not found
+      mockEntityManager.getEntityInstance.mockReturnValue(undefined);
       const location = worldContext.getCurrentLocation();
       expect(location).toBeNull();
       expect(mockLogger.warn).toHaveBeenCalledWith(
@@ -277,7 +290,6 @@ describe('WorldContext (Stateless)', () => {
 
   describe('getLocationOfEntity', () => {
     it('should return the location entity for a given entityId with a valid position', () => {
-      // Setup itemEntity with the position component
       itemEntity.addComponent(POSITION_COMPONENT_ID, {
         locationId: LOCATION_2_ID,
       });
@@ -292,8 +304,6 @@ describe('WorldContext (Stateless)', () => {
 
       expect(location).toBe(location2Entity);
       expect(mockEntityManager.getEntityInstance).toHaveBeenCalledWith(ITEM_ID);
-      // mockEntityManager.getComponentData is NOT called by WorldContext in this specific path
-      // instead, itemEntity.getComponentData is called.
       expect(mockEntityManager.getEntityInstance).toHaveBeenCalledWith(
         LOCATION_2_ID
       );
@@ -313,7 +323,7 @@ describe('WorldContext (Stateless)', () => {
     });
 
     it('should return null and log warning if the entity for entityId is not found', () => {
-      mockEntityManager.getEntityInstance.mockReturnValue(undefined); // Entity for ITEM_ID not found
+      mockEntityManager.getEntityInstance.mockReturnValue(undefined);
       const location = worldContext.getLocationOfEntity(ITEM_ID);
       expect(location).toBeNull();
       expect(mockLogger.warn).toHaveBeenCalledWith(
@@ -322,7 +332,7 @@ describe('WorldContext (Stateless)', () => {
     });
 
     it('should return null if the entity does not have a POSITION component', () => {
-      mockEntityManager.getEntityInstance.mockReturnValue(itemEntity); // itemEntity has no components by default here
+      mockEntityManager.getEntityInstance.mockReturnValue(itemEntity);
       const location = worldContext.getLocationOfEntity(ITEM_ID);
       expect(location).toBeNull();
       expect(mockLogger.debug).toHaveBeenCalledWith(
@@ -335,7 +345,7 @@ describe('WorldContext (Stateless)', () => {
     it('should return null and log warning if the entity position data lacks a valid locationId', () => {
       itemEntity.addComponent(POSITION_COMPONENT_ID, {
         someOtherProp: 'value',
-      }); // Position lacks locationId
+      });
       mockEntityManager.getEntityInstance.mockReturnValue(itemEntity);
 
       const location = worldContext.getLocationOfEntity(ITEM_ID);
@@ -354,7 +364,7 @@ describe('WorldContext (Stateless)', () => {
       });
       mockEntityManager.getEntityInstance.mockImplementation((id) => {
         if (id === ITEM_ID) return itemEntity;
-        if (id === 'nonexistent-location') return undefined; // Location not found
+        if (id === 'nonexistent-location') return undefined;
         return undefined;
       });
 
@@ -369,4 +379,3 @@ describe('WorldContext (Stateless)', () => {
     });
   });
 });
-// --- FILE END ---

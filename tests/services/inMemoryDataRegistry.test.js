@@ -11,7 +11,7 @@ describe('InMemoryDataRegistry', () => {
   const id1 = 'item:potion_health';
   const obj1 = { name: 'Health Potion', effect: 'heal', value: 50 };
 
-  const type2 = 'entities';
+  const type2 = 'entity_definitions';
   const id2 = 'entity:goblin_warrior';
   const obj2 = { name: 'Goblin Warrior', hp: 15, attack: 3 };
 

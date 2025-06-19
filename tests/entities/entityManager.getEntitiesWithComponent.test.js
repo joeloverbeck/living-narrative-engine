@@ -10,8 +10,8 @@ import {
 } from '@jest/globals';
 import EntityManager from '../../src/entities/entityManager.js';
 import Entity from '../../src/entities/entity.js';
-import EntityDefinition from '../../src/entities/EntityDefinition.js';
-import EntityInstanceData from '../../src/entities/EntityInstanceData.js';
+import EntityDefinition from '../../src/entities/entityDefinition.js';
+import EntityInstanceData from '../../src/entities/entityInstanceData.js';
 
 // --- Mock Implementations ---
 const createMockDataRegistry = () => ({ getEntityDefinition: jest.fn() });
@@ -31,6 +31,9 @@ const createMockSpatialIndexManager = () => ({
   buildIndex: jest.fn(),
   clearIndex: jest.fn(),
 });
+const createMockSafeEventDispatcher = () => ({
+  dispatch: jest.fn(),
+});
 
 // --- Test Suite ---
 describe('EntityManager.getEntitiesWithComponent', () => {
@@ -39,6 +42,8 @@ describe('EntityManager.getEntitiesWithComponent', () => {
   let mockLogger;
   let mockSpatialIndex;
   let entityManager;
+  let mockEventDispatcher;
+
 
   // --- Test Constants ---
   const COMPONENT_A = 'core:component_a';
@@ -53,9 +58,21 @@ describe('EntityManager.getEntitiesWithComponent', () => {
   const DUMMY_DEFINITION_ID = 'def:dummy'; // A common definition ID for these test entities
 
   // Helper function to create entity instances for testing
-  const createTestEntity = (instanceId, definitionId, defComponents = {}, instanceOverrides = {}) => {
-    const definition = new EntityDefinition(definitionId, { description: `Test Definition ${definitionId}`, components: defComponents });
-    const instanceData = new EntityInstanceData(instanceId, definition, instanceOverrides);
+  const createTestEntity = (
+    instanceId,
+    definitionId,
+    defComponents = {},
+    instanceOverrides = {}
+  ) => {
+    const definition = new EntityDefinition(definitionId, {
+      description: `Test Definition ${definitionId}`,
+      components: defComponents,
+    });
+    const instanceData = new EntityInstanceData(
+      instanceId,
+      definition,
+      instanceOverrides
+    );
     return new Entity(instanceData);
   };
 
@@ -66,25 +83,42 @@ describe('EntityManager.getEntitiesWithComponent', () => {
     mockValidator = createMockSchemaValidator();
     mockLogger = createMockLogger();
     mockSpatialIndex = createMockSpatialIndexManager();
+    mockEventDispatcher = createMockSafeEventDispatcher();
     entityManager = new EntityManager(
       mockRegistry,
       mockValidator,
       mockLogger,
-      mockSpatialIndex
+      mockSpatialIndex,
+      mockEventDispatcher
     );
 
     jest.clearAllMocks();
     entityManager.activeEntities.clear();
 
     // Create test entities with components as instance overrides
-    entity1 = createTestEntity(ENTITY_1_INSTANCE_ID, DUMMY_DEFINITION_ID, {}, { [COMPONENT_A]: { value: 1 } });
+    entity1 = createTestEntity(
+      ENTITY_1_INSTANCE_ID,
+      DUMMY_DEFINITION_ID,
+      {},
+      { [COMPONENT_A]: { value: 1 } }
+    );
 
-    entity2 = createTestEntity(ENTITY_2_INSTANCE_ID, DUMMY_DEFINITION_ID, {}, { [COMPONENT_B]: { text: 'hello' } });
+    entity2 = createTestEntity(
+      ENTITY_2_INSTANCE_ID,
+      DUMMY_DEFINITION_ID,
+      {},
+      { [COMPONENT_B]: { text: 'hello' } }
+    );
 
-    entity3 = createTestEntity(ENTITY_3_INSTANCE_ID, DUMMY_DEFINITION_ID, {}, {
-      [COMPONENT_A]: { value: 3 },
-      [COMPONENT_B]: { text: 'world' },
-    });
+    entity3 = createTestEntity(
+      ENTITY_3_INSTANCE_ID,
+      DUMMY_DEFINITION_ID,
+      {},
+      {
+        [COMPONENT_A]: { value: 3 },
+        [COMPONENT_B]: { text: 'world' },
+      }
+    );
   });
 
   afterEach(() => {
@@ -197,29 +231,37 @@ describe('EntityManager.getEntitiesWithComponent', () => {
 
     expect(entityManager.getEntitiesWithComponent(null)).toEqual([]);
     expect(mockLogger.debug).toHaveBeenCalledWith(
-      expect.stringContaining('Received invalid componentTypeId (null)')
+      "EntityManager.getEntitiesWithComponent: Received invalid componentTypeId ('null'). Returning empty array."
     );
+    mockLogger.debug.mockClear();
 
     expect(entityManager.getEntitiesWithComponent(undefined)).toEqual([]);
     expect(mockLogger.debug).toHaveBeenCalledWith(
-      expect.stringContaining('Received invalid componentTypeId (undefined)')
+      "EntityManager.getEntitiesWithComponent: Received invalid componentTypeId ('undefined'). Returning empty array."
     );
+    mockLogger.debug.mockClear();
 
     expect(entityManager.getEntitiesWithComponent('')).toEqual([]);
     expect(mockLogger.debug).toHaveBeenCalledWith(
-      expect.stringContaining('Received invalid componentTypeId ()')
+      "EntityManager.getEntitiesWithComponent: Received invalid componentTypeId (''). Returning empty array."
     );
+    mockLogger.debug.mockClear();
+
+    expect(entityManager.getEntitiesWithComponent('   ')).toEqual([]);
+    expect(mockLogger.debug).toHaveBeenCalledWith(
+      "EntityManager.getEntitiesWithComponent: Received invalid componentTypeId ('   '). Returning empty array."
+    );
+    mockLogger.debug.mockClear();
 
     expect(entityManager.getEntitiesWithComponent(123)).toEqual([]);
     expect(mockLogger.debug).toHaveBeenCalledWith(
-      expect.stringContaining('Received invalid componentTypeId (123)')
+      "EntityManager.getEntitiesWithComponent: Received invalid componentTypeId ('123'). Returning empty array."
     );
+    mockLogger.debug.mockClear();
 
     expect(entityManager.getEntitiesWithComponent({})).toEqual([]);
     expect(mockLogger.debug).toHaveBeenCalledWith(
-      expect.stringContaining(
-        'Received invalid componentTypeId ([object Object])'
-      )
+      "EntityManager.getEntitiesWithComponent: Received invalid componentTypeId ('[object Object]'). Returning empty array."
     );
   });
 
@@ -236,7 +278,12 @@ describe('EntityManager.getEntitiesWithComponent', () => {
     entityManager.activeEntities.delete(entity1.id); // Modify source map
 
     const newEntity4InstanceId = 'instance-4';
-    const newEntity4 = createTestEntity(newEntity4InstanceId, DUMMY_DEFINITION_ID, {}, { [COMPONENT_A]: { value: 4 } });
+    const newEntity4 = createTestEntity(
+      newEntity4InstanceId,
+      DUMMY_DEFINITION_ID,
+      {},
+      { [COMPONENT_A]: { value: 4 } }
+    );
     entityManager.activeEntities.set(newEntity4.id, newEntity4);
 
     expect(initialResult).toHaveLength(2); // Original result unchanged

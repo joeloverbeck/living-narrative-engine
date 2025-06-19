@@ -13,8 +13,8 @@ import { ActionValidationService } from '../../src/actions/validation/actionVali
 // --- Mock Dependencies ---
 import { PrerequisiteEvaluationService } from '../../src/actions/validation/prerequisiteEvaluationService.js'; // Import PES
 import Entity from '../../src/entities/entity.js'; // Needed for test inputs
-import EntityDefinition from '../../src/entities/EntityDefinition.js';
-import EntityInstanceData from '../../src/entities/EntityInstanceData.js';
+import EntityDefinition from '../../src/entities/entityDefinition.js';
+import EntityInstanceData from '../../src/entities/entityInstanceData.js';
 import { ActionTargetContext } from '../../src/models/actionTargetContext.js';
 import { createMockPrerequisiteEvaluationService } from '../testUtils.js'; // Needed for test inputs
 
@@ -56,9 +56,21 @@ const mockDomainChecker = {
 let mockPesInstance;
 
 // Helper function to create entity instances for testing
-const createTestEntity = (instanceId, definitionId, defComponents = {}, instanceOverrides = {}) => {
-  const definition = new EntityDefinition(definitionId, { description: `Test Definition ${definitionId}`, components: defComponents });
-  const instanceData = new EntityInstanceData(instanceId, definition, instanceOverrides);
+const createTestEntity = (
+  instanceId,
+  definitionId,
+  defComponents = {},
+  instanceOverrides = {}
+) => {
+  const definition = new EntityDefinition(definitionId, {
+    description: `Test Definition ${definitionId}`,
+    components: defComponents,
+  });
+  const instanceData = new EntityInstanceData(
+    instanceId,
+    definition,
+    instanceOverrides
+  );
   return new Entity(instanceData);
 };
 

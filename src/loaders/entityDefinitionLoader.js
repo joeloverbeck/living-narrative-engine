@@ -24,7 +24,7 @@ import { parseAndValidateId } from '../utils/idUtils.js';
  * Loads entity definitions (including items, locations, blockers, connections) from mods
  * based on their manifests. Entities are defined by an ID and a collection of components.
  * Extends {@link BaseManifestItemLoader} to leverage common file processing logic,
- * including primary schema validation based on the 'entities' content type.
+ * including primary schema validation based on the 'entity_definitions' content type.
  *
  * @class EntityDefinitionLoader
  * @augments BaseManifestItemLoader
@@ -53,11 +53,11 @@ class EntityDefinitionLoader extends BaseManifestItemLoader {
     dataRegistry,
     logger
   ) {
-    // --- [LOADER-REFACTOR-04 Change START]: Call super with 'entities' content type ---
-    // Pass 'entities' as the first argument to the base class constructor.
+    // --- [LOADER-REFACTOR-04 Change START]: Call super with 'entity_definitions' content type ---
+    // Pass 'entity_definitions' as the first argument to the base class constructor.
     // Dependencies are passed in the correct order.
     super(
-      'entities',
+      'entity_definitions',
       config,
       pathResolver,
       dataFetcher,
@@ -68,12 +68,12 @@ class EntityDefinitionLoader extends BaseManifestItemLoader {
     // --- [LOADER-REFACTOR-04 Change END] ---
 
     // --- [LOADER-REFACTOR-04 Change START]: Removed schema ID retrieval and warning ---
-    // The base class constructor now handles retrieving the primary schema ID ('entities')
+    // The base class constructor now handles retrieving the primary schema ID ('entity_definitions')
     // and logging a warning if it's not found. No need to duplicate it here.
-    // const retrievedSchemaId = this._getContentTypeSchemaId('entities'); // Removed
+    // const retrievedSchemaId = this._getContentTypeSchemaId('entity_definitions'); // Removed
     // this.#entitySchemaId = retrievedSchemaId; // Removed
     // if (this.#entitySchemaId === null) { // Removed block
-    //     this._logger.warn(`EntityDefinitionLoader: Schema ID for 'entities' is missing. Entity validation will be skipped or may fail.`);
+    //     this._logger.warn(`EntityDefinitionLoader: Schema ID for 'entity_definitions' is missing. Entity validation will be skipped or may fail.`);
     // }
     // --- [LOADER-REFACTOR-04 Change END] ---
   }
@@ -163,7 +163,7 @@ class EntityDefinitionLoader extends BaseManifestItemLoader {
    * This method handles entity-specific logic:
    * 1. Extracts and validates the entity's `id`.
    * 2. Performs runtime validation of `components` against their schemas.
-   * 3. Delegates storage to the base class helper, always using the 'entities' category.
+   * 3. Delegates storage to the base class helper, always using the 'entity_definitions' category.
    * 4. Returns an object containing the final, fully qualified entity ID and whether an overwrite occurred.
    *
    * @override
@@ -172,7 +172,7 @@ class EntityDefinitionLoader extends BaseManifestItemLoader {
    * @param {string} modId - The ID of the mod owning the file.
    * @param {string} filename - The original filename from the manifest.
    * @param {string} resolvedPath - The fully resolved path to the file.
-   * @param {any} data - The raw data fetched from the file (already validated against the primary 'entities' schema).
+   * @param {any} data - The raw data fetched from the file (already validated against the primary 'entity_definitions' schema).
    * @param {string} typeName - The original content type name (e.g., 'items', 'locations') used for logging/context, but not for storage category.
    * @returns {Promise<{qualifiedId: string, didOverride: boolean}>} An object containing the final registry key and overwrite status.
    * @throws {Error} If entity-specific processing (ID extraction, component validation, storage) fails.
@@ -214,12 +214,12 @@ class EntityDefinitionLoader extends BaseManifestItemLoader {
 
     // --- Step 3: Storage (Using Helper) ---
     this._logger.debug(
-      `EntityLoader [${modId}]: Delegating storage for original type '${typeName}' with base ID '${baseEntityId}' to base helper for file ${filename}. Storing under 'entities' category.`
+      `EntityLoader [${modId}]: Delegating storage for original type '${typeName}' with base ID '${baseEntityId}' to base helper for file ${filename}. Storing under 'entity_definitions' category.`
     );
     const { qualifiedId, didOverride } = await processAndStoreItem(this, {
       data,
       idProp: 'id',
-      category: 'entities',
+      category: 'entity_definitions',
       modId,
       filename,
       parseOptions: { allowFallback: true },

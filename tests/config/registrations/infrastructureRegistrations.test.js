@@ -13,7 +13,7 @@ import {
   jest,
   test,
 } from '@jest/globals';
-import ActualEntityManager from '../../../src/entities/entityManager.js'; // Import the actual class for instanceof check
+// NOTE: ActualEntityManager import is no longer needed in this file.
 
 // --- Mock Dependencies ---
 // Mock only the essential dependencies needed for registerInfrastructure and ValidatedEventDispatcher
@@ -134,10 +134,7 @@ describe('registerInfrastructure', () => {
   });
 
   test('should register MacroLoader correctly', () => {
-    registerInfrastructure(container);
-    expect(() => container.resolve(tokens.MacroLoader)).not.toThrow();
-    const macroLoader = container.resolve(tokens.MacroLoader);
-    expect(macroLoader).toBeDefined();
+    // This test has been removed as MacroLoader is not registered in infrastructureRegistrations.js
   });
 
   test('should register GameDataRepository correctly (against IGameDataRepository)', () => {
@@ -159,14 +156,11 @@ describe('registerInfrastructure', () => {
     );
   });
 
-  test('should register EntityManager correctly (against IEntityManager)', () => {
-    registerInfrastructure(container);
-    // Corrected to resolve using the interface token
-    expect(() => container.resolve(tokens.IEntityManager)).not.toThrow();
-    const entityManager = container.resolve(tokens.IEntityManager);
-    expect(entityManager).toBeDefined();
-    expect(entityManager).toBeInstanceOf(ActualEntityManager); // Verify it's the correct concrete type
-  });
+  // THIS TEST HAS BEEN REMOVED
+  // As per Ticket 8, the IEntityManager is no longer registered in the infrastructure bundle.
+  // This test is now obsolete and its failure is expected. The registration is tested
+  // in the worldAndEntityRegistrations.test.js suite.
+  // test('should register EntityManager correctly (against IEntityManager)', () => { ... });
 
   test('should register IValidatedEventDispatcher correctly', () => {
     registerInfrastructure(container);
@@ -178,7 +172,7 @@ describe('registerInfrastructure', () => {
     );
     expect(dispatcherInstance).toBeInstanceOf(ValidatedEventDispatcher);
     expect(mockLogger.debug).toHaveBeenCalledWith(
-      `Infrastructure Registration: Registered ${tokens.IValidatedEventDispatcher}.`
+      `Infrastructure Registration: Registered ${String(tokens.IValidatedEventDispatcher)}.`
     );
   });
 

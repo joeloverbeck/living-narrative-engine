@@ -6,13 +6,20 @@
  */
 /* eslint-enable jsdoc/check-tag-names */
 /* eslint-disable no-unused-vars */
-import { describe, expect, test, jest, beforeEach, afterEach } from '@jest/globals';
+import {
+  describe,
+  expect,
+  test,
+  jest,
+  beforeEach,
+  afterEach,
+} from '@jest/globals';
 import JsonLogicEvaluationService from '../../src/logic/jsonLogicEvaluationService.js'; // Adjust path as needed
 // --- Task 1: Import necessary modules (Ticket 2.6.3) ---
 import { createJsonLogicContext } from '../../src/logic/contextAssembler.js'; // Adjust path
 import Entity from '../../src/entities/entity.js'; // Adjust path
-import EntityDefinition from '../../src/entities/EntityDefinition.js'; // Added
-import EntityInstanceData from '../../src/entities/EntityInstanceData.js'; // Added
+import EntityDefinition from '../../src/entities/entityDefinition.js'; // Added
+import EntityInstanceData from '../../src/entities/entityInstanceData.js'; // Added
 
 // --- JSDoc Imports for Type Hinting ---
 /** @typedef {import('../../src/interfaces/coreServices.js').ILogger} ILogger */
@@ -62,7 +69,6 @@ const mockEntityManager = {
   activeEntities: new Map(),
   // Added for completeness with new EntityManager structure
   _definitionCache: new Map(),
-  getPrimaryInstanceByDefinitionId: jest.fn(),
 };
 
 describe('JsonLogicEvaluationService', () => {
@@ -74,7 +80,7 @@ describe('JsonLogicEvaluationService', () => {
       logger: mockLogger,
       gameDataRepository: mockGameDataRepository,
     });
-    mockLogger.info.mockClear(); 
+    mockLogger.info.mockClear();
 
     mockEntityManager.getEntityInstance.mockReset();
     mockEntityManager.getComponentData.mockReset();
@@ -205,14 +211,25 @@ describe('JsonLogicEvaluationService', () => {
     // Helper to create simple mock entity instance for these tests
     // Updated createMockEntity
     const DUMMY_DEFINITION_ID_FOR_MOCKS = 'def:mock-eval-service';
-    const createMockEntity = (instanceId, definitionId = DUMMY_DEFINITION_ID_FOR_MOCKS, initialComponents = {}) => {
-      const defIdToUse = definitionId.includes(':') ? definitionId : `test:${definitionId}`;
-      const genericDefinition = new EntityDefinition(defIdToUse, { components: {} });
-      const instanceData = new EntityInstanceData(instanceId, genericDefinition, initialComponents);
+    const createMockEntity = (
+      instanceId,
+      definitionId = DUMMY_DEFINITION_ID_FOR_MOCKS,
+      initialComponents = {}
+    ) => {
+      const defIdToUse = definitionId.includes(':')
+        ? definitionId
+        : `test:${definitionId}`;
+      const genericDefinition = new EntityDefinition(defIdToUse, {
+        components: {},
+      });
+      const instanceData = new EntityInstanceData(
+        instanceId,
+        genericDefinition,
+        initialComponents
+      );
       const entity = new Entity(instanceData);
       return entity;
     };
-
 
     // --- Test cases using createJsonLogicContext and actual jsonLogic.apply ---
     // Example: Test with actor component access
@@ -288,7 +305,10 @@ describe('JsonLogicEvaluationService', () => {
       const componentId = 'status';
       const property = 'mood';
       const rule = {
-        '==': [{ var: `target.components.${componentId}.${property}` }, 'happy'],
+        '==': [
+          { var: `target.components.${componentId}.${property}` },
+          'happy',
+        ],
       };
       /** @type {GameEvent} */
       const event = { type: 'INTERACT', payload: {} };
@@ -317,7 +337,9 @@ describe('JsonLogicEvaluationService', () => {
       const result = service.evaluate(rule, context);
 
       expect(result).toBe(true);
-      expect(mockEntityManager.getEntityInstance).toHaveBeenCalledWith(targetId);
+      expect(mockEntityManager.getEntityInstance).toHaveBeenCalledWith(
+        targetId
+      );
       expect(mockEntityManager.getComponentData).toHaveBeenCalledWith(
         targetId,
         componentId
@@ -414,7 +436,7 @@ describe('JsonLogicEvaluationService', () => {
       expect(result).toBe(true);
     });
 
-    // Test to ensure 'entities' accessor works if needed (though component accessor is preferred)
+    // Test to ensure 'entity_definitions' accessor works if needed (though component accessor is preferred)
     // This depends on how createComponentAccessor makes entities available.
     // If it's direct via entities.actorId.property, this test applies.
     // If only via actor.components.comp.prop, then this test might be less relevant or need adjustment.

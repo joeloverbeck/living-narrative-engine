@@ -168,8 +168,8 @@ export class BaseManifestItemLoader extends AbstractLoader {
    * @param {string} filename - The original filename (for context in logs/errors).
    * @param {string} modId - The ID of the mod owning the data (for context in logs/errors).
    * @param {string} resolvedPath - The resolved path of the file (for context in logs/errors).
-   * @returns {ValidationResult} The result object from the schema validator ({ isValid: boolean, errors: AjvError[] | null }). Returns {isValid: true, errors: null} if validation is skipped.
-   * @throws {Error} If validation against the primary schema fails (`isValid` is false). The error message will include details.
+   * @returns {ValidationResult} Result of the validation. If skipping due to unloaded schema, returns `{isValid: true, errors: null}`.
+   * @throws {Error} When the schema is missing (and skipping disabled), no validator function exists, or validation fails.
    */
   _validatePrimarySchema(data, filename, modId, resolvedPath) {
     const schemaId = this._primarySchemaId;
@@ -462,7 +462,7 @@ export class BaseManifestItemLoader extends AbstractLoader {
    * It wraps registry interactions in a try/catch block for robust error handling.
    *
    * @protected
-   * @param {string} category - The data registry category (e.g., 'items', 'actions', 'entities').
+   * @param {string} category - The data registry category (e.g., 'items', 'actions', 'entity_definitions').
    * @param {string} modId - The ID of the mod providing the item.
    * @param {string} baseItemId - The item's **un-prefixed** base ID (extracted from the item data or filename).
    * @param {object} dataToStore - The original data object fetched and validated for the item.

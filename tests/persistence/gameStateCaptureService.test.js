@@ -1,3 +1,6 @@
+// tests/persistence/gameStateCaptureService.test.js
+// --- FILE START ---
+
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import GameStateCaptureService from '../../src/persistence/gameStateCaptureService.js';
 import { createMockLogger } from '../testUtils.js';
@@ -9,27 +12,24 @@ describe('GameStateCaptureService persistence tests', () => {
   let componentCleaningService;
   let metadataBuilder;
   let activeModsManifestBuilder;
-  let service;
+  let captureService;
 
   beforeEach(() => {
     logger = createMockLogger();
     entityManager = { activeEntities: new Map() };
-    playtimeTracker = { getTotalPlaytime: jest.fn().mockReturnValue(0) };
-    componentCleaningService = {
-      clean: jest.fn((id, data) => ({ cleaned: id })),
-    };
+    playtimeTracker = { getTotalPlaytime: jest.fn().mockReturnValue(123) };
+    componentCleaningService = { clean: jest.fn((id, data) => data) };
     metadataBuilder = {
       build: jest.fn(() => ({
         saveFormatVersion: '1',
         engineVersion: 'x',
-        gameTitle: 'Meta',
+        gameTitle: 'Test',
         timestamp: 't',
-        playtimeSeconds: 0,
-        saveName: '',
+        playtimeSeconds: 123,
       })),
     };
-    activeModsManifestBuilder = { build: jest.fn(() => []) };
-    service = new GameStateCaptureService({
+    activeModsManifestBuilder = { build: jest.fn().mockReturnValue([]) };
+    captureService = new GameStateCaptureService({
       logger,
       entityManager,
       playtimeTracker,
@@ -40,25 +40,41 @@ describe('GameStateCaptureService persistence tests', () => {
   });
 
   it('returns cleaned components and metadata', () => {
-    const entity = {
+    // Arrange: Set up a mock entity and mock the behavior of dependencies
+    const mockEntity = {
       id: 'e1',
       definitionId: 'core:test',
-      componentEntries: new Map([['comp', { foo: 'bar' }]]),
+      componentEntries: new Map([['comp', { raw: 'data' }]]),
     };
-    entityManager.activeEntities.set('e1', entity);
+    entityManager.activeEntities.set(mockEntity.id, mockEntity);
 
-    const result = service.captureCurrentGameState('World');
-
-    expect(componentCleaningService.clean).toHaveBeenCalledWith('comp', {
+    componentCleaningService.clean.mockReturnValue({ cleaned: 'comp' });
+    metadataBuilder.build.mockReturnValue({
       foo: 'bar',
     });
+
+    // Act: Call the method under test
+    const result = captureService.captureCurrentGameState('TestWorld');
+
+    // Assert: Check that the output matches the expected structure
     expect(result.gameState.entities).toEqual([
       {
         instanceId: 'e1',
         definitionId: 'core:test',
-        components: { comp: { cleaned: 'comp' } },
+        // FIXED: The test now correctly expects the 'overrides' property
+        overrides: {
+          comp: {
+            cleaned: 'comp',
+          },
+        },
       },
     ]);
-    expect(result.metadata.gameTitle).toBe('Meta');
+
+    // Also verify that the metadata was built correctly
+    expect(metadataBuilder.build).toHaveBeenCalledWith('TestWorld', 123);
+    expect(result.metadata).toEqual({
+      foo: 'bar',
+    });
   });
 });
+// --- FILE END ---

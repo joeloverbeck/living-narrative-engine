@@ -1,10 +1,10 @@
-import { deepFreeze } from '../utils/objectUtils.js'; // Assuming a utility for deep freezing
+import { deepFreeze } from '../utils'; // Assuming a utility for deep freezing
 
 /**
  * Represents the immutable template/definition of an entity.
  * This object is intended to be shared by multiple EntityInstanceData objects.
  *
- * @module core/entities/EntityDefinition
+ * @module core/entities/entityDefinition
  */
 class EntityDefinition {
   /**
@@ -44,7 +44,9 @@ class EntityDefinition {
       throw new Error('EntityDefinition requires a valid string id.');
     }
     if (typeof definitionData !== 'object' || definitionData === null) {
-      throw new Error('EntityDefinition requires definitionData to be an object.');
+      throw new Error(
+        'EntityDefinition requires definitionData to be an object.'
+      );
     }
 
     this.id = id;
@@ -52,9 +54,10 @@ class EntityDefinition {
 
     const inputComponents = definitionData.components;
 
-    const effectiveComponents = (typeof inputComponents === 'object' && inputComponents !== null)
-      ? inputComponents
-      : {};
+    const effectiveComponents =
+      typeof inputComponents === 'object' && inputComponents !== null
+        ? inputComponents
+        : {};
 
     const frozenComponents = {};
     for (const [key, value] of Object.entries(effectiveComponents)) {
@@ -74,12 +77,12 @@ class EntityDefinition {
   }
 
   /**
-   * Retrieves the schema/data for a specific component type from this definition.
+   * Retrieves the template/data for a specific component type from this definition.
    *
    * @param {string} componentTypeId - The unique string identifier for the component type.
    * @returns {Readonly<object> | undefined} The component data object if found, otherwise undefined.
    */
-  getComponentSchema(componentTypeId) {
+  getComponentTemplate(componentTypeId) {
     return this.components[componentTypeId];
   }
 
@@ -94,4 +97,4 @@ class EntityDefinition {
   }
 }
 
-export default EntityDefinition; 
+export default EntityDefinition;

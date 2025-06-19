@@ -11,8 +11,8 @@ import { PromptStaticContentService } from '../../src/prompting/promptStaticCont
 import AjvSchemaValidator from '../../src/validation/ajvSchemaValidator.js';
 import { LLMResponseProcessor } from '../../src/turns/services/LLMResponseProcessor.js';
 import Entity from '../../src/entities/entity.js';
-import EntityDefinition from '../../src/entities/EntityDefinition.js';
-import EntityInstanceData from '../../src/entities/EntityInstanceData.js';
+import EntityDefinition from '../../src/entities/entityDefinition.js';
+import EntityInstanceData from '../../src/entities/entityInstanceData.js';
 import {
   NOTES_COMPONENT_ID,
   SHORT_TERM_MEMORY_COMPONENT_ID,
@@ -36,9 +36,21 @@ const makeLogger = () => ({
 });
 
 // Standard helper function to create entity instances for testing
-const createTestEntity = (instanceId, definitionId, defComponents = {}, instanceOverrides = {}) => {
-  const definition = new EntityDefinition(definitionId, { description: `Test Definition ${definitionId}`, components: defComponents });
-  const instanceData = new EntityInstanceData(instanceId, definition, instanceOverrides);
+const createTestEntity = (
+  instanceId,
+  definitionId,
+  defComponents = {},
+  instanceOverrides = {}
+) => {
+  const definition = new EntityDefinition(definitionId, {
+    description: `Test Definition ${definitionId}`,
+    components: defComponents,
+  });
+  const instanceData = new EntityInstanceData(
+    instanceId,
+    definition,
+    instanceOverrides
+  );
   return new Entity(instanceData);
 };
 
@@ -192,12 +204,16 @@ describe('End-to-End Notes Persistence Flow', () => {
 
     // persist it on the entity
     if (processingResult.success && processingResult.extractedData.notes) {
-      const currentNotesData = actor.getComponentData(NOTES_COMPONENT_ID) || { notes: [] };
-      const newNoteObjects = processingResult.extractedData.notes.map((text) => ({
-        text,
-        timestamp: new Date().toISOString(), // Consistent with potential schema
-      }));
-      
+      const currentNotesData = actor.getComponentData(NOTES_COMPONENT_ID) || {
+        notes: [],
+      };
+      const newNoteObjects = processingResult.extractedData.notes.map(
+        (text) => ({
+          text,
+          timestamp: new Date().toISOString(), // Consistent with potential schema
+        })
+      );
+
       const updatedNotesArray = [...currentNotesData.notes, ...newNoteObjects];
       actor.addComponent(NOTES_COMPONENT_ID, { notes: updatedNotesArray });
     }

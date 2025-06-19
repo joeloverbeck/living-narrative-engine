@@ -78,11 +78,11 @@ describe('InMemoryDataRegistry', () => {
 
       registry.store('items', 'potion', itemData);
       registry.store('actions', 'use', actionData);
-      registry.store('entities', 'player', entityData);
+      registry.store('entity_definitions', 'player', entityData);
 
       expect(registry.get('items', 'potion')).toEqual(itemData);
       expect(registry.get('actions', 'use')).toEqual(actionData);
-      expect(registry.get('entities', 'player')).toEqual(entityData);
+      expect(registry.get('entity_definitions', 'player')).toEqual(entityData);
       expect(registry.get('items', 'use')).toBeUndefined(); // Check wrong type
     });
 
@@ -177,7 +177,7 @@ describe('InMemoryDataRegistry', () => {
 
     it('should return an empty array even if other data types are stored', () => {
       registry.store('actions', 'action1', { id: 'action1' });
-      registry.store('entities', 'player', { id: 'player' });
+      registry.store('entity_definitions', 'player', { id: 'player' });
       const rules = registry.getAllSystemRules();
       expect(rules).toEqual([]);
     });
@@ -257,11 +257,11 @@ describe('InMemoryDataRegistry', () => {
   describe('getEntityDefinition()', () => {
     const entity = { id: 'goblin', type: 'monster' };
     const item = { id: 'sword', type: 'weapon' };
-    // Assuming getEntityDefinition ONLY checks 'entities' now based on implementation
+    // Assuming getEntityDefinition ONLY checks 'entity_definitions' now based on implementation
     // If it checked multiple types, those tests would remain.
 
     beforeEach(() => {
-      registry.store('entities', entity.id, entity);
+      registry.store('entity_definitions', entity.id, entity);
       registry.store('items', item.id, item); // Store something else
     });
 
@@ -335,19 +335,19 @@ describe('InMemoryDataRegistry', () => {
     });
 
     it('should return null if entities are loaded but none have core:player component', () => {
-      registry.store('entities', npcEntity.id, npcEntity);
+      registry.store('entity_definitions', npcEntity.id, npcEntity);
       expect(registry.getStartingPlayerId()).toBeNull();
       expect(registry.getStartingLocationId()).toBeNull();
     });
 
     it('should find the starting player ID if an entity has core:player component', () => {
-      registry.store('entities', npcEntity.id, npcEntity);
-      registry.store('entities', playerEntity.id, playerEntity);
+      registry.store('entity_definitions', npcEntity.id, npcEntity);
+      registry.store('entity_definitions', playerEntity.id, playerEntity);
       expect(registry.getStartingPlayerId()).toBe(playerEntity.id);
     });
 
     it('should find the starting location ID from the player entity', () => {
-      registry.store('entities', playerEntity.id, playerEntity);
+      registry.store('entity_definitions', playerEntity.id, playerEntity);
       registry.store('locations', startRoomLoc.id, startRoomLoc); // Location definition isn't strictly needed for the ID lookup
       expect(registry.getStartingLocationId()).toBe('startRoom');
     });
@@ -358,7 +358,7 @@ describe('InMemoryDataRegistry', () => {
         name: 'Lost Hero',
         components: { 'core:player': {} },
       };
-      registry.store('entities', playerNoPos.id, playerNoPos);
+      registry.store('entity_definitions', playerNoPos.id, playerNoPos);
       expect(registry.getStartingPlayerId()).toBe(playerNoPos.id);
       expect(registry.getStartingLocationId()).toBeNull();
     });
@@ -369,7 +369,7 @@ describe('InMemoryDataRegistry', () => {
         name: 'Nowhere Hero',
         components: { 'core:player': {}, 'core:position': { x: 0, y: 0 } },
       };
-      registry.store('entities', playerNoLocId.id, playerNoLocId);
+      registry.store('entity_definitions', playerNoLocId.id, playerNoLocId);
       expect(registry.getStartingPlayerId()).toBe(playerNoLocId.id);
       expect(registry.getStartingLocationId()).toBeNull();
     });

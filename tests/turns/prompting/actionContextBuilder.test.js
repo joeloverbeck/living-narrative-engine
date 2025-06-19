@@ -7,8 +7,8 @@ import { jest, describe, it, expect, beforeEach } from '@jest/globals';
 import ActionContextBuilder from '../../../src/turns/prompting/actionContextBuilder.js';
 import { PromptError } from '../../../src/errors/promptError.js';
 import Entity from '../../../src/entities/entity.js';
-import EntityDefinition from '../../../src/entities/EntityDefinition.js';
-import EntityInstanceData from '../../../src/entities/EntityInstanceData.js';
+import EntityDefinition from '../../../src/entities/entityDefinition.js';
+import EntityInstanceData from '../../../src/entities/entityInstanceData.js';
 
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -33,9 +33,21 @@ const createMockLogger = () => ({
 });
 
 // Helper function to create entity instances for testing
-const createTestEntity = (instanceId, definitionId, defComponents = {}, instanceOverrides = {}) => {
-  const definition = new EntityDefinition(definitionId, { description: `Test Definition ${definitionId}`, components: defComponents });
-  const instanceData = new EntityInstanceData(instanceId, definition, instanceOverrides);
+const createTestEntity = (
+  instanceId,
+  definitionId,
+  defComponents = {},
+  instanceOverrides = {}
+) => {
+  const definition = new EntityDefinition(definitionId, {
+    description: `Test Definition ${definitionId}`,
+    components: defComponents,
+  });
+  const instanceData = new EntityInstanceData(
+    instanceId,
+    definition,
+    instanceOverrides
+  );
   return new Entity(instanceData);
 };
 
@@ -205,8 +217,12 @@ describe('ActionContextBuilder', () => {
         // Based on current buildContext, only 'id' is strictly needed for this specific failure path.
         hasComponent: jest.fn(),
         getComponentData: jest.fn(),
-        get definitionId() { return 'mock-def'; },
-        get instanceData() { return { instanceId: '' }; }
+        get definitionId() {
+          return 'mock-def';
+        },
+        get instanceData() {
+          return { instanceId: '' };
+        },
       };
       const expectedError = new PromptError(
         'Cannot build ActionContext: actor is invalid or has no ID.',
@@ -215,7 +231,9 @@ describe('ActionContextBuilder', () => {
       );
 
       // Act & Assert
-      await expect(builder.buildContext(actorWithEmptyId)).rejects.toThrow(expectedError);
+      await expect(builder.buildContext(actorWithEmptyId)).rejects.toThrow(
+        expectedError
+      );
     });
 
     it('should throw a PromptError with code INVALID_ACTOR if actor.id is a string of just whitespace', async () => {
@@ -225,8 +243,12 @@ describe('ActionContextBuilder', () => {
         id: '   ',
         hasComponent: jest.fn(),
         getComponentData: jest.fn(),
-        get definitionId() { return 'mock-def'; },
-        get instanceData() { return { instanceId: '   ' }; }
+        get definitionId() {
+          return 'mock-def';
+        },
+        get instanceData() {
+          return { instanceId: '   ' };
+        },
       };
       const expectedError = new PromptError(
         'Cannot build ActionContext: actor is invalid or has no ID.',
@@ -235,7 +257,9 @@ describe('ActionContextBuilder', () => {
       );
 
       // Act & Assert
-      await expect(builder.buildContext(actorWithWhitespaceId)).rejects.toThrow(expectedError);
+      await expect(builder.buildContext(actorWithWhitespaceId)).rejects.toThrow(
+        expectedError
+      );
     });
 
     it('should throw a PromptError with code LOCATION_NOT_FOUND if the location is missing', async () => {

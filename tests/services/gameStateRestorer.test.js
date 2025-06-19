@@ -42,9 +42,11 @@ describe('GameStateRestorer.restoreGameState', () => {
     };
     const res = await ctx.restorer.restoreGameState(data);
     expect(ctx.entityManager.clearAll).toHaveBeenCalled();
-    expect(ctx.entityManager.reconstructEntity).toHaveBeenCalledWith(
-      data.gameState.entities[0]
-    );
+    expect(ctx.entityManager.reconstructEntity).toHaveBeenCalledWith({
+      instanceId: 'e1',
+      definitionId: 'core:player',
+      overrides: {},
+    });
     expect(ctx.playtimeTracker.setAccumulatedPlaytime).toHaveBeenCalledWith(50);
     expect(res.success).toBe(true);
   });

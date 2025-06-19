@@ -8,6 +8,7 @@
 import Ajv from 'ajv';
 import addFormats from 'ajv-formats';
 import EntityManager from '../../src/entities/entityManager.js';
+import EntityDefinition from '../../src/entities/entityDefinition.js';
 import {
   ACTOR_COMPONENT_ID,
   NOTES_COMPONENT_ID,
@@ -52,6 +53,10 @@ const coreNotesSchema = {
   additionalProperties: false,
 };
 
+const createMockSafeEventDispatcher = () => ({
+  dispatch: jest.fn(),
+});
+
 // -----------------------------
 // Build an Ajv validator for core:notes
 // -----------------------------
@@ -65,6 +70,7 @@ describe('EntityManager - core:notes injection', () => {
   let loggerMock;
   let spatialIndexMock;
   let entityManager;
+  let mockEventDispatcher;
 
   beforeEach(() => {
     // A no-op IDataRegistry mock whose getEntityDefinition will be set per-test
@@ -104,11 +110,14 @@ describe('EntityManager - core:notes injection', () => {
       clearIndex: jest.fn(),
     };
 
+    mockEventDispatcher = createMockSafeEventDispatcher();
+
     entityManager = new EntityManager(
       registryMock,
       validatorMock,
       loggerMock,
-      spatialIndexMock
+      spatialIndexMock,
+      mockEventDispatcher
     );
   });
 
@@ -126,8 +135,7 @@ describe('EntityManager - core:notes injection', () => {
       },
     ];
 
-    const actorDefinition = {
-      definitionId,
+    const actorDefinitionData = {
       components: {
         [ACTOR_COMPONENT_ID]: {
           /* actor-specific data */
@@ -136,7 +144,9 @@ describe('EntityManager - core:notes injection', () => {
       },
     };
 
-    registryMock.getEntityDefinition.mockReturnValue(actorDefinition);
+    registryMock.getEntityDefinition.mockReturnValue(
+      new EntityDefinition(definitionId, actorDefinitionData)
+    );
 
     const created = entityManager.createEntityInstance(definitionId);
 
@@ -159,8 +169,7 @@ describe('EntityManager - core:notes injection', () => {
   test('Creating an actor WITHOUT core:notes injects { notes: [] } and passes Ajv', () => {
     const definitionId = 'test:heroWithoutNotes';
 
-    const actorDefinition = {
-      definitionId,
+    const actorDefinitionData = {
       components: {
         [ACTOR_COMPONENT_ID]: {
           /* actor-specific data */
@@ -169,7 +178,9 @@ describe('EntityManager - core:notes injection', () => {
       },
     };
 
-    registryMock.getEntityDefinition.mockReturnValue(actorDefinition);
+    registryMock.getEntityDefinition.mockReturnValue(
+      new EntityDefinition(definitionId, actorDefinitionData)
+    );
 
     const created = entityManager.createEntityInstance(definitionId);
 
@@ -191,15 +202,16 @@ describe('EntityManager - core:notes injection', () => {
   test('Creating a non-actor entity absolutely does NOT inject core:notes', () => {
     const definitionId = 'test:nonActor';
 
-    const nonActorDefinition = {
-      definitionId,
+    const nonActorDefinitionData = {
       components: {
         // No core:actor, so we should not inject anything
         'core:name': { value: 'JustAnItem' },
       },
     };
 
-    registryMock.getEntityDefinition.mockReturnValue(nonActorDefinition);
+    registryMock.getEntityDefinition.mockReturnValue(
+      new EntityDefinition(definitionId, nonActorDefinitionData)
+    );
 
     const created = entityManager.createEntityInstance(definitionId);
     expect(created).not.toBeNull();

@@ -2,6 +2,7 @@
 
 import EntityManager from '../../src/entities/entityManager.js';
 import Entity from '../../src/entities/entity.js';
+import EntityDefinition from '../../src/entities/entityDefinition.js';
 import {
   ACTOR_COMPONENT_ID,
   SHORT_TERM_MEMORY_COMPONENT_ID,
@@ -9,12 +10,17 @@ import {
 } from '../../src/constants/componentIds.js';
 import { beforeEach, describe, expect, test } from '@jest/globals';
 
+const createMockSafeEventDispatcher = () => ({
+  dispatch: jest.fn(),
+});
+
 describe('EntityManager – core:goals injection logic', () => {
   let registryStub;
   let validatorStub;
   let loggerStub;
   let spatialIndexStub;
   let manager;
+  let mockEventDispatcher;
 
   beforeEach(() => {
     // 1. Stub IDataRegistry
@@ -45,24 +51,29 @@ describe('EntityManager – core:goals injection logic', () => {
       getEntitiesInLocation: jest.fn(() => new Set()),
     };
 
+    mockEventDispatcher = createMockSafeEventDispatcher();
+
     // 5. Create the EntityManager instance
     manager = new EntityManager(
       registryStub,
       validatorStub,
       loggerStub,
-      spatialIndexStub
+      spatialIndexStub,
+      mockEventDispatcher
     );
   });
 
   test('Actor with no core:goals → receives default { goals: [] }', () => {
     // Arrange: define an actor definition WITHOUT core:goals
     const defId = 'mod:testActorNoGoals';
-    registryStub.getEntityDefinition.mockReturnValue({
-      definitionId: defId,
+    const definitionData = {
       components: {
         [ACTOR_COMPONENT_ID]: {}, // minimal actor component
       },
-    });
+    };
+    registryStub.getEntityDefinition.mockReturnValue(
+      new EntityDefinition(defId, definitionData)
+    );
 
     // Act: create the entity
     const entity = manager.createEntityInstance(defId);
@@ -76,7 +87,7 @@ describe('EntityManager – core:goals injection logic', () => {
     // 2. Since it was missing, the default core:goals must exist now
     expect(entity.hasComponent('core:goals')).toBe(true);
 
-    // 3. That component’s data must equal exactly { goals: [] }
+    // 3. That component's data must equal exactly { goals: [] }
     const goalsData = entity.getComponentData('core:goals');
     expect(goalsData).toEqual({ goals: [] });
 
@@ -104,13 +115,15 @@ describe('EntityManager – core:goals injection logic', () => {
     const initialGoals = {
       goals: [{ text: 'Find treasure', timestamp: '2025-01-01T12:00:00Z' }],
     };
-    registryStub.getEntityDefinition.mockReturnValue({
-      definitionId: defId,
+    const definitionDataWithGoals = {
       components: {
         [ACTOR_COMPONENT_ID]: {},
         'core:goals': initialGoals,
       },
-    });
+    };
+    registryStub.getEntityDefinition.mockReturnValue(
+      new EntityDefinition(defId, definitionDataWithGoals)
+    );
 
     // Act: create the entity
     const entity = manager.createEntityInstance(defId);
@@ -140,13 +153,15 @@ describe('EntityManager – core:goals injection logic', () => {
   test('Non-actor entity without core:goals → no core:goals injection', () => {
     // Arrange: a non-actor definition missing core:goals
     const defId = 'mod:testItemNoGoals';
-    registryStub.getEntityDefinition.mockReturnValue({
-      definitionId: defId,
+    const itemDefinitionData = {
       components: {
         // e.g. some item component
         'core:name': { name: 'Healing Potion' },
       },
-    });
+    };
+    registryStub.getEntityDefinition.mockReturnValue(
+      new EntityDefinition(defId, itemDefinitionData)
+    );
 
     // Act: create the entity
     const entity = manager.createEntityInstance(defId);

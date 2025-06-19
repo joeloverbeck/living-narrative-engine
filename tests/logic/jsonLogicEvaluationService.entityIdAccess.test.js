@@ -29,8 +29,8 @@ import JsonLogicEvaluationService from '../../src/logic/jsonLogicEvaluationServi
 // --- Dependencies for Mocking & Context ---
 import { createJsonLogicContext } from '../../src/logic/contextAssembler.js'; // Adjust path as needed - Needed for entity access tests
 import Entity from '../../src/entities/entity.js'; // Adjust path as needed - Needed for mock context setup
-import EntityDefinition from '../../src/entities/EntityDefinition.js';
-import EntityInstanceData from '../../src/entities/EntityInstanceData.js';
+import EntityDefinition from '../../src/entities/entityDefinition.js';
+import EntityInstanceData from '../../src/entities/entityInstanceData.js';
 
 // --- JSDoc Imports for Type Hinting ---
 /** @typedef {import('../../src/interfaces/coreServices.js').ILogger} ILogger */ // Adjust path as needed
@@ -72,9 +72,21 @@ const mockEntityManager = {
 // const createMockEntity = (id) => new Entity(id, 'dummy'); // Replaced by standard createTestEntity
 
 // Standard helper function to create entity instances for testing
-const createTestEntity = (instanceId, definitionId = 'dummy-def', defComponents = {}, instanceOverrides = {}) => {
-  const definition = new EntityDefinition(definitionId, { description: `Test Definition ${definitionId}`, components: defComponents });
-  const instanceData = new EntityInstanceData(instanceId, definition, instanceOverrides);
+const createTestEntity = (
+  instanceId,
+  definitionId = 'dummy-def',
+  defComponents = {},
+  instanceOverrides = {}
+) => {
+  const definition = new EntityDefinition(definitionId, {
+    description: `Test Definition ${definitionId}`,
+    components: defComponents,
+  });
+  const instanceData = new EntityInstanceData(
+    instanceId,
+    definition,
+    instanceOverrides
+  );
   return new Entity(instanceData);
 };
 

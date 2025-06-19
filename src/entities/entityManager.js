@@ -15,8 +15,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import { cloneDeep } from 'lodash';
 import Entity from './entity.js';
-import EntityDefinition from './EntityDefinition.js';
-import EntityInstanceData from './EntityInstanceData.js';
+import EntityInstanceData from './entityInstanceData.js';
 import MapManager from '../utils/mapManagerUtils.js';
 import {
   ACTOR_COMPONENT_ID,
@@ -27,7 +26,15 @@ import {
 } from '../constants/componentIds.js';
 import { IEntityManager } from '../interfaces/IEntityManager.js';
 import { validateDependency } from '../utils/validationUtils.js';
-import { ensureValidLogger } from '../utils/loggerUtils.js';
+import { ensureValidLogger } from '../utils';
+import { DefinitionNotFoundError } from '../errors/definitionNotFoundError.js';
+import { EntityNotFoundError } from '../errors/entityNotFoundError';
+import {
+  ENTITY_CREATED_ID,
+  ENTITY_REMOVED_ID,
+  COMPONENT_ADDED_ID,
+  COMPONENT_REMOVED_ID,
+} from '../constants/eventIds.js';
 
 /* -------------------------------------------------------------------------- */
 /* Type-Hint Imports (JSDoc only – removed at runtime)                        */
@@ -38,6 +45,7 @@ import { ensureValidLogger } from '../utils/loggerUtils.js';
 /** @typedef {import('../interfaces/coreServices.js').ILogger}              ILogger */
 /** @typedef {import('../interfaces/ISpatialIndexManager.js').ISpatialIndexManager} ISpatialIndexManager */
 /** @typedef {import('../interfaces/coreServices.js').ValidationResult}     ValidationResult */
+/** @typedef {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 
 /* -------------------------------------------------------------------------- */
 /* Internal Utilities                                                         */
@@ -86,17 +94,19 @@ function formatValidationErrors(rawResult) {
  * @augments {IEntityManager}
  * @description
  * Runtime manager responsible for:
- *  • Instantiating entities from definitions
- *  • Validating and mutating component payloads
- *  • Injecting engine-level default components (STM, notes, and goals)
- *  • Tracking active entities and their primary instances
- *  • Propagating position changes to the spatial index
+ * • Instantiating entities from definitions
+ * • Validating and mutating component payloads
+ * • Injecting engine-level default components (STM, notes, and goals)
+ * • Tracking active entities and their primary instances
+ * • Propagating position changes to the spatial index
+ * • Emitting events for entity lifecycle and component changes.
  */
 class EntityManager extends IEntityManager {
   /** @type {IDataRegistry}  @private */ #registry;
   /** @type {ISchemaValidator} @private */ #validator;
   /** @type {ILogger} @private */ #logger;
   /** @type {ISpatialIndexManager} @private */ #spatialIndexManager;
+  /** @type {ISafeEventDispatcher} @private */ #eventDispatcher;
 
   /** @type {MapManager} @private */ #mapManager;
 
@@ -106,18 +116,16 @@ class EntityManager extends IEntityManager {
   /** @type {Map<string, Entity>} */
   activeEntities;
 
-  /** @type {Map<string, string>}  @private */
-  #definitionToPrimaryInstanceMap;
-
   /**
    * @class
    * @param {IDataRegistry}        registry
    * @param {ISchemaValidator}     validator
    * @param {ILogger}              logger
    * @param {ISpatialIndexManager} spatialIndexManager
+   * @param {ISafeEventDispatcher} safeEventDispatcher
    * @throws {Error} If any dependency is missing or malformed.
    */
-  constructor(registry, validator, logger, spatialIndexManager) {
+  constructor(registry, validator, logger, spatialIndexManager, safeEventDispatcher) {
     super();
 
     /* ---------- dependency checks ---------- */
@@ -145,11 +153,14 @@ class EntityManager extends IEntityManager {
         ],
       }
     );
+    validateDependency(safeEventDispatcher, 'ISafeEventDispatcher', this.#logger, {
+      requiredMethods: ['dispatch'],
+    });
 
     this.#registry = registry;
     this.#validator = validator;
     this.#spatialIndexManager = spatialIndexManager;
-    this.#definitionToPrimaryInstanceMap = new Map();
+    this.#eventDispatcher = safeEventDispatcher;
     this.#mapManager = new MapManager({ throwOnInvalidId: false });
     this.activeEntities = this.#mapManager.items;
     this.#definitionCache = new Map();
@@ -158,20 +169,13 @@ class EntityManager extends IEntityManager {
   }
 
   /**
-   * Retrieve an entity by ID or throw an Error if missing.
-   *
+   * Retrieves an entity instance without throwing an error if not found.
+   * @param {string} instanceId - The ID of the entity instance.
+   * @returns {Entity | undefined} The entity instance or undefined if not found.
    * @private
-   * @param {string} instanceId
-   * @returns {Entity}
    */
-  #getEntityOrThrow(instanceId) {
-    const entity = this.#mapManager.get(instanceId);
-    if (!entity) {
-      const msg = `EntityManager: Entity not found with ID: ${instanceId}`;
-      this.#logger.error(msg);
-      throw new Error(msg);
-    }
-    return entity;
+  #_getEntity(instanceId) {
+    return this.#mapManager.get(instanceId);
   }
 
   /**
@@ -203,92 +207,96 @@ class EntityManager extends IEntityManager {
    * @param {Entity} entity - The entity instance to modify.
    */
   #injectDefaultComponents(entity) {
-    // If it's an actor, handle STM and Notes injection
     if (entity.hasComponent(ACTOR_COMPONENT_ID)) {
-      // Inject STM if missing
-      if (!entity.hasComponent(SHORT_TERM_MEMORY_COMPONENT_ID)) {
-        this.#logger.debug(
-          `Injecting STM for ${entity.id} (def: ${entity.definitionId})`
-        );
-        const stmData = { thoughts: [], maxEntries: 10 };
-        const validatedStmData = this.#validateAndClone(
-          SHORT_TERM_MEMORY_COMPONENT_ID,
-          stmData,
-          `Default STM component injection for entity ${entity.id}`
-        );
-        entity.addComponent(SHORT_TERM_MEMORY_COMPONENT_ID, validatedStmData);
-      }
+      const componentsToInject = [
+        {
+          id: SHORT_TERM_MEMORY_COMPONENT_ID,
+          data: { thoughts: [], maxEntries: 10 },
+          name: 'STM',
+        },
+        { id: NOTES_COMPONENT_ID, data: { notes: [] }, name: 'Notes' },
+        { id: GOALS_COMPONENT_ID, data: { goals: [] }, name: 'Goals' },
+      ];
 
-      // Inject Notes if missing (now actor-dependent)
-      if (!entity.hasComponent(NOTES_COMPONENT_ID)) {
-        this.#logger.debug(
-          `Injecting Notes for ${entity.id} (def: ${entity.definitionId})`
-        );
-        const notesData = { notes: [] };
-        const validatedNotesData = this.#validateAndClone(
-          NOTES_COMPONENT_ID,
-          notesData,
-          `Default Notes component injection for entity ${entity.id}`
-        );
-        entity.addComponent(NOTES_COMPONENT_ID, validatedNotesData);
-      }
-
-      // Inject Goals if missing (actor-dependent)
-      if (!entity.hasComponent(GOALS_COMPONENT_ID)) {
-        this.#logger.debug(
-          `Injecting Goals for ${entity.id} (def: ${entity.definitionId})`
-        );
-        const goalsData = { goals: [] }; // Default goals
-        const validatedGoalsData = this.#validateAndClone(
-          GOALS_COMPONENT_ID,
-          goalsData,
-          `Default Goals component injection for entity ${entity.id}`
-        );
-        entity.addComponent(GOALS_COMPONENT_ID, validatedGoalsData);
+      for (const comp of componentsToInject) {
+        if (!entity.hasComponent(comp.id)) {
+          this.#logger.debug(
+            `Injecting ${comp.name} for ${entity.id} (def: ${entity.definitionId})`
+          );
+          try {
+            // Note: This does not and should not fire a COMPONENT_ADDED event,
+            // as this is part of the entity creation process, not a discrete runtime action.
+            const validatedData = this.#validateAndClone(
+              comp.id,
+              comp.data,
+              `Default ${comp.name} component injection for entity ${entity.id}`
+            );
+            entity.addComponent(comp.id, validatedData);
+          } catch (e) {
+            this.#logger.error(
+              `Failed to inject default component ${comp.id} for entity ${entity.id}: ${e.message}`
+            );
+          }
+        }
       }
     }
-    // Placeholder for goal injection logic if it becomes a default component
-    // if (!entity.hasComponent(GOAL_COMPONENT_ID)) { ... }
   }
 
   /**
-   * Track a newly created entity if not a forced clone.
+   * Internal method to add an entity to tracking collections.
    *
    * @private
-   * @param {Entity} entity
-   * @param {string} definitionId
-   * @param {string} instanceId
-   * @param {boolean} isCurrentlyForceNew - True if this specific creation call was a forceNew.
-   * @param {boolean} isReconstruction - True if this is part of a reconstruction.
+   * @param {Entity} entity The entity to track.
    */
-  #_trackEntity(entity, definitionId, instanceId, isCurrentlyForceNew, isReconstruction) {
-    this.#mapManager.add(instanceId, entity);
+  #_trackEntity(entity) {
+    this.#mapManager.add(entity.id, entity);
 
-    // If it's a forceNew, it becomes the primary.
-    // If it's a reconstruction, it also becomes primary IF no other primary exists for that definition
-    // (covers case where game is loaded and reconstructed entities become the primaries).
-    // Otherwise (normal creation), it becomes primary only if no primary exists yet for that def.
-    const currentPrimary = this.#definitionToPrimaryInstanceMap.get(definitionId);
-    let shouldSetAsPrimary = false;
-
-    if (isCurrentlyForceNew) {
-      shouldSetAsPrimary = true;
-    } else if (isReconstruction) {
-      if (!currentPrimary) {
-        shouldSetAsPrimary = true;
-      }
-    } else { // Standard creation
-      if (!currentPrimary) {
-        shouldSetAsPrimary = true;
+    // If entity has a position, add it to the spatial index
+    if (entity.hasComponent(POSITION_COMPONENT_ID)) {
+      const position = entity.getComponentData(POSITION_COMPONENT_ID);
+      // Ensure locationId exists and is a non-empty string before adding to spatial index
+      if (
+        position &&
+        typeof position.locationId === 'string' &&
+        position.locationId.trim() !== ''
+      ) {
+        this.#spatialIndexManager.addEntity(entity.id, position.locationId);
+        this.#logger.debug(
+          `Added entity ${entity.id} to spatial index at location ${position.locationId}.`
+        );
+      } else {
+        this.#logger.debug(
+          `Entity ${entity.id} has position component but no valid locationId; not added to spatial index.`
+        );
       }
     }
+    this.#logger.debug(`Tracked entity ${entity.id}`);
+  }
 
-    if (shouldSetAsPrimary) {
-      this.#definitionToPrimaryInstanceMap.set(definitionId, instanceId);
-      this.#logger.debug(
-        `Set ${instanceId} as primary for definition ${definitionId} (forceNew: ${isCurrentlyForceNew}, recon: ${isReconstruction})`
+  /**
+   * Retrieves a cached entity definition or fetches it from the registry.
+   *
+   * @private
+   * @param {string} definitionId - The ID of the entity definition.
+   * @returns {EntityDefinition|null} The entity definition or null if not found.
+   */
+  #getDefinition(definitionId) {
+    if (!MapManager.isValidId(definitionId)) {
+      this.#logger.warn(
+        `EntityManager.#getDefinition called with invalid definitionId: '${definitionId}'`
       );
+      return null;
     }
+    if (this.#definitionCache.has(definitionId)) {
+      return this.#definitionCache.get(definitionId);
+    }
+    const definition = this.#registry.getEntityDefinition(definitionId);
+    if (definition) {
+      this.#definitionCache.set(definitionId, definition);
+      return definition;
+    }
+    this.#logger.warn(`Definition not found in registry: ${definitionId}`);
+    return null;
   }
 
   /* ---------------------------------------------------------------------- */
@@ -297,266 +305,175 @@ class EntityManager extends IEntityManager {
   /* ---------------------------------------------------------------------- */
 
   /**
-   * Gets or creates an EntityDefinition.
-   * @private
-   * @param {string} definitionId
-   * @returns {EntityDefinition}
-   * @throws {Error} If definitionId is invalid or definition data cannot be fetched/parsed.
+   * Create a new entity instance from a definition.
+   *
+   * @param {string} definitionId - The ID of the entity definition to use.
+   * @param {object} options - Options for entity creation.
+   * @param {string} [options.instanceId] - Optional. A specific ID for the new instance. If not provided, a UUID will be generated.
+   * @param {Object<string, object>} [options.componentOverrides={}] - Optional. A map of component data to override or add.
+   * @returns {Entity} The newly created entity instance.
+   * @throws {DefinitionNotFoundError} If the definition is not found.
+   * @throws {Error} If component data is invalid, or if an entity with the given instanceId already exists.
    */
-  #getOrCreateEntityDefinition(definitionId) {
-    if (this.#definitionCache.has(definitionId)) {
-      return this.#definitionCache.get(definitionId);
-    }
-
-    this.#logger.debug(`Definition ${definitionId} not in cache. Fetching...`);
-    const rawDefinitionData = this.#registry.getEntityDefinition(definitionId);
-    if (!rawDefinitionData) {
-      const msg = `Entity definition not found for ID: ${definitionId}`;
+  createEntityInstance(
+    definitionId,
+    { instanceId, componentOverrides = {} } = {}
+  ) {
+    if (!MapManager.isValidId(definitionId)) {
+      const msg = `EntityManager.createEntityInstance: Invalid definitionId: ${definitionId}`;
       this.#logger.error(msg);
       throw new Error(msg);
     }
 
-    try {
-      // The EntityDefinition constructor will deep-freeze its components.
-      const definition = new EntityDefinition(definitionId, rawDefinitionData);
-      this.#definitionCache.set(definitionId, definition);
-      this.#logger.info(`Cached new entity definition: ${definitionId}`);
-      return definition;
-    } catch (error) {
-      this.#logger.error(
-        `Failed to create EntityDefinition for ${definitionId}: ${error.message}`
-      );
-      throw error; // Re-throw after logging
-    }
-  }
-
-  /**
-   * Create a new entity instance from a definition ID.
-   * This method maintains backward compatibility with the older signature
-   * `createEntityInstance(definitionId, instanceId = null, forceNew = false)`
-   * while also supporting `createEntityInstance(definitionId, componentOverrides = {}, instanceId = null, forceNew = false)`.
-   *
-   * @param {string} definitionId - The ID of the entity definition (e.g., "core:player").
-   * @param {Record<string, object> | string | null} [p2] - Either componentOverrides (object), instanceId (string/null), or undefined.
-   * @param {string | boolean | null} [p3] - Either instanceId (string/null), forceNew (boolean), or undefined.
-   * @param {boolean} [p4] - forceNew (boolean) or undefined.
-   * @returns {Entity|null} The created entity instance, or null if creation failed.
-   * @throws {Error} If definitionId is invalid or definition cannot be found/parsed.
-   */
-  createEntityInstance(definitionId, p2, p3, p4) {
-    if (typeof definitionId !== 'string' || !definitionId.trim()) {
-      this.#logger.error('EntityManager.createEntityInstance: Invalid definitionId provided.', { definitionId });
-      throw new Error('Invalid definitionId');
-    }
-
-    let instanceId;
-    let componentOverrides = {};
-    let finalForceNew = false; // Default for the new signature path
-
-    // --- Argument Parsing for Overloaded Signature ---
-    if (typeof p2 === 'string') {
-      instanceId = p2;
-      finalForceNew = typeof p3 === 'boolean' ? p3 : false; 
-    } else if (typeof p2 === 'boolean') {
-      instanceId = uuidv4();
-      finalForceNew = p2; 
-    } else if (typeof p2 === 'object' && p2 !== null) {
-      componentOverrides = p2;
-      if (typeof p3 === 'string') {
-        instanceId = p3;
-        finalForceNew = typeof p4 === 'boolean' ? p4 : false;
-      } else if (typeof p3 === 'boolean') { 
-        instanceId = uuidv4();
-        finalForceNew = p3;
-      } else { 
-        instanceId = uuidv4();
-      }
-    } else if (p2 === undefined && p3 === undefined && p4 === undefined) {
-      instanceId = uuidv4();
-    } else {
-      this.#logger.error('EntityManager.createEntityInstance: Invalid arguments provided.', { definitionId, p2, p3, p4 });
-      throw new Error('Invalid arguments for createEntityInstance');
-    }
-
-    // --- Definition Handling ---
-    const definition = this.#getOrCreateEntityDefinition(definitionId);
+    const definition = this.#getDefinition(definitionId);
     if (!definition) {
+      // UPDATED: Throw custom error
       this.#logger.error(
-        `EntityManager.createEntityInstance: Entity definition not found for ID: ${definitionId}`
+        `EntityManager.createEntityInstance: Definition not found: '${definitionId}'`
       );
-      return null;
+      throw new DefinitionNotFoundError(definitionId);
     }
 
-    // --- MODIFIED SECTION for ForceNew Handling ---
-    if (finalForceNew) {
-      const currentPrimaryId = this.#definitionToPrimaryInstanceMap.get(definitionId);
-      // If a primary exists AND its ID is different from the instanceId we might be about to use/create,
-      // or if instanceId is about to be generated (meaning it will be different unless a very unlikely collision).
-      // The key is to remove the *current* primary if forceNew is active for the definition.
-      if (currentPrimaryId) { 
-        this.#logger.debug(
-          `ForceNew active for definition ${definitionId}. Removing existing primary instance ${currentPrimaryId} before creating new instance ${instanceId}.`
-        );
-        this.removeEntityInstance(currentPrimaryId); // This removes from mapManager, spatialIndex, and definitionToPrimaryInstanceMap.
-      }
-    }
-    // --- End MODIFIED SECTION ---
+    const newInstanceId =
+      instanceId && MapManager.isValidId(instanceId) ? instanceId : uuidv4();
 
-    // --- Existing Entity & ForceNew Handling (for the *specific* instanceId being created) ---
-    const existingEntity = this.#mapManager.get(instanceId);
-    if (existingEntity) {
-      if (finalForceNew) {
-        // If we reached here and finalForceNew is true, it means currentPrimaryId (if it existed) was different from instanceId,
-        // OR currentPrimaryId was the same as instanceId. In either case, if an entity with this *specific* instanceId still exists,
-        // it needs to be removed because we are forcing a new one with this ID.
-        this.#logger.debug(`ForceNew: Entity with target ID ${instanceId} exists. Removing it before creating new one.`);
-        this.removeEntityInstance(instanceId); // Remove old one completely (handles all cleanup)
-      } else {
-        this.#logger.warn(
-          `EntityManager.createEntityInstance: Entity with ID ${instanceId} already exists and forceNew is false. Returning existing.`
-        );
-        return existingEntity;
-      }
+    if (this.#mapManager.has(newInstanceId)) {
+      const msg = `EntityManager.createEntityInstance: Entity with instanceId '${newInstanceId}' already exists.`;
+      this.#logger.error(msg);
+      throw new Error(msg);
     }
-    
-    // --- Create EntityInstanceData (Holds definition and overrides) ---
-    const validatedInitialOverrides = {};
+
+    this.#logger.debug(
+      `Creating entity instance '${newInstanceId}' from definition '${definitionId}'`
+    );
+
+    const validatedOverrides = {};
     if (componentOverrides) {
-      for (const compId in componentOverrides) {
-        const compData = componentOverrides[compId];
-        if (compData === null) { // Allow null to signify removal/nullification
-          validatedInitialOverrides[compId] = null;
+      for (const [typeId, data] of Object.entries(componentOverrides)) {
+        if (data === null) {
+          validatedOverrides[typeId] = null;
         } else {
-          try {
-            validatedInitialOverrides[compId] = this.#validateAndClone(
-              compId,
-              compData,
-              `Override component ${compId} for entity ${instanceId}`
-            );
-          } catch (error) {
-            // Log already done in #validateAndClone, rethrow or handle if needed
-            this.#logger.error(`Failed to validate override component ${compId} for entity ${instanceId} during creation. Error: ${error.message}`);
-            throw error; // Propagate validation error
-          }
+          validatedOverrides[typeId] = this.#validateAndClone(
+            typeId,
+            data,
+            `Override component ${typeId} for new entity ${newInstanceId} (definition ${definitionId})`
+          );
         }
       }
     }
 
-    const instanceData = new EntityInstanceData(instanceId, definition, validatedInitialOverrides);
-    
-    // --- Create Entity (Passes instanceData) ---
-    const entity = new Entity(instanceData);
+    if (definition.components) {
+      for (const [typeId, defData] of Object.entries(definition.components)) {
+        if (
+          defData !== null &&
+          (!componentOverrides || !componentOverrides.hasOwnProperty(typeId))
+        ) {
+          this.#validateAndClone(
+            typeId,
+            defData,
+            `Definition component ${typeId} for new entity ${newInstanceId} (definition ${definitionId})`
+          );
+        }
+      }
+    }
 
-    // --- Default Component Injection (operates on the new entity's instanceData) ---
+    const entityInstanceDataObject = new EntityInstanceData(
+      newInstanceId,
+      definition,
+      validatedOverrides
+    );
+    const entity = new Entity(entityInstanceDataObject);
+
     this.#injectDefaultComponents(entity);
+    this.#_trackEntity(entity);
 
-    // --- Final Validation of ALL Components ---
-    // Ensure all components present on the entity after definition, overrides, and defaults are validated.
-    for (const componentTypeId of entity.componentTypeIds) {
-      const componentData = entity.getComponentData(componentTypeId);
-      // We only attempt to validate if componentData is not undefined AND not null.
-      // Null is a valid state for a component (nulled override) and should NOT be re-validated here.
-      if (componentData !== undefined && componentData !== null) {
-        try {
-          // #validateAndClone uses the validator and returns cloned data.
-          // The entity's components are already set (either from definition, validated overrides, or validated defaults).
-          // This call is primarily for the validation side-effect for components sourced purely from definition.
-          const validationContext = `Final validation for component ${componentTypeId} on entity ${entity.id}`;
-          this.#validateAndClone(componentTypeId, componentData, validationContext);
-        } catch (error) {
-          this.#logger.error(`EntityManager.createEntityInstance: Final validation failed for component ${componentTypeId} on entity ${entity.id}. Error: ${error.message}`);
-          // Propagate validation error to halt entity creation if any component is invalid.
-          throw error;
-        }
-      }
-    }
+    this.#eventDispatcher.dispatch(ENTITY_CREATED_ID, {
+      instanceId: entity.id,
+      definitionId: entity.definitionId,
+      wasReconstructed: false,
+    });
 
-    // --- Tracking & Spatial Index ---
-    this.#_trackEntity(entity, definition.id, instanceId, finalForceNew, false); // Pass finalForceNew as isCurrentlyForceNew
-
-    const posComponent = entity.getComponentData(POSITION_COMPONENT_ID);
-    if (posComponent && posComponent.locationId) {
-      this.#spatialIndexManager.addEntity(
-        instanceId,
-        posComponent.locationId
-      );
-    }
-    
-    this.#logger.info(`Entity instance created: ${instanceId} (Def: ${definitionId})`);
+    this.#logger.info(
+      `Entity instance '${newInstanceId}' (def: '${definitionId}') created.`
+    );
     return entity;
   }
 
   /**
-   * Reconstructs an entity from a previously serialized state.
-   * NOTE: This implementation will need careful review and adaptation to the new
-   * EntityDefinition/EntityInstanceData model. The serialized format might need to change.
-   *
-   * @param {object} serializedEntityData - The data to reconstruct from. Expected to have
-   *                                        `definitionId`, `instanceId`, and `componentOverrides` (or similar).
-   * @returns {Entity|null} The reconstructed entity, or null on failure.
+   * Reconstructs an entity instance from a plain serializable object.
+   * @param {object} serializedEntity - Plain object from a save file.
+   * @param {string} serializedEntity.instanceId
+   * @param {string} serializedEntity.definitionId
+   * @param {Record<string, object>} [serializedEntity.overrides]
+   * @returns {Entity} The reconstructed Entity instance.
+   * @throws {DefinitionNotFoundError} If the entity definition is not found.
+   * @throws {Error} If component data is invalid, or if an entity with the given ID already exists.
    */
-  reconstructEntity(serializedEntityData) {
-    if (!serializedEntityData || !serializedEntityData.instanceId || !serializedEntityData.definitionId) {
-      this.#logger.error('EntityManager.reconstructEntity: Invalid serialized data. instanceId and definitionId are required.', serializedEntityData);
-      return null;
-    }
-    const { instanceId, definitionId } = serializedEntityData;
+  reconstructEntity(serializedEntity) {
+    // Destructure data from the plain object
+    const { instanceId, definitionId, overrides } = serializedEntity;
 
+    // Validate the plain data
+    if (!MapManager.isValidId(instanceId)) {
+      throw new Error(`Invalid instanceId in serialized data: '${instanceId}'`);
+    }
+    if (!MapManager.isValidId(definitionId)) {
+      throw new Error(
+        `Serialized data for '${instanceId}' is missing a valid definitionId.`
+      );
+    }
+
+    this.#logger.debug(
+      `Reconstructing entity '${instanceId}' from def '${definitionId}'`
+    );
+
+    // Existing logic for checking for duplicates and getting definition
     if (this.#mapManager.has(instanceId)) {
-      this.#logger.warn(`EntityManager.reconstructEntity: Entity with ID ${instanceId} already exists. Returning existing.`);
-      return this.#mapManager.get(instanceId);
+      const msg = `EntityManager.reconstructEntity: Entity with ID '${instanceId}' already exists. Reconstruction aborted.`;
+      this.#logger.error(msg);
+      throw new Error(msg);
     }
 
-    const definition = this.#getOrCreateEntityDefinition(definitionId);
-    if (!definition) {
-      this.#logger.error(`EntityManager.reconstructEntity: Failed to get/create definition ${definitionId} for ${instanceId}`);
-      return null;
+    const definitionToUse = this.#getDefinition(definitionId);
+    if (!definitionToUse) {
+      this.#logger.error(
+        `EntityManager.reconstructEntity: Definition '${definitionId}' not found in registry for entity '${instanceId}'. Reconstruction aborted.`
+      );
+      throw new DefinitionNotFoundError(definitionId);
     }
 
+    // Validate components
     const validatedOverrides = {};
-    if (serializedEntityData.overrides) {
-      for (const compId in serializedEntityData.overrides) {
-        const compData = serializedEntityData.overrides[compId];
-        if (compData === null) {
-          validatedOverrides[compId] = null;
-        } else if (typeof compData === 'object' && compData !== null) { // Ensured compData is a non-null object
-          try {
-            validatedOverrides[compId] = this.#validateAndClone(
-              compId,
-              compData,
-              `Reconstructed override component ${compId} for entity ${instanceId}`
-            );
-          } catch (error) {
-            this.#logger.error(`EntityManager.reconstructEntity: Failed to validate reconstructed override component ${compId} for entity ${instanceId}. Error: ${error.message}. Entity reconstruction aborted.`);
-            return null;
-          }
+    if (overrides) {
+      for (const [typeId, data] of Object.entries(overrides)) {
+        if (data === null) {
+          validatedOverrides[typeId] = null;
         } else {
-          // Log a warning if a non-object, non-null override is found during reconstruction, then skip.
-          this.#logger.warn(`EntityManager.reconstructEntity: Invalid (non-object or null but not explicitly handled as null) override data for component ${compId} on entity ${instanceId}. Skipping override.`);
-          // validatedOverrides[compId] remains undefined or not set.
+          validatedOverrides[typeId] = this.#validateAndClone(
+            typeId,
+            data,
+            `Reconstruction component ${typeId} for entity ${instanceId} (definition ${definitionId})`
+          );
         }
       }
     }
-    
-    const instanceData = new EntityInstanceData(instanceId, definition, validatedOverrides);
-    const entity = new Entity(instanceData);
 
-    try {
-      this.#injectDefaultComponents(entity);
-    } catch (error) {
-      this.#logger.error(`EntityManager.reconstructEntity: Failed during default component injection for entity ${instanceId}. Error: ${error.message}. Entity reconstruction aborted.`);
-      // Note: The entity isn't fully tracked in #mapManager etc. yet at this stage,
-      // as #_trackEntity is called after #injectDefaultComponents.
-      // If #_trackEntity were called before, we'd need to untrack here.
-      return null;
-    }
-    this.#_trackEntity(entity, definition.id, instanceId, false, true); // isReconstruction = true
+    // Create the instance data object inside this method
+    const entityInstanceDataObject = new EntityInstanceData(
+      instanceId,
+      definitionToUse,
+      validatedOverrides
+    );
+    const entity = new Entity(entityInstanceDataObject);
+    this.#_trackEntity(entity);
 
-    const posComponent = entity.getComponentData(POSITION_COMPONENT_ID);
-    if (posComponent && posComponent.locationId) {
-      this.#spatialIndexManager.addEntity(instanceId, posComponent.locationId);
-    }
-    this.#logger.info(`Entity instance reconstructed: ${instanceId} (Def: ${definitionId})`);
+    this.#eventDispatcher.dispatch(ENTITY_CREATED_ID, {
+      instanceId: entity.id,
+      definitionId: entity.definitionId,
+      wasReconstructed: true,
+    });
+
+    this.#logger.info(`Entity instance '${instanceId}' reconstructed.`);
     return entity;
   }
 
@@ -571,58 +488,86 @@ class EntityManager extends IEntityManager {
    * @param {string} instanceId - The ID of the entity instance.
    * @param {string} componentTypeId - The unique ID of the component type.
    * @param {object} componentData - The data for the component.
-   * @throws {Error} If entity not found, or component data is invalid.
+   * @throws {EntityNotFoundError} If entity not found.
+   * @throws {Error} If component data is invalid.
    */
   addComponent(instanceId, componentTypeId, componentData) {
-    const entity = this.#getEntityOrThrow(instanceId);
-
-    if (!MapManager.isValidId(componentTypeId)) {
-      const msg = `EntityManager.addComponent: Invalid componentTypeId: ${componentTypeId}`;
-      this.#logger.error(msg);
-      throw new Error(msg);
+    if (!MapManager.isValidId(instanceId)) {
+      this.#logger.warn(
+        `EntityManager.addComponent: Invalid instanceId: '${instanceId}'`
+      );
+      return false;
     }
-    // Validate componentData: must be an object or null
-    if (typeof componentData !== 'object' && componentData !== null) {
-      const msg = `EntityManager.addComponent: componentData for ${componentTypeId} on ${instanceId} must be an object or null. Received: ${typeof componentData}`;
-      this.#logger.error(msg, { componentData });
-      throw new Error(msg);
+    if (typeof componentTypeId !== 'string' || !componentTypeId.trim()) {
+      this.#logger.warn(
+        `EntityManager.addComponent: Invalid componentTypeId: '${componentTypeId}' for entity '${instanceId}'`
+      );
+      return false;
+    }
+
+    // Unified check for componentData type, including undefined
+    if (componentData !== null && typeof componentData !== 'object') {
+      const receivedType =
+        componentData === undefined ? 'undefined' : typeof componentData;
+      const errorMsg = `EntityManager.addComponent: componentData for ${componentTypeId} on ${instanceId} must be an object or null. Received: ${receivedType}`;
+      this.#logger.error(errorMsg, {
+        componentTypeId,
+        instanceId,
+        receivedType,
+      });
+      throw new Error(errorMsg);
+    }
+
+    const entity = this.#_getEntity(instanceId);
+    if (!entity) {
+      // UPDATED: Throw custom error
+      this.#logger.error(
+        `EntityManager.addComponent: Entity not found with ID: ${instanceId}`,
+        { instanceId, componentTypeId }
+      );
+      throw new EntityNotFoundError(instanceId);
     }
 
     let validatedData;
     if (componentData === null) {
-      validatedData = null; // Explicitly nullifying the component
+      validatedData = null;
     } else {
-      try {
-        validatedData = this.#validateAndClone(
-          componentTypeId,
-          componentData,
-          `addComponent ${componentTypeId} to entity ${instanceId}`
-        );
-      } catch (error) {
-        // Error already logged by #validateAndClone, rethrow
-        throw error;
-      }
+      validatedData = this.#validateAndClone(
+        componentTypeId,
+        componentData, // This is an object
+        `addComponent ${componentTypeId} to entity ${instanceId}`
+      );
     }
 
     let oldLocationId;
     let newLocationId;
 
     if (componentTypeId === POSITION_COMPONENT_ID) {
-      const currentPositionComponent = entity.getComponentData(POSITION_COMPONENT_ID);
-      oldLocationId = currentPositionComponent ? currentPositionComponent.locationId : undefined;
+      const currentPositionComponent = entity.getComponentData(
+        POSITION_COMPONENT_ID,
+        true
+      );
+      oldLocationId =
+        currentPositionComponent &&
+        typeof currentPositionComponent.locationId === 'string' &&
+        currentPositionComponent.locationId.trim() !== ''
+          ? currentPositionComponent.locationId
+          : currentPositionComponent &&
+          currentPositionComponent.hasOwnProperty('locationId')
+            ? currentPositionComponent.locationId
+            : undefined;
 
-      // Determine newLocationId from the data that will be applied
       if (validatedData && validatedData.hasOwnProperty('locationId')) {
-        newLocationId = validatedData.locationId; // Can be string or null
-      } else if (validatedData && typeof validatedData === 'object' && !validatedData.hasOwnProperty('locationId')) {
-        // If locationId is not a property in validatedData (e.g., {x, y}), it's undefined for spatial purposes.
-        newLocationId = undefined;
+        newLocationId =
+          typeof validatedData.locationId === 'string' &&
+          validatedData.locationId.trim() !== ''
+            ? validatedData.locationId
+            : validatedData.locationId === null
+              ? null
+              : undefined;
       } else if (validatedData === null) {
-        // If the entire component is being nulled out.
         newLocationId = undefined;
       } else {
-        // Default newLocationId if not determined (e.g. componentData was not an object, though validation should catch this)
-        // Or if validatedData is not an object (e.g. if #validateAndClone could return non-object, though it shouldn't for valid schemas)
         newLocationId = undefined;
       }
     }
@@ -630,36 +575,31 @@ class EntityManager extends IEntityManager {
     const updateSucceeded = entity.addComponent(componentTypeId, validatedData);
 
     if (!updateSucceeded) {
-      this.#logger.error(
-        `EntityManager.addComponent: Failed to update component ${componentTypeId} on entity ${instanceId} via entity.addComponent. The entity's method returned false.`
+      this.#logger.warn(
+        `EntityManager.addComponent: entity.addComponent returned false for '${componentTypeId}' on entity '${instanceId}'. This may indicate an internal issue.`
       );
-      // Depending on contract, could throw or return a more specific error/result.
-      // For now, mirroring previous behavior of returning false from EM.addComponent if entity.addComponent fails.
       return false;
     }
+
+    this.#eventDispatcher.dispatch(COMPONENT_ADDED_ID, {
+      instanceId,
+      componentTypeId,
+      componentData: validatedData,
+    });
 
     this.#logger.debug(
       `Successfully added/updated component '${componentTypeId}' data on entity '${instanceId}'.`
     );
 
-    // Spatial Index Update Logic and Logging for POSITION_COMPONENT_ID
     if (componentTypeId === POSITION_COMPONENT_ID) {
-      this.#spatialIndexManager.updateEntityLocation(instanceId, oldLocationId, newLocationId);
-
-      // Detailed logging to match test expectations
-      if (oldLocationId && typeof oldLocationId === 'string') {
-        this.#logger.debug(`Old location for entity '${instanceId}' was '${oldLocationId}'.`);
-      } else { // Handles undefined or null oldLocationId
-        this.#logger.debug(`Old location for entity '${instanceId}' was null/undefined.`);
-      }
-
-      if (newLocationId && typeof newLocationId === 'string') {
-        this.#logger.debug(`New location for entity '${instanceId}' is '${newLocationId}'.`);
-      } else if (newLocationId === null) {
-        this.#logger.debug(`New location for entity '${instanceId}' is null.`);
-      } else { // newLocationId is undefined
-        this.#logger.debug(`New location for entity '${instanceId}' is undefined.`);
-      }
+      this.#spatialIndexManager.updateEntityLocation(
+        instanceId,
+        oldLocationId,
+        newLocationId
+      );
+      this.#logger.debug(
+        `Spatial index updated for entity '${instanceId}': old='${oldLocationId}', new='${newLocationId}'.`
+      );
     }
     return true;
   }
@@ -672,60 +612,102 @@ class EntityManager extends IEntityManager {
    * @param {string} instanceId          – UUID of the target entity.
    * @param {string} componentTypeId     – Component type to remove.
    * @returns {boolean}                  – `true` if the component was present and then "removed" (nulled out), `false` otherwise.
+   * @throws {EntityNotFoundError} If the entity is not found.
    */
   removeComponent(instanceId, componentTypeId) {
-    const entity = this.getEntityInstance(instanceId); // Use public getter, don't throw immediately
+    if (!MapManager.isValidId(instanceId)) {
+      this.#logger.warn(
+        `EntityManager.removeComponent: Invalid instanceId: '${instanceId}'`
+      );
+      return false;
+    }
+    if (typeof componentTypeId !== 'string' || !componentTypeId.trim()) {
+      this.#logger.warn(
+        `EntityManager.removeComponent: Invalid componentTypeId: '${componentTypeId}' for entity '${instanceId}'`
+      );
+      return false;
+    }
 
+    const entity = this.#_getEntity(instanceId);
     if (!entity) {
-      this.#logger.warn( // Changed from #getEntityOrThrow behavior
-        `EntityManager.removeComponent: Entity not found with ID: ${instanceId}. Cannot remove component.`
+      // UPDATED: Throw custom error
+      this.#logger.error(
+        `EntityManager.removeComponent: Entity not found with ID: '${instanceId}'. Cannot remove component '${componentTypeId}'.`
       );
-      return false;
+      throw new EntityNotFoundError(instanceId);
     }
 
-    if (!entity.hasComponent(componentTypeId)) {
+    // Check if the component to be removed exists as an override.
+    if (!entity.hasComponent(componentTypeId, true)) {
       this.#logger.debug(
-        `Component '${componentTypeId}' not found on entity '${instanceId}'. Nothing removed.`
+        `EntityManager.removeComponent: Component '${componentTypeId}' not found as an override on entity '${instanceId}'. Nothing to remove at instance level.`
       );
       return false;
     }
 
-    // If removing the position component, update the spatial index by removing the entity from its old location.
-    if (componentTypeId === POSITION_COMPONENT_ID) {
-      const oldPositionData = entity.getComponentData(POSITION_COMPONENT_ID);
-      const oldLocationId = oldPositionData?.locationId; // This can be undefined or null
+    let oldLocationIdForSpatialIndex = undefined;
+    const wasPositionComponentOverride =
+      componentTypeId === POSITION_COMPONENT_ID &&
+      entity.hasComponent(componentTypeId, true); // Already know it's an override from check above
 
-      // Always attempt to remove from spatial index if it's a position component.
-      // The spatial index manager should handle cases where oldLocationId is not specific.
-      this.#spatialIndexManager.removeEntity(instanceId, oldLocationId);
-
-      if (oldLocationId !== undefined && oldLocationId !== null) {
-        this.#logger.debug(
-          `EntityManager.removeComponent: Entity '${instanceId}' removed from old location '${oldLocationId}' in spatial index due to ${componentTypeId} removal.`
-        );
-      } else {
-        this.#logger.debug(
-          `EntityManager.removeComponent: Attempted removal of entity '${instanceId}' from spatial index (old location was undefined/null) due to ${componentTypeId} removal.`
-        );
+    if (wasPositionComponentOverride) {
+      // Since it's an override and it's the POSITION_COMPONENT_ID, get its data.
+      const positionData = entity.getComponentData(componentTypeId);
+      if (
+        positionData &&
+        typeof positionData.locationId === 'string' &&
+        positionData.locationId.trim() !== ''
+      ) {
+        oldLocationIdForSpatialIndex = positionData.locationId;
+      } else if (
+        positionData &&
+        positionData.hasOwnProperty('locationId') &&
+        positionData.locationId === null
+      ) {
+        oldLocationIdForSpatialIndex = null;
       }
+      // If positionData is undefined, or locationId is not a string/null, oldLocationIdForSpatialIndex remains undefined.
     }
 
-    // Remove the component override from the entity instance.
-    const removed = entity.removeComponent(componentTypeId);
+    const successfullyRemovedOverride = entity.removeComponent(componentTypeId);
 
-    if (removed) {
+    if (successfullyRemovedOverride) {
+      this.#eventDispatcher.dispatch(COMPONENT_REMOVED_ID, {
+        instanceId,
+        componentTypeId,
+      });
+
       this.#logger.debug(
         `EntityManager.removeComponent: Component override '${componentTypeId}' removed from entity '${instanceId}'.`
       );
+
+      // Only attempt spatial index removal if the component removed was a POSITION component *override*
+      // and its old location was validly determined (string or null).
+      if (
+        wasPositionComponentOverride &&
+        (typeof oldLocationIdForSpatialIndex === 'string' ||
+          oldLocationIdForSpatialIndex === null)
+      ) {
+        this.#spatialIndexManager.removeEntity(
+          instanceId,
+          oldLocationIdForSpatialIndex
+        );
+        this.#logger.debug(
+          `EntityManager.removeComponent: Entity '${instanceId}' removed from spatial index (based on old override location '${oldLocationIdForSpatialIndex}') due to ${POSITION_COMPONENT_ID} override removal.`
+        );
+      } else if (wasPositionComponentOverride) {
+        // Position override was removed, but oldLocationId was effectively undefined
+        this.#logger.debug(
+          `EntityManager.removeComponent: Entity '${instanceId}' (position component override removed). Old override location was '${oldLocationIdForSpatialIndex}', so not explicitly removed from spatial index by that location.`
+        );
+      }
+      return true;
     } else {
-      // This case should ideally not be hit if hasComponent above was true and it was an override.
-      // If hasComponent was true due to definition only, removeComponent on entity would return false.
-      // This indicates the component was on the definition and not as an override, so no override was removed.
-      this.#logger.debug(
-        `EntityManager.removeComponent: Component '${componentTypeId}' on entity '${instanceId}' was not an override or could not be removed.`
+      this.#logger.warn(
+        `EntityManager.removeComponent: entity.removeComponent('${componentTypeId}') returned false for entity '${instanceId}' when an override was expected and should have been removable. This may indicate an issue in Entity class logic.`
       );
+      return false;
     }
-    return removed; // Return the result of the entity's removeComponent operation.
   }
 
   /* ---------------------------------------------------------------------- */
@@ -733,29 +715,63 @@ class EntityManager extends IEntityManager {
 
   /* ---------------------------------------------------------------------- */
 
-  getPrimaryInstanceByDefinitionId(definitionId) {
-    const instanceId = this.#definitionToPrimaryInstanceMap.get(definitionId);
-    if (!instanceId) {
+  getEntityInstance(instanceId) {
+    if (!MapManager.isValidId(instanceId)) {
       this.#logger.debug(
-        `No primary instance found for definition ID: ${definitionId}`
+        `EntityManager.getEntityInstance: Called with invalid ID format: '${instanceId}'. Returning undefined.`
       );
       return undefined;
     }
-    return this.#mapManager.get(instanceId); // Return the Entity object
-  }
-
-  getEntityInstance(instanceId) {
-    return this.#mapManager.get(instanceId);
+    const entity = this.#_getEntity(instanceId);
+    if (!entity) {
+      this.#logger.debug(
+        `EntityManager.getEntityInstance: Entity not found with ID: '${instanceId}'. Returning undefined.`
+      );
+      return undefined;
+    }
+    return entity;
   }
 
   getComponentData(instanceId, componentTypeId) {
-    const entity = this.#getEntityOrThrow(instanceId);
+    if (!MapManager.isValidId(instanceId)) {
+      this.#logger.debug(
+        `EntityManager.getComponentData: Called with invalid instanceId format: '${instanceId}'. Returning undefined.`
+      );
+      return undefined;
+    }
+    if (typeof componentTypeId !== 'string' || !componentTypeId.trim()) {
+      this.#logger.debug(
+        `EntityManager.getComponentData: Called with invalid componentTypeId format: '${componentTypeId}'. Returning undefined.`
+      );
+      return undefined;
+    }
+    const entity = this.#_getEntity(instanceId);
+    if (!entity) {
+      this.#logger.debug(
+        `EntityManager.getComponentData: Entity not found with ID: '${instanceId}'. Returning undefined for component '${componentTypeId}'.`
+      );
+      return undefined;
+    }
     return entity.getComponentData(componentTypeId);
   }
 
-  hasComponent(instanceId, componentTypeId) {
-    const entity = this.#mapManager.get(instanceId); // Use get, not getEntityOrThrow
-    return entity ? entity.hasComponent(componentTypeId) : false;
+  hasComponent(instanceId, componentTypeId, checkOverrideOnly = false) {
+    if (!MapManager.isValidId(instanceId)) {
+      this.#logger.debug(
+        `EntityManager.hasComponent: Called with invalid instanceId format: '${instanceId}'. Returning false.`
+      );
+      return false;
+    }
+    if (typeof componentTypeId !== 'string' || !componentTypeId.trim()) {
+      this.#logger.debug(
+        `EntityManager.hasComponent: Called with invalid componentTypeId format: '${componentTypeId}'. Returning false.`
+      );
+      return false;
+    }
+    const entity = this.#_getEntity(instanceId);
+    return entity
+      ? entity.hasComponent(componentTypeId, checkOverrideOnly)
+      : false;
   }
 
   /**
@@ -766,13 +782,12 @@ class EntityManager extends IEntityManager {
    * @returns {Entity[]} fresh array (never a live reference)
    */
   getEntitiesWithComponent(componentTypeId) {
-    if (componentTypeId === null || componentTypeId === undefined || typeof componentTypeId !== 'string' || componentTypeId.trim() === '') {
+    if (typeof componentTypeId !== 'string' || !componentTypeId.trim()) {
       this.#logger.debug(
-        `EntityManager.getEntitiesWithComponent: Received invalid componentTypeId (${componentTypeId}). Returning empty array.`
+        `EntityManager.getEntitiesWithComponent: Received invalid componentTypeId ('${componentTypeId}'). Returning empty array.`
       );
       return [];
     }
-
     const results = [];
     for (const entity of this.activeEntities.values()) {
       if (entity.hasComponent(componentTypeId)) {
@@ -792,110 +807,95 @@ class EntityManager extends IEntityManager {
    * @returns {Set<string>}             – Set of contained entity IDs.
    */
   getEntitiesInLocation(locationInstanceId) {
-    // This assumes locationInstanceId is an entity ID that acts as a location
-    // You might need a more direct way to query the spatial index or locations
+    if (!MapManager.isValidId(locationInstanceId)) {
+      this.#logger.warn(
+        `EntityManager.getEntitiesInLocation: Invalid locationInstanceId: '${locationInstanceId}'. Returning empty set.`
+      );
+      return new Set();
+    }
     return this.#spatialIndexManager.getEntitiesInLocation(locationInstanceId);
   }
 
   /**
-   * Completely removes an entity instance from the manager and spatial index.
-   * @param {string} instanceId The ID of the entity instance to remove.
-   * @returns {boolean} True if the entity was found and removed, false otherwise.
+   * Remove an entity instance from the manager and spatial index.
+   *
+   * @param {string} instanceId - The ID of the entity instance to remove.
+   * @returns {boolean} True if the entity was successfully removed.
+   * @throws {EntityNotFoundError} If the entity is not found.
    */
   removeEntityInstance(instanceId) {
-    const entity = this.getEntityInstance(instanceId);
-
-    if (!entity) {
+    if (!MapManager.isValidId(instanceId)) {
       this.#logger.warn(
-        // `EntityManager.removeEntityInstance: Entity not found with ID: ${instanceId}`
-        `EntityManager.removeEntityInstance: Attempted to remove non-existent entity instance ${instanceId}.`
+        `EntityManager.removeEntityInstance: Attempted to remove entity with invalid ID: '${instanceId}'`
       );
       return false;
     }
 
-    // Attempt to remove from spatial index if it has a valid position component and locationId
-    const positionComponent = entity.getComponentData(POSITION_COMPONENT_ID);
-    if (positionComponent && typeof positionComponent.locationId === 'string' && positionComponent.locationId.trim()) {
-      const locationId = positionComponent.locationId.trim();
-      this.#spatialIndexManager.removeEntity(instanceId, locationId);
-      this.#logger.debug(
-        `EntityManager.removeEntityInstance: Removed entity ${instanceId} from spatial index (old location was ${locationId}).`
+    const entityToRemove = this.#_getEntity(instanceId);
+    if (!entityToRemove) {
+      // UPDATED: Throw custom error
+      this.#logger.error(
+        `EntityManager.removeEntityInstance: Attempted to remove non-existent entity instance '${instanceId}'.`
       );
+      throw new EntityNotFoundError(instanceId);
+    }
+
+    // Dispatch event immediately after finding the entity and before any removal logic.
+    this.#eventDispatcher.dispatch(ENTITY_REMOVED_ID, {
+      instanceId,
+    });
+
+    if (entityToRemove.hasComponent(POSITION_COMPONENT_ID)) {
+      const positionData = entityToRemove.getComponentData(
+        POSITION_COMPONENT_ID
+      );
+      if (
+        positionData &&
+        typeof positionData.locationId === 'string' &&
+        positionData.locationId.trim() !== ''
+      ) {
+        this.#spatialIndexManager.removeEntity(
+          entityToRemove.id,
+          positionData.locationId
+        );
+        this.#logger.debug(
+          `Removed entity ${entityToRemove.id} from spatial index (old location was ${positionData.locationId}) during entity removal.`
+        );
+      } else {
+        this.#logger.debug(
+          `Entity ${entityToRemove.id} had position component but no valid locationId (or location was null/empty); not explicitly removed from spatial index by that location during entity removal.`
+        );
+      }
+    }
+
+    const removed = this.#mapManager.remove(entityToRemove.id);
+    if (removed) {
+      this.#logger.info(
+        `Entity instance ${entityToRemove.id} removed from EntityManager.`
+      );
+      return true;
     } else {
-      // Even if not in spatial index or locationId is invalid, still attempt a general removal call
-      // to SpatialIndexManager in case it tracks entities by ID alone for some reason (e.g. entityLocations map)
-      // ISpatialIndexManager.removeEntity can take (entityId, null) or (entityId, undefined)
-      // This call will be a no-op if locationId is not valid, as per ISpatialIndexManager.removeEntity spec.
-      // However, the tests for aux expect removeEntity NOT to be called if position is missing or locationId invalid.
-      // So, we will only call it if the locationId was valid above.
-      // If there was no valid locationId, we don't call this.#spatialIndexManager.removeEntity at all.
-    }
-
-    // Remove from active entities
-    this.#mapManager.remove(instanceId);
-    this.#logger.info(`Removed entity instance: ${instanceId}`);
-
-    // Remove from primary instance map if it was a primary
-    const definitionId = entity.definitionId;
-    if (this.#definitionToPrimaryInstanceMap.get(definitionId) === instanceId) {
-      this.#definitionToPrimaryInstanceMap.delete(definitionId);
-      this.#logger.debug(
-        `Removed ${instanceId} as primary for definition ${definitionId}. Checking for new primary...`
+      this.#logger.error(
+        `EntityManager.removeEntityInstance: MapManager.remove failed for already retrieved entity '${instanceId}'. This indicates a serious internal inconsistency.`
       );
-      // Try to find a new primary: iterate over active entities.
-      // This is potentially slow but removeEntityInstance is not a high-frequency operation.
-      let newPrimaryAssigned = false;
-      for (const activeEntity of this.#mapManager.values()) {
-        if (activeEntity.definitionId === definitionId) {
-          this.#definitionToPrimaryInstanceMap.set(definitionId, activeEntity.id);
-          this.#logger.info(
-            `Assigned ${activeEntity.id} as new primary for definition ${definitionId} after removal of ${instanceId}.`
-          );
-          newPrimaryAssigned = true;
-          break;
-        }
-      }
-      if (!newPrimaryAssigned) {
-        this.#logger.info(`No other instances of ${definitionId} found to assign as new primary.`);
-      }
+      // This path should ideally not be reachable if `_getEntity` succeeded, but returning false is safer.
+      return false;
     }
-
-    return true;
   }
 
   /**
-   * Clear **all** runtime state — primarily for use in test harnesses.
+   * Clear all entities from the manager and the spatial index.
+   * Also clears the entity definition cache.
    */
   clearAll() {
-    // Clear spatial index before removing entities
     this.#spatialIndexManager.clearIndex();
     this.#logger.debug('Spatial index cleared.');
 
-    // Clear active entities
     this.#mapManager.clear();
-    this.#logger.info('All entity instances removed.');
+    this.#logger.info('All entity instances removed from EntityManager.');
 
-    // Clear primary instance mappings
-    this.#definitionToPrimaryInstanceMap.clear();
-    this.#logger.debug('Primary instance mappings cleared.');
-    
-    // Clear definition cache
     this.#definitionCache.clear();
     this.#logger.info('Entity definition cache cleared.');
-  }
-
-  #ensurePrimaryInstanceCleared(definitionId, forceNew) {
-    if (forceNew) {
-      const oldPrimaryInstanceId =
-        this.#definitionToPrimaryInstanceMap.get(definitionId);
-      if (oldPrimaryInstanceId) {
-        this.#logger.debug(
-          `ForceNew: Removing old primary instance ${oldPrimaryInstanceId} for definition ${definitionId}`
-        );
-        this.removeEntityInstance(oldPrimaryInstanceId); // removeEntityInstance handles mapManager and spatialIndex
-        this.#definitionToPrimaryInstanceMap.delete(definitionId);
-      }
-    }
   }
 }
 

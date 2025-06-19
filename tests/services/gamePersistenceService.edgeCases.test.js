@@ -110,12 +110,13 @@ describe('GamePersistenceService edge cases', () => {
       });
 
       const result = captureService.captureCurrentGameState('World');
-      const comps = result.gameState.entities[0].components;
-      expect(comps).not.toHaveProperty(NOTES_COMPONENT_ID);
-      expect(comps).not.toHaveProperty(SHORT_TERM_MEMORY_COMPONENT_ID);
-      expect(comps).not.toHaveProperty(CURRENT_ACTOR_COMPONENT_ID);
+      // FIXED: Use 'overrides' instead of 'components'
+      const overrides = result.gameState.entities[0].overrides;
+      expect(overrides).not.toHaveProperty(NOTES_COMPONENT_ID);
+      expect(overrides).not.toHaveProperty(SHORT_TERM_MEMORY_COMPONENT_ID);
+      expect(overrides).not.toHaveProperty(CURRENT_ACTOR_COMPONENT_ID);
       expect(
-        comps[PERCEPTION_LOG_COMPONENT_ID].log[0].action
+        overrides[PERCEPTION_LOG_COMPONENT_ID].log[0].action
       ).not.toHaveProperty('speech');
       expect(result.modManifest.activeMods).toEqual([
         { modId: CORE_MOD_ID, version: 'unknown_fallback' },
@@ -165,7 +166,8 @@ describe('GamePersistenceService edge cases', () => {
       const data = {
         gameState: {
           entities: [
-            { instanceId: 'e1', definitionId: 'core:player', components: {} },
+            // FIXED: Use 'overrides' in test data
+            { instanceId: 'e1', definitionId: 'core:player', overrides: {} },
           ],
         },
       };

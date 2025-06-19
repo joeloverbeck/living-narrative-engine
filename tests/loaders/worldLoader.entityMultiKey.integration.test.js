@@ -130,7 +130,9 @@ describe('WorldLoader Integration Test Suite - EntityDefinitionLoader Multi-Key 
       getAllSystemRules: jest.fn(() => []),
       getManifest: jest.fn(),
       setManifest: jest.fn(),
-      getEntityDefinition: jest.fn((id) => internalStore['entities']?.[id]),
+      getEntityDefinition: jest.fn(
+        (id) => internalStore['entity_definitions']?.[id]
+      ),
       getItemDefinition: jest.fn((id) => internalStore['items']?.[id]), // Expected not to be used
       getLocationDefinition: jest.fn((id) => internalStore['locations']?.[id]), // Expected not to be used
       getConnectionDefinition: jest.fn(
@@ -143,7 +145,7 @@ describe('WorldLoader Integration Test Suite - EntityDefinitionLoader Multi-Key 
         (id) => internalStore['components']?.[id]
       ),
       getAllEntityDefinitions: jest.fn(() =>
-        Object.values(internalStore['entities'] || {})
+        Object.values(internalStore['entity_definitions'] || {})
       ),
       getAllItemDefinitions: jest.fn(() =>
         Object.values(internalStore['items'] || {})
@@ -216,7 +218,7 @@ describe('WorldLoader Integration Test Suite - EntityDefinitionLoader Multi-Key 
     // This is the key mock. It simulates the behavior of EntityDefinitionLoader.
     // It needs to:
     // 1. Be called with the correct arguments from WorldLoader.
-    // 2. Simulate storing the data under the 'entities' category in the mockRegistry.
+    // 2. Simulate storing the data under the 'entity_definitions' category in the mockRegistry.
     // 3. Return the expected LoadItemsResult structure.
     mockEntityLoader = {
       loadItemsForMod: jest
@@ -253,7 +255,11 @@ describe('WorldLoader Integration Test Suite - EntityDefinitionLoader Multi-Key 
                   modId: modIdArg,
                   _sourceFile: file,
                 };
-                mockRegistry.store('entities', finalRegistryKey, finalData);
+                mockRegistry.store(
+                  'entity_definitions',
+                  finalRegistryKey,
+                  finalData
+                );
                 mockLogger.debug(
                   `Mock EntityLoader: Stored ${finalRegistryKey} for ${modIdArg}`
                 );
@@ -361,8 +367,11 @@ describe('WorldLoader Integration Test Suite - EntityDefinitionLoader Multi-Key 
       'entityDefinitions'
     );
 
-    // 3. Verify data is stored correctly in the 'entities' category
-    const storedLocation = mockRegistry.get('entities', 'testMod:start_area');
+    // 3. Verify data is stored correctly in the 'entity_definitions' category
+    const storedLocation = mockRegistry.get(
+      'entity_definitions',
+      'testMod:start_area'
+    );
     expect(storedLocation).toBeDefined();
     expect(storedLocation).toEqual({
       ...locationData,
@@ -371,7 +380,7 @@ describe('WorldLoader Integration Test Suite - EntityDefinitionLoader Multi-Key 
       _sourceFile: 'locations/start_area.json',
     });
 
-    const storedItem = mockRegistry.get('entities', 'testMod:sword');
+    const storedItem = mockRegistry.get('entity_definitions', 'testMod:sword');
     expect(storedItem).toBeDefined();
     expect(storedItem).toEqual({
       ...itemData,
@@ -380,7 +389,10 @@ describe('WorldLoader Integration Test Suite - EntityDefinitionLoader Multi-Key 
       _sourceFile: 'items/sword.json',
     });
 
-    const storedCharacter = mockRegistry.get('entities', 'testMod:guard');
+    const storedCharacter = mockRegistry.get(
+      'entity_definitions',
+      'testMod:guard'
+    );
     expect(storedCharacter).toBeDefined();
     expect(storedCharacter).toEqual({
       ...characterData,

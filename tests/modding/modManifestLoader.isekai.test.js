@@ -22,7 +22,9 @@ const mockConfiguration = {
 };
 
 const mockPathResolver = {
-  resolveModManifestPath: jest.fn((modId) => `data/mods/${modId}/mod.manifest.json`),
+  resolveModManifestPath: jest.fn(
+    (modId) => `data/mods/${modId}/mod.manifest.json`
+  ),
 };
 
 const mockDataFetcher = {
@@ -115,7 +117,8 @@ const isekaiManifestContent = {
   id: 'isekai',
   version: '1.0.0',
   name: 'isekai',
-  description: 'Contains the definitions of a demo scenario based on a fantasy setting.',
+  description:
+    'Contains the definitions of a demo scenario based on a fantasy setting.',
   author: 'joeloverbeck',
   gameVersion: '>=0.0.1',
   content: {
@@ -150,26 +153,34 @@ describe('ModManifestLoader Isekai Content Validation', () => {
     mockDataFetcher.fetch.mockImplementation(async (path) => {
       // Default fetch mock for most tests, overridden where necessary
       if (path === 'data/mods/isekai/mod.manifest.json') {
-        return Promise.resolve(JSON.parse(JSON.stringify(isekaiManifestContent))); // Deep clone
+        return Promise.resolve(
+          JSON.parse(JSON.stringify(isekaiManifestContent))
+        ); // Deep clone
       }
       // Allow other paths to be tested or throw an error for unexpected paths
       // This was a bit too restrictive before, so making it more flexible
       // return Promise.reject(new Error(`Unexpected path in default mock: ${path}`));
       // For tests that expect specific rejections, they will re-mock fetch.
       // For general schema tests, they might mock a generic valid response.
-      return Promise.resolve({ id: 'generic-test-mod', content: {} }); 
+      return Promise.resolve({ id: 'generic-test-mod', content: {} });
     });
 
     schemaValidator = new MockSchemaValidator(); // Uses the generic schema internally
 
     // Ensure the schema used by configuration is added to the validator
-    const configuredSchemaId = mockConfiguration.getContentTypeSchemaId('mod-manifest');
-    if (configuredSchemaId && !schemaValidator.validators.has(configuredSchemaId)) {
-        // This attempts to add the schema if not already present from constructor
-        // For this test, the generic one in constructor should cover it.
-         schemaValidator.addSchema({ $id: configuredSchemaId, type: 'object', additionalProperties: true }, configuredSchemaId);
+    const configuredSchemaId =
+      mockConfiguration.getContentTypeSchemaId('mod-manifest');
+    if (
+      configuredSchemaId &&
+      !schemaValidator.validators.has(configuredSchemaId)
+    ) {
+      // This attempts to add the schema if not already present from constructor
+      // For this test, the generic one in constructor should cover it.
+      schemaValidator.addSchema(
+        { $id: configuredSchemaId, type: 'object', additionalProperties: true },
+        configuredSchemaId
+      );
     }
-
 
     modManifestLoader = new ModManifestLoader(
       mockConfiguration,
@@ -183,11 +194,15 @@ describe('ModManifestLoader Isekai Content Validation', () => {
 
   test('should correctly load and parse the isekai mod manifest with updated entityDefinitions', async () => {
     // Act
-    const loadedManifests = await modManifestLoader.loadRequestedManifests(['isekai']);
+    const loadedManifests = await modManifestLoader.loadRequestedManifests([
+      'isekai',
+    ]);
 
     // Assert
     // 1. Check if the fetch was called correctly
-    expect(mockDataFetcher.fetch).toHaveBeenCalledWith('data/mods/isekai/mod.manifest.json');
+    expect(mockDataFetcher.fetch).toHaveBeenCalledWith(
+      'data/mods/isekai/mod.manifest.json'
+    );
 
     // 2. Check the returned map
     expect(loadedManifests).toBeInstanceOf(Map);
@@ -215,31 +230,36 @@ describe('ModManifestLoader Isekai Content Validation', () => {
     );
 
     // 6. Ensure no schema validation errors were logged for this successful case
-     expect(mockLogger.error).not.toHaveBeenCalledWith(
-        expect.stringMatching(/MOD_MANIFEST_SCHEMA_INVALID/i),
-        expect.any(String),
-        expect.any(Object)
+    expect(mockLogger.error).not.toHaveBeenCalledWith(
+      expect.stringMatching(/MOD_MANIFEST_SCHEMA_INVALID/i),
+      expect.any(String),
+      expect.any(Object)
     );
-     expect(mockLogger.warn).not.toHaveBeenCalledWith(
-        expect.stringMatching(/MOD_MANIFEST_FETCH_FAIL/i),
-        expect.any(String),
-        expect.any(Object)
+    expect(mockLogger.warn).not.toHaveBeenCalledWith(
+      expect.stringMatching(/MOD_MANIFEST_FETCH_FAIL/i),
+      expect.any(String),
+      expect.any(Object)
     );
   });
 
-   test('should use resolved path from pathResolver for fetching', async () => {
+  test('should use resolved path from pathResolver for fetching', async () => {
     const specificPath = 'custom/path/to/isekai/mod.manifest.json';
     mockPathResolver.resolveModManifestPath.mockReturnValue(specificPath);
-    mockDataFetcher.fetch.mockImplementation(async (path) => { // Need to re-mock for this specific path
+    mockDataFetcher.fetch.mockImplementation(async (path) => {
+      // Need to re-mock for this specific path
       if (path === specificPath) {
-        return Promise.resolve(JSON.parse(JSON.stringify(isekaiManifestContent)));
+        return Promise.resolve(
+          JSON.parse(JSON.stringify(isekaiManifestContent))
+        );
       }
       return Promise.reject(new Error(`Unexpected path: ${path}`));
     });
 
     await modManifestLoader.loadRequestedManifests(['isekai']);
 
-    expect(mockPathResolver.resolveModManifestPath).toHaveBeenCalledWith('isekai');
+    expect(mockPathResolver.resolveModManifestPath).toHaveBeenCalledWith(
+      'isekai'
+    );
     expect(mockDataFetcher.fetch).toHaveBeenCalledWith(specificPath);
   });
 
@@ -249,17 +269,23 @@ describe('ModManifestLoader Isekai Content Validation', () => {
       id: 'not-isekai', // Mismatched ID
     };
     // Specific mock for this test case
-    mockDataFetcher.fetch.mockResolvedValue(JSON.parse(JSON.stringify(mismatchedManifest)));
+    mockDataFetcher.fetch.mockResolvedValue(
+      JSON.parse(JSON.stringify(mismatchedManifest))
+    );
 
-    await expect(modManifestLoader.loadRequestedManifests(['isekai'])).rejects.toThrow(
-        // Corrected error message to match actual thrown error
-        "ModManifestLoader.loadRequestedManifests: manifest ID 'not-isekai' does not match expected mod ID 'isekai'."
+    await expect(
+      modManifestLoader.loadRequestedManifests(['isekai'])
+    ).rejects.toThrow(
+      // Corrected error message to match actual thrown error
+      "ModManifestLoader.loadRequestedManifests: manifest ID 'not-isekai' does not match expected mod ID 'isekai'."
     );
 
     expect(mockLogger.error).toHaveBeenCalledWith(
       'MOD_MANIFEST_ID_MISMATCH',
       // Corrected expected log message to match actual logged error
-      expect.stringContaining("manifest ID 'not-isekai' does not match expected mod ID 'isekai'."),
+      expect.stringContaining(
+        "manifest ID 'not-isekai' does not match expected mod ID 'isekai'."
+      ),
       // Corrected metadata object to match what is actually logged
       { modId: 'isekai', path: 'data/mods/isekai/mod.manifest.json' }
     );
@@ -269,38 +295,51 @@ describe('ModManifestLoader Isekai Content Validation', () => {
     // Specific mock for this test case
     mockDataFetcher.fetch.mockRejectedValue(new Error('Network Error'));
 
-    const loadedManifests = await modManifestLoader.loadRequestedManifests(['isekai']);
+    const loadedManifests = await modManifestLoader.loadRequestedManifests([
+      'isekai',
+    ]);
 
     expect(loadedManifests).toBeInstanceOf(Map);
     expect(loadedManifests.size).toBe(0); // No manifest should be loaded
     expect(mockLogger.warn).toHaveBeenCalledWith(
       'MOD_MANIFEST_FETCH_FAIL',
       "ModManifestLoader.loadRequestedManifests: could not fetch manifest for 'isekai' – skipping.",
-      { modId: 'isekai', path: 'data/mods/isekai/mod.manifest.json', reason: 'Network Error' }
+      {
+        modId: 'isekai',
+        path: 'data/mods/isekai/mod.manifest.json',
+        reason: 'Network Error',
+      }
     );
   });
 
   test('should log an error and throw if schema validation fails', async () => {
     const invalidManifest = { ...isekaiManifestContent, version: undefined }; // Missing required 'version'
-     mockDataFetcher.fetch.mockResolvedValue(JSON.parse(JSON.stringify(invalidManifest)));
+    mockDataFetcher.fetch.mockResolvedValue(
+      JSON.parse(JSON.stringify(invalidManifest))
+    );
 
     // Make validator fail for this specific test
     const mockValidatorFn = jest.fn(() => ({
-        isValid: false,
-        errors: [{ message: 'Version is required' }]
+      isValid: false,
+      errors: [{ message: 'Version is required' }],
     }));
     schemaValidator.getValidator = jest.fn().mockReturnValue(mockValidatorFn);
 
-
-    await expect(modManifestLoader.loadRequestedManifests(['isekai'])).rejects.toThrow(
+    await expect(
+      modManifestLoader.loadRequestedManifests(['isekai'])
+    ).rejects.toThrow(
       "manifest for 'isekai' failed schema validation. See log for Ajv error details."
     );
 
     expect(mockLogger.error).toHaveBeenCalledWith(
       'MOD_MANIFEST_SCHEMA_INVALID',
-      expect.stringContaining("manifest for 'isekai' failed schema validation."),
-      expect.objectContaining({ modId: 'isekai', schemaId: 'http://example.com/schemas/mod.manifest.schema.json' })
+      expect.stringContaining(
+        "manifest for 'isekai' failed schema validation."
+      ),
+      expect.objectContaining({
+        modId: 'isekai',
+        schemaId: 'http://example.com/schemas/mod.manifest.schema.json',
+      })
     );
   });
-
-}); 
+});

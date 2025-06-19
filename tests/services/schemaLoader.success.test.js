@@ -32,8 +32,14 @@ const connectionSchemaId = 'test://schemas/connections';
 const triggerSchemaId = 'test://schemas/triggers';
 
 const commonSchemaData = { $id: commonSchemaId, title: 'Common Test' };
-const entityDefinitionSchemaData = { $id: entityDefinitionSchemaId, title: 'Entity Definition Test' };
-const entityInstanceSchemaData = { $id: entityInstanceSchemaId, title: 'Entity Instance Test' };
+const entityDefinitionSchemaData = {
+  $id: entityDefinitionSchemaId,
+  title: 'Entity Definition Test',
+};
+const entityInstanceSchemaData = {
+  $id: entityInstanceSchemaId,
+  title: 'Entity Instance Test',
+};
 const manifestSchemaData = { $id: manifestSchemaId, title: 'Manifest Test' };
 const itemSchemaData = { $id: itemSchemaId, title: 'Items Test' };
 const locationSchemaData = { $id: locationSchemaId, title: 'Locations Test' };

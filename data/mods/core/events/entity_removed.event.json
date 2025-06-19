@@ -1,0 +1,17 @@
+{
+  "$schema": "http://example.com/schemas/component.schema.json",
+  "id": "core:entity_removed",
+  "description": "Fired just before an entity instance is removed from the EntityManager. Listeners can use this to perform cleanup related to the entity before it is gone.",
+  "payloadSchema": {
+    "description": "Defines the structure for the 'core:entity_removed' event payload.",
+    "type": "object",
+    "required": ["instanceId"],
+    "properties": {
+      "instanceId": {
+        "$ref": "../schemas/common.schema.json#/definitions/namespacedId",
+        "description": "The unique instance ID of the entity being removed."
+      }
+    },
+    "additionalProperties": false
+  }
+}

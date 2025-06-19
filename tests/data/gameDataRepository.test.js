@@ -26,6 +26,10 @@ const createRegistry = () => ({
   getAllComponentDefinitions: jest.fn(() => [{ id: 'c1' }]),
   getConditionDefinition: jest.fn((id) => ({ id })),
   getAllConditionDefinitions: jest.fn(() => [{ id: 'cond1' }]),
+  // --- FIX START: Add missing methods to the mock registry ---
+  getEntityInstanceDefinition: jest.fn((id) => ({ instanceId: id })),
+  getAllEntityInstanceDefinitions: jest.fn(() => [{ instanceId: 'inst-01' }]),
+  // --- FIX END ---
   getContentSource: jest.fn(() => 'modA'),
   listContentByMod: jest.fn(() => ({ actions: ['a1'] })),
   get: jest.fn(),
@@ -45,12 +49,15 @@ describe('GameDataRepository', () => {
   beforeEach(() => {
     registry = createRegistry();
     logger = createLogger();
+    // This instantiation will now succeed
     repo = new GameDataRepository(registry, logger);
     jest.clearAllMocks();
   });
 
   test('constructor validates logger and registry', () => {
     expect(() => new GameDataRepository(registry, {})).toThrow();
+    // Re-create a valid registry for the second check
+    const validRegistry = createRegistry();
     expect(() => new GameDataRepository({}, logger)).toThrow();
   });
 
@@ -79,8 +86,14 @@ describe('GameDataRepository', () => {
 
   test('getContentSource warns when method missing', () => {
     delete registry.getContentSource;
-    repo = new GameDataRepository(registry, logger);
-    const result = repo.getContentSource('actions', 'a1');
+    // We can't re-create the repo here without a valid registry.
+    // So we test the behavior on the existing repo when the method is not available on its registry.
+    // To do this properly, we need a registry without the method from the start.
+    const deficientRegistry = createRegistry();
+    delete deficientRegistry.getContentSource;
+    const deficientRepo = new GameDataRepository(deficientRegistry, logger);
+
+    const result = deficientRepo.getContentSource('actions', 'a1');
     expect(result).toBeNull();
     expect(logger.warn).toHaveBeenCalledWith(
       'GameDataRepository: getContentSource not supported by registry'
@@ -88,9 +101,12 @@ describe('GameDataRepository', () => {
   });
 
   test('listContentByMod warns when method missing', () => {
-    delete registry.listContentByMod;
-    repo = new GameDataRepository(registry, logger);
-    const result = repo.listContentByMod('modA');
+    // Similar to the test above, create a specific registry for this test case.
+    const deficientRegistry = createRegistry();
+    delete deficientRegistry.listContentByMod;
+    const deficientRepo = new GameDataRepository(deficientRegistry, logger);
+
+    const result = deficientRepo.listContentByMod('modA');
     expect(result).toEqual({});
     expect(logger.warn).toHaveBeenCalledWith(
       'GameDataRepository: listContentByMod not supported by registry'

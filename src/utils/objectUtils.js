@@ -1,7 +1,6 @@
 // src/utils/objectUtils.js
 
 import {
-  PersistenceError,
   PersistenceErrorCodes,
 } from '../persistence/persistenceErrors.js';
 import {
@@ -168,7 +167,7 @@ export function safeDeepClone(value, logger) {
 export function deepFreeze(object) {
   if (object && typeof object === 'object') {
     // Freeze properties before freezing self
-    Object.keys(object).forEach(key => {
+    Object.keys(object).forEach((key) => {
       const value = object[key];
       // Recurse for nested objects
       if (value && typeof value === 'object') {

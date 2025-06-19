@@ -48,7 +48,9 @@ describe('StaticConfiguration Validation Test', () => {
       expect(schemaId).toMatch(/^https?:\/\//);
 
       // Optional: Log on success for visibility during test runs
-      console.log(`[OK] Essential type '${typeName}' is configured with schema ID: ${schemaId}`);
+      console.log(
+        `[OK] Essential type '${typeName}' is configured with schema ID: ${schemaId}`
+      );
     }
   });
 

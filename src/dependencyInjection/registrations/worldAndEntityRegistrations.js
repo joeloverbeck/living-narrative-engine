@@ -42,7 +42,12 @@ export function registerWorldAndEntity(container) {
       /** @type {IDataRegistry} */ (c.resolve(tokens.IDataRegistry)),
       /** @type {ISchemaValidator} */ (c.resolve(tokens.ISchemaValidator)),
       /** @type {ILogger} */ (c.resolve(tokens.ILogger)),
-      /** @type {ISpatialIndexManager} */ (c.resolve(tokens.ISpatialIndexManager))
+      /** @type {ISpatialIndexManager} */ (
+        c.resolve(tokens.ISpatialIndexManager)
+      ),
+      /** @type {ISafeEventDispatcher} */ (
+        c.resolve(tokens.ISafeEventDispatcher)
+      )
     );
   });
   logger.debug(

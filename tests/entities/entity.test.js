@@ -2,8 +2,8 @@
 
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import Entity from '../../src/entities/entity.js';
-import EntityInstanceData from '../../src/entities/EntityInstanceData.js';
-import EntityDefinition from '../../src/entities/EntityDefinition.js';
+import EntityInstanceData from '../../src/entities/entityInstanceData.js';
+import EntityDefinition from '../../src/entities/entityDefinition.js';
 
 describe('Entity Class', () => {
   const testDefinitionId = 'testDef:basic';
@@ -29,8 +29,12 @@ describe('Entity Class', () => {
     // Spies are on the prototype, so they need to be fresh for each test if a method is called multiple times across tests.
     // However, for most of these tests, we're checking the Entity's behavior given a certain state of InstanceData,
     // so direct spies on the instance passed to Entity constructor are fine.
-    mockInstanceData = new EntityInstanceData(testInstanceId, mockDefinition, {});
-    
+    mockInstanceData = new EntityInstanceData(
+      testInstanceId,
+      mockDefinition,
+      {}
+    );
+
     entity = new Entity(mockInstanceData);
   });
 
@@ -41,7 +45,7 @@ describe('Entity Class', () => {
     });
 
     it('should assign the _instanceData property correctly', () => {
-      expect(entity._instanceData).toBe(mockInstanceData); // Note: renamed to _instanceData based on Entity.js refactor
+      expect(entity.instanceData).toBe(mockInstanceData); // Changed from _instanceData to data
     });
 
     it('should throw an Error if not provided with an EntityInstanceData object', () => {
@@ -74,12 +78,12 @@ describe('Entity Class', () => {
     });
 
     it('should throw if componentTypeId is invalid (as per Entity.js own check)', () => {
-        expect(() => entity.addComponent('', { data: 'test' })).toThrow(
-            `Invalid componentTypeId provided to addComponent for entity ${entity.id}. Expected non-empty string.`
-        );
-         expect(() => entity.addComponent(null, { data: 'test' })).toThrow(
-            `Invalid componentTypeId provided to addComponent for entity ${entity.id}. Expected non-empty string.`
-        );
+      expect(() => entity.addComponent('', { data: 'test' })).toThrow(
+        `Invalid componentTypeId provided to addComponent for entity ${entity.id}. Expected non-empty string.`
+      );
+      expect(() => entity.addComponent(null, { data: 'test' })).toThrow(
+        `Invalid componentTypeId provided to addComponent for entity ${entity.id}. Expected non-empty string.`
+      );
     });
   });
 
@@ -97,7 +101,7 @@ describe('Entity Class', () => {
       spy.mockRestore();
     });
 
-     it('should return merged data (definition + override) correctly via instanceData', () => {
+    it('should return merged data (definition + override) correctly via instanceData', () => {
       const def = new EntityDefinition('test:def', {
         components: {
           'core:health': { current: 100, max: 100 },
@@ -123,31 +127,39 @@ describe('Entity Class', () => {
       const manaData = entity.getComponentData('custom:mana');
       expect(manaData).toEqual({ current: 20 });
     });
-    
+
     it('should return undefined for a non-existent componentTypeId', () => {
-        expect(entity.getComponentData('non:existent')).toBeUndefined();
+      expect(entity.getComponentData('non:existent')).toBeUndefined();
     });
 
     it('should return null if the override is explicitly null', () => {
-        mockInstanceData.setComponentOverride('core:health', null);
-        expect(entity.getComponentData('core:health')).toBeNull();
+      mockInstanceData.setComponentOverride('core:health', null);
+      expect(entity.getComponentData('core:health')).toBeNull();
     });
   });
 
   describe('hasComponent', () => {
     it('should call _instanceData.hasComponent and return its result', () => {
-      const spy = jest.spyOn(mockInstanceData, 'hasComponent');
-      spy.mockReturnValue(true); // Mock the return value
-
       const componentTypeId = 'core:health';
+      const spy = jest.spyOn(mockInstanceData, 'hasComponent');
       const result = entity.hasComponent(componentTypeId);
 
-      expect(spy).toHaveBeenCalledWith(componentTypeId);
+      expect(spy).toHaveBeenCalledWith(componentTypeId, false); // Added false as second argument
       expect(result).toBe(true);
       spy.mockRestore();
     });
 
-     it('should return true if component in definition (via instanceData)', () => {
+    it('should pass checkOverrideOnly to _instanceData.hasComponent', () => {
+      const componentTypeId = 'core:health';
+      const spy = jest.spyOn(mockInstanceData, 'hasComponent');
+      const result = entity.hasComponent(componentTypeId);
+
+      expect(spy).toHaveBeenCalledWith(componentTypeId, false);
+      expect(result).toBe(true);
+      spy.mockRestore();
+    });
+
+    it('should return true if component in definition (via instanceData)', () => {
       expect(entity.hasComponent('core:name')).toBe(true);
     });
 
@@ -155,9 +167,9 @@ describe('Entity Class', () => {
       mockInstanceData.setComponentOverride('custom:inventory', { items: [] });
       expect(entity.hasComponent('custom:inventory')).toBe(true);
     });
-    
+
     it('should return false if component not in definition or overrides (via instanceData)', () => {
-        expect(entity.hasComponent('non:existent')).toBe(false);
+      expect(entity.hasComponent('non:existent')).toBe(false);
     });
   });
 
@@ -182,7 +194,7 @@ describe('Entity Class', () => {
 
       const removed = entity.removeComponent('core:health'); // Removes the override
       expect(removed).toBe(true);
-      
+
       healthData = entity.getComponentData('core:health');
       // Should now be definition's value: { current: 100, max: 100 }
       expect(healthData.current).toBe(100);
@@ -192,12 +204,14 @@ describe('Entity Class', () => {
 
   // --- 3. Iterators and Getters ---
   describe('componentTypeIds getter', () => {
-    it('should return an iterator for allComponentTypeIds from _instanceData', () => {
+    it('should return an array for allComponentTypeIds from _instanceData', () => {
       const expectedIds = ['core:name', 'core:health', 'custom:mana'];
-      // Ensure the mock returns something predictable that can be iterated
-      jest.spyOn(mockInstanceData, 'allComponentTypeIds', 'get').mockReturnValue(expectedIds);
-      
-      const ids = Array.from(entity.componentTypeIds); // Convert iterator to array
+      // Ensure the mock returns something predictable
+      jest
+        .spyOn(mockInstanceData, 'allComponentTypeIds', 'get')
+        .mockReturnValue(expectedIds);
+
+      const ids = entity.componentTypeIds; // No longer need Array.from()
       expect(ids).toEqual(expectedIds);
 
       // Verify it called the getter on _instanceData
@@ -205,12 +219,16 @@ describe('Entity Class', () => {
     });
 
     it('should reflect definition and overrides', () => {
-        mockInstanceData.setComponentOverride('custom:mana', { current: 20 });
-        mockInstanceData.setComponentOverride('core:name', { name: 'OverrideName' }); // Override existing
+      mockInstanceData.setComponentOverride('custom:mana', { current: 20 });
+      mockInstanceData.setComponentOverride('core:name', {
+        name: 'OverrideName',
+      }); // Override existing
 
-        const ids = Array.from(entity.componentTypeIds);
-        expect(ids).toEqual(expect.arrayContaining(['core:name', 'core:health', 'custom:mana']));
-        expect(ids.length).toBe(3); // 'core:name' is overridden, not added twice
+      const ids = entity.componentTypeIds;
+      expect(ids).toEqual(
+        expect.arrayContaining(['core:name', 'core:health', 'custom:mana'])
+      );
+      expect(ids.length).toBe(3); // 'core:name' is overridden, not added twice
     });
   });
 
@@ -222,32 +240,42 @@ describe('Entity Class', () => {
           'core:health': { current: 100, max: 100 }, // Definition data
         },
       });
-      const instanceData = new EntityInstanceData('entity-complex', definition, {
-        'core:health': { current: 50 }, // Override only current health
-        'custom:inventory': { items: ['potion'] },
-      });
+      const instanceData = new EntityInstanceData(
+        'entity-complex',
+        definition,
+        {
+          'core:health': { current: 50 }, // Override only current health
+          'custom:inventory': { items: ['potion'] },
+        }
+      );
       const entity = new Entity(instanceData);
 
-      const collectedData = Array.from(entity.allComponentData);
+      const collectedData = entity.allComponentData;
 
-      expect(collectedData).toEqual(expect.arrayContaining([
-        { name: 'DefaultName' },
-        { current: 50 }, // Health should now only have the overridden part
-        { items: ['potion'] },
-      ]));
+      expect(collectedData).toEqual(
+        expect.arrayContaining([
+          { name: 'DefaultName' },
+          { current: 50 }, // Health should now only have the overridden part
+          { items: ['potion'] },
+        ])
+      );
       // Check that the length is also correct (no extra/missing components)
       expect(collectedData.length).toBe(3);
     });
 
     it('should not yield data for components overridden to null', () => {
-        mockInstanceData.setComponentOverride('core:health', null); // Nullify
-        const collectedData = Array.from(entity.allComponentData);
+      mockInstanceData.setComponentOverride('core:health', null); // Nullify
+      const collectedData = entity.allComponentData;
 
-        // Expected: 'core:name'
-        // 'core:health' should be absent from values, even if its key might appear in allComponentTypeIds
-        expect(collectedData.some(data => data && data.hasOwnProperty('current'))).toBe(false); // No health data
-        expect(collectedData.find(data => data && data.name === 'DefaultName')).toEqual({ name: 'DefaultName' });
-        expect(collectedData.length).toBe(1); // Only core:name
+      // Expected: 'core:name'
+      // 'core:health' should be absent from values, even if its key might appear in allComponentTypeIds
+      expect(
+        collectedData.some((data) => data && data.hasOwnProperty('current'))
+      ).toBe(false); // No health data
+      expect(
+        collectedData.find((data) => data && data.name === 'DefaultName')
+      ).toEqual({ name: 'DefaultName' });
+      expect(collectedData.length).toBe(1); // Only core:name
     });
   });
 
@@ -259,30 +287,41 @@ describe('Entity Class', () => {
           'core:health': { current: 100, max: 100 },
         },
       });
-      const instanceData = new EntityInstanceData('entity-entries', definition, {
-        'core:health': { current: 75 }, // Override only current health
-        'custom:stamina': { value: 30 },
-      });
+      const instanceData = new EntityInstanceData(
+        'entity-entries',
+        definition,
+        {
+          'core:health': { current: 75 }, // Override only current health
+          'custom:stamina': { value: 30 },
+        }
+      );
       const entity = new Entity(instanceData);
 
-      const collectedEntries = Array.from(entity.componentEntries);
+      const collectedEntries = entity.componentEntries;
 
-      expect(collectedEntries).toEqual(expect.arrayContaining([
-        ['core:name', { name: 'DefaultName' }],
-        ['core:health', { current: 75 }], // Health should now only have the overridden part
-        ['custom:stamina', { value: 30 }],
-      ]));
+      expect(collectedEntries).toEqual(
+        expect.arrayContaining([
+          ['core:name', { name: 'DefaultName' }],
+          ['core:health', { current: 75 }], // Health should now only have the overridden part
+          ['custom:stamina', { value: 30 }],
+        ])
+      );
       // Check that the length is also correct
       expect(collectedEntries.length).toBe(3);
     });
 
     it('should not yield entries for components overridden to null', () => {
-        mockInstanceData.setComponentOverride('core:name', null);
-        const collectedEntries = Array.from(entity.componentEntries);
+      mockInstanceData.setComponentOverride('core:name', null);
+      const collectedEntries = entity.componentEntries;
 
-        expect(collectedEntries.find(([id, _]) => id === 'core:name')).toBeUndefined();
-        expect(collectedEntries.length).toBe(1); // Only core:health
-        expect(collectedEntries[0]).toEqual(['core:health', { current:100, max:100}]);
+      expect(
+        collectedEntries.find(([id, _]) => id === 'core:name')
+      ).toBeUndefined();
+      expect(collectedEntries.length).toBe(1); // Only core:health
+      expect(collectedEntries[0]).toEqual([
+        'core:health',
+        { current: 100, max: 100 },
+      ]);
     });
   });
 
@@ -293,7 +332,9 @@ describe('Entity Class', () => {
       const expectedString = `Entity[${testInstanceId} (Def: ${testDefinitionId})] Components: core:name, core:health, custom:mana`;
       // Order might vary, so check parts or use a regex/matcher
       const str = entity.toString();
-      expect(str).toContain(`Entity[${testInstanceId} (Def: ${testDefinitionId})]`);
+      expect(str).toContain(
+        `Entity[${testInstanceId} (Def: ${testDefinitionId})]`
+      );
       expect(str).toContain('core:name');
       expect(str).toContain('core:health');
       expect(str).toContain('custom:mana');
@@ -303,8 +344,9 @@ describe('Entity Class', () => {
       const emptyDef = new EntityDefinition('empty:def', { components: {} });
       const emptyInstanceData = new EntityInstanceData('emptyInst', emptyDef);
       const emptyEntity = new Entity(emptyInstanceData);
-      
-      const expectedString = 'Entity[emptyInst (Def: empty:def)] Components: None';
+
+      const expectedString =
+        'Entity[emptyInst (Def: empty:def)] Components: None';
       expect(emptyEntity.toString()).toBe(expectedString);
     });
   });
@@ -312,8 +354,7 @@ describe('Entity Class', () => {
   // --- 5. instanceData getter ---
   describe('instanceData getter', () => {
     it('should return the underlying EntityInstanceData object', () => {
-        expect(entity.instanceData).toBe(mockInstanceData);
+      expect(entity.instanceData).toBe(mockInstanceData);
     });
   });
-
 });

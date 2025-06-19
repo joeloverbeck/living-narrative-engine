@@ -138,7 +138,9 @@ describe('WorldLoader Integration Test Suite - Mod Overrides and Load Order (Sub
           internalStore['mod_manifests'] = {};
         internalStore['mod_manifests'][id.toLowerCase()] = manifest;
       }),
-      getEntityDefinition: jest.fn((id) => internalStore['entities']?.[id]), // Used for asserting final state
+      getEntityDefinition: jest.fn(
+        (id) => internalStore['entity_definitions']?.[id]
+      ), // Used for asserting final state
       getItemDefinition: jest.fn((id) => internalStore['items']?.[id]),
       getLocationDefinition: jest.fn((id) => internalStore['locations']?.[id]),
       getConnectionDefinition: jest.fn(
@@ -151,7 +153,7 @@ describe('WorldLoader Integration Test Suite - Mod Overrides and Load Order (Sub
         (id) => internalStore['components']?.[id]
       ),
       getAllEntityDefinitions: jest.fn(() =>
-        Object.values(internalStore['entities'] || {})
+        Object.values(internalStore['entity_definitions'] || {})
       ),
       getAllItemDefinitions: jest.fn(() =>
         Object.values(internalStore['items'] || {})
@@ -355,7 +357,11 @@ describe('WorldLoader Integration Test Suite - Mod Overrides and Load Order (Sub
             modId: modIdArg,
             _sourceFile: itemFilename, // Add source file meta
           };
-          mockRegistry.store('entities', finalRegistryKey, dataToStore);
+          mockRegistry.store(
+            'entity_definitions',
+            finalRegistryKey,
+            dataToStore
+          );
           // Assume no overwrites within the same loader call for this test
           return { count: 1, overrides: 0, errors: 0 };
         }
@@ -441,7 +447,7 @@ describe('WorldLoader Integration Test Suite - Mod Overrides and Load Order (Sub
       _sourceFile: 'items/potion.json',
     };
     expect(mockRegistry.store).toHaveBeenCalledWith(
-      'entities',
+      'entity_definitions',
       `${CORE_MOD_ID}:${baseItemId}`,
       corePotionStoredData
     );
@@ -455,7 +461,7 @@ describe('WorldLoader Integration Test Suite - Mod Overrides and Load Order (Sub
       _sourceFile: 'items/potion.json',
     };
     expect(mockRegistry.store).toHaveBeenCalledWith(
-      'entities',
+      'entity_definitions',
       `${fooModId}:${baseItemId}`,
       fooPotionStoredData
     );
@@ -469,7 +475,7 @@ describe('WorldLoader Integration Test Suite - Mod Overrides and Load Order (Sub
       _sourceFile: 'items/potion.json',
     };
     expect(mockRegistry.store).toHaveBeenCalledWith(
-      'entities',
+      'entity_definitions',
       `${barModId}:${baseItemId}`,
       barPotionStoredData
     );
@@ -477,7 +483,7 @@ describe('WorldLoader Integration Test Suite - Mod Overrides and Load Order (Sub
     // 4. Verify Final Registry State - check that get returns the correct data for each prefixed ID
     // Core Potion
     const corePotionFinal = mockRegistry.get(
-      'entities',
+      'entity_definitions',
       `${CORE_MOD_ID}:${baseItemId}`
     );
     expect(corePotionFinal).toBeDefined();
@@ -485,7 +491,7 @@ describe('WorldLoader Integration Test Suite - Mod Overrides and Load Order (Sub
 
     // Foo Potion
     const fooPotionFinal = mockRegistry.get(
-      'entities',
+      'entity_definitions',
       `${fooModId}:${baseItemId}`
     );
     expect(fooPotionFinal).toBeDefined();
@@ -493,7 +499,7 @@ describe('WorldLoader Integration Test Suite - Mod Overrides and Load Order (Sub
 
     // Bar Potion
     const barPotionFinal = mockRegistry.get(
-      'entities',
+      'entity_definitions',
       `${barModId}:${baseItemId}`
     );
     expect(barPotionFinal).toBeDefined();

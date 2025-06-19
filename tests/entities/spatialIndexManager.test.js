@@ -422,7 +422,12 @@ describe('SpatialIndexManager', () => {
   //------------------------------------------
   describe('buildIndex', () => {
     it('should correctly build the index using getComponentData', () => {
-      const mockEntityManager = setupMockEntityManagerWithEntities(true, false, false, false);
+      const mockEntityManager = setupMockEntityManagerWithEntities(
+        true,
+        false,
+        false,
+        false
+      );
       spatialIndexManager.buildIndex(mockEntityManager);
 
       expect(spatialIndexManager.locationIndex.size).toBe(2);
@@ -437,13 +442,20 @@ describe('SpatialIndexManager', () => {
       expect(locationBSet.has('entity2')).toBe(true);
 
       // Verify that entities without valid locationId or without position component are not added.
-      const mockEntityManagerWithInvalid = setupMockEntityManagerWithEntities(true, true, true, true);
+      const mockEntityManagerWithInvalid = setupMockEntityManagerWithEntities(
+        true,
+        true,
+        true,
+        true
+      );
       spatialIndexManager.buildIndex(mockEntityManagerWithInvalid);
       expect(spatialIndexManager.locationIndex.size).toBe(2); // Still entity1 & entity2
       expect(spatialIndexManager.locationIndex.has('locationA')).toBe(true);
       expect(spatialIndexManager.locationIndex.has('locationB')).toBe(true);
       expect(spatialIndexManager.locationIndex.has('   ')).toBe(false); // Invalid loc from entity3InvalidLoc
-      const hasNullKey = Array.from(spatialIndexManager.locationIndex.keys()).some(key => key === null);
+      const hasNullKey = Array.from(
+        spatialIndexManager.locationIndex.keys()
+      ).some((key) => key === null);
       expect(hasNullKey).toBe(false);
 
       // Remove or update specific consoleLogSpy checks that are failing due to new detailed logging
@@ -463,7 +475,12 @@ describe('SpatialIndexManager', () => {
       spatialIndexManager.addEntity('preExisting2', 'locationOld2');
       expect(spatialIndexManager.locationIndex.size).toBe(2);
 
-      const mockEntityManager = setupMockEntityManagerWithEntities(true, false, false, false);
+      const mockEntityManager = setupMockEntityManagerWithEntities(
+        true,
+        false,
+        false,
+        false
+      );
       spatialIndexManager.buildIndex(mockEntityManager);
 
       expect(spatialIndexManager.locationIndex.has('locationOld1')).toBe(false); // Cleared
@@ -571,7 +588,7 @@ const setupMockEntityManagerWithEntities = (
     };
     activeEntities.set(mockEntity3.id, mockEntity3);
   }
-  
+
   if (includeNullLocationId) {
     const mockEntityNullLoc = {
       id: 'entity4NullLoc',
@@ -600,6 +617,6 @@ const setupMockEntityManagerWithEntities = (
   return {
     activeEntities,
     // Mock other EntityManager methods if needed by tests, e.g., getEntityInstance
-    getEntityInstance: jest.fn(entityId => activeEntities.get(entityId)),
+    getEntityInstance: jest.fn((entityId) => activeEntities.get(entityId)),
   };
 };

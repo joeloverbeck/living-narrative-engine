@@ -1,5 +1,7 @@
 // src/services/gameDataRepository.js
 // --- FILE START ---
+
+// --- FILE START ---
 import { IGameDataRepository } from '../interfaces/IGameDataRepository.js';
 
 /**
@@ -7,6 +9,7 @@ import { IGameDataRepository } from '../interfaces/IGameDataRepository.js';
  * @typedef {import('../interfaces/coreServices.js').ILogger} ILogger
  * @typedef {import('../../data/schemas/action.schema.json').ActionDefinition} ActionDefinition
  * @typedef {import('../../data/schemas/entity-definition.schema.json').EntityDefinition} EntityDefinition
+ * @typedef {import('../../data/schemas/entity-instance.schema.json').EntityInstance} EntityInstance
  * @typedef {import('../../data/schemas/component.schema.json').EventDefinition} EventDefinition
  * @typedef {import('../../data/schemas/component.schema.json').ComponentDefinition} ComponentDefinition
  * @typedef {import('../../data/schemas/condition.schema.json').ConditionDefinition} ConditionDefinition
@@ -51,8 +54,10 @@ export class GameDataRepository extends IGameDataRepository {
       'getAllEventDefinitions',
       'getComponentDefinition',
       'getAllComponentDefinitions',
-      'getConditionDefinition', // Added
-      'getAllConditionDefinitions', // Added
+      'getConditionDefinition',
+      'getAllConditionDefinitions',
+      'getEntityInstanceDefinition', // Added
+      'getAllEntityInstanceDefinitions', // Added
       'get',
       'getAll',
       'clear',
@@ -141,6 +146,30 @@ export class GameDataRepository extends IGameDataRepository {
   /** @returns {EntityDefinition[]} */
   getAllEntityDefinitions() {
     return this.#registry.getAllEntityDefinitions();
+  }
+
+  // ────────────────────────────────────────────────────────────────────────────
+  //  Entity instances (NEW SECTION)
+  // ────────────────────────────────────────────────────────────────────────────
+
+  /**
+   * @param {string} id
+   * @returns {EntityInstance | null}
+   */
+  getEntityInstanceDefinition(id) {
+    if (typeof id !== 'string' || !id.trim()) {
+      this.#logger.warn(
+        `GameDataRepository: getEntityInstanceDefinition called with invalid ID: ${id}`
+      );
+      return null;
+    }
+    const definition = this.#registry.getEntityInstanceDefinition(id);
+    return definition ?? null;
+  }
+
+  /** @returns {EntityInstance[]} */
+  getAllEntityInstanceDefinitions() {
+    return this.#registry.getAllEntityInstanceDefinitions();
   }
 
   // ────────────────────────────────────────────────────────────────────────────

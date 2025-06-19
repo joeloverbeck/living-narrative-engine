@@ -1,9 +1,19 @@
 import { describe, test, expect, jest } from '@jest/globals';
 import EntityManager from '../../src/entities/entityManager.js';
+import EntityDefinition from '../../src/entities/entityDefinition.js';
 
 const makeDeps = (definition) => {
   const registry = {
-    getEntityDefinition: jest.fn().mockReturnValue(definition),
+    getEntityDefinition: jest.fn().mockImplementation((definitionId) => {
+      if (definitionId === definition.id) {
+        const definitionData = {
+          components: definition.components,
+          description: definition.description,
+        };
+        return new EntityDefinition(definition.id, definitionData);
+      }
+      return null;
+    }),
   };
   const validator = { validate: jest.fn().mockReturnValue({ isValid: true }) };
   const logger = {
@@ -22,15 +32,25 @@ const makeDeps = (definition) => {
   return { registry, validator, logger, spatialIndexManager };
 };
 
+const createMockSafeEventDispatcher = () => ({
+  dispatch: jest.fn(),
+});
+
 describe('EntityManager.createEntityInstance does not mutate definitions', () => {
+  let mockEventDispatcher;
+
   test('components property remains unchanged when null', () => {
     const definition = { id: 'test:nullComps', components: null };
     const deps = makeDeps(definition);
+    mockEventDispatcher = createMockSafeEventDispatcher();
+
+
     const em = new EntityManager(
       deps.registry,
       deps.validator,
       deps.logger,
-      deps.spatialIndexManager
+      deps.spatialIndexManager,
+      mockEventDispatcher
     );
 
     const entity = em.createEntityInstance(definition.id);
@@ -44,11 +64,16 @@ describe('EntityManager.createEntityInstance does not mutate definitions', () =>
       components: { 'core:name': { value: 'A' } },
     };
     const deps = makeDeps(definition);
+
+    mockEventDispatcher = createMockSafeEventDispatcher();
+
+
     const em = new EntityManager(
       deps.registry,
       deps.validator,
       deps.logger,
-      deps.spatialIndexManager
+      deps.spatialIndexManager,
+      mockEventDispatcher
     );
 
     const entity = em.createEntityInstance(definition.id);

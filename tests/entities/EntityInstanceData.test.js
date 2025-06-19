@@ -1,5 +1,5 @@
-import EntityDefinition from '../../src/entities/EntityDefinition.js';
-import EntityInstanceData from '../../src/entities/EntityInstanceData.js';
+import EntityDefinition from '../../src/entities/entityDefinition.js';
+import EntityInstanceData from '../../src/entities/entityInstanceData.js';
 
 describe('EntityInstanceData', () => {
   const definitionData = {
@@ -31,11 +31,19 @@ describe('EntityInstanceData', () => {
       'core:health': { current: 40 }, // Override one property
       'custom:inventory': { items: ['item1'] }, // New component
     };
-    const instanceData = new EntityInstanceData(validInstanceId, entityDef, initialOverrides);
+    const instanceData = new EntityInstanceData(
+      validInstanceId,
+      entityDef,
+      initialOverrides
+    );
     expect(instanceData.overrides['core:health'].current).toBe(40);
     // Check that it does not affect the original initialOverrides object
-    expect(instanceData.overrides['core:health']).not.toBe(initialOverrides['core:health']);
-    expect(instanceData.overrides['custom:inventory']).toEqual({ items: ['item1'] });
+    expect(instanceData.overrides['core:health']).not.toBe(
+      initialOverrides['core:health']
+    );
+    expect(instanceData.overrides['custom:inventory']).toEqual({
+      items: ['item1'],
+    });
   });
 
   it('should throw an error if instanceId is invalid', () => {
@@ -96,9 +104,9 @@ describe('EntityInstanceData', () => {
     });
 
     it('should return null if override is explicitly null, even if component exists in definition', () => {
-        const instanceData = new EntityInstanceData(validInstanceId, entityDef);
-        instanceData.setComponentOverride('core:health', null);
-        expect(instanceData.getComponentData('core:health')).toBeNull();
+      const instanceData = new EntityInstanceData(validInstanceId, entityDef);
+      instanceData.setComponentOverride('core:health', null);
+      expect(instanceData.getComponentData('core:health')).toBeNull();
     });
 
     it('should return a clone, not the original override object, when override is an object', () => {
@@ -127,15 +135,23 @@ describe('EntityInstanceData', () => {
       const inventoryData = { items: ['sword'] };
       instanceData.setComponentOverride('custom:inventory', inventoryData);
       expect(instanceData.overrides['custom:inventory']).toEqual(inventoryData);
-      expect(instanceData.overrides['custom:inventory']).not.toBe(inventoryData); // Should be a clone
+      expect(instanceData.overrides['custom:inventory']).not.toBe(
+        inventoryData
+      ); // Should be a clone
     });
 
     it('should update an existing override', () => {
       const instanceData = new EntityInstanceData(validInstanceId, entityDef, {
         'core:health': { current: 30 },
       });
-      instanceData.setComponentOverride('core:health', { current: 20, max: 40 });
-      expect(instanceData.overrides['core:health']).toEqual({ current: 20, max: 40 });
+      instanceData.setComponentOverride('core:health', {
+        current: 20,
+        max: 40,
+      });
+      expect(instanceData.overrides['core:health']).toEqual({
+        current: 20,
+        max: 40,
+      });
     });
 
     it('should throw if componentTypeId is invalid', () => {
@@ -199,7 +215,9 @@ describe('EntityInstanceData', () => {
     it('should return keys from definition if no overrides', () => {
       const instanceData = new EntityInstanceData(validInstanceId, entityDef);
       const ids = instanceData.allComponentTypeIds;
-      expect(ids).toEqual(expect.arrayContaining(['core:health', 'core:name', 'custom:mana']));
+      expect(ids).toEqual(
+        expect.arrayContaining(['core:health', 'core:name', 'custom:mana'])
+      );
       expect(ids.length).toBe(3);
     });
 
@@ -209,18 +227,32 @@ describe('EntityInstanceData', () => {
         'new:ability': { name: 'fly' }, // New
       });
       const ids = instanceData.allComponentTypeIds;
-      expect(ids).toEqual(expect.arrayContaining(['core:health', 'core:name', 'custom:mana', 'new:ability']));
+      expect(ids).toEqual(
+        expect.arrayContaining([
+          'core:health',
+          'core:name',
+          'custom:mana',
+          'new:ability',
+        ])
+      );
       expect(ids.length).toBe(4);
     });
 
     it('should include keys of overrides that are set to null', () => {
       const instanceData = new EntityInstanceData(validInstanceId, entityDef, {
         'core:name': null, // Nullify existing
-        'new:aura': null,    // New but nullified
+        'new:aura': null, // New but nullified
       });
       const ids = instanceData.allComponentTypeIds;
-      expect(ids).toEqual(expect.arrayContaining(['core:health', 'core:name', 'custom:mana', 'new:aura']));
+      expect(ids).toEqual(
+        expect.arrayContaining([
+          'core:health',
+          'core:name',
+          'custom:mana',
+          'new:aura',
+        ])
+      );
       expect(ids.length).toBe(4);
     });
   });
-}); 
+});

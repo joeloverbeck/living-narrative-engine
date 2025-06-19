@@ -1,6 +1,10 @@
+// src/interfaces/IGameDataRepository.js
+
 /**
  * @typedef {import('../../data/schemas/action.schema.json').ActionDefinition} ActionDefinition
  * @typedef {import('../../data/schemas/condition.schema.json').ConditionDefinition} ConditionDefinition
+ * @typedef {import('../../data/schemas/entity-definition.schema.json').EntityDefinition} EntityDefinition
+ * @typedef {import('../../data/schemas/entity-instance.schema.json').EntityInstance} EntityInstance
  */
 
 /**
@@ -51,6 +55,50 @@ export class IGameDataRepository {
   getAllConditionDefinitions() {
     throw new Error(
       'IGameDataRepository.getAllConditionDefinitions not implemented.'
+    );
+  }
+
+  /**
+   * Retrieves a specific EntityDefinition by its ID.
+   *
+   * @param {string} entityId The fully qualified ID of the entity definition (e.g., 'core:player').
+   * @returns {EntityDefinition | null} The entity definition if found, otherwise null.
+   */
+  getEntityDefinition(entityId) {
+    throw new Error('IGameDataRepository.getEntityDefinition not implemented.');
+  }
+
+  /**
+   * Returns all EntityDefinition objects currently available.
+   *
+   * @returns {EntityDefinition[]} An array of all entity definitions.
+   */
+  getAllEntityDefinitions() {
+    throw new Error(
+      'IGameDataRepository.getAllEntityDefinitions not implemented.'
+    );
+  }
+
+  /**
+   * Retrieves a specific EntityInstance data object by its ID.
+   *
+   * @param {string} instanceId The fully qualified ID of the entity instance (e.g., 'world:main_character').
+   * @returns {EntityInstance | null} The entity instance data if found, otherwise null.
+   */
+  getEntityInstanceDefinition(instanceId) {
+    throw new Error(
+      'IGameDataRepository.getEntityInstanceDefinition not implemented.'
+    );
+  }
+
+  /**
+   * Returns all EntityInstance data objects currently available.
+   *
+   * @returns {EntityInstance[]} An array of all entity instance data objects.
+   */
+  getAllEntityInstanceDefinitions() {
+    throw new Error(
+      'IGameDataRepository.getAllEntityInstanceDefinitions not implemented.'
     );
   }
 
