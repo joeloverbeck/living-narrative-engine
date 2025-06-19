@@ -27,7 +27,10 @@ import AbstractLoader from './abstractLoader.js';
 import ModManifestProcessor from './ModManifestProcessor.js';
 import ContentLoadManager from './ContentLoadManager.js';
 import WorldLoadSummaryLogger from './WorldLoadSummaryLogger.js';
-import createDefaultContentLoadersConfig from './defaultLoaderConfig.js';
+import createDefaultContentLoadersConfig, {
+  createContentLoadersConfig,
+} from './defaultLoaderConfig.js';
+import ESSENTIAL_SCHEMA_TYPES from '../constants/essentialSchemas.js';
 
 // --- Type Definitions for Loader Results ---
 /**
@@ -121,7 +124,7 @@ class WorldLoader extends AbstractLoader {
    * @param {typeof import('../modding/modDependencyValidator.js')} dependencies.modDependencyValidator - Helper for validating dependencies.
    * @param {typeof import('../modding/modVersionValidator.js').default} dependencies.modVersionValidator - Helper for validating engine versions.
    * @param {import('../modding/modLoadOrderResolver.js')} dependencies.modLoadOrderResolver - Helper for resolving load order.
-   * @param {Array<{loader: BaseManifestItemLoaderInterface, contentKey: string, contentTypeDir: string, typeName: string}>} [dependencies.contentLoadersConfig] - Optional custom content loader configuration.
+   * @param {Array<{loader: BaseManifestItemLoaderInterface, contentKey: string, contentTypeDir: string, typeName: string}>|Record<string, BaseManifestItemLoaderInterface>} [dependencies.contentLoadersConfig] - Optional custom content loader configuration or map.
    * @throws {Error} If any required dependency is missing or invalid.
    */
   constructor({
@@ -259,7 +262,11 @@ class WorldLoader extends AbstractLoader {
 
     // --- Initialize content loaders configuration ---
     this.#contentLoadersConfig =
-      contentLoadersConfig ??
+      (Array.isArray(contentLoadersConfig)
+        ? contentLoadersConfig
+        : contentLoadersConfig && typeof contentLoadersConfig === 'object'
+          ? createContentLoadersConfig(contentLoadersConfig)
+          : null) ??
       createDefaultContentLoadersConfig({
         componentDefinitionLoader: this.#componentDefinitionLoader,
         eventLoader: this.#eventLoader,
@@ -325,17 +332,9 @@ class WorldLoader extends AbstractLoader {
    * @throws {MissingSchemaError} If a required schema is missing.
    */
   #checkEssentialSchemas() {
-    const essentials = [
-      this.#configuration.getContentTypeSchemaId('game'),
-      this.#configuration.getContentTypeSchemaId('components'),
-      this.#configuration.getContentTypeSchemaId('mod-manifest'),
-      this.#configuration.getContentTypeSchemaId('entityDefinitions'),
-      this.#configuration.getContentTypeSchemaId('entityInstances'),
-      this.#configuration.getContentTypeSchemaId('actions'),
-      this.#configuration.getContentTypeSchemaId('events'),
-      this.#configuration.getContentTypeSchemaId('rules'),
-      this.#configuration.getContentTypeSchemaId('conditions'),
-    ];
+    const essentials = ESSENTIAL_SCHEMA_TYPES.map((type) =>
+      this.#configuration.getContentTypeSchemaId(type)
+    );
     this.#logger.debug(
       `WorldLoader: Checking for essential schemas: [${essentials.filter((id) => !!id).join(', ')}]`
     );
@@ -404,18 +403,14 @@ class WorldLoader extends AbstractLoader {
    *
    * @param {object} params - Loader configuration.
    * @param {BaseManifestItemLoaderInterface} params.loader - Loader instance.
-   * @param {string} params.contentKey - Key in the manifest's content section.
-   * @param {string} params.contentTypeDir - Directory path for this content type.
    * @param {string} params.typeName - Name used for logging and summary counts.
    * @returns {void}
    */
-  registerContentLoader({ loader, contentKey, contentTypeDir, typeName }) {
-    this.#contentLoadersConfig.push({
-      loader,
-      contentKey,
-      contentTypeDir,
-      typeName,
-    });
+  registerContentLoader({ loader, typeName }) {
+    const [entry] = createContentLoadersConfig({ [typeName]: loader });
+    if (entry) {
+      this.#contentLoadersConfig.push(entry);
+    }
   }
 
   /**
