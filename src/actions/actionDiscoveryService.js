@@ -164,7 +164,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
     );
 
     /** @type {import('../interfaces/IActionDiscoveryService.js').DiscoveredActionInfo[]} */
-    const discovered = [];
+    const discoveredActions = [];
 
     for (const exit of exits) {
       const targetCtx = ActionTargetContext.forDirection(exit.direction);
@@ -191,7 +191,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
         continue;
       }
 
-      discovered.push({
+      discoveredActions.push({
         id: actionDef.id,
         name: actionDef.name || actionDef.commandVerb,
         command: formattedCommand,
@@ -200,7 +200,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
       });
     }
 
-    return discovered;
+    return discoveredActions;
   }
 
   /**
@@ -223,7 +223,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
     const targetIds =
       this.#getEntityIdsForScopesFn([domain], context) ?? new Set();
     /** @type {import('../interfaces/IActionDiscoveryService.js').DiscoveredActionInfo[]} */
-    const discovered = [];
+    const discoveredActions = [];
 
     for (const targetId of targetIds) {
       const targetCtx = ActionTargetContext.forEntity(targetId);
@@ -249,7 +249,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
         continue;
       }
 
-      discovered.push({
+      discoveredActions.push({
         id: actionDef.id,
         name: actionDef.name || actionDef.commandVerb,
         command: formattedCommand,
@@ -258,7 +258,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
       });
     }
 
-    return discovered;
+    return discoveredActions;
   }
 
   /**
