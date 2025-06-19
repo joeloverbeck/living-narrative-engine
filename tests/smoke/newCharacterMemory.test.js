@@ -9,7 +9,7 @@
 // -----------------------------------------------------------------------------
 
 import EntityManager from '../../src/entities/entityManager.js';
-import EntityDefinition from '../../src/entities/EntityDefinition.js';
+import EntityDefinition from '../../src/entities/entityDefinition.js';
 import {
   ACTOR_COMPONENT_ID,
   SHORT_TERM_MEMORY_COMPONENT_ID,
@@ -71,7 +71,7 @@ describe('Smoke › New Character › Short-Term Memory bootstrap', () => {
   let mockEventDispatcher;
 
   test('EntityManager injects default short-term memory', () => {
-    mockEventDispatcher = createMockSafeEventDispatcher()
+    mockEventDispatcher = createMockSafeEventDispatcher();
 
     const { registry, validator, logger, spatialIndexManager } = makeStubs();
 

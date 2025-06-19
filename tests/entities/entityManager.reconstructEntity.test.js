@@ -2,7 +2,7 @@
 // --- FILE START ---
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import EntityManager from '../../src/entities/entityManager.js';
-import EntityDefinition from '../../src/entities/EntityDefinition.js';
+import EntityDefinition from '../../src/entities/entityDefinition.js';
 import EntityInstanceData from '../../src/entities/entityInstanceData.js';
 import { POSITION_COMPONENT_ID } from '../../src/constants/componentIds.js';
 import { ENTITY_CREATED_ID } from '../../src/constants/eventIds.js';
@@ -82,7 +82,10 @@ describe('EntityManager.reconstructEntity', () => {
 
     expect(entity).not.toBeNull();
     expect(manager.activeEntities.get('e1')).toBe(entity);
-    expect(mockEventDispatcher.dispatch).toHaveBeenCalledWith(ENTITY_CREATED_ID, { entity, wasReconstructed: true });
+    expect(mockEventDispatcher.dispatch).toHaveBeenCalledWith(
+      ENTITY_CREATED_ID,
+      { entity, wasReconstructed: true }
+    );
   });
 
   it('returns null on validation failure', () => {

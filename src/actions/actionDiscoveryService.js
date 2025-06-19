@@ -95,7 +95,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
    * @param {object} params - Extra params to include in the result.
    * @returns {import('../interfaces/IActionDiscoveryService.js').DiscoveredActionInfo|null} The info object or null.
    */
-  // eslint-disable-next-line no-unused-private-class-members
+
   #buildDiscoveredAction(
     actionDef,
     actorEntity,
@@ -144,33 +144,14 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
         ? ActionTargetContext.forEntity(actorEntity.id)
         : ActionTargetContext.noTarget();
 
-    if (
-      !this.#actionValidationService.isValid(actionDef, actorEntity, targetCtx)
-    ) {
-      return [];
-    }
-
-    const formattedCommand = this.#formatActionCommandFn(
+    const action = this.#buildDiscoveredAction(
       actionDef,
+      actorEntity,
       targetCtx,
-      this.#entityManager,
-      formatterOptions,
-      getEntityDisplayName
+      formatterOptions
     );
 
-    if (formattedCommand === null) {
-      return [];
-    }
-
-    return [
-      {
-        id: actionDef.id,
-        name: actionDef.name || actionDef.commandVerb,
-        command: formattedCommand,
-        description: actionDef.description || '',
-        params: {},
-      },
-    ];
+    return [action].filter(Boolean);
   }
 
   /**
@@ -213,35 +194,17 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
     for (const exit of exits) {
       const targetCtx = ActionTargetContext.forDirection(exit.direction);
 
-      if (
-        !this.#actionValidationService.isValid(
-          actionDef,
-          actorEntity,
-          targetCtx
-        )
-      ) {
-        continue;
-      }
-
-      const formattedCommand = this.#formatActionCommandFn(
+      const action = this.#buildDiscoveredAction(
         actionDef,
+        actorEntity,
         targetCtx,
-        this.#entityManager,
         formatterOptions,
-        getEntityDisplayName
+        { targetId: exit.target }
       );
 
-      if (formattedCommand === null) {
-        continue;
+      if (action) {
+        discoveredActions.push(action);
       }
-
-      discoveredActions.push({
-        id: actionDef.id,
-        name: actionDef.name || actionDef.commandVerb,
-        command: formattedCommand,
-        description: actionDef.description || '',
-        params: { targetId: exit.target },
-      });
     }
 
     return discoveredActions;
@@ -271,35 +234,18 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
 
     for (const targetId of targetIds) {
       const targetCtx = ActionTargetContext.forEntity(targetId);
-      if (
-        !this.#actionValidationService.isValid(
-          actionDef,
-          actorEntity,
-          targetCtx
-        )
-      ) {
-        continue;
-      }
 
-      const formattedCommand = this.#formatActionCommandFn(
+      const action = this.#buildDiscoveredAction(
         actionDef,
+        actorEntity,
         targetCtx,
-        this.#entityManager,
         formatterOptions,
-        getEntityDisplayName
+        { targetId }
       );
 
-      if (formattedCommand === null) {
-        continue;
+      if (action) {
+        discoveredActions.push(action);
       }
-
-      discoveredActions.push({
-        id: actionDef.id,
-        name: actionDef.name || actionDef.commandVerb,
-        command: formattedCommand,
-        description: actionDef.description || '',
-        params: { targetId },
-      });
     }
 
     return discoveredActions;
