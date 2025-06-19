@@ -239,13 +239,10 @@ export default class SaveFileRepository extends BaseService {
       const readRes = await this.#readSaveFile(filePath);
       if (!readRes.success) return readRes;
 
-      const decompressRes = this.#serializer.decompress(readRes.data);
-      if (!decompressRes.success) return decompressRes;
+      const parseRes = this.#serializer.decompressAndDeserialize(readRes.data);
+      if (!parseRes.success) return parseRes;
 
-      const deserializeRes = this.#serializer.deserialize(decompressRes.data);
-      if (!deserializeRes.success) return deserializeRes;
-
-      return createPersistenceSuccess(deserializeRes.data);
+      return createPersistenceSuccess(parseRes.data);
     });
   }
 

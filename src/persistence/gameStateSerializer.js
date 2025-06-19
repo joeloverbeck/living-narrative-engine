@@ -230,6 +230,21 @@ class GameStateSerializer {
     }
     return result;
   }
+
+  /**
+   * Decompresses and deserializes a MessagePack+gzip buffer.
+   *
+   * @description Convenience helper that combines {@link decompress} and
+   *   {@link deserialize}.
+   * @param {Uint8Array} buffer - Compressed data buffer.
+   * @returns {import('./persistenceTypes.js').PersistenceResult<object>} Parsed
+   *   object or encountered error.
+   */
+  decompressAndDeserialize(buffer) {
+    const decompressed = this.decompress(buffer);
+    if (!decompressed.success) return decompressed;
+    return this.deserialize(decompressed.data);
+  }
 }
 
 export default GameStateSerializer;
