@@ -57,42 +57,52 @@ describe('GamePersistenceService private helpers', () => {
     context = makeService();
   });
 
-  it('_validateRestoreInput fails when gameState missing', () => {
-    const res = context.restorer._validateRestoreInput({});
+  it('restoreGameState fails validation when gameState missing', async () => {
+    const res = await context.restorer.restoreGameState({});
     expect(res.success).toBe(false);
   });
 
-  it('_validateRestoreInput passes with required fields', () => {
-    const res = context.restorer._validateRestoreInput({ gameState: {} });
+  it('restoreGameState passes with required fields', async () => {
+    const res = await context.restorer.restoreGameState({
+      gameState: { entities: [] },
+    });
     expect(res.success).toBe(true);
   });
 
-  it('_clearEntities returns failure on exception', () => {
+  it('restoreGameState returns failure when entity clearing throws', async () => {
     context.entityManager.clearAll.mockImplementation(() => {
       throw new Error('x');
     });
-    const res = context.restorer._clearEntities();
+    const res = await context.restorer.restoreGameState({
+      gameState: { entities: [] },
+    });
     expect(res.success).toBe(false);
   });
 
-  it('_restoreEntities skips invalid data and restores valid', () => {
+  it('restoreGameState skips invalid entity data and restores valid entities', async () => {
     const valid = { instanceId: 'e1', definitionId: 'd1', components: {} };
-    const res = context.restorer._restoreEntities([valid, {}]);
+    const res = await context.restorer.restoreGameState({
+      gameState: { entities: [valid, {}] },
+    });
     expect(context.entityManager.reconstructEntity).toHaveBeenCalledWith(valid);
     expect(context.entityManager.reconstructEntity).toHaveBeenCalledTimes(1);
     expect(res.success).toBe(true);
   });
 
-  it('_restorePlaytime handles missing value', () => {
-    const res = context.restorer._restorePlaytime();
+  it('restoreGameState handles missing playtime metadata', async () => {
+    const res = await context.restorer.restoreGameState({
+      gameState: { entities: [] },
+    });
     expect(context.playtimeTracker.setAccumulatedPlaytime).toHaveBeenCalledWith(
       0
     );
     expect(res.success).toBe(true);
   });
 
-  it('_finalizeRestore logs completion', () => {
-    const res = context.restorer._finalizeRestore();
+  it('restoreGameState logs completion', async () => {
+    const res = await context.restorer.restoreGameState({
+      gameState: { entities: [] },
+    });
     expect(context.logger.debug).toHaveBeenCalled();
     expect(res.success).toBe(true);
   });
