@@ -10,6 +10,7 @@ import {
 import { safeDispatchError } from '../utils/safeDispatchErrorUtils.js';
 import { resolveSafeDispatcher } from '../utils/dispatcherUtils.js';
 import { initLogger } from '../utils/index.js';
+import { isValidEnvironmentContext } from './environmentContext.js';
 
 /**
  * @typedef {import('./environmentContext.js').EnvironmentContext} EnvironmentContext
@@ -24,20 +25,6 @@ export class ServerApiKeyProvider extends IApiKeyProvider {
   #environmentVariableReader;
   /** @type {ISafeEventDispatcher} */
   #dispatcher;
-  /**
-   * @private
-   * Checks if the provided context object appears to be a valid EnvironmentContext.
-   * @param {any} ctx - The context object to validate.
-   * @returns {boolean} True if the object exposes the required methods.
-   */
-  #isValidEnvironmentContext(ctx) {
-    return (
-      !!ctx &&
-      typeof ctx.isServer === 'function' &&
-      typeof ctx.getProjectRootPath === 'function' &&
-      typeof ctx.getExecutionEnvironment === 'function'
-    );
-  }
 
   /**
    * @private
@@ -187,7 +174,7 @@ export class ServerApiKeyProvider extends IApiKeyProvider {
   async getKey(llmConfig, environmentContext) {
     const llmId = llmConfig?.id || 'UnknownLLM';
 
-    if (!this.#isValidEnvironmentContext(environmentContext)) {
+    if (!isValidEnvironmentContext(environmentContext)) {
       safeDispatchError(
         this.#dispatcher,
         `ServerApiKeyProvider.getKey (${llmId}): Invalid environmentContext provided.`,

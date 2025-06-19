@@ -15,6 +15,21 @@ const VALID_EXECUTION_ENVIRONMENTS = ['client', 'server', 'unknown'];
 import { initLogger } from '../utils/index.js';
 
 /**
+ * @description Checks if the provided object conforms to the EnvironmentContext interface.
+ * @param {any} ctx - Object to validate.
+ * @returns {boolean} True if the object exposes the expected methods.
+ */
+export function isValidEnvironmentContext(ctx) {
+  return (
+    !!ctx &&
+    typeof ctx.isClient === 'function' &&
+    typeof ctx.isServer === 'function' &&
+    typeof ctx.getExecutionEnvironment === 'function' &&
+    typeof ctx.getProjectRootPath === 'function'
+  );
+}
+
+/**
  * @class EnvironmentContext
  * @description Encapsulates and validates information about the application's execution environment.
  * This class centralizes environment-specific settings, making them explicitly available and testable.

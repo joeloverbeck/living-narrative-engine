@@ -6,6 +6,7 @@ import { safeDispatchError } from '../utils/safeDispatchErrorUtils.js';
 import { resolveSafeDispatcher } from '../utils/dispatcherUtils.js';
 import { initLogger } from '../utils/index.js';
 import { CLOUD_API_TYPES } from './constants/llmConstants.js';
+import { isValidEnvironmentContext } from './environmentContext.js';
 
 /**
  * @typedef {import('./environmentContext.js').EnvironmentContext} EnvironmentContext
@@ -75,10 +76,7 @@ export class ClientApiKeyProvider extends IApiKeyProvider {
   async getKey(llmConfig, environmentContext) {
     const llmId = llmConfig?.configId || 'UnknownLLM'; // For logging context
 
-    if (
-      !environmentContext ||
-      typeof environmentContext.isClient !== 'function'
-    ) {
+    if (!isValidEnvironmentContext(environmentContext)) {
       safeDispatchError(
         this.#dispatcher,
         `ClientApiKeyProvider.getKey (${llmId}): Invalid environmentContext provided.`,
