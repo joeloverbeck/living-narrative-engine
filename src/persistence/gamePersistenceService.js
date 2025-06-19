@@ -123,14 +123,17 @@ class GamePersistenceService extends IGamePersistenceService {
     return true;
   }
 
-  async saveGame(saveName, isEngineInitialized, activeWorldName) {
-    this.#logger.debug(
-      `GamePersistenceService: Manual save triggered with name: "${saveName}". Active world hint: "${activeWorldName || 'N/A'}".`
-    );
-
+  /**
+   * Determines whether a save operation can proceed.
+   *
+   * @description Checks dependencies and saving policy before attempting to save.
+   * @param {boolean} isEngineInitialized - Whether the engine is fully initialized.
+   * @returns {import('./persistenceTypes.js').PersistenceResult<boolean>} Result indicating permission.
+   */
+  #canSave(isEngineInitialized) {
     if (!this.#saveLoadService) {
       const errorMsg = 'SaveLoadService is not available. Cannot save game.';
-      this.#logger.error(`GamePersistenceService.saveGame: ${errorMsg}`);
+      this.#logger.error(`GamePersistenceService.canSave: ${errorMsg}`);
       return createPersistenceFailure(
         PersistenceErrorCodes.UNEXPECTED_ERROR,
         errorMsg
@@ -140,12 +143,25 @@ class GamePersistenceService extends IGamePersistenceService {
     if (!this.isSavingAllowed(isEngineInitialized)) {
       const errorMsg = 'Saving is not currently allowed.';
       this.#logger.warn(
-        `GamePersistenceService.saveGame: Saving is not currently allowed.`
+        'GamePersistenceService.canSave: Saving is not currently allowed.'
       );
       return createPersistenceFailure(
         PersistenceErrorCodes.UNEXPECTED_ERROR,
         errorMsg
       );
+    }
+
+    return createPersistenceSuccess(true);
+  }
+
+  async saveGame(saveName, isEngineInitialized, activeWorldName) {
+    this.#logger.debug(
+      `GamePersistenceService: Manual save triggered with name: "${saveName}". Active world hint: "${activeWorldName || 'N/A'}".`
+    );
+
+    const canSaveResult = this.#canSave(isEngineInitialized);
+    if (!canSaveResult.success) {
+      return canSaveResult;
     }
 
     return wrapPersistenceOperation(this.#logger, async () => {
