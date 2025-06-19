@@ -161,3 +161,38 @@ export function createJsonLogicContext(
 
   return evaluationContext;
 }
+
+/**
+ * @description Assemble the nested execution context used by SystemLogicInterpreter.
+ * Internally delegates to {@link createJsonLogicContext} for the evaluation context.
+ * @param {GameEvent} event - Event triggering rule evaluation.
+ * @param {EntityId} actorId - Optional actor entity ID.
+ * @param {EntityId} targetId - Optional target entity ID.
+ * @param {EntityManager} entityManager - Entity manager for lookups.
+ * @param {ILogger} logger - Logger instance.
+ * @returns {{event: GameEvent, actor: JsonLogicEntityContext|null, target: JsonLogicEntityContext|null, logger: ILogger, evaluationContext: JsonLogicEvaluationContext}}
+ *   The nested execution context structure.
+ */
+export function createNestedExecutionContext(
+  event,
+  actorId,
+  targetId,
+  entityManager,
+  logger
+) {
+  const ctx = createJsonLogicContext(
+    event,
+    actorId,
+    targetId,
+    entityManager,
+    logger
+  );
+
+  return {
+    event,
+    actor: ctx.actor,
+    target: ctx.target,
+    logger,
+    evaluationContext: ctx,
+  };
+}

@@ -239,12 +239,12 @@ describe('SystemLogicInterpreter Integration Tests', () => {
     // These logs should now be present and match
     expect(mockLogger.debug).toHaveBeenCalledWith(
       expect.stringContaining(
-        `[Event: ${eventType}] Assembling JsonLogic context via createJsonLogicContext... (ActorID: ${eventPayload.actorId}, TargetID: ${eventPayload.targetId})`
+        `[Event: ${eventType}] Assembling execution context via createNestedExecutionContext... (ActorID: ${eventPayload.actorId}, TargetID: ${eventPayload.targetId})`
       )
     );
     expect(mockLogger.debug).toHaveBeenCalledWith(
       expect.stringContaining(
-        `[Event: ${eventType}] createJsonLogicContext returned a valid JsonLogicEvaluationContext.`
+        `[Event: ${eventType}] createNestedExecutionContext returned a valid ExecutionContext.`
       )
     );
     expect(mockLogger.debug).toHaveBeenCalledWith(
@@ -302,7 +302,7 @@ describe('SystemLogicInterpreter Integration Tests', () => {
     );
     expect(mockLogger.debug).toHaveBeenCalledWith(
       expect.stringContaining(
-        `[Event: ${eventType}] Assembling JsonLogic context via createJsonLogicContext...`
+        `[Event: ${eventType}] Assembling execution context via createNestedExecutionContext...`
       )
     );
     expect(mockLogger.debug).toHaveBeenCalledWith(
@@ -375,7 +375,7 @@ describe('SystemLogicInterpreter Integration Tests', () => {
     );
     expect(mockLogger.debug).toHaveBeenCalledWith(
       expect.stringContaining(
-        `[Event: ${eventType}] Assembling JsonLogic context via createJsonLogicContext...`
+        `[Event: ${eventType}] Assembling execution context via createNestedExecutionContext...`
       )
     );
     expect(mockLogger.debug).toHaveBeenCalledWith(
