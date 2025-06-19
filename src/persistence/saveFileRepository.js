@@ -16,6 +16,9 @@ import {
 import { wrapPersistenceOperation } from '../utils/persistenceErrorUtils.js';
 import BaseService from '../utils/serviceBase.js';
 
+// Precompile manual save file regex once for reuse
+const manualSaveRegex = MANUAL_SAVE_PATTERN;
+
 /**
  * @class SaveFileRepository
  * @description Handles file system interactions for manual save files.
@@ -126,7 +129,7 @@ export default class SaveFileRepository extends BaseService {
     try {
       const files = await this.#storageProvider.listFiles(
         FULL_MANUAL_SAVE_DIRECTORY_PATH,
-        MANUAL_SAVE_PATTERN.source
+        manualSaveRegex.source
       );
       this.#logger.debug(
         `Found ${files.length} potential manual save files in ${FULL_MANUAL_SAVE_DIRECTORY_PATH}.`
