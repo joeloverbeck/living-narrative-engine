@@ -23,17 +23,19 @@ describe('ManualSaveCoordinator', () => {
     });
   });
 
-  it('_setSaveMetadata ensures metadata and sets name', () => {
-    const state = {};
-    coordinator._setSaveMetadata(state, 'Slot');
-    expect(state.metadata.saveName).toBe('Slot');
-  });
-
-  it('saveGame captures state and delegates to saveLoadService', async () => {
+  it('saveGame adds metadata and delegates to saveLoadService', async () => {
+    captureService.captureCurrentGameState.mockReturnValueOnce({});
     await coordinator.saveGame('Slot', 'World');
     expect(captureService.captureCurrentGameState).toHaveBeenCalledWith(
       'World'
     );
+    expect(saveLoadService.saveManualGame).toHaveBeenCalledWith('Slot', {
+      metadata: { saveName: 'Slot' },
+    });
+  });
+
+  it('saveGame preserves existing state fields', async () => {
+    await coordinator.saveGame('Slot', 'World');
     expect(saveLoadService.saveManualGame).toHaveBeenCalledWith('Slot', {
       metadata: { saveName: 'Slot' },
       gameState: {},
