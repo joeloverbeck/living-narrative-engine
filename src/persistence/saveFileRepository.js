@@ -249,6 +249,27 @@ export default class SaveFileRepository extends BaseService {
   }
 
   /**
+   * Builds a result object for a corrupted save file.
+   *
+   * @param {string} filePath - Full path to the save file.
+   * @param {string} fileName - Name of the save file.
+   * @param {string} label - Suffix appended to the derived save name.
+   * @returns {import('./persistenceTypes.js').ParseSaveFileResult}
+   *   Result marked as corrupted.
+   */
+  #buildCorruptedMetadata(filePath, fileName, label) {
+    return {
+      metadata: {
+        identifier: filePath,
+        saveName: extractSaveName(fileName) + label,
+        timestamp: 'N/A',
+        playtimeSeconds: 0,
+      },
+      isCorrupted: true,
+    };
+  }
+
+  /**
    * Parses a manual save file and extracts metadata.
    *
    * @param {string} fileName - File name within manual saves directory.
@@ -266,15 +287,7 @@ export default class SaveFileRepository extends BaseService {
         this.#logger.warn(
           `Failed to deserialize ${filePath}: ${deserializationResult.error}. Flagging as corrupted for listing.`
         );
-        return {
-          metadata: {
-            identifier: filePath,
-            saveName: extractSaveName(fileName) + ' (Corrupted)',
-            timestamp: 'N/A',
-            playtimeSeconds: 0,
-          },
-          isCorrupted: true,
-        };
+        return this.#buildCorruptedMetadata(filePath, fileName, ' (Corrupted)');
       }
 
       const saveObject =
@@ -290,15 +303,11 @@ export default class SaveFileRepository extends BaseService {
         this.#logger.warn(
           `No metadata section found in ${filePath}. Flagging as corrupted for listing.`
         );
-        return {
-          metadata: {
-            identifier: filePath,
-            saveName: extractSaveName(fileName) + ' (No Metadata)',
-            timestamp: 'N/A',
-            playtimeSeconds: 0,
-          },
-          isCorrupted: true,
-        };
+        return this.#buildCorruptedMetadata(
+          filePath,
+          fileName,
+          ' (No Metadata)'
+        );
       }
 
       const validated = validateSaveMetadataFields(
@@ -319,15 +328,7 @@ export default class SaveFileRepository extends BaseService {
       };
     } catch (error) {
       this.#logger.error(`Unexpected error parsing ${filePath}:`, error);
-      return {
-        metadata: {
-          identifier: filePath,
-          saveName: extractSaveName(fileName) + ' (Corrupted)',
-          timestamp: 'N/A',
-          playtimeSeconds: 0,
-        },
-        isCorrupted: true,
-      };
+      return this.#buildCorruptedMetadata(filePath, fileName, ' (Corrupted)');
     }
   }
 
