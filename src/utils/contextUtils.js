@@ -141,40 +141,6 @@ function resolvePlaceholderPath(
  * @param {Iterable<string>} [skipKeys] - Keys to skip when processing objects.
  * @returns {*} Resolved value or the original input when unchanged.
  */
-function _resolveStructure(value, resolver, sources, fallback, skipKeys = []) {
-  if (
-    value &&
-    typeof value === 'object' &&
-    !Array.isArray(value) &&
-    !(value instanceof Date)
-  ) {
-    let changed = false;
-    const resolvedObj = {};
-    for (const key in value) {
-      if (Object.prototype.hasOwnProperty.call(value, key)) {
-        if (
-          (skipKeys instanceof Set && skipKeys.has(key)) ||
-          (Array.isArray(skipKeys) && skipKeys.includes(key))
-        ) {
-          resolvedObj[key] = value[key];
-        } else {
-          const resolvedVal = resolver.resolveStructure(
-            value[key],
-            sources,
-            fallback
-          );
-          if (resolvedVal !== value[key]) {
-            changed = true;
-          }
-          resolvedObj[key] = resolvedVal;
-        }
-      }
-    }
-    return changed ? resolvedObj : value;
-  }
-
-  return resolver.resolveStructure(value, sources, fallback);
-}
 
 /**
  * Recursively resolves placeholder strings (e.g., "{actor.id}", "{context.variableName}") within an input structure
@@ -205,5 +171,5 @@ export function resolvePlaceholders(
   const { sources, fallback } =
     PlaceholderResolver.buildResolutionSources(executionContext);
 
-  return _resolveStructure(input, resolver, sources, fallback, skipKeys);
+  return resolver.resolveStructure(input, sources, fallback, skipKeys);
 }

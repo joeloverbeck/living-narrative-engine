@@ -210,10 +210,11 @@ export class PlaceholderResolver {
    *
    * @private
    * @param {*} value - Value that may contain placeholders.
+   * @param skipKeys
    * @param {object[]} sources - Ordered list of source objects.
    * @returns {*} Value with placeholders resolved.
    */
-  _resolveValue(value, sources) {
+  _resolveValue(value, sources, skipKeys) {
     if (typeof value === 'string') {
       const fullMatch = value.match(FULL_STRING_PLACEHOLDER_REGEX);
       const replaced = this.resolve(value, ...sources);
@@ -276,12 +277,16 @@ export class PlaceholderResolver {
       const result = {};
       for (const key in value) {
         if (Object.prototype.hasOwnProperty.call(value, key)) {
-          const original = value[key];
-          const resolvedVal = this._resolveValue(original, sources);
-          if (resolvedVal !== original) {
-            changed = true;
+          if (skipKeys && skipKeys.has(key)) {
+            result[key] = value[key];
+          } else {
+            const original = value[key];
+            const resolvedVal = this._resolveValue(original, sources);
+            if (resolvedVal !== original) {
+              changed = true;
+            }
+            result[key] = resolvedVal;
           }
-          result[key] = resolvedVal;
         }
       }
       return changed ? result : value;
@@ -301,9 +306,11 @@ export class PlaceholderResolver {
    * @param {object|object[]} context - Primary data source or array of sources
    *   used for resolution.
    * @param {object} [fallback] - Optional fallback data source.
+   * @param {Iterable<string>} [skipKeys] - Keys to leave unresolved when
+   *   encountered at the current object level. Defaults to `[]`.
    * @returns {*} The input with all placeholders resolved.
    */
-  resolveStructure(input, context, fallback = {}) {
+  resolveStructure(input, context, fallback = {}, skipKeys = []) {
     const sources = Array.isArray(context) ? [...context] : [context];
     if (
       fallback &&
@@ -313,7 +320,14 @@ export class PlaceholderResolver {
       sources.push(fallback);
     }
 
-    return this._resolveValue(input, sources);
+    const skipSet =
+      skipKeys instanceof Set
+        ? skipKeys
+        : Array.isArray(skipKeys)
+          ? new Set(skipKeys)
+          : new Set();
+
+    return this._resolveValue(input, sources, skipSet);
   }
 }
 
