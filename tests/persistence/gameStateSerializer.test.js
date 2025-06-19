@@ -62,6 +62,33 @@ describe('GameStateSerializer persistence tests', () => {
     expect(des.error.code).toBe(PersistenceErrorCodes.DESERIALIZATION_ERROR);
   });
 
+  it('decompressAndDeserialize succeeds for valid input', async () => {
+    const obj = {
+      metadata: { title: 'Test' },
+      modManifest: {},
+      gameState: { foo: 'bar' },
+      integrityChecks: {},
+    };
+    const { compressedData, finalSaveObject } =
+      await serializer.serializeAndCompress(obj);
+    const res = serializer.decompressAndDeserialize(compressedData);
+    expect(res.success).toBe(true);
+    expect(res.data).toEqual(finalSaveObject);
+  });
+
+  it('decompressAndDeserialize propagates decompression errors', () => {
+    const res = serializer.decompressAndDeserialize(new Uint8Array([1, 2, 3]));
+    expect(res.success).toBe(false);
+    expect(res.error.code).toBe(PersistenceErrorCodes.DECOMPRESSION_ERROR);
+  });
+
+  it('decompressAndDeserialize propagates deserialization errors', () => {
+    const malformed = pako.gzip(new Uint8Array([1, 2, 3]));
+    const res = serializer.decompressAndDeserialize(malformed);
+    expect(res.success).toBe(false);
+    expect(res.error.code).toBe(PersistenceErrorCodes.DESERIALIZATION_ERROR);
+  });
+
   it('generateChecksum is consistent for identical input', async () => {
     const data = { hello: 'world' };
     const first = await serializer.generateChecksum(data);

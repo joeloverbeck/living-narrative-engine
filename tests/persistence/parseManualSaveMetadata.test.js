@@ -41,10 +41,7 @@ describe('SaveFileRepository.parseManualSaveMetadata', () => {
     };
 
     storageProvider.readFile.mockResolvedValue(new Uint8Array([1]));
-    serializer.decompress = jest
-      .fn()
-      .mockReturnValue({ success: true, data: new Uint8Array([2]) });
-    serializer.deserialize = jest
+    serializer.decompressAndDeserialize = jest
       .fn()
       .mockReturnValue({ success: true, data: { metadata } });
 
@@ -59,7 +56,7 @@ describe('SaveFileRepository.parseManualSaveMetadata', () => {
 
   it('marks file as corrupted when deserialization fails', async () => {
     storageProvider.readFile.mockResolvedValue(new Uint8Array([1]));
-    serializer.decompress = jest
+    serializer.decompressAndDeserialize = jest
       .fn()
       .mockReturnValue({ success: false, error: 'bad' });
 
@@ -78,10 +75,7 @@ describe('SaveFileRepository.parseManualSaveMetadata', () => {
 
   it('flags missing metadata section', async () => {
     storageProvider.readFile.mockResolvedValue(new Uint8Array([1]));
-    serializer.decompress = jest
-      .fn()
-      .mockReturnValue({ success: true, data: new Uint8Array([2]) });
-    serializer.deserialize = jest
+    serializer.decompressAndDeserialize = jest
       .fn()
       .mockReturnValue({ success: true, data: {} });
 

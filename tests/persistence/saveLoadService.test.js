@@ -52,6 +52,7 @@ const createMockGameStateSerializer = () => ({
   })),
   decompress: jest.fn((data) => ({ success: true, data })),
   deserialize: jest.fn(() => ({ success: true, data: {} })),
+  decompressAndDeserialize: jest.fn(() => ({ success: true, data: {} })),
 });
 
 describe('SaveLoadService', () => {
@@ -142,7 +143,7 @@ describe('SaveLoadService', () => {
       // Arrange
       const path = 'saves/manual_saves/manual_save_bad.sav';
       storageProvider.readFile.mockResolvedValue(new Uint8Array([1]));
-      serializer.deserialize.mockReturnValue({
+      serializer.decompressAndDeserialize.mockReturnValue({
         success: false,
         error: new PersistenceError(
           PersistenceErrorCodes.DESERIALIZATION_ERROR,
@@ -165,7 +166,7 @@ describe('SaveLoadService', () => {
       // Arrange
       const path = 'saves/manual_saves/manual_save_bad.sav';
       storageProvider.readFile.mockResolvedValue(new Uint8Array([1]));
-      serializer.deserialize.mockReturnValue({
+      serializer.decompressAndDeserialize.mockReturnValue({
         success: false,
         error: 'boom',
         userFriendlyError: 'Boom!',
