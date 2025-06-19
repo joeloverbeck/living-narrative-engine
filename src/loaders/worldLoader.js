@@ -26,6 +26,8 @@ import MissingSchemaError from '../errors/missingSchemaError.js';
 import AbstractLoader from './abstractLoader.js';
 import ModManifestProcessor from './ModManifestProcessor.js';
 import ContentLoadManager from './ContentLoadManager.js';
+import WorldLoadSummaryLogger from './WorldLoadSummaryLogger.js';
+import createDefaultContentLoadersConfig from './defaultLoaderConfig.js';
 
 // --- Type Definitions for Loader Results ---
 /**
@@ -83,6 +85,7 @@ class WorldLoader extends AbstractLoader {
   /** @type {ValidatedEventDispatcher} */ #validatedEventDispatcher;
   /** @type {ModManifestProcessor} */ #modManifestProcessor;
   /** @type {ContentLoadManager} */ #contentLoadManager;
+  /** @type {WorldLoadSummaryLogger} */ #summaryLogger;
   /** @type {string[]}       */ #finalOrder = [];
 
   /**
@@ -256,7 +259,17 @@ class WorldLoader extends AbstractLoader {
 
     // --- Initialize content loaders configuration ---
     this.#contentLoadersConfig =
-      contentLoadersConfig ?? this.#createDefaultContentLoadersConfig();
+      contentLoadersConfig ??
+      createDefaultContentLoadersConfig({
+        componentDefinitionLoader: this.#componentDefinitionLoader,
+        eventLoader: this.#eventLoader,
+        conditionLoader: this.#conditionLoader,
+        macroLoader: this.#macroLoader,
+        actionLoader: this.#actionLoader,
+        ruleLoader: this.#ruleLoader,
+        entityDefinitionLoader: this.#entityDefinitionLoader,
+        entityInstanceLoader: this.#entityInstanceLoader,
+      });
 
     this.#modManifestProcessor = new ModManifestProcessor({
       modManifestLoader: this.#modManifestLoader,
@@ -274,70 +287,14 @@ class WorldLoader extends AbstractLoader {
       contentLoadersConfig: this.#contentLoadersConfig,
     });
 
+    this.#summaryLogger = new WorldLoadSummaryLogger();
+
     this.#logger.debug(
       'WorldLoader: Instance created with ALL loaders, order‑resolver, and ValidatedEventDispatcher.'
     );
   }
 
   // ── Private Helper Methods ─────────────────────────────────────────────
-  /**
-   * Creates the default content loader configuration using built-in loaders.
-   *
-   * @private
-   * @returns {Array<{loader: BaseManifestItemLoaderInterface, contentKey: string, contentTypeDir: string, typeName: string}>} Default loader configuration.
-   */
-  #createDefaultContentLoadersConfig() {
-    return [
-      {
-        loader: this.#componentDefinitionLoader,
-        contentKey: 'components',
-        contentTypeDir: 'components',
-        typeName: 'components',
-      },
-      {
-        loader: this.#eventLoader,
-        contentKey: 'events',
-        contentTypeDir: 'events',
-        typeName: 'events',
-      },
-      {
-        loader: this.#conditionLoader,
-        contentKey: 'conditions',
-        contentTypeDir: 'conditions',
-        typeName: 'conditions',
-      },
-      {
-        loader: this.#macroLoader,
-        contentKey: 'macros',
-        contentTypeDir: 'macros',
-        typeName: 'macros',
-      },
-      {
-        loader: this.#actionLoader,
-        contentKey: 'actions',
-        contentTypeDir: 'actions',
-        typeName: 'actions',
-      },
-      {
-        loader: this.#ruleLoader,
-        contentKey: 'rules',
-        contentTypeDir: 'rules',
-        typeName: 'rules',
-      },
-      {
-        loader: this.#entityDefinitionLoader,
-        contentKey: 'entityDefinitions',
-        contentTypeDir: 'entities/definitions',
-        typeName: 'entityDefinitions',
-      },
-      {
-        loader: this.#entityInstanceLoader,
-        contentKey: 'entityInstances',
-        contentTypeDir: 'entities/instances',
-        typeName: 'entityInstances',
-      },
-    ];
-  }
 
   /**
    * Clears all entries from the data registry.
@@ -503,7 +460,8 @@ class WorldLoader extends AbstractLoader {
         totalCounts
       );
 
-      this.#logLoadSummary(
+      this.#summaryLogger.logSummary(
+        this.#logger,
         worldName,
         requestedModIds,
         this.#finalOrder,
@@ -540,72 +498,6 @@ class WorldLoader extends AbstractLoader {
       }
       // --- END REVISED CATCH BLOCK ---
     }
-  }
-
-  // ── Helper: final summary logger ────────────────────────────────────────
-  /**
-   * Prints a multi‑line summary of what was loaded across all mods.
-   *
-   * @private
-   * @param {string}   worldName - Identifier for the world being loaded.
-   * @param {string[]} requestedModIds - Mods requested by the game configuration.
-   * @param {string[]} finalOrder - Resolved load order for all mods.
-   * @param {number}   incompatibilityCount - Count of engine version mismatches.
-   * @param {TotalResultsSummary} totalCounts - Map of content type name to {count, overrides, errors}.
-   */
-  #logLoadSummary(
-    worldName,
-    requestedModIds,
-    finalOrder,
-    incompatibilityCount,
-    totalCounts
-  ) {
-    this.#logger.info(`— WorldLoader Load Summary (World: '${worldName}') —`);
-    this.#logger.info(
-      `  • Requested Mods (raw): [${requestedModIds.join(', ')}]`
-    );
-    this.#logger.info(`  • Final Load Order     : [${finalOrder.join(', ')}]`);
-    if (incompatibilityCount > 0) {
-      // Logged as warning because it indicates potential issues, even if loading continued
-      this.#logger.warn(
-        `  • Engine‑version incompatibilities detected: ${incompatibilityCount}`
-      );
-    }
-    this.#logger.info(`  • Content Loading Summary (Totals):`);
-    if (Object.keys(totalCounts).length > 0) {
-      const sortedTypes = Object.keys(totalCounts).sort();
-      for (const typeName of sortedTypes) {
-        const counts = totalCounts[typeName]; // counts is { count, overrides, errors }
-        const paddedTypeName = typeName.padEnd(20, ' ');
-        // Display Totals: C=Count, O=Overrides, E=Errors during load
-        const details = `C:${counts.count}, O:${counts.overrides}, E:${counts.errors}`;
-        this.#logger.info(`     - ${paddedTypeName}: ${details}`);
-      }
-      // Calculate grand totals
-      const grandTotalCount = Object.values(totalCounts).reduce(
-        (sum, tc) => sum + tc.count,
-        0
-      );
-      const grandTotalOverrides = Object.values(totalCounts).reduce(
-        (sum, tc) => sum + tc.overrides,
-        0
-      );
-      const grandTotalErrors = Object.values(totalCounts).reduce(
-        (sum, tc) => sum + tc.errors,
-        0
-      );
-      this.#logger.info(
-        `     - ${''.padEnd(20, '-')}--------------------------`
-      );
-      this.#logger.info(
-        `     - ${'TOTAL'.padEnd(20, ' ')}: C:${grandTotalCount}, O:${grandTotalOverrides}, E:${grandTotalErrors}`
-      );
-    } else {
-      this.#logger.info(
-        `     - No specific content items were processed by loaders in this run.`
-      );
-    }
-    this.#logger.info('———————————————————————————————————————————');
   }
 }
 
