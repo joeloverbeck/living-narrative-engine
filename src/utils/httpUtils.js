@@ -176,6 +176,85 @@ async function _handleNetworkError(
 }
 
 /**
+ * @description Perform a single fetch attempt and determine if a retry is needed.
+ * @param {number} currentAttempt Current attempt number starting at 1.
+ * @param {string} url Request URL.
+ * @param {object} options Fetch options.
+ * @param {number} maxRetries Maximum allowed retries.
+ * @param {number} baseDelayMs Base delay in milliseconds for retries.
+ * @param {number} maxDelayMs Maximum backoff delay in milliseconds.
+ * @param {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} safeEventDispatcher Dispatcher for error events.
+ * @param {import('../interfaces/coreServices.js').ILogger} log Logger instance.
+ * @param {typeof fetch} fetchFn Fetch implementation.
+ * @returns {Promise<{retry: boolean, data?: any}>} Result of the attempt.
+ * @private
+ */
+async function performFetchAttempt(
+  currentAttempt,
+  url,
+  options,
+  maxRetries,
+  baseDelayMs,
+  maxDelayMs,
+  safeEventDispatcher,
+  log,
+  fetchFn
+) {
+  try {
+    log.debug(
+      `Attempt ${currentAttempt}/${maxRetries} - Fetching ${options.method || 'GET'} ${url}`
+    );
+    const response = await fetchFn(url, options);
+    return _handleResponse(
+      response,
+      currentAttempt,
+      url,
+      maxRetries,
+      baseDelayMs,
+      maxDelayMs,
+      safeEventDispatcher,
+      log
+    );
+  } catch (error) {
+    if (error.message.startsWith('API request to')) {
+      throw error;
+    }
+
+    const { retried, isNetworkError } = await _handleNetworkError(
+      error,
+      currentAttempt,
+      url,
+      maxRetries,
+      baseDelayMs,
+      maxDelayMs,
+      log
+    );
+    if (retried) {
+      return { retry: true };
+    }
+
+    let finalErrorMessage;
+    if (isNetworkError) {
+      finalErrorMessage = `fetchWithRetry: Failed for ${url} after ${currentAttempt} attempt(s) due to persistent network error: ${error.message}`;
+    } else {
+      finalErrorMessage = `fetchWithRetry: Failed for ${url} after ${currentAttempt} attempt(s). Unexpected error: ${error.message}`;
+    }
+    await safeEventDispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
+      message: finalErrorMessage,
+      details: {
+        originalErrorName: error.name,
+        originalErrorMessage: error.message,
+        stack: error.stack,
+        status: error.status,
+      },
+    });
+    const finalError = new Error(finalErrorMessage);
+    finalError.status = error.status;
+    throw finalError;
+  }
+}
+
+/**
  * @async
  * @function fetchWithRetry
  * @description
@@ -206,71 +285,32 @@ export async function fetchWithRetry(
 ) {
   const log = getModuleLogger('fetchWithRetry', logger);
 
-  /**
-   *
-   * @param currentAttempt
-   */
-  async function attemptFetchRecursive(currentAttempt) {
-    try {
-      log.debug(
-        `Attempt ${currentAttempt}/${maxRetries} - Fetching ${options.method || 'GET'} ${url}`
-      );
-      const response = await fetchFn(url, options);
-      const { retry, data } = await _handleResponse(
-        response,
-        currentAttempt,
-        url,
-        maxRetries,
-        baseDelayMs,
-        maxDelayMs,
-        safeEventDispatcher,
-        log
-      );
-      if (retry) {
-        return attemptFetchRecursive(currentAttempt + 1);
-      }
-      return data;
-    } catch (error) {
-      if (error.message.startsWith('API request to')) {
-        throw error;
-      }
-
-      const { retried, isNetworkError } = await _handleNetworkError(
-        error,
-        currentAttempt,
-        url,
-        maxRetries,
-        baseDelayMs,
-        maxDelayMs,
-        log
-      );
-      if (retried) {
-        return attemptFetchRecursive(currentAttempt + 1);
-      }
-
-      let finalErrorMessage;
-      if (isNetworkError) {
-        finalErrorMessage = `fetchWithRetry: Failed for ${url} after ${currentAttempt} attempt(s) due to persistent network error: ${error.message}`;
-      } else {
-        finalErrorMessage = `fetchWithRetry: Failed for ${url} after ${currentAttempt} attempt(s). Unexpected error: ${error.message}`;
-      }
-      await safeEventDispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
-        message: finalErrorMessage,
-        details: {
-          originalErrorName: error.name,
-          originalErrorMessage: error.message,
-          stack: error.stack,
-          status: error.status,
-        },
-      });
-      const finalError = new Error(finalErrorMessage);
-      finalError.status = error.status;
-      throw finalError;
-    }
-  }
-
   log.debug(
     `fetchWithRetry: Initiating request sequence for ${url} with maxRetries=${maxRetries}, baseDelayMs=${baseDelayMs}, maxDelayMs=${maxDelayMs}.`
   );
-  return attemptFetchRecursive(1);
+
+  let attempt = 1;
+  while (attempt <= maxRetries) {
+    const { retry, data } = await performFetchAttempt(
+      attempt,
+      url,
+      options,
+      maxRetries,
+      baseDelayMs,
+      maxDelayMs,
+      safeEventDispatcher,
+      log,
+      fetchFn
+    );
+
+    if (!retry) {
+      return data;
+    }
+
+    attempt += 1;
+  }
+
+  throw new Error(
+    `fetchWithRetry: Failed for ${url} after ${maxRetries} attempts with no successful response.`
+  );
 }
