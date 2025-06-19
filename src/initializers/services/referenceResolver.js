@@ -154,6 +154,11 @@ class ReferenceResolver {
   /**
    * Was: Resolves a direct definition ID to an instance ID.
    * Now: Logs a warning and returns the original value, as this resolution is deprecated.
+   *
+   * @param currentValue
+   * @param entityId
+   * @param componentTypeId
+   * @param dataPathDisplay
    * @private
    */
   _resolveDirect(currentValue, entityId, componentTypeId, dataPathDisplay) {
@@ -170,6 +175,11 @@ class ReferenceResolver {
   /**
    * Was: Resolves an array of definition IDs to an array of instance IDs.
    * Now: Logs warnings and returns the original array, as this resolution is deprecated.
+   *
+   * @param currentValue
+   * @param entityId
+   * @param componentTypeId
+   * @param dataPathDisplay
    * @private
    */
   _resolveArrayOfDefinitionIds(
@@ -194,6 +204,12 @@ class ReferenceResolver {
   /**
    * Was: Resolves definition IDs within a specified field of objects in an array.
    * Now: Logs warnings and returns the original array, as this resolution is deprecated.
+   *
+   * @param currentValue
+   * @param spec
+   * @param entityId
+   * @param componentTypeId
+   * @param dataPathDisplay
    * @private
    */
   _resolveArrayOfObjects(

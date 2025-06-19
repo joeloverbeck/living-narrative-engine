@@ -164,6 +164,14 @@ class InMemoryDataRegistry {
     return this.getAll('entity_instances');
   }
 
+  getGoalDefinition(id) {
+    return this.get('goals', id);
+  }
+
+  getAllGoalDefinitions() {
+    return this.getAll('goals');
+  }
+
   /**
    * Retrieves the mod ID that provided a specific content item.
    *

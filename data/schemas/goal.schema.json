@@ -1,0 +1,41 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "http://example.com/schemas/goal.schema.json",
+    "title": "GOAP Goal Definition",
+    "description": "Defines a single, reusable world-state target for a GOAP agent. It specifies the goal's priority, the conditions under which it is relevant, and the desired state of the world to be achieved.",
+    "$comment": "Goals are evaluated highest 'priority' first. The 'relevance' condition must pass against the live world state for the goal to be considered by the planner.",
+    "type": "object",
+    "properties": {
+        "$schema": {
+            "$ref": "./common.schema.json#/definitions/BaseDefinition/properties/$schema"
+        },
+        "id": {
+            "$ref": "./common.schema.json#/definitions/namespacedId",
+            "description": "The unique, namespaced ID for this goal definition (e.g., 'core:goal_survive', 'monsters:goal_attack_intruder')."
+        },
+        "description": {
+            "type": "string",
+            "description": "Optional. A human-readable explanation of what this goal represents, for documentation and debugging."
+        },
+        "priority": {
+            "type": "number",
+            "description": "Required. A numeric value indicating the goal's importance. The GoapBrain will select the relevant goal with the highest priority.",
+            "minimum": 0
+        },
+        "relevance": {
+            "$ref": "./condition-container.schema.json#",
+            "description": "Required. A JSON-Logic condition that must be true in the current world state for this goal to be considered active or relevant."
+        },
+        "goalState": {
+            "$ref": "./condition-container.schema.json#",
+            "description": "Required. A JSON-Logic condition describing the desired world state. The GoapPlannerService will build a plan to make this condition true."
+        }
+    },
+    "required": [
+        "id",
+        "priority",
+        "relevance",
+        "goalState"
+    ],
+    "additionalProperties": false
+}

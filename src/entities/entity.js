@@ -17,6 +17,7 @@ class Entity {
   // Ensure it extends the correct interface if any
   /**
    * The underlying instance data for this entity.
+   *
    * @type {EntityInstanceData}
    * @private
    */
@@ -97,7 +98,7 @@ class Entity {
    * considering both its definition and instance overrides.
    *
    * @param {string} componentTypeId - The unique string identifier for the component type.
-   * @param {boolean} [checkOverrideOnly=false] - If true, only checks instance overrides.
+   * @param {boolean} [checkOverrideOnly] - If true, only checks instance overrides.
    * @returns {boolean} True if the entity has data for this component type, false otherwise.
    */
   hasComponent(componentTypeId, checkOverrideOnly = false) {

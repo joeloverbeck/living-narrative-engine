@@ -72,6 +72,7 @@ class EntityDefinition {
   /**
    * Gets the mod ID (namespace) from the definition ID.
    * E.g., "core:goblin" -> "core"
+   *
    * @returns {string | undefined} The mod ID, or undefined if the ID format is unexpected.
    */
   get modId() {

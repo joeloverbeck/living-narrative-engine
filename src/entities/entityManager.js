@@ -153,6 +153,7 @@ class EntityManager extends IEntityManager {
 
   /**
    * Retrieves an entity instance without throwing an error if not found.
+   *
    * @param {string} instanceId - The ID of the entity instance.
    * @returns {Entity | undefined} The entity instance or undefined if not found.
    * @private
@@ -273,7 +274,7 @@ class EntityManager extends IEntityManager {
    * @param {string} definitionId - The ID of the entity definition to use.
    * @param {object} options - Options for entity creation.
    * @param {string} [options.instanceId] - Optional. A specific ID for the new instance. If not provided, a UUID will be generated.
-   * @param {Object<string, object>} [options.componentOverrides={}] - Optional. A map of component data to override or add.
+   * @param {Object<string, object>} [options.componentOverrides] - Optional. A map of component data to override or add.
    * @returns {Entity} The newly created entity instance.
    * @throws {DefinitionNotFoundError} If the definition is not found.
    * @throws {Error} If component data is invalid, or if an entity with the given instanceId already exists.
@@ -345,6 +346,7 @@ class EntityManager extends IEntityManager {
 
   /**
    * Reconstructs an entity instance from a plain serializable object.
+   *
    * @param {object} serializedEntity - Plain object from a save file.
    * @param {string} serializedEntity.instanceId
    * @param {string} serializedEntity.definitionId

@@ -7,6 +7,7 @@ import MapManager from '../utils/mapManagerUtils.js';
 /**
  * Manages a spatial index mapping location IDs to the entities present
  * based on their position data. Handles entities whose locationId might be null.
+ *
  * @implements {ISpatialIndexManager}
  */
 class SpatialIndexManager extends MapManager {

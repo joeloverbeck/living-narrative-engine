@@ -5,8 +5,9 @@
 
 /**
  * Error thrown when an entity instance cannot be found in the manager.
+ *
  * @class
- * @extends {Error}
+ * @augments {Error}
  */
 export class EntityNotFoundError extends Error {
   /**
