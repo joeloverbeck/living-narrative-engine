@@ -18,7 +18,7 @@ import {
  * @returns {import('../persistence/persistenceTypes.js').PersistenceResult<object>}
  *   Clone result with validation outcome.
  */
-export function cloneAndValidateSaveState(obj, logger) {
+export function cloneValidatedState(obj, logger) {
   const cloneResult = safeDeepClone(obj, logger);
   if (!cloneResult.success || !cloneResult.data) {
     return createPersistenceFailure(
@@ -37,6 +37,19 @@ export function cloneAndValidateSaveState(obj, logger) {
   }
 
   return createPersistenceSuccess(cloned);
+}
+
+/**
+ * Wrapper for {@link cloneValidatedState} to maintain backward compatibility.
+ *
+ * @param {object} obj - Raw save state object to clone.
+ * @param {import('../interfaces/coreServices.js').ILogger} logger - Logger for
+ *   error reporting.
+ * @returns {import('../persistence/persistenceTypes.js').PersistenceResult<object>}
+ *   Clone result with validation outcome.
+ */
+export function cloneAndValidateSaveState(obj, logger) {
+  return cloneValidatedState(obj, logger);
 }
 
 export default cloneAndValidateSaveState;
