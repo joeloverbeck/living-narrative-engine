@@ -10,7 +10,7 @@ import {
 } from '@jest/globals';
 import EntityManager from '../../src/entities/entityManager.js';
 import Entity from '../../src/entities/entity.js';
-import EntityDefinition from '../../src/entities/EntityDefinition.js';
+import EntityDefinition from '../../src/entities/entityDefinition.js';
 import EntityInstanceData from '../../src/entities/entityInstanceData.js';
 import { POSITION_COMPONENT_ID } from '../../src/constants/componentIds.js';
 import { ENTITY_REMOVED_ID } from '../../src/constants/eventIds.js';

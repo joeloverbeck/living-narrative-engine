@@ -11,7 +11,7 @@ import {
 import EntityManager from '../../src/entities/entityManager.js';
 // Entity import might not be directly needed if we only interact via EntityManager
 // import Entity from '../../src/entities/entity.js';
-import EntityDefinition from '../../src/entities/EntityDefinition.js';
+import EntityDefinition from '../../src/entities/entityDefinition.js';
 import { POSITION_COMPONENT_ID } from '../../src/constants/componentIds.js';
 import { EntityNotFoundError } from '../../src/errors/entityNotFoundError.js';
 import { COMPONENT_REMOVED_ID } from '../../src/constants/eventIds.js'; // Added import

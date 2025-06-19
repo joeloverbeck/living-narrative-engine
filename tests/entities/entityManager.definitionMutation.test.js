@@ -1,6 +1,6 @@
 import { describe, test, expect, jest } from '@jest/globals';
 import EntityManager from '../../src/entities/entityManager.js';
-import EntityDefinition from '../../src/entities/EntityDefinition.js';
+import EntityDefinition from '../../src/entities/entityDefinition.js';
 
 const makeDeps = (definition) => {
   const registry = {

@@ -9,7 +9,7 @@ import {
   afterEach,
 } from '@jest/globals';
 import EntityManager from '../../src/entities/entityManager.js';
-import EntityDefinition from '../../src/entities/EntityDefinition.js';
+import EntityDefinition from '../../src/entities/entityDefinition.js';
 // Entity import might not be needed if only interacting via EntityManager
 import { POSITION_COMPONENT_ID } from '../../src/constants/componentIds.js';
 import { EntityNotFoundError } from '../../src/errors/entityNotFoundError.js';
