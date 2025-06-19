@@ -2,6 +2,8 @@
 // --- FILE START ---
 
 /**
+ * @typedef {import("../interfaces/ICommandHandlingState.js").ICommandHandlingState} ICommandHandlingState
+ * @typedef {import("../interfaces/ITurnLifecycleState.js").ITurnLifecycleState} ITurnLifecycleState_Interface
  * @typedef {import('../handlers/baseTurnHandler.js').BaseTurnHandler} BaseTurnHandler
  * @typedef {import('../../entities/entity.js').default} Entity
  * @typedef {import('../interfaces/ITurnState.js').ITurnState} ITurnState_Interface
@@ -15,6 +17,8 @@ import { UNKNOWN_ENTITY_ID } from '../../constants/unknownIds.js';
 /**
  * @class TurnIdleState
  * @augments AbstractTurnState_Base
+ * @implements {ICommandHandlingState}
+ * @implements {ITurnLifecycleState_Interface}
  */
 export class TurnIdleState extends AbstractTurnState {
   /** @override */
