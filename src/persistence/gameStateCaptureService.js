@@ -158,13 +158,6 @@ class GameStateCaptureService extends BaseService {
       'GameStateCaptureService: Capturing current game state...'
     );
 
-    if (!this.#entityManager)
-      throw new Error('EntityManager not available for capturing game state.');
-    if (!this.#playtimeTracker)
-      throw new Error(
-        'PlaytimeTracker not available for capturing game state.'
-      );
-
     const entitiesData = [];
     for (const entity of this.#entityManager.activeEntities.values()) {
       entitiesData.push(this.#serializeEntity(entity));
