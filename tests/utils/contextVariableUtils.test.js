@@ -1,6 +1,7 @@
 import { describe, test, expect, jest } from '@jest/globals';
 import storeResult, {
   setContextValue,
+  setContextValueResult,
 } from '../../src/utils/contextVariableUtils.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../src/constants/eventIds.js';
 
@@ -14,18 +15,19 @@ describe('storeResult', () => {
       info: jest.fn(),
       debug: jest.fn(),
     };
-    const success = storeResult('foo', 123, ctx, dispatcher, logger);
-    expect(success).toBe(true);
+    const result = storeResult('foo', 123, ctx, dispatcher, logger);
+    expect(result).toEqual({ success: true });
     expect(ctx.evaluationContext.context.foo).toBe(123);
     expect(dispatcher.dispatch).not.toHaveBeenCalled();
   });
 
-  test('dispatches error and returns false when context missing', () => {
+  test('dispatches error and returns failure when context missing', () => {
     const ctx = { evaluationContext: null };
     const dispatcher = { dispatch: jest.fn() };
     const logger = { error: jest.fn() };
-    const success = storeResult('bar', 5, ctx, dispatcher, logger);
-    expect(success).toBe(false);
+    const result = storeResult('bar', 5, ctx, dispatcher, logger);
+    expect(result.success).toBe(false);
+    expect(result.error).toBeInstanceOf(Error);
     expect(dispatcher.dispatch).toHaveBeenCalledWith(
       SYSTEM_ERROR_OCCURRED_ID,
       expect.objectContaining({ message: expect.any(String) })
@@ -48,9 +50,10 @@ describe('storeResult', () => {
       info: jest.fn(),
       debug: jest.fn(),
     };
-    const success = storeResult('baz', 7, ctx, undefined, logger);
+    const result = storeResult('baz', 7, ctx, undefined, logger);
     await Promise.resolve();
-    expect(success).toBe(false);
+    expect(result.success).toBe(false);
+    expect(result.error).toBeInstanceOf(Error);
     expect(validated.dispatch).toHaveBeenCalledWith(
       SYSTEM_ERROR_OCCURRED_ID,
       expect.objectContaining({ message: expect.any(String) }),
@@ -81,5 +84,20 @@ describe('setContextValue', () => {
       expect.objectContaining({ message: expect.any(String) })
     );
     expect(Object.keys(ctx.evaluationContext.context)).toHaveLength(0);
+  });
+});
+
+describe('setContextValueResult', () => {
+  test('returns error object when evaluation context missing', () => {
+    const ctx = { evaluationContext: null };
+    const dispatcher = { dispatch: jest.fn() };
+    const logger = { error: jest.fn() };
+    const result = setContextValueResult('foo', 1, ctx, dispatcher, logger);
+    expect(result.success).toBe(false);
+    expect(result.error).toBeInstanceOf(Error);
+    expect(dispatcher.dispatch).toHaveBeenCalledWith(
+      SYSTEM_ERROR_OCCURRED_ID,
+      expect.objectContaining({ message: expect.any(String) })
+    );
   });
 });

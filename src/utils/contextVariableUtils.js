@@ -6,8 +6,8 @@ import { resolveSafeDispatcher } from './dispatcherUtils.js';
 
 /**
  * Safely stores a value into `execCtx.evaluationContext.context`. If the context
- * is missing, an error is dispatched (or logged) and the function returns
- * `false`.
+ * is missing, an error is dispatched (or logged) and the function returns a
+ * failure result.
  *
  * @param {string} variableName - Name of the variable to store.
  * @param {*} value - The value to store.
@@ -15,7 +15,7 @@ import { resolveSafeDispatcher } from './dispatcherUtils.js';
  * @param {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} [dispatcher] -
  * Optional dispatcher for error events.
  * @param {import('../interfaces/coreServices.js').ILogger} [logger] - Optional logger used when no dispatcher is provided.
- * @returns {boolean} `true` if the value was stored successfully, otherwise `false`.
+ * @returns {{success: boolean, error?: Error}} Result of the store operation.
  */
 export function storeResult(variableName, value, execCtx, dispatcher, logger) {
   const log = getModuleLogger('contextVariableUtils', logger);
@@ -27,30 +27,30 @@ export function storeResult(variableName, value, execCtx, dispatcher, logger) {
     execCtx.evaluationContext.context !== null;
 
   if (!hasContext) {
-    const message =
-      'storeResult: evaluationContext.context is missing; cannot store result';
+    const err = new Error(
+      'storeResult: evaluationContext.context is missing; cannot store result'
+    );
     if (safeDispatcher) {
-      safeDispatchError(safeDispatcher, message, { variableName });
+      safeDispatchError(safeDispatcher, err.message, { variableName });
     }
-    return false;
+    return { success: false, error: err };
   }
 
   try {
     execCtx.evaluationContext.context[variableName] = value;
-    return true;
+    return { success: true };
   } catch (e) {
+    const err = new Error(
+      `storeResult: Failed to write variable "${variableName}"`
+    );
     if (safeDispatcher) {
-      safeDispatchError(
-        safeDispatcher,
-        `storeResult: Failed to write variable "${variableName}"`,
-        {
-          variableName,
-          error: e.message,
-          stack: e.stack,
-        }
-      );
+      safeDispatchError(safeDispatcher, err.message, {
+        variableName,
+        error: e.message,
+        stack: e.stack,
+      });
     }
-    return false;
+    return { success: false, error: err };
   }
 }
 
@@ -66,7 +66,7 @@ export function storeResult(variableName, value, execCtx, dispatcher, logger) {
  * @param {import('../interfaces/coreServices.js').ILogger} [logger] - Logger used when no dispatcher is provided.
  * @returns {boolean} `true` when the value was successfully stored.
  */
-export function setContextValue(
+export function setContextValueResult(
   variableName,
   value,
   execCtx,
@@ -79,20 +79,37 @@ export function setContextValue(
 
   if (!trimmedName) {
     const safeDispatcher = resolveSafeDispatcher(execCtx, dispatcher, log);
-
+    const err = new Error(
+      'setContextValue: variableName must be a non-empty string.'
+    );
     if (safeDispatcher) {
-      safeDispatchError(
-        safeDispatcher,
-        'setContextValue: variableName must be a non-empty string.',
-        {
-          variableName,
-        }
-      );
+      safeDispatchError(safeDispatcher, err.message, {
+        variableName,
+      });
     }
-    return false;
+    return { success: false, error: err };
   }
 
   return storeResult(trimmedName, value, execCtx, dispatcher, logger);
+}
+
+/**
+ *
+ * @param variableName
+ * @param value
+ * @param execCtx
+ * @param dispatcher
+ * @param logger
+ */
+export function setContextValue(
+  variableName,
+  value,
+  execCtx,
+  dispatcher,
+  logger
+) {
+  return setContextValueResult(variableName, value, execCtx, dispatcher, logger)
+    .success;
 }
 
 export default storeResult;
