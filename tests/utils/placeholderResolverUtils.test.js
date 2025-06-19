@@ -10,6 +10,7 @@ import {
 } from '@jest/globals';
 import { PlaceholderResolver } from '../../src/utils/placeholderResolverUtils.js'; // Adjust path as needed
 import { createMockLogger } from '../testUtils.js'; // Adjust path as needed (assuming testUtils.js from previous adjustment)
+import { NAME_COMPONENT_ID } from '../../src/constants/componentIds.js';
 
 describe('PlaceholderResolver', () => {
   let mockLogger;
@@ -272,6 +273,23 @@ describe('PlaceholderResolver', () => {
       const result = resolver.resolveStructure(input, { value: 1 });
       expect(result).toBeUndefined();
       expect(mockLogger.warn).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('buildResolutionSources', () => {
+    it('should build sources from execution context and resolve placeholders', () => {
+      const executionContext = {
+        evaluationContext: { context: { val: 'foo' } },
+        actor: { components: { [NAME_COMPONENT_ID]: { text: 'Hero' } } },
+      };
+      const { sources, fallback } =
+        PlaceholderResolver.buildResolutionSources(executionContext);
+      const result = resolver.resolveStructure(
+        '{context.val} {actor.name}',
+        sources,
+        fallback
+      );
+      expect(result).toBe('foo Hero');
     });
   });
 });
