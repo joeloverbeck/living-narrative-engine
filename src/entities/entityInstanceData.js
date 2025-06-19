@@ -4,7 +4,8 @@
  */
 
 import { cloneDeep, isEqual, pick } from 'lodash';
-import EntityDefinition from './EntityDefinition.js';
+import EntityDefinition from './entityDefinition.js';
+import { ACTOR_COMPONENT_ID } from '../constants/componentIds.js';
 
 /**
  * Represents the mutable, runtime data for a unique instance of an entity.

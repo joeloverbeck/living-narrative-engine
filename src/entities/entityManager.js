@@ -399,11 +399,18 @@ class EntityManager extends IEntityManager {
         if (data === null) {
           validatedComponents[typeId] = null;
         } else {
-          validatedComponents[typeId] = this.#validateAndClone(
+          const validationResult = this.#validator.validate(
             typeId,
             data,
             `Reconstruction component ${typeId} for entity ${instanceId} (definition ${definitionId})`
           );
+          if (validationResult.isValid) {
+            validatedComponents[typeId] = JSON.parse(JSON.stringify(data));
+          } else {
+            const errorMsg = `Reconstruction component ${typeId} for entity ${instanceId} (definition ${definitionId}) Errors: ${JSON.stringify(validationResult.errors)}`;
+            this.#logger.error(errorMsg);
+            throw new Error(errorMsg);
+          }
         }
       }
     }
@@ -414,7 +421,7 @@ class EntityManager extends IEntityManager {
     const instanceDataForReconstruction = new EntityInstanceData(
       instanceId,            // Corrected: instanceId first
       definitionToUse,       // Corrected: definition second
-      validatedComponents    // Corrected: initialOverrides (validatedComponents) third
+      JSON.parse(JSON.stringify(validatedComponents))    // Replaced structuredClone
                              // Removed extra arguments: componentStates, tags, flags
     );
     const entity = new Entity(instanceDataForReconstruction, this.#logger, this.#validator);
@@ -484,7 +491,7 @@ class EntityManager extends IEntityManager {
     } else {
       validatedData = this.#validateAndClone(
         componentTypeId,
-        componentData, // This is an object
+        componentData,
         `addComponent ${componentTypeId} to entity ${instanceId}`
       );
     }
