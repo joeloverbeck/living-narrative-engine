@@ -15,6 +15,7 @@ import { cloneDeep } from 'lodash'; // For merging, if complex merge logic is ne
 class EntityInstanceData {
   /**
    * The unique runtime identifier for this entity instance (e.g., a UUID).
+   *
    * @type {string}
    * @readonly
    */
@@ -22,6 +23,7 @@ class EntityInstanceData {
 
   /**
    * A strong reference to the immutable EntityDefinition for this instance.
+   *
    * @type {EntityDefinition}
    * @readonly
    */
@@ -40,6 +42,7 @@ class EntityInstanceData {
    *
    * @param {string} instanceId - The unique runtime identifier for this instance.
    * @param {EntityDefinition} definition - The EntityDefinition this instance is based on.
+   * @param {Record<string, object>} [initialOverrides] - Optional initial component overrides.
    * @param {Record<string, object>} [initialOverrides={}] - Optional initial component overrides.
    * @throws {Error} If instanceId is not a valid string.
    * @throws {Error} If definition is not an instance of EntityDefinition.
@@ -167,6 +170,7 @@ class EntityInstanceData {
   /**
    * Gets all component type IDs for this instance, including those from the definition
    * and any overridden components.
+   *
    * @returns {string[]} An array of unique component type IDs.
    */
   get allComponentTypeIds() {
