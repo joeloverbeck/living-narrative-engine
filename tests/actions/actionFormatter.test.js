@@ -98,7 +98,9 @@ describe('formatActionCommand', () => {
         {},
         { logger, safeEventDispatcher: dispatcher }
       )
-    ).toThrow('formatActionCommand requires a valid EntityManager instance.');
+    ).toThrow(
+      'formatActionCommand: entityManager parameter must be a valid EntityManager instance.'
+    );
   });
 
   it('warns on unknown target type', () => {
@@ -110,7 +112,7 @@ describe('formatActionCommand', () => {
     });
     expect(result).toBe('do it');
     expect(logger.warn).toHaveBeenCalledWith(
-      expect.stringContaining('Unknown validatedTargetContext type')
+      expect.stringContaining('Unknown targetContext type')
     );
   });
 });
