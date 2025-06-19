@@ -5,8 +5,9 @@
 
 /**
  * Error thrown when an entity definition cannot be found in the registry.
+ *
  * @class
- * @extends {Error}
+ * @augments {Error}
  */
 export class DefinitionNotFoundError extends Error {
   /**

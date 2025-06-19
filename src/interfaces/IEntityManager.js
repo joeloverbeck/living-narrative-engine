@@ -19,8 +19,9 @@ export class IEntityManager {
 
   /**
    * Creates a new Entity instance based on its definition ID.
+   *
    * @param {string} definitionId - The ID of the entity definition to use.
-   * @param {object} [options={}] - Options for entity creation.
+   * @param {object} [options] - Options for entity creation.
    * @param {string} [options.instanceId] - A specific ID for the new instance. If not provided, a UUID will be generated.
    * @param {Object<string, object>} [options.componentOverrides] - A map of component data to override or add.
    * @returns {Entity} The newly created entity instance.
@@ -33,6 +34,7 @@ export class IEntityManager {
 
   /**
    * Reconstructs an entity instance from a plain serializable object.
+   *
    * @param {object} serializedEntity - Plain object from a save file.
    * @param {string} serializedEntity.instanceId
    * @param {string} serializedEntity.definitionId

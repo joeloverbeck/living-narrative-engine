@@ -23,10 +23,10 @@ const createRegistry = () => ({
   getAllComponentDefinitions: jest.fn(() => [{ id: 'c1' }]),
   getConditionDefinition: jest.fn((id) => ({ id })),
   getAllConditionDefinitions: jest.fn(() => [{ id: 'cond1' }]),
-  // --- FIX START: Add missing methods to the mock registry ---
   getEntityInstanceDefinition: jest.fn((id) => ({ instanceId: id })),
   getAllEntityInstanceDefinitions: jest.fn(() => [{ instanceId: 'inst-01' }]),
-  // --- FIX END ---
+  getGoalDefinition: jest.fn((id) => ({ id })),
+  getAllGoalDefinitions: jest.fn(() => [{ id: 'g1' }]),
   getContentSource: jest.fn(() => 'modA'),
   listContentByMod: jest.fn(() => ({ actions: ['a1'] })),
   get: jest.fn(),

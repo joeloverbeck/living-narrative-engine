@@ -25,7 +25,7 @@ import { resolveSafeDispatcher } from '../utils/dispatcherUtils.js';
  * @param {boolean} [options.debug] - If true, logs additional debug information.
  * @param {ILogger} [options.logger] - Logger instance used for diagnostic output. Defaults to console.
  * @param {ISafeEventDispatcher} options.safeEventDispatcher - Dispatcher used for error events.
- * @param {(entity: Entity, fallback: string, logger?: ILogger) => string} [displayNameFn=getEntityDisplayName] -
+ * @param {(entity: Entity, fallback: string, logger?: ILogger) => string} [displayNameFn] -
  *  Function used to resolve entity display names.
  * @returns {string | null} The formatted command string, or null if inputs are invalid.
  * @throws {Error} If critical dependencies (entityManager, displayNameFn) are missing or invalid during processing.

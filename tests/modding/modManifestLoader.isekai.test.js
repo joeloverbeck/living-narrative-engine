@@ -85,7 +85,7 @@ class MockSchemaValidator {
       this.ajv.addSchema(schemaData, id);
       this.validators.set(id, this.ajv.getSchema(id));
     } catch (e) {
-      // eslint-disable-next-line no-console
+       
       console.error(`Error adding schema ${id}:`, e);
       // Suppress error in test setup if schema is problematic but allow test to proceed
       this.validators.set(id, () => ({ isValid: true, errors: null }));
