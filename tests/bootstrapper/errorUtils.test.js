@@ -33,6 +33,13 @@ describe('displayFatalStartupError', () => {
     const alertSpy = jest.fn();
     const domAdapter = {
       createElement: document.createElement.bind(document),
+      insertAfter: (ref, el) => ref.insertAdjacentElement('afterend', el),
+      setTextContent: (el, text) => {
+        el.textContent = text;
+      },
+      setStyle: (el, prop, val) => {
+        el.style[prop] = val;
+      },
       alert: alertSpy,
     };
     const logger = {
@@ -77,6 +84,13 @@ describe('displayFatalStartupError', () => {
     const alertSpy = jest.fn();
     const domAdapter = {
       createElement: document.createElement.bind(document),
+      insertAfter: (ref, el) => ref.insertAdjacentElement('afterend', el),
+      setTextContent: (el, text) => {
+        el.textContent = text;
+      },
+      setStyle: (el, prop, val) => {
+        el.style[prop] = val;
+      },
       alert: alertSpy,
     };
     const logger = {
@@ -111,6 +125,13 @@ describe('displayFatalStartupError', () => {
     const alertSpy = jest.fn();
     const domAdapter = {
       createElement: document.createElement.bind(document),
+      insertAfter: (ref, el) => ref.insertAdjacentElement('afterend', el),
+      setTextContent: (el, text) => {
+        el.textContent = text;
+      },
+      setStyle: (el, prop, val) => {
+        el.style[prop] = val;
+      },
       alert: alertSpy,
     };
     const logger = {
