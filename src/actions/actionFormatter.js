@@ -19,7 +19,7 @@ import { resolveSafeDispatcher } from '../utils/dispatcherUtils.js';
  * Formats a validated action and target into a user-facing command string.
  *
  * @param {ActionDefinition} actionDefinition - The validated action's definition. Must not be null/undefined.
- * @param {ActionTargetContext} validatedTargetContext - The validated target context. Must not be null/undefined.
+ * @param {ActionTargetContext} targetContext - The validated target context. Must not be null/undefined.
  * @param {EntityManager} entityManager - The entity manager for lookups. Must not be null/undefined.
  * @param {object} [options] - Optional parameters.
  * @param {boolean} [options.debug] - If true, logs additional debug information.
@@ -30,7 +30,7 @@ import { resolveSafeDispatcher } from '../utils/dispatcherUtils.js';
  */
 export function formatActionCommand(
   actionDefinition,
-  validatedTargetContext,
+  targetContext,
   entityManager,
   options = {}
 ) {
@@ -51,11 +51,11 @@ export function formatActionCommand(
     );
     return null;
   }
-  if (!validatedTargetContext) {
+  if (!targetContext) {
     safeDispatchError(
       dispatcher,
-      'formatActionCommand: Invalid or missing validatedTargetContext.',
-      { validatedTargetContext }
+      'formatActionCommand: Invalid or missing targetContext.',
+      { targetContext }
     );
     return null;
   }
@@ -66,7 +66,7 @@ export function formatActionCommand(
       { entityManager }
     );
     throw new Error(
-      'formatActionCommand requires a valid EntityManager instance.'
+      'formatActionCommand: entityManager parameter must be a valid EntityManager instance.'
     );
   }
   if (typeof getEntityDisplayName !== 'function') {
@@ -75,12 +75,12 @@ export function formatActionCommand(
       'formatActionCommand: getEntityDisplayName utility function is not available.'
     );
     throw new Error(
-      'formatActionCommand requires the getEntityDisplayName utility function.'
+      'formatActionCommand: getEntityDisplayName parameter must be a function.'
     );
   }
 
   let command = actionDefinition.template;
-  const contextType = validatedTargetContext.type;
+  const contextType = targetContext.type;
 
   if (debug) {
     logger.debug(
@@ -92,7 +92,7 @@ export function formatActionCommand(
   try {
     switch (contextType) {
       case 'entity': {
-        const targetId = validatedTargetContext.entityId;
+        const targetId = targetContext.entityId;
         if (!targetId) {
           logger.warn(
             `formatActionCommand: Target context type is 'entity' but entityId is missing for action ${actionDefinition.id}. Template: "${command}"`
@@ -128,7 +128,7 @@ export function formatActionCommand(
       }
 
       case 'direction': {
-        const direction = validatedTargetContext.direction;
+        const direction = targetContext.direction;
         if (!direction) {
           logger.warn(
             `formatActionCommand: Target context type is 'direction' but direction string is missing for action ${actionDefinition.id}. Template: "${command}"`
@@ -158,7 +158,7 @@ export function formatActionCommand(
 
       default:
         logger.warn(
-          `formatActionCommand: Unknown validatedTargetContext type: ${contextType} for action ${actionDefinition.id}. Returning template unmodified.`
+          `formatActionCommand: Unknown targetContext type: ${contextType} for action ${actionDefinition.id}. Returning template unmodified.`
         );
         // Return template as-is for unknown types? Or null? Returning unmodified seems safer.
         break;
