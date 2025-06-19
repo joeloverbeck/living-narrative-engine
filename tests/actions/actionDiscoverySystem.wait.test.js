@@ -53,9 +53,21 @@ describe('ActionDiscoveryService - Wait Action Tests', () => {
   const DUMMY_DEFINITION_ID = 'def:dummy-wait-test';
 
   // Helper function to create entity instances for testing
-  const createTestEntity = (instanceId, definitionId, defComponents = {}, instanceOverrides = {}) => {
-    const definition = new EntityDefinition(definitionId, { description: `Test Definition ${definitionId}`, components: defComponents });
-    const instanceData = new EntityInstanceData(instanceId, definition, instanceOverrides);
+  const createTestEntity = (
+    instanceId,
+    definitionId,
+    defComponents = {},
+    instanceOverrides = {}
+  ) => {
+    const definition = new EntityDefinition(definitionId, {
+      description: `Test Definition ${definitionId}`,
+      components: defComponents,
+    });
+    const instanceData = new EntityInstanceData(
+      instanceId,
+      definition,
+      instanceOverrides
+    );
     return new Entity(instanceData);
   };
 
@@ -84,7 +96,10 @@ describe('ActionDiscoveryService - Wait Action Tests', () => {
     mockSafeEventDispatcher = { dispatch: jest.fn() };
 
     mockActorEntity = createTestEntity(ACTOR_INSTANCE_ID, DUMMY_DEFINITION_ID);
-    mockLocationEntity = createTestEntity(LOCATION_INSTANCE_ID, DUMMY_DEFINITION_ID);
+    mockLocationEntity = createTestEntity(
+      LOCATION_INSTANCE_ID,
+      DUMMY_DEFINITION_ID
+    );
 
     mockGameDataRepo.getAllActionDefinitions.mockReturnValue([
       coreWaitActionDefinition,
@@ -159,7 +174,8 @@ describe('ActionDiscoveryService - Wait Action Tests', () => {
       coreWaitActionDefinition,
       ActionTargetContext.noTarget(),
       mockEntityManager,
-      expect.any(Object)
+      expect.any(Object),
+      expect.any(Function)
     );
 
     // Log messages: only start and finish

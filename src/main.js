@@ -163,6 +163,13 @@ export async function bootstrapApp() {
       logger,
       {
         createElement: (tag) => document.createElement(tag),
+        insertAfter: (ref, el) => ref.insertAdjacentElement('afterend', el),
+        setTextContent: (el, text) => {
+          el.textContent = text;
+        },
+        setStyle: (el, prop, val) => {
+          el.style[prop] = val;
+        },
         alert,
       }
     );
@@ -193,6 +200,13 @@ export async function beginGame(showLoadUI = false) {
       logger,
       {
         createElement: (tag) => document.createElement(tag),
+        insertAfter: (ref, el) => ref.insertAdjacentElement('afterend', el),
+        setTextContent: (el, text) => {
+          el.textContent = text;
+        },
+        setStyle: (el, prop, val) => {
+          el.style[prop] = val;
+        },
         alert,
       }
     );
@@ -217,6 +231,13 @@ export async function beginGame(showLoadUI = false) {
       logger,
       {
         createElement: (tag) => document.createElement(tag),
+        insertAfter: (ref, el) => ref.insertAdjacentElement('afterend', el),
+        setTextContent: (el, text) => {
+          el.textContent = text;
+        },
+        setStyle: (el, prop, val) => {
+          el.style[prop] = val;
+        },
         alert,
       }
     );

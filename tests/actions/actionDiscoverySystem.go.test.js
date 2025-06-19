@@ -63,11 +63,23 @@ describe('ActionDiscoveryService - Go Action (Fixed State)', () => {
   const GUILD_INSTANCE_ID = 'guild-instance-uuid-integration-1';
 
   // Helper function to create entity instances for testing
-  const createTestEntity = (instanceId, definitionId, defComponents = {}, instanceOverrides = {}) => {
+  const createTestEntity = (
+    instanceId,
+    definitionId,
+    defComponents = {},
+    instanceOverrides = {}
+  ) => {
     // For this test, entities are created with base components on their definition
     // and specific test data as instance overrides.
-    const definition = new EntityDefinition(definitionId, { description: `Test Definition ${definitionId}`, components: defComponents });      
-    const instanceData = new EntityInstanceData(instanceId, definition, instanceOverrides);
+    const definition = new EntityDefinition(definitionId, {
+      description: `Test Definition ${definitionId}`,
+      components: defComponents,
+    });
+    const instanceData = new EntityInstanceData(
+      instanceId,
+      definition,
+      instanceOverrides
+    );
     return new Entity(instanceData);
   };
 
@@ -114,9 +126,19 @@ describe('ActionDiscoveryService - Go Action (Fixed State)', () => {
     mockGetLocationIdForLog = getLocationIdForLog;
     mockSafeEventDispatcher = { dispatch: jest.fn() };
 
-    mockHeroEntity = createTestEntity(HERO_INSTANCE_ID, HERO_DEFINITION_ID, {}, heroEntityInitialComponents);
+    mockHeroEntity = createTestEntity(
+      HERO_INSTANCE_ID,
+      HERO_DEFINITION_ID,
+      {},
+      heroEntityInitialComponents
+    );
 
-    mockAdventurersGuildLocation = createTestEntity(GUILD_INSTANCE_ID, GUILD_DEFINITION_ID, {}, adventurersGuildEntityDefinitionData.components);
+    mockAdventurersGuildLocation = createTestEntity(
+      GUILD_INSTANCE_ID,
+      GUILD_DEFINITION_ID,
+      {},
+      adventurersGuildEntityDefinitionData.components
+    );
 
     mockGameDataRepo.getAllActionDefinitions.mockReturnValue([
       coreWaitActionDefinition,
@@ -276,13 +298,15 @@ describe('ActionDiscoveryService - Go Action (Fixed State)', () => {
       coreWaitActionDefinition,
       ActionTargetContext.noTarget(),
       mockEntityManager,
-      expect.any(Object)
+      expect.any(Object),
+      expect.any(Function)
     );
     expect(mockFormatActionCommandFn).toHaveBeenCalledWith(
       coreGoActionDefinition,
       ActionTargetContext.forDirection('out to town'),
       mockEntityManager,
-      expect.any(Object)
+      expect.any(Object),
+      expect.any(Function)
     );
 
     expect(mockGetEntityIdsForScopesFn).not.toHaveBeenCalled();

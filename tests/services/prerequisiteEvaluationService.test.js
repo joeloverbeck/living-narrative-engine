@@ -395,5 +395,46 @@ describe('PrerequisiteEvaluationService', () => {
     );
   });
 
+  /**
+   * Test Case: _resolveConditionReferences object and array resolution
+   */
+  test('_resolveConditionReferences should resolve condition_ref objects', () => {
+    mockGameDataRepository.getConditionDefinition.mockReturnValueOnce({
+      logic: { '==': [1, 1] },
+    });
+
+    const result = service._resolveConditionReferences(
+      { condition_ref: 'condA' },
+      'testAction'
+    );
+
+    expect(result).toEqual({ '==': [1, 1] });
+    expect(mockGameDataRepository.getConditionDefinition).toHaveBeenCalledWith(
+      'condA'
+    );
+  });
+
+  test('_resolveConditionReferences should resolve arrays of logic blocks', () => {
+    mockGameDataRepository.getConditionDefinition.mockImplementation((id) => {
+      if (id === 'A') return { logic: { '!': false } };
+      if (id === 'B') return { logic: { var: 'actor.components.health' } };
+      return null;
+    });
+
+    const input = [
+      { condition_ref: 'A' },
+      { condition_ref: 'B' },
+      { '==': [1, 1] },
+    ];
+
+    const result = service._resolveConditionReferences(input, 'testAction');
+
+    expect(result).toEqual([
+      { '!': false },
+      { var: 'actor.components.health' },
+      { '==': [1, 1] },
+    ]);
+  });
+
   /* --- Obsolete tests commented out --- */
 }); // End describe('PrerequisiteEvaluationService')

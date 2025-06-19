@@ -1,8 +1,9 @@
 import { ISaveLoadService } from '../interfaces/ISaveLoadService.js';
 import GameStateSerializer from './gameStateSerializer.js';
 import SaveValidationService from './saveValidationService.js';
-import { buildManualFileName, manualSavePath } from '../utils/savePathUtils.js';
+import { getManualSavePath } from '../utils/savePathUtils.js';
 import SaveFileRepository from './saveFileRepository.js';
+import { ISaveFileRepository } from '../interfaces/ISaveFileRepository.js';
 import BaseService from '../utils/serviceBase.js';
 import { prepareState } from './savePreparation.js';
 import { PersistenceErrorCodes } from './persistenceErrors.js';
@@ -20,6 +21,7 @@ import { isValidSaveString } from './saveInputValidators.js';
 /** @typedef {import('../interfaces/ISaveLoadService.js').LoadGameResult} LoadGameResult */
 /** @typedef {import('../interfaces/ISaveLoadService.js').SaveGameStructure} SaveGameStructure */
 /** @typedef {import('./gameStateSerializer.js').default} GameStateSerializer */
+/** @typedef {import('../interfaces/ISaveFileRepository.js').ISaveFileRepository} ISaveFileRepository */
 
 // --- Constants ---
 // const MAX_MANUAL_SAVES = 10; // Not directly enforced by list/load, but by save UI/logic
@@ -31,6 +33,7 @@ import { isValidSaveString } from './saveInputValidators.js';
  */
 class SaveLoadService extends BaseService {
   #logger;
+  /** @type {ISaveFileRepository} */
   #fileRepository;
   #serializer;
   #validationService;
@@ -40,7 +43,7 @@ class SaveLoadService extends BaseService {
    *
    * @param {object} dependencies - The dependencies object.
    * @param {ILogger} dependencies.logger - The logging service.
-   * @param {SaveFileRepository} dependencies.saveFileRepository - Repository for save files.
+   * @param {ISaveFileRepository} dependencies.saveFileRepository - Repository for save files.
    * @param {GameStateSerializer} dependencies.gameStateSerializer - Serializer instance.
    * @param {SaveValidationService} dependencies.saveValidationService - Validation service.
    */
@@ -244,8 +247,7 @@ class SaveLoadService extends BaseService {
       );
     }
 
-    const fileName = buildManualFileName(saveName);
-    const filePath = manualSavePath(fileName);
+    const filePath = getManualSavePath(saveName);
 
     const dirResult = await this.#ensureSaveDirectory();
     if (!dirResult.success) {

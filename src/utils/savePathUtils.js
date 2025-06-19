@@ -58,3 +58,16 @@ export function extractSaveName(fileName) {
 export function manualSavePath(fileName) {
   return `${FULL_MANUAL_SAVE_DIRECTORY_PATH}/${fileName}`;
 }
+
+/**
+ * Creates the full path to a manual save from a raw save name.
+ *
+ * Combines {@link buildManualFileName} with {@link manualSavePath} for
+ * convenience.
+ *
+ * @param {string} saveName - Raw save name provided by the user.
+ * @returns {string} Fully-qualified manual save path.
+ */
+export function getManualSavePath(saveName) {
+  return manualSavePath(buildManualFileName(saveName));
+}

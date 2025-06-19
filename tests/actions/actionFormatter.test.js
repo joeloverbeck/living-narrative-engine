@@ -1,11 +1,6 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { formatActionCommand } from '../../src/actions/actionFormatter.js';
-import { getEntityDisplayName } from '../../src/utils/entityUtils.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../src/constants/eventIds.js';
-
-jest.mock('../../src/utils/entityUtils.js', () => ({
-  getEntityDisplayName: jest.fn(),
-}));
 
 /** Simple mock for logger */
 const createMockLogger = () => ({
@@ -19,11 +14,13 @@ describe('formatActionCommand', () => {
   let entityManager;
   let logger;
   let dispatcher;
+  let displayNameFn;
 
   beforeEach(() => {
     entityManager = { getEntityInstance: jest.fn() };
     logger = createMockLogger();
     dispatcher = { dispatch: jest.fn() };
+    displayNameFn = jest.fn();
     jest.clearAllMocks();
   });
 
@@ -32,16 +29,22 @@ describe('formatActionCommand', () => {
     const context = { type: 'entity', entityId: 'e1' };
     const mockEntity = { id: 'e1' };
     entityManager.getEntityInstance.mockReturnValue(mockEntity);
-    getEntityDisplayName.mockReturnValue('The Entity');
+    displayNameFn.mockReturnValue('The Entity');
 
-    const result = formatActionCommand(actionDef, context, entityManager, {
-      logger,
-      debug: true,
-      safeEventDispatcher: dispatcher,
-    });
+    const result = formatActionCommand(
+      actionDef,
+      context,
+      entityManager,
+      {
+        logger,
+        debug: true,
+        safeEventDispatcher: dispatcher,
+      },
+      displayNameFn
+    );
 
     expect(result).toBe('inspect The Entity');
-    expect(getEntityDisplayName).toHaveBeenCalledWith(mockEntity, 'e1', logger);
+    expect(displayNameFn).toHaveBeenCalledWith(mockEntity, 'e1', logger);
     expect(logger.debug).toHaveBeenCalled();
   });
 
@@ -50,10 +53,16 @@ describe('formatActionCommand', () => {
     const context = { type: 'entity', entityId: 'e1' };
     entityManager.getEntityInstance.mockReturnValue(null);
 
-    const result = formatActionCommand(actionDef, context, entityManager, {
-      logger,
-      safeEventDispatcher: dispatcher,
-    });
+    const result = formatActionCommand(
+      actionDef,
+      context,
+      entityManager,
+      {
+        logger,
+        safeEventDispatcher: dispatcher,
+      },
+      displayNameFn
+    );
 
     expect(result).toBe('inspect e1');
     expect(logger.warn).toHaveBeenCalledWith(
@@ -65,10 +74,16 @@ describe('formatActionCommand', () => {
     const actionDef = { id: 'core:move', template: 'move {direction}' };
     const context = { type: 'direction', direction: 'north' };
 
-    const result = formatActionCommand(actionDef, context, entityManager, {
-      logger,
-      safeEventDispatcher: dispatcher,
-    });
+    const result = formatActionCommand(
+      actionDef,
+      context,
+      entityManager,
+      {
+        logger,
+        safeEventDispatcher: dispatcher,
+      },
+      displayNameFn
+    );
 
     expect(result).toBe('move north');
   });
@@ -78,7 +93,8 @@ describe('formatActionCommand', () => {
       { id: 'bad' },
       { type: 'none' },
       entityManager,
-      { logger, safeEventDispatcher: dispatcher }
+      { logger, safeEventDispatcher: dispatcher },
+      displayNameFn
     );
     expect(result).toBeNull();
     expect(dispatcher.dispatch).toHaveBeenCalledWith(
@@ -96,7 +112,8 @@ describe('formatActionCommand', () => {
         { id: 'core:use', template: 'use {target}' },
         { type: 'entity', entityId: 'e1' },
         {},
-        { logger, safeEventDispatcher: dispatcher }
+        { logger, safeEventDispatcher: dispatcher },
+        displayNameFn
       )
     ).toThrow(
       'formatActionCommand: entityManager parameter must be a valid EntityManager instance.'
@@ -106,10 +123,16 @@ describe('formatActionCommand', () => {
   it('warns on unknown target type', () => {
     const actionDef = { id: 'core:do', template: 'do it' };
     const context = { type: 'mystery' };
-    const result = formatActionCommand(actionDef, context, entityManager, {
-      logger,
-      safeEventDispatcher: dispatcher,
-    });
+    const result = formatActionCommand(
+      actionDef,
+      context,
+      entityManager,
+      {
+        logger,
+        safeEventDispatcher: dispatcher,
+      },
+      displayNameFn
+    );
     expect(result).toBe('do it');
     expect(logger.warn).toHaveBeenCalledWith(
       expect.stringContaining('Unknown targetContext type')

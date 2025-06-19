@@ -20,6 +20,7 @@ import {
 import { setupService } from '../utils/serviceInitializerUtils.js';
 import { getActorLocation } from '../utils/actorLocationUtils.js';
 import { safeDispatchError } from '../utils/safeDispatchErrorUtils.js';
+import { getEntityDisplayName } from '../utils/entityUtils.js';
 
 // ────────────────────────────────────────────────────────────────────────────────
 export class ActionDiscoveryService extends IActionDiscoveryService {
@@ -109,7 +110,8 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
       actionDef,
       targetCtx,
       this.#entityManager,
-      formatterOptions
+      formatterOptions,
+      getEntityDisplayName
     );
 
     if (formattedCommand === null) {
@@ -160,7 +162,8 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
         actionDef,
         targetCtx,
         this.#entityManager,
-        formatterOptions
+        formatterOptions,
+        getEntityDisplayName
       );
 
       if (formattedCommand === null) {
@@ -249,6 +252,33 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
       context: ActionTargetContext.forEntity(targetId),
       params: { targetId },
     }));
+      
+    /** @type {import('../interfaces/IActionDiscoveryService.js').DiscoveredActionInfo[]} */
+    const discovered = [];
+
+    for (const targetId of targetIds) {
+      const targetCtx = ActionTargetContext.forEntity(targetId);
+      if (
+        !this.#actionValidationService.isValid(
+          actionDef,
+          actorEntity,
+          targetCtx
+        )
+      ) {
+        continue;
+      }
+
+      const formattedCommand = this.#formatActionCommandFn(
+        actionDef,
+        targetCtx,
+        this.#entityManager,
+        formatterOptions,
+        getEntityDisplayName
+      );
+
+      if (formattedCommand === null) {
+        continue;
+      }
 
     return this.#collectValidTargets(
       actionDef,

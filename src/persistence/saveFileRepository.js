@@ -4,7 +4,7 @@ import {
   FULL_MANUAL_SAVE_DIRECTORY_PATH,
   MANUAL_SAVE_PATTERN,
   extractSaveName,
-  manualSavePath,
+  getManualSavePath,
 } from '../utils/savePathUtils.js';
 import { validateSaveMetadataFields } from '../utils/saveMetadataUtils.js';
 import { MSG_FILE_READ_ERROR, MSG_EMPTY_FILE } from './persistenceMessages.js';
@@ -276,7 +276,7 @@ export default class SaveFileRepository extends BaseService {
    * @returns {Promise<import('./persistenceTypes.js').PersistenceResult<import('../interfaces/ISaveLoadService.js').SaveFileMetadata>>}
    */
   async #parseManualSaveFile(fileName) {
-    const filePath = manualSavePath(fileName);
+    const filePath = getManualSavePath(extractSaveName(fileName));
     this.#logger.debug(`Processing file: ${filePath}`);
 
     try {

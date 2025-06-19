@@ -231,6 +231,56 @@ export class ActionValidationService {
   }
 
   /**
+   * Extracts prerequisite processing into a single step.
+   * Collects prerequisites and delegates evaluation to PrerequisiteEvaluationService.
+   * Logs progress for Steps 3 and 4.
+   *
+   * @private
+   * @param {ActionDefinition} actionDefinition - The definition of the action.
+   * @param {Entity} actorEntity - The entity attempting the action.
+   * @param {ActionTargetContext} targetContext - The context of the action's target.
+   * @returns {boolean} True if prerequisites pass or there are none.
+   */
+  #processPrerequisites(actionDefinition, actorEntity, targetContext) {
+    const actionId = actionDefinition.id;
+    const prerequisites =
+      this._collectAndValidatePrerequisites(actionDefinition);
+    this.#logger.debug(
+      `Validation[${actionId}]: → STEP 3 PASSED (Prerequisites Collected: ${prerequisites.length}).`
+    );
+
+    if (prerequisites.length > 0) {
+      this.#logger.debug(
+        `Validation[${actionId}]: Delegating prerequisite evaluation (including context building) to PrerequisiteEvaluationService...`
+      );
+      const passed = this.#prerequisiteEvaluationService.evaluate(
+        prerequisites,
+        actionDefinition,
+        actorEntity,
+        targetContext
+      );
+      if (!passed) {
+        this.#logger.debug(
+          `END Validation: FAILED (Prerequisite Not Met or Error during evaluation) for action '${actionId}'.`
+        );
+        return false;
+      }
+      this.#logger.debug(
+        `Validation[${actionId}]: → STEP 4 PASSED (Prerequisite evaluation successful or skipped).`
+      );
+      return true;
+    }
+
+    this.#logger.debug(
+      `Validation[${actionId}]: → STEP 4 SKIPPED (No prerequisites to evaluate).`
+    );
+    this.#logger.debug(
+      `Validation[${actionId}]: → STEP 4 PASSED (Prerequisite evaluation successful or skipped).`
+    );
+    return true;
+  }
+
+  /**
    * Validates if an action can be performed by an actor on a target context.
    * Acts as an orchestrator, calling helper methods for each validation step.
    *
@@ -292,51 +342,15 @@ export class ActionValidationService {
         `Validation[${actionId}]: → STEP 2 PASSED (Entity Existence Checked).`
       );
 
-      // Step 3: Collect and Validate Prerequisites Format
-      const prerequisites =
-        this._collectAndValidatePrerequisites(actionDefinition);
-      this.#logger.debug(
-        `Validation[${actionId}]: → STEP 3 PASSED (Prerequisites Collected: ${prerequisites.length}).`
+      // Steps 3 & 4: Process prerequisites
+      const prerequisitesPassed = this.#processPrerequisites(
+        actionDefinition,
+        actorEntity,
+        targetContext
       );
-
-      // Step 4: Evaluate Prerequisites (Context building now happens inside PES.evaluate)
-      let allPrerequisitesPassed = true;
-
-      if (prerequisites.length > 0) {
-        // Check gates the call
-        this.#logger.debug(
-          `Validation[${actionId}]: Delegating prerequisite evaluation (including context building) to PrerequisiteEvaluationService...`
-        );
-        // --- Refactor-AVS-3.4: Confirm call signature ---
-        // Call evaluate with the required signature. AVS is now decoupled from context building.
-        // PES internally uses its ActionValidationContextBuilder.
-        // AC3: Called with prerequisites, actionDefinition, actor, target.
-        allPrerequisitesPassed = this.#prerequisiteEvaluationService.evaluate(
-          prerequisites,
-          actionDefinition,
-          actorEntity,
-          targetContext
-        );
-        // --- End Refactor-AVS-3.4 ---
-        // Logging for pass/fail of this step is handled within PES.evaluate itself.
-      } else {
-        this.#logger.debug(
-          `Validation[${actionId}]: → STEP 4 SKIPPED (No prerequisites to evaluate).`
-        );
-      }
-
-      // Check the outcome of the prerequisite evaluation step
-      if (!allPrerequisitesPassed) {
-        // Failure message is already logged by PES
-        this.#logger.debug(
-          `END Validation: FAILED (Prerequisite Not Met or Error during evaluation) for action '${actionId}'.`
-        );
+      if (!prerequisitesPassed) {
         return false;
       }
-      // If we got here, prerequisites either passed or were skipped
-      this.#logger.debug(
-        `Validation[${actionId}]: → STEP 4 PASSED (Prerequisite evaluation successful or skipped).`
-      );
 
       // All Steps Passed
       this.#logger.debug(`END Validation: PASSED for action '${actionId}'.`);
