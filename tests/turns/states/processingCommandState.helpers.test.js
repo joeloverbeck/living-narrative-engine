@@ -59,14 +59,14 @@ describe('ProcessingCommandState helpers', () => {
     expect(dispatcher.dispatch).toHaveBeenCalled();
   });
 
-  test('_processAction calls _processCommandInternal', async () => {
+  test('_executeActionWorkflow calls _processCommandInternal', async () => {
     const actor = { id: 'a1' };
     const ctx = makeCtx(actor);
     const action = { actionDefinitionId: 'act' };
     const spy = jest
       .spyOn(state, '_processCommandInternal')
       .mockResolvedValue(undefined);
-    await workflow._processAction(ctx, actor, action);
+    await workflow._executeActionWorkflow(ctx, actor, action);
     expect(spy).toHaveBeenCalledWith(ctx, actor, action);
   });
 });

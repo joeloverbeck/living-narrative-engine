@@ -124,7 +124,7 @@ export class ProcessingCommandState extends AbstractTurnState {
    * @param {ITurnAction} turnAction - Action to process.
    * @returns {Promise<void>} Resolves when processing completes.
    */
-  // _processAction logic moved to ProcessingWorkflow
+  // _executeActionWorkflow logic moved to ProcessingWorkflow
 
   async _processCommandInternal(turnCtx, actor, turnAction) {
     return processCommandInternal(this, turnCtx, actor, turnAction);

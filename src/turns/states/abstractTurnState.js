@@ -148,9 +148,9 @@ export class AbstractTurnState extends ITurnState {
     }
 
     try {
-      const h = handler || this._handler;
-      if (h && typeof h.getLogger === 'function') {
-        const logger = h.getLogger();
+      const resolvedHandler = handler || this._handler;
+      if (resolvedHandler && typeof resolvedHandler.getLogger === 'function') {
+        const logger = resolvedHandler.getLogger();
         if (logger) {
           return logger;
         }
