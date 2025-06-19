@@ -486,6 +486,29 @@ describe('resolvePlaceholders (contextUtils.js)', () => {
         skip: '{context.other}',
       });
     });
+
+    test('7.2 should not skip nested object keys', () => {
+      const context = createMockExecutionContext({ other: 'unused' });
+      const input = {
+        outer: {
+          skip: '{context.other}',
+        },
+        key1: '{context.varA}',
+      };
+      const result = resolvePlaceholders(
+        input,
+        context,
+        mockLogger,
+        '',
+        new Set(['skip'])
+      );
+      expect(result).toEqual({
+        outer: {
+          skip: 'unused',
+        },
+        key1: 'valueA',
+      });
+    });
   });
 
   describe('resolveEntityNameFallback helper', () => {
