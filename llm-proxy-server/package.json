@@ -8,7 +8,7 @@
     "start": "node src/core/server.js",
     "dev": "node --watch src/core/server.js",
     "test": "jest --silent --coverage",
-    "test:single": "jest",
+    "test:single": "jest --silent=false --runInBand",
     "test:ci": "jest --ci --silent --coverage",
     "format": "prettier --write \"**/*.{js,json,md,cjs}\" --log-level error",
     "format:check": "prettier --check \"**/*.{js,json,md,cjs}\" --log-level error",

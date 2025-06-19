@@ -57,15 +57,24 @@ class GameStateRestorer {
   /**
    * Restores a single serialized entity via the EntityManager.
    *
-   * @param {{instanceId: string, definitionId: string, components: Record<string, any>}} savedEntityData
-   *   Serialized entity data from the save file.
+   * @param {{instanceId: string, definitionId: string, overrides: Record<string, any>}} savedEntityData
+   * Serialized entity data from the save file.
    * @returns {void}
    * @private
    */
   #restoreEntity(savedEntityData) {
     try {
+      // If savedEntityData.overrides is missing (undefined) or null, default to an empty object.
+      // This makes the restoration process more robust.
+      const entityToReconstruct = {
+        instanceId: savedEntityData.instanceId,
+        definitionId: savedEntityData.definitionId,
+        overrides: savedEntityData.overrides || {},
+      };
+
       const restoredEntity =
-        this.#entityManager.reconstructEntity(savedEntityData);
+        this.#entityManager.reconstructEntity(entityToReconstruct);
+
       if (!restoredEntity) {
         this.#logger.warn(
           `GameStateRestorer.restoreGameState: Failed to restore entity with instanceId: ${savedEntityData.instanceId} (Def: ${savedEntityData.definitionId}). reconstructEntity indicated failure.`

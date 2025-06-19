@@ -61,7 +61,11 @@ const mockConfiguration = {
   getBaseDataPath: jest.fn().mockReturnValue('./data'),
   getSchemaFiles: jest
     .fn()
-    .mockReturnValue(['common.schema.json', 'entity-definition.schema.json', 'entity-instance.schema.json']),
+    .mockReturnValue([
+      'common.schema.json',
+      'entity-definition.schema.json',
+      'entity-instance.schema.json',
+    ]),
   getContentTypeSchemaId: jest.fn((typeName) => {
     const map = {
       /* map based on actual dependencyInjection if needed */

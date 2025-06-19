@@ -7,7 +7,7 @@
  * @class AbstractLoader
  */
 
-import { ensureValidLogger } from '../utils/loggerUtils.js';
+import { ensureValidLogger } from '../utils';
 import { validateLoaderDeps } from '../utils/validationUtils.js';
 
 export class AbstractLoader {

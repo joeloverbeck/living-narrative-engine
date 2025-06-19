@@ -48,8 +48,11 @@ describe('registerWorldAndEntity', () => {
     container.register(tokens.ILogger, () => mockLogger);
     container.register(tokens.IDataRegistry, () => mockDataRegistry);
     container.register(tokens.ISchemaValidator, () => mockSchemaValidator);
-    container.register(tokens.ISpatialIndexManager, () => mockSpatialIndexManager);
-    
+    container.register(
+      tokens.ISpatialIndexManager,
+      () => mockSpatialIndexManager
+    );
+
     // Other dependencies for services registered by registerWorldAndEntity
     container.register(tokens.ISafeEventDispatcher, () => ({
       dispatch: jest.fn().mockResolvedValue(true),
@@ -122,14 +125,17 @@ describe('registerWorldAndEntity', () => {
       expect(container.resolve(token)).toBe(instance);
 
       // Registration metadata check (verifies how it was registered by the SUT)
-      const registrationCall = registerSpy.mock.calls.find((c) => c[0] === token);
+      const registrationCall = registerSpy.mock.calls.find(
+        (c) => c[0] === token
+      );
       expect(registrationCall).toBeDefined();
       const registrationOptions = registrationCall[2] || {}; // Third argument to register()
-      expect(registrationOptions.lifecycle).toBe(lifecycle); 
-      
+      expect(registrationOptions.lifecycle).toBe(lifecycle);
+
       // For direct class registrations (like singleton), dependencies might be in registrationOptions.
       // For factories, dependencies are internal to the factory and not in registrationOptions.dependencies.
-      if (lifecycle === 'singleton') { // Typically used for r.single(token, Class, deps)
+      if (lifecycle === 'singleton') {
+        // Typically used for r.single(token, Class, deps)
         expect(registrationOptions.dependencies).toEqual(deps);
       } else if (lifecycle === 'singletonFactory') {
         expect(registrationOptions.dependencies).toBeUndefined(); // Factories don't list deps this way

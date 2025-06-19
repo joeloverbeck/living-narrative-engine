@@ -1,0 +1,9 @@
+---
+description: 
+globs: *.test.js
+alwaysApply: false
+---
+# Test suites guidelines
+
+
+In this project, we only create tests using the Jest framework. If you're working on a test suite and you see the opportunity to refactor some testing code to reduce duplication, do so, but those separate modules must all be under the tests/ directory of root (in appropriate subdirectories if necessary.)

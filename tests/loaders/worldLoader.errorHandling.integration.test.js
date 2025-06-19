@@ -113,7 +113,9 @@ describe('WorldLoader Integration Test Suite - Error Handling (TEST-LOADER-7.4)'
       getAllSystemRules: jest.fn(() => []),
       getManifest: jest.fn(() => null),
       setManifest: jest.fn(),
-      getEntityDefinition: jest.fn((id) => internalStore['entities']?.[id]),
+      getEntityDefinition: jest.fn(
+        (id) => internalStore['entity_definitions']?.[id]
+      ),
       getItemDefinition: jest.fn((id) => internalStore['items']?.[id]),
       getLocationDefinition: jest.fn((id) => internalStore['locations']?.[id]),
       getConnectionDefinition: jest.fn(
@@ -126,7 +128,7 @@ describe('WorldLoader Integration Test Suite - Error Handling (TEST-LOADER-7.4)'
         (id) => internalStore['components']?.[id]
       ),
       getAllEntityDefinitions: jest.fn(() =>
-        Object.values(internalStore['entities'] || {})
+        Object.values(internalStore['entity_definitions'] || {})
       ),
       getAllItemDefinitions: jest.fn(() =>
         Object.values(internalStore['items'] || {})

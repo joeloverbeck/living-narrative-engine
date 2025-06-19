@@ -1,4 +1,5 @@
 // src/persistence/gameStateCaptureService.js
+// --- FILE START ---
 
 import { CURRENT_ACTOR_COMPONENT_ID } from '../constants/componentIds.js';
 import { CHECKSUM_PENDING } from '../constants/persistence.js';
@@ -45,13 +46,13 @@ class GameStateCaptureService extends BaseService {
    * @param {ActiveModsManifestBuilder} deps.activeModsManifestBuilder - Builder for active mods manifest.
    */
   constructor({
-    logger,
-    entityManager,
-    playtimeTracker,
-    componentCleaningService,
-    metadataBuilder,
-    activeModsManifestBuilder,
-  }) {
+                logger,
+                entityManager,
+                playtimeTracker,
+                componentCleaningService,
+                metadataBuilder,
+                activeModsManifestBuilder,
+              }) {
     super();
     this.#logger = this._init('GameStateCaptureService', logger, {
       entityManager: { value: entityManager },
@@ -82,7 +83,7 @@ class GameStateCaptureService extends BaseService {
    *
    * @param {*} data - Component data after cleaning.
    * @returns {boolean} True if data is non-null and either not an object or an
-   *   object with at least one key.
+   * object with at least one key.
    * @private
    */
   #hasMeaningfulData(data) {
@@ -131,19 +132,19 @@ class GameStateCaptureService extends BaseService {
    * Serializes a single entity for saving.
    *
    * @param {Entity} entity - The entity instance to serialize.
-   * @returns {{instanceId: string, definitionId: string, components: Record<string, any>}}
-   *   Clean serialized representation of the entity.
+   * @returns {{instanceId: string, definitionId: string, overrides: Record<string, any>}}
+   * Clean serialized representation of the entity.
    * @private
    */
   #serializeEntity(entity) {
-    const components = this.#applyComponentCleaners(
+    const overrides = this.#applyComponentCleaners(
       entity.componentEntries,
       entity.id
     );
     return {
       instanceId: entity.id,
       definitionId: entity.definitionId,
-      components,
+      overrides,
     };
   }
 
@@ -202,3 +203,4 @@ class GameStateCaptureService extends BaseService {
 }
 
 export default GameStateCaptureService;
+// --- FILE END ---

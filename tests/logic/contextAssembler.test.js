@@ -13,7 +13,6 @@ import {
 } from '@jest/globals';
 // Import ONLY createJsonLogicContext
 import { createJsonLogicContext } from '../../src/logic/contextAssembler.js'; // Import the function under test
-import Entity from '../../src/entities/entity.js'; // Adjust path
 
 // --- JSDoc Imports for Type Hinting ---
 /** @typedef {import('../../src/interfaces/coreServices.js').ILogger} ILogger */

@@ -1,4 +1,4 @@
-import EntityDefinition from '../../src/entities/EntityDefinition.js';
+import EntityDefinition from '../../src/entities/entityDefinition.js';
 import { deepFreeze } from '../../src/utils/objectUtils.js'; // Used by the class, not directly tested here unless necessary
 
 describe('EntityDefinition', () => {
@@ -13,7 +13,10 @@ describe('EntityDefinition', () => {
   const validDefinitionId = 'test:goblin';
 
   it('should be creatable with valid ID and data', () => {
-    const definition = new EntityDefinition(validDefinitionId, validDefinitionData);
+    const definition = new EntityDefinition(
+      validDefinitionId,
+      validDefinitionData
+    );
     expect(definition).toBeInstanceOf(EntityDefinition);
     expect(definition.id).toBe(validDefinitionId);
     expect(definition.description).toBe(validDefinitionData.description);
@@ -39,33 +42,42 @@ describe('EntityDefinition', () => {
       expect(() => new EntityDefinition(validDefinitionId, undefined)).toThrow(
         'EntityDefinition requires definitionData to be an object.'
       );
-      expect(() => new EntityDefinition(validDefinitionId, 'not-an-object-at-all')).toThrow(
-        'EntityDefinition requires definitionData to be an object.'
-      );
+      expect(
+        () => new EntityDefinition(validDefinitionId, 'not-an-object-at-all')
+      ).toThrow('EntityDefinition requires definitionData to be an object.');
     });
 
     it('should default to empty components if definitionData.components is missing', () => {
-      const definition = new EntityDefinition(validDefinitionId, { description: 'No components property' });
+      const definition = new EntityDefinition(validDefinitionId, {
+        description: 'No components property',
+      });
       expect(definition.components).toEqual({});
       expect(Object.isFrozen(definition.components)).toBe(true);
     });
 
     it('should default to empty components if definitionData.components is null', () => {
-      const definition = new EntityDefinition(validDefinitionId, { components: null });
+      const definition = new EntityDefinition(validDefinitionId, {
+        components: null,
+      });
       expect(definition.components).toEqual({});
       expect(Object.isFrozen(definition.components)).toBe(true);
     });
 
     it('should default to empty components if definitionData.components is not an object (e.g., a string)', () => {
       // This covers cases where components might be an invalid type but not null/undefined
-      const definition = new EntityDefinition(validDefinitionId, { components: 'not-an-object' });
+      const definition = new EntityDefinition(validDefinitionId, {
+        components: 'not-an-object',
+      });
       expect(definition.components).toEqual({});
       expect(Object.isFrozen(definition.components)).toBe(true);
     });
   });
 
   it('should have deeply frozen components', () => {
-    const definition = new EntityDefinition(validDefinitionId, validDefinitionData);
+    const definition = new EntityDefinition(
+      validDefinitionId,
+      validDefinitionData
+    );
     expect(Object.isFrozen(definition.components)).toBe(true);
     expect(Object.isFrozen(definition.components['core:health'])).toBe(true);
 
@@ -77,16 +89,22 @@ describe('EntityDefinition', () => {
     expect(definition.components['core:health'].max).toBe(10);
 
     expect(() => {
-        definition.components['new:comp'] = { data: 'test' };
+      definition.components['new:comp'] = { data: 'test' };
     }).toThrow(TypeError);
     expect(definition.components['new:comp']).toBeUndefined();
   });
 
   it('should correctly return modId', () => {
-    const definition1 = new EntityDefinition('core:player', validDefinitionData);
+    const definition1 = new EntityDefinition(
+      'core:player',
+      validDefinitionData
+    );
     expect(definition1.modId).toBe('core');
 
-    const definition2 = new EntityDefinition('myMod:creature', validDefinitionData);
+    const definition2 = new EntityDefinition(
+      'myMod:creature',
+      validDefinitionData
+    );
     expect(definition2.modId).toBe('myMod');
 
     const definition3 = new EntityDefinition('noPrefix', validDefinitionData);
@@ -95,27 +113,39 @@ describe('EntityDefinition', () => {
 
   describe('getComponentSchema', () => {
     it('should return component data if it exists', () => {
-      const definition = new EntityDefinition(validDefinitionId, validDefinitionData);
-      const healthData = definition.getComponentSchema('core:health');
+      const definition = new EntityDefinition(
+        validDefinitionId,
+        validDefinitionData
+      );
+      const healthData = definition.getComponentTemplate('core:health');
       expect(healthData).toEqual({ current: 10, max: 10 });
     });
 
     it('should return undefined if component data does not exist', () => {
-      const definition = new EntityDefinition(validDefinitionId, validDefinitionData);
-      const nonExistentData = definition.getComponentSchema('core:mana');
+      const definition = new EntityDefinition(
+        validDefinitionId,
+        validDefinitionData
+      );
+      const nonExistentData = definition.getComponentTemplate('core:mana');
       expect(nonExistentData).toBeUndefined();
     });
   });
 
   describe('hasComponent', () => {
     it('should return true if component exists', () => {
-      const definition = new EntityDefinition(validDefinitionId, validDefinitionData);
+      const definition = new EntityDefinition(
+        validDefinitionId,
+        validDefinitionData
+      );
       expect(definition.hasComponent('core:health')).toBe(true);
     });
 
     it('should return false if component does not exist', () => {
-      const definition = new EntityDefinition(validDefinitionId, validDefinitionData);
+      const definition = new EntityDefinition(
+        validDefinitionId,
+        validDefinitionData
+      );
       expect(definition.hasComponent('core:mana')).toBe(false);
     });
   });
-}); 
+});

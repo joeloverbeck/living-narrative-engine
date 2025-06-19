@@ -5,7 +5,6 @@ import SpatialIndexManager from '../../entities/spatialIndexManager.js';
 import WorldLoader from '../../loaders/worldLoader.js';
 import PromptTextLoader from '../../loaders/promptTextLoader.js';
 import { GameDataRepository } from '../../data/gameDataRepository.js'; // Concrete class
-import EntityManager from '../../entities/entityManager.js'; // Concrete class
 import ValidatedEventDispatcher from '../../events/validatedEventDispatcher.js'; // Concrete Class Import
 import { SafeEventDispatcher } from '../../events/safeEventDispatcher.js';
 import ModDependencyValidator from '../../modding/modDependencyValidator.js';
@@ -58,11 +57,11 @@ export function registerInfrastructure(container) {
       })
   );
   log.debug(
-    `Infrastructure Registration: Registered ${tokens.ActionIndexingService}.`
+    `Infrastructure Registration: Registered ${String(tokens.ActionIndexingService)}.`
   );
 
   r.single(tokens.EventBus, EventBus);
-  log.debug(`Infrastructure Registration: Registered ${tokens.EventBus}.`);
+  log.debug(`Infrastructure Registration: Registered ${String(tokens.EventBus)}.`);
 
   container.register(
     tokens.ISpatialIndexManager,
@@ -70,7 +69,7 @@ export function registerInfrastructure(container) {
     { lifecycle: 'singleton' }
   );
   log.debug(
-    `Infrastructure Registration: Registered ${tokens.ISpatialIndexManager}.`
+    `Infrastructure Registration: Registered ${String(tokens.ISpatialIndexManager)}.`
   );
 
   r.singletonFactory(
@@ -86,7 +85,7 @@ export function registerInfrastructure(container) {
       })
   );
   log.debug(
-    `Infrastructure Registration: Registered ${tokens.PromptTextLoader}.`
+    `Infrastructure Registration: Registered ${String(tokens.PromptTextLoader)}.`
   );
 
   container.register(
@@ -117,7 +116,7 @@ export function registerInfrastructure(container) {
     },
     { lifecycle: 'singleton' }
   );
-  log.debug(`Infrastructure Registration: Registered ${tokens.WorldLoader}.`);
+  log.debug(`Infrastructure Registration: Registered ${String(tokens.WorldLoader)}.`);
 
   container.register(
     tokens.IGameDataRepository,
@@ -129,25 +128,11 @@ export function registerInfrastructure(container) {
     { lifecycle: 'singleton' }
   );
   log.debug(
-    `Infrastructure Registration: Registered ${tokens.IGameDataRepository}.`
+    `Infrastructure Registration: Registered ${String(tokens.IGameDataRepository)}.`
   );
 
-  container.register(
-    tokens.IEntityManager,
-    (c) =>
-      new EntityManager(
-        /** @type {IDataRegistry} */ (c.resolve(tokens.IDataRegistry)),
-        /** @type {ISchemaValidator} */ (c.resolve(tokens.ISchemaValidator)),
-        /** @type {ILogger} */ (c.resolve(tokens.ILogger)),
-        /** @type {ISpatialIndexManager} */ (
-          c.resolve(tokens.ISpatialIndexManager)
-        )
-      ),
-    { lifecycle: 'singleton' }
-  );
-  log.debug(
-    `Infrastructure Registration: Registered ${tokens.IEntityManager}.`
-  );
+  // DELETED: Duplicate IEntityManager registration removed as per Ticket 8.
+  // The canonical registration is now in worldAndEntityRegistrations.js.
 
   container.register(
     tokens.IValidatedEventDispatcher,
@@ -163,7 +148,7 @@ export function registerInfrastructure(container) {
     { lifecycle: 'singleton' }
   );
   log.debug(
-    `Infrastructure Registration: Registered ${tokens.IValidatedEventDispatcher}.`
+    `Infrastructure Registration: Registered ${String(tokens.IValidatedEventDispatcher)}.`
   );
 
   r.singletonFactory(
@@ -177,7 +162,7 @@ export function registerInfrastructure(container) {
       })
   );
   log.debug(
-    `Infrastructure Registration: Registered ${tokens.ISafeEventDispatcher}.`
+    `Infrastructure Registration: Registered ${String(tokens.ISafeEventDispatcher)}.`
   );
 
   log.debug('Infrastructure Registration: complete.');

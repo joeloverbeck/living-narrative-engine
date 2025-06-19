@@ -1,4 +1,4 @@
-// tests/services/EntityDisplayDataProvider.test.js
+// tests/services/entityDisplayDataProvider.test.js
 
 import { jest, describe, beforeEach, it, expect } from '@jest/globals';
 import { EntityDisplayDataProvider } from '../../src/entities/entityDisplayDataProvider.js';

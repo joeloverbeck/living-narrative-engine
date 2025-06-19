@@ -9,6 +9,7 @@
 // -----------------------------------------------------------------------------
 
 import EntityManager from '../../src/entities/entityManager.js';
+import EntityDefinition from '../../src/entities/entityDefinition.js';
 import {
   ACTOR_COMPONENT_ID,
   SHORT_TERM_MEMORY_COMPONENT_ID,
@@ -26,12 +27,12 @@ const makeStubs = () => {
   const registry = {
     getEntityDefinition: jest.fn().mockImplementation((definitionId) => {
       if (definitionId === 'test:alice') {
-        return {
-          id: definitionId,
+        const definitionData = {
           components: {
             [ACTOR_COMPONENT_ID]: {}, // minimal actor component payload
           },
         };
+        return new EntityDefinition(definitionId, definitionData);
       }
       return null;
     }),
@@ -62,8 +63,16 @@ const makeStubs = () => {
   return { registry, validator, logger, spatialIndexManager };
 };
 
+const createMockSafeEventDispatcher = () => ({
+  dispatch: jest.fn(),
+});
+
 describe('Smoke › New Character › Short-Term Memory bootstrap', () => {
+  let mockEventDispatcher;
+
   test('EntityManager injects default short-term memory', () => {
+    mockEventDispatcher = createMockSafeEventDispatcher()
+
     const { registry, validator, logger, spatialIndexManager } = makeStubs();
 
     // Arrange – instantiate EntityManager exactly as production would
@@ -71,7 +80,8 @@ describe('Smoke › New Character › Short-Term Memory bootstrap', () => {
       registry,
       validator,
       logger,
-      spatialIndexManager
+      spatialIndexManager,
+      mockEventDispatcher
     );
 
     // Act – create a new entity using the real method under test

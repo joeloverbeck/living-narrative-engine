@@ -84,7 +84,11 @@ describe('GamePersistenceService private helpers', () => {
     const res = await context.restorer.restoreGameState({
       gameState: { entities: [valid, {}] },
     });
-    expect(context.entityManager.reconstructEntity).toHaveBeenCalledWith(valid);
+    expect(context.entityManager.reconstructEntity).toHaveBeenCalledWith({
+      instanceId: 'e1',
+      definitionId: 'd1',
+      overrides: {},
+    });
     expect(context.entityManager.reconstructEntity).toHaveBeenCalledTimes(1);
     expect(res.success).toBe(true);
   });

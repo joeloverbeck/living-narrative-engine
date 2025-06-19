@@ -10,9 +10,10 @@ import {
 } from '@jest/globals';
 import EntityManager from '../../src/entities/entityManager.js';
 import Entity from '../../src/entities/entity.js';
-import EntityDefinition from '../../src/entities/EntityDefinition.js';
-import EntityInstanceData from '../../src/entities/EntityInstanceData.js';
+import EntityDefinition from '../../src/entities/entityDefinition.js';
+import EntityInstanceData from '../../src/entities/entityInstanceData.js';
 import { POSITION_COMPONENT_ID } from '../../src/constants/componentIds.js';
+import { EntityNotFoundError } from '../../src/errors/entityNotFoundError';
 
 // --- Mock Implementations ---
 const createMockDataRegistry = () => ({
@@ -39,6 +40,10 @@ const createMockSpatialIndexManager = () => ({
   clearIndex: jest.fn(),
 });
 
+const createMockSafeEventDispatcher = () => ({
+  dispatch: jest.fn(),
+});
+
 // --- Constants ---
 const INSTANCE_ID_1 = 'aux-instance-01'; // Was TEST_ENTITY_ID_1
 const INSTANCE_ID_2_POS = 'aux-instance-02-pos'; // Was TEST_ENTITY_ID_2
@@ -51,9 +56,21 @@ const OTHER_COMPONENT_ID = 'core:tag';
 const OTHER_COMPONENT_DATA = { tag: 'test' };
 
 // Helper function to create entity instances for testing
-const createTestEntity = (instanceId, definitionId, defComponents = {}, instanceOverrides = {}) => {
-  const definition = new EntityDefinition(definitionId, { description: `Test Definition ${definitionId}`, components: defComponents });
-  const instanceData = new EntityInstanceData(instanceId, definition, instanceOverrides);
+const createTestEntity = (
+  instanceId,
+  definitionId,
+  defComponents = {},
+  instanceOverrides = {}
+) => {
+  const definition = new EntityDefinition(definitionId, {
+    description: `Test Definition ${definitionId}`,
+    components: defComponents,
+  });
+  const instanceData = new EntityInstanceData(
+    instanceId,
+    definition,
+    instanceOverrides
+  );
   return new Entity(instanceData);
 };
 
@@ -66,17 +83,21 @@ describe('EntityManager - Auxiliary Methods (Lifecycle & Spatial Index)', () => 
   let entityManager;
   let entity1; // Entity without position
   let entity2_pos; // Entity with position, renamed for clarity
+  let mockEventDispatcher;
 
   beforeEach(() => {
     mockRegistry = createMockDataRegistry();
     mockValidator = createMockSchemaValidator();
     mockLogger = createMockLogger();
     mockSpatialIndex = createMockSpatialIndexManager();
+    mockEventDispatcher = createMockSafeEventDispatcher();
+
     entityManager = new EntityManager(
       mockRegistry,
       mockValidator,
       mockLogger,
-      mockSpatialIndex
+      mockSpatialIndex,
+      mockEventDispatcher
     );
     jest.clearAllMocks();
 
@@ -84,22 +105,22 @@ describe('EntityManager - Auxiliary Methods (Lifecycle & Spatial Index)', () => 
     // entity1 (no position) is created with just its definition.
     // Components (OTHER_COMPONENT_ID) are added as instance overrides.
     entity1 = createTestEntity(
-        INSTANCE_ID_1,
-        DEFINITION_ID_DUMMY,
-        {}, // No components on definition
-        { [OTHER_COMPONENT_ID]: { ...OTHER_COMPONENT_DATA } }
+      INSTANCE_ID_1,
+      DEFINITION_ID_DUMMY,
+      {}, // No components on definition
+      { [OTHER_COMPONENT_ID]: { ...OTHER_COMPONENT_DATA } }
     );
 
     // entity2_pos (with position) is also created from a base definition.
     // Both OTHER_COMPONENT_ID and POSITION_COMPONENT_ID are added as instance overrides.
     entity2_pos = createTestEntity(
-        INSTANCE_ID_2_POS,
-        DEFINITION_ID_DUMMY,
-        {}, // No components on definition
-        {
-            [OTHER_COMPONENT_ID]: { ...OTHER_COMPONENT_DATA },
-            [POSITION_COMPONENT_ID]: { ...POSITION_DATA }
-        }
+      INSTANCE_ID_2_POS,
+      DEFINITION_ID_DUMMY,
+      {}, // No components on definition
+      {
+        [OTHER_COMPONENT_ID]: { ...OTHER_COMPONENT_DATA },
+        [POSITION_COMPONENT_ID]: { ...POSITION_DATA },
+      }
     );
   });
 
@@ -138,7 +159,12 @@ describe('EntityManager - Auxiliary Methods (Lifecycle & Spatial Index)', () => 
   describe('removeEntityInstance', () => {
     describe('when removing an entity without position', () => {
       beforeEach(() => {
-        entityManager.activeEntities.set(entity1.id, entity1);
+        // Use a mock entity that can be added to the real map instance
+        const mockEntity = {
+          id: INSTANCE_ID_1,
+          hasComponent: jest.fn().mockReturnValue(false),
+        };
+        entityManager.activeEntities.set(INSTANCE_ID_1, mockEntity);
         expect(entityManager.activeEntities.has(INSTANCE_ID_1)).toBe(true);
       });
 
@@ -159,12 +185,15 @@ describe('EntityManager - Auxiliary Methods (Lifecycle & Spatial Index)', () => 
 
     describe('when removing an entity with position', () => {
       beforeEach(() => {
-        entityManager.activeEntities.set(entity2_pos.id, entity2_pos); // entity2_pos.id is INSTANCE_ID_2_POS
+        const mockEntityWithPos = {
+          id: INSTANCE_ID_2_POS,
+          hasComponent: jest.fn((id) => id === POSITION_COMPONENT_ID),
+          getComponentData: jest
+            .fn()
+            .mockReturnValue({ locationId: TEST_LOCATION_ID }),
+        };
+        entityManager.activeEntities.set(INSTANCE_ID_2_POS, mockEntityWithPos);
         expect(entityManager.activeEntities.has(INSTANCE_ID_2_POS)).toBe(true);
-        expect(entity2_pos.hasComponent(POSITION_COMPONENT_ID)).toBe(true);
-        expect(
-          entity2_pos.getComponentData(POSITION_COMPONENT_ID)?.locationId
-        ).toBe(TEST_LOCATION_ID);
       });
 
       it('should return true', () => {
@@ -189,14 +218,10 @@ describe('EntityManager - Auxiliary Methods (Lifecycle & Spatial Index)', () => 
       it('should log debug and info messages about removal', () => {
         entityManager.removeEntityInstance(INSTANCE_ID_2_POS);
         expect(mockLogger.debug).toHaveBeenCalledWith(
-          expect.stringContaining(
-            `Removed entity ${INSTANCE_ID_2_POS} from spatial index (old location was ${TEST_LOCATION_ID}).`
-          )
+          `Removed entity ${INSTANCE_ID_2_POS} from spatial index (old location was ${TEST_LOCATION_ID}) during entity removal.`
         );
         expect(mockLogger.info).toHaveBeenCalledWith(
-          expect.stringContaining(
-            `Removed entity instance: ${INSTANCE_ID_2_POS}`
-          )
+          `Entity instance ${INSTANCE_ID_2_POS} removed from EntityManager.`
         );
       });
     });
@@ -207,15 +232,14 @@ describe('EntityManager - Auxiliary Methods (Lifecycle & Spatial Index)', () => 
 
       beforeEach(() => {
         // Entity with position component but no locationId in it (invalid for spatial index)
-        entityWithInvalidPos = createTestEntity(
-          instanceIdInvalidPos,
-          DEFINITION_ID_DUMMY,
-          {}, // No components on definition
-          { [POSITION_COMPONENT_ID]: { x: 0, y: 0 } } // Override with position data lacking locationId
-        );
+        const mockEntityInvalidPos = {
+          id: instanceIdInvalidPos,
+          hasComponent: jest.fn((id) => id === POSITION_COMPONENT_ID),
+          getComponentData: jest.fn().mockReturnValue({ x: 0, y: 0 }),
+        };
         entityManager.activeEntities.set(
           instanceIdInvalidPos,
-          entityWithInvalidPos
+          mockEntityInvalidPos
         );
       });
 
@@ -234,31 +258,25 @@ describe('EntityManager - Auxiliary Methods (Lifecycle & Spatial Index)', () => 
       });
     });
 
+    // --- FIXED TEST BLOCK ---
     describe('when attempting to remove a non-existent entity', () => {
-      it('should return false', () => {
-        expect(
-          entityManager.removeEntityInstance(NON_EXISTENT_INSTANCE_ID)
-        ).toBe(false);
-      });
-
-      it('should log a warning message', () => {
-        entityManager.removeEntityInstance(NON_EXISTENT_INSTANCE_ID);
-        expect(mockLogger.warn).toHaveBeenCalledWith(
-          expect.stringContaining(
-            `Attempted to remove non-existent entity instance ${NON_EXISTENT_INSTANCE_ID}`
-          )
-        );
-      });
-
-      it('should not change the activeEntities map', () => {
+      it('should throw EntityNotFoundError and not have side effects', () => {
         const initialSize = entityManager.activeEntities.size;
-        entityManager.removeEntityInstance(NON_EXISTENT_INSTANCE_ID);
-        expect(entityManager.activeEntities.size).toBe(initialSize);
-      });
 
-      it('should NOT call ISpatialIndexManager.removeEntity', () => {
-        entityManager.removeEntityInstance(NON_EXISTENT_INSTANCE_ID);
-        expect(mockSpatialIndex.removeEntity).not.toHaveBeenCalled();
+        // Assert that the error is thrown
+        expect(() =>
+          entityManager.removeEntityInstance(NON_EXISTENT_INSTANCE_ID)
+        ).toThrow(EntityNotFoundError);
+        expect(() =>
+          entityManager.removeEntityInstance(NON_EXISTENT_INSTANCE_ID)
+        ).toThrow(`Entity instance not found: '${NON_EXISTENT_INSTANCE_ID}'`);
+
+        // Assert side-effects (or lack thereof) after catching the error
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          `EntityManager.removeEntityInstance: Attempted to remove non-existent entity instance '${NON_EXISTENT_INSTANCE_ID}'.`
+        );
+        expect(entityManager.activeEntities.size).toBe(initialSize); // No change in map size
+        expect(mockSpatialIndex.removeEntity).not.toHaveBeenCalled(); // No spatial index call
       });
     });
   });

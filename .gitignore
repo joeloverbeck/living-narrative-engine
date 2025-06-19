@@ -184,25 +184,5 @@ data/mods/onee
 # Node
 node_modules/
 
-# User-specific files
-.idea/workspace.xml
-.idea/tasks.xml
-.idea/shelf/
-.idea/dictionaries/
-.idea/vcs.xml
-
-# Sensitive information
-.idea/dataSources/
-.idea/dataSources.xml
-.idea/dataSources.ids
-.idea/dataSources.local.xml
-.idea/sqlDataSources.xml
-.idea/dynamic.xml
-.idea/uiDesigner.xml
-
-# Others
-.idea/jarRepositories.xml
-.idea/gradle.xml
-.idea/libraries/
-.idea/misc.xml
-.idea/modules.xml
+# JetBrains IDE metadata
+.idea/

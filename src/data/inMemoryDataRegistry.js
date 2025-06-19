@@ -20,7 +20,7 @@ class InMemoryDataRegistry {
   constructor() {
     /**
      * Internal storage for typed game data definitions.
-     * The outer Map's key is the data type (e.g., 'actions', 'entities', 'components').
+     * The outer Map's key is the data type (e.g., 'actions', 'entity_definitions', 'components').
      * The inner Map's key is the specific item's ID, and the value is the data object.
      *
      * @private
@@ -42,7 +42,7 @@ class InMemoryDataRegistry {
    * Stores a data object under a specific category (`type`) and unique identifier (`id`).
    * If the type category doesn't exist, it's created. Overwrites existing data for the same type/id.
    *
-   * @param {string} type - The category of data (e.g., 'entities', 'actions'). Must be a non-empty string.
+   * @param {string} type - The category of data (e.g., 'entity_definitions', 'actions'). Must be a non-empty string.
    * @param {string} id - The unique identifier for the data object within its type. Must be a non-empty string.
    * @param {object} data - The data object to store. Must be a non-null object.
    */
@@ -82,7 +82,7 @@ class InMemoryDataRegistry {
   /**
    * Retrieves a specific data object by its type and ID.
    *
-   * @param {string} type - The category of data (e.g., 'entities').
+   * @param {string} type - The category of data (e.g., 'entity_definitions').
    * @param {string} id - The unique identifier of the data object.
    * @returns {object | undefined} The data object if found, otherwise undefined.
    */
@@ -94,7 +94,7 @@ class InMemoryDataRegistry {
   /**
    * Retrieves all data objects belonging to a specific type as an array.
    *
-   * @param {string} type - The category of data (e.g., 'entities').
+   * @param {string} type - The category of data (e.g., 'entity_definitions').
    * @returns {object[]} An array of data objects for the given type. Returns an empty array
    * if the type is unknown or has no data stored.
    */
@@ -117,7 +117,7 @@ class InMemoryDataRegistry {
   // =======================================================
 
   getEntityDefinition(id) {
-    return this.get('entities', id);
+    return this.get('entity_definitions', id);
   }
 
   getActionDefinition(id) {
@@ -136,8 +136,12 @@ class InMemoryDataRegistry {
     return this.get('conditions', id);
   }
 
+  getEntityInstanceDefinition(id) {
+    return this.get('entity_instances', id);
+  }
+
   getAllEntityDefinitions() {
-    return this.getAll('entities');
+    return this.getAll('entity_definitions');
   }
 
   getAllActionDefinitions() {
@@ -154,6 +158,10 @@ class InMemoryDataRegistry {
 
   getAllConditionDefinitions() {
     return this.getAll('conditions');
+  }
+
+  getAllEntityInstanceDefinitions() {
+    return this.getAll('entity_instances');
   }
 
   /**
@@ -208,17 +216,17 @@ class InMemoryDataRegistry {
 
   /**
    * Dynamically discovers the starting player ID by finding the first entity
-   * definition in the 'entities' type map that contains a 'core:player' component.
+   * definition in the 'entity_definitions' type map that contains a 'core:player' component.
    * The iteration order depends on the insertion order into the underlying Map.
    *
    * @returns {string | null} The ID of the first entity definition found with a
    * 'core:player' component, or null if no such entity is found.
    */
   getStartingPlayerId() {
-    const entityMap = this.data.get('entities');
+    const entityMap = this.data.get('entity_definitions');
     if (!entityMap) {
       console.warn(
-        "InMemoryDataRegistry.getStartingPlayerId: No 'entities' data found in registry."
+        "InMemoryDataRegistry.getStartingPlayerId: No 'entity_definitions' data found in registry."
       );
       return null;
     }
@@ -281,7 +289,3 @@ class InMemoryDataRegistry {
 }
 
 export default InMemoryDataRegistry;
-
-/**
- * @typedef {import('../interfaces/coreServices.js').IDataRegistry} IDataRegistry
- */

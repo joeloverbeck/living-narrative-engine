@@ -6,18 +6,36 @@
 
 import TurnHandlerResolver from '../../src/turns/services/turnHandlerResolver.js';
 import Entity from '../../src/entities/entity.js';
-import EntityDefinition from '../../src/entities/EntityDefinition.js';
-import EntityInstanceData from '../../src/entities/EntityInstanceData.js';
+import EntityDefinition from '../../src/entities/entityDefinition.js';
+import EntityInstanceData from '../../src/entities/entityInstanceData.js';
 import {
   PLAYER_COMPONENT_ID,
   ACTOR_COMPONENT_ID,
 } from '../../src/constants/componentIds.js';
-import { beforeEach, describe, expect, jest, test, afterEach } from '@jest/globals';
+import {
+  beforeEach,
+  describe,
+  expect,
+  jest,
+  test,
+  afterEach,
+} from '@jest/globals';
 
 // Helper function to create entity instances for testing
-const createTestEntity = (instanceId, definitionId, defComponents = {}, instanceOverrides = {}) => {
-  const definition = new EntityDefinition(definitionId, { components: defComponents });
-  const instanceData = new EntityInstanceData(instanceId, definition, instanceOverrides);
+const createTestEntity = (
+  instanceId,
+  definitionId,
+  defComponents = {},
+  instanceOverrides = {}
+) => {
+  const definition = new EntityDefinition(definitionId, {
+    components: defComponents,
+  });
+  const instanceData = new EntityInstanceData(
+    instanceId,
+    definition,
+    instanceOverrides
+  );
   return new Entity(instanceData);
 };
 
@@ -140,7 +158,9 @@ describe('TurnHandlerResolver', () => {
   // --- resolveHandler Tests ---
   describe('Player Actor Handling', () => {
     test('should resolve ActorTurnHandler for an entity with PLAYER_COMPONENT_ID', async () => {
-      const playerEntity = createTestEntity('player1', 'dummy-def', { [PLAYER_COMPONENT_ID]: {} });
+      const playerEntity = createTestEntity('player1', 'dummy-def', {
+        [PLAYER_COMPONENT_ID]: {},
+      });
 
       const handler = await resolver.resolveHandler(playerEntity);
 
@@ -171,7 +191,9 @@ describe('TurnHandlerResolver', () => {
 
   describe('AI Actor Handling', () => {
     test('should resolve ActorTurnHandler for an entity with ACTOR_COMPONENT_ID but not PLAYER_COMPONENT_ID', async () => {
-      const aiEntity = createTestEntity('ai1', 'dummy-def', { [ACTOR_COMPONENT_ID]: {} });
+      const aiEntity = createTestEntity('ai1', 'dummy-def', {
+        [ACTOR_COMPONENT_ID]: {},
+      });
 
       const handler = await resolver.resolveHandler(aiEntity);
 
@@ -245,7 +267,9 @@ describe('TurnHandlerResolver', () => {
     });
 
     test('should return null for an entity that only has unrelated components', async () => {
-      const sceneryEntity = createTestEntity('scenery1', 'dummy-def', { 'component:description': {} });
+      const sceneryEntity = createTestEntity('scenery1', 'dummy-def', {
+        'component:description': {},
+      });
 
       const handler = await resolver.resolveHandler(sceneryEntity);
 

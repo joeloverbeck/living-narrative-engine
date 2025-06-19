@@ -280,13 +280,17 @@ describe('WorldLoader → ModDependencyValidator integration (missing dependency
       dispatch: jest.fn().mockResolvedValue(),
     };
 
-    modDependencyValidator = { validate: jest.fn(() => {
-      throw new ModDependencyError(
-        "Mod 'badmod' requires missing dependency 'MissingMod'"
-      );
-    }) };
+    modDependencyValidator = {
+      validate: jest.fn(() => {
+        throw new ModDependencyError(
+          "Mod 'badmod' requires missing dependency 'MissingMod'"
+        );
+      }),
+    };
     modVersionValidator = jest.fn();
-    modLoadOrderResolver = { resolveOrder: jest.fn(() => ['basegame', 'badmod']) };
+    modLoadOrderResolver = {
+      resolveOrder: jest.fn(() => ['basegame', 'badmod']),
+    };
 
     /* -------------------- Real ModManifestLoader ------------------------- */
     modManifestLoader = new ModManifestLoader(

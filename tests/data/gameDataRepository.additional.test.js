@@ -1,3 +1,5 @@
+// tests/data/gameDataRepository.additional.test.js
+
 import { describe, expect, it, jest, beforeEach } from '@jest/globals';
 import { GameDataRepository } from '../../src/data/gameDataRepository.js';
 
@@ -21,6 +23,10 @@ const createRegistry = () => ({
   getAllComponentDefinitions: jest.fn(() => [{ id: 'c1' }]),
   getConditionDefinition: jest.fn((id) => ({ id })),
   getAllConditionDefinitions: jest.fn(() => [{ id: 'cond1' }]),
+  // --- FIX START: Add missing methods to the mock registry ---
+  getEntityInstanceDefinition: jest.fn((id) => ({ instanceId: id })),
+  getAllEntityInstanceDefinitions: jest.fn(() => [{ instanceId: 'inst-01' }]),
+  // --- FIX END ---
   getContentSource: jest.fn(() => 'modA'),
   listContentByMod: jest.fn(() => ({ actions: ['a1'] })),
   get: jest.fn(),
@@ -37,14 +43,27 @@ describe('GameDataRepository additional coverage', () => {
   beforeEach(() => {
     registry = createRegistry();
     logger = createLogger();
+    // This instantiation will now succeed
     repo = new GameDataRepository(registry, logger);
     jest.clearAllMocks();
   });
 
   it('handles invalid entity, event, and component IDs', () => {
     expect(repo.getEntityDefinition('')).toBeNull();
+    expect(logger.warn).toHaveBeenCalledWith(
+      'GameDataRepository: getEntityDefinition called with invalid ID: '
+    );
+
     expect(repo.getEventDefinition('   ')).toBeNull();
+    expect(logger.warn).toHaveBeenCalledWith(
+      'GameDataRepository: getEventDefinition called with invalid ID:    '
+    );
+
     expect(repo.getComponentDefinition(null)).toBeNull();
+    expect(logger.warn).toHaveBeenCalledWith(
+      'GameDataRepository: getComponentDefinition called with invalid ID: null'
+    );
+
     expect(logger.warn).toHaveBeenCalledTimes(3);
   });
 
@@ -64,6 +83,32 @@ describe('GameDataRepository additional coverage', () => {
     expect(repo.getAllComponentDefinitions()).toEqual([{ id: 'c1' }]);
   });
 
+  // --- NEW TESTS for entity instances ---
+  it('handles invalid entity instance IDs', () => {
+    expect(repo.getEntityInstanceDefinition(undefined)).toBeNull();
+    expect(logger.warn).toHaveBeenCalledWith(
+      'GameDataRepository: getEntityInstanceDefinition called with invalid ID: undefined'
+    );
+    expect(logger.warn).toHaveBeenCalledTimes(1);
+  });
+
+  it('returns entity instance definitions from registry', () => {
+    expect(repo.getEntityInstanceDefinition('inst-01')).toEqual({
+      instanceId: 'inst-01',
+    });
+    expect(registry.getEntityInstanceDefinition).toHaveBeenCalledWith(
+      'inst-01'
+    );
+  });
+
+  it('retrieves all entity instance definitions from the registry', () => {
+    expect(repo.getAllEntityInstanceDefinitions()).toEqual([
+      { instanceId: 'inst-01' },
+    ]);
+    expect(registry.getAllEntityInstanceDefinitions).toHaveBeenCalled();
+  });
+  // --- END NEW TESTS ---
+
   it('delegates getContentSource and listContentByMod when supported', () => {
     expect(repo.getContentSource('actions', 'a1')).toBe('modA');
     expect(registry.getContentSource).toHaveBeenCalledWith('actions', 'a1');
@@ -73,7 +118,10 @@ describe('GameDataRepository additional coverage', () => {
   });
 
   it('constructor throws if registry missing required methods', () => {
+    // This test is now more robust as it checks against a more complete interface
     const badRegistry = { getStartingPlayerId: jest.fn() };
-    expect(() => new GameDataRepository(badRegistry, logger)).toThrow();
+    expect(() => new GameDataRepository(badRegistry, logger)).toThrow(
+      'GameDataRepository requires a valid IDataRegistry with specific methods.'
+    );
   });
 });

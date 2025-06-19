@@ -88,7 +88,10 @@
       "ui_request_show_load_game.event.json",
       "ui_request_show_save_game.event.json",
       "ui_stopped.event.json",
-      "update_available_actions.event.json"
+      "update_available_actions.event.json",
+      "entity_created.event.json",
+      "entity_removed.event.json",
+      "component_added.event.json"
     ],
     "macros": [
       "autoMoveFollower.macro.json",
@@ -109,9 +112,6 @@
       "turn_started.rule.json",
       "wait.rule.json"
     ],
-    "ui": [
-      "icons.json",
-      "labels.json"
-    ]
+    "ui": ["icons.json", "labels.json"]
   }
 }

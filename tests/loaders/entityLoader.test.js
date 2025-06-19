@@ -18,7 +18,8 @@ import { BaseManifestItemLoader } from '../../src/loaders/baseManifestItemLoader
 // Assume these factories (createMockConfiguration, createMockPathResolver, etc.) are defined as before...
 
 // --- Constants ---
-const ENTITY_DEFINITION_SCHEMA_ID = 'http://example.com/schemas/entity-definition.schema.json';
+const ENTITY_DEFINITION_SCHEMA_ID =
+  'http://example.com/schemas/entity-definition.schema.json';
 const TEST_MOD_ID = 'test-entity-mod';
 const GENERIC_CONTENT_KEY = 'items'; // Example key in manifest.content
 const GENERIC_CONTENT_DIR = 'items'; // Example directory name
@@ -34,9 +35,9 @@ const COMPONENT_SCHEMA_HEALTH =
 const createMockConfiguration = (overrides = {}) => {
   const config = {
     getModsBasePath: jest.fn().mockReturnValue('./data/mods'),
-    // --- [LOADER-REFACTOR-04 Test Change]: Ensure this mock handles 'entities' ---
+    // --- [LOADER-REFACTOR-04 Test Change]: Ensure this mock handles 'entity_definitions' ---
     getContentTypeSchemaId: jest.fn((typeName) => {
-      if (typeName === 'entities') return ENTITY_DEFINITION_SCHEMA_ID;
+      if (typeName === 'entity_definitions') return ENTITY_DEFINITION_SCHEMA_ID;
       if (typeName === 'components') {
         // Example for component loading if needed
         if (overrides.componentSchemaId) return overrides.componentSchemaId;
@@ -282,7 +283,7 @@ describe('EntityLoader', () => {
       // Verify super() was called correctly by checking dependencyInjection interaction and result
       expect(tempConfig.getContentTypeSchemaId).toHaveBeenCalledTimes(1);
       expect(tempConfig.getContentTypeSchemaId).toHaveBeenCalledWith(
-        'entities'
+        'entity_definitions'
       );
       expect(loader._primarySchemaId).toBe(ENTITY_DEFINITION_SCHEMA_ID); // Check protected base class field
       // --- [LOADER-REFACTOR-04 Test Change END] ---
@@ -296,9 +297,9 @@ describe('EntityLoader', () => {
     it('should log ONE warning (from base class) if entity schema ID is not found during construction', () => {
       const warnLogger = createMockLogger(); // Use a temporary logger
       const badConfig = createMockConfiguration({
-        // Mock dependencyInjection to return null specifically for 'entities'
+        // Mock dependencyInjection to return null specifically for 'entity_definitions'
         getContentTypeSchemaId: jest.fn((typeName) => {
-          if (typeName === 'entities') return null;
+          if (typeName === 'entity_definitions') return null;
           return `http://example.com/schemas/${typeName}.schema.json`; // Fallback for others
         }),
       });
@@ -316,7 +317,7 @@ describe('EntityLoader', () => {
       // --- [LOADER-REFACTOR-04 Test Change START] ---
       // --- CORRECTION: Updated expected warning message ---
       const expectedBaseWarning =
-        "EntityDefinitionLoader: Primary schema ID for content type 'entities' not found in configuration. Primary validation might be skipped.";
+        "EntityDefinitionLoader: Primary schema ID for content type 'entity_definitions' not found in configuration. Primary validation might be skipped.";
 
       // Expect only ONE warning call total (from the base class)
       expect(warnLogger.warn).toHaveBeenCalledTimes(1);
@@ -325,7 +326,7 @@ describe('EntityLoader', () => {
       // Ensure the EntityDefinitionLoader-specific warning is NOT logged
       expect(warnLogger.warn).not.toHaveBeenCalledWith(
         expect.stringContaining(
-          "EntityDefinitionLoader: Schema ID for 'entities' is missing."
+          "EntityDefinitionLoader: Schema ID for 'entity_definitions' is missing."
         )
       );
       // --- [LOADER-REFACTOR-04 Test Change END] ---
@@ -518,13 +519,13 @@ describe('EntityLoader', () => {
       // 3. Storage Delegation
       expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining(
-          `Delegating storage for original type '${entityType}' with base ID '${baseIdSimple}' to base helper for file ${filename}. Storing under 'entities' category.`
+          `Delegating storage for original type '${entityType}' with base ID '${baseIdSimple}' to base helper for file ${filename}. Storing under 'entity_definitions' category.`
         )
       );
       expect(entityLoader._storeItemInRegistry).toHaveBeenCalledTimes(1);
       const expectedStoredData = { ...fetchedData };
       expect(entityLoader._storeItemInRegistry).toHaveBeenCalledWith(
-        'entities',
+        'entity_definitions',
         TEST_MOD_ID,
         baseIdSimple,
         expectedStoredData,
@@ -629,7 +630,7 @@ describe('EntityLoader', () => {
       expect(entityLoader._storeItemInRegistry).toHaveBeenCalledTimes(1);
       const expectedStoredData = { ...fetchedData };
       expect(entityLoader._storeItemInRegistry).toHaveBeenCalledWith(
-        'entities',
+        'entity_definitions',
         TEST_MOD_ID,
         baseIdComplex,
         expectedStoredData,
@@ -756,7 +757,7 @@ describe('EntityLoader', () => {
       );
       expect(entityLoader._storeItemInRegistry).toHaveBeenCalledTimes(1);
       expect(entityLoader._storeItemInRegistry).toHaveBeenCalledWith(
-        'entities',
+        'entity_definitions',
         TEST_MOD_ID,
         expectedBaseId,
         fetchedData,
@@ -866,7 +867,7 @@ describe('EntityLoader', () => {
       );
       expect(entityLoader._storeItemInRegistry).toHaveBeenCalledTimes(1);
       expect(entityLoader._storeItemInRegistry).toHaveBeenCalledWith(
-        'entities',
+        'entity_definitions',
         TEST_MOD_ID,
         baseIdSimple,
         fetchedData,
@@ -908,7 +909,7 @@ describe('EntityLoader', () => {
         )
       );
       expect(entityLoader._storeItemInRegistry).toHaveBeenCalledWith(
-        'entities',
+        'entity_definitions',
         TEST_MOD_ID,
         baseId,
         fetchedData,
@@ -945,7 +946,7 @@ describe('EntityLoader', () => {
         )
       );
       expect(entityLoader._storeItemInRegistry).toHaveBeenCalledWith(
-        'entities',
+        'entity_definitions',
         TEST_MOD_ID,
         baseId,
         fetchedData,
@@ -985,7 +986,7 @@ describe('EntityLoader', () => {
         expect.anything()
       ); // No component validation calls
       expect(entityLoader._storeItemInRegistry).toHaveBeenCalledWith(
-        'entities',
+        'entity_definitions',
         TEST_MOD_ID,
         baseId,
         fetchedData,
@@ -1025,7 +1026,7 @@ describe('EntityLoader', () => {
         expect.anything()
       ); // No component validation calls
       expect(entityLoader._storeItemInRegistry).toHaveBeenCalledWith(
-        'entities',
+        'entity_definitions',
         TEST_MOD_ID,
         baseId,
         fetchedData,
@@ -1098,7 +1099,7 @@ describe('EntityLoader', () => {
 
       // Storage should still succeed because skipping validation isn't an error
       expect(entityLoader._storeItemInRegistry).toHaveBeenCalledWith(
-        'entities',
+        'entity_definitions',
         TEST_MOD_ID,
         baseId,
         fetchedData,

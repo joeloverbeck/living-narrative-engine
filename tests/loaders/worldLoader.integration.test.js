@@ -193,7 +193,7 @@ describe('WorldLoader Integration Test Suite (TEST-LOADER-7.1)', () => {
           return 'schema:components';
         case 'mod-manifest':
           return 'schema:mod-manifest';
-        case 'entities':
+        case 'entity_definitions':
           return 'schema:entityDefinitions';
         // Let others fall through to default
         default:
@@ -269,7 +269,9 @@ describe('WorldLoader Integration Test Suite (TEST-LOADER-7.1)', () => {
                 data: `mock ${typeName} data ${i}`,
               };
               const storeType =
-                typeName === 'entityDefinitions' ? 'entities' : typeName;
+                typeName === 'entityDefinitions'
+                  ? 'entity_definitions'
+                  : typeName;
               mockRegistry.store(storeType, itemId, itemData);
             }
             // Simulate the expected return structure {count, overrides, errors}
@@ -500,7 +502,7 @@ describe('WorldLoader Integration Test Suite (TEST-LOADER-7.1)', () => {
       expect.any(Object)
     );
     expect(mockRegistry.store).toHaveBeenCalledWith(
-      'entities',
+      'entity_definitions',
       'core:entityDefinitions_item_0',
       expect.any(Object)
     );

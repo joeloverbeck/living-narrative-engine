@@ -1,3 +1,8 @@
+/**
+ * @file Tests matters regarding to invalid data when adding a component to an entity.
+ * @see tests/entities/entityManager.addComponent.invalidData.test.js
+ */
+
 import {
   describe,
   it,
@@ -7,6 +12,7 @@ import {
   jest,
 } from '@jest/globals';
 import EntityManager from '../../src/entities/entityManager.js';
+import EntityDefinition from '../../src/entities/entityDefinition.js';
 
 const createMockDataRegistry = () => ({
   getEntityDefinition: jest.fn(),
@@ -32,6 +38,10 @@ const createMockSpatialIndexManager = () => ({
   clearIndex: jest.fn(),
 });
 
+const createMockSafeEventDispatcher = () => ({
+  dispatch: jest.fn(),
+});
+
 const TEST_DEFINITION_ID = 'test:def-invalid-data';
 const MOCK_INSTANCE_ID = 'instance-invalid-data';
 const COMPONENT_TYPE_ID = 'core:name';
@@ -43,21 +53,29 @@ describe('EntityManager.addComponent invalid componentData handling', () => {
   let logger;
   let spatial;
   let manager;
+  let mockEventDispatcher;
 
   beforeEach(() => {
     registry = createMockDataRegistry();
     validator = createMockSchemaValidator();
     logger = createMockLogger();
     spatial = createMockSpatialIndexManager();
-    manager = new EntityManager(registry, validator, logger, spatial);
+    mockEventDispatcher = createMockSafeEventDispatcher()
 
-    registry.getEntityDefinition.mockReturnValue({
-      id: TEST_DEFINITION_ID,
+    manager = new EntityManager(registry, validator, logger, spatial,
+      mockEventDispatcher);
+
+    const definitionData = {
       components: {
         [COMPONENT_TYPE_ID]: { ...VALID_COMPONENT_DATA },
       },
+    };
+    registry.getEntityDefinition.mockReturnValue(
+      new EntityDefinition(TEST_DEFINITION_ID, definitionData)
+    );
+    manager.createEntityInstance(TEST_DEFINITION_ID, {
+      instanceId: MOCK_INSTANCE_ID,
     });
-    manager.createEntityInstance(TEST_DEFINITION_ID, MOCK_INSTANCE_ID);
     jest.clearAllMocks();
   });
 
@@ -72,9 +90,14 @@ describe('EntityManager.addComponent invalid componentData handling', () => {
 
     expect(logger.error).not.toHaveBeenCalled();
     expect(validator.validate).not.toHaveBeenCalled();
-    expect(manager.getComponentData(MOCK_INSTANCE_ID, COMPONENT_TYPE_ID)).toBeNull();
-    // Even if the data is null, the component is considered "on" the entity via an override
-    expect(manager.hasComponent(MOCK_INSTANCE_ID, COMPONENT_TYPE_ID)).toBe(true); 
+    expect(
+      manager.getComponentData(MOCK_INSTANCE_ID, COMPONENT_TYPE_ID)
+    ).toBeNull();
+    // FIXED: The established design is that a component with a null override IS present.
+    // The override is an explicit instruction to nullify, not to remove.
+    expect(manager.hasComponent(MOCK_INSTANCE_ID, COMPONENT_TYPE_ID)).toBe(
+      true
+    );
   });
 
   it.each([
@@ -86,15 +109,19 @@ describe('EntityManager.addComponent invalid componentData handling', () => {
   ])(
     'throws descriptive error when componentData is %s (and is not an object or null)',
     (typeDescription, value) => {
-      const expectedErrorMessage = `EntityManager.addComponent: componentData for ${COMPONENT_TYPE_ID} on ${MOCK_INSTANCE_ID} must be an object or null. Received: ${typeof value}`;
+      const receivedType = typeof value;
+      const expectedErrorMessage = `EntityManager.addComponent: componentData for ${COMPONENT_TYPE_ID} on ${MOCK_INSTANCE_ID} must be an object or null. Received: ${receivedType}`;
+
       expect(() =>
         manager.addComponent(MOCK_INSTANCE_ID, COMPONENT_TYPE_ID, value)
       ).toThrow(expectedErrorMessage);
 
-      expect(logger.error).toHaveBeenCalledWith(
-        expectedErrorMessage,
-        { componentData: value }
-      );
+      // The logger receives a different context object than the one previously asserted.
+      expect(logger.error).toHaveBeenCalledWith(expectedErrorMessage, {
+        componentTypeId: COMPONENT_TYPE_ID,
+        instanceId: MOCK_INSTANCE_ID,
+        receivedType: receivedType,
+      });
       expect(validator.validate).not.toHaveBeenCalled();
     }
   );

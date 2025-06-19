@@ -26,21 +26,5 @@
       "additionalProperties": false
     },
     "default": []
-  },
-  "resolveFields": [
-    {
-      "dataPathIsSelf": true,
-      "resolutionStrategy": {
-        "type": "arrayOfObjects",
-        "idField": "target"
-      }
-    },
-    {
-      "dataPathIsSelf": true,
-      "resolutionStrategy": {
-        "type": "arrayOfObjects",
-        "idField": "blocker"
-      }
-    }
-  ]
+  }
 }

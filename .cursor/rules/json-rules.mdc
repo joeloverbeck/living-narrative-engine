@@ -1,0 +1,14 @@
+---
+description: 
+globs: *.json
+alwaysApply: false
+---
+# JSON files preferences
+
+The JSON files in our app are located inside the data/ folder of the root. Structure:
+
+data/mods
+data/schemas
+
+
+If your work involves a JSON file, make sure to check its corresponding schema so you can be sure you don't violate the schema.

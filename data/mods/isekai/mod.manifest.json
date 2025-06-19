@@ -20,9 +20,6 @@
     "events": [],
     "macros": [],
     "rules": [],
-    "ui": [
-      "icons.json",
-      "labels.json"
-    ]
+    "ui": ["icons.json", "labels.json"]
   }
 }

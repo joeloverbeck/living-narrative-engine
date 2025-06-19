@@ -65,12 +65,22 @@ describe('SchemaLoader', () => {
   const manifestSchemaId = 'test://schemas/manifest';
 
   const commonSchemaData = { $id: commonSchemaId, title: 'Common Test' };
-  const entityDefinitionSchemaData = { $id: entityDefinitionSchemaId, title: 'Entity Definition Test' };
-  const entityInstanceSchemaData = { $id: entityInstanceSchemaId, title: 'Entity Instance Test' };
+  const entityDefinitionSchemaData = {
+    $id: entityDefinitionSchemaId,
+    title: 'Entity Definition Test',
+  };
+  const entityInstanceSchemaData = {
+    $id: entityInstanceSchemaId,
+    title: 'Entity Instance Test',
+  };
   const manifestSchemaData = { $id: manifestSchemaId, title: 'Manifest Test' };
 
   // Simpler setup, add more files/IDs if tests specifically require them
-  const defaultSchemaFiles = [commonSchemaFile, entityDefinitionSchemaFile, entityInstanceSchemaFile];
+  const defaultSchemaFiles = [
+    commonSchemaFile,
+    entityDefinitionSchemaFile,
+    entityInstanceSchemaFile,
+  ];
 
   // Helper to reset mocks and setup default behaviors
   beforeEach(() => {
@@ -89,7 +99,8 @@ describe('SchemaLoader', () => {
     mockSchemaValidator.isSchemaLoaded.mockReturnValue(false); // Assume not loaded by default
     mockDataFetcher.fetch.mockImplementation(async (path) => {
       if (path === commonSchemaPath) return commonSchemaData;
-      if (path === entityDefinitionSchemaPath) return entityDefinitionSchemaData;
+      if (path === entityDefinitionSchemaPath)
+        return entityDefinitionSchemaData;
       if (path === entityInstanceSchemaPath) return entityInstanceSchemaData;
       if (path === manifestSchemaPath) return manifestSchemaData;
       throw new Error(`Mock fetch error: Unknown path ${path}`);
@@ -154,7 +165,8 @@ describe('SchemaLoader', () => {
     // Ensure fetch mock covers both files
     mockDataFetcher.fetch.mockImplementation(async (path) => {
       if (path === commonSchemaPath) return commonSchemaData;
-      if (path === entityDefinitionSchemaPath) return entityDefinitionSchemaData;
+      if (path === entityDefinitionSchemaPath)
+        return entityDefinitionSchemaData;
       throw new Error(`Mock fetch error: Unknown path ${path}`);
     });
 

@@ -109,8 +109,12 @@ class SpatialIndexManager extends MapManager {
       return;
     }
 
-    const effectiveOldLocationId = MapManager.isValidId(oldLocationId) ? oldLocationId.trim() : null;
-    const effectiveNewLocationId = MapManager.isValidId(newLocationId) ? newLocationId.trim() : null;
+    const effectiveOldLocationId = MapManager.isValidId(oldLocationId)
+      ? oldLocationId.trim()
+      : null;
+    const effectiveNewLocationId = MapManager.isValidId(newLocationId)
+      ? newLocationId.trim()
+      : null;
 
     if (effectiveOldLocationId === effectiveNewLocationId) {
       return; // No change needed
@@ -154,20 +158,36 @@ class SpatialIndexManager extends MapManager {
    */
   buildIndex(entityManager) {
     this.clearIndex();
-    if (!entityManager || typeof entityManager.activeEntities?.values !== 'function') {
-      console.error('SpatialIndexManager.buildIndex: Invalid entityManager provided.');
+    if (
+      !entityManager ||
+      typeof entityManager.activeEntities?.values !== 'function'
+    ) {
+      console.error(
+        'SpatialIndexManager.buildIndex: Invalid entityManager provided.'
+      );
       return;
     }
     for (const entity of entityManager.activeEntities.values()) {
-      if (!entity || typeof entity.id === 'undefined' || typeof entity.getComponentData !== 'function') {
+      if (
+        !entity ||
+        typeof entity.id === 'undefined' ||
+        typeof entity.getComponentData !== 'function'
+      ) {
         // console.warn(`[SpatialIndexManager.buildIndex] Skipping invalid entity object: ${JSON.stringify(entity)}`);
         continue;
       }
       const positionComponent = entity.getComponentData(POSITION_COMPONENT_ID);
-      const locationId = positionComponent ? positionComponent.locationId : undefined;
+      const locationId = positionComponent
+        ? positionComponent.locationId
+        : undefined;
 
       // Ensure locationId is a valid string before adding
-      if (positionComponent && locationId && typeof locationId === 'string' && locationId.trim()) {
+      if (
+        positionComponent &&
+        locationId &&
+        typeof locationId === 'string' &&
+        locationId.trim()
+      ) {
         this.addEntity(entity.id, locationId);
       }
     }

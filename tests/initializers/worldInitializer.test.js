@@ -23,7 +23,6 @@ describe('WorldInitializer', () => {
   let mockValidatedEventDispatcher;
   let mockLogger;
   let mockSpatialIndexManager;
-  let mockReferenceResolver; // <<< NEW MOCK
   let worldInitializer;
 
   const createMockEntityInstance = (
@@ -53,6 +52,9 @@ describe('WorldInitializer', () => {
       _getInternalComponentData: (componentTypeId) => {
         return internalComponentsMap.get(componentTypeId);
       },
+      hasComponent: jest.fn((componentTypeId) =>
+        internalComponentsMap.has(componentTypeId)
+      ),
     };
 
     Object.defineProperty(mockInstanceBase, 'componentEntries', {
@@ -74,7 +76,6 @@ describe('WorldInitializer', () => {
 
     mockEntityManager = {
       createEntityInstance: jest.fn(),
-      getPrimaryInstanceByDefinitionId: jest.fn(), // Still needed by ReferenceResolver mock
       getEntityInstance: jest.fn((id) => id.startsWith('uuid-')),
     };
     mockWorldContext = {};
@@ -94,10 +95,6 @@ describe('WorldInitializer', () => {
     mockSpatialIndexManager = {
       addEntity: jest.fn(),
     };
-    mockReferenceResolver = {
-      // <<< INITIALIZE NEW MOCK
-      resolve: jest.fn(),
-    };
 
     worldInitializer = new WorldInitializer({
       entityManager: mockEntityManager,
@@ -106,12 +103,11 @@ describe('WorldInitializer', () => {
       validatedEventDispatcher: mockValidatedEventDispatcher,
       logger: mockLogger,
       spatialIndexManager: mockSpatialIndexManager,
-      referenceResolver: mockReferenceResolver, // <<< PASS NEW MOCK
     });
 
     mockGameDataRepository.getComponentDefinition.mockImplementation(
       (componentTypeId) => {
-        return { id: componentTypeId, resolveFields: [] }; // Default: no fields to resolve
+        return { id: componentTypeId };
       }
     );
   });
@@ -119,7 +115,7 @@ describe('WorldInitializer', () => {
   describe('constructor', () => {
     it('should instantiate successfully with all valid dependencies', () => {
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        'WorldInitializer: Instance created (with ReferenceResolver).'
+        'WorldInitializer: Instance created. Reference resolution step is being phased out.'
       );
     });
 
@@ -150,11 +146,6 @@ describe('WorldInitializer', () => {
         'spatialIndexManager',
         'WorldInitializer requires an ISpatialIndexManager.',
       ],
-      [
-        'ReferenceResolver',
-        'referenceResolver',
-        'WorldInitializer requires a ReferenceResolver.',
-      ], // <<< NEW TEST CASE
     ];
 
     it.each(constructorErrorTestCases)(
@@ -167,7 +158,6 @@ describe('WorldInitializer', () => {
           validatedEventDispatcher: mockValidatedEventDispatcher,
           logger: mockLogger,
           spatialIndexManager: mockSpatialIndexManager,
-          referenceResolver: mockReferenceResolver, // <<< INCLUDE IN BASE DEPS
         };
         delete deps[depsKey];
         expect(() => new WorldInitializer(deps)).toThrow(expectedErrorMessage);
@@ -197,13 +187,6 @@ describe('WorldInitializer', () => {
         {}
       );
       mockEntityManager.createEntityInstance.mockReturnValueOnce(mockInstance1);
-      // Mock ReferenceResolver.resolve to return no changes for an empty component
-      mockReferenceResolver.resolve.mockReturnValue({
-        resolvedValue: undefined,
-        valueChanged: false,
-        dataPath: null,
-        dataPathIsSelf: false,
-      });
 
       await worldInitializer.initializeWorldEntities();
 
@@ -211,7 +194,14 @@ describe('WorldInitializer', () => {
         'def:room1'
       );
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        `WorldInitializer (Pass 1): Instantiated entity uuid-room1 (from definition: def:room1)`
+        expect.stringContaining(
+          'WorldInitializer (Pass 1): Instantiated entity uuid-room1 (from definition: def:room1)'
+        )
+      );
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining(
+          "Processing entity uuid-room1. This step is mostly a no-op as 'resolveFields' is deprecated."
+        )
       );
     });
 
@@ -227,550 +217,259 @@ describe('WorldInitializer', () => {
       expect(mockLogger.warn).toHaveBeenCalledWith(
         'WorldInitializer (Pass 1): Failed to instantiate entity from definition: def:broken.'
       );
+      expect(mockLogger.debug).not.toHaveBeenCalledWith(
+        expect.stringContaining(
+          'Processing entity def:broken. This step is mostly a no-op'
+        )
+      );
     });
 
-    describe('Pass 2: Reference Resolution', () => {
-      let locationDef, characterDef, locationInstance, characterInstance;
-      let originalLocationPositionComponentData,
-        originalCharacterPositionComponentData,
-        originalLocationExitsComponentData;
-      // Instances needed for spatial index, not directly by ReferenceResolver mock in these tests
-      let targetRoomInstance, outerSpaceInstance, anotherTargetInstance;
-
-      beforeEach(() => {
-        // --- Component Definitions ---
-        mockGameDataRepository.getComponentDefinition.mockImplementation(
-          (componentTypeId) => {
-            if (componentTypeId === POSITION_COMPONENT_ID) {
-              return {
-                id: POSITION_COMPONENT_ID,
-                resolveFields: [
-                  {
-                    dataPath: 'locationId', // Path within the component data
-                    dataPathIsSelf: false,
-                    resolutionStrategy: { type: 'direct' }, // Strategy info for ReferenceResolver
-                  },
-                ],
-              };
-            }
-            if (componentTypeId === EXITS_COMPONENT_ID) {
-              return {
-                id: EXITS_COMPONENT_ID,
-                resolveFields: [
-                  {
-                    dataPath: null, // For dataPathIsSelf, dataPath can be null or irrelevant
-                    dataPathIsSelf: true, // Indicates the whole component data might be replaced
-                    resolutionStrategy: {
-                      type: 'arrayOfObjects',
-                      idField: 'target',
-                    },
-                  },
-                ],
-              };
-            }
-            return { id: componentTypeId, resolveFields: [] }; // Default empty
+    describe('Pass 2: Component Processing (No Reference Resolution)', () => {
+      it('should log that component processing is happening but no resolution for entities with components', async () => {
+        const locationDef = { id: 'def:location1' };
+        const locationInstance = createMockEntityInstance(
+          'uuid-loc1',
+          'def:location1',
+          {
+            [POSITION_COMPONENT_ID]: { locationId: 'another-place' },
           }
         );
-
-        // --- Original Data ---
-        originalLocationPositionComponentData = {
-          locationId: 'def:outer_space',
-        };
-        originalLocationExitsComponentData = [
-          { direction: 'north', target: 'def:target_room' }, // To be resolved
-          { direction: 'south', target: 'uuid-already-instance' }, // Already instance ID
-          { direction: 'east', target: 'def:unresolved_room' }, // Will fail to resolve
-          { direction: 'west', target: '' }, // Empty
-          { direction: 'up', target: null }, // Null
-          { direction: 'down', target: 'def:another_target' }, // To be resolved
-        ];
-
-        // --- Entity Definitions & Instances ---
-        locationDef = {
-          id: 'def:current_room',
-          components: {
-            [POSITION_COMPONENT_ID]: {
-              ...originalLocationPositionComponentData,
-            },
-            [EXITS_COMPONENT_ID]: JSON.parse(
-              JSON.stringify(originalLocationExitsComponentData)
-            ),
-          },
-        };
-        locationInstance = createMockEntityInstance(
-          'uuid-current-room',
-          'def:current_room',
-          locationDef.components
-        );
-
-        originalCharacterPositionComponentData = {
-          locationId: 'def:current_room',
-        };
-        characterDef = {
-          id: 'def:player',
-          components: {
-            [POSITION_COMPONENT_ID]: {
-              ...originalCharacterPositionComponentData,
-            },
-          },
-        };
-        characterInstance = createMockEntityInstance(
-          'uuid-player',
-          'def:player',
-          characterDef.components
-        );
-
-        // Instances for spatial index check
-        targetRoomInstance = createMockEntityInstance(
-          'uuid-target-room',
-          'def:target_room'
-        );
-        outerSpaceInstance = createMockEntityInstance(
-          'uuid-outer-space',
-          'def:outer_space'
-        );
-        anotherTargetInstance = createMockEntityInstance(
-          'uuid-another-target',
-          'def:another_target'
-        );
-
-        // --- Mock EntityManager.getPrimaryInstanceByDefinitionId (used by ReferenceResolver internally, so keep for conceptual integrity if ReferenceResolver itself was more complexly mocked) ---
-        // However, for these tests, we will directly mock `mockReferenceResolver.resolve` outcomes.
-        // This is kept for when ReferenceResolver itself might be tested or if a more integrated test was desired.
-        mockEntityManager.getPrimaryInstanceByDefinitionId.mockImplementation(
-          (defId) => {
-            if (defId === 'def:target_room') return targetRoomInstance;
-            if (defId === 'def:current_room') return locationInstance; // For character's location
-            if (defId === 'def:outer_space') return outerSpaceInstance; // For location's location
-            if (defId === 'def:another_target') return anotherTargetInstance;
-            return undefined;
-          }
-        );
-
-        // --- Setup for WorldInitializer.initializeWorldEntities ---
         mockGameDataRepository.getAllEntityDefinitions.mockReturnValue([
           locationDef,
-          characterDef,
         ]);
-        mockEntityManager.createEntityInstance
-          .mockReset() // Reset from any previous calls in other tests
-          .mockImplementation((defId) => {
-            // Simulate entity creation
-            if (defId === 'def:current_room') return locationInstance;
-            if (defId === 'def:player') return characterInstance;
-            return undefined;
-          });
-      });
+        mockEntityManager.createEntityInstance.mockReturnValueOnce(
+          locationInstance
+        );
 
-      it('should resolve position.locationId and update component data', async () => {
-        // Mock ReferenceResolver behavior for position components
-        mockReferenceResolver.resolve.mockImplementation(
-          (componentData, spec) => {
-            if (spec.dataPath === 'locationId') {
-              if (componentData.locationId === 'def:current_room') {
-                return {
-                  resolvedValue: 'uuid-current-room', // Resolved instance ID
-                  valueChanged: true,
-                  dataPath: 'locationId',
-                  dataPathIsSelf: false,
-                };
-              }
-              if (componentData.locationId === 'def:outer_space') {
-                return {
-                  resolvedValue: 'uuid-outer-space',
-                  valueChanged: true,
-                  dataPath: 'locationId',
-                  dataPathIsSelf: false,
-                };
-              }
-            }
-            return {
-              resolvedValue: undefined,
-              valueChanged: false,
-              dataPath: spec.dataPath,
-              dataPathIsSelf: spec.dataPathIsSelf,
-            };
-          }
+        mockGameDataRepository.getComponentDefinition.mockImplementation(
+          (componentTypeId) => ({
+            id: componentTypeId,
+          })
         );
 
         await worldInitializer.initializeWorldEntities();
 
-        // Verify character's position
-        const finalCharPosData = characterInstance._getInternalComponentData(
-          POSITION_COMPONENT_ID
-        );
-        expect(finalCharPosData.locationId).toBe('uuid-current-room');
         expect(mockLogger.debug).toHaveBeenCalledWith(
-          `WorldInitializer (Pass 2 RefResolution): Modified path 'locationId' in component [${POSITION_COMPONENT_ID}] for entity uuid-player.`
-        );
-        expect(mockSpatialIndexManager.addEntity).toHaveBeenCalledWith(
-          'uuid-player',
-          'uuid-current-room'
-        );
-
-        // Verify location's own position
-        const finalLocPosData = locationInstance._getInternalComponentData(
-          POSITION_COMPONENT_ID
-        );
-        expect(finalLocPosData.locationId).toBe('uuid-outer-space');
-        expect(mockSpatialIndexManager.addEntity).toHaveBeenCalledWith(
-          'uuid-current-room',
-          'uuid-outer-space'
-        );
-      });
-
-      it('should resolve exitData.target for core:exits and update component data', async () => {
-        const resolvedExitsData = [
-          // This is what ReferenceResolver would return for the exits component
-          { direction: 'north', target: 'uuid-target-room' },
-          { direction: 'south', target: 'uuid-already-instance' },
-          { direction: 'east', target: 'def:unresolved_room' }, // Assuming ReferenceResolver keeps unresolved ones
-          { direction: 'west', target: '' },
-          { direction: 'up', target: null },
-          { direction: 'down', target: 'uuid-another-target' },
-        ];
-
-        mockReferenceResolver.resolve.mockImplementation(
-          (componentData, spec, entityId, componentTypeId) => {
-            if (componentTypeId === EXITS_COMPONENT_ID && spec.dataPathIsSelf) {
-              // Simulate that ReferenceResolver determined a change was made to the exits array
-              return {
-                resolvedValue: resolvedExitsData, // The entire new component data
-                valueChanged: true,
-                dataPath: null, // Original specDataPath from resolveFields
-                dataPathIsSelf: true, // Original specDataPathIsSelf from resolveFields
-              };
-            }
-            // Fallback for other components like position
-            if (spec.dataPath === 'locationId') {
-              if (componentData.locationId === 'def:current_room')
-                return {
-                  resolvedValue: 'uuid-current-room',
-                  valueChanged: true,
-                  dataPath: 'locationId',
-                  dataPathIsSelf: false,
-                };
-              if (componentData.locationId === 'def:outer_space')
-                return {
-                  resolvedValue: 'uuid-outer-space',
-                  valueChanged: true,
-                  dataPath: 'locationId',
-                  dataPathIsSelf: false,
-                };
-            }
-            return {
-              resolvedValue: undefined,
-              valueChanged: false,
-              dataPath: spec.dataPath,
-              dataPathIsSelf: spec.dataPathIsSelf,
-            };
-          }
-        );
-
-        await worldInitializer.initializeWorldEntities();
-        const processedExits =
-          locationInstance._getInternalComponentData(EXITS_COMPONENT_ID);
-
-        expect(processedExits).toEqual(resolvedExitsData);
-        expect(locationInstance.addComponent).toHaveBeenCalledWith(
-          EXITS_COMPONENT_ID,
-          resolvedExitsData
+          expect.stringContaining(
+            "Processing entity uuid-loc1. This step is mostly a no-op as 'resolveFields' is deprecated."
+          )
         );
         expect(mockLogger.debug).toHaveBeenCalledWith(
-          `WorldInitializer (Pass 2 RefResolution): Updated component [${EXITS_COMPONENT_ID}] data directly for entity uuid-current-room via addComponent.`
+          expect.stringContaining(
+            "Entity uuid-loc1, component core:position has no 'resolveFields' to process, or it is empty. (Expected)"
+          )
         );
-      });
-
-      it('should keep exitData.target as is if already an instance ID (no colon) - handled by ReferenceResolver', async () => {
-        mockReferenceResolver.resolve.mockImplementation(
-          (componentData, spec, entityId, componentTypeId) => {
-            if (componentTypeId === EXITS_COMPONENT_ID && spec.dataPathIsSelf) {
-              // ReferenceResolver would internally decide not to change 'uuid-already-instance'
-              // and would determine if the overall component data changed.
-              // For this specific test, assume only the resolvable ones change, so valueChanged: true.
-              return {
-                resolvedValue: [
-                  { direction: 'north', target: 'uuid-target-room' }, // changed
-                  { direction: 'south', target: 'uuid-already-instance' }, // unchanged
-                  { direction: 'east', target: 'def:unresolved_room' }, // unchanged (failed resolve)
-                  { direction: 'west', target: '' }, // unchanged
-                  { direction: 'up', target: null }, // unchanged
-                  { direction: 'down', target: 'uuid-another-target' }, // changed
-                ],
-                valueChanged: true, // Because other parts of the component changed
-                dataPath: null,
-                dataPathIsSelf: true,
-              };
-            }
-            // Fallback for other components like position
-            if (spec.dataPath === 'locationId') {
-              if (componentData.locationId === 'def:current_room')
-                return {
-                  resolvedValue: 'uuid-current-room',
-                  valueChanged: true,
-                  dataPath: 'locationId',
-                  dataPathIsSelf: false,
-                };
-              if (componentData.locationId === 'def:outer_space')
-                return {
-                  resolvedValue: 'uuid-outer-space',
-                  valueChanged: true,
-                  dataPath: 'locationId',
-                  dataPathIsSelf: false,
-                };
-            }
-            return {
-              resolvedValue: undefined,
-              valueChanged: false,
-              dataPath: spec.dataPath,
-              dataPathIsSelf: spec.dataPathIsSelf,
-            };
-          }
-        );
-
-        await worldInitializer.initializeWorldEntities();
-        const processedExits =
-          locationInstance._getInternalComponentData(EXITS_COMPONENT_ID);
-        expect(processedExits[1].target).toBe('uuid-already-instance');
-        // WorldInitializer's logger won't show specific "Could not resolve" for already instance IDs
-        // as ReferenceResolver handles that distinction.
-      });
-
-      it('should keep exitData.target as is and warn (via ReferenceResolver) if definitionId cannot be resolved', async () => {
-        mockReferenceResolver.resolve.mockImplementation(
-          (componentData, spec, entityId, componentTypeId) => {
-            if (componentTypeId === EXITS_COMPONENT_ID && spec.dataPathIsSelf) {
-              // ReferenceResolver handles the warning for 'def:unresolved_room'
-              // It returns the component data with the unresolved ID still present.
-              return {
-                resolvedValue: [
-                  { direction: 'north', target: 'uuid-target-room' },
-                  { direction: 'south', target: 'uuid-already-instance' },
-                  { direction: 'east', target: 'def:unresolved_room' }, // Kept as is by RR
-                  { direction: 'west', target: '' },
-                  { direction: 'up', target: null },
-                  { direction: 'down', target: 'uuid-another-target' },
-                ],
-                valueChanged: true, // because other parts changed
-                dataPath: null,
-                dataPathIsSelf: true,
-              };
-            }
-            // Fallback for other components like position
-            if (spec.dataPath === 'locationId') {
-              if (componentData.locationId === 'def:current_room')
-                return {
-                  resolvedValue: 'uuid-current-room',
-                  valueChanged: true,
-                  dataPath: 'locationId',
-                  dataPathIsSelf: false,
-                };
-              if (componentData.locationId === 'def:outer_space')
-                return {
-                  resolvedValue: 'uuid-outer-space',
-                  valueChanged: true,
-                  dataPath: 'locationId',
-                  dataPathIsSelf: false,
-                };
-            }
-            return {
-              resolvedValue: undefined,
-              valueChanged: false,
-              dataPath: spec.dataPath,
-              dataPathIsSelf: spec.dataPathIsSelf,
-            };
-          }
-        );
-
-        await worldInitializer.initializeWorldEntities();
-        const processedExits =
-          locationInstance._getInternalComponentData(EXITS_COMPONENT_ID);
-        expect(processedExits[2].target).toBe('def:unresolved_room');
-        // The specific warning "Could not resolve..." would be logged by ReferenceResolver, not WorldInitializer directly.
-        // WorldInitializer logs the update if valueChanged is true.
         expect(mockLogger.debug).toHaveBeenCalledWith(
-          `WorldInitializer (Pass 2 RefResolution): Updated component [${EXITS_COMPONENT_ID}] data directly for entity uuid-current-room via addComponent.`
+          expect.stringContaining(
+            "Entity uuid-loc1 has POSITION_COMPONENT_ID with locationId 'another-place'. Spatial index add/update is handled by EntityManager."
+          )
         );
       });
 
-      it('should keep empty or null exitData.target as is (no resolution attempt by ReferenceResolver)', async () => {
-        mockReferenceResolver.resolve.mockImplementation(
-          (componentData, spec, entityId, componentTypeId) => {
-            if (componentTypeId === EXITS_COMPONENT_ID && spec.dataPathIsSelf) {
-              // ReferenceResolver would not attempt to resolve empty/null strings and return them as is.
+      it('should log a warning if a component definition surprisingly still has resolveFields', async () => {
+        const problematicDef = { id: 'def:problem' };
+        const problematicInstance = createMockEntityInstance(
+          'uuid-problem1',
+          'def:problem',
+          {
+            'custom:testcomponent': { someField: 'test:ref' },
+          }
+        );
+        mockGameDataRepository.getAllEntityDefinitions.mockReturnValue([
+          problematicDef,
+        ]);
+        mockEntityManager.createEntityInstance.mockReturnValueOnce(
+          problematicInstance
+        );
+
+        mockGameDataRepository.getComponentDefinition.mockImplementation(
+          (componentTypeId) => {
+            if (componentTypeId === 'custom:testcomponent') {
               return {
-                resolvedValue: [
-                  { direction: 'north', target: 'uuid-target-room' },
-                  { direction: 'south', target: 'uuid-already-instance' },
-                  { direction: 'east', target: 'def:unresolved_room' },
-                  { direction: 'west', target: '' }, // Kept
-                  { direction: 'up', target: null }, // Kept
-                  { direction: 'down', target: 'uuid-another-target' },
+                id: componentTypeId,
+                resolveFields: [
+                  {
+                    dataPath: 'someField',
+                    resolutionStrategy: { type: 'direct' },
+                  },
                 ],
-                valueChanged: true, // Other parts changed
-                dataPath: null,
-                dataPathIsSelf: true,
               };
             }
-            if (spec.dataPath === 'locationId') {
-              if (componentData.locationId === 'def:current_room')
-                return {
-                  resolvedValue: 'uuid-current-room',
-                  valueChanged: true,
-                  dataPath: 'locationId',
-                  dataPathIsSelf: false,
-                };
-              if (componentData.locationId === 'def:outer_space')
-                return {
-                  resolvedValue: 'uuid-outer-space',
-                  valueChanged: true,
-                  dataPath: 'locationId',
-                  dataPathIsSelf: false,
-                };
-            }
-            return {
-              resolvedValue: undefined,
-              valueChanged: false,
-              dataPath: spec.dataPath,
-              dataPathIsSelf: spec.dataPathIsSelf,
-            };
+            return { id: componentTypeId };
           }
         );
 
         await worldInitializer.initializeWorldEntities();
-        const processedExits =
-          locationInstance._getInternalComponentData(EXITS_COMPONENT_ID);
-        expect(processedExits[3].target).toBe('');
-        expect(processedExits[4].target).toBeNull();
+
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+          expect.stringContaining(
+            "Entity uuid-problem1, component custom:testcomponent still has 'resolveFields'. This is a DEPRECATED pattern."
+          )
+        );
       });
 
-      it('should not process non-array data for core:exits if resolveFields expects an array (ReferenceResolver handles)', async () => {
-        const malformedExitsComponentData = {
-          not_an_array: 'actually_an_object',
-        };
-        const malformedEntityDef = {
-          id: 'def:malformed',
-          components: { [EXITS_COMPONENT_ID]: malformedExitsComponentData },
-        };
-        const malformedInstance = createMockEntityInstance(
-          'uuid-malformed',
-          'def:malformed',
-          malformedEntityDef.components
+      it('should log if entity componentEntries is not iterable in Pass 2', async () => {
+        const entityDef = { id: 'def:baditerator' };
+        const mockInstance = createMockEntityInstance(
+          'uuid-baditer',
+          'def:baditerator'
         );
 
-        mockGameDataRepository.getAllEntityDefinitions.mockReturnValueOnce([
-          malformedEntityDef,
-        ]);
-        mockEntityManager.createEntityInstance
-          .mockReset()
-          .mockReturnValueOnce(malformedInstance);
-
-        // ReferenceResolver should see the malformed data and likely return valueChanged: false
-        mockReferenceResolver.resolve.mockImplementation(
-          (componentData, spec, entityId, componentTypeId) => {
-            if (
-              componentTypeId === EXITS_COMPONENT_ID &&
-              entityId === 'uuid-malformed'
-            ) {
-              // ReferenceResolver would log a warning about malformed data type
-              return {
-                resolvedValue: componentData, // or undefined
-                valueChanged: false, // Crucially, no change is made
-                dataPath: null,
-                dataPathIsSelf: true,
-              };
-            }
-            return {
-              resolvedValue: undefined,
-              valueChanged: false,
-              dataPath: spec.dataPath,
-              dataPathIsSelf: spec.dataPathIsSelf,
-            };
-          }
-        );
-
-        await worldInitializer.initializeWorldEntities();
-
-        const exitsDataAfter =
-          malformedInstance._getInternalComponentData(EXITS_COMPONENT_ID);
-        expect(_isEqual(exitsDataAfter, malformedExitsComponentData)).toBe(
-          true
-        ); // Data remains unchanged
-        // WorldInitializer wouldn't log an update because valueChanged is false.
-        // The warning about data type would come from ReferenceResolver.
-        expect(malformedInstance.addComponent).not.toHaveBeenCalled(); // No update call
-      });
-
-      it('should not attempt to resolve exits if EXITS_COMPONENT_ID is missing from entity', async () => {
-        const noExitsDef = {
-          id: 'def:no_exits_room',
-          components: {
-            [POSITION_COMPONENT_ID]: { locationId: 'def:somewhere' },
-          },
-        };
-        const noExitsInstance = createMockEntityInstance(
-          'uuid-no_exits',
-          'def:no_exits_room',
-          noExitsDef.components
-        );
-
-        mockGameDataRepository.getAllEntityDefinitions.mockReturnValueOnce([
-          noExitsDef,
-        ]);
-        mockEntityManager.createEntityInstance
-          .mockReset()
-          .mockReturnValueOnce(noExitsInstance);
-
-        // Mock for the position component resolution
-        mockReferenceResolver.resolve.mockImplementation(
-          (componentData, spec) => {
-            if (
-              spec.dataPath === 'locationId' &&
-              componentData.locationId === 'def:somewhere'
-            ) {
-              return {
-                resolvedValue: 'uuid-somewhere',
-                valueChanged: true,
-                dataPath: 'locationId',
-                dataPathIsSelf: false,
-              };
-            }
-            return {
-              resolvedValue: undefined,
-              valueChanged: false,
-              dataPath: spec.dataPath,
-              dataPathIsSelf: spec.dataPathIsSelf,
-            };
-          }
-        );
-
-        await worldInitializer.initializeWorldEntities();
-
-        // Check that resolve was not called for EXITS_COMPONENT_ID on this entity
-        const resolveCalls = mockReferenceResolver.resolve.mock.calls;
-        const exitResolveCall = resolveCalls.find((call) => {
-          const [, , entityId, componentTypeId] = call;
-          return (
-            entityId === 'uuid-no_exits' &&
-            componentTypeId === EXITS_COMPONENT_ID
-          );
+        Object.defineProperty(mockInstance, 'componentEntries', {
+          get: jest.fn(() => ({
+            [Symbol.iterator]: () => 'not an iterator',
+          })),
+          configurable: true,
         });
-        expect(exitResolveCall).toBeUndefined();
+
+        mockGameDataRepository.getAllEntityDefinitions.mockReturnValue([
+          entityDef,
+        ]);
+        mockEntityManager.createEntityInstance.mockReturnValueOnce(
+          mockInstance
+        );
+
+        await worldInitializer.initializeWorldEntities();
+
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+          expect.stringContaining(
+            'Entity uuid-baditer componentEntries[Symbol.iterator]() did not return a valid iterator.'
+          )
+        );
+      });
+
+      it('should log if entity componentEntries itself is not iterable in Pass 2', async () => {
+        const nonIterableEntity = createMockEntityInstance(
+          'uuid-noniter',
+          'def:noniter'
+        );
+        // Make componentEntries return an object that is not null/undefined but lacks Symbol.iterator
+        Object.defineProperty(nonIterableEntity, 'componentEntries', {
+          get: () => ({
+            description: 'I am an object, but not an iterator factory',
+          }),
+          configurable: true,
+        });
+
+        mockGameDataRepository.getAllEntityDefinitions.mockReturnValue([
+          { id: 'def:noniter' },
+        ]);
+        mockEntityManager.createEntityInstance.mockReturnValueOnce(
+          nonIterableEntity
+        );
+
+        await worldInitializer.initializeWorldEntities();
+
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+          expect.stringContaining(
+            'WorldInitializer (Pass 2 RefResolution): Entity uuid-noniter componentEntries IS NOT ITERABLE or is problematic. Value: [object Object]. Skipping component processing for this entity.'
+          )
+        );
       });
     });
 
-    it('should throw and log error if a critical failure occurs (e.g., in repository)', async () => {
-      const criticalError = new Error('Repository exploded');
-      mockGameDataRepository.getAllEntityDefinitions.mockImplementation(() => {
-        throw criticalError;
+    describe('Pass 3: Build Spatial Index', () => {
+      it('should log completion of entity processing and spatial index additions (formerly Pass 3)', async () => {
+        // Setup a basic entity definition
+        const entityDef = { id: 'def:spatialDummy' };
+        mockGameDataRepository.getAllEntityDefinitions.mockReturnValue([
+          entityDef,
+        ]);
+        // Mock entity instance creation
+        const mockInstance = createMockEntityInstance(
+          'uuid-spatialDummy',
+          'def:spatialDummy',
+          {
+            [POSITION_COMPONENT_ID]: { locationId: 'some-place' }, // Ensure it could be added to spatial index
+          }
+        );
+        mockEntityManager.createEntityInstance.mockReturnValueOnce(
+          mockInstance
+        );
+
+        await worldInitializer.initializeWorldEntities();
+
+        // Check for the Pass 2 completion log which includes spatial index summary
+        expect(mockLogger.debug).toHaveBeenCalledWith(
+          expect.stringContaining(
+            'WorldInitializer (Pass 2): Completed entity processing. Processed 1 entities. Added 1 entities to spatial index.'
+          ) // Adjusted for one entity
+        );
       });
 
-      await expect(worldInitializer.initializeWorldEntities()).rejects.toThrow(
-        criticalError
+      it('Pass 2 - Post-Processing: EntityManager handles adding entities with position to spatial index', async () => {
+        const roomDefPos1 = { id: 'def:roomPos1' };
+        const roomInstancePos1 = createMockEntityInstance(
+          'uuid-roomPos1',
+          'def:roomPos1',
+          {
+            [POSITION_COMPONENT_ID]: { locationId: 'some-other-place' },
+          }
+        );
+        mockGameDataRepository.getAllEntityDefinitions.mockReturnValue([
+          roomDefPos1,
+        ]);
+        mockEntityManager.createEntityInstance.mockReturnValueOnce(
+          roomInstancePos1
+        );
+
+        // This mock is for getComponentDefinition in _resolveReferencesForEntityComponents
+        mockGameDataRepository.getComponentDefinition.mockImplementation(
+          (componentTypeId) => ({ id: componentTypeId })
+        );
+
+        await worldInitializer.initializeWorldEntities();
+
+        // This log comes from _resolveReferencesForEntityComponents's post-processing part
+        expect(mockLogger.debug).toHaveBeenCalledWith(
+          expect.stringContaining(
+            "WorldInitializer (Pass 2 Post-Processing): Entity uuid-roomPos1 has POSITION_COMPONENT_ID with locationId 'some-other-place'. Spatial index add/update is handled by EntityManager."
+          )
+        );
+        // And check for the overall completion
+        expect(mockLogger.debug).toHaveBeenCalledWith(
+          expect.stringContaining(
+            'WorldInitializer: World entity initialization and spatial indexing complete.'
+          )
+        );
+      });
+    });
+
+    it('should complete and log final success message', async () => {
+      mockGameDataRepository.getAllEntityDefinitions.mockReturnValue([]);
+      await worldInitializer.initializeWorldEntities();
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'WorldInitializer: World entity initialization and spatial indexing complete.'
       );
+    });
+  });
+
+  // Test for _dispatchWorldInitEvent error handling
+  describe('_dispatchWorldInitEvent error handling', () => {
+    it('should log an error if event dispatching fails', async () => {
+      const MOCK_ERROR_MESSAGE = 'Dispatch failed';
+      mockValidatedEventDispatcher.dispatch.mockRejectedValueOnce(
+        new Error(MOCK_ERROR_MESSAGE)
+      );
+
+      // Need to trigger an event dispatch. Easiest is via entity instantiation.
+      const entityDef1 = { id: 'def:eventTest' };
+      const mockInstance1 = createMockEntityInstance(
+        'uuid-eventTest1',
+        'def:eventTest'
+      );
+      mockGameDataRepository.getAllEntityDefinitions.mockReturnValue([
+        entityDef1,
+      ]);
+      mockEntityManager.createEntityInstance.mockReturnValueOnce(mockInstance1);
+
+      await worldInitializer.initializeWorldEntities();
+
       expect(mockLogger.error).toHaveBeenCalledWith(
-        'WorldInitializer: CRITICAL ERROR during entity initialization or reference resolution:',
-        criticalError
+        expect.stringContaining(
+          "Failed dispatching 'worldinit:entity_instantiated' event for entity uuid-eventTest1"
+        ),
+        expect.any(Error)
       );
     });
   });

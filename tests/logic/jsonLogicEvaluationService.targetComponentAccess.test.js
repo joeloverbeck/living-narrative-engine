@@ -17,8 +17,8 @@ import JsonLogicEvaluationService from '../../src/logic/jsonLogicEvaluationServi
 // --- Dependencies for Mocking & Context ---
 import { createJsonLogicContext } from '../../src/logic/contextAssembler.js'; // Adjust path as needed
 import Entity from '../../src/entities/entity.js'; // Adjust path as needed
-import EntityDefinition from '../../src/entities/EntityDefinition.js'; // Added
-import EntityInstanceData from '../../src/entities/EntityInstanceData.js'; // Added
+import EntityDefinition from '../../src/entities/entityDefinition.js'; // Added
+import EntityInstanceData from '../../src/entities/entityInstanceData.js'; // Added
 
 // --- JSDoc Imports for Type Hinting ---
 /** @typedef {import('../../src/interfaces/coreServices.js').ILogger} ILogger */ // Adjust path as needed
@@ -56,10 +56,22 @@ const mockEntityManager = {
 
 // Helper to create a simple mock entity instance for testing
 const DUMMY_DEFINITION_ID_FOR_MOCKS = 'def:mock-eval-target-access';
-const createMockEntity = (instanceId, definitionId = DUMMY_DEFINITION_ID_FOR_MOCKS, initialComponents = {}) => {
-  const defIdToUse = definitionId.includes(':') ? definitionId : `test:${definitionId}`;
-  const genericDefinition = new EntityDefinition(defIdToUse, { components: {} });
-  const instanceData = new EntityInstanceData(instanceId, genericDefinition, initialComponents);
+const createMockEntity = (
+  instanceId,
+  definitionId = DUMMY_DEFINITION_ID_FOR_MOCKS,
+  initialComponents = {}
+) => {
+  const defIdToUse = definitionId.includes(':')
+    ? definitionId
+    : `test:${definitionId}`;
+  const genericDefinition = new EntityDefinition(defIdToUse, {
+    components: {},
+  });
+  const instanceData = new EntityInstanceData(
+    instanceId,
+    genericDefinition,
+    initialComponents
+  );
   const entity = new Entity(instanceData);
   return entity;
 };

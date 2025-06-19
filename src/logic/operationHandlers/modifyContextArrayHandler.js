@@ -24,7 +24,7 @@ function setPath(obj, path, value) {
   let current = obj;
   for (let i = 0; i < pathParts.length - 1; i++) {
     const part = pathParts[i];
-    if (part === "__proto__" || part === "constructor") {
+    if (part === '__proto__' || part === 'constructor') {
       throw new Error(`Unsafe property name detected: ${part}`);
     }
     if (current[part] === undefined || typeof current[part] !== 'object') {
@@ -33,7 +33,7 @@ function setPath(obj, path, value) {
     current = current[part];
   }
   const lastPart = pathParts[pathParts.length - 1];
-  if (lastPart === "__proto__" || lastPart === "constructor") {
+  if (lastPart === '__proto__' || lastPart === 'constructor') {
     throw new Error(`Unsafe property name detected: ${lastPart}`);
   }
   current[lastPart] = value;

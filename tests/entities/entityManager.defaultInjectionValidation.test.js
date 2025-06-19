@@ -1,4 +1,5 @@
 import EntityManager from '../../src/entities/entityManager.js';
+import EntityDefinition from '../../src/entities/entityDefinition.js';
 import {
   ACTOR_COMPONENT_ID,
   NOTES_COMPONENT_ID,
@@ -14,10 +15,20 @@ import { beforeEach, describe, expect, jest, test } from '@jest/globals';
 const makeStubs = (validator) => {
   const registry = {
     getEntityDefinition: jest.fn().mockReturnValue({
-      id: 'test:actor',
       components: {
         [ACTOR_COMPONENT_ID]: {},
       },
+    }),
+    getEntityDefinition: jest.fn().mockImplementation((definitionId) => {
+      if (definitionId === 'test:actor') {
+        const definitionData = {
+          components: {
+            [ACTOR_COMPONENT_ID]: {},
+          },
+        };
+        return new EntityDefinition(definitionId, definitionData);
+      }
+      return null; // Or throw an error, depending on desired mock behavior for other IDs
     }),
   };
 
@@ -44,9 +55,15 @@ const makeStubs = (validator) => {
   };
 };
 
+const createMockSafeEventDispatcher = () => ({
+  dispatch: jest.fn(),
+});
+
+
 describe('EntityManager default component injection uses validated data', () => {
   let validator;
   let manager;
+  let mockEventDispatcher;
 
   beforeEach(() => {
     validator = {
@@ -65,11 +82,15 @@ describe('EntityManager default component injection uses validated data', () => 
     };
 
     const stubs = makeStubs(validator);
+
+    mockEventDispatcher = createMockSafeEventDispatcher();
+
     manager = new EntityManager(
       stubs.registry,
       stubs.validator,
       stubs.logger,
-      stubs.spatialIndexManager
+      stubs.spatialIndexManager,
+      mockEventDispatcher
     );
   });
 

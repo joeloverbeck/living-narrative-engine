@@ -136,7 +136,9 @@ describe('WorldLoader Integration Test Suite - Partial/Empty Content (TEST-LOADE
           internalStore['mod_manifests'] = {};
         internalStore['mod_manifests'][id.toLowerCase()] = manifest;
       }),
-      getEntityDefinition: jest.fn((id) => internalStore['entities']?.[id]),
+      getEntityDefinition: jest.fn(
+        (id) => internalStore['entity_definitions']?.[id]
+      ),
       getItemDefinition: jest.fn((id) => internalStore['items']?.[id]),
       getLocationDefinition: jest.fn((id) => internalStore['locations']?.[id]),
       getConnectionDefinition: jest.fn(
@@ -149,7 +151,7 @@ describe('WorldLoader Integration Test Suite - Partial/Empty Content (TEST-LOADE
         (id) => internalStore['components']?.[id]
       ),
       getAllEntityDefinitions: jest.fn(() =>
-        Object.values(internalStore['entities'] || {})
+        Object.values(internalStore['entity_definitions'] || {})
       ),
       getAllItemDefinitions: jest.fn(() =>
         Object.values(internalStore['items'] || {})
@@ -509,7 +511,7 @@ describe('WorldLoader Integration Test Suite - Partial/Empty Content (TEST-LOADE
 
     // Verify no unexpected items were stored (e.g., events)
     expect(mockRegistry.getAll('events')).toEqual([]); // Check the specific type isn't populated
-    expect(mockRegistry.getAll('entities')).toEqual([]); // Check the specific type isn't populated
+    expect(mockRegistry.getAll('entity_definitions')).toEqual([]); // Check the specific type isn't populated
 
     // Verify the summary log (logger.info) only lists counts for components, actions, and rules
     const infoCalls = mockLogger.info.mock.calls;
