@@ -62,7 +62,7 @@ class GameStateRestorer {
    * @returns {void}
    * @private
    */
-  _restoreEntity(savedEntityData) {
+  #restoreEntity(savedEntityData) {
     try {
       const restoredEntity =
         this.#entityManager.reconstructEntity(savedEntityData);
@@ -86,7 +86,7 @@ class GameStateRestorer {
    * @returns {{success: false, error: PersistenceError} | null} Failure object or null if validation passes.
    * @private
    */
-  _validateRestoreInput(data) {
+  #validateRestoreInput(data) {
     if (!data?.gameState) {
       const errorMsg =
         'Invalid save data structure provided (missing gameState).';
@@ -117,7 +117,7 @@ class GameStateRestorer {
    * @returns {{success: false, error: PersistenceError} | null} Failure object or null on success.
    * @private
    */
-  _clearEntities() {
+  #clearEntities() {
     try {
       this.#entityManager.clearAll();
       this.#logger.debug(
@@ -144,7 +144,7 @@ class GameStateRestorer {
    * @returns {void}
    * @private
    */
-  _restoreEntities(entitiesArray) {
+  #restoreEntities(entitiesArray) {
     const entitiesToRestore = entitiesArray;
     if (!Array.isArray(entitiesToRestore)) {
       this.#logger.warn(
@@ -159,7 +159,7 @@ class GameStateRestorer {
         );
         continue;
       }
-      this._restoreEntity(savedEntityData);
+      this.#restoreEntity(savedEntityData);
     }
     this.#logger.debug(
       'GameStateRestorer.restoreGameState: Entity restoration complete.'
@@ -174,7 +174,7 @@ class GameStateRestorer {
    * @returns {void}
    * @private
    */
-  _restorePlaytime(playtimeSeconds) {
+  #restorePlaytime(playtimeSeconds) {
     if (typeof playtimeSeconds === 'number') {
       try {
         this.#playtimeTracker.setAccumulatedPlaytime(playtimeSeconds);
@@ -203,7 +203,7 @@ class GameStateRestorer {
    * @returns {{success: true}}
    * @private
    */
-  _finalizeRestore() {
+  #finalizeRestore() {
     this.#logger.debug(
       'GameStateRestorer.restoreGameState: Skipping turn count restoration as TurnManager is restarted on load.'
     );
@@ -227,25 +227,25 @@ class GameStateRestorer {
       'GameStateRestorer.restoreGameState: Starting game state restoration...'
     );
 
-    let stepResult = this._validateRestoreInput(deserializedSaveData);
+    let stepResult = this.#validateRestoreInput(deserializedSaveData);
     if (!stepResult.success) return stepResult;
 
-    stepResult = this._clearEntities();
+    stepResult = this.#clearEntities();
     if (!stepResult.success) return stepResult;
 
     this.#logger.debug(
       'GameStateRestorer.restoreGameState: Restoring entities...'
     );
 
-    stepResult = this._restoreEntities(deserializedSaveData.gameState.entities);
+    stepResult = this.#restoreEntities(deserializedSaveData.gameState.entities);
     if (!stepResult.success) return stepResult;
 
-    stepResult = this._restorePlaytime(
+    stepResult = this.#restorePlaytime(
       deserializedSaveData.metadata?.playtimeSeconds
     );
     if (!stepResult.success) return stepResult;
 
-    stepResult = this._finalizeRestore();
+    stepResult = this.#finalizeRestore();
     if (!stepResult.success) return stepResult;
 
     return { success: true };
