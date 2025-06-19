@@ -1,7 +1,7 @@
 import { ISaveLoadService } from '../interfaces/ISaveLoadService.js';
 import GameStateSerializer from './gameStateSerializer.js';
 import SaveValidationService from './saveValidationService.js';
-import { buildManualFileName, manualSavePath } from '../utils/savePathUtils.js';
+import { getManualSavePath } from '../utils/savePathUtils.js';
 import SaveFileRepository from './saveFileRepository.js';
 import BaseService from '../utils/serviceBase.js';
 import { prepareState } from './savePreparation.js';
@@ -244,8 +244,7 @@ class SaveLoadService extends BaseService {
       );
     }
 
-    const fileName = buildManualFileName(saveName);
-    const filePath = manualSavePath(fileName);
+    const filePath = getManualSavePath(saveName);
 
     const dirResult = await this.#ensureSaveDirectory();
     if (!dirResult.success) {
