@@ -225,8 +225,8 @@ export class AwaitingActorDecisionState extends AbstractTurnState {
   /* --------------------------------------------------------------------- */
   async exitState(handler, nextState) {
     await super.exitState(handler, nextState);
-    const l = this._resolveLogger(this._getTurnContext());
-    l.debug(
+    const logger = this._resolveLogger(this._getTurnContext());
+    logger.debug(
       `${this.getStateName()}: ExitState cleanup (if any) specific to AwaitingActorDecisionState complete.`
     );
   }

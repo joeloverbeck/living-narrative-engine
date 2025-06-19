@@ -62,7 +62,7 @@ export class ProcessingWorkflow {
     const decisionMeta = turnCtx.getDecisionMeta?.() ?? {};
     await this._state._dispatchSpeech(turnCtx, actor, decisionMeta);
 
-    await this._processAction(turnCtx, actor, turnAction);
+    await this._executeActionWorkflow(turnCtx, actor, turnAction);
   }
 
   /**
@@ -178,7 +178,7 @@ export class ProcessingWorkflow {
    * @param {import('../interfaces/IActorTurnStrategy.js').ITurnAction} turnAction - Action to process.
    * @returns {Promise<void>} Resolves when processing completes.
    */
-  async _processAction(turnCtx, actor, turnAction) {
+  async _executeActionWorkflow(turnCtx, actor, turnAction) {
     try {
       await this._state._processCommandInternal(turnCtx, actor, turnAction);
     } catch (error) {
