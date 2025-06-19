@@ -56,4 +56,45 @@ describe('SaveFileRepository.parseManualSaveMetadata', () => {
     );
     expect(logger.debug).toHaveBeenCalled();
   });
+
+  it('marks file as corrupted when deserialization fails', async () => {
+    storageProvider.readFile.mockResolvedValue(new Uint8Array([1]));
+    serializer.decompress = jest
+      .fn()
+      .mockReturnValue({ success: false, error: 'bad' });
+
+    const result = await repo.parseManualSaveMetadata('manual_save_Bad.sav');
+
+    expect(result).toEqual({
+      metadata: {
+        identifier: manualSavePath('manual_save_Bad.sav'),
+        saveName: 'Bad (Corrupted)',
+        timestamp: 'N/A',
+        playtimeSeconds: 0,
+      },
+      isCorrupted: true,
+    });
+  });
+
+  it('flags missing metadata section', async () => {
+    storageProvider.readFile.mockResolvedValue(new Uint8Array([1]));
+    serializer.decompress = jest
+      .fn()
+      .mockReturnValue({ success: true, data: new Uint8Array([2]) });
+    serializer.deserialize = jest
+      .fn()
+      .mockReturnValue({ success: true, data: {} });
+
+    const result = await repo.parseManualSaveMetadata('manual_save_NoMeta.sav');
+
+    expect(result).toEqual({
+      metadata: {
+        identifier: manualSavePath('manual_save_NoMeta.sav'),
+        saveName: 'NoMeta (No Metadata)',
+        timestamp: 'N/A',
+        playtimeSeconds: 0,
+      },
+      isCorrupted: true,
+    });
+  });
 });
