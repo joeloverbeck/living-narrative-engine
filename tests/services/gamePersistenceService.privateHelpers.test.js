@@ -57,35 +57,43 @@ describe('GamePersistenceService private helpers', () => {
     context = makeService();
   });
 
-  it('_validateRestoreData fails when gameState missing', () => {
-    const res = context.restorer._validateRestoreData({});
+  it('_validateRestoreInput fails when gameState missing', () => {
+    const res = context.restorer._validateRestoreInput({});
     expect(res.success).toBe(false);
   });
 
-  it('_validateRestoreData passes with required fields', () => {
-    const res = context.restorer._validateRestoreData({ gameState: {} });
-    expect(res).toBeNull();
+  it('_validateRestoreInput passes with required fields', () => {
+    const res = context.restorer._validateRestoreInput({ gameState: {} });
+    expect(res.success).toBe(true);
   });
 
-  it('_clearExistingEntities returns failure on exception', () => {
+  it('_clearEntities returns failure on exception', () => {
     context.entityManager.clearAll.mockImplementation(() => {
       throw new Error('x');
     });
-    const res = context.restorer._clearExistingEntities();
+    const res = context.restorer._clearEntities();
     expect(res.success).toBe(false);
   });
 
   it('_restoreEntities skips invalid data and restores valid', () => {
     const valid = { instanceId: 'e1', definitionId: 'd1', components: {} };
-    context.restorer._restoreEntities([valid, {}]);
+    const res = context.restorer._restoreEntities([valid, {}]);
     expect(context.entityManager.reconstructEntity).toHaveBeenCalledWith(valid);
     expect(context.entityManager.reconstructEntity).toHaveBeenCalledTimes(1);
+    expect(res.success).toBe(true);
   });
 
   it('_restorePlaytime handles missing value', () => {
-    context.restorer._restorePlaytime();
+    const res = context.restorer._restorePlaytime();
     expect(context.playtimeTracker.setAccumulatedPlaytime).toHaveBeenCalledWith(
       0
     );
+    expect(res.success).toBe(true);
+  });
+
+  it('_finalizeRestore logs completion', () => {
+    const res = context.restorer._finalizeRestore();
+    expect(context.logger.debug).toHaveBeenCalled();
+    expect(res.success).toBe(true);
   });
 });

@@ -1,7 +1,10 @@
 // src/persistence/gameStateRestorer.js
 
 import { setupService } from '../utils/serviceInitializerUtils.js';
-import { createPersistenceFailure } from '../utils/persistenceResultUtils.js';
+import {
+  createPersistenceFailure,
+  createPersistenceSuccess,
+} from '../utils/persistenceResultUtils.js';
 import {
   PersistenceError,
   PersistenceErrorCodes,
@@ -83,7 +86,7 @@ class GameStateRestorer {
    * @returns {{success: false, error: PersistenceError} | null} Failure object or null if validation passes.
    * @private
    */
-  _validateRestoreData(data) {
+  _validateRestoreInput(data) {
     if (!data?.gameState) {
       const errorMsg =
         'Invalid save data structure provided (missing gameState).';
@@ -105,7 +108,7 @@ class GameStateRestorer {
         'PlaytimeTracker not available.'
       );
     }
-    return null;
+    return createPersistenceSuccess(null);
   }
 
   /**
@@ -114,13 +117,13 @@ class GameStateRestorer {
    * @returns {{success: false, error: PersistenceError} | null} Failure object or null on success.
    * @private
    */
-  _clearExistingEntities() {
+  _clearEntities() {
     try {
       this.#entityManager.clearAll();
       this.#logger.debug(
         'GameStateRestorer.restoreGameState: Existing entity state cleared.'
       );
-      return null;
+      return createPersistenceSuccess(null);
     } catch (error) {
       const errorMsg = `Failed to clear existing entity state: ${error.message}`;
       this.#logger.error(
@@ -147,7 +150,7 @@ class GameStateRestorer {
       this.#logger.warn(
         'GameStateRestorer.restoreGameState: entitiesToRestore is not an array. No entities will be restored.'
       );
-      return;
+      return createPersistenceSuccess(null);
     }
     for (const savedEntityData of entitiesToRestore) {
       if (!savedEntityData?.instanceId || !savedEntityData?.definitionId) {
@@ -161,6 +164,7 @@ class GameStateRestorer {
     this.#logger.debug(
       'GameStateRestorer.restoreGameState: Entity restoration complete.'
     );
+    return createPersistenceSuccess(null);
   }
 
   /**
@@ -190,6 +194,26 @@ class GameStateRestorer {
       );
       this.#playtimeTracker.setAccumulatedPlaytime(0);
     }
+    return createPersistenceSuccess(null);
+  }
+
+  /**
+   * Finalizes the restore process. Currently just logs completion.
+   *
+   * @returns {{success: true}}
+   * @private
+   */
+  _finalizeRestore() {
+    this.#logger.debug(
+      'GameStateRestorer.restoreGameState: Skipping turn count restoration as TurnManager is restarted on load.'
+    );
+    this.#logger.debug(
+      'GameStateRestorer.restoreGameState: Placeholder for PlayerState/WorldState restoration.'
+    );
+    this.#logger.debug(
+      'GameStateRestorer.restoreGameState: Game state restoration process complete.'
+    );
+    return createPersistenceSuccess(null);
   }
 
   /**
@@ -203,28 +227,27 @@ class GameStateRestorer {
       'GameStateRestorer.restoreGameState: Starting game state restoration...'
     );
 
-    const validationError = this._validateRestoreData(deserializedSaveData);
-    if (validationError) return validationError;
+    let stepResult = this._validateRestoreInput(deserializedSaveData);
+    if (!stepResult.success) return stepResult;
 
-    const clearingResult = this._clearExistingEntities();
-    if (clearingResult) return clearingResult;
+    stepResult = this._clearEntities();
+    if (!stepResult.success) return stepResult;
 
     this.#logger.debug(
       'GameStateRestorer.restoreGameState: Restoring entities...'
     );
 
-    this._restoreEntities(deserializedSaveData.gameState.entities);
-    this._restorePlaytime(deserializedSaveData.metadata?.playtimeSeconds);
+    stepResult = this._restoreEntities(deserializedSaveData.gameState.entities);
+    if (!stepResult.success) return stepResult;
 
-    this.#logger.debug(
-      'GameStateRestorer.restoreGameState: Skipping turn count restoration as TurnManager is restarted on load.'
+    stepResult = this._restorePlaytime(
+      deserializedSaveData.metadata?.playtimeSeconds
     );
-    this.#logger.debug(
-      'GameStateRestorer.restoreGameState: Placeholder for PlayerState/WorldState restoration.'
-    );
-    this.#logger.debug(
-      'GameStateRestorer.restoreGameState: Game state restoration process complete.'
-    );
+    if (!stepResult.success) return stepResult;
+
+    stepResult = this._finalizeRestore();
+    if (!stepResult.success) return stepResult;
+
     return { success: true };
   }
 }
