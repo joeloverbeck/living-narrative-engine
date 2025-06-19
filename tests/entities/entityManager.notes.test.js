@@ -8,12 +8,15 @@
 import Ajv from 'ajv';
 import addFormats from 'ajv-formats';
 import EntityManager from '../../src/entities/entityManager.js';
-import EntityDefinition from '../../src/entities/entityDefinition.js';
+import EntityDefinition from '../../src/entities/EntityDefinition.js';
 import {
   ACTOR_COMPONENT_ID,
   NOTES_COMPONENT_ID,
+  SHORT_TERM_MEMORY_COMPONENT_ID,
+  GOALS_COMPONENT_ID,
 } from '../../src/constants/componentIds.js';
 import { beforeEach, describe, expect, jest, test } from '@jest/globals';
+import { deepClone } from '../../src/utils';
 
 // -----------------------------
 // Inlined core:notes schema (from the ticket):
@@ -80,16 +83,17 @@ describe('EntityManager - core:notes injection', () => {
 
     // Stubbed ISchemaValidator:
     validatorMock = {
-      validate: jest.fn((componentTypeId, data) => {
+      validate: jest.fn((componentTypeId, dataToValidate) => {
         if (componentTypeId === NOTES_COMPONENT_ID) {
-          const isValid = validateCoreNotes(data);
+          const isValid = validateCoreNotes(dataToValidate);
           return {
             isValid,
             errors: isValid ? null : validateCoreNotes.errors,
+            validatedData: isValid ? deepClone(dataToValidate) : null,
           };
         }
-        // All other components are assumed valid
-        return { isValid: true, errors: null };
+        // For all other components, assume validation passes and provide cloned data.
+        return { isValid: true, errors: null, validatedData: deepClone(dataToValidate) };
       }),
     };
 
@@ -116,7 +120,6 @@ describe('EntityManager - core:notes injection', () => {
       registryMock,
       validatorMock,
       loggerMock,
-      spatialIndexMock,
       mockEventDispatcher
     );
   });
@@ -154,10 +157,18 @@ describe('EntityManager - core:notes injection', () => {
     expect(registryMock.getEntityDefinition).toHaveBeenCalledWith(definitionId);
     expect(created).not.toBeNull();
 
-    // Ensure validator.validate was called for the explicit notes
-    expect(validatorMock.validate).toHaveBeenCalledWith(NOTES_COMPONENT_ID, {
-      notes: explicitNotes,
-    });
+    // EntityManager validates injected default components (STM, Goals), but not those from definition (Notes)
+    expect(validatorMock.validate).toHaveBeenCalledWith(
+      SHORT_TERM_MEMORY_COMPONENT_ID,
+      { thoughts: [], maxEntries: 10 } // Default STM data
+    );
+    expect(validatorMock.validate).toHaveBeenCalledWith(
+      GOALS_COMPONENT_ID,
+      { goals: [] } // Default Goals data
+    );
+    // Ensure validator was called only for STM and Goals, not for the explicit notes from definition
+    expect(validatorMock.validate).toHaveBeenCalledTimes(2);
+
     expect(loggerMock.error).not.toHaveBeenCalled();
 
     // Confirm that the entity actually carries the same notes
@@ -187,10 +198,21 @@ describe('EntityManager - core:notes injection', () => {
     expect(registryMock.getEntityDefinition).toHaveBeenCalledWith(definitionId);
     expect(created).not.toBeNull();
 
-    // Validator should have been called for the injected default notes
+    // Validator should have been called for the injected default notes, STM, and Goals
     expect(validatorMock.validate).toHaveBeenCalledWith(NOTES_COMPONENT_ID, {
-      notes: [],
+      notes: [], // Default injected notes
     });
+    expect(validatorMock.validate).toHaveBeenCalledWith(
+      SHORT_TERM_MEMORY_COMPONENT_ID,
+      { thoughts: [], maxEntries: 10 } // Default STM data
+    );
+    expect(validatorMock.validate).toHaveBeenCalledWith(
+      GOALS_COMPONENT_ID,
+      { goals: [] } // Default Goals data
+    );
+    // Ensure validator was called for notes, STM, and Goals
+    expect(validatorMock.validate).toHaveBeenCalledTimes(3);
+
     expect(loggerMock.error).not.toHaveBeenCalled();
 
     // The entity should have a "core:notes" component with an empty array

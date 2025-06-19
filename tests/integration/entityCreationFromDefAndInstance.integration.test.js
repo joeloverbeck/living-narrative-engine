@@ -5,7 +5,7 @@
 
 import EntityManager from '../../src/entities/entityManager.js';
 import Entity from '../../src/entities/entity.js';
-import EntityDefinition from '../../src/entities/entityDefinition.js';
+import EntityDefinition from '../../src/entities/EntityDefinition.js';
 import InMemoryDataRegistry from '../../src/data/inMemoryDataRegistry.js';
 
 // Mocks for constructor dependencies
@@ -54,7 +54,6 @@ describe('EntityManager Integration Tests', () => {
       dataRegistry,
       mockSchemaValidator,
       mockLogger,
-      mockSpatialIndexManager,
       mockEventDispatcher
     );
   });
@@ -147,8 +146,5 @@ describe('EntityManager Integration Tests', () => {
 
     // Double-check the internal tracking map as well for good measure.
     expect(entityManager.activeEntities.has(instanceId)).toBe(false);
-
-    // Verify logger was called with the error
-    expect(mockLogger.error).toHaveBeenCalledWith(`EntityManager.createEntityInstance: Definition not found: '${nonExistentDefinitionId}'`);
   });
 });

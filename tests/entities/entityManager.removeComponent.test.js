@@ -11,9 +11,10 @@ import {
 import EntityManager from '../../src/entities/entityManager.js';
 // Entity import might not be directly needed if we only interact via EntityManager
 // import Entity from '../../src/entities/entity.js';
-import EntityDefinition from '../../src/entities/entityDefinition.js';
+import EntityDefinition from '../../src/entities/EntityDefinition.js';
 import { POSITION_COMPONENT_ID } from '../../src/constants/componentIds.js';
-import { EntityNotFoundError } from '../../src/errors/entityNotFoundError';
+import { EntityNotFoundError } from '../../src/errors/entityNotFoundError.js';
+import { COMPONENT_REMOVED_ID } from '../../src/constants/eventIds.js'; // Added import
 
 // --- Mock Implementations ---
 const createMockDataRegistry = () => ({
@@ -100,6 +101,7 @@ describe('EntityManager.removeComponent', () => {
     mockValidator.validate.mockClear(); // Potentially called during injectDefaultComponents
     mockSpatialIndex.addEntity.mockClear();
     mockLogger.info.mockClear();
+    mockEventDispatcher.dispatch.mockClear(); // Clear after entity creation
   };
 
   beforeEach(() => {
@@ -112,7 +114,6 @@ describe('EntityManager.removeComponent', () => {
       mockRegistry,
       mockValidator,
       mockLogger,
-      mockSpatialIndex,
       mockEventDispatcher
     );
     jest.clearAllMocks(); // Clear mocks before each test setup
@@ -124,7 +125,7 @@ describe('EntityManager.removeComponent', () => {
     jest.clearAllMocks(); // Clear all mocks after each test
   });
 
-  it('Success Case (Remove Non-Position Component): should remove component, return true, and NOT call spatial index remove', () => {
+  it('Success Case (Remove Non-Position Component): should remove component, return true, dispatch event, and NOT expect direct spatial index call', () => {
     // Setup: NAME as override, HEALTH as override (or on def, but override for this test ensures it exists if needed)
     // Definition is empty for this test's specific needs regarding NAME.
     setupBaseEntity(
@@ -134,6 +135,9 @@ describe('EntityManager.removeComponent', () => {
       },
       {} // No components on definition relevant to removal test for NAME
     );
+    const entityInstance = entityManager.getEntityInstance(MOCK_INSTANCE_ID);
+    expect(entityInstance).toBeDefined();
+
     expect(
       entityManager.hasComponent(MOCK_INSTANCE_ID, COMPONENT_TYPE_ID_NAME, true)
     ).toBe(true); // From override
@@ -154,15 +158,24 @@ describe('EntityManager.removeComponent', () => {
       entityManager.hasComponent(MOCK_INSTANCE_ID, COMPONENT_TYPE_ID_HEALTH)
     ).toBe(true); // HEALTH override still there
 
-    expect(mockSpatialIndex.removeEntity).not.toHaveBeenCalled();
+    expect(mockSpatialIndex.removeEntity).not.toHaveBeenCalled(); // Still valid as non-position shouldn't affect it
+
+    expect(mockEventDispatcher.dispatch).toHaveBeenCalledTimes(1);
+    expect(mockEventDispatcher.dispatch).toHaveBeenCalledWith(
+      COMPONENT_REMOVED_ID,
+      { entity: entityInstance, componentTypeId: COMPONENT_TYPE_ID_NAME }
+    );
+
     expect(mockLogger.error).not.toHaveBeenCalled();
     expect(mockLogger.warn).not.toHaveBeenCalled();
+    const debugCalls = mockLogger.debug.mock.calls.filter(call => call[0].startsWith('EntityManager.removeComponent: Component override'));
+    expect(debugCalls.length).toBe(1);
     expect(mockLogger.debug).toHaveBeenCalledWith(
       `EntityManager.removeComponent: Component override '${COMPONENT_TYPE_ID_NAME}' removed from entity '${MOCK_INSTANCE_ID}'.`
     );
   });
 
-  it('Success Case (Remove Position Component): should remove component, return true, and call spatial index remove with old locationId', () => {
+  it('Success Case (Remove Position Component): should remove component, return true, and dispatch COMPONENT_REMOVED_ID event', () => {
     setupBaseEntity(
       {
         [POSITION_COMPONENT_ID]: { ...POSITION_DATA_WITH_LOCATION },
@@ -170,6 +183,9 @@ describe('EntityManager.removeComponent', () => {
       },
       {}
     );
+    const entityInstance = entityManager.getEntityInstance(MOCK_INSTANCE_ID);
+    expect(entityInstance).toBeDefined();
+
     expect(
       entityManager.hasComponent(MOCK_INSTANCE_ID, POSITION_COMPONENT_ID, true)
     ).toBe(true);
@@ -191,27 +207,43 @@ describe('EntityManager.removeComponent', () => {
       entityManager.hasComponent(MOCK_INSTANCE_ID, COMPONENT_TYPE_ID_NAME, true)
     ).toBe(true);
 
-    expect(mockSpatialIndex.removeEntity).toHaveBeenCalledTimes(1);
-    expect(mockSpatialIndex.removeEntity).toHaveBeenCalledWith(
-      MOCK_INSTANCE_ID,
-      TEST_LOCATION_ID
+    // Removed spatial index direct call checks
+    // expect(mockSpatialIndex.removeEntity).toHaveBeenCalledTimes(1);
+    // expect(mockSpatialIndex.removeEntity).toHaveBeenCalledWith(
+    //   MOCK_INSTANCE_ID,
+    //   TEST_LOCATION_ID
+    // );
+
+    expect(mockEventDispatcher.dispatch).toHaveBeenCalledTimes(1);
+    expect(mockEventDispatcher.dispatch).toHaveBeenCalledWith(
+      COMPONENT_REMOVED_ID,
+      { entity: entityInstance, componentTypeId: POSITION_COMPONENT_ID }
     );
 
     expect(mockLogger.error).not.toHaveBeenCalled();
     expect(mockLogger.warn).not.toHaveBeenCalled();
-    expect(mockLogger.debug).toHaveBeenCalledWith(
-      `EntityManager.removeComponent: Component override '${POSITION_COMPONENT_ID}' removed from entity '${MOCK_INSTANCE_ID}'.`
+    
+    // Check for the generic component removal log
+    const genericLogCall = mockLogger.debug.mock.calls.find(call => 
+      call[0] === `EntityManager.removeComponent: Component override '${POSITION_COMPONENT_ID}' removed from entity '${MOCK_INSTANCE_ID}'.`
     );
-    expect(mockLogger.debug).toHaveBeenCalledWith(
-      `EntityManager.removeComponent: Entity '${MOCK_INSTANCE_ID}' removed from spatial index (based on old override location '${TEST_LOCATION_ID}') due to ${POSITION_COMPONENT_ID} override removal.`
+    expect(genericLogCall).toBeDefined();
+
+    // Ensure the specific spatial index log is NOT present
+    const spatialIndexLogCall = mockLogger.debug.mock.calls.find(call =>
+      call[0].includes('removed from spatial index')
     );
+    expect(spatialIndexLogCall).toBeUndefined();
   });
 
-  it('Success Case (Remove Position Component - No locationId): should remove component, return true, and NOT call spatial index remove', () => {
+  it('Success Case (Remove Position Component - No locationId): should remove component, return true, dispatch event, and NOT expect direct spatial index call', () => {
     setupBaseEntity(
       { [POSITION_COMPONENT_ID]: { ...POSITION_DATA_NO_LOCATION } },
       {}
     );
+    const entityInstance = entityManager.getEntityInstance(MOCK_INSTANCE_ID);
+    expect(entityInstance).toBeDefined();
+
     expect(
       entityManager.hasComponent(MOCK_INSTANCE_ID, POSITION_COMPONENT_ID, true)
     ).toBe(true);
@@ -230,28 +262,42 @@ describe('EntityManager.removeComponent', () => {
       entityManager.hasComponent(MOCK_INSTANCE_ID, POSITION_COMPONENT_ID, true)
     ).toBe(false);
 
-    expect(mockSpatialIndex.removeEntity).toHaveBeenCalledTimes(0);
+    expect(mockSpatialIndex.removeEntity).toHaveBeenCalledTimes(0); // This was already 0, still valid
 
-    expect(mockLogger.debug).toHaveBeenCalledWith(
-      `EntityManager.removeComponent: Component override '${POSITION_COMPONENT_ID}' removed from entity '${MOCK_INSTANCE_ID}'.`
+    expect(mockEventDispatcher.dispatch).toHaveBeenCalledTimes(1);
+    expect(mockEventDispatcher.dispatch).toHaveBeenCalledWith(
+      COMPONENT_REMOVED_ID,
+      { entity: entityInstance, componentTypeId: POSITION_COMPONENT_ID }
     );
-    expect(mockLogger.debug).toHaveBeenCalledWith(
-      `EntityManager.removeComponent: Entity '${MOCK_INSTANCE_ID}' (position component override removed). Old override location was 'undefined', so not explicitly removed from spatial index by that location.`
+    
+    // Check for the generic component removal log
+    const genericLogCall = mockLogger.debug.mock.calls.find(call => 
+      call[0] === `EntityManager.removeComponent: Component override '${POSITION_COMPONENT_ID}' removed from entity '${MOCK_INSTANCE_ID}'.`
     );
+    expect(genericLogCall).toBeDefined();
+
+    // Ensure the specific log about 'undefined' location is NOT present as a separate call (or adjust if it's part of the generic one)
+    const specificUndefinedLogCall = mockLogger.debug.mock.calls.find(call =>
+      call[0].includes("Old override location was 'undefined'")
+    );
+    expect(specificUndefinedLogCall).toBeUndefined();
   });
 
-  it('Success Case (Remove Position Component - Null locationId): should remove component, return true, and call spatial index remove with null locationId', () => {
+  it('Success Case (Remove Position Component - Null locationId): should remove component, return true, and dispatch COMPONENT_REMOVED_ID event', () => {
     setupBaseEntity(
       { [POSITION_COMPONENT_ID]: { ...POSITION_DATA_NULL_LOCATION } },
       {}
     );
+    const entityInstance = entityManager.getEntityInstance(MOCK_INSTANCE_ID);
+    expect(entityInstance).toBeDefined();
+
     expect(
       entityManager.hasComponent(MOCK_INSTANCE_ID, POSITION_COMPONENT_ID, true)
     ).toBe(true);
     expect(
       entityManager.getComponentData(MOCK_INSTANCE_ID, POSITION_COMPONENT_ID)
         ?.locationId
-    ).toBeNull();
+    ).toBe(null);
 
     const result = entityManager.removeComponent(
       MOCK_INSTANCE_ID,
@@ -263,62 +309,95 @@ describe('EntityManager.removeComponent', () => {
       entityManager.hasComponent(MOCK_INSTANCE_ID, POSITION_COMPONENT_ID, true)
     ).toBe(false);
 
-    expect(mockSpatialIndex.removeEntity).toHaveBeenCalledTimes(1);
-    expect(mockSpatialIndex.removeEntity).toHaveBeenCalledWith(
-      MOCK_INSTANCE_ID,
-      null
+    // Removed spatial index direct call checks
+    // expect(mockSpatialIndex.removeEntity).toHaveBeenCalledTimes(1);
+    // expect(mockSpatialIndex.removeEntity).toHaveBeenCalledWith(
+    //   MOCK_INSTANCE_ID,
+    //   null
+    // );
+
+    expect(mockEventDispatcher.dispatch).toHaveBeenCalledTimes(1);
+    expect(mockEventDispatcher.dispatch).toHaveBeenCalledWith(
+      COMPONENT_REMOVED_ID,
+      { entity: entityInstance, componentTypeId: POSITION_COMPONENT_ID }
     );
-    expect(mockLogger.debug).toHaveBeenCalledWith(
-      `EntityManager.removeComponent: Component override '${POSITION_COMPONENT_ID}' removed from entity '${MOCK_INSTANCE_ID}'.`
+    
+    expect(mockLogger.error).not.toHaveBeenCalled();
+    expect(mockLogger.warn).not.toHaveBeenCalled();
+
+    // Check for the generic component removal log
+    const genericLogCall = mockLogger.debug.mock.calls.find(call => 
+      call[0] === `EntityManager.removeComponent: Component override '${POSITION_COMPONENT_ID}' removed from entity '${MOCK_INSTANCE_ID}'.`
     );
-    expect(mockLogger.debug).toHaveBeenCalledWith(
-      `EntityManager.removeComponent: Entity '${MOCK_INSTANCE_ID}' removed from spatial index (based on old override location 'null') due to ${POSITION_COMPONENT_ID} override removal.`
+    expect(genericLogCall).toBeDefined();
+    
+    // Ensure the specific spatial index log is NOT present
+    const spatialIndexLogCall = mockLogger.debug.mock.calls.find(call =>
+      call[0].includes('removed from spatial index') 
     );
+    expect(spatialIndexLogCall).toBeUndefined();
   });
 
-  it('Failure Case (Component Not Found on Entity - exists on definition but not instance)', () => {
-    // Setup: NAME on definition, HEALTH as override. No NAME override.
+  it('Failure Case (Component Not Found - Override): should return false, NOT dispatch event, and log debug if component override does not exist', () => {
+    // Setup: NAME on definition, HEALTH as override. Try to remove NAME.
+    // removeComponent only acts on overrides. So if NAME is not an override, it logs and returns false.
     setupBaseEntity(
-      { [COMPONENT_TYPE_ID_HEALTH]: { ...COMPONENT_DATA_HEALTH } },
-      { [COMPONENT_TYPE_ID_NAME]: { ...COMPONENT_DATA_NAME } } // Name is on definition
+      { [COMPONENT_TYPE_ID_HEALTH]: { ...COMPONENT_DATA_HEALTH } }, // HEALTH is an override
+      { [COMPONENT_TYPE_ID_NAME]: { ...COMPONENT_DATA_NAME } } // NAME is on the definition
     );
-    expect(
-      entityManager.hasComponent(MOCK_INSTANCE_ID, COMPONENT_TYPE_ID_NAME, true)
-    ).toBe(false); // No override for NAME
+    const entityInstance = entityManager.getEntityInstance(MOCK_INSTANCE_ID);
+    expect(entityInstance).toBeDefined();
+
+    // Pre-check: NAME is present (from definition), but not as an override
     expect(
       entityManager.hasComponent(MOCK_INSTANCE_ID, COMPONENT_TYPE_ID_NAME)
-    ).toBe(true); // Exists due to definition
+    ).toBe(true);
+    expect(
+      entityManager.hasComponent(MOCK_INSTANCE_ID, COMPONENT_TYPE_ID_NAME, true)
+    ).toBe(false); // Not an override
 
     const result = entityManager.removeComponent(
       MOCK_INSTANCE_ID,
-      COMPONENT_TYPE_ID_NAME
+      COMPONENT_TYPE_ID_NAME // Attempting to remove NAME (which is not an override)
     );
 
-    expect(result).toBe(false); // No override to remove
+    expect(result).toBe(false);
     expect(
       entityManager.hasComponent(MOCK_INSTANCE_ID, COMPONENT_TYPE_ID_NAME)
-    ).toBe(true); // Still true from definition
+    ).toBe(true); // NAME (from definition) should still be there
     expect(mockSpatialIndex.removeEntity).not.toHaveBeenCalled();
-    expect(mockLogger.debug).toHaveBeenCalledWith(
-      `EntityManager.removeComponent: Component '${COMPONENT_TYPE_ID_NAME}' not found as an override on entity '${MOCK_INSTANCE_ID}'. Nothing to remove at instance level.`
+    expect(mockEventDispatcher.dispatch).not.toHaveBeenCalled();
+    expect(mockLogger.debug).toHaveBeenCalledWith( // Changed from info to debug
+      `EntityManager.removeComponent: Component '${COMPONENT_TYPE_ID_NAME}' not found as an override on entity '${MOCK_INSTANCE_ID}'. Nothing to remove at instance level.` // Updated message
     );
   });
 
-  it('Failure Case (Component Not Found Anywhere)', () => {
-    setupBaseEntity({}, {}); // No components anywhere
+  it('Failure Case (Component Not Found - Definition): should return false, NOT dispatch event, and log debug if component does not exist on definition (and no override)', () => {
+    // Setup: Entity has HEALTH as override. Try to remove NON_EXISTENT component.
+    setupBaseEntity(
+      { [COMPONENT_TYPE_ID_HEALTH]: { ...COMPONENT_DATA_HEALTH } }, // HEALTH is an override
+      {} // No components on definition for this test
+    );
+    const entityInstance = entityManager.getEntityInstance(MOCK_INSTANCE_ID);
+    expect(entityInstance).toBeDefined();
+
+    expect(
+      entityManager.hasComponent(MOCK_INSTANCE_ID, COMPONENT_TYPE_ID_NON_EXISTENT)
+    ).toBe(false); // NON_EXISTENT is not there at all
+
     const result = entityManager.removeComponent(
       MOCK_INSTANCE_ID,
       COMPONENT_TYPE_ID_NON_EXISTENT
     );
+
     expect(result).toBe(false);
-    expect(mockSpatialIndex.removeEntity).not.toHaveBeenCalled();
-    expect(mockLogger.debug).toHaveBeenCalledWith(
-      `EntityManager.removeComponent: Component '${COMPONENT_TYPE_ID_NON_EXISTENT}' not found as an override on entity '${MOCK_INSTANCE_ID}'. Nothing to remove at instance level.`
+    expect(mockEventDispatcher.dispatch).not.toHaveBeenCalled();
+    expect(mockLogger.debug).toHaveBeenCalledWith( // Changed from info to debug
+      `EntityManager.removeComponent: Component '${COMPONENT_TYPE_ID_NON_EXISTENT}' not found as an override on entity '${MOCK_INSTANCE_ID}'. Nothing to remove at instance level.` // Updated message
     );
   });
 
-  // --- FIXED TEST ---
-  it('Failure Case (Entity Not Found): should throw EntityNotFoundError', () => {
+  it('Failure Case (Entity Not Found): should throw EntityNotFoundError and NOT dispatch event', () => {
     const nonExistentInstanceId = 'ghost-instance-uuid';
 
     // Assert that the specific error is thrown
@@ -342,11 +421,10 @@ describe('EntityManager.removeComponent', () => {
       `EntityManager.removeComponent: Entity not found with ID: '${nonExistentInstanceId}'. Cannot remove component '${COMPONENT_TYPE_ID_NAME}'.`
     );
     expect(mockLogger.warn).not.toHaveBeenCalled();
-    expect(mockSpatialIndex.removeEntity).not.toHaveBeenCalled();
+    expect(mockEventDispatcher.dispatch).not.toHaveBeenCalled();
   });
 
-  // --- FIXED TEST ---
-  it('Failure Case (Invalid but existing-format Instance ID): should throw EntityNotFoundError', () => {
+  it('Failure Case (Invalid but existing-format Instance ID): should throw EntityNotFoundError, NOT dispatch event, and log error', () => {
     const invalidInstanceId = '###INVALID_ID###';
     mockLogger.warn.mockClear();
 
@@ -359,7 +437,7 @@ describe('EntityManager.removeComponent', () => {
     expect(mockLogger.error).toHaveBeenCalledWith(
       `EntityManager.removeComponent: Entity not found with ID: '${invalidInstanceId}'. Cannot remove component '${COMPONENT_TYPE_ID_NAME}'.`
     );
-    expect(mockSpatialIndex.removeEntity).not.toHaveBeenCalled();
+    expect(mockEventDispatcher.dispatch).not.toHaveBeenCalled();
   });
 
   it.each([
@@ -381,7 +459,7 @@ describe('EntityManager.removeComponent', () => {
         `EntityManager.removeComponent: Invalid componentTypeId: '${idStr}' for entity '${MOCK_INSTANCE_ID}'`
       );
       expect(mockLogger.debug).not.toHaveBeenCalled(); // Should not reach the "not found as override" debug log
-      expect(mockSpatialIndex.removeEntity).not.toHaveBeenCalled();
+      expect(mockEventDispatcher.dispatch).not.toHaveBeenCalled();
     }
   );
 });

@@ -9,10 +9,11 @@ import {
   afterEach,
 } from '@jest/globals';
 import EntityManager from '../../src/entities/entityManager.js';
-import EntityDefinition from '../../src/entities/entityDefinition.js';
+import EntityDefinition from '../../src/entities/EntityDefinition.js';
 // Entity import might not be needed if only interacting via EntityManager
 import { POSITION_COMPONENT_ID } from '../../src/constants/componentIds.js';
-import { EntityNotFoundError } from '../../src/errors/entityNotFoundError';
+import { EntityNotFoundError } from '../../src/errors/entityNotFoundError.js';
+import { COMPONENT_ADDED_ID } from '../../src/constants/eventIds.js';
 
 // --- Mock Implementations ---
 const createMockDataRegistry = () => ({
@@ -107,6 +108,7 @@ describe('EntityManager.addComponent', () => {
     mockSpatialIndex.updateEntityLocation.mockClear();
     mockLogger.info.mockClear();
     mockLogger.debug.mockClear();
+    mockEventDispatcher.dispatch.mockClear(); // Clear after entity creation
   };
 
   beforeEach(() => {
@@ -120,7 +122,6 @@ describe('EntityManager.addComponent', () => {
       mockRegistry,
       mockValidator,
       mockLogger,
-      mockSpatialIndex,
       mockEventDispatcher
     );
     jest.clearAllMocks();
@@ -135,11 +136,12 @@ describe('EntityManager.addComponent', () => {
     testEntityInstance = null;
   });
 
-  it('Success Case (New Component): should add a new component, return true, and NOT update spatial index', () => {
+  it('Success Case (New Component): should add a new component, return true, dispatch event, and NOT expect direct spatial index call', () => {
+    const dataToAdd = { ...NEW_COMPONENT_DATA };
     const result = entityManager.addComponent(
       MOCK_INSTANCE_ID,
       NEW_COMPONENT_TYPE_ID,
-      { ...NEW_COMPONENT_DATA }
+      dataToAdd
     );
 
     expect(result).toBe(true);
@@ -156,25 +158,33 @@ describe('EntityManager.addComponent', () => {
 
     expect(mockValidator.validate).toHaveBeenCalledWith(
       NEW_COMPONENT_TYPE_ID,
-      expect.any(Object)
+      expect.any(Object) // The exact object passed to validate is a clone
     );
     expect(mockSpatialIndex.updateEntityLocation).not.toHaveBeenCalled();
+
+    expect(mockEventDispatcher.dispatch).toHaveBeenCalledTimes(1);
+    expect(mockEventDispatcher.dispatch).toHaveBeenCalledWith(
+      COMPONENT_ADDED_ID,
+      { entity: testEntityInstance, componentTypeId: NEW_COMPONENT_TYPE_ID, componentData: dataToAdd }
+    );
+
     expect(mockLogger.debug).toHaveBeenCalledWith(
       `Successfully added/updated component '${NEW_COMPONENT_TYPE_ID}' data on entity '${MOCK_INSTANCE_ID}'.`
     );
   });
 
-  it('Success Case (Update Component): should update existing component data, return true, and NOT update spatial index', () => {
+  it('Success Case (Update Component): should update existing component data, return true, dispatch event, and NOT expect direct spatial index call', () => {
     const initialDataCheck = entityManager.getComponentData(
       MOCK_INSTANCE_ID,
       INITIAL_COMPONENT_TYPE_ID
     );
     expect(initialDataCheck).toEqual(INITIAL_COMPONENT_DATA); // Pre-condition
 
+    const dataToUpdate = { ...UPDATED_COMPONENT_DATA };
     const result = entityManager.addComponent(
       MOCK_INSTANCE_ID,
       INITIAL_COMPONENT_TYPE_ID,
-      { ...UPDATED_COMPONENT_DATA }
+      dataToUpdate
     );
 
     expect(result).toBe(true);
@@ -188,9 +198,16 @@ describe('EntityManager.addComponent', () => {
 
     expect(mockValidator.validate).toHaveBeenCalledWith(
       INITIAL_COMPONENT_TYPE_ID,
-      expect.any(Object)
+      expect.any(Object) // The exact object passed to validate is a clone
     );
     expect(mockSpatialIndex.updateEntityLocation).not.toHaveBeenCalled();
+
+    expect(mockEventDispatcher.dispatch).toHaveBeenCalledTimes(1);
+    expect(mockEventDispatcher.dispatch).toHaveBeenCalledWith(
+      COMPONENT_ADDED_ID,
+      { entity: testEntityInstance, componentTypeId: INITIAL_COMPONENT_TYPE_ID, componentData: dataToUpdate }
+    );
+
     expect(mockLogger.debug).toHaveBeenCalledWith(
       `Successfully added/updated component '${INITIAL_COMPONENT_TYPE_ID}' data on entity '${MOCK_INSTANCE_ID}'.`
     );
@@ -200,163 +217,172 @@ describe('EntityManager.addComponent', () => {
     beforeEach(() => {
       // For this nested describe, ensure entity is recreated without initial position,
       // so we are testing ADDING position component, not updating an existing one unless specified.
-      entityManager.activeEntities.clear(); // Clear entity from outer beforeEach
-      mockSpatialIndex.clearIndex();
+      entityManager.clearAll(); // Clears active entities AND definition cache
+      // mockSpatialIndex.clearIndex(); // Old, can be removed if not used by any test in this block
       jest.clearAllMocks(); // Clear mocks again for this specific context
       setupBaseEntity(false); // Entity with only 'core:name'
       mockValidator.validate.mockReturnValue({ isValid: true }); // Default to valid
+      mockEventDispatcher.dispatch.mockClear(); // Clear again after setup
     });
 
-    it('Success Case (Add Position Component): should add position, return true, and update spatial index with undefined oldLocationId', () => {
+    it('Success Case (Add Position Component): should add position, return true, and dispatch COMPONENT_ADDED_ID event', () => {
       expect(testEntityInstance.hasComponent(POSITION_COMPONENT_ID)).toBe(
         false
       );
-
+      const positionDataForEvent = { ...POSITION_DATA_NEW };
       const result = entityManager.addComponent(
         MOCK_INSTANCE_ID,
         POSITION_COMPONENT_ID,
-        { ...POSITION_DATA_NEW }
+        positionDataForEvent
       );
 
       expect(result).toBe(true);
       expect(
         entityManager.getComponentData(MOCK_INSTANCE_ID, POSITION_COMPONENT_ID)
       ).toEqual(POSITION_DATA_NEW);
-      expect(mockSpatialIndex.updateEntityLocation).toHaveBeenCalledWith(
-        MOCK_INSTANCE_ID,
-        undefined,
-        NEW_LOCATION_ID
+      
+      expect(mockEventDispatcher.dispatch).toHaveBeenCalledTimes(1);
+      expect(mockEventDispatcher.dispatch).toHaveBeenCalledWith(
+        COMPONENT_ADDED_ID,
+        { entity: testEntityInstance, componentTypeId: POSITION_COMPONENT_ID, componentData: positionDataForEvent }
       );
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        `Spatial index updated for entity '${MOCK_INSTANCE_ID}': old='undefined', new='${NEW_LOCATION_ID}'.`
+        `Successfully added/updated component '${POSITION_COMPONENT_ID}' data on entity '${MOCK_INSTANCE_ID}'.`
       );
     });
 
-    it('Success Case (Add Position Component - No LocationId): should add position, return true, update spatial index with undefined old/new locationId', () => {
+    it('Success Case (Add Position Component - No LocationId): should add position, return true, and dispatch COMPONENT_ADDED_ID event', () => {
+      const positionDataForEvent = { ...POSITION_DATA_NO_LOCATION };
       const result = entityManager.addComponent(
         MOCK_INSTANCE_ID,
         POSITION_COMPONENT_ID,
-        POSITION_DATA_NO_LOCATION
+        positionDataForEvent
       );
 
       expect(result).toBe(true);
       expect(
         entityManager.getComponentData(MOCK_INSTANCE_ID, POSITION_COMPONENT_ID)
       ).toEqual(POSITION_DATA_NO_LOCATION);
-      expect(mockSpatialIndex.updateEntityLocation).toHaveBeenCalledWith(
-        MOCK_INSTANCE_ID,
-        undefined,
-        undefined
+      
+      expect(mockEventDispatcher.dispatch).toHaveBeenCalledTimes(1);
+      expect(mockEventDispatcher.dispatch).toHaveBeenCalledWith(
+        COMPONENT_ADDED_ID,
+        { entity: testEntityInstance, componentTypeId: POSITION_COMPONENT_ID, componentData: positionDataForEvent }
       );
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        `Spatial index updated for entity '${MOCK_INSTANCE_ID}': old='undefined', new='undefined'.`
+        `Successfully added/updated component '${POSITION_COMPONENT_ID}' data on entity '${MOCK_INSTANCE_ID}'.`
       );
     });
 
-    it('Success Case (Add Position Component - Null LocationId): should add position, return true, update spatial index with undefined old and null new locationId', () => {
+    it('Success Case (Add Position Component - Null LocationId): should add position, return true, and dispatch COMPONENT_ADDED_ID event', () => {
+      const positionDataForEvent = { ...POSITION_DATA_NULL_LOCATION };
       const result = entityManager.addComponent(
         MOCK_INSTANCE_ID,
         POSITION_COMPONENT_ID,
-        POSITION_DATA_NULL_LOCATION
+        positionDataForEvent
       );
 
       expect(result).toBe(true);
       expect(
         entityManager.getComponentData(MOCK_INSTANCE_ID, POSITION_COMPONENT_ID)
       ).toEqual(POSITION_DATA_NULL_LOCATION);
-      expect(mockSpatialIndex.updateEntityLocation).toHaveBeenCalledWith(
-        MOCK_INSTANCE_ID,
-        undefined,
-        null
+      
+      expect(mockEventDispatcher.dispatch).toHaveBeenCalledTimes(1);
+      expect(mockEventDispatcher.dispatch).toHaveBeenCalledWith(
+        COMPONENT_ADDED_ID,
+        { entity: testEntityInstance, componentTypeId: POSITION_COMPONENT_ID, componentData: positionDataForEvent }
       );
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        `Spatial index updated for entity '${MOCK_INSTANCE_ID}': old='undefined', new='null'.`
+        `Successfully added/updated component '${POSITION_COMPONENT_ID}' data on entity '${MOCK_INSTANCE_ID}'.`
       );
     });
 
     describe('With Initial Position Component', () => {
       beforeEach(() => {
-        entityManager.clearAll();
-        mockSpatialIndex.clearIndex();
-        jest.clearAllMocks();
-        setupBaseEntity(true, POSITION_DATA_INITIAL);
+        entityManager.clearAll(); // Clears active entities AND definition cache
+        // mockSpatialIndex.clearIndex(); // Old
+        jest.clearAllMocks(); // Clears all mocks.
+        setupBaseEntity(true, POSITION_DATA_INITIAL); // Entity WITH 'position'.
         mockValidator.validate.mockReturnValue({ isValid: true });
+        mockEventDispatcher.dispatch.mockClear();
       });
 
-      it('Success Case (Update Position Component): should update position, return true, and update spatial index with old and new locationIds', () => {
+      it('Success Case (Update Position Component): should update position, return true, and dispatch COMPONENT_ADDED_ID event', () => {
+        expect(
+          entityManager.getComponentData(MOCK_INSTANCE_ID, POSITION_COMPONENT_ID)
+            ?.locationId
+        ).toBe(INITIAL_LOCATION_ID);
+
+        const positionDataForEvent = { ...POSITION_DATA_NEW };
         const result = entityManager.addComponent(
           MOCK_INSTANCE_ID,
           POSITION_COMPONENT_ID,
-          { ...POSITION_DATA_NEW }
+          positionDataForEvent
         );
 
         expect(result).toBe(true);
         expect(
-          entityManager.getComponentData(
-            MOCK_INSTANCE_ID,
-            POSITION_COMPONENT_ID
-          )
+          entityManager.getComponentData(MOCK_INSTANCE_ID, POSITION_COMPONENT_ID)
         ).toEqual(POSITION_DATA_NEW);
-        expect(mockSpatialIndex.updateEntityLocation).toHaveBeenCalledWith(
-          MOCK_INSTANCE_ID,
-          INITIAL_LOCATION_ID,
-          NEW_LOCATION_ID
+        
+        expect(mockEventDispatcher.dispatch).toHaveBeenCalledTimes(1);
+        expect(mockEventDispatcher.dispatch).toHaveBeenCalledWith(
+          COMPONENT_ADDED_ID,
+          { entity: testEntityInstance, componentTypeId: POSITION_COMPONENT_ID, componentData: positionDataForEvent }
         );
         expect(mockLogger.debug).toHaveBeenCalledWith(
-          `Spatial index updated for entity '${MOCK_INSTANCE_ID}': old='${INITIAL_LOCATION_ID}', new='${NEW_LOCATION_ID}'.`
+          `Successfully added/updated component '${POSITION_COMPONENT_ID}' data on entity '${MOCK_INSTANCE_ID}'.`
         );
       });
 
-      it('Success Case (Update Position Component - To Null LocationId): should update position, return true, update spatial index with old and null new locationId', () => {
+      it('Success Case (Update Position Component - To Null LocationId): should update position, return true, and dispatch COMPONENT_ADDED_ID event', () => {
+        const positionDataForEvent = { ...POSITION_DATA_NULL_LOCATION };
         const result = entityManager.addComponent(
           MOCK_INSTANCE_ID,
           POSITION_COMPONENT_ID,
-          { ...POSITION_DATA_NULL_LOCATION }
+          positionDataForEvent
         );
 
         expect(result).toBe(true);
         expect(
-          entityManager.getComponentData(
-            MOCK_INSTANCE_ID,
-            POSITION_COMPONENT_ID
-          )
+          entityManager.getComponentData(MOCK_INSTANCE_ID, POSITION_COMPONENT_ID)
         ).toEqual(POSITION_DATA_NULL_LOCATION);
-        expect(mockSpatialIndex.updateEntityLocation).toHaveBeenCalledWith(
-          MOCK_INSTANCE_ID,
-          INITIAL_LOCATION_ID,
-          null
+        
+        expect(mockEventDispatcher.dispatch).toHaveBeenCalledTimes(1);
+        expect(mockEventDispatcher.dispatch).toHaveBeenCalledWith(
+          COMPONENT_ADDED_ID,
+          { entity: testEntityInstance, componentTypeId: POSITION_COMPONENT_ID, componentData: positionDataForEvent }
         );
         expect(mockLogger.debug).toHaveBeenCalledWith(
-          `Spatial index updated for entity '${MOCK_INSTANCE_ID}': old='${INITIAL_LOCATION_ID}', new='null'.`
+          `Successfully added/updated component '${POSITION_COMPONENT_ID}' data on entity '${MOCK_INSTANCE_ID}'.`
         );
       });
 
-      it('Success Case (Update Position Component - To No LocationId): should update position, return true, update spatial index with old and undefined new locationId', () => {
+      it('Success Case (Update Position Component - To No LocationId): should update position, return true, and dispatch COMPONENT_ADDED_ID event', () => {
+        const positionDataForEvent = { ...POSITION_DATA_NO_LOCATION };
         const result = entityManager.addComponent(
           MOCK_INSTANCE_ID,
           POSITION_COMPONENT_ID,
-          { ...POSITION_DATA_NO_LOCATION }
+          positionDataForEvent
         );
+
         expect(result).toBe(true);
         expect(
-          entityManager.getComponentData(
-            MOCK_INSTANCE_ID,
-            POSITION_COMPONENT_ID
-          )
+          entityManager.getComponentData(MOCK_INSTANCE_ID, POSITION_COMPONENT_ID)
         ).toEqual(POSITION_DATA_NO_LOCATION);
-        expect(mockSpatialIndex.updateEntityLocation).toHaveBeenCalledWith(
-          MOCK_INSTANCE_ID,
-          INITIAL_LOCATION_ID,
-          undefined
+
+        expect(mockEventDispatcher.dispatch).toHaveBeenCalledTimes(1);
+        expect(mockEventDispatcher.dispatch).toHaveBeenCalledWith(
+          COMPONENT_ADDED_ID,
+          { entity: testEntityInstance, componentTypeId: POSITION_COMPONENT_ID, componentData: positionDataForEvent }
         );
         expect(mockLogger.debug).toHaveBeenCalledWith(
-          `Spatial index updated for entity '${MOCK_INSTANCE_ID}': old='${INITIAL_LOCATION_ID}', new='undefined'.`
+          `Successfully added/updated component '${POSITION_COMPONENT_ID}' data on entity '${MOCK_INSTANCE_ID}'.`
         );
       });
     });
   });
 
-  // --- FIXED TEST ---
   it('Failure Case (Entity Not Found): should throw EntityNotFoundError and log error', () => {
     const nonExistentInstanceId = 'ghost-instance-uuid';
     const componentTypeId = 'core:health';
@@ -380,9 +406,10 @@ describe('EntityManager.addComponent', () => {
       { instanceId: nonExistentInstanceId, componentTypeId: componentTypeId }
     );
     expect(mockValidator.validate).not.toHaveBeenCalled();
+    expect(mockEventDispatcher.dispatch).not.toHaveBeenCalled();
   });
 
-  it('Failure Case (Validation Fails): should throw Error, log error with details, NOT add/update component, and NOT update spatial index', () => {
+  it('Failure Case (Validation Fails): should throw Error, log error with details, NOT add/update component, and NOT dispatch event', () => {
     const validationErrors = [
       { field: 'data.current', message: 'must be a number' },
     ];
@@ -418,10 +445,12 @@ describe('EntityManager.addComponent', () => {
       NEW_COMPONENT_TYPE_ID,
       expect.any(Object)
     );
+    expect(mockEventDispatcher.dispatch).not.toHaveBeenCalled();
+    // Ensure spatial index was not updated
     expect(mockSpatialIndex.updateEntityLocation).not.toHaveBeenCalled();
   });
 
-  it('Failure Case (Validation Fails - Position): should throw, log, NOT add/update, and NOT update spatial index', () => {
+  it('Failure Case (Validation Fails - Position): should throw, log, NOT add/update, NOT dispatch event, and NOT update spatial index', () => {
     const validationErrors = [
       { field: 'data.locationId', message: 'must be a string' },
     ];
@@ -456,6 +485,7 @@ describe('EntityManager.addComponent', () => {
       POSITION_COMPONENT_ID,
       expect.any(Object)
     );
+    expect(mockEventDispatcher.dispatch).not.toHaveBeenCalled();
     expect(mockSpatialIndex.updateEntityLocation).not.toHaveBeenCalled();
   });
 });

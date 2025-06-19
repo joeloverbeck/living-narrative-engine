@@ -2,7 +2,7 @@
 
 import EntityManager from '../../src/entities/entityManager.js';
 import Entity from '../../src/entities/entity.js';
-import EntityDefinition from '../../src/entities/entityDefinition.js';
+import EntityDefinition from '../../src/entities/EntityDefinition.js';
 import {
   ACTOR_COMPONENT_ID,
   SHORT_TERM_MEMORY_COMPONENT_ID,
@@ -58,7 +58,6 @@ describe('EntityManager – core:goals injection logic', () => {
       registryStub,
       validatorStub,
       loggerStub,
-      spatialIndexStub,
       mockEventDispatcher
     );
   });
@@ -143,10 +142,16 @@ describe('EntityManager – core:goals injection logic', () => {
     expect(entity.hasComponent(SHORT_TERM_MEMORY_COMPONENT_ID)).toBe(true);
     expect(entity.hasComponent(NOTES_COMPONENT_ID)).toBe(true);
 
-    // 4. Validator.validate must have been called at least once for 'core:goals' with initialGoals
+    // Validator.validate should have been called for the default injected STM and Notes.
+    // It should NOT have been called by EntityManager for 'core:goals' in this case,
+    // as 'core:goals' was part of the definition and not an override nor a default injection here.
     expect(validatorStub.validate).toHaveBeenCalledWith(
-      'core:goals',
-      initialGoals
+      SHORT_TERM_MEMORY_COMPONENT_ID,
+      expect.any(Object)
+    );
+    expect(validatorStub.validate).toHaveBeenCalledWith(
+      NOTES_COMPONENT_ID,
+      expect.any(Object)
     );
   });
 

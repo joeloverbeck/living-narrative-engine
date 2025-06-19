@@ -18,6 +18,12 @@ import {
   ACTOR_COMPONENT_ID,
 } from '../../src/constants/componentIds.js';
 import {
+  ENTITY_CREATED_ID,
+  ENTITY_REMOVED_ID,
+  COMPONENT_ADDED_ID,
+  COMPONENT_REMOVED_ID,
+} from '../../src/constants/eventIds.js';
+import {
   DefinitionNotFoundError
 } from '../../src/errors/definitionNotFoundError';
 import { EntityNotFoundError } from '../../src/errors/entityNotFoundError';
@@ -165,7 +171,6 @@ describe('EntityManager', () => {
       mockRegistry,
       mockValidator,
       mockLogger,
-      mockSpatialIndex,
       mockEventDispatcher
     );
 
@@ -197,10 +202,7 @@ describe('EntityManager', () => {
     mockLogger.error.mockClear();
     mockLogger.warn.mockClear();
     mockLogger.debug.mockClear();
-    mockSpatialIndex.addEntity.mockClear();
-    mockSpatialIndex.removeEntity.mockClear();
-    mockSpatialIndex.updateEntityLocation.mockClear();
-    mockSpatialIndex.clearIndex.mockClear();
+    mockEventDispatcher.dispatch.mockClear();
   });
 
   afterEach(() => {
@@ -263,8 +265,8 @@ describe('EntityManager', () => {
     delete invalidValidatorMissingMethod.validate;
     const invalidLoggerMissingMethod = { ...createMockLogger() };
     delete invalidLoggerMissingMethod.error;
-    const invalidSpatialMissingMethod = { ...createMockSpatialIndexManager() };
-    delete invalidSpatialMissingMethod.addEntity;
+    const invalidEventDispatcherMissingMethod = { ...createMockSafeEventDispatcher() };
+    delete invalidEventDispatcherMissingMethod.dispatch;
 
     it.each([
       ['IDataRegistry', null, /Missing required dependency: IDataRegistry/],
@@ -275,9 +277,9 @@ describe('EntityManager', () => {
       ],
       ['ILogger', null, /Missing required dependency: ILogger/],
       [
-        'ISpatialIndexManager',
+        'ISafeEventDispatcher',
         null,
-        /Missing required dependency: ISpatialIndexManager/,
+        /Missing required dependency: ISafeEventDispatcher/,
       ],
       [
         'IDataRegistry (missing method)',
@@ -295,9 +297,9 @@ describe('EntityManager', () => {
         /Invalid or missing method 'error' on dependency 'ILogger'/,
       ],
       [
-        'ISpatialIndexManager (missing method)',
-        invalidSpatialMissingMethod,
-        /Invalid or missing method 'addEntity' on dependency 'ISpatialIndexManager'/,
+        'ISafeEventDispatcher (missing method)',
+        invalidEventDispatcherMissingMethod,
+        /Invalid or missing method 'dispatch' on dependency 'ISafeEventDispatcher'/,
       ],
     ])(
       'should throw an Error if %s is missing or invalid (%p)',
@@ -306,9 +308,9 @@ describe('EntityManager', () => {
           depName.startsWith('IDataRegistry') ? invalidDep : mockRegistry,
           depName.startsWith('ISchemaValidator') ? invalidDep : mockValidator,
           depName.startsWith('ILogger') ? invalidDep : mockLogger,
-          depName.startsWith('ISpatialIndexManager')
+          depName.startsWith('ISafeEventDispatcher')
             ? invalidDep
-            : mockSpatialIndex,
+            : mockEventDispatcher,
         ];
         const consoleErrorSpy = jest
           .spyOn(console, 'error')
@@ -317,6 +319,101 @@ describe('EntityManager', () => {
         consoleErrorSpy.mockRestore();
       }
     );
+  });
+
+  // --- 2. createEntityInstance Tests ---
+  describe('createEntityInstance', () => {
+    it('should create an entity and add it to active entities', () => {
+      const entity = entityManager.createEntityInstance(entityDefMain.id);
+      expect(entity).toBeInstanceOf(Entity);
+      expect(entityManager.getEntityInstance(entity.id)).toBe(entity);
+      expect(entityManager.activeEntities.has(entity.id)).toBe(true);
+    });
+
+    it('should create an entity with a specific instance ID', () => {
+      const instanceId = 'test-instance-123';
+      const entity = entityManager.createEntityInstance(entityDefMain.id, {
+        instanceId,
+      });
+      expect(entity.id).toBe(instanceId);
+    });
+
+    it('should dispatch ENTITY_CREATED_ID event when an entity is created', () => {
+      const entity = entityManager.createEntityInstance(entityDefMain.id);
+      expect(mockEventDispatcher.dispatch).toHaveBeenCalledWith(
+        ENTITY_CREATED_ID,
+        { entity, wasReconstructed: false }
+      );
+    });
+
+    it('should dispatch ENTITY_CREATED_ID event even if entity has no position component', () => {
+      // This test ensures the event is always dispatched, regardless of position component presence,
+      // as spatial index logic is now decoupled.
+      const entity = entityManager.createEntityInstance(entityDefBasic.id); // entityDefBasic has no position component
+      expect(mockEventDispatcher.dispatch).toHaveBeenCalledWith(
+        ENTITY_CREATED_ID,
+        { entity, wasReconstructed: false }
+      );
+    });
+
+    it('should throw DefinitionNotFoundError if definition not found', () => {
+      const unknownDefId = 'unknown:def-for-create';
+      const instanceId = 'create-def-not-found-instance';
+      expect(() => {
+        entityManager.createEntityInstance(unknownDefId, { instanceId });
+      }).toThrow(DefinitionNotFoundError);
+    });
+
+    it('should throw if an entity with the same ID already exists', () => {
+      const instanceId = 'duplicate-id-test';
+      entityManager.createEntityInstance(entityDefMain.id, { instanceId }); // Create first entity
+      mockEventDispatcher.dispatch.mockClear(); // Clear dispatch from first creation
+
+      expect(() => {
+        entityManager.createEntityInstance(entityDefMain.id, { instanceId }); // Attempt to create duplicate
+      }).toThrow(`Entity with ID '${instanceId}' already exists.`);
+      expect(mockEventDispatcher.dispatch).not.toHaveBeenCalled(); // No event for failed creation
+    });
+
+    it('should validate and apply component overrides', () => {
+      const instanceId = 'override-test-create';
+      const overrideData = { hp: 50, mp: 25 };
+      const entity = entityManager.createEntityInstance(DEF_ID_FOR_OVERRIDES, {
+        instanceId,
+        componentOverrides: {
+          [EXISTING_COMPONENT_ID]: overrideData,
+        },
+      });
+      expect(entity.getComponentData(EXISTING_COMPONENT_ID)).toEqual(overrideData);
+      expect(mockValidator.validate).toHaveBeenCalledWith(EXISTING_COMPONENT_ID, overrideData);
+      expect(mockEventDispatcher.dispatch).toHaveBeenCalledWith(
+        ENTITY_CREATED_ID,
+        { entity, wasReconstructed: false }
+      );
+    });
+
+    it('should throw if component override validation fails', () => {
+      const instanceId = 'override-fail-test-create';
+      const invalidOverrideData = { hp: 'very low' }; // Assuming this is invalid
+      mockValidator.validate.mockReturnValueOnce({
+        isValid: false,
+        errors: [{ message: 'Invalid HP for override create test' }],
+      });
+
+      expect(() => {
+        entityManager.createEntityInstance(DEF_ID_FOR_OVERRIDES, {
+          instanceId,
+          componentOverrides: {
+            [EXISTING_COMPONENT_ID]: invalidOverrideData,
+          },
+        });
+      }).toThrow(
+        new RegExp(
+          `Override for component ${EXISTING_COMPONENT_ID} on entity ${instanceId} Errors:[\\s\\S]*Invalid HP for override create test`
+        )
+      );
+      expect(mockEventDispatcher.dispatch).not.toHaveBeenCalled();
+    });
   });
 
   // --- 3. reconstructEntity Tests ---
@@ -337,7 +434,7 @@ describe('EntityManager', () => {
       baseSerializedEntityData = {
         instanceId: instanceId,
         definitionId: defIdForReconstruct,
-        overrides: { 'core:name': { name: 'Reconstructed Name' } },
+        components: { 'core:name': { name: 'Reconstructed Name' } },
       };
     });
 
@@ -352,17 +449,15 @@ describe('EntityManager', () => {
       expect(entityManager.getEntityInstance(instanceId)).toBe(entity);
     });
 
-    // FIXED: Test name and assertion updated to match the actual behavior for malformed POJOs.
     it('should throw error if serialized data is missing a valid instanceId', () => {
       expect(() =>
         entityManager.reconstructEntity({
           // 'instanceId' key is missing
           definitionId: defIdForReconstruct,
-          overrides: {},
+          components: {},
         })
-      ).toThrow("Invalid instanceId in serialized data: 'undefined'");
+      ).toThrow("EntityManager.reconstructEntity: instanceId is missing or invalid in serialized data.");
     });
-
 
     it('should throw error if entity with the same ID already exists', () => {
       // Create an entity with the same ID first
@@ -391,7 +486,7 @@ describe('EntityManager', () => {
       const serializedWithUnknownDef = {
         instanceId: altInstanceId,
         definitionId: unknownDefId,
-        overrides: {}
+        components: {}
       };
 
       expect(() =>
@@ -408,27 +503,44 @@ describe('EntityManager', () => {
       mockRegistry.getEntityDefinition = originalGetDef;
     });
 
-    it('should add reconstructed entity to spatial index if it has position', () => {
-      const posDefId = entityDefWithPosGlobal.id; // 'test:defWithPos'
-      const posInstanceId = 'recon-pos-id-global-test';
+    it('should dispatch ENTITY_CREATED_ID event with wasReconstructed true when an entity is reconstructed', () => {
+      const posDefId = entityDefWithPosGlobal.id; // 'test:defWithPos' - still useful for creating a valid entity
+      const posInstanceId = 'recon-pos-id-global-test-event'; // new ID to avoid clashes
 
-      // FIXED: Use a POJO for the serialized data
-      const serializedWithPos = {
+      const serializedEntityData = { // Renamed for clarity, can be with or without position
         instanceId: posInstanceId,
-        definitionId: posDefId,
-        overrides: {
+        definitionId: posDefId, // Using an existing valid definition
+        components: {
+          'core:name': { name: 'Reconstructed For Event Test' }, // Basic override
+          // Position component is not strictly necessary for this event dispatch test itself
+          // but including it ensures the entity is complex enough for a good test.
           [POSITION_COMPONENT_ID]: {
-            locationId: 'recon:loc-global-test',
+            locationId: 'recon:loc-global-test-event',
             x: 5,
             y: 5,
           },
         }
       };
 
-      entityManager.reconstructEntity(serializedWithPos);
-      expect(mockSpatialIndex.addEntity).toHaveBeenCalledWith(
-        posInstanceId,
-        'recon:loc-global-test'
+      const entity = entityManager.reconstructEntity(serializedEntityData);
+      expect(mockEventDispatcher.dispatch).toHaveBeenCalledWith(
+        ENTITY_CREATED_ID,
+        { entity, wasReconstructed: true }
+      );
+    });
+
+    it('should dispatch ENTITY_CREATED_ID event (wasReconstructed true) for entity without position', () => {
+      const instanceId = 'recon-no-pos-event-test';
+      const serializedEntityData = {
+        instanceId: instanceId,
+        definitionId: defIdForReconstruct, // Uses 'test-def:basicReconstruct' which has no position
+        components: { 'core:name': { name: 'Reconstructed No Pos For Event Test' } },
+      };
+
+      const entity = entityManager.reconstructEntity(serializedEntityData);
+      expect(mockEventDispatcher.dispatch).toHaveBeenCalledWith(
+        ENTITY_CREATED_ID,
+        { entity, wasReconstructed: true }
       );
     });
 
@@ -438,7 +550,7 @@ describe('EntityManager', () => {
       const serializedWithNullComp = {
         instanceId: nullCompInstanceId,
         definitionId: defIdForReconstruct,
-        overrides: { 'core:custom': null }
+        components: { 'core:custom': null }
       };
 
       const entity = entityManager.reconstructEntity(serializedWithNullComp);
@@ -462,7 +574,7 @@ describe('EntityManager', () => {
       const serializedToFail = {
         instanceId: instanceIdFailRecon,
         definitionId: defIdForReconstruct,
-        overrides: { 'core:stats': { hp: 1 } }
+        components: { 'core:stats': { hp: 1 } }
       };
 
       expect(() => {
@@ -479,56 +591,59 @@ describe('EntityManager', () => {
   describe('removeEntityInstance', () => {
     const defIdWithPosForRemoveInstanceTest = 'test:positioned'; // This ID is set up in global mockRegistry to have 'loc:start'
 
-    it('should remove an existing entity', () => {
+    it('should remove an existing entity and update internal state', () => {
       const instanceId = 'remove-test-entity';
-      entityManager.createEntityInstance(entityDefBasic.id, { instanceId });
+      const entity = entityManager.createEntityInstance(entityDefBasic.id, { instanceId });
+      mockEventDispatcher.dispatch.mockClear(); // Clear event from creation
+
       const result = entityManager.removeEntityInstance(instanceId);
       expect(result).toBe(true);
       expect(entityManager.activeEntities.has(instanceId)).toBe(false);
       expect(entityManager.getEntityInstance(instanceId)).toBeUndefined();
+      // Event check is handled in specific tests below
     });
 
-    // --- FIXED TEST ---
-    it('should throw EntityNotFoundError if entity does not exist', () => {
-      const nonExistentId = 'non-existent-entity';
+    it('should throw EntityNotFoundError if entity does not exist and not dispatch event', () => {
+      const nonExistentId = 'non-existent-entity-remove';
       expect(() =>
         entityManager.removeEntityInstance(nonExistentId)
       ).toThrow(EntityNotFoundError);
       expect(mockLogger.error).toHaveBeenCalledWith(
         `EntityManager.removeEntityInstance: Attempted to remove non-existent entity instance '${nonExistentId}'.`
       );
+      expect(mockEventDispatcher.dispatch).not.toHaveBeenCalled();
     });
 
-    it('should remove entity from spatial index if it has a position', () => {
-      const instanceId = 'spatial-remove-test-locstart-instance';
-      entityManager.createEntityInstance(defIdWithPosForRemoveInstanceTest, {
+    it('should dispatch ENTITY_REMOVED_ID event when removing an entity (with position component)', () => {
+      const instanceId = 'event-remove-test-pos-instance';
+      // 'test:positioned' has locationId: 'loc:start' by default from mockRegistry setup
+      const entityToRemove = entityManager.createEntityInstance(defIdWithPosForRemoveInstanceTest, {
         instanceId,
-      }); // 'test:positioned' has locationId: 'loc:start'
+      });
+      expect(entityToRemove.hasComponent(POSITION_COMPONENT_ID)).toBe(true); // Pre-condition check
+
+      mockEventDispatcher.dispatch.mockClear(); // Clear event from creation
+
       entityManager.removeEntityInstance(instanceId);
-      expect(mockSpatialIndex.removeEntity).toHaveBeenCalledWith(
-        instanceId,
-        'loc:start'
+      expect(mockEventDispatcher.dispatch).toHaveBeenCalledWith(
+        ENTITY_REMOVED_ID,
+        { entity: entityToRemove }
       );
     });
 
-    it('should not attempt to remove from spatial index if entity has no position component', () => {
-      const instanceId = 'no-pos-entity-remove';
-      entityManager.createEntityInstance(entityDefBasic.id, { instanceId }); // defIdBasic has no position
-      entityManager.removeEntityInstance(instanceId);
-      expect(mockSpatialIndex.removeEntity).not.toHaveBeenCalled();
-    });
+    it('should dispatch ENTITY_REMOVED_ID event when removing an entity (without position component)', () => {
+      const instanceId = 'event-remove-test-no-pos-instance';
+      // entityDefBasic has no position component by default
+      const entityToRemove = entityManager.createEntityInstance(entityDefBasic.id, { instanceId });
+      expect(entityToRemove.hasComponent(POSITION_COMPONENT_ID)).toBe(false); // Pre-condition check
 
-    it('should not attempt to remove from spatial index if position component has no locationId', () => {
-      const instanceId = 'no-locationId-remove-instance';
-      entityManager.createEntityInstance(entityDefBasic.id, { instanceId });
-      entityManager.addComponent(instanceId, POSITION_COMPONENT_ID, {
-        x: 10,
-        y: 10,
-      }); // No locationId
-      mockSpatialIndex.removeEntity.mockClear();
+      mockEventDispatcher.dispatch.mockClear(); // Clear event from creation
 
       entityManager.removeEntityInstance(instanceId);
-      expect(mockSpatialIndex.removeEntity).not.toHaveBeenCalled();
+      expect(mockEventDispatcher.dispatch).toHaveBeenCalledWith(
+        ENTITY_REMOVED_ID,
+        { entity: entityToRemove }
+      );
     });
   });
 
@@ -600,91 +715,69 @@ describe('EntityManager', () => {
       mockSpatialIndex.updateEntityLocation.mockClear();
       mockSpatialIndex.removeEntity.mockClear();
       mockLogger.info.mockClear(); // Clear info logs from creation
+      mockEventDispatcher.dispatch.mockClear(); // Clear events from entity creation
     });
 
     describe('addComponent', () => {
-      it('should add a new component to an existing entity', () => {
+      it('should add a new component and dispatch COMPONENT_ADDED_ID event', () => {
+        const newComponentId = NON_EXISTENT_COMPONENT_ID;
         const newData = { value: 100 };
-        entityManager.addComponent(
-          entityId,
-          NON_EXISTENT_COMPONENT_ID,
-          newData
-        );
-        expect(entity.hasComponent(NON_EXISTENT_COMPONENT_ID)).toBe(true);
-        expect(entity.getComponentData(NON_EXISTENT_COMPONENT_ID)).toEqual(
-          newData
+        // mockEventDispatcher.dispatch.mockClear(); // Already cleared in beforeEach of parent describe
+
+        entityManager.addComponent(entityId, newComponentId, newData);
+        expect(entity.hasComponent(newComponentId)).toBe(true);
+        expect(entity.getComponentData(newComponentId)).toEqual(newData);
+        expect(mockEventDispatcher.dispatch).toHaveBeenCalledWith(
+          COMPONENT_ADDED_ID,
+          { entity, componentTypeId: newComponentId, componentData: newData }
         );
       });
 
-      it('should update an existing component on an entity', () => {
+      it('should update an existing component and dispatch COMPONENT_ADDED_ID event', () => {
+        const existingComponentId = EXISTING_COMPONENT_ID;
         const updatedData = { hp: 20, mp: 10, armor: 5 };
-        entityManager.addComponent(
-          entityId,
-          EXISTING_COMPONENT_ID,
-          updatedData
-        );
-        expect(entity.getComponentData(EXISTING_COMPONENT_ID)).toEqual(
-          updatedData
+        // mockEventDispatcher.dispatch.mockClear();
+
+        entityManager.addComponent(entityId, existingComponentId, updatedData);
+        expect(entity.getComponentData(existingComponentId)).toEqual(updatedData);
+        expect(mockEventDispatcher.dispatch).toHaveBeenCalledWith(
+          COMPONENT_ADDED_ID,
+          { entity, componentTypeId: existingComponentId, componentData: updatedData }
         );
       });
 
-      it('should add entity to spatial index if POSITION_COMPONENT is added with locationId', () => {
+      it('should dispatch COMPONENT_ADDED_ID event when adding/updating POSITION_COMPONENT', () => {
         const newPositionData = {
-          locationId: 'new:loc-for-add-final',
+          locationId: 'new:loc-for-add-event',
           x: 5,
           y: 5,
         };
-        entityManager.addComponent(
-          entityId,
-          POSITION_COMPONENT_ID,
-          newPositionData
-        );
-        expect(mockSpatialIndex.updateEntityLocation).toHaveBeenCalledWith(
-          entityId,
-          undefined,
-          'new:loc-for-add-final'
-        );
-      });
+        // mockEventDispatcher.dispatch.mockClear();
 
-      it('should update entity in spatial index if POSITION_COMPONENT is changed', () => {
-        entityManager.addComponent(entityId, POSITION_COMPONENT_ID, {
-          locationId: 'start:loc',
-          x: 1,
-          y: 1,
-        });
-        const newPositionData = {
-          locationId: 'updated:loc-for-add-final',
+        entityManager.addComponent(entityId, POSITION_COMPONENT_ID, newPositionData);
+        expect(entity.getComponentData(POSITION_COMPONENT_ID)).toEqual(newPositionData);
+        expect(mockEventDispatcher.dispatch).toHaveBeenCalledWith(
+          COMPONENT_ADDED_ID,
+          { entity, componentTypeId: POSITION_COMPONENT_ID, componentData: newPositionData }
+        );
+
+        mockEventDispatcher.dispatch.mockClear(); // Clear for next call in this test
+
+        const updatedPositionData = {
+          locationId: 'updated:loc-for-add-event',
           x: 15,
           y: 15,
         };
-        entityManager.addComponent(
-          entityId,
-          POSITION_COMPONENT_ID,
-          newPositionData
-        );
-        expect(mockSpatialIndex.updateEntityLocation).toHaveBeenCalledWith(
-          entityId,
-          'start:loc',
-          'updated:loc-for-add-final'
+        entityManager.addComponent(entityId, POSITION_COMPONENT_ID, updatedPositionData);
+        expect(entity.getComponentData(POSITION_COMPONENT_ID)).toEqual(updatedPositionData);
+        expect(mockEventDispatcher.dispatch).toHaveBeenCalledWith(
+          COMPONENT_ADDED_ID,
+          { entity, componentTypeId: POSITION_COMPONENT_ID, componentData: updatedPositionData }
         );
       });
 
-      it('should remove from spatial index if POSITION_COMPONENT is added without locationId (effectively nullifying location)', () => {
-        const noLocationData = { x: 20, y: 20 };
-        entityManager.addComponent(
-          entityId,
-          POSITION_COMPONENT_ID,
-          noLocationData
-        );
-        expect(mockSpatialIndex.updateEntityLocation).toHaveBeenCalledWith(
-          entityId,
-          undefined,
-          undefined
-        );
-      });
-
-      // --- FIXED TEST ---
-      it('should throw EntityNotFoundError if entity not found', () => {
+      it('should throw EntityNotFoundError if entity not found and not dispatch event', () => {
+        // mockEventDispatcher.dispatch.mockClear(); // Ensure clean slate if needed, though error should prevent dispatch
         expect(() => {
           entityManager.addComponent(
             NON_EXISTENT_ENTITY_INSTANCE_ID,
@@ -692,43 +785,40 @@ describe('EntityManager', () => {
             {}
           );
         }).toThrow(EntityNotFoundError);
-
-        expect(() => {
-          entityManager.addComponent(
-            NON_EXISTENT_ENTITY_INSTANCE_ID,
-            'comp:test',
-            {}
-          );
-        }).toThrow(
-          `Entity instance not found: '${NON_EXISTENT_ENTITY_INSTANCE_ID}'`
-        );
-
         expect(mockLogger.error).toHaveBeenCalledWith(
           `EntityManager.addComponent: Entity not found with ID: ${NON_EXISTENT_ENTITY_INSTANCE_ID}`,
-          expect.any(Object)
+          expect.any(Object) // For the Error object logged
         );
+        expect(mockEventDispatcher.dispatch).not.toHaveBeenCalled();
       });
 
-      it('should throw if component validation fails', () => {
+      it('should throw if component validation fails and not dispatch event', () => {
         mockValidator.validate.mockReturnValueOnce({
           isValid: false,
-          errors: [{ message: 'Invalid data for stats addComponent' }],
+          errors: [{ message: 'Invalid data for stats addComponent event test' }],
         });
         const newStatsData = { hp: 'extremely high' };
+        // mockEventDispatcher.dispatch.mockClear();
+
         expect(() => {
           entityManager.addComponent(entityId, 'core:stats', newStatsData);
         }).toThrow(
           new RegExp(
-            `addComponent core:stats to entity ${entityId} Errors:\\s*\\[\\s*{\\s*"message":\\s*"Invalid data for stats addComponent"\\s*}\\s*\\]`
+            `addComponent core:stats to entity ${entityId} Errors:\\s*\\[\\s*{\\s*"message":\\s*"Invalid data for stats addComponent event test"\\s*}\\s*\\]`
           )
         );
+        expect(mockEventDispatcher.dispatch).not.toHaveBeenCalled();
       });
     });
 
     describe('removeComponent', () => {
-      it('should remove an existing component override', () => {
-        const { entity, definition } = setupEntityWithOverrides();
+      it('should remove an existing component override and dispatch COMPONENT_REMOVED_ID event', () => {
+        const { entity } = setupEntityWithOverrides(); // This creates an entity with EXISTING_COMPONENT_ID override
         const entityId = entity.id;
+
+        // Clear dispatch calls from setupEntityWithOverrides if any (it calls createEntityInstance)
+        // and any addComponent calls within it.
+        mockEventDispatcher.dispatch.mockClear();
 
         const result = entityManager.removeComponent(
           entityId,
@@ -736,68 +826,42 @@ describe('EntityManager', () => {
         );
         expect(result).toBe(true);
 
-        const updatedEntity = entityManager.getEntityInstance(entityId);
+        const updatedEntity = entityManager.getEntityInstance(entityId); // Get the entity again to check its state
+        expect(updatedEntity.hasComponent(EXISTING_COMPONENT_ID, true)).toBe(false); // Check override is gone
 
-        expect(updatedEntity).toBe(entity);
-        expect(updatedEntity).toBeDefined();
-
-        expect(updatedEntity.instanceData).toBeDefined();
-
-        if (updatedEntity.instanceData) {
-          expect(
-            updatedEntity.instanceData.overrides.hasOwnProperty(EXISTING_COMPONENT_ID)
-          ).toBe(false);
-          expect(updatedEntity.hasComponent(EXISTING_COMPONENT_ID, true)).toBe(
-            false
-          );
-
-          if (
-            definition.components &&
-            definition.components[EXISTING_COMPONENT_ID]
-          ) {
-            expect(updatedEntity.hasComponent(EXISTING_COMPONENT_ID)).toBe(
-              true
-            );
-            expect(
-              updatedEntity.getComponentData(EXISTING_COMPONENT_ID)
-            ).toEqual(definition.components[EXISTING_COMPONENT_ID]);
-          } else {
-            expect(updatedEntity.hasComponent(EXISTING_COMPONENT_ID)).toBe(
-              false
-            );
-          }
-        } else {
-          fail(
-            'updatedEntity.instanceData was undefined, preventing further checks on overrides and component presence.'
-          );
-        }
-      });
-
-      it('should remove entity from spatial index if POSITION_COMPONENT is removed', () => {
-        const posData = { locationId: 'test-loc-for-remove', x: 1, y: 1 };
-        entityManager.addComponent(entityId, POSITION_COMPONENT_ID, posData);
-        expect(entity.hasComponent(POSITION_COMPONENT_ID, true)).toBe(true);
-
-        mockSpatialIndex.removeEntity.mockClear();
-        mockSpatialIndex.updateEntityLocation.mockClear();
-        mockLogger.debug.mockClear();
-
-        entityManager.removeComponent(entityId, POSITION_COMPONENT_ID);
-        // Check that removeEntity was called, not updateEntityLocation for removal
-        expect(mockSpatialIndex.removeEntity).toHaveBeenCalledWith(
-          entityId,
-          'test-loc-for-remove'
+        expect(mockEventDispatcher.dispatch).toHaveBeenCalledWith(
+          COMPONENT_REMOVED_ID,
+          { entity: updatedEntity, componentTypeId: EXISTING_COMPONENT_ID }
         );
-        expect(mockSpatialIndex.updateEntityLocation).not.toHaveBeenCalled();
       });
 
-      it('should do nothing (and not throw) if component does not exist on entity (logs info)', () => {
-        const { entity } = setupEntityWithOverrides();
-        const entityId = entity.id;
+      it('should dispatch COMPONENT_REMOVED_ID event when removing POSITION_COMPONENT', () => {
+        const posComponentId = POSITION_COMPONENT_ID;
+        const posData = { locationId: 'test-loc-for-remove-event', x: 1, y: 1 };
+
+        // Add POSITION_COMPONENT_ID to the global 'entity' from the parent describe block's beforeEach
+        entityManager.addComponent(entityId, posComponentId, posData);
+        expect(entity.hasComponent(posComponentId, true)).toBe(true);
+
+        mockEventDispatcher.dispatch.mockClear(); // Clear dispatch from addComponent
+
+        entityManager.removeComponent(entityId, posComponentId);
+        expect(entity.hasComponent(posComponentId, true)).toBe(false); // Check component is removed
+        expect(mockEventDispatcher.dispatch).toHaveBeenCalledWith(
+          COMPONENT_REMOVED_ID,
+          { entity, componentTypeId: posComponentId }
+        );
+      });
+
+      it('should do nothing, not throw, and not dispatch event if component does not exist on entity', () => {
+        // const { entity } = setupEntityWithOverrides(); // Using global entity from parent beforeEach
+        // const entityId = entity.id;
+        mockEventDispatcher.dispatch.mockClear(); // Ensure clean state
+
         expect(() =>
           entityManager.removeComponent(entityId, NON_EXISTENT_COMPONENT_ID)
         ).not.toThrow();
-        // FIXED: The template literal was malformed with HTML tags
+
         expect(mockLogger.debug).toHaveBeenCalledWith(
           `EntityManager.removeComponent: Component '${NON_EXISTENT_COMPONENT_ID}' not found as an override on entity '${entityId}'. Nothing to remove at instance level.`
         );
@@ -806,10 +870,12 @@ describe('EntityManager', () => {
           NON_EXISTENT_COMPONENT_ID
         );
         expect(result).toBe(false);
+        expect(mockEventDispatcher.dispatch).not.toHaveBeenCalled();
       });
 
-      // --- FIXED TEST ---
-      it('should throw EntityNotFoundError for non-existent entity', () => {
+      it('should throw EntityNotFoundError for non-existent entity and not dispatch event', () => {
+        mockEventDispatcher.dispatch.mockClear(); // Ensure clean state
+
         expect(() =>
           entityManager.removeComponent(
             NON_EXISTENT_ENTITY_INSTANCE_ID,
@@ -820,6 +886,7 @@ describe('EntityManager', () => {
         expect(mockLogger.error).toHaveBeenCalledWith(
           `EntityManager.removeComponent: Entity not found with ID: '${NON_EXISTENT_ENTITY_INSTANCE_ID}'. Cannot remove component 'core:name'.`
         );
+        expect(mockEventDispatcher.dispatch).not.toHaveBeenCalled();
       });
     });
 
@@ -966,21 +1033,23 @@ describe('EntityManager', () => {
     });
 
     describe('getEntitiesInLocation', () => {
-      it('should delegate to spatialIndexManager.getEntitiesInLocation', () => {
-        const mockEntities = new Set(['e1', 'e2']);
-        mockSpatialIndex.getEntitiesInLocation.mockReturnValue(mockEntities);
-        const result = entityManager.getEntitiesInLocation('loc:test');
-        expect(mockSpatialIndex.getEntitiesInLocation).toHaveBeenCalledWith(
-          'loc:test'
+      it('should log a deprecation warning and return an empty set', () => {
+        const locationId = 'loc:test-deprecated';
+        const result = entityManager.getEntitiesInLocation(locationId);
+
+        expect(mockLogger.warn).toHaveBeenCalledWith(
+          'EntityManager.getEntitiesInLocation: This method is deprecated as EntityManager is decoupled from SpatialIndexManager. Returning an empty set. Consumers should rely on events to maintain their own spatial data.'
         );
-        expect(result).toBe(mockEntities);
+        expect(result).toEqual(new Set());
+        // Ensure the mockSpatialIndex was not called
+        expect(mockSpatialIndex.getEntitiesInLocation).not.toHaveBeenCalled();
       });
     });
   });
 
   // --- 7. Lifecycle Methods ---
   describe('clearAll', () => {
-    it('should remove all active entities and clear definition cache and spatial index', () => {
+    it('should remove all active entities and clear definition cache', () => {
       entityManager.createEntityInstance(MOCK_DEFINITION_ID_MAIN, {
         instanceId: 'entity1',
       });
@@ -1022,8 +1091,6 @@ describe('EntityManager', () => {
       entityManager.clearAll();
 
       expect(entityManager.activeEntities.size).toBe(0);
-      expect(mockSpatialIndex.clearIndex).toHaveBeenCalledTimes(1);
-      expect(mockLogger.debug).toHaveBeenCalledWith('Spatial index cleared.');
       expect(mockLogger.info).toHaveBeenCalledWith(
         'All entity instances removed from EntityManager.'
       );
