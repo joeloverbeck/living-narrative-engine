@@ -3,7 +3,7 @@
 
 import { CURRENT_ACTOR_COMPONENT_ID } from '../constants/componentIds.js';
 import { CHECKSUM_PENDING } from '../constants/persistence.js';
-import BaseService from '../utils/serviceBase.js';
+import { BaseService } from '../utils/serviceBase.js';
 
 /**
  * @typedef {import('../interfaces/coreServices.js').ILogger} ILogger
@@ -46,13 +46,13 @@ class GameStateCaptureService extends BaseService {
    * @param {ActiveModsManifestBuilder} deps.activeModsManifestBuilder - Builder for active mods manifest.
    */
   constructor({
-                logger,
-                entityManager,
-                playtimeTracker,
-                componentCleaningService,
-                metadataBuilder,
-                activeModsManifestBuilder,
-              }) {
+    logger,
+    entityManager,
+    playtimeTracker,
+    componentCleaningService,
+    metadataBuilder,
+    activeModsManifestBuilder,
+  }) {
     super();
     this.#logger = this._init('GameStateCaptureService', logger, {
       entityManager: { value: entityManager },
