@@ -30,7 +30,7 @@ describe('GameStateSerializer persistence tests', () => {
     serializer = new GameStateSerializer({ logger, crypto: webcrypto });
   });
 
-  it('round trips via serializeAndCompress/decompress/deserialize', async () => {
+  it('round trips via compressPreparedState/decompress/deserialize', async () => {
     const obj = {
       metadata: { title: 'Test' },
       modManifest: {},
@@ -39,7 +39,7 @@ describe('GameStateSerializer persistence tests', () => {
     };
 
     const { compressedData, finalSaveObject } =
-      await serializer.serializeAndCompress(obj);
+      await serializer.compressPreparedState(obj);
     const dec = serializer.decompress(compressedData);
     expect(dec.success).toBe(true);
     const des = serializer.deserialize(dec.data);

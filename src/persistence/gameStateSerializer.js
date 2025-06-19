@@ -177,6 +177,19 @@ class GameStateSerializer {
   }
 
   /**
+   * Compresses a pre-cloned and validated save object.
+   *
+   * @description Compresses a pre-cloned and validated save object.
+   * @param {object} saveObj - Prepared save object.
+   * @returns {Promise<{compressedData: Uint8Array, finalSaveObject: object}>}
+   *   Compressed data and original object.
+   */
+  async compressPreparedState(saveObj) {
+    await this.#applyChecksum(saveObj);
+    return this.#encodeAndCompress(saveObj);
+  }
+
+  /**
    * Decompresses Gzip-compressed data.
    *
    * @param {Uint8Array} data - Compressed data.
