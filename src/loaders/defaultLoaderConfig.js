@@ -17,8 +17,42 @@
  */
 
 /**
- * Creates the default loader configuration used by WorldLoader when a custom
- * configuration isn't supplied.
+ * Converts a map of loader instances into the structured configuration array
+ * used by {@link WorldLoader} and {@link ContentLoadManager}.
+ *
+ * @param {Record<string, BaseManifestItemLoaderInterface>} loaderMap - Map of
+ * type name to loader instance.
+ * @returns {LoaderConfigEntry[]} Array describing loader configuration.
+ */
+export function createContentLoadersConfig(loaderMap) {
+  const meta = {
+    components: { contentKey: 'components', contentTypeDir: 'components' },
+    events: { contentKey: 'events', contentTypeDir: 'events' },
+    conditions: { contentKey: 'conditions', contentTypeDir: 'conditions' },
+    macros: { contentKey: 'macros', contentTypeDir: 'macros' },
+    actions: { contentKey: 'actions', contentTypeDir: 'actions' },
+    rules: { contentKey: 'rules', contentTypeDir: 'rules' },
+    entityDefinitions: {
+      contentKey: 'entityDefinitions',
+      contentTypeDir: 'entities/definitions',
+    },
+    entityInstances: {
+      contentKey: 'entityInstances',
+      contentTypeDir: 'entities/instances',
+    },
+  };
+
+  return Object.entries(loaderMap).map(([typeName, loader]) => ({
+    loader,
+    typeName,
+    contentKey: meta[typeName].contentKey,
+    contentTypeDir: meta[typeName].contentTypeDir,
+  }));
+}
+
+/**
+ * Creates the default loader configuration used by {@link WorldLoader} when a
+ * custom configuration isn't supplied.
  *
  * @param {object} deps - Loader instances used to build the config.
  * @param {BaseManifestItemLoaderInterface} deps.componentDefinitionLoader - Component loader.
@@ -41,56 +75,16 @@ export function createDefaultContentLoadersConfig({
   entityDefinitionLoader,
   entityInstanceLoader,
 }) {
-  return [
-    {
-      loader: componentDefinitionLoader,
-      contentKey: 'components',
-      contentTypeDir: 'components',
-      typeName: 'components',
-    },
-    {
-      loader: eventLoader,
-      contentKey: 'events',
-      contentTypeDir: 'events',
-      typeName: 'events',
-    },
-    {
-      loader: conditionLoader,
-      contentKey: 'conditions',
-      contentTypeDir: 'conditions',
-      typeName: 'conditions',
-    },
-    {
-      loader: macroLoader,
-      contentKey: 'macros',
-      contentTypeDir: 'macros',
-      typeName: 'macros',
-    },
-    {
-      loader: actionLoader,
-      contentKey: 'actions',
-      contentTypeDir: 'actions',
-      typeName: 'actions',
-    },
-    {
-      loader: ruleLoader,
-      contentKey: 'rules',
-      contentTypeDir: 'rules',
-      typeName: 'rules',
-    },
-    {
-      loader: entityDefinitionLoader,
-      contentKey: 'entityDefinitions',
-      contentTypeDir: 'entities/definitions',
-      typeName: 'entityDefinitions',
-    },
-    {
-      loader: entityInstanceLoader,
-      contentKey: 'entityInstances',
-      contentTypeDir: 'entities/instances',
-      typeName: 'entityInstances',
-    },
-  ];
+  return createContentLoadersConfig({
+    components: componentDefinitionLoader,
+    events: eventLoader,
+    conditions: conditionLoader,
+    macros: macroLoader,
+    actions: actionLoader,
+    rules: ruleLoader,
+    entityDefinitions: entityDefinitionLoader,
+    entityInstances: entityInstanceLoader,
+  });
 }
 
 export default createDefaultContentLoadersConfig;
