@@ -66,6 +66,23 @@ export class PrerequisiteEvaluationService {
   }
 
   /**
+   * Checks for circular condition references and throws an error if detected.
+   *
+   * @private
+   * @param {string} conditionId - The referenced condition ID.
+   * @param {Set<string>} visited - Set of already visited condition IDs.
+   * @param {string} actionId - The ID of the action being validated.
+   * @throws {Error} If a circular reference is detected.
+   */
+  _checkCircularReference(conditionId, visited, actionId) {
+    if (visited.has(conditionId)) {
+      throw new Error(
+        `Circular reference detected in prerequisites for action '${actionId}'. Path: ${[...visited, conditionId].join(' -> ')}`
+      );
+    }
+  }
+
+  /**
    * Recursively traverses a JSON Logic rule and replaces all `condition_ref`
    * objects with the actual logic from the referenced condition definition.
    *
@@ -95,11 +112,7 @@ export class PrerequisiteEvaluationService {
         throw new Error(`Invalid condition_ref value: not a string.`);
       }
 
-      if (visited.has(conditionId)) {
-        throw new Error(
-          `Circular reference detected in prerequisites for action '${actionId}'. Path: ${[...visited, conditionId].join(' -> ')}`
-        );
-      }
+      this._checkCircularReference(conditionId, visited, actionId);
       visited.add(conditionId);
 
       this.#logger.debug(
