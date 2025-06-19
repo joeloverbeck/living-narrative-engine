@@ -12,7 +12,7 @@ import {
 } from '@jest/globals';
 import EntityManager from '../../src/entities/entityManager.js';
 import Entity from '../../src/entities/entity.js';
-import EntityDefinition from '../../src/entities/EntityDefinition.js';
+import EntityDefinition from '../../src/entities/entityDefinition.js';
 import {
   POSITION_COMPONENT_ID,
   SHORT_TERM_MEMORY_COMPONENT_ID,

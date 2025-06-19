@@ -9,6 +9,7 @@ import { deepFreeze } from '../utils'; // Assuming a utility for deep freezing
 class EntityDefinition {
   /**
    * The unique identifier for this entity definition (e.g., "core:goblin").
+   *
    * @type {string}
    * @readonly
    */
@@ -16,6 +17,7 @@ class EntityDefinition {
 
   /**
    * A human-readable description of the entity type.
+   *
    * @type {string | undefined}
    * @readonly
    */
@@ -24,6 +26,7 @@ class EntityDefinition {
   /**
    * A deep-frozen object containing the component data for this definition.
    * Keys are componentTypeIds, values are component data objects.
+   *
    * @type {Readonly<Record<string, Readonly<object>>>}
    * @readonly
    */
@@ -69,6 +72,7 @@ class EntityDefinition {
   /**
    * Gets the mod ID (namespace) from the definition ID.
    * E.g., "core:goblin" -> "core"
+   *
    * @returns {string | undefined} The mod ID, or undefined if the ID format is unexpected.
    */
   get modId() {

@@ -15,6 +15,7 @@ import { cloneDeep } from 'lodash'; // For merging, if complex merge logic is ne
 class EntityInstanceData {
   /**
    * The unique runtime identifier for this entity instance (e.g., a UUID).
+   *
    * @type {string}
    * @readonly
    */
@@ -22,6 +23,7 @@ class EntityInstanceData {
 
   /**
    * A strong reference to the immutable EntityDefinition for this instance.
+   *
    * @type {EntityDefinition}
    * @readonly
    */
@@ -31,6 +33,7 @@ class EntityInstanceData {
    * A shallow map of component data that overrides or supplements the definition's components.
    * Keys are componentTypeIds, values are component data objects.
    * This map only stores data that is different from or not present in the definition.
+   *
    * @type {Record<string, object>}
    */
   overrides;
@@ -40,7 +43,7 @@ class EntityInstanceData {
    *
    * @param {string} instanceId - The unique runtime identifier for this instance.
    * @param {EntityDefinition} definition - The EntityDefinition this instance is based on.
-   * @param {Record<string, object>} [initialOverrides={}] - Optional initial component overrides.
+   * @param {Record<string, object>} [initialOverrides] - Optional initial component overrides.
    * @throws {Error} If instanceId is not a valid string.
    * @throws {Error} If definition is not an instance of EntityDefinition.
    */
@@ -139,7 +142,7 @@ class EntityInstanceData {
    * A component explicitly overridden with `null` is considered not present for this instance via the override.
    *
    * @param {string} componentTypeId - The unique string identifier for the component type.
-   * @param {boolean} [checkOverrideOnly=false] - If true, only checks if a non-null override exists for this instance.
+   * @param {boolean} [checkOverrideOnly] - If true, only checks if a non-null override exists for this instance.
    * @returns {boolean} True if the instance has data for this component type under the specified condition.
    */
   hasComponent(componentTypeId, checkOverrideOnly = false) {
@@ -167,6 +170,7 @@ class EntityInstanceData {
   /**
    * Gets all component type IDs for this instance, including those from the definition
    * and any overridden components.
+   *
    * @returns {string[]} An array of unique component type IDs.
    */
   get allComponentTypeIds() {
