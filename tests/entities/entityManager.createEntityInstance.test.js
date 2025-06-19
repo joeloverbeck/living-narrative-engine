@@ -488,9 +488,9 @@ describe('EntityManager', () => {
 
       // Corrected expectedErrorContext to match #validateAndClone's errorContext
       const expectedErrorContext = `Reconstruction component ${failingComponentId} for entity ${instanceId} (definition ${entityData.definitionId})`;
-      const expectedDetails = JSON.stringify(validationErrors, null, 2);
+      const expectedDetails = JSON.stringify(validationErrors); // Removed pretty-printing
       // Corrected expectedFullMessage to match the direct error from #validateAndClone
-      const expectedFullMessage = `${expectedErrorContext} Errors:\n${expectedDetails}`;
+      const expectedFullMessage = `${expectedErrorContext} Errors: ${expectedDetails}`; // Removed newline
 
       expect(() => entityManager.reconstructEntity(entityData)).toThrow(
         expectedFullMessage
