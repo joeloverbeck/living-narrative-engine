@@ -87,6 +87,50 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
   }
 
   /**
+   * @description Builds a DiscoveredActionInfo object for a valid action.
+   * @param {import('../data/gameDataRepository.js').ActionDefinition} actionDef - The action definition.
+   * @param {Entity} actorEntity - The entity performing the action.
+   * @param {ActionTargetContext} targetCtx - The context of the action target.
+   * @param {object} formatterOptions - Options for formatting the command string.
+   * @param {object} params - Extra params to include in the result.
+   * @returns {import('../interfaces/IActionDiscoveryService.js').DiscoveredActionInfo|null} The info object or null.
+   */
+  // eslint-disable-next-line no-unused-private-class-members
+  #buildDiscoveredAction(
+    actionDef,
+    actorEntity,
+    targetCtx,
+    formatterOptions,
+    params = {}
+  ) {
+    if (
+      !this.#actionValidationService.isValid(actionDef, actorEntity, targetCtx)
+    ) {
+      return null;
+    }
+
+    const formattedCommand = this.#formatActionCommandFn(
+      actionDef,
+      targetCtx,
+      this.#entityManager,
+      formatterOptions,
+      getEntityDisplayName
+    );
+
+    if (formattedCommand === null) {
+      return null;
+    }
+
+    return {
+      id: actionDef.id,
+      name: actionDef.name || actionDef.commandVerb,
+      command: formattedCommand,
+      description: actionDef.description || '',
+      params,
+    };
+  }
+
+  /**
    * Handles discovery for actions targeting 'self' or having no target.
    *
    * @param {import('../data/gameDataRepository.js').ActionDefinition} actionDef
@@ -164,7 +208,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
     );
 
     /** @type {import('../interfaces/IActionDiscoveryService.js').DiscoveredActionInfo[]} */
-    const discovered = [];
+    const discoveredActions = [];
 
     for (const exit of exits) {
       const targetCtx = ActionTargetContext.forDirection(exit.direction);
@@ -191,7 +235,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
         continue;
       }
 
-      discovered.push({
+      discoveredActions.push({
         id: actionDef.id,
         name: actionDef.name || actionDef.commandVerb,
         command: formattedCommand,
@@ -200,7 +244,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
       });
     }
 
-    return discovered;
+    return discoveredActions;
   }
 
   /**
@@ -223,7 +267,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
     const targetIds =
       this.#getEntityIdsForScopesFn([domain], context) ?? new Set();
     /** @type {import('../interfaces/IActionDiscoveryService.js').DiscoveredActionInfo[]} */
-    const discovered = [];
+    const discoveredActions = [];
 
     for (const targetId of targetIds) {
       const targetCtx = ActionTargetContext.forEntity(targetId);
@@ -249,7 +293,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
         continue;
       }
 
-      discovered.push({
+      discoveredActions.push({
         id: actionDef.id,
         name: actionDef.name || actionDef.commandVerb,
         command: formattedCommand,
@@ -258,7 +302,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
       });
     }
 
-    return discovered;
+    return discoveredActions;
   }
 
   /**

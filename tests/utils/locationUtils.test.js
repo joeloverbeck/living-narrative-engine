@@ -137,6 +137,22 @@ describe('locationUtils', () => {
       expect(result).toBeNull();
       expect(mockLogger.warn).toHaveBeenCalled();
     });
+
+    it('should match exits regardless of extra whitespace', () => {
+      const exits = [{ direction: 'north', target: 'loc2' }];
+      const location = createMockLocation('loc1', exits);
+      mockEntityManager.getEntityInstance.mockReturnValue(location);
+
+      const result = getExitByDirection(
+        'loc1',
+        '  NORTH  ',
+        mockEntityManager,
+        mockLogger,
+        mockDispatcher
+      );
+
+      expect(result).toEqual({ direction: 'north', target: 'loc2' });
+    });
   });
 
   describe('getAvailableExits', () => {
@@ -189,6 +205,22 @@ describe('locationUtils', () => {
       );
 
       expect(result).toEqual([]);
+    });
+
+    it('should ignore exits that are not objects', () => {
+      const exits = [{ direction: 'north', target: 'loc2' }, null, 'invalid'];
+      const location = createMockLocation('loc1', exits);
+      mockEntityManager.getEntityInstance.mockReturnValue(location);
+
+      const result = getAvailableExits(
+        'loc1',
+        mockEntityManager,
+        mockDispatcher,
+        mockLogger
+      );
+
+      expect(result).toEqual([{ direction: 'north', target: 'loc2' }]);
+      expect(mockLogger.warn).toHaveBeenCalledTimes(2);
     });
   });
 });

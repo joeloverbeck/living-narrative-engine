@@ -5,7 +5,6 @@
 import jsonLogic from 'json-logic-js';
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 import { setContextValue } from '../../utils/contextVariableUtils.js';
-import storeResult from '../../utils/contextVariableUtils.js';
 import { assertParamsObject } from '../../utils/handlerUtils/paramsUtils.js';
 
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
@@ -86,7 +85,7 @@ class MathHandler {
       log
     );
     if (!stored) {
-      // storeResult already handled logging/dispatching
+      // writeContextVariable already handled logging/dispatching
     }
   }
 

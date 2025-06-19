@@ -1,6 +1,6 @@
 // src/persistence/savePreparation.js
 
-import { cloneAndValidateSaveState } from '../utils/saveStateUtils.js';
+import { cloneValidatedState } from '../utils/saveStateUtils.js';
 import { createPersistenceSuccess } from '../utils/persistenceResultUtils.js';
 import { wrapPersistenceOperation } from '../utils/persistenceErrorUtils.js';
 
@@ -14,7 +14,7 @@ import { wrapPersistenceOperation } from '../utils/persistenceErrorUtils.js';
  *   Result containing the cloned object or error.
  */
 export function cloneAndPrepareState(saveName, obj, logger) {
-  const cloneResult = cloneAndValidateSaveState(obj, logger);
+  const cloneResult = cloneValidatedState(obj, logger);
   if (!cloneResult.success || !cloneResult.data) {
     return { success: false, error: cloneResult.error };
   }

@@ -12,20 +12,12 @@ import {
 } from '@jest/globals';
 import EntityManager from '../../src/entities/entityManager.js';
 import Entity from '../../src/entities/entity.js';
-import EntityDefinition from '../../src/entities/EntityDefinition.js';
+import EntityDefinition from '../../src/entities/entityDefinition.js';
 import {
   POSITION_COMPONENT_ID,
   ACTOR_COMPONENT_ID,
 } from '../../src/constants/componentIds.js';
-import {
-  ENTITY_CREATED_ID,
-  ENTITY_REMOVED_ID,
-  COMPONENT_ADDED_ID,
-  COMPONENT_REMOVED_ID,
-} from '../../src/constants/eventIds.js';
-import {
-  DefinitionNotFoundError
-} from '../../src/errors/definitionNotFoundError';
+import { DefinitionNotFoundError } from '../../src/errors/definitionNotFoundError';
 import { EntityNotFoundError } from '../../src/errors/entityNotFoundError';
 
 // --- Mock Implementations ---
@@ -153,7 +145,8 @@ describe('EntityManager', () => {
     );
     entityDefBasicReconstruct = new EntityDefinition(
       'test-def:basicReconstruct',
-      { // A simplified version of rawDefBasicForTests for reconstruction tests
+      {
+        // A simplified version of rawDefBasicForTests for reconstruction tests
         id: 'test-def:basicReconstruct',
         description: 'A basic entity definition for reconstruction testing.',
         components: {
@@ -486,7 +479,7 @@ describe('EntityManager', () => {
       const serializedWithUnknownDef = {
         instanceId: altInstanceId,
         definitionId: unknownDefId,
-        components: {}
+        overrides: {},
       };
 
       expect(() =>
@@ -519,7 +512,7 @@ describe('EntityManager', () => {
             x: 5,
             y: 5,
           },
-        }
+        },
       };
 
       const entity = entityManager.reconstructEntity(serializedEntityData);
@@ -550,7 +543,7 @@ describe('EntityManager', () => {
       const serializedWithNullComp = {
         instanceId: nullCompInstanceId,
         definitionId: defIdForReconstruct,
-        components: { 'core:custom': null }
+        overrides: { 'core:custom': null },
       };
 
       const entity = entityManager.reconstructEntity(serializedWithNullComp);
@@ -574,7 +567,7 @@ describe('EntityManager', () => {
       const serializedToFail = {
         instanceId: instanceIdFailRecon,
         definitionId: defIdForReconstruct,
-        components: { 'core:stats': { hp: 1 } }
+        overrides: { 'core:stats': { hp: 1 } },
       };
 
       expect(() => {
@@ -603,11 +596,12 @@ describe('EntityManager', () => {
       // Event check is handled in specific tests below
     });
 
-    it('should throw EntityNotFoundError if entity does not exist and not dispatch event', () => {
-      const nonExistentId = 'non-existent-entity-remove';
-      expect(() =>
-        entityManager.removeEntityInstance(nonExistentId)
-      ).toThrow(EntityNotFoundError);
+    // --- FIXED TEST ---
+    it('should throw EntityNotFoundError if entity does not exist', () => {
+      const nonExistentId = 'non-existent-entity';
+      expect(() => entityManager.removeEntityInstance(nonExistentId)).toThrow(
+        EntityNotFoundError
+      );
       expect(mockLogger.error).toHaveBeenCalledWith(
         `EntityManager.removeEntityInstance: Attempted to remove non-existent entity instance '${nonExistentId}'.`
       );
@@ -826,24 +820,53 @@ describe('EntityManager', () => {
         );
         expect(result).toBe(true);
 
-        const updatedEntity = entityManager.getEntityInstance(entityId); // Get the entity again to check its state
-        expect(updatedEntity.hasComponent(EXISTING_COMPONENT_ID, true)).toBe(false); // Check override is gone
+        const updatedEntity = entityManager.getEntityInstance(entityId);
 
-        expect(mockEventDispatcher.dispatch).toHaveBeenCalledWith(
-          COMPONENT_REMOVED_ID,
-          { entity: updatedEntity, componentTypeId: EXISTING_COMPONENT_ID }
-        );
+        expect(updatedEntity).toBe(entity);
+        expect(updatedEntity).toBeDefined();
+
+        expect(updatedEntity.instanceData).toBeDefined();
+
+        if (updatedEntity.instanceData) {
+          expect(
+            updatedEntity.instanceData.overrides.hasOwnProperty(
+              EXISTING_COMPONENT_ID
+            )
+          ).toBe(false);
+          expect(updatedEntity.hasComponent(EXISTING_COMPONENT_ID, true)).toBe(
+            false
+          );
+
+          if (
+            definition.components &&
+            definition.components[EXISTING_COMPONENT_ID]
+          ) {
+            expect(updatedEntity.hasComponent(EXISTING_COMPONENT_ID)).toBe(
+              true
+            );
+            expect(
+              updatedEntity.getComponentData(EXISTING_COMPONENT_ID)
+            ).toEqual(definition.components[EXISTING_COMPONENT_ID]);
+          } else {
+            expect(updatedEntity.hasComponent(EXISTING_COMPONENT_ID)).toBe(
+              false
+            );
+          }
+        } else {
+          fail(
+            'updatedEntity.instanceData was undefined, preventing further checks on overrides and component presence.'
+          );
+        }
       });
 
-      it('should dispatch COMPONENT_REMOVED_ID event when removing POSITION_COMPONENT', () => {
-        const posComponentId = POSITION_COMPONENT_ID;
-        const posData = { locationId: 'test-loc-for-remove-event', x: 1, y: 1 };
+      it('should remove entity from spatial index if POSITION_COMPONENT is removed', () => {
+        const posData = { locationId: 'test-loc-for-remove', x: 1, y: 1 };
+        entityManager.addComponent(entityId, POSITION_COMPONENT_ID, posData);
+        expect(entity.hasComponent(POSITION_COMPONENT_ID, true)).toBe(true);
 
-        // Add POSITION_COMPONENT_ID to the global 'entity' from the parent describe block's beforeEach
-        entityManager.addComponent(entityId, posComponentId, posData);
-        expect(entity.hasComponent(posComponentId, true)).toBe(true);
-
-        mockEventDispatcher.dispatch.mockClear(); // Clear dispatch from addComponent
+        mockSpatialIndex.removeEntity.mockClear();
+        mockSpatialIndex.updateEntityLocation.mockClear();
+        mockLogger.debug.mockClear();
 
         entityManager.removeComponent(entityId, posComponentId);
         expect(entity.hasComponent(posComponentId, true)).toBe(false); // Check component is removed

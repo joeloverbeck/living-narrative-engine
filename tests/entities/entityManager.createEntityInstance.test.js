@@ -12,7 +12,7 @@ import {
 } from '@jest/globals';
 import EntityManager from '../../src/entities/entityManager.js';
 import Entity from '../../src/entities/entity.js';
-import EntityDefinition from '../../src/entities/EntityDefinition.js';
+import EntityDefinition from '../../src/entities/entityDefinition.js';
 import {
   POSITION_COMPONENT_ID,
   SHORT_TERM_MEMORY_COMPONENT_ID,
@@ -55,7 +55,6 @@ const MOCK_DEFINITION_ID_MAIN = 'test-def:main';
 const MOCK_DEFINITION_ID_ACTOR = 'test-def:actor';
 const MOCK_DEFINITION_ID_ITEM = 'test-def:item';
 const DEF_ID_FOR_OVERRIDES = 'test-def:for-overrides'; // New definition ID
-
 
 const EXISTING_COMPONENT_ID = 'core:stats';
 
@@ -142,7 +141,8 @@ describe('EntityManager', () => {
     );
     entityDefBasicReconstruct = new EntityDefinition(
       'test-def:basicReconstruct',
-      { // A simplified version of rawDefBasicForTests for reconstruction tests
+      {
+        // A simplified version of rawDefBasicForTests for reconstruction tests
         id: 'test-def:basicReconstruct',
         description: 'A basic entity definition for reconstruction testing.',
         components: {

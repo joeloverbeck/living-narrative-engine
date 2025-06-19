@@ -2,7 +2,7 @@
 
 import { encode, decode } from '@msgpack/msgpack';
 import pako from 'pako';
-import { cloneAndValidateSaveState } from '../utils/saveStateUtils.js';
+import { cloneValidatedState } from '../utils/saveStateUtils.js';
 import {
   PersistenceError,
   PersistenceErrorCodes,
@@ -119,10 +119,7 @@ class GameStateSerializer {
    * @private
    */
   #cloneForSerialization(gameStateObject) {
-    const cloneResult = cloneAndValidateSaveState(
-      gameStateObject,
-      this.#logger
-    );
+    const cloneResult = cloneValidatedState(gameStateObject, this.#logger);
     if (!cloneResult.success || !cloneResult.data) {
       throw cloneResult.error;
     }

@@ -62,6 +62,30 @@ export function resolveEntityNameFallback(
 }
 
 /**
+ * Extracts the effective root and path when handling `context.` placeholders.
+ *
+ * @description Returns an object containing the trimmed path and the root
+ * context object. When the prefix is used but `executionContext.evaluationContext.context`
+ * is missing, `null` is returned.
+ * @param {string} placeholderPath - Original placeholder path.
+ * @param {object} executionContext - The current execution context.
+ * @returns {{ path: string, root: object } | null} Extracted info or `null` on
+ *   invalid context.
+ */
+function extractContextPath(placeholderPath, executionContext) {
+  if (!placeholderPath.startsWith('context.')) {
+    return { path: placeholderPath, root: executionContext };
+  }
+
+  const ctx = executionContext?.evaluationContext?.context;
+  if (ctx && typeof ctx === 'object') {
+    return { path: placeholderPath.substring('context.'.length), root: ctx };
+  }
+
+  return null;
+}
+
+/**
  * Resolves a placeholder path against the provided execution context.
  *
  * @description Handles the `context.` prefix, uses {@link safeResolvePath}, and
@@ -93,38 +117,21 @@ function resolvePlaceholderPath(
     return undefined;
   }
 
-  let pathForResolvePath = placeholderPath;
-  let effectiveRoot = executionContext;
-
-  if (placeholderPath.startsWith('context.')) {
-    if (
-      executionContext.evaluationContext &&
-      typeof executionContext.evaluationContext.context === 'object' &&
-      executionContext.evaluationContext.context !== null
-    ) {
-      effectiveRoot = executionContext.evaluationContext.context;
-      pathForResolvePath = placeholderPath.substring('context.'.length);
-    } else {
-      logger?.warn(
-        `Placeholder "${placeholderPath}" uses "context." prefix, but executionContext.evaluationContext.context is missing or invalid. Path: ${logPath}`
-      );
-    }
-  }
-
-  let resolvedValue = safeResolvePath(
-    effectiveRoot,
-    pathForResolvePath,
-    logger,
-    `resolvePlaceholderPath for "${placeholderPath}" at ${logPath}`
-  );
-
-  if (resolvedValue === undefined) {
-    resolvedValue = resolveEntityNameFallback(
-      placeholderPath,
-      executionContext,
-      logger
+  const contextInfo = extractContextPath(placeholderPath, executionContext);
+  if (contextInfo === null) {
+    logger?.warn(
+      `Placeholder "${placeholderPath}" uses "context." prefix, but executionContext.evaluationContext.context is missing or invalid. Path: ${logPath}`
     );
+    return undefined;
   }
+
+  const resolvedValue =
+    safeResolvePath(
+      contextInfo.root,
+      contextInfo.path,
+      logger,
+      `resolvePlaceholderPath for "${placeholderPath}" at ${logPath}`
+    ) ?? resolveEntityNameFallback(placeholderPath, executionContext, logger);
 
   return resolvedValue;
 }
