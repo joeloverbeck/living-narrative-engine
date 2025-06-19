@@ -131,49 +131,6 @@ function resolvePlaceholderPath(
 }
 
 /**
- * Builds the data sources for placeholder resolution.
- *
- * @private
- * @description Creates the base, root context, and fallback sources used by
- * {@link PlaceholderResolver}.
- * @param {object} executionContext - Execution context supplying actor, target,
- *   and evaluationContext data.
- * @returns {{sources: object[], fallback: object}} Sources array and fallback
- *   object for {@link PlaceholderResolver#resolveStructure}.
- */
-function _buildResolutionSources(executionContext) {
-  const contextSource = {
-    context:
-      executionContext?.evaluationContext?.context &&
-      typeof executionContext.evaluationContext.context === 'object'
-        ? executionContext.evaluationContext.context
-        : {},
-  };
-
-  const fallback = {};
-  const actorName = resolveEntityNameFallback('actor.name', executionContext);
-  if (actorName !== undefined) {
-    fallback.actor = { name: actorName };
-  }
-  const targetName = resolveEntityNameFallback('target.name', executionContext);
-  if (targetName !== undefined) {
-    if (!fallback.target) fallback.target = {};
-    fallback.target.name = targetName;
-  }
-
-  const baseSource = { ...(executionContext ?? {}) };
-  delete baseSource.context;
-  const rootContextSource =
-    executionContext &&
-    Object.prototype.hasOwnProperty.call(executionContext, 'context')
-      ? { context: executionContext.context }
-      : {};
-  const sources = [rootContextSource, baseSource, contextSource];
-
-  return { sources, fallback };
-}
-
-/**
  * Resolves placeholders within a structure using a provided resolver.
  *
  * @private
@@ -245,7 +202,8 @@ export function resolvePlaceholders(
   skipKeys = []
 ) {
   const resolver = new PlaceholderResolver(logger);
-  const { sources, fallback } = _buildResolutionSources(executionContext);
+  const { sources, fallback } =
+    PlaceholderResolver.buildResolutionSources(executionContext);
 
   return _resolveStructure(input, resolver, sources, fallback, skipKeys);
 }

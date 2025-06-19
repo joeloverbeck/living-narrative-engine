@@ -3,6 +3,7 @@
 
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 import { safeResolvePath } from './objectUtils.js';
+import { resolveEntityNameFallback } from './contextUtils.js';
 
 /**
  * Regex to find placeholders like {path.to.value} within a string.
@@ -42,6 +43,51 @@ export class PlaceholderResolver {
    */
   constructor(logger = console) {
     this.#logger = logger;
+  }
+
+  /**
+   * Builds the data sources for placeholder resolution.
+   *
+   * @description Creates the base, root context, and fallback sources used by
+   *   {@link PlaceholderResolver#resolveStructure}.
+   * @param {object} executionContext - Execution context supplying actor, target,
+   *   and evaluationContext data.
+   * @returns {{sources: object[], fallback: object}} Sources array and fallback
+   *   object for {@link PlaceholderResolver#resolveStructure}.
+   */
+  static buildResolutionSources(executionContext) {
+    const contextSource = {
+      context:
+        executionContext?.evaluationContext?.context &&
+        typeof executionContext.evaluationContext.context === 'object'
+          ? executionContext.evaluationContext.context
+          : {},
+    };
+
+    const fallback = {};
+    const actorName = resolveEntityNameFallback('actor.name', executionContext);
+    if (actorName !== undefined) {
+      fallback.actor = { name: actorName };
+    }
+    const targetName = resolveEntityNameFallback(
+      'target.name',
+      executionContext
+    );
+    if (targetName !== undefined) {
+      if (!fallback.target) fallback.target = {};
+      fallback.target.name = targetName;
+    }
+
+    const baseSource = { ...(executionContext ?? {}) };
+    delete baseSource.context;
+    const rootContextSource =
+      executionContext &&
+      Object.prototype.hasOwnProperty.call(executionContext, 'context')
+        ? { context: executionContext.context }
+        : {};
+    const sources = [rootContextSource, baseSource, contextSource];
+
+    return { sources, fallback };
   }
 
   /**
