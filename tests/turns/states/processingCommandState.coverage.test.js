@@ -9,7 +9,6 @@ import {
   afterEach,
 } from '@jest/globals';
 import { ProcessingCommandState } from '../../../src/turns/states/processingCommandState.js';
-import { TurnIdleState } from '../../../src/turns/states/turnIdleState.js';
 import {
   SYSTEM_ERROR_OCCURRED_ID,
   ENTITY_SPOKE_ID,
@@ -404,6 +403,39 @@ describe('ProcessingCommandState._getServiceFromContext – error branches', () 
     );
     expect(result).toBeNull();
     expect(processingState['_isProcessing']).toBe(false);
+    expect(mockLogger.error).toHaveBeenCalledWith(
+      expect.stringContaining('Invalid turnCtx in _getServiceFromContext')
+    );
+    expect(mockHandler.safeEventDispatcher.dispatch).toHaveBeenCalledWith(
+      SYSTEM_ERROR_OCCURRED_ID,
+      expect.objectContaining({
+        message: expect.stringContaining('Invalid turnCtx'),
+      })
+    );
+  });
+
+  test('should log error when turnCtx lacks getLogger', async () => {
+    processingState['_isProcessing'] = true;
+    const dummyCtx = {};
+
+    const result = await processingState['_getServiceFromContext'](
+      dummyCtx,
+      'getCommandProcessor',
+      'ICommandProcessor',
+      'actorMissingLogger'
+    );
+
+    expect(result).toBeNull();
+    expect(processingState['_isProcessing']).toBe(false);
+    expect(mockLogger.error).toHaveBeenCalledWith(
+      expect.stringContaining('Invalid turnCtx in _getServiceFromContext')
+    );
+    expect(mockHandler.safeEventDispatcher.dispatch).toHaveBeenCalledWith(
+      SYSTEM_ERROR_OCCURRED_ID,
+      expect.objectContaining({
+        message: expect.stringContaining('Invalid turnCtx'),
+      })
+    );
   });
 
   test('should catch missing method on turnCtx and dispatch SYSTEM_ERROR_OCCURRED_ID, then return null', async () => {
