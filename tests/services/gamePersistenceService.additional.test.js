@@ -158,6 +158,13 @@ describe('GamePersistenceService additional coverage', () => {
       );
       expect(res.success).toBe(true);
     });
+
+    it('skips saving when isSavingAllowed denies', async () => {
+      jest.spyOn(service, 'isSavingAllowed').mockReturnValue(false);
+      const result = await service.saveGame('Denied', true, 'World');
+      expect(manualSaveCoordinator.saveGame).not.toHaveBeenCalled();
+      expect(result.success).toBe(false);
+    });
   });
 
   describe('restoreGameState and loadAndRestoreGame', () => {
