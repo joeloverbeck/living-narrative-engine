@@ -2,9 +2,10 @@
 // --- FILE START ---
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import EntityManager from '../../src/entities/entityManager.js';
-import EntityDefinition from '../../src/entities/entityDefinition.js';
+import EntityDefinition from '../../src/entities/EntityDefinition.js';
 import EntityInstanceData from '../../src/entities/entityInstanceData.js';
 import { POSITION_COMPONENT_ID } from '../../src/constants/componentIds.js';
+import { ENTITY_CREATED_ID } from '../../src/constants/eventIds.js';
 import { deepClone } from '../../src/utils';
 
 const makeStubs = () => {
@@ -57,17 +58,17 @@ describe('EntityManager.reconstructEntity', () => {
       stubs.registry,
       stubs.validator,
       stubs.logger,
-      stubs.spatial,
       mockEventDispatcher
     );
   });
 
   it('reconstructs entity and indexes position', () => {
+    expect(ENTITY_CREATED_ID).toBe('core:entity_created');
     const rawData = {
       instanceId: 'e1',
       definitionId: 'core:item',
-      overrides: {
-        [POSITION_COMPONENT_ID]: { x: 1, y: 2, locationId: 'loc1' }, // Changed to locationId
+      components: {
+        [POSITION_COMPONENT_ID]: { x: 1, y: 2, locationId: 'loc1' },
         'core:tag': { tag: 'a' },
       },
     };
@@ -81,7 +82,7 @@ describe('EntityManager.reconstructEntity', () => {
 
     expect(entity).not.toBeNull();
     expect(manager.activeEntities.get('e1')).toBe(entity);
-    expect(stubs.spatial.addEntity).toHaveBeenCalledWith('e1', 'loc1');
+    expect(mockEventDispatcher.dispatch).toHaveBeenCalledWith(ENTITY_CREATED_ID, { entity, wasReconstructed: true });
   });
 
   it('returns null on validation failure', () => {
@@ -105,7 +106,7 @@ describe('EntityManager.reconstructEntity', () => {
     const rawDataFail = {
       instanceId: 'e2',
       definitionId: 'core:item',
-      overrides: { 'core:tag': { tag: 'b' } },
+      components: { 'core:tag': { tag: 'b' } },
     };
 
     // This check confirms the mock registry is working as expected.
@@ -120,7 +121,7 @@ describe('EntityManager.reconstructEntity', () => {
     expect(() => manager.reconstructEntity(rawDataFail)).toThrow();
 
     expect(manager.activeEntities.has('e2')).toBe(false);
-    expect(stubs.spatial.addEntity).not.toHaveBeenCalled();
+    expect(mockEventDispatcher.dispatch).not.toHaveBeenCalled();
     expect(stubs.logger.error).toHaveBeenCalled();
   });
 });

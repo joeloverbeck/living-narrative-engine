@@ -1,6 +1,6 @@
 import { describe, test, expect, jest } from '@jest/globals';
 import EntityManager from '../../src/entities/entityManager.js';
-import EntityDefinition from '../../src/entities/entityDefinition.js';
+import EntityDefinition from '../../src/entities/EntityDefinition.js';
 
 const makeDeps = (definition) => {
   const registry = {
@@ -49,7 +49,6 @@ describe('EntityManager.createEntityInstance does not mutate definitions', () =>
       deps.registry,
       deps.validator,
       deps.logger,
-      deps.spatialIndexManager,
       mockEventDispatcher
     );
 
@@ -72,7 +71,6 @@ describe('EntityManager.createEntityInstance does not mutate definitions', () =>
       deps.registry,
       deps.validator,
       deps.logger,
-      deps.spatialIndexManager,
       mockEventDispatcher
     );
 

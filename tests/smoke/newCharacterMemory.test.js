@@ -9,7 +9,7 @@
 // -----------------------------------------------------------------------------
 
 import EntityManager from '../../src/entities/entityManager.js';
-import EntityDefinition from '../../src/entities/entityDefinition.js';
+import EntityDefinition from '../../src/entities/EntityDefinition.js';
 import {
   ACTOR_COMPONENT_ID,
   SHORT_TERM_MEMORY_COMPONENT_ID,
@@ -80,7 +80,6 @@ describe('Smoke › New Character › Short-Term Memory bootstrap', () => {
       registry,
       validator,
       logger,
-      spatialIndexManager,
       mockEventDispatcher
     );
 

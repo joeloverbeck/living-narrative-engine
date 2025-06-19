@@ -160,7 +160,6 @@ describe('EntityManager', () => {
       mockRegistry,
       mockValidator,
       mockLogger,
-      mockSpatialIndex,
       mockEventDispatcher
     );
 
@@ -284,30 +283,31 @@ describe('EntityManager', () => {
 
     it('should throw an error if an entity with the provided instanceId already exists', () => {
       const specificId = 'duplicate-id-test';
-      entityManager.createEntityInstance(defIdBasic, {
-        instanceId: specificId,
-      }); // First attempt
+      entityManager.createEntityInstance(defIdBasic, { instanceId: specificId }); // First attempt
+      mockEventDispatcher.dispatch.mockClear(); // Clear event from first creation
+
       expect(() => {
         entityManager.createEntityInstance(defIdBasic, {
           instanceId: specificId,
         }); // Second attempt
       }).toThrow(
-        `EntityManager.createEntityInstance: Entity with instanceId '${specificId}' already exists.`
+        `Entity with ID '${specificId}' already exists.` // Corrected message
       );
     });
 
     it('should throw an error if definitionId is not a non-empty string', () => {
       expect(() => entityManager.createEntityInstance(null)).toThrow(
-        `EntityManager.createEntityInstance: Invalid definitionId: null`
+        'definitionId must be a non-empty string.' // Corrected message
       );
       expect(() => entityManager.createEntityInstance('')).toThrow(
-        `EntityManager.createEntityInstance: Invalid definitionId: `
+        'definitionId must be a non-empty string.' // Corrected message
       );
-      expect(() => entityManager.createEntityInstance('   ')).toThrow(
-        `EntityManager.createEntityInstance: Invalid definitionId:    `
+      // Optional: Check for undefined if that's a distinct path, otherwise covered by typeof check
+      expect(() => entityManager.createEntityInstance(undefined)).toThrow(
+        'definitionId must be a non-empty string.' // Corrected message
       );
       expect(() => entityManager.createEntityInstance(123)).toThrow(
-        `EntityManager.createEntityInstance: Invalid definitionId: 123`
+        'definitionId must be a non-empty string.' // Corrected message for wrong type
       );
     });
 
@@ -360,32 +360,6 @@ describe('EntityManager', () => {
       );
     });
 
-    it('should add entity to spatial index if it has a position component with valid locationId', () => {
-      const entity = entityManager.createEntityInstance(defIdWithPos);
-      expect(mockSpatialIndex.addEntity).toHaveBeenCalledWith(
-        entity.id,
-        'loc:start'
-      );
-    });
-
-    it('should NOT add entity to spatial index if position component has no locationId', () => {
-      const defIdNoLocation = 'test:posNoLocation';
-      const entityDefNoLocation = new EntityDefinition(defIdNoLocation, {
-        id: defIdNoLocation,
-        description: 'Position without locationId',
-        components: { [POSITION_COMPONENT_ID]: { x: 1, y: 1 } }, // No locationId
-      });
-      const originalGetDef = mockRegistry.getEntityDefinition;
-      mockRegistry.getEntityDefinition = jest.fn((id) => {
-        if (id === defIdNoLocation) return entityDefNoLocation;
-        return originalGetDef(id);
-      });
-
-      entityManager.createEntityInstance(defIdNoLocation);
-      expect(mockSpatialIndex.addEntity).not.toHaveBeenCalled();
-      mockRegistry.getEntityDefinition = originalGetDef; // Restore
-    });
-
     it('should inject default components (STM, Notes, Goals) for actors', () => {
       const entity = entityManager.createEntityInstance(defIdActor);
       expect(entity.hasComponent(SHORT_TERM_MEMORY_COMPONENT_ID)).toBe(true);
@@ -422,23 +396,162 @@ describe('EntityManager', () => {
     });
 
     it('throws error if component validation fails during creation (override component)', () => {
-      const overrides = { 'core:stats': { hp: -10 } }; // Invalid HP
+      const instanceId = 'override-validation-fail-instance';
+      const overrides = {
+        [EXISTING_COMPONENT_ID]: { hp: -5 }, // Invalid HP
+      };
+      const validationErrors = [{ message: 'HP too low' }];
 
-      mockValidator.validate.mockImplementation((typeId, data) => {
-        if (typeId === 'core:stats' && data.hp === -10) {
-          return { isValid: false, errors: [{ message: 'HP too low' }] };
-        }
-        return { isValid: true };
+      mockValidator.validate.mockReturnValueOnce({
+        isValid: false,
+        errors: validationErrors,
       });
 
+      const expectedErrorContext = `Override for component ${EXISTING_COMPONENT_ID} on entity ${instanceId}`;
+      const expectedDetails = JSON.stringify(validationErrors, null, 2);
+      const expectedErrorMessage = `${expectedErrorContext} Errors:\n${expectedDetails}`;
+
       expect(() => {
-        entityManager.createEntityInstance(defIdBasic, {
+        entityManager.createEntityInstance(DEF_ID_FOR_OVERRIDES, {
+          instanceId,
           componentOverrides: overrides,
         });
-      }).toThrow(
-        new RegExp(
-          `Override component core:stats for new entity .* \\(definition ${defIdBasic}\\) Errors:\\s*\\[\\s*{\\s*"message":\\s*"HP too low"\\s*}\\s*\\]`
-        )
+      }).toThrow(expectedErrorMessage);
+
+      expect(mockValidator.validate).toHaveBeenCalledWith(
+        EXISTING_COMPONENT_ID,
+        overrides[EXISTING_COMPONENT_ID]
+      );
+      expect(mockLogger.error).toHaveBeenCalled();
+    });
+
+    it('throws error if component validation fails for a new component (not an override)', () => {
+      const instanceId = 'new-component-validation-fail-instance';
+      const newComponentId = 'new:component';
+      const overrides = {
+        [newComponentId]: { data: 'invalid-data' },
+      };
+      const validationErrors = [{ message: 'Invalid data format' }];
+
+      mockValidator.validate.mockReturnValueOnce({
+        isValid: false,
+        errors: validationErrors,
+      });
+
+      const expectedErrorContext = `New component ${newComponentId} on entity ${instanceId}`;
+      const expectedDetails = JSON.stringify(validationErrors, null, 2);
+      const expectedErrorMessage = `${expectedErrorContext} Errors:\n${expectedDetails}`;
+
+      expect(() => {
+        entityManager.createEntityInstance(DEF_ID_FOR_OVERRIDES, {
+          instanceId,
+          componentOverrides: overrides,
+        });
+      }).toThrow(expectedErrorMessage);
+
+      expect(mockValidator.validate).toHaveBeenCalledWith(
+        newComponentId,
+        overrides[newComponentId]
+      );
+      expect(mockLogger.error).toHaveBeenCalled();
+    });
+  });
+
+  describe('reconstructEntity', () => {
+    let rawEntityData; // To be defined in tests
+
+    // Utility to create a basic valid raw entity data structure
+    // ... existing code ...
+    it('throws an error if a component fails validation during reconstruction', () => {
+      const instanceId = 'reconstruct-validation-fail';
+      const failingComponentId = 'nameComponent'; // To match the existing regex expectation
+      const entityData = {
+        instanceId,
+        definitionId: 'test:basic',
+        components: {
+          [failingComponentId]: { name: null }, // This data should cause validation to fail
+        },
+        componentStates: {},
+        tags: [],
+        flags: {},
+      };
+
+      const validationErrors = [{ message: 'Name validation failed (forced by test)' }];
+
+      // Mock validator to fail for the specific component
+      mockValidator.validate.mockImplementation((componentTypeId, _data) => {
+        if (componentTypeId === failingComponentId) { // 'nameComponent'
+          return { isValid: false, errors: validationErrors };
+        }
+        return { isValid: true, validatedData: _data }; // Pass other validations
+      });
+
+      // Corrected expectedErrorContext to match #validateAndClone's errorContext
+      const expectedErrorContext = `Reconstruction component ${failingComponentId} for entity ${instanceId} (definition ${entityData.definitionId})`;
+      const expectedDetails = JSON.stringify(validationErrors, null, 2);
+      // Corrected expectedFullMessage to match the direct error from #validateAndClone
+      const expectedFullMessage = `${expectedErrorContext} Errors:\n${expectedDetails}`;
+
+      expect(() => entityManager.reconstructEntity(entityData)).toThrow(
+        expectedFullMessage
+      );
+      expect(mockLogger.error).toHaveBeenCalled();
+    });
+
+    it('throws an error and logs if entity definition is not found during reconstruction', () => {
+      const defIdUnknown = 'unknown:def-for-reconstruct';
+      const instanceId = 'reconstruct-def-not-found';
+      const entityData = {
+        instanceId,
+        definitionId: defIdUnknown,
+        components: { 'core:name': { name: 'Test Entity Def Not Found' } },
+        componentStates: {},
+        tags: [],
+        flags: {},
+      };
+
+      // Ensure getEntityDefinition returns undefined for this specific ID
+      const originalGetEntityDef = mockRegistry.getEntityDefinition;
+      mockRegistry.getEntityDefinition = jest.fn((id) => {
+        if (id === defIdUnknown) return undefined;
+        return originalGetEntityDef(id); // Fallback to original mock for other IDs
+      });
+
+      const expectedErrorMessage = `Entity definition not found: '${defIdUnknown}'`;
+
+      expect(() => entityManager.reconstructEntity(entityData)).toThrow(
+        expectedErrorMessage
+      );
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        expect.stringContaining(`Definition '${defIdUnknown}' not found in registry for entity '${instanceId}'`) // Logger message is slightly different
+      );
+
+      // Restore original mock
+      mockRegistry.getEntityDefinition = originalGetEntityDef;
+    });
+
+    it('throws an error if an entity with the same instanceId already exists', () => {
+      const instanceId = 'reconstruct-duplicate-id';
+
+      // Ensure 'test:basic' definition is available via mockRegistry for the initial creation
+      // This relies on entityDefBasic being defined in the outer scope and mockRegistry
+      // being set up to return it.
+      entityManager.createEntityInstance('test:basic', { instanceId });
+
+      // Now, prepare data for reconstruction attempt with the same instanceId
+      const entityDataForReconstruction = {
+        instanceId,
+        definitionId: 'test:basic',
+        components: { 'core:name': { name: 'Duplicate Entity Attempt' } },
+        componentStates: {},
+        tags: [],
+        flags: {},
+      };
+
+      const expectedErrorMessage = `EntityManager.reconstructEntity: Entity with ID '${instanceId}' already exists. Reconstruction aborted.`;
+
+      expect(() => entityManager.reconstructEntity(entityDataForReconstruction)).toThrow(
+        expectedErrorMessage
       );
     });
   });

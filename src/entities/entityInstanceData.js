@@ -3,8 +3,8 @@
  * @see src/entities/entityInstanceData.js
  */
 
-import EntityDefinition from './entityDefinition.js';
-import { cloneDeep } from 'lodash'; // For merging, if complex merge logic is needed beyond simple override
+import { cloneDeep, isEqual, pick } from 'lodash';
+import EntityDefinition from './EntityDefinition.js';
 
 /**
  * Represents the mutable, runtime data for a unique instance of an entity.

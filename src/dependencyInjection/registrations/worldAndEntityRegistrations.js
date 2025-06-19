@@ -13,7 +13,6 @@
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 /** @typedef {import('../../interfaces/coreServices.js').IDataRegistry} IDataRegistry */
 /** @typedef {import('../../interfaces/coreServices.js').ISchemaValidator} ISchemaValidator */
-/** @typedef {import('../../interfaces/ISpatialIndexManager.js').ISpatialIndexManager} ISpatialIndexManager */
 
 // --- DI & Helper Imports ---
 import { tokens } from '../tokens.js';
@@ -42,9 +41,6 @@ export function registerWorldAndEntity(container) {
       /** @type {IDataRegistry} */ (c.resolve(tokens.IDataRegistry)),
       /** @type {ISchemaValidator} */ (c.resolve(tokens.ISchemaValidator)),
       /** @type {ILogger} */ (c.resolve(tokens.ILogger)),
-      /** @type {ISpatialIndexManager} */ (
-        c.resolve(tokens.ISpatialIndexManager)
-      ),
       /** @type {ISafeEventDispatcher} */ (
         c.resolve(tokens.ISafeEventDispatcher)
       )
