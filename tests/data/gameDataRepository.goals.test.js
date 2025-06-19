@@ -3,6 +3,7 @@ import { GameDataRepository } from '../../src/data/gameDataRepository.js';
 
 /**
  * Creates a mock logger object with jest functions.
+ *
  * @returns {import('../../src/interfaces/coreServices.js').ILogger}
  */
 const createMockLogger = () => ({
@@ -14,6 +15,7 @@ const createMockLogger = () => ({
 
 /**
  * Creates a mock registry with all methods required by GameDataRepository.
+ *
  * @returns {import('../../src/interfaces/coreServices.js').IDataRegistry}
  */
 const createMockRegistry = () => ({

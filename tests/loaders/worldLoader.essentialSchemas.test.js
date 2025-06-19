@@ -3,199 +3,165 @@
  * @see tests/loaders/worldLoader.essentialSchemas.test.js
  */
 
-import { describe, it, expect, beforeEach, jest } from '@jest/globals';
+import { jest, describe, beforeEach, test, expect } from '@jest/globals';
 import WorldLoader from '../../src/loaders/worldLoader.js';
+import ESSENTIAL_SCHEMA_TYPES from '../../src/constants/essentialSchemas.js';
+import MissingSchemaError from '../../src/errors/missingSchemaError.js';
 import WorldLoaderError from '../../src/errors/worldLoaderError.js';
 
-// Minimal mocks for all WorldLoader dependencies
-const mockRegistry = { store: jest.fn(), get: jest.fn(), clear: jest.fn() };
-const mockLogger = {
-  debug: jest.fn(),
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-};
-const mockSchemaLoader = {
-  loadAndCompileAllSchemas: jest.fn().mockResolvedValue(),
-};
-const mockComponentLoader = { loadItemsForMod: jest.fn() };
-const mockConditionLoader = { loadItemsForMod: jest.fn() };
-const mockRuleLoader = { loadItemsForMod: jest.fn() };
-const mockMacroLoader = { loadItemsForMod: jest.fn() };
-const mockActionLoader = { loadItemsForMod: jest.fn() };
-const mockEventLoader = { loadItemsForMod: jest.fn() };
-const mockEntityDefinitionLoader = { loadItemsForMod: jest.fn() };
-const mockEntityInstanceLoader = { loadItemsForMod: jest.fn() };
-const mockGameConfigLoader = {
-  loadConfig: jest.fn().mockResolvedValue(['core']),
-};
-const mockPromptTextLoader = { loadPromptText: jest.fn().mockResolvedValue() };
-const mockModManifestLoader = {
-  loadRequestedManifests: jest.fn().mockResolvedValue(new Map()),
-};
-const mockValidatedEventDispatcher = {
-  dispatch: jest.fn().mockResolvedValue(),
-};
-const mockModDependencyValidator = { validate: jest.fn() };
-const mockModVersionValidator = jest.fn();
-const mockModLoadOrderResolver = { resolveOrder: jest.fn() };
+// Mock minimal dependencies for WorldLoader
+const mockMinimalDeps = () => ({
+  registry: { store: jest.fn(), get: jest.fn(), clear: jest.fn() },
+  logger: { debug: jest.fn(), info: jest.fn(), warn: jest.fn(), error: jest.fn(), dump: jest.fn() },
+  schemaLoader: { loadAndCompileAllSchemas: jest.fn() },
+  componentLoader: { loadItemsForMod: jest.fn() },
+  conditionLoader: { loadItemsForMod: jest.fn() },
+  ruleLoader: { loadItemsForMod: jest.fn() },
+  actionLoader: { loadItemsForMod: jest.fn() },
+  eventLoader: { loadItemsForMod: jest.fn() },
+  entityLoader: { loadItemsForMod: jest.fn() },
+  entityInstanceLoader: { loadItemsForMod: jest.fn().mockResolvedValue({ count: 0, overrides: 0, errors: 0 }) },
+  validator: { isSchemaLoaded: jest.fn(), getValidator: jest.fn(), addSchema: jest.fn() },
+  configuration: { getContentTypeSchemaId: jest.fn(), getModsBasePath: jest.fn(() => 'data/mods') },
+  gameConfigLoader: { loadConfig: jest.fn().mockResolvedValue(['core']) },
+  promptTextLoader: { loadPromptText: jest.fn() },
+  modManifestLoader: { loadRequestedManifests: jest.fn().mockResolvedValue(new Map()) },
+  validatedEventDispatcher: { dispatch: jest.fn() },
+  modDependencyValidator: { validate: jest.fn() },
+  modVersionValidator: jest.fn(),
+  modLoadOrderResolver: { resolveOrder: jest.fn(ids => ids) }
+});
 
-// Mocks for the specific services under test
-let mockConfiguration;
-let mockValidator;
 
-describe('WorldLoader Essential Schema Validation', () => {
+describe('WorldLoader Essential Schema Checking', () => {
+  let mockConfiguration;
+  let mockValidator;
+  let mockLogger;
+  let worldLoader;
+  let deps;
+
+  const ALL_ESSENTIAL_SCHEMA_IDS = ESSENTIAL_SCHEMA_TYPES.reduce((acc, type) => {
+    acc[type] = `http://example.com/schemas/${type}.schema.json`;
+    return acc;
+  }, {});
+
   beforeEach(() => {
-    // Reset mocks before each test to ensure isolation
-    jest.clearAllMocks();
-    mockModDependencyValidator.validate.mockReset();
-    mockModDependencyValidator.validate.mockReturnValue();
-    mockModVersionValidator.mockReset();
-    mockModVersionValidator.mockReturnValue();
-    mockModLoadOrderResolver.resolveOrder.mockReset();
-    mockModLoadOrderResolver.resolveOrder.mockReturnValue([]);
+    deps = mockMinimalDeps();
+    mockConfiguration = deps.configuration;
+    mockValidator = deps.validator;
+    mockLogger = deps.logger;
 
-    // Define schema IDs for a successful run, reflecting the fix
-    const schemaIds = {
-      game: 'http://example.com/schemas/game.schema.json',
-      components: 'http://example.com/schemas/component.schema.json',
-      'mod-manifest': 'http://example.com/schemas/mod.manifest.schema.json',
-      entityDefinitions:
-        'http://example.com/schemas/entity-definition.schema.json',
-      entityInstances: 'http://example.com/schemas/entity-instance.schema.json',
-      actions: 'http://example.com/schemas/action.schema.json',
-      events: 'http://example.com/schemas/event.schema.json',
-      rules: 'http://example.com/schemas/rule.schema.json',
-      conditions: 'http://example.com/schemas/condition.schema.json',
-    };
-
-    mockConfiguration = {
-      getContentTypeSchemaId: jest.fn((typeName) => schemaIds[typeName]),
-    };
-
-    mockValidator = {
-      isSchemaLoaded: jest.fn().mockReturnValue(true),
-    };
+    mockConfiguration.getContentTypeSchemaId.mockImplementation(
+      (type) => ALL_ESSENTIAL_SCHEMA_IDS[type] || null
+    );
+    mockValidator.isSchemaLoaded.mockReturnValue(true);
+    
+    deps.modDependencyValidator.validate.mockClear().mockReturnValue();
+    deps.modVersionValidator.mockClear().mockReturnValue();
+    
+    worldLoader = new WorldLoader(deps);
   });
 
-  /**
-   * Helper function to create a new WorldLoader instance with the current mocks.
-   *
-   * @returns {WorldLoader}
-   */
-  const createWorldLoaderInstance = () => {
-    return new WorldLoader({
-      registry: mockRegistry,
-      logger: mockLogger,
-      schemaLoader: mockSchemaLoader,
-      componentLoader: mockComponentLoader,
-      conditionLoader: mockConditionLoader,
-      ruleLoader: mockRuleLoader,
-      macroLoader: mockMacroLoader,
-      actionLoader: mockActionLoader,
-      eventLoader: mockEventLoader,
-      entityLoader: mockEntityDefinitionLoader,
-      entityInstanceLoader: mockEntityInstanceLoader,
-      validator: mockValidator,
-      configuration: mockConfiguration,
-      gameConfigLoader: mockGameConfigLoader,
-      promptTextLoader: mockPromptTextLoader,
-      modManifestLoader: mockModManifestLoader,
-      validatedEventDispatcher: mockValidatedEventDispatcher,
-      modDependencyValidator: mockModDependencyValidator,
-      modVersionValidator: mockModVersionValidator,
-      modLoadOrderResolver: mockModLoadOrderResolver,
-      contentLoadersConfig: null,
-    });
-  };
+  test('should pass if all essential schemas are configured and loaded', async () => {
+    const coreManifest = { name: 'Core', version: '1.0.0', engineVersion: '1.0.0', dependencies: {}, conflicts: {} };
+    deps.modManifestLoader.loadRequestedManifests.mockResolvedValue(new Map([['core', coreManifest]]));
+    
+    await expect(worldLoader.loadWorld('testWorld')).resolves.toBeUndefined();
 
-  it('should pass validation when all essential schemas are configured and loaded', async () => {
-    const worldLoader = createWorldLoaderInstance();
-    // We expect loadWorld not to throw an error related to essential schemas.
-    // It might fail later for other reasons (like no manifests), but that's fine for this test.
-    // We just need to ensure it gets past the essential schema check.
-    await expect(worldLoader.loadWorld('test-world')).resolves.toBeUndefined();
-
-    // Verify logger was not called with an error about missing schemas
     expect(mockLogger.error).not.toHaveBeenCalledWith(
-      expect.stringContaining('Essential schema missing or not configured')
+      expect.stringMatching(/Essential schema missing|CRITICAL load failure/i),
+      // expect.any(Error) // This was too broad; specific checks are better if an error is expected
     );
+    expect(deps.modDependencyValidator.validate).toHaveBeenCalled();
+    expect(deps.modVersionValidator).toHaveBeenCalled();
   });
 
-  it('should throw WorldLoaderError if a schema ID is not configured (returns undefined)', async () => {
-    // Simulate the original error: 'actions' schema is not configured.
-    mockConfiguration.getContentTypeSchemaId.mockImplementation((typeName) => {
-      if (typeName === 'actions') {
-        return undefined;
-      }
-      // Provide a valid ID for all other types.
-      const schemaIds = {
-        game: 'http://example.com/schemas/game.schema.json',
-        components: 'http://example.com/schemas/component.schema.json',
-        'mod-manifest': 'http://example.com/schemas/mod.manifest.schema.json',
-        entityDefinitions:
-          'http://example.com/schemas/entity-definition.schema.json',
-        entityInstances:
-          'http://example.com/schemas/entity-instance.schema.json',
-        events: 'http://example.com/schemas/event.schema.json',
-        rules: 'http://example.com/schemas/rule.schema.json',
-        conditions: 'http://example.com/schemas/condition.schema.json',
-      };
-      return schemaIds[typeName];
+  test('should throw WorldLoaderError if an essential schema type is not configured (getContentTypeSchemaId returns null)', async () => {
+    const missingType = 'game'; // An example of a type that might not be configured
+    const expectedErrorMessageFromCheck = `WorldLoader: Essential schema type '${missingType}' is not configured (no schema ID found).`;
+    const expectedMissingSchemaErrorMsg = `Essential schema type '${missingType}' is not configured (no schema ID found).`;
+
+    mockConfiguration.getContentTypeSchemaId.mockImplementation((type) => {
+      if (type === missingType) return null;
+      return ALL_ESSENTIAL_SCHEMA_IDS[type] || null;
     });
-
-    const worldLoader = createWorldLoaderInstance();
-
-    // The promise should be rejected with a specific error type and message.
-    await expect(worldLoader.loadWorld('test-world')).rejects.toThrow(
-      WorldLoaderError
-    );
-    await expect(worldLoader.loadWorld('test-world')).rejects.toThrow(
-      "WorldLoader failed: Essential schema 'Unknown Essential Schema ID' missing or check failed – aborting world load. Original error: Missing essential schema: Unknown Essential Schema ID"
-    );
-
-    // Check that the specific internal error was logged.
-    expect(mockLogger.error).toHaveBeenCalledWith(
-      'WorldLoader: Essential schema missing or not configured: Unknown Essential Schema ID'
-    );
-  });
-
-  it('should throw WorldLoaderError if a schema is configured but not loaded', async () => {
-    const missingSchemaId = 'http://example.com/schemas/action.schema.json';
-
-    // Simulate that the validator does not have the 'actions' schema loaded.
-    mockValidator.isSchemaLoaded.mockImplementation((id) => {
-      return id !== missingSchemaId;
-    });
-
-    const worldLoader = createWorldLoaderInstance();
-
-    // --- CORRECTED ASSERTION ---
-    // Use a try/catch block to inspect the thrown error's type and message separately.
-    // This avoids the 'cause' property mismatch when comparing error instances.
-    let caughtError;
+    
+    await expect(worldLoader.loadWorld('testWorld')).rejects.toThrow(WorldLoaderError);
+    
     try {
-      await worldLoader.loadWorld('test-world');
-      // This line should not be reached; if it is, the test fails.
-      throw new Error(
-        'Test failed: worldLoader.loadWorld did not throw an error as expected.'
-      );
-    } catch (error) {
-      caughtError = error;
+      await worldLoader.loadWorld('testWorld');
+    } catch (e) {
+      expect(e).toBeInstanceOf(WorldLoaderError);
+      expect(e.message).toContain(`WorldLoader failed during essential schema check – aborting world load. Original error: ${expectedMissingSchemaErrorMsg}`);
+      expect(e.cause).toBeInstanceOf(MissingSchemaError);
+      expect(e.cause.message).toBe(expectedMissingSchemaErrorMsg);
+      expect(e.cause.schemaId).toBeNull();
+      expect(e.cause.contentType).toBe(missingType);
     }
 
-    // 1. Assert the error is of the correct custom type.
-    expect(caughtError).toBeInstanceOf(WorldLoaderError);
+    // Check the log from #checkEssentialSchemas
+    expect(mockLogger.error).toHaveBeenCalledWith(expectedErrorMessageFromCheck);
 
-    // 2. Assert the error has the exact expected message.
-    expect(caughtError.message).toBe(
-      `WorldLoader failed: Essential schema '${missingSchemaId}' missing or check failed – aborting world load. Original error: Missing essential schema: ${missingSchemaId}`
-    );
-    // --- END CORRECTION ---
-
-    // Check that the specific internal error was logged.
+    // Check the CRITICAL load failure log from loadWorld catch block
     expect(mockLogger.error).toHaveBeenCalledWith(
-      `WorldLoader: Essential schema missing or not configured: ${missingSchemaId}`
+      expect.stringContaining('CRITICAL load failure during world/mod loading sequence.'),
+      expect.objectContaining({ error: expect.any(MissingSchemaError) })
     );
+  });
+
+  test('should throw WorldLoaderError if an essential schema is configured but not loaded (isSchemaLoaded returns false)', async () => {
+    const notLoadedType = 'actions';
+    const notLoadedSchemaId = ALL_ESSENTIAL_SCHEMA_IDS[notLoadedType];
+    const expectedErrorMessageFromCheck = `WorldLoader: Essential schema '${notLoadedSchemaId}' (type: '${notLoadedType}') is configured but not loaded.`;
+    const expectedMissingSchemaErrorMsg = `Essential schema '${notLoadedSchemaId}' (type: '${notLoadedType}') is configured but not loaded.`;
+
+    mockValidator.isSchemaLoaded.mockImplementation((schemaId) => {
+      if (schemaId === notLoadedSchemaId) return false;
+      return true;
+    });
+    
+    await expect(worldLoader.loadWorld('testWorld')).rejects.toThrow(WorldLoaderError);
+    
+    try {
+      await worldLoader.loadWorld('testWorld');
+    } catch (e) {
+      expect(e).toBeInstanceOf(WorldLoaderError);
+      expect(e.message).toContain(`WorldLoader failed during essential schema check – aborting world load. Original error: ${expectedMissingSchemaErrorMsg}`);
+      expect(e.cause).toBeInstanceOf(MissingSchemaError);
+      expect(e.cause.message).toBe(expectedMissingSchemaErrorMsg);
+      expect(e.cause.schemaId).toBe(notLoadedSchemaId);
+      expect(e.cause.contentType).toBe(notLoadedType);
+    }
+
+    // Check the log from #checkEssentialSchemas
+    expect(mockLogger.error).toHaveBeenCalledWith(expectedErrorMessageFromCheck);
+
+    // Check the CRITICAL load failure log from loadWorld catch block
+    expect(mockLogger.error).toHaveBeenCalledWith(
+        expect.stringContaining('CRITICAL load failure during world/mod loading sequence.'),
+        expect.objectContaining({ error: expect.any(MissingSchemaError) })
+    );
+  });
+
+  test('should correctly identify the type key in log when a schema ID is not configured', async () => {
+    const unconfiguredType = 'entityDefinitions'; 
+    const expectedLogMessage = `WorldLoader: Essential schema type '${unconfiguredType}' is not configured (no schema ID found).`;
+
+    mockConfiguration.getContentTypeSchemaId.mockImplementation((type) => {
+      if (type === unconfiguredType) return undefined; // Simulate not configured
+      return ALL_ESSENTIAL_SCHEMA_IDS[type] || null;
+    });
+    
+    try {
+      await worldLoader.loadWorld('testWorld');
+    } catch (e) {
+      // We expect it to throw, this is fine.
+      expect(e).toBeInstanceOf(WorldLoaderError);
+      expect(e.cause).toBeInstanceOf(MissingSchemaError);
+      expect(e.cause.contentType).toBe(unconfiguredType);
+    }
+
+    // Check that the specific error message from #checkEssentialSchemas was logged
+    expect(mockLogger.error).toHaveBeenCalledWith(expectedLogMessage);
   });
 });

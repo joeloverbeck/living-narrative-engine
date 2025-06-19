@@ -291,25 +291,32 @@ describe('ModManifestLoader Isekai Content Validation', () => {
     );
   });
 
-  test('should log a warning and skip if manifest fetch fails', async () => {
+  test('should log an error and throw if manifest fetch fails', async () => {
     // Specific mock for this test case
-    mockDataFetcher.fetch.mockRejectedValue(new Error('Network Error'));
+    const fetchError = new Error('Network Error');
+    mockDataFetcher.fetch.mockRejectedValue(fetchError);
 
-    const loadedManifests = await modManifestLoader.loadRequestedManifests([
-      'isekai',
-    ]);
+    // MODIFIED: Expect a throw
+    await expect(
+      modManifestLoader.loadRequestedManifests(['isekai'])
+    ).rejects.toThrow(
+      "ModManifestLoader.loadRequestedManifests: Critical error - could not fetch manifest for requested mod 'isekai'. Path: data/mods/isekai/mod.manifest.json. Reason: Network Error"
+    );
 
-    expect(loadedManifests).toBeInstanceOf(Map);
-    expect(loadedManifests.size).toBe(0); // No manifest should be loaded
-    expect(mockLogger.warn).toHaveBeenCalledWith(
+    // MODIFIED: Expect logger.error to have been called
+    expect(mockLogger.error).toHaveBeenCalledWith(
       'MOD_MANIFEST_FETCH_FAIL',
-      "ModManifestLoader.loadRequestedManifests: could not fetch manifest for 'isekai' – skipping.",
+      expect.stringContaining(
+        "Critical error - could not fetch manifest for requested mod 'isekai'"
+      ),
       {
         modId: 'isekai',
         path: 'data/mods/isekai/mod.manifest.json',
         reason: 'Network Error',
       }
     );
+    // Ensure no warning was logged for this case anymore
+    expect(mockLogger.warn).not.toHaveBeenCalled(); 
   });
 
   test('should log an error and throw if schema validation fails', async () => {

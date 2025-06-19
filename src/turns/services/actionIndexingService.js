@@ -76,8 +76,8 @@ export class ActionIndexingService {
     for (const raw of discovered) {
       // The tests still send `{ actionId, commandString }`; production sends
       // `{ id, command }`.  We normalise so both worlds work.
-      const actionId = raw.actionId ?? raw.id;
-      const commandString = raw.commandString ?? raw.command;
+      const actionId = raw.id;
+      const commandString = raw.command;
       const params = raw.params ?? {};
       const description = raw.description ?? '';
       const key = `${actionId}:${JSON.stringify(params)}`;
@@ -93,7 +93,7 @@ export class ActionIndexingService {
       );
     }
 
-    /* ── cap the list if it’s over the maximum ─────────────────────────── */
+    /* ── cap the list if it's over the maximum ─────────────────────────── */
     let uniqueArr = Array.from(unique.values());
     if (uniqueArr.length > MAX_AVAILABLE_ACTIONS_PER_TURN) {
       const truncated = uniqueArr.length - MAX_AVAILABLE_ACTIONS_PER_TURN;

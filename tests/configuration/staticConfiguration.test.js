@@ -25,7 +25,7 @@ describe('StaticConfiguration Validation Test', () => {
       'events',
       'rules',
       'conditions',
-      'entityDefinitions', // The schema that was missing
+      'entityDefinitions', // MODIFIED to camelCase
       'entityInstances', // The schema that was missing
       'llm-configs',
     ];

@@ -139,9 +139,8 @@ class StaticConfiguration {
       macros: 'http://example.com/schemas/macro.schema.json',
       rules: 'http://example.com/schemas/rule.schema.json',
 
-      // --- ENTITY TYPES (CORRECTED) ---
-      entityDefinitions:
-        'http://example.com/schemas/entity-definition.schema.json',
+      // --- ENTITY TYPES ---
+      entityDefinitions: 'http://example.com/schemas/entity-definition.schema.json',
       entityInstances: 'http://example.com/schemas/entity-instance.schema.json',
 
       // --- MISC ---

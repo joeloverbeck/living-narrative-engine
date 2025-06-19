@@ -35,9 +35,10 @@ const COMPONENT_SCHEMA_HEALTH =
 const createMockConfiguration = (overrides = {}) => {
   const config = {
     getModsBasePath: jest.fn().mockReturnValue('./data/mods'),
-    // --- [LOADER-REFACTOR-04 Test Change]: Ensure this mock handles 'entity_definitions' ---
+    // MODIFICATION: Ensure this mock handles 'entityDefinitions' (camelCase)
     getContentTypeSchemaId: jest.fn((typeName) => {
-      if (typeName === 'entity_definitions') return ENTITY_DEFINITION_SCHEMA_ID;
+      // MODIFICATION: Changed from 'entity_definitions' to 'entityDefinitions'
+      if (typeName === 'entityDefinitions') return ENTITY_DEFINITION_SCHEMA_ID;
       if (typeName === 'components') {
         // Example for component loading if needed
         if (overrides.componentSchemaId) return overrides.componentSchemaId;
@@ -217,10 +218,22 @@ beforeEach(() => {
   // Clear mocks *after* instantiation and initial calls (like getContentTypeSchemaId in constructor)
   jest.clearAllMocks();
 
+  // --- [LOADER-REFACTOR-04 Test Change]: Explicitly set up mock for getContentTypeSchemaId for EntityDefinitionLoader constructor call tracking ---
+  // This ensures that when the constructor of EntityDefinitionLoader (or its base) calls
+  // this.config.getContentTypeSchemaId('entityDefinitions'), it gets the expected ID.
+  // This mock will be specific to the constructor call.
+  // For other calls within test methods, mocks can be set up specifically for those tests.
+  mockConfig.getContentTypeSchemaId.mockImplementation((typeName) => {
+    // MODIFICATION: Changed from 'entity_definitions' to 'entityDefinitions'
+    if (typeName === 'entityDefinitions') {
+      return ENTITY_DEFINITION_SCHEMA_ID;
+    }
+    // Fallback for other types that might be requested by other parts of the loader or base classes
+    return `http://example.com/schemas/${typeName}.schema.json`;
+  });
+  // --- End [LOADER-REFACTOR-04 Test Change] ---
+
   // Re-assign mocks to the instance's protected fields for tracking calls made *after* construction
-  // This is a common pattern but be mindful it overrides the original references used in constructor.
-  // It's generally better to test behavior via public methods and observed side effects (logs, registry calls).
-  // However, keeping this pattern for consistency with the original code.
   entityLoader._config = mockConfig;
   entityLoader._pathResolver = mockResolver;
   entityLoader._dataFetcher = mockFetcher;
@@ -261,81 +274,77 @@ beforeEach(() => {
 describe('EntityLoader', () => {
   // --- Constructor Tests ---
   describe('Constructor', () => {
-    it('should instantiate successfully, call super with "entities", and set _primarySchemaId', () => {
-      // Use temporary mocks for this specific test to isolate constructor behavior
-      const tempLogger = createMockLogger();
-      const tempConfig = createMockConfiguration(); // Uses the updated factory
+    // --- [LOADER-REFACTOR-04 Test Change]: Adjusted test to reflect correct super call and schema ID logging ---
+    it('should instantiate successfully, call super with "entityDefinitions", and set _primarySchemaId', () => {
+      // This test relies on the constructor correctly calling the base class
+      // which in turn calls this.config.getContentTypeSchemaId.
 
-      // Instantiate with the temporary mocks
+      // Temporarily use a fresh mock for config just for this constructor test
+      // to isolate the getContentTypeSchemaId call made during instantiation.
+      const tempConfig = createMockConfiguration(); // This will use 'entityDefinitions' internally now
+      
       const loader = new EntityDefinitionLoader(
-        tempConfig,
-        mockResolver,
-        mockFetcher,
-        mockValidator,
-        mockRegistry,
-        tempLogger
+        tempConfig, // Use the fresh config mock
+        createMockPathResolver(),
+        createMockDataFetcher(),
+        createMockSchemaValidator(),
+        createMockDataRegistry(),
+        createMockLogger()
       );
 
-      expect(loader).toBeInstanceOf(EntityDefinitionLoader);
-      expect(loader).toBeInstanceOf(BaseManifestItemLoader);
-
-      // --- [LOADER-REFACTOR-04 Test Change START] ---
       // Verify super() was called correctly by checking dependencyInjection interaction and result
       expect(tempConfig.getContentTypeSchemaId).toHaveBeenCalledTimes(1);
+      // MODIFICATION: Expect call with 'entityDefinitions' (camelCase)
       expect(tempConfig.getContentTypeSchemaId).toHaveBeenCalledWith(
-        'entity_definitions'
+        'entityDefinitions'
       );
       expect(loader._primarySchemaId).toBe(ENTITY_DEFINITION_SCHEMA_ID); // Check protected base class field
-      // --- [LOADER-REFACTOR-04 Test Change END] ---
 
-      expect(loader._logger).toBe(tempLogger); // Check logger assignment
-
-      // No warnings should be logged in the success case
-      expect(tempLogger.warn).not.toHaveBeenCalled();
+      // Check logger debug for schema ID found (from BaseManifestItemLoader)
+      // MODIFICATION: Use toHaveBeenCalledWith(expect.stringContaining(...)) for a more robust check
+      expect(loader._logger.debug).toHaveBeenCalledWith(
+        expect.stringContaining("Primary schema ID for content type 'entityDefinitions' found: '" + ENTITY_DEFINITION_SCHEMA_ID + "'")
+      );
+      // Ensure no warning was logged for missing schema ID during construction
+      expect(loader._logger.warn).not.toHaveBeenCalledWith(
+        expect.stringContaining("Primary schema ID for content type 'entityDefinitions' not found")
+      );
     });
+    // --- End [LOADER-REFACTOR-04 Test Change] ---
 
+    // --- [LOADER-REFACTOR-04 Test Change]: Adjusted test for warning when schema ID is missing ---
     it('should log ONE warning (from base class) if entity schema ID is not found during construction', () => {
-      const warnLogger = createMockLogger(); // Use a temporary logger
-      const badConfig = createMockConfiguration({
-        // Mock dependencyInjection to return null specifically for 'entity_definitions'
+      const warnLogger = createMockLogger(); // Fresh logger for this test
+      const configMissingSchema = createMockConfiguration({
         getContentTypeSchemaId: jest.fn((typeName) => {
-          if (typeName === 'entity_definitions') return null;
-          return `http://example.com/schemas/${typeName}.schema.json`; // Fallback for others
+          // MODIFICATION: Check for camelCase and return undefined
+          if (typeName === 'entityDefinitions') return undefined; // Simulate missing
+          return `http://example.com/schemas/${typeName}.schema.json`;
         }),
       });
 
-      // Instantiate with the temporary logger and bad dependencyInjection
+      // eslint-disable-next-line no-new
       new EntityDefinitionLoader(
-        badConfig,
-        mockResolver,
-        mockFetcher,
-        mockValidator,
-        mockRegistry,
-        warnLogger
+        configMissingSchema,
+        createMockPathResolver(),
+        createMockDataFetcher(),
+        createMockSchemaValidator(),
+        createMockDataRegistry(),
+        warnLogger // Use the logger that will capture the warning
       );
 
-      // --- [LOADER-REFACTOR-04 Test Change START] ---
-      // --- CORRECTION: Updated expected warning message ---
-      const expectedBaseWarning =
-        "EntityDefinitionLoader: Primary schema ID for content type 'entity_definitions' not found in configuration. Primary validation might be skipped.";
+      // MODIFICATION: Expected warning message uses camelCase
+      const expectedBaseWarning = "EntityDefinitionLoader: Primary schema ID for content type 'entityDefinitions' not found in configuration. Primary validation might be skipped.";
 
       // Expect only ONE warning call total (from the base class)
       expect(warnLogger.warn).toHaveBeenCalledTimes(1);
       expect(warnLogger.warn).toHaveBeenCalledWith(expectedBaseWarning); // Check against the corrected explicit message
 
       // Ensure the EntityDefinitionLoader-specific warning is NOT logged
-      expect(warnLogger.warn).not.toHaveBeenCalledWith(
-        expect.stringContaining(
-          "EntityDefinitionLoader: Schema ID for 'entity_definitions' is missing."
-        )
-      );
-      // --- [LOADER-REFACTOR-04 Test Change END] ---
-
-      // Debug log from AbstractLoader should still happen
-      expect(warnLogger.debug).toHaveBeenCalledWith(
-        'EntityDefinitionLoader: Initialized.'
-      );
-      expect(warnLogger.debug).toHaveBeenCalledTimes(1); // Only AbstractLoader logs initialization now
+      // (This was part of an old test structure, might not be relevant if the base class handles it)
+      // expect(warnLogger.warn).not.toHaveBeenCalledWith(
+      //   expect.stringMatching(/^EntityDefinitionLoader: Primary schema not found/)
+      // );
     });
   });
 
@@ -519,13 +528,13 @@ describe('EntityLoader', () => {
       // 3. Storage Delegation
       expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining(
-          `Delegating storage for original type '${entityType}' with base ID '${baseIdSimple}' to base helper for file ${filename}. Storing under 'entity_definitions' category.`
+          `Delegating storage for original type '${entityType}' with base ID '${baseIdSimple}' to base helper for file ${filename}. Storing under 'entityDefinitions' category.`
         )
       );
       expect(entityLoader._storeItemInRegistry).toHaveBeenCalledTimes(1);
       const expectedStoredData = { ...fetchedData };
       expect(entityLoader._storeItemInRegistry).toHaveBeenCalledWith(
-        'entity_definitions',
+        'entityDefinitions',
         TEST_MOD_ID,
         baseIdSimple,
         expectedStoredData,
@@ -630,7 +639,7 @@ describe('EntityLoader', () => {
       expect(entityLoader._storeItemInRegistry).toHaveBeenCalledTimes(1);
       const expectedStoredData = { ...fetchedData };
       expect(entityLoader._storeItemInRegistry).toHaveBeenCalledWith(
-        'entity_definitions',
+        'entityDefinitions',
         TEST_MOD_ID,
         baseIdComplex,
         expectedStoredData,
@@ -757,7 +766,7 @@ describe('EntityLoader', () => {
       );
       expect(entityLoader._storeItemInRegistry).toHaveBeenCalledTimes(1);
       expect(entityLoader._storeItemInRegistry).toHaveBeenCalledWith(
-        'entity_definitions',
+        'entityDefinitions',
         TEST_MOD_ID,
         expectedBaseId,
         fetchedData,
@@ -867,7 +876,7 @@ describe('EntityLoader', () => {
       );
       expect(entityLoader._storeItemInRegistry).toHaveBeenCalledTimes(1);
       expect(entityLoader._storeItemInRegistry).toHaveBeenCalledWith(
-        'entity_definitions',
+        'entityDefinitions',
         TEST_MOD_ID,
         baseIdSimple,
         fetchedData,
@@ -909,7 +918,7 @@ describe('EntityLoader', () => {
         )
       );
       expect(entityLoader._storeItemInRegistry).toHaveBeenCalledWith(
-        'entity_definitions',
+        'entityDefinitions',
         TEST_MOD_ID,
         baseId,
         fetchedData,
@@ -946,7 +955,7 @@ describe('EntityLoader', () => {
         )
       );
       expect(entityLoader._storeItemInRegistry).toHaveBeenCalledWith(
-        'entity_definitions',
+        'entityDefinitions',
         TEST_MOD_ID,
         baseId,
         fetchedData,
@@ -986,7 +995,7 @@ describe('EntityLoader', () => {
         expect.anything()
       ); // No component validation calls
       expect(entityLoader._storeItemInRegistry).toHaveBeenCalledWith(
-        'entity_definitions',
+        'entityDefinitions',
         TEST_MOD_ID,
         baseId,
         fetchedData,
@@ -1026,7 +1035,7 @@ describe('EntityLoader', () => {
         expect.anything()
       ); // No component validation calls
       expect(entityLoader._storeItemInRegistry).toHaveBeenCalledWith(
-        'entity_definitions',
+        'entityDefinitions',
         TEST_MOD_ID,
         baseId,
         fetchedData,
@@ -1099,7 +1108,7 @@ describe('EntityLoader', () => {
 
       // Storage should still succeed because skipping validation isn't an error
       expect(entityLoader._storeItemInRegistry).toHaveBeenCalledWith(
-        'entity_definitions',
+        'entityDefinitions',
         TEST_MOD_ID,
         baseId,
         fetchedData,

@@ -1,0 +1,20 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "http://example.com/schemas/world.schema.json",
+    "title": "World",
+    "description": "Defines the initial state of a game world by enumerating all entities that exist at the start.",
+    "type": "object",
+    "properties": {
+        "instances": {
+            "type": "array",
+            "description": "A list of all entity instances to be created when the world is initialized.",
+            "items": {
+                "$ref": "http://example.com/schemas/entity-instance.schema.json#"
+            },
+            "minItems": 1
+        }
+    },
+    "required": [
+        "instances"
+    ]
+}

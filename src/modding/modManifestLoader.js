@@ -177,12 +177,13 @@ class ModManifestLoader {
       const result = settled[i];
 
       if (result.status === 'rejected') {
-        this.#logger.warn(
-          ERR.FETCH_FAIL,
-          `${fn}: could not fetch manifest for '${modId}' – skipping.`,
-          { modId, path, reason: result.reason?.message || result.reason }
-        );
-        continue;
+        const errorMsg = `${fn}: Critical error - could not fetch manifest for requested mod '${modId}'. Path: ${path}. Reason: ${result.reason?.message || result.reason}`;
+        this.#logger.error(ERR.FETCH_FAIL, errorMsg, {
+          modId,
+          path,
+          reason: result.reason?.message || result.reason,
+        });
+        throw new Error(errorMsg);
       }
 
       const manifestObj = result.value;

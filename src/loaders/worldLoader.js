@@ -332,22 +332,26 @@ class WorldLoader extends AbstractLoader {
    * @throws {MissingSchemaError} If a required schema is missing.
    */
   #checkEssentialSchemas() {
-    const essentials = ESSENTIAL_SCHEMA_TYPES.map((type) =>
-      this.#configuration.getContentTypeSchemaId(type)
-    );
     this.#logger.debug(
-      `WorldLoader: Checking for essential schemas: [${essentials.filter((id) => !!id).join(', ')}]`
+      `WorldLoader: Checking configuration and load state for ${ESSENTIAL_SCHEMA_TYPES.length} essential schema types...`
     );
-    for (const id of essentials) {
-      if (!id || !this.#validator.isSchemaLoaded(id)) {
-        const missing = id ?? 'Unknown Essential Schema ID';
-        this.#logger.error(
-          `WorldLoader: Essential schema missing or not configured: ${missing}`
-        );
-        throw new MissingSchemaError(missing);
+    for (const type of ESSENTIAL_SCHEMA_TYPES) {
+      const schemaId = this.#configuration.getContentTypeSchemaId(type);
+      if (!schemaId) {
+        const errorMessage = `Essential schema type '${type}' is not configured (no schema ID found).`;
+        this.#logger.error(`WorldLoader: ${errorMessage}`);
+        throw new MissingSchemaError(errorMessage, null, type);
       }
+      if (!this.#validator.isSchemaLoaded(schemaId)) {
+        const errorMessage = `Essential schema '${schemaId}' (type: '${type}') is configured but not loaded.`;
+        this.#logger.error(`WorldLoader: ${errorMessage}`);
+        throw new MissingSchemaError(errorMessage, schemaId, type);
+      }
+      this.#logger.debug(
+        `WorldLoader: Essential schema for type '${type}' (ID: '${schemaId}') is configured and loaded.`
+      );
     }
-    this.#logger.debug('WorldLoader: All essential schemas found.');
+    this.#logger.debug('WorldLoader: All essential schemas are configured and loaded.');
   }
 
   /**
@@ -478,7 +482,8 @@ class WorldLoader extends AbstractLoader {
         );
         throw err; // Re-throw the specific dependency/version error
       } else if (err instanceof MissingSchemaError) {
-        const finalMessage = `WorldLoader failed: Essential schema '${err.schemaId || 'unknown'}' missing or check failed – aborting world load. Original error: ${err.message}`;
+        // The err.message from MissingSchemaError is now detailed enough.
+        const finalMessage = `WorldLoader failed during essential schema check – aborting world load. Original error: ${err.message}`;
         this.#logger.error(finalMessage, err); // Log the combined info
         throw new WorldLoaderError(finalMessage, err); // Throw a new error, preserving the original cause
       } else {
