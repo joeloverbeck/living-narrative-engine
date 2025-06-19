@@ -10,7 +10,7 @@ import {
 } from '@jest/globals';
 import EntityManager from '../../src/entities/entityManager.js';
 import Entity from '../../src/entities/entity.js';
-import EntityDefinition from '../../src/entities/EntityDefinition.js';
+import EntityDefinition from '../../src/entities/entityDefinition.js';
 import EntityInstanceData from '../../src/entities/entityInstanceData.js';
 import { POSITION_COMPONENT_ID } from '../../src/constants/componentIds.js';
 import { ENTITY_REMOVED_ID } from '../../src/constants/eventIds.js';
@@ -161,7 +161,8 @@ describe('EntityManager - Auxiliary Methods (Lifecycle & Spatial Index)', () => 
       let mockEntityWithoutPos;
       beforeEach(() => {
         // Use a mock entity that can be added to the real map instance
-        mockEntityWithoutPos = { // Renamed for clarity
+        mockEntityWithoutPos = {
+          // Renamed for clarity
           id: INSTANCE_ID_1,
           hasComponent: jest.fn().mockReturnValue(false),
         };
@@ -179,14 +180,19 @@ describe('EntityManager - Auxiliary Methods (Lifecycle & Spatial Index)', () => 
         expect(entityManager.activeEntities.has(INSTANCE_ID_1)).toBe(false);
       });
 
-      it('should dispatch ENTITY_REMOVED_ID event and NOT call ISpatialIndexManager.removeEntity', () => { // Updated description
+      it('should dispatch ENTITY_REMOVED_ID event and NOT call ISpatialIndexManager.removeEntity', () => {
+        // Updated description
         expect(ENTITY_REMOVED_ID).toBe('core:entity_removed'); // Added check
         entityManager.removeEntityInstance(INSTANCE_ID_1);
         expect(mockSpatialIndex.removeEntity).not.toHaveBeenCalled();
-        expect(mockEventDispatcher.dispatch).toHaveBeenCalledWith(ENTITY_REMOVED_ID, { entity: mockEntityWithoutPos }); // Added event check
+        expect(mockEventDispatcher.dispatch).toHaveBeenCalledWith(
+          ENTITY_REMOVED_ID,
+          { entity: mockEntityWithoutPos }
+        ); // Added event check
         expect(mockEventDispatcher.dispatch).toHaveBeenCalledTimes(1);
       });
-      it('should log info message about removal', () => { // Added test for generic log
+      it('should log info message about removal', () => {
+        // Added test for generic log
         entityManager.removeEntityInstance(INSTANCE_ID_1);
         expect(mockLogger.info).toHaveBeenCalledWith(
           `Entity instance ${INSTANCE_ID_1} removed from EntityManager.`
@@ -220,17 +226,23 @@ describe('EntityManager - Auxiliary Methods (Lifecycle & Spatial Index)', () => 
         expect(entityManager.activeEntities.has(INSTANCE_ID_2_POS)).toBe(false);
       });
 
-      it('should dispatch ENTITY_REMOVED_ID event and NOT call ISpatialIndexManager.removeEntity', () => { // Updated description and assertion
+      it('should dispatch ENTITY_REMOVED_ID event and NOT call ISpatialIndexManager.removeEntity', () => {
+        // Updated description and assertion
         expect(ENTITY_REMOVED_ID).toBe('core:entity_removed'); // Added check
         entityManager.removeEntityInstance(INSTANCE_ID_2_POS);
         expect(mockSpatialIndex.removeEntity).not.toHaveBeenCalled(); // No direct call
-        expect(mockEventDispatcher.dispatch).toHaveBeenCalledWith(ENTITY_REMOVED_ID, { entity: mockEntityWithPos }); // Added event check
+        expect(mockEventDispatcher.dispatch).toHaveBeenCalledWith(
+          ENTITY_REMOVED_ID,
+          { entity: mockEntityWithPos }
+        ); // Added event check
         expect(mockEventDispatcher.dispatch).toHaveBeenCalledTimes(1);
       });
 
-      it('should log info message about removal and NOT log spatial index specific debug message', () => { // Updated description
+      it('should log info message about removal and NOT log spatial index specific debug message', () => {
+        // Updated description
         entityManager.removeEntityInstance(INSTANCE_ID_2_POS);
-        expect(mockLogger.debug).not.toHaveBeenCalledWith( // Ensure old debug log is gone
+        expect(mockLogger.debug).not.toHaveBeenCalledWith(
+          // Ensure old debug log is gone
           expect.stringContaining('from spatial index')
         );
         expect(mockLogger.info).toHaveBeenCalledWith(
@@ -245,7 +257,8 @@ describe('EntityManager - Auxiliary Methods (Lifecycle & Spatial Index)', () => 
 
       beforeEach(() => {
         // Entity with position component but no locationId in it (invalid for spatial index)
-        mockEntityInvalidPos = { // Renamed for clarity
+        mockEntityInvalidPos = {
+          // Renamed for clarity
           id: instanceIdInvalidPos,
           hasComponent: jest.fn((id) => id === POSITION_COMPONENT_ID),
           getComponentData: jest.fn().mockReturnValue({ x: 0, y: 0 }),
@@ -266,20 +279,26 @@ describe('EntityManager - Auxiliary Methods (Lifecycle & Spatial Index)', () => 
         );
       });
 
-      it('should dispatch ENTITY_REMOVED_ID event and NOT call ISpatialIndexManager.removeEntity', () => { // Updated description and assertion
+      it('should dispatch ENTITY_REMOVED_ID event and NOT call ISpatialIndexManager.removeEntity', () => {
+        // Updated description and assertion
         expect(ENTITY_REMOVED_ID).toBe('core:entity_removed'); // Added check
         entityManager.removeEntityInstance(instanceIdInvalidPos);
         expect(mockSpatialIndex.removeEntity).not.toHaveBeenCalled(); // No direct call
-        expect(mockEventDispatcher.dispatch).toHaveBeenCalledWith(ENTITY_REMOVED_ID, { entity: mockEntityInvalidPos }); // Added event check
+        expect(mockEventDispatcher.dispatch).toHaveBeenCalledWith(
+          ENTITY_REMOVED_ID,
+          { entity: mockEntityInvalidPos }
+        ); // Added event check
         expect(mockEventDispatcher.dispatch).toHaveBeenCalledTimes(1);
       });
 
-      it('should log info about removal and NOT specific spatial debug messages', () => { // Updated description
+      it('should log info about removal and NOT specific spatial debug messages', () => {
+        // Updated description
         entityManager.removeEntityInstance(instanceIdInvalidPos);
-        expect(mockLogger.debug).not.toHaveBeenCalledWith( // Ensure old debug log is gone
-           expect.stringContaining('from spatial index')
+        expect(mockLogger.debug).not.toHaveBeenCalledWith(
+          // Ensure old debug log is gone
+          expect.stringContaining('from spatial index')
         );
-         expect(mockLogger.info).toHaveBeenCalledWith(
+        expect(mockLogger.info).toHaveBeenCalledWith(
           `Entity instance ${instanceIdInvalidPos} removed from EntityManager.`
         );
       });
@@ -317,19 +336,22 @@ describe('EntityManager - Auxiliary Methods (Lifecycle & Spatial Index)', () => 
       mockLogger.warn.mockClear(); // Clear before test
     });
 
-    it('should log a deprecation warning', () => { // New test for warning
+    it('should log a deprecation warning', () => {
+      // New test for warning
       entityManager.getEntitiesInLocation(queryLocationId);
       expect(mockLogger.warn).toHaveBeenCalledWith(
         'EntityManager.getEntitiesInLocation: This method is deprecated as EntityManager is decoupled from SpatialIndexManager. Returning an empty set. Consumers should rely on events to maintain their own spatial data.'
       );
     });
-    
-    it('should NOT call ISpatialIndexManager.getEntitiesInLocation', () => { // Updated
+
+    it('should NOT call ISpatialIndexManager.getEntitiesInLocation', () => {
+      // Updated
       entityManager.getEntitiesInLocation(queryLocationId);
       expect(mockSpatialIndex.getEntitiesInLocation).not.toHaveBeenCalled();
     });
 
-    it('should return an empty Set', () => { // Updated
+    it('should return an empty Set', () => {
+      // Updated
       const result = entityManager.getEntitiesInLocation(queryLocationId);
       expect(result).toEqual(new Set()); // Check for empty set
       expect(result.size).toBe(0);
@@ -353,7 +375,8 @@ describe('EntityManager - Auxiliary Methods (Lifecycle & Spatial Index)', () => 
       expect(entityManager.activeEntities.size).toBe(0);
     });
 
-    it('should log info messages about clearing entities and definition cache', () => { // Updated
+    it('should log info messages about clearing entities and definition cache', () => {
+      // Updated
       entityManager.clearAll();
       expect(mockLogger.info).toHaveBeenCalledWith(
         'All entity instances removed from EntityManager.'
@@ -364,10 +387,13 @@ describe('EntityManager - Auxiliary Methods (Lifecycle & Spatial Index)', () => 
       expect(mockLogger.info).toHaveBeenCalledTimes(2); // Ensure only these two info logs
     });
 
-    it('should NOT call ISpatialIndexManager.clearIndex and NOT log about spatial index', () => { // Updated
+    it('should NOT call ISpatialIndexManager.clearIndex and NOT log about spatial index', () => {
+      // Updated
       entityManager.clearAll();
       expect(mockSpatialIndex.clearIndex).not.toHaveBeenCalled();
-      expect(mockLogger.debug).not.toHaveBeenCalledWith('Spatial index cleared.');
+      expect(mockLogger.debug).not.toHaveBeenCalledWith(
+        'Spatial index cleared.'
+      );
     });
   });
 });

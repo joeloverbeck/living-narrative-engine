@@ -1,5 +1,5 @@
 import EntityManager from '../../src/entities/entityManager.js';
-import EntityDefinition from '../../src/entities/EntityDefinition.js';
+import EntityDefinition from '../../src/entities/entityDefinition.js';
 import {
   ACTOR_COMPONENT_ID,
   NOTES_COMPONENT_ID,
@@ -58,7 +58,6 @@ const makeStubs = (validator) => {
 const createMockSafeEventDispatcher = () => ({
   dispatch: jest.fn(),
 });
-
 
 describe('EntityManager default component injection uses validated data', () => {
   let validator;

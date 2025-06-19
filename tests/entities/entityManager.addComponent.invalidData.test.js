@@ -12,7 +12,7 @@ import {
   jest,
 } from '@jest/globals';
 import EntityManager from '../../src/entities/entityManager.js';
-import EntityDefinition from '../../src/entities/EntityDefinition.js';
+import EntityDefinition from '../../src/entities/entityDefinition.js';
 
 const createMockDataRegistry = () => ({
   getEntityDefinition: jest.fn(),
@@ -60,9 +60,14 @@ describe('EntityManager.addComponent invalid componentData handling', () => {
     validator = createMockSchemaValidator();
     logger = createMockLogger();
     spatial = createMockSpatialIndexManager();
-    mockEventDispatcher = createMockSafeEventDispatcher()
+    mockEventDispatcher = createMockSafeEventDispatcher();
 
-    manager = new EntityManager(registry, validator, logger, mockEventDispatcher);
+    manager = new EntityManager(
+      registry,
+      validator,
+      logger,
+      mockEventDispatcher
+    );
 
     const definitionData = {
       components: {

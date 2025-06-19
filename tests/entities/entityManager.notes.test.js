@@ -8,7 +8,7 @@
 import Ajv from 'ajv';
 import addFormats from 'ajv-formats';
 import EntityManager from '../../src/entities/entityManager.js';
-import EntityDefinition from '../../src/entities/EntityDefinition.js';
+import EntityDefinition from '../../src/entities/entityDefinition.js';
 import {
   ACTOR_COMPONENT_ID,
   NOTES_COMPONENT_ID,
@@ -93,7 +93,11 @@ describe('EntityManager - core:notes injection', () => {
           };
         }
         // For all other components, assume validation passes and provide cloned data.
-        return { isValid: true, errors: null, validatedData: deepClone(dataToValidate) };
+        return {
+          isValid: true,
+          errors: null,
+          validatedData: deepClone(dataToValidate),
+        };
       }),
     };
 
