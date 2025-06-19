@@ -46,7 +46,7 @@ const createMemoryStorageProvider = () => {
  * @returns {jest.Mocked<GameStateSerializer>} Mock serializer
  */
 const createMockGameStateSerializer = () => ({
-  serializeAndCompress: jest.fn(async (obj) => ({
+  compressPreparedState: jest.fn(async (obj) => ({
     compressedData: new Uint8Array([1, 2, 3]),
     finalSaveObject: obj,
   })),
@@ -111,14 +111,14 @@ describe('SaveLoadService', () => {
         expectedPath,
         expect.any(Uint8Array)
       );
-      expect(serializer.serializeAndCompress).toHaveBeenCalledTimes(1);
+      expect(serializer.compressPreparedState).toHaveBeenCalledTimes(1);
       expect(prepareSpy).toHaveBeenCalledWith(
         name,
         state,
         serializer,
         expect.anything()
       );
-      const passedObj = serializer.serializeAndCompress.mock.calls[0][0];
+      const passedObj = serializer.compressPreparedState.mock.calls[0][0];
       expect(passedObj.metadata.saveName).toBe(name);
       expect(passedObj.integrityChecks).toEqual({});
     });
@@ -132,7 +132,7 @@ describe('SaveLoadService', () => {
       expect(result.error).toBeInstanceOf(PersistenceError);
       expect(result.error.code).toBe(PersistenceErrorCodes.INVALID_SAVE_NAME);
       expect(storageProvider.writeFileAtomically).not.toHaveBeenCalled();
-      expect(serializer.serializeAndCompress).not.toHaveBeenCalled();
+      expect(serializer.compressPreparedState).not.toHaveBeenCalled();
       expect(prepareSpy).not.toHaveBeenCalled();
     });
   });

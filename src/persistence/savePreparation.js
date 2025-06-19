@@ -48,7 +48,7 @@ export async function prepareState(
   }
 
   return wrapPersistenceOperation(logger, async () => {
-    const { compressedData } = await serializer.serializeAndCompress(
+    const { compressedData } = await serializer.compressPreparedState(
       cloneResult.data
     );
     return { success: true, data: compressedData };

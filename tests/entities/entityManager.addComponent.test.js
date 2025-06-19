@@ -9,7 +9,7 @@ import {
   afterEach,
 } from '@jest/globals';
 import EntityManager from '../../src/entities/entityManager.js';
-import EntityDefinition from '../../src/entities/EntityDefinition.js';
+import EntityDefinition from '../../src/entities/entityDefinition.js';
 // Entity import might not be needed if only interacting via EntityManager
 import { POSITION_COMPONENT_ID } from '../../src/constants/componentIds.js';
 import { EntityNotFoundError } from '../../src/errors/entityNotFoundError.js';
@@ -165,7 +165,11 @@ describe('EntityManager.addComponent', () => {
     expect(mockEventDispatcher.dispatch).toHaveBeenCalledTimes(1);
     expect(mockEventDispatcher.dispatch).toHaveBeenCalledWith(
       COMPONENT_ADDED_ID,
-      { entity: testEntityInstance, componentTypeId: NEW_COMPONENT_TYPE_ID, componentData: dataToAdd }
+      {
+        entity: testEntityInstance,
+        componentTypeId: NEW_COMPONENT_TYPE_ID,
+        componentData: dataToAdd,
+      }
     );
 
     expect(mockLogger.debug).toHaveBeenCalledWith(
@@ -205,7 +209,11 @@ describe('EntityManager.addComponent', () => {
     expect(mockEventDispatcher.dispatch).toHaveBeenCalledTimes(1);
     expect(mockEventDispatcher.dispatch).toHaveBeenCalledWith(
       COMPONENT_ADDED_ID,
-      { entity: testEntityInstance, componentTypeId: INITIAL_COMPONENT_TYPE_ID, componentData: dataToUpdate }
+      {
+        entity: testEntityInstance,
+        componentTypeId: INITIAL_COMPONENT_TYPE_ID,
+        componentData: dataToUpdate,
+      }
     );
 
     expect(mockLogger.debug).toHaveBeenCalledWith(
@@ -240,11 +248,15 @@ describe('EntityManager.addComponent', () => {
       expect(
         entityManager.getComponentData(MOCK_INSTANCE_ID, POSITION_COMPONENT_ID)
       ).toEqual(POSITION_DATA_NEW);
-      
+
       expect(mockEventDispatcher.dispatch).toHaveBeenCalledTimes(1);
       expect(mockEventDispatcher.dispatch).toHaveBeenCalledWith(
         COMPONENT_ADDED_ID,
-        { entity: testEntityInstance, componentTypeId: POSITION_COMPONENT_ID, componentData: positionDataForEvent }
+        {
+          entity: testEntityInstance,
+          componentTypeId: POSITION_COMPONENT_ID,
+          componentData: positionDataForEvent,
+        }
       );
       expect(mockLogger.debug).toHaveBeenCalledWith(
         `Successfully added/updated component '${POSITION_COMPONENT_ID}' data on entity '${MOCK_INSTANCE_ID}'.`
@@ -263,11 +275,15 @@ describe('EntityManager.addComponent', () => {
       expect(
         entityManager.getComponentData(MOCK_INSTANCE_ID, POSITION_COMPONENT_ID)
       ).toEqual(POSITION_DATA_NO_LOCATION);
-      
+
       expect(mockEventDispatcher.dispatch).toHaveBeenCalledTimes(1);
       expect(mockEventDispatcher.dispatch).toHaveBeenCalledWith(
         COMPONENT_ADDED_ID,
-        { entity: testEntityInstance, componentTypeId: POSITION_COMPONENT_ID, componentData: positionDataForEvent }
+        {
+          entity: testEntityInstance,
+          componentTypeId: POSITION_COMPONENT_ID,
+          componentData: positionDataForEvent,
+        }
       );
       expect(mockLogger.debug).toHaveBeenCalledWith(
         `Successfully added/updated component '${POSITION_COMPONENT_ID}' data on entity '${MOCK_INSTANCE_ID}'.`
@@ -286,11 +302,15 @@ describe('EntityManager.addComponent', () => {
       expect(
         entityManager.getComponentData(MOCK_INSTANCE_ID, POSITION_COMPONENT_ID)
       ).toEqual(POSITION_DATA_NULL_LOCATION);
-      
+
       expect(mockEventDispatcher.dispatch).toHaveBeenCalledTimes(1);
       expect(mockEventDispatcher.dispatch).toHaveBeenCalledWith(
         COMPONENT_ADDED_ID,
-        { entity: testEntityInstance, componentTypeId: POSITION_COMPONENT_ID, componentData: positionDataForEvent }
+        {
+          entity: testEntityInstance,
+          componentTypeId: POSITION_COMPONENT_ID,
+          componentData: positionDataForEvent,
+        }
       );
       expect(mockLogger.debug).toHaveBeenCalledWith(
         `Successfully added/updated component '${POSITION_COMPONENT_ID}' data on entity '${MOCK_INSTANCE_ID}'.`
@@ -309,8 +329,10 @@ describe('EntityManager.addComponent', () => {
 
       it('Success Case (Update Position Component): should update position, return true, and dispatch COMPONENT_ADDED_ID event', () => {
         expect(
-          entityManager.getComponentData(MOCK_INSTANCE_ID, POSITION_COMPONENT_ID)
-            ?.locationId
+          entityManager.getComponentData(
+            MOCK_INSTANCE_ID,
+            POSITION_COMPONENT_ID
+          )?.locationId
         ).toBe(INITIAL_LOCATION_ID);
 
         const positionDataForEvent = { ...POSITION_DATA_NEW };
@@ -322,13 +344,20 @@ describe('EntityManager.addComponent', () => {
 
         expect(result).toBe(true);
         expect(
-          entityManager.getComponentData(MOCK_INSTANCE_ID, POSITION_COMPONENT_ID)
+          entityManager.getComponentData(
+            MOCK_INSTANCE_ID,
+            POSITION_COMPONENT_ID
+          )
         ).toEqual(POSITION_DATA_NEW);
-        
+
         expect(mockEventDispatcher.dispatch).toHaveBeenCalledTimes(1);
         expect(mockEventDispatcher.dispatch).toHaveBeenCalledWith(
           COMPONENT_ADDED_ID,
-          { entity: testEntityInstance, componentTypeId: POSITION_COMPONENT_ID, componentData: positionDataForEvent }
+          {
+            entity: testEntityInstance,
+            componentTypeId: POSITION_COMPONENT_ID,
+            componentData: positionDataForEvent,
+          }
         );
         expect(mockLogger.debug).toHaveBeenCalledWith(
           `Successfully added/updated component '${POSITION_COMPONENT_ID}' data on entity '${MOCK_INSTANCE_ID}'.`
@@ -345,13 +374,20 @@ describe('EntityManager.addComponent', () => {
 
         expect(result).toBe(true);
         expect(
-          entityManager.getComponentData(MOCK_INSTANCE_ID, POSITION_COMPONENT_ID)
+          entityManager.getComponentData(
+            MOCK_INSTANCE_ID,
+            POSITION_COMPONENT_ID
+          )
         ).toEqual(POSITION_DATA_NULL_LOCATION);
-        
+
         expect(mockEventDispatcher.dispatch).toHaveBeenCalledTimes(1);
         expect(mockEventDispatcher.dispatch).toHaveBeenCalledWith(
           COMPONENT_ADDED_ID,
-          { entity: testEntityInstance, componentTypeId: POSITION_COMPONENT_ID, componentData: positionDataForEvent }
+          {
+            entity: testEntityInstance,
+            componentTypeId: POSITION_COMPONENT_ID,
+            componentData: positionDataForEvent,
+          }
         );
         expect(mockLogger.debug).toHaveBeenCalledWith(
           `Successfully added/updated component '${POSITION_COMPONENT_ID}' data on entity '${MOCK_INSTANCE_ID}'.`
@@ -368,13 +404,20 @@ describe('EntityManager.addComponent', () => {
 
         expect(result).toBe(true);
         expect(
-          entityManager.getComponentData(MOCK_INSTANCE_ID, POSITION_COMPONENT_ID)
+          entityManager.getComponentData(
+            MOCK_INSTANCE_ID,
+            POSITION_COMPONENT_ID
+          )
         ).toEqual(POSITION_DATA_NO_LOCATION);
 
         expect(mockEventDispatcher.dispatch).toHaveBeenCalledTimes(1);
         expect(mockEventDispatcher.dispatch).toHaveBeenCalledWith(
           COMPONENT_ADDED_ID,
-          { entity: testEntityInstance, componentTypeId: POSITION_COMPONENT_ID, componentData: positionDataForEvent }
+          {
+            entity: testEntityInstance,
+            componentTypeId: POSITION_COMPONENT_ID,
+            componentData: positionDataForEvent,
+          }
         );
         expect(mockLogger.debug).toHaveBeenCalledWith(
           `Successfully added/updated component '${POSITION_COMPONENT_ID}' data on entity '${MOCK_INSTANCE_ID}'.`

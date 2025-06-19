@@ -10,7 +10,7 @@ import {
 } from '@jest/globals';
 import EntityManager from '../../src/entities/entityManager.js';
 import Entity from '../../src/entities/entity.js';
-import EntityDefinition from '../../src/entities/EntityDefinition.js';
+import EntityDefinition from '../../src/entities/entityDefinition.js';
 import EntityInstanceData from '../../src/entities/entityInstanceData.js';
 
 // --- Mock Implementations ---
@@ -43,7 +43,6 @@ describe('EntityManager.getEntitiesWithComponent', () => {
   let mockSpatialIndex;
   let entityManager;
   let mockEventDispatcher;
-
 
   // --- Test Constants ---
   const COMPONENT_A = 'core:component_a';
