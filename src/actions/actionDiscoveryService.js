@@ -128,9 +128,8 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
   }
 
   /**
-   * Helper that validates and formats potential targets, returning
+   * @description Helper that validates and formats potential targets, returning
    * structured {@link DiscoveredActionInfo} objects.
-   *
    * @param {import('../data/gameDataRepository.js').ActionDefinition} actionDef
    * @param {Entity} actorEntity
    * @param {Array<{context: ActionTargetContext, params: object}>} targetContexts
