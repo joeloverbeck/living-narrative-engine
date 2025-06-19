@@ -5,6 +5,46 @@ import { safeDispatchError } from './safeDispatchErrorUtils.js';
 import { resolveSafeDispatcher } from './dispatcherUtils.js';
 
 /**
+ * Validate that the context exists and the variable name is valid.
+ *
+ * @param {string} variableName Variable name to validate.
+ * @param {import('../logic/defs.js').ExecutionContext} execCtx Execution context.
+ * @param {import('../interfaces/coreServices.js').ILogger} [logger] Optional logger.
+ * @param _logger
+ * @returns {{valid: boolean, error?: Error, name?: string}} Validation result.
+ * @private
+ */
+function _validateContextAndName(variableName, execCtx, _logger) {
+  const trimmedName =
+    typeof variableName === 'string' ? variableName.trim() : '';
+
+  if (!trimmedName) {
+    return {
+      valid: false,
+      error: new Error(
+        'setContextValue: variableName must be a non-empty string.'
+      ),
+    };
+  }
+
+  const hasContext =
+    execCtx?.evaluationContext &&
+    typeof execCtx.evaluationContext.context === 'object' &&
+    execCtx.evaluationContext.context !== null;
+
+  if (!hasContext) {
+    return {
+      valid: false,
+      error: new Error(
+        'storeResult: evaluationContext.context is missing; cannot store result'
+      ),
+    };
+  }
+
+  return { valid: true, name: trimmedName };
+}
+
+/**
  * Safely stores a value into `execCtx.evaluationContext.context`. If the context
  * is missing, an error is dispatched (or logged) and the function returns a
  * failure result.
@@ -20,24 +60,21 @@ import { resolveSafeDispatcher } from './dispatcherUtils.js';
 export function storeResult(variableName, value, execCtx, dispatcher, logger) {
   const log = getModuleLogger('contextVariableUtils', logger);
   const safeDispatcher = resolveSafeDispatcher(execCtx, dispatcher, log);
+  const { valid, error, name } = _validateContextAndName(
+    variableName,
+    execCtx,
+    logger
+  );
 
-  const hasContext =
-    execCtx?.evaluationContext &&
-    typeof execCtx.evaluationContext.context === 'object' &&
-    execCtx.evaluationContext.context !== null;
-
-  if (!hasContext) {
-    const err = new Error(
-      'storeResult: evaluationContext.context is missing; cannot store result'
-    );
+  if (!valid) {
     if (safeDispatcher) {
-      safeDispatchError(safeDispatcher, err.message, { variableName });
+      safeDispatchError(safeDispatcher, error.message, { variableName });
     }
-    return { success: false, error: err };
+    return { success: false, error };
   }
 
   try {
-    execCtx.evaluationContext.context[variableName] = value;
+    execCtx.evaluationContext.context[name] = value;
     return { success: true };
   } catch (e) {
     const err = new Error(
@@ -76,21 +113,18 @@ export function setContextValueResult(
   const trimmedName =
     typeof variableName === 'string' ? variableName.trim() : '';
   const log = getModuleLogger('contextVariableUtils', logger);
-
-  if (!trimmedName) {
+  const validation = _validateContextAndName(trimmedName, execCtx, logger);
+  if (!validation.valid) {
     const safeDispatcher = resolveSafeDispatcher(execCtx, dispatcher, log);
-    const err = new Error(
-      'setContextValue: variableName must be a non-empty string.'
-    );
     if (safeDispatcher) {
-      safeDispatchError(safeDispatcher, err.message, {
+      safeDispatchError(safeDispatcher, validation.error.message, {
         variableName,
       });
     }
-    return { success: false, error: err };
+    return { success: false, error: validation.error };
   }
 
-  return storeResult(trimmedName, value, execCtx, dispatcher, logger);
+  return storeResult(validation.name, value, execCtx, dispatcher, logger);
 }
 
 /**

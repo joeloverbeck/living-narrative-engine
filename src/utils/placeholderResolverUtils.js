@@ -206,6 +206,114 @@ export class PlaceholderResolver {
   }
 
   /**
+   * Handles string placeholder resolution.
+   *
+   * @private
+   * @param {string} value String potentially containing placeholders.
+   * @param {object[]} sources Resolution sources.
+   * @returns {{changed: boolean, value: *}} Resulting value and change flag.
+   */
+  _resolveString(value, sources) {
+    const fullMatch = value.match(FULL_STRING_PLACEHOLDER_REGEX);
+    const replaced = this.resolve(value, ...sources);
+    if (fullMatch) {
+      let placeholderPath = fullMatch[1];
+      const isOptional = placeholderPath.endsWith('?');
+      if (isOptional) {
+        placeholderPath = placeholderPath.slice(0, -1);
+      }
+      const resolved = this._resolveFromSources(placeholderPath, sources);
+      if (resolved !== undefined) {
+        this.#logger.debug(
+          `Resolved full string placeholder {${placeholderPath}${isOptional ? '?' : ''}} to: ${
+            typeof resolved === 'object' ? JSON.stringify(resolved) : resolved
+          }`
+        );
+        return { changed: true, value: resolved };
+      }
+      return { changed: true, value: undefined };
+    }
+
+    if (replaced !== value) {
+      let match;
+      PLACEHOLDER_FIND_REGEX.lastIndex = 0;
+      while ((match = PLACEHOLDER_FIND_REGEX.exec(value))) {
+        let placeholderPath = match[1];
+        const placeholderSyntax = match[0];
+        const isOptional = placeholderPath.endsWith('?');
+        if (isOptional) {
+          placeholderPath = placeholderPath.slice(0, -1);
+        }
+        const resolved = this._resolveFromSources(placeholderPath, sources);
+        if (resolved !== undefined) {
+          const stringValue = resolved === null ? 'null' : String(resolved);
+          this.#logger.debug(
+            `Replaced embedded placeholder ${placeholderSyntax} with string: "${stringValue}"`
+          );
+        }
+      }
+      return { changed: true, value: replaced };
+    }
+
+    return { changed: false, value };
+  }
+
+  /**
+   * Handles array placeholder resolution.
+   *
+   * @private
+   * @param {Array} arr Array potentially containing placeholders.
+   * @param _skipKeys
+   * @param {object[]} sources Resolution sources.
+   * @returns {{changed: boolean, value: *}} Resulting value and change flag.
+   */
+  _resolveArray(arr, sources, _skipKeys) {
+    let changed = false;
+    const resolvedArr = arr.map((item) => {
+      const { value: resolvedItem, changed: c } = this._resolveValue(
+        item,
+        sources
+      );
+      if (c) {
+        changed = true;
+      }
+      return resolvedItem;
+    });
+    return { changed, value: changed ? resolvedArr : arr };
+  }
+
+  /**
+   * Handles object placeholder resolution.
+   *
+   * @private
+   * @param {object} obj Object potentially containing placeholders.
+   * @param {object[]} sources Resolution sources.
+   * @param {Set<string>} skipKeys Keys that should not be resolved at this level.
+   * @returns {{changed: boolean, value: *}} Resulting value and change flag.
+   */
+  _resolveObject(obj, sources, skipKeys) {
+    let changed = false;
+    const result = {};
+    for (const key in obj) {
+      if (Object.prototype.hasOwnProperty.call(obj, key)) {
+        if (skipKeys && skipKeys.has(key)) {
+          result[key] = obj[key];
+        } else {
+          const { value: resolvedVal, changed: c } = this._resolveValue(
+            obj[key],
+            sources
+          );
+          if (c) {
+            changed = true;
+          }
+          result[key] = resolvedVal;
+        }
+      }
+    }
+    return { changed, value: changed ? result : obj };
+  }
+
+  /**
    * Recursively resolves placeholders within a value using provided sources.
    *
    * @private
@@ -216,83 +324,18 @@ export class PlaceholderResolver {
    */
   _resolveValue(value, sources, skipKeys) {
     if (typeof value === 'string') {
-      const fullMatch = value.match(FULL_STRING_PLACEHOLDER_REGEX);
-      const replaced = this.resolve(value, ...sources);
-      if (fullMatch) {
-        let placeholderPath = fullMatch[1];
-        const isOptional = placeholderPath.endsWith('?');
-        if (isOptional) {
-          placeholderPath = placeholderPath.slice(0, -1);
-        }
-        const resolved = this._resolveFromSources(placeholderPath, sources);
-        if (resolved !== undefined) {
-          this.#logger.debug(
-            `Resolved full string placeholder {${placeholderPath}${
-              isOptional ? '?' : ''
-            }} to: ${
-              typeof resolved === 'object' ? JSON.stringify(resolved) : resolved
-            }`
-          );
-          return resolved;
-        }
-        return undefined;
-      }
-
-      if (replaced !== value) {
-        let match;
-        PLACEHOLDER_FIND_REGEX.lastIndex = 0;
-        while ((match = PLACEHOLDER_FIND_REGEX.exec(value))) {
-          let placeholderPath = match[1];
-          const placeholderSyntax = match[0];
-          const isOptional = placeholderPath.endsWith('?');
-          if (isOptional) {
-            placeholderPath = placeholderPath.slice(0, -1);
-          }
-          const resolved = this._resolveFromSources(placeholderPath, sources);
-          if (resolved !== undefined) {
-            const stringValue = resolved === null ? 'null' : String(resolved);
-            this.#logger.debug(
-              `Replaced embedded placeholder ${placeholderSyntax} with string: "${stringValue}"`
-            );
-          }
-        }
-      }
-      return replaced;
+      return this._resolveString(value, sources);
     }
 
     if (Array.isArray(value)) {
-      let changed = false;
-      const resolvedArr = value.map((item) => {
-        const resolvedItem = this._resolveValue(item, sources);
-        if (resolvedItem !== item) {
-          changed = true;
-        }
-        return resolvedItem;
-      });
-      return changed ? resolvedArr : value;
+      return this._resolveArray(value, sources, skipKeys);
     }
 
     if (value && typeof value === 'object' && !(value instanceof Date)) {
-      let changed = false;
-      const result = {};
-      for (const key in value) {
-        if (Object.prototype.hasOwnProperty.call(value, key)) {
-          if (skipKeys && skipKeys.has(key)) {
-            result[key] = value[key];
-          } else {
-            const original = value[key];
-            const resolvedVal = this._resolveValue(original, sources);
-            if (resolvedVal !== original) {
-              changed = true;
-            }
-            result[key] = resolvedVal;
-          }
-        }
-      }
-      return changed ? result : value;
+      return this._resolveObject(value, sources, skipKeys);
     }
 
-    return value;
+    return { changed: false, value };
   }
 
   /**
@@ -327,7 +370,7 @@ export class PlaceholderResolver {
           ? new Set(skipKeys)
           : new Set();
 
-    return this._resolveValue(input, sources, skipSet);
+    return this._resolveValue(input, sources, skipSet).value;
   }
 }
 
