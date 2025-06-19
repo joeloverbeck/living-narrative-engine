@@ -54,7 +54,7 @@ export function registerPersistence(container) {
     `Persistence Registration: Registered ${String(tokens.IStorageProvider)}.`
   );
 
-  r.singletonFactory(tokens.SaveFileRepository, (c) => {
+  r.singletonFactory(tokens.ISaveFileRepository, (c) => {
     return new SaveFileRepository({
       logger: c.resolve(tokens.ILogger),
       storageProvider: c.resolve(tokens.IStorageProvider),
@@ -64,7 +64,7 @@ export function registerPersistence(container) {
     });
   });
   logger.debug(
-    `Persistence Registration: Registered ${String(tokens.SaveFileRepository)}.`
+    `Persistence Registration: Registered ${String(tokens.ISaveFileRepository)}.`
   );
 
   r.singletonFactory(tokens.ISaveLoadService, (c) =>

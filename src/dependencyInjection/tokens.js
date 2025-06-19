@@ -78,6 +78,7 @@ import { freeze } from '../utils/objectUtils.js';
  * @property {DiToken} PlaytimeTracker - Token for the service managing player playtime.
  * @property {DiToken} ComponentCleaningService - Token for the service cleaning component data.
  * @property {DiToken} SaveFileRepository - Token for the save file repository service.
+ * @property {DiToken} ISaveFileRepository - Token for the save file repository interface.
  * @property {DiToken} GameStateCaptureService - Token for the service capturing game state.
  * @property {DiToken} ManualSaveCoordinator - Token coordinating manual save preparation.
  * @property {DiToken} GamePersistenceService - Token for the game state persistence service.
@@ -230,6 +231,7 @@ export const tokens = freeze({
   IPlayerTurnEvents: 'IPlayerTurnEvents',
   IEntityManager: 'IEntityManager',
   IGameDataRepository: 'IGameDataRepository',
+  ISaveFileRepository: 'ISaveFileRepository',
   ISaveLoadService: 'ISaveLoadService',
   IStorageProvider: 'IStorageProvider',
   IInitializationService: 'IInitializationService',
