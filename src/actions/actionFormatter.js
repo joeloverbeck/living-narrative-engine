@@ -25,14 +25,17 @@ import { resolveSafeDispatcher } from '../utils/dispatcherUtils.js';
  * @param {boolean} [options.debug] - If true, logs additional debug information.
  * @param {ILogger} [options.logger] - Logger instance used for diagnostic output. Defaults to console.
  * @param {ISafeEventDispatcher} options.safeEventDispatcher - Dispatcher used for error events.
+ * @param {(entity: Entity, fallback: string, logger?: ILogger) => string} [displayNameFn=getEntityDisplayName] -
+ *  Function used to resolve entity display names.
  * @returns {string | null} The formatted command string, or null if inputs are invalid.
- * @throws {Error} If critical dependencies (entityManager, getEntityDisplayName) are missing or invalid during processing.
+ * @throws {Error} If critical dependencies (entityManager, displayNameFn) are missing or invalid during processing.
  */
 export function formatActionCommand(
   actionDefinition,
   targetContext,
   entityManager,
-  options = {}
+  options = {},
+  displayNameFn = getEntityDisplayName
 ) {
   const { debug = false, logger = console, safeEventDispatcher } = options;
   const dispatcher = resolveSafeDispatcher(null, safeEventDispatcher, logger);
@@ -69,7 +72,7 @@ export function formatActionCommand(
       'formatActionCommand: entityManager parameter must be a valid EntityManager instance.'
     );
   }
-  if (typeof getEntityDisplayName !== 'function') {
+  if (typeof displayNameFn !== 'function') {
     safeDispatchError(
       dispatcher,
       'formatActionCommand: getEntityDisplayName utility function is not available.'
@@ -107,8 +110,8 @@ export function formatActionCommand(
         const targetEntity = entityManager.getEntityInstance(targetId);
 
         if (targetEntity) {
-          // Use getEntityDisplayName utility with ID as fallback and pass logger
-          targetName = getEntityDisplayName(targetEntity, targetId, logger);
+          // Use provided displayNameFn utility with ID as fallback and pass logger
+          targetName = displayNameFn(targetEntity, targetId, logger);
           if (debug) {
             logger.debug(
               ` -> Found entity ${targetId}, display name: "${targetName}"`

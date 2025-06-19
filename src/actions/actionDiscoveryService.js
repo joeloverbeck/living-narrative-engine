@@ -20,6 +20,7 @@ import {
 import { setupService } from '../utils/serviceInitializerUtils.js';
 import { getActorLocation } from '../utils/actorLocationUtils.js';
 import { safeDispatchError } from '../utils/safeDispatchErrorUtils.js';
+import { getEntityDisplayName } from '../utils/entityUtils.js';
 
 // ────────────────────────────────────────────────────────────────────────────────
 export class ActionDiscoveryService extends IActionDiscoveryService {
@@ -109,7 +110,8 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
       actionDef,
       targetCtx,
       this.#entityManager,
-      formatterOptions
+      formatterOptions,
+      getEntityDisplayName
     );
 
     if (formattedCommand === null) {
@@ -181,7 +183,8 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
         actionDef,
         targetCtx,
         this.#entityManager,
-        formatterOptions
+        formatterOptions,
+        getEntityDisplayName
       );
 
       if (formattedCommand === null) {
@@ -238,7 +241,8 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
         actionDef,
         targetCtx,
         this.#entityManager,
-        formatterOptions
+        formatterOptions,
+        getEntityDisplayName
       );
 
       if (formattedCommand === null) {
