@@ -2,10 +2,6 @@ import { describe, it, beforeEach, expect, jest } from '@jest/globals';
 import { formatActionCommand } from '../../src/actions/actionFormatter.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../src/constants/eventIds.js';
 
-jest.mock('../../src/utils/entityUtils.js', () => ({
-  getEntityDisplayName: jest.fn(),
-}));
-
 const createMockLogger = () => ({
   debug: jest.fn(),
   info: jest.fn(),
@@ -17,11 +13,13 @@ describe('formatActionCommand additional cases', () => {
   let entityManager;
   let logger;
   let dispatcher;
+  let displayNameFn;
 
   beforeEach(() => {
     entityManager = { getEntityInstance: jest.fn() };
     logger = createMockLogger();
     dispatcher = { dispatch: jest.fn() };
+    displayNameFn = jest.fn();
     jest.clearAllMocks();
   });
 
@@ -29,10 +27,16 @@ describe('formatActionCommand additional cases', () => {
     const actionDef = { id: 'core:use', template: 'use {target}' };
     const context = { type: 'entity' };
 
-    const result = formatActionCommand(actionDef, context, entityManager, {
-      logger,
-      safeEventDispatcher: dispatcher,
-    });
+    const result = formatActionCommand(
+      actionDef,
+      context,
+      entityManager,
+      {
+        logger,
+        safeEventDispatcher: dispatcher,
+      },
+      displayNameFn
+    );
 
     expect(result).toBeNull();
     expect(logger.warn).toHaveBeenCalledWith(
@@ -44,10 +48,16 @@ describe('formatActionCommand additional cases', () => {
     const actionDef = { id: 'core:move', template: 'move {direction}' };
     const context = { type: 'direction' };
 
-    const result = formatActionCommand(actionDef, context, entityManager, {
-      logger,
-      safeEventDispatcher: dispatcher,
-    });
+    const result = formatActionCommand(
+      actionDef,
+      context,
+      entityManager,
+      {
+        logger,
+        safeEventDispatcher: dispatcher,
+      },
+      displayNameFn
+    );
 
     expect(result).toBeNull();
     expect(logger.warn).toHaveBeenCalledWith(
@@ -62,10 +72,16 @@ describe('formatActionCommand additional cases', () => {
     };
     const context = { type: 'none' };
 
-    const result = formatActionCommand(actionDef, context, entityManager, {
-      logger,
-      safeEventDispatcher: dispatcher,
-    });
+    const result = formatActionCommand(
+      actionDef,
+      context,
+      entityManager,
+      {
+        logger,
+        safeEventDispatcher: dispatcher,
+      },
+      displayNameFn
+    );
 
     expect(result).toBe('wait {target} {direction}');
     expect(logger.warn).toHaveBeenCalledWith(
@@ -80,10 +96,16 @@ describe('formatActionCommand additional cases', () => {
       throw new Error('boom');
     });
 
-    const result = formatActionCommand(actionDef, context, entityManager, {
-      logger,
-      safeEventDispatcher: dispatcher,
-    });
+    const result = formatActionCommand(
+      actionDef,
+      context,
+      entityManager,
+      {
+        logger,
+        safeEventDispatcher: dispatcher,
+      },
+      displayNameFn
+    );
 
     expect(result).toBeNull();
     expect(dispatcher.dispatch).toHaveBeenCalledWith(
