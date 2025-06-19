@@ -1,1 +1,1 @@
-export { BaseService as default, BaseService } from './serviceBase.js';
+export { BaseService } from './serviceBase.js';

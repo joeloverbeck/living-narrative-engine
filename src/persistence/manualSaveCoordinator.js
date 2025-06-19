@@ -1,4 +1,4 @@
-import BaseService from '../utils/serviceBase.js';
+import { BaseService } from '../utils/serviceBase.js';
 
 /**
  * @typedef {import('../interfaces/coreServices.js').ILogger} ILogger

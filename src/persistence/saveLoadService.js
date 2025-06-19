@@ -4,7 +4,7 @@ import SaveValidationService from './saveValidationService.js';
 import { getManualSavePath } from '../utils/savePathUtils.js';
 import SaveFileRepository from './saveFileRepository.js';
 import { ISaveFileRepository } from '../interfaces/ISaveFileRepository.js';
-import BaseService from '../utils/serviceBase.js';
+import { BaseService } from '../utils/serviceBase.js';
 import { prepareState } from './savePreparation.js';
 import { PersistenceErrorCodes } from './persistenceErrors.js';
 import {

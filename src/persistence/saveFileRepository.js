@@ -15,7 +15,7 @@ import {
   createPersistenceSuccess,
 } from '../utils/persistenceResultUtils.js';
 import { wrapPersistenceOperation } from '../utils/persistenceErrorUtils.js';
-import BaseService from '../utils/serviceBase.js';
+import { BaseService } from '../utils/serviceBase.js';
 
 // Precompile manual save file regex once for reuse
 const manualSaveRegex = MANUAL_SAVE_PATTERN;
