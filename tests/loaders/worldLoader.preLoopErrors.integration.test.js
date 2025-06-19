@@ -8,6 +8,7 @@ import WorldLoader from '../../src/loaders/worldLoader.js';
 // --- Dependencies to Mock/Import ---
 import ModDependencyError from '../../src/errors/modDependencyError.js';
 import WorldLoaderError from '../../src/errors/worldLoaderError.js';
+import MissingSchemaError from '../../src/errors/missingSchemaError.js';
 
 // --- Mock Modules BEFORE they are potentially imported by SUT or other imports ---
 // Mocks will be injected via constructor
@@ -348,17 +349,12 @@ describe('WorldLoader Integration Test Suite - Error Handling: Manifest Schema, 
 
   // ── Test Case: Missing Essential Schema (game) ──────────────────────────
   it('should throw Error if an essential schema (e.g., game) is missing', async () => {
-    // Setup
-    mockValidator.isSchemaLoaded.mockImplementation(
-      (id) => id !== gameSchemaId
-    ); // Fails only for game schema
+    mockValidator.isSchemaLoaded.mockImplementation((id) => id !== gameSchemaId);
+    const expectedLoggedErrorMessage = `WorldLoader: Essential schema '${gameSchemaId}' (type: 'game') is configured but not loaded.`;
+    const expectedMissingSchemaErrorMsg = `Essential schema '${gameSchemaId}' (type: 'game') is configured but not loaded.`;
+    const expectedFinalErrorMessage = `WorldLoader failed during essential schema check – aborting world load. Original error: ${expectedMissingSchemaErrorMsg}`;
 
-    const essentialCheckErrorMessage = `WorldLoader: Essential schema missing or not configured: ${gameSchemaId}`;
-    const expectedInternalErrorMessage = `Missing essential schema: ${gameSchemaId}`;
-    const expectedFinalErrorMessage = `WorldLoader failed: Essential schema '${gameSchemaId}' missing or check failed – aborting world load. Original error: ${expectedInternalErrorMessage}`;
-
-    // Action & Assertions
-    let thrown;
+    let thrown = null;
     try {
       await worldLoader.loadWorld(worldName);
     } catch (e) {
@@ -366,26 +362,29 @@ describe('WorldLoader Integration Test Suite - Error Handling: Manifest Schema, 
     }
     expect(thrown).toBeInstanceOf(WorldLoaderError);
     expect(thrown.message).toBe(expectedFinalErrorMessage);
+    expect(thrown.cause).toBeInstanceOf(MissingSchemaError);
+    expect(thrown.cause.message).toBe(expectedMissingSchemaErrorMsg);
+    expect(thrown.cause.schemaId).toBe(gameSchemaId);
+    expect(thrown.cause.contentType).toBe('game');
 
     // Verify side effects
     expect(mockRegistry.clear).toHaveBeenCalledTimes(2); // Start + Catch
-
     // Check for the specific log messages based on the implementation's catch block
     // 1. Logged inside the try block when check fails
-    expect(mockLogger.error).toHaveBeenCalledWith(essentialCheckErrorMessage);
+    expect(mockLogger.error).toHaveBeenCalledWith(expectedLoggedErrorMessage);
     // 2. The 'CRITICAL' log in the catch block
     expect(mockLogger.error).toHaveBeenCalledWith(
       'WorldLoader: CRITICAL load failure during world/mod loading sequence.',
       expect.objectContaining({
         error: expect.objectContaining({
-          message: expectedInternalErrorMessage,
-        }), // Check internal message
+          message: expectedMissingSchemaErrorMsg,
+        }),
       })
     );
     // 3. The log made just before throwing the final error
     expect(mockLogger.error).toHaveBeenCalledWith(
-      expectedFinalErrorMessage, // Check the final message is logged
-      expect.objectContaining({ message: expectedInternalErrorMessage }) // And the original error is passed as the second arg
+      expectedFinalErrorMessage,
+      expect.objectContaining({ message: expectedMissingSchemaErrorMsg })
     );
     expect(mockLogger.error).toHaveBeenCalledTimes(3);
 
@@ -394,55 +393,45 @@ describe('WorldLoader Integration Test Suite - Error Handling: Manifest Schema, 
 
   // ── Test Case: Missing Essential Schema (mod-manifest) ──────────────────
   it('should throw Error if an essential schema (e.g., mod-manifest) is missing', async () => {
-    // Setup
-    const essentialSchemas = [
-      gameSchemaId,
-      componentSchemaId,
-      manifestSchemaId,
-      entitySchemaId,
-      actionsSchemaId,
-      eventsSchemaId,
-      rulesSchemaId,
-      entityInstancesSchemaId,
-    ];
-    mockValidator.isSchemaLoaded.mockImplementation((id) => {
-      const exists = essentialSchemas.includes(id) && id !== manifestSchemaId;
-      return exists;
-    });
+    // Test with mod-manifest schema
+    mockValidator.isSchemaLoaded.mockImplementation(
+      (id) => id !== manifestSchemaId
+    );
+    const expectedLoggedErrorMessage2 = `WorldLoader: Essential schema '${manifestSchemaId}' (type: 'mod-manifest') is configured but not loaded.`;
+    const expectedMissingSchemaErrorMsg2 = `Essential schema '${manifestSchemaId}' (type: 'mod-manifest') is configured but not loaded.`;
+    const expectedFinalErrorMessage2 = `WorldLoader failed during essential schema check – aborting world load. Original error: ${expectedMissingSchemaErrorMsg2}`;
 
-    const essentialCheckErrorMessage = `WorldLoader: Essential schema missing or not configured: ${manifestSchemaId}`;
-    const expectedInternalErrorMessage = `Missing essential schema: ${manifestSchemaId}`;
-    const expectedFinalErrorMessage = `WorldLoader failed: Essential schema '${manifestSchemaId}' missing or check failed – aborting world load. Original error: ${expectedInternalErrorMessage}`;
-
-    // Action & Assertions
-    let thrown2;
+    let thrown2 = null;
     try {
       await worldLoader.loadWorld(worldName);
     } catch (e) {
       thrown2 = e;
     }
     expect(thrown2).toBeInstanceOf(WorldLoaderError);
-    expect(thrown2.message).toBe(expectedFinalErrorMessage);
+    expect(thrown2.message).toBe(expectedFinalErrorMessage2);
+    expect(thrown2.cause).toBeInstanceOf(MissingSchemaError);
+    expect(thrown2.cause.message).toBe(expectedMissingSchemaErrorMsg2);
+    expect(thrown2.cause.schemaId).toBe(manifestSchemaId);
+    expect(thrown2.cause.contentType).toBe('mod-manifest');
 
     // Verify side effects
     expect(mockRegistry.clear).toHaveBeenCalledTimes(2); // Start + Catch
-
     // Check for the specific log messages
     // 1. Logged inside the try block when check fails
-    expect(mockLogger.error).toHaveBeenCalledWith(essentialCheckErrorMessage);
+    expect(mockLogger.error).toHaveBeenCalledWith(expectedLoggedErrorMessage2);
     // 2. The 'CRITICAL' log in the catch block
     expect(mockLogger.error).toHaveBeenCalledWith(
       'WorldLoader: CRITICAL load failure during world/mod loading sequence.',
       expect.objectContaining({
         error: expect.objectContaining({
-          message: expectedInternalErrorMessage,
+          message: expectedMissingSchemaErrorMsg2,
         }),
       })
     );
     // 3. The log made just before throwing the final error
     expect(mockLogger.error).toHaveBeenCalledWith(
-      expectedFinalErrorMessage,
-      expect.objectContaining({ message: expectedInternalErrorMessage })
+      expectedFinalErrorMessage2,
+      expect.objectContaining({ message: expectedMissingSchemaErrorMsg2 })
     );
     expect(mockLogger.error).toHaveBeenCalledTimes(3);
 
@@ -462,55 +451,46 @@ describe('WorldLoader Integration Test Suite - Error Handling: Manifest Schema, 
 
   // ── Test Case: Missing Essential Schema (entities) ──────────────────────
   it('should throw Error if an essential schema (e.g., entities) is missing', async () => {
-    // Setup
-    const essentialSchemas = [
-      gameSchemaId,
-      componentSchemaId,
-      manifestSchemaId,
-      entitySchemaId,
-      actionsSchemaId,
-      eventsSchemaId,
-      rulesSchemaId,
-      entityInstancesSchemaId,
-    ];
-    mockValidator.isSchemaLoaded.mockImplementation((id) => {
-      const exists = essentialSchemas.includes(id) && id !== entitySchemaId;
-      return exists;
-    });
+    // Test with entityDefinitions schema
+    mockValidator.isSchemaLoaded.mockImplementation(
+      (id) => id !== entitySchemaId // entitySchemaId is 'schema:entityDefinitions'
+    );
+    // Note: WorldLoader uses ESSENTIAL_SCHEMA_TYPES which has 'entityDefinitions' (camelCase)
+    const expectedLoggedErrorMessage3 = `WorldLoader: Essential schema '${entitySchemaId}' (type: 'entityDefinitions') is configured but not loaded.`;
+    const expectedMissingSchemaErrorMsg3 = `Essential schema '${entitySchemaId}' (type: 'entityDefinitions') is configured but not loaded.`;
+    const expectedFinalErrorMessage3 = `WorldLoader failed during essential schema check – aborting world load. Original error: ${expectedMissingSchemaErrorMsg3}`;
 
-    const essentialCheckErrorMessage = `WorldLoader: Essential schema missing or not configured: ${entitySchemaId}`;
-    const expectedInternalErrorMessage = `Missing essential schema: ${entitySchemaId}`;
-    const expectedFinalErrorMessage = `WorldLoader failed: Essential schema '${entitySchemaId}' missing or check failed – aborting world load. Original error: ${expectedInternalErrorMessage}`;
-
-    // Action & Assertions
-    let thrown3;
+    let thrown3 = null;
     try {
       await worldLoader.loadWorld(worldName);
     } catch (e) {
       thrown3 = e;
     }
     expect(thrown3).toBeInstanceOf(WorldLoaderError);
-    expect(thrown3.message).toBe(expectedFinalErrorMessage);
+    expect(thrown3.message).toBe(expectedFinalErrorMessage3);
+    expect(thrown3.cause).toBeInstanceOf(MissingSchemaError);
+    expect(thrown3.cause.message).toBe(expectedMissingSchemaErrorMsg3);
+    expect(thrown3.cause.schemaId).toBe(entitySchemaId);
+    expect(thrown3.cause.contentType).toBe('entityDefinitions');
 
     // Verify side effects
     expect(mockRegistry.clear).toHaveBeenCalledTimes(2); // Start + Catch
-
     // Check for the specific log messages
     // 1. Logged inside the try block when check fails
-    expect(mockLogger.error).toHaveBeenCalledWith(essentialCheckErrorMessage);
+    expect(mockLogger.error).toHaveBeenCalledWith(expectedLoggedErrorMessage3);
     // 2. The 'CRITICAL' log in the catch block
     expect(mockLogger.error).toHaveBeenCalledWith(
       'WorldLoader: CRITICAL load failure during world/mod loading sequence.',
       expect.objectContaining({
         error: expect.objectContaining({
-          message: expectedInternalErrorMessage,
+          message: expectedMissingSchemaErrorMsg3,
         }),
       })
     );
     // 3. The log made just before throwing the final error
     expect(mockLogger.error).toHaveBeenCalledWith(
-      expectedFinalErrorMessage,
-      expect.objectContaining({ message: expectedInternalErrorMessage })
+      expectedFinalErrorMessage3,
+      expect.objectContaining({ message: expectedMissingSchemaErrorMsg3 })
     );
     expect(mockLogger.error).toHaveBeenCalledTimes(3);
 

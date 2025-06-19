@@ -11,13 +11,13 @@ describe('ActionIndexerAdapter', () => {
       const mockService = {
         indexActions: jest
           .fn()
-          .mockReturnValue([{ actionId: 'a', params: {} }]),
+          .mockReturnValue([{ id: 'a', command: 'do a', params: {} }]),
         resolve: jest.fn(),
         beginTurn: jest.fn(),
       };
       const adapter = new ActionIndexerAdapter(mockService);
 
-      const rawActions = [{ actionId: 'foo', params: { x: 1 } }];
+      const rawActions = [{ id: 'foo', command: 'do foo', params: { x: 1 } }];
       const actorId = 'actor123';
 
       // Act
@@ -29,7 +29,7 @@ describe('ActionIndexerAdapter', () => {
         actorId,
         rawActions
       );
-      expect(result).toEqual([{ actionId: 'a', params: {} }]);
+      expect(result).toEqual([{ id: 'a', command: 'do a', params: {} }]);
     });
   });
 
@@ -48,14 +48,14 @@ describe('ActionIndexerAdapter', () => {
       // Prepare some raw actions (now including required description)
       const rawActions = [
         {
-          actionId: 'move',
-          commandString: 'move',
+          id: 'move',
+          command: 'move',
           params: { x: 1, y: 2 },
           description: 'Move to coordinates',
         },
         {
-          actionId: 'attack',
-          commandString: 'attack',
+          id: 'attack',
+          command: 'attack',
           params: { target: 'enemy' },
           description: 'Attack the enemy',
         },

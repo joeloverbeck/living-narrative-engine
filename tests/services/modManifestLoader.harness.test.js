@@ -1,6 +1,6 @@
 // tests/services/modManifestLoader.harness.test.js
 // -----------------------------------------------------------------------------
-// MODLOADER‑005 F — exhaustive branch & integration harness
+// MODLOADER‑005 F — exhaustive branch & integration harness
 // -----------------------------------------------------------------------------
 // This file complements modManifestLoader.test.js by mopping‑up constructor/
 // edge branches *and* wiring a **real AjvSchemaValidator** to exercise true
@@ -66,7 +66,7 @@ const buildLoader = (d) =>
   );
 
 /* -------------------------------------------------------------------------- */
-/* 1️⃣ Constructor / branch edge cases                                         */
+/* 1️⃣ Constructor / branch edge cases                                         */
 /* -------------------------------------------------------------------------- */
 
 describe('ModManifestLoader — branch edges', () => {
@@ -117,21 +117,26 @@ describe('ModManifestLoader — branch edges', () => {
     );
   });
 
-  it('logs & returns empty Map if every fetch rejects', async () => {
+  it('throws on first fetch rejection if every fetch rejects', async () => {
     deps.fetcher = createMockFetcher({}, ['a', 'b']);
-    const result = await buildLoader(deps).loadRequestedManifests(['a', 'b']);
-    expect(result).toBeInstanceOf(Map);
-    expect(result.size).toBe(0);
+    await expect(buildLoader(deps).loadRequestedManifests(['a', 'b'])).rejects.toThrow(
+      "ModManifestLoader.loadRequestedManifests: Critical error - could not fetch manifest for requested mod 'a'. Path: ./data/mods/a/mod.manifest.json. Reason: Fail a"
+    );
     expect(deps.registry.store).not.toHaveBeenCalled();
-    // *** FIX: Removed colon from 'fetched: 0/2' ***
-    expect(deps.logger.debug).toHaveBeenCalledWith(
+    expect(deps.logger.error).toHaveBeenCalledWith(
+      expect.stringMatching(/MOD_MANIFEST_FETCH_FAIL/i),
+      expect.stringContaining("Critical error - could not fetch manifest for requested mod 'a'"),
+      expect.objectContaining({ modId: 'a', reason: 'Fail a' })
+    );
+    expect(deps.logger.warn).not.toHaveBeenCalled();
+    expect(deps.logger.debug).not.toHaveBeenCalledWith(
       expect.stringContaining('fetched 0/2')
     );
   });
 });
 
 /* -------------------------------------------------------------------------- */
-/* 2️⃣ Integration — real AjvSchemaValidator in play                           */
+/* 2️⃣ Integration — real AjvSchemaValidator in play                           */
 /* -------------------------------------------------------------------------- */
 
 describe('ModManifestLoader — integration (AjvSchemaValidator)', () => {
@@ -174,40 +179,26 @@ describe('ModManifestLoader — integration (AjvSchemaValidator)', () => {
     // *** FIX END ***
   });
 
-  it('loads two valid mods, skips failing fetch, and stores exactly two', async () => {
+  it('throws on first failing fetch and does not store successfully fetched manifests from the same batch', async () => {
     const loader = buildLoader(deps);
-    const map = await loader.loadRequestedManifests(['good1', 'bad', 'good2']);
-
-    expect(map).toBeInstanceOf(Map);
-    expect([...map.keys()].sort()).toEqual(['good1', 'good2']);
-    expect(map.get('good1')).toEqual(m1);
-
-    // registry interactions
-    expect(deps.registry.store).toHaveBeenCalledTimes(2);
-    expect(deps.registry.store).toHaveBeenNthCalledWith(
-      1,
-      'mod_manifests',
-      'good1',
-      m1
-    );
-    expect(deps.registry.store).toHaveBeenNthCalledWith(
-      2,
-      'mod_manifests',
-      'good2',
-      m2
+    await expect(loader.loadRequestedManifests(['good1', 'bad', 'good2'])).rejects.toThrow(
+      "ModManifestLoader.loadRequestedManifests: Critical error - could not fetch manifest for requested mod 'bad'. Path: ./data/mods/bad/mod.manifest.json. Reason: Fail bad"
     );
 
-    // warning for failed fetch
-    expect(deps.logger.warn).toHaveBeenCalledWith(
+    expect(deps.registry.store).not.toHaveBeenCalled();
+
+    expect(deps.logger.error).toHaveBeenCalledWith(
       expect.stringMatching(/MOD_MANIFEST_FETCH_FAIL/),
-      expect.any(String),
+      expect.stringContaining("Critical error - could not fetch manifest for requested mod 'bad'"),
       expect.objectContaining({ modId: 'bad' })
     );
+    expect(deps.logger.warn).not.toHaveBeenCalled();
 
-    // final summary reflects 2/3 fetched ok
-    // *** FIX: Removed colon from 'fetched: 2/3' ***
     expect(deps.logger.debug).toHaveBeenCalledWith(
-      expect.stringContaining('fetched 2/3')
+      expect.stringContaining("manifest for 'good1' schema-validated OK")
+    );
+    expect(deps.logger.debug).not.toHaveBeenCalledWith(
+      expect.stringContaining("manifest for 'good2' schema-validated OK")
     );
   });
 });

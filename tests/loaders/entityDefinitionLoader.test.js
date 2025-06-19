@@ -52,7 +52,7 @@ describe('EntityDefinitionLoader', () => {
     // The BaseManifestItemLoader constructor checks for a primary schema ID.
     // We must configure the mock to return a valid ID.
     mockConfig.getContentTypeSchemaId
-      .calledWith('entity_definitions')
+      .calledWith('entityDefinitions')
       .mockReturnValue('entity-definition-schema');
 
     // Instantiate the loader with the mocked dependencies
@@ -134,14 +134,14 @@ describe('EntityDefinitionLoader', () => {
 
       expect(mockDataRegistry.store).toHaveBeenCalledTimes(1);
       expect(mockDataRegistry.store).toHaveBeenCalledWith(
-        'entity_definitions',
+        'entityDefinitions',
         'core:goblin',
         expectedStoredData
       );
 
       expect(mockDataRegistry.get).toHaveBeenCalledTimes(1);
       expect(mockDataRegistry.get).toHaveBeenCalledWith(
-        'entity_definitions',
+        'entityDefinitions',
         'core:goblin'
       );
 

@@ -97,8 +97,8 @@ describe('AvailableActionsProvider', () => {
 
     test('AC1: should return the same cached list when get() is called twice in the same turn', async () => {
       // Arrange: Set up the expected data flow for the first call
-      const discoveredActions = [{ id: 'core:wait', params: {} }];
-      const indexedActions = [{ index: 1, actionId: 'core:wait' }];
+      const discoveredActions = [{ id: 'core:wait', command: 'wait command', params: {}, description: 'Wait a turn' }];
+      const indexedActions = [{ index: 1, actionId: 'core:wait', commandString: 'wait command', params: {}, description: 'Wait a turn' }];
       actionDiscoveryService.getValidActions.mockResolvedValue(
         discoveredActions
       );
@@ -120,14 +120,14 @@ describe('AvailableActionsProvider', () => {
 
     test('AC2: should re-index actions and restart indices in a new turn', async () => {
       // Arrange: Mock services for two separate turns
-      const discoveredActions = [{ id: 'core:wait' }];
+      const discoveredActions = [{ id: 'core:wait', command: 'wait command', description: 'desc' }];
       actionDiscoveryService.getValidActions.mockResolvedValue(
         discoveredActions
       );
       // The indexing service will be called for each turn, returning a fresh list
       actionIndexer.index
-        .mockReturnValueOnce([{ index: 1, actionId: 'core:wait' }]) // Turn 1
-        .mockReturnValueOnce([{ index: 1, actionId: 'core:wait' }]); // Turn 2 (indices restart)
+        .mockReturnValueOnce([{ index: 1, actionId: 'core:wait', commandString: 'wait command', description: 'desc', params: {} }]) // Turn 1
+        .mockReturnValueOnce([{ index: 1, actionId: 'core:wait', commandString: 'wait command', description: 'desc', params: {} }]); // Turn 2 (indices restart)
 
       // Act: Call the provider across two different turn contexts
       await provider.get(mockActor, turnContext1, logger);
@@ -148,12 +148,21 @@ describe('AvailableActionsProvider', () => {
         { length: requestedCount },
         (_, i) => ({
           id: `action-${i}`,
+          command: `command-${i}`,
+          params: { p: i },
+          description: `desc-${i}`,
         })
       );
       // Mock the indexing service to return a capped list
       const cappedActions = discoveredActions
         .slice(0, MAX_AVAILABLE_ACTIONS_PER_TURN)
-        .map((a, i) => ({ ...a, index: i + 1 }));
+        .map((a, i) => ({
+          index: i + 1,
+          actionId: a.id,
+          commandString: a.command,
+          params: a.params,
+          description: a.description,
+        }));
 
       actionDiscoveryService.getValidActions.mockResolvedValue(
         discoveredActions
@@ -174,18 +183,20 @@ describe('AvailableActionsProvider', () => {
     test('AC4: should suppress duplicate actions from the final list', async () => {
       // Arrange: Discover a list containing duplicate actions
       const duplicateDiscoveredActions = [
-        { id: 'core:attack', params: { targetId: 'goblin-1' } },
-        { id: 'core:wait', params: {} },
-        { id: 'core:attack', params: { targetId: 'goblin-1' } }, // Duplicate
+        { id: 'core:attack', command: 'attack goblin', params: { targetId: 'goblin-1' }, description: 'Attack the goblin' },
+        { id: 'core:wait', command: 'wait', params: {}, description: 'Wait a turn' },
+        { id: 'core:attack', command: 'attack goblin', params: { targetId: 'goblin-1' }, description: 'Attack the goblin' }, // Duplicate
       ];
       // Mock the indexing service to return the de-duplicated and indexed list
       const dedupedIndexedActions = [
         {
           index: 1,
           actionId: 'core:attack',
+          commandString: 'attack goblin',
           params: { targetId: 'goblin-1' },
+          description: 'Attack the goblin',
         },
-        { index: 2, actionId: 'core:wait', params: {} },
+        { index: 2, actionId: 'core:wait', commandString: 'wait', params: {}, description: 'Wait a turn' },
       ];
       actionDiscoveryService.getValidActions.mockResolvedValue(
         duplicateDiscoveredActions
@@ -236,9 +247,15 @@ describe('AvailableActionsProvider', () => {
 
       const discoveredActions = Array.from(
         { length: discoveredCount },
-        (_, i) => ({ id: `action-${i}` })
+        (_, i) => ({ id: `action-${i}`, command: `command-${i}`, params: {}, description: `desc-${i}` })
       );
-      const reducedActions = discoveredActions.slice(0, finalCount);
+      const reducedActions = discoveredActions.slice(0, finalCount).map((a, i) => ({
+        index: i + 1,
+        actionId: a.id,
+        commandString: a.command,
+        params: a.params,
+        description: a.description,
+      }));
 
       actionDiscoveryService.getValidActions.mockResolvedValue(
         discoveredActions

@@ -90,25 +90,46 @@ describe('WorldLoader helper methods', () => {
     });
 
     it('throws MissingSchemaError when a schema id is undefined', () => {
+      const missingType = 'actions';
+      const expectedLog = `WorldLoader: Essential schema type '${missingType}' is not configured (no schema ID found).`;
+      const expectedErrorMsg = `Essential schema type '${missingType}' is not configured (no schema ID found).`;
+
       configuration.getContentTypeSchemaId.mockImplementation((type) =>
-        type === 'actions' ? undefined : `id:${type}`
+        type === missingType ? undefined : `id:${type}`
       );
-      expect(() => worldLoader.checkEssentialSchemas()).toThrow(
-        MissingSchemaError
-      );
-      expect(logger.error).toHaveBeenCalledWith(
-        'WorldLoader: Essential schema missing or not configured: Unknown Essential Schema ID'
-      );
+
+      let caughtError;
+      try {
+        worldLoader.checkEssentialSchemas();
+      } catch (e) {
+        caughtError = e;
+      }
+      expect(caughtError).toBeInstanceOf(MissingSchemaError);
+      expect(caughtError.message).toBe(expectedErrorMsg);
+      expect(caughtError.schemaId).toBeNull();
+      expect(caughtError.contentType).toBe(missingType);
+      expect(logger.error).toHaveBeenCalledWith(expectedLog);
     });
 
     it('throws MissingSchemaError when a schema is not loaded', () => {
-      validator.isSchemaLoaded.mockImplementation((id) => id !== 'id:actions');
-      expect(() => worldLoader.checkEssentialSchemas()).toThrow(
-        MissingSchemaError
-      );
-      expect(logger.error).toHaveBeenCalledWith(
-        'WorldLoader: Essential schema missing or not configured: id:actions'
-      );
+      const notLoadedType = 'actions';
+      const notLoadedSchemaId = `id:${notLoadedType}`;
+      const expectedLog = `WorldLoader: Essential schema '${notLoadedSchemaId}' (type: '${notLoadedType}') is configured but not loaded.`;
+      const expectedErrorMsg = `Essential schema '${notLoadedSchemaId}' (type: '${notLoadedType}') is configured but not loaded.`;
+
+      validator.isSchemaLoaded.mockImplementation((id) => id !== notLoadedSchemaId);
+      
+      let caughtError;
+      try {
+        worldLoader.checkEssentialSchemas();
+      } catch (e) {
+        caughtError = e;
+      }
+      expect(caughtError).toBeInstanceOf(MissingSchemaError);
+      expect(caughtError.message).toBe(expectedErrorMsg);
+      expect(caughtError.schemaId).toBe(notLoadedSchemaId);
+      expect(caughtError.contentType).toBe(notLoadedType);
+      expect(logger.error).toHaveBeenCalledWith(expectedLog);
     });
   });
 

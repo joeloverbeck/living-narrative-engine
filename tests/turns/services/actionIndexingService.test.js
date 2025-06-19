@@ -19,21 +19,21 @@ describe('ActionIndexingService', () => {
   it('enumerates actions with correct indices (happy path)', () => {
     const rawActions = [
       {
-        actionId: 'a',
+        id: 'a',
         params: { x: 1 },
-        commandString: 'cmd1',
+        command: 'cmd1',
         description: 'first',
       },
       {
-        actionId: 'b',
+        id: 'b',
         params: { y: 2 },
-        commandString: 'cmd2',
+        command: 'cmd2',
         description: 'second',
       },
       {
-        actionId: 'c',
+        id: 'c',
         params: {},
-        commandString: 'cmd3',
+        command: 'cmd3',
         description: 'third',
       },
     ];
@@ -43,8 +43,8 @@ describe('ActionIndexingService', () => {
     expect(indexed).toHaveLength(3);
     indexed.forEach((comp, idx) => {
       expect(comp.index).toBe(idx + 1);
-      expect(comp.actionId).toBe(rawActions[idx].actionId);
-      expect(comp.commandString).toBe(rawActions[idx].commandString);
+      expect(comp.actionId).toBe(rawActions[idx].id);
+      expect(comp.commandString).toBe(rawActions[idx].command);
       expect(comp.params).toEqual(rawActions[idx].params);
       expect(comp.description).toBe(rawActions[idx].description);
     });
@@ -55,21 +55,21 @@ describe('ActionIndexingService', () => {
   it('suppresses duplicate actions and logs info', () => {
     const rawActions = [
       {
-        actionId: 'a',
+        id: 'a',
         params: { x: 1 },
-        commandString: 'cmd1',
+        command: 'cmd1',
         description: 'first',
       },
       {
-        actionId: 'a',
+        id: 'a',
         params: { x: 1 },
-        commandString: 'cmd1',
+        command: 'cmd1',
         description: 'dup',
       },
       {
-        actionId: 'b',
+        id: 'b',
         params: {},
-        commandString: 'cmd2',
+        command: 'cmd2',
         description: 'second',
       },
     ];
@@ -87,15 +87,15 @@ describe('ActionIndexingService', () => {
   it('does not log info when there are no duplicates', () => {
     const rawActions = [
       {
-        actionId: 'a',
+        id: 'a',
         params: { x: 1 },
-        commandString: 'cmd1',
+        command: 'cmd1',
         description: 'one',
       },
       {
-        actionId: 'b',
+        id: 'b',
         params: { x: 2 },
-        commandString: 'cmd2',
+        command: 'cmd2',
         description: 'two',
       },
     ];
@@ -110,9 +110,9 @@ describe('ActionIndexingService', () => {
     const excess = 3;
     const total = MAX_AVAILABLE_ACTIONS_PER_TURN + excess;
     const rawActions = Array.from({ length: total }, (_, i) => ({
-      actionId: `act${i}`,
+      id: `act${i}`,
       params: {},
-      commandString: `cmd${i}`,
+      command: `cmd${i}`,
       description: `desc${i}`,
     }));
 
@@ -128,15 +128,15 @@ describe('ActionIndexingService', () => {
   it('is idempotent within the same turn', () => {
     const raw = [
       {
-        actionId: 'x',
+        id: 'x',
         params: { foo: 'bar' },
-        commandString: 'cmdX',
+        command: 'cmdX',
         description: 'descX',
       },
       {
-        actionId: 'x',
+        id: 'x',
         params: { foo: 'bar' },
-        commandString: 'cmdX',
+        command: 'cmdX',
         description: 'dup',
       },
     ];
@@ -149,16 +149,16 @@ describe('ActionIndexingService', () => {
 
   it('resets between turns and re-suppresses duplicates per actor', () => {
     service.indexActions('actorA', [
-      { actionId: 'a', params: {}, commandString: 'c', description: 'd' },
-      { actionId: 'a', params: {}, commandString: 'c', description: 'dup' },
+      { id: 'a', params: {}, command: 'c', description: 'd' },
+      { id: 'a', params: {}, command: 'c', description: 'dup' },
     ]);
     expect(logger.info).toHaveBeenCalledWith(
       'ActionIndexingService: actor "actorA" suppressed 1 duplicate actions'
     );
 
     service.indexActions('actorB', [
-      { actionId: 'a', params: {}, commandString: 'c', description: 'd' },
-      { actionId: 'a', params: {}, commandString: 'c', description: 'dup' },
+      { id: 'a', params: {}, command: 'c', description: 'd' },
+      { id: 'a', params: {}, command: 'c', description: 'dup' },
     ]);
     expect(logger.info).toHaveBeenCalledWith(
       'ActionIndexingService: actor "actorB" suppressed 1 duplicate actions'
@@ -173,8 +173,8 @@ describe('ActionIndexingService', () => {
 
   it('getIndexedList returns a copy and protects internal state', () => {
     const raw = [
-      { actionId: 'a', params: {}, commandString: 'c', description: 'd' },
-      { actionId: 'b', params: {}, commandString: 'c2', description: 'd2' },
+      { id: 'a', params: {}, command: 'c', description: 'd' },
+      { id: 'b', params: {}, command: 'c2', description: 'd2' },
     ];
     service.indexActions('actorY', raw);
     const firstList = service.getIndexedList('actorY');
@@ -191,7 +191,7 @@ describe('ActionIndexingService', () => {
 
   it('resolve throws if index out of range', () => {
     service.indexActions('actorZ', [
-      { actionId: 'x', params: {}, commandString: 'cmd', description: 'desc' },
+      { id: 'x', params: {}, command: 'cmd', description: 'desc' },
     ]);
     expect(() => service.resolve('actorZ', 2)).toThrow(
       'No action found at index 2 for actor "actorZ"'
