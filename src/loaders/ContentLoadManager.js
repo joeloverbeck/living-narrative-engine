@@ -38,23 +38,27 @@ export class ContentLoadManager {
    * @param {string[]} finalOrder - Resolved load order of mods.
    * @param {Map<string, ModManifest>} manifests - Map of manifests keyed by ID.
    * @param {TotalResultsSummary} totalCounts - Object to accumulate totals across mods.
-   * @returns {Promise<void>} Resolves when processing completes.
+   * @returns {Promise<Record<string, 'success' | 'skipped' | 'failed'>>} Map of modIds to load status.
    */
   async loadContent(finalOrder, manifests, totalCounts) {
     this.#logger.debug(
       'WorldLoader: Beginning content loading based on final order...'
     );
 
+    /** @type {Record<string, 'success' | 'skipped' | 'failed'>} */
+    const results = {};
+
     for (const modId of finalOrder) {
       const manifest = /** @type {ModManifest | null} */ (
         manifests.get(modId.toLowerCase())
       );
-      await this.processMod(modId, manifest, totalCounts);
+      results[modId] = await this.processMod(modId, manifest, totalCounts);
     }
 
     this.#logger.debug(
       'WorldLoader: Completed content loading loop for all mods in final order.'
     );
+    return results;
   }
 
   /**
@@ -64,12 +68,14 @@ export class ContentLoadManager {
    * @param {string} modId - Mod identifier.
    * @param {ModManifest|null} manifest - Manifest for the mod.
    * @param {TotalResultsSummary} totalCounts - Aggregated totals object.
-   * @returns {Promise<void>} Resolves when the mod has been processed.
+   * @returns {Promise<'success' | 'skipped' | 'failed'>} Status of the load process.
    */
   async processMod(modId, manifest, totalCounts) {
     this.#logger.debug(`--- Loading content for mod: ${modId} ---`);
     const aggregator = new LoadResultAggregator(totalCounts);
     let modDurationMs = 0;
+    /** @type {'success' | 'skipped' | 'failed'} */
+    let status = 'success';
 
     try {
       if (!manifest) {
@@ -87,7 +93,8 @@ export class ContentLoadManager {
               dispatchError
             )
           );
-        return;
+        status = 'skipped';
+        return status;
       }
 
       this.#logger.debug(
@@ -145,6 +152,7 @@ export class ContentLoadManager {
                   e
                 )
               );
+            status = 'failed';
           }
         } else {
           this.#logger.debug(
@@ -176,7 +184,8 @@ export class ContentLoadManager {
             dispatchError
           )
         );
-      return;
+      status = 'failed';
+      return status;
     }
 
     const totalModOverrides = Object.values(aggregator.modResults).reduce(
@@ -197,6 +206,7 @@ export class ContentLoadManager {
     }${typeCountsString.length > 0 ? ' ' : ''}-> Overrides(${totalModOverrides}), Errors(${totalModErrors})`;
     this.#logger.debug(summaryMessage);
     this.#logger.debug(`--- Finished loading content for mod: ${modId} ---`);
+    return status;
   }
 }
 
