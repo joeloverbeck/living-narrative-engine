@@ -4,6 +4,8 @@ import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 
 // --- SUT ---
 import WorldLoader from '../../src/loaders/worldLoader.js';
+import ModManifestProcessor from '../../src/loaders/ModManifestProcessor.js';
+import ContentLoadManager from '../../src/loaders/ContentLoadManager.js';
 
 // --- Dependencies to Mock ---
 // mocks will be injected via constructor rather than jest.mock
@@ -62,6 +64,10 @@ describe('WorldLoader Integration Test Suite (TEST-LOADER-7.1)', () => {
   let mockModManifestLoader;
   /** @type {jest.Mocked<ValidatedEventDispatcher>} */
   let mockValidatedEventDispatcher;
+  /** @type {jest.SpyInstance} */
+  let processManifestsSpy;
+  /** @type {jest.SpyInstance} */
+  let loadContentSpy;
 
   // --- Mock Data ---
   /** @type {ModManifest} */
@@ -306,6 +312,17 @@ describe('WorldLoader Integration Test Suite (TEST-LOADER-7.1)', () => {
       modLoadOrderResolver: mockModLoadOrderResolver,
       contentLoadersConfig: null,
     });
+
+    processManifestsSpy = jest.spyOn(
+      ModManifestProcessor.prototype,
+      'processManifests'
+    );
+    loadContentSpy = jest.spyOn(ContentLoadManager.prototype, 'loadContent');
+  });
+
+  afterEach(() => {
+    processManifestsSpy.mockRestore();
+    loadContentSpy.mockRestore();
   });
 
   // ── Test Case: Basic Successful Load ───────────────────────────────────
@@ -385,6 +402,10 @@ describe('WorldLoader Integration Test Suite (TEST-LOADER-7.1)', () => {
       expectedValidationMap,
       mockLogger
     );
+
+    // Ensure helper classes were called
+    expect(processManifestsSpy).toHaveBeenCalledTimes(1);
+    expect(loadContentSpy).toHaveBeenCalledTimes(1);
 
     // 10. Verify registry.store was called for final mod order.
     expect(mockRegistry.store).toHaveBeenCalledWith('meta', 'final_mod_order', [
