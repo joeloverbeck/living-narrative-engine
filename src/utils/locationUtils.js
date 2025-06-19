@@ -122,6 +122,33 @@ function _readExitsComponent(locationEntity, logger) {
 }
 
 /**
+ * Normalize a direction string for comparison.
+ *
+ * @private
+ * @param {string} name - Direction name to normalize.
+ * @returns {string} Normalized direction value.
+ */
+export function _normalizeDirection(name) {
+  return isNonBlankString(name) ? name.toLowerCase().trim() : '';
+}
+
+/**
+ * Validate whether an exit object has required properties.
+ *
+ * @private
+ * @param {any} exit - Exit object to validate.
+ * @returns {boolean} True if the exit is valid.
+ */
+export function _isValidExit(exit) {
+  return (
+    !!exit &&
+    typeof exit === 'object' &&
+    isNonBlankString(exit.direction) &&
+    isNonBlankString(exit.target)
+  );
+}
+
+/**
  * Fetch and validate exits component data from a location entity.
  *
  * @private
@@ -187,24 +214,26 @@ export function getExitByDirection(
     return null;
   }
 
-  const normalizedDirName = directionName.toLowerCase().trim();
+  const normalizedDirName = _normalizeDirection(directionName);
   for (const exit of exitsData) {
+    if (
+      _isValidExit(exit) &&
+      _normalizeDirection(exit.direction) === normalizedDirName
+    ) {
+      return exit;
+    }
     if (
       exit &&
       isNonBlankString(exit.direction) &&
-      exit.direction.toLowerCase().trim() === normalizedDirName
+      _normalizeDirection(exit.direction) === normalizedDirName
     ) {
-      if (isNonBlankString(exit.target)) {
-        return exit;
-      }
       const locId = getLocationIdForLog(locationEntityOrId);
       log.warn(
         `getExitByDirection: Found exit for direction '${directionName}' in location '${locId}', but its target ID ('target' property) is invalid: ${JSON.stringify(
-          // CHANGED warning message
           exit
         )}`
       );
-      return null; // Return null if target is invalid for the found direction
+      return null;
     }
   }
   const locId = getLocationIdForLog(locationEntityOrId);
@@ -245,12 +274,7 @@ export function getAvailableExits(
   const locIdForLog = getLocationIdForLog(locationEntityOrId);
 
   for (const exit of exitsData) {
-    if (
-      exit &&
-      typeof exit === 'object' &&
-      isNonBlankString(exit.direction) &&
-      isNonBlankString(exit.target)
-    ) {
+    if (_isValidExit(exit)) {
       validExits.push(exit);
     } else {
       log.warn(
