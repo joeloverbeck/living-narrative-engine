@@ -32,7 +32,11 @@ export async function getServiceFromContext(
       `${state.getStateName()}: Invalid turnCtx in _getServiceFromContext for ${serviceNameForLog}, actor ${actorIdForLog}.`
     );
     if (state._isProcessing) {
-      state._isProcessing = false;
+      if (state._processingGuard) {
+        state._processingGuard.finish();
+      } else {
+        state._isProcessing = false;
+      }
     }
     return null;
   }
