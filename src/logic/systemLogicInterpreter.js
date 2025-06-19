@@ -4,7 +4,7 @@
 //  v2.7 — restores full-fidelity debug/error messages required by legacy tests
 // -----------------------------------------------------------------------------
 
-import { createJsonLogicContext } from './contextAssembler.js';
+import { createNestedExecutionContext } from './contextAssembler.js';
 import { ATTEMPT_ACTION_ID } from '../constants/eventIds.js';
 import { REQUIRED_ENTITY_MANAGER_METHODS } from '../constants/entityManager.js';
 import { evaluateConditionWithLogging } from './jsonLogicEvaluationService.js';
@@ -171,10 +171,10 @@ class SystemLogicInterpreter extends BaseService {
       const targetId = event.payload?.targetId ?? null;
 
       this.#logger.debug(
-        `[Event: ${event.type}] Assembling JsonLogic context via createJsonLogicContext... (ActorID: ${actorId}, TargetID: ${targetId})`
+        `[Event: ${event.type}] Assembling execution context via createNestedExecutionContext... (ActorID: ${actorId}, TargetID: ${targetId})`
       );
 
-      const evalCtx = createJsonLogicContext(
+      nestedCtx = createNestedExecutionContext(
         event,
         actorId,
         targetId,
@@ -183,16 +183,8 @@ class SystemLogicInterpreter extends BaseService {
       );
 
       this.#logger.debug(
-        `[Event: ${event.type}] createJsonLogicContext returned a valid JsonLogicEvaluationContext.`
+        `[Event: ${event.type}] createNestedExecutionContext returned a valid ExecutionContext.`
       );
-
-      nestedCtx = {
-        event,
-        actor: evalCtx.actor,
-        target: evalCtx.target,
-        logger: this.#logger,
-        evaluationContext: evalCtx,
-      };
 
       this.#logger.debug(
         `[Event: ${event.type}] Final ExecutionContext (nested structure) assembled successfully.`
