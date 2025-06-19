@@ -372,7 +372,7 @@ describe('CheckFollowCycleHandler', () => {
       expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
         SYSTEM_ERROR_OCCURRED_ID,
         expect.objectContaining({
-          message: expect.stringContaining('cannot store result'),
+          message: expect.stringContaining('cannot store value'),
         })
       );
     });
