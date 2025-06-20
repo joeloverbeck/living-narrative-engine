@@ -12,33 +12,8 @@ import {
 } from '../testUtils.js';
 
 /** @typedef {import('../../../src/interfaces/IStorageProvider.js').IStorageProvider} IStorageProvider */
+import { createMemoryStorageProvider } from '../../common/persistence/memoryStorageProvider.js';
 /** @typedef {import('../../../src/persistence/gameStateSerializer.js').default} GameStateSerializer */
-
-/**
- * Creates an in-memory storage provider for testing.
- *
- * @returns {IStorageProvider} In-memory provider
- */
-const createMemoryStorageProvider = () => {
-  const files = {};
-  return {
-    writeFileAtomically: jest.fn(async (path, data) => {
-      files[path] = data;
-      return { success: true };
-    }),
-    readFile: jest.fn(async (path) => files[path]),
-    listFiles: jest.fn(async () => Object.keys(files)),
-    deleteFile: jest.fn(async (path) => {
-      if (path in files) {
-        delete files[path];
-        return { success: true };
-      }
-      return { success: false, error: 'not found' };
-    }),
-    fileExists: jest.fn(async (path) => path in files),
-    ensureDirectoryExists: jest.fn(async () => {}),
-  };
-};
 
 /**
  * Creates a mock GameStateSerializer.
