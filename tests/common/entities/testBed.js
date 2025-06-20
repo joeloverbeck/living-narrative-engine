@@ -223,4 +223,27 @@ export class TestBed {
   }
 }
 
+/**
+ * Creates a test suite for {@link EntityManager} utilizing {@link TestBed} for
+ * setup and cleanup. The provided suite function receives a getter that
+ * returns the current {@link TestBed} instance.
+ *
+ * @param {string} title - Title of the suite passed to `describe`.
+ * @param {(getTestBed: () => TestBed) => void} suiteFn - Function containing the
+ *   tests. It receives a callback that returns the active {@link TestBed}.
+ * @returns {void}
+ */
+export function describeEntityManagerSuite(title, suiteFn) {
+  describe(title, () => {
+    let tb;
+    beforeEach(() => {
+      tb = new TestBed();
+    });
+    afterEach(() => {
+      tb.cleanup();
+    });
+    suiteFn(() => tb);
+  });
+}
+
 export default TestBed;
