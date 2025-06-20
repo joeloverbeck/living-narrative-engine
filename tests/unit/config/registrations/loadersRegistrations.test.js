@@ -248,7 +248,7 @@ describe('registerLoaders (with Mock DI Container)', () => {
     // Keep register mock history
   });
 
-  it('should register all 15 services/loaders (+ ILogger) as singletons', () => {
+  it('should register all 19 services/loaders (+ ILogger) as singletons', () => {
     // Arrange: Logger is already registered in beforeEach
 
     // Act: Register the loaders
@@ -272,11 +272,15 @@ describe('registerLoaders (with Mock DI Container)', () => {
       tokens.ActionLoader,
       tokens.EventLoader,
       tokens.MacroLoader,
-      tokens.EntityLoader,
+      tokens.EntityLoader, // Maps to EntityDefinitionLoader
+      tokens.PromptTextLoader,
+      tokens.WorldLoader,
+      tokens.EntityInstanceLoader,
+      tokens.ModsLoader,
     ];
-    const expectedRegistrationCount = expectedTokens.length; // 15
+    const expectedRegistrationCount = expectedTokens.length; // This must be 19
 
-    // Expect 1 (ILogger from beforeEach) + 15 (from registerLoaders) = 16 calls
+    // Expect 1 (ILogger from beforeEach) + 19 (from registerLoaders) = 20 calls to register
     expect(mockContainer.register).toHaveBeenCalledTimes(
       expectedRegistrationCount + 1
     );
@@ -288,14 +292,11 @@ describe('registerLoaders (with Mock DI Container)', () => {
           `Undefined token found in expectedTokens array. Check tokens.js.`
         );
       }
-      // --- VVVV MODIFIED SECTION VVVV ---
-      // Check only for token and factory. Rely on snapshot for lifecycle details.
       expect(mockContainer.register).toHaveBeenCalledWith(
-        token, // The token itself
-        expect.any(Function), // The factory function
-        expect.any(Object) // Options object (details checked in snapshot)
+        token,
+        expect.any(Function),
+        expect.any(Object)
       );
-      // --- ^^^^ MODIFIED SECTION ^^^^ ---
     });
 
     // Check the ILogger registration from beforeEach separately
@@ -306,12 +307,13 @@ describe('registerLoaders (with Mock DI Container)', () => {
     });
 
     // Verify logger calls within registerLoaders
+    // 1 "Starting..." debug call + 1 debug call for each of the 19 services registered.
     expect(mockLogger.debug).toHaveBeenCalledTimes(
-      2 + expectedRegistrationCount
-    ); // 1 Starting + 15 Registered
-    expect(mockLogger.info).toHaveBeenCalledTimes(0);
-    expect(mockLogger.debug).toHaveBeenCalledWith(
-      'Loaders Registration: Completed.'
+      1 + expectedRegistrationCount
+    );
+    expect(mockLogger.info).toHaveBeenCalledTimes(1); // Expect one info message at the end
+    expect(mockLogger.info).toHaveBeenCalledWith(
+      'Loaders Registration: All core services and data loaders registered.'
     );
   });
 

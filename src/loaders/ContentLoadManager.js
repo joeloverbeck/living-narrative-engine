@@ -42,7 +42,7 @@ export class ContentLoadManager {
    */
   async loadContent(finalOrder, manifests, totalCounts) {
     this.#logger.debug(
-      'WorldLoader: Beginning content loading based on final order...'
+      'ModsLoader: Beginning content loading based on final order...'
     );
 
     /** @type {Record<string, 'success' | 'skipped' | 'failed'>} */
@@ -56,7 +56,7 @@ export class ContentLoadManager {
     }
 
     this.#logger.debug(
-      'WorldLoader: Completed content loading loop for all mods in final order.'
+      'ModsLoader: Completed content loading loop for all mods in final order.'
     );
     return results;
   }
@@ -80,7 +80,7 @@ export class ContentLoadManager {
     try {
       if (!manifest) {
         const reason = `Manifest not found in registry for mod ID '${modId}'. Skipping content load.`;
-        this.#logger.error(`WorldLoader: ${reason}`);
+        this.#logger.error(`ModsLoader: ${reason}`);
         await this.#validatedEventDispatcher
           .dispatch(
             'initialization:world_loader:mod_load_failed',
@@ -98,7 +98,7 @@ export class ContentLoadManager {
       }
 
       this.#logger.debug(
-        `WorldLoader [${modId}]: Manifest retrieved successfully. Processing content types...`
+        `ModsLoader [${modId}]: Manifest retrieved successfully. Processing content types...`
       );
       const modStartTime = performance.now();
 
@@ -111,7 +111,7 @@ export class ContentLoadManager {
 
         if (hasContent) {
           this.#logger.debug(
-            `WorldLoader [${modId}]: Found content for '${contentKey}'. Invoking loader '${loader.constructor.name}'.`
+            `ModsLoader [${modId}]: Found content for '${contentKey}'. Invoking loader '${loader.constructor.name}'.`
           );
           try {
             const result = /** @type {LoadItemsResult} */ (
@@ -127,7 +127,7 @@ export class ContentLoadManager {
               aggregator.aggregate(result, typeName);
             } else {
               this.#logger.warn(
-                `WorldLoader [${modId}]: Loader for '${typeName}' returned an unexpected result format. Assuming 0 counts.`,
+                `ModsLoader [${modId}]: Loader for '${typeName}' returned an unexpected result format. Assuming 0 counts.`,
                 { result }
               );
               aggregator.aggregate(null, typeName);
@@ -135,7 +135,7 @@ export class ContentLoadManager {
           } catch (loadError) {
             const errorMessage = loadError?.message || String(loadError);
             this.#logger.error(
-              `WorldLoader [${modId}]: Error loading content type '${typeName}'. Continuing...`,
+              `ModsLoader [${modId}]: Error loading content type '${typeName}'. Continuing...`,
               { modId, typeName, error: errorMessage },
               loadError
             );
@@ -156,7 +156,7 @@ export class ContentLoadManager {
           }
         } else {
           this.#logger.debug(
-            `WorldLoader [${modId}]: Skipping content type '${typeName}' (key: '${contentKey}') as it's not defined or empty in the manifest.`
+            `ModsLoader [${modId}]: Skipping content type '${typeName}' (key: '${contentKey}') as it's not defined or empty in the manifest.`
           );
         }
       }
@@ -164,11 +164,11 @@ export class ContentLoadManager {
       const modEndTime = performance.now();
       modDurationMs = modEndTime - modStartTime;
       this.#logger.debug(
-        `WorldLoader [${modId}]: Content loading loop took ${modDurationMs.toFixed(2)} ms.`
+        `ModsLoader [${modId}]: Content loading loop took ${modDurationMs.toFixed(2)} ms.`
       );
     } catch (error) {
       this.#logger.error(
-        `WorldLoader [${modId}]: Unexpected error during processing for mod '${modId}'. Skipping remaining content for this mod.`,
+        `ModsLoader [${modId}]: Unexpected error during processing for mod '${modId}'. Skipping remaining content for this mod.`,
         { modId, error: error?.message },
         error
       );

@@ -11,12 +11,9 @@ const defaultActions = [];
 describe('AIPromptPipeline', () => {
   /** @type {AIPromptPipelineTestBed} */
   let testBed;
-  /** @type {AIPromptPipeline} */
-  let pipeline;
 
   beforeEach(() => {
     testBed = new AIPromptPipelineTestBed();
-    pipeline = testBed.createPipeline();
 
     // Default success paths
     testBed.setupMockSuccess();
@@ -124,7 +121,7 @@ describe('AIPromptPipeline', () => {
       finalPrompt: 'FINAL',
     });
 
-    const prompt = await pipeline.generatePrompt(actor, context, actions);
+    const prompt = await testBed.generate(actor, context, actions);
 
     expect(prompt).toBe('FINAL');
     expect(testBed.llmAdapter.getCurrentActiveLlmId).toHaveBeenCalledTimes(1);
@@ -157,7 +154,7 @@ describe('AIPromptPipeline', () => {
   ])('generatePrompt rejects when %s', async ({ mutate, error }) => {
     mutate();
     await expect(
-      pipeline.generatePrompt(defaultActor, defaultContext, defaultActions)
+      testBed.generate(defaultActor, defaultContext, defaultActions)
     ).rejects.toThrow(error);
   });
 
@@ -172,7 +169,7 @@ describe('AIPromptPipeline', () => {
       finalPrompt: 'prompt',
     });
 
-    await pipeline.generatePrompt(actor, context, actions);
+    await testBed.generate(actor, context, actions);
 
     expect(testBed.promptContentProvider.getPromptData).toHaveBeenCalledWith(
       expect.objectContaining({ availableActions: actions }),

@@ -142,4 +142,14 @@ export function createTurnManagerTestBed() {
   return new TurnManagerTestBed();
 }
 
+/**
+ * Flushes pending promises and advances all Jest timers.
+ *
+ * @description Flushes pending promises and advances all Jest timers.
+ * @returns {Promise<void>} Resolves after timers have run.
+ */
+export const flushPromisesAndTimers = async () => {
+  await jest.runAllTimersAsync();
+};
+
 export default TurnManagerTestBed;

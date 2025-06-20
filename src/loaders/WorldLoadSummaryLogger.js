@@ -1,4 +1,4 @@
-// src/loaders/WorldLoadSummaryLogger.js
+// src/loaders/worldLoadSummaryLogger.js
 
 /**
  * @file Logs a summary of world loading results.
@@ -31,7 +31,7 @@ export class WorldLoadSummaryLogger {
     incompatibilityCount,
     totals
   ) {
-    logger.info(`— WorldLoader Load Summary (World: '${worldName}') —`);
+    logger.info(`— ModsLoader Load Summary (World: '${worldName}') —`);
     logger.info(`  • Requested Mods (raw): [${requestedMods.join(', ')}]`);
     logger.info(`  • Final Load Order     : [${finalOrder.join(', ')}]`);
     if (incompatibilityCount > 0) {

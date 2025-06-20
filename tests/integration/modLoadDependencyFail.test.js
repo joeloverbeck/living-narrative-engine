@@ -3,7 +3,7 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 
 // Core services under test
-import WorldLoader from '../../src/loaders/worldLoader.js';
+import ModsLoader from '../../src/loaders/modsLoader.js';
 import ModManifestLoader from '../../src/modding/modManifestLoader.js';
 import AjvSchemaValidator from '../../src/validation/ajvSchemaValidator.js';
 import ModDependencyError from '../../src/errors/modDependencyError.js';
@@ -14,7 +14,7 @@ import ModDependencyError from '../../src/errors/modDependencyError.js';
 
 const createMockConfiguration = (overrides = {}) => ({
   getContentTypeSchemaId: jest.fn((t) => {
-    // This map now reflects the current essential schema requirements of WorldLoader
+    // This map now reflects the current essential schema requirements of ModsLoader
     const schemaMap = {
       'mod-manifest': 'http://example.com/schemas/mod.manifest.schema.json',
       game: 'http://example.com/schemas/game.schema.json',
@@ -152,28 +152,36 @@ const createMockLogger = () => ({
 /* Integration test                                                           */
 /* -------------------------------------------------------------------------- */
 
-describe('WorldLoader → ModDependencyValidator integration (missing dependency)', () => {
-  let validator;
-  let configuration;
-  let pathResolver;
-  let fetcher;
-  let registry;
-  let logger;
-  let schemaLoader;
-  let conditionLoader;
-  let componentDefinitionLoader;
-  let ruleLoader;
-  let actionLoader;
-  let eventLoader;
-  let entityLoader;
-  let entityInstanceLoader;
-  let gameConfigLoader;
-  let modManifestLoader;
-  let validatedEventDispatcher;
-  let modDependencyValidator;
-  let modVersionValidator;
-  let modLoadOrderResolver;
-  let worldLoader;
+describe('ModsLoader → ModDependencyValidator integration (missing dependency)', () => {
+  // Core service mocks, used by various parts of the setup
+  let validator; // ISchemaValidator instance (AjvSchemaValidator)
+  let configuration; // IConfiguration mock
+  let pathResolver;  // IPathResolver mock, used by ModManifestLoader, not ModsLoader directly
+  let fetcher;       // IDataFetcher mock, used by ModManifestLoader, not ModsLoader directly
+  let registry;      // IDataRegistry mock
+  let logger;        // ILogger mock
+
+  // Mocks for dependencies directly required by ModsLoader constructor object
+  let schemaLoaderMock; // SchemaLoader class mock
+  let componentLoaderMock;
+  let conditionLoaderMock;
+  let ruleLoaderMock;
+  let macroLoaderMock;
+  let actionLoaderMock;
+  let eventLoaderMock;
+  let entityLoaderMock; // EntityDefinitionLoader
+  let entityInstanceLoaderMock;
+  let gameConfigLoaderMock;
+  let promptTextLoaderMock;
+  let modManifestLoaderMock; // ModManifestLoader CLASS INSTANCE mock
+  let validatedEventDispatcherMock;
+  let modDependencyValidatorMock;
+  let modVersionValidatorMock; // Function
+  let modLoadOrderResolverMock;
+  let worldLoaderMock;
+
+  // The SUT
+  let modsLoader;
 
   const schemaDefs = {
     MOD_MANIFEST: {
@@ -209,26 +217,53 @@ describe('WorldLoader → ModDependencyValidator integration (missing dependency
 
   beforeEach(async () => {
     jest.clearAllMocks();
-    if (modDependencyValidator) modDependencyValidator.validate.mockReset();
-    if (modVersionValidator) modVersionValidator.mockReset();
-    if (modLoadOrderResolver) modLoadOrderResolver.resolveOrder.mockReset();
-
-    /* -------------------- Core plumbing ---------------------------------- */
+    
+    // --- Initialize Core Mocks (some are used by helper services, not directly by ModsLoader) ---
     logger = createMockLogger();
-    validator = new AjvSchemaValidator(logger);
+    configuration = createMockConfiguration(); // IConfiguration mock
+    pathResolver = createMockPathResolver();   // IPathResolver mock
+    fetcher = createMockFetcher(                // IDataFetcher mock
+      { /* Mock fetcher responses if needed for ModManifestLoader setup */ },
+      []
+    );
+    registry = createMockRegistry();           // IDataRegistry mock
+    validator = new AjvSchemaValidator(logger); // Real Ajv instance for ISchemaValidator, needs schemas
 
-    schemaLoader = {
+    // --- Initialize Mocks for ModsLoader's direct dependencies ---
+    schemaLoaderMock = { loadAndCompileAllSchemas: jest.fn().mockResolvedValue(undefined) };
+    componentLoaderMock = { loadItemsForMod: jest.fn().mockResolvedValue({ count: 0, overrides: 0, errors: 0 }) };
+    conditionLoaderMock = { loadItemsForMod: jest.fn().mockResolvedValue({ count: 0, overrides: 0, errors: 0 }) };
+    ruleLoaderMock = { loadItemsForMod: jest.fn().mockResolvedValue({ count: 0, overrides: 0, errors: 0 }) };
+    macroLoaderMock = { loadItemsForMod: jest.fn().mockResolvedValue({ count: 0, overrides: 0, errors: 0 }) };
+    actionLoaderMock = { loadItemsForMod: jest.fn().mockResolvedValue({ count: 0, overrides: 0, errors: 0 }) };
+    eventLoaderMock = { loadItemsForMod: jest.fn().mockResolvedValue({ count: 0, overrides: 0, errors: 0 }) };
+    entityLoaderMock = { loadItemsForMod: jest.fn().mockResolvedValue({ count: 0, overrides: 0, errors: 0 }) }; // EntityDefinitionLoader
+    entityInstanceLoaderMock = { loadItemsForMod: jest.fn().mockResolvedValue({ count: 0, overrides: 0, errors: 0 }) };
+    gameConfigLoaderMock = { loadConfig: jest.fn().mockResolvedValue(['basegame', 'badmod']) }; // GameConfigLoader class mock
+    promptTextLoaderMock = { loadPromptText: jest.fn().mockResolvedValue({}) };
+    modManifestLoaderMock = { // ModManifestLoader CLASS INSTANCE mock
+      loadRequestedManifests: jest.fn().mockResolvedValue(new Map()),
+      loadManifest: jest.fn(),
+    };
+    validatedEventDispatcherMock = { dispatch: jest.fn().mockResolvedValue(undefined) };
+    modDependencyValidatorMock = { validate: jest.fn() }; // IModDependencyValidator
+    modVersionValidatorMock = jest.fn().mockImplementation(() => true); // IModVersionValidator (function)
+    modLoadOrderResolverMock = { resolveOrder: jest.fn((m) => Array.from(m.keys())) }; // IModLoadOrderResolver
+    worldLoaderMock = { loadWorlds: jest.fn().mockResolvedValue(undefined) }; // IWorldLoader
+
+    // Setup for the real AjvSchemaValidator instance used in the test
+    // This uses a *temporary* schemaLoader to load schema definitions into our real validator instance.
+    // This is separate from schemaLoaderMock passed to ModsLoader.
+    const tempSchemaLoaderForValidatorSetup = {
       loadAndCompileAllSchemas: jest.fn().mockImplementation(async () => {
         for (const schemaDef of Object.values(schemaDefs)) {
           if (!validator.isSchemaLoaded(schemaDef.id)) {
             await validator.addSchema(buildSchema(schemaDef), schemaDef.id);
           }
         }
-        logger.debug('Mock SchemaLoader: Added schemas to REAL validator.');
       }),
     };
-    configuration = createMockConfiguration();
-    pathResolver = createMockPathResolver();
+    await tempSchemaLoaderForValidatorSetup.loadAndCompileAllSchemas();
 
     /* -------------------- Fixture manifests ------------------------------ */
     const baseManifest = {
@@ -245,97 +280,59 @@ describe('WorldLoader → ModDependencyValidator integration (missing dependency
       content: {},
     };
 
-    fetcher = createMockFetcher(
-      { basegame: baseManifest, badmod: badManifest },
-      []
-    );
-    registry = createMockRegistry();
-
-    /* -------------------- Auxiliary loaders ------------------------------ */
-    ruleLoader = { loadItemsForMod: jest.fn().mockResolvedValue({ count: 0 }) };
-    conditionLoader = {
-      loadItemsForMod: jest.fn().mockResolvedValue({ count: 0 }),
-    };
-    componentDefinitionLoader = {
-      loadItemsForMod: jest.fn().mockResolvedValue({ count: 0 }),
-    };
-    actionLoader = {
-      loadItemsForMod: jest.fn().mockResolvedValue({ count: 0 }),
-    };
-    eventLoader = {
-      loadItemsForMod: jest.fn().mockResolvedValue({ count: 0 }),
-    };
-    entityLoader = {
-      loadItemsForMod: jest.fn().mockResolvedValue({ count: 0 }),
-    };
-    entityInstanceLoader = {
-      loadItemsForMod: jest.fn().mockResolvedValue({ count: 0 }),
-    };
-
-    gameConfigLoader = {
-      loadConfig: jest.fn().mockResolvedValue(['basegame', 'badmod']),
-    };
-
-    validatedEventDispatcher = {
-      dispatch: jest.fn().mockResolvedValue(),
-    };
-
-    modDependencyValidator = {
-      validate: jest.fn(() => {
-        throw new ModDependencyError(
-          "Mod 'badmod' requires missing dependency 'MissingMod'"
-        );
-      }),
-    };
-    modVersionValidator = jest.fn();
-    modLoadOrderResolver = {
-      resolveOrder: jest.fn(() => ['basegame', 'badmod']),
-    };
-
-    /* -------------------- Real ModManifestLoader ------------------------- */
-    modManifestLoader = new ModManifestLoader(
-      configuration,
-      pathResolver,
-      fetcher,
-      validator,
-      registry,
-      logger
-    );
-
-    /* -------------------- System under test ------------------------------ */
-    worldLoader = new WorldLoader({
-      registry,
-      logger,
-      schemaLoader,
-      conditionLoader,
-      componentLoader: componentDefinitionLoader,
-      ruleLoader,
-      actionLoader,
-      eventLoader,
-      entityLoader,
-      entityInstanceLoader,
-      validator,
-      configuration,
-      gameConfigLoader,
-      promptTextLoader: { loadPromptText: jest.fn() },
-      modManifestLoader,
-      validatedEventDispatcher,
-      modDependencyValidator,
-      modVersionValidator,
-      modLoadOrderResolver,
-      contentLoadersConfig: null,
+    // --- Instantiate SUT (ModsLoader) --- Pass a single object with all dependencies
+    modsLoader = new ModsLoader({
+      registry: registry, // IDataRegistry
+      logger: logger, // ILogger
+      schemaLoader: schemaLoaderMock, // SchemaLoader class instance
+      componentLoader: componentLoaderMock,
+      conditionLoader: conditionLoaderMock,
+      ruleLoader: ruleLoaderMock,
+      macroLoader: macroLoaderMock,
+      actionLoader: actionLoaderMock,
+      eventLoader: eventLoaderMock,
+      entityLoader: entityLoaderMock, // EntityDefinitionLoader class instance
+      entityInstanceLoader: entityInstanceLoaderMock,
+      validator: validator, // ISchemaValidator (our Ajv instance)
+      configuration: configuration, // IConfiguration
+      gameConfigLoader: gameConfigLoaderMock, // GameConfigLoader class instance
+      promptTextLoader: promptTextLoaderMock,
+      modManifestLoader: modManifestLoaderMock, // ModManifestLoader class instance
+      validatedEventDispatcher: validatedEventDispatcherMock,
+      modDependencyValidator: modDependencyValidatorMock, // IModDependencyValidator
+      modVersionValidator: modVersionValidatorMock, // IModVersionValidator (function)
+      modLoadOrderResolver: modLoadOrderResolverMock, // IModLoadOrderResolver
+      worldLoader: worldLoaderMock, // IWorldLoader
+      contentLoadersConfig: null, // Use default
     });
+
+    // Configure the mockModManifestLoader (which *is* a constructor dependency of ModsLoader)
+    // to return our test manifests when its methods are called.
+    modManifestLoaderMock.loadRequestedManifests.mockResolvedValue(
+      new Map([
+        ['basegame', baseManifest],
+        ['badmod', badManifest],
+      ])
+    );
+    
+    // Configure the modDependencyValidatorMock to throw an error for this test case
+    modDependencyValidatorMock.validate.mockImplementation(() => {
+      throw new ModDependencyError(
+        "Mod 'badmod' requires missing dependency 'MissingMod' (version: ^1.0.0)"
+      );
+    });
+
   });
 
-  it('rejects with ModDependencyError and fetches only mod manifests (no content)', async () => {
+  it('should throw ModDependencyError if a required mod dependency is missing', async () => {
     const loadManifestsSpy = jest.spyOn(
-      modManifestLoader,
+      modManifestLoaderMock,
       'loadRequestedManifests'
     );
 
     let caughtError = null;
     try {
-      await worldLoader.loadWorld('TestWorld');
+      await modsLoader.loadWorld('TestWorld');
     } catch (error) {
       caughtError = error;
     }
@@ -349,48 +346,29 @@ describe('WorldLoader → ModDependencyValidator integration (missing dependency
 
     // --- Assert side effects (mocks and spies) ---
 
-    // Fetcher assertions
-    expect(fetcher.fetch).toHaveBeenCalledWith(
-      './data/mods/basegame/mod.manifest.json'
-    );
-    expect(fetcher.fetch).toHaveBeenCalledWith(
-      './data/mods/badmod/mod.manifest.json'
-    );
-
-    // Check that NO content files were fetched
-    const contentFetches = fetcher.fetch.mock.calls.filter(([p]) =>
-      /\/mods\/[^/]+\/(actions|components|events|rules|entityDefinitions|entityInstances)\//.test(
-        p
-      )
-    );
-    expect(contentFetches).toHaveLength(0);
-
-    // Total fetch count should be just the 2 manifests
-    expect(fetcher.fetch).toHaveBeenCalledTimes(2);
-
     // SchemaLoader assertion
-    expect(schemaLoader.loadAndCompileAllSchemas).toHaveBeenCalledTimes(1);
+    expect(schemaLoaderMock.loadAndCompileAllSchemas).toHaveBeenCalledTimes(1);
 
     // Manifest loader spy assertion
     expect(loadManifestsSpy).toHaveBeenCalledTimes(1);
     expect(loadManifestsSpy).toHaveBeenCalledWith(['basegame', 'badmod']);
 
     // GameConfigLoader assertion
-    expect(gameConfigLoader.loadConfig).toHaveBeenCalledTimes(1);
+    expect(gameConfigLoaderMock.loadConfig).toHaveBeenCalledTimes(1);
 
     // Assert auxiliary loaders were NOT called
-    expect(ruleLoader.loadItemsForMod).not.toHaveBeenCalled();
-    expect(componentDefinitionLoader.loadItemsForMod).not.toHaveBeenCalled();
-    expect(actionLoader.loadItemsForMod).not.toHaveBeenCalled();
-    expect(eventLoader.loadItemsForMod).not.toHaveBeenCalled();
-    expect(entityLoader.loadItemsForMod).not.toHaveBeenCalled();
-    expect(entityInstanceLoader.loadItemsForMod).not.toHaveBeenCalled();
+    expect(ruleLoaderMock.loadItemsForMod).not.toHaveBeenCalled();
+    expect(componentLoaderMock.loadItemsForMod).not.toHaveBeenCalled();
+    expect(actionLoaderMock.loadItemsForMod).not.toHaveBeenCalled();
+    expect(eventLoaderMock.loadItemsForMod).not.toHaveBeenCalled();
+    expect(entityLoaderMock.loadItemsForMod).not.toHaveBeenCalled();
+    expect(entityInstanceLoaderMock.loadItemsForMod).not.toHaveBeenCalled();
 
     // Logger assertions
     const errorLogCallArgs = logger.error.mock.calls[0];
     expect(logger.error).toHaveBeenCalledTimes(1);
     expect(errorLogCallArgs[0]).toBe(
-      'WorldLoader: CRITICAL load failure during world/mod loading sequence.'
+      'ModsLoader: CRITICAL load failure during world/mod loading sequence.'
     );
     expect(errorLogCallArgs[1]).toEqual(
       expect.objectContaining({

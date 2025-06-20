@@ -4,7 +4,7 @@
 /** @typedef {import('../../dependencyInjection/appContainer.js').default} AppContainer */
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../events/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
-/** @typedef {import('../../loaders/worldLoader.js').default} WorldLoader */
+/** @typedef {import('../../loaders/modsLoader.js').default} ModsLoader */
 /** @typedef {import('../systemInitializer.js').default} SystemInitializer */
 /** @typedef {import('../worldInitializer.js').default} WorldInitializer */
 /** @typedef {import('../../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
@@ -109,12 +109,12 @@ class InitializationService extends IInitializationService {
     }
 
     try {
-      this.#logger.debug('Resolving WorldLoader...');
-      const worldLoader = /** @type {WorldLoader} */ (
-        this.#container.resolve(tokens.WorldLoader)
+      this.#logger.debug('Resolving ModsLoader...');
+      const modsLoader = /** @type {ModsLoader} */ (
+        this.#container.resolve(tokens.ModsLoader)
       );
-      this.#logger.debug('WorldLoader resolved. Loading world data...');
-      await worldLoader.loadWorld(worldName); // Schemas are loaded by this point
+      this.#logger.debug('ModsLoader resolved. Loading world data...');
+      await modsLoader.loadWorld(worldName); // Schemas are loaded by this point
       this.#logger.debug(
         `InitializationService: World data loaded successfully for world: ${worldName}.`
       );

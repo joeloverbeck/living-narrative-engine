@@ -16,7 +16,7 @@ import { tokens } from '../../../../src/dependencyInjection/tokens.js'; // Impor
 let mockContainer;
 let mockLogger;
 let mockValidatedEventDispatcher;
-let mockWorldLoader;
+let mockModsLoader;
 let mockSystemInitializer;
 // REMOVED: let mockGameStateInitializer;
 let mockWorldInitializer;
@@ -38,7 +38,7 @@ describe('InitializationService', () => {
     mockValidatedEventDispatcher = {
       dispatch: jest.fn().mockResolvedValue(undefined), // Default success
     };
-    mockWorldLoader = {
+    mockModsLoader = {
       loadWorld: jest.fn().mockResolvedValue(undefined),
     };
     mockSystemInitializer = {
@@ -59,8 +59,8 @@ describe('InitializationService', () => {
     mockContainer = {
       resolve: jest.fn((token) => {
         switch (token) {
-          case 'WorldLoader':
-            return mockWorldLoader;
+          case 'ModsLoader':
+            return mockModsLoader;
           case 'SystemInitializer':
             return mockSystemInitializer;
           // REMOVED: GameStateInitializer case
@@ -94,8 +94,8 @@ describe('InitializationService', () => {
     // Ensure originalContainerResolve starts with the base behavior for fallback
     originalContainerResolve = jest.fn((token) => {
       switch (token) {
-        case 'WorldLoader':
-          return mockWorldLoader;
+        case 'ModsLoader':
+          return mockModsLoader;
         case 'SystemInitializer':
           return mockSystemInitializer;
         case 'WorldInitializer':
@@ -111,8 +111,8 @@ describe('InitializationService', () => {
     // Now set the main mockContainer.resolve to use the switch and the fallback mechanism
     mockContainer.resolve.mockImplementation((token) => {
       switch (token) {
-        case 'WorldLoader':
-          return mockWorldLoader;
+        case 'ModsLoader':
+          return mockModsLoader;
         case 'SystemInitializer':
           return mockSystemInitializer;
         case 'WorldInitializer':
