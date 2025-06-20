@@ -14,12 +14,12 @@ import {
   createMockGameConfigLoader,
   createMockModManifestLoader,
   createMockValidatedEventDispatcher,
-  createMockContentLoader,
   createMockModDependencyValidator,
   createMockModVersionValidator,
   createMockModLoadOrderResolver,
   createMockWorldLoader, // ← NEW import
 } from '../mockFactories.js';
+import { createLoaderMocks } from './modsLoader.test-utils.js';
 
 /**
  * List of loader types used when generating mock loaders.
@@ -56,10 +56,7 @@ export function createTestEnvironment() {
   const mockValidatedEventDispatcher = createMockValidatedEventDispatcher();
 
   /* ── Content-loader mocks ───────────────────────────────────────────── */
-  const loaders = {};
-  for (const type of loaderTypes) {
-    loaders[`mock${type}Loader`] = createMockContentLoader();
-  }
+  const loaders = createLoaderMocks(loaderTypes);
 
   /* ── Modding-helper mocks ───────────────────────────────────────────── */
   const mockModDependencyValidator = createMockModDependencyValidator();
