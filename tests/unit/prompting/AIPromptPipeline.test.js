@@ -1,12 +1,5 @@
 /* eslint-env node */
-import {
-  describe,
-  beforeEach,
-  afterEach,
-  test,
-  expect,
-  jest,
-} from '@jest/globals';
+import { describe, beforeEach, afterEach, test, expect } from '@jest/globals';
 import { AIPromptPipeline } from '../../../src/prompting/AIPromptPipeline.js';
 import { AIPromptPipelineTestBed } from '../../common/prompting/promptPipelineTestBed.js';
 
@@ -21,10 +14,7 @@ describe('AIPromptPipeline', () => {
     pipeline = testBed.createPipeline();
 
     // Default success paths
-    testBed.llmAdapter.getCurrentActiveLlmId.mockResolvedValue('llm-id');
-    testBed.gameStateProvider.buildGameState.mockResolvedValue({});
-    testBed.promptContentProvider.getPromptData.mockResolvedValue({});
-    testBed.promptBuilder.build.mockResolvedValue('PROMPT');
+    testBed.setupMockSuccess();
   });
 
   afterEach(() => {

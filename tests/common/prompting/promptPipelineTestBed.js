@@ -80,6 +80,27 @@ export class AIPromptPipelineTestBed {
   cleanup() {
     jest.clearAllMocks();
   }
+
+  /**
+   * Sets up mock resolved values for a successful pipeline run.
+   *
+   * @param {object} [options]
+   * @param {string} [options.llmId] - LLM ID returned by the adapter.
+   * @param {object} [options.gameState] - Game state returned by the provider.
+   * @param {object} [options.promptData] - Prompt data returned by the content provider.
+   * @param {string} [options.finalPrompt] - Final prompt string returned by the builder.
+   */
+  setupMockSuccess({
+    llmId = 'llm-id',
+    gameState = {},
+    promptData = {},
+    finalPrompt = 'PROMPT',
+  } = {}) {
+    this.llmAdapter.getCurrentActiveLlmId.mockResolvedValue(llmId);
+    this.gameStateProvider.buildGameState.mockResolvedValue(gameState);
+    this.promptContentProvider.getPromptData.mockResolvedValue(promptData);
+    this.promptBuilder.build.mockResolvedValue(finalPrompt);
+  }
 }
 
 export default AIPromptPipelineTestBed;

@@ -132,6 +132,8 @@ export class TestBed {
   entityManager;
 
   /**
+   * Creates a new TestBed instance.
+   *
    * @param {object} [entityManagerOptions] - Optional options to pass to the EntityManager constructor.
    * @param {Function} [entityManagerOptions.idGenerator] - A mock ID generator function.
    */
@@ -178,6 +180,34 @@ export class TestBed {
     ) {
       this.entityManager.clearAll();
     }
+    
+    * Creates a new entity instance from a definition stored in {@link TestData}.
+   *
+   * Internally this configures the mock registry via {@link TestBed#setupDefinitions}
+   * and then delegates to {@link EntityManager#createEntityInstance}.
+   *
+   * @param {keyof typeof TestData.Definitions} defKey - Key of the test
+   *   definition to use.
+   * @param {object} [options] - Options forwarded to
+   *   {@link EntityManager#createEntityInstance}.
+   * @returns {import('../../../src/entities/entity.js').default} The created
+   *   entity instance.
+   */
+  createEntity(defKey, options = {}) {
+    const definition = TestData.Definitions[defKey];
+    if (!definition) {
+      throw new Error(`Unknown test definition key: ${defKey}`);
+    }
+    this.setupDefinitions(definition);
+    return this.entityManager.createEntityInstance(definition.id, options);
+  }
+
+  /**
+   * Resets the dispatch mock on the internal event dispatcher.
+   *
+   * @returns {void}
+   */
+  resetDispatchMock() {
+    this.mocks.eventDispatcher.dispatch.mockClear();
   }
 }
-
