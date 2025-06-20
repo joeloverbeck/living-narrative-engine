@@ -3,9 +3,8 @@
  * @see src/entities/entityInstanceData.js
  */
 
-import { cloneDeep, isEqual, pick } from 'lodash';
+import { cloneDeep } from 'lodash';
 import EntityDefinition from './entityDefinition.js';
-import { ACTOR_COMPONENT_ID } from '../constants/componentIds.js';
 
 /**
  * Represents the mutable, runtime data for a unique instance of an entity.

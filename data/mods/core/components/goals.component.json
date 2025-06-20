@@ -30,6 +30,5 @@
     },
     "required": ["goals"],
     "additionalProperties": false
-  },
-  "resolveFields": []
+  }
 }

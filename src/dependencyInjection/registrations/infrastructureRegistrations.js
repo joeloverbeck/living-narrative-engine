@@ -61,7 +61,9 @@ export function registerInfrastructure(container) {
   );
 
   r.single(tokens.EventBus, EventBus);
-  log.debug(`Infrastructure Registration: Registered ${String(tokens.EventBus)}.`);
+  log.debug(
+    `Infrastructure Registration: Registered ${String(tokens.EventBus)}.`
+  );
 
   container.register(
     tokens.ISpatialIndexManager,
@@ -116,7 +118,9 @@ export function registerInfrastructure(container) {
     },
     { lifecycle: 'singleton' }
   );
-  log.debug(`Infrastructure Registration: Registered ${String(tokens.WorldLoader)}.`);
+  log.debug(
+    `Infrastructure Registration: Registered ${String(tokens.WorldLoader)}.`
+  );
 
   container.register(
     tokens.IGameDataRepository,

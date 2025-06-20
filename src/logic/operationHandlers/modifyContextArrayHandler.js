@@ -109,8 +109,13 @@ class ModifyContextArrayHandler {
 
     if (Array.isArray(resolvedValue)) {
       clonedArray = cloneDeep(resolvedValue);
-    } else if (resolvedValue === undefined && (mode === 'push' || mode === 'push_unique')) {
-      log.debug(`MODIFY_CONTEXT_ARRAY: Path '${variable_path}' does not exist. Initializing as empty array for mode '${mode}'.`);
+    } else if (
+      resolvedValue === undefined &&
+      (mode === 'push' || mode === 'push_unique')
+    ) {
+      log.debug(
+        `MODIFY_CONTEXT_ARRAY: Path '${variable_path}' does not exist. Initializing as empty array for mode '${mode}'.`
+      );
       clonedArray = [];
     } else {
       let message = `MODIFY_CONTEXT_ARRAY: Context variable path '${variable_path}' `;
@@ -124,7 +129,10 @@ class ModifyContextArrayHandler {
     }
 
     let debugMessage = `MODIFY_CONTEXT_ARRAY: Performing '${mode}' on context variable '${variable_path}'.`;
-    if (value !== undefined && (mode === 'push' || mode === 'push_unique' || mode === 'remove_by_value')) {
+    if (
+      value !== undefined &&
+      (mode === 'push' || mode === 'push_unique' || mode === 'remove_by_value')
+    ) {
       try {
         // Attempt to stringify, but catch errors for complex objects or circular refs
         debugMessage += ` Value: ${JSON.stringify(value)}.`;
