@@ -3,6 +3,7 @@ import {
   expectDispatchSequence,
   buildSaveDispatches,
   DEFAULT_ACTIVE_WORLD_FOR_SAVE,
+  expectEngineStatus,
 } from './dispatchTestUtils.js';
 import {
   ENGINE_OPERATION_IN_PROGRESS_UI,
@@ -73,6 +74,18 @@ describe('dispatchTestUtils', () => {
           },
         ],
       ]);
+    });
+  });
+
+  describe('expectEngineStatus', () => {
+    it('verifies engine status equality', () => {
+      const engine = { getEngineStatus: () => ({ ready: true }) };
+      expect(() => expectEngineStatus(engine, { ready: true })).not.toThrow();
+    });
+
+    it('throws when statuses differ', () => {
+      const engine = { getEngineStatus: () => ({ ready: false }) };
+      expect(() => expectEngineStatus(engine, { ready: true })).toThrow();
     });
   });
 });
