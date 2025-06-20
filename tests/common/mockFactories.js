@@ -4,12 +4,17 @@
  */
 
 import { jest } from '@jest/globals';
+import {
+  ACTOR_COMPONENT_ID,
+  PLAYER_COMPONENT_ID,
+} from '../../src/constants/componentIds.js';
 
 // --- Core Service Mocks ---
 
 /**
  * Creates a mock ILogger with jest functions.
- * @returns {jest.Mocked<import('../../src/interfaces/coreServices.js').ILogger>}
+ *
+ * @returns {jest.Mocked<import('../../src/interfaces/coreServices.js').ILogger>} A mocked ILogger.
  */
 export const createMockLogger = () => ({
   info: jest.fn(),
@@ -20,8 +25,9 @@ export const createMockLogger = () => ({
 
 /**
  * Creates a mock ISchemaValidator with jest functions.
+ *
  * @param {{ isValid: boolean }} [defaultValidationResult] - The default result for the validate method.
- * @returns {jest.Mocked<import('../../src/interfaces/coreServices.js').ISchemaValidator>}
+ * @returns {jest.Mocked<import('../../src/interfaces/coreServices.js').ISchemaValidator>} A mocked validator.
  */
 export const createMockSchemaValidator = (
   defaultValidationResult = { isValid: true }
@@ -36,7 +42,8 @@ export const createMockSchemaValidator = (
 /**
  * Creates a simple, non-stateful mock IDataRegistry.
  * Useful for unit tests where only specific methods need to be mocked.
- * @returns {jest.Mocked<import('../../src/interfaces/coreServices.js').IDataRegistry>}
+ *
+ * @returns {jest.Mocked<import('../../src/interfaces/coreServices.js').IDataRegistry>} A mocked data registry.
  */
 export const createSimpleMockDataRegistry = () => ({
   getEntityDefinition: jest.fn(),
@@ -50,7 +57,8 @@ export const createSimpleMockDataRegistry = () => ({
 /**
  * Creates a sophisticated, stateful mock IDataRegistry for integration testing.
  * It simulates an in-memory store.
- * @returns {jest.Mocked<import('../../src/interfaces/coreServices.js').IDataRegistry> & { _internalStore: object }}
+ *
+ * @returns {jest.Mocked<import('../../src/interfaces/coreServices.js').IDataRegistry> & { _internalStore: object }} A stateful mocked data registry.
  */
 export const createStatefulMockDataRegistry = () => {
   const internalStore = {};
@@ -111,7 +119,8 @@ export const createStatefulMockDataRegistry = () => {
 
 /**
  * Creates a mock IConfiguration service with common default values.
- * @returns {jest.Mocked<import('../../src/interfaces/coreServices.js').IConfiguration>}
+ *
+ * @returns {jest.Mocked<import('../../src/interfaces/coreServices.js').IConfiguration>} A mocked configuration service.
  */
 export const createMockConfiguration = () => ({
   getContentTypeSchemaId: jest.fn((typeName) => `schema:${typeName}`),
@@ -128,7 +137,8 @@ export const createMockConfiguration = () => ({
 
 /**
  * Creates a mock ISafeEventDispatcher with jest functions.
- * @returns {jest.Mocked<import('../../src/interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher>}
+ *
+ * @returns {jest.Mocked<import('../../src/interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher>} A mocked safe dispatcher.
  */
 export const createMockSafeEventDispatcher = () => ({
   dispatch: jest.fn(),
@@ -136,7 +146,8 @@ export const createMockSafeEventDispatcher = () => ({
 
 /**
  * Creates a mock ValidatedEventDispatcher.
- * @returns {jest.Mocked<import('../../services/validatedEventDispatcher.js').default>}
+ *
+ * @returns {jest.Mocked<import('../../services/validatedEventDispatcher.js').default>} A mocked validated dispatcher.
  */
 export const createMockValidatedEventDispatcher = () => ({
   dispatch: jest.fn().mockResolvedValue(undefined),
@@ -146,8 +157,9 @@ export const createMockValidatedEventDispatcher = () => ({
 
 /**
  * Creates a generic mock for content loaders (e.g., ActionLoader, ComponentLoader).
+ *
  * @param {object} [defaultLoadResult] - The default result for loadItemsForMod.
- * @returns {jest.Mocked<import('../../../src/interfaces/coreServices.js').BaseManifestItemLoaderInterface>}
+ * @returns {jest.Mocked<import('../../../src/interfaces/coreServices.js').BaseManifestItemLoaderInterface>} A mocked content loader.
  */
 export const createMockContentLoader = (
   defaultLoadResult = { count: 0, overrides: 0, errors: 0 }
@@ -157,7 +169,8 @@ export const createMockContentLoader = (
 
 /**
  * Creates a mock SchemaLoader.
- * @returns {jest.Mocked<import('../../src/loaders/schemaLoader.js').default>}
+ *
+ * @returns {jest.Mocked<import('../../src/loaders/schemaLoader.js').default>} A mocked schema loader.
  */
 export const createMockSchemaLoader = () => ({
   loadAndCompileAllSchemas: jest.fn().mockResolvedValue(undefined),
@@ -165,7 +178,8 @@ export const createMockSchemaLoader = () => ({
 
 /**
  * Creates a mock GameConfigLoader.
- * @returns {jest.Mocked<import('../../src/loaders/gameConfigLoader.js').default>}
+ *
+ * @returns {jest.Mocked<import('../../src/loaders/gameConfigLoader.js').default>} A mocked game config loader.
  */
 export const createMockGameConfigLoader = () => ({
   loadConfig: jest.fn().mockResolvedValue([]), // Default to no mods
@@ -173,7 +187,8 @@ export const createMockGameConfigLoader = () => ({
 
 /**
  * Creates a mock ModManifestLoader.
- * @returns {jest.Mocked<import('../../src/modding/modManifestLoader.js').default>}
+ *
+ * @returns {jest.Mocked<import('../../src/modding/modManifestLoader.js').default>} A mocked mod manifest loader.
  */
 export const createMockModManifestLoader = () => ({
   loadRequestedManifests: jest.fn().mockResolvedValue(new Map()),
@@ -183,7 +198,8 @@ export const createMockModManifestLoader = () => ({
 
 /**
  * Creates a mock for the mod dependency validator.
- * @returns {{ validate: jest.Mock }}
+ *
+ * @returns {{ validate: jest.Mock }} The mocked dependency validator.
  */
 export const createMockModDependencyValidator = () => ({
   validate: jest.fn(),
@@ -191,15 +207,127 @@ export const createMockModDependencyValidator = () => ({
 
 /**
  * Creates a mock for the mod version validator.
- * @returns {jest.Mock}
+ *
+ * @returns {jest.Mock} The mocked version validator.
  */
 export const createMockModVersionValidator = () => jest.fn();
 
 /**
  * Creates a mock for the mod load order resolver.
- * @returns {{ resolveOrder: jest.Mock }}
+ *
+ * @returns {{ resolveOrder: jest.Mock }} The mocked resolver.
  */
 export const createMockModLoadOrderResolver = () => ({
   // Default behavior resolves to the same order it was given
   resolveOrder: jest.fn((reqIds) => reqIds),
+});
+
+// --- Turn & Entity System Mocks ---
+
+/**
+ * Creates a mock ITurnOrderService with jest.fn() methods.
+ *
+ * @returns {jest.Mocked<import('../../src/turns/interfaces/ITurnOrderService.js').ITurnOrderService>} The mocked service instance.
+ */
+export const createMockTurnOrderService = () => ({
+  startNewRound: jest.fn(),
+  getNextEntity: jest.fn(),
+  peekNextEntity: jest.fn(),
+  addEntity: jest.fn(),
+  removeEntity: jest.fn(),
+  isEmpty: jest.fn(),
+  getCurrentOrder: jest.fn(),
+  clearCurrentRound: jest.fn(),
+});
+
+/**
+ * Creates a mock ITurnHandlerResolver.
+ *
+ * @returns {jest.Mocked<import('../../src/turns/interfaces/ITurnHandlerResolver.js').ITurnHandlerResolver>} The mocked resolver.
+ */
+export const createMockTurnHandlerResolver = () => ({
+  resolveHandler: jest.fn(),
+});
+
+/**
+ * Creates a mock ITurnHandler instance.
+ *
+ * @returns {jest.Mocked<import('../../src/turns/interfaces/ITurnHandler.js').ITurnHandler>} The mocked handler.
+ */
+export const createMockTurnHandler = () => ({
+  startTurn: jest.fn().mockResolvedValue(undefined),
+  destroy: jest.fn().mockResolvedValue(undefined),
+  signalNormalApparentTermination: jest.fn(),
+});
+
+/**
+ * Creates a mock IEntityManager.
+ *
+ * @returns {jest.Mocked<import('../../src/entities/entityManager.js').default> & { activeEntities: Map<string, any> }} The mocked entity manager.
+ */
+export const createMockEntityManager = () => ({
+  getEntityInstance: jest.fn(),
+  getEntitiesInLocation: jest.fn(() => new Set()),
+  clearAll: jest.fn(),
+  getActiveEntities: jest.fn(() => []),
+  createEntity: jest.fn(),
+  destroyEntity: jest.fn(),
+  activeEntities: new Map(),
+});
+
+/**
+ * Creates a mock Validated EventBus for tests.
+ * Provides helper methods to manually trigger events and clear handlers.
+ *
+ * @returns {{
+ *   dispatch: jest.Mock,
+ *   subscribe: jest.Mock,
+ *   _triggerEvent: (eventName: string, payload: any) => void,
+ *   _clearHandlers: () => void,
+ * }} The mocked event bus with manual trigger helpers.
+ */
+export const createMockValidatedEventBus = () => {
+  const handlers = {};
+  return {
+    dispatch: jest.fn(async (eventName, payload) => {
+      const listeners = handlers[eventName] || [];
+      for (const listener of listeners) {
+        await listener({ type: eventName, payload });
+      }
+    }),
+    subscribe: jest.fn((eventName, handler) => {
+      handlers[eventName] = handlers[eventName] || [];
+      handlers[eventName].push(handler);
+      return () => {
+        const idx = handlers[eventName].indexOf(handler);
+        if (idx > -1) handlers[eventName].splice(idx, 1);
+      };
+    }),
+    _triggerEvent(eventName, payload) {
+      const listeners = handlers[eventName] || [];
+      listeners.forEach((h) => h(payload));
+    },
+    _clearHandlers() {
+      Object.keys(handlers).forEach((k) => delete handlers[k]);
+    },
+  };
+};
+
+/**
+ * Creates a simple mock Entity with configurable component flags.
+ *
+ * @param {string} id - The entity identifier.
+ * @param {{ isActor?: boolean, isPlayer?: boolean }} [options] - Flags indicating component presence.
+ * @returns {{ id: string, hasComponent: jest.Mock }} The created mock entity.
+ */
+export const createMockEntity = (
+  id,
+  { isActor = false, isPlayer = false } = {}
+) => ({
+  id,
+  hasComponent: jest.fn((componentId) => {
+    if (componentId === ACTOR_COMPONENT_ID) return isActor;
+    if (componentId === PLAYER_COMPONENT_ID) return isPlayer;
+    return false;
+  }),
 });
