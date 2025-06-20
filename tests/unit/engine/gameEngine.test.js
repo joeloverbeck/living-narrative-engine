@@ -13,8 +13,13 @@ import { tokens } from '../../../src/dependencyInjection/tokens.js';
 import { createGameEngineTestBed } from '../../common/engine/gameEngineTestBed.js';
 import { expectDispatchCalls } from '../../common/engine/dispatchTestUtils.js';
 import { buildSaveDispatches } from '../../common/engine/gameEngineSaveTestUtils.js';
+
 import {
-  GAME_SAVED_ID,
+  expectDispatchSequence,
+  buildSaveDispatches,
+  DEFAULT_ACTIVE_WORLD_FOR_SAVE,
+} from '../../common/engine/dispatchTestUtils.js';
+import {
   // --- Import new UI Event IDs ---
   ENGINE_INITIALIZING_UI,
   ENGINE_READY_UI,
@@ -334,7 +339,7 @@ describe('GameEngine', () => {
 
   describe('triggerManualSave', () => {
     const SAVE_NAME = 'MySaveFile';
-    const MOCK_ACTIVE_WORLD_FOR_SAVE = 'TestWorldForSaving';
+    const MOCK_ACTIVE_WORLD_FOR_SAVE = DEFAULT_ACTIVE_WORLD_FOR_SAVE;
 
     it('should dispatch error and not attempt save if engine is not initialized', async () => {
       const localBed = createGameEngineTestBed();
@@ -391,6 +396,7 @@ describe('GameEngine', () => {
         await localBed.cleanup();
       });
 
+
       it.each([
         {
           saveResult: { success: true, filePath: 'path/to/my.sav' },
@@ -439,6 +445,13 @@ describe('GameEngine', () => {
           expect(
             testBed.mocks.gamePersistenceService.saveGame
           ).toHaveBeenCalledWith(SAVE_NAME, true, MOCK_ACTIVE_WORLD_FOR_SAVE);
+
+        const result = await gameEngine.triggerManualSave(SAVE_NAME);
+
+        expectDispatchSequence(
+          testBed.mocks.safeEventDispatcher.dispatch,
+          ...buildSaveDispatches(SAVE_NAME)
+        );
 
           if (saveResult instanceof Error) {
             expect(result).toEqual({
@@ -576,20 +589,13 @@ describe('GameEngine', () => {
       expect(localBed.mocks.logger.error).toHaveBeenCalledWith(
         `GameEngine.loadGame: ${rawErrorMsg}`
       );
-      const expectedDispatches = [
-        [
-          ENGINE_OPERATION_FAILED_UI,
-          {
-            errorMessage: rawErrorMsg,
-            errorTitle: 'Load Failed',
-          },
-        ],
-      ];
-
-      expectDispatchCalls(
-        localBed.mocks.safeEventDispatcher.dispatch,
-        expectedDispatches
-      );
+      expectDispatchSequence(localBed.mocks.safeEventDispatcher.dispatch, [
+        ENGINE_OPERATION_FAILED_UI,
+        {
+          errorMessage: rawErrorMsg,
+          errorTitle: 'Load Failed',
+        },
+      ]);
       expect(result).toEqual({
         success: false,
         error: rawErrorMsg,
