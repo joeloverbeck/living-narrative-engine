@@ -68,6 +68,47 @@ export const TestData = {
     SECONDARY: 'test-instance-02',
     GHOST: 'non-existent-instance-id',
   },
+  /**
+   * A collection of intentionally malformed values used for negative test
+   * scenarios. Each array targets a different validation case within the
+   * EntityManager.
+   *
+   * @property {Array<*>} componentDataNotObject Values that are invalid when
+   *   passed as component data because they are not plain objects.
+   * @property {Array<Array<*>>} invalidIdPairs Array of `[definitionId, instanceId]`
+   *   pairs considered invalid.
+   * @property {Array<*>} invalidIds Values that should fail when used as IDs.
+   * @property {Array<*>} serializedEntityShapes Malformed shapes for serialized
+   *   entities.
+   * @property {Array<*>} serializedInstanceIds Malformed instance identifiers
+   *   within serialized data.
+   */
+  InvalidValues: {
+    componentDataNotObject: [null, undefined, 42, 'string', []],
+    invalidIdPairs: [
+      [null, 'id'],
+      ['def', null],
+      ['', ''],
+      [123, 456],
+    ],
+    invalidIds: [null, undefined, '', 0, true, {}, []],
+    serializedEntityShapes: [null, undefined, 5, 'bad', []],
+    serializedInstanceIds: [null, undefined, '', 99, {}, []],
+  },
+  /**
+   * Default data mappings for components that the EntityManager injects
+   * automatically for actor entities.
+   *
+   * @property {object} "core:goals" Default data for the `core:goals` component.
+   * @property {object} "core:notes" Default data for the `core:notes` component.
+   * @property {object} "core:short_term_memory" Default data for the
+   *   `core:short_term_memory` component.
+   */
+  DefaultComponentData: {
+    [GOALS_COMPONENT_ID]: { goals: [] },
+    [NOTES_COMPONENT_ID]: { notes: [] },
+    [SHORT_TERM_MEMORY_COMPONENT_ID]: { thoughts: [], maxEntries: 10 },
+  },
 };
 
 /**
@@ -78,18 +119,20 @@ export const TestData = {
 export class TestBed {
   /**
    * Collection of all mocks for easy access in tests.
+   *
    * @type {{registry: ReturnType<typeof createSimpleMockDataRegistry>, validator: ReturnType<typeof createMockSchemaValidator>, logger: ReturnType<typeof createMockLogger>, eventDispatcher: ReturnType<typeof createMockSafeEventDispatcher>}}
    */
   mocks;
 
   /**
    * The instance of EntityManager under test, pre-configured with mocks.
+   *
    * @type {EntityManager}
    */
   entityManager;
 
   /**
-   * @param {object} [entityManagerOptions={}] - Optional options to pass to the EntityManager constructor.
+   * @param {object} [entityManagerOptions] - Optional options to pass to the EntityManager constructor.
    * @param {Function} [entityManagerOptions.idGenerator] - A mock ID generator function.
    */
   constructor(entityManagerOptions = {}) {
@@ -111,6 +154,7 @@ export class TestBed {
 
   /**
    * Configures the mock IDataRegistry to return specific definitions for a test.
+   *
    * @param {...EntityDefinition} definitions - The definitions to make available via the mock registry.
    */
   setupDefinitions(...definitions) {
@@ -136,3 +180,4 @@ export class TestBed {
     }
   }
 }
+

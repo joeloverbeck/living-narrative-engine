@@ -11,6 +11,9 @@ import EntityDefinition from '../../../../src/entities/entityDefinition.js';
 import {
   ACTOR_COMPONENT_ID,
   POSITION_COMPONENT_ID,
+  GOALS_COMPONENT_ID,
+  NOTES_COMPONENT_ID,
+  SHORT_TERM_MEMORY_COMPONENT_ID,
 } from '../../../../src/constants/componentIds.js';
 
 // We only need to mock EntityManager to verify that the TestBed instantiates it correctly.
@@ -51,6 +54,27 @@ describe('EntityManager Test Helpers: TestBed & TestData', () => {
       expect(TestData.InstanceIDs).toBeDefined();
       expect(TestData.InstanceIDs.PRIMARY).toBe('test-instance-01');
       expect(TestData.InstanceIDs.SECONDARY).toBe('test-instance-02');
+    });
+
+    it('should expose collections of invalid values', () => {
+      const { InvalidValues } = TestData;
+      expect(InvalidValues).toBeDefined();
+      expect(Array.isArray(InvalidValues.componentDataNotObject)).toBe(true);
+      expect(Array.isArray(InvalidValues.invalidIdPairs)).toBe(true);
+      expect(Array.isArray(InvalidValues.invalidIds)).toBe(true);
+      expect(Array.isArray(InvalidValues.serializedEntityShapes)).toBe(true);
+      expect(Array.isArray(InvalidValues.serializedInstanceIds)).toBe(true);
+    });
+
+    it('should provide default data for injected components', () => {
+      const { DefaultComponentData } = TestData;
+      expect(DefaultComponentData).toBeDefined();
+      expect(DefaultComponentData[GOALS_COMPONENT_ID]).toEqual({ goals: [] });
+      expect(DefaultComponentData[NOTES_COMPONENT_ID]).toEqual({ notes: [] });
+      expect(DefaultComponentData[SHORT_TERM_MEMORY_COMPONENT_ID]).toEqual({
+        thoughts: [],
+        maxEntries: 10,
+      });
     });
   });
 
