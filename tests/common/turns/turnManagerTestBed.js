@@ -18,16 +18,6 @@ import BaseTestBed from '../baseTestBed.js';
  * @class
  */
 export class TurnManagerTestBed extends BaseTestBed {
-  /** @type {ReturnType<typeof createMockLogger>} */
-  logger;
-  /** @type {ReturnType<typeof createMockEntityManager>} */
-  entityManager;
-  /** @type {ReturnType<typeof createMockValidatedEventBus>} */
-  dispatcher;
-  /** @type {{ isEmpty: jest.Mock, getNextEntity: jest.Mock, startNewRound: jest.Mock, clearCurrentRound: jest.Mock }} */
-  turnOrderService;
-  /** @type {{ resolveHandler: jest.Mock }} */
-  turnHandlerResolver;
   /** @type {TurnManager} */
   turnManager;
 
@@ -64,11 +54,6 @@ export class TurnManagerTestBed extends BaseTestBed {
       turnHandlerResolver,
     };
     super(mocks);
-    this.logger = logger;
-    this.entityManager = entityManager;
-    this.turnOrderService = turnOrderService;
-    this.turnHandlerResolver = turnHandlerResolver;
-    this.dispatcher = dispatcher;
 
     this.turnManager = new TurnManager({
       turnOrderService: this.turnOrderService,

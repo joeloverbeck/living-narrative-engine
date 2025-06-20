@@ -13,7 +13,9 @@ export class BaseTestBed {
   /**
    * Creates a new BaseTestBed instance.
    *
-   * @param {Record<string, object>} [mocks] - The mocks used by the test bed.
+   * @param {Record<string, object>} [mocks] - The mocks used by the test bed. Each
+   *   provided mock is also assigned directly as a property on the instance for
+   *   easier access.
    */
   constructor(mocks = {}) {
     /**
@@ -22,6 +24,10 @@ export class BaseTestBed {
      * @type {Record<string, object>}
      */
     this.mocks = mocks;
+
+    Object.entries(mocks).forEach(([key, value]) => {
+      this[key] = value;
+    });
   }
 
   /**

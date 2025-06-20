@@ -20,16 +20,6 @@ import BaseTestBed from '../baseTestBed.js';
  * @class
  */
 export class AIPromptPipelineTestBed extends BaseTestBed {
-  /** @type {jest.Mocked<import('../../src/turns/interfaces/ILLMAdapter.js').ILLMAdapter>} */
-  llmAdapter;
-  /** @type {jest.Mocked<import('../../src/turns/interfaces/IAIGameStateProvider.js').IAIGameStateProvider>} */
-  gameStateProvider;
-  /** @type {jest.Mocked<import('../../src/turns/interfaces/IAIPromptContentProvider.js').IAIPromptContentProvider>} */
-  promptContentProvider;
-  /** @type {jest.Mocked<import('../../src/interfaces/IPromptBuilder.js').IPromptBuilder>} */
-  promptBuilder;
-  /** @type {jest.Mocked<import('../../src/interfaces/coreServices.js').ILogger>} */
-  logger;
   /** @type {import('../../src/entities/entity.js').default} */
   defaultActor;
   /** @type {import('../../src/turns/interfaces/ITurnContext.js').ITurnContext} */
@@ -46,13 +36,6 @@ export class AIPromptPipelineTestBed extends BaseTestBed {
       logger: createMockLogger(),
     };
     super(mocks);
-
-    // Preserve direct properties for backward compatibility
-    this.llmAdapter = this.mocks.llmAdapter;
-    this.gameStateProvider = this.mocks.gameStateProvider;
-    this.promptContentProvider = this.mocks.promptContentProvider;
-    this.promptBuilder = this.mocks.promptBuilder;
-    this.logger = this.mocks.logger;
     this.defaultActor = createMockEntity('actor');
     this.defaultContext = {};
     this.defaultActions = [];

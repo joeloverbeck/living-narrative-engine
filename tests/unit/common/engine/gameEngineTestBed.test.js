@@ -31,8 +31,8 @@ describe('GameEngine Test Helpers: GameEngineTestBed', () => {
       container: testBed.env.mockContainer,
     });
     expect(testBed.engine).toBe(engine);
-    expect(testBed.mocks.logger).toBe(testBed.env.logger);
-    expect(testBed.mocks.turnManager).toBe(testBed.env.turnManager);
+    expect(testBed.logger).toBe(testBed.env.logger);
+    expect(testBed.turnManager).toBe(testBed.env.turnManager);
   });
 
   it('start presets initialization result and calls startNewGame', async () => {
@@ -90,7 +90,7 @@ describe('GameEngine Test Helpers: GameEngineTestBed', () => {
     await testBed.cleanup();
 
     const restored = testBed.env.mockContainer.resolve(tokens.PlaytimeTracker);
-    expect(restored).toBe(testBed.mocks.playtimeTracker);
+    expect(restored).toBe(testBed.playtimeTracker);
   });
 
   it('constructor overrides return specified value', async () => {
@@ -107,36 +107,34 @@ describe('GameEngine Test Helpers: GameEngineTestBed', () => {
   });
 
   it('resetMocks clears all spy call history', () => {
-    testBed.mocks.logger.info('log');
-    testBed.mocks.entityManager.clearAll();
-    testBed.mocks.turnManager.start();
-    testBed.mocks.gamePersistenceService.saveGame();
-    testBed.mocks.playtimeTracker.startSession();
-    testBed.mocks.safeEventDispatcher.dispatch();
-    testBed.mocks.initializationService.runInitializationSequence();
+    testBed.logger.info('log');
+    testBed.entityManager.clearAll();
+    testBed.turnManager.start();
+    testBed.gamePersistenceService.saveGame();
+    testBed.playtimeTracker.startSession();
+    testBed.safeEventDispatcher.dispatch();
+    testBed.initializationService.runInitializationSequence();
 
-    expect(testBed.mocks.logger.info).toHaveBeenCalled();
-    expect(testBed.mocks.entityManager.clearAll).toHaveBeenCalled();
-    expect(testBed.mocks.turnManager.start).toHaveBeenCalled();
-    expect(testBed.mocks.gamePersistenceService.saveGame).toHaveBeenCalled();
-    expect(testBed.mocks.playtimeTracker.startSession).toHaveBeenCalled();
-    expect(testBed.mocks.safeEventDispatcher.dispatch).toHaveBeenCalled();
+    expect(testBed.logger.info).toHaveBeenCalled();
+    expect(testBed.entityManager.clearAll).toHaveBeenCalled();
+    expect(testBed.turnManager.start).toHaveBeenCalled();
+    expect(testBed.gamePersistenceService.saveGame).toHaveBeenCalled();
+    expect(testBed.playtimeTracker.startSession).toHaveBeenCalled();
+    expect(testBed.safeEventDispatcher.dispatch).toHaveBeenCalled();
     expect(
-      testBed.mocks.initializationService.runInitializationSequence
+      testBed.initializationService.runInitializationSequence
     ).toHaveBeenCalled();
 
     testBed.resetMocks();
 
-    expect(testBed.mocks.logger.info).not.toHaveBeenCalled();
-    expect(testBed.mocks.entityManager.clearAll).not.toHaveBeenCalled();
-    expect(testBed.mocks.turnManager.start).not.toHaveBeenCalled();
+    expect(testBed.logger.info).not.toHaveBeenCalled();
+    expect(testBed.entityManager.clearAll).not.toHaveBeenCalled();
+    expect(testBed.turnManager.start).not.toHaveBeenCalled();
+    expect(testBed.gamePersistenceService.saveGame).not.toHaveBeenCalled();
+    expect(testBed.playtimeTracker.startSession).not.toHaveBeenCalled();
+    expect(testBed.safeEventDispatcher.dispatch).not.toHaveBeenCalled();
     expect(
-      testBed.mocks.gamePersistenceService.saveGame
-    ).not.toHaveBeenCalled();
-    expect(testBed.mocks.playtimeTracker.startSession).not.toHaveBeenCalled();
-    expect(testBed.mocks.safeEventDispatcher.dispatch).not.toHaveBeenCalled();
-    expect(
-      testBed.mocks.initializationService.runInitializationSequence
+      testBed.initializationService.runInitializationSequence
     ).not.toHaveBeenCalled();
   });
 });
