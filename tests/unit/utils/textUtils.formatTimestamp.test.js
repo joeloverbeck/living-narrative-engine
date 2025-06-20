@@ -12,8 +12,17 @@ describe('formatTimestamp', () => {
     expect(formatTimestamp('not-a-date')).toBe('Invalid Date');
   });
 
-  it('uses provided fallback on error', () => {
+  it('uses provided fallback when date parsing fails', () => {
     const fallback = 'N/A';
     expect(formatTimestamp('???', fallback)).toBe(fallback);
+  });
+
+  it('handles errors thrown during Date construction', () => {
+    const throwingInput = {
+      toString() {
+        throw new Error('boom');
+      },
+    };
+    expect(formatTimestamp(throwingInput, 'bad')).toBe('bad');
   });
 });
