@@ -68,13 +68,12 @@ describe('EntityManager Test Helpers: TestBed & TestData', () => {
         expect(EntityManager).toHaveBeenCalledTimes(1);
         // FIX: The constructor now receives a 5th `options` argument, which is `{}` by default.
         // We update the test to expect this new argument.
-        expect(EntityManager).toHaveBeenCalledWith(
-          testBed.mocks.registry,
-          testBed.mocks.validator,
-          testBed.mocks.logger,
-          testBed.mocks.eventDispatcher,
-          expect.any(Object) // It receives an options object, which is {} by default.
-        );
+        expect(EntityManager).toHaveBeenCalledWith({
+          registry: testBed.mocks.registry,
+          validator: testBed.mocks.validator,
+          logger: testBed.mocks.logger,
+          dispatcher: testBed.mocks.eventDispatcher,
+        });
       });
 
       it('should provide a public property `entityManager` with the SUT instance', () => {

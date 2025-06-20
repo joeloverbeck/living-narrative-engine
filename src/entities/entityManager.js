@@ -16,8 +16,10 @@
 //  @since   0.3.0
 // -----------------------------------------------------------------------------
 
-import { v4 as uuidv4 } from 'uuid';
-import { cloneDeep } from 'lodash';
+import InMemoryEntityRepository from '../adapters/InMemoryEntityRepository.js';
+import UuidGenerator from '../adapters/UuidGenerator.js';
+import LodashCloner from '../adapters/LodashCloner.js';
+import DefaultComponentPolicy from '../adapters/DefaultComponentPolicy.js';
 import Entity from './entity.js';
 import EntityInstanceData from './entityInstanceData.js';
 import MapManager from '../utils/mapManagerUtils.js';
@@ -49,6 +51,10 @@ import {
 /** @typedef {import('../interfaces/coreServices.js').ILogger}              ILogger */
 /** @typedef {import('../interfaces/coreServices.js').ValidationResult}     ValidationResult */
 /** @typedef {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
+/** @typedef {import('../ports/IEntityRepository.js').IEntityRepository} IEntityRepository */
+/** @typedef {import('../ports/IComponentCloner.js').IComponentCloner} IComponentCloner */
+/** @typedef {import('../ports/IIdGenerator.js').IIdGenerator} IIdGenerator */
+/** @typedef {import('../ports/IDefaultComponentPolicy.js').IDefaultComponentPolicy} IDefaultComponentPolicy */
 
 /* -------------------------------------------------------------------------- */
 /* Internal Utilities                                                         */
@@ -114,6 +120,12 @@ class EntityManager extends IEntityManager {
   #eventDispatcher;
   /** @type {function(): string} @private */
   #idGenerator;
+  /** @type {IEntityRepository} @private */
+  #repository; // eslint-disable-line no-unused-private-class-members
+  /** @type {IComponentCloner} @private */
+  #cloner;
+  /** @type {IDefaultComponentPolicy} @private */
+  #defaultPolicy; // eslint-disable-line no-unused-private-class-members
 
   /** @type {MapManager} @private */
   #mapManager;
@@ -126,21 +138,27 @@ class EntityManager extends IEntityManager {
 
   /**
    * @class
-   * @param {IDataRegistry}        registry
-   * @param {ISchemaValidator}     validator
-   * @param {ILogger}              logger
-   * @param {ISafeEventDispatcher} safeEventDispatcher
-   * @param {object} [options] - Optional settings.
-   * @param {function(): string} [options.idGenerator] - A function to generate new entity instance IDs. Defaults to uuidv4.
+   * @param {object} [deps] - Constructor dependencies.
+   * @param {IDataRegistry}        deps.registry - Data registry for definitions.
+   * @param {IEntityRepository}    [deps.repository] - Repository for active entities.
+   * @param {ISchemaValidator}     deps.validator - Schema validator instance.
+   * @param {ILogger}              deps.logger - Logger implementation.
+   * @param {ISafeEventDispatcher} deps.dispatcher - Event dispatcher.
+   * @param {IIdGenerator}         [deps.idGenerator] - ID generator function.
+   * @param {IComponentCloner}     [deps.cloner] - Component deep cloner.
+   * @param {IDefaultComponentPolicy} [deps.defaultPolicy] - Default component injection policy.
    * @throws {Error} If any dependency is missing or malformed.
    */
-  constructor(
+  constructor({
     registry,
+    repository = new InMemoryEntityRepository(),
     validator,
     logger,
-    safeEventDispatcher,
-    { idGenerator = uuidv4 } = {}
-  ) {
+    dispatcher,
+    idGenerator = UuidGenerator,
+    cloner = LodashCloner,
+    defaultPolicy = new DefaultComponentPolicy(),
+  } = {}) {
     super();
 
     /* ---------- dependency checks ---------- */
@@ -152,22 +170,34 @@ class EntityManager extends IEntityManager {
     validateDependency(registry, 'IDataRegistry', this.#logger, {
       requiredMethods: ['getEntityDefinition'],
     });
+    validateDependency(repository, 'IEntityRepository', this.#logger, {
+      requiredMethods: ['add', 'get', 'has', 'remove', 'clear', 'entities'],
+    });
     validateDependency(validator, 'ISchemaValidator', this.#logger, {
       requiredMethods: ['validate'],
     });
-    validateDependency(
-      safeEventDispatcher,
-      'ISafeEventDispatcher',
-      this.#logger,
-      {
-        requiredMethods: ['dispatch'],
-      }
-    );
+
+    validateDependency(dispatcher, 'ISafeEventDispatcher', this.#logger, {
+      requiredMethods: ['dispatch'],
+    });
+    validateDependency(idGenerator, 'IIdGenerator', this.#logger, {
+      isFunction: true,
+    });
+    validateDependency(cloner, 'IComponentCloner', this.#logger, {
+      isFunction: true,
+    });
+    validateDependency(defaultPolicy, 'IDefaultComponentPolicy', this.#logger, {
+      requiredMethods: ['apply'],
+    });
 
     this.#registry = registry;
+    this.#repository = repository;
     this.#validator = validator;
-    this.#eventDispatcher = safeEventDispatcher;
+    this.#logger = ensureValidLogger(logger, 'EntityManager');
+    this.#eventDispatcher = dispatcher;
     this.#idGenerator = idGenerator;
+    this.#cloner = cloner;
+    this.#defaultPolicy = defaultPolicy;
 
     this.#mapManager = new MapManager({ throwOnInvalidId: false });
     this.activeEntities = this.#mapManager.items;
@@ -197,7 +227,7 @@ class EntityManager extends IEntityManager {
    * @returns {object} The validated (and potentially cloned/modified by validator) data.
    */
   #validateAndClone(componentTypeId, data, errorContext) {
-    const clone = cloneDeep(data);
+    const clone = this.#cloner(data);
     const result = this.#validator.validate(componentTypeId, clone);
     if (!validationSucceeded(result)) {
       const details = formatValidationErrors(result);
