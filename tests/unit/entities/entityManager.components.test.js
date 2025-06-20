@@ -16,7 +16,7 @@ import {
   COMPONENT_ADDED_ID,
   COMPONENT_REMOVED_ID,
 } from '../../../src/constants/eventIds.js';
-import { expectDispatchCalls } from '../../common/engine/dispatchTestUtils.js';
+import { expectDispatchSequence } from '../../common/engine/dispatchTestUtils.js';
 
 describeEntityManagerSuite(
   'EntityManager - Component Manipulation',
@@ -76,7 +76,7 @@ describeEntityManagerSuite(
         );
 
         // Assert
-        expectDispatchCalls(mocks.eventDispatcher.dispatch, [
+        expectDispatchSequence(mocks.eventDispatcher.dispatch, [
           [
             COMPONENT_ADDED_ID,
             {
@@ -135,7 +135,7 @@ describeEntityManagerSuite(
         );
 
         // Assert
-        expectDispatchCalls(mocks.eventDispatcher.dispatch, [
+        expectDispatchSequence(mocks.eventDispatcher.dispatch, [
           [
             COMPONENT_ADDED_ID,
             {
@@ -322,7 +322,7 @@ describeEntityManagerSuite(
         entityManager.removeComponent(PRIMARY, NAME_COMPONENT_ID);
 
         // Assert
-        expectDispatchCalls(mocks.eventDispatcher.dispatch, [
+        expectDispatchSequence(mocks.eventDispatcher.dispatch, [
           [
             COMPONENT_REMOVED_ID,
             {
