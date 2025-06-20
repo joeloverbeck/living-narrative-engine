@@ -22,7 +22,25 @@ import {
 } from '../mockFactories.js';
 
 /**
+ * List of loader types used when generating mock loaders.
+ *
+ * @type {string[]}
+ */
+const loaderTypes = [
+  'Action',
+  'Component',
+  'Condition',
+  'Event',
+  'Rule',
+  'Entity',
+];
+
+/**
  * Builds a fully mocked environment for ModsLoader tests.
+ *
+ * @description Creates and returns a collection of mock loaders and
+ *   dependencies used by ModsLoader integration tests.
+ * @returns {object} Test environment utilities and mocks.
  */
 export function createTestEnvironment() {
   jest.clearAllMocks();
@@ -38,12 +56,10 @@ export function createTestEnvironment() {
   const mockValidatedEventDispatcher = createMockValidatedEventDispatcher();
 
   /* ── Content-loader mocks ───────────────────────────────────────────── */
-  const mockActionLoader = createMockContentLoader();
-  const mockComponentLoader = createMockContentLoader();
-  const mockConditionLoader = createMockContentLoader();
-  const mockEventLoader = createMockContentLoader();
-  const mockRuleLoader = createMockContentLoader();
-  const mockEntityLoader = createMockContentLoader();
+  const loaders = {};
+  for (const type of loaderTypes) {
+    loaders[`mock${type}Loader`] = createMockContentLoader();
+  }
 
   /* ── Modding-helper mocks ───────────────────────────────────────────── */
   const mockModDependencyValidator = createMockModDependencyValidator();
@@ -77,12 +93,12 @@ export function createTestEnvironment() {
     registry: mockRegistry,
     logger: mockLogger,
     schemaLoader: mockSchemaLoader,
-    componentLoader: mockComponentLoader,
-    conditionLoader: mockConditionLoader,
-    ruleLoader: mockRuleLoader,
-    actionLoader: mockActionLoader,
-    eventLoader: mockEventLoader,
-    entityLoader: mockEntityLoader,
+    componentLoader: loaders.mockComponentLoader,
+    conditionLoader: loaders.mockConditionLoader,
+    ruleLoader: loaders.mockRuleLoader,
+    actionLoader: loaders.mockActionLoader,
+    eventLoader: loaders.mockEventLoader,
+    entityLoader: loaders.mockEntityLoader,
     validator: mockValidator,
     configuration: mockConfiguration,
     gameConfigLoader: mockGameConfigLoader,
@@ -102,12 +118,7 @@ export function createTestEnvironment() {
     mockRegistry,
     mockLogger,
     mockSchemaLoader,
-    mockComponentLoader,
-    mockConditionLoader,
-    mockRuleLoader,
-    mockActionLoader,
-    mockEventLoader,
-    mockEntityLoader,
+    ...loaders,
     mockValidator,
     mockConfiguration,
     mockGameConfigLoader,
