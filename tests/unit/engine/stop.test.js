@@ -1,14 +1,10 @@
 // tests/engine/stop.test.js
-import {
-  afterEach,
-  beforeEach,
-  describe,
-  expect,
-  it,
-  jest,
-} from '@jest/globals';
+import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { tokens } from '../../../src/dependencyInjection/tokens.js';
-import { createGameEngineTestBed } from '../../common/engine/gameEngineTestBed.js';
+import {
+  createGameEngineTestBed,
+  describeGameEngineSuite,
+} from '../../common/engine/gameEngineTestBed.js';
 import { ENGINE_STOPPED_UI } from '../../../src/constants/eventIds.js';
 
 /** @typedef {import('../../../src/interfaces/coreServices.js').ILogger} ILogger */
@@ -21,19 +17,14 @@ import { ENGINE_STOPPED_UI } from '../../../src/constants/eventIds.js';
 /** @typedef {import('../../../src/interfaces/IInitializationService.js').IInitializationService} IInitializationService */
 /** @typedef {import('../../../src/interfaces/ISaveLoadService.js').SaveGameStructure} SaveGameStructure */
 
-describe('GameEngine', () => {
+describeGameEngineSuite('GameEngine', (getBed) => {
   let testBed;
   let gameEngine; // Instance of GameEngine
 
   const MOCK_WORLD_NAME = 'TestWorld';
 
   beforeEach(() => {
-    testBed = createGameEngineTestBed();
-    jest.spyOn(console, 'error').mockImplementation(() => {});
-  });
-
-  afterEach(async () => {
-    await testBed.cleanup();
+    testBed = getBed();
   });
   describe('stop', () => {
     beforeEach(() => {

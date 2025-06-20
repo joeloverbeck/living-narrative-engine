@@ -1,16 +1,9 @@
 // tests/engine/gameEngine.test.js
 
-import {
-  afterEach,
-  beforeEach,
-  describe,
-  expect,
-  it,
-  jest,
-} from '@jest/globals';
+import { describe, expect, it, jest } from '@jest/globals';
 import GameEngine from '../../../src/engine/gameEngine.js';
 import { tokens } from '../../../src/dependencyInjection/tokens.js';
-import { createGameEngineTestBed } from '../../common/engine/gameEngineTestBed.js';
+import { describeGameEngineSuite } from '../../common/engine/gameEngineTestBed.js';
 import {
   expectDispatchSequence,
   buildSaveDispatches,
@@ -39,24 +32,13 @@ import {
 /** @typedef {import('../../../src/interfaces/IInitializationService.js').IInitializationService} IInitializationService */
 /** @typedef {import('../../../src/interfaces/ISaveLoadService.js').SaveGameStructure} SaveGameStructure */
 
-describe('GameEngine', () => {
-  let testBed;
-  let gameEngine; // Instance of GameEngine
-
-  const MOCK_WORLD_NAME = 'TestWorld';
-
-  beforeEach(() => {
-    testBed = createGameEngineTestBed();
-    jest.spyOn(console, 'error').mockImplementation(() => {});
-  });
-
-  afterEach(async () => {
-    await testBed.cleanup();
-  });
-
+describeGameEngineSuite('GameEngine', (getBed) => {
   describe('Constructor', () => {
     it('should instantiate and resolve all core services successfully', () => {
-      gameEngine = new GameEngine({ container: testBed.env.mockContainer }); // Instantiation for this test
+      const testBed = getBed();
+      const gameEngine = new GameEngine({
+        container: testBed.env.mockContainer,
+      }); // Instantiation for this test
       expect(testBed.env.mockContainer.resolve).toHaveBeenCalledWith(
         tokens.ILogger
       );
@@ -78,6 +60,7 @@ describe('GameEngine', () => {
     });
 
     it('should throw an error if ILogger cannot be resolved', () => {
+      const testBed = getBed();
       testBed.withTokenOverride(tokens.ILogger, () => {
         throw new Error('Logger failed to resolve');
       });
@@ -98,6 +81,7 @@ describe('GameEngine', () => {
       ['PlaytimeTracker', tokens.PlaytimeTracker],
       ['ISafeEventDispatcher', tokens.ISafeEventDispatcher],
     ])('should throw an error if %s cannot be resolved', (_, failingToken) => {
+      const testBed = getBed();
       const resolutionError = new Error(`${String(failingToken)} failed`);
       testBed.withTokenOverride(failingToken, () => {
         throw resolutionError;

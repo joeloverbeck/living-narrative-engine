@@ -1,14 +1,10 @@
 // tests/engine/loadGame.test.js
-import {
-  afterEach,
-  beforeEach,
-  describe,
-  expect,
-  it,
-  jest,
-} from '@jest/globals';
+import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { tokens } from '../../../src/dependencyInjection/tokens.js';
-import { createGameEngineTestBed } from '../../common/engine/gameEngineTestBed.js';
+import {
+  createGameEngineTestBed,
+  describeGameEngineSuite,
+} from '../../common/engine/gameEngineTestBed.js';
 import { expectDispatchSequence } from '../../common/engine/dispatchTestUtils.js';
 import { ENGINE_OPERATION_FAILED_UI } from '../../../src/constants/eventIds.js';
 
@@ -22,18 +18,9 @@ import { ENGINE_OPERATION_FAILED_UI } from '../../../src/constants/eventIds.js';
 /** @typedef {import('../../../src/interfaces/IInitializationService.js').IInitializationService} IInitializationService */
 /** @typedef {import('../../../src/interfaces/ISaveLoadService.js').SaveGameStructure} SaveGameStructure */
 
-describe('GameEngine', () => {
+describeGameEngineSuite('GameEngine', (getBed) => {
   let testBed;
   let gameEngine; // Instance of GameEngine
-
-  beforeEach(() => {
-    testBed = createGameEngineTestBed();
-    jest.spyOn(console, 'error').mockImplementation(() => {});
-  });
-
-  afterEach(async () => {
-    await testBed.cleanup();
-  });
   describe('loadGame', () => {
     const SAVE_ID = 'savegame-001.sav';
     const mockSaveData = {
@@ -45,6 +32,7 @@ describe('GameEngine', () => {
     let prepareSpy, executeSpy, finalizeSpy, handleFailureSpy;
 
     beforeEach(() => {
+      testBed = getBed();
       gameEngine = testBed.engine; // Ensure gameEngine is fresh
       // Spies are on the gameEngine instance created here
       prepareSpy = jest
