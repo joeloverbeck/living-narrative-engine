@@ -133,6 +133,65 @@ export const createMockConfiguration = () => ({
   getModManifestFilename: jest.fn(() => 'mod.manifest.json'),
 });
 
+/**
+ * Mock for IEntityManager.
+ *
+ * @description Creates a mock IEntityManager service.
+ * @returns {jest.Mocked<import('../../src/interfaces/IEntityManager.js').IEntityManager>} Mocked IEntityManager
+ */
+export const createMockEntityManager = () => ({
+  clearAll: jest.fn(),
+  getActiveEntities: jest.fn().mockReturnValue([]),
+});
+
+/**
+ * Mock for ITurnManager.
+ *
+ * @description Creates a mock ITurnManager service.
+ * @returns {jest.Mocked<import('../../src/turns/interfaces/ITurnManager.js').ITurnManager>} Mocked turn manager
+ */
+export const createMockTurnManager = () => ({
+  start: jest.fn(),
+  stop: jest.fn(),
+  nextTurn: jest.fn(),
+});
+
+/**
+ * Mock for IGamePersistenceService.
+ *
+ * @description Creates a mock IGamePersistenceService service.
+ * @returns {jest.Mocked<import('../../src/interfaces/IGamePersistenceService.js').IGamePersistenceService>} Mocked persistence service
+ */
+export const createMockGamePersistenceService = () => ({
+  saveGame: jest.fn(),
+  loadAndRestoreGame: jest.fn(),
+  isSavingAllowed: jest.fn(),
+});
+
+/**
+ * Mock for PlaytimeTracker.
+ *
+ * @description Creates a mock PlaytimeTracker service.
+ * @returns {jest.Mocked<import('../../src/interfaces/IPlaytimeTracker.js').default>} Mocked playtime tracker
+ */
+export const createMockPlaytimeTracker = () => ({
+  reset: jest.fn(),
+  startSession: jest.fn(),
+  endSessionAndAccumulate: jest.fn(),
+  getTotalPlaytime: jest.fn().mockReturnValue(0),
+  setAccumulatedPlaytime: jest.fn(),
+});
+
+/**
+ * Mock for IInitializationService.
+ *
+ * @description Creates a mock IInitializationService service.
+ * @returns {jest.Mocked<import('../../src/interfaces/IInitializationService.js').IInitializationService>} Mocked initialization service
+ */
+export const createMockInitializationService = () => ({
+  runInitializationSequence: jest.fn(),
+});
+
 // --- Event Dispatcher Mocks ---
 
 /**
