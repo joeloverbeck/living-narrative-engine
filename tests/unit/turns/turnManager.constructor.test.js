@@ -1,77 +1,26 @@
 // src/tests/turns/turnManager.constructor.test.js
 // --- FILE START ---
 
+import { TurnManagerTestBed } from '../../common/turns/turnManagerTestBed.js';
 import TurnManager from '../../../src/turns/turnManager.js';
-import { beforeEach, describe, expect, it, jest } from '@jest/globals'; // Use 'it' alias for test cases
-
-// --- Mock Setup ---
-
-// Helper function to create a full set of valid mocks with required methods
-const createValidMocks = () => ({
-  turnOrderService: {
-    isEmpty: jest.fn(),
-    startNewRound: jest.fn(),
-    getNextEntity: jest.fn(),
-    clearCurrentRound: jest.fn(),
-    peekNextEntity: jest.fn(),
-    addEntity: jest.fn(),
-    removeEntity: jest.fn(),
-    getCurrentOrder: jest.fn(),
-    size: jest.fn(), // Include methods checked implicitly or explicitly
-  },
-  entityManager: {
-    // Mock activeEntities getter if needed for validation, otherwise just methods
-    get activeEntities() {
-      return this._mockActiveEntities;
-    },
-    _mockActiveEntities: new Map(), // Example internal state
-    getEntityInstance: jest.fn(), // Method checked by TurnManager constructor
-    // Add other methods if TurnManager constructor directly checks them
-    getEntitiesWithComponents: jest.fn(),
-  },
-  logger: {
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
-    debug: jest.fn(),
-    createChildLogger: jest.fn(() => createValidMocks().logger), // Allow child logger creation if needed
-  },
-  dispatcher: {
-    dispatch: jest.fn(),
-    subscribe: jest.fn(() => jest.fn()), // subscribe returns an unsubscribe function
-  },
-  turnHandlerResolver: {
-    resolveHandler: jest.fn(), // Method checked by TurnManager constructor
-  },
-});
-
-// Variables to hold mocks accessible in tests
-let mockTurnOrderService;
-let mockEntityManager;
-let mockLogger;
-let mockDispatcher;
-let mockTurnHandlerResolver;
-let validOptions; // To hold the full set of valid options
+import { beforeEach, describe, expect, it, jest, afterEach } from '@jest/globals'; // Use 'it' alias for test cases
 
 // --- Test Suite ---
 
 describe('TurnManager - Constructor Dependency Validation', () => {
+  let testBed;
+  let validOptions; // To hold the full set of valid options
+
   beforeEach(() => {
-    // Create fresh mocks for each test run
-    const mocks = createValidMocks();
-    mockTurnOrderService = mocks.turnOrderService;
-    mockEntityManager = mocks.entityManager;
-    mockLogger = mocks.logger;
-    mockDispatcher = mocks.dispatcher;
-    mockTurnHandlerResolver = mocks.turnHandlerResolver;
+    testBed = new TurnManagerTestBed();
 
     // Prepare valid options object
     validOptions = {
-      turnOrderService: mockTurnOrderService,
-      entityManager: mockEntityManager,
-      logger: mockLogger,
-      dispatcher: mockDispatcher,
-      turnHandlerResolver: mockTurnHandlerResolver,
+      turnOrderService: testBed.mocks.turnOrderService,
+      entityManager: testBed.mocks.entityManager,
+      logger: testBed.mocks.logger,
+      dispatcher: testBed.mocks.dispatcher,
+      turnHandlerResolver: testBed.mocks.turnHandlerResolver,
     };
 
     // Spy on console.error for tests checking logger fallback
@@ -81,6 +30,7 @@ describe('TurnManager - Constructor Dependency Validation', () => {
   afterEach(() => {
     // Restore console.error spy
     jest.restoreAllMocks();
+    testBed.cleanup();
   });
 
   // --- Success Case ---
@@ -92,7 +42,7 @@ describe('TurnManager - Constructor Dependency Validation', () => {
     }).not.toThrow();
 
     expect(turnManager).toBeInstanceOf(TurnManager);
-    expect(mockLogger.info).toHaveBeenCalledTimes(0); // Called only once
+    expect(testBed.mocks.logger.info).toHaveBeenCalledTimes(0); // Called only once
     expect(turnManager.getCurrentActor()).toBeNull(); // Check initial state
     // isRunning is private, cannot check directly without hacks
   });
@@ -111,7 +61,7 @@ describe('TurnManager - Constructor Dependency Validation', () => {
 
   it('should throw if turnOrderService is invalid (missing required methods like clearCurrentRound)', () => {
     const invalidService = {
-      ...mockTurnOrderService,
+      ...testBed.mocks.turnOrderService,
       clearCurrentRound: undefined,
     };
     const options = { ...validOptions, turnOrderService: invalidService };
@@ -132,7 +82,7 @@ describe('TurnManager - Constructor Dependency Validation', () => {
 
   it('should throw if entityManager is invalid (missing getEntityInstance)', () => {
     const invalidManager = {
-      ...mockEntityManager,
+      ...testBed.mocks.entityManager,
       getEntityInstance: undefined,
     };
     const options = { ...validOptions, entityManager: invalidManager };
@@ -176,7 +126,7 @@ describe('TurnManager - Constructor Dependency Validation', () => {
     const options = { ...validOptions, dispatcher: null };
     expect(() => new TurnManager(options)).toThrow(expectedErrorMsg);
     // Logger is valid here, so check logger.error
-    expect(mockLogger.error).toHaveBeenCalledWith(expectedErrorMsg);
+    expect(testBed.mocks.logger.error).toHaveBeenCalledWith(expectedErrorMsg);
     // Verify console.error was NOT called for this specific check (since logger was valid)
     expect(console.error).not.toHaveBeenCalledWith(expectedErrorMsg);
   });
@@ -187,7 +137,7 @@ describe('TurnManager - Constructor Dependency Validation', () => {
     const expectedErrorMsg =
       'TurnManager requires a valid IValidatedEventDispatcher instance (with dispatch and subscribe methods).';
     expect(() => new TurnManager(options)).toThrow(expectedErrorMsg);
-    expect(mockLogger.error).toHaveBeenCalledWith(expectedErrorMsg);
+    expect(testBed.mocks.logger.error).toHaveBeenCalledWith(expectedErrorMsg);
     expect(console.error).not.toHaveBeenCalledWith(expectedErrorMsg);
   });
 
@@ -197,7 +147,7 @@ describe('TurnManager - Constructor Dependency Validation', () => {
     const expectedErrorMsg =
       'TurnManager requires a valid IValidatedEventDispatcher instance (with dispatch and subscribe methods).';
     expect(() => new TurnManager(options)).toThrow(expectedErrorMsg);
-    expect(mockLogger.error).toHaveBeenCalledWith(expectedErrorMsg);
+    expect(testBed.mocks.logger.error).toHaveBeenCalledWith(expectedErrorMsg);
     expect(console.error).not.toHaveBeenCalledWith(expectedErrorMsg);
   });
 
@@ -207,19 +157,41 @@ describe('TurnManager - Constructor Dependency Validation', () => {
       'TurnManager requires a valid ITurnHandlerResolver instance (with resolveHandler method).';
     const options = { ...validOptions, turnHandlerResolver: null };
     expect(() => new TurnManager(options)).toThrow(expectedErrorMsg);
-    // Logger and Dispatcher are valid here, so check logger.error
-    expect(mockLogger.error).toHaveBeenCalledWith(expectedErrorMsg);
+    expect(testBed.mocks.logger.error).toHaveBeenCalledWith(expectedErrorMsg);
     expect(console.error).not.toHaveBeenCalledWith(expectedErrorMsg);
   });
 
   it('should throw if turnHandlerResolver is invalid (missing resolveHandler)', () => {
-    const invalidResolver = { someOtherMethod: jest.fn() }; // Missing resolveHandler
+    const invalidResolver = {}; // Missing resolveHandler
     const options = { ...validOptions, turnHandlerResolver: invalidResolver };
     const expectedErrorMsg =
       'TurnManager requires a valid ITurnHandlerResolver instance (with resolveHandler method).';
     expect(() => new TurnManager(options)).toThrow(expectedErrorMsg);
-    expect(mockLogger.error).toHaveBeenCalledWith(expectedErrorMsg);
+    expect(testBed.mocks.logger.error).toHaveBeenCalledWith(expectedErrorMsg);
     expect(console.error).not.toHaveBeenCalledWith(expectedErrorMsg);
+  });
+
+  // --- Edge Cases ---
+
+  it('should handle empty options object gracefully', () => {
+    const expectedErrorMsg =
+      'TurnManager requires a valid ITurnOrderService instance.';
+    expect(() => new TurnManager({})).toThrow(expectedErrorMsg);
+    expect(console.error).toHaveBeenCalledWith(expectedErrorMsg);
+  });
+
+  it('should handle undefined options gracefully', () => {
+    const expectedErrorMsg =
+      'TurnManager requires a valid ITurnOrderService instance.';
+    expect(() => new TurnManager(undefined)).toThrow(expectedErrorMsg);
+    expect(console.error).toHaveBeenCalledWith(expectedErrorMsg);
+  });
+
+  it('should handle null options gracefully', () => {
+    const expectedErrorMsg =
+      'TurnManager requires a valid ITurnOrderService instance.';
+    expect(() => new TurnManager(null)).toThrow(expectedErrorMsg);
+    expect(console.error).toHaveBeenCalledWith(expectedErrorMsg);
   });
 });
 // --- FILE END ---

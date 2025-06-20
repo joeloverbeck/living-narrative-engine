@@ -363,7 +363,16 @@ class TurnManager extends ITurnManager {
         this.#currentActor = nextEntity; // Set the new current actor
         const actorId = this.#currentActor.id;
         const isPlayer = this.#currentActor.hasComponent(PLAYER_COMPONENT_ID);
+        const isActor = this.#currentActor.hasComponent(ACTOR_COMPONENT_ID);
         const entityType = isPlayer ? 'player' : 'ai';
+
+        if (!isActor) {
+          this.#logger.warn(
+            `Entity ${actorId} is not an actor. Skipping turn advancement for this entity.`
+          );
+          this.#currentActor = null; // Clear current actor for non-actor entities
+          return;
+        }
 
         this.#logger.debug(
           `>>> Starting turn initiation for Entity: ${actorId} (${entityType}) <<<`
