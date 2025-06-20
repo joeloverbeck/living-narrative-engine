@@ -117,10 +117,12 @@ describe('AIPromptPipeline', () => {
     const context = defaultContext;
     const actions = [...defaultActions, { id: 'a1' }];
 
-    testBed.llmAdapter.getCurrentActiveLlmId.mockResolvedValue('llm1');
-    testBed.gameStateProvider.buildGameState.mockResolvedValue({ state: true });
-    testBed.promptContentProvider.getPromptData.mockResolvedValue({ pd: true });
-    testBed.promptBuilder.build.mockResolvedValue('FINAL');
+    testBed.setupMockSuccess({
+      llmId: 'llm1',
+      gameState: { state: true },
+      promptData: { pd: true },
+      finalPrompt: 'FINAL',
+    });
 
     const prompt = await pipeline.generatePrompt(actor, context, actions);
 
@@ -164,9 +166,11 @@ describe('AIPromptPipeline', () => {
     const context = defaultContext;
     const actions = [...defaultActions, { id: 'act' }];
 
-    testBed.gameStateProvider.buildGameState.mockResolvedValue({});
-    testBed.promptContentProvider.getPromptData.mockResolvedValue({});
-    testBed.promptBuilder.build.mockResolvedValue('prompt');
+    testBed.setupMockSuccess({
+      gameState: {},
+      promptData: {},
+      finalPrompt: 'prompt',
+    });
 
     await pipeline.generatePrompt(actor, context, actions);
 
