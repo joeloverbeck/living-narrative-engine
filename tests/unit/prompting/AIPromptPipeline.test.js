@@ -2,11 +2,6 @@
 import { describe, beforeEach, afterEach, test, expect } from '@jest/globals';
 import { AIPromptPipeline } from '../../../src/prompting/AIPromptPipeline.js';
 import { AIPromptPipelineTestBed } from '../../common/prompting/promptPipelineTestBed.js';
-import { createMockEntity } from '../../common/mockFactories.js';
-
-const defaultActor = createMockEntity('actor');
-const defaultContext = {};
-const defaultActions = [];
 
 describe('AIPromptPipeline', () => {
   /** @type {AIPromptPipelineTestBed} */
@@ -110,9 +105,9 @@ describe('AIPromptPipeline', () => {
   });
 
   test('generatePrompt orchestrates dependencies and returns prompt', async () => {
-    const actor = defaultActor;
-    const context = defaultContext;
-    const actions = [...defaultActions, { id: 'a1' }];
+    const actor = testBed.defaultActor;
+    const context = testBed.defaultContext;
+    const actions = [...testBed.defaultActions, { id: 'a1' }];
 
     testBed.setupMockSuccess({
       llmId: 'llm1',
@@ -154,14 +149,18 @@ describe('AIPromptPipeline', () => {
   ])('generatePrompt rejects when %s', async ({ mutate, error }) => {
     mutate();
     await expect(
-      testBed.generate(defaultActor, defaultContext, defaultActions)
+      testBed.generate(
+        testBed.defaultActor,
+        testBed.defaultContext,
+        testBed.defaultActions
+      )
     ).rejects.toThrow(error);
   });
 
   test('availableActions are attached to DTO sent to getPromptData', async () => {
-    const actor = defaultActor;
-    const context = defaultContext;
-    const actions = [...defaultActions, { id: 'act' }];
+    const actor = testBed.defaultActor;
+    const context = testBed.defaultContext;
+    const actions = [...testBed.defaultActions, { id: 'act' }];
 
     testBed.setupMockSuccess({
       gameState: {},
