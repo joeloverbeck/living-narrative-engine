@@ -22,7 +22,7 @@ import {
   createMockSafeEventDispatcher,
   createSimpleMockDataRegistry,
 } from '../mockFactories.js';
-import { clearMockFunctions } from '../jestHelpers.js';
+import BaseTestBed from '../baseTestBed.js';
 
 // --- Centralized Mocks (REMOVED) ---
 // Mock creation functions are now imported.
@@ -113,7 +113,7 @@ export const TestData = {
  * Creates mocks, instantiates the manager, and provides helper methods
  * to streamline test writing.
  */
-export class TestBed {
+export class TestBed extends BaseTestBed {
   /**
    * Collection of all mocks for easy access in tests.
    *
@@ -135,6 +135,7 @@ export class TestBed {
    * @param {Function} [entityManagerOptions.idGenerator] - A mock ID generator function.
    */
   constructor(entityManagerOptions = {}) {
+    super();
     this.mocks = {
       registry: createSimpleMockDataRegistry(),
       validator: createMockSchemaValidator(),
@@ -167,14 +168,7 @@ export class TestBed {
    * This should be called in an `afterEach` block to ensure test isolation.
    */
   cleanup() {
-    // Clear call history on all mocks
-    jest.clearAllMocks();
-    clearMockFunctions(
-      this.mocks.registry,
-      this.mocks.validator,
-      this.mocks.logger,
-      this.mocks.eventDispatcher
-    );
+    this.resetMocks();
 
     // Reset specific mock implementations that tests commonly override
     this.mocks.registry.getEntityDefinition.mockReset();

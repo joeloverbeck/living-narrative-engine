@@ -5,14 +5,14 @@
 
 import { jest } from '@jest/globals';
 import { createTestEnvironment } from './gameEngine.test-environment.js';
-import { clearMockFunctions } from '../jestHelpers.js';
+import BaseTestBed from '../baseTestBed.js';
 
 /**
  * @description Utility class that instantiates {@link GameEngine} using a mocked
  * environment and exposes helpers for common test operations.
  * @class
  */
-export class GameEngineTestBed {
+export class GameEngineTestBed extends BaseTestBed {
   /** @type {ReturnType<typeof createTestEnvironment>} */
   env;
   /** @type {import('../../../src/engine/gameEngine.js').default} */
@@ -40,6 +40,7 @@ export class GameEngineTestBed {
    * @param {{[token: string]: any}} [overrides]
    */
   constructor(overrides = {}) {
+    super();
     this.env = createTestEnvironment(overrides);
     this.engine = this.env.createGameEngine();
     this.mocks = {
@@ -122,24 +123,6 @@ export class GameEngineTestBed {
     this.env.mockContainer.resolve.mockImplementation(this.#originalResolve);
     this.#tokenOverrides.clear();
     this.env.cleanup();
-  }
-
-  /**
-   * Clears all mock call history for the test bed.
-   *
-   * @returns {void} Nothing.
-   */
-  resetMocks() {
-    jest.clearAllMocks();
-    clearMockFunctions(
-      this.mocks.logger,
-      this.mocks.entityManager,
-      this.mocks.turnManager,
-      this.mocks.gamePersistenceService,
-      this.mocks.playtimeTracker,
-      this.mocks.safeEventDispatcher,
-      this.mocks.initializationService
-    );
   }
 }
 
