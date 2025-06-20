@@ -54,6 +54,19 @@ export class AIPromptPipelineTestBed {
   }
 
   /**
+   * Convenience method that creates a pipeline and generates a prompt.
+   *
+   * @param {import('../../../src/entities/entity.js').default} actor - The actor requesting the prompt.
+   * @param {import('../../../src/turns/interfaces/ITurnContext.js').ITurnContext} context - Turn context for the prompt.
+   * @param {import('../../../src/turns/dtos/actionComposite.js').ActionComposite[]} actions - Possible actions for the actor.
+   * @returns {Promise<string>} The generated prompt string.
+   */
+  async generate(actor, context, actions) {
+    const pipeline = this.createPipeline();
+    return pipeline.generatePrompt(actor, context, actions);
+  }
+
+  /**
    * Returns the dependency object used to construct the pipeline.
    *
    * @returns {{
@@ -62,7 +75,7 @@ export class AIPromptPipelineTestBed {
    *   promptContentProvider: ReturnType<typeof createMockAIPromptContentProvider>,
    *   promptBuilder: ReturnType<typeof createMockPromptBuilder>,
    *   logger: ReturnType<typeof createMockLogger>,
-   * }}
+   * }} The dependency object.
    */
   getDependencies() {
     return {
@@ -84,7 +97,7 @@ export class AIPromptPipelineTestBed {
   /**
    * Sets up mock resolved values for a successful pipeline run.
    *
-   * @param {object} [options]
+   * @param {object} [options] - Configuration options.
    * @param {string} [options.llmId] - LLM ID returned by the adapter.
    * @param {object} [options.gameState] - Game state returned by the provider.
    * @param {object} [options.promptData] - Prompt data returned by the content provider.
