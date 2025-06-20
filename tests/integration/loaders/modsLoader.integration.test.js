@@ -50,7 +50,7 @@ describe('ModsLoader Integration Test Suite (TEST-LOADER-7.1)', () => {
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    env.cleanup();
   });
 
   it('should successfully load world with only the core mod', async () => {
