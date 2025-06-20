@@ -159,11 +159,7 @@ describe('GameEngine', () => {
       );
       await gameEngine.startNewGame('InitialWorld');
 
-      testBed.mocks.playtimeTracker.endSessionAndAccumulate.mockClear();
-      testBed.mocks.turnManager.stop.mockClear();
-      testBed.mocks.safeEventDispatcher.dispatch.mockClear();
-      testBed.mocks.logger.info.mockClear();
-      testBed.mocks.logger.warn.mockClear();
+      testBed.resetMocks();
 
       testBed.mocks.initializationService.runInitializationSequence.mockResolvedValueOnce(
         { success: true }
@@ -261,11 +257,7 @@ describe('GameEngine', () => {
       await gameEngine.startNewGame(MOCK_WORLD_NAME); // Start the game first
 
       // Clear mocks to ensure we only check calls from stop()
-      testBed.mocks.playtimeTracker.endSessionAndAccumulate.mockClear();
-      testBed.mocks.turnManager.stop.mockClear();
-      testBed.mocks.safeEventDispatcher.dispatch.mockClear();
-      testBed.mocks.logger.info.mockClear();
-      testBed.mocks.logger.warn.mockClear();
+      testBed.resetMocks();
 
       await gameEngine.stop();
 
@@ -293,10 +285,7 @@ describe('GameEngine', () => {
       expect(initialStatus.isInitialized).toBe(false);
       expect(initialStatus.isLoopRunning).toBe(false);
 
-      testBed.mocks.logger.info.mockClear(); // Clear logs from constructor if any
-      testBed.mocks.playtimeTracker.endSessionAndAccumulate.mockClear();
-      testBed.mocks.turnManager.stop.mockClear();
-      testBed.mocks.safeEventDispatcher.dispatch.mockClear();
+      testBed.resetMocks();
 
       await gameEngine.stop();
 
@@ -319,15 +308,14 @@ describe('GameEngine', () => {
           success: true,
         }
       );
-      testBed.mocks.logger.warn.mockClear();
+      testBed.resetMocks();
       await gameEngine.startNewGame(MOCK_WORLD_NAME); // Should start, but with warnings about PT
 
       const statusAfterStart = gameEngine.getEngineStatus();
       expect(statusAfterStart.isInitialized).toBe(true);
       expect(statusAfterStart.isLoopRunning).toBe(true);
 
-      testBed.mocks.logger.warn.mockClear(); // Clear warnings from startNewGame
-      testBed.mocks.logger.info.mockClear();
+      testBed.resetMocks();
       // testBed.mocks.playtimeTracker.endSessionAndAccumulate should not be called as the instance is null
 
       await gameEngine.stop();
@@ -348,7 +336,7 @@ describe('GameEngine', () => {
     it('should dispatch error and not attempt save if engine is not initialized', async () => {
       const localBed = createGameEngineTestBed();
       const uninitializedGameEngine = localBed.engine;
-      localBed.mocks.safeEventDispatcher.dispatch.mockClear();
+      localBed.resetMocks();
 
       const result = await uninitializedGameEngine.triggerManualSave(SAVE_NAME);
       const expectedErrorMsg =
@@ -368,11 +356,7 @@ describe('GameEngine', () => {
       beforeEach(async () => {
         await testBed.init(MOCK_ACTIVE_WORLD_FOR_SAVE);
         gameEngine = testBed.engine;
-        testBed.mocks.safeEventDispatcher.dispatch.mockClear();
-        testBed.mocks.logger.info.mockClear();
-        testBed.mocks.logger.error.mockClear();
-        testBed.mocks.logger.warn.mockClear();
-        testBed.mocks.gamePersistenceService.saveGame.mockClear();
+        testBed.resetMocks();
       });
 
       it('should dispatch error if GamePersistenceService is unavailable', async () => {
@@ -389,8 +373,8 @@ describe('GameEngine', () => {
         ); // For startNewGame below
         await engineWithNullGps.startNewGame(MOCK_ACTIVE_WORLD_FOR_SAVE); // Initialize this specific engine
 
-        testBed.mocks.safeEventDispatcher.dispatch.mockClear(); // Clear events from this engine's startNewGame
-        testBed.mocks.logger.error.mockClear();
+        // Clear mocks after initialization of this engine instance
+        testBed.resetMocks();
 
         const result = await engineWithNullGps.triggerManualSave(SAVE_NAME);
         const expectedErrorMsg =
@@ -568,10 +552,7 @@ describe('GameEngine', () => {
             data: null,
           };
         });
-      testBed.mocks.logger.info.mockClear(); // Clear logs for cleaner test assertions
-      testBed.mocks.logger.warn.mockClear();
-      testBed.mocks.logger.error.mockClear();
-      testBed.mocks.safeEventDispatcher.dispatch.mockClear();
+      testBed.resetMocks();
     });
 
     it('should successfully orchestrate loading a game and call helpers in order', async () => {
@@ -647,8 +628,7 @@ describe('GameEngine', () => {
         container: testBed.env.mockContainer,
       }); // GPS is null
 
-      testBed.mocks.safeEventDispatcher.dispatch.mockClear();
-      testBed.mocks.logger.error.mockClear();
+      testBed.resetMocks();
 
       const rawErrorMsg =
         'GamePersistenceService is not available. Cannot load game.';
@@ -748,11 +728,7 @@ describe('GameEngine', () => {
       gameEngine = testBed.engine;
       // Start the game to ensure this.#isEngineInitialized is true for isSavingAllowed check
       await testBed.init(MOCK_WORLD_NAME);
-      testBed.mocks.safeEventDispatcher.dispatch.mockClear();
-      testBed.mocks.logger.info.mockClear();
-      testBed.mocks.logger.warn.mockClear();
-      testBed.mocks.logger.error.mockClear();
-      testBed.mocks.gamePersistenceService.isSavingAllowed.mockClear();
+      testBed.resetMocks();
     });
 
     it('should dispatch REQUEST_SHOW_SAVE_GAME_UI if saving is allowed and log intent', () => {
@@ -805,8 +781,7 @@ describe('GameEngine', () => {
         container: testBed.env.mockContainer,
       });
 
-      testBed.mocks.safeEventDispatcher.dispatch.mockClear(); // Clear any dispatches from constructor
-      testBed.mocks.logger.error.mockClear(); // Clear any error logs from constructor
+      testBed.resetMocks(); // Clear any dispatches and logs from constructor
 
       localGameEngine.showSaveGameUI(); // Method is now sync
 
@@ -823,9 +798,7 @@ describe('GameEngine', () => {
   describe('showLoadGameUI', () => {
     beforeEach(() => {
       gameEngine = testBed.engine;
-      testBed.mocks.safeEventDispatcher.dispatch.mockClear();
-      testBed.mocks.logger.info.mockClear();
-      testBed.mocks.logger.error.mockClear();
+      testBed.resetMocks();
     });
 
     it('should dispatch REQUEST_SHOW_LOAD_GAME_UI and log intent if persistence service is available', () => {
@@ -849,8 +822,7 @@ describe('GameEngine', () => {
         container: testBed.env.mockContainer,
       }); // GPS is null
 
-      testBed.mocks.safeEventDispatcher.dispatch.mockClear(); // Clear from constructor
-      testBed.mocks.logger.error.mockClear(); // Clear from constructor
+      testBed.resetMocks(); // Clear from constructor
 
       localGameEngine.showLoadGameUI(); // Method is now sync
 
