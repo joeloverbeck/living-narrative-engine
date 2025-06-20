@@ -21,9 +21,9 @@ export class TurnManagerTestBed extends BaseTestBed {
   /** @type {TurnManager} */
   turnManager;
 
-  constructor() {
-    const logger = createMockLogger();
-    const entityManager = createMockEntityManager();
+  constructor(overrides = {}) {
+    const logger = overrides.logger ?? createMockLogger();
+    const entityManager = overrides.entityManager ?? createMockEntityManager();
     // Attach active entity map used by TurnManager
     entityManager.activeEntities = new Map();
     entityManager.getEntityInstance = jest.fn((id) =>
@@ -33,18 +33,18 @@ export class TurnManagerTestBed extends BaseTestBed {
       Array.from(entityManager.activeEntities.values())
     );
 
-    const turnOrderService = {
+    const turnOrderService = overrides.turnOrderService ?? {
       isEmpty: jest.fn(),
       getNextEntity: jest.fn(),
       startNewRound: jest.fn(),
       clearCurrentRound: jest.fn(),
     };
 
-    const turnHandlerResolver = {
+    const turnHandlerResolver = overrides.turnHandlerResolver ?? {
       resolveHandler: jest.fn(),
     };
 
-    const dispatcher = createMockValidatedEventBus();
+    const dispatcher = overrides.dispatcher ?? createMockValidatedEventBus();
 
     const mocks = {
       turnOrderService,
@@ -55,12 +55,16 @@ export class TurnManagerTestBed extends BaseTestBed {
     };
     super(mocks);
 
-    this.turnManager = new TurnManager({
+    const TurnManagerClass = overrides.TurnManagerClass ?? TurnManager;
+    const tmOptions = overrides.turnManagerOptions ?? {};
+
+    this.turnManager = new TurnManagerClass({
       turnOrderService: this.turnOrderService,
       entityManager: this.entityManager,
       logger: this.logger,
       dispatcher: this.dispatcher,
       turnHandlerResolver: this.turnHandlerResolver,
+      ...tmOptions,
     });
   }
 
@@ -105,10 +109,11 @@ export class TurnManagerTestBed extends BaseTestBed {
 /**
  * Creates a new {@link TurnManagerTestBed} instance.
  *
+ * @param overrides
  * @returns {TurnManagerTestBed} Test bed instance.
  */
-export function createTurnManagerTestBed() {
-  return new TurnManagerTestBed();
+export function createTurnManagerTestBed(overrides = {}) {
+  return new TurnManagerTestBed(overrides);
 }
 
 /**
@@ -120,5 +125,28 @@ export function createTurnManagerTestBed() {
 export const flushPromisesAndTimers = async () => {
   await jest.runAllTimersAsync();
 };
+
+/**
+ * Defines a test suite with automatic {@link TurnManagerTestBed} setup.
+ *
+ * @param {string} title - Suite title passed to `describe`.
+ * @param {(getBed: () => TurnManagerTestBed) => void} suiteFn - Callback
+ *   containing the tests. Receives a getter for the active test bed.
+ * @param {Record<string, any>} [overrides] - Optional overrides for mock
+ *   creation.
+ * @returns {void}
+ */
+export function describeTurnManagerSuite(title, suiteFn, overrides = {}) {
+  describe(title, () => {
+    let testBed;
+    beforeEach(() => {
+      testBed = new TurnManagerTestBed(overrides);
+    });
+    afterEach(async () => {
+      await testBed.cleanup();
+    });
+    suiteFn(() => testBed);
+  });
+}
 
 export default TurnManagerTestBed;
