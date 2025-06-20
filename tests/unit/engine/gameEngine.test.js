@@ -75,15 +75,9 @@ describe('GameEngine', () => {
     });
 
     it('should throw an error if ILogger cannot be resolved', () => {
-      jest
-        .spyOn(testBed.env.mockContainer, 'resolve')
-        .mockImplementation((token) => {
-          if (token === tokens.ILogger)
-            throw new Error('Logger failed to resolve');
-          throw new Error(
-            `Unexpected token resolution attempt in ILogger failure test: ${token?.toString()}`
-          );
-        });
+      testBed.withTokenOverride(tokens.ILogger, () => {
+        throw new Error('Logger failed to resolve');
+      });
 
       expect(
         () => new GameEngine({ container: testBed.env.mockContainer })
@@ -102,32 +96,8 @@ describe('GameEngine', () => {
       ['ISafeEventDispatcher', tokens.ISafeEventDispatcher],
     ])('should throw an error if %s cannot be resolved', (_, failingToken) => {
       const resolutionError = new Error(`${String(failingToken)} failed`);
-      testBed.env.mockContainer.resolve.mockImplementation((token) => {
-        if (token === failingToken) throw resolutionError;
-        switch (token) {
-          case tokens.ILogger:
-            return testBed.mocks.logger;
-          case tokens.IEntityManager:
-            return testBed.mocks.entityManager;
-          case tokens.ITurnManager:
-            return testBed.mocks.turnManager;
-          case tokens.GamePersistenceService:
-            return testBed.mocks.gamePersistenceService;
-          case tokens.PlaytimeTracker:
-            return testBed.mocks.playtimeTracker;
-          case tokens.ISafeEventDispatcher:
-            return testBed.mocks.safeEventDispatcher;
-          case tokens.IInitializationService:
-            return testBed.mocks.initializationService;
-          default: {
-            const tokenName =
-              Object.keys(tokens).find((key) => tokens[key] === token) ||
-              token?.toString();
-            throw new Error(
-              `Constructor failure: Unmocked token: ${tokenName}`
-            );
-          }
-        }
+      testBed.withTokenOverride(failingToken, () => {
+        throw resolutionError;
       });
 
       expect(() => testBed.env.createGameEngine()).toThrow(
@@ -340,11 +310,7 @@ describe('GameEngine', () => {
     });
 
     it('should log warning for PlaytimeTracker if it is not available during stop, after a successful start', async () => {
-      const originalResolve = testBed.env.mockContainer.resolve;
-      testBed.env.mockContainer.resolve = jest.fn((token) => {
-        if (token === tokens.PlaytimeTracker) return null;
-        return originalResolve(token); // Use the original mock setup for other tokens
-      });
+      testBed.withTokenOverride(tokens.PlaytimeTracker, null);
 
       gameEngine = new GameEngine({ container: testBed.env.mockContainer }); // PlaytimeTracker is now null for this instance
 
@@ -372,8 +338,6 @@ describe('GameEngine', () => {
       // The actual testBed.mocks.playtimeTracker object's methods won't be called as this.#playtimeTracker is null.
 
       expect(testBed.mocks.turnManager.stop).toHaveBeenCalledTimes(1);
-
-      testBed.env.mockContainer.resolve = originalResolve; // Restore
     });
   });
 
@@ -412,27 +376,7 @@ describe('GameEngine', () => {
       });
 
       it('should dispatch error if GamePersistenceService is unavailable', async () => {
-        const originalGlobalResolve = testBed.env.mockContainer.resolve;
-
-        // Temporarily modify the global testBed.env.mockContainer's resolve behavior
-        testBed.env.mockContainer.resolve = jest.fn((token) => {
-          if (token === tokens.GamePersistenceService) return null;
-          // Delegate to the original setup for other tokens to ensure GameEngine constructor works
-          // AND IInitializationService is resolved for startNewGame
-          if (token === tokens.ILogger) return testBed.mocks.logger;
-          if (token === tokens.IEntityManager)
-            return testBed.mocks.entityManager;
-          if (token === tokens.ITurnManager) return testBed.mocks.turnManager;
-          if (token === tokens.PlaytimeTracker)
-            return testBed.mocks.playtimeTracker;
-          if (token === tokens.ISafeEventDispatcher)
-            return testBed.mocks.safeEventDispatcher;
-          if (token === tokens.IInitializationService)
-            return testBed.mocks.initializationService;
-          throw new Error(
-            `GPS unavailable test: Unmocked token: ${token?.toString()}`
-          );
-        });
+        testBed.withTokenOverride(tokens.GamePersistenceService, null);
 
         const engineWithNullGps = new GameEngine({
           container: testBed.env.mockContainer,
@@ -459,8 +403,6 @@ describe('GameEngine', () => {
           testBed.mocks.safeEventDispatcher.dispatch
         ).not.toHaveBeenCalled();
         expect(result).toEqual({ success: false, error: expectedErrorMsg });
-
-        testBed.env.mockContainer.resolve = originalGlobalResolve; // Restore global testBed.env.mockContainer.resolve
       });
 
       it('should successfully save, dispatch all UI events in order, and return success result', async () => {
@@ -699,11 +641,7 @@ describe('GameEngine', () => {
     });
 
     it('should handle GamePersistenceService unavailability (guard clause) and dispatch UI event directly', async () => {
-      const originalResolve = testBed.env.mockContainer.resolve;
-      testBed.env.mockContainer.resolve = jest.fn((token) => {
-        if (token === tokens.GamePersistenceService) return null;
-        return originalResolve(token);
-      });
+      testBed.withTokenOverride(tokens.GamePersistenceService, null);
 
       const localGameEngine = new GameEngine({
         container: testBed.env.mockContainer,
@@ -738,8 +676,6 @@ describe('GameEngine', () => {
         error: rawErrorMsg,
         data: null,
       });
-
-      testBed.env.mockContainer.resolve = originalResolve; // Restore
     });
 
     it('should use _handleLoadFailure when _prepareForLoadGameSession throws an error', async () => {
@@ -861,22 +797,7 @@ describe('GameEngine', () => {
     });
 
     it('should log error if GamePersistenceService is unavailable when showing save UI', () => {
-      const originalResolve = testBed.env.mockContainer.resolve;
-      testBed.env.mockContainer.resolve = jest.fn((token) => {
-        if (token === tokens.GamePersistenceService) return null;
-        // Provide other dependencies for GameEngine constructor to avoid cascading errors
-        if (token === tokens.ILogger) return testBed.mocks.logger;
-        if (token === tokens.IEntityManager) return testBed.mocks.entityManager;
-        if (token === tokens.ITurnManager) return testBed.mocks.turnManager;
-        if (token === tokens.PlaytimeTracker)
-          return testBed.mocks.playtimeTracker;
-        if (token === tokens.ISafeEventDispatcher)
-          return testBed.mocks.safeEventDispatcher;
-        // IInitializationService not needed here as we don't start the game for this specific localGameEngine
-        throw new Error(
-          `showSaveGameUI GPS Unavailability: Unmocked token: ${token?.toString()}`
-        );
-      });
+      testBed.withTokenOverride(tokens.GamePersistenceService, null);
 
       // Create a new engine instance where GPS will be null
       // No need to start this specific instance as the check is upfront in showSaveGameUI
@@ -896,8 +817,6 @@ describe('GameEngine', () => {
       expect(
         testBed.mocks.gamePersistenceService.isSavingAllowed
       ).not.toHaveBeenCalled(); // Should not be called if service is null
-
-      testBed.env.mockContainer.resolve = originalResolve; // Restore
     });
   });
 
@@ -925,21 +844,7 @@ describe('GameEngine', () => {
     });
 
     it('should log error if GamePersistenceService is unavailable when showing load UI', () => {
-      const originalResolve = testBed.env.mockContainer.resolve;
-      testBed.env.mockContainer.resolve = jest.fn((token) => {
-        if (token === tokens.GamePersistenceService) return null;
-        // Provide other dependencies for GameEngine constructor
-        if (token === tokens.ILogger) return testBed.mocks.logger;
-        if (token === tokens.IEntityManager) return testBed.mocks.entityManager;
-        if (token === tokens.ITurnManager) return testBed.mocks.turnManager;
-        if (token === tokens.PlaytimeTracker)
-          return testBed.mocks.playtimeTracker;
-        if (token === tokens.ISafeEventDispatcher)
-          return testBed.mocks.safeEventDispatcher;
-        throw new Error(
-          `showLoadGameUI GPS Unavailability: Unmocked token: ${token?.toString()}`
-        );
-      });
+      testBed.withTokenOverride(tokens.GamePersistenceService, null);
       const localGameEngine = new GameEngine({
         container: testBed.env.mockContainer,
       }); // GPS is null
@@ -953,7 +858,6 @@ describe('GameEngine', () => {
         'GameEngine.showLoadGameUI: GamePersistenceService is unavailable. Cannot show Load Game UI.'
       );
       expect(testBed.mocks.safeEventDispatcher.dispatch).not.toHaveBeenCalled();
-      testBed.env.mockContainer.resolve = originalResolve; // Restore
     });
   });
 
