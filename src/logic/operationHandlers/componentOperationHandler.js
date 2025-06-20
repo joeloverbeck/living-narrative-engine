@@ -13,6 +13,11 @@ import BaseOperationHandler from './baseOperationHandler.js';
 import { resolveEntityId } from '../../utils/entityRefUtils.js';
 
 /**
+ * @typedef {object} EntityRefObject
+ * @property {string} entityId
+ */
+
+/**
  * @class ComponentOperationHandler
  * @description Base class for handlers that operate on entity components.
  * It adds utility methods for common validation tasks.
@@ -21,7 +26,7 @@ class ComponentOperationHandler extends BaseOperationHandler {
   /**
    * Resolve an entity reference to an ID string.
    *
-   * @param {'actor'|'target'|string|import('./modifyComponentHandler.js').EntityRefObject} entityRef
+   * @param {'actor'|'target'|string|EntityRefObject} entityRef
    * @param {ExecutionContext} execCtx
    * @returns {string|null} The resolved ID or null if invalid.
    */

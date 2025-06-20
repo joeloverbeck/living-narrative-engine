@@ -23,7 +23,7 @@ export function isEmptyCondition(cond) {
  * notation in a JSON Logic rule.
  *
  * @param {object | any} rule - Rule object or value to inspect.
- * @param {import('../../interfaces/coreServices.js').ILogger} logger - Logger for warnings.
+ * @param {import('../interfaces/coreServices.js').ILogger} logger - Logger for warnings.
  * @returns {void}
  */
 export function warnOnBracketPaths(rule, logger) {

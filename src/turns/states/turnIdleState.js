@@ -70,7 +70,7 @@ export class TurnIdleState extends AbstractTurnState {
    * @description Validates the provided actor entity.
    * @param {BaseTurnHandler} handler - Owning handler.
    * @param {Entity} actorEntity - Actor entity provided.
-   * @param {import('../../utils/logger.js').Logger} logger - Logger instance.
+   * @param {import('../../utils/loggerUtils.js').Logger} logger - Logger instance.
    */
   _validateActorEntity(handler, actorEntity, logger) {
     if (!actorEntity || typeof actorEntity.id === 'undefined') {
@@ -87,7 +87,7 @@ export class TurnIdleState extends AbstractTurnState {
    * @param {BaseTurnHandler} handler - Owning handler.
    * @param {ITurnContext} turnCtx - Current turn context.
    * @param {string} actorIdForLog - Actor ID for logging.
-   * @param {import('../../utils/logger.js').Logger} logger - Logger instance.
+   * @param {import('../../utils/loggerUtils.js').Logger} logger - Logger instance.
    */
   _validateTurnContext(handler, turnCtx, actorIdForLog, logger) {
     if (!turnCtx) {
@@ -104,7 +104,7 @@ export class TurnIdleState extends AbstractTurnState {
    * @param {BaseTurnHandler} handler - Owning handler.
    * @param {ITurnContext} turnCtx - Current turn context.
    * @param {Entity} actorEntity - Actor entity provided.
-   * @param {import('../../utils/logger.js').Logger} logger - Logger instance.
+   * @param {import('../../utils/loggerUtils.js').Logger} logger - Logger instance.
    * @returns {Entity} The actor from context.
    */
   _validateActorMatch(handler, turnCtx, actorEntity, logger) {
@@ -124,7 +124,7 @@ export class TurnIdleState extends AbstractTurnState {
    * @param {ITurnContext} turnCtx - Current turn context.
    * @param {Entity} actor - Actor whose turn has started.
    * @param {BaseTurnHandler} handler - Owning handler.
-   * @param {import('../../utils/logger.js').Logger} logger - Logger instance.
+   * @param {import('../../utils/loggerUtils.js').Logger} logger - Logger instance.
    * @returns {Promise<void>} Resolves when the transition is complete.
    */
   async _requestAwaitingInput(turnCtx, actor, handler, logger) {

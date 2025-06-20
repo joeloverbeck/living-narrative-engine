@@ -12,10 +12,10 @@ import { handleProcessingException } from '../helpers/handleProcessingException.
  */
 export class ProcessingWorkflow {
   /**
-   * @param {import('../processingCommandState.js').ProcessingCommandState} state - Owning state instance.
+   * @param {object} state - Owning state instance (ProcessingCommandState, but type avoided to break circular dependency).
    * @param {string|null} commandString - Command string for logging.
-   * @param {import('../interfaces/IActorTurnStrategy.js').ITurnAction|null} initialAction - Constructor provided action.
-   * @param {(action: import('../interfaces/IActorTurnStrategy.js').ITurnAction|null) => void} setAction - Setter for the state's private action field.
+   * @param {import('../../interfaces/IActorTurnStrategy.js').ITurnAction|null} initialAction - Constructor provided action.
+   * @param {(action: import('../../interfaces/IActorTurnStrategy.js').ITurnAction|null) => void} setAction - Setter for the state's private action field.
    */
   constructor(state, commandString, initialAction, setAction) {
     this._state = state;
@@ -27,8 +27,8 @@ export class ProcessingWorkflow {
   /**
    * Runs the workflow.
    *
-   * @param {import('../handlers/baseTurnHandler.js').BaseTurnHandler} handler - Owning handler.
-   * @param {import('../interfaces/ITurnState.js').ITurnState|null} previousState - Previous state.
+   * @param {import('../../handlers/baseTurnHandler.js').BaseTurnHandler} handler - Owning handler.
+   * @param {import('../../interfaces/ITurnState.js').ITurnState|null} previousState - Previous state.
    * @returns {Promise<void>} Resolves when complete.
    */
   async run(handler, previousState) {
@@ -68,8 +68,8 @@ export class ProcessingWorkflow {
   /**
    * Validates the actor from the context and logs entry.
    *
-   * @param {import('../interfaces/ITurnContext.js').ITurnContext} turnCtx - Context.
-   * @returns {Promise<import('../../entities/entity.js').default|null>} Resolved actor or null.
+   * @param {import('../../interfaces/ITurnContext.js').ITurnContext} turnCtx - Context.
+   * @returns {Promise<import('../../../entities/entity.js').default|null>} Resolved actor or null.
    */
   async _validateContextAndActor(turnCtx) {
     const logger = this._state._resolveLogger(turnCtx);
@@ -100,9 +100,9 @@ export class ProcessingWorkflow {
   /**
    * Resolves the ITurnAction to process.
    *
-   * @param {import('../interfaces/ITurnContext.js').ITurnContext} turnCtx - Context.
-   * @param {import('../../entities/entity.js').default} actor - Actor.
-   * @returns {Promise<import('../interfaces/IActorTurnStrategy.js').ITurnAction|null>} Resolved action or null.
+   * @param {import('../../interfaces/ITurnContext.js').ITurnContext} turnCtx - Context.
+   * @param {import('../../../entities/entity.js').default} actor - Actor.
+   * @returns {Promise<import('../../interfaces/IActorTurnStrategy.js').ITurnAction|null>} Resolved action or null.
    */
   async _resolveTurnAction(turnCtx, actor) {
     const logger = this._state._resolveLogger(turnCtx);
@@ -173,9 +173,9 @@ export class ProcessingWorkflow {
   /**
    * Processes the resolved action via the state's internal method.
    *
-   * @param {import('../interfaces/ITurnContext.js').ITurnContext} turnCtx - Context.
-   * @param {import('../../entities/entity.js').default} actor - Actor.
-   * @param {import('../interfaces/IActorTurnStrategy.js').ITurnAction} turnAction - Action to process.
+   * @param {import('../../interfaces/ITurnContext.js').ITurnContext} turnCtx - Context.
+   * @param {import('../../../entities/entity.js').default} actor - Actor.
+   * @param {import('../../interfaces/IActorTurnStrategy.js').ITurnAction} turnAction - Action to process.
    * @returns {Promise<void>} Resolves when processing completes.
    */
   async _executeActionWorkflow(turnCtx, actor, turnAction) {

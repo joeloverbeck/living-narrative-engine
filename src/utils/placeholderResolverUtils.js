@@ -3,7 +3,7 @@
 
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 import { safeResolvePath } from './objectUtils.js';
-import { resolveEntityNameFallback } from './contextUtils.js';
+import { resolveEntityNameFallback } from './entityNameFallbackUtils.js';
 
 /**
  * Regex to find placeholders like {path.to.value} within a string.
