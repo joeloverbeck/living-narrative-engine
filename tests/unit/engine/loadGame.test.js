@@ -7,24 +7,10 @@ import {
   it,
   jest,
 } from '@jest/globals';
-import GameEngine from '../../../src/engine/gameEngine.js';
 import { tokens } from '../../../src/dependencyInjection/tokens.js';
 import { createGameEngineTestBed } from '../../common/engine/gameEngineTestBed.js';
-import {
-  expectDispatchSequence,
-  buildSaveDispatches,
-  DEFAULT_ACTIVE_WORLD_FOR_SAVE,
-} from '../../common/engine/dispatchTestUtils.js';
-import {
-  ENGINE_INITIALIZING_UI,
-  ENGINE_READY_UI,
-  ENGINE_OPERATION_IN_PROGRESS_UI,
-  ENGINE_OPERATION_FAILED_UI,
-  ENGINE_STOPPED_UI,
-  REQUEST_SHOW_SAVE_GAME_UI,
-  REQUEST_SHOW_LOAD_GAME_UI,
-  CANNOT_SAVE_GAME_INFO,
-} from '../../../src/constants/eventIds.js';
+import { expectDispatchSequence } from '../../common/engine/dispatchTestUtils.js';
+import { ENGINE_OPERATION_FAILED_UI } from '../../../src/constants/eventIds.js';
 
 /** @typedef {import('../../../src/interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../../src/dependencyInjection/appContainer.js').default} AppContainer */
@@ -39,8 +25,6 @@ import {
 describe('GameEngine', () => {
   let testBed;
   let gameEngine; // Instance of GameEngine
-
-  const MOCK_WORLD_NAME = 'TestWorld';
 
   beforeEach(() => {
     testBed = createGameEngineTestBed();
@@ -158,36 +142,33 @@ describe('GameEngine', () => {
       });
     });
 
-    it('should handle GamePersistenceService unavailability (guard clause) and dispatch UI event directly', async () => {
-      const localBed = createGameEngineTestBed({
-        [tokens.GamePersistenceService]: null,
-      });
-      const localGameEngine = localBed.engine; // GPS is null
+    it.each([
+      [
+        'GamePersistenceService',
+        tokens.GamePersistenceService,
+        'GamePersistenceService is not available. Cannot load game.',
+      ],
+    ])(
+      'should handle %s unavailability (guard clause) and dispatch UI event directly',
+      async (_name, token, msg) => {
+        const localBed = createGameEngineTestBed({ [token]: null });
+        const localGameEngine = localBed.engine;
+        localBed.resetMocks();
 
-      localBed.resetMocks();
+        const result = await localGameEngine.loadGame(SAVE_ID);
 
-      const rawErrorMsg =
-        'GamePersistenceService is not available. Cannot load game.';
-      const result = await localGameEngine.loadGame(SAVE_ID);
+        expect(localBed.mocks.logger.error).toHaveBeenCalledWith(
+          `GameEngine.loadGame: ${msg}`
+        );
+        expectDispatchSequence(localBed.mocks.safeEventDispatcher.dispatch, [
+          ENGINE_OPERATION_FAILED_UI,
+          { errorMessage: msg, errorTitle: 'Load Failed' },
+        ]);
+        expect(result).toEqual({ success: false, error: msg, data: null });
 
-      expect(localBed.mocks.logger.error).toHaveBeenCalledWith(
-        `GameEngine.loadGame: ${rawErrorMsg}`
-      );
-      expectDispatchSequence(localBed.mocks.safeEventDispatcher.dispatch, [
-        ENGINE_OPERATION_FAILED_UI,
-        {
-          errorMessage: rawErrorMsg,
-          errorTitle: 'Load Failed',
-        },
-      ]);
-      expect(result).toEqual({
-        success: false,
-        error: rawErrorMsg,
-        data: null,
-      });
-
-      await localBed.cleanup();
-    });
+        await localBed.cleanup();
+      }
+    );
 
     it('should use _handleLoadFailure when _prepareForLoadGameSession throws an error', async () => {
       const prepareError = new Error('Prepare failed');

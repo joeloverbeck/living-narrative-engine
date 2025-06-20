@@ -7,24 +7,9 @@ import {
   it,
   jest,
 } from '@jest/globals';
-import GameEngine from '../../../src/engine/gameEngine.js';
 import { tokens } from '../../../src/dependencyInjection/tokens.js';
 import { createGameEngineTestBed } from '../../common/engine/gameEngineTestBed.js';
-import {
-  expectDispatchSequence,
-  buildSaveDispatches,
-  DEFAULT_ACTIVE_WORLD_FOR_SAVE,
-} from '../../common/engine/dispatchTestUtils.js';
-import {
-  ENGINE_INITIALIZING_UI,
-  ENGINE_READY_UI,
-  ENGINE_OPERATION_IN_PROGRESS_UI,
-  ENGINE_OPERATION_FAILED_UI,
-  ENGINE_STOPPED_UI,
-  REQUEST_SHOW_SAVE_GAME_UI,
-  REQUEST_SHOW_LOAD_GAME_UI,
-  CANNOT_SAVE_GAME_INFO,
-} from '../../../src/constants/eventIds.js';
+import { REQUEST_SHOW_LOAD_GAME_UI } from '../../../src/constants/eventIds.js';
 
 /** @typedef {import('../../../src/interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../../src/dependencyInjection/appContainer.js').default} AppContainer */
@@ -39,8 +24,6 @@ import {
 describe('GameEngine', () => {
   let testBed;
   let gameEngine; // Instance of GameEngine
-
-  const MOCK_WORLD_NAME = 'TestWorld';
 
   beforeEach(() => {
     testBed = createGameEngineTestBed();
@@ -71,24 +54,28 @@ describe('GameEngine', () => {
       );
     });
 
-    it('should log error if GamePersistenceService is unavailable when showing load UI', async () => {
-      const localBed = createGameEngineTestBed({
-        [tokens.GamePersistenceService]: null,
-      });
-      const localGameEngine = localBed.engine; // GPS is null
+    it.each([
+      [
+        'GamePersistenceService',
+        tokens.GamePersistenceService,
+        'GameEngine.showLoadGameUI: GamePersistenceService is unavailable. Cannot show Load Game UI.',
+      ],
+    ])(
+      'should log error if %s is unavailable when showing load UI',
+      async (_name, token, expectedMsg) => {
+        const localBed = createGameEngineTestBed({ [token]: null });
+        const localGameEngine = localBed.engine;
+        localBed.resetMocks();
 
-      localBed.resetMocks(); // Clear from constructor
+        localGameEngine.showLoadGameUI();
 
-      localGameEngine.showLoadGameUI(); // Method is now sync
+        expect(localBed.mocks.logger.error).toHaveBeenCalledWith(expectedMsg);
+        expect(
+          localBed.mocks.safeEventDispatcher.dispatch
+        ).not.toHaveBeenCalled();
 
-      expect(localBed.mocks.logger.error).toHaveBeenCalledWith(
-        'GameEngine.showLoadGameUI: GamePersistenceService is unavailable. Cannot show Load Game UI.'
-      );
-      expect(
-        localBed.mocks.safeEventDispatcher.dispatch
-      ).not.toHaveBeenCalled();
-
-      await localBed.cleanup();
-    });
+        await localBed.cleanup();
+      }
+    );
   });
 });
