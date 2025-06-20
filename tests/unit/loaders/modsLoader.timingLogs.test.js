@@ -52,7 +52,9 @@ describe('ModsLoader Integration Test Suite - Performance Timing Logs (Refactore
 
     // 3. Configure Mocks
     env.mockGameConfigLoader.loadConfig.mockResolvedValue(finalOrder);
-    env.mockModManifestLoader.loadRequestedManifests.mockResolvedValue(mockManifestMap);
+    env.mockModManifestLoader.loadRequestedManifests.mockResolvedValue(
+      mockManifestMap
+    );
     env.mockedResolveOrder.mockReturnValue(finalOrder);
 
     // The factory sets up loaders to return a default success result, which is sufficient here.
@@ -77,8 +79,12 @@ describe('ModsLoader Integration Test Suite - Performance Timing Logs (Refactore
 
     // Verify a timing log was created for each mod
     for (const modId of finalOrder) {
-      const expectedLogRegex = new RegExp(`^Mod '${modId}' loaded in (\\d+\\.\\d{2})ms`);
-      const timingLogCall = debugCalls.find((call) => expectedLogRegex.test(call[0]));
+      const expectedLogRegex = new RegExp(
+        `^Mod '${modId}' loaded in (\\d+\\.\\d{2})ms`
+      );
+      const timingLogCall = debugCalls.find((call) =>
+        expectedLogRegex.test(call[0])
+      );
 
       expect(timingLogCall).toBeDefined(); // Ensure the log exists
 

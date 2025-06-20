@@ -248,7 +248,7 @@ describe('registerLoaders (with Mock DI Container)', () => {
     // Keep register mock history
   });
 
-  it('should register all 19 services/loaders (+ ILogger) as singletons', () => {
+  it('should register all 20 services/loaders (+ ILogger) as singletons', () => {
     // Arrange: Logger is already registered in beforeEach
 
     // Act: Register the loaders
@@ -276,11 +276,12 @@ describe('registerLoaders (with Mock DI Container)', () => {
       tokens.PromptTextLoader,
       tokens.WorldLoader,
       tokens.EntityInstanceLoader,
+      tokens.GoalLoader,
       tokens.ModsLoader,
     ];
-    const expectedRegistrationCount = expectedTokens.length; // This must be 19
+    const expectedRegistrationCount = expectedTokens.length; // This must be 20
 
-    // Expect 1 (ILogger from beforeEach) + 19 (from registerLoaders) = 20 calls to register
+    // Expect 1 (ILogger from beforeEach) + 20 (from registerLoaders) = 21 calls to register
     expect(mockContainer.register).toHaveBeenCalledTimes(
       expectedRegistrationCount + 1
     );
@@ -307,7 +308,7 @@ describe('registerLoaders (with Mock DI Container)', () => {
     });
 
     // Verify logger calls within registerLoaders
-    // 1 "Starting..." debug call + 1 debug call for each of the 19 services registered.
+    // 1 "Starting..." debug call + 1 debug call for each of the 20 services registered.
     expect(mockLogger.debug).toHaveBeenCalledTimes(
       1 + expectedRegistrationCount
     );

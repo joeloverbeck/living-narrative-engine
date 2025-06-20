@@ -18,7 +18,7 @@ import {
   createMockModDependencyValidator,
   createMockModVersionValidator,
   createMockModLoadOrderResolver,
-  createMockWorldLoader,            // ← NEW import
+  createMockWorldLoader, // ← NEW import
 } from '../mockFactories.js';
 
 /**
@@ -65,10 +65,11 @@ export function createTestEnvironment() {
       'schema:rules',
       'schema:conditions',
       'schema:entityInstances',
+      'schema:goals',
     ].includes(id)
   );
-  mockModDependencyValidator.validate.mockImplementation(() => { });
-  mockModVersionValidator.mockImplementation(() => { });
+  mockModDependencyValidator.validate.mockImplementation(() => {});
+  mockModVersionValidator.mockImplementation(() => {});
   mockModLoadOrderResolver.resolveOrder.mockImplementation((ids) => ids);
 
   /* ── Instantiate system-under-test ──────────────────────────────────── */
@@ -91,7 +92,7 @@ export function createTestEnvironment() {
     modDependencyValidator: mockModDependencyValidator,
     modVersionValidator: mockModVersionValidator,
     modLoadOrderResolver: mockModLoadOrderResolver,
-    worldLoader: mockWorldLoader,   // ← injected here
+    worldLoader: mockWorldLoader, // ← injected here
     contentLoadersConfig: null,
   });
 
@@ -115,7 +116,7 @@ export function createTestEnvironment() {
     mockModDependencyValidator,
     mockModVersionValidator,
     mockModLoadOrderResolver,
-    mockWorldLoader,                        // ← exposed for assertions
+    mockWorldLoader, // ← exposed for assertions
     // Handy aliases for deeply nested jest fns
     mockedModDependencyValidator: mockModDependencyValidator.validate,
     mockedValidateModEngineVersions: mockModVersionValidator,

@@ -52,19 +52,22 @@ describe('JSON-Schema – Component Definition Validation', () => {
     ['following.component.json', followingComponent],
     ['leading.component.json', leadingComponent],
     // Add new component definition files here as they are created
-  ])('✓ %s – should conform to the component definition schema', (_filename, componentDefinition) => {
-    const ok = validate(componentDefinition);
+  ])(
+    '✓ %s – should conform to the component definition schema',
+    (_filename, componentDefinition) => {
+      const ok = validate(componentDefinition);
 
-    // Provide detailed error feedback if validation fails
-    if (!ok) {
-      console.error(
-        `Validation failed for ${_filename}:`,
-        JSON.stringify(validate.errors, null, 2)
-      );
+      // Provide detailed error feedback if validation fails
+      if (!ok) {
+        console.error(
+          `Validation failed for ${_filename}:`,
+          JSON.stringify(validate.errors, null, 2)
+        );
+      }
+
+      expect(ok).toBe(true);
     }
-
-    expect(ok).toBe(true);
-  });
+  );
 
   /* ---------------------------------------------------------------------- */
   /* ✗ INVALID definitions: Test cases that should fail validation         */

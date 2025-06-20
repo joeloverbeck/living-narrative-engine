@@ -55,7 +55,9 @@ describe('ModsLoader Integration Test Suite - Overrides (Refactored)', () => {
 
     // 3. Configure Mocks for this specific test's behavior
     env.mockGameConfigLoader.loadConfig.mockResolvedValue(finalOrder);
-    env.mockModManifestLoader.loadRequestedManifests.mockResolvedValue(mockManifestMap);
+    env.mockModManifestLoader.loadRequestedManifests.mockResolvedValue(
+      mockManifestMap
+    );
     env.mockedResolveOrder.mockReturnValue(finalOrder);
 
     // The factory provides a stateful registry, so we just need to set up the .get for manifests
@@ -70,33 +72,45 @@ describe('ModsLoader Integration Test Suite - Overrides (Refactored)', () => {
     });
 
     // Configure ActionLoader to simulate storing/overriding
-    env.mockActionLoader.loadItemsForMod.mockImplementation(async (modIdArg) => {
-      let count = 0;
-      let overrides = 0;
-      if (modIdArg === CORE_MOD_ID) {
-        env.mockRegistry.store('actions', `${CORE_MOD_ID}:action1`, { value: 'core_value' });
-        count = 1;
-      } else if (modIdArg === overrideModId) {
-        // This simulates overriding the core action
-        if (env.mockRegistry.get('actions', `${CORE_MOD_ID}:action1`)) {
-          overrides = 1;
+    env.mockActionLoader.loadItemsForMod.mockImplementation(
+      async (modIdArg) => {
+        let count = 0;
+        let overrides = 0;
+        if (modIdArg === CORE_MOD_ID) {
+          env.mockRegistry.store('actions', `${CORE_MOD_ID}:action1`, {
+            value: 'core_value',
+          });
+          count = 1;
+        } else if (modIdArg === overrideModId) {
+          // This simulates overriding the core action
+          if (env.mockRegistry.get('actions', `${CORE_MOD_ID}:action1`)) {
+            overrides = 1;
+          }
+          env.mockRegistry.store('actions', `${CORE_MOD_ID}:action1`, {
+            value: 'override_value',
+          });
+          // This simulates adding a new action
+          env.mockRegistry.store('actions', `${overrideModId}:action2`, {
+            value: 'new_value',
+          });
+          count = 2; // two files processed
         }
-        env.mockRegistry.store('actions', `${CORE_MOD_ID}:action1`, { value: 'override_value' });
-        // This simulates adding a new action
-        env.mockRegistry.store('actions', `${overrideModId}:action2`, { value: 'new_value' });
-        count = 2; // two files processed
+        return { count, overrides, errors: 0 };
       }
-      return { count, overrides, errors: 0 };
-    });
+    );
 
     // Configure ComponentLoader
-    env.mockComponentLoader.loadItemsForMod.mockImplementation(async (modIdArg) => {
-      if (modIdArg === overrideModId) {
-        env.mockRegistry.store('components', `${overrideModId}:component1`, { value: 'comp_value' });
-        return { count: 1, overrides: 0, errors: 0 };
+    env.mockComponentLoader.loadItemsForMod.mockImplementation(
+      async (modIdArg) => {
+        if (modIdArg === overrideModId) {
+          env.mockRegistry.store('components', `${overrideModId}:component1`, {
+            value: 'comp_value',
+          });
+          return { count: 1, overrides: 0, errors: 0 };
+        }
+        return { count: 0, overrides: 0, errors: 0 };
       }
-      return { count: 0, overrides: 0, errors: 0 };
-    });
+    );
   });
 
   it('should load core and override mod, applying overrides correctly', async () => {
@@ -116,13 +130,18 @@ describe('ModsLoader Integration Test Suite - Overrides (Refactored)', () => {
     const newAction = env.mockRegistry.get('actions', 'overrideMod:action2');
     expect(newAction).toEqual({ value: 'new_value' });
 
-    const newComponent = env.mockRegistry.get('components', 'overrideMod:component1');
+    const newComponent = env.mockRegistry.get(
+      'components',
+      'overrideMod:component1'
+    );
     expect(newComponent).toEqual({ value: 'comp_value' });
 
     // --- Assert Summary Logging ---
-    const summaryText = env.mockLogger.info.mock.calls.map((c) => c[0]).join('\n');
-    expect(summaryText).toMatch(/actions\s+: C:3, O:1, E:0/);    // 1 from core + 2 from override = 3 created/processed
+    const summaryText = env.mockLogger.info.mock.calls
+      .map((c) => c[0])
+      .join('\n');
+    expect(summaryText).toMatch(/actions\s+: C:3, O:1, E:0/); // 1 from core + 2 from override = 3 created/processed
     expect(summaryText).toMatch(/components\s+: C:1, O:0, E:0/); // 1 from override
-    expect(summaryText).toMatch(/TOTAL\s+: C:4, O:1, E:0/);      // 3+1=4 total created/processed
+    expect(summaryText).toMatch(/TOTAL\s+: C:4, O:1, E:0/); // 3+1=4 total created/processed
   });
 });

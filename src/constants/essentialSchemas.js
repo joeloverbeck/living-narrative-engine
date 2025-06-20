@@ -19,6 +19,7 @@ export const ESSENTIAL_SCHEMA_TYPES = [
   'events',
   'rules',
   'conditions',
+  'goals',
 ];
 
 export default ESSENTIAL_SCHEMA_TYPES;

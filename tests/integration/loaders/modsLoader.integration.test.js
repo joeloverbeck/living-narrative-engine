@@ -63,7 +63,7 @@ describe('ModsLoader Integration Test Suite (TEST-LOADER-7.1)', () => {
   /** @type {jest.Mocked<IPathResolver>} */
   let mockPathResolver; // Added
   /** @type {jest.Mocked<IDataFetcher>} */
-  let mockDataFetcher;  // Added
+  let mockDataFetcher; // Added
   /** @type {jest.Mocked<GameConfigLoader>} */
   let mockGameConfigLoader;
   /** @type {jest.Mocked<ModManifestLoader>} */
@@ -135,7 +135,9 @@ describe('ModsLoader Integration Test Suite (TEST-LOADER-7.1)', () => {
       getAllComponentDefinitions: jest.fn(() => []),
       getStartingPlayerId: jest.fn(() => null),
       getStartingLocationId: jest.fn(() => null),
-      loadItemsForMod: jest.fn().mockResolvedValue({ count: 0, overrides: 0, errors: 0 }), // Correctly assigned
+      loadItemsForMod: jest
+        .fn()
+        .mockResolvedValue({ count: 0, overrides: 0, errors: 0 }), // Correctly assigned
     };
     mockLogger = {
       info: jest.fn(),
@@ -143,10 +145,12 @@ describe('ModsLoader Integration Test Suite (TEST-LOADER-7.1)', () => {
       warn: jest.fn(),
       error: jest.fn(),
     };
-    mockSchemaLoader = { // Used by test setup, not directly by ModsLoader constructor
+    mockSchemaLoader = {
+      // Used by test setup, not directly by ModsLoader constructor
       loadAndCompileAllSchemas: jest.fn(),
     };
-    mockValidator = { // This is for ISchemaValidator
+    mockValidator = {
+      // This is for ISchemaValidator
       isSchemaLoaded: jest.fn(),
       addSchema: jest.fn(),
       removeSchema: jest.fn(),
@@ -165,19 +169,25 @@ describe('ModsLoader Integration Test Suite (TEST-LOADER-7.1)', () => {
       getPromptsBasePath: jest.fn(() => 'prompts'),
       getCorePromptFileName: jest.fn(() => 'corePromptText.json'),
     };
-    mockPathResolver = { // Added
-        resolve: jest.fn(path => `resolved/${path}`),
-        resolveDataPath: jest.fn(filename => `resolved/data/${filename}`),
-        resolveSchemaPath: jest.fn(filename => `resolved/schemas/${filename}`),
-        resolveModPath: jest.fn(modId => `resolved/mods/${modId}`),
-        resolveModManifestPath: jest.fn(modId => `resolved/mods/${modId}/mod.manifest.json`),
-        resolveModContentPath: jest.fn((modId, type, file) => `resolved/mods/${modId}/${type}/${file}`),
-        resolveGameConfigPath: jest.fn(() => 'resolved/game.json'),
-        resolvePromptsPath: jest.fn((filename) => `resolved/prompts/${filename}`),
+    mockPathResolver = {
+      // Added
+      resolve: jest.fn((path) => `resolved/${path}`),
+      resolveDataPath: jest.fn((filename) => `resolved/data/${filename}`),
+      resolveSchemaPath: jest.fn((filename) => `resolved/schemas/${filename}`),
+      resolveModPath: jest.fn((modId) => `resolved/mods/${modId}`),
+      resolveModManifestPath: jest.fn(
+        (modId) => `resolved/mods/${modId}/mod.manifest.json`
+      ),
+      resolveModContentPath: jest.fn(
+        (modId, type, file) => `resolved/mods/${modId}/${type}/${file}`
+      ),
+      resolveGameConfigPath: jest.fn(() => 'resolved/game.json'),
+      resolvePromptsPath: jest.fn((filename) => `resolved/prompts/${filename}`),
     };
-    mockDataFetcher = { // Added
-        fetch: jest.fn().mockResolvedValue({}), // Generic fetch
-        fetchContentBatch: jest.fn().mockResolvedValue([]), // For loaders that use batch
+    mockDataFetcher = {
+      // Added
+      fetch: jest.fn().mockResolvedValue({}), // Generic fetch
+      fetchContentBatch: jest.fn().mockResolvedValue([]), // For loaders that use batch
     };
     mockGameConfigLoader = {
       loadConfig: jest.fn(),
@@ -202,14 +212,19 @@ describe('ModsLoader Integration Test Suite (TEST-LOADER-7.1)', () => {
     };
 
     // Dependencies for ModsLoader constructor - these are initialized here
-    mockWorldLoader = { // Implements IWorldLoader
+    mockWorldLoader = {
+      // Implements IWorldLoader
       loadWorlds: jest.fn().mockResolvedValue(undefined),
     };
-    mockPromptTextLoader = { // Implements IPromptTextLoader
+    mockPromptTextLoader = {
+      // Implements IPromptTextLoader
       loadPromptText: jest.fn().mockResolvedValue({}), // Correctly assigned
     };
-    mockEntityInstanceLoader = { // Implements IEntityInstanceLoader
-      loadItemsForMod: jest.fn().mockResolvedValue({ count: 0, overrides: 0, errors: 0 }), // Correctly assigned
+    mockEntityInstanceLoader = {
+      // Implements IEntityInstanceLoader
+      loadItemsForMod: jest
+        .fn()
+        .mockResolvedValue({ count: 0, overrides: 0, errors: 0 }), // Correctly assigned
     };
 
     // --- Define Mock Data First ---
@@ -229,52 +244,50 @@ describe('ModsLoader Integration Test Suite (TEST-LOADER-7.1)', () => {
     mockManifestMap.set(CORE_MOD_ID.toLowerCase(), mockCoreManifest);
 
     // Spies on prototypes (must be set AFTER mock data is ready)
-    processManifestsSpy = jest.spyOn(ModManifestProcessor.prototype, 'processManifests')
-                             .mockResolvedValue({
-                               loadedManifestsMap: mockManifestMap, // Use the fresh mockManifestMap
-                               finalOrder: [CORE_MOD_ID],
-                               incompatibilityCount: 0
-                             });
-    loadContentSpy = jest.spyOn(ContentLoadManager.prototype, 'loadContent')
-                         .mockResolvedValue({});
+    processManifestsSpy = jest
+      .spyOn(ModManifestProcessor.prototype, 'processManifests')
+      .mockResolvedValue({
+        loadedManifestsMap: mockManifestMap, // Use the fresh mockManifestMap
+        finalOrder: [CORE_MOD_ID],
+        incompatibilityCount: 0,
+      });
+    loadContentSpy = jest
+      .spyOn(ContentLoadManager.prototype, 'loadContent')
+      .mockResolvedValue({});
 
     // --- 3. Configure Mocks (Default Success Paths) ---
     mockSchemaLoader.loadAndCompileAllSchemas.mockResolvedValue(undefined);
 
     // Configure IConfiguration to return IDs for essential schemas
-    mockConfiguration.getContentTypeSchemaId.mockImplementation((typeName) => {
-      // This mock correctly generates the IDs like 'schema:actions' via default
-      switch (typeName) {
-        case 'game':
-          return 'schema:game';
-        case 'components':
-          return 'schema:components';
-        case 'mod-manifest':
-          return 'schema:mod-manifest';
-        case 'entity_definitions':
-          return 'schema:entityDefinitions';
-        // Let others fall through to default
-        default:
-          return `schema:${typeName}`;
-      }
+    mockConfiguration.getContentTypeSchemaId.mockImplementation((type) => {
+      if (type === 'goals') return 'http://example.com/schemas/goal.schema.json';
+      if (type === 'game') return 'http://example.com/schemas/game.schema.json';
+      if (type === 'components') return 'http://example.com/schemas/component.schema.json';
+      if (type === 'mod-manifest') return 'http://example.com/schemas/mod.manifest.schema.json';
+      if (type === 'entityDefinitions') return 'http://example.com/schemas/entity-definition.schema.json';
+      if (type === 'entityInstances') return 'http://example.com/schemas/entity-instance.schema.json';
+      if (type === 'actions') return 'http://example.com/schemas/action.schema.json';
+      if (type === 'events') return 'http://example.com/schemas/event.schema.json';
+      if (type === 'rules') return 'http://example.com/schemas/rule.schema.json';
+      if (type === 'conditions') return 'http://example.com/schemas/condition.schema.json';
+      return undefined;
     });
 
     // *** FIX: Configure ISchemaValidator to return TRUE for ALL essential schemas checked by ModsLoader ***
     mockValidator.isSchemaLoaded.mockImplementation((schemaId) => {
       const essentialSchemas = [
-        'schema:game',
-        'schema:components',
-        'schema:mod-manifest',
-        'schema:entityDefinitions',
-        'schema:actions', // <<< Required by ModsLoader
-        'schema:events', // <<< Required by ModsLoader
-        'schema:rules', // <<< Required by ModsLoader
-        'schema:conditions', // <<< Newly required by ModsLoader
-        'schema:entityInstances',
+        'http://example.com/schemas/game.schema.json',
+        'http://example.com/schemas/component.schema.json',
+        'http://example.com/schemas/mod.manifest.schema.json',
+        'http://example.com/schemas/entity-definition.schema.json',
+        'http://example.com/schemas/action.schema.json',
+        'http://example.com/schemas/event.schema.json',
+        'http://example.com/schemas/rule.schema.json',
+        'http://example.com/schemas/condition.schema.json',
+        'http://example.com/schemas/entity-instance.schema.json',
+        'http://example.com/schemas/goal.schema.json',
       ];
       const isLoaded = essentialSchemas.includes(schemaId);
-      // Optional: Add logging here to see exactly which schemas are being checked
-      // console.log(`mockValidator.isSchemaLoaded called with: ${schemaId}, returning: ${isLoaded}`);
       return isLoaded;
     });
 
@@ -293,7 +306,9 @@ describe('ModsLoader Integration Test Suite (TEST-LOADER-7.1)', () => {
     mockedValidateModEngineVersions.mockImplementation(() => true);
 
     // Configure ModLoadOrderResolver
-    mockedResolveOrder.mockImplementation((manifests) => Array.from(manifests.keys()));
+    mockedResolveOrder.mockImplementation((manifests) =>
+      Array.from(manifests.keys())
+    );
 
     // Configure Registry.get for manifest lookup
     mockRegistry.get.mockImplementation((type, id) => {
@@ -400,24 +415,27 @@ describe('ModsLoader Integration Test Suite (TEST-LOADER-7.1)', () => {
     expect(mockSchemaLoader.loadAndCompileAllSchemas).toHaveBeenCalledTimes(1);
 
     // 3. *** FIX: Verify essential schema checks passed for ALL required schemas ***
-    expect(mockValidator.isSchemaLoaded).toHaveBeenCalledWith('schema:game');
+    expect(mockValidator.isSchemaLoaded).toHaveBeenCalledWith('http://example.com/schemas/game.schema.json');
     expect(mockValidator.isSchemaLoaded).toHaveBeenCalledWith(
-      'schema:components'
+      'http://example.com/schemas/component.schema.json'
     );
     expect(mockValidator.isSchemaLoaded).toHaveBeenCalledWith(
-      'schema:mod-manifest'
+      'http://example.com/schemas/mod.manifest.schema.json'
     );
     expect(mockValidator.isSchemaLoaded).toHaveBeenCalledWith(
-      'schema:entityDefinitions'
+      'http://example.com/schemas/entity-definition.schema.json'
     );
-    expect(mockValidator.isSchemaLoaded).toHaveBeenCalledWith('schema:actions'); // <<< Added check
-    expect(mockValidator.isSchemaLoaded).toHaveBeenCalledWith('schema:events'); // <<< Added check
-    expect(mockValidator.isSchemaLoaded).toHaveBeenCalledWith('schema:rules'); // <<< Added check
+    expect(mockValidator.isSchemaLoaded).toHaveBeenCalledWith('http://example.com/schemas/action.schema.json');
+    expect(mockValidator.isSchemaLoaded).toHaveBeenCalledWith('http://example.com/schemas/event.schema.json');
+    expect(mockValidator.isSchemaLoaded).toHaveBeenCalledWith('http://example.com/schemas/rule.schema.json');
     expect(mockValidator.isSchemaLoaded).toHaveBeenCalledWith(
-      'schema:conditions'
-    ); // <<< Added check
+      'http://example.com/schemas/condition.schema.json'
+    );
     expect(mockValidator.isSchemaLoaded).toHaveBeenCalledWith(
-      'schema:entityInstances'
+      'http://example.com/schemas/entity-instance.schema.json'
+    );
+    expect(mockValidator.isSchemaLoaded).toHaveBeenCalledWith(
+      'http://example.com/schemas/goal.schema.json'
     );
 
     // 4. Verify gameConfigLoader.loadConfig was called.
@@ -513,3 +531,5 @@ describe('ModsLoader Integration Test Suite (TEST-LOADER-7.1)', () => {
     );
   });
 });
+
+

@@ -62,7 +62,9 @@ describe('ModsLoader Integration Test Suite - Mod Overrides and Load Order (Refa
 
     // 3. Configure Mocks
     env.mockGameConfigLoader.loadConfig.mockResolvedValue(finalOrder);
-    env.mockModManifestLoader.loadRequestedManifests.mockResolvedValue(mockManifestMap);
+    env.mockModManifestLoader.loadRequestedManifests.mockResolvedValue(
+      mockManifestMap
+    );
     env.mockedResolveOrder.mockReturnValue(finalOrder);
 
     // Configure registry to return manifests and fallback to stateful store for other data
@@ -78,7 +80,13 @@ describe('ModsLoader Integration Test Suite - Mod Overrides and Load Order (Refa
 
     // Configure EntityLoader to simulate storing items from each mod
     env.mockEntityLoader.loadItemsForMod.mockImplementation(
-      async (modIdArg, manifestArg, contentKeyArg, contentTypeDirArg, typeNameArg) => {
+      async (
+        modIdArg,
+        manifestArg,
+        contentKeyArg,
+        contentTypeDirArg,
+        typeNameArg
+      ) => {
         if (typeNameArg !== 'entityDefinitions') {
           return { count: 0, overrides: 0, errors: 0 };
         }
@@ -92,7 +100,10 @@ describe('ModsLoader Integration Test Suite - Mod Overrides and Load Order (Refa
 
         if (itemData) {
           const finalId = `${modIdArg}:${baseItemId}`;
-          env.mockRegistry.store('entity_definitions', finalId, { id: finalId, ...itemData });
+          env.mockRegistry.store('entity_definitions', finalId, {
+            id: finalId,
+            ...itemData,
+          });
           return { count: 1, overrides: 0, errors: 0 };
         }
         return { count: 0, overrides: 0, errors: 0 };
@@ -108,22 +119,66 @@ describe('ModsLoader Integration Test Suite - Mod Overrides and Load Order (Refa
 
     // 1. Verify loader was called sequentially for each mod in the correct order
     expect(env.mockEntityLoader.loadItemsForMod).toHaveBeenCalledTimes(3);
-    expect(env.mockEntityLoader.loadItemsForMod).toHaveBeenNthCalledWith(1, CORE_MOD_ID, expect.anything(), 'entityDefinitions', 'entities/definitions', 'entityDefinitions');
-    expect(env.mockEntityLoader.loadItemsForMod).toHaveBeenNthCalledWith(2, fooModId, expect.anything(), 'entityDefinitions', 'entities/definitions', 'entityDefinitions');
-    expect(env.mockEntityLoader.loadItemsForMod).toHaveBeenNthCalledWith(3, barModId, expect.anything(), 'entityDefinitions', 'entities/definitions', 'entityDefinitions');
+    expect(env.mockEntityLoader.loadItemsForMod).toHaveBeenNthCalledWith(
+      1,
+      CORE_MOD_ID,
+      expect.anything(),
+      'entityDefinitions',
+      'entities/definitions',
+      'entityDefinitions'
+    );
+    expect(env.mockEntityLoader.loadItemsForMod).toHaveBeenNthCalledWith(
+      2,
+      fooModId,
+      expect.anything(),
+      'entityDefinitions',
+      'entities/definitions',
+      'entityDefinitions'
+    );
+    expect(env.mockEntityLoader.loadItemsForMod).toHaveBeenNthCalledWith(
+      3,
+      barModId,
+      expect.anything(),
+      'entityDefinitions',
+      'entities/definitions',
+      'entityDefinitions'
+    );
 
     // 2. Verify Final Registry State for each mod's version of the item
-    const corePotion = env.mockRegistry.get('entity_definitions', `${CORE_MOD_ID}:${baseItemId}`);
-    expect(corePotion).toEqual({ id: `${CORE_MOD_ID}:${baseItemId}`, value: 10, description: 'Core potion' });
+    const corePotion = env.mockRegistry.get(
+      'entity_definitions',
+      `${CORE_MOD_ID}:${baseItemId}`
+    );
+    expect(corePotion).toEqual({
+      id: `${CORE_MOD_ID}:${baseItemId}`,
+      value: 10,
+      description: 'Core potion',
+    });
 
-    const fooPotion = env.mockRegistry.get('entity_definitions', `${fooModId}:${baseItemId}`);
-    expect(fooPotion).toEqual({ id: `${fooModId}:${baseItemId}`, value: 20, description: 'Foo potion' });
+    const fooPotion = env.mockRegistry.get(
+      'entity_definitions',
+      `${fooModId}:${baseItemId}`
+    );
+    expect(fooPotion).toEqual({
+      id: `${fooModId}:${baseItemId}`,
+      value: 20,
+      description: 'Foo potion',
+    });
 
-    const barPotion = env.mockRegistry.get('entity_definitions', `${barModId}:${baseItemId}`);
-    expect(barPotion).toEqual({ id: `${barModId}:${baseItemId}`, value: 30, description: 'Bar potion' });
+    const barPotion = env.mockRegistry.get(
+      'entity_definitions',
+      `${barModId}:${baseItemId}`
+    );
+    expect(barPotion).toEqual({
+      id: `${barModId}:${baseItemId}`,
+      value: 30,
+      description: 'Bar potion',
+    });
 
     // 3. Verify Summary Log
-    const summaryText = env.mockLogger.info.mock.calls.map((c) => c[0]).join('\n');
+    const summaryText = env.mockLogger.info.mock.calls
+      .map((c) => c[0])
+      .join('\n');
     expect(summaryText).toMatch(/entityDefinitions\s+: C:3, O:0, E:0/);
     expect(summaryText).toMatch(/TOTAL\s+: C:3, O:0, E:0/);
   });

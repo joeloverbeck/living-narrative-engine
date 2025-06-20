@@ -192,6 +192,7 @@ export const tokens = freeze({
   EntityLoader: 'EntityLoader',
   EntityInstanceLoader: 'EntityInstanceLoader',
   WorldLoader: 'WorldLoader',
+  GoalLoader:              'GoalLoader',    
   ModsLoader: 'ModsLoader',
   GameConfigLoader: 'GameConfigLoader',
   PromptTextLoader: 'PromptTextLoader',

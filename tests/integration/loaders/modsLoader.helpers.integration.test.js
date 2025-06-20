@@ -30,27 +30,100 @@ function createModsLoader() {
   };
 
   // --- Mock all direct dependencies of ModsLoader ---
-  const logger = { debug: jest.fn(), info: jest.fn(), warn: jest.fn(), error: jest.fn() };
-  const registry = { store: jest.fn(), get: jest.fn(), clear: jest.fn(), setManifest: jest.fn(), getManifest: jest.fn() };
-  const validator = { isSchemaLoaded: jest.fn(() => true), addSchema: jest.fn(), validate: jest.fn() }; // ISchemaValidator
-  const configuration = { getContentTypeSchemaId: jest.fn((type) => schemaIds[type]), getModManifestFilename: jest.fn(() => 'mod.manifest.json')}; // IConfiguration
-  
-  const schemaLoader = { loadAndCompileAllSchemas: jest.fn().mockResolvedValue(undefined) };
-  const componentLoader = { loadItemsForMod: jest.fn().mockResolvedValue({ count: 0, overrides: 0, errors: 0 }) };
-  const conditionLoader = { loadItemsForMod: jest.fn().mockResolvedValue({ count: 0, overrides: 0, errors: 0 }) };
-  const ruleLoader = { loadItemsForMod: jest.fn().mockResolvedValue({ count: 0, overrides: 0, errors: 0 }) };
-  const macroLoader = { loadItemsForMod: jest.fn().mockResolvedValue({ count: 0, overrides: 0, errors: 0 }) };
-  const actionLoader = { loadItemsForMod: jest.fn().mockResolvedValue({ count: 0, overrides: 0, errors: 0 }) };
-  const eventLoader = { loadItemsForMod: jest.fn().mockResolvedValue({ count: 0, overrides: 0, errors: 0 }) };
-  const entityLoader = { loadItemsForMod: jest.fn().mockResolvedValue({ count: 0, overrides: 0, errors: 0 }) }; // EntityDefinitionLoader
-  const entityInstanceLoader = { loadItemsForMod: jest.fn().mockResolvedValue({ count: 0, overrides: 0, errors: 0 }) };
+  const logger = {
+    debug: jest.fn(),
+    info: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+  };
+  const registry = {
+    store: jest.fn(),
+    get: jest.fn(),
+    clear: jest.fn(),
+    setManifest: jest.fn(),
+    getManifest: jest.fn(),
+  };
+  const validator = {
+    isSchemaLoaded: jest.fn(() => true),
+    addSchema: jest.fn(),
+    validate: jest.fn(),
+  }; // ISchemaValidator
+  const configuration = {
+    getContentTypeSchemaId: jest.fn((type) => {
+      if (type === 'goals') return 'http://example.com/schemas/goal.schema.json';
+      if (type === 'game') return 'http://example.com/schemas/game.schema.json';
+      if (type === 'components') return 'http://example.com/schemas/component.schema.json';
+      if (type === 'mod-manifest') return 'http://example.com/schemas/mod.manifest.schema.json';
+      if (type === 'entityDefinitions') return 'http://example.com/schemas/entity-definition.schema.json';
+      if (type === 'entityInstances') return 'http://example.com/schemas/entity-instance.schema.json';
+      if (type === 'actions') return 'http://example.com/schemas/action.schema.json';
+      if (type === 'events') return 'http://example.com/schemas/event.schema.json';
+      if (type === 'rules') return 'http://example.com/schemas/rule.schema.json';
+      if (type === 'conditions') return 'http://example.com/schemas/condition.schema.json';
+      return undefined;
+    }),
+    getModManifestFilename: jest.fn(() => 'mod.manifest.json'),
+  }; // IConfiguration
+
+  const schemaLoader = {
+    loadAndCompileAllSchemas: jest.fn().mockResolvedValue(undefined),
+  };
+  const componentLoader = {
+    loadItemsForMod: jest
+      .fn()
+      .mockResolvedValue({ count: 0, overrides: 0, errors: 0 }),
+  };
+  const conditionLoader = {
+    loadItemsForMod: jest
+      .fn()
+      .mockResolvedValue({ count: 0, overrides: 0, errors: 0 }),
+  };
+  const ruleLoader = {
+    loadItemsForMod: jest
+      .fn()
+      .mockResolvedValue({ count: 0, overrides: 0, errors: 0 }),
+  };
+  const macroLoader = {
+    loadItemsForMod: jest
+      .fn()
+      .mockResolvedValue({ count: 0, overrides: 0, errors: 0 }),
+  };
+  const actionLoader = {
+    loadItemsForMod: jest
+      .fn()
+      .mockResolvedValue({ count: 0, overrides: 0, errors: 0 }),
+  };
+  const eventLoader = {
+    loadItemsForMod: jest
+      .fn()
+      .mockResolvedValue({ count: 0, overrides: 0, errors: 0 }),
+  };
+  const entityLoader = {
+    loadItemsForMod: jest
+      .fn()
+      .mockResolvedValue({ count: 0, overrides: 0, errors: 0 }),
+  }; // EntityDefinitionLoader
+  const entityInstanceLoader = {
+    loadItemsForMod: jest
+      .fn()
+      .mockResolvedValue({ count: 0, overrides: 0, errors: 0 }),
+  };
   const gameConfigLoader = { loadConfig: jest.fn().mockResolvedValue([]) };
   const promptTextLoader = { loadPromptText: jest.fn().mockResolvedValue({}) };
-  const modManifestLoader = { loadRequestedManifests: jest.fn().mockResolvedValue(new Map()), loadManifest: jest.fn() };
-  const validatedEventDispatcher = { dispatch: jest.fn().mockResolvedValue(undefined) };
+  const modManifestLoader = {
+    loadRequestedManifests: jest.fn().mockResolvedValue(new Map()),
+    loadManifest: jest.fn(),
+  };
+  const validatedEventDispatcher = {
+    dispatch: jest.fn().mockResolvedValue(undefined),
+  };
   const modDependencyValidator = { validate: jest.fn() };
   const modVersionValidator = jest.fn().mockImplementation(() => true);
-  const modLoadOrderResolver = { resolveOrder: jest.fn().mockImplementation(manifests => Array.from(manifests.keys())) };
+  const modLoadOrderResolver = {
+    resolveOrder: jest
+      .fn()
+      .mockImplementation((manifests) => Array.from(manifests.keys())),
+  };
   const worldLoader = { loadWorlds: jest.fn().mockResolvedValue(undefined) };
   // contentLoadersConfig can be null to use default
 
@@ -67,8 +140,8 @@ function createModsLoader() {
     eventLoader,
     entityLoader, // Alias for componentDefinitionLoader
     entityInstanceLoader,
-    validator,    // ISchemaValidator
-    configuration,// IConfiguration
+    validator, // ISchemaValidator
+    configuration, // IConfiguration
     gameConfigLoader,
     promptTextLoader,
     modManifestLoader, // Instance of ModManifestLoader class
@@ -192,6 +265,11 @@ describe('ModsLoader helper methods', () => {
       const expectedLog = `ModsLoader: Essential schema '${notLoadedSchemaId}' (type: '${notLoadedType}') is configured but not loaded.`;
       const expectedErrorMsg = `Essential schema '${notLoadedSchemaId}' (type: '${notLoadedType}') is configured but not loaded.`;
 
+      configuration.getContentTypeSchemaId.mockImplementation((type) => {
+        if (type === notLoadedType) return notLoadedSchemaId;
+        return `id:${type}`;
+      });
+
       validator.isSchemaLoaded.mockImplementation(
         (id) => id !== notLoadedSchemaId
       );
@@ -202,6 +280,7 @@ describe('ModsLoader helper methods', () => {
       } catch (e) {
         caughtError = e;
       }
+      
       expect(caughtError).toBeInstanceOf(MissingSchemaError);
       expect(caughtError.message).toBe(expectedErrorMsg);
       expect(caughtError.schemaId).toBe(notLoadedSchemaId);

@@ -32,7 +32,6 @@
 /** @typedef {import('../../modding/modLoadOrderResolver.js').default} ModLoadOrderResolver */
 /** @typedef {import('../../loaders/promptTextLoader.js').default} PromptTextLoader */
 
-
 // --- Core Service Imports ---
 import StaticConfiguration from '../../configuration/staticConfiguration.js';
 import DefaultPathResolver from '../../pathing/defaultPathResolver.js';
@@ -56,12 +55,10 @@ import WorldLoader from '../../loaders/worldLoader.js';
 import ModsLoader from '../../loaders/modsLoader.js';
 import PromptTextLoader from '../../loaders/promptTextLoader.js';
 
-
 // --- Modding Service Imports ---
 import ModDependencyValidator from '../../modding/modDependencyValidator.js';
 import ModVersionValidator from '../../modding/modVersionValidator.js';
 import ModLoadOrderResolver from '../../modding/modLoadOrderResolver.js';
-
 
 // --- DI & Helper Imports ---
 import { tokens } from '../tokens.js';
@@ -101,10 +98,7 @@ export function registerLoaders(container) {
   // AjvSchemaValidator depends on ILogger
   registrar.singletonFactory(
     tokens.ISchemaValidator,
-    (c) =>
-      new AjvSchemaValidator(
-        c.resolve(tokens.ILogger)
-      )
+    (c) => new AjvSchemaValidator(c.resolve(tokens.ILogger))
   );
   logger.debug(`Loaders Registration: Registered ${tokens.ISchemaValidator}.`);
 
@@ -318,6 +312,20 @@ export function registerLoaders(container) {
     `Loaders Registration: Registered ${tokens.EntityInstanceLoader}.`
   );
 
+  registrar.singletonFactory(
+    tokens.GoalLoader,
+    (c) =>
+      new GoalLoader(
+        c.resolve(tokens.IConfiguration),
+        c.resolve(tokens.IPathResolver),
+        c.resolve(tokens.IDataFetcher),
+        c.resolve(tokens.ISchemaValidator),
+        c.resolve(tokens.IDataRegistry),
+        c.resolve(tokens.ILogger),
+      ),
+  );
+  logger.debug(`Loaders Registration: Registered ${tokens.GoalLoader}.`);
+
   // ModsLoader depends on a multitude of services
   registrar.singletonFactory(tokens.ModsLoader, (c) => {
     const loggerDep = c.resolve(tokens.ILogger);
@@ -332,7 +340,8 @@ export function registerLoaders(container) {
       actionLoader: c.resolve(tokens.ActionLoader),
       eventLoader: c.resolve(tokens.EventLoader),
       entityLoader: c.resolve(tokens.EntityLoader),
-      entityInstanceLoader: c.resolve(tokens.EntityInstanceLoader), // Added
+      entityInstanceLoader: c.resolve(tokens.EntityInstanceLoader),
+      goalLoader: c.resolve(tokens.GoalLoader),
       validator: c.resolve(tokens.ISchemaValidator),
       configuration: c.resolve(tokens.IConfiguration),
       gameConfigLoader: c.resolve(tokens.GameConfigLoader),
@@ -342,10 +351,12 @@ export function registerLoaders(container) {
       modDependencyValidator: new ModDependencyValidator(loggerDep),
       modVersionValidator: new ModVersionValidator(loggerDep),
       modLoadOrderResolver: new ModLoadOrderResolver(loggerDep),
-      worldLoader: c.resolve(tokens.WorldLoader), // Added
+      worldLoader: c.resolve(tokens.WorldLoader),
     });
   });
   logger.debug(`Loaders Registration: Registered ${tokens.ModsLoader}.`);
 
-  logger.info('Loaders Registration: All core services and data loaders registered.');
+  logger.info(
+    'Loaders Registration: All core services and data loaders registered.'
+  );
 }

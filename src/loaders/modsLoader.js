@@ -24,6 +24,7 @@
 /** @typedef {import('../../data/schemas/mod.manifest.schema.json').ModManifest} ModManifest */
 /** @typedef {import('../events/validatedEventDispatcher.js').default}         ValidatedEventDispatcher */
 /** @typedef {import('./worldLoader.js').default}                              WorldLoader */
+/** @typedef {import('./goalLoader.js').default}                               GoalLoader */
 
 /* ── Implementation imports ─────────────────────────────────────────────── */
 import ModDependencyError from '../errors/modDependencyError.js';
@@ -38,6 +39,7 @@ import createDefaultContentLoadersConfig, {
 } from './defaultLoaderConfig.js';
 import ESSENTIAL_SCHEMA_TYPES from '../constants/essentialSchemas.js';
 import WorldLoader from './worldLoader.js';
+import GoalLoader from './goalLoader.js';
 
 /* ── Result-shape typedefs ─────────────────────────────────────────────── */
 /**
@@ -83,6 +85,7 @@ class ModsLoader extends AbstractLoader {
   /** @type {ContentLoadManager}      */ _contentLoadManager;
   /** @type {WorldLoadSummaryLogger}  */ _summaryLogger;
   /** @type {WorldLoader}             */ _worldLoader;
+  /** @type {GoalLoader}              */ _goalLoader;
   /** @type {string[]}                */ _finalOrder = [];
 
   /**
@@ -112,6 +115,7 @@ class ModsLoader extends AbstractLoader {
         return { count: 0, overrides: 0, errors: 0 };
       },
     },
+    goalLoader,
     validator,
     configuration,
     gameConfigLoader,
@@ -141,22 +145,86 @@ class ModsLoader extends AbstractLoader {
       typeof modLoadOrderResolver.resolveOrder === 'function';
 
     const depsToValidate = [
-      { dependency: registry, name: 'IDataRegistry', methods: ['store', 'get', 'clear'] },
-      { dependency: schemaLoader, name: 'SchemaLoader', methods: ['loadAndCompileAllSchemas'] },
-      { dependency: componentLoader, name: 'ComponentLoader', methods: ['loadItemsForMod'] },
-      { dependency: conditionLoader, name: 'ConditionLoader', methods: ['loadItemsForMod'] },
-      { dependency: ruleLoader, name: 'RuleLoader', methods: ['loadItemsForMod'] },
-      { dependency: actionLoader, name: 'ActionLoader', methods: ['loadItemsForMod'] },
-      { dependency: eventLoader, name: 'EventLoader', methods: ['loadItemsForMod'] },
-      { dependency: entityLoader, name: 'EntityLoader', methods: ['loadItemsForMod'] },
-      { dependency: entityInstanceLoader, name: 'EntityInstanceLoader', methods: ['loadItemsForMod'] },
-      { dependency: validator, name: 'ISchemaValidator', methods: ['isSchemaLoaded'] },
-      { dependency: configuration, name: 'IConfiguration', methods: ['getContentTypeSchemaId'] },
-      { dependency: gameConfigLoader, name: 'GameConfigLoader', methods: ['loadConfig'] },
-      { dependency: promptTextLoader, name: 'PromptTextLoader', methods: ['loadPromptText'] },
-      { dependency: modManifestLoader, name: 'ModManifestLoader', methods: ['loadRequestedManifests'] },
-      { dependency: validatedEventDispatcher, name: 'ValidatedEventDispatcher', methods: ['dispatch'] },
-      { dependency: modDependencyValidator, name: 'ModDependencyValidator', methods: ['validate'] },
+      {
+        dependency: registry,
+        name: 'IDataRegistry',
+        methods: ['store', 'get', 'clear'],
+      },
+      {
+        dependency: schemaLoader,
+        name: 'SchemaLoader',
+        methods: ['loadAndCompileAllSchemas'],
+      },
+      {
+        dependency: componentLoader,
+        name: 'ComponentLoader',
+        methods: ['loadItemsForMod'],
+      },
+      {
+        dependency: conditionLoader,
+        name: 'ConditionLoader',
+        methods: ['loadItemsForMod'],
+      },
+      {
+        dependency: ruleLoader,
+        name: 'RuleLoader',
+        methods: ['loadItemsForMod'],
+      },
+      {
+        dependency: actionLoader,
+        name: 'ActionLoader',
+        methods: ['loadItemsForMod'],
+      },
+      {
+        dependency: eventLoader,
+        name: 'EventLoader',
+        methods: ['loadItemsForMod'],
+      },
+      {
+        dependency: entityLoader,
+        name: 'EntityLoader',
+        methods: ['loadItemsForMod'],
+      },
+      {
+        dependency: entityInstanceLoader,
+        name: 'EntityInstanceLoader',
+        methods: ['loadItemsForMod'],
+      },
+      {
+        dependency: validator,
+        name: 'ISchemaValidator',
+        methods: ['isSchemaLoaded'],
+      },
+      {
+        dependency: configuration,
+        name: 'IConfiguration',
+        methods: ['getContentTypeSchemaId'],
+      },
+      {
+        dependency: gameConfigLoader,
+        name: 'GameConfigLoader',
+        methods: ['loadConfig'],
+      },
+      {
+        dependency: promptTextLoader,
+        name: 'PromptTextLoader',
+        methods: ['loadPromptText'],
+      },
+      {
+        dependency: modManifestLoader,
+        name: 'ModManifestLoader',
+        methods: ['loadRequestedManifests'],
+      },
+      {
+        dependency: validatedEventDispatcher,
+        name: 'ValidatedEventDispatcher',
+        methods: ['dispatch'],
+      },
+      {
+        dependency: modDependencyValidator,
+        name: 'ModDependencyValidator',
+        methods: ['validate'],
+      },
 
       /* ✅ ModVersionValidator spec */
       {
@@ -169,22 +237,22 @@ class ModsLoader extends AbstractLoader {
       /* ✅ ModLoadOrderResolver spec — accept several shapes */
       isModLoadOrderResolverFn
         ? {
-          dependency: modLoadOrderResolver,
-          name: 'ModLoadOrderResolver',
-          methods: [],
-          isFunction: true,
-        }
+            dependency: modLoadOrderResolver,
+            name: 'ModLoadOrderResolver',
+            methods: [],
+            isFunction: true,
+          }
         : hasResolve
           ? {
-            dependency: modLoadOrderResolver,
-            name: 'ModLoadOrderResolver',
-            methods: ['resolve'],
-          }
+              dependency: modLoadOrderResolver,
+              name: 'ModLoadOrderResolver',
+              methods: ['resolve'],
+            }
           : {
-            dependency: modLoadOrderResolver,
-            name: 'ModLoadOrderResolver',
-            methods: ['resolveOrder'], // fall-back (tests often provide this name)
-          },
+              dependency: modLoadOrderResolver,
+              name: 'ModLoadOrderResolver',
+              methods: ['resolveOrder'], // fall-back (tests often provide this name)
+            },
 
       { dependency: worldLoader, name: 'WorldLoader', methods: ['loadWorlds'] },
     ];
@@ -200,13 +268,15 @@ class ModsLoader extends AbstractLoader {
     this._conditionLoader = conditionLoader;
     this._ruleLoader = ruleLoader;
     this._macroLoader =
-      macroLoader || /** @type {MacroLoader} */ ({
+      macroLoader ||
+      /** @type {MacroLoader} */ ({
         loadItemsForMod: async () => ({ count: 0, overrides: 0, errors: 0 }),
       });
     this._actionLoader = actionLoader;
     this._eventLoader = eventLoader;
     this._entityDefinitionLoader = entityLoader;
     this._entityInstanceLoader = entityInstanceLoader;
+    this._goalLoader = goalLoader;
     this._validator = validator;
     this._configuration = configuration;
     this._gameConfigLoader = gameConfigLoader;
@@ -229,6 +299,7 @@ class ModsLoader extends AbstractLoader {
         macroLoader: this._macroLoader,
         actionLoader: this._actionLoader,
         ruleLoader: this._ruleLoader,
+        goalLoader: this._goalLoader,
         entityDefinitionLoader: this._entityDefinitionLoader,
         entityInstanceLoader: this._entityInstanceLoader,
       });
@@ -251,7 +322,9 @@ class ModsLoader extends AbstractLoader {
 
     this._summaryLogger = new WorldLoadSummaryLogger();
 
-    this._logger.debug('ModsLoader: Instance created with ALL loaders and WorldLoader.');
+    this._logger.debug(
+      'ModsLoader: Instance created with ALL loaders and WorldLoader.'
+    );
   }
 
   /* ── helper methods (unchanged) ─────────────────────────────────────── */
@@ -266,7 +339,9 @@ class ModsLoader extends AbstractLoader {
   }
 
   _checkEssentialSchemas() {
-    this._logger.debug(`ModsLoader: Checking ${ESSENTIAL_SCHEMA_TYPES.length} essential schemas…`);
+    this._logger.debug(
+      `ModsLoader: Checking ${ESSENTIAL_SCHEMA_TYPES.length} essential schemas…`
+    );
     for (const type of ESSENTIAL_SCHEMA_TYPES) {
       const schemaId = this._configuration.getContentTypeSchemaId(type);
       if (!schemaId) {
@@ -279,7 +354,9 @@ class ModsLoader extends AbstractLoader {
         this._logger.error(`ModsLoader: ${msg}`);
         throw new MissingSchemaError(msg, schemaId, type);
       }
-      this._logger.debug(`ModsLoader: Schema '${schemaId}' for type '${type}' is loaded.`);
+      this._logger.debug(
+        `ModsLoader: Schema '${schemaId}' for type '${type}' is loaded.`
+      );
     }
   }
 
@@ -290,13 +367,18 @@ class ModsLoader extends AbstractLoader {
     } catch (e) {
       totalCounts['prompt_text'] ??= { count: 0, overrides: 0, errors: 0 };
       totalCounts['prompt_text'].errors++;
-      this._logger.error(`ModsLoader: Failed to load prompt text: ${e.message}`, e);
+      this._logger.error(
+        `ModsLoader: Failed to load prompt text: ${e.message}`,
+        e
+      );
     }
   }
 
   async _loadGameConfig() {
     const mods = await this._gameConfigLoader.loadConfig();
-    this._logger.debug(`ModsLoader: Game config requested mods: [${mods.join(', ')}]`);
+    this._logger.debug(
+      `ModsLoader: Game config requested mods: [${mods.join(', ')}]`
+    );
     return mods;
   }
 
@@ -315,7 +397,9 @@ class ModsLoader extends AbstractLoader {
    * @param {string} worldName
    */
   async loadWorld(worldName) {
-    this._logger.debug(`ModsLoader: Starting load sequence (World: '${worldName}')`);
+    this._logger.debug(
+      `ModsLoader: Starting load sequence (World: '${worldName}')`
+    );
 
     const totalCounts = /** @type {TotalResultsSummary} */ ({});
     let requestedModIds = [];
@@ -330,7 +414,8 @@ class ModsLoader extends AbstractLoader {
 
       requestedModIds = await this._loadGameConfig();
 
-      const manifestData = await this._modManifestProcessor.processManifests(requestedModIds);
+      const manifestData =
+        await this._modManifestProcessor.processManifests(requestedModIds);
       loadedManifestsMap = manifestData.loadedManifestsMap;
       this._finalOrder = manifestData.finalOrder;
       incompatibilityCount = manifestData.incompatibilityCount;
@@ -362,17 +447,22 @@ class ModsLoader extends AbstractLoader {
       );
       this._registry.clear();
 
-      if (err instanceof ModDependencyError) {
+      if (err instanceof ModDependencyError || err.name === 'ModDependencyError') {
         throw err;
-      } else if (err instanceof MissingSchemaError) {
+      } else if (err instanceof MissingSchemaError || err.name === 'MissingSchemaError') {
         const msg =
           `ModsLoader failed during essential schema check – aborting world load. ` +
           `Original error: ${err.message}`;
         this._logger.error(msg, err);
         throw new ModsLoaderError(msg, err);
       } else {
-        this._logger.debug('ModsLoader: Unexpected error, wrapping and re-throwing.');
-        throw new ModsLoaderError(`ModsLoader unexpected error: ${err.message}`, err);
+        this._logger.debug(
+          'ModsLoader: Unexpected error, wrapping and re-throwing.'
+        );
+        throw new ModsLoaderError(
+          `ModsLoader unexpected error: ${err.message}`,
+          err
+        );
       }
     }
   }

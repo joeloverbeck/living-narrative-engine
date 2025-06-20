@@ -34,21 +34,45 @@ describe('ModsLoader Integration Test Suite - Pre-Loop Error Handling (Refactore
     env = createTestEnvironment();
 
     // 2. Define Base Mock Data
-    coreManifest = { id: CORE_MOD_ID, version: '1.0.0', name: 'Core', gameVersion: '1.0.0', content: {} };
-    modAManifest = { id: modAId, version: '1.0.0', name: 'Mod A', gameVersion: '1.0.0', content: {} };
-    modBManifest = { id: modBId, version: '1.0.0', name: 'Mod B', gameVersion: '1.0.0', content: {} };
+    coreManifest = {
+      id: CORE_MOD_ID,
+      version: '1.0.0',
+      name: 'Core',
+      gameVersion: '1.0.0',
+      content: {},
+    };
+    modAManifest = {
+      id: modAId,
+      version: '1.0.0',
+      name: 'Mod A',
+      gameVersion: '1.0.0',
+      content: {},
+    };
+    modBManifest = {
+      id: modBId,
+      version: '1.0.0',
+      name: 'Mod B',
+      gameVersion: '1.0.0',
+      content: {},
+    };
 
     // 3. Configure a default success path that tests can override
     env.mockGameConfigLoader.loadConfig.mockResolvedValue([CORE_MOD_ID]);
     const defaultMap = new Map([[CORE_MOD_ID.toLowerCase(), coreManifest]]);
-    env.mockModManifestLoader.loadRequestedManifests.mockResolvedValue(defaultMap);
+    env.mockModManifestLoader.loadRequestedManifests.mockResolvedValue(
+      defaultMap
+    );
     env.mockedResolveOrder.mockImplementation((ids) => ids); // Default to pass-through
   });
 
   it('should throw ModsLoaderError if a mod manifest fails schema validation (simulated)', async () => {
     // Arrange: Configure the manifest loader to reject
-    const simulatedError = new Error('Simulated manifest schema validation failure');
-    env.mockModManifestLoader.loadRequestedManifests.mockRejectedValue(simulatedError);
+    const simulatedError = new Error(
+      'Simulated manifest schema validation failure'
+    );
+    env.mockModManifestLoader.loadRequestedManifests.mockRejectedValue(
+      simulatedError
+    );
     env.mockGameConfigLoader.loadConfig.mockResolvedValue([modAId]);
 
     // *** FIX IS HERE ***
@@ -85,7 +109,9 @@ describe('ModsLoader Integration Test Suite - Pre-Loop Error Handling (Refactore
     ]);
 
     env.mockGameConfigLoader.loadConfig.mockResolvedValue(requestedIds);
-    env.mockModManifestLoader.loadRequestedManifests.mockResolvedValue(cycleManifestMap);
+    env.mockModManifestLoader.loadRequestedManifests.mockResolvedValue(
+      cycleManifestMap
+    );
 
     // Arrange: Configure the load order resolver to throw the cycle error
     const cycleErrorMessage = `DEPENDENCY_CYCLE: Cyclic dependency detected among mods: ${modAId}, ${modBId}`;
@@ -99,7 +125,7 @@ describe('ModsLoader Integration Test Suite - Pre-Loop Error Handling (Refactore
     let caughtError;
     try {
       await env.modsLoader.loadWorld(worldName);
-    } catch(e) {
+    } catch (e) {
       caughtError = e;
     }
 
@@ -114,6 +140,10 @@ describe('ModsLoader Integration Test Suite - Pre-Loop Error Handling (Refactore
       expect.stringContaining('CRITICAL load failure'),
       expect.objectContaining({ error: expectedError })
     );
-    expect(env.mockedResolveOrder).toHaveBeenCalledWith(requestedIds, cycleManifestMap, env.mockLogger);
+    expect(env.mockedResolveOrder).toHaveBeenCalledWith(
+      requestedIds,
+      cycleManifestMap,
+      env.mockLogger
+    );
   });
 });
