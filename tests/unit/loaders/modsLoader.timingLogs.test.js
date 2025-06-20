@@ -1,10 +1,11 @@
 // Filename: src/tests/loaders/modsLoader.timingLogs.test.js
 // Sub-Ticket 9: Test - Verify Performance Timing Logs
 
-import { beforeEach, describe, expect, it, jest } from '@jest/globals';
+import { beforeEach, describe, expect, it } from '@jest/globals';
 
 // --- The new Test Setup Factory ---
 import { createTestEnvironment } from '../../common/loaders/modsLoader.test-setup.js';
+import { setupManifests } from '../../common/loaders/modsLoader.test-utils.js';
 
 // --- SUT Dependencies ---
 import { CORE_MOD_ID } from '../../../src/constants/core.js';
@@ -51,22 +52,7 @@ describe('ModsLoader Integration Test Suite - Performance Timing Logs (Refactore
     const finalOrder = [CORE_MOD_ID, fooModId];
 
     // 3. Configure Mocks
-    env.mockGameConfigLoader.loadConfig.mockResolvedValue(finalOrder);
-    env.mockModManifestLoader.loadRequestedManifests.mockResolvedValue(
-      mockManifestMap
-    );
-    env.mockedResolveOrder.mockReturnValue(finalOrder);
-
-    // The factory sets up loaders to return a default success result, which is sufficient here.
-    // Configure registry.get to return the correct manifest during the load loop.
-    env.mockRegistry.get.mockImplementation((type, id) => {
-      if (type === 'mod_manifests') {
-        const lcId = id.toLowerCase();
-        if (lcId === CORE_MOD_ID) return mockCoreManifest;
-        if (lcId === fooModId) return mockFooManifest;
-      }
-      return undefined;
-    });
+    setupManifests(env, mockManifestMap, finalOrder);
   });
 
   it('should log per-mod performance timing information at DEBUG level', async () => {

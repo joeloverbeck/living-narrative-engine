@@ -1,9 +1,13 @@
 // Filename: tests/unit/loaders/modsLoader.entityMultiKey.test.js
 
-import { beforeEach, describe, expect, it, jest } from '@jest/globals';
+import { beforeEach, describe, expect, it } from '@jest/globals';
 
 // --- The new Test Setup Factory ---
 import { createTestEnvironment } from '../../common/loaders/modsLoader.test-setup.js';
+import {
+  setupManifests,
+  getSummaryText,
+} from '../../common/loaders/modsLoader.test-utils.js';
 
 // --- Type‑only JSDoc imports for Mocks and SUT ---
 /** @typedef {import('../../../src/loaders/modsLoader.js').default} ModsLoader */
@@ -63,11 +67,7 @@ describe('ModsLoader Integration Test Suite - EntityDefinitionLoader Multi-Key H
     mockEventLoader = env.mockEventLoader;
 
     // 3. Layer test-specific mock implementations ON TOP of the defaults
-    env.mockGameConfigLoader.loadConfig.mockResolvedValue([testModId]);
-    env.mockModManifestLoader.loadRequestedManifests.mockResolvedValue(
-      mockManifestMap
-    );
-    env.mockedResolveOrder.mockReturnValue(finalOrder);
+    setupManifests(env, mockManifestMap, finalOrder);
 
     // This test specifically needs entityLoader to return a result with a count of 3
     env.mockEntityLoader.loadItemsForMod.mockResolvedValue({
@@ -113,8 +113,7 @@ describe('ModsLoader Integration Test Suite - EntityDefinitionLoader Multi-Key H
     expect(mockEventLoader.loadItemsForMod).not.toHaveBeenCalled();
 
     // 3. Verify the results from the loader were correctly aggregated and logged.
-    const infoCalls = mockLogger.info.mock.calls;
-    const summaryText = infoCalls.map((call) => call[0]).join('\n');
+    const summaryText = getSummaryText(mockLogger);
 
     expect(summaryText).toContain('Content Loading Summary (Totals):');
     expect(summaryText).toMatch(/entityDefinitions\s+: C:3, O:0, E:0/);

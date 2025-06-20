@@ -1,7 +1,11 @@
-import { beforeEach, describe, expect, it, jest } from '@jest/globals';
+import { beforeEach, describe, expect, it } from '@jest/globals';
 
 // --- The new Test Setup Factory ---
 import { createTestEnvironment } from '../../common/loaders/modsLoader.test-setup.js';
+import {
+  setupManifests,
+  getSummaryText,
+} from '../../common/loaders/modsLoader.test-utils.js';
 
 // --- SUT Dependencies ---
 import { CORE_MOD_ID } from '../../../src/constants/core.js';
@@ -54,22 +58,7 @@ describe('ModsLoader Integration Test Suite - Overrides (Refactored)', () => {
     const finalOrder = [CORE_MOD_ID, overrideModId];
 
     // 3. Configure Mocks for this specific test's behavior
-    env.mockGameConfigLoader.loadConfig.mockResolvedValue(finalOrder);
-    env.mockModManifestLoader.loadRequestedManifests.mockResolvedValue(
-      mockManifestMap
-    );
-    env.mockedResolveOrder.mockReturnValue(finalOrder);
-
-    // The factory provides a stateful registry, so we just need to set up the .get for manifests
-    env.mockRegistry.get.mockImplementation((type, id) => {
-      const lcId = id.toLowerCase();
-      if (type === 'mod_manifests') {
-        if (lcId === CORE_MOD_ID) return mockCoreManifest;
-        if (lcId === overrideModId) return mockOverrideManifest;
-      }
-      // Fallback to the stateful registry's internal getter for other data types
-      return env.mockRegistry._internalStore[type]?.[id];
-    });
+    setupManifests(env, mockManifestMap, finalOrder);
 
     // Configure ActionLoader to simulate storing/overriding
     env.mockActionLoader.loadItemsForMod.mockImplementation(
@@ -137,9 +126,7 @@ describe('ModsLoader Integration Test Suite - Overrides (Refactored)', () => {
     expect(newComponent).toEqual({ value: 'comp_value' });
 
     // --- Assert Summary Logging ---
-    const summaryText = env.mockLogger.info.mock.calls
-      .map((c) => c[0])
-      .join('\n');
+    const summaryText = getSummaryText(env.mockLogger);
     expect(summaryText).toMatch(/actions\s+: C:3, O:1, E:0/); // 1 from core + 2 from override = 3 created/processed
     expect(summaryText).toMatch(/components\s+: C:1, O:0, E:0/); // 1 from override
     expect(summaryText).toMatch(/TOTAL\s+: C:4, O:1, E:0/); // 3+1=4 total created/processed
