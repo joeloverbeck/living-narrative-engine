@@ -12,6 +12,7 @@ import GameEngine from '../../../src/engine/gameEngine.js';
 import { tokens } from '../../../src/dependencyInjection/tokens.js';
 import { createGameEngineTestBed } from '../../common/engine/gameEngineTestBed.js';
 import { expectDispatchCalls } from '../../common/engine/dispatchTestUtils.js';
+import { buildSaveDispatches } from '../../common/engine/gameEngineSaveTestUtils.js';
 import {
   GAME_SAVED_ID,
   // --- Import new UI Event IDs ---
@@ -390,127 +391,65 @@ describe('GameEngine', () => {
         await localBed.cleanup();
       });
 
-      it('should successfully save, dispatch all UI events in order, and return success result', async () => {
-        const saveResultData = { success: true, filePath: 'path/to/my.sav' };
-        testBed.mocks.gamePersistenceService.saveGame.mockResolvedValue(
-          saveResultData
-        );
+      it.each([
+        {
+          saveResult: { success: true, filePath: 'path/to/my.sav' },
+          expectedCalls: buildSaveDispatches(
+            SAVE_NAME,
+            { success: true, filePath: 'path/to/my.sav' },
+            MOCK_ACTIVE_WORLD_FOR_SAVE
+          ),
+        },
+        {
+          saveResult: { success: false, error: 'Disk is critically full' },
+          expectedCalls: buildSaveDispatches(
+            SAVE_NAME,
+            { success: false },
+            MOCK_ACTIVE_WORLD_FOR_SAVE
+          ),
+        },
+        {
+          saveResult: new Error('Network connection failed'),
+          expectedCalls: buildSaveDispatches(
+            SAVE_NAME,
+            { success: false },
+            MOCK_ACTIVE_WORLD_FOR_SAVE
+          ),
+        },
+      ])(
+        'handles manual save result %#',
+        async ({ saveResult, expectedCalls }) => {
+          if (saveResult instanceof Error) {
+            testBed.mocks.gamePersistenceService.saveGame.mockRejectedValue(
+              saveResult
+            );
+          } else {
+            testBed.mocks.gamePersistenceService.saveGame.mockResolvedValue(
+              saveResult
+            );
+          }
 
-        const result = await gameEngine.triggerManualSave(SAVE_NAME);
+          const result = await gameEngine.triggerManualSave(SAVE_NAME);
 
-        const expectedDispatches = [
-          [
-            ENGINE_OPERATION_IN_PROGRESS_UI,
-            {
-              titleMessage: 'Saving...',
-              inputDisabledMessage: `Saving game "${SAVE_NAME}"...`,
-            },
-          ],
-          [
-            GAME_SAVED_ID,
-            {
-              saveName: SAVE_NAME,
-              path: saveResultData.filePath,
-              type: 'manual',
-            },
-          ],
-          [
-            ENGINE_READY_UI,
-            {
-              activeWorld: MOCK_ACTIVE_WORLD_FOR_SAVE,
-              message: 'Save operation finished. Ready.',
-            },
-          ],
-        ];
+          expectDispatchCalls(
+            testBed.mocks.safeEventDispatcher.dispatch,
+            expectedCalls
+          );
 
-        expectDispatchCalls(
-          testBed.mocks.safeEventDispatcher.dispatch,
-          expectedDispatches
-        );
+          expect(
+            testBed.mocks.gamePersistenceService.saveGame
+          ).toHaveBeenCalledWith(SAVE_NAME, true, MOCK_ACTIVE_WORLD_FOR_SAVE);
 
-        expect(
-          testBed.mocks.gamePersistenceService.saveGame
-        ).toHaveBeenCalledWith(SAVE_NAME, true, MOCK_ACTIVE_WORLD_FOR_SAVE);
-        expect(result).toEqual(saveResultData);
-      });
-
-      it('should handle save failure from persistence service, dispatch UI events, and return failure result', async () => {
-        const saveFailureData = {
-          success: false,
-          error: 'Disk is critically full',
-        };
-        testBed.mocks.gamePersistenceService.saveGame.mockResolvedValue(
-          saveFailureData
-        );
-
-        const result = await gameEngine.triggerManualSave(SAVE_NAME);
-
-        const expectedDispatches = [
-          [
-            ENGINE_OPERATION_IN_PROGRESS_UI,
-            {
-              titleMessage: 'Saving...',
-              inputDisabledMessage: `Saving game "${SAVE_NAME}"...`,
-            },
-          ],
-          [
-            ENGINE_READY_UI,
-            {
-              activeWorld: MOCK_ACTIVE_WORLD_FOR_SAVE,
-              message: 'Save operation finished. Ready.',
-            },
-          ],
-        ];
-
-        expectDispatchCalls(
-          testBed.mocks.safeEventDispatcher.dispatch,
-          expectedDispatches
-        );
-
-        expect(
-          testBed.mocks.gamePersistenceService.saveGame
-        ).toHaveBeenCalledWith(SAVE_NAME, true, MOCK_ACTIVE_WORLD_FOR_SAVE);
-        expect(result).toEqual(saveFailureData);
-      });
-
-      it('should handle unexpected error during saveGame call, dispatch UI events, and return failure result', async () => {
-        const unexpectedError = new Error('Network connection failed');
-        testBed.mocks.gamePersistenceService.saveGame.mockRejectedValue(
-          unexpectedError
-        );
-
-        const result = await gameEngine.triggerManualSave(SAVE_NAME);
-
-        const expectedDispatches = [
-          [
-            ENGINE_OPERATION_IN_PROGRESS_UI,
-            {
-              titleMessage: 'Saving...',
-              inputDisabledMessage: `Saving game "${SAVE_NAME}"...`,
-            },
-          ],
-          [
-            ENGINE_READY_UI,
-            {
-              activeWorld: MOCK_ACTIVE_WORLD_FOR_SAVE,
-              message: 'Save operation finished. Ready.',
-            },
-          ],
-        ];
-
-        expectDispatchCalls(
-          testBed.mocks.safeEventDispatcher.dispatch,
-          expectedDispatches
-        );
-
-        expect(
-          testBed.mocks.gamePersistenceService.saveGame
-        ).toHaveBeenCalledWith(SAVE_NAME, true, MOCK_ACTIVE_WORLD_FOR_SAVE);
-        expect(result).toEqual({
-          success: false,
-          error: `Unexpected error during save: ${unexpectedError.message}`,
-        });
-      });
+          if (saveResult instanceof Error) {
+            expect(result).toEqual({
+              success: false,
+              error: `Unexpected error during save: ${saveResult.message}`,
+            });
+          } else {
+            expect(result).toEqual(saveResult);
+          }
+        }
+      );
     });
   });
 
