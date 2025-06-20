@@ -119,7 +119,6 @@ export class TestBed extends BaseTestBed {
    *
    * @type {{registry: ReturnType<typeof createSimpleMockDataRegistry>, validator: ReturnType<typeof createMockSchemaValidator>, logger: ReturnType<typeof createMockLogger>, eventDispatcher: ReturnType<typeof createMockSafeEventDispatcher>}}
    */
-  mocks;
 
   /**
    * The instance of EntityManager under test, pre-configured with mocks.
@@ -135,13 +134,13 @@ export class TestBed extends BaseTestBed {
    * @param {Function} [entityManagerOptions.idGenerator] - A mock ID generator function.
    */
   constructor(entityManagerOptions = {}) {
-    super();
-    this.mocks = {
+    const mocks = {
       registry: createSimpleMockDataRegistry(),
       validator: createMockSchemaValidator(),
       logger: createMockLogger(),
       eventDispatcher: createMockSafeEventDispatcher(),
     };
+    super(mocks);
 
     this.entityManager = new EntityManager(
       this.mocks.registry,
@@ -167,8 +166,8 @@ export class TestBed extends BaseTestBed {
    * Clears all mocks and the entity manager's internal state.
    * This should be called in an `afterEach` block to ensure test isolation.
    */
-  cleanup() {
-    this.resetMocks();
+  async cleanup() {
+    await super.cleanup();
 
     // Reset specific mock implementations that tests commonly override
     this.mocks.registry.getEntityDefinition.mockReset();
@@ -232,8 +231,8 @@ export function describeEntityManagerSuite(title, suiteFn) {
     beforeEach(() => {
       tb = new TestBed();
     });
-    afterEach(() => {
-      tb.cleanup();
+    afterEach(async () => {
+      await tb.cleanup();
     });
     suiteFn(() => tb);
   });

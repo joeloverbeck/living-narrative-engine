@@ -32,38 +32,43 @@ export class TurnManagerTestBed extends BaseTestBed {
   turnManager;
 
   constructor() {
-    super();
-    this.logger = createMockLogger();
-    this.entityManager = createMockEntityManager();
+    const logger = createMockLogger();
+    const entityManager = createMockEntityManager();
     // Attach active entity map used by TurnManager
-    this.entityManager.activeEntities = new Map();
-    this.entityManager.getEntityInstance = jest.fn((id) =>
-      this.entityManager.activeEntities.get(id)
+    entityManager.activeEntities = new Map();
+    entityManager.getEntityInstance = jest.fn((id) =>
+      entityManager.activeEntities.get(id)
     );
-    this.entityManager.getActiveEntities.mockImplementation(() =>
-      Array.from(this.entityManager.activeEntities.values())
+    entityManager.getActiveEntities.mockImplementation(() =>
+      Array.from(entityManager.activeEntities.values())
     );
 
-    this.turnOrderService = {
+    const turnOrderService = {
       isEmpty: jest.fn(),
       getNextEntity: jest.fn(),
       startNewRound: jest.fn(),
       clearCurrentRound: jest.fn(),
     };
 
-    this.turnHandlerResolver = {
+    const turnHandlerResolver = {
       resolveHandler: jest.fn(),
     };
 
-    this.dispatcher = createMockValidatedEventBus();
+    const dispatcher = createMockValidatedEventBus();
 
-    this.mocks = {
-      turnOrderService: this.turnOrderService,
-      entityManager: this.entityManager,
-      logger: this.logger,
-      dispatcher: this.dispatcher,
-      turnHandlerResolver: this.turnHandlerResolver,
+    const mocks = {
+      turnOrderService,
+      entityManager,
+      logger,
+      dispatcher,
+      turnHandlerResolver,
     };
+    super(mocks);
+    this.logger = logger;
+    this.entityManager = entityManager;
+    this.turnOrderService = turnOrderService;
+    this.turnHandlerResolver = turnHandlerResolver;
+    this.dispatcher = dispatcher;
 
     this.turnManager = new TurnManager({
       turnOrderService: this.turnOrderService,
@@ -105,7 +110,7 @@ export class TurnManagerTestBed extends BaseTestBed {
    * @returns {Promise<void>}
    */
   async cleanup() {
-    this.resetMocks();
+    await super.cleanup();
     if (this.turnManager && typeof this.turnManager.stop === 'function') {
       await this.turnManager.stop();
     }
