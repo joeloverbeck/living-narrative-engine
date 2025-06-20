@@ -7,7 +7,6 @@ import {
   it,
   jest,
 } from '@jest/globals';
-import GameEngine from '../../../src/engine/gameEngine.js';
 import { tokens } from '../../../src/dependencyInjection/tokens.js';
 import { createGameEngineTestBed } from '../../common/engine/gameEngineTestBed.js';
 import {
@@ -15,16 +14,6 @@ import {
   buildSaveDispatches,
   DEFAULT_ACTIVE_WORLD_FOR_SAVE,
 } from '../../common/engine/dispatchTestUtils.js';
-import {
-  ENGINE_INITIALIZING_UI,
-  ENGINE_READY_UI,
-  ENGINE_OPERATION_IN_PROGRESS_UI,
-  ENGINE_OPERATION_FAILED_UI,
-  ENGINE_STOPPED_UI,
-  REQUEST_SHOW_SAVE_GAME_UI,
-  REQUEST_SHOW_LOAD_GAME_UI,
-  CANNOT_SAVE_GAME_INFO,
-} from '../../../src/constants/eventIds.js';
 
 /** @typedef {import('../../../src/interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../../src/dependencyInjection/appContainer.js').default} AppContainer */
@@ -39,8 +28,6 @@ import {
 describe('GameEngine', () => {
   let testBed;
   let gameEngine; // Instance of GameEngine
-
-  const MOCK_WORLD_NAME = 'TestWorld';
 
   beforeEach(() => {
     testBed = createGameEngineTestBed();
@@ -80,34 +67,39 @@ describe('GameEngine', () => {
         testBed.resetMocks();
       });
 
-      it('should dispatch error if GamePersistenceService is unavailable', async () => {
-        const localBed = createGameEngineTestBed({
-          [tokens.GamePersistenceService]: null,
-        });
+      it.each([
+        [
+          'GamePersistenceService',
+          tokens.GamePersistenceService,
+          'GamePersistenceService is not available. Cannot save game.',
+        ],
+      ])(
+        'should dispatch error if %s is unavailable',
+        async (_name, token, expectedMsg) => {
+          const localBed = createGameEngineTestBed({ [token]: null });
 
-        localBed.mocks.initializationService.runInitializationSequence.mockResolvedValue(
-          {
-            success: true,
-          }
-        );
-        await localBed.engine.startNewGame(MOCK_ACTIVE_WORLD_FOR_SAVE);
+          localBed.mocks.initializationService.runInitializationSequence.mockResolvedValue(
+            {
+              success: true,
+            }
+          );
+          await localBed.engine.startNewGame(MOCK_ACTIVE_WORLD_FOR_SAVE);
 
-        localBed.resetMocks();
+          localBed.resetMocks();
 
-        const result = await localBed.engine.triggerManualSave(SAVE_NAME);
-        const expectedErrorMsg =
-          'GamePersistenceService is not available. Cannot save game.';
+          const result = await localBed.engine.triggerManualSave(SAVE_NAME);
 
-        expect(localBed.mocks.logger.error).toHaveBeenCalledWith(
-          `GameEngine.triggerManualSave: ${expectedErrorMsg}`
-        );
-        expect(
-          localBed.mocks.safeEventDispatcher.dispatch
-        ).not.toHaveBeenCalled();
-        expect(result).toEqual({ success: false, error: expectedErrorMsg });
+          expect(localBed.mocks.logger.error).toHaveBeenCalledWith(
+            `GameEngine.triggerManualSave: ${expectedMsg}`
+          );
+          expect(
+            localBed.mocks.safeEventDispatcher.dispatch
+          ).not.toHaveBeenCalled();
+          expect(result).toEqual({ success: false, error: expectedMsg });
 
-        await localBed.cleanup();
-      });
+          await localBed.cleanup();
+        }
+      );
 
       it('should successfully save, dispatch all UI events in order, and return success result', async () => {
         const saveResultData = { success: true, filePath: 'path/to/my.sav' };

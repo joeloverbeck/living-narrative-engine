@@ -7,24 +7,9 @@ import {
   it,
   jest,
 } from '@jest/globals';
-import GameEngine from '../../../src/engine/gameEngine.js';
 import { tokens } from '../../../src/dependencyInjection/tokens.js';
 import { createGameEngineTestBed } from '../../common/engine/gameEngineTestBed.js';
-import {
-  expectDispatchSequence,
-  buildSaveDispatches,
-  DEFAULT_ACTIVE_WORLD_FOR_SAVE,
-} from '../../common/engine/dispatchTestUtils.js';
-import {
-  ENGINE_INITIALIZING_UI,
-  ENGINE_READY_UI,
-  ENGINE_OPERATION_IN_PROGRESS_UI,
-  ENGINE_OPERATION_FAILED_UI,
-  ENGINE_STOPPED_UI,
-  REQUEST_SHOW_SAVE_GAME_UI,
-  REQUEST_SHOW_LOAD_GAME_UI,
-  CANNOT_SAVE_GAME_INFO,
-} from '../../../src/constants/eventIds.js';
+import { ENGINE_STOPPED_UI } from '../../../src/constants/eventIds.js';
 
 /** @typedef {import('../../../src/interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../../src/dependencyInjection/appContainer.js').default} AppContainer */
@@ -106,36 +91,36 @@ describe('GameEngine', () => {
       ).not.toHaveBeenCalledWith(ENGINE_STOPPED_UI, expect.anything());
     });
 
-    it('should log warning for PlaytimeTracker if it is not available during stop, after a successful start', async () => {
-      const localBed = createGameEngineTestBed({
-        [tokens.PlaytimeTracker]: null,
-      });
-      const localEngine = localBed.engine;
+    it.each([
+      [
+        'PlaytimeTracker',
+        tokens.PlaytimeTracker,
+        'GameEngine.stop: PlaytimeTracker service not available, cannot end session.',
+      ],
+    ])(
+      'should log warning for %s if it is not available during stop, after a successful start',
+      async (_name, token, expectedMsg) => {
+        const localBed = createGameEngineTestBed({ [token]: null });
+        const localEngine = localBed.engine;
 
-      localBed.mocks.initializationService.runInitializationSequence.mockResolvedValue(
-        {
-          success: true,
-        }
-      );
-      await localEngine.startNewGame(MOCK_WORLD_NAME); // Should start, but with warnings about PT
+        localBed.mocks.initializationService.runInitializationSequence.mockResolvedValue(
+          { success: true }
+        );
+        await localEngine.startNewGame(MOCK_WORLD_NAME);
 
-      const statusAfterStart = localEngine.getEngineStatus();
-      expect(statusAfterStart.isInitialized).toBe(true);
-      expect(statusAfterStart.isLoopRunning).toBe(true);
+        const statusAfterStart = localEngine.getEngineStatus();
+        expect(statusAfterStart.isInitialized).toBe(true);
+        expect(statusAfterStart.isLoopRunning).toBe(true);
 
-      localBed.resetMocks();
-      // testBed.mocks.playtimeTracker.endSessionAndAccumulate should not be called as the instance is null
+        localBed.resetMocks();
 
-      await localEngine.stop();
+        await localEngine.stop();
 
-      expect(localBed.mocks.logger.warn).toHaveBeenCalledWith(
-        'GameEngine.stop: PlaytimeTracker service not available, cannot end session.'
-      );
-      // The actual testBed.mocks.playtimeTracker object's methods won't be called as this.#playtimeTracker is null.
+        expect(localBed.mocks.logger.warn).toHaveBeenCalledWith(expectedMsg);
+        expect(localBed.mocks.turnManager.stop).toHaveBeenCalledTimes(1);
 
-      expect(localBed.mocks.turnManager.stop).toHaveBeenCalledTimes(1);
-
-      await localBed.cleanup();
-    });
+        await localBed.cleanup();
+      }
+    );
   });
 });

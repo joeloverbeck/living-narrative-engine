@@ -36,6 +36,8 @@ class AppContainer {
   #registrations = new Map();
   /** @type {Map<string, any>} */
   #instances = new Map(); // Stores singleton instances
+  /** @type {Map<string, any | (() => any)>} */
+  #overrides = new Map();
 
   /**
    * Registers a service/system with the container.
@@ -84,6 +86,10 @@ class AppContainer {
    */
   resolve(key) {
     const registrationKey = String(key);
+    if (this.#overrides.has(registrationKey)) {
+      const override = this.#overrides.get(registrationKey);
+      return typeof override === 'function' ? override() : override;
+    }
     const registration = this.#registrations.get(registrationKey);
     if (!registration) {
       const knownKeys = Array.from(this.#registrations.keys()).join(', ');
@@ -219,6 +225,31 @@ class AppContainer {
       // --- Handle Instance/Value registration ---
       return factoryOrValueOrClass; // Return value
     }
+  }
+
+  /**
+   * Sets an override for a given token. If a function is provided it will be
+   * executed on resolve.
+   *
+   * @param {DiToken} key - Token to override.
+   * @param {any | (() => any)} value - Replacement value or factory.
+   */
+  setOverride(key, value) {
+    this.#overrides.set(String(key), value);
+  }
+
+  /**
+   * Removes a previously set override.
+   *
+   * @param {DiToken} key - Token override to remove.
+   */
+  clearOverride(key) {
+    this.#overrides.delete(String(key));
+  }
+
+  /** Clears all overrides. */
+  clearOverrides() {
+    this.#overrides.clear();
   }
 
   /**
