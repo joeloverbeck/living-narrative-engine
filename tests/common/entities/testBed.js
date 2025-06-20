@@ -78,18 +78,22 @@ export const TestData = {
 export class TestBed {
   /**
    * Collection of all mocks for easy access in tests.
+   *
    * @type {{registry: ReturnType<typeof createSimpleMockDataRegistry>, validator: ReturnType<typeof createMockSchemaValidator>, logger: ReturnType<typeof createMockLogger>, eventDispatcher: ReturnType<typeof createMockSafeEventDispatcher>}}
    */
   mocks;
 
   /**
    * The instance of EntityManager under test, pre-configured with mocks.
+   *
    * @type {EntityManager}
    */
   entityManager;
 
   /**
-   * @param {object} [entityManagerOptions={}] - Optional options to pass to the EntityManager constructor.
+   * Creates a new TestBed instance.
+   *
+   * @param {object} [entityManagerOptions] - Optional options to pass to the EntityManager constructor.
    * @param {Function} [entityManagerOptions.idGenerator] - A mock ID generator function.
    */
   constructor(entityManagerOptions = {}) {
@@ -111,6 +115,7 @@ export class TestBed {
 
   /**
    * Configures the mock IDataRegistry to return specific definitions for a test.
+   *
    * @param {...EntityDefinition} definitions - The definitions to make available via the mock registry.
    */
   setupDefinitions(...definitions) {
@@ -134,5 +139,36 @@ export class TestBed {
     ) {
       this.entityManager.clearAll();
     }
+  }
+
+  /**
+   * Creates a new entity instance from a definition stored in {@link TestData}.
+   *
+   * Internally this configures the mock registry via {@link TestBed#setupDefinitions}
+   * and then delegates to {@link EntityManager#createEntityInstance}.
+   *
+   * @param {keyof typeof TestData.Definitions} defKey - Key of the test
+   *   definition to use.
+   * @param {object} [options] - Options forwarded to
+   *   {@link EntityManager#createEntityInstance}.
+   * @returns {import('../../../src/entities/entity.js').default} The created
+   *   entity instance.
+   */
+  createEntity(defKey, options = {}) {
+    const definition = TestData.Definitions[defKey];
+    if (!definition) {
+      throw new Error(`Unknown test definition key: ${defKey}`);
+    }
+    this.setupDefinitions(definition);
+    return this.entityManager.createEntityInstance(definition.id, options);
+  }
+
+  /**
+   * Resets the dispatch mock on the internal event dispatcher.
+   *
+   * @returns {void}
+   */
+  resetDispatchMock() {
+    this.mocks.eventDispatcher.dispatch.mockClear();
   }
 }
