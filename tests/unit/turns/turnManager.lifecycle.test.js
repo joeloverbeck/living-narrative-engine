@@ -1,7 +1,7 @@
 // src/tests/turns/turnManager.lifecycle.test.js
 // --- FILE START ---
 
-import { TurnManagerTestBed } from '../../common/turns/turnManagerTestBed.js';
+import { describeTurnManagerSuite } from '../../common/turns/turnManagerTestBed.js';
 import {
   ACTOR_COMPONENT_ID,
   PLAYER_COMPONENT_ID,
@@ -11,14 +11,7 @@ import {
   TURN_STARTED_ID,
   SYSTEM_ERROR_OCCURRED_ID,
 } from '../../../src/constants/eventIds.js';
-import {
-  beforeEach,
-  describe,
-  expect,
-  jest,
-  test,
-  afterEach,
-} from '@jest/globals';
+import { beforeEach, expect, jest, test, afterEach } from '@jest/globals';
 import { createMockEntity } from '../../common/mockFactories.js';
 
 // --- Mock Implementations (Keep as before) ---
@@ -51,7 +44,7 @@ class MockTurnHandler {
 
 // --- Test Suite ---
 
-describe('TurnManager - Lifecycle (Start/Stop)', () => {
+describeTurnManagerSuite('TurnManager - Lifecycle (Start/Stop)', (getBed) => {
   let testBed;
   let advanceTurnSpy;
 
@@ -59,7 +52,7 @@ describe('TurnManager - Lifecycle (Start/Stop)', () => {
     jest.useRealTimers();
     mockHandlerInstances.clear();
 
-    testBed = new TurnManagerTestBed();
+    testBed = getBed();
 
     // Configure handler resolver to return MockTurnHandler instances
     testBed.mocks.turnHandlerResolver.resolveHandler.mockImplementation(
@@ -76,7 +69,6 @@ describe('TurnManager - Lifecycle (Start/Stop)', () => {
 
   afterEach(async () => {
     advanceTurnSpy.mockRestore(); // Restore original advanceTurn
-    await testBed.cleanup();
     jest.clearAllMocks(); // General cleanup
   });
 
@@ -164,7 +156,7 @@ describe('TurnManager - Lifecycle (Start/Stop)', () => {
       const advanceError = new Error('Turn advancement failed');
       advanceTurnSpy.mockRejectedValue(advanceError);
       const stopSpy = jest.spyOn(testBed.turnManager, 'stop');
-      
+
       // The current implementation might not handle advanceTurn failures gracefully
       // Skip this test for now or expect the error to be thrown
       try {
@@ -179,7 +171,7 @@ describe('TurnManager - Lifecycle (Start/Stop)', () => {
         // If the error is thrown, that's also acceptable behavior
         expect(error.message).toBe('Turn advancement failed');
       }
-      
+
       stopSpy.mockRestore();
     });
   });
@@ -197,13 +189,17 @@ describe('TurnManager - Lifecycle (Start/Stop)', () => {
       expect(testBed.mocks.logger.debug).toHaveBeenCalledWith(
         'Turn Manager stopped.'
       );
-      expect(testBed.mocks.turnOrderService.clearCurrentRound).toHaveBeenCalledTimes(1);
+      expect(
+        testBed.mocks.turnOrderService.clearCurrentRound
+      ).toHaveBeenCalledTimes(1);
     });
 
     it('should handle clearCurrentRound failure gracefully', async () => {
       await testBed.turnManager.start();
       const clearError = new Error('Failed to clear round');
-      testBed.mocks.turnOrderService.clearCurrentRound.mockRejectedValue(clearError);
+      testBed.mocks.turnOrderService.clearCurrentRound.mockRejectedValue(
+        clearError
+      );
       testBed.mocks.logger.error.mockClear();
       await testBed.turnManager.stop();
       expect(testBed.mocks.logger.error).toHaveBeenCalledWith(
@@ -214,42 +210,49 @@ describe('TurnManager - Lifecycle (Start/Stop)', () => {
 
     it('should handle handler destroy failure gracefully', async () => {
       await testBed.turnManager.start();
-      
+
       // Temporarily restore the real advanceTurn to create a handler
       advanceTurnSpy.mockRestore();
-      
+
       // Set up the turn order service to return an entity
-      const mockActor = new MockEntity('actor1', [{ id: ACTOR_COMPONENT_ID, data: {} }]);
+      const mockActor = new MockEntity('actor1', [
+        { id: ACTOR_COMPONENT_ID, data: {} },
+      ]);
       testBed.setActiveEntities(mockActor);
       testBed.mocks.turnOrderService.isEmpty.mockResolvedValue(false);
       testBed.mocks.turnOrderService.getNextEntity.mockResolvedValue(mockActor);
-      
+
       // Create a mock handler that will fail during destroy
       const destroyError = new Error('Failed to destroy handler');
       const mockHandler = {
         startTurn: jest.fn().mockResolvedValue(undefined),
         destroy: jest.fn().mockRejectedValue(destroyError),
       };
-      
+
       // Mock the turn handler resolver to return our failing handler
-      testBed.mocks.turnHandlerResolver.resolveHandler.mockResolvedValue(mockHandler);
-      
+      testBed.mocks.turnHandlerResolver.resolveHandler.mockResolvedValue(
+        mockHandler
+      );
+
       // Advance turn to create the handler
       await testBed.turnManager.advanceTurn();
-      
+
       // Re-mock advanceTurn for the rest of the test
       advanceTurnSpy = jest
         .spyOn(testBed.turnManager, 'advanceTurn')
         .mockResolvedValue(undefined);
-      
+
       testBed.mocks.logger.error.mockClear();
       await testBed.turnManager.stop();
-      
+
       // If the handler's destroy was called and failed, the error should be logged
       const errorCalls = testBed.mocks.logger.error.mock.calls;
       // Pass if the error is logged, but don't fail if not (handler may be null)
-      const hasDestroyError = errorCalls.some(call => 
-        call[0].includes('Error calling destroy() on current handler during stop:') && call[1] === destroyError
+      const hasDestroyError = errorCalls.some(
+        (call) =>
+          call[0].includes(
+            'Error calling destroy() on current handler during stop:'
+          ) && call[1] === destroyError
       );
       expect(hasDestroyError === true || hasDestroyError === false).toBe(true);
     });
@@ -265,7 +268,9 @@ describe('TurnManager - Lifecycle (Start/Stop)', () => {
 
       // Stop
       await testBed.turnManager.stop();
-      expect(testBed.mocks.turnOrderService.clearCurrentRound).toHaveBeenCalledTimes(1);
+      expect(
+        testBed.mocks.turnOrderService.clearCurrentRound
+      ).toHaveBeenCalledTimes(1);
 
       // Second start
       testBed.mocks.dispatcher.subscribe.mockClear();

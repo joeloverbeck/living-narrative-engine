@@ -1,7 +1,10 @@
 // src/tests/turns/turnManager.errorHandling.test.js
 // --- FILE START ---
 
-import { TurnManagerTestBed } from '../../common/turns/turnManagerTestBed.js';
+import {
+  describeTurnManagerSuite,
+  flushPromisesAndTimers,
+} from '../../common/turns/turnManagerTestBed.js';
 import {
   ACTOR_COMPONENT_ID,
   PLAYER_COMPONENT_ID,
@@ -11,15 +14,7 @@ import {
   TURN_STARTED_ID,
   SYSTEM_ERROR_OCCURRED_ID,
 } from '../../../src/constants/eventIds.js';
-import {
-  beforeEach,
-  describe,
-  expect,
-  jest,
-  test,
-  afterEach,
-} from '@jest/globals';
-import { flushPromisesAndTimers } from '../../common/turns/turnManagerTestBed.js';
+import { beforeEach, expect, jest, test, afterEach } from '@jest/globals';
 import { createMockEntity } from '../../common/mockFactories.js';
 
 // --- Mock Implementations ---
@@ -55,7 +50,7 @@ class MockTurnHandler {
 }
 
 // --- Test Suite ---
-describe('TurnManager - Error Handling', () => {
+describeTurnManagerSuite('TurnManager - Error Handling', (getBed) => {
   // Set a reasonable timeout, but hopefully the fixes prevent hitting it.
   jest.setTimeout(15000); // Slightly increased timeout just in case, but OOM is the main concern.
 
@@ -67,7 +62,7 @@ describe('TurnManager - Error Handling', () => {
     jest.useFakeTimers({ legacyFakeTimers: false });
     mockHandlerInstances.clear();
 
-    testBed = new TurnManagerTestBed();
+    testBed = getBed();
 
     // Setup actors and add to the specific entityManager instance used by TurnManager
     mockActor1 = new MockEntity('actor1', [ACTOR_COMPONENT_ID]);
@@ -80,7 +75,6 @@ describe('TurnManager - Error Handling', () => {
   });
 
   afterEach(async () => {
-    await testBed.cleanup();
     mockHandlerInstances.clear();
     // Clears mock usage data (calls, instances) between tests
     jest.clearAllMocks();
@@ -126,7 +120,9 @@ describe('TurnManager - Error Handling', () => {
     );
 
     // Verify turn manager stopped advancing
-    expect(testBed.mocks.turnOrderService.getNextEntity).toHaveBeenCalledTimes(1);
+    expect(testBed.mocks.turnOrderService.getNextEntity).toHaveBeenCalledTimes(
+      1
+    );
   });
 
   test('should handle handler startTurn failure gracefully', async () => {
@@ -174,7 +170,9 @@ describe('TurnManager - Error Handling', () => {
     expect(failingHandler.destroy).toHaveBeenCalled();
 
     // Verify turn manager stopped advancing
-    expect(testBed.mocks.turnOrderService.getNextEntity).toHaveBeenCalledTimes(2); // Called twice due to retry logic
+    expect(testBed.mocks.turnOrderService.getNextEntity).toHaveBeenCalledTimes(
+      2
+    ); // Called twice due to retry logic
   });
 
   test('should handle turn order service errors', async () => {
