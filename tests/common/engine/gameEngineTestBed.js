@@ -117,6 +117,32 @@ export class GameEngineTestBed {
     this.#tokenOverrides.clear();
     this.env.cleanup();
   }
+
+  /**
+   * Clears all mock call history for the test bed.
+   *
+   * @returns {void} Nothing.
+   */
+  resetMocks() {
+    jest.clearAllMocks();
+    const services = [
+      this.mocks.logger,
+      this.mocks.entityManager,
+      this.mocks.turnManager,
+      this.mocks.gamePersistenceService,
+      this.mocks.playtimeTracker,
+      this.mocks.safeEventDispatcher,
+      this.mocks.initializationService,
+    ];
+
+    services.forEach((svc) => {
+      Object.values(svc).forEach((fn) => {
+        if (fn && typeof fn.mockClear === 'function') {
+          fn.mockClear();
+        }
+      });
+    });
+  }
 }
 
 /**
