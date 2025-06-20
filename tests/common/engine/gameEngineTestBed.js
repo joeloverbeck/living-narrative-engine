@@ -28,6 +28,11 @@ export class GameEngineTestBed {
    */
   mocks;
 
+  /** @type {Map<any, any>} */
+  #tokenOverrides = new Map();
+  /** @type {Function} */
+  #originalResolve;
+
   constructor() {
     this.env = createTestEnvironment();
     this.engine = this.env.createGameEngine();
@@ -40,6 +45,10 @@ export class GameEngineTestBed {
       safeEventDispatcher: this.env.safeEventDispatcher,
       initializationService: this.env.initializationService,
     };
+
+    this.#originalResolve =
+      this.env.mockContainer.resolve.getMockImplementation?.() ??
+      this.env.mockContainer.resolve;
   }
 
   /**
@@ -81,12 +90,31 @@ export class GameEngineTestBed {
   }
 
   /**
+   * Temporarily overrides container token resolution.
+   *
+   * @param {any} token - Token to override.
+   * @param {any | (() => any)} value - Replacement value or function.
+   */
+  withTokenOverride(token, value) {
+    this.#tokenOverrides.set(token, value);
+    this.env.mockContainer.resolve.mockImplementation((tok) => {
+      if (this.#tokenOverrides.has(tok)) {
+        const override = this.#tokenOverrides.get(tok);
+        return typeof override === 'function' ? override() : override;
+      }
+      return this.#originalResolve(tok);
+    });
+  }
+
+  /**
    * Stops the engine and cleans up the environment.
    *
    * @returns {Promise<void>} Promise resolving when cleanup is complete.
    */
   async cleanup() {
     await this.stop();
+    this.env.mockContainer.resolve.mockImplementation(this.#originalResolve);
+    this.#tokenOverrides.clear();
     this.env.cleanup();
   }
 }

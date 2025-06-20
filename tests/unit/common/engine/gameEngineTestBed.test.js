@@ -6,6 +6,7 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { GameEngineTestBed } from '../../../common/engine/gameEngineTestBed.js';
 import GameEngine from '../../../../src/engine/gameEngine.js';
+import { tokens } from '../../../../src/dependencyInjection/tokens.js';
 
 jest.mock('../../../../src/engine/gameEngine.js');
 
@@ -77,5 +78,18 @@ describe('GameEngine Test Helpers: GameEngineTestBed', () => {
 
     expect(engine.stop).toHaveBeenCalledTimes(1);
     expect(testBed.env.cleanup).toHaveBeenCalledTimes(1);
+  });
+
+  it('withTokenOverride replaces container resolve and resets on cleanup', async () => {
+    const custom = { foo: 'bar' };
+    testBed.withTokenOverride(tokens.PlaytimeTracker, custom);
+
+    const resolved = testBed.env.mockContainer.resolve(tokens.PlaytimeTracker);
+    expect(resolved).toBe(custom);
+
+    await testBed.cleanup();
+
+    const restored = testBed.env.mockContainer.resolve(tokens.PlaytimeTracker);
+    expect(restored).toBe(testBed.mocks.playtimeTracker);
   });
 });
