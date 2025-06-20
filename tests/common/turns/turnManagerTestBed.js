@@ -10,14 +10,14 @@ import {
   createMockEntityManager,
   createMockValidatedEventBus,
 } from '../mockFactories.js';
-import { clearMockFunctions } from '../jestHelpers.js';
+import BaseTestBed from '../baseTestBed.js';
 
 /**
  * @description Utility class that instantiates {@link TurnManager} with mocked
  * dependencies and exposes helpers for common test operations.
  * @class
  */
-export class TurnManagerTestBed {
+export class TurnManagerTestBed extends BaseTestBed {
   /** @type {ReturnType<typeof createMockLogger>} */
   logger;
   /** @type {ReturnType<typeof createMockEntityManager>} */
@@ -32,6 +32,7 @@ export class TurnManagerTestBed {
   turnManager;
 
   constructor() {
+    super();
     this.logger = createMockLogger();
     this.entityManager = createMockEntityManager();
     // Attach active entity map used by TurnManager
@@ -104,14 +105,7 @@ export class TurnManagerTestBed {
    * @returns {Promise<void>}
    */
   async cleanup() {
-    jest.clearAllMocks();
-    clearMockFunctions(
-      this.turnOrderService,
-      this.entityManager,
-      this.logger,
-      this.dispatcher,
-      this.turnHandlerResolver
-    );
+    this.resetMocks();
     if (this.turnManager && typeof this.turnManager.stop === 'function') {
       await this.turnManager.stop();
     }

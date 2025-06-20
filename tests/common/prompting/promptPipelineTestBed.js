@@ -14,12 +14,13 @@ import {
   createMockEntity,
 } from '../mockFactories.js';
 import { clearMockFunctions } from '../jestHelpers.js';
+import BaseTestBed from '../baseTestBed.js';
 
 /**
  * @description Utility class for unit tests that need an AIPromptPipeline with common mocks.
  * @class
  */
-export class AIPromptPipelineTestBed {
+export class AIPromptPipelineTestBed extends BaseTestBed {
   /** @type {jest.Mocked<import('../../src/turns/interfaces/ILLMAdapter.js').ILLMAdapter>} */
   llmAdapter;
   /** @type {jest.Mocked<import('../../src/turns/interfaces/IAIGameStateProvider.js').IAIGameStateProvider>} */
@@ -38,11 +39,21 @@ export class AIPromptPipelineTestBed {
   defaultActions;
 
   constructor() {
-    this.llmAdapter = createMockLLMAdapter();
-    this.gameStateProvider = createMockAIGameStateProvider();
-    this.promptContentProvider = createMockAIPromptContentProvider();
-    this.promptBuilder = createMockPromptBuilder();
-    this.logger = createMockLogger();
+    super();
+    this.mocks = {
+      llmAdapter: createMockLLMAdapter(),
+      gameStateProvider: createMockAIGameStateProvider(),
+      promptContentProvider: createMockAIPromptContentProvider(),
+      promptBuilder: createMockPromptBuilder(),
+      logger: createMockLogger(),
+    };
+
+    // Preserve direct properties for backward compatibility
+    this.llmAdapter = this.mocks.llmAdapter;
+    this.gameStateProvider = this.mocks.gameStateProvider;
+    this.promptContentProvider = this.mocks.promptContentProvider;
+    this.promptBuilder = this.mocks.promptBuilder;
+    this.logger = this.mocks.logger;
     this.defaultActor = createMockEntity('actor');
     this.defaultContext = {};
     this.defaultActions = [];
@@ -56,11 +67,11 @@ export class AIPromptPipelineTestBed {
    */
   createPipeline() {
     return new AIPromptPipeline({
-      llmAdapter: this.llmAdapter,
-      gameStateProvider: this.gameStateProvider,
-      promptContentProvider: this.promptContentProvider,
-      promptBuilder: this.promptBuilder,
-      logger: this.logger,
+      llmAdapter: this.mocks.llmAdapter,
+      gameStateProvider: this.mocks.gameStateProvider,
+      promptContentProvider: this.mocks.promptContentProvider,
+      promptBuilder: this.mocks.promptBuilder,
+      logger: this.mocks.logger,
     });
   }
 
@@ -90,11 +101,11 @@ export class AIPromptPipelineTestBed {
    */
   getDependencies() {
     return {
-      llmAdapter: this.llmAdapter,
-      gameStateProvider: this.gameStateProvider,
-      promptContentProvider: this.promptContentProvider,
-      promptBuilder: this.promptBuilder,
-      logger: this.logger,
+      llmAdapter: this.mocks.llmAdapter,
+      gameStateProvider: this.mocks.gameStateProvider,
+      promptContentProvider: this.mocks.promptContentProvider,
+      promptBuilder: this.mocks.promptBuilder,
+      logger: this.mocks.logger,
     };
   }
 
@@ -102,14 +113,7 @@ export class AIPromptPipelineTestBed {
    * Clears all jest mocks used by this test bed.
    */
   cleanup() {
-    jest.clearAllMocks();
-    clearMockFunctions(
-      this.llmAdapter,
-      this.gameStateProvider,
-      this.promptContentProvider,
-      this.promptBuilder,
-      this.logger
-    );
+    this.resetMocks();
   }
 
   /**
@@ -127,10 +131,12 @@ export class AIPromptPipelineTestBed {
     promptData = {},
     finalPrompt = 'PROMPT',
   } = {}) {
-    this.llmAdapter.getCurrentActiveLlmId.mockResolvedValue(llmId);
-    this.gameStateProvider.buildGameState.mockResolvedValue(gameState);
-    this.promptContentProvider.getPromptData.mockResolvedValue(promptData);
-    this.promptBuilder.build.mockResolvedValue(finalPrompt);
+    this.mocks.llmAdapter.getCurrentActiveLlmId.mockResolvedValue(llmId);
+    this.mocks.gameStateProvider.buildGameState.mockResolvedValue(gameState);
+    this.mocks.promptContentProvider.getPromptData.mockResolvedValue(
+      promptData
+    );
+    this.mocks.promptBuilder.build.mockResolvedValue(finalPrompt);
   }
 }
 
