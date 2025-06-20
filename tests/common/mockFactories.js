@@ -4,6 +4,10 @@
  */
 
 import { jest } from '@jest/globals';
+import {
+  ACTOR_COMPONENT_ID,
+  PLAYER_COMPONENT_ID,
+} from '../../src/constants/componentIds.js';
 
 // --- Core Service Mocks ---
 
@@ -135,10 +139,23 @@ export const createMockConfiguration = () => ({
  * @description Creates a mock IEntityManager service.
  * @returns {jest.Mocked<import('../../src/interfaces/IEntityManager.js').IEntityManager>} Mocked IEntityManager
  */
-export const createMockEntityManager = () => ({
-  clearAll: jest.fn(),
-  getActiveEntities: jest.fn().mockReturnValue([]),
-});
+export const createMockEntityManager = () => {
+  const activeEntities = new Map();
+  return {
+    activeEntities,
+    clearAll: jest.fn(() => {
+      activeEntities.clear();
+    }),
+    getActiveEntities: jest.fn(() => activeEntities),
+    getEntityInstance: jest.fn((id) => activeEntities.get(id)),
+    removeEntityInstance: jest.fn((id) => activeEntities.delete(id)),
+    reconstructEntity: jest.fn((data) => {
+      const entity = { id: data.instanceId || data.id };
+      activeEntities.set(entity.id, entity);
+      return entity;
+    }),
+  };
+};
 
 /**
  * Mock for ITurnManager.
@@ -150,6 +167,41 @@ export const createMockTurnManager = () => ({
   start: jest.fn(),
   stop: jest.fn(),
   nextTurn: jest.fn(),
+});
+
+/**
+ * Creates a mock ITurnOrderService.
+ *
+ * @returns {jest.Mocked<import('../../src/turns/interfaces/ITurnOrderService.js').ITurnOrderService>} Mocked service
+ */
+export const createMockTurnOrderService = () => ({
+  startNewRound: jest.fn(),
+  getNextEntity: jest.fn(),
+  peekNextEntity: jest.fn(),
+  addEntity: jest.fn(),
+  removeEntity: jest.fn(),
+  isEmpty: jest.fn(),
+  getCurrentOrder: jest.fn(),
+  clearCurrentRound: jest.fn(),
+});
+
+/**
+ * Creates a mock ITurnHandlerResolver.
+ *
+ * @returns {jest.Mocked<import('../../src/turns/interfaces/ITurnHandlerResolver.js').ITurnHandlerResolver>} Mocked resolver
+ */
+export const createMockTurnHandlerResolver = () => ({
+  resolveHandler: jest.fn(),
+});
+
+/**
+ * Creates a mock ITurnHandler instance.
+ *
+ * @returns {jest.Mocked<import('../../src/turns/interfaces/ITurnHandler.js').ITurnHandler>} Mocked handler
+ */
+export const createMockTurnHandler = () => ({
+  startTurn: jest.fn(),
+  destroy: jest.fn(),
 });
 
 /**
@@ -207,6 +259,36 @@ export const createMockSafeEventDispatcher = () => ({
 export const createMockValidatedEventDispatcher = () => ({
   dispatch: jest.fn().mockResolvedValue(undefined),
 });
+
+/**
+ * Creates a mock event bus that records subscriptions and allows manual triggering.
+ *
+ * @returns {object} Mock event bus with helper methods
+ */
+export const createMockValidatedEventBus = () => {
+  const handlers = {};
+  return {
+    dispatch: jest.fn().mockResolvedValue(undefined),
+    subscribe: jest.fn((eventName, handler) => {
+      if (!handlers[eventName]) {
+        handlers[eventName] = [];
+      }
+      handlers[eventName].push(handler);
+      return jest.fn(() => {
+        const index = handlers[eventName].indexOf(handler);
+        if (index > -1) {
+          handlers[eventName].splice(index, 1);
+        }
+      });
+    }),
+    _triggerEvent: (eventName, payload) => {
+      (handlers[eventName] || []).forEach((h) => h(payload));
+    },
+    _clearHandlers: () => {
+      Object.keys(handlers).forEach((k) => delete handlers[k]);
+    },
+  };
+};
 
 // --- Loader Mocks ---
 
@@ -275,4 +357,23 @@ export const createMockModVersionValidator = () => jest.fn();
 export const createMockModLoadOrderResolver = () => ({
   // Default behavior resolves to the same order it was given
   resolveOrder: jest.fn((reqIds) => reqIds),
+});
+
+/**
+ * Creates a simple mock entity with component checks.
+ *
+ * @param {string} id - Unique entity ID.
+ * @param {{isActor?: boolean, isPlayer?: boolean}} [options] - Flags for component presence.
+ * @returns {{id: string, hasComponent: jest.Mock}} Mock entity
+ */
+export const createMockEntity = (
+  id,
+  { isActor = false, isPlayer = false } = {}
+) => ({
+  id,
+  hasComponent: jest.fn((compId) => {
+    if (compId === ACTOR_COMPONENT_ID) return isActor;
+    if (compId === PLAYER_COMPONENT_ID) return isPlayer;
+    return false;
+  }),
 });
