@@ -11,6 +11,7 @@ import {
   createMockAIGameStateProvider,
   createMockAIPromptContentProvider,
   createMockPromptBuilder,
+  createMockEntity,
 } from '../mockFactories.js';
 
 /**
@@ -28,6 +29,12 @@ export class AIPromptPipelineTestBed {
   promptBuilder;
   /** @type {jest.Mocked<import('../../src/interfaces/coreServices.js').ILogger>} */
   logger;
+  /** @type {import('../../src/entities/entity.js').default} */
+  defaultActor;
+  /** @type {import('../../src/turns/interfaces/ITurnContext.js').ITurnContext} */
+  defaultContext;
+  /** @type {import('../../src/turns/dtos/actionComposite.js').ActionComposite[]} */
+  defaultActions;
 
   constructor() {
     this.llmAdapter = createMockLLMAdapter();
@@ -35,6 +42,9 @@ export class AIPromptPipelineTestBed {
     this.promptContentProvider = createMockAIPromptContentProvider();
     this.promptBuilder = createMockPromptBuilder();
     this.logger = createMockLogger();
+    this.defaultActor = createMockEntity('actor');
+    this.defaultContext = {};
+    this.defaultActions = [];
   }
 
   /**
