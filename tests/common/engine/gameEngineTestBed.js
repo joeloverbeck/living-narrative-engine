@@ -43,6 +43,19 @@ export class GameEngineTestBed {
   }
 
   /**
+   * Initializes the engine using a default successful initialization result.
+   *
+   * @param {string} [world] - World name to initialize.
+   * @returns {Promise<void>} Promise resolving when the engine has started.
+   */
+  async init(world = 'TestWorld') {
+    this.env.initializationService.runInitializationSequence.mockResolvedValue({
+      success: true,
+    });
+    await this.engine.startNewGame(world);
+  }
+
+  /**
    * Presets initialization results and starts a new game.
    *
    * @param {string} worldName - Name of the world to initialize.
