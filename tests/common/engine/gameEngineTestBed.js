@@ -3,9 +3,8 @@
  * @see tests/common/engine/gameEngineTestBed.js
  */
 
-import { jest } from '@jest/globals';
 import { createTestEnvironment } from './gameEngine.test-environment.js';
-import BaseTestBed from '../baseTestBed.js';
+import ContainerTestBed from '../containerTestBed.js';
 import { suppressConsoleError } from '../jestHelpers.js';
 
 /**
@@ -13,7 +12,7 @@ import { suppressConsoleError } from '../jestHelpers.js';
  * environment and exposes helpers for common test operations.
  * @class
  */
-export class GameEngineTestBed extends BaseTestBed {
+export class GameEngineTestBed extends ContainerTestBed {
   /** @type {ReturnType<typeof createTestEnvironment>} */
   env;
   /** @type {import('../../../src/engine/gameEngine.js').default} */
@@ -29,11 +28,6 @@ export class GameEngineTestBed extends BaseTestBed {
    *   initializationService: ReturnType<import('../mockFactories.js').createMockInitializationService>,
    * }}
    */
-
-  /** @type {Map<any, any>} */
-  #tokenOverrides = new Map();
-  /** @type {Function} */
-  #originalResolve;
 
   /**
    * @description Constructs a new test bed with optional DI overrides.
@@ -51,13 +45,9 @@ export class GameEngineTestBed extends BaseTestBed {
       safeEventDispatcher: env.safeEventDispatcher,
       initializationService: env.initializationService,
     };
-    super(mocks);
+    super(env.mockContainer, mocks);
     this.env = env;
     this.engine = engine;
-
-    this.#originalResolve =
-      this.env.mockContainer.resolve.getMockImplementation?.() ??
-      this.env.mockContainer.resolve;
   }
 
   /**
@@ -99,23 +89,6 @@ export class GameEngineTestBed extends BaseTestBed {
   }
 
   /**
-   * Temporarily overrides container token resolution.
-   *
-   * @param {any} token - Token to override.
-   * @param {any | (() => any)} value - Replacement value or function.
-   */
-  withTokenOverride(token, value) {
-    this.#tokenOverrides.set(token, value);
-    this.env.mockContainer.resolve.mockImplementation((tok) => {
-      if (this.#tokenOverrides.has(tok)) {
-        const override = this.#tokenOverrides.get(tok);
-        return typeof override === 'function' ? override() : override;
-      }
-      return this.#originalResolve(tok);
-    });
-  }
-
-  /**
    * Stops the engine and cleans up the environment.
    *
    * @returns {Promise<void>} Promise resolving when cleanup is complete.
@@ -123,8 +96,6 @@ export class GameEngineTestBed extends BaseTestBed {
   async cleanup() {
     await super.cleanup();
     await this.stop();
-    this.env.mockContainer.resolve.mockImplementation(this.#originalResolve);
-    this.#tokenOverrides.clear();
     this.env.cleanup();
   }
 }
