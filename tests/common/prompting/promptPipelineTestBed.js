@@ -13,6 +13,7 @@ import {
   createMockPromptBuilder,
   createMockEntity,
 } from '../mockFactories.js';
+import { clearMockFunctions } from '../jestHelpers.js';
 
 /**
  * @description Utility class for unit tests that need an AIPromptPipeline with common mocks.
@@ -102,6 +103,13 @@ export class AIPromptPipelineTestBed {
    */
   cleanup() {
     jest.clearAllMocks();
+    clearMockFunctions(
+      this.llmAdapter,
+      this.gameStateProvider,
+      this.promptContentProvider,
+      this.promptBuilder,
+      this.logger
+    );
   }
 
   /**

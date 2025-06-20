@@ -10,6 +10,7 @@ import {
   createMockEntityManager,
   createMockValidatedEventBus,
 } from '../mockFactories.js';
+import { clearMockFunctions } from '../jestHelpers.js';
 
 /**
  * @description Utility class that instantiates {@link TurnManager} with mocked
@@ -104,6 +105,13 @@ export class TurnManagerTestBed {
    */
   async cleanup() {
     jest.clearAllMocks();
+    clearMockFunctions(
+      this.turnOrderService,
+      this.entityManager,
+      this.logger,
+      this.dispatcher,
+      this.turnHandlerResolver
+    );
     if (this.turnManager && typeof this.turnManager.stop === 'function') {
       await this.turnManager.stop();
     }

@@ -3,7 +3,9 @@
  * @see tests/common/engine/gameEngineTestBed.js
  */
 
+import { jest } from '@jest/globals';
 import { createTestEnvironment } from './gameEngine.test-environment.js';
+import { clearMockFunctions } from '../jestHelpers.js';
 
 /**
  * @description Utility class that instantiates {@link GameEngine} using a mocked
@@ -129,23 +131,15 @@ export class GameEngineTestBed {
    */
   resetMocks() {
     jest.clearAllMocks();
-    const services = [
+    clearMockFunctions(
       this.mocks.logger,
       this.mocks.entityManager,
       this.mocks.turnManager,
       this.mocks.gamePersistenceService,
       this.mocks.playtimeTracker,
       this.mocks.safeEventDispatcher,
-      this.mocks.initializationService,
-    ];
-
-    services.forEach((svc) => {
-      Object.values(svc).forEach((fn) => {
-        if (fn && typeof fn.mockClear === 'function') {
-          fn.mockClear();
-        }
-      });
-    });
+      this.mocks.initializationService
+    );
   }
 }
 
