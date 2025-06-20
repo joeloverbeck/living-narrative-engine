@@ -1,9 +1,10 @@
 // tests/unit/loaders/modsLoader.preLoopErrors.test.js
 
-import { beforeEach, describe, expect, it, jest } from '@jest/globals';
+import { beforeEach, describe, expect, it } from '@jest/globals';
 
 // --- The new Test Setup Factory ---
 import { createTestEnvironment } from '../../common/loaders/modsLoader.test-setup.js';
+import { setupManifests } from '../../common/loaders/modsLoader.test-utils.js';
 
 // --- SUT Dependencies & Errors ---
 import ModDependencyError from '../../../src/errors/modDependencyError.js';
@@ -57,11 +58,8 @@ describe('ModsLoader Integration Test Suite - Pre-Loop Error Handling (Refactore
     };
 
     // 3. Configure a default success path that tests can override
-    env.mockGameConfigLoader.loadConfig.mockResolvedValue([CORE_MOD_ID]);
     const defaultMap = new Map([[CORE_MOD_ID.toLowerCase(), coreManifest]]);
-    env.mockModManifestLoader.loadRequestedManifests.mockResolvedValue(
-      defaultMap
-    );
+    setupManifests(env, defaultMap, [CORE_MOD_ID]);
     env.mockedResolveOrder.mockImplementation((ids) => ids); // Default to pass-through
   });
 

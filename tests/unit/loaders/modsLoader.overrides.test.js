@@ -1,7 +1,11 @@
-import { beforeEach, describe, expect, it, jest } from '@jest/globals';
+import { beforeEach, describe, expect, it } from '@jest/globals';
 
 // --- The new Test Setup Factory ---
 import { createTestEnvironment } from '../../common/loaders/modsLoader.test-setup.js';
+import {
+  setupManifests,
+  getSummaryText,
+} from '../../common/loaders/modsLoader.test-utils.js';
 
 // --- SUT Dependencies ---
 import { CORE_MOD_ID } from '../../../src/constants/core.js';
@@ -61,22 +65,7 @@ describe('ModsLoader Integration Test Suite - Mod Overrides and Load Order (Refa
     const finalOrder = [CORE_MOD_ID, fooModId, barModId];
 
     // 3. Configure Mocks
-    env.mockGameConfigLoader.loadConfig.mockResolvedValue(finalOrder);
-    env.mockModManifestLoader.loadRequestedManifests.mockResolvedValue(
-      mockManifestMap
-    );
-    env.mockedResolveOrder.mockReturnValue(finalOrder);
-
-    // Configure registry to return manifests and fallback to stateful store for other data
-    env.mockRegistry.get.mockImplementation((type, id) => {
-      const lcId = id.toLowerCase();
-      if (type === 'mod_manifests') {
-        if (lcId === CORE_MOD_ID) return mockCoreManifest;
-        if (lcId === fooModId) return mockFooManifest;
-        if (lcId === barModId) return mockBarManifest;
-      }
-      return env.mockRegistry._internalStore[type]?.[id];
-    });
+    setupManifests(env, mockManifestMap, finalOrder);
 
     // Configure EntityLoader to simulate storing items from each mod
     env.mockEntityLoader.loadItemsForMod.mockImplementation(
@@ -176,9 +165,7 @@ describe('ModsLoader Integration Test Suite - Mod Overrides and Load Order (Refa
     });
 
     // 3. Verify Summary Log
-    const summaryText = env.mockLogger.info.mock.calls
-      .map((c) => c[0])
-      .join('\n');
+    const summaryText = getSummaryText(env.mockLogger);
     expect(summaryText).toMatch(/entityDefinitions\s+: C:3, O:0, E:0/);
     expect(summaryText).toMatch(/TOTAL\s+: C:3, O:0, E:0/);
   });

@@ -6,6 +6,10 @@ import { beforeEach, describe, expect, it } from '@jest/globals';
 // --- SUT & Dependencies ---
 import { CORE_MOD_ID } from '../../../src/constants/core.js';
 import { createTestEnvironment } from '../../common/loaders/modsLoader.test-setup.js';
+import {
+  setupManifests,
+  getSummaryText,
+} from '../../common/loaders/modsLoader.test-utils.js';
 
 // --- Type‑only JSDoc imports ---
 /** @typedef {import('../../../src/loaders/modsLoader.js').default} ModsLoader */
@@ -50,14 +54,7 @@ describe('ModsLoader Integration Test Suite - Error Handling (TEST-LOADER-7.4)',
     env = createTestEnvironment();
 
     // 3. Layer test-specific mock implementations ON TOP of the defaults
-    env.mockGameConfigLoader.loadConfig.mockResolvedValue([
-      CORE_MOD_ID,
-      badModId,
-    ]);
-    env.mockModManifestLoader.loadRequestedManifests.mockResolvedValue(
-      mockManifestMap
-    );
-    env.mockedResolveOrder.mockReturnValue([CORE_MOD_ID, badModId]);
+    setupManifests(env, mockManifestMap, [CORE_MOD_ID, badModId]);
 
     // *** THE FIX IS HERE ***
     // This mock now correctly handles case-sensitivity.
@@ -154,9 +151,7 @@ describe('ModsLoader Integration Test Suite - Error Handling (TEST-LOADER-7.4)',
     expect(env.mockRegistry.get('rules', `${badModId}:rule1`)).toBeDefined();
     expect(env.mockRegistry.getAll('components')).toHaveLength(0);
 
-    const summaryText = env.mockLogger.info.mock.calls
-      .map((c) => c[0])
-      .join('\n');
+    const summaryText = getSummaryText(env.mockLogger);
     expect(summaryText).toMatch(/actions\s+: C:1, O:0, E:0/);
     expect(summaryText).toMatch(/components\s+: C:0, O:0, E:1/);
     expect(summaryText).toMatch(/rules\s+: C:1, O:0, E:0/);

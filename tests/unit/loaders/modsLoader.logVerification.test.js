@@ -1,9 +1,13 @@
 // Filename: src/tests/loaders/modsLoader.logVerification.test.js
 
-import { beforeEach, describe, expect, it, jest } from '@jest/globals';
+import { beforeEach, describe, expect, it } from '@jest/globals';
 
 // --- The new Test Setup Factory ---
 import { createTestEnvironment } from '../../common/loaders/modsLoader.test-setup.js';
+import {
+  setupManifests,
+  getSummaryText,
+} from '../../common/loaders/modsLoader.test-utils.js';
 
 // --- Dependencies to Mock ---
 import { CORE_MOD_ID } from '../../../src/constants/core.js';
@@ -83,21 +87,7 @@ describe('ModsLoader Integration Test Suite - Log Verification (Refactored)', ()
       [CORE_MOD_ID.toLowerCase(), coreManifest],
     ]);
 
-    env.mockGameConfigLoader.loadConfig.mockResolvedValue([CORE_MOD_ID]);
-    env.mockModManifestLoader.loadRequestedManifests.mockResolvedValue(
-      mockManifestMap
-    );
-    env.mockedResolveOrder.mockReturnValue([CORE_MOD_ID]);
-
-    env.mockRegistry.get.mockImplementation((type, id) => {
-      if (
-        type === 'mod_manifests' &&
-        id.toLowerCase() === CORE_MOD_ID.toLowerCase()
-      ) {
-        return coreManifest;
-      }
-      return undefined;
-    });
+    setupManifests(env, mockManifestMap, [CORE_MOD_ID]);
 
     env.mockActionLoader.loadItemsForMod.mockResolvedValue({
       count: coreActionCount,
@@ -124,14 +114,13 @@ describe('ModsLoader Integration Test Suite - Log Verification (Refactored)', ()
     await env.modsLoader.loadWorld(worldName);
 
     // Assertions
-    const infoCalls = env.mockLogger.info.mock.calls;
-    const summaryStart = infoCalls.findIndex((call) =>
-      call[0].includes(`ModsLoader Load Summary (World: '${worldName}')`)
+    const summaryText = getSummaryText(env.mockLogger);
+    const summaryLines = summaryText.split('\n');
+    const summaryStart = summaryLines.findIndex((line) =>
+      line.includes(`ModsLoader Load Summary (World: '${worldName}')`)
     );
     expect(summaryStart).toBeGreaterThan(-1);
-
-    const summaryLines = infoCalls.slice(summaryStart).map((call) => call[0]);
-    const summaryBlock = summaryLines.join('\n');
+    const summaryBlock = summaryLines.slice(summaryStart).join('\n');
 
     expect(summaryBlock).toMatch(/actions\s+: C:2, O:0, E:0/);
     expect(summaryBlock).toMatch(/components\s+: C:1, O:0, E:0/);
@@ -162,20 +151,7 @@ describe('ModsLoader Integration Test Suite - Log Verification (Refactored)', ()
     ]);
     const finalOrder = [CORE_MOD_ID, overrideModId];
 
-    env.mockGameConfigLoader.loadConfig.mockResolvedValue(finalOrder);
-    env.mockModManifestLoader.loadRequestedManifests.mockResolvedValue(
-      mockManifestMap
-    );
-    env.mockedResolveOrder.mockReturnValue(finalOrder);
-
-    env.mockRegistry.get.mockImplementation((type, id) => {
-      const lcId = id.toLowerCase();
-      if (type === 'mod_manifests') {
-        if (lcId === CORE_MOD_ID.toLowerCase()) return coreManifest;
-        if (lcId === overrideModId.toLowerCase()) return overrideManifest;
-      }
-      return undefined;
-    });
+    setupManifests(env, mockManifestMap, finalOrder);
 
     // Simulate loader returns for each mod
     env.mockActionLoader.loadItemsForMod.mockImplementation(
@@ -194,9 +170,7 @@ describe('ModsLoader Integration Test Suite - Log Verification (Refactored)', ()
     await env.modsLoader.loadWorld(worldName);
 
     // Assertions
-    const summaryText = env.mockLogger.info.mock.calls
-      .map((c) => c[0])
-      .join('\n');
+    const summaryText = getSummaryText(env.mockLogger);
     const expectedTotalActions = coreActionCount + overrideActionCount; // 1 + 2 = 3
 
     // *** FIX IS HERE ***
@@ -222,21 +196,7 @@ describe('ModsLoader Integration Test Suite - Log Verification (Refactored)', ()
     ]);
     const finalOrder = [CORE_MOD_ID, modAId, modBId];
 
-    env.mockGameConfigLoader.loadConfig.mockResolvedValue(finalOrder);
-    env.mockModManifestLoader.loadRequestedManifests.mockResolvedValue(
-      mockManifestMap
-    );
-    env.mockedResolveOrder.mockReturnValue(finalOrder);
-
-    env.mockRegistry.get.mockImplementation((type, id) => {
-      const lcId = id.toLowerCase();
-      if (type === 'mod_manifests') {
-        if (lcId === CORE_MOD_ID.toLowerCase()) return coreManifest;
-        if (lcId === modAId.toLowerCase()) return modAManifest;
-        if (lcId === modBId.toLowerCase()) return modBManifest;
-      }
-      return undefined;
-    });
+    setupManifests(env, mockManifestMap, finalOrder);
 
     env.mockComponentLoader.loadItemsForMod.mockResolvedValue({
       count: 1,
@@ -258,9 +218,7 @@ describe('ModsLoader Integration Test Suite - Log Verification (Refactored)', ()
     await env.modsLoader.loadWorld(worldName);
 
     // Assertions
-    const summaryText = env.mockLogger.info.mock.calls
-      .map((c) => c[0])
-      .join('\n');
+    const summaryText = getSummaryText(env.mockLogger);
     expect(summaryText).toMatch(/actions\s+: C:1, O:0, E:0/);
     expect(summaryText).toMatch(/components\s+: C:1, O:0, E:0/);
     expect(summaryText).toMatch(/rules\s+: C:1, O:0, E:0/);
