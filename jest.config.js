@@ -56,7 +56,7 @@ module.exports = {
       branches: 80,
       functions: 85,
       lines: 85,
-      statements: -1500,
+      statements: -1515,
     },
   },
   // --- END COVERAGE CONFIGURATION ---
