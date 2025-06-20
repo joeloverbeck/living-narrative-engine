@@ -9,14 +9,30 @@ import {
   PLAYER_COMPONENT_ID,
 } from '../../src/constants/componentIds.js';
 
+/**
+ * Creates a simple mock object with jest.fn methods.
+ *
+ * @description Utility to generate mock implementations for a list of method
+ *   names. If default implementations are provided, they will be used instead
+ *   of `jest.fn()`.
+ * @param {string[]} methodNames - Names of the methods to mock.
+ * @param {Record<string, any>} [defaults] - Optional default implementations.
+ * @returns {Record<string, jest.Mock>} Object containing mocked methods.
+ */
+export function createSimpleMock(methodNames, defaults = {}) {
+  const mock = {};
+  for (const name of methodNames) {
+    mock[name] = Object.prototype.hasOwnProperty.call(defaults, name)
+      ? defaults[name]
+      : jest.fn();
+  }
+  return mock;
+}
+
 // ── Core Service Mocks ────────────────────────────────────────────────────
 
-export const createMockLogger = () => ({
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-  debug: jest.fn(),
-});
+export const createMockLogger = () =>
+  createSimpleMock(['info', 'warn', 'error', 'debug']);
 
 export const createMockSchemaValidator = (
   defaultValidationResult = { isValid: true }
@@ -129,46 +145,41 @@ export const createMockEntityManager = () => {
   };
 };
 
-export const createMockTurnManager = () => ({
-  start: jest.fn(),
-  stop: jest.fn(),
-  nextTurn: jest.fn(),
-});
+export const createMockTurnManager = () =>
+  createSimpleMock(['start', 'stop', 'nextTurn']);
 
 /**
  * Creates a mock ITurnOrderService.
  *
  * @returns {jest.Mocked<import('../../src/turns/interfaces/ITurnOrderService.js').ITurnOrderService>} Mocked service
  */
-export const createMockTurnOrderService = () => ({
-  startNewRound: jest.fn(),
-  getNextEntity: jest.fn(),
-  peekNextEntity: jest.fn(),
-  addEntity: jest.fn(),
-  removeEntity: jest.fn(),
-  isEmpty: jest.fn(),
-  getCurrentOrder: jest.fn(),
-  clearCurrentRound: jest.fn(),
-});
+export const createMockTurnOrderService = () =>
+  createSimpleMock([
+    'startNewRound',
+    'getNextEntity',
+    'peekNextEntity',
+    'addEntity',
+    'removeEntity',
+    'isEmpty',
+    'getCurrentOrder',
+    'clearCurrentRound',
+  ]);
 
 /**
  * Creates a mock ITurnHandlerResolver.
  *
  * @returns {jest.Mocked<import('../../src/turns/interfaces/ITurnHandlerResolver.js').ITurnHandlerResolver>} Mocked resolver
  */
-export const createMockTurnHandlerResolver = () => ({
-  resolveHandler: jest.fn(),
-});
+export const createMockTurnHandlerResolver = () =>
+  createSimpleMock(['resolveHandler']);
 
 /**
  * Creates a mock ITurnHandler instance.
  *
  * @returns {jest.Mocked<import('../../src/turns/interfaces/ITurnHandler.js').ITurnHandler>} Mocked handler
  */
-export const createMockTurnHandler = () => ({
-  startTurn: jest.fn(),
-  destroy: jest.fn(),
-});
+export const createMockTurnHandler = () =>
+  createSimpleMock(['startTurn', 'destroy']);
 
 /**
  * Mock for IGamePersistenceService.
@@ -176,23 +187,23 @@ export const createMockTurnHandler = () => ({
  * @description Creates a mock IGamePersistenceService service.
  * @returns {jest.Mocked<import('../../src/interfaces/IGamePersistenceService.js').IGamePersistenceService>} Mocked persistence service
  */
-export const createMockGamePersistenceService = () => ({
-  saveGame: jest.fn(),
-  loadAndRestoreGame: jest.fn(),
-  isSavingAllowed: jest.fn(),
-});
+export const createMockGamePersistenceService = () =>
+  createSimpleMock(['saveGame', 'loadAndRestoreGame', 'isSavingAllowed']);
 
-export const createMockPlaytimeTracker = () => ({
-  reset: jest.fn(),
-  startSession: jest.fn(),
-  endSessionAndAccumulate: jest.fn(),
-  getTotalPlaytime: jest.fn().mockReturnValue(0),
-  setAccumulatedPlaytime: jest.fn(),
-});
+export const createMockPlaytimeTracker = () =>
+  createSimpleMock(
+    [
+      'reset',
+      'startSession',
+      'endSessionAndAccumulate',
+      'getTotalPlaytime',
+      'setAccumulatedPlaytime',
+    ],
+    { getTotalPlaytime: jest.fn().mockReturnValue(0) }
+  );
 
-export const createMockInitializationService = () => ({
-  runInitializationSequence: jest.fn(),
-});
+export const createMockInitializationService = () =>
+  createSimpleMock(['runInitializationSequence']);
 
 // --- Prompting Mocks ---
 
@@ -201,47 +212,41 @@ export const createMockInitializationService = () => ({
  *
  * @returns {jest.Mocked<import('../../src/turns/interfaces/ILLMAdapter.js').ILLMAdapter>} Mocked LLM adapter
  */
-export const createMockLLMAdapter = () => ({
-  getAIDecision: jest.fn(),
-  getCurrentActiveLlmId: jest.fn(),
-});
+export const createMockLLMAdapter = () =>
+  createSimpleMock(['getAIDecision', 'getCurrentActiveLlmId']);
 
 /**
  * Creates a mock IAIGameStateProvider.
  *
  * @returns {jest.Mocked<import('../../src/turns/interfaces/IAIGameStateProvider.js').IAIGameStateProvider>} Mocked game state provider
  */
-export const createMockAIGameStateProvider = () => ({
-  buildGameState: jest.fn(),
-});
+export const createMockAIGameStateProvider = () =>
+  createSimpleMock(['buildGameState']);
 
 /**
  * Creates a mock IAIPromptContentProvider.
  *
  * @returns {jest.Mocked<import('../../src/turns/interfaces/IAIPromptContentProvider.js').IAIPromptContentProvider>} Mocked prompt content provider
  */
-export const createMockAIPromptContentProvider = () => ({
-  getPromptData: jest.fn(),
-});
+export const createMockAIPromptContentProvider = () =>
+  createSimpleMock(['getPromptData']);
 
 /**
  * Creates a mock IPromptBuilder.
  *
  * @returns {jest.Mocked<import('../../src/interfaces/IPromptBuilder.js').IPromptBuilder>} Mocked prompt builder
  */
-export const createMockPromptBuilder = () => ({
-  build: jest.fn(),
-});
+export const createMockPromptBuilder = () => createSimpleMock(['build']);
 
 // --- Event Dispatcher Mocks ---
 
-export const createMockSafeEventDispatcher = () => ({
-  dispatch: jest.fn(),
-});
+export const createMockSafeEventDispatcher = () =>
+  createSimpleMock(['dispatch']);
 
-export const createMockValidatedEventDispatcher = () => ({
-  dispatch: jest.fn().mockResolvedValue(undefined),
-});
+export const createMockValidatedEventDispatcher = () =>
+  createSimpleMock(['dispatch'], {
+    dispatch: jest.fn().mockResolvedValue(undefined),
+  });
 
 /**
  * Creates a mock event bus that records subscriptions and allows manual triggering.
@@ -276,6 +281,8 @@ export const createMockValidatedEventBus = () => {
 // --- Loader Mocks ---
 /**
  * Generic content-loader mock (ActionLoader, ComponentLoader, …).
+ *
+ * @param defaultLoadResult
  */
 export const createMockContentLoader = (
   defaultLoadResult = { count: 0, overrides: 0, errors: 0 }
@@ -286,40 +293,44 @@ export const createMockContentLoader = (
 /**
  * SchemaLoader stub.
  */
-export const createMockSchemaLoader = () => ({
-  loadAndCompileAllSchemas: jest.fn().mockResolvedValue(undefined),
-});
+export const createMockSchemaLoader = () =>
+  createSimpleMock(['loadAndCompileAllSchemas'], {
+    loadAndCompileAllSchemas: jest.fn().mockResolvedValue(undefined),
+  });
 
 /**
  * GameConfigLoader stub.
  */
-export const createMockGameConfigLoader = () => ({
-  loadConfig: jest.fn().mockResolvedValue([]),
-});
+export const createMockGameConfigLoader = () =>
+  createSimpleMock(['loadConfig'], {
+    loadConfig: jest.fn().mockResolvedValue([]),
+  });
 
 /**
  * ModManifestLoader stub.
  */
-export const createMockModManifestLoader = () => ({
-  loadRequestedManifests: jest.fn().mockResolvedValue(new Map()),
-});
+export const createMockModManifestLoader = () =>
+  createSimpleMock(['loadRequestedManifests'], {
+    loadRequestedManifests: jest.fn().mockResolvedValue(new Map()),
+  });
 
 /**
  * **NEW**: WorldLoader stub – satisfies ModsLoader’s dependency check.
  */
-export const createMockWorldLoader = () => ({
-  loadWorlds: jest.fn().mockResolvedValue(undefined),
-});
+export const createMockWorldLoader = () =>
+  createSimpleMock(['loadWorlds'], {
+    loadWorlds: jest.fn().mockResolvedValue(undefined),
+  });
 
 // ── Modding Helper Mocks ──────────────────────────────────────────────────
 
 /**
  * Creates a mock for the mod dependency validator.
+ *
  * @returns {{ validate: jest.Mock }}
  */
-export const createMockModDependencyValidator = () => ({
-  validate: jest.fn(),
-});
+export const createMockModDependencyValidator = () =>
+  createSimpleMock(['validate']);
 
 /**
  * Creates a mock for the mod version validator that satisfies both
