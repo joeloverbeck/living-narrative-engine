@@ -3,6 +3,8 @@
  * @see tests/common/loaders/modsLoader.test-utils.js
  */
 
+import { createMockContentLoader } from '../mockFactories.js';
+
 /**
  * Sets up manifest-related mocks for a ModsLoader test environment.
  *
@@ -39,4 +41,22 @@ export function setupManifests(env, manifestMap, finalOrder) {
  */
 export function getSummaryText(logger) {
   return logger.info.mock.calls.map((c) => c[0]).join('\n');
+}
+
+/**
+ * Generates mock loader objects for the given content types.
+ *
+ * @description Iterates over the supplied type names and returns an
+ *   object containing `{ mock${type}Loader: createMockContentLoader() }`
+ *   entries for each.
+ * @param {string[]} types - Content loader type names.
+ * @returns {Record<string, { loadItemsForMod: jest.Mock }>} Mapping of
+ *   mock loader names to loader mocks.
+ */
+export function createLoaderMocks(types) {
+  const loaders = {};
+  for (const type of types) {
+    loaders[`mock${type}Loader`] = createMockContentLoader();
+  }
+  return loaders;
 }
