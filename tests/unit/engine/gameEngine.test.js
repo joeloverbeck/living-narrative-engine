@@ -10,6 +10,7 @@ import {
 } from '@jest/globals';
 import GameEngine from '../../../src/engine/gameEngine.js';
 import { tokens } from '../../../src/dependencyInjection/tokens.js';
+import { createTestEnvironment } from '../../common/engine/gameEngine.test-environment.js';
 import {
   GAME_SAVED_ID,
   // --- Import new UI Event IDs ---
@@ -35,6 +36,8 @@ import {
 /** @typedef {import('../../../src/interfaces/ISaveLoadService.js').SaveGameStructure} SaveGameStructure */
 
 describe('GameEngine', () => {
+  /** @type {ReturnType<typeof createTestEnvironment>} */
+  let env;
   let mockContainer;
   /** @type {jest.Mocked<ILogger>} */
   let mockLogger;
@@ -55,77 +58,21 @@ describe('GameEngine', () => {
 
   const MOCK_WORLD_NAME = 'TestWorld';
 
-  const setupMockContainer = () => {
-    mockLogger = {
-      info: jest.fn(),
-      warn: jest.fn(),
-      error: jest.fn(),
-      debug: jest.fn(),
-      log: jest.fn(),
-    };
-    mockEntityManager = {
-      clearAll: jest.fn(),
-      getActiveEntities: jest.fn().mockReturnValue([]),
-    };
-    mockTurnManager = {
-      start: jest.fn(),
-      stop: jest.fn(),
-      nextTurn: jest.fn(),
-    };
-    mockGamePersistenceService = {
-      saveGame: jest.fn(),
-      loadAndRestoreGame: jest.fn(),
-      isSavingAllowed: jest.fn(),
-    };
-    mockPlaytimeTracker = {
-      reset: jest.fn(),
-      startSession: jest.fn(),
-      endSessionAndAccumulate: jest.fn(),
-      getAccumulatedPlaytime: jest.fn().mockReturnValue(0),
-      setAccumulatedPlaytime: jest.fn(),
-    };
-    mockSafeEventDispatcher = {
-      dispatch: jest.fn().mockResolvedValue(undefined),
-    }; // .mockResolvedValue since dispatch can be async internally
-    mockInitializationService = { runInitializationSequence: jest.fn() };
-
-    mockContainer = {
-      resolve: jest.fn((token) => {
-        switch (token) {
-          case tokens.ILogger:
-            return mockLogger;
-          case tokens.IEntityManager:
-            return mockEntityManager;
-          case tokens.ITurnManager:
-            return mockTurnManager;
-          case tokens.GamePersistenceService:
-            return mockGamePersistenceService;
-          case tokens.PlaytimeTracker:
-            return mockPlaytimeTracker;
-          case tokens.ISafeEventDispatcher:
-            return mockSafeEventDispatcher;
-          case tokens.IInitializationService:
-            return mockInitializationService;
-          default:
-            const tokenName =
-              Object.keys(tokens).find((key) => tokens[key] === token) ||
-              token?.toString();
-            throw new Error(
-              `GameEngine.test.js: Unmocked token: ${tokenName || 'unknown token'}`
-            );
-        }
-      }),
-    };
-  };
-
   beforeEach(() => {
-    setupMockContainer(); // Sets up all mocks fresh for each top-level test
+    env = createTestEnvironment();
+    mockContainer = env.mockContainer;
+    mockLogger = env.logger;
+    mockEntityManager = env.entityManager;
+    mockTurnManager = env.turnManager;
+    mockGamePersistenceService = env.gamePersistenceService;
+    mockPlaytimeTracker = env.playtimeTracker;
+    mockSafeEventDispatcher = env.safeEventDispatcher;
+    mockInitializationService = env.initializationService;
     jest.spyOn(console, 'error').mockImplementation(() => {});
-    // gameEngine instance is created within specific describe blocks or tests if custom setup is needed
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    env.cleanup();
   });
 
   describe('Constructor', () => {
@@ -163,23 +110,42 @@ describe('GameEngine', () => {
       );
     });
 
-    it('should throw an error and log if any other core service fails to resolve', () => {
-      const resolutionError = new Error('EntityManager failed to resolve');
-      jest.spyOn(mockContainer, 'resolve').mockImplementation((token) => {
-        if (token === tokens.ILogger) return mockLogger;
-        if (token === tokens.IEntityManager) throw resolutionError;
-        if (token === tokens.ITurnManager) return mockTurnManager;
-        if (token === tokens.GamePersistenceService)
-          return mockGamePersistenceService;
-        if (token === tokens.PlaytimeTracker) return mockPlaytimeTracker;
-        if (token === tokens.ISafeEventDispatcher)
-          return mockSafeEventDispatcher;
-        throw new Error(
-          `GameEngine.test.js - Constructor Core Service: Unmocked token during specific failure test: ${token?.toString()}`
-        );
+    it.each([
+      ['IEntityManager', tokens.IEntityManager],
+      ['ITurnManager', tokens.ITurnManager],
+      ['GamePersistenceService', tokens.GamePersistenceService],
+      ['PlaytimeTracker', tokens.PlaytimeTracker],
+      ['ISafeEventDispatcher', tokens.ISafeEventDispatcher],
+    ])('should throw an error if %s cannot be resolved', (_, failingToken) => {
+      const resolutionError = new Error(`${String(failingToken)} failed`);
+      mockContainer.resolve.mockImplementation((token) => {
+        if (token === failingToken) throw resolutionError;
+        switch (token) {
+          case tokens.ILogger:
+            return mockLogger;
+          case tokens.IEntityManager:
+            return mockEntityManager;
+          case tokens.ITurnManager:
+            return mockTurnManager;
+          case tokens.GamePersistenceService:
+            return mockGamePersistenceService;
+          case tokens.PlaytimeTracker:
+            return mockPlaytimeTracker;
+          case tokens.ISafeEventDispatcher:
+            return mockSafeEventDispatcher;
+          case tokens.IInitializationService:
+            return mockInitializationService;
+          default:
+            const tokenName =
+              Object.keys(tokens).find((key) => tokens[key] === token) ||
+              token?.toString();
+            throw new Error(
+              `Constructor failure: Unmocked token: ${tokenName}`
+            );
+        }
       });
 
-      expect(() => new GameEngine({ container: mockContainer })).toThrow(
+      expect(() => env.createGameEngine()).toThrow(
         `GameEngine: Failed to resolve core services. ${resolutionError.message}`
       );
 
@@ -422,30 +388,35 @@ describe('GameEngine', () => {
     const MOCK_ACTIVE_WORLD_FOR_SAVE = 'TestWorldForSaving';
 
     it('should dispatch error and not attempt save if engine is not initialized', async () => {
-      // Create a fresh, uninitialized engine for this test
-      setupMockContainer(); // Ensure mocks are clean for this specific setup
-      const uninitializedGameEngine = new GameEngine({
-        container: mockContainer,
-      });
-      mockSafeEventDispatcher.dispatch.mockClear(); // Clear any dispatches from constructor
+      const localEnv = createTestEnvironment();
+      const uninitializedGameEngine = localEnv.createGameEngine();
+      localEnv.safeEventDispatcher.dispatch.mockClear();
 
       const result = await uninitializedGameEngine.triggerManualSave(SAVE_NAME);
       const expectedErrorMsg =
         'Game engine is not initialized. Cannot save game.';
 
-      expect(mockSafeEventDispatcher.dispatch).not.toHaveBeenCalled();
-      expect(mockGamePersistenceService.saveGame).not.toHaveBeenCalled();
+      expect(localEnv.safeEventDispatcher.dispatch).not.toHaveBeenCalled();
+      expect(localEnv.gamePersistenceService.saveGame).not.toHaveBeenCalled();
       expect(result).toEqual({ success: false, error: expectedErrorMsg });
+      localEnv.cleanup();
     });
 
     describe('when engine is initialized', () => {
       beforeEach(async () => {
-        setupMockContainer(); // Fresh mocks for each test in this inner describe
-        gameEngine = new GameEngine({ container: mockContainer });
+        env = createTestEnvironment();
+        mockContainer = env.mockContainer;
+        mockLogger = env.logger;
+        mockEntityManager = env.entityManager;
+        mockTurnManager = env.turnManager;
+        mockGamePersistenceService = env.gamePersistenceService;
+        mockPlaytimeTracker = env.playtimeTracker;
+        mockSafeEventDispatcher = env.safeEventDispatcher;
+        mockInitializationService = env.initializationService;
+        gameEngine = env.createGameEngine();
         mockInitializationService.runInitializationSequence.mockResolvedValue({
           success: true,
         });
-        // This call sets this.#activeWorld to MOCK_ACTIVE_WORLD_FOR_SAVE in the gameEngine instance
         await gameEngine.startNewGame(MOCK_ACTIVE_WORLD_FOR_SAVE);
 
         mockSafeEventDispatcher.dispatch.mockClear();
