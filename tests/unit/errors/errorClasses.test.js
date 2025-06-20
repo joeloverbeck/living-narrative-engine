@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { ActorError } from '../../../src/errors/actorError.js';
 import { ActorMismatchError } from '../../../src/errors/actorMismatchError.js';
 import ModDependencyError from '../../../src/errors/modDependencyError.js';
-import WorldLoaderError from '../../../src/errors/worldLoaderError.js';
+import ModsLoaderError from '../../../src/errors/modsLoaderError.js';
 import PromptTooLongError from '../../../src/errors/promptTooLongError.js';
 import {
   LLMInteractionError,
@@ -42,10 +42,10 @@ describe('custom error classes', () => {
     expect(err.operation).toBe('op');
   });
 
-  it('ModDependencyError and WorldLoaderError support causes', () => {
+  it('ModDependencyError and ModsLoaderError support causes', () => {
     const cause = new Error('root');
     const modErr = new ModDependencyError('mod', cause);
-    const worldErr = new WorldLoaderError('world', cause);
+    const worldErr = new ModsLoaderError('world', cause);
     expect(modErr.cause).toBe(cause);
     expect(worldErr.cause).toBe(cause);
   });

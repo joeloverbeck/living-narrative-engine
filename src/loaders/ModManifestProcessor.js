@@ -15,7 +15,7 @@ import ModDependencyError from '../errors/modDependencyError.js';
 /** @typedef {import('../../data/schemas/mod.manifest.schema.json').ModManifest} ModManifest */
 
 /**
- * @description Service used by WorldLoader to prepare mod manifests for loading.
+ * @description Service used by ModsLoader to prepare mod manifests for loading.
  * @class
  */
 export class ModManifestProcessor {
@@ -75,7 +75,7 @@ export class ModManifestProcessor {
       loadedManifestsMap.set(lowerCaseModId, manifestObj);
     }
     this.#logger.debug(
-      `WorldLoader: Stored ${manifestsForValidation.size} mod manifests in the registry.`
+      `ModsLoader: Stored ${manifestsForValidation.size} mod manifests in the registry.`
     );
 
     this.#modDependencyValidator.validate(manifestsForValidation, this.#logger);
@@ -90,7 +90,7 @@ export class ModManifestProcessor {
       if (e instanceof ModDependencyError) {
         incompatibilityCount = (e.message.match(/\n/g) || []).length;
         this.#logger.warn(
-          `WorldLoader: Encountered ${incompatibilityCount} engine version incompatibilities. Details:\n${e.message}`,
+          `ModsLoader: Encountered ${incompatibilityCount} engine version incompatibilities. Details:\n${e.message}`,
           e
         );
         throw e;
@@ -104,7 +104,7 @@ export class ModManifestProcessor {
       this.#logger
     );
     this.#logger.debug(
-      `WorldLoader: Final mod order resolved: [${finalOrder.join(', ')}]`
+      `ModsLoader: Final mod order resolved: [${finalOrder.join(', ')}]`
     );
     this.#registry.store('meta', 'final_mod_order', finalOrder);
 

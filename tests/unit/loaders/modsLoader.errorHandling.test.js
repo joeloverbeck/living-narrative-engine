@@ -1,18 +1,18 @@
-// Filename: tests/unit/loaders/worldLoader.errorHandling.test.js
+// Filename: tests/unit/loaders/modsLoader.errorHandling.test.js
 // NOTE: This file is now corrected.
 
 import { beforeEach, describe, expect, it } from '@jest/globals';
 
 // --- SUT & Dependencies ---
-import { CORE_MOD_ID } from '../../../src/constants/core';
-import { createTestEnvironment } from '../../common/loaders/worldLoader.test-setup.js';
+import { CORE_MOD_ID } from '../../../src/constants/core.js';
+import { createTestEnvironment } from '../../common/loaders/modsLoader.test-setup.js';
 
 // --- Type‑only JSDoc imports ---
-/** @typedef {import('../../../src/loaders/worldLoader.js').default} WorldLoader */
+/** @typedef {import('../../../src/loaders/modsLoader.js').default} ModsLoader */
 /** @typedef {import('../../../interfaces/manifestItems.js').ModManifest} ModManifest */
-/** @typedef {import('../../common/loaders/worldLoader.test-setup.js').createTestEnvironment} TestEnvironment */
+/** @typedef {import('../../common/loaders/modsLoader.test-setup.js').createTestEnvironment} TestEnvironment */
 
-describe('WorldLoader Integration Test Suite - Error Handling (TEST-LOADER-7.4)', () => {
+describe('ModsLoader Integration Test Suite - Error Handling (TEST-LOADER-7.4)', () => {
   /** @type {TestEnvironment} */
   let env;
 
@@ -111,7 +111,7 @@ describe('WorldLoader Integration Test Suite - Error Handling (TEST-LOADER-7.4)'
 
   it('should log an error and continue loading other content when a content loader fails', async () => {
     // --- Action ---
-    await expect(env.worldLoader.loadWorld(worldName)).resolves.not.toThrow();
+    await expect(env.modsLoader.loadWorld(worldName)).resolves.not.toThrow();
 
     // --- Assertions ---
     // The assertions in the test case are now correct and do not need to change.

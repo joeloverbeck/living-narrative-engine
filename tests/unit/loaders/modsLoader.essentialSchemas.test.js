@@ -1,22 +1,22 @@
 /**
  * @file Test suite to ensure essential schemas are always loaded.
- * @see tests/loaders/worldLoader.essentialSchemas.test.js
+ * @see tests/loaders/modsLoader.essentialSchemas.test.js
  */
 
 import { jest, describe, beforeEach, test, expect } from '@jest/globals';
 
 // --- The new Test Setup Factory ---
-import { createTestEnvironment } from '../../common/loaders/worldLoader.test-setup.js';
+import { createTestEnvironment } from '../../common/loaders/modsLoader.test-setup.js';
 
 // --- SUT Dependencies & Errors ---
 import ESSENTIAL_SCHEMA_TYPES from '../../../src/constants/essentialSchemas.js';
 import MissingSchemaError from '../../../src/errors/missingSchemaError.js';
-import WorldLoaderError from '../../../src/errors/worldLoaderError.js';
+import ModsLoaderError from '../../../src/errors/modsLoaderError.js';
 
 // --- Type‑only JSDoc imports for Mocks and SUT ---
-/** @typedef {import('../../common/loaders/worldLoader.test-setup.js').TestEnvironment} TestEnvironment */
+/** @typedef {import('../../common/loaders/modsLoader.test-setup.js').TestEnvironment} TestEnvironment */
 
-describe('WorldLoader Essential Schema Checking (Refactored)', () => {
+describe('ModsLoader Essential Schema Checking (Refactored)', () => {
   /** @type {TestEnvironment} */
   let env;
 
@@ -60,7 +60,7 @@ describe('WorldLoader Essential Schema Checking (Refactored)', () => {
     );
 
     // Action & Assert
-    await expect(env.worldLoader.loadWorld('testWorld')).resolves.toBeUndefined();
+    await expect(env.modsLoader.loadWorld('testWorld')).resolves.toBeUndefined();
 
     expect(env.mockLogger.error).not.toHaveBeenCalledWith(
       expect.stringMatching(/Essential schema missing|CRITICAL load failure/i)
@@ -69,10 +69,10 @@ describe('WorldLoader Essential Schema Checking (Refactored)', () => {
     expect(env.mockModVersionValidator).toHaveBeenCalled();
   });
 
-  test('should throw WorldLoaderError if an essential schema type is not configured (getContentTypeSchemaId returns null)', async () => {
+  test('should throw ModsLoaderError if an essential schema type is not configured (getContentTypeSchemaId returns null)', async () => {
     // Arrange
     const missingType = 'game'; // An example of a type that might not be configured
-    const expectedErrorMessageFromCheck = `WorldLoader: Essential schema type '${missingType}' is not configured (no schema ID found).`;
+    const expectedErrorMessageFromCheck = `ModsLoader: Essential schema type '${missingType}' is not configured (no schema ID found).`;
     const expectedMissingSchemaErrorMsg = `Essential schema type '${missingType}' is not configured (no schema ID found).`;
 
     env.mockConfiguration.getContentTypeSchemaId.mockImplementation((type) => {
@@ -81,16 +81,16 @@ describe('WorldLoader Essential Schema Checking (Refactored)', () => {
     });
 
     // Action & Assert
-    await expect(env.worldLoader.loadWorld('testWorld')).rejects.toThrow(
-      WorldLoaderError
+    await expect(env.modsLoader.loadWorld('testWorld')).rejects.toThrow(
+      ModsLoaderError
     );
 
     try {
-      await env.worldLoader.loadWorld('testWorld');
+      await env.modsLoader.loadWorld('testWorld');
     } catch (e) {
-      expect(e).toBeInstanceOf(WorldLoaderError);
+      expect(e).toBeInstanceOf(ModsLoaderError);
       expect(e.message).toContain(
-        `WorldLoader failed during essential schema check – aborting world load. Original error: ${expectedMissingSchemaErrorMsg}`
+        `ModsLoader failed during essential schema check – aborting world load. Original error: ${expectedMissingSchemaErrorMsg}`
       );
       expect(e.cause).toBeInstanceOf(MissingSchemaError);
       expect(e.cause.message).toBe(expectedMissingSchemaErrorMsg);
@@ -110,11 +110,11 @@ describe('WorldLoader Essential Schema Checking (Refactored)', () => {
     );
   });
 
-  test('should throw WorldLoaderError if an essential schema is configured but not loaded (isSchemaLoaded returns false)', async () => {
+  test('should throw ModsLoaderError if an essential schema is configured but not loaded (isSchemaLoaded returns false)', async () => {
     // Arrange
     const notLoadedType = 'actions';
     const notLoadedSchemaId = ALL_ESSENTIAL_SCHEMA_IDS[notLoadedType];
-    const expectedErrorMessageFromCheck = `WorldLoader: Essential schema '${notLoadedSchemaId}' (type: '${notLoadedType}') is configured but not loaded.`;
+    const expectedErrorMessageFromCheck = `ModsLoader: Essential schema '${notLoadedSchemaId}' (type: '${notLoadedType}') is configured but not loaded.`;
     const expectedMissingSchemaErrorMsg = `Essential schema '${notLoadedSchemaId}' (type: '${notLoadedType}') is configured but not loaded.`;
 
     env.mockValidator.isSchemaLoaded.mockImplementation((schemaId) => {
@@ -123,16 +123,16 @@ describe('WorldLoader Essential Schema Checking (Refactored)', () => {
     });
 
     // Action & Assert
-    await expect(env.worldLoader.loadWorld('testWorld')).rejects.toThrow(
-      WorldLoaderError
+    await expect(env.modsLoader.loadWorld('testWorld')).rejects.toThrow(
+      ModsLoaderError
     );
 
     try {
-      await env.worldLoader.loadWorld('testWorld');
+      await env.modsLoader.loadWorld('testWorld');
     } catch (e) {
-      expect(e).toBeInstanceOf(WorldLoaderError);
+      expect(e).toBeInstanceOf(ModsLoaderError);
       expect(e.message).toContain(
-        `WorldLoader failed during essential schema check – aborting world load. Original error: ${expectedMissingSchemaErrorMsg}`
+        `ModsLoader failed during essential schema check – aborting world load. Original error: ${expectedMissingSchemaErrorMsg}`
       );
       expect(e.cause).toBeInstanceOf(MissingSchemaError);
       expect(e.cause.message).toBe(expectedMissingSchemaErrorMsg);
@@ -155,7 +155,7 @@ describe('WorldLoader Essential Schema Checking (Refactored)', () => {
   test('should correctly identify the type key in log when a schema ID is not configured', async () => {
     // Arrange
     const unconfiguredType = 'entityDefinitions';
-    const expectedLogMessage = `WorldLoader: Essential schema type '${unconfiguredType}' is not configured (no schema ID found).`;
+    const expectedLogMessage = `ModsLoader: Essential schema type '${unconfiguredType}' is not configured (no schema ID found).`;
 
     env.mockConfiguration.getContentTypeSchemaId.mockImplementation((type) => {
       if (type === unconfiguredType) return undefined; // Simulate not configured
@@ -164,10 +164,10 @@ describe('WorldLoader Essential Schema Checking (Refactored)', () => {
 
     // Action & Assert
     try {
-      await env.worldLoader.loadWorld('testWorld');
+      await env.modsLoader.loadWorld('testWorld');
     } catch (e) {
       // We expect it to throw, this is fine.
-      expect(e).toBeInstanceOf(WorldLoaderError);
+      expect(e).toBeInstanceOf(ModsLoaderError);
       expect(e.cause).toBeInstanceOf(MissingSchemaError);
       expect(e.cause.contentType).toBe(unconfiguredType);
     }

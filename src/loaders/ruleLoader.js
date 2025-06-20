@@ -137,12 +137,12 @@ class RuleLoader extends BaseManifestItemLoader {
    * `loadItemsForMod` for each mod sequentially. It aggregates the count of loaded rules.
    * NOTE: This method returns only the total count, not the detailed LoadItemsResult object,
    * as its original purpose seemed to be just summing counts. The detailed results per mod
-   * are handled by WorldLoader using the updated loadItemsForMod return value.
+   * are handled by ModsLoader using the updated loadItemsForMod return value.
    *
    * @param {Array<{modId: string, manifest: ModManifest}>} modsToLoad - An ordered list of mod objects.
    * @returns {Promise<number>} A promise resolving with the total number of rules loaded.
    * @async
-   * @deprecated This aggregation logic is likely better handled by the caller (WorldLoader) using the detailed results from loadItemsForMod.
+   * @deprecated This aggregation logic is likely better handled by the caller (ModsLoader) using the detailed results from loadItemsForMod.
    */
   async loadAllRules(modsToLoad) {
     this._logger.warn(

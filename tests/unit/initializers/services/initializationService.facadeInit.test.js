@@ -21,7 +21,7 @@ const mockEventDispatcher = {
   unsubscribe: jest.fn(),
 };
 
-const mockWorldLoader = {
+const mockModsLoader = {
   loadWorld: jest.fn().mockResolvedValue(true),
 };
 
@@ -80,7 +80,7 @@ beforeEach(() => {
 
   container.register(tokens.ILogger, mockLogger);
   container.register(tokens.IValidatedEventDispatcher, mockEventDispatcher);
-  container.register(tokens.WorldLoader, mockWorldLoader);
+  container.register(tokens.ModsLoader, mockModsLoader);
   container.register(tokens.SystemInitializer, mockSystemInitializer);
   container.register(tokens.WorldInitializer, mockWorldInitializer);
   container.register(tokens.DomUiFacade, MockDomUiFacade, {
@@ -189,7 +189,7 @@ describe('InitializationService', () => {
     it('should call core initialization steps in order, including ILLMAdapter init', async () => {
       await initializationService.runInitializationSequence(testWorldName);
 
-      expect(mockWorldLoader.loadWorld).toHaveBeenCalledWith(testWorldName);
+      expect(mockModsLoader.loadWorld).toHaveBeenCalledWith(testWorldName);
       expect(mockLlmAdapterInstance.init).toHaveBeenCalledTimes(1);
       // After successful init, these should have been called by the service to log status
       expect(mockLlmAdapterInstance.isOperational).toHaveBeenCalled();
@@ -232,8 +232,8 @@ describe('InitializationService', () => {
 
     const testError = new Error('Test Initialization Step Failed');
 
-    it('should return failure and log error if WorldLoader fails', async () => {
-      mockWorldLoader.loadWorld.mockRejectedValueOnce(testError);
+    it('should return failure and log error if ModsLoader fails', async () => {
+      mockModsLoader.loadWorld.mockRejectedValueOnce(testError);
       const result =
         await initializationService.runInitializationSequence(testWorldName);
       expect(result.success).toBe(false);
@@ -368,7 +368,7 @@ describe('InitializationService', () => {
     });
 
     it('should dispatch UI error events on critical error', async () => {
-      mockWorldLoader.loadWorld.mockRejectedValueOnce(testError);
+      mockModsLoader.loadWorld.mockRejectedValueOnce(testError);
       await initializationService.runInitializationSequence(testWorldName);
       expect(mockEventDispatcher.dispatch).toHaveBeenCalledWith(
         'ui:show_fatal_error',
@@ -388,7 +388,7 @@ describe('InitializationService', () => {
 
     it('should log error if dispatching UI error events fails after critical error', async () => {
       const dispatchError = new Error('Dispatch Failed');
-      mockWorldLoader.loadWorld.mockRejectedValueOnce(testError);
+      mockModsLoader.loadWorld.mockRejectedValueOnce(testError);
       mockEventDispatcher.dispatch
         .mockResolvedValueOnce(undefined)
         .mockRejectedValueOnce(dispatchError);

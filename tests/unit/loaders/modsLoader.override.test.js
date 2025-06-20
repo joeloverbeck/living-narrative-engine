@@ -1,16 +1,16 @@
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 
 // --- The new Test Setup Factory ---
-import { createTestEnvironment } from '../../common/loaders/worldLoader.test-setup.js';
+import { createTestEnvironment } from '../../common/loaders/modsLoader.test-setup.js';
 
 // --- SUT Dependencies ---
-import { CORE_MOD_ID } from '../../../src/constants/core';
+import { CORE_MOD_ID } from '../../../src/constants/core.js';
 
 // --- Type‑only JSDoc imports for Mocks ---
-/** @typedef {import('../../common/loaders/worldLoader.test-setup.js').TestEnvironment} TestEnvironment */
+/** @typedef {import('../../common/loaders/modsLoader.test-setup.js').TestEnvironment} TestEnvironment */
 /** @typedef {import('../../../src/interfaces/manifestItems.js').ModManifest} ModManifest */
 
-describe('WorldLoader Integration Test Suite - Overrides (Refactored)', () => {
+describe('ModsLoader Integration Test Suite - Overrides (Refactored)', () => {
   /** @type {TestEnvironment} */
   let env;
 
@@ -101,7 +101,7 @@ describe('WorldLoader Integration Test Suite - Overrides (Refactored)', () => {
 
   it('should load core and override mod, applying overrides correctly', async () => {
     // --- Action ---
-    await expect(env.worldLoader.loadWorld(worldName)).resolves.not.toThrow();
+    await expect(env.modsLoader.loadWorld(worldName)).resolves.not.toThrow();
 
     // --- Assert Loader Calls ---
     expect(env.mockActionLoader.loadItemsForMod).toHaveBeenCalledTimes(2);

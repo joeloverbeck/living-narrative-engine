@@ -125,12 +125,13 @@ describe('registerInfrastructure', () => {
     // expect(spatialManager).toBeInstanceOf(ActualSpatialIndexManager); // If you import it
   });
 
-  test('should register WorldLoader correctly', () => {
-    registerInfrastructure(container);
-    expect(() => container.resolve(tokens.WorldLoader)).not.toThrow();
-    const worldLoader = container.resolve(tokens.WorldLoader);
-    expect(worldLoader).toBeDefined();
-    // expect(worldLoader).toBeInstanceOf(ActualWorldLoader); // If you import it
+  test('should register ModsLoader correctly', () => {
+    // This test has been removed as ModsLoader is now registered in loadersRegistrations.js
+    // registerInfrastructure(container);
+    // expect(() => container.resolve(tokens.ModsLoader)).not.toThrow();
+    // const modsLoader = container.resolve(tokens.ModsLoader);
+    // expect(modsLoader).toBeDefined();
+    // expect(modsLoader).toBeInstanceOf(ActualModsLoader); // If you import it
   });
 
   test('should register MacroLoader correctly', () => {

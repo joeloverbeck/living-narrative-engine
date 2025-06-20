@@ -1,10 +1,10 @@
 /**
- * @file Setup in common for WorldLoader tests.
- * @see tests/common/loaders/worldLoader.test-setup.js
+ * @file Common setup for ModsLoader integration tests.
+ * @see tests/common/loaders/modsLoader.test-setup.js
  */
 
 import { jest } from '@jest/globals';
-import WorldLoader from '../../../src/loaders/worldLoader.js';
+import ModsLoader from '../../../src/loaders/modsLoader.js';
 import {
   createStatefulMockDataRegistry,
   createMockLogger,
@@ -18,45 +18,16 @@ import {
   createMockModDependencyValidator,
   createMockModVersionValidator,
   createMockModLoadOrderResolver,
+  createMockWorldLoader,            // ← NEW import
 } from '../mockFactories.js';
 
-// --- Type‑only JSDoc imports (UNCHANGED) ---
-// JSDoc comments remain the same...
-
 /**
- * Creates a complete, mocked test environment for WorldLoader integration tests.
- *
- * This factory handles the instantiation of WorldLoader and all its dependencies,
- * providing default mock implementations for successful execution paths.
- *
- * @returns {{
- * worldLoader: WorldLoader,
- * mockRegistry: jest.Mocked<import('../../../src/interfaces/coreServices.js').IDataRegistry>,
- * mockLogger: jest.Mocked<import('../../../src/interfaces/coreServices.js').ILogger>,
- * mockSchemaLoader: jest.Mocked<import('../../../src/loaders/schemaLoader.js').default>,
- * mockComponentLoader: jest.Mocked<import('../../../src/loaders/componentLoader.js').default>,
- * mockConditionLoader: jest.Mocked<import('../../../src/loaders/conditionLoader.js').default>,
- * mockRuleLoader: jest.Mocked<import('../../../src/loaders/ruleLoader.js').default>,
- * mockActionLoader: jest.Mocked<import('../../../src/loaders/actionLoader.js').default>,
- * mockEventLoader: jest.Mocked<import('../../../src/loaders/eventLoader.js').default>,
- * mockEntityLoader: jest.Mocked<import('../../../src/loaders/entityDefinitionLoader.js').default>,
- * mockValidator: jest.Mocked<import('../../../src/interfaces/coreServices.js').ISchemaValidator>,
- * mockConfiguration: jest.Mocked<import('../../../src/interfaces/coreServices.js').IConfiguration>,
- * mockGameConfigLoader: jest.Mocked<import('../../../src/loaders/gameConfigLoader.js').default>,
- * mockModManifestLoader: jest.Mocked<import('../../../src/modding/modManifestLoader.js').default>,
- * mockValidatedEventDispatcher: jest.Mocked<import('../../services/validatedEventDispatcher.js').default>,
- * mockModDependencyValidator: { validate: jest.Mock<any, any>},
- * mockModVersionValidator: jest.Mock<any, any>,
- * mockModLoadOrderResolver: { resolveOrder: jest.Mock<any, any>},
- * mockedModDependencyValidator: jest.Mock<any, any>,
- * mockedValidateModEngineVersions: jest.Mock<any, any>,
- * mockedResolveOrder: jest.Mock<any, any>
- * }}
+ * Builds a fully mocked environment for ModsLoader tests.
  */
 export function createTestEnvironment() {
   jest.clearAllMocks();
 
-  // --- Create Mocks using Factories ---
+  /* ── Core-service mocks ─────────────────────────────────────────────── */
   const mockRegistry = createStatefulMockDataRegistry();
   const mockLogger = createMockLogger();
   const mockSchemaLoader = createMockSchemaLoader();
@@ -66,7 +37,7 @@ export function createTestEnvironment() {
   const mockModManifestLoader = createMockModManifestLoader();
   const mockValidatedEventDispatcher = createMockValidatedEventDispatcher();
 
-  // Content Loaders
+  /* ── Content-loader mocks ───────────────────────────────────────────── */
   const mockActionLoader = createMockContentLoader();
   const mockComponentLoader = createMockContentLoader();
   const mockConditionLoader = createMockContentLoader();
@@ -74,13 +45,16 @@ export function createTestEnvironment() {
   const mockRuleLoader = createMockContentLoader();
   const mockEntityLoader = createMockContentLoader();
 
-  // Modding Helpers
+  /* ── Modding-helper mocks ───────────────────────────────────────────── */
   const mockModDependencyValidator = createMockModDependencyValidator();
   const mockModVersionValidator = createMockModVersionValidator();
   const mockModLoadOrderResolver = createMockModLoadOrderResolver();
 
-  // --- Configure Specific Mock Behaviors (Success Paths) ---
-  mockValidator.isSchemaLoaded.mockImplementation((schemaId) =>
+  /* ── **WorldLoader mock** (new) ─────────────────────────────────────── */
+  const mockWorldLoader = createMockWorldLoader();
+
+  /* ── Default success behaviour overrides ───────────────────────────── */
+  mockValidator.isSchemaLoaded.mockImplementation((id) =>
     [
       'schema:game',
       'schema:components',
@@ -91,14 +65,14 @@ export function createTestEnvironment() {
       'schema:rules',
       'schema:conditions',
       'schema:entityInstances',
-    ].includes(schemaId)
+    ].includes(id)
   );
-  mockModDependencyValidator.validate.mockImplementation(() => {});
-  mockModVersionValidator.mockImplementation(() => {});
-  mockModLoadOrderResolver.resolveOrder.mockImplementation((reqIds) => reqIds);
+  mockModDependencyValidator.validate.mockImplementation(() => { });
+  mockModVersionValidator.mockImplementation(() => { });
+  mockModLoadOrderResolver.resolveOrder.mockImplementation((ids) => ids);
 
-  // --- Instantiate SUT ---
-  const worldLoader = new WorldLoader({
+  /* ── Instantiate system-under-test ──────────────────────────────────── */
+  const modsLoader = new ModsLoader({
     registry: mockRegistry,
     logger: mockLogger,
     schemaLoader: mockSchemaLoader,
@@ -114,15 +88,16 @@ export function createTestEnvironment() {
     promptTextLoader: { loadPromptText: jest.fn() },
     modManifestLoader: mockModManifestLoader,
     validatedEventDispatcher: mockValidatedEventDispatcher,
-    // FIX: Changed from property shorthand to explicit key-value pairs
     modDependencyValidator: mockModDependencyValidator,
     modVersionValidator: mockModVersionValidator,
     modLoadOrderResolver: mockModLoadOrderResolver,
+    worldLoader: mockWorldLoader,   // ← injected here
     contentLoadersConfig: null,
   });
 
+  /* ── Return the assembled environment ──────────────────────────────── */
   return {
-    worldLoader,
+    modsLoader,
     mockRegistry,
     mockLogger,
     mockSchemaLoader,
@@ -140,7 +115,8 @@ export function createTestEnvironment() {
     mockModDependencyValidator,
     mockModVersionValidator,
     mockModLoadOrderResolver,
-    // Convenience accessors for inner jest functions
+    mockWorldLoader,                        // ← exposed for assertions
+    // Handy aliases for deeply nested jest fns
     mockedModDependencyValidator: mockModDependencyValidator.validate,
     mockedValidateModEngineVersions: mockModVersionValidator,
     mockedResolveOrder: mockModLoadOrderResolver.resolveOrder,
