@@ -38,7 +38,20 @@ export const createSimpleMockDataRegistry = () => ({
 
 export const createStatefulMockDataRegistry = () => {
   const internalStore = {};
-  return {
+
+  /**
+   * Converts a snake_case or kebab-case string to PascalCase.
+   *
+   * @param {string} str - The string to convert.
+   * @returns {string} The PascalCase version of the string.
+   */
+  const toPascalCase = (str) =>
+    str
+      .split(/[_-]/)
+      .map((s) => s.charAt(0).toUpperCase() + s.slice(1))
+      .join('');
+
+  const registry = {
     _internalStore: internalStore,
     store: jest.fn((type, id, data) => {
       if (!internalStore[type]) internalStore[type] = {};
@@ -53,45 +66,32 @@ export const createStatefulMockDataRegistry = () => {
     getAllSystemRules: jest.fn(() => []),
     getManifest: jest.fn(),
     setManifest: jest.fn(),
-    getEntityDefinition: jest.fn(
-      (id) => internalStore['entity_definitions']?.[id]
-    ),
-    getItemDefinition: jest.fn((id) => internalStore['items']?.[id]),
-    getLocationDefinition: jest.fn((id) => internalStore['locations']?.[id]),
-    getConnectionDefinition: jest.fn(
-      (id) => internalStore['connections']?.[id]
-    ),
-    getBlockerDefinition: jest.fn((id) => internalStore['blockers']?.[id]),
-    getActionDefinition: jest.fn((id) => internalStore['actions']?.[id]),
-    getEventDefinition: jest.fn((id) => internalStore['events']?.[id]),
-    getComponentDefinition: jest.fn((id) => internalStore['components']?.[id]),
-    getAllEntityDefinitions: jest.fn(() =>
-      Object.values(internalStore['entity_definitions'] || {})
-    ),
-    getAllItemDefinitions: jest.fn(() =>
-      Object.values(internalStore['items'] || {})
-    ),
-    getAllLocationDefinitions: jest.fn(() =>
-      Object.values(internalStore['locations'] || {})
-    ),
-    getAllConnectionDefinitions: jest.fn(() =>
-      Object.values(internalStore['connections'] || {})
-    ),
-    getAllBlockerDefinitions: jest.fn(() =>
-      Object.values(internalStore['blockers'] || {})
-    ),
-    getAllActionDefinitions: jest.fn(() =>
-      Object.values(internalStore['actions'] || {})
-    ),
-    getAllEventDefinitions: jest.fn(() =>
-      Object.values(internalStore['events'] || {})
-    ),
-    getAllComponentDefinitions: jest.fn(() =>
-      Object.values(internalStore['components'] || {})
-    ),
     getStartingPlayerId: jest.fn(() => null),
     getStartingLocationId: jest.fn(() => null),
   };
+
+  const contentTypes = [
+    'entity_definitions',
+    'items',
+    'locations',
+    'connections',
+    'blockers',
+    'actions',
+    'events',
+    'components',
+  ];
+
+  for (const type of contentTypes) {
+    const pascal = toPascalCase(type);
+    registry[`get${pascal}Definition`] = jest.fn(
+      (id) => internalStore[type]?.[id]
+    );
+    registry[`getAll${pascal}Definitions`] = jest.fn(() =>
+      Object.values(internalStore[type] || {})
+    );
+  }
+
+  return registry;
 };
 
 export const createMockConfiguration = () => ({
@@ -276,6 +276,8 @@ export const createMockValidatedEventBus = () => {
 // --- Loader Mocks ---
 /**
  * Generic content-loader mock (ActionLoader, ComponentLoader, …).
+ *
+ * @param defaultLoadResult
  */
 export const createMockContentLoader = (
   defaultLoadResult = { count: 0, overrides: 0, errors: 0 }
@@ -315,6 +317,7 @@ export const createMockWorldLoader = () => ({
 
 /**
  * Creates a mock for the mod dependency validator.
+ *
  * @returns {{ validate: jest.Mock }}
  */
 export const createMockModDependencyValidator = () => ({
