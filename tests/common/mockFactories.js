@@ -9,6 +9,7 @@ import { jest } from '@jest/globals';
 
 /**
  * Creates a mock ILogger with jest functions.
+ *
  * @returns {jest.Mocked<import('../../src/interfaces/coreServices.js').ILogger>}
  */
 export const createMockLogger = () => ({
@@ -20,6 +21,7 @@ export const createMockLogger = () => ({
 
 /**
  * Creates a mock ISchemaValidator with jest functions.
+ *
  * @param {{ isValid: boolean }} [defaultValidationResult] - The default result for the validate method.
  * @returns {jest.Mocked<import('../../src/interfaces/coreServices.js').ISchemaValidator>}
  */
@@ -36,6 +38,7 @@ export const createMockSchemaValidator = (
 /**
  * Creates a simple, non-stateful mock IDataRegistry.
  * Useful for unit tests where only specific methods need to be mocked.
+ *
  * @returns {jest.Mocked<import('../../src/interfaces/coreServices.js').IDataRegistry>}
  */
 export const createSimpleMockDataRegistry = () => ({
@@ -50,6 +53,7 @@ export const createSimpleMockDataRegistry = () => ({
 /**
  * Creates a sophisticated, stateful mock IDataRegistry for integration testing.
  * It simulates an in-memory store.
+ *
  * @returns {jest.Mocked<import('../../src/interfaces/coreServices.js').IDataRegistry> & { _internalStore: object }}
  */
 export const createStatefulMockDataRegistry = () => {
@@ -111,6 +115,7 @@ export const createStatefulMockDataRegistry = () => {
 
 /**
  * Creates a mock IConfiguration service with common default values.
+ *
  * @returns {jest.Mocked<import('../../src/interfaces/coreServices.js').IConfiguration>}
  */
 export const createMockConfiguration = () => ({
@@ -124,10 +129,70 @@ export const createMockConfiguration = () => ({
   getModManifestFilename: jest.fn(() => 'mod.manifest.json'),
 });
 
+/**
+ * Mock for IEntityManager.
+ *
+ * @description Creates a mock IEntityManager service.
+ * @returns {jest.Mocked<import('../../src/interfaces/IEntityManager.js').IEntityManager>} Mocked IEntityManager
+ */
+export const createMockEntityManager = () => ({
+  clearAll: jest.fn(),
+  getActiveEntities: jest.fn().mockReturnValue([]),
+});
+
+/**
+ * Mock for ITurnManager.
+ *
+ * @description Creates a mock ITurnManager service.
+ * @returns {jest.Mocked<import('../../src/turns/interfaces/ITurnManager.js').ITurnManager>} Mocked turn manager
+ */
+export const createMockTurnManager = () => ({
+  start: jest.fn(),
+  stop: jest.fn(),
+  nextTurn: jest.fn(),
+});
+
+/**
+ * Mock for IGamePersistenceService.
+ *
+ * @description Creates a mock IGamePersistenceService service.
+ * @returns {jest.Mocked<import('../../src/interfaces/IGamePersistenceService.js').IGamePersistenceService>} Mocked persistence service
+ */
+export const createMockGamePersistenceService = () => ({
+  saveGame: jest.fn(),
+  loadAndRestoreGame: jest.fn(),
+  isSavingAllowed: jest.fn(),
+});
+
+/**
+ * Mock for PlaytimeTracker.
+ *
+ * @description Creates a mock PlaytimeTracker service.
+ * @returns {jest.Mocked<import('../../src/interfaces/IPlaytimeTracker.js').default>} Mocked playtime tracker
+ */
+export const createMockPlaytimeTracker = () => ({
+  reset: jest.fn(),
+  startSession: jest.fn(),
+  endSessionAndAccumulate: jest.fn(),
+  getTotalPlaytime: jest.fn().mockReturnValue(0),
+  setAccumulatedPlaytime: jest.fn(),
+});
+
+/**
+ * Mock for IInitializationService.
+ *
+ * @description Creates a mock IInitializationService service.
+ * @returns {jest.Mocked<import('../../src/interfaces/IInitializationService.js').IInitializationService>} Mocked initialization service
+ */
+export const createMockInitializationService = () => ({
+  runInitializationSequence: jest.fn(),
+});
+
 // --- Event Dispatcher Mocks ---
 
 /**
  * Creates a mock ISafeEventDispatcher with jest functions.
+ *
  * @returns {jest.Mocked<import('../../src/interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher>}
  */
 export const createMockSafeEventDispatcher = () => ({
@@ -136,6 +201,7 @@ export const createMockSafeEventDispatcher = () => ({
 
 /**
  * Creates a mock ValidatedEventDispatcher.
+ *
  * @returns {jest.Mocked<import('../../services/validatedEventDispatcher.js').default>}
  */
 export const createMockValidatedEventDispatcher = () => ({
@@ -146,6 +212,7 @@ export const createMockValidatedEventDispatcher = () => ({
 
 /**
  * Creates a generic mock for content loaders (e.g., ActionLoader, ComponentLoader).
+ *
  * @param {object} [defaultLoadResult] - The default result for loadItemsForMod.
  * @returns {jest.Mocked<import('../../../src/interfaces/coreServices.js').BaseManifestItemLoaderInterface>}
  */
@@ -157,6 +224,7 @@ export const createMockContentLoader = (
 
 /**
  * Creates a mock SchemaLoader.
+ *
  * @returns {jest.Mocked<import('../../src/loaders/schemaLoader.js').default>}
  */
 export const createMockSchemaLoader = () => ({
@@ -165,6 +233,7 @@ export const createMockSchemaLoader = () => ({
 
 /**
  * Creates a mock GameConfigLoader.
+ *
  * @returns {jest.Mocked<import('../../src/loaders/gameConfigLoader.js').default>}
  */
 export const createMockGameConfigLoader = () => ({
@@ -173,6 +242,7 @@ export const createMockGameConfigLoader = () => ({
 
 /**
  * Creates a mock ModManifestLoader.
+ *
  * @returns {jest.Mocked<import('../../src/modding/modManifestLoader.js').default>}
  */
 export const createMockModManifestLoader = () => ({
@@ -183,6 +253,7 @@ export const createMockModManifestLoader = () => ({
 
 /**
  * Creates a mock for the mod dependency validator.
+ *
  * @returns {{ validate: jest.Mock }}
  */
 export const createMockModDependencyValidator = () => ({
@@ -191,12 +262,14 @@ export const createMockModDependencyValidator = () => ({
 
 /**
  * Creates a mock for the mod version validator.
+ *
  * @returns {jest.Mock}
  */
 export const createMockModVersionValidator = () => jest.fn();
 
 /**
  * Creates a mock for the mod load order resolver.
+ *
  * @returns {{ resolveOrder: jest.Mock }}
  */
 export const createMockModLoadOrderResolver = () => ({
