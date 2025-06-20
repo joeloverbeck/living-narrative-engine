@@ -4,6 +4,7 @@
 
 import { jest } from '@jest/globals';
 import { clearMockFunctions } from './jestHelpers.js';
+import { createMockEnvironment } from './mockEnvironment.js';
 
 /**
  * @description Base class that stores mocks and exposes a reset helper.
@@ -28,6 +29,18 @@ export class BaseTestBed {
     Object.entries(mocks).forEach(([key, value]) => {
       this[key] = value;
     });
+  }
+
+  /**
+   * Creates mocks from factory functions and returns them with a cleanup helper.
+   *
+   * @param {Record<string, () => any>} factoryMap - Map of mock factory functions.
+   * @param {object} [extraProps] - Additional data merged into the result.
+   * @returns {{ mocks: Record<string, any>, cleanup: () => void } & object}
+   *   Generated mocks and cleanup function.
+   */
+  static fromFactories(factoryMap, extraProps = {}) {
+    return { ...createMockEnvironment(factoryMap), ...extraProps };
   }
 
   /**

@@ -5,7 +5,6 @@
  * @see tests/common/entities/testBed.js
  */
 
-import { jest } from '@jest/globals';
 import EntityManager from '../../../src/entities/entityManager.js';
 import EntityDefinition from '../../../src/entities/entityDefinition.js';
 import {
@@ -135,12 +134,12 @@ export class TestBed extends BaseTestBed {
    * @param {Function} [entityManagerOptions.idGenerator] - A mock ID generator function.
    */
   constructor(entityManagerOptions = {}) {
-    const mocks = {
-      registry: createSimpleMockDataRegistry(),
-      validator: createMockSchemaValidator(),
-      logger: createMockLogger(),
-      eventDispatcher: createMockSafeEventDispatcher(),
-    };
+    const { mocks } = BaseTestBed.fromFactories({
+      registry: createSimpleMockDataRegistry,
+      validator: createMockSchemaValidator,
+      logger: createMockLogger,
+      eventDispatcher: createMockSafeEventDispatcher,
+    });
     super(mocks);
 
     this.entityManager = new EntityManager({
