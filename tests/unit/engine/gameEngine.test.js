@@ -11,6 +11,7 @@ import {
 import GameEngine from '../../../src/engine/gameEngine.js';
 import { tokens } from '../../../src/dependencyInjection/tokens.js';
 import { createGameEngineTestBed } from '../../common/engine/gameEngineTestBed.js';
+import { expectDispatchCalls } from '../../common/engine/dispatchTestUtils.js';
 import {
   GAME_SAVED_ID,
   // --- Import new UI Event IDs ---
@@ -118,13 +119,14 @@ describe('GameEngine', () => {
             return testBed.mocks.safeEventDispatcher;
           case tokens.IInitializationService:
             return testBed.mocks.initializationService;
-          default:
+          default: {
             const tokenName =
               Object.keys(tokens).find((key) => tokens[key] === token) ||
               token?.toString();
             throw new Error(
               `Constructor failure: Unmocked token: ${tokenName}`
             );
+          }
         }
       });
 
@@ -469,35 +471,39 @@ describe('GameEngine', () => {
 
         const result = await gameEngine.triggerManualSave(SAVE_NAME);
 
-        const dispatchCalls =
-          testBed.mocks.safeEventDispatcher.dispatch.mock.calls;
+        const expectedDispatches = [
+          [
+            ENGINE_OPERATION_IN_PROGRESS_UI,
+            {
+              titleMessage: 'Saving...',
+              inputDisabledMessage: `Saving game "${SAVE_NAME}"...`,
+            },
+          ],
+          [
+            GAME_SAVED_ID,
+            {
+              saveName: SAVE_NAME,
+              path: saveResultData.filePath,
+              type: 'manual',
+            },
+          ],
+          [
+            ENGINE_READY_UI,
+            {
+              activeWorld: MOCK_ACTIVE_WORLD_FOR_SAVE,
+              message: 'Save operation finished. Ready.',
+            },
+          ],
+        ];
 
-        expect(dispatchCalls[0][0]).toBe(ENGINE_OPERATION_IN_PROGRESS_UI);
-        expect(dispatchCalls[0][1]).toEqual({
-          titleMessage: 'Saving...',
-          inputDisabledMessage: `Saving game "${SAVE_NAME}"...`,
-        });
+        expectDispatchCalls(
+          testBed.mocks.safeEventDispatcher.dispatch,
+          expectedDispatches
+        );
 
-        // 👇 MODIFIED EXPECTATION HERE
         expect(
           testBed.mocks.gamePersistenceService.saveGame
         ).toHaveBeenCalledWith(SAVE_NAME, true, MOCK_ACTIVE_WORLD_FOR_SAVE);
-
-        expect(dispatchCalls[1][0]).toBe(GAME_SAVED_ID);
-        expect(dispatchCalls[1][1]).toEqual({
-          saveName: SAVE_NAME,
-          path: saveResultData.filePath,
-          type: 'manual',
-        });
-
-        expect(dispatchCalls[2][0]).toBe(ENGINE_READY_UI);
-        expect(dispatchCalls[2][1]).toEqual({
-          activeWorld: MOCK_ACTIVE_WORLD_FOR_SAVE,
-          message: 'Save operation finished. Ready.',
-        });
-        expect(
-          testBed.mocks.safeEventDispatcher.dispatch
-        ).toHaveBeenCalledTimes(3);
         expect(result).toEqual(saveResultData);
       });
 
@@ -512,32 +518,31 @@ describe('GameEngine', () => {
 
         const result = await gameEngine.triggerManualSave(SAVE_NAME);
 
-        const dispatchCalls =
-          testBed.mocks.safeEventDispatcher.dispatch.mock.calls;
+        const expectedDispatches = [
+          [
+            ENGINE_OPERATION_IN_PROGRESS_UI,
+            {
+              titleMessage: 'Saving...',
+              inputDisabledMessage: `Saving game "${SAVE_NAME}"...`,
+            },
+          ],
+          [
+            ENGINE_READY_UI,
+            {
+              activeWorld: MOCK_ACTIVE_WORLD_FOR_SAVE,
+              message: 'Save operation finished. Ready.',
+            },
+          ],
+        ];
 
-        expect(dispatchCalls[0][0]).toBe(ENGINE_OPERATION_IN_PROGRESS_UI);
-        expect(dispatchCalls[0][1]).toEqual({
-          titleMessage: 'Saving...',
-          inputDisabledMessage: `Saving game "${SAVE_NAME}"...`,
-        });
+        expectDispatchCalls(
+          testBed.mocks.safeEventDispatcher.dispatch,
+          expectedDispatches
+        );
 
-        // 👇 MODIFIED EXPECTATION HERE
         expect(
           testBed.mocks.gamePersistenceService.saveGame
         ).toHaveBeenCalledWith(SAVE_NAME, true, MOCK_ACTIVE_WORLD_FOR_SAVE);
-
-        expect(dispatchCalls[1][0]).toBe(ENGINE_READY_UI);
-        expect(dispatchCalls[1][1]).toEqual({
-          activeWorld: MOCK_ACTIVE_WORLD_FOR_SAVE,
-          message: 'Save operation finished. Ready.',
-        });
-
-        expect(
-          testBed.mocks.safeEventDispatcher.dispatch
-        ).toHaveBeenCalledTimes(2);
-        expect(
-          testBed.mocks.safeEventDispatcher.dispatch
-        ).not.toHaveBeenCalledWith(GAME_SAVED_ID, expect.anything());
         expect(result).toEqual(saveFailureData);
       });
 
@@ -549,32 +554,31 @@ describe('GameEngine', () => {
 
         const result = await gameEngine.triggerManualSave(SAVE_NAME);
 
-        const dispatchCalls =
-          testBed.mocks.safeEventDispatcher.dispatch.mock.calls;
+        const expectedDispatches = [
+          [
+            ENGINE_OPERATION_IN_PROGRESS_UI,
+            {
+              titleMessage: 'Saving...',
+              inputDisabledMessage: `Saving game "${SAVE_NAME}"...`,
+            },
+          ],
+          [
+            ENGINE_READY_UI,
+            {
+              activeWorld: MOCK_ACTIVE_WORLD_FOR_SAVE,
+              message: 'Save operation finished. Ready.',
+            },
+          ],
+        ];
 
-        expect(dispatchCalls[0][0]).toBe(ENGINE_OPERATION_IN_PROGRESS_UI);
-        expect(dispatchCalls[0][1]).toEqual({
-          titleMessage: 'Saving...',
-          inputDisabledMessage: `Saving game "${SAVE_NAME}"...`,
-        });
+        expectDispatchCalls(
+          testBed.mocks.safeEventDispatcher.dispatch,
+          expectedDispatches
+        );
 
-        // 👇 MODIFIED EXPECTATION HERE
         expect(
           testBed.mocks.gamePersistenceService.saveGame
         ).toHaveBeenCalledWith(SAVE_NAME, true, MOCK_ACTIVE_WORLD_FOR_SAVE);
-
-        expect(dispatchCalls[1][0]).toBe(ENGINE_READY_UI);
-        expect(dispatchCalls[1][1]).toEqual({
-          activeWorld: MOCK_ACTIVE_WORLD_FOR_SAVE,
-          message: 'Save operation finished. Ready.',
-        });
-
-        expect(
-          testBed.mocks.safeEventDispatcher.dispatch
-        ).toHaveBeenCalledTimes(2);
-        expect(
-          testBed.mocks.safeEventDispatcher.dispatch
-        ).not.toHaveBeenCalledWith(GAME_SAVED_ID, expect.anything());
         expect(result).toEqual({
           success: false,
           error: `Unexpected error during save: ${unexpectedError.message}`,
@@ -613,7 +617,7 @@ describe('GameEngine', () => {
         });
       handleFailureSpy = jest
         .spyOn(gameEngine, '_handleLoadFailure')
-        .mockImplementation(async (error, saveId) => {
+        .mockImplementation(async (error) => {
           const errorMsg =
             error instanceof Error ? error.message : String(error);
           return {
@@ -649,7 +653,7 @@ describe('GameEngine', () => {
         data: null,
       });
       // Redefine handleFailureSpy for this specific test to check its input accurately
-      handleFailureSpy.mockImplementation(async (error, saveId) => {
+      handleFailureSpy.mockImplementation(async (error) => {
         return { success: false, error: String(error), data: null };
       });
 
@@ -674,7 +678,7 @@ describe('GameEngine', () => {
       const expectedError =
         'Restored data was missing or load operation failed.';
       // Redefine handleFailureSpy for this specific test
-      handleFailureSpy.mockImplementation(async (error, saveId) => {
+      handleFailureSpy.mockImplementation(async (error) => {
         return { success: false, error: String(error), data: null };
       });
 
@@ -715,12 +719,19 @@ describe('GameEngine', () => {
       expect(testBed.mocks.logger.error).toHaveBeenCalledWith(
         `GameEngine.loadGame: ${rawErrorMsg}`
       );
-      expect(testBed.mocks.safeEventDispatcher.dispatch).toHaveBeenCalledWith(
-        ENGINE_OPERATION_FAILED_UI,
-        {
-          errorMessage: rawErrorMsg,
-          errorTitle: 'Load Failed',
-        }
+      const expectedDispatches = [
+        [
+          ENGINE_OPERATION_FAILED_UI,
+          {
+            errorMessage: rawErrorMsg,
+            errorTitle: 'Load Failed',
+          },
+        ],
+      ];
+
+      expectDispatchCalls(
+        testBed.mocks.safeEventDispatcher.dispatch,
+        expectedDispatches
       );
       expect(result).toEqual({
         success: false,
