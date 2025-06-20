@@ -1,3 +1,5 @@
+import { jest } from '@jest/globals';
+
 /**
  * Clears jest mock call histories on all functions within the supplied objects.
  *
@@ -12,4 +14,13 @@ export function clearMockFunctions(...targets) {
       }
     }
   }
+}
+
+/**
+ * Creates a spy that suppresses output from `console.error` during a test.
+ *
+ * @returns {import('@jest/globals').Mock} Jest spy on `console.error`.
+ */
+export function suppressConsoleError() {
+  return jest.spyOn(console, 'error').mockImplementation(() => {});
 }

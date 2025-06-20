@@ -4,7 +4,10 @@
  */
 
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
-import { GameEngineTestBed } from '../../../common/engine/gameEngineTestBed.js';
+import {
+  GameEngineTestBed,
+  describeGameEngineSuite,
+} from '../../../common/engine/gameEngineTestBed.js';
 import GameEngine from '../../../../src/engine/gameEngine.js';
 import { tokens } from '../../../../src/dependencyInjection/tokens.js';
 
@@ -136,5 +139,36 @@ describe('GameEngine Test Helpers: GameEngineTestBed', () => {
     expect(
       testBed.initializationService.runInitializationSequence
     ).not.toHaveBeenCalled();
+  });
+});
+
+describe('describeGameEngineSuite', () => {
+  let cleanupCalls = 0;
+  const originalCleanup = GameEngineTestBed.prototype.cleanup;
+  const cleanupSpy = jest
+    .spyOn(GameEngineTestBed.prototype, 'cleanup')
+    .mockImplementation(async function (...args) {
+      cleanupCalls++;
+      return originalCleanup.apply(this, args);
+    });
+
+  describeGameEngineSuite('inner', (getBed) => {
+    it('instantiates a test bed', () => {
+      expect(getBed()).toBeInstanceOf(GameEngineTestBed);
+    });
+
+    it('suppresses console.error', () => {
+      expect(jest.isMockFunction(console.error)).toBe(true);
+      console.error('oops');
+      expect(console.error).toHaveBeenCalledWith('oops');
+    });
+  });
+
+  afterAll(() => {
+    cleanupSpy.mockRestore();
+  });
+
+  it('calls cleanup after each test', () => {
+    expect(cleanupCalls).toBe(2);
   });
 });
