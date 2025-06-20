@@ -11,6 +11,7 @@ import {
   TestData,
   TestBed,
 } from '../../common/entities/testBed.js';
+import { expectDispatchCalls } from '../../common/engine/dispatchTestUtils.js';
 import Entity from '../../../src/entities/entity.js';
 import { DefinitionNotFoundError } from '../../../src/errors/definitionNotFoundError.js';
 import { EntityNotFoundError } from '../../../src/errors/entityNotFoundError.js';
@@ -112,14 +113,15 @@ describeEntityManagerSuite('EntityManager - Lifecycle', (getBed) => {
       const entity = getBed().createEntity('basic');
 
       // Assert
-      expect(mocks.eventDispatcher.dispatch).toHaveBeenCalledTimes(1);
-      expect(mocks.eventDispatcher.dispatch).toHaveBeenCalledWith(
-        ENTITY_CREATED_ID,
-        {
-          entity,
-          wasReconstructed: false,
-        }
-      );
+      expectDispatchCalls(mocks.eventDispatcher.dispatch, [
+        [
+          ENTITY_CREATED_ID,
+          {
+            entity,
+            wasReconstructed: false,
+          },
+        ],
+      ]);
     });
 
     it('should throw a DefinitionNotFoundError if the definitionId does not exist', () => {
@@ -267,14 +269,15 @@ describeEntityManagerSuite('EntityManager - Lifecycle', (getBed) => {
       );
 
       // Assert event was dispatched
-      expect(mocks.eventDispatcher.dispatch).toHaveBeenCalledTimes(1);
-      expect(mocks.eventDispatcher.dispatch).toHaveBeenCalledWith(
-        ENTITY_CREATED_ID,
-        {
-          entity,
-          wasReconstructed: true,
-        }
-      );
+      expectDispatchCalls(mocks.eventDispatcher.dispatch, [
+        [
+          ENTITY_CREATED_ID,
+          {
+            entity,
+            wasReconstructed: true,
+          },
+        ],
+      ]);
     });
 
     it('should throw an error if the definition is not found', () => {
@@ -392,13 +395,14 @@ describeEntityManagerSuite('EntityManager - Lifecycle', (getBed) => {
       entityManager.removeEntityInstance(entity.id);
 
       // Assert
-      expect(mocks.eventDispatcher.dispatch).toHaveBeenCalledTimes(1);
-      expect(mocks.eventDispatcher.dispatch).toHaveBeenCalledWith(
-        ENTITY_REMOVED_ID,
-        {
-          entity,
-        }
-      );
+      expectDispatchCalls(mocks.eventDispatcher.dispatch, [
+        [
+          ENTITY_REMOVED_ID,
+          {
+            entity,
+          },
+        ],
+      ]);
     });
 
     it('should throw an EntityNotFoundError when trying to remove a non-existent entity', () => {
