@@ -68,6 +68,43 @@ export const TestData = {
     SECONDARY: 'test-instance-02',
     GHOST: 'non-existent-instance-id',
   },
+
+  /**
+   * Default payloads that {@link EntityManager} injects for core components.
+   *
+   * @type {Record<string, object>}
+   */
+  DefaultComponentData: {
+    [SHORT_TERM_MEMORY_COMPONENT_ID]: { thoughts: [], maxEntries: 10 },
+    [NOTES_COMPONENT_ID]: { notes: [] },
+    [GOALS_COMPONENT_ID]: { goals: [] },
+  },
+
+  /**
+   * Collections of intentionally invalid values for negative test cases.
+   *
+   * @property {Array<*>} componentDataNotObject - Values that are not objects
+   *   when component data is expected.
+   * @property {Array<Array<*>>} invalidIdPairs - Invalid definition/instance ID
+   *   pairs used in tests.
+   * @property {Array<*>} invalidIds - Generic invalid ID values.
+   * @property {Array<*>} serializedEntityShapes - Invalid serialized entity
+   *   structures passed to {@link EntityManager#reconstructEntity}.
+   * @property {Array<*>} serializedInstanceIds - Invalid instanceId values used
+   *   in reconstruction tests.
+   */
+  InvalidValues: {
+    componentDataNotObject: [null, 42, 'string', [], true],
+    invalidIdPairs: [
+      [null, 'id'],
+      ['def', null],
+      ['', ''],
+      [123, {}],
+    ],
+    invalidIds: [null, undefined, '', 123, {}, []],
+    serializedEntityShapes: [null, 'invalid', 42, [], { foo: 'bar' }],
+    serializedInstanceIds: [null, undefined, '', 42],
+  },
 };
 
 /**
@@ -172,3 +209,5 @@ export class TestBed {
     this.mocks.eventDispatcher.dispatch.mockClear();
   }
 }
+
+export default TestBed;
