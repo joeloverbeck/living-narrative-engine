@@ -15,12 +15,12 @@ import {
   expectDispatchSequence,
   buildSaveDispatches,
   DEFAULT_ACTIVE_WORLD_FOR_SAVE,
+  expectEngineStatus,
 } from '../../common/engine/dispatchTestUtils.js';
 import {
   // --- Import new UI Event IDs ---
   ENGINE_INITIALIZING_UI,
   ENGINE_READY_UI,
-  ENGINE_OPERATION_IN_PROGRESS_UI,
   ENGINE_OPERATION_FAILED_UI,
   ENGINE_STOPPED_UI,
   REQUEST_SHOW_SAVE_GAME_UI,
@@ -150,10 +150,11 @@ describe('GameEngine', () => {
       );
       expect(testBed.mocks.turnManager.start).toHaveBeenCalled();
 
-      const status = gameEngine.getEngineStatus();
-      expect(status.isInitialized).toBe(true);
-      expect(status.isLoopRunning).toBe(true);
-      expect(status.activeWorld).toBe(MOCK_WORLD_NAME);
+      expectEngineStatus(gameEngine, {
+        isInitialized: true,
+        isLoopRunning: true,
+        activeWorld: MOCK_WORLD_NAME,
+      });
     });
 
     it('should stop an existing game if already initialized, with correct event payloads from stop()', async () => {
@@ -187,8 +188,11 @@ describe('GameEngine', () => {
           message: 'Enter command...',
         }
       );
-      const status = gameEngine.getEngineStatus();
-      expect(status.activeWorld).toBe(MOCK_WORLD_NAME);
+      expectEngineStatus(gameEngine, {
+        isInitialized: true,
+        isLoopRunning: true,
+        activeWorld: MOCK_WORLD_NAME,
+      });
     });
 
     it('should handle InitializationService failure', async () => {
@@ -211,10 +215,11 @@ describe('GameEngine', () => {
           errorTitle: 'Initialization Error',
         }
       );
-      const status = gameEngine.getEngineStatus();
-      expect(status.isInitialized).toBe(false);
-      expect(status.isLoopRunning).toBe(false);
-      expect(status.activeWorld).toBeNull();
+      expectEngineStatus(gameEngine, {
+        isInitialized: false,
+        isLoopRunning: false,
+        activeWorld: null,
+      });
     });
 
     it('should handle general errors during start-up and dispatch failure event', async () => {
@@ -238,10 +243,11 @@ describe('GameEngine', () => {
           errorTitle: 'Initialization Error',
         }
       );
-      const status = gameEngine.getEngineStatus();
-      expect(status.isInitialized).toBe(false); // Should be reset by _handleNewGameFailure
-      expect(status.isLoopRunning).toBe(false);
-      expect(status.activeWorld).toBeNull();
+      expectEngineStatus(gameEngine, {
+        isInitialized: false, // Should be reset by _handleNewGameFailure
+        isLoopRunning: false,
+        activeWorld: null,
+      });
     });
   });
 
@@ -274,19 +280,22 @@ describe('GameEngine', () => {
         { inputDisabledMessage: 'Game stopped. Engine is inactive.' }
       );
 
-      const status = gameEngine.getEngineStatus();
-      expect(status.isInitialized).toBe(false);
-      expect(status.isLoopRunning).toBe(false);
-      expect(status.activeWorld).toBeNull();
+      expectEngineStatus(gameEngine, {
+        isInitialized: false,
+        isLoopRunning: false,
+        activeWorld: null,
+      });
 
       expect(testBed.mocks.logger.warn).not.toHaveBeenCalled();
     });
 
     it('should do nothing and log if engine is already stopped', async () => {
       // gameEngine is fresh, so not initialized
-      const initialStatus = gameEngine.getEngineStatus();
-      expect(initialStatus.isInitialized).toBe(false);
-      expect(initialStatus.isLoopRunning).toBe(false);
+      expectEngineStatus(gameEngine, {
+        isInitialized: false,
+        isLoopRunning: false,
+        activeWorld: null,
+      });
 
       testBed.resetMocks();
 
@@ -314,9 +323,11 @@ describe('GameEngine', () => {
       );
       await localEngine.startNewGame(MOCK_WORLD_NAME); // Should start, but with warnings about PT
 
-      const statusAfterStart = localEngine.getEngineStatus();
-      expect(statusAfterStart.isInitialized).toBe(true);
-      expect(statusAfterStart.isLoopRunning).toBe(true);
+      expectEngineStatus(localEngine, {
+        isInitialized: true,
+        isLoopRunning: true,
+        activeWorld: MOCK_WORLD_NAME,
+      });
 
       localBed.resetMocks();
       // testBed.mocks.playtimeTracker.endSessionAndAccumulate should not be called as the instance is null
@@ -784,8 +795,7 @@ describe('GameEngine', () => {
     });
 
     it('should return initial status correctly after construction', () => {
-      const status = gameEngine.getEngineStatus();
-      expect(status).toEqual({
+      expectEngineStatus(gameEngine, {
         isInitialized: false,
         isLoopRunning: false,
         activeWorld: null,
@@ -799,8 +809,7 @@ describe('GameEngine', () => {
         }
       );
       await gameEngine.startNewGame(MOCK_WORLD_NAME);
-      const status = gameEngine.getEngineStatus();
-      expect(status).toEqual({
+      expectEngineStatus(gameEngine, {
         isInitialized: true,
         isLoopRunning: true,
         activeWorld: MOCK_WORLD_NAME,
@@ -815,8 +824,7 @@ describe('GameEngine', () => {
       );
       await gameEngine.startNewGame(MOCK_WORLD_NAME);
       await gameEngine.stop();
-      const status = gameEngine.getEngineStatus();
-      expect(status).toEqual({
+      expectEngineStatus(gameEngine, {
         isInitialized: false,
         isLoopRunning: false,
         activeWorld: null,
