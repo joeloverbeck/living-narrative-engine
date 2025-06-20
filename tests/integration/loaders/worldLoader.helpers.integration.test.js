@@ -1,14 +1,22 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
-import WorldLoader from '../../../src/loaders/worldLoader.js';
+import ModsLoader from '../../../src/loaders/modsLoader.js';
 import LoadResultAggregator from '../../../src/loaders/LoadResultAggregator.js';
 import MissingSchemaError from '../../../src/errors/missingSchemaError.js';
 
 /**
- * Creates a WorldLoader instance with mocked dependencies for unit tests.
+ * Creates a ModsLoader instance with mocked dependencies for unit tests.
  *
- * @returns {{worldLoader: WorldLoader, configuration: any, validator: any, logger: any}}
+ * @returns {{
+ *   modsLoader: ModsLoader,
+ *   configuration: any, validator: any, logger: any, worldLoader: any, registry: any,
+ *   schemaLoader: any, componentLoader: any, conditionLoader: any, ruleLoader: any,
+ *   macroLoader: any, actionLoader: any, eventLoader: any, entityLoader: any,
+ *   entityInstanceLoader: any, gameConfigLoader: any, promptTextLoader: any,
+ *   modManifestLoader: any, validatedEventDispatcher: any, modDependencyValidator: any,
+ *   modVersionValidator: any, modLoadOrderResolver: any
+ * }}
  */
-function createWorldLoader() {
+function createModsLoader() {
   const schemaIds = {
     game: 'id:game',
     components: 'id:components',
@@ -21,45 +29,73 @@ function createWorldLoader() {
     conditions: 'id:conditions',
   };
 
-  const configuration = {
-    getContentTypeSchemaId: jest.fn((type) => schemaIds[type]),
-  };
-  const validator = {
-    isSchemaLoaded: jest.fn(() => true),
-  };
-  const logger = {
-    debug: jest.fn(),
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
-  };
-  const registry = { store: jest.fn(), get: jest.fn(), clear: jest.fn() };
-  const loaderMock = { loadItemsForMod: jest.fn() };
-  const schemaLoader = { loadAndCompileAllSchemas: jest.fn() };
+  // --- Mock all direct dependencies of ModsLoader ---
+  const logger = { debug: jest.fn(), info: jest.fn(), warn: jest.fn(), error: jest.fn() };
+  const registry = { store: jest.fn(), get: jest.fn(), clear: jest.fn(), setManifest: jest.fn(), getManifest: jest.fn() };
+  const validator = { isSchemaLoaded: jest.fn(() => true), addSchema: jest.fn(), validate: jest.fn() }; // ISchemaValidator
+  const configuration = { getContentTypeSchemaId: jest.fn((type) => schemaIds[type]), getModManifestFilename: jest.fn(() => 'mod.manifest.json')}; // IConfiguration
+  
+  const schemaLoader = { loadAndCompileAllSchemas: jest.fn().mockResolvedValue(undefined) };
+  const componentLoader = { loadItemsForMod: jest.fn().mockResolvedValue({ count: 0, overrides: 0, errors: 0 }) };
+  const conditionLoader = { loadItemsForMod: jest.fn().mockResolvedValue({ count: 0, overrides: 0, errors: 0 }) };
+  const ruleLoader = { loadItemsForMod: jest.fn().mockResolvedValue({ count: 0, overrides: 0, errors: 0 }) };
+  const macroLoader = { loadItemsForMod: jest.fn().mockResolvedValue({ count: 0, overrides: 0, errors: 0 }) };
+  const actionLoader = { loadItemsForMod: jest.fn().mockResolvedValue({ count: 0, overrides: 0, errors: 0 }) };
+  const eventLoader = { loadItemsForMod: jest.fn().mockResolvedValue({ count: 0, overrides: 0, errors: 0 }) };
+  const entityLoader = { loadItemsForMod: jest.fn().mockResolvedValue({ count: 0, overrides: 0, errors: 0 }) }; // EntityDefinitionLoader
+  const entityInstanceLoader = { loadItemsForMod: jest.fn().mockResolvedValue({ count: 0, overrides: 0, errors: 0 }) };
   const gameConfigLoader = { loadConfig: jest.fn().mockResolvedValue([]) };
-  const promptTextLoader = { loadPromptText: jest.fn() };
-  const modManifestLoader = {
-    loadRequestedManifests: jest.fn().mockResolvedValue(new Map()),
-  };
-  const validatedEventDispatcher = { dispatch: jest.fn() };
+  const promptTextLoader = { loadPromptText: jest.fn().mockResolvedValue({}) };
+  const modManifestLoader = { loadRequestedManifests: jest.fn().mockResolvedValue(new Map()), loadManifest: jest.fn() };
+  const validatedEventDispatcher = { dispatch: jest.fn().mockResolvedValue(undefined) };
   const modDependencyValidator = { validate: jest.fn() };
-  const modVersionValidator = jest.fn();
-  const modLoadOrderResolver = { resolveOrder: jest.fn() };
+  const modVersionValidator = jest.fn().mockImplementation(() => true);
+  const modLoadOrderResolver = { resolveOrder: jest.fn().mockImplementation(manifests => Array.from(manifests.keys())) };
+  const worldLoader = { loadWorlds: jest.fn().mockResolvedValue(undefined) };
+  // contentLoadersConfig can be null to use default
 
-  const worldLoader = new WorldLoader({
+  // ModsLoader expects a single object with these properties
+  const modsLoader = new ModsLoader({
     registry,
     logger,
     schemaLoader,
-    componentLoader: loaderMock,
-    conditionLoader: loaderMock,
-    ruleLoader: loaderMock,
-    macroLoader: loaderMock,
-    actionLoader: loaderMock,
-    eventLoader: loaderMock,
-    entityLoader: loaderMock,
-    entityInstanceLoader: loaderMock,
-    validator,
+    componentLoader,
+    conditionLoader,
+    ruleLoader,
+    macroLoader,
+    actionLoader,
+    eventLoader,
+    entityLoader, // Alias for componentDefinitionLoader
+    entityInstanceLoader,
+    validator,    // ISchemaValidator
+    configuration,// IConfiguration
+    gameConfigLoader,
+    promptTextLoader,
+    modManifestLoader, // Instance of ModManifestLoader class
+    validatedEventDispatcher,
+    modDependencyValidator,
+    modVersionValidator,
+    modLoadOrderResolver,
+    worldLoader,
+    contentLoadersConfig: null, // Use default
+  });
+
+  return {
+    modsLoader,
     configuration,
+    validator,
+    logger,
+    worldLoader,
+    registry,
+    schemaLoader,
+    componentLoader,
+    conditionLoader,
+    ruleLoader,
+    macroLoader,
+    actionLoader,
+    eventLoader,
+    entityLoader,
+    entityInstanceLoader,
     gameConfigLoader,
     promptTextLoader,
     modManifestLoader,
@@ -67,31 +103,70 @@ function createWorldLoader() {
     modDependencyValidator,
     modVersionValidator,
     modLoadOrderResolver,
-    contentLoadersConfig: null,
-  });
-
-  return { worldLoader, configuration, validator, logger };
+  };
 }
 
-describe('WorldLoader helper methods', () => {
-  let worldLoader;
+describe('ModsLoader helper methods', () => {
+  let modsLoader;
   let configuration;
   let validator;
   let logger;
+  let worldLoader;
+  let registry;
+  let schemaLoader;
+  let componentLoader;
+  let conditionLoader;
+  let ruleLoader;
+  let macroLoader;
+  let actionLoader;
+  let eventLoader;
+  let entityLoader;
+  let entityInstanceLoader;
+  let gameConfigLoader;
+  let promptTextLoader;
+  let modManifestLoader;
+  let validatedEventDispatcher;
+  let modDependencyValidator;
+  let modVersionValidator;
+  let modLoadOrderResolver;
 
   beforeEach(() => {
-    ({ worldLoader, configuration, validator, logger } = createWorldLoader());
+    // Destructure all relevant mocks
+    ({
+      modsLoader,
+      configuration,
+      validator,
+      logger,
+      worldLoader,
+      registry, // Added
+      schemaLoader, // Added
+      componentLoader, // Added
+      conditionLoader, // Added
+      ruleLoader, // Added
+      macroLoader, // Added
+      actionLoader, // Added
+      eventLoader, // Added
+      entityLoader, // Added
+      entityInstanceLoader, // Added
+      gameConfigLoader, // Added
+      promptTextLoader, // Added
+      modManifestLoader, // Added
+      validatedEventDispatcher, // Added
+      modDependencyValidator, // Added
+      modVersionValidator, // Added
+      modLoadOrderResolver, // Added
+    } = createModsLoader());
     jest.clearAllMocks();
   });
 
   describe('checkEssentialSchemas', () => {
     it('passes when all schemas are loaded', () => {
-      expect(() => worldLoader.checkEssentialSchemas()).not.toThrow();
+      expect(() => modsLoader._checkEssentialSchemas()).not.toThrow();
     });
 
     it('throws MissingSchemaError when a schema id is undefined', () => {
       const missingType = 'actions';
-      const expectedLog = `WorldLoader: Essential schema type '${missingType}' is not configured (no schema ID found).`;
+      const expectedLog = `ModsLoader: Essential schema type '${missingType}' is not configured (no schema ID found).`;
       const expectedErrorMsg = `Essential schema type '${missingType}' is not configured (no schema ID found).`;
 
       configuration.getContentTypeSchemaId.mockImplementation((type) =>
@@ -100,7 +175,7 @@ describe('WorldLoader helper methods', () => {
 
       let caughtError;
       try {
-        worldLoader.checkEssentialSchemas();
+        modsLoader._checkEssentialSchemas();
       } catch (e) {
         caughtError = e;
       }
@@ -114,7 +189,7 @@ describe('WorldLoader helper methods', () => {
     it('throws MissingSchemaError when a schema is not loaded', () => {
       const notLoadedType = 'actions';
       const notLoadedSchemaId = `id:${notLoadedType}`;
-      const expectedLog = `WorldLoader: Essential schema '${notLoadedSchemaId}' (type: '${notLoadedType}') is configured but not loaded.`;
+      const expectedLog = `ModsLoader: Essential schema '${notLoadedSchemaId}' (type: '${notLoadedType}') is configured but not loaded.`;
       const expectedErrorMsg = `Essential schema '${notLoadedSchemaId}' (type: '${notLoadedType}') is configured but not loaded.`;
 
       validator.isSchemaLoaded.mockImplementation(
@@ -123,7 +198,7 @@ describe('WorldLoader helper methods', () => {
 
       let caughtError;
       try {
-        worldLoader.checkEssentialSchemas();
+        modsLoader._checkEssentialSchemas();
       } catch (e) {
         caughtError = e;
       }

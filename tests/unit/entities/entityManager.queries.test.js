@@ -199,4 +199,142 @@ describe('EntityManager - Queries and Accessors', () => {
       expect(results2.map((e) => e.id)).toContain(entity2.id);
     });
   });
+
+  // ----------------------------------------------------------------------//
+  //
+  //                          findEntities
+  //
+  // ----------------------------------------------------------------------//
+  describe('findEntities', () => {
+    const COMPONENT_A = 'test:comp-a';
+    const COMPONENT_B = 'test:comp-b';
+    const COMPONENT_C = 'test:comp-c';
+
+    let entity1, entity2, entity3, entity4;
+
+    beforeEach(() => {
+      const { entityManager } = testBed;
+      testBed.setupDefinitions(TestData.Definitions.basic);
+
+      // entity1: has A
+      entity1 = entityManager.createEntityInstance(TestData.DefinitionIDs.BASIC, {
+        instanceId: 'e1',
+        componentOverrides: { [COMPONENT_A]: { val: 1 } },
+      });
+
+      // entity2: has B, C
+      entity2 = entityManager.createEntityInstance(TestData.DefinitionIDs.BASIC, {
+        instanceId: 'e2',
+        componentOverrides: {
+          [COMPONENT_B]: { val: 2 },
+          [COMPONENT_C]: { val: 3 },
+        },
+      });
+
+      // entity3: has A, B
+      entity3 = entityManager.createEntityInstance(TestData.DefinitionIDs.BASIC, {
+        instanceId: 'e3',
+        componentOverrides: {
+          [COMPONENT_A]: { val: 4 },
+          [COMPONENT_B]: { val: 5 },
+        },
+      });
+
+      // entity4: has A, B, C
+      entity4 = entityManager.createEntityInstance(TestData.DefinitionIDs.BASIC, {
+        instanceId: 'e4',
+        componentOverrides: {
+          [COMPONENT_A]: { val: 6 },
+          [COMPONENT_B]: { val: 7 },
+          [COMPONENT_C]: { val: 8 },
+        },
+      });
+    });
+
+    it('should return an empty array and warn if no positive conditions are provided', () => {
+      const { entityManager, mocks } = testBed;
+      const results = entityManager.findEntities({ without: [COMPONENT_A] });
+      expect(results).toEqual([]);
+      expect(mocks.logger.warn).toHaveBeenCalledWith(expect.stringContaining('called with no "withAll" or "withAny"'));
+    });
+
+    it('should handle empty queries gracefully', () => {
+      const { entityManager, mocks } = testBed;
+      const results = entityManager.findEntities({});
+      expect(results).toEqual([]);
+      expect(mocks.logger.warn).toHaveBeenCalledWith(expect.stringContaining('called with no "withAll" or "withAny"'));
+    });
+
+    it('should return entities with ALL of the specified components', () => {
+      const { entityManager } = testBed;
+      const results = entityManager.findEntities({ withAll: [COMPONENT_A, COMPONENT_B] });
+      const ids = results.map(e => e.id);
+      expect(ids).toHaveLength(2);
+      expect(ids).toContain(entity3.id);
+      expect(ids).toContain(entity4.id);
+    });
+
+    it('should return entities with ANY of the specified components', () => {
+      const { entityManager } = testBed;
+      const results = entityManager.findEntities({ withAny: [COMPONENT_A, COMPONENT_C] });
+      const ids = results.map(e => e.id);
+      expect(ids).toHaveLength(4); // e1 (A), e2 (C), e3 (A), e4 (A, C)
+      expect(ids).toContain(entity1.id);
+      expect(ids).toContain(entity2.id);
+      expect(ids).toContain(entity3.id);
+      expect(ids).toContain(entity4.id);
+    });
+
+    it('should exclude entities with any of the WITHOUT components', () => {
+      const { entityManager } = testBed;
+      // Find entities with A, but without C
+      const results = entityManager.findEntities({ withAll: [COMPONENT_A], without: [COMPONENT_C] });
+      const ids = results.map(e => e.id);
+      expect(ids).toHaveLength(2); // e1, e3
+      expect(ids).toContain(entity1.id);
+      expect(ids).toContain(entity3.id);
+    });
+
+    it('should correctly combine withAll and withAny', () => {
+      const { entityManager } = testBed;
+      // Must have A, and must have either B or C
+      const results = entityManager.findEntities({ withAll: [COMPONENT_A], withAny: [COMPONENT_B, COMPONENT_C] });
+      const ids = results.map(e => e.id);
+      expect(ids).toHaveLength(2); // e3 (A, B), e4 (A, B, C)
+      expect(ids).toContain(entity3.id);
+      expect(ids).toContain(entity4.id);
+    });
+
+    it('should correctly combine withAll, withAny, and without', () => {
+        const { entityManager } = testBed;
+        // Must have A, must have B or C, but must NOT have C
+        // This logic simplifies to: Must have A and B, but not C
+        const results = entityManager.findEntities({
+            withAll: [COMPONENT_A],
+            withAny: [COMPONENT_B, COMPONENT_C],
+            without: [COMPONENT_C]
+        });
+        const ids = results.map(e => e.id);
+        expect(ids).toHaveLength(1); // e3 (A,B)
+        expect(ids).toContain(entity3.id);
+    });
+
+    it('should return an empty array if a withAll condition is impossible', () => {
+        const { entityManager } = testBed;
+        const results = entityManager.findEntities({ withAll: [COMPONENT_A, 'nonexistent'] });
+        expect(results).toEqual([]);
+    });
+
+    it('should return an empty array if withAny condition is not met', () => {
+        const { entityManager } = testBed;
+        const results = entityManager.findEntities({ withAll: [COMPONENT_A], withAny: ['nonexistent'] });
+        expect(results).toEqual([]);
+    });
+    
+    it('should return all entities when query matches all', () => {
+        const { entityManager } = testBed;
+        const results = entityManager.findEntities({ withAny: [COMPONENT_A, COMPONENT_B, COMPONENT_C] });
+        expect(results).toHaveLength(4);
+    });
+  });
 });

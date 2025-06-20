@@ -115,4 +115,17 @@ export class IEntityManager {
   getEntitiesInLocation(locationId) {
     throw new Error('IEntityManager.getEntitiesInLocation not implemented.');
   }
+
+  /**
+   * Finds all active entities that match a complex query.
+   *
+   * @param {object} query - The query definition.
+   * @param {string[]} [query.withAll] - A list of componentTypeIds that the entity must have.
+   * @param {string[]} [query.withAny] - A list of componentTypeIds where the entity must have at least one.
+   * @param {string[]} [query.without] - A list of componentTypeIds that the entity must NOT have.
+   * @returns {Entity[]} A new array of matching entities.
+   */
+  findEntities(query) {
+    throw new Error('IEntityManager.findEntities not implemented.');
+  }
 }

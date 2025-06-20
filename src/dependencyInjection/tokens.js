@@ -56,7 +56,9 @@ import { freeze } from '../utils';
  * @property {DiToken} EventLoader - Token for the event loading service.
  * @property {DiToken} MacroLoader - Token for the macro loading service.
  * @property {DiToken} EntityLoader - Token for loading entity definitions.
+ * @property {DiToken} EntityInstanceLoader - Token for loading entity instances from world files or saves.
  * @property {DiToken} WorldLoader - Token for orchestrating world data loading.
+ * @property {DiToken} ModsLoader - Token for orchestrating world data loading.
  * @property {DiToken} GameConfigLoader - Token for loading the main game configuration file.
  * @property {DiToken} PromptTextLoader - Token for loading the core prompt text used by the AI system.
  * @property {DiToken} ModManifestLoader - Token for loading mod manifests.
@@ -188,7 +190,9 @@ export const tokens = freeze({
   EventLoader: 'EventLoader',
   MacroLoader: 'MacroLoader',
   EntityLoader: 'EntityLoader',
+  EntityInstanceLoader: 'EntityInstanceLoader',
   WorldLoader: 'WorldLoader',
+  ModsLoader: 'ModsLoader',
   GameConfigLoader: 'GameConfigLoader',
   PromptTextLoader: 'PromptTextLoader',
   ModManifestLoader: 'ModManifestLoader',

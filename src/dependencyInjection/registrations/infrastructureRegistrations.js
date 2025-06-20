@@ -2,7 +2,7 @@
 
 import EventBus from '../../events/eventBus.js';
 import SpatialIndexManager from '../../entities/spatialIndexManager.js';
-import WorldLoader from '../../loaders/worldLoader.js';
+import ModsLoader from '../../loaders/modsLoader.js';
 import PromptTextLoader from '../../loaders/promptTextLoader.js';
 import { GameDataRepository } from '../../data/gameDataRepository.js'; // Concrete class
 import ValidatedEventDispatcher from '../../events/validatedEventDispatcher.js'; // Concrete Class Import
@@ -91,7 +91,7 @@ export function registerInfrastructure(container) {
   );
 
   container.register(
-    tokens.WorldLoader,
+    tokens.ModsLoader,
     (c) => {
       const dependencies = {
         registry: c.resolve(tokens.IDataRegistry),
@@ -104,6 +104,7 @@ export function registerInfrastructure(container) {
         actionLoader: c.resolve(tokens.ActionLoader),
         eventLoader: c.resolve(tokens.EventLoader),
         entityLoader: c.resolve(tokens.EntityLoader),
+        worldLoader: c.resolve(tokens.WorldLoader),
         validator: c.resolve(tokens.ISchemaValidator),
         configuration: c.resolve(tokens.IConfiguration),
         gameConfigLoader: c.resolve(tokens.GameConfigLoader),
@@ -114,20 +115,20 @@ export function registerInfrastructure(container) {
         modVersionValidator: validateModEngineVersions,
         modLoadOrderResolver: ModLoadOrderResolver,
       };
-      return new WorldLoader(dependencies);
+      return new ModsLoader(dependencies);
     },
     { lifecycle: 'singleton' }
   );
   log.debug(
-    `Infrastructure Registration: Registered ${String(tokens.WorldLoader)}.`
+    `Infrastructure Registration: Registered ${String(tokens.ModsLoader)}.`
   );
 
   container.register(
     tokens.IGameDataRepository,
     (c) =>
       new GameDataRepository(
-        /** @type {IDataRegistry} */ (c.resolve(tokens.IDataRegistry)),
-        /** @type {ILogger} */ (c.resolve(tokens.ILogger))
+        /** @type {IDataRegistry} */(c.resolve(tokens.IDataRegistry)),
+        /** @type {ILogger} */(c.resolve(tokens.ILogger))
       ),
     { lifecycle: 'singleton' }
   );

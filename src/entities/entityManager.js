@@ -748,6 +748,39 @@ class EntityManager extends IEntityManager {
     return results;
   }
 
+  findEntities({ withAll = [], withAny = [], without = [] }) {
+    const results = [];
+
+    // A query must have at least one positive condition.
+    if (withAll.length === 0 && withAny.length === 0) {
+      this.#logger.warn('EntityManager.findEntities called with no "withAll" or "withAny" conditions. Returning empty array.');
+      return [];
+    }
+
+    for (const entity of this.activeEntities.values()) {
+      // 1. 'without' check (fastest rejection): If the entity has any component from the 'without' list, skip it.
+      if (without.length > 0 && without.some(componentTypeId => entity.hasComponent(componentTypeId))) {
+        continue;
+      }
+
+      // 2. 'withAll' check: If the entity fails to have even one component from the 'withAll' list, skip it.
+      if (withAll.length > 0 && !withAll.every(componentTypeId => entity.hasComponent(componentTypeId))) {
+        continue;
+      }
+
+      // 3. 'withAny' check: If a 'withAny' list is provided, the entity must have at least one component from it.
+      if (withAny.length > 0 && !withAny.some(componentTypeId => entity.hasComponent(componentTypeId))) {
+        continue;
+      }
+
+      // If all checks pass, add the entity to the results.
+      results.push(entity);
+    }
+
+    this.#logger.debug(`EntityManager.findEntities found ${results.length} entities for query.`);
+    return results;
+  }
+
   /**
    * Remove an entity instance from the manager.
    *

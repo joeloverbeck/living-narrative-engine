@@ -1,18 +1,18 @@
-// Filename: src/tests/loaders/worldLoader.logVerification.test.js
+// Filename: src/tests/loaders/modsLoader.logVerification.test.js
 
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 
 // --- The new Test Setup Factory ---
-import { createTestEnvironment } from '../../common/loaders/worldLoader.test-setup.js';
+import { createTestEnvironment } from '../../common/loaders/modsLoader.test-setup.js';
 
 // --- Dependencies to Mock ---
-import { CORE_MOD_ID } from '../../../src/constants/core';
+import { CORE_MOD_ID } from '../../../src/constants/core.js';
 
 // --- Type‑only JSDoc imports for Mocks ---
-/** @typedef {import('../../common/loaders/worldLoader.test-setup.js').TestEnvironment} TestEnvironment */
+/** @typedef {import('../../common/loaders/modsLoader.test-setup.js').TestEnvironment} TestEnvironment */
 /** @typedef {import('../../../src/interfaces/manifestItems.js').ModManifest} ModManifest */
 
-describe('WorldLoader Integration Test Suite - Log Verification (Refactored)', () => {
+describe('ModsLoader Integration Test Suite - Log Verification (Refactored)', () => {
   /** @type {TestEnvironment} */
   let env;
 
@@ -100,12 +100,12 @@ describe('WorldLoader Integration Test Suite - Log Verification (Refactored)', (
     env.mockConditionLoader.loadItemsForMod.mockImplementation(defaultReturnZero);
 
     // Action
-    await env.worldLoader.loadWorld(worldName);
+    await env.modsLoader.loadWorld(worldName);
 
     // Assertions
     const infoCalls = env.mockLogger.info.mock.calls;
     const summaryStart = infoCalls.findIndex((call) =>
-      call[0].includes(`WorldLoader Load Summary (World: '${worldName}')`)
+      call[0].includes(`ModsLoader Load Summary (World: '${worldName}')`)
     );
     expect(summaryStart).toBeGreaterThan(-1);
 
@@ -165,7 +165,7 @@ describe('WorldLoader Integration Test Suite - Log Verification (Refactored)', (
     );
 
     // Action
-    await env.worldLoader.loadWorld(worldName);
+    await env.modsLoader.loadWorld(worldName);
 
     // Assertions
     const summaryText = env.mockLogger.info.mock.calls.map((c) => c[0]).join('\n');
@@ -209,7 +209,7 @@ describe('WorldLoader Integration Test Suite - Log Verification (Refactored)', (
     env.mockRuleLoader.loadItemsForMod.mockResolvedValue({ count: 1, overrides: 0, errors: 0 });
 
     // Action
-    await env.worldLoader.loadWorld(worldName);
+    await env.modsLoader.loadWorld(worldName);
 
     // Assertions
     const summaryText = env.mockLogger.info.mock.calls.map((c) => c[0]).join('\n');

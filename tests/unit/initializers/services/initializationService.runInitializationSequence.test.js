@@ -17,7 +17,7 @@ import { tokens } from '../../../../src/dependencyInjection/tokens.js';
 let mockContainer;
 let mockLogger;
 let mockValidatedEventDispatcher;
-let mockWorldLoader;
+let mockModsLoader;
 let mockSystemInitializer;
 let mockWorldInitializer;
 let mockDomUiFacade;
@@ -38,7 +38,7 @@ describe('InitializationService', () => {
     mockValidatedEventDispatcher = {
       dispatch: jest.fn().mockResolvedValue(undefined),
     };
-    mockWorldLoader = {
+    mockModsLoader = {
       loadWorld: jest.fn().mockResolvedValue(undefined),
     };
     mockSystemInitializer = {
@@ -79,8 +79,8 @@ describe('InitializationService', () => {
         // jest.fn().mock.calls will store calls automatically.
         // No need for custom 'recordedCalls' property.
         switch (token) {
-          case tokens.WorldLoader:
-            return mockWorldLoader;
+          case tokens.ModsLoader:
+            return mockModsLoader;
           case tokens.SystemInitializer:
             return mockSystemInitializer;
           case tokens.WorldInitializer:
@@ -172,7 +172,7 @@ describe('InitializationService', () => {
       );
 
       expect(serviceResolveOrder).toEqual([
-        tokens.WorldLoader,
+        tokens.ModsLoader,
         tokens.LLMAdapter,
         tokens.ISchemaValidator, // Resolved by LlmConfigLoader via container
         tokens.IConfiguration, // Resolved by LlmConfigLoader via container
@@ -184,7 +184,7 @@ describe('InitializationService', () => {
         tokens.DomUiFacade,
       ]);
 
-      expect(mockWorldLoader.loadWorld).toHaveBeenCalledWith(MOCK_WORLD_NAME);
+      expect(mockModsLoader.loadWorld).toHaveBeenCalledWith(MOCK_WORLD_NAME);
       expect(mockLlmAdapter.init).toHaveBeenCalledTimes(1);
       expect(mockSystemInitializer.initializeAll).toHaveBeenCalled();
       expect(mockWorldInitializer.initializeWorldEntities).toHaveBeenCalled();
@@ -289,14 +289,14 @@ describe('InitializationService', () => {
       }
     };
 
-    it('should handle failure when WorldLoader resolve fails', async () => {
-      const error = new Error('Failed to resolve WorldLoader');
+    it('should handle failure when ModsLoader resolve fails', async () => {
+      const error = new Error('Failed to resolve ModsLoader');
       const originalResolve = mockContainer.resolve; // Keep a reference to the original mock function
       await testFailure(
         () => {
           // Temporarily override the mock for this specific test case
           mockContainer.resolve = jest.fn((token) => {
-            if (token === tokens.WorldLoader) throw error;
+            if (token === tokens.ModsLoader) throw error;
             if (token === tokens.ILogger) return mockLogger;
             return undefined;
           });
@@ -304,14 +304,14 @@ describe('InitializationService', () => {
         error,
         { shouldCallAdapterInit: false }
       );
-      expect(mockWorldLoader.loadWorld).not.toHaveBeenCalled();
+      expect(mockModsLoader.loadWorld).not.toHaveBeenCalled();
       mockContainer.resolve = originalResolve; // Restore original mock
     });
 
-    it('should handle failure when worldLoader.loadWorld rejects', async () => {
+    it('should handle failure when modsLoader.loadWorld rejects', async () => {
       const error = new Error('World loading failed');
       await testFailure(
-        () => mockWorldLoader.loadWorld.mockRejectedValue(error),
+        () => mockModsLoader.loadWorld.mockRejectedValue(error),
         error,
         { shouldCallAdapterInit: false }
       );
@@ -325,7 +325,7 @@ describe('InitializationService', () => {
       await testFailure(() => {
         mockContainer.resolve = jest.fn((token) => {
           if (token === tokens.ILogger) return mockLogger;
-          if (token === tokens.WorldLoader) return mockWorldLoader;
+          if (token === tokens.ModsLoader) return mockModsLoader;
           if (token === tokens.LLMAdapter) return mockLlmAdapter;
           if (token === tokens.ISchemaValidator) return mockSchemaValidator;
           if (token === tokens.IConfiguration) return mockConfiguration;
@@ -339,7 +339,7 @@ describe('InitializationService', () => {
           return undefined;
         });
       }, error); // Default shouldCallAdapterInit is true, which is correct here
-      expect(mockWorldLoader.loadWorld).toHaveBeenCalled();
+      expect(mockModsLoader.loadWorld).toHaveBeenCalled();
       expect(mockLlmAdapter.init).toHaveBeenCalled();
       expect(mockSystemInitializer.initializeAll).not.toHaveBeenCalled();
       mockContainer.resolve = originalResolve;
@@ -351,7 +351,7 @@ describe('InitializationService', () => {
         () => mockSystemInitializer.initializeAll.mockRejectedValue(error),
         error
       );
-      expect(mockWorldLoader.loadWorld).toHaveBeenCalledWith(MOCK_WORLD_NAME);
+      expect(mockModsLoader.loadWorld).toHaveBeenCalledWith(MOCK_WORLD_NAME);
       expect(mockLlmAdapter.init).toHaveBeenCalled();
       expect(
         mockWorldInitializer.initializeWorldEntities
@@ -364,7 +364,7 @@ describe('InitializationService', () => {
       await testFailure(() => {
         mockContainer.resolve = jest.fn((token) => {
           if (token === tokens.ILogger) return mockLogger;
-          if (token === tokens.WorldLoader) return mockWorldLoader;
+          if (token === tokens.ModsLoader) return mockModsLoader;
           if (token === tokens.LLMAdapter) return mockLlmAdapter;
           if (token === tokens.ISchemaValidator) return mockSchemaValidator;
           if (token === tokens.IConfiguration) return mockConfiguration;
@@ -379,7 +379,7 @@ describe('InitializationService', () => {
           return undefined;
         });
       }, error);
-      expect(mockWorldLoader.loadWorld).toHaveBeenCalled();
+      expect(mockModsLoader.loadWorld).toHaveBeenCalled();
       expect(mockLlmAdapter.init).toHaveBeenCalled();
       expect(mockSystemInitializer.initializeAll).toHaveBeenCalled();
       expect(
@@ -395,7 +395,7 @@ describe('InitializationService', () => {
       await testFailure(() => {
         mockWorldInitializer.initializeWorldEntities.mockReturnValue(false);
       }, expectedError);
-      expect(mockWorldLoader.loadWorld).toHaveBeenCalled();
+      expect(mockModsLoader.loadWorld).toHaveBeenCalled();
       expect(mockLlmAdapter.init).toHaveBeenCalled();
       expect(mockSystemInitializer.initializeAll).toHaveBeenCalled();
     });
@@ -407,7 +407,7 @@ describe('InitializationService', () => {
           throw error;
         });
       }, error);
-      expect(mockWorldLoader.loadWorld).toHaveBeenCalled();
+      expect(mockModsLoader.loadWorld).toHaveBeenCalled();
       expect(mockLlmAdapter.init).toHaveBeenCalled();
       expect(mockSystemInitializer.initializeAll).toHaveBeenCalled();
     });
@@ -416,7 +416,7 @@ describe('InitializationService', () => {
       const mainError = new Error('World loading failed');
       const dispatchError = new Error('Failed to dispatch UI event');
 
-      mockWorldLoader.loadWorld.mockRejectedValue(mainError);
+      mockModsLoader.loadWorld.mockRejectedValue(mainError);
       let dispatchCallCount = 0;
       mockValidatedEventDispatcher.dispatch.mockImplementation(
         async (eventName) => {

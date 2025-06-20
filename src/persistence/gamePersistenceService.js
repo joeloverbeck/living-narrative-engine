@@ -11,7 +11,7 @@ import { setupService } from '../utils/serviceInitializerUtils.js';
 /** @typedef {import('../engine/playtimeTracker.js').default} PlaytimeTracker */
 /** @typedef {import('../dependencyInjection/appContainer.js').default} AppContainer */
 /** @typedef {import('../turns/interfaces/ITurnManager.js').ITurnManager} ITurnManager */
-/** @typedef {import('../loaders/worldLoader.js').default} WorldLoader */
+/** @typedef {import('../loaders/modsLoader.js').default} ModsLoader */
 /** @typedef {import('./gameStateCaptureService.js').default} GameStateCaptureService */
 /** @typedef {import('./manualSaveCoordinator.js').default} ManualSaveCoordinator */
 

@@ -1,18 +1,18 @@
-// Filename: tests/unit/loaders/worldLoader.entityMultiKey.test.js
+// Filename: tests/unit/loaders/modsLoader.entityMultiKey.test.js
 
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 
 // --- The new Test Setup Factory ---
-import { createTestEnvironment } from '../../common/loaders/worldLoader.test-setup.js';
+import { createTestEnvironment } from '../../common/loaders/modsLoader.test-setup.js';
 
 // --- Type‑only JSDoc imports for Mocks and SUT ---
-/** @typedef {import('../../../src/loaders/worldLoader.js').default} WorldLoader */
+/** @typedef {import('../../../src/loaders/modsLoader.js').default} ModsLoader */
 /** @typedef {import('../../../core/interfaces/manifestItems.js').ModManifest} ModManifest */
-/** @typedef {import('../../common/loaders/worldLoader.test-setup.js').createTestEnvironment} TestEnvironment */
+/** @typedef {import('../../common/loaders/modsLoader.test-setup.js').createTestEnvironment} TestEnvironment */
 
-describe('WorldLoader Integration Test Suite - EntityDefinitionLoader Multi-Key Handling (Sub-Ticket 11)', () => {
-  /** @type {TestEnvironment['worldLoader']} */
-  let worldLoader;
+describe('ModsLoader Integration Test Suite - EntityDefinitionLoader Multi-Key Handling (Sub-Ticket 11)', () => {
+  /** @type {TestEnvironment['modsLoader']} */
+  let modsLoader;
   /** @type {TestEnvironment['mockLogger']} */
   let mockLogger;
   /** @type {TestEnvironment['mockEntityLoader']} */
@@ -54,7 +54,7 @@ describe('WorldLoader Integration Test Suite - EntityDefinitionLoader Multi-Key 
 
     // 2. Get the standard environment from the factory
     const env = createTestEnvironment();
-    worldLoader = env.worldLoader;
+    modsLoader = env.modsLoader;
     mockLogger = env.mockLogger;
     mockEntityLoader = env.mockEntityLoader;
     mockComponentLoader = env.mockComponentLoader;
@@ -76,7 +76,7 @@ describe('WorldLoader Integration Test Suite - EntityDefinitionLoader Multi-Key 
       errors: 0,
     });
 
-    // WorldLoader's internal loop needs to `get` the manifest by its ID after it has been stored.
+    // ModsLoader's internal loop needs to `get` the manifest by its ID after it has been stored.
     // We must provide an implementation for the registry's `get` method for this test.
     env.mockRegistry.get.mockImplementation((type, id) => {
       if (
@@ -91,7 +91,7 @@ describe('WorldLoader Integration Test Suite - EntityDefinitionLoader Multi-Key 
 
   it('should invoke the correct loader for the "entityDefinitions" content type and aggregate its results', async () => {
     // --- Action ---
-    await expect(worldLoader.loadWorld(worldName)).resolves.not.toThrow();
+    await expect(modsLoader.loadWorld(worldName)).resolves.not.toThrow();
 
     // --- Assertions ---
     // The test logic itself does not need to change.

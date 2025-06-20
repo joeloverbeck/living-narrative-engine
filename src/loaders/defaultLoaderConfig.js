@@ -18,7 +18,7 @@
 
 /**
  * Converts a map of loader instances into the structured configuration array
- * used by {@link WorldLoader} and {@link ContentLoadManager}.
+ * used by {@link ModsLoader} and {@link ContentLoadManager}.
  *
  * @param {Record<string, BaseManifestItemLoaderInterface>} loaderMap - Map of
  * type name to loader instance.
@@ -51,7 +51,7 @@ export function createContentLoadersConfig(loaderMap) {
 }
 
 /**
- * Creates the default loader configuration used by {@link WorldLoader} when a
+ * Creates the default loader configuration used by {@link ModsLoader} when a
  * custom configuration isn't supplied.
  *
  * @param {object} deps - Loader instances used to build the config.

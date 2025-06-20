@@ -7,7 +7,7 @@ This service is responsible for locating, fetching, validating, and storing mod 
 The following diagram illustrates the typical interaction flow when loading mod manifests (Mermaid Syntax):
 
 sequenceDiagram
-participant Caller as Calling Service (e.g., WorldLoader)
+participant Caller as Calling Service (e.g., ModsLoader)
 participant Resolver as IPathResolver
 participant Fetcher as IDataFetcher
 participant Validator as ISchemaValidator
@@ -91,7 +91,7 @@ _Diagram Notes:_
 Inject ModManifestLoader using your dependency injection container and call loadRequestedManifests with an array of mod IDs you want to load (typically obtained from game.json).
 
 ```javascript
-// Example within an async function (e.g., inside WorldLoader)
+// Example within an async function (e.g., inside ModsLoader)
 async function loadMods(container, requestedModIds) {
   try {
     const modManifestLoader = container.resolve(tokens.ModManifestLoader); // Assuming DI tokens

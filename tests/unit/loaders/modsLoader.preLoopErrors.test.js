@@ -1,20 +1,20 @@
-// tests/unit/loaders/worldLoader.preLoopErrors.test.js
+// tests/unit/loaders/modsLoader.preLoopErrors.test.js
 
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 
 // --- The new Test Setup Factory ---
-import { createTestEnvironment } from '../../common/loaders/worldLoader.test-setup.js';
+import { createTestEnvironment } from '../../common/loaders/modsLoader.test-setup.js';
 
 // --- SUT Dependencies & Errors ---
 import ModDependencyError from '../../../src/errors/modDependencyError.js';
-import WorldLoaderError from '../../../src/errors/worldLoaderError.js';
-import { CORE_MOD_ID } from '../../../src/constants/core';
+import ModsLoaderError from '../../../src/errors/modsLoaderError.js';
+import { CORE_MOD_ID } from '../../../src/constants/core.js';
 
 // --- Type‑only JSDoc imports for Mocks ---
-/** @typedef {import('../../common/loaders/worldLoader.test-setup.js').TestEnvironment} TestEnvironment */
+/** @typedef {import('../../common/loaders/modsLoader.test-setup.js').TestEnvironment} TestEnvironment */
 /** @typedef {import('../../../src/interfaces/manifestItems.js').ModManifest} ModManifest */
 
-describe('WorldLoader Integration Test Suite - Pre-Loop Error Handling (Refactored)', () => {
+describe('ModsLoader Integration Test Suite - Pre-Loop Error Handling (Refactored)', () => {
   /** @type {TestEnvironment} */
   let env;
 
@@ -45,7 +45,7 @@ describe('WorldLoader Integration Test Suite - Pre-Loop Error Handling (Refactor
     env.mockedResolveOrder.mockImplementation((ids) => ids); // Default to pass-through
   });
 
-  it('should throw WorldLoaderError if a mod manifest fails schema validation (simulated)', async () => {
+  it('should throw ModsLoaderError if a mod manifest fails schema validation (simulated)', async () => {
     // Arrange: Configure the manifest loader to reject
     const simulatedError = new Error('Simulated manifest schema validation failure');
     env.mockModManifestLoader.loadRequestedManifests.mockRejectedValue(simulatedError);
@@ -55,13 +55,13 @@ describe('WorldLoader Integration Test Suite - Pre-Loop Error Handling (Refactor
     // The test was calling loadWorld twice. It should only be called once inside a try/catch.
     let caughtError;
     try {
-      await env.worldLoader.loadWorld(worldName);
+      await env.modsLoader.loadWorld(worldName);
     } catch (e) {
       caughtError = e;
     }
 
     // Assert
-    expect(caughtError).toBeInstanceOf(WorldLoaderError);
+    expect(caughtError).toBeInstanceOf(ModsLoaderError);
     expect(caughtError.cause).toBe(simulatedError);
 
     // Verify side effects
@@ -98,7 +98,7 @@ describe('WorldLoader Integration Test Suite - Pre-Loop Error Handling (Refactor
     // The test was calling loadWorld twice. It should only be called once inside a try/catch.
     let caughtError;
     try {
-      await env.worldLoader.loadWorld(worldName);
+      await env.modsLoader.loadWorld(worldName);
     } catch(e) {
       caughtError = e;
     }
