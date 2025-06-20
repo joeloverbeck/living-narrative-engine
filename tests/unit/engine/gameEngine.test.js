@@ -402,7 +402,7 @@ describe('GameEngine', () => {
 
     describe('when engine is initialized', () => {
       beforeEach(async () => {
-        await testBed.start(MOCK_ACTIVE_WORLD_FOR_SAVE);
+        await testBed.init(MOCK_ACTIVE_WORLD_FOR_SAVE);
         gameEngine = testBed.engine;
         testBed.mocks.safeEventDispatcher.dispatch.mockClear();
         testBed.mocks.logger.info.mockClear();
@@ -811,7 +811,7 @@ describe('GameEngine', () => {
     beforeEach(async () => {
       gameEngine = testBed.engine;
       // Start the game to ensure this.#isEngineInitialized is true for isSavingAllowed check
-      await testBed.start(MOCK_WORLD_NAME);
+      await testBed.init(MOCK_WORLD_NAME);
       testBed.mocks.safeEventDispatcher.dispatch.mockClear();
       testBed.mocks.logger.info.mockClear();
       testBed.mocks.logger.warn.mockClear();

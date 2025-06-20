@@ -44,6 +44,20 @@ describe('GameEngine Test Helpers: GameEngineTestBed', () => {
     ).resolves.toEqual(initResult);
   });
 
+  it('init mocks successful initialization and starts default world', async () => {
+    await testBed.init();
+
+    expect(engine.startNewGame).toHaveBeenCalledWith('TestWorld');
+    await expect(
+      testBed.env.initializationService.runInitializationSequence()
+    ).resolves.toEqual({ success: true });
+  });
+
+  it('init accepts custom world name', async () => {
+    await testBed.init('Custom');
+    expect(engine.startNewGame).toHaveBeenCalledWith('Custom');
+  });
+
   it('stop only stops engine when initialized', async () => {
     engine.getEngineStatus.mockReturnValue({ isInitialized: true });
     await testBed.stop();
