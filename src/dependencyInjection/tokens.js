@@ -154,7 +154,7 @@ export const tokens = freeze({
   ISchemaValidator: 'ISchemaValidator',
   IDataRegistry: 'IDataRegistry',
   ISpatialIndexManager: 'ISpatialIndexManager',
-  IReferenceResolver: 'IReferenceResolver',
+  // IReferenceResolver: 'IReferenceResolver', // Removed - service is deprecated
 
   // --- External Dependencies / Environment ---
   WindowDocument: 'WindowDocument',
@@ -201,7 +201,7 @@ export const tokens = freeze({
   GameDataRepository: 'GameDataRepository',
   EntityManager: 'EntityManager',
   SpatialIndexSynchronizer: 'SpatialIndexSynchronizer',
-  ReferenceResolver: 'ReferenceResolver',
+  // ReferenceResolver: 'ReferenceResolver', // Removed - service is deprecated
   JsonLogicEvaluationService: 'JsonLogicEvaluationService',
   ActionValidationContextBuilder: 'ActionValidationContextBuilder',
   PrerequisiteEvaluationService: 'PrerequisiteEvaluationService',

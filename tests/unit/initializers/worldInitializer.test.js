@@ -112,7 +112,7 @@ describe('WorldInitializer', () => {
   describe('constructor', () => {
     it('should instantiate successfully with all valid dependencies', () => {
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        'WorldInitializer: Instance created. Reference resolution step is being phased out.'
+        'WorldInitializer: Instance created. Reference resolution step has been removed.'
       );
     });
 

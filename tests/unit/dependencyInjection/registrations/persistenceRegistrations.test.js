@@ -23,7 +23,6 @@ import PlaytimeTracker from '../../../../src/engine/playtimeTracker.js';
 import ComponentCleaningService from '../../../../src/persistence/componentCleaningService.js';
 import GamePersistenceService from '../../../../src/persistence/gamePersistenceService.js';
 import GameStateCaptureService from '../../../../src/persistence/gameStateCaptureService.js';
-import ReferenceResolver from '../../../../src/initializers/services/referenceResolver.js';
 import SaveMetadataBuilder from '../../../../src/persistence/saveMetadataBuilder.js';
 import ActiveModsManifestBuilder from '../../../../src/persistence/activeModsManifestBuilder.js';
 import SaveLoadService from '../../../../src/persistence/saveLoadService.js';
@@ -45,15 +44,15 @@ describe('registerPersistence', () => {
     // Mocks for external dependencies
     mockLogger = mock();
     mockEntityManager = mock();
+    mockEntityManager.clearAll = jest.fn();
+    mockEntityManager.reconstructEntity = jest.fn();
     mockDataRegistry = mock();
 
     // Register required pre-existing services
     container.register(tokens.ILogger, () => mockLogger);
-    container.register(tokens.IEntityManager, () => mockEntityManager);
+    container.register(tokens.IEntityManager, { clearAll: jest.fn(), reconstructEntity: jest.fn() }, { lifecycle: 'singleton' });
     container.register(tokens.IDataRegistry, () => mockDataRegistry);
-    container.register(tokens.ISafeEventDispatcher, () => ({
-      dispatch: jest.fn(),
-    }));
+    container.register(tokens.ISafeEventDispatcher, { dispatch: jest.fn() }, { lifecycle: 'singleton' });
   });
 
   afterEach(() => {
@@ -92,9 +91,6 @@ describe('registerPersistence', () => {
     );
     expect(logs).toContain(
       `Persistence Registration: Registered ${String(tokens.GamePersistenceService)}.`
-    );
-    expect(logs).toContain(
-      `Persistence Registration: Registered ${String(tokens.IReferenceResolver)}.`
     );
     expect(logs[logs.length - 1]).toBe('Persistence Registration: Completed.');
   });
@@ -150,11 +146,6 @@ describe('registerPersistence', () => {
         Class: GamePersistenceService,
         lifecycle: 'singletonFactory',
       },
-      {
-        token: tokens.IReferenceResolver,
-        Class: ReferenceResolver,
-        lifecycle: 'singletonFactory',
-      },
     ];
 
     test.each(specs)(
@@ -179,6 +170,61 @@ describe('registerPersistence', () => {
         const expectedDeps = deps || undefined;
         expect(options.dependencies).toEqual(expectedDeps);
       }
+    );
+  });
+
+  it('registers all required services with correct dependencies', () => {
+    const container = new AppContainer();
+    // Register required dependencies first
+    container.register(tokens.ILogger, {
+      debug: jest.fn(),
+      info: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+    }, { lifecycle: 'singleton' });
+    container.register(tokens.IEntityManager, { clearAll: jest.fn(), reconstructEntity: jest.fn() }, { lifecycle: 'singleton' });
+    container.register(tokens.ISafeEventDispatcher, { dispatch: jest.fn() }, { lifecycle: 'singleton' });
+    container.register(tokens.IDataRegistry, { getAll: jest.fn() }, { lifecycle: 'singleton' });
+    
+    registerPersistence(container);
+
+    // Test that services can be resolved without errors
+    expect(() => container.resolve(tokens.IStorageProvider)).not.toThrow();
+    expect(() => container.resolve(tokens.ISaveFileRepository)).not.toThrow();
+    expect(() => container.resolve(tokens.ISaveLoadService)).not.toThrow();
+    expect(() => container.resolve(tokens.PlaytimeTracker)).not.toThrow();
+    expect(() => container.resolve(tokens.ComponentCleaningService)).not.toThrow();
+    expect(() => container.resolve(tokens.SaveMetadataBuilder)).not.toThrow();
+    expect(() => container.resolve(tokens.ActiveModsManifestBuilder)).not.toThrow();
+    expect(() => container.resolve(tokens.GameStateCaptureService)).not.toThrow();
+    expect(() => container.resolve(tokens.ManualSaveCoordinator)).not.toThrow();
+    expect(() => container.resolve(tokens.GamePersistenceService)).not.toThrow();
+  });
+
+  it('logs registration messages', () => {
+    const container = new AppContainer();
+    const mockLogger = {
+      debug: jest.fn(),
+      info: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+    };
+    
+    // Register required dependencies first
+    container.register(tokens.ILogger, mockLogger, { lifecycle: 'singleton' });
+    container.register(tokens.IEntityManager, { clearAll: jest.fn(), reconstructEntity: jest.fn() }, { lifecycle: 'singleton' });
+    container.register(tokens.ISafeEventDispatcher, { dispatch: jest.fn() }, { lifecycle: 'singleton' });
+    container.register(tokens.IDataRegistry, {}, { lifecycle: 'singleton' });
+    
+    const logSpy = jest.spyOn(mockLogger, 'debug');
+
+    registerPersistence(container);
+
+    expect(logSpy).toHaveBeenCalledWith(
+      expect.stringContaining('Persistence Registration: Starting...')
+    );
+    expect(logSpy).toHaveBeenCalledWith(
+      expect.stringContaining('Persistence Registration: Completed.')
     );
   });
 });
