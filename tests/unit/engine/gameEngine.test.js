@@ -299,33 +299,35 @@ describe('GameEngine', () => {
     });
 
     it('should log warning for PlaytimeTracker if it is not available during stop, after a successful start', async () => {
-      testBed.withTokenOverride(tokens.PlaytimeTracker, null);
+      const localBed = createGameEngineTestBed({
+        [tokens.PlaytimeTracker]: null,
+      });
+      const localEngine = localBed.engine;
 
-      gameEngine = new GameEngine({ container: testBed.env.mockContainer }); // PlaytimeTracker is now null for this instance
-
-      testBed.mocks.initializationService.runInitializationSequence.mockResolvedValue(
+      localBed.mocks.initializationService.runInitializationSequence.mockResolvedValue(
         {
           success: true,
         }
       );
-      testBed.resetMocks();
-      await gameEngine.startNewGame(MOCK_WORLD_NAME); // Should start, but with warnings about PT
+      await localEngine.startNewGame(MOCK_WORLD_NAME); // Should start, but with warnings about PT
 
-      const statusAfterStart = gameEngine.getEngineStatus();
+      const statusAfterStart = localEngine.getEngineStatus();
       expect(statusAfterStart.isInitialized).toBe(true);
       expect(statusAfterStart.isLoopRunning).toBe(true);
 
-      testBed.resetMocks();
+      localBed.resetMocks();
       // testBed.mocks.playtimeTracker.endSessionAndAccumulate should not be called as the instance is null
 
-      await gameEngine.stop();
+      await localEngine.stop();
 
-      expect(testBed.mocks.logger.warn).toHaveBeenCalledWith(
+      expect(localBed.mocks.logger.warn).toHaveBeenCalledWith(
         'GameEngine.stop: PlaytimeTracker service not available, cannot end session.'
       );
       // The actual testBed.mocks.playtimeTracker object's methods won't be called as this.#playtimeTracker is null.
 
-      expect(testBed.mocks.turnManager.stop).toHaveBeenCalledTimes(1);
+      expect(localBed.mocks.turnManager.stop).toHaveBeenCalledTimes(1);
+
+      await localBed.cleanup();
     });
   });
 
@@ -360,33 +362,32 @@ describe('GameEngine', () => {
       });
 
       it('should dispatch error if GamePersistenceService is unavailable', async () => {
-        testBed.withTokenOverride(tokens.GamePersistenceService, null);
-
-        const engineWithNullGps = new GameEngine({
-          container: testBed.env.mockContainer,
+        const localBed = createGameEngineTestBed({
+          [tokens.GamePersistenceService]: null,
         });
 
-        testBed.mocks.initializationService.runInitializationSequence.mockResolvedValue(
+        localBed.mocks.initializationService.runInitializationSequence.mockResolvedValue(
           {
             success: true,
           }
-        ); // For startNewGame below
-        await engineWithNullGps.startNewGame(MOCK_ACTIVE_WORLD_FOR_SAVE); // Initialize this specific engine
+        );
+        await localBed.engine.startNewGame(MOCK_ACTIVE_WORLD_FOR_SAVE);
 
-        // Clear mocks after initialization of this engine instance
-        testBed.resetMocks();
+        localBed.resetMocks();
 
-        const result = await engineWithNullGps.triggerManualSave(SAVE_NAME);
+        const result = await localBed.engine.triggerManualSave(SAVE_NAME);
         const expectedErrorMsg =
           'GamePersistenceService is not available. Cannot save game.';
 
-        expect(testBed.mocks.logger.error).toHaveBeenCalledWith(
+        expect(localBed.mocks.logger.error).toHaveBeenCalledWith(
           `GameEngine.triggerManualSave: ${expectedErrorMsg}`
         );
         expect(
-          testBed.mocks.safeEventDispatcher.dispatch
+          localBed.mocks.safeEventDispatcher.dispatch
         ).not.toHaveBeenCalled();
         expect(result).toEqual({ success: false, error: expectedErrorMsg });
+
+        await localBed.cleanup();
       });
 
       it('should successfully save, dispatch all UI events in order, and return success result', async () => {
@@ -622,19 +623,18 @@ describe('GameEngine', () => {
     });
 
     it('should handle GamePersistenceService unavailability (guard clause) and dispatch UI event directly', async () => {
-      testBed.withTokenOverride(tokens.GamePersistenceService, null);
+      const localBed = createGameEngineTestBed({
+        [tokens.GamePersistenceService]: null,
+      });
+      const localGameEngine = localBed.engine; // GPS is null
 
-      const localGameEngine = new GameEngine({
-        container: testBed.env.mockContainer,
-      }); // GPS is null
-
-      testBed.resetMocks();
+      localBed.resetMocks();
 
       const rawErrorMsg =
         'GamePersistenceService is not available. Cannot load game.';
       const result = await localGameEngine.loadGame(SAVE_ID);
 
-      expect(testBed.mocks.logger.error).toHaveBeenCalledWith(
+      expect(localBed.mocks.logger.error).toHaveBeenCalledWith(
         `GameEngine.loadGame: ${rawErrorMsg}`
       );
       const expectedDispatches = [
@@ -648,7 +648,7 @@ describe('GameEngine', () => {
       ];
 
       expectDispatchCalls(
-        testBed.mocks.safeEventDispatcher.dispatch,
+        localBed.mocks.safeEventDispatcher.dispatch,
         expectedDispatches
       );
       expect(result).toEqual({
@@ -656,6 +656,8 @@ describe('GameEngine', () => {
         error: rawErrorMsg,
         data: null,
       });
+
+      await localBed.cleanup();
     });
 
     it('should use _handleLoadFailure when _prepareForLoadGameSession throws an error', async () => {
@@ -772,26 +774,27 @@ describe('GameEngine', () => {
       );
     });
 
-    it('should log error if GamePersistenceService is unavailable when showing save UI', () => {
-      testBed.withTokenOverride(tokens.GamePersistenceService, null);
-
-      // Create a new engine instance where GPS will be null
-      // No need to start this specific instance as the check is upfront in showSaveGameUI
-      const localGameEngine = new GameEngine({
-        container: testBed.env.mockContainer,
+    it('should log error if GamePersistenceService is unavailable when showing save UI', async () => {
+      const localBed = createGameEngineTestBed({
+        [tokens.GamePersistenceService]: null,
       });
+      const localGameEngine = localBed.engine; // GPS will be null
 
-      testBed.resetMocks(); // Clear any dispatches and logs from constructor
+      localBed.resetMocks(); // Clear any dispatches and logs from constructor
 
       localGameEngine.showSaveGameUI(); // Method is now sync
 
-      expect(testBed.mocks.logger.error).toHaveBeenCalledWith(
+      expect(localBed.mocks.logger.error).toHaveBeenCalledWith(
         'GameEngine.showSaveGameUI: GamePersistenceService is unavailable. Cannot show Save Game UI.'
       );
-      expect(testBed.mocks.safeEventDispatcher.dispatch).not.toHaveBeenCalled();
       expect(
-        testBed.mocks.gamePersistenceService.isSavingAllowed
+        localBed.mocks.safeEventDispatcher.dispatch
+      ).not.toHaveBeenCalled();
+      expect(
+        localBed.mocks.gamePersistenceService.isSavingAllowed
       ).not.toHaveBeenCalled(); // Should not be called if service is null
+
+      await localBed.cleanup();
     });
   });
 
@@ -816,20 +819,24 @@ describe('GameEngine', () => {
       );
     });
 
-    it('should log error if GamePersistenceService is unavailable when showing load UI', () => {
-      testBed.withTokenOverride(tokens.GamePersistenceService, null);
-      const localGameEngine = new GameEngine({
-        container: testBed.env.mockContainer,
-      }); // GPS is null
+    it('should log error if GamePersistenceService is unavailable when showing load UI', async () => {
+      const localBed = createGameEngineTestBed({
+        [tokens.GamePersistenceService]: null,
+      });
+      const localGameEngine = localBed.engine; // GPS is null
 
-      testBed.resetMocks(); // Clear from constructor
+      localBed.resetMocks(); // Clear from constructor
 
       localGameEngine.showLoadGameUI(); // Method is now sync
 
-      expect(testBed.mocks.logger.error).toHaveBeenCalledWith(
+      expect(localBed.mocks.logger.error).toHaveBeenCalledWith(
         'GameEngine.showLoadGameUI: GamePersistenceService is unavailable. Cannot show Load Game UI.'
       );
-      expect(testBed.mocks.safeEventDispatcher.dispatch).not.toHaveBeenCalled();
+      expect(
+        localBed.mocks.safeEventDispatcher.dispatch
+      ).not.toHaveBeenCalled();
+
+      await localBed.cleanup();
     });
   });
 
