@@ -8,7 +8,7 @@ import TurnManager from '../../../src/turns/turnManager.js';
 import {
   createMockLogger,
   createMockEntityManager,
-  createMockValidatedEventDispatcher,
+  createMockValidatedEventBus,
 } from '../mockFactories.js';
 
 /**
@@ -21,7 +21,7 @@ export class TurnManagerTestBed {
   logger;
   /** @type {ReturnType<typeof createMockEntityManager>} */
   entityManager;
-  /** @type {ReturnType<typeof createMockValidatedEventDispatcher> & { subscribe: jest.Mock, _triggerEvent: Function }} */
+  /** @type {ReturnType<typeof createMockValidatedEventBus>} */
   dispatcher;
   /** @type {{ isEmpty: jest.Mock, getNextEntity: jest.Mock, startNewRound: jest.Mock, clearCurrentRound: jest.Mock }} */
   turnOrderService;
@@ -29,8 +29,6 @@ export class TurnManagerTestBed {
   turnHandlerResolver;
   /** @type {TurnManager} */
   turnManager;
-  /** @private */
-  _handlers;
 
   constructor() {
     this.logger = createMockLogger();
@@ -55,28 +53,7 @@ export class TurnManagerTestBed {
       resolveHandler: jest.fn(),
     };
 
-    this._handlers = {};
-    this.dispatcher = {
-      ...createMockValidatedEventDispatcher(),
-      subscribe: jest.fn((eventType, handler) => {
-        if (!this._handlers[eventType]) {
-          this._handlers[eventType] = [];
-        }
-        this._handlers[eventType].push(handler);
-        return () => {
-          this._handlers[eventType] = this._handlers[eventType].filter(
-            (h) => h !== handler
-          );
-        };
-      }),
-      _triggerEvent: (eventType, payload) => {
-        if (this._handlers[eventType]) {
-          this._handlers[eventType].forEach((h) =>
-            h({ type: eventType, payload })
-          );
-        }
-      },
-    };
+    this.dispatcher = createMockValidatedEventBus();
 
     this.mocks = {
       turnOrderService: this.turnOrderService,
@@ -117,7 +94,7 @@ export class TurnManagerTestBed {
    * @returns {void}
    */
   trigger(eventType, payload) {
-    this.dispatcher._triggerEvent(eventType, payload);
+    this.dispatcher._triggerEvent(eventType, { type: eventType, payload });
   }
 
   /**

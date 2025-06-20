@@ -79,8 +79,21 @@ export function buildSaveDispatches(saveName, filePath) {
   return sequence;
 }
 
+/**
+ * Asserts that an engine's status matches the expected values.
+ *
+ * @param {{ getEngineStatus: () => any }} engine - Engine instance with a
+ *   `getEngineStatus` method.
+ * @param {object} expectedStatus - Expected status object.
+ * @returns {void}
+ */
+export function expectEngineStatus(engine, expectedStatus) {
+  expect(engine.getEngineStatus()).toEqual(expectedStatus);
+}
+
 export default {
   expectDispatchCalls,
   expectDispatchSequence,
   buildSaveDispatches,
+  expectEngineStatus,
 };

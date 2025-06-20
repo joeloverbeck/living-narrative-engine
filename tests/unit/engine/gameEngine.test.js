@@ -15,12 +15,12 @@ import {
   expectDispatchSequence,
   buildSaveDispatches,
   DEFAULT_ACTIVE_WORLD_FOR_SAVE,
+  expectEngineStatus,
 } from '../../common/engine/dispatchTestUtils.js';
 import {
   // --- Import new UI Event IDs ---
   ENGINE_INITIALIZING_UI,
   ENGINE_READY_UI,
-  ENGINE_OPERATION_IN_PROGRESS_UI,
   ENGINE_OPERATION_FAILED_UI,
   ENGINE_STOPPED_UI,
   REQUEST_SHOW_SAVE_GAME_UI,
