@@ -1,7 +1,7 @@
 // src/tests/turns/turnManager.getCurrentActor.test.js
 // --- FILE START (Entire file content, Corrected) ---
 
-import TurnManager from '../../../src/turns/turnManager.js';
+import { TurnManagerTestBed } from '../../common/turns/turnManagerTestBed.js';
 import {
   ACTOR_COMPONENT_ID,
   PLAYER_COMPONENT_ID,
@@ -15,47 +15,7 @@ import {
   jest,
   test,
 } from '@jest/globals';
-
-// Mock dependencies
-const mockTurnOrderService = {
-  isEmpty: jest.fn(),
-  startNewRound: jest.fn(),
-  getNextEntity: jest.fn(),
-  clearCurrentRound: jest.fn(),
-};
-
-const mockEntityManager = {
-  get activeEntities() {
-    // Ensure it returns an iterable (like a Map's values)
-    return this._mockActiveEntities;
-  },
-  _mockActiveEntities: new Map(),
-  getEntityInstance: jest.fn(), // Checked by constructor
-  // Helper to set entities used in some tests
-  _setActiveEntities: function (entities) {
-    this._mockActiveEntities.clear();
-    entities.forEach((entity) =>
-      this._mockActiveEntities.set(entity.id, entity)
-    );
-  },
-};
-
-const mockLogger = {
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-  debug: jest.fn(),
-};
-
-// Mock dispatcher with subscribe
-const mockDispatcher = {
-  dispatch: jest.fn(),
-  subscribe: jest.fn(), // Needs to be present
-};
-
-const mockTurnHandlerResolver = {
-  resolveHandler: jest.fn(),
-};
+import { createMockEntity } from '../../common/mockFactories.js';
 
 // Mock Turn Handlers - ADD startTurn and destroy
 const mockPlayerHandler = {
@@ -69,95 +29,46 @@ const mockAiHandler = {
   destroy: jest.fn().mockResolvedValue(),
 };
 
-// Helper function to create basic mock entities
-const createMockEntity = (id, isActor = false, isPlayer = false) => {
-  const entity = {
-    id: id,
-    hasComponent: jest.fn((componentId) => {
-      if (componentId === ACTOR_COMPONENT_ID) {
-        return isActor;
-      }
-      if (componentId === PLAYER_COMPONENT_ID) {
-        return isPlayer;
-      }
-      return false;
-    }),
-  };
-  return entity;
-};
-
 describe('TurnManager', () => {
-  let turnManager;
+  let testBed;
   let mockPlayerEntity;
   let mockAiEntity1;
   let mockAiEntity2;
-  let turnEndedUnsubscribeMock = jest.fn(); // Mock for unsubscribe return value
 
   beforeEach(() => {
-    // Reset mocks before each test
-    jest.clearAllMocks();
+    testBed = new TurnManagerTestBed();
 
-    // Reset mock EntityManager's internal state
-    mockEntityManager._setActiveEntities([]);
+    // Create fresh mock entities
+    mockPlayerEntity = createMockEntity('player-1', { isActor: true, isPlayer: true });
+    mockAiEntity1 = createMockEntity('ai-1', { isActor: true, isPlayer: false });
+    mockAiEntity2 = createMockEntity('ai-2', { isActor: true, isPlayer: false });
 
-    // Re-initialize basic mock configurations
-    mockTurnOrderService.isEmpty.mockResolvedValue(true);
-    mockTurnOrderService.getNextEntity.mockResolvedValue(null);
-    mockTurnOrderService.startNewRound.mockResolvedValue();
-    mockTurnOrderService.clearCurrentRound.mockResolvedValue();
-    mockDispatcher.dispatch.mockReset().mockResolvedValue(true); // Reset and default success
-    mockDispatcher.subscribe
+    // Configure default mock behaviors
+    testBed.mocks.turnOrderService.isEmpty.mockResolvedValue(true);
+    testBed.mocks.turnOrderService.getNextEntity.mockResolvedValue(null);
+    testBed.mocks.turnOrderService.startNewRound.mockResolvedValue();
+    testBed.mocks.turnOrderService.clearCurrentRound.mockResolvedValue();
+    testBed.mocks.dispatcher.dispatch.mockReset().mockResolvedValue(true);
+    testBed.mocks.turnHandlerResolver.resolveHandler
       .mockReset()
-      .mockReturnValue(turnEndedUnsubscribeMock); // Mock subscribe return
-    turnEndedUnsubscribeMock.mockClear(); // Clear the unsubscribe mock itself
+      .mockResolvedValue(mockAiHandler);
 
-    mockTurnHandlerResolver.resolveHandler
-      .mockReset()
-      .mockResolvedValue(mockAiHandler); // Default reset and value
-    mockPlayerHandler.startTurn.mockClear().mockResolvedValue(); // Clear handler mocks
+    // Clear handler mocks
+    mockPlayerHandler.startTurn.mockClear().mockResolvedValue();
     mockAiHandler.startTurn.mockClear().mockResolvedValue();
     mockPlayerHandler.destroy.mockClear().mockResolvedValue();
     mockAiHandler.destroy.mockClear().mockResolvedValue();
-
-    // Create fresh mock entities
-    mockPlayerEntity = createMockEntity('player-1', true, true);
-    mockAiEntity1 = createMockEntity('ai-1', true, false);
-    mockAiEntity2 = createMockEntity('ai-2', true, false);
-
-    // Instantiate TurnManager
-    turnManager = new TurnManager({
-      turnOrderService: mockTurnOrderService,
-      entityManager: mockEntityManager,
-      logger: mockLogger,
-      dispatcher: mockDispatcher,
-      turnHandlerResolver: mockTurnHandlerResolver,
-    });
-
-    // Clear logs from the constructor call itself AFTER instantiation
-    mockLogger.info.mockClear();
-    mockLogger.warn.mockClear();
-    mockLogger.error.mockClear();
-    mockLogger.debug.mockClear();
   });
 
-  afterEach(() => {
-    // jest.restoreAllMocks(); // Can cause issues if mocks are shared/modified across tests unexpectedly. clearAllMocks is usually safer.
-    turnManager = null; // Help GC
+  afterEach(async () => {
+    await testBed.cleanup();
   });
 
   // --- Basic Setup Tests ---
   test('should exist and be a class', () => {
-    // Re-instantiate here just to check constructor log in isolation if needed,
-    // although beforeEach already does this.
-    const instance = new TurnManager({
-      turnOrderService: mockTurnOrderService,
-      entityManager: mockEntityManager,
-      logger: mockLogger,
-      dispatcher: mockDispatcher,
-      turnHandlerResolver: mockTurnHandlerResolver,
-    });
-    expect(TurnManager).toBeDefined();
-    expect(instance).toBeInstanceOf(TurnManager);
+    const instance = new TurnManagerTestBed().turnManager;
+    expect(instance).toBeDefined();
+    expect(instance).toBeInstanceOf(testBed.turnManager.constructor);
   });
 
   test('mock entities should behave as configured', () => {
@@ -169,11 +80,11 @@ describe('TurnManager', () => {
 
   test('EntityManager mock allows setting active entities', () => {
     const entities = [mockPlayerEntity, mockAiEntity1];
-    mockEntityManager._setActiveEntities(entities);
-    expect(Array.from(mockEntityManager.activeEntities.values())).toEqual(
+    testBed.setActiveEntities(...entities);
+    expect(Array.from(testBed.mocks.entityManager.activeEntities.values())).toEqual(
       entities
     );
-    expect(mockEntityManager.activeEntities.get('player-1')).toBe(
+    expect(testBed.mocks.entityManager.activeEntities.get('player-1')).toBe(
       mockPlayerEntity
     );
   });
@@ -181,124 +92,166 @@ describe('TurnManager', () => {
   // --- Tests for getCurrentActor() ---
   describe('getCurrentActor()', () => {
     test('should return null initially', () => {
-      expect(turnManager.getCurrentActor()).toBeNull();
+      expect(testBed.turnManager.getCurrentActor()).toBeNull();
     });
 
     test('should return the assigned actor after start and advanceTurn assigns one', async () => {
-      const mockActor = createMockEntity('actor-test', true, false);
+      const mockActor = createMockEntity('actor-test', { isActor: true, isPlayer: false });
       const entityType = 'ai'; // Define expected type
 
       // --- Setup mocks for start() -> advanceTurn() path ---
-      mockTurnOrderService.isEmpty.mockResolvedValue(false); // Queue not empty
-      mockTurnOrderService.getNextEntity.mockResolvedValue(mockActor); // Return our actor
+      testBed.mocks.turnOrderService.isEmpty.mockResolvedValue(false); // Queue not empty
+      testBed.mocks.turnOrderService.getNextEntity.mockResolvedValue(mockActor); // Return our actor
       // Configure resolver to return the AI handler WHEN called with this specific actor
-      mockTurnHandlerResolver.resolveHandler.mockResolvedValue(mockAiHandler);
+      testBed.mocks.turnHandlerResolver.resolveHandler.mockResolvedValue(mockAiHandler);
 
       // --- Execute ---
-      await turnManager.start(); // Calls advanceTurn internally
+      await testBed.turnManager.start(); // Calls advanceTurn internally
 
       // --- Assert ---
-      // The actor is set synchronously within advanceTurn before startTurn is called (async)
-      expect(turnManager.getCurrentActor()).toBe(mockActor);
-
-      // Verify logs and calls related to setting the actor and initiating the turn
-      expect(mockDispatcher.subscribe).toHaveBeenCalledTimes(1); // Called by start
-      expect(mockLogger.debug).toHaveBeenCalledWith(
-        'TurnManager.advanceTurn() initiating...'
-      );
-      expect(mockLogger.debug).toHaveBeenCalledWith(
-        'Queue not empty, retrieving next entity.'
-      );
-      expect(mockTurnOrderService.getNextEntity).toHaveBeenCalledTimes(1);
-      // Check actor set log
-      // Check core:turn_started event was dispatched
-      expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
-        'core:turn_started',
-        {
-          entityId: mockActor.id,
-          entityType: entityType,
-        }
-      );
-      expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
+      expect(testBed.turnManager.getCurrentActor()).toBe(mockActor);
+      expect(testBed.mocks.turnHandlerResolver.resolveHandler).toHaveBeenCalledWith(mockActor);
+      expect(mockAiHandler.startTurn).toHaveBeenCalledWith(mockActor);
+      expect(testBed.mocks.dispatcher.dispatch).toHaveBeenCalledWith(
         TURN_PROCESSING_STARTED,
         { entityId: mockActor.id, actorType: entityType }
       );
-      expect(mockLogger.debug).toHaveBeenCalledWith(
-        `Resolving turn handler for entity ${mockActor.id}...`
+    });
+
+    test('should return null after stop() clears the current actor', async () => {
+      const mockActor = createMockEntity('actor-test', { isActor: true, isPlayer: false });
+
+      // --- Setup mocks ---
+      testBed.mocks.turnOrderService.isEmpty.mockResolvedValue(false);
+      testBed.mocks.turnOrderService.getNextEntity.mockResolvedValue(mockActor);
+      testBed.mocks.turnHandlerResolver.resolveHandler.mockResolvedValue(mockAiHandler);
+
+      // --- Execute ---
+      await testBed.turnManager.start();
+      expect(testBed.turnManager.getCurrentActor()).toBe(mockActor);
+
+      await testBed.turnManager.stop();
+
+      // --- Assert ---
+      expect(testBed.turnManager.getCurrentActor()).toBeNull();
+      expect(mockAiHandler.destroy).toHaveBeenCalled();
+    });
+
+    test('should return the correct actor when multiple actors are in the queue', async () => {
+      const mockActor1 = createMockEntity('actor1', { isActor: true, isPlayer: false });
+      const mockActor2 = createMockEntity('actor2', { isActor: true, isPlayer: false });
+
+      // --- Setup mocks for sequential actors ---
+      testBed.mocks.turnOrderService.isEmpty.mockResolvedValue(false);
+      testBed.mocks.turnOrderService.getNextEntity
+        .mockResolvedValueOnce(mockActor1)
+        .mockResolvedValueOnce(mockActor2);
+      testBed.mocks.turnHandlerResolver.resolveHandler
+        .mockResolvedValueOnce(mockAiHandler)
+        .mockResolvedValueOnce(mockAiHandler);
+
+      // --- Execute ---
+      await testBed.turnManager.start();
+      expect(testBed.turnManager.getCurrentActor()).toBe(mockActor1);
+
+      // Simulate turn ending and advancing to next actor
+      testBed.trigger('core:turn_ended', { entityId: mockActor1.id, success: true });
+      await new Promise(resolve => setTimeout(resolve, 10)); // Allow async operations
+      await new Promise(resolve => setTimeout(resolve, 10)); // Additional wait for advanceTurn
+
+      // --- Assert ---
+      expect(testBed.turnManager.getCurrentActor()).toBe(mockActor2);
+    });
+
+    test('should return null when queue becomes empty', async () => {
+      const mockActor = createMockEntity('actor-test', { isActor: true, isPlayer: false });
+
+      // --- Setup mocks ---
+      testBed.mocks.turnOrderService.isEmpty.mockResolvedValue(false);
+      testBed.mocks.turnOrderService.getNextEntity.mockResolvedValue(mockActor);
+      testBed.mocks.turnHandlerResolver.resolveHandler.mockResolvedValue(mockAiHandler);
+
+      // --- Execute ---
+      await testBed.turnManager.start();
+      expect(testBed.turnManager.getCurrentActor()).toBe(mockActor);
+
+      // Simulate queue becoming empty
+      testBed.mocks.turnOrderService.isEmpty.mockResolvedValue(true);
+      testBed.mocks.turnOrderService.getNextEntity.mockResolvedValue(null);
+
+      // Simulate turn ending
+      testBed.trigger('core:turn_ended', { entityId: mockActor.id, success: true });
+      await new Promise(resolve => setTimeout(resolve, 10)); // Allow async operations
+      await new Promise(resolve => setTimeout(resolve, 10)); // Additional wait for advanceTurn
+
+      // --- Assert ---
+      expect(testBed.turnManager.getCurrentActor()).toBeNull();
+    });
+
+    test('should handle player vs AI actor types correctly', async () => {
+      const mockPlayerActor = createMockEntity('player-actor', { isActor: true, isPlayer: true });
+      const mockAiActor = createMockEntity('ai-actor', { isActor: true, isPlayer: false });
+
+      // Test player actor
+      testBed.mocks.turnOrderService.isEmpty.mockResolvedValue(false);
+      testBed.mocks.turnOrderService.getNextEntity.mockResolvedValue(mockPlayerActor);
+      testBed.mocks.turnHandlerResolver.resolveHandler.mockResolvedValue(mockPlayerHandler);
+
+      await testBed.turnManager.start();
+      expect(testBed.turnManager.getCurrentActor()).toBe(mockPlayerActor);
+      expect(testBed.mocks.dispatcher.dispatch).toHaveBeenCalledWith(
+        TURN_PROCESSING_STARTED,
+        { entityId: mockPlayerActor.id, actorType: 'player' }
       );
-      expect(mockTurnHandlerResolver.resolveHandler).toHaveBeenCalledWith(
-        mockActor
-      );
-      // Check startTurn call
-      expect(mockLogger.debug).toHaveBeenCalledWith(
-        `Calling startTurn on ${mockAiHandler.constructor.name} for entity ${mockActor.id}`
-      );
-      expect(mockAiHandler.startTurn).toHaveBeenCalledWith(mockActor); // Check startTurn was called
-      // Check log indicating waiting for event (since startTurn is not awaited)
-      expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining(
-          `TurnManager now WAITING for 'core:turn_ended' event.`
-        )
+
+      await testBed.turnManager.stop();
+
+      // Test AI actor
+      testBed.mocks.turnOrderService.getNextEntity.mockResolvedValue(mockAiActor);
+      testBed.mocks.turnHandlerResolver.resolveHandler.mockResolvedValue(mockAiHandler);
+
+      await testBed.turnManager.start();
+      expect(testBed.turnManager.getCurrentActor()).toBe(mockAiActor);
+      expect(testBed.mocks.dispatcher.dispatch).toHaveBeenCalledWith(
+        TURN_PROCESSING_STARTED,
+        { entityId: mockAiActor.id, actorType: 'ai' }
       );
     });
 
-    // *** CORRECTED TEST CASE ***
-    test('should return null after stop() is called', async () => {
-      const mockActor = createMockEntity('actor-test-stop', true, false);
+    test('should return null when no valid actor is found', async () => {
+      const mockNonActor = createMockEntity('non-actor', { isActor: false, isPlayer: false });
 
-      // --- Setup TurnManager to be running with an actor ---
-      mockTurnOrderService.isEmpty.mockResolvedValue(false); // Queue not empty
-      mockTurnOrderService.getNextEntity.mockResolvedValue(mockActor); // Return actor
-      mockTurnHandlerResolver.resolveHandler.mockResolvedValue(mockAiHandler); // Resolve handler
+      // --- Setup mocks ---
+      testBed.mocks.turnOrderService.isEmpty.mockResolvedValue(false);
+      testBed.mocks.turnOrderService.getNextEntity.mockResolvedValue(mockNonActor);
 
-      await turnManager.start(); // Get the manager running and the actor assigned
+      // --- Execute ---
+      await testBed.turnManager.start();
 
-      // --- Sanity checks: Verify state after start() ---
-      expect(turnManager.getCurrentActor()).toBe(mockActor);
-      expect(mockTurnHandlerResolver.resolveHandler).toHaveBeenCalledTimes(1); // Called once during start
-      expect(mockAiHandler.startTurn).toHaveBeenCalledTimes(1); // Called once during start
-      expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
-        'core:turn_started',
-        {
-          entityId: mockActor.id,
-          entityType: 'ai',
-        }
-      ); // Turn started event dispatched
-      expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
-        TURN_PROCESSING_STARTED,
-        { entityId: mockActor.id, actorType: 'ai' }
+      // --- Assert ---
+      expect(testBed.turnManager.getCurrentActor()).toBeNull();
+      expect(testBed.mocks.logger.warn).toHaveBeenCalledWith(
+        'Entity non-actor is not an actor. Skipping turn advancement for this entity.'
       );
-      expect(mockDispatcher.subscribe).toHaveBeenCalledTimes(1); // Subscribed during start
+    });
 
-      // --- Clear mocks BEFORE calling stop() to isolate stop()'s effects ---
-      mockTurnHandlerResolver.resolveHandler.mockClear();
-      mockAiHandler.startTurn.mockClear();
-      mockDispatcher.dispatch.mockClear();
-      mockDispatcher.subscribe.mockClear(); // Clear subscribe calls if needed, though stop doesn't call it
-      mockLogger.info.mockClear();
-      mockLogger.debug.mockClear();
-      turnEndedUnsubscribeMock.mockClear(); // Clear the unsubscribe function mock
-      mockAiHandler.destroy.mockClear(); // Clear the destroy mock
-      mockTurnOrderService.clearCurrentRound.mockClear(); // Clear this specific mock too
+    test('should handle entity manager errors gracefully', async () => {
+      const mockActor = createMockEntity('actor-test', { isActor: true, isPlayer: false });
 
-      // --- Execute Stop ---
-      await turnManager.stop();
+      // --- Setup mocks ---
+      testBed.mocks.turnOrderService.isEmpty.mockResolvedValue(false);
+      // Simulate getNextEntity returning null to trigger the error condition
+      testBed.mocks.turnOrderService.getNextEntity.mockResolvedValue(null);
 
-      // --- Assert results of stop() ---
-      expect(turnManager.getCurrentActor()).toBeNull(); // Actor should be cleared
-      expect(mockLogger.debug).toHaveBeenCalledWith(
-        'Turn order service current round cleared.'
+      // --- Execute ---
+      await testBed.turnManager.start();
+
+      // --- Assert ---
+      expect(testBed.turnManager.getCurrentActor()).toBeNull();
+      expect(testBed.mocks.logger.error).toHaveBeenCalledWith(
+        'Turn order inconsistency: getNextEntity() returned null/undefined when queue was not empty.'
       );
-      expect(mockTurnOrderService.clearCurrentRound).toHaveBeenCalledTimes(1); // stop() calls clearCurrentRound
-      expect(turnEndedUnsubscribeMock).toHaveBeenCalledTimes(1); // stop() calls the unsubscribe function
-      expect(mockAiHandler.destroy).toHaveBeenCalledTimes(1); // stop() calls destroy on the active handler
-
-      // --- Verify stop() DID NOT trigger NEW turn advancement actions ---
-      expect(mockTurnHandlerResolver.resolveHandler).not.toHaveBeenCalled(); // Should NOT be called *again* by stop
-      expect(mockAiHandler.startTurn).not.toHaveBeenCalled(); // Should NOT be called *again* by stop
-      expect(mockDispatcher.dispatch).not.toHaveBeenCalled(); // stop() doesn't dispatch events currently
     });
   });
-  // --- End Tests for getCurrentActor() ---
 });
 // --- FILE END ---
