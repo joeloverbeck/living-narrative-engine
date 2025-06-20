@@ -9,8 +9,9 @@
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../interfaces/coreServices.js').ISpatialIndexManager} ISpatialIndexManager */
 /** @typedef {import('../entities/entity.js').default} Entity */
-/** @typedef {import('./services/referenceResolver.js').default} ReferenceResolver */ // Path confirmed correct
-/** @typedef {import('../interfaces/IReferenceResolver.js').IReferenceResolver} IReferenceResolver */
+/** @typedef {import('../entities/entityDefinition.js').default} EntityDefinition */
+/** @typedef {import('../entities/entityInstance.js').default} EntityInstance */
+/** @typedef {import('../interfaces/IDataRegistry.js').IDataRegistry} IDataRegistry */
 
 // --- Library Imports ---
 import _get from 'lodash/get.js';
@@ -39,7 +40,7 @@ class WorldInitializer {
   /** @type {ISpatialIndexManager} */
   #spatialIndexManager;
   // /** @type {IReferenceResolver | ReferenceResolver} */
-  // #referenceResolver; // ReferenceResolver is being phased out
+  // #referenceResolver; // ReferenceResolver is being phased out - removed entirely
 
   /**
    * Exposes the provided world context for potential external use.
@@ -88,10 +89,10 @@ class WorldInitializer {
     this.#validatedEventDispatcher = validatedEventDispatcher;
     this.#logger = logger;
     this.#spatialIndexManager = spatialIndexManager;
-    // this.#referenceResolver = referenceResolver; // No longer assigned
+    // this.#referenceResolver = referenceResolver; // No longer assigned - removed entirely
 
     this.#logger.debug(
-      'WorldInitializer: Instance created. Reference resolution step is being phased out.'
+      'WorldInitializer: Instance created. Reference resolution step has been removed.'
     );
   }
 

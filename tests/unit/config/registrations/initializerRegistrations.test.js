@@ -9,7 +9,6 @@
 /** @typedef {import('../../../../src/events/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
 /** @typedef {import('../../../../src/initializers/worldInitializer.js').default} WorldInitializer */
 /** @typedef {import('../../../../src/initializers/systemInitializer.js').default} SystemInitializer */
-/** @typedef {import('../../../../src/initializers/services/referenceResolver.js').default} ReferenceResolver */ // <<< NEW
 /** @typedef {any} AppContainer */ // Using 'any' for the mock container type for simplicity
 
 // --- Jest Imports ---
@@ -25,7 +24,6 @@ import { INITIALIZABLE } from '../../../../src/dependencyInjection/tags.js';
 // --- MOCK the Modules (Classes being registered) ---
 jest.mock('../../../../src/initializers/worldInitializer.js');
 jest.mock('../../../../src/initializers/systemInitializer.js');
-// No need to mock ReferenceResolver as we provide a mock instance for its token
 
 // --- Import AFTER mocking ---
 import WorldInitializer from '../../../../src/initializers/worldInitializer.js';
@@ -43,10 +41,6 @@ const mockWorldContext = { name: 'MockWorldContext' };
 const mockGameDataRepository = { name: 'MockGameDataRepository' };
 const mockValidatedEventDispatcher = { name: 'MockValidatedEventDispatcher' };
 const mockSpatialIndexManager = { name: 'MockSpatialIndexManager' };
-const mockReferenceResolver = {
-  name: 'MockReferenceResolver',
-  resolve: jest.fn(),
-}; // <<< NEW MOCK INSTANCE
 
 const createMockContainer = () => {
   const registrations = new Map();
@@ -174,9 +168,6 @@ describe('registerInitializers', () => {
       mockSpatialIndexManager,
       { lifecycle: 'singleton' }
     );
-    mockContainer.register(tokens.IReferenceResolver, mockReferenceResolver, {
-      lifecycle: 'singleton',
-    }); // <<< REGISTER IReferenceResolver
 
     Object.values(mockLogger).forEach((fn) => fn.mockClear?.());
     if (WorldInitializer.mockClear) WorldInitializer.mockClear();
@@ -216,7 +207,6 @@ describe('registerInitializers', () => {
       validatedEventDispatcher: mockValidatedEventDispatcher,
       logger: mockLogger,
       spatialIndexManager: mockSpatialIndexManager,
-      referenceResolver: mockReferenceResolver, // <<< EXPECTED DEPENDENCY
     });
   });
 
@@ -252,7 +242,6 @@ describe('registerInitializers', () => {
     expect(resolveSpy).toHaveBeenCalledWith(tokens.IGameDataRepository);
     expect(resolveSpy).toHaveBeenCalledWith(tokens.IValidatedEventDispatcher);
     expect(resolveSpy).toHaveBeenCalledWith(tokens.ISpatialIndexManager);
-    expect(resolveSpy).toHaveBeenCalledWith(tokens.IReferenceResolver); // <<< CHECK RESOLUTION
     resolveSpy.mockRestore();
   });
 });

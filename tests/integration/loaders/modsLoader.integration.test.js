@@ -9,7 +9,7 @@ import ContentLoadManager from '../../../src/loaders/ContentLoadManager.js';
 
 // --- Dependencies to Mock ---
 // mocks will be injected via constructor rather than jest.mock
-import { CORE_MOD_ID } from '../../../src/constants/core';
+import { CORE_MOD_ID } from '../../../src/constants/core.js';
 
 // --- Type‑only JSDoc imports for Mocks ---
 /** @typedef {import('../../../src/interfaces/coreServices.js').ILogger} ILogger */

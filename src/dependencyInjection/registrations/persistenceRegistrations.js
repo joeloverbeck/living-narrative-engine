@@ -13,7 +13,7 @@
 /** @typedef {import('../../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
 /** @typedef {import('../../interfaces/coreServices.js').IDataRegistry} IDataRegistry_Interface */
 /** @typedef {import('../../interfaces/IStorageProvider.js').IStorageProvider} IStorageProvider */
-/** @typedef {import('../../interfaces/IReferenceResolver.js').IReferenceResolver} IReferenceResolver_Interface */
+// /** @typedef {import('../../interfaces/IReferenceResolver.js').IReferenceResolver} IReferenceResolver_Interface */ // Removed - service is deprecated
 
 // --- DI & Helper Imports ---
 import { tokens } from '../tokens.js';
@@ -29,7 +29,7 @@ import GameStateCaptureService from '../../persistence/gameStateCaptureService.j
 import ManualSaveCoordinator from '../../persistence/manualSaveCoordinator.js';
 import SaveMetadataBuilder from '../../persistence/saveMetadataBuilder.js';
 import ActiveModsManifestBuilder from '../../persistence/activeModsManifestBuilder.js';
-import ReferenceResolver from '../../initializers/services/referenceResolver.js';
+// import ReferenceResolver from '../../initializers/services/referenceResolver.js'; // Removed - service is deprecated
 import SaveLoadService from '../../persistence/saveLoadService.js';
 import GameStateSerializer from '../../persistence/gameStateSerializer.js';
 import SaveFileRepository from '../../persistence/saveFileRepository.js';
@@ -149,15 +149,15 @@ export function registerPersistence(container) {
     `Persistence Registration: Registered ${String(tokens.GamePersistenceService)}.`
   );
 
-  r.singletonFactory(tokens.IReferenceResolver, (c) => {
-    return new ReferenceResolver({
-      entityManager: c.resolve(tokens.IEntityManager),
-      logger: c.resolve(tokens.ILogger),
-    });
-  });
-  logger.debug(
-    `Persistence Registration: Registered ${String(tokens.IReferenceResolver)}.`
-  );
+  // r.singletonFactory(tokens.IReferenceResolver, (c) => { // Removed - service is deprecated
+  //   return new ReferenceResolver({
+  //     entityManager: c.resolve(tokens.IEntityManager),
+  //     logger: c.resolve(tokens.ILogger),
+  //   });
+  // });
+  // logger.debug(
+  //   `Persistence Registration: Registered ${String(tokens.IReferenceResolver)}.`
+  // );
 
   logger.debug('Persistence Registration: Completed.');
 }
