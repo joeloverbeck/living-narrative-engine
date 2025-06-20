@@ -18,7 +18,7 @@ import {
   ENTITY_CREATED_ID,
   ENTITY_REMOVED_ID,
 } from '../../../src/constants/eventIds.js';
-import { expectDispatchCalls } from '../../common/engine/dispatchTestUtils.js';
+import { expectDispatchSequence } from '../../common/engine/dispatchTestUtils.js';
 import EntityDefinition from '../../../src/entities/entityDefinition.js';
 import MapManager from '../../../src/utils/mapManagerUtils.js';
 
@@ -125,7 +125,7 @@ describeEntityManagerSuite('EntityManager - Lifecycle', (getBed) => {
       const entity = getBed().createEntity('basic');
 
       // Assert
-      expectDispatchCalls(mocks.eventDispatcher.dispatch, [
+      expectDispatchSequence(mocks.eventDispatcher.dispatch, [
         [
           ENTITY_CREATED_ID,
           {
@@ -281,7 +281,7 @@ describeEntityManagerSuite('EntityManager - Lifecycle', (getBed) => {
       );
 
       // Assert event was dispatched
-      expectDispatchCalls(mocks.eventDispatcher.dispatch, [
+      expectDispatchSequence(mocks.eventDispatcher.dispatch, [
         [
           ENTITY_CREATED_ID,
           {
@@ -407,7 +407,7 @@ describeEntityManagerSuite('EntityManager - Lifecycle', (getBed) => {
       entityManager.removeEntityInstance(entity.id);
 
       // Assert
-      expectDispatchCalls(mocks.eventDispatcher.dispatch, [
+      expectDispatchSequence(mocks.eventDispatcher.dispatch, [
         [
           ENTITY_REMOVED_ID,
           {
