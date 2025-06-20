@@ -22,6 +22,7 @@ import {
   createMockSafeEventDispatcher,
   createSimpleMockDataRegistry,
 } from '../mockFactories.js';
+import { clearMockFunctions } from '../jestHelpers.js';
 
 // --- Centralized Mocks (REMOVED) ---
 // Mock creation functions are now imported.
@@ -168,6 +169,12 @@ export class TestBed {
   cleanup() {
     // Clear call history on all mocks
     jest.clearAllMocks();
+    clearMockFunctions(
+      this.mocks.registry,
+      this.mocks.validator,
+      this.mocks.logger,
+      this.mocks.eventDispatcher
+    );
 
     // Reset specific mock implementations that tests commonly override
     this.mocks.registry.getEntityDefinition.mockReset();
