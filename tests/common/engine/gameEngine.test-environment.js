@@ -32,8 +32,10 @@ import {
  *   createGameEngine: () => GameEngine,
  *   cleanup: () => void,
  * }} Test environment utilities and mocks.
+ * @param {{[token: string]: any}} [overrides] - Optional map of DI tokens to
+ *   replacement values used instead of defaults.
  */
-export function createTestEnvironment() {
+export function createTestEnvironment(overrides = {}) {
   jest.clearAllMocks();
 
   const logger = createMockLogger();
@@ -46,6 +48,9 @@ export function createTestEnvironment() {
 
   const mockContainer = {
     resolve: jest.fn((token) => {
+      if (Object.prototype.hasOwnProperty.call(overrides, token)) {
+        return overrides[token];
+      }
       switch (token) {
         case tokens.ILogger:
           return logger;

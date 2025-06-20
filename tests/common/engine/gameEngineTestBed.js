@@ -33,8 +33,12 @@ export class GameEngineTestBed {
   /** @type {Function} */
   #originalResolve;
 
-  constructor() {
-    this.env = createTestEnvironment();
+  /**
+   * @description Constructs a new test bed with optional DI overrides.
+   * @param {{[token: string]: any}} [overrides]
+   */
+  constructor(overrides = {}) {
+    this.env = createTestEnvironment(overrides);
     this.engine = this.env.createGameEngine();
     this.mocks = {
       logger: this.env.logger,
@@ -148,10 +152,11 @@ export class GameEngineTestBed {
 /**
  * Creates a new {@link GameEngineTestBed} instance.
  *
+ * @param {{[token: string]: any}} [overrides] - Optional DI token overrides.
  * @returns {GameEngineTestBed} Test bed instance.
  */
-export function createGameEngineTestBed() {
-  return new GameEngineTestBed();
+export function createGameEngineTestBed(overrides = {}) {
+  return new GameEngineTestBed(overrides);
 }
 
 export default GameEngineTestBed;

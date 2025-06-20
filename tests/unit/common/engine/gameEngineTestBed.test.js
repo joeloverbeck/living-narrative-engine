@@ -93,6 +93,19 @@ describe('GameEngine Test Helpers: GameEngineTestBed', () => {
     expect(restored).toBe(testBed.mocks.playtimeTracker);
   });
 
+  it('constructor overrides return specified value', async () => {
+    const custom = { foo: 'bar' };
+    const bed = new GameEngineTestBed({ [tokens.PlaytimeTracker]: custom });
+    expect(bed.env.mockContainer.resolve(tokens.PlaytimeTracker)).toBe(custom);
+    await bed.cleanup();
+  });
+
+  it('constructor overrides can return null', async () => {
+    const bed = new GameEngineTestBed({ [tokens.PlaytimeTracker]: null });
+    expect(bed.env.mockContainer.resolve(tokens.PlaytimeTracker)).toBeNull();
+    await bed.cleanup();
+  });
+
   it('resetMocks clears all spy call history', () => {
     testBed.mocks.logger.info('log');
     testBed.mocks.entityManager.clearAll();
