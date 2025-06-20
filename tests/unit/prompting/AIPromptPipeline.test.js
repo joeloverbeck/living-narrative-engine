@@ -135,19 +135,22 @@ describe('AIPromptPipeline', () => {
     });
   });
 
-  test('generatePrompt errors when llmAdapter returns falsy', async () => {
-    testBed.llmAdapter.getCurrentActiveLlmId.mockResolvedValue(null);
-
+  test.each([
+    {
+      desc: 'llmAdapter returns falsy',
+      mutate: () =>
+        testBed.llmAdapter.getCurrentActiveLlmId.mockResolvedValue(null),
+      error: 'Could not determine active LLM ID.',
+    },
+    {
+      desc: 'promptBuilder returns empty string',
+      mutate: () => testBed.promptBuilder.build.mockResolvedValue(''),
+      error: 'PromptBuilder returned an empty or invalid prompt.',
+    },
+  ])('generatePrompt rejects when %s', async ({ mutate, error }) => {
+    mutate();
     await expect(pipeline.generatePrompt({ id: 'a' }, {}, [])).rejects.toThrow(
-      'Could not determine active LLM ID.'
-    );
-  });
-
-  test('generatePrompt errors when promptBuilder.build returns empty string', async () => {
-    testBed.promptBuilder.build.mockResolvedValue('');
-
-    await expect(pipeline.generatePrompt({ id: 'a' }, {}, [])).rejects.toThrow(
-      'PromptBuilder returned an empty or invalid prompt.'
+      error
     );
   });
 
