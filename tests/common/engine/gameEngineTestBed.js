@@ -2,9 +2,12 @@
  * @file Provides a minimal test bed for GameEngine unit tests.
  * @see tests/common/engine/gameEngineTestBed.js
  */
+/* eslint-env jest */
+/* global beforeEach, afterEach, describe */
 
 import { createTestEnvironment } from './gameEngine.test-environment.js';
 import ContainerTestBed from '../containerTestBed.js';
+import BaseTestBed from '../baseTestBed.js';
 import { suppressConsoleError } from '../jestHelpers.js';
 import { describeSuite } from '../describeSuite.js';
 
@@ -36,16 +39,16 @@ export class GameEngineTestBed extends ContainerTestBed {
    */
   constructor(overrides = {}) {
     const env = createTestEnvironment(overrides);
+    const { mocks } = BaseTestBed.fromFactories({
+      logger: () => env.logger,
+      entityManager: () => env.entityManager,
+      turnManager: () => env.turnManager,
+      gamePersistenceService: () => env.gamePersistenceService,
+      playtimeTracker: () => env.playtimeTracker,
+      safeEventDispatcher: () => env.safeEventDispatcher,
+      initializationService: () => env.initializationService,
+    });
     const engine = env.createGameEngine();
-    const mocks = {
-      logger: env.logger,
-      entityManager: env.entityManager,
-      turnManager: env.turnManager,
-      gamePersistenceService: env.gamePersistenceService,
-      playtimeTracker: env.playtimeTracker,
-      safeEventDispatcher: env.safeEventDispatcher,
-      initializationService: env.initializationService,
-    };
     super(env.mockContainer, mocks);
     this.env = env;
     this.engine = engine;

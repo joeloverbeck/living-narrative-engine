@@ -3,7 +3,6 @@
  * @see tests/common/prompting/promptPipelineTestBed.js
  */
 
-import { jest } from '@jest/globals';
 import { AIPromptPipeline } from '../../../src/prompting/AIPromptPipeline.js';
 import {
   createMockLogger,
@@ -28,13 +27,13 @@ export class AIPromptPipelineTestBed extends BaseTestBed {
   defaultActions;
 
   constructor() {
-    const mocks = {
-      llmAdapter: createMockLLMAdapter(),
-      gameStateProvider: createMockAIGameStateProvider(),
-      promptContentProvider: createMockAIPromptContentProvider(),
-      promptBuilder: createMockPromptBuilder(),
-      logger: createMockLogger(),
-    };
+    const { mocks } = BaseTestBed.fromFactories({
+      llmAdapter: createMockLLMAdapter,
+      gameStateProvider: createMockAIGameStateProvider,
+      promptContentProvider: createMockAIPromptContentProvider,
+      promptBuilder: createMockPromptBuilder,
+      logger: createMockLogger,
+    });
     super(mocks);
     this.defaultActor = createMockEntity('actor');
     this.defaultContext = {};

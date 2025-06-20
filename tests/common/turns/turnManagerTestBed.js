@@ -2,6 +2,8 @@
  * @file Provides a minimal test bed for TurnManager unit tests.
  * @see tests/common/turns/turnManagerTestBed.js
  */
+/* eslint-env jest */
+/* global describe, beforeEach, afterEach */
 
 import { jest } from '@jest/globals';
 import TurnManager from '../../../src/turns/turnManager.js';
@@ -22,37 +24,30 @@ export class TurnManagerTestBed extends BaseTestBed {
   turnManager;
 
   constructor(overrides = {}) {
-    const logger = overrides.logger ?? createMockLogger();
-    const entityManager = overrides.entityManager ?? createMockEntityManager();
-    // Attach active entity map used by TurnManager
-    entityManager.activeEntities = new Map();
-    entityManager.getEntityInstance = jest.fn((id) =>
-      entityManager.activeEntities.get(id)
-    );
-    entityManager.getActiveEntities.mockImplementation(() =>
-      Array.from(entityManager.activeEntities.values())
-    );
-
-    const turnOrderService = overrides.turnOrderService ?? {
-      isEmpty: jest.fn(),
-      getNextEntity: jest.fn(),
-      startNewRound: jest.fn(),
-      clearCurrentRound: jest.fn(),
-    };
-
-    const turnHandlerResolver = overrides.turnHandlerResolver ?? {
-      resolveHandler: jest.fn(),
-    };
-
-    const dispatcher = overrides.dispatcher ?? createMockValidatedEventBus();
-
-    const mocks = {
-      turnOrderService,
-      entityManager,
-      logger,
-      dispatcher,
-      turnHandlerResolver,
-    };
+    const { mocks } = BaseTestBed.fromFactories({
+      logger: () => overrides.logger ?? createMockLogger(),
+      entityManager: () => {
+        const em = overrides.entityManager ?? createMockEntityManager();
+        em.activeEntities = new Map();
+        em.getEntityInstance = jest.fn((id) => em.activeEntities.get(id));
+        em.getActiveEntities.mockImplementation(() =>
+          Array.from(em.activeEntities.values())
+        );
+        return em;
+      },
+      turnOrderService: () =>
+        overrides.turnOrderService ?? {
+          isEmpty: jest.fn(),
+          getNextEntity: jest.fn(),
+          startNewRound: jest.fn(),
+          clearCurrentRound: jest.fn(),
+        },
+      turnHandlerResolver: () =>
+        overrides.turnHandlerResolver ?? {
+          resolveHandler: jest.fn(),
+        },
+      dispatcher: () => overrides.dispatcher ?? createMockValidatedEventBus(),
+    });
     super(mocks);
 
     const TurnManagerClass = overrides.TurnManagerClass ?? TurnManager;
