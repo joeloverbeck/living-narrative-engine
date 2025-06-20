@@ -50,12 +50,12 @@ describe('EntityManager Integration Tests', () => {
     mockEventDispatcher = createMockSafeEventDispatcher();
 
     // Instantiate EntityManager with real registry and mocked services
-    entityManager = new EntityManager(
-      dataRegistry,
-      mockSchemaValidator,
-      mockLogger,
-      mockEventDispatcher
-    );
+    entityManager = new EntityManager({
+      registry: dataRegistry,
+      validator: mockSchemaValidator,
+      logger: mockLogger,
+      dispatcher: mockEventDispatcher,
+    });
   });
 
   /**

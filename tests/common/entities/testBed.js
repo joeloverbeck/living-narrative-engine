@@ -142,13 +142,13 @@ export class TestBed extends BaseTestBed {
     };
     super(mocks);
 
-    this.entityManager = new EntityManager(
-      this.mocks.registry,
-      this.mocks.validator,
-      this.mocks.logger,
-      this.mocks.eventDispatcher,
-      entityManagerOptions
-    );
+    this.entityManager = new EntityManager({
+      registry: this.mocks.registry,
+      validator: this.mocks.validator,
+      logger: this.mocks.logger,
+      dispatcher: this.mocks.eventDispatcher,
+      ...entityManagerOptions,
+    });
   }
 
   /**

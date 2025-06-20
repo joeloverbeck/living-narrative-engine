@@ -36,7 +36,13 @@ describeEntityManagerSuite('EntityManager - Lifecycle', (getBed) => {
       const EntityManager = getBed().entityManager.constructor;
 
       expect(
-        () => new EntityManager(null, validator, logger, eventDispatcher)
+        () =>
+          new EntityManager({
+            registry: null,
+            validator,
+            logger,
+            dispatcher: eventDispatcher,
+          })
       ).toThrow('Missing required dependency: IDataRegistry.');
     });
 
@@ -45,7 +51,13 @@ describeEntityManagerSuite('EntityManager - Lifecycle', (getBed) => {
       const EntityManager = getBed().entityManager.constructor;
 
       expect(
-        () => new EntityManager(registry, null, logger, eventDispatcher)
+        () =>
+          new EntityManager({
+            registry,
+            validator: null,
+            logger,
+            dispatcher: eventDispatcher,
+          })
       ).toThrow('Missing required dependency: ISchemaValidator.');
     });
 

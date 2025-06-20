@@ -39,14 +39,16 @@ export function registerWorldAndEntity(container) {
 
   // --- IEntityManager (EntityManager implementation) ---
   r.singletonFactory(tokens.IEntityManager, (c) => {
-    return new EntityManager(
-      /** @type {IDataRegistry} */ (c.resolve(tokens.IDataRegistry)),
-      /** @type {ISchemaValidator} */ (c.resolve(tokens.ISchemaValidator)),
-      /** @type {ILogger} */ (c.resolve(tokens.ILogger)),
-      /** @type {ISafeEventDispatcher} */ (
+    return new EntityManager({
+      registry: /** @type {IDataRegistry} */ (c.resolve(tokens.IDataRegistry)),
+      validator: /** @type {ISchemaValidator} */ (
+        c.resolve(tokens.ISchemaValidator)
+      ),
+      logger: /** @type {ILogger} */ (c.resolve(tokens.ILogger)),
+      dispatcher: /** @type {ISafeEventDispatcher} */ (
         c.resolve(tokens.ISafeEventDispatcher)
-      )
-    );
+      ),
+    });
   });
   logger.debug(
     `World and Entity Registration: Registered ${String(tokens.IEntityManager)}.`
