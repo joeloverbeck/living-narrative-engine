@@ -1,6 +1,7 @@
 // tests/unit/entities/entityManager.definitionMutation.test.js
 
 import { describe, test, expect, jest } from '@jest/globals';
+import { describeEntityManagerSuite } from '../../common/entities/testBed.js';
 import EntityManager from '../../../src/entities/entityManager.js';
 import EntityDefinition from '../../../src/entities/entityDefinition.js';
 
@@ -38,44 +39,47 @@ const createMockSafeEventDispatcher = () => ({
   dispatch: jest.fn(),
 });
 
-describe('EntityManager.createEntityInstance does not mutate definitions', () => {
-  let mockEventDispatcher;
+describeEntityManagerSuite(
+  'EntityManager.createEntityInstance does not mutate definitions',
+  (getBed) => {
+    let mockEventDispatcher;
 
-  test('components property remains unchanged when null', () => {
-    const definition = { id: 'test:nullComps', components: null };
-    const deps = makeDeps(definition);
-    mockEventDispatcher = createMockSafeEventDispatcher();
+    test('components property remains unchanged when null', () => {
+      const definition = { id: 'test:nullComps', components: null };
+      const deps = makeDeps(definition);
+      mockEventDispatcher = createMockSafeEventDispatcher();
 
-    const em = new EntityManager(
-      deps.registry,
-      deps.validator,
-      deps.logger,
-      mockEventDispatcher
-    );
+      const em = new EntityManager(
+        deps.registry,
+        deps.validator,
+        deps.logger,
+        mockEventDispatcher
+      );
 
-    const entity = em.createEntityInstance(definition.id);
-    expect(entity).not.toBeNull();
-    expect(definition.components).toBeNull();
-  });
+      const entity = em.createEntityInstance(definition.id);
+      expect(entity).not.toBeNull();
+      expect(definition.components).toBeNull();
+    });
 
-  test('components property remains unchanged when valid object', () => {
-    const definition = {
-      id: 'test:validComps',
-      components: { 'core:name': { value: 'A' } },
-    };
-    const deps = makeDeps(definition);
+    test('components property remains unchanged when valid object', () => {
+      const definition = {
+        id: 'test:validComps',
+        components: { 'core:name': { value: 'A' } },
+      };
+      const deps = makeDeps(definition);
 
-    mockEventDispatcher = createMockSafeEventDispatcher();
+      mockEventDispatcher = createMockSafeEventDispatcher();
 
-    const em = new EntityManager(
-      deps.registry,
-      deps.validator,
-      deps.logger,
-      mockEventDispatcher
-    );
+      const em = new EntityManager(
+        deps.registry,
+        deps.validator,
+        deps.logger,
+        mockEventDispatcher
+      );
 
-    const entity = em.createEntityInstance(definition.id);
-    expect(entity).not.toBeNull();
-    expect(definition.components).toEqual({ 'core:name': { value: 'A' } });
-  });
-});
+      const entity = em.createEntityInstance(definition.id);
+      expect(entity).not.toBeNull();
+      expect(definition.components).toEqual({ 'core:name': { value: 'A' } });
+    });
+  }
+);
