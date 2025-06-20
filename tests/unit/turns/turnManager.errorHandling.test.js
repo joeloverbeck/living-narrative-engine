@@ -19,6 +19,7 @@ import {
   test,
   afterEach,
 } from '@jest/globals';
+import { flushPromisesAndTimers } from '../../common/turns/turnManagerTestBed.js';
 
 // --- Mock Implementations ---
 class MockEntity {
@@ -124,19 +125,6 @@ describe('TurnManager - Error Handling', () => {
   let dispatcher;
   let turnHandlerResolver;
   let mockActor1, mockActor2, mockActor3;
-
-  /**
-   * Flushes pending promises and advances Jest's fake timers.
-   * Uses advanceTimersByTimeAsync for compatibility with modern fake timers
-   * and async operations triggered by timers. Simplified version.
-   */
-  const flushPromisesAndTimers = async () => {
-    // Advance timers by the smallest possible amount (0ms).
-    // The 'Async' version waits for microtasks (Promises) resolved
-    // as a result of the timers advancing.
-    await jest.advanceTimersByTimeAsync(0);
-    // No extra Promise.resolve() here - let's see if advanceTimersByTimeAsync is sufficient.
-  };
 
   beforeEach(() => {
     // Use MODERN fake timers explicitly
