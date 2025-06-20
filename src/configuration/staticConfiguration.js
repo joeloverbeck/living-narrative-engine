@@ -140,7 +140,8 @@ class StaticConfiguration {
       rules: 'http://example.com/schemas/rule.schema.json',
 
       // --- ENTITY TYPES ---
-      entityDefinitions: 'http://example.com/schemas/entity-definition.schema.json',
+      entityDefinitions:
+        'http://example.com/schemas/entity-definition.schema.json',
       entityInstances: 'http://example.com/schemas/entity-instance.schema.json',
 
       // --- MISC ---

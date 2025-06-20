@@ -3,7 +3,7 @@
  * Using tokens instead of raw strings prevents typos and aids refactoring.
  */
 
-import { freeze } from '../utils/objectUtils.js';
+import { freeze } from '../utils';
 
 /**
  * A frozen object containing all unique keys used for registering and resolving
@@ -64,6 +64,7 @@ import { freeze } from '../utils/objectUtils.js';
  * --- Core Services & Managers (Implementations - some will be replaced by Interface Tokens below) ---
  * @property {DiToken} GameDataRepository - Token for accessing registered game data (implementation).
  * @property {DiToken} EntityManager - Token for managing game entities and components (implementation).
+ * @property {DiToken} SpatialIndexSynchronizer - Token for the service that keeps the spatial index in sync with entity events.
  * @property {DiToken} TargetResolutionService - Token for resolving action targets.
  * @property {DiToken} ReferenceResolver - Token for the reference resolution service (implementation).
  * @property {DiToken} JsonLogicEvaluationService - Token for evaluating JsonLogic rules.
@@ -195,6 +196,7 @@ export const tokens = freeze({
   // Core Services & Managers (Concrete Implementations - some may be deprecated for interface tokens)
   GameDataRepository: 'GameDataRepository',
   EntityManager: 'EntityManager',
+  SpatialIndexSynchronizer: 'SpatialIndexSynchronizer',
   ReferenceResolver: 'ReferenceResolver',
   JsonLogicEvaluationService: 'JsonLogicEvaluationService',
   ActionValidationContextBuilder: 'ActionValidationContextBuilder',

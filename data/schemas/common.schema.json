@@ -20,10 +20,7 @@
           "description": "Required. A human-readable explanation of what this definition represents or does."
         }
       },
-      "required": [
-        "id",
-        "description"
-      ]
+      "required": ["id", "description"]
     },
     "namespacedId": {
       "description": "A unique identifier string, typically namespaced using a colon (e.g., 'core:player', 'mod_combat:action_attack'). Allows alphanumeric characters, underscore, hyphen, and colon.",
@@ -60,9 +57,7 @@
               "pattern": "^\\S(.*\\S)?$"
             }
           },
-          "required": [
-            "entityId"
-          ],
+          "required": ["entityId"],
           "additionalProperties": false,
           "description": "Reference via explicit entityId property."
         }

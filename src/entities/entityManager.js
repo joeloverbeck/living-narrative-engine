@@ -1,4 +1,8 @@
-// src/entities/entityManager.js
+/**
+ * @file This module is in charge of entities: their creation and destruction, updating components, etc. A big honcho.
+ * @see src/entities/entityManager.js
+ */
+
 // -----------------------------------------------------------------------------
 //  Living Narrative Engine – EntityManager
 // -----------------------------------------------------------------------------
@@ -19,7 +23,6 @@ import EntityInstanceData from './entityInstanceData.js';
 import MapManager from '../utils/mapManagerUtils.js';
 import {
   ACTOR_COMPONENT_ID,
-  POSITION_COMPONENT_ID,
   SHORT_TERM_MEMORY_COMPONENT_ID,
   NOTES_COMPONENT_ID,
   GOALS_COMPONENT_ID,
@@ -40,6 +43,7 @@ import {
 /* Type-Hint Imports (JSDoc only – removed at runtime)                        */
 /* -------------------------------------------------------------------------- */
 
+/** @typedef {import('./entityDefinition.js').default} EntityDefinition */
 /** @typedef {import('../interfaces/coreServices.js').IDataRegistry}        IDataRegistry */
 /** @typedef {import('../interfaces/coreServices.js').ISchemaValidator}     ISchemaValidator */
 /** @typedef {import('../interfaces/coreServices.js').ILogger}              ILogger */
@@ -97,16 +101,22 @@ function formatValidationErrors(rawResult) {
  * • Validating and mutating component payloads
  * • Injecting engine-level default components (STM, notes, and goals)
  * • Tracking active entities and their primary instances
- * • Propagating position changes to the spatial index
  * • Emitting events for entity lifecycle and component changes.
  */
 class EntityManager extends IEntityManager {
-  /** @type {IDataRegistry}  @private */ #registry;
-  /** @type {ISchemaValidator} @private */ #validator;
-  /** @type {ILogger} @private */ #logger;
-  /** @type {ISafeEventDispatcher} @private */ #eventDispatcher;
+  /** @type {IDataRegistry}  @private */
+  #registry;
+  /** @type {ISchemaValidator} @private */
+  #validator;
+  /** @type {ILogger} @private */
+  #logger;
+  /** @type {ISafeEventDispatcher} @private */
+  #eventDispatcher;
+  /** @type {function(): string} @private */
+  #idGenerator;
 
-  /** @type {MapManager} @private */ #mapManager;
+  /** @type {MapManager} @private */
+  #mapManager;
 
   /** @type {Map<string, EntityDefinition>} @private */
   #definitionCache;
@@ -120,9 +130,17 @@ class EntityManager extends IEntityManager {
    * @param {ISchemaValidator}     validator
    * @param {ILogger}              logger
    * @param {ISafeEventDispatcher} safeEventDispatcher
+   * @param {object} [options] - Optional settings.
+   * @param {function(): string} [options.idGenerator=uuidv4] - A function to generate new entity instance IDs. Defaults to uuidv4.
    * @throws {Error} If any dependency is missing or malformed.
    */
-  constructor(registry, validator, logger, safeEventDispatcher) {
+  constructor(
+    registry,
+    validator,
+    logger,
+    safeEventDispatcher,
+    { idGenerator = uuidv4 } = {}
+  ) {
     super();
 
     /* ---------- dependency checks ---------- */
@@ -137,13 +155,20 @@ class EntityManager extends IEntityManager {
     validateDependency(validator, 'ISchemaValidator', this.#logger, {
       requiredMethods: ['validate'],
     });
-    validateDependency(safeEventDispatcher, 'ISafeEventDispatcher', this.#logger, {
-      requiredMethods: ['dispatch'],
-    });
+    validateDependency(
+      safeEventDispatcher,
+      'ISafeEventDispatcher',
+      this.#logger,
+      {
+        requiredMethods: ['dispatch'],
+      }
+    );
 
     this.#registry = registry;
     this.#validator = validator;
     this.#eventDispatcher = safeEventDispatcher;
+    this.#idGenerator = idGenerator;
+
     this.#mapManager = new MapManager({ throwOnInvalidId: false });
     this.activeEntities = this.#mapManager.items;
     this.#definitionCache = new Map();
@@ -218,7 +243,9 @@ class EntityManager extends IEntityManager {
             entity.addComponent(comp.id, validatedData);
           } catch (e) {
             this.#logger.error(
-              `Failed to inject default component ${comp.id} for entity ${entity.id}: ${e.message}`
+              `Failed to inject default component ${comp.id} for entity ${
+                entity.id
+              }: ${e.message}`
             );
           }
         }
@@ -296,7 +323,10 @@ class EntityManager extends IEntityManager {
       throw new DefinitionNotFoundError(definitionId);
     }
 
-    const actualInstanceId = instanceId || uuidv4();
+    const actualInstanceId =
+      instanceId && MapManager.isValidId(instanceId)
+        ? instanceId
+        : this.#idGenerator();
 
     // Check for duplicate instanceId BEFORE any other operations
     if (this.#mapManager.has(actualInstanceId)) {
@@ -327,16 +357,27 @@ class EntityManager extends IEntityManager {
     }
 
     // Initialise Entity with its definition, a new instance ID, and validated overrides.
-    const entityInstanceDataObject = new EntityInstanceData(actualInstanceId, definition, validatedOverrides);
+    const entityInstanceDataObject = new EntityInstanceData(
+      actualInstanceId,
+      definition,
+      validatedOverrides
+    );
     // Pass logger and validator to Entity constructor
-    const entity = new Entity(entityInstanceDataObject, this.#logger, this.#validator);
+    const entity = new Entity(
+      entityInstanceDataObject,
+      this.#logger,
+      this.#validator
+    );
 
     // Track the primary instance.
     this.#_trackEntity(entity);
     this.#injectDefaultComponents(entity); // Injects defaults if applicable
 
     // Dispatch event after successful creation and setup
-    this.#eventDispatcher.dispatch(ENTITY_CREATED_ID, { entity, wasReconstructed: false });
+    this.#eventDispatcher.dispatch(ENTITY_CREATED_ID, {
+      entity,
+      wasReconstructed: false,
+    });
 
     this.#logger.info(
       `Entity instance '${actualInstanceId}' (def: '${definitionId}') created.`
@@ -356,10 +397,15 @@ class EntityManager extends IEntityManager {
    * @throws {Error} If component data is invalid, or if an entity with the given ID already exists.
    */
   reconstructEntity(serializedEntity) {
-    this.#logger.debug(`[RECONSTRUCT_ENTITY_LOG] Attempting to reconstruct entity. Data: ${JSON.stringify(serializedEntity)}`);
+    this.#logger.debug(
+      `[RECONSTRUCT_ENTITY_LOG] Attempting to reconstruct entity. Data: ${JSON.stringify(
+        serializedEntity
+      )}`
+    );
 
     if (!serializedEntity || typeof serializedEntity !== 'object') {
-      const msg = 'EntityManager.reconstructEntity: serializedEntity data is missing or invalid.';
+      const msg =
+        'EntityManager.reconstructEntity: serializedEntity data is missing or invalid.';
       this.#logger.error(msg);
       throw new Error(msg);
     }
@@ -374,7 +420,8 @@ class EntityManager extends IEntityManager {
     } = serializedEntity;
 
     if (!MapManager.isValidId(instanceId)) {
-      const msg = 'EntityManager.reconstructEntity: instanceId is missing or invalid in serialized data.';
+      const msg =
+        'EntityManager.reconstructEntity: instanceId is missing or invalid in serialized data.';
       this.#logger.error(msg);
       throw new Error(msg);
     }
@@ -394,10 +441,18 @@ class EntityManager extends IEntityManager {
     }
 
     const validatedComponents = {};
-    this.#logger.debug(`[RECONSTRUCT_ENTITY_LOG] About to validate components for entity '${instanceId}'. Components to process: ${JSON.stringify(components)}`);
+    this.#logger.debug(
+      `[RECONSTRUCT_ENTITY_LOG] About to validate components for entity '${instanceId}'. Components to process: ${JSON.stringify(
+        components
+      )}`
+    );
     if (components && typeof components === 'object') {
       for (const [typeId, data] of Object.entries(components)) {
-        this.#logger.debug(`[RECONSTRUCT_ENTITY_LOG] Validating component '${typeId}' for entity '${instanceId}'. Data: ${JSON.stringify(data)}`);
+        this.#logger.debug(
+          `[RECONSTRUCT_ENTITY_LOG] Validating component '${typeId}' for entity '${instanceId}'. Data: ${JSON.stringify(
+            data
+          )}`
+        );
         if (data === null) {
           validatedComponents[typeId] = null;
         } else {
@@ -409,7 +464,9 @@ class EntityManager extends IEntityManager {
           if (validationResult.isValid) {
             validatedComponents[typeId] = JSON.parse(JSON.stringify(data));
           } else {
-            const errorMsg = `Reconstruction component ${typeId} for entity ${instanceId} (definition ${definitionId}) Errors: ${JSON.stringify(validationResult.errors)}`;
+            const errorMsg = `Reconstruction component ${typeId} for entity ${instanceId} (definition ${definitionId}) Errors: ${JSON.stringify(
+              validationResult.errors
+            )}`;
             this.#logger.error(errorMsg);
             throw new Error(errorMsg);
           }
@@ -417,20 +474,29 @@ class EntityManager extends IEntityManager {
       }
     }
 
-    this.#logger.debug(`[RECONSTRUCT_ENTITY_LOG] All components validated for entity '${instanceId}'.`);
+    this.#logger.debug(
+      `[RECONSTRUCT_ENTITY_LOG] All components validated for entity '${instanceId}'.`
+    );
 
     // Create and track the entity
     const instanceDataForReconstruction = new EntityInstanceData(
-      instanceId,            // Corrected: instanceId first
-      definitionToUse,       // Corrected: definition second
-      JSON.parse(JSON.stringify(validatedComponents))    // Replaced structuredClone
-                             // Removed extra arguments: componentStates, tags, flags
+      instanceId, // Corrected: instanceId first
+      definitionToUse, // Corrected: definition second
+      JSON.parse(JSON.stringify(validatedComponents)) // Replaced structuredClone
+      // Removed extra arguments: componentStates, tags, flags
     );
-    const entity = new Entity(instanceDataForReconstruction, this.#logger, this.#validator);
+    const entity = new Entity(
+      instanceDataForReconstruction,
+      this.#logger,
+      this.#validator
+    );
 
     this.#_trackEntity(entity);
 
-    this.#eventDispatcher.dispatch(ENTITY_CREATED_ID, { entity, wasReconstructed: true });
+    this.#eventDispatcher.dispatch(ENTITY_CREATED_ID, {
+      entity,
+      wasReconstructed: true,
+    });
 
     this.#logger.info(`Entity instance '${instanceId}' reconstructed.`);
     return entity;
@@ -487,6 +553,9 @@ class EntityManager extends IEntityManager {
       throw new EntityNotFoundError(instanceId);
     }
 
+    // Capture the state of the component *before* the change.
+    const oldComponentData = entity.getComponentData(componentTypeId);
+
     let validatedData;
     if (componentData === null) {
       validatedData = null;
@@ -508,9 +577,10 @@ class EntityManager extends IEntityManager {
     }
 
     this.#eventDispatcher.dispatch(COMPONENT_ADDED_ID, {
-      entity, // Changed from instanceId
+      entity,
       componentTypeId,
       componentData: validatedData,
+      oldComponentData, // Include old data in the event
     });
 
     this.#logger.debug(
@@ -561,12 +631,16 @@ class EntityManager extends IEntityManager {
       return false;
     }
 
+    // Capture the state of the component *before* it is removed.
+    const oldComponentData = entity.getComponentData(componentTypeId);
+
     const successfullyRemovedOverride = entity.removeComponent(componentTypeId);
 
     if (successfullyRemovedOverride) {
       this.#eventDispatcher.dispatch(COMPONENT_REMOVED_ID, {
-        entity, // Changed from instanceId
+        entity,
         componentTypeId,
+        oldComponentData, // Include old data in the event
       });
 
       this.#logger.debug(
@@ -667,32 +741,15 @@ class EntityManager extends IEntityManager {
       }
     }
     this.#logger.debug(
-      `EntityManager.getEntitiesWithComponent: Found ${results.length} entities with component '${componentTypeId}'.`
+      `EntityManager.getEntitiesWithComponent: Found ${
+        results.length
+      } entities with component '${componentTypeId}'.`
     );
     return results;
   }
 
   /**
-   * Retrieve the set of entity IDs currently inside a location instance.
-   *
-   * @param {string} locationInstanceId – UUID of the location entity.
-   * @returns {Set<string>}             – Set of contained entity IDs.
-   */
-  getEntitiesInLocation(locationInstanceId) {
-    if (!MapManager.isValidId(locationInstanceId)) {
-      this.#logger.warn(
-        `EntityManager.getEntitiesInLocation: Invalid locationInstanceId: '${locationInstanceId}'. Returning empty set.`
-      );
-      return new Set();
-    }
-    this.#logger.warn(
-      `EntityManager.getEntitiesInLocation: This method is deprecated as EntityManager is decoupled from SpatialIndexManager. Returning an empty set. Consumers should rely on events to maintain their own spatial data.`
-    );
-    return new Set(); // Formerly: this.#spatialIndexManager.getEntitiesInLocation(locationInstanceId);
-  }
-
-  /**
-   * Remove an entity instance from the manager and spatial index.
+   * Remove an entity instance from the manager.
    *
    * @param {string} instanceId - The ID of the entity instance to remove.
    * @returns {boolean} True if the entity was successfully removed.
@@ -720,7 +777,9 @@ class EntityManager extends IEntityManager {
       this.#logger.info(
         `Entity instance ${entityToRemove.id} removed from EntityManager.`
       );
-      this.#eventDispatcher.dispatch(ENTITY_REMOVED_ID, { entity: entityToRemove });
+      this.#eventDispatcher.dispatch(ENTITY_REMOVED_ID, {
+        entity: entityToRemove,
+      });
       return true;
     } else {
       this.#logger.error(
@@ -732,13 +791,10 @@ class EntityManager extends IEntityManager {
   }
 
   /**
-   * Clear all entities from the manager and the spatial index.
+   * Clear all entities from the manager.
    * Also clears the entity definition cache.
    */
   clearAll() {
-    // Removed: this.#spatialIndexManager.clearIndex();
-    // Removed: this.#logger.debug('Spatial index cleared.');
-
     this.#mapManager.clear();
     this.#logger.info('All entity instances removed from EntityManager.');
 

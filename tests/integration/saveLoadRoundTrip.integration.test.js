@@ -1,6 +1,13 @@
 // tests/integration/saveLoadRoundTrip.integration.test.js
 // --- FILE START ---
-import { describe, beforeEach, test, expect, jest, beforeAll } from '@jest/globals';
+import {
+  describe,
+  beforeEach,
+  test,
+  expect,
+  jest,
+  beforeAll,
+} from '@jest/globals';
 import SaveLoadService from '../../src/persistence/saveLoadService.js';
 import SaveFileRepository from '../../src/persistence/saveFileRepository.js';
 import GameStateSerializer from '../../src/persistence/gameStateSerializer.js';
@@ -12,7 +19,7 @@ import ComponentCleaningService, {
 } from '../../src/persistence/componentCleaningService.js';
 import receptionistDef from '../../data/mods/isekai/entities/definitions/receptionist.character.json';
 import { webcrypto } from 'crypto';
-import { createMockSaveValidationService } from '../testUtils.js';
+import { createMockSaveValidationService } from '../unit/testUtils.js';
 
 beforeAll(() => {
   if (typeof window !== 'undefined') {

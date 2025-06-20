@@ -1,19 +1,23 @@
 {
-  "$schema": "http://example.com/schemas/component.schema.json",
+  "$schema": "http://example.com/schemas/event.schema.json",
   "id": "core:component_removed",
   "description": "Fired when a component override is successfully removed from an entity instance. This reverts the component's state to its definition's default.",
   "payloadSchema": {
     "description": "Defines the structure for the 'core:component_removed' event payload.",
     "type": "object",
-    "required": ["instanceId", "componentTypeId"],
+    "required": ["entity", "componentTypeId"],
     "properties": {
-      "instanceId": {
-        "$ref": "../schemas/common.schema.json#/definitions/namespacedId",
-        "description": "The instance ID of the entity from which the component was removed."
+      "entity": {
+        "type": "object",
+        "description": "The full entity instance from which the component was removed."
       },
       "componentTypeId": {
-        "$ref": "../schemas/common.schema.json#/definitions/namespacedId",
+        "$ref": "../../schemas/common.schema.json#/definitions/namespacedId",
         "description": "The ID of the component that was removed."
+      },
+      "oldComponentData": {
+        "description": "Optional. The data of the component before it was removed.",
+        "type": ["object", "null"]
       }
     },
     "additionalProperties": false

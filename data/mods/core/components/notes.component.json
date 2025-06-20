@@ -30,6 +30,5 @@
     },
     "required": ["notes"],
     "additionalProperties": false
-  },
-  "resolveFields": []
+  }
 }

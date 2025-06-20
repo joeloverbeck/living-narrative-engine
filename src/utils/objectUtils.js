@@ -1,8 +1,6 @@
 // src/utils/objectUtils.js
 
-import {
-  PersistenceErrorCodes,
-} from '../persistence/persistenceErrors.js';
+import { PersistenceErrorCodes } from '../persistence/persistenceErrors.js';
 import {
   createPersistenceFailure,
   createPersistenceSuccess,

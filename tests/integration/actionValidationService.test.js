@@ -16,7 +16,7 @@ import Entity from '../../src/entities/entity.js'; // Needed for test inputs
 import EntityDefinition from '../../src/entities/entityDefinition.js';
 import EntityInstanceData from '../../src/entities/entityInstanceData.js';
 import { ActionTargetContext } from '../../src/models/actionTargetContext.js';
-import { createMockPrerequisiteEvaluationService } from '../testUtils.js'; // Needed for test inputs
+import { createMockPrerequisiteEvaluationService } from '../unit/testUtils.js'; // Needed for test inputs
 
 // --- Mock Modules ---
 jest.mock('../../src/actions/validation/prerequisiteEvaluationService.js'); // Mock PES module

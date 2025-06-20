@@ -351,7 +351,9 @@ class WorldLoader extends AbstractLoader {
         `WorldLoader: Essential schema for type '${type}' (ID: '${schemaId}') is configured and loaded.`
       );
     }
-    this.#logger.debug('WorldLoader: All essential schemas are configured and loaded.');
+    this.#logger.debug(
+      'WorldLoader: All essential schemas are configured and loaded.'
+    );
   }
 
   /**

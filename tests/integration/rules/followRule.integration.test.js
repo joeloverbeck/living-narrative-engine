@@ -11,7 +11,7 @@ import operationSchema from '../../../data/schemas/operation.schema.json';
 import jsonLogicSchema from '../../../data/schemas/json-logic.schema.json';
 import conditionSchema from '../../../data/schemas/condition.schema.json';
 import conditionContainerSchema from '../../../data/schemas/condition-container.schema.json';
-import loadOperationSchemas from '../../helpers/loadOperationSchemas.js';
+import loadOperationSchemas from '../../unit/helpers/loadOperationSchemas.js';
 import followRule from '../../../data/mods/core/rules/follow.rule.json';
 import eventIsActionFollow from '../../../data/mods/core/conditions/event-is-action-follow.condition.json';
 import SystemLogicInterpreter from '../../../src/logic/systemLogicInterpreter.js';

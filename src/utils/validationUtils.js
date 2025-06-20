@@ -47,12 +47,12 @@ export function validateDependency(
       // --- REFINED DIAGNOSTIC LOG ---
       console.log(
         `DIAGNOSTIC (validationUtils.js): Validating ${dependencyName}.${method}. ` +
-        `Retrieved method: ${String(actualMethod)}. ` +
-        `typeof retrieved method: ${typeof actualMethod}. ` +
-        `Dependency object keys: ${Object.keys(dependency)}`
+          `Retrieved method: ${String(actualMethod)}. ` +
+          `typeof retrieved method: ${typeof actualMethod}. ` +
+          `Dependency object keys: ${Object.keys(dependency)}`
       );
       // --- END REFINED DIAGNOSTIC LOG ---
-      if (typeof actualMethod !== 'function') { 
+      if (typeof actualMethod !== 'function') {
         const errorMsg = `Invalid or missing method '${method}' on dependency '${dependencyName}'.`;
         effectiveLogger.error(errorMsg);
         throw new Error(errorMsg);

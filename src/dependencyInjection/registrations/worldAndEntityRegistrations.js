@@ -17,12 +17,14 @@
 // --- DI & Helper Imports ---
 import { tokens } from '../tokens.js';
 import { Registrar } from '../registrarHelpers.js';
+import { INITIALIZABLE } from '../tags.js';
 
 // --- Service Imports ---
 import EntityManager from '../../entities/entityManager.js';
 import WorldContext from '../../context/worldContext.js';
 import JsonLogicEvaluationService from '../../logic/jsonLogicEvaluationService.js';
 import { EntityDisplayDataProvider } from '../../entities/entityDisplayDataProvider.js';
+import { SpatialIndexSynchronizer } from '../../entities/spatialIndexSynchronizer.js';
 
 /**
  * Registers world, entity, and context-related services.
@@ -70,7 +72,9 @@ export function registerWorldAndEntity(container) {
     tokens.IGameDataRepository,
   ]);
   logger.debug(
-    `World and Entity Registration: Registered ${String(tokens.JsonLogicEvaluationService)}.`
+    `World and Entity Registration: Registered ${String(
+      tokens.JsonLogicEvaluationService
+    )}.`
   );
 
   r.singletonFactory(tokens.EntityDisplayDataProvider, (c) => {
@@ -82,7 +86,26 @@ export function registerWorldAndEntity(container) {
     });
   });
   logger.debug(
-    `World and Entity Registration: Registered ${String(tokens.EntityDisplayDataProvider)}.`
+    `World and Entity Registration: Registered ${String(
+      tokens.EntityDisplayDataProvider
+    )}.`
+  );
+
+  // --- SpatialIndexSynchronizer ---
+  r.tagged(INITIALIZABLE).singletonFactory(
+    tokens.SpatialIndexSynchronizer,
+    (c) => {
+      return new SpatialIndexSynchronizer({
+        spatialIndexManager: c.resolve(tokens.ISpatialIndexManager),
+        safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+        logger: c.resolve(tokens.ILogger),
+      });
+    }
+  );
+  logger.debug(
+    `World and Entity Registration: Registered ${String(
+      tokens.SpatialIndexSynchronizer
+    )} tagged ${INITIALIZABLE.join(', ')}.`
   );
 
   logger.debug('World and Entity Registration: Completed.');

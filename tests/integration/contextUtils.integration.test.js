@@ -3,17 +3,10 @@
  * @see tests/integration/contextUtils.integration.test.js
  */
 
-
 /**
  * @jest-environment node
  */
-import {
-  describe,
-  expect,
-  jest,
-  test,
-  beforeEach,
-} from '@jest/globals';
+import { describe, expect, jest, test, beforeEach } from '@jest/globals';
 import { resolvePlaceholders } from '../../src/utils/contextUtils.js';
 import { getEntityDisplayName } from '../../src/utils/entityUtils.js';
 
@@ -61,8 +54,8 @@ describe('contextUtils.js', () => {
       const input = { text: 'The value is {context.myVar}' };
       const executionContext = {
         evaluationContext: {
-          context: { myVar: 123 }
-        }
+          context: { myVar: 123 },
+        },
       };
       const result = resolvePlaceholders(input, executionContext, mockLogger);
       expect(result).toEqual({ text: 'The value is 123' });
@@ -72,19 +65,25 @@ describe('contextUtils.js', () => {
       const input = { text: 'Value: {context.myVar}' };
       const executionContext = { evaluationContext: {} };
       resolvePlaceholders(input, executionContext, mockLogger);
-      expect(mockLogger.warn).toHaveBeenCalledWith(expect.stringContaining('Placeholder "{context.myVar}" not found'));
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('Placeholder "{context.myVar}" not found')
+      );
     });
 
     test('should use entity name fallback for {actor.name}', () => {
-      const input = "The hero is {actor.name}.";
-      const executionContext = { actor: { id: 'a-1', name: 'Sir Clucks-a-Lot' } };
+      const input = 'The hero is {actor.name}.';
+      const executionContext = {
+        actor: { id: 'a-1', name: 'Sir Clucks-a-Lot' },
+      };
       const result = resolvePlaceholders(input, executionContext, mockLogger);
-      expect(result).toBe("The hero is Sir Clucks-a-Lot.");
+      expect(result).toBe('The hero is Sir Clucks-a-Lot.');
     });
 
     test('should replace a full-string placeholder with its native type', () => {
       const input = '{context.isPlayer}';
-      const executionContext = { evaluationContext: { context: { isPlayer: true } } };
+      const executionContext = {
+        evaluationContext: { context: { isPlayer: true } },
+      };
       const result = resolvePlaceholders(input, executionContext, mockLogger);
       expect(result).toBe(true);
     });
@@ -94,12 +93,12 @@ describe('contextUtils.js', () => {
         title: 'Report for {actor.name}',
         data: [
           { key: 'ID', value: '{actor.id}' },
-          { key: 'Status', value: '{context.status}' }
-        ]
+          { key: 'Status', value: '{context.status}' },
+        ],
       };
       const executionContext = {
         actor: { id: 'a-1', name: 'Test Actor' },
-        evaluationContext: { context: { status: 'Active' } }
+        evaluationContext: { context: { status: 'Active' } },
       };
 
       const result = resolvePlaceholders(input, executionContext, mockLogger);
@@ -108,25 +107,31 @@ describe('contextUtils.js', () => {
         title: 'Report for Test Actor',
         data: [
           { key: 'ID', value: 'a-1' },
-          { key: 'Status', value: 'Active' }
-        ]
+          { key: 'Status', value: 'Active' },
+        ],
       });
     });
 
     test('should respect the skipKeys parameter', () => {
       const input = {
         unresolved: 'Data is {context.data}',
-        resolved: 'Name is {actor.name}'
+        resolved: 'Name is {actor.name}',
       };
       const executionContext = {
         actor: { id: 'a-1', name: 'DoNotResolve' },
-        evaluationContext: { context: { data: 'should-be-ignored' } }
+        evaluationContext: { context: { data: 'should-be-ignored' } },
       };
 
-      const result = resolvePlaceholders(input, executionContext, mockLogger, '', ['unresolved']);
+      const result = resolvePlaceholders(
+        input,
+        executionContext,
+        mockLogger,
+        '',
+        ['unresolved']
+      );
       expect(result).toEqual({
         unresolved: 'Data is {context.data}',
-        resolved: 'Name is DoNotResolve'
+        resolved: 'Name is DoNotResolve',
       });
     });
   });
