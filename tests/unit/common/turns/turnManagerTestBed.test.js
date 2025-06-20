@@ -20,24 +20,24 @@ describe('TurnManager Test Helpers: TurnManagerTestBed', () => {
   it('instantiates TurnManager with mocks', () => {
     expect(TurnManager).toHaveBeenCalledTimes(1);
     expect(TurnManager).toHaveBeenCalledWith({
-      turnOrderService: testBed.mocks.turnOrderService,
-      entityManager: testBed.mocks.entityManager,
-      logger: testBed.mocks.logger,
-      dispatcher: testBed.mocks.dispatcher,
-      turnHandlerResolver: testBed.mocks.turnHandlerResolver,
+      turnOrderService: testBed.turnOrderService,
+      entityManager: testBed.entityManager,
+      logger: testBed.logger,
+      dispatcher: testBed.dispatcher,
+      turnHandlerResolver: testBed.turnHandlerResolver,
     });
   });
 
   it('setActiveEntities stores entities in the mock', () => {
     const entity = { id: 'e1' };
     testBed.setActiveEntities(entity);
-    expect(testBed.mocks.entityManager.activeEntities.get('e1')).toBe(entity);
-    expect(testBed.mocks.entityManager.getActiveEntities()).toContain(entity);
+    expect(testBed.entityManager.activeEntities.get('e1')).toBe(entity);
+    expect(testBed.entityManager.getActiveEntities()).toContain(entity);
   });
 
   it('trigger dispatches to subscribed handlers', () => {
     const handler = jest.fn();
-    testBed.mocks.dispatcher.subscribe('core:test', handler);
+    testBed.dispatcher.subscribe('core:test', handler);
     const payload = { ok: true };
 
     testBed.trigger('core:test', payload);
@@ -47,12 +47,12 @@ describe('TurnManager Test Helpers: TurnManagerTestBed', () => {
 
   it('cleanup stops the manager and resets mocks', async () => {
     const stopSpy = testBed.turnManager.stop;
-    testBed.mocks.logger.debug('hi');
-    expect(testBed.mocks.logger.debug).toHaveBeenCalledTimes(1);
+    testBed.logger.debug('hi');
+    expect(testBed.logger.debug).toHaveBeenCalledTimes(1);
 
     await testBed.cleanup();
 
     expect(stopSpy).toHaveBeenCalledTimes(1);
-    expect(testBed.mocks.logger.debug).toHaveBeenCalledTimes(0);
+    expect(testBed.logger.debug).toHaveBeenCalledTimes(0);
   });
 });
