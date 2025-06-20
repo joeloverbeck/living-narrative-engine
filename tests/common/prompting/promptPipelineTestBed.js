@@ -13,13 +13,13 @@ import {
   createMockPromptBuilder,
   createMockEntity,
 } from '../mockFactories.js';
-import { clearMockFunctions } from '../jestHelpers.js';
+import BaseTestBed from '../baseTestBed.js';
 
 /**
  * @description Utility class for unit tests that need an AIPromptPipeline with common mocks.
  * @class
  */
-export class AIPromptPipelineTestBed {
+export class AIPromptPipelineTestBed extends BaseTestBed {
   /** @type {jest.Mocked<import('../../src/turns/interfaces/ILLMAdapter.js').ILLMAdapter>} */
   llmAdapter;
   /** @type {jest.Mocked<import('../../src/turns/interfaces/IAIGameStateProvider.js').IAIGameStateProvider>} */
@@ -38,11 +38,27 @@ export class AIPromptPipelineTestBed {
   defaultActions;
 
   constructor() {
-    this.llmAdapter = createMockLLMAdapter();
-    this.gameStateProvider = createMockAIGameStateProvider();
-    this.promptContentProvider = createMockAIPromptContentProvider();
-    this.promptBuilder = createMockPromptBuilder();
-    this.logger = createMockLogger();
+    const llmAdapter = createMockLLMAdapter();
+    const gameStateProvider = createMockAIGameStateProvider();
+    const promptContentProvider = createMockAIPromptContentProvider();
+    const promptBuilder = createMockPromptBuilder();
+    const logger = createMockLogger();
+
+    const mocks = {
+      llmAdapter,
+      gameStateProvider,
+      promptContentProvider,
+      promptBuilder,
+      logger,
+    };
+
+    super(mocks);
+
+    this.llmAdapter = llmAdapter;
+    this.gameStateProvider = gameStateProvider;
+    this.promptContentProvider = promptContentProvider;
+    this.promptBuilder = promptBuilder;
+    this.logger = logger;
     this.defaultActor = createMockEntity('actor');
     this.defaultContext = {};
     this.defaultActions = [];
@@ -96,20 +112,6 @@ export class AIPromptPipelineTestBed {
       promptBuilder: this.promptBuilder,
       logger: this.logger,
     };
-  }
-
-  /**
-   * Clears all jest mocks used by this test bed.
-   */
-  cleanup() {
-    jest.clearAllMocks();
-    clearMockFunctions(
-      this.llmAdapter,
-      this.gameStateProvider,
-      this.promptContentProvider,
-      this.promptBuilder,
-      this.logger
-    );
   }
 
   /**

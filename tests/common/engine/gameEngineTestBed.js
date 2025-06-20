@@ -3,16 +3,16 @@
  * @see tests/common/engine/gameEngineTestBed.js
  */
 
-import { jest } from '@jest/globals';
 import { createTestEnvironment } from './gameEngine.test-environment.js';
-import { clearMockFunctions } from '../jestHelpers.js';
+import BaseTestBed from '../baseTestBed.js';
 
 /**
- * @description Utility class that instantiates {@link GameEngine} using a mocked
- * environment and exposes helpers for common test operations.
+ * Utility class that instantiates {@link import('../../../src/engine/gameEngine.js').default|GameEngine}
+ * using a mocked environment and exposes helpers for common test operations.
+ *
  * @class
  */
-export class GameEngineTestBed {
+export class GameEngineTestBed extends BaseTestBed {
   /** @type {ReturnType<typeof createTestEnvironment>} */
   env;
   /** @type {import('../../../src/engine/gameEngine.js').default} */
@@ -28,7 +28,6 @@ export class GameEngineTestBed {
    *   initializationService: ReturnType<import('../mockFactories.js').createMockInitializationService>,
    * }}
    */
-  mocks;
 
   /** @type {Map<any, any>} */
   #tokenOverrides = new Map();
@@ -36,25 +35,31 @@ export class GameEngineTestBed {
   #originalResolve;
 
   /**
-   * @description Constructs a new test bed with optional DI overrides.
-   * @param {{[token: string]: any}} [overrides]
+   * Constructs a new test bed with optional DI overrides.
+   *
+   * @param {{[token: string]: any}} [overrides] - Token overrides for the test environment.
    */
   constructor(overrides = {}) {
-    this.env = createTestEnvironment(overrides);
-    this.engine = this.env.createGameEngine();
-    this.mocks = {
-      logger: this.env.logger,
-      entityManager: this.env.entityManager,
-      turnManager: this.env.turnManager,
-      gamePersistenceService: this.env.gamePersistenceService,
-      playtimeTracker: this.env.playtimeTracker,
-      safeEventDispatcher: this.env.safeEventDispatcher,
-      initializationService: this.env.initializationService,
+    const env = createTestEnvironment(overrides);
+    const engine = env.createGameEngine();
+    const mocks = {
+      logger: env.logger,
+      entityManager: env.entityManager,
+      turnManager: env.turnManager,
+      gamePersistenceService: env.gamePersistenceService,
+      playtimeTracker: env.playtimeTracker,
+      safeEventDispatcher: env.safeEventDispatcher,
+      initializationService: env.initializationService,
     };
 
+    super(mocks);
+
+    this.env = env;
+    this.engine = engine;
+
     this.#originalResolve =
-      this.env.mockContainer.resolve.getMockImplementation?.() ??
-      this.env.mockContainer.resolve;
+      env.mockContainer.resolve.getMockImplementation?.() ??
+      env.mockContainer.resolve;
   }
 
   /**
@@ -74,7 +79,8 @@ export class GameEngineTestBed {
    * Presets initialization results and starts a new game.
    *
    * @param {string} worldName - Name of the world to initialize.
-   * @param {import('../../src/interfaces/IInitializationService.js').InitializationResult} [initResult]
+   * @param {import('../../src/interfaces/IInitializationService.js').InitializationResult} [initResult] -
+   *   Initialization result to return from the mocked service.
    * @returns {Promise<void>} Promise resolving when the engine has started.
    */
   async start(worldName, initResult = { success: true }) {
@@ -118,6 +124,7 @@ export class GameEngineTestBed {
    * @returns {Promise<void>} Promise resolving when cleanup is complete.
    */
   async cleanup() {
+    await super.cleanup();
     await this.stop();
     this.env.mockContainer.resolve.mockImplementation(this.#originalResolve);
     this.#tokenOverrides.clear();
@@ -130,16 +137,7 @@ export class GameEngineTestBed {
    * @returns {void} Nothing.
    */
   resetMocks() {
-    jest.clearAllMocks();
-    clearMockFunctions(
-      this.mocks.logger,
-      this.mocks.entityManager,
-      this.mocks.turnManager,
-      this.mocks.gamePersistenceService,
-      this.mocks.playtimeTracker,
-      this.mocks.safeEventDispatcher,
-      this.mocks.initializationService
-    );
+    super.resetMocks();
   }
 }
 

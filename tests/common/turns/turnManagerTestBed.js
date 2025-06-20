@@ -10,14 +10,14 @@ import {
   createMockEntityManager,
   createMockValidatedEventBus,
 } from '../mockFactories.js';
-import { clearMockFunctions } from '../jestHelpers.js';
+import BaseTestBed from '../baseTestBed.js';
 
 /**
  * @description Utility class that instantiates {@link TurnManager} with mocked
  * dependencies and exposes helpers for common test operations.
  * @class
  */
-export class TurnManagerTestBed {
+export class TurnManagerTestBed extends BaseTestBed {
   /** @type {ReturnType<typeof createMockLogger>} */
   logger;
   /** @type {ReturnType<typeof createMockEntityManager>} */
@@ -32,37 +32,45 @@ export class TurnManagerTestBed {
   turnManager;
 
   constructor() {
-    this.logger = createMockLogger();
-    this.entityManager = createMockEntityManager();
+    const logger = createMockLogger();
+    const entityManager = createMockEntityManager();
     // Attach active entity map used by TurnManager
-    this.entityManager.activeEntities = new Map();
-    this.entityManager.getEntityInstance = jest.fn((id) =>
-      this.entityManager.activeEntities.get(id)
+    entityManager.activeEntities = new Map();
+    entityManager.getEntityInstance = jest.fn((id) =>
+      entityManager.activeEntities.get(id)
     );
-    this.entityManager.getActiveEntities.mockImplementation(() =>
-      Array.from(this.entityManager.activeEntities.values())
+    entityManager.getActiveEntities.mockImplementation(() =>
+      Array.from(entityManager.activeEntities.values())
     );
 
-    this.turnOrderService = {
+    const turnOrderService = {
       isEmpty: jest.fn(),
       getNextEntity: jest.fn(),
       startNewRound: jest.fn(),
       clearCurrentRound: jest.fn(),
     };
 
-    this.turnHandlerResolver = {
+    const turnHandlerResolver = {
       resolveHandler: jest.fn(),
     };
 
-    this.dispatcher = createMockValidatedEventBus();
+    const dispatcher = createMockValidatedEventBus();
 
-    this.mocks = {
-      turnOrderService: this.turnOrderService,
-      entityManager: this.entityManager,
-      logger: this.logger,
-      dispatcher: this.dispatcher,
-      turnHandlerResolver: this.turnHandlerResolver,
+    const mocks = {
+      turnOrderService,
+      entityManager,
+      logger,
+      dispatcher,
+      turnHandlerResolver,
     };
+
+    super(mocks);
+
+    this.logger = logger;
+    this.entityManager = entityManager;
+    this.dispatcher = dispatcher;
+    this.turnOrderService = turnOrderService;
+    this.turnHandlerResolver = turnHandlerResolver;
 
     this.turnManager = new TurnManager({
       turnOrderService: this.turnOrderService,
@@ -104,14 +112,7 @@ export class TurnManagerTestBed {
    * @returns {Promise<void>}
    */
   async cleanup() {
-    jest.clearAllMocks();
-    clearMockFunctions(
-      this.turnOrderService,
-      this.entityManager,
-      this.logger,
-      this.dispatcher,
-      this.turnHandlerResolver
-    );
+    await super.cleanup();
     if (this.turnManager && typeof this.turnManager.stop === 'function') {
       await this.turnManager.stop();
     }
