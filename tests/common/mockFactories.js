@@ -379,3 +379,27 @@ export const createMockEntity = (
     return false;
   }),
 });
+
+/**
+ * Creates a minimal DI container mock.
+ *
+ * @description Provides a `resolve` method that returns predefined mocks based
+ * on token keys. Optional overrides can supply alternative return values for
+ * specific tokens during a test.
+ * @param {Record<string | symbol, any>} mapping - Base token–to–mock map.
+ * @param {Record<string | symbol, any>} [overrides={}] - Per-test override map.
+ * @returns {{ resolve: jest.Mock }} Object with a jest.fn `resolve` method.
+ */
+export const createMockContainer = (mapping, overrides = {}) => ({
+  resolve: jest.fn((token) => {
+    if (Object.prototype.hasOwnProperty.call(overrides, token)) {
+      return overrides[token];
+    }
+    if (Object.prototype.hasOwnProperty.call(mapping, token)) {
+      return mapping[token];
+    }
+    const tokenName =
+      typeof token === 'symbol' ? token.toString() : String(token);
+    throw new Error(`createMockContainer: Unmapped token: ${tokenName}`);
+  }),
+});

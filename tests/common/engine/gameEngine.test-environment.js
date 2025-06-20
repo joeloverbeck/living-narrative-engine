@@ -14,6 +14,7 @@ import {
   createMockPlaytimeTracker,
   createMockSafeEventDispatcher,
   createMockInitializationService,
+  createMockContainer,
 } from '../mockFactories.js';
 
 /**
@@ -46,37 +47,17 @@ export function createTestEnvironment(overrides = {}) {
   const safeEventDispatcher = createMockSafeEventDispatcher();
   const initializationService = createMockInitializationService();
 
-  const mockContainer = {
-    resolve: jest.fn((token) => {
-      if (Object.prototype.hasOwnProperty.call(overrides, token)) {
-        return overrides[token];
-      }
-      switch (token) {
-        case tokens.ILogger:
-          return logger;
-        case tokens.IEntityManager:
-          return entityManager;
-        case tokens.ITurnManager:
-          return turnManager;
-        case tokens.GamePersistenceService:
-          return gamePersistenceService;
-        case tokens.PlaytimeTracker:
-          return playtimeTracker;
-        case tokens.ISafeEventDispatcher:
-          return safeEventDispatcher;
-        case tokens.IInitializationService:
-          return initializationService;
-        default: {
-          const tokenName =
-            Object.keys(tokens).find((key) => tokens[key] === token) ||
-            token?.toString();
-          throw new Error(
-            `gameEngine.test-environment: Unmocked token: ${tokenName}`
-          );
-        }
-      }
-    }),
+  const mapping = {
+    [tokens.ILogger]: logger,
+    [tokens.IEntityManager]: entityManager,
+    [tokens.ITurnManager]: turnManager,
+    [tokens.GamePersistenceService]: gamePersistenceService,
+    [tokens.PlaytimeTracker]: playtimeTracker,
+    [tokens.ISafeEventDispatcher]: safeEventDispatcher,
+    [tokens.IInitializationService]: initializationService,
   };
+
+  const mockContainer = createMockContainer(mapping, overrides);
 
   const createGameEngine = () => new GameEngine({ container: mockContainer });
 
