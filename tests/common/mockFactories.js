@@ -240,6 +240,45 @@ export const createMockInitializationService = () => ({
   runInitializationSequence: jest.fn(),
 });
 
+// --- Prompting Mocks ---
+
+/**
+ * Creates a mock ILLMAdapter.
+ *
+ * @returns {jest.Mocked<import('../../src/turns/interfaces/ILLMAdapter.js').ILLMAdapter>} Mocked LLM adapter
+ */
+export const createMockLLMAdapter = () => ({
+  getAIDecision: jest.fn(),
+  getCurrentActiveLlmId: jest.fn(),
+});
+
+/**
+ * Creates a mock IAIGameStateProvider.
+ *
+ * @returns {jest.Mocked<import('../../src/turns/interfaces/IAIGameStateProvider.js').IAIGameStateProvider>} Mocked game state provider
+ */
+export const createMockAIGameStateProvider = () => ({
+  buildGameState: jest.fn(),
+});
+
+/**
+ * Creates a mock IAIPromptContentProvider.
+ *
+ * @returns {jest.Mocked<import('../../src/turns/interfaces/IAIPromptContentProvider.js').IAIPromptContentProvider>} Mocked prompt content provider
+ */
+export const createMockAIPromptContentProvider = () => ({
+  getPromptData: jest.fn(),
+});
+
+/**
+ * Creates a mock IPromptBuilder.
+ *
+ * @returns {jest.Mocked<import('../../src/interfaces/IPromptBuilder.js').IPromptBuilder>} Mocked prompt builder
+ */
+export const createMockPromptBuilder = () => ({
+  build: jest.fn(),
+});
+
 // --- Event Dispatcher Mocks ---
 
 /**
