@@ -4,6 +4,10 @@
  */
 
 import { jest } from '@jest/globals';
+import {
+  ACTOR_COMPONENT_ID,
+  PLAYER_COMPONENT_ID,
+} from '../../src/constants/componentIds.js';
 
 // ── Core Service Mocks ────────────────────────────────────────────────────
 
@@ -81,12 +85,30 @@ export const createMockConfiguration = () => ({
   getModManifestFilename: jest.fn(() => 'mod.manifest.json'),
 });
 
-// ── Misc Service Mocks ───────────────────────────────────────────────────
 
-export const createMockEntityManager = () => ({
-  clearAll: jest.fn(),
-  getActiveEntities: jest.fn().mockReturnValue([]),
-});
+/**
+ * Mock for IEntityManager.
+ *
+ * @description Creates a mock IEntityManager service.
+ * @returns {jest.Mocked<import('../../src/interfaces/IEntityManager.js').IEntityManager>} Mocked IEntityManager
+ */
+export const createMockEntityManager = () => {
+  const activeEntities = new Map();
+  return {
+    activeEntities,
+    clearAll: jest.fn(() => {
+      activeEntities.clear();
+    }),
+    getActiveEntities: jest.fn(() => activeEntities),
+    getEntityInstance: jest.fn((id) => activeEntities.get(id)),
+    removeEntityInstance: jest.fn((id) => activeEntities.delete(id)),
+    reconstructEntity: jest.fn((data) => {
+      const entity = { id: data.instanceId || data.id };
+      activeEntities.set(entity.id, entity);
+      return entity;
+    }),
+  };
+};
 
 export const createMockTurnManager = () => ({
   start: jest.fn(),
@@ -94,6 +116,48 @@ export const createMockTurnManager = () => ({
   nextTurn: jest.fn(),
 });
 
+
+/**
+ * Creates a mock ITurnOrderService.
+ *
+ * @returns {jest.Mocked<import('../../src/turns/interfaces/ITurnOrderService.js').ITurnOrderService>} Mocked service
+ */
+export const createMockTurnOrderService = () => ({
+  startNewRound: jest.fn(),
+  getNextEntity: jest.fn(),
+  peekNextEntity: jest.fn(),
+  addEntity: jest.fn(),
+  removeEntity: jest.fn(),
+  isEmpty: jest.fn(),
+  getCurrentOrder: jest.fn(),
+  clearCurrentRound: jest.fn(),
+});
+
+/**
+ * Creates a mock ITurnHandlerResolver.
+ *
+ * @returns {jest.Mocked<import('../../src/turns/interfaces/ITurnHandlerResolver.js').ITurnHandlerResolver>} Mocked resolver
+ */
+export const createMockTurnHandlerResolver = () => ({
+  resolveHandler: jest.fn(),
+});
+
+/**
+ * Creates a mock ITurnHandler instance.
+ *
+ * @returns {jest.Mocked<import('../../src/turns/interfaces/ITurnHandler.js').ITurnHandler>} Mocked handler
+ */
+export const createMockTurnHandler = () => ({
+  startTurn: jest.fn(),
+  destroy: jest.fn(),
+});
+
+/**
+ * Mock for IGamePersistenceService.
+ *
+ * @description Creates a mock IGamePersistenceService service.
+ * @returns {jest.Mocked<import('../../src/interfaces/IGamePersistenceService.js').IGamePersistenceService>} Mocked persistence service
+ */
 export const createMockGamePersistenceService = () => ({
   saveGame: jest.fn(),
   loadAndRestoreGame: jest.fn(),
@@ -112,7 +176,47 @@ export const createMockInitializationService = () => ({
   runInitializationSequence: jest.fn(),
 });
 
-// ── Dispatcher Mocks ──────────────────────────────────────────────────────
+
+// --- Prompting Mocks ---
+
+/**
+ * Creates a mock ILLMAdapter.
+ *
+ * @returns {jest.Mocked<import('../../src/turns/interfaces/ILLMAdapter.js').ILLMAdapter>} Mocked LLM adapter
+ */
+export const createMockLLMAdapter = () => ({
+  getAIDecision: jest.fn(),
+  getCurrentActiveLlmId: jest.fn(),
+});
+
+/**
+ * Creates a mock IAIGameStateProvider.
+ *
+ * @returns {jest.Mocked<import('../../src/turns/interfaces/IAIGameStateProvider.js').IAIGameStateProvider>} Mocked game state provider
+ */
+export const createMockAIGameStateProvider = () => ({
+  buildGameState: jest.fn(),
+});
+
+/**
+ * Creates a mock IAIPromptContentProvider.
+ *
+ * @returns {jest.Mocked<import('../../src/turns/interfaces/IAIPromptContentProvider.js').IAIPromptContentProvider>} Mocked prompt content provider
+ */
+export const createMockAIPromptContentProvider = () => ({
+  getPromptData: jest.fn(),
+});
+
+/**
+ * Creates a mock IPromptBuilder.
+ *
+ * @returns {jest.Mocked<import('../../src/interfaces/IPromptBuilder.js').IPromptBuilder>} Mocked prompt builder
+ */
+export const createMockPromptBuilder = () => ({
+  build: jest.fn(),
+});
+
+// --- Event Dispatcher Mocks ---
 
 export const createMockSafeEventDispatcher = () => ({
   dispatch: jest.fn(),
@@ -122,8 +226,37 @@ export const createMockValidatedEventDispatcher = () => ({
   dispatch: jest.fn().mockResolvedValue(undefined),
 });
 
-/* ── Loader-specific mocks ─────────────────────────────────────────────── */
+/**
+ * Creates a mock event bus that records subscriptions and allows manual triggering.
+ *
+ * @returns {object} Mock event bus with helper methods
+ */
+export const createMockValidatedEventBus = () => {
+  const handlers = {};
+  return {
+    dispatch: jest.fn().mockResolvedValue(undefined),
+    subscribe: jest.fn((eventName, handler) => {
+      if (!handlers[eventName]) {
+        handlers[eventName] = [];
+      }
+      handlers[eventName].push(handler);
+      return jest.fn(() => {
+        const index = handlers[eventName].indexOf(handler);
+        if (index > -1) {
+          handlers[eventName].splice(index, 1);
+        }
+      });
+    }),
+    _triggerEvent: (eventName, payload) => {
+      (handlers[eventName] || []).forEach((h) => h(payload));
+    },
+    _clearHandlers: () => {
+      Object.keys(handlers).forEach((k) => delete handlers[k]);
+    },
+  };
+};
 
+// --- Loader Mocks ---
 /**
  * Generic content-loader mock (ActionLoader, ComponentLoader, …).
  */
@@ -199,3 +332,22 @@ export const createMockModLoadOrderResolver = () => {
     resolveOrder: resolveFn, // alias so existing tests keep working
   };
 };
+
+/**
+ * Creates a simple mock entity with component checks.
+ *
+ * @param {string} id - Unique entity ID.
+ * @param {{isActor?: boolean, isPlayer?: boolean}} [options] - Flags for component presence.
+ * @returns {{id: string, hasComponent: jest.Mock}} Mock entity
+ */
+export const createMockEntity = (
+  id,
+  { isActor = false, isPlayer = false } = {}
+) => ({
+  id,
+  hasComponent: jest.fn((compId) => {
+    if (compId === ACTOR_COMPONENT_ID) return isActor;
+    if (compId === PLAYER_COMPONENT_ID) return isPlayer;
+    return false;
+  }),
+});

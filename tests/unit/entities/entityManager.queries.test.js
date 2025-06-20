@@ -28,10 +28,8 @@ describe('EntityManager - Queries and Accessors', () => {
     it('should return the correct entity instance if the ID exists', () => {
       // Arrange
       const { entityManager } = testBed;
-      const { BASIC } = TestData.DefinitionIDs;
       const { PRIMARY } = TestData.InstanceIDs;
-      testBed.setupDefinitions(TestData.Definitions.basic);
-      const expectedEntity = entityManager.createEntityInstance(BASIC, {
+      const expectedEntity = testBed.createEntity('basic', {
         instanceId: PRIMARY,
       });
 
@@ -54,14 +52,9 @@ describe('EntityManager - Queries and Accessors', () => {
       expect(result).toBeUndefined();
     });
 
-    it.each([
-      ['null', null],
-      ['undefined', undefined],
-      ['an empty string', ''],
-      ['a non-string', 12345],
-    ])(
-      'should return undefined for an invalid ID type: %s',
-      (desc, invalidId) => {
+    it.each(TestData.InvalidValues.invalidIds)(
+      'should return undefined for an invalid ID type: %p',
+      (invalidId) => {
         // Arrange
         const { entityManager, mocks } = testBed;
 
@@ -100,8 +93,7 @@ describe('EntityManager - Queries and Accessors', () => {
     it('should return an empty array if no entities have the specified component', () => {
       // Arrange
       const { entityManager } = testBed;
-      testBed.setupDefinitions(TestData.Definitions.basic);
-      entityManager.createEntityInstance(TestData.DefinitionIDs.BASIC, {
+      testBed.createEntity('basic', {
         componentOverrides: { [COMPONENT_B]: { val: 1 } },
       });
 
@@ -115,32 +107,21 @@ describe('EntityManager - Queries and Accessors', () => {
     it('should return only entities that have the specified component', () => {
       // Arrange
       const { entityManager } = testBed;
-      testBed.setupDefinitions(TestData.Definitions.basic);
-
-      const entity1 = entityManager.createEntityInstance(
-        TestData.DefinitionIDs.BASIC,
-        {
-          instanceId: 'instance-1',
-          componentOverrides: { [COMPONENT_A]: { val: 1 } },
-        }
-      );
-      const entity2 = entityManager.createEntityInstance(
-        TestData.DefinitionIDs.BASIC,
-        {
-          instanceId: 'instance-2',
-          componentOverrides: { [COMPONENT_B]: { val: 2 } },
-        }
-      );
-      const entity3 = entityManager.createEntityInstance(
-        TestData.DefinitionIDs.BASIC,
-        {
-          instanceId: 'instance-3',
-          componentOverrides: {
-            [COMPONENT_A]: { val: 3 },
-            [COMPONENT_B]: { val: 4 },
-          },
-        }
-      );
+      const entity1 = testBed.createEntity('basic', {
+        instanceId: 'instance-1',
+        componentOverrides: { [COMPONENT_A]: { val: 1 } },
+      });
+      const entity2 = testBed.createEntity('basic', {
+        instanceId: 'instance-2',
+        componentOverrides: { [COMPONENT_B]: { val: 2 } },
+      });
+      const entity3 = testBed.createEntity('basic', {
+        instanceId: 'instance-3',
+        componentOverrides: {
+          [COMPONENT_A]: { val: 3 },
+          [COMPONENT_B]: { val: 4 },
+        },
+      });
 
       // Act
       const results = entityManager.getEntitiesWithComponent(COMPONENT_A);
@@ -162,12 +143,8 @@ describe('EntityManager - Queries and Accessors', () => {
         TestData.Definitions.actor
       ); // basic has name, actor does not
 
-      const entityWithComponent = entityManager.createEntityInstance(
-        TestData.DefinitionIDs.BASIC
-      );
-      const entityWithoutComponent = entityManager.createEntityInstance(
-        TestData.DefinitionIDs.ACTOR
-      );
+      const entityWithComponent = testBed.createEntity('basic');
+      const entityWithoutComponent = testBed.createEntity('actor');
 
       // Act
       const results = entityManager.getEntitiesWithComponent(NAME_COMPONENT_ID);
@@ -179,45 +156,39 @@ describe('EntityManager - Queries and Accessors', () => {
       expect(resultIds).not.toContain(entityWithoutComponent.id);
     });
 
-    it('should return an empty array for invalid componentTypeIds', () => {
-      // Arrange
-      const { entityManager, mocks } = testBed;
-      testBed.setupDefinitions(TestData.Definitions.basic);
-      entityManager.createEntityInstance(TestData.DefinitionIDs.BASIC);
+    it.each(TestData.InvalidValues.invalidIds)(
+      'should return an empty array for invalid componentTypeId %p',
+      (invalidId) => {
+        // Arrange
+        const { entityManager, mocks } = testBed;
+        testBed.createEntity('basic');
 
-      // Act & Assert
-      expect(entityManager.getEntitiesWithComponent(null)).toEqual([]);
-      expect(entityManager.getEntitiesWithComponent(undefined)).toEqual([]);
-      expect(entityManager.getEntitiesWithComponent('')).toEqual([]);
-      expect(entityManager.getEntitiesWithComponent('   ')).toEqual([]);
-      expect(entityManager.getEntitiesWithComponent(123)).toEqual([]);
-      expect(mocks.logger.debug).toHaveBeenCalledWith(
-        expect.stringContaining('Received invalid componentTypeId')
-      );
-    });
+        // Act
+        const result = entityManager.getEntitiesWithComponent(invalidId);
+
+        // Assert
+        expect(result).toEqual([]);
+        expect(mocks.logger.debug).toHaveBeenCalledWith(
+          expect.stringContaining('Received invalid componentTypeId')
+        );
+      }
+    );
 
     it('should return a new array, not a live reference', () => {
       // Arrange
       const { entityManager } = testBed;
-      testBed.setupDefinitions(TestData.Definitions.basic);
-      const entity1 = entityManager.createEntityInstance(
-        TestData.DefinitionIDs.BASIC,
-        {
-          componentOverrides: { [COMPONENT_A]: { val: 1 } },
-        }
-      );
+      const entity1 = testBed.createEntity('basic', {
+        componentOverrides: { [COMPONENT_A]: { val: 1 } },
+      });
 
       // Act
       const results1 = entityManager.getEntitiesWithComponent(COMPONENT_A);
       expect(results1).toHaveLength(1);
 
       // Modify the state by adding another entity with the component
-      const entity2 = entityManager.createEntityInstance(
-        TestData.DefinitionIDs.BASIC,
-        {
-          componentOverrides: { [COMPONENT_A]: { val: 2 } },
-        }
-      );
+      const entity2 = testBed.createEntity('basic', {
+        componentOverrides: { [COMPONENT_A]: { val: 2 } },
+      });
 
       const results2 = entityManager.getEntitiesWithComponent(COMPONENT_A);
 

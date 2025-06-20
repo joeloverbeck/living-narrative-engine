@@ -5,7 +5,13 @@
 
 import { jest } from '@jest/globals';
 import { AIPromptPipeline } from '../../../src/prompting/AIPromptPipeline.js';
-import { createMockLogger } from '../mockFactories.js';
+import {
+  createMockLogger,
+  createMockLLMAdapter,
+  createMockAIGameStateProvider,
+  createMockAIPromptContentProvider,
+  createMockPromptBuilder,
+} from '../mockFactories.js';
 
 /**
  * @description Utility class for unit tests that need an AIPromptPipeline with common mocks.
@@ -24,19 +30,10 @@ export class AIPromptPipelineTestBed {
   logger;
 
   constructor() {
-    this.llmAdapter = {
-      getAIDecision: jest.fn(),
-      getCurrentActiveLlmId: jest.fn(),
-    };
-    this.gameStateProvider = {
-      buildGameState: jest.fn(),
-    };
-    this.promptContentProvider = {
-      getPromptData: jest.fn(),
-    };
-    this.promptBuilder = {
-      build: jest.fn(),
-    };
+    this.llmAdapter = createMockLLMAdapter();
+    this.gameStateProvider = createMockAIGameStateProvider();
+    this.promptContentProvider = createMockAIPromptContentProvider();
+    this.promptBuilder = createMockPromptBuilder();
     this.logger = createMockLogger();
   }
 
@@ -57,10 +54,52 @@ export class AIPromptPipelineTestBed {
   }
 
   /**
+   * Returns the dependency object used to construct the pipeline.
+   *
+   * @returns {{
+   *   llmAdapter: ReturnType<typeof createMockLLMAdapter>,
+   *   gameStateProvider: ReturnType<typeof createMockAIGameStateProvider>,
+   *   promptContentProvider: ReturnType<typeof createMockAIPromptContentProvider>,
+   *   promptBuilder: ReturnType<typeof createMockPromptBuilder>,
+   *   logger: ReturnType<typeof createMockLogger>,
+   * }}
+   */
+  getDependencies() {
+    return {
+      llmAdapter: this.llmAdapter,
+      gameStateProvider: this.gameStateProvider,
+      promptContentProvider: this.promptContentProvider,
+      promptBuilder: this.promptBuilder,
+      logger: this.logger,
+    };
+  }
+
+  /**
    * Clears all jest mocks used by this test bed.
    */
   cleanup() {
     jest.clearAllMocks();
+  }
+
+  /**
+   * Sets up mock resolved values for a successful pipeline run.
+   *
+   * @param {object} [options]
+   * @param {string} [options.llmId] - LLM ID returned by the adapter.
+   * @param {object} [options.gameState] - Game state returned by the provider.
+   * @param {object} [options.promptData] - Prompt data returned by the content provider.
+   * @param {string} [options.finalPrompt] - Final prompt string returned by the builder.
+   */
+  setupMockSuccess({
+    llmId = 'llm-id',
+    gameState = {},
+    promptData = {},
+    finalPrompt = 'PROMPT',
+  } = {}) {
+    this.llmAdapter.getCurrentActiveLlmId.mockResolvedValue(llmId);
+    this.gameStateProvider.buildGameState.mockResolvedValue(gameState);
+    this.promptContentProvider.getPromptData.mockResolvedValue(promptData);
+    this.promptBuilder.build.mockResolvedValue(finalPrompt);
   }
 }
 

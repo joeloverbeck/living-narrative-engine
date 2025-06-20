@@ -43,13 +43,11 @@ describe('EntityManager - Component Manipulation', () => {
     it('should add a new component to an existing entity and return true', () => {
       // Arrange
       const { entityManager, mocks } = testBed;
-      const { BASIC } = TestData.DefinitionIDs;
       const { PRIMARY } = TestData.InstanceIDs;
-      testBed.setupDefinitions(TestData.Definitions.basic);
-      const entity = entityManager.createEntityInstance(BASIC, {
+      const entity = testBed.createEntity('basic', {
         instanceId: PRIMARY,
       });
-      mocks.eventDispatcher.dispatch.mockClear(); // Clear events from creation
+      testBed.resetDispatchMock();
 
       // Act
       const result = entityManager.addComponent(
@@ -72,13 +70,11 @@ describe('EntityManager - Component Manipulation', () => {
     it('should dispatch a COMPONENT_ADDED event with undefined old data for a new component', () => {
       // Arrange
       const { entityManager, mocks } = testBed;
-      const { BASIC } = TestData.DefinitionIDs;
       const { PRIMARY } = TestData.InstanceIDs;
-      testBed.setupDefinitions(TestData.Definitions.basic);
-      const entity = entityManager.createEntityInstance(BASIC, {
+      const entity = testBed.createEntity('basic', {
         instanceId: PRIMARY,
       });
-      mocks.eventDispatcher.dispatch.mockClear();
+      testBed.resetDispatchMock();
 
       // Act
       entityManager.addComponent(PRIMARY, NEW_COMPONENT_ID, NEW_COMPONENT_DATA);
@@ -100,12 +96,10 @@ describe('EntityManager - Component Manipulation', () => {
       // Arrange
       const { entityManager } = testBed;
       const { NAME_COMPONENT_ID } = TestData.ComponentIDs;
-      const { BASIC } = TestData.DefinitionIDs;
       const { PRIMARY } = TestData.InstanceIDs;
       const UPDATED_NAME_DATA = { name: 'Updated Name' };
 
-      testBed.setupDefinitions(TestData.Definitions.basic);
-      entityManager.createEntityInstance(BASIC, { instanceId: PRIMARY });
+      testBed.createEntity('basic', { instanceId: PRIMARY });
 
       // Act
       const result = entityManager.addComponent(
@@ -127,16 +121,14 @@ describe('EntityManager - Component Manipulation', () => {
       // Arrange
       const { entityManager, mocks } = testBed;
       const { NAME_COMPONENT_ID } = TestData.ComponentIDs;
-      const { BASIC } = TestData.DefinitionIDs;
       const { PRIMARY } = TestData.InstanceIDs;
       const UPDATED_NAME_DATA = { name: 'Updated Name' };
 
-      testBed.setupDefinitions(TestData.Definitions.basic);
-      const entity = entityManager.createEntityInstance(BASIC, {
+      const entity = testBed.createEntity('basic', {
         instanceId: PRIMARY,
       });
       const originalNameData = entity.getComponentData(NAME_COMPONENT_ID);
-      mocks.eventDispatcher.dispatch.mockClear();
+      testBed.resetDispatchMock();
 
       // Act
       entityManager.addComponent(PRIMARY, NAME_COMPONENT_ID, UPDATED_NAME_DATA);
@@ -168,11 +160,9 @@ describe('EntityManager - Component Manipulation', () => {
     it('should throw an error if component validation fails', () => {
       // Arrange
       const { entityManager, mocks } = testBed;
-      const { BASIC } = TestData.DefinitionIDs;
       const { PRIMARY } = TestData.InstanceIDs;
-      testBed.setupDefinitions(TestData.Definitions.basic);
-      entityManager.createEntityInstance(BASIC, { instanceId: PRIMARY });
-      mocks.eventDispatcher.dispatch.mockClear(); // FIX: Clear dispatcher after setup
+      testBed.createEntity('basic', { instanceId: PRIMARY });
+      testBed.resetDispatchMock();
 
       const validationErrors = [{ message: 'Invalid data' }];
       mocks.validator.validate.mockReturnValue({
@@ -198,10 +188,8 @@ describe('EntityManager - Component Manipulation', () => {
       // Arrange
       const { entityManager, mocks } = testBed;
       const { NAME_COMPONENT_ID } = TestData.ComponentIDs;
-      const { BASIC } = TestData.DefinitionIDs;
       const { PRIMARY } = TestData.InstanceIDs;
-      testBed.setupDefinitions(TestData.Definitions.basic);
-      entityManager.createEntityInstance(BASIC, { instanceId: PRIMARY });
+      testBed.createEntity('basic', { instanceId: PRIMARY });
 
       // Act & Assert
       expect(() =>
@@ -213,44 +201,33 @@ describe('EntityManager - Component Manipulation', () => {
       ).toBeNull();
     });
 
-    it.each([
-      ['undefined', undefined],
-      ['a string', 'bad-data'],
-      ['a number', 123],
-      ['a boolean', false],
-    ])(
-      'should throw a descriptive error when componentData is %s',
-      (desc, value) => {
-        // Arrange
-        const { entityManager, mocks } = testBed;
-        const { NAME_COMPONENT_ID } = TestData.ComponentIDs;
-        const { BASIC } = TestData.DefinitionIDs;
-        const { PRIMARY } = TestData.InstanceIDs;
-        testBed.setupDefinitions(TestData.Definitions.basic);
-        entityManager.createEntityInstance(BASIC, { instanceId: PRIMARY });
-        const receivedType = typeof value;
-        const expectedError = `EntityManager.addComponent: componentData for ${NAME_COMPONENT_ID} on ${PRIMARY} must be an object or null. Received: ${receivedType}`;
+    it.each(
+      TestData.InvalidValues.componentDataNotObject.filter(
+        (v) => v !== null && !Array.isArray(v)
+      )
+    )('should throw a descriptive error when componentData is %p', (value) => {
+      // Arrange
+      const { entityManager, mocks } = testBed;
+      const { NAME_COMPONENT_ID } = TestData.ComponentIDs;
+      const { PRIMARY } = TestData.InstanceIDs;
+      testBed.createEntity('basic', { instanceId: PRIMARY });
+      const receivedType = typeof value;
+      const expectedError = `EntityManager.addComponent: componentData for ${NAME_COMPONENT_ID} on ${PRIMARY} must be an object or null. Received: ${receivedType}`;
 
-        // Act & Assert
-        expect(() =>
-          entityManager.addComponent(PRIMARY, NAME_COMPONENT_ID, value)
-        ).toThrow(expectedError);
-        expect(mocks.logger.error).toHaveBeenCalledWith(expectedError, {
-          componentTypeId: NAME_COMPONENT_ID,
-          instanceId: PRIMARY,
-          receivedType: receivedType,
-        });
-      }
-    );
+      // Act & Assert
+      expect(() =>
+        entityManager.addComponent(PRIMARY, NAME_COMPONENT_ID, value)
+      ).toThrow(expectedError);
+      expect(mocks.logger.error).toHaveBeenCalledWith(expectedError, {
+        componentTypeId: NAME_COMPONENT_ID,
+        instanceId: PRIMARY,
+        receivedType: receivedType,
+      });
+    });
 
-    it.each([
-      ['instanceId', null, 'comp:id'],
-      ['instanceId', '', 'comp:id'],
-      ['componentTypeId', 'instance:id', null],
-      ['componentTypeId', 'instance:id', '  '],
-    ])(
-      'should return false for invalid %s format',
-      (param, instanceId, componentTypeId) => {
+    it.each(TestData.InvalidValues.invalidIdPairs)(
+      'should return false for invalid inputs',
+      (instanceId, componentTypeId) => {
         const { entityManager, mocks } = testBed;
         const result = entityManager.addComponent(
           instanceId,
@@ -265,14 +242,12 @@ describe('EntityManager - Component Manipulation', () => {
     it('should return false if the internal entity update fails', () => {
       // Arrange
       const { entityManager, mocks } = testBed;
-      const { BASIC } = TestData.DefinitionIDs;
       const { PRIMARY } = TestData.InstanceIDs;
-      testBed.setupDefinitions(TestData.Definitions.basic);
-      const entity = entityManager.createEntityInstance(BASIC, {
+      const entity = testBed.createEntity('basic', {
         instanceId: PRIMARY,
       });
-      // FIX: Clear dispatcher mock to ignore the ENTITY_CREATED event from setup.
-      mocks.eventDispatcher.dispatch.mockClear();
+      // Clear dispatcher mock to ignore the ENTITY_CREATED event from setup.
+      testBed.resetDispatchMock();
 
       // Mock the entity's own method to simulate an internal failure
       const addComponentSpy = jest
@@ -303,12 +278,10 @@ describe('EntityManager - Component Manipulation', () => {
       // Arrange
       const { entityManager } = testBed;
       const { NAME_COMPONENT_ID } = TestData.ComponentIDs;
-      const { BASIC } = TestData.DefinitionIDs;
       const { PRIMARY } = TestData.InstanceIDs;
-      testBed.setupDefinitions(TestData.Definitions.basic);
 
       // Add component as an override
-      const entity = entityManager.createEntityInstance(BASIC, {
+      const entity = testBed.createEntity('basic', {
         instanceId: PRIMARY,
       });
       entityManager.addComponent(PRIMARY, NAME_COMPONENT_ID, {
@@ -332,15 +305,13 @@ describe('EntityManager - Component Manipulation', () => {
       // Arrange
       const { entityManager, mocks } = testBed;
       const { NAME_COMPONENT_ID } = TestData.ComponentIDs;
-      const { BASIC } = TestData.DefinitionIDs;
       const { PRIMARY } = TestData.InstanceIDs;
       const overrideData = { name: 'ToBeRemoved' };
-      testBed.setupDefinitions(TestData.Definitions.basic);
-      const entity = entityManager.createEntityInstance(BASIC, {
+      const entity = testBed.createEntity('basic', {
         instanceId: PRIMARY,
       });
       entityManager.addComponent(PRIMARY, NAME_COMPONENT_ID, overrideData);
-      mocks.eventDispatcher.dispatch.mockClear();
+      testBed.resetDispatchMock();
 
       // Act
       entityManager.removeComponent(PRIMARY, NAME_COMPONENT_ID);
@@ -361,12 +332,10 @@ describe('EntityManager - Component Manipulation', () => {
       // Arrange
       const { entityManager, mocks } = testBed;
       const { NAME_COMPONENT_ID } = TestData.ComponentIDs;
-      const { BASIC } = TestData.DefinitionIDs;
       const { PRIMARY } = TestData.InstanceIDs;
-      testBed.setupDefinitions(TestData.Definitions.basic);
-      entityManager.createEntityInstance(BASIC, { instanceId: PRIMARY });
+      testBed.createEntity('basic', { instanceId: PRIMARY });
       // NAME_COMPONENT_ID exists on definition, but not as an override
-      mocks.eventDispatcher.dispatch.mockClear();
+      testBed.resetDispatchMock();
 
       // Act
       const result = entityManager.removeComponent(PRIMARY, NAME_COMPONENT_ID);
@@ -388,14 +357,9 @@ describe('EntityManager - Component Manipulation', () => {
       ).toThrow(new EntityNotFoundError(GHOST));
     });
 
-    it.each([
-      ['instanceId', null, 'comp:id'],
-      ['instanceId', '', 'comp:id'],
-      ['componentTypeId', 'instance:id', null],
-      ['componentTypeId', 'instance:id', '  '],
-    ])(
-      'should return false for invalid %s format',
-      (param, instanceId, componentTypeId) => {
+    it.each(TestData.InvalidValues.invalidIdPairs)(
+      'should return false for invalid inputs',
+      (instanceId, componentTypeId) => {
         const { entityManager, mocks } = testBed;
         const result = entityManager.removeComponent(
           instanceId,
@@ -419,10 +383,8 @@ describe('EntityManager - Component Manipulation', () => {
       // Arrange
       const { entityManager } = testBed;
       const { NAME_COMPONENT_ID } = TestData.ComponentIDs;
-      const { BASIC } = TestData.DefinitionIDs;
       const { PRIMARY } = TestData.InstanceIDs;
-      testBed.setupDefinitions(TestData.Definitions.basic);
-      entityManager.createEntityInstance(BASIC, { instanceId: PRIMARY });
+      testBed.createEntity('basic', { instanceId: PRIMARY });
       const expectedData = TestData.Definitions.basic.components['core:name'];
 
       // Act
@@ -436,11 +398,9 @@ describe('EntityManager - Component Manipulation', () => {
       // Arrange
       const { entityManager } = testBed;
       const { NAME_COMPONENT_ID } = TestData.ComponentIDs;
-      const { BASIC } = TestData.DefinitionIDs;
       const { PRIMARY } = TestData.InstanceIDs;
       const overrideData = { name: 'Overridden Name' };
-      testBed.setupDefinitions(TestData.Definitions.basic);
-      entityManager.createEntityInstance(BASIC, {
+      testBed.createEntity('basic', {
         instanceId: PRIMARY,
         componentOverrides: { [NAME_COMPONENT_ID]: overrideData },
       });
@@ -455,10 +415,8 @@ describe('EntityManager - Component Manipulation', () => {
     it('should return undefined for a non-existent component', () => {
       // Arrange
       const { entityManager } = testBed;
-      const { BASIC } = TestData.DefinitionIDs;
       const { PRIMARY } = TestData.InstanceIDs;
-      testBed.setupDefinitions(TestData.Definitions.basic);
-      entityManager.createEntityInstance(BASIC, { instanceId: PRIMARY });
+      testBed.createEntity('basic', { instanceId: PRIMARY });
 
       // Act
       const data = entityManager.getComponentData(PRIMARY, 'non:existent');
@@ -480,14 +438,9 @@ describe('EntityManager - Component Manipulation', () => {
       expect(data).toBeUndefined();
     });
 
-    it.each([
-      ['instanceId', null, 'comp:id'],
-      ['instanceId', '', 'comp:id'],
-      ['componentTypeId', 'instance:id', null],
-      ['componentTypeId', 'instance:id', ' '],
-    ])(
-      'should return undefined for invalid %s format',
-      (param, instanceId, componentTypeId) => {
+    it.each(TestData.InvalidValues.invalidIdPairs)(
+      'should return undefined for invalid inputs',
+      (instanceId, componentTypeId) => {
         const { entityManager, mocks } = testBed;
         const result = entityManager.getComponentData(
           instanceId,
@@ -511,10 +464,8 @@ describe('EntityManager - Component Manipulation', () => {
       // Arrange
       const { entityManager } = testBed;
       const { NAME_COMPONENT_ID } = TestData.ComponentIDs;
-      const { BASIC } = TestData.DefinitionIDs;
       const { PRIMARY } = TestData.InstanceIDs;
-      testBed.setupDefinitions(TestData.Definitions.basic);
-      entityManager.createEntityInstance(BASIC, { instanceId: PRIMARY });
+      testBed.createEntity('basic', { instanceId: PRIMARY });
 
       // Act & Assert
       expect(entityManager.hasComponent(PRIMARY, NAME_COMPONENT_ID)).toBe(true);
@@ -523,11 +474,9 @@ describe('EntityManager - Component Manipulation', () => {
     it('should return true if the component is added as an override', () => {
       // Arrange
       const { entityManager } = testBed;
-      const { BASIC } = TestData.DefinitionIDs;
       const { PRIMARY } = TestData.InstanceIDs;
       const NEW_COMPONENT_ID = 'core:health';
-      testBed.setupDefinitions(TestData.Definitions.basic);
-      entityManager.createEntityInstance(BASIC, {
+      testBed.createEntity('basic', {
         instanceId: PRIMARY,
         componentOverrides: { [NEW_COMPONENT_ID]: { hp: 10 } },
       });
@@ -539,10 +488,8 @@ describe('EntityManager - Component Manipulation', () => {
     it('should return false if the component does not exist', () => {
       // Arrange
       const { entityManager } = testBed;
-      const { BASIC } = TestData.DefinitionIDs;
       const { PRIMARY } = TestData.InstanceIDs; // FIX: Was TestA
-      testBed.setupDefinitions(TestData.Definitions.basic);
-      entityManager.createEntityInstance(BASIC, { instanceId: PRIMARY });
+      testBed.createEntity('basic', { instanceId: PRIMARY });
 
       // Act & Assert
       expect(entityManager.hasComponent(PRIMARY, 'non:existent')).toBe(false);
@@ -558,14 +505,9 @@ describe('EntityManager - Component Manipulation', () => {
       expect(entityManager.hasComponent(GHOST, NAME_COMPONENT_ID)).toBe(false);
     });
 
-    it.each([
-      ['instanceId', null, 'comp:id'],
-      ['instanceId', '', 'comp:id'],
-      ['componentTypeId', 'instance:id', null],
-      ['componentTypeId', 'instance:id', ' '],
-    ])(
-      'should return false for invalid %s format',
-      (param, instanceId, componentTypeId) => {
+    it.each(TestData.InvalidValues.invalidIdPairs)(
+      'should return false for invalid inputs',
+      (instanceId, componentTypeId) => {
         const { entityManager, mocks } = testBed;
         const result = entityManager.hasComponent(instanceId, componentTypeId);
         expect(result).toBe(false);
@@ -580,10 +522,8 @@ describe('EntityManager - Component Manipulation', () => {
         // Arrange
         const { entityManager } = testBed;
         const { NAME_COMPONENT_ID } = TestData.ComponentIDs;
-        const { BASIC } = TestData.DefinitionIDs;
         const { PRIMARY } = TestData.InstanceIDs;
-        testBed.setupDefinitions(TestData.Definitions.basic);
-        entityManager.createEntityInstance(BASIC, { instanceId: PRIMARY });
+        testBed.createEntity('basic', { instanceId: PRIMARY });
 
         // Act & Assert
         expect(
@@ -595,10 +535,8 @@ describe('EntityManager - Component Manipulation', () => {
         // Arrange
         const { entityManager } = testBed;
         const { NAME_COMPONENT_ID } = TestData.ComponentIDs;
-        const { BASIC } = TestData.DefinitionIDs;
         const { PRIMARY } = TestData.InstanceIDs;
-        testBed.setupDefinitions(TestData.Definitions.basic);
-        entityManager.createEntityInstance(BASIC, {
+        testBed.createEntity('basic', {
           instanceId: PRIMARY,
           componentOverrides: { [NAME_COMPONENT_ID]: { name: 'Override' } },
         });
