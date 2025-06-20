@@ -6,6 +6,7 @@
 import { jest } from '@jest/globals';
 import { createTestEnvironment } from './gameEngine.test-environment.js';
 import BaseTestBed from '../baseTestBed.js';
+import { suppressConsoleError } from '../jestHelpers.js';
 
 /**
  * @description Utility class that instantiates {@link GameEngine} using a mocked
@@ -136,6 +137,31 @@ export class GameEngineTestBed extends BaseTestBed {
  */
 export function createGameEngineTestBed(overrides = {}) {
   return new GameEngineTestBed(overrides);
+}
+
+/**
+ * Defines a test suite with automatic {@link GameEngineTestBed} setup.
+ *
+ * @param {string} title - Suite title passed to `describe`.
+ * @param {(getBed: () => GameEngineTestBed) => void} suiteFn - Callback
+ *   containing the tests. Receives a getter for the active test bed.
+ * @param {{[token: string]: any}} [overrides] - Optional DI overrides.
+ * @returns {void}
+ */
+export function describeGameEngineSuite(title, suiteFn, overrides = {}) {
+  describe(title, () => {
+    let testBed;
+    let consoleSpy;
+    beforeEach(() => {
+      consoleSpy = suppressConsoleError();
+      testBed = new GameEngineTestBed(overrides);
+    });
+    afterEach(async () => {
+      await testBed.cleanup();
+      consoleSpy.mockRestore();
+    });
+    suiteFn(() => testBed);
+  });
 }
 
 export default GameEngineTestBed;
