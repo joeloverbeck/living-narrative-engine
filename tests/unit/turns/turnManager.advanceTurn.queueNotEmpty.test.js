@@ -204,36 +204,6 @@ describe('TurnManager: advanceTurn() - Turn Advancement (Queue Not Empty)', () =
     expect(stopSpy).toHaveBeenCalledTimes(1);
   });
 
-  test.skip('Entity manager getEntityInstance throws: logs error, stops manager', async () => {
-    // Arrange
-    const entityError = new Error('Entity not found');
-    const mockActor = createMockEntity('actor1', { isActor: true });
-    testBed.mocks.turnOrderService.getNextEntity.mockResolvedValue(mockActor); // Return valid entity first
-    testBed.mocks.entityManager.getEntityInstance.mockRejectedValue(entityError); // Then throw error
-
-    // Act
-    await testBed.turnManager.advanceTurn();
-
-    // Assert
-    expect(testBed.mocks.logger.error).toHaveBeenCalledWith(
-      'CRITICAL Error during turn advancement logic (before handler initiation): Entity not found',
-      entityError
-    );
-
-    expect(testBed.mocks.dispatcher.dispatch).toHaveBeenCalledWith(
-      SYSTEM_ERROR_OCCURRED_ID,
-      expect.objectContaining({
-        details: {
-          raw: entityError.message,
-          stack: expect.any(String),
-          timestamp: expect.any(String),
-        },
-      })
-    );
-
-    expect(stopSpy).toHaveBeenCalledTimes(1);
-  });
-
   test('Handler resolver throws: logs error, stops manager', async () => {
     // Arrange
     const resolveError = new Error('Handler resolution failed');
@@ -320,23 +290,29 @@ describe('TurnManager: advanceTurn() - Turn Advancement (Queue Not Empty)', () =
     // expect(stopSpy).toHaveBeenCalledTimes(1);
   });
 
-  test.skip('Called when not running: logs debug and returns early', async () => {
+  test('Called when not running: logs debug and returns early', async () => {
     // Arrange
-    // Ensure the manager is not running by setting the internal state
-    testBed.turnManager._isRunning = false; // Directly set the internal state
+    // Create a fresh test bed that doesn't start the manager
+    const freshTestBed = new TurnManagerTestBed();
+    
+    // Don't start the manager - it will not be running by default
+    // The manager starts with _isRunning = false
 
     // Act
-    await testBed.turnManager.advanceTurn();
+    await freshTestBed.turnManager.advanceTurn();
 
     // Assert
-    expect(testBed.mocks.logger.debug).toHaveBeenCalledWith(
+    expect(freshTestBed.mocks.logger.debug).toHaveBeenCalledWith(
       'TurnManager.advanceTurn() called while manager is not running. Returning.'
     );
 
-    expect(testBed.mocks.turnOrderService.isEmpty).not.toHaveBeenCalled();
-    expect(testBed.mocks.turnOrderService.getNextEntity).not.toHaveBeenCalled();
-    expect(testBed.mocks.turnHandlerResolver.resolveHandler).not.toHaveBeenCalled();
-    expect(testBed.mocks.dispatcher.dispatch).not.toHaveBeenCalled();
+    expect(freshTestBed.mocks.turnOrderService.isEmpty).not.toHaveBeenCalled();
+    expect(freshTestBed.mocks.turnOrderService.getNextEntity).not.toHaveBeenCalled();
+    expect(freshTestBed.mocks.turnHandlerResolver.resolveHandler).not.toHaveBeenCalled();
+    expect(freshTestBed.mocks.dispatcher.dispatch).not.toHaveBeenCalled();
+    
+    // Clean up the fresh test bed
+    await freshTestBed.cleanup();
   });
 });
 // --- FILE END ---

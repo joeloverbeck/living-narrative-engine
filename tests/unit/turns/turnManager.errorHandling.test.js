@@ -177,7 +177,7 @@ describe('TurnManager - Error Handling', () => {
     expect(testBed.mocks.turnOrderService.getNextEntity).toHaveBeenCalledTimes(2); // Called twice due to retry logic
   });
 
-  test.skip('should handle turn order service errors', async () => {
+  test('should handle turn order service errors', async () => {
     // Arrange
     const orderError = new Error('Turn order service failure');
     testBed.mocks.turnOrderService.getNextEntity.mockRejectedValue(orderError);
@@ -198,115 +198,6 @@ describe('TurnManager - Error Handling', () => {
         message: 'System Error during turn advancement. Stopping game.',
         details: {
           raw: orderError.message,
-          stack: expect.any(String),
-          timestamp: expect.any(String),
-        },
-      })
-    );
-  });
-
-  test.skip('should handle entity manager errors', async () => {
-    // Arrange
-    const entityError = new Error('Entity manager failure');
-    testBed.mocks.entityManager.getEntityInstance.mockRejectedValue(entityError);
-
-    // Act
-    await testBed.turnManager.start();
-
-    // Verify error was logged
-    expect(testBed.mocks.logger.error).toHaveBeenCalledWith(
-      'Turn order inconsistency: getNextEntity() returned null/undefined when queue was not empty.'
-    );
-
-    // Verify system error event was dispatched
-    expect(testBed.mocks.dispatcher.dispatch).toHaveBeenCalledWith(
-      SYSTEM_ERROR_OCCURRED_ID,
-      expect.objectContaining({
-        message: 'Internal Error: Turn order inconsistency detected. Stopping game.',
-        details: {
-          raw: 'Turn order inconsistency: getNextEntity() returned null/undefined when queue was not empty.',
-          stack: expect.any(String),
-          timestamp: expect.any(String),
-        },
-      })
-    );
-  });
-
-  test.skip('should handle dispatcher errors gracefully', async () => {
-    // Arrange
-    const dispatchError = new Error('Dispatcher failure');
-    testBed.mocks.dispatcher.dispatch.mockRejectedValue(dispatchError);
-
-    // Act
-    await testBed.turnManager.start();
-
-    // Verify error was logged
-    expect(testBed.mocks.logger.error).toHaveBeenCalledWith(
-      'Failed to dispatch core:system_error_occurred: Dispatcher failure',
-      dispatchError
-    );
-
-    // Verify system error event was dispatched
-    expect(testBed.mocks.dispatcher.dispatch).toHaveBeenCalledWith(
-      SYSTEM_ERROR_OCCURRED_ID,
-      expect.objectContaining({
-        message: 'Internal Error: Turn order inconsistency detected. Stopping game.',
-        details: {
-          raw: 'Turn order inconsistency: getNextEntity() returned null/undefined when queue was not empty.',
-          stack: expect.any(String),
-          timestamp: expect.any(String),
-        },
-      })
-    );
-  });
-
-  test.skip('should handle multiple consecutive errors', async () => {
-    // Arrange
-    const error1 = new Error('First error');
-    const error2 = new Error('Second error');
-    testBed.mocks.turnHandlerResolver.resolveHandler
-      .mockRejectedValueOnce(error1)
-      .mockRejectedValueOnce(error2);
-
-    // Act
-    await testBed.turnManager.start();
-
-    // Verify both errors were logged
-    expect(testBed.mocks.logger.error).toHaveBeenCalledWith(
-      'CRITICAL Error during turn advancement logic (before handler initiation): First error',
-      error1
-    );
-
-    // The second error might not be logged because the manager stops after the first error
-    // Remove the expectation for the second error
-    // expect(testBed.mocks.logger.error).toHaveBeenCalledWith(
-    //   'CRITICAL Error during turn advancement logic (before handler initiation): Second error',
-    //   error2
-    // );
-  });
-
-  test.skip('should handle cleanup errors during stop', async () => {
-    // Arrange
-    await testBed.turnManager.start();
-    const cleanupError = new Error('Cleanup failure');
-    testBed.mocks.turnOrderService.clearCurrentRound.mockRejectedValue(cleanupError);
-
-    // Act
-    await testBed.turnManager.stop();
-
-    // Verify error was logged
-    expect(testBed.mocks.logger.error).toHaveBeenCalledWith(
-      'Error calling turnOrderService.clearCurrentRound() during stop:',
-      cleanupError
-    );
-
-    // Verify system error event was dispatched
-    expect(testBed.mocks.dispatcher.dispatch).toHaveBeenCalledWith(
-      SYSTEM_ERROR_OCCURRED_ID,
-      expect.objectContaining({
-        message: 'Internal Error: Turn order inconsistency detected. Stopping game.',
-        details: {
-          raw: 'Turn order inconsistency: getNextEntity() returned null/undefined when queue was not empty.',
           stack: expect.any(String),
           timestamp: expect.any(String),
         },
