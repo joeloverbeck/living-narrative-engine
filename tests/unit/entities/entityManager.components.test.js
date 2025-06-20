@@ -10,6 +10,7 @@ import {
   describeEntityManagerSuite,
   TestData,
 } from '../../common/entities/testBed.js';
+import { runInvalidIdPairTests } from '../../common/entities/invalidInputHelpers.js';
 import { EntityNotFoundError } from '../../../src/errors/entityNotFoundError.js';
 import {
   COMPONENT_ADDED_ID,
@@ -230,18 +231,11 @@ describeEntityManagerSuite(
         }
       );
 
-      it.each(TestData.InvalidValues.invalidIdPairs)(
-        'should return false for invalid inputs',
-        (instanceId, componentTypeId) => {
-          const { entityManager, mocks } = getBed();
-          const result = entityManager.addComponent(
-            instanceId,
-            componentTypeId,
-            {}
-          );
-          expect(result).toBe(false);
-          expect(mocks.logger.warn).toHaveBeenCalled();
-        }
+      runInvalidIdPairTests(
+        getBed,
+        (em, instanceId, componentTypeId) =>
+          em.addComponent(instanceId, componentTypeId, {}),
+        false
       );
 
       it('should return false if the internal entity update fails', () => {
@@ -368,19 +362,11 @@ describeEntityManagerSuite(
         ).toThrow(new EntityNotFoundError(GHOST));
       });
 
-      it.each(TestData.InvalidValues.invalidIdPairs)(
-        'should return false for invalid inputs',
-        (instanceId, componentTypeId) => {
-          const { entityManager, mocks } = getBed();
-          const result = entityManager.removeComponent(
-            instanceId,
-            componentTypeId
-          );
-          expect(result).toBe(false);
-          expect(mocks.logger.warn).toHaveBeenCalledWith(
-            expect.stringContaining('Invalid')
-          );
-        }
+      runInvalidIdPairTests(
+        getBed,
+        (em, instanceId, componentTypeId) =>
+          em.removeComponent(instanceId, componentTypeId),
+        false
       );
     });
 
@@ -449,19 +435,11 @@ describeEntityManagerSuite(
         expect(data).toBeUndefined();
       });
 
-      it.each(TestData.InvalidValues.invalidIdPairs)(
-        'should return undefined for invalid inputs',
-        (instanceId, componentTypeId) => {
-          const { entityManager, mocks } = getBed();
-          const result = entityManager.getComponentData(
-            instanceId,
-            componentTypeId
-          );
-          expect(result).toBeUndefined();
-          expect(mocks.logger.debug).toHaveBeenCalledWith(
-            expect.stringContaining('Called with invalid')
-          );
-        }
+      runInvalidIdPairTests(
+        getBed,
+        (em, instanceId, componentTypeId) =>
+          em.getComponentData(instanceId, componentTypeId),
+        undefined
       );
     });
 
@@ -522,19 +500,11 @@ describeEntityManagerSuite(
         );
       });
 
-      it.each(TestData.InvalidValues.invalidIdPairs)(
-        'should return false for invalid inputs',
-        (instanceId, componentTypeId) => {
-          const { entityManager, mocks } = getBed();
-          const result = entityManager.hasComponent(
-            instanceId,
-            componentTypeId
-          );
-          expect(result).toBe(false);
-          expect(mocks.logger.debug).toHaveBeenCalledWith(
-            expect.stringContaining('Called with invalid')
-          );
-        }
+      runInvalidIdPairTests(
+        getBed,
+        (em, instanceId, componentTypeId) =>
+          em.hasComponent(instanceId, componentTypeId),
+        false
       );
 
       describe('with checkOverrideOnly flag', () => {
