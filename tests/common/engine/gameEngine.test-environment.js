@@ -16,6 +16,7 @@ import {
   createMockInitializationService,
   createMockContainer,
 } from '../mockFactories.js';
+import { createMockEnvironment } from '../mockEnvironment.js';
 
 /**
  * Creates a set of mocks and a container for GameEngine.
@@ -37,44 +38,33 @@ import {
  *   replacement values used instead of defaults.
  */
 export function createTestEnvironment(overrides = {}) {
-  jest.clearAllMocks();
-
-  const logger = createMockLogger();
-  const entityManager = createMockEntityManager();
-  const turnManager = createMockTurnManager();
-  const gamePersistenceService = createMockGamePersistenceService();
-  const playtimeTracker = createMockPlaytimeTracker();
-  const safeEventDispatcher = createMockSafeEventDispatcher();
-  const initializationService = createMockInitializationService();
+  const { mocks, cleanup } = createMockEnvironment({
+    logger: createMockLogger,
+    entityManager: createMockEntityManager,
+    turnManager: createMockTurnManager,
+    gamePersistenceService: createMockGamePersistenceService,
+    playtimeTracker: createMockPlaytimeTracker,
+    safeEventDispatcher: createMockSafeEventDispatcher,
+    initializationService: createMockInitializationService,
+  });
 
   const mapping = {
-    [tokens.ILogger]: logger,
-    [tokens.IEntityManager]: entityManager,
-    [tokens.ITurnManager]: turnManager,
-    [tokens.GamePersistenceService]: gamePersistenceService,
-    [tokens.PlaytimeTracker]: playtimeTracker,
-    [tokens.ISafeEventDispatcher]: safeEventDispatcher,
-    [tokens.IInitializationService]: initializationService,
+    [tokens.ILogger]: mocks.logger,
+    [tokens.IEntityManager]: mocks.entityManager,
+    [tokens.ITurnManager]: mocks.turnManager,
+    [tokens.GamePersistenceService]: mocks.gamePersistenceService,
+    [tokens.PlaytimeTracker]: mocks.playtimeTracker,
+    [tokens.ISafeEventDispatcher]: mocks.safeEventDispatcher,
+    [tokens.IInitializationService]: mocks.initializationService,
   };
 
   const mockContainer = createMockContainer(mapping, overrides);
 
   const createGameEngine = () => new GameEngine({ container: mockContainer });
 
-  const cleanup = () => {
-    jest.clearAllMocks();
-    jest.restoreAllMocks();
-  };
-
   return {
     mockContainer,
-    logger,
-    entityManager,
-    turnManager,
-    gamePersistenceService,
-    playtimeTracker,
-    safeEventDispatcher,
-    initializationService,
+    ...mocks,
     createGameEngine,
     cleanup,
   };

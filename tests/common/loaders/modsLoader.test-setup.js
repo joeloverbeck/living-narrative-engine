@@ -20,6 +20,7 @@ import {
   createMockWorldLoader, // ← NEW import
 } from '../mockFactories.js';
 import { createLoaderMocks } from './modsLoader.test-utils.js';
+import { createMockEnvironment } from '../mockEnvironment.js';
 
 /**
  * List of loader types used when generating mock loaders.
@@ -43,31 +44,26 @@ const loaderTypes = [
  * @returns {object} Test environment utilities and mocks.
  */
 export function createTestEnvironment() {
-  jest.clearAllMocks();
-
-  /* ── Core-service mocks ─────────────────────────────────────────────── */
-  const mockRegistry = createStatefulMockDataRegistry();
-  const mockLogger = createMockLogger();
-  const mockSchemaLoader = createMockSchemaLoader();
-  const mockValidator = createMockSchemaValidator();
-  const mockConfiguration = createMockConfiguration();
-  const mockGameConfigLoader = createMockGameConfigLoader();
-  const mockModManifestLoader = createMockModManifestLoader();
-  const mockValidatedEventDispatcher = createMockValidatedEventDispatcher();
+  const { mocks, cleanup } = createMockEnvironment({
+    mockRegistry: createStatefulMockDataRegistry,
+    mockLogger: createMockLogger,
+    mockSchemaLoader: createMockSchemaLoader,
+    mockValidator: createMockSchemaValidator,
+    mockConfiguration: createMockConfiguration,
+    mockGameConfigLoader: createMockGameConfigLoader,
+    mockModManifestLoader: createMockModManifestLoader,
+    mockValidatedEventDispatcher: createMockValidatedEventDispatcher,
+    mockModDependencyValidator: createMockModDependencyValidator,
+    mockModVersionValidator: createMockModVersionValidator,
+    mockModLoadOrderResolver: createMockModLoadOrderResolver,
+    mockWorldLoader: createMockWorldLoader,
+  });
 
   /* ── Content-loader mocks ───────────────────────────────────────────── */
   const loaders = createLoaderMocks(loaderTypes);
 
-  /* ── Modding-helper mocks ───────────────────────────────────────────── */
-  const mockModDependencyValidator = createMockModDependencyValidator();
-  const mockModVersionValidator = createMockModVersionValidator();
-  const mockModLoadOrderResolver = createMockModLoadOrderResolver();
-
-  /* ── **WorldLoader mock** (new) ─────────────────────────────────────── */
-  const mockWorldLoader = createMockWorldLoader();
-
   /* ── Default success behaviour overrides ───────────────────────────── */
-  mockValidator.isSchemaLoaded.mockImplementation((id) =>
+  mocks.mockValidator.isSchemaLoaded.mockImplementation((id) =>
     [
       'schema:game',
       'schema:components',
@@ -81,53 +77,44 @@ export function createTestEnvironment() {
       'schema:goals',
     ].includes(id)
   );
-  mockModDependencyValidator.validate.mockImplementation(() => {});
-  mockModVersionValidator.mockImplementation(() => {});
-  mockModLoadOrderResolver.resolveOrder.mockImplementation((ids) => ids);
+  mocks.mockModDependencyValidator.validate.mockImplementation(() => {});
+  mocks.mockModVersionValidator.mockImplementation(() => {});
+  mocks.mockModLoadOrderResolver.resolveOrder.mockImplementation((ids) => ids);
 
   /* ── Instantiate system-under-test ──────────────────────────────────── */
   const modsLoader = new ModsLoader({
-    registry: mockRegistry,
-    logger: mockLogger,
-    schemaLoader: mockSchemaLoader,
+    registry: mocks.mockRegistry,
+    logger: mocks.mockLogger,
+    schemaLoader: mocks.mockSchemaLoader,
     componentLoader: loaders.mockComponentLoader,
     conditionLoader: loaders.mockConditionLoader,
     ruleLoader: loaders.mockRuleLoader,
     actionLoader: loaders.mockActionLoader,
     eventLoader: loaders.mockEventLoader,
     entityLoader: loaders.mockEntityLoader,
-    validator: mockValidator,
-    configuration: mockConfiguration,
-    gameConfigLoader: mockGameConfigLoader,
+    validator: mocks.mockValidator,
+    configuration: mocks.mockConfiguration,
+    gameConfigLoader: mocks.mockGameConfigLoader,
     promptTextLoader: { loadPromptText: jest.fn() },
-    modManifestLoader: mockModManifestLoader,
-    validatedEventDispatcher: mockValidatedEventDispatcher,
-    modDependencyValidator: mockModDependencyValidator,
-    modVersionValidator: mockModVersionValidator,
-    modLoadOrderResolver: mockModLoadOrderResolver,
-    worldLoader: mockWorldLoader, // ← injected here
+    modManifestLoader: mocks.mockModManifestLoader,
+    validatedEventDispatcher: mocks.mockValidatedEventDispatcher,
+    modDependencyValidator: mocks.mockModDependencyValidator,
+    modVersionValidator: mocks.mockModVersionValidator,
+    modLoadOrderResolver: mocks.mockModLoadOrderResolver,
+    worldLoader: mocks.mockWorldLoader, // ← injected here
     contentLoadersConfig: null,
   });
 
   /* ── Return the assembled environment ──────────────────────────────── */
   return {
     modsLoader,
-    mockRegistry,
-    mockLogger,
-    mockSchemaLoader,
+    ...mocks,
     ...loaders,
-    mockValidator,
-    mockConfiguration,
-    mockGameConfigLoader,
-    mockModManifestLoader,
-    mockValidatedEventDispatcher,
-    mockModDependencyValidator,
-    mockModVersionValidator,
-    mockModLoadOrderResolver,
-    mockWorldLoader, // ← exposed for assertions
+    mockWorldLoader: mocks.mockWorldLoader, // ← exposed for assertions
     // Handy aliases for deeply nested jest fns
-    mockedModDependencyValidator: mockModDependencyValidator.validate,
-    mockedValidateModEngineVersions: mockModVersionValidator,
-    mockedResolveOrder: mockModLoadOrderResolver.resolveOrder,
+    mockedModDependencyValidator: mocks.mockModDependencyValidator.validate,
+    mockedValidateModEngineVersions: mocks.mockModVersionValidator,
+    mockedResolveOrder: mocks.mockModLoadOrderResolver.resolveOrder,
+    cleanup,
   };
 }
