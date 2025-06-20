@@ -41,6 +41,14 @@ export const TestData = {
     GOALS_COMPONENT_ID,
     NAME_COMPONENT_ID,
   },
+  DefaultComponentData: {
+    [GOALS_COMPONENT_ID]: { goals: [] },
+    [NOTES_COMPONENT_ID]: { notes: [] },
+    [SHORT_TERM_MEMORY_COMPONENT_ID]: {
+      thoughts: [],
+      maxEntries: 10,
+    },
+  },
   DefinitionIDs: {
     BASIC: 'test-def:basic',
     ACTOR: 'test-def:actor',

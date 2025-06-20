@@ -22,80 +22,36 @@ describe('EntityManager - Default Component Injection', () => {
   });
 
   describe('for Actors', () => {
-    it('should inject core:goals if not present', () => {
-      // Arrange
-      const { entityManager, mocks } = testBed;
-      const { ACTOR } = TestData.DefinitionIDs;
-      const { GOALS_COMPONENT_ID } = TestData.ComponentIDs;
+    const {
+      GOALS_COMPONENT_ID,
+      NOTES_COMPONENT_ID,
+      SHORT_TERM_MEMORY_COMPONENT_ID,
+    } = TestData.ComponentIDs;
 
-      // The default actor definition in TestData does not have goals
-      testBed.setupDefinitions(TestData.Definitions.actor);
-
-      // Act
-      const entity = entityManager.createEntityInstance(ACTOR);
-
-      // Assert
-      const hasGoals = entity.hasComponent(GOALS_COMPONENT_ID);
-      expect(hasGoals).toBe(true);
-
-      const goalsData = entity.getComponentData(GOALS_COMPONENT_ID);
-      expect(goalsData).toEqual({ goals: [] });
-
-      // Check that the validation was called for the injected component.
-      expect(mocks.validator.validate).toHaveBeenCalledWith(
-        GOALS_COMPONENT_ID,
-        { goals: [] }
-      );
-    });
-
-    it('should inject core:notes if not present', () => {
-      // Arrange
-      const { entityManager, mocks } = testBed;
-      const { ACTOR } = TestData.DefinitionIDs;
-      const { NOTES_COMPONENT_ID } = TestData.ComponentIDs;
-
-      testBed.setupDefinitions(TestData.Definitions.actor);
-
-      // Act
-      const entity = entityManager.createEntityInstance(ACTOR);
-
-      // Assert
-      const hasNotes = entity.hasComponent(NOTES_COMPONENT_ID);
-      expect(hasNotes).toBe(true);
-
-      const notesData = entity.getComponentData(NOTES_COMPONENT_ID);
-      expect(notesData).toEqual({ notes: [] });
-
-      expect(mocks.validator.validate).toHaveBeenCalledWith(
-        NOTES_COMPONENT_ID,
-        { notes: [] }
-      );
-    });
-
-    it('should inject core:short_term_memory if not present', () => {
-      // Arrange
-      const { entityManager, mocks } = testBed;
-      const { ACTOR } = TestData.DefinitionIDs;
-      const { SHORT_TERM_MEMORY_COMPONENT_ID } = TestData.ComponentIDs;
-      const expectedDefaultSTM = { thoughts: [], maxEntries: 10 };
-
-      testBed.setupDefinitions(TestData.Definitions.actor);
-
-      // Act
-      const entity = entityManager.createEntityInstance(ACTOR);
-
-      // Assert
-      const hasSTM = entity.hasComponent(SHORT_TERM_MEMORY_COMPONENT_ID);
-      expect(hasSTM).toBe(true);
-
-      const stmData = entity.getComponentData(SHORT_TERM_MEMORY_COMPONENT_ID);
-      expect(stmData).toEqual(expectedDefaultSTM);
-
-      expect(mocks.validator.validate).toHaveBeenCalledWith(
+    const defaultComponentsTable = [
+      [GOALS_COMPONENT_ID, TestData.DefaultComponentData[GOALS_COMPONENT_ID]],
+      [NOTES_COMPONENT_ID, TestData.DefaultComponentData[NOTES_COMPONENT_ID]],
+      [
         SHORT_TERM_MEMORY_COMPONENT_ID,
-        expectedDefaultSTM
-      );
-    });
+        TestData.DefaultComponentData[SHORT_TERM_MEMORY_COMPONENT_ID],
+      ],
+    ];
+
+    it.each(defaultComponentsTable)(
+      'should inject %s if not present',
+      (id, expected) => {
+        // Arrange
+        const { mocks } = testBed;
+
+        // Act
+        const entity = testBed.createEntity('actor');
+
+        // Assert
+        expect(entity.hasComponent(id)).toBe(true);
+        expect(entity.getComponentData(id)).toEqual(expected);
+        expect(mocks.validator.validate).toHaveBeenCalledWith(id, expected);
+      }
+    );
 
     it('should not override existing default components', () => {
       // Arrange
@@ -158,19 +114,17 @@ describe('EntityManager - Default Component Injection', () => {
   describe('for Non-Actors', () => {
     it('should not inject any default components', () => {
       // Arrange
-      const { entityManager } = testBed;
       const {
         GOALS_COMPONENT_ID,
         NOTES_COMPONENT_ID,
         SHORT_TERM_MEMORY_COMPONENT_ID,
       } = TestData.ComponentIDs;
-      const { BASIC } = TestData.DefinitionIDs;
 
       // The 'basic' definition is not an actor
       testBed.setupDefinitions(TestData.Definitions.basic);
 
       // Act
-      const entity = entityManager.createEntityInstance(BASIC);
+      const entity = testBed.createEntity('basic');
 
       // Assert
       expect(entity.hasComponent(GOALS_COMPONENT_ID)).toBe(false);
