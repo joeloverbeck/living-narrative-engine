@@ -23,6 +23,7 @@ import {
   createSimpleMockDataRegistry,
 } from '../mockFactories.js';
 import BaseTestBed from '../baseTestBed.js';
+import { describeSuite } from '../describeSuite.js';
 
 // --- Centralized Mocks (REMOVED) ---
 // Mock creation functions are now imported.
@@ -226,16 +227,7 @@ export class TestBed extends BaseTestBed {
  * @returns {void}
  */
 export function describeEntityManagerSuite(title, suiteFn) {
-  describe(title, () => {
-    let tb;
-    beforeEach(() => {
-      tb = new TestBed();
-    });
-    afterEach(async () => {
-      await tb.cleanup();
-    });
-    suiteFn(() => tb);
-  });
+  describeSuite(title, TestBed, suiteFn);
 }
 
 export default TestBed;

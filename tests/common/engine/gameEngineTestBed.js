@@ -6,6 +6,7 @@
 import { createTestEnvironment } from './gameEngine.test-environment.js';
 import ContainerTestBed from '../containerTestBed.js';
 import { suppressConsoleError } from '../jestHelpers.js';
+import { describeSuite } from '../describeSuite.js';
 
 /**
  * @description Utility class that instantiates {@link GameEngine} using a mocked
@@ -120,19 +121,21 @@ export function createGameEngineTestBed(overrides = {}) {
  * @returns {void}
  */
 export function describeGameEngineSuite(title, suiteFn, overrides = {}) {
-  describe(title, () => {
-    let testBed;
-    let consoleSpy;
-    beforeEach(() => {
-      consoleSpy = suppressConsoleError();
-      testBed = new GameEngineTestBed(overrides);
-    });
-    afterEach(async () => {
-      await testBed.cleanup();
-      consoleSpy.mockRestore();
-    });
-    suiteFn(() => testBed);
-  });
+  describeSuite(
+    title,
+    GameEngineTestBed,
+    (getBed) => {
+      let consoleSpy;
+      beforeEach(() => {
+        consoleSpy = suppressConsoleError();
+      });
+      afterEach(() => {
+        consoleSpy.mockRestore();
+      });
+      suiteFn(getBed);
+    },
+    overrides
+  );
 }
 
 export default GameEngineTestBed;
