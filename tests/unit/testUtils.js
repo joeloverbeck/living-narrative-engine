@@ -2,6 +2,7 @@
 
 import { PrerequisiteEvaluationService } from '../../src/actions/validation/prerequisiteEvaluationService.js';
 import { jest } from '@jest/globals';
+import { createMockLogger } from '../common/mockFactories.js';
 
 // --- Mock PrerequisiteEvaluationService ---
 jest.mock('../../src/actions/validation/prerequisiteEvaluationService.js'); // Mock needs to be in the utility or called before import in test
@@ -30,19 +31,8 @@ export function createMockPrerequisiteEvaluationService() {
 }
 
 // --- Mock Logger ---
-/**
- * Creates a mock logger object with Jest mock functions for standard levels.
- *
- * @returns {{info: jest.Mock, warn: jest.Mock, error: jest.Mock, debug: jest.Mock}}
- */
-export function createMockLogger() {
-  return {
-    debug: jest.fn(),
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
-  };
-}
+// re-export createMockLogger from common utilities
+export { createMockLogger };
 
 /**
  * Creates a mock SaveValidationService with noop methods.
