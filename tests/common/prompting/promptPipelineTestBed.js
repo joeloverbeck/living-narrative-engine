@@ -5,7 +5,13 @@
 
 import { jest } from '@jest/globals';
 import { AIPromptPipeline } from '../../../src/prompting/AIPromptPipeline.js';
-import { createMockLogger } from '../mockFactories.js';
+import {
+  createMockLogger,
+  createMockLLMAdapter,
+  createMockAIGameStateProvider,
+  createMockAIPromptContentProvider,
+  createMockPromptBuilder,
+} from '../mockFactories.js';
 
 /**
  * @description Utility class for unit tests that need an AIPromptPipeline with common mocks.
@@ -24,19 +30,10 @@ export class AIPromptPipelineTestBed {
   logger;
 
   constructor() {
-    this.llmAdapter = {
-      getAIDecision: jest.fn(),
-      getCurrentActiveLlmId: jest.fn(),
-    };
-    this.gameStateProvider = {
-      buildGameState: jest.fn(),
-    };
-    this.promptContentProvider = {
-      getPromptData: jest.fn(),
-    };
-    this.promptBuilder = {
-      build: jest.fn(),
-    };
+    this.llmAdapter = createMockLLMAdapter();
+    this.gameStateProvider = createMockAIGameStateProvider();
+    this.promptContentProvider = createMockAIPromptContentProvider();
+    this.promptBuilder = createMockPromptBuilder();
     this.logger = createMockLogger();
   }
 
@@ -54,6 +51,27 @@ export class AIPromptPipelineTestBed {
       promptBuilder: this.promptBuilder,
       logger: this.logger,
     });
+  }
+
+  /**
+   * Returns the dependency object used to construct the pipeline.
+   *
+   * @returns {{
+   *   llmAdapter: ReturnType<typeof createMockLLMAdapter>,
+   *   gameStateProvider: ReturnType<typeof createMockAIGameStateProvider>,
+   *   promptContentProvider: ReturnType<typeof createMockAIPromptContentProvider>,
+   *   promptBuilder: ReturnType<typeof createMockPromptBuilder>,
+   *   logger: ReturnType<typeof createMockLogger>,
+   * }}
+   */
+  getDependencies() {
+    return {
+      llmAdapter: this.llmAdapter,
+      gameStateProvider: this.gameStateProvider,
+      promptContentProvider: this.promptContentProvider,
+      promptBuilder: this.promptBuilder,
+      logger: this.logger,
+    };
   }
 
   /**
