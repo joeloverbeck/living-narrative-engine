@@ -131,7 +131,7 @@ class EntityManager extends IEntityManager {
    * @param {ILogger}              logger
    * @param {ISafeEventDispatcher} safeEventDispatcher
    * @param {object} [options] - Optional settings.
-   * @param {function(): string} [options.idGenerator=uuidv4] - A function to generate new entity instance IDs. Defaults to uuidv4.
+   * @param {function(): string} [options.idGenerator] - A function to generate new entity instance IDs. Defaults to uuidv4.
    * @throws {Error} If any dependency is missing or malformed.
    */
   constructor(
@@ -680,20 +680,20 @@ class EntityManager extends IEntityManager {
 
   getComponentData(instanceId, componentTypeId) {
     if (!MapManager.isValidId(instanceId)) {
-      this.#logger.debug(
+      this.#logger.warn(
         `EntityManager.getComponentData: Called with invalid instanceId format: '${instanceId}'. Returning undefined.`
       );
       return undefined;
     }
     if (typeof componentTypeId !== 'string' || !componentTypeId.trim()) {
-      this.#logger.debug(
+      this.#logger.warn(
         `EntityManager.getComponentData: Called with invalid componentTypeId format: '${componentTypeId}'. Returning undefined.`
       );
       return undefined;
     }
     const entity = this.#_getEntity(instanceId);
     if (!entity) {
-      this.#logger.debug(
+      this.#logger.warn(
         `EntityManager.getComponentData: Entity not found with ID: '${instanceId}'. Returning undefined for component '${componentTypeId}'.`
       );
       return undefined;
@@ -703,13 +703,13 @@ class EntityManager extends IEntityManager {
 
   hasComponent(instanceId, componentTypeId, checkOverrideOnly = false) {
     if (!MapManager.isValidId(instanceId)) {
-      this.#logger.debug(
+      this.#logger.warn(
         `EntityManager.hasComponent: Called with invalid instanceId format: '${instanceId}'. Returning false.`
       );
       return false;
     }
     if (typeof componentTypeId !== 'string' || !componentTypeId.trim()) {
-      this.#logger.debug(
+      this.#logger.warn(
         `EntityManager.hasComponent: Called with invalid componentTypeId format: '${componentTypeId}'. Returning false.`
       );
       return false;
@@ -753,23 +753,36 @@ class EntityManager extends IEntityManager {
 
     // A query must have at least one positive condition.
     if (withAll.length === 0 && withAny.length === 0) {
-      this.#logger.warn('EntityManager.findEntities called with no "withAll" or "withAny" conditions. Returning empty array.');
+      this.#logger.warn(
+        'EntityManager.findEntities called with no "withAll" or "withAny" conditions. Returning empty array.'
+      );
       return [];
     }
 
     for (const entity of this.activeEntities.values()) {
       // 1. 'without' check (fastest rejection): If the entity has any component from the 'without' list, skip it.
-      if (without.length > 0 && without.some(componentTypeId => entity.hasComponent(componentTypeId))) {
+      if (
+        without.length > 0 &&
+        without.some((componentTypeId) => entity.hasComponent(componentTypeId))
+      ) {
         continue;
       }
 
       // 2. 'withAll' check: If the entity fails to have even one component from the 'withAll' list, skip it.
-      if (withAll.length > 0 && !withAll.every(componentTypeId => entity.hasComponent(componentTypeId))) {
+      if (
+        withAll.length > 0 &&
+        !withAll.every((componentTypeId) =>
+          entity.hasComponent(componentTypeId)
+        )
+      ) {
         continue;
       }
 
       // 3. 'withAny' check: If a 'withAny' list is provided, the entity must have at least one component from it.
-      if (withAny.length > 0 && !withAny.some(componentTypeId => entity.hasComponent(componentTypeId))) {
+      if (
+        withAny.length > 0 &&
+        !withAny.some((componentTypeId) => entity.hasComponent(componentTypeId))
+      ) {
         continue;
       }
 
@@ -777,7 +790,9 @@ class EntityManager extends IEntityManager {
       results.push(entity);
     }
 
-    this.#logger.debug(`EntityManager.findEntities found ${results.length} entities for query.`);
+    this.#logger.debug(
+      `EntityManager.findEntities found ${results.length} entities for query.`
+    );
     return results;
   }
 
