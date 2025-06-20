@@ -74,12 +74,7 @@ describe('EntityManager - Lifecycle', () => {
     it('should default to a UUIDv4 generator if none is provided', () => {
       // Arrange
       const { entityManager } = testBed; // Uses default constructor
-      testBed.setupDefinitions(TestData.Definitions.basic);
-
-      // Act
-      const entity = entityManager.createEntityInstance(
-        TestData.DefinitionIDs.BASIC
-      );
+      const entity = testBed.createEntity('basic');
 
       // Assert
       // This is an indirect test. We can't check *which* function was used,
@@ -101,10 +96,8 @@ describe('EntityManager - Lifecycle', () => {
       const mockIdGenerator = () => 'test-entity-id-123';
       testBed = new TestBed({ idGenerator: mockIdGenerator }); // Re-init testBed with the mock
       const { entityManager } = testBed; // FIX: Get reference to entityManager
-      testBed.setupDefinitions(TestData.Definitions.basic);
 
-      // Act
-      const entity = entityManager.createEntityInstance(BASIC);
+      const entity = testBed.createEntity('basic');
 
       // Assert
       expect(entity).toBeInstanceOf(Entity);
@@ -118,10 +111,8 @@ describe('EntityManager - Lifecycle', () => {
       testBed = new TestBed({ idGenerator: mockIdGenerator }); // Re-init testBed with the mock
       const { entityManager } = testBed; // FIX: Get reference to entityManager
       const { PRIMARY } = TestData.InstanceIDs;
-      testBed.setupDefinitions(TestData.Definitions.basic);
 
-      // Act
-      const entity = entityManager.createEntityInstance(BASIC, {
+      const entity = testBed.createEntity('basic', {
         instanceId: PRIMARY,
       });
 
@@ -134,10 +125,8 @@ describe('EntityManager - Lifecycle', () => {
     it('should dispatch an ENTITY_CREATED event upon successful creation', () => {
       // Arrange
       const { entityManager, mocks } = testBed;
-      testBed.setupDefinitions(TestData.Definitions.basic);
 
-      // Act
-      const entity = entityManager.createEntityInstance(BASIC);
+      const entity = testBed.createEntity('basic');
 
       // Assert
       expect(mocks.eventDispatcher.dispatch).toHaveBeenCalledTimes(1);
@@ -166,8 +155,7 @@ describe('EntityManager - Lifecycle', () => {
       // Arrange
       const { entityManager } = testBed;
       const { PRIMARY } = TestData.InstanceIDs;
-      testBed.setupDefinitions(TestData.Definitions.basic);
-      entityManager.createEntityInstance(BASIC, { instanceId: PRIMARY }); // Create the first one
+      testBed.createEntity('basic', { instanceId: PRIMARY }); // Create the first one
 
       // Act & Assert
       expect(() => {
@@ -192,11 +180,10 @@ describe('EntityManager - Lifecycle', () => {
     it('should fetch and cache the EntityDefinition on first use', () => {
       // Arrange
       const { entityManager, mocks } = testBed;
-      testBed.setupDefinitions(TestData.Definitions.basic);
 
       // Act
-      entityManager.createEntityInstance(BASIC, { instanceId: 'e1' });
-      entityManager.createEntityInstance(BASIC, { instanceId: 'e2' });
+      testBed.createEntity('basic', { instanceId: 'e1' });
+      testBed.createEntity('basic', { instanceId: 'e2' });
 
       // Assert
       expect(mocks.registry.getEntityDefinition).toHaveBeenCalledTimes(1);
@@ -206,14 +193,13 @@ describe('EntityManager - Lifecycle', () => {
     it('should correctly apply component overrides', () => {
       // Arrange
       const { entityManager } = testBed;
-      testBed.setupDefinitions(TestData.Definitions.basic);
       const overrides = {
         'core:description': { text: 'Overridden Description' },
         'new:component': { data: 'xyz' },
       };
 
       // Act
-      const entity = entityManager.createEntityInstance(BASIC, {
+      const entity = testBed.createEntity('basic', {
         componentOverrides: overrides,
       });
 
@@ -229,7 +215,6 @@ describe('EntityManager - Lifecycle', () => {
       // Arrange
       const { entityManager, mocks } = testBed;
       const { PRIMARY } = TestData.InstanceIDs;
-      testBed.setupDefinitions(TestData.Definitions.basic);
 
       const validationErrors = [{ message: 'Invalid data' }];
       mocks.validator.validate.mockReturnValue({
@@ -241,7 +226,7 @@ describe('EntityManager - Lifecycle', () => {
       // Act & Assert
       const expectedDetails = JSON.stringify(validationErrors, null, 2);
       expect(() => {
-        entityManager.createEntityInstance(BASIC, {
+        testBed.createEntity('basic', {
           instanceId: PRIMARY,
           componentOverrides: overrides,
         });
@@ -332,8 +317,7 @@ describe('EntityManager - Lifecycle', () => {
       const { entityManager } = testBed;
       const { BASIC } = TestData.DefinitionIDs;
       const { PRIMARY } = TestData.InstanceIDs;
-      testBed.setupDefinitions(TestData.Definitions.basic);
-      entityManager.createEntityInstance(BASIC, { instanceId: PRIMARY }); // Pre-existing entity
+      testBed.createEntity('basic', { instanceId: PRIMARY }); // Pre-existing entity
 
       const serializedEntity = {
         instanceId: PRIMARY,
@@ -372,22 +356,22 @@ describe('EntityManager - Lifecycle', () => {
     });
 
     describe('with invalid input data', () => {
-      it.each([
-        ['null', null],
-        ['a string', 'iamnotanobject'],
-        ['a number', 123],
-      ])('should throw an error if serializedEntity is %s', (desc, value) => {
+      it.each(
+        TestData.InvalidValues.serializedEntityShapes.filter(
+          (v) => v === null || typeof v !== 'object'
+        )
+      )('should throw an error if serializedEntity is %p', (value) => {
         const { entityManager } = testBed;
         expect(() => entityManager.reconstructEntity(value)).toThrow(
           'EntityManager.reconstructEntity: serializedEntity data is missing or invalid.'
         );
       });
 
-      it.each([
-        ['null', null],
-        ['undefined', undefined],
-        ['an empty string', ''],
-      ])('should throw an error if instanceId is %s', (desc, invalidId) => {
+      it.each(
+        TestData.InvalidValues.serializedInstanceIds.filter(
+          (v) => typeof v !== 'number'
+        )
+      )('should throw an error if instanceId is %p', (invalidId) => {
         const { entityManager } = testBed;
         const serializedEntity = {
           instanceId: invalidId,
@@ -405,10 +389,7 @@ describe('EntityManager - Lifecycle', () => {
     it('should remove an existing entity and return true', () => {
       // Arrange
       const { entityManager } = testBed;
-      testBed.setupDefinitions(TestData.Definitions.basic);
-      const entity = entityManager.createEntityInstance(
-        TestData.DefinitionIDs.BASIC
-      );
+      const entity = testBed.createEntity('basic');
       expect(entityManager.getEntityInstance(entity.id)).toBe(entity);
 
       // Act
@@ -422,11 +403,8 @@ describe('EntityManager - Lifecycle', () => {
     it('should dispatch an ENTITY_REMOVED event upon successful removal', () => {
       // Arrange
       const { entityManager, mocks } = testBed;
-      testBed.setupDefinitions(TestData.Definitions.basic);
-      const entity = entityManager.createEntityInstance(
-        TestData.DefinitionIDs.BASIC
-      );
-      mocks.eventDispatcher.dispatch.mockClear(); // Clear creation event
+      const entity = testBed.createEntity('basic');
+      testBed.resetDispatchMock();
 
       // Act
       entityManager.removeEntityInstance(entity.id);
@@ -452,18 +430,16 @@ describe('EntityManager - Lifecycle', () => {
       );
     });
 
-    it('should return false for invalid instanceId formats', () => {
-      // Arrange
-      const { entityManager, mocks } = testBed;
-
-      // Act & Assert
-      expect(entityManager.removeEntityInstance(null)).toBe(false);
-      expect(entityManager.removeEntityInstance('')).toBe(false);
-      expect(entityManager.removeEntityInstance(123)).toBe(false);
-      expect(mocks.logger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('Attempted to remove entity with invalid ID')
-      );
-    });
+    it.each(TestData.InvalidValues.invalidIds)(
+      'should return false for invalid instanceId %p',
+      (invalidId) => {
+        const { entityManager, mocks } = testBed;
+        expect(entityManager.removeEntityInstance(invalidId)).toBe(false);
+        expect(mocks.logger.warn).toHaveBeenCalledWith(
+          expect.stringContaining('Attempted to remove entity with invalid ID')
+        );
+      }
+    );
 
     it('should return false and log an error if MapManager fails internally', () => {
       // This is a tricky test for a defensive code path.
@@ -475,10 +451,8 @@ describe('EntityManager - Lifecycle', () => {
       // Arrange
       const localTestBed = new TestBed(); // Uses the spied-on MapManager
       const { entityManager, mocks } = localTestBed;
-      const { BASIC } = TestData.DefinitionIDs;
       const { PRIMARY } = TestData.InstanceIDs;
-      localTestBed.setupDefinitions(TestData.Definitions.basic);
-      entityManager.createEntityInstance(BASIC, { instanceId: PRIMARY });
+      localTestBed.createEntity('basic', { instanceId: PRIMARY });
 
       // Act
       const result = entityManager.removeEntityInstance(PRIMARY);
@@ -501,13 +475,8 @@ describe('EntityManager - Lifecycle', () => {
     it('should remove all active entities', () => {
       // Arrange
       const { entityManager } = testBed;
-      testBed.setupDefinitions(TestData.Definitions.basic);
-      const entity1 = entityManager.createEntityInstance(
-        TestData.DefinitionIDs.BASIC
-      );
-      const entity2 = entityManager.createEntityInstance(
-        TestData.DefinitionIDs.BASIC
-      );
+      const entity1 = testBed.createEntity('basic');
+      const entity2 = testBed.createEntity('basic');
 
       expect(entityManager.activeEntities.size).toBe(2);
 
@@ -523,19 +492,17 @@ describe('EntityManager - Lifecycle', () => {
     it('should clear the internal definition cache', () => {
       // Arrange
       const { entityManager, mocks } = testBed;
-      const { BASIC } = TestData.DefinitionIDs;
-      testBed.setupDefinitions(TestData.Definitions.basic);
 
       // Act
-      entityManager.createEntityInstance(BASIC, { instanceId: 'e1' });
+      testBed.createEntity('basic', { instanceId: 'e1' });
       // This should hit the cache
-      entityManager.createEntityInstance(BASIC, { instanceId: 'e2' });
+      testBed.createEntity('basic', { instanceId: 'e2' });
       expect(mocks.registry.getEntityDefinition).toHaveBeenCalledTimes(1);
 
       entityManager.clearAll();
 
       // After clearing, it should fetch from the registry again
-      entityManager.createEntityInstance(BASIC, { instanceId: 'e3' });
+      testBed.createEntity('basic', { instanceId: 'e3' });
       expect(mocks.registry.getEntityDefinition).toHaveBeenCalledTimes(2);
     });
 
