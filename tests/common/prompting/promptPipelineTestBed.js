@@ -13,7 +13,6 @@ import {
   createMockPromptBuilder,
   createMockEntity,
 } from '../mockFactories.js';
-import { clearMockFunctions } from '../jestHelpers.js';
 import BaseTestBed from '../baseTestBed.js';
 
 /**
@@ -39,14 +38,14 @@ export class AIPromptPipelineTestBed extends BaseTestBed {
   defaultActions;
 
   constructor() {
-    super();
-    this.mocks = {
+    const mocks = {
       llmAdapter: createMockLLMAdapter(),
       gameStateProvider: createMockAIGameStateProvider(),
       promptContentProvider: createMockAIPromptContentProvider(),
       promptBuilder: createMockPromptBuilder(),
       logger: createMockLogger(),
     };
+    super(mocks);
 
     // Preserve direct properties for backward compatibility
     this.llmAdapter = this.mocks.llmAdapter;
@@ -112,8 +111,8 @@ export class AIPromptPipelineTestBed extends BaseTestBed {
   /**
    * Clears all jest mocks used by this test bed.
    */
-  cleanup() {
-    this.resetMocks();
+  async cleanup() {
+    await super.cleanup();
   }
 
   /**

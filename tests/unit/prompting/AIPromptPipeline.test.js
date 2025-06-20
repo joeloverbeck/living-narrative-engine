@@ -14,8 +14,8 @@ describe('AIPromptPipeline', () => {
     testBed.setupMockSuccess();
   });
 
-  afterEach(() => {
-    testBed.cleanup();
+  afterEach(async () => {
+    await testBed.cleanup();
   });
 
   describe('constructor validation', () => {

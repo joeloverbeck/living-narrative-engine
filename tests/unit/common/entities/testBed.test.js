@@ -158,22 +158,22 @@ describe('EntityManager Test Helpers: TestBed & TestData', () => {
     });
 
     describe('cleanup()', () => {
-      it('should call clearAll() on its entityManager instance', () => {
+      it('should call clearAll() on its entityManager instance', async () => {
         // FIX: The entityManager instance from the mocked module already has mock methods.
         // We directly assert on that mock method.
         const clearAllMethod = testBed.entityManager.clearAll;
 
-        testBed.cleanup();
+        await testBed.cleanup();
 
         expect(clearAllMethod).toHaveBeenCalledTimes(1);
       });
 
-      it('should clear all mocks via jest.clearAllMocks()', () => {
+      it('should clear all mocks via jest.clearAllMocks()', async () => {
         const { logger } = testBed.mocks;
         logger.info('test call');
         expect(logger.info).toHaveBeenCalledTimes(1);
 
-        testBed.cleanup();
+        await testBed.cleanup();
 
         // jest.clearAllMocks() resets the counter.
         expect(logger.info).toHaveBeenCalledTimes(0);
