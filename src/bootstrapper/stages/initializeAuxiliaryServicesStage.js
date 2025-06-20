@@ -12,10 +12,10 @@ import {
 } from './auxiliary/index.js';
 
 /**
- * @typedef {import('../dependencyInjection/appContainer.js').default} AppContainer
- * @typedef {import('../engine/gameEngine.js').default} GameEngineInstance
- * @typedef {import('../interfaces/coreServices.js').ILogger} ILogger
- * @typedef {import('../dependencyInjection/tokens.js').tokens} TokensObject
+ * @typedef {import('../../dependencyInjection/appContainer.js').default} AppContainer
+ * @typedef {import('../../engine/gameEngine.js').default} GameEngineInstance
+ * @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger
+ * @typedef {import('../../dependencyInjection/tokens.js').tokens} TokensObject
  */
 
 /**
@@ -26,7 +26,7 @@ import {
  * @param {GameEngineInstance} gameEngine
  * @param {ILogger} logger
  * @param {TokensObject} tokens
- * @returns {Promise<import('../types/stageResult.js').StageResult>} Result object indicating if all services initialized.
+ * @returns {Promise<import('../../types/stageResult.js').StageResult>} Result object indicating if all services initialized.
  */
 export async function initializeAuxiliaryServicesStage(
   container,

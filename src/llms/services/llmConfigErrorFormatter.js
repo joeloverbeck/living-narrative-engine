@@ -4,7 +4,15 @@
  */
 
 /**
- * @typedef {import('./llmConfigLoader.js').StandardizedValidationError} StandardizedValidationError
+ * @typedef {object} StandardizedValidationError
+ * @description Defines a common structure for validation error objects/messages.
+ * @property {string} errorType - The type of error (e.g., "SCHEMA_VALIDATION", "SEMANTIC_VALIDATION_MISSING_ASSEMBLY_KEY").
+ * @property {string} configId - The configId of the configuration object where the error occurred. Can be "N/A (root property)" or the actual configId.
+ * @property {string} path - A JSON path-like string indicating the location of the error (e.g., "configs.myConfig.promptElements[0].prefix", "defaultConfigId").
+ * @property {string} message - A human-readable description of the error.
+ * @property {any} [expected] - What was expected (optional, typically for schema errors, derived from params).
+ * @property {any} [actual] - What was found (optional, typically for schema errors, e.g. type errors).
+ * @property {object} [details] - Original error details from Ajv (ErrorObject) or the semantic validator (OriginalSemanticValidationError).
  */
 
 /**

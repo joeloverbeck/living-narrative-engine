@@ -1,4 +1,4 @@
-import { deepFreeze } from '../utils'; // Assuming a utility for deep freezing
+import { deepFreeze } from '../utils/objectUtils.js'; // Import directly to avoid circular dependency
 
 /**
  * Represents the immutable template/definition of an entity.

@@ -7,7 +7,7 @@
 
 /** @typedef {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 
-import { SYSTEM_ERROR_OCCURRED_ID } from '../constants/eventIds.js';
+import { SYSTEM_ERROR_OCCURRED_ID } from '../constants/systemEventIds.js';
 
 /**
  * Error thrown when `safeDispatchError` receives an invalid dispatcher.

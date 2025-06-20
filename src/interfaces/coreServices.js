@@ -1,10 +1,6 @@
 // src/interfaces/coreServices.js
 
 /**
- * @typedef {import('../interfaces/coreServices.js').IDataRegistry} IDataRegistry
- */
-
-/**
  * @file Defines JSDoc typedefs for core service interfaces,
  * promoting dependency injection and loose coupling. These types define
  * the expected shape of objects implementing these responsibilities.
