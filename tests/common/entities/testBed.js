@@ -174,9 +174,14 @@ export class TestBed {
    * This should be called in an `afterEach` block to ensure test isolation.
    */
   cleanup() {
-    // FIX: Clear mocks first to make the call to clearAll() testable.
-    // This doesn't change the external behavior, which is to reset the test environment.
+    // Clear call history on all mocks
     jest.clearAllMocks();
+
+    // Reset specific mock implementations that tests commonly override
+    this.mocks.registry.getEntityDefinition.mockReset();
+    this.mocks.validator.validate.mockReset();
+    // Restore default behavior for validate after reset
+    this.mocks.validator.validate.mockReturnValue({ isValid: true });
 
     if (
       this.entityManager &&
