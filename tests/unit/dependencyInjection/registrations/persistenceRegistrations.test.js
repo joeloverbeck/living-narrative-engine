@@ -50,9 +50,17 @@ describe('registerPersistence', () => {
 
     // Register required pre-existing services
     container.register(tokens.ILogger, () => mockLogger);
-    container.register(tokens.IEntityManager, { clearAll: jest.fn(), reconstructEntity: jest.fn() }, { lifecycle: 'singleton' });
+    container.register(
+      tokens.IEntityManager,
+      { clearAll: jest.fn(), reconstructEntity: jest.fn() },
+      { lifecycle: 'singleton' }
+    );
     container.register(tokens.IDataRegistry, () => mockDataRegistry);
-    container.register(tokens.ISafeEventDispatcher, { dispatch: jest.fn() }, { lifecycle: 'singleton' });
+    container.register(
+      tokens.ISafeEventDispatcher,
+      { dispatch: jest.fn() },
+      { lifecycle: 'singleton' }
+    );
   });
 
   afterEach(() => {
@@ -176,16 +184,32 @@ describe('registerPersistence', () => {
   it('registers all required services with correct dependencies', () => {
     const container = new AppContainer();
     // Register required dependencies first
-    container.register(tokens.ILogger, {
-      debug: jest.fn(),
-      info: jest.fn(),
-      warn: jest.fn(),
-      error: jest.fn(),
-    }, { lifecycle: 'singleton' });
-    container.register(tokens.IEntityManager, { clearAll: jest.fn(), reconstructEntity: jest.fn() }, { lifecycle: 'singleton' });
-    container.register(tokens.ISafeEventDispatcher, { dispatch: jest.fn() }, { lifecycle: 'singleton' });
-    container.register(tokens.IDataRegistry, { getAll: jest.fn() }, { lifecycle: 'singleton' });
-    
+    container.register(
+      tokens.ILogger,
+      {
+        debug: jest.fn(),
+        info: jest.fn(),
+        warn: jest.fn(),
+        error: jest.fn(),
+      },
+      { lifecycle: 'singleton' }
+    );
+    container.register(
+      tokens.IEntityManager,
+      { clearAll: jest.fn(), reconstructEntity: jest.fn() },
+      { lifecycle: 'singleton' }
+    );
+    container.register(
+      tokens.ISafeEventDispatcher,
+      { dispatch: jest.fn() },
+      { lifecycle: 'singleton' }
+    );
+    container.register(
+      tokens.IDataRegistry,
+      { getAll: jest.fn() },
+      { lifecycle: 'singleton' }
+    );
+
     registerPersistence(container);
 
     // Test that services can be resolved without errors
@@ -193,12 +217,20 @@ describe('registerPersistence', () => {
     expect(() => container.resolve(tokens.ISaveFileRepository)).not.toThrow();
     expect(() => container.resolve(tokens.ISaveLoadService)).not.toThrow();
     expect(() => container.resolve(tokens.PlaytimeTracker)).not.toThrow();
-    expect(() => container.resolve(tokens.ComponentCleaningService)).not.toThrow();
+    expect(() =>
+      container.resolve(tokens.ComponentCleaningService)
+    ).not.toThrow();
     expect(() => container.resolve(tokens.SaveMetadataBuilder)).not.toThrow();
-    expect(() => container.resolve(tokens.ActiveModsManifestBuilder)).not.toThrow();
-    expect(() => container.resolve(tokens.GameStateCaptureService)).not.toThrow();
+    expect(() =>
+      container.resolve(tokens.ActiveModsManifestBuilder)
+    ).not.toThrow();
+    expect(() =>
+      container.resolve(tokens.GameStateCaptureService)
+    ).not.toThrow();
     expect(() => container.resolve(tokens.ManualSaveCoordinator)).not.toThrow();
-    expect(() => container.resolve(tokens.GamePersistenceService)).not.toThrow();
+    expect(() =>
+      container.resolve(tokens.GamePersistenceService)
+    ).not.toThrow();
   });
 
   it('logs registration messages', () => {
@@ -209,13 +241,21 @@ describe('registerPersistence', () => {
       warn: jest.fn(),
       error: jest.fn(),
     };
-    
+
     // Register required dependencies first
     container.register(tokens.ILogger, mockLogger, { lifecycle: 'singleton' });
-    container.register(tokens.IEntityManager, { clearAll: jest.fn(), reconstructEntity: jest.fn() }, { lifecycle: 'singleton' });
-    container.register(tokens.ISafeEventDispatcher, { dispatch: jest.fn() }, { lifecycle: 'singleton' });
+    container.register(
+      tokens.IEntityManager,
+      { clearAll: jest.fn(), reconstructEntity: jest.fn() },
+      { lifecycle: 'singleton' }
+    );
+    container.register(
+      tokens.ISafeEventDispatcher,
+      { dispatch: jest.fn() },
+      { lifecycle: 'singleton' }
+    );
     container.register(tokens.IDataRegistry, {}, { lifecycle: 'singleton' });
-    
+
     const logSpy = jest.spyOn(mockLogger, 'debug');
 
     registerPersistence(container);

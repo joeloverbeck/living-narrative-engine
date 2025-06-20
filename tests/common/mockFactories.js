@@ -53,22 +53,42 @@ export const createStatefulMockDataRegistry = () => {
     getAllSystemRules: jest.fn(() => []),
     getManifest: jest.fn(),
     setManifest: jest.fn(),
-    getEntityDefinition: jest.fn((id) => internalStore['entity_definitions']?.[id]),
+    getEntityDefinition: jest.fn(
+      (id) => internalStore['entity_definitions']?.[id]
+    ),
     getItemDefinition: jest.fn((id) => internalStore['items']?.[id]),
     getLocationDefinition: jest.fn((id) => internalStore['locations']?.[id]),
-    getConnectionDefinition: jest.fn((id) => internalStore['connections']?.[id]),
+    getConnectionDefinition: jest.fn(
+      (id) => internalStore['connections']?.[id]
+    ),
     getBlockerDefinition: jest.fn((id) => internalStore['blockers']?.[id]),
     getActionDefinition: jest.fn((id) => internalStore['actions']?.[id]),
     getEventDefinition: jest.fn((id) => internalStore['events']?.[id]),
     getComponentDefinition: jest.fn((id) => internalStore['components']?.[id]),
-    getAllEntityDefinitions: jest.fn(() => Object.values(internalStore['entity_definitions'] || {})),
-    getAllItemDefinitions: jest.fn(() => Object.values(internalStore['items'] || {})),
-    getAllLocationDefinitions: jest.fn(() => Object.values(internalStore['locations'] || {})),
-    getAllConnectionDefinitions: jest.fn(() => Object.values(internalStore['connections'] || {})),
-    getAllBlockerDefinitions: jest.fn(() => Object.values(internalStore['blockers'] || {})),
-    getAllActionDefinitions: jest.fn(() => Object.values(internalStore['actions'] || {})),
-    getAllEventDefinitions: jest.fn(() => Object.values(internalStore['events'] || {})),
-    getAllComponentDefinitions: jest.fn(() => Object.values(internalStore['components'] || {})),
+    getAllEntityDefinitions: jest.fn(() =>
+      Object.values(internalStore['entity_definitions'] || {})
+    ),
+    getAllItemDefinitions: jest.fn(() =>
+      Object.values(internalStore['items'] || {})
+    ),
+    getAllLocationDefinitions: jest.fn(() =>
+      Object.values(internalStore['locations'] || {})
+    ),
+    getAllConnectionDefinitions: jest.fn(() =>
+      Object.values(internalStore['connections'] || {})
+    ),
+    getAllBlockerDefinitions: jest.fn(() =>
+      Object.values(internalStore['blockers'] || {})
+    ),
+    getAllActionDefinitions: jest.fn(() =>
+      Object.values(internalStore['actions'] || {})
+    ),
+    getAllEventDefinitions: jest.fn(() =>
+      Object.values(internalStore['events'] || {})
+    ),
+    getAllComponentDefinitions: jest.fn(() =>
+      Object.values(internalStore['components'] || {})
+    ),
     getStartingPlayerId: jest.fn(() => null),
     getStartingLocationId: jest.fn(() => null),
   };
@@ -84,7 +104,6 @@ export const createMockConfiguration = () => ({
   getModsBasePath: jest.fn(() => 'mods'),
   getModManifestFilename: jest.fn(() => 'mod.manifest.json'),
 });
-
 
 /**
  * Mock for IEntityManager.
@@ -115,7 +134,6 @@ export const createMockTurnManager = () => ({
   stop: jest.fn(),
   nextTurn: jest.fn(),
 });
-
 
 /**
  * Creates a mock ITurnOrderService.
@@ -175,7 +193,6 @@ export const createMockPlaytimeTracker = () => ({
 export const createMockInitializationService = () => ({
   runInitializationSequence: jest.fn(),
 });
-
 
 // --- Prompting Mocks ---
 

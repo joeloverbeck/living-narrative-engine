@@ -105,6 +105,7 @@ class StaticConfiguration {
       'entity-instance.schema.json', // CORRECTED
       'event.schema.json',
       'game.schema.json',
+      'goal.schema.json',
       'json-logic.schema.json',
       'mod.manifest.schema.json',
       'operation.schema.json',
@@ -136,6 +137,7 @@ class StaticConfiguration {
       components: 'http://example.com/schemas/component.schema.json',
       conditions: 'http://example.com/schemas/condition.schema.json',
       events: 'http://example.com/schemas/event.schema.json',
+      goals: 'http://example.com/schemas/goal.schema.json',
       macros: 'http://example.com/schemas/macro.schema.json',
       rules: 'http://example.com/schemas/rule.schema.json',
 

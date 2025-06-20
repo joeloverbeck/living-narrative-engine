@@ -60,7 +60,9 @@ describe('ModsLoader Essential Schema Checking (Refactored)', () => {
     );
 
     // Action & Assert
-    await expect(env.modsLoader.loadWorld('testWorld')).resolves.toBeUndefined();
+    await expect(
+      env.modsLoader.loadWorld('testWorld')
+    ).resolves.toBeUndefined();
 
     expect(env.mockLogger.error).not.toHaveBeenCalledWith(
       expect.stringMatching(/Essential schema missing|CRITICAL load failure/i)
