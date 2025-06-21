@@ -74,7 +74,7 @@ describeEngineSuite('GameEngine', (ctx) => {
             { preInit: true },
           ],
         ],
-        async (bed, engine) => {
+        async (bed, engine, expectedMsg) => {
           expectEngineStatus(engine, {
             isInitialized: true,
             isLoopRunning: true,
@@ -83,6 +83,7 @@ describeEngineSuite('GameEngine', (ctx) => {
 
           await engine.stop();
 
+          expect(bed.mocks.logger.warn).toHaveBeenCalledWith(expectedMsg);
           expect(bed.mocks.safeEventDispatcher.dispatch).toHaveBeenCalledWith(
             ENGINE_STOPPED_UI,
             { inputDisabledMessage: 'Game stopped. Engine is inactive.' }
@@ -95,7 +96,7 @@ describeEngineSuite('GameEngine', (ctx) => {
     )(
       'should log warning for %s if it is not available during stop, after a successful start',
       async (_token, fn) => {
-        expect.assertions(5);
+        expect.assertions(6);
         await fn();
       }
     );
