@@ -18,10 +18,7 @@ import {
   COMPONENT_ADDED_ID,
   COMPONENT_REMOVED_ID,
 } from '../../../src/constants/eventIds.js';
-import {
-  expectDispatchSequence,
-  expectSingleDispatch,
-} from '../../common/engine/dispatchTestUtils.js';
+import { expectSingleDispatch } from '../../common/engine/dispatchTestUtils.js';
 
 describeEntityManagerSuite(
   'EntityManager - Component Manipulation',
@@ -137,7 +134,6 @@ describeEntityManagerSuite(
           { resetDispatch: true }
         );
         const originalNameData = entity.getComponentData(NAME_COMPONENT_ID);
-        getBed().resetDispatchMock();
 
         // Act
         entityManager.addComponent(
