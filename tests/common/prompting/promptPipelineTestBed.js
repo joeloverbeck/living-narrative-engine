@@ -216,6 +216,23 @@ export class AIPromptPipelineTestBed extends FactoryTestBed {
     );
     expect(this.promptBuilder.build).toHaveBeenCalledWith(_llmId, _promptData);
   }
+
+  /**
+   * Applies a mutation to the test bed's mocks and expects generation to fail.
+   *
+   * @description Applies a mutation to the mocks and verifies that
+   *   {@link AIPromptPipelineTestBed#generateDefault} rejects with the given
+   *   error.
+   * @param {(bed: this) => void} mutateFn - Function that mutates the test
+   *   bed's mocks before generation.
+   * @param {string|RegExp|Error} expectedError - Error expected from the
+   *   generation call.
+   * @returns {Promise<void>} Resolves when the assertion completes.
+   */
+  async expectGenerationFailure(mutateFn, expectedError) {
+    mutateFn(this);
+    await expect(this.generateDefault()).rejects.toThrow(expectedError);
+  }
 }
 
 /**
