@@ -2,123 +2,15 @@
  * @file Helper for creating system logic test environments
  * @description Provides a standardized way to set up test environments for rule integration tests
  */
+/* eslint-env jest */
+/* global jest */
 
 import EventBus from '../../../src/events/eventBus.js';
 import OperationRegistry from '../../../src/logic/operationRegistry.js';
 import OperationInterpreter from '../../../src/logic/operationInterpreter.js';
 import JsonLogicEvaluationService from '../../../src/logic/jsonLogicEvaluationService.js';
 import SystemLogicInterpreter from '../../../src/logic/systemLogicInterpreter.js';
-
-/**
- * Minimal in-memory entity manager used for integration tests.
- *
- * @class SimpleEntityManager
- * @description Provides just enough of IEntityManager for the tested handlers.
- */
-class SimpleEntityManager {
-  /**
-   * Create the manager with the provided entities.
-   *
-   * @param {Array<{id:string,components:object}>} entities - initial entities
-   */
-  constructor(entities) {
-    console.log(
-      'DEBUG: [SimpleEntityManager constructor] received entities:',
-      JSON.stringify(entities, null, 2)
-    );
-    this.entities = new Map();
-    for (const e of entities) {
-      console.log(
-        'DEBUG: Processing entity:',
-        e.id,
-        'with components:',
-        JSON.stringify(e.components, null, 2)
-      );
-      this.entities.set(e.id, {
-        id: e.id,
-        components: JSON.parse(JSON.stringify(e.components)),
-        getComponentData(type) {
-          return this.components[type] ?? null;
-        },
-        hasComponent(type) {
-          return Object.prototype.hasOwnProperty.call(this.components, type);
-        },
-      });
-      console.log(
-        'DEBUG: Stored entity:',
-        e.id,
-        'with components:',
-        JSON.stringify(this.entities.get(e.id).components, null, 2)
-      );
-    }
-  }
-
-  /**
-   * Return an entity instance.
-   *
-   * @param {string} id - entity id
-   * @returns {object|undefined} entity object
-   */
-  getEntityInstance(id) {
-    return this.entities.get(id);
-  }
-
-  /**
-   * Retrieve component data.
-   *
-   * @param {string} id - entity id
-   * @param {string} type - component type
-   * @returns {any} component data or null
-   */
-  getComponentData(id, type) {
-    return this.entities.get(id)?.components[type] ?? null;
-  }
-
-  /**
-   * Check if an entity has a component.
-   *
-   * @param {string} id - entity id
-   * @param {string} type - component type
-   * @returns {boolean} true if present
-   */
-  hasComponent(id, type) {
-    return Object.prototype.hasOwnProperty.call(
-      this.entities.get(id)?.components || {},
-      type
-    );
-  }
-
-  /**
-   * Add or replace a component on an entity.
-   *
-   * @param {string} id - entity id
-   * @param {string} type - component type
-   * @param {object} data - component data
-   */
-  addComponent(id, type, data) {
-    const ent = this.entities.get(id);
-    if (ent) {
-      ent.components[type] = JSON.parse(JSON.stringify(data));
-      return true;
-    }
-    return false;
-  }
-
-  /**
-   * Remove a component from an entity.
-   *
-   * @param {string} id - entity id
-   * @param {string} type - component type
-   */
-  removeComponent(id, type) {
-    const ent = this.entities.get(id);
-    if (ent) {
-      delete ent.components[type];
-      return true;
-    }
-    return false;
-  }
-}
+import SimpleEntityManager from '../entities/simpleEntityManager.js';
 
 /**
  * Creates a complete test environment for system logic rule testing.
