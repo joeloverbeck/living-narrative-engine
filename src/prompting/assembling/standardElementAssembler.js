@@ -1,5 +1,5 @@
 // src/services/promptElementAssemblers/standardElementAssembler.js
-import { IPromptElementAssembler } from '../../interfaces/IPromptElementAssembler.js';
+import { IPromptElementAssembler } from '../../interfaces/iPromptElementAssembler.js';
 import { snakeToCamel } from '../../utils/textUtils.js';
 import { resolveWrapper } from '../../utils/wrapperUtils.js';
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';

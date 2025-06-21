@@ -1,5 +1,5 @@
 import { cloneDeep } from 'lodash';
-import { IDefaultComponentPolicy } from '../ports/IDefaultComponentPolicy.js';
+import { IDefaultComponentPolicy } from '../ports/iDefaultComponentPolicy.js';
 import {
   ACTOR_COMPONENT_ID,
   SHORT_TERM_MEMORY_COMPONENT_ID,

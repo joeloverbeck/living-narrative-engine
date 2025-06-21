@@ -63,11 +63,11 @@ const mockSchemaValidatorInstance = {
 };
 
 const mockConfigurationInstance = {
-  getContentTypeSchemaId: jest.fn((typeName) => {
-    if (typeName === 'llm-configs') {
+  getContentTypeSchemaId: jest.fn((registryKey) => {
+    if (registryKey === 'llm-configs') {
       return 'http://example.com/schemas/llm-configs.schema.json';
     }
-    return `http://example.com/schemas/${typeName}.schema.json`;
+    return `http://example.com/schemas/${registryKey}.schema.json`;
   }),
 };
 

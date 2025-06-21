@@ -1,7 +1,7 @@
 // src/domUI/index.js
 // --- FILE START ---
 // Export interfaces and base classes
-export * from '../interfaces/IDocumentContext.js'; // Assuming this file exists and exports IDocumentContext
+export * from '../interfaces/iDocumentContext.js';
 export { RendererBase } from './rendererBase.js'; // Ensure RendererBase export is correct
 export { BoundDomRendererBase } from './boundDomRendererBase.js'; // Added BoundDomRendererBase
 export * from './chatAlertRenderer.js';

@@ -12,7 +12,7 @@
 /** @typedef {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 
 import { ActionTargetContext } from '../models/actionTargetContext.js';
-import { IActionDiscoveryService } from '../interfaces/IActionDiscoveryService.js';
+import { IActionDiscoveryService } from '../interfaces/iActionDiscoveryService.js';
 import {
   getAvailableExits,
   getLocationIdForLog,
@@ -93,7 +93,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
    * @param {ActionTargetContext} targetCtx - The context of the action target.
    * @param {object} formatterOptions - Options for formatting the command string.
    * @param {object} params - Extra params to include in the result.
-   * @returns {import('../interfaces/IActionDiscoveryService.js').DiscoveredActionInfo|null} The info object or null.
+   * @returns {import('../interfaces/iActionDiscoveryService.js').DiscoveredActionInfo|null} The info object or null.
    */
 
   #buildDiscoveredAction(
@@ -136,7 +136,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
    * @param {import('../data/gameDataRepository.js').ActionDefinition} actionDef
    * @param {Entity} actorEntity
    * @param {object} formatterOptions
-   * @returns {import('../interfaces/IActionDiscoveryService.js').DiscoveredActionInfo[]}
+   * @returns {import('../interfaces/iActionDiscoveryService.js').DiscoveredActionInfo[]}
    */
   #discoverSelfOrNone(actionDef, actorEntity, formatterOptions) {
     const targetCtx =
@@ -162,7 +162,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
    * @param {Entity|string|null} currentLocation
    * @param {string} locIdForLog
    * @param {object} formatterOptions
-   * @returns {import('../interfaces/IActionDiscoveryService.js').DiscoveredActionInfo[]}
+   * @returns {import('../interfaces/iActionDiscoveryService.js').DiscoveredActionInfo[]}
    */
   #discoverDirectionalActions(
     actionDef,
@@ -188,7 +188,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
       `Found ${exits.length} available exits for location: ${locIdForLog} via getAvailableExits.`
     );
 
-    /** @type {import('../interfaces/IActionDiscoveryService.js').DiscoveredActionInfo[]} */
+    /** @type {import('../interfaces/iActionDiscoveryService.js').DiscoveredActionInfo[]} */
     const discoveredActions = [];
 
     for (const exit of exits) {
@@ -218,7 +218,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
    * @param {string} domain
    * @param {ActionContext} context
    * @param {object} formatterOptions
-   * @returns {import('../interfaces/IActionDiscoveryService.js').DiscoveredActionInfo[]}
+   * @returns {import('../interfaces/iActionDiscoveryService.js').DiscoveredActionInfo[]}
    */
   #discoverScopedEntityActions(
     actionDef,
@@ -229,7 +229,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
   ) {
     const targetIds =
       this.#getEntityIdsForScopesFn([domain], context) ?? new Set();
-    /** @type {import('../interfaces/IActionDiscoveryService.js').DiscoveredActionInfo[]} */
+    /** @type {import('../interfaces/iActionDiscoveryService.js').DiscoveredActionInfo[]} */
     const discoveredActions = [];
 
     for (const targetId of targetIds) {
@@ -254,14 +254,14 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
   /**
    * @param {Entity} actorEntity
    * @param {ActionContext} context
-   * @returns {Promise<import('../interfaces/IActionDiscoveryService.js').DiscoveredActionInfo[]>}
+   * @returns {Promise<import('../interfaces/iActionDiscoveryService.js').DiscoveredActionInfo[]>}
    */
   async getValidActions(actorEntity, context) {
     this.#logger.debug(
       `Starting action discovery for actor: ${actorEntity.id}`
     );
     const allDefs = this.#gameDataRepository.getAllActionDefinitions();
-    /** @type {import('../interfaces/IActionDiscoveryService.js').DiscoveredActionInfo[]} */
+    /** @type {import('../interfaces/iActionDiscoveryService.js').DiscoveredActionInfo[]} */
     const validActions = [];
 
     const formatterOptions = {

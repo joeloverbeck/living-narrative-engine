@@ -14,12 +14,12 @@
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../llms/llmConfigService.js').LLMConfigService} LLMConfigService */
 /** @typedef {import('../utils/placeholderResolverUtils.js').PlaceholderResolver} PlaceholderResolver */
-/** @typedef {import('../interfaces/IPromptBuilder.js').IPromptBuilder} IPromptBuilder */
+/** @typedef {import('../interfaces/iPromptBuilder.js').IPromptBuilder} IPromptBuilder */
 /** @typedef {import('../prompting/assemblerRegistry.js').AssemblerRegistry} AssemblerRegistry */
 /** @typedef {import('../prompting/elementConditionEvaluator.js')} ConditionEvaluatorModule */
 /** @typedef {import('../types/promptData.js').PromptData} PromptData */
 
-import { IPromptBuilder } from '../interfaces/IPromptBuilder.js';
+import { IPromptBuilder } from '../interfaces/iPromptBuilder.js';
 import { validateDependency } from '../utils/validationUtils.js';
 import { PromptAssembler } from './promptAssembler.js';
 

@@ -1,7 +1,7 @@
 // src/llms/strategies/openRouterJsonSchemaStrategy.js
 // --- FILE START ---
 import { BaseOpenRouterStrategy } from './base/baseOpenRouterStrategy.js';
-import { LLMStrategyError } from '../errors/LLMStrategyError.js';
+import { LLMStrategyError } from '../errors/llmStrategyError.js';
 import { OPENROUTER_GAME_AI_ACTION_SPEECH_SCHEMA } from '../constants/llmConstants.js'; // Still potentially used for tool_calls fallback logic's expected name
 
 /**

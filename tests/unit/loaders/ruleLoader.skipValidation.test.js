@@ -24,12 +24,12 @@ import RuleLoader from '../../../src/loaders/ruleLoader.js'; // Adjust path as n
  * @param overrides
  */
 const createMockConfiguration = (overrides = {}) => ({
-  getContentBasePath: jest.fn((typeName) => `./data/mods/test-mod/${typeName}`),
-  getContentTypeSchemaId: jest.fn((typeName) => {
-    if (typeName === 'rules') {
+  getContentBasePath: jest.fn((registryKey) => `./data/mods/test-mod/${registryKey}`),
+  getContentTypeSchemaId: jest.fn((registryKey) => {
+    if (registryKey === 'rules') {
       return 'http://example.com/schemas/rule.schema.json';
     }
-    return `http://example.com/schemas/${typeName}.schema.json`;
+    return `http://example.com/schemas/${registryKey}.schema.json`;
   }),
   getSchemaBasePath: jest.fn().mockReturnValue('schemas'),
   getSchemaFiles: jest.fn().mockReturnValue([]),
@@ -52,11 +52,11 @@ const createMockConfiguration = (overrides = {}) => ({
  */
 const createMockPathResolver = (overrides = {}) => ({
   resolveModContentPath: jest.fn(
-    (modId, typeName, filename) =>
-      `/abs/path/to/mods/${modId}/${typeName}/${filename}`
+    (modId, registryKey, filename) =>
+      `/abs/path/to/mods/${modId}/${registryKey}/${filename}`
   ),
   resolveContentPath: jest.fn(
-    (typeName, filename) => `./data/${typeName}/${filename}`
+    (registryKey, filename) => `./data/${registryKey}/${filename}`
   ),
   resolveSchemaPath: jest.fn((filename) => `./data/schemas/${filename}`),
   resolveModManifestPath: jest.fn(
@@ -171,8 +171,8 @@ describe('RuleLoader - Skip Validation Scenario (via loadItemsForMod)', () => {
     mockLogger = createMockLogger();
 
     // Common mock setup, ISchemaLoaded will be overridden in test
-    mockConfig.getContentTypeSchemaId.mockImplementation((typeName) =>
-      typeName === RULE_TYPE_NAME ? ruleSchemaId : undefined
+    mockConfig.getContentTypeSchemaId.mockImplementation((registryKey) =>
+      registryKey === RULE_TYPE_NAME ? ruleSchemaId : undefined
     );
     // Mock specific getter if RuleLoader uses it
     mockConfig.getRuleSchemaId.mockReturnValue(ruleSchemaId);

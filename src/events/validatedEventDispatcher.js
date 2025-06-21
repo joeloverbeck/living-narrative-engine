@@ -15,7 +15,7 @@
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../interfaces/coreServices.js').ValidationResult} ValidationResult */
 
-import { IValidatedEventDispatcher } from '../interfaces/IValidatedEventDispatcher.js';
+import { IValidatedEventDispatcher } from '../interfaces/iValidatedEventDispatcher.js';
 
 /**
  * A service responsible for validating event payloads against their definitions

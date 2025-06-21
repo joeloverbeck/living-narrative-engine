@@ -147,9 +147,9 @@ describe('TurnOrderService', () => {
           true, // Boolean
           {}, // Object
         ];
-        const expectedErrorMsg = 'Invalid entityId provided for removal.';
+        const expectedErrorMsg = 'Invalid entityId format.';
         const expectedLogMsg =
-          'TurnOrderService.removeEntity: Failed - Invalid entityId provided.';
+          'TurnOrderService.removeEntity: Failed - Invalid entityId format.';
 
         invalidIds.forEach((invalidId) => {
           // Arrange

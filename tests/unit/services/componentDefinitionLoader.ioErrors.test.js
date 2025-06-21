@@ -14,12 +14,12 @@ import ComponentLoader from '../../../src/loaders/componentLoader.js'; // Adjust
  * @returns {import('../../../src/interfaces/coreServices.js').IConfiguration} Mocked configuration service.
  */
 const createMockConfiguration = (overrides = {}) => ({
-  getContentBasePath: jest.fn((typeName) => `./data/mods/test-mod/${typeName}`),
-  getContentTypeSchemaId: jest.fn((typeName) => {
-    if (typeName === 'components') {
+  getContentBasePath: jest.fn((registryKey) => `./data/mods/test-mod/${registryKey}`),
+  getContentTypeSchemaId: jest.fn((registryKey) => {
+    if (registryKey === 'components') {
       return 'http://example.com/schemas/component.schema.json';
     }
-    return `http://example.com/schemas/${typeName}.schema.json`;
+    return `http://example.com/schemas/${registryKey}.schema.json`;
   }),
   getSchemaBasePath: jest.fn().mockReturnValue('schemas'),
   getSchemaFiles: jest.fn().mockReturnValue([]),
@@ -43,11 +43,11 @@ const createMockConfiguration = (overrides = {}) => ({
  */
 const createMockPathResolver = (overrides = {}) => ({
   resolveModContentPath: jest.fn(
-    (modId, typeName, filename) =>
-      `./data/mods/${modId}/${typeName}/${filename}`
+    (modId, registryKey, filename) =>
+      `./data/mods/${modId}/${registryKey}/${filename}`
   ),
   resolveContentPath: jest.fn(
-    (typeName, filename) => `./data/${typeName}/${filename}`
+    (registryKey, filename) => `./data/${registryKey}/${filename}`
   ),
   resolveSchemaPath: jest.fn((filename) => `./data/schemas/${filename}`),
   resolveModManifestPath: jest.fn(
@@ -269,8 +269,8 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.7: Path/Fetch Errors)', () => 
     );
 
     // Common setup - Ensure component definition schema ID is known
-    mockConfig.getContentTypeSchemaId.mockImplementation((typeName) => {
-      if (typeName === 'components') {
+    mockConfig.getContentTypeSchemaId.mockImplementation((registryKey) => {
+      if (registryKey === 'components') {
         return componentDefinitionSchemaId; // Use defined constant
       }
       return undefined;
@@ -304,8 +304,8 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.7: Path/Fetch Errors)', () => 
       modId, // modId
       errorManifest, // modManifest
       'components', // contentKey
-      'components', // contentTypeDir
-      'components' // typeName
+      'components', // diskFolder
+      'components' // registryKey
     );
 
     // --- Verify: Promise Resolves & Result Object ---
@@ -326,7 +326,7 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.7: Path/Fetch Errors)', () => 
         modId: modId,
         filename: filename,
         path: 'Path not resolved',
-        typeName: 'components',
+        registryKey: 'components',
         error: pathError.message,
       }),
       pathError
@@ -384,8 +384,8 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.7: Path/Fetch Errors)', () => 
       modId, // modId
       errorManifest, // modManifest
       'components', // contentKey
-      'components', // contentTypeDir
-      'components' // typeName
+      'components', // diskFolder
+      'components' // registryKey
     );
 
     // --- Verify: Promise Resolves & Result Object ---
@@ -405,7 +405,7 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.7: Path/Fetch Errors)', () => 
         modId: modId,
         filename: filename,
         path: filePath,
-        typeName: 'components',
+        registryKey: 'components',
         error: fetchError.message,
       }),
       fetchError

@@ -3,7 +3,7 @@
 import { configureContainer } from './dependencyInjection/containerConfig.js';
 import { tokens } from './dependencyInjection/tokens.js';
 import { displayFatalStartupError } from './utils/errorUtils.js';
-import { UIBootstrapper } from './bootstrapper/UIBootstrapper.js';
+import { UIBootstrapper } from './bootstrapper/uiBootstrapper.js';
 import AppContainer from './dependencyInjection/appContainer.js';
 import GameEngine from './engine/gameEngine.js';
 // Import all necessary stages
@@ -20,7 +20,7 @@ import { initializeAuxiliaryServicesStage } from './bootstrapper/stages/auxiliar
 
 const ACTIVE_WORLD = 'demo';
 
-/** @type {import('./bootstrapper/UIBootstrapper.js').EssentialUIElements | undefined} */
+/** @type {import('./bootstrapper/uiBootstrapper.js').EssentialUIElements | undefined} */
 let uiElements;
 /** @type {import('./dependencyInjection/appContainer.js').default | undefined} */
 let container;

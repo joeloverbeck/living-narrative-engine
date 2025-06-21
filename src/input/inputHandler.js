@@ -3,7 +3,7 @@
 /** @typedef {import('../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher */ // Changed from EventBus
 /** @typedef {import('../types/eventTypes.js').SystemEventPayloads} SystemEventPayloads */ // Assuming event types defined here
 
-import { IInputHandler } from '../interfaces/IInputHandler.js';
+import { IInputHandler } from '../interfaces/iInputHandler.js';
 
 /**
  * Handles user input from a specified HTML input element and global key presses.

@@ -42,9 +42,9 @@ export class WorldLoadSummaryLogger {
     logger.info(`  • Content Loading Summary (Totals):`);
     if (Object.keys(totals).length > 0) {
       const sortedTypes = Object.keys(totals).sort();
-      for (const typeName of sortedTypes) {
-        const counts = totals[typeName];
-        const paddedTypeName = typeName.padEnd(20, ' ');
+      for (const registryKey of sortedTypes) {
+        const counts = totals[registryKey];
+        const paddedTypeName = registryKey.padEnd(20, ' ');
         const details = `C:${counts.count}, O:${counts.overrides}, E:${counts.errors}`;
         logger.info(`     - ${paddedTypeName}: ${details}`);
       }

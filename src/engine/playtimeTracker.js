@@ -1,8 +1,8 @@
 // src/services/playtimeTracker.js
 
-import IPlaytimeTracker from '../interfaces/IPlaytimeTracker.js';
+import IPlaytimeTracker from '../interfaces/iPlaytimeTracker.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../constants/eventIds.js';
-import { ISafeEventDispatcher } from '../interfaces/ISafeEventDispatcher.js';
+import { ISafeEventDispatcher } from '../interfaces/iSafeEventDispatcher.js';
 import { resolveSafeDispatcher } from '../utils/dispatcherUtils.js';
 
 /**

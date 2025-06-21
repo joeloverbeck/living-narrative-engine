@@ -3,7 +3,7 @@
  * through the IActionIndexer port.
  */
 
-import { IActionIndexer } from '../ports/IActionIndexer.js';
+import { IActionIndexer } from '../ports/iActionIndexer.js';
 
 /**
  * @class ActionIndexerAdapter

@@ -25,11 +25,11 @@ const createMockConfiguration = (overrides = {}) => ({
 
 const createMockPathResolver = (overrides = {}) => ({
   resolveModContentPath: jest.fn(
-    (modId, typeName, filename) =>
-      `./data/mods/${modId}/${typeName}/${filename}`
+    (modId, registryKey, filename) =>
+      `./data/mods/${modId}/${registryKey}/${filename}`
   ),
   resolveContentPath: jest.fn(
-    (typeName, filename) => `./data/${typeName}/${filename}`
+    (registryKey, filename) => `./data/${registryKey}/${filename}`
   ),
   resolveSchemaPath: jest.fn((filename) => `./data/schemas/${filename}`),
   resolveModManifestPath: jest.fn(
@@ -155,9 +155,9 @@ beforeEach(() => {
 describe('BaseManifestItemLoader _processFileWrapper', () => {
   const modId = 'test-mod';
   const filename = 'item.json';
-  const contentTypeDir = 'items';
-  const typeName = 'items';
-  const resolvedPath = `./data/mods/${modId}/${contentTypeDir}/${filename}`;
+  const diskFolder = 'items';
+  const registryKey = 'items';
+  const resolvedPath = `./data/mods/${modId}/${diskFolder}/${filename}`;
   const mockData = { id: 'test-item', value: 123 };
   // --- MODIFIED: Mock result should match the expected object structure ---
   const mockProcessResult = {
@@ -198,8 +198,8 @@ describe('BaseManifestItemLoader _processFileWrapper', () => {
     const result = await loader._processFileWrapper(
       modId,
       filename,
-      contentTypeDir,
-      typeName
+      diskFolder,
+      registryKey
     );
 
     // --- Assert ---
@@ -207,7 +207,7 @@ describe('BaseManifestItemLoader _processFileWrapper', () => {
     expect(result).toEqual(mockProcessResult);
     expect(mockResolver.resolveModContentPath).toHaveBeenCalledWith(
       modId,
-      contentTypeDir,
+      diskFolder,
       filename
     );
     expect(mockFetcher.fetch).toHaveBeenCalledWith(resolvedPath);
@@ -224,7 +224,7 @@ describe('BaseManifestItemLoader _processFileWrapper', () => {
       filename,
       resolvedPath,
       mockData,
-      typeName
+      registryKey
     );
     expect(mockLogger.error).not.toHaveBeenCalled(); // No errors logged
 
@@ -254,7 +254,7 @@ describe('BaseManifestItemLoader _processFileWrapper', () => {
 
     // --- Act & Assert ---
     await expect(
-      loader._processFileWrapper(modId, filename, contentTypeDir, typeName)
+      loader._processFileWrapper(modId, filename, diskFolder, registryKey)
     ).rejects.toThrow(resolutionError); // Verify re-throw
 
     // Assert logging
@@ -265,7 +265,7 @@ describe('BaseManifestItemLoader _processFileWrapper', () => {
         modId: modId,
         filename: filename,
         path: 'Path not resolved', // resolvedPath is null here
-        typeName: typeName,
+        registryKey: registryKey,
         error: resolutionError.message,
       },
       resolutionError // Original error object
@@ -286,7 +286,7 @@ describe('BaseManifestItemLoader _processFileWrapper', () => {
 
     // --- Act & Assert ---
     await expect(
-      loader._processFileWrapper(modId, filename, contentTypeDir, typeName)
+      loader._processFileWrapper(modId, filename, diskFolder, registryKey)
     ).rejects.toThrow(fetchError); // Verify re-throw
 
     // Assert logging
@@ -297,7 +297,7 @@ describe('BaseManifestItemLoader _processFileWrapper', () => {
         modId: modId,
         filename: filename,
         path: resolvedPath, // Path was resolved
-        typeName: typeName,
+        registryKey: registryKey,
         error: fetchError.message,
       },
       fetchError // Original error object
@@ -331,7 +331,7 @@ describe('BaseManifestItemLoader _processFileWrapper', () => {
 
     // --- Act & Assert ---
     await expect(
-      loader._processFileWrapper(modId, filename, contentTypeDir, typeName)
+      loader._processFileWrapper(modId, filename, diskFolder, registryKey)
     ).rejects.toThrow(validationError); // Verify re-throw
 
     // Assert logging (Error is logged by _processFileWrapper's catch block)
@@ -342,7 +342,7 @@ describe('BaseManifestItemLoader _processFileWrapper', () => {
         modId: modId,
         filename: filename,
         path: resolvedPath, // Path resolved, data fetched
-        typeName: typeName,
+        registryKey: registryKey,
         error: validationError.message,
       },
       validationError // Original error object
@@ -373,7 +373,7 @@ describe('BaseManifestItemLoader _processFileWrapper', () => {
 
     // --- Act & Assert ---
     await expect(
-      loader._processFileWrapper(modId, filename, contentTypeDir, typeName)
+      loader._processFileWrapper(modId, filename, diskFolder, registryKey)
     ).rejects.toThrow(processError); // Verify re-throw
 
     // Assert logging
@@ -384,7 +384,7 @@ describe('BaseManifestItemLoader _processFileWrapper', () => {
         modId: modId,
         filename: filename,
         path: resolvedPath, // Path was resolved, data fetched, validated
-        typeName: typeName,
+        registryKey: registryKey,
         error: processError.message,
       },
       processError // Original error object

@@ -7,10 +7,10 @@ import { BaseManifestItemLoader } from '../../../src/loaders/baseManifestItemLoa
 // --- Mock Service Factories ---
 const createMockConfiguration = (overrides = {}) => ({
   getModsBasePath: jest.fn().mockReturnValue('./data/mods'),
-  getContentTypeSchemaId: jest.fn((typeName) => {
-    if (typeName === 'entityDefinitions')
+  getContentTypeSchemaId: jest.fn((registryKey) => {
+    if (registryKey === 'entityDefinitions')
       return 'http://example.com/schemas/entity-definition.schema.json';
-    return `http://example.com/schemas/${typeName}.schema.json`;
+    return `http://example.com/schemas/${registryKey}.schema.json`;
   }),
   getSchemaBasePath: jest.fn().mockReturnValue('schemas'),
   getSchemaFiles: jest.fn().mockReturnValue([]),
@@ -18,7 +18,7 @@ const createMockConfiguration = (overrides = {}) => ({
   getBaseDataPath: jest.fn().mockReturnValue('./data'),
   getGameConfigFilename: jest.fn().mockReturnValue('game.json'),
   getModManifestFilename: jest.fn().mockReturnValue('mod.manifest.json'),
-  getContentBasePath: jest.fn((typeName) => `./data/${typeName}`),
+  getContentBasePath: jest.fn((registryKey) => `./data/${registryKey}`),
   getRuleBasePath: jest.fn().mockReturnValue('rules'),
   getRuleSchemaId: jest
     .fn()
@@ -29,13 +29,13 @@ const createMockPathResolver = (overrides = {}) => ({
   resolveModContentPath: jest
     .fn()
     .mockImplementation(
-      (modId, typeName, filename) =>
-        `./data/mods/${modId}/${typeName}/${filename}`
+      (modId, registryKey, filename) =>
+        `./data/mods/${modId}/${registryKey}/${filename}`
     ),
   resolveContentPath: jest
     .fn()
     .mockImplementation(
-      (typeName, filename) => `./data/${typeName}/${filename}`
+      (registryKey, filename) => `./data/${registryKey}/${filename}`
     ),
   resolveSchemaPath: jest
     .fn()
@@ -115,9 +115,9 @@ beforeEach(() => {
   );
   jest.clearAllMocks();
 
-  mockConfig.getContentTypeSchemaId.mockImplementation((typeName) => {
-    if (typeName === 'entityDefinitions') return ENTITY_DEFINITION_SCHEMA_ID;
-    return `http://example.com/schemas/${typeName}.schema.json`;
+  mockConfig.getContentTypeSchemaId.mockImplementation((registryKey) => {
+    if (registryKey === 'entityDefinitions') return ENTITY_DEFINITION_SCHEMA_ID;
+    return `http://example.com/schemas/${registryKey}.schema.json`;
   });
 
   entityLoader._config = mockConfig;

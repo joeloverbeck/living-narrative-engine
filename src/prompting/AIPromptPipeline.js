@@ -1,7 +1,7 @@
 // src/prompting/AIPromptPipeline.js
 // --- FILE START ---
 
-import { IAIPromptPipeline } from './interfaces/IAIPromptPipeline.js';
+import { IAIPromptPipeline } from './interfaces/iAIPromptPipeline.js';
 
 /** @typedef {import('../turns/interfaces/ILLMAdapter.js').ILLMAdapter} ILLMAdapter */
 /** @typedef {import('../turns/interfaces/IAIGameStateProvider.js').IAIGameStateProvider} IAIGameStateProvider */

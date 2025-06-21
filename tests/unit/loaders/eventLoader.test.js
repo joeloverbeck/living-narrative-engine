@@ -14,18 +14,18 @@ import { BaseManifestItemLoader } from '../../../src/loaders/baseManifestItemLoa
 // --- Mock Service Factories ---
 const createMockConfiguration = (overrides = {}) => ({
   getModsBasePath: jest.fn().mockReturnValue('./data/mods'), // <<< CORRECTION: Added missing method
-  getContentTypeSchemaId: jest.fn((typeName) => {
+  getContentTypeSchemaId: jest.fn((registryKey) => {
     if (
       overrides.getContentTypeSchemaId &&
       typeof overrides.getContentTypeSchemaId === 'function'
     ) {
-      const result = overrides.getContentTypeSchemaId(typeName);
+      const result = overrides.getContentTypeSchemaId(registryKey);
       if (result !== undefined) return result;
     }
-    if (typeName === 'events') {
+    if (registryKey === 'events') {
       return 'http://example.com/schemas/event.schema.json';
     }
-    return `http://example.com/schemas/${typeName}.schema.json`;
+    return `http://example.com/schemas/${registryKey}.schema.json`;
   }),
   getSchemaBasePath: jest.fn().mockReturnValue('schemas'),
   getSchemaFiles: jest.fn().mockReturnValue([]),
@@ -33,16 +33,16 @@ const createMockConfiguration = (overrides = {}) => ({
   getBaseDataPath: jest.fn().mockReturnValue('./data'),
   getGameConfigFilename: jest.fn().mockReturnValue('game.json'),
   getModManifestFilename: jest.fn().mockReturnValue('mod.manifest.json'),
-  getContentBasePath: jest.fn((typeName) => `./data/${typeName}`),
+  getContentBasePath: jest.fn((registryKey) => `./data/${registryKey}`),
   ...overrides,
 });
 const createMockPathResolver = (overrides = {}) => ({
   resolveModContentPath: jest.fn(
-    (modId, typeName, filename) =>
-      `./data/mods/${modId}/${typeName}/${filename}`
+    (modId, registryKey, filename) =>
+      `./data/mods/${modId}/${registryKey}/${filename}`
   ),
   resolveContentPath: jest.fn(
-    (typeName, filename) => `./data/${typeName}/${filename}`
+    (registryKey, filename) => `./data/${registryKey}/${filename}`
   ),
   resolveSchemaPath: jest.fn((filename) => `./data/schemas/${filename}`),
   resolveModManifestPath: jest.fn(

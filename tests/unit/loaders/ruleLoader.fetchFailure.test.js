@@ -18,12 +18,12 @@ import RuleLoader from '../../../src/loaders/ruleLoader.js';
 
 // --- Mock Service Factories ---
 const createMockConfiguration = (overrides = {}) => ({
-  getContentBasePath: jest.fn((typeName) => `./data/mods/test-mod/${typeName}`),
-  getContentTypeSchemaId: jest.fn((typeName) => {
-    if (typeName === 'rules') {
+  getContentBasePath: jest.fn((registryKey) => `./data/mods/test-mod/${registryKey}`),
+  getContentTypeSchemaId: jest.fn((registryKey) => {
+    if (registryKey === 'rules') {
       return 'http://example.com/schemas/rule.schema.json';
     }
-    return `http://example.com/schemas/${typeName}.schema.json`;
+    return `http://example.com/schemas/${registryKey}.schema.json`;
   }),
   getSchemaBasePath: jest.fn().mockReturnValue('schemas'),
   getSchemaFiles: jest.fn().mockReturnValue([]),
@@ -41,12 +41,12 @@ const createMockConfiguration = (overrides = {}) => ({
 
 const createMockPathResolver = (overrides = {}) => ({
   resolveModContentPath: jest.fn(
-    (modId, typeName, filename) =>
-      `/abs/path/to/mods/${modId}/${typeName}/${filename}`
+    (modId, registryKey, filename) =>
+      `/abs/path/to/mods/${modId}/${registryKey}/${filename}`
   ),
   // Add other methods if needed by base class constructor or other logic
   resolveContentPath: jest.fn(
-    (typeName, filename) => `./data/${typeName}/${filename}`
+    (registryKey, filename) => `./data/${registryKey}/${filename}`
   ),
   resolveSchemaPath: jest.fn((filename) => `./data/schemas/${filename}`),
   resolveModManifestPath: jest.fn(
@@ -150,8 +150,8 @@ describe('RuleLoader - Fetch Failure Handling (via loadItemsForMod)', () => {
     mockLogger = createMockLogger();
 
     // Ensure rule schema ID is configured via base method
-    mockConfig.getContentTypeSchemaId.mockImplementation((typeName) =>
-      typeName === RULE_TYPE_NAME ? ruleSchemaId : undefined
+    mockConfig.getContentTypeSchemaId.mockImplementation((registryKey) =>
+      registryKey === RULE_TYPE_NAME ? ruleSchemaId : undefined
     );
     // Mock specific getter if RuleLoader uses it
     mockConfig.getRuleSchemaId.mockReturnValue(ruleSchemaId);
@@ -253,7 +253,7 @@ describe('RuleLoader - Fetch Failure Handling (via loadItemsForMod)', () => {
           modId: modId,
           filename: fileFail,
           path: resolvedPathFail,
-          typeName: RULE_TYPE_NAME, // Type name should be logged
+          registryKey: RULE_TYPE_NAME, // Type name should be logged
           error: fetchError.message, // Base class logs the message string here
         }),
         fetchError // Base class passes the full error object as the third argument

@@ -1,8 +1,8 @@
 import { describe, it, expect } from '@jest/globals';
-import InMemoryEntityRepository from '../../../src/adapters/InMemoryEntityRepository.js';
-import UuidGenerator from '../../../src/adapters/UuidGenerator.js';
-import LodashCloner from '../../../src/adapters/LodashCloner.js';
-import DefaultComponentPolicy from '../../../src/adapters/DefaultComponentPolicy.js';
+import InMemoryEntityRepository from '../../../src/adapters/inMemoryEntityRepository.js';
+import UuidGenerator from '../../../src/adapters/uuidGenerator.js';
+import LodashCloner from '../../../src/adapters/lodashCloner.js';
+import DefaultComponentPolicy from '../../../src/adapters/defaultComponentPolicy.js';
 import {
   createMockLogger,
   createMockSchemaValidator,

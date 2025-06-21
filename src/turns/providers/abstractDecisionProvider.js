@@ -2,7 +2,7 @@
  * @module AbstractDecisionProvider
  */
 
-import { ITurnDecisionProvider } from '../interfaces/ITurnDecisionProvider.js';
+import { ITurnDecisionProvider } from '../interfaces/iTurnDecisionProvider.js';
 import { assertValidActionIndex } from '../../utils/actionIndexUtils.js';
 
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
@@ -10,7 +10,7 @@ import { assertValidActionIndex } from '../../utils/actionIndexUtils.js';
 /**
  * @abstract
  * @class AbstractDecisionProvider
- * @augments ITurnDecisionProvider
+ * @augments iTurnDecisionProvider
  * @description
  * Provides shared logic for decision providers that select an action index.
  */
@@ -52,7 +52,7 @@ export class AbstractDecisionProvider extends ITurnDecisionProvider {
    * @param {import('../interfaces/ITurnContext.js').ITurnContext} context - Turn context
    * @param {import('../dtos/actionComposite.js').ActionComposite[]} actions - Indexed action list
    * @param {AbortSignal} [abortSignal] - Optional cancellation signal
-   * @returns {Promise<import('../interfaces/ITurnDecisionProvider.js').ITurnDecisionResult>} Finalized decision result
+   * @returns {Promise<import('../interfaces/iTurnDecisionProvider.js').ITurnDecisionResult>} Finalized decision result
    */
   async decide(actor, context, actions, abortSignal) {
     const { index, speech, thoughts, notes } = await this.choose(

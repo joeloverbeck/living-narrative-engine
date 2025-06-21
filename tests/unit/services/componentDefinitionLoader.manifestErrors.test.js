@@ -25,16 +25,16 @@ import ComponentLoader from '../../../src/loaders/componentLoader.js';
  * @returns {import('../../../src/interfaces/coreServices.js').IConfiguration} Mocked configuration service.
  */
 const createMockConfiguration = (overrides = {}) => ({
-  getContentBasePath: jest.fn((typeName) => `./data/mods/test-mod/${typeName}`),
-  getContentTypeSchemaId: jest.fn((typeName) => {
-    if (typeName === 'components') {
+  getContentBasePath: jest.fn((registryKey) => `./data/mods/test-mod/${registryKey}`),
+  getContentTypeSchemaId: jest.fn((registryKey) => {
+    if (registryKey === 'components') {
       return 'http://example.com/schemas/component.schema.json';
     }
-    if (typeName === 'game')
+    if (registryKey === 'game')
       return 'http://example.com/schemas/game.schema.json';
-    if (typeName === 'mod-manifest')
+    if (registryKey === 'mod-manifest')
       return 'http://example.com/schemas/mod.manifest.schema.json';
-    return `http://example.com/schemas/${typeName}.schema.json`;
+    return `http://example.com/schemas/${registryKey}.schema.json`;
   }),
   getSchemaBasePath: jest.fn().mockReturnValue('schemas'),
   getSchemaFiles: jest.fn().mockReturnValue([]),
@@ -58,11 +58,11 @@ const createMockConfiguration = (overrides = {}) => ({
  */
 const createMockPathResolver = (overrides = {}) => ({
   resolveModContentPath: jest.fn(
-    (modId, typeName, filename) =>
-      `./data/mods/${modId}/${typeName}/${filename}`
+    (modId, registryKey, filename) =>
+      `./data/mods/${modId}/${registryKey}/${filename}`
   ),
   resolveContentPath: jest.fn(
-    (typeName, filename) => `./data/${typeName}/${filename}`
+    (registryKey, filename) => `./data/${registryKey}/${filename}`
   ),
   resolveSchemaPath: jest.fn((filename) => `./data/schemas/${filename}`),
   resolveModManifestPath: jest.fn(
@@ -256,8 +256,8 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.6: Manifest Handling Errors)',
       modId, // modId
       manifestMissingComponents, // modManifest
       'components', // contentKey
-      'components', // contentTypeDir
-      'components' // typeName
+      'components', // diskFolder
+      'components' // registryKey
     );
 
     // --- Verify: Promise Resolves & Result ---
@@ -303,8 +303,8 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.6: Manifest Handling Errors)',
       modId, // modId
       manifestNullComponents, // modManifest
       'components', // contentKey
-      'components', // contentTypeDir
-      'components' // typeName
+      'components', // diskFolder
+      'components' // registryKey
     );
 
     // --- Verify: Promise Resolves & Result ---
@@ -350,8 +350,8 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.6: Manifest Handling Errors)',
       modId, // modId
       manifestObjectComponents, // modManifest
       'components', // contentKey
-      'components', // contentTypeDir
-      'components' // typeName
+      'components', // diskFolder
+      'components' // registryKey
     );
 
     // --- Verify: Promise Resolves & Result ---
@@ -397,8 +397,8 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.6: Manifest Handling Errors)',
       modId, // modId
       manifestStringComponents, // modManifest
       'components', // contentKey
-      'components', // contentTypeDir
-      'components' // typeName
+      'components', // diskFolder
+      'components' // registryKey
     );
 
     // --- Verify: Promise Resolves & Result ---

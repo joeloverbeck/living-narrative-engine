@@ -12,8 +12,8 @@
  * @typedef {object} LoaderConfigEntry
  * @property {BaseManifestItemLoaderInterface} loader - Loader instance.
  * @property {string} contentKey - Key within the manifest's `content` section.
- * @property {string} contentTypeDir - Directory name under the mod root.
- * @property {string} typeName - Registry key for the loaded content type.
+ * @property {string} diskFolder - Directory name under the mod root.
+ * @property {string} registryKey - Registry key for the loaded content type.
  * @property {'definitions' | 'instances'} phase - Loading phase for the content type.
  */
 
@@ -29,57 +29,57 @@ export function createContentLoadersConfig(loaderMap) {
   const meta = {
     components: {
       contentKey: 'components',
-      contentTypeDir: 'components',
+      diskFolder: 'components',
       phase: 'definitions',
     },
     events: {
       contentKey: 'events',
-      contentTypeDir: 'events',
+      diskFolder: 'events',
       phase: 'definitions',
     },
     conditions: {
       contentKey: 'conditions',
-      contentTypeDir: 'conditions',
+      diskFolder: 'conditions',
       phase: 'definitions',
     },
     macros: {
       contentKey: 'macros',
-      contentTypeDir: 'macros',
+      diskFolder: 'macros',
       phase: 'definitions',
     },
     actions: {
       contentKey: 'actions',
-      contentTypeDir: 'actions',
+      diskFolder: 'actions',
       phase: 'definitions',
     },
     rules: {
       contentKey: 'rules',
-      contentTypeDir: 'rules',
+      diskFolder: 'rules',
       phase: 'definitions',
     },
     goals: {
       contentKey: 'goals',
-      contentTypeDir: 'goals',
+      diskFolder: 'goals',
       phase: 'definitions',
     },
     entityDefinitions: {
       contentKey: 'entityDefinitions',
-      contentTypeDir: 'entities/definitions',
+      diskFolder: 'entities/definitions',
       phase: 'definitions',
     },
     entityInstances: {
       contentKey: 'entityInstances',
-      contentTypeDir: 'entities/instances',
+      diskFolder: 'entities/instances',
       phase: 'instances',
     },
   };
 
-  return Object.entries(loaderMap).map(([typeName, loader]) => ({
+  return Object.entries(loaderMap).map(([registryKey, loader]) => ({
     loader,
-    typeName,
-    contentKey: meta[typeName].contentKey,
-    contentTypeDir: meta[typeName].contentTypeDir,
-    phase: meta[typeName].phase,
+    registryKey,
+    contentKey: meta[registryKey].contentKey,
+    diskFolder: meta[registryKey].diskFolder,
+    phase: meta[registryKey].phase,
   }));
 }
 

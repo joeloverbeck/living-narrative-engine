@@ -5,13 +5,13 @@
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 
-import { IWorldContext } from '../interfaces/IWorldContext.js';
+import { IWorldContext } from '../interfaces/iWorldContext.js';
 import {
   POSITION_COMPONENT_ID,
   CURRENT_ACTOR_COMPONENT_ID,
 } from '../constants/componentIds.js';
 import { safeDispatchError } from '../utils/safeDispatchErrorUtils.js';
-import { ISafeEventDispatcher } from '../interfaces/ISafeEventDispatcher.js';
+import { ISafeEventDispatcher } from '../interfaces/iSafeEventDispatcher.js';
 import { resolveSafeDispatcher } from '../utils/dispatcherUtils.js';
 
 /**

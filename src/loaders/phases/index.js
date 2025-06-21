@@ -1,3 +1,3 @@
-export { default as LoaderPhase } from './LoaderPhase.js';
-export { default as SchemaPhase } from './SchemaPhase.js';
-export { default as ManifestPhase } from './ManifestPhase.js';
+export { default as LoaderPhase } from './loaderphase.js';
+export { default as SchemaPhase } from './schemaphase.js';
+export { default as ManifestPhase } from './manifestphase.js';

@@ -129,7 +129,7 @@ describe('GoalLoader', () => {
       const filename = 'goal1.json';
       const resolvedPath = '/mods/test-mod/goals/goal1.json';
       const goalData = { id: 'goal-1', description: 'Test goal' };
-      const typeName = 'goals';
+      const registryKey = 'goals';
 
       // Act: Call the method with the full set of 5 arguments, as the base class does.
       await loader._processFetchedItem(
@@ -137,7 +137,7 @@ describe('GoalLoader', () => {
         filename,
         resolvedPath,
         goalData,
-        typeName
+        registryKey
       );
 
       // Assert: This confirms the second bug fix. The method signature is correct,
@@ -198,8 +198,8 @@ describe('GoalLoader', () => {
         modId,
         manifest,
         'goals', // contentKey
-        'goals', // contentTypeDir
-        'goals' // typeName
+        'goals', // diskFolder
+        'goals' // registryKey
       );
 
       // Assert

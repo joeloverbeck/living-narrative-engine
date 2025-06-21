@@ -1,6 +1,6 @@
 /** @typedef {import('../interfaces/coreServices.js').IConfiguration} IConfiguration */
 
-import { IPathResolver } from '../interfaces/IPathResolver.js';
+import { IPathResolver } from '../interfaces/iPathResolver.js';
 
 /**
  * Default implementation of IPathResolver.
@@ -98,10 +98,10 @@ class DefaultPathResolver extends IPathResolver {
     );
   }
 
-  resolveContentPath(typeName, filename) {
-    if (typeof typeName !== 'string' || typeName.trim() === '') {
+  resolveContentPath(registryKey, filename) {
+    if (typeof registryKey !== 'string' || registryKey.trim() === '') {
       throw new Error(
-        'Invalid or empty typeName provided to resolveContentPath.'
+        'Invalid or empty registryKey provided to resolveContentPath.'
       );
     }
     if (typeof filename !== 'string' || filename.trim() === '') {
@@ -111,7 +111,7 @@ class DefaultPathResolver extends IPathResolver {
     }
     return this.#join(
       this.#config.getBaseDataPath(),
-      this.#config.getContentBasePath(typeName),
+      this.#config.getContentBasePath(registryKey),
       filename
     );
   }
@@ -159,15 +159,15 @@ class DefaultPathResolver extends IPathResolver {
     );
   }
 
-  resolveModContentPath(modId, typeName, filename) {
+  resolveModContentPath(modId, registryKey, filename) {
     if (typeof modId !== 'string' || modId.trim() === '') {
       throw new Error(
         'Invalid or empty modId provided to resolveModContentPath.'
       );
     }
-    if (typeof typeName !== 'string' || typeName.trim() === '') {
+    if (typeof registryKey !== 'string' || registryKey.trim() === '') {
       throw new Error(
-        'Invalid or empty typeName provided to resolveModContentPath.'
+        'Invalid or empty registryKey provided to resolveModContentPath.'
       );
     }
     if (typeof filename !== 'string' || filename.trim() === '') {
@@ -179,7 +179,7 @@ class DefaultPathResolver extends IPathResolver {
       this.#config.getBaseDataPath(),
       this.#config.getModsBasePath(),
       modId,
-      typeName,
+      registryKey,
       filename
     );
   }

@@ -121,11 +121,11 @@
  * Returns the root path where all game data is located.
  * @property {() => string[]} getSchemaFiles
  * Returns a list of schema filenames that should be loaded.
- * @property {(typeName: string) => string | undefined} getContentTypeSchemaId
+ * @property {(registryKey: string) => string | undefined} getContentTypeSchemaId
  * Returns the schema ID associated with a given content type name.
  * @property {() => string} getSchemaBasePath
  * Returns the path where schema files are stored.
- * @property {(typeName: string) => string} getContentBasePath
+ * @property {(registryKey: string) => string} getContentBasePath
  * Returns the path where content definition files for a specific type are stored.
  * Returns the path where world manifest files are stored.
  * @property {() => string} getGameConfigFilename

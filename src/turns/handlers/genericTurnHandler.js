@@ -8,11 +8,11 @@ import { BaseTurnHandler } from './baseTurnHandler.js';
 import { AwaitTurnEndState } from '../valueObjects/awaitTurnEndState.js';
 import { assertValidEntity } from '../../utils/entityAssertionsUtils.js';
 import { tokens } from '../../dependencyInjection/tokens.js';
+import { ITurnEndPort } from '../ports/iTurnEndPort.js';
 
 /** @typedef {import('../../entities/entity.js').default} Entity */
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../interfaces/ITurnStateFactory.js').ITurnStateFactory} ITurnStateFactory */
-/** @typedef {import('../ports/ITurnEndPort.js').ITurnEndPort} ITurnEndPort */
 /** @typedef {import('../interfaces/ITurnStrategyFactory.js').ITurnStrategyFactory} ITurnStrategyFactory */
 
 /** @typedef {import('../builders/turnContextBuilder.js').TurnContextBuilder} TurnContextBuilder */

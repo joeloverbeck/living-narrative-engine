@@ -68,12 +68,12 @@ class ConditionLoader extends BaseManifestItemLoader {
    * @param {string} filename - The original filename from the manifest.
    * @param {string} resolvedPath - The fully resolved path to the file.
    * @param {any} data - The raw data fetched from the file.
-   * @param {string} typeName - The content type name ('conditions').
+   * @param {string} registryKey - The content type name ('conditions').
    * @returns {Promise<{qualifiedId: string, didOverride: boolean}>} An object containing the final registry key and overwrite status.
    */
-  async _processFetchedItem(modId, filename, resolvedPath, data, typeName) {
+  async _processFetchedItem(modId, filename, resolvedPath, data, registryKey) {
     this._logger.debug(
-      `ConditionLoader [${modId}]: Processing item: ${filename} (Type: ${typeName})`
+      `ConditionLoader [${modId}]: Processing item: ${filename} (Type: ${registryKey})`
     );
 
     // Delegate all processing to the generic helper function.

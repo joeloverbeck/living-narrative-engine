@@ -1,7 +1,7 @@
 // src/llms/strategies/base/baseLLMStrategy.js
 // --- FILE START ---
 
-import { ILLMStrategy } from '../../interfaces/ILLMStrategy.js';
+import { ILLMStrategy } from '../../interfaces/iLLMStrategy.js';
 
 /**
  * @typedef {import('../../../interfaces/coreServices.js').ILogger} ILogger

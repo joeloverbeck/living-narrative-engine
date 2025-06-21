@@ -14,11 +14,11 @@ export class IPathResolver {
   }
 
   /**
-   * @param typeName
+   * @param registryKey
    * @param filename
    * @returns {string}
    */
-  resolveContentPath(typeName, filename) {
+  resolveContentPath(registryKey, filename) {
     throw new Error('Not implemented');
   }
 
@@ -37,11 +37,11 @@ export class IPathResolver {
 
   /**
    * @param modId
-   * @param typeName
+   * @param registryKey
    * @param filename
    * @returns {string}
    */
-  resolveModContentPath(modId, typeName, filename) {
+  resolveModContentPath(modId, registryKey, filename) {
     throw new Error('Not implemented');
   }
 }

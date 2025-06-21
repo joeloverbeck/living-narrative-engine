@@ -1,4 +1,4 @@
-import { createLoadContext } from '../../../src/loaders/LoadContext.js';
+import { createLoadContext } from '../../../src/loaders/loadContext.js';
 
 // Mock IDataRegistry
 const mockRegistry = {

@@ -77,7 +77,7 @@ describe('EntityInstanceLoader', () => {
       const modId = 'core';
       const filename = 'core_goblin-sentry.instance.json';
       const resolvedPath = `data/mods/core/entities/instances/${filename}`;
-      const typeName = 'entityInstances';
+      const registryKey = 'entityInstances';
 
       const testInstanceData = {
         $schema: 'http://example.com/schemas/entity-instance.schema.json',
@@ -119,7 +119,7 @@ describe('EntityInstanceLoader', () => {
         filename,
         resolvedPath,
         testInstanceData,
-        typeName
+        registryKey
       );
 
       // --- Assert ---
@@ -173,8 +173,8 @@ describe('EntityInstanceLoader', () => {
       const modId = 'core';
       const filename = 'invalid-sentry.instance.json';
       const resolvedPath = `data/mods/core/entities/instances/${filename}`;
-      const contentTypeDir = 'entities/instances';
-      const typeName = 'entityInstances';
+      const diskFolder = 'entities/instances';
+      const registryKey = 'entityInstances';
       const primarySchemaId = 'entity-instance.schema.json';
 
       // Invalid data: missing the required 'definitionId' property.
@@ -215,7 +215,7 @@ describe('EntityInstanceLoader', () => {
       // --- Act & Assert ---
       // 1. Assert that the method throws an Error related to schema validation.
       await expect(
-        loader._processFileWrapper(modId, filename, contentTypeDir, typeName)
+        loader._processFileWrapper(modId, filename, diskFolder, registryKey)
       ).rejects.toThrow(/Primary schema validation failed/);
 
       // 2. Assert that IDataRegistry.store() was not called.

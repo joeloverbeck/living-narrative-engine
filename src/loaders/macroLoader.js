@@ -58,12 +58,12 @@ class MacroLoader extends BaseManifestItemLoader {
    * @param {string} filename - Original file name.
    * @param {string} resolvedPath - Resolved path to the file.
    * @param {object} data - Parsed macro definition data.
-   * @param {string} typeName - Content type name ("macros").
+   * @param {string} registryKey - Content type name ("macros").
    * @returns {Promise<{qualifiedId: string, didOverride: boolean}>} Result of storage.
    */
-  async _processFetchedItem(modId, filename, resolvedPath, data, typeName) {
+  async _processFetchedItem(modId, filename, resolvedPath, data, registryKey) {
     this._logger.debug(
-      `MacroLoader [${modId}]: Processing macro file ${filename} (${typeName}).`
+      `MacroLoader [${modId}]: Processing macro file ${filename} (${registryKey}).`
     );
 
     const { qualifiedId, didOverride } = this._parseIdAndStoreItem(

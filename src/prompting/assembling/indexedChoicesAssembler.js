@@ -1,5 +1,5 @@
 // src/prompting/assembling/indexedChoicesAssembler.js
-import { IPromptElementAssembler } from '../../interfaces/IPromptElementAssembler.js';
+import { IPromptElementAssembler } from '../../interfaces/iPromptElementAssembler.js';
 import { resolveWrapper } from '../../utils/wrapperUtils.js';
 
 export const INDEXED_CHOICES_KEY = 'indexed_choices';

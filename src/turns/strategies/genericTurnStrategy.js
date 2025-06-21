@@ -1,4 +1,4 @@
-import { IActorTurnStrategy } from '../interfaces/IActorTurnStrategy.js';
+import { IActorTurnStrategy } from '../interfaces/iActorTurnStrategy.js';
 import { buildDecisionResult } from '../../utils/decisionResultUtils.js';
 
 /**
