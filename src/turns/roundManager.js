@@ -21,6 +21,7 @@ export default class RoundManager {
     
     // Get all active entities and filter for actors
     const allEntities = Array.from(this.#entityManager.entities);
+    console.log('RoundManager.startRound: allEntities =', allEntities.map(e => ({ id: e.id, isActor: e.hasComponent(ACTOR_COMPONENT_ID) })));
     const actors = allEntities.filter((e) => e.hasComponent(ACTOR_COMPONENT_ID));
 
     if (actors.length === 0) {

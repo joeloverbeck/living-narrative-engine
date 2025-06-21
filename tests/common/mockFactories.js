@@ -414,3 +414,7 @@ export const createMockDataFetcher = () => ({
   fetchJson: jest.fn(),
   fetchText: jest.fn(),
 });
+
+export { createMockContainer, createMemoryStorageProvider } from './mockFactories/container.js';
+
+export { createMockActor } from './mockFactories/entities.js';
