@@ -66,8 +66,8 @@ import FnLoadOrderResolverAdapter from '../../adapters/fnLoadOrderResolverAdapte
 // --- Phase Imports ---
 import SchemaPhase from '../../loaders/phases/SchemaPhase.js';
 import ManifestPhase from '../../loaders/phases/ManifestPhase.js';
-import ContentPhase from '../../loaders/phases/ContentPhase.js';
-import WorldPhase from '../../loaders/phases/WorldPhase.js';
+import ContentPhase from '../../loaders/phases/contentPhase.js';
+import WorldPhase from '../../loaders/phases/worldPhase.js';
 import SummaryPhase from '../../loaders/phases/summaryPhase.js';
 import ModManifestProcessor from '../../loaders/ModManifestProcessor.js';
 import ContentLoadManager from '../../loaders/ContentLoadManager.js';

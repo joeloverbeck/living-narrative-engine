@@ -4,6 +4,43 @@
  */
 
 /**
+ * Internal recursive helper used by {@link expandMacros} and
+ * {@link expandActionArray}.
+ *
+ * @param {object[]} actions - Array of action or macro reference objects.
+ * @param {import('../interfaces/coreServices.js').IDataRegistry} registry - Data registry used to resolve macros.
+ * @param {import('../interfaces/coreServices.js').ILogger} [logger] - Optional logger for warnings.
+ * @returns {object[]} A new array with all macros expanded.
+ */
+function _expandActions(actions, registry, logger) {
+  if (!Array.isArray(actions)) return [];
+
+  const result = [];
+  for (const action of actions) {
+    if (action && action.macro) {
+      const macro = registry.get('macros', action.macro);
+      if (macro && Array.isArray(macro.actions)) {
+        result.push(..._expandActions(macro.actions, registry, logger));
+      } else {
+        logger?.warn?.(`expandMacros: macro '${action.macro}' not found.`);
+      }
+    } else if (action && action.parameters) {
+      const newParams = { ...action.parameters };
+      for (const key of ['then_actions', 'else_actions', 'actions']) {
+        if (Array.isArray(newParams[key])) {
+          newParams[key] = _expandActions(newParams[key], registry, logger);
+        }
+      }
+      result.push({ ...action, parameters: newParams });
+    } else {
+      result.push(action);
+    }
+  }
+
+  return result;
+}
+
+/**
  * Recursively expands macro references in an array of action objects.
  *
  * A macro reference takes the form `{ "macro": "modId:macroId" }` and will be
@@ -15,32 +52,7 @@
  * @returns {object[]} A new array with all macros expanded.
  */
 export function expandMacros(actions, registry, logger) {
-  if (!Array.isArray(actions)) return [];
-
-  const result = [];
-  for (const action of actions) {
-    if (action && action.macro) {
-      const macro = registry.get('macros', action.macro);
-      if (macro && Array.isArray(macro.actions)) {
-        // Recursively expand macros in the macro's actions
-        result.push(...expandMacros(macro.actions, registry, logger));
-      } else {
-        logger?.warn?.(`expandMacros: macro '${action.macro}' not found.`);
-      }
-    } else if (action && action.parameters) {
-      let newParams = { ...action.parameters };
-      // Recursively expand macros in all nested action arrays
-      for (const key of ['then_actions', 'else_actions', 'actions']) {
-        if (Array.isArray(newParams[key])) {
-          newParams[key] = expandMacros(newParams[key], registry, logger);
-        }
-      }
-      result.push({ ...action, parameters: newParams });
-    } else {
-      result.push(action);
-    }
-  }
-  return result;
+  return _expandActions(actions, registry, logger);
 }
 
 /**
@@ -48,7 +60,7 @@ export function expandMacros(actions, registry, logger) {
  * Useful for validation after macro expansion.
  *
  * @param {object[]} actions - Array of action objects to check.
- * @param {string} [path='actions'] - Current path in the actions tree for debugging.
+ * @param {string} [path] - Current path in the actions tree for debugging.
  * @returns {Array<{path: string, macro: string, action: object}>} Array of found macro references.
  */
 export function findUnexpandedMacros(actions, path = 'actions') {
@@ -99,13 +111,13 @@ export function validateMacroExpansion(actions, registry, logger) {
 /**
  * Recursively expands macro references in an array of action objects.
  * This is a legacy function maintained for backward compatibility.
- * @deprecated Use expandMacros instead.
  *
+ * @deprecated Use expandMacros instead.
  * @param {object[]} actions - Array of action or macro reference objects.
  * @param {import('../interfaces/coreServices.js').IDataRegistry} registry - Data registry used to resolve macros.
  * @param {import('../interfaces/coreServices.js').ILogger} [logger] - Optional logger for warnings.
  * @returns {object[]} A new array with all macros expanded.
  */
 export function expandActionArray(actions, registry, logger) {
-  return expandMacros(actions, registry, logger);
+  return _expandActions(actions, registry, logger);
 }

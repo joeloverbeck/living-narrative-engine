@@ -15,7 +15,7 @@
 import { NAME_COMPONENT_ID } from '../../constants/componentIds.js';
 import { DEFAULT_FALLBACK_CHARACTER_NAME } from '../../constants/textDefaults.js';
 import { resolveEntityId } from '../../utils/entityRefUtils.js';
-import { setContextValue } from '../../utils/contextVariableUtils.js';
+import { tryWriteContextVariable } from '../../utils/contextVariableUtils.js';
 import { assertParamsObject } from '../../utils/handlerUtils/paramsUtils.js';
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 import BaseOperationHandler from './baseOperationHandler.js';
@@ -96,7 +96,13 @@ class GetNameHandler extends BaseOperationHandler {
         `GET_NAME: Could not resolve entity from entity_ref. Storing fallback '${fallback}'.`,
         { entity_ref }
       );
-      setContextValue(resultVar, fallback, executionContext, undefined, log);
+      tryWriteContextVariable(
+        resultVar,
+        fallback,
+        executionContext,
+        undefined,
+        log
+      );
       return;
     }
 
@@ -118,7 +124,7 @@ class GetNameHandler extends BaseOperationHandler {
       );
     }
 
-    setContextValue(resultVar, name, executionContext, undefined, log);
+    tryWriteContextVariable(resultVar, name, executionContext, undefined, log);
   }
 }
 

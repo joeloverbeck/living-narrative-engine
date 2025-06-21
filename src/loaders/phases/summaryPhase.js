@@ -1,5 +1,5 @@
 // src/loaders/phases/SummaryPhase.js
-import LoaderPhase from './loaderPhase.js';
+import LoaderPhase from './LoaderPhase.js';
 import {
   ModsLoaderPhaseError,
   ModsLoaderErrorCode,
@@ -14,7 +14,7 @@ import {
 /**
  * @description The final phase of the mod loading process, responsible for logging a summary of the entire operation.
  * @class SummaryPhase
- * @extends {LoaderPhase}
+ * @augments {LoaderPhase}
  * @module Loaders/Phases
  */
 export default class SummaryPhase extends LoaderPhase {

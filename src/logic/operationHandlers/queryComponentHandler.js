@@ -23,7 +23,7 @@ import ComponentOperationHandler from './componentOperationHandler.js';
  *   missing or an error occurs. Defaults to `undefined` if not provided.
  */
 
-import { setContextValue } from '../../utils/contextVariableUtils.js';
+import { writeContextVariable } from '../../utils/contextVariableUtils.js';
 
 class QueryComponentHandler extends ComponentOperationHandler {
   #entityManager;
@@ -134,7 +134,7 @@ class QueryComponentHandler extends ComponentOperationHandler {
 
       const valueToStore = result === undefined ? missing_value : result;
 
-      setContextValue(
+      writeContextVariable(
         result_variable,
         valueToStore,
         executionContext,
@@ -176,14 +176,14 @@ class QueryComponentHandler extends ComponentOperationHandler {
           resolvedEntityId: entityId,
         }
       );
-      const stored = setContextValue(
+      const stored = writeContextVariable(
         result_variable,
         missing_value,
         executionContext,
         this.#dispatcher,
         logger
       );
-      if (stored) {
+      if (stored.success) {
         const missingString =
           missing_value === null
             ? 'null'
