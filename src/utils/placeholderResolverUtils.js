@@ -263,11 +263,10 @@ export class PlaceholderResolver {
    *
    * @private
    * @param {Array} arr Array potentially containing placeholders.
-   * @param _skipKeys
    * @param {object[]} sources Resolution sources.
    * @returns {{changed: boolean, value: *}} Resulting value and change flag.
    */
-  _resolveArray(arr, sources, _skipKeys) {
+  _resolveArray(arr, sources) {
     let changed = false;
     const resolvedArr = arr.map((item) => {
       const { value: resolvedItem, changed: c } = this._resolveValue(
@@ -318,8 +317,8 @@ export class PlaceholderResolver {
    *
    * @private
    * @param {*} value - Value that may contain placeholders.
-   * @param skipKeys
    * @param {object[]} sources - Ordered list of source objects.
+   * @param {Set<string>} skipKeys - Keys to skip when resolving objects.
    * @returns {*} Value with placeholders resolved.
    */
   _resolveValue(value, sources, skipKeys) {
@@ -328,7 +327,7 @@ export class PlaceholderResolver {
     }
 
     if (Array.isArray(value)) {
-      return this._resolveArray(value, sources, skipKeys);
+      return this._resolveArray(value, sources);
     }
 
     if (value && typeof value === 'object' && !(value instanceof Date)) {
