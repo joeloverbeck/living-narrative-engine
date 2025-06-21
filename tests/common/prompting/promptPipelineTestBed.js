@@ -15,7 +15,7 @@ import {
   createMockEntity,
 } from '../mockFactories.js';
 import BaseTestBed from '../baseTestBed.js';
-import { describeSuite } from '../describeSuite.js';
+import { describeSuiteWithHooks } from '../describeSuite.js';
 
 /**
  * @description Utility class for unit tests that need an AIPromptPipeline with common mocks.
@@ -139,11 +139,10 @@ export class AIPromptPipelineTestBed extends BaseTestBed {
  * @returns {void}
  */
 function describeAIPromptPipelineSuite(title, suiteFn) {
-  describeSuite(title, AIPromptPipelineTestBed, (getBed) => {
-    beforeEach(() => {
-      getBed().setupMockSuccess();
-    });
-    suiteFn(getBed);
+  describeSuiteWithHooks(title, AIPromptPipelineTestBed, suiteFn, {
+    beforeEachHook(bed) {
+      bed.setupMockSuccess();
+    },
   });
 }
 
