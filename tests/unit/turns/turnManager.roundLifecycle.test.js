@@ -13,10 +13,8 @@ import {
 } from '../../../src/constants/eventIds.js';
 import { beforeEach, expect, jest, test, afterEach } from '@jest/globals';
 import { createDefaultActors } from '../../common/turns/testActors.js';
-import {
-  createMockEntity,
-  createMockTurnHandler,
-} from '../../common/mockFactories.js';
+import { createMockTurnHandler } from '../../common/mockFactories.js';
+import { createAiActor } from '../../common/turns/testActors.js';
 
 // --- Test Suite ---
 
@@ -249,8 +247,8 @@ describeTurnManagerSuite(
       testBed.mocks.turnOrderService.clearCurrentRound.mockImplementation(
         () => {
           // Create fresh mock actors for the new round
-          const newActor1 = createMockEntity('actor1', { isActor: true });
-          const newActor2 = createMockEntity('actor2', { isActor: true });
+          const newActor1 = createAiActor('actor1');
+          const newActor2 = createAiActor('actor2');
           testBed.setActiveEntities(newActor1, newActor2);
           return Promise.resolve();
         }
