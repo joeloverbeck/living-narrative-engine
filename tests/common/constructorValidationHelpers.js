@@ -1,3 +1,5 @@
+/* eslint-env jest */
+/* global describe, test, expect */
 /**
  * @file Utilities for generating constructor validation test cases.
  *
@@ -51,6 +53,30 @@ export function buildMissingDependencyCases(factoryFn, spec) {
   return cases;
 }
 
+/**
+ * Defines a describe block verifying constructor dependency checks.
+ *
+ * @description Generates cases via {@link buildMissingDependencyCases} and
+ * asserts that constructing {@code Class} throws when required dependencies are
+ * missing.
+ * @param {Function} Class - Constructor under test.
+ * @param {() => Record<string, any>} createDeps - Factory for valid dependencies.
+ * @param {Record<string, {error: RegExp, methods: string[]}>} spec - Dependency
+ *   specification.
+ * @returns {void}
+ */
+export function describeConstructorValidation(Class, createDeps, spec) {
+  describe('constructor validation', () => {
+    const cases = buildMissingDependencyCases(createDeps, spec);
+    test.each(cases)('throws when %s', (_d, mutate, regex) => {
+      const deps = createDeps();
+      mutate(deps);
+      expect(() => new Class(deps)).toThrow(regex);
+    });
+  });
+}
+
 export default {
   buildMissingDependencyCases,
+  describeConstructorValidation,
 };
