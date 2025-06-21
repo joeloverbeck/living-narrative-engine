@@ -20,6 +20,7 @@ import { registerInitializers } from '../../../../src/dependencyInjection/regist
 // --- Dependencies ---
 import { tokens } from '../../../../src/dependencyInjection/tokens.js';
 import { INITIALIZABLE } from '../../../../src/dependencyInjection/tags.js';
+import { createMockContainerWithRegistration } from '../../../common/mockFactories/index.js';
 
 // --- MOCK the Modules (Classes being registered) ---
 jest.mock('../../../../src/initializers/worldInitializer.js');
@@ -42,108 +43,13 @@ const mockGameDataRepository = { name: 'MockGameDataRepository' };
 const mockValidatedEventDispatcher = { name: 'MockValidatedEventDispatcher' };
 const mockSpatialIndexManager = { name: 'MockSpatialIndexManager' };
 
-const createMockContainer = () => {
-  const registrations = new Map();
-  const container = {
-    _registrations: registrations,
-    register: jest.fn((token, factoryOrValue, options = {}) => {
-      if (!token) throw new Error('Mock Register Error: Token is required.');
-      const registration = {
-        factoryOrValue,
-        options: { ...options, tags: options.tags || [] },
-        instance: undefined,
-      };
-      registrations.set(String(token), registration);
-    }),
-    resolve: jest.fn((token) => {
-      const registrationKey = String(token);
-      const registration = registrations.get(registrationKey);
-      if (!registration) {
-        const registeredTokens = Array.from(registrations.keys())
-          .map(String)
-          .join(', ');
-        throw new Error(
-          `Mock Resolve Error: Token not registered: ${registrationKey}. Registered tokens are: [${registeredTokens}]`
-        );
-      }
-
-      const { factoryOrValue, options } = registration;
-
-      if (
-        options?.lifecycle === 'singletonFactory' ||
-        options?.lifecycle === 'singleton'
-      ) {
-        if (registration.instance !== undefined) {
-          return registration.instance;
-        }
-        if (typeof factoryOrValue === 'function') {
-          try {
-            const isClass =
-              factoryOrValue.prototype &&
-              typeof factoryOrValue.prototype.constructor === 'function';
-            if (
-              isClass &&
-              options?.lifecycle === 'singleton' &&
-              !options?.isFactory
-            ) {
-              registration.instance = new factoryOrValue(container);
-            } else {
-              registration.instance = factoryOrValue(container);
-            }
-          } catch (e) {
-            throw new Error(
-              `Mock container: Error executing factory for ${registrationKey}: ${e.message}`
-            );
-          }
-          return registration.instance;
-        }
-        registration.instance = factoryOrValue;
-        return registration.instance;
-      }
-
-      if (typeof factoryOrValue === 'function') {
-        try {
-          const isClass =
-            factoryOrValue.prototype &&
-            typeof factoryOrValue.prototype.constructor === 'function';
-          if (isClass && !options?.isFactory) {
-            return new factoryOrValue(container);
-          }
-          return factoryOrValue(container);
-        } catch (e) {
-          throw new Error(
-            `Mock container: Error executing transient factory for ${registrationKey}: ${e.message}`
-          );
-        }
-      }
-      return factoryOrValue;
-    }),
-    resolveByTag: jest.fn(async (tag) => {
-      const resolved = [];
-      registrations.forEach((reg, tokenKey) => {
-        if (reg.options?.tags?.includes(tag)) {
-          try {
-            resolved.push(container.resolve(tokenKey));
-          } catch (e) {
-            console.warn(
-              `Mock resolveByTag: Failed to resolve tagged token ${tokenKey}: ${e.message}`
-            );
-          }
-        }
-      });
-      return resolved;
-    }),
-  };
-  return container;
-};
-
 describe('registerInitializers', () => {
-  /** @type {ReturnType<typeof createMockContainer>} */
+  /** @type {ReturnType<typeof createMockContainerWithRegistration>} */
   let mockContainer;
 
   beforeEach(() => {
     jest.clearAllMocks();
-    mockContainer = createMockContainer();
+    mockContainer = createMockContainerWithRegistration();
 
     // Register all base dependencies that the factories might try to resolve
     mockContainer.register(tokens.ILogger, mockLogger, {

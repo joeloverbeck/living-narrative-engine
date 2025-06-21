@@ -3,6 +3,7 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import ComponentLoader from '../../../src/loaders/componentLoader.js';
 import { createMockPathResolver, createMockDataFetcher } from '../../common/mockFactories/index.js';
+import { createMockConfiguration, createMockLogger } from '../../common/mockFactories/index.js';
 
 // --- Mock Service Factories ---
 // [Mocks omitted for brevity - assume they are the same as provided in the question]
@@ -19,55 +20,7 @@ import { createMockPathResolver, createMockDataFetcher } from '../../common/mock
  */
 // --- Mock Service Factories (Copied from previous test files for self-containment) ---
 
-/**
- * Creates a mock IConfiguration service.
- *
- * @param {object} [overrides] - Optional overrides for mock methods.
- * @returns {import('../../../src/core/interfaces/coreServices.js').IConfiguration} Mocked configuration service.
- */
-const createMockConfiguration = (overrides = {}) => ({
-  // --- FIX START: Add the missing required method ---
-  getModsBasePath: jest.fn(() => './data/mods'), // Provide a mock implementation/return value
-  // --- FIX END ---
 
-  getContentBasePath: jest.fn((registryKey) => `./data/mods/test-mod/${registryKey}`), // This might be redundant now depending on how paths are constructed, but keep it for now if ComponentLoader uses it directly.
-  getContentTypeSchemaId: jest.fn((registryKey) => {
-    if (registryKey === 'components') {
-      // Matches the schema provided in the ticket
-      return 'http://example.com/schemas/component.schema.json';
-    }
-    // Default fallback for other types if needed in future tests
-    return `http://example.com/schemas/${registryKey}.schema.json`;
-  }),
-  // Include other IConfiguration methods if needed by the loader, mocking their returns
-  // Required by Base Class validation
-  getSchemaBasePath: jest.fn().mockReturnValue('schemas'),
-  getSchemaFiles: jest.fn().mockReturnValue([]),
-  getBaseDataPath: jest.fn().mockReturnValue('./data'),
-  getGameConfigFilename: jest.fn().mockReturnValue('game.json'),
-  getModManifestFilename: jest.fn().mockReturnValue('mod-manifest.json'),
-  getRuleBasePath: jest.fn().mockReturnValue('rules'),
-  getRuleSchemaId: jest
-    .fn()
-    .mockReturnValue('http://example.com/schemas/rule.schema.json'),
-
-  ...overrides,
-});
-
-/**
- * Creates a mock ILogger service.
- * All methods are jest.fn() for tracking calls.
- *
- * @param {object} [overrides] - Optional overrides for mock methods.
- * @returns {import('../../../src/core/interfaces/coreServices.js').ILogger} Mocked logger service.
- */
-const createMockLogger = (overrides = {}) => ({
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-  debug: jest.fn(),
-  ...overrides,
-});
 
 // --- Test Utility Functions ---
 // [Utility functions createMockComponentDefinition, createMockModManifest omitted for brevity]

@@ -21,6 +21,7 @@ import { registerInterpreters } from '../../../../src/dependencyInjection/regist
 
 // --- Dependencies ---
 import { tokens } from '../../../../src/dependencyInjection/tokens.js';
+import { createMockContainerWithRegistration } from '../../../common/mockFactories/index.js';
 
 // --- Mock Modules ---
 jest.mock('../../../../src/logic/operationRegistry.js');
@@ -72,125 +73,13 @@ const mockvalidatedEventDispatcher = {
 };
 const mockSafeEventDispatcher = { dispatch: jest.fn().mockResolvedValue(true) };
 
-// --- Mock DI Container ---
-const createMockContainer = () => {
-  const registrations = new Map();
-  /** @type {AppContainer} */
-  const container = {
-    _registrations: registrations,
-    register: jest.fn((token, factoryOrValue, options = {}) => {
-      console.log(
-        `[Mock Register] Called. Token type: ${typeof token}, Token value: ${String(token)}`,
-        { options }
-      );
-      if (token && typeof token !== 'string' && typeof token !== 'symbol') {
-        console.warn(
-          `[Mock Register] Received non-standard token type: ${typeof token}`,
-          token
-        );
-      }
-      if (!token) {
-        console.error('[Mock Register] ERROR: Token is falsy!', token);
-        throw new Error('Mock Register Error: Token is required.');
-      }
-      registrations.set(token, {
-        factoryOrValue,
-        options,
-        instance: undefined,
-      });
-    }),
-    resolve: jest.fn((token) => {
-      console.log(
-        `[Mock Resolve] Attempting to resolve token: ${String(token)}`
-      );
-      const registration = registrations.get(token);
-      if (!registration) {
-        const registeredTokens = Array.from(registrations.keys())
-          .map((t) => String(t))
-          .join(', ');
-        console.error(
-          `[Mock Resolve] ERROR: Token not registered: ${String(token)}. Registered: [${registeredTokens}]`
-        );
-        throw new Error(
-          `Mock Resolve Error: Token not registered: ${String(token)}. Registered tokens are: [${registeredTokens}]`
-        );
-      }
-      const { factoryOrValue, options } = registration;
-      const tokenStr = String(token);
-      if (
-        options?.lifecycle === 'singleton' ||
-        options?.lifecycle === 'singletonFactory'
-      ) {
-        if (registration.instance !== undefined) {
-          console.log(
-            `[Mock Resolve] Returning cached singleton instance for: ${tokenStr}`
-          );
-          return registration.instance;
-        }
-        console.log(
-          `[Mock Resolve] Creating singleton instance for: ${tokenStr}`
-        );
-        if (typeof factoryOrValue === 'function') {
-          try {
-            registration.instance = factoryOrValue(container);
-            console.log(
-              `[Mock Resolve] Successfully created singleton instance for: ${tokenStr}`
-            );
-          } catch (e) {
-            console.error(
-              `[Mock Resolve] ERROR executing factory during singleton resolve for ${tokenStr}: ${e.message}`,
-              e
-            );
-            throw new Error(
-              `Factory error during mock resolve for ${tokenStr}: ${e.message}`,
-              { cause: e }
-            );
-          }
-        } else {
-          registration.instance = factoryOrValue;
-          console.log(
-            `[Mock Resolve] Caching direct value as singleton instance for: ${tokenStr}`
-          );
-        }
-        return registration.instance;
-      }
-      console.log(
-        `[Mock Resolve] Creating transient instance/value for: ${tokenStr}`
-      );
-      if (typeof factoryOrValue === 'function') {
-        try {
-          const transientInstance = factoryOrValue(container);
-          console.log(
-            `[Mock Resolve] Successfully created transient instance for: ${tokenStr}`
-          );
-          return transientInstance;
-        } catch (e) {
-          console.error(
-            `[Mock Resolve] ERROR executing transient factory during resolve for ${tokenStr}: ${e.message}`,
-            e
-          );
-          throw new Error(
-            `Transient factory error during mock resolve for ${tokenStr}: ${e.message}`,
-            { cause: e }
-          );
-        }
-      }
-      console.log(
-        `[Mock Resolve] Returning direct transient value for: ${tokenStr}`
-      );
-      return factoryOrValue;
-    }),
-  };
-  return container;
-};
-
 describe('registerInterpreters', () => {
-  /** @type {ReturnType<typeof createMockContainer>} */
+  /** @type {ReturnType<typeof createMockContainerWithRegistration>} */
   let mockContainer;
 
   beforeEach(() => {
     jest.clearAllMocks();
-    mockContainer = createMockContainer();
+    mockContainer = createMockContainerWithRegistration();
 
     // Pre-register core dependencies NEEDED by the interpreter factories
     // These are the services the factories themselves will resolve.

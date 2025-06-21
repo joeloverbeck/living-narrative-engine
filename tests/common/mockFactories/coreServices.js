@@ -207,19 +207,22 @@ export const createMockSchemaValidator = (
 /**
  * Creates a mock configuration provider.
  *
+ * @param {object} [overrides] - Optional overrides for mock methods.
  * @returns {object} Mock configuration
  */
-export const createMockConfiguration = () => ({
+export const createMockConfiguration = (overrides = {}) => ({
   getContentTypeSchemaId: jest.fn((type) => `schema:${type}`),
   getBaseDataPath: jest.fn(() => './data'),
   getSchemaFiles: jest.fn(() => []),
   getSchemaBasePath: jest.fn(() => 'schemas'),
-  getContentBasePath: jest.fn(() => 'content'),
+  getContentBasePath: jest.fn((type) => `./data/${type}`),
   getGameConfigFilename: jest.fn(() => 'game.json'),
-  getModsBasePath: jest.fn(() => 'mods'),
+  getModsBasePath: jest.fn(() => './data/mods'),
   getModManifestFilename: jest.fn(() => 'mod-manifest.json'),
+  getWorldBasePath: jest.fn(() => 'worlds'),
   getContentTypeDirectory: jest.fn(),
   get: jest.fn(),
+  ...overrides,
 });
 
 /**

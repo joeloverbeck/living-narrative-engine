@@ -1,14 +1,7 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { formatActionCommand } from '../../../src/actions/actionFormatter.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/eventIds.js';
-
-/** Simple mock for logger */
-const createMockLogger = () => ({
-  debug: jest.fn(),
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-});
+import { createMockLogger } from '../../common/mockFactories/index.js';
 
 describe('formatActionCommand', () => {
   let entityManager;

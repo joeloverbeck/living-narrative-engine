@@ -48,6 +48,7 @@ import DefaultPathResolver from '../../../../src/pathing/defaultPathResolver.js'
 import AjvSchemaValidator from '../../../../src/validation/ajvSchemaValidator.js';
 import InMemoryDataRegistry from '../../../../src/data/inMemoryDataRegistry.js';
 import WorkspaceDataFetcher from '../../../../src/data/workspaceDataFetcher.js';
+import { createMockContainerWithRegistration } from '../../../common/mockFactories/index.js';
 
 // --- Mock Implementations (Core Services) ---
 const mockLogger = {
@@ -139,98 +140,13 @@ const mockDataRegistry = {
 };
 
 // --- Mock Custom DI Container ---
-const createMockContainer = () => {
-  const registrations = new Map();
-  let containerInstance; // Define containerInstance to be accessible in resolveSpy
-
-  const resolveSpy = jest.fn((token) => {
-    console.log(`DEBUG: Resolving token: ${String(token)}`);
-    const registration = registrations.get(token);
-    if (!registration) {
-      // Fallback logic for base dependencies if not explicitly registered *before* resolve is called
-      if (token === tokens.ILogger) {
-        console.log(`DEBUG: Returning mockLogger for ILogger`);
-        return mockLogger;
-      }
-      // Return basic mocks for other common dependencies if needed for factory resolution
-      if (token === tokens.IConfiguration) return mockConfiguration;
-      if (token === tokens.IPathResolver) return mockPathResolver;
-      if (token === tokens.IDataFetcher) return mockDataFetcher;
-      if (token === tokens.ISchemaValidator) return mockSchemaValidator;
-      if (token === tokens.IDataRegistry) {
-        console.log(`DEBUG: Returning mockDataRegistry for IDataRegistry`);
-        return mockDataRegistry;
-      }
-
-      throw new Error(
-        `Mock Resolve Error: Token not registered or explicitly mocked: ${String(token)}`
-      );
-    }
-    console.log(`DEBUG: Found registration for token: ${String(token)}`);
-    const { factoryOrValue, options } = registration;
-    const isFactory =
-      typeof factoryOrValue === 'function' && !options?.isInstance;
-
-    // --- VVVV MODIFIED SECTION VVVV ---
-    // Correct handling for BOTH singleton and singletonFactory lifecycles
-    if (
-      options?.lifecycle === 'singleton' ||
-      options?.lifecycle === 'singletonFactory'
-    ) {
-      // Check if instance already exists on the registration entry
-      if (registration.instance === undefined) {
-        // Create and cache instance if it doesn't exist
-        // If it's a factory, call it with the container; otherwise, use the value directly.
-        registration.instance = isFactory
-          ? factoryOrValue(containerInstance)
-          : factoryOrValue;
-      }
-      // Return the cached instance
-      return registration.instance;
-    }
-    // --- ^^^^ MODIFIED SECTION ^^^^ ---
-
-    // For transient or unspecified lifecycles, create new instance if it's a factory
-    return isFactory ? factoryOrValue(containerInstance) : factoryOrValue;
-  });
-
-  containerInstance = {
-    _registrations: registrations,
-    // Simplified register spy, capturing token, factory/value, and options
-    register: jest.fn((token, factoryOrValue, options = {}) => {
-      if (!token) {
-        console.log(
-          'Undefined token in registration:',
-          token,
-          factoryOrValue && factoryOrValue.name
-        );
-        throw new Error('Mock Register Error: Token is required.');
-      }
-      // Mark if it's an instance registration for resolver logic
-      const internalOptions = { ...options }; // Copy options
-      internalOptions.isInstance =
-        typeof factoryOrValue !== 'function' ||
-        options?.lifecycle === 'instance'; // isInstance is internal mock detail
-      // Store the original options from the call as well for snapshot testing
-      registrations.set(token, {
-        factoryOrValue,
-        options: options, // Store original options for snapshot/assertions
-        internalOptions: internalOptions, // Store internal options for mock resolve logic
-        instance: undefined, // Initialize instance cache
-      });
-    }),
-    resolve: resolveSpy,
-  };
-  return containerInstance;
-};
-
 describe('registerLoaders (with Mock DI Container)', () => {
-  /** @type {ReturnType<typeof createMockContainer>} */
+  /** @type {ReturnType<typeof createMockContainerWithRegistration>} */
   let mockContainer;
 
   beforeEach(() => {
     jest.clearAllMocks();
-    mockContainer = createMockContainer();
+    mockContainer = createMockContainerWithRegistration();
 
     // Register the logger BEFORE calling the function under test
     // Use internalOptions here for the mock's logic
