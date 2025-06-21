@@ -1,3 +1,7 @@
+/**
+ *
+ * @param registry
+ */
 export function makeRegistryCache(registry) {
   return {
     clear: () => registry.clear(),
