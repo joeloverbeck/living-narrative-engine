@@ -47,6 +47,11 @@ describe('StaticConfiguration Validation Test', () => {
       // CORRECTED: Removed .withContext()
       expect(schemaId).toMatch(/^https?:\/\//);
 
+      // Focused assertion for llm-configs schema ID
+      if (registryKey === 'llm-configs') {
+        expect(schemaId).toBe('http://example.com/schemas/llm-configs.schema.json');
+      }
+
       // Optional: Log on success for visibility during test runs
       console.log(
         `[OK] Essential type '${registryKey}' is configured with schema ID: ${schemaId}`

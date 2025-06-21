@@ -135,7 +135,7 @@ class StaticConfiguration {
       'goals': 'http://example.com/schemas/goal.schema.json',
       'entityDefinitions': 'http://example.com/schemas/entity-definition.schema.json',
       'entityInstances': 'http://example.com/schemas/entity-instance.schema.json',
-      'llm-configs': 'http://example.com/schemas/llm-config.schema.json',
+      'llm-configs': 'http://example.com/schemas/llm-configs.schema.json',
       'mod-manifest': 'http://example.com/schemas/mod-manifest.schema.json',
       'game': 'http://example.com/schemas/game.schema.json',
       'world': 'http://example.com/schemas/world.schema.json',
