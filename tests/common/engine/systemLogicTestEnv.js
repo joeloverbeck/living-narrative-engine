@@ -124,7 +124,7 @@ class SimpleEntityManager {
  * Creates a complete test environment for system logic rule testing.
  *
  * @param {object} options - Configuration options
- * @param {function} options.createHandlers - Function to create handlers with (entityManager, eventBus, logger) parameters
+ * @param {Function} options.createHandlers - Function to create handlers with (entityManager, eventBus, logger) parameters
  * @param {Array<{id:string,components:object}>} options.entities - Initial entities
  * @param {Array<object>} options.rules - System rules to load
  * @param {object} options.logger - Logger instance (optional, creates mock if not provided)

@@ -4,7 +4,7 @@
  */
 
 /**
- * @param {Object} params
+ * @param {object} params
  * @param {string} params.worldName
  * @param {string[]} [params.requestedMods]
  * @param {IDataRegistry} params.registry
@@ -25,7 +25,7 @@ export function createLoadContext({ worldName, requestedMods = [], registry }) {
 }
 
 /**
- * @typedef {Object} LoadContext
+ * @typedef {object} LoadContext
  * @property {string} worldName
  * @property {string[]} requestedMods
  * @property {string[]} finalModOrder

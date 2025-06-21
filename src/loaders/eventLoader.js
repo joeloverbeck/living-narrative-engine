@@ -18,6 +18,7 @@ import { parseAndValidateId } from '../utils/idUtils.js';
 
 /**
  * Loads event definitions from mods.
+ *
  * @augments BaseInlineSchemaLoader
  */
 class EventLoader extends BaseInlineSchemaLoader {
@@ -50,6 +51,7 @@ class EventLoader extends BaseInlineSchemaLoader {
 
   /**
    * Processes a single fetched event file's data.
+   *
    * @override
    * @protected
    * @param {string} modId

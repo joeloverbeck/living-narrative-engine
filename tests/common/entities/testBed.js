@@ -195,7 +195,7 @@ export class TestBed extends FactoryTestBed {
    * @param {object} [options] - Options forwarded to
    *   {@link EntityManager#createEntityInstance}.
    * @param {object} [config] - Additional configuration options.
-   * @param {boolean} [config.resetDispatch=false] - If true, resets the event
+   * @param {boolean} [config.resetDispatch] - If true, resets the event
    *   dispatch mock after creation.
    * @returns {import('../../../src/entities/entity.js').default} The created
    *   entity instance.

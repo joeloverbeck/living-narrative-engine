@@ -1,6 +1,6 @@
 /**
-* @typedef {import('../LoadContext.js').LoadContext} LoadContext
-*/
+ * @typedef {import('../LoadContext.js').LoadContext} LoadContext
+ */
 import { createLoadContext } from '../LoadContext.js';
 
 export default class LoaderPhase {

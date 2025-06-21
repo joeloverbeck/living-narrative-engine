@@ -4,6 +4,7 @@ import { BaseManifestItemLoader } from '../../../src/loaders/baseManifestItemLoa
 
 /**
  * Creates minimal mock dependencies required for GoalLoader.
+ *
  * @returns {object} mocks
  */
 function createMocks() {

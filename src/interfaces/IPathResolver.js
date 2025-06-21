@@ -15,6 +15,7 @@ export class IPathResolver {
 
   /**
    * Resolves the path to a content file.
+   *
    * @param registryKey
    * @param filename
    * @returns {string}
@@ -38,6 +39,7 @@ export class IPathResolver {
 
   /**
    * Resolves the path to a mod content file.
+   *
    * @param modId
    * @param registryKey
    * @param filename

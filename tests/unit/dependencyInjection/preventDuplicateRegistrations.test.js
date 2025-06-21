@@ -15,6 +15,7 @@ jest.mock('../../../src/configuration/loggerConfigLoader.js', () => ({
 
 /**
  * Creates a mock DI container that spies on registrations.
+ *
  * @returns A mock container object with `register`, `resolve`, `isRegistered` methods
  * and a `registrations` property to inspect calls.
  */
