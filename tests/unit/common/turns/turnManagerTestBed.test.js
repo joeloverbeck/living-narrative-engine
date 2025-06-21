@@ -22,6 +22,14 @@ describe('TurnManager Test Helpers: TurnManagerTestBed', () => {
     }
   }
 
+  class RealManager {
+    async start() {
+      await this.advanceTurn();
+    }
+    stop() {}
+    advanceTurn() {}
+  }
+
   beforeEach(() => {
     jest.clearAllMocks();
     testBed = new TurnManagerTestBed();
@@ -110,5 +118,30 @@ describe('TurnManager Test Helpers: TurnManagerTestBed', () => {
     expect(fn).toHaveBeenCalled();
     jest.useRealTimers();
     await bed.cleanup();
+  });
+
+  it('startAndFlush starts manager then flushes timers', async () => {
+    jest.useFakeTimers({ legacyFakeTimers: false });
+    const bed = new TurnManagerTestBed({ TurnManagerClass: FakeManager });
+    const fn = jest.fn();
+    setTimeout(fn, 50);
+    await bed.startAndFlush();
+    expect(bed.turnManager.start).toHaveBeenCalled();
+    expect(fn).toHaveBeenCalled();
+    jest.useRealTimers();
+    await bed.cleanup();
+  });
+
+  it('spy helpers restore spies during cleanup', async () => {
+    const bed = new TurnManagerTestBed({ TurnManagerClass: RealManager });
+    const stopSpy = bed.spyOnStop();
+    const advanceSpy = bed.spyOnAdvanceTurn();
+    await bed.turnManager.stop();
+    await bed.turnManager.advanceTurn();
+    expect(stopSpy).toHaveBeenCalledTimes(1);
+    expect(advanceSpy).toHaveBeenCalledTimes(1);
+    await bed.cleanup();
+    expect(jest.isMockFunction(bed.turnManager.stop)).toBe(false);
+    expect(jest.isMockFunction(bed.turnManager.advanceTurn)).toBe(false);
   });
 });

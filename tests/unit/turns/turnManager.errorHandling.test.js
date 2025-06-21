@@ -152,6 +152,7 @@ describeTurnManagerSuite('TurnManager - Error Handling', (getBed) => {
   test('should handle turn order service errors', async () => {
     // Arrange
     const orderError = new Error('Turn order service failure');
+    testBed.mocks.turnOrderService.isEmpty.mockResolvedValue(false);
     testBed.mocks.turnOrderService.getNextEntity.mockRejectedValue(orderError);
 
     // Act
