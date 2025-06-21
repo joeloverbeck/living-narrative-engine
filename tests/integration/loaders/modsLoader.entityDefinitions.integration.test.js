@@ -62,7 +62,10 @@ class MockManifestPhase extends LoaderPhase {
     return {
       ...context,
       finalModOrder: ['isekai'],
-      totals: { entityDefinitions: 4, entityInstances: 0 },
+      totals: { 
+        entityDefinitions: manifest.content.entityDefinitions?.length || 0, 
+        entityInstances: manifest.content.entityInstances?.length || 0 
+      },
       manifests: new Map([[MOD_ID, manifest]]),
     };
   }
@@ -177,17 +180,21 @@ describe('Integration: Entity Definitions and Instances Loader', () => {
     );
     const files = manifest.content.entityDefinitions || [];
     for (const file of files) {
-      const id = file.replace(/\.json$/, '');
-      const entityId =
-        {
-          'hero.character.json': 'isekai:hero',
-          'sidekick.character.json': 'isekai:sidekick',
-          'adventurers_guild.location.json': 'isekai:adventurers_guild',
-          'town.location.json': 'isekai:town',
-        }[file] || `isekai:${id}`;
+      // Read the entity definition file to get the correct id
+      const filePath = path.join(DEFINITIONS_DIR, file);
+      const entityData = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+      const entityId = entityData.id;
 
       const entity = registry.get('entityDefinitions', entityId);
+      if (!entity) {
+        console.error(`DEBUG: Entity not found for file: ${file}, entityId: ${entityId}`);
+        const allEntities = registry.getAll('entityDefinitions');
+        console.error('DEBUG: All entityDefinitions in registry:', allEntities);
+      }
       expect(entity).toBeDefined();
+      if (entity && entity._sourceFile !== file) {
+        console.error(`DEBUG: _sourceFile mismatch for entityId: ${entityId}. Expected: ${file}, Actual: ${entity._sourceFile}`);
+      }
       expect(entity._sourceFile).toBe(file);
     }
   });
@@ -198,10 +205,26 @@ describe('Integration: Entity Definitions and Instances Loader', () => {
       const files = fs
         .readdirSync(INSTANCES_DIR)
         .filter((f) => f.endsWith('.json'));
+      
+      // DEBUG: Log what files we found
+      console.log('DEBUG: Found entity instance files:', files);
+      
+      // DEBUG: Log all entity instances in registry
+      const allInstances = registry.getAll('entity_instances');
+      console.log('DEBUG: All entity instances in registry:', allInstances);
+      
       for (const file of files) {
-        const id = file.replace(/\.json$/, '');
-        const fullId = `${MOD_ID}:${id}`;
-        const instance = registry.get('entityInstances', fullId);
+        // Read the entity instance file to get the correct instanceId
+        const filePath = path.join(INSTANCES_DIR, file);
+        const instanceData = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+        const instanceId = instanceData.instanceId;
+        
+        // DEBUG: Log what we're looking for
+        console.log(`DEBUG: Looking for entity instance with ID: ${instanceId}`);
+        
+        const instance = registry.get('entity_instances', instanceId);
+        console.log(`DEBUG: Found instance:`, instance);
+        
         expect(instance).toBeDefined();
         expect(instance._sourceFile).toBe(file);
       }
