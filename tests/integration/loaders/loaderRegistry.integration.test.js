@@ -1,6 +1,7 @@
 // Filename: src/tests/integration/loaderRegistry.integration.test.js
 
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
+import { createMockLogger } from '../../common/mockFactories.js';
 import ActionLoader from '../../../src/loaders/actionLoader.js';
 import ComponentLoader from '../../../src/loaders/componentLoader.js';
 import InMemoryDataRegistry from '../../../src/data/inMemoryDataRegistry.js';
@@ -81,13 +82,6 @@ const createMockSchemaValidator = (overrides = {}) => {
   return mockValidator;
 };
 
-const createMockLogger = (overrides = {}) => ({
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-  debug: jest.fn(),
-  ...overrides,
-});
 
 // --- Test Suite ---
 describe('Integration: Loaders, Registry State, and Overrides (REFACTOR-8.6)', () => {
