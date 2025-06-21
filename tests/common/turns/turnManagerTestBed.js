@@ -13,7 +13,7 @@ import {
   createMockTurnHandler,
 } from '../mockFactories.js';
 import BaseTestBed from '../baseTestBed.js';
-import { describeSuite } from '../describeSuite.js';
+import { describeSuiteWithHooks } from '../describeSuite.js';
 
 /**
  * @description Utility class that instantiates {@link TurnManager} with mocked
@@ -223,7 +223,9 @@ export const flushPromisesAndTimers = async () => {
  * @returns {void}
  */
 export function describeTurnManagerSuite(title, suiteFn, overrides = {}) {
-  describeSuite(title, TurnManagerTestBed, suiteFn, overrides);
+  describeSuiteWithHooks(title, TurnManagerTestBed, suiteFn, {
+    args: [overrides],
+  });
 }
 
 export default TurnManagerTestBed;
