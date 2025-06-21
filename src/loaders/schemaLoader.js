@@ -20,6 +20,7 @@
  * It focuses solely on processing the schemas listed in the configuration's `schemaFiles`.
  */
 import AbstractLoader from './abstractLoader.js';
+import { validateDependencies } from '../utils/validationUtils.js';
 
 class SchemaLoader extends AbstractLoader {
   #config;
@@ -39,7 +40,12 @@ class SchemaLoader extends AbstractLoader {
    * @throws {Error} If any required dependency is not provided or invalid.
    */
   constructor(configuration, pathResolver, fetcher, validator, logger) {
-    super(logger, [
+    validateDependencies([
+      {
+        dependency: logger,
+        name: 'ILogger',
+        methods: ['info', 'warn', 'error', 'debug'],
+      },
       {
         dependency: configuration,
         name: 'IConfiguration',
@@ -60,7 +66,8 @@ class SchemaLoader extends AbstractLoader {
         name: 'ISchemaValidator',
         methods: ['addSchema', 'isSchemaLoaded'],
       },
-    ]);
+    ], logger);
+    super(logger);
 
     this.#config = configuration;
     this.#resolver = pathResolver;

@@ -1,12 +1,12 @@
 import { describe, it, expect, jest } from '@jest/globals';
 import * as validationUtils from '../../../src/utils/validationUtils.js';
 import { assertValidActionIndex } from '../../../src/utils/actionIndexUtils.js';
-const { validateLoaderDeps, validateDependencies } = validationUtils;
+const { validateDependency, validateDependencies } = validationUtils;
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/eventIds.js';
 
-// Tests for validateLoaderDeps and assertValidActionIndex
+// Tests for validateDependency and validateDependencies
 
-describe('validateLoaderDeps', () => {
+describe('validateDependency', () => {
   it('does not throw for valid dependencies', () => {
     const logger = {
       info: jest.fn(),
@@ -17,11 +17,49 @@ describe('validateLoaderDeps', () => {
     const depA = {};
     const depB = { foo: jest.fn() };
     expect(() =>
-      validateLoaderDeps(logger, [
+      validateDependency(logger, [
         { dependency: depA, name: 'depA', methods: [] },
         { dependency: depB, name: 'depB', methods: ['foo'] },
       ])
     ).not.toThrow();
+  });
+});
+
+describe('validateDependencies', () => {
+  it('validates each dependency and passes for valid specs', () => {
+    const logger = {
+      error: jest.fn(),
+      info: jest.fn(),
+      warn: jest.fn(),
+      debug: jest.fn(),
+    };
+    const depA = { m: jest.fn() };
+    const depB = () => {};
+
+    expect(() =>
+      validateDependencies(
+        [
+          { dependency: depA, name: 'A', methods: ['m'] },
+          { dependency: depB, name: 'B', isFunction: true },
+        ],
+        logger
+      )
+    ).not.toThrow();
+  });
+
+  it('does nothing when deps is falsy', () => {
+    const logger = { error: jest.fn() };
+    expect(() => validateDependencies(null, logger)).not.toThrow();
+  });
+
+  it('throws when a dependency fails validation', () => {
+    const logger = { error: jest.fn() };
+    expect(() =>
+      validateDependencies([{ dependency: null, name: 'Bad' }], logger)
+    ).toThrow('Missing required dependency: Bad.');
+    expect(logger.error).toHaveBeenCalledWith(
+      'Missing required dependency: Bad.'
+    );
   });
 });
 
@@ -63,43 +101,5 @@ describe('assertValidActionIndex', () => {
       assertValidActionIndex(2, 3, 'Prov', 'actor3', dispatcher, {})
     ).not.toThrow();
     expect(dispatcher.dispatch).not.toHaveBeenCalled();
-  });
-});
-
-describe('validateDependencies', () => {
-  it('validates each dependency and passes for valid specs', () => {
-    const logger = {
-      error: jest.fn(),
-      info: jest.fn(),
-      warn: jest.fn(),
-      debug: jest.fn(),
-    };
-    const depA = { m: jest.fn() };
-    const depB = () => {};
-
-    expect(() =>
-      validateDependencies(
-        [
-          { dependency: depA, name: 'A', methods: ['m'] },
-          { dependency: depB, name: 'B', isFunction: true },
-        ],
-        logger
-      )
-    ).not.toThrow();
-  });
-
-  it('does nothing when deps is falsy', () => {
-    const logger = { error: jest.fn() };
-    expect(() => validateDependencies(null, logger)).not.toThrow();
-  });
-
-  it('throws when a dependency fails validation', () => {
-    const logger = { error: jest.fn() };
-    expect(() =>
-      validateDependencies([{ dependency: null, name: 'Bad' }], logger)
-    ).toThrow('Missing required dependency: Bad.');
-    expect(logger.error).toHaveBeenCalledWith(
-      'Missing required dependency: Bad.'
-    );
   });
 });
