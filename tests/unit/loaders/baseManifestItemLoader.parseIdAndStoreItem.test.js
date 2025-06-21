@@ -1,6 +1,7 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import { BaseManifestItemLoader } from '../../../src/loaders/baseManifestItemLoader.js';
 import { parseAndValidateId } from '../../../src/utils/idUtils.js';
+import { createMockPathResolver, createMockDataFetcher } from '../../common/mockFactories/index.js';
 
 jest.mock('../../../src/utils/idUtils.js', () => {
   const actual = jest.requireActual('../../../src/utils/idUtils.js');
@@ -9,7 +10,7 @@ jest.mock('../../../src/utils/idUtils.js', () => {
 
 const createMockConfiguration = (overrides = {}) => ({
   getModsBasePath: jest.fn().mockReturnValue('./data/mods'),
-  getContentTypeSchemaId: jest.fn().mockReturnValue('schema'),
+  getContentTypeSchemaId: jest.fn(() => 'testSchema'),
   getSchemaBasePath: jest.fn().mockReturnValue('schemas'),
   getSchemaFiles: jest.fn().mockReturnValue([]),
   getBaseDataPath: jest.fn().mockReturnValue('./data'),
@@ -18,23 +19,12 @@ const createMockConfiguration = (overrides = {}) => ({
   getContentBasePath: jest.fn((t) => `./data/${t}`),
   ...overrides,
 });
-const createMockPathResolver = (overrides = {}) => ({
-  resolveModContentPath: jest.fn(),
-  resolveContentPath: jest.fn(),
-  resolveSchemaPath: jest.fn(),
-  resolveModManifestPath: jest.fn(),
-  resolveGameConfigPath: jest.fn(),
-  resolveRulePath: jest.fn(),
+
+const createMockSchemaValidator = (overrides = {}) => ({
+  validate: jest.fn().mockReturnValue({ isValid: true, errors: null }),
   ...overrides,
 });
-const createMockDataFetcher = () => ({ fetch: jest.fn() });
-const createMockSchemaValidator = () => ({
-  validate: jest.fn(),
-  getValidator: jest.fn(),
-  addSchema: jest.fn(),
-  removeSchema: jest.fn(),
-  isSchemaLoaded: jest.fn(),
-});
+
 const createMockDataRegistry = (overrides = {}) => ({
   store: jest.fn(),
   get: jest.fn(),
@@ -42,11 +32,13 @@ const createMockDataRegistry = (overrides = {}) => ({
   clear: jest.fn(),
   ...overrides,
 });
-const createMockLogger = () => ({
+
+const createMockLogger = (overrides = {}) => ({
   info: jest.fn(),
   warn: jest.fn(),
   error: jest.fn(),
   debug: jest.fn(),
+  ...overrides,
 });
 
 class TestableLoader extends BaseManifestItemLoader {
@@ -75,7 +67,7 @@ describe('BaseManifestItemLoader._parseIdAndStoreItem', () => {
     const config = createMockConfiguration();
     const resolver = createMockPathResolver();
     const fetcher = createMockDataFetcher();
-    const validator = createMockSchemaValidator();
+    const validator = require('../../common/mockFactories/coreServices.js').createMockSchemaValidator(undefined, { getValidator: jest.fn() });
     mockRegistry = createMockDataRegistry();
     mockRegistry.store.mockReturnValue(false);
     const logger = createMockLogger();

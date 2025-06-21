@@ -1,18 +1,9 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import WorldLoader from '../../../src/loaders/worldLoader.js';
+import { createMockPathResolver, createMockDataFetcher } from '../../common/mockFactories/index.js';
 
 const createMockConfiguration = () => ({
   getContentTypeSchemaId: jest.fn(() => 'worldSchema'),
-});
-
-const createMockPathResolver = () => ({
-  resolveModContentPath: jest.fn(
-    (modId, dir, filename) => `/mods/${modId}/${dir}/${filename}`
-  ),
-});
-
-const createMockDataFetcher = () => ({
-  fetch: jest.fn().mockResolvedValue({ instances: [] }),
 });
 
 const createMockSchemaValidator = () => ({
@@ -43,7 +34,9 @@ describe('WorldLoader.loadWorlds', () => {
 
   beforeEach(() => {
     config = createMockConfiguration();
-    resolver = createMockPathResolver();
+    resolver = createMockPathResolver({
+      resolveModContentPath: jest.fn((modId, dir, filename) => `/mods/${modId}/${dir}/${filename}`),
+    });
     fetcher = createMockDataFetcher();
     validator = createMockSchemaValidator();
     registry = createMockDataRegistry();

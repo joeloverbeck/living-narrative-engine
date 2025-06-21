@@ -10,6 +10,7 @@ import {
   afterEach,
 } from '@jest/globals'; // Assuming Jest environment
 import RuleLoader from '../../../src/loaders/ruleLoader.js'; // Adjust path as necessary
+import { createMockPathResolver, createMockDataFetcher } from '../../common/mockFactories/index.js';
 // Import interfaces for JSDoc typing if desired
 // import { IConfiguration, IPathResolver, IDataFetcher, ISchemaValidator, IDataRegistry, ILogger } from '../../../interfaces/coreServices';
 
@@ -58,24 +59,7 @@ const createMockConfiguration = (overrides = {}) => ({
  * @param {object} [overrides] - Optional overrides for mock methods.
  * @returns {import('../../../src/interfaces/coreServices.js').IPathResolver} Mocked path resolver service.
  */
-const createMockPathResolver = (overrides = {}) => ({
-  // resolveModContentPath is the key method needed by loaders iterating mod content
-  resolveModContentPath: jest.fn(
-    (modId, registryKey, filename) =>
-      `./data/mods/${modId}/${registryKey}/${filename}`
-  ),
-  resolveContentPath: jest.fn(
-    (registryKey, filename) => `./data/${registryKey}/${filename}`
-  ),
-  resolveSchemaPath: jest.fn((filename) => `./data/schemas/${filename}`),
-  resolveModManifestPath: jest.fn(
-    (modId) => `./data/mods/${modId}/mod-manifest.json`
-  ),
-  resolveGameConfigPath: jest.fn(() => './data/game.json'),
-  // resolveRulePath might be used if loading non-mod rules, ensure it's mocked
-  resolveRulePath: jest.fn((filename) => `./data/system-rules/${filename}`),
-  ...overrides,
-});
+// REMOVED: const createMockPathResolver = ...
 
 /**
  * Creates a mock IDataFetcher service.
@@ -85,76 +69,7 @@ const createMockPathResolver = (overrides = {}) => ({
  * @param {string[]} [errorPaths] - List of paths that should trigger a rejection.
  * @returns {import('../../../src/interfaces/coreServices.js').IDataFetcher} Mocked data fetcher service.
  */
-const createMockDataFetcher = (pathToResponse = {}, errorPaths = []) => ({
-  fetch: jest.fn(async (path) => {
-    if (errorPaths.includes(path)) {
-      return Promise.reject(
-        new Error(`Mock Fetch Error: Failed to fetch ${path}`)
-      );
-    }
-    if (Object.prototype.hasOwnProperty.call(pathToResponse, path)) {
-      // Deep clone to prevent tests from modifying the mock response object state
-      try {
-        return Promise.resolve(
-          JSON.parse(JSON.stringify(pathToResponse[path]))
-        );
-      } catch (e) {
-        // Handle cases where mock data isn't valid JSON if needed, though usually it should be
-        return Promise.reject(
-          new Error(
-            `Mock Fetcher Error: Could not clone mock data for path ${path}. Is it valid JSON?`
-          )
-        );
-      }
-    }
-    // Default behavior if path is not explicitly mocked for success or error
-    return Promise.reject(
-      new Error(`Mock Fetch Error: 404 Not Found for path ${path}`)
-    );
-  }),
-  // Helper to easily add successful responses mid-test
-  mockSuccess: function (path, responseData) {
-    // Ensure deep cloning
-    pathToResponse[path] = JSON.parse(JSON.stringify(responseData));
-    if (errorPaths.includes(path)) {
-      errorPaths = errorPaths.filter((p) => p !== path);
-    }
-    // Re-assign the mock function to capture the updated closures
-    this.fetch.mockImplementation(async (p) => {
-      if (errorPaths.includes(p))
-        return Promise.reject(
-          new Error(`Mock Fetch Error: Failed to fetch ${p}`)
-        );
-      if (Object.prototype.hasOwnProperty.call(pathToResponse, p))
-        return Promise.resolve(JSON.parse(JSON.stringify(pathToResponse[p])));
-      return Promise.reject(
-        new Error(`Mock Fetch Error: 404 Not Found for path ${p}`)
-      );
-    });
-  },
-  // Helper to easily add error responses mid-test
-  mockFailure: function (
-    path,
-    errorMessage = `Mock Fetch Error: Failed to fetch ${path}`
-  ) {
-    if (!errorPaths.includes(path)) {
-      errorPaths.push(path);
-    }
-    if (Object.prototype.hasOwnProperty.call(pathToResponse, path)) {
-      delete pathToResponse[path];
-    }
-    // Re-assign the mock function to capture the updated closures
-    this.fetch.mockImplementation(async (p) => {
-      if (errorPaths.includes(p))
-        return Promise.reject(new Error(errorMessage)); // Use provided message
-      if (Object.prototype.hasOwnProperty.call(pathToResponse, p))
-        return Promise.resolve(JSON.parse(JSON.stringify(pathToResponse[p])));
-      return Promise.reject(
-        new Error(`Mock Fetch Error: 404 Not Found for path ${p}`)
-      );
-    });
-  },
-});
+// REMOVED: const createMockDataFetcher = ...
 
 /**
  * Creates a mock ISchemaValidator service with helpers for configuration.

@@ -189,16 +189,19 @@ export const createMockValidatedEventBus = () => {
  * Creates a mock AJV schema validator service.
  *
  * @param {object} [defaultValidationResult] - Default result.
- * @returns {{ validate: jest.Mock }} Mock validator
+ * @param {object} [overrides] - Optional overrides for mock methods.
+ * @returns {{ validate: jest.Mock, getValidator: jest.Mock }} Mock validator
  */
 export const createMockSchemaValidator = (
-  defaultValidationResult = { isValid: true }
+  defaultValidationResult = { isValid: true },
+  overrides = {}
 ) => ({
   validate: jest.fn(() => defaultValidationResult),
   isSchemaLoaded: jest.fn(),
   addSchema: jest.fn(),
   removeSchema: jest.fn(),
-  getValidator: jest.fn(),
+  getValidator: jest.fn(() => jest.fn(() => defaultValidationResult)),
+  ...overrides,
 });
 
 /**
@@ -222,29 +225,109 @@ export const createMockConfiguration = () => ({
 /**
  * Creates a mock IPathResolver.
  *
+ * @param {object} [overrides] - Optional overrides for mock methods.
  * @returns {object} Mock path resolver
  */
-export const createMockPathResolver = () => ({
+export const createMockPathResolver = (overrides = {}) => ({
   resolvePath: jest.fn((path) => path),
   resolveModPath: jest.fn((modId) => `mods/${modId}`),
-  resolveModContentPath: jest.fn(
-    (modId, diskFolder, filename) => `mods/${modId}/${diskFolder}/${filename}`
-  ),
+  resolveModContentPath: jest.fn((modId, diskFolder, filename) => `mods/${modId}/${diskFolder}/${filename}`),
   resolveModManifestPath: jest.fn((modId) => `mods/${modId}/mod-manifest.json`),
   getModDirectory: jest.fn((modId) => `mods/${modId}`),
   getManifestName: jest.fn(),
+  resolveContentPath: jest.fn((registryKey, filename) => `/path/${registryKey}/${filename}`),
+  resolveSchemaPath: jest.fn((filename) => `/schemas/${filename}`),
+  resolveGameConfigPath: jest.fn(() => '/game.json'),
+  resolveRulePath: jest.fn((filename) => `/system-rules/${filename}`),
+  ...overrides,
 });
 
 /**
  * Creates a mock IDataFetcher.
  *
- * @returns {object} Mock data fetcher
+ * @param {object} [pathToResponse] - Map of path strings to successful response data (will be deep cloned).
+ * @param {string[]} [errorPaths] - List of paths that should trigger a rejection.
+ * @param {object} [overrides] - Optional overrides for mock methods.
+ * @returns {object} Mock data fetcher with helper methods
  */
-export const createMockDataFetcher = () => ({
-  fetch: jest.fn(),
-  fetchJson: jest.fn(),
-  fetchText: jest.fn(),
-});
+export const createMockDataFetcher = (pathToResponse = {}, errorPaths = [], overrides = {}) => {
+  const mockFetcher = {
+    fetch: jest.fn(async (path) => {
+      if (errorPaths.includes(path)) {
+        return Promise.reject(
+          new Error(`Mock Fetch Error: Failed to fetch ${path}`)
+        );
+      }
+      if (Object.prototype.hasOwnProperty.call(pathToResponse, path)) {
+        try {
+          return Promise.resolve(
+            JSON.parse(JSON.stringify(pathToResponse[path]))
+          );
+        } catch (e) {
+          return Promise.reject(
+            new Error(
+              `Mock Fetcher Error: Could not clone mock data for path ${path}. Is it valid JSON?`
+            )
+          );
+        }
+      }
+      // Default fallback for some tests
+      if (overrides.defaultValue !== undefined) {
+        return Promise.resolve(JSON.parse(JSON.stringify(overrides.defaultValue)));
+      }
+      return Promise.reject(
+        new Error(`Mock Fetch Error: 404 Not Found for path ${path}`)
+      );
+    }),
+    fetchJson: jest.fn(),
+    fetchText: jest.fn(),
+    mockSuccess: function (path, responseData) {
+      pathToResponse[path] = JSON.parse(JSON.stringify(responseData));
+      if (errorPaths.includes(path)) {
+        errorPaths = errorPaths.filter((p) => p !== path);
+      }
+      this.fetch.mockImplementation(async (p) => {
+        if (errorPaths.includes(p))
+          return Promise.reject(
+            new Error(`Mock Fetch Error: Failed to fetch ${p}`)
+          );
+        if (Object.prototype.hasOwnProperty.call(pathToResponse, p))
+          return Promise.resolve(JSON.parse(JSON.stringify(pathToResponse[p])));
+        if (overrides.defaultValue !== undefined) {
+          return Promise.resolve(JSON.parse(JSON.stringify(overrides.defaultValue)));
+        }
+        return Promise.reject(
+          new Error(`Mock Fetch Error: 404 Not Found for path ${p}`)
+        );
+      });
+    },
+    mockFailure: function (
+      path,
+      errorMessage = `Mock Fetch Error: Failed to fetch ${path}`
+    ) {
+      if (!errorPaths.includes(path)) {
+        errorPaths.push(path);
+      }
+      if (Object.prototype.hasOwnProperty.call(pathToResponse, path)) {
+        delete pathToResponse[path];
+      }
+      this.fetch.mockImplementation(async (p) => {
+        if (errorPaths.includes(p))
+          return Promise.reject(new Error(errorMessage));
+        if (Object.prototype.hasOwnProperty.call(pathToResponse, p))
+          return Promise.resolve(JSON.parse(JSON.stringify(pathToResponse[p])));
+        if (overrides.defaultValue !== undefined) {
+          return Promise.resolve(JSON.parse(JSON.stringify(overrides.defaultValue)));
+        }
+        return Promise.reject(
+          new Error(`Mock Fetch Error: 404 Not Found for path ${p}`)
+        );
+      });
+    },
+    ...overrides,
+  };
+  return mockFetcher;
+};
 
 /**
  * Creates a mock IDataFetcher that reads JSON files from disk for integration tests.

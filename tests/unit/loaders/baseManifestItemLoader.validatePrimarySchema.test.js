@@ -4,6 +4,7 @@ import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 // Adjust the import path as necessary
 import { BaseManifestItemLoader } from '../../../src/loaders/baseManifestItemLoader.js';
 import { formatAjvErrors } from '../../../src/utils/ajvUtils.js';
+import { createMockPathResolver, createMockDataFetcher } from '../../common/mockFactories/index.js';
 // Assume ValidationResult type is available or mock it if needed for type checking in tests
 // import { ValidationResult } from '../../../src/interfaces/validation.js'; // Example import
 
@@ -11,9 +12,7 @@ import { formatAjvErrors } from '../../../src/utils/ajvUtils.js';
 
 const createMockConfiguration = (overrides = {}) => ({
   getModsBasePath: jest.fn().mockReturnValue('./data/mods'),
-  getContentTypeSchemaId: jest
-    .fn()
-    .mockReturnValue('http://example.com/schemas/default.schema.json'),
+  getContentTypeSchemaId: jest.fn(() => 'testSchema'),
   getSchemaBasePath: jest.fn().mockReturnValue('schemas'),
   getSchemaFiles: jest.fn().mockReturnValue([]),
   getWorldBasePath: jest.fn().mockReturnValue('worlds'),
@@ -21,28 +20,6 @@ const createMockConfiguration = (overrides = {}) => ({
   getGameConfigFilename: jest.fn().mockReturnValue('game.json'),
   getModManifestFilename: jest.fn().mockReturnValue('mod-manifest.json'),
   getContentBasePath: jest.fn((type) => `./data/${type}`),
-  ...overrides,
-});
-
-const createMockPathResolver = (overrides = {}) => ({
-  resolveModContentPath: jest.fn(
-    (modId, registryKey, filename) =>
-      `./data/mods/${modId}/${registryKey}/${filename}`
-  ),
-  resolveContentPath: jest.fn(
-    (registryKey, filename) => `./data/${registryKey}/${filename}`
-  ),
-  resolveSchemaPath: jest.fn((filename) => `./data/schemas/${filename}`),
-  resolveModManifestPath: jest.fn(
-    (modId) => `./data/mods/${modId}/mod-manifest.json`
-  ),
-  resolveGameConfigPath: jest.fn(() => './data/game.json'),
-  resolveRulePath: jest.fn((filename) => `./data/system-rules/${filename}`),
-  ...overrides,
-});
-
-const createMockDataFetcher = (overrides = {}) => ({
-  fetch: jest.fn().mockResolvedValue({}),
   ...overrides,
 });
 

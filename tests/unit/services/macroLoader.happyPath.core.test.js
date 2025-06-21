@@ -2,6 +2,7 @@ import MacroLoader from '../../../src/loaders/macroLoader.js';
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { CORE_MOD_ID } from '../../../src/constants/core';
 import StaticConfiguration from '../../../src/configuration/staticConfiguration.js';
+import { createMockPathResolver, createMockDataFetcher } from '../../common/mockFactories/index.js';
 
 const createMockConfiguration = (overrides = {}) => ({
   getModsBasePath: jest.fn(() => './data/mods'),
@@ -14,20 +15,6 @@ const createMockConfiguration = (overrides = {}) => ({
   ...overrides,
 });
 
-const createMockPathResolver = (overrides = {}) => ({
-  resolveModContentPath: jest.fn(
-    (modId, dir, filename) => `./data/mods/${modId}/${dir}/${filename}`
-  ),
-  ...overrides,
-});
-
-const createMockDataFetcher = (map) => ({
-  fetch: jest.fn(async (path) => {
-    if (path in map) return JSON.parse(JSON.stringify(map[path]));
-    throw new Error(`Unexpected fetch path: ${path}`);
-  }),
-});
-
 const createMockSchemaValidator = (overrides = {}) => ({
   isSchemaLoaded: jest.fn(() => true),
   getValidator: jest.fn(() => () => ({ isValid: true, errors: null })),
@@ -37,17 +24,19 @@ const createMockSchemaValidator = (overrides = {}) => ({
   ...overrides,
 });
 
-const createMockDataRegistry = () => ({
+const createMockDataRegistry = (overrides = {}) => ({
   store: jest.fn(),
   get: jest.fn(),
   clear: jest.fn(),
+  ...overrides,
 });
 
-const createMockLogger = () => ({
+const createMockLogger = (overrides = {}) => ({
   debug: jest.fn(),
   info: jest.fn(),
   warn: jest.fn(),
   error: jest.fn(),
+  ...overrides,
 });
 
 describe('MacroLoader (Happy Path - Core Mod)', () => {
@@ -73,7 +62,9 @@ describe('MacroLoader (Happy Path - Core Mod)', () => {
     mockLogger = createMockLogger();
     macroLoader = new MacroLoader(
       createMockConfiguration(),
-      createMockPathResolver(),
+      createMockPathResolver({
+        resolveModContentPath: jest.fn((modId, dir, filename) => `./data/mods/${modId}/${dir}/${filename}`),
+      }),
       createMockDataFetcher({
         [`./data/mods/${CORE_MOD_ID}/macros/logSuccessAndEndTurn.macro.json`]:
           logSuccess,
