@@ -12,17 +12,6 @@ import {
 } from './entityValidationUtils.js';
 import { isNonBlankString } from './textUtils.js';
 
-/**
- * Checks that the manager or entity exposes a `getComponentData` method.
- *
- * @param {*} mgr - Value to validate.
- * @returns {boolean} True if `mgr.getComponentData` is a function.
- * @private
- */
-function _isValidManager(mgr) {
-  return !!mgr && typeof mgr.getComponentData === 'function';
-}
-
 /** @typedef {import('../entities/entity.js').default} Entity */
 
 /**
@@ -38,7 +27,7 @@ function _isValidManager(mgr) {
 export function getComponentFromEntity(entity, componentId, logger) {
   const log = getPrefixedLogger(logger, '[componentAccessUtils] ');
 
-  if (!isNonBlankString(componentId) || !_isValidManager(entity)) {
+  if (!isNonBlankString(componentId) || !isValidEntity(entity)) {
     log.debug('getComponentFromEntity: invalid entity or componentId.');
     return null;
   }
@@ -83,7 +72,7 @@ export function getComponentFromManager(
     return null;
   }
 
-  if (!_isValidManager(entityManager)) {
+  if (!isValidEntityManager(entityManager)) {
     log.debug('getComponentFromManager: invalid entityManager provided.');
     return null;
   }
