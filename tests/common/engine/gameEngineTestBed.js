@@ -142,4 +142,39 @@ export function describeGameEngineSuite(title, suiteFn, overrides = {}) {
   );
 }
 
+/**
+ * Defines an engine-focused test suite providing `bed` and `engine` variables
+ * automatically via `beforeEach`.
+ *
+ * @param {string} title - Suite title passed to `describe`.
+ * @param {(context: { bed: GameEngineTestBed, engine: import('../../../src/engine/gameEngine.js').default }) => void} suiteFn -
+ *   Callback containing the tests.
+ * @param {{[token: string]: any}} [overrides] - Optional DI overrides.
+ * @returns {void}
+ */
+export function describeEngineSuite(title, suiteFn, overrides = {}) {
+  describeGameEngineSuite(
+    title,
+    (getBed) => {
+      /** @type {GameEngineTestBed} */
+      let bed;
+      /** @type {import('../../../src/engine/gameEngine.js').default} */
+      let engine;
+      beforeEach(() => {
+        bed = getBed();
+        engine = bed.engine;
+      });
+      suiteFn({
+        get bed() {
+          return bed;
+        },
+        get engine() {
+          return engine;
+        },
+      });
+    },
+    overrides
+  );
+}
+
 export default GameEngineTestBed;

@@ -3,13 +3,13 @@ import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { tokens } from '../../../src/dependencyInjection/tokens.js';
 import {
   createGameEngineTestBed,
-  describeGameEngineSuite,
+  describeEngineSuite,
 } from '../../common/engine/gameEngineTestBed.js';
 import '../../common/engine/engineTestTypedefs.js';
 import { expectDispatchSequence } from '../../common/engine/dispatchTestUtils.js';
 import { ENGINE_OPERATION_FAILED_UI } from '../../../src/constants/eventIds.js';
 
-describeGameEngineSuite('GameEngine', (getBed) => {
+describeEngineSuite('GameEngine', (ctx) => {
   let testBed;
   let gameEngine; // Instance of GameEngine
   describe('loadGame', () => {
@@ -23,8 +23,8 @@ describeGameEngineSuite('GameEngine', (getBed) => {
     let prepareSpy, executeSpy, finalizeSpy, handleFailureSpy;
 
     beforeEach(() => {
-      testBed = getBed();
-      gameEngine = testBed.engine; // Ensure gameEngine is fresh
+      testBed = ctx.bed;
+      gameEngine = ctx.engine; // Ensure gameEngine is fresh
       // Spies are on the gameEngine instance created here
       prepareSpy = jest
         .spyOn(gameEngine, '_prepareForLoadGameSession')

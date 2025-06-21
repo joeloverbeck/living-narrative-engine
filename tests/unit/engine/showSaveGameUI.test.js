@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it } from '@jest/globals';
 import { tokens } from '../../../src/dependencyInjection/tokens.js';
 import {
   createGameEngineTestBed,
-  describeGameEngineSuite,
+  describeEngineSuite,
 } from '../../common/engine/gameEngineTestBed.js';
 import '../../common/engine/engineTestTypedefs.js';
 import {
@@ -11,18 +11,18 @@ import {
   CANNOT_SAVE_GAME_INFO,
 } from '../../../src/constants/eventIds.js';
 
-describeGameEngineSuite('GameEngine', (getBed) => {
+describeEngineSuite('GameEngine', (ctx) => {
   let testBed;
   let gameEngine; // Instance of GameEngine
 
   const MOCK_WORLD_NAME = 'TestWorld';
 
   beforeEach(() => {
-    testBed = getBed();
+    testBed = ctx.bed;
   });
   describe('showSaveGameUI', () => {
     beforeEach(async () => {
-      gameEngine = testBed.engine;
+      gameEngine = ctx.engine;
       // Start the game to ensure this.#isEngineInitialized is true for isSavingAllowed check
       await testBed.init(MOCK_WORLD_NAME);
       testBed.resetMocks();

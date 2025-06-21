@@ -1,7 +1,7 @@
 // tests/engine/startNewGame.test.js
 import { beforeEach, describe, expect, it } from '@jest/globals';
 import { tokens } from '../../../src/dependencyInjection/tokens.js';
-import { describeGameEngineSuite } from '../../common/engine/gameEngineTestBed.js';
+import { describeEngineSuite } from '../../common/engine/gameEngineTestBed.js';
 import '../../common/engine/engineTestTypedefs.js';
 
 import {
@@ -11,19 +11,19 @@ import {
   ENGINE_STOPPED_UI,
 } from '../../../src/constants/eventIds.js';
 
-describeGameEngineSuite('GameEngine', (getBed) => {
+describeEngineSuite('GameEngine', (ctx) => {
   let testBed;
   let gameEngine; // Instance of GameEngine
 
   const MOCK_WORLD_NAME = 'TestWorld';
 
   beforeEach(() => {
-    testBed = getBed();
+    testBed = ctx.bed;
   });
 
   describe('startNewGame', () => {
     beforeEach(() => {
-      gameEngine = testBed.engine; // Standard instance for these tests
+      gameEngine = ctx.engine; // Standard instance for these tests
       testBed.mocks.initializationService.runInitializationSequence.mockResolvedValue(
         {
           success: true,
