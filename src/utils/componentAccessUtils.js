@@ -10,17 +10,7 @@ import {
   isValidEntityManager,
   isValidEntity,
 } from './entityValidationUtils.js';
-
-/**
- * Checks that the provided identifier is a non-blank string.
- *
- * @param {*} id - Value to validate.
- * @returns {boolean} True when `id` is a non-empty string.
- * @private
- */
-function _isValidId(id) {
-  return typeof id === 'string' && id.trim() !== '';
-}
+import { isNonBlankString } from './textUtils.js';
 
 /**
  * Checks that the manager or entity exposes a `getComponentData` method.
@@ -48,7 +38,7 @@ function _isValidManager(mgr) {
 export function getComponentFromEntity(entity, componentId, logger) {
   const log = getPrefixedLogger(logger, '[componentAccessUtils] ');
 
-  if (!_isValidId(componentId) || !_isValidManager(entity)) {
+  if (!isNonBlankString(componentId) || !_isValidManager(entity)) {
     log.debug('getComponentFromEntity: invalid entity or componentId.');
     return null;
   }
@@ -88,7 +78,7 @@ export function getComponentFromManager(
 ) {
   const log = getPrefixedLogger(logger, '[componentAccessUtils] ');
 
-  if (!_isValidId(entityId) || !_isValidId(componentId)) {
+  if (!isNonBlankString(entityId) || !isNonBlankString(componentId)) {
     log.debug('getComponentFromManager: invalid entityId or componentId.');
     return null;
   }
