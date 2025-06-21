@@ -3,7 +3,11 @@
  */
 
 import { describe, it, expect, jest } from '@jest/globals';
-import { withGameEngineBed } from '../../../common/engine/gameEngineHelpers.js';
+import {
+  withGameEngineBed,
+  runUnavailableServiceTest,
+} from '../../../common/engine/gameEngineHelpers.js';
+import { tokens } from '../../../../src/dependencyInjection/tokens.js';
 import * as bedModule from '../../../common/engine/gameEngineTestBed.js';
 
 describe('withGameEngineBed', () => {
@@ -43,5 +47,26 @@ describe('withGameEngineBed', () => {
     expect(bed.cleanup).toHaveBeenCalledTimes(1);
 
     bedModule.createGameEngineTestBed.mockRestore();
+  });
+});
+
+describe('runUnavailableServiceTest', () => {
+  it('generates executable test functions', async () => {
+    const cases = [
+      [
+        tokens.GamePersistenceService,
+        'GameEngine.showLoadGameUI: GamePersistenceService is unavailable. Cannot show Load Game UI.',
+      ],
+    ];
+
+    const testCases = runUnavailableServiceTest(cases, (bed, engine) => {
+      engine.showLoadGameUI();
+      return [bed.mocks.logger.error, bed.mocks.safeEventDispatcher.dispatch];
+    });
+
+    expect(Array.isArray(testCases)).toBe(true);
+    const [token, fn] = testCases[0];
+    expect(token).toBe(tokens.GamePersistenceService);
+    await fn();
   });
 });
