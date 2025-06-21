@@ -9,6 +9,8 @@
  *
  * @class
  */
+import { deepClone } from '../../../src/utils/cloneUtils.js';
+
 export default class SimpleEntityManager {
   /**
    * Creates a new instance pre-populated with the provided entities.
@@ -19,10 +21,8 @@ export default class SimpleEntityManager {
     /** @type {Map<string, {id:string, components:Record<string, any>}>} */
     this.entities = new Map();
     for (const e of entities) {
-      this.entities.set(e.id, {
-        id: e.id,
-        components: { ...e.components },
-      });
+      const cloned = deepClone(e);
+      this.entities.set(cloned.id, cloned);
     }
   }
 
@@ -72,7 +72,7 @@ export default class SimpleEntityManager {
   addComponent(id, type, data) {
     const ent = this.entities.get(id);
     if (ent) {
-      ent.components[type] = JSON.parse(JSON.stringify(data));
+      ent.components[type] = deepClone(data);
     }
   }
 
