@@ -1,5 +1,3 @@
-export { default } from './contentPhase.js';
-export { default } from './contentPhase.js';Add commentMore actions
 // src/loaders/phases/contentPhase.js
 
 import LoaderPhase from './loaderphase.js';
@@ -10,7 +8,7 @@ import {
 import { logPhaseStart } from '../../utils/logPhaseStart.js';
 
 /**
- * @typedef {import('../loadContext.js').LoadContext} LoadContext
+ * @typedef {import('../LoadContext.js').LoadContext} LoadContext
  * @typedef {import('../contentLoadManager.js').default} ContentLoadManager
  * @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger
  * @typedef {import('../../../data/schemas/mod.manifest.schema.json').ModManifest} ModManifest
