@@ -4,6 +4,7 @@ import { AIPromptPipeline } from '../../../src/prompting/AIPromptPipeline.js';
 import {
   describeAIPromptPipelineSuite,
   AIPromptPipelineTestBed,
+  AIPromptPipelineDependencySpec,
 } from '../../common/prompting/promptPipelineTestBed.js';
 import { buildMissingDependencyCases } from '../../common/constructorValidationHelpers.js';
 
@@ -16,28 +17,9 @@ describeAIPromptPipelineSuite('AIPromptPipeline', (getBed) => {
   });
 
   describe('constructor validation', () => {
-    const spec = {
-      llmAdapter: {
-        error: /ILLMAdapter/,
-        methods: ['getAIDecision', 'getCurrentActiveLlmId'],
-      },
-      gameStateProvider: {
-        error: /IAIGameStateProvider/,
-        methods: ['buildGameState'],
-      },
-      promptContentProvider: {
-        error: /IAIPromptContentProvider/,
-        methods: ['getPromptData'],
-      },
-      promptBuilder: {
-        error: /IPromptBuilder/,
-        methods: ['build'],
-      },
-      logger: { error: /ILogger/, methods: ['info'] },
-    };
     const cases = buildMissingDependencyCases(
       () => testBed.getDependencies(),
-      spec
+      AIPromptPipelineDependencySpec
     );
     test.each(cases)('throws when %s', (_desc, mutate, regex) => {
       const deps = testBed.getDependencies();
