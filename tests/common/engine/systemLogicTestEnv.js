@@ -11,6 +11,7 @@ import OperationInterpreter from '../../../src/logic/operationInterpreter.js';
 import JsonLogicEvaluationService from '../../../src/logic/jsonLogicEvaluationService.js';
 import SystemLogicInterpreter from '../../../src/logic/systemLogicInterpreter.js';
 import SimpleEntityManager from '../entities/simpleEntityManager.js';
+import { createMockLogger } from '../mockFactories/index.js';
 
 /**
  * Creates a complete test environment for system logic rule testing.
@@ -31,14 +32,7 @@ export function createRuleTestEnvironment({
   dataRegistry = null,
 }) {
   // Create logger if not provided
-  const testLogger = logger || {
-    debug: (...args) => {
-      console.log('[DEBUG]', ...args);
-    },
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
-  };
+  const testLogger = logger || createMockLogger();
 
   // Create data registry if not provided
   const testDataRegistry = dataRegistry || {
@@ -58,16 +52,6 @@ export function createRuleTestEnvironment({
   // Create handlers using the provided function
   let handlers = createHandlers(entityManager, eventBus, testLogger);
   for (const [type, handler] of Object.entries(handlers)) {
-    if (type === 'DISPATCH_EVENT') {
-      const origExecute = handler.execute.bind(handler);
-      handler.execute = function (...args) {
-        console.log(
-          '[DEBUG] DISPATCH_EVENT handler called with args:',
-          JSON.stringify(args, null, 2)
-        );
-        return origExecute(...args);
-      };
-    }
     operationRegistry.register(type, handler.execute.bind(handler));
   }
 
@@ -111,21 +95,11 @@ export function createRuleTestEnvironment({
     },
     reset: (newEntities = []) => {
       env.cleanup();
-      // Unique debug log for reset
-      console.log(
-        'DEBUG: [reset] called with newEntities:',
-        JSON.stringify(newEntities, null, 2)
-      );
       // Deep clone entities and their components to avoid mutation issues
       const clonedEntities = newEntities.map((e) => ({
         id: e.id,
         components: JSON.parse(JSON.stringify(e.components)),
       }));
-      // Unique debug log for reset
-      console.log(
-        'DEBUG: [reset] using clonedEntities:',
-        JSON.stringify(clonedEntities, null, 2)
-      );
       entityManager = new SimpleEntityManager(clonedEntities);
       env.entityManager = entityManager;
       operationRegistry = new OperationRegistry({ logger: testLogger });
@@ -155,20 +129,6 @@ export function createRuleTestEnvironment({
   };
 
   return env;
-}
-
-/**
- * Creates a mock logger for testing.
- *
- * @returns {object} Mock logger with jest functions
- */
-export function createMockLogger() {
-  return {
-    debug: jest.fn(),
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
-  };
 }
 
 /**
