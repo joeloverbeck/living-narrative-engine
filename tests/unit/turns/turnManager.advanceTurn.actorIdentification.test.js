@@ -20,7 +20,6 @@ describeTurnManagerSuite(
     let turnEndCapture;
 
     beforeEach(async () => {
-      jest.clearAllMocks();
       testBed = getBed();
 
       testBed.mocks.turnOrderService.isEmpty.mockResolvedValue(false);
@@ -47,16 +46,7 @@ describeTurnManagerSuite(
         .spyOn(testBed.turnManager, 'stop')
         .mockImplementation(async () => {});
 
-      await testBed.turnManager.start();
-
-      testBed.mocks.logger.info.mockClear();
-      testBed.mocks.logger.debug.mockClear();
-      testBed.mocks.logger.warn.mockClear();
-      testBed.mocks.logger.error.mockClear();
-      testBed.mocks.dispatcher.dispatch.mockClear();
-      testBed.mocks.turnOrderService.isEmpty.mockClear();
-      testBed.mocks.turnOrderService.getNextEntity.mockClear();
-      testBed.mocks.turnHandlerResolver.resolveHandler.mockClear();
+      await testBed.startRunning();
 
       testBed.mocks.turnOrderService.isEmpty.mockResolvedValue(false);
       testBed.mocks.dispatcher.dispatch.mockResolvedValue(true);
