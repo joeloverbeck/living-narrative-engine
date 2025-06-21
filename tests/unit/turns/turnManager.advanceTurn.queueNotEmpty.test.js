@@ -7,10 +7,6 @@ import {
   TurnManagerTestBed,
 } from '../../common/turns/turnManagerTestBed.js';
 import {
-  ACTOR_COMPONENT_ID,
-  PLAYER_COMPONENT_ID,
-} from '../../../src/constants/componentIds.js';
-import {
   SYSTEM_ERROR_OCCURRED_ID,
   TURN_PROCESSING_STARTED,
 } from '../../../src/constants/eventIds.js';
@@ -23,7 +19,6 @@ describeTurnManagerSuite(
   (getBed) => {
     let testBed;
     let stopSpy;
-    let initialAdvanceTurnSpy;
 
     beforeEach(async () => {
       // Made beforeEach async
@@ -57,28 +52,10 @@ describeTurnManagerSuite(
           testBed.mocks.logger.debug('Mocked instance.stop() called.');
         });
 
-      // --- Set instance to running state (simulating start()) ---
-      initialAdvanceTurnSpy = jest
-        .spyOn(testBed.turnManager, 'advanceTurn')
-        .mockImplementationOnce(async () => {
-          // Prevent advanceTurn logic during start()
-          testBed.mocks.logger.debug(
-            'advanceTurn call during start() suppressed by mock.'
-          );
-        });
-      await testBed.turnManager.start(); // Sets #isRunning = true and subscribes
-      initialAdvanceTurnSpy.mockRestore(); // Restore advanceTurn for actual testing
+      // Start manager without running advanceTurn
+      await testBed.startRunning();
 
-      // Clear mocks called during start() phase
-      testBed.mocks.logger.info.mockClear(); // Clear "Turn Manager started." log
-      testBed.mocks.logger.debug.mockClear(); // Clear suppressed advanceTurn log
-      testBed.mocks.dispatcher.dispatch.mockClear();
-      testBed.mocks.dispatcher.subscribe.mockClear(); // Clear the subscribe call from start()
-      testBed.mocks.turnOrderService.isEmpty.mockClear(); // Clear mocks before actual test calls
-      testBed.mocks.turnOrderService.getNextEntity.mockClear();
-      testBed.mocks.turnHandlerResolver.resolveHandler.mockClear();
-
-      // Re-apply default isEmpty mock for the actual tests focusing on queue NOT empty
+      // Re-apply default isEmpty mock after resetting call history
       testBed.mocks.turnOrderService.isEmpty.mockResolvedValue(false);
     });
 
