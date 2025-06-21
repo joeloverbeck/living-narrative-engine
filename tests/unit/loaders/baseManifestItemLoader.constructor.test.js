@@ -25,11 +25,11 @@ const createMockConfiguration = (overrides = {}) => ({
 
 const createMockPathResolver = (overrides = {}) => ({
   resolveModContentPath: jest.fn(
-    (modId, typeName, filename) =>
-      `./data/mods/${modId}/${typeName}/${filename}`
+    (modId, registryKey, filename) =>
+      `./data/mods/${modId}/${registryKey}/${filename}`
   ),
   resolveContentPath: jest.fn(
-    (typeName, filename) => `./data/${typeName}/${filename}`
+    (registryKey, filename) => `./data/${registryKey}/${filename}`
   ),
   resolveSchemaPath: jest.fn((filename) => `./data/schemas/${filename}`),
   resolveModManifestPath: jest.fn(
@@ -874,7 +874,7 @@ describe('BaseManifestItemLoader Constructor', () => {
           'filename',
           'path',
           {},
-          'someTypeName'
+          'someregistryKey'
         )
       ).rejects.toThrow(
         'Abstract method _processFetchedItem must be implemented by subclass.'

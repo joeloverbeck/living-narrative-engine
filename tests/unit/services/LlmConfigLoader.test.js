@@ -46,11 +46,11 @@ const mockConfigurationInstance = () => ({
   getModManifestFilename: jest.fn().mockReturnValue('mod.manifest.json'),
   getModsBasePath: jest.fn().mockReturnValue('mods'),
   getSchemaFiles: jest.fn().mockReturnValue([]),
-  getContentTypeSchemaId: jest.fn((typeName) => {
-    if (typeName === 'llm-configs') {
+  getContentTypeSchemaId: jest.fn((registryKey) => {
+    if (registryKey === 'llm-configs') {
       return 'http://example.com/schemas/llm-configs.schema.json';
     }
-    return `http://example.com/schemas/${typeName}.schema.json`;
+    return `http://example.com/schemas/${registryKey}.schema.json`;
   }),
   getRuleSchemaId: jest
     .fn()
