@@ -31,8 +31,8 @@ describe('StaticConfiguration Validation Test', () => {
     ];
 
     // 3. Assert: Check that each essential type returns a valid schema ID.
-    for (const registryKey of essentialTypes) {
-      const schemaId = configService.getContentTypeSchemaId(registryKey);
+    for (const typeName of essentialTypes) {
+      const schemaId = configService.getContentTypeSchemaId(typeName);
 
       // Assert that a schema ID is configured for the type
       // CORRECTED: Replaced .withContext(...).not.toBeUndefined() with .toBeDefined() for Jest compatibility.
@@ -49,7 +49,7 @@ describe('StaticConfiguration Validation Test', () => {
 
       // Optional: Log on success for visibility during test runs
       console.log(
-        `[OK] Essential type '${registryKey}' is configured with schema ID: ${schemaId}`
+        `[OK] Essential type '${typeName}' is configured with schema ID: ${schemaId}`
       );
     }
   });

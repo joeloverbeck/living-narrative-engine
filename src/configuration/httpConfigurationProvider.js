@@ -1,7 +1,7 @@
 // src/services/httpConfigurationProvider.js
 // --- FILE START ---
 
-import { IConfigurationProvider } from '../interfaces/iConfigurationProvider.js';
+import { IConfigurationProvider } from '../interfaces/IConfigurationProvider.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../constants/eventIds.js';
 
 /**

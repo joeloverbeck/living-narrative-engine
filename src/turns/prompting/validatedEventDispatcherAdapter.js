@@ -4,11 +4,11 @@
  */
 
 /** @typedef {import('../../interfaces/IValidatedEventDispatcher').IValidatedEventDispatcher} IValidatedEventDispatcher */
-/** @typedef {import('../interfaces/iPlayerTurnEvents.js').IPlayerTurnEvents} IPlayerTurnEvents_Interface */
+/** @typedef {import('../interfaces/IPlayerTurnEvents.js').IPlayerTurnEvents} IPlayerTurnEvents_Interface */
 /** @typedef {import('../../events/eventBus.js').EventListener} EventListener */
 /** @typedef {() => void} UnsubscribeFn */
 
-import { IPlayerTurnEvents } from '../interfaces/iPlayerTurnEvents.js';
+import { IPlayerTurnEvents } from '../interfaces/IPlayerTurnEvents.js';
 
 /**
  * @class ValidatedEventDispatcherAdapter

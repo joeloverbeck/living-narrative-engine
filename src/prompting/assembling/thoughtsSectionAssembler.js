@@ -1,5 +1,5 @@
 // src/services/promptElementAssemblers/thoughtsSectionAssembler.js
-import { IPromptElementAssembler } from '../../interfaces/iPromptElementAssembler.js';
+import { IPromptElementAssembler } from '../../interfaces/IPromptElementAssembler.js';
 import { resolveWrapper } from '../../utils/wrapperUtils.js';
 
 export const THOUGHTS_WRAPPER_KEY = 'thoughts_wrapper';

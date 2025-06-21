@@ -2,8 +2,8 @@
  * @module src/turns/pipeline/turnActionChoicePipeline.js
  */
 
-import { IAvailableActionsProvider } from '../../interfaces/iAvailableActionsProvider.js';
-import { ITurnContext } from '../interfaces/iTurnContext.js';
+import { IAvailableActionsProvider } from '../../interfaces/IAvailableActionsProvider.js';
+import { ITurnContext } from '../interfaces/ITurnContext.js';
 
 /**
  * Centralises action discovery and indexing for both AI and human turn flows.
@@ -27,8 +27,8 @@ export class TurnActionChoicePipeline {
   /**
    * Discovers, indexes, and returns a list of action choices for an actor's turn.
    *
-   * @param {import('../../entities/entity.js').Entity} actor - The entity whose actions we're building choices for.
-   * @param {iTurnContext} context - The current turn context.
+   * @param {import('../../entities/entity.js').Entity} actor - The entity whose actions we’re building choices for.
+   * @param {ITurnContext} context - The current turn context.
    * @returns {Promise<import('../dtos/actionComposite.js').ActionComposite[]>} Deduped, capped, 1-based indexed action list.
    */
   async buildChoices(actor, context) {

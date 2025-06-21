@@ -17,7 +17,7 @@ describe('WorldPhase', () => {
   beforeEach(() => {
     worldLoader = mock();
     logger = mock();
-    manifests = new Map();
+    manifests = new Map([['core', { id: 'core' }]]);
   });
 
   it('should instantiate correctly and assign properties', () => {
@@ -39,7 +39,7 @@ describe('WorldPhase', () => {
       // Arrange
       const ctx = {
         finalModOrder: ['core', 'modA'],
-        totals: { worlds: { count: 0, overrides: 0, errors: 0, instances: 0, resolvedDefinitions: 0, unresolvedDefinitions: 0 } },
+        totals: { components: 10, actions: 5 },
       };
       worldLoader.loadWorlds.mockResolvedValue(undefined);
 
@@ -47,6 +47,7 @@ describe('WorldPhase', () => {
       await worldPhase.execute(ctx);
 
       // Assert
+      expect(logger.info).toHaveBeenCalledWith('— WorldPhase starting —');
       expect(worldLoader.loadWorlds).toHaveBeenCalledWith(
         ctx.finalModOrder,
         manifests,
@@ -61,7 +62,7 @@ describe('WorldPhase', () => {
       worldLoader.loadWorlds.mockRejectedValue(originalError);
       const ctx = {
         finalModOrder: ['core'],
-        totals: { worlds: { count: 0, overrides: 0, errors: 0, instances: 0, resolvedDefinitions: 0, unresolvedDefinitions: 0 } },
+        totals: {},
       };
 
       // Act & Assert
@@ -79,7 +80,7 @@ describe('WorldPhase', () => {
       worldLoader.loadWorlds.mockRejectedValue(originalError);
       const ctx = {
         finalModOrder: ['core'],
-        totals: { worlds: { count: 0, overrides: 0, errors: 0, instances: 0, resolvedDefinitions: 0, unresolvedDefinitions: 0 } },
+        totals: {},
       };
 
       // Act
@@ -95,6 +96,7 @@ describe('WorldPhase', () => {
       expect(caughtError.code).toBe(ModsLoaderErrorCode.WORLD);
       expect(caughtError.message).toBe(originalError.message);
       expect(caughtError.phase).toBe('WorldPhase');
+      // FIX: Changed 'originalError' to 'cause' to align with standard error wrapping.
       expect(caughtError.cause).toBe(originalError);
     });
   });

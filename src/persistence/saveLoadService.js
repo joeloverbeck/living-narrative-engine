@@ -1,9 +1,9 @@
-import { ISaveLoadService } from '../interfaces/iSaveLoadService.js';
-import { ISaveFileRepository } from '../interfaces/iSaveFileRepository.js';
+import { ISaveLoadService } from '../interfaces/ISaveLoadService.js';
 import GameStateSerializer from './gameStateSerializer.js';
 import SaveValidationService from './saveValidationService.js';
 import { getManualSavePath } from '../utils/savePathUtils.js';
 import SaveFileRepository from './saveFileRepository.js';
+import { ISaveFileRepository } from '../interfaces/ISaveFileRepository.js';
 import { BaseService } from '../utils/serviceBase.js';
 import { prepareState } from './savePreparation.js';
 import { PersistenceErrorCodes } from './persistenceErrors.js';
@@ -16,11 +16,12 @@ import { isValidSaveString } from './saveInputValidators.js';
 
 // --- Type Imports ---
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
-/** @typedef {import('../interfaces/iStorageProvider.js').IStorageProvider} IStorageProvider */
-/** @typedef {import('../interfaces/iSaveLoadService.js').SaveFileMetadata} SaveFileMetadata */
-/** @typedef {import('../interfaces/iSaveLoadService.js').LoadGameResult} LoadGameResult */
-/** @typedef {import('../interfaces/iSaveLoadService.js').SaveGameStructure} SaveGameStructure */
+/** @typedef {import('../interfaces/IStorageProvider.js').IStorageProvider} IStorageProvider */
+/** @typedef {import('../interfaces/ISaveLoadService.js').SaveFileMetadata} SaveFileMetadata */
+/** @typedef {import('../interfaces/ISaveLoadService.js').LoadGameResult} LoadGameResult */
+/** @typedef {import('../interfaces/ISaveLoadService.js').SaveGameStructure} SaveGameStructure */
 /** @typedef {import('./gameStateSerializer.js').default} GameStateSerializer */
+/** @typedef {import('../interfaces/ISaveFileRepository.js').ISaveFileRepository} ISaveFileRepository */
 
 // --- Constants ---
 // const MAX_MANUAL_SAVES = 10; // Not directly enforced by list/load, but by save UI/logic

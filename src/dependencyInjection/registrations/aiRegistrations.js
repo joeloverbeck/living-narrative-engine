@@ -9,30 +9,30 @@
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../interfaces/coreServices.js').ISchemaValidator} ISchemaValidator */
 /** @typedef {import('../../interfaces/coreServices.js').IConfiguration} IConfiguration */
-/** @typedef {import('../../interfaces/iValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher */
-/** @typedef {import('../../interfaces/iSafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
-/** @typedef {import('../../turns/interfaces/iLLMAdapter.js').ILLMAdapter} ILLMAdapter */
-/** @typedef {import('../../llms/interfaces/iApiKeyProvider.js').IApiKeyProvider} IApiKeyProvider */
-/** @typedef {import('../../llms/interfaces/iHttpClient.js').IHttpClient} IHttpClient */
-/** @typedef {import('../../turns/interfaces/iTurnStateFactory.js').ITurnStateFactory} ITurnStateFactory */
-/** @typedef {import('../../interfaces/iWorldContext.js').IWorldContext} IWorldContext */
-/** @typedef {import('../../turns/ports/iTurnEndPort.js').ITurnEndPort} ITurnEndPort */
-/** @typedef {import('../../commands/interfaces/iCommandProcessor.js').ICommandProcessor} ICommandProcessor */
-/** @typedef {import('../../commands/interfaces/iCommandOutcomeInterpreter.js').ICommandOutcomeInterpreter} ICommandOutcomeInterpreter */
-/** @typedef {import('../../interfaces/iEntityManager.js').IEntityManager_Interface} IEntityManager_Interface */
-/** @typedef {import('../../interfaces/iActionDiscoveryService.js').IActionDiscoveryService} IActionDiscoveryService_Interface */
+/** @typedef {import('../../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher */
+/** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
+/** @typedef {import('../../turns/interfaces/ILLMAdapter.js').ILLMAdapter} ILLMAdapter */
+/** @typedef {import('../../llms/interfaces/IApiKeyProvider.js').IApiKeyProvider} IApiKeyProvider */
+/** @typedef {import('../../llms/interfaces/IHttpClient.js').IHttpClient} IHttpClient */
+/** @typedef {import('../../turns/interfaces/ITurnStateFactory.js').ITurnStateFactory} ITurnStateFactory */
+/** @typedef {import('../../interfaces/IWorldContext.js').IWorldContext} IWorldContext */
+/** @typedef {import('../../turns/ports/ITurnEndPort.js').ITurnEndPort} ITurnEndPort */
+/** @typedef {import('../../commands/interfaces/ICommandProcessor.js').ICommandProcessor} ICommandProcessor */
+/** @typedef {import('../../commands/interfaces/ICommandOutcomeInterpreter.js').ICommandOutcomeInterpreter} ICommandOutcomeInterpreter */
+/** @typedef {import('../../interfaces/IEntityManager.js').IEntityManager_Interface} IEntityManager_Interface */
+/** @typedef {import('../../interfaces/IActionDiscoveryService.js').IActionDiscoveryService} IActionDiscoveryService_Interface */
 /** @typedef {import('../../prompting/promptBuilder.js').PromptBuilder} IPromptBuilder */
-/** @typedef {import('../../turns/interfaces/iAIFallbackActionFactory.js').IAIFallbackActionFactory} IAIFallbackActionFactory */
-/** @typedef {import('../../turns/interfaces/iAIPlayerStrategyFactory.js').IAIPlayerStrategyFactory} IAIPlayerStrategyFactory */
-/** @typedef {import('../../turns/interfaces/iTurnContextFactory.js').ITurnContextFactory} ITurnContextFactory */
-/** @typedef {import('../../turns/interfaces/iAIGameStateProvider.js').IAIGameStateProvider} IAIGameStateProvider */
-/** @typedef {import('../../prompting/aiPromptContentProvider.js').AIPromptContentProvider} IAIPromptContentProvider */
-/** @typedef {import('../../turns/interfaces/iLLMResponseProcessor.js').ILLMResponseProcessor} ILLMResponseProcessor */
-/** @typedef {import('../../prompting/interfaces/iAIPromptPipeline.js').IAIPromptPipeline} IAIPromptPipeline_Interface */
-/** @typedef {import('../../interfaces/iPromptStaticContentService.js').IPromptStaticContentService} IPromptStaticContentService */
-/** @typedef {import('../../interfaces/iPerceptionLogFormatter.js').IPerceptionLogFormatter} IPerceptionLogFormatter */
-/** @typedef {import('../../interfaces/iGameStateValidationServiceForPrompting.js').IGameStateValidationServiceForPrompting} IGameStateValidationServiceForPrompting */
-/** @typedef {import('../../interfaces/iConfigurationProvider.js').IConfigurationProvider} IConfigurationProvider */
+/** @typedef {import('../../turns/interfaces/IAIFallbackActionFactory.js').IAIFallbackActionFactory} IAIFallbackActionFactory */
+/** @typedef {import('../../turns/interfaces/IAIPlayerStrategyFactory.js').IAIPlayerStrategyFactory} IAIPlayerStrategyFactory */
+/** @typedef {import('../../turns/interfaces/ITurnContextFactory.js').ITurnContextFactory} ITurnContextFactory */
+/** @typedef {import('../../turns/interfaces/IAIGameStateProvider.js').IAIGameStateProvider} IAIGameStateProvider */
+/** @typedef {import('../../prompting/AIPromptContentProvider.js').AIPromptContentProvider} IAIPromptContentProvider */
+/** @typedef {import('../../turns/interfaces/ILLMResponseProcessor.js').ILLMResponseProcessor} ILLMResponseProcessor */
+/** @typedef {import('../../prompting/interfaces/IAIPromptPipeline.js').IAIPromptPipeline} IAIPromptPipeline_Interface */
+/** @typedef {import('../../interfaces/IPromptStaticContentService.js').IPromptStaticContentService} IPromptStaticContentService */
+/** @typedef {import('../../interfaces/IPerceptionLogFormatter.js').IPerceptionLogFormatter} IPerceptionLogFormatter */
+/** @typedef {import('../../interfaces/IGameStateValidationServiceForPrompting.js').IGameStateValidationServiceForPrompting} IGameStateValidationServiceForPrompting */
+/** @typedef {import('../../interfaces/IConfigurationProvider.js').IConfigurationProvider} IConfigurationProvider */
 /** @typedef {import('../../llms/llmConfigService.js').LLMConfigService} LLMConfigService_Concrete */
 /** @typedef {import('../../utils/placeholderResolverUtils.js').PlaceholderResolver} PlaceholderResolver_Concrete */
 /** @typedef {import('../../prompting/assembling/standardElementAssembler.js').StandardElementAssembler} StandardElementAssembler_Concrete */
@@ -40,7 +40,7 @@
 /** @typedef {import('../../prompting/assembling/thoughtsSectionAssembler.js').default} ThoughtsSectionAssembler_Concrete */
 /** @typedef {import('../../prompting/assembling/notesSectionAssembler.js').default} NotesSectionAssembler_Concrete */
 /** @typedef {import('../../turns/handlers/actorTurnHandler.js').default} ActorTurnHandler_Concrete */
-/** @typedef {import('../../llms/llmStrategyFactory.js').LLMStrategyFactory} LLMStrategyFactory_Concrete */
+/** @typedef {import('../../llms/LLMStrategyFactory.js').LLMStrategyFactory} LLMStrategyFactory_Concrete */
 
 // --- DI & Helper Imports ---
 import { tokens } from '../tokens.js';
@@ -51,7 +51,7 @@ import { ConfigurableLLMAdapter } from '../../turns/adapters/configurableLLMAdap
 import { EnvironmentContext } from '../../llms/environmentContext.js';
 import { ClientApiKeyProvider } from '../../llms/clientApiKeyProvider.js';
 import { RetryHttpClient } from '../../llms/retryHttpClient.js';
-import { LLMStrategyFactory } from '../../llms/llmStrategyFactory.js';
+import { LLMStrategyFactory } from '../../llms/LLMStrategyFactory.js';
 
 // --- AI Turn Handler Import ---
 import ActorTurnHandler from '../../turns/handlers/actorTurnHandler.js';
@@ -84,11 +84,11 @@ import { ActorStateProvider } from '../../data/providers/actorStateProvider.js';
 import { PerceptionLogProvider } from '../../data/providers/perceptionLogProvider.js';
 import { AvailableActionsProvider } from '../../data/providers/availableActionsProvider.js';
 import { LocationSummaryProvider } from '../../data/providers/locationSummaryProvider.js';
-import { AIGameStateProvider } from '../../turns/services/aiGameStateProvider.js';
-import { AIPromptContentProvider } from '../../prompting/aiPromptContentProvider.js';
-import { LLMResponseProcessor } from '../../turns/services/llmResponseProcessor.js';
-import { AIFallbackActionFactory } from '../../turns/services/aiFallbackActionFactory.js';
-import { AIPromptPipeline } from '../../prompting/aiPromptPipeline.js';
+import { AIGameStateProvider } from '../../turns/services/AIGameStateProvider.js';
+import { AIPromptContentProvider } from '../../prompting/AIPromptContentProvider.js';
+import { LLMResponseProcessor } from '../../turns/services/LLMResponseProcessor.js';
+import { AIFallbackActionFactory } from '../../turns/services/AIFallbackActionFactory.js';
+import { AIPromptPipeline } from '../../prompting/AIPromptPipeline.js';
 import { SHUTDOWNABLE, INITIALIZABLE } from '../tags.js';
 import {
   INDEXED_CHOICES_KEY,

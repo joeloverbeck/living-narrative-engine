@@ -5,8 +5,8 @@
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher */
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
-/** @typedef {import('../../turns/ports/iPromptOutputPort.js').IPromptOutputPort} IPromptOutputPort */
-/** @typedef {import('../../turns/ports/iTurnEndPort.js').ITurnEndPort} ITurnEndPort */
+/** @typedef {import('../../turns/ports/IPromptOutputPort.js').IPromptOutputPort} IPromptOutputPort */
+/** @typedef {import('../../turns/ports/ITurnEndPort.js').ITurnEndPort} ITurnEndPort */
 
 // --- DI & Helper Imports ---
 import { tokens } from '../tokens.js';
@@ -16,8 +16,6 @@ import { SHUTDOWNABLE as _SHUTDOWNABLE } from '../tags.js';
 // --- Adapter Imports ---
 import { EventBusPromptAdapter } from '../../turns/adapters/eventBusPromptAdapter.js';
 import EventBusTurnEndAdapter from '../../turns/adapters/eventBusTurnEndAdapter.js';
-import { IPromptOutputPort } from '../../turns/ports/iPromptOutputPort.js';
-import { ITurnEndPort } from '../../turns/ports/iTurnEndPort.js';
 
 /**
  * Registers the default event bus-based port adapters.

@@ -29,14 +29,14 @@ const createMockConfiguration = (overrides = {}) => ({
   getModsBasePath: jest.fn(() => './data/mods'), // Provide a mock implementation/return value
   // --- FIX END ---
 
-  getContentBasePath: jest.fn((registryKey) => `./data/mods/test-mod/${registryKey}`), // This might be redundant now depending on how paths are constructed, but keep it for now if ComponentDefinitionLoader uses it directly.
-  getContentTypeSchemaId: jest.fn((registryKey) => {
-    if (registryKey === 'components') {
+  getContentBasePath: jest.fn((typeName) => `./data/mods/test-mod/${typeName}`), // This might be redundant now depending on how paths are constructed, but keep it for now if ComponentDefinitionLoader uses it directly.
+  getContentTypeSchemaId: jest.fn((typeName) => {
+    if (typeName === 'components') {
       // Matches the schema provided in the ticket
       return 'http://example.com/schemas/component.schema.json';
     }
     // Default fallback for other types if needed in future tests
-    return `http://example.com/schemas/${registryKey}.schema.json`;
+    return `http://example.com/schemas/${typeName}.schema.json`;
   }),
   // Include other IConfiguration methods if needed by the loader, mocking their returns
   // Required by Base Class validation
@@ -62,12 +62,12 @@ const createMockConfiguration = (overrides = {}) => ({
 const createMockPathResolver = (overrides = {}) => ({
   // Mock the method used by ComponentDefinitionLoader's #processSingleComponentFile
   resolveModContentPath: jest.fn(
-    (modId, registryKey, filename) =>
-      `./data/mods/${modId}/${registryKey}/${filename}`
+    (modId, typeName, filename) =>
+      `./data/mods/${modId}/${typeName}/${filename}`
   ),
   // Include other IPathResolver methods if needed, mocking their returns
   resolveContentPath: jest.fn(
-    (registryKey, filename) => `./data/${registryKey}/${filename}`
+    (typeName, filename) => `./data/${typeName}/${filename}`
   ), // Example for non-mod paths if used elsewhere
   // Required by Base Class validation
   resolveSchemaPath: jest.fn(),

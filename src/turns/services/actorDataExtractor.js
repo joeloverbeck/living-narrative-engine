@@ -18,7 +18,7 @@ import {
   DEFAULT_FALLBACK_CHARACTER_NAME,
   DEFAULT_FALLBACK_DESCRIPTION_RAW,
 } from '../../constants/textDefaults.js';
-import { IActorDataExtractor } from '../../interfaces/iActorDataExtractor.js';
+import { IActorDataExtractor } from '../../interfaces/IActorDataExtractor';
 // --- TICKET AIPF-REFACTOR-009 END ---
 
 // ActorPromptDataDTO is defined in AIGameStateDTO.js as per the provided context

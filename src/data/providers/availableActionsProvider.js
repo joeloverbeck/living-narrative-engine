@@ -3,7 +3,7 @@
  * @see src/data/providers/availableActionsProvider.js
  */
 
-import { IAvailableActionsProvider } from '../../interfaces/iAvailableActionsProvider.js';
+import { IAvailableActionsProvider } from '../../interfaces/IAvailableActionsProvider.js';
 import { POSITION_COMPONENT_ID } from '../../constants/componentIds.js';
 import { MAX_AVAILABLE_ACTIONS_PER_TURN } from '../../constants/core.js';
 

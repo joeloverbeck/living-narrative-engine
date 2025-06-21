@@ -3,7 +3,7 @@
  * @see src/data/providers/perceptionLogProvider.js
  */
 
-import { IPerceptionLogProvider } from '../../interfaces/iPerceptionLogProvider.js';
+import { IPerceptionLogProvider } from '../../interfaces/IPerceptionLogProvider.js';
 import { PERCEPTION_LOG_COMPONENT_ID } from '../../constants/componentIds.js';
 import { DEFAULT_FALLBACK_EVENT_DESCRIPTION_RAW } from '../../constants/textDefaults.js';
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';

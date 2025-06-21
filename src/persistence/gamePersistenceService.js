@@ -1,4 +1,4 @@
-import { IGamePersistenceService } from '../interfaces/iGamePersistenceService.js';
+import { IGamePersistenceService } from '../interfaces/IGamePersistenceService.js';
 import { setupService } from '../utils/serviceInitializerUtils.js';
 
 // --- JSDoc Type Imports ---
@@ -30,7 +30,7 @@ import GameStateRestorer from './gameStateRestorer.js';
 /**
  * @class GamePersistenceService
  * @description Handles capturing, saving, and restoring game state.
- * @implements {iGamePersistenceService}
+ * @implements {IGamePersistenceService}
  */
 class GamePersistenceService extends IGamePersistenceService {
   #logger;

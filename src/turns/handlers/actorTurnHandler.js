@@ -4,7 +4,6 @@
 
 import { GenericTurnHandler } from './genericTurnHandler.js';
 import { ActorMismatchError } from '../../errors/actorMismatchError.js';
-import { ITurnEndPort } from '../ports/iTurnEndPort.js';
 
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../interfaces/ITurnStateFactory.js').ITurnStateFactory} ITurnStateFactory */

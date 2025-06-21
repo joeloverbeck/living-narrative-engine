@@ -42,12 +42,12 @@ class ComponentLoader extends BaseInlineSchemaLoader {
    * @param {string} filename
    * @param {string} resolvedPath
    * @param {any} data
-   * @param {string} registryKey
+   * @param {string} typeName
    * @returns {Promise<{qualifiedId: string, didOverride: boolean}>}
    */
-  async _processFetchedItem(modId, filename, resolvedPath, data, registryKey) {
+  async _processFetchedItem(modId, filename, resolvedPath, data, typeName) {
     this._logger.debug(
-      `ComponentLoader [${modId}]: Processing fetched item: ${filename} (Type: ${registryKey})`
+      `ComponentLoader [${modId}]: Processing fetched item: ${filename} (Type: ${typeName})`
     );
 
     const { baseId } = parseAndValidateId(

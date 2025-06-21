@@ -5,8 +5,8 @@ import StaticConfiguration from '../../../src/configuration/staticConfiguration.
 
 const createMockConfiguration = (overrides = {}) => ({
   getModsBasePath: jest.fn(() => './data/mods'),
-  getContentTypeSchemaId: jest.fn((registryKey) => {
-    if (registryKey === 'macros') {
+  getContentTypeSchemaId: jest.fn((typeName) => {
+    if (typeName === 'macros') {
       return 'http://example.com/schemas/macro.schema.json';
     }
     return undefined;

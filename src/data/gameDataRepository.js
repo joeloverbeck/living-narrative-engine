@@ -1,6 +1,6 @@
 // src/services/gameDataRepository.js
 
-import { IGameDataRepository } from '../interfaces/iGameDataRepository.js';
+import { IGameDataRepository } from '../interfaces/IGameDataRepository.js';
 
 /**
  * @typedef {import('../interfaces/coreServices.js').IDataRegistry} IDataRegistry

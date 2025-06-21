@@ -13,7 +13,7 @@
  * @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher
  * @typedef {import('../../commands/interfaces/ICommandProcessor.js').ICommandProcessor} ICommandProcessor
  * @typedef {import('../../commands/interfaces/ICommandOutcomeInterpreter.js').ICommandOutcomeInterpreter} ICommandOutcomeInterpreter
- * @typedef {import('../ports/iTurnEndPort.js').ITurnEndPort}               ITurnEndPort
+ * @typedef {import('../ports/ITurnEndPort.js').ITurnEndPort}               ITurnEndPort
  * @typedef {import('../../interfaces/IEntityManager.js').IEntityManager}   IEntityManager
  */
 
@@ -29,9 +29,8 @@
  * // …extend as needed
  */
 
-import { ITurnContext } from '../interfaces/iTurnContext.js';
+import { ITurnContext } from '../interfaces/ITurnContext.js';
 import { POSITION_COMPONENT_ID } from '../../constants/componentIds.js'; // ⬅ only import needed
-import { ITurnEndPort } from '../ports/iTurnEndPort.js';
 
 /**
  * Concrete implementation of ITurnContext.

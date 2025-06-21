@@ -26,14 +26,14 @@ import RuleLoader from '../../../src/loaders/ruleLoader.js'; // Adjust path as n
 const createMockConfiguration = (overrides = {}) => ({
   // --- Methods required by BaseManifestItemLoader constructor ---
   getModsBasePath: jest.fn().mockReturnValue('./data/mods'),
-  getContentTypeSchemaId: jest.fn((registryKey) => {
-    if (registryKey === 'rules') {
+  getContentTypeSchemaId: jest.fn((typeName) => {
+    if (typeName === 'rules') {
       return 'http://example.com/schemas/rule.schema.json';
     }
-    return `http://example.com/schemas/${registryKey}.schema.json`;
+    return `http://example.com/schemas/${typeName}.schema.json`;
   }),
   // --- Other potentially used methods (good practice to include) ---
-  getContentBasePath: jest.fn((registryKey) => `./data/mods/test-mod/${registryKey}`),
+  getContentBasePath: jest.fn((typeName) => `./data/mods/test-mod/${typeName}`),
   getSchemaBasePath: jest.fn().mockReturnValue('schemas'),
   getSchemaFiles: jest.fn().mockReturnValue([]),
   getWorldBasePath: jest.fn().mockReturnValue('worlds'),
@@ -54,12 +54,12 @@ const createMockConfiguration = (overrides = {}) => ({
  */
 const createMockPathResolver = (overrides = {}) => ({
   resolveModContentPath: jest.fn(
-    (modId, registryKey, filename) =>
-      `/abs/path/to/mods/${modId}/${registryKey}/${filename}`
+    (modId, typeName, filename) =>
+      `/abs/path/to/mods/${modId}/${typeName}/${filename}`
   ),
   // Mock other methods required by Base constructor or other logic
   resolveContentPath: jest.fn(
-    (registryKey, filename) => `./data/${registryKey}/${filename}`
+    (typeName, filename) => `./data/${typeName}/${filename}`
   ),
   resolveSchemaPath: jest.fn((filename) => `./data/schemas/${filename}`),
   resolveModManifestPath: jest.fn(
@@ -197,8 +197,8 @@ describe('RuleLoader - Storage Failure Handling (via loadItemsForMod)', () => {
     mockRuleValidatorFn = mockValidator._mockValidatorFn; // Get reference
 
     // Ensure rule schema ID is configured via base method
-    mockConfig.getContentTypeSchemaId.mockImplementation((registryKey) =>
-      registryKey === RULE_TYPE_NAME ? ruleSchemaId : undefined
+    mockConfig.getContentTypeSchemaId.mockImplementation((typeName) =>
+      typeName === RULE_TYPE_NAME ? ruleSchemaId : undefined
     );
     // Mock specific getter if RuleLoader uses it
     mockConfig.getRuleSchemaId.mockReturnValue(ruleSchemaId);
@@ -345,7 +345,7 @@ describe('RuleLoader - Storage Failure Handling (via loadItemsForMod)', () => {
           modId: modId,
           filename: ruleFileFailStore,
           path: resolvedPathFailStore,
-          registryKey: RULE_TYPE_NAME,
+          typeName: RULE_TYPE_NAME,
           error: storageError.message,
         }),
         storageError // Match the full error object

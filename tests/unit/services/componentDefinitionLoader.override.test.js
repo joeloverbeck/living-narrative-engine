@@ -8,16 +8,16 @@ import { CORE_MOD_ID } from '../../../src/constants/core'; // Added base class i
 // --- Mock Service Factories (remain the same) ---
 // [Mocks omitted for brevity - use the ones provided]
 const createMockConfiguration = (overrides = {}) => ({
-  getContentBasePath: jest.fn((registryKey) => `./data/mods/test-mod/${registryKey}`),
-  getContentTypeSchemaId: jest.fn((registryKey) => {
-    if (registryKey === 'components') {
+  getContentBasePath: jest.fn((typeName) => `./data/mods/test-mod/${typeName}`),
+  getContentTypeSchemaId: jest.fn((typeName) => {
+    if (typeName === 'components') {
       return 'http://example.com/schemas/component.schema.json';
     }
-    if (registryKey === 'game')
+    if (typeName === 'game')
       return 'http://example.com/schemas/game.schema.json';
-    if (registryKey === 'mod-manifest')
+    if (typeName === 'mod-manifest')
       return 'http://example.com/schemas/mod.manifest.schema.json';
-    return `http://example.com/schemas/${registryKey}.schema.json`;
+    return `http://example.com/schemas/${typeName}.schema.json`;
   }),
   getSchemaBasePath: jest.fn().mockReturnValue('schemas'),
   getSchemaFiles: jest.fn().mockReturnValue([]),
@@ -34,11 +34,11 @@ const createMockConfiguration = (overrides = {}) => ({
 });
 const createMockPathResolver = (overrides = {}) => ({
   resolveModContentPath: jest.fn(
-    (modId, registryKey, filename) =>
-      `./data/mods/${modId}/${registryKey}/${filename}`
+    (modId, typeName, filename) =>
+      `./data/mods/${modId}/${typeName}/${filename}`
   ),
   resolveContentPath: jest.fn(
-    (registryKey, filename) => `./data/${registryKey}/${filename}`
+    (typeName, filename) => `./data/${typeName}/${filename}`
   ),
   resolveSchemaPath: jest.fn((filename) => `./data/schemas/${filename}`),
   resolveModManifestPath: jest.fn(
@@ -312,8 +312,8 @@ describe('ComponentLoader (Sub-Ticket 6.3: Override Behavior)', () => {
     // Spy on _storeItemInRegistry to verify its arguments precisely
     // jest.spyOn(loader, '_storeItemInRegistry'); // Already a spy via BaseManifestItemLoader tests
 
-    mockConfig.getContentTypeSchemaId.mockImplementation((registryKey) =>
-      registryKey === registryCategory ? componentDefSchemaId : undefined
+    mockConfig.getContentTypeSchemaId.mockImplementation((typeName) =>
+      typeName === registryCategory ? componentDefSchemaId : undefined
     );
     mockValidator._setSchemaLoaded(componentDefSchemaId, { type: 'object' });
     mockValidator.mockValidatorFunction(componentDefSchemaId, () => ({
@@ -332,21 +332,21 @@ describe('ComponentLoader (Sub-Ticket 6.3: Override Behavior)', () => {
     });
 
     mockResolver.resolveModContentPath.mockImplementation(
-      (modId, registryKey, filename) => {
+      (modId, typeName, filename) => {
         if (
           modId === CORE_MOD_ID &&
-          registryKey === registryCategory &&
+          typeName === registryCategory &&
           filename === sharedFilename
         )
           return coreSharedPositionPath;
         if (
           modId === fooModId &&
-          registryKey === registryCategory &&
+          typeName === registryCategory &&
           filename === sharedFilename
         )
           return fooSharedPositionPath;
         throw new Error(
-          `Mock PathResolver Error: Unexpected resolveModContentPath call: ${modId}, ${registryKey}, ${filename}`
+          `Mock PathResolver Error: Unexpected resolveModContentPath call: ${modId}, ${typeName}, ${filename}`
         );
       }
     );

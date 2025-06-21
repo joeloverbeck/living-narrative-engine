@@ -13,12 +13,12 @@ import ComponentLoader from '../../../src/loaders/componentLoader.js'; // Using 
  * @returns {import('../../../src/interfaces/coreServices.js').IConfiguration} Mocked configuration service.
  */
 const createMockConfiguration = (overrides = {}) => ({
-  getContentBasePath: jest.fn((registryKey) => `./data/mods/test-mod/${registryKey}`),
-  getContentTypeSchemaId: jest.fn((registryKey) => {
-    if (registryKey === 'components') {
+  getContentBasePath: jest.fn((typeName) => `./data/mods/test-mod/${typeName}`),
+  getContentTypeSchemaId: jest.fn((typeName) => {
+    if (typeName === 'components') {
       return 'http://example.com/schemas/component.schema.json';
     }
-    return `http://example.com/schemas/${registryKey}.schema.json`;
+    return `http://example.com/schemas/${typeName}.schema.json`;
   }),
   getSchemaBasePath: jest.fn().mockReturnValue('schemas'),
   getSchemaFiles: jest.fn().mockReturnValue([]),
@@ -42,11 +42,11 @@ const createMockConfiguration = (overrides = {}) => ({
  */
 const createMockPathResolver = (overrides = {}) => ({
   resolveModContentPath: jest.fn(
-    (modId, registryKey, filename) =>
-      `./data/mods/${modId}/${registryKey}/${filename}`
+    (modId, typeName, filename) =>
+      `./data/mods/${modId}/${typeName}/${filename}`
   ),
   resolveContentPath: jest.fn(
-    (registryKey, filename) => `./data/${registryKey}/${filename}`
+    (typeName, filename) => `./data/${typeName}/${filename}`
   ),
   resolveSchemaPath: jest.fn((filename) => `./data/schemas/${filename}`),
   resolveModManifestPath: jest.fn(
@@ -331,8 +331,8 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.9: Registry Storage Failure)',
     );
 
     // Configure Mocks
-    mockConfig.getContentTypeSchemaId.mockImplementation((registryKey) =>
-      registryKey === 'components' ? componentDefSchemaId : undefined
+    mockConfig.getContentTypeSchemaId.mockImplementation((typeName) =>
+      typeName === 'components' ? componentDefSchemaId : undefined
     );
     mockResolver.resolveModContentPath.mockImplementation((mId, type, fName) =>
       mId === modId && type === 'components' && fName === filename
@@ -377,8 +377,8 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.9: Registry Storage Failure)',
       modId, // 'storeFailMod'
       manifest, // The mock manifest
       'components', // contentKey
-      'components', // diskFolder
-      'components' // registryKey
+      'components', // contentTypeDir
+      'components' // typeName
     );
 
     // --- Verify: Promise Resolves & Result Object --- <<<< CORRECTED VERIFICATION
@@ -437,7 +437,7 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.9: Registry Storage Failure)',
       modId: modId,
       filename: filename,
       path: filePath,
-      registryKey: 'components',
+      typeName: 'components',
       error: storageError.message, // Logs the error message string
     });
     expect(mockLogger.error).toHaveBeenCalledWith(

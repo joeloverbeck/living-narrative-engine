@@ -17,8 +17,8 @@ describe('defaultLoaderConfig', () => {
     const config = createContentLoadersConfig(loaderMap);
     expect(config).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ loader: stubLoader, registryKey: 'components', contentKey: 'components', diskFolder: 'components', phase: 'definitions' }),
-        expect.objectContaining({ loader: stubLoader, registryKey: 'entityInstances', contentKey: 'entityInstances', diskFolder: 'entities/instances', phase: 'instances' }),
+        expect.objectContaining({ loader: stubLoader, typeName: 'components', contentKey: 'components', contentTypeDir: 'components', phase: 'definitions' }),
+        expect.objectContaining({ loader: stubLoader, typeName: 'entityInstances', contentKey: 'entityInstances', contentTypeDir: 'entities/instances', phase: 'instances' }),
       ])
     );
     expect(config).toHaveLength(Object.keys(loaderMap).length);
@@ -40,8 +40,8 @@ describe('defaultLoaderConfig', () => {
     const config = createDefaultContentLoadersConfig(deps);
     expect(config).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ loader: stubLoader, registryKey: 'components' }),
-        expect.objectContaining({ loader: stubLoader, registryKey: 'entityInstances' }),
+        expect.objectContaining({ loader: stubLoader, typeName: 'components' }),
+        expect.objectContaining({ loader: stubLoader, typeName: 'entityInstances' }),
       ])
     );
     expect(config).toHaveLength(Object.keys(deps).length);

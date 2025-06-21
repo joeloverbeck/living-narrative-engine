@@ -10,7 +10,7 @@
 /** @typedef {import('./interfaces/ITurnHandler.js').ITurnHandler} ITurnHandler */
 /** @typedef {import('../types/eventTypes.js').SystemEventPayloads} SystemEventPayloads */
 
-/** @typedef {import('./interfaces/iTurnManager.js').ITurnManager} ITurnManagerInterface */
+/** @typedef {import('./interfaces/ITurnManager.js').ITurnManager} ITurnManagerInterface */
 
 // Import the necessary component ID constants
 import {
@@ -23,7 +23,7 @@ import {
   TURN_PROCESSING_STARTED,
   TURN_PROCESSING_ENDED,
 } from '../constants/eventIds.js';
-import { ITurnManager } from './interfaces/iTurnManager.js';
+import { ITurnManager } from './interfaces/ITurnManager.js';
 import RoundManager from './roundManager.js';
 import TurnCycle from './turnCycle.js';
 import { RealScheduler } from '../scheduling/index.js';

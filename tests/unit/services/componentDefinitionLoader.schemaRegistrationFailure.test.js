@@ -13,15 +13,15 @@ import { BaseManifestItemLoader } from '../../../src/loaders/baseManifestItemLoa
  * @param overrides
  */
 const createMockConfiguration = (overrides = {}) => ({
-  getContentBasePath: jest.fn((registryKey) => `./data/mods/test-mod/${registryKey}`),
-  getContentTypeSchemaId: jest.fn((registryKey) => {
-    if (registryKey === 'components') {
+  getContentBasePath: jest.fn((typeName) => `./data/mods/test-mod/${typeName}`),
+  getContentTypeSchemaId: jest.fn((typeName) => {
+    if (typeName === 'components') {
       return 'http://example.com/schemas/component.schema.json';
     }
-    if (registryKey === 'mod-manifest') {
+    if (typeName === 'mod-manifest') {
       return 'http://example.com/schemas/mod.manifest.schema.json';
     }
-    return `http://example.com/schemas/${registryKey}.schema.json`;
+    return `http://example.com/schemas/${typeName}.schema.json`;
   }),
   getSchemaBasePath: jest.fn().mockReturnValue('schemas'),
   getSchemaFiles: jest.fn().mockReturnValue([]),
@@ -44,11 +44,11 @@ const createMockConfiguration = (overrides = {}) => ({
  */
 const createMockPathResolver = (overrides = {}) => ({
   resolveModContentPath: jest.fn(
-    (modId, registryKey, filename) =>
-      `./data/mods/${modId}/${registryKey}/${filename}`
+    (modId, typeName, filename) =>
+      `./data/mods/${modId}/${typeName}/${filename}`
   ),
   resolveContentPath: jest.fn(
-    (registryKey, filename) => `./data/${registryKey}/${filename}`
+    (typeName, filename) => `./data/${typeName}/${filename}`
   ),
   resolveSchemaPath: jest.fn((filename) => `./data/schemas/${filename}`),
   resolveModManifestPath: jest.fn(
@@ -242,8 +242,8 @@ describe('ComponentLoader (Sub-Ticket 6.8: Data Schema Registration Failure)', (
     );
 
     // --- Base setup common ---
-    mockConfig.getContentTypeSchemaId.mockImplementation((registryKey) =>
-      registryKey === 'components' ? componentDefSchemaId : undefined
+    mockConfig.getContentTypeSchemaId.mockImplementation((typeName) =>
+      typeName === 'components' ? componentDefSchemaId : undefined
     );
     mockValidator._setSchemaLoaded(componentDefSchemaId);
     mockValidator.validate.mockImplementation((schemaId, data) => {

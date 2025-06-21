@@ -1,12 +1,9 @@
-// src/loaders/phases/schemaphase.js
-
-import LoaderPhase from './loaderphase.js';
+import LoaderPhase from './LoaderPhase.js';
 import {
   ModsLoaderPhaseError,
   ModsLoaderErrorCode,
 } from '../../errors/modsLoaderPhaseError.js';
 import ESSENTIAL_SCHEMA_TYPES from '../../constants/essentialSchemas.js';
-import { logPhaseStart } from '../../utils/logPhaseStart.js';
 
 /**
  * @description Phase responsible for loading and compiling all schemas and verifying essential schemas are present.
@@ -30,12 +27,12 @@ export default class SchemaPhase extends LoaderPhase {
 
   /**
    * @description Executes the schema loading and verification phase.
-   * @param {import('../loadContext.js').LoadContext} ctx - The load context
+   * @param {import('../LoadContext.js').LoadContext} ctx - The load context
    * @returns {Promise<void>}
    * @throws {ModsLoaderPhaseError} When schema loading fails or essential schemas are missing
    */
   async execute(ctx) {
-    logPhaseStart(this.logger, 'SchemaPhase');
+    this.logger.info('— SchemaPhase starting —');
 
     try {
       // Load and compile all schemas

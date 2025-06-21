@@ -1,6 +1,6 @@
 import { describe, it, expect, jest, afterEach } from '@jest/globals';
 import { initProcessingIndicatorController } from '../../../../../src/bootstrapper/stages/auxiliary/initProcessingIndicatorController.js';
-import StageError from '../../../../../src/bootstrapper/stageError.js';
+import StageError from '../../../../../src/bootstrapper/StageError.js';
 import {
   stageSuccess,
   stageFailure,
@@ -12,7 +12,7 @@ jest.mock('../../../../../src/bootstrapper/helpers.js', () => ({
   stageFailure: jest.fn((phase, message, cause) => ({
     success: false,
     error:
-      new (require('../../../../../src/bootstrapper/stageError.js').default)(
+      new (require('../../../../../src/bootstrapper/StageError.js').default)(
         phase,
         message,
         cause

@@ -1,7 +1,7 @@
 // src/prompting/promptStaticContentService.js
 // --- FILE START ---
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
-import { IPromptStaticContentService } from '../interfaces/iPromptStaticContentService.js';
+import { IPromptStaticContentService } from '../interfaces/IPromptStaticContentService.js';
 
 /** @typedef {import('../loaders/promptTextLoader.js').default} PromptTextLoader */
 /** @typedef {import('../interfaces/IPromptStaticContentService.js').IPromptStaticContentService} IPromptStaticContentService_Interface */

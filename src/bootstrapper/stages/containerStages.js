@@ -6,7 +6,7 @@ import { tokens } from '../../dependencyInjection/tokens.js';
 import { stageSuccess, stageFailure } from '../helpers.js';
 
 /**
- * @typedef {import('../uiBootstrapper.js').EssentialUIElements} EssentialUIElements
+ * @typedef {import('../UIBootstrapper.js').EssentialUIElements} EssentialUIElements
  */
 /**
  * @typedef {import('../../dependencyInjection/containerConfig.js').ConfigureContainerFunction} ConfigureContainerFunction

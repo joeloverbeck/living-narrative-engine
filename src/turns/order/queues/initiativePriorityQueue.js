@@ -7,7 +7,7 @@
  */
 
 import TinyQueue from 'tinyqueue';
-import { ITurnOrderQueue } from '../../interfaces/iTurnOrderQueue.js';
+import { ITurnOrderQueue } from '../../interfaces/ITurnOrderQueue.js';
 
 // --- Type Imports ---
 /**

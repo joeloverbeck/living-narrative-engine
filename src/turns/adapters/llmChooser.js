@@ -10,7 +10,7 @@
 /** @typedef {import('../interfaces/ILLMAdapter.js').ILLMAdapter} ILLMAdapter */
 
 /** @typedef {import('../interfaces/ILLMResponseProcessor.js').ILLMResponseProcessor} ILLMResponseProcessor */
-import { ILLMChooser } from '../ports/iLLMChooser.js';
+import { ILLMChooser } from '../ports/ILLMChooser';
 
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 

@@ -2,7 +2,7 @@
 
 import { jest, describe, beforeEach, expect, test } from '@jest/globals';
 import { HumanDecisionProvider } from '../../../../src/turns/providers/humanDecisionProvider.js';
-import { ITurnDecisionProvider } from '../../../../src/turns/interfaces/iTurnDecisionProvider.js';
+import { ITurnDecisionProvider } from '../../../../src/turns/interfaces/ITurnDecisionProvider.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../../../src/constants/eventIds.js';
 
 // Mock dependencies

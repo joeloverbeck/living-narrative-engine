@@ -10,8 +10,8 @@
 /** @typedef {import('../../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
 
 // --- Interface Imports for JSDoc & `extends` ---
-/** @typedef {import('../../interfaces/iInitializationService.js').InitializationResult} InitializationResult */
-import { IInitializationService } from '../../interfaces/iInitializationService.js';
+/** @typedef {import('../../interfaces/IInitializationService.js').InitializationResult} InitializationResult */
+import { IInitializationService } from '../../interfaces/IInitializationService.js';
 import { tokens } from '../../dependencyInjection/tokens.js';
 import { LlmConfigLoader } from '../../llms/services/llmConfigLoader.js';
 import { ThoughtPersistenceListener } from '../../ai/thoughtPersistenceListener.js';
@@ -21,7 +21,7 @@ import { ACTION_DECIDED_ID } from '../../constants/eventIds.js';
 /**
  * Service responsible for orchestrating the entire game initialization sequence.
  *
- * @implements {iInitializationService}
+ * @implements {IInitializationService}
  */
 class InitializationService extends IInitializationService {
   #container;

@@ -5,19 +5,19 @@ import {
   ATTEMPT_ACTION_ID,
   SYSTEM_ERROR_OCCURRED_ID,
 } from '../constants/eventIds.js';
-import { ICommandProcessor } from './interfaces/iCommandProcessor.js';
+import { ICommandProcessor } from './interfaces/ICommandProcessor.js';
 import { resolveSafeDispatcher } from '../utils/dispatcherUtils.js';
 
 // --- Type Imports ---
 /** @typedef {import('../entities/entity.js').default} Entity */
-/** @typedef {import('./interfaces/iCommandProcessor.js').iCommandProcessor} iCommandProcessor_Interface */
+/** @typedef {import('./interfaces/ICommandProcessor.js').ICommandProcessor} ICommandProcessor_Interface */
 /** @typedef {import('../turns/interfaces/IActorTurnStrategy.js').ITurnAction} ITurnAction */
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 
 /**
  * @description Processes raw command strings from actors.
- * @implements {iCommandProcessor_Interface}
+ * @implements {ICommandProcessor_Interface}
  */
 class CommandProcessor extends ICommandProcessor {
   /** @type {ILogger} */

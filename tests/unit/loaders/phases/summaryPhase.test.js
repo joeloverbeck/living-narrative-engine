@@ -1,6 +1,6 @@
 // tests/unit/loaders/phases/summaryPhase.test.js
 import SummaryPhase from '../../../../src/loaders/phases/summaryPhase.js';
-import LoaderPhase from '../../../../src/loaders/phases/loaderphase.js';
+import LoaderPhase from '../../../../src/loaders/phases/LoaderPhase.js';
 import {
   ModsLoaderPhaseError,
   ModsLoaderErrorCode,
