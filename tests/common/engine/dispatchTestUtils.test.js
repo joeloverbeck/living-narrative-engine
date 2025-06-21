@@ -5,11 +5,19 @@ import {
   buildSaveDispatches,
   DEFAULT_ACTIVE_WORLD_FOR_SAVE,
   expectEngineStatus,
+  expectEntityCreatedDispatch,
+  expectEntityRemovedDispatch,
+  expectComponentAddedDispatch,
+  expectComponentRemovedDispatch,
 } from './dispatchTestUtils.js';
 import {
   ENGINE_OPERATION_IN_PROGRESS_UI,
   ENGINE_READY_UI,
   GAME_SAVED_ID,
+  ENTITY_CREATED_ID,
+  ENTITY_REMOVED_ID,
+  COMPONENT_ADDED_ID,
+  COMPONENT_REMOVED_ID,
 } from '../../../src/constants/eventIds.js';
 
 describe('dispatchTestUtils', () => {
@@ -114,6 +122,65 @@ describe('dispatchTestUtils', () => {
     it('throws when statuses differ', () => {
       const engine = { getEngineStatus: () => ({ ready: false }) };
       expect(() => expectEngineStatus(engine, { ready: true })).toThrow();
+    });
+  });
+
+  describe('entity and component dispatch helpers', () => {
+    it('validates ENTITY_CREATED helper', () => {
+      const mock = jest.fn();
+      const entity = { id: 'e1' };
+      mock(ENTITY_CREATED_ID, { entity, wasReconstructed: false });
+
+      expect(() =>
+        expectEntityCreatedDispatch(mock, entity, false)
+      ).not.toThrow();
+    });
+
+    it('throws on mismatched ENTITY_CREATED payload', () => {
+      const mock = jest.fn();
+      const entity = { id: 'e1' };
+      mock(ENTITY_CREATED_ID, { entity, wasReconstructed: false });
+
+      expect(() => expectEntityCreatedDispatch(mock, entity, true)).toThrow();
+    });
+
+    it('validates ENTITY_REMOVED helper', () => {
+      const mock = jest.fn();
+      const entity = { id: 'e1' };
+      mock(ENTITY_REMOVED_ID, { entity });
+
+      expect(() => expectEntityRemovedDispatch(mock, entity)).not.toThrow();
+    });
+
+    it('validates COMPONENT_ADDED helper', () => {
+      const mock = jest.fn();
+      const entity = { id: 'e1' };
+      const newData = { a: 1 };
+      mock(COMPONENT_ADDED_ID, {
+        entity,
+        componentTypeId: 'typeA',
+        componentData: newData,
+        oldComponentData: undefined,
+      });
+
+      expect(() =>
+        expectComponentAddedDispatch(mock, entity, 'typeA', newData, undefined)
+      ).not.toThrow();
+    });
+
+    it('validates COMPONENT_REMOVED helper', () => {
+      const mock = jest.fn();
+      const entity = { id: 'e1' };
+      const oldData = { a: 1 };
+      mock(COMPONENT_REMOVED_ID, {
+        entity,
+        componentTypeId: 'typeA',
+        oldComponentData: oldData,
+      });
+
+      expect(() =>
+        expectComponentRemovedDispatch(mock, entity, 'typeA', oldData)
+      ).not.toThrow();
     });
   });
 });

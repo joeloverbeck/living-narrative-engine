@@ -8,6 +8,10 @@ import {
   ENGINE_OPERATION_IN_PROGRESS_UI,
   ENGINE_READY_UI,
   GAME_SAVED_ID,
+  ENTITY_CREATED_ID,
+  ENTITY_REMOVED_ID,
+  COMPONENT_ADDED_ID,
+  COMPONENT_REMOVED_ID,
 } from '../../../src/constants/eventIds.js';
 
 /**
@@ -100,6 +104,79 @@ export function expectSingleDispatch(mock, eventId, payload) {
   expectDispatchSequence(mock, [[eventId, payload]]);
 }
 
+/**
+ * Asserts that an ENTITY_CREATED dispatch with the correct payload occurred.
+ *
+ * @param {import('@jest/globals').Mock} mock - Mocked dispatch function.
+ * @param {import('../../../src/entities/entity.js').default} entity - Entity instance.
+ * @param {boolean} wasReconstructed - Flag indicating reconstruction.
+ * @returns {void}
+ */
+export function expectEntityCreatedDispatch(mock, entity, wasReconstructed) {
+  expectSingleDispatch(mock, ENTITY_CREATED_ID, {
+    entity,
+    wasReconstructed,
+  });
+}
+
+/**
+ * Asserts that an ENTITY_REMOVED dispatch with the correct payload occurred.
+ *
+ * @param {import('@jest/globals').Mock} mock - Mocked dispatch function.
+ * @param {import('../../../src/entities/entity.js').default} entity - Entity instance.
+ * @returns {void}
+ */
+export function expectEntityRemovedDispatch(mock, entity) {
+  expectSingleDispatch(mock, ENTITY_REMOVED_ID, { entity });
+}
+
+/**
+ * Asserts that a COMPONENT_ADDED dispatch with the expected payload occurred.
+ *
+ * @param {import('@jest/globals').Mock} mock - Mocked dispatch function.
+ * @param {import('../../../src/entities/entity.js').default} entity - Entity instance.
+ * @param {string} componentTypeId - Component type identifier.
+ * @param {object|null} newData - New component data.
+ * @param {object|null|undefined} oldData - Previous component data.
+ * @returns {void}
+ */
+export function expectComponentAddedDispatch(
+  mock,
+  entity,
+  componentTypeId,
+  newData,
+  oldData
+) {
+  expectSingleDispatch(mock, COMPONENT_ADDED_ID, {
+    entity,
+    componentTypeId,
+    componentData: newData,
+    oldComponentData: oldData,
+  });
+}
+
+/**
+ * Asserts that a COMPONENT_REMOVED dispatch with the expected payload occurred.
+ *
+ * @param {import('@jest/globals').Mock} mock - Mocked dispatch function.
+ * @param {import('../../../src/entities/entity.js').default} entity - Entity instance.
+ * @param {string} componentTypeId - Component type identifier.
+ * @param {object|null|undefined} oldData - Previous component data.
+ * @returns {void}
+ */
+export function expectComponentRemovedDispatch(
+  mock,
+  entity,
+  componentTypeId,
+  oldData
+) {
+  expectSingleDispatch(mock, COMPONENT_REMOVED_ID, {
+    entity,
+    componentTypeId,
+    oldComponentData: oldData,
+  });
+}
+
 export { expectDispatchSequence as expectDispatchCalls };
 
 export default {
@@ -107,5 +184,9 @@ export default {
   buildSaveDispatches,
   expectEngineStatus,
   expectSingleDispatch,
+  expectEntityCreatedDispatch,
+  expectEntityRemovedDispatch,
+  expectComponentAddedDispatch,
+  expectComponentRemovedDispatch,
   expectDispatchCalls: expectDispatchSequence,
 };
