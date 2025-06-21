@@ -3,7 +3,7 @@
 
 import { describeTurnManagerSuite } from '../../common/turns/turnManagerTestBed.js';
 import { flushPromisesAndTimers } from '../../common/jestHelpers.js';
-import { ACTOR_COMPONENT_ID } from '../../../src/constants/componentIds.js';
+// import removed constant; not needed
 import {
   TURN_ENDED_ID,
   TURN_STARTED_ID,
@@ -14,10 +14,7 @@ import {
   createDefaultActors,
   createAiActor,
 } from '../../common/turns/testActors.js';
-import {
-  createMockEntity,
-  createMockTurnHandler,
-} from '../../common/mockFactories.js';
+import { createMockTurnHandler } from '../../common/mockFactories.js';
 
 // --- Test Suite ---
 
@@ -43,7 +40,7 @@ describeTurnManagerSuite(
       testBed.mocks.turnHandlerResolver.resolveHandler.mockImplementation(
         async (actor) => {
           const handler = createMockTurnHandler({ actor });
-          handler.startTurn = (_currentActor) => Promise.resolve();
+          handler.startTurn = () => Promise.resolve();
 
           return handler;
         }
@@ -59,17 +56,13 @@ describeTurnManagerSuite(
 
     afterEach(async () => {
       jest.clearAllMocks();
-      jest.clearAllTimers();
-      jest.useRealTimers();
+      // Timer cleanup handled by BaseTestBed
     });
 
     test('Starts a new round when queue is empty and active actors exist', async () => {
       testBed.setActiveEntities(ai1, player);
 
-      // Debug: verify actors
-      const entities = Array.from(testBed.entityManager.entities);
-
-      // Entities have ACTOR_COMPONENT_ID component or not; not logged
+      // Debug: verify actor references
 
       // Mock isEmpty to return true (queue is empty) before the first turn
       testBed.mocks.turnOrderService.isEmpty.mockResolvedValueOnce(true);

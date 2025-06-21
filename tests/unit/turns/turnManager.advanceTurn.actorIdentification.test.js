@@ -53,7 +53,7 @@ describeTurnManagerSuite(
         stopSpy.mockRestore();
       }
       turnEndCapture.unsubscribe.mockClear();
-      jest.useRealTimers();
+      // Timer cleanup handled by BaseTestBed
     });
 
     test.each([
@@ -110,7 +110,7 @@ describeTurnManagerSuite(
         await flushPromisesAndTimers();
         expect(mockHandler.destroy).toHaveBeenCalledTimes(1);
 
-        jest.useRealTimers();
+        // Timer cleanup handled by BaseTestBed
       }
     );
 
@@ -138,7 +138,6 @@ describeTurnManagerSuite(
     });
 
     test('Entity manager error: logs error, stops manager', async () => {
-      const entityError = new Error('Entity not found');
 
       testBed.mocks.turnOrderService.isEmpty.mockResolvedValue(false);
       testBed.mocks.turnOrderService.getNextEntity.mockResolvedValue(null);

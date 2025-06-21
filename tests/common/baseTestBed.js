@@ -73,6 +73,8 @@ export class BaseTestBed {
    * @returns {Promise<void>} Promise resolving when cleanup is complete.
    */
   async cleanup() {
+    jest.useRealTimers();
+    jest.clearAllTimers();
     jest.clearAllMocks();
     this.resetMocks();
     await this._afterCleanup();

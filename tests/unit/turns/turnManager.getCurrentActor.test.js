@@ -55,8 +55,7 @@ describeTurnManagerSuite('TurnManager', (getBed) => {
   });
 
   afterEach(() => {
-    jest.clearAllTimers();
-    jest.useRealTimers();
+    // Timer cleanup handled by BaseTestBed
   });
 
   // --- Basic Setup Tests ---
