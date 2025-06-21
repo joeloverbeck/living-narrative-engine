@@ -20,7 +20,7 @@ import {
   createMockWorldLoader, // ← NEW import
 } from '../mockFactories';
 import { createLoaderMocks } from './modsLoader.test-utils.js';
-import { createTestEnvironmentBuilder } from '../mockEnvironment.js';
+import { createServiceTestEnvironment } from '../mockEnvironment.js';
 
 /**
  * List of loader types used when generating mock loaders.
@@ -62,37 +62,35 @@ export function createTestEnvironment() {
   /* ── Content-loader mocks ───────────────────────────────────────────── */
   const loaders = createLoaderMocks(loaderTypes);
 
-  const buildEnv = createTestEnvironmentBuilder(
-    factoryMap,
-    {},
-    (mockContainer, m) => {
-      m.mockValidator.isSchemaLoaded.mockImplementation((id) =>
-        [
-          'schema:game',
-          'schema:components',
-          'schema:mod-manifest',
-          'schema:entityDefinitions',
-          'schema:actions',
-          'schema:events',
-          'schema:rules',
-          'schema:conditions',
-          'schema:entityInstances',
-          'schema:goals',
-        ].includes(id)
-      );
-      m.mockModDependencyValidator.validate.mockImplementation(() => {});
-      m.mockModVersionValidator.mockImplementation(() => {});
-      m.mockModLoadOrderResolver.resolve.mockImplementation((ids) => ids);
+  const {
+    mocks,
+    instance: modsLoader,
+    cleanup,
+  } = createServiceTestEnvironment(factoryMap, {}, (mockContainer, m) => {
+    m.mockValidator.isSchemaLoaded.mockImplementation((id) =>
+      [
+        'schema:game',
+        'schema:components',
+        'schema:mod-manifest',
+        'schema:entityDefinitions',
+        'schema:actions',
+        'schema:events',
+        'schema:rules',
+        'schema:conditions',
+        'schema:entityInstances',
+        'schema:goals',
+      ].includes(id)
+    );
+    m.mockModDependencyValidator.validate.mockImplementation(() => {});
+    m.mockModVersionValidator.mockImplementation(() => {});
+    m.mockModLoadOrderResolver.resolve.mockImplementation((ids) => ids);
 
-      return new ModsLoader({
-        logger: m.mockLogger,
-        cache: { clear: jest.fn(), snapshot: jest.fn(), restore: jest.fn() },
-        session: { run: jest.fn().mockResolvedValue({}) },
-      });
-    }
-  );
-
-  const { mocks, instance: modsLoader, cleanup } = buildEnv();
+    return new ModsLoader({
+      logger: m.mockLogger,
+      cache: { clear: jest.fn(), snapshot: jest.fn(), restore: jest.fn() },
+      session: { run: jest.fn().mockResolvedValue({}) },
+    });
+  });
 
   /* ── Return the assembled environment ──────────────────────────────── */
   return {
