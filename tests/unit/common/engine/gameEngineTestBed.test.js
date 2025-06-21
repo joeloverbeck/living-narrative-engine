@@ -7,6 +7,7 @@ import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import {
   GameEngineTestBed,
   describeGameEngineSuite,
+  describeEngineSuite,
 } from '../../../common/engine/gameEngineTestBed.js';
 import GameEngine from '../../../../src/engine/gameEngine.js';
 import { tokens } from '../../../../src/dependencyInjection/tokens.js';
@@ -60,6 +61,43 @@ describe('GameEngine Test Helpers: GameEngineTestBed', () => {
   it('init accepts custom world name', async () => {
     await testBed.init('Custom');
     expect(engine.startNewGame).toHaveBeenCalledWith('Custom');
+  });
+
+  it('initAndReset runs init then clears mock history', async () => {
+    const initSpy = jest.spyOn(testBed, 'init');
+    const resetSpy = jest.spyOn(testBed, 'resetMocks');
+
+    await testBed.initAndReset('ResetWorld');
+
+    expect(initSpy).toHaveBeenCalledWith('ResetWorld');
+    expect(engine.startNewGame).toHaveBeenCalledWith('ResetWorld');
+    expect(resetSpy).toHaveBeenCalledTimes(1);
+
+    await expect(
+      testBed.env.initializationService.runInitializationSequence()
+    ).resolves.toEqual({ success: true });
+
+    initSpy.mockRestore();
+    resetSpy.mockRestore();
+  });
+
+  it('startAndReset calls start with result then clears mock history', async () => {
+    const startSpy = jest.spyOn(testBed, 'start');
+    const resetSpy = jest.spyOn(testBed, 'resetMocks');
+    const result = { success: false };
+
+    await testBed.startAndReset('WorldName', result);
+
+    expect(startSpy).toHaveBeenCalledWith('WorldName', result);
+    expect(engine.startNewGame).toHaveBeenCalledWith('WorldName');
+    expect(resetSpy).toHaveBeenCalledTimes(1);
+
+    await expect(
+      testBed.env.initializationService.runInitializationSequence()
+    ).resolves.toEqual(result);
+
+    startSpy.mockRestore();
+    resetSpy.mockRestore();
   });
 
   it('stop only stops engine when initialized', async () => {
@@ -144,13 +182,25 @@ describe('GameEngine Test Helpers: GameEngineTestBed', () => {
 
 describe('describeGameEngineSuite', () => {
   let cleanupCalls = 0;
-  const originalCleanup = GameEngineTestBed.prototype.cleanup;
-  const cleanupSpy = jest
-    .spyOn(GameEngineTestBed.prototype, 'cleanup')
-    .mockImplementation(async function (...args) {
-      cleanupCalls++;
-      return originalCleanup.apply(this, args);
-    });
+  let originalCleanup;
+  let cleanupSpy;
+
+  beforeAll(() => {
+    originalCleanup = GameEngineTestBed.prototype.cleanup;
+  });
+
+  beforeEach(() => {
+    cleanupSpy = jest
+      .spyOn(GameEngineTestBed.prototype, 'cleanup')
+      .mockImplementation(async function (...args) {
+        cleanupCalls++;
+        return originalCleanup.apply(this, args);
+      });
+  });
+
+  afterEach(() => {
+    cleanupSpy.mockRestore();
+  });
 
   describeGameEngineSuite('inner', (getBed) => {
     it('instantiates a test bed', () => {
@@ -164,8 +214,44 @@ describe('describeGameEngineSuite', () => {
     });
   });
 
-  afterAll(() => {
+  it('calls cleanup after each test', () => {
+    expect(cleanupCalls).toBe(2);
+  });
+});
+
+describe('describeEngineSuite', () => {
+  let cleanupCalls = 0;
+  let originalCleanup;
+  let cleanupSpy;
+
+  beforeAll(() => {
+    originalCleanup = GameEngineTestBed.prototype.cleanup;
+  });
+
+  beforeEach(() => {
+    cleanupSpy = jest
+      .spyOn(GameEngineTestBed.prototype, 'cleanup')
+      .mockImplementation(async function (...args) {
+        cleanupCalls++;
+        return originalCleanup.apply(this, args);
+      });
+  });
+
+  afterEach(() => {
     cleanupSpy.mockRestore();
+  });
+
+  describeEngineSuite('inner', (ctx) => {
+    it('provides bed and engine references', () => {
+      expect(ctx.bed).toBeInstanceOf(GameEngineTestBed);
+      expect(ctx.engine).toBe(ctx.bed.engine);
+    });
+
+    it('suppresses console.error', () => {
+      expect(jest.isMockFunction(console.error)).toBe(true);
+      console.error('oops');
+      expect(console.error).toHaveBeenCalledWith('oops');
+    });
   });
 
   it('calls cleanup after each test', () => {
