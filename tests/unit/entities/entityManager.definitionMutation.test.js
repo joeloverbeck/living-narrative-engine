@@ -4,7 +4,7 @@ import { test, expect } from '@jest/globals';
 import {
   describeEntityManagerSuite,
   TestBed,
-} from '../../common/entities/testBed.js';
+} from '../../common/entities/index.js';
 import EntityDefinition from '../../../src/entities/entityDefinition.js';
 
 describeEntityManagerSuite(

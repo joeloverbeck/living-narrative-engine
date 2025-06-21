@@ -1,5 +1,5 @@
 import { describe, it, expect } from '@jest/globals';
-import { buildSerializedEntity } from './serializationUtils.js';
+import { buildSerializedEntity } from './index.js';
 
 describe('buildSerializedEntity', () => {
   it('returns object with provided parameters', () => {

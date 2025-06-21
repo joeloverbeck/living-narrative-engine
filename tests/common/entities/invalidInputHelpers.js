@@ -3,7 +3,7 @@
  * @see tests/common/entities/invalidInputHelpers.js
  */
 
-import { TestData } from './testBed.js';
+import { TestData } from './index.js';
 import { InvalidArgumentError } from '../../../src/errors/invalidArgumentError.js';
 
 /**
