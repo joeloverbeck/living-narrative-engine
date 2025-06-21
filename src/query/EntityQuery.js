@@ -16,9 +16,9 @@ export default class EntityQuery {
    * Creates a new EntityQuery instance.
    *
    * @param {object} options - Query configuration options
-   * @param {string[]} [options.withAll=[]] - Components that the entity MUST have ALL of
-   * @param {string[]} [options.withAny=[]] - Components that the entity MUST have AT LEAST ONE of
-   * @param {string[]} [options.without=[]] - Components that the entity MUST NOT have ANY of
+   * @param {string[]} [options.withAll] - Components that the entity MUST have ALL of
+   * @param {string[]} [options.withAny] - Components that the entity MUST have AT LEAST ONE of
+   * @param {string[]} [options.without] - Components that the entity MUST NOT have ANY of
    */
   constructor({ withAll = [], withAny = [], without = [] } = {}) {
     this.withAll = Array.isArray(withAll) ? withAll : [];

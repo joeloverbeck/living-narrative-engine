@@ -47,13 +47,13 @@ export default class ContentPhase extends LoaderPhase {
     async execute(ctx) {
         logPhaseStart(this.logger, 'ContentPhase');
         try {
-            await this.manager.loadContent(
+            const loadResult = await this.manager.loadContent(
                 ctx.finalModOrder,
                 this.manifests,
                 ctx.totals
             );
-            // Per acceptance criteria, create a new object reference for totals to ensure immutability downstream.
-            ctx.totals = JSON.parse(JSON.stringify(ctx.totals)); // snapshot
+            // Assign the returned totals to ctx.totals to ensure immutability
+            ctx.totals = loadResult.updatedTotals;
         } catch (e) {
             throw new ModsLoaderPhaseError(
                 ModsLoaderErrorCode.CONTENT,

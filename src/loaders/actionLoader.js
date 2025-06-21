@@ -15,6 +15,7 @@ import { BaseManifestItemLoader } from './baseManifestItemLoader.js';
 
 /**
  * Loads action definitions from mods.
+ *
  * @augments BaseManifestItemLoader
  */
 class ActionLoader extends BaseManifestItemLoader {
@@ -47,6 +48,7 @@ class ActionLoader extends BaseManifestItemLoader {
 
   /**
    * Processes a single fetched action definition.
+   *
    * @override
    * @protected
    * @param {string} modId

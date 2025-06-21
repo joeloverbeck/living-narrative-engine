@@ -1,5 +1,5 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
-import ContentLoadManager from '../../../src/loaders/ContentLoadManager.js';
+import ContentLoadManager from '../../../src/loaders/contentLoadManager.js';
 
 /** @typedef {import('../../../src/loaders/LoadResultAggregator.js').TotalResultsSummary} TotalResultsSummary */
 
@@ -99,11 +99,12 @@ describe('ContentLoadManager.loadContent', () => {
     ]);
     /** @type {TotalResultsSummary} */ const totals = {};
 
-    const results = await manager.loadContent(finalOrder, manifests, totals);
+    const { results, updatedTotals } = await manager.loadContent(finalOrder, manifests, totals);
 
     expect(results).toEqual({ modA: 'success', modB: 'failed' });
-    expect(totals.items.count).toBe(1); // Only loaderA succeeded
-    expect(totals.items.errors).toBe(1); // Only loaderB failed
+    expect(updatedTotals.items.count).toBe(1); // Only loaderA succeeded
+    expect(updatedTotals.items.errors).toBe(1); // Only loaderB failed
+    expect(totals).toEqual({}); // original totals should not be mutated
 
     // Check that dispatcher was called for loaderB's failure
     expect(dispatcher.dispatch).toHaveBeenCalledWith(

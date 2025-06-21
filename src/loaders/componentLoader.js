@@ -12,6 +12,7 @@ import { parseAndValidateId } from '../utils/idUtils.js';
 
 /**
  * Loads component definitions from mods.
+ *
  * @augments BaseInlineSchemaLoader
  */
 class ComponentLoader extends BaseInlineSchemaLoader {
@@ -36,6 +37,7 @@ class ComponentLoader extends BaseInlineSchemaLoader {
 
   /**
    * Processes a single fetched component definition file's data.
+   *
    * @override
    * @protected
    * @param {string} modId

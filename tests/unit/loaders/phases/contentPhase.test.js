@@ -18,9 +18,12 @@ describe('ContentPhase', () => {
       loadContent: jest
         .fn()
         .mockImplementation((_order, _manifests, totals) => {
-          // Simulate the manager mutating the totals object
-          totals.components = { count: 10, overrides: 1, errors: 0 };
-          return Promise.resolve();
+          // Simulate the manager returning a new totals object
+          const updatedTotals = {
+            ...totals,
+            components: { count: 10, overrides: 1, errors: 0 },
+          };
+          return Promise.resolve({ updatedTotals });
         }),
     };
     mockLogger = {

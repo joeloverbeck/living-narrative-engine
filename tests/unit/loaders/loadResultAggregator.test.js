@@ -13,27 +13,31 @@ describe('LoadResultAggregator', () => {
   });
 
   it('aggregates multiple results and updates totals', () => {
-    agg.aggregate({ count: 2, overrides: 1, errors: 0 }, 'actions');
-    agg.aggregate({ count: 1, overrides: 0, errors: 1 }, 'events');
+    const updatedTotals1 = agg.aggregate({ count: 2, overrides: 1, errors: 0 }, 'actions');
+    const updatedTotals2 = agg.aggregate({ count: 1, overrides: 0, errors: 1 }, 'events');
 
     expect(agg.modResults).toEqual({
       actions: { count: 2, overrides: 1, errors: 0 },
       events: { count: 1, overrides: 0, errors: 1 },
     });
-    expect(totals).toEqual({
+    expect(updatedTotals2).toEqual({
       actions: { count: 2, overrides: 1, errors: 0 },
       events: { count: 1, overrides: 0, errors: 1 },
     });
+    // Verify that the original totals object is not mutated
+    expect(totals).toEqual({});
   });
 
   it('recordFailure increments error counts in both summaries', () => {
     agg.aggregate({ count: 1, overrides: 0, errors: 0 }, 'rules');
-    agg.recordFailure('rules');
-    agg.recordFailure('missing');
+    const updatedTotals1 = agg.recordFailure('rules');
+    const updatedTotals2 = agg.recordFailure('missing');
 
     expect(agg.modResults.rules.errors).toBe(1);
     expect(agg.modResults.missing.errors).toBe(1);
-    expect(totals.rules.errors).toBe(1);
-    expect(totals.missing.errors).toBe(1);
+    expect(updatedTotals2.rules.errors).toBe(1);
+    expect(updatedTotals2.missing.errors).toBe(1);
+    // Verify that the original totals object is not mutated
+    expect(totals).toEqual({});
   });
 });

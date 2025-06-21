@@ -48,10 +48,11 @@ export class LoadResultAggregator {
 
   /**
    * Aggregates a loader result into the per-mod and total summaries.
+   * Returns a new totals object to maintain immutability.
    *
    * @param {LoadItemsResult|null|undefined} result - Loader result to aggregate.
    * @param {string} typeName - Content type name.
-   * @returns {void}
+   * @returns {TotalResultsSummary} A new totals object with updated counts.
    */
   aggregate(result, typeName) {
     const res =
@@ -65,19 +66,28 @@ export class LoadResultAggregator {
 
     this.modResults[typeName] = res;
 
-    if (!this.#totalCounts[typeName]) {
-      this.#totalCounts[typeName] = { count: 0, overrides: 0, errors: 0 };
+    // Clone the current totals to maintain immutability
+    const newTotals = { ...this.#totalCounts };
+    
+    if (!newTotals[typeName]) {
+      newTotals[typeName] = { count: 0, overrides: 0, errors: 0 };
     }
-    this.#totalCounts[typeName].count += res.count;
-    this.#totalCounts[typeName].overrides += res.overrides;
-    this.#totalCounts[typeName].errors += res.errors;
+    newTotals[typeName].count += res.count;
+    newTotals[typeName].overrides += res.overrides;
+    newTotals[typeName].errors += res.errors;
+    
+    // Update the internal totals reference
+    this.#totalCounts = newTotals;
+    
+    return newTotals;
   }
 
   /**
    * Records a failure occurrence for a specific loader.
+   * Returns a new totals object to maintain immutability.
    *
    * @param {string} typeName - Content type name for which a failure occurred.
-   * @returns {void}
+   * @returns {TotalResultsSummary} A new totals object with updated error counts.
    */
   recordFailure(typeName) {
     if (!this.modResults[typeName]) {
@@ -85,10 +95,18 @@ export class LoadResultAggregator {
     }
     this.modResults[typeName].errors += 1;
 
-    if (!this.#totalCounts[typeName]) {
-      this.#totalCounts[typeName] = { count: 0, overrides: 0, errors: 0 };
+    // Clone the current totals to maintain immutability
+    const newTotals = { ...this.#totalCounts };
+    
+    if (!newTotals[typeName]) {
+      newTotals[typeName] = { count: 0, overrides: 0, errors: 0 };
     }
-    this.#totalCounts[typeName].errors += 1;
+    newTotals[typeName].errors += 1;
+    
+    // Update the internal totals reference
+    this.#totalCounts = newTotals;
+    
+    return newTotals;
   }
 }
 

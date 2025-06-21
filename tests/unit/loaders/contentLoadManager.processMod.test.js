@@ -1,5 +1,5 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
-import ContentLoadManager from '../../../src/loaders/ContentLoadManager.js';
+import ContentLoadManager from '../../../src/loaders/contentLoadManager.js';
 
 /** @typedef {import('../../../src/loaders/LoadResultAggregator.js').TotalResultsSummary} TotalResultsSummary */
 
@@ -47,7 +47,7 @@ describe('ContentLoadManager.processMod', () => {
     /** @type {TotalResultsSummary} */ const totals = {};
     const phase = 'definitions';
 
-    const status = await manager.processMod(
+    const result = await manager.processMod(
       'testMod',
       null,
       totals,
@@ -55,7 +55,8 @@ describe('ContentLoadManager.processMod', () => {
       phase
     );
 
-    expect(status).toBe('skipped');
+    expect(result.status).toBe('skipped');
+    expect(result.updatedTotals).toEqual({});
     expect(dispatcher.dispatch).toHaveBeenCalledWith(
       'initialization:world_loader:mod_load_failed',
       expect.objectContaining({ modId: 'testMod' }),
@@ -84,7 +85,7 @@ describe('ContentLoadManager.processMod', () => {
     /** @type {TotalResultsSummary} */ const totals = {};
     const phase = 'definitions';
 
-    const status = await manager.processMod(
+    const result = await manager.processMod(
       'testMod',
       manifest,
       totals,
@@ -92,8 +93,9 @@ describe('ContentLoadManager.processMod', () => {
       phase
     );
 
-    expect(status).toBe('failed');
-    expect(totals.items.errors).toBe(1);
+    expect(result.status).toBe('failed');
+    expect(result.updatedTotals.items.errors).toBe(1);
+    expect(totals).toEqual({});
     expect(dispatcher.dispatch).toHaveBeenCalledWith(
       'initialization:world_loader:content_load_failed',
       expect.objectContaining({
@@ -126,7 +128,7 @@ describe('ContentLoadManager.processMod', () => {
     /** @type {TotalResultsSummary} */ const totals = {};
     const phase = 'definitions';
 
-    const status = await manager.processMod(
+    const result = await manager.processMod(
       'testMod',
       manifest,
       totals,
@@ -134,8 +136,9 @@ describe('ContentLoadManager.processMod', () => {
       phase
     );
 
-    expect(status).toBe('success');
-    expect(totals.items.count).toBe(1);
+    expect(result.status).toBe('success');
+    expect(result.updatedTotals.items.count).toBe(1);
+    expect(totals).toEqual({});
     expect(dispatcher.dispatch).not.toHaveBeenCalled();
   });
 });

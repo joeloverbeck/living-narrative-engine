@@ -22,7 +22,7 @@ import AbstractLoader from './abstractLoader.js';
  * such as loading schemas, processing manifests, loading content, etc.
  *
  * @class ModsLoader
- * @extends {AbstractLoader}
+ * @augments {AbstractLoader}
  */
 class ModsLoader extends AbstractLoader {
   /** @type {ILogger} */
