@@ -9,6 +9,7 @@ import InMemoryDataRegistry from '../../../src/data/inMemoryDataRegistry.js';
 import ModsLoader from '../../../src/loaders/modsLoader.js';
 import LoaderPhase from '../../../src/loaders/phases/LoaderPhase.js';
 import { ModsLoaderPhaseError } from '../../../src/errors/modsLoaderPhaseError.js';
+import { makeRegistryCache } from '../../../src/loaders/registryCacheAdapter.js';
 
 /**
  * Creates a mock phase that tracks execution order and can be configured to fail.
@@ -75,7 +76,8 @@ describe('Integration: ModsLoader Orchestrator Order and Error Propagation', () 
       const modsLoader = new ModsLoader({
         logger: mockLogger,
         registry: dataRegistry,
-        phases
+        phases,
+        cache: makeRegistryCache(dataRegistry),
       });
 
       // Act: Execute the loader
@@ -131,7 +133,8 @@ describe('Integration: ModsLoader Orchestrator Order and Error Propagation', () 
       const modsLoader = new ModsLoader({
         logger: mockLogger,
         registry: dataRegistry,
-        phases
+        phases,
+        cache: makeRegistryCache(dataRegistry),
       });
 
       // Act & Assert: Execute the loader and expect it to fail
@@ -176,7 +179,8 @@ describe('Integration: ModsLoader Orchestrator Order and Error Propagation', () 
       const modsLoader = new ModsLoader({
         logger: mockLogger,
         registry: dataRegistry,
-        phases
+        phases,
+        cache: makeRegistryCache(dataRegistry),
       });
 
       // Add some data to registry before failure
@@ -223,7 +227,8 @@ describe('Integration: ModsLoader Orchestrator Order and Error Propagation', () 
       const modsLoader = new ModsLoader({
         logger: mockLogger,
         registry: dataRegistry,
-        phases
+        phases,
+        cache: makeRegistryCache(dataRegistry),
       });
 
       // Act & Assert: Execute and expect wrapped error
@@ -247,7 +252,8 @@ describe('Integration: ModsLoader Orchestrator Order and Error Propagation', () 
       const modsLoader = new ModsLoader({
         logger: mockLogger,
         registry: dataRegistry,
-        phases: []
+        phases: [],
+        cache: makeRegistryCache(dataRegistry),
       });
 
       // Act & Assert: Should not throw during construction due to incomplete validation
@@ -267,7 +273,8 @@ describe('Integration: ModsLoader Orchestrator Order and Error Propagation', () 
       const modsLoader = new ModsLoader({
         logger: mockLogger,
         registry: dataRegistry,
-        phases
+        phases,
+        cache: makeRegistryCache(dataRegistry),
       });
 
       // Act: Execute
@@ -298,7 +305,8 @@ describe('Integration: ModsLoader Orchestrator Order and Error Propagation', () 
       const modsLoader = new ModsLoader({
         logger: mockLogger,
         registry: dataRegistry,
-        phases
+        phases,
+        cache: makeRegistryCache(dataRegistry),
       });
 
       // Act & Assert: Should fail immediately

@@ -32,14 +32,17 @@ class ModsLoader extends AbstractLoader {
   _registry;
   /** @type {LoaderPhase[]} */
   _phases;
+  /** @type {import('../interfaces/loadContracts.js').ILoadCache} */
+  _cache;
 
   /**
    * @param {object} dependencies
    * @param {ILogger} dependencies.logger
    * @param {IDataRegistry} dependencies.registry
    * @param {LoaderPhase[]} dependencies.phases - The ordered sequence of loading phases to execute.
+   * @param {import('../interfaces/loadContracts.js').ILoadCache} dependencies.cache
    */
-  constructor({ logger, registry, phases }) {
+  constructor({ logger, registry, phases, cache }) {
     const depsToValidate = [
       {
         dependency: registry,
@@ -53,6 +56,11 @@ class ModsLoader extends AbstractLoader {
         methods: ['forEach', 'map'], // Check it's array-like and not empty
         isNotEmpty: true,
       },
+      {
+        dependency: cache,
+        name: 'ILoadCache',
+        methods: ['clear', 'snapshot', 'restore'],
+      },
     ];
 
     super(logger, depsToValidate);
@@ -60,6 +68,7 @@ class ModsLoader extends AbstractLoader {
     this._logger = logger;
     this._registry = registry;
     this._phases = phases;
+    this._cache = cache;
 
     this._logger.debug(
       'ModsLoader: Instance created with phase-based architecture.'
@@ -80,23 +89,19 @@ class ModsLoader extends AbstractLoader {
 
     const context = createLoadContext({ worldName, requestedMods: requestedModIds, registry: this._registry });
 
+    this._cache.clear();
     try {
-      this._registry.clear();
       this._logger.debug('ModsLoader: Data registry cleared.');
-
       for (const phase of this._phases) {
         const phaseName = phase.constructor.name;
         this._logger.debug(`Executing phase: ${phaseName}`);
         await phase.execute(context);
         this._logger.debug(`Phase ${phaseName} completed.`);
       }
-
       this._logger.info(
         `ModsLoader: Load sequence for world '${worldName}' completed successfully.`
       );
     } catch (err) {
-      this._registry.clear();
-
       if (err instanceof ModsLoaderPhaseError) {
         this._logger.error(
           `ModsLoader: CRITICAL failure during phase '${err.phase}'. Code: [${err.code}]. Error: ${err.message}`,
@@ -104,7 +109,6 @@ class ModsLoader extends AbstractLoader {
         );
         return Promise.reject(err);
       }
-
       const msg = `ModsLoader: CRITICAL load failure due to an unexpected error. Original error: ${err.message}`;
       this._logger.error(msg, err);
       return Promise.reject(
