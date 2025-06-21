@@ -1,6 +1,7 @@
 // Filename: src/tests/integration/loaders/modLoadDependencyFail.test.js
 
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
+import { createMockLogger } from '../../common/mockFactories.js';
 
 // Core services under test
 import ModsLoader from '../../../src/loaders/modsLoader.js';
@@ -141,12 +142,6 @@ const createMockRegistry = () => {
   };
 };
 
-const createMockLogger = () => ({
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-  debug: jest.fn(),
-});
 
 /* -------------------------------------------------------------------------- */
 /* Integration test                                                           */
