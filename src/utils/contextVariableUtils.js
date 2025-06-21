@@ -22,7 +22,7 @@ function _validateContextAndName(variableName, execCtx, _logger) {
     return {
       valid: false,
       error: new Error(
-        'setContextValue: variableName must be a non-empty string.'
+        'writeContextVariable: variableName must be a non-empty string.'
       ),
     };
   }
@@ -107,7 +107,7 @@ export function writeContextVariable(
  * @param {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} [dispatcher]
  *   Optional dispatcher for error events.
  * @param {import('../interfaces/coreServices.js').ILogger} [logger] - Logger used when no dispatcher is provided.
- * @returns {boolean} `true` when the value was successfully stored.
+ * @returns {{success: boolean, error?: Error}} Result of the store operation.
  */
 export function tryWriteContextVariable(
   variableName,
@@ -137,30 +137,6 @@ export function tryWriteContextVariable(
     dispatcher,
     logger
   );
-}
-
-/**
- *
- * @param variableName
- * @param value
- * @param execCtx
- * @param dispatcher
- * @param logger
- */
-export function setContextValue(
-  variableName,
-  value,
-  execCtx,
-  dispatcher,
-  logger
-) {
-  return tryWriteContextVariable(
-    variableName,
-    value,
-    execCtx,
-    dispatcher,
-    logger
-  ).success;
 }
 
 export default writeContextVariable;

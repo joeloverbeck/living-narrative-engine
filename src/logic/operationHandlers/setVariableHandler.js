@@ -11,7 +11,7 @@
 // <<< ADDED Import: jsonLogic directly >>>
 import jsonLogic from 'json-logic-js';
 import { assertParamsObject } from '../../utils/handlerUtils/paramsUtils.js';
-import { setContextValue } from '../../utils/contextVariableUtils.js';
+import { tryWriteContextVariable } from '../../utils/contextVariableUtils.js';
 
 /**
  * Parameters expected by the SetVariableHandler#execute method.
@@ -195,8 +195,14 @@ class SetVariableHandler {
       `SET_VARIABLE: Setting context variable "${name}" in evaluationContext.context to value: ${finalValueStringForLog}`
     );
 
-    const stored = setContextValue(name, value, execCtx, undefined, logger);
-    if (!stored) {
+    const result = tryWriteContextVariable(
+      name,
+      value,
+      execCtx,
+      undefined,
+      logger
+    );
+    if (!result.success) {
       logger.error(
         `SET_VARIABLE: Unexpected error during assignment for variable "${name}" into evaluationContext.context.`,
         {

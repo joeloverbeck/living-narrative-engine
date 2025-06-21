@@ -4,7 +4,7 @@
 
 import jsonLogic from 'json-logic-js';
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
-import { setContextValue } from '../../utils/contextVariableUtils.js';
+import { tryWriteContextVariable } from '../../utils/contextVariableUtils.js';
 import { assertParamsObject } from '../../utils/handlerUtils/paramsUtils.js';
 
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
@@ -77,14 +77,14 @@ class MathHandler {
     if (finalNumber === null) {
       log.warn('MATH: expression did not resolve to a numeric result.');
     }
-    const stored = setContextValue(
+    const resultObj = tryWriteContextVariable(
       result_variable,
       finalNumber,
       executionContext,
       this.#dispatcher,
       log
     );
-    if (!stored) {
+    if (!resultObj.success) {
       // writeContextVariable already handled logging/dispatching
     }
   }

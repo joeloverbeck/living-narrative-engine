@@ -1,6 +1,5 @@
 import { describe, test, expect, jest } from '@jest/globals';
 import writeContextVariable, {
-  setContextValue,
   tryWriteContextVariable,
 } from '../../../src/utils/contextVariableUtils.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/eventIds.js';
@@ -60,30 +59,6 @@ describe('writeContextVariable', () => {
       expect.any(Object)
     );
     expect(logger.error).not.toHaveBeenCalled();
-  });
-});
-
-describe('setContextValue', () => {
-  test('trims variable name and stores value', () => {
-    const ctx = { evaluationContext: { context: {} } };
-    const dispatcher = { dispatch: jest.fn() };
-    const logger = { warn: jest.fn(), error: jest.fn(), debug: jest.fn() };
-    const success = setContextValue('  myVar  ', 42, ctx, dispatcher, logger);
-    expect(success).toBe(true);
-    expect(ctx.evaluationContext.context.myVar).toBe(42);
-  });
-
-  test('returns false and dispatches error for invalid name', () => {
-    const ctx = { evaluationContext: { context: {} } };
-    const dispatcher = { dispatch: jest.fn() };
-    const logger = { warn: jest.fn() };
-    const success = setContextValue('   ', 1, ctx, dispatcher, logger);
-    expect(success).toBe(false);
-    expect(dispatcher.dispatch).toHaveBeenCalledWith(
-      SYSTEM_ERROR_OCCURRED_ID,
-      expect.objectContaining({ message: expect.any(String) })
-    );
-    expect(Object.keys(ctx.evaluationContext.context)).toHaveLength(0);
   });
 });
 

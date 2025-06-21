@@ -3,7 +3,7 @@
  * @see src/logic/operationHandlers/resolveDirectionHandler.js
  */
 
-import { setContextValue } from '../../utils/contextVariableUtils.js';
+import { tryWriteContextVariable } from '../../utils/contextVariableUtils.js';
 import { assertParamsObject } from '../../utils/handlerUtils/indexUtils.js';
 
 class ResolveDirectionHandler {
@@ -44,14 +44,14 @@ class ResolveDirectionHandler {
     });
 
     const trimmedVar = result_variable.trim();
-    const stored = setContextValue(
+    const res = tryWriteContextVariable(
       trimmedVar,
       target,
       execCtx,
       undefined,
       this.#logger
     );
-    if (stored) {
+    if (res.success) {
       this.#logger.debug(`RESOLVE_DIRECTION → ${trimmedVar} = ${target}`);
     }
   }

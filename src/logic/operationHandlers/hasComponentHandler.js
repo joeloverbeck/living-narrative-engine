@@ -12,7 +12,7 @@
 /** @typedef {import('./modifyComponentHandler.js').EntityRefObject} EntityRefObject */
 
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
-import { setContextValue } from '../../utils/contextVariableUtils.js';
+import { tryWriteContextVariable } from '../../utils/contextVariableUtils.js';
 import { assertParamsObject } from '../../utils/handlerUtils/indexUtils.js';
 import ComponentOperationHandler from './componentOperationHandler.js';
 
@@ -148,7 +148,7 @@ class HasComponentHandler extends ComponentOperationHandler {
     }
 
     // 4. Store the final boolean result in the context
-    setContextValue(
+    tryWriteContextVariable(
       result_variable,
       result,
       executionContext,

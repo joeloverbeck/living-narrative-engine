@@ -8,7 +8,7 @@
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 
 import { resolvePath } from '../../utils/objectUtils.js';
-import { setContextValue } from '../../utils/contextVariableUtils.js';
+import { tryWriteContextVariable } from '../../utils/contextVariableUtils.js';
 import { cloneDeep } from 'lodash';
 import { assertParamsObject } from '../../utils/handlerUtils/indexUtils.js';
 
@@ -217,7 +217,7 @@ class ModifyContextArrayHandler {
     const resultForStorage = mode === 'pop' ? operationResult : clonedArray;
 
     if (result_variable) {
-      setContextValue(
+      tryWriteContextVariable(
         result_variable,
         resultForStorage,
         executionContext,

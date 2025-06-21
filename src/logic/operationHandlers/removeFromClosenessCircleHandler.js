@@ -16,7 +16,7 @@ import {
   getExecLogger,
 } from '../../utils/handlerUtils/serviceUtils.js';
 import { assertParamsObject } from '../../utils/handlerUtils/paramsUtils.js';
-import { setContextValue } from '../../utils/contextVariableUtils.js';
+import { tryWriteContextVariable } from '../../utils/contextVariableUtils.js';
 
 class RemoveFromClosenessCircleHandler {
   /** @type {ILogger} */
@@ -121,7 +121,7 @@ class RemoveFromClosenessCircleHandler {
     });
 
     if (result_variable) {
-      setContextValue(
+      tryWriteContextVariable(
         result_variable,
         partners,
         execCtx,

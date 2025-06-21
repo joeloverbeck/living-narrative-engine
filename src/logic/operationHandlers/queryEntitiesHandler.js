@@ -11,7 +11,7 @@
 
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 import BaseOperationHandler from './baseOperationHandler.js';
-import { setContextValue } from '../../utils/contextVariableUtils.js';
+import { tryWriteContextVariable } from '../../utils/contextVariableUtils.js';
 import { assertParamsObject } from '../../utils/handlerUtils/indexUtils.js';
 
 /**
@@ -223,14 +223,14 @@ class QueryEntitiesHandler extends BaseOperationHandler {
     }
 
     const resultVariable = params.result_variable;
-    const stored = setContextValue(
+    const res = tryWriteContextVariable(
       resultVariable,
       finalIds,
       executionContext,
       this.#dispatcher,
       log
     );
-    if (stored) {
+    if (res.success) {
       log.debug(
         `QUERY_ENTITIES: Stored ${finalIds.length} entity IDs in context variable "${resultVariable}".`
       );
