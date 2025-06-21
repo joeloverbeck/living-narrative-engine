@@ -13,6 +13,7 @@
 import ModsLoaderError from '../errors/modsLoaderError.js';
 import { ModsLoaderPhaseError } from '../errors/modsLoaderPhaseError.js';
 import AbstractLoader from './abstractLoader.js';
+import { createLoadContext } from './LoadContext.js';
 
 /* ───────────────────────────────────────────────────────────────────────── */
 
@@ -77,13 +78,7 @@ class ModsLoader extends AbstractLoader {
       `ModsLoader: Starting load sequence for world '${worldName}'...`
     );
 
-    const context = /** @type {LoadContext} */ ({
-      worldName,
-      requestedMods: requestedModIds,
-      finalModOrder: [],
-      incompatibilities: 0,
-      totals: {},
-    });
+    const context = createLoadContext({ worldName, requestedMods: requestedModIds, registry: this._registry });
 
     try {
       this._registry.clear();
