@@ -103,6 +103,7 @@ export const TestData = {
       [123, {}],
     ],
     invalidIds: [null, undefined, '', 123, {}, []],
+    invalidDefinitionIds: [null, undefined, '', 123, {}, []],
     serializedEntityShapes: [null, 'invalid', 42, [], { foo: 'bar' }],
     serializedInstanceIds: [null, undefined, '', 42],
   },
