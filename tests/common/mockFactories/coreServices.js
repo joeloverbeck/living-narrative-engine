@@ -84,6 +84,8 @@ const simpleFactories = {
   },
 };
 
+const generatedFactories = generateFactories(simpleFactories);
+
 export const {
   createMockLogger,
   createMockTurnManager,
@@ -96,10 +98,20 @@ export const {
   createMockAIGameStateProvider,
   createMockAIPromptContentProvider,
   createMockPromptBuilder,
-  createMockAIPromptPipeline,
   createMockSafeEventDispatcher,
   createMockValidatedEventDispatcher,
-} = generateFactories(simpleFactories);
+} = generatedFactories;
+
+const baseCreateMockAIPromptPipeline =
+  generatedFactories.createMockAIPromptPipeline;
+
+export const createMockAIPromptPipeline = (defaultPrompt) => {
+  const pipeline = baseCreateMockAIPromptPipeline();
+  if (typeof defaultPrompt === 'string') {
+    pipeline.generatePrompt = jest.fn().mockResolvedValue(defaultPrompt);
+  }
+  return pipeline;
+};
 
 /**
  * Creates a mock turn handler.
