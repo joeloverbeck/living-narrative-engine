@@ -18,7 +18,7 @@ import {
   COMPONENT_ADDED_ID,
   COMPONENT_REMOVED_ID,
 } from '../../../src/constants/eventIds.js';
-import { expectDispatchSequence } from '../../common/engine/dispatchTestUtils.js';
+import { expectSingleDispatch } from '../../common/engine/dispatchTestUtils.js';
 
 describeEntityManagerSuite(
   'EntityManager - Component Manipulation',
@@ -83,17 +83,12 @@ describeEntityManagerSuite(
         );
 
         // Assert
-        expectDispatchSequence(mocks.eventDispatcher.dispatch, [
-          [
-            COMPONENT_ADDED_ID,
-            {
-              entity: entity,
-              componentTypeId: NEW_COMPONENT_ID,
-              componentData: NEW_COMPONENT_DATA,
-              oldComponentData: undefined,
-            },
-          ],
-        ]);
+        expectSingleDispatch(mocks.eventDispatcher.dispatch, COMPONENT_ADDED_ID, {
+          entity: entity,
+          componentTypeId: NEW_COMPONENT_ID,
+          componentData: NEW_COMPONENT_DATA,
+          oldComponentData: undefined,
+        });
       });
 
       it('should update an existing component', () => {
@@ -145,17 +140,12 @@ describeEntityManagerSuite(
         );
 
         // Assert
-        expectDispatchSequence(mocks.eventDispatcher.dispatch, [
-          [
-            COMPONENT_ADDED_ID,
-            {
-              entity: entity,
-              componentTypeId: NAME_COMPONENT_ID,
-              componentData: UPDATED_NAME_DATA,
-              oldComponentData: originalNameData,
-            },
-          ],
-        ]);
+        expectSingleDispatch(mocks.eventDispatcher.dispatch, COMPONENT_ADDED_ID, {
+          entity: entity,
+          componentTypeId: NAME_COMPONENT_ID,
+          componentData: UPDATED_NAME_DATA,
+          oldComponentData: originalNameData,
+        });
       });
 
       it('should throw EntityNotFoundError for a non-existent entity', () => {
@@ -304,6 +294,7 @@ describeEntityManagerSuite(
         entityManager.removeComponent(PRIMARY, NAME_COMPONENT_ID);
 
         // Assert
+        expect(entity).toBeDefined();
         expect(
           entityManager.hasComponent(PRIMARY, NAME_COMPONENT_ID, true)
         ).toBe(false);
@@ -329,16 +320,15 @@ describeEntityManagerSuite(
         entityManager.removeComponent(PRIMARY, NAME_COMPONENT_ID);
 
         // Assert
-        expectDispatchSequence(mocks.eventDispatcher.dispatch, [
-          [
-            COMPONENT_REMOVED_ID,
-            {
-              entity: entity,
-              componentTypeId: NAME_COMPONENT_ID,
-              oldComponentData: overrideData,
-            },
-          ],
-        ]);
+        expectSingleDispatch(
+          mocks.eventDispatcher.dispatch,
+          COMPONENT_REMOVED_ID,
+          {
+            entity: entity,
+            componentTypeId: NAME_COMPONENT_ID,
+            oldComponentData: overrideData,
+          }
+        );
       });
 
       it('should throw an error if component is not an override on the instance', () => {
