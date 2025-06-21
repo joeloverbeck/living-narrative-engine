@@ -58,27 +58,27 @@ export class LoadResultAggregator {
     const res =
       result && typeof result.count === 'number'
         ? {
-            count: result.count || 0,
-            overrides: result.overrides || 0,
-            errors: result.errors || 0,
-          }
+          count: result.count || 0,
+          overrides: result.overrides || 0,
+          errors: result.errors || 0,
+        }
         : { count: 0, overrides: 0, errors: 0 };
 
     this.modResults[typeName] = res;
 
     // Clone the current totals to maintain immutability
     const newTotals = { ...this.#totalCounts };
-    
+
     if (!newTotals[typeName]) {
       newTotals[typeName] = { count: 0, overrides: 0, errors: 0 };
     }
     newTotals[typeName].count += res.count;
     newTotals[typeName].overrides += res.overrides;
     newTotals[typeName].errors += res.errors;
-    
+
     // Update the internal totals reference
     this.#totalCounts = newTotals;
-    
+
     return newTotals;
   }
 
@@ -97,15 +97,15 @@ export class LoadResultAggregator {
 
     // Clone the current totals to maintain immutability
     const newTotals = { ...this.#totalCounts };
-    
+
     if (!newTotals[typeName]) {
       newTotals[typeName] = { count: 0, overrides: 0, errors: 0 };
     }
     newTotals[typeName].errors += 1;
-    
+
     // Update the internal totals reference
     this.#totalCounts = newTotals;
-    
+
     return newTotals;
   }
 }
