@@ -10,6 +10,7 @@ import {
   createMockLogger,
   createMockEntityManager,
   createMockValidatedEventBus,
+  createMockTurnHandler,
 } from '../mockFactories.js';
 import BaseTestBed from '../baseTestBed.js';
 import { describeSuite } from '../describeSuite.js';
@@ -101,6 +102,17 @@ export class TurnManagerTestBed extends BaseTestBed {
     for (const e of entities) {
       map.set(e.id, e);
     }
+  }
+
+  /**
+   * Configures the mock turnHandlerResolver to return a standard mock handler.
+   *
+   * @returns {void}
+   */
+  setupMockHandlerResolver() {
+    this.turnHandlerResolver.resolveHandler.mockImplementation(async (actor) =>
+      createMockTurnHandler({ actor, includeSignalTermination: true })
+    );
   }
 
   /**

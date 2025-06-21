@@ -2,16 +2,12 @@
 // --- FILE START ---
 
 import { describeTurnManagerSuite } from '../../common/turns/turnManagerTestBed.js';
-import {
-  ACTOR_COMPONENT_ID,
-  PLAYER_COMPONENT_ID,
-} from '../../../src/constants/componentIds.js';
+import { ACTOR_COMPONENT_ID } from '../../../src/constants/componentIds.js';
 import {
   TURN_ENDED_ID,
-  TURN_STARTED_ID,
   SYSTEM_ERROR_OCCURRED_ID,
 } from '../../../src/constants/eventIds.js';
-import { beforeEach, expect, jest, test, afterEach } from '@jest/globals';
+import { beforeEach, expect, jest, afterEach } from '@jest/globals';
 import { createMockTurnHandler } from '../../common/mockFactories.js';
 import { createAiActor } from '../../common/turns/testActors.js';
 
@@ -27,11 +23,7 @@ describeTurnManagerSuite('TurnManager - Lifecycle (Start/Stop)', (getBed) => {
 
     testBed = getBed();
 
-    // Configure handler resolver to return mock turn handlers
-    testBed.mocks.turnHandlerResolver.resolveHandler.mockImplementation(
-      async (actor) =>
-        createMockTurnHandler({ actor, includeSignalTermination: true })
-    );
+    testBed.setupMockHandlerResolver();
 
     // Default: Mock advanceTurn to isolate start/stop logic
     advanceTurnSpy = jest
@@ -143,6 +135,7 @@ describeTurnManagerSuite('TurnManager - Lifecycle (Start/Stop)', (getBed) => {
         expect(stopSpy).toHaveBeenCalledTimes(1);
       } catch (error) {
         // If the error is thrown, that's also acceptable behavior
+        // eslint-disable-next-line jest/no-conditional-expect
         expect(error.message).toBe('Turn advancement failed');
       }
 
