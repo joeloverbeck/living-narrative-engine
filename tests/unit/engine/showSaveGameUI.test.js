@@ -24,8 +24,7 @@ describeEngineSuite('GameEngine', (ctx) => {
     beforeEach(async () => {
       gameEngine = ctx.engine;
       // Start the game to ensure this.#isEngineInitialized is true for isSavingAllowed check
-      await testBed.init(MOCK_WORLD_NAME);
-      testBed.resetMocks();
+      await testBed.initAndReset(MOCK_WORLD_NAME);
     });
 
     it('should dispatch REQUEST_SHOW_SAVE_GAME_UI if saving is allowed and log intent', () => {

@@ -29,10 +29,7 @@ describeEngineSuite('GameEngine', (ctx) => {
           success: true,
         }
       );
-      await gameEngine.startNewGame(MOCK_WORLD_NAME); // Start the game first
-
-      // Clear mocks to ensure we only check calls from stop()
-      testBed.resetMocks();
+      await testBed.startAndReset(MOCK_WORLD_NAME); // Start the game first and clear mocks
 
       await gameEngine.stop();
 
@@ -88,13 +85,11 @@ describeEngineSuite('GameEngine', (ctx) => {
         localBed.mocks.initializationService.runInitializationSequence.mockResolvedValue(
           { success: true }
         );
-        await localEngine.startNewGame(MOCK_WORLD_NAME);
+        await localBed.startAndReset(MOCK_WORLD_NAME);
 
         const statusAfterStart = localEngine.getEngineStatus();
         expect(statusAfterStart.isInitialized).toBe(true);
         expect(statusAfterStart.isLoopRunning).toBe(true);
-
-        localBed.resetMocks();
 
         await localEngine.stop();
 
