@@ -20,7 +20,7 @@ describe('DefaultPathResolver', () => {
   const MOCK_GAME_CONFIG_FILENAME = 'game.json'; // Matching StaticConfig
   const MOCK_MODS_BASE = 'mods'; // <<< ADDED for MODLOADER-003
   const MOCK_MOD_MANIFEST_FILENAME = 'mod.manifest.json'; // <<< ADDED for MODLOADER-003
-  const MOCK_CONTENT_BASE_FN = (typeName) => typeName; // Relative path matching StaticConfig
+  const MOCK_CONTENT_BASE_FN = (registryKey) => registryKey; // Relative path matching StaticConfig
 
   beforeEach(() => {
     // Create a fresh mock configuration before each test
@@ -183,61 +183,61 @@ describe('DefaultPathResolver', () => {
     });
 
     it('should return the correct content path for a valid type and filename (items)', () => {
-      const typeName = 'items';
+      const registryKey = 'items';
       const filename = 'potion.json';
-      const expectedContentDir = MOCK_CONTENT_BASE_FN(typeName); // e.g., items
+      const expectedContentDir = MOCK_CONTENT_BASE_FN(registryKey); // e.g., items
       const expectedPath = `${MOCK_BASE_DATA_PATH}/${expectedContentDir}/${filename}`;
-      const actualPath = resolver.resolveContentPath(typeName, filename);
+      const actualPath = resolver.resolveContentPath(registryKey, filename);
 
       expect(actualPath).toBe(expectedPath);
       expect(mockConfig.getBaseDataPath).toHaveBeenCalledTimes(1);
       expect(mockConfig.getContentBasePath).toHaveBeenCalledTimes(1);
-      expect(mockConfig.getContentBasePath).toHaveBeenCalledWith(typeName);
+      expect(mockConfig.getContentBasePath).toHaveBeenCalledWith(registryKey);
     });
 
     it('should return the correct content path for a valid type and filename (actions)', () => {
-      const typeName = 'actions';
+      const registryKey = 'actions';
       const filename = 'attack.json';
-      const expectedContentDir = MOCK_CONTENT_BASE_FN(typeName);
+      const expectedContentDir = MOCK_CONTENT_BASE_FN(registryKey);
       const expectedPath = `${MOCK_BASE_DATA_PATH}/${expectedContentDir}/${filename}`;
-      const actualPath = resolver.resolveContentPath(typeName, filename);
+      const actualPath = resolver.resolveContentPath(registryKey, filename);
 
       expect(actualPath).toBe(expectedPath);
       expect(mockConfig.getBaseDataPath).toHaveBeenCalledTimes(1);
       expect(mockConfig.getContentBasePath).toHaveBeenCalledTimes(1);
-      expect(mockConfig.getContentBasePath).toHaveBeenCalledWith(typeName);
+      expect(mockConfig.getContentBasePath).toHaveBeenCalledWith(registryKey);
     });
 
     // --- Ticket 2.1.2 Test ---
-    it('should return the correct content path for component definitions (typeName = "components")', () => {
-      const typeName = 'components'; // Specific typeName for component definitions
+    it('should return the correct content path for component definitions (registryKey = "components")', () => {
+      const registryKey = 'components'; // Specific registryKey for component definitions
       const filename = 'core_health.component.json';
-      const expectedContentDir = MOCK_CONTENT_BASE_FN(typeName);
+      const expectedContentDir = MOCK_CONTENT_BASE_FN(registryKey);
       const expectedPath = `${MOCK_BASE_DATA_PATH}/${expectedContentDir}/${filename}`;
-      const actualPath = resolver.resolveContentPath(typeName, filename);
+      const actualPath = resolver.resolveContentPath(registryKey, filename);
 
       expect(actualPath).toBe(expectedPath);
-      // Verify the mock was called correctly for this typeName
+      // Verify the mock was called correctly for this registryKey
       expect(mockConfig.getBaseDataPath).toHaveBeenCalledTimes(1);
       expect(mockConfig.getContentBasePath).toHaveBeenCalledTimes(1);
-      expect(mockConfig.getContentBasePath).toHaveBeenCalledWith(typeName);
+      expect(mockConfig.getContentBasePath).toHaveBeenCalledWith(registryKey);
     });
     // --- End Ticket 2.1.2 Test ---
 
-    it('should handle typeName and filename with spaces (passed through by join)', () => {
-      const typeName = ' spaced type ';
+    it('should handle registryKey and filename with spaces (passed through by join)', () => {
+      const registryKey = ' spaced type ';
       const filename = ' spaced file.json ';
-      const expectedContentDir = MOCK_CONTENT_BASE_FN(typeName);
+      const expectedContentDir = MOCK_CONTENT_BASE_FN(registryKey);
       const expectedPath = `${MOCK_BASE_DATA_PATH}/${expectedContentDir}/${filename}`;
-      const actualPath = resolver.resolveContentPath(typeName, filename);
+      const actualPath = resolver.resolveContentPath(registryKey, filename);
 
       expect(actualPath).toBe(expectedPath);
       expect(mockConfig.getBaseDataPath).toHaveBeenCalledTimes(1);
       expect(mockConfig.getContentBasePath).toHaveBeenCalledTimes(1);
-      expect(mockConfig.getContentBasePath).toHaveBeenCalledWith(typeName);
+      expect(mockConfig.getContentBasePath).toHaveBeenCalledWith(registryKey);
     });
 
-    // Invalid typeName cases
+    // Invalid registryKey cases
     it.each([
       ['null', null],
       ['undefined', undefined],
@@ -245,12 +245,12 @@ describe('DefaultPathResolver', () => {
       ['spaces only', '   '],
       ['non-string', 123],
     ])(
-      'should throw an Error for invalid typeName (%s)',
-      (desc, invalidType) => {
+      'should throw an Error for invalid registryKey (%s)',
+      (desc, invalidRegistryKey) => {
         const filename = 'valid.json';
-        const expectedErrorMsg = /Invalid or empty typeName provided/;
+        const expectedErrorMsg = /Invalid or empty registryKey provided/;
         expect(() =>
-          resolver.resolveContentPath(invalidType, filename)
+          resolver.resolveContentPath(invalidRegistryKey, filename)
         ).toThrow(expectedErrorMsg);
         expect(mockConfig.getBaseDataPath).not.toHaveBeenCalled();
         expect(mockConfig.getContentBasePath).not.toHaveBeenCalled();
@@ -267,14 +267,14 @@ describe('DefaultPathResolver', () => {
     ])(
       'should throw an Error for invalid filename (%s)',
       (desc, invalidFilename) => {
-        const typeName = 'validType';
+        const registryKey = 'validType';
         const expectedErrorMsg = /Invalid or empty filename provided/;
 
         // Wrap the actual call and the check in the expect().toThrow block
         expect(() => {
           // Reset mock *just before* the call within this specific test context
           mockConfig.getContentBasePath.mockClear(); // Only need to clear the one potentially called
-          resolver.resolveContentPath(typeName, invalidFilename);
+          resolver.resolveContentPath(registryKey, invalidFilename);
         }).toThrow(expectedErrorMsg);
 
         // Verify that neither dependencyInjection method was called because validation failed first
@@ -283,8 +283,8 @@ describe('DefaultPathResolver', () => {
       }
     );
 
-    it('should throw typeName error if both typeName and filename are invalid (typeName checked first)', () => {
-      const expectedErrorMsg = /Invalid or empty typeName provided/;
+    it('should throw registryKey error if both registryKey and filename are invalid (registryKey checked first)', () => {
+      const expectedErrorMsg = /Invalid or empty registryKey provided/;
       expect(() => resolver.resolveContentPath('', '')).toThrow(
         expectedErrorMsg
       );
@@ -333,10 +333,10 @@ describe('DefaultPathResolver', () => {
 
     it('should return the correct path for valid modId, typeName, and filename', () => {
       const modId = 'MyMod';
-      const typeName = 'items';
+      const registryKey = 'items';
       const filename = 'special_item.json';
-      const expectedPath = `${MOCK_BASE_DATA_PATH}/${MOCK_MODS_BASE}/${modId}/${typeName}/${filename}`;
-      expect(resolver.resolveModContentPath(modId, typeName, filename)).toBe(
+      const expectedPath = `${MOCK_BASE_DATA_PATH}/${MOCK_MODS_BASE}/${modId}/${registryKey}/${filename}`;
+      expect(resolver.resolveModContentPath(modId, registryKey, filename)).toBe(
         expectedPath
       );
       expect(mockConfig.getBaseDataPath).toHaveBeenCalledTimes(1);
@@ -352,8 +352,8 @@ describe('DefaultPathResolver', () => {
       expect(mockConfig.getModsBasePath).not.toHaveBeenCalled();
     });
 
-    it('should throw an Error for invalid typeName', () => {
-      const expectedErrorMsg = /Invalid or empty typeName provided/;
+    it('should throw an Error for invalid registryKey', () => {
+      const expectedErrorMsg = /Invalid or empty registryKey provided/;
       expect(() =>
         resolver.resolveModContentPath('MyMod', null, 'file.json')
       ).toThrow(expectedErrorMsg);

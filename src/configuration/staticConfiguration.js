@@ -56,9 +56,9 @@ class StaticConfiguration {
     return 'schemas';
   }
 
-  /** @param {string} typeName */
-  getContentBasePath(typeName) {
-    return typeName;
+  /** @param {string} registryKey */
+  getContentBasePath(registryKey) {
+    return registryKey;
   }
 
   /** @returns {string} */
@@ -121,39 +121,27 @@ class StaticConfiguration {
   }
 
   /**
-   * Maps logical content-type names to their canonical $id values.
-   *
-   * @param    {string} typeName
-   * @returns {string|undefined}
+   * @param    {string} registryKey
+   * @returns  {string|undefined}
    */
-  getContentTypeSchemaId(typeName) {
+  getContentTypeSchemaId(registryKey) {
     const map = {
-      // --- CORE ---
-      'mod-manifest': 'http://example.com/schemas/mod.manifest.schema.json',
-      game: 'http://example.com/schemas/game.schema.json',
-
-      // --- CONTENT TYPES ---
-      actions: 'http://example.com/schemas/action.schema.json',
-      components: 'http://example.com/schemas/component.schema.json',
-      conditions: 'http://example.com/schemas/condition.schema.json',
-      events: 'http://example.com/schemas/event.schema.json',
-      goals: 'http://example.com/schemas/goal.schema.json',
-      macros: 'http://example.com/schemas/macro.schema.json',
-      rules: 'http://example.com/schemas/rule.schema.json',
-
-      // --- ENTITY TYPES ---
-      entityDefinitions:
-        'http://example.com/schemas/entity-definition.schema.json',
-      entityInstances: 'http://example.com/schemas/entity-instance.schema.json',
-
-      // --- MISC ---
-      operations: 'http://example.com/schemas/operation.schema.json',
-      'llm-configs': 'http://example.com/schemas/llm-configs.schema.json',
-      'prompt-text': 'http://example.com/schemas/prompt-text.schema.json',
-      'ui-icons': 'http://example.com/schemas/ui-icons.schema.json',
-      'ui-labels': 'http://example.com/schemas/ui-labels.schema.json',
+      'components': 'http://example.com/schemas/component.schema.json',
+      'actions': 'http://example.com/schemas/action.schema.json',
+      'events': 'http://example.com/schemas/event.schema.json',
+      'conditions': 'http://example.com/schemas/condition.schema.json',
+      'macros': 'http://example.com/schemas/macro.schema.json',
+      'rules': 'http://example.com/schemas/rule.schema.json',
+      'goals': 'http://example.com/schemas/goal.schema.json',
+      'entityDefinitions': 'http://example.com/schemas/entity-definition.schema.json',
+      'entityInstances': 'http://example.com/schemas/entity-instance.schema.json',
+      'llm-configs': 'http://example.com/schemas/llm-config.schema.json',
+      'mod-manifest': 'http://example.com/schemas/mod-manifest.schema.json',
+      'game': 'http://example.com/schemas/game.schema.json',
+      'world': 'http://example.com/schemas/world.schema.json',
+      'prompts': 'http://example.com/schemas/prompt.schema.json',
     };
-    return map[typeName];
+    return map[registryKey];
   }
 
   /* ─────────────────────────────── OTHER IDS ─────────────────────────────── */

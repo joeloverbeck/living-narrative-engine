@@ -156,7 +156,7 @@ describe('BaseManifestItemLoader _loadItemsInternal', () => {
   const modId = 'test-mod';
   const manifest = { id: modId, content: {} }; // Basic manifest structure
   const contentKey = 'items';
-  const contentTypeDir = 'items';
+  const diskFolder = 'items';
   const typeName = 'items';
 
   // Note: loader, mocks are set up in global beforeEach
@@ -180,7 +180,7 @@ describe('BaseManifestItemLoader _loadItemsInternal', () => {
       modId,
       manifest,
       contentKey,
-      contentTypeDir,
+      diskFolder,
       typeName
     );
 
@@ -222,7 +222,7 @@ describe('BaseManifestItemLoader _loadItemsInternal', () => {
       modId,
       manifest,
       contentKey,
-      contentTypeDir,
+      diskFolder,
       typeName
     );
 
@@ -241,13 +241,13 @@ describe('BaseManifestItemLoader _loadItemsInternal', () => {
     expect(loader._processFileWrapper).toHaveBeenCalledWith(
       modId,
       'file1.json',
-      contentTypeDir,
+      diskFolder,
       typeName
     );
     expect(loader._processFileWrapper).toHaveBeenCalledWith(
       modId,
       'file2.json',
-      contentTypeDir,
+      diskFolder,
       typeName
     );
     expect(mockLogger.info).toHaveBeenCalledWith(
@@ -266,7 +266,7 @@ describe('BaseManifestItemLoader _loadItemsInternal', () => {
     const failureError = new Error('Failed to process file2');
     loader._extractValidFilenames.mockReturnValue(filenames);
     loader._processFileWrapper.mockImplementation(
-      async (mId, fname, cTypeDir, tName) => {
+      async (mId, fname, dFolder, tName) => {
         expect(tName).toBe(typeName); // Add assertion for typeName within mock
         if (fname === 'file1.json')
           return { qualifiedId: qualifiedId1, didOverride: true }; // Simulate success with override
@@ -282,7 +282,7 @@ describe('BaseManifestItemLoader _loadItemsInternal', () => {
       modId,
       manifest,
       contentKey,
-      contentTypeDir,
+      diskFolder,
       typeName
     );
 
@@ -301,19 +301,19 @@ describe('BaseManifestItemLoader _loadItemsInternal', () => {
     expect(loader._processFileWrapper).toHaveBeenCalledWith(
       modId,
       'file1.json',
-      contentTypeDir,
+      diskFolder,
       typeName
     );
     expect(loader._processFileWrapper).toHaveBeenCalledWith(
       modId,
       'file2.json',
-      contentTypeDir,
+      diskFolder,
       typeName
     );
     expect(loader._processFileWrapper).toHaveBeenCalledWith(
       modId,
       'file3.json',
-      contentTypeDir,
+      diskFolder,
       typeName
     );
     // <<< CORRECTED: Updated expected log message to include overrides and failures
@@ -332,7 +332,7 @@ describe('BaseManifestItemLoader _loadItemsInternal', () => {
     const failureError2 = new Error('Failed file2');
     loader._extractValidFilenames.mockReturnValue(filenames);
     loader._processFileWrapper.mockImplementation(
-      async (mId, fname, cTypeDir, tName) => {
+      async (mId, fname, dFolder, tName) => {
         expect(tName).toBe(typeName);
         if (fname === 'file1.json') throw failureError1;
         if (fname === 'file2.json') throw failureError2;
@@ -345,7 +345,7 @@ describe('BaseManifestItemLoader _loadItemsInternal', () => {
       modId,
       manifest,
       contentKey,
-      contentTypeDir,
+      diskFolder,
       typeName
     );
 
@@ -364,13 +364,13 @@ describe('BaseManifestItemLoader _loadItemsInternal', () => {
     expect(loader._processFileWrapper).toHaveBeenCalledWith(
       modId,
       'file1.json',
-      contentTypeDir,
+      diskFolder,
       typeName
     );
     expect(loader._processFileWrapper).toHaveBeenCalledWith(
       modId,
       'file2.json',
-      contentTypeDir,
+      diskFolder,
       typeName
     );
     // <<< CORRECTED: Updated expected log message

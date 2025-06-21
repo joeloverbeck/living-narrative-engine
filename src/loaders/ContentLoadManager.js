@@ -36,19 +36,19 @@ export class ContentLoadManager {
   /**
    * Loads content for all mods in two phases: definitions, then instances.
    *
-   * @param {string[]} finalOrder - Resolved load order of mods.
+   * @param {string[]} finalModOrder - Resolved load order of mods.
    * @param {Map<string, ModManifest>} manifests - Map of manifests keyed by ID.
    * @param {TotalResultsSummary} totalCounts - Object to accumulate totals across mods.
    * @returns {Promise<Record<string, 'success' | 'skipped' | 'failed'>>} Map of modIds to overall load status.
    */
-  async loadContent(finalOrder, manifests, totalCounts) {
+  async loadContent(finalModOrder, manifests, totalCounts) {
     this.#logger.debug(
       'ModsLoader: Beginning content loading in two phases: definitions, then instances.'
     );
 
     // Phase 1: Definitions
     const definitionResults = await this.loadContentForPhase(
-      finalOrder,
+      finalModOrder,
       manifests,
       totalCounts,
       'definitions'
@@ -56,7 +56,7 @@ export class ContentLoadManager {
 
     // Phase 2: Instances
     const instanceResults = await this.loadContentForPhase(
-      finalOrder,
+      finalModOrder,
       manifests,
       totalCounts,
       'instances'
@@ -67,7 +67,7 @@ export class ContentLoadManager {
     // For simplicity, let's say success requires success in phases it participated in.
     // A mod might not have content for all phases.
     const combinedResults = {};
-    for (const modId of finalOrder) {
+    for (const modId of finalModOrder) {
       const defStatus = definitionResults[modId] || 'skipped'; // if not present, assume skipped for that phase
       const instStatus = instanceResults[modId] || 'skipped';
 
@@ -87,13 +87,13 @@ export class ContentLoadManager {
   /**
    * Loads content for all mods for a specific phase.
    *
-   * @param {string[]} finalOrder - Resolved load order of mods.
+   * @param {string[]} finalModOrder - Resolved load order of mods.
    * @param {Map<string, ModManifest>} manifests - Map of manifests keyed by ID.
    * @param {TotalResultsSummary} totalCounts - Object to accumulate totals across mods.
    * @param {'definitions' | 'instances'} phase - The loading phase.
    * @returns {Promise<Record<string, 'success' | 'skipped' | 'failed'>>} Map of modIds to load status for this phase.
    */
-  async loadContentForPhase(finalOrder, manifests, totalCounts, phase) {
+  async loadContentForPhase(finalModOrder, manifests, totalCounts, phase) {
     this.#logger.debug(
       `ModsLoader: Beginning content loading for phase: ${phase}...`
     );
@@ -109,13 +109,13 @@ export class ContentLoadManager {
         `ModsLoader: No loaders configured for phase: ${phase}. Skipping.`
       );
       // Fill results with 'skipped' for all mods if no loaders for this phase
-      for (const modId of finalOrder) {
+      for (const modId of finalModOrder) {
         results[modId] = 'skipped';
       }
       return results;
     }
 
-    for (const modId of finalOrder) {
+    for (const modId of finalModOrder) {
       const manifest = /** @type {ModManifest | null} */ (
         manifests.get(modId.toLowerCase())
       );
@@ -193,7 +193,7 @@ export class ContentLoadManager {
 
       for (const config of phaseLoaders) {
         // Iterate over phase-specific loaders
-        const { loader, contentKey, contentTypeDir, typeName } = config;
+        const { loader, contentKey, diskFolder, registryKey } = config;
         const manifestContent = manifest.content || {};
         const hasContentForLoader =
           Array.isArray(manifestContent[contentKey]) &&
@@ -210,36 +210,36 @@ export class ContentLoadManager {
                 modId,
                 manifest,
                 contentKey,
-                contentTypeDir,
-                typeName
+                diskFolder,
+                registryKey
               )
             );
             if (result && typeof result.count === 'number') {
-              aggregator.aggregate(result, typeName);
+              aggregator.aggregate(result, registryKey);
             } else {
               this.#logger.warn(
-                `ModsLoader [${modId}, ${phase}]: Loader for '${typeName}' returned an unexpected result format. Assuming 0 counts.`,
+                `ModsLoader [${modId}, ${phase}]: Loader for '${registryKey}' returned an unexpected result format. Assuming 0 counts.`,
                 { result }
               );
-              aggregator.aggregate(null, typeName); // Ensure typeName is recorded even with 0 counts.
+              aggregator.aggregate(null, registryKey); // Ensure registryKey is recorded even with 0 counts.
             }
           } catch (error) {
             const errorMessage = error?.message || String(error);
             this.#logger.error(
-              `ModsLoader [${modId}, ${phase}]: Error loading content type '${typeName}'. Continuing...`,
-              { modId, typeName, phase, error: errorMessage },
+              `ModsLoader [${modId}, ${phase}]: Error loading content type '${registryKey}'. Continuing...`,
+              { modId, registryKey, phase, error: errorMessage },
               error
             );
-            aggregator.recordFailure(typeName);
+            aggregator.recordFailure(registryKey);
             await this.#validatedEventDispatcher
               .dispatch(
                 'initialization:world_loader:content_load_failed',
-                { modId, typeName, error: errorMessage, phase },
+                { modId, registryKey, error: errorMessage, phase },
                 { allowSchemaNotFound: true }
               )
               .catch((e) =>
                 this.#logger.error(
-                  `Failed dispatching content_load_failed event for ${modId}/${typeName}/${phase}`,
+                  `Failed dispatching content_load_failed event for ${modId}/${registryKey}/${phase}`,
                   e
                 )
               );
@@ -248,7 +248,7 @@ export class ContentLoadManager {
           }
         } else {
           this.#logger.debug(
-            `ModsLoader [${modId}, ${phase}]: Skipping content type '${typeName}' (key: '${contentKey}') as it's not defined or empty in the manifest.`
+            `ModsLoader [${modId}, ${phase}]: Skipping content type '${registryKey}' (key: '${contentKey}') as it's not defined or empty in the manifest.`
           );
         }
       }

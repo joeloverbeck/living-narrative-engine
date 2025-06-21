@@ -90,7 +90,7 @@ describe('ModManifestProcessor.processManifests', () => {
       'modA',
       'modB',
     ]);
-    expect(result.finalOrder).toEqual(['modA', 'modB']);
+    expect(result.finalModOrder).toEqual(['modA', 'modB']);
     expect(result.loadedManifestsMap.size).toBe(2);
     expect(result.incompatibilityCount).toBe(0);
   });

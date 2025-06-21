@@ -1,4 +1,4 @@
-// src/tests/services/componentDefinitionLoader.override.test.js
+// src/tests/services/componentLoader.override.test.js
 
 // --- Imports (remain the same) ---
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
@@ -8,23 +8,23 @@ import { CORE_MOD_ID } from '../../../src/constants/core'; // Added base class i
 // --- Mock Service Factories (remain the same) ---
 // [Mocks omitted for brevity - use the ones provided]
 const createMockConfiguration = (overrides = {}) => ({
-  getContentBasePath: jest.fn((typeName) => `./data/mods/test-mod/${typeName}`),
-  getContentTypeSchemaId: jest.fn((typeName) => {
-    if (typeName === 'components') {
+  getModsBasePath: jest.fn(() => './data/mods'),
+  getContentBasePath: jest.fn((registryKey) => `./data/mods/test-mod/${registryKey}`),
+  getContentTypeSchemaId: jest.fn((registryKey) => {
+    if (registryKey === 'components') {
       return 'http://example.com/schemas/component.schema.json';
     }
-    if (typeName === 'game')
+    if (registryKey === 'game')
       return 'http://example.com/schemas/game.schema.json';
-    if (typeName === 'mod-manifest')
-      return 'http://example.com/schemas/mod.manifest.schema.json';
-    return `http://example.com/schemas/${typeName}.schema.json`;
+    if (registryKey === 'mod-manifest')
+      return 'http://example.com/schemas/mod-manifest.schema.json';
+    return `http://example.com/schemas/${registryKey}.schema.json`;
   }),
   getSchemaBasePath: jest.fn().mockReturnValue('schemas'),
   getSchemaFiles: jest.fn().mockReturnValue([]),
   getWorldBasePath: jest.fn().mockReturnValue('worlds'),
   getBaseDataPath: jest.fn().mockReturnValue('./data'),
   getGameConfigFilename: jest.fn().mockReturnValue('game.json'),
-  getModsBasePath: jest.fn().mockReturnValue('mods'),
   getModManifestFilename: jest.fn().mockReturnValue('mod.manifest.json'),
   getRuleBasePath: jest.fn().mockReturnValue('rules'),
   getRuleSchemaId: jest
@@ -34,11 +34,11 @@ const createMockConfiguration = (overrides = {}) => ({
 });
 const createMockPathResolver = (overrides = {}) => ({
   resolveModContentPath: jest.fn(
-    (modId, typeName, filename) =>
-      `./data/mods/${modId}/${typeName}/${filename}`
+    (modId, registryKey, filename) =>
+      `./data/mods/${modId}/${registryKey}/${filename}`
   ),
   resolveContentPath: jest.fn(
-    (typeName, filename) => `./data/${typeName}/${filename}`
+    (registryKey, filename) => `./data/${registryKey}/${filename}`
   ),
   resolveSchemaPath: jest.fn((filename) => `./data/schemas/${filename}`),
   resolveModManifestPath: jest.fn(
@@ -312,8 +312,8 @@ describe('ComponentLoader (Sub-Ticket 6.3: Override Behavior)', () => {
     // Spy on _storeItemInRegistry to verify its arguments precisely
     // jest.spyOn(loader, '_storeItemInRegistry'); // Already a spy via BaseManifestItemLoader tests
 
-    mockConfig.getContentTypeSchemaId.mockImplementation((typeName) =>
-      typeName === registryCategory ? componentDefSchemaId : undefined
+    mockConfig.getContentTypeSchemaId.mockImplementation((registryKey) =>
+      registryKey === registryCategory ? componentDefSchemaId : undefined
     );
     mockValidator._setSchemaLoaded(componentDefSchemaId, { type: 'object' });
     mockValidator.mockValidatorFunction(componentDefSchemaId, () => ({
@@ -332,21 +332,21 @@ describe('ComponentLoader (Sub-Ticket 6.3: Override Behavior)', () => {
     });
 
     mockResolver.resolveModContentPath.mockImplementation(
-      (modId, typeName, filename) => {
+      (modId, registryKey, filename) => {
         if (
           modId === CORE_MOD_ID &&
-          typeName === registryCategory &&
+          registryKey === registryCategory &&
           filename === sharedFilename
         )
           return coreSharedPositionPath;
         if (
           modId === fooModId &&
-          typeName === registryCategory &&
+          registryKey === registryCategory &&
           filename === sharedFilename
         )
           return fooSharedPositionPath;
         throw new Error(
-          `Mock PathResolver Error: Unexpected resolveModContentPath call: ${modId}, ${typeName}, ${filename}`
+          `Mock PathResolver Error: Unexpected resolveModContentPath call: ${modId}, ${registryKey}, ${filename}`
         );
       }
     );

@@ -56,24 +56,19 @@ class ConditionLoader extends BaseManifestItemLoader {
   }
 
   /**
-   * Processes a single fetched condition definition file's data. This method
-   * relies entirely on the reusable `processAndStoreItem` helper, which handles
-   * primary schema validation (via the wrapper), ID extraction, and storage in the
-   * 'conditions' registry category.
-   *
+   * Processes a single fetched condition file's data.
    * @override
    * @protected
-   * @async
-   * @param {string} modId - The ID of the mod owning the file.
-   * @param {string} filename - The original filename from the manifest.
-   * @param {string} resolvedPath - The fully resolved path to the file.
-   * @param {any} data - The raw data fetched from the file.
-   * @param {string} typeName - The content type name ('conditions').
-   * @returns {Promise<{qualifiedId: string, didOverride: boolean}>} An object containing the final registry key and overwrite status.
+   * @param {string} modId
+   * @param {string} filename
+   * @param {string} resolvedPath
+   * @param {any} data
+   * @param {string} registryKey - The content type registry key ('conditions').
+   * @returns {Promise<{qualifiedId: string, didOverride: boolean}>}
    */
-  async _processFetchedItem(modId, filename, resolvedPath, data, typeName) {
+  async _processFetchedItem(modId, filename, resolvedPath, data, registryKey) {
     this._logger.debug(
-      `ConditionLoader [${modId}]: Processing item: ${filename} (Type: ${typeName})`
+      `ConditionLoader [${modId}]: Processing item: ${filename} (Type: ${registryKey})`
     );
 
     // Delegate all processing to the generic helper function.

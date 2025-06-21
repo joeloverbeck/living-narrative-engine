@@ -13,7 +13,7 @@ class MockLoader {
       async (
         currentModId,
         manifest,
-        actualContentKey /*, contentTypeDir, typeName */
+        actualContentKey /*, diskFolder, registryKey */
       ) => {
         // Not for this mod, or manifest is missing/empty for this loader's specific contentKey
         if (
@@ -77,21 +77,21 @@ describe('ContentLoadManager.loadContent', () => {
         {
           loader: loaderA,
           contentKey: 'items', // loaderA looks for 'items'
-          contentTypeDir: 'items',
-          typeName: 'items',
+          diskFolder: 'items',
+          registryKey: 'items',
           phase: 'definitions',
         },
         {
           loader: loaderB,
           contentKey: 'items', // loaderB also looks for 'items'
-          contentTypeDir: 'items',
-          typeName: 'items',
+          diskFolder: 'items',
+          registryKey: 'items',
           phase: 'definitions',
         },
       ],
     });
 
-    const finalOrder = ['modA', 'modB'];
+    const finalModOrder = ['modA', 'modB'];
     // Manifest keys are lowercase in the actual map in ModsLoader
     const manifests = new Map([
       ['moda', { id: 'modA', content: { items: ['a.json'] } }],
@@ -99,7 +99,7 @@ describe('ContentLoadManager.loadContent', () => {
     ]);
     /** @type {TotalResultsSummary} */ const totals = {};
 
-    const results = await manager.loadContent(finalOrder, manifests, totals);
+    const results = await manager.loadContent(finalModOrder, manifests, totals);
 
     expect(results).toEqual({ modA: 'success', modB: 'failed' });
     expect(totals.items.count).toBe(1); // Only loaderA succeeded
@@ -110,7 +110,7 @@ describe('ContentLoadManager.loadContent', () => {
       'initialization:world_loader:content_load_failed',
       expect.objectContaining({
         modId: 'modB',
-        typeName: 'items',
+        registryKey: 'items',
         error: 'Loader B failed',
         phase: 'definitions', // Ensure phase is checked
       }),

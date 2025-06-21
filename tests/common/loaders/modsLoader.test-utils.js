@@ -10,18 +10,18 @@ import { createMockContentLoader } from '../mockFactories';
  *
  * @param {object} env - Test environment returned by createTestEnvironment.
  * @param {Map<string, object>} manifestMap - Map of mod IDs to manifests.
- * @param {string[]} finalOrder - Final mod load order.
+ * @param {string[]} finalModOrder - Final mod load order.
  * @returns {void}
  */
-export function setupManifests(env, manifestMap, finalOrder) {
+export function setupManifests(env, manifestMap, finalModOrder) {
   env.mockGameConfigLoader.loadConfig.mockResolvedValue({
-    mods: finalOrder,
+    mods: finalModOrder,
     world: 'testWorldSimple',
   });
   env.mockModManifestLoader.loadRequestedManifests.mockResolvedValue(
     manifestMap
   );
-  env.mockedResolveOrder.mockReturnValue(finalOrder);
+  env.mockedResolveOrder.mockReturnValue(finalModOrder);
 
   const defaultGet = (type, id) => env.mockRegistry._internalStore[type]?.[id];
 

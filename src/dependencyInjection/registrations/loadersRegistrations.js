@@ -12,7 +12,7 @@
 /** @typedef {import('../../interfaces/coreServices.js').IDataFetcher} IDataFetcher */
 /** @typedef {import('../../loaders/schemaLoader.js').default} SchemaLoader */
 /** @typedef {import('../../loaders/ruleLoader.js').default} RuleLoader */
-/** @typedef {import('../../loaders/componentLoader.js').default} ComponentDefinitionLoader */
+/** @typedef {import('../../loaders/componentLoader.js').default} ComponentLoader */
 /** @typedef {import('../../loaders/conditionLoader.js').default} ConditionLoader */
 /** @typedef {import('../../loaders/gameConfigLoader.js').default} GameConfigLoader */
 /** @typedef {import('../../modding/modManifestLoader.js').default} ModManifestLoader */
@@ -138,7 +138,7 @@ export function registerLoaders(container) {
   };
 
   registerLoader(tokens.RuleLoader, RuleLoader);
-  registerLoader(tokens.ComponentDefinitionLoader, ComponentLoader);
+  registerLoader(tokens.ComponentLoader, ComponentLoader);
   registerLoader(tokens.ConditionLoader, ConditionLoader);
   registerLoader(tokens.ActionLoader, ActionLoader);
   registerLoader(tokens.EventLoader, EventLoader);

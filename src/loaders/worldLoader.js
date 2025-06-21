@@ -103,13 +103,13 @@ export class WorldLoader extends AbstractLoader {
    *
    * Throws a ModsLoaderError if a definitionId is not found.
    *
-   * @param {string[]} finalOrder - The resolved load order of mods.
+   * @param {string[]} finalModOrder - The resolved load order of mods.
    * @param {Map<string, ModManifest>} manifests - A map of all loaded mod manifests, keyed by lowercase mod ID.
    * @param {TotalResultsSummary} totalCounts - The aggregator for load results to be updated.
    * @returns {Promise<void>} A promise that resolves when all world files have been processed successfully.
    * @throws {ModsLoaderError} If a referenced definitionId is not found in the registry.
    */
-  async loadWorlds(finalOrder, manifests, totalCounts) {
+  async loadWorlds(finalModOrder, manifests, totalCounts) {
     this._logger.info('--- Starting World File Loading Phase ---');
     const aggregatedInstances = [];
     let filesProcessed = 0;
@@ -126,7 +126,7 @@ export class WorldLoader extends AbstractLoader {
       totalCounts.worlds = {
         count: 0,
         overrides: 0,
-        errors: finalOrder.length,
+        errors: finalModOrder.length,
         instances: 0,
         resolvedDefinitions: 0,
         unresolvedDefinitions: 0,
@@ -134,7 +134,7 @@ export class WorldLoader extends AbstractLoader {
       return;
     }
 
-    for (const modId of finalOrder) {
+    for (const modId of finalModOrder) {
       const manifest = manifests.get(modId.toLowerCase());
       if (!manifest) {
         this._logger.warn(

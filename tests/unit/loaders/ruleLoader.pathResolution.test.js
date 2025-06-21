@@ -386,10 +386,10 @@ describe('RuleLoader (Path Resolution & Fetching via loadItemsForMod)', () => {
         'Error processing file:', // Log from BaseManifestItemLoader._processFileWrapper
         expect.objectContaining({
           modId: modId,
-          filename: ruleFileB,
-          path: 'Path not resolved', // Because resolution failed
-          typeName: RULE_TYPE_NAME,
-          error: resolutionError.message,
+          filename: 'rules/ruleB.json',
+          path: 'Path not resolved',
+          registryKey: 'rules',
+          error: 'Path resolution failed miserably',
         }),
         resolutionError
       );
@@ -454,10 +454,10 @@ describe('RuleLoader (Path Resolution & Fetching via loadItemsForMod)', () => {
         'Error processing file:', // Log from BaseManifestItemLoader._processFileWrapper
         expect.objectContaining({
           modId: modId,
-          filename: ruleFileA,
-          path: 'Path not resolved', // Because resolution failed
-          typeName: RULE_TYPE_NAME,
-          error: resolutionError.message,
+          filename: 'ruleA.json',
+          path: 'Path not resolved',
+          registryKey: 'rules',
+          error: 'Path resolution failed miserably',
         }),
         resolutionError
       );

@@ -1,4 +1,4 @@
-// src/tests/services/componentDefinitionLoader.happyPath.core.test.js
+// src/tests/services/componentLoader.happyPath.core.test.js
 
 import ComponentLoader from '../../../src/loaders/componentLoader.js'; // Corrected path based on project structure
 import { beforeEach, describe, expect, jest, test } from '@jest/globals';
@@ -24,19 +24,18 @@ import { CORE_MOD_ID } from '../../../src/constants/core'; // Import Jest utilit
  * @returns {import('../../../src/interfaces/coreServices.js').IConfiguration} Mocked configuration service.
  */
 const createMockConfiguration = (overrides = {}) => ({
-  getContentBasePath: jest.fn((typeName) => `./data/mods/test-mod/${typeName}`),
-  getContentTypeSchemaId: jest.fn((typeName) => {
-    if (typeName === 'components') {
+  getModsBasePath: jest.fn(() => './data/mods'),
+  getContentBasePath: jest.fn((registryKey) => `./data/mods/test-mod/${registryKey}`),
+  getContentTypeSchemaId: jest.fn((registryKey) => {
+    if (registryKey === 'components') {
       return 'http://example.com/schemas/component.schema.json';
     }
-    return `http://example.com/schemas/${typeName}.schema.json`;
+    return `http://example.com/schemas/${registryKey}.schema.json`;
   }),
   getSchemaBasePath: jest.fn().mockReturnValue('schemas'),
   getSchemaFiles: jest.fn().mockReturnValue([]),
-  getWorldBasePath: jest.fn().mockReturnValue('worlds'),
   getBaseDataPath: jest.fn().mockReturnValue('./data'),
   getGameConfigFilename: jest.fn().mockReturnValue('game.json'),
-  getModsBasePath: jest.fn().mockReturnValue('mods'),
   getModManifestFilename: jest.fn().mockReturnValue('mod.manifest.json'),
   getRuleBasePath: jest.fn().mockReturnValue('rules'),
   getRuleSchemaId: jest
@@ -53,18 +52,16 @@ const createMockConfiguration = (overrides = {}) => ({
  */
 const createMockPathResolver = (overrides = {}) => ({
   resolveModContentPath: jest.fn(
-    (modId, typeName, filename) =>
-      `./data/mods/${modId}/${typeName}/${filename}`
+    (modId, registryKey, filename) =>
+      `./data/mods/${modId}/${registryKey}/${filename}`
   ),
   resolveContentPath: jest.fn(
-    (typeName, filename) => `./data/${typeName}/${filename}`
+    (registryKey, filename) => `./data/${registryKey}/${filename}`
   ),
-  resolveSchemaPath: jest.fn((filename) => `./data/schemas/${filename}`),
-  resolveModManifestPath: jest.fn(
-    (modId) => `./data/mods/${modId}/mod.manifest.json`
-  ),
-  resolveGameConfigPath: jest.fn(() => './data/game.json'),
-  resolveRulePath: jest.fn((filename) => `./data/system-rules/${filename}`),
+  resolveSchemaPath: jest.fn(),
+  resolveRulePath: jest.fn(),
+  resolveGameConfigPath: jest.fn(),
+  resolveModManifestPath: jest.fn(),
   ...overrides,
 });
 
@@ -313,21 +310,20 @@ describe('ComponentLoader (Happy Path - Core Mod)', () => {
     // --- Setup: Configure Mock Implementations ---
 
     // Config: Ensure it returns the correct schema ID for 'components'
-    mockConfig.getContentTypeSchemaId.mockImplementation((typeName) => {
-      if (typeName === 'components') return componentDefinitionSchemaId;
-      // Return undefined for other types, as the base loader might call this
-      return undefined;
+    mockConfig.getContentTypeSchemaId.mockImplementation((registryKey) => {
+      if (registryKey === 'components') return componentDefinitionSchemaId;
+      return `http://example.com/schemas/${registryKey}.schema.json`;
     });
 
     // Resolver: Ensure it returns the expected paths (already done by default mock, but explicit is ok too)
     mockResolver.resolveModContentPath.mockImplementation(
-      (modId, contentTypeDir, filename) => {
-        if (modId === CORE_MOD_ID && contentTypeDir === 'components') {
+      (modId, diskFolder, filename) => {
+        if (modId === CORE_MOD_ID && diskFolder === 'components') {
           if (filename === coreHealthFilename) return coreHealthPath;
           if (filename === corePositionFilename) return corePositionPath;
         }
         // Fallback for unexpected calls, helps debugging
-        return `./data/mods/${modId}/${contentTypeDir}/${filename}`;
+        return `./data/mods/${modId}/${diskFolder}/${filename}`;
       }
     );
 
@@ -388,8 +384,8 @@ describe('ComponentLoader (Happy Path - Core Mod)', () => {
       CORE_MOD_ID, // modId
       mockCoreManifest, // modManifest
       'components', // contentKey
-      'components', // contentTypeDir
-      'components' // typeName
+      'components', // diskFolder
+      'components' // registryKey
     );
 
     // --- Verify: Promise Resolves & Result Object --- // <<< MODIFIED SECTION START

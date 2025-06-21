@@ -370,26 +370,18 @@ describe('RuleLoader (Manifest Input Handling via loadItemsForMod)', () => {
   // --- Invalid Manifest Structure ---
   describe('Invalid Manifest Structure', () => {
     // *** UPDATED TEST for null manifest based on BaseManifestItemLoader behavior ***
-    it('should return 0 and log error if manifest is null', async () => {
-      // --- Action ---
-      // *** RENAMED count to result ***
-      const result = await loader.loadItemsForMod(
+    it('should throw TypeError and log error if manifest is null', async () => {
+      const expectedErrorMsg = `RuleLoader: Programming Error - Invalid 'modManifest' provided for loading content for mod '${modId}'. Must be a non-null object. Received: null`;
+      // --- Assert ---
+      await expect(loader.loadItemsForMod(
         modId,
         null, // Invalid manifest
         RULE_CONTENT_KEY,
         RULE_CONTENT_DIR,
         RULE_TYPE_NAME
-      );
-
-      // --- Assert ---
-      // *** FIXED: Assert result.count ***
-      expect(result.count).toBe(0); // Should return 0 based on base class validation
-
+      )).rejects.toThrow(new TypeError(expectedErrorMsg));
       // Verify ERROR log occurred from base class
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        `RuleLoader: Invalid 'modManifest' provided for loading ${RULE_TYPE_NAME} for mod '${modId}'. Must be a non-null object. Received: object` // typeof null is 'object'
-      );
-
+      expect(mockLogger.error).toHaveBeenCalledWith(expectedErrorMsg);
       // Verify other steps weren't reached
       expect(mockResolver.resolveModContentPath).not.toHaveBeenCalled();
       expect(mockFetcher.fetch).not.toHaveBeenCalled();
