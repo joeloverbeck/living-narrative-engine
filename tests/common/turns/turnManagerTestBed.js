@@ -107,11 +107,6 @@ export class TurnManagerTestBed extends FactoryTestBed {
     for (const e of entities) {
       map.set(e.id, e);
     }
-    // Debug: print the map after adding entities
-    console.log(
-      'setActiveEntities: activeEntities =',
-      Array.from(map.values()).map((ent) => ({ id: ent.id }))
-    );
   }
 
   /**
