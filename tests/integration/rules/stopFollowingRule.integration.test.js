@@ -248,7 +248,7 @@ describe('stop_following rule integration', () => {
   });
 
   console.log('DEBUG: Test body started (describe block)');
-  it.only('removes following relationship and emits perceptible event when co-located', async () => {
+  it('removes following relationship and emits perceptible event when co-located', async () => {
     console.log('DEBUG: Test body started');
 
     const entities = [
