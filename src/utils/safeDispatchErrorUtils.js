@@ -17,10 +17,10 @@ export class InvalidDispatcherError extends Error {
    * @param {string} message - The error message.
    * @param {object} [details] - Optional diagnostic details.
    */
-  constructor(message, details) {
+  constructor(message, details = {}) {
     super(message);
     this.name = 'InvalidDispatcherError';
-    if (details) this.details = details;
+    this.details = details;
   }
 }
 
@@ -42,7 +42,9 @@ export function safeDispatchError(dispatcher, message, details = {}) {
     const errorMsg =
       "Invalid or missing method 'dispatch' on dependency 'safeDispatchError: dispatcher'.";
     console.error(errorMsg);
-    throw new InvalidDispatcherError(errorMsg);
+    throw new InvalidDispatcherError(errorMsg, {
+      functionName: 'safeDispatchError',
+    });
   }
 
   dispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, { message, details });
