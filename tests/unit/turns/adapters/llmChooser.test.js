@@ -9,8 +9,7 @@ const dummyLogger = createMockLogger();
 
 describe('LLMChooser', () => {
   test('forwards AbortSignal to llmAdapter', async () => {
-    const promptPipeline = createMockAIPromptPipeline();
-    promptPipeline.generatePrompt.mockResolvedValue('PROMPT');
+    const promptPipeline = createMockAIPromptPipeline('PROMPT');
     const llmAdapter = { getAIDecision: jest.fn().mockResolvedValue('{}') };
     const responseProcessor = {
       processResponse: jest.fn().mockResolvedValue({
@@ -40,8 +39,7 @@ describe('LLMChooser', () => {
   });
 
   test('returns {index, speech} shape', async () => {
-    const promptPipeline = createMockAIPromptPipeline();
-    promptPipeline.generatePrompt.mockResolvedValue('PROMPT');
+    const promptPipeline = createMockAIPromptPipeline('PROMPT');
     const llmAdapter = { getAIDecision: jest.fn().mockResolvedValue('{}') };
     const responseProcessor = {
       processResponse: jest.fn().mockResolvedValue({

@@ -41,8 +41,7 @@ describe('LLMChooser.choose – metadata propagation', () => {
   beforeEach(() => {
     jest.clearAllMocks();
 
-    promptPipeline = createMockAIPromptPipeline();
-    promptPipeline.generatePrompt.mockResolvedValue('PROMPT');
+    promptPipeline = createMockAIPromptPipeline('PROMPT');
     llmAdapter = { getAIDecision: jest.fn().mockResolvedValue('{"ok":1}') };
     responseProcessor = {
       processResponse: jest.fn().mockResolvedValue({
