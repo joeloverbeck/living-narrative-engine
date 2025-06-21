@@ -42,6 +42,7 @@ import { LLMResponseProcessor } from '../../../../src/turns/services/LLMResponse
 import { AIFallbackActionFactory } from '../../../../src/turns/services/AIFallbackActionFactory.js';
 import { AIPromptPipeline } from '../../../../src/prompting/AIPromptPipeline.js';
 import { createMockLogger } from '../../../common/mockFactories/index.js';
+import { expectSingleton } from '../../../common/containerAssertions.js';
 
 // --- Mocks ---
 const logger = createMockLogger();
@@ -110,9 +111,7 @@ describe('registerAI', () => {
   describe('LLM Infrastructure & Adapter', () => {
     it('should register IHttpClient using ISafeEventDispatcher if available', () => {
       registerAI(container);
-      expect(() => container.resolve(tokens.IHttpClient)).not.toThrow();
-      const instance = container.resolve(tokens.IHttpClient);
-      expect(instance).toBeInstanceOf(RetryHttpClient);
+      expectSingleton(container, tokens.IHttpClient, RetryHttpClient);
     });
 
     it('should register IHttpClient using IValidatedEventDispatcher as fallback', () => {
@@ -130,18 +129,12 @@ describe('registerAI', () => {
 
       registerAI(fallbackContainer);
 
-      expect(() => fallbackContainer.resolve(tokens.IHttpClient)).not.toThrow();
-      const instance = fallbackContainer.resolve(tokens.IHttpClient);
-      expect(instance).toBeInstanceOf(RetryHttpClient);
+      expectSingleton(fallbackContainer, tokens.IHttpClient, RetryHttpClient);
     });
 
     it('should register LLMAdapter as a singleton factory', () => {
       registerAI(container);
-      expect(() => container.resolve(tokens.LLMAdapter)).not.toThrow();
-      const instance1 = container.resolve(tokens.LLMAdapter);
-      const instance2 = container.resolve(tokens.LLMAdapter);
-      expect(instance1).toBeInstanceOf(ConfigurableLLMAdapter);
-      expect(instance1).toBe(instance2);
+      expectSingleton(container, tokens.LLMAdapter, ConfigurableLLMAdapter);
     });
   });
 
@@ -182,10 +175,7 @@ describe('registerAI', () => {
       'should register $token correctly',
       ({ token, Class }) => {
         registerAI(container);
-        expect(() => container.resolve(token)).not.toThrow();
-        const instance = container.resolve(token);
-        expect(instance).toBeInstanceOf(Class);
-        expect(container.resolve(token)).toBe(instance);
+        expectSingleton(container, token, Class);
       }
     );
 
@@ -232,8 +222,7 @@ describe('registerAI', () => {
       'should register $token correctly',
       ({ token, Class }) => {
         registerAI(container);
-        expect(() => container.resolve(token)).not.toThrow();
-        expect(container.resolve(token)).toBeInstanceOf(Class);
+        expectSingleton(container, token, Class);
       }
     );
 
@@ -270,10 +259,7 @@ describe('registerAI', () => {
       'should register $token correctly',
       ({ token, Class }) => {
         registerAI(container);
-        expect(() => container.resolve(token)).not.toThrow();
-        const instance = container.resolve(token);
-        expect(instance).toBeInstanceOf(Class);
-        expect(container.resolve(token)).toBe(instance);
+        expectSingleton(container, token, Class);
       }
     );
 
