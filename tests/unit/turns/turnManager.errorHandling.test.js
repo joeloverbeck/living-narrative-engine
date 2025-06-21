@@ -1,22 +1,11 @@
 // src/tests/turns/turnManager.errorHandling.test.js
 // --- FILE START ---
 
-import {
-  describeTurnManagerSuite,
-  flushPromisesAndTimers,
-} from '../../common/turns/turnManagerTestBed.js';
-import {
-  ACTOR_COMPONENT_ID,
-  PLAYER_COMPONENT_ID,
-} from '../../../src/constants/componentIds.js';
-import {
-  TURN_ENDED_ID,
-  TURN_STARTED_ID,
-  SYSTEM_ERROR_OCCURRED_ID,
-} from '../../../src/constants/eventIds.js';
+import { describeTurnManagerSuite } from '../../common/turns/turnManagerTestBed.js';
+import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/eventIds.js';
 import { beforeEach, expect, jest, test, afterEach } from '@jest/globals';
 import { createMockTurnHandler } from '../../common/mockFactories';
-import { createAiActor } from '../../common/turns/testActors.js';
+import { createDefaultActors } from '../../common/turns/testActors.js';
 
 // --- Mock Implementations ---
 
@@ -26,7 +15,7 @@ describeTurnManagerSuite('TurnManager - Error Handling', (getBed) => {
   jest.setTimeout(15000); // Slightly increased timeout just in case, but OOM is the main concern.
 
   let testBed;
-  let mockActor1, mockActor2, mockActor3;
+  let ai1, ai2, player;
 
   beforeEach(() => {
     // Use MODERN fake timers explicitly
@@ -35,10 +24,8 @@ describeTurnManagerSuite('TurnManager - Error Handling', (getBed) => {
     testBed = getBed();
 
     // Setup actors and add to the specific entityManager instance used by TurnManager
-    mockActor1 = createAiActor('actor1');
-    mockActor2 = createAiActor('actor2');
-    mockActor3 = createAiActor('actor3');
-    testBed.setActiveEntities(mockActor1, mockActor2, mockActor3);
+    ({ ai1, ai2, player } = createDefaultActors());
+    testBed.setActiveEntities(ai1, ai2, player);
 
     // Default Mocks setup - configure specifically within each test if needed
     // to avoid mock state leaking or becoming confusing.
@@ -56,7 +43,7 @@ describeTurnManagerSuite('TurnManager - Error Handling', (getBed) => {
     testBed.mocks.turnOrderService.isEmpty.mockReset().mockResolvedValue(false);
     testBed.mocks.turnOrderService.getNextEntity
       .mockReset()
-      .mockResolvedValueOnce(mockActor1);
+      .mockResolvedValueOnce(ai1);
     const resolveError = new Error('Simulated Handler Resolution Failure');
     testBed.mocks.turnHandlerResolver.resolveHandler
       .mockReset()
@@ -99,23 +86,25 @@ describeTurnManagerSuite('TurnManager - Error Handling', (getBed) => {
     testBed.mocks.turnOrderService.isEmpty.mockReset().mockResolvedValue(false);
     testBed.mocks.turnOrderService.getNextEntity
       .mockReset()
-      .mockResolvedValueOnce(mockActor1)
-      .mockResolvedValueOnce(mockActor2);
+      .mockResolvedValueOnce(ai1)
+      .mockResolvedValueOnce(ai2);
 
     // Create a handler that will fail on startTurn
     const failingHandler = createMockTurnHandler({
-      actor: mockActor1,
+      actor: ai1,
       failStart: true,
       includeSignalTermination: true,
     });
     // Ensure startTurn always returns a Promise
     failingHandler.startTurn = jest.fn().mockImplementation((currentActor) => {
       return Promise.reject(
-        new Error(`Simulated startTurn failure for ${currentActor?.id || 'unknown actor'}`)
+        new Error(
+          `Simulated startTurn failure for ${currentActor?.id || 'unknown actor'}`
+        )
       );
     });
     const successHandler = createMockTurnHandler({
-      actor: mockActor2,
+      actor: ai2,
       includeSignalTermination: true,
     });
     successHandler.startTurn = jest.fn().mockResolvedValue();
@@ -133,7 +122,9 @@ describeTurnManagerSuite('TurnManager - Error Handling', (getBed) => {
 
     // Verify error was logged
     expect(testBed.mocks.logger.error).toHaveBeenCalledWith(
-      expect.stringContaining('Error during handler.startTurn() initiation for entity actor1'),
+      expect.stringContaining(
+        'Error during handler.startTurn() initiation for entity actor1'
+      ),
       expect.any(Error)
     );
 
