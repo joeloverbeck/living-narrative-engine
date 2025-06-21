@@ -26,6 +26,7 @@ import OperationInterpreter from '../../src/logic/operationInterpreter.js';
 import OperationRegistry from '../../src/logic/operationRegistry.js';
 import JsonLogicEvaluationService from '../../src/logic/jsonLogicEvaluationService.js';
 import ModifyComponentHandler from '../../src/logic/operationHandlers/modifyComponentHandler.js';
+import { createSimpleMockDataRegistry } from '../common/mockFactories.js';
 
 // -----------------------------------------------------------------------------
 //  Minimal in‑memory EntityManager stub – just enough for the handlers we use.
@@ -63,20 +64,6 @@ class SimpleEntityManager {
   // Not used but keeps the public surface familiar
   getEntityInstance(id) {
     return { id };
-  }
-}
-
-// -----------------------------------------------------------------------------
-//  Minimal IDataRegistry stub – only the method the interpreter needs.
-// -----------------------------------------------------------------------------
-class StubDataRegistry {
-  /** @param {import('../../data/schemas/rule.schema.json').SystemRule[]} rules */
-  constructor(rules) {
-    this._rules = rules;
-  }
-
-  getAllSystemRules() {
-    return this._rules;
   }
 }
 
@@ -194,7 +181,10 @@ describe('T‑07: enemy_damaged ➜ enemy_dead chained rules', () => {
       ],
     };
 
-    const dataRegistry = new StubDataRegistry([ruleA, ruleB]);
+    const rules = [ruleA, ruleB];
+    const dataRegistry = createSimpleMockDataRegistry();
+    dataRegistry.getAllSystemRules = jest.fn();
+    dataRegistry.getAllSystemRules.mockReturnValue(rules);
 
     // ---- System‑logic interpreter ------------------------------------------
     interpreter = new SystemLogicInterpreter({
