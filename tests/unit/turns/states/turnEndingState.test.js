@@ -50,10 +50,7 @@ const mockContextSpecificLogger = {
   createChild: jest.fn(() => mockContextSpecificLogger),
 };
 
-const createMockActor = (id = 'test-actor-ending-turn') => ({
-  id: id,
-  name: `MockEndingTurnActor-${id}`,
-});
+import { createMockActor } from '../../../common/mockFactories.js';
 
 const mockTurnEndPortInstance = {
   notifyTurnEnded: jest.fn().mockResolvedValue(undefined),

@@ -25,6 +25,7 @@ import { TurnIdleState } from '../../../../src/turns/states/turnIdleState.js';
 import { AwaitingActorDecisionState } from '../../../../src/turns/states/awaitingActorDecisionState.js';
 import { TurnEndingState } from '../../../../src/turns/states/turnEndingState.js'; // Needed for some assertions
 import { AbstractTurnState } from '../../../../src/turns/states/abstractTurnState.js'; // For calling super methods in mocks
+import { createMockActor } from '../../../common/mockFactories.js';
 
 // --- Mocks & Test Utilities ---
 
@@ -43,12 +44,6 @@ const mockTurnStateFactory = {
   // Add the missing mock method
   createAwaitingInputState: jest.fn(),
 };
-
-const createMockActor = (id = 'test-actor') => ({
-  id: id,
-  name: `MockActor-${id}`,
-  getId: jest.fn(() => id), // Ensure getId method if used by code under test
-});
 
 const mockPlayerPromptService = {
   prompt: jest.fn().mockResolvedValue('mock command'),

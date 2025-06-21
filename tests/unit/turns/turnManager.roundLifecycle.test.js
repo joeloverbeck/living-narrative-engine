@@ -3,40 +3,17 @@
 
 import { describeTurnManagerSuite } from '../../common/turns/turnManagerTestBed.js';
 import {
-  ACTOR_COMPONENT_ID,
-  PLAYER_COMPONENT_ID,
-} from '../../../src/constants/componentIds.js';
-import {
   TURN_ENDED_ID,
   TURN_STARTED_ID,
   SYSTEM_ERROR_OCCURRED_ID,
 } from '../../../src/constants/eventIds.js';
 import { beforeEach, expect, jest, test, afterEach } from '@jest/globals';
-import { createMockEntity } from '../../common/mockFactories.js';
+import {
+  createMockActor,
+  createMockTurnHandler,
+} from '../../common/mockFactories.js';
 
 // --- Mock Implementations (Reusing from previous files) ---
-
-class MockEntity {
-  constructor(id, components = []) {
-    this.id = id || `entity-${Math.random().toString(36).substr(2, 9)}`;
-    this.components = new Map(components.map((c) => [c, {}]));
-    this.hasComponent = jest.fn((componentId) =>
-      this.components.has(componentId)
-    );
-    this.getComponent = jest.fn((componentId) =>
-      this.components.get(componentId)
-    );
-  }
-}
-
-class MockTurnHandler {
-  constructor(actor) {
-    this.actor = actor;
-    this.startTurn = jest.fn(async (currentActor) => {});
-    this.destroy = jest.fn(async () => {});
-    this.signalNormalApparentTermination = jest.fn();
-  }
-}
 
 // --- Test Suite ---
 
@@ -52,22 +29,17 @@ describeTurnManagerSuite(
       jest.useFakeTimers();
       testBed = getBed();
 
-      mockActor1 = createMockEntity('actor1', {
-        isActor: true,
-        isPlayer: false,
-      });
-      mockActor2 = createMockEntity('actor2', {
-        isActor: true,
-        isPlayer: false,
-      });
-      mockPlayerActor = createMockEntity('player1', {
-        isActor: true,
-        isPlayer: true,
-      });
+      mockActor1 = createMockActor('actor1');
+      mockActor2 = createMockActor('actor2');
+      mockPlayerActor = createMockActor('player1', { isPlayer: true });
 
       // Configure handler resolver to return MockTurnHandler instances
       testBed.mocks.turnHandlerResolver.resolveHandler.mockImplementation(
-        async (actor) => new MockTurnHandler(actor)
+        async (actor) =>
+          createMockTurnHandler({
+            actor,
+            includeSignalNormalApparentTermination: true,
+          })
       );
 
       stopSpy = jest.spyOn(testBed.turnManager, 'stop');

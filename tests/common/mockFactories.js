@@ -178,8 +178,39 @@ export const createMockTurnHandlerResolver = () =>
  *
  * @returns {jest.Mocked<import('../../src/turns/interfaces/ITurnHandler.js').ITurnHandler>} Mocked handler
  */
-export const createMockTurnHandler = () =>
-  createSimpleMock(['startTurn', 'destroy']);
+/**
+ * Creates a mock ITurnHandler instance.
+ *
+ * @param {object} [options]
+ * @param {object} [options.actor] - Actor associated with the handler.
+ * @param {boolean} [options.failStart] - If true, startTurn rejects with an error.
+ * @param {boolean} [options.includeSignalNormalApparentTermination] - If true, include a signalNormalApparentTermination stub.
+ * @returns {jest.Mocked<import('../../src/turns/interfaces/ITurnHandler.js').ITurnHandler>} Mocked handler
+ */
+export const createMockTurnHandler = ({
+  actor = null,
+  failStart = false,
+  includeSignalNormalApparentTermination = false,
+} = {}) => {
+  class MockTurnHandler {
+    constructor(actorRef) {
+      this.actor = actorRef;
+      this.startTurn = failStart
+        ? jest.fn(async (currentActor) => {
+            throw new Error(
+              `Simulated startTurn failure for ${currentActor?.id || 'unknown actor'}`
+            );
+          })
+        : jest.fn(async () => {});
+      this.destroy = jest.fn(async () => {});
+      if (includeSignalNormalApparentTermination) {
+        this.signalNormalApparentTermination = jest.fn();
+      }
+    }
+  }
+
+  return new MockTurnHandler(actor);
+};
 
 /**
  * Mock for IGamePersistenceService.
@@ -381,13 +412,45 @@ export const createMockEntity = (
 });
 
 /**
+ * Creates a mock actor entity extending {@link createMockEntity}.
+ *
+ * @param {string} id - Unique entity ID.
+ * @param {object} [options]
+ * @param {string} [options.name] - Actor name.
+ * @param {Array<string|{componentId:string}>} [options.components] - Additional components.
+ * @param {boolean} [options.isPlayer] - Whether the actor has the Player component.
+ * @returns {{id:string,name:string,components:Map<string,object>,getComponent:jest.Mock,hasComponent:jest.Mock}}
+ */
+export const createMockActor = (
+  id,
+  {
+    name = `MockActor-${id}`,
+    components = [ACTOR_COMPONENT_ID],
+    isPlayer = false,
+  } = {}
+) => {
+  const entity = createMockEntity(id, {
+    isActor: true,
+    isPlayer,
+  });
+
+  entity.name = name;
+  entity.components = new Map(components.map((c) => [c.componentId || c, {}]));
+  entity.getComponent = jest.fn((componentId) =>
+    entity.components.get(componentId)
+  );
+
+  return entity;
+};
+
+/**
  * Creates a minimal DI container mock.
  *
  * @description Provides a `resolve` method that returns predefined mocks based
  * on token keys. Optional overrides can supply alternative return values for
  * specific tokens during a test.
  * @param {Record<string | symbol, any>} mapping - Base token–to–mock map.
- * @param {Record<string | symbol, any>} [overrides={}] - Per-test override map.
+ * @param {Record<string | symbol, any>} [overrides] - Per-test override map.
  * @returns {{ resolve: jest.Mock }} Object with a jest.fn `resolve` method.
  */
 export const createMockContainer = (mapping, overrides = {}) => ({

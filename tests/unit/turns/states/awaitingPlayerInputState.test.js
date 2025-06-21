@@ -21,6 +21,7 @@ import { AwaitingActorDecisionState } from '../../../../src/turns/states/awaitin
 
 // Dependencies to be mocked or spied upon
 import { AbstractTurnState } from '../../../../src/turns/states/abstractTurnState.js';
+import { createMockActor } from '../../../common/mockFactories.js';
 
 // --- Mocks & Test Utilities ---
 
@@ -33,12 +34,6 @@ const mockLogger = {
   createChild: jest.fn(() => mockLogger),
   createChildLogger: jest.fn(() => mockLogger),
 };
-
-const createMockActor = (id = 'test-actor-awaiting') => ({
-  id: id,
-  name: `MockAwaitingActor-${id}`,
-  hasComponent: jest.fn(),
-});
 
 const createMockTurnAction = (
   commandString = 'mock action',
