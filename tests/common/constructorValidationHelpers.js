@@ -1,3 +1,4 @@
+import { describe, test, expect } from '@jest/globals';
 /**
  * @file Utilities for generating constructor validation test cases.
  *
@@ -51,6 +52,28 @@ export function buildMissingDependencyCases(factoryFn, spec) {
   return cases;
 }
 
+/**
+ * Defines a `describe` block verifying that the given constructor validates its
+ * dependencies according to the provided specification.
+ *
+ * @param {Function} Ctor - Constructor to test.
+ * @param {() => Record<string, any>} getDeps - Function returning valid deps.
+ * @param {Record<string, {error: RegExp, methods: string[]}>} spec - Validation
+ *   specification for each dependency.
+ * @returns {void}
+ */
+export function describeConstructorValidation(Ctor, getDeps, spec) {
+  describe('constructor validation', () => {
+    const cases = buildMissingDependencyCases(getDeps, spec);
+    test.each(cases)('throws when %s', (_desc, mutate, regex) => {
+      const deps = getDeps();
+      mutate(deps);
+      expect(() => new Ctor(deps)).toThrow(regex);
+    });
+  });
+}
+
 export default {
   buildMissingDependencyCases,
+  describeConstructorValidation,
 };

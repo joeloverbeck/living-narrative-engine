@@ -1,28 +1,23 @@
 /* eslint-env node */
-import { test, expect } from '@jest/globals';
+/* eslint jest/expect-expect: "off" */
+import { test } from '@jest/globals';
 import { AIPromptPipeline } from '../../../src/prompting/AIPromptPipeline.js';
 import {
   describeAIPromptPipelineSuite,
   AIPromptPipelineDependencySpec,
 } from '../../common/prompting/promptPipelineTestBed.js';
-import { buildMissingDependencyCases } from '../../common/constructorValidationHelpers.js';
+import { describeConstructorValidation } from '../../common/constructorValidationHelpers.js';
 
 describeAIPromptPipelineSuite('AIPromptPipeline', (getBed) => {
   let bed;
   beforeEach(() => {
     bed = getBed();
   });
-  describe('constructor validation', () => {
-    const cases = buildMissingDependencyCases(
-      () => bed.getDependencies(),
-      AIPromptPipelineDependencySpec
-    );
-    test.each(cases)('throws when %s', (_desc, mutate, regex) => {
-      const deps = bed.getDependencies();
-      mutate(deps);
-      expect(() => new AIPromptPipeline(deps)).toThrow(regex);
-    });
-  });
+  describeConstructorValidation(
+    AIPromptPipeline,
+    () => bed.getDependencies(),
+    AIPromptPipelineDependencySpec
+  );
 
   test('generatePrompt orchestrates dependencies and returns prompt', async () => {
     const actor = bed.defaultActor;
