@@ -13,13 +13,7 @@ import {
   COMPONENT_ADDED_ID,
   COMPONENT_REMOVED_ID,
 } from '../../../src/constants/eventIds.js';
-
-/**
- * Default world used for save dispatch helper.
- *
- * @type {string}
- */
-export const DEFAULT_ACTIVE_WORLD_FOR_SAVE = 'TestWorldForSaving';
+import { DEFAULT_ACTIVE_WORLD_FOR_SAVE } from '../constants.js';
 
 /**
  * Asserts that dispatch calls match the provided event sequence.
