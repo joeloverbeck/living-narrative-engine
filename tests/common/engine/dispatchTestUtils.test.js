@@ -1,6 +1,7 @@
 import { describe, it, expect, jest } from '@jest/globals';
 import {
   expectDispatchSequence,
+  expectSingleDispatch,
   buildSaveDispatches,
   DEFAULT_ACTIVE_WORLD_FOR_SAVE,
   expectEngineStatus,
@@ -39,6 +40,22 @@ describe('dispatchTestUtils', () => {
       expect(() =>
         expectDispatchSequence(mock, ['eventA', { a: 2 }])
       ).toThrow();
+    });
+  });
+
+  describe('expectSingleDispatch', () => {
+    it('succeeds when single call matches', () => {
+      const mock = jest.fn();
+      mock('eventA', { a: 1 });
+      expect(() =>
+        expectSingleDispatch(mock, 'eventA', { a: 1 })
+      ).not.toThrow();
+    });
+
+    it('throws when call differs', () => {
+      const mock = jest.fn();
+      mock('eventA', { a: 2 });
+      expect(() => expectSingleDispatch(mock, 'eventA', { a: 1 })).toThrow();
     });
   });
 
