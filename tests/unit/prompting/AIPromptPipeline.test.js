@@ -51,18 +51,15 @@ describeAIPromptPipelineSuite('AIPromptPipeline', (getBed) => {
     const context = testBed.defaultContext;
     const actions = [...testBed.defaultActions, { id: 'a1' }];
 
-    testBed.setupMockSuccess({
-      llmId: 'llm1',
-      gameState: { state: true },
-      promptData: { pd: true },
-      finalPrompt: 'FINAL',
-    });
-
     await testBed.expectSuccessfulGeneration({
       actor,
       context,
       actions,
       expectedPrompt: 'FINAL',
+      llmId: 'llm1',
+      gameState: { state: true },
+      promptData: { pd: true },
+      finalPrompt: 'FINAL',
     });
   });
 
