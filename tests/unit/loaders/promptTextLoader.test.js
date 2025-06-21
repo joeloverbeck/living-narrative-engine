@@ -101,4 +101,29 @@ describe('PromptTextLoader', () => {
     });
     expect(result).toEqual({ example: true });
   });
+
+  it('should use the correct schema ID from StaticConfiguration', async () => {
+    // Arrange: Use the real StaticConfiguration to test the integration
+    const StaticConfiguration = (await import('../../../src/configuration/staticConfiguration.js')).default;
+    const realConfig = new StaticConfiguration();
+    
+    // Create a new loader with the real configuration
+    const realConfigLoader = new PromptTextLoader({
+      configuration: realConfig,
+      pathResolver,
+      dataFetcher,
+      schemaValidator,
+      dataRegistry,
+      logger,
+    });
+
+    // Act
+    await realConfigLoader.loadPromptText();
+
+    // Assert: Verify that the real configuration returns the correct schema ID
+    expect(schemaValidator.validate).toHaveBeenCalledWith(
+      'http://example.com/schemas/prompt-text.schema.json',
+      { example: true }
+    );
+  });
 });

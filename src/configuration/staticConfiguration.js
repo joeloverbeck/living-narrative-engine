@@ -139,7 +139,7 @@ class StaticConfiguration {
       'mod-manifest': 'http://example.com/schemas/mod-manifest.schema.json',
       'game': 'http://example.com/schemas/game.schema.json',
       'world': 'http://example.com/schemas/world.schema.json',
-      'prompts': 'http://example.com/schemas/prompt.schema.json',
+      'prompt-text': 'http://example.com/schemas/prompt-text.schema.json',
     };
     return map[registryKey];
   }

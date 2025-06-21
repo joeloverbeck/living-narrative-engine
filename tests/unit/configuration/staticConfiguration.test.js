@@ -28,6 +28,7 @@ describe('StaticConfiguration Validation Test', () => {
       'entityDefinitions', // MODIFIED to camelCase
       'entityInstances', // The schema that was missing
       'llm-configs',
+      'prompt-text', // Added to ensure prompt text validation works
     ];
 
     // 3. Assert: Check that each essential type returns a valid schema ID.
@@ -50,6 +51,11 @@ describe('StaticConfiguration Validation Test', () => {
       // Focused assertion for llm-configs schema ID
       if (registryKey === 'llm-configs') {
         expect(schemaId).toBe('http://example.com/schemas/llm-configs.schema.json');
+      }
+
+      // Focused assertion for prompt-text schema ID
+      if (registryKey === 'prompt-text') {
+        expect(schemaId).toBe('http://example.com/schemas/prompt-text.schema.json');
       }
 
       // Optional: Log on success for visibility during test runs
@@ -76,5 +82,16 @@ describe('StaticConfiguration Validation Test', () => {
 
     // Ensure the old, obsolete schema is gone
     expect(schemaFiles).not.toContain('entity.schema.json');
+  });
+
+  it('should include prompt-text schema in the schema files list', () => {
+    // 1. Arrange
+    const configService = new StaticConfiguration();
+
+    // 2. Act
+    const schemaFiles = configService.getSchemaFiles();
+
+    // 3. Assert
+    expect(schemaFiles).toContain('prompt-text.schema.json');
   });
 });
