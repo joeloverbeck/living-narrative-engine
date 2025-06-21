@@ -15,7 +15,10 @@ import {
   createMockEntity,
 } from '../mockFactories';
 import FactoryTestBed from '../factoryTestBed.js';
-import { describeSuiteWithHooks } from '../describeSuite.js';
+import {
+  createDescribeTestBedSuite,
+  describeSuiteWithHooks,
+} from '../describeSuite.js';
 
 /**
  * @typedef {object} DependencySpecEntry
@@ -243,14 +246,13 @@ export class AIPromptPipelineTestBed extends FactoryTestBed {
  *   containing the tests. Receives a getter for the active test bed.
  * @returns {void}
  */
-function describeAIPromptPipelineSuite(title, suiteFn) {
-  describeSuiteWithHooks(title, AIPromptPipelineTestBed, suiteFn, {
+export const describeAIPromptPipelineSuite = createDescribeTestBedSuite(
+  AIPromptPipelineTestBed,
+  {
     beforeEachHook(bed) {
       bed.setupMockSuccess();
     },
-  });
-}
-
-export { describeAIPromptPipelineSuite };
+  }
+);
 
 export default AIPromptPipelineTestBed;
