@@ -13,6 +13,7 @@ import {
   createDescribeTestBedSuite,
   describeSuiteWithHooks,
 } from '../describeSuite.js';
+import { DEFAULT_TEST_WORLD } from '../constants.js';
 
 /**
  * @description Utility class that instantiates {@link GameEngine} using a mocked
@@ -64,7 +65,7 @@ export class GameEngineTestBed extends StoppableMixin(ContainerTestBed) {
    * @param {string} [world] - World name to initialize.
    * @returns {Promise<void>} Promise resolving when the engine has started.
    */
-  async init(world = 'TestWorld') {
+  async init(world = DEFAULT_TEST_WORLD) {
     this.env.initializationService.runInitializationSequence.mockResolvedValue({
       success: true,
     });
@@ -77,7 +78,7 @@ export class GameEngineTestBed extends StoppableMixin(ContainerTestBed) {
    * @param {string} [world] - World name to initialize.
    * @returns {Promise<void>} Resolves once initialization completes.
    */
-  async initAndReset(world = 'TestWorld') {
+  async initAndReset(world = DEFAULT_TEST_WORLD) {
     await this.init(world);
     this.resetMocks();
   }
@@ -219,9 +220,9 @@ export function describeInitializedEngineSuite(
 ) {
   if (typeof world === 'object' && world !== null) {
     overrides = world;
-    world = 'TestWorld';
+    world = DEFAULT_TEST_WORLD;
   }
-  world = world || 'TestWorld';
+  world = world || DEFAULT_TEST_WORLD;
   describeEngineSuite(
     title,
     (ctx) => {
