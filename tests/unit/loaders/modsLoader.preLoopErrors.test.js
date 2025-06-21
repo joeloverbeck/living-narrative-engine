@@ -151,8 +151,7 @@ describe('ModsLoader Integration Test Suite - Pre-Loop Error Handling (Refactore
 
     expect(env.mockedResolveOrder).toHaveBeenCalledWith(
       requestedIds,
-      cycleManifestMap,
-      env.mockLogger
+      cycleManifestMap
     );
   });
 });

@@ -83,7 +83,7 @@ export function createTestEnvironment() {
     );
     m.mockModDependencyValidator.validate.mockImplementation(() => {});
     m.mockModVersionValidator.mockImplementation(() => {});
-    m.mockModLoadOrderResolver.resolveOrder.mockImplementation((ids) => ids);
+    m.mockModLoadOrderResolver.resolve.mockImplementation((ids) => ids);
 
     return new ModsLoader({
       registry: m.mockRegistry,
@@ -118,7 +118,7 @@ export function createTestEnvironment() {
     // Handy aliases for deeply nested jest fns
     mockedModDependencyValidator: mocks.mockModDependencyValidator.validate,
     mockedValidateModEngineVersions: mocks.mockModVersionValidator,
-    mockedResolveOrder: mocks.mockModLoadOrderResolver.resolveOrder,
+    mockedResolveOrder: mocks.mockModLoadOrderResolver.resolve,
     cleanup,
   };
 }
