@@ -5,6 +5,7 @@ import {
   createGameEngineTestBed,
   describeEngineSuite,
 } from '../../common/engine/gameEngineTestBed.js';
+import { runUnavailableServiceTest } from '../../common/engine/gameEngineHelpers.js';
 import '../../common/engine/engineTestTypedefs.js';
 import {
   expectDispatchSequence,
@@ -41,37 +42,33 @@ describeEngineSuite('GameEngine', (ctx) => {
         await ctx.bed.initAndReset(MOCK_ACTIVE_WORLD_FOR_SAVE);
       });
 
-      it.each([
-        [
-          'GamePersistenceService',
-          tokens.GamePersistenceService,
-          'GamePersistenceService is not available. Cannot save game.',
-        ],
-      ])(
-        'should dispatch error if %s is unavailable',
-        async (_name, token, expectedMsg) => {
-          const localBed = createGameEngineTestBed({ [token]: null });
-
-          localBed.mocks.initializationService.runInitializationSequence.mockResolvedValue(
-            {
-              success: true,
-            }
-          );
-          await localBed.startAndReset(MOCK_ACTIVE_WORLD_FOR_SAVE);
-
-          const result = await localBed.engine.triggerManualSave(SAVE_NAME);
-
-          expect(localBed.mocks.logger.error).toHaveBeenCalledWith(
-            `GameEngine.triggerManualSave: ${expectedMsg}`
-          );
-          expect(
-            localBed.mocks.safeEventDispatcher.dispatch
-          ).not.toHaveBeenCalled();
-          expect(result).toEqual({ success: false, error: expectedMsg });
-
-          await localBed.cleanup();
-        }
-      );
+      it.each(
+        runUnavailableServiceTest(
+          [
+            [
+              tokens.GamePersistenceService,
+              'GameEngine.triggerManualSave: GamePersistenceService is not available. Cannot save game.',
+              { preInit: true },
+            ],
+          ],
+          async (bed, engine) => {
+            const result = await engine.triggerManualSave(SAVE_NAME);
+            const baseMsg =
+              'GamePersistenceService is not available. Cannot save game.';
+            expect(
+              bed.mocks.safeEventDispatcher.dispatch
+            ).not.toHaveBeenCalled();
+            expect(result).toEqual({ success: false, error: baseMsg });
+            return [
+              bed.mocks.logger.error,
+              bed.mocks.safeEventDispatcher.dispatch,
+            ];
+          }
+        )
+      )('should dispatch error if %s is unavailable', async (_token, fn) => {
+        expect.assertions(4);
+        await fn();
+      });
 
       it('should successfully save, dispatch all UI events in order, and return success result', async () => {
         const saveResultData = { success: true, filePath: 'path/to/my.sav' };
