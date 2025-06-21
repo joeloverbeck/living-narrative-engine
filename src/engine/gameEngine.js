@@ -656,15 +656,12 @@ class GameEngine {
     if (!this.#gamePersistenceService) {
       const errorMsg =
         'GamePersistenceService is not available. Cannot load game.';
-      this.#logger.error(`GameEngine.loadGame: ${errorMsg}`);
-      await this.#safeEventDispatcher.dispatch(ENGINE_OPERATION_FAILED_UI, {
-        errorMessage: errorMsg,
-        errorTitle: 'Load Failed',
-      });
+      const fullMsg = `GameEngine.loadGame: ${errorMsg}`;
+      this.#logger.error(fullMsg);
       this.#isEngineInitialized = false;
       this.#isGameLoopRunning = false;
       this.#activeWorld = null;
-      return { success: false, error: errorMsg, data: null };
+      return { success: false, error: fullMsg, data: null };
     }
 
     try {
