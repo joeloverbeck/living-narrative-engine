@@ -245,3 +245,39 @@ export const createMockDataFetcher = () => ({
   fetchJson: jest.fn(),
   fetchText: jest.fn(),
 });
+
+/**
+ * Creates a mock IDataFetcher that reads JSON files from disk for integration tests.
+ * This is useful when you need to test with real file data but can't use fetch in Node/Jest.
+ *
+ * @returns {object} Mock data fetcher that reads from disk
+ */
+export const createMockDataFetcherForIntegration = () => {
+  const fs = require('fs');
+  const path = require('path');
+  
+  return {
+    fetch: jest.fn().mockImplementation(async (identifier) => {
+      if (identifier.endsWith('.json')) {
+        // Remove leading './' if present
+        const filePath = identifier.replace(/^\.\//, '');
+        return JSON.parse(fs.readFileSync(filePath, 'utf8'));
+      }
+      throw new Error('Unsupported identifier: ' + identifier);
+    }),
+    fetchJson: jest.fn(),
+    fetchText: jest.fn(),
+  };
+};
+
+/**
+ * Creates a mock IValidatedEventDispatcher suitable for integration tests.
+ * Provides no-op methods that don't interfere with the test flow.
+ *
+ * @returns {object} Mock validated event dispatcher for integration tests
+ */
+export const createMockValidatedEventDispatcherForIntegration = () => ({
+  dispatch: jest.fn().mockResolvedValue(true),
+  subscribe: jest.fn().mockReturnValue(() => {}),
+  unsubscribe: jest.fn(),
+});

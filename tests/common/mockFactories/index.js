@@ -7,5 +7,7 @@ export * from './container.js';
 export {
   createMockPathResolver,
   createMockDataFetcher,
+  createMockDataFetcherForIntegration,
+  createMockValidatedEventDispatcherForIntegration,
   createMockAIPromptPipeline,
 } from './coreServices.js';
