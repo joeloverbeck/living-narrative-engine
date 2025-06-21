@@ -117,7 +117,7 @@ describeTurnManagerSuite(
       // Verify state update and logging
       expect(testBed.turnManager.getCurrentActor()).toBe(nextActor);
       expect(testBed.mocks.logger.debug).toHaveBeenCalledWith(
-        'TurnManager.advanceTurn() initiating...'
+        '▶️  TurnManager.advanceTurn() initiating...'
       );
       expect(testBed.mocks.logger.debug).toHaveBeenCalledWith(
         'Queue not empty, retrieving next entity.'

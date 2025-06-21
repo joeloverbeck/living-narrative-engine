@@ -26,6 +26,7 @@ import {
 import { ITurnManager } from './interfaces/ITurnManager.js';
 import { RealScheduler } from '../scheduling/index.js';
 import { safeDispatch } from '../utils/eventHelpers.js';
+import { logStart, logEnd, logError } from '../utils/logHelpers.js';
 
 /**
  * @class TurnManager
@@ -172,7 +173,7 @@ class TurnManager extends ITurnManager {
     this.#roundInProgress = false; // Initialize new flag
     // --- End State Initialization ---
 
-    this.#logger.debug('TurnManager initialized successfully.');
+    logStart(this.#logger, 'TurnManager initialized successfully.');
   }
 
   /**
@@ -191,7 +192,7 @@ class TurnManager extends ITurnManager {
     this.#isRunning = true;
     this.#roundInProgress = false; // Reset on start
     this.#roundHadSuccessfulTurn = false; // Reset on start
-    this.#logger.debug('Turn Manager started.');
+    logStart(this.#logger, 'Turn Manager started.');
 
     this.#subscribeToTurnEnd(); // Subscribe when manager starts
     await this.advanceTurn();
@@ -218,13 +219,15 @@ class TurnManager extends ITurnManager {
       typeof this.#currentHandler.destroy === 'function'
     ) {
       try {
-        this.#logger.debug(
+        logStart(
+          this.#logger,
           `Calling destroy() on current handler (${this.#currentHandler.constructor?.name || 'Unknown'}) for actor ${this.#currentActor?.id || 'N/A'}`
         );
         await Promise.resolve(this.#currentHandler.destroy());
       } catch (destroyError) {
-        this.#logger.error(
-          `Error calling destroy() on current handler during stop: ${destroyError.message}`,
+        logError(
+          this.#logger,
+          'Error calling destroy() on current handler during stop',
           destroyError
         );
       }
@@ -243,7 +246,7 @@ class TurnManager extends ITurnManager {
         error
       );
     }
-    this.#logger.debug('Turn Manager stopped.');
+    logEnd(this.#logger, 'Turn Manager stopped.');
   }
 
   /**
@@ -283,7 +286,7 @@ class TurnManager extends ITurnManager {
       return;
     }
 
-    this.#logger.debug('TurnManager.advanceTurn() initiating...');
+    logStart(this.#logger, 'TurnManager.advanceTurn() initiating...');
     // Clear previous actor/handler
     const previousActorIdForLog = this.#currentActor?.id;
     if (previousActorIdForLog) {
@@ -456,8 +459,10 @@ class TurnManager extends ITurnManager {
             `Error initiating turn for ${actorId}.`,
             startTurnError
           ).catch((e) =>
-            this.#logger.error(
-              `Failed to dispatch system error after startTurn failure: ${e.message}`
+            logError(
+              this.#logger,
+              'Failed to dispatch system error after startTurn failure',
+              e
             )
           );
 
@@ -527,8 +532,10 @@ class TurnManager extends ITurnManager {
               'Error processing turn ended event (setTimeout).',
               handlerError
             ).catch((e) =>
-              this.#logger.error(
-                `Failed to dispatch system error after setTimeout event handler failure: ${e.message}`
+              logError(
+                this.#logger,
+                'Failed to dispatch system error after setTimeout event handler failure',
+                e
               )
             );
           }
@@ -554,8 +561,10 @@ class TurnManager extends ITurnManager {
         `Failed to subscribe to ${TURN_ENDED_ID}. Game cannot proceed reliably.`,
         error
       ).catch((e) =>
-        this.#logger.error(
-          `Failed to dispatch system error after subscription failure: ${e.message}`
+        logError(
+          this.#logger,
+          'Failed to dispatch system error after subscription failure',
+          e
         )
       );
       this.stop().catch((e) =>
@@ -670,13 +679,15 @@ class TurnManager extends ITurnManager {
         handlerToDestroy.signalNormalApparentTermination();
       }
       if (typeof handlerToDestroy.destroy === 'function') {
-        this.#logger.debug(
+        logStart(
+          this.#logger,
           `Calling destroy() on handler (${handlerToDestroy.constructor?.name || 'Unknown'}) for completed turn ${endedActorId}`
         );
         // destroy() can be async, handle its promise to catch errors
         Promise.resolve(handlerToDestroy.destroy()).catch((destroyError) =>
-          this.#logger.error(
-            `Error destroying handler for ${endedActorId} after turn end: ${destroyError.message}`,
+          logError(
+            this.#logger,
+            `Error destroying handler for ${endedActorId} after turn end`,
             destroyError
           )
         );
@@ -696,8 +707,10 @@ class TurnManager extends ITurnManager {
           'Critical error during scheduled turn advancement.',
           advanceTurnError
         ).catch((e) =>
-          this.#logger.error(
-            `Failed to dispatch system error for advanceTurn failure: ${e.message}`
+          logError(
+            this.#logger,
+            'Failed to dispatch system error for advanceTurn failure',
+            e
           )
         );
         this.stop().catch((e) =>
