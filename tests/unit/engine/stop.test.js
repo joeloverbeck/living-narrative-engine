@@ -7,6 +7,7 @@ import {
 } from '../../common/engine/gameEngineTestBed.js';
 import '../../common/engine/engineTestTypedefs.js';
 import { ENGINE_STOPPED_UI } from '../../../src/constants/eventIds.js';
+import { expectEngineStatus } from '../../common/engine/dispatchTestUtils.js';
 
 describeEngineSuite('GameEngine', (ctx) => {
   let testBed;
@@ -43,19 +44,22 @@ describeEngineSuite('GameEngine', (ctx) => {
         { inputDisabledMessage: 'Game stopped. Engine is inactive.' }
       );
 
-      const status = gameEngine.getEngineStatus();
-      expect(status.isInitialized).toBe(false);
-      expect(status.isLoopRunning).toBe(false);
-      expect(status.activeWorld).toBeNull();
+      expectEngineStatus(gameEngine, {
+        isInitialized: false,
+        isLoopRunning: false,
+        activeWorld: null,
+      });
 
       expect(testBed.mocks.logger.warn).not.toHaveBeenCalled();
     });
 
     it('should do nothing and log if engine is already stopped', async () => {
       // gameEngine is fresh, so not initialized
-      const initialStatus = gameEngine.getEngineStatus();
-      expect(initialStatus.isInitialized).toBe(false);
-      expect(initialStatus.isLoopRunning).toBe(false);
+      expectEngineStatus(gameEngine, {
+        isInitialized: false,
+        isLoopRunning: false,
+        activeWorld: null,
+      });
 
       testBed.resetMocks();
 
@@ -87,9 +91,11 @@ describeEngineSuite('GameEngine', (ctx) => {
         );
         await localBed.startAndReset(MOCK_WORLD_NAME);
 
-        const statusAfterStart = localEngine.getEngineStatus();
-        expect(statusAfterStart.isInitialized).toBe(true);
-        expect(statusAfterStart.isLoopRunning).toBe(true);
+        expectEngineStatus(localEngine, {
+          isInitialized: true,
+          isLoopRunning: true,
+          activeWorld: MOCK_WORLD_NAME,
+        });
 
         await localEngine.stop();
 
