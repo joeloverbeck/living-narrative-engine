@@ -3,6 +3,7 @@ import {
   expectDispatchSequence,
   expectSingleDispatch,
   buildSaveDispatches,
+  buildStopDispatches,
   expectEngineStatus,
   expectEntityCreatedDispatch,
   expectEntityRemovedDispatch,
@@ -18,6 +19,7 @@ import {
   ENTITY_REMOVED_ID,
   COMPONENT_ADDED_ID,
   COMPONENT_REMOVED_ID,
+  ENGINE_STOPPED_UI,
 } from '../../../src/constants/eventIds.js';
 
 describe('dispatchTestUtils', () => {
@@ -108,6 +110,18 @@ describe('dispatchTestUtils', () => {
             activeWorld: DEFAULT_ACTIVE_WORLD_FOR_SAVE,
             message: 'Save operation finished. Ready.',
           },
+        ],
+      ]);
+    });
+  });
+
+  describe('buildStopDispatches', () => {
+    it('returns expected stop dispatch sequence', () => {
+      const result = buildStopDispatches();
+      expect(result).toEqual([
+        [
+          ENGINE_STOPPED_UI,
+          { inputDisabledMessage: 'Game stopped. Engine is inactive.' },
         ],
       ]);
     });
