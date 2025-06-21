@@ -1,24 +1,15 @@
 // tests/engine/showSaveGameUI.test.js
-import { beforeEach, describe, expect, it, jest } from '@jest/globals';
+import { beforeEach, describe, expect, it } from '@jest/globals';
 import { tokens } from '../../../src/dependencyInjection/tokens.js';
 import {
   createGameEngineTestBed,
   describeGameEngineSuite,
 } from '../../common/engine/gameEngineTestBed.js';
+import '../../common/engine/engineTestTypedefs.js';
 import {
   REQUEST_SHOW_SAVE_GAME_UI,
   CANNOT_SAVE_GAME_INFO,
 } from '../../../src/constants/eventIds.js';
-
-/** @typedef {import('../../../src/interfaces/coreServices.js').ILogger} ILogger */
-/** @typedef {import('../../../src/dependencyInjection/appContainer.js').default} AppContainer */
-/** @typedef {import('../../../src/interfaces/IEntityManager.js').IEntityManager} IEntityManager */
-/** @typedef {import('../../../src/turns/interfaces/ITurnManager.js').ITurnManager} ITurnManager */
-/** @typedef {import('../../../src/interfaces/IGamePersistenceService.js').IGamePersistenceService} IGamePersistenceService */
-/** @typedef {import('../../../src/interfaces/IPlaytimeTracker.js').default} IPlaytimeTracker */
-/** @typedef {import('../../../src/interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
-/** @typedef {import('../../../src/interfaces/IInitializationService.js').IInitializationService} IInitializationService */
-/** @typedef {import('../../../src/interfaces/ISaveLoadService.js').SaveGameStructure} SaveGameStructure */
 
 describeGameEngineSuite('GameEngine', (getBed) => {
   let testBed;
