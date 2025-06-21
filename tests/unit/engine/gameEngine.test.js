@@ -3,13 +3,13 @@
 import { describe, expect, it } from '@jest/globals';
 import GameEngine from '../../../src/engine/gameEngine.js';
 import { tokens } from '../../../src/dependencyInjection/tokens.js';
-import { describeGameEngineSuite } from '../../common/engine/gameEngineTestBed.js';
+import { describeEngineSuite } from '../../common/engine/gameEngineTestBed.js';
 import '../../common/engine/engineTestTypedefs.js';
 
-describeGameEngineSuite('GameEngine', (getBed) => {
+describeEngineSuite('GameEngine', (ctx) => {
   describe('Constructor', () => {
     it('should instantiate and resolve all core services successfully', () => {
-      const testBed = getBed();
+      const testBed = ctx.bed;
       new GameEngine({
         container: testBed.env.mockContainer,
       }); // Instantiation for this test
@@ -34,7 +34,7 @@ describeGameEngineSuite('GameEngine', (getBed) => {
     });
 
     it('should throw an error if ILogger cannot be resolved', () => {
-      const testBed = getBed();
+      const testBed = ctx.bed;
       testBed.withTokenOverride(tokens.ILogger, () => {
         throw new Error('Logger failed to resolve');
       });
@@ -55,7 +55,7 @@ describeGameEngineSuite('GameEngine', (getBed) => {
       ['PlaytimeTracker', tokens.PlaytimeTracker],
       ['ISafeEventDispatcher', tokens.ISafeEventDispatcher],
     ])('should throw an error if %s cannot be resolved', (_, failingToken) => {
-      const testBed = getBed();
+      const testBed = ctx.bed;
       const resolutionError = new Error(`${String(failingToken)} failed`);
       testBed.withTokenOverride(failingToken, () => {
         throw resolutionError;

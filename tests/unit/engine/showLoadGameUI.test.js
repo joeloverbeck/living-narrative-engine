@@ -3,21 +3,21 @@ import { beforeEach, describe, expect, it } from '@jest/globals';
 import { tokens } from '../../../src/dependencyInjection/tokens.js';
 import {
   createGameEngineTestBed,
-  describeGameEngineSuite,
+  describeEngineSuite,
 } from '../../common/engine/gameEngineTestBed.js';
 import '../../common/engine/engineTestTypedefs.js';
 import { REQUEST_SHOW_LOAD_GAME_UI } from '../../../src/constants/eventIds.js';
 
-describeGameEngineSuite('GameEngine', (getBed) => {
+describeEngineSuite('GameEngine', (ctx) => {
   let testBed;
   let gameEngine; // Instance of GameEngine
 
   beforeEach(() => {
-    testBed = getBed();
+    testBed = ctx.bed;
   });
   describe('showLoadGameUI', () => {
     beforeEach(() => {
-      gameEngine = testBed.engine;
+      gameEngine = ctx.engine;
       testBed.resetMocks();
     });
 

@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it } from '@jest/globals';
 import { tokens } from '../../../src/dependencyInjection/tokens.js';
 import {
   createGameEngineTestBed,
-  describeGameEngineSuite,
+  describeEngineSuite,
 } from '../../common/engine/gameEngineTestBed.js';
 import '../../common/engine/engineTestTypedefs.js';
 import {
@@ -12,12 +12,12 @@ import {
   DEFAULT_ACTIVE_WORLD_FOR_SAVE,
 } from '../../common/engine/dispatchTestUtils.js';
 
-describeGameEngineSuite('GameEngine', (getBed) => {
+describeEngineSuite('GameEngine', (ctx) => {
   let testBed;
   let gameEngine; // Instance of GameEngine
 
   beforeEach(() => {
-    testBed = getBed();
+    testBed = ctx.bed;
   });
   describe('triggerManualSave', () => {
     const SAVE_NAME = 'MySaveFile';
@@ -45,7 +45,7 @@ describeGameEngineSuite('GameEngine', (getBed) => {
     describe('when engine is initialized', () => {
       beforeEach(async () => {
         await testBed.init(MOCK_ACTIVE_WORLD_FOR_SAVE);
-        gameEngine = testBed.engine;
+        gameEngine = ctx.engine;
         testBed.resetMocks();
       });
 

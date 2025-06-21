@@ -3,24 +3,24 @@ import { beforeEach, describe, expect, it } from '@jest/globals';
 import { tokens } from '../../../src/dependencyInjection/tokens.js';
 import {
   createGameEngineTestBed,
-  describeGameEngineSuite,
+  describeEngineSuite,
 } from '../../common/engine/gameEngineTestBed.js';
 import '../../common/engine/engineTestTypedefs.js';
 import { ENGINE_STOPPED_UI } from '../../../src/constants/eventIds.js';
 
-describeGameEngineSuite('GameEngine', (getBed) => {
+describeEngineSuite('GameEngine', (ctx) => {
   let testBed;
   let gameEngine; // Instance of GameEngine
 
   const MOCK_WORLD_NAME = 'TestWorld';
 
   beforeEach(() => {
-    testBed = getBed();
+    testBed = ctx.bed;
   });
   describe('stop', () => {
     beforeEach(() => {
       // Ensure gameEngine is fresh for each 'stop' test
-      gameEngine = testBed.engine;
+      gameEngine = ctx.engine;
     });
 
     it('should successfully stop a running game, with correct logging, events, and state changes', async () => {
