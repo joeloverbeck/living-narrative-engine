@@ -1,9 +1,13 @@
 // src/tests/turns/turnManager.constructor.test.js
 // --- FILE START ---
 
-import { describeTurnManagerSuite } from '../../common/turns/turnManagerTestBed.js';
+import {
+  describeTurnManagerSuite,
+  TurnManagerTestBed,
+} from '../../common/turns/turnManagerTestBed.js';
 import TurnManager from '../../../src/turns/turnManager.js';
 import { beforeEach, expect, it, jest, afterEach } from '@jest/globals'; // Use 'it' alias for test cases
+import { describeConstructorValidation } from '../../common/constructorValidationHelpers.js';
 
 // --- Test Suite ---
 
@@ -50,101 +54,32 @@ describeTurnManagerSuite(
 
     // --- Dependency Validation Failure Cases ---
 
-    it.each([
-      [
-        'turnOrderService',
-        null,
-        'TurnManager requires a valid ITurnOrderService instance.',
-        true,
-      ],
-      [
-        'turnOrderService',
-        () => ({
-          ...testBed.mocks.turnOrderService,
-          clearCurrentRound: undefined,
-        }),
-        'TurnManager requires a valid ITurnOrderService instance.',
-        true,
-      ],
-      [
-        'entityManager',
-        null,
-        'TurnManager requires a valid EntityManager instance.',
-        true,
-      ],
-      [
-        'entityManager',
-        () => ({
-          ...testBed.mocks.entityManager,
-          getEntityInstance: undefined,
-        }),
-        'TurnManager requires a valid EntityManager instance.',
-        true,
-      ],
-      ['logger', null, 'TurnManager requires a valid ILogger instance.', true],
-      [
-        'logger',
-        () => ({ error: jest.fn() }),
-        'TurnManager requires a valid ILogger instance.',
-        true,
-      ],
-      [
-        'logger',
-        () => ({ info: jest.fn(), warn: jest.fn(), debug: jest.fn() }),
-        'TurnManager requires a valid ILogger instance.',
-        true,
-      ],
-      [
-        'dispatcher',
-        null,
-        'TurnManager requires a valid IValidatedEventDispatcher instance (with dispatch and subscribe methods).',
-        false,
-      ],
-      [
-        'dispatcher',
-        () => ({ subscribe: jest.fn(() => jest.fn()) }),
-        'TurnManager requires a valid IValidatedEventDispatcher instance (with dispatch and subscribe methods).',
-        false,
-      ],
-      [
-        'dispatcher',
-        () => ({ dispatch: jest.fn() }),
-        'TurnManager requires a valid IValidatedEventDispatcher instance (with dispatch and subscribe methods).',
-        false,
-      ],
-      [
-        'turnHandlerResolver',
-        null,
-        'TurnManager requires a valid ITurnHandlerResolver instance (with resolveHandler method).',
-        false,
-      ],
-      [
-        'turnHandlerResolver',
-        () => ({}),
-        'TurnManager requires a valid ITurnHandlerResolver instance (with resolveHandler method).',
-        false,
-      ],
-    ])(
-      'should throw if %s is invalid',
-      (optionKey, valueOrFactory, expectedErrorMsg, expectConsole) => {
-        const value =
-          typeof valueOrFactory === 'function'
-            ? valueOrFactory()
-            : valueOrFactory;
-        const options = { ...validOptions, [optionKey]: value };
-        expect(() => new TurnManager(options)).toThrow(expectedErrorMsg);
+    function createDeps() {
+      const bed = new TurnManagerTestBed();
+      return bed.mocks;
+    }
 
-        const consoleCalled = console.error.mock.calls.some(
-          ([msg]) => msg === expectedErrorMsg
-        );
-        const loggerCalled = testBed.mocks.logger.error.mock.calls.some(
-          ([msg]) => msg === expectedErrorMsg
-        );
+    const dependencySpec = {
+      turnOrderService: {
+        error: /ITurnOrderService/,
+        methods: ['clearCurrentRound'],
+      },
+      entityManager: {
+        error: /EntityManager/,
+        methods: ['getEntityInstance'],
+      },
+      logger: { error: /ILogger/, methods: ['warn', 'error'] },
+      dispatcher: {
+        error: /IValidatedEventDispatcher/,
+        methods: ['dispatch', 'subscribe'],
+      },
+      turnHandlerResolver: {
+        error: /ITurnHandlerResolver/,
+        methods: ['resolveHandler'],
+      },
+    };
 
-        expect(consoleCalled).toBe(expectConsole);
-        expect(loggerCalled).toBe(!expectConsole);
-      }
-    );
+    describeConstructorValidation(TurnManager, createDeps, dependencySpec);
 
     // --- Edge Cases ---
 
