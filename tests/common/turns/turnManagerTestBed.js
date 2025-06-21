@@ -111,6 +111,17 @@ export class TurnManagerTestBed extends StoppableMixin(FactoryTestBed) {
   }
 
   /**
+   * Starts the manager with entities then flushes timers/promises.
+   *
+   * @param {...{ id: string }} entities - Entities to register as active.
+   * @returns {Promise<void>} Resolves once timers are flushed.
+   */
+  async startWithEntitiesAndFlush(...entities) {
+    await this.startWithEntities(...entities);
+    await flushPromisesAndTimers();
+  }
+
+  /**
    * Spies on {@link TurnManager.stop} and tracks for cleanup.
    *
    * @returns {import('@jest/globals').Mock} The spy instance.
@@ -285,4 +296,16 @@ export const describeTurnManagerSuite = createDescribeTestBedSuite(
 );
 
 export default TurnManagerTestBed;
+
+/**
+ * Convenience export for {@link TurnManagerTestBed#startWithEntitiesAndFlush}.
+ *
+ * @param {TurnManagerTestBed} bed - Test bed instance.
+ * @param {...{ id: string }} entities - Entities to register as active.
+ * @returns {Promise<void>} Resolves once timers are flushed.
+ */
+export async function startWithEntitiesAndFlush(bed, ...entities) {
+  await bed.startWithEntitiesAndFlush(...entities);
+}
+
 export { flushPromisesAndTimers };
