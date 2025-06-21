@@ -4,9 +4,7 @@ describe('makeRegistryCache', () => {
   it('snapshot/clear/restore round-trip keeps deep-equal data', () => {
     // Fake registry with .data as a Map
     const registry = {
-      data: new Map([
-        ['foo', new Map([['bar', { bar: 1, baz: [2, 3] }]])],
-      ]),
+      data: new Map([['foo', new Map([['bar', { bar: 1, baz: [2, 3] }]])]]),
       clear() {
         this.data.clear();
       },
@@ -32,4 +30,4 @@ describe('makeRegistryCache', () => {
     registry.get('foo', 'bar').bar = 42;
     expect(snap.foo.bar.bar).toBe(1);
   });
-}); 
+});

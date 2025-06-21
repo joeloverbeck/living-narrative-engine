@@ -58,9 +58,9 @@ describe('ManifestPhase', () => {
     it('should properly assign all constructor parameters', () => {
       const processor = { processManifests: jest.fn() };
       const logger = { info: jest.fn() };
-      
+
       const phase = new ManifestPhase({ processor, logger });
-      
+
       expect(phase.processor).toBe(processor);
       expect(phase.logger).toBe(logger);
     });
@@ -80,18 +80,22 @@ describe('ManifestPhase', () => {
       const result = await manifestPhase.execute(mockLoadContext);
 
       // Assert
-      expect(mockLogger.info).toHaveBeenCalledWith('— ManifestPhase starting —');
+      expect(mockLogger.info).toHaveBeenCalledWith(
+        '— ManifestPhase starting —'
+      );
       expect(mockProcessor.processManifests).toHaveBeenCalledWith(
         mockLoadContext.requestedMods,
         mockLoadContext.worldName
       );
       expect(mockProcessor.processManifests).toHaveBeenCalledTimes(1);
-      
+
       // Verify returned context was updated
       expect(result.finalModOrder).toEqual(expectedResult.finalModOrder);
-      expect(result.incompatibilities).toBe(expectedResult.incompatibilityCount);
+      expect(result.incompatibilities).toBe(
+        expectedResult.incompatibilityCount
+      );
       expect(result.manifests).toBe(expectedResult.loadedManifestsMap);
-      
+
       // Verify the result is frozen
       expect(() => {
         result.newProperty = 'test';
@@ -215,7 +219,10 @@ describe('ManifestPhase', () => {
       const result = await manifestPhase.execute(emptyContext);
 
       // Assert
-      expect(mockProcessor.processManifests).toHaveBeenCalledWith([], 'test-world');
+      expect(mockProcessor.processManifests).toHaveBeenCalledWith(
+        [],
+        'test-world'
+      );
       expect(result.finalModOrder).toEqual([]);
       expect(result.incompatibilities).toBe(0);
     });
@@ -237,7 +244,10 @@ describe('ManifestPhase', () => {
       const result = await manifestPhase.execute(singleModContext);
 
       // Assert
-      expect(mockProcessor.processManifests).toHaveBeenCalledWith(['core'], 'test-world');
+      expect(mockProcessor.processManifests).toHaveBeenCalledWith(
+        ['core'],
+        'test-world'
+      );
       expect(result.finalModOrder).toEqual(['core']);
       expect(result.incompatibilities).toBe(0);
     });
@@ -266,4 +276,4 @@ describe('ManifestPhase', () => {
       expect(result.incompatibilities).toBe(1);
     });
   });
-}); 
+});

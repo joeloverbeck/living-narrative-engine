@@ -113,7 +113,9 @@ describe('GameEngine Test Helpers: GameEngineTestBed', () => {
   });
 
   it('cleanup stops engine', async () => {
-    jest.spyOn(testBed.env, 'cleanup').mockImplementation(() => { console.trace('env.cleanup called'); });
+    jest.spyOn(testBed.env, 'cleanup').mockImplementation(() => {
+      console.trace('env.cleanup called');
+    });
     engine.getEngineStatus.mockReturnValue({ isInitialized: true });
 
     await testBed.cleanup();

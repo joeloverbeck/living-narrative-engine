@@ -24,7 +24,10 @@ import {
 
 // Mock phases for non-essential loading phases
 class MockSchemaPhase extends LoaderPhase {
-  constructor(logger) { super(); this.logger = logger; }
+  constructor(logger) {
+    super();
+    this.logger = logger;
+  }
   name = 'MockSchemaPhase';
   async execute(context) {
     // Mock schema phase that does nothing
@@ -33,7 +36,10 @@ class MockSchemaPhase extends LoaderPhase {
 }
 
 class MockGameConfigPhase extends LoaderPhase {
-  constructor(logger) { super(); this.logger = logger; }
+  constructor(logger) {
+    super();
+    this.logger = logger;
+  }
   name = 'MockGameConfigPhase';
   async execute(context) {
     // Mock game config phase that does nothing
@@ -42,7 +48,10 @@ class MockGameConfigPhase extends LoaderPhase {
 }
 
 class MockManifestPhase extends LoaderPhase {
-  constructor(logger) { super(); this.logger = logger; }
+  constructor(logger) {
+    super();
+    this.logger = logger;
+  }
   name = 'MockManifestPhase';
   async execute(context) {
     // Mock manifest phase that sets up the mod context
@@ -60,7 +69,10 @@ class MockManifestPhase extends LoaderPhase {
 }
 
 class MockWorldPhase extends LoaderPhase {
-  constructor(logger) { super(); this.logger = logger; }
+  constructor(logger) {
+    super();
+    this.logger = logger;
+  }
   name = 'MockWorldPhase';
   async execute(context) {
     // Mock world phase that does nothing
@@ -69,7 +81,10 @@ class MockWorldPhase extends LoaderPhase {
 }
 
 class MockSummaryPhase extends LoaderPhase {
-  constructor(logger) { super(); this.logger = logger; }
+  constructor(logger) {
+    super();
+    this.logger = logger;
+  }
   name = 'MockSummaryPhase';
   async execute(context) {
     // Mock summary phase that does nothing
@@ -89,14 +104,20 @@ describe('Integration: Entity Definitions and Instances Loader', () => {
     const container = new AppContainer();
     container.register(tokens.ILogger, logger);
     // Register mock validated event dispatcher
-    container.register(tokens.IValidatedEventDispatcher, createMockValidatedEventDispatcherForIntegration());
+    container.register(
+      tokens.IValidatedEventDispatcher,
+      createMockValidatedEventDispatcherForIntegration()
+    );
     // Register all loaders and phases
     registerLoaders(container);
     // Register mock data fetcher AFTER loader registration to overwrite
-    container.register(tokens.IDataFetcher, createMockDataFetcherForIntegration());
+    container.register(
+      tokens.IDataFetcher,
+      createMockDataFetcherForIntegration()
+    );
     // Resolve registry from the container
     registry = container.resolve(tokens.IDataRegistry);
-    
+
     // Create test phases using the container's dependencies
     const phases = [
       new MockSchemaPhase(logger),
@@ -106,30 +127,33 @@ describe('Integration: Entity Definitions and Instances Loader', () => {
       new MockWorldPhase(logger),
       new MockSummaryPhase(logger),
     ];
-    
+
     // Create a custom session with test phases
     const session = makeSession(phases);
-    
+
     // Override the ModsLoader registration to use our custom session
-    container.register(tokens.ModsLoader, new ModsLoader({
-      logger,
-      cache: container.resolve(tokens.ILoadCache),
-      session,
-      registry,
-    }));
-    
+    container.register(
+      tokens.ModsLoader,
+      new ModsLoader({
+        logger,
+        cache: container.resolve(tokens.ILoadCache),
+        session,
+        registry,
+      })
+    );
+
     modsLoader = container.resolve(tokens.ModsLoader);
-    
+
     // Load the isekai mod
     const result = await modsLoader.loadMods('test-world', [MOD_ID]);
-    
+
     // Verify the returned LoadReport
     expect(result).toEqual({
       finalModOrder: ['isekai'],
       totals: expect.any(Object),
       incompatibilities: 0,
     });
-    
+
     // DEBUG: Log all entity_definitions in the registry after loading
     const allEntities = registry.getAll('entityDefinitions');
     console.log('DEBUG: All entity_definitions in registry:', allEntities);
@@ -137,21 +161,31 @@ describe('Integration: Entity Definitions and Instances Loader', () => {
 
   const MOD_ID = 'isekai';
   const MODS_BASE_PATH = './data/mods';
-  const DEFINITIONS_DIR = path.join(MODS_BASE_PATH, MOD_ID, 'entities/definitions');
+  const DEFINITIONS_DIR = path.join(
+    MODS_BASE_PATH,
+    MOD_ID,
+    'entities/definitions'
+  );
   const INSTANCES_DIR = path.join(MODS_BASE_PATH, MOD_ID, 'entities/instances');
 
   it('should load all entity definitions listed in the mod manifest', () => {
-    const manifest = JSON.parse(fs.readFileSync(path.join(MODS_BASE_PATH, MOD_ID, 'mod-manifest.json'), 'utf8'));
+    const manifest = JSON.parse(
+      fs.readFileSync(
+        path.join(MODS_BASE_PATH, MOD_ID, 'mod-manifest.json'),
+        'utf8'
+      )
+    );
     const files = manifest.content.entityDefinitions || [];
     for (const file of files) {
       const id = file.replace(/\.json$/, '');
-      const entityId = {
-        'hero.character.json': 'isekai:hero',
-        'sidekick.character.json': 'isekai:sidekick',
-        'adventurers_guild.location.json': 'isekai:adventurers_guild',
-        'town.location.json': 'isekai:town',
-      }[file] || `isekai:${id}`;
-      
+      const entityId =
+        {
+          'hero.character.json': 'isekai:hero',
+          'sidekick.character.json': 'isekai:sidekick',
+          'adventurers_guild.location.json': 'isekai:adventurers_guild',
+          'town.location.json': 'isekai:town',
+        }[file] || `isekai:${id}`;
+
       const entity = registry.get('entityDefinitions', entityId);
       expect(entity).toBeDefined();
       expect(entity._sourceFile).toBe(file);
@@ -161,7 +195,9 @@ describe('Integration: Entity Definitions and Instances Loader', () => {
   it('should load entity instances if they exist', () => {
     // Check if instances directory exists
     if (fs.existsSync(INSTANCES_DIR)) {
-      const files = fs.readdirSync(INSTANCES_DIR).filter(f => f.endsWith('.json'));
+      const files = fs
+        .readdirSync(INSTANCES_DIR)
+        .filter((f) => f.endsWith('.json'));
       for (const file of files) {
         const id = file.replace(/\.json$/, '');
         const fullId = `${MOD_ID}:${id}`;
@@ -177,11 +213,18 @@ describe('Integration: Entity Definitions and Instances Loader', () => {
 
   it('should not load entity definitions that are not in the manifest', () => {
     // Check for files that exist in the directory but are not in the manifest
-    const manifest = JSON.parse(fs.readFileSync(path.join(MODS_BASE_PATH, MOD_ID, 'mod-manifest.json'), 'utf8'));
+    const manifest = JSON.parse(
+      fs.readFileSync(
+        path.join(MODS_BASE_PATH, MOD_ID, 'mod-manifest.json'),
+        'utf8'
+      )
+    );
     const manifestFiles = new Set(manifest.content.entityDefinitions || []);
-    
+
     if (fs.existsSync(DEFINITIONS_DIR)) {
-      const allFiles = fs.readdirSync(DEFINITIONS_DIR).filter(f => f.endsWith('.json'));
+      const allFiles = fs
+        .readdirSync(DEFINITIONS_DIR)
+        .filter((f) => f.endsWith('.json'));
       for (const file of allFiles) {
         if (!manifestFiles.has(file)) {
           const id = file.replace(/\.json$/, '');
@@ -208,4 +251,4 @@ function makeSession(phases) {
       return current;
     },
   };
-} 
+}

@@ -3,13 +3,18 @@
  */
 const fs = require('fs/promises');
 const path = require('path');
-const { registerLoaders } = require('../../../src/dependencyInjection/registrations/loadersRegistrations.js');
+const {
+  registerLoaders,
+} = require('../../../src/dependencyInjection/registrations/loadersRegistrations.js');
 const { tokens } = require('../../../src/dependencyInjection/tokens.js');
 const ModsLoader = require('../../../src/loaders/modsLoader.js').default;
 const { createLoadContext } = require('../../../src/loaders/LoadContext.js');
 
 const GAME_JSON_PATH = path.join(__dirname, '../../../data/game.json');
-const BACKUP_GAME_JSON_PATH = path.join(__dirname, '../../../data/game.json.bak');
+const BACKUP_GAME_JSON_PATH = path.join(
+  __dirname,
+  '../../../data/game.json.bak'
+);
 
 // Helper to read/restore game.json
 /**
@@ -51,7 +56,10 @@ function nodeFileFetch(identifier) {
       } catch (err) {
         // If the file is 'mod-manifest.json', try 'mod.manifest.json' as fallback
         if (absolutePath.endsWith('mod-manifest.json')) {
-          absolutePath = absolutePath.replace('mod-manifest.json', 'mod.manifest.json');
+          absolutePath = absolutePath.replace(
+            'mod-manifest.json',
+            'mod.manifest.json'
+          );
           content = await fs.readFile(absolutePath, 'utf8');
         } else {
           throw err;
@@ -103,16 +111,17 @@ describe('Integration: ModsLoader can load the core mod (real files)', () => {
   beforeEach(async () => {
     // Create a minimal game.json that only includes the core mod
     const testGameConfig = {
-      mods: ['core']
+      mods: ['core'],
     };
     await fs.writeFile(gameJsonPath, JSON.stringify(testGameConfig, null, 2));
   });
 
   it('loads the core mod without error and registers its manifest', async () => {
     // Set up a real DI container and register all loaders
-    const AppContainer = require('../../../src/dependencyInjection/appContainer.js').default;
+    const AppContainer =
+      require('../../../src/dependencyInjection/appContainer.js').default;
     const container = new AppContainer();
-    
+
     // Register a simple logger
     const simpleLogger = {
       debug: console.debug,
@@ -121,47 +130,50 @@ describe('Integration: ModsLoader can load the core mod (real files)', () => {
       error: console.error,
     };
     container.register(tokens.ILogger, simpleLogger);
-    
+
     // Register a minimal IValidatedEventDispatcher stub
     const validatedEventDispatcherStub = { dispatch: () => Promise.resolve() };
-    container.register(tokens.IValidatedEventDispatcher, validatedEventDispatcherStub);
-    
+    container.register(
+      tokens.IValidatedEventDispatcher,
+      validatedEventDispatcherStub
+    );
+
     // Register Node-compatible data fetcher
     // const nodeDataFetcher = new NodeDataFetcher();
     // container.register(tokens.IDataFetcher, nodeDataFetcher);
-    
+
     registerLoaders(container);
     const logger = container.resolve(tokens.ILogger);
     // Spy on logger.error for critical errors
     const errorSpy = jest.spyOn(logger, 'error');
-    
+
     // Get the real ModsLoader
     const modsLoader = container.resolve(tokens.ModsLoader);
-    
+
     // Run the pipeline
     const result = await modsLoader.loadMods('testworld');
-    
+
     // Verify the returned LoadReport
     expect(result).toEqual({
       finalModOrder: ['core'],
       totals: expect.any(Object),
       incompatibilities: 0,
     });
-    
+
     // Check the registry for the core mod manifest
     const registry = container.resolve(tokens.IDataRegistry);
     const coreManifest = registry.get('mod_manifests', 'core');
     expect(coreManifest).toBeDefined();
     expect(coreManifest.id).toBe('core');
-    
+
     // Verify no critical errors were logged
     expect(errorSpy).not.toHaveBeenCalledWith(
       expect.stringContaining('CRITICAL'),
       expect.anything()
     );
-    
+
     // Verify the final mod order contains only 'core'
     const finalModOrder = registry.get('meta', 'final_mod_order');
     expect(finalModOrder).toEqual(['core']);
   });
-}); 
+});

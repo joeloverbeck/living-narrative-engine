@@ -1,4 +1,6 @@
-const { withValidatedDeps } = require('../../../src/utils/withValidatedDeps.js');
+const {
+  withValidatedDeps,
+} = require('../../../src/utils/withValidatedDeps.js');
 
 describe('withValidatedDeps', () => {
   it('throws on missing dependency', () => {
@@ -41,4 +43,4 @@ describe('withValidatedDeps', () => {
       });
     }).not.toThrow();
   });
-}); 
+});

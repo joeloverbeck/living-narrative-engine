@@ -22,62 +22,7 @@ import QueryComponentHandler from '../../../src/logic/operationHandlers/queryCom
 import DispatchEventHandler from '../../../src/logic/operationHandlers/dispatchEventHandler.js';
 import { NAME_COMPONENT_ID } from '../../../src/constants/componentIds.js';
 import { ATTEMPT_ACTION_ID } from '../../../src/constants/eventIds.js';
-
-/**
- * Simple entity manager used for integration tests.
- * Provides just enough functionality for the handlers.
- */
-class SimpleEntityManager {
-  /**
-   * Create the manager with the provided entities.
-   *
-   * @param {Array<{id:string,components:object}>} entities - initial entities
-   */
-  constructor(entities) {
-    this.entities = new Map();
-    for (const e of entities) {
-      this.entities.set(e.id, {
-        id: e.id,
-        components: { ...e.components },
-      });
-    }
-  }
-
-  /**
-   * Return an entity instance.
-   *
-   * @param {string} id - entity id
-   * @returns {object|undefined} entity object
-   */
-  getEntityInstance(id) {
-    return this.entities.get(id);
-  }
-
-  /**
-   * Retrieve component data.
-   *
-   * @param {string} id - entity id
-   * @param {string} type - component type
-   * @returns {any} component data or null
-   */
-  getComponentData(id, type) {
-    return this.entities.get(id)?.components[type] ?? null;
-  }
-
-  /**
-   * Determine if an entity has a component.
-   *
-   * @param {string} id - entity id
-   * @param {string} type - component type
-   * @returns {boolean} true if present
-   */
-  hasComponent(id, type) {
-    return Object.prototype.hasOwnProperty.call(
-      this.entities.get(id)?.components || {},
-      type
-    );
-  }
-}
+import SimpleEntityManager from '../../common/entities/simpleEntityManager.js';
 
 /**
  * Helper to initialize the interpreter with a fresh entity manager.

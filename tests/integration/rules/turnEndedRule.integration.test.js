@@ -17,75 +17,7 @@ import OperationRegistry from '../../../src/logic/operationRegistry.js';
 import JsonLogicEvaluationService from '../../../src/logic/jsonLogicEvaluationService.js';
 import RemoveComponentHandler from '../../../src/logic/operationHandlers/removeComponentHandler.js';
 import { CURRENT_ACTOR_COMPONENT_ID } from '../../../src/constants/componentIds.js';
-
-/**
- * Minimal in-memory entity manager for integration tests.
- * Provides just enough of IEntityManager for the tested handlers.
- */
-class SimpleEntityManager {
-  /**
-   * Create the manager with provided entities.
-   *
-   * @param {Array<{id:string,components:object}>} entities - initial entities
-   */
-  constructor(entities) {
-    this.entities = new Map();
-    for (const e of entities) {
-      this.entities.set(e.id, {
-        id: e.id,
-        components: { ...e.components },
-      });
-    }
-  }
-
-  /**
-   * Retrieve an entity instance.
-   *
-   * @param {string} id - entity id
-   * @returns {object|undefined} entity object
-   */
-  getEntityInstance(id) {
-    return this.entities.get(id);
-  }
-
-  /**
-   * Get component data from an entity.
-   *
-   * @param {string} id - entity id
-   * @param {string} type - component type
-   * @returns {any} component data or null
-   */
-  getComponentData(id, type) {
-    return this.entities.get(id)?.components[type] ?? null;
-  }
-
-  /**
-   * Determine if an entity has a component.
-   *
-   * @param {string} id - entity id
-   * @param {string} type - component type
-   * @returns {boolean} true if present
-   */
-  hasComponent(id, type) {
-    return Object.prototype.hasOwnProperty.call(
-      this.entities.get(id)?.components || {},
-      type
-    );
-  }
-
-  /**
-   * Remove a component from an entity.
-   *
-   * @param {string} id - entity id
-   * @param {string} type - component type
-   */
-  removeComponent(id, type) {
-    const ent = this.entities.get(id);
-    if (ent) {
-      delete ent.components[type];
-    }
-  }
-}
+import SimpleEntityManager from '../../common/entities/simpleEntityManager.js';
 
 /**
  * Initialize interpreter and register handlers with provided seed entities.

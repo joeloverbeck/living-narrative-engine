@@ -1,9 +1,14 @@
 // const { jest } = require('@jest/globals');
 jest.mock('../../../src/loaders/helpers/processAndStoreItem.js', () => ({
-  processAndStoreItem: jest.fn().mockResolvedValue({ qualifiedId: 'mod:cond', didOverride: false })
+  processAndStoreItem: jest
+    .fn()
+    .mockResolvedValue({ qualifiedId: 'mod:cond', didOverride: false }),
 }));
-const { processAndStoreItem } = require('../../../src/loaders/helpers/processAndStoreItem.js');
-const ConditionLoader = require('../../../src/loaders/conditionLoader.js').default;
+const {
+  processAndStoreItem,
+} = require('../../../src/loaders/helpers/processAndStoreItem.js');
+const ConditionLoader =
+  require('../../../src/loaders/conditionLoader.js').default;
 
 describe('ConditionLoader', () => {
   let deps;
@@ -14,9 +19,18 @@ describe('ConditionLoader', () => {
       config: { getModsBasePath: jest.fn(), getContentTypeSchemaId: jest.fn() },
       pathResolver: { resolveModContentPath: jest.fn() },
       dataFetcher: { fetch: jest.fn() },
-      schemaValidator: { validate: jest.fn(), getValidator: jest.fn(), isSchemaLoaded: jest.fn() },
+      schemaValidator: {
+        validate: jest.fn(),
+        getValidator: jest.fn(),
+        isSchemaLoaded: jest.fn(),
+      },
       dataRegistry: { store: jest.fn(), get: jest.fn() },
-      logger: { debug: jest.fn(), info: jest.fn(), warn: jest.fn(), error: jest.fn() },
+      logger: {
+        debug: jest.fn(),
+        info: jest.fn(),
+        warn: jest.fn(),
+        error: jest.fn(),
+      },
     };
     loader = new ConditionLoader(
       deps.config,
@@ -35,14 +49,23 @@ describe('ConditionLoader', () => {
   });
 
   it('should delegate _processFetchedItem to processAndStoreItem and return result', async () => {
-    const result = await loader._processFetchedItem('mod1', 'file.json', '/abs/path', { id: 'foo' }, 'conditions');
-    expect(processAndStoreItem).toHaveBeenCalledWith(loader, expect.objectContaining({
-      data: { id: 'foo' },
-      idProp: 'id',
-      category: 'conditions',
-      modId: 'mod1',
-      filename: 'file.json',
-    }));
+    const result = await loader._processFetchedItem(
+      'mod1',
+      'file.json',
+      '/abs/path',
+      { id: 'foo' },
+      'conditions'
+    );
+    expect(processAndStoreItem).toHaveBeenCalledWith(
+      loader,
+      expect.objectContaining({
+        data: { id: 'foo' },
+        idProp: 'id',
+        category: 'conditions',
+        modId: 'mod1',
+        filename: 'file.json',
+      })
+    );
     expect(result).toEqual({ qualifiedId: 'mod:cond', didOverride: false });
   });
-}); 
+});

@@ -24,7 +24,9 @@ import RuleLoader from '../../../src/loaders/ruleLoader.js'; // Adjust path as n
  * @param overrides
  */
 const createMockConfiguration = (overrides = {}) => ({
-  getContentBasePath: jest.fn((registryKey) => `./data/mods/test-mod/${registryKey}`),
+  getContentBasePath: jest.fn(
+    (registryKey) => `./data/mods/test-mod/${registryKey}`
+  ),
   getContentTypeSchemaId: jest.fn((registryKey) => {
     if (registryKey === 'rules') {
       return 'http://example.com/schemas/rule.schema.json';

@@ -70,12 +70,12 @@ describe('ContentPhase', () => {
         actions: { count: 5, overrides: 0, errors: 0 },
         components: { count: 10, overrides: 1, errors: 0 },
       });
-      
+
       // Verify the result is frozen
       expect(() => {
         result.newProperty = 'test';
       }).toThrow(TypeError);
-      
+
       // Verify the totals object is not frozen (needs to be mutable for aggregators)
       expect(() => {
         result.totals.newProperty = 'test';

@@ -84,10 +84,7 @@ describe('registerInfrastructure', () => {
     container.register(tokens.IDataRegistry, () => mockDataRegistry);
     container.register(tokens.SchemaLoader, () => mockSchemaLoader);
     container.register(tokens.ConditionLoader, () => mockConditionLoader);
-    container.register(
-      tokens.ComponentLoader,
-      () => mockComponentLoader
-    );
+    container.register(tokens.ComponentLoader, () => mockComponentLoader);
     container.register(tokens.RuleLoader, () => mockRuleLoader);
     container.register(tokens.ActionLoader, () => mockActionLoader);
     container.register(tokens.EventLoader, () => mockEventLoader);

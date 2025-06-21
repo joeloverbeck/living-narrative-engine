@@ -424,28 +424,31 @@ describe('WorldInitializer', () => {
 
     it('should throw error and dispatch system error event when no entity definitions are found', async () => {
       mockGameDataRepository.getAllEntityDefinitions.mockReturnValue([]);
-      
+
       await expect(worldInitializer.initializeWorldEntities()).rejects.toThrow(
         'Game cannot start: No entity definitions found in the world data. Please ensure at least one entity is defined.'
       );
-      
+
       expect(mockLogger.error).toHaveBeenCalledWith(
         'WorldInitializer (Pass 1): No entity definitions found. Game cannot start without entities.'
       );
-      
+
       // Verify that the system error event was dispatched
       expect(mockValidatedEventDispatcher.dispatch).toHaveBeenCalledWith(
         'core:system_error_occurred',
         {
-          message: 'No entity definitions found. The game cannot start without any entities in the world.',
+          message:
+            'No entity definitions found. The game cannot start without any entities in the world.',
           details: {
             statusCode: 500,
-            raw: expect.stringContaining('No entity definitions available in game data repository. Context: WorldInitializer._instantiateAllEntitiesFromDefinitions, entityDefinitionsCount: 0, repositoryMethod: getAllEntityDefinitions'),
-            timestamp: expect.any(String)
-          }
+            raw: expect.stringContaining(
+              'No entity definitions available in game data repository. Context: WorldInitializer._instantiateAllEntitiesFromDefinitions, entityDefinitionsCount: 0, repositoryMethod: getAllEntityDefinitions'
+            ),
+            timestamp: expect.any(String),
+          },
         }
       );
-      
+
       expect(mockEntityManager.createEntityInstance).not.toHaveBeenCalled();
     });
   });

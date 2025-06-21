@@ -19,7 +19,7 @@ export function makeRegistryCache(registry) {
       }
       return snapshot;
     },
-    restore: snap => {
+    restore: (snap) => {
       registry.clear();
       for (const [type, typeData] of Object.entries(snap)) {
         for (const [id, data] of Object.entries(typeData)) {
@@ -28,4 +28,4 @@ export function makeRegistryCache(registry) {
       }
     },
   };
-} 
+}

@@ -305,10 +305,11 @@ export class ContentLoadManager {
       .sort()
       .join(', ');
 
-    const summaryMessage = `Mod '${modId}' phase '${phase}' loaded in ${modDurationMs.toFixed(2)}ms: ${typeCountsString.length > 0
+    const summaryMessage = `Mod '${modId}' phase '${phase}' loaded in ${modDurationMs.toFixed(2)}ms: ${
+      typeCountsString.length > 0
         ? typeCountsString
         : 'No items processed in this phase'
-      }${typeCountsString.length > 0 ? ' ' : ''}-> Overrides(${totalModOverrides}), Errors(${totalModErrors})`;
+    }${typeCountsString.length > 0 ? ' ' : ''}-> Overrides(${totalModOverrides}), Errors(${totalModErrors})`;
 
     this.#logger.debug(summaryMessage);
     this.#logger.debug(

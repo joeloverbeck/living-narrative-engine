@@ -20,9 +20,18 @@ describe('ModsLoadSession', () => {
       },
     };
     // Fake cache
-    const fakeCache = { clear: () => {}, snapshot: () => ({}), restore: () => {} };
+    const fakeCache = {
+      clear: () => {},
+      snapshot: () => ({}),
+      restore: () => {},
+    };
     // Null logger
-    const nullLogger = { debug: () => {}, info: () => {}, warn: () => {}, error: () => {} };
+    const nullLogger = {
+      debug: () => {},
+      info: () => {},
+      warn: () => {},
+      error: () => {},
+    };
 
     const session = new ModsLoadSession({
       phases: [phase1, phase2],
@@ -32,4 +41,4 @@ describe('ModsLoadSession', () => {
     await session.run(ctx);
     expect(callOrder).toEqual(['P1', 'P2']);
   });
-}); 
+});

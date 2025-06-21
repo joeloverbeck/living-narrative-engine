@@ -32,7 +32,7 @@ export default class ManifestPhase extends LoaderPhase {
         ctx.requestedMods,
         ctx.worldName
       );
-      
+
       // Create new frozen context with modifications
       const next = {
         ...ctx,
@@ -40,7 +40,7 @@ export default class ManifestPhase extends LoaderPhase {
         incompatibilities: res.incompatibilityCount,
         manifests: res.loadedManifestsMap,
       };
-      
+
       return Object.freeze(next);
     } catch (e) {
       throw new ModsLoaderPhaseError(

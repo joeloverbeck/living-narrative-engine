@@ -5,9 +5,16 @@ describe('ModsLoader', () => {
     const clearSpy = jest.fn();
     const cache = { clear: clearSpy, snapshot: jest.fn(), restore: jest.fn() };
     const session = { run: jest.fn().mockRejectedValue(new Error('fail')) };
-    const logger = { debug: jest.fn(), info: jest.fn(), warn: jest.fn(), error: jest.fn() };
+    const logger = {
+      debug: jest.fn(),
+      info: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+    };
     const registry = { store: jest.fn(), get: jest.fn(), clear: jest.fn() };
-    const { default: ModsLoader } = await import('../../../src/loaders/modsLoader.js');
+    const { default: ModsLoader } = await import(
+      '../../../src/loaders/modsLoader.js'
+    );
     const loader = new ModsLoader({ logger, cache, session, registry });
     await expect(loader.loadMods('foo', ['bar'])).rejects.toThrow('fail');
     expect(clearSpy).toHaveBeenCalledTimes(1);
@@ -25,9 +32,16 @@ describe('ModsLoader', () => {
       registry: { store: jest.fn(), get: jest.fn(), clear: jest.fn() },
     };
     const session = { run: jest.fn().mockResolvedValue(mockContext) };
-    const logger = { debug: jest.fn(), info: jest.fn(), warn: jest.fn(), error: jest.fn() };
+    const logger = {
+      debug: jest.fn(),
+      info: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+    };
     const registry = { store: jest.fn(), get: jest.fn(), clear: jest.fn() };
-    const { default: ModsLoader } = await import('../../../src/loaders/modsLoader.js');
+    const { default: ModsLoader } = await import(
+      '../../../src/loaders/modsLoader.js'
+    );
     const loader = new ModsLoader({ logger, cache, session, registry });
     const result = await loader.loadMods('foo', ['bar']);
     expect(clearSpy).toHaveBeenCalledTimes(1);
@@ -49,9 +63,16 @@ describe('ModsLoader', () => {
       registry: { store: jest.fn(), get: jest.fn(), clear: jest.fn() },
     };
     const session = { run: jest.fn().mockResolvedValue(mockContext) };
-    const logger = { debug: jest.fn(), info: jest.fn(), warn: jest.fn(), error: jest.fn() };
+    const logger = {
+      debug: jest.fn(),
+      info: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+    };
     const registry = { store: jest.fn(), get: jest.fn(), clear: jest.fn() };
-    const { default: ModsLoader } = await import('../../../src/loaders/modsLoader.js');
+    const { default: ModsLoader } = await import(
+      '../../../src/loaders/modsLoader.js'
+    );
     const loader = new ModsLoader({ logger, cache, session, registry });
     const worldName = 'foo';
     const requestedMods = ['bar'];
@@ -76,30 +97,39 @@ describe('ModsLoader', () => {
       totals: { schemas: { count: 5, overrides: 0, errors: 0 } },
       registry: { store: jest.fn(), get: jest.fn(), clear: jest.fn() },
     };
-    const session = { run: jest.fn().mockImplementation(async (ctx) => {
-      // Simulate the session returning a new context object (pure function)
-      return {
-        ...ctx,
-        finalModOrder: mockContext.finalModOrder,
-        incompatibilities: mockContext.incompatibilities,
-        totals: mockContext.totals,
-      };
-    }) };
-    const logger = { debug: jest.fn(), info: jest.fn(), warn: jest.fn(), error: jest.fn() };
+    const session = {
+      run: jest.fn().mockImplementation(async (ctx) => {
+        // Simulate the session returning a new context object (pure function)
+        return {
+          ...ctx,
+          finalModOrder: mockContext.finalModOrder,
+          incompatibilities: mockContext.incompatibilities,
+          totals: mockContext.totals,
+        };
+      }),
+    };
+    const logger = {
+      debug: jest.fn(),
+      info: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+    };
     const registry = { store: jest.fn(), get: jest.fn(), clear: jest.fn() };
-    const { default: ModsLoader } = await import('../../../src/loaders/modsLoader.js');
+    const { default: ModsLoader } = await import(
+      '../../../src/loaders/modsLoader.js'
+    );
     const loader = new ModsLoader({ logger, cache, session, registry });
-    
+
     const result = await loader.loadMods('test-world', ['mod1', 'mod2']);
-    
+
     expect(result).toEqual({
       finalModOrder: ['mod1', 'mod2'],
       totals: { schemas: { count: 5, overrides: 0, errors: 0 } },
       incompatibilities: 1,
     });
-    
+
     // Verify the returned object is immutable
     expect(Object.isFrozen(result.totals)).toBe(true);
     expect(Array.isArray(result.finalModOrder)).toBe(true);
   });
-}); 
+});

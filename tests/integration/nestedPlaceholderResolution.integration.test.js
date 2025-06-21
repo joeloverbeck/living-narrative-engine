@@ -11,6 +11,7 @@ import SystemLogicInterpreter from '../../src/logic/systemLogicInterpreter.js';
 import OperationInterpreter from '../../src/logic/operationInterpreter.js';
 import OperationRegistry from '../../src/logic/operationRegistry.js';
 import JsonLogicEvaluationService from '../../src/logic/jsonLogicEvaluationService.js';
+import SimpleEntityManager from '../common/entities/simpleEntityManager.js';
 
 const TEST_TIMESTAMP = '2099-01-01T00:00:00.000Z';
 
@@ -31,22 +32,6 @@ class SimpleEventBus {
   dispatch(type, payload) {
     this.listeners.forEach((l) => l({ type, payload }));
     return Promise.resolve();
-  }
-}
-
-class SimpleEntityManager {
-  getComponentData() {
-    return { locationId: 'loc-1' };
-  }
-
-  getEntityInstance(id) {
-    return { id, components: {} };
-  }
-
-  hasComponent() {
-    /* This regression test doesn’t care about component presence,
-   it just needs the API to exist and return a boolean. */
-    return false;
   }
 }
 
@@ -128,7 +113,7 @@ describe('nested placeholder resolution', () => {
     expect(events).toHaveLength(1);
     expect(events[0].payload.ts).toBe(TEST_TIMESTAMP);
 
-    // No “could not be resolved” warnings
+    // No "could not be resolved" warnings
     const warnMsgs = logger.warn.mock.calls.map((c) => c[0]).join('\n');
     expect(warnMsgs).not.toMatch(/could not be resolved/);
   });

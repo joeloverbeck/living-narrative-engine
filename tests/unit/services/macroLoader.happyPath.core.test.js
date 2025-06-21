@@ -2,7 +2,10 @@ import MacroLoader from '../../../src/loaders/macroLoader.js';
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { CORE_MOD_ID } from '../../../src/constants/core';
 import StaticConfiguration from '../../../src/configuration/staticConfiguration.js';
-import { createMockPathResolver, createMockDataFetcher } from '../../common/mockFactories/index.js';
+import {
+  createMockPathResolver,
+  createMockDataFetcher,
+} from '../../common/mockFactories/index.js';
 
 const createMockConfiguration = (overrides = {}) => ({
   getModsBasePath: jest.fn(() => './data/mods'),
@@ -63,7 +66,9 @@ describe('MacroLoader (Happy Path - Core Mod)', () => {
     macroLoader = new MacroLoader(
       createMockConfiguration(),
       createMockPathResolver({
-        resolveModContentPath: jest.fn((modId, dir, filename) => `./data/mods/${modId}/${dir}/${filename}`),
+        resolveModContentPath: jest.fn(
+          (modId, dir, filename) => `./data/mods/${modId}/${dir}/${filename}`
+        ),
       }),
       createMockDataFetcher({
         [`./data/mods/${CORE_MOD_ID}/macros/logSuccessAndEndTurn.macro.json`]:

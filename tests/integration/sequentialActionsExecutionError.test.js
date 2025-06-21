@@ -27,6 +27,7 @@ import {
   createMockLogger,
 } from '../common/mockFactories.js';
 import { buildExecContext } from '../common/entities/index.js';
+import SimpleEntityManager from '../common/entities/simpleEntityManager.js';
 import {
   afterEach,
   beforeEach,
@@ -35,31 +36,6 @@ import {
   it,
   jest,
 } from '@jest/globals';
-
-/* ---------- Simple stubs & helpers --------------------------------------- */
-
-class SimpleEntityManager {
-  constructor() {
-    this.entities = new Map();
-  }
-
-  addComponent(id, type, data) {
-    if (!this.entities.has(id)) this.entities.set(id, new Map());
-    this.entities.get(id).set(type, data);
-  }
-
-  getComponentData(id, type) {
-    return this.entities.get(id)?.get(type);
-  }
-
-  hasComponent(id, type) {
-    return this.entities.get(id)?.has(type) ?? false;
-  }
-
-  getEntityInstance(id) {
-    return { id };
-  }
-}
 
 /* ------------------------ The Test --------------------------------------- */
 

@@ -34,9 +34,14 @@ export class TurnEndingState extends AbstractTurnState {
       const message =
         'TurnEndingState Constructor: actorToEndId must be provided.';
       if (dispatcher) {
-        safeDispatchError(dispatcher, message, {
-          providedActorId: actorToEndId ?? null,
-        }, log);
+        safeDispatchError(
+          dispatcher,
+          message,
+          {
+            providedActorId: actorToEndId ?? null,
+          },
+          log
+        );
       }
       this.#actorToEndId = handler.getCurrentActor()?.id ?? UNKNOWN_ACTOR_ID;
       log.warn(

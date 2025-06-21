@@ -169,12 +169,14 @@ describe('LlmConfigLoader - Initialization and Schema Handling', () => {
 
   test('should return an error with stage "validation_setup" if schema ID for "llm-configs" cannot be retrieved', async () => {
     // Arrange
-    configurationMock.getContentTypeSchemaId.mockImplementation((registryKey) => {
-      if (registryKey === 'llm-configs') {
-        return undefined; // Simulate schema ID not found for 'llm-configs'
+    configurationMock.getContentTypeSchemaId.mockImplementation(
+      (registryKey) => {
+        if (registryKey === 'llm-configs') {
+          return undefined; // Simulate schema ID not found for 'llm-configs'
+        }
+        return `http://example.com/schemas/${registryKey}.schema.json`;
       }
-      return `http://example.com/schemas/${registryKey}.schema.json`;
-    });
+    );
     // fetchWithRetry will still be called as this check happens after fetch.
     fetchWithRetry.mockResolvedValue(
       JSON.parse(JSON.stringify(MOCK_RAW_LLM_CONFIG_DATA))

@@ -50,12 +50,16 @@ describe('StaticConfiguration Validation Test', () => {
 
       // Focused assertion for llm-configs schema ID
       if (registryKey === 'llm-configs') {
-        expect(schemaId).toBe('http://example.com/schemas/llm-configs.schema.json');
+        expect(schemaId).toBe(
+          'http://example.com/schemas/llm-configs.schema.json'
+        );
       }
 
       // Focused assertion for prompt-text schema ID
       if (registryKey === 'prompt-text') {
-        expect(schemaId).toBe('http://example.com/schemas/prompt-text.schema.json');
+        expect(schemaId).toBe(
+          'http://example.com/schemas/prompt-text.schema.json'
+        );
       }
 
       // Optional: Log on success for visibility during test runs

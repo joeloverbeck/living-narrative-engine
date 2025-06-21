@@ -33,44 +33,7 @@ import {
   POSITION_COMPONENT_ID,
 } from '../../../src/constants/componentIds.js';
 import { ATTEMPT_ACTION_ID } from '../../../src/constants/eventIds.js';
-
-/**
- * Simple entity manager used in integration tests.
- */
-class SimpleEntityManager {
-  constructor(entities) {
-    this.entities = new Map();
-    for (const e of entities) {
-      this.entities.set(e.id, {
-        id: e.id,
-        components: { ...e.components },
-      });
-    }
-  }
-
-  getEntityInstance(id) {
-    return this.entities.get(id);
-  }
-
-  getComponentData(id, type) {
-    return this.entities.get(id)?.components[type] ?? null;
-  }
-
-  /**
-   * Check if an entity has a component.
-   *
-   * @description Checks if an entity has a component.
-   * @param {string} id - entity id
-   * @param {string} type - component type
-   * @returns {boolean} true if component exists
-   */
-  hasComponent(id, type) {
-    return Object.prototype.hasOwnProperty.call(
-      this.entities.get(id)?.components || {},
-      type
-    );
-  }
-}
+import SimpleEntityManager from '../../common/entities/simpleEntityManager.js';
 
 let logger;
 let eventBus;

@@ -30,5 +30,5 @@
  * }
  */
 export function logPhaseStart(logger, phase) {
-    logger.info(`— ${phase} starting —`);
+  logger.info(`— ${phase} starting —`);
 }

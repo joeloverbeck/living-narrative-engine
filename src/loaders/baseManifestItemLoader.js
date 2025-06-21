@@ -101,38 +101,41 @@ export class BaseManifestItemLoader extends AbstractLoader {
     dataRegistry,
     logger
   ) {
-    validateDependencies([
-      {
-        dependency: logger,
-        name: 'ILogger',
-        methods: ['info', 'warn', 'error', 'debug'],
-      },
-      {
-        dependency: config,
-        name: 'IConfiguration',
-        methods: ['getModsBasePath', 'getContentTypeSchemaId'],
-      },
-      {
-        dependency: pathResolver,
-        name: 'IPathResolver',
-        methods: ['resolveModContentPath'],
-      },
-      {
-        dependency: dataFetcher,
-        name: 'IDataFetcher',
-        methods: ['fetch'],
-      },
-      {
-        dependency: schemaValidator,
-        name: 'ISchemaValidator',
-        methods: ['validate', 'getValidator', 'isSchemaLoaded'],
-      },
-      {
-        dependency: dataRegistry,
-        name: 'IDataRegistry',
-        methods: ['store', 'get'],
-      },
-    ], logger);
+    validateDependencies(
+      [
+        {
+          dependency: logger,
+          name: 'ILogger',
+          methods: ['info', 'warn', 'error', 'debug'],
+        },
+        {
+          dependency: config,
+          name: 'IConfiguration',
+          methods: ['getModsBasePath', 'getContentTypeSchemaId'],
+        },
+        {
+          dependency: pathResolver,
+          name: 'IPathResolver',
+          methods: ['resolveModContentPath'],
+        },
+        {
+          dependency: dataFetcher,
+          name: 'IDataFetcher',
+          methods: ['fetch'],
+        },
+        {
+          dependency: schemaValidator,
+          name: 'ISchemaValidator',
+          methods: ['validate', 'getValidator', 'isSchemaLoaded'],
+        },
+        {
+          dependency: dataRegistry,
+          name: 'IDataRegistry',
+          methods: ['store', 'get'],
+        },
+      ],
+      logger
+    );
     super(logger);
 
     if (typeof contentType !== 'string' || contentType.trim() === '') {

@@ -1,7 +1,10 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import { BaseManifestItemLoader } from '../../../src/loaders/baseManifestItemLoader.js';
 import { parseAndValidateId } from '../../../src/utils/idUtils.js';
-import { createMockPathResolver, createMockDataFetcher } from '../../common/mockFactories/index.js';
+import {
+  createMockPathResolver,
+  createMockDataFetcher,
+} from '../../common/mockFactories/index.js';
 
 jest.mock('../../../src/utils/idUtils.js', () => {
   const actual = jest.requireActual('../../../src/utils/idUtils.js');
@@ -67,7 +70,11 @@ describe('BaseManifestItemLoader._parseIdAndStoreItem', () => {
     const config = createMockConfiguration();
     const resolver = createMockPathResolver();
     const fetcher = createMockDataFetcher();
-    const validator = require('../../common/mockFactories/coreServices.js').createMockSchemaValidator(undefined, { getValidator: jest.fn() });
+    const validator =
+      require('../../common/mockFactories/coreServices.js').createMockSchemaValidator(
+        undefined,
+        { getValidator: jest.fn() }
+      );
     mockRegistry = createMockDataRegistry();
     mockRegistry.store.mockReturnValue(false);
     const logger = createMockLogger();
