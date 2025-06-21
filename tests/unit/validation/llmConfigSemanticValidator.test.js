@@ -80,4 +80,40 @@ describe('performSemanticValidations', () => {
     });
     expect(result).toEqual([]);
   });
+
+  test('ignores prototype properties in the configs map', () => {
+    const proto = {
+      inherited: {
+        promptElements: [{ key: 'foo' }],
+        promptAssemblyOrder: ['foo'],
+      },
+    };
+    const map = Object.create(proto);
+    const result = performSemanticValidations(map);
+    expect(result).toEqual([]);
+  });
+
+  test('handles non-array promptElements and assembly order gracefully', () => {
+    const result = performSemanticValidations({
+      cfg: {
+        promptElements: { key: 'foo' },
+        promptAssemblyOrder: 'foo',
+      },
+    });
+    expect(result).toEqual([]);
+  });
+
+  test('missing keys on prompt elements are detected via assembly order', () => {
+    const result = performSemanticValidations({
+      cfg: {
+        promptElements: [{}],
+        promptAssemblyOrder: ['foo'],
+      },
+    });
+    expect(result).toHaveLength(1);
+    expect(result[0]).toMatchObject({
+      configId: 'cfg',
+      errorType: 'SEMANTIC_VALIDATION_MISSING_ASSEMBLY_KEY',
+    });
+  });
 });
