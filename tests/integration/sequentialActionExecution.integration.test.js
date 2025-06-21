@@ -36,6 +36,7 @@ import {
   createSimpleMockDataRegistry,
   createMockLogger,
 } from '../common/mockFactories.js';
+import { buildExecContext } from '../common/entities/execContext.js';
 import {
   afterEach,
   beforeEach,
@@ -81,23 +82,6 @@ class SimpleEntityManager {
   }
 }
 /** Jest‑friendly logger stub capturing calls for optional debugging. */
-
-/**
- * Build the ExecutionContext object expected by real operation handlers from
- * the *raw* evaluationContext that OperationInterpreter currently passes in.
- *
- * @param root0
- * @param root0.evaluationContext
- * @param root0.entityManager
- * @param root0.logger
- */
-function buildExecContext({ evaluationContext, entityManager, logger }) {
-  return {
-    evaluationContext,
-    entityManager,
-    logger,
-  };
-}
 
 describe('Sequential Action Execution – Success Path', () => {
   /** @type {*} */
