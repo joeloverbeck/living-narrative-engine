@@ -39,7 +39,9 @@ export async function withGameEngineBed(overrides = {}, testFn) {
  * @param {Array<[string, string, { preInit?: boolean }]>} cases - Array of
  *   `[token, message, options]` tuples.
  * @param {(bed: GameEngineTestBed,
- *   engine: import('../../../src/engine/gameEngine.js').default) =>
+ *   engine: import('../../../src/engine/gameEngine.js').default,
+ *   expectedMessage: string) =>
+ *   Promise<[import('@jest/globals').Mock, import('@jest/globals').Mock]> |
  *   [import('@jest/globals').Mock, import('@jest/globals').Mock]} invokeFn -
  *   Callback performing the invocation and returning logger/dispatch mocks.
  * @returns {Array<[string, () => Promise<void>]>} Generated test cases.
@@ -52,7 +54,11 @@ export function runUnavailableServiceTest(cases, invokeFn) {
         if (opts.preInit) {
           await bed.startAndReset('TestWorld');
         }
-        const [loggerMock, dispatchMock] = invokeFn(bed, engine);
+        const [loggerMock, dispatchMock] = await invokeFn(
+          bed,
+          engine,
+          expectedMessage
+        );
         expect(loggerMock).toHaveBeenCalledWith(expectedMessage);
         expect(dispatchMock).not.toHaveBeenCalled();
       });
