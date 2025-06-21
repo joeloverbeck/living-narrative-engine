@@ -1,6 +1,7 @@
 // Filename: src/tests/integration/loaderRegistry.integration.test.js
 
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
+import { createMockLogger } from '../common/mockFactories.js';
 import ActionLoader from '../../src/loaders/actionLoader.js'; // Adjust path if needed
 import ComponentLoader from '../../src/loaders/componentLoader.js'; // Adjust path if needed
 import InMemoryDataRegistry from '../../src/data/inMemoryDataRegistry.js'; // Use the real registry
@@ -169,22 +170,6 @@ const createMockSchemaValidator = (overrides = {}) => {
   };
   return mockValidator;
 };
-
-/**
- * Creates a mock ILogger service.
- *
- * @param {object} [overrides] - Optional overrides for mock methods.
- * @returns {import('../../../../interfaces/coreServices.js').ILogger} Mocked logger service.
- */
-const createMockLogger = (overrides = {}) => ({
-  // Set default mocks using jest.fn()
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-  debug: jest.fn(),
-  // Allow overriding specific methods or adding new ones
-  ...overrides,
-});
 
 // --- Test Suite ---
 

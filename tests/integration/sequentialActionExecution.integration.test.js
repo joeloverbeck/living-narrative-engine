@@ -32,7 +32,10 @@ import OperationInterpreter from '../../src/logic/operationInterpreter.js';
 import JsonLogicEvaluationService from '../../src/logic/jsonLogicEvaluationService.js';
 import SystemLogicInterpreter from '../../src/logic/systemLogicInterpreter.js';
 import ModifyComponentHandler from '../../src/logic/operationHandlers/modifyComponentHandler.js';
-import { createSimpleMockDataRegistry } from '../common/mockFactories.js';
+import {
+  createSimpleMockDataRegistry,
+  createMockLogger,
+} from '../common/mockFactories.js';
 import {
   afterEach,
   beforeEach,
@@ -77,13 +80,6 @@ class SimpleEntityManager {
     return { id: entityId };
   }
 }
-/** Jest‑friendly logger stub capturing calls for optional debugging. */
-const createMockLogger = () => ({
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-  debug: jest.fn(),
-});
 
 /**
  * Build the ExecutionContext object expected by real operation handlers from

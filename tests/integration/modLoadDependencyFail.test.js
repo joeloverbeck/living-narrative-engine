@@ -7,6 +7,7 @@ import ModsLoader from '../../src/loaders/modsLoader.js';
 import ModManifestLoader from '../../src/modding/modManifestLoader.js';
 import AjvSchemaValidator from '../../src/validation/ajvSchemaValidator.js';
 import ModDependencyError from '../../src/errors/modDependencyError.js';
+import { createMockLogger } from '../common/mockFactories.js';
 
 /* -------------------------------------------------------------------------- */
 /* Helper factories – duplicated from modManifestLoader.harness.test.js        */
@@ -141,13 +142,6 @@ const createMockRegistry = () => {
     getManifest: jest.fn(),
   };
 };
-
-const createMockLogger = () => ({
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-  debug: jest.fn(),
-});
 
 /* -------------------------------------------------------------------------- */
 /* Integration test                                                           */
