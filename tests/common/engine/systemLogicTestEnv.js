@@ -32,9 +32,7 @@ export function createRuleTestEnvironment({
 }) {
   // Create logger if not provided
   const testLogger = logger || {
-    debug: (...args) => {
-      console.log('[DEBUG]', ...args);
-    },
+    debug: jest.fn(),
     info: jest.fn(),
     warn: jest.fn(),
     error: jest.fn(),
@@ -58,16 +56,6 @@ export function createRuleTestEnvironment({
   // Create handlers using the provided function
   let handlers = createHandlers(entityManager, eventBus, testLogger);
   for (const [type, handler] of Object.entries(handlers)) {
-    if (type === 'DISPATCH_EVENT') {
-      const origExecute = handler.execute.bind(handler);
-      handler.execute = function (...args) {
-        console.log(
-          '[DEBUG] DISPATCH_EVENT handler called with args:',
-          JSON.stringify(args, null, 2)
-        );
-        return origExecute(...args);
-      };
-    }
     operationRegistry.register(type, handler.execute.bind(handler));
   }
 
@@ -111,21 +99,11 @@ export function createRuleTestEnvironment({
     },
     reset: (newEntities = []) => {
       env.cleanup();
-      // Unique debug log for reset
-      console.log(
-        'DEBUG: [reset] called with newEntities:',
-        JSON.stringify(newEntities, null, 2)
-      );
       // Deep clone entities and their components to avoid mutation issues
       const clonedEntities = newEntities.map((e) => ({
         id: e.id,
         components: JSON.parse(JSON.stringify(e.components)),
       }));
-      // Unique debug log for reset
-      console.log(
-        'DEBUG: [reset] using clonedEntities:',
-        JSON.stringify(clonedEntities, null, 2)
-      );
       entityManager = new SimpleEntityManager(clonedEntities);
       env.entityManager = entityManager;
       operationRegistry = new OperationRegistry({ logger: testLogger });
