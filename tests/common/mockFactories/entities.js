@@ -10,16 +10,30 @@ import {
 } from '../../../src/constants/componentIds.js';
 
 /**
+ * Builds a base registry object with stubbed methods.
+ *
+ * @description Provides minimal jest.fn implementations for registry APIs used
+ *   in tests.
+ * @returns {{get: jest.Mock, getAll: jest.Mock, store: jest.Mock, clear: jest.Mock}}
+ *   Base registry stub.
+ */
+function buildRegistryBase() {
+  return {
+    get: jest.fn(),
+    getAll: jest.fn(() => []),
+    store: jest.fn(),
+    clear: jest.fn(),
+  };
+}
+
+/**
  * Creates a simple mock data registry with jest.fn methods.
  *
  * @returns {{get: jest.Mock, store: jest.Mock, clear: jest.Mock}} Registry mock
  */
 export const createSimpleMockDataRegistry = () => ({
+  ...buildRegistryBase(),
   getEntityDefinition: jest.fn(),
-  get: jest.fn(),
-  getAll: jest.fn(() => []),
-  store: jest.fn(),
-  clear: jest.fn(),
 });
 
 /**
@@ -38,6 +52,7 @@ export const createStatefulMockDataRegistry = () => {
 
   const registry = {
     _internalStore: internalStore,
+    ...buildRegistryBase(),
     store: jest.fn((type, id, data) => {
       if (!internalStore[type]) internalStore[type] = {};
       internalStore[type][id] = data;
