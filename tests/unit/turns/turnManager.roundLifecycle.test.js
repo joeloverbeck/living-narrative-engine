@@ -1,10 +1,8 @@
 // src/tests/turns/turnManager.roundLifecycle.test.js
 // --- FILE START ---
 
-import {
-  describeTurnManagerSuite,
-  flushPromisesAndTimers,
-} from '../../common/turns/turnManagerTestBed.js';
+import { describeTurnManagerSuite } from '../../common/turns/turnManagerTestBed.js';
+import { flushPromisesAndTimers } from '../../common/jestHelpers.js';
 import { ACTOR_COMPONENT_ID } from '../../../src/constants/componentIds.js';
 import {
   TURN_ENDED_ID,
@@ -62,6 +60,7 @@ describeTurnManagerSuite(
     afterEach(async () => {
       jest.clearAllMocks();
       jest.clearAllTimers();
+      jest.useRealTimers();
     });
 
     test('Starts a new round when queue is empty and active actors exist', async () => {
@@ -144,9 +143,6 @@ describeTurnManagerSuite(
     });
 
     test('Correctly identifies actor types for event dispatching', async () => {
-      // Use real timers for this test since turn advancement uses setTimeout
-      jest.useRealTimers();
-
       testBed.setActiveEntities(player, ai1);
 
       testBed.mocks.turnOrderService.isEmpty.mockResolvedValue(false);
@@ -155,7 +151,7 @@ describeTurnManagerSuite(
         .mockResolvedValueOnce(ai1);
 
       await testBed.turnManager.start();
-      await new Promise((resolve) => setTimeout(resolve, 10)); // Wait for initial turn advancement
+      await flushPromisesAndTimers();
 
       // Check player actor event
       expect(testBed.mocks.dispatcher.dispatch).toHaveBeenCalledWith(
@@ -171,8 +167,8 @@ describeTurnManagerSuite(
         entityId: player.id,
         success: true,
       });
-      await new Promise((resolve) => setTimeout(resolve, 10)); // Wait for async turn advancement
-      await new Promise((resolve) => setTimeout(resolve, 10)); // Additional wait
+      await flushPromisesAndTimers();
+      await flushPromisesAndTimers();
 
       // Check AI actor event
       expect(testBed.mocks.dispatcher.dispatch).toHaveBeenCalledWith(
@@ -185,9 +181,6 @@ describeTurnManagerSuite(
     });
 
     test('Starts new round when queue becomes empty after turn ends', async () => {
-      // Use real timers for this test since turn advancement uses setTimeout
-      jest.useRealTimers();
-
       testBed.setActiveEntities(ai1, ai2);
 
       // Set up mocks to simulate the queue state changes
@@ -226,7 +219,7 @@ describeTurnManagerSuite(
       );
 
       await testBed.turnManager.start();
-      await new Promise((resolve) => setTimeout(resolve, 10)); // Wait for initial turn advancement
+      await flushPromisesAndTimers();
 
       // Verify first actor is current
       expect(testBed.turnManager.getCurrentActor()?.id).toBe(ai1.id);
@@ -234,7 +227,7 @@ describeTurnManagerSuite(
       // Simulate turn ending for actor1 (success: true)
       testBed.trigger(TURN_ENDED_ID, { entityId: ai1.id, success: true });
 
-      await new Promise((resolve) => setTimeout(resolve, 10)); // Wait for async turn advancement
+      await flushPromisesAndTimers();
 
       // Wait for TurnManager to advance to ai2
       let found = false;
@@ -243,14 +236,14 @@ describeTurnManagerSuite(
           found = true;
           break;
         }
-        await new Promise((resolve) => setTimeout(resolve, 5));
+        await flushPromisesAndTimers();
       }
       expect(found).toBe(true);
 
       // Simulate turn ending for actor2 (success: true)
       testBed.trigger(TURN_ENDED_ID, { entityId: ai2.id, success: true });
 
-      await new Promise((resolve) => setTimeout(resolve, 10)); // Wait for async turn advancement
+      await flushPromisesAndTimers();
 
       // Wait for the TurnManager to process and start a new round
       let roundStarted = false;
@@ -261,7 +254,7 @@ describeTurnManagerSuite(
           roundStarted = true;
           break;
         }
-        await new Promise((resolve) => setTimeout(resolve, 5));
+        await flushPromisesAndTimers();
       }
       expect(roundStarted).toBe(true);
     });

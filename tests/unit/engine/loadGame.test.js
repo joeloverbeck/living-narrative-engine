@@ -1,8 +1,11 @@
 // tests/engine/loadGame.test.js
-import { beforeEach, describe, expect, it, jest } from '@jest/globals';
+import { beforeEach, describe, expect, it } from '@jest/globals';
 import { tokens } from '../../../src/dependencyInjection/tokens.js';
 import { describeEngineSuite } from '../../common/engine/gameEngineTestBed.js';
-import { runUnavailableServiceTest } from '../../common/engine/gameEngineHelpers.js';
+import {
+  runUnavailableServiceTest,
+  setupLoadGameSpies,
+} from '../../common/engine/gameEngineHelpers.js';
 import '../../common/engine/engineTestTypedefs.js';
 
 describeEngineSuite('GameEngine', (ctx) => {
@@ -17,33 +20,25 @@ describeEngineSuite('GameEngine', (ctx) => {
     let prepareSpy, executeSpy, finalizeSpy, handleFailureSpy;
 
     beforeEach(() => {
-      // Spies are on the engine instance created here
-      prepareSpy = jest
-        .spyOn(ctx.engine, '_prepareForLoadGameSession')
-        .mockResolvedValue(undefined);
-      executeSpy = jest
-        .spyOn(ctx.engine, '_executeLoadAndRestore')
-        .mockResolvedValue({
-          success: true,
-          data: typedMockSaveData,
-        });
-      finalizeSpy = jest
-        .spyOn(ctx.engine, '_finalizeLoadSuccess')
-        .mockResolvedValue({
-          success: true,
-          data: typedMockSaveData,
-        });
-      handleFailureSpy = jest
-        .spyOn(ctx.engine, '_handleLoadFailure')
-        .mockImplementation(async (error) => {
-          const errorMsg =
-            error instanceof Error ? error.message : String(error);
-          return {
-            success: false,
-            error: `Processed: ${errorMsg}`,
-            data: null,
-          };
-        });
+      ({ prepareSpy, executeSpy, finalizeSpy, handleFailureSpy } =
+        setupLoadGameSpies(ctx.engine));
+      prepareSpy.mockResolvedValue(undefined);
+      executeSpy.mockResolvedValue({
+        success: true,
+        data: typedMockSaveData,
+      });
+      finalizeSpy.mockResolvedValue({
+        success: true,
+        data: typedMockSaveData,
+      });
+      handleFailureSpy.mockImplementation(async (error) => {
+        const errorMsg = error instanceof Error ? error.message : String(error);
+        return {
+          success: false,
+          error: `Processed: ${errorMsg}`,
+          data: null,
+        };
+      });
       ctx.bed.resetMocks();
     });
 

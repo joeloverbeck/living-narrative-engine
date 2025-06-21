@@ -3,7 +3,7 @@
  * @see tests/common/engine/gameEngineHelpers.js
  */
 
-import { expect } from '@jest/globals';
+import { expect, jest } from '@jest/globals';
 import {
   createGameEngineTestBed,
   GameEngineTestBed,
@@ -64,4 +64,23 @@ export function runUnavailableServiceTest(cases, invokeFn) {
       });
     },
   ]);
+}
+
+/**
+ * Attaches spies to GameEngine load helpers.
+ *
+ * @param {import('../../../src/engine/gameEngine.js').default} engine - Engine instance.
+ * @returns {{
+ *   prepareSpy: ReturnType<typeof jest.spyOn>,
+ *   executeSpy: ReturnType<typeof jest.spyOn>,
+ *   finalizeSpy: ReturnType<typeof jest.spyOn>,
+ *   handleFailureSpy: ReturnType<typeof jest.spyOn>,
+ * }} Object containing the created spies.
+ */
+export function setupLoadGameSpies(engine) {
+  const prepareSpy = jest.spyOn(engine, '_prepareForLoadGameSession');
+  const executeSpy = jest.spyOn(engine, '_executeLoadAndRestore');
+  const finalizeSpy = jest.spyOn(engine, '_finalizeLoadSuccess');
+  const handleFailureSpy = jest.spyOn(engine, '_handleLoadFailure');
+  return { prepareSpy, executeSpy, finalizeSpy, handleFailureSpy };
 }

@@ -32,7 +32,9 @@ export function createRuleTestEnvironment({
   dataRegistry = null,
 }) {
   // Create logger if not provided
+
   const testLogger = logger || createMockLogger();
+
 
   // Create data registry if not provided
   const testDataRegistry = dataRegistry || {
