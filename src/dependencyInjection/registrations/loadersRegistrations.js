@@ -43,6 +43,7 @@ import ActionLoader from '../../loaders/actionLoader.js';
 import EventLoader from '../../loaders/eventLoader.js';
 import MacroLoader from '../../loaders/macroLoader.js';
 import EntityDefinitionLoader from '../../loaders/entityDefinitionLoader.js';
+import ModDependencyValidator from '../../modding/modDependencyValidator.js';
 
 // --- DI & Helper Imports ---
 import { tokens } from '../tokens.js';
@@ -196,6 +197,23 @@ export function registerLoaders(container) {
   logger.debug(`Loaders Registration: Registered ${tokens.ModManifestLoader}.`);
   // === ADDED: MODLOADER-005 A END ===
 
+  // Register ModDependencyValidator as a singleton factory that returns the class itself
+  registrar.singletonFactory(
+    tokens.ModDependencyValidator,
+    () => ModDependencyValidator
+  );
+  logger.debug(`Loaders Registration: Registered ${tokens.ModDependencyValidator}.`);
+
+  // Register ModsLoader as a singleton factory
+  registrar.singletonFactory(
+    tokens.ModsLoader,
+    (c) => new ModsLoader({
+      modDependencyValidator: c.resolve(tokens.ModDependencyValidator),
+      // Add other dependencies as needed
+    })
+  );
+  logger.debug(`Loaders Registration: Registered ${tokens.ModsLoader}.`);
+
   // === ADDED: LOADER-001 ===
   registrar.singletonFactory(
     tokens.ActionLoader,
@@ -260,3 +278,10 @@ export function registerLoaders(container) {
 
   logger.debug('Loaders Registration: Completed.');
 }
+
+// Placeholder for ModsLoader - this will help us identify if it's being used
+const ModsLoader = class ModsLoader {
+  constructor(dependencies) {
+    throw new Error('ModsLoader is not properly implemented yet. Dependencies: ' + JSON.stringify(Object.keys(dependencies || {})));
+  }
+};

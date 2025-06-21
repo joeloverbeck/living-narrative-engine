@@ -60,6 +60,8 @@ import { freeze } from '../utils/objectUtils.js';
  * @property {DiToken} GameConfigLoader - Token for loading the main game configuration file.
  * @property {DiToken} PromptTextLoader - Token for loading the core prompt text used by the AI system.
  * @property {DiToken} ModManifestLoader - Token for loading mod manifests.
+ * @property {DiToken} ModDependencyValidator - Token for the mod dependency validator service.
+ * @property {DiToken} ModsLoader - Token for the mod loading service.
  *
  * --- Core Services & Managers (Implementations - some will be replaced by Interface Tokens below) ---
  * @property {DiToken} GameDataRepository - Token for accessing registered game data (implementation).
@@ -189,6 +191,8 @@ export const tokens = freeze({
   GameConfigLoader: 'GameConfigLoader',
   PromptTextLoader: 'PromptTextLoader',
   ModManifestLoader: 'ModManifestLoader',
+  ModDependencyValidator: 'ModDependencyValidator',
+  ModsLoader: 'ModsLoader',
 
   // Core Services & Managers (Concrete Implementations - some may be deprecated for interface tokens)
   GameDataRepository: 'GameDataRepository',

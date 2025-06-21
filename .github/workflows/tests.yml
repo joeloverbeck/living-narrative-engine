@@ -6,7 +6,6 @@ name: Run Tests
 # Controls when the workflow will run.
 # It runs on push events for all branches and on pull request events targeting the main branch.
 on:
-  push:
   pull_request:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
