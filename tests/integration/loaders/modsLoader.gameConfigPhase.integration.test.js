@@ -42,11 +42,19 @@ describe('ModsLoader + GameConfigPhase integration', () => {
     fakeLogger.error.mockClear();
   });
 
+  /**
+   *
+   * @param config
+   */
   function makeGameConfigPhaseWithConfig(config) {
     fakeGameConfigLoader = { loadConfig: jest.fn().mockResolvedValue(config) };
     return new GameConfigPhase({ gameConfigLoader: fakeGameConfigLoader, logger: fakeLogger });
   }
 
+  /**
+   *
+   * @param error
+   */
   function makeGameConfigPhaseWithError(error) {
     fakeGameConfigLoader = { loadConfig: jest.fn().mockRejectedValue(error) };
     return new GameConfigPhase({ gameConfigLoader: fakeGameConfigLoader, logger: fakeLogger });
