@@ -24,8 +24,10 @@ import {
   ENTITY_REMOVED_ID,
 } from '../../../src/constants/eventIds.js';
 import { expectDispatchSequence } from '../../common/engine/dispatchTestUtils.js';
-import MapManager from '../../../src/utils/mapManagerUtils.js';
+
+import { MapManager } from '../../../src/utils/mapManagerUtils.js';
 import { buildSerializedEntity } from '../../common/entities/serializationUtils.js';
+
 
 describeEntityManagerSuite('EntityManager - Lifecycle', (getBed) => {
   describe('constructor', () => {

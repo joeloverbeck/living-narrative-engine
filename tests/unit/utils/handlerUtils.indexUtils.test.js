@@ -1,5 +1,5 @@
 import { describe, it, expect } from '@jest/globals';
-import indexUtils, {
+import {
   assertParamsObject,
   initHandlerLogger,
   validateDeps,
@@ -18,14 +18,5 @@ describe('handlerUtils/indexUtils exports', () => {
     expect(initHandlerLogger).toBe(serviceInit);
     expect(validateDeps).toBe(serviceValidate);
     expect(getExecLogger).toBe(serviceGetExec);
-  });
-
-  it('default export contains same references', () => {
-    expect(indexUtils).toEqual({
-      assertParamsObject: paramsAssert,
-      initHandlerLogger: serviceInit,
-      validateDeps: serviceValidate,
-      getExecLogger: serviceGetExec,
-    });
   });
 });

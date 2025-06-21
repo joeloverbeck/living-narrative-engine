@@ -49,5 +49,3 @@ export function warnOnBracketPaths(rule, logger) {
     Object.values(rule).forEach((v) => warnOnBracketPaths(v, logger));
   }
 }
-
-export default isEmptyCondition;

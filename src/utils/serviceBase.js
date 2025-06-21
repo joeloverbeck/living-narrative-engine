@@ -39,5 +39,3 @@ export class BaseService {
     validateServiceDeps(serviceName, logger, deps);
   }
 }
-
-export default BaseService;

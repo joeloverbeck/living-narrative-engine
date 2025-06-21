@@ -22,7 +22,7 @@ import LodashCloner from '../adapters/LodashCloner.js';
 import DefaultComponentPolicy from '../adapters/DefaultComponentPolicy.js';
 import Entity from './entity.js';
 import EntityInstanceData from './entityInstanceData.js';
-import MapManager from '../utils/mapManagerUtils.js';
+import { MapManager } from '../utils/mapManagerUtils.js';
 import EntityFactory from './factories/entityFactory.js';
 import EntityQuery from '../query/EntityQuery.js';
 import {
@@ -396,7 +396,7 @@ class EntityManager extends IEntityManager {
         wasReconstructed: false,
       });
       return entity;
-    } catch (err) {      
+    } catch (err) {
       if (err instanceof Error && err.message.startsWith('Entity with ID')) {
         this.#logger.error(err.message);
         // Extract the entity ID from the error message and throw DuplicateEntityError

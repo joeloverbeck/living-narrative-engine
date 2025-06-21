@@ -35,5 +35,3 @@ export function resolveSafeDispatcher(execCtx, dispatcher, logger) {
 
   return null;
 }
-
-export default resolveSafeDispatcher;

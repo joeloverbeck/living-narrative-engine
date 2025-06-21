@@ -27,5 +27,3 @@ export function getNormalizedOperationType(type, logger, label) {
 
   return trimmed;
 }
-
-export default getNormalizedOperationType;

@@ -19,5 +19,3 @@ export function deriveBaseRuleIdFromFilename(filename) {
     '.rule.yaml',
   ]);
 }
-
-export default deriveBaseRuleIdFromFilename;

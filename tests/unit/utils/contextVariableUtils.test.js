@@ -1,5 +1,6 @@
 import { describe, test, expect, jest } from '@jest/globals';
-import writeContextVariable, {
+import {
+  writeContextVariable,
   tryWriteContextVariable,
 } from '../../../src/utils/contextVariableUtils.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/eventIds.js';
