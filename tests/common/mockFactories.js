@@ -62,7 +62,6 @@ const simpleFactories = {
     'clearCurrentRound',
   ],
   createMockTurnHandlerResolver: ['resolveHandler'],
-  createMockTurnHandler: ['startTurn', 'destroy'],
   createMockGamePersistenceService: [
     'saveGame',
     'loadAndRestoreGame',
@@ -116,7 +115,6 @@ export const {
   createMockTurnManager,
   createMockTurnOrderService,
   createMockTurnHandlerResolver,
-  createMockTurnHandler,
   createMockGamePersistenceService,
   createMockPlaytimeTracker,
   createMockInitializationService,
@@ -132,6 +130,51 @@ export const {
   createMockWorldLoader,
   createMockModDependencyValidator,
 } = generateFactories(simpleFactories);
+
+/**
+ * Creates a mock turn handler.
+ *
+ * @param {object} [options]
+ * @param {import('../../src/entities/entity.js').default} [options.actor] - Associated actor.
+ * @param {boolean} [options.failStart] - If true, startTurn throws an error.
+ * @param {boolean} [options.failDestroy] - If true, destroy throws an error.
+ * @param {boolean} [options.includeSignalTermination] - Add signalNormalApparentTermination fn.
+ * @param options.name
+ * @returns {{
+ *   actor: any,
+ *   startTurn: jest.Mock,
+ *   destroy: jest.Mock,
+ *   signalNormalApparentTermination?: jest.Mock
+ * }} Mock turn handler.
+ */
+export const createMockTurnHandler = ({
+  actor = null,
+  failStart = false,
+  failDestroy = false,
+  includeSignalTermination = false,
+  name = 'MockTurnHandler',
+} = {}) => {
+  const handler = {
+    actor,
+    constructor: { name },
+    startTurn: jest.fn(async (currentActor) => {
+      if (failStart) {
+        throw new Error(
+          `Simulated startTurn failure for ${currentActor?.id || 'unknown actor'}`
+        );
+      }
+    }),
+    destroy: jest.fn(async () => {
+      if (failDestroy) {
+        throw new Error('Simulated destroy failure');
+      }
+    }),
+  };
+  if (includeSignalTermination) {
+    handler.signalNormalApparentTermination = jest.fn();
+  }
+  return handler;
+};
 
 // ── Core Service Mocks ────────────────────────────────────────────────────
 
@@ -340,6 +383,39 @@ export const createMockEntity = (
     return false;
   }),
 });
+
+/**
+ * Creates a mock actor entity with component access helpers.
+ *
+ * @param {string} id - Actor ID.
+ * @param {{
+ *   isPlayer?: boolean,
+ *   name?: string,
+ *   components?: Array<string | { componentId: string, data?: any }>
+ * }} [options] - Configuration options.
+ * @returns {{
+ *   id: string,
+ *   name: string,
+ *   components: Map<string, any>,
+ *   getComponent: jest.Mock,
+ *   hasComponent: jest.Mock
+ * }} Mock actor entity.
+ */
+export const createMockActor = (
+  id,
+  { isPlayer = false, name = id, components = [] } = {}
+) => {
+  const base = createMockEntity(id, { isActor: true, isPlayer });
+  const compMap = new Map(
+    components.map((c) => [c.componentId ?? c, c.data ?? {}])
+  );
+  return {
+    ...base,
+    name,
+    components: compMap,
+    getComponent: jest.fn((compId) => compMap.get(compId)),
+  };
+};
 
 /**
  * Creates a minimal DI container mock.
