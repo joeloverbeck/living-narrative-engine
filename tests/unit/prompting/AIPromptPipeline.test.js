@@ -1,21 +1,17 @@
 /* eslint-env node */
-import { describe, beforeEach, afterEach, test, expect } from '@jest/globals';
+import { beforeEach, test, expect } from '@jest/globals';
 import { AIPromptPipeline } from '../../../src/prompting/AIPromptPipeline.js';
-import { AIPromptPipelineTestBed } from '../../common/prompting/promptPipelineTestBed.js';
+import {
+  describeAIPromptPipelineSuite,
+  AIPromptPipelineTestBed,
+} from '../../common/prompting/promptPipelineTestBed.js';
 
-describe('AIPromptPipeline', () => {
+describeAIPromptPipelineSuite('AIPromptPipeline', (getBed) => {
   /** @type {AIPromptPipelineTestBed} */
   let testBed;
 
   beforeEach(() => {
-    testBed = new AIPromptPipelineTestBed();
-
-    // Default success paths
-    testBed.setupMockSuccess();
-  });
-
-  afterEach(async () => {
-    await testBed.cleanup();
+    testBed = getBed();
   });
 
   describe('constructor validation', () => {
