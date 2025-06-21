@@ -50,7 +50,9 @@ export default class SchemaPhase extends LoaderPhase {
       this.logger.debug(
         'SchemaPhase: All schemas loaded and essential schemas verified.'
       );
-      return ctx;
+      
+      // Return frozen context (no modifications in this phase)
+      return Object.freeze({ ...ctx });
     } catch (e) {
       throw new ModsLoaderPhaseError(
         ModsLoaderErrorCode.SCHEMA,

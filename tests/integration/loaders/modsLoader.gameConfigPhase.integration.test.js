@@ -64,7 +64,15 @@ describe('ModsLoader + GameConfigPhase integration', () => {
   // Minimal manifest phase that just records the requestedMods
   class TestManifestPhase {
     async execute(ctx) {
-      ctx._manifestPhaseRequestedMods = ctx.requestedMods;
+      // Return new frozen context with the requestedMods recorded
+      const next = {
+        ...ctx,
+        _manifestPhaseRequestedMods: ctx.requestedMods,
+        finalModOrder: ctx.requestedMods, // Simulate processing
+        incompatibilities: 0,
+        manifests: new Map(),
+      };
+      return Object.freeze(next);
     }
   }
 
@@ -75,10 +83,11 @@ describe('ModsLoader + GameConfigPhase integration', () => {
   function makeSession(phases) {
     return {
       async run(ctx) {
+        let currentCtx = ctx;
         for (const phase of phases) {
-          await phase.execute(ctx);
+          currentCtx = await phase.execute(currentCtx);
         }
-        return ctx;
+        return currentCtx;
       },
     };
   }
@@ -95,7 +104,7 @@ describe('ModsLoader + GameConfigPhase integration', () => {
     
     // Verify the returned LoadReport
     expect(result).toEqual({
-      finalModOrder: [],
+      finalModOrder: ['core', 'modA', 'modB'],
       totals: {},
       incompatibilities: 0,
     });
@@ -128,6 +137,14 @@ describe('ModsLoader + GameConfigPhase integration', () => {
     class RegistryManifestPhase {
       async execute(ctx) {
         ctx.requestedMods.forEach((mod) => registry.store('mod_manifests', mod, { id: mod }));
+        // Return new frozen context with processing results
+        const next = {
+          ...ctx,
+          finalModOrder: ctx.requestedMods,
+          incompatibilities: 0,
+          manifests: new Map(),
+        };
+        return Object.freeze(next);
       }
     }
     manifestPhase = new RegistryManifestPhase();
@@ -139,7 +156,7 @@ describe('ModsLoader + GameConfigPhase integration', () => {
     
     // Verify the returned LoadReport
     expect(result).toEqual({
-      finalModOrder: [],
+      finalModOrder: ['core', 'modA'],
       totals: {},
       incompatibilities: 0,
     });

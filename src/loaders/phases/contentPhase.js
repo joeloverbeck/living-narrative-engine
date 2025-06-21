@@ -48,9 +48,17 @@ export default class ContentPhase extends LoaderPhase {
                 ctx.manifests,
                 ctx.totals
             );
-            // Per acceptance criteria, create a new object reference for totals to ensure immutability downstream.
-            ctx.totals = JSON.parse(JSON.stringify(ctx.totals)); // snapshot
-            return ctx;
+            
+            // Create a new object reference for totals to ensure immutability downstream.
+            const totalsSnapshot = JSON.parse(JSON.stringify(ctx.totals));
+            
+            // Create new frozen context with modifications
+            const next = {
+                ...ctx,
+                totals: totalsSnapshot,
+            };
+            
+            return Object.freeze(next);
         } catch (e) {
             throw new ModsLoaderPhaseError(
                 ModsLoaderErrorCode.CONTENT,

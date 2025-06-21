@@ -32,10 +32,16 @@ export default class ManifestPhase extends LoaderPhase {
         ctx.requestedMods,
         ctx.worldName
       );
-      ctx.finalModOrder = res.finalModOrder;
-      ctx.incompatibilities = res.incompatibilityCount;
-      ctx.manifests = res.loadedManifestsMap;
-      return ctx;
+      
+      // Create new frozen context with modifications
+      const next = {
+        ...ctx,
+        finalModOrder: res.finalModOrder,
+        incompatibilities: res.incompatibilityCount,
+        manifests: res.loadedManifestsMap,
+      };
+      
+      return Object.freeze(next);
     } catch (e) {
       throw new ModsLoaderPhaseError(
         ModsLoaderErrorCode.MANIFEST,

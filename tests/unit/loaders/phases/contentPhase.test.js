@@ -54,7 +54,7 @@ describe('ContentPhase', () => {
       const originalTotalsRef = ctx.totals;
 
       // Act
-      await phase.execute(ctx);
+      const result = await phase.execute(ctx);
 
       // Assert
       expect(mockLogger.info).toHaveBeenCalledWith('— ContentPhase starting —');
@@ -65,11 +65,21 @@ describe('ContentPhase', () => {
       );
 
       // Acceptance Criterion 1: Totals object reference changes after phase.
-      expect(ctx.totals).not.toBe(originalTotalsRef);
-      expect(ctx.totals).toEqual({
+      expect(result.totals).not.toBe(originalTotalsRef);
+      expect(result.totals).toEqual({
         actions: { count: 5, overrides: 0, errors: 0 },
         components: { count: 10, overrides: 1, errors: 0 },
       });
+      
+      // Verify the result is frozen
+      expect(() => {
+        result.newProperty = 'test';
+      }).toThrow(TypeError);
+      
+      // Verify the totals object is not frozen (needs to be mutable for aggregators)
+      expect(() => {
+        result.totals.newProperty = 'test';
+      }).not.toThrow(TypeError);
     });
 
     it('should throw a ModsLoaderPhaseError if content loading fails', async () => {

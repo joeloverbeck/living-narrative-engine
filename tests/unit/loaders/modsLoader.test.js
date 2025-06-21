@@ -16,7 +16,15 @@ describe('ModsLoader', () => {
   it('calls cache.clear once (pre) on success and returns LoadReport', async () => {
     const clearSpy = jest.fn();
     const cache = { clear: clearSpy, snapshot: jest.fn(), restore: jest.fn() };
-    const session = { run: jest.fn().mockResolvedValue({}) };
+    const mockContext = {
+      worldName: 'foo',
+      requestedMods: ['bar'],
+      finalModOrder: [],
+      incompatibilities: 0,
+      totals: {},
+      registry: { store: jest.fn(), get: jest.fn(), clear: jest.fn() },
+    };
+    const session = { run: jest.fn().mockResolvedValue(mockContext) };
     const logger = { debug: jest.fn(), info: jest.fn(), warn: jest.fn(), error: jest.fn() };
     const registry = { store: jest.fn(), get: jest.fn(), clear: jest.fn() };
     const { default: ModsLoader } = await import('../../../src/loaders/modsLoader.js');
@@ -32,7 +40,15 @@ describe('ModsLoader', () => {
 
   it('calls session.run with the correct context', async () => {
     const cache = { clear: jest.fn(), snapshot: jest.fn(), restore: jest.fn() };
-    const session = { run: jest.fn().mockResolvedValue({}) };
+    const mockContext = {
+      worldName: 'foo',
+      requestedMods: ['bar'],
+      finalModOrder: [],
+      incompatibilities: 0,
+      totals: {},
+      registry: { store: jest.fn(), get: jest.fn(), clear: jest.fn() },
+    };
+    const session = { run: jest.fn().mockResolvedValue(mockContext) };
     const logger = { debug: jest.fn(), info: jest.fn(), warn: jest.fn(), error: jest.fn() };
     const registry = { store: jest.fn(), get: jest.fn(), clear: jest.fn() };
     const { default: ModsLoader } = await import('../../../src/loaders/modsLoader.js');

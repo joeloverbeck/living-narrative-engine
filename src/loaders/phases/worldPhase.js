@@ -56,7 +56,9 @@ export default class WorldPhase extends LoaderPhase {
                 ctx.manifests,
                 ctx.totals
             );
-            return ctx;
+            
+            // Return frozen context (no modifications in this phase)
+            return Object.freeze({ ...ctx });
         } catch (e) {
             throw new ModsLoaderPhaseError(
                 ModsLoaderErrorCode.WORLD,

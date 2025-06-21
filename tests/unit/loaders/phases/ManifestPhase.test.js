@@ -72,11 +72,12 @@ describe('ManifestPhase', () => {
       const expectedResult = {
         finalModOrder: ['core', 'modA', 'modB'],
         incompatibilityCount: 2,
+        loadedManifestsMap: new Map([['core', { id: 'core' }]]),
       };
       mockProcessor.processManifests.mockResolvedValue(expectedResult);
 
       // Act
-      await manifestPhase.execute(mockLoadContext);
+      const result = await manifestPhase.execute(mockLoadContext);
 
       // Assert
       expect(mockLogger.info).toHaveBeenCalledWith('— ManifestPhase starting —');
@@ -86,9 +87,15 @@ describe('ManifestPhase', () => {
       );
       expect(mockProcessor.processManifests).toHaveBeenCalledTimes(1);
       
-      // Verify context was updated
-      expect(mockLoadContext.finalModOrder).toEqual(expectedResult.finalModOrder);
-      expect(mockLoadContext.incompatibilities).toBe(expectedResult.incompatibilityCount);
+      // Verify returned context was updated
+      expect(result.finalModOrder).toEqual(expectedResult.finalModOrder);
+      expect(result.incompatibilities).toBe(expectedResult.incompatibilityCount);
+      expect(result.manifests).toBe(expectedResult.loadedManifestsMap);
+      
+      // Verify the result is frozen
+      expect(() => {
+        result.newProperty = 'test';
+      }).toThrow(TypeError);
     });
 
     it('should handle successful processing with zero incompatibilities', async () => {
@@ -96,15 +103,16 @@ describe('ManifestPhase', () => {
       const expectedResult = {
         finalModOrder: ['core'],
         incompatibilityCount: 0,
+        loadedManifestsMap: new Map(),
       };
       mockProcessor.processManifests.mockResolvedValue(expectedResult);
 
       // Act
-      await manifestPhase.execute(mockLoadContext);
+      const result = await manifestPhase.execute(mockLoadContext);
 
       // Assert
-      expect(mockLoadContext.finalModOrder).toEqual(['core']);
-      expect(mockLoadContext.incompatibilities).toBe(0);
+      expect(result.finalModOrder).toEqual(['core']);
+      expect(result.incompatibilities).toBe(0);
     });
 
     it('should handle successful processing with multiple incompatibilities', async () => {
@@ -112,15 +120,16 @@ describe('ManifestPhase', () => {
       const expectedResult = {
         finalModOrder: ['core', 'modA'],
         incompatibilityCount: 5,
+        loadedManifestsMap: new Map(),
       };
       mockProcessor.processManifests.mockResolvedValue(expectedResult);
 
       // Act
-      await manifestPhase.execute(mockLoadContext);
+      const result = await manifestPhase.execute(mockLoadContext);
 
       // Assert
-      expect(mockLoadContext.finalModOrder).toEqual(['core', 'modA']);
-      expect(mockLoadContext.incompatibilities).toBe(5);
+      expect(result.finalModOrder).toEqual(['core', 'modA']);
+      expect(result.incompatibilities).toBe(5);
     });
 
     it('should throw ModsLoaderPhaseError when manifest processing fails', async () => {
@@ -198,16 +207,17 @@ describe('ManifestPhase', () => {
       const expectedResult = {
         finalModOrder: [],
         incompatibilityCount: 0,
+        loadedManifestsMap: new Map(),
       };
       mockProcessor.processManifests.mockResolvedValue(expectedResult);
 
       // Act
-      await manifestPhase.execute(emptyContext);
+      const result = await manifestPhase.execute(emptyContext);
 
       // Assert
       expect(mockProcessor.processManifests).toHaveBeenCalledWith([], 'test-world');
-      expect(emptyContext.finalModOrder).toEqual([]);
-      expect(emptyContext.incompatibilities).toBe(0);
+      expect(result.finalModOrder).toEqual([]);
+      expect(result.incompatibilities).toBe(0);
     });
 
     it('should handle single mod in requestedMods', async () => {
@@ -219,16 +229,17 @@ describe('ManifestPhase', () => {
       const expectedResult = {
         finalModOrder: ['core'],
         incompatibilityCount: 0,
+        loadedManifestsMap: new Map(),
       };
       mockProcessor.processManifests.mockResolvedValue(expectedResult);
 
       // Act
-      await manifestPhase.execute(singleModContext);
+      const result = await manifestPhase.execute(singleModContext);
 
       // Assert
       expect(mockProcessor.processManifests).toHaveBeenCalledWith(['core'], 'test-world');
-      expect(singleModContext.finalModOrder).toEqual(['core']);
-      expect(singleModContext.incompatibilities).toBe(0);
+      expect(result.finalModOrder).toEqual(['core']);
+      expect(result.incompatibilities).toBe(0);
     });
 
     it('should preserve existing context properties not modified by the phase', async () => {
@@ -241,17 +252,18 @@ describe('ManifestPhase', () => {
       const expectedResult = {
         finalModOrder: ['core'],
         incompatibilityCount: 1,
+        loadedManifestsMap: new Map(),
       };
       mockProcessor.processManifests.mockResolvedValue(expectedResult);
 
       // Act
-      await manifestPhase.execute(contextWithExtraProps);
+      const result = await manifestPhase.execute(contextWithExtraProps);
 
       // Assert
-      expect(contextWithExtraProps.someExtraProperty).toBe('should remain unchanged');
-      expect(contextWithExtraProps.totals).toEqual({ existing: 'data' });
-      expect(contextWithExtraProps.finalModOrder).toEqual(['core']);
-      expect(contextWithExtraProps.incompatibilities).toBe(1);
+      expect(result.someExtraProperty).toBe('should remain unchanged');
+      expect(result.totals).toEqual({ existing: 'data' });
+      expect(result.finalModOrder).toEqual(['core']);
+      expect(result.incompatibilities).toBe(1);
     });
   });
 }); 

@@ -29,11 +29,18 @@ export default class GameConfigPhase extends LoaderPhase {
     this.logger.info('— GameConfigPhase starting —');
     try {
       const requestedMods = await this.gameConfigLoader.loadConfig();
-      ctx.requestedMods = requestedMods;
+      
       this.logger.debug(
         `GameConfigPhase: Loaded ${requestedMods.length} mods from game configuration: [${requestedMods.join(', ')}]`
       );
-      return ctx;
+      
+      // Create new frozen context with modifications
+      const next = {
+        ...ctx,
+        requestedMods,
+      };
+      
+      return Object.freeze(next);
     } catch (e) {
       throw new ModsLoaderPhaseError(
         ModsLoaderErrorCode.GAME_CONFIG,

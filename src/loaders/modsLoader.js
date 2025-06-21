@@ -86,15 +86,15 @@ class ModsLoader extends AbstractLoader {
     this._cache.clear();
     try {
       this._logger.debug('ModsLoader: Data registry cleared.');
-      await this._session.run(context);
+      const finalContext = await this._session.run(context);
       this._logger.info(
         `ModsLoader: Load sequence for world '${worldName}' completed successfully.`
       );
       
       return /** @type {import('../interfaces/loadContracts.js').LoadReport} */ ({
-        finalModOrder: context.finalModOrder.slice(),
-        totals: Object.freeze({ ...context.totals }),
-        incompatibilities: context.incompatibilities,
+        finalModOrder: finalContext.finalModOrder.slice(),
+        totals: Object.freeze({ ...finalContext.totals }),
+        incompatibilities: finalContext.incompatibilities,
       });
     } catch (err) {
       if (err instanceof ModsLoaderPhaseError) {
