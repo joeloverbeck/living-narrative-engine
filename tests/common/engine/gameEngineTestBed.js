@@ -6,8 +6,7 @@
 /* global beforeEach, afterEach, describe */
 
 import { createTestEnvironment } from './gameEngine.test-environment.js';
-import FactoryTestBed from '../factoryTestBed.js';
-import { TokenOverrideMixin } from '../tokenOverrideMixin.js';
+import ContainerTestBed from '../containerTestBed.js';
 import { createStoppableMixin } from '../stoppableTestBedMixin.js';
 import { suppressConsoleError } from '../jestHelpers.js';
 import {
@@ -22,15 +21,11 @@ import {
  */
 const StoppableMixin = createStoppableMixin('engine');
 
-export class GameEngineTestBed extends StoppableMixin(
-  TokenOverrideMixin(FactoryTestBed)
-) {
+export class GameEngineTestBed extends StoppableMixin(ContainerTestBed) {
   /** @type {ReturnType<typeof createTestEnvironment>} */
   env;
   /** @type {import('../../../src/engine/gameEngine.js').default} */
   engine;
-  /** @type {{ resolve: import('jest').Mock }} */
-  container;
   /**
    * @type {{
    *   logger: ReturnType<import('../mockFactories').createMockLogger>,
@@ -49,18 +44,17 @@ export class GameEngineTestBed extends StoppableMixin(
    */
   constructor(overrides = {}) {
     const env = createTestEnvironment(overrides);
-    super({
-      logger: () => env.logger,
-      entityManager: () => env.entityManager,
-      turnManager: () => env.turnManager,
-      gamePersistenceService: () => env.gamePersistenceService,
-      playtimeTracker: () => env.playtimeTracker,
-      safeEventDispatcher: () => env.safeEventDispatcher,
-      initializationService: () => env.initializationService,
+    super(env.mockContainer, {
+      logger: env.logger,
+      entityManager: env.entityManager,
+      turnManager: env.turnManager,
+      gamePersistenceService: env.gamePersistenceService,
+      playtimeTracker: env.playtimeTracker,
+      safeEventDispatcher: env.safeEventDispatcher,
+      initializationService: env.initializationService,
     });
-    this.container = env.mockContainer;
-    this._initTokenOverrides(env.mockContainer);
-    const engine = env.createGameEngine();
+    // Use the already created gameEngine instance if available to avoid double instantiation
+    const engine = env.gameEngine || env.createGameEngine();
     this.env = env;
     this.engine = engine;
   }
@@ -132,6 +126,9 @@ export class GameEngineTestBed extends StoppableMixin(
    * @protected
    * @returns {Promise<void>} Promise resolving when engine cleanup is complete.
    */
+  async _afterCleanup() {
+    await super._afterCleanup();
+  }
 }
 
 /**
