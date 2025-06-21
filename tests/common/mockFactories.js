@@ -29,10 +29,111 @@ export function createSimpleMock(methodNames, defaults = {}) {
   return mock;
 }
 
-// ── Core Service Mocks ────────────────────────────────────────────────────
+/**
+ * Generates simple mock factory functions based on a specification map.
+ *
+ * @param {Record<string, string[] | {methods: string[], defaults?: object}>} specMap
+ *  Mapping of factory names to method arrays or spec objects.
+ * @returns {Record<string, () => object>} Generated factory functions.
+ */
+function generateFactories(specMap) {
+  const factories = {};
+  for (const [name, spec] of Object.entries(specMap)) {
+    const { methods, defaults = {} } = Array.isArray(spec)
+      ? { methods: spec, defaults: {} }
+      : spec;
+    factories[name] = () => createSimpleMock(methods, defaults);
+  }
+  return factories;
+}
 
-export const createMockLogger = () =>
-  createSimpleMock(['info', 'warn', 'error', 'debug']);
+// Definitions for factories that only wrap createSimpleMock
+const simpleFactories = {
+  createMockLogger: ['info', 'warn', 'error', 'debug'],
+  createMockTurnManager: ['start', 'stop', 'nextTurn'],
+  createMockTurnOrderService: [
+    'startNewRound',
+    'getNextEntity',
+    'peekNextEntity',
+    'addEntity',
+    'removeEntity',
+    'isEmpty',
+    'getCurrentOrder',
+    'clearCurrentRound',
+  ],
+  createMockTurnHandlerResolver: ['resolveHandler'],
+  createMockTurnHandler: ['startTurn', 'destroy'],
+  createMockGamePersistenceService: [
+    'saveGame',
+    'loadAndRestoreGame',
+    'isSavingAllowed',
+  ],
+  createMockPlaytimeTracker: {
+    methods: [
+      'reset',
+      'startSession',
+      'endSessionAndAccumulate',
+      'getTotalPlaytime',
+      'setAccumulatedPlaytime',
+    ],
+    defaults: { getTotalPlaytime: jest.fn().mockReturnValue(0) },
+  },
+  createMockInitializationService: ['runInitializationSequence'],
+  createMockLLMAdapter: ['getAIDecision', 'getCurrentActiveLlmId'],
+  createMockAIGameStateProvider: ['buildGameState'],
+  createMockAIPromptContentProvider: ['getPromptData'],
+  createMockPromptBuilder: ['build'],
+  createMockSafeEventDispatcher: ['dispatch'],
+  createMockValidatedEventDispatcher: {
+    methods: ['dispatch'],
+    defaults: { dispatch: jest.fn().mockResolvedValue(undefined) },
+  },
+  createMockSchemaLoader: {
+    methods: ['loadAndCompileAllSchemas'],
+    defaults: {
+      loadAndCompileAllSchemas: jest.fn().mockResolvedValue(undefined),
+    },
+  },
+  createMockGameConfigLoader: {
+    methods: ['loadConfig'],
+    defaults: { loadConfig: jest.fn().mockResolvedValue([]) },
+  },
+  createMockModManifestLoader: {
+    methods: ['loadRequestedManifests'],
+    defaults: {
+      loadRequestedManifests: jest.fn().mockResolvedValue(new Map()),
+    },
+  },
+  createMockWorldLoader: {
+    methods: ['loadWorlds'],
+    defaults: { loadWorlds: jest.fn().mockResolvedValue(undefined) },
+  },
+  createMockModDependencyValidator: ['validate'],
+};
+
+export const {
+  createMockLogger,
+  createMockTurnManager,
+  createMockTurnOrderService,
+  createMockTurnHandlerResolver,
+  createMockTurnHandler,
+  createMockGamePersistenceService,
+  createMockPlaytimeTracker,
+  createMockInitializationService,
+  createMockLLMAdapter,
+  createMockAIGameStateProvider,
+  createMockAIPromptContentProvider,
+  createMockPromptBuilder,
+  createMockSafeEventDispatcher,
+  createMockValidatedEventDispatcher,
+  createMockSchemaLoader,
+  createMockGameConfigLoader,
+  createMockModManifestLoader,
+  createMockWorldLoader,
+  createMockModDependencyValidator,
+} = generateFactories(simpleFactories);
+
+// ── Core Service Mocks ────────────────────────────────────────────────────
 
 export const createMockSchemaValidator = (
   defaultValidationResult = { isValid: true }
@@ -324,44 +425,7 @@ export const createMockContentLoader = (
 /**
  * SchemaLoader stub.
  */
-export const createMockSchemaLoader = () =>
-  createSimpleMock(['loadAndCompileAllSchemas'], {
-    loadAndCompileAllSchemas: jest.fn().mockResolvedValue(undefined),
-  });
-
-/**
- * GameConfigLoader stub.
- */
-export const createMockGameConfigLoader = () =>
-  createSimpleMock(['loadConfig'], {
-    loadConfig: jest.fn().mockResolvedValue([]),
-  });
-
-/**
- * ModManifestLoader stub.
- */
-export const createMockModManifestLoader = () =>
-  createSimpleMock(['loadRequestedManifests'], {
-    loadRequestedManifests: jest.fn().mockResolvedValue(new Map()),
-  });
-
-/**
- * **NEW**: WorldLoader stub – satisfies ModsLoader’s dependency check.
- */
-export const createMockWorldLoader = () =>
-  createSimpleMock(['loadWorlds'], {
-    loadWorlds: jest.fn().mockResolvedValue(undefined),
-  });
-
 // ── Modding Helper Mocks ──────────────────────────────────────────────────
-
-/**
- * Creates a mock for the mod dependency validator.
- *
- * @returns {{ validate: jest.Mock }}
- */
-export const createMockModDependencyValidator = () =>
-  createSimpleMock(['validate']);
 
 /**
  * Creates a mock for the mod version validator that satisfies both
