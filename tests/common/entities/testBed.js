@@ -163,14 +163,6 @@ export class TestBed extends BaseTestBed {
   }
 
   /**
-   * Clears all mocks and the entity manager's internal state.
-   * This should be called in an `afterEach` block to ensure test isolation.
-   */
-  async cleanup() {
-    await super.cleanup();
-  }
-
-  /**
    * Clears mock implementations and resets entity manager state after base cleanup.
    *
    * @protected

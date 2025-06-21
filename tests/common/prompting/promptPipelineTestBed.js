@@ -94,13 +94,6 @@ export class AIPromptPipelineTestBed extends BaseTestBed {
   }
 
   /**
-   * Clears all jest mocks used by this test bed.
-   */
-  async cleanup() {
-    await super.cleanup();
-  }
-
-  /**
    * Sets up mock resolved values for a successful pipeline run.
    *
    * @param {object} [options] - Configuration options.

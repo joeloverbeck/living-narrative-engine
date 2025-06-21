@@ -163,15 +163,6 @@ export class TurnManagerTestBed extends BaseTestBed {
   }
 
   /**
-   * Clears all mocks and stops the TurnManager.
-   *
-   * @returns {Promise<void>}
-   */
-  async cleanup() {
-    await super.cleanup();
-  }
-
-  /**
    * Stops the TurnManager after base cleanup.
    *
    * @protected
