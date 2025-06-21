@@ -42,4 +42,4 @@ export default class TurnCycle {
   async clear() {
     await this.#service.clearCurrentRound();
   }
-} 
+}

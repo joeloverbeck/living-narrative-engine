@@ -228,10 +228,8 @@ describeEntityManagerSuite(
         }
       );
 
-      runInvalidIdPairTests(
-        getBed,
-        (em, instanceId, componentTypeId) =>
-          em.addComponent(instanceId, componentTypeId, {})
+      runInvalidIdPairTests(getBed, (em, instanceId, componentTypeId) =>
+        em.addComponent(instanceId, componentTypeId, {})
       );
 
       it('should throw an error if the internal entity update fails', () => {
@@ -250,7 +248,9 @@ describeEntityManagerSuite(
           .mockReturnValue(false);
 
         // Act & Assert
-        expect(() => entityManager.addComponent(PRIMARY, 'any:comp', {})).toThrow(
+        expect(() =>
+          entityManager.addComponent(PRIMARY, 'any:comp', {})
+        ).toThrow(
           "Failed to add component 'any:comp' to entity 'test-instance-01'. Internal entity update failed."
         );
         expect(mocks.logger.warn).toHaveBeenCalledWith(
@@ -286,10 +286,7 @@ describeEntityManagerSuite(
         ).toBe(true);
 
         // Act
-        entityManager.removeComponent(
-          PRIMARY,
-          NAME_COMPONENT_ID
-        );
+        entityManager.removeComponent(PRIMARY, NAME_COMPONENT_ID);
 
         // Assert
         expect(
@@ -335,7 +332,9 @@ describeEntityManagerSuite(
         getBed().resetDispatchMock();
 
         // Act & Assert
-        expect(() => entityManager.removeComponent(PRIMARY, NAME_COMPONENT_ID)).toThrow(
+        expect(() =>
+          entityManager.removeComponent(PRIMARY, NAME_COMPONENT_ID)
+        ).toThrow(
           "Component 'core:name' not found as an override on entity 'test-instance-01'. Nothing to remove at instance level."
         );
         expect(mocks.eventDispatcher.dispatch).not.toHaveBeenCalled();
@@ -353,10 +352,8 @@ describeEntityManagerSuite(
         ).toThrow(new EntityNotFoundError(GHOST));
       });
 
-      runInvalidIdPairTests(
-        getBed,
-        (em, instanceId, componentTypeId) =>
-          em.removeComponent(instanceId, componentTypeId)
+      runInvalidIdPairTests(getBed, (em, instanceId, componentTypeId) =>
+        em.removeComponent(instanceId, componentTypeId)
       );
     });
 
@@ -422,10 +419,8 @@ describeEntityManagerSuite(
         expect(data).toBeUndefined();
       });
 
-      runInvalidIdPairTests(
-        getBed,
-        (em, instanceId, componentTypeId) =>
-          em.getComponentData(instanceId, componentTypeId)
+      runInvalidIdPairTests(getBed, (em, instanceId, componentTypeId) =>
+        em.getComponentData(instanceId, componentTypeId)
       );
     });
 
@@ -488,10 +483,8 @@ describeEntityManagerSuite(
         expect(result).toBe(false);
       });
 
-      runInvalidIdPairTests(
-        getBed,
-        (em, instanceId, componentTypeId) =>
-          em.hasComponent(instanceId, componentTypeId)
+      runInvalidIdPairTests(getBed, (em, instanceId, componentTypeId) =>
+        em.hasComponent(instanceId, componentTypeId)
       );
 
       describe('with checkOverrideOnly flag', () => {
@@ -503,7 +496,11 @@ describeEntityManagerSuite(
           getBed().createEntity('basic', { instanceId: PRIMARY });
 
           // Act
-          const result = entityManager.hasComponent(PRIMARY, NAME_COMPONENT_ID, true);
+          const result = entityManager.hasComponent(
+            PRIMARY,
+            NAME_COMPONENT_ID,
+            true
+          );
 
           // Assert
           expect(result).toBe(false);
@@ -515,10 +512,16 @@ describeEntityManagerSuite(
           const { NAME_COMPONENT_ID } = TestData.ComponentIDs;
           const { PRIMARY } = TestData.InstanceIDs;
           getBed().createEntity('basic', { instanceId: PRIMARY });
-          entityManager.addComponent(PRIMARY, NAME_COMPONENT_ID, { name: 'Override' });
+          entityManager.addComponent(PRIMARY, NAME_COMPONENT_ID, {
+            name: 'Override',
+          });
 
           // Act
-          const result = entityManager.hasComponent(PRIMARY, NAME_COMPONENT_ID, true);
+          const result = entityManager.hasComponent(
+            PRIMARY,
+            NAME_COMPONENT_ID,
+            true
+          );
 
           // Assert
           expect(result).toBe(true);
@@ -534,7 +537,10 @@ describeEntityManagerSuite(
           getBed().createEntity('basic', { instanceId: PRIMARY });
 
           // Act
-          const result = entityManager.hasComponentOverride(PRIMARY, NAME_COMPONENT_ID);
+          const result = entityManager.hasComponentOverride(
+            PRIMARY,
+            NAME_COMPONENT_ID
+          );
 
           // Assert
           expect(result).toBe(false);
@@ -546,10 +552,15 @@ describeEntityManagerSuite(
           const { NAME_COMPONENT_ID } = TestData.ComponentIDs;
           const { PRIMARY } = TestData.InstanceIDs;
           getBed().createEntity('basic', { instanceId: PRIMARY });
-          entityManager.addComponent(PRIMARY, NAME_COMPONENT_ID, { name: 'Override' });
+          entityManager.addComponent(PRIMARY, NAME_COMPONENT_ID, {
+            name: 'Override',
+          });
 
           // Act
-          const result = entityManager.hasComponentOverride(PRIMARY, NAME_COMPONENT_ID);
+          const result = entityManager.hasComponentOverride(
+            PRIMARY,
+            NAME_COMPONENT_ID
+          );
 
           // Assert
           expect(result).toBe(true);
@@ -561,16 +572,17 @@ describeEntityManagerSuite(
           const { GHOST } = TestData.InstanceIDs;
 
           // Act
-          const result = entityManager.hasComponentOverride(GHOST, 'any:component');
+          const result = entityManager.hasComponentOverride(
+            GHOST,
+            'any:component'
+          );
 
           // Assert
           expect(result).toBe(false);
         });
 
-        runInvalidIdPairTests(
-          getBed,
-          (em, instanceId, componentTypeId) =>
-            em.hasComponentOverride(instanceId, componentTypeId)
+        runInvalidIdPairTests(getBed, (em, instanceId, componentTypeId) =>
+          em.hasComponentOverride(instanceId, componentTypeId)
         );
       });
     });

@@ -306,8 +306,12 @@ describe('RuleLoader Integration (Rule Override via loadItemsForMod)', () => {
 
     // Let's assume the test wants to verify that the item loaded by OverrideMod is present
     // and the item loaded by BaseMod is ALSO present, because their full keys are different.
-    expect(realRegistry.get(RULE_TYPE_NAME, finalBaseRuleId)).toEqual(expectedStoredBaseData);
-    expect(realRegistry.get(RULE_TYPE_NAME, finalOverrideRuleId)).toEqual(expectedStoredOverrideData);
+    expect(realRegistry.get(RULE_TYPE_NAME, finalBaseRuleId)).toEqual(
+      expectedStoredBaseData
+    );
+    expect(realRegistry.get(RULE_TYPE_NAME, finalOverrideRuleId)).toEqual(
+      expectedStoredOverrideData
+    );
     expect(mockLogger.warn).not.toHaveBeenCalledWith(
       expect.stringContaining('overwrote an existing entry')
     );

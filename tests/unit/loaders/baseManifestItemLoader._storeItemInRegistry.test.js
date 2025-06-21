@@ -98,7 +98,11 @@ class TestableLoader extends BaseManifestItemLoader {
     _fetchedData,
     _typeName
   ) {
-    return { id: _fetchedData?.id || 'dummyId', didOverride: false, qualifiedId: `${_modId}:${_fetchedData?.id || 'dummyId'}` };
+    return {
+      id: _fetchedData?.id || 'dummyId',
+      didOverride: false,
+      qualifiedId: `${_modId}:${_fetchedData?.id || 'dummyId'}`,
+    };
   }
 
   getLoggerClassName() {
@@ -218,7 +222,7 @@ describe('BaseManifestItemLoader._storeItemInRegistry', () => {
       expect(mockLogger.warn).toHaveBeenCalledWith(
         `${loaderClassName} [${TEST_MOD_ID}]: Item '${finalRegistryKey}' (Base: '${baseItemId}') in category '${TEST_CATEGORY}' from file '${TEST_FILENAME}' overwrote an existing entry.`
       );
-       // Debug for "Storing item..."
+      // Debug for "Storing item..."
       expect(mockLogger.debug).toHaveBeenCalledTimes(1);
       expect(mockLogger.debug).toHaveBeenCalledWith(
         `${loaderClassName} [${TEST_MOD_ID}]: Storing item in registry. Category: '${TEST_CATEGORY}', Qualified ID: '${finalRegistryKey}', Base ID: '${baseItemId}', Filename: '${TEST_FILENAME}'`
@@ -264,8 +268,11 @@ describe('BaseManifestItemLoader._storeItemInRegistry', () => {
 
     it('should correctly use baseItemId for "id" field even if original data had a conflicting "id"', () => {
       mockRegistry.store.mockReturnValue(false); // No override
-      const dataWithConflictingId = { id: 'originalConflictingId', description: 'Test', extra: true };
-
+      const dataWithConflictingId = {
+        id: 'originalConflictingId',
+        description: 'Test',
+        extra: true,
+      };
 
       const result = testLoader.publicStoreItemInRegistry(
         TEST_CATEGORY,
@@ -306,10 +313,12 @@ describe('BaseManifestItemLoader._storeItemInRegistry', () => {
       );
 
       expect(mockLogger.debug).toHaveBeenCalledTimes(2);
-      expect(mockLogger.debug).toHaveBeenNthCalledWith(1,
+      expect(mockLogger.debug).toHaveBeenNthCalledWith(
+        1,
         `${loaderClassName} [${TEST_MOD_ID}]: Storing item in registry. Category: '${TEST_CATEGORY}', Qualified ID: '${finalRegistryKey}', Base ID: '${baseItemId}', Filename: '${TEST_FILENAME}'`
       );
-      expect(mockLogger.debug).toHaveBeenNthCalledWith(2,
+      expect(mockLogger.debug).toHaveBeenNthCalledWith(
+        2,
         `${loaderClassName} [${TEST_MOD_ID}]: Item '${finalRegistryKey}' (Base: '${baseItemId}') stored successfully in category '${TEST_CATEGORY}'.`
       );
       expect(mockLogger.warn).not.toHaveBeenCalled();
@@ -348,22 +357,99 @@ describe('BaseManifestItemLoader._storeItemInRegistry', () => {
     const validFilename = 'file.json';
 
     it.each([
-      [null, TEST_MOD_ID, validBaseItemId, validData, validFilename, 'Category must be a non-empty string'],
-      ['', TEST_MOD_ID, validBaseItemId, validData, validFilename, 'Category must be a non-empty string'],
-      [TEST_CATEGORY, null, validBaseItemId, validData, validFilename, 'ModId must be a non-empty string'],
-      [TEST_CATEGORY, '', validBaseItemId, validData, validFilename, 'ModId must be a non-empty string'],
-      [TEST_CATEGORY, TEST_MOD_ID, null, validData, validFilename, 'BaseItemId must be a non-empty string'],
-      [TEST_CATEGORY, TEST_MOD_ID, '', validData, validFilename, 'BaseItemId must be a non-empty string'],
-      [TEST_CATEGORY, TEST_MOD_ID, validBaseItemId, null, validFilename, 'Data for \'testMod:validItem\' (category: items) must be an object'],
-      [TEST_CATEGORY, TEST_MOD_ID, validBaseItemId, 'not-an-object', validFilename, 'Data for \'testMod:validItem\' (category: items) must be an object'],
-    ])('should log error and return error flag for invalid arguments: category="%s", modId="%s", baseItemId="%s", dataToStore="%s"', 
-       (category, modId, baseItemId, dataToStore, filename, expectedLogPartial) => {
-      const result = testLoader.publicStoreItemInRegistry(category, modId, baseItemId, dataToStore, filename);
-      
-      expect(mockLogger.error).toHaveBeenCalledTimes(1);
-      expect(mockLogger.error).toHaveBeenCalledWith(expect.stringContaining(expectedLogPartial));
-      expect(result).toEqual({ qualifiedId: null, didOverride: false, error: true });
-      expect(mockRegistry.store).not.toHaveBeenCalled(); // Should not attempt to store
-    });
+      [
+        null,
+        TEST_MOD_ID,
+        validBaseItemId,
+        validData,
+        validFilename,
+        'Category must be a non-empty string',
+      ],
+      [
+        '',
+        TEST_MOD_ID,
+        validBaseItemId,
+        validData,
+        validFilename,
+        'Category must be a non-empty string',
+      ],
+      [
+        TEST_CATEGORY,
+        null,
+        validBaseItemId,
+        validData,
+        validFilename,
+        'ModId must be a non-empty string',
+      ],
+      [
+        TEST_CATEGORY,
+        '',
+        validBaseItemId,
+        validData,
+        validFilename,
+        'ModId must be a non-empty string',
+      ],
+      [
+        TEST_CATEGORY,
+        TEST_MOD_ID,
+        null,
+        validData,
+        validFilename,
+        'BaseItemId must be a non-empty string',
+      ],
+      [
+        TEST_CATEGORY,
+        TEST_MOD_ID,
+        '',
+        validData,
+        validFilename,
+        'BaseItemId must be a non-empty string',
+      ],
+      [
+        TEST_CATEGORY,
+        TEST_MOD_ID,
+        validBaseItemId,
+        null,
+        validFilename,
+        "Data for 'testMod:validItem' (category: items) must be an object",
+      ],
+      [
+        TEST_CATEGORY,
+        TEST_MOD_ID,
+        validBaseItemId,
+        'not-an-object',
+        validFilename,
+        "Data for 'testMod:validItem' (category: items) must be an object",
+      ],
+    ])(
+      'should log error and return error flag for invalid arguments: category="%s", modId="%s", baseItemId="%s", dataToStore="%s"',
+      (
+        category,
+        modId,
+        baseItemId,
+        dataToStore,
+        filename,
+        expectedLogPartial
+      ) => {
+        const result = testLoader.publicStoreItemInRegistry(
+          category,
+          modId,
+          baseItemId,
+          dataToStore,
+          filename
+        );
+
+        expect(mockLogger.error).toHaveBeenCalledTimes(1);
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          expect.stringContaining(expectedLogPartial)
+        );
+        expect(result).toEqual({
+          qualifiedId: null,
+          didOverride: false,
+          error: true,
+        });
+        expect(mockRegistry.store).not.toHaveBeenCalled(); // Should not attempt to store
+      }
+    );
   });
 });

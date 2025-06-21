@@ -83,8 +83,8 @@ export function registerInfrastructure(container) {
     tokens.IGameDataRepository,
     (c) =>
       new GameDataRepository(
-        /** @type {IDataRegistry} */(c.resolve(tokens.IDataRegistry)),
-        /** @type {ILogger} */(c.resolve(tokens.ILogger))
+        /** @type {IDataRegistry} */ (c.resolve(tokens.IDataRegistry)),
+        /** @type {ILogger} */ (c.resolve(tokens.ILogger))
       ),
     { lifecycle: 'singleton' }
   );

@@ -118,7 +118,6 @@ describe('ModLoadOrderResolver – input validation', () => {
   });
 });
 
-
 /* ==================================================================== */
 /* Core resolution logic tests                                          */
 /* ==================================================================== */
@@ -203,7 +202,6 @@ describe('ModLoadOrderResolver – resolution logic', () => {
     expect(order).toEqual([CORE_MOD_ID, 'modB']);
   });
 });
-
 
 /* ==================================================================== */
 /* Adjustment logging tests                                             */

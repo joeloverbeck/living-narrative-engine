@@ -146,6 +146,8 @@ describeTurnManagerSuite(
     });
 
     test('Entity manager error: logs error, stops manager', async () => {
+      const entityError = new Error('Entity not found');
+
       testBed.mocks.turnOrderService.isEmpty.mockResolvedValue(false);
       testBed.mocks.turnOrderService.getNextEntity.mockResolvedValue(null);
 

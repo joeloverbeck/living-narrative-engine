@@ -8,7 +8,8 @@ import { BaseManifestItemLoader } from '../../../src/loaders/baseManifestItemLoa
 const createMockConfiguration = (overrides = {}) => ({
   getModsBasePath: jest.fn().mockReturnValue('./data/mods'),
   getContentTypeSchemaId: jest.fn((typeName) => {
-    if (typeName === 'entityDefinitions') return 'http://example.com/schemas/entity-definition.schema.json';
+    if (typeName === 'entityDefinitions')
+      return 'http://example.com/schemas/entity-definition.schema.json';
     return `http://example.com/schemas/${typeName}.schema.json`;
   }),
   getSchemaBasePath: jest.fn().mockReturnValue('schemas'),
@@ -19,16 +20,33 @@ const createMockConfiguration = (overrides = {}) => ({
   getModManifestFilename: jest.fn().mockReturnValue('mod.manifest.json'),
   getContentBasePath: jest.fn((typeName) => `./data/${typeName}`),
   getRuleBasePath: jest.fn().mockReturnValue('rules'),
-  getRuleSchemaId: jest.fn().mockReturnValue('http://example.com/schemas/rule.schema.json'),
+  getRuleSchemaId: jest
+    .fn()
+    .mockReturnValue('http://example.com/schemas/rule.schema.json'),
   ...overrides,
 });
 const createMockPathResolver = (overrides = {}) => ({
-  resolveModContentPath: jest.fn().mockImplementation((modId, typeName, filename) => `./data/mods/${modId}/${typeName}/${filename}`),
-  resolveContentPath: jest.fn().mockImplementation((typeName, filename) => `./data/${typeName}/${filename}`),
-  resolveSchemaPath: jest.fn().mockImplementation((filename) => `./data/schemas/${filename}`),
-  resolveModManifestPath: jest.fn().mockImplementation((modId) => `./data/mods/${modId}/mod.manifest.json`),
+  resolveModContentPath: jest
+    .fn()
+    .mockImplementation(
+      (modId, typeName, filename) =>
+        `./data/mods/${modId}/${typeName}/${filename}`
+    ),
+  resolveContentPath: jest
+    .fn()
+    .mockImplementation(
+      (typeName, filename) => `./data/${typeName}/${filename}`
+    ),
+  resolveSchemaPath: jest
+    .fn()
+    .mockImplementation((filename) => `./data/schemas/${filename}`),
+  resolveModManifestPath: jest
+    .fn()
+    .mockImplementation((modId) => `./data/mods/${modId}/mod.manifest.json`),
   resolveGameConfigPath: jest.fn().mockImplementation(() => './data/game.json'),
-  resolveRulePath: jest.fn().mockImplementation((filename) => `./data/system-rules/${filename}`),
+  resolveRulePath: jest
+    .fn()
+    .mockImplementation((filename) => `./data/system-rules/${filename}`),
   ...overrides,
 });
 const createMockDataFetcher = (overrides = {}) => ({
@@ -37,7 +55,9 @@ const createMockDataFetcher = (overrides = {}) => ({
 });
 const createMockSchemaValidator = (overrides = {}) => ({
   validate: jest.fn().mockReturnValue({ isValid: true, errors: null }),
-  getValidator: jest.fn().mockReturnValue(() => ({ isValid: true, errors: null })),
+  getValidator: jest
+    .fn()
+    .mockReturnValue(() => ({ isValid: true, errors: null })),
   addSchema: jest.fn().mockResolvedValue(undefined),
   removeSchema: jest.fn().mockReturnValue(true),
   isSchemaLoaded: jest.fn().mockReturnValue(true),
@@ -59,7 +79,8 @@ const createMockLogger = (overrides = {}) => ({
 });
 
 // --- Constants ---
-const ENTITY_DEFINITION_SCHEMA_ID = 'http://example.com/schemas/entity-definition.schema.json';
+const ENTITY_DEFINITION_SCHEMA_ID =
+  'http://example.com/schemas/entity-definition.schema.json';
 const TEST_MOD_ID = 'test-entity-mod';
 const GENERIC_CONTENT_KEY = 'entityDefinitions';
 const GENERIC_CONTENT_DIR = 'entityDefinitions';
@@ -68,7 +89,13 @@ const COMPONENT_POSITION_ID = 'core:position';
 const COMPONENT_HEALTH_ID = 'core:health';
 
 // --- Shared Mocks Instance for Tests ---
-let mockConfig, mockResolver, mockFetcher, mockValidator, mockRegistry, mockLogger, entityLoader;
+let mockConfig,
+  mockResolver,
+  mockFetcher,
+  mockValidator,
+  mockRegistry,
+  mockLogger,
+  entityLoader;
 
 beforeEach(() => {
   mockConfig = createMockConfiguration();
@@ -78,7 +105,14 @@ beforeEach(() => {
   mockRegistry = createMockDataRegistry();
   mockLogger = createMockLogger();
 
-  entityLoader = new EntityDefinitionLoader(mockConfig, mockResolver, mockFetcher, mockValidator, mockRegistry, mockLogger);
+  entityLoader = new EntityDefinitionLoader(
+    mockConfig,
+    mockResolver,
+    mockFetcher,
+    mockValidator,
+    mockRegistry,
+    mockLogger
+  );
   jest.clearAllMocks();
 
   mockConfig.getContentTypeSchemaId.mockImplementation((typeName) => {
@@ -122,15 +156,18 @@ describe('EntityLoader', () => {
         );
       });
       entityLoader._storeItemInRegistry.mockImplementation((...args) =>
-        BaseManifestItemLoader.prototype._storeItemInRegistry.apply(entityLoader, args)
+        BaseManifestItemLoader.prototype._storeItemInRegistry.apply(
+          entityLoader,
+          args
+        )
       );
     });
 
     // This test is correct and can be skipped
-    it('Success Path (No Components): should extract ID, skip component validation, delegate storage under "entities", log, and return result object', async () => { });
+    it('Success Path (No Components): should extract ID, skip component validation, delegate storage under "entities", log, and return result object', async () => {});
 
     // This test is correct and can be skipped
-    it('Success Path (With Valid Components): should extract ID, validate components, delegate storage under "entities", log, and return result object', async () => { });
+    it('Success Path (With Valid Components): should extract ID, validate components, delegate storage under "entities", log, and return result object', async () => {});
 
     it('Failure: Missing `id` field', async () => {
       const fetchedData = { name: 'Entity without ID' };

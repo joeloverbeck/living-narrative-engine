@@ -1,6 +1,9 @@
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import SchemaPhase from '../../../../src/loaders/phases/SchemaPhase.js';
-import { ModsLoaderPhaseError, ModsLoaderErrorCode } from '../../../../src/errors/modsLoaderPhaseError.js';
+import {
+  ModsLoaderPhaseError,
+  ModsLoaderErrorCode,
+} from '../../../../src/errors/modsLoaderPhaseError.js';
 import ESSENTIAL_SCHEMA_TYPES from '../../../../src/constants/essentialSchemas.js';
 
 describe('SchemaPhase', () => {
@@ -24,7 +27,9 @@ describe('SchemaPhase', () => {
     };
 
     mockConfig = {
-      getContentTypeSchemaId: jest.fn().mockImplementation((type) => `schema:${type}`),
+      getContentTypeSchemaId: jest
+        .fn()
+        .mockImplementation((type) => `schema:${type}`),
     };
 
     mockValidator = {
@@ -75,24 +80,36 @@ describe('SchemaPhase', () => {
 
       // Assert
       expect(mockLogger.info).toHaveBeenCalledWith('— SchemaPhase starting —');
-      expect(mockSchemaLoader.loadAndCompileAllSchemas).toHaveBeenCalledTimes(1);
-      expect(mockValidator.isSchemaLoaded).toHaveBeenCalledTimes(ESSENTIAL_SCHEMA_TYPES.length);
-      expect(mockLogger.debug).toHaveBeenCalledWith('SchemaPhase: All schemas loaded and essential schemas verified.');
+      expect(mockSchemaLoader.loadAndCompileAllSchemas).toHaveBeenCalledTimes(
+        1
+      );
+      expect(mockValidator.isSchemaLoaded).toHaveBeenCalledTimes(
+        ESSENTIAL_SCHEMA_TYPES.length
+      );
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'SchemaPhase: All schemas loaded and essential schemas verified.'
+      );
 
       // Verify each essential schema type was checked
       ESSENTIAL_SCHEMA_TYPES.forEach((type) => {
         expect(mockConfig.getContentTypeSchemaId).toHaveBeenCalledWith(type);
-        expect(mockValidator.isSchemaLoaded).toHaveBeenCalledWith(`schema:${type}`);
+        expect(mockValidator.isSchemaLoaded).toHaveBeenCalledWith(
+          `schema:${type}`
+        );
       });
     });
 
     it('should throw ModsLoaderPhaseError when schema loading fails', async () => {
       // Arrange
       const schemaLoadError = new Error('Schema loading failed');
-      mockSchemaLoader.loadAndCompileAllSchemas.mockRejectedValue(schemaLoadError);
+      mockSchemaLoader.loadAndCompileAllSchemas.mockRejectedValue(
+        schemaLoadError
+      );
 
       // Act & Assert
-      await expect(schemaPhase.execute(mockLoadContext)).rejects.toThrow(ModsLoaderPhaseError);
+      await expect(schemaPhase.execute(mockLoadContext)).rejects.toThrow(
+        ModsLoaderPhaseError
+      );
 
       try {
         await schemaPhase.execute(mockLoadContext);
@@ -110,7 +127,9 @@ describe('SchemaPhase', () => {
       mockConfig.getContentTypeSchemaId.mockReturnValue(null);
 
       // Act & Assert
-      await expect(schemaPhase.execute(mockLoadContext)).rejects.toThrow(ModsLoaderPhaseError);
+      await expect(schemaPhase.execute(mockLoadContext)).rejects.toThrow(
+        ModsLoaderPhaseError
+      );
 
       try {
         await schemaPhase.execute(mockLoadContext);
@@ -127,14 +146,18 @@ describe('SchemaPhase', () => {
       mockValidator.isSchemaLoaded.mockReturnValue(false);
 
       // Act & Assert
-      await expect(schemaPhase.execute(mockLoadContext)).rejects.toThrow(ModsLoaderPhaseError);
+      await expect(schemaPhase.execute(mockLoadContext)).rejects.toThrow(
+        ModsLoaderPhaseError
+      );
 
       try {
         await schemaPhase.execute(mockLoadContext);
       } catch (error) {
         expect(error).toBeInstanceOf(ModsLoaderPhaseError);
         expect(error.code).toBe(ModsLoaderErrorCode.SCHEMA);
-        expect(error.message).toBe("Essential schema 'game' missing (schema:game).");
+        expect(error.message).toBe(
+          "Essential schema 'game' missing (schema:game)."
+        );
         expect(error.phase).toBe('SchemaPhase');
       }
     });
@@ -153,4 +176,4 @@ describe('SchemaPhase', () => {
       }
     });
   });
-}); 
+});

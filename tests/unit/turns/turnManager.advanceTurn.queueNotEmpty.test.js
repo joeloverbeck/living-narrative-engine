@@ -21,9 +21,11 @@ class MockRoundManager {
     this.hadSuccess = true;
   }
   resetFlags() {}
-  startRound() { 
+  startRound() {
     // Simulate the real RoundManager behavior - throw error when no actors found
-    throw new Error('Cannot start a new round: No active entities with an Actor component found.');
+    throw new Error(
+      'Cannot start a new round: No active entities with an Actor component found.'
+    );
   }
   endTurn() {}
 }
@@ -102,17 +104,17 @@ describeTurnManagerSuite(
         testBed.mocks.turnOrderService.getNextEntity
       ).toHaveBeenCalledTimes(1);
 
-    // Verify state update and logging
-    expect(testBed.turnManager.getCurrentActor()).toBe(nextActor);
-    expect(testBed.mocks.logger.debug).toHaveBeenCalledWith(
-      '▶️  TurnManager.advanceTurn() initiating...'
-    );
-    expect(testBed.mocks.logger.debug).toHaveBeenCalledWith(
-      'Queue not empty, processing next entity.'
-    );
-    expect(testBed.mocks.logger.debug).toHaveBeenCalledWith(
-      `Resolving turn handler for entity ${nextActor.id}...`
-    );
+      // Verify state update and logging
+      expect(testBed.turnManager.getCurrentActor()).toBe(nextActor);
+      expect(testBed.mocks.logger.debug).toHaveBeenCalledWith(
+        '▶️  TurnManager.advanceTurn() initiating...'
+      );
+      expect(testBed.mocks.logger.debug).toHaveBeenCalledWith(
+        'Queue not empty, processing next entity.'
+      );
+      expect(testBed.mocks.logger.debug).toHaveBeenCalledWith(
+        `Resolving turn handler for entity ${nextActor.id}...`
+      );
 
       // Check core:turn_started dispatch
       expect(testBed.mocks.dispatcher.dispatch).toHaveBeenCalledWith(
@@ -150,35 +152,40 @@ describeTurnManagerSuite(
       expect(stopSpy).not.toHaveBeenCalled();
     });
 
-  test('getNextEntity returns null: logs error, stops manager', async () => {
-    // Arrange
-    const mockActor = createMockEntity('actor1', { isActor: true, isPlayer: false });
-    testBed.setActiveEntities(mockActor); // Set up entities so RoundManager can start a new round
-    testBed.mocks.turnOrderService.isEmpty.mockResolvedValue(false);
-    testBed.mocks.turnOrderService.getNextEntity.mockResolvedValue(null);
+    test('getNextEntity returns null: logs error, stops manager', async () => {
+      // Arrange
+      const mockActor = createMockEntity('actor1', {
+        isActor: true,
+        isPlayer: false,
+      });
+      testBed.setActiveEntities(mockActor); // Set up entities so RoundManager can start a new round
+      testBed.mocks.turnOrderService.isEmpty.mockResolvedValue(false);
+      testBed.mocks.turnOrderService.getNextEntity.mockResolvedValue(null);
 
       // Act
       await testBed.turnManager.advanceTurn();
 
-    // Assert
-    expect(testBed.mocks.turnOrderService.isEmpty).toHaveBeenCalledTimes(2);
-    expect(testBed.mocks.turnOrderService.getNextEntity).toHaveBeenCalledTimes(2);
+      // Assert
+      expect(testBed.mocks.turnOrderService.isEmpty).toHaveBeenCalledTimes(2);
+      expect(
+        testBed.mocks.turnOrderService.getNextEntity
+      ).toHaveBeenCalledTimes(2);
 
-    expect(testBed.mocks.logger.error).toHaveBeenCalledWith(
-      'No successful turns completed in the previous round. Stopping TurnManager.'
-    );
+      expect(testBed.mocks.logger.error).toHaveBeenCalledWith(
+        'No successful turns completed in the previous round. Stopping TurnManager.'
+      );
 
-    expect(testBed.mocks.dispatcher.dispatch).toHaveBeenCalledWith(
-      SYSTEM_ERROR_OCCURRED_ID,
-      expect.objectContaining({
-        message: 'System Error: No progress made in the last round.',
-        details: {
-          raw: 'No successful turns completed in the previous round. Stopping TurnManager.',
-          stack: expect.any(String),
-          timestamp: expect.any(String),
-        },
-      })
-    );
+      expect(testBed.mocks.dispatcher.dispatch).toHaveBeenCalledWith(
+        SYSTEM_ERROR_OCCURRED_ID,
+        expect.objectContaining({
+          message: 'System Error: No progress made in the last round.',
+          details: {
+            raw: 'No successful turns completed in the previous round. Stopping TurnManager.',
+            stack: expect.any(String),
+            timestamp: expect.any(String),
+          },
+        })
+      );
 
       expect(stopSpy).toHaveBeenCalledTimes(1);
     });

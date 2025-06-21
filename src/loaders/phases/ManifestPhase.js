@@ -1,5 +1,8 @@
-import LoaderPhase from './LoaderPhase.js';
-import { ModsLoaderPhaseError, ModsLoaderErrorCode } from '../../errors/modsLoaderPhaseError.js';
+import LoaderPhase from './loaderPhase.js';
+import {
+  ModsLoaderPhaseError,
+  ModsLoaderErrorCode,
+} from '../../errors/modsLoaderPhaseError.js';
 
 /**
  * @description Phase responsible for handling manifest loading, dependency checks, version validation and final mod-order resolution.
@@ -26,7 +29,10 @@ export default class ManifestPhase extends LoaderPhase {
   async execute(ctx) {
     this.logger.info('— ManifestPhase starting —');
     try {
-      const res = await this.processor.processManifests(ctx.requestedMods, ctx.worldName);
+      const res = await this.processor.processManifests(
+        ctx.requestedMods,
+        ctx.worldName
+      );
       ctx.finalModOrder = res.finalOrder;
       ctx.incompatibilities = res.incompatibilityCount;
     } catch (e) {
@@ -38,4 +44,4 @@ export default class ManifestPhase extends LoaderPhase {
       );
     }
   }
-} 
+}

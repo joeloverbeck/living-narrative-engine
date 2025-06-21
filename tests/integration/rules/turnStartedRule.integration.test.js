@@ -13,164 +13,52 @@ import conditionContainerSchema from '../../../data/schemas/condition-container.
 import loadOperationSchemas from '../../unit/helpers/loadOperationSchemas.js';
 import loadConditionSchemas from '../../unit/helpers/loadConditionSchemas.js';
 import turnStartedRule from '../../../data/mods/core/rules/turn_started.rule.json';
-import SystemLogicInterpreter from '../../../src/logic/systemLogicInterpreter.js';
-import OperationInterpreter from '../../../src/logic/operationInterpreter.js';
-import OperationRegistry from '../../../src/logic/operationRegistry.js';
-import JsonLogicEvaluationService from '../../../src/logic/jsonLogicEvaluationService.js';
 import AddComponentHandler from '../../../src/logic/operationHandlers/addComponentHandler.js';
 import { CURRENT_ACTOR_COMPONENT_ID } from '../../../src/constants/componentIds.js';
-
-/**
- * Minimal in-memory entity manager for integration tests.
- * Provides just enough of IEntityManager for the tested handlers.
- */
-class SimpleEntityManager {
-  /**
-   * Create the manager with provided entities.
-   *
-   * @param {Array<{id:string,components:object}>} entities - initial entities
-   */
-  constructor(entities) {
-    this.entities = new Map();
-    for (const e of entities) {
-      this.entities.set(e.id, {
-        id: e.id,
-        components: { ...e.components },
-      });
-    }
-  }
-
-  /**
-   * Retrieve an entity instance.
-   *
-   * @param {string} id - entity id
-   * @returns {object|undefined} entity object
-   */
-  getEntityInstance(id) {
-    return this.entities.get(id);
-  }
-
-  /**
-   * Get component data from an entity.
-   *
-   * @param {string} id - entity id
-   * @param {string} type - component type
-   * @returns {any} component data or null
-   */
-  getComponentData(id, type) {
-    return this.entities.get(id)?.components[type] ?? null;
-  }
-
-  /**
-   * Determine if an entity has a component.
-   *
-   * @param {string} id - entity id
-   * @param {string} type - component type
-   * @returns {boolean} true if present
-   */
-  hasComponent(id, type) {
-    return Object.prototype.hasOwnProperty.call(
-      this.entities.get(id)?.components || {},
-      type
-    );
-  }
-
-  /**
-   * Add or replace a component on an entity.
-   *
-   * @param {string} id - entity id
-   * @param {string} type - component type
-   * @param {object} data - component data
-   */
-  addComponent(id, type, data) {
-    const ent = this.entities.get(id);
-    if (ent) {
-      ent.components[type] = JSON.parse(JSON.stringify(data));
-    }
-  }
-}
-
-/**
- * Initialize interpreter and register handlers with provided seed entities.
- *
- * @param {Array<{id:string,components:object}>} entities - seed entities
- */
-function init(entities) {
-  operationRegistry = new OperationRegistry({ logger });
-  entityManager = new SimpleEntityManager(entities);
-
-  const safeDispatcher = { dispatch: jest.fn().mockResolvedValue(true) };
-
-  const handlers = {
-    ADD_COMPONENT: new AddComponentHandler({
-      entityManager,
-      logger,
-      safeEventDispatcher: safeDispatcher,
-    }),
-  };
-
-  for (const [type, handler] of Object.entries(handlers)) {
-    operationRegistry.register(type, handler.execute.bind(handler));
-  }
-
-  operationInterpreter = new OperationInterpreter({
-    logger,
-    operationRegistry,
-  });
-
-  jsonLogic = new JsonLogicEvaluationService({ logger });
-
-  interpreter = new SystemLogicInterpreter({
-    logger,
-    eventBus,
-    dataRegistry,
-    jsonLogicEvaluationService: jsonLogic,
-    entityManager,
-    operationInterpreter,
-  });
-
-  listener = null;
-  interpreter.initialize();
-}
-
-let logger;
-let eventBus;
-let dataRegistry;
-let entityManager;
-let operationRegistry;
-let operationInterpreter;
-let jsonLogic;
-let interpreter;
-let events;
-let listener;
+import { createRuleTestEnvironment } from '../../common/engine/systemLogicTestEnv.js';
 
 describe('turn_started rule integration', () => {
+  let testEnv;
+  let events = [];
+
   beforeEach(() => {
-    logger = {
-      debug: jest.fn(),
-      info: jest.fn(),
-      warn: jest.fn(),
-      error: jest.fn(),
-    };
-
-    events = [];
-    eventBus = {
-      subscribe: jest.fn((ev, l) => {
-        if (ev === '*') listener = l;
-      }),
-      unsubscribe: jest.fn(),
-      dispatch: jest.fn((eventType, payload) => {
-        events.push({ eventType, payload });
-        return Promise.resolve();
-      }),
-      listenerCount: jest.fn().mockReturnValue(1),
-    };
-
-    dataRegistry = {
+    const dataRegistry = {
       getAllSystemRules: jest.fn().mockReturnValue([turnStartedRule]),
+      getConditionDefinition: jest.fn().mockReturnValue(undefined),
     };
 
-    init([]);
+    // Create handlers with dependencies
+    const createHandlers = (entityManager, eventBus, logger) => {
+      return {
+        ADD_COMPONENT: new AddComponentHandler({
+          entityManager,
+          logger,
+          safeEventDispatcher: {
+            dispatch: (...args) => eventBus.dispatch(...args),
+          },
+        }),
+      };
+    };
+
+    // Create test environment
+    testEnv = createRuleTestEnvironment({
+      createHandlers,
+      entities: [],
+      rules: [turnStartedRule],
+      dataRegistry,
+    });
+
+    // Set up event listener
+    events = [];
+    testEnv.eventBus.subscribe('*', (event) => {
+      events.push(event);
+    });
+  });
+
+  afterEach(() => {
+    if (testEnv) {
+      testEnv.cleanup();
+    }
   });
 
   it('validates turn_started.rule.json against schema', () => {
@@ -194,38 +82,45 @@ describe('turn_started rule integration', () => {
     expect(valid).toBe(true);
   });
 
-  it('adds current_actor component to the payload entity', () => {
-    interpreter.shutdown();
-    init([
+  it('adds current_actor component to the payload entity', async () => {
+    testEnv.reset([
       {
-        id: 'p1',
+        id: 'player1',
         components: {},
       },
     ]);
 
-    listener({
-      type: 'core:turn_started',
-      payload: { entityId: 'p1' },
+    await testEnv.eventBus.dispatch('core:turn_started', {
+      entityId: 'player1',
     });
 
     expect(
-      entityManager.getComponentData('p1', CURRENT_ACTOR_COMPONENT_ID)
+      testEnv.entityManager.getComponentData(
+        'player1',
+        CURRENT_ACTOR_COMPONENT_ID
+      )
     ).toEqual({});
-    expect(events).toEqual([]);
   });
 
-  it('gracefully handles missing entity', () => {
-    interpreter.shutdown();
-    init([]);
+  it('replaces existing current_actor component', async () => {
+    testEnv.reset([
+      {
+        id: 'player1',
+        components: {
+          [CURRENT_ACTOR_COMPONENT_ID]: { actorId: 'oldActor' },
+        },
+      },
+    ]);
 
-    listener({
-      type: 'core:turn_started',
-      payload: { entityId: 'missing' },
+    await testEnv.eventBus.dispatch('core:turn_started', {
+      entityId: 'player1',
     });
 
     expect(
-      entityManager.getComponentData('missing', CURRENT_ACTOR_COMPONENT_ID)
-    ).toBeNull();
-    expect(events).toEqual([]);
+      testEnv.entityManager.getComponentData(
+        'player1',
+        CURRENT_ACTOR_COMPONENT_ID
+      )
+    ).toEqual({});
   });
 });

@@ -14,7 +14,10 @@ import { createMockContentLoader } from '../mockFactories';
  * @returns {void}
  */
 export function setupManifests(env, manifestMap, finalOrder) {
-  env.mockGameConfigLoader.loadConfig.mockResolvedValue({ mods: finalOrder, world: 'testWorldSimple' });
+  env.mockGameConfigLoader.loadConfig.mockResolvedValue({
+    mods: finalOrder,
+    world: 'testWorldSimple',
+  });
   env.mockModManifestLoader.loadRequestedManifests.mockResolvedValue(
     manifestMap
   );

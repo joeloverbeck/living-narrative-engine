@@ -362,7 +362,9 @@ describe('RuleLoader - Storage Failure Handling (via loadItemsForMod)', () => {
         `Mod [${modId}] - Processed 1/2 ${RULE_CONTENT_KEY} items. (1 failed)`
       );
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining(`Item '${finalIdOK}' (Base: '${ruleDataOK.rule_id}') stored successfully`)
+        expect.stringContaining(
+          `Item '${finalIdOK}' (Base: '${ruleDataOK.rule_id}') stored successfully`
+        )
       );
       expect(mockLogger.warn).not.toHaveBeenCalled();
     });

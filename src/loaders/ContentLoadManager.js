@@ -80,9 +80,7 @@ export class ContentLoadManager {
         combinedResults[modId] = 'skipped'; // Skipped in all relevant phases
       }
     }
-    this.#logger.debug(
-      'ModsLoader: Completed both content loading phases.'
-    );
+    this.#logger.debug('ModsLoader: Completed both content loading phases.');
     return combinedResults;
   }
 
@@ -107,7 +105,9 @@ export class ContentLoadManager {
     );
 
     if (phaseLoaders.length === 0) {
-      this.#logger.debug(`ModsLoader: No loaders configured for phase: ${phase}. Skipping.`);
+      this.#logger.debug(
+        `ModsLoader: No loaders configured for phase: ${phase}. Skipping.`
+      );
       // Fill results with 'skipped' for all mods if no loaders for this phase
       for (const modId of finalOrder) {
         results[modId] = 'skipped';
@@ -121,7 +121,13 @@ export class ContentLoadManager {
       );
       // Pass the filtered phaseLoaders to processMod
       try {
-        results[modId] = await this.processMod(modId, manifest, totalCounts, phaseLoaders, phase);
+        results[modId] = await this.processMod(
+          modId,
+          manifest,
+          totalCounts,
+          phaseLoaders,
+          phase
+        );
       } catch (error) {
         this.#logger.error(
           `ContentLoadManager: Error during processMod for ${modId}, phase ${phase}. Marking as failed and continuing with other mods in this phase.`,
@@ -151,7 +157,9 @@ export class ContentLoadManager {
    * @returns {Promise<'success' | 'skipped' | 'failed'>} Status of the load process for this mod in this phase.
    */
   async processMod(modId, manifest, totalCounts, phaseLoaders, phase) {
-    this.#logger.debug(`--- Loading content for mod: ${modId}, phase: ${phase} ---`);
+    this.#logger.debug(
+      `--- Loading content for mod: ${modId}, phase: ${phase} ---`
+    );
     const aggregator = new LoadResultAggregator(totalCounts);
     let modDurationMs = 0;
     /** @type {'success' | 'skipped' | 'failed'} */
@@ -183,7 +191,8 @@ export class ContentLoadManager {
       );
       const modStartTime = performance.now();
 
-      for (const config of phaseLoaders) { // Iterate over phase-specific loaders
+      for (const config of phaseLoaders) {
+        // Iterate over phase-specific loaders
         const { loader, contentKey, contentTypeDir, typeName } = config;
         const manifestContent = manifest.content || {};
         const hasContentForLoader =
@@ -258,7 +267,10 @@ export class ContentLoadManager {
       await this.#validatedEventDispatcher
         .dispatch(
           'initialization:world_loader:mod_load_failed',
-          { modId, reason: `Unexpected error in phase ${phase}: ${error?.message}` },
+          {
+            modId,
+            reason: `Unexpected error in phase ${phase}: ${error?.message}`,
+          },
           { allowSchemaNotFound: true }
         )
         .catch((dispatchError) =>
@@ -276,7 +288,6 @@ export class ContentLoadManager {
       status = 'skipped';
     }
 
-
     const totalModOverrides = Object.values(aggregator.modResults).reduce(
       (sum, res) => sum + (res.overrides || 0),
       0
@@ -287,15 +298,23 @@ export class ContentLoadManager {
     );
     const typeCountsString = Object.entries(aggregator.modResults)
       .filter(([, result]) => result.count > 0 || result.errors > 0) // Show if errors, even if count is 0
-      .map(([t, result]) => `${t}(${result.count}${result.errors > 0 ? ` E:${result.errors}` : ''})`)
+      .map(
+        ([t, result]) =>
+          `${t}(${result.count}${result.errors > 0 ? ` E:${result.errors}` : ''})`
+      )
       .sort()
       .join(', ');
 
-    const summaryMessage = `Mod '${modId}' phase '${phase}' loaded in ${modDurationMs.toFixed(2)}ms: ${typeCountsString.length > 0 ? typeCountsString : 'No items processed in this phase'
-      }${typeCountsString.length > 0 ? ' ' : ''}-> Overrides(${totalModOverrides}), Errors(${totalModErrors})`;
+    const summaryMessage = `Mod '${modId}' phase '${phase}' loaded in ${modDurationMs.toFixed(2)}ms: ${
+      typeCountsString.length > 0
+        ? typeCountsString
+        : 'No items processed in this phase'
+    }${typeCountsString.length > 0 ? ' ' : ''}-> Overrides(${totalModOverrides}), Errors(${totalModErrors})`;
 
     this.#logger.debug(summaryMessage);
-    this.#logger.debug(`--- Finished loading content for mod: ${modId}, phase: ${phase} ---`);
+    this.#logger.debug(
+      `--- Finished loading content for mod: ${modId}, phase: ${phase} ---`
+    );
     return status;
   }
 }

@@ -23,7 +23,15 @@ class ComponentLoader extends BaseInlineSchemaLoader {
     dataRegistry,
     logger
   ) {
-    super('components', config, pathResolver, dataFetcher, schemaValidator, dataRegistry, logger);
+    super(
+      'components',
+      config,
+      pathResolver,
+      dataFetcher,
+      schemaValidator,
+      dataRegistry,
+      logger
+    );
   }
 
   /**
@@ -38,9 +46,17 @@ class ComponentLoader extends BaseInlineSchemaLoader {
    * @returns {Promise<{qualifiedId: string, didOverride: boolean}>}
    */
   async _processFetchedItem(modId, filename, resolvedPath, data, typeName) {
-    this._logger.debug(`ComponentLoader [${modId}]: Processing fetched item: ${filename} (Type: ${typeName})`);
+    this._logger.debug(
+      `ComponentLoader [${modId}]: Processing fetched item: ${filename} (Type: ${typeName})`
+    );
 
-    const { baseId } = parseAndValidateId(data, 'id', modId, filename, this._logger);
+    const { baseId } = parseAndValidateId(
+      data,
+      'id',
+      modId,
+      filename,
+      this._logger
+    );
     const dataSchema = data.dataSchema;
 
     if (typeof dataSchema !== 'object' || dataSchema === null) {
@@ -70,7 +86,9 @@ class ComponentLoader extends BaseInlineSchemaLoader {
       filename
     );
 
-    this._logger.debug(`ComponentLoader [${modId}]: Successfully processed component definition from ${filename}. Returning final registry key: ${qualifiedId}, Overwrite: ${didOverride}`);
+    this._logger.debug(
+      `ComponentLoader [${modId}]: Successfully processed component definition from ${filename}. Returning final registry key: ${qualifiedId}, Overwrite: ${didOverride}`
+    );
     return { qualifiedId, didOverride };
   }
 }

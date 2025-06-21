@@ -429,7 +429,10 @@ describe('SpatialIndexManager', () => {
     it('should correctly build the index using getComponentData', () => {
       const mockEntityManager = setupMockEntityManagerWithEntities(true);
       // Debug: print the entities to verify setup
-      console.log('Entities in mockEntityManager:', Array.from(mockEntityManager.entities));
+      console.log(
+        'Entities in mockEntityManager:',
+        Array.from(mockEntityManager.entities)
+      );
       spatialIndexManager.buildIndex(mockEntityManager);
 
       expect(spatialIndexManager.locationIndex.size).toBe(2);
@@ -611,20 +614,23 @@ const setupMockEntityManagerWithEntities = (
     activeEntities.set(mockEntityNoPos.id, mockEntityNoPos);
   }
 
-  return Object.defineProperties({
-    activeEntities,
-    getEntityInstance: jest.fn((entityId) => activeEntities.get(entityId)),
-  }, {
-    entities: {
-      get() {
-        const iterable = {
-          [Symbol.iterator]: () => activeEntities.values(),
-          values: () => activeEntities.values(),
-        };
-        return iterable;
+  return Object.defineProperties(
+    {
+      activeEntities,
+      getEntityInstance: jest.fn((entityId) => activeEntities.get(entityId)),
+    },
+    {
+      entities: {
+        get() {
+          const iterable = {
+            [Symbol.iterator]: () => activeEntities.values(),
+            values: () => activeEntities.values(),
+          };
+          return iterable;
+        },
+        enumerable: true,
+        configurable: false,
       },
-      enumerable: true,
-      configurable: false
     }
-  });
+  );
 };

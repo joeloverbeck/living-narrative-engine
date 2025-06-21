@@ -82,7 +82,11 @@ export class WorldLoader extends AbstractLoader {
         name: 'ISchemaValidator',
         methods: ['validate'],
       },
-      { dependency: dataRegistry, name: 'IDataRegistry', methods: ['store', 'get'] },
+      {
+        dependency: dataRegistry,
+        name: 'IDataRegistry',
+        methods: ['store', 'get'],
+      },
     ]);
 
     this._config = config;
@@ -191,7 +195,10 @@ export class WorldLoader extends AbstractLoader {
                 );
               }
 
-              const definition = this._dataRegistry.get(ENTITY_DEFINITIONS_KEY, definitionId);
+              const definition = this._dataRegistry.get(
+                ENTITY_DEFINITIONS_KEY,
+                definitionId
+              );
 
               if (!definition) {
                 fileUnresolvedDefinitions++;
@@ -223,13 +230,18 @@ export class WorldLoader extends AbstractLoader {
             }
           } else if (data.instances) {
             this._logger.warn(
-              `WorldLoader [${modId}]: 'instances' field in '${filename}' is not an array. Skipping instance processing for this file.`, { modId, filename, actualType: typeof data.instances }
+              `WorldLoader [${modId}]: 'instances' field in '${filename}' is not an array. Skipping instance processing for this file.`,
+              { modId, filename, actualType: typeof data.instances }
             );
           }
           filesProcessed++;
         } catch (error) {
           filesFailed++;
-          if (error instanceof ModsLoaderError && (error.code === 'missing_definition' || error.code === 'missing_definition_id_in_instance')) {
+          if (
+            error instanceof ModsLoaderError &&
+            (error.code === 'missing_definition' ||
+              error.code === 'missing_definition_id_in_instance')
+          ) {
             throw error;
           }
           this._logger.error(
@@ -240,13 +252,21 @@ export class WorldLoader extends AbstractLoader {
               filename,
             }
           );
-          if (error.name === 'SyntaxError' || (error.message && error.message.startsWith('Schema validation failed'))) {
+          if (
+            error.name === 'SyntaxError' ||
+            (error.message &&
+              error.message.startsWith('Schema validation failed'))
+          ) {
           }
         }
       }
     }
 
-    this._dataRegistry.store(WORLD_INITIAL_STATE_KEY, 'main', aggregatedInstances);
+    this._dataRegistry.store(
+      WORLD_INITIAL_STATE_KEY,
+      'main',
+      aggregatedInstances
+    );
     totalCounts.worlds = {
       count: filesProcessed,
       overrides: 0,

@@ -88,7 +88,9 @@ export const createMockEntityManager = () => {
   const activeEntities = new Map();
   return {
     activeEntities,
-    get entities() { return Array.from(activeEntities.values())[Symbol.iterator](); },
+    get entities() {
+      return Array.from(activeEntities.values())[Symbol.iterator]();
+    },
     clearAll: jest.fn(() => {
       activeEntities.clear();
     }),

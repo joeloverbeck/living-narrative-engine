@@ -2,7 +2,7 @@
 
 // Import BaseManifestItemLoader
 import { BaseManifestItemLoader } from './baseManifestItemLoader.js';
-import { expandMacros } from '../utils/macroUtils.js';
+import { expandMacros, validateMacroExpansion } from '../utils/macroUtils.js';
 import { deriveBaseRuleIdFromFilename } from '../utils/ruleIdUtils.js';
 
 /**
@@ -101,11 +101,28 @@ class RuleLoader extends BaseManifestItemLoader {
 
     // --- Macro Expansion ---
     if (Array.isArray(data.actions)) {
+      this._logger.debug(
+        `RuleLoader [${modId}]: Expanding macros in rule actions for ${filename}.`
+      );
+
       data.actions = expandMacros(
         data.actions,
         this._dataRegistry,
         this._logger
       );
+
+      // Validate that all macros were properly expanded
+      if (
+        !validateMacroExpansion(data.actions, this._dataRegistry, this._logger)
+      ) {
+        this._logger.warn(
+          `RuleLoader [${modId}]: Some macros may not have been fully expanded in ${filename}.`
+        );
+      } else {
+        this._logger.debug(
+          `RuleLoader [${modId}]: All macros successfully expanded in ${filename}.`
+        );
+      }
     }
 
     // --- Storage ---

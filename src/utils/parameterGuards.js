@@ -20,7 +20,7 @@ export function assertValidId(id, context, logger) {
     logger.error(message, {
       receivedId: id,
       receivedType: typeof id,
-      context
+      context,
     });
     throw new InvalidArgumentError(message, 'id', id);
   }
@@ -43,8 +43,8 @@ export function assertNonBlankString(str, name, context, logger) {
       receivedValue: str,
       receivedType: typeof str,
       parameterName: name,
-      context
+      context,
     });
     throw new InvalidArgumentError(message, name, str);
   }
-} 
+}

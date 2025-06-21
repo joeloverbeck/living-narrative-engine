@@ -49,6 +49,18 @@ function handleIf(node, nestedCtx, logger, operationInterpreter) {
     return;
   }
 
+  if (result) {
+    logger.debug(`[handleIf] then_actions length: ${thenActs.length}`);
+    logger.debug(
+      `[handleIf] then_actions: ${JSON.stringify(thenActs, null, 2)}`
+    );
+  } else {
+    logger.debug(`[handleIf] else_actions length: ${elseActs.length}`);
+    logger.debug(
+      `[handleIf] else_actions: ${JSON.stringify(elseActs, null, 2)}`
+    );
+  }
+
   executeActionSequence(
     result ? thenActs : elseActs,
     { ...baseCtx, scopeLabel, jsonLogic },
@@ -161,6 +173,7 @@ export function executeActionSequence(
     }
 
     try {
+      logger.debug(`${tag} About to execute operation of type: ${opType}`);
       if (opType === 'IF') {
         handleIf(
           nodeToOperation(op),
@@ -168,6 +181,7 @@ export function executeActionSequence(
           logger,
           operationInterpreter
         );
+        logger.debug(`${tag} Finished executing IF operation.`);
       } else if (opType === 'FOR_EACH') {
         handleForEach(
           nodeToOperation(op),
@@ -179,17 +193,16 @@ export function executeActionSequence(
           logger,
           operationInterpreter
         );
+        logger.debug(`${tag} Finished executing FOR_EACH operation.`);
       } else {
         operationInterpreter.execute(op, baseCtx);
+        logger.debug(`${tag} Finished executing operation of type: ${opType}`);
       }
     } catch (err) {
       logger.error(
         `${tag} CRITICAL error during execution of Operation ${opType}`,
         err
       );
-      const idMatch = scopeLabel.match(/Rule '(.+?)'/);
-      const ruleIdForLog = idMatch ? idMatch[1] : 'UNKNOWN_RULE';
-      logger.error(`rule '${ruleIdForLog}' threw:`, err);
       break;
     }
   }

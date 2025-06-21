@@ -113,7 +113,11 @@ class SpatialIndexManager extends MapManager {
    */
   updateEntityLocation(entityId, oldLocationId, newLocationId) {
     try {
-      assertValidId(entityId, 'SpatialIndexManager.updateEntityLocation', console);
+      assertValidId(
+        entityId,
+        'SpatialIndexManager.updateEntityLocation',
+        console
+      );
     } catch (error) {
       console.warn(
         'SpatialIndexManager.updateEntityLocation: Invalid entityId. Skipping.'
@@ -150,7 +154,11 @@ class SpatialIndexManager extends MapManager {
    */
   getEntitiesInLocation(locationId) {
     try {
-      assertValidId(locationId, 'SpatialIndexManager.getEntitiesInLocation', console);
+      assertValidId(
+        locationId,
+        'SpatialIndexManager.getEntitiesInLocation',
+        console
+      );
     } catch (error) {
       return new Set();
     }
