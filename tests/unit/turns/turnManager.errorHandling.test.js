@@ -15,10 +15,8 @@ import {
   SYSTEM_ERROR_OCCURRED_ID,
 } from '../../../src/constants/eventIds.js';
 import { beforeEach, expect, jest, test, afterEach } from '@jest/globals';
-import {
-  createMockActor,
-  createMockTurnHandler,
-} from '../../common/mockFactories.js';
+import { createMockTurnHandler } from '../../common/mockFactories.js';
+import { createAiActor } from '../../common/turns/testActors.js';
 
 // --- Mock Implementations ---
 
@@ -37,9 +35,9 @@ describeTurnManagerSuite('TurnManager - Error Handling', (getBed) => {
     testBed = getBed();
 
     // Setup actors and add to the specific entityManager instance used by TurnManager
-    mockActor1 = createMockActor('actor1');
-    mockActor2 = createMockActor('actor2');
-    mockActor3 = createMockActor('actor3');
+    mockActor1 = createAiActor('actor1');
+    mockActor2 = createAiActor('actor2');
+    mockActor3 = createAiActor('actor3');
     testBed.setActiveEntities(mockActor1, mockActor2, mockActor3);
 
     // Default Mocks setup - configure specifically within each test if needed

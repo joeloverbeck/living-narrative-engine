@@ -12,10 +12,8 @@ import {
   SYSTEM_ERROR_OCCURRED_ID,
 } from '../../../src/constants/eventIds.js';
 import { beforeEach, expect, jest, test, afterEach } from '@jest/globals';
-import {
-  createMockActor,
-  createMockTurnHandler,
-} from '../../common/mockFactories.js';
+import { createMockTurnHandler } from '../../common/mockFactories.js';
+import { createAiActor } from '../../common/turns/testActors.js';
 
 // --- Test Setup Helpers ---
 // --- Test Suite ---
@@ -191,7 +189,7 @@ describeTurnManagerSuite('TurnManager - Lifecycle (Start/Stop)', (getBed) => {
       advanceTurnSpy.mockRestore();
 
       // Set up the turn order service to return an entity
-      const mockActor = createMockActor('actor1', {
+      const mockActor = createAiActor('actor1', {
         components: [ACTOR_COMPONENT_ID],
       });
       testBed.setActiveEntities(mockActor);
