@@ -4,10 +4,8 @@
  */
 
 import { expect, jest } from '@jest/globals';
-import {
-  createGameEngineTestBed,
-  GameEngineTestBed,
-} from './gameEngineTestBed.js';
+import { GameEngineTestBed } from './gameEngineTestBed.js';
+import { withTestBed } from '../testBedUtils.js';
 import { DEFAULT_TEST_WORLD } from '../constants.js';
 
 /**
@@ -20,13 +18,10 @@ import { DEFAULT_TEST_WORLD } from '../constants.js';
  * @returns {Promise<void>} Resolves when the callback completes.
  */
 export async function withGameEngineBed(overrides = {}, testFn) {
-  const bed = createGameEngineTestBed(overrides);
-  try {
+  await withTestBed(GameEngineTestBed, overrides, async (bed) => {
     bed.resetMocks();
     await testFn(bed, bed.engine);
-  } finally {
-    await bed.cleanup();
-  }
+  });
 }
 
 /**
@@ -56,13 +51,10 @@ export async function withInitializedGameEngineBed(overrides, world, testFn) {
     overrides = overrides || {};
     world = world || DEFAULT_TEST_WORLD;
   }
-  const bed = createGameEngineTestBed(overrides);
-  try {
+  await withTestBed(GameEngineTestBed, overrides, async (bed) => {
     await bed.initAndReset(world);
     await testFn(bed, bed.engine);
-  } finally {
-    await bed.cleanup();
-  }
+  });
 }
 
 /**
