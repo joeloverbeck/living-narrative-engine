@@ -217,22 +217,6 @@ export class TestBed extends FactoryTestBed {
   }
 
   /**
-   * Creates an entity instance using a definition key from {@link TestData}.
-   *
-   * @param {keyof typeof TestData.Definitions} key - Definition key to use.
-   * @param {object} [options] - Options forwarded to
-   *   {@link EntityManager#createEntityInstance}.
-   * @param {object} [config] - Additional configuration options.
-   * @param {boolean} [config.resetDispatch] - If true, resets the event
-   *   dispatch mock after creation.
-   * @returns {import('../../../src/entities/entity.js').default} The created
-   *   entity instance.
-   */
-  createEntityByKey(key, options = {}, config = {}) {
-    return this.createEntity(key, options, config);
-  }
-
-  /**
    * Convenience wrapper around {@link TestBed#setupDefinitions} for test
    * definitions stored in {@link TestData}.
    *
@@ -257,7 +241,7 @@ export class TestBed extends FactoryTestBed {
    *   entity instance.
    */
   createBasicEntity(options = {}, config = {}) {
-    return this.createEntityByKey('basic', options, config);
+    return this.createEntity('basic', options, config);
   }
 
   /**
@@ -273,7 +257,7 @@ export class TestBed extends FactoryTestBed {
    *   entity instance.
    */
   createActorEntity(options = {}, config = {}) {
-    return this.createEntityByKey('actor', options, config);
+    return this.createEntity('actor', options, config);
   }
 
   /**
