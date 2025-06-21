@@ -8,6 +8,7 @@ import {
   createGameEngineTestBed,
   GameEngineTestBed,
 } from './gameEngineTestBed.js';
+import { DEFAULT_TEST_WORLD } from '../constants.js';
 
 /**
  * Executes a callback with a temporary {@link GameEngineTestBed} instance.
@@ -46,14 +47,14 @@ export async function withInitializedGameEngineBed(overrides, world, testFn) {
   if (typeof overrides === 'function') {
     testFn = overrides;
     overrides = {};
-    world = 'TestWorld';
+    world = DEFAULT_TEST_WORLD;
   } else if (typeof world === 'function') {
     testFn = world;
-    world = 'TestWorld';
+    world = DEFAULT_TEST_WORLD;
     overrides = overrides || {};
   } else {
     overrides = overrides || {};
-    world = world || 'TestWorld';
+    world = world || DEFAULT_TEST_WORLD;
   }
   const bed = createGameEngineTestBed(overrides);
   try {
@@ -88,7 +89,7 @@ export function runUnavailableServiceTest(cases, invokeFn) {
     async () => {
       await withGameEngineBed({ [token]: null }, async (bed, engine) => {
         if (opts.preInit) {
-          await bed.startAndReset('TestWorld');
+          await bed.startAndReset(DEFAULT_TEST_WORLD);
         }
         const [loggerMock, dispatchMock] = await invokeFn(
           bed,
