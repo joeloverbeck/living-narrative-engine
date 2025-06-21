@@ -68,6 +68,17 @@ export class GameEngineTestBed extends ContainerTestBed {
   }
 
   /**
+   * Initializes the engine then clears mock call history.
+   *
+   * @param {string} [world] - World name to initialize.
+   * @returns {Promise<void>} Resolves once initialization completes.
+   */
+  async initAndReset(world = 'TestWorld') {
+    await this.init(world);
+    this.resetMocks();
+  }
+
+  /**
    * Presets initialization results and starts a new game.
    *
    * @param {string} worldName - Name of the world to initialize.
@@ -79,6 +90,19 @@ export class GameEngineTestBed extends ContainerTestBed {
       initResult
     );
     await this.engine.startNewGame(worldName);
+  }
+
+  /**
+   * Starts a new game and immediately clears mock call history.
+   *
+   * @param {string} world - Name of the world to initialize.
+   * @param {import('../../src/interfaces/IInitializationService.js').InitializationResult} [result]
+   *   Initialization result returned by the service.
+   * @returns {Promise<void>} Resolves when the game has started.
+   */
+  async startAndReset(world, result = { success: true }) {
+    await this.start(world, result);
+    this.resetMocks();
   }
 
   /**

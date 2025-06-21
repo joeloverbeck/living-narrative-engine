@@ -44,9 +44,8 @@ describeEngineSuite('GameEngine', (ctx) => {
 
     describe('when engine is initialized', () => {
       beforeEach(async () => {
-        await testBed.init(MOCK_ACTIVE_WORLD_FOR_SAVE);
+        await testBed.initAndReset(MOCK_ACTIVE_WORLD_FOR_SAVE);
         gameEngine = ctx.engine;
-        testBed.resetMocks();
       });
 
       it.each([
@@ -65,9 +64,7 @@ describeEngineSuite('GameEngine', (ctx) => {
               success: true,
             }
           );
-          await localBed.engine.startNewGame(MOCK_ACTIVE_WORLD_FOR_SAVE);
-
-          localBed.resetMocks();
+          await localBed.startAndReset(MOCK_ACTIVE_WORLD_FOR_SAVE);
 
           const result = await localBed.engine.triggerManualSave(SAVE_NAME);
 

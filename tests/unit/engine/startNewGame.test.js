@@ -67,9 +67,7 @@ describeEngineSuite('GameEngine', (ctx) => {
       testBed.mocks.initializationService.runInitializationSequence.mockResolvedValueOnce(
         { success: true }
       );
-      await gameEngine.startNewGame('InitialWorld');
-
-      testBed.resetMocks();
+      await testBed.startAndReset('InitialWorld');
 
       testBed.mocks.initializationService.runInitializationSequence.mockResolvedValueOnce(
         { success: true }
