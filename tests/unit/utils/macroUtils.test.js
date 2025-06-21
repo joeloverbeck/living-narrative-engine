@@ -1,5 +1,5 @@
 import { expandMacros } from '../../../src/utils/macroUtils.js';
-import { freeze } from '../../../src/utils/objectUtils.js';
+import { freeze } from '../../../src/utils/cloneUtils.js';
 import { describe, it, expect, jest } from '@jest/globals';
 
 const createRegistry = (macros) => ({

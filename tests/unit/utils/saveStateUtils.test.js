@@ -1,9 +1,9 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import * as saveStateUtils from '../../../src/utils/saveStateUtils.js';
 import { PersistenceErrorCodes } from '../../../src/persistence/persistenceErrors.js';
-import * as objectUtils from '../../../src/utils/objectUtils.js';
+import * as cloneUtils from '../../../src/utils/cloneUtils.js';
 
-jest.mock('../../../src/utils/objectUtils.js', () => ({
+jest.mock('../../../src/utils/cloneUtils.js', () => ({
   safeDeepClone: jest.fn(),
 }));
 
@@ -19,11 +19,11 @@ describe('saveStateUtils', () => {
 
   it('returns success when clone is valid with gameState', () => {
     const obj = { gameState: { foo: 'bar' } };
-    objectUtils.safeDeepClone.mockReturnValue({ success: true, data: obj });
+    cloneUtils.safeDeepClone.mockReturnValue({ success: true, data: obj });
 
     const result = cloneValidatedState(obj, logger);
 
-    expect(objectUtils.safeDeepClone).toHaveBeenCalledWith(obj, logger);
+    expect(cloneUtils.safeDeepClone).toHaveBeenCalledWith(obj, logger);
     expect(result).toEqual({ success: true, data: obj });
     expect(logger.error).not.toHaveBeenCalled();
   });
@@ -31,7 +31,7 @@ describe('saveStateUtils', () => {
   it('propagates failure from safeDeepClone', () => {
     const obj = { any: 'value' };
     const err = { code: 'ERR', message: 'bad' };
-    objectUtils.safeDeepClone.mockReturnValue({ success: false, error: err });
+    cloneUtils.safeDeepClone.mockReturnValue({ success: false, error: err });
 
     const result = cloneValidatedState(obj, logger);
 
@@ -42,7 +42,7 @@ describe('saveStateUtils', () => {
 
   it('fails when cloned object lacks gameState', () => {
     const obj = { notGameState: true };
-    objectUtils.safeDeepClone.mockReturnValue({ success: true, data: obj });
+    cloneUtils.safeDeepClone.mockReturnValue({ success: true, data: obj });
 
     const result = cloneValidatedState(obj, logger);
 
@@ -53,11 +53,11 @@ describe('saveStateUtils', () => {
 
   it('cloneAndValidateSaveState returns same result as cloneValidatedState', () => {
     const obj = { gameState: {} };
-    objectUtils.safeDeepClone.mockReturnValue({ success: true, data: obj });
+    cloneUtils.safeDeepClone.mockReturnValue({ success: true, data: obj });
 
     const viaWrapper = cloneAndValidateSaveState(obj, logger);
 
     expect(viaWrapper).toEqual({ success: true, data: obj });
-    expect(objectUtils.safeDeepClone).toHaveBeenCalledWith(obj, logger);
+    expect(cloneUtils.safeDeepClone).toHaveBeenCalledWith(obj, logger);
   });
 });

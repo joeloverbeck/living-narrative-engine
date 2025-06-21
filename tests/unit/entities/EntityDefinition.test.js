@@ -1,5 +1,5 @@
 import EntityDefinition from '../../../src/entities/entityDefinition.js';
-import { deepFreeze } from '../../../src/utils/objectUtils.js'; // Used by the class, not directly tested here unless necessary
+import { deepFreeze } from '../../../src/utils/cloneUtils.js'; // Used by the class, not directly tested here unless necessary
 
 describe('EntityDefinition', () => {
   const validDefinitionData = {

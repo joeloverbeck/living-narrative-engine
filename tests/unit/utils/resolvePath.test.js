@@ -3,7 +3,8 @@
  * ------------------------------------------------------------------ */
 
 import { describe, it, expect } from '@jest/globals';
-import { resolvePath, freeze } from '../../../src/utils/objectUtils.js';
+import { resolvePath } from '../../../src/utils/objectUtils.js';
+import { freeze } from '../../../src/utils/cloneUtils.js';
 
 describe('utils/resolvePath', () => {
   /* -------------------------------------------------

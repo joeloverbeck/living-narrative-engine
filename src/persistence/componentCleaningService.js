@@ -1,6 +1,6 @@
 // src/persistence/componentCleaningService.js
 
-import { safeDeepClone } from '../utils/objectUtils.js';
+import { safeDeepClone } from '../utils/cloneUtils.js';
 import { setupService } from '../utils/serviceInitializerUtils.js';
 /** @typedef {import('../interfaces/IComponentCleaningService.js').IComponentCleaningService} IComponentCleaningService */
 import {
