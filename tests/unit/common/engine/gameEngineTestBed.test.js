@@ -276,12 +276,16 @@ describe('describeInitializedEngineSuite', () => {
 });
 
 describe('describeEngineSuite', () => {
+  let initCalls = 0;
   let cleanupCalls = 0;
+  let originalInit;
   let originalCleanup;
+  let initSpy;
   let cleanupSpy;
 
   beforeAll(() => {
     originalCleanup = GameEngineTestBed.prototype.cleanup;
+    originalInit = GameEngineTestBed.prototype.initAndReset;
   });
 
   beforeEach(() => {
@@ -291,13 +295,24 @@ describe('describeEngineSuite', () => {
         cleanupCalls++;
         return originalCleanup.apply(this, args);
       });
+    initSpy = jest
+      .spyOn(GameEngineTestBed.prototype, 'initAndReset')
+      .mockImplementation(async function (...args) {
+        initCalls++;
+        return originalInit.apply(this, args);
+      });
   });
 
   afterEach(() => {
     cleanupSpy.mockRestore();
+    initSpy.mockRestore();
   });
 
   describeEngineSuite('inner', (ctx) => {
+    beforeEach(async () => {
+      await ctx.bed.initAndReset();
+    });
+
     it('provides bed and engine references', () => {
       expect(ctx.bed).toBeInstanceOf(GameEngineTestBed);
       expect(ctx.engine).toBe(ctx.bed.engine);
@@ -308,6 +323,10 @@ describe('describeEngineSuite', () => {
       console.error('oops');
       expect(console.error).toHaveBeenCalledWith('oops');
     });
+  });
+
+  it('calls initAndReset before each test', () => {
+    expect(initCalls).toBe(2);
   });
 
   it('calls cleanup after each test', () => {
