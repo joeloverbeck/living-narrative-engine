@@ -39,7 +39,8 @@ export class GameEngineTestBed extends ContainerTestBed {
    */
   constructor(overrides = {}) {
     const env = createTestEnvironment(overrides);
-    const { mocks } = BaseTestBed.fromFactories({
+    super(env.mockContainer);
+    this.initializeFromFactories({
       logger: () => env.logger,
       entityManager: () => env.entityManager,
       turnManager: () => env.turnManager,
@@ -49,7 +50,6 @@ export class GameEngineTestBed extends ContainerTestBed {
       initializationService: () => env.initializationService,
     });
     const engine = env.createGameEngine();
-    super(env.mockContainer, mocks);
     this.env = env;
     this.engine = engine;
   }

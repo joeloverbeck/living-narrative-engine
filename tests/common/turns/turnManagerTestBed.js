@@ -25,7 +25,8 @@ export class TurnManagerTestBed extends BaseTestBed {
   turnManager;
 
   constructor(overrides = {}) {
-    const { mocks } = BaseTestBed.fromFactories({
+    super();
+    this.initializeFromFactories({
       logger: () => overrides.logger ?? createMockLogger(),
       entityManager: () => {
         const em = overrides.entityManager ?? createMockEntityManager();
@@ -49,7 +50,6 @@ export class TurnManagerTestBed extends BaseTestBed {
         },
       dispatcher: () => overrides.dispatcher ?? createMockValidatedEventBus(),
     });
-    super(mocks);
 
     const TurnManagerClass = overrides.TurnManagerClass ?? TurnManager;
     const tmOptions = overrides.turnManagerOptions ?? {};

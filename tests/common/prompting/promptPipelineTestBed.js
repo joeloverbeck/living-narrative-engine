@@ -30,14 +30,14 @@ export class AIPromptPipelineTestBed extends BaseTestBed {
   defaultActions;
 
   constructor() {
-    const { mocks } = BaseTestBed.fromFactories({
+    super();
+    this.initializeFromFactories({
       llmAdapter: createMockLLMAdapter,
       gameStateProvider: createMockAIGameStateProvider,
       promptContentProvider: createMockAIPromptContentProvider,
       promptBuilder: createMockPromptBuilder,
       logger: createMockLogger,
     });
-    super(mocks);
     this.defaultActor = createMockEntity('actor');
     this.defaultContext = {};
     this.defaultActions = [];

@@ -44,6 +44,21 @@ export class BaseTestBed {
   }
 
   /**
+   * Initializes the test bed's mocks from factory functions.
+   *
+   * @param {Record<string, () => any>} factoryMap - Map of mock factory
+   *   functions.
+   * @returns {void}
+   */
+  initializeFromFactories(factoryMap) {
+    const { mocks } = BaseTestBed.fromFactories(factoryMap);
+    this.mocks = mocks;
+    Object.entries(mocks).forEach(([k, v]) => {
+      this[k] = v;
+    });
+  }
+
+  /**
    * Clears call history on all mocks stored in {@link BaseTestBed#mocks}.
    *
    * @returns {void}
