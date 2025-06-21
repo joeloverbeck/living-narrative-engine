@@ -77,11 +77,13 @@ describe('ModsLoader', () => {
       registry: { store: jest.fn(), get: jest.fn(), clear: jest.fn() },
     };
     const session = { run: jest.fn().mockImplementation(async (ctx) => {
-      // Simulate the session modifying the context
-      ctx.finalModOrder = mockContext.finalModOrder;
-      ctx.incompatibilities = mockContext.incompatibilities;
-      ctx.totals = mockContext.totals;
-      return ctx;
+      // Simulate the session returning a new context object (pure function)
+      return {
+        ...ctx,
+        finalModOrder: mockContext.finalModOrder,
+        incompatibilities: mockContext.incompatibilities,
+        totals: mockContext.totals,
+      };
     }) };
     const logger = { debug: jest.fn(), info: jest.fn(), warn: jest.fn(), error: jest.fn() };
     const registry = { store: jest.fn(), get: jest.fn(), clear: jest.fn() };

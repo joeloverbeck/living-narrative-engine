@@ -46,15 +46,16 @@ class MockManifestPhase extends LoaderPhase {
   name = 'MockManifestPhase';
   async execute(context) {
     // Mock manifest phase that sets up the mod context
-    context.finalModOrder = ['isekai'];
-    context.totals = { entityDefinitions: 4, entityInstances: 0 };
-    // Populate manifests map as expected by ContentPhase
     const MOD_ID = 'isekai';
     const MODS_BASE_PATH = './data/mods';
     const manifestPath = path.join(MODS_BASE_PATH, MOD_ID, 'mod-manifest.json');
     const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
-    context.manifests = new Map([[MOD_ID, manifest]]);
-    return context;
+    return {
+      ...context,
+      finalModOrder: ['isekai'],
+      totals: { entityDefinitions: 4, entityInstances: 0 },
+      manifests: new Map([[MOD_ID, manifest]]),
+    };
   }
 }
 
@@ -200,10 +201,11 @@ describe('Integration: Entity Definitions and Instances Loader', () => {
 function makeSession(phases) {
   return {
     async run(ctx) {
+      let current = ctx;
       for (const phase of phases) {
-        await phase.execute(ctx);
+        current = await phase.execute(current);
       }
-      return ctx;
+      return current;
     },
   };
 } 
