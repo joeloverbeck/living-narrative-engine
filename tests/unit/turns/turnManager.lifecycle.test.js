@@ -187,7 +187,7 @@ describeTurnManagerSuite('TurnManager - Lifecycle (Start/Stop)', (getBed) => {
       await testBed.turnManager.stop();
 
       expect(testBed.mocks.logger.debug).toHaveBeenCalledWith(
-        'Turn Manager stopped.'
+        '✅ Turn Manager stopped.'
       );
       expect(
         testBed.mocks.turnOrderService.clearCurrentRound

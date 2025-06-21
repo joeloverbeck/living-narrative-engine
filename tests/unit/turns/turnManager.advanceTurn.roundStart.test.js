@@ -94,7 +94,7 @@ describeTurnManagerSuite(
 
       // Check logs from the advanceTurn call triggered by start()
       expect(testBed.mocks.logger.debug).toHaveBeenCalledWith(
-        'TurnManager.advanceTurn() initiating...'
+        '▶️  TurnManager.advanceTurn() initiating...'
       );
       expect(testBed.mocks.turnOrderService.isEmpty).toHaveBeenCalledTimes(1); // Called once, no recursive call when no actors
       expect(testBed.mocks.logger.error).toHaveBeenCalledWith(expectedErrorMsg); // Error logged

@@ -8,4 +8,5 @@
  */
 export { fetchWithRetry } from './httpUtils.js';
 export * from './loggerUtils.js';
+export * from './logHelpers.js';
 export * from './objectUtils.js';
