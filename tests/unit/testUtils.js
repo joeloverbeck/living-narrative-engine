@@ -2,7 +2,7 @@
 
 import { PrerequisiteEvaluationService } from '../../src/actions/validation/prerequisiteEvaluationService.js';
 import { jest } from '@jest/globals';
-import { createMockLogger } from '../common/mockFactories.js';
+import { createMockLogger } from '../common/mockFactories';
 
 // --- Mock PrerequisiteEvaluationService ---
 jest.mock('../../src/actions/validation/prerequisiteEvaluationService.js'); // Mock needs to be in the utility or called before import in test

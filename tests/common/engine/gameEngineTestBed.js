@@ -23,13 +23,13 @@ export class GameEngineTestBed extends ContainerTestBed {
   engine;
   /**
    * @type {{
-   *   logger: ReturnType<import('../mockFactories.js').createMockLogger>,
-   *   entityManager: ReturnType<import('../mockFactories.js').createMockEntityManager>,
-   *   turnManager: ReturnType<import('../mockFactories.js').createMockTurnManager>,
-   *   gamePersistenceService: ReturnType<import('../mockFactories.js').createMockGamePersistenceService>,
-   *   playtimeTracker: ReturnType<import('../mockFactories.js').createMockPlaytimeTracker>,
-   *   safeEventDispatcher: ReturnType<import('../mockFactories.js').createMockSafeEventDispatcher>,
-   *   initializationService: ReturnType<import('../mockFactories.js').createMockInitializationService>,
+   *   logger: ReturnType<import('../mockFactories').createMockLogger>,
+   *   entityManager: ReturnType<import('../mockFactories').createMockEntityManager>,
+   *   turnManager: ReturnType<import('../mockFactories').createMockTurnManager>,
+   *   gamePersistenceService: ReturnType<import('../mockFactories').createMockGamePersistenceService>,
+   *   playtimeTracker: ReturnType<import('../mockFactories').createMockPlaytimeTracker>,
+   *   safeEventDispatcher: ReturnType<import('../mockFactories').createMockSafeEventDispatcher>,
+   *   initializationService: ReturnType<import('../mockFactories').createMockInitializationService>,
    * }}
    */
 

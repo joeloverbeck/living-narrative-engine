@@ -128,7 +128,9 @@ describeTurnManagerSuite(
       'should throw if %s is invalid',
       (optionKey, valueOrFactory, expectedErrorMsg, expectConsole) => {
         const value =
-          typeof valueOrFactory === 'function' ? valueOrFactory() : valueOrFactory;
+          typeof valueOrFactory === 'function'
+            ? valueOrFactory()
+            : valueOrFactory;
         const options = { ...validOptions, [optionKey]: value };
         expect(() => new TurnManager(options)).toThrow(expectedErrorMsg);
 

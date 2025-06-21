@@ -6,7 +6,7 @@ import DefaultComponentPolicy from '../../../src/adapters/DefaultComponentPolicy
 import {
   createMockLogger,
   createMockSchemaValidator,
-} from '../../common/mockFactories.js';
+} from '../../common/mockFactories';
 import EntityDefinition from '../../../src/entities/entityDefinition.js';
 import EntityInstanceData from '../../../src/entities/entityInstanceData.js';
 import Entity from '../../../src/entities/entity.js';

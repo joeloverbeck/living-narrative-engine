@@ -11,7 +11,7 @@ import {
 } from '../../../src/constants/componentIds.js';
 import { TURN_PROCESSING_STARTED } from '../../../src/constants/eventIds.js';
 import { beforeEach, expect, jest, test } from '@jest/globals';
-import { createMockEntity } from '../../common/mockFactories.js';
+import { createMockEntity } from '../../common/mockFactories';
 
 // Mock Turn Handlers - ADD startTurn and destroy
 const mockPlayerHandler = {

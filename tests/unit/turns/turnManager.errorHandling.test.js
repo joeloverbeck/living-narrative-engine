@@ -15,7 +15,7 @@ import {
   SYSTEM_ERROR_OCCURRED_ID,
 } from '../../../src/constants/eventIds.js';
 import { beforeEach, expect, jest, test, afterEach } from '@jest/globals';
-import { createMockTurnHandler } from '../../common/mockFactories.js';
+import { createMockTurnHandler } from '../../common/mockFactories';
 import { createAiActor } from '../../common/turns/testActors.js';
 
 // --- Mock Implementations ---

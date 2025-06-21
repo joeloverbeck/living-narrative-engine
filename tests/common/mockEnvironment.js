@@ -3,7 +3,7 @@
  */
 
 import { jest } from '@jest/globals';
-import { createMockContainer } from './mockFactories.js';
+import { createMockContainer } from './mockFactories';
 
 /**
  * Creates mocks using the provided factory functions.

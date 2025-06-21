@@ -10,7 +10,7 @@ import {
   SYSTEM_ERROR_OCCURRED_ID,
   TURN_PROCESSING_STARTED,
 } from '../../../src/constants/eventIds.js';
-import { createMockEntity } from '../../common/mockFactories.js';
+import { createMockEntity } from '../../common/mockFactories';
 
 // --- Test Suite ---
 
