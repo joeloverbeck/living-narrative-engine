@@ -11,7 +11,7 @@
 
 /* ── Implementation imports ─────────────────────────────────────────────── */
 import ModsLoaderError from '../errors/modsLoaderError.js';
-import { ModsLoaderPhaseError } from '../errors/modsLoaderPhaseError.js';
+import { ModsLoaderPhaseError, ModsLoaderErrorCode } from '../errors/modsLoaderPhaseError.js';
 import AbstractLoader from './abstractLoader.js';
 import { createLoadContext } from './LoadContext.js';
 
@@ -106,7 +106,7 @@ class ModsLoader extends AbstractLoader {
       }
       const msg = `ModsLoader: CRITICAL load failure due to an unexpected error. Original error: ${err.message}`;
       this._logger.error(msg, err);
-      throw new ModsLoaderError(msg, 'unknown_loader_error', err);
+      throw new ModsLoaderError(msg, ModsLoaderErrorCode.UNEXPECTED, err);
     }
   }
 }

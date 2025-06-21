@@ -8,9 +8,10 @@ import { createMockLogger } from '../../common/mockFactories.js';
 import InMemoryDataRegistry from '../../../src/data/inMemoryDataRegistry.js';
 import ModsLoader from '../../../src/loaders/modsLoader.js';
 import LoaderPhase from '../../../src/loaders/phases/LoaderPhase.js';
-import { ModsLoaderPhaseError } from '../../../src/errors/modsLoaderPhaseError.js';
+import { ModsLoaderPhaseError, ModsLoaderErrorCode } from '../../../src/errors/modsLoaderPhaseError.js';
 import { makeRegistryCache } from '../../../src/loaders/registryCacheAdapter.js';
 import ModsLoadSession from '../../../src/loaders/ModsLoadSession.js';
+import ModsLoaderError from '../../../src/errors/modsLoaderError.js';
 
 /**
  * Creates a mock phase that tracks execution order and can be configured to fail.
@@ -273,6 +274,14 @@ describe('Integration: ModsLoader Orchestrator Order and Error Propagation', () 
         'ModsLoader: CRITICAL load failure due to an unexpected error. Original error: Unexpected system error',
         expect.any(Error)
       );
+
+      // Verify the error is a ModsLoaderError with the correct code
+      try {
+        await modsLoader.loadMods('test-world', ['mod1']);
+      } catch (error) {
+        expect(error).toBeInstanceOf(ModsLoaderError);
+        expect(error.code).toBe(ModsLoaderErrorCode.UNEXPECTED);
+      }
     });
   });
 
