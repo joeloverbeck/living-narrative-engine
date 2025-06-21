@@ -75,6 +75,7 @@ const simpleFactories = {
   createMockAIGameStateProvider: ['buildGameState'],
   createMockAIPromptContentProvider: ['getPromptData'],
   createMockPromptBuilder: ['build'],
+  createMockAIPromptPipeline: ['generatePrompt'],
   createMockSafeEventDispatcher: ['dispatch'],
   createMockValidatedEventDispatcher: {
     methods: ['dispatch'],
@@ -94,6 +95,7 @@ export const {
   createMockAIGameStateProvider,
   createMockAIPromptContentProvider,
   createMockPromptBuilder,
+  createMockAIPromptPipeline,
   createMockSafeEventDispatcher,
   createMockValidatedEventDispatcher,
 } = generateFactories(simpleFactories);
@@ -226,8 +228,7 @@ export const createMockPathResolver = () => ({
   resolvePath: jest.fn((path) => path),
   resolveModPath: jest.fn((modId) => `mods/${modId}`),
   resolveModContentPath: jest.fn(
-    (modId, diskFolder, filename) =>
-      `mods/${modId}/${diskFolder}/${filename}`
+    (modId, diskFolder, filename) => `mods/${modId}/${diskFolder}/${filename}`
   ),
   resolveModManifestPath: jest.fn((modId) => `mods/${modId}/mod-manifest.json`),
   getModDirectory: jest.fn((modId) => `mods/${modId}`),
