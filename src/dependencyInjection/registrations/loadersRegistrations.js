@@ -188,10 +188,8 @@ export function registerLoaders(container) {
       modManifestLoader: c.resolve(tokens.ModManifestLoader),
       registry: c.resolve(tokens.IDataRegistry),
       validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
-      modDependencyValidator: new ModDependencyValidator(
-        c.resolve(tokens.ILogger)
-      ),
-      modVersionValidator: validateModEngineVersions, // Use the function directly
+      modDependencyValidator: ModDependencyValidator,
+      modVersionValidator: validateModEngineVersions,
       modLoadOrderResolver: resolver,
       configuration: c.resolve(tokens.IConfiguration),
     });
