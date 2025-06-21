@@ -1,6 +1,7 @@
 // src/loaders/phases/worldPhase.js
 
-import LoaderPhase from './loaderphase.js';
+import { createLoadContext } from '../LoadContext.js';
+import LoaderPhase from './LoaderPhase.js';
 import {
     ModsLoaderPhaseError,
     ModsLoaderErrorCode,
