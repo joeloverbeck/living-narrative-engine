@@ -8,6 +8,7 @@ import {
 } from '../../common/turns/turnManagerTestBed.js';
 
 import { TURN_ENDED_ID } from '../../../src/constants/eventIds.js';
+import { PLAYER_COMPONENT_ID } from '../../../src/constants/componentIds.js';
 import { createMockEntity } from '../../common/mockFactories';
 
 // --- Test Suite ---
@@ -60,115 +61,66 @@ describeTurnManagerSuite(
       jest.useRealTimers();
     });
 
-    test('Player actor identified: resolves handler, calls startTurn, dispatches event', async () => {
-      jest.useFakeTimers();
+    test.each([
+      [
+        'player',
+        createMockEntity('player-1', { isActor: true, isPlayer: true }),
+      ],
+      ['ai', createMockEntity('ai-goblin', { isActor: true, isPlayer: false })],
+    ])(
+      'actor identified (%s) -> handler invoked and event dispatched',
+      async (_, actor) => {
+        jest.useFakeTimers();
 
-      const playerActor = createMockEntity('player-1', {
-        isActor: true,
-        isPlayer: true,
-      });
-      const entityType = 'player';
-      testBed.mocks.turnOrderService.getNextEntity.mockResolvedValue(
-        playerActor
-      );
+        const entityType = actor.hasComponent(PLAYER_COMPONENT_ID)
+          ? 'player'
+          : 'ai';
+        testBed.mocks.turnOrderService.getNextEntity.mockResolvedValue(actor);
 
-      const mockHandler = {
-        startTurn: jest.fn().mockResolvedValue(undefined),
-        destroy: jest.fn().mockResolvedValue(undefined),
-      };
-      testBed.mocks.turnHandlerResolver.resolveHandler.mockResolvedValue(
-        mockHandler
-      );
+        const mockHandler = {
+          startTurn: jest.fn().mockResolvedValue(undefined),
+          destroy: jest.fn().mockResolvedValue(undefined),
+        };
+        testBed.mocks.turnHandlerResolver.resolveHandler.mockResolvedValue(
+          mockHandler
+        );
 
-      await testBed.turnManager.advanceTurn();
+        await testBed.turnManager.advanceTurn();
 
-      expect(testBed.mocks.turnOrderService.isEmpty).toHaveBeenCalledTimes(1);
-      expect(
-        testBed.mocks.turnOrderService.getNextEntity
-      ).toHaveBeenCalledTimes(1);
-      expect(testBed.mocks.dispatcher.dispatch).toHaveBeenCalledWith(
-        'core:turn_started',
-        {
-          entityId: playerActor.id,
-          entityType: entityType,
-        }
-      );
-      expect(
-        testBed.mocks.turnHandlerResolver.resolveHandler
-      ).toHaveBeenCalledWith(playerActor);
-      expect(mockHandler.startTurn).toHaveBeenCalledWith(playerActor);
-      expect(testBed.mocks.logger.debug).toHaveBeenCalledWith(
-        expect.stringContaining(
-          `TurnManager now WAITING for 'core:turn_ended' event.`
-        )
-      );
-      expect(stopSpy).not.toHaveBeenCalled();
+        expect(testBed.mocks.turnOrderService.isEmpty).toHaveBeenCalledTimes(1);
+        expect(
+          testBed.mocks.turnOrderService.getNextEntity
+        ).toHaveBeenCalledTimes(1);
+        expect(testBed.mocks.dispatcher.dispatch).toHaveBeenCalledWith(
+          'core:turn_started',
+          {
+            entityId: actor.id,
+            entityType,
+          }
+        );
+        expect(
+          testBed.mocks.turnHandlerResolver.resolveHandler
+        ).toHaveBeenCalledWith(actor);
+        expect(mockHandler.startTurn).toHaveBeenCalledWith(actor);
+        expect(testBed.mocks.logger.debug).toHaveBeenCalledWith(
+          expect.stringContaining(
+            `TurnManager now WAITING for 'core:turn_ended' event.`
+          )
+        );
+        expect(stopSpy).not.toHaveBeenCalled();
 
-      expect(turnEndCapture.handler).toBeInstanceOf(Function);
-      turnEndCapture.handler({
-        type: TURN_ENDED_ID,
-        payload: { entityId: playerActor.id, success: true },
-      });
+        expect(turnEndCapture.handler).toBeInstanceOf(Function);
+        turnEndCapture.handler({
+          type: TURN_ENDED_ID,
+          payload: { entityId: actor.id, success: true },
+        });
 
-      await flushPromisesAndTimers();
-      expect(mockHandler.destroy).toHaveBeenCalledTimes(1);
+        await flushPromisesAndTimers();
+        expect(mockHandler.destroy).toHaveBeenCalledTimes(1);
 
-      jest.useRealTimers();
-    });
-
-    test('AI actor identified: resolves handler, calls startTurn, dispatches event', async () => {
-      jest.useFakeTimers();
-
-      const aiActor = createMockEntity('ai-goblin', {
-        isActor: true,
-        isPlayer: false,
-      });
-      const entityType = 'ai';
-      testBed.mocks.turnOrderService.getNextEntity.mockResolvedValue(aiActor);
-
-      const mockHandler = {
-        startTurn: jest.fn().mockResolvedValue(undefined),
-        destroy: jest.fn().mockResolvedValue(undefined),
-      };
-      testBed.mocks.turnHandlerResolver.resolveHandler.mockResolvedValue(
-        mockHandler
-      );
-
-      await testBed.turnManager.advanceTurn();
-
-      expect(testBed.mocks.turnOrderService.isEmpty).toHaveBeenCalledTimes(1);
-      expect(
-        testBed.mocks.turnOrderService.getNextEntity
-      ).toHaveBeenCalledTimes(1);
-      expect(testBed.mocks.dispatcher.dispatch).toHaveBeenCalledWith(
-        'core:turn_started',
-        {
-          entityId: aiActor.id,
-          entityType: entityType,
-        }
-      );
-      expect(
-        testBed.mocks.turnHandlerResolver.resolveHandler
-      ).toHaveBeenCalledWith(aiActor);
-      expect(mockHandler.startTurn).toHaveBeenCalledWith(aiActor);
-      expect(testBed.mocks.logger.debug).toHaveBeenCalledWith(
-        expect.stringContaining(
-          `TurnManager now WAITING for 'core:turn_ended' event.`
-        )
-      );
-      expect(stopSpy).not.toHaveBeenCalled();
-
-      expect(turnEndCapture.handler).toBeInstanceOf(Function);
-      turnEndCapture.handler({
-        type: TURN_ENDED_ID,
-        payload: { entityId: aiActor.id, success: true },
-      });
-
-      await flushPromisesAndTimers();
-      expect(mockHandler.destroy).toHaveBeenCalledTimes(1);
-
-      jest.useRealTimers();
-    });
+        jest.useRealTimers();
+      }
+    );
 
     test('Non-actor entity: logs warning, does not resolve handler or dispatch events', async () => {
       const nonActor = createMockEntity('non-actor', {
@@ -193,16 +145,15 @@ describeTurnManagerSuite(
       expect(stopSpy).not.toHaveBeenCalled();
     });
 
-  test('Entity manager error: logs error, stops manager', async () => {
-    const entityError = new Error('Entity not found');
-    testBed.mocks.turnOrderService.isEmpty.mockResolvedValue(false);
-    testBed.mocks.turnOrderService.getNextEntity.mockResolvedValue(null);
+    test('Entity manager error: logs error, stops manager', async () => {
+      testBed.mocks.turnOrderService.isEmpty.mockResolvedValue(false);
+      testBed.mocks.turnOrderService.getNextEntity.mockResolvedValue(null);
 
       await testBed.turnManager.advanceTurn();
 
       expect(testBed.mocks.logger.error).toHaveBeenCalledWith(
         'CRITICAL Error during turn advancement logic (before handler initiation): Cannot start a new round: No active entities with an Actor component found.',
-      expect.any(Error)
+        expect.any(Error)
       );
       expect(stopSpy).toHaveBeenCalled();
     });
