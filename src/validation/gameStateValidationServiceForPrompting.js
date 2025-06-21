@@ -1,14 +1,14 @@
 // src/services/gameStateValidationServiceForPrompting.js
 // --- FILE START ---
-/** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
-/** @typedef {import('../turns/dtos/AIGameStateDTO.js').AIGameStateDTO} AIGameStateDTO */
-/** @typedef {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
+import { ILogger } from '../interfaces/iLogger.js';
+import { ISafeEventDispatcher } from '../interfaces/iSafeEventDispatcher.js';
+import { IGameStateValidationServiceForPrompting } from '../interfaces/iGameStateValidationServiceForPrompting.js';
 
-/** @typedef {import('../interfaces/IGameStateValidationServiceForPrompting.js').IGameStateValidationServiceForPrompting} IGameStateValidationServiceForPrompting_Interface */
+/**
+ * @typedef {import('../interfaces/iGameStateValidationServiceForPrompting.js').IGameStateValidationServiceForPrompting} IGameStateValidationServiceForPrompting_Interface */
 
 import { ERROR_FALLBACK_CRITICAL_GAME_STATE_MISSING } from '../constants/textDefaults.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../constants/eventIds.js';
-import { IGameStateValidationServiceForPrompting } from '../interfaces/IGameStateValidationServiceForPrompting.js';
 
 /**
  * @class GameStateValidationServiceForPrompting

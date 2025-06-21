@@ -64,13 +64,13 @@ import ModLoadOrderResolver from '../../modding/modLoadOrderResolver.js';
 import FnLoadOrderResolverAdapter from '../../adapters/fnLoadOrderResolverAdapter.js';
 
 // --- Phase Imports ---
-import SchemaPhase from '../../loaders/phases/SchemaPhase.js';
-import ManifestPhase from '../../loaders/phases/ManifestPhase.js';
+import SchemaPhase from '../../loaders/phases/schemaphase.js';
+import ManifestPhase from '../../loaders/phases/manifestphase.js';
 import ContentPhase from '../../loaders/phases/contentPhase.js';
 import WorldPhase from '../../loaders/phases/worldPhase.js';
 import SummaryPhase from '../../loaders/phases/summaryPhase.js';
 import ModManifestProcessor from '../../loaders/ModManifestProcessor.js';
-import ContentLoadManager from '../../loaders/ContentLoadManager.js';
+import ContentLoadManager from '../../loaders/contentLoadManager.js';
 import WorldLoadSummaryLogger from '../../loaders/WorldLoadSummaryLogger.js';
 
 // --- DI & Helper Imports ---

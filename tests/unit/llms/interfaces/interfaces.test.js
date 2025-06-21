@@ -7,9 +7,9 @@
 // -----------------------------------------------------------------------------
 
 import { describe, it, expect } from '@jest/globals';
-import { IApiKeyProvider } from '../../../../src/llms/interfaces/IApiKeyProvider.js';
-import { IHttpClient } from '../../../../src/llms/interfaces/IHttpClient.js';
-import { ILLMStrategy } from '../../../../src/llms/interfaces/ILLMStrategy.js';
+import { IApiKeyProvider } from '../../../../src/llms/interfaces/iApiKeyProvider.js';
+import { IHttpClient } from '../../../../src/llms/interfaces/iHttpClient.js';
+import { ILLMStrategy } from '../../../../src/llms/interfaces/iLLMStrategy.js';
 
 /** Dummy objects for method arguments */
 const dummyConfig = {};

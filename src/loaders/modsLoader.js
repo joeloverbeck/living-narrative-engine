@@ -6,13 +6,14 @@
 /* ── Type-only imports ──────────────────────────────────────────────────── */
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../interfaces/coreServices.js').IDataRegistry} IDataRegistry */
-/** @typedef {import('../loaders/phases/LoaderPhase.js').default} LoaderPhase */
-/** @typedef {import('./LoadContext.js').LoadContext} LoadContext */
+/** @typedef {import('../loaders/phases/loaderphase.js').default} LoaderPhase */
+/** @typedef {import('./loadContext.js').LoadContext} LoadContext */
 
 /* ── Implementation imports ─────────────────────────────────────────────── */
 import ModsLoaderError from '../errors/modsLoaderError.js';
 import { ModsLoaderPhaseError } from '../errors/modsLoaderPhaseError.js';
 import AbstractLoader from './abstractLoader.js';
+import { createLoadContext } from './loadContext.js';
 
 /* ───────────────────────────────────────────────────────────────────────── */
 

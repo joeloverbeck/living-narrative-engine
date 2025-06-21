@@ -1,5 +1,5 @@
 import { describe, it, expect, jest } from '@jest/globals';
-import DefaultComponentPolicy from '../../../src/adapters/DefaultComponentPolicy.js';
+import DefaultComponentPolicy from '../../../src/adapters/defaultComponentPolicy.js';
 import {
   createMockLogger,
   createMockSchemaValidator,

@@ -9,14 +9,14 @@
 // --- Interface/Type Imports for JSDoc ---
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
-/** @typedef {import('../interfaces/ICommandOutcomeInterpreter.js').ICommandOutcomeInterpreter} ICommandOutcomeInterpreterType */
+/** @typedef {import('../interfaces/iCommandOutcomeInterpreter.js').ICommandOutcomeInterpreter} ICommandOutcomeInterpreterType */
 /** @typedef {import('../../turns/interfaces/ITurnContext.js').ITurnContext} ITurnContext */
 /** @typedef {import('../../entities/entity.js').default} Entity */
 
 // --- Constant Imports ---
 import TurnDirective from '../../turns/constants/turnDirectives.js';
 // --- Interface Imports ---
-import { ICommandOutcomeInterpreter } from '../interfaces/ICommandOutcomeInterpreter.js';
+import { ICommandOutcomeInterpreter } from '../interfaces/iCommandOutcomeInterpreter.js';
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 
 /**

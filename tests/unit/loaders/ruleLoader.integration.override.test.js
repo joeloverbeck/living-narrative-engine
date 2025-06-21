@@ -28,14 +28,14 @@ import InMemoryDataRegistry from '../../../src/data/inMemoryDataRegistry.js'; //
 const createMockConfiguration = (overrides = {}) => ({
   // --- Methods required by BaseManifestItemLoader constructor ---
   getModsBasePath: jest.fn().mockReturnValue('./data/mods'),
-  getContentTypeSchemaId: jest.fn((typeName) => {
-    if (typeName === 'rules') {
+  getContentTypeSchemaId: jest.fn((registryKey) => {
+    if (registryKey === 'rules') {
       return 'http://example.com/schemas/rule.schema.json';
     }
-    return `http://example.com/schemas/${typeName}.schema.json`;
+    return `http://example.com/schemas/${registryKey}.schema.json`;
   }),
   // --- Other potentially used methods (good practice to include) ---
-  getContentBasePath: jest.fn((typeName) => `./data/mods/test-mod/${typeName}`),
+  getContentBasePath: jest.fn((registryKey) => `./data/mods/test-mod/${registryKey}`),
   getSchemaBasePath: jest.fn().mockReturnValue('schemas'),
   getSchemaFiles: jest.fn().mockReturnValue([]),
   getWorldBasePath: jest.fn().mockReturnValue('worlds'),
@@ -55,12 +55,12 @@ const createMockConfiguration = (overrides = {}) => ({
  * @param overrides
  */
 const createMockPathResolver = (overrides = {}) => ({
-  resolveModContentPath: jest.fn((modId, typeName, filename) => {
-    return `/abs/path/to/mods/${modId}/${typeName}/${filename}`;
+  resolveModContentPath: jest.fn((modId, registryKey, filename) => {
+    return `/abs/path/to/mods/${modId}/${registryKey}/${filename}`;
   }),
   // Mock other methods required by Base constructor or other logic
   resolveContentPath: jest.fn(
-    (typeName, filename) => `./data/${typeName}/${filename}`
+    (registryKey, filename) => `./data/${registryKey}/${filename}`
   ),
   resolveSchemaPath: jest.fn((filename) => `./data/schemas/${filename}`),
   resolveModManifestPath: jest.fn(
@@ -212,8 +212,8 @@ describe('RuleLoader Integration (Rule Override via loadItemsForMod)', () => {
     realRegistry = new InMemoryDataRegistry(mockLogger); // Pass mock logger if needed by registry
 
     // Ensure rule schema ID is configured via base method
-    mockConfig.getContentTypeSchemaId.mockImplementation((typeName) =>
-      typeName === RULE_TYPE_NAME ? ruleSchemaId : undefined
+    mockConfig.getContentTypeSchemaId.mockImplementation((registryKey) =>
+      registryKey === RULE_TYPE_NAME ? ruleSchemaId : undefined
     );
     // Mock specific getter if RuleLoader uses it (Good practice, though base class uses getContentTypeSchemaId)
     mockConfig.getRuleSchemaId.mockReturnValue(ruleSchemaId);

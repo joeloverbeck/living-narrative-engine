@@ -66,7 +66,7 @@ const mockConfiguration = {
       'entity-definition.schema.json',
       'entity-instance.schema.json',
     ]),
-  getContentTypeSchemaId: jest.fn((typeName) => {
+  getContentTypeSchemaId: jest.fn((registryKey) => {
     const map = {
       /* map based on actual dependencyInjection if needed */
       components: 'http://example.com/schemas/component.schema.json',
@@ -77,10 +77,10 @@ const mockConfiguration = {
       game: 'http://example.com/schemas/game.schema.json',
       'mod-manifest': 'http://example.com/schemas/mod.manifest.schema.json',
     };
-    return map[typeName];
+    return map[registryKey];
   }),
   getSchemaBasePath: jest.fn().mockReturnValue('./data/schemas'),
-  getContentBasePath: jest.fn((typeName) => `./data/${typeName}`),
+  getContentBasePath: jest.fn((registryKey) => `./data/${registryKey}`),
   getGameConfigFilename: jest.fn().mockReturnValue('game.json'),
   getModsBasePath: jest.fn().mockReturnValue('mods'), // Needed for ModManifestLoader etc.
   getModManifestFilename: jest.fn().mockReturnValue('mod.manifest.json'), // Needed
@@ -94,8 +94,8 @@ const mockConfiguration = {
 const mockPathResolver = {
   resolveSchemaPath: jest.fn((filename) => `resolved/schemas/${filename}`),
   resolveModContentPath: jest.fn(
-    (modId, typeName, filename) =>
-      `resolved/mods/${modId}/${typeName}/${filename}`
+    (modId, registryKey, filename) =>
+      `resolved/mods/${modId}/${registryKey}/${filename}`
   ),
   resolveModManifestPath: jest.fn(
     (modId) => `resolved/mods/${modId}/mod.manifest.json`

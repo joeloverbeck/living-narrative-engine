@@ -3,7 +3,7 @@
  * @see src/data/providers/entitySummaryProvider.js
  */
 
-import { IEntitySummaryProvider } from '../../interfaces/IEntitySummaryProvider.js';
+import { IEntitySummaryProvider } from '../../interfaces/iEntitySummaryProvider.js';
 import {
   NAME_COMPONENT_ID,
   DESCRIPTION_COMPONENT_ID,

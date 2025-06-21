@@ -1,6 +1,6 @@
 // --- FILE: src/llms/retryHttpClient.js ---
 
-import { IHttpClient } from './interfaces/IHttpClient.js';
+import { IHttpClient } from './interfaces/iHttpClient.js';
 import {
   SYSTEM_ERROR_OCCURRED_ID,
   SYSTEM_WARNING_OCCURRED_ID,

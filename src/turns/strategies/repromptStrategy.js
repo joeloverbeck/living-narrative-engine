@@ -8,7 +8,7 @@
 /** @typedef {import('../constants/turnDirectives.js').default} TurnDirectiveEnum */
 /** @typedef {import('../../types/commandResult.js').CommandResult}  CommandResult */
 
-import { ITurnDirectiveStrategy } from '../interfaces/ITurnDirectiveStrategy.js';
+import { ITurnDirectiveStrategy } from '../interfaces/iTurnDirectiveStrategy.js';
 import TurnDirective from '../constants/turnDirectives.js';
 import { AwaitingActorDecisionState } from '../states/awaitingActorDecisionState.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../constants/eventIds.js';

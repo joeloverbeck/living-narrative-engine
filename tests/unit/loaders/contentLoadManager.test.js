@@ -1,5 +1,5 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
-import ContentLoadManager from '../../../src/loaders/ContentLoadManager.js';
+import ContentLoadManager from '../../../src/loaders/contentLoadManager.js';
 
 /** @typedef {import('../../../src/loaders/LoadResultAggregator.js').TotalResultsSummary} TotalResultsSummary */
 
@@ -13,7 +13,7 @@ class MockLoader {
       async (
         currentModId,
         manifest,
-        actualContentKey /*, contentTypeDir, typeName */
+        actualContentKey /*, diskFolder, registryKey */
       ) => {
         // Not for this mod, or manifest is missing/empty for this loader's specific contentKey
         if (
@@ -77,15 +77,15 @@ describe('ContentLoadManager.loadContent', () => {
         {
           loader: loaderA,
           contentKey: 'items', // loaderA looks for 'items'
-          contentTypeDir: 'items',
-          typeName: 'items',
+          diskFolder: 'items',
+          registryKey: 'items',
           phase: 'definitions',
         },
         {
           loader: loaderB,
           contentKey: 'items', // loaderB also looks for 'items'
-          contentTypeDir: 'items',
-          typeName: 'items',
+          diskFolder: 'items',
+          registryKey: 'items',
           phase: 'definitions',
         },
       ],
@@ -101,16 +101,22 @@ describe('ContentLoadManager.loadContent', () => {
 
     const results = await manager.loadContent(finalOrder, manifests, totals);
 
-    expect(results).toEqual({ modA: 'success', modB: 'failed' });
-    expect(totals.items.count).toBe(1); // Only loaderA succeeded
-    expect(totals.items.errors).toBe(1); // Only loaderB failed
+    expect(results).toEqual({
+      items: {
+        count: 1,
+        errors: 1,
+        overrides: 0,
+      },
+    });
+    expect(results.items.count).toBe(1); // Only loaderA succeeded
+    expect(results.items.errors).toBe(1); // Only loaderB failed
 
     // Check that dispatcher was called for loaderB's failure
     expect(dispatcher.dispatch).toHaveBeenCalledWith(
       'initialization:world_loader:content_load_failed',
       expect.objectContaining({
         modId: 'modB',
-        typeName: 'items',
+        registryKey: 'items',
         error: 'Loader B failed',
         phase: 'definitions', // Ensure phase is checked
       }),

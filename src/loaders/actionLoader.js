@@ -53,12 +53,12 @@ class ActionLoader extends BaseManifestItemLoader {
    * @param {string} filename
    * @param {string} resolvedPath
    * @param {any} data
-   * @param {string} typeName
+   * @param {string} registryKey
    * @returns {Promise<{qualifiedId: string, didOverride: boolean}>}
    */
-  async _processFetchedItem(modId, filename, resolvedPath, data, typeName) {
+  async _processFetchedItem(modId, filename, resolvedPath, data, registryKey) {
     this._logger.debug(
-      `ActionLoader [${modId}]: Processing fetched item: ${filename} (Type: ${typeName})`
+      `ActionLoader [${modId}]: Processing fetched item: ${filename} (Type: ${registryKey})`
     );
 
     // Use the reliable base class helper to handle ID parsing and storage.

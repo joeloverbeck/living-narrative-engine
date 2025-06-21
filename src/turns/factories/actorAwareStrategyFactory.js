@@ -4,7 +4,7 @@
  * based on an actor's properties.
  */
 
-import { ITurnStrategyFactory } from '../interfaces/ITurnStrategyFactory.js';
+import { ITurnStrategyFactory } from '../interfaces/iTurnStrategyFactory.js';
 import { GenericTurnStrategy } from '../strategies/genericTurnStrategy.js';
 
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */

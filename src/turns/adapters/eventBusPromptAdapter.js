@@ -1,7 +1,7 @@
 // src/turns/adapters/eventBusPromptAdapter.js
 // --- FILE START ---
 
-import { IPromptOutputPort } from '../ports/IPromptOutputPort.js';
+import { IPromptOutputPort } from '../ports/iPromptOutputPort.js';
 import { PLAYER_TURN_PROMPT_ID } from '../../constants/eventIds.js';
 /* eslint-disable no-console */
 

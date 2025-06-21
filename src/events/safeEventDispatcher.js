@@ -7,15 +7,15 @@
 
 /** @typedef {import('../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher */
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
-/** @typedef {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
+/** @typedef {import('../interfaces/iSafeEventDispatcher.js').iSafeEventDispatcher} iSafeEventDispatcher */
 /** @typedef {import('./eventBus.js').EventListener} EventListener */
 /** @typedef {() => void} UnsubscribeFn */
 
-import { ISafeEventDispatcher } from '../interfaces/ISafeEventDispatcher.js';
+import { ISafeEventDispatcher } from '../interfaces/iSafeEventDispatcher.js';
 
 /**
  * @class SafeEventDispatcher
- * @implements {ISafeEventDispatcher}
+ * @implements {iSafeEventDispatcher}
  * @description A utility class that wraps an IValidatedEventDispatcher to provide
  * safe, non-throwing event dispatching, subscription, and unsubscription.
  * It logs failures encountered during these operations but ensures the calling

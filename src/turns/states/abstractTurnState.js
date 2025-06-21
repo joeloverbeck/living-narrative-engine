@@ -9,15 +9,15 @@
  * @typedef {import('../constants/turnDirectives.js').default} TurnDirectiveEnum
  * @typedef {import('../../constants/eventIds.js').SystemEventPayloads} SystemEventPayloads
  * @typedef {import('../../constants/eventIds.js').TURN_ENDED_ID} TURN_ENDED_ID_TYPE
- * @typedef {import('../interfaces/ITurnState.js').ITurnState} ITurnState_Interface
+ * @typedef {import('../interfaces/iTurnState.js').iTurnState} iTurnState_Interface
  */
 
-import { ITurnState } from '../interfaces/ITurnState.js';
+import { ITurnState } from '../interfaces/iTurnState.js';
 import { UNKNOWN_ACTOR_ID } from '../../constants/unknownIds.js';
 
 /**
  * @class AbstractTurnState
- * @implements {ITurnState_Interface}
+ * @implements {iTurnState_Interface}
  * @description
  * An abstract base class for turn states. It stores the BaseTurnHandler instance
  * (passed in constructor) to facilitate state transitions and to access the ITurnContext.

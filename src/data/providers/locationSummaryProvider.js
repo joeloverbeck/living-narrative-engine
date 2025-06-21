@@ -3,7 +3,8 @@
  * @see src/data/providers/locationSummaryProvider.js
  */
 
-import { ILocationSummaryProvider } from '../../interfaces/ILocationSummaryProvider.js';
+import { ILocationSummaryProvider } from '../../interfaces/iLocationSummaryProvider.js';
+import { IEntitySummaryProvider } from '../../interfaces/iEntitySummaryProvider.js';
 import {
   POSITION_COMPONENT_ID,
   EXITS_COMPONENT_ID,
@@ -20,7 +21,6 @@ import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 /** @typedef {import('../../turns/dtos/AIGameStateDTO.js').AILocationExitDTO} AILocationExitDTO */
 /** @typedef {import('../../turns/dtos/AIGameStateDTO.js').AICharacterInLocationDTO} AICharacterInLocationDTO */
 /** @typedef {import('../../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
-/** @typedef {import('../../interfaces/IEntitySummaryProvider.js').IEntitySummaryProvider} IEntitySummaryProvider */
 
 export class LocationSummaryProvider extends ILocationSummaryProvider {
   /** @type {IEntityManager} */

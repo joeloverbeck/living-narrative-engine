@@ -1,6 +1,6 @@
 // src/services/promptElementAssemblers/perceptionLogAssembler.js
 
-import { IPromptElementAssembler } from '../../interfaces/IPromptElementAssembler.js';
+import { IPromptElementAssembler } from '../../interfaces/iPromptElementAssembler.js';
 import { resolveWrapper } from '../../utils/wrapperUtils.js';
 
 export const PERCEPTION_LOG_ENTRY_KEY = 'perception_log_entry';

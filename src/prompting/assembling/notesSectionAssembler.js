@@ -1,5 +1,5 @@
 // src/prompting/notesSectionAssembler.js
-import { IPromptElementAssembler } from '../../interfaces/IPromptElementAssembler.js';
+import { IPromptElementAssembler } from '../../interfaces/iPromptElementAssembler.js';
 import { resolveWrapper } from '../../utils/wrapperUtils.js';
 
 export const NOTES_WRAPPER_KEY = 'notes_wrapper';

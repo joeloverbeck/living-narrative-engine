@@ -1,6 +1,6 @@
 // src/ai/shortTermMemoryService.js
 
-import { ISafeEventDispatcher } from '../interfaces/ISafeEventDispatcher.js';
+import { ISafeEventDispatcher } from '../interfaces/iSafeEventDispatcher.js';
 
 /**
  * Short-Term Memory service.
@@ -11,7 +11,7 @@ export default class ShortTermMemoryService {
    * Creates a new ShortTermMemoryService.
    *
    * @param {object} [options] Configuration options for the service.
-   * @param {ISafeEventDispatcher} [options.eventDispatcher] Safe dispatcher for domain events.
+   * @param {iSafeEventDispatcher} [options.eventDispatcher] Safe dispatcher for domain events.
    * @param {number} [options.defaultMaxEntries] Fallback when mem.maxEntries is missing or invalid.
    */
   constructor({ eventDispatcher = null, defaultMaxEntries = 50 } = {}) {
@@ -20,7 +20,7 @@ export default class ShortTermMemoryService {
   }
 
   /**
-   * Add a thought if it isn’t already present.
+   * Add a thought if it isn't already present.
    *
    * @param {object} mem The memory object to update.
    * @param {Array<{text:string,timestamp:string}>} mem.thoughts The list of existing thought entries.

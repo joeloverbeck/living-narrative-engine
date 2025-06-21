@@ -8,7 +8,7 @@ import { BaseManifestItemLoader } from '../../../src/loaders/baseManifestItemLoa
 const createMockConfiguration = (overrides = {}) => ({
   getModsBasePath: jest.fn().mockReturnValue('./data/mods'),
   getContentTypeSchemaId: jest.fn(
-    (typeName) => `http://example.com/schemas/${typeName}.schema.json`
+    (registryKey) => `http://example.com/schemas/${registryKey}.schema.json`
   ),
   getSchemaBasePath: jest.fn().mockReturnValue('schemas'),
   getSchemaFiles: jest.fn().mockReturnValue([]),
@@ -16,17 +16,17 @@ const createMockConfiguration = (overrides = {}) => ({
   getBaseDataPath: jest.fn().mockReturnValue('./data'),
   getGameConfigFilename: jest.fn().mockReturnValue('game.json'),
   getModManifestFilename: jest.fn().mockReturnValue('mod.manifest.json'),
-  getContentBasePath: jest.fn((typeName) => `./data/${typeName}`),
+  getContentBasePath: jest.fn((registryKey) => `./data/${registryKey}`),
   ...overrides,
 });
 
 const createMockPathResolver = (overrides = {}) => ({
   resolveModContentPath: jest.fn(
-    (modId, typeName, filename) =>
-      `./data/mods/${modId}/${typeName}/${filename}`
+    (modId, registryKey, filename) =>
+      `./data/mods/${modId}/${registryKey}/${filename}`
   ),
   resolveContentPath: jest.fn(
-    (typeName, filename) => `./data/${typeName}/${filename}`
+    (registryKey, filename) => `./data/${registryKey}/${filename}`
   ),
   resolveSchemaPath: jest.fn((filename) => `./data/schemas/${filename}`),
   resolveModManifestPath: jest.fn(
@@ -102,7 +102,7 @@ class TestableLoader extends BaseManifestItemLoader {
     filename,
     resolvedPath,
     fetchedData,
-    typeName
+    registryKey
   ) {
     // Mock implementation required by the abstract class, needs to return the correct shape now
     // based on the JSDoc for _processFetchedItem. Assume no override for simplicity here.
@@ -250,7 +250,7 @@ describe('BaseManifestItemLoader.loadItemsForMod', () => {
     });
     // ***** END CORRECTED TESTS *****
 
-    // ***** KEPT TESTS for contentKey/contentTypeDir/typeName: Expect TypeError *****
+    // ***** KEPT TESTS for contentKey/diskFolder/registryKey: Expect TypeError *****
     // These tests expect errors to be *thrown*, not resolved values, so they remain correct.
     it('should throw TypeError and log error if contentKey is invalid', async () => {
       const invalidKeys = [null, undefined, ''];
@@ -277,7 +277,7 @@ describe('BaseManifestItemLoader.loadItemsForMod', () => {
       }
     });
 
-    it('should throw TypeError and log error if contentTypeDir is invalid', async () => {
+    it('should throw TypeError and log error if diskFolder is invalid', async () => {
       const invalidDirs = [null, undefined, ''];
       for (const invalidDir of invalidDirs) {
         mockLogger.error.mockClear();
@@ -294,7 +294,7 @@ describe('BaseManifestItemLoader.loadItemsForMod', () => {
         ).rejects.toThrow(TypeError);
 
         expect(mockLogger.error).toHaveBeenCalledWith(
-          `TestableLoader: Programming Error - Invalid 'contentTypeDir' provided for loading ${TEST_TYPE_NAME} for mod '${TEST_MOD_ID}'. Must be a non-empty string. Received: ${invalidDir}`
+          `TestableLoader: Programming Error - Invalid 'diskFolder' provided for loading ${TEST_TYPE_NAME} for mod '${TEST_MOD_ID}'. Must be a non-empty string. Received: ${invalidDir}`
         );
         expect(mockLogger.error).toHaveBeenCalledTimes(1);
         expect(mockLogger.warn).not.toHaveBeenCalled();
@@ -302,7 +302,7 @@ describe('BaseManifestItemLoader.loadItemsForMod', () => {
       }
     });
 
-    it('should throw TypeError and log error if typeName is invalid', async () => {
+    it('should throw TypeError and log error if registryKey is invalid', async () => {
       const invalidTypeNames = [null, undefined, ''];
       for (const invalidTypeName of invalidTypeNames) {
         mockLogger.error.mockClear();
@@ -319,7 +319,7 @@ describe('BaseManifestItemLoader.loadItemsForMod', () => {
         ).rejects.toThrow(TypeError);
 
         expect(mockLogger.error).toHaveBeenCalledWith(
-          `TestableLoader: Programming Error - Invalid 'typeName' provided for loading content for mod '${TEST_MOD_ID}'. Must be a non-empty string. Received: ${invalidTypeName}`
+          `TestableLoader: Programming Error - Invalid 'registryKey' provided for loading content for mod '${TEST_MOD_ID}'. Must be a non-empty string. Received: ${invalidTypeName}`
         );
         expect(mockLogger.error).toHaveBeenCalledTimes(1);
         expect(mockLogger.warn).not.toHaveBeenCalled();
@@ -330,7 +330,7 @@ describe('BaseManifestItemLoader.loadItemsForMod', () => {
   });
 
   // --- Logging Test ---
-  it('should log the informational loading message with correct class name and typeName', async () => {
+  it('should log the informational loading message with correct class name and registryKey', async () => {
     await testLoader.loadItemsForMod(
       TEST_MOD_ID,
       MOCK_MANIFEST,

@@ -1,7 +1,7 @@
 // src/turns/adapters/eventBusTurnEndAdapter.js
 // --- FILE START ---
 
-import { ITurnEndPort } from '../ports/ITurnEndPort.js';
+import { ITurnEndPort } from '../ports/iTurnEndPort.js';
 import {
   TURN_ENDED_ID,
   SYSTEM_ERROR_OCCURRED_ID,

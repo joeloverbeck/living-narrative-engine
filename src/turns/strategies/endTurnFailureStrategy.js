@@ -8,7 +8,7 @@
 /** @typedef {import('../constants/turnDirectives.js').default}   TurnDirectiveEnum */
 /** @typedef {import('../../types/commandResult.js').CommandResult}   CommandResult */
 
-import { ITurnDirectiveStrategy } from '../interfaces/ITurnDirectiveStrategy.js';
+import { ITurnDirectiveStrategy } from '../interfaces/iTurnDirectiveStrategy.js';
 import TurnDirective from '../constants/turnDirectives.js';
 
 export default class EndTurnFailureStrategy extends ITurnDirectiveStrategy {

@@ -11,7 +11,7 @@
 /** @typedef {import('../../interfaces/ILocationSummaryProvider.js').ILocationSummaryProvider} ILocationSummaryProvider */
 /** @typedef {import('../../interfaces/IPerceptionLogProvider.js').IPerceptionLogProvider} IPerceptionLogProvider */
 
-import { IAIGameStateProvider } from '../interfaces/IAIGameStateProvider.js';
+import { IAIGameStateProvider } from '../interfaces/iAIGameStateProvider.js';
 
 /**
  * @class AIGameStateProvider

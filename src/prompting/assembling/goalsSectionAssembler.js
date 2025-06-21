@@ -1,5 +1,5 @@
 // src/prompting/goalsSectionAssembler.js
-import { IPromptElementAssembler } from '../../interfaces/IPromptElementAssembler.js';
+import { IPromptElementAssembler } from '../../interfaces/iPromptElementAssembler.js';
 import { resolveWrapper } from '../../utils/wrapperUtils.js';
 
 export const GOALS_WRAPPER_KEY = 'goals_wrapper';

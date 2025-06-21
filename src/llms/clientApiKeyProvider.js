@@ -1,7 +1,7 @@
 // src/llms/clientApiKeyProvider.js
 // --- FILE START ---
 
-import { IApiKeyProvider } from './interfaces/IApiKeyProvider.js';
+import { IApiKeyProvider } from './interfaces/iApiKeyProvider.js';
 import { safeDispatchError } from '../utils/safeDispatchErrorUtils.js';
 import { resolveSafeDispatcher } from '../utils/dispatcherUtils.js';
 import { initLogger } from '../utils/index.js';

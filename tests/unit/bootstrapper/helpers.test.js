@@ -15,7 +15,7 @@ import {
   stageSuccess,
   stageFailure,
 } from '../../../src/bootstrapper/helpers.js';
-import StageError from '../../../src/bootstrapper/StageError.js';
+import StageError from '../../../src/bootstrapper/stageError.js';
 
 /**
  * Basic logger mock for helper tests.

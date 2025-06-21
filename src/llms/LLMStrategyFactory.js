@@ -1,11 +1,11 @@
 // src/llms/LLMStrategyFactory.js
 
 // --- MODIFIED FILE START ---
-import { IHttpClient } from './interfaces/IHttpClient.js'; // Assuming IHttpClient is in ./interfaces/
-import { ILogger } from '../interfaces/ILogger.js'; // Assuming ILogger is in ../interfaces/
-import { ILLMStrategy } from './interfaces/ILLMStrategy.js'; // Assuming ILLMStrategy is in ./interfaces/
+import { IHttpClient } from './interfaces/iHttpClient.js';
+import { ILogger } from '../interfaces/iLogger.js';
+import { ILLMStrategy } from './interfaces/iLLMStrategy.js';
 import { ConfigurationError } from '../errors/configurationError';
-import { LLMStrategyFactoryError } from './errors/LLMStrategyFactoryError.js';
+import { LLMStrategyFactoryError } from './errors/llmStrategyFactoryError.js';
 import { initLogger } from '../utils/index.js';
 
 // Import concrete strategy implementations

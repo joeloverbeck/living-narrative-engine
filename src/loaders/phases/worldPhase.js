@@ -1,13 +1,14 @@
 // src/loaders/phases/worldPhase.js
 
-import LoaderPhase from './LoaderPhase.js';
+import LoaderPhase from './loaderphase.js';
 import {
   ModsLoaderPhaseError,
   ModsLoaderErrorCode,
 } from '../../errors/modsLoaderPhaseError.js';
+import { logPhaseStart } from '../../utils/logPhaseStart.js';
 
 /**
- * @typedef {import('../LoadContext.js').LoadContext} LoadContext
+ * @typedef {import('../loadContext.js').LoadContext} LoadContext
  * @typedef {import('../worldLoader.js').default} WorldLoader
  * @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger
  * @typedef {import('../../../data/schemas/mod.manifest.schema.json').ModManifest} ModManifest
@@ -54,7 +55,7 @@ export default class WorldPhase extends LoaderPhase {
    * @async
    */
   async execute(ctx) {
-    this.logger.info('— WorldPhase starting —');
+    logPhaseStart(this.logger, 'WorldPhase');
     try {
       await this.worldLoader.loadWorlds(
         ctx.finalModOrder,

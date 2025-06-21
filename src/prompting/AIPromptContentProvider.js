@@ -9,7 +9,7 @@
 /** @typedef {import('../interfaces/IGameStateValidationServiceForPrompting.js').IGameStateValidationServiceForPrompting} IGameStateValidationServiceForPrompting */
 /** @typedef {import('../turns/dtos/actionComposite.js').ActionComposite} ActionComposite */
 
-import { IAIPromptContentProvider } from '../turns/interfaces/IAIPromptContentProvider.js';
+import { IAIPromptContentProvider } from '../turns/interfaces/iAIPromptContentProvider.js';
 import { ensureTerminalPunctuation } from '../utils/textUtils.js';
 import {
   DEFAULT_FALLBACK_CHARACTER_NAME,
