@@ -93,15 +93,6 @@ export class GameEngineTestBed extends ContainerTestBed {
   }
 
   /**
-   * Stops the engine and cleans up the environment.
-   *
-   * @returns {Promise<void>} Promise resolving when cleanup is complete.
-   */
-  async cleanup() {
-    await super.cleanup();
-  }
-
-  /**
    * Stops the engine and cleans up the mock environment after base cleanup.
    *
    * @protected
