@@ -1,32 +1,11 @@
 // Filename: src/tests/loaders/entityLoader.test.js
 
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
-import EntityDefinitionLoader from '../../../src/loaders/entityDefinitionLoader.js'; // Adjust path as needed
+import EntityDefinitionLoader from '../../../src/loaders/entityDefinitionLoader.js';
+import { createMockConfiguration, createMockPathResolver, createMockDataFetcher } from '../../common/mockFactories/index.js';
 import { BaseManifestItemLoader } from '../../../src/loaders/baseManifestItemLoader.js'; // Base class
-import { createMockPathResolver, createMockDataFetcher } from '../../common/mockFactories/index.js';
 
 // --- Mock Service Factories ---
-const createMockConfiguration = (overrides = {}) => ({
-  getModsBasePath: jest.fn().mockReturnValue('./data/mods'),
-  getContentTypeSchemaId: jest.fn((registryKey) => {
-    if (registryKey === 'entityDefinitions')
-      return 'http://example.com/schemas/entity-definition.schema.json';
-    return `http://example.com/schemas/${registryKey}.schema.json`;
-  }),
-  getSchemaBasePath: jest.fn().mockReturnValue('schemas'),
-  getSchemaFiles: jest.fn().mockReturnValue([]),
-  getWorldBasePath: jest.fn().mockReturnValue('worlds'),
-  getBaseDataPath: jest.fn().mockReturnValue('./data'),
-  getGameConfigFilename: jest.fn().mockReturnValue('game.json'),
-  getModManifestFilename: jest.fn().mockReturnValue('mod-manifest.json'),
-  getContentBasePath: jest.fn((registryKey) => `./data/${registryKey}`),
-  getRuleBasePath: jest.fn().mockReturnValue('rules'),
-  getRuleSchemaId: jest
-    .fn()
-    .mockReturnValue('http://example.com/schemas/rule.schema.json'),
-  ...overrides,
-});
-
 const createMockSchemaValidator = (overrides = {}) => ({
   validate: jest.fn().mockReturnValue({ isValid: true, errors: null }),
   getValidator: jest

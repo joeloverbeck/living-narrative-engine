@@ -15,6 +15,7 @@ import { describe, beforeEach, it, expect, jest } from '@jest/globals';
 // --- Dependencies for Registration ---
 import { tokens } from '../../../../src/dependencyInjection/tokens.js';
 import { Registrar } from '../../../../src/dependencyInjection/registrarHelpers.js';
+import { createMockContainerWithRegistration } from '../../../common/mockFactories/index.js';
 
 // --- Classes to be Mocked ---
 // Mock concrete implementations that will be instantiated by factories or resolved.
@@ -92,75 +93,6 @@ const mockLogger = {
   debug: jest.fn(),
 };
 
-// --- Mock AppContainer ---
-const createMockContainer = () => {
-  const registrations = new Map();
-  const instances = new Map();
-  let containerInstance; // Forward declaration for the factory functions
-
-  const register = jest.fn((token, factoryOrClass, options = {}) => {
-    registrations.set(String(token), {
-      registration: factoryOrClass,
-      options: { lifecycle: 'singletonFactory', ...options }, // Default to singletonFactory for simplicity in this test
-    });
-  });
-
-  const resolve = jest.fn((token) => {
-    const tokenStr = String(token);
-
-    // Basic instance cache for singletons
-    if (instances.has(tokenStr)) {
-      return instances.get(tokenStr);
-    }
-
-    // Fallback for shared/external dependencies
-    if (token === tokens.ILogger) return mockLogger;
-
-    const reg = registrations.get(tokenStr);
-    if (!reg) {
-      throw new Error(`MockContainer: Token ${tokenStr} not registered.`);
-    }
-
-    let instance;
-    if (typeof reg.registration === 'function') {
-      // Check if it's a class constructor based on options.dependencies from Registrar helper
-      // For this test, we'll assume factory functions are used for simplicity or direct class constructors
-      if (
-        reg.options &&
-        reg.options.dependencies &&
-        jest.isMockFunction(reg.registration.prototype?.constructor)
-      ) {
-        // Simplified: Assumes dependencies are passed as a single object if it's a class from r.single
-        const deps = {};
-        reg.options.dependencies.forEach((depToken) => {
-          const depName = String(depToken).replace(/^I/, '').toLowerCase();
-          deps[depName] = containerInstance.resolve(depToken);
-        });
-        instance = new reg.registration(deps);
-      } else {
-        instance = reg.registration(containerInstance); // It's a factory function
-      }
-    } else {
-      instance = reg.registration; // It's a direct value
-    }
-
-    if (
-      reg.options.lifecycle === 'singleton' ||
-      reg.options.lifecycle === 'singletonFactory'
-    ) {
-      instances.set(tokenStr, instance);
-    }
-    return instance;
-  });
-
-  containerInstance = {
-    register,
-    resolve,
-    // Add other methods if needed by Registrar or tested logic
-  };
-  return containerInstance;
-};
-
 describe('IPromptBuilder Registration and Resolution', () => {
   let mockContainer;
   let registrar;
@@ -210,7 +142,7 @@ describe('IPromptBuilder Registration and Resolution', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    mockContainer = createMockContainer();
+    mockContainer = createMockContainerWithRegistration();
     registrar = new Registrar(mockContainer);
 
     // Pre-register the mocked dependencies that IPromptBuilder's factory will resolve

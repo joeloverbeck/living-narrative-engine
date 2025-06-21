@@ -1,17 +1,6 @@
 import { beforeEach, describe, expect, jest, test } from '@jest/globals';
 import { GameDataRepository } from '../../../src/data/gameDataRepository.js';
-
-/**
- * Creates a mock logger object with jest functions.
- *
- * @returns {import('../../../src/interfaces/coreServices.js').ILogger}
- */
-const createMockLogger = () => ({
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-  debug: jest.fn(),
-});
+import { createMockLogger } from '../../common/mockFactories/index.js';
 
 /**
  * Creates a mock registry with all methods required by GameDataRepository.

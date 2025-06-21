@@ -11,3 +11,7 @@ export {
   createMockValidatedEventDispatcherForIntegration,
   createMockAIPromptPipeline,
 } from './coreServices.js';
+
+export {
+  createMockContainerWithRegistration,
+} from './container.js';

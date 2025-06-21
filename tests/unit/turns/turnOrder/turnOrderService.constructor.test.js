@@ -8,16 +8,9 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { TurnOrderService } from '../../../../src/turns/order/turnOrderService.js';
 import { freeze } from '../../../../src/utils/cloneUtils'; // Adjust path as needed
+import { createMockLogger } from '../../../common/mockFactories/index.js';
 // Assuming ILogger interface definition (or use a simplified mock structure)
 // For testing, we don't need the actual interface, just an object matching the expected structure.
-
-// Mock ILogger interface
-const createMockLogger = () => ({
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-  debug: jest.fn(), // Assuming debug might be used elsewhere, include for completeness
-});
 
 describe('TurnOrderService', () => {
   // --- Test Suite for Constructor Logic (TEST-TURN-ORDER-001.11.1) ---
