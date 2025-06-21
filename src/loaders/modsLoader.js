@@ -6,7 +6,7 @@
 /* ── Type-only imports ──────────────────────────────────────────────────── */
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../interfaces/coreServices.js').IDataRegistry} IDataRegistry */
-/** @typedef {import('../loaders/phases/loaderPhase.js').default} LoaderPhase */
+/** @typedef {import('../loaders/phases/LoaderPhase.js').default} LoaderPhase */
 /** @typedef {import('./LoadContext.js').LoadContext} LoadContext */
 
 /* ── Implementation imports ─────────────────────────────────────────────── */

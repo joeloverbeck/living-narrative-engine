@@ -1,4 +1,4 @@
-import LoaderPhase from './loaderPhase.js';
+import LoaderPhase from './LoaderPhase.js';
 import {
   ModsLoaderPhaseError,
   ModsLoaderErrorCode,
