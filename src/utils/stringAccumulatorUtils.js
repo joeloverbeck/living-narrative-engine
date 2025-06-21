@@ -19,13 +19,29 @@ export class StringAccumulator {
   #parts = [];
 
   /**
+   * @private
+   * @type {number}
+   * @description Cached total length of all parts.
+   */
+  #length = 0;
+
+  /**
+   * Initializes a new StringAccumulator instance.
+   */
+  constructor() {
+    this.#length = 0;
+  }
+
+  /**
    * Appends a value to the accumulator, coercing it to a string.
    *
    * @param {any} value - The value to append; will be converted via `String(value)`.
    * @returns {void}
    */
   append(value) {
-    this.#parts.push(String(value));
+    const part = String(value);
+    this.#parts.push(part);
+    this.#length += part.length;
   }
 
   /**
@@ -44,6 +60,6 @@ export class StringAccumulator {
    * @returns {number} Sum of `.length` of each part.
    */
   get length() {
-    return this.#parts.reduce((sum, part) => sum + part.length, 0);
+    return this.#length;
   }
 }
