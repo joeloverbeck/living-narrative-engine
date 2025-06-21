@@ -19,7 +19,9 @@ import { CORE_MOD_ID } from '../constants/core';
  * @param {string} to - The ending node.
  */
 function addEdge(edges, from, to) {
-  if (!edges.has(from)) edges.set(from, new Set());
+  if (!edges.has(from)) {
+    edges.set(from, new Set());
+  }
   edges.get(from).add(to);
 }
 
