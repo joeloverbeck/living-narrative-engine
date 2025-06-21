@@ -8,7 +8,7 @@ import {
 } from '../../common/turns/turnManagerTestBed.js';
 
 import { TURN_ENDED_ID } from '../../../src/constants/eventIds.js';
-import { createMockEntity } from '../../common/mockFactories.js';
+import { createMockEntity } from '../../common/mockFactories';
 
 // --- Test Suite ---
 

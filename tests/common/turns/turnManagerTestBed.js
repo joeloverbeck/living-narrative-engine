@@ -11,7 +11,7 @@ import {
   createMockEntityManager,
   createMockValidatedEventBus,
   createMockTurnHandler,
-} from '../mockFactories.js';
+} from '../mockFactories';
 import BaseTestBed from '../baseTestBed.js';
 import { describeSuiteWithHooks } from '../describeSuite.js';
 

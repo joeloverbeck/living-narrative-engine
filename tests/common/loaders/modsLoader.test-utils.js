@@ -3,7 +3,7 @@
  * @see tests/common/loaders/modsLoader.test-utils.js
  */
 
-import { createMockContentLoader } from '../mockFactories.js';
+import { createMockContentLoader } from '../mockFactories';
 
 /**
  * Sets up manifest-related mocks for a ModsLoader test environment.

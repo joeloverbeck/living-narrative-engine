@@ -20,7 +20,7 @@ import {
   createMockSchemaValidator,
   createMockSafeEventDispatcher,
   createSimpleMockDataRegistry,
-} from '../mockFactories.js';
+} from '../mockFactories';
 import BaseTestBed from '../baseTestBed.js';
 import { describeSuite } from '../describeSuite.js';
 

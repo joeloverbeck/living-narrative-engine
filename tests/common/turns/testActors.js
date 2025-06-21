@@ -3,7 +3,7 @@
  * @see tests/common/turns/testActors.js
  */
 
-import { createMockActor } from '../mockFactories.js';
+import { createMockActor } from '../mockFactories';
 
 /**
  * Creates a mock AI actor entity.

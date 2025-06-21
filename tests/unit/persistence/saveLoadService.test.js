@@ -12,7 +12,7 @@ import {
 } from '../testUtils.js';
 
 /** @typedef {import('../../../src/interfaces/IStorageProvider.js').IStorageProvider} IStorageProvider */
-import { createMemoryStorageProvider } from '../../common/persistence/memoryStorageProvider.js';
+import { createMemoryStorageProvider } from '../../common/mockFactories';
 /** @typedef {import('../../../src/persistence/gameStateSerializer.js').default} GameStateSerializer */
 
 /**

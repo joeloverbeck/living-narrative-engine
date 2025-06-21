@@ -20,7 +20,7 @@ import ComponentCleaningService, {
 import receptionistDef from '../../data/mods/isekai/entities/definitions/receptionist.character.json';
 import { webcrypto } from 'crypto';
 import { createMockSaveValidationService } from '../unit/testUtils.js';
-import { createMemoryStorageProvider } from '../common/persistence/memoryStorageProvider.js';
+import { createMemoryStorageProvider } from '../common/mockFactories';
 
 beforeAll(() => {
   if (typeof window !== 'undefined') {

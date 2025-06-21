@@ -14,7 +14,7 @@ import {
   createMockPlaytimeTracker,
   createMockSafeEventDispatcher,
   createMockInitializationService,
-} from '../mockFactories.js';
+} from '../mockFactories';
 import { buildEnvironment } from '../mockEnvironment.js';
 
 /**
