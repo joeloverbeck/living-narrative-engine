@@ -12,6 +12,7 @@ import JsonLogicEvaluationService from '../../../src/logic/jsonLogicEvaluationSe
 import SystemLogicInterpreter from '../../../src/logic/systemLogicInterpreter.js';
 import { SimpleEntityManager } from '../entities/index.js';
 import { createMockLogger } from '../mockFactories/index.js';
+import { deepClone } from '../../../src/utils/cloneUtils.js';
 
 /**
  * Creates a complete test environment for system logic rule testing.
@@ -109,10 +110,7 @@ export function createRuleTestEnvironment({
     reset: (newEntities = []) => {
       env.cleanup();
       // Deep clone entities and their components to avoid mutation issues
-      const clonedEntities = newEntities.map((e) => ({
-        id: e.id,
-        components: JSON.parse(JSON.stringify(e.components)),
-      }));
+      const clonedEntities = newEntities.map((e) => deepClone(e));
       const newEnv = initializeEnv(clonedEntities);
       env.entityManager = newEnv.entityManager;
       env.operationRegistry = newEnv.operationRegistry;
