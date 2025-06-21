@@ -9,12 +9,10 @@ import { resolveSafeDispatcher } from './dispatcherUtils.js';
  *
  * @param {string} variableName Variable name to validate.
  * @param {import('../logic/defs.js').ExecutionContext} execCtx Execution context.
- * @param {import('../interfaces/coreServices.js').ILogger} [logger] Optional logger.
- * @param _logger
  * @returns {{valid: boolean, error?: Error, name?: string}} Validation result.
  * @private
  */
-function _validateContextAndName(variableName, execCtx, _logger) {
+function _validateContextAndName(variableName, execCtx) {
   const trimmedName =
     typeof variableName === 'string' ? variableName.trim() : '';
 
@@ -66,11 +64,7 @@ export function writeContextVariable(
 ) {
   const log = getModuleLogger('contextVariableUtils', logger);
   const safeDispatcher = resolveSafeDispatcher(execCtx, dispatcher, log);
-  const { valid, error, name } = _validateContextAndName(
-    variableName,
-    execCtx,
-    logger
-  );
+  const { valid, error, name } = _validateContextAndName(variableName, execCtx);
 
   if (!valid) {
     if (safeDispatcher) {
@@ -119,7 +113,7 @@ export function tryWriteContextVariable(
   const trimmedName =
     typeof variableName === 'string' ? variableName.trim() : '';
   const log = getModuleLogger('contextVariableUtils', logger);
-  const validation = _validateContextAndName(trimmedName, execCtx, logger);
+  const validation = _validateContextAndName(trimmedName, execCtx);
   if (!validation.valid) {
     const safeDispatcher = resolveSafeDispatcher(execCtx, dispatcher, log);
     if (safeDispatcher) {
