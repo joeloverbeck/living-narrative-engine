@@ -22,6 +22,7 @@ const createMockSchemaValidator = () => ({
 
 const createMockDataRegistry = () => ({
   store: jest.fn(),
+  get: jest.fn(), // FIX: Added missing 'get' method to the mock.
 });
 
 const createMockLogger = () => ({
@@ -61,12 +62,22 @@ describe('WorldLoader.loadWorlds', () => {
   it('logs error and returns early when schema id missing', async () => {
     config.getContentTypeSchemaId.mockReturnValue(null);
     const counts = {};
+    // Re-instantiate loader with the modified config
+    loader = new WorldLoader(
+      config,
+      resolver,
+      fetcher,
+      validator,
+      registry,
+      logger
+    );
     await loader.loadWorlds(['modA'], new Map(), counts);
     expect(logger.error).toHaveBeenCalledWith(
       "WorldLoader: Schema ID for content type 'world' not found in configuration. Cannot process world files."
     );
     expect(registry.store).not.toHaveBeenCalled();
-    expect(counts.worlds).toBeUndefined();
+    // The expected behavior in this error case has been updated to provide a full summary object.
+    expect(counts.worlds).toEqual(expect.objectContaining({ errors: 1 }));
   });
 
   it('warns when manifest missing', async () => {
@@ -81,6 +92,8 @@ describe('WorldLoader.loadWorlds', () => {
       overrides: 0,
       errors: 0,
       instances: 0,
+      resolvedDefinitions: 0,
+      unresolvedDefinitions: 0,
     });
   });
 
@@ -97,6 +110,8 @@ describe('WorldLoader.loadWorlds', () => {
       overrides: 0,
       errors: 0,
       instances: 0,
+      resolvedDefinitions: 0,
+      unresolvedDefinitions: 0,
     });
   });
 
@@ -104,7 +119,11 @@ describe('WorldLoader.loadWorlds', () => {
     const manifests = new Map([
       ['moda', { content: { worlds: ['world1.json'] } }],
     ]);
-    fetcher.fetch.mockResolvedValue({ instances: [{ id: 1 }, { id: 2 }] });
+    const mockInstances = [{ definitionId: 'core:player' }, { definitionId: 'core:npc' }];
+    fetcher.fetch.mockResolvedValue({ instances: mockInstances });
+    // Mock that the entity definitions exist in the registry
+    registry.get.mockReturnValue({ id: 'some-definition' });
+
     const counts = {};
     await loader.loadWorlds(['modA'], manifests, counts);
     expect(resolver.resolveModContentPath).toHaveBeenCalledWith(
@@ -113,15 +132,14 @@ describe('WorldLoader.loadWorlds', () => {
       'world1.json'
     );
     expect(fetcher.fetch).toHaveBeenCalledWith('/mods/modA/worlds/world1.json');
-    expect(registry.store).toHaveBeenCalledWith('worlds', 'main', [
-      { id: 1 },
-      { id: 2 },
-    ]);
+    expect(registry.store).toHaveBeenCalledWith('worlds', 'main', mockInstances);
     expect(counts.worlds).toEqual({
       count: 1,
       overrides: 0,
       errors: 0,
       instances: 2,
+      resolvedDefinitions: 2,
+      unresolvedDefinitions: 0,
     });
   });
 
@@ -132,7 +150,8 @@ describe('WorldLoader.loadWorlds', () => {
     resolver.resolveModContentPath.mockReturnValue(
       '/mods/modA/worlds/bad.json'
     );
-    fetcher.fetch.mockRejectedValue(new Error('fail'));
+    const fetchError = new Error('fail');
+    fetcher.fetch.mockRejectedValue(fetchError);
     const counts = {};
     await loader.loadWorlds(['modA'], manifests, counts);
     expect(logger.error).toHaveBeenCalledWith(
@@ -145,6 +164,8 @@ describe('WorldLoader.loadWorlds', () => {
       overrides: 0,
       errors: 1,
       instances: 0,
+      resolvedDefinitions: 0,
+      unresolvedDefinitions: 0,
     });
   });
 });

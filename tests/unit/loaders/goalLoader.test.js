@@ -57,7 +57,15 @@ describe('GoalLoader._processFetchedItem', () => {
       .mockReturnValue({ qualifiedId: 'test:goal', didOverride: false });
 
     const data = { id: 'goal' };
-    const result = await loader._processFetchedItem('test', 'goal.json', data);
+    // FIX: Updated call to match the 5-argument signature of _processFetchedItem.
+    // The 'resolvedPath' and 'typeName' arguments are added.
+    const result = await loader._processFetchedItem(
+      'test',
+      'goal.json',
+      'test/goals/goal.json',
+      data,
+      'goals'
+    );
 
     expect(parseSpy).toHaveBeenCalledWith(
       data,
@@ -75,9 +83,15 @@ describe('GoalLoader._processFetchedItem', () => {
       .spyOn(BaseManifestItemLoader.prototype, '_parseIdAndStoreItem')
       .mockReturnValue({ qualifiedId: 'mod:goal2', didOverride: true });
 
-    const result = await loader._processFetchedItem('mod', 'goal2.json', {
-      id: 'goal2',
-    });
+    const data = { id: 'goal2' };
+    // FIX: Updated call to match the 5-argument signature.
+    const result = await loader._processFetchedItem(
+      'mod',
+      'goal2.json',
+      'mod/goals/goal2.json',
+      data,
+      'goals'
+    );
 
     expect(result).toEqual({ qualifiedId: 'mod:goal2', didOverride: true });
     parseSpy.mockRestore();
@@ -91,8 +105,16 @@ describe('GoalLoader._processFetchedItem', () => {
         throw error;
       });
 
+    const data = { id: 'bad' };
+    // FIX: Updated call to match the 5-argument signature.
     await expect(
-      loader._processFetchedItem('badmod', 'bad.json', { id: 'bad' })
+      loader._processFetchedItem(
+        'badmod',
+        'bad.json',
+        'badmod/goals/bad.json',
+        data,
+        'goals'
+      )
     ).rejects.toThrow(error);
     parseSpy.mockRestore();
   });

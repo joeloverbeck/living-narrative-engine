@@ -271,14 +271,14 @@ export function registerLoaders(container) {
   registrar.singletonFactory(
     tokens.PromptTextLoader,
     (c) =>
-      new PromptTextLoader(
-        c.resolve(tokens.IConfiguration),
-        c.resolve(tokens.IPathResolver),
-        c.resolve(tokens.IDataFetcher),
-        c.resolve(tokens.ISchemaValidator),
-        c.resolve(tokens.IDataRegistry),
-        c.resolve(tokens.ILogger)
-      )
+      new PromptTextLoader({
+        configuration: c.resolve(tokens.IConfiguration),
+        pathResolver: c.resolve(tokens.IPathResolver),
+        dataFetcher: c.resolve(tokens.IDataFetcher),
+        schemaValidator: c.resolve(tokens.ISchemaValidator),
+        dataRegistry: c.resolve(tokens.IDataRegistry),
+        logger: c.resolve(tokens.ILogger),
+      })
   );
   logger.debug(`Loaders Registration: Registered ${tokens.PromptTextLoader}.`);
 
@@ -323,8 +323,8 @@ export function registerLoaders(container) {
         c.resolve(tokens.IDataFetcher),
         c.resolve(tokens.ISchemaValidator),
         c.resolve(tokens.IDataRegistry),
-        c.resolve(tokens.ILogger),
-      ),
+        c.resolve(tokens.ILogger)
+      )
   );
   logger.debug(`Loaders Registration: Registered ${tokens.GoalLoader}.`);
 

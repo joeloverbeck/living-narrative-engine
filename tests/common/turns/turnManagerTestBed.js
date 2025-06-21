@@ -31,7 +31,6 @@ export class TurnManagerTestBed extends BaseTestBed {
       logger: () => overrides.logger ?? createMockLogger(),
       entityManager: () => {
         const em = overrides.entityManager ?? createMockEntityManager();
-        em.activeEntities = new Map();
         em.getEntityInstance = jest.fn((id) => em.activeEntities.get(id));
         em.getActiveEntities.mockImplementation(() =>
           Array.from(em.activeEntities.values())
@@ -63,6 +62,9 @@ export class TurnManagerTestBed extends BaseTestBed {
       turnHandlerResolver: this.turnHandlerResolver,
       ...tmOptions,
     });
+
+    // Ensure entityManager is always the same reference
+    this.entityManager = this.mocks.entityManager;
   }
 
   /**
@@ -103,6 +105,8 @@ export class TurnManagerTestBed extends BaseTestBed {
     for (const e of entities) {
       map.set(e.id, e);
     }
+    // Debug: print the map after adding entities
+    console.log('setActiveEntities: activeEntities =', Array.from(map.values()).map(ent => ({ id: ent.id })));
   }
 
   /**

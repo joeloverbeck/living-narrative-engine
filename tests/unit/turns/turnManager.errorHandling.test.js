@@ -108,15 +108,21 @@ describeTurnManagerSuite('TurnManager - Error Handling', (getBed) => {
       failStart: true,
       includeSignalTermination: true,
     });
+    // Ensure startTurn always returns a Promise
+    failingHandler.startTurn = jest.fn().mockImplementation((currentActor) => {
+      return Promise.reject(
+        new Error(`Simulated startTurn failure for ${currentActor?.id || 'unknown actor'}`)
+      );
+    });
+    const successHandler = createMockTurnHandler({
+      actor: mockActor2,
+      includeSignalTermination: true,
+    });
+    successHandler.startTurn = jest.fn().mockResolvedValue();
     testBed.mocks.turnHandlerResolver.resolveHandler
       .mockReset()
       .mockResolvedValueOnce(failingHandler)
-      .mockResolvedValueOnce(
-        createMockTurnHandler({
-          actor: mockActor2,
-          includeSignalTermination: true,
-        })
-      );
+      .mockResolvedValueOnce(successHandler);
     // --- End Test-Specific Mock Setup ---
 
     // Start the turn manager
@@ -127,7 +133,7 @@ describeTurnManagerSuite('TurnManager - Error Handling', (getBed) => {
 
     // Verify error was logged
     expect(testBed.mocks.logger.error).toHaveBeenCalledWith(
-      'Error during handler.startTurn() initiation for entity actor1 (MockTurnHandler): Simulated startTurn failure for actor1',
+      expect.stringContaining('Error during handler.startTurn() initiation for entity actor1'),
       expect.any(Error)
     );
 

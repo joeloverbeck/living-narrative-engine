@@ -123,20 +123,27 @@ export const createMockTurnHandler = ({
 } = {}) => {
   const handler = {
     actor,
-    constructor: { name },
-    startTurn: jest.fn(async (currentActor) => {
-      if (failStart) {
-        throw new Error(
-          `Simulated startTurn failure for ${currentActor?.id || 'unknown actor'}`
-        );
-      }
+    startTurn: jest.fn().mockImplementation((currentActor) => {
+      const promise = failStart
+        ? Promise.reject(
+            new Error(
+              `Simulated startTurn failure for ${currentActor?.id || 'unknown actor'}`
+            )
+          )
+        : Promise.resolve();
+      console.log('createMockTurnHandler.startTurn called, returns Promise:', typeof promise.then === 'function');
+      return promise;
     }),
-    destroy: jest.fn(async () => {
+    destroy: jest.fn().mockImplementation(() => {
       if (failDestroy) {
-        throw new Error('Simulated destroy failure');
+        return Promise.reject(new Error('Simulated destroy failure'));
       }
+      return Promise.resolve();
     }),
   };
+  // Set constructor to a function with the correct name
+  const NamedConstructor = Function('return function ' + name + '(){}')();
+  handler.constructor = NamedConstructor;
   if (includeSignalTermination) {
     handler.signalNormalApparentTermination = jest.fn();
   }

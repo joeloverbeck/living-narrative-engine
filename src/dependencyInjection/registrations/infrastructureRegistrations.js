@@ -2,8 +2,9 @@
 
 import EventBus from '../../events/eventBus.js';
 import SpatialIndexManager from '../../entities/spatialIndexManager.js';
-import ModsLoader from '../../loaders/modsLoader.js';
-import PromptTextLoader from '../../loaders/promptTextLoader.js';
+// REMOVED: Unused loader imports
+// import ModsLoader from '../../loaders/modsLoader.js';
+// import PromptTextLoader from '../../loaders/promptTextLoader.js';
 import { GameDataRepository } from '../../data/gameDataRepository.js'; // Concrete class
 import ValidatedEventDispatcher from '../../events/validatedEventDispatcher.js'; // Concrete Class Import
 import { SafeEventDispatcher } from '../../events/safeEventDispatcher.js';
@@ -74,61 +75,16 @@ export function registerInfrastructure(container) {
     `Infrastructure Registration: Registered ${String(tokens.ISpatialIndexManager)}.`
   );
 
-  r.singletonFactory(
-    tokens.PromptTextLoader,
-    (c) =>
-      new PromptTextLoader({
-        configuration: c.resolve(tokens.IConfiguration),
-        pathResolver: c.resolve(tokens.IPathResolver),
-        dataFetcher: c.resolve(tokens.IDataFetcher),
-        schemaValidator: c.resolve(tokens.ISchemaValidator),
-        dataRegistry: c.resolve(tokens.IDataRegistry),
-        logger: c.resolve(tokens.ILogger),
-      })
-  );
-  log.debug(
-    `Infrastructure Registration: Registered ${String(tokens.PromptTextLoader)}.`
-  );
-
-  container.register(
-    tokens.ModsLoader,
-    (c) => {
-      const dependencies = {
-        registry: c.resolve(tokens.IDataRegistry),
-        logger: c.resolve(tokens.ILogger),
-        schemaLoader: c.resolve(tokens.SchemaLoader),
-        conditionLoader: c.resolve(tokens.ConditionLoader),
-        componentLoader: c.resolve(tokens.ComponentDefinitionLoader),
-        macroLoader: c.resolve(tokens.MacroLoader),
-        ruleLoader: c.resolve(tokens.RuleLoader),
-        actionLoader: c.resolve(tokens.ActionLoader),
-        eventLoader: c.resolve(tokens.EventLoader),
-        entityLoader: c.resolve(tokens.EntityLoader),
-        worldLoader: c.resolve(tokens.WorldLoader),
-        validator: c.resolve(tokens.ISchemaValidator),
-        configuration: c.resolve(tokens.IConfiguration),
-        gameConfigLoader: c.resolve(tokens.GameConfigLoader),
-        promptTextLoader: c.resolve(tokens.PromptTextLoader),
-        modManifestLoader: c.resolve(tokens.ModManifestLoader),
-        validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
-        modDependencyValidator: ModDependencyValidator,
-        modVersionValidator: validateModEngineVersions,
-        modLoadOrderResolver: ModLoadOrderResolver,
-      };
-      return new ModsLoader(dependencies);
-    },
-    { lifecycle: 'singleton' }
-  );
-  log.debug(
-    `Infrastructure Registration: Registered ${String(tokens.ModsLoader)}.`
-  );
+  // --- FIXED: Removed duplicate loader registrations ---
+  // `PromptTextLoader` is now correctly registered only in `loadersRegistrations.js`.
+  // `ModsLoader` is now correctly registered only in `loadersRegistrations.js`.
 
   container.register(
     tokens.IGameDataRepository,
     (c) =>
       new GameDataRepository(
-        /** @type {IDataRegistry} */ (c.resolve(tokens.IDataRegistry)),
-        /** @type {ILogger} */ (c.resolve(tokens.ILogger))
+        /** @type {IDataRegistry} */(c.resolve(tokens.IDataRegistry)),
+        /** @type {ILogger} */(c.resolve(tokens.ILogger))
       ),
     { lifecycle: 'singleton' }
   );

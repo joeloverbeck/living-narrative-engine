@@ -223,7 +223,7 @@ class EntityManager extends IEntityManager {
       validator: this.#validator,
       logger: this.#logger,
       idGenerator: this.#idGenerator,
-      cloner: cloneDeep,
+      cloner: this.#cloner,
       defaultPolicy: {}, // Default component policy
     });
 
