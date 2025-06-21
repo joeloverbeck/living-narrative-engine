@@ -10,6 +10,7 @@ import {
   createMockLogger,
   createMockEntityManager,
   createMockValidatedEventBus,
+  createMockTurnHandler,
 } from '../mockFactories.js';
 import BaseTestBed from '../baseTestBed.js';
 import { describeSuite } from '../describeSuite.js';
@@ -101,6 +102,21 @@ export class TurnManagerTestBed extends BaseTestBed {
     for (const e of entities) {
       map.set(e.id, e);
     }
+  }
+
+  /**
+   * Configures the resolver to return a fresh mock handler for any actor.
+   *
+   * @param {boolean} [includeSignal] - Whether handlers include signalNormalApparentTermination.
+   * @returns {void}
+   */
+  setupMockHandlerResolver(includeSignal = true) {
+    this.turnHandlerResolver.resolveHandler.mockImplementation(async (actor) =>
+      createMockTurnHandler({
+        actor,
+        includeSignalTermination: includeSignal,
+      })
+    );
   }
 
   /**
