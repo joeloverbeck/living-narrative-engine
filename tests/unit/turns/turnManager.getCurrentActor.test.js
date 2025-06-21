@@ -5,6 +5,7 @@ import {
   TurnManagerTestBed,
   describeTurnManagerSuite,
 } from '../../common/turns/turnManagerTestBed.js';
+import { flushPromisesAndTimers } from '../../common/jestHelpers.js';
 import {
   ACTOR_COMPONENT_ID,
   PLAYER_COMPONENT_ID,
@@ -36,6 +37,7 @@ describeTurnManagerSuite('TurnManager', (getBed) => {
   let mockAiEntity1;
 
   beforeEach(() => {
+    jest.useFakeTimers();
     testBed = getBed();
 
     ({ player: mockPlayerEntity, ai1: mockAiEntity1 } = createDefaultActors());
@@ -50,6 +52,11 @@ describeTurnManagerSuite('TurnManager', (getBed) => {
     mockAiHandler.startTurn.mockClear().mockResolvedValue();
     mockPlayerHandler.destroy.mockClear().mockResolvedValue();
     mockAiHandler.destroy.mockClear().mockResolvedValue();
+  });
+
+  afterEach(() => {
+    jest.clearAllTimers();
+    jest.useRealTimers();
   });
 
   // --- Basic Setup Tests ---
@@ -153,8 +160,8 @@ describeTurnManagerSuite('TurnManager', (getBed) => {
         entityId: mockActor1.id,
         success: true,
       });
-      await new Promise((resolve) => setTimeout(resolve, 10)); // Allow async operations
-      await new Promise((resolve) => setTimeout(resolve, 10)); // Additional wait for advanceTurn
+      await flushPromisesAndTimers();
+      await flushPromisesAndTimers();
 
       // --- Assert ---
       expect(testBed.turnManager.getCurrentActor()).toBe(mockActor2);
@@ -183,8 +190,8 @@ describeTurnManagerSuite('TurnManager', (getBed) => {
         entityId: mockActor.id,
         success: true,
       });
-      await new Promise((resolve) => setTimeout(resolve, 10)); // Allow async operations
-      await new Promise((resolve) => setTimeout(resolve, 10)); // Additional wait for advanceTurn
+      await flushPromisesAndTimers();
+      await flushPromisesAndTimers();
 
       // --- Assert ---
       expect(testBed.turnManager.getCurrentActor()).toBeNull();
