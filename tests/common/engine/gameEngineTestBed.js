@@ -6,8 +6,7 @@
 /* global beforeEach, afterEach, describe */
 
 import { createTestEnvironment } from './gameEngine.test-environment.js';
-import ContainerTestBed from '../containerTestBed.js';
-import BaseTestBed from '../baseTestBed.js';
+import FactoryTestBed from '../factoryTestBed.js';
 import { suppressConsoleError } from '../jestHelpers.js';
 import { describeSuiteWithHooks } from '../describeSuite.js';
 
@@ -16,11 +15,17 @@ import { describeSuiteWithHooks } from '../describeSuite.js';
  * environment and exposes helpers for common test operations.
  * @class
  */
-export class GameEngineTestBed extends ContainerTestBed {
+export class GameEngineTestBed extends FactoryTestBed {
   /** @type {ReturnType<typeof createTestEnvironment>} */
   env;
   /** @type {import('../../../src/engine/gameEngine.js').default} */
   engine;
+  /** @type {{ resolve: import('jest').Mock }} */
+  container;
+  /** @type {Map<any, any>} */
+  #tokenOverrides = new Map();
+  /** @type {Function} */
+  #originalResolve;
   /**
    * @type {{
    *   logger: ReturnType<import('../mockFactories').createMockLogger>,
@@ -39,8 +44,7 @@ export class GameEngineTestBed extends ContainerTestBed {
    */
   constructor(overrides = {}) {
     const env = createTestEnvironment(overrides);
-    super(env.mockContainer);
-    this.initializeFromFactories({
+    super({
       logger: () => env.logger,
       entityManager: () => env.entityManager,
       turnManager: () => env.turnManager,
@@ -49,9 +53,31 @@ export class GameEngineTestBed extends ContainerTestBed {
       safeEventDispatcher: () => env.safeEventDispatcher,
       initializationService: () => env.initializationService,
     });
+    this.container = env.mockContainer;
+    this.#originalResolve =
+      this.container.resolve.getMockImplementation?.() ??
+      this.container.resolve;
     const engine = env.createGameEngine();
     this.env = env;
     this.engine = engine;
+  }
+
+  /**
+   * Temporarily overrides container token resolution.
+   *
+   * @param {any} token - Token to override.
+   * @param {any | (() => any)} value - Replacement value or function.
+   * @returns {void}
+   */
+  withTokenOverride(token, value) {
+    this.#tokenOverrides.set(token, value);
+    this.container.resolve.mockImplementation((tok) => {
+      if (this.#tokenOverrides.has(tok)) {
+        const override = this.#tokenOverrides.get(tok);
+        return typeof override === 'function' ? override() : override;
+      }
+      return this.#originalResolve(tok);
+    });
   }
 
   /**
@@ -125,6 +151,8 @@ export class GameEngineTestBed extends ContainerTestBed {
   async _afterCleanup() {
     await this.stop();
     this.env.cleanup();
+    this.container.resolve.mockImplementation(this.#originalResolve);
+    this.#tokenOverrides.clear();
     await super._afterCleanup();
   }
 }

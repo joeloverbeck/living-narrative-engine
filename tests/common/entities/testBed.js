@@ -21,7 +21,7 @@ import {
   createMockSafeEventDispatcher,
   createSimpleMockDataRegistry,
 } from '../mockFactories';
-import BaseTestBed from '../baseTestBed.js';
+import FactoryTestBed from '../factoryTestBed.js';
 import { describeSuite } from '../describeSuite.js';
 
 // --- Centralized Mocks (REMOVED) ---
@@ -113,7 +113,7 @@ export const TestData = {
  * Creates mocks, instantiates the manager, and provides helper methods
  * to streamline test writing.
  */
-export class TestBed extends BaseTestBed {
+export class TestBed extends FactoryTestBed {
   /**
    * Collection of all mocks for easy access in tests.
    *
@@ -134,13 +134,12 @@ export class TestBed extends BaseTestBed {
    * @param {Function} [entityManagerOptions.idGenerator] - A mock ID generator function.
    */
   constructor(entityManagerOptions = {}) {
-    const { mocks } = BaseTestBed.fromFactories({
+    super({
       registry: createSimpleMockDataRegistry,
       validator: createMockSchemaValidator,
       logger: createMockLogger,
       eventDispatcher: createMockSafeEventDispatcher,
     });
-    super(mocks);
 
     this.entityManager = new EntityManager({
       registry: this.mocks.registry,

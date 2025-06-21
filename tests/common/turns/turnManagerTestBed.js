@@ -12,7 +12,7 @@ import {
   createMockValidatedEventBus,
   createMockTurnHandler,
 } from '../mockFactories';
-import BaseTestBed from '../baseTestBed.js';
+import FactoryTestBed from '../factoryTestBed.js';
 import { describeSuiteWithHooks } from '../describeSuite.js';
 import { flushPromisesAndTimers } from '../jestHelpers.js';
 
@@ -21,13 +21,12 @@ import { flushPromisesAndTimers } from '../jestHelpers.js';
  * dependencies and exposes helpers for common test operations.
  * @class
  */
-export class TurnManagerTestBed extends BaseTestBed {
+export class TurnManagerTestBed extends FactoryTestBed {
   /** @type {TurnManager} */
   turnManager;
 
   constructor(overrides = {}) {
-    super();
-    this.initializeFromFactories({
+    super({
       logger: () => overrides.logger ?? createMockLogger(),
       entityManager: () => {
         const em = overrides.entityManager ?? createMockEntityManager();
@@ -106,7 +105,10 @@ export class TurnManagerTestBed extends BaseTestBed {
       map.set(e.id, e);
     }
     // Debug: print the map after adding entities
-    console.log('setActiveEntities: activeEntities =', Array.from(map.values()).map(ent => ({ id: ent.id })));
+    console.log(
+      'setActiveEntities: activeEntities =',
+      Array.from(map.values()).map((ent) => ({ id: ent.id }))
+    );
   }
 
   /**

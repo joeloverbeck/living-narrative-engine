@@ -14,14 +14,14 @@ import {
   createMockPromptBuilder,
   createMockEntity,
 } from '../mockFactories';
-import BaseTestBed from '../baseTestBed.js';
+import FactoryTestBed from '../factoryTestBed.js';
 import { describeSuiteWithHooks } from '../describeSuite.js';
 
 /**
  * @description Utility class for unit tests that need an AIPromptPipeline with common mocks.
  * @class
  */
-export class AIPromptPipelineTestBed extends BaseTestBed {
+export class AIPromptPipelineTestBed extends FactoryTestBed {
   /** @type {import('../../src/entities/entity.js').default} */
   defaultActor;
   /** @type {import('../../src/turns/interfaces/ITurnContext.js').ITurnContext} */
@@ -30,8 +30,7 @@ export class AIPromptPipelineTestBed extends BaseTestBed {
   defaultActions;
 
   constructor() {
-    super();
-    this.initializeFromFactories({
+    super({
       llmAdapter: createMockLLMAdapter,
       gameStateProvider: createMockAIGameStateProvider,
       promptContentProvider: createMockAIPromptContentProvider,
