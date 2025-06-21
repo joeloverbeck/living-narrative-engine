@@ -2,16 +2,12 @@
 // --- FILE START ---
 
 import { describeTurnManagerSuite } from '../../common/turns/turnManagerTestBed.js';
-import {
-  ACTOR_COMPONENT_ID,
-  PLAYER_COMPONENT_ID,
-} from '../../../src/constants/componentIds.js';
+import { ACTOR_COMPONENT_ID } from '../../../src/constants/componentIds.js';
 import {
   TURN_ENDED_ID,
-  TURN_STARTED_ID,
   SYSTEM_ERROR_OCCURRED_ID,
 } from '../../../src/constants/eventIds.js';
-import { beforeEach, expect, jest, test, afterEach } from '@jest/globals';
+import { beforeEach, expect, jest, afterEach } from '@jest/globals';
 import { createMockTurnHandler } from '../../common/mockFactories';
 import { createAiActor } from '../../common/turns/testActors.js';
 
@@ -23,7 +19,7 @@ describeTurnManagerSuite('TurnManager - Lifecycle (Start/Stop)', (getBed) => {
   let advanceTurnSpy;
 
   beforeEach(() => {
-    jest.useRealTimers();
+    // Timers reset via BaseTestBed cleanup
 
     testBed = getBed();
 
@@ -126,21 +122,9 @@ describeTurnManagerSuite('TurnManager - Lifecycle (Start/Stop)', (getBed) => {
       advanceTurnSpy.mockRejectedValue(advanceError);
       const stopSpy = jest.spyOn(testBed.turnManager, 'stop');
 
-      // The current implementation might not handle advanceTurn failures gracefully
-      // Skip this test for now or expect the error to be thrown
-      try {
-        await testBed.turnManager.start();
-        // If we reach here, the error was handled gracefully
-        expect(testBed.mocks.logger.error).toHaveBeenCalledWith(
-          'CRITICAL Error during turn advancement logic (before handler initiation): Turn advancement failed',
-          advanceError
-        );
-        expect(stopSpy).toHaveBeenCalledTimes(1);
-      } catch (error) {
-        // If the error is thrown, that's also acceptable behavior
-        expect(error.message).toBe('Turn advancement failed');
-      }
-
+      await expect(testBed.turnManager.start()).rejects.toThrow(
+        'Turn advancement failed'
+      );
       stopSpy.mockRestore();
     });
   });

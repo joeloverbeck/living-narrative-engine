@@ -34,8 +34,7 @@ describeTurnManagerSuite('TurnManager - Error Handling', (getBed) => {
   afterEach(async () => {
     // Clears mock usage data between tests
     jest.clearAllMocks();
-    // Restore real timers after each test
-    jest.useRealTimers();
+    // Timer cleanup handled by BaseTestBed
   });
 
   test('should stop advancing if handlerResolver fails', async () => {
