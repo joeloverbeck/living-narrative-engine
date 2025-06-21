@@ -151,7 +151,9 @@ describeTurnManagerSuite(
 
     test('getNextEntity returns null: logs error, stops manager', async () => {
       // Arrange
+
       const mockActor = createAiActor('actor1');
+
       testBed.setActiveEntities(mockActor); // Set up entities so RoundManager can start a new round
       testBed.mocks.turnOrderService.isEmpty.mockResolvedValue(false);
       testBed.mocks.turnOrderService.getNextEntity.mockResolvedValue(null);

@@ -35,35 +35,29 @@ describeEntityManagerSuite('EntityManager - Lifecycle', (getBed) => {
       );
     });
 
-    it('should throw an error if the data registry is missing or invalid', () => {
-      const { validator, logger, eventDispatcher } = getBed().mocks;
-      const EntityManager = getBed().entityManager.constructor;
+    it.each([
+      ['registry', null],
+      ['validator', null],
+    ])(
+      'should throw an error if the %s is missing or invalid',
+      (depName, value) => {
+        const { registry, validator, logger, eventDispatcher } = getBed().mocks;
+        const EntityManager = getBed().entityManager.constructor;
 
-      expect(
-        () =>
+        expect(() =>
           new EntityManager({
-            registry: null,
-            validator,
+            registry: depName === 'registry' ? value : registry,
+            validator: depName === 'validator' ? value : validator,
             logger,
             dispatcher: eventDispatcher,
           })
-      ).toThrow('Missing required dependency: IDataRegistry.');
-    });
-
-    it('should throw an error if the schema validator is missing or invalid', () => {
-      const { registry, logger, eventDispatcher } = getBed().mocks;
-      const EntityManager = getBed().entityManager.constructor;
-
-      expect(
-        () =>
-          new EntityManager({
-            registry,
-            validator: null,
-            logger,
-            dispatcher: eventDispatcher,
-          })
-      ).toThrow('Missing required dependency: ISchemaValidator.');
-    });
+        ).toThrow(
+          depName === 'registry'
+            ? 'Missing required dependency: IDataRegistry.'
+            : 'Missing required dependency: ISchemaValidator.'
+        );
+      }
+    );
 
     it('should use the injected idGenerator', () => {
       const mockIdGenerator = jest.fn();

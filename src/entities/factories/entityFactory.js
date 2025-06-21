@@ -20,7 +20,10 @@ import { cloneDeep } from 'lodash';
 import Entity from '../entity.js';
 import EntityInstanceData from '../entityInstanceData.js';
 import MapManager from '../../utils/mapManagerUtils.js';
-import { assertValidId, assertNonBlankString } from '../../utils/parameterGuards.js';
+import {
+  assertValidId,
+  assertNonBlankString,
+} from '../../utils/parameterGuards.js';
 import {
   ACTOR_COMPONENT_ID,
   SHORT_TERM_MEMORY_COMPONENT_ID,
@@ -225,7 +228,9 @@ class EntityFactory {
     if (definition) {
       return definition;
     }
-    this.#logger.warn(`[EntityFactory] Definition not found in registry: ${definitionId}`);
+    this.#logger.warn(
+      `[EntityFactory] Definition not found in registry: ${definitionId}`
+    );
     return null;
   }
 
@@ -243,7 +248,13 @@ class EntityFactory {
    * @throws {DefinitionNotFoundError} If the definition is not found.
    * @throws {Error} If component data is invalid, or if an entity with the given instanceId already exists.
    */
-  create(definitionId, { componentOverrides = {}, instanceId } = {}, registry, repository, definition = null) {
+  create(
+    definitionId,
+    { componentOverrides = {}, instanceId } = {},
+    registry,
+    repository,
+    definition = null
+  ) {
     try {
       assertValidId(definitionId, 'EntityFactory.create', this.#logger);
     } catch (err) {
@@ -256,7 +267,8 @@ class EntityFactory {
       throw err;
     }
 
-    const entityDefinition = definition || this.#getDefinition(definitionId, registry);
+    const entityDefinition =
+      definition || this.#getDefinition(definitionId, registry);
     if (!entityDefinition) {
       // No need to log here, #getDefinition already logs if invalid definitionId is passed
       // and DefinitionNotFoundError is specific.
@@ -359,7 +371,8 @@ class EntityFactory {
     } catch (err) {
       // Legacy compatibility: throw legacy error message for tests
       if (err && err.name === 'InvalidArgumentError') {
-        const msg = 'EntityFactory.reconstruct: instanceId is missing or invalid in serialized data.';
+        const msg =
+          'EntityFactory.reconstruct: instanceId is missing or invalid in serialized data.';
         this.#logger.error(`[EntityFactory] ${msg}`);
         throw new Error(msg);
       }
@@ -441,4 +454,4 @@ class EntityFactory {
   }
 }
 
-export default EntityFactory; 
+export default EntityFactory;

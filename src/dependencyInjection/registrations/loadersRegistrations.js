@@ -61,124 +61,94 @@ import WorldLoader from '../../loaders/worldLoader.js';
 import ModDependencyValidator from '../../modding/modDependencyValidator.js';
 import validateModEngineVersions from '../../modding/modVersionValidator.js';
 import ModLoadOrderResolver from '../../modding/modLoadOrderResolver.js';
+import FnLoadOrderResolverAdapter from '../../adapters/fnLoadOrderResolverAdapter.js';
+
+// --- Phase Imports ---
+import SchemaPhase from '../../loaders/phases/SchemaPhase.js';
+import ManifestPhase from '../../loaders/phases/ManifestPhase.js';
+import ContentPhase from '../../loaders/phases/ContentPhase.js';
+import WorldPhase from '../../loaders/phases/WorldPhase.js';
+import SummaryPhase from '../../loaders/phases/summaryPhase.js';
+import ModManifestProcessor from '../../loaders/ModManifestProcessor.js';
+import ContentLoadManager from '../../loaders/ContentLoadManager.js';
+import WorldLoadSummaryLogger from '../../loaders/WorldLoadSummaryLogger.js';
 
 // --- DI & Helper Imports ---
 import { tokens } from '../tokens.js';
 import { Registrar } from '../registrarHelpers.js';
 
 /**
- * Registers core data infrastructure services (Configuration, PathResolver, Validator, Registry, Fetcher)
- * and specific data loaders (Schema, Manifest, Rules, Generic Content, Component Definitions, Game Config, Mod Manifests).
+ * Registers core data infrastructure services, data loaders, and the phase-based mod loading system.
  *
  * @export
  * @param {AppContainer} container - The application's DI container.
  */
 export function registerLoaders(container) {
   const registrar = new Registrar(container);
-  // Resolve logger early for use within this registration bundle
-  /** @type {ILogger} */
   const logger = container.resolve(tokens.ILogger);
-  logger.debug(
-    'Loaders Registration: Starting core services and data loaders...'
-  );
+  logger.debug('Loaders Registration: Starting...');
 
-  // === Core Infrastructure Interfaces ===
-  // These are fundamental services needed by the loaders and other parts of the app.
+  // === Core Infrastructure (unchanged) ===
   registrar.singletonFactory(
     tokens.IConfiguration,
     () => new StaticConfiguration()
   );
-  logger.debug(`Loaders Registration: Registered ${tokens.IConfiguration}.`);
-
-  // DefaultPathResolver depends on IConfiguration
   registrar.singletonFactory(
     tokens.IPathResolver,
     (c) => new DefaultPathResolver(c.resolve(tokens.IConfiguration))
   );
-  logger.debug(`Loaders Registration: Registered ${tokens.IPathResolver}.`);
-
-  // AjvSchemaValidator depends on ILogger
   registrar.singletonFactory(
     tokens.ISchemaValidator,
     (c) => new AjvSchemaValidator(c.resolve(tokens.ILogger))
   );
-  logger.debug(`Loaders Registration: Registered ${tokens.ISchemaValidator}.`);
-
   registrar.singletonFactory(
     tokens.IDataRegistry,
     () => new InMemoryDataRegistry()
   );
-  logger.debug(`Loaders Registration: Registered ${tokens.IDataRegistry}.`);
-
   registrar.singletonFactory(
     tokens.IDataFetcher,
     () => new WorkspaceDataFetcher()
   );
-  logger.debug(`Loaders Registration: Registered ${tokens.IDataFetcher}.`);
 
-  // === Data Loaders ===
-  // SchemaLoader
-  registrar.singletonFactory(
-    tokens.SchemaLoader,
-    (c) =>
-      new SchemaLoader(
-        c.resolve(tokens.IConfiguration),
-        c.resolve(tokens.IPathResolver),
-        c.resolve(tokens.IDataFetcher),
-        c.resolve(tokens.ISchemaValidator),
-        c.resolve(tokens.ILogger)
-      )
-  );
-  logger.debug(`Loaders Registration: Registered ${tokens.SchemaLoader}.`);
+  // === Individual Content & Data Loaders (unchanged) ===
+  const registerLoader = (token, LoaderClass) => {
+    if (!token) {
+      console.log(
+        'registerLoader called with undefined token:',
+        token,
+        'LoaderClass:',
+        LoaderClass && LoaderClass.name
+      );
+      throw new Error(
+        `registerLoader called with undefined token for LoaderClass: ${LoaderClass && LoaderClass.name}`
+      );
+    }
+    registrar.singletonFactory(
+      token,
+      (c) =>
+        new LoaderClass(
+          c.resolve(tokens.IConfiguration),
+          c.resolve(tokens.IPathResolver),
+          c.resolve(tokens.IDataFetcher),
+          c.resolve(tokens.ISchemaValidator),
+          c.resolve(tokens.IDataRegistry),
+          c.resolve(tokens.ILogger)
+        )
+    );
+  };
 
-  // RuleLoader
-  registrar.singletonFactory(
-    tokens.RuleLoader,
-    (c) =>
-      new RuleLoader(
-        c.resolve(tokens.IConfiguration),
-        c.resolve(tokens.IPathResolver),
-        c.resolve(tokens.IDataFetcher),
-        c.resolve(tokens.ISchemaValidator),
-        c.resolve(tokens.IDataRegistry),
-        c.resolve(tokens.ILogger)
-      )
-  );
-  logger.debug(`Loaders Registration: Registered ${tokens.RuleLoader}.`);
+  registerLoader(tokens.RuleLoader, RuleLoader);
+  registerLoader(tokens.ComponentDefinitionLoader, ComponentLoader);
+  registerLoader(tokens.ConditionLoader, ConditionLoader);
+  registerLoader(tokens.ActionLoader, ActionLoader);
+  registerLoader(tokens.EventLoader, EventLoader);
+  registerLoader(tokens.MacroLoader, MacroLoader);
+  registerLoader(tokens.EntityLoader, EntityDefinitionLoader);
+  registerLoader(tokens.EntityInstanceLoader, EntityInstanceLoader);
+  registerLoader(tokens.WorldLoader, WorldLoader);
+  registerLoader(tokens.GoalLoader, GoalLoader);
+  registerLoader(tokens.ModManifestLoader, ModManifestLoader);
 
-  // ComponentDefinitionLoader (ComponentLoader)
-  registrar.singletonFactory(
-    tokens.ComponentDefinitionLoader,
-    (c) =>
-      new ComponentLoader(
-        c.resolve(tokens.IConfiguration),
-        c.resolve(tokens.IPathResolver),
-        c.resolve(tokens.IDataFetcher),
-        c.resolve(tokens.ISchemaValidator),
-        c.resolve(tokens.IDataRegistry),
-        c.resolve(tokens.ILogger)
-      )
-  );
-  logger.debug(
-    `Loaders Registration: Registered ${tokens.ComponentDefinitionLoader}.`
-  );
-
-  // ConditionLoader
-  registrar.singletonFactory(
-    tokens.ConditionLoader,
-    (c) =>
-      new ConditionLoader(
-        c.resolve(tokens.IConfiguration),
-        c.resolve(tokens.IPathResolver),
-        c.resolve(tokens.IDataFetcher),
-        c.resolve(tokens.ISchemaValidator),
-        c.resolve(tokens.IDataRegistry),
-        c.resolve(tokens.ILogger)
-      )
-  );
-  logger.debug(`Loaders Registration: Registered ${tokens.ConditionLoader}.`);
-
-  // GameConfigLoader
   registrar.singletonFactory(
     tokens.GameConfigLoader,
     (c) =>
@@ -190,85 +160,6 @@ export function registerLoaders(container) {
         logger: c.resolve(tokens.ILogger),
       })
   );
-  logger.debug(`Loaders Registration: Registered ${tokens.GameConfigLoader}.`);
-
-  // ModManifestLoader
-  registrar.singletonFactory(
-    tokens.ModManifestLoader,
-    (c) =>
-      new ModManifestLoader(
-        c.resolve(tokens.IConfiguration),
-        c.resolve(tokens.IPathResolver),
-        c.resolve(tokens.IDataFetcher),
-        c.resolve(tokens.ISchemaValidator),
-        c.resolve(tokens.IDataRegistry),
-        c.resolve(tokens.ILogger)
-      )
-  );
-  logger.debug(`Loaders Registration: Registered ${tokens.ModManifestLoader}.`);
-  // === ADDED: MODLOADER-005 A END ===
-
-  // ActionLoader
-  registrar.singletonFactory(
-    tokens.ActionLoader,
-    (c) =>
-      new ActionLoader(
-        c.resolve(tokens.IConfiguration),
-        c.resolve(tokens.IPathResolver),
-        c.resolve(tokens.IDataFetcher),
-        c.resolve(tokens.ISchemaValidator),
-        c.resolve(tokens.IDataRegistry),
-        c.resolve(tokens.ILogger)
-      )
-  );
-  logger.debug(`Loaders Registration: Registered ${tokens.ActionLoader}.`);
-
-  // EventLoader
-  registrar.singletonFactory(
-    tokens.EventLoader,
-    (c) =>
-      new EventLoader(
-        c.resolve(tokens.IConfiguration),
-        c.resolve(tokens.IPathResolver),
-        c.resolve(tokens.IDataFetcher),
-        c.resolve(tokens.ISchemaValidator),
-        c.resolve(tokens.IDataRegistry),
-        c.resolve(tokens.ILogger)
-      )
-  );
-  logger.debug(`Loaders Registration: Registered ${tokens.EventLoader}.`);
-
-  // MacroLoader
-  registrar.singletonFactory(
-    tokens.MacroLoader,
-    (c) =>
-      new MacroLoader(
-        c.resolve(tokens.IConfiguration),
-        c.resolve(tokens.IPathResolver),
-        c.resolve(tokens.IDataFetcher),
-        c.resolve(tokens.ISchemaValidator),
-        c.resolve(tokens.IDataRegistry),
-        c.resolve(tokens.ILogger)
-      )
-  );
-  logger.debug(`Loaders Registration: Registered ${tokens.MacroLoader}.`);
-
-  // EntityLoader (EntityDefinitionLoader)
-  registrar.singletonFactory(
-    tokens.EntityLoader,
-    (c) =>
-      new EntityDefinitionLoader(
-        c.resolve(tokens.IConfiguration),
-        c.resolve(tokens.IPathResolver),
-        c.resolve(tokens.IDataFetcher),
-        c.resolve(tokens.ISchemaValidator),
-        c.resolve(tokens.IDataRegistry),
-        c.resolve(tokens.ILogger)
-      )
-  );
-  logger.debug(`Loaders Registration: Registered ${tokens.EntityLoader}.`);
-
-  // PromptTextLoader
   registrar.singletonFactory(
     tokens.PromptTextLoader,
     (c) =>
@@ -281,85 +172,125 @@ export function registerLoaders(container) {
         logger: c.resolve(tokens.ILogger),
       })
   );
-  logger.debug(`Loaders Registration: Registered ${tokens.PromptTextLoader}.`);
 
-  // WorldLoader
+  // === New: Phase-related Services & Processors ===
+  // These services were previously created inside ModsLoader.
   registrar.singletonFactory(
-    tokens.WorldLoader,
-    (c) =>
-      new WorldLoader(
-        c.resolve(tokens.IConfiguration),
-        c.resolve(tokens.IPathResolver),
-        c.resolve(tokens.IDataFetcher),
-        c.resolve(tokens.ISchemaValidator),
-        c.resolve(tokens.IDataRegistry),
-        c.resolve(tokens.ILogger)
-      )
-  );
-  logger.debug(`Loaders Registration: Registered ${tokens.WorldLoader}.`);
-
-  // EntityInstanceLoader
-  registrar.singletonFactory(
-    tokens.EntityInstanceLoader,
-    (c) =>
-      new EntityInstanceLoader( // Assuming constructor matches EntityDefinitionLoader for now
-        c.resolve(tokens.IConfiguration),
-        c.resolve(tokens.IPathResolver),
-        c.resolve(tokens.IDataFetcher),
-        c.resolve(tokens.ISchemaValidator),
-        c.resolve(tokens.IDataRegistry),
-        c.resolve(tokens.ILogger)
-      )
-  );
-  logger.debug(
-    `Loaders Registration: Registered ${tokens.EntityInstanceLoader}.`
+    tokens.ModLoadOrderResolver,
+    (c) => new ModLoadOrderResolver(c.resolve(tokens.ILogger))
   );
 
-  registrar.singletonFactory(
-    tokens.GoalLoader,
-    (c) =>
-      new GoalLoader(
-        c.resolve(tokens.IConfiguration),
-        c.resolve(tokens.IPathResolver),
-        c.resolve(tokens.IDataFetcher),
-        c.resolve(tokens.ISchemaValidator),
-        c.resolve(tokens.IDataRegistry),
-        c.resolve(tokens.ILogger)
-      )
-  );
-  logger.debug(`Loaders Registration: Registered ${tokens.GoalLoader}.`);
+  registrar.singletonFactory(tokens.ModManifestProcessor, (c) => {
+    const resolver = c.resolve(tokens.ModLoadOrderResolver); // Expects an object
 
-  // ModsLoader depends on a multitude of services
-  registrar.singletonFactory(tokens.ModsLoader, (c) => {
-    const loggerDep = c.resolve(tokens.ILogger);
-    return new ModsLoader({
-      registry: c.resolve(tokens.IDataRegistry),
-      logger: loggerDep,
-      schemaLoader: c.resolve(tokens.SchemaLoader),
-      componentLoader: c.resolve(tokens.ComponentDefinitionLoader),
-      conditionLoader: c.resolve(tokens.ConditionLoader),
-      ruleLoader: c.resolve(tokens.RuleLoader),
-      macroLoader: c.resolve(tokens.MacroLoader),
-      actionLoader: c.resolve(tokens.ActionLoader),
-      eventLoader: c.resolve(tokens.EventLoader),
-      entityLoader: c.resolve(tokens.EntityLoader),
-      entityInstanceLoader: c.resolve(tokens.EntityInstanceLoader),
-      goalLoader: c.resolve(tokens.GoalLoader),
-      validator: c.resolve(tokens.ISchemaValidator),
-      configuration: c.resolve(tokens.IConfiguration),
-      gameConfigLoader: c.resolve(tokens.GameConfigLoader),
-      promptTextLoader: c.resolve(tokens.PromptTextLoader),
+    return new ModManifestProcessor({
+      logger: c.resolve(tokens.ILogger),
       modManifestLoader: c.resolve(tokens.ModManifestLoader),
+      registry: c.resolve(tokens.IDataRegistry),
       validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
-      modDependencyValidator: new ModDependencyValidator(loggerDep),
-      modVersionValidator: validateModEngineVersions,
-      modLoadOrderResolver: new ModLoadOrderResolver(loggerDep),
-      worldLoader: c.resolve(tokens.WorldLoader),
+      modDependencyValidator: new ModDependencyValidator(
+        c.resolve(tokens.ILogger)
+      ),
+      modVersionValidator: validateModEngineVersions, // Use the function directly
+      modLoadOrderResolver: resolver,
+      configuration: c.resolve(tokens.IConfiguration),
     });
   });
-  logger.debug(`Loaders Registration: Registered ${tokens.ModsLoader}.`);
+
+  registrar.singletonFactory(
+    tokens.ContentLoadManager,
+    (c) =>
+      new ContentLoadManager({
+        logger: c.resolve(tokens.ILogger),
+        validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
+        contentLoadersConfig: null, // Will be generated from individual loaders
+      })
+  );
+
+  registrar.singletonFactory(
+    tokens.WorldLoadSummaryLogger,
+    () => new WorldLoadSummaryLogger()
+  );
+
+  // === New: Loading Phases ===
+  registrar.singletonFactory(
+    tokens.SchemaPhase,
+    (c) =>
+      new SchemaPhase({
+        schemaLoader: c.resolve(tokens.SchemaLoader),
+        config: c.resolve(tokens.IConfiguration),
+        validator: c.resolve(tokens.ISchemaValidator),
+        logger: c.resolve(tokens.ILogger),
+      })
+  );
+
+  registrar.singletonFactory(
+    tokens.ManifestPhase,
+    (c) =>
+      new ManifestPhase({
+        processor: c.resolve(tokens.ModManifestProcessor),
+        logger: c.resolve(tokens.ILogger),
+      })
+  );
+
+  registrar.singletonFactory(
+    tokens.ContentPhase,
+    (c) =>
+      new ContentPhase({
+        manager: c.resolve(tokens.ContentLoadManager),
+        logger: c.resolve(tokens.ILogger),
+      })
+  );
+
+  registrar.singletonFactory(
+    tokens.WorldPhase,
+    (c) =>
+      new WorldPhase({
+        worldLoader: c.resolve(tokens.WorldLoader),
+        logger: c.resolve(tokens.ILogger),
+      })
+  );
+
+  registrar.singletonFactory(
+    tokens.SummaryPhase,
+    (c) =>
+      new SummaryPhase({
+        summaryLogger: c.resolve(tokens.WorldLoadSummaryLogger),
+        logger: c.resolve(tokens.ILogger),
+      })
+  );
+
+  // === Refactored ModsLoader Registration ===
+  registrar.singletonFactory(tokens.ModsLoader, (c) => {
+    const phases = [
+      c.resolve(tokens.SchemaPhase),
+      c.resolve(tokens.ManifestPhase),
+      c.resolve(tokens.ContentPhase),
+      c.resolve(tokens.WorldPhase),
+      c.resolve(tokens.SummaryPhase),
+    ];
+
+    return new ModsLoader({
+      logger: c.resolve(tokens.ILogger),
+      registry: c.resolve(tokens.IDataRegistry),
+      phases: phases,
+    });
+  });
+
+  // Register SchemaLoader directly with correct dependencies
+  registrar.singletonFactory(
+    tokens.SchemaLoader,
+    (c) =>
+      new SchemaLoader(
+        c.resolve(tokens.IConfiguration),
+        c.resolve(tokens.IPathResolver),
+        c.resolve(tokens.IDataFetcher),
+        c.resolve(tokens.ISchemaValidator),
+        c.resolve(tokens.ILogger)
+      )
+  );
 
   logger.info(
-    'Loaders Registration: All core services and data loaders registered.'
+    'Loaders Registration: All core services, loaders, and phases registered.'
   );
 }

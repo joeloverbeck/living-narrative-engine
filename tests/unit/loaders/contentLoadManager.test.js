@@ -10,7 +10,11 @@ class MockLoader {
     this.contentKey = contentKey;
 
     this.loadItemsForMod = jest.fn(
-      async (currentModId, manifest, actualContentKey /*, contentTypeDir, typeName */) => {
+      async (
+        currentModId,
+        manifest,
+        actualContentKey /*, contentTypeDir, typeName */
+      ) => {
         // Not for this mod, or manifest is missing/empty for this loader's specific contentKey
         if (
           currentModId !== this.intendedModId ||
@@ -137,7 +141,7 @@ describe('ContentLoadManager.loadContent', () => {
       'items',
       'items'
     );
-     expect(loaderB.loadItemsForMod).toHaveBeenCalledWith(
+    expect(loaderB.loadItemsForMod).toHaveBeenCalledWith(
       'modA',
       manifests.get('moda'),
       'items',

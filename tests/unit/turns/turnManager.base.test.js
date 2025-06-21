@@ -14,7 +14,9 @@ import {
   test,
   afterEach,
 } from '@jest/globals';
+
 import { createDefaultActors } from '../../common/turns/testActors.js';
+
 
 describe('TurnManager', () => {
   let testBed;
@@ -31,6 +33,7 @@ describe('TurnManager', () => {
       ai1: mockAiEntity1,
       ai2: mockAiEntity2,
     } = createDefaultActors());
+
   });
 
   afterEach(() => testBed.cleanup());

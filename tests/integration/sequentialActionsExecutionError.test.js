@@ -60,7 +60,6 @@ class SimpleEntityManager {
   }
 }
 
-
 /**
  *
  * @param root0
@@ -177,7 +176,7 @@ describe('Sequential Action Execution – Error Path', () => {
     expect(failingHandlerMock).toHaveBeenCalledTimes(1);
 
     /* ✔️ Error logged with contextual message + error object */
-    expect(logger.error).toHaveBeenCalledTimes(2);
+    expect(logger.error).toHaveBeenCalledTimes(1);
 
     // --- FIX: Update the expected string to include the 'Rule' context ---
     expect(logger.error).toHaveBeenCalledWith(

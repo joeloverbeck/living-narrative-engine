@@ -3,7 +3,10 @@
  */
 
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
-import { assertValidId, assertNonBlankString } from '../../../src/utils/parameterGuards.js';
+import {
+  assertValidId,
+  assertNonBlankString,
+} from '../../../src/utils/parameterGuards.js';
 import { InvalidArgumentError } from '../../../src/errors/invalidArgumentError.js';
 
 describe('parameterGuards', () => {
@@ -21,13 +24,13 @@ describe('parameterGuards', () => {
   describe('assertValidId', () => {
     it('should pass validation for valid non-blank string IDs', () => {
       const validIds = ['valid-id', 'another_id', '123', 'id-with-dashes'];
-      
-      validIds.forEach(id => {
+
+      validIds.forEach((id) => {
         expect(() => {
           assertValidId(id, 'testMethod', mockLogger);
         }).not.toThrow();
       });
-      
+
       expect(mockLogger.error).not.toHaveBeenCalled();
     });
 
@@ -37,11 +40,11 @@ describe('parameterGuards', () => {
       }).toThrow(InvalidArgumentError);
 
       expect(mockLogger.error).toHaveBeenCalledWith(
-        'testMethod: Invalid ID \'null\'. Expected non-blank string.',
+        "testMethod: Invalid ID 'null'. Expected non-blank string.",
         {
           receivedId: null,
           receivedType: 'object',
-          context: 'testMethod'
+          context: 'testMethod',
         }
       );
     });
@@ -52,11 +55,11 @@ describe('parameterGuards', () => {
       }).toThrow(InvalidArgumentError);
 
       expect(mockLogger.error).toHaveBeenCalledWith(
-        'testMethod: Invalid ID \'undefined\'. Expected non-blank string.',
+        "testMethod: Invalid ID 'undefined'. Expected non-blank string.",
         {
           receivedId: undefined,
           receivedType: 'undefined',
-          context: 'testMethod'
+          context: 'testMethod',
         }
       );
     });
@@ -67,36 +70,36 @@ describe('parameterGuards', () => {
       }).toThrow(InvalidArgumentError);
 
       expect(mockLogger.error).toHaveBeenCalledWith(
-        'testMethod: Invalid ID \'\'. Expected non-blank string.',
+        "testMethod: Invalid ID ''. Expected non-blank string.",
         {
           receivedId: '',
           receivedType: 'string',
-          context: 'testMethod'
+          context: 'testMethod',
         }
       );
     });
 
     it('should throw InvalidArgumentError for whitespace-only string IDs', () => {
       const whitespaceIds = [' ', '  ', '\t', '\n', ' \t \n '];
-      
-      whitespaceIds.forEach(id => {
+
+      whitespaceIds.forEach((id) => {
         expect(() => {
           assertValidId(id, 'testMethod', mockLogger);
         }).toThrow(InvalidArgumentError);
       });
-      
+
       expect(mockLogger.error).toHaveBeenCalledTimes(whitespaceIds.length);
     });
 
     it('should throw InvalidArgumentError for non-string IDs', () => {
       const invalidIds = [123, {}, [], true, false, 0, -1];
-      
-      invalidIds.forEach(id => {
+
+      invalidIds.forEach((id) => {
         expect(() => {
           assertValidId(id, 'testMethod', mockLogger);
         }).toThrow(InvalidArgumentError);
       });
-      
+
       expect(mockLogger.error).toHaveBeenCalledTimes(invalidIds.length);
     });
 
@@ -111,20 +114,27 @@ describe('parameterGuards', () => {
       expect(error.name).toBe('InvalidArgumentError');
       expect(error.parameterName).toBe('id');
       expect(error.receivedValue).toBe(123);
-      expect(error.message).toBe('testMethod: Invalid ID \'123\'. Expected non-blank string.');
+      expect(error.message).toBe(
+        "testMethod: Invalid ID '123'. Expected non-blank string."
+      );
     });
   });
 
   describe('assertNonBlankString', () => {
     it('should pass validation for valid non-blank strings', () => {
-      const validStrings = ['valid-string', 'another_string', '123', 'string-with-dashes'];
-      
-      validStrings.forEach(str => {
+      const validStrings = [
+        'valid-string',
+        'another_string',
+        '123',
+        'string-with-dashes',
+      ];
+
+      validStrings.forEach((str) => {
         expect(() => {
           assertNonBlankString(str, 'testParam', 'testMethod', mockLogger);
         }).not.toThrow();
       });
-      
+
       expect(mockLogger.error).not.toHaveBeenCalled();
     });
 
@@ -134,12 +144,12 @@ describe('parameterGuards', () => {
       }).toThrow(InvalidArgumentError);
 
       expect(mockLogger.error).toHaveBeenCalledWith(
-        'testMethod: Invalid testParam \'null\'. Expected non-blank string.',
+        "testMethod: Invalid testParam 'null'. Expected non-blank string.",
         {
           receivedValue: null,
           receivedType: 'object',
           parameterName: 'testParam',
-          context: 'testMethod'
+          context: 'testMethod',
         }
       );
     });
@@ -150,12 +160,12 @@ describe('parameterGuards', () => {
       }).toThrow(InvalidArgumentError);
 
       expect(mockLogger.error).toHaveBeenCalledWith(
-        'testMethod: Invalid testParam \'undefined\'. Expected non-blank string.',
+        "testMethod: Invalid testParam 'undefined'. Expected non-blank string.",
         {
           receivedValue: undefined,
           receivedType: 'undefined',
           parameterName: 'testParam',
-          context: 'testMethod'
+          context: 'testMethod',
         }
       );
     });
@@ -166,37 +176,37 @@ describe('parameterGuards', () => {
       }).toThrow(InvalidArgumentError);
 
       expect(mockLogger.error).toHaveBeenCalledWith(
-        'testMethod: Invalid testParam \'\'. Expected non-blank string.',
+        "testMethod: Invalid testParam ''. Expected non-blank string.",
         {
           receivedValue: '',
           receivedType: 'string',
           parameterName: 'testParam',
-          context: 'testMethod'
+          context: 'testMethod',
         }
       );
     });
 
     it('should throw InvalidArgumentError for whitespace-only strings', () => {
       const whitespaceStrings = [' ', '  ', '\t', '\n', ' \t \n '];
-      
-      whitespaceStrings.forEach(str => {
+
+      whitespaceStrings.forEach((str) => {
         expect(() => {
           assertNonBlankString(str, 'testParam', 'testMethod', mockLogger);
         }).toThrow(InvalidArgumentError);
       });
-      
+
       expect(mockLogger.error).toHaveBeenCalledTimes(whitespaceStrings.length);
     });
 
     it('should throw InvalidArgumentError for non-string values', () => {
       const invalidValues = [123, {}, [], true, false, 0, -1];
-      
-      invalidValues.forEach(value => {
+
+      invalidValues.forEach((value) => {
         expect(() => {
           assertNonBlankString(value, 'testParam', 'testMethod', mockLogger);
         }).toThrow(InvalidArgumentError);
       });
-      
+
       expect(mockLogger.error).toHaveBeenCalledTimes(invalidValues.length);
     });
 
@@ -211,7 +221,9 @@ describe('parameterGuards', () => {
       expect(error.name).toBe('InvalidArgumentError');
       expect(error.parameterName).toBe('testParam');
       expect(error.receivedValue).toBe(123);
-      expect(error.message).toBe('testMethod: Invalid testParam \'123\'. Expected non-blank string.');
+      expect(error.message).toBe(
+        "testMethod: Invalid testParam '123'. Expected non-blank string."
+      );
     });
 
     it('should use custom parameter name in error message', () => {
@@ -220,11 +232,11 @@ describe('parameterGuards', () => {
       }).toThrow(InvalidArgumentError);
 
       expect(mockLogger.error).toHaveBeenCalledWith(
-        'testMethod: Invalid customParamName \'\'. Expected non-blank string.',
+        "testMethod: Invalid customParamName ''. Expected non-blank string.",
         expect.objectContaining({
-          parameterName: 'customParamName'
+          parameterName: 'customParamName',
         })
       );
     });
   });
-}); 
+});

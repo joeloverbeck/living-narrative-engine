@@ -354,10 +354,12 @@ describe('RuleLoader (Path Resolution & Fetching via loadItemsForMod)', () => {
     it('should catch errors from resolveModContentPath, log them, and process other files', async () => {
       // --- Arrange ---
       // Fail resolution for ruleFileB
-      mockResolver.resolveModContentPath.mockImplementation((mod, type, file) => {
-        if (file === ruleFileB) throw resolutionError;
-        return `/path/to/mods/${mod}/${RULE_CONTENT_DIR}/${file}`; // Use RULE_CONTENT_DIR
-      });
+      mockResolver.resolveModContentPath.mockImplementation(
+        (mod, type, file) => {
+          if (file === ruleFileB) throw resolutionError;
+          return `/path/to/mods/${mod}/${RULE_CONTENT_DIR}/${file}`; // Use RULE_CONTENT_DIR
+        }
+      );
 
       const resolvedPathA = `/path/to/mods/${modId}/${RULE_CONTENT_DIR}/${ruleFileA}`;
 
@@ -403,7 +405,12 @@ describe('RuleLoader (Path Resolution & Fetching via loadItemsForMod)', () => {
           modId: modId,
           _sourceFile: ruleFileA,
           event_type: 'core:dummy_event', // Corrected to match general mockFetcher
-          actions: [{ type: 'LOG', parameters: { message: `Loaded from ${resolvedPathA}` } }],
+          actions: [
+            {
+              type: 'LOG',
+              parameters: { message: `Loaded from ${resolvedPathA}` },
+            },
+          ],
         })
       );
 
@@ -416,10 +423,12 @@ describe('RuleLoader (Path Resolution & Fetching via loadItemsForMod)', () => {
     it('should process file B if the FIRST resolveModContentPath fails', async () => {
       // --- Arrange ---
       // Fail resolution for ruleFileA
-      mockResolver.resolveModContentPath.mockImplementation((mod, type, file) => {
-        if (file === ruleFileA) throw resolutionError;
-        return `/path/to/mods/${mod}/${RULE_CONTENT_DIR}/${file}`; // Use RULE_CONTENT_DIR
-      });
+      mockResolver.resolveModContentPath.mockImplementation(
+        (mod, type, file) => {
+          if (file === ruleFileA) throw resolutionError;
+          return `/path/to/mods/${mod}/${RULE_CONTENT_DIR}/${file}`; // Use RULE_CONTENT_DIR
+        }
+      );
       const resolvedPathB = `/path/to/mods/${modId}/${RULE_CONTENT_DIR}/${ruleFileB}`;
 
       // --- Act ---
@@ -464,7 +473,12 @@ describe('RuleLoader (Path Resolution & Fetching via loadItemsForMod)', () => {
           modId: modId,
           _sourceFile: ruleFileB,
           event_type: 'core:dummy_event', // Corrected to match general mockFetcher
-          actions: [{ type: 'LOG', parameters: { message: `Loaded from ${resolvedPathB}` } }],
+          actions: [
+            {
+              type: 'LOG',
+              parameters: { message: `Loaded from ${resolvedPathB}` },
+            },
+          ],
         })
       );
 

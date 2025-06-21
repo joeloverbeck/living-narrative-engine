@@ -27,13 +27,41 @@
  */
 export function createContentLoadersConfig(loaderMap) {
   const meta = {
-    components: { contentKey: 'components', contentTypeDir: 'components', phase: 'definitions' },
-    events: { contentKey: 'events', contentTypeDir: 'events', phase: 'definitions' },
-    conditions: { contentKey: 'conditions', contentTypeDir: 'conditions', phase: 'definitions' },
-    macros: { contentKey: 'macros', contentTypeDir: 'macros', phase: 'definitions' },
-    actions: { contentKey: 'actions', contentTypeDir: 'actions', phase: 'definitions' },
-    rules: { contentKey: 'rules', contentTypeDir: 'rules', phase: 'definitions' },
-    goals: { contentKey: 'goals', contentTypeDir: 'goals', phase: 'definitions' },
+    components: {
+      contentKey: 'components',
+      contentTypeDir: 'components',
+      phase: 'definitions',
+    },
+    events: {
+      contentKey: 'events',
+      contentTypeDir: 'events',
+      phase: 'definitions',
+    },
+    conditions: {
+      contentKey: 'conditions',
+      contentTypeDir: 'conditions',
+      phase: 'definitions',
+    },
+    macros: {
+      contentKey: 'macros',
+      contentTypeDir: 'macros',
+      phase: 'definitions',
+    },
+    actions: {
+      contentKey: 'actions',
+      contentTypeDir: 'actions',
+      phase: 'definitions',
+    },
+    rules: {
+      contentKey: 'rules',
+      contentTypeDir: 'rules',
+      phase: 'definitions',
+    },
+    goals: {
+      contentKey: 'goals',
+      contentTypeDir: 'goals',
+      phase: 'definitions',
+    },
     entityDefinitions: {
       contentKey: 'entityDefinitions',
       contentTypeDir: 'entities/definitions',

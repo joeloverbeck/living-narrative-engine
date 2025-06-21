@@ -93,7 +93,10 @@ describe('BaseManifestItemLoader._parseIdAndStoreItem', () => {
 
   it('parses ID and stores item, returning result', () => {
     const data = { id: 'test' };
-    parseAndValidateId.mockReturnValue({ fullId: `${modId}:test`, baseId: 'test' });
+    parseAndValidateId.mockReturnValue({
+      fullId: `${modId}:test`,
+      baseId: 'test',
+    });
     mockRegistry.get.mockReturnValue(undefined);
 
     const result = loader.publicParseAndStore(

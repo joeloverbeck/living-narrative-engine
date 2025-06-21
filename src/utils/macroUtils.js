@@ -16,64 +16,90 @@
  */
 export function expandMacros(actions, registry, logger) {
   if (!Array.isArray(actions)) return [];
-  /** @type {object[]} */
+
   const result = [];
   for (const action of actions) {
-    if (action && typeof action === 'object') {
-      if (typeof action.macro === 'string') {
-        const macro = registry.get('macros', action.macro);
-        if (!macro || !Array.isArray(macro.actions)) {
-          logger?.warn?.(`expandMacros: macro '${action.macro}' not found.`);
-          continue;
-        }
-        const expanded = expandActionArray(macro.actions, registry, logger);
-        result.push(...expanded);
-        continue;
+    if (action && action.macro) {
+      const macro = registry.get('macros', action.macro);
+      if (macro && Array.isArray(macro.actions)) {
+        // Recursively expand macros in the macro's actions
+        result.push(...expandMacros(macro.actions, registry, logger));
+      } else {
+        logger?.warn?.(`expandMacros: macro '${action.macro}' not found.`);
       }
-
-      const params = action.parameters;
-      if (params && typeof params === 'object') {
-        const newParams = { ...params };
-        let changed = false;
-
-        if (Array.isArray(params.then_actions)) {
-          newParams.then_actions = expandActionArray(
-            params.then_actions,
-            registry,
-            logger
-          );
-          changed = true;
-        }
-        if (Array.isArray(params.else_actions)) {
-          newParams.else_actions = expandActionArray(
-            params.else_actions,
-            registry,
-            logger
-          );
-          changed = true;
-        }
-        if (Array.isArray(params.actions)) {
-          newParams.actions = expandActionArray(
-            params.actions,
-            registry,
-            logger
-          );
-          changed = true;
-        }
-
-        if (changed) {
-          result.push({ ...action, parameters: newParams });
-          continue;
+    } else if (action && action.parameters) {
+      let newParams = { ...action.parameters };
+      // Recursively expand macros in all nested action arrays
+      for (const key of ['then_actions', 'else_actions', 'actions']) {
+        if (Array.isArray(newParams[key])) {
+          newParams[key] = expandMacros(newParams[key], registry, logger);
         }
       }
+      result.push({ ...action, parameters: newParams });
+    } else {
+      result.push(action);
     }
-    result.push(action);
   }
   return result;
 }
 
 /**
+ * Finds any unexpanded macro references in an actions tree.
+ * Useful for validation after macro expansion.
+ *
+ * @param {object[]} actions - Array of action objects to check.
+ * @param {string} [path='actions'] - Current path in the actions tree for debugging.
+ * @returns {Array<{path: string, macro: string, action: object}>} Array of found macro references.
+ */
+export function findUnexpandedMacros(actions, path = 'actions') {
+  if (!Array.isArray(actions)) return [];
+
+  let found = [];
+  actions.forEach((action, idx) => {
+    if (action && action.macro) {
+      found.push({ path: `${path}[${idx}]`, macro: action.macro, action });
+    }
+    if (action && action.parameters) {
+      for (const key of Object.keys(action.parameters)) {
+        if (Array.isArray(action.parameters[key])) {
+          found = found.concat(
+            findUnexpandedMacros(
+              action.parameters[key],
+              `${path}[${idx}].parameters.${key}`
+            )
+          );
+        }
+      }
+    }
+  });
+  return found;
+}
+
+/**
+ * Validates that all macros have been properly expanded.
+ * Logs warnings for any unexpanded macros found.
+ *
+ * @param {object[]} actions - Array of action objects to validate.
+ * @param {import('../interfaces/coreServices.js').IDataRegistry} registry - Data registry used to resolve macros.
+ * @param {import('../interfaces/coreServices.js').ILogger} [logger] - Optional logger for warnings.
+ * @returns {boolean} True if no unexpanded macros found, false otherwise.
+ */
+export function validateMacroExpansion(actions, registry, logger) {
+  const unexpanded = findUnexpandedMacros(actions);
+  if (unexpanded.length > 0) {
+    logger?.warn?.(
+      `Found ${unexpanded.length} unexpanded macro references:`,
+      unexpanded
+    );
+    return false;
+  }
+  return true;
+}
+
+/**
  * Recursively expands macro references in an array of action objects.
+ * This is a legacy function maintained for backward compatibility.
+ * @deprecated Use expandMacros instead.
  *
  * @param {object[]} actions - Array of action or macro reference objects.
  * @param {import('../interfaces/coreServices.js').IDataRegistry} registry - Data registry used to resolve macros.
@@ -81,30 +107,5 @@ export function expandMacros(actions, registry, logger) {
  * @returns {object[]} A new array with all macros expanded.
  */
 export function expandActionArray(actions, registry, logger) {
-  if (!Array.isArray(actions)) return [];
-  /** @type {object[]} */
-  const result = [];
-
-  for (const action of actions) {
-    if (
-      action &&
-      typeof action === 'object' &&
-      typeof action.macro === 'string'
-    ) {
-      const macro = registry.get('macros', action.macro);
-      if (!macro || !Array.isArray(macro.actions)) {
-        logger?.warn?.(`expandMacros: macro '${action.macro}' not found.`);
-        continue;
-      }
-      const expanded = expandActionArray(macro.actions, registry, logger);
-      result.push(...expanded);
-    } else if (action && typeof action === 'object') {
-      const [expanded] = expandMacros([action], registry, logger);
-      result.push(expanded);
-    } else {
-      result.push(action);
-    }
-  }
-
-  return result;
+  return expandMacros(actions, registry, logger);
 }

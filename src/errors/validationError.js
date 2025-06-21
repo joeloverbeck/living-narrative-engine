@@ -20,4 +20,4 @@ export class ValidationError extends Error {
     this.componentTypeId = componentTypeId;
     this.validationErrors = validationErrors;
   }
-} 
+}

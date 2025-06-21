@@ -145,6 +145,8 @@ describe('EntityManager Integration Tests', () => {
     expect(entity).toBeUndefined();
 
     // Double-check the internal tracking map as well for good measure.
-    expect(Array.from(entityManager.entities).find(e => e.id === instanceId)).toBeUndefined();
+    expect(
+      Array.from(entityManager.entities).find((e) => e.id === instanceId)
+    ).toBeUndefined();
   });
 });

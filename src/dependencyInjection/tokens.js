@@ -194,7 +194,7 @@ export const tokens = freeze({
   EntityLoader: 'EntityLoader',
   EntityInstanceLoader: 'EntityInstanceLoader',
   WorldLoader: 'WorldLoader',
-  GoalLoader:              'GoalLoader',    
+  GoalLoader: 'GoalLoader',
   ModsLoader: 'ModsLoader',
   GameConfigLoader: 'GameConfigLoader',
   PromptTextLoader: 'PromptTextLoader',
@@ -354,4 +354,15 @@ export const tokens = freeze({
   ILLMDecisionProvider: 'ILLMDecisionProvider',
   IHumanDecisionProvider: 'IHumanDecisionProvider',
   IGoapDecisionProvider: 'IGoapDecisionProvider',
+
+  // --- Phase-related services and processors ---
+  ModLoadOrderResolver: 'ModLoadOrderResolver',
+  ModManifestProcessor: 'ModManifestProcessor',
+  ContentLoadManager: 'ContentLoadManager',
+  WorldLoadSummaryLogger: 'WorldLoadSummaryLogger',
+  SchemaPhase: 'SchemaPhase',
+  ManifestPhase: 'ManifestPhase',
+  ContentPhase: 'ContentPhase',
+  WorldPhase: 'WorldPhase',
+  SummaryPhase: 'SummaryPhase',
 });

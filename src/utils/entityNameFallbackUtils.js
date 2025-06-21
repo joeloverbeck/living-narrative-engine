@@ -53,4 +53,4 @@ export function resolveEntityNameFallback(
   }
 
   return undefined;
-} 
+}

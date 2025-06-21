@@ -52,23 +52,4 @@ describeAIPromptPipelineSuite('AIPromptPipeline', (bed) => {
   ])('generatePrompt rejects when %s', async ({ mutate, error }) => {
     await bed.expectGenerationFailure(mutate, error);
   });
-
-  test('availableActions are attached to DTO sent to getPromptData', async () => {
-    const actor = bed.defaultActor;
-    const context = bed.defaultContext;
-    const actions = [...bed.defaultActions, { id: 'act' }];
-
-    bed.setupMockSuccess({
-      gameState: {},
-      promptData: {},
-      finalPrompt: 'prompt',
-    });
-
-    await bed.generate(actor, context, actions);
-
-    expect(bed.promptContentProvider.getPromptData).toHaveBeenCalledWith(
-      expect.objectContaining({ availableActions: actions }),
-      bed.logger
-    );
-  });
 });

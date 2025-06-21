@@ -98,4 +98,4 @@ describe('createLoadContext', () => {
     expect(typeof ctx.totals).toBe('object');
     expect(typeof ctx.incompatibilities).toBe('number');
   });
-}); 
+});

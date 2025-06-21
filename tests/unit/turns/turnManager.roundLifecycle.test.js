@@ -36,26 +36,15 @@ describeTurnManagerSuite(
       testBed.mocks.turnOrderService.startNewRound.mockResolvedValue();
       testBed.mocks.turnOrderService.clearCurrentRound.mockResolvedValue();
 
+
       ({ ai1, ai2, player } = createDefaultActors());
 
       // Configure handler resolver to return MockTurnHandler instances
       testBed.mocks.turnHandlerResolver.resolveHandler.mockImplementation(
         async (actor) => {
           const handler = createMockTurnHandler({ actor });
-          handler.startTurn = (_currentActor) => {
-            const promise = Promise.resolve();
-            console.log(
-              'test override: startTurn called, returns Promise:',
-              typeof promise.then === 'function'
-            );
-            return promise;
-          };
-          console.log(
-            'resolveHandler called for actor:',
-            actor?.id,
-            'returning handler:',
-            !!handler
-          );
+          handler.startTurn = (_currentActor) => Promise.resolve();
+
           return handler;
         }
       );
@@ -76,15 +65,11 @@ describeTurnManagerSuite(
     test('Starts a new round when queue is empty and active actors exist', async () => {
       testBed.setActiveEntities(ai1, player);
 
-      // Debug: print hasComponent for each entity
+      // Debug: verify actors
       const entities = Array.from(testBed.entityManager.entities);
-      console.log(
-        'Entities and isActor:',
-        entities.map((e) => ({
-          id: e.id,
-          isActor: e.hasComponent(ACTOR_COMPONENT_ID),
-        }))
-      );
+
+      // Entities have ACTOR_COMPONENT_ID component or not; not logged
+
 
       // Mock isEmpty to return true (queue is empty) before the first turn
       testBed.mocks.turnOrderService.isEmpty.mockResolvedValueOnce(true);
@@ -139,22 +124,11 @@ describeTurnManagerSuite(
           testBed.mocks.turnOrderService.getNextEntity.mock.calls.length === 1
             ? ai1
             : ai2;
-        const emActor = testBed.entityManager.activeEntities.get(result.id);
-        console.log(
-          'getNextEntity called, returning:',
-          result?.id,
-          'entityManager ref === result:',
-          emActor === result
-        );
         return Promise.resolve(result);
       });
 
       await testBed.turnManager.start();
       await flushPromisesAndTimers();
-      console.log(
-        'After start, current actor:',
-        testBed.turnManager.getCurrentActor()?.id
-      );
 
       expect(testBed.turnManager.getCurrentActor()).toBe(ai1);
 
@@ -164,10 +138,6 @@ describeTurnManagerSuite(
         success: true,
       });
       await flushPromisesAndTimers();
-      console.log(
-        'After turn end, current actor:',
-        testBed.turnManager.getCurrentActor()?.id
-      );
 
       expect(testBed.turnManager.getCurrentActor()).toBe(ai2);
     });
@@ -262,12 +232,14 @@ describeTurnManagerSuite(
 
       // Simulate turn ending for actor1 (success: true)
       testBed.trigger(TURN_ENDED_ID, { entityId: ai1.id, success: true });
+
       await new Promise((resolve) => setTimeout(resolve, 10)); // Wait for async turn advancement
 
       // Wait for TurnManager to advance to ai2
       let found = false;
       for (let i = 0; i < 50; i++) {
         if (testBed.turnManager.getCurrentActor()?.id === ai2.id) {
+
           found = true;
           break;
         }
@@ -277,6 +249,7 @@ describeTurnManagerSuite(
 
       // Simulate turn ending for actor2 (success: true)
       testBed.trigger(TURN_ENDED_ID, { entityId: ai2.id, success: true });
+
       await new Promise((resolve) => setTimeout(resolve, 10)); // Wait for async turn advancement
 
       // Wait for the TurnManager to process and start a new round

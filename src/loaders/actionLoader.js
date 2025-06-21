@@ -34,7 +34,15 @@ class ActionLoader extends BaseManifestItemLoader {
     dataRegistry,
     logger
   ) {
-    super('actions', config, pathResolver, dataFetcher, schemaValidator, dataRegistry, logger);
+    super(
+      'actions',
+      config,
+      pathResolver,
+      dataFetcher,
+      schemaValidator,
+      dataRegistry,
+      logger
+    );
   }
 
   /**
@@ -49,7 +57,9 @@ class ActionLoader extends BaseManifestItemLoader {
    * @returns {Promise<{qualifiedId: string, didOverride: boolean}>}
    */
   async _processFetchedItem(modId, filename, resolvedPath, data, typeName) {
-    this._logger.debug(`ActionLoader [${modId}]: Processing fetched item: ${filename} (Type: ${typeName})`);
+    this._logger.debug(
+      `ActionLoader [${modId}]: Processing fetched item: ${filename} (Type: ${typeName})`
+    );
 
     // Use the reliable base class helper to handle ID parsing and storage.
     const { qualifiedId, didOverride } = this._parseIdAndStoreItem(
@@ -60,7 +70,9 @@ class ActionLoader extends BaseManifestItemLoader {
       filename
     );
 
-    this._logger.debug(`ActionLoader [${modId}]: Successfully processed action from ${filename}. Returning final registry key: ${qualifiedId}, Overwrite: ${didOverride}`);
+    this._logger.debug(
+      `ActionLoader [${modId}]: Successfully processed action from ${filename}. Returning final registry key: ${qualifiedId}, Overwrite: ${didOverride}`
+    );
     return { qualifiedId, didOverride };
   }
 }

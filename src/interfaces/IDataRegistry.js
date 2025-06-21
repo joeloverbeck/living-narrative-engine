@@ -84,4 +84,4 @@ export class IDataRegistry {
   entries() {
     throw new Error('IDataRegistry.entries() must be implemented');
   }
-} 
+}

@@ -32,4 +32,4 @@ export function createLoadContext({ worldName, requestedMods = [], registry }) {
  * @property {IDataRegistry} registry
  * @property {TotalResultsSummary} totals
  * @property {number} incompatibilities
- */ 
+ */

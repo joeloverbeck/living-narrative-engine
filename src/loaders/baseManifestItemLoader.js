@@ -522,7 +522,6 @@ export class BaseManifestItemLoader extends AbstractLoader {
     // Forcing dataWithMetadata.id to be baseItemId ensures clarity.
     dataWithMetadata.id = baseItemId;
 
-
     this._logger.debug(
       `${this.constructor.name} [${modId}]: Storing item in registry. Category: '${category}', Qualified ID: '${qualifiedId}', Base ID: '${baseItemId}', Filename: '${sourceFilename}'`
     );

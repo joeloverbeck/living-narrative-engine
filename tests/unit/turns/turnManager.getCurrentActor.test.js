@@ -83,7 +83,9 @@ describeTurnManagerSuite('TurnManager', (getBed) => {
     expect(Array.from(testBed.mocks.entityManager.entities)).toEqual(entities);
     expect(
       Array.from(testBed.mocks.entityManager.entities).find(
+
         (e) => e.id === 'player1'
+
       )
     ).toBe(mockPlayerEntity);
   });

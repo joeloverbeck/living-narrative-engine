@@ -10,7 +10,7 @@ import { BaseManifestItemLoader } from '../../../src/loaders/baseManifestItemLoa
 /**
  * Creates a mock IConfiguration service.
  *
-* @param overrides
+ * @param overrides
  */
 const createMockConfiguration = (overrides = {}) => ({
   getContentBasePath: jest.fn((typeName) => `./data/mods/test-mod/${typeName}`),
@@ -155,7 +155,7 @@ const createMockSchemaValidator = (overrides = {}) => {
  * @param overrides
  */
 const createMockDataRegistry = (overrides = {}) => ({
-  store: jest.fn((type, id, data) => { }),
+  store: jest.fn((type, id, data) => {}),
   get: jest.fn((type, id) => undefined),
   getAll: jest.fn((type) => []),
   clear: jest.fn(),
@@ -311,7 +311,9 @@ describe('ComponentLoader (Sub-Ticket 6.8: Data Schema Registration Failure)', (
     expect(mockValidator.isSchemaLoaded).toHaveBeenCalledWith(
       componentDefSchemaId
     );
-    expect(mockValidator.isSchemaLoaded).toHaveBeenCalledWith(qualifiedSchemaId);
+    expect(mockValidator.isSchemaLoaded).toHaveBeenCalledWith(
+      qualifiedSchemaId
+    );
     expect(mockValidator.removeSchema).not.toHaveBeenCalled();
     expect(mockValidator.addSchema).toHaveBeenCalledTimes(1);
     expect(mockValidator.addSchema).toHaveBeenCalledWith(
@@ -398,7 +400,9 @@ describe('ComponentLoader (Sub-Ticket 6.8: Data Schema Registration Failure)', (
     );
     expect(mockFetcher.fetch).toHaveBeenCalledWith(filePath);
     expect(mockValidator.validate).toHaveBeenCalledTimes(1);
-    expect(mockValidator.isSchemaLoaded).toHaveBeenCalledWith(qualifiedSchemaId);
+    expect(mockValidator.isSchemaLoaded).toHaveBeenCalledWith(
+      qualifiedSchemaId
+    );
     expect(mockValidator.removeSchema).toHaveBeenCalledTimes(1);
     expect(mockValidator.removeSchema).toHaveBeenCalledWith(qualifiedSchemaId);
     expect(mockValidator.addSchema).not.toHaveBeenCalled();

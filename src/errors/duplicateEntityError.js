@@ -19,4 +19,4 @@ export class DuplicateEntityError extends Error {
     this.name = 'DuplicateEntityError';
     this.entityId = entityId;
   }
-} 
+}

@@ -396,7 +396,7 @@ class EntityManager extends IEntityManager {
         wasReconstructed: false,
       });
       return entity;
-    } catch (err) {
+    } catch (err) {      
       if (err instanceof Error && err.message.startsWith('Entity with ID')) {
         this.#logger.error(err.message);
         // Extract the entity ID from the error message and throw DuplicateEntityError

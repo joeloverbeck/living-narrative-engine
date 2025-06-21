@@ -90,16 +90,16 @@ The engine loads mod content in a specific, deterministic order to ensure stabil
 
 1.  **Schemas**: All JSON schemas from all mods are loaded and compiled first. This ensures that all subsequent content files can be validated correctly.
 2.  **Content Definitions**: All files listed under content categories that define new game elements are loaded next. This includes, but is not limited to:
-    *   `components`
-    *   `entityDefinitions` (e.g., character types, item templates, location types)
-    *   `actions`
-    *   `rules`
-    *   `conditions`
-    *   `events`
-    *   `macros`
-    *   `goals`
-    *   (Other custom definition types)
-    Within this phase, the content is loaded for each mod based on the resolved mod dependency order.
+    - `components`
+    - `entityDefinitions` (e.g., character types, item templates, location types)
+    - `actions`
+    - `rules`
+    - `conditions`
+    - `events`
+    - `macros`
+    - `goals`
+    - (Other custom definition types)
+      Within this phase, the content is loaded for each mod based on the resolved mod dependency order.
 3.  **Entity Instances**: After all definitions are registered, files that specify concrete instances of entities (typically found under an `entityInstances` content key if a mod provides them separately from world files) are loaded. These instances rely on the previously loaded `entityDefinitions`.
 4.  **World Files**: Finally, `worlds` (initial game state files) are processed. These files populate the game world with entity instances, referencing the `entityDefinitions` and `entityInstances` loaded in the prior phases.
 

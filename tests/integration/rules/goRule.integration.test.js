@@ -16,10 +16,6 @@ import eventIsActionGo from '../../../data/mods/core/conditions/event-is-action-
 import goRule from '../../../data/mods/core/rules/go.rule.json';
 import displaySuccessAndEndTurn from '../../../data/mods/core/macros/displaySuccessAndEndTurn.macro.json';
 import { expandMacros } from '../../../src/utils/macroUtils.js';
-import SystemLogicInterpreter from '../../../src/logic/systemLogicInterpreter.js';
-import OperationInterpreter from '../../../src/logic/operationInterpreter.js';
-import OperationRegistry from '../../../src/logic/operationRegistry.js';
-import JsonLogicEvaluationService from '../../../src/logic/jsonLogicEvaluationService.js';
 import QueryComponentHandler from '../../../src/logic/operationHandlers/queryComponentHandler.js';
 import GetTimestampHandler from '../../../src/logic/operationHandlers/getTimestampHandler.js';
 import SetVariableHandler from '../../../src/logic/operationHandlers/setVariableHandler.js';
@@ -36,86 +32,7 @@ import {
 import { ATTEMPT_ACTION_ID } from '../../../src/constants/eventIds.js';
 import goAction from '../../../data/mods/core/actions/go.action.json';
 import { createJsonLogicContext } from '../../../src/logic/contextAssembler.js';
-
-/**
- * Minimal in-memory entity manager used for integration tests.
- *
- * @class SimpleEntityManager
- * @description Provides just enough of IEntityManager for the tested handlers.
- */
-class SimpleEntityManager {
-  /**
-   * Create the manager with the provided entities.
-   *
-   * @param {Array<{id:string,components:object}>} entities - initial entities
-   */
-  constructor(entities) {
-    this.entities = new Map();
-    for (const e of entities) {
-      this.entities.set(e.id, {
-        id: e.id,
-        components: { ...e.components },
-        getComponentData(type) {
-          return this.components[type] ?? null;
-        },
-        hasComponent(type) {
-          return Object.prototype.hasOwnProperty.call(this.components, type);
-        },
-      });
-    }
-  }
-
-  /**
-   * Return an entity instance.
-   *
-   * @param {string} id - entity id
-   * @returns {object|undefined} entity object
-   */
-  getEntityInstance(id) {
-    return this.entities.get(id);
-  }
-
-  /**
-   * Retrieve component data.
-   *
-   * @param {string} id - entity id
-   * @param {string} type - component type
-   * @returns {any} component data or null
-   */
-  getComponentData(id, type) {
-    return this.entities.get(id)?.components[type] ?? null;
-  }
-
-  /**
-   * Check if an entity has a component.
-   *
-   * @param {string} id - entity id
-   * @param {string} type - component type
-   * @returns {boolean} true if present
-   */
-  hasComponent(id, type) {
-    return Object.prototype.hasOwnProperty.call(
-      this.entities.get(id)?.components || {},
-      type
-    );
-  }
-
-  /**
-   * Add or replace a component on an entity.
-   *
-   * @param {string} id - entity id
-   * @param {string} type - component type
-   * @param {object} data - component data
-   */
-  addComponent(id, type, data) {
-    const ent = this.entities.get(id);
-    if (ent) {
-      ent.components[type] = JSON.parse(JSON.stringify(data));
-      return true;
-    }
-    return false;
-  }
-}
+import { createRuleTestEnvironment } from '../../common/engine/systemLogicTestEnv.js';
 
 /**
  * Very small world context implementation providing direction resolution.
@@ -148,121 +65,18 @@ class SimpleWorldContext {
   }
 }
 
-/**
- * Initialize interpreter and register handlers with seed entities.
- *
- * @param {Array<{id:string,components:object}>} entities - seed entities
- */
-function init(entities) {
-  operationRegistry = new OperationRegistry({ logger });
-  entityManager = new SimpleEntityManager(entities);
-  worldContext = new SimpleWorldContext(entityManager, logger);
+describe('core_handle_go rule integration', () => {
+  let testEnv;
+  let events = [];
 
-  const safeDispatcher = {
-    dispatch: jest.fn((eventType, payload) => {
-      events.push({ eventType, payload });
-      return Promise.resolve(true);
-    }),
-  };
-
-  const handlers = {
-    QUERY_COMPONENT: new QueryComponentHandler({
-      entityManager,
-      logger,
-      safeEventDispatcher: safeDispatcher,
-    }),
-    QUERY_COMPONENTS:
-      new (require('../../../src/logic/operationHandlers/queryComponentsHandler.js').default)(
-        {
-          entityManager,
-          logger,
-          safeEventDispatcher: safeDispatcher,
-        }
-      ),
-    GET_TIMESTAMP: new GetTimestampHandler({ logger }),
-    SET_VARIABLE: new SetVariableHandler({ logger }),
-    RESOLVE_DIRECTION: new ResolveDirectionHandler({
-      worldContext,
-      logger,
-    }),
-    MODIFY_COMPONENT: new ModifyComponentHandler({
-      entityManager,
-      logger,
-      safeEventDispatcher: { dispatch: jest.fn().mockResolvedValue(true) },
-    }),
-    DISPATCH_PERCEPTIBLE_EVENT: new DispatchPerceptibleEventHandler({
-      dispatcher: eventBus,
-      logger,
-      addPerceptionLogEntryHandler: { execute: jest.fn() },
-    }),
-    DISPATCH_EVENT: new DispatchEventHandler({ dispatcher: eventBus, logger }),
-    END_TURN: new EndTurnHandler({
-      safeEventDispatcher: safeDispatcher,
-      logger,
-    }),
-  };
-
-  for (const [type, handler] of Object.entries(handlers)) {
-    operationRegistry.register(type, handler.execute.bind(handler));
+  function setupListener() {
+    events = [];
+    testEnv.eventBus.subscribe('*', (event) => {
+      events.push(event);
+    });
   }
 
-  operationInterpreter = new OperationInterpreter({
-    logger,
-    operationRegistry,
-  });
-
-  jsonLogic = new JsonLogicEvaluationService({
-    logger,
-    gameDataRepository: dataRegistry,
-  });
-
-  interpreter = new SystemLogicInterpreter({
-    logger,
-    eventBus,
-    dataRegistry,
-    jsonLogicEvaluationService: jsonLogic,
-    entityManager,
-    operationInterpreter,
-  });
-
-  listener = null;
-  interpreter.initialize();
-}
-
-let logger;
-let eventBus;
-let dataRegistry;
-let entityManager;
-let worldContext;
-let operationRegistry;
-let operationInterpreter;
-let jsonLogic;
-let interpreter;
-let events;
-let listener;
-
-describe('core_handle_go rule integration', () => {
   beforeEach(() => {
-    logger = {
-      debug: jest.fn(),
-      info: jest.fn(),
-      warn: jest.fn(),
-      error: jest.fn(),
-    };
-
-    events = [];
-    eventBus = {
-      subscribe: jest.fn((ev, l) => {
-        if (ev === '*') listener = l;
-      }),
-      unsubscribe: jest.fn(),
-      dispatch: jest.fn((eventType, payload) => {
-        events.push({ eventType, payload });
-        return Promise.resolve();
-      }),
-      listenerCount: jest.fn().mockReturnValue(1),
-    };
-
     const macroRegistry = {
       get: (type, id) =>
         type === 'macros'
@@ -275,14 +89,77 @@ describe('core_handle_go rule integration', () => {
       actions: expandMacros(goRule.actions, macroRegistry),
     };
 
-    dataRegistry = {
+    const dataRegistry = {
       getAllSystemRules: jest.fn().mockReturnValue([expandedRule]),
       getConditionDefinition: jest.fn((id) =>
         id === 'core:event-is-action-go' ? eventIsActionGo : undefined
       ),
     };
 
-    init([]);
+    // Create handlers with dependencies
+    const createHandlers = (entityManager, eventBus, logger) => {
+      const worldContext = new SimpleWorldContext(entityManager, logger);
+
+      return {
+        QUERY_COMPONENT: new QueryComponentHandler({
+          entityManager,
+          logger,
+          safeEventDispatcher: { dispatch: jest.fn().mockResolvedValue(true) },
+        }),
+        QUERY_COMPONENTS:
+          new (require('../../../src/logic/operationHandlers/queryComponentsHandler.js').default)(
+            {
+              entityManager,
+              logger,
+              safeEventDispatcher: {
+                dispatch: jest.fn().mockResolvedValue(true),
+              },
+            }
+          ),
+        GET_TIMESTAMP: new GetTimestampHandler({ logger }),
+        SET_VARIABLE: new SetVariableHandler({ logger }),
+        RESOLVE_DIRECTION: new ResolveDirectionHandler({
+          worldContext,
+          logger,
+        }),
+        MODIFY_COMPONENT: new ModifyComponentHandler({
+          entityManager,
+          logger,
+          safeEventDispatcher: { dispatch: jest.fn().mockResolvedValue(true) },
+        }),
+        DISPATCH_PERCEPTIBLE_EVENT: new DispatchPerceptibleEventHandler({
+          dispatcher: eventBus,
+          logger,
+          addPerceptionLogEntryHandler: { execute: jest.fn() },
+        }),
+        DISPATCH_EVENT: new DispatchEventHandler({
+          dispatcher: eventBus,
+          logger,
+        }),
+        END_TURN: new EndTurnHandler({
+          safeEventDispatcher: {
+            dispatch: (...args) => eventBus.dispatch(...args),
+          },
+          logger,
+        }),
+      };
+    };
+
+    // Create test environment
+    testEnv = createRuleTestEnvironment({
+      createHandlers,
+      entities: [],
+      rules: [expandedRule],
+      dataRegistry,
+    });
+
+    setupListener();
+  });
+
+  afterEach(() => {
+    if (testEnv) {
+      testEnv.cleanup();
+    }
   });
 
   it('validates go.rule.json against schema', () => {
@@ -307,8 +184,7 @@ describe('core_handle_go rule integration', () => {
   });
 
   it('moves actor when pre-resolved targetId provided', () => {
-    interpreter.shutdown();
-    init([
+    testEnv.reset([
       {
         id: 'actor1',
         components: {
@@ -319,40 +195,33 @@ describe('core_handle_go rule integration', () => {
       { id: 'locA', components: { [NAME_COMPONENT_ID]: { text: 'Loc A' } } },
       { id: 'locB', components: { [NAME_COMPONENT_ID]: { text: 'Loc B' } } },
     ]);
-    entityManager.addComponent('locA', EXITS_COMPONENT_ID, [
+    setupListener();
+    testEnv.entityManager.addComponent('locA', EXITS_COMPONENT_ID, [
       { direction: 'north', target: 'locB' },
     ]);
 
-    listener({
-      type: ATTEMPT_ACTION_ID,
-      payload: {
-        actorId: 'actor1',
-        actionId: 'core:go',
-        direction: 'north',
-        targetId: 'locB',
-        originalInput: 'go north',
-      },
+    testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      actorId: 'actor1',
+      actionId: 'core:go',
+      direction: 'north',
+      targetId: 'locB',
+      originalInput: 'go north',
     });
 
     expect(
-      entityManager.getComponentData('actor1', POSITION_COMPONENT_ID)
+      testEnv.entityManager.getComponentData('actor1', POSITION_COMPONENT_ID)
     ).toEqual({
       locationId: 'locB',
     });
-    const types = events.map((e) => e.eventType);
-    expect(types).toEqual(
-      expect.arrayContaining([
-        'core:perceptible_event',
-        'core:entity_moved',
-        'core:display_successful_action_result',
-        'core:turn_ended',
-      ])
-    );
+    const types = events.map((e) => e.type);
+    expect(types).toContain('core:perceptible_event');
+    expect(types).toContain('core:entity_moved');
+    expect(types).toContain('core:display_successful_action_result');
+    expect(types).toContain('core:turn_ended');
   });
 
   it('moves actor using direction when targetId missing', () => {
-    interpreter.shutdown();
-    init([
+    testEnv.reset([
       {
         id: 'actor1',
         components: {
@@ -363,40 +232,33 @@ describe('core_handle_go rule integration', () => {
       { id: 'locA', components: { [NAME_COMPONENT_ID]: { text: 'Loc A' } } },
       { id: 'locB', components: { [NAME_COMPONENT_ID]: { text: 'Loc B' } } },
     ]);
-    entityManager.addComponent('locA', EXITS_COMPONENT_ID, [
+    setupListener();
+    testEnv.entityManager.addComponent('locA', EXITS_COMPONENT_ID, [
       { direction: 'east', target: 'locB' },
     ]);
 
-    listener({
-      type: ATTEMPT_ACTION_ID,
-      payload: {
-        actorId: 'actor1',
-        actionId: 'core:go',
-        direction: 'east',
-        targetId: null,
-        originalInput: 'go east',
-      },
+    testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      actorId: 'actor1',
+      actionId: 'core:go',
+      direction: 'east',
+      targetId: null,
+      originalInput: 'go east',
     });
 
     expect(
-      entityManager.getComponentData('actor1', POSITION_COMPONENT_ID)
+      testEnv.entityManager.getComponentData('actor1', POSITION_COMPONENT_ID)
     ).toEqual({
       locationId: 'locB',
     });
-    const types = events.map((e) => e.eventType);
-    expect(types).toEqual(
-      expect.arrayContaining([
-        'core:perceptible_event',
-        'core:entity_moved',
-        'core:display_successful_action_result',
-        'core:turn_ended',
-      ])
-    );
+    const types = events.map((e) => e.type);
+    expect(types).toContain('core:perceptible_event');
+    expect(types).toContain('core:entity_moved');
+    expect(types).toContain('core:display_successful_action_result');
+    expect(types).toContain('core:turn_ended');
   });
 
   it('fails when direction cannot be resolved', () => {
-    interpreter.shutdown();
-    init([
+    testEnv.reset([
       {
         id: 'actor1',
         components: {
@@ -406,37 +268,30 @@ describe('core_handle_go rule integration', () => {
       },
       { id: 'locA', components: { [NAME_COMPONENT_ID]: { text: 'Loc A' } } },
     ]);
-    entityManager.addComponent('locA', EXITS_COMPONENT_ID, []);
+    setupListener();
+    testEnv.entityManager.addComponent('locA', EXITS_COMPONENT_ID, []);
 
-    listener({
-      type: ATTEMPT_ACTION_ID,
-      payload: {
-        actorId: 'actor1',
-        actionId: 'core:go',
-        direction: 'south',
-        targetId: null,
-        originalInput: 'go south',
-      },
+    testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      actorId: 'actor1',
+      actionId: 'core:go',
+      direction: 'south',
+      targetId: null,
+      originalInput: 'go south',
     });
 
     expect(
-      entityManager.getComponentData('actor1', POSITION_COMPONENT_ID)
+      testEnv.entityManager.getComponentData('actor1', POSITION_COMPONENT_ID)
     ).toEqual({
       locationId: 'locA',
     });
-    const types = events.map((e) => e.eventType);
-    expect(types).toEqual(
-      expect.arrayContaining([
-        'core:display_failed_action_result',
-        'core:turn_ended',
-      ])
-    );
+    const types = events.map((e) => e.type);
+    expect(types).toContain('core:display_failed_action_result');
+    expect(types).toContain('core:turn_ended');
     expect(types).not.toContain('core:entity_moved');
   });
 
   it('movement succeeds when locked flag is false', () => {
-    interpreter.shutdown();
-    init([
+    testEnv.reset([
       {
         id: 'actor1',
         components: {
@@ -448,33 +303,27 @@ describe('core_handle_go rule integration', () => {
       { id: 'locA', components: { [NAME_COMPONENT_ID]: { text: 'Loc A' } } },
       { id: 'locB', components: { [NAME_COMPONENT_ID]: { text: 'Loc B' } } },
     ]);
-    entityManager.addComponent('locA', EXITS_COMPONENT_ID, [
+    setupListener();
+    testEnv.entityManager.addComponent('locA', EXITS_COMPONENT_ID, [
       { direction: 'north', target: 'locB' },
     ]);
 
-    listener({
-      type: ATTEMPT_ACTION_ID,
-      payload: {
-        actorId: 'actor1',
-        actionId: 'core:go',
-        direction: 'north',
-        targetId: 'locB',
-        originalInput: 'go north',
-      },
+    testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      actorId: 'actor1',
+      actionId: 'core:go',
+      direction: 'north',
+      targetId: 'locB',
+      originalInput: 'go north',
     });
 
     expect(
-      entityManager.getComponentData('actor1', POSITION_COMPONENT_ID)
+      testEnv.entityManager.getComponentData('actor1', POSITION_COMPONENT_ID)
     ).toEqual({ locationId: 'locB' });
-    const types = events.map((e) => e.eventType);
-    expect(types).toEqual(
-      expect.arrayContaining([
-        'core:perceptible_event',
-        'core:entity_moved',
-        'core:display_successful_action_result',
-        'core:turn_ended',
-      ])
-    );
+    const types = events.map((e) => e.type);
+    expect(types).toContain('core:perceptible_event');
+    expect(types).toContain('core:entity_moved');
+    expect(types).toContain('core:display_successful_action_result');
+    expect(types).toContain('core:turn_ended');
   });
 
   it('prerequisite check fails when movement locked', () => {
@@ -500,9 +349,9 @@ describe('core_handle_go rule integration', () => {
           return true;
         },
       },
-      logger
+      testEnv.logger
     );
-    const result = jsonLogic.evaluate(prereq, ctx.context);
+    const result = testEnv.jsonLogic.evaluate(prereq, ctx.context);
     expect(result).toBe(false);
   });
 });
