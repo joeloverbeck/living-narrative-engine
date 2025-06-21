@@ -168,7 +168,15 @@ export class TestBed extends BaseTestBed {
    */
   async cleanup() {
     await super.cleanup();
+  }
 
+  /**
+   * Clears mock implementations and resets entity manager state after base cleanup.
+   *
+   * @protected
+   * @returns {Promise<void>} Promise resolving when entity cleanup is complete.
+   */
+  async _afterCleanup() {
     // Reset specific mock implementations that tests commonly override
     this.mocks.registry.getEntityDefinition.mockReset();
     this.mocks.validator.validate.mockReset();
@@ -181,6 +189,7 @@ export class TestBed extends BaseTestBed {
     ) {
       this.entityManager.clearAll();
     }
+    await super._afterCleanup();
   }
 
   /**

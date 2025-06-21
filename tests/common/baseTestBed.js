@@ -60,7 +60,17 @@ export class BaseTestBed {
   async cleanup() {
     jest.clearAllMocks();
     this.resetMocks();
+    await this._afterCleanup();
   }
+
+  /**
+   * Hook invoked at the end of {@link BaseTestBed#cleanup} for subclass-specific
+   * teardown logic.
+   *
+   * @protected
+   * @returns {Promise<void>} Promise resolving when subclass cleanup is complete.
+   */
+  async _afterCleanup() {}
 }
 
 export default BaseTestBed;

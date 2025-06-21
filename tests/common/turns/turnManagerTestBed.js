@@ -95,9 +95,19 @@ export class TurnManagerTestBed extends BaseTestBed {
    */
   async cleanup() {
     await super.cleanup();
+  }
+
+  /**
+   * Stops the TurnManager after base cleanup.
+   *
+   * @protected
+   * @returns {Promise<void>} Promise resolving when manager cleanup is complete.
+   */
+  async _afterCleanup() {
     if (this.turnManager && typeof this.turnManager.stop === 'function') {
       await this.turnManager.stop();
     }
+    await super._afterCleanup();
   }
 }
 
