@@ -5,22 +5,16 @@ import {
   describeAIPromptPipelineSuite,
   AIPromptPipelineDependencySpec,
 } from '../../common/prompting/promptPipelineTestBed.js';
-import { buildMissingDependencyCases } from '../../common/constructorValidationHelpers.js';
+import { describeConstructorValidation } from '../../common/constructorValidationHelpers.js';
 import { useTestBed } from '../../common/useTestBed.js';
 
 describeAIPromptPipelineSuite('AIPromptPipeline', (getBed) => {
   const get = useTestBed(getBed);
-  describe('constructor validation', () => {
-    const cases = buildMissingDependencyCases(
-      () => get().getDependencies(),
-      AIPromptPipelineDependencySpec
-    );
-    test.each(cases)('throws when %s', (_desc, mutate, regex) => {
-      const deps = get().getDependencies();
-      mutate(deps);
-      expect(() => new AIPromptPipeline(deps)).toThrow(regex);
-    });
-  });
+  describeConstructorValidation(
+    AIPromptPipeline,
+    () => get().getDependencies(),
+    AIPromptPipelineDependencySpec
+  );
 
   test('generatePrompt orchestrates dependencies and returns prompt', async () => {
     const bed = get();
