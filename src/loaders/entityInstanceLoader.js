@@ -133,11 +133,11 @@ export class EntityInstanceLoader extends BaseManifestItemLoader {
    * @param {string} filename - The original filename from the manifest.
    * @param {string} resolvedPath - The fully resolved path to the file.
    * @param {any} data - The raw data from the file (validated against the primary 'entity-instance' schema).
-   * @param {string} typeName - The original content type name ('entityInstances').
+   * @param {string} registryKey - The original content type registry key ('entityInstances').
    * @returns {Promise<{qualifiedId: string, didOverride: boolean}>} An object containing the final registry key and overwrite status.
    * @throws {Error} If instance-specific processing (ID extraction, component validation, storage) fails.
    */
-  async _processFetchedItem(modId, filename, resolvedPath, data, typeName) {
+  async _processFetchedItem(modId, filename, resolvedPath, data, registryKey) {
     this._logger.debug(
       `EntityInstanceLoader [${modId}]: Processing fetched item: ${filename}`
     );

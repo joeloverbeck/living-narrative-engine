@@ -59,14 +59,13 @@ class RuleLoader extends BaseManifestItemLoader {
    * @param {string} filename - The original filename from the manifest.
    * @param {string} resolvedPath - The fully resolved path used to fetch the file data.
    * @param {any} data - The raw, parsed data object from the rule file (already primary-validated).
-   * @param {string} typeName - The content type name ('rules').
+   * @param {string} registryKey - The content type registry key ('rules').
    * @returns {Promise<{qualifiedId: string, didOverride: boolean}>} An object containing the final registry key and overwrite status.
    * @throws {Error} If storing the rule fails.
    */
-  async _processFetchedItem(modId, filename, resolvedPath, data, typeName) {
-    // <<< MODIFIED Return Type in JSDoc
+  async _processFetchedItem(modId, filename, resolvedPath, data, registryKey) {
     this._logger.debug(
-      `RuleLoader [${modId}]: Processing validated rule item: ${filename} from path ${resolvedPath} (Type: ${typeName})`
+      `RuleLoader [${modId}]: Processing validated rule item: ${filename} from path ${resolvedPath} (Type: ${registryKey})`
     );
 
     // Primary validation happens in BaseManifestItemLoader._processFileWrapper

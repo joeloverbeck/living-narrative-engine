@@ -18,7 +18,7 @@ export class WorldLoadSummaryLogger {
    * @param {ILogger} logger - Logging service.
    * @param {string} worldName - Identifier for the world being loaded.
    * @param {string[]} requestedMods - Mods requested by the game configuration.
-   * @param {string[]} finalOrder - Resolved load order for all mods.
+   * @param {string[]} finalModOrder - Resolved load order for all mods.
    * @param {number} incompatibilityCount - Count of engine version mismatches.
    * @param {TotalResultsSummary} totals - Map of content type totals.
    * @returns {void}
@@ -27,13 +27,13 @@ export class WorldLoadSummaryLogger {
     logger,
     worldName,
     requestedMods,
-    finalOrder,
+    finalModOrder,
     incompatibilityCount,
     totals
   ) {
     logger.info(`— ModsLoader Load Summary (World: '${worldName}') —`);
     logger.info(`  • Requested Mods (raw): [${requestedMods.join(', ')}]`);
-    logger.info(`  • Final Load Order     : [${finalOrder.join(', ')}]`);
+    logger.info(`  • Final Load Order     : [${finalModOrder.join(', ')}]`);
     if (incompatibilityCount > 0) {
       logger.warn(
         `  • Engine-version incompatibilities detected: ${incompatibilityCount}`
@@ -42,11 +42,11 @@ export class WorldLoadSummaryLogger {
     logger.info(`  • Content Loading Summary (Totals):`);
     if (Object.keys(totals).length > 0) {
       const sortedTypes = Object.keys(totals).sort();
-      for (const typeName of sortedTypes) {
-        const counts = totals[typeName];
-        const paddedTypeName = typeName.padEnd(20, ' ');
-        const details = `C:${counts.count}, O:${counts.overrides}, E:${counts.errors}`;
-        logger.info(`     - ${paddedTypeName}: ${details}`);
+      for (const registryKey of sortedTypes) {
+        const counts = totals[registryKey];
+        const paddedRegistryKey = registryKey.padEnd(20, ' ');
+        const details = `${counts.count} loaded, ${counts.overrides} overrides, ${counts.errors} errors`;
+        logger.info(`     - ${paddedRegistryKey}: ${details}`);
       }
       const grandTotalCount = Object.values(totals).reduce(
         (sum, tc) => sum + tc.count,

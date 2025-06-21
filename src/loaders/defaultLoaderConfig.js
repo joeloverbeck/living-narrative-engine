@@ -12,8 +12,8 @@
  * @typedef {object} LoaderConfigEntry
  * @property {BaseManifestItemLoaderInterface} loader - Loader instance.
  * @property {string} contentKey - Key within the manifest's `content` section.
- * @property {string} contentTypeDir - Directory name under the mod root.
- * @property {string} typeName - Registry key for the loaded content type.
+ * @property {string} diskFolder - Directory name under the mod root.
+ * @property {string} registryKey - Registry key for the loaded content type.
  * @property {'definitions' | 'instances'} phase - Loading phase for the content type.
  */
 
@@ -22,64 +22,73 @@
  * used by {@link ModsLoader} and {@link ContentLoadManager}.
  *
  * @param {Record<string, BaseManifestItemLoaderInterface>} loaderMap - Map of
- * type name to loader instance.
+ * registry key to loader instance.
  * @returns {LoaderConfigEntry[]} Array describing loader configuration.
  */
 export function createContentLoadersConfig(loaderMap) {
   const meta = {
     components: {
       contentKey: 'components',
-      contentTypeDir: 'components',
+      diskFolder: 'components',
       phase: 'definitions',
+      registryKey: 'components',
     },
     events: {
       contentKey: 'events',
-      contentTypeDir: 'events',
+      diskFolder: 'events',
       phase: 'definitions',
+      registryKey: 'events',
     },
     conditions: {
       contentKey: 'conditions',
-      contentTypeDir: 'conditions',
+      diskFolder: 'conditions',
       phase: 'definitions',
+      registryKey: 'conditions',
     },
     macros: {
       contentKey: 'macros',
-      contentTypeDir: 'macros',
+      diskFolder: 'macros',
       phase: 'definitions',
+      registryKey: 'macros',
     },
     actions: {
       contentKey: 'actions',
-      contentTypeDir: 'actions',
+      diskFolder: 'actions',
       phase: 'definitions',
+      registryKey: 'actions',
     },
     rules: {
       contentKey: 'rules',
-      contentTypeDir: 'rules',
+      diskFolder: 'rules',
       phase: 'definitions',
+      registryKey: 'rules',
     },
     goals: {
       contentKey: 'goals',
-      contentTypeDir: 'goals',
+      diskFolder: 'goals',
       phase: 'definitions',
+      registryKey: 'goals',
     },
     entityDefinitions: {
       contentKey: 'entityDefinitions',
-      contentTypeDir: 'entities/definitions',
+      diskFolder: 'entities/definitions',
       phase: 'definitions',
+      registryKey: 'entityDefinitions',
     },
     entityInstances: {
       contentKey: 'entityInstances',
-      contentTypeDir: 'entities/instances',
+      diskFolder: 'entities/instances',
       phase: 'instances',
+      registryKey: 'entityInstances',
     },
   };
 
-  return Object.entries(loaderMap).map(([typeName, loader]) => ({
+  return Object.entries(loaderMap).map(([registryKey, loader]) => ({
     loader,
-    typeName,
-    contentKey: meta[typeName].contentKey,
-    contentTypeDir: meta[typeName].contentTypeDir,
-    phase: meta[typeName].phase,
+    registryKey: meta[registryKey].registryKey,
+    contentKey: meta[registryKey].contentKey,
+    diskFolder: meta[registryKey].diskFolder,
+    phase: meta[registryKey].phase,
   }));
 }
 
@@ -88,7 +97,7 @@ export function createContentLoadersConfig(loaderMap) {
  * custom configuration isn't supplied.
  *
  * @param {object} deps - Loader instances used to build the config.
- * @param {BaseManifestItemLoaderInterface} deps.componentDefinitionLoader - Component loader.
+ * @param {BaseManifestItemLoaderInterface} deps.componentLoader - Component loader.
  * @param {BaseManifestItemLoaderInterface} deps.eventLoader - Event loader.
  * @param {BaseManifestItemLoaderInterface} deps.conditionLoader - Condition loader.
  * @param {BaseManifestItemLoaderInterface} deps.macroLoader - Macro loader.
@@ -100,7 +109,7 @@ export function createContentLoadersConfig(loaderMap) {
  * @returns {LoaderConfigEntry[]} Array describing loader configuration.
  */
 export function createDefaultContentLoadersConfig({
-  componentDefinitionLoader,
+  componentLoader,
   eventLoader,
   conditionLoader,
   macroLoader,
@@ -111,7 +120,7 @@ export function createDefaultContentLoadersConfig({
   entityInstanceLoader,
 }) {
   return createContentLoadersConfig({
-    components: componentDefinitionLoader,
+    components: componentLoader,
     events: eventLoader,
     conditions: conditionLoader,
     macros: macroLoader,

@@ -11,7 +11,7 @@
 /** @typedef {import('../../../../src/interfaces/coreServices.js').IDataFetcher} IDataFetcher */
 /** @typedef {import('../../../../src/loaders/schemaLoader.js').default} SchemaLoader */
 /** @typedef {import('../../../../src/loaders/ruleLoader.js').default} RuleLoader */
-/** @typedef {import('../../../../src/loaders/componentLoader.js').default} ComponentDefinitionLoader */
+/** @typedef {import('../../../../src/loaders/componentLoader.js').default} ComponentLoader */
 /** @typedef {import('../../../../src/loaders/gameConfigLoader.js').default} GameConfigLoader */
 /** @typedef {import('../../../../src/modding/modManifestLoader.js').default} ModManifestLoader */
 /** @typedef {import('../../../../src/loaders/actionLoader.js').default} ActionLoader */
@@ -281,7 +281,7 @@ describe('registerLoaders (with Mock DI Container)', () => {
       tokens.SchemaLoader,
       tokens.ConditionLoader,
       tokens.RuleLoader,
-      tokens.ComponentDefinitionLoader,
+      tokens.ComponentLoader,
       tokens.GameConfigLoader,
       tokens.ModManifestLoader,
       tokens.ActionLoader,

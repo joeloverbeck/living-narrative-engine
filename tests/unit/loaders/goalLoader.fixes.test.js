@@ -198,7 +198,7 @@ describe('GoalLoader', () => {
         modId,
         manifest,
         'goals', // contentKey
-        'goals', // contentTypeDir
+        'goals', // diskFolder
         'goals' // typeName
       );
 

@@ -60,7 +60,7 @@ export class ModManifestProcessor {
    *
    * @param {string[]} requestedIds - IDs of mods requested by the game config.
    * @param {string} worldName - The name of the world being loaded.
-   * @returns {Promise<{loadedManifestsMap: Map<string, ModManifest>, finalOrder: string[], incompatibilityCount: number}>}
+   * @returns {Promise<{loadedManifestsMap: Map<string, ModManifest>, finalModOrder: string[], incompatibilityCount: number}>}
    * Object containing the loaded manifests, resolved order and incompatibility count.
    * @throws {ModDependencyError|Error} Propagates validation errors.
    */
@@ -103,16 +103,16 @@ export class ModManifestProcessor {
       throw e;
     }
 
-    const finalOrder = this.#modLoadOrderResolver.resolve(
+    const finalModOrder = this.#modLoadOrderResolver.resolve(
       requestedIds,
       manifestsForValidation
     );
     this.#logger.debug(
-      `ModsLoader: Final mod order resolved: [${finalOrder.join(', ')}]`
+      `ModsLoader: Final mod order resolved: [${finalModOrder.join(', ')}]`
     );
-    this.#registry.store('meta', 'final_mod_order', finalOrder);
+    this.#registry.store('meta', 'final_mod_order', finalModOrder);
 
-    return { loadedManifestsMap, finalOrder, incompatibilityCount };
+    return { loadedManifestsMap, finalModOrder, incompatibilityCount };
   }
 }
 

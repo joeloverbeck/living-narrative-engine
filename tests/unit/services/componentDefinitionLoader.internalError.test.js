@@ -1,4 +1,4 @@
-// src/tests/services/componentDefinitionLoader.internalError.test.js
+// src/tests/services/componentLoader.internalError.test.js
 
 // --- Imports ---
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
@@ -6,18 +6,18 @@ import ComponentLoader from '../../../src/loaders/componentLoader.js'; // Adjust
 
 // --- Mock Service Factories ---
 const createMockConfiguration = (overrides = {}) => ({
-  getContentBasePath: jest.fn((typeName) => `./data/mods/test-mod/${typeName}`),
-  getContentTypeSchemaId: jest.fn((typeName) =>
-    typeName === 'components'
+  getModsBasePath: jest.fn(() => './data/mods'),
+  getContentBasePath: jest.fn((registryKey) => `./data/mods/test-mod/${registryKey}`),
+  getContentTypeSchemaId: jest.fn((registryKey) =>
+    registryKey === 'components'
       ? 'http://example.com/schemas/component.schema.json'
-      : `http://example.com/schemas/${typeName}.schema.json`
+      : `http://example.com/schemas/${registryKey}.schema.json`
   ),
   getSchemaBasePath: jest.fn().mockReturnValue('schemas'),
   getSchemaFiles: jest.fn().mockReturnValue([]),
   getWorldBasePath: jest.fn().mockReturnValue('worlds'),
   getBaseDataPath: jest.fn().mockReturnValue('./data'),
   getGameConfigFilename: jest.fn().mockReturnValue('game.json'),
-  getModsBasePath: jest.fn().mockReturnValue('mods'),
   getModManifestFilename: jest.fn().mockReturnValue('mod.manifest.json'),
   getRuleBasePath: jest.fn().mockReturnValue('rules'),
   getRuleSchemaId: jest
@@ -27,11 +27,11 @@ const createMockConfiguration = (overrides = {}) => ({
 });
 const createMockPathResolver = (overrides = {}) => ({
   resolveModContentPath: jest.fn(
-    (modId, typeName, filename) =>
-      `./data/mods/${modId}/${typeName}/${filename}`
+    (modId, registryKey, filename) =>
+      `./data/mods/${modId}/${registryKey}/${filename}`
   ),
   resolveContentPath: jest.fn(
-    (typeName, filename) => `./data/${typeName}/${filename}`
+    (registryKey, filename) => `./data/${registryKey}/${filename}`
   ),
   resolveSchemaPath: jest.fn((filename) => `./data/schemas/${filename}`),
   resolveModManifestPath: jest.fn(
@@ -155,13 +155,13 @@ describe('ComponentLoader (Internal Definition Errors)', () => {
       mockRegistry,
       mockLogger
     );
-    mockConfig.getContentTypeSchemaId.mockImplementation((typeName) =>
-      typeName === 'components' ? componentDefSchemaId : undefined
+    mockConfig.getContentTypeSchemaId.mockImplementation((registryKey) =>
+      registryKey === 'components' ? componentDefSchemaId : undefined
     );
     mockValidator._setSchemaLoaded(componentDefSchemaId, {});
     mockResolver.resolveModContentPath.mockImplementation(
-      (modId, typeName, filename) =>
-        `./data/mods/${modId}/${typeName}/${filename}`
+      (modId, registryKey, filename) =>
+        `./data/mods/${modId}/${registryKey}/${filename}`
     );
     jest.spyOn(loader, '_storeItemInRegistry');
   });

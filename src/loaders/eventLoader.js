@@ -49,19 +49,19 @@ class EventLoader extends BaseInlineSchemaLoader {
   }
 
   /**
-   * Processes a single fetched event definition file's data after primary validation.
+   * Processes a single fetched event file's data.
    * @override
    * @protected
    * @param {string} modId
    * @param {string} filename
    * @param {string} resolvedPath
    * @param {any} data
-   * @param {string} typeName
+   * @param {string} registryKey
    * @returns {Promise<{qualifiedId: string, didOverride: boolean}>}
    */
-  async _processFetchedItem(modId, filename, resolvedPath, data, typeName) {
+  async _processFetchedItem(modId, filename, resolvedPath, data, registryKey) {
     this._logger.debug(
-      `EventLoader [${modId}]: Processing fetched item: ${filename} (Type: ${typeName})`
+      `EventLoader [${modId}]: Processing fetched item: ${filename} (Type: ${registryKey})`
     );
 
     const { fullId: trimmedFullEventId, baseId: baseEventId } =

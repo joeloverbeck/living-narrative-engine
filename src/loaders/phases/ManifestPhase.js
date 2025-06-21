@@ -33,7 +33,7 @@ export default class ManifestPhase extends LoaderPhase {
         ctx.requestedMods,
         ctx.worldName
       );
-      ctx.finalModOrder = res.finalOrder;
+      ctx.finalModOrder = res.finalModOrder;
       ctx.incompatibilities = res.incompatibilityCount;
     } catch (e) {
       throw new ModsLoaderPhaseError(

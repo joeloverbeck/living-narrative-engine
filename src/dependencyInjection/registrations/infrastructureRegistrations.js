@@ -22,7 +22,7 @@ import { ActionIndexingService } from '../../turns/services/actionIndexingServic
  * @typedef {import('../../interfaces/coreServices.js').ISpatialIndexManager} ISpatialIndexManager
  * @typedef {import('../../interfaces/coreServices.js').IConfiguration} IConfiguration
  * @typedef {import('../../loaders/schemaLoader.js').default} SchemaLoader
- * @typedef {import('../../loaders/componentLoader.js').default} ComponentDefinitionLoader
+ * @typedef {import('../../loaders/componentLoader.js').default} ComponentLoader
  * @typedef {import('../../loaders/ruleLoader.js').default} RuleLoader
  * @typedef {import('../../loaders/actionLoader.js').default} ActionLoader
  * @typedef {import('../../loaders/eventLoader.js').default} EventLoader

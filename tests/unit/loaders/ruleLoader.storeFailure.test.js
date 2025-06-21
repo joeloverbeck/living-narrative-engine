@@ -341,12 +341,11 @@ describe('RuleLoader - Storage Failure Handling (via loadItemsForMod)', () => {
       expect(mockLogger.error).toHaveBeenCalledWith(
         'Error processing file:', // Match the wrapper's log message
         expect.objectContaining({
-          // Match the metadata object
           modId: modId,
           filename: ruleFileFailStore,
           path: resolvedPathFailStore,
-          typeName: RULE_TYPE_NAME,
-          error: storageError.message,
+          registryKey: 'rules',
+          error: storageError.message, // Logs the error message string
         }),
         storageError // Match the full error object
       );
