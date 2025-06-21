@@ -3,7 +3,6 @@
  * @see tests/common/turns/turnManagerTestBed.js
  */
 /* eslint-env jest */
-/* global describe, beforeEach, afterEach */
 
 import { jest } from '@jest/globals';
 import TurnManager from '../../../src/turns/turnManager.js';
@@ -13,6 +12,7 @@ import {
   createMockValidatedEventBus,
 } from '../mockFactories.js';
 import BaseTestBed from '../baseTestBed.js';
+import { describeSuite } from '../describeSuite.js';
 
 /**
  * @description Utility class that instantiates {@link TurnManager} with mocked
@@ -191,16 +191,7 @@ export const flushPromisesAndTimers = async () => {
  * @returns {void}
  */
 export function describeTurnManagerSuite(title, suiteFn, overrides = {}) {
-  describe(title, () => {
-    let testBed;
-    beforeEach(() => {
-      testBed = new TurnManagerTestBed(overrides);
-    });
-    afterEach(async () => {
-      await testBed.cleanup();
-    });
-    suiteFn(() => testBed);
-  });
+  describeSuite(title, TurnManagerTestBed, suiteFn, overrides);
 }
 
 export default TurnManagerTestBed;
