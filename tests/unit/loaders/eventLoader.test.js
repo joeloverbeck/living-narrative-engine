@@ -10,6 +10,7 @@ import {
 } from '@jest/globals';
 import EventLoader from '../../../src/loaders/eventLoader.js';
 import { BaseManifestItemLoader } from '../../../src/loaders/baseManifestItemLoader.js';
+import { createMockPathResolver, createMockDataFetcher } from '../../common/mockFactories/index.js';
 
 // --- Mock Service Factories ---
 const createMockConfiguration = (overrides = {}) => ({
@@ -34,26 +35,6 @@ const createMockConfiguration = (overrides = {}) => ({
   getGameConfigFilename: jest.fn().mockReturnValue('game.json'),
   getModManifestFilename: jest.fn().mockReturnValue('mod-manifest.json'),
   getContentBasePath: jest.fn((registryKey) => `./data/${registryKey}`),
-  ...overrides,
-});
-const createMockPathResolver = (overrides = {}) => ({
-  resolveModContentPath: jest.fn(
-    (modId, registryKey, filename) =>
-      `./data/mods/${modId}/${registryKey}/${filename}`
-  ),
-  resolveContentPath: jest.fn(
-    (registryKey, filename) => `./data/${registryKey}/${filename}`
-  ),
-  resolveSchemaPath: jest.fn((filename) => `./data/schemas/${filename}`),
-  resolveModManifestPath: jest.fn(
-    (modId) => `./data/mods/${modId}/mod-manifest.json`
-  ),
-  resolveGameConfigPath: jest.fn(() => './data/game.json'),
-  resolveRulePath: jest.fn((filename) => `./data/system-rules/${filename}`),
-  ...overrides,
-});
-const createMockDataFetcher = (overrides = {}) => ({
-  fetch: jest.fn().mockResolvedValue({}),
   ...overrides,
 });
 const createMockSchemaValidator = (overrides = {}) => ({

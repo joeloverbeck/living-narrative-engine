@@ -3,6 +3,7 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import EntityDefinitionLoader from '../../../src/loaders/entityDefinitionLoader.js'; // Adjust path as needed
 import { BaseManifestItemLoader } from '../../../src/loaders/baseManifestItemLoader.js'; // Base class
+import { createMockPathResolver, createMockDataFetcher } from '../../common/mockFactories/index.js';
 
 // --- Mock Service Factories ---
 const createMockConfiguration = (overrides = {}) => ({
@@ -25,34 +26,7 @@ const createMockConfiguration = (overrides = {}) => ({
     .mockReturnValue('http://example.com/schemas/rule.schema.json'),
   ...overrides,
 });
-const createMockPathResolver = (overrides = {}) => ({
-  resolveModContentPath: jest
-    .fn()
-    .mockImplementation(
-      (modId, registryKey, filename) =>
-        `./data/mods/${modId}/${registryKey}/${filename}`
-    ),
-  resolveContentPath: jest
-    .fn()
-    .mockImplementation(
-      (registryKey, filename) => `./data/${registryKey}/${filename}`
-    ),
-  resolveSchemaPath: jest
-    .fn()
-    .mockImplementation((filename) => `./data/schemas/${filename}`),
-  resolveModManifestPath: jest
-    .fn()
-    .mockImplementation((modId) => `./data/mods/${modId}/mod-manifest.json`),
-  resolveGameConfigPath: jest.fn().mockImplementation(() => './data/game.json'),
-  resolveRulePath: jest
-    .fn()
-    .mockImplementation((filename) => `./data/system-rules/${filename}`),
-  ...overrides,
-});
-const createMockDataFetcher = (overrides = {}) => ({
-  fetch: jest.fn().mockResolvedValue({}),
-  ...overrides,
-});
+
 const createMockSchemaValidator = (overrides = {}) => ({
   validate: jest.fn().mockReturnValue({ isValid: true, errors: null }),
   getValidator: jest
@@ -63,6 +37,7 @@ const createMockSchemaValidator = (overrides = {}) => ({
   isSchemaLoaded: jest.fn().mockReturnValue(true),
   ...overrides,
 });
+
 const createMockDataRegistry = (overrides = {}) => ({
   store: jest.fn().mockReturnValue(false),
   get: jest.fn().mockReturnValue(undefined),
@@ -70,6 +45,7 @@ const createMockDataRegistry = (overrides = {}) => ({
   clear: jest.fn(),
   ...overrides,
 });
+
 const createMockLogger = (overrides = {}) => ({
   info: jest.fn(),
   warn: jest.fn(),

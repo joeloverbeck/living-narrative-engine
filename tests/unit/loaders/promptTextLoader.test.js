@@ -2,6 +2,7 @@
 
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import PromptTextLoader from '../../../src/loaders/promptTextLoader.js';
+import { createMockPathResolver, createMockDataFetcher } from '../../common/mockFactories/index.js';
 
 /** @typedef {import('../../../src/interfaces/coreServices.js').IConfiguration} IConfiguration */
 /** @typedef {import('../../../src/interfaces/coreServices.js').IPathResolver} IPathResolver */
@@ -14,16 +15,6 @@ const createMockConfiguration = (overrides = {}) => ({
   getContentTypeSchemaId: jest
     .fn()
     .mockReturnValue('http://example.com/schemas/prompt-text.schema.json'),
-  ...overrides,
-});
-
-const createMockPathResolver = (overrides = {}) => ({
-  resolveContentPath: jest.fn(() => '/path/prompts/corePromptText.json'),
-  ...overrides,
-});
-
-const createMockDataFetcher = (overrides = {}) => ({
-  fetch: jest.fn().mockResolvedValue({ example: true }),
   ...overrides,
 });
 
@@ -63,7 +54,7 @@ let loader;
 beforeEach(() => {
   configuration = createMockConfiguration();
   pathResolver = createMockPathResolver();
-  dataFetcher = createMockDataFetcher();
+  dataFetcher = createMockDataFetcher({ '/path/prompts/corePromptText.json': { example: true } });
   schemaValidator = createMockSchemaValidator();
   dataRegistry = createMockDataRegistry();
   logger = createMockLogger();

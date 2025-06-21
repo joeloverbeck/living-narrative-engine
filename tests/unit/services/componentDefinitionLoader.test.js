@@ -2,6 +2,7 @@
 // --- Imports ---
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import ComponentLoader from '../../../src/loaders/componentLoader.js';
+import { createMockPathResolver, createMockDataFetcher } from '../../common/mockFactories/index.js';
 
 // --- Mock Service Factories ---
 // [Mocks omitted for brevity - assume they are the same as provided in the question]
@@ -54,52 +55,55 @@ const createMockConfiguration = (overrides = {}) => ({
 });
 
 /**
- * Creates a mock IPathResolver service.
+ * Creates a mock ILogger service.
+ * All methods are jest.fn() for tracking calls.
  *
  * @param {object} [overrides] - Optional overrides for mock methods.
- * @returns {import('../../../src/core/interfaces/coreServices.js').IPathResolver} Mocked path resolver service.
+ * @returns {import('../../../src/core/interfaces/coreServices.js').ILogger} Mocked logger service.
  */
-const createMockPathResolver = (overrides = {}) => ({
-  // Mock the method used by ComponentLoader's #processSingleComponentFile
-  resolveModContentPath: jest.fn(
-    (modId, registryKey, filename) =>
-      `./data/mods/${modId}/${registryKey}/${filename}`
-  ),
-  // Include other IPathResolver methods if needed, mocking their returns
-  resolveContentPath: jest.fn(
-    (registryKey, filename) => `./data/${registryKey}/${filename}`
-  ), // Example for non-mod paths if used elsewhere
-  // Required by Base Class validation
-  resolveSchemaPath: jest.fn(),
-  resolveRulePath: jest.fn(),
-  resolveGameConfigPath: jest.fn(),
-  resolveModManifestPath: jest.fn(),
+const createMockLogger = (overrides = {}) => ({
+  info: jest.fn(),
+  warn: jest.fn(),
+  error: jest.fn(),
+  debug: jest.fn(),
   ...overrides,
 });
 
+// --- Test Utility Functions ---
+// [Utility functions createMockComponentDefinition, createMockModManifest omitted for brevity]
 /**
- * Creates a mock IDataFetcher service.
- * Allows configuring responses and errors based on fetched paths.
+ * Creates a basic valid mock component definition object.
  *
- * @param {object} [pathToResponse] - Map of path strings to successful response data.
- * @param {string[]} [errorPaths] - List of paths that should trigger a rejection.
- * @returns {import('../../../src/core/interfaces/coreServices.js').IDataFetcher} Mocked data fetcher service.
+ * @param {string} id - The component ID (e.g., 'core:health').
+ * @param {object} [dataSchema] - The data schema object.
+ * @param {string} [description] - Optional description.
+ * @returns {object} A mock component definition object.
  */
-const createMockDataFetcher = (pathToResponse = {}, errorPaths = []) => ({
-  fetch: jest.fn(async (path) => {
-    if (errorPaths.includes(path)) {
-      return Promise.reject(
-        new Error(`Mock Fetch Error: Failed to fetch ${path}`)
-      );
-    }
-    if (path in pathToResponse) {
-      // Deep clone to prevent tests from modifying the mock response object
-      return Promise.resolve(JSON.parse(JSON.stringify(pathToResponse[path])));
-    }
-    return Promise.reject(
-      new Error(`Mock Fetch Error: 404 Not Found for ${path}`)
-    );
-  }),
+const createMockComponentDefinition = (
+  id,
+  dataSchema = { type: 'object', properties: {} },
+  description = ''
+) => ({
+  id: id,
+  dataSchema: dataSchema,
+  ...(description && { description: description }), // Only include description if provided
+});
+
+/**
+ * Creates a basic mock Mod Manifest object containing component files.
+ *
+ * @param {string} modId - The ID of the mod.
+ * @param {string[]} componentFiles - Array of component definition filenames.
+ * @returns {object} A mock mod manifest object.
+ */
+const createMockModManifest = (modId, componentFiles = []) => ({
+  id: modId,
+  name: `Mock Mod ${modId}`,
+  version: '1.0.0',
+  content: {
+    components: componentFiles,
+    // Other content types can be added here if needed for broader tests
+  },
 });
 
 /**
@@ -261,58 +265,6 @@ const createMockDataRegistry = (overrides = {}) => {
     ...overrides,
   };
 };
-
-/**
- * Creates a mock ILogger service.
- * All methods are jest.fn() for tracking calls.
- *
- * @param {object} [overrides] - Optional overrides for mock methods.
- * @returns {import('../../../src/core/interfaces/coreServices.js').ILogger} Mocked logger service.
- */
-const createMockLogger = (overrides = {}) => ({
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-  debug: jest.fn(),
-  ...overrides,
-});
-
-// --- Test Utility Functions ---
-// [Utility functions createMockComponentDefinition, createMockModManifest omitted for brevity]
-/**
- * Creates a basic valid mock component definition object.
- *
- * @param {string} id - The component ID (e.g., 'core:health').
- * @param {object} [dataSchema] - The data schema object.
- * @param {string} [description] - Optional description.
- * @returns {object} A mock component definition object.
- */
-const createMockComponentDefinition = (
-  id,
-  dataSchema = { type: 'object', properties: {} },
-  description = ''
-) => ({
-  id: id,
-  dataSchema: dataSchema,
-  ...(description && { description: description }), // Only include description if provided
-});
-
-/**
- * Creates a basic mock Mod Manifest object containing component files.
- *
- * @param {string} modId - The ID of the mod.
- * @param {string[]} componentFiles - Array of component definition filenames.
- * @returns {object} A mock mod manifest object.
- */
-const createMockModManifest = (modId, componentFiles = []) => ({
-  id: modId,
-  name: `Mock Mod ${modId}`,
-  version: '1.0.0',
-  content: {
-    components: componentFiles,
-    // Other content types can be added here if needed for broader tests
-  },
-});
 
 // --- Test Suite ---
 
