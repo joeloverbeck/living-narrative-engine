@@ -301,7 +301,7 @@ describeTurnManagerSuite(
 
       // Assert
       expect(testBed.mocks.logger.error).toHaveBeenCalledWith(
-        'Failed to dispatch core:turn_started for actor1: Dispatcher failure',
+        'Dispatch core:turn_started failed: Dispatcher failure',
         dispatchError
       );
 
