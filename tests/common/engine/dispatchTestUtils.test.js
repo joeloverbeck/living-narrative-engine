@@ -3,13 +3,13 @@ import {
   expectDispatchSequence,
   expectSingleDispatch,
   buildSaveDispatches,
-  DEFAULT_ACTIVE_WORLD_FOR_SAVE,
   expectEngineStatus,
   expectEntityCreatedDispatch,
   expectEntityRemovedDispatch,
   expectComponentAddedDispatch,
   expectComponentRemovedDispatch,
 } from './dispatchTestUtils.js';
+import { DEFAULT_ACTIVE_WORLD_FOR_SAVE } from '../constants.js';
 import {
   ENGINE_OPERATION_IN_PROGRESS_UI,
   ENGINE_READY_UI,

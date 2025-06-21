@@ -11,8 +11,8 @@ import '../../common/engine/engineTestTypedefs.js';
 import {
   expectDispatchSequence,
   buildSaveDispatches,
-  DEFAULT_ACTIVE_WORLD_FOR_SAVE,
 } from '../../common/engine/dispatchTestUtils.js';
+import { DEFAULT_ACTIVE_WORLD_FOR_SAVE } from '../../common/constants.js';
 
 describeEngineSuite('GameEngine', () => {
   describe('triggerManualSave', () => {
