@@ -5,6 +5,7 @@
 import { describe, it, expect, jest } from '@jest/globals';
 import {
   withGameEngineBed,
+  withInitializedGameEngineBed,
   runUnavailableServiceTest,
 } from '../../../common/engine/gameEngineHelpers.js';
 import { tokens } from '../../../../src/dependencyInjection/tokens.js';
@@ -44,6 +45,46 @@ describe('withGameEngineBed', () => {
     const testFn = jest.fn().mockRejectedValue(error);
 
     await expect(withGameEngineBed(undefined, testFn)).rejects.toThrow('fail');
+    expect(bed.cleanup).toHaveBeenCalledTimes(1);
+
+    bedModule.createGameEngineTestBed.mockRestore();
+  });
+});
+
+describe('withInitializedGameEngineBed', () => {
+  it('initializes engine, runs callback and cleans up', async () => {
+    const bed = {
+      engine: 'engine',
+      initAndReset: jest.fn(),
+      cleanup: jest.fn(),
+    };
+    const createSpy = jest
+      .spyOn(bedModule, 'createGameEngineTestBed')
+      .mockReturnValue(bed);
+    const testFn = jest.fn();
+
+    await withInitializedGameEngineBed({ b: 2 }, 'World', testFn);
+
+    expect(createSpy).toHaveBeenCalledWith({ b: 2 });
+    expect(bed.initAndReset).toHaveBeenCalledWith('World');
+    expect(testFn).toHaveBeenCalledWith(bed, bed.engine);
+    expect(bed.cleanup).toHaveBeenCalledTimes(1);
+
+    createSpy.mockRestore();
+  });
+
+  it('uses defaults and cleans up on error', async () => {
+    const bed = {
+      engine: 'engine',
+      initAndReset: jest.fn(),
+      cleanup: jest.fn(),
+    };
+    jest.spyOn(bedModule, 'createGameEngineTestBed').mockReturnValue(bed);
+    const error = new Error('oops');
+    const testFn = jest.fn().mockRejectedValue(error);
+
+    await expect(withInitializedGameEngineBed(testFn)).rejects.toThrow('oops');
+    expect(bed.initAndReset).toHaveBeenCalledWith('TestWorld');
     expect(bed.cleanup).toHaveBeenCalledTimes(1);
 
     bedModule.createGameEngineTestBed.mockRestore();
