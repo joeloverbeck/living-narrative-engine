@@ -48,18 +48,17 @@ describeAIPromptPipelineSuite('AIPromptPipeline', (getBed) => {
   test.each([
     {
       desc: 'llmAdapter returns falsy',
-      mutate: () =>
-        testBed.llmAdapter.getCurrentActiveLlmId.mockResolvedValue(null),
+      mutate: (bed) =>
+        bed.llmAdapter.getCurrentActiveLlmId.mockResolvedValue(null),
       error: 'Could not determine active LLM ID.',
     },
     {
       desc: 'promptBuilder returns empty string',
-      mutate: () => testBed.promptBuilder.build.mockResolvedValue(''),
+      mutate: (bed) => bed.promptBuilder.build.mockResolvedValue(''),
       error: 'PromptBuilder returned an empty or invalid prompt.',
     },
   ])('generatePrompt rejects when %s', async ({ mutate, error }) => {
-    mutate();
-    await expect(testBed.generateDefault()).rejects.toThrow(error);
+    await testBed.expectGenerationFailure(mutate, error);
   });
 
   test('availableActions are attached to DTO sent to getPromptData', async () => {
