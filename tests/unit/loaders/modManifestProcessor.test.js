@@ -43,7 +43,7 @@ describe('ModManifestProcessor.processManifests', () => {
     dispatcher = { dispatch: jest.fn() };
     modDependencyValidator = { validate: jest.fn() };
     modVersionValidator = jest.fn();
-    modLoadOrderResolver = { resolveOrder: jest.fn(() => ['modA', 'modB']) };
+    modLoadOrderResolver = { resolve: jest.fn(() => ['modA', 'modB']) };
     processor = new ModManifestProcessor({
       modManifestLoader: manifestLoader,
       logger,
@@ -72,10 +72,9 @@ describe('ModManifestProcessor.processManifests', () => {
       logger,
       dispatcher
     );
-    expect(modLoadOrderResolver.resolveOrder).toHaveBeenCalledWith(
+    expect(modLoadOrderResolver.resolve).toHaveBeenCalledWith(
       ['modA', 'modB'],
-      expect.any(Map),
-      logger
+      expect.any(Map)
     );
     expect(registry.store).toHaveBeenCalledWith(
       'mod_manifests',
@@ -112,7 +111,7 @@ describe('ModManifestProcessor.processManifests', () => {
       expect.stringContaining('Encountered 1 engine version incompatibilities'),
       error
     );
-    expect(modLoadOrderResolver.resolveOrder).not.toHaveBeenCalled();
+    expect(modLoadOrderResolver.resolve).not.toHaveBeenCalled();
     expect(registry.store).not.toHaveBeenCalledWith(
       'meta',
       'final_mod_order',

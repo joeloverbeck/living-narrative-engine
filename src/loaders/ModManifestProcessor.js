@@ -103,10 +103,9 @@ export class ModManifestProcessor {
       throw e;
     }
 
-    const finalOrder = this.#modLoadOrderResolver.resolveOrder(
+    const finalOrder = this.#modLoadOrderResolver.resolve(
       requestedIds,
-      manifestsForValidation,
-      this.#logger
+      manifestsForValidation
     );
     this.#logger.debug(
       `ModsLoader: Final mod order resolved: [${finalOrder.join(', ')}]`

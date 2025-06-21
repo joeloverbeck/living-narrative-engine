@@ -59,7 +59,7 @@ import WorldLoader from '../../loaders/worldLoader.js';
 
 // --- Modding Service Imports ---
 import ModDependencyValidator from '../../modding/modDependencyValidator.js';
-import ModVersionValidator from '../../modding/modVersionValidator.js';
+import validateModEngineVersions from '../../modding/modVersionValidator.js';
 import ModLoadOrderResolver from '../../modding/modLoadOrderResolver.js';
 
 // --- DI & Helper Imports ---
@@ -351,7 +351,7 @@ export function registerLoaders(container) {
       modManifestLoader: c.resolve(tokens.ModManifestLoader),
       validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
       modDependencyValidator: new ModDependencyValidator(loggerDep),
-      modVersionValidator: new ModVersionValidator(loggerDep),
+      modVersionValidator: validateModEngineVersions,
       modLoadOrderResolver: new ModLoadOrderResolver(loggerDep),
       worldLoader: c.resolve(tokens.WorldLoader),
     });
