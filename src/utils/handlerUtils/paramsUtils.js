@@ -29,4 +29,4 @@ export function assertParamsObject(params, logger, opName) {
   return false;
 }
 
-export default { assertParamsObject };
+// deprecated default export removed in favor of named exports only

@@ -36,5 +36,3 @@ export function getActorLocation(entityId, entityManager) {
   }
   return null;
 }
-
-export default getActorLocation;

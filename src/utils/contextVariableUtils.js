@@ -138,5 +138,3 @@ export function tryWriteContextVariable(
     logger
   );
 }
-
-export default writeContextVariable;

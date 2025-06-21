@@ -1,4 +1,4 @@
-import MapManager from '../utils/mapManagerUtils.js';
+import { MapManager } from '../utils/mapManagerUtils.js';
 import { IEntityRepository } from '../ports/IEntityRepository.js';
 
 /**

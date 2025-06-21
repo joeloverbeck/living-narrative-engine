@@ -19,7 +19,7 @@
 import { cloneDeep } from 'lodash';
 import Entity from '../entity.js';
 import EntityInstanceData from '../entityInstanceData.js';
-import MapManager from '../../utils/mapManagerUtils.js';
+import { MapManager } from '../../utils/mapManagerUtils.js';
 import {
   assertValidId,
   assertNonBlankString,

@@ -27,6 +27,7 @@ import { expectSingleDispatch } from '../../common/engine/dispatchTestUtils.js';
 import MapManager from '../../../src/utils/mapManagerUtils.js';
 import { buildSerializedEntity } from '../../common/entities/serializationUtils.js';
 
+
 describeEntityManagerSuite('EntityManager - Lifecycle', (getBed) => {
   describe('constructor', () => {
     it('should instantiate successfully via TestBed', () => {
@@ -360,8 +361,11 @@ describeEntityManagerSuite('EntityManager - Lifecycle', (getBed) => {
     it('should dispatch an ENTITY_REMOVED event upon successful removal', () => {
       // Arrange
       const { entityManager, mocks } = getBed();
-      const entity = getBed().createEntity('basic');
-      getBed().resetDispatchMock();
+      const entity = getBed().createEntity(
+        'basic',
+        {},
+        { resetDispatch: true }
+      );
 
       // Act
       entityManager.removeEntityInstance(entity.id);

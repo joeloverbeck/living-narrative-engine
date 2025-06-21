@@ -41,5 +41,3 @@ export function validateSaveMetadataFields(metadata, fileName, logger) {
 
   return metadata;
 }
-
-export default validateSaveMetadataFields;

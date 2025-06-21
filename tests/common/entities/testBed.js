@@ -194,16 +194,26 @@ export class TestBed extends FactoryTestBed {
    *   definition to use.
    * @param {object} [options] - Options forwarded to
    *   {@link EntityManager#createEntityInstance}.
+   * @param {object} [config] - Additional configuration options.
+   * @param {boolean} [config.resetDispatch=false] - If true, resets the event
+   *   dispatch mock after creation.
    * @returns {import('../../../src/entities/entity.js').default} The created
    *   entity instance.
    */
-  createEntity(defKey, options = {}) {
+  createEntity(defKey, options = {}, { resetDispatch = false } = {}) {
     const definition = TestData.Definitions[defKey];
     if (!definition) {
       throw new Error(`Unknown test definition key: ${defKey}`);
     }
     this.setupDefinitions(definition);
-    return this.entityManager.createEntityInstance(definition.id, options);
+    const entity = this.entityManager.createEntityInstance(
+      definition.id,
+      options
+    );
+    if (resetDispatch) {
+      this.resetDispatchMock();
+    }
+    return entity;
   }
 
   /**

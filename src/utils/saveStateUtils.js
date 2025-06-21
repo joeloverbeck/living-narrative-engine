@@ -51,5 +51,3 @@ export function cloneValidatedState(obj, logger) {
 export function cloneAndValidateSaveState(obj, logger) {
   return cloneValidatedState(obj, logger);
 }
-
-export default cloneAndValidateSaveState;
