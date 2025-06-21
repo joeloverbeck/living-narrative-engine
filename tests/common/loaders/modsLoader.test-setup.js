@@ -20,7 +20,7 @@ import {
   createMockWorldLoader, // ← NEW import
 } from '../mockFactories.js';
 import { createLoaderMocks } from './modsLoader.test-utils.js';
-import { buildTestEnvironment } from '../mockEnvironment.js';
+import { buildEnvironment } from '../mockEnvironment.js';
 
 /**
  * List of loader types used when generating mock loaders.
@@ -59,52 +59,54 @@ export function createTestEnvironment() {
     mockWorldLoader: createMockWorldLoader,
   };
 
-  const { mocks, cleanup } = buildTestEnvironment(factoryMap, {});
-
   /* ── Content-loader mocks ───────────────────────────────────────────── */
   const loaders = createLoaderMocks(loaderTypes);
 
-  /* ── Default success behaviour overrides ───────────────────────────── */
-  mocks.mockValidator.isSchemaLoaded.mockImplementation((id) =>
-    [
-      'schema:game',
-      'schema:components',
-      'schema:mod-manifest',
-      'schema:entityDefinitions',
-      'schema:actions',
-      'schema:events',
-      'schema:rules',
-      'schema:conditions',
-      'schema:entityInstances',
-      'schema:goals',
-    ].includes(id)
-  );
-  mocks.mockModDependencyValidator.validate.mockImplementation(() => {});
-  mocks.mockModVersionValidator.mockImplementation(() => {});
-  mocks.mockModLoadOrderResolver.resolveOrder.mockImplementation((ids) => ids);
+  const {
+    mocks,
+    instance: modsLoader,
+    cleanup,
+  } = buildEnvironment(factoryMap, {}, {}, (mockContainer, m) => {
+    m.mockValidator.isSchemaLoaded.mockImplementation((id) =>
+      [
+        'schema:game',
+        'schema:components',
+        'schema:mod-manifest',
+        'schema:entityDefinitions',
+        'schema:actions',
+        'schema:events',
+        'schema:rules',
+        'schema:conditions',
+        'schema:entityInstances',
+        'schema:goals',
+      ].includes(id)
+    );
+    m.mockModDependencyValidator.validate.mockImplementation(() => {});
+    m.mockModVersionValidator.mockImplementation(() => {});
+    m.mockModLoadOrderResolver.resolveOrder.mockImplementation((ids) => ids);
 
-  /* ── Instantiate system-under-test ──────────────────────────────────── */
-  const modsLoader = new ModsLoader({
-    registry: mocks.mockRegistry,
-    logger: mocks.mockLogger,
-    schemaLoader: mocks.mockSchemaLoader,
-    componentLoader: loaders.mockComponentLoader,
-    conditionLoader: loaders.mockConditionLoader,
-    ruleLoader: loaders.mockRuleLoader,
-    actionLoader: loaders.mockActionLoader,
-    eventLoader: loaders.mockEventLoader,
-    entityLoader: loaders.mockEntityLoader,
-    validator: mocks.mockValidator,
-    configuration: mocks.mockConfiguration,
-    gameConfigLoader: mocks.mockGameConfigLoader,
-    promptTextLoader: { loadPromptText: jest.fn() },
-    modManifestLoader: mocks.mockModManifestLoader,
-    validatedEventDispatcher: mocks.mockValidatedEventDispatcher,
-    modDependencyValidator: mocks.mockModDependencyValidator,
-    modVersionValidator: mocks.mockModVersionValidator,
-    modLoadOrderResolver: mocks.mockModLoadOrderResolver,
-    worldLoader: mocks.mockWorldLoader, // ← injected here
-    contentLoadersConfig: null,
+    return new ModsLoader({
+      registry: m.mockRegistry,
+      logger: m.mockLogger,
+      schemaLoader: m.mockSchemaLoader,
+      componentLoader: loaders.mockComponentLoader,
+      conditionLoader: loaders.mockConditionLoader,
+      ruleLoader: loaders.mockRuleLoader,
+      actionLoader: loaders.mockActionLoader,
+      eventLoader: loaders.mockEventLoader,
+      entityLoader: loaders.mockEntityLoader,
+      validator: m.mockValidator,
+      configuration: m.mockConfiguration,
+      gameConfigLoader: m.mockGameConfigLoader,
+      promptTextLoader: { loadPromptText: jest.fn() },
+      modManifestLoader: m.mockModManifestLoader,
+      validatedEventDispatcher: m.mockValidatedEventDispatcher,
+      modDependencyValidator: m.mockModDependencyValidator,
+      modVersionValidator: m.mockModVersionValidator,
+      modLoadOrderResolver: m.mockModLoadOrderResolver,
+      worldLoader: m.mockWorldLoader,
+      contentLoadersConfig: null,
+    });
   });
 
   /* ── Return the assembled environment ──────────────────────────────── */

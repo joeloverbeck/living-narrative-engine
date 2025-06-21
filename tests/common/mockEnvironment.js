@@ -64,3 +64,41 @@ export function buildTestEnvironment(factoryMap, tokenMap, overrides = {}) {
 
   return { mocks, mockContainer, cleanup };
 }
+
+/**
+ * Builds and optionally instantiates a test environment.
+ *
+ * @description Wrapper around {@link buildTestEnvironment} that also
+ *   constructs an instance of the system under test using the provided
+ *   creation callback.
+ * @param {Record<string, () => any>} factoryMap - Map of mock factory
+ *   functions to create.
+ * @param {Record<string | symbol, string | ((m: Record<string, any>) => any) | any>} tokenMap
+ *   Map of DI tokens to mock keys, provider callbacks, or constant values.
+ * @param {Record<string | symbol, any>} [overrides] - Optional per-test token
+ *   overrides for the container.
+ * @param {(container: any, mocks: Record<string, any>) => any} [createFn]
+ *   Function that returns the system under test when provided the mock
+ *   container and generated mocks.
+ * @returns {{
+ *   mocks: Record<string, any>,
+ *   mockContainer: { resolve: jest.Mock },
+ *   instance: any,
+ *   cleanup: () => void,
+ * }}
+ *   Mocks, container, optionally created instance and cleanup helper.
+ */
+export function buildEnvironment(
+  factoryMap,
+  tokenMap,
+  overrides = {},
+  createFn
+) {
+  const { mocks, mockContainer, cleanup } = buildTestEnvironment(
+    factoryMap,
+    tokenMap,
+    overrides
+  );
+  const instance = createFn ? createFn(mockContainer, mocks) : undefined;
+  return { mocks, mockContainer, instance, cleanup };
+}
