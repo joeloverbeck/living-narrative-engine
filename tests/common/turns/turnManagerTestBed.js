@@ -14,6 +14,7 @@ import {
 } from '../mockFactories';
 import BaseTestBed from '../baseTestBed.js';
 import { describeSuiteWithHooks } from '../describeSuite.js';
+import { flushPromisesAndTimers } from '../jestHelpers.js';
 
 /**
  * @description Utility class that instantiates {@link TurnManager} with mocked
@@ -203,16 +204,6 @@ export function createTurnManagerTestBed(overrides = {}) {
 }
 
 /**
- * Flushes pending promises and advances all Jest timers.
- *
- * @description Flushes pending promises and advances all Jest timers.
- * @returns {Promise<void>} Resolves after timers have run.
- */
-export const flushPromisesAndTimers = async () => {
-  await jest.runAllTimersAsync();
-};
-
-/**
  * Defines a test suite with automatic {@link TurnManagerTestBed} setup.
  *
  * @param {string} title - Suite title passed to `describe`.
@@ -229,3 +220,4 @@ export function describeTurnManagerSuite(title, suiteFn, overrides = {}) {
 }
 
 export default TurnManagerTestBed;
+export { flushPromisesAndTimers };

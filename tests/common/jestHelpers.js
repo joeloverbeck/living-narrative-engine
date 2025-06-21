@@ -24,3 +24,12 @@ export function clearMockFunctions(...targets) {
 export function suppressConsoleError() {
   return jest.spyOn(console, 'error').mockImplementation(() => {});
 }
+
+/**
+ * Flushes pending promises and advances all Jest timers.
+ *
+ * @returns {Promise<void>} Resolves once all timers have run.
+ */
+export async function flushPromisesAndTimers() {
+  await jest.runAllTimersAsync();
+}
