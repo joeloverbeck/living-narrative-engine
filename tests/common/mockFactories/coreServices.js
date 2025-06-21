@@ -30,7 +30,7 @@ export function createSimpleMock(methodNames, defaults = {}) {
  *  Mapping of factory names to method arrays or spec objects.
  * @returns {Record<string, () => object>} Generated factory functions.
  */
-function generateFactories(specMap) {
+export function generateFactories(specMap) {
   const factories = {};
   for (const [name, spec] of Object.entries(specMap)) {
     const { methods, defaults = {} } = Array.isArray(spec)
