@@ -9,64 +9,57 @@ import '../../common/engine/engineTestTypedefs.js';
 import { ENGINE_STOPPED_UI } from '../../../src/constants/eventIds.js';
 
 describeEngineSuite('GameEngine', (ctx) => {
-  let testBed;
-  let gameEngine; // Instance of GameEngine
-
   const MOCK_WORLD_NAME = 'TestWorld';
 
-  beforeEach(() => {
-    testBed = ctx.bed;
-  });
   describe('stop', () => {
     beforeEach(() => {
-      // Ensure gameEngine is fresh for each 'stop' test
-      gameEngine = ctx.engine;
+      // Ensure engine is fresh for each 'stop' test
     });
 
     it('should successfully stop a running game, with correct logging, events, and state changes', async () => {
-      testBed.mocks.initializationService.runInitializationSequence.mockResolvedValue(
+      ctx.bed.mocks.initializationService.runInitializationSequence.mockResolvedValue(
         {
           success: true,
         }
       );
-      await testBed.startAndReset(MOCK_WORLD_NAME); // Start the game first and clear mocks
+      await ctx.bed.startAndReset(MOCK_WORLD_NAME); // Start the game first and clear mocks
 
-      await gameEngine.stop();
+      await ctx.engine.stop();
 
       expect(
-        testBed.mocks.playtimeTracker.endSessionAndAccumulate
+        ctx.bed.mocks.playtimeTracker.endSessionAndAccumulate
       ).toHaveBeenCalledTimes(1);
-      expect(testBed.mocks.turnManager.stop).toHaveBeenCalledTimes(1);
+      expect(ctx.bed.mocks.turnManager.stop).toHaveBeenCalledTimes(1);
 
-      expect(testBed.mocks.safeEventDispatcher.dispatch).toHaveBeenCalledWith(
+      expect(ctx.bed.mocks.safeEventDispatcher.dispatch).toHaveBeenCalledWith(
         ENGINE_STOPPED_UI,
         { inputDisabledMessage: 'Game stopped. Engine is inactive.' }
       );
 
-      const status = gameEngine.getEngineStatus();
+      const status = ctx.engine.getEngineStatus();
       expect(status.isInitialized).toBe(false);
       expect(status.isLoopRunning).toBe(false);
       expect(status.activeWorld).toBeNull();
 
-      expect(testBed.mocks.logger.warn).not.toHaveBeenCalled();
+      expect(ctx.bed.mocks.logger.warn).not.toHaveBeenCalled();
     });
 
     it('should do nothing and log if engine is already stopped', async () => {
-      // gameEngine is fresh, so not initialized
-      const initialStatus = gameEngine.getEngineStatus();
+      // ctx.engine is fresh, so not initialized
+      const initialStatus = ctx.engine.getEngineStatus();
       expect(initialStatus.isInitialized).toBe(false);
       expect(initialStatus.isLoopRunning).toBe(false);
 
-      testBed.resetMocks();
+      ctx.bed.resetMocks();
 
-      await gameEngine.stop();
+      await ctx.engine.stop();
 
       expect(
-        testBed.mocks.playtimeTracker.endSessionAndAccumulate
+        ctx.bed.mocks.playtimeTracker.endSessionAndAccumulate
       ).not.toHaveBeenCalled();
-      expect(testBed.mocks.turnManager.stop).not.toHaveBeenCalled();
+      expect(ctx.bed.mocks.turnManager.stop).not.toHaveBeenCalled();
       expect(
-        testBed.mocks.safeEventDispatcher.dispatch
+        ctx.bed.mocks.safeEventDispatcher.dispatch
       ).not.toHaveBeenCalledWith(ENGINE_STOPPED_UI, expect.anything());
     });
 

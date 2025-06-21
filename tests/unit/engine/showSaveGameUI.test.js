@@ -12,58 +12,51 @@ import {
 } from '../../../src/constants/eventIds.js';
 
 describeEngineSuite('GameEngine', (ctx) => {
-  let testBed;
-  let gameEngine; // Instance of GameEngine
-
   const MOCK_WORLD_NAME = 'TestWorld';
 
-  beforeEach(() => {
-    testBed = ctx.bed;
-  });
   describe('showSaveGameUI', () => {
     beforeEach(async () => {
-      gameEngine = ctx.engine;
       // Start the game to ensure this.#isEngineInitialized is true for isSavingAllowed check
-      await testBed.initAndReset(MOCK_WORLD_NAME);
+      await ctx.bed.initAndReset(MOCK_WORLD_NAME);
     });
 
     it('should dispatch REQUEST_SHOW_SAVE_GAME_UI if saving is allowed and log intent', () => {
-      testBed.mocks.gamePersistenceService.isSavingAllowed.mockReturnValue(
+      ctx.bed.mocks.gamePersistenceService.isSavingAllowed.mockReturnValue(
         true
       );
-      gameEngine.showSaveGameUI(); // Method is now sync
+      ctx.engine.showSaveGameUI(); // Method is now sync
 
-      expect(testBed.mocks.logger.debug).toHaveBeenCalledWith(
+      expect(ctx.bed.mocks.logger.debug).toHaveBeenCalledWith(
         'GameEngine.showSaveGameUI: Dispatching request to show Save Game UI.'
       );
       expect(
-        testBed.mocks.gamePersistenceService.isSavingAllowed
+        ctx.bed.mocks.gamePersistenceService.isSavingAllowed
       ).toHaveBeenCalledWith(true); // engine is initialized
-      expect(testBed.mocks.safeEventDispatcher.dispatch).toHaveBeenCalledWith(
+      expect(ctx.bed.mocks.safeEventDispatcher.dispatch).toHaveBeenCalledWith(
         REQUEST_SHOW_SAVE_GAME_UI,
         {}
       );
-      expect(testBed.mocks.safeEventDispatcher.dispatch).toHaveBeenCalledTimes(
+      expect(ctx.bed.mocks.safeEventDispatcher.dispatch).toHaveBeenCalledTimes(
         1
       );
     });
 
     it('should dispatch CANNOT_SAVE_GAME_INFO if saving is not allowed and log reason', () => {
-      testBed.mocks.gamePersistenceService.isSavingAllowed.mockReturnValue(
+      ctx.bed.mocks.gamePersistenceService.isSavingAllowed.mockReturnValue(
         false
       );
-      gameEngine.showSaveGameUI(); // Method is now sync
+      ctx.engine.showSaveGameUI(); // Method is now sync
 
-      expect(testBed.mocks.logger.warn).toHaveBeenCalledWith(
+      expect(ctx.bed.mocks.logger.warn).toHaveBeenCalledWith(
         'GameEngine.showSaveGameUI: Saving is not currently allowed.'
       );
       expect(
-        testBed.mocks.gamePersistenceService.isSavingAllowed
+        ctx.bed.mocks.gamePersistenceService.isSavingAllowed
       ).toHaveBeenCalledWith(true);
-      expect(testBed.mocks.safeEventDispatcher.dispatch).toHaveBeenCalledWith(
+      expect(ctx.bed.mocks.safeEventDispatcher.dispatch).toHaveBeenCalledWith(
         CANNOT_SAVE_GAME_INFO
       );
-      expect(testBed.mocks.safeEventDispatcher.dispatch).toHaveBeenCalledTimes(
+      expect(ctx.bed.mocks.safeEventDispatcher.dispatch).toHaveBeenCalledTimes(
         1
       );
     });

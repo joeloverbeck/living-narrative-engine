@@ -9,29 +9,22 @@ import '../../common/engine/engineTestTypedefs.js';
 import { REQUEST_SHOW_LOAD_GAME_UI } from '../../../src/constants/eventIds.js';
 
 describeEngineSuite('GameEngine', (ctx) => {
-  let testBed;
-  let gameEngine; // Instance of GameEngine
-
-  beforeEach(() => {
-    testBed = ctx.bed;
-  });
   describe('showLoadGameUI', () => {
     beforeEach(() => {
-      gameEngine = ctx.engine;
-      testBed.resetMocks();
+      ctx.bed.resetMocks();
     });
 
     it('should dispatch REQUEST_SHOW_LOAD_GAME_UI and log intent if persistence service is available', () => {
-      gameEngine.showLoadGameUI(); // Method is now sync
+      ctx.engine.showLoadGameUI(); // Method is now sync
 
-      expect(testBed.mocks.logger.debug).toHaveBeenCalledWith(
+      expect(ctx.bed.mocks.logger.debug).toHaveBeenCalledWith(
         'GameEngine.showLoadGameUI: Dispatching request to show Load Game UI.'
       );
-      expect(testBed.mocks.safeEventDispatcher.dispatch).toHaveBeenCalledWith(
+      expect(ctx.bed.mocks.safeEventDispatcher.dispatch).toHaveBeenCalledWith(
         REQUEST_SHOW_LOAD_GAME_UI,
         {}
       );
-      expect(testBed.mocks.safeEventDispatcher.dispatch).toHaveBeenCalledTimes(
+      expect(ctx.bed.mocks.safeEventDispatcher.dispatch).toHaveBeenCalledTimes(
         1
       );
     });
