@@ -35,7 +35,6 @@ export function createRuleTestEnvironment({
 
   const testLogger = logger || createMockLogger();
 
-
   // Create data registry if not provided
   const testDataRegistry = dataRegistry || {
     getAllSystemRules: jest.fn().mockReturnValue(rules),
@@ -45,23 +44,11 @@ export function createRuleTestEnvironment({
   // Create event bus
   const eventBus = new EventBus();
 
-  // Create entity manager
-  let entityManager = new SimpleEntityManager(entities);
-
-  // Create operation registry
-  let operationRegistry = new OperationRegistry({ logger: testLogger });
-
-  // Create handlers using the provided function
-  let handlers = createHandlers(entityManager, eventBus, testLogger);
-  for (const [type, handler] of Object.entries(handlers)) {
-    operationRegistry.register(type, handler.execute.bind(handler));
-  }
-
-  // Create operation interpreter
-  let operationInterpreter = new OperationInterpreter({
-    logger: testLogger,
-    operationRegistry,
-  });
+  // Hold core components so they can be recreated on reset
+  let entityManager;
+  let operationRegistry;
+  let operationInterpreter;
+  let interpreter;
 
   // Create JSON logic evaluation service
   const jsonLogic = new JsonLogicEvaluationService({
@@ -69,27 +56,51 @@ export function createRuleTestEnvironment({
     gameDataRepository: testDataRegistry,
   });
 
-  // Create system logic interpreter
-  let interpreter = new SystemLogicInterpreter({
-    logger: testLogger,
-    eventBus,
-    dataRegistry: testDataRegistry,
-    jsonLogicEvaluationService: jsonLogic,
-    entityManager,
-    operationInterpreter,
-  });
+  /**
+   * Initializes core engine components.
+   *
+   * @private
+   * @param {Array<{id:string,components:object}>} entityList - Entities to load.
+   * @returns {object} Initialized environment pieces.
+   */
+  function initializeEnv(entityList) {
+    entityManager = new SimpleEntityManager(entityList);
+    operationRegistry = new OperationRegistry({ logger: testLogger });
+    const handlers = createHandlers(entityManager, eventBus, testLogger);
+    for (const [type, handler] of Object.entries(handlers)) {
+      operationRegistry.register(type, handler.execute.bind(handler));
+    }
+    operationInterpreter = new OperationInterpreter({
+      logger: testLogger,
+      operationRegistry,
+    });
+    interpreter = new SystemLogicInterpreter({
+      logger: testLogger,
+      eventBus,
+      dataRegistry: testDataRegistry,
+      jsonLogicEvaluationService: jsonLogic,
+      entityManager,
+      operationInterpreter,
+    });
+    interpreter.initialize();
+    return {
+      entityManager,
+      operationRegistry,
+      operationInterpreter,
+      systemLogicInterpreter: interpreter,
+    };
+  }
 
-  // Initialize the interpreter
-  interpreter.initialize();
+  const init = initializeEnv(entities);
 
   // The environment object to return
   const env = {
     eventBus,
-    operationRegistry,
-    operationInterpreter,
+    operationRegistry: init.operationRegistry,
+    operationInterpreter: init.operationInterpreter,
     jsonLogic,
-    systemLogicInterpreter: interpreter,
-    entityManager,
+    systemLogicInterpreter: init.systemLogicInterpreter,
+    entityManager: init.entityManager,
     logger: testLogger,
     dataRegistry: testDataRegistry,
     cleanup: () => {
@@ -102,31 +113,11 @@ export function createRuleTestEnvironment({
         id: e.id,
         components: JSON.parse(JSON.stringify(e.components)),
       }));
-      entityManager = new SimpleEntityManager(clonedEntities);
-      env.entityManager = entityManager;
-      operationRegistry = new OperationRegistry({ logger: testLogger });
-      handlers = createHandlers(entityManager, eventBus, testLogger);
-      for (const [type, handler] of Object.entries(handlers)) {
-        operationRegistry.register(type, handler.execute.bind(handler));
-      }
-      operationInterpreter = new OperationInterpreter({
-        logger: testLogger,
-        operationRegistry,
-      });
-      interpreter = new SystemLogicInterpreter({
-        logger: testLogger,
-        eventBus,
-        dataRegistry: testDataRegistry,
-        jsonLogicEvaluationService: jsonLogic,
-        entityManager,
-        operationInterpreter,
-      });
-      interpreter.initialize();
-      // Update references on env
-      env.entityManager = entityManager;
-      env.operationRegistry = operationRegistry;
-      env.operationInterpreter = operationInterpreter;
-      env.systemLogicInterpreter = interpreter;
+      const newEnv = initializeEnv(clonedEntities);
+      env.entityManager = newEnv.entityManager;
+      env.operationRegistry = newEnv.operationRegistry;
+      env.operationInterpreter = newEnv.operationInterpreter;
+      env.systemLogicInterpreter = newEnv.systemLogicInterpreter;
     },
   };
 
