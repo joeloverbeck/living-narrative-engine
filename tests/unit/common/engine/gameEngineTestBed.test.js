@@ -8,6 +8,7 @@ import {
   GameEngineTestBed,
   describeGameEngineSuite,
   describeEngineSuite,
+  describeInitializedEngineSuite,
 } from '../../../common/engine/gameEngineTestBed.js';
 import GameEngine from '../../../../src/engine/gameEngine.js';
 import { tokens } from '../../../../src/dependencyInjection/tokens.js';
@@ -216,6 +217,61 @@ describe('describeGameEngineSuite', () => {
 
   it('calls cleanup after each test', () => {
     expect(cleanupCalls).toBe(2);
+  });
+});
+
+describe('describeInitializedEngineSuite', () => {
+  let initCalls = 0;
+  let originalInit;
+  let initSpy;
+
+  beforeAll(() => {
+    originalInit = GameEngineTestBed.prototype.initAndReset;
+  });
+
+  beforeEach(() => {
+    initSpy = jest
+      .spyOn(GameEngineTestBed.prototype, 'initAndReset')
+      .mockImplementation(async function (...args) {
+        initCalls++;
+        return originalInit.apply(this, args);
+      });
+  });
+
+  afterEach(() => {
+    initSpy.mockRestore();
+  });
+
+  describeInitializedEngineSuite('inner', (ctx) => {
+    it('provides bed and engine references', () => {
+      expect(ctx.bed).toBeInstanceOf(GameEngineTestBed);
+      expect(ctx.engine).toBe(ctx.bed.engine);
+    });
+
+    it('initializes engine and suppresses console.error', () => {
+      expect(jest.isMockFunction(console.error)).toBe(true);
+      expect(initSpy).toHaveBeenCalledWith('TestWorld');
+      console.error('oops');
+      expect(console.error).toHaveBeenCalledWith('oops');
+    });
+  });
+
+  it('calls initAndReset before each test', () => {
+    expect(initCalls).toBe(2);
+  });
+
+  describeInitializedEngineSuite(
+    'custom world',
+    () => {
+      it('uses provided world name', () => {
+        expect(initSpy).toHaveBeenCalledWith('MyWorld');
+      });
+    },
+    'MyWorld'
+  );
+
+  it('tracks total initialization calls', () => {
+    expect(initCalls).toBe(3);
   });
 });
 
