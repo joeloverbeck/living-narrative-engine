@@ -352,12 +352,12 @@ export function registerLoaders(container) {
       c.resolve(tokens.WorldPhase),
       c.resolve(tokens.SummaryPhase),
     ];
-
-    return new ModsLoader({
+    const ModsLoadSession = require('../../loaders/ModsLoadSession.js').default;
+    return new (require('../../loaders/modsLoader.js').default)({
       logger: c.resolve(tokens.ILogger),
-      registry: c.resolve(tokens.IDataRegistry),
-      phases: phases,
       cache: c.resolve(tokens.ILoadCache),
+      session: new ModsLoadSession({ phases, cache: c.resolve(tokens.ILoadCache), logger: c.resolve(tokens.ILogger) }),
+      registry: c.resolve(tokens.IDataRegistry),
     });
   });
 

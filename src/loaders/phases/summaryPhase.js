@@ -45,7 +45,7 @@ export default class SummaryPhase extends LoaderPhase {
   /**
    * @description Executes the summary logging phase.
    * @param {LoadContext} ctx - The load context containing all the data from previous phases.
-   * @returns {Promise<void>}
+   * @returns {Promise<LoadContext>}
    * @throws {ModsLoaderPhaseError} Throws a phase-specific error if the summary logging fails.
    * @async
    */
@@ -60,6 +60,7 @@ export default class SummaryPhase extends LoaderPhase {
         ctx.incompatibilities,
         ctx.totals
       );
+      return ctx;
     } catch (e) {
       throw new ModsLoaderPhaseError(
         ModsLoaderErrorCode.SUMMARY,

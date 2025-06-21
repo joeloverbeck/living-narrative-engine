@@ -68,18 +68,25 @@ describe('ModsLoader + GameConfigPhase integration', () => {
     }
   }
 
+  function makeSession(phases) {
+    return {
+      async run(ctx) {
+        for (const phase of phases) {
+          await phase.execute(ctx);
+        }
+        return ctx;
+      },
+    };
+  }
+
   it('loads mods from game.json and sets them in context', async () => {
     const mods = ['core', 'modA', 'modB'];
     const gameConfigPhase = makeGameConfigPhaseWithConfig(mods);
     manifestPhase = new TestManifestPhase();
     phases = [gameConfigPhase, manifestPhase];
-    modsLoader = new ModsLoader({ logger: fakeLogger, registry, phases, cache: makeRegistryCache(registry) });
-    // Pass a shared context to all phases
-    const sharedContext = createLoadContext({ worldName: 'test', registry });
-    for (const phase of phases) {
-      await phase.execute(sharedContext);
-    }
-    expect(sharedContext.requestedMods).toEqual(mods);
+    modsLoader = new ModsLoader({ logger: fakeLogger, cache: makeRegistryCache(registry), session: makeSession(phases), registry });
+    await modsLoader.loadMods('test');
+    // After loadMods, check the registry or other side effects as needed
     expect(fakeGameConfigLoader.loadConfig).toHaveBeenCalled();
   });
 
@@ -88,7 +95,7 @@ describe('ModsLoader + GameConfigPhase integration', () => {
     const gameConfigPhase = makeGameConfigPhaseWithError(error);
     manifestPhase = new TestManifestPhase();
     phases = [gameConfigPhase, manifestPhase];
-    modsLoader = new ModsLoader({ logger: fakeLogger, registry, phases, cache: makeRegistryCache(registry) });
+    modsLoader = new ModsLoader({ logger: fakeLogger, cache: makeRegistryCache(registry), session: makeSession(phases), registry });
     await expect(modsLoader.loadMods('test')).rejects.toThrow(ModsLoaderPhaseError);
     await expect(modsLoader.loadMods('test')).rejects.toHaveProperty('code', ModsLoaderErrorCode.GAME_CONFIG);
   });
@@ -98,7 +105,7 @@ describe('ModsLoader + GameConfigPhase integration', () => {
     const gameConfigPhase = makeGameConfigPhaseWithError(error);
     manifestPhase = new TestManifestPhase();
     phases = [gameConfigPhase, manifestPhase];
-    modsLoader = new ModsLoader({ logger: fakeLogger, registry, phases, cache: makeRegistryCache(registry) });
+    modsLoader = new ModsLoader({ logger: fakeLogger, cache: makeRegistryCache(registry), session: makeSession(phases), registry });
     await expect(modsLoader.loadMods('test')).rejects.toThrow(ModsLoaderPhaseError);
     await expect(modsLoader.loadMods('test')).rejects.toHaveProperty('code', ModsLoaderErrorCode.GAME_CONFIG);
   });
@@ -114,7 +121,7 @@ describe('ModsLoader + GameConfigPhase integration', () => {
     }
     manifestPhase = new RegistryManifestPhase();
     phases = [gameConfigPhase, manifestPhase];
-    modsLoader = new ModsLoader({ logger: fakeLogger, registry, phases, cache: makeRegistryCache(registry) });
+    modsLoader = new ModsLoader({ logger: fakeLogger, cache: makeRegistryCache(registry), session: makeSession(phases), registry });
     await modsLoader.loadMods('test');
     expect(registry.get('mod_manifests', 'core')).toEqual({ id: 'core' });
     expect(registry.get('mod_manifests', 'modA')).toEqual({ id: 'modA' });

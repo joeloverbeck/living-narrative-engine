@@ -24,6 +24,7 @@ import {
 
 // Mock phases for non-essential loading phases
 class MockSchemaPhase extends LoaderPhase {
+  constructor(logger) { super(); this.logger = logger; }
   name = 'MockSchemaPhase';
   async execute(context) {
     // Mock schema phase that does nothing
@@ -32,6 +33,7 @@ class MockSchemaPhase extends LoaderPhase {
 }
 
 class MockGameConfigPhase extends LoaderPhase {
+  constructor(logger) { super(); this.logger = logger; }
   name = 'MockGameConfigPhase';
   async execute(context) {
     // Mock game config phase that does nothing
@@ -40,6 +42,7 @@ class MockGameConfigPhase extends LoaderPhase {
 }
 
 class MockManifestPhase extends LoaderPhase {
+  constructor(logger) { super(); this.logger = logger; }
   name = 'MockManifestPhase';
   async execute(context) {
     // Mock manifest phase that sets up the mod context
@@ -56,6 +59,7 @@ class MockManifestPhase extends LoaderPhase {
 }
 
 class MockWorldPhase extends LoaderPhase {
+  constructor(logger) { super(); this.logger = logger; }
   name = 'MockWorldPhase';
   async execute(context) {
     // Mock world phase that does nothing
@@ -64,6 +68,7 @@ class MockWorldPhase extends LoaderPhase {
 }
 
 class MockSummaryPhase extends LoaderPhase {
+  constructor(logger) { super(); this.logger = logger; }
   name = 'MockSummaryPhase';
   async execute(context) {
     // Mock summary phase that does nothing
@@ -77,9 +82,10 @@ describe('Integration: Entity Definitions and Instances Loader', () => {
   let logger;
 
   beforeAll(async () => {
+    // Ensure logger is defined first and used everywhere
+    logger = new ConsoleLogger('info');
     // Set up DI container and register all loaders as in production
     const container = new AppContainer();
-    logger = new ConsoleLogger('info');
     container.register(tokens.ILogger, logger);
     // Register mock validated event dispatcher
     container.register(tokens.IValidatedEventDispatcher, createMockValidatedEventDispatcherForIntegration());
@@ -87,13 +93,34 @@ describe('Integration: Entity Definitions and Instances Loader', () => {
     registerLoaders(container);
     // Register mock data fetcher AFTER loader registration to overwrite
     container.register(tokens.IDataFetcher, createMockDataFetcherForIntegration());
-    // Resolve registry and modsLoader from the container
+    // Resolve registry from the container
     registry = container.resolve(tokens.IDataRegistry);
+    
+    // Create test phases using the container's dependencies
+    const phases = [
+      new MockSchemaPhase(logger),
+      new MockGameConfigPhase(logger),
+      new MockManifestPhase(logger),
+      container.resolve(tokens.ContentPhase),
+      new MockWorldPhase(logger),
+      new MockSummaryPhase(logger),
+    ];
+    
+    // Create a custom session with test phases
+    const session = makeSession(phases);
+    
+    // Override the ModsLoader registration to use our custom session
+    container.register(tokens.ModsLoader, new ModsLoader({
+      logger,
+      cache: container.resolve(tokens.ILoadCache),
+      session,
+      registry,
+    }));
+    
     modsLoader = container.resolve(tokens.ModsLoader);
-
+    
     // Load the isekai mod
     await modsLoader.loadMods('test-world', [MOD_ID]);
-
     // DEBUG: Log all entity_definitions in the registry after loading
     const allEntities = registry.getAll('entityDefinitions');
     console.log('DEBUG: All entity_definitions in registry:', allEntities);
@@ -156,4 +183,15 @@ describe('Integration: Entity Definitions and Instances Loader', () => {
       }
     }
   });
-}); 
+});
+
+function makeSession(phases) {
+  return {
+    async run(ctx) {
+      for (const phase of phases) {
+        await phase.execute(ctx);
+      }
+      return ctx;
+    },
+  };
+} 

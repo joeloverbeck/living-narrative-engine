@@ -25,7 +25,7 @@ export default class GameConfigPhase extends LoaderPhase {
   /**
    * @description Executes the game configuration loading phase.
    * @param {import('../LoadContext.js').LoadContext} ctx - The load context
-   * @returns {Promise<void>}
+   * @returns {Promise<import('../LoadContext.js').LoadContext>}
    * @throws {ModsLoaderPhaseError} When game configuration loading fails
    */
   async execute(ctx) {
@@ -36,6 +36,7 @@ export default class GameConfigPhase extends LoaderPhase {
       this.logger.debug(
         `GameConfigPhase: Loaded ${requestedMods.length} mods from game configuration: [${requestedMods.join(', ')}]`
       );
+      return ctx;
     } catch (e) {
       throw new ModsLoaderPhaseError(
         ModsLoaderErrorCode.GAME_CONFIG,

@@ -30,7 +30,7 @@ export default class SchemaPhase extends LoaderPhase {
   /**
    * @description Executes the schema loading and verification phase.
    * @param {import('../LoadContext.js').LoadContext} ctx - The load context
-   * @returns {Promise<void>}
+   * @returns {Promise<import('../LoadContext.js').LoadContext>}
    * @throws {ModsLoaderPhaseError} When schema loading fails or essential schemas are missing
    */
   async execute(ctx) {
@@ -53,6 +53,7 @@ export default class SchemaPhase extends LoaderPhase {
       this.logger.debug(
         'SchemaPhase: All schemas loaded and essential schemas verified.'
       );
+      return ctx;
     } catch (e) {
       throw new ModsLoaderPhaseError(
         ModsLoaderErrorCode.SCHEMA,

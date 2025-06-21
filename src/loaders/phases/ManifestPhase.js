@@ -25,7 +25,7 @@ export default class ManifestPhase extends LoaderPhase {
   /**
    * @description Executes the manifest processing phase.
    * @param {import('../LoadContext.js').LoadContext} ctx - The load context
-   * @returns {Promise<void>}
+   * @returns {Promise<import('../LoadContext.js').LoadContext>}
    * @throws {ModsLoaderPhaseError} When manifest processing fails
    */
   async execute(ctx) {
@@ -38,6 +38,7 @@ export default class ManifestPhase extends LoaderPhase {
       ctx.finalModOrder = res.finalModOrder;
       ctx.incompatibilities = res.incompatibilityCount;
       ctx.manifests = res.loadedManifestsMap;
+      return ctx;
     } catch (e) {
       throw new ModsLoaderPhaseError(
         ModsLoaderErrorCode.MANIFEST,

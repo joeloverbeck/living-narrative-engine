@@ -28,55 +28,50 @@ import { createLoadContext } from './LoadContext.js';
 class ModsLoader extends AbstractLoader {
   /** @type {ILogger} */
   _logger;
-  /** @type {IDataRegistry} */
-  _registry;
-  /** @type {LoaderPhase[]} */
-  _phases;
   /** @type {import('../interfaces/loadContracts.js').ILoadCache} */
   _cache;
+  /** @type {object} */
+  _session;
+  /** @type {import('../interfaces/coreServices.js').IDataRegistry} */
+  _registry;
 
   /**
    * @param {object} dependencies
    * @param {ILogger} dependencies.logger
-   * @param {IDataRegistry} dependencies.registry
-   * @param {LoaderPhase[]} dependencies.phases - The ordered sequence of loading phases to execute.
    * @param {import('../interfaces/loadContracts.js').ILoadCache} dependencies.cache
+   * @param {object} dependencies.session - Must have a run(ctx) method
+   * @param {import('../interfaces/coreServices.js').IDataRegistry} dependencies.registry
    */
-  constructor({ logger, registry, phases, cache }) {
+  constructor({ logger, cache, session, registry }) {
     const depsToValidate = [
-      {
-        dependency: registry,
-        name: 'IDataRegistry',
-        methods: ['store', 'get', 'clear'],
-      },
-      {
-        dependency: phases,
-        name: 'PhasesArray',
-        isArray: true,
-        methods: ['forEach', 'map'], // Check it's array-like and not empty
-        isNotEmpty: true,
-      },
       {
         dependency: cache,
         name: 'ILoadCache',
         methods: ['clear', 'snapshot', 'restore'],
       },
+      {
+        dependency: session,
+        name: 'IModsLoadSession',
+        methods: ['run'],
+      },
+      {
+        dependency: registry,
+        name: 'IDataRegistry',
+        methods: ['store', 'get', 'clear'],
+      },
     ];
-
     super(logger, depsToValidate);
-
     this._logger = logger;
-    this._registry = registry;
-    this._phases = phases;
     this._cache = cache;
-
+    this._session = session;
+    this._registry = registry;
     this._logger.debug(
-      'ModsLoader: Instance created with phase-based architecture.'
+      'ModsLoader: Instance created with session-based architecture.'
     );
   }
 
   /**
-   * Load everything for a world by executing the configured phases.
+   * Load everything for a world by executing the configured phases via the session.
    *
    * @param {string} worldName - The name of the world to load.
    * @param {string[]} requestedModIds - An array of mod IDs to load.
@@ -86,18 +81,12 @@ class ModsLoader extends AbstractLoader {
     this._logger.debug(
       `ModsLoader: Starting load sequence for world '${worldName}'...`
     );
-
+    const { createLoadContext } = await import('./LoadContext.js');
     const context = createLoadContext({ worldName, requestedMods: requestedModIds, registry: this._registry });
-
     this._cache.clear();
     try {
       this._logger.debug('ModsLoader: Data registry cleared.');
-      for (const phase of this._phases) {
-        const phaseName = phase.name;
-        this._logger.debug(`Executing phase: ${phaseName}`);
-        await phase.execute(context);
-        this._logger.debug(`Phase ${phaseName} completed.`);
-      }
+      await this._session.run(context);
       this._logger.info(
         `ModsLoader: Load sequence for world '${worldName}' completed successfully.`
       );

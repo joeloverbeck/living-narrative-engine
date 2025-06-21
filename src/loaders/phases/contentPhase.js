@@ -40,7 +40,7 @@ export default class ContentPhase extends LoaderPhase {
     /**
      * @description Executes the content loading phase.
      * @param {LoadContext} ctx - The load context.
-     * @returns {Promise<void>}
+     * @returns {Promise<LoadContext>}
      * @throws {ModsLoaderPhaseError} When content loading fails for any reason.
      */
     async execute(ctx) {
@@ -53,6 +53,7 @@ export default class ContentPhase extends LoaderPhase {
             );
             // Per acceptance criteria, create a new object reference for totals to ensure immutability downstream.
             ctx.totals = JSON.parse(JSON.stringify(ctx.totals)); // snapshot
+            return ctx;
         } catch (e) {
             throw new ModsLoaderPhaseError(
                 ModsLoaderErrorCode.CONTENT,

@@ -47,7 +47,7 @@ export default class WorldPhase extends LoaderPhase {
     /**
      * @description Executes the world loading phase.
      * @param {LoadContext} ctx - The load context.
-     * @returns {Promise<void>}
+     * @returns {Promise<LoadContext>}
      * @throws {ModsLoaderPhaseError} When world loading fails.
      * @async
      */
@@ -59,6 +59,7 @@ export default class WorldPhase extends LoaderPhase {
                 ctx.manifests,
                 ctx.totals
             );
+            return ctx;
         } catch (e) {
             throw new ModsLoaderPhaseError(
                 ModsLoaderErrorCode.WORLD,
