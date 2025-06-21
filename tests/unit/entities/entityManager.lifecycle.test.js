@@ -21,7 +21,7 @@ import {
   ENTITY_CREATED_ID,
   ENTITY_REMOVED_ID,
 } from '../../../src/constants/eventIds.js';
-import { expectDispatchCalls } from '../../common/engine/dispatchTestUtils.js';
+import { expectDispatchSequence } from '../../common/engine/dispatchTestUtils.js';
 import EntityDefinition from '../../../src/entities/entityDefinition.js';
 import MapManager from '../../../src/utils/mapManagerUtils.js';
 
@@ -39,7 +39,13 @@ describeEntityManagerSuite('EntityManager - Lifecycle', (getBed) => {
       const EntityManager = getBed().entityManager.constructor;
 
       expect(
-        () => new EntityManager(null, validator, logger, eventDispatcher)
+        () =>
+          new EntityManager({
+            registry: null,
+            validator,
+            logger,
+            dispatcher: eventDispatcher,
+          })
       ).toThrow('Missing required dependency: IDataRegistry.');
     });
 
@@ -48,7 +54,13 @@ describeEntityManagerSuite('EntityManager - Lifecycle', (getBed) => {
       const EntityManager = getBed().entityManager.constructor;
 
       expect(
-        () => new EntityManager(registry, null, logger, eventDispatcher)
+        () =>
+          new EntityManager({
+            registry,
+            validator: null,
+            logger,
+            dispatcher: eventDispatcher,
+          })
       ).toThrow('Missing required dependency: ISchemaValidator.');
     });
 
@@ -116,7 +128,7 @@ describeEntityManagerSuite('EntityManager - Lifecycle', (getBed) => {
       const entity = getBed().createEntity('basic');
 
       // Assert
-      expectDispatchCalls(mocks.eventDispatcher.dispatch, [
+      expectDispatchSequence(mocks.eventDispatcher.dispatch, [
         [
           ENTITY_CREATED_ID,
           {
@@ -261,7 +273,7 @@ describeEntityManagerSuite('EntityManager - Lifecycle', (getBed) => {
       const entity = entityManager.reconstructEntity(serializedEntity);
 
       // Assert
-      expectDispatchCalls(mocks.eventDispatcher.dispatch, [
+      expectDispatchSequence(mocks.eventDispatcher.dispatch, [
         [
           ENTITY_CREATED_ID,
           {
@@ -388,7 +400,7 @@ describeEntityManagerSuite('EntityManager - Lifecycle', (getBed) => {
       entityManager.removeEntityInstance(entity.id);
 
       // Assert
-      expectDispatchCalls(mocks.eventDispatcher.dispatch, [
+      expectDispatchSequence(mocks.eventDispatcher.dispatch, [
         [
           ENTITY_REMOVED_ID,
           {

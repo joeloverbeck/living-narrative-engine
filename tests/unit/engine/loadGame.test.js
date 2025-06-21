@@ -1,55 +1,15 @@
 // tests/engine/loadGame.test.js
-import {
-  afterEach,
-  beforeEach,
-  describe,
-  expect,
-  it,
-  jest,
-} from '@jest/globals';
-import GameEngine from '../../../src/engine/gameEngine.js';
+import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { tokens } from '../../../src/dependencyInjection/tokens.js';
-import { createGameEngineTestBed } from '../../common/engine/gameEngineTestBed.js';
 import {
-  expectDispatchSequence,
-  buildSaveDispatches,
-  DEFAULT_ACTIVE_WORLD_FOR_SAVE,
-} from '../../common/engine/dispatchTestUtils.js';
-import {
-  ENGINE_INITIALIZING_UI,
-  ENGINE_READY_UI,
-  ENGINE_OPERATION_IN_PROGRESS_UI,
-  ENGINE_OPERATION_FAILED_UI,
-  ENGINE_STOPPED_UI,
-  REQUEST_SHOW_SAVE_GAME_UI,
-  REQUEST_SHOW_LOAD_GAME_UI,
-  CANNOT_SAVE_GAME_INFO,
-} from '../../../src/constants/eventIds.js';
+  createGameEngineTestBed,
+  describeEngineSuite,
+} from '../../common/engine/gameEngineTestBed.js';
+import '../../common/engine/engineTestTypedefs.js';
+import { expectDispatchSequence } from '../../common/engine/dispatchTestUtils.js';
+import { ENGINE_OPERATION_FAILED_UI } from '../../../src/constants/eventIds.js';
 
-/** @typedef {import('../../../src/interfaces/coreServices.js').ILogger} ILogger */
-/** @typedef {import('../../../src/dependencyInjection/appContainer.js').default} AppContainer */
-/** @typedef {import('../../../src/interfaces/IEntityManager.js').IEntityManager} IEntityManager */
-/** @typedef {import('../../../src/turns/interfaces/ITurnManager.js').ITurnManager} ITurnManager */
-/** @typedef {import('../../../src/interfaces/IGamePersistenceService.js').IGamePersistenceService} IGamePersistenceService */
-/** @typedef {import('../../../src/interfaces/IPlaytimeTracker.js').default} IPlaytimeTracker */
-/** @typedef {import('../../../src/interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
-/** @typedef {import('../../../src/interfaces/IInitializationService.js').IInitializationService} IInitializationService */
-/** @typedef {import('../../../src/interfaces/ISaveLoadService.js').SaveGameStructure} SaveGameStructure */
-
-describe('GameEngine', () => {
-  let testBed;
-  let gameEngine; // Instance of GameEngine
-
-  const MOCK_WORLD_NAME = 'TestWorld';
-
-  beforeEach(() => {
-    testBed = createGameEngineTestBed();
-    jest.spyOn(console, 'error').mockImplementation(() => {});
-  });
-
-  afterEach(async () => {
-    await testBed.cleanup();
-  });
+describeEngineSuite('GameEngine', (ctx) => {
   describe('loadGame', () => {
     const SAVE_ID = 'savegame-001.sav';
     const mockSaveData = {
@@ -61,25 +21,24 @@ describe('GameEngine', () => {
     let prepareSpy, executeSpy, finalizeSpy, handleFailureSpy;
 
     beforeEach(() => {
-      gameEngine = testBed.engine; // Ensure gameEngine is fresh
-      // Spies are on the gameEngine instance created here
+      // Spies are on the engine instance created here
       prepareSpy = jest
-        .spyOn(gameEngine, '_prepareForLoadGameSession')
+        .spyOn(ctx.engine, '_prepareForLoadGameSession')
         .mockResolvedValue(undefined);
       executeSpy = jest
-        .spyOn(gameEngine, '_executeLoadAndRestore')
+        .spyOn(ctx.engine, '_executeLoadAndRestore')
         .mockResolvedValue({
           success: true,
           data: typedMockSaveData,
         });
       finalizeSpy = jest
-        .spyOn(gameEngine, '_finalizeLoadSuccess')
+        .spyOn(ctx.engine, '_finalizeLoadSuccess')
         .mockResolvedValue({
           success: true,
           data: typedMockSaveData,
         });
       handleFailureSpy = jest
-        .spyOn(gameEngine, '_handleLoadFailure')
+        .spyOn(ctx.engine, '_handleLoadFailure')
         .mockImplementation(async (error) => {
           const errorMsg =
             error instanceof Error ? error.message : String(error);
@@ -89,13 +48,13 @@ describe('GameEngine', () => {
             data: null,
           };
         });
-      testBed.resetMocks();
+      ctx.bed.resetMocks();
     });
 
     it('should successfully orchestrate loading a game and call helpers in order', async () => {
-      const result = await gameEngine.loadGame(SAVE_ID);
+      const result = await ctx.engine.loadGame(SAVE_ID);
 
-      expect(testBed.mocks.logger.debug).toHaveBeenCalledWith(
+      expect(ctx.bed.mocks.logger.debug).toHaveBeenCalledWith(
         `GameEngine: loadGame called for identifier: ${SAVE_ID}`
       );
       expect(prepareSpy).toHaveBeenCalledWith(SAVE_ID);
@@ -117,11 +76,11 @@ describe('GameEngine', () => {
         return { success: false, error: String(error), data: null };
       });
 
-      const result = await gameEngine.loadGame(SAVE_ID);
+      const result = await ctx.engine.loadGame(SAVE_ID);
 
       expect(prepareSpy).toHaveBeenCalledWith(SAVE_ID);
       expect(executeSpy).toHaveBeenCalledWith(SAVE_ID);
-      expect(testBed.mocks.logger.warn).toHaveBeenCalledWith(
+      expect(ctx.bed.mocks.logger.warn).toHaveBeenCalledWith(
         `GameEngine: Load/restore operation reported failure for "${SAVE_ID}".`
       );
       expect(finalizeSpy).not.toHaveBeenCalled();
@@ -142,11 +101,11 @@ describe('GameEngine', () => {
         return { success: false, error: String(error), data: null };
       });
 
-      const result = await gameEngine.loadGame(SAVE_ID);
+      const result = await ctx.engine.loadGame(SAVE_ID);
 
       expect(prepareSpy).toHaveBeenCalledWith(SAVE_ID);
       expect(executeSpy).toHaveBeenCalledWith(SAVE_ID);
-      expect(testBed.mocks.logger.warn).toHaveBeenCalledWith(
+      expect(ctx.bed.mocks.logger.warn).toHaveBeenCalledWith(
         `GameEngine: Load/restore operation reported failure for "${SAVE_ID}".`
       );
       expect(finalizeSpy).not.toHaveBeenCalled();
@@ -158,45 +117,42 @@ describe('GameEngine', () => {
       });
     });
 
-    it('should handle GamePersistenceService unavailability (guard clause) and dispatch UI event directly', async () => {
-      const localBed = createGameEngineTestBed({
-        [tokens.GamePersistenceService]: null,
-      });
-      const localGameEngine = localBed.engine; // GPS is null
+    it.each([
+      [
+        'GamePersistenceService',
+        tokens.GamePersistenceService,
+        'GamePersistenceService is not available. Cannot load game.',
+      ],
+    ])(
+      'should handle %s unavailability (guard clause) and dispatch UI event directly',
+      async (_name, token, msg) => {
+        const localBed = createGameEngineTestBed({ [token]: null });
+        const localGameEngine = localBed.engine;
+        localBed.resetMocks();
 
-      localBed.resetMocks();
+        const result = await localGameEngine.loadGame(SAVE_ID);
 
-      const rawErrorMsg =
-        'GamePersistenceService is not available. Cannot load game.';
-      const result = await localGameEngine.loadGame(SAVE_ID);
+        expect(localBed.mocks.logger.error).toHaveBeenCalledWith(
+          `GameEngine.loadGame: ${msg}`
+        );
+        expectDispatchSequence(localBed.mocks.safeEventDispatcher.dispatch, [
+          ENGINE_OPERATION_FAILED_UI,
+          { errorMessage: msg, errorTitle: 'Load Failed' },
+        ]);
+        expect(result).toEqual({ success: false, error: msg, data: null });
 
-      expect(localBed.mocks.logger.error).toHaveBeenCalledWith(
-        `GameEngine.loadGame: ${rawErrorMsg}`
-      );
-      expectDispatchSequence(localBed.mocks.safeEventDispatcher.dispatch, [
-        ENGINE_OPERATION_FAILED_UI,
-        {
-          errorMessage: rawErrorMsg,
-          errorTitle: 'Load Failed',
-        },
-      ]);
-      expect(result).toEqual({
-        success: false,
-        error: rawErrorMsg,
-        data: null,
-      });
-
-      await localBed.cleanup();
-    });
+        await localBed.cleanup();
+      }
+    );
 
     it('should use _handleLoadFailure when _prepareForLoadGameSession throws an error', async () => {
       const prepareError = new Error('Prepare failed');
       prepareSpy.mockRejectedValue(prepareError);
 
-      const result = await gameEngine.loadGame(SAVE_ID);
+      const result = await ctx.engine.loadGame(SAVE_ID);
 
       expect(prepareSpy).toHaveBeenCalledWith(SAVE_ID);
-      expect(testBed.mocks.logger.error).toHaveBeenCalledWith(
+      expect(ctx.bed.mocks.logger.error).toHaveBeenCalledWith(
         `GameEngine: Overall catch in loadGame for identifier "${SAVE_ID}". Error: ${prepareError.message || String(prepareError)}`,
         prepareError
       );
@@ -214,11 +170,11 @@ describe('GameEngine', () => {
       const executeError = new Error('Execute failed');
       executeSpy.mockRejectedValue(executeError);
 
-      const result = await gameEngine.loadGame(SAVE_ID);
+      const result = await ctx.engine.loadGame(SAVE_ID);
 
       expect(prepareSpy).toHaveBeenCalledWith(SAVE_ID);
       expect(executeSpy).toHaveBeenCalledWith(SAVE_ID);
-      expect(testBed.mocks.logger.error).toHaveBeenCalledWith(
+      expect(ctx.bed.mocks.logger.error).toHaveBeenCalledWith(
         `GameEngine: Overall catch in loadGame for identifier "${SAVE_ID}". Error: ${executeError.message || String(executeError)}`,
         executeError
       );
@@ -236,12 +192,12 @@ describe('GameEngine', () => {
       finalizeSpy.mockRejectedValue(finalizeError); // _executeLoadAndRestore is fine
       executeSpy.mockResolvedValue({ success: true, data: typedMockSaveData });
 
-      const result = await gameEngine.loadGame(SAVE_ID);
+      const result = await ctx.engine.loadGame(SAVE_ID);
 
       expect(prepareSpy).toHaveBeenCalledWith(SAVE_ID);
       expect(executeSpy).toHaveBeenCalledWith(SAVE_ID);
       expect(finalizeSpy).toHaveBeenCalledWith(typedMockSaveData, SAVE_ID);
-      expect(testBed.mocks.logger.error).toHaveBeenCalledWith(
+      expect(ctx.bed.mocks.logger.error).toHaveBeenCalledWith(
         `GameEngine: Overall catch in loadGame for identifier "${SAVE_ID}". Error: ${finalizeError.message || String(finalizeError)}`,
         finalizeError
       );

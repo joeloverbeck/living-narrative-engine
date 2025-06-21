@@ -68,13 +68,12 @@ describe('EntityManager Test Helpers: TestBed & TestData', () => {
         expect(EntityManager).toHaveBeenCalledTimes(1);
         // FIX: The constructor now receives a 5th `options` argument, which is `{}` by default.
         // We update the test to expect this new argument.
-        expect(EntityManager).toHaveBeenCalledWith(
-          testBed.mocks.registry,
-          testBed.mocks.validator,
-          testBed.mocks.logger,
-          testBed.mocks.eventDispatcher,
-          expect.any(Object) // It receives an options object, which is {} by default.
-        );
+        expect(EntityManager).toHaveBeenCalledWith({
+          registry: testBed.mocks.registry,
+          validator: testBed.mocks.validator,
+          logger: testBed.mocks.logger,
+          dispatcher: testBed.mocks.eventDispatcher,
+        });
       });
 
       it('should provide a public property `entityManager` with the SUT instance', () => {
@@ -158,22 +157,22 @@ describe('EntityManager Test Helpers: TestBed & TestData', () => {
     });
 
     describe('cleanup()', () => {
-      it('should call clearAll() on its entityManager instance', () => {
+      it('should call clearAll() on its entityManager instance', async () => {
         // FIX: The entityManager instance from the mocked module already has mock methods.
         // We directly assert on that mock method.
         const clearAllMethod = testBed.entityManager.clearAll;
 
-        testBed.cleanup();
+        await testBed.cleanup();
 
         expect(clearAllMethod).toHaveBeenCalledTimes(1);
       });
 
-      it('should clear all mocks via jest.clearAllMocks()', () => {
+      it('should clear all mocks via jest.clearAllMocks()', async () => {
         const { logger } = testBed.mocks;
         logger.info('test call');
         expect(logger.info).toHaveBeenCalledTimes(1);
 
-        testBed.cleanup();
+        await testBed.cleanup();
 
         // jest.clearAllMocks() resets the counter.
         expect(logger.info).toHaveBeenCalledTimes(0);

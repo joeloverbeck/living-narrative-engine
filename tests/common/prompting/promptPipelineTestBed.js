@@ -2,9 +2,10 @@
  * @file Provides a minimal test bed for creating AIPromptPipeline instances with mocked dependencies.
  * @see tests/common/prompting/promptPipelineTestBed.js
  */
+/* eslint-env jest */
 
-import { jest } from '@jest/globals';
 import { AIPromptPipeline } from '../../../src/prompting/AIPromptPipeline.js';
+import { expect } from '@jest/globals';
 import {
   createMockLogger,
   createMockLLMAdapter,
@@ -12,23 +13,15 @@ import {
   createMockAIPromptContentProvider,
   createMockPromptBuilder,
   createMockEntity,
-} from '../mockFactories.js';
+} from '../mockFactories';
+import BaseTestBed from '../baseTestBed.js';
+import { describeSuiteWithHooks } from '../describeSuite.js';
 
 /**
  * @description Utility class for unit tests that need an AIPromptPipeline with common mocks.
  * @class
  */
-export class AIPromptPipelineTestBed {
-  /** @type {jest.Mocked<import('../../src/turns/interfaces/ILLMAdapter.js').ILLMAdapter>} */
-  llmAdapter;
-  /** @type {jest.Mocked<import('../../src/turns/interfaces/IAIGameStateProvider.js').IAIGameStateProvider>} */
-  gameStateProvider;
-  /** @type {jest.Mocked<import('../../src/turns/interfaces/IAIPromptContentProvider.js').IAIPromptContentProvider>} */
-  promptContentProvider;
-  /** @type {jest.Mocked<import('../../src/interfaces/IPromptBuilder.js').IPromptBuilder>} */
-  promptBuilder;
-  /** @type {jest.Mocked<import('../../src/interfaces/coreServices.js').ILogger>} */
-  logger;
+export class AIPromptPipelineTestBed extends BaseTestBed {
   /** @type {import('../../src/entities/entity.js').default} */
   defaultActor;
   /** @type {import('../../src/turns/interfaces/ITurnContext.js').ITurnContext} */
@@ -37,14 +30,24 @@ export class AIPromptPipelineTestBed {
   defaultActions;
 
   constructor() {
-    this.llmAdapter = createMockLLMAdapter();
-    this.gameStateProvider = createMockAIGameStateProvider();
-    this.promptContentProvider = createMockAIPromptContentProvider();
-    this.promptBuilder = createMockPromptBuilder();
-    this.logger = createMockLogger();
+    super();
+    this.initializeFromFactories({
+      llmAdapter: createMockLLMAdapter,
+      gameStateProvider: createMockAIGameStateProvider,
+      promptContentProvider: createMockAIPromptContentProvider,
+      promptBuilder: createMockPromptBuilder,
+      logger: createMockLogger,
+    });
     this.defaultActor = createMockEntity('actor');
     this.defaultContext = {};
     this.defaultActions = [];
+    /** @private */
+    this._successOptions = {
+      llmId: 'llm-id',
+      gameState: {},
+      promptData: {},
+      finalPrompt: 'PROMPT',
+    };
   }
 
   /**
@@ -55,11 +58,11 @@ export class AIPromptPipelineTestBed {
    */
   createPipeline() {
     return new AIPromptPipeline({
-      llmAdapter: this.llmAdapter,
-      gameStateProvider: this.gameStateProvider,
-      promptContentProvider: this.promptContentProvider,
-      promptBuilder: this.promptBuilder,
-      logger: this.logger,
+      llmAdapter: this.mocks.llmAdapter,
+      gameStateProvider: this.mocks.gameStateProvider,
+      promptContentProvider: this.mocks.promptContentProvider,
+      promptBuilder: this.mocks.promptBuilder,
+      logger: this.mocks.logger,
     });
   }
 
@@ -77,6 +80,21 @@ export class AIPromptPipelineTestBed {
   }
 
   /**
+   * Convenience wrapper that delegates to the {@code generate} method using the
+   * default actor, context and actions provided by the test bed.
+   *
+   * @description Convenience wrapper over generate using default values.
+   * @returns {Promise<string>} The generated prompt string.
+   */
+  async generateDefault() {
+    return this.generate(
+      this.defaultActor,
+      this.defaultContext,
+      this.defaultActions
+    );
+  }
+
+  /**
    * Returns the dependency object used to construct the pipeline.
    *
    * @returns {{
@@ -89,19 +107,12 @@ export class AIPromptPipelineTestBed {
    */
   getDependencies() {
     return {
-      llmAdapter: this.llmAdapter,
-      gameStateProvider: this.gameStateProvider,
-      promptContentProvider: this.promptContentProvider,
-      promptBuilder: this.promptBuilder,
-      logger: this.logger,
+      llmAdapter: this.mocks.llmAdapter,
+      gameStateProvider: this.mocks.gameStateProvider,
+      promptContentProvider: this.mocks.promptContentProvider,
+      promptBuilder: this.mocks.promptBuilder,
+      logger: this.mocks.logger,
     };
-  }
-
-  /**
-   * Clears all jest mocks used by this test bed.
-   */
-  cleanup() {
-    jest.clearAllMocks();
   }
 
   /**
@@ -119,11 +130,79 @@ export class AIPromptPipelineTestBed {
     promptData = {},
     finalPrompt = 'PROMPT',
   } = {}) {
-    this.llmAdapter.getCurrentActiveLlmId.mockResolvedValue(llmId);
-    this.gameStateProvider.buildGameState.mockResolvedValue(gameState);
-    this.promptContentProvider.getPromptData.mockResolvedValue(promptData);
-    this.promptBuilder.build.mockResolvedValue(finalPrompt);
+    this._successOptions = { llmId, gameState, promptData, finalPrompt };
+    this.mocks.llmAdapter.getCurrentActiveLlmId.mockResolvedValue(llmId);
+    this.mocks.gameStateProvider.buildGameState.mockResolvedValue(gameState);
+    this.mocks.promptContentProvider.getPromptData.mockResolvedValue(
+      promptData
+    );
+    this.mocks.promptBuilder.build.mockResolvedValue(finalPrompt);
+  }
+
+  /**
+   * Generates a prompt and verifies that all mocked dependencies were called
+   * with the values configured by setupMockSuccess.
+   *
+   * @param {object} params - Options for generation and assertions.
+   * @param {import('../../../src/entities/entity.js').default} params.actor - Actor for the prompt.
+   * @param {import('../../../src/turns/interfaces/ITurnContext.js').ITurnContext} params.context - Turn context.
+   * @param {import('../../../src/turns/dtos/actionComposite.js').ActionComposite[]} params.actions - Available actions.
+   * @param {string} params.expectedPrompt - Expected final prompt string.
+   * @param {string} [params.llmId] - Optional LLM ID override.
+   * @param {object} [params.gameState] - Optional game state override.
+   * @param {object} [params.promptData] - Optional prompt data override.
+   * @param {string} [params.finalPrompt] - Optional final prompt override.
+   * @returns {Promise<void>} Resolves when assertions pass.
+   */
+  async expectSuccessfulGeneration({
+    actor,
+    context,
+    actions,
+    expectedPrompt,
+    llmId,
+    gameState,
+    promptData,
+    finalPrompt,
+  }) {
+    this.setupMockSuccess({ llmId, gameState, promptData, finalPrompt });
+    const prompt = await this.generate(actor, context, actions);
+    expect(prompt).toBe(expectedPrompt);
+
+    const {
+      llmId: _llmId,
+      gameState: _gameState,
+      promptData: _promptData,
+    } = this._successOptions;
+    expect(this.llmAdapter.getCurrentActiveLlmId).toHaveBeenCalledTimes(1);
+    expect(this.gameStateProvider.buildGameState).toHaveBeenCalledWith(
+      actor,
+      context,
+      this.logger
+    );
+    expect(this.promptContentProvider.getPromptData).toHaveBeenCalledWith(
+      expect.objectContaining({ ..._gameState, availableActions: actions }),
+      this.logger
+    );
+    expect(this.promptBuilder.build).toHaveBeenCalledWith(_llmId, _promptData);
   }
 }
+
+/**
+ * Defines a test suite with automatic {@link AIPromptPipelineTestBed} setup.
+ *
+ * @param {string} title - Suite title passed to `describe`.
+ * @param {(getBed: () => AIPromptPipelineTestBed) => void} suiteFn - Callback
+ *   containing the tests. Receives a getter for the active test bed.
+ * @returns {void}
+ */
+function describeAIPromptPipelineSuite(title, suiteFn) {
+  describeSuiteWithHooks(title, AIPromptPipelineTestBed, suiteFn, {
+    beforeEachHook(bed) {
+      bed.setupMockSuccess();
+    },
+  });
+}
+
+export { describeAIPromptPipelineSuite };
 
 export default AIPromptPipelineTestBed;

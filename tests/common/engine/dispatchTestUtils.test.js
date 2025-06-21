@@ -22,6 +22,17 @@ describe('dispatchTestUtils', () => {
       expect(() => expectDispatchSequence(mock, eventA, eventB)).not.toThrow();
     });
 
+    it('accepts a single array of events', () => {
+      const mock = jest.fn();
+      const events = [
+        ['eventA', { a: 1 }],
+        ['eventB', { b: 2 }],
+      ];
+      events.forEach((e) => mock(...e));
+
+      expect(() => expectDispatchSequence(mock, events)).not.toThrow();
+    });
+
     it('throws when sequences differ', () => {
       const mock = jest.fn();
       mock('eventA', { a: 1 });

@@ -18,27 +18,24 @@ import {
 export const DEFAULT_ACTIVE_WORLD_FOR_SAVE = 'TestWorldForSaving';
 
 /**
- * Compares dispatch mock calls with an expected array of
- * [eventId, payload] pairs.
- *
- * @param {import('@jest/globals').Mock} mock - Mocked dispatch function.
- * @param {Array<[string, any]>} expected - Expected calls.
- * @returns {void}
- */
-export function expectDispatchCalls(mock, expected) {
-  expect(mock.mock.calls).toEqual(expected);
-}
-
-/**
  * Asserts that dispatch calls match the provided event sequence.
  * Usage: expectDispatchSequence(mock, [id, payload], [id, payload], ...)
+ * or expectDispatchSequence(mock, [[id, payload], [id, payload], ...])
  *
  * @param {import('@jest/globals').Mock} mock - Mocked dispatch function.
- * @param {...Array} events - Sequence of [eventId, payload] pairs.
+ * @param {...Array} events - Sequence of [eventId, payload] pairs or a single
+ *   array of such pairs.
  * @returns {void}
  */
 export function expectDispatchSequence(mock, ...events) {
-  expect(mock.mock.calls).toEqual(events);
+  const expected =
+    events.length === 1 &&
+    Array.isArray(events[0]) &&
+    Array.isArray(events[0][0])
+      ? events[0]
+      : events;
+
+  expect(mock.mock.calls).toEqual(expected);
 }
 
 /**
@@ -91,9 +88,11 @@ export function expectEngineStatus(engine, expectedStatus) {
   expect(engine.getEngineStatus()).toEqual(expectedStatus);
 }
 
+export { expectDispatchSequence as expectDispatchCalls };
+
 export default {
-  expectDispatchCalls,
   expectDispatchSequence,
   buildSaveDispatches,
   expectEngineStatus,
+  expectDispatchCalls: expectDispatchSequence,
 };

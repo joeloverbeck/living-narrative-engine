@@ -113,5 +113,46 @@ describe('contextBuilders', () => {
         exitDetails: null,
       });
     });
+
+    it('returns undefined blocker when actor has no location', () => {
+      mockEntityManager.getComponentData.mockReturnValue(null);
+      const result = buildDirectionContext(
+        'actor1',
+        'east',
+        mockEntityManager,
+        mockLogger
+      );
+      expect(getExitByDirection).not.toHaveBeenCalled();
+      expect(result).toEqual({
+        type: 'direction',
+        id: null,
+        direction: 'east',
+        components: null,
+        blocker: undefined,
+        exitDetails: null,
+      });
+    });
+
+    it('maps missing blocker to null', () => {
+      mockEntityManager.getComponentData.mockReturnValue({
+        locationId: 'loc1',
+      });
+      const exitObj = { some: 'data' };
+      getExitByDirection.mockReturnValue(exitObj);
+      const result = buildDirectionContext(
+        'actor1',
+        'west',
+        mockEntityManager,
+        mockLogger
+      );
+      expect(result).toEqual({
+        type: 'direction',
+        id: null,
+        direction: 'west',
+        components: null,
+        blocker: null,
+        exitDetails: exitObj,
+      });
+    });
   });
 });

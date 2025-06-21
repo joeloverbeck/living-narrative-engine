@@ -20,6 +20,7 @@ import ComponentCleaningService, {
 import receptionistDef from '../../data/mods/isekai/entities/definitions/receptionist.character.json';
 import { webcrypto } from 'crypto';
 import { createMockSaveValidationService } from '../unit/testUtils.js';
+import { createMemoryStorageProvider } from '../common/mockFactories';
 
 beforeAll(() => {
   if (typeof window !== 'undefined') {
@@ -40,29 +41,6 @@ const makeLogger = () => ({
   error: jest.fn(),
   debug: jest.fn(),
 });
-
-/**
- * Creates an in-memory storage provider implementation for testing.
- *
- * @returns {import('../../src/interfaces/IStorageProvider.js').IStorageProvider} In-memory provider
- */
-const createMemoryStorageProvider = () => {
-  const files = {};
-  return {
-    writeFileAtomically: jest.fn(async (path, data) => {
-      files[path] = data;
-      return { success: true };
-    }),
-    readFile: jest.fn(async (path) => files[path]),
-    listFiles: jest.fn(async () => Object.keys(files)),
-    deleteFile: jest.fn(async (path) => {
-      delete files[path];
-      return { success: true };
-    }),
-    fileExists: jest.fn(async (path) => path in files),
-    ensureDirectoryExists: jest.fn(async () => {}),
-  };
-};
 
 const makeEntity = (id, def) => ({
   id,

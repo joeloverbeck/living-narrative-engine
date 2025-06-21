@@ -1,62 +1,18 @@
 // tests/engine/gameEngine.test.js
 
-import {
-  afterEach,
-  beforeEach,
-  describe,
-  expect,
-  it,
-  jest,
-} from '@jest/globals';
+import { describe, expect, it } from '@jest/globals';
 import GameEngine from '../../../src/engine/gameEngine.js';
 import { tokens } from '../../../src/dependencyInjection/tokens.js';
-import { createGameEngineTestBed } from '../../common/engine/gameEngineTestBed.js';
-import {
-  expectDispatchSequence,
-  buildSaveDispatches,
-  DEFAULT_ACTIVE_WORLD_FOR_SAVE,
-  expectEngineStatus,
-} from '../../common/engine/dispatchTestUtils.js';
-import {
-  // --- Import new UI Event IDs ---
-  ENGINE_INITIALIZING_UI,
-  ENGINE_READY_UI,
-  ENGINE_OPERATION_FAILED_UI,
-  ENGINE_STOPPED_UI,
-  REQUEST_SHOW_SAVE_GAME_UI,
-  REQUEST_SHOW_LOAD_GAME_UI,
-  CANNOT_SAVE_GAME_INFO,
-} from '../../../src/constants/eventIds.js';
+import { describeEngineSuite } from '../../common/engine/gameEngineTestBed.js';
+import '../../common/engine/engineTestTypedefs.js';
 
-// --- JSDoc Type Imports for Mocks ---
-/** @typedef {import('../../../src/interfaces/coreServices.js').ILogger} ILogger */
-/** @typedef {import('../../../src/dependencyInjection/appContainer.js').default} AppContainer */
-/** @typedef {import('../../../src/interfaces/IEntityManager.js').IEntityManager} IEntityManager */
-/** @typedef {import('../../../src/turns/interfaces/ITurnManager.js').ITurnManager} ITurnManager */
-/** @typedef {import('../../../src/interfaces/IGamePersistenceService.js').IGamePersistenceService} IGamePersistenceService */
-/** @typedef {import('../../../src/interfaces/IPlaytimeTracker.js').default} IPlaytimeTracker */
-/** @typedef {import('../../../src/interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
-/** @typedef {import('../../../src/interfaces/IInitializationService.js').IInitializationService} IInitializationService */
-/** @typedef {import('../../../src/interfaces/ISaveLoadService.js').SaveGameStructure} SaveGameStructure */
-
-describe('GameEngine', () => {
-  let testBed;
-  let gameEngine; // Instance of GameEngine
-
-  const MOCK_WORLD_NAME = 'TestWorld';
-
-  beforeEach(() => {
-    testBed = createGameEngineTestBed();
-    jest.spyOn(console, 'error').mockImplementation(() => {});
-  });
-
-  afterEach(async () => {
-    await testBed.cleanup();
-  });
-
+describeEngineSuite('GameEngine', (ctx) => {
   describe('Constructor', () => {
     it('should instantiate and resolve all core services successfully', () => {
-      gameEngine = new GameEngine({ container: testBed.env.mockContainer }); // Instantiation for this test
+      const testBed = ctx.bed;
+      new GameEngine({
+        container: testBed.env.mockContainer,
+      }); // Instantiation for this test
       expect(testBed.env.mockContainer.resolve).toHaveBeenCalledWith(
         tokens.ILogger
       );
@@ -78,6 +34,7 @@ describe('GameEngine', () => {
     });
 
     it('should throw an error if ILogger cannot be resolved', () => {
+      const testBed = ctx.bed;
       testBed.withTokenOverride(tokens.ILogger, () => {
         throw new Error('Logger failed to resolve');
       });
@@ -98,6 +55,7 @@ describe('GameEngine', () => {
       ['PlaytimeTracker', tokens.PlaytimeTracker],
       ['ISafeEventDispatcher', tokens.ISafeEventDispatcher],
     ])('should throw an error if %s cannot be resolved', (_, failingToken) => {
+      const testBed = ctx.bed;
       const resolutionError = new Error(`${String(failingToken)} failed`);
       testBed.withTokenOverride(failingToken, () => {
         throw resolutionError;

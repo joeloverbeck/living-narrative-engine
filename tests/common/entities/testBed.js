@@ -5,7 +5,6 @@
  * @see tests/common/entities/testBed.js
  */
 
-import { jest } from '@jest/globals';
 import EntityManager from '../../../src/entities/entityManager.js';
 import EntityDefinition from '../../../src/entities/entityDefinition.js';
 import {
@@ -21,7 +20,9 @@ import {
   createMockSchemaValidator,
   createMockSafeEventDispatcher,
   createSimpleMockDataRegistry,
-} from '../mockFactories.js';
+} from '../mockFactories';
+import BaseTestBed from '../baseTestBed.js';
+import { describeSuite } from '../describeSuite.js';
 
 // --- Centralized Mocks (REMOVED) ---
 // Mock creation functions are now imported.
@@ -112,13 +113,12 @@ export const TestData = {
  * Creates mocks, instantiates the manager, and provides helper methods
  * to streamline test writing.
  */
-export class TestBed {
+export class TestBed extends BaseTestBed {
   /**
    * Collection of all mocks for easy access in tests.
    *
    * @type {{registry: ReturnType<typeof createSimpleMockDataRegistry>, validator: ReturnType<typeof createMockSchemaValidator>, logger: ReturnType<typeof createMockLogger>, eventDispatcher: ReturnType<typeof createMockSafeEventDispatcher>}}
    */
-  mocks;
 
   /**
    * The instance of EntityManager under test, pre-configured with mocks.
@@ -134,20 +134,21 @@ export class TestBed {
    * @param {Function} [entityManagerOptions.idGenerator] - A mock ID generator function.
    */
   constructor(entityManagerOptions = {}) {
-    this.mocks = {
-      registry: createSimpleMockDataRegistry(),
-      validator: createMockSchemaValidator(),
-      logger: createMockLogger(),
-      eventDispatcher: createMockSafeEventDispatcher(),
-    };
+    const { mocks } = BaseTestBed.fromFactories({
+      registry: createSimpleMockDataRegistry,
+      validator: createMockSchemaValidator,
+      logger: createMockLogger,
+      eventDispatcher: createMockSafeEventDispatcher,
+    });
+    super(mocks);
 
-    this.entityManager = new EntityManager(
-      this.mocks.registry,
-      this.mocks.validator,
-      this.mocks.logger,
-      this.mocks.eventDispatcher,
-      entityManagerOptions
-    );
+    this.entityManager = new EntityManager({
+      registry: this.mocks.registry,
+      validator: this.mocks.validator,
+      logger: this.mocks.logger,
+      dispatcher: this.mocks.eventDispatcher,
+      ...entityManagerOptions,
+    });
   }
 
   /**
@@ -162,13 +163,12 @@ export class TestBed {
   }
 
   /**
-   * Clears all mocks and the entity manager's internal state.
-   * This should be called in an `afterEach` block to ensure test isolation.
+   * Clears mock implementations and resets entity manager state after base cleanup.
+   *
+   * @protected
+   * @returns {Promise<void>} Promise resolving when entity cleanup is complete.
    */
-  cleanup() {
-    // Clear call history on all mocks
-    jest.clearAllMocks();
-
+  async _afterCleanup() {
     // Reset specific mock implementations that tests commonly override
     this.mocks.registry.getEntityDefinition.mockReset();
     this.mocks.validator.validate.mockReset();
@@ -181,6 +181,7 @@ export class TestBed {
     ) {
       this.entityManager.clearAll();
     }
+    await super._afterCleanup();
   }
 
   /**
@@ -226,16 +227,7 @@ export class TestBed {
  * @returns {void}
  */
 export function describeEntityManagerSuite(title, suiteFn) {
-  describe(title, () => {
-    let tb;
-    beforeEach(() => {
-      tb = new TestBed();
-    });
-    afterEach(() => {
-      tb.cleanup();
-    });
-    suiteFn(() => tb);
-  });
+  describeSuite(title, TestBed, suiteFn);
 }
 
 export default TestBed;

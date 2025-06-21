@@ -1,103 +1,45 @@
 /* eslint-env node */
-import { describe, beforeEach, afterEach, test, expect } from '@jest/globals';
+import { beforeEach, test, expect } from '@jest/globals';
 import { AIPromptPipeline } from '../../../src/prompting/AIPromptPipeline.js';
-import { AIPromptPipelineTestBed } from '../../common/prompting/promptPipelineTestBed.js';
+import {
+  describeAIPromptPipelineSuite,
+  AIPromptPipelineTestBed,
+} from '../../common/prompting/promptPipelineTestBed.js';
+import { buildMissingDependencyCases } from '../../common/constructorValidationHelpers.js';
 
-describe('AIPromptPipeline', () => {
+describeAIPromptPipelineSuite('AIPromptPipeline', (getBed) => {
   /** @type {AIPromptPipelineTestBed} */
   let testBed;
 
   beforeEach(() => {
-    testBed = new AIPromptPipelineTestBed();
-
-    // Default success paths
-    testBed.setupMockSuccess();
-  });
-
-  afterEach(() => {
-    testBed.cleanup();
+    testBed = getBed();
   });
 
   describe('constructor validation', () => {
-    test.each([
-      [
-        'llmAdapter missing',
-        (d) => {
-          delete d.llmAdapter;
-        },
-        /ILLMAdapter/,
-      ],
-      [
-        'llmAdapter.getAIDecision missing',
-        (d) => {
-          delete d.llmAdapter.getAIDecision;
-        },
-        /ILLMAdapter/,
-      ],
-      [
-        'llmAdapter.getCurrentActiveLlmId missing',
-        (d) => {
-          delete d.llmAdapter.getCurrentActiveLlmId;
-        },
-        /ILLMAdapter/,
-      ],
-      [
-        'gameStateProvider missing',
-        (d) => {
-          delete d.gameStateProvider;
-        },
-        /IAIGameStateProvider/,
-      ],
-      [
-        'gameStateProvider.buildGameState missing',
-        (d) => {
-          delete d.gameStateProvider.buildGameState;
-        },
-        /IAIGameStateProvider/,
-      ],
-      [
-        'promptContentProvider missing',
-        (d) => {
-          delete d.promptContentProvider;
-        },
-        /IAIPromptContentProvider/,
-      ],
-      [
-        'promptContentProvider.getPromptData missing',
-        (d) => {
-          delete d.promptContentProvider.getPromptData;
-        },
-        /IAIPromptContentProvider/,
-      ],
-      [
-        'promptBuilder missing',
-        (d) => {
-          delete d.promptBuilder;
-        },
-        /IPromptBuilder/,
-      ],
-      [
-        'promptBuilder.build missing',
-        (d) => {
-          delete d.promptBuilder.build;
-        },
-        /IPromptBuilder/,
-      ],
-      [
-        'logger missing',
-        (d) => {
-          delete d.logger;
-        },
-        /ILogger/,
-      ],
-      [
-        'logger.info missing',
-        (d) => {
-          delete d.logger.info;
-        },
-        /ILogger/,
-      ],
-    ])('throws when %s', (_desc, mutate, regex) => {
+    const spec = {
+      llmAdapter: {
+        error: /ILLMAdapter/,
+        methods: ['getAIDecision', 'getCurrentActiveLlmId'],
+      },
+      gameStateProvider: {
+        error: /IAIGameStateProvider/,
+        methods: ['buildGameState'],
+      },
+      promptContentProvider: {
+        error: /IAIPromptContentProvider/,
+        methods: ['getPromptData'],
+      },
+      promptBuilder: {
+        error: /IPromptBuilder/,
+        methods: ['build'],
+      },
+      logger: { error: /ILogger/, methods: ['info'] },
+    };
+    const cases = buildMissingDependencyCases(
+      () => testBed.getDependencies(),
+      spec
+    );
+    test.each(cases)('throws when %s', (_desc, mutate, regex) => {
       const deps = testBed.getDependencies();
       mutate(deps);
       expect(() => new AIPromptPipeline(deps)).toThrow(regex);
@@ -109,28 +51,15 @@ describe('AIPromptPipeline', () => {
     const context = testBed.defaultContext;
     const actions = [...testBed.defaultActions, { id: 'a1' }];
 
-    testBed.setupMockSuccess({
+    await testBed.expectSuccessfulGeneration({
+      actor,
+      context,
+      actions,
+      expectedPrompt: 'FINAL',
       llmId: 'llm1',
       gameState: { state: true },
       promptData: { pd: true },
       finalPrompt: 'FINAL',
-    });
-
-    const prompt = await testBed.generate(actor, context, actions);
-
-    expect(prompt).toBe('FINAL');
-    expect(testBed.llmAdapter.getCurrentActiveLlmId).toHaveBeenCalledTimes(1);
-    expect(testBed.gameStateProvider.buildGameState).toHaveBeenCalledWith(
-      actor,
-      context,
-      testBed.logger
-    );
-    expect(testBed.promptContentProvider.getPromptData).toHaveBeenCalledWith(
-      expect.objectContaining({ state: true, availableActions: actions }),
-      testBed.logger
-    );
-    expect(testBed.promptBuilder.build).toHaveBeenCalledWith('llm1', {
-      pd: true,
     });
   });
 
@@ -148,13 +77,7 @@ describe('AIPromptPipeline', () => {
     },
   ])('generatePrompt rejects when %s', async ({ mutate, error }) => {
     mutate();
-    await expect(
-      testBed.generate(
-        testBed.defaultActor,
-        testBed.defaultContext,
-        testBed.defaultActions
-      )
-    ).rejects.toThrow(error);
+    await expect(testBed.generateDefault()).rejects.toThrow(error);
   });
 
   test('availableActions are attached to DTO sent to getPromptData', async () => {
