@@ -11,6 +11,7 @@ import OperationInterpreter from '../../../src/logic/operationInterpreter.js';
 import JsonLogicEvaluationService from '../../../src/logic/jsonLogicEvaluationService.js';
 import SystemLogicInterpreter from '../../../src/logic/systemLogicInterpreter.js';
 import SimpleEntityManager from '../entities/simpleEntityManager.js';
+import { createMockLogger } from '../mockFactories/index.js';
 
 /**
  * Creates a complete test environment for system logic rule testing.
@@ -31,12 +32,9 @@ export function createRuleTestEnvironment({
   dataRegistry = null,
 }) {
   // Create logger if not provided
-  const testLogger = logger || {
-    debug: jest.fn(),
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
-  };
+
+  const testLogger = logger || createMockLogger();
+
 
   // Create data registry if not provided
   const testDataRegistry = dataRegistry || {
@@ -133,20 +131,6 @@ export function createRuleTestEnvironment({
   };
 
   return env;
-}
-
-/**
- * Creates a mock logger for testing.
- *
- * @returns {object} Mock logger with jest functions
- */
-export function createMockLogger() {
-  return {
-    debug: jest.fn(),
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
-  };
 }
 
 /**
