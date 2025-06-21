@@ -1,9 +1,8 @@
 // src/tests/turns/turnManager.advanceTurn.roundStart.test.js
 // --- FILE START (Entire file content with corrected assertions) ---
 
-import { afterEach, beforeEach, expect, jest, test } from '@jest/globals';
+import { beforeEach, expect, jest, test } from '@jest/globals';
 import { describeTurnManagerSuite } from '../../common/turns/turnManagerTestBed.js';
-import { ACTOR_COMPONENT_ID } from '../../../src/constants/componentIds.js';
 import {
   SYSTEM_ERROR_OCCURRED_ID,
   TURN_PROCESSING_STARTED,
@@ -18,7 +17,6 @@ describeTurnManagerSuite(
     let advanceTurnSpy; // General spy for advanceTurn
 
     beforeEach(() => {
-      jest.clearAllMocks();
       testBed = getBed();
 
       // Reset mock state
@@ -50,10 +48,6 @@ describeTurnManagerSuite(
       testBed.mocks.logger.debug.mockClear();
       testBed.mocks.logger.warn.mockClear();
       testBed.mocks.logger.error.mockClear();
-    });
-
-    afterEach(async () => {
-      jest.restoreAllMocks();
     });
 
     // --- Test Cases ---

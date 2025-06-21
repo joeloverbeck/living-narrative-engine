@@ -1,7 +1,7 @@
 // src/tests/turns/turnManager.advanceTurn.queueNotEmpty.test.js
 // --- FILE START (Entire file content as requested, with corrections) ---
 
-import { afterEach, beforeEach, expect, jest, test } from '@jest/globals';
+import { beforeEach, expect, jest, test } from '@jest/globals';
 import {
   describeTurnManagerSuite,
   TurnManagerTestBed,
@@ -22,7 +22,6 @@ describeTurnManagerSuite(
 
     beforeEach(async () => {
       // Made beforeEach async
-      jest.clearAllMocks();
       testBed = getBed();
 
       // Reset mock state
@@ -57,10 +56,6 @@ describeTurnManagerSuite(
 
       // Re-apply default isEmpty mock after resetting call history
       testBed.mocks.turnOrderService.isEmpty.mockResolvedValue(false);
-    });
-
-    afterEach(async () => {
-      jest.restoreAllMocks();
     });
 
     // --- Test Cases ---
