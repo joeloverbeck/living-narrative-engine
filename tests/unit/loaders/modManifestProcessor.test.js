@@ -118,4 +118,26 @@ describe('ModManifestProcessor.processManifests', () => {
       expect.anything()
     );
   });
+
+  it('works with static-only validator class (regression for DI bug)', async () => {
+    // Create a static-only validator class
+    class StaticValidator {
+      static validate(manifests, loggerArg) {
+        loggerArg.debug('StaticValidator.validate called');
+      }
+    }
+    processor = new ModManifestProcessor({
+      modManifestLoader: manifestLoader,
+      logger,
+      registry,
+      validatedEventDispatcher: dispatcher,
+      modDependencyValidator: StaticValidator, // Pass the class itself
+      modVersionValidator,
+      modLoadOrderResolver,
+    });
+    const requestedIds = ['modA', 'modB'];
+    const result = await processor.processManifests(requestedIds, worldName);
+    expect(result.finalModOrder).toEqual(['modA', 'modB']);
+    expect(logger.debug).toHaveBeenCalledWith('StaticValidator.validate called');
+  });
 });
