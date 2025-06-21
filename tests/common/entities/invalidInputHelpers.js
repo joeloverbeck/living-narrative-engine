@@ -2,9 +2,32 @@
  * @file Utility helpers for invalid input tests for EntityManager methods.
  * @see tests/common/entities/invalidInputHelpers.js
  */
+/* eslint-env jest */
 
 import { TestData } from './index.js';
 import { InvalidArgumentError } from '../../../src/errors/invalidArgumentError.js';
+
+/**
+ * Runs a parameterized test for a list of invalid inputs.
+ *
+ * @description Private helper used by the exported test helpers to avoid
+ *   repeating the same `it.each` logic.
+ * @param {Array<*>|Array<Array<*>>} values - Invalid values to iterate over.
+ * @param {string} message - Test description passed to `it.each`.
+ * @param {() => import('./testBed.js').TestBed} getBed - Callback returning the
+ *   active {@link TestBed} instance.
+ * @param {(em: import('../../../src/entities/entityManager.js').default,
+ *   ...args: any[]) => any} invoke - Function that calls the method under test
+ *   using the provided EntityManager instance.
+ * @returns {void}
+ */
+function runInvalidCases(values, message, getBed, invoke) {
+  it.each(values)(message, (...args) => {
+    const { entityManager, mocks } = getBed();
+    expect(() => invoke(entityManager, ...args)).toThrow(InvalidArgumentError);
+    expect(mocks.logger.warn).toHaveBeenCalled();
+  });
+}
 
 /**
  * Runs a parameterized test verifying how a method handles invalid entity and
@@ -14,20 +37,16 @@ import { InvalidArgumentError } from '../../../src/errors/invalidArgumentError.j
  * removeComponent that should throw InvalidArgumentError when called with invalid IDs.
  * @param {() => import('./testBed.js').TestBed} getBed - Callback to retrieve
  *   the active {@link TestBed} instance.
- * @param {(em: import('../../../src/entities/entityManager.js').default, instanceId: *, componentId: *) => *} method
+ * @param {(em: import('../../../src/entities/entityManager.js').default, instanceId: *, componentId: *) => *} invoke
  *   - Function that invokes the target EntityManager method.
  * @returns {void}
  */
-export function runInvalidIdPairTests(getBed, method) {
-  it.each(TestData.InvalidValues.invalidIdPairs)(
+export function runInvalidIdPairTests(getBed, invoke) {
+  runInvalidCases(
+    TestData.InvalidValues.invalidIdPairs,
     'should throw InvalidArgumentError for invalid inputs',
-    (instanceId, componentId) => {
-      const { entityManager, mocks } = getBed();
-      expect(() => method(entityManager, instanceId, componentId)).toThrow(
-        InvalidArgumentError
-      );
-      expect(mocks.logger.warn).toHaveBeenCalled();
-    }
+    getBed,
+    invoke
   );
 }
 
@@ -37,20 +56,16 @@ export function runInvalidIdPairTests(getBed, method) {
  * @description Helper for entity methods like removeEntityInstance that should throw InvalidArgumentError when called with invalid IDs.
  * @param {() => import('./testBed.js').TestBed} getBed - Callback to retrieve
  *   the active {@link TestBed} instance.
- * @param {(em: import('../../../src/entities/entityManager.js').default, instanceId: *) => *} method
+ * @param {(em: import('../../../src/entities/entityManager.js').default, instanceId: *) => *} invoke
  *   - Function that invokes the target EntityManager method.
  * @returns {void}
  */
-export function runInvalidEntityIdTests(getBed, method) {
-  it.each(TestData.InvalidValues.invalidIds)(
+export function runInvalidEntityIdTests(getBed, invoke) {
+  runInvalidCases(
+    TestData.InvalidValues.invalidIds,
     'should throw InvalidArgumentError for invalid instanceId %p',
-    (invalidId) => {
-      const { entityManager, mocks } = getBed();
-      expect(() => method(entityManager, invalidId)).toThrow(
-        InvalidArgumentError
-      );
-      expect(mocks.logger.warn).toHaveBeenCalled();
-    }
+    getBed,
+    invoke
   );
 }
 
@@ -61,17 +76,15 @@ export function runInvalidEntityIdTests(getBed, method) {
  * InvalidArgumentError when called with invalid IDs.
  * @param {() => import('./testBed.js').TestBed} getBed - Callback to retrieve
  *   the active {@link TestBed} instance.
- * @param {(em: import('../../../src/entities/entityManager.js').default, definitionId: *) => *} method
+ * @param {(em: import('../../../src/entities/entityManager.js').default, definitionId: *) => *} invoke
  *   - Function that invokes the target EntityManager method.
  * @returns {void}
  */
-export function runInvalidDefinitionIdTests(getBed, method) {
-  it.each(TestData.InvalidValues.invalidDefinitionIds)(
+export function runInvalidDefinitionIdTests(getBed, invoke) {
+  runInvalidCases(
+    TestData.InvalidValues.invalidDefinitionIds,
     'should throw InvalidArgumentError for invalid definitionId %p',
-    (invalidId) => {
-      const { entityManager, mocks } = getBed();
-      expect(() => method(entityManager, invalidId)).toThrow(InvalidArgumentError);
-      expect(mocks.logger.warn).toHaveBeenCalled();
-    }
+    getBed,
+    invoke
   );
 }
