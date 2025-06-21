@@ -1,4 +1,3 @@
-export { default } from './worldPhase.js';
 // src/loaders/phases/worldPhase.js
 
 import LoaderPhase from './loaderphase.js';
