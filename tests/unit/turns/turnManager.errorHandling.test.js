@@ -3,7 +3,7 @@
 
 import { describeTurnManagerSuite } from '../../common/turns/turnManagerTestBed.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/eventIds.js';
-import { beforeEach, expect, jest, test, afterEach } from '@jest/globals';
+import { beforeEach, expect, jest, test } from '@jest/globals';
 import { createMockTurnHandler } from '../../common/mockFactories';
 import { createDefaultActors } from '../../common/turns/testActors.js';
 
@@ -26,12 +26,6 @@ describeTurnManagerSuite('TurnManager - Error Handling', (getBed) => {
 
     // Default Mocks setup - configure specifically within each test if needed
     // to avoid mock state leaking or becoming confusing.
-  });
-
-  afterEach(async () => {
-    // Clears mock usage data between tests
-    jest.clearAllMocks();
-    // Timer cleanup handled by BaseTestBed
   });
 
   test('should stop advancing if handlerResolver fails', async () => {

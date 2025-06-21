@@ -7,7 +7,7 @@ import {
   TURN_ENDED_ID,
   SYSTEM_ERROR_OCCURRED_ID,
 } from '../../../src/constants/eventIds.js';
-import { beforeEach, expect, jest, afterEach } from '@jest/globals';
+import { beforeEach, expect, jest } from '@jest/globals';
 import { createMockTurnHandler } from '../../common/mockFactories';
 import { createAiActor } from '../../common/turns/testActors.js';
 
@@ -29,10 +29,6 @@ describeTurnManagerSuite('TurnManager - Lifecycle (Start/Stop)', (getBed) => {
     advanceTurnSpy.mockResolvedValue(undefined);
 
     testBed.resetMocks();
-  });
-
-  afterEach(async () => {
-    jest.clearAllMocks(); // General cleanup
   });
 
   // --- start() Tests (Largely Unchanged) ---
