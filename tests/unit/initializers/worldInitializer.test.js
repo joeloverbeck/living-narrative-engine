@@ -440,11 +440,8 @@ describe('WorldInitializer', () => {
           message: 'No entity definitions found. The game cannot start without any entities in the world.',
           details: {
             statusCode: 500,
-            raw: 'No entity definitions available in game data repository',
-            timestamp: expect.any(String),
-            context: 'WorldInitializer._instantiateAllEntitiesFromDefinitions',
-            entityDefinitionsCount: 0,
-            repositoryMethod: 'getAllEntityDefinitions'
+            raw: expect.stringContaining('No entity definitions available in game data repository. Context: WorldInitializer._instantiateAllEntitiesFromDefinitions, entityDefinitionsCount: 0, repositoryMethod: getAllEntityDefinitions'),
+            timestamp: expect.any(String)
           }
         }
       );
