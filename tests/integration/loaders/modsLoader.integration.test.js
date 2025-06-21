@@ -231,7 +231,7 @@ describe('Integration: ModsLoader Orchestrator Order and Error Propagation', () 
       expect(dataRegistry.get('test', 'item1')).toBeUndefined();
     });
 
-    it('should handle unexpected errors and wrap them in ModsLoaderError', async () => {
+    it('should handle unexpected errors and re-throw them to upstream', async () => {
       // Arrange: Create a phase that throws an unexpected error
       phases = [
         new MockPhase({ 
@@ -247,9 +247,8 @@ describe('Integration: ModsLoader Orchestrator Order and Error Propagation', () 
       ];
 
       // Make the second phase throw an unexpected error
-      phases[1].execute = jest.fn().mockRejectedValue(
-        new Error('Unexpected system error')
-      );
+      const unexpectedError = new Error('Unexpected system error');
+      phases[1].execute = jest.fn().mockRejectedValue(unexpectedError);
 
       const session = { run: jest.fn().mockImplementation(async ctx => {
         for (const phase of phases) {
@@ -264,23 +263,24 @@ describe('Integration: ModsLoader Orchestrator Order and Error Propagation', () 
         registry: dataRegistry,
       });
 
-      // Act & Assert: Execute and expect wrapped error
+      // Act & Assert: Execute and expect original error to be re-thrown
       await expect(modsLoader.loadMods('test-world', ['mod1']))
         .rejects
-        .toThrow('ModsLoader: CRITICAL load failure due to an unexpected error. Original error: Unexpected system error');
+        .toThrow('Unexpected system error');
 
-      // Verify error logging for unexpected errors
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        'ModsLoader: CRITICAL load failure due to an unexpected error. Original error: Unexpected system error',
-        expect.any(Error)
+      // Verify that no additional error logging occurred for unexpected errors
+      // (since we're letting upstream handle them)
+      expect(mockLogger.error).not.toHaveBeenCalledWith(
+        expect.stringContaining('CRITICAL load failure due to an unexpected error'),
+        expect.anything()
       );
 
-      // Verify the error is a ModsLoaderError with the correct code
+      // Verify the error is the original error, not a ModsLoaderError
       try {
         await modsLoader.loadMods('test-world', ['mod1']);
       } catch (error) {
-        expect(error).toBeInstanceOf(ModsLoaderError);
-        expect(error.code).toBe(ModsLoaderErrorCode.UNEXPECTED);
+        expect(error).toBe(unexpectedError);
+        expect(error).not.toBeInstanceOf(ModsLoaderError);
       }
     });
   });

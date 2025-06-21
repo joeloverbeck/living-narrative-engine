@@ -84,12 +84,14 @@ class ModsLoader extends AbstractLoader {
     const { createLoadContext } = await import('./LoadContext.js');
     const context = createLoadContext({ worldName, requestedMods: requestedModIds, registry: this._registry });
     this._cache.clear();
+    let success = false;
     try {
       this._logger.debug('ModsLoader: Data registry cleared.');
       const finalContext = await this._session.run(context);
       this._logger.info(
         `ModsLoader: Load sequence for world '${worldName}' completed successfully.`
       );
+      success = true;
       
       return /** @type {import('../interfaces/loadContracts.js').LoadReport} */ ({
         finalModOrder: finalContext.finalModOrder.slice(),
@@ -104,9 +106,12 @@ class ModsLoader extends AbstractLoader {
         );
         throw err;
       }
-      const msg = `ModsLoader: CRITICAL load failure due to an unexpected error. Original error: ${err.message}`;
-      this._logger.error(msg, err);
-      throw new ModsLoaderError(msg, ModsLoaderErrorCode.UNEXPECTED, err);
+      // Re-throw other errors to let upstream handle them
+      throw err;
+    } finally {
+      this._logger.info(
+        `ModsLoader: Load sequence for world '${worldName}' ${success ? 'completed successfully' : 'failed'}.`
+      );
     }
   }
 }
