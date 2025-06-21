@@ -3,7 +3,10 @@
  */
 
 import { describe, it, expect, jest } from '@jest/globals';
-import { buildMissingDependencyCases } from '../../common/constructorValidationHelpers.js';
+import {
+  buildMissingDependencyCases,
+  describeConstructorValidation,
+} from '../../common/constructorValidationHelpers.js';
 
 /**
  *
@@ -50,5 +53,24 @@ describe('buildMissingDependencyCases', () => {
     for (const [, , regex] of cases) {
       expect(regex).toBeInstanceOf(RegExp);
     }
+  });
+});
+
+describe('describeConstructorValidation', () => {
+  class DummyClass {
+    constructor(deps) {
+      if (!deps.logger?.info || !deps.logger?.error) {
+        throw new Error('logger');
+      }
+      if (!deps.service?.start) {
+        throw new Error('service');
+      }
+    }
+  }
+
+  describeConstructorValidation(DummyClass, createDeps, spec);
+
+  it('allows construction when all dependencies are present', () => {
+    expect(() => new DummyClass(createDeps())).not.toThrow();
   });
 });
