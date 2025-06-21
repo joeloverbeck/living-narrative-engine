@@ -56,8 +56,18 @@ export class ContainerTestBed extends BaseTestBed {
    */
   async cleanup() {
     await super.cleanup();
+  }
+
+  /**
+   * Restores the container state and clears overrides after base cleanup.
+   *
+   * @protected
+   * @returns {Promise<void>} Promise resolving when container cleanup is complete.
+   */
+  async _afterCleanup() {
     this.container.resolve.mockImplementation(this.#originalResolve);
     this.#tokenOverrides.clear();
+    await super._afterCleanup();
   }
 }
 
