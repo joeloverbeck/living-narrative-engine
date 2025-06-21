@@ -94,7 +94,8 @@ class BreakFollowRelationHandler extends BaseOperationHandler {
       safeDispatchError(
         this.#dispatcher,
         'BREAK_FOLLOW_RELATION: Invalid "follower_id" parameter',
-        { params }
+        { params },
+        logger
       );
       return;
     }
@@ -115,7 +116,8 @@ class BreakFollowRelationHandler extends BaseOperationHandler {
       safeDispatchError(
         this.#dispatcher,
         'BREAK_FOLLOW_RELATION: Failed removing following component',
-        { error: err.message, stack: err.stack, follower_id: fid }
+        { error: err.message, stack: err.stack, follower_id: fid },
+        logger
       );
       return;
     }

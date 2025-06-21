@@ -95,7 +95,8 @@ class DispatchPerceptibleEventHandler {
       safeDispatchError(
         this.#dispatcher,
         'DISPATCH_PERCEPTIBLE_EVENT: location_id required',
-        { location_id }
+        { location_id },
+        this.#logger
       );
       return;
     }
@@ -103,7 +104,8 @@ class DispatchPerceptibleEventHandler {
       safeDispatchError(
         this.#dispatcher,
         'DISPATCH_PERCEPTIBLE_EVENT: description_text required',
-        { description_text }
+        { description_text },
+        this.#logger
       );
       return;
     }
@@ -111,7 +113,8 @@ class DispatchPerceptibleEventHandler {
       safeDispatchError(
         this.#dispatcher,
         'DISPATCH_PERCEPTIBLE_EVENT: perception_type required',
-        { perception_type }
+        { perception_type },
+        this.#logger
       );
       return;
     }
@@ -119,7 +122,8 @@ class DispatchPerceptibleEventHandler {
       safeDispatchError(
         this.#dispatcher,
         'DISPATCH_PERCEPTIBLE_EVENT: actor_id required',
-        { actor_id }
+        { actor_id },
+        this.#logger
       );
       return;
     }

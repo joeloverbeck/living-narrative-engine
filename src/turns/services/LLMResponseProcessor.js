@@ -96,7 +96,7 @@ export class LLMResponseProcessor extends ILLMResponseProcessor {
         rawResponse: llmJsonResponse,
         error: err.message,
         stack: err.stack,
-      });
+      }, this.#logger);
       throw new LLMProcessingError(errorMsg);
     }
 
@@ -111,7 +111,7 @@ export class LLMResponseProcessor extends ILLMResponseProcessor {
       safeDispatchError(this.#safeEventDispatcher, errorMsg, {
         errors,
         parsed,
-      });
+      }, this.#logger);
       throw new LLMProcessingError(
         `LLM response JSON schema validation failed for actor ${actorId}.`,
         { validationErrors: errors }

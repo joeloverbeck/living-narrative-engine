@@ -37,7 +37,7 @@ export async function getServiceFromContext(
         actorId: actorIdForLog,
         service: serviceNameForLog,
         method: methodName,
-      });
+      }, logger);
     }
     logger.error(errorMsg);
 
@@ -73,7 +73,7 @@ export async function getServiceFromContext(
         method: methodName,
         error: error.message,
         stack: error.stack,
-      });
+      }, logger);
     }
     const serviceError = new Error(errorMsg);
     await handleProcessingException(

@@ -90,7 +90,8 @@ describe('AwaitingExternalTurnEndState – action propagation', () => {
         actorId: 'hero-123',
         actionId: 'attack',
         code: 'TURN_END_TIMEOUT',
-      })
+      }),
+      mockLogger
     );
   });
 
@@ -106,7 +107,8 @@ describe('AwaitingExternalTurnEndState – action propagation', () => {
       expect.any(String),
       expect.objectContaining({
         actionId: 'use-potion',
-      })
+      }),
+      mockLogger
     );
   });
 });

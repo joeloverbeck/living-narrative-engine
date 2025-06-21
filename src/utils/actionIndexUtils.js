@@ -27,7 +27,8 @@ export function assertValidActionIndex(
     safeDispatchError(
       dispatcher,
       `${providerName}: Did not receive a valid integer 'chosenIndex' for actor ${actorId}.`,
-      debugData
+      debugData,
+      logger
     );
     throw new Error('Could not resolve the chosen action to a valid index.');
   }
@@ -36,7 +37,8 @@ export function assertValidActionIndex(
     safeDispatchError(
       dispatcher,
       `${providerName}: invalid chosenIndex (${chosenIndex}) for actor ${actorId}.`,
-      { ...debugData, actionsCount: actionsLength }
+      { ...debugData, actionsCount: actionsLength },
+      logger
     );
     throw new Error('Player chose an index that does not exist for this turn.');
   }

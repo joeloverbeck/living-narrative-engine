@@ -114,7 +114,7 @@ export default function validateModEngineVersions(
     safeDispatchError(safeEventDispatcher, errorMessage, {
       incompatibilities: fatals,
       engineVersion: ENGINE_VERSION,
-    });
+    }, logger);
     throw new ModDependencyError(errorMessage);
   }
 

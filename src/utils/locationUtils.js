@@ -76,7 +76,7 @@ function _resolveLocationEntity(
         !!entityManager &&
         typeof entityManager.getEntityInstance === 'function',
     };
-    safeDispatchError(dispatcher, message, details);
+    safeDispatchError(dispatcher, message, details, log);
     return null;
   }
 

@@ -22,7 +22,7 @@ export function assertParamsObject(params, logger, opName) {
   if (logger && typeof logger.warn === 'function') {
     logger.warn(message, { params });
   } else if (logger && typeof logger.dispatch === 'function') {
-    safeDispatchError(logger, message, { params });
+    safeDispatchError(logger, message, { params }, logger);
   } else {
     console.warn(message, { params });
   }

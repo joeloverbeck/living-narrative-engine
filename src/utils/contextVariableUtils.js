@@ -64,7 +64,7 @@ export function writeContextVariable(
 
   if (!valid) {
     if (safeDispatcher) {
-      safeDispatchError(safeDispatcher, error.message, { variableName });
+      safeDispatchError(safeDispatcher, error.message, { variableName }, log);
     }
     return { success: false, error };
   }
@@ -81,7 +81,7 @@ export function writeContextVariable(
         variableName,
         error: e.message,
         stack: e.stack,
-      });
+      }, log);
     }
     return { success: false, error: err };
   }
@@ -113,7 +113,7 @@ export function tryWriteContextVariable(
     if (safeDispatcher) {
       safeDispatchError(safeDispatcher, validation.error.message, {
         variableName,
-      });
+      }, log);
     }
     return { success: false, error: validation.error };
   }

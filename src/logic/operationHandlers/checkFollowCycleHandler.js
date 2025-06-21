@@ -62,7 +62,8 @@ class CheckFollowCycleHandler {
       safeDispatchError(
         this.#dispatcher,
         'CHECK_FOLLOW_CYCLE: Invalid "follower_id" parameter',
-        { params }
+        { params },
+        log
       );
       return;
     }
@@ -70,7 +71,8 @@ class CheckFollowCycleHandler {
       safeDispatchError(
         this.#dispatcher,
         'CHECK_FOLLOW_CYCLE: Invalid "leader_id" parameter',
-        { params }
+        { params },
+        log
       );
       return;
     }
@@ -78,7 +80,8 @@ class CheckFollowCycleHandler {
       safeDispatchError(
         this.#dispatcher,
         'CHECK_FOLLOW_CYCLE: Invalid "result_variable" parameter',
-        { params }
+        { params },
+        log
       );
       return;
     }

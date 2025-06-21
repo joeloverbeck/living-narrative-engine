@@ -39,7 +39,8 @@ export class StandardElementAssembler extends IPromptElementAssembler {
       safeDispatchError(
         this.#safeEventDispatcher,
         'StandardElementAssembler.assemble: Missing required parameters (elementConfig, promptData, or placeholderResolver).',
-        paramsProvided
+        paramsProvided,
+        this.#logger
       );
       return '';
     }

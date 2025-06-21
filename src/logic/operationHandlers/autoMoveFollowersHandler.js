@@ -78,7 +78,8 @@ class AutoMoveFollowersHandler extends BaseOperationHandler {
       safeDispatchError(
         this.#dispatcher,
         'AUTO_MOVE_FOLLOWERS: Invalid "leader_id" parameter',
-        { params }
+        { params },
+        logger
       );
       return;
     }
@@ -86,7 +87,8 @@ class AutoMoveFollowersHandler extends BaseOperationHandler {
       safeDispatchError(
         this.#dispatcher,
         'AUTO_MOVE_FOLLOWERS: Invalid "destination_id" parameter',
-        { params }
+        { params },
+        logger
       );
       return;
     }
@@ -149,7 +151,8 @@ class AutoMoveFollowersHandler extends BaseOperationHandler {
         safeDispatchError(
           this.#dispatcher,
           'AUTO_MOVE_FOLLOWERS: Error moving follower',
-          { error: err.message, stack: err.stack, followerId: fid }
+          { error: err.message, stack: err.stack, followerId: fid },
+          logger
         );
       }
     }

@@ -149,7 +149,7 @@ export class AwaitingExternalTurnEndState extends AbstractTurnState {
         code: err.code,
         actorId: ctx.getActor().id,
         actionId: this.#awaitingActionId,
-      });
+      }, this._resolveLogger(ctx, handler));
     }
 
     // 2) close the turn
