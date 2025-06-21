@@ -15,10 +15,7 @@ import {
   SYSTEM_ERROR_OCCURRED_ID,
 } from '../../../src/constants/eventIds.js';
 import { beforeEach, expect, jest, test, afterEach } from '@jest/globals';
-import {
-  createAiActor,
-  createPlayerActor,
-} from '../../common/turns/testActors.js';
+import { createDefaultActors } from '../../common/turns/testActors.js';
 
 // --- Test Suite ---
 
@@ -34,10 +31,11 @@ describeTurnManagerSuite(
       jest.useFakeTimers();
       testBed = getBed();
 
-      mockActor1 = createAiActor('actor1');
-      mockActor2 = createAiActor('actor2');
-      mockPlayerActor = createPlayerActor('player1');
-
+      ({
+        ai1: mockActor1,
+        ai2: mockActor2,
+        player: mockPlayerActor,
+      } = createDefaultActors());
       // Configure handler resolver to return mock turn handlers
       testBed.setupMockHandlerResolver();
 
