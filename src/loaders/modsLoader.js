@@ -102,13 +102,11 @@ class ModsLoader extends AbstractLoader {
           `ModsLoader: CRITICAL failure during phase '${err.phase}'. Code: [${err.code}]. Error: ${err.message}`,
           { error: err.cause ?? err }
         );
-        return Promise.reject(err);
+        throw err;
       }
       const msg = `ModsLoader: CRITICAL load failure due to an unexpected error. Original error: ${err.message}`;
       this._logger.error(msg, err);
-      return Promise.reject(
-        new ModsLoaderError(msg, 'unknown_loader_error', err)
-      );
+      throw new ModsLoaderError(msg, 'unknown_loader_error', err);
     }
   }
 }

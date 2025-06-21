@@ -68,6 +68,10 @@ describe('ModsLoader + GameConfigPhase integration', () => {
     }
   }
 
+  /**
+   *
+   * @param phases
+   */
   function makeSession(phases) {
     return {
       async run(ctx) {

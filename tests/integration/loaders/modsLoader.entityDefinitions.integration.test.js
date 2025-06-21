@@ -193,6 +193,10 @@ describe('Integration: Entity Definitions and Instances Loader', () => {
   });
 });
 
+/**
+ *
+ * @param phases
+ */
 function makeSession(phases) {
   return {
     async run(ctx) {
