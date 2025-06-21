@@ -1,7 +1,7 @@
 // src/llms/strategies/openRouterToolCallingStrategy.js
 // --- FILE START ---
 import { BaseOpenRouterStrategy } from './base/baseOpenRouterStrategy.js';
-import { LLMStrategyError } from '../errors/llmStrategyError.js';
+import { LLMStrategyError } from '../errors/LLMStrategyError.js';
 import {
   OPENROUTER_GAME_AI_ACTION_SPEECH_SCHEMA, // Still needed for the parameters schema
   OPENROUTER_DEFAULT_TOOL_DESCRIPTION, // Can still be used for description

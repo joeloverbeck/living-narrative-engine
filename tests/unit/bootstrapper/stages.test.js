@@ -1,6 +1,6 @@
 import { ensureCriticalDOMElementsStage } from '../../../src/bootstrapper/stages';
-import StageError from '../../../src/bootstrapper/stageError.js';
-import { UIBootstrapper } from '../../../src/bootstrapper/uiBootstrapper.js';
+import StageError from '../../../src/bootstrapper/StageError.js';
+import { UIBootstrapper } from '../../../src/bootstrapper/UIBootstrapper.js';
 import { describe, it, expect, jest, afterEach } from '@jest/globals';
 
 afterEach(() => {

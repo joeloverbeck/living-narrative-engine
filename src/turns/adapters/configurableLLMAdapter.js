@@ -1,7 +1,7 @@
 // src/turns/adapters/configurableLLMAdapter.js
 // --- FILE START ---
 
-import { ILLMAdapter } from '../interfaces/iLLMAdapter.js';
+import { ILLMAdapter } from '../interfaces/ILLMAdapter.js';
 import { CLOUD_API_TYPES } from '../../llms/constants/llmConstants.js';
 
 // 🔄  REPLACE the old import with the default CL100K encoder helpers
@@ -73,7 +73,7 @@ import { ConfigurationError } from '../../errors/configurationError';
 /** @typedef {import('../schemas/llmOutputSchemas.js').LLM_TURN_ACTION_RESPONSE_SCHEMA} LLM_TURN_ACTION_SCHEMA_TYPE */
 /** @typedef {import('../../llms/environmentContext.js').EnvironmentContext} EnvironmentContext */
 /** @typedef {import('../../llms/interfaces/IApiKeyProvider.js').IApiKeyProvider} IApiKeyProvider */
-/** @typedef {import('../../llms/llmStrategyFactory.js').LLMStrategyFactory} LLMStrategyFactory */
+/** @typedef {import('../../llms/LLMStrategyFactory.js').LLMStrategyFactory} LLMStrategyFactory */
 
 /** @typedef {import('../../llms/interfaces/ILLMStrategy.js').ILLMStrategy} ILLMStrategy */
 
@@ -758,7 +758,7 @@ export class ConfigurableLLMAdapter extends ILLMAdapter {
       // CL100K encoder is already imported at the top
       let encodeFn = cl100kEncode;
 
-      // lazy-load any other encoder the first time it's needed
+      // lazy-load any other encoder the first time it’s needed
       if (encodingName !== 'cl100k_base') {
         encodeFn = (
           await import(

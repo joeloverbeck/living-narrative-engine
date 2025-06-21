@@ -7,9 +7,9 @@ import { setupButtonListener, stageSuccess, stageFailure } from '../helpers.js';
 import { tokens } from '../../dependencyInjection/tokens.js';
 
 /**
- * @typedef {import('../uiBootstrapper.js').EssentialUIElements} EssentialUIElements
- * @typedef {import('../uiBootstrapper.js').UIBootstrapper} UIBootstrapper
+ * @typedef {import('../UIBootstrapper.js').EssentialUIElements} EssentialUIElements
  */
+/** @typedef {import('../UIBootstrapper.js').UIBootstrapper} UIBootstrapper */
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../engine/gameEngine.js').default} GameEngineInstance */
 /** @typedef {import('../../types/stageResult.js').StageResult} StageResult */

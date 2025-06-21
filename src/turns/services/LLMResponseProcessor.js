@@ -1,7 +1,7 @@
 /* eslint-env es2022 */
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../interfaces/coreServices.js').ISchemaValidator} ISchemaValidator */
-import { ILLMResponseProcessor } from '../interfaces/iLLMResponseProcessor.js';
+import { ILLMResponseProcessor } from '../interfaces/ILLMResponseProcessor.js';
 import { parseAndRepairJson } from '../../utils/llmUtils.js';
 import { LLM_TURN_ACTION_RESPONSE_SCHEMA_ID } from '../schemas/llmOutputSchemas.js';
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
@@ -22,7 +22,7 @@ class LLMProcessingError extends Error {
 }
 
 /**
- * @implements {iLLMResponseProcessor}
+ * @implements {ILLMResponseProcessor}
  */
 export class LLMResponseProcessor extends ILLMResponseProcessor {
   /** @type {ISchemaValidator} */

@@ -1,4 +1,3 @@
-export { default } from './contentPhase.js';
 // src/loaders/phases/contentPhase.js
 
 import LoaderPhase from './loaderphase.js';

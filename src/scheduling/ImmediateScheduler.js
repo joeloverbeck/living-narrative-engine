@@ -1,4 +1,4 @@
-import { IScheduler } from './iScheduler.js';
+import { IScheduler } from './IScheduler.js';
 
 /**
  * @class ImmediateScheduler

@@ -5,20 +5,20 @@
  * the sequence of entity turns within a round.
  */
 
-import { ITurnOrderService } from '../interfaces/iTurnOrderService.js';
-import { ITurnOrderQueue } from '../interfaces/iTurnOrderQueue.js';
+import { ITurnOrderService } from '../interfaces/ITurnOrderService.js';
+import { ITurnOrderQueue } from '../interfaces/ITurnOrderQueue.js';
 import { SimpleRoundRobinQueue } from './queues/simpleRoundRobinQueue.js'; // Added import
 import { InitiativePriorityQueue } from './queues/initiativePriorityQueue.js';
 import { freeze } from '../../utils/objectUtils.js'; // Added import
 
 // --- Type Imports ---
-/** @typedef {import('../interfaces/iTurnOrderQueue.js').Entity} Entity */
-/** @typedef {import('../interfaces/iTurnOrderService.js').TurnOrderStrategy} TurnOrderStrategy */
+/** @typedef {import('../interfaces/ITurnOrderQueue.js').Entity} Entity */
+/** @typedef {import('../interfaces/ITurnOrderService.js').TurnOrderStrategy} TurnOrderStrategy */
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */ // Assuming ILogger path
 
 /**
  * @class TurnOrderService
- * @implements {iTurnOrderService}
+ * @implements {ITurnOrderService}
  * @classdesc Manages the overall turn order for a round or encounter, using
  * an underlying queue structure based on the selected strategy.
  */
@@ -27,7 +27,7 @@ export class TurnOrderService extends ITurnOrderService {
    * The currently active turn order queue instance. Null if no round is active.
    *
    * @private
-   * @type {iTurnOrderQueue | null}
+   * @type {ITurnOrderQueue | null}
    */
   #currentQueue = null;
 
@@ -347,26 +347,41 @@ export class TurnOrderService extends ITurnOrderService {
       this.#logger.warn(
         `TurnOrderService.removeEntity: Called for entity "${entityId}" when no round is active. No action taken.`
       );
+      // Don't throw an error here, just log and return, as removing from a non-existent round is a no-op.
       return;
     }
-    if (!entityId || typeof entityId !== 'string' || entityId === '') {
+    if (typeof entityId !== 'string' || entityId === '') {
       this.#logger.error(
-        'TurnOrderService.removeEntity: Failed - Invalid entityId format.'
+        'TurnOrderService.removeEntity: Failed - Invalid entityId provided.'
       );
-      throw new Error('Invalid entityId format.');
+      throw new Error('Invalid entityId provided for removal.');
     }
 
     try {
       this.#logger.debug(
-        `TurnOrderService: Removing entity "${entityId}" from the turn order.`
+        `TurnOrderService: Attempting to remove entity "${entityId}" from the turn order.`
       );
-      this.#currentQueue.remove(entityId);
-      this.#logger.debug(
-        `TurnOrderService: Entity "${entityId}" successfully removed from the turn order.`
-      );
+      const removedEntity = this.#currentQueue.remove(entityId); // Call the queue's remove method
+
+      // --- CORRECTED LOGIC ---
+      // Log success info if the entity was directly removed (non-null return)
+      // OR if it's the initiative strategy (where null signifies processing for lazy removal).
+      if (removedEntity !== null || this.#currentStrategy === 'initiative') {
+        this.#logger.debug(
+          `TurnOrderService: Entity "${entityId}" processed for removal (actual removal may be lazy depending on queue type).`
+        );
+      }
+      // Log a warning only if the entity was truly not found (remove returned null AND it wasn't initiative strategy)
+      else {
+        // Implicitly: removedEntity === null && this.#currentStrategy !== 'initiative'
+        this.#logger.warn(
+          `TurnOrderService.removeEntity: Entity "${entityId}" not found in the current turn order queue.`
+        );
+      }
+      // --- END CORRECTED LOGIC ---
     } catch (error) {
       this.#logger.error(
-        `TurnOrderService.removeEntity: Failed to remove entity "${entityId}": ${error.message}`,
+        `TurnOrderService.removeEntity: Error while trying to remove entity "${entityId}": ${error.message}`,
         error
       );
       throw error; // Re-throw after logging

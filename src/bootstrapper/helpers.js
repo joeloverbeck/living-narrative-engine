@@ -4,7 +4,7 @@
  * @file Utility helpers used during application bootstrap stages.
  */
 
-import StageError from './stageError.js';
+import StageError from './StageError.js';
 import {
   stageSuccess as baseStageSuccess,
   stageFailure as baseStageFailure,

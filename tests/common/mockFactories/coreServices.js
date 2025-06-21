@@ -226,8 +226,8 @@ export const createMockPathResolver = () => ({
   resolvePath: jest.fn((path) => path),
   resolveModPath: jest.fn((modId) => `mods/${modId}`),
   resolveModContentPath: jest.fn(
-    (modId, diskFolder, filename) =>
-      `mods/${modId}/${diskFolder}/${filename}`
+    (modId, contentTypeDir, filename) =>
+      `mods/${modId}/${contentTypeDir}/${filename}`
   ),
   resolveModManifestPath: jest.fn((modId) => `mods/${modId}/mod.manifest.json`),
   getModDirectory: jest.fn((modId) => `mods/${modId}`),

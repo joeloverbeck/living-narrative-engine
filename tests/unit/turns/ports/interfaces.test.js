@@ -7,12 +7,12 @@
 // -----------------------------------------------------------------------------
 
 import { describe, it, expect } from '@jest/globals';
-import { IPromptOutputPort } from '../../../../src/turns/ports/iPromptOutputPort.js';
-import { ITurnEndPort } from '../../../../src/turns/ports/iTurnEndPort.js';
-import { ICommandInputPort } from '../../../../src/turns/ports/iCommandInputPort.js';
-import { IActionIndexer } from '../../../../src/turns/ports/iActionIndexer.js';
-import { ILLMChooser } from '../../../../src/turns/ports/iLLMChooser.js';
-import { ITurnActionFactory } from '../../../../src/turns/ports/iTurnActionFactory.js';
+import { IPromptOutputPort } from '../../../../src/turns/ports/IPromptOutputPort.js';
+import { ITurnEndPort } from '../../../../src/turns/ports/ITurnEndPort.js';
+import { ICommandInputPort } from '../../../../src/turns/ports/ICommandInputPort.js';
+import { IActionIndexer } from '../../../../src/turns/ports/IActionIndexer.js';
+import { ILLMChooser } from '../../../../src/turns/ports/ILLMChooser.js';
+import { ITurnActionFactory } from '../../../../src/turns/ports/ITurnActionFactory.js';
 
 describe('Turn port interface classes', () => {
   it('IPromptOutputPort.prompt rejects when not implemented', async () => {

@@ -237,7 +237,7 @@ export class BaseManifestItemLoader extends AbstractLoader {
    * @param {string} _filename - The original filename from the manifest.
    * @param {string} _resolvedPath - The fully resolved path to the file.
    * @param {any} _data - The raw data fetched from the file (already validated against the primary schema).
-   * @param {string} _registryKey - The content type name (e.g., 'items', 'locations').
+   * @param {string} _typeName - The content type name (e.g., 'items', 'locations').
    * @returns {Promise<{qualifiedId: string, didOverride: boolean}>} A promise resolving with an object containing the fully qualified item ID and whether an overwrite occurred.
    * @throws {Error} If processing or validation fails. This error will be caught by `_processFileWrapper`.
    */
@@ -246,7 +246,7 @@ export class BaseManifestItemLoader extends AbstractLoader {
     _filename,
     _resolvedPath,
     _data,
-    _registryKey
+    _typeName
   ) {
     // <<< MODIFIED: Updated JSDoc Guidance and Return Type
     // istanbul ignore next
@@ -311,19 +311,19 @@ export class BaseManifestItemLoader extends AbstractLoader {
    * @async
    * @param {string} modId - The ID of the mod owning the file.
    * @param {string} filename - The filename to process.
-   * @param {string} diskFolder - The directory name for this content type (e.g., 'items', 'actions').
-   * @param {string} registryKey - The content type name (e.g., 'items', 'locations').
+   * @param {string} contentTypeDir - The directory name for this content type (e.g., 'items', 'actions').
+   * @param {string} typeName - The content type name (e.g., 'items', 'locations').
    * @returns {Promise<{qualifiedId: string, didOverride: boolean}>} A promise that resolves with the result object from `_processFetchedItem` (containing qualifiedId and didOverride) or rejects if any step fails.
    * @throws {Error} Re-throws the caught error after logging to allow `Promise.allSettled` to detect failure.
    */
-  async _processFileWrapper(modId, filename, diskFolder, registryKey) {
+  async _processFileWrapper(modId, filename, contentTypeDir, typeName) {
     // <<< MODIFIED RETURN TYPE
     let resolvedPath = null;
     try {
       // 1. Resolve Path
       resolvedPath = this._pathResolver.resolveModContentPath(
         modId,
-        diskFolder,
+        contentTypeDir,
         filename
       );
       this._logger.debug(
@@ -338,14 +338,14 @@ export class BaseManifestItemLoader extends AbstractLoader {
       this._validatePrimarySchema(data, filename, modId, resolvedPath);
 
       // 4. Subclass Processing
-      // Pass original filename, resolved path, and registryKey for context
+      // Pass original filename, resolved path, and typeName for context
       // _processFetchedItem now returns { qualifiedId, didOverride }
       const result = await this._processFetchedItem(
         modId,
         filename,
         resolvedPath,
         data,
-        registryKey
+        typeName
       );
       this._logger.debug(
         `[${modId}] Successfully processed ${filename}. Result: ID=${result.qualifiedId}, Overwrite=${result.didOverride}`
@@ -361,7 +361,7 @@ export class BaseManifestItemLoader extends AbstractLoader {
           modId,
           filename,
           path: resolvedPath ?? 'Path not resolved', // Include resolved path if available
-          registryKey,
+          typeName,
           error: error?.message || String(error), // Get error message safely
         },
         error // Pass the original error object for full stack trace logging
@@ -380,16 +380,16 @@ export class BaseManifestItemLoader extends AbstractLoader {
    * @param {string} modId - The ID of the mod being processed.
    * @param {object} manifest - The parsed mod manifest object.
    * @param {string} contentKey - The key within `manifest.content` (e.g., 'components').
-   * @param {string} diskFolder - The directory name for this content type (e.g., 'components').
-   * @param {string} registryKey - The content type name (e.g., 'components', 'locations').
+   * @param {string} contentTypeDir - The directory name for this content type (e.g., 'components').
+   * @param {string} typeName - The content type name (e.g., 'components', 'locations').
    * @returns {Promise<LoadItemsResult>} A promise that resolves with an object containing the counts of successfully processed items (`count`), items that caused an overwrite (`overrides`), and items that failed processing (`errors`).
    */
   async _loadItemsInternal(
     modId,
     manifest,
     contentKey,
-    diskFolder,
-    registryKey
+    contentTypeDir,
+    typeName
   ) {
     // <<< MODIFIED RETURN TYPE
     const filenames = this._extractValidFilenames(manifest, contentKey, modId);
@@ -408,7 +408,7 @@ export class BaseManifestItemLoader extends AbstractLoader {
     );
 
     const processingPromises = filenames.map((filename) =>
-      this._processFileWrapper(modId, filename, diskFolder, registryKey)
+      this._processFileWrapper(modId, filename, contentTypeDir, typeName)
     );
 
     const settledResults = await Promise.allSettled(processingPromises);
@@ -587,53 +587,53 @@ export class BaseManifestItemLoader extends AbstractLoader {
    * @param {string} modId - The ID of the mod. Must be a non-empty string.
    * @param {ModManifest} modManifest - The manifest object for the mod. Must be a non-null object.
    * @param {string} contentKey - The key in the manifest's `content` section (e.g., 'actions', 'components'). Must be a non-empty string.
-   * @param {string} diskFolder - The subdirectory within the mod's folder containing the content files (e.g., 'actions', 'components'). Must be a non-empty string.
-   * @param {string} registryKey - A descriptive name for the content type being loaded (e.g., 'actions', 'components'). Used for logging and context. Must be a non-empty string.
+   * @param {string} contentTypeDir - The subdirectory within the mod's folder containing the content files (e.g., 'actions', 'components'). Must be a non-empty string.
+   * @param {string} typeName - A descriptive name for the content type being loaded (e.g., 'actions', 'components'). Used for logging and context. Must be a non-empty string.
    * @returns {Promise<LoadItemsResult>} A promise that resolves with an object containing the counts (`count`, `overrides`, `errors`) for this type and mod. Returns `{ count: 0, overrides: 0, errors: 0 }` if initial validation fails.
-   * @throws {TypeError} If `contentKey`, `diskFolder`, or `registryKey` are invalid (indicates a programming error in the calling subclass).
+   * @throws {TypeError} If `contentKey`, `contentTypeDir`, or `typeName` are invalid (indicates a programming error in the calling subclass).
    */
   async loadItemsForMod(
     modId,
     modManifest,
     contentKey,
-    diskFolder,
-    registryKey
+    contentTypeDir,
+    typeName
   ) {
     // <<< MODIFIED RETURN TYPE
     this._logger.info(
-      `${this.constructor.name}: Loading ${registryKey} definitions for mod '${modId}'.`
+      `${this.constructor.name}: Loading ${typeName} definitions for mod '${modId}'.`
     );
     if (typeof modId !== 'string' || modId.trim() === '') {
       this._logger.error(
-        `${this.constructor.name}: Invalid 'modId' provided for loading ${registryKey}. Must be a non-empty string. Received: ${modId}`
+        `${this.constructor.name}: Invalid 'modId' provided for loading ${typeName}. Must be a non-empty string. Received: ${modId}`
       );
       return { count: 0, overrides: 0, errors: 0 }; // <<< MODIFIED RETURN VALUE
     }
     const trimmedModId = modId.trim();
     if (!modManifest || typeof modManifest !== 'object') {
       this._logger.error(
-        `${this.constructor.name}: Invalid 'modManifest' provided for loading ${registryKey} for mod '${trimmedModId}'. Must be a non-null object. Received: ${typeof modManifest}`
+        `${this.constructor.name}: Invalid 'modManifest' provided for loading ${typeName} for mod '${trimmedModId}'. Must be a non-null object. Received: ${typeof modManifest}`
       );
       return { count: 0, overrides: 0, errors: 0 }; // <<< MODIFIED RETURN VALUE
     }
     if (typeof contentKey !== 'string' || contentKey.trim() === '') {
-      const errorMsg = `${this.constructor.name}: Programming Error - Invalid 'contentKey' provided for loading ${registryKey} for mod '${trimmedModId}'. Must be a non-empty string. Received: ${contentKey}`;
+      const errorMsg = `${this.constructor.name}: Programming Error - Invalid 'contentKey' provided for loading ${typeName} for mod '${trimmedModId}'. Must be a non-empty string. Received: ${contentKey}`;
       this._logger.error(errorMsg);
       throw new TypeError(errorMsg);
     }
     const trimmedContentKey = contentKey.trim();
-    if (typeof diskFolder !== 'string' || diskFolder.trim() === '') {
-      const errorMsg = `${this.constructor.name}: Programming Error - Invalid 'diskFolder' provided for loading ${registryKey} for mod '${trimmedModId}'. Must be a non-empty string. Received: ${diskFolder}`;
+    if (typeof contentTypeDir !== 'string' || contentTypeDir.trim() === '') {
+      const errorMsg = `${this.constructor.name}: Programming Error - Invalid 'contentTypeDir' provided for loading ${typeName} for mod '${trimmedModId}'. Must be a non-empty string. Received: ${contentTypeDir}`;
       this._logger.error(errorMsg);
       throw new TypeError(errorMsg);
     }
-    const trimmedContentTypeDir = diskFolder.trim();
-    if (typeof registryKey !== 'string' || registryKey.trim() === '') {
-      const errorMsg = `${this.constructor.name}: Programming Error - Invalid 'registryKey' provided for loading content for mod '${trimmedModId}'. Must be a non-empty string. Received: ${registryKey}`;
+    const trimmedContentTypeDir = contentTypeDir.trim();
+    if (typeof typeName !== 'string' || typeName.trim() === '') {
+      const errorMsg = `${this.constructor.name}: Programming Error - Invalid 'typeName' provided for loading content for mod '${trimmedModId}'. Must be a non-empty string. Received: ${typeName}`;
       this._logger.error(errorMsg);
       throw new TypeError(errorMsg);
     }
-    const trimmedTypeName = registryKey.trim();
+    const trimmedTypeName = typeName.trim();
 
     this._logger.debug(
       `${this.constructor.name} [${trimmedModId}]: Delegating loading for type '${trimmedTypeName}' to _loadItemsInternal.`

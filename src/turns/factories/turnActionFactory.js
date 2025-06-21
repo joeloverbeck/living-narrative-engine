@@ -3,7 +3,7 @@
  */
 
 import { freeze } from '../../utils/objectUtils.js';
-import { ITurnActionFactory } from '../ports/iTurnActionFactory.js';
+import { ITurnActionFactory } from '../ports/ITurnActionFactory.js';
 
 /**
  * @class TurnActionFactory

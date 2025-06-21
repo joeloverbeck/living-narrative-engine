@@ -1,5 +1,5 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
-import ContentLoadManager from '../../../src/loaders/contentLoadManager.js';
+import ContentLoadManager from '../../../src/loaders/ContentLoadManager.js';
 
 /** @typedef {import('../../../src/loaders/LoadResultAggregator.js').TotalResultsSummary} TotalResultsSummary */
 
@@ -35,8 +35,8 @@ describe('ContentLoadManager.processMod', () => {
       {
         loader,
         contentKey: 'items',
-        diskFolder: 'items',
-        registryKey: 'items',
+        contentTypeDir: 'items',
+        typeName: 'items',
       },
     ];
     const manager = new ContentLoadManager({
@@ -47,7 +47,7 @@ describe('ContentLoadManager.processMod', () => {
     /** @type {TotalResultsSummary} */ const totals = {};
     const phase = 'definitions';
 
-    const result = await manager.processMod(
+    const status = await manager.processMod(
       'testMod',
       null,
       totals,
@@ -55,7 +55,7 @@ describe('ContentLoadManager.processMod', () => {
       phase
     );
 
-    expect(result.status).toBe('skipped');
+    expect(status).toBe('skipped');
     expect(dispatcher.dispatch).toHaveBeenCalledWith(
       'initialization:world_loader:mod_load_failed',
       expect.objectContaining({ modId: 'testMod' }),
@@ -71,8 +71,8 @@ describe('ContentLoadManager.processMod', () => {
       {
         loader,
         contentKey: 'items',
-        diskFolder: 'items',
-        registryKey: 'items',
+        contentTypeDir: 'items',
+        typeName: 'items',
       },
     ];
     const manager = new ContentLoadManager({
@@ -84,7 +84,7 @@ describe('ContentLoadManager.processMod', () => {
     /** @type {TotalResultsSummary} */ const totals = {};
     const phase = 'definitions';
 
-    const result = await manager.processMod(
+    const status = await manager.processMod(
       'testMod',
       manifest,
       totals,
@@ -92,13 +92,13 @@ describe('ContentLoadManager.processMod', () => {
       phase
     );
 
-    expect(result.status).toBe('failed');
-    expect(result.totals.items.errors).toBe(1);
+    expect(status).toBe('failed');
+    expect(totals.items.errors).toBe(1);
     expect(dispatcher.dispatch).toHaveBeenCalledWith(
       'initialization:world_loader:content_load_failed',
       expect.objectContaining({
         modId: 'testMod',
-        registryKey: 'items',
+        typeName: 'items',
         error: 'boom',
         phase,
       }),
@@ -113,8 +113,8 @@ describe('ContentLoadManager.processMod', () => {
       {
         loader,
         contentKey: 'items',
-        diskFolder: 'items',
-        registryKey: 'items',
+        contentTypeDir: 'items',
+        typeName: 'items',
       },
     ];
     const manager = new ContentLoadManager({
@@ -126,7 +126,7 @@ describe('ContentLoadManager.processMod', () => {
     /** @type {TotalResultsSummary} */ const totals = {};
     const phase = 'definitions';
 
-    const result = await manager.processMod(
+    const status = await manager.processMod(
       'testMod',
       manifest,
       totals,
@@ -134,8 +134,8 @@ describe('ContentLoadManager.processMod', () => {
       phase
     );
 
-    expect(result.status).toBe('success');
-    expect(result.totals.items.count).toBe(1);
+    expect(status).toBe('success');
+    expect(totals.items.count).toBe(1);
     expect(dispatcher.dispatch).not.toHaveBeenCalled();
   });
 });

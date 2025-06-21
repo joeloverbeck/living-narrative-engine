@@ -1,7 +1,7 @@
 // src/turns/factories/ConcreteTurnStateFactory.js
 // ──────────────────────────────────────────────────────────────────────────────
 
-import { ITurnStateFactory } from '../interfaces/iTurnStateFactory.js';
+import { ITurnStateFactory } from '../interfaces/ITurnStateFactory.js';
 import { AwaitingActorDecisionState } from '../states/awaitingActorDecisionState.js';
 import { AwaitingExternalTurnEndState } from '../states/awaitingExternalTurnEndState.js';
 import { ProcessingCommandState } from '../states/processingCommandState.js';

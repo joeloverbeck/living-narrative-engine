@@ -109,16 +109,16 @@ describe('TurnOrderService', () => {
       );
 
       // 2. Logging
-      expect(mockLogger.warn).toHaveBeenCalledTimes(0);
       expect(mockLogger.debug).toHaveBeenCalledTimes(2);
       expect(mockLogger.debug).toHaveBeenNthCalledWith(
         1,
-        `TurnOrderService: Removing entity "${entityIdToRemove}" from the turn order.`
+        `TurnOrderService: Attempting to remove entity "${entityIdToRemove}" from the turn order.`
       );
       expect(mockLogger.debug).toHaveBeenNthCalledWith(
         2,
-        `TurnOrderService: Entity "${entityIdToRemove}" successfully removed from the turn order.`
+        `TurnOrderService: Entity "${entityIdToRemove}" processed for removal (actual removal may be lazy depending on queue type).`
       );
+      expect(mockLogger.warn).not.toHaveBeenCalled();
       expect(mockLogger.error).not.toHaveBeenCalled();
     });
 
@@ -143,13 +143,17 @@ describe('TurnOrderService', () => {
       );
 
       // 2. Logging
-      expect(mockLogger.warn).toHaveBeenCalledTimes(0);
-      expect(mockLogger.debug).toHaveBeenCalledTimes(2);
-      expect(mockLogger.debug).toHaveBeenCalledWith(
-        `TurnOrderService: Removing entity "${entityIdToRemove}" from the turn order.`
+      expect(mockLogger.warn).toHaveBeenCalledTimes(1);
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        `TurnOrderService.removeEntity: Entity "${entityIdToRemove}" not found in the current turn order queue.`
       );
+      // The specific "processed for removal" info log should NOT be called when remove returns null for RR
+      expect(mockLogger.info).not.toHaveBeenCalledWith(
+        expect.stringContaining('processed for removal')
+      );
+      expect(mockLogger.debug).toHaveBeenCalledTimes(1);
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        `TurnOrderService: Entity "${entityIdToRemove}" successfully removed from the turn order.`
+        `TurnOrderService: Attempting to remove entity "${entityIdToRemove}" from the turn order.`
       );
       expect(mockLogger.error).not.toHaveBeenCalled();
     });
@@ -180,11 +184,11 @@ describe('TurnOrderService', () => {
       expect(mockLogger.debug).toHaveBeenCalledTimes(2);
       expect(mockLogger.debug).toHaveBeenNthCalledWith(
         1,
-        `TurnOrderService: Removing entity "${entityIdToRemove}" from the turn order.`
+        `TurnOrderService: Attempting to remove entity "${entityIdToRemove}" from the turn order.`
       );
       expect(mockLogger.debug).toHaveBeenNthCalledWith(
         2,
-        `TurnOrderService: Entity "${entityIdToRemove}" successfully removed from the turn order.`
+        `TurnOrderService: Entity "${entityIdToRemove}" processed for removal (actual removal may be lazy depending on queue type).`
       );
       // Warn log for "not found" is NOT expected, because null IS expected from initiative queue remove
       expect(mockLogger.warn).not.toHaveBeenCalledWith(
@@ -229,9 +233,9 @@ describe('TurnOrderService', () => {
       // Arrange
       service.startNewRound(entitiesRR, 'round-robin'); // Start any round
       const invalidIds = ['', null, undefined, 123];
-      const expectedErrorMsg = 'Invalid entityId format.';
+      const expectedErrorMsg = 'Invalid entityId provided for removal.';
       const expectedLogMsg =
-        'TurnOrderService.removeEntity: Failed - Invalid entityId format.';
+        'TurnOrderService.removeEntity: Failed - Invalid entityId provided.';
       mockLogger.info.mockClear(); // Clear logs after setup
       mockLogger.warn.mockClear();
       mockLogger.debug.mockClear();
@@ -280,7 +284,7 @@ describe('TurnOrderService', () => {
       // Assert Logging
       expect(mockLogger.error).toHaveBeenCalledTimes(1);
       expect(mockLogger.error).toHaveBeenCalledWith(
-        `TurnOrderService.removeEntity: Failed to remove entity "${entityIdToRemove}": ${queueError.message}`,
+        `TurnOrderService.removeEntity: Error while trying to remove entity "${entityIdToRemove}": ${queueError.message}`,
         queueError // Check that the original error object is passed for context
       );
       expect(mockSimpleQueueInstance.remove).toHaveBeenCalledTimes(1); // Verify it was called

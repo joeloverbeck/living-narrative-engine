@@ -31,15 +31,15 @@ import RuleLoader from '../../../src/loaders/ruleLoader.js'; // Adjust path as n
  * @returns {IConfiguration} Mocked configuration service.
  */
 const createMockConfiguration = (overrides = {}) => ({
-  getContentBasePath: jest.fn((registryKey) => `./data/mods/test-mod/${registryKey}`),
-  getContentTypeSchemaId: jest.fn((registryKey) => {
-    if (registryKey === 'rules') {
+  getContentBasePath: jest.fn((typeName) => `./data/mods/test-mod/${typeName}`),
+  getContentTypeSchemaId: jest.fn((typeName) => {
+    if (typeName === 'rules') {
       return 'http://example.com/schemas/rule.schema.json';
     }
-    if (registryKey === 'components') {
+    if (typeName === 'components') {
       return 'http://example.com/schemas/component.schema.json';
     }
-    return `http://example.com/schemas/${registryKey}.schema.json`; // Generic fallback
+    return `http://example.com/schemas/${typeName}.schema.json`; // Generic fallback
   }),
   getSchemaBasePath: jest.fn().mockReturnValue('schemas'),
   getSchemaFiles: jest.fn().mockReturnValue([]),
@@ -63,11 +63,11 @@ const createMockConfiguration = (overrides = {}) => ({
  */
 const createMockPathResolver = (overrides = {}) => ({
   resolveModContentPath: jest.fn(
-    (modId, registryKey, filename) =>
-      `./data/mods/${modId}/${registryKey}/${filename}`
+    (modId, typeName, filename) =>
+      `./data/mods/${modId}/${typeName}/${filename}`
   ),
   resolveContentPath: jest.fn(
-    (registryKey, filename) => `./data/${registryKey}/${filename}`
+    (typeName, filename) => `./data/${typeName}/${filename}`
   ),
   resolveSchemaPath: jest.fn((filename) => `./data/schemas/${filename}`),
   resolveModManifestPath: jest.fn(
@@ -377,8 +377,8 @@ describe('RuleLoader (Sub-Ticket 4.2: Verify Absence of Legacy Discovery)', () =
     mockLogger = createMockLogger();
 
     // Default dependencyInjection for rule schema ID via base class method
-    mockConfig.getContentTypeSchemaId.mockImplementation((registryKey) =>
-      registryKey === RULE_TYPE_NAME ? defaultRuleSchemaId : undefined
+    mockConfig.getContentTypeSchemaId.mockImplementation((typeName) =>
+      typeName === RULE_TYPE_NAME ? defaultRuleSchemaId : undefined
     );
     // Also mock specific getter if RuleLoader uses it
     mockConfig.getRuleSchemaId.mockReturnValue(defaultRuleSchemaId);
@@ -581,16 +581,16 @@ describe('RuleLoader (Sub-Ticket 4.2: Verify Absence of Legacy Discovery)', () =
     // --- Arrange Mocks ---
     mockFetcher.mockSuccess(expectedResolvedPath, currentValidRuleData);
     mockResolver.resolveModContentPath.mockImplementation(
-      (mId, registryKey, file) => {
+      (mId, typeName, file) => {
         if (
           mId === modId &&
-          registryKey === RULE_CONTENT_DIR &&
+          typeName === RULE_CONTENT_DIR &&
           file === ruleFilenameRelative
         ) {
           return expectedResolvedPath;
         }
         throw new Error(
-          `Unexpected resolveModContentPath call: ${mId}, ${registryKey}, ${file}`
+          `Unexpected resolveModContentPath call: ${mId}, ${typeName}, ${file}`
         );
       }
     );

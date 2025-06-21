@@ -16,11 +16,10 @@ describe('Build Integrity', () => {
   test('All loader/phase imports use correct casing', () => {
     // Map of expected filenames (actual on disk)
     const expectedFiles = [
+      'LoaderPhase.js',
+      'ManifestPhase.js',
+      'SchemaPhase.js',
       'contentPhase.js',
-      'index.js',
-      'loaderphase.js',
-      'manifestphase.js',
-      'schemaphase.js',
       'summaryPhase.js',
       'worldPhase.js',
     ];

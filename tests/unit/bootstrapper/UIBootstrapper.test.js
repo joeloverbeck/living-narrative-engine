@@ -1,5 +1,5 @@
 import { afterEach, describe, it, expect, jest } from '@jest/globals';
-import { UIBootstrapper } from '../../../src/bootstrapper/uiBootstrapper.js';
+import { UIBootstrapper } from '../../../src/bootstrapper/UIBootstrapper.js';
 
 // Use a global variable so the jest.mock factory can access it
 global.__queryMock = undefined;

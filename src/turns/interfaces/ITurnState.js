@@ -1,5 +1,5 @@
-import { ICommandHandlingState } from './iCommandHandlingState.js';
-import { ITurnLifecycleState } from './iTurnLifecycleState.js';
+import { ICommandHandlingState } from './ICommandHandlingState.js';
+import { ITurnLifecycleState } from './ITurnLifecycleState.js';
 // src/turns/states/ITurnState.js
 // ──────────────────────────────────────────────────────────────────────────────
 
@@ -52,7 +52,7 @@ export class ITurnState {
 
   /**
    * Handles the initiation of an actor's turn.
-   * Typically invoked by the host's `startTurn` delegating to the current state.
+   * Typically invoked by the host’s `startTurn` delegating to the current state.
    *
    * @async
    * @param {ITurnStateHost} handler      - The host instance.

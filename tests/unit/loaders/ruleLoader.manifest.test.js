@@ -32,12 +32,12 @@ import RuleLoader from '../../../src/loaders/ruleLoader.js'; // Adjust path as n
  * @returns {IConfiguration} Mocked configuration service.
  */
 const createMockConfiguration = (overrides = {}) => ({
-  getContentBasePath: jest.fn((registryKey) => `./data/mods/test-mod/${registryKey}`),
-  getContentTypeSchemaId: jest.fn((registryKey) => {
-    if (registryKey === 'rules') {
+  getContentBasePath: jest.fn((typeName) => `./data/mods/test-mod/${typeName}`),
+  getContentTypeSchemaId: jest.fn((typeName) => {
+    if (typeName === 'rules') {
       return 'http://example.com/schemas/rule.schema.json';
     }
-    return `http://example.com/schemas/${registryKey}.schema.json`;
+    return `http://example.com/schemas/${typeName}.schema.json`;
   }),
   getSchemaBasePath: jest.fn().mockReturnValue('schemas'),
   getSchemaFiles: jest.fn().mockReturnValue([]),
@@ -62,11 +62,11 @@ const createMockConfiguration = (overrides = {}) => ({
  */
 const createMockPathResolver = (overrides = {}) => ({
   resolveModContentPath: jest.fn(
-    (modId, registryKey, filename) =>
-      `./data/mods/${modId}/${registryKey}/${filename}`
+    (modId, typeName, filename) =>
+      `./data/mods/${modId}/${typeName}/${filename}`
   ),
   resolveContentPath: jest.fn(
-    (registryKey, filename) => `./data/${registryKey}/${filename}`
+    (typeName, filename) => `./data/${typeName}/${filename}`
   ),
   resolveSchemaPath: jest.fn((filename) => `./data/schemas/${filename}`),
   resolveModManifestPath: jest.fn(
@@ -212,8 +212,8 @@ describe('RuleLoader (Manifest Input Handling via loadItemsForMod)', () => {
     mockLogger = createMockLogger();
 
     // Ensure dependencyInjection returns the rule schema ID correctly via base class method
-    mockConfig.getContentTypeSchemaId.mockImplementation((registryKey) =>
-      registryKey === RULE_TYPE_NAME ? defaultRuleSchemaId : undefined
+    mockConfig.getContentTypeSchemaId.mockImplementation((typeName) =>
+      typeName === RULE_TYPE_NAME ? defaultRuleSchemaId : undefined
     );
 
     loader = new RuleLoader(

@@ -1,5 +1,5 @@
 // src/services/browserStorageProvider.js
-import { IStorageProvider } from '../interfaces/iStorageProvider.js';
+import { IStorageProvider } from '../interfaces/IStorageProvider.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../constants/eventIds.js';
 import { resolveSafeDispatcher } from '../utils/dispatcherUtils.js';
 

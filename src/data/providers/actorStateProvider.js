@@ -3,7 +3,7 @@
  * @see src/data/providers/actorStateProvider.js
  */
 
-import { IActorStateProvider } from '../../interfaces/iActorStateProvider.js';
+import { IActorStateProvider } from '../../interfaces/IActorStateProvider.js';
 import {
   NAME_COMPONENT_ID,
   DESCRIPTION_COMPONENT_ID,

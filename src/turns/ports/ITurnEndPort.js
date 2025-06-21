@@ -1,6 +1,6 @@
 /**
  * @file Output-port used by turn handlers to say
- * “this actor's turn is finished”.
+ * “this actor’s turn is finished”.
  *
  * Concrete adapters (e.g. Event-Bus emitters, Promise resolvers, etc.)
  * implement this contract.

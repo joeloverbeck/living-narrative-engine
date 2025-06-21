@@ -75,7 +75,7 @@ describe('EntityDefinitionLoader', () => {
       const modId = 'core';
       const filename = 'goblin.definition.json';
       const resolvedPath = `data/mods/core/entities/definitions/${filename}`;
-      const registryKey = 'entityDefinitions';
+      const typeName = 'entityDefinitions';
 
       const testEntityData = {
         $schema: 'http://example.com/schemas/entity-definition.schema.json',
@@ -109,7 +109,7 @@ describe('EntityDefinitionLoader', () => {
         filename,
         resolvedPath,
         testEntityData,
-        registryKey
+        typeName
       );
 
       // --- Assert ---
@@ -154,8 +154,8 @@ describe('EntityDefinitionLoader', () => {
       const modId = 'core';
       const filename = 'invalid-goblin.definition.json';
       const resolvedPath = `data/mods/core/entities/definitions/${filename}`;
-      const diskFolder = 'entities/definitions';
-      const registryKey = 'entityDefinitions';
+      const contentTypeDir = 'entities/definitions';
+      const typeName = 'entityDefinitions';
       const primarySchemaId = 'entity-definition-schema';
 
       const invalidEntityData = {
@@ -194,7 +194,7 @@ describe('EntityDefinitionLoader', () => {
       // --- Act & Assert ---
       // The call should now be rejected because `validateAgainstSchema` will throw an error.
       await expect(
-        loader._processFileWrapper(modId, filename, diskFolder, registryKey)
+        loader._processFileWrapper(modId, filename, contentTypeDir, typeName)
       ).rejects.toThrow(
         /Primary schema validation failed for 'invalid-goblin.definition.json'/
       );

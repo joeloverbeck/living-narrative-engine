@@ -9,12 +9,11 @@
  * @typedef {import('../interfaces/ITurnContext.js').ITurnContext} ITurnContext
  * @typedef {import('../interfaces/ITurnState.js').ITurnState} ITurnState
  * @typedef {import('../interfaces/ITurnStateFactory.js').ITurnStateFactory} ITurnStateFactory
- * @typedef {import('../ports/iTurnEndPort.js').ITurnEndPort} ITurnEndPort
+ * @typedef {import('../ports/ITurnEndPort.js').ITurnEndPort} ITurnEndPort
  * @typedef {import('../interfaces/IActorTurnStrategy.js').ITurnAction} ITurnAction
  */
 
-import { ITurnStateHost } from '../interfaces/iTurnStateHost.js';
-import { ITurnEndPort } from '../ports/iTurnEndPort.js';
+import { ITurnStateHost } from '../interfaces/ITurnStateHost.js';
 
 /**
  * @abstract
@@ -34,7 +33,7 @@ export class BaseTurnHandler {
    * @param {object} deps
    * @param {ILogger} deps.logger
    * @param {ITurnStateFactory} deps.turnStateFactory - Factory for creating turn states.
-   * @implements {iTurnStateHost}
+   * @implements {ITurnStateHost}
    */
   constructor({ logger, turnStateFactory }) {
     if (!logger) {

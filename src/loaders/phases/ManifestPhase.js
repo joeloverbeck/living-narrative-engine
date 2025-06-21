@@ -1,11 +1,8 @@
-// src/loaders/phases/manifestphase.js
-
-import LoaderPhase from './loaderphase.js';
+import LoaderPhase from './LoaderPhase.js';
 import {
   ModsLoaderPhaseError,
   ModsLoaderErrorCode,
 } from '../../errors/modsLoaderPhaseError.js';
-import { logPhaseStart } from '../../utils/logPhaseStart.js';
 
 /**
  * @description Phase responsible for handling manifest loading, dependency checks, version validation and final mod-order resolution.
@@ -14,7 +11,7 @@ export default class ManifestPhase extends LoaderPhase {
   /**
    * @description Creates a new ManifestPhase instance.
    * @param {object} params - Configuration parameters
-   * @param {import('../../loaders/modManifestProcessor.js').default} params.processor - Service for processing mod manifests
+   * @param {import('../../loaders/ModManifestProcessor.js').default} params.processor - Service for processing mod manifests
    * @param {import('../../interfaces/coreServices.js').ILogger} params.logger - Logger service
    */
   constructor({ processor, logger }) {
@@ -25,12 +22,12 @@ export default class ManifestPhase extends LoaderPhase {
 
   /**
    * @description Executes the manifest processing phase.
-   * @param {import('../loadContext.js').LoadContext} ctx - The load context
+   * @param {import('../LoadContext.js').LoadContext} ctx - The load context
    * @returns {Promise<void>}
    * @throws {ModsLoaderPhaseError} When manifest processing fails
    */
   async execute(ctx) {
-    logPhaseStart(this.logger, 'ManifestPhase');
+    this.logger.info('— ManifestPhase starting —');
     try {
       const res = await this.processor.processManifests(
         ctx.requestedMods,

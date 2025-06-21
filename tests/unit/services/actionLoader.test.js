@@ -14,18 +14,18 @@ import { BaseManifestItemLoader } from '../../../src/loaders/baseManifestItemLoa
 // --- Mock Service Factories (Keep as is) ---
 const createMockConfiguration = (overrides = {}) => ({
   getModsBasePath: jest.fn().mockReturnValue('./data/mods'),
-  getContentTypeSchemaId: jest.fn((registryKey) => {
+  getContentTypeSchemaId: jest.fn((typeName) => {
     if (
       overrides.getContentTypeSchemaId &&
       typeof overrides.getContentTypeSchemaId === 'function'
     ) {
-      const result = overrides.getContentTypeSchemaId(registryKey);
+      const result = overrides.getContentTypeSchemaId(typeName);
       if (result !== undefined) return result;
     }
-    if (registryKey === 'actions') {
+    if (typeName === 'actions') {
       return 'http://example.com/schemas/action.schema.json';
     }
-    return `http://example.com/schemas/${registryKey}.schema.json`;
+    return `http://example.com/schemas/${typeName}.schema.json`;
   }),
   getSchemaBasePath: jest.fn().mockReturnValue('schemas'),
   getSchemaFiles: jest.fn().mockReturnValue([]),
@@ -33,16 +33,16 @@ const createMockConfiguration = (overrides = {}) => ({
   getBaseDataPath: jest.fn().mockReturnValue('./data'),
   getGameConfigFilename: jest.fn().mockReturnValue('game.json'),
   getModManifestFilename: jest.fn().mockReturnValue('mod.manifest.json'),
-  getContentBasePath: jest.fn((registryKey) => `./data/${registryKey}`),
+  getContentBasePath: jest.fn((typeName) => `./data/${typeName}`),
   ...overrides,
 });
 const createMockPathResolver = (overrides = {}) => ({
   resolveModContentPath: jest.fn(
-    (modId, registryKey, filename) =>
-      `./data/mods/${modId}/${registryKey}/${filename}`
+    (modId, typeName, filename) =>
+      `./data/mods/${modId}/${typeName}/${filename}`
   ),
   resolveContentPath: jest.fn(
-    (registryKey, filename) => `./data/${registryKey}/${filename}`
+    (typeName, filename) => `./data/${typeName}/${filename}`
   ),
   resolveSchemaPath: jest.fn((filename) => `./data/schemas/${filename}`),
   resolveModManifestPath: jest.fn(

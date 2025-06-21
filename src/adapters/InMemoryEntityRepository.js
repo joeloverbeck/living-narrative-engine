@@ -1,5 +1,5 @@
 import MapManager from '../utils/mapManagerUtils.js';
-import { IEntityRepository } from '../ports/iEntityRepository.js';
+import { IEntityRepository } from '../ports/IEntityRepository.js';
 
 /**
  * @class InMemoryEntityRepository

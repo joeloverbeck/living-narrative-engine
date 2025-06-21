@@ -22,20 +22,20 @@ import RuleLoader from '../../../src/loaders/ruleLoader.js'; // Adjust path as n
  * @returns {import('../../../src/interfaces/coreServices.js').IConfiguration} Mocked configuration service.
  */
 const createMockConfiguration = (overrides = {}) => ({
-  getContentBasePath: jest.fn((registryKey) => `./data/mods/test-mod/${registryKey}`),
+  getContentBasePath: jest.fn((typeName) => `./data/mods/test-mod/${typeName}`),
   // Updated to specifically handle 'rules' and return ruleSchemaId
-  getContentTypeSchemaId: jest.fn((registryKey) => {
-    if (registryKey === 'rules') {
+  getContentTypeSchemaId: jest.fn((typeName) => {
+    if (typeName === 'rules') {
       // Delegate to getRuleSchemaId or return a fixed value if getRuleSchemaId isn't used directly
       // Assuming RuleLoader might use this OR getRuleSchemaId directly.
       // Let's use a default value here and allow overriding getRuleSchemaId separately.
       return 'http://example.com/schemas/rule.schema.json';
     }
     // Add other types if needed for different loaders tested in the same context potentially
-    if (registryKey === 'components') {
+    if (typeName === 'components') {
       return 'http://example.com/schemas/component.schema.json';
     }
-    return `http://example.com/schemas/${registryKey}.schema.json`; // Generic fallback
+    return `http://example.com/schemas/${typeName}.schema.json`; // Generic fallback
   }),
   getSchemaBasePath: jest.fn().mockReturnValue('schemas'),
   getSchemaFiles: jest.fn().mockReturnValue([]),
@@ -61,11 +61,11 @@ const createMockConfiguration = (overrides = {}) => ({
 const createMockPathResolver = (overrides = {}) => ({
   // resolveModContentPath is the key method needed by loaders iterating mod content
   resolveModContentPath: jest.fn(
-    (modId, registryKey, filename) =>
-      `./data/mods/${modId}/${registryKey}/${filename}`
+    (modId, typeName, filename) =>
+      `./data/mods/${modId}/${typeName}/${filename}`
   ),
   resolveContentPath: jest.fn(
-    (registryKey, filename) => `./data/${registryKey}/${filename}`
+    (typeName, filename) => `./data/${typeName}/${filename}`
   ),
   resolveSchemaPath: jest.fn((filename) => `./data/schemas/${filename}`),
   resolveModManifestPath: jest.fn(
@@ -451,8 +451,8 @@ describe('RuleLoader (Sub-Ticket 4.1: Test Setup & Mocking)', () => {
     // --- Default Mock Configurations ---
     // Ensure the rule schema ID is consistently returned
     mockConfig.getRuleSchemaId.mockReturnValue(defaultRuleSchemaId);
-    mockConfig.getContentTypeSchemaId.mockImplementation((registryKey) => {
-      if (registryKey === 'rules') {
+    mockConfig.getContentTypeSchemaId.mockImplementation((typeName) => {
+      if (typeName === 'rules') {
         return defaultRuleSchemaId;
       }
       return undefined; // Or handle other types if necessary

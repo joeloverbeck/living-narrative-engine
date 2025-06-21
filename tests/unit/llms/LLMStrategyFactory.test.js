@@ -1,9 +1,9 @@
 // tests/llms/LLMStrategyFactory.test.js
 // --- CORRECTED FILE START ---
 import { jest, describe, beforeEach, test, expect } from '@jest/globals';
-import { LLMStrategyFactory } from '../../../src/llms/llmStrategyFactory.js';
+import { LLMStrategyFactory } from '../../../src/llms/LLMStrategyFactory.js';
 import { ConfigurationError } from '../../../src/errors/configurationError';
-import { LLMStrategyFactoryError } from '../../../src/llms/errors/llmStrategyFactoryError.js';
+import { LLMStrategyFactoryError } from '../../../src/llms/errors/LLMStrategyFactoryError.js';
 
 // Import concrete strategies to check instanceof and to mock their modules
 import { OpenRouterJsonSchemaStrategy } from '../../../src/llms/strategies/openRouterJsonSchemaStrategy.js';

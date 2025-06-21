@@ -56,9 +56,9 @@ class StaticConfiguration {
     return 'schemas';
   }
 
-  /** @param {string} registryKey */
-  getContentBasePath(registryKey) {
-    return registryKey;
+  /** @param {string} typeName */
+  getContentBasePath(typeName) {
+    return typeName;
   }
 
   /** @returns {string} */
@@ -123,10 +123,10 @@ class StaticConfiguration {
   /**
    * Maps logical content-type names to their canonical $id values.
    *
-   * @param    {string} registryKey
+   * @param    {string} typeName
    * @returns {string|undefined}
    */
-  getContentTypeSchemaId(registryKey) {
+  getContentTypeSchemaId(typeName) {
     const map = {
       // --- CORE ---
       'mod-manifest': 'http://example.com/schemas/mod.manifest.schema.json',
@@ -153,7 +153,7 @@ class StaticConfiguration {
       'ui-icons': 'http://example.com/schemas/ui-icons.schema.json',
       'ui-labels': 'http://example.com/schemas/ui-labels.schema.json',
     };
-    return map[registryKey];
+    return map[typeName];
   }
 
   /* ─────────────────────────────── OTHER IDS ─────────────────────────────── */

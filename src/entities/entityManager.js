@@ -16,15 +16,15 @@
 //  @since   0.3.0
 // -----------------------------------------------------------------------------
 
-import InMemoryEntityRepository from '../adapters/inMemoryEntityRepository.js';
-import UuidGenerator from '../adapters/uuidGenerator.js';
-import LodashCloner from '../adapters/lodashCloner.js';
-import DefaultComponentPolicy from '../adapters/defaultComponentPolicy.js';
+import InMemoryEntityRepository from '../adapters/InMemoryEntityRepository.js';
+import UuidGenerator from '../adapters/UuidGenerator.js';
+import LodashCloner from '../adapters/LodashCloner.js';
+import DefaultComponentPolicy from '../adapters/DefaultComponentPolicy.js';
 import Entity from './entity.js';
 import EntityInstanceData from './entityInstanceData.js';
 import MapManager from '../utils/mapManagerUtils.js';
 import EntityFactory from './factories/entityFactory.js';
-import EntityQuery from '../query/entityQuery.js';
+import EntityQuery from '../query/EntityQuery.js';
 import {
   assertValidId,
   assertNonBlankString,
@@ -35,7 +35,7 @@ import {
   NOTES_COMPONENT_ID,
   GOALS_COMPONENT_ID,
 } from '../constants/componentIds.js';
-import { IEntityManager } from '../interfaces/iEntityManager.js';
+import { IEntityManager } from '../interfaces/IEntityManager.js';
 import { validateDependency } from '../utils/validationUtils.js';
 import { ensureValidLogger } from '../utils';
 import { DefinitionNotFoundError } from '../errors/definitionNotFoundError.js';
@@ -49,8 +49,6 @@ import {
   COMPONENT_ADDED_ID,
   COMPONENT_REMOVED_ID,
 } from '../constants/eventIds.js';
-import { IEntityRepository } from '../ports/iEntityRepository.js';
-import { IDefaultComponentPolicy } from '../ports/iDefaultComponentPolicy.js';
 
 /* -------------------------------------------------------------------------- */
 /* Type-Hint Imports (JSDoc only – removed at runtime)                        */
@@ -62,6 +60,7 @@ import { IDefaultComponentPolicy } from '../ports/iDefaultComponentPolicy.js';
 /** @typedef {import('../interfaces/coreServices.js').ILogger}              ILogger */
 /** @typedef {import('../interfaces/coreServices.js').ValidationResult}     ValidationResult */
 /** @typedef {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
+/** @typedef {import('../ports/IEntityRepository.js').IEntityRepository} IEntityRepository */
 /** @typedef {import('../ports/IComponentCloner.js').IComponentCloner} IComponentCloner */
 /** @typedef {import('../ports/IIdGenerator.js').IIdGenerator} IIdGenerator */
 /** @typedef {import('../ports/IDefaultComponentPolicy.js').IDefaultComponentPolicy} IDefaultComponentPolicy */

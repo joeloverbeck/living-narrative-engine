@@ -37,11 +37,11 @@ const mockSchemaValidatorInstance = () => ({
  * @returns {jest.Mocked<import('../../src/interfaces/coreServices.js').IConfiguration>}
  */
 const mockConfigurationInstance = () => ({
-  getContentTypeSchemaId: jest.fn((registryKey) => {
-    if (registryKey === 'llm-configs') {
+  getContentTypeSchemaId: jest.fn((typeName) => {
+    if (typeName === 'llm-configs') {
       return 'http://example.com/schemas/llm-configs.schema.json';
     }
-    return `http://example.com/schemas/${registryKey}.schema.json`;
+    return `http://example.com/schemas/${typeName}.schema.json`;
   }),
   // Add other IConfiguration methods if LlmConfigLoader uses them, otherwise keep minimal
 });
@@ -169,11 +169,11 @@ describe('LlmConfigLoader - Initialization and Schema Handling', () => {
 
   test('should return an error with stage "validation_setup" if schema ID for "llm-configs" cannot be retrieved', async () => {
     // Arrange
-    configurationMock.getContentTypeSchemaId.mockImplementation((registryKey) => {
-      if (registryKey === 'llm-configs') {
+    configurationMock.getContentTypeSchemaId.mockImplementation((typeName) => {
+      if (typeName === 'llm-configs') {
         return undefined; // Simulate schema ID not found for 'llm-configs'
       }
-      return `http://example.com/schemas/${registryKey}.schema.json`;
+      return `http://example.com/schemas/${typeName}.schema.json`;
     });
     // fetchWithRetry will still be called as this check happens after fetch.
     fetchWithRetry.mockResolvedValue(

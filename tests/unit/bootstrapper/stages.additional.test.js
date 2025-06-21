@@ -16,7 +16,7 @@ import {
   startGameStage,
 } from '../../../src/bootstrapper/stages';
 import AppContainer from '../../../src/dependencyInjection/appContainer.js';
-import StageError from '../../../src/bootstrapper/stageError.js';
+import StageError from '../../../src/bootstrapper/StageError.js';
 
 const createLogger = () => ({
   debug: jest.fn(),

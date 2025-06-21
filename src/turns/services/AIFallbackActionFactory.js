@@ -1,18 +1,17 @@
 // src/turns/services/AIFallbackActionFactory.js
 // --- FILE START ---
 
-import { ILogger } from '../../interfaces/iLogger.js';
-import { ISafeEventDispatcher } from '../../interfaces/iSafeEventDispatcher.js';
-import { IAIFallbackActionFactory } from '../interfaces/iAIFallbackActionFactory.js';
+import { IAIFallbackActionFactory } from '../interfaces/IAIFallbackActionFactory.js';
 import { DEFAULT_FALLBACK_ACTION } from '../../llms/constants/llmConstants.js';
 
 /** @typedef {import('../interfaces/IActorTurnStrategy.js').ITurnAction} ITurnAction */
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 
 /**
- * Factory for creating fallback actions when AI processing fails.
- * 
+ * @class AIFallbackActionFactory
  * @augments {IAIFallbackActionFactory}
+ * @description Concrete implementation that builds fallback actions when
+ * AI processing fails.
  */
 export class AIFallbackActionFactory extends IAIFallbackActionFactory {
   #logger;

@@ -4,9 +4,8 @@
  */
 // ──────────────────────────────────────────────────────────────────────────────
 
-import { ITurnContextFactory } from '../interfaces/iTurnContextFactory.js';
+import { ITurnContextFactory } from '../interfaces/ITurnContextFactory.js';
 import { TurnContext } from '../context/turnContext.js';
-import { ITurnEndPort } from '../ports/iTurnEndPort.js';
 
 /**
  * @typedef {import('../../entities/entity.js').default} Entity

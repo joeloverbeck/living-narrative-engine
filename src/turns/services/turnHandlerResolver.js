@@ -2,7 +2,7 @@
 // --- FILE START (Entire file content as requested) ---
 
 // --- Interface Imports ---
-import { ITurnHandlerResolver } from '../interfaces/iTurnHandlerResolver.js';
+import { ITurnHandlerResolver } from '../interfaces/ITurnHandlerResolver.js';
 
 // --- Core Imports ---
 import { validateDependency } from '../../utils/validationUtils.js';
@@ -21,7 +21,7 @@ import { validateDependency } from '../../utils/validationUtils.js';
 
 /**
  * @class TurnHandlerResolver
- * @implements {iTurnHandlerResolver}
+ * @implements {ITurnHandlerResolver}
  * @description Service responsible for resolving the correct ITurnHandler using a
  * configurable set of rules. It finds the first matching rule and uses its factory
  * to create a new handler instance.
