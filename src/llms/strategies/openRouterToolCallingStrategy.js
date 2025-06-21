@@ -44,11 +44,8 @@ export class OpenRouterToolCallingStrategy extends BaseOpenRouterStrategy {
    * @throws {LLMStrategyError} If tool schema configuration is invalid.
    */
   _buildProviderRequestPayloadAdditions(baseMessagesPayload, llmConfig) {
-    // MODIFICATION START: Use llmConfig.configId for logging
     const llmId = llmConfig?.configId || 'UnknownLLM';
-    // MODIFICATION END
 
-    // MODIFICATION START: Use toolName from llmConfig.jsonOutputStrategy
     const configuredToolName = llmConfig.jsonOutputStrategy?.toolName;
 
     if (
@@ -70,7 +67,6 @@ export class OpenRouterToolCallingStrategy extends BaseOpenRouterStrategy {
         llmId
       );
     }
-    // MODIFICATION END
 
     // The parameters schema can still come from constants if it's standardized for this strategy's purpose.
     // If the parameters schema also needs to be dynamic from llmConfig, that would be a further change.
@@ -126,12 +122,9 @@ export class OpenRouterToolCallingStrategy extends BaseOpenRouterStrategy {
    * @throws {LLMStrategyError} If JSON content cannot be extracted or validated.
    */
   async _extractJsonOutput(responseData, llmConfig, _providerRequestPayload) {
-    // MODIFICATION START: Use llmConfig.configId for logging
     const llmId = llmConfig?.configId || 'UnknownLLM';
-    // MODIFICATION END
     const message = responseData?.choices?.[0]?.message;
 
-    // MODIFICATION START: Use expectedToolName from llmConfig.jsonOutputStrategy
     const expectedToolName = llmConfig.jsonOutputStrategy?.toolName;
 
     if (
@@ -146,7 +139,6 @@ export class OpenRouterToolCallingStrategy extends BaseOpenRouterStrategy {
       });
       throw new LLMStrategyError(errorMsg, llmId);
     }
-    // MODIFICATION END
 
     if (!message) {
       const errorMsg = `${this.constructor.name} (${llmId}): Response structure did not contain 'choices[0].message'.`;

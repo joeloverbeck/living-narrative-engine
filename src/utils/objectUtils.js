@@ -1,17 +1,16 @@
 // src/utils/objectUtils.js
 
-import {
-  PersistenceError,
-  PersistenceErrorCodes,
-} from '../persistence/persistenceErrors.js';
+import { PersistenceErrorCodes } from '../persistence/persistenceErrors.js';
 import {
   createPersistenceFailure,
   createPersistenceSuccess,
-} from '../persistence/persistenceResultUtils.js';
+} from './persistenceResultUtils.js';
 import { ensureValidLogger } from './loggerUtils.js';
 
 /**
  * @file Utility functions for working with plain JavaScript objects.
+ * @description Re-exported from {@link src/utils/index.js}. Import from there
+ * for convenience.
  */
 
 /**
@@ -61,6 +60,32 @@ export function resolvePath(obj, propertyPath) {
   }
 
   return current;
+}
+
+/**
+ * Safely resolves a path within an object and logs errors on failure.
+ *
+ * @description Wraps {@link resolvePath} in a try/catch block. When
+ * resolution throws an error, the error is logged using
+ * {@link ensureValidLogger} and `undefined` is returned.
+ * @param {Record<string, any> | any[] | null | undefined} obj - Root object to
+ *   resolve against.
+ * @param {string} propertyPath - Dot separated path.
+ * @param {import('../interfaces/coreServices.js').ILogger} [logger] - Logger for
+ *   error reporting.
+ * @param {string} [contextInfo] - Additional context included in log messages.
+ * @returns {any | undefined} The resolved value or `undefined` when resolution
+ *   fails.
+ */
+export function safeResolvePath(obj, propertyPath, logger, contextInfo = '') {
+  const log = ensureValidLogger(logger, 'ObjectUtils');
+  try {
+    return resolvePath(obj, propertyPath);
+  } catch (error) {
+    const info = contextInfo ? ` (${contextInfo})` : '';
+    log.error(`Error resolving path "${propertyPath}"${info}`, error);
+    return undefined;
+  }
 }
 
 /**
@@ -140,7 +165,7 @@ export function safeDeepClone(value, logger) {
 export function deepFreeze(object) {
   if (object && typeof object === 'object') {
     // Freeze properties before freezing self
-    Object.keys(object).forEach(key => {
+    Object.keys(object).forEach((key) => {
       const value = object[key];
       // Recurse for nested objects
       if (value && typeof value === 'object') {

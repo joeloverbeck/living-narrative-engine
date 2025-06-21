@@ -1,7 +1,8 @@
 // src/entities/entity.js
 
 // import MapManager from '../utils/mapManagerUtils.js'; // No longer extends MapManager
-import EntityInstanceData from './EntityInstanceData.js'; // Added import
+import EntityInstanceData from './entityInstanceData.js'; // Added import
+// import { IEntity } from '../interfaces/IEntity.js'; // Assuming IEntity is the correct interface
 
 /**
  * Represents a game entity (player, NPC, item, etc.).
@@ -13,12 +14,14 @@ import EntityInstanceData from './EntityInstanceData.js'; // Added import
  */
 // class Entity extends MapManager { // No longer extends MapManager
 class Entity {
+  // Ensure it extends the correct interface if any
   /**
    * The underlying instance data for this entity.
+   *
    * @type {EntityInstanceData}
    * @private
    */
-  _instanceData;
+  #data; // Correctly declared private field
 
   /**
    * The unique runtime identifier (typically a UUID) for this entity instance.
@@ -27,7 +30,7 @@ class Entity {
    * @readonly
    */
   get id() {
-    return this._instanceData.instanceId;
+    return this.#data.instanceId; // Use #data
   }
 
   /**
@@ -38,7 +41,7 @@ class Entity {
    * @readonly
    */
   get definitionId() {
-    return this._instanceData.definition.id;
+    return this.#data.definition.id; // Use #data
   }
 
   /**
@@ -49,10 +52,13 @@ class Entity {
    */
   constructor(instanceData) {
     // super({ throwOnInvalidId: false }); // Removed as no longer extending MapManager
+    // super(); // Call super constructor if extending an interface class that has one
     if (!(instanceData instanceof EntityInstanceData)) {
-      throw new Error('Entity must be initialized with an EntityInstanceData object.');
+      throw new Error(
+        'Entity must be initialized with an EntityInstanceData object.'
+      );
     }
-    this._instanceData = instanceData;
+    this.#data = instanceData; // Assign to #data
     // console.log(`Entity created: ${this.id} (from definition: ${this.definitionId})`);
   }
 
@@ -71,7 +77,7 @@ class Entity {
       );
     }
     // componentData validation (being an object) is implicitly handled by setComponentOverride or could be added here.
-    this._instanceData.setComponentOverride(componentTypeId, componentData);
+    this.#data.setComponentOverride(componentTypeId, componentData); // Use #data
     // console.log(`Entity ${this.id}: Added/Updated component override for "${componentTypeId}"`);
     return true; // Explicitly return true on success
   }
@@ -84,7 +90,7 @@ class Entity {
    * @returns {object | undefined} The component data object if found, otherwise undefined.
    */
   getComponentData(componentTypeId) {
-    return this._instanceData.getComponentData(componentTypeId);
+    return this.#data.getComponentData(componentTypeId); // Use #data
   }
 
   /**
@@ -92,10 +98,12 @@ class Entity {
    * considering both its definition and instance overrides.
    *
    * @param {string} componentTypeId - The unique string identifier for the component type.
+   * @param {boolean} [checkOverrideOnly] - If true, only checks instance overrides.
    * @returns {boolean} True if the entity has data for this component type, false otherwise.
    */
-  hasComponent(componentTypeId) {
-    return this._instanceData.hasComponent(componentTypeId);
+  hasComponent(componentTypeId, checkOverrideOnly = false) {
+    // Added checkOverrideOnly parameter
+    return this.#data.hasComponent(componentTypeId, checkOverrideOnly); // Use #data and pass parameter
   }
 
   /**
@@ -110,7 +118,7 @@ class Entity {
   removeComponent(componentTypeId) {
     // This now refers to removing an *override*.
     // The previous MapManager based remove is different.
-    return this._instanceData.removeComponentOverride(componentTypeId);
+    return this.#data.removeComponentOverride(componentTypeId); // Use #data
   }
 
   /**
@@ -119,60 +127,38 @@ class Entity {
    * @returns {string}
    */
   toString() {
-    const componentTypeIds = this._instanceData.allComponentTypeIds.join(', ');
+    const componentTypeIds = this.#data.allComponentTypeIds.join(', '); // Use #data
     return `Entity[${this.id} (Def: ${this.definitionId})] Components: ${componentTypeIds || 'None'}`;
   }
 
   /**
-   * Gets an iterable of all component type IDs effectively present on this entity
+   * Gets an array of all component type IDs effectively present on this entity
    * (considering definition and overrides).
    *
-   * @returns {IterableIterator<string>} An iterator over the component type IDs.
+   * @returns {string[]} An array of the component type IDs.
    */
   get componentTypeIds() {
-    // Convert array to an iterator if strict API compatibility is needed,
-    // or change consuming code to expect an array. For now, returning array.
-    return this._instanceData.allComponentTypeIds[Symbol.iterator]();
+    return this.#data.allComponentTypeIds;
   }
 
   /**
-   * Gets an iterable of all component data objects effectively present on this entity.
+   * Gets an array of all component data objects effectively present on this entity.
    *
-   * @returns {IterableIterator<object>} An iterator over the component data objects.
+   * @returns {object[]} An array of the component data objects.
    */
   get allComponentData() {
-    const instance = this; // to use 'this' inside map function of the generator
-    // This needs to be a generator because we resolve data on demand
-    // eslint-disable-next-line func-style
-    function* componentDataGenerator() {
-      for (const typeId of instance._instanceData.allComponentTypeIds) {
-        const data = instance.getComponentData(typeId);
-        if (data !== undefined && data !== null) { // Ensure component exists (e.g. override wasn't null)
-            yield data;
-        }
-      }
-    }
-    return componentDataGenerator();
+    return this.componentEntries.map(([, data]) => data);
   }
 
   /**
-   * Gets an iterable of [componentTypeId, componentData] pairs effectively present on this entity.
+   * Gets an array of [componentTypeId, componentData] pairs effectively present on this entity.
    *
-   * @returns {IterableIterator<[string, object]>} An iterator over the [ID, data] pairs.
+   * @returns {Array<[string, object]>} An array of the [ID, data] pairs.
    */
   get componentEntries() {
-    const instance = this; // to use 'this' inside map function of the generator
-    // This needs to be a generator because we resolve data on demand
-    // eslint-disable-next-line func-style
-    function* componentEntriesGenerator() {
-      for (const typeId of instance._instanceData.allComponentTypeIds) {
-        const data = instance.getComponentData(typeId);
-         if (data !== undefined && data !== null) { // Ensure component exists
-            yield [typeId, data];
-        }
-      }
-    }
-    return componentEntriesGenerator();
+    return this.#data.allComponentTypeIds
+      .map((typeId) => [typeId, this.getComponentData(typeId)])
+      .filter(([, data]) => data !== undefined && data !== null);
   }
 
   /**
@@ -184,7 +170,8 @@ class Entity {
    * @returns {EntityInstanceData}
    */
   get instanceData() {
-    return this._instanceData;
+    // This getter might be redundant
+    return this.#data; // Use #data
   }
 }
 

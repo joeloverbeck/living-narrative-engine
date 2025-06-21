@@ -1,0 +1,21 @@
+{
+  "$schema": "http://example.com/schemas/goal.schema.json",
+  "id": "monsters:goal_attack_intruder",
+  "description": "A high-priority goal to attack any visible enemy until they are defeated.",
+  "priority": 100,
+  "relevance": {
+    "logic": {
+      "!!": "world.enemyInSight"
+    }
+  },
+  "goalState": {
+    "logic": {
+      "<=": [
+        {
+          "var": "target.components.core:health.hp"
+        },
+        0
+      ]
+    }
+  }
+}

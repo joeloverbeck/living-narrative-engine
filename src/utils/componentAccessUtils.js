@@ -11,6 +11,28 @@ import {
   isValidEntity,
 } from './entityValidationUtils.js';
 
+/**
+ * Checks that the provided identifier is a non-blank string.
+ *
+ * @param {*} id - Value to validate.
+ * @returns {boolean} True when `id` is a non-empty string.
+ * @private
+ */
+function _isValidId(id) {
+  return typeof id === 'string' && id.trim() !== '';
+}
+
+/**
+ * Checks that the manager or entity exposes a `getComponentData` method.
+ *
+ * @param {*} mgr - Value to validate.
+ * @returns {boolean} True if `mgr.getComponentData` is a function.
+ * @private
+ */
+function _isValidManager(mgr) {
+  return !!mgr && typeof mgr.getComponentData === 'function';
+}
+
 /** @typedef {import('../entities/entity.js').default} Entity */
 
 /**
@@ -19,21 +41,26 @@ import {
  * @param {Entity | any} entity - The entity instance to query. Must expose a
  *   `getComponentData` method.
  * @param {string} componentId - The component type ID to retrieve.
+ * @param {import('../interfaces/ILogger.js').ILogger} [logger] - Optional logger
+ *   for debug messages.
  * @returns {any | null} The component data if available, otherwise `null`.
  */
-export function getComponent(entity, componentId) {
-  if (typeof componentId !== 'string' || componentId.trim() === '') {
-    return null;
-  }
+export function getComponentFromEntity(entity, componentId, logger) {
+  const log = getPrefixedLogger(logger, '[componentAccessUtils] ');
 
-  if (!entity || typeof entity.getComponentData !== 'function') {
+  if (!_isValidId(componentId) || !_isValidManager(entity)) {
+    log.debug('getComponentFromEntity: invalid entity or componentId.');
     return null;
   }
 
   try {
     const data = entity.getComponentData(componentId);
     return data ?? null;
-  } catch {
+  } catch (error) {
+    log.debug(
+      'getComponentFromEntity: error retrieving component data.',
+      error
+    );
     return null;
   }
 }
@@ -50,26 +77,35 @@ export function getComponent(entity, componentId) {
  * @param {string} entityId - The ID of the entity instance to query.
  * @param {string} componentId - The component type ID to retrieve.
  * @param {IEntityManager} entityManager - Manager used to access component data.
+ * @param logger
  * @returns {any | null} The component data if available, otherwise `null`.
  */
-export function getComponentFromManager(entityId, componentId, entityManager) {
-  if (
-    typeof entityId !== 'string' ||
-    entityId.trim() === '' ||
-    typeof componentId !== 'string' ||
-    componentId.trim() === ''
-  ) {
+export function getComponentFromManager(
+  entityId,
+  componentId,
+  entityManager,
+  logger
+) {
+  const log = getPrefixedLogger(logger, '[componentAccessUtils] ');
+
+  if (!_isValidId(entityId) || !_isValidId(componentId)) {
+    log.debug('getComponentFromManager: invalid entityId or componentId.');
     return null;
   }
 
-  if (!entityManager || typeof entityManager.getComponentData !== 'function') {
+  if (!_isValidManager(entityManager)) {
+    log.debug('getComponentFromManager: invalid entityManager provided.');
     return null;
   }
 
   try {
     const data = entityManager.getComponentData(entityId, componentId);
     return data ?? null;
-  } catch {
+  } catch (error) {
+    log.debug(
+      `getComponentFromManager: error retrieving '${componentId}' for entity '${entityId}'.`,
+      error
+    );
     return null;
   }
 }
@@ -113,7 +149,7 @@ export function resolveEntityInstance(entityOrId, entityManager, logger) {
     return null;
   }
 
-  if (entityOrId != null) {
+  if (entityOrId !== null && entityOrId !== undefined) {
     log.debug('resolveEntityInstance: provided value is not a valid entity.');
   }
 

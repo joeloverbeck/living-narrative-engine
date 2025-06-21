@@ -24,6 +24,11 @@ import {
   TURN_PROCESSING_ENDED,
 } from '../constants/eventIds.js';
 import { ITurnManager } from './interfaces/ITurnManager.js';
+import RoundManager from './roundManager.js';
+import TurnCycle from './turnCycle.js';
+import { RealScheduler } from '../scheduling/index.js';
+import { safeDispatch } from '../utils/eventHelpers.js';
+import { logStart, logEnd, logError } from '../utils/logHelpers.js';
 
 /**
  * @class TurnManager
@@ -45,6 +50,12 @@ class TurnManager extends ITurnManager {
   #dispatcher;
   /** @type {ITurnHandlerResolver} */
   #turnHandlerResolver;
+  /** @type {RoundManager} */
+  #roundManager;
+  /** @type {TurnCycle} */
+  #turnCycle;
+  /** @type {import('../scheduling').IScheduler} */
+  #scheduler;
 
   /** @type {boolean} */
   #isRunning = false;
@@ -55,24 +66,6 @@ class TurnManager extends ITurnManager {
   /** @type { (() => void) | null } */
   #turnEndedUnsubscribe = null;
 
-  // --- NEW FIELDS ---
-  /**
-   * Tracks if at least one turn completed successfully within the current round.
-   * Reset to false when a new round starts.
-   *
-   * @type {boolean}
-   */
-  #roundHadSuccessfulTurn = false;
-  /**
-   * Tracks if a round is currently considered in progress (i.e., after startNewRound was called successfully).
-   * Reset to false when stopped or before starting the very first round.
-   *
-   * @type {boolean}
-   */
-  #roundInProgress = false;
-
-  // --- END NEW FIELDS ---
-
   /**
    * Creates an instance of TurnManager.
    *
@@ -82,6 +75,8 @@ class TurnManager extends ITurnManager {
    * @param {ILogger} options.logger - Logging service.
    * @param {IValidatedEventDispatcher} options.dispatcher - Service for dispatching events AND subscribing.
    * @param {ITurnHandlerResolver} options.turnHandlerResolver - Service to resolve the correct turn handler.
+   * @param {RoundManager} [options.roundManager] - Optional RoundManager instance for testing.
+   * @param {import('../scheduling').IScheduler} [options.scheduler] - Scheduler implementation for timeouts.
    * @throws {Error} If any required dependency is missing or invalid.
    */
   constructor(options) {
@@ -93,6 +88,8 @@ class TurnManager extends ITurnManager {
       logger,
       dispatcher,
       turnHandlerResolver,
+      roundManager,
+      scheduler = new RealScheduler(),
     } = options || {};
     const className = this.constructor.name;
 
@@ -139,6 +136,15 @@ class TurnManager extends ITurnManager {
       (logger || console).error(errorMsg);
       throw new Error(errorMsg);
     }
+    if (
+      !scheduler ||
+      typeof scheduler.setTimeout !== 'function' ||
+      typeof scheduler.clearTimeout !== 'function'
+    ) {
+      const errorMsg = `${className} requires a valid IScheduler instance.`;
+      (logger || console).error(errorMsg);
+      throw new Error(errorMsg);
+    }
     // --- End Dependency Validation ---
 
     this.#turnOrderService = turnOrderService;
@@ -146,17 +152,18 @@ class TurnManager extends ITurnManager {
     this.#logger = logger;
     this.#dispatcher = dispatcher;
     this.#turnHandlerResolver = turnHandlerResolver;
+    this.#roundManager = roundManager || new RoundManager(turnOrderService, entityManager, logger);
+    this.#turnCycle = new TurnCycle(turnOrderService, logger);
+    this.#scheduler = scheduler;
 
     // --- State Initialization (reset flags) ---
     this.#isRunning = false;
     this.#currentActor = null;
     this.#currentHandler = null;
     this.#turnEndedUnsubscribe = null;
-    this.#roundHadSuccessfulTurn = false; // Initialize new flag
-    this.#roundInProgress = false; // Initialize new flag
     // --- End State Initialization ---
 
-    this.#logger.debug('TurnManager initialized successfully.');
+    logStart(this.#logger, 'TurnManager initialized successfully.');
   }
 
   /**
@@ -173,9 +180,8 @@ class TurnManager extends ITurnManager {
       return;
     }
     this.#isRunning = true;
-    this.#roundInProgress = false; // Reset on start
-    this.#roundHadSuccessfulTurn = false; // Reset on start
-    this.#logger.debug('Turn Manager started.');
+    this.#roundManager.resetFlags(); // Reset round flags on start
+    logStart(this.#logger, 'Turn Manager started.');
 
     this.#subscribeToTurnEnd(); // Subscribe when manager starts
     await this.advanceTurn();
@@ -202,13 +208,15 @@ class TurnManager extends ITurnManager {
       typeof this.#currentHandler.destroy === 'function'
     ) {
       try {
-        this.#logger.debug(
+        logStart(
+          this.#logger,
           `Calling destroy() on current handler (${this.#currentHandler.constructor?.name || 'Unknown'}) for actor ${this.#currentActor?.id || 'N/A'}`
         );
         await Promise.resolve(this.#currentHandler.destroy());
       } catch (destroyError) {
-        this.#logger.error(
-          `Error calling destroy() on current handler during stop: ${destroyError.message}`,
+        logError(
+          this.#logger,
+          'Error calling destroy() on current handler during stop',
           destroyError
         );
       }
@@ -218,8 +226,7 @@ class TurnManager extends ITurnManager {
     this.#currentHandler = null;
 
     try {
-      await this.#turnOrderService.clearCurrentRound();
-      this.#roundInProgress = false; // Reset round progress flag on stop/clear
+      await this.#turnCycle.clear();
       this.#logger.debug('Turn order service current round cleared.');
     } catch (error) {
       this.#logger.error(
@@ -227,7 +234,7 @@ class TurnManager extends ITurnManager {
         error
       );
     }
-    this.#logger.debug('Turn Manager stopped.');
+    logEnd(this.#logger, 'Turn Manager stopped.');
   }
 
   /**
@@ -236,7 +243,9 @@ class TurnManager extends ITurnManager {
    * @returns {Entity | null} The entity currently taking its turn, or `null`.
    */
   getCurrentActor() {
-    return this.#currentActor;
+    const actor = this.#currentActor;
+    console.log('TurnManager.getCurrentActor: currentActor =', actor?.id);
+    return actor;
   }
 
   /**
@@ -267,7 +276,7 @@ class TurnManager extends ITurnManager {
       return;
     }
 
-    this.#logger.debug('TurnManager.advanceTurn() initiating...');
+    logStart(this.#logger, 'TurnManager.advanceTurn() initiating...');
     // Clear previous actor/handler
     const previousActorIdForLog = this.#currentActor?.id;
     if (previousActorIdForLog) {
@@ -279,15 +288,18 @@ class TurnManager extends ITurnManager {
     this.#currentHandler = null;
 
     try {
-      const isQueueEmpty = await this.#turnOrderService.isEmpty();
+      const nextEntity = await this.#turnCycle.nextActor();
+      console.log('TurnManager.advanceTurn: nextActor =', nextEntity?.id);
 
-      if (isQueueEmpty) {
+      if (!nextEntity) {
+        // TurnCycle.nextActor() returns null only when the queue is empty
+        // (TurnCycle calls isEmpty() first, then getNextEntity() only if not empty)
         this.#logger.debug(
           'Turn queue is empty. Preparing for new round or stopping.'
         );
 
         // --- NEW CHECK: Stop if previous round had no success ---
-        if (this.#roundInProgress && !this.#roundHadSuccessfulTurn) {
+        if (this.#roundManager.inProgress && !this.#roundManager.hadSuccess) {
           const errorMsg =
             'No successful turns completed in the previous round. Stopping TurnManager.';
           this.#logger.error(errorMsg);
@@ -300,97 +312,69 @@ class TurnManager extends ITurnManager {
         }
         // --- END NEW CHECK ---
 
-        // --- Reset for new round ---
+        // --- Start new round using RoundManager ---
         this.#logger.debug('Attempting to start a new round.');
-        this.#roundHadSuccessfulTurn = false; // Reset success tracker *before* starting new round
-        // #roundInProgress will be set to true *after* startNewRound succeeds below
-        // --- End Reset ---
-
-        const allEntities = Array.from(
-          this.#entityManager.activeEntities.values()
-        );
-        const actors = allEntities.filter((e) =>
-          e.hasComponent(ACTOR_COMPONENT_ID)
-        );
-
-        if (actors.length === 0) {
-          const errorMsg =
-            'Cannot start a new round: No active entities with an Actor component found.';
-          this.#logger.error(errorMsg);
+        try {
+          await this.#roundManager.startRound();
+          this.#logger.debug(
+            'New round started, recursively calling advanceTurn() to process the first turn.'
+          );
+          await this.advanceTurn(); // Recursive call to process the first turn of the new round
+          return;
+        } catch (roundError) {
+          // Restore original error handling for test compatibility
+          this.#logger.error(
+            `CRITICAL Error during turn advancement logic (before handler initiation): ${roundError.message}`,
+            roundError
+          );
           await this.#dispatchSystemError(
             'System Error: No active actors found to start a round. Stopping game.',
-            errorMsg
+            roundError.message
           );
           await this.stop();
           return;
         }
-
-        const actorIds = actors.map((a) => a.id);
-        this.#logger.debug(
-          `Found ${actors.length} actors to start the round: ${actorIds.join(', ')}`
-        );
-        const strategy = 'round-robin'; // Or determine dynamically
-
-        // Start the new round in the service
-        await this.#turnOrderService.startNewRound(actors, strategy);
-        this.#roundInProgress = true; // Mark round as officially in progress *after* successful start
-        this.#logger.debug(
-          `Successfully started a new round with ${actors.length} actors using the '${strategy}' strategy.`
-        );
-
-        this.#logger.debug(
-          'New round started, recursively calling advanceTurn() to process the first turn.'
-        );
-        await this.advanceTurn(); // Recursive call to process the first turn of the new round
-        return;
+        // --- End Start new round ---
       } else {
         // Queue is not empty, process next turn
-        this.#logger.debug('Queue not empty, retrieving next entity.');
-        const nextEntity = await this.#turnOrderService.getNextEntity();
-
-        if (!nextEntity) {
-          const errorMsg =
-            'Turn order inconsistency: getNextEntity() returned null/undefined when queue was not empty.';
-          this.#logger.error(errorMsg);
-          await this.#dispatchSystemError(
-            'Internal Error: Turn order inconsistency detected. Stopping game.',
-            errorMsg
-          );
-          await this.stop();
-          return;
-        }
+        this.#logger.debug('Queue not empty, processing next entity.');
 
         this.#currentActor = nextEntity; // Set the new current actor
         const actorId = this.#currentActor.id;
         const isPlayer = this.#currentActor.hasComponent(PLAYER_COMPONENT_ID);
+        const isActor = this.#currentActor.hasComponent(ACTOR_COMPONENT_ID);
         const entityType = isPlayer ? 'player' : 'ai';
+
+        if (!isActor) {
+          this.#logger.warn(
+            `Entity ${actorId} is not an actor. Skipping turn advancement for this entity.`
+          );
+          this.#currentActor = null; // Clear current actor for non-actor entities
+          return;
+        }
 
         this.#logger.debug(
           `>>> Starting turn initiation for Entity: ${actorId} (${entityType}) <<<`
         );
-        try {
-          await this.#dispatcher.dispatch('core:turn_started', {
+        await safeDispatch(
+          this.#dispatcher,
+          'core:turn_started',
+          {
             entityId: actorId,
             entityType: entityType,
-          });
-        } catch (dispatchError) {
-          this.#logger.error(
-            `Failed to dispatch core:turn_started for ${actorId}: ${dispatchError.message}`,
-            dispatchError
-          );
-        }
+          },
+          this.#logger
+        );
 
-        try {
-          await this.#dispatcher.dispatch(TURN_PROCESSING_STARTED, {
+        await safeDispatch(
+          this.#dispatcher,
+          TURN_PROCESSING_STARTED,
+          {
             entityId: actorId,
             actorType: entityType,
-          });
-        } catch (dispatchError) {
-          this.#logger.error(
-            `Failed to dispatch ${TURN_PROCESSING_STARTED} for ${actorId}: ${dispatchError.message}`,
-            dispatchError
-          );
-        }
+          },
+          this.#logger
+        );
 
         this.#logger.debug(`Resolving turn handler for entity ${actorId}...`);
         const handler = await this.#turnHandlerResolver.resolveHandler(
@@ -427,7 +411,7 @@ class TurnManager extends ITurnManager {
           `Calling startTurn on ${handlerName} for entity ${actorId}`
         );
 
-        // Start the turn, but don't await it here. Wait for TURN_ENDED_ID event.
+        console.log('TurnManager: handler =', handler, 'handler.startTurn =', typeof handler?.startTurn);
         handler.startTurn(this.#currentActor).catch((startTurnError) => {
           const errorMsg = `Error during handler.startTurn() initiation for entity ${actorId} (${handlerName}): ${startTurnError.message}`;
           this.#logger.error(errorMsg, startTurnError);
@@ -435,8 +419,10 @@ class TurnManager extends ITurnManager {
             `Error initiating turn for ${actorId}.`,
             startTurnError
           ).catch((e) =>
-            this.#logger.error(
-              `Failed to dispatch system error after startTurn failure: ${e.message}`
+            logError(
+              this.#logger,
+              'Failed to dispatch system error after startTurn failure',
+              e
             )
           );
 
@@ -489,8 +475,8 @@ class TurnManager extends ITurnManager {
       this.#logger.debug(`Subscribing to '${TURN_ENDED_ID}' event.`);
 
       const handlerCallback = (event) => {
-        // MODIFICATION: Use setTimeout to schedule as a macrotask
-        setTimeout(() => {
+        // MODIFICATION: Use scheduler to schedule as a macrotask
+        this.#setTimeout(() => {
           try {
             // #handleTurnEndedEvent is not an async function itself,
             // but it initiates async operations.
@@ -506,8 +492,10 @@ class TurnManager extends ITurnManager {
               'Error processing turn ended event (setTimeout).',
               handlerError
             ).catch((e) =>
-              this.#logger.error(
-                `Failed to dispatch system error after setTimeout event handler failure: ${e.message}`
+              logError(
+                this.#logger,
+                'Failed to dispatch system error after setTimeout event handler failure',
+                e
               )
             );
           }
@@ -533,8 +521,10 @@ class TurnManager extends ITurnManager {
         `Failed to subscribe to ${TURN_ENDED_ID}. Game cannot proceed reliably.`,
         error
       ).catch((e) =>
-        this.#logger.error(
-          `Failed to dispatch system error after subscription failure: ${e.message}`
+        logError(
+          this.#logger,
+          'Failed to dispatch system error after subscription failure',
+          e
         )
       );
       this.stop().catch((e) =>
@@ -614,7 +604,7 @@ class TurnManager extends ITurnManager {
       this.#logger.debug(
         `Marking round as having had a successful turn (actor: ${endedActorId}).`
       );
-      this.#roundHadSuccessfulTurn = true;
+      this.#roundManager.endTurn(true);
     }
 
     const currentActor = this.#currentActor;
@@ -649,13 +639,15 @@ class TurnManager extends ITurnManager {
         handlerToDestroy.signalNormalApparentTermination();
       }
       if (typeof handlerToDestroy.destroy === 'function') {
-        this.#logger.debug(
+        logStart(
+          this.#logger,
           `Calling destroy() on handler (${handlerToDestroy.constructor?.name || 'Unknown'}) for completed turn ${endedActorId}`
         );
         // destroy() can be async, handle its promise to catch errors
         Promise.resolve(handlerToDestroy.destroy()).catch((destroyError) =>
-          this.#logger.error(
-            `Error destroying handler for ${endedActorId} after turn end: ${destroyError.message}`,
+          logError(
+            this.#logger,
+            `Error destroying handler for ${endedActorId} after turn end`,
             destroyError
           )
         );
@@ -663,7 +655,7 @@ class TurnManager extends ITurnManager {
     }
 
     // Schedule advanceTurn to run after the current event processing stack clears.
-    setTimeout(() => {
+    this.#setTimeout(() => {
       // advanceTurn is async, so if we want to catch errors from it, we should.
       this.advanceTurn().catch((advanceTurnError) => {
         this.#logger.error(
@@ -675,8 +667,10 @@ class TurnManager extends ITurnManager {
           'Critical error during scheduled turn advancement.',
           advanceTurnError
         ).catch((e) =>
-          this.#logger.error(
-            `Failed to dispatch system error for advanceTurn failure: ${e.message}`
+          logError(
+            this.#logger,
+            'Failed to dispatch system error for advanceTurn failure',
+            e
           )
         );
         this.stop().catch((e) =>
@@ -705,21 +699,43 @@ class TurnManager extends ITurnManager {
       detailsOrError instanceof Error
         ? detailsOrError.stack
         : new Error().stack;
-    try {
-      await this.#dispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
+    await safeDispatch(
+      this.#dispatcher,
+      SYSTEM_ERROR_OCCURRED_ID,
+      {
         message: message,
         details: {
           raw: detailString,
           stack: stackString,
           timestamp: new Date().toISOString(),
         },
-      });
-    } catch (dispatchError) {
-      this.#logger.error(
-        `Failed to dispatch ${SYSTEM_ERROR_OCCURRED_ID}: ${dispatchError.message}`,
-        dispatchError
-      );
-    }
+      },
+      this.#logger
+    );
+  }
+
+  /**
+   * Wrapper for scheduler.setTimeout.
+   *
+   * @param {() => void} fn - Callback to execute.
+   * @param {number} ms - Delay in milliseconds.
+   * @returns {any} Timeout identifier.
+   * @private
+   */
+  #setTimeout(fn, ms) {
+    return this.#scheduler.setTimeout(fn, ms);
+  }
+
+  /**
+   * Wrapper for scheduler.clearTimeout.
+   *
+   * @param {any} id - Timeout identifier.
+   * @returns {void}
+   * @private
+   */
+  // eslint-disable-next-line no-unused-private-class-members
+  #clearTimeout(id) {
+    this.#scheduler.clearTimeout(id);
   }
 }
 

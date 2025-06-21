@@ -14,16 +14,24 @@
 /** @typedef {import('../../loaders/ruleLoader.js').default} RuleLoader */
 /** @typedef {import('../../loaders/componentLoader.js').default} ComponentDefinitionLoader */
 /** @typedef {import('../../loaders/conditionLoader.js').default} ConditionLoader */
-/** @typedef {import('../../loaders/gameConfigLoader.js').default} GameConfigLoader */ // <<< ADDED
-/** @typedef {import('../../modding/modManifestLoader.js').default} ModManifestLoader */ // <<< ADDED: MODLOADER-005 A
-/** @typedef {import('../../loaders/actionLoader.js').default} ActionLoader */ // <<< ADDED: LOADER-001
-/** @typedef {import('../../loaders/eventLoader.js').default} EventLoader */ // <<< ADDED: LOADER-003
-/** @typedef {import('../../loaders/entityDefinitionLoader.js').default} EntityLoader */ // <<< ADDED: LOADER-004-F
+/** @typedef {import('../../loaders/gameConfigLoader.js').default} GameConfigLoader */
+/** @typedef {import('../../modding/modManifestLoader.js').default} ModManifestLoader */
+/** @typedef {import('../../loaders/actionLoader.js').default} ActionLoader */
+/** @typedef {import('../../loaders/eventLoader.js').default} EventLoader */
+/** @typedef {import('../../loaders/entityDefinitionLoader.js').default} EntityLoader */
+/** @typedef {import('../../loaders/entityInstanceLoader.js').default} EntityInstanceLoader */
+/** @typedef {import('../../loaders/worldLoader.js').default} WorldLoader */
+/** @typedef {import('../../loaders/modsLoader.js').default} ModsLoader */
 /** @typedef {import('../../configuration/staticConfiguration.js').default} StaticConfiguration */
 /** @typedef {import('../../pathing/defaultPathResolver.js').default} DefaultPathResolver */
 /** @typedef {import('../../validation/ajvSchemaValidator.js').default} AjvSchemaValidator */
 /** @typedef {import('../../data/inMemoryDataRegistry.js').default} InMemoryDataRegistry */
 /** @typedef {import('../../data/workspaceDataFetcher.js').default} WorkspaceDataFetcher */
+/** @typedef {import('../../modding/modDependencyValidator.js').default} ModDependencyValidator */
+/** @typedef {import('../../modding/modVersionValidator.js').default} ModVersionValidator */
+/** @typedef {import('../../modding/modLoadOrderResolver.js').default} ModLoadOrderResolver */
+/** @typedef {import('../../loaders/promptTextLoader.js').default} PromptTextLoader */
+/** @typedef {import('../../loaders/goalLoader.js').default} GoalLoader */
 
 // --- Core Service Imports ---
 import StaticConfiguration from '../../configuration/staticConfiguration.js';
@@ -33,17 +41,26 @@ import InMemoryDataRegistry from '../../data/inMemoryDataRegistry.js';
 import WorkspaceDataFetcher from '../../data/workspaceDataFetcher.js';
 
 // --- Loader Imports ---
-import SchemaLoader from '../../loaders/schemaLoader.js';
-import RuleLoader from '../../loaders/ruleLoader.js';
+import ActionLoader from '../../loaders/actionLoader.js';
 import ComponentLoader from '../../loaders/componentLoader.js';
 import ConditionLoader from '../../loaders/conditionLoader.js';
-import GameConfigLoader from '../../loaders/gameConfigLoader.js';
-import ModManifestLoader from '../../modding/modManifestLoader.js';
-import ActionLoader from '../../loaders/actionLoader.js';
-import EventLoader from '../../loaders/eventLoader.js';
-import MacroLoader from '../../loaders/macroLoader.js';
 import EntityDefinitionLoader from '../../loaders/entityDefinitionLoader.js';
+import EntityInstanceLoader from '../../loaders/entityInstanceLoader.js';
+import EventLoader from '../../loaders/eventLoader.js';
+import GameConfigLoader from '../../loaders/gameConfigLoader.js';
+import GoalLoader from '../../loaders/goalLoader.js';
+import MacroLoader from '../../loaders/macroLoader.js';
+import ModManifestLoader from '../../modding/modManifestLoader.js';
+import ModsLoader from '../../loaders/modsLoader.js';
+import PromptTextLoader from '../../loaders/promptTextLoader.js';
+import RuleLoader from '../../loaders/ruleLoader.js';
+import SchemaLoader from '../../loaders/schemaLoader.js';
+import WorldLoader from '../../loaders/worldLoader.js';
+
+// --- Modding Service Imports ---
 import ModDependencyValidator from '../../modding/modDependencyValidator.js';
+import validateModEngineVersions from '../../modding/modVersionValidator.js';
+import ModLoadOrderResolver from '../../modding/modLoadOrderResolver.js';
 
 // --- DI & Helper Imports ---
 import { tokens } from '../tokens.js';
@@ -51,7 +68,7 @@ import { Registrar } from '../registrarHelpers.js';
 
 /**
  * Registers core data infrastructure services (Configuration, PathResolver, Validator, Registry, Fetcher)
- * and specific data loaders (Schema, Manifest, Rules, Generic Content, Component Definitions, Game Config, Mod Manifests). // <<< UPDATED Description
+ * and specific data loaders (Schema, Manifest, Rules, Generic Content, Component Definitions, Game Config, Mod Manifests).
  *
  * @export
  * @param {AppContainer} container - The application's DI container.
@@ -81,13 +98,9 @@ export function registerLoaders(container) {
   logger.debug(`Loaders Registration: Registered ${tokens.IPathResolver}.`);
 
   // AjvSchemaValidator depends on ILogger
-  // Corrected registration: Pass the resolved logger
   registrar.singletonFactory(
     tokens.ISchemaValidator,
-    (c) =>
-      new AjvSchemaValidator(
-        c.resolve(tokens.ILogger) // <-- Resolve and pass ILogger here
-      )
+    (c) => new AjvSchemaValidator(c.resolve(tokens.ILogger))
   );
   logger.debug(`Loaders Registration: Registered ${tokens.ISchemaValidator}.`);
 
@@ -104,10 +117,7 @@ export function registerLoaders(container) {
   logger.debug(`Loaders Registration: Registered ${tokens.IDataFetcher}.`);
 
   // === Data Loaders ===
-  // These services are responsible for fetching, validating, and potentially processing
-  // specific types of game data files.
-
-  // SchemaLoader depends on IConfiguration, IPathResolver, IDataFetcher, ISchemaValidator, ILogger
+  // SchemaLoader
   registrar.singletonFactory(
     tokens.SchemaLoader,
     (c) =>
@@ -116,27 +126,27 @@ export function registerLoaders(container) {
         c.resolve(tokens.IPathResolver),
         c.resolve(tokens.IDataFetcher),
         c.resolve(tokens.ISchemaValidator),
-        c.resolve(tokens.ILogger) // Pass logger here too
+        c.resolve(tokens.ILogger)
       )
   );
   logger.debug(`Loaders Registration: Registered ${tokens.SchemaLoader}.`);
 
-  // RuleLoader depends on IPathResolver, IDataFetcher, ISchemaValidator, IDataRegistry, ILogger
+  // RuleLoader
   registrar.singletonFactory(
     tokens.RuleLoader,
     (c) =>
       new RuleLoader(
-        c.resolve(tokens.IConfiguration), // <<< FIXED: RuleLoader needs dependencyInjection too
+        c.resolve(tokens.IConfiguration),
         c.resolve(tokens.IPathResolver),
         c.resolve(tokens.IDataFetcher),
         c.resolve(tokens.ISchemaValidator),
         c.resolve(tokens.IDataRegistry),
-        c.resolve(tokens.ILogger) // Pass logger here too
+        c.resolve(tokens.ILogger)
       )
   );
   logger.debug(`Loaders Registration: Registered ${tokens.RuleLoader}.`);
 
-  // ComponentDefinitionLoader depends on IConfiguration, IPathResolver, IDataFetcher, ISchemaValidator, IDataRegistry, ILogger
+  // ComponentDefinitionLoader (ComponentLoader)
   registrar.singletonFactory(
     tokens.ComponentDefinitionLoader,
     (c) =>
@@ -146,14 +156,14 @@ export function registerLoaders(container) {
         c.resolve(tokens.IDataFetcher),
         c.resolve(tokens.ISchemaValidator),
         c.resolve(tokens.IDataRegistry),
-        c.resolve(tokens.ILogger) // Pass logger here too
+        c.resolve(tokens.ILogger)
       )
   );
   logger.debug(
     `Loaders Registration: Registered ${tokens.ComponentDefinitionLoader}.`
   );
 
-  // ConditionLoader depends on IConfiguration, IPathResolver, IDataFetcher, ISchemaValidator, IDataRegistry, ILogger
+  // ConditionLoader
   registrar.singletonFactory(
     tokens.ConditionLoader,
     (c) =>
@@ -168,7 +178,7 @@ export function registerLoaders(container) {
   );
   logger.debug(`Loaders Registration: Registered ${tokens.ConditionLoader}.`);
 
-  // GameConfigLoader depends on IConfiguration, IPathResolver, IDataFetcher, ISchemaValidator, ILogger
+  // GameConfigLoader
   registrar.singletonFactory(
     tokens.GameConfigLoader,
     (c) =>
@@ -177,11 +187,12 @@ export function registerLoaders(container) {
         pathResolver: c.resolve(tokens.IPathResolver),
         dataFetcher: c.resolve(tokens.IDataFetcher),
         schemaValidator: c.resolve(tokens.ISchemaValidator),
-        logger: c.resolve(tokens.ILogger), // Correctly passing logger via object destructuring
+        logger: c.resolve(tokens.ILogger),
       })
   );
   logger.debug(`Loaders Registration: Registered ${tokens.GameConfigLoader}.`);
 
+  // ModManifestLoader
   registrar.singletonFactory(
     tokens.ModManifestLoader,
     (c) =>
@@ -191,7 +202,7 @@ export function registerLoaders(container) {
         c.resolve(tokens.IDataFetcher),
         c.resolve(tokens.ISchemaValidator),
         c.resolve(tokens.IDataRegistry),
-        c.resolve(tokens.ILogger) // Pass logger here too
+        c.resolve(tokens.ILogger)
       )
   );
   logger.debug(`Loaders Registration: Registered ${tokens.ModManifestLoader}.`);
@@ -214,7 +225,7 @@ export function registerLoaders(container) {
   );
   logger.debug(`Loaders Registration: Registered ${tokens.ModsLoader}.`);
 
-  // === ADDED: LOADER-001 ===
+  // ActionLoader
   registrar.singletonFactory(
     tokens.ActionLoader,
     (c) =>
@@ -228,9 +239,8 @@ export function registerLoaders(container) {
       )
   );
   logger.debug(`Loaders Registration: Registered ${tokens.ActionLoader}.`);
-  // === END LOADER-001 ===
 
-  // === ADDED: LOADER-003 ===
+  // EventLoader
   registrar.singletonFactory(
     tokens.EventLoader,
     (c) =>
@@ -244,8 +254,8 @@ export function registerLoaders(container) {
       )
   );
   logger.debug(`Loaders Registration: Registered ${tokens.EventLoader}.`);
-  // === END LOADER-003 ===
 
+  // MacroLoader
   registrar.singletonFactory(
     tokens.MacroLoader,
     (c) =>
@@ -260,7 +270,7 @@ export function registerLoaders(container) {
   );
   logger.debug(`Loaders Registration: Registered ${tokens.MacroLoader}.`);
 
-  // === ADDED: LOADER-004-F ===
+  // EntityLoader (EntityDefinitionLoader)
   registrar.singletonFactory(
     tokens.EntityLoader,
     (c) =>
@@ -274,14 +284,99 @@ export function registerLoaders(container) {
       )
   );
   logger.debug(`Loaders Registration: Registered ${tokens.EntityLoader}.`);
-  // === END LOADER-004-F ===
 
-  logger.debug('Loaders Registration: Completed.');
+  // PromptTextLoader
+  registrar.singletonFactory(
+    tokens.PromptTextLoader,
+    (c) =>
+      new PromptTextLoader({
+        configuration: c.resolve(tokens.IConfiguration),
+        pathResolver: c.resolve(tokens.IPathResolver),
+        dataFetcher: c.resolve(tokens.IDataFetcher),
+        schemaValidator: c.resolve(tokens.ISchemaValidator),
+        dataRegistry: c.resolve(tokens.IDataRegistry),
+        logger: c.resolve(tokens.ILogger),
+      })
+  );
+  logger.debug(`Loaders Registration: Registered ${tokens.PromptTextLoader}.`);
+
+  // WorldLoader
+  registrar.singletonFactory(
+    tokens.WorldLoader,
+    (c) =>
+      new WorldLoader(
+        c.resolve(tokens.IConfiguration),
+        c.resolve(tokens.IPathResolver),
+        c.resolve(tokens.IDataFetcher),
+        c.resolve(tokens.ISchemaValidator),
+        c.resolve(tokens.IDataRegistry),
+        c.resolve(tokens.ILogger)
+      )
+  );
+  logger.debug(`Loaders Registration: Registered ${tokens.WorldLoader}.`);
+
+  // EntityInstanceLoader
+  registrar.singletonFactory(
+    tokens.EntityInstanceLoader,
+    (c) =>
+      new EntityInstanceLoader( // Assuming constructor matches EntityDefinitionLoader for now
+        c.resolve(tokens.IConfiguration),
+        c.resolve(tokens.IPathResolver),
+        c.resolve(tokens.IDataFetcher),
+        c.resolve(tokens.ISchemaValidator),
+        c.resolve(tokens.IDataRegistry),
+        c.resolve(tokens.ILogger)
+      )
+  );
+  logger.debug(
+    `Loaders Registration: Registered ${tokens.EntityInstanceLoader}.`
+  );
+
+  registrar.singletonFactory(
+    tokens.GoalLoader,
+    (c) =>
+      new GoalLoader(
+        c.resolve(tokens.IConfiguration),
+        c.resolve(tokens.IPathResolver),
+        c.resolve(tokens.IDataFetcher),
+        c.resolve(tokens.ISchemaValidator),
+        c.resolve(tokens.IDataRegistry),
+        c.resolve(tokens.ILogger)
+      )
+  );
+  logger.debug(`Loaders Registration: Registered ${tokens.GoalLoader}.`);
+
+  // ModsLoader depends on a multitude of services
+  registrar.singletonFactory(tokens.ModsLoader, (c) => {
+    const loggerDep = c.resolve(tokens.ILogger);
+    return new ModsLoader({
+      registry: c.resolve(tokens.IDataRegistry),
+      logger: loggerDep,
+      schemaLoader: c.resolve(tokens.SchemaLoader),
+      componentLoader: c.resolve(tokens.ComponentDefinitionLoader),
+      conditionLoader: c.resolve(tokens.ConditionLoader),
+      ruleLoader: c.resolve(tokens.RuleLoader),
+      macroLoader: c.resolve(tokens.MacroLoader),
+      actionLoader: c.resolve(tokens.ActionLoader),
+      eventLoader: c.resolve(tokens.EventLoader),
+      entityLoader: c.resolve(tokens.EntityLoader),
+      entityInstanceLoader: c.resolve(tokens.EntityInstanceLoader),
+      goalLoader: c.resolve(tokens.GoalLoader),
+      validator: c.resolve(tokens.ISchemaValidator),
+      configuration: c.resolve(tokens.IConfiguration),
+      gameConfigLoader: c.resolve(tokens.GameConfigLoader),
+      promptTextLoader: c.resolve(tokens.PromptTextLoader),
+      modManifestLoader: c.resolve(tokens.ModManifestLoader),
+      validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
+      modDependencyValidator: new ModDependencyValidator(loggerDep),
+      modVersionValidator: validateModEngineVersions,
+      modLoadOrderResolver: new ModLoadOrderResolver(loggerDep),
+      worldLoader: c.resolve(tokens.WorldLoader),
+    });
+  });
+  logger.debug(`Loaders Registration: Registered ${tokens.ModsLoader}.`);
+
+  logger.info(
+    'Loaders Registration: All core services and data loaders registered.'
+  );
 }
-
-// Placeholder for ModsLoader - this will help us identify if it's being used
-const ModsLoader = class ModsLoader {
-  constructor(dependencies) {
-    throw new Error('ModsLoader is not properly implemented yet. Dependencies: ' + JSON.stringify(Object.keys(dependencies || {})));
-  }
-};

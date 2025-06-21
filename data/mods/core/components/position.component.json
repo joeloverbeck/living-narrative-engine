@@ -23,13 +23,5 @@
     },
     "required": ["locationId"],
     "additionalProperties": false
-  },
-  "resolveFields": [
-    {
-      "dataPath": "locationId",
-      "resolutionStrategy": {
-        "type": "direct"
-      }
-    }
-  ]
+  }
 }

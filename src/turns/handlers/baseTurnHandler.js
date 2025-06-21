@@ -380,6 +380,16 @@ export class BaseTurnHandler {
     );
   }
 
+  /**
+   * Public wrapper that delegates to the internal resource resetter.
+   *
+   * @param {string} reason - Contextual reason for the reset.
+   * @returns {void}
+   */
+  resetStateAndResources(reason) {
+    this._resetTurnStateAndResources(reason);
+  }
+
   /* ───────────────────────────── PUBLIC API ──────────────────────────── */
 
   async startTurn(_actor) {

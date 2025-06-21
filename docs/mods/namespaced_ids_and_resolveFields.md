@@ -1,4 +1,4 @@
-# Namespaced IDs & `resolveFields`
+# Namespaced IDs
 
 The engine stores most game content in JSON files. Each mod uses a unique **namespace** taken from its `mod.manifest.json` so that identifiers do not collide. The general pattern is:
 
@@ -23,24 +23,7 @@ When a definition in one mod needs to reference content from another mod, it sim
 }
 ```
 
-During world initialization every entity definition is turned into a runtime instance with a generated UUID. Components that contain references to other definitions list how those references should be resolved via the **`resolveFields`** array in their component definition file.
-
-A simplified `core:position` component definition illustrates the structure:
-
-```json
-{
-  "id": "core:position",
-  "resolveFields": [
-    { "dataPath": "locationId", "resolutionStrategy": { "type": "direct" } }
-  ]
-}
-```
-
-Each entry describes a field path and a strategy. Supported strategies include:
-
-- `direct` – a single namespaced ID is replaced with the target instance ID.
-- `arrayOfDefinitionIds` – every element in the array is resolved.
-- `arrayOfObjects` – resolve an ID field inside each object (e.g., `core:exits` uses `idField: "target"`).
+During world initialization, every entity definition is turned into a runtime entity instance, each with a unique generated UUID. When components contain references to other entity definitions (like `locationId` in the example above), these namespaced IDs are used by the engine to link to the correct entity instance.
 
 ### Example Cross‑Mod Resolution
 
@@ -56,16 +39,15 @@ Suppose `modA` defines a location `modA:castle` and `modB` defines a character `
 }
 ```
 
-When both mods load, the engine creates instances for `modA:castle` and `modB:knight`. Pass 2 of world initialization uses the `resolveFields` specification from `core:position` to look up the instance created from `modA:castle` and swaps `"modA:castle"` with that instance's UUID. Other components such as `core:exits` perform similar resolution for each referenced target.
+When both mods load, the engine creates instances for `modA:castle` and `modB:knight`. The engine then ensures that the `locationId: "modA:castle"` in the `modB:knight`'s `core:position` component correctly refers to the instance of `modA:castle`. This linking happens automatically based on the namespaced IDs provided in the component data.
 
 ### Limitations & Best Practices
 
-- **Avoid circular references.** Entities that ultimately refer back to themselves via `resolveFields` chains may never resolve or could create unexpected behaviours.
+- **Avoid circular references.** Entities that ultimately refer back to themselves through component data chains may lead to issues or unexpected behaviours.
 - Ensure that any referenced mod is listed as a dependency in your mod manifest so it loads before your mod.
-- Only fields declared in a component's `resolveFields` array are processed. Other strings that look like IDs remain unchanged.
 
-Using namespaced IDs consistently and declaring `resolveFields` correctly allows the engine to keep mods isolated yet interoperable.
+Using namespaced IDs consistently allows the engine to keep mods isolated yet interoperable.
 
 ### Runtime IDs in memory components
 
-Some components are designed to store the **runtime instance IDs** produced when the world loads. Examples include `core:perception_log`, `core:following`, and `core:leading`. These components intentionally omit `resolveFields` because their fields don’t reference other definitions during initialization. If you pre-populate them with namespaced IDs, those values will remain raw strings unless your game introduces custom logic to resolve them later.
+Some components are designed to store the **runtime instance IDs** (UUIDs) that are generated when the world loads, rather than definition IDs. Examples include `core:perception_log`, `core:following`, and `core:leading`. These components are intended to hold direct references to other entity instances. If you pre-populate their fields with namespaced definition IDs, those values will remain as raw strings, as the engine does not automatically resolve definition IDs to instance IDs in these specific components after initial world setup. Your game logic would need to handle such cases if they arise.

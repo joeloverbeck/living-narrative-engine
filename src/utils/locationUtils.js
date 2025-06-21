@@ -10,6 +10,18 @@ import {
 } from './entityValidationUtils.js';
 import { resolveEntityInstance } from './componentAccessUtils.js';
 
+/**
+ * Get the identifier string for a location entity or ID for logging.
+ *
+ * @param {Entity | string | null | undefined} locationEntityOrId - Location entity or ID.
+ * @returns {string} Identifier string for logs.
+ */
+export function getLocationIdForLog(locationEntityOrId) {
+  return typeof locationEntityOrId === 'string'
+    ? locationEntityOrId
+    : locationEntityOrId?.id || 'unknown';
+}
+
 /** @typedef {import('../entities/entity.js').default} Entity */
 /** @typedef {import('../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
 /** @typedef {import('../interfaces/ILogger.js').ILogger} ILogger */
@@ -26,29 +38,38 @@ import { resolveEntityInstance } from './componentAccessUtils.js';
  */
 
 /**
- * Retrieve the exits component data from a location entity.
+ * Resolve a location entity from an instance or its ID.
  *
  * @private
- * @param {Entity | string} locationEntityOrId - Entity instance or ID to check.
- * @param {IEntityManager} entityManager - Used to fetch the entity when an ID is provided.
- * @param {ILogger} [logger] - Optional logger for debug messages.
+ * @param {Entity | string} locationEntityOrId - Entity instance or ID.
+ * @param {IEntityManager} entityManager - Manager used when an ID is provided.
+ * @param {ILogger} [logger] - Optional logger for diagnostics.
  * @param {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} dispatcher -
  * Safe dispatcher for error events.
- * @returns {ExitData[] | null} Array of exit objects or null when unavailable.
+ * @returns {Entity | null} The resolved location entity or `null`.
  */
-function _getExitsComponentData(
+function _resolveLocationEntity(
   locationEntityOrId,
   entityManager,
   logger,
   dispatcher
 ) {
   const log = getModuleLogger('locationUtils', logger);
+
+  if (
+    !locationEntityOrId ||
+    (typeof locationEntityOrId === 'string' && locationEntityOrId.trim() === '')
+  ) {
+    log.debug('_resolveLocationEntity: locationEntityOrId is invalid.');
+    return null;
+  }
+
   if (
     typeof locationEntityOrId === 'string' &&
     !isValidEntityManager(entityManager)
   ) {
     const message =
-      "_getExitsComponentData: EntityManager is required when passing location ID, but it's invalid.";
+      "_resolveLocationEntity: EntityManager is required when passing location ID, but it's invalid.";
     const details = {
       locationId: locationEntityOrId,
       entityManagerValid:
@@ -56,7 +77,6 @@ function _getExitsComponentData(
         typeof entityManager.getEntityInstance === 'function',
     };
     safeDispatchError(dispatcher, message, details);
-
     return null;
   }
 
@@ -67,24 +87,96 @@ function _getExitsComponentData(
   );
 
   if (!isValidEntity(locationEntity)) {
-    const id =
+    const id = getLocationIdForLog(
       typeof locationEntityOrId === 'string'
         ? locationEntityOrId
-        : locationEntity?.id || 'unknown';
+        : locationEntity
+    );
     log.warn(
-      `_getExitsComponentData: Location entity not found or invalid for ID/object: ${id}`
+      `_resolveLocationEntity: Location entity not found or invalid for ID/object: ${id}`
     );
     return null;
   }
 
+  return locationEntity;
+}
+
+/**
+ * Retrieve the exits component data from a location entity.
+ *
+ * @private
+ * @param {Entity} locationEntity - The resolved location entity.
+ * @param {ILogger} [logger] - Optional logger for diagnostics.
+ * @returns {ExitData[] | null} Array of exit objects or null when unavailable.
+ */
+function _readExitsComponent(locationEntity, logger) {
+  const log = getModuleLogger('locationUtils', logger);
   const exitsData = locationEntity.getComponentData(EXITS_COMPONENT_ID);
   if (!Array.isArray(exitsData)) {
     log.debug(
-      `_getExitsComponentData: Location '${locationEntity.id}' has no '${EXITS_COMPONENT_ID}' component, or it's not an array.`
+      `_readExitsComponent: Location '${locationEntity.id}' has no '${EXITS_COMPONENT_ID}' component, or it's not an array.`
     );
     return null;
   }
   return /** @type {ExitData[]} */ (exitsData);
+}
+
+/**
+ * Normalize a direction string for comparison.
+ *
+ * @private
+ * @param {string} name - Direction name to normalize.
+ * @returns {string} Normalized direction value.
+ */
+export function _normalizeDirection(name) {
+  return isNonBlankString(name) ? name.toLowerCase().trim() : '';
+}
+
+/**
+ * Validate whether an exit object has required properties.
+ *
+ * @private
+ * @param {any} exit - Exit object to validate.
+ * @returns {boolean} True if the exit is valid.
+ */
+export function _isValidExit(exit) {
+  return (
+    !!exit &&
+    typeof exit === 'object' &&
+    isNonBlankString(exit.direction) &&
+    isNonBlankString(exit.target)
+  );
+}
+
+/**
+ * Fetch and validate exits component data from a location entity.
+ *
+ * @private
+ * @param {Entity | string} locationEntityOrId - Entity instance or ID to check.
+ * @param {IEntityManager} entityManager - Used to fetch the entity when an ID is provided.
+ * @param {ILogger} [logger] - Optional logger for debug messages.
+ * @param {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} dispatcher -
+ * Safe dispatcher for error events.
+ * @returns {ExitData[] | null} Validated exit array or `null` when unavailable.
+ */
+function fetchValidExitData(
+  locationEntityOrId,
+  entityManager,
+  logger,
+  dispatcher
+) {
+  const locationEntity = _resolveLocationEntity(
+    locationEntityOrId,
+    entityManager,
+    logger,
+    dispatcher
+  );
+
+  if (!locationEntity) {
+    return null;
+  }
+
+  return _readExitsComponent(locationEntity, logger);
 }
 
 /**
@@ -111,43 +203,40 @@ export function getExitByDirection(
     return null;
   }
 
-  const exitsData = _getExitsComponentData(
+  const exitsData = fetchValidExitData(
     locationEntityOrId,
     entityManager,
     log,
     dispatcher
   );
+
   if (!exitsData || exitsData.length === 0) {
     return null;
   }
 
-  const normalizedDirName = directionName.toLowerCase().trim();
+  const normalizedDirName = _normalizeDirection(directionName);
   for (const exit of exitsData) {
+    if (
+      _isValidExit(exit) &&
+      _normalizeDirection(exit.direction) === normalizedDirName
+    ) {
+      return exit;
+    }
     if (
       exit &&
       isNonBlankString(exit.direction) &&
-      exit.direction.toLowerCase().trim() === normalizedDirName
+      _normalizeDirection(exit.direction) === normalizedDirName
     ) {
-      if (isNonBlankString(exit.target)) {
-        return exit;
-      }
-      const locId =
-        typeof locationEntityOrId === 'string'
-          ? locationEntityOrId
-          : locationEntityOrId?.id || 'unknown';
+      const locId = getLocationIdForLog(locationEntityOrId);
       log.warn(
         `getExitByDirection: Found exit for direction '${directionName}' in location '${locId}', but its target ID ('target' property) is invalid: ${JSON.stringify(
-          // CHANGED warning message
           exit
         )}`
       );
-      return null; // Return null if target is invalid for the found direction
+      return null;
     }
   }
-  const locId =
-    typeof locationEntityOrId === 'string'
-      ? locationEntityOrId
-      : locationEntityOrId?.id || 'unknown';
+  const locId = getLocationIdForLog(locationEntityOrId);
   log.debug(
     `getExitByDirection: No exit found for direction '${directionName}' in location '${locId}'.`
   );
@@ -171,7 +260,7 @@ export function getAvailableExits(
   logger
 ) {
   const log = getModuleLogger('locationUtils', logger);
-  const exitsData = _getExitsComponentData(
+  const exitsData = fetchValidExitData(
     locationEntityOrId,
     entityManager,
     log,
@@ -182,18 +271,10 @@ export function getAvailableExits(
   }
 
   const validExits = [];
-  const locIdForLog =
-    typeof locationEntityOrId === 'string'
-      ? locationEntityOrId
-      : locationEntityOrId?.id || 'unknown';
+  const locIdForLog = getLocationIdForLog(locationEntityOrId);
 
   for (const exit of exitsData) {
-    if (
-      exit &&
-      typeof exit === 'object' &&
-      isNonBlankString(exit.direction) &&
-      isNonBlankString(exit.target)
-    ) {
+    if (_isValidExit(exit)) {
       validExits.push(exit);
     } else {
       log.warn(
@@ -206,5 +287,3 @@ export function getAvailableExits(
   }
   return validExits;
 }
-
-export { _getExitsComponentData };

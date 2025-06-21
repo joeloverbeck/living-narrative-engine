@@ -1,3 +1,5 @@
+import { ICommandHandlingState } from './ICommandHandlingState.js';
+import { ITurnLifecycleState } from './ITurnLifecycleState.js';
 // src/turns/states/ITurnState.js
 // ──────────────────────────────────────────────────────────────────────────────
 
@@ -12,6 +14,8 @@
 
 /**
  * @interface ITurnState
+ * @implements {ICommandHandlingState}
+ * @implements {ITurnLifecycleState}
  * @description
  * Contract for all concrete state classes that manage a specific phase
  * of an actor's turn lifecycle.  States trigger transitions through the

@@ -43,17 +43,41 @@ export function validateDependency(
 
   if (requiredMethods && requiredMethods.length > 0) {
     for (const method of requiredMethods) {
-      if (
-        dependency[method] === null ||
-        dependency[method] === undefined ||
-        typeof dependency[method] !== 'function'
-      ) {
-        // Check for null/undefined or not a function
+      const actualMethod = dependency[method]; // Get the method itself
+      // --- REFINED DIAGNOSTIC LOG ---
+      console.log(
+        `DIAGNOSTIC (validationUtils.js): Validating ${dependencyName}.${method}. ` +
+          `Retrieved method: ${String(actualMethod)}. ` +
+          `typeof retrieved method: ${typeof actualMethod}. ` +
+          `Dependency object keys: ${Object.keys(dependency)}`
+      );
+      // --- END REFINED DIAGNOSTIC LOG ---
+      if (typeof actualMethod !== 'function') {
         const errorMsg = `Invalid or missing method '${method}' on dependency '${dependencyName}'.`;
         effectiveLogger.error(errorMsg);
         throw new Error(errorMsg);
       }
     }
+  }
+}
+
+/**
+ * Validate a list of dependencies using {@link validateDependency}.
+ *
+ * @description Iterates over each spec and validates the dependency.
+ * @param {Iterable<{dependency: *, name: string, methods?: string[], isFunction?: boolean}>} deps
+ *   Iterable of dependency specs.
+ * @param {import('../interfaces/coreServices.js').ILogger} logger - Logger used for validation errors.
+ * @returns {void}
+ */
+export function validateDependencies(deps, logger) {
+  if (!deps) return;
+
+  for (const { dependency, name, methods = [], isFunction = false } of deps) {
+    validateDependency(dependency, name, logger, {
+      requiredMethods: methods,
+      isFunction,
+    });
   }
 }
 
@@ -66,13 +90,16 @@ export function validateDependency(
  * @throws {Error} If any dependency fails validation.
  */
 export function validateLoaderDeps(logger, checks) {
-  validateDependency(logger, 'ILogger', console, {
-    requiredMethods: ['info', 'warn', 'error', 'debug'],
-  });
+  const deps = [
+    {
+      dependency: logger,
+      name: 'ILogger',
+      methods: ['info', 'warn', 'error', 'debug'],
+    },
+    ...(checks || []),
+  ];
 
-  for (const { dependency, name, methods = [] } of checks) {
-    validateDependency(dependency, name, logger, { requiredMethods: methods });
-  }
+  validateDependencies(deps, logger);
 }
 
 /**

@@ -1,14 +1,13 @@
 // src/services/entityDisplayDataProvider.js
 
 import {
-  NAME_COMPONENT_ID,
   PORTRAIT_COMPONENT_ID,
   DESCRIPTION_COMPONENT_ID,
   POSITION_COMPONENT_ID,
   EXITS_COMPONENT_ID,
 } from '../constants/componentIds.js';
 import { validateDependency } from '../utils/validationUtils.js';
-import { ensureValidLogger } from '../utils/loggerUtils.js';
+import { ensureValidLogger } from '../utils';
 import { getEntityDisplayName } from '../utils/entityUtils.js';
 import { isNonBlankString } from '../utils/textUtils.js';
 

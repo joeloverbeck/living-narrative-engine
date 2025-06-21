@@ -2,15 +2,16 @@
 
 import { encode, decode } from '@msgpack/msgpack';
 import pako from 'pako';
-import { safeDeepClone } from '../utils/objectUtils.js';
+import { cloneValidatedState } from '../utils/saveStateUtils.js';
 import {
   PersistenceError,
   PersistenceErrorCodes,
 } from './persistenceErrors.js';
 import {
-  createPersistenceFailure,
-  createPersistenceSuccess,
-} from './persistenceResultUtils.js';
+  MSG_DECOMPRESSION_FAILED,
+  MSG_DESERIALIZATION_FAILED,
+} from './persistenceMessages.js';
+import { wrapSyncPersistenceOperation } from '../utils/persistenceErrorUtils.js';
 
 /**
  * @class GameStateSerializer
@@ -118,26 +119,12 @@ class GameStateSerializer {
    * @private
    */
   #cloneForSerialization(gameStateObject) {
-    const cloneResult = safeDeepClone(gameStateObject, this.#logger);
+    const cloneResult = cloneValidatedState(gameStateObject, this.#logger);
     if (!cloneResult.success || !cloneResult.data) {
       throw cloneResult.error;
     }
-    const finalSaveObject = cloneResult.data;
 
-    if (
-      !finalSaveObject.gameState ||
-      typeof finalSaveObject.gameState !== 'object'
-    ) {
-      this.#logger.error(
-        'Invalid or missing gameState property in save object for checksum calculation.'
-      );
-      throw new PersistenceError(
-        PersistenceErrorCodes.INVALID_GAME_STATE,
-        'Invalid gameState for checksum calculation.'
-      );
-    }
-
-    return finalSaveObject;
+    return cloneResult.data;
   }
 
   /**
@@ -190,30 +177,38 @@ class GameStateSerializer {
   }
 
   /**
+   * Compresses a pre-cloned and validated save object.
+   *
+   * @description Compresses a pre-cloned and validated save object.
+   * @param {object} saveObj - Prepared save object.
+   * @returns {Promise<{compressedData: Uint8Array, finalSaveObject: object}>}
+   *   Compressed data and original object.
+   */
+  async compressPreparedState(saveObj) {
+    await this.#applyChecksum(saveObj);
+    return this.#encodeAndCompress(saveObj);
+  }
+
+  /**
    * Decompresses Gzip-compressed data.
    *
    * @param {Uint8Array} data - Compressed data.
    * @returns {import('./persistenceTypes.js').PersistenceResult<Uint8Array>} Outcome of decompression.
    */
   decompress(data) {
-    try {
-      const decompressed = pako.ungzip(data);
+    const result = wrapSyncPersistenceOperation(
+      this.#logger,
+      () => pako.ungzip(data),
+      PersistenceErrorCodes.DECOMPRESSION_ERROR,
+      MSG_DECOMPRESSION_FAILED,
+      'Gzip decompression failed:'
+    );
+    if (result.success) {
       this.#logger.debug(
-        `Decompressed data size: ${decompressed.byteLength} bytes`
+        `Decompressed data size: ${result.data.byteLength} bytes`
       );
-      return createPersistenceSuccess(decompressed);
-    } catch (error) {
-      const userMsg =
-        'The save file appears to be corrupted (could not decompress). Please try another save.';
-      this.#logger.error('Gzip decompression failed:', error);
-      return {
-        ...createPersistenceFailure(
-          PersistenceErrorCodes.DECOMPRESSION_ERROR,
-          userMsg
-        ),
-        userFriendlyError: userMsg,
-      };
     }
+    return result;
   }
 
   /**
@@ -223,22 +218,32 @@ class GameStateSerializer {
    * @returns {import('./persistenceTypes.js').PersistenceResult<object>} Outcome of deserialization.
    */
   deserialize(buffer) {
-    try {
-      const obj = decode(buffer);
+    const result = wrapSyncPersistenceOperation(
+      this.#logger,
+      () => decode(buffer),
+      PersistenceErrorCodes.DESERIALIZATION_ERROR,
+      MSG_DESERIALIZATION_FAILED,
+      'MessagePack deserialization failed:'
+    );
+    if (result.success) {
       this.#logger.debug('Successfully deserialized MessagePack');
-      return createPersistenceSuccess(obj);
-    } catch (error) {
-      const userMsg =
-        'The save file appears to be corrupted (could not understand file content). Please try another save.';
-      this.#logger.error('MessagePack deserialization failed:', error);
-      return {
-        ...createPersistenceFailure(
-          PersistenceErrorCodes.DESERIALIZATION_ERROR,
-          userMsg
-        ),
-        userFriendlyError: userMsg,
-      };
     }
+    return result;
+  }
+
+  /**
+   * Decompresses and deserializes a MessagePack+gzip buffer.
+   *
+   * @description Convenience helper that combines {@link decompress} and
+   *   {@link deserialize}.
+   * @param {Uint8Array} buffer - Compressed data buffer.
+   * @returns {import('./persistenceTypes.js').PersistenceResult<object>} Parsed
+   *   object or encountered error.
+   */
+  decompressAndDeserialize(buffer) {
+    const decompressed = this.decompress(buffer);
+    if (!decompressed.success) return decompressed;
+    return this.deserialize(decompressed.data);
   }
 }
 

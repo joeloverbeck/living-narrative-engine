@@ -5,6 +5,10 @@
  */
 
 import StageError from './StageError.js';
+import {
+  stageSuccess as baseStageSuccess,
+  stageFailure as baseStageFailure,
+} from '../types/stageResult.js';
 
 /**
  * @typedef {import('../dependencyInjection/appContainer.js').default} AppContainer
@@ -36,7 +40,7 @@ export function resolveAndInitialize(
     if (!service) {
       const err = new Error(`${token} could not be resolved.`);
       logger.warn(`${stage}: ${err.message}`);
-      return { success: false, error: err };
+      return baseStageFailure(err);
     }
     const initFn = service[initFnName];
     if (typeof initFn !== 'function') {
@@ -44,10 +48,10 @@ export function resolveAndInitialize(
     }
     initFn.apply(service, args);
     logger.debug(`${stage}: Initialized successfully.`);
-    return { success: true };
+    return baseStageSuccess();
   } catch (err) {
     logger.error(`${stage}: Failed to initialize.`, err);
-    return { success: false, error: err };
+    return baseStageFailure(err);
   }
 }
 
@@ -122,7 +126,7 @@ export function createStageError(phase, message, cause) {
  * @returns {import('../types/stageResult.js').StageResult}
  */
 export function stageSuccess(payload) {
-  return { success: true, payload };
+  return baseStageSuccess(payload);
 }
 
 /**
@@ -133,7 +137,7 @@ export function stageSuccess(payload) {
  * @returns {import('../types/stageResult.js').StageResult}
  */
 export function stageFailure(phase, message, cause) {
-  return { success: false, error: createStageError(phase, message, cause) };
+  return baseStageFailure(createStageError(phase, message, cause));
 }
 
 // --- FILE END ---

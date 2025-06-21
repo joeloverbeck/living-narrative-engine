@@ -57,12 +57,13 @@ class WorldContext extends IWorldContext {
     if (
       !entityManager ||
       typeof entityManager.getEntitiesWithComponent !== 'function' ||
-      typeof entityManager.getEntityInstance !== 'function' ||
-      typeof entityManager.getPrimaryInstanceByDefinitionId !== 'function'
+      typeof entityManager.getEntityInstance !== 'function'
     ) {
-      throw new Error(
-        'WorldContext requires a valid EntityManager instance with getEntitiesWithComponent, getEntityInstance, and getPrimaryInstanceByDefinitionId methods.'
-      );
+      const errorMsg =
+        'WorldContext requires a valid EntityManager instance with getEntitiesWithComponent and getEntityInstance methods.';
+      // Log directly to console if logger might not be set up
+      console.error(errorMsg);
+      throw new Error(errorMsg);
     }
     if (
       !logger ||
@@ -80,7 +81,7 @@ class WorldContext extends IWorldContext {
       logger
     );
     if (!this.#safeEventDispatcher) {
-      console.warn(
+      logger.warn(
         'WorldContext: safeEventDispatcher resolution failed; some errors may not be dispatched.'
       );
     }

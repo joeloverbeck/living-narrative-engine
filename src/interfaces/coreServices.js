@@ -1,3 +1,5 @@
+// src/interfaces/coreServices.js
+
 /**
  * @file Defines JSDoc typedefs for core service interfaces,
  * promoting dependency injection and loose coupling. These types define
@@ -76,11 +78,15 @@
  * @property {(id: string) => object | undefined} getEventDefinition Retrieves a definition classified as an 'event'.
  * @property {(id: string) => object | undefined} getComponentDefinition Retrieves a definition classified as a 'component'.
  * @property {(id: string) => object | undefined} getConditionDefinition Retrieves a definition classified as a 'condition'.
+ * @property {(id: string) => object | undefined} getEntityInstanceDefinition Retrieves a definition for an 'entity instance'.
+ * @property {(id: string) => object | undefined} getGoalDefinition Retrieves a definition classified as a 'goal'.
  * @property {() => object[]} getAllEntityDefinitions Retrieves all 'entity' definitions.
  * @property {() => object[]} getAllActionDefinitions Retrieves all 'action' definitions.
  * @property {() => object[]} getAllEventDefinitions Retrieves all 'event' definitions.
  * @property {() => object[]} getAllComponentDefinitions Retrieves all 'component' definitions.
  * @property {() => object[]} getAllConditionDefinitions Retrieves all 'condition' definitions.
+ * @property {() => object[]} getAllEntityInstanceDefinitions Retrieves all 'entity instance' definitions.
+ * @property {() => object[]} getAllGoalDefinitions Retrieves all 'goal' definitions.
  *
  * // --- Manifest Specific Data ---
  * @property {() => string | null} getStartingPlayerId Retrieves the starting player ID from the manifest or dynamically.

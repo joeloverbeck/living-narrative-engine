@@ -13,7 +13,7 @@
 /** @typedef {import('../../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
 /** @typedef {import('../../interfaces/coreServices.js').IDataRegistry} IDataRegistry_Interface */
 /** @typedef {import('../../interfaces/IStorageProvider.js').IStorageProvider} IStorageProvider */
-/** @typedef {import('../../interfaces/IReferenceResolver.js').IReferenceResolver} IReferenceResolver_Interface */
+// /** @typedef {import('../../interfaces/IReferenceResolver.js').IReferenceResolver} IReferenceResolver_Interface */ // Removed - service is deprecated
 
 // --- DI & Helper Imports ---
 import { tokens } from '../tokens.js';
@@ -26,9 +26,10 @@ import ComponentCleaningService, {
 } from '../../persistence/componentCleaningService.js';
 import GamePersistenceService from '../../persistence/gamePersistenceService.js';
 import GameStateCaptureService from '../../persistence/gameStateCaptureService.js';
+import ManualSaveCoordinator from '../../persistence/manualSaveCoordinator.js';
 import SaveMetadataBuilder from '../../persistence/saveMetadataBuilder.js';
 import ActiveModsManifestBuilder from '../../persistence/activeModsManifestBuilder.js';
-import ReferenceResolver from '../../initializers/services/referenceResolver.js';
+// import ReferenceResolver from '../../initializers/services/referenceResolver.js'; // Removed - service is deprecated
 import SaveLoadService from '../../persistence/saveLoadService.js';
 import GameStateSerializer from '../../persistence/gameStateSerializer.js';
 import SaveFileRepository from '../../persistence/saveFileRepository.js';
@@ -53,7 +54,7 @@ export function registerPersistence(container) {
     `Persistence Registration: Registered ${String(tokens.IStorageProvider)}.`
   );
 
-  r.singletonFactory(tokens.SaveFileRepository, (c) => {
+  r.singletonFactory(tokens.ISaveFileRepository, (c) => {
     return new SaveFileRepository({
       logger: c.resolve(tokens.ILogger),
       storageProvider: c.resolve(tokens.IStorageProvider),
@@ -63,7 +64,7 @@ export function registerPersistence(container) {
     });
   });
   logger.debug(
-    `Persistence Registration: Registered ${String(tokens.SaveFileRepository)}.`
+    `Persistence Registration: Registered ${String(tokens.ISaveFileRepository)}.`
   );
 
   r.singletonFactory(tokens.ISaveLoadService, (c) =>
@@ -123,6 +124,17 @@ export function registerPersistence(container) {
     `Persistence Registration: Registered ${String(tokens.GameStateCaptureService)}.`
   );
 
+  r.singletonFactory(tokens.ManualSaveCoordinator, (c) => {
+    return new ManualSaveCoordinator({
+      logger: c.resolve(tokens.ILogger),
+      gameStateCaptureService: c.resolve(tokens.GameStateCaptureService),
+      saveLoadService: c.resolve(tokens.ISaveLoadService),
+    });
+  });
+  logger.debug(
+    `Persistence Registration: Registered ${String(tokens.ManualSaveCoordinator)}.`
+  );
+
   r.singletonFactory(tokens.GamePersistenceService, (c) => {
     return new GamePersistenceService({
       logger: c.resolve(tokens.ILogger),
@@ -130,21 +142,22 @@ export function registerPersistence(container) {
       entityManager: c.resolve(tokens.IEntityManager),
       playtimeTracker: c.resolve(tokens.PlaytimeTracker),
       gameStateCaptureService: c.resolve(tokens.GameStateCaptureService),
+      manualSaveCoordinator: c.resolve(tokens.ManualSaveCoordinator),
     });
   });
   logger.debug(
     `Persistence Registration: Registered ${String(tokens.GamePersistenceService)}.`
   );
 
-  r.singletonFactory(tokens.IReferenceResolver, (c) => {
-    return new ReferenceResolver({
-      entityManager: c.resolve(tokens.IEntityManager),
-      logger: c.resolve(tokens.ILogger),
-    });
-  });
-  logger.debug(
-    `Persistence Registration: Registered ${String(tokens.IReferenceResolver)}.`
-  );
+  // r.singletonFactory(tokens.IReferenceResolver, (c) => { // Removed - service is deprecated
+  //   return new ReferenceResolver({
+  //     entityManager: c.resolve(tokens.IEntityManager),
+  //     logger: c.resolve(tokens.ILogger),
+  //   });
+  // });
+  // logger.debug(
+  //   `Persistence Registration: Registered ${String(tokens.IReferenceResolver)}.`
+  // );
 
   logger.debug('Persistence Registration: Completed.');
 }

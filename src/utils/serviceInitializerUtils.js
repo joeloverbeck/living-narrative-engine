@@ -11,7 +11,7 @@ import {
   createPrefixedLogger,
   initLogger as baseInitLogger,
 } from './loggerUtils.js';
-import { validateDependency } from './validationUtils.js';
+import { validateDependencies } from './validationUtils.js';
 
 /**
  * Validate the provided logger and return a prefixed logger instance.
@@ -37,13 +37,20 @@ export function initPrefixedLogger(serviceName, logger) {
  */
 export function validateServiceDeps(serviceName, logger, deps) {
   if (!deps) return;
+
+  const checks = [];
+
   for (const [depName, spec] of Object.entries(deps)) {
     if (!spec) continue;
-    validateDependency(spec.value, `${serviceName}: ${depName}`, logger, {
-      requiredMethods: spec.requiredMethods,
+    checks.push({
+      dependency: spec.value,
+      name: `${serviceName}: ${depName}`,
+      methods: spec.requiredMethods,
       isFunction: spec.isFunction,
     });
   }
+
+  validateDependencies(checks, logger);
 }
 
 /**

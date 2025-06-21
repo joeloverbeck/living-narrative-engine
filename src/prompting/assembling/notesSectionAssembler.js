@@ -5,11 +5,8 @@ import { resolveWrapper } from '../../utils/wrapperUtils.js';
 export const NOTES_WRAPPER_KEY = 'notes_wrapper';
 
 export class NotesSectionAssembler extends IPromptElementAssembler {
-  #logger;
-
-  constructor({ logger = console } = {}) {
+  constructor() {
     super();
-    this.#logger = logger;
   }
 
   /** @inheritdoc */

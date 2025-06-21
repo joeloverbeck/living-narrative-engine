@@ -1,5 +1,5 @@
 // src/services/gameDataRepository.js
-// --- FILE START ---
+
 import { IGameDataRepository } from '../interfaces/IGameDataRepository.js';
 
 /**
@@ -7,6 +7,8 @@ import { IGameDataRepository } from '../interfaces/IGameDataRepository.js';
  * @typedef {import('../interfaces/coreServices.js').ILogger} ILogger
  * @typedef {import('../../data/schemas/action.schema.json').ActionDefinition} ActionDefinition
  * @typedef {import('../../data/schemas/entity-definition.schema.json').EntityDefinition} EntityDefinition
+ * @typedef {import('../../data/schemas/entity-instance.schema.json').EntityInstance} EntityInstance
+ * @typedef {import('../../data/schemas/goal.schema.json').GoalDefinition} GoalDefinition
  * @typedef {import('../../data/schemas/component.schema.json').EventDefinition} EventDefinition
  * @typedef {import('../../data/schemas/component.schema.json').ComponentDefinition} ComponentDefinition
  * @typedef {import('../../data/schemas/condition.schema.json').ConditionDefinition} ConditionDefinition
@@ -51,8 +53,12 @@ export class GameDataRepository extends IGameDataRepository {
       'getAllEventDefinitions',
       'getComponentDefinition',
       'getAllComponentDefinitions',
-      'getConditionDefinition', // Added
-      'getAllConditionDefinitions', // Added
+      'getConditionDefinition',
+      'getAllConditionDefinitions',
+      'getGoalDefinition', // Added
+      'getAllGoalDefinitions', // Added
+      'getEntityInstanceDefinition',
+      'getAllEntityInstanceDefinitions',
       'get',
       'getAll',
       'clear',
@@ -80,7 +86,7 @@ export class GameDataRepository extends IGameDataRepository {
   }
 
   // ────────────────────────────────────────────────────────────────────────────
-  //  Manifest / World Info
+  // 	Manifest / World Info
   // ────────────────────────────────────────────────────────────────────────────
 
   getWorldName() {
@@ -96,7 +102,7 @@ export class GameDataRepository extends IGameDataRepository {
   }
 
   // ────────────────────────────────────────────────────────────────────────────
-  //  Action definitions
+  // 	Action definitions
   // ────────────────────────────────────────────────────────────────────────────
 
   /** @returns {ActionDefinition[]} */
@@ -120,7 +126,7 @@ export class GameDataRepository extends IGameDataRepository {
   }
 
   // ────────────────────────────────────────────────────────────────────────────
-  //  Entity definitions
+  // 	Entity definitions
   // ────────────────────────────────────────────────────────────────────────────
 
   /**
@@ -144,7 +150,31 @@ export class GameDataRepository extends IGameDataRepository {
   }
 
   // ────────────────────────────────────────────────────────────────────────────
-  //  Event definitions
+  // 	Entity instances
+  // ────────────────────────────────────────────────────────────────────────────
+
+  /**
+   * @param {string} id
+   * @returns {EntityInstance | null}
+   */
+  getEntityInstanceDefinition(id) {
+    if (typeof id !== 'string' || !id.trim()) {
+      this.#logger.warn(
+        `GameDataRepository: getEntityInstanceDefinition called with invalid ID: ${id}`
+      );
+      return null;
+    }
+    const definition = this.#registry.getEntityInstanceDefinition(id);
+    return definition ?? null;
+  }
+
+  /** @returns {EntityInstance[]} */
+  getAllEntityInstanceDefinitions() {
+    return this.#registry.getAllEntityInstanceDefinitions();
+  }
+
+  // ────────────────────────────────────────────────────────────────────────────
+  // 	Event definitions
   // ────────────────────────────────────────────────────────────────────────────
 
   /**
@@ -168,7 +198,7 @@ export class GameDataRepository extends IGameDataRepository {
   }
 
   // ────────────────────────────────────────────────────────────────────────────
-  //  Component definitions
+  // 	Component definitions
   // ────────────────────────────────────────────────────────────────────────────
 
   /**
@@ -192,7 +222,7 @@ export class GameDataRepository extends IGameDataRepository {
   }
 
   // ────────────────────────────────────────────────────────────────────────────
-  //  Condition definitions (NEW SECTION)
+  // 	Condition definitions
   // ────────────────────────────────────────────────────────────────────────────
 
   /**
@@ -222,7 +252,37 @@ export class GameDataRepository extends IGameDataRepository {
   }
 
   // ────────────────────────────────────────────────────────────────────────────
-  //  Mod & Content Info
+  // 	Goal definitions (NEW)
+  // ────────────────────────────────────────────────────────────────────────────
+
+  /**
+   * Retrieves a specific GoalDefinition by its ID from the registry.
+   *
+   * @param {string} id The fully qualified ID (e.g., 'core:goal_survive').
+   * @returns {GoalDefinition | null} The goal definition, or null if not found.
+   */
+  getGoalDefinition(id) {
+    if (typeof id !== 'string' || !id.trim()) {
+      this.#logger.warn(
+        `GameDataRepository: getGoalDefinition called with invalid ID: ${id}`
+      );
+      return null;
+    }
+    const definition = this.#registry.getGoalDefinition(id);
+    return definition ?? null;
+  }
+
+  /**
+   * Retrieves all GoalDefinition objects currently stored in the registry.
+   *
+   * @returns {GoalDefinition[]} An array of all goal definitions.
+   */
+  getAllGoalDefinitions() {
+    return this.#registry.getAllGoalDefinitions();
+  }
+
+  // ────────────────────────────────────────────────────────────────────────────
+  // 	Mod & Content Info
   // ────────────────────────────────────────────────────────────────────────────
 
   /**

@@ -3,6 +3,7 @@
 import { BaseChatLLMStrategy } from './baseChatLLMStrategy.js';
 import { ConfigurationError } from '../../../errors/configurationError';
 import { LLMStrategyError } from '../../errors/LLMStrategyError.js';
+import { logPreview } from '../../../utils/index.js';
 // Assuming HttpClientError might be a specific type, if not, general Error is caught.
 // For actual HttpClientError type, it would be imported from its definition:
 // import { HttpClientError } from '../../retryHttpClient.js'; // Example path
@@ -68,9 +69,7 @@ export class BaseOpenRouterStrategy extends BaseChatLLMStrategy {
    */
   _buildProviderRequestPayloadAdditions(baseMessagesPayload, llmConfig) {
     const errorMessage = `${this.constructor.name}._buildProviderRequestPayloadAdditions: Method not implemented. Subclasses must override this method.`;
-    // MODIFICATION START: Use llmConfig.configId for logging
     const llmId = llmConfig?.configId || 'UnknownLLM';
-    // MODIFICATION END
     this.logger.error(errorMessage, { llmId });
     throw new Error(errorMessage); // Or potentially an LLMStrategyError
   }
@@ -91,36 +90,29 @@ export class BaseOpenRouterStrategy extends BaseChatLLMStrategy {
    */
   async _extractJsonOutput(responseData, llmConfig, _providerRequestPayload) {
     const errorMessage = `${this.constructor.name}._extractJsonOutput: Method not implemented. Subclasses must override this method.`;
-    // MODIFICATION START: Use llmConfig.configId for logging
     const llmId = llmConfig?.configId || 'UnknownLLM';
-    // MODIFICATION END
     this.logger.error(errorMessage, { llmId });
     throw new Error(errorMessage); // Or potentially an LLMStrategyError
   }
 
   /**
-   * Executes the OpenRouter strategy.
+   * Validates parameters passed to {@link execute} and returns the LLM id.
    *
-   * @param {LLMStrategyExecuteParams} params - The parameters for LLM execution.
-   * @returns {Promise<string>} A promise that resolves to the extracted JSON string.
-   * @throws {ConfigurationError} If there's a configuration issue.
-   * @throws {LLMStrategyError} If there's an error during strategy execution.
+   * @private
+   * @param {LLMStrategyExecuteParams} params - The execution parameters.
+   * @returns {{ llmId: string }} The resolved LLM identifier.
+   * @throws {ConfigurationError} If required parameters are missing or invalid.
    */
-  async execute(params) {
-    const { gameSummary, llmConfig, apiKey, environmentContext } = params;
-
+  #validateExecuteParams({ llmConfig, environmentContext }) {
     if (!llmConfig) {
       const errorMsg = `${this.constructor.name}: Missing llmConfig. Cannot proceed.`;
-      // this.logger is guaranteed. llmId is not available here.
       this.logger.error(errorMsg);
       throw new ConfigurationError(errorMsg, {
         llmId: 'Unknown (llmConfig missing)',
       });
     }
 
-    // MODIFICATION START: Use llmConfig.configId
     const llmId = llmConfig.configId || 'UnknownLLM';
-    // MODIFICATION END
 
     if (!environmentContext) {
       const errorMsg = `${this.constructor.name} (${llmId}): Missing environmentContext. Cannot proceed.`;
@@ -146,6 +138,19 @@ export class BaseOpenRouterStrategy extends BaseChatLLMStrategy {
       });
     }
 
+    return { llmId };
+  }
+
+  /**
+   * Builds the provider payload from the prompt payload and strategy additions.
+   *
+   * @private
+   * @param {string} gameSummary - The game summary text.
+   * @param {LLMModelConfig} llmConfig - The LLM configuration.
+   * @param {string} llmId - Identifier of the LLM for logging.
+   * @returns {{ providerRequestPayload: object }} The payload sent to the provider.
+   */
+  #buildProviderPayload(gameSummary, llmConfig, llmId) {
     const baseMessagesPayload = this._constructPromptPayload(
       gameSummary,
       llmConfig
@@ -197,6 +202,29 @@ export class BaseOpenRouterStrategy extends BaseChatLLMStrategy {
       }
     );
 
+    return { providerRequestPayload };
+  }
+
+  /**
+   * Prepares HTTP request details for the provider call.
+   *
+   * @private
+   * @param {object} providerRequestPayload - The payload for the provider.
+   * @param {LLMModelConfig} llmConfig - The LLM configuration.
+   * @param {string} apiKey - API key for direct calls.
+   * @param {EnvironmentContext} environmentContext - The environment context.
+   * @param {string} llmId - Identifier of the LLM for logging.
+   * @returns {{ targetUrl: string, finalPayload: object, headers: object }}
+   * The URL, payload, and headers for the HTTP request.
+   * @throws {ConfigurationError} If the API key is missing when required.
+   */
+  #prepareHttpRequest(
+    providerRequestPayload,
+    llmConfig,
+    apiKey,
+    environmentContext,
+    llmId
+  ) {
     let targetUrl = llmConfig.endpointUrl;
     let finalPayload = providerRequestPayload;
     const headers = {
@@ -206,13 +234,11 @@ export class BaseOpenRouterStrategy extends BaseChatLLMStrategy {
 
     if (environmentContext.isClient()) {
       targetUrl = environmentContext.getProxyServerUrl();
-      // MODIFICATION START: Use llmConfig.configId in proxy payload
       finalPayload = {
-        llmId: llmConfig.configId, // Crucial change for proxy compatibility
+        llmId: llmConfig.configId,
         targetPayload: providerRequestPayload,
         targetHeaders: llmConfig.providerSpecificHeaders || {},
       };
-      // MODIFICATION END
       this.logger.debug(
         `${this.constructor.name} (${llmId}): Client-side execution. Using proxy URL: ${targetUrl}. Payload prepared according to proxy API contract.`,
         { llmId }
@@ -234,8 +260,32 @@ export class BaseOpenRouterStrategy extends BaseChatLLMStrategy {
       }
     }
 
-    let responseData;
+    return { targetUrl, finalPayload, headers };
+  }
 
+  /**
+   * Handles the HTTP request/response cycle and JSON extraction.
+   *
+   * @private
+   * @async
+   * @param {string} targetUrl - The request URL.
+   * @param {object} finalPayload - Payload to send.
+   * @param {object} headers - Request headers.
+   * @param {object} providerRequestPayload - Original provider payload for logging.
+   * @param {LLMModelConfig} llmConfig - The LLM configuration.
+   * @param {string} llmId - Identifier of the LLM for logging.
+   * @returns {Promise<string>} Extracted JSON string.
+   * @throws {LLMStrategyError|ConfigurationError} On request or processing failure.
+   */
+  async #handleResponse(
+    targetUrl,
+    finalPayload,
+    headers,
+    providerRequestPayload,
+    llmConfig,
+    llmId
+  ) {
+    let responseData;
     try {
       this.logger.debug(
         `${this.constructor.name} (${llmId}): Making API call to '${targetUrl}'. Payload length: ${JSON.stringify(finalPayload)?.length}`,
@@ -243,7 +293,10 @@ export class BaseOpenRouterStrategy extends BaseChatLLMStrategy {
       );
       this.logger.debug(
         `${this.constructor.name} (${llmId}): Final prompt to be sent to '${targetUrl}':`,
-        { llmId, payload: JSON.stringify(finalPayload, null, 2) }
+        {
+          llmId,
+          payload: JSON.stringify(finalPayload, null, 2),
+        }
       );
 
       responseData = await this.#httpClient.request(targetUrl, {
@@ -252,13 +305,11 @@ export class BaseOpenRouterStrategy extends BaseChatLLMStrategy {
         body: JSON.stringify(finalPayload),
       });
 
-      this.logger.debug(
-        `${this.constructor.name} (${llmId}): Raw API response received.`,
-        {
-          llmId,
-          responsePreview:
-            JSON.stringify(responseData)?.substring(0, 250) + '...',
-        }
+      logPreview(
+        this.logger,
+        `${this.constructor.name} (${llmId}): Raw API response received. Preview: `,
+        JSON.stringify(responseData),
+        250
       );
 
       const extractedJsonString = await this._extractJsonOutput(
@@ -277,17 +328,17 @@ export class BaseOpenRouterStrategy extends BaseChatLLMStrategy {
           { llmId }
         );
         return extractedJsonString;
-      } else {
-        const errorMsg = `${this.constructor.name} (${llmId}): Failed to extract usable JSON content from OpenRouter response. _extractJsonOutput returned null, empty, or non-string.`;
-        this.logger.error(errorMsg, {
-          llmId,
-          responseDataPreview: JSON.stringify(responseData)?.substring(0, 500),
-          returnedValue: extractedJsonString,
-        });
-        throw new LLMStrategyError(errorMsg, llmId, null, {
-          responsePreview: JSON.stringify(responseData)?.substring(0, 500),
-        });
       }
+
+      const errorMsg = `${this.constructor.name} (${llmId}): Failed to extract usable JSON content from OpenRouter response. _extractJsonOutput returned null, empty, or non-string.`;
+      this.logger.error(errorMsg, {
+        llmId,
+        responseDataPreview: JSON.stringify(responseData)?.substring(0, 500),
+        returnedValue: extractedJsonString,
+      });
+      throw new LLMStrategyError(errorMsg, llmId, null, {
+        responsePreview: JSON.stringify(responseData)?.substring(0, 500),
+      });
     } catch (error) {
       if (
         error instanceof ConfigurationError ||
@@ -317,8 +368,8 @@ export class BaseOpenRouterStrategy extends BaseChatLLMStrategy {
         );
         finalError = error;
       } else {
-        const errorMsg = `${this.constructor.name} (${llmId}): An unexpected error occurred during API call or response processing for endpoint '${targetUrl}'. Original message: ${error.message}`;
-        this.logger.error(errorMsg, {
+        const errMsg = `${this.constructor.name} (${llmId}): An unexpected error occurred during API call or response processing for endpoint '${targetUrl}'. Original message: ${error.message}`;
+        this.logger.error(errMsg, {
           llmId,
           originalErrorName: error.name,
           originalErrorMessage: error.message,
@@ -326,7 +377,7 @@ export class BaseOpenRouterStrategy extends BaseChatLLMStrategy {
           payloadPreview:
             JSON.stringify(providerRequestPayload)?.substring(0, 200) + '...',
         });
-        finalError = new LLMStrategyError(errorMsg, llmId, error, {
+        finalError = new LLMStrategyError(errMsg, llmId, error, {
           requestUrl: targetUrl,
           payloadPreview:
             JSON.stringify(providerRequestPayload)?.substring(0, 200) + '...',
@@ -334,6 +385,46 @@ export class BaseOpenRouterStrategy extends BaseChatLLMStrategy {
       }
       throw finalError;
     }
+  }
+
+  /**
+   * Executes the OpenRouter strategy.
+   *
+   * @param {LLMStrategyExecuteParams} params - The parameters for LLM execution.
+   * @returns {Promise<string>} A promise that resolves to the extracted JSON string.
+   * @throws {ConfigurationError} If there's a configuration issue.
+   * @throws {LLMStrategyError} If there's an error during strategy execution.
+   */
+  async execute(params) {
+    const { gameSummary, llmConfig, apiKey, environmentContext } = params;
+
+    const { llmId } = this.#validateExecuteParams({
+      llmConfig,
+      environmentContext,
+    });
+
+    const { providerRequestPayload } = this.#buildProviderPayload(
+      gameSummary,
+      llmConfig,
+      llmId
+    );
+
+    const { targetUrl, finalPayload, headers } = this.#prepareHttpRequest(
+      providerRequestPayload,
+      llmConfig,
+      apiKey,
+      environmentContext,
+      llmId
+    );
+
+    return this.#handleResponse(
+      targetUrl,
+      finalPayload,
+      headers,
+      providerRequestPayload,
+      llmConfig,
+      llmId
+    );
   }
 }
 

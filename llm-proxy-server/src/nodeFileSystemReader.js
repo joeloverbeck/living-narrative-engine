@@ -2,7 +2,7 @@
 
 import * as fs from 'node:fs/promises';
 
-/** @typedef {import('./interfaces/IServerUtils.js').IFileSystemReader} IFileSystemReader */
+/** @typedef {import('./utils/IServerUtils.js').IFileSystemReader} IFileSystemReader */
 
 /**
  * @class NodeFileSystemReader

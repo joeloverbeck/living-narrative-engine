@@ -3,15 +3,19 @@
 import { persistThoughts } from './thoughtPersistenceHook.js';
 
 /**
- * Listens for ACTION_DECIDED_ID and persists any thoughts in the
- * actor’s short-term memory component.
+ * @class
+ * @description Listens for ACTION_DECIDED_ID events and persists any thoughts in the
+ * actor's short-term memory component.
  */
 export class ThoughtPersistenceListener {
   /**
+   * Creates an instance of the listener.
+   *
    * @param {{
    *   logger: import('../interfaces/coreServices.js').ILogger,
    *   entityManager: import('../interfaces/IEntityManager.js').IEntityManager
    * }} deps
+   *   Dependencies for the listener.
    */
   constructor({ logger, entityManager }) {
     this.logger = logger;
@@ -19,7 +23,10 @@ export class ThoughtPersistenceListener {
   }
 
   /**
-   * @param {{ type: string, payload: { actorId: string, extractedData?: { thoughts?: string } } }} event
+   * Handles events emitted after an action decision.
+   *
+   * @param {{ type: string, payload: { actorId: string, extractedData?: { thoughts?: string } } }} event -
+   * The event containing any thoughts produced during the decision process.
    */
   handleEvent(event) {
     if (!event || !event.payload) return;

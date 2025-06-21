@@ -32,6 +32,18 @@ export class ITurnStateHost {
     throw new Error('ITurnStateHost.getTurnContext must be implemented.');
   }
 
+  /**
+   * Resets the host's turn state and related resources.
+   *
+   * @param {string} reason - Contextual reason for the reset.
+   * @returns {void}
+   */
+  resetStateAndResources(reason) {
+    throw new Error(
+      'ITurnStateHost.resetStateAndResources must be implemented.'
+    );
+  }
+
   // ───────────────────────────────────────────
   // Higher-level helpers invoked by states
   // ───────────────────────────────────────────

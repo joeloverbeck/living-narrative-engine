@@ -9,8 +9,9 @@
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../interfaces/coreServices.js').ISpatialIndexManager} ISpatialIndexManager */
 /** @typedef {import('../entities/entity.js').default} Entity */
-/** @typedef {import('./services/referenceResolver.js').default} ReferenceResolver */ // Path confirmed correct
-/** @typedef {import('../interfaces/IReferenceResolver.js').IReferenceResolver} IReferenceResolver */
+/** @typedef {import('../entities/entityDefinition.js').default} EntityDefinition */
+/** @typedef {import('../entities/entityInstance.js').default} EntityInstance */
+/** @typedef {import('../interfaces/IDataRegistry.js').IDataRegistry} IDataRegistry */
 
 // --- Library Imports ---
 import _get from 'lodash/get.js';
@@ -38,8 +39,8 @@ class WorldInitializer {
   #logger;
   /** @type {ISpatialIndexManager} */
   #spatialIndexManager;
-  /** @type {IReferenceResolver | ReferenceResolver} */
-  #referenceResolver;
+  // /** @type {IReferenceResolver | ReferenceResolver} */
+  // #referenceResolver; // ReferenceResolver is being phased out - removed entirely
 
   /**
    * Exposes the provided world context for potential external use.
@@ -60,7 +61,6 @@ class WorldInitializer {
    * @param {ValidatedEventDispatcher} dependencies.validatedEventDispatcher
    * @param {ILogger} dependencies.logger
    * @param {ISpatialIndexManager} dependencies.spatialIndexManager
-   * @param {IReferenceResolver | ReferenceResolver} dependencies.referenceResolver
    * @throws {Error} If any required dependency is missing or invalid.
    */
   constructor({
@@ -70,7 +70,6 @@ class WorldInitializer {
     validatedEventDispatcher,
     logger,
     spatialIndexManager,
-    referenceResolver,
   }) {
     if (!entityManager)
       throw new Error('WorldInitializer requires an EntityManager.');
@@ -83,8 +82,6 @@ class WorldInitializer {
     if (!logger) throw new Error('WorldInitializer requires an ILogger.');
     if (!spatialIndexManager)
       throw new Error('WorldInitializer requires an ISpatialIndexManager.');
-    if (!referenceResolver)
-      throw new Error('WorldInitializer requires a ReferenceResolver.');
 
     this.#entityManager = entityManager;
     this.#worldContext = worldContext;
@@ -92,10 +89,10 @@ class WorldInitializer {
     this.#validatedEventDispatcher = validatedEventDispatcher;
     this.#logger = logger;
     this.#spatialIndexManager = spatialIndexManager;
-    this.#referenceResolver = referenceResolver;
+    // this.#referenceResolver = referenceResolver; // No longer assigned - removed entirely
 
     this.#logger.debug(
-      'WorldInitializer: Instance created (with ReferenceResolver).'
+      'WorldInitializer: Instance created. Reference resolution step has been removed.'
     );
   }
 
@@ -201,11 +198,13 @@ class WorldInitializer {
    * @throws {Error} If a critical error occurs during component iteration that should halt processing for this entity.
    */
   async #_resolveReferencesForEntityComponents(entity) {
-    const entriesIterable = entity.componentEntries;
-
     this.#logger.debug(
-      `WorldInitializer (Pass 2 RefResolution): Processing components for entity ${entity.id}.`
+      `WorldInitializer (Pass 2 RefResolution): Processing entity ${entity.id}. This step is mostly a no-op as 'resolveFields' is deprecated.`
     );
+
+    // The following logic is largely deprecated as componentDefinition.resolveFields is being removed.
+    // Kept for informational purposes during transition, but will not execute if resolveFields is absent.
+    const entriesIterable = entity.componentEntries;
 
     if (
       entriesIterable &&
@@ -214,13 +213,13 @@ class WorldInitializer {
       const iterator = entriesIterable[Symbol.iterator]();
       if (!(iterator && typeof iterator.next === 'function')) {
         this.#logger.warn(
-          `WorldInitializer (Pass 2 RefResolution): Entity ${entity.id} componentEntries[Symbol.iterator]() did not return a valid iterator. Skipping component resolution for this entity.`
+          `WorldInitializer (Pass 2 RefResolution): Entity ${entity.id} componentEntries[Symbol.iterator]() did not return a valid iterator. Skipping component processing for this entity.`
         );
         return;
       }
     } else {
       this.#logger.warn(
-        `WorldInitializer (Pass 2 RefResolution): Entity ${entity.id} componentEntries IS NOT ITERABLE or is problematic. Value: ${String(entriesIterable)}. Skipping component resolution for this entity.`
+        `WorldInitializer (Pass 2 RefResolution): Entity ${entity.id} componentEntries IS NOT ITERABLE or is problematic. Value: ${String(entriesIterable)}. Skipping component processing for this entity.`
       );
       return;
     }
@@ -232,55 +231,52 @@ class WorldInitializer {
 
         if (
           componentDefinition?.resolveFields &&
-          Array.isArray(componentDefinition.resolveFields)
+          Array.isArray(componentDefinition.resolveFields) &&
+          componentDefinition.resolveFields.length > 0 // Only proceed if there are actual fields to resolve
         ) {
-          for (const spec of componentDefinition.resolveFields) {
-            if (!spec || !spec.resolutionStrategy) {
-              // Standardized log prefix
-              this.#logger.warn(
-                `WorldInitializer (Pass 2 RefResolution): Invalid resolveFields spec for component ${componentTypeId} on entity ${entity.id}`,
-                spec
-              );
-              continue;
-            }
+          this.#logger.warn(
+            `WorldInitializer (Pass 2 RefResolution): Entity ${entity.id}, component ${componentTypeId} still has 'resolveFields'. This is a DEPRECATED pattern.`
+          );
+          // The original loop for processing spec in resolveFields has been removed
+          // as ReferenceResolver no longer performs active resolution and resolveFields itself is deprecated.
+          // If any component *still* has resolveFields, it will be logged above, but no resolution attempt will be made here.
+        } else {
+          // This is the expected path for components following the updated schema (no resolveFields)
+          this.#logger.debug(
+            `WorldInitializer (Pass 2 RefResolution): Entity ${entity.id}, component ${componentTypeId} has no 'resolveFields' to process, or it is empty. (Expected)`
+          );
+        }
 
-            const {
-              resolvedValue,
-              valueChanged,
-              dataPath: specDataPath,
-              dataPathIsSelf: specDataPathIsSelf,
-            } = this.#referenceResolver.resolve(
-              componentDataInstance,
-              spec,
-              entity.id,
-              componentTypeId
+        // Original location update logic - this should remain if still relevant
+        // This part seems to be for initializing spatial index based on PositionComponent, not related to resolveFields.
+        if (componentTypeId === POSITION_COMPONENT_ID) {
+          const locationId = _get(componentDataInstance, 'locationId');
+          if (locationId) {
+            // Ensure entity is added to spatial index if not already (e.g. by EntityManager upon creation with location)
+            // EntityManager now handles entity tracking directly via MapManager.add.
+            // Let's confirm if an explicit add here is still needed or if it's redundant.
+            // For now, will keep the logging to see if it triggers.
+            this.#logger.debug(
+              `WorldInitializer (Pass 2 Post-Processing): Entity ${entity.id} has POSITION_COMPONENT_ID with locationId '${locationId}'. Spatial index add/update is handled by EntityManager.`
             );
-
-            if (valueChanged && resolvedValue !== undefined) {
-              if (specDataPathIsSelf) {
-                entity.addComponent(componentTypeId, resolvedValue);
-                // Standardized log prefix
-                this.#logger.debug(
-                  `WorldInitializer (Pass 2 RefResolution): Updated component [${componentTypeId}] data directly for entity ${entity.id} via addComponent.`
-                );
-              } else if (specDataPath) {
-                _set(componentDataInstance, specDataPath, resolvedValue);
-                // Standardized log prefix
-                this.#logger.debug(
-                  `WorldInitializer (Pass 2 RefResolution): Modified path '${specDataPath}' in component [${componentTypeId}] for entity ${entity.id}.`
-                );
-              }
-            }
+          } else {
+            this.#logger.debug(
+              `WorldInitializer (Pass 2 Post-Processing): Entity ${entity.id} has POSITION_COMPONENT_ID but no locationId found in its data.`
+            );
           }
         }
       }
-    } catch (loopError) {
+    } catch (error) {
       this.#logger.error(
-        `WorldInitializer (Pass 2 RefResolution): CRITICAL error during component iteration for entity ${entity.id}. Error:`,
-        loopError
+        `WorldInitializer (Pass 2 RefResolution): Error processing components for entity ${entity.id}:`,
+        error
       );
-      throw loopError; // This error is caught by #_processSingleEntityForPass2
+      // Decide if this error is critical enough to throw and halt further processing for this entity or all entities.
+      // For now, logging and continuing with the next entity or step.
     }
+    this.#logger.debug(
+      `WorldInitializer (Pass 2 RefResolution): Finished processing components for entity ${entity.id}.`
+    );
   }
 
   /**

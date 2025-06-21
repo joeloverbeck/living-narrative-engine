@@ -99,6 +99,7 @@ import * as ConditionEvaluator from '../../prompting/elementConditionEvaluator.j
 import { LLMChooser } from '../../turns/adapters/llmChooser.js';
 import { ActionIndexerAdapter } from '../../turns/adapters/actionIndexerAdapter.js';
 import { LLMDecisionProvider } from '../../turns/providers/llmDecisionProvider.js';
+import { GoapDecisionProvider } from '../../turns/providers/goapDecisionProvider.js';
 import { registerActorAwareStrategy } from './registerActorAwareStrategy.js';
 
 /**
@@ -309,7 +310,7 @@ export function registerAI(container) {
     (c) =>
       new AvailableActionsProvider({
         actionDiscoveryService: c.resolve(tokens.IActionDiscoveryService),
-        actionIndexingService: c.resolve(tokens.ActionIndexingService),
+        actionIndexingService: c.resolve(tokens.IActionIndexer),
         entityManager: c.resolve(tokens.IEntityManager),
       })
   );
@@ -402,6 +403,18 @@ export function registerAI(container) {
   );
   logger.debug(
     `AI Systems Registration: Registered ${tokens.ILLMDecisionProvider}.`
+  );
+
+  r.singletonFactory(
+    tokens.IGoapDecisionProvider,
+    (c) =>
+      new GoapDecisionProvider({
+        logger: c.resolve(tokens.ILogger),
+        safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+      })
+  );
+  logger.debug(
+    `AI Systems Registration: Registered ${tokens.IGoapDecisionProvider}.`
   );
 
   registerActorAwareStrategy(container);

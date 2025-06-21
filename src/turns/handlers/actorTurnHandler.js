@@ -19,9 +19,6 @@ import { ActorMismatchError } from '../../errors/actorMismatchError.js';
  * @description Generic handler for any actor's turn.
  */
 class ActorTurnHandler extends GenericTurnHandler {
-  /** @type {boolean} */
-  #hasSignalledNormalEnd = false;
-
   /**
    * @param {object} deps
    * @param {ILogger} deps.logger
@@ -30,6 +27,7 @@ class ActorTurnHandler extends GenericTurnHandler {
    * @param {ITurnStrategyFactory} [deps.turnStrategyFactory]
    * @param {ITurnStrategyFactory} [deps.strategyFactory]
    * @param {TurnContextBuilder} deps.turnContextBuilder
+   * @param deps.container
    */
   constructor({
     logger,
@@ -38,6 +36,7 @@ class ActorTurnHandler extends GenericTurnHandler {
     turnStrategyFactory,
     strategyFactory,
     turnContextBuilder,
+    container = null,
   }) {
     const factory = turnStrategyFactory || strategyFactory;
     super({
@@ -46,6 +45,7 @@ class ActorTurnHandler extends GenericTurnHandler {
       turnEndPort,
       strategyFactory: factory,
       turnContextBuilder,
+      container,
     });
 
     const initialState = this._turnStateFactory.createInitialState(this);
@@ -72,7 +72,6 @@ class ActorTurnHandler extends GenericTurnHandler {
     );
     super._resetTurnStateAndResources(logCtx);
 
-    this.#hasSignalledNormalEnd = false;
     this._logger.debug(
       `${this.constructor.name}: Actor-specific state reset complete for '${logCtx}'.`
     );
@@ -95,7 +94,6 @@ class ActorTurnHandler extends GenericTurnHandler {
   }
 
   signalNormalApparentTermination() {
-    this.#hasSignalledNormalEnd = true;
     this._logger.debug(
       `${this.constructor.name}: Normal apparent termination signaled.`
     );

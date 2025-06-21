@@ -1,0 +1,29 @@
+{
+  "$schema": "http://example.com/schemas/event.schema.json",
+  "id": "core:component_added",
+  "description": "Fired when a component is successfully added to or updated on an entity instance. This includes both adding new components and changing the data of existing ones.",
+  "payloadSchema": {
+    "description": "Defines the structure for the 'core:component_added' event payload.",
+    "type": "object",
+    "required": ["entity", "componentTypeId", "componentData"],
+    "properties": {
+      "entity": {
+        "type": "object",
+        "description": "The full entity instance that received the component."
+      },
+      "componentTypeId": {
+        "$ref": "../../schemas/common.schema.json#/definitions/namespacedId",
+        "description": "The ID of the component that was added or updated."
+      },
+      "componentData": {
+        "description": "The validated data of the added/updated component. Will be 'null' if the component was explicitly set to null, or an object otherwise.",
+        "type": ["object", "null"]
+      },
+      "oldComponentData": {
+        "description": "Optional. The data of the component before this change. Is undefined if the component was not present before.",
+        "type": ["object", "null"]
+      }
+    },
+    "additionalProperties": false
+  }
+}

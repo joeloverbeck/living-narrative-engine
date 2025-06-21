@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { AvailableActionsProvider } from '../../src/data/providers/availableActionsProvider.js';
 import { ActionIndexingService } from '../../src/turns/services/actionIndexingService.js';
+import { ActionIndexerAdapter } from '../../src/turns/adapters/actionIndexerAdapter.js';
 import { TurnActionChoicePipeline } from '../../src/turns/pipeline/turnActionChoicePipeline.js';
 
 /**
@@ -43,7 +44,9 @@ describe('Integration – AvailableActionsProvider caching', () => {
       error: jest.fn(),
     };
     discoverySvc = { getValidActions: jest.fn() };
-    indexingService = new ActionIndexingService({ logger });
+    indexingService = new ActionIndexerAdapter(
+      new ActionIndexingService({ logger })
+    );
     entityManager = { getEntityInstance: jest.fn().mockResolvedValue(null) };
 
     provider = new AvailableActionsProvider({

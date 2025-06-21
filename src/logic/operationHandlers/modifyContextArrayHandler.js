@@ -24,7 +24,7 @@ function setPath(obj, path, value) {
   let current = obj;
   for (let i = 0; i < pathParts.length - 1; i++) {
     const part = pathParts[i];
-    if (part === "__proto__" || part === "constructor") {
+    if (part === '__proto__' || part === 'constructor') {
       throw new Error(`Unsafe property name detected: ${part}`);
     }
     if (current[part] === undefined || typeof current[part] !== 'object') {
@@ -33,7 +33,7 @@ function setPath(obj, path, value) {
     current = current[part];
   }
   const lastPart = pathParts[pathParts.length - 1];
-  if (lastPart === "__proto__" || lastPart === "constructor") {
+  if (lastPart === '__proto__' || lastPart === 'constructor') {
     throw new Error(`Unsafe property name detected: ${lastPart}`);
   }
   current[lastPart] = value;
@@ -104,20 +104,45 @@ class ModifyContextArrayHandler {
       return;
     }
 
-    const originalArray = resolvePath(contextObject, variable_path);
-    if (!Array.isArray(originalArray)) {
-      log.warn(
-        `MODIFY_CONTEXT_ARRAY: Context variable path '${variable_path}' does not resolve to an array.`
+    const resolvedValue = resolvePath(contextObject, variable_path);
+    let clonedArray;
+
+    if (Array.isArray(resolvedValue)) {
+      clonedArray = cloneDeep(resolvedValue);
+    } else if (
+      resolvedValue === undefined &&
+      (mode === 'push' || mode === 'push_unique')
+    ) {
+      log.debug(
+        `MODIFY_CONTEXT_ARRAY: Path '${variable_path}' does not exist. Initializing as empty array for mode '${mode}'.`
       );
+      clonedArray = [];
+    } else {
+      let message = `MODIFY_CONTEXT_ARRAY: Context variable path '${variable_path}' `;
+      if (resolvedValue === undefined) {
+        message += `does not exist, and mode '${mode}' does not support initialization from undefined.`;
+      } else {
+        message += `does not resolve to an array (found type: ${typeof resolvedValue}).`;
+      }
+      log.warn(message);
       return;
     }
 
-    // --- FIX: Operate on a clone to prevent mutating the original rule definition ---
-    const clonedArray = cloneDeep(originalArray);
+    let debugMessage = `MODIFY_CONTEXT_ARRAY: Performing '${mode}' on context variable '${variable_path}'.`;
+    if (
+      value !== undefined &&
+      (mode === 'push' || mode === 'push_unique' || mode === 'remove_by_value')
+    ) {
+      try {
+        // Attempt to stringify, but catch errors for complex objects or circular refs
+        debugMessage += ` Value: ${JSON.stringify(value)}.`;
+      } catch (e) {
+        debugMessage += ` Value: [unable to stringify].`;
+      }
+    }
+    log.debug(debugMessage);
+
     let operationResult = null;
-    log.debug(
-      `MODIFY_CONTEXT_ARRAY: Performing '${mode}' on context variable '${variable_path}'.`
-    );
 
     switch (mode) {
       case 'push':
@@ -185,13 +210,11 @@ class ModifyContextArrayHandler {
     }
 
     // --- FIX: Set the modified clone back into the context ---
-    const finalArray = ['pop', 'remove_by_value'].includes(mode)
-      ? operationResult
-      : clonedArray;
+    const finalArray = clonedArray;
     setPath(contextObject, variable_path, finalArray);
 
     // The result variable should get the popped item or the final state of the array
-    const resultForStorage = mode === 'pop' ? operationResult : finalArray;
+    const resultForStorage = mode === 'pop' ? operationResult : clonedArray;
 
     if (result_variable) {
       setContextValue(

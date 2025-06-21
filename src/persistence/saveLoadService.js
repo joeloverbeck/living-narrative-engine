@@ -1,22 +1,18 @@
 import { ISaveLoadService } from '../interfaces/ISaveLoadService.js';
 import GameStateSerializer from './gameStateSerializer.js';
 import SaveValidationService from './saveValidationService.js';
-import { buildManualFileName, manualSavePath } from '../utils/savePathUtils.js';
+import { getManualSavePath } from '../utils/savePathUtils.js';
 import SaveFileRepository from './saveFileRepository.js';
-import { setupService } from '../utils/serviceInitializerUtils.js';
-import { safeDeepClone } from '../utils/objectUtils.js';
-import {
-  PersistenceError,
-  PersistenceErrorCodes,
-} from './persistenceErrors.js';
+import { ISaveFileRepository } from '../interfaces/ISaveFileRepository.js';
+import { BaseService } from '../utils/serviceBase.js';
+import { prepareState } from './savePreparation.js';
+import { PersistenceErrorCodes } from './persistenceErrors.js';
 import {
   createPersistenceFailure,
   createPersistenceSuccess,
-} from './persistenceResultUtils.js';
-import {
-  validateSaveName,
-  validateSaveIdentifier,
-} from './saveInputValidators.js';
+  normalizePersistenceFailure,
+} from '../utils/persistenceResultUtils.js';
+import { isValidSaveString } from './saveInputValidators.js';
 
 // --- Type Imports ---
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
@@ -25,6 +21,7 @@ import {
 /** @typedef {import('../interfaces/ISaveLoadService.js').LoadGameResult} LoadGameResult */
 /** @typedef {import('../interfaces/ISaveLoadService.js').SaveGameStructure} SaveGameStructure */
 /** @typedef {import('./gameStateSerializer.js').default} GameStateSerializer */
+/** @typedef {import('../interfaces/ISaveFileRepository.js').ISaveFileRepository} ISaveFileRepository */
 
 // --- Constants ---
 // const MAX_MANUAL_SAVES = 10; // Not directly enforced by list/load, but by save UI/logic
@@ -34,8 +31,9 @@ import {
 /**
  * @implements {ISaveLoadService}
  */
-class SaveLoadService extends ISaveLoadService {
+class SaveLoadService extends BaseService {
   #logger;
+  /** @type {ISaveFileRepository} */
   #fileRepository;
   #serializer;
   #validationService;
@@ -45,7 +43,7 @@ class SaveLoadService extends ISaveLoadService {
    *
    * @param {object} dependencies - The dependencies object.
    * @param {ILogger} dependencies.logger - The logging service.
-   * @param {SaveFileRepository} dependencies.saveFileRepository - Repository for save files.
+   * @param {ISaveFileRepository} dependencies.saveFileRepository - Repository for save files.
    * @param {GameStateSerializer} dependencies.gameStateSerializer - Serializer instance.
    * @param {SaveValidationService} dependencies.saveValidationService - Validation service.
    */
@@ -73,8 +71,7 @@ class SaveLoadService extends ISaveLoadService {
     this.#validationService = saveValidationService;
 
     this.#fileRepository = saveFileRepository;
-
-    this.#logger = setupService('SaveLoadService', logger, {
+    this.#logger = this._init('SaveLoadService', logger, {
       fileRepository: {
         value: this.#fileRepository,
         requiredMethods: [
@@ -105,7 +102,7 @@ class SaveLoadService extends ISaveLoadService {
    * @private
    */
   #assertValidIdentifier(id) {
-    if (!validateSaveIdentifier(id)) {
+    if (!isValidSaveString(id)) {
       this.#logger.error('Invalid saveIdentifier provided.');
       return createPersistenceFailure(
         PersistenceErrorCodes.INVALID_SAVE_IDENTIFIER,
@@ -113,31 +110,6 @@ class SaveLoadService extends ISaveLoadService {
       );
     }
     return { success: true };
-  }
-
-  /**
-   * Deep clones and augments the provided game state for saving.
-   *
-   * @param {string} saveName - Name of the save slot.
-   * @param {SaveGameStructure} obj - Original game state object.
-   * @returns {import('./persistenceTypes.js').PersistenceResult<SaveGameStructure>}
-   *   Result containing the cloned object or error.
-   * @private
-   */
-  #cloneAndPrepareState(saveName, obj) {
-    const cloneResult = safeDeepClone(obj, this.#logger);
-    if (!cloneResult.success || !cloneResult.data) {
-      return createPersistenceFailure(
-        cloneResult.error.code,
-        cloneResult.error.message
-      );
-    }
-
-    /** @type {SaveGameStructure} */
-    const cloned = cloneResult.data;
-    cloned.metadata = { ...(cloned.metadata || {}), saveName };
-    cloned.integrityChecks = { ...(cloned.integrityChecks || {}) };
-    return createPersistenceSuccess(cloned);
   }
 
   /**
@@ -161,28 +133,12 @@ class SaveLoadService extends ISaveLoadService {
    * @private
    */
   async #prepareState(saveName, gameStateObject) {
-    const cloneResult = this.#cloneAndPrepareState(saveName, gameStateObject);
-    if (!cloneResult.success || !cloneResult.data) {
-      return { success: false, error: cloneResult.error };
-    }
-
-    try {
-      const { compressedData } = await this.#serializer.serializeAndCompress(
-        cloneResult.data
-      );
-      return { success: true, data: compressedData };
-    } catch (error) {
-      this.#logger.error(
-        `Error during manual save process for "${saveName}":`,
-        error
-      );
-      return error instanceof PersistenceError
-        ? { success: false, error }
-        : createPersistenceFailure(
-            PersistenceErrorCodes.UNEXPECTED_ERROR,
-            `An unexpected error occurred while saving: ${error.message}`
-          );
-    }
+    return prepareState(
+      saveName,
+      gameStateObject,
+      this.#serializer,
+      this.#logger
+    );
   }
 
   /**
@@ -200,20 +156,30 @@ class SaveLoadService extends ISaveLoadService {
 
   /**
    * @inheritdoc
-   * @returns {Promise<Array<SaveFileMetadata>>} Parsed metadata entries.
+   * @returns {Promise<import('./persistenceTypes.js').PersistenceResult<Array<SaveFileMetadata>>>}
+   *   Parsed metadata entries wrapped in a PersistenceResult.
    */
   async listManualSaveSlots() {
     this.#logger.debug('Listing manual save slots...');
-    const files = await this.#fileRepository.listManualSaveFiles();
+    const fileListResult = await this.#fileRepository.listManualSaveFiles();
 
-    const metadataList = await Promise.all(
+    if (!fileListResult.success) {
+      return fileListResult;
+    }
+
+    const files = fileListResult.data || [];
+    const parsedList = await Promise.all(
       files.map((name) => this.#fileRepository.parseManualSaveMetadata(name))
+    );
+
+    const metadataList = parsedList.map((res) =>
+      res.isCorrupted ? { ...res.metadata, isCorrupted: true } : res.metadata
     );
 
     this.#logger.debug(
       `Finished listing manual save slots. Returning ${metadataList.length} items.`
     );
-    return metadataList;
+    return { success: true, data: metadataList };
   }
 
   /**
@@ -239,16 +205,12 @@ class SaveLoadService extends ISaveLoadService {
       this.#logger.warn(
         `Failed to deserialize ${saveIdentifier}: ${deserializationResult.error}`
       );
-      return {
-        ...(deserializationResult.error instanceof PersistenceError
-          ? { success: false, error: deserializationResult.error }
-          : createPersistenceFailure(
-              PersistenceErrorCodes.DESERIALIZATION_ERROR,
-              deserializationResult.userFriendlyError ||
-                'Unknown deserialization error'
-            )),
-        data: null,
-      };
+      return normalizePersistenceFailure(
+        deserializationResult,
+        PersistenceErrorCodes.DESERIALIZATION_ERROR,
+        deserializationResult.userFriendlyError ||
+          'Unknown deserialization error'
+      );
     }
 
     const loadedObject = /** @type {SaveGameStructure} */ (
@@ -276,7 +238,7 @@ class SaveLoadService extends ISaveLoadService {
   async saveManualGame(saveName, gameStateObject) {
     this.#logger.debug(`Attempting to save manual game: "${saveName}"`);
 
-    if (!validateSaveName(saveName)) {
+    if (!isValidSaveString(saveName)) {
       const userMsg = 'Invalid save name provided. Please enter a valid name.';
       this.#logger.error('Invalid saveName provided for manual save.');
       return createPersistenceFailure(
@@ -285,8 +247,7 @@ class SaveLoadService extends ISaveLoadService {
       );
     }
 
-    const fileName = buildManualFileName(saveName);
-    const filePath = manualSavePath(fileName);
+    const filePath = getManualSavePath(saveName);
 
     const dirResult = await this.#ensureSaveDirectory();
     if (!dirResult.success) {

@@ -16,7 +16,7 @@ import {
   setupGlobalEventListenersStage,
   startGameStage,
 } from './bootstrapper/stages/index.js';
-import { initializeAuxiliaryServicesStage } from './bootstrapper/auxiliaryStages.js';
+import { initializeAuxiliaryServicesStage } from './bootstrapper/stages/auxiliary';
 
 const ACTIVE_WORLD = 'demo';
 
@@ -54,7 +54,8 @@ export async function bootstrapApp() {
       configureContainer,
       {
         createAppContainer: () => new AppContainer(),
-      }
+      },
+      console
     );
     if (!diResult.success) throw diResult.error;
     container = diResult.payload;
@@ -158,7 +159,19 @@ export async function bootstrapApp() {
         inputElement: document.getElementById('speech-input'),
         document: document,
       },
-      errorDetails
+      errorDetails,
+      logger,
+      {
+        createElement: (tag) => document.createElement(tag),
+        insertAfter: (ref, el) => ref.insertAdjacentElement('afterend', el),
+        setTextContent: (el, text) => {
+          el.textContent = text;
+        },
+        setStyle: (el, prop, val) => {
+          el.style[prop] = val;
+        },
+        alert,
+      }
     );
   }
 }
@@ -176,12 +189,27 @@ export async function beginGame(showLoadUI = false) {
       'Critical: GameEngine not initialized before attempting Start Game stage.';
     const errorObj = new Error(errMsg);
     (logger || console).error(`main.js: ${errMsg}`);
-    displayFatalStartupError(uiElements, {
-      userMessage: errMsg,
-      consoleMessage: errMsg,
-      errorObject: errorObj,
-      phase: currentPhaseForError,
-    });
+    displayFatalStartupError(
+      uiElements,
+      {
+        userMessage: errMsg,
+        consoleMessage: errMsg,
+        errorObject: errorObj,
+        phase: currentPhaseForError,
+      },
+      logger,
+      {
+        createElement: (tag) => document.createElement(tag),
+        insertAfter: (ref, el) => ref.insertAdjacentElement('afterend', el),
+        setTextContent: (el, text) => {
+          el.textContent = text;
+        },
+        setStyle: (el, prop, val) => {
+          el.style[prop] = val;
+        },
+        alert,
+      }
+    );
     throw errorObj;
   }
 
@@ -192,12 +220,27 @@ export async function beginGame(showLoadUI = false) {
       gameEngine.showLoadGameUI();
     }
   } catch (error) {
-    displayFatalStartupError(uiElements, {
-      userMessage: `Application failed to start due to a critical error: ${error.message}`,
-      consoleMessage: `Critical error during application bootstrap in phase: ${currentPhaseForError}.`,
-      errorObject: error,
-      phase: currentPhaseForError,
-    });
+    displayFatalStartupError(
+      uiElements,
+      {
+        userMessage: `Application failed to start due to a critical error: ${error.message}`,
+        consoleMessage: `Critical error during application bootstrap in phase: ${currentPhaseForError}.`,
+        errorObject: error,
+        phase: currentPhaseForError,
+      },
+      logger,
+      {
+        createElement: (tag) => document.createElement(tag),
+        insertAfter: (ref, el) => ref.insertAdjacentElement('afterend', el),
+        setTextContent: (el, text) => {
+          el.textContent = text;
+        },
+        setStyle: (el, prop, val) => {
+          el.style[prop] = val;
+        },
+        alert,
+      }
+    );
     throw error;
   }
 }

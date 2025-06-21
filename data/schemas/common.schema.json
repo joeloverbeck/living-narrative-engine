@@ -25,14 +25,13 @@
     "namespacedId": {
       "description": "A unique identifier string, typically namespaced using a colon (e.g., 'core:player', 'mod_combat:action_attack'). Allows alphanumeric characters, underscore, hyphen, and colon.",
       "type": "string",
-      "pattern": "^[a-zA-Z0-9_\\-:]+$"
+      "pattern": "^[a-zA-Z0-9_:-]+$"
     },
     "nullableNamespacedId": {
       "description": "A unique identifier string, typically namespaced (like namespacedId), or null.",
       "oneOf": [
         {
-          "type": "string",
-          "pattern": "^[a-zA-Z0-9_\\-:]+$"
+          "$ref": "#/definitions/namespacedId"
         },
         {
           "type": "null"

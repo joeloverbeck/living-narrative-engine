@@ -14,7 +14,7 @@ import { validateDependency } from '../../utils/validationUtils.js';
 
 /**
  * @typedef {object} PlayerPromptResolution
- * @property {import('../services/humanPlayerPromptService.js').DiscoveredActionInfo} action
+ * @property {import('../../interfaces/IActionDiscoveryService.js').DiscoveredActionInfo} action
  * @property {number} chosenIndex
  * @property {string|null} speech
  * @property {string|null} thoughts - Optional thoughts from the player.

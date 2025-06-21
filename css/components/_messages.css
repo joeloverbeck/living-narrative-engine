@@ -43,11 +43,6 @@
   line-height: 1.7;
 }
 
-#message-list li:last-child {
-  /* Simplified from #center-pane #message-list li:last-child */
-  border-bottom: none;
-}
-
 /* Specific Message Type Styling - Uses new contrast-checked colors */
 #message-list li.message-echo {
   /* Simplified from #center-pane #message-list li.message-echo */
@@ -206,6 +201,7 @@
 .chat-alert-details-content code {
   display: block;
   margin-top: var(--spacing-xs);
+  margin-right: var(--spacing-xs);
   padding: var(--spacing-sm);
   background-color: var(--secondary-bg-color);
   border-radius: var(--border-radius-sm);

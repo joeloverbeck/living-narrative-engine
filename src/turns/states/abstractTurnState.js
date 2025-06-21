@@ -13,6 +13,7 @@
  */
 
 import { ITurnState } from '../interfaces/ITurnState.js';
+import { UNKNOWN_ACTOR_ID } from '../../constants/unknownIds.js';
 
 /**
  * @class AbstractTurnState
@@ -92,8 +93,8 @@ export class AbstractTurnState extends ITurnState {
    * @returns {Promise<void>}
    */
   async _resetToIdle(reason) {
-    if (typeof this._handler?._resetTurnStateAndResources === 'function') {
-      this._handler._resetTurnStateAndResources(reason);
+    if (typeof this._handler?.resetStateAndResources === 'function') {
+      this._handler.resetStateAndResources(reason);
     }
     if (typeof this._handler?.requestIdleStateTransition === 'function') {
       await this._handler.requestIdleStateTransition();
@@ -132,23 +133,35 @@ export class AbstractTurnState extends ITurnState {
    * @returns {import('../../logging/consoleLogger.js').default | Console} The logger instance.
    */
   _resolveLogger(turnCtx, handler) {
-    if (turnCtx && typeof turnCtx.getLogger === 'function') {
-      try {
-        const l = turnCtx.getLogger();
-        if (l) return l;
-      } catch {
-        /* ignore */
+    try {
+      if (turnCtx && typeof turnCtx.getLogger === 'function') {
+        const logger = turnCtx.getLogger();
+        if (logger) {
+          return logger;
+        }
       }
+    } catch (err) {
+      console.error(
+        `${this.getStateName()}: Error getting logger from turnCtx: ${err.message}`,
+        err
+      );
     }
-    const h = handler || this._handler;
-    if (h && typeof h.getLogger === 'function') {
-      try {
-        const l = h.getLogger();
-        if (l) return l;
-      } catch {
-        /* ignore */
+
+    try {
+      const resolvedHandler = handler || this._handler;
+      if (resolvedHandler && typeof resolvedHandler.getLogger === 'function') {
+        const logger = resolvedHandler.getLogger();
+        if (logger) {
+          return logger;
+        }
       }
+    } catch (err) {
+      console.error(
+        `${this.getStateName()}: Error getting logger from handler: ${err.message}`,
+        err
+      );
     }
+
     return console;
   }
 
@@ -163,13 +176,11 @@ export class AbstractTurnState extends ITurnState {
    *   The resolved dispatcher or null if unavailable.
    */
   _getSafeEventDispatcher(turnCtx, handler = this._handler) {
-    let dispatcher = null;
-
     if (turnCtx && typeof turnCtx.getSafeEventDispatcher === 'function') {
       try {
-        const d = turnCtx.getSafeEventDispatcher();
-        if (d && typeof d.dispatch === 'function') {
-          dispatcher = d;
+        const dispatcher = turnCtx.getSafeEventDispatcher();
+        if (dispatcher && typeof dispatcher.dispatch === 'function') {
+          return dispatcher;
         }
       } catch (err) {
         this._resolveLogger(turnCtx, handler).error(
@@ -179,22 +190,20 @@ export class AbstractTurnState extends ITurnState {
       }
     }
 
-    if (!dispatcher && handler?.safeEventDispatcher) {
-      if (typeof handler.safeEventDispatcher.dispatch === 'function') {
-        this._resolveLogger(turnCtx, handler).warn(
-          `${this.getStateName()}: SafeEventDispatcher not found on ITurnContext. Falling back to handler.safeEventDispatcher.`
-        );
-        dispatcher = handler.safeEventDispatcher;
-      }
-    }
-
-    if (!dispatcher) {
+    if (
+      handler?.safeEventDispatcher &&
+      typeof handler.safeEventDispatcher.dispatch === 'function'
+    ) {
       this._resolveLogger(turnCtx, handler).warn(
-        `${this.getStateName()}: SafeEventDispatcher unavailable.`
+        `${this.getStateName()}: SafeEventDispatcher not found on ITurnContext. Falling back to handler.safeEventDispatcher.`
       );
+      return handler.safeEventDispatcher;
     }
 
-    return dispatcher;
+    this._resolveLogger(turnCtx, handler).warn(
+      `${this.getStateName()}: SafeEventDispatcher unavailable.`
+    );
+    return null;
   }
 
   // --- Interface Methods with Default Implementations ---
@@ -247,7 +256,7 @@ export class AbstractTurnState extends ITurnState {
   async startTurn(handler, actorEntity) {
     const turnCtx = this._getTurnContext();
     const logger = this._resolveLogger(turnCtx, handler);
-    const actorIdForLog = actorEntity?.id ?? 'UNKNOWN_ACTOR';
+    const actorIdForLog = actorEntity?.id ?? UNKNOWN_ACTOR_ID;
     const warningMessage = `Method 'startTurn(actorId: ${actorIdForLog})' called on state ${this.getStateName()} where it is not expected or handled.`;
     logger.warn(warningMessage);
     throw new Error(

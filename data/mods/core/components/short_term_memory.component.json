@@ -33,6 +33,5 @@
     },
     "required": ["thoughts", "maxEntries"],
     "additionalProperties": false
-  },
-  "resolveFields": []
+  }
 }

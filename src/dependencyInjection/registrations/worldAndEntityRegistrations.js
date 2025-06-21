@@ -13,17 +13,18 @@
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 /** @typedef {import('../../interfaces/coreServices.js').IDataRegistry} IDataRegistry */
 /** @typedef {import('../../interfaces/coreServices.js').ISchemaValidator} ISchemaValidator */
-/** @typedef {import('../../interfaces/ISpatialIndexManager.js').ISpatialIndexManager} ISpatialIndexManager */
 
 // --- DI & Helper Imports ---
 import { tokens } from '../tokens.js';
 import { Registrar } from '../registrarHelpers.js';
+import { INITIALIZABLE } from '../tags.js';
 
 // --- Service Imports ---
 import EntityManager from '../../entities/entityManager.js';
 import WorldContext from '../../context/worldContext.js';
 import JsonLogicEvaluationService from '../../logic/jsonLogicEvaluationService.js';
 import { EntityDisplayDataProvider } from '../../entities/entityDisplayDataProvider.js';
+import { SpatialIndexSynchronizer } from '../../entities/spatialIndexSynchronizer.js';
 
 /**
  * Registers world, entity, and context-related services.
@@ -38,12 +39,16 @@ export function registerWorldAndEntity(container) {
 
   // --- IEntityManager (EntityManager implementation) ---
   r.singletonFactory(tokens.IEntityManager, (c) => {
-    return new EntityManager(
-      /** @type {IDataRegistry} */ (c.resolve(tokens.IDataRegistry)),
-      /** @type {ISchemaValidator} */ (c.resolve(tokens.ISchemaValidator)),
-      /** @type {ILogger} */ (c.resolve(tokens.ILogger)),
-      /** @type {ISpatialIndexManager} */ (c.resolve(tokens.ISpatialIndexManager))
-    );
+    return new EntityManager({
+      registry: /** @type {IDataRegistry} */ (c.resolve(tokens.IDataRegistry)),
+      validator: /** @type {ISchemaValidator} */ (
+        c.resolve(tokens.ISchemaValidator)
+      ),
+      logger: /** @type {ILogger} */ (c.resolve(tokens.ILogger)),
+      dispatcher: /** @type {ISafeEventDispatcher} */ (
+        c.resolve(tokens.ISafeEventDispatcher)
+      ),
+    });
   });
   logger.debug(
     `World and Entity Registration: Registered ${String(tokens.IEntityManager)}.`
@@ -69,7 +74,9 @@ export function registerWorldAndEntity(container) {
     tokens.IGameDataRepository,
   ]);
   logger.debug(
-    `World and Entity Registration: Registered ${String(tokens.JsonLogicEvaluationService)}.`
+    `World and Entity Registration: Registered ${String(
+      tokens.JsonLogicEvaluationService
+    )}.`
   );
 
   r.singletonFactory(tokens.EntityDisplayDataProvider, (c) => {
@@ -81,7 +88,26 @@ export function registerWorldAndEntity(container) {
     });
   });
   logger.debug(
-    `World and Entity Registration: Registered ${String(tokens.EntityDisplayDataProvider)}.`
+    `World and Entity Registration: Registered ${String(
+      tokens.EntityDisplayDataProvider
+    )}.`
+  );
+
+  // --- SpatialIndexSynchronizer ---
+  r.tagged(INITIALIZABLE).singletonFactory(
+    tokens.SpatialIndexSynchronizer,
+    (c) => {
+      return new SpatialIndexSynchronizer({
+        spatialIndexManager: c.resolve(tokens.ISpatialIndexManager),
+        safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+        logger: c.resolve(tokens.ILogger),
+      });
+    }
+  );
+  logger.debug(
+    `World and Entity Registration: Registered ${String(
+      tokens.SpatialIndexSynchronizer
+    )} tagged ${INITIALIZABLE.join(', ')}.`
   );
 
   logger.debug('World and Entity Registration: Completed.');

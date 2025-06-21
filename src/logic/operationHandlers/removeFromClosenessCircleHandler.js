@@ -14,8 +14,8 @@ import {
   initHandlerLogger,
   validateDeps,
   getExecLogger,
-} from '../../utils/handlerUtils/indexUtils.js';
-import { assertParamsObject } from '../../utils/handlerUtils/indexUtils.js';
+} from '../../utils/handlerUtils/serviceUtils.js';
+import { assertParamsObject } from '../../utils/handlerUtils/paramsUtils.js';
 import { setContextValue } from '../../utils/contextVariableUtils.js';
 
 class RemoveFromClosenessCircleHandler {

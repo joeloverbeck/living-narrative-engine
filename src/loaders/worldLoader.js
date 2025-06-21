@@ -1,774 +1,271 @@
-// --- Type‑only JSDoc imports ────────────────────────────────────────────────
-/** @typedef {import('../interfaces/coreServices.js').ILogger}               ILogger */
-/** @typedef {import('../interfaces/coreServices.js').ISchemaValidator}    ISchemaValidator */
-/** @typedef {import('../interfaces/coreServices.js').IDataRegistry}         IDataRegistry */
-/** @typedef {import('../interfaces/coreServices.js').IConfiguration}       IConfiguration */
-/** @typedef {import('../interfaces/coreServices.js').BaseManifestItemLoaderInterface} BaseManifestItemLoaderInterface */ // Assuming an interface exists for loaders
-/** @typedef {import('./actionLoader.js').default} ActionLoader */
-/** @typedef {import('./eventLoader.js').default} EventLoader */
-/** @typedef {import('./componentLoader.js').default} ComponentLoader */
-/** @typedef {import('./conditionLoader.js').default} ConditionLoader */
-/** @typedef {import('./ruleLoader.js').default} RuleLoader */
-/** @typedef {import('./macroLoader.js').default} MacroLoader */
-/** @typedef {import('./schemaLoader.js').default} SchemaLoader */
-/** @typedef {import('./gameConfigLoader.js').default} GameConfigLoader */
-/** @typedef {import('../modding/modManifestLoader.js').default} ModManifestLoader */
-/** @typedef {import('./entityDefinitionLoader.js').default} EntityLoader */
-/** @typedef {import('./entityInstanceLoader.js').default} EntityInstanceLoader */
-/** @typedef {import('./promptTextLoader.js').default} PromptTextLoader */
-/** @typedef {import('../../data/schemas/mod.manifest.schema.json').ModManifest} ModManifest */
-/** @typedef {import('../events/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
+// src/loaders/worldLoader.js
 
-// --- Implementation Imports -------------------------------------------------
-import ModDependencyValidator from '../modding/modDependencyValidator.js';
-import validateModEngineVersions from '../modding/modVersionValidator.js';
-import ModDependencyError from '../errors/modDependencyError.js';
-import WorldLoaderError from '../errors/worldLoaderError.js';
-import { resolveOrder } from '../modding/modLoadOrderResolver.js';
+/**
+ * @file Implements the WorldLoader, responsible for loading and aggregating
+ * initial world state files from mods after all other definitions are loaded.
+ */
+
+// --- JSDoc Imports for Type Hinting ---
+/** @typedef {import('../interfaces/coreServices.js').IConfiguration} IConfiguration */
+/** @typedef {import('../interfaces/coreServices.js').IPathResolver} IPathResolver */
+/** @typedef {import('../interfaces/coreServices.js').IDataFetcher} IDataFetcher */
+/** @typedef {import('../interfaces/coreServices.js').ISchemaValidator} ISchemaValidator */
+/** @typedef {import('../interfaces/coreServices.js').IDataRegistry} IDataRegistry */
+/** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
+/** @typedef {import('../interfaces/manifestItems.js').ModManifest} ModManifest */
+/** @typedef {import('./LoadResultAggregator.js').TotalResultsSummary} TotalResultsSummary */
+
+// --- Core Imports ---
 import AbstractLoader from './abstractLoader.js';
+import { validateAgainstSchema } from '../utils/schemaValidationUtils.js';
+import ModsLoaderError from '../errors/modsLoaderError.js';
 
-// --- Type Definitions for Loader Results ---
-/**
- * Expected return structure from BaseManifestItemLoader.loadItemsForMod.
- * (Assumed to be implemented per AC#8 stretch goal).
- *
- * @typedef {object} LoadItemsResult
- * @property {number} count - Number of items successfully loaded.
- * @property {number} overrides - Number of items that overwrote existing ones.
- * @property {number} errors - Number of individual file processing errors encountered.
- */
+const WORLD_INITIAL_STATE_KEY = 'worlds';
+const ENTITY_DEFINITIONS_KEY = 'entityDefinitions';
 
 /**
- * Structure to hold aggregated results per content type.
+ * Loads, validates, and aggregates world definition files from mods.
+ * This loader is intended to run *after* all other definition loaders have completed,
+ * ensuring that the world's initial state can be built upon a complete set of
+ * registered game data.
  *
- * @typedef {object} ContentTypeCounts
- * @property {number} count
- * @property {number} overrides
- * @property {number} errors
- */
-
-/**
- * Structure to hold aggregated results for a single mod.
- * Maps typeName to ContentTypeCounts.
+ * It enforces that all `definitionId`s referenced in world entity instances
+ * must already exist in the data registry.
  *
- * @typedef {Record<string, ContentTypeCounts>} ModResultsSummary
+ * @class WorldLoader
+ * @augments AbstractLoader
  */
+export class WorldLoader extends AbstractLoader {
+  /** @protected @type {IConfiguration} */
+  _config;
+  /** @protected @type {IPathResolver} */
+  _pathResolver;
+  /** @protected @type {IDataFetcher} */
+  _dataFetcher;
+  /** @protected @type {ISchemaValidator} */
+  _schemaValidator;
+  /** @protected @type {IDataRegistry} */
+  _dataRegistry;
 
-/**
- * Structure to hold aggregated results across all mods.
- * Maps typeName to ContentTypeCounts.
- *
- * @typedef {Record<string, ContentTypeCounts>} TotalResultsSummary
- */
-
-// ── Class ────────────────────────────────────────────────────────────────────
-class WorldLoader extends AbstractLoader {
-  // Private fields
-  /** @type {IDataRegistry}  */ #registry;
-  /** @type {ILogger}        */ #logger;
-  /** @type {ISchemaValidator}*/ #validator;
-  /** @type {IConfiguration} */ #configuration;
-  /** @type {SchemaLoader}   */ #schemaLoader;
-  /** @type {ComponentLoader}*/ #componentDefinitionLoader;
-  /** @type {ConditionLoader}*/ #conditionLoader;
-  /** @type {RuleLoader}     */ #ruleLoader;
-  /** @type {MacroLoader}    */ #macroLoader;
-  /** @type {ActionLoader}   */ #actionLoader;
-  /** @type {EventLoader}    */ #eventLoader;
-  /** @type {EntityLoader}   */ #entityDefinitionLoader;
-  /** @type {EntityInstanceLoader} */ #entityInstanceLoader;
-  /** @type {GameConfigLoader}*/ #gameConfigLoader;
-  /** @type {PromptTextLoader}*/ #promptTextLoader;
-  /** @type {ModManifestLoader}*/ #modManifestLoader;
-  /** @type {ValidatedEventDispatcher} */ #validatedEventDispatcher;
-  /** @type {string[]}       */ #finalOrder = [];
-
-  /**
-   * Configuration mapping content types to their loaders and parameters.
-   *
-   * @private
-   * @type {Array<{loader: BaseManifestItemLoaderInterface, contentKey: string, contentTypeDir: string, typeName: string}>}
-   */
-  #contentLoadersConfig = [];
-
-  // ── Constructor ────────────────────────────────────────────────────────
   /**
    * Creates an instance of WorldLoader.
    *
-   * @param {object} dependencies - The required service dependencies.
-   * @param {IDataRegistry} dependencies.registry - The data registry.
-   * @param {ILogger} dependencies.logger - The logging service.
-   * @param {SchemaLoader} dependencies.schemaLoader - Loader for JSON schemas.
-   * @param {ComponentLoader} dependencies.componentLoader - Loader for component definitions.
-   * @param {ConditionLoader} dependencies.conditionLoader - Loader for condition definitions.
-   * @param {RuleLoader} dependencies.ruleLoader - Loader for system rules.
-   * @param {MacroLoader} [dependencies.macroLoader] - Loader for macro definitions.
-   * @param {ActionLoader} dependencies.actionLoader - Loader for action definitions.
-   * @param {EventLoader} dependencies.eventLoader - Loader for event definitions.
-   * @param {EntityLoader} dependencies.entityLoader - Loader for entity definitions.
-   * @param {EntityInstanceLoader} dependencies.entityInstanceLoader - Loader for entity instances.
-   * @param {ISchemaValidator} dependencies.validator - Service for schema validation.
-   * @param {IConfiguration} dependencies.configuration - Service for configuration access.
-   * @param {GameConfigLoader} dependencies.gameConfigLoader - Loader for game configuration.
-   * @param {PromptTextLoader} dependencies.promptTextLoader - Loader for core prompt text.
-   * @param {ModManifestLoader} dependencies.modManifestLoader - Loader for mod manifests.
-   * @param {ValidatedEventDispatcher} dependencies.validatedEventDispatcher - Service for dispatching validated events.
-   * @throws {Error} If any required dependency is missing or invalid.
+   * @param {IConfiguration} config - Configuration service instance.
+   * @param {IPathResolver} pathResolver - Path resolution service instance.
+   * @param {IDataFetcher} dataFetcher - Data fetching service instance.
+   * @param {ISchemaValidator} schemaValidator - Schema validation service instance.
+   * @param {IDataRegistry} dataRegistry - Data registry service instance.
+   * @param {ILogger} logger - Logging service instance.
    */
-  constructor({
-                registry,
-                logger,
-                schemaLoader,
-                componentLoader,
-                conditionLoader,
-                ruleLoader,
-                macroLoader,
-                actionLoader,
-                eventLoader,
-                entityLoader,
-                entityInstanceLoader = {
-                  /**
-                   * Fallback implementation when no EntityInstanceLoader is supplied.
-                   *
-                   * @returns {Promise<{count:number, overrides:number, errors:number}>}
-                   */
-                  async loadItemsForMod() {
-                    return { count: 0, overrides: 0, errors: 0 };
-                  },
-                },
-                validator,
-                configuration,
-                gameConfigLoader,
-                promptTextLoader,
-                modManifestLoader,
-                validatedEventDispatcher,
-              }) {
+  constructor(
+    config,
+    pathResolver,
+    dataFetcher,
+    schemaValidator,
+    dataRegistry,
+    logger
+  ) {
     super(logger, [
       {
-        dependency: registry,
-        name: 'IDataRegistry',
-        methods: ['store', 'get', 'clear'],
-      },
-      {
-        dependency: schemaLoader,
-        name: 'SchemaLoader',
-        methods: ['loadAndCompileAllSchemas'],
-      },
-      {
-        dependency: componentLoader,
-        name: 'ComponentLoader',
-        methods: ['loadItemsForMod'],
-      },
-      {
-        dependency: conditionLoader,
-        name: 'ConditionLoader',
-        methods: ['loadItemsForMod'],
-      },
-      {
-        dependency: ruleLoader,
-        name: 'RuleLoader',
-        methods: ['loadItemsForMod'],
-      },
-      {
-        dependency: actionLoader,
-        name: 'ActionLoader',
-        methods: ['loadItemsForMod'],
-      },
-      {
-        dependency: eventLoader,
-        name: 'EventLoader',
-        methods: ['loadItemsForMod'],
-      },
-      {
-        dependency: entityLoader,
-        name: 'EntityLoader',
-        methods: ['loadItemsForMod'],
-      },
-      {
-        dependency: entityInstanceLoader,
-        name: 'EntityInstanceLoader',
-        methods: ['loadItemsForMod'],
-      },
-      {
-        dependency: validator,
-        name: 'ISchemaValidator',
-        methods: ['isSchemaLoaded'],
-      },
-      {
-        dependency: configuration,
+        dependency: config,
         name: 'IConfiguration',
         methods: ['getContentTypeSchemaId'],
       },
       {
-        dependency: gameConfigLoader,
-        name: 'GameConfigLoader',
-        methods: ['loadConfig'],
+        dependency: pathResolver,
+        name: 'IPathResolver',
+        methods: ['resolveModContentPath'],
       },
+      { dependency: dataFetcher, name: 'IDataFetcher', methods: ['fetch'] },
       {
-        dependency: promptTextLoader,
-        name: 'PromptTextLoader',
-        methods: ['loadPromptText'],
+        dependency: schemaValidator,
+        name: 'ISchemaValidator',
+        methods: ['validate'],
       },
-      {
-        dependency: modManifestLoader,
-        name: 'ModManifestLoader',
-        methods: ['loadRequestedManifests'],
-      },
-      {
-        dependency: validatedEventDispatcher,
-        name: 'ValidatedEventDispatcher',
-        methods: ['dispatch'],
-      },
+      { dependency: dataRegistry, name: 'IDataRegistry', methods: ['store', 'get'] },
     ]);
 
-    this.#logger = this._logger;
-
-    // --- Store dependencies ---
-    this.#registry = registry;
-    this.#schemaLoader = schemaLoader;
-    this.#componentDefinitionLoader = componentLoader;
-    this.#conditionLoader = conditionLoader;
-    this.#ruleLoader = ruleLoader;
-    this.#macroLoader = macroLoader || {
-      loadItemsForMod: async () => ({ count: 0, overrides: 0, errors: 0 }),
-    };
-    this.#actionLoader = actionLoader;
-    this.#eventLoader = eventLoader;
-    this.#entityDefinitionLoader = entityLoader;
-    this.#entityInstanceLoader = entityInstanceLoader;
-    this.#validator = validator;
-    this.#configuration = configuration;
-    this.#gameConfigLoader = gameConfigLoader;
-    this.#promptTextLoader = promptTextLoader;
-    this.#modManifestLoader = modManifestLoader;
-    this.#validatedEventDispatcher = validatedEventDispatcher;
-
-    // --- Initialize content loaders dependencyInjection ---
-    this.#contentLoadersConfig = [
-      {
-        loader: this.#componentDefinitionLoader,
-        contentKey: 'components',
-        contentTypeDir: 'components',
-        typeName: 'components',
-      },
-      {
-        loader: this.#eventLoader,
-        contentKey: 'events',
-        contentTypeDir: 'events',
-        typeName: 'events',
-      },
-      {
-        loader: this.#conditionLoader,
-        contentKey: 'conditions',
-        contentTypeDir: 'conditions',
-        typeName: 'conditions',
-      },
-      {
-        loader: this.#macroLoader,
-        contentKey: 'macros',
-        contentTypeDir: 'macros',
-        typeName: 'macros',
-      },
-      {
-        loader: this.#actionLoader,
-        contentKey: 'actions',
-        contentTypeDir: 'actions',
-        typeName: 'actions',
-      },
-      {
-        loader: this.#ruleLoader,
-        contentKey: 'rules',
-        contentTypeDir: 'rules',
-        typeName: 'rules',
-      },
-      {
-        loader: this.#entityDefinitionLoader,
-        contentKey: 'entityDefinitions',
-        contentTypeDir: 'entities/definitions',
-        typeName: 'entityDefinitions',
-      },
-      {
-        loader: this.#entityInstanceLoader,
-        contentKey: 'entityInstances',
-        contentTypeDir: 'entities/instances',
-        typeName: 'entityInstances',
-      },
-    ];
-
-    this.#logger.debug(
-      'WorldLoader: Instance created with ALL loaders, order‑resolver, and ValidatedEventDispatcher.'
-    );
+    this._config = config;
+    this._pathResolver = pathResolver;
+    this._dataFetcher = dataFetcher;
+    this._schemaValidator = schemaValidator;
+    this._dataRegistry = dataRegistry;
   }
 
-  // ── Public API ──────────────────────────────────────────────────────────
   /**
-   * High‑level orchestration of the entire data‑load pipeline.
-   * Orchestrates schema loading, game dependencyInjection loading, manifest processing,
-   * dependency validation, load order resolution, and sequential, per-mod content loading.
+   * Iterates through mods in the final load order, finds their world files,
+   * validates them, checks for definitionId existence, and aggregates all
+   * valid initial entity instances into the data registry.
    *
-   * @param {string} worldName - A hint or identifier for the world being loaded (used for logging/events).
-   * @returns {Promise<void>} A promise that resolves when loading completes successfully or rejects on critical failure.
-   * @throws {Error | ModDependencyError} Re-throws critical errors encountered during the loading sequence.
+   * Throws a ModsLoaderError if a definitionId is not found.
+   *
+   * @param {string[]} finalOrder - The resolved load order of mods.
+   * @param {Map<string, ModManifest>} manifests - A map of all loaded mod manifests, keyed by lowercase mod ID.
+   * @param {TotalResultsSummary} totalCounts - The aggregator for load results to be updated.
+   * @returns {Promise<void>} A promise that resolves when all world files have been processed successfully.
+   * @throws {ModsLoaderError} If a referenced definitionId is not found in the registry.
    */
-  async loadWorld(worldName) {
-    this.#logger.debug(
-      `WorldLoader: Starting load sequence (World Hint: '${worldName}') ...`
-    );
+  async loadWorlds(finalOrder, manifests, totalCounts) {
+    this._logger.info('--- Starting World File Loading Phase ---');
+    const aggregatedInstances = [];
+    let filesProcessed = 0;
+    let filesFailed = 0;
+    let instancesLoaded = 0;
+    let totalResolvedDefinitions = 0;
+    let fileUnresolvedDefinitions = 0;
 
-    let requestedModIds = [];
-    let incompatibilityCount = 0;
-    let essentialSchemaMissing = false;
-    let missingSchemaId = '';
-    let loadedManifestsMap = new Map();
-    /** @type {TotalResultsSummary} */
-    const totalCounts = {}; // Object to store total counts per content type across all mods
-
-    try {
-      // --- Step 1: Clear Existing Data ---
-      this.#registry.clear();
-      this.#logger.debug('WorldLoader: Data registry cleared.');
-
-      // --- Step 2: Load All Core Schemas ---
-      await this.#schemaLoader.loadAndCompileAllSchemas();
-      this.#logger.debug('WorldLoader: Schema loading phase completed.');
-
-      // --- Step 3: Essential Schema Guard ---
-      const essentials = [
-        this.#configuration.getContentTypeSchemaId('game'),
-        this.#configuration.getContentTypeSchemaId('components'),
-        this.#configuration.getContentTypeSchemaId('mod-manifest'),
-        this.#configuration.getContentTypeSchemaId('entityDefinitions'),
-        this.#configuration.getContentTypeSchemaId('entityInstances'),
-        this.#configuration.getContentTypeSchemaId('actions'),
-        this.#configuration.getContentTypeSchemaId('events'),
-        this.#configuration.getContentTypeSchemaId('rules'),
-        this.#configuration.getContentTypeSchemaId('conditions'),
-      ];
-      this.#logger.debug(
-        `WorldLoader: Checking for essential schemas: [${essentials.filter((id) => !!id).join(', ')}]`
+    const worldSchemaId = this._config.getContentTypeSchemaId('world');
+    if (!worldSchemaId) {
+      this._logger.error(
+        "WorldLoader: Schema ID for content type 'world' not found in configuration. Cannot process world files."
       );
-      for (const id of essentials) {
-        if (!id || !this.#validator.isSchemaLoaded(id)) {
-          essentialSchemaMissing = true; // Set flag if essential schema is missing
-          missingSchemaId = id ?? 'Unknown Essential Schema ID';
-          // No longer throwing here; let the main catch handle it after logging/cleanup
-          this.#logger.error(
-            `WorldLoader: Essential schema missing or not configured: ${missingSchemaId}`
-          );
-          break; // Exit loop early if one is missing
-        }
-      }
-      // If flag was set, throw the error now to proceed to catch block
-      if (essentialSchemaMissing) {
-        throw new Error(
-          `Essential schema check failed for: ${missingSchemaId}`
+      totalCounts.worlds = {
+        count: 0,
+        overrides: 0,
+        errors: finalOrder.length,
+        instances: 0,
+        resolvedDefinitions: 0,
+        unresolvedDefinitions: 0,
+      };
+      return;
+    }
+
+    for (const modId of finalOrder) {
+      const manifest = manifests.get(modId.toLowerCase());
+      if (!manifest) {
+        this._logger.warn(
+          `WorldLoader [${modId}]: Manifest not found. Skipping world file search.`
         );
+        continue;
       }
-      this.#logger.debug('WorldLoader: All essential schemas found.');
 
-      // --- Load Core Prompt Text ---
-      try {
-        await this.#promptTextLoader.loadPromptText();
-        this.#logger.debug('WorldLoader: Prompt text loaded successfully.');
-      } catch (e) {
-        if (!totalCounts['prompt_text']) {
-          totalCounts['prompt_text'] = { count: 0, overrides: 0, errors: 0 };
-        }
-        totalCounts['prompt_text'].errors += 1;
-        this.#logger.error(
-          `WorldLoader: Failed to load prompt text: ${e.message}`,
-          e
+      const worldFiles = manifest.content?.worlds;
+      if (!Array.isArray(worldFiles) || worldFiles.length === 0) {
+        this._logger.debug(
+          `WorldLoader [${modId}]: No world files listed in manifest. Skipping.`
         );
+        continue;
       }
 
-      // --- Step 4: Load Game Configuration ---
-      requestedModIds = await this.#gameConfigLoader.loadConfig();
-      this.#logger.debug(
-        `WorldLoader: Game config loaded. Requested mods: [${requestedModIds.join(', ')}]`
-      );
-
-      // --- Step 5: Load, Validate, and Resolve Mod Manifests ---
-      loadedManifestsMap =
-        await this.#modManifestLoader.loadRequestedManifests(requestedModIds);
-      const manifestsForValidation = new Map();
-      for (const [modId, manifestObj] of loadedManifestsMap.entries()) {
-        const lcModId = modId.toLowerCase();
-        this.#registry.store('mod_manifests', lcModId, manifestObj);
-        manifestsForValidation.set(lcModId, manifestObj);
-      }
-      this.#logger.debug(
-        `WorldLoader: Stored ${manifestsForValidation.size} mod manifests in the registry.`
-      );
-
-      // Run validations - these may throw ModDependencyError
-      ModDependencyValidator.validate(manifestsForValidation, this.#logger);
-      try {
-        validateModEngineVersions(
-          manifestsForValidation,
-          this.#logger,
-          this.#validatedEventDispatcher
-        );
-      } catch (e) {
-        // Capture engine version specific errors for summary, but re-throw
-        if (e instanceof ModDependencyError) {
-          // Count incompatibilities based on newlines (assuming one per line after header)
-          incompatibilityCount = (e.message.match(/\n/g) || []).length;
-          this.#logger.warn(
-            `WorldLoader: Encountered ${incompatibilityCount} engine version incompatibilities. Details:\n${e.message}`,
-            e
-          );
-          // Still throw to trigger the main catch block
-          throw e;
-        } else {
-          // Re-throw unexpected errors during version validation
-          throw e;
-        }
-      }
-
-      this.#finalOrder = resolveOrder(
-        requestedModIds,
-        manifestsForValidation,
-        this.#logger
-      );
-      this.#logger.debug(
-        `WorldLoader: Final mod order resolved: [${this.#finalOrder.join(', ')}]`
-      );
-      this.#registry.store('meta', 'final_mod_order', this.#finalOrder);
-
-      // --- Step 6: Sequential Per-Mod Content Loading ---
-      this.#logger.debug(
-        `WorldLoader: Beginning content loading based on final order...`
-      );
-
-      for (const modId of this.#finalOrder) {
-        this.#logger.debug(`--- Loading content for mod: ${modId} ---`);
-
-        let manifest = null;
-        /** @type {ModResultsSummary} */
-        const modResults = {}; // Stores { typeName: { count, overrides, errors } } for this mod
-        let modDurationMs = 0; // Variable to store duration for this mod
+      for (const filename of worldFiles) {
+        let resolvedPath = '';
+        let fileResolvedDefinitions = 0;
+        const instancesForCurrentFile = [];
 
         try {
-          manifest = /** @type {ModManifest | null} */ (
-            this.#registry.get('mod_manifests', modId.toLowerCase())
+          resolvedPath = this._pathResolver.resolveModContentPath(
+            modId,
+            'worlds',
+            filename
+          );
+          this._logger.debug(
+            `WorldLoader [${modId}]: Processing world file '${filename}' from '${resolvedPath}'.`
           );
 
-          if (!manifest) {
-            const reason = `Manifest not found in registry for mod ID '${modId}'. Skipping content load.`;
-            this.#logger.error(`WorldLoader: ${reason}`);
-            this.#validatedEventDispatcher
-              .dispatch(
-                'initialization:world_loader:mod_load_failed',
-                {
-                  modId,
-                  reason,
-                },
-                { allowSchemaNotFound: true }
-              )
-              .catch((dispatchError) =>
-                this.#logger.error(
-                  `Failed dispatching mod_load_failed event for ${modId}: ${dispatchError.message}`,
-                  dispatchError
-                )
-              );
-            continue;
-          }
+          const data = await this._dataFetcher.fetch(resolvedPath);
 
-          this.#logger.debug(
-            `WorldLoader [${modId}]: Manifest retrieved successfully. Processing content types...`
+          validateAgainstSchema(
+            this._schemaValidator,
+            worldSchemaId,
+            data,
+            this._logger,
+            {
+              failureMessage: `WorldLoader [${modId}]: Schema validation failed for world file '${filename}'.`,
+              failureThrowMessage: `Schema validation failed for ${filename} in mod ${modId}.`,
+            }
           );
 
-          // *** Start Timer ***
-          const modStartTime = performance.now();
-
-          // Inner loop iterates through #contentLoadersConfig
-          for (const config of this.#contentLoadersConfig) {
-            const { loader, contentKey, contentTypeDir, typeName } = config;
-            const hasContent =
-              manifest.content &&
-              Array.isArray(manifest.content[contentKey]) &&
-              manifest.content[contentKey].length > 0;
-
-            if (hasContent) {
-              this.#logger.debug(
-                `WorldLoader [${modId}]: Found content for '${contentKey}'. Invoking loader '${loader.constructor.name}'.`
-              );
-              try {
-                const result = /** @type {LoadItemsResult} */ (
-                  await loader.loadItemsForMod(
-                    modId,
-                    manifest,
-                    contentKey,
-                    contentTypeDir,
-                    typeName
-                  )
+          if (data.instances && Array.isArray(data.instances)) {
+            for (const instance of data.instances) {
+              const definitionId = instance.definitionId;
+              if (!definitionId) {
+                this._logger.warn(
+                  `WorldLoader [${modId}]: Instance in '${filename}' is missing 'definitionId'. Skipping instance.`,
+                  { instance }
                 );
-
-                // --- START: Data Aggregation ---
-                if (result && typeof result.count === 'number') {
-                  modResults[typeName] = {
-                    count: result.count || 0,
-                    overrides: result.overrides || 0,
-                    errors: result.errors || 0,
-                  };
-                  this.#logger.debug(
-                    `WorldLoader [${modId}]: Loader for '${typeName}' reported: C:${modResults[typeName].count}, O:${modResults[typeName].overrides}, E:${modResults[typeName].errors}`
-                  );
-
-                  // Aggregate into totalCounts
-                  if (!totalCounts[typeName]) {
-                    totalCounts[typeName] = {
-                      count: 0,
-                      overrides: 0,
-                      errors: 0,
-                    };
-                  }
-                  totalCounts[typeName].count += modResults[typeName].count;
-                  totalCounts[typeName].overrides +=
-                    modResults[typeName].overrides;
-                  totalCounts[typeName].errors += modResults[typeName].errors;
-                } else {
-                  this.#logger.warn(
-                    `WorldLoader [${modId}]: Loader for '${typeName}' returned an unexpected result format. Assuming 0 counts.`,
-                    { result }
-                  );
-                  modResults[typeName] = { count: 0, overrides: 0, errors: 0 };
-                  if (!totalCounts[typeName]) {
-                    totalCounts[typeName] = {
-                      count: 0,
-                      overrides: 0,
-                      errors: 0,
-                    };
-                  }
-                }
-                // --- END: Data Aggregation ---
-              } catch (loadError) {
-                const errorMessage = loadError?.message || String(loadError);
-                this.#logger.error(
-                  `WorldLoader [${modId}]: Error loading content type '${typeName}'. Continuing...`,
-                  {
-                    modId,
-                    typeName,
-                    error: errorMessage,
-                  },
-                  loadError
+                fileUnresolvedDefinitions++;
+                throw new ModsLoaderError(
+                  `Instance in world file '${filename}' (mod: '${modId}') is missing a 'definitionId'.`,
+                  'missing_definition_id_in_instance',
+                  { modId, filename, instance }
                 );
-                // --- START: Error Handling ---
-                if (!modResults[typeName]) {
-                  modResults[typeName] = { count: 0, overrides: 0, errors: 0 };
-                }
-                modResults[typeName].errors += 1;
-                if (!totalCounts[typeName]) {
-                  totalCounts[typeName] = { count: 0, overrides: 0, errors: 0 };
-                }
-                totalCounts[typeName].errors += 1;
-                // --- END: Error Handling ---
-                this.#validatedEventDispatcher
-                  .dispatch(
-                    'initialization:world_loader:content_load_failed',
-                    {
-                      modId,
-                      typeName,
-                      error: errorMessage,
-                    },
-                    { allowSchemaNotFound: true }
-                  )
-                  .catch((e) =>
-                    this.#logger.error(
-                      `Failed dispatching content_load_failed event for ${modId}/${typeName}`,
-                      e
-                    )
-                  );
               }
+
+              const definition = this._dataRegistry.get(ENTITY_DEFINITIONS_KEY, definitionId);
+
+              if (!definition) {
+                fileUnresolvedDefinitions++;
+                this._logger.error(
+                  `WorldLoader [${modId}]: Unknown entity definitionId '${definitionId}' referenced in world file '${filename}'.`,
+                  { modId, filename, definitionId, instance }
+                );
+                throw new ModsLoaderError(
+                  `Unknown entity definition: ${definitionId} (referenced in world file '${filename}', mod: '${modId}')`,
+                  'missing_definition',
+                  { modId, filename, definitionId }
+                );
+              }
+              fileResolvedDefinitions++;
+              instancesForCurrentFile.push(instance);
+            }
+
+            if (fileUnresolvedDefinitions > 0) {
+              this._logger.error(
+                `WorldLoader [${modId}]: World file '${filename}' has ${fileUnresolvedDefinitions} unresolved entity definition(s). Resolved: ${fileResolvedDefinitions}.`
+              );
             } else {
-              this.#logger.debug(
-                `WorldLoader [${modId}]: Skipping content type '${typeName}' (key: '${contentKey}') as it's not defined or empty in the manifest.`
+              aggregatedInstances.push(...instancesForCurrentFile);
+              instancesLoaded += instancesForCurrentFile.length;
+              totalResolvedDefinitions += fileResolvedDefinitions;
+              this._logger.debug(
+                `WorldLoader [${modId}]: Successfully validated ${instancesForCurrentFile.length} instances from '${filename}'. All ${fileResolvedDefinitions} definitionId(s) resolved.`
               );
             }
-          } // End inner loop (contentLoadersConfig)
-
-          // *** Stop Timer & Calculate Duration ***
-          const modEndTime = performance.now();
-          modDurationMs = modEndTime - modStartTime;
-          this.#logger.debug(
-            `WorldLoader [${modId}]: Content loading loop took ${modDurationMs.toFixed(2)} ms.`
-          );
-        } catch (error) {
-          this.#logger.error(
-            `WorldLoader [${modId}]: Unexpected error during processing for mod '${modId}'. Skipping remaining content for this mod.`,
-            {
-              modId,
-              error: error?.message,
-            },
-            error
-          );
-          this.#validatedEventDispatcher
-            .dispatch(
-              'initialization:world_loader:mod_load_failed',
-              {
-                modId,
-                reason: `Unexpected error: ${error?.message}`,
-              },
-              { allowSchemaNotFound: true }
-            )
-            .catch((dispatchError) =>
-              this.#logger.error(
-                `Failed dispatching mod_load_failed event for ${modId} after unexpected error: ${dispatchError.message}`,
-                dispatchError
-              )
+          } else if (data.instances) {
+            this._logger.warn(
+              `WorldLoader [${modId}]: 'instances' field in '${filename}' is not an array. Skipping instance processing for this file.`, { modId, filename, actualType: typeof data.instances }
             );
-          continue; // Continue to the next mod
+          }
+          filesProcessed++;
+        } catch (error) {
+          filesFailed++;
+          if (error instanceof ModsLoaderError && (error.code === 'missing_definition' || error.code === 'missing_definition_id_in_instance')) {
+            throw error;
+          }
+          this._logger.error(
+            `WorldLoader [${modId}]: Failed to process world file '${filename}'. Path: '${resolvedPath || 'unresolved'}'`,
+            {
+              error: error.message,
+              modId,
+              filename,
+            }
+          );
+          if (error.name === 'SyntaxError' || (error.message && error.message.startsWith('Schema validation failed'))) {
+          }
         }
-
-        // --- Per-Mod Summary Logging ---
-        const totalModOverrides = Object.values(modResults).reduce(
-          (sum, res) => sum + (res.overrides || 0),
-          0
-        );
-        const totalModErrors = Object.values(modResults).reduce(
-          (sum, res) => sum + (res.errors || 0),
-          0
-        );
-        const typeCountsString = Object.entries(modResults)
-          .filter(([typeName, result]) => result.count > 0)
-          .map(([typeName, result]) => `${typeName}(${result.count})`)
-          .sort()
-          .join(', ');
-        const summaryMessage = `Mod '${modId}' loaded in ${modDurationMs.toFixed(2)}ms: ${typeCountsString.length > 0 ? typeCountsString : 'No items loaded'}${typeCountsString.length > 0 ? ' ' : ''}-> Overrides(${totalModOverrides}), Errors(${totalModErrors})`;
-        this.#logger.debug(summaryMessage);
-        // --- End Per-Mod Summary Logging ---
-
-        this.#logger.debug(
-          `--- Finished loading content for mod: ${modId} ---`
-        );
-      } // End outer loop (finalOrder)
-      this.#logger.debug(
-        `WorldLoader: Completed content loading loop for all mods in final order.`
-      );
-
-      // --- Step 7: Post-Load Processing (Placeholder) ---
-      this.#logger.debug(
-        'WorldLoader: Post-load processing step (if any) reached.'
-      );
-
-      // --- Step 8: Log Summary ---
-      this.#logLoadSummary(
-        worldName,
-        requestedModIds,
-        this.#finalOrder,
-        incompatibilityCount,
-        totalCounts
-      );
-    } catch (err) {
-      // --- REVISED CATCH BLOCK ---
-      this.#logger.error(
-        'WorldLoader: CRITICAL load failure during world/mod loading sequence.',
-        { error: err }
-      );
-      this.#registry.clear(); // Ensure registry is cleared on failure
-
-      // Explicitly check the type of error before deciding how to re-throw
-      if (err instanceof ModDependencyError) {
-        this.#logger.debug(
-          'Caught ModDependencyError, re-throwing original error.'
-        );
-        throw err; // Re-throw the specific dependency/version error
-      } else if (essentialSchemaMissing) {
-        // This condition should now primarily catch the error thrown if the flag was set in Step 3
-        const finalMessage = `WorldLoader failed: Essential schema '${missingSchemaId || 'unknown'}' missing or check failed – aborting world load. Original error: ${err.message}`;
-        this.#logger.error(finalMessage, err); // Log the combined info
-        throw new WorldLoaderError(finalMessage, err); // Throw a new error, preserving the original cause
-      } else {
-        // Re-throw any other unexpected error encountered during the try block
-        this.#logger.debug(
-          'Caught an unexpected error type, re-throwing original error.'
-        );
-        throw new WorldLoaderError(
-          `WorldLoader unexpected error: ${err.message}`,
-          err
-        );
       }
-      // --- END REVISED CATCH BLOCK ---
     }
-  }
 
-  // ── Helper: per-mod summary logger (OLD - Replaced by inline logic above) ──
-  /**
-   * @private
-   * @deprecated Use inline summary logging logic after the mod processing loop instead.
-   */
-  // eslint-disable-next-line no-unused-private-class-members
-  #logModLoadSummary /* modId, modResults, durationMs */() {
-    // This method is intentionally left empty as the logic is now inline above.
-    this.#logger.warn(
-      'WorldLoader: #logModLoadSummary is deprecated and should not be called.'
-    );
-  }
+    this._dataRegistry.store(WORLD_INITIAL_STATE_KEY, 'main', aggregatedInstances);
+    totalCounts.worlds = {
+      count: filesProcessed,
+      overrides: 0,
+      errors: filesFailed,
+      instances: instancesLoaded,
+      resolvedDefinitions: totalResolvedDefinitions,
+      unresolvedDefinitions: fileUnresolvedDefinitions,
+    };
 
-  // ── Helper: final summary logger ────────────────────────────────────────
-  /**
-   * Prints a multi‑line summary of what was loaded across all mods.
-   *
-   * @private
-   * @param {string}   worldName
-   * @param {string[]} requestedModIds
-   * @param {string[]} finalOrder
-   * @param {number}   incompatibilityCount
-   * @param {TotalResultsSummary} totalCounts - Map of content type name to {count, overrides, errors}.
-   */
-  #logLoadSummary(
-    worldName,
-    requestedModIds,
-    finalOrder,
-    incompatibilityCount,
-    totalCounts
-  ) {
-    this.#logger.info(`— WorldLoader Load Summary (World: '${worldName}') —`);
-    this.#logger.info(
-      `  • Requested Mods (raw): [${requestedModIds.join(', ')}]`
-    );
-    this.#logger.info(`  • Final Load Order     : [${finalOrder.join(', ')}]`);
-    if (incompatibilityCount > 0) {
-      // Logged as warning because it indicates potential issues, even if loading continued
-      this.#logger.warn(
-        `  • Engine‑version incompatibilities detected: ${incompatibilityCount}`
-      );
-    }
-    this.#logger.info(`  • Content Loading Summary (Totals):`);
-    if (Object.keys(totalCounts).length > 0) {
-      const sortedTypes = Object.keys(totalCounts).sort();
-      for (const typeName of sortedTypes) {
-        const counts = totalCounts[typeName]; // counts is { count, overrides, errors }
-        const paddedTypeName = typeName.padEnd(20, ' ');
-        // Display Totals: C=Count, O=Overrides, E=Errors during load
-        const details = `C:${counts.count}, O:${counts.overrides}, E:${counts.errors}`;
-        this.#logger.info(`     - ${paddedTypeName}: ${details}`);
-      }
-      // Calculate grand totals
-      const grandTotalCount = Object.values(totalCounts).reduce(
-        (sum, tc) => sum + tc.count,
-        0
-      );
-      const grandTotalOverrides = Object.values(totalCounts).reduce(
-        (sum, tc) => sum + tc.overrides,
-        0
-      );
-      const grandTotalErrors = Object.values(totalCounts).reduce(
-        (sum, tc) => sum + tc.errors,
-        0
-      );
-      this.#logger.info(
-        `     - ${''.padEnd(20, '-')}--------------------------`
-      );
-      this.#logger.info(
-        `     - ${'TOTAL'.padEnd(20, ' ')}: C:${grandTotalCount}, O:${grandTotalOverrides}, E:${grandTotalErrors}`
+    this._logger.info(`--- World File Loading Phase Complete ---`);
+    if (filesFailed > 0) {
+      this._logger.warn(
+        `WorldLoader: Processed ${filesProcessed} world files. Successfully loaded ${instancesLoaded} instances from ${filesProcessed - filesFailed} files. Encountered ${filesFailed} file-level errors.`
       );
     } else {
-      this.#logger.info(
-        `     - No specific content items were processed by loaders in this run.`
+      this._logger.info(
+        `WorldLoader: Successfully processed ${filesProcessed} world files, loading ${instancesLoaded} entity instances. All ${totalResolvedDefinitions} definition references were resolved.`
       );
     }
-    this.#logger.info('———————————————————————————————————————————');
   }
 }
 

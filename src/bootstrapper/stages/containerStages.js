@@ -25,25 +25,30 @@ import { stageSuccess, stageFailure } from '../helpers.js';
  * @param {ConfigureContainerFunction} containerConfigFunc - A reference to the configureContainer function.
  * @param {{ createAppContainer: function(): AppContainer }} options
  *  - Factory provider for an AppContainer instance.
+ * @param {{ error: function(...any): void, debug: function(...any): void }} [log]
+ *  - Logger with `error` and `debug` methods. Defaults to `console`.
  * @returns {Promise<StageResult>} Result object with the configured AppContainer on success.
  */
 export async function setupDIContainerStage(
   uiReferences,
   containerConfigFunc,
-  { createAppContainer }
+  { createAppContainer },
+  log = console
 ) {
   const container = createAppContainer();
+  log.debug('Bootstrap Stage: setupDIContainerStage starting...');
 
   try {
     containerConfigFunc(container, uiReferences);
   } catch (registrationError) {
     const errorMsg = `Fatal Error during service registration: ${registrationError.message}.`;
-    console.error(
+    log.error(
       `Bootstrap Stage: setupDIContainerStage failed. ${errorMsg}`,
       registrationError
     );
     return stageFailure('DI Container Setup', errorMsg, registrationError);
   }
+  log.debug('Bootstrap Stage: setupDIContainerStage completed successfully.');
   return stageSuccess(container);
 }
 

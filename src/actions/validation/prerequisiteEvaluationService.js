@@ -66,6 +66,23 @@ export class PrerequisiteEvaluationService {
   }
 
   /**
+   * Checks for circular condition references and throws an error if detected.
+   *
+   * @private
+   * @param {string} conditionId - The referenced condition ID.
+   * @param {Set<string>} visited - Set of already visited condition IDs.
+   * @param {string} actionId - The ID of the action being validated.
+   * @throws {Error} If a circular reference is detected.
+   */
+  _checkCircularReference(conditionId, visited, actionId) {
+    if (visited.has(conditionId)) {
+      throw new Error(
+        `Circular reference detected in prerequisites for action '${actionId}'. Path: ${[...visited, conditionId].join(' -> ')}`
+      );
+    }
+  }
+
+  /**
    * Recursively traverses a JSON Logic rule and replaces all `condition_ref`
    * objects with the actual logic from the referenced condition definition.
    *
@@ -82,31 +99,51 @@ export class PrerequisiteEvaluationService {
     }
 
     if (Array.isArray(logic)) {
-      // If it's an array of rules (e.g., in 'and'/'or'), resolve each one
-      return logic.map((item) =>
-        this._resolveConditionReferences(item, actionId, new Set(visited))
-      );
+      return this.#resolveArrayReferences(logic, actionId, visited);
     }
 
-    // Base case: This is a condition reference object like {"condition_ref": "..."}
-    if (Object.prototype.hasOwnProperty.call(logic, 'condition_ref')) {
-      const conditionId = logic.condition_ref;
+    return this.#resolveObjectReferences(logic, actionId, visited);
+  }
+
+  /**
+   * Resolves condition references within an array of logic blocks.
+   *
+   * @private
+   * @param {any[]} logicArray - Array of logic blocks.
+   * @param {string} actionId - The ID of the action being validated.
+   * @param {Set<string>} visited - Set of already visited condition IDs.
+   * @returns {any[]} The resolved array.
+   */
+  #resolveArrayReferences(logicArray, actionId, visited) {
+    return logicArray.map((item) =>
+      this._resolveConditionReferences(item, actionId, new Set(visited))
+    );
+  }
+
+  /**
+   * Resolves condition references within an object logic block.
+   *
+   * @private
+   * @param {object} logicObj - Logic object to resolve.
+   * @param {string} actionId - The ID of the action being validated.
+   * @param {Set<string>} visited - Set of already visited condition IDs.
+   * @returns {object | any} The resolved logic object.
+   * @throws {Error} If a condition reference cannot be found.
+   */
+  #resolveObjectReferences(logicObj, actionId, visited) {
+    if (Object.prototype.hasOwnProperty.call(logicObj, 'condition_ref')) {
+      const conditionId = logicObj.condition_ref;
       if (typeof conditionId !== 'string') {
         throw new Error(`Invalid condition_ref value: not a string.`);
       }
 
-      if (visited.has(conditionId)) {
-        throw new Error(
-          `Circular reference detected in prerequisites for action '${actionId}'. Path: ${[...visited, conditionId].join(' -> ')}`
-        );
-      }
+      this._checkCircularReference(conditionId, visited, actionId);
       visited.add(conditionId);
 
       this.#logger.debug(
         `PrereqEval[${actionId}]: Resolving reference to '${conditionId}'...`
       );
 
-      // Assumes GameDataRepository has this method
       const conditionDef =
         this.#gameDataRepository.getConditionDefinition(conditionId);
 
@@ -116,7 +153,6 @@ export class PrerequisiteEvaluationService {
         );
       }
 
-      // Recursively resolve the logic from the definition itself, in case it also contains references.
       return this._resolveConditionReferences(
         conditionDef.logic,
         actionId,
@@ -124,12 +160,11 @@ export class PrerequisiteEvaluationService {
       );
     }
 
-    // Recursive step: This is a logic block (e.g., {"var": ...}, {"!": ...}). Resolve its contents.
     const resolvedLogic = {};
-    for (const operator in logic) {
-      if (Object.prototype.hasOwnProperty.call(logic, operator)) {
+    for (const operator in logicObj) {
+      if (Object.prototype.hasOwnProperty.call(logicObj, operator)) {
         resolvedLogic[operator] = this._resolveConditionReferences(
-          logic[operator],
+          logicObj[operator],
           actionId,
           new Set(visited)
         );

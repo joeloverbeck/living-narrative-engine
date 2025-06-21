@@ -1,6 +1,7 @@
 // jest.config.js
 
 /* eslint-env node */
+/* global module */
 
 /**
  * @description Jest configuration for the root project.
@@ -43,6 +44,8 @@ module.exports = {
     '!src/interfaces/**',
     '!src/commands/interfaces/**',
     '!src/turns/interfaces/**',
+    '!src/prompting/interfaces/**',
+    '!src/actions/actionTypes.js',
     '!src/index.js',
     '!index.js',
   ],
@@ -50,9 +53,9 @@ module.exports = {
   // Optional: Enforce coverage levels. Uncomment and adjust as needed.
   coverageThreshold: {
     global: {
-      branches: 75,
-      functions: 80,
-      lines: 80,
+      branches: 80,
+      functions: 90,
+      lines: 87,
       statements: -2000,
     },
   },

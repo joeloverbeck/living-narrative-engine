@@ -3,7 +3,7 @@
  * Using tokens instead of raw strings prevents typos and aids refactoring.
  */
 
-import { freeze } from '../utils/objectUtils.js';
+import { freeze } from '../utils';
 
 /**
  * A frozen object containing all unique keys used for registering and resolving
@@ -56,7 +56,9 @@ import { freeze } from '../utils/objectUtils.js';
  * @property {DiToken} EventLoader - Token for the event loading service.
  * @property {DiToken} MacroLoader - Token for the macro loading service.
  * @property {DiToken} EntityLoader - Token for loading entity definitions.
+ * @property {DiToken} EntityInstanceLoader - Token for loading entity instances from world files or saves.
  * @property {DiToken} WorldLoader - Token for orchestrating world data loading.
+ * @property {DiToken} ModsLoader - Token for orchestrating world data loading.
  * @property {DiToken} GameConfigLoader - Token for loading the main game configuration file.
  * @property {DiToken} PromptTextLoader - Token for loading the core prompt text used by the AI system.
  * @property {DiToken} ModManifestLoader - Token for loading mod manifests.
@@ -66,6 +68,7 @@ import { freeze } from '../utils/objectUtils.js';
  * --- Core Services & Managers (Implementations - some will be replaced by Interface Tokens below) ---
  * @property {DiToken} GameDataRepository - Token for accessing registered game data (implementation).
  * @property {DiToken} EntityManager - Token for managing game entities and components (implementation).
+ * @property {DiToken} SpatialIndexSynchronizer - Token for the service that keeps the spatial index in sync with entity events.
  * @property {DiToken} TargetResolutionService - Token for resolving action targets.
  * @property {DiToken} ReferenceResolver - Token for the reference resolution service (implementation).
  * @property {DiToken} JsonLogicEvaluationService - Token for evaluating JsonLogic rules.
@@ -80,7 +83,9 @@ import { freeze } from '../utils/objectUtils.js';
  * @property {DiToken} PlaytimeTracker - Token for the service managing player playtime.
  * @property {DiToken} ComponentCleaningService - Token for the service cleaning component data.
  * @property {DiToken} SaveFileRepository - Token for the save file repository service.
+ * @property {DiToken} ISaveFileRepository - Token for the save file repository interface.
  * @property {DiToken} GameStateCaptureService - Token for the service capturing game state.
+ * @property {DiToken} ManualSaveCoordinator - Token coordinating manual save preparation.
  * @property {DiToken} GamePersistenceService - Token for the game state persistence service.
  * @property {DiToken} EntityDisplayDataProvider - Token for the service providing entity display data.
  * @property {DiToken} AlertRouter - Token for the service that routes alerts to the UI or console.
@@ -151,7 +156,7 @@ export const tokens = freeze({
   ISchemaValidator: 'ISchemaValidator',
   IDataRegistry: 'IDataRegistry',
   ISpatialIndexManager: 'ISpatialIndexManager',
-  IReferenceResolver: 'IReferenceResolver',
+  // IReferenceResolver: 'IReferenceResolver', // Removed - service is deprecated
 
   // --- External Dependencies / Environment ---
   WindowDocument: 'WindowDocument',
@@ -187,7 +192,10 @@ export const tokens = freeze({
   EventLoader: 'EventLoader',
   MacroLoader: 'MacroLoader',
   EntityLoader: 'EntityLoader',
+  EntityInstanceLoader: 'EntityInstanceLoader',
   WorldLoader: 'WorldLoader',
+  GoalLoader:              'GoalLoader',    
+  ModsLoader: 'ModsLoader',
   GameConfigLoader: 'GameConfigLoader',
   PromptTextLoader: 'PromptTextLoader',
   ModManifestLoader: 'ModManifestLoader',
@@ -197,7 +205,8 @@ export const tokens = freeze({
   // Core Services & Managers (Concrete Implementations - some may be deprecated for interface tokens)
   GameDataRepository: 'GameDataRepository',
   EntityManager: 'EntityManager',
-  ReferenceResolver: 'ReferenceResolver',
+  SpatialIndexSynchronizer: 'SpatialIndexSynchronizer',
+  // ReferenceResolver: 'ReferenceResolver', // Removed - service is deprecated
   JsonLogicEvaluationService: 'JsonLogicEvaluationService',
   ActionValidationContextBuilder: 'ActionValidationContextBuilder',
   PrerequisiteEvaluationService: 'PrerequisiteEvaluationService',
@@ -211,6 +220,7 @@ export const tokens = freeze({
   SaveMetadataBuilder: 'SaveMetadataBuilder',
   ActiveModsManifestBuilder: 'ActiveModsManifestBuilder',
   GameStateCaptureService: 'GameStateCaptureService',
+  ManualSaveCoordinator: 'ManualSaveCoordinator',
   GamePersistenceService: 'GamePersistenceService',
   EntityDisplayDataProvider: 'EntityDisplayDataProvider',
   AlertRouter: 'AlertRouter',
@@ -232,6 +242,7 @@ export const tokens = freeze({
   IPlayerTurnEvents: 'IPlayerTurnEvents',
   IEntityManager: 'IEntityManager',
   IGameDataRepository: 'IGameDataRepository',
+  ISaveFileRepository: 'ISaveFileRepository',
   ISaveLoadService: 'ISaveLoadService',
   IStorageProvider: 'IStorageProvider',
   IInitializationService: 'IInitializationService',
@@ -342,4 +353,5 @@ export const tokens = freeze({
   ITurnDecisionProvider: 'ITurnDecisionProvider',
   ILLMDecisionProvider: 'ILLMDecisionProvider',
   IHumanDecisionProvider: 'IHumanDecisionProvider',
+  IGoapDecisionProvider: 'IGoapDecisionProvider',
 });

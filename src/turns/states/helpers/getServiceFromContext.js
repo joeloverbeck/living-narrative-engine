@@ -27,17 +27,29 @@ export async function getServiceFromContext(
   serviceNameForLog,
   actorIdForLog
 ) {
+  const logger = state._resolveLogger(turnCtx);
+  const dispatcher = state._getSafeEventDispatcher(turnCtx);
+
   if (!turnCtx || typeof turnCtx.getLogger !== 'function') {
-    console.error(
-      `${state.getStateName()}: Invalid turnCtx in _getServiceFromContext for ${serviceNameForLog}, actor ${actorIdForLog}.`
-    );
+    const errorMsg = `${state.getStateName()}: Invalid turnCtx in _getServiceFromContext for ${serviceNameForLog}, actor ${actorIdForLog}.`;
+    if (dispatcher) {
+      safeDispatchError(dispatcher, errorMsg, {
+        actorId: actorIdForLog,
+        service: serviceNameForLog,
+        method: methodName,
+      });
+    }
+    logger.error(errorMsg);
+
     if (state._isProcessing) {
-      state._isProcessing = false;
+      if (state._processingGuard) {
+        state._processingGuard.finish();
+      } else {
+        state._isProcessing = false;
+      }
     }
     return null;
   }
-  const logger = turnCtx.getLogger();
-  const dispatcher = state._getSafeEventDispatcher(turnCtx);
   try {
     if (typeof turnCtx[methodName] !== 'function') {
       throw new Error(
@@ -53,6 +65,7 @@ export async function getServiceFromContext(
     return service;
   } catch (error) {
     const errorMsg = `${state.getStateName()}: Failed to retrieve ${serviceNameForLog} for actor ${actorIdForLog}. Error: ${error.message}`;
+    logger.error(errorMsg, error);
     if (dispatcher) {
       safeDispatchError(dispatcher, errorMsg, {
         actorId: actorIdForLog,
@@ -61,8 +74,6 @@ export async function getServiceFromContext(
         error: error.message,
         stack: error.stack,
       });
-    } else {
-      logger.error(errorMsg, error);
     }
     const serviceError = new Error(errorMsg);
     await handleProcessingException(

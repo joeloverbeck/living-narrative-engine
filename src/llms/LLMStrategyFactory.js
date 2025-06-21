@@ -6,6 +6,7 @@ import { ILogger } from '../interfaces/ILogger.js'; // Assuming ILogger is in ..
 import { ILLMStrategy } from './interfaces/ILLMStrategy.js'; // Assuming ILLMStrategy is in ./interfaces/
 import { ConfigurationError } from '../errors/configurationError';
 import { LLMStrategyFactoryError } from './errors/LLMStrategyFactoryError.js';
+import { initLogger } from '../utils/index.js';
 
 // Import concrete strategy implementations
 import { OpenRouterJsonSchemaStrategy } from './strategies/openRouterJsonSchemaStrategy.js';
@@ -53,18 +54,7 @@ export class LLMStrategyFactory {
    * @throws {Error} If httpClient or logger dependencies are invalid.
    */
   constructor({ httpClient, logger }) {
-    if (
-      !logger ||
-      typeof logger.warn !== 'function' ||
-      typeof logger.error !== 'function' ||
-      typeof logger.debug !== 'function'
-    ) {
-      const errorMsg =
-        'LLMStrategyFactory: Constructor requires a valid logger instance with info, warn, error, and debug methods.';
-      // Throwing an error is sufficient here because logging is unavailable.
-      throw new Error(errorMsg);
-    }
-    this.#logger = logger;
+    this.#logger = initLogger('LLMStrategyFactory', logger);
 
     if (!httpClient || typeof httpClient.request !== 'function') {
       const errorMsg =
@@ -89,27 +79,8 @@ export class LLMStrategyFactory {
    * (e.g., missing jsonOutputStrategy.method, unsupported method, or unsupported apiType).
    */
   getStrategy(llmConfig) {
-    if (
-      !llmConfig ||
-      typeof llmConfig.apiType !== 'string' ||
-      !llmConfig.apiType.trim()
-    ) {
-      const errorMsg =
-        'LLMStrategyFactory: llmConfig is invalid or missing a non-empty apiType.';
-      this.#logger.error(errorMsg, { receivedConfig: llmConfig });
-      throw new ConfigurationError(errorMsg, {
-        problematicField: 'apiType',
-        fieldValue: llmConfig?.apiType,
-      });
-    }
-
-    // MODIFICATION START: Use llmConfig.configId
-    const llmId = llmConfig.configId || 'UnknownLLM';
-    // MODIFICATION END
-    const apiType = llmConfig.apiType.trim().toLowerCase();
-    const configuredMethod = llmConfig.jsonOutputStrategy?.method
-      ?.trim()
-      ?.toLowerCase();
+    const { llmId, apiType, configuredMethod } =
+      this.#validateConfig(llmConfig);
 
     this.#logger.debug(
       `LLMStrategyFactory: Determining strategy for LLM ID: '${llmId}', apiType: '${apiType}'.`,
@@ -119,34 +90,7 @@ export class LLMStrategyFactory {
       }
     );
 
-    if (!configuredMethod) {
-      const errorMsg = `LLMStrategyFactory: 'jsonOutputStrategy.method' is required in llmConfig for LLM ID '${llmId}' (apiType: '${apiType}') but was missing or empty. A specific method must be configured.`;
-      this.#logger.error(errorMsg, {
-        llmId,
-        apiType,
-        llmConfigJsonOutputStrategy: llmConfig.jsonOutputStrategy,
-      });
-      throw new LLMStrategyFactoryError(errorMsg, {
-        apiType: apiType,
-        jsonOutputMethod: configuredMethod,
-      });
-    }
-
-    if (configuredMethod === 'prompt_engineering') {
-      const errorMsg = `LLMStrategyFactory: 'jsonOutputStrategy.method' cannot be 'prompt_engineering' for LLM ID '${llmId}' (apiType: '${apiType}'). This strategy is no longer supported as an explicit choice. Please configure a specific JSON output strategy (e.g., 'openrouter_json_schema', 'openrouter_tool_calling', etc.).`;
-      this.#logger.error(errorMsg, { llmId, apiType, configuredMethod });
-      throw new LLMStrategyFactoryError(errorMsg, {
-        apiType: apiType,
-        jsonOutputMethod: configuredMethod,
-      });
-    }
-
-    let StrategyClass = null;
-    const apiTypeStrategies = strategyMappings[apiType];
-
-    if (apiTypeStrategies) {
-      StrategyClass = apiTypeStrategies[configuredMethod];
-    }
+    let StrategyClass = this.#resolveStrategy(apiType, configuredMethod);
 
     if (!StrategyClass) {
       let errorMessage;
@@ -201,6 +145,74 @@ export class LLMStrategyFactory {
       httpClient: this.#httpClient,
       logger: this.#logger,
     });
+  }
+
+  /**
+   * Validates the provided LLM configuration and extracts normalized values.
+   *
+   * @private
+   * @param {LLMModelConfigType} llmConfig - The configuration to validate.
+   * @returns {{ llmId: string, apiType: string, configuredMethod: string }}
+   * Normalized identifiers.
+   * @throws {ConfigurationError|LLMStrategyFactoryError}
+   */
+  #validateConfig(llmConfig) {
+    if (
+      !llmConfig ||
+      typeof llmConfig.apiType !== 'string' ||
+      !llmConfig.apiType.trim()
+    ) {
+      const errorMsg =
+        'LLMStrategyFactory: llmConfig is invalid or missing a non-empty apiType.';
+      this.#logger.error(errorMsg, { receivedConfig: llmConfig });
+      throw new ConfigurationError(errorMsg, {
+        problematicField: 'apiType',
+        fieldValue: llmConfig?.apiType,
+      });
+    }
+
+    const llmId = llmConfig.configId || 'UnknownLLM';
+    const apiType = llmConfig.apiType.trim().toLowerCase();
+    const configuredMethod = llmConfig.jsonOutputStrategy?.method
+      ?.trim()
+      ?.toLowerCase();
+
+    if (!configuredMethod) {
+      const errorMsg = `LLMStrategyFactory: 'jsonOutputStrategy.method' is required in llmConfig for LLM ID '${llmId}' (apiType: '${apiType}') but was missing or empty. A specific method must be configured.`;
+      this.#logger.error(errorMsg, {
+        llmId,
+        apiType,
+        llmConfigJsonOutputStrategy: llmConfig.jsonOutputStrategy,
+      });
+      throw new LLMStrategyFactoryError(errorMsg, {
+        apiType: apiType,
+        jsonOutputMethod: configuredMethod,
+      });
+    }
+
+    if (configuredMethod === 'prompt_engineering') {
+      const errorMsg = `LLMStrategyFactory: 'jsonOutputStrategy.method' cannot be 'prompt_engineering' for LLM ID '${llmId}' (apiType: '${apiType}'). This strategy is no longer supported as an explicit choice. Please configure a specific JSON output strategy (e.g., 'openrouter_json_schema', 'openrouter_tool_calling', etc.).`;
+      this.#logger.error(errorMsg, { llmId, apiType, configuredMethod });
+      throw new LLMStrategyFactoryError(errorMsg, {
+        apiType: apiType,
+        jsonOutputMethod: configuredMethod,
+      });
+    }
+
+    return { llmId, apiType, configuredMethod };
+  }
+
+  /**
+   * Resolves the strategy class for a given apiType and json output method.
+   *
+   * @private
+   * @param {string} apiType - Normalized API type.
+   * @param {string} method - Normalized jsonOutputStrategy method.
+   * @returns {Function | undefined} The matching strategy class, if any.
+   */
+  #resolveStrategy(apiType, method) {
+    const apiTypeStrategies = strategyMappings[apiType];
+    return apiTypeStrategies ? apiTypeStrategies[method] : undefined;
   }
 }
 

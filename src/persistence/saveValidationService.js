@@ -1,7 +1,12 @@
 // src/persistence/saveValidationService.js
 
 import { PersistenceErrorCodes } from './persistenceErrors.js';
-import { createPersistenceFailure } from './persistenceResultUtils.js';
+import { createPersistenceFailure } from '../utils/persistenceResultUtils.js';
+import { setupService } from '../utils/serviceInitializerUtils.js';
+import {
+  MSG_INTEGRITY_CALCULATION_ERROR,
+  MSG_CHECKSUM_MISMATCH,
+} from './persistenceMessages.js';
 
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('./gameStateSerializer.js').default} GameStateSerializer */
@@ -26,8 +31,13 @@ class SaveValidationService {
    * @param {GameStateSerializer} dependencies.gameStateSerializer - Serializer used for checksum generation.
    */
   constructor({ logger, gameStateSerializer }) {
-    this.#logger = logger;
     this.#serializer = gameStateSerializer;
+    this.#logger = setupService('SaveValidationService', logger, {
+      gameStateSerializer: {
+        value: gameStateSerializer,
+        requiredMethods: ['calculateGameStateChecksum'],
+      },
+    });
   }
 
   /**
@@ -93,8 +103,7 @@ class SaveValidationService {
       );
     } catch (checksumError) {
       const devMsg = `Error calculating checksum for gameState in ${identifier}: ${checksumError.message}.`;
-      const userMsg =
-        'Could not verify the integrity of the save file due to an internal error. The file might be corrupted.';
+      const userMsg = MSG_INTEGRITY_CALCULATION_ERROR;
       this.#logger.error(devMsg + ` User message: "${userMsg}"`, checksumError);
       return createPersistenceFailure(
         PersistenceErrorCodes.CHECKSUM_CALCULATION_ERROR,
@@ -104,8 +113,7 @@ class SaveValidationService {
 
     if (storedChecksum !== recalculatedChecksum) {
       const devMsg = `Checksum mismatch for ${identifier}. Stored: ${storedChecksum}, Calculated: ${recalculatedChecksum}.`;
-      const userMsg =
-        'The save file appears to be corrupted (integrity check failed). Please try another save or a backup.';
+      const userMsg = MSG_CHECKSUM_MISMATCH;
       this.#logger.error(devMsg + ` User message: "${userMsg}"`);
       return createPersistenceFailure(
         PersistenceErrorCodes.CHECKSUM_MISMATCH,

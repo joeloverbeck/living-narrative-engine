@@ -1,5 +1,66 @@
 // src/utils/errorUtils.js
-/* eslint-disable no-console */
+
+import { getModuleLogger } from './loggerUtils.js';
+
+/**
+ * Sets an error message in a DOM element and makes it visible.
+ *
+ * @description Sets an error message in a DOM element and makes it visible.
+ * @param {HTMLElement | null | undefined} targetEl - Element to display the message in.
+ * @param {string} msg - Message to show.
+ * @param {import('../interfaces/DomAdapter.js').DomAdapter} dom - DOM adapter instance.
+ * @returns {boolean} True if the message was displayed.
+ */
+export function showErrorInElement(targetEl, msg, dom) {
+  if (!targetEl || !(targetEl instanceof HTMLElement)) {
+    return false;
+  }
+  dom.setTextContent(targetEl, msg);
+  dom.setStyle(targetEl, 'display', 'block');
+  return true;
+}
+
+/**
+ * Creates a temporary error element after the provided base element.
+ *
+ * @description Creates a temporary error element after the provided base element.
+ * @param {HTMLElement | null | undefined} baseEl - Element to insert after.
+ * @param {string} msg - Message for the new element.
+ * @param {import('../interfaces/DomAdapter.js').DomAdapter} dom - DOM adapter instance.
+ * @returns {HTMLElement | null} The created element, or null if not created.
+ */
+export function createTemporaryErrorElement(baseEl, msg, dom) {
+  if (!baseEl || !(baseEl instanceof HTMLElement)) {
+    return null;
+  }
+  const temporaryErrorElement = dom.createElement('div');
+  temporaryErrorElement.id = 'temp-startup-error';
+  dom.setTextContent(temporaryErrorElement, msg);
+  dom.setStyle(temporaryErrorElement, 'color', 'red');
+  dom.setStyle(temporaryErrorElement, 'padding', '10px');
+  dom.setStyle(temporaryErrorElement, 'border', '1px solid red');
+  dom.setStyle(temporaryErrorElement, 'marginTop', '10px');
+  dom.insertAfter(baseEl, temporaryErrorElement);
+  return temporaryErrorElement;
+}
+
+/**
+ * Disables an input element and sets a placeholder.
+ *
+ * @description Disables an input element and sets a placeholder.
+ * @param {HTMLInputElement | null | undefined} el - Input to disable.
+ * @param {string} placeholder - Placeholder text to set.
+ * @param {import('../interfaces/DomAdapter.js').DomAdapter} dom - DOM adapter instance.
+ * @returns {boolean} True if the element was updated.
+ */
+export function disableInput(el, placeholder, dom) {
+  if (!el || !(el instanceof HTMLInputElement)) {
+    return false;
+  }
+  el.disabled = true;
+  el.placeholder = placeholder;
+  return true;
+}
 
 /**
  * @typedef {object} FatalErrorUIElements
@@ -20,13 +81,141 @@
  */
 
 /**
+ * Logs details about a fatal startup error.
+ *
+ * @param {import('../interfaces/coreServices.js').ILogger} log - Logger instance.
+ * @param {string} phase - The bootstrap phase during which the error occurred.
+ * @param {string} consoleMessage - Message to log to the console.
+ * @param {Error} [errorObject] - Optional error object for stack trace logging.
+ * @returns {void}
+ * @private
+ */
+function logStartupError(log, phase, consoleMessage, errorObject) {
+  log.error(
+    `[Bootstrapper Error - Phase: ${phase}] ${consoleMessage}`,
+    errorObject || ''
+  );
+}
+
+/**
+ * Attempts to show an error message in the DOM or falls back to alert().
+ *
+ * @param {object} params - Parameters object.
+ * @param {HTMLElement | null | undefined} params.errorDiv - Element for displaying errors.
+ * @param {HTMLElement | null | undefined} params.outputDiv - Main output area element.
+ * @param {import('../interfaces/DomAdapter.js').DomAdapter} params.dom - DOM adapter instance.
+ * @param {function(string): void} params.showAlert - Alert function to display messages.
+ * @param {import('../interfaces/coreServices.js').ILogger} params.log - Logger instance.
+ * @param {string} params.userMessage - Message to display to the user.
+ * @returns {{displayed: boolean}} Object indicating if the message was shown in the DOM.
+ * @private
+ */
+function displayErrorMessage({
+  errorDiv,
+  outputDiv,
+  dom,
+  showAlert,
+  log,
+  userMessage,
+}) {
+  let displayedInErrorDiv = false;
+  try {
+    displayedInErrorDiv = showErrorInElement(errorDiv, userMessage, dom);
+  } catch (e) {
+    log.error(
+      'displayFatalStartupError: Failed to set textContent on errorDiv.',
+      e
+    );
+  }
+
+  if (!displayedInErrorDiv) {
+    try {
+      const tmpEl = createTemporaryErrorElement(outputDiv, userMessage, dom);
+      if (tmpEl) {
+        log.info(
+          'displayFatalStartupError: Displayed error in a dynamically created element near outputDiv.'
+        );
+        displayedInErrorDiv = true;
+      }
+    } catch (e) {
+      log.error(
+        'displayFatalStartupError: Failed to create or append temporary error element.',
+        e
+      );
+    }
+  }
+
+  if (!displayedInErrorDiv) {
+    showAlert(userMessage);
+    log.info(
+      'displayFatalStartupError: Displayed error using alert() as a fallback.'
+    );
+  }
+
+  return { displayed: displayedInErrorDiv };
+}
+
+/**
+ * Updates the title and disables the input element when a fatal error occurs.
+ *
+ * @param {object} params - Parameters object.
+ * @param {HTMLElement | null | undefined} params.titleElement - Page title element.
+ * @param {HTMLInputElement | null | undefined} params.inputElement - Command input element.
+ * @param {string} params.pageTitle - Text to set for the title element.
+ * @param {string} params.inputPlaceholder - Placeholder text for the input element.
+ * @param {import('../interfaces/coreServices.js').ILogger} params.log - Logger instance.
+ * @param {import('../interfaces/DomAdapter.js').DomAdapter} params.dom - DOM adapter instance.
+ * @returns {void}
+ * @private
+ */
+function updateElements({
+  titleElement,
+  inputElement,
+  pageTitle,
+  inputPlaceholder,
+  log,
+  dom,
+}) {
+  try {
+    if (titleElement && titleElement instanceof HTMLElement) {
+      dom.setTextContent(titleElement, pageTitle);
+    }
+  } catch (e) {
+    log.error(
+      'displayFatalStartupError: Failed to set textContent on titleElement.',
+      e
+    );
+  }
+
+  try {
+    disableInput(inputElement, inputPlaceholder, dom);
+  } catch (e) {
+    log.error(
+      'displayFatalStartupError: Failed to disable or set placeholder on inputElement.',
+      e
+    );
+  }
+}
+
+/**
  * Displays a fatal startup error to the user, logs it to the console, and updates UI elements.
  *
  * @param {FatalErrorUIElements} uiElements - References to key UI elements.
  * @param {FatalErrorDetails} errorDetails - Details about the error.
+ * @param {import('../interfaces/coreServices.js').ILogger} [logger] - Optional logger instance.
+ * @param {import('../interfaces/DomAdapter.js').DomAdapter} domAdapter - DOM adapter for custom element creation and DOM updates.
+ * @returns {{displayed: boolean}} Whether the error was displayed in the DOM.
  */
-export function displayFatalStartupError(uiElements, errorDetails) {
+export function displayFatalStartupError(
+  uiElements,
+  errorDetails,
+  logger,
+  domAdapter
+) {
+  const log = getModuleLogger('errorUtils', logger);
   const { outputDiv, errorDiv, titleElement, inputElement } = uiElements;
+  const dom = domAdapter;
+  const showAlert = domAdapter.alert;
   const {
     userMessage,
     consoleMessage,
@@ -36,80 +225,25 @@ export function displayFatalStartupError(uiElements, errorDetails) {
     phase = 'Unknown Phase',
   } = errorDetails;
 
-  // 1. Log to console.error
-  console.error(
-    `[Bootstrapper Error - Phase: ${phase}] ${consoleMessage}`,
-    errorObject || ''
-  );
+  logStartupError(log, phase, consoleMessage, errorObject);
 
-  // 2. Attempt to display userMessage in errorDiv
-  let displayedInErrorDiv = false;
-  if (errorDiv && errorDiv instanceof HTMLElement) {
-    try {
-      errorDiv.textContent = userMessage;
-      errorDiv.style.display = 'block'; // Ensure it's visible
-      displayedInErrorDiv = true;
-    } catch (e) {
-      console.error(
-        'displayFatalStartupError: Failed to set textContent on errorDiv.',
-        e
-      );
-    }
-  }
+  const { displayed } = displayErrorMessage({
+    errorDiv,
+    outputDiv,
+    dom,
+    showAlert,
+    log,
+    userMessage,
+  });
 
-  // 3. Fallback to dynamic creation if errorDiv not available/failed, but outputDiv is
-  if (!displayedInErrorDiv && outputDiv && outputDiv instanceof HTMLElement) {
-    try {
-      const temporaryErrorElement = document.createElement('div');
-      temporaryErrorElement.id = 'temp-startup-error';
-      temporaryErrorElement.textContent = userMessage;
-      temporaryErrorElement.style.color = 'red';
-      temporaryErrorElement.style.padding = '10px';
-      temporaryErrorElement.style.border = '1px solid red';
-      temporaryErrorElement.style.marginTop = '10px';
-      outputDiv.insertAdjacentElement('afterend', temporaryErrorElement); // Append near outputDiv
-      console.log(
-        'displayFatalStartupError: Displayed error in a dynamically created element near outputDiv.'
-      );
-      displayedInErrorDiv = true; // Consider this as having displayed the error in a DOM element
-    } catch (e) {
-      console.error(
-        'displayFatalStartupError: Failed to create or append temporary error element.',
-        e
-      );
-    }
-  }
+  updateElements({
+    titleElement,
+    inputElement,
+    pageTitle,
+    inputPlaceholder,
+    log,
+    dom,
+  });
 
-  // 4. Ultimate fallback to alert if no DOM display was feasible
-  if (!displayedInErrorDiv) {
-    alert(userMessage);
-    console.log(
-      'displayFatalStartupError: Displayed error using alert() as a fallback.'
-    );
-  }
-
-  // 5. If titleElement is available, set its textContent
-  if (titleElement && titleElement instanceof HTMLElement) {
-    try {
-      titleElement.textContent = pageTitle;
-    } catch (e) {
-      console.error(
-        'displayFatalStartupError: Failed to set textContent on titleElement.',
-        e
-      );
-    }
-  }
-
-  // 6. If inputElement is available, disable it and set placeholder
-  if (inputElement && inputElement instanceof HTMLInputElement) {
-    try {
-      inputElement.disabled = true;
-      inputElement.placeholder = inputPlaceholder;
-    } catch (e) {
-      console.error(
-        'displayFatalStartupError: Failed to disable or set placeholder on inputElement.',
-        e
-      );
-    }
-  }
+  return { displayed };
 }

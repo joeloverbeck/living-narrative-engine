@@ -30,7 +30,11 @@ export async function handleProcessingException(
   shouldEndTurn = true
 ) {
   const wasProcessing = state._isProcessing;
-  state._isProcessing = false;
+  if (state._processingGuard) {
+    state._processingGuard.finish();
+  } else {
+    state._isProcessing = false;
+  }
 
   let logger = console;
   let currentActorIdForLog = actorIdContext;
@@ -91,18 +95,16 @@ export async function handleProcessingException(
           endTurnError
         );
         if (
-          state._handler?._resetTurnStateAndResources &&
-          state._handler?._transitionToState
+          state._handler?.resetStateAndResources &&
+          state._handler?.requestIdleStateTransition
         ) {
           logger.warn(
             `${state.getStateName()}: Resetting handler due to failure in turnCtx.endTurn().`
           );
-          await state._handler._resetTurnStateAndResources(
+          await state._handler.resetStateAndResources(
             `exception-endTurn-failed-${state.getStateName()}`
           );
-          await state._handler._transitionToState(
-            new TurnIdleState(state._handler)
-          );
+          await state._handler.requestIdleStateTransition();
         }
       }
     } else {
@@ -110,15 +112,13 @@ export async function handleProcessingException(
         `${state.getStateName()}: Cannot call turnCtx.endTurn(); ITurnContext or its endTurn method is unavailable.`
       );
       if (
-        state._handler?._resetTurnStateAndResources &&
-        state._handler?._transitionToState
+        state._handler?.resetStateAndResources &&
+        state._handler?.requestIdleStateTransition
       ) {
-        await state._handler._resetTurnStateAndResources(
+        await state._handler.resetStateAndResources(
           `exception-no-context-end-${state.getStateName()}`
         );
-        await state._handler._transitionToState(
-          new TurnIdleState(state._handler)
-        );
+        await state._handler.requestIdleStateTransition();
       } else {
         logger.error(
           `${state.getStateName()}: CRITICAL - Cannot end turn OR reset handler. System may be unstable.`

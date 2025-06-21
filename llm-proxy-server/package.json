@@ -8,7 +8,7 @@
     "start": "node src/core/server.js",
     "dev": "node --watch src/core/server.js",
     "test": "jest --silent --coverage",
-    "test:single": "jest",
+    "test:single": "jest --silent=false --runInBand",
     "test:ci": "jest --ci --silent --coverage",
     "format": "prettier --write \"**/*.{js,json,md,cjs}\" --log-level error",
     "format:check": "prettier --check \"**/*.{js,json,md,cjs}\" --log-level error",
@@ -29,6 +29,7 @@
   "devDependencies": {
     "@babel/core": "^7.27.1",
     "@babel/preset-env": "^7.27.2",
+    "@eslint/js": "^9.28.0",
     "@jest/globals": "^29.7.0",
     "babel-jest": "^29.7.0",
     "eslint": "^9.28.0",

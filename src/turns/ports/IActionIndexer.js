@@ -30,4 +30,15 @@ export class IActionIndexer {
   index(actions, actorId) {
     throw new Error('Interface method');
   }
+
+  /**
+   * Resolves a previously indexed list by numeric choice.
+   *
+   * @param {string} actorId
+   * @param {number} chosenIndex
+   * @returns {import('../dtos/actionComposite.js').ActionComposite}
+   */
+  resolve(actorId, chosenIndex) {
+    throw new Error('Interface method');
+  }
 }

@@ -16,6 +16,9 @@ import { ENTITY_SPOKE_ID } from '../../constants/eventIds.js';
 import { processCommandInternal } from './helpers/processCommandInternal.js';
 import { getServiceFromContext } from './helpers/getServiceFromContext.js';
 import { handleProcessingException } from './helpers/handleProcessingException.js';
+import { ProcessingWorkflow } from './workflows/processingWorkflow.js';
+import { buildSpeechPayload } from './helpers/buildSpeechPayload.js';
+import { ProcessingGuard } from './helpers/processingGuard.js';
 
 /**
  * @class ProcessingCommandState
@@ -23,6 +26,7 @@ import { handleProcessingException } from './helpers/handleProcessingException.j
  */
 export class ProcessingCommandState extends AbstractTurnState {
   _isProcessing = false;
+  _processingGuard;
   #turnActionToProcess = null;
   #commandStringForLog = null;
 
@@ -36,6 +40,7 @@ export class ProcessingCommandState extends AbstractTurnState {
   constructor(handler, commandString, turnAction = null) {
     super(handler);
     this._isProcessing = false;
+    this._processingGuard = new ProcessingGuard(this);
     this.#turnActionToProcess = turnAction;
     this.#commandStringForLog =
       commandString || turnAction?.commandString || null;
@@ -52,151 +57,39 @@ export class ProcessingCommandState extends AbstractTurnState {
    * @param {ITurnState_Interface} [previousState]
    */
   async enterState(handler, previousState) {
-    const turnCtx = await this._ensureContext(
-      `critical-no-context-${this.getStateName()}`,
-      handler
-    );
-
-    if (!turnCtx) return;
-
-    if (this._isProcessing) {
-      const logger = this._resolveLogger(turnCtx);
-      logger.warn(
-        `${this.getStateName()}: enterState called while already processing. Actor: ${turnCtx?.getActor()?.id ?? 'N/A'}. Aborting re-entry.`
-      );
-      return;
-    }
-    this._isProcessing = true;
-
-    await super.enterState(this._handler, previousState);
-    const logger = this._resolveLogger(turnCtx);
-
-    const actor = turnCtx.getActor();
-    if (!actor) {
-      const noActorError = new Error(
-        'No actor present at the start of command processing.'
-      );
-      await this.#handleProcessingException(
-        turnCtx,
-        noActorError,
-        'NoActorOnEnter'
-      );
-      return;
-    }
-
-    const actorId = actor.id;
-    logger.debug(`${this.getStateName()}: Entered for actor ${actorId}.`);
-    logger.debug(
-      `${this.getStateName()}: Entering with command: "${this.#commandStringForLog}" for actor: ${actorId}`
-    );
-
-    let turnAction = this.#turnActionToProcess;
-    if (!turnAction) {
-      logger.debug(
-        `${this.getStateName()}: No turnAction passed via constructor. Retrieving from turnContext.getChosenAction() for actor ${actorId}.`
-      );
-      try {
-        turnAction = turnCtx.getChosenAction();
-      } catch (e) {
-        const errorMsg = `${this.getStateName()}: Error retrieving ITurnAction from context for actor ${actorId}: ${e.message}`;
-        logger.error(errorMsg, e);
-        await this.#handleProcessingException(
-          turnCtx,
-          new Error(errorMsg, { cause: e }),
-          actorId
-        );
-        return;
+    const workflow = new ProcessingWorkflow(
+      this,
+      this.#commandStringForLog,
+      this.#turnActionToProcess,
+      (a) => {
+        this.#turnActionToProcess = a;
       }
-    }
-
-    if (!turnAction) {
-      const errorMsg = `${this.getStateName()}: No ITurnAction available for actor ${actorId}. Cannot process command.`;
-      logger.error(errorMsg);
-      await this.#handleProcessingException(
-        turnCtx,
-        new Error(errorMsg),
-        actorId
-      );
-      return;
-    }
-
-    if (
-      typeof turnAction.actionDefinitionId !== 'string' ||
-      !turnAction.actionDefinitionId
-    ) {
-      const errorMsg = `${this.getStateName()}: ITurnAction for actor ${actorId} is invalid: missing or empty actionDefinitionId.`;
-      logger.error(errorMsg, { receivedAction: turnAction });
-      await this.#handleProcessingException(
-        turnCtx,
-        new Error(errorMsg),
-        actorId
-      );
-      return;
-    }
-
-    const commandStringToLog =
-      turnAction.commandString ||
-      this.#commandStringForLog ||
-      '(no command string available)';
-    // Logging `turnAction.resolvedParameters` here which is no longer expected from LLMResponseProcessor output.
-    // This log will show `Params: {}` if turnAction.resolvedParameters is undefined.
-    // The actual speech is in `turnAction.speech`.
-    logger.debug(
-      `${this.getStateName()}: Actor ${actorId} processing action. ` +
-        `ID: "${turnAction.actionDefinitionId}". ` +
-        `Params: ${JSON.stringify(turnAction.resolvedParameters || {})}. ` + // This line shows resolvedParameters which should be undefined
-        `CommandString: "${commandStringToLog}".`
     );
+    await workflow.run(handler, previousState);
+  }
 
-    this.#turnActionToProcess = turnAction;
+  /**
+   * @description Dispatches ENTITY_SPOKE_ID if decision metadata contains speech.
+   * @param {ITurnContext} turnCtx - Current turn context.
+   * @param {Entity} actor - Actor speaking.
+   * @param {object} decisionMeta - Metadata from the actor decision.
+   * @returns {Promise<void>} Resolves when dispatch completes.
+   */
+  async _dispatchSpeech(turnCtx, actor, decisionMeta) {
+    const logger = this._resolveLogger(turnCtx);
+    const actorId = actor.id;
+    const payloadBase = buildSpeechPayload(decisionMeta);
+    const speechRaw = decisionMeta?.speech;
 
-    // --- MODIFIED SECTION ---
-    // Get all relevant data from the persisted decision metadata.
-    const decisionMeta = turnCtx.getDecisionMeta() ?? {};
-    const {
-      speech: speechRaw,
-      thoughts: thoughtsRaw,
-      notes: notesRaw,
-    } = decisionMeta;
-
-    const speech =
-      typeof speechRaw === 'string' && speechRaw.trim()
-        ? speechRaw.trim()
-        : null;
-
-    if (speech) {
+    if (payloadBase) {
       logger.debug(
-        `${this.getStateName()}: Actor ${actorId} spoke: "${speech}". Dispatching ${ENTITY_SPOKE_ID}.`
+        `${this.getStateName()}: Actor ${actorId} spoke: "${payloadBase.speechContent}". Dispatching ${ENTITY_SPOKE_ID}.`
       );
 
       try {
-        /** @type {ISafeEventDispatcher | undefined} */
-        const eventDispatcher = turnCtx.getSafeEventDispatcher();
+        const eventDispatcher = turnCtx.getSafeEventDispatcher?.();
         if (eventDispatcher) {
-          // Construct the base payload
-          const payload = {
-            entityId: actorId,
-            speechContent: speech,
-          };
-
-          // Conditionally add thoughts if it is a valid string
-          if (typeof thoughtsRaw === 'string' && thoughtsRaw.trim()) {
-            payload.thoughts = thoughtsRaw.trim();
-          }
-
-          // Normalize notes which may be an array from the LLM output
-          if (Array.isArray(notesRaw)) {
-            const joined = notesRaw
-              .map((n) => (typeof n === 'string' ? n.trim() : ''))
-              .filter(Boolean)
-              .join('\n');
-            if (joined) {
-              payload.notes = joined;
-            }
-          } else if (typeof notesRaw === 'string' && notesRaw.trim()) {
-            payload.notes = notesRaw.trim();
-          }
-
+          const payload = { entityId: actorId, ...payloadBase };
           await eventDispatcher.dispatch(ENTITY_SPOKE_ID, payload);
           logger.debug(
             `${this.getStateName()}: Attempted dispatch of ${ENTITY_SPOKE_ID} for actor ${actorId} via TurnContext's SafeEventDispatcher.`,
@@ -214,42 +107,24 @@ export class ProcessingCommandState extends AbstractTurnState {
         );
       }
     } else if (speechRaw !== null && speechRaw !== undefined) {
-      // This covers cases where speechRaw was a non-string or an empty/whitespace string.
       logger.debug(
         `${this.getStateName()}: Actor ${actorId} had a non-string or empty speech field in decisionMeta. No ${ENTITY_SPOKE_ID} event dispatched. (Type: ${typeof speechRaw}, Value: "${String(speechRaw)}")`
       );
     } else {
-      // This covers speechRaw being null or undefined (i.e., not present in meta).
       logger.debug(
         `${this.getStateName()}: Actor ${actorId} has no 'speech' field in decisionMeta. No ${ENTITY_SPOKE_ID} event dispatched.`
       );
     }
-    // --- END MODIFIED SECTION ---
-
-    await (async () => {
-      try {
-        await this._processCommandInternal(
-          turnCtx,
-          actor,
-          this.#turnActionToProcess
-        );
-      } catch (error) {
-        const currentTurnCtxForCatch = this._getTurnContext() ?? turnCtx;
-        const errorLogger = currentTurnCtxForCatch?.getLogger?.() ?? logger;
-        errorLogger.error(
-          `${this.getStateName()}: Uncaught error from _processCommandInternal scope. Error: ${error.message}`,
-          error
-        );
-        const actorIdForHandler =
-          currentTurnCtxForCatch?.getActor?.()?.id ?? actorId;
-        await this.#handleProcessingException(
-          currentTurnCtxForCatch || turnCtx,
-          error,
-          actorIdForHandler
-        );
-      }
-    })();
   }
+
+  /**
+   * @description Processes the resolved action and handles errors from the internal workflow.
+   * @param {ITurnContext} turnCtx - Current turn context.
+   * @param {Entity} actor - Actor performing the action.
+   * @param {ITurnAction} turnAction - Action to process.
+   * @returns {Promise<void>} Resolves when processing completes.
+   */
+  // _executeActionWorkflow logic moved to ProcessingWorkflow
 
   async _processCommandInternal(turnCtx, actor, turnAction) {
     return processCommandInternal(this, turnCtx, actor, turnAction);
@@ -288,7 +163,7 @@ export class ProcessingCommandState extends AbstractTurnState {
   async exitState(handler, nextState) {
     const wasProcessing = this._isProcessing;
     // Ensure processing flag is false on exit, regardless of how exit was triggered.
-    this._isProcessing = false;
+    this._processingGuard.finish();
 
     const turnCtx = this._getTurnContext();
     const logger = this._resolveLogger(turnCtx, handler);
@@ -321,7 +196,7 @@ export class ProcessingCommandState extends AbstractTurnState {
         `${this.getStateName()}: Destroyed during active processing for actor ${actorId}.`
       );
     }
-    this._isProcessing = false; // Ensure flag is cleared.
+    this._processingGuard.finish(); // Ensure flag is cleared.
 
     await super.destroy(handler); // Call super.destroy which handles its own logging.
     logger.debug(

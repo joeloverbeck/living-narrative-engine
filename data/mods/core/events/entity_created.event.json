@@ -1,0 +1,25 @@
+{
+  "$schema": "http://example.com/schemas/component.schema.json",
+  "id": "core:entity_created",
+  "description": "Fired when a new entity instance is successfully created or reconstructed by the EntityManager. This event signals that a new entity is now tracked and available in the world.",
+  "payloadSchema": {
+    "description": "Defines the structure for the 'core:entity_created' event payload.",
+    "type": "object",
+    "required": ["instanceId", "definitionId", "wasReconstructed"],
+    "properties": {
+      "instanceId": {
+        "$ref": "../schemas/common.schema.json#/definitions/namespacedId",
+        "description": "The unique instance ID of the created entity."
+      },
+      "definitionId": {
+        "$ref": "../schemas/common.schema.json#/definitions/namespacedId",
+        "description": "The definition ID from which the entity was created."
+      },
+      "wasReconstructed": {
+        "type": "boolean",
+        "description": "True if the entity was reconstructed from save data, false if it was newly created at runtime."
+      }
+    },
+    "additionalProperties": false
+  }
+}

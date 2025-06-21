@@ -1,8 +1,9 @@
 // src/persistence/gameStateCaptureService.js
+// --- FILE START ---
 
 import { CURRENT_ACTOR_COMPONENT_ID } from '../constants/componentIds.js';
 import { CHECKSUM_PENDING } from '../constants/persistence.js';
-import { setupService } from '../utils/serviceInitializerUtils.js';
+import { BaseService } from '../utils/serviceBase.js';
 
 /**
  * @typedef {import('../interfaces/coreServices.js').ILogger} ILogger
@@ -19,7 +20,7 @@ import { setupService } from '../utils/serviceInitializerUtils.js';
  * @class GameStateCaptureService
  * @description Captures the current game state for saving.
  */
-class GameStateCaptureService {
+class GameStateCaptureService extends BaseService {
   /** @type {ILogger} */
   #logger;
   /** @type {EntityManager} */
@@ -52,7 +53,8 @@ class GameStateCaptureService {
     metadataBuilder,
     activeModsManifestBuilder,
   }) {
-    this.#logger = setupService('GameStateCaptureService', logger, {
+    super();
+    this.#logger = this._init('GameStateCaptureService', logger, {
       entityManager: { value: entityManager },
       playtimeTracker: {
         value: playtimeTracker,
@@ -81,12 +83,14 @@ class GameStateCaptureService {
    *
    * @param {*} data - Component data after cleaning.
    * @returns {boolean} True if data is non-null and either not an object or an
-   *   object with at least one key.
+   * object with at least one key.
    * @private
    */
   #hasMeaningfulData(data) {
     return (
-      data != null && (typeof data !== 'object' || Object.keys(data).length > 0)
+      data !== null &&
+      data !== undefined &&
+      (typeof data !== 'object' || Object.keys(data).length > 0)
     );
   }
 
@@ -128,19 +132,19 @@ class GameStateCaptureService {
    * Serializes a single entity for saving.
    *
    * @param {Entity} entity - The entity instance to serialize.
-   * @returns {{instanceId: string, definitionId: string, components: Record<string, any>}}
-   *   Clean serialized representation of the entity.
+   * @returns {{instanceId: string, definitionId: string, overrides: Record<string, any>}}
+   * Clean serialized representation of the entity.
    * @private
    */
   #serializeEntity(entity) {
-    const components = this.#applyComponentCleaners(
+    const overrides = this.#applyComponentCleaners(
       entity.componentEntries,
       entity.id
     );
     return {
       instanceId: entity.id,
       definitionId: entity.definitionId,
-      components,
+      overrides,
     };
   }
 
@@ -155,14 +159,10 @@ class GameStateCaptureService {
       'GameStateCaptureService: Capturing current game state...'
     );
 
-    if (!this.#entityManager)
-      throw new Error('EntityManager not available for capturing game state.');
-    if (!this.#playtimeTracker)
-      throw new Error(
-        'PlaytimeTracker not available for capturing game state.'
-      );
-
     const entitiesData = [];
+    // *** THE FIX IS HERE ***
+    // The entityManager in the test (and likely the real one) stores entities
+    // in a Map called 'activeEntities', not an array called 'entities'.
     for (const entity of this.#entityManager.activeEntities.values()) {
       entitiesData.push(this.#serializeEntity(entity));
     }
@@ -206,3 +206,4 @@ class GameStateCaptureService {
 }
 
 export default GameStateCaptureService;
+// --- FILE END ---

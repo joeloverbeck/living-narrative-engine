@@ -11,7 +11,7 @@ import IPromptCoordinator from '../../interfaces/IPromptCoordinator';
  * @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger
  * @typedef {import('../ports/IPromptOutputPort.js').IPromptOutputPort} IPromptOutputPort
  * @typedef {import('../interfaces/IPlayerTurnEvents.js').IPlayerTurnEvents} IPlayerTurnEvents
- * @typedef {import('../services/actionIndexingService.js').ActionIndexingService} ActionIndexingService
+ * @typedef {import('../ports/IActionIndexer.js').IActionIndexer} IActionIndexer
  * @typedef {import('../../entities/entity.js').default} Entity
  */
 
@@ -19,7 +19,7 @@ import IPromptCoordinator from '../../interfaces/IPromptCoordinator';
  * @typedef {object} PromptCoordinatorDependencies
  * @property {ILogger} logger
  * @property {IPromptOutputPort} promptOutputPort
- * @property {ActionIndexingService} actionIndexingService
+ * @property {IActionIndexer} actionIndexingService
  * @property {IPlayerTurnEvents} playerTurnEvents
  */
 
@@ -31,7 +31,7 @@ import IPromptCoordinator from '../../interfaces/IPromptCoordinator';
 class PromptCoordinator extends IPromptCoordinator {
   /** @type {ILogger} */ #logger;
   /** @type {IPromptOutputPort} */ #promptOutputPort;
-  /** @type {ActionIndexingService} */ #actionIndexingService;
+  /** @type {IActionIndexer} */ #actionIndexer;
   /** @type {IPlayerTurnEvents} */ #playerTurnEvents;
 
   /** @type {PromptSession | null} */
@@ -43,7 +43,7 @@ class PromptCoordinator extends IPromptCoordinator {
   constructor({
     logger,
     promptOutputPort,
-    actionIndexingService,
+    actionIndexingService: actionIndexer,
     playerTurnEvents,
   }) {
     super();
@@ -54,14 +54,14 @@ class PromptCoordinator extends IPromptCoordinator {
     validateDependency(promptOutputPort, 'promptOutputPort', logger, {
       requiredMethods: ['prompt'],
     });
-    validateDependency(actionIndexingService, 'actionIndexingService', logger, {
-      requiredMethods: ['indexActions', 'resolve'],
+    validateDependency(actionIndexer, 'actionIndexingService', logger, {
+      requiredMethods: ['index', 'resolve'],
     });
     validateDependency(playerTurnEvents, 'playerTurnEvents', logger);
 
     this.#logger = logger;
     this.#promptOutputPort = promptOutputPort;
-    this.#actionIndexingService = actionIndexingService;
+    this.#actionIndexer = actionIndexer;
     this.#playerTurnEvents = playerTurnEvents;
 
     this.#logger.debug('PromptCoordinator initialised.');
@@ -110,7 +110,7 @@ class PromptCoordinator extends IPromptCoordinator {
       eventBus: this.#playerTurnEvents,
       logger: this.#logger,
       abortSignal: cancellationSignal,
-      actionIndexingService: this.#actionIndexingService, // <— same singleton
+      actionIndexingService: this.#actionIndexer, // <— same singleton
     });
     this.#activeSession = session;
 

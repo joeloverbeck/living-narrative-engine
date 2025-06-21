@@ -71,20 +71,24 @@ export async function registerInlineSchema(
       log.debug(successDebugMessage);
     }
   } catch (error) {
-    let context;
-    if (typeof errorContext === 'function') {
-      context = errorContext(error) || {};
-    } else {
-      context = { ...(errorContext || {}) };
+    // Only log if a specific error message is provided by the caller.
+    // Otherwise, just re-throw and let the caller handle logging.
+    if (errorLogMessage) {
+      let context;
+      if (typeof errorContext === 'function') {
+        context = errorContext(error) || {};
+      } else {
+        context = { ...(errorContext || {}) };
+      }
+      if (!('error' in context)) {
+        context.error = error?.message || error;
+      }
+      log.error(
+        errorLogMessage,
+        context,
+        error
+      );
     }
-    if (!('error' in context)) {
-      context.error = error?.message || error;
-    }
-    log.error(
-      errorLogMessage || `Error registering inline schema '${schemaId}'.`,
-      context,
-      error
-    );
     if (throwErrorMessage) {
       throw new Error(throwErrorMessage);
     }

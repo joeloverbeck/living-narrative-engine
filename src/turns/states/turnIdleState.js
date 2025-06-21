@@ -2,6 +2,8 @@
 // --- FILE START ---
 
 /**
+ * @typedef {import("../interfaces/ICommandHandlingState.js").ICommandHandlingState} ICommandHandlingState
+ * @typedef {import("../interfaces/ITurnLifecycleState.js").ITurnLifecycleState} ITurnLifecycleState_Interface
  * @typedef {import('../handlers/baseTurnHandler.js').BaseTurnHandler} BaseTurnHandler
  * @typedef {import('../../entities/entity.js').default} Entity
  * @typedef {import('../interfaces/ITurnState.js').ITurnState} ITurnState_Interface
@@ -10,10 +12,13 @@
  */
 
 import { AbstractTurnState } from './abstractTurnState.js';
+import { UNKNOWN_ENTITY_ID } from '../../constants/unknownIds.js';
 
 /**
  * @class TurnIdleState
  * @augments AbstractTurnState_Base
+ * @implements {ICommandHandlingState}
+ * @implements {ITurnLifecycleState_Interface}
  */
 export class TurnIdleState extends AbstractTurnState {
   /** @override */
@@ -22,9 +27,9 @@ export class TurnIdleState extends AbstractTurnState {
 
     const logger = this._resolveLogger(null, handler);
     logger.debug(
-      `${this.getStateName()}: Ensuring clean state by calling handler._resetTurnStateAndResources().`
+      `${this.getStateName()}: Ensuring clean state by calling handler.resetStateAndResources().`
     );
-    handler._resetTurnStateAndResources(`enterState-${this.getStateName()}`);
+    handler.resetStateAndResources(`enterState-${this.getStateName()}`);
     logger.debug(
       `${this.getStateName()}: Entry complete. Handler is now idle.`
     );
@@ -40,72 +45,101 @@ export class TurnIdleState extends AbstractTurnState {
     const turnCtx = this._getTurnContext();
     const logger = this._resolveLogger(turnCtx, handler);
 
-    const actorIdForLog = actorEntity?.id ?? 'UNKNOWN_ENTITY';
+    const actorIdForLog = actorEntity?.id ?? UNKNOWN_ENTITY_ID;
     logger.debug(
       `${this.getStateName()}: Received startTurn for actor ${actorIdForLog}.`
     );
 
-    // Validate actorEntity
-    if (!actorEntity || typeof actorEntity.id === 'undefined') {
-      const errorMsg = `${this.getStateName()}: startTurn called with invalid actorEntity.`;
-      logger.error(errorMsg);
-      handler._resetTurnStateAndResources(
-        `invalid-actor-${this.getStateName()}`
-      );
-      await handler._transitionToState(
-        handler._turnStateFactory.createIdleState(handler)
-      );
-      throw new Error(errorMsg);
-    }
-
-    // Validate ITurnContext
-    if (!turnCtx) {
-      const errorMsg = `${this.getStateName()}: ITurnContext is missing or invalid. Expected concrete handler to set it up. Actor: ${actorIdForLog}.`;
-      logger.error(errorMsg);
-      handler._resetTurnStateAndResources(
-        `missing-context-${this.getStateName()}`
-      );
-      await handler._transitionToState(
-        handler._turnStateFactory.createIdleState(handler)
-      );
-      throw new Error(errorMsg);
-    }
-
-    const contextActor = turnCtx.getActor();
-    if (!contextActor || contextActor.id !== actorEntity.id) {
-      const errorMsg = `${this.getStateName()}: Actor in ITurnContext ('${contextActor?.id}') does not match actor provided to state's startTurn ('${actorEntity.id}').`;
-      logger.error(errorMsg);
-      handler._resetTurnStateAndResources(
-        `actor-mismatch-${this.getStateName()}`
-      );
-      await handler._transitionToState(
-        handler._turnStateFactory.createIdleState(handler)
-      );
-      throw new Error(errorMsg);
-    }
+    this._validateActorEntity(handler, actorEntity, logger);
+    this._validateTurnContext(handler, turnCtx, actorIdForLog, logger);
+    const contextActor = this._validateActorMatch(
+      handler,
+      turnCtx,
+      actorEntity,
+      logger
+    );
 
     logger.debug(
       `${this.getStateName()}: ITurnContext confirmed for actor ${contextActor.id}. Transitioning to AwaitingActorDecisionState.`
     );
 
-    try {
-      // Use ITurnContext to request the transition
-      await turnCtx.requestAwaitingInputStateTransition();
+    await this._requestAwaitingInput(turnCtx, contextActor, handler, logger);
+  }
 
+  /**
+   * @description Validates the provided actor entity.
+   * @param {BaseTurnHandler} handler - Owning handler.
+   * @param {Entity} actorEntity - Actor entity provided.
+   * @param {import('../../utils/loggerUtils.js').Logger} logger - Logger instance.
+   */
+  _validateActorEntity(handler, actorEntity, logger) {
+    if (!actorEntity || typeof actorEntity.id === 'undefined') {
+      const errorMsg = `${this.getStateName()}: startTurn called with invalid actorEntity.`;
+      logger.error(errorMsg);
+      handler.resetStateAndResources(`invalid-actor-${this.getStateName()}`);
+      handler.requestIdleStateTransition();
+      throw new Error(errorMsg);
+    }
+  }
+
+  /**
+   * @description Ensures a valid ITurnContext is present.
+   * @param {BaseTurnHandler} handler - Owning handler.
+   * @param {ITurnContext} turnCtx - Current turn context.
+   * @param {string} actorIdForLog - Actor ID for logging.
+   * @param {import('../../utils/loggerUtils.js').Logger} logger - Logger instance.
+   */
+  _validateTurnContext(handler, turnCtx, actorIdForLog, logger) {
+    if (!turnCtx) {
+      const errorMsg = `${this.getStateName()}: ITurnContext is missing or invalid. Expected concrete handler to set it up. Actor: ${actorIdForLog}.`;
+      logger.error(errorMsg);
+      handler.resetStateAndResources(`missing-context-${this.getStateName()}`);
+      handler.requestIdleStateTransition();
+      throw new Error(errorMsg);
+    }
+  }
+
+  /**
+   * @description Validates that the context actor matches the provided actor.
+   * @param {BaseTurnHandler} handler - Owning handler.
+   * @param {ITurnContext} turnCtx - Current turn context.
+   * @param {Entity} actorEntity - Actor entity provided.
+   * @param {import('../../utils/loggerUtils.js').Logger} logger - Logger instance.
+   * @returns {Entity} The actor from context.
+   */
+  _validateActorMatch(handler, turnCtx, actorEntity, logger) {
+    const contextActor = turnCtx.getActor();
+    if (!contextActor || contextActor.id !== actorEntity.id) {
+      const errorMsg = `${this.getStateName()}: Actor in ITurnContext ('${contextActor?.id}') does not match actor provided to state's startTurn ('${actorEntity.id}').`;
+      logger.error(errorMsg);
+      handler.resetStateAndResources(`actor-mismatch-${this.getStateName()}`);
+      handler.requestIdleStateTransition();
+      throw new Error(errorMsg);
+    }
+    return contextActor;
+  }
+
+  /**
+   * @description Requests transition to AwaitingActorDecisionState via the context.
+   * @param {ITurnContext} turnCtx - Current turn context.
+   * @param {Entity} actor - Actor whose turn has started.
+   * @param {BaseTurnHandler} handler - Owning handler.
+   * @param {import('../../utils/loggerUtils.js').Logger} logger - Logger instance.
+   * @returns {Promise<void>} Resolves when the transition is complete.
+   */
+  async _requestAwaitingInput(turnCtx, actor, handler, logger) {
+    try {
+      await turnCtx.requestAwaitingInputStateTransition();
       logger.debug(
-        `${this.getStateName()}: Successfully transitioned to AwaitingActorDecisionState for actor ${contextActor.id}.`
+        `${this.getStateName()}: Successfully transitioned to AwaitingActorDecisionState for actor ${actor.id}.`
       );
     } catch (error) {
       logger.error(
-        `${this.getStateName()}: Failed to transition to AwaitingActorDecisionState for ${contextActor.id}. Error: ${error.message}`,
+        `${this.getStateName()}: Failed to transition to AwaitingActorDecisionState for ${actor.id}. Error: ${error.message}`,
         error
       );
-      handler._resetTurnStateAndResources(
-        `transition-fail-${this.getStateName()}`
-      );
-      await handler._transitionToState(
-        handler._turnStateFactory.createIdleState(handler)
-      );
+      handler.resetStateAndResources(`transition-fail-${this.getStateName()}`);
+      await handler.requestIdleStateTransition();
       throw error;
     }
   }
@@ -114,7 +148,7 @@ export class TurnIdleState extends AbstractTurnState {
   async handleSubmittedCommand(handler, commandString, actorEntity) {
     const turnCtx = this._getTurnContext();
     const logger = this._resolveLogger(turnCtx, handler);
-    const actorIdForLog = actorEntity?.id ?? 'UNKNOWN_ENTITY';
+    const actorIdForLog = actorEntity?.id ?? UNKNOWN_ENTITY_ID;
     const message = `${this.getStateName()}: Command ('${commandString}') submitted by ${actorIdForLog} but no turn is active (handler is Idle).`;
     logger.warn(message);
     return super.handleSubmittedCommand(handler, commandString, actorEntity);
@@ -124,7 +158,7 @@ export class TurnIdleState extends AbstractTurnState {
   async handleTurnEndedEvent(handler, payload) {
     const turnCtx = this._getTurnContext();
     const logger = this._resolveLogger(turnCtx, handler);
-    const payloadActorId = payload?.entityId ?? 'UNKNOWN_ENTITY';
+    const payloadActorId = payload?.entityId ?? UNKNOWN_ENTITY_ID;
     const message = `${this.getStateName()}: handleTurnEndedEvent called (for ${payloadActorId}) but no turn is active (handler is Idle).`;
     logger.warn(message);
     return super.handleTurnEndedEvent(handler, payload);
@@ -134,7 +168,7 @@ export class TurnIdleState extends AbstractTurnState {
   async processCommandResult(handler, actor, cmdProcResult, commandString) {
     const turnCtx = this._getTurnContext();
     const logger = this._resolveLogger(turnCtx, handler);
-    const actorIdForLog = actor?.id ?? 'UNKNOWN_ENTITY';
+    const actorIdForLog = actor?.id ?? UNKNOWN_ENTITY_ID;
     const message = `${this.getStateName()}: processCommandResult called (for ${actorIdForLog}) but no turn is active.`;
     logger.warn(message);
     return super.processCommandResult(
@@ -149,7 +183,7 @@ export class TurnIdleState extends AbstractTurnState {
   async handleDirective(handler, actor, directive, cmdProcResult) {
     const turnCtx = this._getTurnContext();
     const logger = this._resolveLogger(turnCtx, handler);
-    const actorIdForLog = actor?.id ?? 'UNKNOWN_ENTITY';
+    const actorIdForLog = actor?.id ?? UNKNOWN_ENTITY_ID;
     const message = `${this.getStateName()}: handleDirective called (for ${actorIdForLog}) but no turn is active.`;
     logger.warn(message);
     return super.handleDirective(handler, actor, directive, cmdProcResult);

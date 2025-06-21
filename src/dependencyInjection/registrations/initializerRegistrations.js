@@ -26,12 +26,12 @@ export function registerInitializers(container) {
       validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
       logger: c.resolve(tokens.ILogger),
       spatialIndexManager: c.resolve(tokens.ISpatialIndexManager),
-      referenceResolver: c.resolve(tokens.IReferenceResolver),
+      // referenceResolver: c.resolve(tokens.IReferenceResolver), // Removed - service is deprecated
     };
     return new WorldInitializer(dependencies);
   });
   log.debug(
-    `Initializer Registration: Registered ${tokens.WorldInitializer} (with VED, ISpatialIndexManager, and IReferenceResolver dependencies).`
+    `Initializer Registration: Registered ${tokens.WorldInitializer} (with VED and ISpatialIndexManager dependencies).`
   );
 
   // --- SystemInitializer (Ticket 15) ---

@@ -5,7 +5,7 @@ import {
   SYSTEM_ERROR_OCCURRED_ID,
   SYSTEM_WARNING_OCCURRED_ID,
 } from '../constants/eventIds.js';
-import { fetchWithRetry } from '../utils/index.js';
+import { fetchWithRetry, initLogger } from '../utils/index.js';
 
 /**
  * @typedef {import('../interfaces/coreServices.js').ILogger} ILogger
@@ -77,17 +77,7 @@ export class RetryHttpClient extends IHttpClient {
     super();
 
     /* ---------------- Dependency validation ---------------- */
-    if (
-      !logger ||
-      typeof logger.warn !== 'function' ||
-      typeof logger.error !== 'function' ||
-      typeof logger.debug !== 'function'
-    ) {
-      const msg =
-        'RetryHttpClient: Constructor requires a valid logger instance.';
-      (logger?.error ?? console.error)(msg);
-      throw new Error(msg);
-    }
+    this.#logger = initLogger('RetryHttpClient', logger);
     // *** CORRECTED VALIDATION: Check for `dispatch` ***
     if (!dispatcher || typeof dispatcher.dispatch !== 'function') {
       logger.error(
@@ -95,7 +85,6 @@ export class RetryHttpClient extends IHttpClient {
       );
       throw new Error('RetryHttpClient: dispatcher dependency invalid.');
     }
-    this.#logger = logger;
     this.#dispatcher = dispatcher;
 
     /* ---------------- Config validation (unchanged) --------- */

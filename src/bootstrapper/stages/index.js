@@ -9,4 +9,4 @@ export {
 } from './containerStages.js';
 export { initializeGameEngineStage, startGameStage } from './engineStages.js';
 export { setupGlobalEventListenersStage } from './eventStages.js';
-export { initializeAuxiliaryServicesStage } from '../auxiliaryStages.js';
+export { initializeAuxiliaryServicesStage } from './auxiliary';

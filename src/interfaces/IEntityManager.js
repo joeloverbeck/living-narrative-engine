@@ -1,5 +1,3 @@
-// src/interfaces/IEntityManager.js
-
 /** @typedef {import('../entities/entity.js').default} Entity */
 
 /**
@@ -20,29 +18,30 @@ export class IEntityManager {
   }
 
   /**
-   * Creates a new Entity instance based on its definition ID, assigning it a unique instance ID.
+   * Creates a new Entity instance based on its definition ID.
    *
-   * @param {string} definitionId - The unique ID of the entity definition to instantiate (e.g., "isekai:hero").
-   * @param {string | null} [instanceId] - Optional. The unique instance ID (UUID) for this entity.
-   * If not provided (or null), the implementation should generate a new UUID.
-   * @param {boolean} [forceNew] - If true and an entity with the given `instanceId` already exists,
-   * the implementation might handle this differently (e.g., create a new unmanaged instance or error).
-   * Refer to concrete implementation for specific behavior.
-   * @returns {Entity | null} The created Entity instance, or null if definition not found or instantiation fails.
-   * If `forceNew` is false and an entity with `instanceId` already exists, the existing managed instance is typically returned.
+   * @param {string} definitionId - The ID of the entity definition to use.
+   * @param {object} [options] - Options for entity creation.
+   * @param {string} [options.instanceId] - A specific ID for the new instance. If not provided, a UUID will be generated.
+   * @param {Object<string, object>} [options.componentOverrides] - A map of component data to override or add.
+   * @returns {Entity} The newly created entity instance.
+   * @throws {DefinitionNotFoundError} If the definition is not found.
+   * @throws {Error} If an entity with the given instanceId already exists.
    */
-  createEntityInstance(definitionId, instanceId = null, forceNew = false) {
+  createEntityInstance(definitionId, options = {}) {
     throw new Error('IEntityManager.createEntityInstance not implemented.');
   }
 
   /**
-   * Reconstructs an entity instance from serialized persistence data.
+   * Reconstructs an entity instance from a plain serializable object.
    *
-   * @param {{instanceId: string, definitionId: string, components: Record<string, any>}} serialized
-   *   Serialized representation produced by the save system.
-   * @returns {Entity | null} The reconstructed Entity instance or null on failure.
+   * @param {object} serializedEntity - Plain object from a save file.
+   * @param {string} serializedEntity.instanceId
+   * @param {string} serializedEntity.definitionId
+   * @param {Record<string, object>} [serializedEntity.overrides]
+   * @returns {Entity} The reconstructed Entity instance.
    */
-  reconstructEntity(serialized) {
+  reconstructEntity(serializedEntity) {
     throw new Error('IEntityManager.reconstructEntity not implemented.');
   }
 
@@ -66,6 +65,18 @@ export class IEntityManager {
    */
   hasComponent(instanceId, componentTypeId) {
     throw new Error('IEntityManager.hasComponent not implemented.');
+  }
+
+  /**
+   * Checks if an entity has a component override (instance-level component data).
+   * This excludes components that only exist on the definition.
+   *
+   * @param {string} instanceId - The ID (UUID) of the entity.
+   * @param {string} componentTypeId - The unique string ID of the component type.
+   * @returns {boolean} True if the entity has a component override, false otherwise.
+   */
+  hasComponentOverride(instanceId, componentTypeId) {
+    throw new Error('IEntityManager.hasComponentOverride not implemented.');
   }
 
   /**
@@ -115,5 +126,27 @@ export class IEntityManager {
    */
   getEntitiesInLocation(locationId) {
     throw new Error('IEntityManager.getEntitiesInLocation not implemented.');
+  }
+
+  /**
+   * Finds all active entities that match a complex query.
+   *
+   * @param {object} query - The query definition.
+   * @param {string[]} [query.withAll] - A list of componentTypeIds that the entity must have.
+   * @param {string[]} [query.withAny] - A list of componentTypeIds where the entity must have at least one.
+   * @param {string[]} [query.without] - A list of componentTypeIds that the entity must NOT have.
+   * @returns {Entity[]} A new array of matching entities.
+   */
+  findEntities(query) {
+    throw new Error('IEntityManager.findEntities not implemented.');
+  }
+
+  /**
+   * Returns an iterator over all active entities (read-only).
+   *
+   * @returns {IterableIterator<Entity>}
+   */
+  get entities() {
+    throw new Error('IEntityManager.entities getter not implemented.');
   }
 }

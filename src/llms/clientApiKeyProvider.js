@@ -4,19 +4,15 @@
 import { IApiKeyProvider } from './interfaces/IApiKeyProvider.js';
 import { safeDispatchError } from '../utils/safeDispatchErrorUtils.js';
 import { resolveSafeDispatcher } from '../utils/dispatcherUtils.js';
+import { initLogger } from '../utils/index.js';
+import { CLOUD_API_TYPES } from './constants/llmConstants.js';
+import { isValidEnvironmentContext } from './environmentContext.js';
 
 /**
  * @typedef {import('./environmentContext.js').EnvironmentContext} EnvironmentContext
  * @typedef {import('./services/llmConfigLoader.js').LLMModelConfig} LLMModelConfig
  * @typedef {import('../interfaces/ILogger.js').ILogger} ILogger
  */
-
-/**
- * @description List of apiType values that are considered "cloud services" requiring proxy key handling.
- * This should be consistent with any other definitions (e.g., in ConfigurableLLMAdapter).
- * @type {string[]}
- */
-const CLOUD_API_TYPES = ['openrouter', 'openai', 'anthropic'];
 
 /**
  * @class ClientApiKeyProvider
@@ -51,19 +47,7 @@ export class ClientApiKeyProvider extends IApiKeyProvider {
   constructor({ logger, safeEventDispatcher }) {
     super();
 
-    if (
-      !logger ||
-      typeof logger.warn !== 'function' ||
-      typeof logger.error !== 'function' ||
-      typeof logger.debug !== 'function'
-    ) {
-      const errorMsg =
-        'ClientApiKeyProvider: Constructor requires a valid logger instance.';
-      // Use console.error as a last resort if logger is completely unusable
-      console.error(errorMsg);
-      throw new Error(errorMsg);
-    }
-    this.#logger = logger;
+    this.#logger = initLogger('ClientApiKeyProvider', logger);
     this.#dispatcher = resolveSafeDispatcher(
       null,
       safeEventDispatcher,
@@ -90,14 +74,9 @@ export class ClientApiKeyProvider extends IApiKeyProvider {
    * @returns {Promise<string | null>} A Promise that always resolves to null.
    */
   async getKey(llmConfig, environmentContext) {
-    // MODIFICATION START: Use llmConfig.configId
     const llmId = llmConfig?.configId || 'UnknownLLM'; // For logging context
-    // MODIFICATION END
 
-    if (
-      !environmentContext ||
-      typeof environmentContext.isClient !== 'function'
-    ) {
+    if (!isValidEnvironmentContext(environmentContext)) {
       safeDispatchError(
         this.#dispatcher,
         `ClientApiKeyProvider.getKey (${llmId}): Invalid environmentContext provided.`,

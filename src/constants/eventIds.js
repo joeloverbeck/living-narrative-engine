@@ -1,11 +1,8 @@
-// src/turns/constants/eventIds.js
-
 // Existing Event IDs
+export { SYSTEM_ERROR_OCCURRED_ID, SYSTEM_WARNING_OCCURRED_ID } from './systemEventIds.js';
 export const GAME_SAVED_ID = 'core:game_saved';
 export const TURN_STARTED_ID = 'core:turn_started';
 export const TURN_ENDED_ID = 'core:turn_ended';
-export const SYSTEM_WARNING_OCCURRED_ID = 'core:system_warning_occurred';
-export const SYSTEM_ERROR_OCCURRED_ID = 'core:system_error_occurred';
 export const PLAYER_TURN_PROMPT_ID = 'core:player_turn_prompt';
 export const PLAYER_TURN_SUBMITTED_ID = 'core:player_turn_submitted';
 export const DISPLAY_ERROR_ID = 'core:display_error';
@@ -160,3 +157,60 @@ export const REQUEST_SHOW_LOAD_GAME_UI = 'core:ui_request_show_load_game';
  * // The UI manager is expected to provide the appropriate user feedback.
  */
 export const CANNOT_SAVE_GAME_INFO = 'core:ui_cannot_save_game_info';
+
+// --- EntityManager Event IDs (Ticket 8) ---
+/** @typedef {import('../entities/entity.js').default} Entity */
+
+/**
+ * @typedef {object} EntityCreatedPayload
+ * @property {Entity} entity - The full entity instance that was created.
+ * @property {boolean} wasReconstructed - True if the entity was reconstructed from save data.
+ */
+
+/**
+ * Fired when a new entity instance is successfully created or reconstructed.
+ *
+ * @type {string}
+ */
+export const ENTITY_CREATED_ID = 'core:entity_created';
+
+/**
+ * @typedef {object} EntityRemovedPayload
+ * @property {Entity} entity - The full entity instance being removed.
+ */
+
+/**
+ * Fired just before an entity instance is removed from the EntityManager.
+ *
+ * @type {string}
+ */
+export const ENTITY_REMOVED_ID = 'core:entity_removed';
+
+/**
+ * @typedef {object} ComponentAddedPayload
+ * @property {Entity} entity - The entity instance that received the component.
+ * @property {string} componentTypeId - The ID of the component that was added/updated.
+ * @property {object | null} componentData - The validated data of the added/updated component.
+ * @property {object | null | undefined} oldComponentData - The data of the component before this change. `undefined` if component was not present before, `null` if it was explicitly null.
+ */
+
+/**
+ * Fired when a component is successfully added to or updated on an entity instance.
+ *
+ * @type {string}
+ */
+export const COMPONENT_ADDED_ID = 'core:component_added';
+
+/**
+ * @typedef {object} ComponentRemovedPayload
+ * @property {Entity} entity - The entity instance from which the component was removed.
+ * @property {string} componentTypeId - The ID of the component that was removed.
+ * @property {object | null | undefined} oldComponentData - The data of the component before it was removed.
+ */
+
+/**
+ * Fired when a component override is successfully removed from an entity instance.
+ *
+ * @type {string}
+ */
+export const COMPONENT_REMOVED_ID = 'core:component_removed';
