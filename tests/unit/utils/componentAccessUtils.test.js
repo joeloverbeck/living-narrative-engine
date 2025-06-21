@@ -80,6 +80,10 @@ class MockManager {
     const comps = this._data.get(entityId);
     return comps ? comps[componentId] : undefined;
   }
+
+  getEntityInstance(id) {
+    return this._data.has(id) ? { id } : null;
+  }
 }
 
 describe('getComponentFromManager', () => {
@@ -107,6 +111,19 @@ describe('getComponentFromManager', () => {
     expect(getComponentFromManager('', 'foo', mgr, logger)).toBeNull();
     expect(logger.debug).toHaveBeenCalledWith(
       '[componentAccessUtils] getComponentFromManager: invalid entityId or componentId.'
+    );
+  });
+
+  it('returns null and logs debug for invalid manager', () => {
+    const logger = createMockLogger();
+    const mgr = {
+      getComponentData() {
+        return {};
+      },
+    };
+    expect(getComponentFromManager('e1', 'foo', mgr, logger)).toBeNull();
+    expect(logger.debug).toHaveBeenCalledWith(
+      '[componentAccessUtils] getComponentFromManager: invalid entityManager provided.'
     );
   });
 
