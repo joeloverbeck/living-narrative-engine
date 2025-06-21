@@ -359,6 +359,7 @@ export const tokens = freeze({
   ContentLoadManager: 'ContentLoadManager',
   WorldLoadSummaryLogger: 'WorldLoadSummaryLogger',
   SchemaPhase: 'SchemaPhase',
+  GameConfigPhase: 'GameConfigPhase',
   ManifestPhase: 'ManifestPhase',
   ContentPhase: 'ContentPhase',
   WorldPhase: 'WorldPhase',

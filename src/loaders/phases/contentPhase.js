@@ -9,7 +9,7 @@ import { logPhaseStart } from '../../utils/logPhaseStart.js';
 
 /**
  * @typedef {import('../LoadContext.js').LoadContext} LoadContext
- * @typedef {import('../contentLoadManager.js').default} ContentLoadManager
+ * @typedef {import('../ContentLoadManager.js').default} ContentLoadManager
  * @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger
  * @typedef {import('../../../data/schemas/mod-manifest.schema.json').ModManifest} ModManifest
  */
@@ -26,16 +26,13 @@ export default class ContentPhase extends LoaderPhase {
      * @param {object} params - Configuration parameters.
      * @param {ContentLoadManager} params.manager - The content load manager responsible for orchestrating content loaders.
      * @param {ILogger} params.logger - The logger service.
-     * @param {Map<string, ModManifest>} params.manifests - A map of all loaded and validated mod manifests.
      */
-    constructor({ manager, logger, manifests }) {
+    constructor({ manager, logger }) {
         super();
         /** @type {ContentLoadManager} */
         this.manager = manager;
         /** @type {ILogger} */
         this.logger = logger;
-        /** @type {Map<string, ModManifest>} */
-        this.manifests = manifests;
     }
 
     /**
@@ -49,7 +46,7 @@ export default class ContentPhase extends LoaderPhase {
         try {
             await this.manager.loadContent(
                 ctx.finalModOrder,
-                this.manifests,
+                ctx.manifests,
                 ctx.totals
             );
             // Per acceptance criteria, create a new object reference for totals to ensure immutability downstream.

@@ -34,7 +34,6 @@ describe('ContentPhase', () => {
     const phase = new ContentPhase({
       manager: mockManager,
       logger: mockLogger,
-      manifests: mockManifests,
     });
     expect(phase).toBeInstanceOf(LoaderPhase);
   });
@@ -45,13 +44,13 @@ describe('ContentPhase', () => {
       const phase = new ContentPhase({
         manager: mockManager,
         logger: mockLogger,
-        manifests: mockManifests,
       });
 
       const ctx = {
         finalModOrder: ['core', 'modA'],
         totals: { actions: { count: 5, overrides: 0, errors: 0 } },
       };
+      ctx.manifests = mockManifests;
       const originalTotalsRef = ctx.totals;
 
       // Act
@@ -61,7 +60,7 @@ describe('ContentPhase', () => {
       expect(mockLogger.info).toHaveBeenCalledWith('— ContentPhase starting —');
       expect(mockManager.loadContent).toHaveBeenCalledWith(
         ['core', 'modA'],
-        mockManifests,
+        ctx.manifests,
         originalTotalsRef // manager receives the original object to mutate
       );
 
@@ -81,13 +80,13 @@ describe('ContentPhase', () => {
       const phase = new ContentPhase({
         manager: mockManager,
         logger: mockLogger,
-        manifests: mockManifests,
       });
 
       const ctx = {
         finalModOrder: ['core'],
         totals: {},
       };
+      ctx.manifests = mockManifests;
 
       // Act & Assert
       await expect(phase.execute(ctx)).rejects.toThrow(ModsLoaderPhaseError);
