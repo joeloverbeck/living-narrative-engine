@@ -1,15 +1,14 @@
-// Filename: src/tests/integration/modLoadDependencyFail.test.js
+// Filename: src/tests/integration/loaders/modLoadDependencyFail.test.js
 
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 
 // Core services under test
-import ModsLoader from '../../src/loaders/modsLoader.js';
-import ModManifestLoader from '../../src/modding/modManifestLoader.js';
-import AjvSchemaValidator from '../../src/validation/ajvSchemaValidator.js';
-import ModDependencyError from '../../src/errors/modDependencyError.js';
+import ModsLoader from '../../../src/loaders/modsLoader.js';
+import AjvSchemaValidator from '../../../src/validation/ajvSchemaValidator.js';
+import ModDependencyError from '../../../src/errors/modDependencyError.js';
 
 /* -------------------------------------------------------------------------- */
-/* Helper factories – duplicated from modManifestLoader.harness.test.js        */
+/* Helper factories – duplicated from modManifestLoader.harness.test.js        */
 /* -------------------------------------------------------------------------- */
 
 const createMockConfiguration = (overrides = {}) => ({
@@ -127,8 +126,8 @@ const createMockRegistry = () => {
     const typeMap = data.get(type);
     return typeMap
       ? Array.from(typeMap.values()).map((obj) =>
-          JSON.parse(JSON.stringify(obj))
-        )
+        JSON.parse(JSON.stringify(obj))
+      )
       : [];
   });
 
@@ -150,7 +149,7 @@ const createMockLogger = () => ({
 });
 
 /* -------------------------------------------------------------------------- */
-/* Integration test                                                           */
+/* Integration test                                                           */
 /* -------------------------------------------------------------------------- */
 
 describe('ModsLoader → ModDependencyValidator integration (missing dependency)', () => {
@@ -279,7 +278,7 @@ describe('ModsLoader → ModDependencyValidator integration (missing dependency)
         .mockResolvedValue({ count: 0, overrides: 0, errors: 0 }),
     };
     gameConfigLoaderMock = {
-      loadConfig: jest.fn().mockResolvedValue(['basegame', 'badmod']),
+      loadConfig: jest.fn().mockResolvedValue({ mods: ['basegame', 'badmod'] }),
     }; // GameConfigLoader class mock
     promptTextLoaderMock = { loadPromptText: jest.fn().mockResolvedValue({}) };
     modManifestLoaderMock = {
@@ -396,7 +395,7 @@ describe('ModsLoader → ModDependencyValidator integration (missing dependency)
 
     // Manifest loader spy assertion
     expect(loadManifestsSpy).toHaveBeenCalledTimes(1);
-    expect(loadManifestsSpy).toHaveBeenCalledWith(['basegame', 'badmod']);
+    expect(loadManifestsSpy).toHaveBeenCalledWith(['basegame', 'badmod'], 'TestWorld');
 
     // GameConfigLoader assertion
     expect(gameConfigLoaderMock.loadConfig).toHaveBeenCalledTimes(1);
@@ -410,19 +409,14 @@ describe('ModsLoader → ModDependencyValidator integration (missing dependency)
     expect(entityInstanceLoaderMock.loadItemsForMod).not.toHaveBeenCalled();
 
     // Logger assertions
-    const errorLogCallArgs = logger.error.mock.calls[0];
-    expect(logger.error).toHaveBeenCalledTimes(1);
-    expect(errorLogCallArgs[0]).toBe(
-      'ModsLoader: CRITICAL load failure during world/mod loading sequence.'
+    const errorLogCallArgs = logger.error.mock.calls.find(call => call[0].includes('CRITICAL load failure due to mod dependencies'));
+    expect(errorLogCallArgs).toBeDefined();
+    expect(errorLogCallArgs[0]).toMatch(
+      /ModsLoader: CRITICAL load failure due to mod dependencies/
     );
-    expect(errorLogCallArgs[1]).toEqual(
-      expect.objectContaining({
-        error: expect.any(ModDependencyError),
-      })
-    );
-    expect(errorLogCallArgs[1].error.message).toMatch(
-      /Mod 'badmod' requires missing dependency 'MissingMod'/
-    );
+    expect(errorLogCallArgs[1].error).toBeInstanceOf(ModDependencyError);
+    expect(errorLogCallArgs[1].error.message).toMatch(/Mod 'badmod' requires missing dependency 'MissingMod'/);
+
 
     // Registry assertions
     expect(registry.clear).toHaveBeenCalledTimes(2);

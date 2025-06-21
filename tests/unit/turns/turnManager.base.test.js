@@ -49,7 +49,7 @@ describe('TurnManager', () => {
     // This tests the mock helper, doesn't directly involve TurnManager instance much
     const entities = [mockPlayerEntity, mockAiEntity1];
     testBed.setActiveEntities(...entities);
-    expect(Array.from(testBed.mocks.entityManager.activeEntities.values())).toEqual(
+    expect(Array.from(testBed.mocks.entityManager.entities)).toEqual(
       entities
     );
   });

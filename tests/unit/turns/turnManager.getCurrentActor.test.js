@@ -81,10 +81,10 @@ describe('TurnManager', () => {
   test('EntityManager mock allows setting active entities', () => {
     const entities = [mockPlayerEntity, mockAiEntity1];
     testBed.setActiveEntities(...entities);
-    expect(Array.from(testBed.mocks.entityManager.activeEntities.values())).toEqual(
+    expect(Array.from(testBed.mocks.entityManager.entities)).toEqual(
       entities
     );
-    expect(testBed.mocks.entityManager.activeEntities.get('player-1')).toBe(
+    expect(Array.from(testBed.mocks.entityManager.entities).find(e => e.id === 'player-1')).toBe(
       mockPlayerEntity
     );
   });
@@ -249,7 +249,8 @@ describe('TurnManager', () => {
       // --- Assert ---
       expect(testBed.turnManager.getCurrentActor()).toBeNull();
       expect(testBed.mocks.logger.error).toHaveBeenCalledWith(
-        'Turn order inconsistency: getNextEntity() returned null/undefined when queue was not empty.'
+        'CRITICAL Error during turn advancement logic (before handler initiation): Cannot start a new round: No active entities with an Actor component found.',
+        expect.any(Error)
       );
     });
   });

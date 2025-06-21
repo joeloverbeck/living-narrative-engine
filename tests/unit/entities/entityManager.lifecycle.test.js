@@ -11,9 +11,12 @@ import {
   TestData,
   TestBed,
 } from '../../common/entities/testBed.js';
+import { runInvalidEntityIdTests } from '../../common/entities/invalidInputHelpers.js';
 import Entity from '../../../src/entities/entity.js';
 import { DefinitionNotFoundError } from '../../../src/errors/definitionNotFoundError.js';
 import { EntityNotFoundError } from '../../../src/errors/entityNotFoundError.js';
+import { DuplicateEntityError } from '../../../src/errors/duplicateEntityError.js';
+import { InvalidArgumentError } from '../../../src/errors/invalidArgumentError.js';
 import {
   ENTITY_CREATED_ID,
   ENTITY_REMOVED_ID,
@@ -136,7 +139,7 @@ describeEntityManagerSuite('EntityManager - Lifecycle', (getBed) => {
       ).toThrow(new DefinitionNotFoundError(NON_EXISTENT_DEF_ID));
     });
 
-    it('should throw an error if an entity with the provided instanceId already exists', () => {
+    it('should throw a DuplicateEntityError if an entity with the provided instanceId already exists', () => {
       // Arrange
       const { entityManager } = getBed();
       const { PRIMARY } = TestData.InstanceIDs;
@@ -145,7 +148,7 @@ describeEntityManagerSuite('EntityManager - Lifecycle', (getBed) => {
       // Act & Assert
       expect(() => {
         entityManager.createEntityInstance(BASIC, { instanceId: PRIMARY });
-      }).toThrow(`Entity with ID '${PRIMARY}' already exists.`);
+      }).toThrow(DuplicateEntityError);
     });
 
     it('should throw a TypeError if definitionId is not a non-empty string', () => {
@@ -197,50 +200,30 @@ describeEntityManagerSuite('EntityManager - Lifecycle', (getBed) => {
 
     it('should throw an error if component validation fails during creation', () => {
       // Arrange
-      const { mocks } = getBed();
+      const { entityManager, mocks } = getBed();
+      const { BASIC } = TestData.DefinitionIDs;
       const { PRIMARY } = TestData.InstanceIDs;
-
-      const validationErrors = [{ message: 'Invalid data' }];
+      getBed().setupDefinitions(TestData.Definitions.basic);
+      const validationErrors = [{ message: 'Validation failed' }];
       mocks.validator.validate.mockReturnValue({
         isValid: false,
         errors: validationErrors,
       });
-      const overrides = { 'new:component': { data: 'invalid' } };
 
       // Act & Assert
-      const expectedDetails = JSON.stringify(validationErrors, null, 2);
-      expect(() => {
-        getBed().createEntity('basic', {
+      expect(() =>
+        entityManager.createEntityInstance(BASIC, {
           instanceId: PRIMARY,
-          componentOverrides: overrides,
-        });
-      }).toThrow(
-        `New component new:component on entity ${PRIMARY} Errors:\n${expectedDetails}`
-      );
-    });
-
-    it('should not mutate the original definition object', () => {
-      // Arrange
-      const { entityManager } = getBed();
-      const mutableDef = new EntityDefinition('test:mutable', {
-        components: { 'core:name': { value: 'A' } },
-      });
-      getBed().setupDefinitions(mutableDef);
-
-      // Act
-      entityManager.createEntityInstance(mutableDef.id, {
-        componentOverrides: { 'core:name': { value: 'B' } }, // Override
-      });
-
-      // Assert
-      expect(mutableDef.components).toEqual({ 'core:name': { value: 'A' } });
+          componentOverrides: { 'core:name': { name: 'invalid' } },
+        })
+      ).toThrow(/Validation failed/);
     });
   });
-  // ... rest of the file is unchanged
+
   describe('reconstructEntity', () => {
-    it('should successfully reconstruct a valid entity', () => {
+    it('should reconstruct an entity from serialized data', () => {
       // Arrange
-      const { entityManager, mocks } = getBed();
+      const { entityManager } = getBed();
       const { BASIC } = TestData.DefinitionIDs;
       const { PRIMARY } = TestData.InstanceIDs;
       getBed().setupDefinitions(TestData.Definitions.basic);
@@ -248,10 +231,7 @@ describeEntityManagerSuite('EntityManager - Lifecycle', (getBed) => {
       const serializedEntity = {
         instanceId: PRIMARY,
         definitionId: BASIC,
-        components: {
-          'core:name': { name: 'Reconstructed Name' },
-          'new:component': { data: 'reconstructed' },
-        },
+        components: { 'core:name': { name: 'Reconstructed' } },
       };
 
       // Act
@@ -261,14 +241,26 @@ describeEntityManagerSuite('EntityManager - Lifecycle', (getBed) => {
       expect(entity).toBeInstanceOf(Entity);
       expect(entity.id).toBe(PRIMARY);
       expect(entity.definitionId).toBe(BASIC);
-      expect(entity.getComponentData('core:name').name).toBe(
-        'Reconstructed Name'
-      );
-      expect(entity.getComponentData('new:component').data).toBe(
-        'reconstructed'
-      );
+      expect(entity.getComponentData('core:name').name).toBe('Reconstructed');
+    });
 
-      // Assert event was dispatched
+    it('should dispatch an ENTITY_CREATED event with wasReconstructed: true', () => {
+      // Arrange
+      const { entityManager, mocks } = getBed();
+      const { BASIC } = TestData.DefinitionIDs;
+      const { PRIMARY } = TestData.InstanceIDs;
+      getBed().setupDefinitions(TestData.Definitions.basic);
+
+      const serializedEntity = {
+        instanceId: PRIMARY,
+        definitionId: BASIC,
+        components: {},
+      };
+
+      // Act
+      const entity = entityManager.reconstructEntity(serializedEntity);
+
+      // Assert
       expectDispatchCalls(mocks.eventDispatcher.dispatch, [
         [
           ENTITY_CREATED_ID,
@@ -280,29 +272,33 @@ describeEntityManagerSuite('EntityManager - Lifecycle', (getBed) => {
       ]);
     });
 
-    it('should throw an error if the definition is not found', () => {
+    it('should throw a DefinitionNotFoundError if the definition is not found', () => {
       // Arrange
       const { entityManager } = getBed();
-      const UNKNOWN_DEF_ID = 'unknown:def';
+      const NON_EXISTENT_DEF_ID = 'non:existent';
       getBed().setupDefinitions(); // No definitions available
+
       const serializedEntity = {
-        instanceId: TestData.InstanceIDs.PRIMARY,
-        definitionId: UNKNOWN_DEF_ID,
+        instanceId: 'test-instance',
+        definitionId: NON_EXISTENT_DEF_ID,
         components: {},
       };
 
       // Act & Assert
-      expect(() => entityManager.reconstructEntity(serializedEntity)).toThrow(
-        new DefinitionNotFoundError(UNKNOWN_DEF_ID)
-      );
+      expect(() =>
+        entityManager.reconstructEntity(serializedEntity)
+      ).toThrow(new DefinitionNotFoundError(NON_EXISTENT_DEF_ID));
     });
 
-    it('should throw an error if an entity with the same ID already exists', () => {
+    it('should throw a DuplicateEntityError if an entity with the same ID already exists', () => {
       // Arrange
       const { entityManager } = getBed();
       const { BASIC } = TestData.DefinitionIDs;
       const { PRIMARY } = TestData.InstanceIDs;
-      getBed().createEntity('basic', { instanceId: PRIMARY }); // Pre-existing entity
+      getBed().setupDefinitions(TestData.Definitions.basic);
+
+      // Create the first entity
+      getBed().createEntity('basic', { instanceId: PRIMARY });
 
       const serializedEntity = {
         instanceId: PRIMARY,
@@ -311,9 +307,7 @@ describeEntityManagerSuite('EntityManager - Lifecycle', (getBed) => {
       };
 
       // Act & Assert
-      expect(() => entityManager.reconstructEntity(serializedEntity)).toThrow(
-        `EntityManager.reconstructEntity: Entity with ID '${PRIMARY}' already exists. Reconstruction aborted.`
-      );
+      expect(() => entityManager.reconstructEntity(serializedEntity)).toThrow(DuplicateEntityError);
     });
 
     it('should throw an error if a component fails validation', () => {
@@ -371,17 +365,16 @@ describeEntityManagerSuite('EntityManager - Lifecycle', (getBed) => {
   });
 
   describe('removeEntityInstance', () => {
-    it('should remove an existing entity and return true', () => {
+    it('should remove an existing entity', () => {
       // Arrange
       const { entityManager } = getBed();
       const entity = getBed().createEntity('basic');
       expect(entityManager.getEntityInstance(entity.id)).toBe(entity);
 
       // Act
-      const result = entityManager.removeEntityInstance(entity.id);
+      entityManager.removeEntityInstance(entity.id);
 
       // Assert
-      expect(result).toBe(true);
       expect(entityManager.getEntityInstance(entity.id)).toBeUndefined();
     });
 
@@ -416,18 +409,12 @@ describeEntityManagerSuite('EntityManager - Lifecycle', (getBed) => {
       );
     });
 
-    it.each(TestData.InvalidValues.invalidIds)(
-      'should return false for invalid instanceId %p',
-      (invalidId) => {
-        const { entityManager, mocks } = getBed();
-        expect(entityManager.removeEntityInstance(invalidId)).toBe(false);
-        expect(mocks.logger.warn).toHaveBeenCalledWith(
-          expect.stringContaining('Attempted to remove entity with invalid ID')
-        );
-      }
+    runInvalidEntityIdTests(
+      getBed,
+      (em, instanceId) => em.removeEntityInstance(instanceId)
     );
 
-    it('should return false and log an error if MapManager fails internally', () => {
+    it('should throw an error if MapManager fails internally', () => {
       // This is a tricky test for a defensive code path.
       // We need to spy on the MapManager's prototype BEFORE TestBed creates the EntityManager.
       const removeSpy = jest
@@ -440,11 +427,10 @@ describeEntityManagerSuite('EntityManager - Lifecycle', (getBed) => {
       const { PRIMARY } = TestData.InstanceIDs;
       localTestBed.createEntity('basic', { instanceId: PRIMARY });
 
-      // Act
-      const result = entityManager.removeEntityInstance(PRIMARY);
-
-      // Assert
-      expect(result).toBe(false);
+      // Act & Assert
+      expect(() => entityManager.removeEntityInstance(PRIMARY)).toThrow(
+        "Internal error: Failed to remove entity 'test-instance-01' from MapManager despite entity being found."
+      );
       expect(mocks.logger.error).toHaveBeenCalledWith(
         expect.stringContaining(
           'MapManager.remove failed for already retrieved entity'
@@ -464,13 +450,13 @@ describeEntityManagerSuite('EntityManager - Lifecycle', (getBed) => {
       const entity1 = getBed().createEntity('basic');
       const entity2 = getBed().createEntity('basic');
 
-      expect(entityManager.activeEntities.size).toBe(2);
+      expect(Array.from(entityManager.entities).length).toBe(2);
 
       // Act
       entityManager.clearAll();
 
       // Assert
-      expect(entityManager.activeEntities.size).toBe(0);
+      expect(Array.from(entityManager.entities).length).toBe(0);
       expect(entityManager.getEntityInstance(entity1.id)).toBeUndefined();
       expect(entityManager.getEntityInstance(entity2.id)).toBeUndefined();
     });

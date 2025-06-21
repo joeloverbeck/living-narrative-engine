@@ -33,13 +33,9 @@ export class TurnManagerTestBed {
   constructor() {
     this.logger = createMockLogger();
     this.entityManager = createMockEntityManager();
-    // Attach active entity map used by TurnManager
-    this.entityManager.activeEntities = new Map();
+    // Use the existing activeEntities map from the mock, don't reassign it
     this.entityManager.getEntityInstance = jest.fn((id) =>
       this.entityManager.activeEntities.get(id)
-    );
-    this.entityManager.getActiveEntities.mockImplementation(() =>
-      Array.from(this.entityManager.activeEntities.values())
     );
 
     this.turnOrderService = {

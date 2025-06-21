@@ -7,15 +7,20 @@
  * @class ModsLoaderError
  * @augments Error
  * @param {string} message - A human friendly message describing the failure.
- * @param {Error} [cause] - The original error that triggered this failure.
+ * @param {string} [code] - An optional error code.
+ * @param {Error} [originalError] - The original error that triggered this failure.
  */
 class ModsLoaderError extends Error {
-  constructor(message, cause) {
+  constructor(message, code, originalError) {
     super(message);
     this.name = 'ModsLoaderError';
-    if (cause) {
-      this.cause = cause;
+    this.code = code;
+
+    if (originalError) {
+      this.cause = originalError;
     }
+
+    // Preserve stack trace (if captureStackTrace is available)
     if (Error.captureStackTrace) {
       Error.captureStackTrace(this, ModsLoaderError);
     }

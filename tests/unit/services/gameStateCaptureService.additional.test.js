@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import GameStateCaptureService from '../../../src/persistence/gameStateCaptureService.js';
 import { CURRENT_ACTOR_COMPONENT_ID } from '../../../src/constants/componentIds.js';
+import { createMockEntityManager } from '../../common/mockFactories.js';
 
 describe('GameStateCaptureService additional coverage', () => {
   let logger;
@@ -18,7 +19,7 @@ describe('GameStateCaptureService additional coverage', () => {
       warn: jest.fn(),
       error: jest.fn(),
     };
-    entityManager = { activeEntities: new Map() };
+    entityManager = createMockEntityManager();
     playtimeTracker = { getTotalPlaytime: jest.fn().mockReturnValue(5) };
     componentCleaningService = { clean: jest.fn((id, data) => data) };
     metadataBuilder = {

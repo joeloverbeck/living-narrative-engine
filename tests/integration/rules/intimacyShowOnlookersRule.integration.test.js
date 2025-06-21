@@ -27,33 +27,37 @@ import { buildABCDWorld } from '../fixtures/intimacyFixtures.js';
 
 class SimpleEntityManager {
   constructor(entities) {
-    this.entities = new Map();
+    this._entitiesMap = new Map();
     for (const e of entities) {
-      this.entities.set(e.id, {
+      this._entitiesMap.set(e.id, {
         id: e.id,
         components: { ...e.components },
       });
     }
-    this.activeEntities = new Map(this.entities);
+    this.activeEntities = new Map(this._entitiesMap);
+  }
+
+  get entities() {
+    return this.activeEntities.values();
   }
 
   getEntityInstance(id) {
-    return this.entities.get(id);
+    return this._entitiesMap.get(id);
   }
 
   getComponentData(id, type) {
-    return this.entities.get(id)?.components[type] ?? null;
+    return this._entitiesMap.get(id)?.components[type] ?? null;
   }
 
   hasComponent(id, type) {
     return Object.prototype.hasOwnProperty.call(
-      this.entities.get(id)?.components || {},
+      this._entitiesMap.get(id)?.components || {},
       type
     );
   }
 
   addComponent(id, type, data) {
-    const ent = this.entities.get(id);
+    const ent = this._entitiesMap.get(id);
     if (ent) {
       ent.components[type] = JSON.parse(JSON.stringify(data));
     }
@@ -61,7 +65,7 @@ class SimpleEntityManager {
 
   getEntitiesInLocation(locationId) {
     const ids = new Set();
-    for (const [id, ent] of this.entities) {
+    for (const [id, ent] of this._entitiesMap) {
       const loc = ent.components[POSITION_COMPONENT_ID]?.locationId;
       if (loc === locationId) ids.add(id);
     }

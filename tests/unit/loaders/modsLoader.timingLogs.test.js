@@ -65,8 +65,9 @@ describe('ModsLoader Integration Test Suite - Performance Timing Logs (Refactore
 
     // Verify a timing log was created for each mod
     for (const modId of finalOrder) {
+      // FIX: Updated regex to match the detailed log format from ContentLoadManager
       const expectedLogRegex = new RegExp(
-        `^Mod '${modId}' loaded in (\\d+\\.\\d{2})ms`
+        `Mod '${modId}' phase 'definitions' loaded in (\\d+\\.\\d{2})ms`
       );
       const timingLogCall = debugCalls.find((call) =>
         expectedLogRegex.test(call[0])

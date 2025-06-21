@@ -1,30 +1,30 @@
 /**
  * @file World-famous ModsLoader — orchestrates loading of all mods and their
- *       content, validates dependencies, and aggregates results.
+ *       content, validates dependencies, and aggregates results.
  */
 
 /* ── Type-only imports ──────────────────────────────────────────────────── */
-/** @typedef {import('../interfaces/coreServices.js').ILogger}                 ILogger */
-/** @typedef {import('../interfaces/coreServices.js').ISchemaValidator}        ISchemaValidator */
-/** @typedef {import('../interfaces/coreServices.js').IDataRegistry}           IDataRegistry */
-/** @typedef {import('../interfaces/coreServices.js').IConfiguration}          IConfiguration */
+/** @typedef {import('../interfaces/coreServices.js').ILogger}                 ILogger */
+/** @typedef {import('../interfaces/coreServices.js').ISchemaValidator}        ISchemaValidator */
+/** @typedef {import('../interfaces/coreServices.js').IDataRegistry}           IDataRegistry */
+/** @typedef {import('../interfaces/coreServices.js').IConfiguration}          IConfiguration */
 /** @typedef {import('../interfaces/coreServices.js').BaseManifestItemLoaderInterface} BaseManifestItemLoaderInterface */
-/** @typedef {import('./actionLoader.js').default}                             ActionLoader */
-/** @typedef {import('./eventLoader.js').default}                              EventLoader */
-/** @typedef {import('./componentLoader.js').default}                          ComponentLoader */
-/** @typedef {import('./conditionLoader.js').default}                          ConditionLoader */
-/** @typedef {import('./ruleLoader.js').default}                               RuleLoader */
-/** @typedef {import('./macroLoader.js').default}                              MacroLoader */
-/** @typedef {import('./schemaLoader.js').default}                             SchemaLoader */
-/** @typedef {import('./gameConfigLoader.js').default}                         GameConfigLoader */
-/** @typedef {import('../modding/modManifestLoader.js').default}               ModManifestLoader */
-/** @typedef {import('./entityDefinitionLoader.js').default}                   EntityLoader */
-/** @typedef {import('./entityInstanceLoader.js').default}                     EntityInstanceLoader */
-/** @typedef {import('./promptTextLoader.js').default}                         PromptTextLoader */
+/** @typedef {import('./actionLoader.js').default}                             ActionLoader */
+/** @typedef {import('./eventLoader.js').default}                              EventLoader */
+/** @typedef {import('./componentLoader.js').default}                          ComponentLoader */
+/** @typedef {import('./conditionLoader.js').default}                          ConditionLoader */
+/** @typedef {import('./ruleLoader.js').default}                               RuleLoader */
+/** @typedef {import('./macroLoader.js').default}                              MacroLoader */
+/** @typedef {import('./schemaLoader.js').default}                             SchemaLoader */
+/** @typedef {import('./gameConfigLoader.js').default}                         GameConfigLoader */
+/** @typedef {import('../modding/modManifestLoader.js').default}               ModManifestLoader */
+/** @typedef {import('./entityDefinitionLoader.js').default}                   EntityLoader */
+/** @typedef {import('./entityInstanceLoader.js').default}                     EntityInstanceLoader */
+/** @typedef {import('./promptTextLoader.js').default}                         PromptTextLoader */
 /** @typedef {import('../../data/schemas/mod.manifest.schema.json').ModManifest} ModManifest */
-/** @typedef {import('../events/validatedEventDispatcher.js').default}         ValidatedEventDispatcher */
-/** @typedef {import('./worldLoader.js').default}                              WorldLoader */
-/** @typedef {import('./goalLoader.js').default}                               GoalLoader */
+/** @typedef {import('../events/validatedEventDispatcher.js').default}         ValidatedEventDispatcher */
+/** @typedef {import('./worldLoader.js').default}                              WorldLoader */
+/** @typedef {import('./goalLoader.js').default}                               GoalLoader */
 
 /* ── Implementation imports ─────────────────────────────────────────────── */
 import ModDependencyError from '../errors/modDependencyError.js';
@@ -62,42 +62,65 @@ import GoalLoader from './goalLoader.js';
 /* ───────────────────────────────────────────────────────────────────────── */
 
 class ModsLoader extends AbstractLoader {
-  /* internal (“pseudo-private”) fields — prefixed with “_” to avoid # transform */
-  /** @type {ILogger}                 */ _logger;
-  /** @type {IDataRegistry}           */ _registry;
-  /** @type {ISchemaValidator}        */ _validator;
-  /** @type {IConfiguration}          */ _configuration;
+  /* internal (“pseudo-private”) fields — prefixed with “_” to avoid # transform */
+  /** @type {ILogger}                 */ _logger;
+  /** @type {IDataRegistry}           */ _registry;
+  /** @type {ISchemaValidator}        */ _validator;
+  /** @type {IConfiguration}          */ _configuration;
 
-  /** @type {SchemaLoader}            */ _schemaLoader;
-  /** @type {ComponentLoader}         */ _componentDefinitionLoader;
-  /** @type {ConditionLoader}         */ _conditionLoader;
-  /** @type {RuleLoader}              */ _ruleLoader;
-  /** @type {MacroLoader}             */ _macroLoader;
-  /** @type {ActionLoader}            */ _actionLoader;
-  /** @type {EventLoader}             */ _eventLoader;
-  /** @type {EntityLoader}            */ _entityDefinitionLoader;
-  /** @type {EntityInstanceLoader}    */ _entityInstanceLoader;
-  /** @type {GameConfigLoader}        */ _gameConfigLoader;
-  /** @type {PromptTextLoader}        */ _promptTextLoader;
-  /** @type {ModManifestLoader}       */ _modManifestLoader;
-  /** @type {ValidatedEventDispatcher}*/ _validatedEventDispatcher;
-  /** @type {ModManifestProcessor}    */ _modManifestProcessor;
-  /** @type {ContentLoadManager}      */ _contentLoadManager;
-  /** @type {WorldLoadSummaryLogger}  */ _summaryLogger;
-  /** @type {WorldLoader}             */ _worldLoader;
-  /** @type {GoalLoader}              */ _goalLoader;
-  /** @type {string[]}                */ _finalOrder = [];
+  /** @type {SchemaLoader}            */ _schemaLoader;
+  /** @type {ComponentLoader}         */ _componentDefinitionLoader;
+  /** @type {ConditionLoader}         */ _conditionLoader;
+  /** @type {RuleLoader}              */ _ruleLoader;
+  /** @type {MacroLoader}             */ _macroLoader;
+  /** @type {ActionLoader}            */ _actionLoader;
+  /** @type {EventLoader}             */ _eventLoader;
+  /** @type {EntityLoader}            */ _entityDefinitionLoader;
+  /** @type {EntityInstanceLoader}    */ _entityInstanceLoader;
+  /** @type {GameConfigLoader}        */ _gameConfigLoader;
+  /** @type {PromptTextLoader}        */ _promptTextLoader;
+  /** @type {ModManifestLoader}       */ _modManifestLoader;
+  /** @type {ValidatedEventDispatcher}*/ _validatedEventDispatcher;
+  /** @type {ModManifestProcessor}    */ _modManifestProcessor;
+  /** @type {ContentLoadManager}      */ _contentLoadManager;
+  /** @type {WorldLoadSummaryLogger}  */ _summaryLogger;
+  /** @type {WorldLoader}             */ _worldLoader;
+  /** @type {GoalLoader}              */ _goalLoader;
+  /** @type {string[]}                */ _finalOrder = [];
 
   /**
    * @private
    * @type {Array<{ loader: BaseManifestItemLoaderInterface,
-   *                contentKey: string, contentTypeDir: string, typeName: string }>}
+   *                contentKey: string, contentTypeDir: string, typeName: string }>}
    */
   _contentLoadersConfig = [];
 
   /* ── constructor ────────────────────────────────────────────────────── */
   /**
    * @param {object} dependencies – see extensive JSDoc list above.
+   * @param dependencies.registry
+   * @param dependencies.logger
+   * @param dependencies.schemaLoader
+   * @param dependencies.componentLoader
+   * @param dependencies.conditionLoader
+   * @param dependencies.ruleLoader
+   * @param dependencies.macroLoader
+   * @param dependencies.actionLoader
+   * @param dependencies.eventLoader
+   * @param dependencies.entityLoader
+   * @param dependencies.entityInstanceLoader
+   * @param dependencies.goalLoader
+   * @param dependencies.validator
+   * @param dependencies.configuration
+   * @param dependencies.gameConfigLoader
+   * @param dependencies.promptTextLoader
+   * @param dependencies.modManifestLoader
+   * @param dependencies.validatedEventDispatcher
+   * @param dependencies.modDependencyValidator
+   * @param dependencies.modVersionValidator
+   * @param dependencies.modLoadOrderResolver
+   * @param dependencies.worldLoader
+   * @param dependencies.contentLoadersConfig
    */
   constructor({
     registry,
@@ -130,10 +153,10 @@ class ModsLoader extends AbstractLoader {
   }) {
     /* ── FLEXIBLE DEP-VALIDATION FOR TWO TRICKY DEPENDENCIES ──────────── */
 
-    /* 1️⃣  ModVersionValidator: function OR object with .validate */
+    /* 1️⃣  ModVersionValidator: function OR object with .validate */
     const isModVersionValidatorFn = typeof modVersionValidator === 'function';
 
-    /* 2️⃣  ModLoadOrderResolver: function OR object with .resolve OR .resolveOrder */
+    /* 2️⃣  ModLoadOrderResolver: function OR object with .resolve OR .resolveOrder */
     const isModLoadOrderResolverFn = typeof modLoadOrderResolver === 'function';
     const hasResolve =
       !isModLoadOrderResolverFn &&
@@ -237,22 +260,22 @@ class ModsLoader extends AbstractLoader {
       /* ✅ ModLoadOrderResolver spec — accept several shapes */
       isModLoadOrderResolverFn
         ? {
-            dependency: modLoadOrderResolver,
-            name: 'ModLoadOrderResolver',
-            methods: [],
-            isFunction: true,
-          }
+          dependency: modLoadOrderResolver,
+          name: 'ModLoadOrderResolver',
+          methods: [],
+          isFunction: true,
+        }
         : hasResolve
           ? {
-              dependency: modLoadOrderResolver,
-              name: 'ModLoadOrderResolver',
-              methods: ['resolve'],
-            }
+            dependency: modLoadOrderResolver,
+            name: 'ModLoadOrderResolver',
+            methods: ['resolve'],
+          }
           : {
-              dependency: modLoadOrderResolver,
-              name: 'ModLoadOrderResolver',
-              methods: ['resolveOrder'], // fall-back (tests often provide this name)
-            },
+            dependency: modLoadOrderResolver,
+            name: 'ModLoadOrderResolver',
+            methods: ['resolveOrder'], // fall-back (tests often provide this name)
+          },
 
       { dependency: worldLoader, name: 'WorldLoader', methods: ['loadWorlds'] },
     ];
@@ -267,11 +290,7 @@ class ModsLoader extends AbstractLoader {
     this._componentDefinitionLoader = componentLoader;
     this._conditionLoader = conditionLoader;
     this._ruleLoader = ruleLoader;
-    this._macroLoader =
-      macroLoader ||
-      /** @type {MacroLoader} */ ({
-        loadItemsForMod: async () => ({ count: 0, overrides: 0, errors: 0 }),
-      });
+    this._macroLoader = macroLoader;
     this._actionLoader = actionLoader;
     this._eventLoader = eventLoader;
     this._entityDefinitionLoader = entityLoader;
@@ -284,6 +303,11 @@ class ModsLoader extends AbstractLoader {
     this._modManifestLoader = modManifestLoader;
     this._validatedEventDispatcher = validatedEventDispatcher;
     this._worldLoader = worldLoader;
+
+    // Assign modding helper services
+    this._modDependencyValidator = modDependencyValidator;
+    this._modVersionValidator = modVersionValidator;
+    this._modLoadOrderResolver = modLoadOrderResolver;
 
     /* ── build content-loader config ──────────────────────────────────── */
     this._contentLoadersConfig =
@@ -302,16 +326,18 @@ class ModsLoader extends AbstractLoader {
         goalLoader: this._goalLoader,
         entityDefinitionLoader: this._entityDefinitionLoader,
         entityInstanceLoader: this._entityInstanceLoader,
+        configuration: this._configuration,
       });
 
     this._modManifestProcessor = new ModManifestProcessor({
-      modManifestLoader,
       logger: this._logger,
+      modManifestLoader: this._modManifestLoader,
       registry: this._registry,
-      validatedEventDispatcher,
-      modDependencyValidator,
-      modVersionValidator,
-      modLoadOrderResolver,
+      validatedEventDispatcher: this._validatedEventDispatcher,
+      modDependencyValidator: this._modDependencyValidator,
+      modVersionValidator: this._modVersionValidator,
+      modLoadOrderResolver: this._modLoadOrderResolver,
+      configuration: this._configuration,
     });
 
     this._contentLoadManager = new ContentLoadManager({
@@ -346,12 +372,10 @@ class ModsLoader extends AbstractLoader {
       const schemaId = this._configuration.getContentTypeSchemaId(type);
       if (!schemaId) {
         const msg = `Essential schema type '${type}' is not configured (no schema ID found).`;
-        this._logger.error(`ModsLoader: ${msg}`);
         throw new MissingSchemaError(msg, null, type);
       }
       if (!this._validator.isSchemaLoaded(schemaId)) {
         const msg = `Essential schema '${schemaId}' (type: '${type}') is configured but not loaded.`;
-        this._logger.error(`ModsLoader: ${msg}`);
         throw new MissingSchemaError(msg, schemaId, type);
       }
       this._logger.debug(
@@ -384,6 +408,7 @@ class ModsLoader extends AbstractLoader {
 
   /**
    * Dynamically register another content loader (mostly used in tests/plugins).
+   *
    * @param {{ loader: BaseManifestItemLoaderInterface, typeName: string }} param0
    */
   registerContentLoader({ loader, typeName }) {
@@ -394,31 +419,35 @@ class ModsLoader extends AbstractLoader {
   /* ── public API ─────────────────────────────────────────────────────── */
   /**
    * Load everything for a world.
+   *
    * @param {string} worldName
+   * @param requestedModIdsRaw
    */
-  async loadWorld(worldName) {
-    this._logger.debug(
-      `ModsLoader: Starting load sequence (World: '${worldName}')`
-    );
-
+  async loadWorld(worldName, requestedModIdsRaw = []) {
+    this._logger.debug(`ModsLoader: Starting load sequence (World: '${worldName}')`);
+    this._currentWorldName = worldName;
     const totalCounts = /** @type {TotalResultsSummary} */ ({});
     let requestedModIds = [];
-    let incompatibilityCount = 0;
     let loadedManifestsMap = new Map();
+    let incompatibilityCount = 0;
 
     try {
-      this._clearRegistry();
-      await this._loadSchemas();
+      this._logger.debug(`ModsLoader: Data registry cleared.`);
+      this._registry.clear();
+
+      await this._schemaLoader.loadAndCompileAllSchemas();
+      this._logger.debug('ModsLoader: Schema loading phase completed.');
       this._checkEssentialSchemas();
       await this._loadPromptText(totalCounts);
 
-      requestedModIds = await this._loadGameConfig();
+      const gameConfig = await this._gameConfigLoader.loadConfig();
+      requestedModIds = gameConfig.mods || [];
+      this._logger.debug(`ModsLoader: Game config requested mods: [${requestedModIds.join(', ')}]`);
 
-      const manifestData =
-        await this._modManifestProcessor.processManifests(requestedModIds);
-      loadedManifestsMap = manifestData.loadedManifestsMap;
-      this._finalOrder = manifestData.finalOrder;
-      incompatibilityCount = manifestData.incompatibilityCount;
+      const manifestProcessorResult = await this._modManifestProcessor.processManifests(requestedModIds, this._currentWorldName);
+      this._finalOrder = manifestProcessorResult.finalOrder;
+      loadedManifestsMap = manifestProcessorResult.loadedManifestsMap;
+      incompatibilityCount = manifestProcessorResult.incompatibilityCount;
 
       await this._contentLoadManager.loadContent(
         this._finalOrder,
@@ -441,28 +470,38 @@ class ModsLoader extends AbstractLoader {
         totalCounts
       );
     } catch (err) {
-      this._logger.error(
-        'ModsLoader: CRITICAL load failure during world/mod loading sequence.',
-        { error: err }
-      );
-      this._registry.clear();
+      this._registry.clear(); // Clear registry on any error
 
       if (err instanceof ModDependencyError || err.name === 'ModDependencyError') {
-        throw err;
+        this._logger.error(
+          `ModsLoader: CRITICAL load failure due to mod dependencies. Error: ${err.message}`,
+          { error: err }
+        );
+        return Promise.reject(err);
       } else if (err instanceof MissingSchemaError || err.name === 'MissingSchemaError') {
         const msg =
-          `ModsLoader failed during essential schema check – aborting world load. ` +
+          `ModsLoader: CRITICAL failure during essential schema check. ` +
+          `Original error: ${err.message}`;
+        this._logger.error(msg, err); // err here is the MissingSchemaError
+        return Promise.reject(new ModsLoaderError(msg, 'essential_schema_failure', err));
+      } else if (err instanceof ModsLoaderError) {
+        // If it's already a ModsLoaderError, assume it was logged appropriately at its source
+        // or by a more specific block above if it wrapped an original error.
+        // Log a generic critical message if not already an 'essential_schema_failure'
+        if (err.code !== 'essential_schema_failure') {
+          this._logger.error(
+            `ModsLoader: CRITICAL load failure. Error: ${err.message}`,
+            { error: err }
+          );
+        }
+        return Promise.reject(err);
+      } else {
+        // For truly unexpected errors
+        const msg =
+          `ModsLoader: CRITICAL load failure due to an unexpected error. ` +
           `Original error: ${err.message}`;
         this._logger.error(msg, err);
-        throw new ModsLoaderError(msg, err);
-      } else {
-        this._logger.debug(
-          'ModsLoader: Unexpected error, wrapping and re-throwing.'
-        );
-        throw new ModsLoaderError(
-          `ModsLoader unexpected error: ${err.message}`,
-          err
-        );
+        return Promise.reject(new ModsLoaderError(msg, 'unknown_loader_error', err));
       }
     }
   }

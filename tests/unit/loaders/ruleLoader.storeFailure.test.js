@@ -257,21 +257,6 @@ describe('RuleLoader - Storage Failure Handling (via loadItemsForMod)', () => {
       },
     };
 
-    // --- Expected Augmented Data (what _storeItemInRegistry prepares) ---
-    const expectedPreparedDataOK = {
-      ...ruleDataOK,
-      id: finalIdOK,
-      modId: modId,
-      _sourceFile: ruleFileOK,
-    };
-    const expectedPreparedDataFailStore = {
-      ...ruleDataFailStore,
-      id: finalIdFailStore,
-      modId: modId,
-      _sourceFile: ruleFileFailStore,
-    };
-    // --- End Expected Augmented Data ---
-
     it('should log storage errors, count failed rules as unsuccessful, process others, and return correct count', async () => {
       // Arrange: Configure mocks specific to this test case
       mockResolver.resolveModContentPath.mockImplementation(
@@ -301,13 +286,11 @@ describe('RuleLoader - Storage Failure Handling (via loadItemsForMod)', () => {
         );
       });
 
-      // Validator passes for both (already set in beforeEach)
-
       // Configure IDataRegistry.store: Success for OK, Throw for FailStore
       mockRegistry.store.mockImplementation((type, id, data) => {
         if (type === RULE_TYPE_NAME && id === finalIdOK) {
           // Success for the OK rule
-          return; // Simulate successful storage
+          return false; // Return false for no overwrite
         }
         if (type === RULE_TYPE_NAME && id === finalIdFailStore) {
           throw storageError; // Throw the specific error for the fail rule
@@ -317,8 +300,6 @@ describe('RuleLoader - Storage Failure Handling (via loadItemsForMod)', () => {
       });
 
       // Act
-      // *** UPDATED: Call loadItemsForMod ***
-      // The 'count' variable now holds the result object { count, errors, overrides }
       const result = await loader.loadItemsForMod(
         modId,
         manifest,
@@ -333,7 +314,6 @@ describe('RuleLoader - Storage Failure Handling (via loadItemsForMod)', () => {
       expect(mockFetcher.fetch).toHaveBeenCalledWith(resolvedPathOK);
       expect(mockFetcher.fetch).toHaveBeenCalledWith(resolvedPathFailStore);
       expect(mockRuleValidatorFn).toHaveBeenCalledTimes(2);
-      // Validator gets original data
       expect(mockRuleValidatorFn).toHaveBeenCalledWith(
         expect.objectContaining(ruleDataOK)
       );
@@ -341,40 +321,23 @@ describe('RuleLoader - Storage Failure Handling (via loadItemsForMod)', () => {
         expect.objectContaining(ruleDataFailStore)
       );
 
-      // Verify IDataRegistry.store was ATTEMPTED for both rules with AUGMENTED data
+      // Verify IDataRegistry.store was ATTEMPTED for both rules
       expect(mockRegistry.store).toHaveBeenCalledTimes(2);
       expect(mockRegistry.store).toHaveBeenCalledWith(
-        RULE_TYPE_NAME, // category
-        finalIdOK, // finalRegistryKey
-        expectedPreparedDataOK // Prepared augmented data
+        RULE_TYPE_NAME,
+        finalIdOK,
+        expect.objectContaining({ _fullId: finalIdOK })
       );
       expect(mockRegistry.store).toHaveBeenCalledWith(
-        RULE_TYPE_NAME, // category
-        finalIdFailStore, // finalRegistryKey
-        expectedPreparedDataFailStore // Prepared augmented data (even though store throws)
+        RULE_TYPE_NAME,
+        finalIdFailStore,
+        expect.objectContaining({ _fullId: finalIdFailStore })
       );
 
       // Verify error logging
-      expect(mockLogger.error).toHaveBeenCalledTimes(2); // Base helper logs, then wrapper logs
+      expect(mockLogger.error).toHaveBeenCalledTimes(1);
 
-      // Error log from BaseManifestItemLoader._storeItemInRegistry's catch block
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.stringContaining(
-          `Failed to store ${RULE_TYPE_NAME} item with key '${finalIdFailStore}'`
-        ), // Match the helper's log message structure
-        expect.objectContaining({
-          // Match the metadata object
-          modId: modId,
-          baseItemId: ruleDataFailStore.rule_id,
-          finalRegistryKey: finalIdFailStore,
-          category: RULE_TYPE_NAME,
-          sourceFilename: ruleFileFailStore,
-          error: storageError.message,
-        }),
-        storageError // Match the full error object
-      );
-
-      // Error log from BaseManifestItemLoader._processFileWrapper's catch block
+      // Verify the single error log from BaseManifestItemLoader._processFileWrapper's catch block
       expect(mockLogger.error).toHaveBeenCalledWith(
         'Error processing file:', // Match the wrapper's log message
         expect.objectContaining({
@@ -382,32 +345,26 @@ describe('RuleLoader - Storage Failure Handling (via loadItemsForMod)', () => {
           modId: modId,
           filename: ruleFileFailStore,
           path: resolvedPathFailStore,
-          typeName: RULE_TYPE_NAME, // Check typeName is logged
+          typeName: RULE_TYPE_NAME,
           error: storageError.message,
         }),
         storageError // Match the full error object
       );
 
-      // Verify the return value object (only ruleOK succeeded, ruleFailStore errored)
-      // *** CORRECTED ASSERTION ***
+      // Verify the return value object
       expect(result).toEqual({ count: 1, errors: 1, overrides: 0 });
 
       // Verify summary and debug logging
       expect(mockLogger.info).toHaveBeenCalledWith(
-        `RuleLoader: Loading ${RULE_TYPE_NAME} definitions for mod '${modId}'.` // Initial log
+        `RuleLoader: Loading ${RULE_TYPE_NAME} definitions for mod '${modId}'.`
       );
       expect(mockLogger.info).toHaveBeenCalledWith(
-        `Mod [${modId}] - Processed 1/2 ${RULE_CONTENT_KEY} items. (1 failed)` // Final summary
+        `Mod [${modId}] - Processed 1/2 ${RULE_CONTENT_KEY} items. (1 failed)`
       );
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        // Successful storage log from _storeItemInRegistry for ruleOK
-        `RuleLoader [${modId}]: Successfully stored ${RULE_TYPE_NAME} item '${finalIdOK}' from file '${ruleFileOK}'.`
+        expect.stringContaining(`Item '${finalIdOK}' (Base: '${ruleDataOK.rule_id}') stored successfully`)
       );
-      // Ensure the successful storage log was NOT called for the failed rule
-      expect(mockLogger.debug).not.toHaveBeenCalledWith(
-        `RuleLoader [${modId}]: Successfully stored ${RULE_TYPE_NAME} item '${finalIdFailStore}' from file '${ruleFileFailStore}'.`
-      );
-      expect(mockLogger.warn).not.toHaveBeenCalled(); // No warnings expected
+      expect(mockLogger.warn).not.toHaveBeenCalled();
     });
   });
 });

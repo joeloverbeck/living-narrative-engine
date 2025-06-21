@@ -32,7 +32,7 @@ describe('TurnManager Test Helpers: TurnManagerTestBed', () => {
     const entity = { id: 'e1' };
     testBed.setActiveEntities(entity);
     expect(testBed.mocks.entityManager.activeEntities.get('e1')).toBe(entity);
-    expect(testBed.mocks.entityManager.getActiveEntities()).toContain(entity);
+    expect(Array.from(testBed.mocks.entityManager.entities)).toContain(entity);
   });
 
   it('trigger dispatches to subscribed handlers', () => {

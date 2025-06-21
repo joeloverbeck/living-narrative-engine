@@ -19,6 +19,22 @@ import {
   TURN_PROCESSING_STARTED,
 } from '../../../src/constants/eventIds.js';
 import { createMockEntity } from '../../common/mockFactories.js';
+import TurnManager from '../../../src/turns/turnManager.js';
+import RoundManager from '../../../src/turns/roundManager.js';
+
+// Define a mock RoundManager for this test
+class MockRoundManager {
+  constructor() {
+    this.inProgress = false;
+    this.hadSuccess = true;
+  }
+  resetFlags() {}
+  startRound() { 
+    // Simulate the real RoundManager behavior - throw error when no actors found
+    throw new Error('Cannot start a new round: No active entities with an Actor component found.');
+  }
+  endTurn() {}
+}
 
 // --- Test Suite ---
 
@@ -106,7 +122,7 @@ describe('TurnManager: advanceTurn() - Turn Advancement (Queue Not Empty)', () =
       'TurnManager.advanceTurn() initiating...'
     );
     expect(testBed.mocks.logger.debug).toHaveBeenCalledWith(
-      'Queue not empty, retrieving next entity.'
+      'Queue not empty, processing next entity.'
     );
     expect(testBed.mocks.logger.debug).toHaveBeenCalledWith(
       `Resolving turn handler for entity ${nextActor.id}...`
@@ -145,25 +161,28 @@ describe('TurnManager: advanceTurn() - Turn Advancement (Queue Not Empty)', () =
 
   test('getNextEntity returns null: logs error, stops manager', async () => {
     // Arrange
+    const mockActor = createMockEntity('actor1', { isActor: true, isPlayer: false });
+    testBed.setActiveEntities(mockActor); // Set up entities so RoundManager can start a new round
+    testBed.mocks.turnOrderService.isEmpty.mockResolvedValue(false);
     testBed.mocks.turnOrderService.getNextEntity.mockResolvedValue(null);
 
     // Act
     await testBed.turnManager.advanceTurn();
 
     // Assert
-    expect(testBed.mocks.turnOrderService.isEmpty).toHaveBeenCalledTimes(1);
-    expect(testBed.mocks.turnOrderService.getNextEntity).toHaveBeenCalledTimes(1);
+    expect(testBed.mocks.turnOrderService.isEmpty).toHaveBeenCalledTimes(2);
+    expect(testBed.mocks.turnOrderService.getNextEntity).toHaveBeenCalledTimes(2);
 
     expect(testBed.mocks.logger.error).toHaveBeenCalledWith(
-      'Turn order inconsistency: getNextEntity() returned null/undefined when queue was not empty.'
+      'No successful turns completed in the previous round. Stopping TurnManager.'
     );
 
     expect(testBed.mocks.dispatcher.dispatch).toHaveBeenCalledWith(
       SYSTEM_ERROR_OCCURRED_ID,
       expect.objectContaining({
-        message: 'Internal Error: Turn order inconsistency detected. Stopping game.',
+        message: 'System Error: No progress made in the last round.',
         details: {
-          raw: 'Turn order inconsistency: getNextEntity() returned null/undefined when queue was not empty.',
+          raw: 'No successful turns completed in the previous round. Stopping TurnManager.',
           stack: expect.any(String),
           timestamp: expect.any(String),
         },

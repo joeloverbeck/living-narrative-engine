@@ -63,7 +63,7 @@ describe('EntityInstanceLoader Integration Test Suite', () => {
     };
     mockDataRegistry = {
       get: jest.fn().mockReturnValue(null), // No existing item
-      store: jest.fn(),
+      store: jest.fn().mockReturnValue(false), // Ensure store returns a boolean
     };
     mockLogger = {
       debug: jest.fn(),
@@ -115,12 +115,17 @@ describe('EntityInstanceLoader Integration Test Suite', () => {
     // 3. Item was stored in the registry
     expect(mockDataRegistry.store).toHaveBeenCalledWith(
       'entity_instances', // Correct category
-      'test_mod:player_char',
+      'test_mod:player_char', // Qualified ID as the key
       expect.objectContaining({
-        id: 'test_mod:player_char',
+        // Properties from _storeItemInRegistry augmentation
+        id: 'player_char', // Base ID
+        _fullId: 'test_mod:player_char', // Qualified ID
         modId: MOD_ID,
         _sourceFile: INSTANCE_FILENAME,
-        ...validInstanceData,
+        // Original data from validInstanceData
+        instanceId: validInstanceData.instanceId,
+        definitionId: validInstanceData.definitionId,
+        componentOverrides: validInstanceData.componentOverrides,
       })
     );
   });

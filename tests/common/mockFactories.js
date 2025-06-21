@@ -12,10 +12,18 @@ import {
 // ── Core Service Mocks ────────────────────────────────────────────────────
 
 export const createMockLogger = () => ({
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-  debug: jest.fn(),
+  info: jest.fn((...args) => {
+    console.log('[MockLogger INFO]:', ...args);
+  }),
+  warn: jest.fn((...args) => {
+    console.warn('[MockLogger WARN]:', ...args);
+  }),
+  error: jest.fn((...args) => {
+    console.error('[MockLogger ERROR]:', ...args);
+  }),
+  debug: jest.fn((...args) => {
+    console.log('[MockLogger DEBUG]:', ...args);
+  }),
 });
 
 export const createMockSchemaValidator = (
@@ -32,7 +40,7 @@ export const createSimpleMockDataRegistry = () => ({
   getEntityDefinition: jest.fn(),
   get: jest.fn(),
   getAll: jest.fn(() => []),
-  store: jest.fn(),
+  store: jest.fn().mockReturnValue(false),
   clear: jest.fn(),
 });
 
@@ -41,8 +49,12 @@ export const createStatefulMockDataRegistry = () => {
   return {
     _internalStore: internalStore,
     store: jest.fn((type, id, data) => {
-      if (!internalStore[type]) internalStore[type] = {};
+      if (!internalStore[type]) {
+        internalStore[type] = {};
+      }
+      const didOverride = Object.prototype.hasOwnProperty.call(internalStore[type], id);
       internalStore[type][id] = data;
+      return didOverride;
     }),
     get: jest.fn((type, id) => internalStore[type]?.[id]),
     getAll: jest.fn((type) => Object.values(internalStore[type] || {})),
@@ -91,6 +103,8 @@ export const createStatefulMockDataRegistry = () => {
     ),
     getStartingPlayerId: jest.fn(() => null),
     getStartingLocationId: jest.fn(() => null),
+    fetchJson: jest.fn(),
+    fetchText: jest.fn(),
   };
 };
 
@@ -103,6 +117,8 @@ export const createMockConfiguration = () => ({
   getGameConfigFilename: jest.fn(() => 'game.json'),
   getModsBasePath: jest.fn(() => 'mods'),
   getModManifestFilename: jest.fn(() => 'mod.manifest.json'),
+  getContentTypeDirectory: jest.fn(),
+  get: jest.fn(),
 });
 
 /**
@@ -113,7 +129,7 @@ export const createMockConfiguration = () => ({
  */
 export const createMockEntityManager = () => {
   const activeEntities = new Map();
-  return {
+  return Object.defineProperties({
     activeEntities,
     clearAll: jest.fn(() => {
       activeEntities.clear();
@@ -126,7 +142,15 @@ export const createMockEntityManager = () => {
       activeEntities.set(entity.id, entity);
       return entity;
     }),
-  };
+  }, {
+    entities: {
+      get() {
+        return activeEntities.values();
+      },
+      enumerable: true,
+      configurable: false
+    }
+  });
 };
 
 export const createMockTurnManager = () => ({
@@ -276,6 +300,8 @@ export const createMockValidatedEventBus = () => {
 // --- Loader Mocks ---
 /**
  * Generic content-loader mock (ActionLoader, ComponentLoader, …).
+ *
+ * @param defaultLoadResult
  */
 export const createMockContentLoader = (
   defaultLoadResult = { count: 0, overrides: 0, errors: 0 }
@@ -305,7 +331,7 @@ export const createMockModManifestLoader = () => ({
 });
 
 /**
- * **NEW**: WorldLoader stub – satisfies ModsLoader’s dependency check.
+ * **NEW**: WorldLoader stub – satisfies ModsLoader's dependency check.
  */
 export const createMockWorldLoader = () => ({
   loadWorlds: jest.fn().mockResolvedValue(undefined),
@@ -315,6 +341,7 @@ export const createMockWorldLoader = () => ({
 
 /**
  * Creates a mock for the mod dependency validator.
+ *
  * @returns {{ validate: jest.Mock }}
  */
 export const createMockModDependencyValidator = () => ({
@@ -367,4 +394,23 @@ export const createMockEntity = (
     if (compId === PLAYER_COMPONENT_ID) return isPlayer;
     return false;
   }),
+});
+
+// Add new mock factory for IPathResolver
+export const createMockPathResolver = () => ({
+  resolvePath: jest.fn((path) => path),
+  resolveModPath: jest.fn((modId) => `mods/${modId}`),
+  resolveModContentPath: jest.fn(
+    (modId, contentTypeDir, filename) => `mods/${modId}/${contentTypeDir}/${filename}`
+  ),
+  resolveModManifestPath: jest.fn((modId) => `mods/${modId}/mod.manifest.json`),
+  getModDirectory: jest.fn((modId) => `mods/${modId}`),
+  getManifestName: jest.fn(),
+});
+
+// Added missing mock factory for IDataFetcher
+export const createMockDataFetcher = () => ({
+  fetch: jest.fn(),
+  fetchJson: jest.fn(),
+  fetchText: jest.fn(),
 });

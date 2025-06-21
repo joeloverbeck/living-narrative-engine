@@ -3,6 +3,7 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import SpatialIndexManager from '../../../src/entities/spatialIndexManager.js';
 import { POSITION_COMPONENT_ID } from '../../../src/constants/componentIds.js'; // Assuming path is correct
+import { createMockEntityManager } from '../../common/mockFactories.js';
 // Entity, EntityDefinition, EntityInstanceData no longer needed for this simplified mock
 
 describe('SpatialIndexManager', () => {
@@ -421,13 +422,14 @@ describe('SpatialIndexManager', () => {
   // buildIndex Tests
   //------------------------------------------
   describe('buildIndex', () => {
+    beforeEach(() => {
+      spatialIndexManager = new SpatialIndexManager();
+    });
+
     it('should correctly build the index using getComponentData', () => {
-      const mockEntityManager = setupMockEntityManagerWithEntities(
-        true,
-        false,
-        false,
-        false
-      );
+      const mockEntityManager = setupMockEntityManagerWithEntities(true);
+      // Debug: print the entities to verify setup
+      console.log('Entities in mockEntityManager:', Array.from(mockEntityManager.entities));
       spatialIndexManager.buildIndex(mockEntityManager);
 
       expect(spatialIndexManager.locationIndex.size).toBe(2);
@@ -475,12 +477,7 @@ describe('SpatialIndexManager', () => {
       spatialIndexManager.addEntity('preExisting2', 'locationOld2');
       expect(spatialIndexManager.locationIndex.size).toBe(2);
 
-      const mockEntityManager = setupMockEntityManagerWithEntities(
-        true,
-        false,
-        false,
-        false
-      );
+      const mockEntityManager = setupMockEntityManagerWithEntities(true);
       spatialIndexManager.buildIndex(mockEntityManager);
 
       expect(spatialIndexManager.locationIndex.has('locationOld1')).toBe(false); // Cleared
@@ -614,9 +611,20 @@ const setupMockEntityManagerWithEntities = (
     activeEntities.set(mockEntityNoPos.id, mockEntityNoPos);
   }
 
-  return {
+  return Object.defineProperties({
     activeEntities,
-    // Mock other EntityManager methods if needed by tests, e.g., getEntityInstance
     getEntityInstance: jest.fn((entityId) => activeEntities.get(entityId)),
-  };
+  }, {
+    entities: {
+      get() {
+        const iterable = {
+          [Symbol.iterator]: () => activeEntities.values(),
+          values: () => activeEntities.values(),
+        };
+        return iterable;
+      },
+      enumerable: true,
+      configurable: false
+    }
+  });
 };

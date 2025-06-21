@@ -100,12 +100,22 @@ describe('MacroLoader (Happy Path - Core Mod)', () => {
     expect(mockRegistry.store).toHaveBeenCalledWith(
       'macros',
       'core:logSuccessAndEndTurn',
-      expect.objectContaining({ id: 'core:logSuccessAndEndTurn' })
+      expect.objectContaining({
+        id: 'logSuccessAndEndTurn',
+        _fullId: 'core:logSuccessAndEndTurn',
+        description: logSuccess.description,
+        actions: logSuccess.actions
+      })
     );
     expect(mockRegistry.store).toHaveBeenCalledWith(
       'macros',
       'core:logFailureAndEndTurn',
-      expect.objectContaining({ id: 'core:logFailureAndEndTurn' })
+      expect.objectContaining({
+        id: 'logFailureAndEndTurn',
+        _fullId: 'core:logFailureAndEndTurn',
+        description: logFailure.description,
+        actions: logFailure.actions
+      })
     );
 
     expect(mockLogger.error).not.toHaveBeenCalled();

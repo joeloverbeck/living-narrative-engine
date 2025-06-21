@@ -9,8 +9,8 @@ class MissingSchemaError extends Error {
    * Creates a new MissingSchemaError instance.
    *
    * @param {string} message - The primary error message.
-   * @param {string | null} [schemaId=null] - Identifier of the missing/unloaded schema, if applicable.
-   * @param {string | null} [contentType=null] - The content type associated with the schema, if applicable.
+   * @param {string | null} [schemaId] - Identifier of the missing/unloaded schema, if applicable.
+   * @param {string | null} [contentType] - The content type associated with the schema, if applicable.
    */
   constructor(message, schemaId = null, contentType = null) {
     super(message);

@@ -4,6 +4,7 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import GameStateCaptureService from '../../../src/persistence/gameStateCaptureService.js';
 import { createMockLogger } from '../testUtils.js';
+import { createMockEntityManager } from '../../common/mockFactories.js';
 
 describe('GameStateCaptureService persistence tests', () => {
   let logger;
@@ -16,7 +17,7 @@ describe('GameStateCaptureService persistence tests', () => {
 
   beforeEach(() => {
     logger = createMockLogger();
-    entityManager = { activeEntities: new Map() };
+    entityManager = createMockEntityManager();
     playtimeTracker = { getTotalPlaytime: jest.fn().mockReturnValue(123) };
     componentCleaningService = { clean: jest.fn((id, data) => data) };
     metadataBuilder = {
