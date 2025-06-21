@@ -122,10 +122,10 @@ describeEntityManagerSuite(
         } = TestData.ComponentIDs;
 
         // The 'basic' definition is not an actor
-        getBed().setupDefinitions(TestData.Definitions.basic);
+        getBed().setupTestDefinitions('basic');
 
         // Act
-        const entity = getBed().createEntity('basic');
+        const entity = getBed().createBasicEntity();
 
         // Assert
         expect(entity.hasComponent(GOALS_COMPONENT_ID)).toBe(false);

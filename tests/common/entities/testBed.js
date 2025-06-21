@@ -217,6 +217,34 @@ export class TestBed extends FactoryTestBed {
   }
 
   /**
+   * Convenience wrapper around {@link TestBed#setupDefinitions} for test
+   * definitions stored in {@link TestData}.
+   *
+   * @param {...keyof typeof TestData.Definitions} defKeys - Keys of test
+   *   definitions to register.
+   * @returns {void}
+   */
+  setupTestDefinitions(...defKeys) {
+    this.setupDefinitions(...defKeys.map((key) => TestData.Definitions[key]));
+  }
+
+  /**
+   * Convenience wrapper for creating an entity using the 'basic' test
+   * definition.
+   *
+   * @param {object} [options] - Options forwarded to
+   *   {@link EntityManager#createEntityInstance}.
+   * @param {object} [config] - Additional configuration options.
+   * @param {boolean} [config.resetDispatch] - If true, resets the event
+   *   dispatch mock after creation.
+   * @returns {import('../../../src/entities/entity.js').default} The created
+   *   entity instance.
+   */
+  createBasicEntity(options = {}, config = {}) {
+    return this.createEntity('basic', options, config);
+  }
+
+  /**
    * Resets the dispatch mock on the internal event dispatcher.
    *
    * @returns {void}
