@@ -3,7 +3,7 @@
  */
 
 import { ITurnDecisionProvider } from '../interfaces/ITurnDecisionProvider.js';
-import { assertValidActionIndex } from '../../utils/validationUtils.js';
+import { assertValidActionIndex } from '../../utils/actionIndexUtils.js';
 
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 
