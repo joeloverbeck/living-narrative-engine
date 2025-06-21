@@ -41,15 +41,10 @@ import { AIPromptContentProvider } from '../../../../src/prompting/AIPromptConte
 import { LLMResponseProcessor } from '../../../../src/turns/services/LLMResponseProcessor.js';
 import { AIFallbackActionFactory } from '../../../../src/turns/services/AIFallbackActionFactory.js';
 import { AIPromptPipeline } from '../../../../src/prompting/AIPromptPipeline.js';
+import { createMockLogger } from '../../../common/mockFactories/index.js';
 
 // --- Mocks ---
-// A plain logger object to be spied on.
-const plainLogger = {
-  debug: () => {},
-  info: () => {},
-  warn: () => {},
-  error: () => {},
-};
+const logger = createMockLogger();
 
 const mockSchemaValidator = {
   validate: jest.fn(),
@@ -61,27 +56,17 @@ const mockSchemaValidator = {
 describe('registerAI', () => {
   let container;
 
-  // Spies to track method calls on the plainLogger
-  let loggerSpies;
-
   beforeEach(() => {
     container = new AppContainer();
 
     // Reset all mocks and spies before each test
     jest.restoreAllMocks();
-
-    // Create spies on our plain logger object
-    loggerSpies = {
-      debug: jest.spyOn(plainLogger, 'debug'),
-      info: jest.spyOn(plainLogger, 'info'),
-      warn: jest.spyOn(plainLogger, 'warn'),
-      error: jest.spyOn(plainLogger, 'error'),
-    };
+    jest.clearAllMocks();
 
     mockSchemaValidator.isSchemaLoaded.mockReturnValue(false);
 
     // Register mocks for external dependencies assumed to be present
-    container.register(tokens.ILogger, plainLogger); // Use the plain object
+    container.register(tokens.ILogger, logger);
     container.register(tokens.ISchemaValidator, mockSchemaValidator);
     container.register(tokens.ISafeEventDispatcher, { dispatch: jest.fn() });
     container.register(tokens.IValidatedEventDispatcher, {
@@ -114,10 +99,10 @@ describe('registerAI', () => {
 
   it('should log start and end messages', () => {
     registerAI(container);
-    expect(loggerSpies.debug).toHaveBeenCalledWith(
+    expect(logger.debug).toHaveBeenCalledWith(
       'AI Systems Registration: Starting...'
     );
-    expect(loggerSpies.debug).toHaveBeenCalledWith(
+    expect(logger.debug).toHaveBeenCalledWith(
       'AI Systems Registration: All registrations complete.'
     );
   });
@@ -132,7 +117,7 @@ describe('registerAI', () => {
 
     it('should register IHttpClient using IValidatedEventDispatcher as fallback', () => {
       const fallbackContainer = new AppContainer();
-      fallbackContainer.register(tokens.ILogger, plainLogger);
+      fallbackContainer.register(tokens.ILogger, logger);
       fallbackContainer.register(tokens.IValidatedEventDispatcher, {
         dispatch: jest.fn(),
       });
@@ -207,7 +192,7 @@ describe('registerAI', () => {
     it('should log after registering all prompting services', () => {
       registerAI(container);
       // Fix: Use stringContaining to make the test more robust against formatting issues.
-      expect(loggerSpies.debug).toHaveBeenCalledWith(
+      expect(logger.debug).toHaveBeenCalledWith(
         expect.stringContaining('Registered Prompting Engine services')
       );
     });
@@ -255,7 +240,7 @@ describe('registerAI', () => {
     it('should log after registering AI game state providers', () => {
       registerAI(container);
       // Fix: Use stringContaining to make the test more robust against formatting issues.
-      expect(loggerSpies.debug).toHaveBeenCalledWith(
+      expect(logger.debug).toHaveBeenCalledWith(
         expect.stringContaining('Registered AI Game State providers')
       );
     });
@@ -295,7 +280,7 @@ describe('registerAI', () => {
     it('should log after registering AI turn pipeline services', () => {
       registerAI(container);
       // Fix: Use stringContaining to make the test more robust against formatting issues.
-      expect(loggerSpies.debug).toHaveBeenCalledWith(
+      expect(logger.debug).toHaveBeenCalledWith(
         expect.stringContaining('Registered AI Turn Pipeline services')
       );
     });
