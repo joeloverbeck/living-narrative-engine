@@ -18,6 +18,7 @@ import { tokens } from '../../../../src/dependencyInjection/tokens.js';
 import { registerOrchestration } from '../../../../src/dependencyInjection/registrations/orchestrationRegistrations.js';
 import InitializationService from '../../../../src/initializers/services/initializationService.js';
 import ShutdownService from '../../../../src/shutdown/services/shutdownService.js';
+import { expectSingleton } from '../../../common/containerAssertions.js';
 
 describe('registerOrchestration', () => {
   /** @type {AppContainer} */
@@ -52,13 +53,12 @@ describe('registerOrchestration', () => {
   it('registers InitializationService and ShutdownService as singleton factories', () => {
     registerOrchestration(container);
 
-    const initInstance = container.resolve(tokens.IInitializationService);
-    expect(initInstance).toBeInstanceOf(InitializationService);
-    expect(container.resolve(tokens.IInitializationService)).toBe(initInstance);
-
-    const shutdownInstance = container.resolve(tokens.ShutdownService);
-    expect(shutdownInstance).toBeInstanceOf(ShutdownService);
-    expect(container.resolve(tokens.ShutdownService)).toBe(shutdownInstance);
+    expectSingleton(
+      container,
+      tokens.IInitializationService,
+      InitializationService
+    );
+    expectSingleton(container, tokens.ShutdownService, ShutdownService);
 
     const initCall = registerSpy.mock.calls.find(
       (c) => c[0] === tokens.IInitializationService

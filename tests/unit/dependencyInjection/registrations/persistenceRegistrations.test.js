@@ -28,6 +28,7 @@ import ActiveModsManifestBuilder from '../../../../src/persistence/activeModsMan
 import SaveLoadService from '../../../../src/persistence/saveLoadService.js';
 import SaveFileRepository from '../../../../src/persistence/saveFileRepository.js';
 import { BrowserStorageProvider } from '../../../../src/storage/browserStorageProvider.js';
+import { expectSingleton } from '../../../common/containerAssertions.js';
 
 describe('registerPersistence', () => {
   /** @type {AppContainer} */
@@ -161,12 +162,7 @@ describe('registerPersistence', () => {
       ({ token, Class, lifecycle, deps }) => {
         registerPersistence(container);
 
-        // 1. Resolution
-        const instance = container.resolve(token);
-        expect(instance).toBeInstanceOf(Class);
-
-        // 2. Singleton behavior
-        expect(container.resolve(token)).toBe(instance);
+        expectSingleton(container, token, Class);
 
         // 3. Registration call
         const call = registerSpy.mock.calls.find((c) => c[0] === token);
