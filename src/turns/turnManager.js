@@ -25,6 +25,7 @@ import {
 } from '../constants/eventIds.js';
 import { ITurnManager } from './interfaces/ITurnManager.js';
 import { RealScheduler } from '../scheduling/index.js';
+import { safeDispatch } from '../utils/eventHelpers.js';
 
 /**
  * @class TurnManager
@@ -392,29 +393,25 @@ class TurnManager extends ITurnManager {
         this.#logger.debug(
           `>>> Starting turn initiation for Entity: ${actorId} (${entityType}) <<<`
         );
-        try {
-          await this.#dispatcher.dispatch('core:turn_started', {
+        await safeDispatch(
+          this.#dispatcher,
+          'core:turn_started',
+          {
             entityId: actorId,
             entityType: entityType,
-          });
-        } catch (dispatchError) {
-          this.#logger.error(
-            `Failed to dispatch core:turn_started for ${actorId}: ${dispatchError.message}`,
-            dispatchError
-          );
-        }
+          },
+          this.#logger
+        );
 
-        try {
-          await this.#dispatcher.dispatch(TURN_PROCESSING_STARTED, {
+        await safeDispatch(
+          this.#dispatcher,
+          TURN_PROCESSING_STARTED,
+          {
             entityId: actorId,
             actorType: entityType,
-          });
-        } catch (dispatchError) {
-          this.#logger.error(
-            `Failed to dispatch ${TURN_PROCESSING_STARTED} for ${actorId}: ${dispatchError.message}`,
-            dispatchError
-          );
-        }
+          },
+          this.#logger
+        );
 
         this.#logger.debug(`Resolving turn handler for entity ${actorId}...`);
         const handler = await this.#turnHandlerResolver.resolveHandler(
@@ -729,21 +726,19 @@ class TurnManager extends ITurnManager {
       detailsOrError instanceof Error
         ? detailsOrError.stack
         : new Error().stack;
-    try {
-      await this.#dispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
+    await safeDispatch(
+      this.#dispatcher,
+      SYSTEM_ERROR_OCCURRED_ID,
+      {
         message: message,
         details: {
           raw: detailString,
           stack: stackString,
           timestamp: new Date().toISOString(),
         },
-      });
-    } catch (dispatchError) {
-      this.#logger.error(
-        `Failed to dispatch ${SYSTEM_ERROR_OCCURRED_ID}: ${dispatchError.message}`,
-        dispatchError
-      );
-    }
+      },
+      this.#logger
+    );
   }
 
   /**
