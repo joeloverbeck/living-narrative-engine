@@ -10,7 +10,7 @@ import OperationRegistry from '../../../src/logic/operationRegistry.js';
 import OperationInterpreter from '../../../src/logic/operationInterpreter.js';
 import JsonLogicEvaluationService from '../../../src/logic/jsonLogicEvaluationService.js';
 import SystemLogicInterpreter from '../../../src/logic/systemLogicInterpreter.js';
-import SimpleEntityManager from '../entities/simpleEntityManager.js';
+import { SimpleEntityManager } from '../entities/index.js';
 import { createMockLogger } from '../mockFactories/index.js';
 
 /**

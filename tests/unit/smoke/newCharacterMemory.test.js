@@ -17,7 +17,7 @@ import { expect, test } from '@jest/globals';
 import {
   describeEntityManagerSuite,
   TestBed,
-} from '../../common/entities/testBed.js';
+} from '../../common/entities/index.js';
 
 /**
  * Uses {@link TestBed} to verify that the EntityManager injects the

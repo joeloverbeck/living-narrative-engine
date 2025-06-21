@@ -36,7 +36,7 @@ import {
   createSimpleMockDataRegistry,
   createMockLogger,
 } from '../common/mockFactories.js';
-import { buildExecContext } from '../common/entities/execContext.js';
+import { buildExecContext } from '../common/entities/index.js';
 import {
   afterEach,
   beforeEach,

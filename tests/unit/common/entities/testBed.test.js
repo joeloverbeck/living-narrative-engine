@@ -5,7 +5,7 @@
 
 import { jest, describe, it, expect, beforeEach } from '@jest/globals';
 // Corrected the path to be relative to the test file's location as per the logs.
-import { TestBed, TestData } from '../../../common/entities/testBed.js';
+import { TestBed, TestData } from '../../../common/entities/index.js';
 import EntityManager from '../../../../src/entities/entityManager.js';
 import EntityDefinition from '../../../../src/entities/entityDefinition.js';
 import {

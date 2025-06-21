@@ -10,11 +10,11 @@ import {
   describeEntityManagerSuite,
   TestData,
   TestBed,
-} from '../../common/entities/testBed.js';
+} from '../../common/entities/index.js';
 import {
   runInvalidEntityIdTests,
   runInvalidDefinitionIdTests,
-} from '../../common/entities/invalidInputHelpers.js';
+} from '../../common/entities/index.js';
 import Entity from '../../../src/entities/entity.js';
 import { DefinitionNotFoundError } from '../../../src/errors/definitionNotFoundError.js';
 import { EntityNotFoundError } from '../../../src/errors/entityNotFoundError.js';
@@ -26,7 +26,7 @@ import {
 import { expectSingleDispatch } from '../../common/engine/dispatchTestUtils.js';
 
 import { MapManager } from '../../../src/utils/mapManagerUtils.js';
-import { buildSerializedEntity } from '../../common/entities/serializationUtils.js';
+import { buildSerializedEntity } from '../../common/entities/index.js';
 
 describeEntityManagerSuite('EntityManager - Lifecycle', (getBed) => {
   describe('constructor', () => {

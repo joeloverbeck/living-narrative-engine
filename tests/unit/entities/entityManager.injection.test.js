@@ -10,7 +10,7 @@ import { describe, it, expect } from '@jest/globals';
 import {
   describeEntityManagerSuite,
   TestData,
-} from '../../common/entities/testBed.js';
+} from '../../common/entities/index.js';
 import EntityDefinition from '../../../src/entities/entityDefinition.js';
 
 describeEntityManagerSuite(

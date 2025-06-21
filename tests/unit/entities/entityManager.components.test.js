@@ -9,8 +9,8 @@ import { describe, it, expect, jest } from '@jest/globals';
 import {
   describeEntityManagerSuite,
   TestData,
-} from '../../common/entities/testBed.js';
-import { runInvalidIdPairTests } from '../../common/entities/invalidInputHelpers.js';
+} from '../../common/entities/index.js';
+import { runInvalidIdPairTests } from '../../common/entities/index.js';
 import { EntityNotFoundError } from '../../../src/errors/entityNotFoundError.js';
 import { InvalidArgumentError } from '../../../src/errors/invalidArgumentError.js';
 import { ValidationError } from '../../../src/errors/validationError.js';
