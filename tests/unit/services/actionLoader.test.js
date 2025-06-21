@@ -143,18 +143,32 @@ beforeEach(() => {
   }
 
   if (actionLoader) {
-    Object.values(mockConfig).forEach((fn) => typeof fn === 'function' && fn.mockClear?.());
-    Object.values(mockResolver).forEach((fn) => typeof fn === 'function' && fn.mockClear?.());
-    Object.values(mockFetcher).forEach((fn) => typeof fn === 'function' && fn.mockClear?.());
-    Object.values(mockValidator).forEach((fn) => typeof fn === 'function' && fn.mockClear?.());
-    Object.values(mockRegistry).forEach((fn) => typeof fn === 'function' && fn.mockClear?.());
+    Object.values(mockConfig).forEach(
+      (fn) => typeof fn === 'function' && fn.mockClear?.()
+    );
+    Object.values(mockResolver).forEach(
+      (fn) => typeof fn === 'function' && fn.mockClear?.()
+    );
+    Object.values(mockFetcher).forEach(
+      (fn) => typeof fn === 'function' && fn.mockClear?.()
+    );
+    Object.values(mockValidator).forEach(
+      (fn) => typeof fn === 'function' && fn.mockClear?.()
+    );
+    Object.values(mockRegistry).forEach(
+      (fn) => typeof fn === 'function' && fn.mockClear?.()
+    );
     mockLogger.info.mockClear();
     mockLogger.warn.mockClear();
     mockLogger.error.mockClear();
     mockLogger.debug.mockClear();
 
-    loadItemsInternalSpy = jest.spyOn(actionLoader, '_loadItemsInternal').mockResolvedValue({ count: 0, overrides: 0, errors: 0 });
-    validatePrimarySchemaSpy = jest.spyOn(actionLoader, '_validatePrimarySchema').mockReturnValue({ isValid: true, errors: null });
+    loadItemsInternalSpy = jest
+      .spyOn(actionLoader, '_loadItemsInternal')
+      .mockResolvedValue({ count: 0, overrides: 0, errors: 0 });
+    validatePrimarySchemaSpy = jest
+      .spyOn(actionLoader, '_validatePrimarySchema')
+      .mockReturnValue({ isValid: true, errors: null });
     actionLoader._logger = mockLogger;
   } else {
     jest.clearAllMocks();
@@ -190,18 +204,38 @@ describe('ActionLoader', () => {
     const resolvedPath = `./data/mods/${TEST_MOD_ID}/${ACTION_CONTENT_DIR}/${filename}`;
     const namespacedActionIdFromFile = 'core:test_action';
     const baseActionIdExtracted = 'test_action';
-    const baseActionData = { id: namespacedActionIdFromFile, description: 'A sample action.', parameters: {} };
+    const baseActionData = {
+      id: namespacedActionIdFromFile,
+      description: 'A sample action.',
+      parameters: {},
+    };
     const finalRegistryKey = `${TEST_MOD_ID}:${baseActionIdExtracted}`;
-    const expectedSuccessResult = { qualifiedId: finalRegistryKey, didOverride: false };
+    const expectedSuccessResult = {
+      qualifiedId: finalRegistryKey,
+      didOverride: false,
+    };
 
     beforeEach(() => {
       // This beforeEach is correct and doesn't need changes.
       if (!actionLoader) {
-        actionLoader = new ActionLoader(mockConfig, mockResolver, mockFetcher, mockValidator, mockRegistry, mockLogger);
-        loadItemsInternalSpy = jest.spyOn(actionLoader, '_loadItemsInternal').mockResolvedValue({ count: 0, overrides: 0, errors: 0 });
-        validatePrimarySchemaSpy = jest.spyOn(actionLoader, '_validatePrimarySchema').mockReturnValue({ isValid: true, errors: null });
+        actionLoader = new ActionLoader(
+          mockConfig,
+          mockResolver,
+          mockFetcher,
+          mockValidator,
+          mockRegistry,
+          mockLogger
+        );
+        loadItemsInternalSpy = jest
+          .spyOn(actionLoader, '_loadItemsInternal')
+          .mockResolvedValue({ count: 0, overrides: 0, errors: 0 });
+        validatePrimarySchemaSpy = jest
+          .spyOn(actionLoader, '_validatePrimarySchema')
+          .mockReturnValue({ isValid: true, errors: null });
       }
-      jest.spyOn(actionLoader, '_storeItemInRegistry').mockReturnValue({ qualifiedId: finalRegistryKey, didOverride: false });
+      jest
+        .spyOn(actionLoader, '_storeItemInRegistry')
+        .mockReturnValue({ qualifiedId: finalRegistryKey, didOverride: false });
     });
 
     // This test is correct and doesn't need changes.

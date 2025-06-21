@@ -193,16 +193,16 @@ describeTurnManagerSuite(
       expect(stopSpy).not.toHaveBeenCalled();
     });
 
-  test('Entity manager error: logs error, stops manager', async () => {
-    const entityError = new Error('Entity not found');
-    testBed.mocks.turnOrderService.isEmpty.mockResolvedValue(false);
-    testBed.mocks.turnOrderService.getNextEntity.mockResolvedValue(null);
+    test('Entity manager error: logs error, stops manager', async () => {
+      const entityError = new Error('Entity not found');
+      testBed.mocks.turnOrderService.isEmpty.mockResolvedValue(false);
+      testBed.mocks.turnOrderService.getNextEntity.mockResolvedValue(null);
 
       await testBed.turnManager.advanceTurn();
 
       expect(testBed.mocks.logger.error).toHaveBeenCalledWith(
         'CRITICAL Error during turn advancement logic (before handler initiation): Cannot start a new round: No active entities with an Actor component found.',
-      expect.any(Error)
+        expect.any(Error)
       );
       expect(stopSpy).toHaveBeenCalled();
     });

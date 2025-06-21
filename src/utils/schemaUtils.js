@@ -83,11 +83,7 @@ export async function registerInlineSchema(
       if (!('error' in context)) {
         context.error = error?.message || error;
       }
-      log.error(
-        errorLogMessage,
-        context,
-        error
-      );
+      log.error(errorLogMessage, context, error);
     }
     if (throwErrorMessage) {
       throw new Error(throwErrorMessage);

@@ -26,6 +26,8 @@ describe('ModLoadOrderResolver integration', () => {
       ['a', { id: 'a', dependencies: [{ id: 'b', required: true }] }],
       ['b', { id: 'b', dependencies: [{ id: 'a', required: true }] }],
     ]);
-    expect(() => resolver.resolve(['a', 'b'], manifests)).toThrow(ModDependencyError);
+    expect(() => resolver.resolve(['a', 'b'], manifests)).toThrow(
+      ModDependencyError
+    );
   });
-}); 
+});

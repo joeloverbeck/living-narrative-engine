@@ -3,7 +3,14 @@
  * @see src/entities/factories/entityFactory.js
  */
 
-import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  jest,
+  beforeEach,
+  afterEach,
+} from '@jest/globals';
 import EntityFactory from '../../../../src/entities/factories/entityFactory.js';
 import Entity from '../../../../src/entities/entity.js';
 import EntityDefinition from '../../../../src/entities/entityDefinition.js';
@@ -129,7 +136,13 @@ describe('EntityFactory', () => {
     });
 
     it('should create an entity with generated ID when no instanceId provided', () => {
-      const entity = factory.create('test-def:basic', {}, mocks.registry, { has: () => false }, null);
+      const entity = factory.create(
+        'test-def:basic',
+        {},
+        mocks.registry,
+        { has: () => false },
+        null
+      );
 
       expect(entity).toBeInstanceOf(Entity);
       expect(entity.id).toBe('test-entity-id-123');
@@ -138,7 +151,13 @@ describe('EntityFactory', () => {
     });
 
     it('should create an entity with provided instanceId', () => {
-      const entity = factory.create('test-def:basic', { instanceId: 'custom-id' }, mocks.registry, { has: () => false }, null);
+      const entity = factory.create(
+        'test-def:basic',
+        { instanceId: 'custom-id' },
+        mocks.registry,
+        { has: () => false },
+        null
+      );
 
       expect(entity.id).toBe('custom-id');
       expect(mockIdGenerator).not.toHaveBeenCalled();
@@ -150,7 +169,13 @@ describe('EntityFactory', () => {
       }).toThrow('definitionId must be a non-empty string.');
 
       expect(() => {
-        factory.create(undefined, {}, mocks.registry, { has: () => false }, null);
+        factory.create(
+          undefined,
+          {},
+          mocks.registry,
+          { has: () => false },
+          null
+        );
       }).toThrow('definitionId must be a non-empty string.');
 
       expect(() => {
@@ -162,7 +187,13 @@ describe('EntityFactory', () => {
       mocks.registry.getEntityDefinition.mockReturnValue(null);
 
       expect(() => {
-        factory.create('non-existent', {}, mocks.registry, { has: () => false }, null);
+        factory.create(
+          'non-existent',
+          {},
+          mocks.registry,
+          { has: () => false },
+          null
+        );
       }).toThrow(new DefinitionNotFoundError('non-existent'));
     });
 
@@ -170,7 +201,13 @@ describe('EntityFactory', () => {
       const repository = { has: jest.fn(() => true) };
 
       expect(() => {
-        factory.create('test-def:basic', { instanceId: 'existing-id' }, mocks.registry, repository, null);
+        factory.create(
+          'test-def:basic',
+          { instanceId: 'existing-id' },
+          mocks.registry,
+          repository,
+          null
+        );
       }).toThrow("Entity with ID 'existing-id' already exists.");
     });
 
@@ -180,20 +217,39 @@ describe('EntityFactory', () => {
         'new:component': { data: 'xyz' },
       };
 
-      const entity = factory.create('test-def:basic', { componentOverrides: overrides }, mocks.registry, { has: () => false }, null);
+      const entity = factory.create(
+        'test-def:basic',
+        { componentOverrides: overrides },
+        mocks.registry,
+        { has: () => false },
+        null
+      );
 
-      expect(entity.getComponentData('core:description').text).toBe('Overridden Description');
+      expect(entity.getComponentData('core:description').text).toBe(
+        'Overridden Description'
+      );
       expect(entity.hasComponent('new:component')).toBe(true);
       expect(entity.getComponentData('new:component').data).toBe('xyz');
     });
 
     it('should validate component overrides', () => {
       const overrides = { 'core:description': { text: 'Test' } };
-      mocks.validator.validate.mockReturnValue({ isValid: false, errors: ['Invalid data'] });
+      mocks.validator.validate.mockReturnValue({
+        isValid: false,
+        errors: ['Invalid data'],
+      });
 
       expect(() => {
-        factory.create('test-def:basic', { componentOverrides: overrides }, mocks.registry, { has: () => false }, null);
-      }).toThrow('New component core:description on entity test-entity-id-123 Errors:');
+        factory.create(
+          'test-def:basic',
+          { componentOverrides: overrides },
+          mocks.registry,
+          { has: () => false },
+          null
+        );
+      }).toThrow(
+        'New component core:description on entity test-entity-id-123 Errors:'
+      );
     });
 
     it('should inject default components for actor entities', () => {
@@ -203,7 +259,13 @@ describe('EntityFactory', () => {
       });
       mocks.registry.getEntityDefinition.mockReturnValue(actorDefinition);
 
-      const entity = factory.create('test-def:actor', {}, mocks.registry, { has: () => false }, null);
+      const entity = factory.create(
+        'test-def:actor',
+        {},
+        mocks.registry,
+        { has: () => false },
+        null
+      );
 
       expect(entity.hasComponent(SHORT_TERM_MEMORY_COMPONENT_ID)).toBe(true);
       expect(entity.hasComponent(NOTES_COMPONENT_ID)).toBe(true);
@@ -211,7 +273,13 @@ describe('EntityFactory', () => {
     });
 
     it('should not inject default components for non-actor entities', () => {
-      const entity = factory.create('test-def:basic', {}, mocks.registry, { has: () => false }, null);
+      const entity = factory.create(
+        'test-def:basic',
+        {},
+        mocks.registry,
+        { has: () => false },
+        null
+      );
 
       expect(entity.hasComponent(SHORT_TERM_MEMORY_COMPONENT_ID)).toBe(false);
       expect(entity.hasComponent(NOTES_COMPONENT_ID)).toBe(false);
@@ -221,18 +289,31 @@ describe('EntityFactory', () => {
     it('should not inject default components that already exist', () => {
       const actorDefinition = new EntityDefinition('test-def:actor', {
         description: 'An actor definition',
-        components: { 
+        components: {
           [ACTOR_COMPONENT_ID]: {},
-          [SHORT_TERM_MEMORY_COMPONENT_ID]: { thoughts: ['existing'], maxEntries: 5 }
+          [SHORT_TERM_MEMORY_COMPONENT_ID]: {
+            thoughts: ['existing'],
+            maxEntries: 5,
+          },
         },
       });
       mocks.registry.getEntityDefinition.mockReturnValue(actorDefinition);
 
-      const entity = factory.create('test-def:actor', {}, mocks.registry, { has: () => false }, null);
+      const entity = factory.create(
+        'test-def:actor',
+        {},
+        mocks.registry,
+        { has: () => false },
+        null
+      );
 
       // Should not override existing STM component
-      expect(entity.getComponentData(SHORT_TERM_MEMORY_COMPONENT_ID).thoughts).toEqual(['existing']);
-      expect(entity.getComponentData(SHORT_TERM_MEMORY_COMPONENT_ID).maxEntries).toBe(5);
+      expect(
+        entity.getComponentData(SHORT_TERM_MEMORY_COMPONENT_ID).thoughts
+      ).toEqual(['existing']);
+      expect(
+        entity.getComponentData(SHORT_TERM_MEMORY_COMPONENT_ID).maxEntries
+      ).toBe(5);
     });
   });
 
@@ -257,23 +338,31 @@ describe('EntityFactory', () => {
         },
       };
 
-      const entity = factory.reconstruct(serializedEntity, mocks.registry, { has: () => false });
+      const entity = factory.reconstruct(serializedEntity, mocks.registry, {
+        has: () => false,
+      });
 
       expect(entity).toBeInstanceOf(Entity);
       expect(entity.id).toBe('reconstructed-id');
       expect(entity.definitionId).toBe('test-def:basic');
       expect(entity.getComponentData('core:name').name).toBe('Reconstructed');
-      expect(entity.getComponentData('core:description').text).toBe('Reconstructed entity');
+      expect(entity.getComponentData('core:description').text).toBe(
+        'Reconstructed entity'
+      );
     });
 
     it('should throw error if serializedEntity is invalid', () => {
       expect(() => {
         factory.reconstruct(null, mocks.registry, { has: () => false });
-      }).toThrow('EntityFactory.reconstruct: serializedEntity data is missing or invalid.');
+      }).toThrow(
+        'EntityFactory.reconstruct: serializedEntity data is missing or invalid.'
+      );
 
       expect(() => {
         factory.reconstruct('invalid', mocks.registry, { has: () => false });
-      }).toThrow('EntityFactory.reconstruct: serializedEntity data is missing or invalid.');
+      }).toThrow(
+        'EntityFactory.reconstruct: serializedEntity data is missing or invalid.'
+      );
     });
 
     it('should throw error if instanceId is invalid', () => {
@@ -284,8 +373,12 @@ describe('EntityFactory', () => {
       };
 
       expect(() => {
-        factory.reconstruct(serializedEntity, mocks.registry, { has: () => false });
-      }).toThrow('EntityFactory.reconstruct: instanceId is missing or invalid in serialized data.');
+        factory.reconstruct(serializedEntity, mocks.registry, {
+          has: () => false,
+        });
+      }).toThrow(
+        'EntityFactory.reconstruct: instanceId is missing or invalid in serialized data.'
+      );
     });
 
     it('should throw error if entity with same ID already exists', () => {
@@ -299,7 +392,9 @@ describe('EntityFactory', () => {
 
       expect(() => {
         factory.reconstruct(serializedEntity, mocks.registry, repository);
-      }).toThrow("EntityFactory.reconstruct: Entity with ID 'existing-id' already exists. Reconstruction aborted.");
+      }).toThrow(
+        "EntityFactory.reconstruct: Entity with ID 'existing-id' already exists. Reconstruction aborted."
+      );
     });
 
     it('should throw DefinitionNotFoundError if definition not found', () => {
@@ -312,7 +407,9 @@ describe('EntityFactory', () => {
       mocks.registry.getEntityDefinition.mockReturnValue(null);
 
       expect(() => {
-        factory.reconstruct(serializedEntity, mocks.registry, { has: () => false });
+        factory.reconstruct(serializedEntity, mocks.registry, {
+          has: () => false,
+        });
       }).toThrow(new DefinitionNotFoundError('non-existent'));
     });
 
@@ -325,11 +422,18 @@ describe('EntityFactory', () => {
         },
       };
 
-      mocks.validator.validate.mockReturnValue({ isValid: false, errors: ['Invalid component'] });
+      mocks.validator.validate.mockReturnValue({
+        isValid: false,
+        errors: ['Invalid component'],
+      });
 
       expect(() => {
-        factory.reconstruct(serializedEntity, mocks.registry, { has: () => false });
-      }).toThrow('Reconstruction component core:description for entity test-id (definition test-def:basic) Errors:');
+        factory.reconstruct(serializedEntity, mocks.registry, {
+          has: () => false,
+        });
+      }).toThrow(
+        'Reconstruction component core:description for entity test-id (definition test-def:basic) Errors:'
+      );
     });
 
     it('should handle null component data', () => {
@@ -341,7 +445,9 @@ describe('EntityFactory', () => {
         },
       };
 
-      const entity = factory.reconstruct(serializedEntity, mocks.registry, { has: () => false });
+      const entity = factory.reconstruct(serializedEntity, mocks.registry, {
+        has: () => false,
+      });
 
       expect(entity.getComponentData('core:description')).toBeNull();
     });
@@ -359,7 +465,9 @@ describe('EntityFactory', () => {
         components: { [ACTOR_COMPONENT_ID]: {} },
       };
 
-      const entity = factory.reconstruct(serializedEntity, mocks.registry, { has: () => false });
+      const entity = factory.reconstruct(serializedEntity, mocks.registry, {
+        has: () => false,
+      });
 
       expect(entity.hasComponent(SHORT_TERM_MEMORY_COMPONENT_ID)).toBe(true);
       expect(entity.hasComponent(NOTES_COMPONENT_ID)).toBe(true);
@@ -373,7 +481,9 @@ describe('EntityFactory', () => {
         components: {},
       };
 
-      const entity = factory.reconstruct(serializedEntity, mocks.registry, { has: () => false });
+      const entity = factory.reconstruct(serializedEntity, mocks.registry, {
+        has: () => false,
+      });
 
       expect(entity).toBeInstanceOf(Entity);
       expect(entity.id).toBe('test-id');
@@ -385,10 +495,12 @@ describe('EntityFactory', () => {
         definitionId: 'test-def:basic',
       };
 
-      const entity = factory.reconstruct(serializedEntity, mocks.registry, { has: () => false });
+      const entity = factory.reconstruct(serializedEntity, mocks.registry, {
+        has: () => false,
+      });
 
       expect(entity).toBeInstanceOf(Entity);
       expect(entity.id).toBe('test-id');
     });
   });
-}); 
+});

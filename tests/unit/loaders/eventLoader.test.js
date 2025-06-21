@@ -37,10 +37,17 @@ const createMockConfiguration = (overrides = {}) => ({
   ...overrides,
 });
 const createMockPathResolver = (overrides = {}) => ({
-  resolveModContentPath: jest.fn((modId, typeName, filename) => `./data/mods/${modId}/${typeName}/${filename}`),
-  resolveContentPath: jest.fn((typeName, filename) => `./data/${typeName}/${filename}`),
+  resolveModContentPath: jest.fn(
+    (modId, typeName, filename) =>
+      `./data/mods/${modId}/${typeName}/${filename}`
+  ),
+  resolveContentPath: jest.fn(
+    (typeName, filename) => `./data/${typeName}/${filename}`
+  ),
   resolveSchemaPath: jest.fn((filename) => `./data/schemas/${filename}`),
-  resolveModManifestPath: jest.fn((modId) => `./data/mods/${modId}/mod.manifest.json`),
+  resolveModManifestPath: jest.fn(
+    (modId) => `./data/mods/${modId}/mod.manifest.json`
+  ),
   resolveGameConfigPath: jest.fn(() => './data/game.json'),
   resolveRulePath: jest.fn((filename) => `./data/system-rules/${filename}`),
   ...overrides,
@@ -51,7 +58,9 @@ const createMockDataFetcher = (overrides = {}) => ({
 });
 const createMockSchemaValidator = (overrides = {}) => ({
   validate: jest.fn().mockReturnValue({ isValid: true, errors: null }),
-  getValidator: jest.fn().mockReturnValue(() => ({ isValid: true, errors: null })),
+  getValidator: jest
+    .fn()
+    .mockReturnValue(() => ({ isValid: true, errors: null })),
   addSchema: jest.fn().mockResolvedValue(undefined),
   removeSchema: jest.fn().mockReturnValue(true),
   isSchemaLoaded: jest.fn().mockReturnValue(true),
@@ -73,9 +82,16 @@ const createMockLogger = (overrides = {}) => ({
 });
 
 // --- Shared Mocks Instance & Test Constants ---
-let mockConfig, mockResolver, mockFetcher, mockValidator, mockRegistry, mockLogger, eventLoader;
+let mockConfig,
+  mockResolver,
+  mockFetcher,
+  mockValidator,
+  mockRegistry,
+  mockLogger,
+  eventLoader;
 let validatePrimarySchemaSpy, storeItemInRegistrySpy, loadItemsInternalSpy;
-const realStoreItemInRegistry = BaseManifestItemLoader.prototype._storeItemInRegistry;
+const realStoreItemInRegistry =
+  BaseManifestItemLoader.prototype._storeItemInRegistry;
 const TEST_MOD_ID = 'test-event-mod';
 const EVENT_CONTENT_KEY = 'events';
 const EVENT_CONTENT_DIR = 'events';
@@ -89,17 +105,35 @@ beforeEach(() => {
   mockRegistry = createMockDataRegistry();
   mockLogger = createMockLogger();
 
-  validatePrimarySchemaSpy = jest.spyOn(BaseManifestItemLoader.prototype, '_validatePrimarySchema');
-  storeItemInRegistrySpy = jest.spyOn(BaseManifestItemLoader.prototype, '_storeItemInRegistry');
-  loadItemsInternalSpy = jest.spyOn(BaseManifestItemLoader.prototype, '_loadItemsInternal');
+  validatePrimarySchemaSpy = jest.spyOn(
+    BaseManifestItemLoader.prototype,
+    '_validatePrimarySchema'
+  );
+  storeItemInRegistrySpy = jest.spyOn(
+    BaseManifestItemLoader.prototype,
+    '_storeItemInRegistry'
+  );
+  loadItemsInternalSpy = jest.spyOn(
+    BaseManifestItemLoader.prototype,
+    '_loadItemsInternal'
+  );
 
-  eventLoader = new EventLoader(mockConfig, mockResolver, mockFetcher, mockValidator, mockRegistry, mockLogger);
+  eventLoader = new EventLoader(
+    mockConfig,
+    mockResolver,
+    mockFetcher,
+    mockValidator,
+    mockRegistry,
+    mockLogger
+  );
   jest.clearAllMocks();
   eventLoader._logger = mockLogger;
 
   loadItemsInternalSpy.mockResolvedValue({ count: 0, overrides: 0, errors: 0 });
   validatePrimarySchemaSpy.mockReturnValue({ isValid: true, errors: null });
-  storeItemInRegistrySpy.mockImplementation((...args) => realStoreItemInRegistry.apply(eventLoader, args));
+  storeItemInRegistrySpy.mockImplementation((...args) =>
+    realStoreItemInRegistry.apply(eventLoader, args)
+  );
 });
 
 afterEach(() => {
@@ -107,8 +141,12 @@ afterEach(() => {
 });
 
 describe('EventLoader', () => {
-  describe('Constructor', () => { /* Unchanged */ });
-  describe('loadItemsForMod', () => { /* Unchanged */ });
+  describe('Constructor', () => {
+    /* Unchanged */
+  });
+  describe('loadItemsForMod', () => {
+    /* Unchanged */
+  });
   describe('_processFetchedItem', () => {
     const filename = 'test_event.json';
     const resolvedPath = `./data/mods/${TEST_MOD_ID}/${EVENT_CONTENT_DIR}/${filename}`;
@@ -124,8 +162,16 @@ describe('EventLoader', () => {
     it('Failure: Missing `id` field in data', async () => {
       const fetchedData = { description: 'Event without ID' };
       await expect(
-        eventLoader._processFetchedItem(TEST_MOD_ID, filename, resolvedPath, fetchedData, EVENT_TYPE_NAME)
-      ).rejects.toThrow(`Invalid or missing 'id' in ${filename} for mod '${TEST_MOD_ID}'.`);
+        eventLoader._processFetchedItem(
+          TEST_MOD_ID,
+          filename,
+          resolvedPath,
+          fetchedData,
+          EVENT_TYPE_NAME
+        )
+      ).rejects.toThrow(
+        `Invalid or missing 'id' in ${filename} for mod '${TEST_MOD_ID}'.`
+      );
       expect(mockLogger.error).not.toHaveBeenCalled();
       expect(storeItemInRegistrySpy).not.toHaveBeenCalled();
     });
@@ -133,8 +179,16 @@ describe('EventLoader', () => {
     it('Failure: Invalid `id` field type (not string)', async () => {
       const fetchedData = { id: 123, description: 'Numeric ID' };
       await expect(
-        eventLoader._processFetchedItem(TEST_MOD_ID, filename, resolvedPath, fetchedData, EVENT_TYPE_NAME)
-      ).rejects.toThrow(`Invalid or missing 'id' in ${filename} for mod '${TEST_MOD_ID}'.`);
+        eventLoader._processFetchedItem(
+          TEST_MOD_ID,
+          filename,
+          resolvedPath,
+          fetchedData,
+          EVENT_TYPE_NAME
+        )
+      ).rejects.toThrow(
+        `Invalid or missing 'id' in ${filename} for mod '${TEST_MOD_ID}'.`
+      );
       expect(mockLogger.error).not.toHaveBeenCalled();
       expect(storeItemInRegistrySpy).not.toHaveBeenCalled();
     });
@@ -142,8 +196,16 @@ describe('EventLoader', () => {
     it('Failure: Cannot extract base ID (e.g., only colon)', async () => {
       const fetchedData = { id: ':', description: 'Just a colon' };
       await expect(
-        eventLoader._processFetchedItem(TEST_MOD_ID, filename, resolvedPath, fetchedData, EVENT_TYPE_NAME)
-      ).rejects.toThrow(`Could not extract base ID from ':' in ${filename}. Invalid format.`);
+        eventLoader._processFetchedItem(
+          TEST_MOD_ID,
+          filename,
+          resolvedPath,
+          fetchedData,
+          EVENT_TYPE_NAME
+        )
+      ).rejects.toThrow(
+        `Could not extract base ID from ':' in ${filename}. Invalid format.`
+      );
       expect(mockLogger.error).not.toHaveBeenCalled();
       expect(storeItemInRegistrySpy).not.toHaveBeenCalled();
     });

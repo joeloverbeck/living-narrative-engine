@@ -131,7 +131,10 @@ export const createMockTurnHandler = ({
             )
           )
         : Promise.resolve();
-      console.log('createMockTurnHandler.startTurn called, returns Promise:', typeof promise.then === 'function');
+      console.log(
+        'createMockTurnHandler.startTurn called, returns Promise:',
+        typeof promise.then === 'function'
+      );
       return promise;
     }),
     destroy: jest.fn().mockImplementation(() => {

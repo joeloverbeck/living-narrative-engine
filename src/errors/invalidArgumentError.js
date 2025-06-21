@@ -20,4 +20,4 @@ export class InvalidArgumentError extends Error {
     this.parameterName = parameterName;
     this.receivedValue = receivedValue;
   }
-} 
+}

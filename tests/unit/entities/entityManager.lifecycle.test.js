@@ -297,9 +297,9 @@ describeEntityManagerSuite('EntityManager - Lifecycle', (getBed) => {
       };
 
       // Act & Assert
-      expect(() =>
-        entityManager.reconstructEntity(serializedEntity)
-      ).toThrow(new DefinitionNotFoundError(NON_EXISTENT_DEF_ID));
+      expect(() => entityManager.reconstructEntity(serializedEntity)).toThrow(
+        new DefinitionNotFoundError(NON_EXISTENT_DEF_ID)
+      );
     });
 
     it('should throw a DuplicateEntityError if an entity with the same ID already exists', () => {
@@ -319,7 +319,9 @@ describeEntityManagerSuite('EntityManager - Lifecycle', (getBed) => {
       };
 
       // Act & Assert
-      expect(() => entityManager.reconstructEntity(serializedEntity)).toThrow(DuplicateEntityError);
+      expect(() => entityManager.reconstructEntity(serializedEntity)).toThrow(
+        DuplicateEntityError
+      );
     });
 
     it('should throw an error if a component fails validation', () => {
@@ -421,9 +423,8 @@ describeEntityManagerSuite('EntityManager - Lifecycle', (getBed) => {
       );
     });
 
-    runInvalidEntityIdTests(
-      getBed,
-      (em, instanceId) => em.removeEntityInstance(instanceId)
+    runInvalidEntityIdTests(getBed, (em, instanceId) =>
+      em.removeEntityInstance(instanceId)
     );
 
     it('should throw an error if MapManager fails internally', () => {

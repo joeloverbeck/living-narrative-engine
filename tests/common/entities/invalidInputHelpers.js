@@ -23,7 +23,9 @@ export function runInvalidIdPairTests(getBed, method) {
     'should throw InvalidArgumentError for invalid inputs',
     (instanceId, componentId) => {
       const { entityManager, mocks } = getBed();
-      expect(() => method(entityManager, instanceId, componentId)).toThrow(InvalidArgumentError);
+      expect(() => method(entityManager, instanceId, componentId)).toThrow(
+        InvalidArgumentError
+      );
       expect(mocks.logger.warn).toHaveBeenCalled();
     }
   );
@@ -44,7 +46,9 @@ export function runInvalidEntityIdTests(getBed, method) {
     'should throw InvalidArgumentError for invalid instanceId %p',
     (invalidId) => {
       const { entityManager, mocks } = getBed();
-      expect(() => method(entityManager, invalidId)).toThrow(InvalidArgumentError);
+      expect(() => method(entityManager, invalidId)).toThrow(
+        InvalidArgumentError
+      );
       expect(mocks.logger.warn).toHaveBeenCalled();
     }
   );

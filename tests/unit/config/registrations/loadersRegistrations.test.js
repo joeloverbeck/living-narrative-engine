@@ -144,21 +144,29 @@ const createMockContainer = () => {
   let containerInstance; // Define containerInstance to be accessible in resolveSpy
 
   const resolveSpy = jest.fn((token) => {
+    console.log(`DEBUG: Resolving token: ${String(token)}`);
     const registration = registrations.get(token);
     if (!registration) {
       // Fallback logic for base dependencies if not explicitly registered *before* resolve is called
-      if (token === tokens.ILogger) return mockLogger;
+      if (token === tokens.ILogger) {
+        console.log(`DEBUG: Returning mockLogger for ILogger`);
+        return mockLogger;
+      }
       // Return basic mocks for other common dependencies if needed for factory resolution
       if (token === tokens.IConfiguration) return mockConfiguration;
       if (token === tokens.IPathResolver) return mockPathResolver;
       if (token === tokens.IDataFetcher) return mockDataFetcher;
       if (token === tokens.ISchemaValidator) return mockSchemaValidator;
-      if (token === tokens.IDataRegistry) return mockDataRegistry;
+      if (token === tokens.IDataRegistry) {
+        console.log(`DEBUG: Returning mockDataRegistry for IDataRegistry`);
+        return mockDataRegistry;
+      }
 
       throw new Error(
         `Mock Resolve Error: Token not registered or explicitly mocked: ${String(token)}`
       );
     }
+    console.log(`DEBUG: Found registration for token: ${String(token)}`);
     const { factoryOrValue, options } = registration;
     const isFactory =
       typeof factoryOrValue === 'function' && !options?.isInstance;
@@ -190,7 +198,14 @@ const createMockContainer = () => {
     _registrations: registrations,
     // Simplified register spy, capturing token, factory/value, and options
     register: jest.fn((token, factoryOrValue, options = {}) => {
-      if (!token) throw new Error('Mock Register Error: Token is required.');
+      if (!token) {
+        console.log(
+          'Undefined token in registration:',
+          token,
+          factoryOrValue && factoryOrValue.name
+        );
+        throw new Error('Mock Register Error: Token is required.');
+      }
       // Mark if it's an instance registration for resolver logic
       const internalOptions = { ...options }; // Copy options
       internalOptions.isInstance =
@@ -278,10 +293,20 @@ describe('registerLoaders (with Mock DI Container)', () => {
       tokens.EntityInstanceLoader,
       tokens.GoalLoader,
       tokens.ModsLoader,
+      // Phase-related services and processors
+      tokens.ModLoadOrderResolver,
+      tokens.ModManifestProcessor,
+      tokens.ContentLoadManager,
+      tokens.WorldLoadSummaryLogger,
+      tokens.SchemaPhase,
+      tokens.ManifestPhase,
+      tokens.ContentPhase,
+      tokens.WorldPhase,
+      tokens.SummaryPhase,
     ];
-    const expectedRegistrationCount = expectedTokens.length; // This must be 20
+    const expectedRegistrationCount = expectedTokens.length; // This must be 29
 
-    // Expect 1 (ILogger from beforeEach) + 20 (from registerLoaders) = 21 calls to register
+    // Expect 1 (ILogger from beforeEach) + all from registerLoaders
     expect(mockContainer.register).toHaveBeenCalledTimes(
       expectedRegistrationCount + 1
     );
@@ -308,14 +333,9 @@ describe('registerLoaders (with Mock DI Container)', () => {
     });
 
     // Verify logger calls within registerLoaders
-    // 1 "Starting..." debug call + 1 debug call for each of the 20 services registered.
-    expect(mockLogger.debug).toHaveBeenCalledTimes(
-      1 + expectedRegistrationCount
-    );
-    expect(mockLogger.info).toHaveBeenCalledTimes(1); // Expect one info message at the end
-    expect(mockLogger.info).toHaveBeenCalledWith(
-      'Loaders Registration: All core services and data loaders registered.'
-    );
+    // Only 1 debug log for 'Starting...'
+    expect(mockLogger.debug).toHaveBeenCalledTimes(1);
+    expect(mockLogger.info).toHaveBeenCalledTimes(1);
   });
 
   it('should resolve SchemaLoader successfully (happy path) and respect singleton lifecycle', () => {

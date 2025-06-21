@@ -103,9 +103,9 @@ describe('ModManifestProcessor.processManifests', () => {
       throw error;
     });
 
-    await expect(processor.processManifests(['modA', 'modB'], worldName)).rejects.toBe(
-      error
-    );
+    await expect(
+      processor.processManifests(['modA', 'modB'], worldName)
+    ).rejects.toBe(error);
 
     expect(logger.warn).toHaveBeenCalledWith(
       expect.stringContaining('Encountered 1 engine version incompatibilities'),

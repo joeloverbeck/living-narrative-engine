@@ -74,4 +74,4 @@ describe('TurnCycle', () => {
       expect(mockService.clearCurrentRound).toHaveBeenCalledOnce();
     });
   });
-}); 
+});

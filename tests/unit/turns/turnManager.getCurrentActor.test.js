@@ -82,12 +82,12 @@ describeTurnManagerSuite('TurnManager', (getBed) => {
   test('EntityManager mock allows setting active entities', () => {
     const entities = [mockPlayerEntity, mockAiEntity1];
     testBed.setActiveEntities(...entities);
-    expect(Array.from(testBed.mocks.entityManager.entities)).toEqual(
-      entities
-    );
-    expect(Array.from(testBed.mocks.entityManager.entities).find(e => e.id === 'player-1')).toBe(
-      mockPlayerEntity
-    );
+    expect(Array.from(testBed.mocks.entityManager.entities)).toEqual(entities);
+    expect(
+      Array.from(testBed.mocks.entityManager.entities).find(
+        (e) => e.id === 'player-1'
+      )
+    ).toBe(mockPlayerEntity);
   });
 
   // --- Tests for getCurrentActor() ---

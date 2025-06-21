@@ -23,7 +23,14 @@ describe('EntityQuery', () => {
   const COMPONENT_C = 'test:comp-c';
   const COMPONENT_D = 'test:comp-d';
 
-  let entityWithA, entityWithB, entityWithC, entityWithAB, entityWithAC, entityWithBC, entityWithABC, entityWithNone;
+  let entityWithA,
+    entityWithB,
+    entityWithC,
+    entityWithAB,
+    entityWithAC,
+    entityWithBC,
+    entityWithABC,
+    entityWithNone;
 
   beforeEach(() => {
     // Create test entities with different component combinations
@@ -49,7 +56,7 @@ describe('EntityQuery', () => {
       const query = new EntityQuery({
         withAll: [COMPONENT_A, COMPONENT_B],
         withAny: [COMPONENT_C],
-        without: [COMPONENT_D]
+        without: [COMPONENT_D],
       });
       expect(query.withAll).toEqual([COMPONENT_A, COMPONENT_B]);
       expect(query.withAny).toEqual([COMPONENT_C]);
@@ -60,7 +67,7 @@ describe('EntityQuery', () => {
       const query = new EntityQuery({
         withAll: 'not-an-array',
         withAny: null,
-        without: undefined
+        without: undefined,
       });
       expect(query.withAll).toEqual([]);
       expect(query.withAny).toEqual([]);
@@ -92,9 +99,9 @@ describe('EntityQuery', () => {
     });
 
     it('should return true when both withAll and withAny have components', () => {
-      const query = new EntityQuery({ 
-        withAll: [COMPONENT_A], 
-        withAny: [COMPONENT_B] 
+      const query = new EntityQuery({
+        withAll: [COMPONENT_A],
+        withAny: [COMPONENT_B],
       });
       expect(query.hasPositiveConditions()).toBe(true);
     });
@@ -177,7 +184,7 @@ describe('EntityQuery', () => {
     it('should match entity with withAll and withAny conditions', () => {
       const query = new EntityQuery({
         withAll: [COMPONENT_A],
-        withAny: [COMPONENT_B, COMPONENT_C]
+        withAny: [COMPONENT_B, COMPONENT_C],
       });
       expect(query.matches(entityWithAB)).toBe(true);
       expect(query.matches(entityWithAC)).toBe(true);
@@ -187,7 +194,7 @@ describe('EntityQuery', () => {
     it('should not match entity missing withAll condition even if withAny is met', () => {
       const query = new EntityQuery({
         withAll: [COMPONENT_A],
-        withAny: [COMPONENT_B, COMPONENT_C]
+        withAny: [COMPONENT_B, COMPONENT_C],
       });
       expect(query.matches(entityWithB)).toBe(false);
       expect(query.matches(entityWithC)).toBe(false);
@@ -197,7 +204,7 @@ describe('EntityQuery', () => {
     it('should not match entity missing withAny condition even if withAll is met', () => {
       const query = new EntityQuery({
         withAll: [COMPONENT_A],
-        withAny: [COMPONENT_B, COMPONENT_C]
+        withAny: [COMPONENT_B, COMPONENT_C],
       });
       expect(query.matches(entityWithA)).toBe(false);
     });
@@ -205,7 +212,7 @@ describe('EntityQuery', () => {
     it('should match entity with withAll and without conditions', () => {
       const query = new EntityQuery({
         withAll: [COMPONENT_A],
-        without: [COMPONENT_B]
+        without: [COMPONENT_B],
       });
       expect(query.matches(entityWithA)).toBe(true);
       expect(query.matches(entityWithAC)).toBe(true);
@@ -214,7 +221,7 @@ describe('EntityQuery', () => {
     it('should not match entity with withAll but also with excluded component', () => {
       const query = new EntityQuery({
         withAll: [COMPONENT_A],
-        without: [COMPONENT_B]
+        without: [COMPONENT_B],
       });
       expect(query.matches(entityWithAB)).toBe(false);
       expect(query.matches(entityWithABC)).toBe(false);
@@ -223,7 +230,7 @@ describe('EntityQuery', () => {
     it('should match entity with withAny and without conditions', () => {
       const query = new EntityQuery({
         withAny: [COMPONENT_A, COMPONENT_B],
-        without: [COMPONENT_C]
+        without: [COMPONENT_C],
       });
       expect(query.matches(entityWithA)).toBe(true);
       expect(query.matches(entityWithB)).toBe(true);
@@ -233,7 +240,7 @@ describe('EntityQuery', () => {
     it('should not match entity with withAny but also with excluded component', () => {
       const query = new EntityQuery({
         withAny: [COMPONENT_A, COMPONENT_B],
-        without: [COMPONENT_C]
+        without: [COMPONENT_C],
       });
       expect(query.matches(entityWithAC)).toBe(false);
       expect(query.matches(entityWithBC)).toBe(false);
@@ -244,7 +251,7 @@ describe('EntityQuery', () => {
       const query = new EntityQuery({
         withAll: [COMPONENT_A],
         withAny: [COMPONENT_B, COMPONENT_C],
-        without: [COMPONENT_D]
+        without: [COMPONENT_D],
       });
       expect(query.matches(entityWithAB)).toBe(true);
       expect(query.matches(entityWithAC)).toBe(true);
@@ -254,7 +261,7 @@ describe('EntityQuery', () => {
       const query = new EntityQuery({
         withAll: [COMPONENT_A],
         withAny: [COMPONENT_B, COMPONENT_C],
-        without: [COMPONENT_D]
+        without: [COMPONENT_D],
       });
       expect(query.matches(entityWithA)).toBe(false); // missing withAny
       expect(query.matches(entityWithB)).toBe(false); // missing withAll
@@ -280,7 +287,7 @@ describe('EntityQuery', () => {
       const query = new EntityQuery({
         withAll: [],
         withAny: [],
-        without: []
+        without: [],
       });
       expect(query.matches(entityWithA)).toBe(true);
       expect(query.matches(entityWithNone)).toBe(true);
@@ -290,7 +297,7 @@ describe('EntityQuery', () => {
       const query = new EntityQuery({
         withAll: [COMPONENT_A],
         withAny: [COMPONENT_B],
-        without: [COMPONENT_C]
+        without: [COMPONENT_C],
       });
       expect(query.matches(entityWithAB)).toBe(true);
       expect(query.matches(entityWithA)).toBe(false); // missing withAny
@@ -304,9 +311,9 @@ describe('EntityQuery', () => {
       const query = new EntityQuery({
         without: [COMPONENT_A],
         withAll: [COMPONENT_B, COMPONENT_C, COMPONENT_D],
-        withAny: [COMPONENT_B, COMPONENT_C, COMPONENT_D]
+        withAny: [COMPONENT_B, COMPONENT_C, COMPONENT_D],
       });
-      
+
       // This should fail fast on the without check, not proceed to check withAll/withAny
       expect(query.matches(entityWithA)).toBe(false);
     });
@@ -314,11 +321,11 @@ describe('EntityQuery', () => {
     it('should fail fast on withAll condition (second check)', () => {
       const query = new EntityQuery({
         withAll: [COMPONENT_A, COMPONENT_B],
-        withAny: [COMPONENT_C, COMPONENT_D]
+        withAny: [COMPONENT_C, COMPONENT_D],
       });
-      
+
       // This should fail fast on the withAll check, not proceed to check withAny
       expect(query.matches(entityWithA)).toBe(false);
     });
   });
-}); 
+});

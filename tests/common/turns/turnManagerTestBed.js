@@ -106,7 +106,10 @@ export class TurnManagerTestBed extends BaseTestBed {
       map.set(e.id, e);
     }
     // Debug: print the map after adding entities
-    console.log('setActiveEntities: activeEntities =', Array.from(map.values()).map(ent => ({ id: ent.id })));
+    console.log(
+      'setActiveEntities: activeEntities =',
+      Array.from(map.values()).map((ent) => ({ id: ent.id }))
+    );
   }
 
   /**

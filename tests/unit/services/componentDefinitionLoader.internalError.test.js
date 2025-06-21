@@ -7,7 +7,11 @@ import ComponentLoader from '../../../src/loaders/componentLoader.js'; // Adjust
 // --- Mock Service Factories ---
 const createMockConfiguration = (overrides = {}) => ({
   getContentBasePath: jest.fn((typeName) => `./data/mods/test-mod/${typeName}`),
-  getContentTypeSchemaId: jest.fn((typeName) => typeName === 'components' ? 'http://example.com/schemas/component.schema.json' : `http://example.com/schemas/${typeName}.schema.json`),
+  getContentTypeSchemaId: jest.fn((typeName) =>
+    typeName === 'components'
+      ? 'http://example.com/schemas/component.schema.json'
+      : `http://example.com/schemas/${typeName}.schema.json`
+  ),
   getSchemaBasePath: jest.fn().mockReturnValue('schemas'),
   getSchemaFiles: jest.fn().mockReturnValue([]),
   getWorldBasePath: jest.fn().mockReturnValue('worlds'),
@@ -16,23 +20,38 @@ const createMockConfiguration = (overrides = {}) => ({
   getModsBasePath: jest.fn().mockReturnValue('mods'),
   getModManifestFilename: jest.fn().mockReturnValue('mod.manifest.json'),
   getRuleBasePath: jest.fn().mockReturnValue('rules'),
-  getRuleSchemaId: jest.fn().mockReturnValue('http://example.com/schemas/rule.schema.json'),
+  getRuleSchemaId: jest
+    .fn()
+    .mockReturnValue('http://example.com/schemas/rule.schema.json'),
   ...overrides,
 });
 const createMockPathResolver = (overrides = {}) => ({
-  resolveModContentPath: jest.fn((modId, typeName, filename) => `./data/mods/${modId}/${typeName}/${filename}`),
-  resolveContentPath: jest.fn((typeName, filename) => `./data/${typeName}/${filename}`),
+  resolveModContentPath: jest.fn(
+    (modId, typeName, filename) =>
+      `./data/mods/${modId}/${typeName}/${filename}`
+  ),
+  resolveContentPath: jest.fn(
+    (typeName, filename) => `./data/${typeName}/${filename}`
+  ),
   resolveSchemaPath: jest.fn((filename) => `./data/schemas/${filename}`),
-  resolveModManifestPath: jest.fn((modId) => `./data/mods/${modId}/mod.manifest.json`),
+  resolveModManifestPath: jest.fn(
+    (modId) => `./data/mods/${modId}/mod.manifest.json`
+  ),
   resolveGameConfigPath: jest.fn(() => './data/game.json'),
   resolveRulePath: jest.fn((filename) => `./data/system-rules/${filename}`),
   ...overrides,
 });
 const createMockDataFetcher = (pathToResponse = {}, errorPaths = []) => ({
   fetch: jest.fn(async (path) => {
-    if (errorPaths.includes(path)) return Promise.reject(new Error(`Mock Fetch Error: Failed to fetch ${path}`));
-    if (path in pathToResponse) return Promise.resolve(JSON.parse(JSON.stringify(pathToResponse[path])));
-    return Promise.reject(new Error(`Mock Fetch Error: 404 Not Found for ${path}`));
+    if (errorPaths.includes(path))
+      return Promise.reject(
+        new Error(`Mock Fetch Error: Failed to fetch ${path}`)
+      );
+    if (path in pathToResponse)
+      return Promise.resolve(JSON.parse(JSON.stringify(pathToResponse[path])));
+    return Promise.reject(
+      new Error(`Mock Fetch Error: 404 Not Found for ${path}`)
+    );
   }),
 });
 const createMockSchemaValidator = (overrides = {}) => {
@@ -42,7 +61,10 @@ const createMockSchemaValidator = (overrides = {}) => {
     addSchema: jest.fn(async (schemaData, schemaId) => {
       loadedSchemas.set(schemaId, schemaData);
       if (!schemaValidators.has(schemaId)) {
-        schemaValidators.set(schemaId, jest.fn(() => ({ isValid: true, errors: null })));
+        schemaValidators.set(
+          schemaId,
+          jest.fn(() => ({ isValid: true, errors: null }))
+        );
       }
     }),
     removeSchema: jest.fn((schemaId) => {
@@ -59,13 +81,23 @@ const createMockSchemaValidator = (overrides = {}) => {
       const validatorFn = schemaValidators.get(schemaId);
       if (validatorFn) return validatorFn(data);
       if (loadedSchemas.has(schemaId)) return { isValid: true, errors: null };
-      return { isValid: false, errors: [{ message: `Mock Schema Error: Schema '${schemaId}' not found for validation.` }] };
+      return {
+        isValid: false,
+        errors: [
+          {
+            message: `Mock Schema Error: Schema '${schemaId}' not found for validation.`,
+          },
+        ],
+      };
     }),
     _setSchemaLoaded: (schemaId, schemaData = {}) => {
       if (!loadedSchemas.has(schemaId)) {
         loadedSchemas.set(schemaId, schemaData);
         if (!schemaValidators.has(schemaId)) {
-          schemaValidators.set(schemaId, jest.fn(() => ({ isValid: true, errors: null })));
+          schemaValidators.set(
+            schemaId,
+            jest.fn(() => ({ isValid: true, errors: null }))
+          );
         }
       }
     },
@@ -96,9 +128,16 @@ const createMockModManifest = (modId, componentFiles = []) => ({
 
 // --- Test Suite ---
 describe('ComponentLoader (Internal Definition Errors)', () => {
-  let mockConfig, mockResolver, mockFetcher, mockValidator, mockRegistry, mockLogger, loader;
+  let mockConfig,
+    mockResolver,
+    mockFetcher,
+    mockValidator,
+    mockRegistry,
+    mockLogger,
+    loader;
   const modId = 'internalErrorMod';
-  const componentDefSchemaId = 'http://example.com/schemas/component.schema.json';
+  const componentDefSchemaId =
+    'http://example.com/schemas/component.schema.json';
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -108,10 +147,22 @@ describe('ComponentLoader (Internal Definition Errors)', () => {
     mockValidator = createMockSchemaValidator();
     mockRegistry = createMockDataRegistry();
     mockLogger = createMockLogger();
-    loader = new ComponentLoader(mockConfig, mockResolver, mockFetcher, mockValidator, mockRegistry, mockLogger);
-    mockConfig.getContentTypeSchemaId.mockImplementation((typeName) => typeName === 'components' ? componentDefSchemaId : undefined);
+    loader = new ComponentLoader(
+      mockConfig,
+      mockResolver,
+      mockFetcher,
+      mockValidator,
+      mockRegistry,
+      mockLogger
+    );
+    mockConfig.getContentTypeSchemaId.mockImplementation((typeName) =>
+      typeName === 'components' ? componentDefSchemaId : undefined
+    );
     mockValidator._setSchemaLoaded(componentDefSchemaId, {});
-    mockResolver.resolveModContentPath.mockImplementation((modId, typeName, filename) => `./data/mods/${modId}/${typeName}/${filename}`);
+    mockResolver.resolveModContentPath.mockImplementation(
+      (modId, typeName, filename) =>
+        `./data/mods/${modId}/${typeName}/${filename}`
+    );
     jest.spyOn(loader, '_storeItemInRegistry');
   });
 
@@ -122,14 +173,25 @@ describe('ComponentLoader (Internal Definition Errors)', () => {
     const filePathEmptyId = `./data/mods/${modId}/components/${filenameEmptyId}`;
     const invalidDataNullId = { id: null, dataSchema: { type: 'object' } };
     const invalidDataEmptyId = { id: '', dataSchema: { type: 'object' } };
-    const errorManifest = createMockModManifest(modId, [filenameNullId, filenameEmptyId]);
+    const errorManifest = createMockModManifest(modId, [
+      filenameNullId,
+      filenameEmptyId,
+    ]);
     mockFetcher.fetch.mockImplementation(async (path) => {
-      if (path === filePathNullId) return Promise.resolve(JSON.parse(JSON.stringify(invalidDataNullId)));
-      if (path === filePathEmptyId) return Promise.resolve(JSON.parse(JSON.stringify(invalidDataEmptyId)));
+      if (path === filePathNullId)
+        return Promise.resolve(JSON.parse(JSON.stringify(invalidDataNullId)));
+      if (path === filePathEmptyId)
+        return Promise.resolve(JSON.parse(JSON.stringify(invalidDataEmptyId)));
       throw new Error(`Unexpected fetch call: ${path}`);
     });
 
-    const result = await loader.loadItemsForMod(modId, errorManifest, 'components', 'components', 'components');
+    const result = await loader.loadItemsForMod(
+      modId,
+      errorManifest,
+      'components',
+      'components',
+      'components'
+    );
 
     expect(result).toEqual({ count: 0, errors: 2, overrides: 0 });
     expect(mockRegistry.store).not.toHaveBeenCalled();
@@ -138,10 +200,24 @@ describe('ComponentLoader (Internal Definition Errors)', () => {
 
     // Verify the two errors logged by the wrapper
     const expectedErrorMsg1 = `Invalid or missing 'id' in ${filenameNullId} for mod '${modId}'.`;
-    expect(mockLogger.error).toHaveBeenCalledWith('Error processing file:', expect.objectContaining({ filename: filenameNullId, error: expectedErrorMsg1 }), expect.any(Error));
+    expect(mockLogger.error).toHaveBeenCalledWith(
+      'Error processing file:',
+      expect.objectContaining({
+        filename: filenameNullId,
+        error: expectedErrorMsg1,
+      }),
+      expect.any(Error)
+    );
 
     const expectedErrorMsg2 = `Invalid or missing 'id' in ${filenameEmptyId} for mod '${modId}'.`;
-    expect(mockLogger.error).toHaveBeenCalledWith('Error processing file:', expect.objectContaining({ filename: filenameEmptyId, error: expectedErrorMsg2 }), expect.any(Error));
+    expect(mockLogger.error).toHaveBeenCalledWith(
+      'Error processing file:',
+      expect.objectContaining({
+        filename: filenameEmptyId,
+        error: expectedErrorMsg2,
+      }),
+      expect.any(Error)
+    );
   });
 
   it('should handle definitions with invalid "dataSchema" (null or not an object)', async () => {
@@ -151,15 +227,33 @@ describe('ComponentLoader (Internal Definition Errors)', () => {
     const filePathStringSchema = `./data/mods/${modId}/components/${filenameStringSchema}`;
     const validId = 'valid_id';
     const invalidDataNullSchema = { id: validId, dataSchema: null };
-    const invalidDataStringSchema = { id: validId, dataSchema: 'not-an-object' };
-    const errorManifest = createMockModManifest(modId, [filenameNullSchema, filenameStringSchema]);
+    const invalidDataStringSchema = {
+      id: validId,
+      dataSchema: 'not-an-object',
+    };
+    const errorManifest = createMockModManifest(modId, [
+      filenameNullSchema,
+      filenameStringSchema,
+    ]);
     mockFetcher.fetch.mockImplementation(async (path) => {
-      if (path === filePathNullSchema) return Promise.resolve(JSON.parse(JSON.stringify(invalidDataNullSchema)));
-      if (path === filePathStringSchema) return Promise.resolve(JSON.parse(JSON.stringify(invalidDataStringSchema)));
+      if (path === filePathNullSchema)
+        return Promise.resolve(
+          JSON.parse(JSON.stringify(invalidDataNullSchema))
+        );
+      if (path === filePathStringSchema)
+        return Promise.resolve(
+          JSON.parse(JSON.stringify(invalidDataStringSchema))
+        );
       throw new Error(`Unexpected fetch call: ${path}`);
     });
 
-    const result = await loader.loadItemsForMod(modId, errorManifest, 'components', 'components', 'components');
+    const result = await loader.loadItemsForMod(
+      modId,
+      errorManifest,
+      'components',
+      'components',
+      'components'
+    );
 
     expect(result).toEqual({ count: 0, errors: 2, overrides: 0 });
     expect(mockRegistry.store).not.toHaveBeenCalled();
@@ -168,10 +262,24 @@ describe('ComponentLoader (Internal Definition Errors)', () => {
 
     // Verify the error for the null dataSchema
     const expectedErrorMsg1 = `Invalid 'dataSchema' for component '${validId}' in '${filenameNullSchema}'. Expected object, received null.`;
-    expect(mockLogger.error).toHaveBeenCalledWith('Error processing file:', expect.objectContaining({ filename: filenameNullSchema, error: expectedErrorMsg1 }), expect.any(Error));
+    expect(mockLogger.error).toHaveBeenCalledWith(
+      'Error processing file:',
+      expect.objectContaining({
+        filename: filenameNullSchema,
+        error: expectedErrorMsg1,
+      }),
+      expect.any(Error)
+    );
 
     // Verify the error for the string dataSchema
     const expectedErrorMsg2 = `Invalid 'dataSchema' for component '${validId}' in '${filenameStringSchema}'. Expected object, received string.`;
-    expect(mockLogger.error).toHaveBeenCalledWith('Error processing file:', expect.objectContaining({ filename: filenameStringSchema, error: expectedErrorMsg2 }), expect.any(Error));
+    expect(mockLogger.error).toHaveBeenCalledWith(
+      'Error processing file:',
+      expect.objectContaining({
+        filename: filenameStringSchema,
+        error: expectedErrorMsg2,
+      }),
+      expect.any(Error)
+    );
   });
 });

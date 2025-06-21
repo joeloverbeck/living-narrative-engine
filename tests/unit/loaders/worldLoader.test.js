@@ -119,7 +119,10 @@ describe('WorldLoader.loadWorlds', () => {
     const manifests = new Map([
       ['moda', { content: { worlds: ['world1.json'] } }],
     ]);
-    const mockInstances = [{ definitionId: 'core:player' }, { definitionId: 'core:npc' }];
+    const mockInstances = [
+      { definitionId: 'core:player' },
+      { definitionId: 'core:npc' },
+    ];
     fetcher.fetch.mockResolvedValue({ instances: mockInstances });
     // Mock that the entity definitions exist in the registry
     registry.get.mockReturnValue({ id: 'some-definition' });
@@ -132,7 +135,11 @@ describe('WorldLoader.loadWorlds', () => {
       'world1.json'
     );
     expect(fetcher.fetch).toHaveBeenCalledWith('/mods/modA/worlds/world1.json');
-    expect(registry.store).toHaveBeenCalledWith('worlds', 'main', mockInstances);
+    expect(registry.store).toHaveBeenCalledWith(
+      'worlds',
+      'main',
+      mockInstances
+    );
     expect(counts.worlds).toEqual({
       count: 1,
       overrides: 0,

@@ -6,7 +6,14 @@ import {
   ACTOR_COMPONENT_ID,
   PLAYER_COMPONENT_ID,
 } from '../../../src/constants/componentIds.js';
-import { beforeEach, describe, expect, jest, test, afterEach } from '@jest/globals';
+import {
+  beforeEach,
+  describe,
+  expect,
+  jest,
+  test,
+  afterEach,
+} from '@jest/globals';
 import { createMockEntity } from '../../common/mockFactories.js';
 
 describe('TurnManager', () => {
@@ -19,9 +26,18 @@ describe('TurnManager', () => {
     testBed = new TurnManagerTestBed();
 
     // Create fresh mock entities
-    mockPlayerEntity = createMockEntity('player-1', { isActor: true, isPlayer: true });
-    mockAiEntity1 = createMockEntity('ai-1', { isActor: true, isPlayer: false });
-    mockAiEntity2 = createMockEntity('ai-2', { isActor: true, isPlayer: false });
+    mockPlayerEntity = createMockEntity('player-1', {
+      isActor: true,
+      isPlayer: true,
+    });
+    mockAiEntity1 = createMockEntity('ai-1', {
+      isActor: true,
+      isPlayer: false,
+    });
+    mockAiEntity2 = createMockEntity('ai-2', {
+      isActor: true,
+      isPlayer: false,
+    });
   });
 
   afterEach(() => testBed.cleanup());
@@ -49,9 +65,7 @@ describe('TurnManager', () => {
     // This tests the mock helper, doesn't directly involve TurnManager instance much
     const entities = [mockPlayerEntity, mockAiEntity1];
     testBed.setActiveEntities(...entities);
-    expect(Array.from(testBed.mocks.entityManager.entities)).toEqual(
-      entities
-    );
+    expect(Array.from(testBed.mocks.entityManager.entities)).toEqual(entities);
   });
 
   // Add more tests for start, stop, advanceTurn, etc. later

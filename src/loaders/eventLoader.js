@@ -37,7 +37,15 @@ class EventLoader extends BaseInlineSchemaLoader {
     dataRegistry,
     logger
   ) {
-    super('events', config, pathResolver, dataFetcher, schemaValidator, dataRegistry, logger);
+    super(
+      'events',
+      config,
+      pathResolver,
+      dataFetcher,
+      schemaValidator,
+      dataRegistry,
+      logger
+    );
   }
 
   /**
@@ -52,7 +60,9 @@ class EventLoader extends BaseInlineSchemaLoader {
    * @returns {Promise<{qualifiedId: string, didOverride: boolean}>}
    */
   async _processFetchedItem(modId, filename, resolvedPath, data, typeName) {
-    this._logger.debug(`EventLoader [${modId}]: Processing fetched item: ${filename} (Type: ${typeName})`);
+    this._logger.debug(
+      `EventLoader [${modId}]: Processing fetched item: ${filename} (Type: ${typeName})`
+    );
 
     const { fullId: trimmedFullEventId, baseId: baseEventId } =
       parseAndValidateId(data, 'id', modId, filename, this._logger);
@@ -63,7 +73,9 @@ class EventLoader extends BaseInlineSchemaLoader {
       Object.keys(data.payloadSchema).length > 0;
 
     if (hasPayload) {
-      this._logger.debug(`EventLoader [${modId}]: Found valid payloadSchema in ${filename} for event '${trimmedFullEventId}'.`);
+      this._logger.debug(
+        `EventLoader [${modId}]: Found valid payloadSchema in ${filename} for event '${trimmedFullEventId}'.`
+      );
 
       const payloadSchemaId = `${trimmedFullEventId}#payload`;
       await this._registerItemSchema(data, 'payloadSchema', payloadSchemaId, {
@@ -75,7 +87,9 @@ class EventLoader extends BaseInlineSchemaLoader {
       });
     }
 
-    this._logger.debug(`EventLoader [${modId}]: Delegating storage for event (base ID: '${baseEventId}') from ${filename} to base helper.`);
+    this._logger.debug(
+      `EventLoader [${modId}]: Delegating storage for event (base ID: '${baseEventId}') from ${filename} to base helper.`
+    );
 
     const { qualifiedId, didOverride } = this._storeItemInRegistry(
       'events',
@@ -85,7 +99,9 @@ class EventLoader extends BaseInlineSchemaLoader {
       filename
     );
 
-    this._logger.debug(`EventLoader [${modId}]: Successfully processed event definition from ${filename}. Returning final registry key: ${qualifiedId}, Overwrite: ${didOverride}`);
+    this._logger.debug(
+      `EventLoader [${modId}]: Successfully processed event definition from ${filename}. Returning final registry key: ${qualifiedId}, Overwrite: ${didOverride}`
+    );
     return { qualifiedId, didOverride };
   }
 }

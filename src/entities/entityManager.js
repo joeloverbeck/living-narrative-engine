@@ -25,7 +25,10 @@ import EntityInstanceData from './entityInstanceData.js';
 import MapManager from '../utils/mapManagerUtils.js';
 import EntityFactory from './factories/entityFactory.js';
 import EntityQuery from '../query/EntityQuery.js';
-import { assertValidId, assertNonBlankString } from '../utils/parameterGuards.js';
+import {
+  assertValidId,
+  assertNonBlankString,
+} from '../utils/parameterGuards.js';
 import {
   ACTOR_COMPONENT_ID,
   SHORT_TERM_MEMORY_COMPONENT_ID,
@@ -145,7 +148,7 @@ class EntityManager extends IEntityManager {
   /**
    * Getter that returns an iterator over all active entities.
    * This provides read-only access to the entity collection.
-   * 
+   *
    * @returns {IterableIterator<Entity>} Iterator over all active entities
    */
   get entities() {
@@ -356,7 +359,11 @@ class EntityManager extends IEntityManager {
   createEntityInstance(definitionId, opts = {}) {
     try {
       try {
-        assertValidId(definitionId, 'EntityManager.createEntityInstance', this.#logger);
+        assertValidId(
+          definitionId,
+          'EntityManager.createEntityInstance',
+          this.#logger
+        );
       } catch (err) {
         if (err && err.name === 'InvalidArgumentError') {
           const msg = 'definitionId must be a non-empty string.';
@@ -365,12 +372,18 @@ class EntityManager extends IEntityManager {
         }
         throw err;
       }
-      
+
       const definition = this.#getDefinition(definitionId);
       if (!definition) {
         throw new DefinitionNotFoundError(definitionId);
       }
-      const entity = this.#factory.create(definitionId, opts, this.#registry, this.#mapManager, definition);
+      const entity = this.#factory.create(
+        definitionId,
+        opts,
+        this.#registry,
+        this.#mapManager,
+        definition
+      );
       // Track the primary instance.
       this.#mapManager.add(entity.id, entity);
       this.#logger.debug(`Tracked entity ${entity.id}`);
@@ -382,14 +395,19 @@ class EntityManager extends IEntityManager {
       return entity;
     } catch (err) {
       // Patch error message to match legacy EntityManager for golden-master tests
-      if (err instanceof TypeError && err.message.includes('definitionId must be a non-empty string.')) {
+      if (
+        err instanceof TypeError &&
+        err.message.includes('definitionId must be a non-empty string.')
+      ) {
         this.#logger.error('definitionId must be a non-empty string.');
         throw new TypeError('definitionId must be a non-empty string.');
       }
       if (err instanceof Error && err.message.startsWith('Entity with ID')) {
         this.#logger.error(err.message);
         // Extract the entity ID from the error message and throw DuplicateEntityError
-        const match = err.message.match(/Entity with ID '([^']+)' already exists/);
+        const match = err.message.match(
+          /Entity with ID '([^']+)' already exists/
+        );
         if (match) {
           throw new DuplicateEntityError(match[1], err.message);
         }
@@ -414,7 +432,11 @@ class EntityManager extends IEntityManager {
    */
   reconstructEntity(serializedEntity) {
     try {
-      const entity = this.#factory.reconstruct(serializedEntity, this.#registry, this.#mapManager);
+      const entity = this.#factory.reconstruct(
+        serializedEntity,
+        this.#registry,
+        this.#mapManager
+      );
       this.#mapManager.add(entity.id, entity);
       this.#logger.debug(`Tracked entity ${entity.id}`);
       this.#eventDispatcher.dispatch(ENTITY_CREATED_ID, {
@@ -426,17 +448,23 @@ class EntityManager extends IEntityManager {
       // Patch error message to match legacy EntityManager for golden-master tests
       if (
         err instanceof Error &&
-        err.message.startsWith('EntityFactory.reconstruct: serializedEntity data is missing or invalid.')
+        err.message.startsWith(
+          'EntityFactory.reconstruct: serializedEntity data is missing or invalid.'
+        )
       ) {
-        const msg = 'EntityManager.reconstructEntity: serializedEntity data is missing or invalid.';
+        const msg =
+          'EntityManager.reconstructEntity: serializedEntity data is missing or invalid.';
         this.#logger.error(msg);
         throw new Error(msg);
       }
       if (
         err instanceof Error &&
-        err.message.startsWith('EntityFactory.reconstruct: instanceId is missing or invalid in serialized data.')
+        err.message.startsWith(
+          'EntityFactory.reconstruct: instanceId is missing or invalid in serialized data.'
+        )
       ) {
-        const msg = 'EntityManager.reconstructEntity: instanceId is missing or invalid in serialized data.';
+        const msg =
+          'EntityManager.reconstructEntity: instanceId is missing or invalid in serialized data.';
         this.#logger.error(msg);
         throw new Error(msg);
       }
@@ -445,12 +473,16 @@ class EntityManager extends IEntityManager {
         err.message.startsWith('EntityFactory.reconstruct: Entity with ID')
       ) {
         // Patch to legacy error message and use DuplicateEntityError
-        const match = err.message.match(/EntityFactory\.reconstruct: (Entity with ID '.*? already exists\. Reconstruction aborted\.)/);
+        const match = err.message.match(
+          /EntityFactory\.reconstruct: (Entity with ID '.*? already exists\. Reconstruction aborted\.)/
+        );
         if (match) {
           const msg = `EntityManager.reconstructEntity: ${match[1]}`;
           this.#logger.error(msg);
           // Extract the entity ID from the error message
-          const entityMatch = match[1].match(/Entity with ID '([^']+)' already exists/);
+          const entityMatch = match[1].match(
+            /Entity with ID '([^']+)' already exists/
+          );
           if (entityMatch) {
             throw new DuplicateEntityError(entityMatch[1], msg);
           }
@@ -479,7 +511,12 @@ class EntityManager extends IEntityManager {
   addComponent(instanceId, componentTypeId, componentData) {
     try {
       assertValidId(instanceId, 'EntityManager.addComponent', this.#logger);
-      assertNonBlankString(componentTypeId, 'componentTypeId', 'EntityManager.addComponent', this.#logger);
+      assertNonBlankString(
+        componentTypeId,
+        'componentTypeId',
+        'EntityManager.addComponent',
+        this.#logger
+      );
     } catch (error) {
       this.#logger.warn(
         `EntityManager.addComponent: Invalid parameters - instanceId: '${instanceId}', componentTypeId: '${componentTypeId}'`
@@ -552,7 +589,9 @@ class EntityManager extends IEntityManager {
       this.#logger.warn(
         `EntityManager.addComponent: entity.addComponent returned false for '${componentTypeId}' on entity '${instanceId}'. This may indicate an internal issue.`
       );
-      throw new Error(`Failed to add component '${componentTypeId}' to entity '${instanceId}'. Internal entity update failed.`);
+      throw new Error(
+        `Failed to add component '${componentTypeId}' to entity '${instanceId}'. Internal entity update failed.`
+      );
     }
 
     this.#eventDispatcher.dispatch(COMPONENT_ADDED_ID, {
@@ -579,7 +618,12 @@ class EntityManager extends IEntityManager {
   removeComponent(instanceId, componentTypeId) {
     try {
       assertValidId(instanceId, 'EntityManager.removeComponent', this.#logger);
-      assertNonBlankString(componentTypeId, 'componentTypeId', 'EntityManager.removeComponent', this.#logger);
+      assertNonBlankString(
+        componentTypeId,
+        'componentTypeId',
+        'EntityManager.removeComponent',
+        this.#logger
+      );
     } catch (error) {
       this.#logger.warn(
         `EntityManager.removeComponent: Invalid parameters - instanceId: '${instanceId}', componentTypeId: '${componentTypeId}'`
@@ -605,7 +649,9 @@ class EntityManager extends IEntityManager {
       this.#logger.debug(
         `EntityManager.removeComponent: Component '${componentTypeId}' not found as an override on entity '${instanceId}'. Nothing to remove at instance level.`
       );
-      throw new Error(`Component '${componentTypeId}' not found as an override on entity '${instanceId}'. Nothing to remove at instance level.`);
+      throw new Error(
+        `Component '${componentTypeId}' not found as an override on entity '${instanceId}'. Nothing to remove at instance level.`
+      );
     }
 
     // Capture the state of the component *before* it is removed.
@@ -627,7 +673,9 @@ class EntityManager extends IEntityManager {
       this.#logger.warn(
         `EntityManager.removeComponent: entity.removeComponent('${componentTypeId}') returned false for entity '${instanceId}' when an override was expected and should have been removable. This may indicate an issue in Entity class logic.`
       );
-      throw new Error(`Failed to remove component '${componentTypeId}' from entity '${instanceId}'. Internal entity removal failed.`);
+      throw new Error(
+        `Failed to remove component '${componentTypeId}' from entity '${instanceId}'. Internal entity removal failed.`
+      );
     }
   }
 
@@ -638,7 +686,11 @@ class EntityManager extends IEntityManager {
 
   getEntityInstance(instanceId) {
     try {
-      assertValidId(instanceId, 'EntityManager.getEntityInstance', this.#logger);
+      assertValidId(
+        instanceId,
+        'EntityManager.getEntityInstance',
+        this.#logger
+      );
     } catch (error) {
       this.#logger.debug(
         `EntityManager.getEntityInstance: Called with invalid ID format: '${instanceId}'. Returning undefined.`
@@ -658,7 +710,12 @@ class EntityManager extends IEntityManager {
   getComponentData(instanceId, componentTypeId) {
     try {
       assertValidId(instanceId, 'EntityManager.getComponentData', this.#logger);
-      assertNonBlankString(componentTypeId, 'componentTypeId', 'EntityManager.getComponentData', this.#logger);
+      assertNonBlankString(
+        componentTypeId,
+        'componentTypeId',
+        'EntityManager.getComponentData',
+        this.#logger
+      );
     } catch (error) {
       this.#logger.warn(
         `EntityManager.getComponentData: Invalid parameters - instanceId: '${instanceId}', componentTypeId: '${componentTypeId}'. Returning undefined.`
@@ -702,7 +759,12 @@ class EntityManager extends IEntityManager {
 
     try {
       assertValidId(instanceId, 'EntityManager.hasComponent', this.#logger);
-      assertNonBlankString(componentTypeId, 'componentTypeId', 'EntityManager.hasComponent', this.#logger);
+      assertNonBlankString(
+        componentTypeId,
+        'componentTypeId',
+        'EntityManager.hasComponent',
+        this.#logger
+      );
     } catch (error) {
       this.#logger.warn(
         `EntityManager.hasComponent: Invalid parameters - instanceId: '${instanceId}', componentTypeId: '${componentTypeId}'. Returning false.`
@@ -714,9 +776,7 @@ class EntityManager extends IEntityManager {
       );
     }
     const entity = this.#getEntityById(instanceId);
-    return entity
-      ? entity.hasComponent(componentTypeId, false)
-      : false;
+    return entity ? entity.hasComponent(componentTypeId, false) : false;
   }
 
   /**
@@ -730,8 +790,17 @@ class EntityManager extends IEntityManager {
    */
   hasComponentOverride(instanceId, componentTypeId) {
     try {
-      assertValidId(instanceId, 'EntityManager.hasComponentOverride', this.#logger);
-      assertNonBlankString(componentTypeId, 'componentTypeId', 'EntityManager.hasComponentOverride', this.#logger);
+      assertValidId(
+        instanceId,
+        'EntityManager.hasComponentOverride',
+        this.#logger
+      );
+      assertNonBlankString(
+        componentTypeId,
+        'componentTypeId',
+        'EntityManager.hasComponentOverride',
+        this.#logger
+      );
     } catch (error) {
       this.#logger.warn(
         `EntityManager.hasComponentOverride: Invalid parameters - instanceId: '${instanceId}', componentTypeId: '${componentTypeId}'. Returning false.`
@@ -743,9 +812,7 @@ class EntityManager extends IEntityManager {
       );
     }
     const entity = this.#getEntityById(instanceId);
-    return entity
-      ? entity.hasComponent(componentTypeId, true)
-      : false;
+    return entity ? entity.hasComponent(componentTypeId, true) : false;
   }
 
   /**
@@ -758,7 +825,12 @@ class EntityManager extends IEntityManager {
    */
   getEntitiesWithComponent(componentTypeId) {
     try {
-      assertNonBlankString(componentTypeId, 'componentTypeId', 'EntityManager.getEntitiesWithComponent', this.#logger);
+      assertNonBlankString(
+        componentTypeId,
+        'componentTypeId',
+        'EntityManager.getEntitiesWithComponent',
+        this.#logger
+      );
     } catch (error) {
       this.#logger.debug(
         `EntityManager.getEntitiesWithComponent: Received invalid componentTypeId ('${componentTypeId}'). Returning empty array.`
@@ -785,7 +857,7 @@ class EntityManager extends IEntityManager {
 
   findEntities(queryObj) {
     const q = new EntityQuery(queryObj);
-    
+
     // A query must have at least one positive condition.
     if (!q.hasPositiveConditions()) {
       this.#logger.warn(
@@ -794,7 +866,7 @@ class EntityManager extends IEntityManager {
       return [];
     }
 
-    const results = [...this.entities].filter(e => q.matches(e));
+    const results = [...this.entities].filter((e) => q.matches(e));
 
     this.#logger.debug(
       `EntityManager.findEntities found ${results.length} entities for query.`
@@ -812,7 +884,11 @@ class EntityManager extends IEntityManager {
    */
   removeEntityInstance(instanceId) {
     try {
-      assertValidId(instanceId, 'EntityManager.removeEntityInstance', this.#logger);
+      assertValidId(
+        instanceId,
+        'EntityManager.removeEntityInstance',
+        this.#logger
+      );
     } catch (error) {
       this.#logger.warn(
         `EntityManager.removeEntityInstance: Attempted to remove entity with invalid ID: '${instanceId}'`
@@ -846,7 +922,9 @@ class EntityManager extends IEntityManager {
         `EntityManager.removeEntityInstance: MapManager.remove failed for already retrieved entity '${instanceId}'. This indicates a serious internal inconsistency.`
       );
       // This path should ideally not be reachable if `getEntityById` succeeded, but throwing an error is safer.
-      throw new Error(`Internal error: Failed to remove entity '${instanceId}' from MapManager despite entity being found.`);
+      throw new Error(
+        `Internal error: Failed to remove entity '${instanceId}' from MapManager despite entity being found.`
+      );
     }
   }
 

@@ -152,7 +152,8 @@ class TurnManager extends ITurnManager {
     this.#logger = logger;
     this.#dispatcher = dispatcher;
     this.#turnHandlerResolver = turnHandlerResolver;
-    this.#roundManager = roundManager || new RoundManager(turnOrderService, entityManager, logger);
+    this.#roundManager =
+      roundManager || new RoundManager(turnOrderService, entityManager, logger);
     this.#turnCycle = new TurnCycle(turnOrderService, logger);
     this.#scheduler = scheduler;
 
@@ -411,7 +412,12 @@ class TurnManager extends ITurnManager {
           `Calling startTurn on ${handlerName} for entity ${actorId}`
         );
 
-        console.log('TurnManager: handler =', handler, 'handler.startTurn =', typeof handler?.startTurn);
+        console.log(
+          'TurnManager: handler =',
+          handler,
+          'handler.startTurn =',
+          typeof handler?.startTurn
+        );
         handler.startTurn(this.#currentActor).catch((startTurnError) => {
           const errorMsg = `Error during handler.startTurn() initiation for entity ${actorId} (${handlerName}): ${startTurnError.message}`;
           this.#logger.error(errorMsg, startTurnError);

@@ -409,11 +409,13 @@ describe('RuleLoader (Rule Processing Logic via loadItemsForMod)', () => {
         actions: [],
       };
 
-      mockResolver.resolveModContentPath.mockImplementation((mId, type, file) => {
-        if (file === fileWithId) return resolvedPathWithId;
-        if (file === fileWithoutId) return resolvedPathWithoutId;
-        return null;
-      });
+      mockResolver.resolveModContentPath.mockImplementation(
+        (mId, type, file) => {
+          if (file === fileWithId) return resolvedPathWithId;
+          if (file === fileWithoutId) return resolvedPathWithoutId;
+          return null;
+        }
+      );
 
       mockFetcher.fetch.mockImplementation(async (filePath) => {
         if (filePath === resolvedPathWithId) return dataWithId;

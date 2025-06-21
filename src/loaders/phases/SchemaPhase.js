@@ -1,5 +1,8 @@
-import LoaderPhase from './LoaderPhase.js';
-import { ModsLoaderPhaseError, ModsLoaderErrorCode } from '../../errors/modsLoaderPhaseError.js';
+import LoaderPhase from './loaderPhase.js';
+import {
+  ModsLoaderPhaseError,
+  ModsLoaderErrorCode,
+} from '../../errors/modsLoaderPhaseError.js';
 import ESSENTIAL_SCHEMA_TYPES from '../../constants/essentialSchemas.js';
 
 /**
@@ -30,20 +33,24 @@ export default class SchemaPhase extends LoaderPhase {
    */
   async execute(ctx) {
     this.logger.info('— SchemaPhase starting —');
-    
+
     try {
       // Load and compile all schemas
       await this.schemaLoader.loadAndCompileAllSchemas();
-      
+
       // Verify all essential schemas are loaded
       for (const type of ESSENTIAL_SCHEMA_TYPES) {
         const id = this.config.getContentTypeSchemaId(type);
         if (!id || !this.validator.isSchemaLoaded(id)) {
-          throw new Error(`Essential schema '${type}' missing (${id || 'no id'}).`);
+          throw new Error(
+            `Essential schema '${type}' missing (${id || 'no id'}).`
+          );
         }
       }
-      
-      this.logger.debug('SchemaPhase: All schemas loaded and essential schemas verified.');
+
+      this.logger.debug(
+        'SchemaPhase: All schemas loaded and essential schemas verified.'
+      );
     } catch (e) {
       throw new ModsLoaderPhaseError(
         ModsLoaderErrorCode.SCHEMA,
@@ -53,4 +60,4 @@ export default class SchemaPhase extends LoaderPhase {
       );
     }
   }
-} 
+}

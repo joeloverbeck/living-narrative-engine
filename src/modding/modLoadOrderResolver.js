@@ -114,7 +114,7 @@ function createMinHeap(keyFn) {
   };
 
   const down = (i) => {
-    for (; ;) {
+    for (;;) {
       const l = (i << 1) + 1;
       const r = l + 1;
       let s = i;
@@ -146,7 +146,6 @@ function createMinHeap(keyFn) {
     },
   };
 }
-
 
 /*─────────────────────────────────────────────────────────────────────────*/
 /* ModLoadOrderResolver Class                                              */
@@ -213,7 +212,7 @@ export default class ModLoadOrderResolver {
     const priorityOf = (id) =>
       id.toLowerCase() === CORE_MOD_ID
         ? -1
-        : reqIndex.get(id.toLowerCase()) ?? Number.MAX_SAFE_INTEGER;
+        : (reqIndex.get(id.toLowerCase()) ?? Number.MAX_SAFE_INTEGER);
 
     /* 3 – Compute in-degrees */
     const inDeg = new Map();

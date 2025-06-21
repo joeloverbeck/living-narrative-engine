@@ -44,10 +44,16 @@ describe('ContentLoadManager.processMod', () => {
       validatedEventDispatcher: dispatcher,
       contentLoadersConfig: phaseLoadersConfig,
     });
-    /** @type {TotalResultsSummary} */ const totals = {};
+    /** @type {TotalResultsSummary} */ const totals = {};
     const phase = 'definitions';
 
-    const status = await manager.processMod('testMod', null, totals, phaseLoadersConfig, phase);
+    const status = await manager.processMod(
+      'testMod',
+      null,
+      totals,
+      phaseLoadersConfig,
+      phase
+    );
 
     expect(status).toBe('skipped');
     expect(dispatcher.dispatch).toHaveBeenCalledWith(
@@ -75,10 +81,16 @@ describe('ContentLoadManager.processMod', () => {
       contentLoadersConfig: phaseLoadersConfig,
     });
     const manifest = { content: { items: ['a.json'] } };
-    /** @type {TotalResultsSummary} */ const totals = {};
+    /** @type {TotalResultsSummary} */ const totals = {};
     const phase = 'definitions';
 
-    const status = await manager.processMod('testMod', manifest, totals, phaseLoadersConfig, phase);
+    const status = await manager.processMod(
+      'testMod',
+      manifest,
+      totals,
+      phaseLoadersConfig,
+      phase
+    );
 
     expect(status).toBe('failed');
     expect(totals.items.errors).toBe(1);
@@ -111,10 +123,16 @@ describe('ContentLoadManager.processMod', () => {
       contentLoadersConfig: phaseLoadersConfig,
     });
     const manifest = { content: { items: ['a.json'] } };
-    /** @type {TotalResultsSummary} */ const totals = {};
+    /** @type {TotalResultsSummary} */ const totals = {};
     const phase = 'definitions';
 
-    const status = await manager.processMod('testMod', manifest, totals, phaseLoadersConfig, phase);
+    const status = await manager.processMod(
+      'testMod',
+      manifest,
+      totals,
+      phaseLoadersConfig,
+      phase
+    );
 
     expect(status).toBe('success');
     expect(totals.items.count).toBe(1);

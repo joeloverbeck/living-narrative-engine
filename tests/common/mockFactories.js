@@ -52,7 +52,10 @@ export const createStatefulMockDataRegistry = () => {
       if (!internalStore[type]) {
         internalStore[type] = {};
       }
-      const didOverride = Object.prototype.hasOwnProperty.call(internalStore[type], id);
+      const didOverride = Object.prototype.hasOwnProperty.call(
+        internalStore[type],
+        id
+      );
       internalStore[type][id] = data;
       return didOverride;
     }),
@@ -129,28 +132,31 @@ export const createMockConfiguration = () => ({
  */
 export const createMockEntityManager = () => {
   const activeEntities = new Map();
-  return Object.defineProperties({
-    activeEntities,
-    clearAll: jest.fn(() => {
-      activeEntities.clear();
-    }),
-    getActiveEntities: jest.fn(() => activeEntities),
-    getEntityInstance: jest.fn((id) => activeEntities.get(id)),
-    removeEntityInstance: jest.fn((id) => activeEntities.delete(id)),
-    reconstructEntity: jest.fn((data) => {
-      const entity = { id: data.instanceId || data.id };
-      activeEntities.set(entity.id, entity);
-      return entity;
-    }),
-  }, {
-    entities: {
-      get() {
-        return activeEntities.values();
+  return Object.defineProperties(
+    {
+      activeEntities,
+      clearAll: jest.fn(() => {
+        activeEntities.clear();
+      }),
+      getActiveEntities: jest.fn(() => activeEntities),
+      getEntityInstance: jest.fn((id) => activeEntities.get(id)),
+      removeEntityInstance: jest.fn((id) => activeEntities.delete(id)),
+      reconstructEntity: jest.fn((data) => {
+        const entity = { id: data.instanceId || data.id };
+        activeEntities.set(entity.id, entity);
+        return entity;
+      }),
+    },
+    {
+      entities: {
+        get() {
+          return activeEntities.values();
+        },
+        enumerable: true,
+        configurable: false,
       },
-      enumerable: true,
-      configurable: false
     }
-  });
+  );
 };
 
 export const createMockTurnManager = () => ({
@@ -401,7 +407,8 @@ export const createMockPathResolver = () => ({
   resolvePath: jest.fn((path) => path),
   resolveModPath: jest.fn((modId) => `mods/${modId}`),
   resolveModContentPath: jest.fn(
-    (modId, contentTypeDir, filename) => `mods/${modId}/${contentTypeDir}/${filename}`
+    (modId, contentTypeDir, filename) =>
+      `mods/${modId}/${contentTypeDir}/${filename}`
   ),
   resolveModManifestPath: jest.fn((modId) => `mods/${modId}/mod.manifest.json`),
   getModDirectory: jest.fn((modId) => `mods/${modId}`),
@@ -415,6 +422,9 @@ export const createMockDataFetcher = () => ({
   fetchText: jest.fn(),
 });
 
-export { createMockContainer, createMemoryStorageProvider } from './mockFactories/container.js';
+export {
+  createMockContainer,
+  createMemoryStorageProvider,
+} from './mockFactories/container.js';
 
 export { createMockActor } from './mockFactories/entities.js';

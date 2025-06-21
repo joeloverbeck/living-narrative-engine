@@ -8,7 +8,7 @@
  * Accepts strings like "name" or "namespace:name". Returns `null` if the
  * extraction fails due to invalid format or empty values.
  *
-* @param {string} fullId - The ID string to parse.
+ * @param {string} fullId - The ID string to parse.
  * @returns {string|null} The base ID, or `null` if it cannot be derived.
  */
 export function extractBaseId(fullId) {

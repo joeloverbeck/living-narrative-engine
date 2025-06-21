@@ -161,7 +161,9 @@ describeEntityManagerSuite(
           getBed().createEntity('basic');
 
           // Act & Assert
-          expect(() => entityManager.getEntitiesWithComponent(invalidId)).toThrow(InvalidArgumentError);
+          expect(() =>
+            entityManager.getEntitiesWithComponent(invalidId)
+          ).toThrow(InvalidArgumentError);
           expect(mocks.logger.debug).toHaveBeenCalledWith(
             expect.stringContaining('Received invalid componentTypeId')
           );

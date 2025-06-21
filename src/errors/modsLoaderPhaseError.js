@@ -24,4 +24,4 @@ export class ModsLoaderPhaseError extends Error {
       Error.captureStackTrace(this, ModsLoaderPhaseError);
     }
   }
-} 
+}
