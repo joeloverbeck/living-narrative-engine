@@ -18,6 +18,8 @@ import {
  * @module Loaders/Phases
  */
 export default class SummaryPhase extends LoaderPhase {
+  name = 'SummaryPhase';
+
   /**
    * @description Creates a new SummaryPhase instance.
    * @param {object} params - Configuration parameters.

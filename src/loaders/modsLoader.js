@@ -93,7 +93,7 @@ class ModsLoader extends AbstractLoader {
     try {
       this._logger.debug('ModsLoader: Data registry cleared.');
       for (const phase of this._phases) {
-        const phaseName = phase.constructor.name;
+        const phaseName = phase.name;
         this._logger.debug(`Executing phase: ${phaseName}`);
         await phase.execute(context);
         this._logger.debug(`Phase ${phaseName} completed.`);

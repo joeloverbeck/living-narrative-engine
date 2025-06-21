@@ -21,6 +21,8 @@ import { logPhaseStart } from '../../utils/logPhaseStart.js';
  * @augments {LoaderPhase}
  */
 export default class ContentPhase extends LoaderPhase {
+    name = 'ContentPhase';
+
     /**
      * @description Creates a new ContentPhase instance.
      * @param {object} params - Configuration parameters.

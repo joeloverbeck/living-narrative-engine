@@ -8,6 +8,8 @@ import {
  * @description Phase responsible for loading the game configuration and populating the requested mods.
  */
 export default class GameConfigPhase extends LoaderPhase {
+  name = 'GameConfigPhase';
+
   /**
    * @description Creates a new GameConfigPhase instance.
    * @param {object} params - Configuration parameters

@@ -8,6 +8,8 @@ import {
  * @description Phase responsible for handling manifest loading, dependency checks, version validation and final mod-order resolution.
  */
 export default class ManifestPhase extends LoaderPhase {
+  name = 'ManifestPhase';
+
   /**
    * @description Creates a new ManifestPhase instance.
    * @param {object} params - Configuration parameters

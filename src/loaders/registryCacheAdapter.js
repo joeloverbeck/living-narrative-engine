@@ -2,6 +2,7 @@ import { deepClone } from '../utils/cloneUtils.js';
 
 /**
  * Creates a cache adapter that wraps an IDataRegistry to provide clear, snapshot, and restore methods.
+ *
  * @param {import('../data/inMemoryDataRegistry.js').default} registry - The registry to wrap
  * @returns {import('../interfaces/loadContracts.js').ILoadCache} A cache object with clear, snapshot, and restore methods
  */

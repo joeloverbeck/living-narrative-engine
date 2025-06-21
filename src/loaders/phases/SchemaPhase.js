@@ -9,6 +9,8 @@ import ESSENTIAL_SCHEMA_TYPES from '../../constants/essentialSchemas.js';
  * @description Phase responsible for loading and compiling all schemas and verifying essential schemas are present.
  */
 export default class SchemaPhase extends LoaderPhase {
+  name = 'SchemaPhase';
+
   /**
    * @description Creates a new SchemaPhase instance.
    * @param {object} params - Configuration parameters

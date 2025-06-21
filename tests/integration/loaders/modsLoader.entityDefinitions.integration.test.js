@@ -24,6 +24,7 @@ import {
 
 // Mock phases for non-essential loading phases
 class MockSchemaPhase extends LoaderPhase {
+  name = 'MockSchemaPhase';
   async execute(context) {
     // Mock schema phase that does nothing
     return context;
@@ -31,6 +32,7 @@ class MockSchemaPhase extends LoaderPhase {
 }
 
 class MockGameConfigPhase extends LoaderPhase {
+  name = 'MockGameConfigPhase';
   async execute(context) {
     // Mock game config phase that does nothing
     return context;
@@ -38,6 +40,7 @@ class MockGameConfigPhase extends LoaderPhase {
 }
 
 class MockManifestPhase extends LoaderPhase {
+  name = 'MockManifestPhase';
   async execute(context) {
     // Mock manifest phase that sets up the mod context
     context.finalModOrder = ['isekai'];
@@ -53,6 +56,7 @@ class MockManifestPhase extends LoaderPhase {
 }
 
 class MockWorldPhase extends LoaderPhase {
+  name = 'MockWorldPhase';
   async execute(context) {
     // Mock world phase that does nothing
     return context;
@@ -60,6 +64,7 @@ class MockWorldPhase extends LoaderPhase {
 }
 
 class MockSummaryPhase extends LoaderPhase {
+  name = 'MockSummaryPhase';
   async execute(context) {
     // Mock summary phase that does nothing
     return context;
