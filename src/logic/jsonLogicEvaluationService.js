@@ -1,7 +1,7 @@
 // src/logic/jsonLogicEvaluationService.js
 import jsonLogic from 'json-logic-js';
 import { validateServiceDeps } from '../utils/serviceInitializerUtils.js';
-import { BaseService } from '../utils/baseService.js';
+import { BaseService } from '../utils/serviceBase.js';
 import { warnOnBracketPaths } from '../utils/jsonLogicUtils.js';
 
 // --- JSDoc Imports for Type Hinting ---

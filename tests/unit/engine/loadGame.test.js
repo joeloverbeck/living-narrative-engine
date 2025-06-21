@@ -1,13 +1,9 @@
 // tests/engine/loadGame.test.js
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { tokens } from '../../../src/dependencyInjection/tokens.js';
-import {
-  createGameEngineTestBed,
-  describeEngineSuite,
-} from '../../common/engine/gameEngineTestBed.js';
+import { describeEngineSuite } from '../../common/engine/gameEngineTestBed.js';
+import { runUnavailableServiceTest } from '../../common/engine/gameEngineHelpers.js';
 import '../../common/engine/engineTestTypedefs.js';
-import { expectDispatchSequence } from '../../common/engine/dispatchTestUtils.js';
-import { ENGINE_OPERATION_FAILED_UI } from '../../../src/constants/eventIds.js';
 
 describeEngineSuite('GameEngine', (ctx) => {
   describe('loadGame', () => {
@@ -117,31 +113,34 @@ describeEngineSuite('GameEngine', (ctx) => {
       });
     });
 
-    it.each([
-      [
-        'GamePersistenceService',
-        tokens.GamePersistenceService,
-        'GamePersistenceService is not available. Cannot load game.',
-      ],
-    ])(
+    it.each(
+      runUnavailableServiceTest(
+        [
+          [
+            tokens.GamePersistenceService,
+            'GameEngine.loadGame: GamePersistenceService is not available. Cannot load game.',
+            { preInit: true },
+          ],
+        ],
+        async (bed, engine, expectedMsg) => {
+          const result = await engine.loadGame(SAVE_ID);
+          expect(bed.mocks.safeEventDispatcher.dispatch).not.toHaveBeenCalled();
+          expect(result).toEqual({
+            success: false,
+            error: expectedMsg,
+            data: null,
+          });
+          return [
+            bed.mocks.logger.error,
+            bed.mocks.safeEventDispatcher.dispatch,
+          ];
+        }
+      )
+    )(
       'should handle %s unavailability (guard clause) and dispatch UI event directly',
-      async (_name, token, msg) => {
-        const localBed = createGameEngineTestBed({ [token]: null });
-        const localGameEngine = localBed.engine;
-        localBed.resetMocks();
-
-        const result = await localGameEngine.loadGame(SAVE_ID);
-
-        expect(localBed.mocks.logger.error).toHaveBeenCalledWith(
-          `GameEngine.loadGame: ${msg}`
-        );
-        expectDispatchSequence(localBed.mocks.safeEventDispatcher.dispatch, [
-          ENGINE_OPERATION_FAILED_UI,
-          { errorMessage: msg, errorTitle: 'Load Failed' },
-        ]);
-        expect(result).toEqual({ success: false, error: msg, data: null });
-
-        await localBed.cleanup();
+      async (_token, fn) => {
+        expect.assertions(4);
+        await fn();
       }
     );
 

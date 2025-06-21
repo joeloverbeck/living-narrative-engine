@@ -8,7 +8,7 @@ import { createNestedExecutionContext } from './contextAssembler.js';
 import { ATTEMPT_ACTION_ID } from '../constants/eventIds.js';
 import { REQUIRED_ENTITY_MANAGER_METHODS } from '../constants/entityManager.js';
 import { evaluateConditionWithLogging } from './jsonLogicEvaluationService.js';
-import { BaseService } from '../utils/baseService.js';
+import { BaseService } from '../utils/serviceBase.js';
 import { executeActionSequence } from './actionSequence.js';
 import { buildRuleCache } from '../utils/ruleCacheUtils.js';
 import { isEmptyCondition } from '../utils/jsonLogicUtils.js';

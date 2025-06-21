@@ -8,6 +8,7 @@ import {
   TURN_PROCESSING_STARTED,
 } from '../../../src/constants/eventIds.js';
 import { createMockEntity } from '../../common/mockFactories';
+import { createAiActor } from '../../common/turns/testActors.js';
 
 describeTurnManagerSuite(
   'TurnManager: advanceTurn() - Round Start (Queue Empty)',
@@ -146,14 +147,8 @@ describeTurnManagerSuite(
 
     test('Active actors found: starts new round and recursively calls advanceTurn', async () => {
       // Arrange
-      const actor1 = createMockEntity('actor1', {
-        isActor: true,
-        isPlayer: false,
-      });
-      const actor2 = createMockEntity('actor2', {
-        isActor: true,
-        isPlayer: false,
-      });
+      const actor1 = createAiActor('actor1');
+      const actor2 = createAiActor('actor2');
       testBed.setActiveEntities(actor1, actor2);
 
       testBed.mocks.turnOrderService.isEmpty.mockResolvedValueOnce(true); // Queue is empty for TurnCycle.nextActor()
@@ -205,10 +200,7 @@ describeTurnManagerSuite(
 
     test('startNewRound throws error: logs error, dispatches message, and stops', async () => {
       // Arrange
-      const actor1 = createMockEntity('actor1', {
-        isActor: true,
-        isPlayer: false,
-      });
+      const actor1 = createAiActor('actor1');
       testBed.setActiveEntities(actor1);
 
       testBed.mocks.turnOrderService.isEmpty.mockResolvedValueOnce(true);
@@ -240,10 +232,7 @@ describeTurnManagerSuite(
 
     test('getNextEntity throws error after new round: logs error, dispatches message, and stops', async () => {
       // Arrange
-      const actor1 = createMockEntity('actor1', {
-        isActor: true,
-        isPlayer: false,
-      });
+      const actor1 = createAiActor('actor1');
       testBed.setActiveEntities(actor1);
 
       testBed.mocks.turnOrderService.isEmpty.mockResolvedValueOnce(true); // First call by TurnCycle.nextActor()
@@ -275,10 +264,7 @@ describeTurnManagerSuite(
 
     test('Handler resolution fails after new round: logs error, dispatches message, and stops', async () => {
       // Arrange
-      const actor1 = createMockEntity('actor1', {
-        isActor: true,
-        isPlayer: false,
-      });
+      const actor1 = createAiActor('actor1');
       testBed.setActiveEntities(actor1);
 
       testBed.mocks.turnOrderService.isEmpty.mockResolvedValueOnce(true); // First call by TurnCycle.nextActor()
