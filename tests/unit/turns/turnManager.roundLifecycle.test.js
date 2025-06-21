@@ -15,7 +15,6 @@ import {
   SYSTEM_ERROR_OCCURRED_ID,
 } from '../../../src/constants/eventIds.js';
 import { beforeEach, expect, jest, test, afterEach } from '@jest/globals';
-import { createMockTurnHandler } from '../../common/mockFactories.js';
 import {
   createAiActor,
   createPlayerActor,
@@ -40,10 +39,7 @@ describeTurnManagerSuite(
       mockPlayerActor = createPlayerActor('player1');
 
       // Configure handler resolver to return mock turn handlers
-      testBed.mocks.turnHandlerResolver.resolveHandler.mockImplementation(
-        async (actor) =>
-          createMockTurnHandler({ actor, includeSignalTermination: true })
-      );
+      testBed.setupMockHandlerResolver();
 
       stopSpy = jest.spyOn(testBed.turnManager, 'stop');
 

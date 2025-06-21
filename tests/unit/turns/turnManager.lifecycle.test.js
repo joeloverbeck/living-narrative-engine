@@ -28,10 +28,7 @@ describeTurnManagerSuite('TurnManager - Lifecycle (Start/Stop)', (getBed) => {
     testBed = getBed();
 
     // Configure handler resolver to return mock turn handlers
-    testBed.mocks.turnHandlerResolver.resolveHandler.mockImplementation(
-      async (actor) =>
-        createMockTurnHandler({ actor, includeSignalTermination: true })
-    );
+    testBed.setupMockHandlerResolver();
 
     // Default: Mock advanceTurn to isolate start/stop logic
     advanceTurnSpy = jest
