@@ -12,24 +12,6 @@ import {
 } from '../../../src/constants/eventIds.js';
 import { createAiActor } from '../../common/turns/testActors.js';
 import { createMockTurnHandler } from '../../common/mockFactories.js';
-import TurnManager from '../../../src/turns/turnManager.js';
-import RoundManager from '../../../src/turns/roundManager.js';
-
-// Define a mock RoundManager for this test
-class MockRoundManager {
-  constructor() {
-    this.inProgress = false;
-    this.hadSuccess = true;
-  }
-  resetFlags() {}
-  startRound() {
-    // Simulate the real RoundManager behavior - throw error when no actors found
-    throw new Error(
-      'Cannot start a new round: No active entities with an Actor component found.'
-    );
-  }
-  endTurn() {}
-}
 
 // --- Test Suite ---
 
@@ -43,7 +25,6 @@ describeTurnManagerSuite(
       // Made beforeEach async
       testBed = getBed();
 
-      testBed.initializeDefaultMocks();
       testBed.mocks.turnOrderService.isEmpty.mockResolvedValue(false);
       testBed.mocks.turnOrderService.getNextEntity.mockResolvedValue(null);
       testBed.mocks.dispatcher.subscribe.mockReset().mockReturnValue(jest.fn());
@@ -52,11 +33,10 @@ describeTurnManagerSuite(
       );
 
       // Spy on stop to verify calls and simulate unsubscribe
-      stopSpy = jest
-        .spyOn(testBed.turnManager, 'stop')
-        .mockImplementation(async () => {
-          testBed.mocks.logger.debug('Mocked instance.stop() called.');
-        });
+      stopSpy = testBed.spyOnStop();
+      stopSpy.mockImplementation(async () => {
+        testBed.mocks.logger.debug('Mocked instance.stop() called.');
+      });
 
       // Start manager without running advanceTurn
       await testBed.startRunning();

@@ -27,10 +27,7 @@ describeTurnManagerSuite(
     let ai1, ai2, player;
 
     beforeEach(() => {
-      jest.useFakeTimers();
       testBed = getBed();
-
-      testBed.initializeDefaultMocks();
       testBed.mocks.turnOrderService.isEmpty.mockResolvedValue(false);
       testBed.mocks.turnOrderService.getNextEntity.mockResolvedValue(null);
 
@@ -46,12 +43,9 @@ describeTurnManagerSuite(
         }
       );
 
-      stopSpy = jest.spyOn(testBed.turnManager, 'stop');
+      stopSpy = testBed.spyOnStop();
 
-      testBed.mocks.logger.info.mockClear();
-      testBed.mocks.logger.debug.mockClear();
-      testBed.mocks.logger.warn.mockClear();
-      testBed.mocks.logger.error.mockClear();
+      testBed.resetMocks();
     });
 
     afterEach(async () => {

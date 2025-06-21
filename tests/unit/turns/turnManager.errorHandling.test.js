@@ -18,9 +18,6 @@ describeTurnManagerSuite('TurnManager - Error Handling', (getBed) => {
   let ai1, ai2, player;
 
   beforeEach(() => {
-    // Use MODERN fake timers explicitly
-    jest.useFakeTimers({ legacyFakeTimers: false });
-
     testBed = getBed();
 
     // Setup actors and add to the specific entityManager instance used by TurnManager

@@ -1,7 +1,7 @@
 // tests/turns/turnManager.advanceTurn.actorIdentification.test.js
 // --- FILE START (Corrected) ---
 
-import { afterEach, beforeEach, expect, jest, test } from '@jest/globals';
+import { afterEach, beforeEach, expect, test } from '@jest/globals';
 import {
   describeTurnManagerSuite,
   flushPromisesAndTimers,
@@ -27,8 +27,6 @@ describeTurnManagerSuite(
 
     beforeEach(async () => {
       testBed = getBed();
-
-      testBed.initializeDefaultMocks();
       testBed.mocks.turnOrderService.isEmpty.mockResolvedValue(false);
       testBed.mocks.turnOrderService.getNextEntity.mockResolvedValue(
         createAiActor('initial-actor-for-start')
@@ -38,9 +36,8 @@ describeTurnManagerSuite(
         createMockTurnHandler()
       );
 
-      stopSpy = jest
-        .spyOn(testBed.turnManager, 'stop')
-        .mockImplementation(async () => {});
+      stopSpy = testBed.spyOnStop();
+      stopSpy.mockImplementation(async () => {});
 
       await testBed.startRunning();
 
@@ -49,9 +46,6 @@ describeTurnManagerSuite(
     });
 
     afterEach(async () => {
-      if (stopSpy) {
-        stopSpy.mockRestore();
-      }
       turnEndCapture.unsubscribe.mockClear();
       // Timer cleanup handled by BaseTestBed
     });
@@ -62,8 +56,6 @@ describeTurnManagerSuite(
     ])(
       'actor identified (%s) -> handler invoked and event dispatched',
       async (_, actor) => {
-        jest.useFakeTimers();
-
         const entityType = actor.hasComponent(PLAYER_COMPONENT_ID)
           ? 'player'
           : 'ai';

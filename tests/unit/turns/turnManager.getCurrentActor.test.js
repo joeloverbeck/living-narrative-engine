@@ -11,7 +11,7 @@ import {
   PLAYER_COMPONENT_ID,
 } from '../../../src/constants/componentIds.js';
 import { TURN_PROCESSING_STARTED } from '../../../src/constants/eventIds.js';
-import { beforeEach, expect, jest, test } from '@jest/globals';
+import { beforeEach, expect, test } from '@jest/globals';
 import { createMockEntity } from '../../common/mockFactories';
 import {
   createDefaultActors,
@@ -30,12 +30,9 @@ describeTurnManagerSuite('TurnManager', (getBed) => {
   let mockAiEntity1;
 
   beforeEach(() => {
-    jest.useFakeTimers();
     testBed = getBed();
 
     ({ player: mockPlayerEntity, ai1: mockAiEntity1 } = createDefaultActors());
-
-    testBed.initializeDefaultMocks();
     testBed.mocks.turnHandlerResolver.resolveHandler.mockResolvedValue(
       mockAiHandler
     );

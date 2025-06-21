@@ -20,27 +20,21 @@ describeTurnManagerSuite(
 
     beforeEach(() => {
       testBed = getBed();
-
-      testBed.initializeDefaultMocks();
       testBed.mocks.turnOrderService.isEmpty.mockReset();
       testBed.mocks.dispatcher.subscribe.mockReset().mockReturnValue(jest.fn());
       testBed.mocks.turnHandlerResolver.resolveHandler.mockResolvedValue(null);
 
       // Define the spy here for the actual advanceTurn method
-      advanceTurnSpy = jest.spyOn(testBed.turnManager, 'advanceTurn');
+      advanceTurnSpy = testBed.spyOnAdvanceTurn();
 
       // Spy on stop - Keep the condition to ensure start was called.
-      stopSpy = jest
-        .spyOn(testBed.turnManager, 'stop')
-        .mockImplementation(async () => {
-          testBed.mocks.logger.debug('Mocked instance.stop() called.');
-        });
+      stopSpy = testBed.spyOnStop();
+      stopSpy.mockImplementation(async () => {
+        testBed.mocks.logger.debug('Mocked instance.stop() called.');
+      });
 
       // Clear constructor/setup logs AFTER instantiation and spy setup
-      testBed.mocks.logger.info.mockClear();
-      testBed.mocks.logger.debug.mockClear();
-      testBed.mocks.logger.warn.mockClear();
-      testBed.mocks.logger.error.mockClear();
+      testBed.resetMocks();
     });
 
     // --- Test Cases ---
