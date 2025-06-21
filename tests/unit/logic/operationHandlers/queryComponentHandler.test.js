@@ -592,9 +592,9 @@ describe('QueryComponentHandler', () => {
       mockActorId,
       trimmedCompType
     ); // Check EM call with trimmed type
-    expect(context.evaluationContext.context[trimmedResultVar]).toEqual(
+    expect(context.evaluationContext.context['  paddedVar  ']).toEqual(
       mockResult
-    ); // Check context storage with trimmed variable name
+    ); // Check context storage with untrimmed variable name
     expect(context.logger.error).not.toHaveBeenCalled(); // Check context logger for errors
 
     // --- FIX: Correct the log message checks ---

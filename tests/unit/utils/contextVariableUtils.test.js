@@ -76,4 +76,27 @@ describe('tryWriteContextVariable', () => {
       expect.objectContaining({ message: expect.any(String) })
     );
   });
+
+  test('rejects blank or whitespace-only variable names', () => {
+    const ctx = { evaluationContext: { context: {} } };
+    const blank = tryWriteContextVariable('', 1, ctx);
+    const spaces = tryWriteContextVariable('   ', 1, ctx);
+
+    expect(blank.success).toBe(false);
+    expect(blank.error).toBeInstanceOf(Error);
+    expect(blank.error.message).toMatch(/^Invalid variableName/);
+
+    expect(spaces.success).toBe(false);
+    expect(spaces.error).toBeInstanceOf(Error);
+    expect(spaces.error.message).toMatch(/^Invalid variableName/);
+  });
+
+  test('keeps variable name untrimmed on success', () => {
+    const ctx = { evaluationContext: { context: {} } };
+    const name = ' foo ';
+    const result = tryWriteContextVariable(name, 42, ctx);
+
+    expect(result).toEqual({ success: true });
+    expect(ctx.evaluationContext.context).toHaveProperty(name, 42);
+  });
 });
