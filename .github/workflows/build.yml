@@ -3,7 +3,6 @@
 name: Build Verification
 
 on:
-  push:
   pull_request:
 
 jobs:
