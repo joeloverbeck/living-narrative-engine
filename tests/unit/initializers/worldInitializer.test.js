@@ -163,16 +163,6 @@ describe('WorldInitializer', () => {
   });
 
   describe('initializeWorldEntities', () => {
-    it('should complete successfully with no entity definitions', async () => {
-      mockGameDataRepository.getAllEntityDefinitions.mockReturnValue([]);
-      const result = await worldInitializer.initializeWorldEntities();
-      expect(result).toBe(true);
-      expect(mockLogger.warn).toHaveBeenCalledWith(
-        'WorldInitializer (Pass 1): No entity definitions found. World may be empty of defined entities.'
-      );
-      expect(mockEntityManager.createEntityInstance).not.toHaveBeenCalled();
-    });
-
     it('should instantiate entities in Pass 1', async () => {
       const entityDef1 = { id: 'def:room1', components: {} };
       mockGameDataRepository.getAllEntityDefinitions.mockReturnValue([
@@ -432,12 +422,34 @@ describe('WorldInitializer', () => {
       });
     });
 
-    it('should complete and log final success message', async () => {
+    it('should throw error and dispatch system error event when no entity definitions are found', async () => {
       mockGameDataRepository.getAllEntityDefinitions.mockReturnValue([]);
-      await worldInitializer.initializeWorldEntities();
-      expect(mockLogger.debug).toHaveBeenCalledWith(
-        'WorldInitializer: World entity initialization and spatial indexing complete.'
+      
+      await expect(worldInitializer.initializeWorldEntities()).rejects.toThrow(
+        'Game cannot start: No entity definitions found in the world data. Please ensure at least one entity is defined.'
       );
+      
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'WorldInitializer (Pass 1): No entity definitions found. Game cannot start without entities.'
+      );
+      
+      // Verify that the system error event was dispatched
+      expect(mockValidatedEventDispatcher.dispatch).toHaveBeenCalledWith(
+        'core:system_error_occurred',
+        {
+          message: 'No entity definitions found. The game cannot start without any entities in the world.',
+          details: {
+            statusCode: 500,
+            raw: 'No entity definitions available in game data repository',
+            timestamp: expect.any(String),
+            context: 'WorldInitializer._instantiateAllEntitiesFromDefinitions',
+            entityDefinitionsCount: 0,
+            repositoryMethod: 'getAllEntityDefinitions'
+          }
+        }
+      );
+      
+      expect(mockEntityManager.createEntityInstance).not.toHaveBeenCalled();
     });
   });
 
