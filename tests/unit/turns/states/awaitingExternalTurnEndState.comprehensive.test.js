@@ -11,6 +11,7 @@ import {
   expect,
   jest,
 } from '@jest/globals';
+import { flushPromisesAndTimers } from '../../../common/turns/turnManagerTestBed.js';
 
 // Use fake timers to control setTimeout/clearTimeout and advance time manually.
 jest.useFakeTimers();
@@ -229,7 +230,7 @@ describe('AwaitingExternalTurnEndState', () => {
         // Act
         await state.enterState(mockHandler, null);
         // Manually trigger timeout to check the actionId in the generated error message.
-        jest.runAllTimers();
+        await flushPromisesAndTimers();
 
         // Assert
         expect(mockEventDispatcher.dispatch).toHaveBeenCalledTimes(1);
@@ -326,25 +327,25 @@ describe('AwaitingExternalTurnEndState', () => {
       await state.enterState(mockHandler, null);
     });
 
-    test('should do nothing if timeout fires after state has been cleaned up', () => {
+    test('should do nothing if timeout fires after state has been cleaned up', async () => {
       // Arrange
       // Simulate cleanup (e.g., a turn_ended event was received first).
       mockTurnContext.isAwaitingExternalEvent.mockReturnValue(false);
 
       // Act
-      jest.runAllTimers();
+      await flushPromisesAndTimers();
 
       // Assert
       expect(mockEventDispatcher.dispatch).not.toHaveBeenCalled();
       expect(mockTurnContext.endTurn).not.toHaveBeenCalled();
     });
 
-    test('should dispatch an error and end the turn when timeout fires', () => {
+    test('should dispatch an error and end the turn when timeout fires', async () => {
       // Arrange
       expect(setTimeoutSpy).toHaveBeenCalledTimes(1);
 
       // Act
-      jest.runAllTimers();
+      await flushPromisesAndTimers();
 
       // Assert
       // 1. A display error event is dispatched.
@@ -370,7 +371,7 @@ describe('AwaitingExternalTurnEndState', () => {
       expect(endTurnError.message).toContain('timed out after 3000 ms');
     });
 
-    test('should recover if endTurn throws an error during timeout handling', () => {
+    test('should recover if endTurn throws an error during timeout handling', async () => {
       // Arrange
       const endTurnFailure = new Error('Failed to end turn');
       mockTurnContext.endTurn.mockImplementation(() => {
@@ -378,7 +379,7 @@ describe('AwaitingExternalTurnEndState', () => {
       });
 
       // Act
-      jest.runAllTimers();
+      await flushPromisesAndTimers();
 
       // Assert
       // It still attempts to end the turn.

@@ -1,7 +1,10 @@
 // src/tests/turns/turnManager.roundLifecycle.test.js
 // --- FILE START ---
 
-import { describeTurnManagerSuite } from '../../common/turns/turnManagerTestBed.js';
+import {
+  describeTurnManagerSuite,
+  flushPromisesAndTimers,
+} from '../../common/turns/turnManagerTestBed.js';
 import {
   ACTOR_COMPONENT_ID,
   PLAYER_COMPONENT_ID,
@@ -66,8 +69,7 @@ describeTurnManagerSuite(
       );
 
       await testBed.turnManager.start();
-      jest.runAllTimers();
-      await Promise.resolve();
+      await flushPromisesAndTimers();
 
       expect(testBed.mocks.entityManager.activeEntities.size).toBe(2);
       expect(testBed.mocks.turnOrderService.startNewRound).toHaveBeenCalledWith(
@@ -96,8 +98,7 @@ describeTurnManagerSuite(
       testBed.mocks.turnOrderService.isEmpty.mockResolvedValue(true);
 
       await testBed.turnManager.start();
-      jest.runAllTimers();
-      await Promise.resolve();
+      await flushPromisesAndTimers();
 
       expect(testBed.mocks.logger.error).toHaveBeenCalledWith(
         'Cannot start a new round: No active entities with an Actor component found.'
@@ -158,8 +159,7 @@ describeTurnManagerSuite(
         .mockResolvedValueOnce(null); // No more actors
 
       await testBed.turnManager.start();
-      jest.runAllTimers();
-      await Promise.resolve();
+      await flushPromisesAndTimers();
 
       expect(testBed.turnManager.getCurrentActor()).toBe(mockActor1);
 
@@ -168,8 +168,7 @@ describeTurnManagerSuite(
         entityId: mockActor1.id,
         success: true,
       });
-      jest.runAllTimers();
-      await Promise.resolve();
+      await flushPromisesAndTimers();
 
       expect(testBed.mocks.turnOrderService.startNewRound).toHaveBeenCalledWith(
         expect.arrayContaining([mockActor1, mockActor2]),
@@ -190,8 +189,7 @@ describeTurnManagerSuite(
       );
 
       await testBed.turnManager.start();
-      jest.runAllTimers();
-      await Promise.resolve();
+      await flushPromisesAndTimers();
 
       expect(testBed.mocks.logger.error).toHaveBeenCalledWith(
         'CRITICAL Error during turn advancement logic (before handler initiation): Turn advancement failed',
@@ -220,8 +218,7 @@ describeTurnManagerSuite(
       );
 
       await testBed.turnManager.start();
-      jest.runAllTimers();
-      await Promise.resolve();
+      await flushPromisesAndTimers();
 
       expect(testBed.mocks.logger.error).toHaveBeenCalledWith(
         'CRITICAL Error during turn advancement logic (before handler initiation): Round start failed',

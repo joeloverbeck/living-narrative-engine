@@ -2,7 +2,10 @@
 // --- FILE START (Corrected) ---
 
 import { afterEach, beforeEach, expect, jest, test } from '@jest/globals';
-import { describeTurnManagerSuite } from '../../common/turns/turnManagerTestBed.js';
+import {
+  describeTurnManagerSuite,
+  flushPromisesAndTimers,
+} from '../../common/turns/turnManagerTestBed.js';
 
 import { TURN_ENDED_ID } from '../../../src/constants/eventIds.js';
 import { createMockEntity } from '../../common/mockFactories.js';
@@ -117,7 +120,7 @@ describeTurnManagerSuite(
         payload: { entityId: playerActor.id, success: true },
       });
 
-      await jest.runAllTimersAsync();
+      await flushPromisesAndTimers();
       expect(mockHandler.destroy).toHaveBeenCalledTimes(1);
 
       jest.useRealTimers();
@@ -171,7 +174,7 @@ describeTurnManagerSuite(
         payload: { entityId: aiActor.id, success: true },
       });
 
-      await jest.runAllTimersAsync();
+      await flushPromisesAndTimers();
       expect(mockHandler.destroy).toHaveBeenCalledTimes(1);
 
       jest.useRealTimers();
