@@ -32,6 +32,7 @@ import OperationInterpreter from '../../src/logic/operationInterpreter.js';
 import JsonLogicEvaluationService from '../../src/logic/jsonLogicEvaluationService.js';
 import SystemLogicInterpreter from '../../src/logic/systemLogicInterpreter.js';
 import ModifyComponentHandler from '../../src/logic/operationHandlers/modifyComponentHandler.js';
+import { createSimpleMockDataRegistry } from '../common/mockFactories.js';
 import {
   afterEach,
   beforeEach,
@@ -76,18 +77,6 @@ class SimpleEntityManager {
     return { id: entityId };
   }
 }
-
-/** Stub IDataRegistry exposing only the method used by SystemLogicInterpreter. */
-class StubDataRegistry {
-  constructor(rules) {
-    this._rules = rules;
-  }
-
-  getAllSystemRules() {
-    return this._rules;
-  }
-}
-
 /** Jest‑friendly logger stub capturing calls for optional debugging. */
 const createMockLogger = () => ({
   info: jest.fn(),
@@ -208,7 +197,10 @@ describe('Sequential Action Execution – Success Path', () => {
         },
       ],
     };
-    const dataRegistry = new StubDataRegistry([testRule]);
+    const rules = [testRule];
+    const dataRegistry = createSimpleMockDataRegistry();
+    dataRegistry.getAllSystemRules = jest.fn();
+    dataRegistry.getAllSystemRules.mockReturnValue(rules);
 
     sysInterpreter = new SystemLogicInterpreter({
       logger,
