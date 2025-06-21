@@ -148,6 +148,10 @@ export class AIPromptPipelineTestBed extends BaseTestBed {
    * @param {import('../../../src/turns/interfaces/ITurnContext.js').ITurnContext} params.context - Turn context.
    * @param {import('../../../src/turns/dtos/actionComposite.js').ActionComposite[]} params.actions - Available actions.
    * @param {string} params.expectedPrompt - Expected final prompt string.
+   * @param {string} [params.llmId] - Optional LLM ID override.
+   * @param {object} [params.gameState] - Optional game state override.
+   * @param {object} [params.promptData] - Optional prompt data override.
+   * @param {string} [params.finalPrompt] - Optional final prompt override.
    * @returns {Promise<void>} Resolves when assertions pass.
    */
   async expectSuccessfulGeneration({
@@ -155,11 +159,20 @@ export class AIPromptPipelineTestBed extends BaseTestBed {
     context,
     actions,
     expectedPrompt,
+    llmId,
+    gameState,
+    promptData,
+    finalPrompt,
   }) {
+    this.setupMockSuccess({ llmId, gameState, promptData, finalPrompt });
     const prompt = await this.generate(actor, context, actions);
     expect(prompt).toBe(expectedPrompt);
 
-    const { llmId, gameState, promptData } = this._successOptions;
+    const {
+      llmId: _llmId,
+      gameState: _gameState,
+      promptData: _promptData,
+    } = this._successOptions;
     expect(this.llmAdapter.getCurrentActiveLlmId).toHaveBeenCalledTimes(1);
     expect(this.gameStateProvider.buildGameState).toHaveBeenCalledWith(
       actor,
@@ -167,10 +180,10 @@ export class AIPromptPipelineTestBed extends BaseTestBed {
       this.logger
     );
     expect(this.promptContentProvider.getPromptData).toHaveBeenCalledWith(
-      expect.objectContaining({ ...gameState, availableActions: actions }),
+      expect.objectContaining({ ..._gameState, availableActions: actions }),
       this.logger
     );
-    expect(this.promptBuilder.build).toHaveBeenCalledWith(llmId, promptData);
+    expect(this.promptBuilder.build).toHaveBeenCalledWith(_llmId, _promptData);
   }
 }
 
