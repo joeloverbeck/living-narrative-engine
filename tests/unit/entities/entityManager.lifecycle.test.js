@@ -23,7 +23,7 @@ import {
   ENTITY_CREATED_ID,
   ENTITY_REMOVED_ID,
 } from '../../../src/constants/eventIds.js';
-import { expectDispatchSequence } from '../../common/engine/dispatchTestUtils.js';
+import { expectSingleDispatch } from '../../common/engine/dispatchTestUtils.js';
 import MapManager from '../../../src/utils/mapManagerUtils.js';
 import { buildSerializedEntity } from '../../common/entities/serializationUtils.js';
 
@@ -125,15 +125,10 @@ describeEntityManagerSuite('EntityManager - Lifecycle', (getBed) => {
       const entity = getBed().createEntity('basic');
 
       // Assert
-      expectDispatchSequence(mocks.eventDispatcher.dispatch, [
-        [
-          ENTITY_CREATED_ID,
-          {
-            entity,
-            wasReconstructed: false,
-          },
-        ],
-      ]);
+      expectSingleDispatch(mocks.eventDispatcher.dispatch, ENTITY_CREATED_ID, {
+        entity,
+        wasReconstructed: false,
+      });
     });
 
     it('should throw a DefinitionNotFoundError if the definitionId does not exist', () => {
@@ -254,15 +249,10 @@ describeEntityManagerSuite('EntityManager - Lifecycle', (getBed) => {
       const entity = entityManager.reconstructEntity(serializedEntity);
 
       // Assert
-      expectDispatchSequence(mocks.eventDispatcher.dispatch, [
-        [
-          ENTITY_CREATED_ID,
-          {
-            entity,
-            wasReconstructed: true,
-          },
-        ],
-      ]);
+      expectSingleDispatch(mocks.eventDispatcher.dispatch, ENTITY_CREATED_ID, {
+        entity,
+        wasReconstructed: true,
+      });
     });
 
     it('should throw a DefinitionNotFoundError if the definition is not found', () => {
@@ -377,14 +367,9 @@ describeEntityManagerSuite('EntityManager - Lifecycle', (getBed) => {
       entityManager.removeEntityInstance(entity.id);
 
       // Assert
-      expectDispatchSequence(mocks.eventDispatcher.dispatch, [
-        [
-          ENTITY_REMOVED_ID,
-          {
-            entity,
-          },
-        ],
-      ]);
+      expectSingleDispatch(mocks.eventDispatcher.dispatch, ENTITY_REMOVED_ID, {
+        entity,
+      });
     });
 
     it('should throw an EntityNotFoundError when trying to remove a non-existent entity', () => {

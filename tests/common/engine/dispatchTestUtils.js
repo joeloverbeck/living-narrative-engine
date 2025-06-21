@@ -88,11 +88,24 @@ export function expectEngineStatus(engine, expectedStatus) {
   expect(engine.getEngineStatus()).toEqual(expectedStatus);
 }
 
+/**
+ * Asserts a single dispatch call with the given id and payload.
+ *
+ * @param {import('@jest/globals').Mock} mock
+ * @param {string} eventId
+ * @param {any} payload
+ * @returns {void}
+ */
+export function expectSingleDispatch(mock, eventId, payload) {
+  expectDispatchSequence(mock, [[eventId, payload]]);
+}
+
 export { expectDispatchSequence as expectDispatchCalls };
 
 export default {
   expectDispatchSequence,
   buildSaveDispatches,
   expectEngineStatus,
+  expectSingleDispatch,
   expectDispatchCalls: expectDispatchSequence,
 };

@@ -4,6 +4,7 @@ import {
   buildSaveDispatches,
   DEFAULT_ACTIVE_WORLD_FOR_SAVE,
   expectEngineStatus,
+  expectSingleDispatch,
 } from './dispatchTestUtils.js';
 import {
   ENGINE_OPERATION_IN_PROGRESS_UI,
@@ -39,6 +40,23 @@ describe('dispatchTestUtils', () => {
       expect(() =>
         expectDispatchSequence(mock, ['eventA', { a: 2 }])
       ).toThrow();
+    });
+  });
+
+  describe('expectSingleDispatch', () => {
+    it('verifies a single dispatch call', () => {
+      const mock = jest.fn();
+      const event = ['eventA', { a: 1 }];
+      mock(...event);
+      expect(() =>
+        expectSingleDispatch(mock, 'eventA', { a: 1 })
+      ).not.toThrow();
+    });
+
+    it('throws when the call does not match', () => {
+      const mock = jest.fn();
+      mock('eventA', { a: 1 });
+      expect(() => expectSingleDispatch(mock, 'eventB', { b: 2 })).toThrow();
     });
   });
 
