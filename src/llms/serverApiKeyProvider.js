@@ -139,11 +139,8 @@ export class ServerApiKeyProvider extends IApiKeyProvider {
   }) {
     super();
     this.#logger = initLogger('ServerApiKeyProvider', logger);
-    this.#dispatcher = resolveSafeDispatcher(
-      null,
-      safeEventDispatcher,
-      this.#logger
-    );
+    this.#dispatcher =
+      safeEventDispatcher || resolveSafeDispatcher(null, this.#logger);
     if (!this.#dispatcher) {
       console.warn(
         'ServerApiKeyProvider: safeEventDispatcher resolution failed; key errors may not be reported.'

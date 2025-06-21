@@ -80,11 +80,8 @@ class PlaytimeTracker extends IPlaytimeTracker {
       this.#logger = logger;
     }
 
-    this.#safeEventDispatcher = resolveSafeDispatcher(
-      null,
-      safeEventDispatcher,
-      this.#logger
-    );
+    this.#safeEventDispatcher =
+      safeEventDispatcher || resolveSafeDispatcher(null, this.#logger);
     if (!this.#safeEventDispatcher) {
       console.warn(
         'PlaytimeTracker: safeEventDispatcher resolution failed; playtime events may not be emitted.'

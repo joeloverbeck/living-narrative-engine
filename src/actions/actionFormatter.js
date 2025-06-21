@@ -38,7 +38,7 @@ export function formatActionCommand(
   displayNameFn = getEntityDisplayName
 ) {
   const { debug = false, logger = console, safeEventDispatcher } = options;
-  const dispatcher = resolveSafeDispatcher(null, safeEventDispatcher, logger);
+  const dispatcher = safeEventDispatcher || resolveSafeDispatcher(null, logger);
   if (!dispatcher) {
     logger.warn(
       'formatActionCommand: safeEventDispatcher resolution failed; error events may not be dispatched.'
