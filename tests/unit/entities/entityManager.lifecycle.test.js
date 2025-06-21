@@ -25,6 +25,7 @@ import {
 } from '../../../src/constants/eventIds.js';
 import { expectDispatchSequence } from '../../common/engine/dispatchTestUtils.js';
 import MapManager from '../../../src/utils/mapManagerUtils.js';
+import { buildSerializedEntity } from '../../common/entities/serializationUtils.js';
 
 describeEntityManagerSuite('EntityManager - Lifecycle', (getBed) => {
   describe('constructor', () => {
@@ -44,13 +45,14 @@ describeEntityManagerSuite('EntityManager - Lifecycle', (getBed) => {
         const { registry, validator, logger, eventDispatcher } = getBed().mocks;
         const EntityManager = getBed().entityManager.constructor;
 
-        expect(() =>
-          new EntityManager({
-            registry: depName === 'registry' ? value : registry,
-            validator: depName === 'validator' ? value : validator,
-            logger,
-            dispatcher: eventDispatcher,
-          })
+        expect(
+          () =>
+            new EntityManager({
+              registry: depName === 'registry' ? value : registry,
+              validator: depName === 'validator' ? value : validator,
+              logger,
+              dispatcher: eventDispatcher,
+            })
         ).toThrow(
           depName === 'registry'
             ? 'Missing required dependency: IDataRegistry.'
@@ -225,11 +227,9 @@ describeEntityManagerSuite('EntityManager - Lifecycle', (getBed) => {
       const { PRIMARY } = TestData.InstanceIDs;
       getBed().setupDefinitions(TestData.Definitions.basic);
 
-      const serializedEntity = {
-        instanceId: PRIMARY,
-        definitionId: BASIC,
-        components: { 'core:name': { name: 'Reconstructed' } },
-      };
+      const serializedEntity = buildSerializedEntity(PRIMARY, BASIC, {
+        'core:name': { name: 'Reconstructed' },
+      });
 
       // Act
       const entity = entityManager.reconstructEntity(serializedEntity);
@@ -248,11 +248,7 @@ describeEntityManagerSuite('EntityManager - Lifecycle', (getBed) => {
       const { PRIMARY } = TestData.InstanceIDs;
       getBed().setupDefinitions(TestData.Definitions.basic);
 
-      const serializedEntity = {
-        instanceId: PRIMARY,
-        definitionId: BASIC,
-        components: {},
-      };
+      const serializedEntity = buildSerializedEntity(PRIMARY, BASIC, {});
 
       // Act
       const entity = entityManager.reconstructEntity(serializedEntity);
@@ -275,11 +271,11 @@ describeEntityManagerSuite('EntityManager - Lifecycle', (getBed) => {
       const NON_EXISTENT_DEF_ID = 'non:existent';
       getBed().setupDefinitions(); // No definitions available
 
-      const serializedEntity = {
-        instanceId: 'test-instance',
-        definitionId: NON_EXISTENT_DEF_ID,
-        components: {},
-      };
+      const serializedEntity = buildSerializedEntity(
+        'test-instance',
+        NON_EXISTENT_DEF_ID,
+        {}
+      );
 
       // Act & Assert
       expect(() => entityManager.reconstructEntity(serializedEntity)).toThrow(
@@ -297,11 +293,7 @@ describeEntityManagerSuite('EntityManager - Lifecycle', (getBed) => {
       // Create the first entity
       getBed().createEntity('basic', { instanceId: PRIMARY });
 
-      const serializedEntity = {
-        instanceId: PRIMARY,
-        definitionId: BASIC,
-        components: {},
-      };
+      const serializedEntity = buildSerializedEntity(PRIMARY, BASIC, {});
 
       // Act & Assert
       expect(() => entityManager.reconstructEntity(serializedEntity)).toThrow(
@@ -321,11 +313,9 @@ describeEntityManagerSuite('EntityManager - Lifecycle', (getBed) => {
         errors: validationErrors,
       });
 
-      const serializedEntity = {
-        instanceId: PRIMARY,
-        definitionId: BASIC,
-        components: { 'core:name': { name: 'invalid' } },
-      };
+      const serializedEntity = buildSerializedEntity(PRIMARY, BASIC, {
+        'core:name': { name: 'invalid' },
+      });
 
       // Act & Assert
       expect(() => entityManager.reconstructEntity(serializedEntity)).toThrow(
@@ -351,11 +341,11 @@ describeEntityManagerSuite('EntityManager - Lifecycle', (getBed) => {
         )
       )('should throw an error if instanceId is %p', (invalidId) => {
         const { entityManager } = getBed();
-        const serializedEntity = {
-          instanceId: invalidId,
-          definitionId: TestData.DefinitionIDs.BASIC,
-          components: {},
-        };
+        const serializedEntity = buildSerializedEntity(
+          invalidId,
+          TestData.DefinitionIDs.BASIC,
+          {}
+        );
         expect(() => entityManager.reconstructEntity(serializedEntity)).toThrow(
           'EntityManager.reconstructEntity: instanceId is missing or invalid in serialized data.'
         );
