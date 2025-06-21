@@ -17,14 +17,30 @@ const baseFactories = generateFactories({
 });
 
 /**
+ * Wraps a mock factory and configures a method to resolve with a specified value.
+ *
+ * @param {Function} factory - Factory creating the mock object.
+ * @param {string} method - Method name on the mock to set.
+ * @param {any} value - Value that the method should resolve to.
+ * @returns {object} The configured mock.
+ */
+export function withResolvedValue(factory, method, value) {
+  const mock = factory();
+  mock[method].mockResolvedValue(value);
+  return mock;
+}
+
+/**
  * Creates a generic content loader mock.
  *
  * @returns {{ loadItemsForMod: jest.Mock }} Loader mock
  */
 export function createMockContentLoader() {
-  const mock = baseFactories.createMockContentLoader();
-  mock.loadItemsForMod.mockResolvedValue({ count: 0, overrides: 0, errors: 0 });
-  return mock;
+  return withResolvedValue(
+    baseFactories.createMockContentLoader,
+    'loadItemsForMod',
+    { count: 0, overrides: 0, errors: 0 }
+  );
 }
 
 /**
@@ -33,9 +49,11 @@ export function createMockContentLoader() {
  * @returns {{ loadAndCompileAllSchemas: jest.Mock }} Loader mock
  */
 export function createMockSchemaLoader() {
-  const mock = baseFactories.createMockSchemaLoader();
-  mock.loadAndCompileAllSchemas.mockResolvedValue(undefined);
-  return mock;
+  return withResolvedValue(
+    baseFactories.createMockSchemaLoader,
+    'loadAndCompileAllSchemas',
+    undefined
+  );
 }
 
 /**
@@ -44,9 +62,11 @@ export function createMockSchemaLoader() {
  * @returns {{ loadConfig: jest.Mock }} Loader mock
  */
 export function createMockGameConfigLoader() {
-  const mock = baseFactories.createMockGameConfigLoader();
-  mock.loadConfig.mockResolvedValue([]);
-  return mock;
+  return withResolvedValue(
+    baseFactories.createMockGameConfigLoader,
+    'loadConfig',
+    []
+  );
 }
 
 /**
@@ -55,9 +75,11 @@ export function createMockGameConfigLoader() {
  * @returns {{ loadRequestedManifests: jest.Mock }} Loader mock
  */
 export function createMockModManifestLoader() {
-  const mock = baseFactories.createMockModManifestLoader();
-  mock.loadRequestedManifests.mockResolvedValue(new Map());
-  return mock;
+  return withResolvedValue(
+    baseFactories.createMockModManifestLoader,
+    'loadRequestedManifests',
+    new Map()
+  );
 }
 
 /**
@@ -66,9 +88,11 @@ export function createMockModManifestLoader() {
  * @returns {{ loadWorlds: jest.Mock }} Loader mock
  */
 export function createMockWorldLoader() {
-  const mock = baseFactories.createMockWorldLoader();
-  mock.loadWorlds.mockResolvedValue(undefined);
-  return mock;
+  return withResolvedValue(
+    baseFactories.createMockWorldLoader,
+    'loadWorlds',
+    undefined
+  );
 }
 
 /**
