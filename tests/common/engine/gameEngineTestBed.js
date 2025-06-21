@@ -8,6 +8,7 @@
 import { createTestEnvironment } from './gameEngine.test-environment.js';
 import FactoryTestBed from '../factoryTestBed.js';
 import { TokenOverrideMixin } from '../tokenOverrideMixin.js';
+import { createStoppableMixin } from '../stoppableTestBedMixin.js';
 import { suppressConsoleError } from '../jestHelpers.js';
 import {
   createDescribeTestBedSuite,
@@ -19,7 +20,11 @@ import {
  * environment and exposes helpers for common test operations.
  * @class
  */
-export class GameEngineTestBed extends TokenOverrideMixin(FactoryTestBed) {
+const StoppableMixin = createStoppableMixin('engine');
+
+export class GameEngineTestBed extends StoppableMixin(
+  TokenOverrideMixin(FactoryTestBed)
+) {
   /** @type {ReturnType<typeof createTestEnvironment>} */
   env;
   /** @type {import('../../../src/engine/gameEngine.js').default} */
@@ -127,11 +132,6 @@ export class GameEngineTestBed extends TokenOverrideMixin(FactoryTestBed) {
    * @protected
    * @returns {Promise<void>} Promise resolving when engine cleanup is complete.
    */
-  async _afterCleanup() {
-    await this.stop();
-    this.env.cleanup();
-    await super._afterCleanup();
-  }
 }
 
 /**

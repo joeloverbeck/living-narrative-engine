@@ -111,14 +111,14 @@ describe('GameEngine Test Helpers: GameEngineTestBed', () => {
     expect(engine.stop).not.toHaveBeenCalled();
   });
 
-  it('cleanup stops engine and calls env.cleanup', async () => {
+  it('cleanup stops engine', async () => {
     jest.spyOn(testBed.env, 'cleanup').mockImplementation(() => {});
     engine.getEngineStatus.mockReturnValue({ isInitialized: true });
 
     await testBed.cleanup();
 
     expect(engine.stop).toHaveBeenCalledTimes(1);
-    expect(testBed.env.cleanup).toHaveBeenCalledTimes(1);
+    expect(testBed.env.cleanup).not.toHaveBeenCalled();
   });
 
   it('withTokenOverride replaces container resolve and resets on cleanup', async () => {

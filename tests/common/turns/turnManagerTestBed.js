@@ -13,6 +13,7 @@ import {
   createMockTurnHandler,
 } from '../mockFactories';
 import FactoryTestBed from '../factoryTestBed.js';
+import { createStoppableMixin } from '../stoppableTestBedMixin.js';
 import {
   describeSuiteWithHooks,
   createDescribeTestBedSuite,
@@ -24,7 +25,9 @@ import { flushPromisesAndTimers } from '../jestHelpers.js';
  * dependencies and exposes helpers for common test operations.
  * @class
  */
-export class TurnManagerTestBed extends FactoryTestBed {
+const StoppableMixin = createStoppableMixin('turnManager');
+
+export class TurnManagerTestBed extends StoppableMixin(FactoryTestBed) {
   /** @type {TurnManager} */
   turnManager;
 
@@ -205,12 +208,6 @@ export class TurnManagerTestBed extends FactoryTestBed {
    * @protected
    * @returns {Promise<void>} Promise resolving when manager cleanup is complete.
    */
-  async _afterCleanup() {
-    if (this.turnManager && typeof this.turnManager.stop === 'function') {
-      await this.turnManager.stop();
-    }
-    await super._afterCleanup();
-  }
 }
 
 /**
