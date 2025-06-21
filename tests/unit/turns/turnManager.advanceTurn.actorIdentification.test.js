@@ -14,6 +14,7 @@ import {
   createAiActor,
   createPlayerActor,
 } from '../../common/turns/testActors.js';
+import { createMockTurnHandler } from '../../common/mockFactories.js';
 
 // --- Test Suite ---
 
@@ -33,10 +34,9 @@ describeTurnManagerSuite(
         createAiActor('initial-actor-for-start')
       );
       turnEndCapture = testBed.captureSubscription(TURN_ENDED_ID);
-      testBed.mocks.turnHandlerResolver.resolveHandler.mockResolvedValue({
-        startTurn: jest.fn().mockResolvedValue(undefined),
-        destroy: jest.fn().mockResolvedValue(undefined),
-      });
+      testBed.mocks.turnHandlerResolver.resolveHandler.mockResolvedValue(
+        createMockTurnHandler()
+      );
 
       stopSpy = jest
         .spyOn(testBed.turnManager, 'stop')
@@ -69,10 +69,7 @@ describeTurnManagerSuite(
           : 'ai';
         testBed.mocks.turnOrderService.getNextEntity.mockResolvedValue(actor);
 
-        const mockHandler = {
-          startTurn: jest.fn().mockResolvedValue(undefined),
-          destroy: jest.fn().mockResolvedValue(undefined),
-        };
+        const mockHandler = createMockTurnHandler({ actor });
         testBed.mocks.turnHandlerResolver.resolveHandler.mockResolvedValue(
           mockHandler
         );
@@ -138,7 +135,6 @@ describeTurnManagerSuite(
     });
 
     test('Entity manager error: logs error, stops manager', async () => {
-
       testBed.mocks.turnOrderService.isEmpty.mockResolvedValue(false);
       testBed.mocks.turnOrderService.getNextEntity.mockResolvedValue(null);
 
@@ -168,10 +164,8 @@ describeTurnManagerSuite(
 
     test('Handler startTurn error: logs error, stops manager', async () => {
       const startError = new Error('Handler start failed');
-      const mockHandler = {
-        startTurn: jest.fn().mockRejectedValue(startError),
-        destroy: jest.fn().mockResolvedValue(undefined),
-      };
+      const mockHandler = createMockTurnHandler();
+      mockHandler.startTurn.mockRejectedValue(startError);
       testBed.mocks.turnHandlerResolver.resolveHandler.mockResolvedValue(
         mockHandler
       );
@@ -180,7 +174,7 @@ describeTurnManagerSuite(
 
       expect(testBed.mocks.logger.error).toHaveBeenCalledWith(
         expect.stringContaining(
-          'Error during handler.startTurn() initiation for entity initial-actor-for-start (Object): Handler start failed'
+          'Error during handler.startTurn() initiation for entity initial-actor-for-start (MockTurnHandler): Handler start failed'
         ),
         startError
       );

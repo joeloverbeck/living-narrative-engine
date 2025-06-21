@@ -9,6 +9,7 @@ import {
 } from '../../../src/constants/eventIds.js';
 import { createMockEntity } from '../../common/mockFactories';
 import { createAiActor } from '../../common/turns/testActors.js';
+import { createMockTurnHandler } from '../../common/mockFactories.js';
 
 describeTurnManagerSuite(
   'TurnManager: advanceTurn() - Round Start (Queue Empty)',
@@ -147,10 +148,7 @@ describeTurnManagerSuite(
         actor1
       ); // First actor in new round
 
-      const mockHandler = {
-        startTurn: jest.fn().mockResolvedValue(undefined),
-        destroy: jest.fn().mockResolvedValue(undefined),
-      };
+      const mockHandler = createMockTurnHandler({ actor: actor1 });
       testBed.mocks.turnHandlerResolver.resolveHandler.mockResolvedValue(
         mockHandler
       );

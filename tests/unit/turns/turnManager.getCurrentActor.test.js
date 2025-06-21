@@ -18,18 +18,11 @@ import {
   createAiActor,
   createPlayerActor,
 } from '../../common/turns/testActors.js';
+import { createMockTurnHandler } from '../../common/mockFactories.js';
 
-// Mock Turn Handlers - ADD startTurn and destroy
-const mockPlayerHandler = {
-  constructor: { name: 'MockPlayerHandler' },
-  startTurn: jest.fn().mockResolvedValue(),
-  destroy: jest.fn().mockResolvedValue(),
-};
-const mockAiHandler = {
-  constructor: { name: 'MockAiHandler' },
-  startTurn: jest.fn().mockResolvedValue(),
-  destroy: jest.fn().mockResolvedValue(),
-};
+// Mock Turn Handlers
+const mockPlayerHandler = createMockTurnHandler();
+const mockAiHandler = createMockTurnHandler();
 
 describeTurnManagerSuite('TurnManager', (getBed) => {
   let testBed;
