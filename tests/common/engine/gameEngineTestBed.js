@@ -11,7 +11,7 @@ import { createStoppableMixin } from '../stoppableTestBedMixin.js';
 import { suppressConsoleError } from '../jestHelpers.js';
 import {
   createDescribeTestBedSuite,
-  describeSuiteWithHooks,
+  createDescribeServiceSuite,
 } from '../describeSuite.js';
 import { DEFAULT_TEST_WORLD } from '../constants.js';
 
@@ -132,6 +132,18 @@ export class GameEngineTestBed extends StoppableMixin(ContainerTestBed) {
   }
 }
 
+const engineSuiteHooks = (() => {
+  let consoleSpy;
+  return {
+    beforeEachHook() {
+      consoleSpy = suppressConsoleError();
+    },
+    afterEachHook() {
+      consoleSpy.mockRestore();
+    },
+  };
+})();
+
 /**
  * Creates a new {@link GameEngineTestBed} instance.
  *
@@ -153,17 +165,7 @@ export function createGameEngineTestBed(overrides = {}) {
  */
 export const describeGameEngineSuite = createDescribeTestBedSuite(
   GameEngineTestBed,
-  (() => {
-    let consoleSpy;
-    return {
-      beforeEachHook() {
-        consoleSpy = suppressConsoleError();
-      },
-      afterEachHook() {
-        consoleSpy.mockRestore();
-      },
-    };
-  })()
+  engineSuiteHooks
 );
 
 /**
@@ -176,30 +178,11 @@ export const describeGameEngineSuite = createDescribeTestBedSuite(
  * @param {{[token: string]: any}} [overrides] - Optional DI overrides.
  * @returns {void}
  */
-export function describeEngineSuite(title, suiteFn, overrides = {}) {
-  describeGameEngineSuite(
-    title,
-    (getBed) => {
-      /** @type {GameEngineTestBed} */
-      let bed;
-      /** @type {import('../../../src/engine/gameEngine.js').default} */
-      let engine;
-      beforeEach(() => {
-        bed = getBed();
-        engine = bed.engine;
-      });
-      suiteFn({
-        get bed() {
-          return bed;
-        },
-        get engine() {
-          return engine;
-        },
-      });
-    },
-    overrides
-  );
-}
+export const describeEngineSuite = createDescribeServiceSuite(
+  GameEngineTestBed,
+  'engine',
+  engineSuiteHooks
+);
 
 /**
  * Defines an engine suite that automatically initializes the engine before

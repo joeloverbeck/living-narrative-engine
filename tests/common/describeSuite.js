@@ -94,3 +94,56 @@ export function createDescribeTestBedSuite(TestBedCtor, defaultOptions = {}) {
     describeSuiteWithHooks(title, TestBedCtor, suiteFn, options);
   };
 }
+
+/**
+ * @description Generates a suite helper exposing a specific service from a
+ *   TestBed instance. Internally uses {@link createDescribeTestBedSuite}.
+ * @param {new (...args: any[]) => {cleanup: () => Promise<void>}} TestBedCtor -
+ *   Constructor for the TestBed.
+ * @param {string} serviceProp - Property on the TestBed representing the service.
+ * @param {object} [defaultOptions] - Default options forwarded to
+ *   {@link createDescribeTestBedSuite}.
+ * @param {(bed: any) => void} [defaultOptions.beforeEachHook] - Hook executed
+ *   after bed creation.
+ * @param {(bed: any) => void} [defaultOptions.afterEachHook] - Hook executed
+ *   after bed cleanup.
+ * @param {any[]} [defaultOptions.args] - Arguments forwarded to the TestBed
+ *   constructor.
+ * @returns {(title: string,
+ *   suiteFn: (context: { bed: any, [serviceProp: string]: any }) => void,
+ *   overrides?: any) => void} Suite creator.
+ */
+export function createDescribeServiceSuite(
+  TestBedCtor,
+  serviceProp,
+  defaultOptions = {}
+) {
+  const describeBedSuite = createDescribeTestBedSuite(
+    TestBedCtor,
+    defaultOptions
+  );
+  return function (title, suiteFn, overrides) {
+    describeBedSuite(
+      title,
+      (getBed) => {
+        /** @type {any} */
+        let bed;
+        /** @type {any} */
+        let service;
+        beforeEach(() => {
+          bed = getBed();
+          service = bed[serviceProp];
+        });
+        suiteFn({
+          get bed() {
+            return bed;
+          },
+          get [serviceProp]() {
+            return service;
+          },
+        });
+      },
+      overrides
+    );
+  };
+}
