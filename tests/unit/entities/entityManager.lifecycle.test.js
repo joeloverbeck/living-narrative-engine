@@ -20,10 +20,9 @@ import { DefinitionNotFoundError } from '../../../src/errors/definitionNotFoundE
 import { EntityNotFoundError } from '../../../src/errors/entityNotFoundError.js';
 import { DuplicateEntityError } from '../../../src/errors/duplicateEntityError.js';
 import {
-  ENTITY_CREATED_ID,
-  ENTITY_REMOVED_ID,
-} from '../../../src/constants/eventIds.js';
-import { expectSingleDispatch } from '../../common/engine/dispatchTestUtils.js';
+  expectEntityCreatedDispatch,
+  expectEntityRemovedDispatch,
+} from '../../common/engine/dispatchTestUtils.js';
 
 import { MapManager } from '../../../src/utils/mapManagerUtils.js';
 import { buildSerializedEntity } from '../../common/entities/index.js';
@@ -124,10 +123,11 @@ describeEntityManagerSuite('EntityManager - Lifecycle', (getBed) => {
       const entity = getBed().createBasicEntity();
 
       // Assert
-      expectSingleDispatch(mocks.eventDispatcher.dispatch, ENTITY_CREATED_ID, {
+      expectEntityCreatedDispatch(
+        mocks.eventDispatcher.dispatch,
         entity,
-        wasReconstructed: false,
-      });
+        false
+      );
     });
 
     it('should throw a DefinitionNotFoundError if the definitionId does not exist', () => {
@@ -257,10 +257,7 @@ describeEntityManagerSuite('EntityManager - Lifecycle', (getBed) => {
       const entity = entityManager.reconstructEntity(serializedEntity);
 
       // Assert
-      expectSingleDispatch(mocks.eventDispatcher.dispatch, ENTITY_CREATED_ID, {
-        entity,
-        wasReconstructed: true,
-      });
+      expectEntityCreatedDispatch(mocks.eventDispatcher.dispatch, entity, true);
     });
 
     it('should throw a DefinitionNotFoundError if the definition is not found', () => {
@@ -384,9 +381,7 @@ describeEntityManagerSuite('EntityManager - Lifecycle', (getBed) => {
       entityManager.removeEntityInstance(entity.id);
 
       // Assert
-      expectSingleDispatch(mocks.eventDispatcher.dispatch, ENTITY_REMOVED_ID, {
-        entity,
-      });
+      expectEntityRemovedDispatch(mocks.eventDispatcher.dispatch, entity);
     });
 
     it('should throw an EntityNotFoundError when trying to remove a non-existent entity', () => {
