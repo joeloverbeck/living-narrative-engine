@@ -26,6 +26,7 @@ import {
   createSimpleMockDataRegistry,
   createMockLogger,
 } from '../common/mockFactories.js';
+import { buildExecContext } from '../common/entities/execContext.js';
 import {
   afterEach,
   beforeEach,
@@ -58,17 +59,6 @@ class SimpleEntityManager {
   getEntityInstance(id) {
     return { id };
   }
-}
-
-/**
- *
- * @param root0
- * @param root0.evaluationContext
- * @param root0.entityManager
- * @param root0.logger
- */
-function buildExecCtx({ evaluationContext, entityManager, logger }) {
-  return { evaluationContext, entityManager, logger };
 }
 
 /* ------------------------ The Test --------------------------------------- */
@@ -119,7 +109,7 @@ describe('Sequential Action Execution – Error Path', () => {
     skippedModifyHandlerMock = jest.fn((p, ctx) =>
       realMod.execute(
         p,
-        buildExecCtx({ evaluationContext: ctx, entityManager, logger })
+        buildExecContext({ evaluationContext: ctx, entityManager, logger })
       )
     );
     opRegistry.register('MODIFY_COMPONENT', skippedModifyHandlerMock);
