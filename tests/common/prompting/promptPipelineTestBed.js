@@ -15,10 +15,8 @@ import {
   createMockEntity,
 } from '../mockFactories';
 import FactoryTestBed from '../factoryTestBed.js';
-import {
-  createDescribeTestBedSuite,
-  describeSuiteWithHooks,
-} from '../describeSuite.js';
+import { describeSuiteWithHooks } from '../describeSuite.js';
+import { beforeEach, afterEach } from '@jest/globals';
 
 /**
  * @typedef {object} DependencySpecEntry
@@ -242,17 +240,50 @@ export class AIPromptPipelineTestBed extends FactoryTestBed {
  * Defines a test suite with automatic {@link AIPromptPipelineTestBed} setup.
  *
  * @param {string} title - Suite title passed to `describe`.
- * @param {(getBed: () => AIPromptPipelineTestBed) => void} suiteFn - Callback
- *   containing the tests. Receives a getter for the active test bed.
+ * @param {(bed: AIPromptPipelineTestBed) => void} suiteFn - Callback
+ *   containing the tests. Receives the active test bed instance.
+ * @param overrides
  * @returns {void}
  */
-export const describeAIPromptPipelineSuite = createDescribeTestBedSuite(
-  AIPromptPipelineTestBed,
-  {
+export const describeAIPromptPipelineSuite = (title, suiteFn, overrides) => {
+  const baseOptions = {
     beforeEachHook(bed) {
       bed.setupMockSuccess();
     },
-  }
-);
+  };
+  const options = overrides ? { ...baseOptions, ...overrides } : baseOptions;
+
+  describeSuiteWithHooks(
+    title,
+    AIPromptPipelineTestBed,
+    (getBed) => {
+      /** @type {AIPromptPipelineTestBed} */
+      let current;
+      const proxy = new Proxy(
+        {},
+        {
+          get(_t, prop) {
+            return current[prop];
+          },
+          set(_t, prop, value) {
+            current[prop] = value;
+            return true;
+          },
+        }
+      );
+
+      beforeEach(() => {
+        current = getBed();
+      });
+
+      afterEach(() => {
+        current = /** @type {any} */ (undefined);
+      });
+
+      suiteFn(proxy);
+    },
+    options
+  );
+};
 
 export default AIPromptPipelineTestBed;
