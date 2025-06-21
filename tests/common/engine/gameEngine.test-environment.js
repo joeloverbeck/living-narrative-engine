@@ -14,9 +14,8 @@ import {
   createMockPlaytimeTracker,
   createMockSafeEventDispatcher,
   createMockInitializationService,
-  createMockContainer,
 } from '../mockFactories.js';
-import { createMockEnvironment } from '../mockEnvironment.js';
+import { buildTestEnvironment } from '../mockEnvironment.js';
 
 /**
  * Creates a set of mocks and a container for GameEngine.
@@ -38,7 +37,7 @@ import { createMockEnvironment } from '../mockEnvironment.js';
  *   replacement values used instead of defaults.
  */
 export function createTestEnvironment(overrides = {}) {
-  const { mocks, cleanup } = createMockEnvironment({
+  const factoryMap = {
     logger: createMockLogger,
     entityManager: createMockEntityManager,
     turnManager: createMockTurnManager,
@@ -46,19 +45,23 @@ export function createTestEnvironment(overrides = {}) {
     playtimeTracker: createMockPlaytimeTracker,
     safeEventDispatcher: createMockSafeEventDispatcher,
     initializationService: createMockInitializationService,
-  });
-
-  const mapping = {
-    [tokens.ILogger]: mocks.logger,
-    [tokens.IEntityManager]: mocks.entityManager,
-    [tokens.ITurnManager]: mocks.turnManager,
-    [tokens.GamePersistenceService]: mocks.gamePersistenceService,
-    [tokens.PlaytimeTracker]: mocks.playtimeTracker,
-    [tokens.ISafeEventDispatcher]: mocks.safeEventDispatcher,
-    [tokens.IInitializationService]: mocks.initializationService,
   };
 
-  const mockContainer = createMockContainer(mapping, overrides);
+  const tokenMap = {
+    [tokens.ILogger]: 'logger',
+    [tokens.IEntityManager]: 'entityManager',
+    [tokens.ITurnManager]: 'turnManager',
+    [tokens.GamePersistenceService]: 'gamePersistenceService',
+    [tokens.PlaytimeTracker]: 'playtimeTracker',
+    [tokens.ISafeEventDispatcher]: 'safeEventDispatcher',
+    [tokens.IInitializationService]: 'initializationService',
+  };
+
+  const { mocks, mockContainer, cleanup } = buildTestEnvironment(
+    factoryMap,
+    tokenMap,
+    overrides
+  );
 
   const createGameEngine = () => new GameEngine({ container: mockContainer });
 

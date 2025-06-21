@@ -20,7 +20,7 @@ import {
   createMockWorldLoader, // ← NEW import
 } from '../mockFactories.js';
 import { createLoaderMocks } from './modsLoader.test-utils.js';
-import { createMockEnvironment } from '../mockEnvironment.js';
+import { buildTestEnvironment } from '../mockEnvironment.js';
 
 /**
  * List of loader types used when generating mock loaders.
@@ -44,7 +44,7 @@ const loaderTypes = [
  * @returns {object} Test environment utilities and mocks.
  */
 export function createTestEnvironment() {
-  const { mocks, cleanup } = createMockEnvironment({
+  const factoryMap = {
     mockRegistry: createStatefulMockDataRegistry,
     mockLogger: createMockLogger,
     mockSchemaLoader: createMockSchemaLoader,
@@ -57,7 +57,9 @@ export function createTestEnvironment() {
     mockModVersionValidator: createMockModVersionValidator,
     mockModLoadOrderResolver: createMockModLoadOrderResolver,
     mockWorldLoader: createMockWorldLoader,
-  });
+  };
+
+  const { mocks, cleanup } = buildTestEnvironment(factoryMap, {});
 
   /* ── Content-loader mocks ───────────────────────────────────────────── */
   const loaders = createLoaderMocks(loaderTypes);
