@@ -22,16 +22,13 @@ import { logPhaseStart } from '../../utils/logPhaseStart.js';
  * @module Loaders/Phases
  */
 export default class WorldPhase extends LoaderPhase {
-    name = 'WorldPhase';
-
     /**
-     * @description Creates a new WorldPhase instance.
-     * @param {object} params - Configuration parameters.
-     * @param {WorldLoader} params.worldLoader - The loader responsible for processing world files.
-     * @param {ILogger} params.logger - The logger service.
+     * @param {object} params
+     * @param {import('../worldLoader.js').default} params.worldLoader
+     * @param {import('../../interfaces/coreServices.js').ILogger} params.logger
      */
     constructor({ worldLoader, logger }) {
-        super();
+        super('world');
         /**
          * @type {WorldLoader}
          * @private

@@ -9,10 +9,7 @@ import ESSENTIAL_SCHEMA_TYPES from '../../constants/essentialSchemas.js';
  * @description Phase responsible for loading and compiling all schemas and verifying essential schemas are present.
  */
 export default class SchemaPhase extends LoaderPhase {
-  name = 'SchemaPhase';
-
   /**
-   * @description Creates a new SchemaPhase instance.
    * @param {object} params - Configuration parameters
    * @param {import('../../interfaces/coreServices.js').ISchemaLoader} params.schemaLoader - Service for loading and compiling schemas
    * @param {import('../../interfaces/coreServices.js').IConfiguration} params.config - Configuration service for getting schema IDs
@@ -20,7 +17,7 @@ export default class SchemaPhase extends LoaderPhase {
    * @param {import('../../interfaces/coreServices.js').ILogger} params.logger - Logger service
    */
   constructor({ schemaLoader, config, validator, logger }) {
-    super();
+    super('schema');
     this.schemaLoader = schemaLoader;
     this.config = config;
     this.validator = validator;

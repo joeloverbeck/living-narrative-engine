@@ -18,23 +18,18 @@ import {
  * @module Loaders/Phases
  */
 export default class SummaryPhase extends LoaderPhase {
-  name = 'SummaryPhase';
-
   /**
-   * @description Creates a new SummaryPhase instance.
-   * @param {object} params - Configuration parameters.
-   * @param {ISummaryLogger} params.summaryLogger - The service responsible for formatting and logging the summary output.
-   * @param {ILogger} params.logger - The general logger service.
+   * @param {object} params
+   * @param {import('../../interfaces/coreServices.js').ISummaryLogger} params.summaryLogger
+   * @param {import('../../interfaces/coreServices.js').ILogger} params.logger
    */
   constructor({ summaryLogger, logger }) {
-    super();
-
+    super('summary');
     /**
      * @type {ISummaryLogger}
      * @private
      */
     this.summaryLogger = summaryLogger;
-
     /**
      * @type {ILogger}
      * @private

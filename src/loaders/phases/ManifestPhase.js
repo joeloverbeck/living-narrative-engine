@@ -8,16 +8,13 @@ import {
  * @description Phase responsible for handling manifest loading, dependency checks, version validation and final mod-order resolution.
  */
 export default class ManifestPhase extends LoaderPhase {
-  name = 'ManifestPhase';
-
   /**
-   * @description Creates a new ManifestPhase instance.
    * @param {object} params - Configuration parameters
    * @param {import('../../loaders/ModManifestProcessor.js').default} params.processor - Service for processing mod manifests
    * @param {import('../../interfaces/coreServices.js').ILogger} params.logger - Logger service
    */
   constructor({ processor, logger }) {
-    super();
+    super('manifest');
     this.processor = processor;
     this.logger = logger;
   }

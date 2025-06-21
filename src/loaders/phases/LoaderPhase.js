@@ -4,6 +4,9 @@
 import { createLoadContext } from '../LoadContext.js';
 
 export default class LoaderPhase {
+  constructor(name) {
+    this.name = name;
+  }
   /**
    * @param {LoadContext} _ctx
    */

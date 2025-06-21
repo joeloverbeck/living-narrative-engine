@@ -8,16 +8,13 @@ import {
  * @description Phase responsible for loading the game configuration and populating the requested mods.
  */
 export default class GameConfigPhase extends LoaderPhase {
-  name = 'GameConfigPhase';
-
   /**
-   * @description Creates a new GameConfigPhase instance.
-   * @param {object} params - Configuration parameters
-   * @param {import('../../loaders/gameConfigLoader.js').default} params.gameConfigLoader - Service for loading game configuration
-   * @param {import('../../interfaces/coreServices.js').ILogger} params.logger - Logger service
+   * @param {object} params
+   * @param {import('../../loaders/gameConfigLoader.js').default} params.gameConfigLoader
+   * @param {import('../../interfaces/coreServices.js').ILogger} params.logger
    */
   constructor({ gameConfigLoader, logger }) {
-    super();
+    super('gameConfig');
     this.gameConfigLoader = gameConfigLoader;
     this.logger = logger;
   }

@@ -21,16 +21,13 @@ import { logPhaseStart } from '../../utils/logPhaseStart.js';
  * @augments {LoaderPhase}
  */
 export default class ContentPhase extends LoaderPhase {
-    name = 'ContentPhase';
-
     /**
-     * @description Creates a new ContentPhase instance.
-     * @param {object} params - Configuration parameters.
-     * @param {ContentLoadManager} params.manager - The content load manager responsible for orchestrating content loaders.
-     * @param {ILogger} params.logger - The logger service.
+     * @param {object} params
+     * @param {import('../ContentLoadManager.js').default} params.manager
+     * @param {import('../../interfaces/coreServices.js').ILogger} params.logger
      */
     constructor({ manager, logger }) {
-        super();
+        super('content');
         /** @type {ContentLoadManager} */
         this.manager = manager;
         /** @type {ILogger} */
