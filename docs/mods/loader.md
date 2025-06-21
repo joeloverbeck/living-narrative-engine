@@ -4,7 +4,7 @@ This document details aspects of how the Living Narrative Engine loads mods.
 
 ## Mod Manifests
 
-See [Mod Manifest Format](mod_manifest_format.md) for details on every allowed field and an example manifest. The engine automatically discovers each `mod.manifest.json` within a mod's directory during startup.
+See [Mod Manifest Format](mod_manifest_format.md) for details on every allowed field and an example manifest. The engine automatically discovers each `mod-manifest.json` within a mod's directory during startup.
 
 ## Dependency & Conflict Validation
 
@@ -51,7 +51,7 @@ needs a policy to decide which definition takes precedence.
 **Important Considerations:**
 
 - **Dependency Resolution:** While `game.json` sets the _initial_ order, the engine's dependency resolution system (
-  which handles `dependencies` declared in `mod.manifest.json`) might adjust the final effective load order to ensure
+  which handles `dependencies` declared in `mod-manifest.json`) might adjust the final effective load order to ensure
   prerequisites are met. However, the general principle of later mods overriding earlier ones still applies to the
   _final_ resolved order. (Details of the exact dependency resolution algorithm are TBD/internal).
 - **Data Types:** This override behaviour applies to distinct data entries identified by an ID (e.g., specific items,

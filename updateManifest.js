@@ -4,7 +4,7 @@
 //
 // Description:
 // A Node.js script to automatically scan the content directories of a mod
-// and update its `mod.manifest.json` file with all the `.json` files found.
+// and update its `mod-manifest.json` file with all the `.json` files found.
 // This version automatically discovers new content directories in the mod folder.
 //
 // Usage:
@@ -15,7 +15,7 @@ const path = require('path');
 
 // --- CONFIGURATION ---
 const MODS_BASE_PATH = path.join('data', 'mods');
-const MANIFEST_FILENAME = 'mod.manifest.json';
+const MANIFEST_FILENAME = 'mod-manifest.json';
 // List of directories to ignore when auto-discovering content folders.
 const IGNORE_DIRS = new Set(['.git', '.idea', 'node_modules']);
 

@@ -212,7 +212,7 @@ export const createMockConfiguration = () => ({
   getContentBasePath: jest.fn(() => 'content'),
   getGameConfigFilename: jest.fn(() => 'game.json'),
   getModsBasePath: jest.fn(() => 'mods'),
-  getModManifestFilename: jest.fn(() => 'mod.manifest.json'),
+  getModManifestFilename: jest.fn(() => 'mod-manifest.json'),
   getContentTypeDirectory: jest.fn(),
   get: jest.fn(),
 });
@@ -229,7 +229,7 @@ export const createMockPathResolver = () => ({
     (modId, diskFolder, filename) =>
       `mods/${modId}/${diskFolder}/${filename}`
   ),
-  resolveModManifestPath: jest.fn((modId) => `mods/${modId}/mod.manifest.json`),
+  resolveModManifestPath: jest.fn((modId) => `mods/${modId}/mod-manifest.json`),
   getModDirectory: jest.fn((modId) => `mods/${modId}`),
   getManifestName: jest.fn(),
 });

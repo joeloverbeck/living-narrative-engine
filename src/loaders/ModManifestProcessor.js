@@ -12,7 +12,7 @@ import ModDependencyError from '../errors/modDependencyError.js';
 /** @typedef {import('../interfaces/coreServices.js').IDataRegistry} IDataRegistry */
 /** @typedef {import('../modding/modManifestLoader.js').default} ModManifestLoader */
 /** @typedef {import('../events/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
-/** @typedef {import('../../data/schemas/mod.manifest.schema.json').ModManifest} ModManifest */
+/** @typedef {import('../../data/schemas/mod-manifest.schema.json').ModManifest} ModManifest */
 
 /**
  * @description Service used by ModsLoader to prepare mod manifests for loading.

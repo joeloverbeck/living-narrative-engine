@@ -1,6 +1,6 @@
 # Namespaced IDs
 
-The engine stores most game content in JSON files. Each mod uses a unique **namespace** taken from its `mod.manifest.json` so that identifiers do not collide. The general pattern is:
+The engine stores most game content in JSON files. Each mod uses a unique **namespace** taken from its `mod-manifest.json` so that identifiers do not collide. The general pattern is:
 
 ```
 <mod-id>:<local-id>

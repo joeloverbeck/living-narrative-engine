@@ -43,7 +43,7 @@ const createMockConfiguration = (overrides = {}) => ({
   getBaseDataPath: jest.fn().mockReturnValue('./data'),
   getGameConfigFilename: jest.fn().mockReturnValue('game.json'),
   getModsBasePath: jest.fn().mockReturnValue('mods'),
-  getModManifestFilename: jest.fn().mockReturnValue('mod.manifest.json'),
+  getModManifestFilename: jest.fn().mockReturnValue('mod-manifest.json'),
   getRuleBasePath: jest.fn().mockReturnValue('rules'), // Relevant for RuleLoader
   // Explicitly mock getRuleSchemaId as RuleLoader might use it
   getRuleSchemaId: jest
@@ -69,7 +69,7 @@ const createMockPathResolver = (overrides = {}) => ({
   ),
   resolveSchemaPath: jest.fn((filename) => `./data/schemas/${filename}`),
   resolveModManifestPath: jest.fn(
-    (modId) => `./data/mods/${modId}/mod.manifest.json`
+    (modId) => `./data/mods/${modId}/mod-manifest.json`
   ),
   resolveGameConfigPath: jest.fn(() => './data/game.json'),
   // resolveRulePath might be used if loading non-mod rules, ensure it's mocked

@@ -1,5 +1,5 @@
 {
-  "$schema": "http://example.com/schemas/mod.manifest.schema.json",
+  "$schema": "http://example.com/schemas/mod-manifest.schema.json",
   "id": "intimacy",
   "version": "1.0.0",
   "name": "intimacy",

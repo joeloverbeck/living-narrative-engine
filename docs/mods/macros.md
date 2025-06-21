@@ -14,7 +14,7 @@ Create a file in your mod's `macros/` folder:
 }
 ```
 
-Add the file path to `macros` in your `mod.manifest.json`.
+Add the file path to `macros` in your `mod-manifest.json`.
 
 ## Using a Macro in a Rule
 

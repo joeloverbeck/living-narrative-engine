@@ -28,7 +28,7 @@ export async function createMod(modId, options = {}) {
 
   const manifestPath = path.join(modDir, config.getModManifestFilename());
   const manifest = {
-    $schema: 'http://example.com/schemas/mod.manifest.schema.json',
+    $schema: 'http://example.com/schemas/mod-manifest.schema.json',
     id: modId,
     version: '1.0.0',
     name: modId,

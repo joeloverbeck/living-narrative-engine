@@ -3,7 +3,7 @@
  * which expects a `.resolve()` method.
  */
 
-/** @typedef {import('../../data/schemas/mod.manifest.schema.json').ModManifest} ModManifest */
+/** @typedef {import('../../data/schemas/mod-manifest.schema.json').ModManifest} ModManifest */
 
 export default class FnLoadOrderResolverAdapter {
   /**

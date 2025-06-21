@@ -1,6 +1,6 @@
 # Mod Manifest Format
 
-Every mod requires a `mod.manifest.json` file describing its metadata and the content files it provides. The following fields are recognized:
+Every mod requires a `mod-manifest.json` file describing its metadata and the content files it provides. The following fields are recognized:
 
 ## `id` (required)
 
@@ -45,7 +45,7 @@ Object mapping content categories to arrays of JSON definition files. Paths are 
 
 ```json
 {
-  "$schema": "http://example.com/schemas/mod.manifest.schema.json",
+  "$schema": "http://example.com/schemas/mod-manifest.schema.json",
   "id": "ExampleMod",
   "version": "1.0.0",
   "name": "Example Mod",

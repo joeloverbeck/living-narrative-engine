@@ -277,10 +277,10 @@ Given the engine's reliance on mods defined in the `data/` directory:
 
 - When adding or modifying game logic, entities, actions, or rules, you will likely be working with JSON files within a
   mod's directory (e.g., `data/core/items/healing_potion.json`).
-- Familiarize yourself with the `mod.manifest.json` structure and its importance for defining mod metadata,
+- Familiarize yourself with the `mod-manifest.json` structure and its importance for defining mod metadata,
   dependencies, and conflicts.
 - Refer to `README.md` for detailed information on:
-  - Mod structure and `mod.manifest.json`.
+  - Mod structure and `mod-manifest.json`.
   - Dependency and conflict resolution rules (D1-D3, C1-C2).
   - Engine version compatibility (`gameVersion` in manifest, Rule E1).
   - JSON schema validation for mod files.

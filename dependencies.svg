@@ -66,12 +66,12 @@
 </a>
 </g>
 </g>
-<!-- data/schemas/mod.manifest.schema.json -->
+<!-- data/schemas/mod-manifest.schema.json -->
 <g id="node4" class="node">
-<title>data/schemas/mod.manifest.schema.json</title>
-<g id="a_node4"><a xlink:href="data/schemas/mod.manifest.schema.json" xlink:title="mod.manifest.schema.json">
+<title>data/schemas/mod-manifest.schema.json</title>
+<g id="a_node4"><a xlink:href="data/schemas/mod-manifest.schema.json" xlink:title="mod-manifest.schema.json">
 <path fill="#ffee44" stroke="black" d="M1066.83,-96.25C1066.83,-96.25 954.42,-96.25 954.42,-96.25 951.33,-96.25 948.25,-93.17 948.25,-90.08 948.25,-90.08 948.25,-83.92 948.25,-83.92 948.25,-80.83 951.33,-77.75 954.42,-77.75 954.42,-77.75 1066.83,-77.75 1066.83,-77.75 1069.92,-77.75 1073,-80.83 1073,-83.92 1073,-83.92 1073,-90.08 1073,-90.08 1073,-93.17 1069.92,-96.25 1066.83,-96.25"/>
-<text xml:space="preserve" text-anchor="start" x="956.25" y="-83.7" font-family="Helvetica,sans-Serif" font-size="9.00">mod.manifest.schema.json</text>
+<text xml:space="preserve" text-anchor="start" x="956.25" y="-83.7" font-family="Helvetica,sans-Serif" font-size="9.00">mod-manifest.schema.json</text>
 </a>
 </g>
 </g>
@@ -1545,9 +1545,9 @@
 <path fill="none" stroke="#000000" stroke-opacity="0.200000" d="M451.25,-451.47C451.25,-396.07 451.25,-118 451.25,-118 451.25,-118 956.38,-118 956.38,-118"/>
 <polygon fill="none" stroke="#000000" stroke-opacity="0.200000" points="956.38,-120.1 962.38,-118 956.38,-115.9 956.38,-120.1"/>
 </g>
-<!-- src/loaders&#45;&gt;data/schemas/mod.manifest.schema.json -->
+<!-- src/loaders&#45;&gt;data/schemas/mod-manifest.schema.json -->
 <g id="edge122" class="edge">
-<title>src/loaders&#45;&gt;data/schemas/mod.manifest.schema.json</title>
+<title>src/loaders&#45;&gt;data/schemas/mod-manifest.schema.json</title>
 <path fill="none" stroke="#000000" stroke-opacity="0.200000" d="M437.25,-451.46C437.25,-393.4 437.25,-90.08 437.25,-90.08 437.25,-90.08 940.38,-90.08 940.38,-90.08"/>
 <polygon fill="none" stroke="#000000" stroke-opacity="0.200000" points="940.38,-92.18 946.38,-90.08 940.38,-87.98 940.38,-92.18"/>
 </g>
@@ -1725,9 +1725,9 @@
 <path fill="none" stroke="#000000" stroke-opacity="0.200000" d="M620.76,-1165.62C679.81,-1165.62 811.25,-1165.62 811.25,-1165.62 811.25,-1165.62 811.25,-826.05 811.25,-826.05"/>
 <polygon fill="none" stroke="#000000" stroke-opacity="0.200000" points="813.35,-826.05 811.25,-820.05 809.15,-826.05 813.35,-826.05"/>
 </g>
-<!-- src/persistence&#45;&gt;data/schemas/mod.manifest.schema.json -->
+<!-- src/persistence&#45;&gt;data/schemas/mod-manifest.schema.json -->
 <g id="edge150" class="edge">
-<title>src/persistence&#45;&gt;data/schemas/mod.manifest.schema.json</title>
+<title>src/persistence&#45;&gt;data/schemas/mod-manifest.schema.json</title>
 <path fill="none" stroke="#000000" stroke-opacity="0.200000" d="M379.25,-527.54C379.25,-462.47 379.25,-83.92 379.25,-83.92 379.25,-83.92 940.26,-83.92 940.26,-83.92"/>
 <polygon fill="none" stroke="#000000" stroke-opacity="0.200000" points="940.26,-86.02 946.26,-83.92 940.26,-81.82 940.26,-86.02"/>
 </g>

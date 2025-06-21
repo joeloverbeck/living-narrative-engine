@@ -75,7 +75,7 @@ class StaticConfiguration {
 
   /** @returns {string} */
   getModManifestFilename() {
-    return 'mod.manifest.json';
+    return 'mod-manifest.json';
   }
 
   /* ─────────────────────────────── MODS PATH ─────────────────────────────── */
@@ -107,7 +107,7 @@ class StaticConfiguration {
       'game.schema.json',
       'goal.schema.json',
       'json-logic.schema.json',
-      'mod.manifest.schema.json',
+      'mod-manifest.schema.json',
       'operation.schema.json',
       'rule.schema.json',
       'llm-configs.schema.json',
