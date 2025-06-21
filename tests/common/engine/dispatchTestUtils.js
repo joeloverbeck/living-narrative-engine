@@ -39,6 +39,19 @@ export function expectDispatchSequence(mock, ...events) {
 }
 
 /**
+ * Asserts that a single dispatch occurred with the given event id and payload.
+ *
+ * @param {import('@jest/globals').Mock} mock - Mocked dispatch function.
+ * @param {string} eventId - Expected event identifier.
+ * @param {any} payload - Expected payload for the dispatch.
+ * @returns {void}
+ */
+export function expectSingleDispatch(mock, eventId, payload) {
+  expect(mock).toHaveBeenCalledTimes(1);
+  expect(mock).toHaveBeenCalledWith(eventId, payload);
+}
+
+/**
  * Builds the dispatch sequence emitted during a manual save.
  * When `filePath` is omitted, the GAME_SAVED_ID event is excluded, mimicking
  * a failure scenario.
@@ -92,6 +105,7 @@ export { expectDispatchSequence as expectDispatchCalls };
 
 export default {
   expectDispatchSequence,
+  expectSingleDispatch,
   buildSaveDispatches,
   expectEngineStatus,
   expectDispatchCalls: expectDispatchSequence,
