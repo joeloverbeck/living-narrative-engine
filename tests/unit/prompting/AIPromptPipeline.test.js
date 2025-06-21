@@ -7,7 +7,11 @@ import {
 } from '../../common/prompting/promptPipelineTestBed.js';
 import { buildMissingDependencyCases } from '../../common/constructorValidationHelpers.js';
 
-describeAIPromptPipelineSuite('AIPromptPipeline', (bed) => {
+describeAIPromptPipelineSuite('AIPromptPipeline', (getBed) => {
+  let bed;
+  beforeEach(() => {
+    bed = getBed();
+  });
   describe('constructor validation', () => {
     const cases = buildMissingDependencyCases(
       () => bed.getDependencies(),
