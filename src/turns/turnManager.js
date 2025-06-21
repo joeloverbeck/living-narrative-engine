@@ -24,6 +24,7 @@ import {
   TURN_PROCESSING_ENDED,
 } from '../constants/eventIds.js';
 import { ITurnManager } from './interfaces/ITurnManager.js';
+import { RealScheduler } from '../scheduling/index.js';
 
 /**
  * @class TurnManager
@@ -45,6 +46,8 @@ class TurnManager extends ITurnManager {
   #dispatcher;
   /** @type {ITurnHandlerResolver} */
   #turnHandlerResolver;
+  /** @type {import('../scheduling').IScheduler} */
+  #scheduler;
 
   /** @type {boolean} */
   #isRunning = false;
@@ -82,6 +85,7 @@ class TurnManager extends ITurnManager {
    * @param {ILogger} options.logger - Logging service.
    * @param {IValidatedEventDispatcher} options.dispatcher - Service for dispatching events AND subscribing.
    * @param {ITurnHandlerResolver} options.turnHandlerResolver - Service to resolve the correct turn handler.
+   * @param {import('../scheduling').IScheduler} [options.scheduler] - Scheduler implementation for timeouts.
    * @throws {Error} If any required dependency is missing or invalid.
    */
   constructor(options) {
@@ -93,6 +97,7 @@ class TurnManager extends ITurnManager {
       logger,
       dispatcher,
       turnHandlerResolver,
+      scheduler = new RealScheduler(),
     } = options || {};
     const className = this.constructor.name;
 
@@ -139,6 +144,15 @@ class TurnManager extends ITurnManager {
       (logger || console).error(errorMsg);
       throw new Error(errorMsg);
     }
+    if (
+      !scheduler ||
+      typeof scheduler.setTimeout !== 'function' ||
+      typeof scheduler.clearTimeout !== 'function'
+    ) {
+      const errorMsg = `${className} requires a valid IScheduler instance.`;
+      (logger || console).error(errorMsg);
+      throw new Error(errorMsg);
+    }
     // --- End Dependency Validation ---
 
     this.#turnOrderService = turnOrderService;
@@ -146,6 +160,7 @@ class TurnManager extends ITurnManager {
     this.#logger = logger;
     this.#dispatcher = dispatcher;
     this.#turnHandlerResolver = turnHandlerResolver;
+    this.#scheduler = scheduler;
 
     // --- State Initialization (reset flags) ---
     this.#isRunning = false;
@@ -498,8 +513,8 @@ class TurnManager extends ITurnManager {
       this.#logger.debug(`Subscribing to '${TURN_ENDED_ID}' event.`);
 
       const handlerCallback = (event) => {
-        // MODIFICATION: Use setTimeout to schedule as a macrotask
-        setTimeout(() => {
+        // MODIFICATION: Use scheduler to schedule as a macrotask
+        this.#setTimeout(() => {
           try {
             // #handleTurnEndedEvent is not an async function itself,
             // but it initiates async operations.
@@ -672,7 +687,7 @@ class TurnManager extends ITurnManager {
     }
 
     // Schedule advanceTurn to run after the current event processing stack clears.
-    setTimeout(() => {
+    this.#setTimeout(() => {
       // advanceTurn is async, so if we want to catch errors from it, we should.
       this.advanceTurn().catch((advanceTurnError) => {
         this.#logger.error(
@@ -729,6 +744,30 @@ class TurnManager extends ITurnManager {
         dispatchError
       );
     }
+  }
+
+  /**
+   * Wrapper for scheduler.setTimeout.
+   *
+   * @param {() => void} fn - Callback to execute.
+   * @param {number} ms - Delay in milliseconds.
+   * @returns {any} Timeout identifier.
+   * @private
+   */
+  #setTimeout(fn, ms) {
+    return this.#scheduler.setTimeout(fn, ms);
+  }
+
+  /**
+   * Wrapper for scheduler.clearTimeout.
+   *
+   * @param {any} id - Timeout identifier.
+   * @returns {void}
+   * @private
+   */
+  // eslint-disable-next-line no-unused-private-class-members
+  #clearTimeout(id) {
+    this.#scheduler.clearTimeout(id);
   }
 }
 
