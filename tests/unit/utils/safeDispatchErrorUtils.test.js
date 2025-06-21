@@ -16,10 +16,17 @@ describe('safeDispatchError', () => {
   });
 
   it('throws if dispatcher is invalid', () => {
-    expect(() => safeDispatchError({}, 'oops')).toThrow(
-      new InvalidDispatcherError(
-        "Invalid or missing method 'dispatch' on dependency 'safeDispatchError: dispatcher'."
-      )
+    const call = () => safeDispatchError({}, 'oops');
+    expect(call).toThrow(InvalidDispatcherError);
+    let error;
+    try {
+      call();
+    } catch (err) {
+      error = err;
+    }
+    expect(error.message).toBe(
+      "Invalid or missing method 'dispatch' on dependency 'safeDispatchError: dispatcher'."
     );
+    expect(error.details).toEqual({ functionName: 'safeDispatchError' });
   });
 });
