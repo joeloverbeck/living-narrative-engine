@@ -7,9 +7,4 @@ import {
 
 export { assertParamsObject, initHandlerLogger, validateDeps, getExecLogger };
 
-export default {
-  assertParamsObject,
-  initHandlerLogger,
-  validateDeps,
-  getExecLogger,
-};
+// deprecated default export removed in favor of named exports only

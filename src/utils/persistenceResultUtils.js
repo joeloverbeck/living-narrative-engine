@@ -55,5 +55,3 @@ export function normalizePersistenceFailure(result, fallbackCode, defaultMsg) {
     data: null,
   };
 }
-
-export default createPersistenceFailure;

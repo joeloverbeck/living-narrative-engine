@@ -1,5 +1,5 @@
 import { describe, it, expect } from '@jest/globals';
-import MapManager from '../../../src/utils/mapManagerUtils.js';
+import { MapManager } from '../../../src/utils/mapManagerUtils.js';
 
 describe('MapManager', () => {
   it('manages values with valid ids', () => {

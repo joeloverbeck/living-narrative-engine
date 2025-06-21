@@ -9,7 +9,7 @@
  */
 import { isNonBlankString } from './textUtils.js';
 
-class MapManager {
+export class MapManager {
   /**
    * Initializes the internal Map storage.
    *
@@ -130,5 +130,3 @@ class MapManager {
     this.items.clear();
   }
 }
-
-export default MapManager;

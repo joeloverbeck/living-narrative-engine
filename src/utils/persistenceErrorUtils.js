@@ -55,5 +55,3 @@ export function wrapSyncPersistenceOperation(
     };
   }
 }
-
-export default wrapPersistenceOperation;

@@ -24,7 +24,7 @@ import {
   ENTITY_REMOVED_ID,
 } from '../../../src/constants/eventIds.js';
 import { expectDispatchSequence } from '../../common/engine/dispatchTestUtils.js';
-import MapManager from '../../../src/utils/mapManagerUtils.js';
+import { MapManager } from '../../../src/utils/mapManagerUtils.js';
 
 describeEntityManagerSuite('EntityManager - Lifecycle', (getBed) => {
   describe('constructor', () => {
@@ -44,13 +44,14 @@ describeEntityManagerSuite('EntityManager - Lifecycle', (getBed) => {
         const { registry, validator, logger, eventDispatcher } = getBed().mocks;
         const EntityManager = getBed().entityManager.constructor;
 
-        expect(() =>
-          new EntityManager({
-            registry: depName === 'registry' ? value : registry,
-            validator: depName === 'validator' ? value : validator,
-            logger,
-            dispatcher: eventDispatcher,
-          })
+        expect(
+          () =>
+            new EntityManager({
+              registry: depName === 'registry' ? value : registry,
+              validator: depName === 'validator' ? value : validator,
+              logger,
+              dispatcher: eventDispatcher,
+            })
         ).toThrow(
           depName === 'registry'
             ? 'Missing required dependency: IDataRegistry.'

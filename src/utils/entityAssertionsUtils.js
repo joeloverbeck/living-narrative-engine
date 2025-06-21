@@ -63,5 +63,3 @@ export function assertValidActor(
 ) {
   assertValidEntity(actor, logger, contextName, safeEventDispatcher);
 }
-
-export default assertValidEntity;

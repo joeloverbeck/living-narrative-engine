@@ -2,7 +2,7 @@
 
 import { POSITION_COMPONENT_ID } from '../constants/componentIds.js';
 import { ISpatialIndexManager } from '../interfaces/ISpatialIndexManager.js';
-import MapManager from '../utils/mapManagerUtils.js';
+import { MapManager } from '../utils/mapManagerUtils.js';
 import { assertValidId } from '../utils/parameterGuards.js';
 
 /**
