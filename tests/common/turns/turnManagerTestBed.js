@@ -13,7 +13,10 @@ import {
   createMockTurnHandler,
 } from '../mockFactories';
 import FactoryTestBed from '../factoryTestBed.js';
-import { describeSuiteWithHooks } from '../describeSuite.js';
+import {
+  describeSuiteWithHooks,
+  createDescribeTestBedSuite,
+} from '../describeSuite.js';
 import { flushPromisesAndTimers } from '../jestHelpers.js';
 
 /**
@@ -219,11 +222,8 @@ export function createTurnManagerTestBed(overrides = {}) {
  *   creation.
  * @returns {void}
  */
-export function describeTurnManagerSuite(title, suiteFn, overrides = {}) {
-  describeSuiteWithHooks(title, TurnManagerTestBed, suiteFn, {
-    args: [overrides],
-  });
-}
+export const describeTurnManagerSuite =
+  createDescribeTestBedSuite(TurnManagerTestBed);
 
 export default TurnManagerTestBed;
 export { flushPromisesAndTimers };

@@ -68,3 +68,29 @@ export function describeSuiteWithHooks(
     suiteFn(() => bed);
   });
 }
+
+/**
+ * @description Generates a helper for defining suites that automatically
+ *   instantiate and clean up a given TestBed.
+ * @param {new (...args: any[]) => {cleanup: () => Promise<void>}} TestBedCtor -
+ *   Constructor for the TestBed.
+ * @param {object} [defaultOptions] - Default options forwarded to
+ *   {@link describeSuiteWithHooks}.
+ * @param {(bed: any) => void} [defaultOptions.beforeEachHook] - Default hook
+ *   executed after bed creation.
+ * @param {(bed: any) => void} [defaultOptions.afterEachHook] - Default hook
+ *   executed after bed cleanup.
+ * @param {any[]} [defaultOptions.args] - Default arguments for the TestBed
+ *   constructor.
+ * @returns {(title: string, suiteFn: (getBed: () => any) => void, overrides?: any) => void}
+ *   Suite function that wraps {@link describeSuiteWithHooks}.
+ */
+export function createDescribeTestBedSuite(TestBedCtor, defaultOptions = {}) {
+  return function (title, suiteFn, overrides) {
+    const options = {
+      ...defaultOptions,
+      args: overrides ? [overrides] : defaultOptions.args,
+    };
+    describeSuiteWithHooks(title, TestBedCtor, suiteFn, options);
+  };
+}

@@ -8,7 +8,10 @@
 import { createTestEnvironment } from './gameEngine.test-environment.js';
 import FactoryTestBed from '../factoryTestBed.js';
 import { suppressConsoleError } from '../jestHelpers.js';
-import { describeSuiteWithHooks } from '../describeSuite.js';
+import {
+  createDescribeTestBedSuite,
+  describeSuiteWithHooks,
+} from '../describeSuite.js';
 
 /**
  * @description Utility class that instantiates {@link GameEngine} using a mocked
@@ -176,18 +179,20 @@ export function createGameEngineTestBed(overrides = {}) {
  * @param {{[token: string]: any}} [overrides] - Optional DI overrides.
  * @returns {void}
  */
-export function describeGameEngineSuite(title, suiteFn, overrides = {}) {
-  let consoleSpy;
-  describeSuiteWithHooks(title, GameEngineTestBed, suiteFn, {
-    args: [overrides],
-    beforeEachHook() {
-      consoleSpy = suppressConsoleError();
-    },
-    afterEachHook() {
-      consoleSpy.mockRestore();
-    },
-  });
-}
+export const describeGameEngineSuite = createDescribeTestBedSuite(
+  GameEngineTestBed,
+  (() => {
+    let consoleSpy;
+    return {
+      beforeEachHook() {
+        consoleSpy = suppressConsoleError();
+      },
+      afterEachHook() {
+        consoleSpy.mockRestore();
+      },
+    };
+  })()
+);
 
 /**
  * Defines an engine-focused test suite providing `bed` and `engine` variables
