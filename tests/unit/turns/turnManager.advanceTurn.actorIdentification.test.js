@@ -3,10 +3,7 @@
 
 import { afterEach, beforeEach, expect, jest, test } from '@jest/globals';
 import { describeTurnManagerSuite } from '../../common/turns/turnManagerTestBed.js';
-import {
-  ACTOR_COMPONENT_ID,
-  PLAYER_COMPONENT_ID,
-} from '../../../src/constants/componentIds.js';
+
 import { TURN_ENDED_ID } from '../../../src/constants/eventIds.js';
 import { createMockEntity } from '../../common/mockFactories.js';
 
@@ -17,11 +14,10 @@ describeTurnManagerSuite(
   (getBed) => {
     let testBed;
     let stopSpy;
-    let capturedTurnEndedHandler;
+    let turnEndCapture;
 
     beforeEach(async () => {
       jest.clearAllMocks();
-      capturedTurnEndedHandler = null;
       testBed = getBed();
 
       testBed.mocks.turnOrderService.isEmpty.mockResolvedValue(false);
@@ -33,14 +29,7 @@ describeTurnManagerSuite(
       );
 
       testBed.mocks.dispatcher.dispatch.mockClear().mockResolvedValue(true);
-      testBed.mocks.dispatcher.subscribe
-        .mockClear()
-        .mockImplementation((eventType, handler) => {
-          if (eventType === TURN_ENDED_ID) {
-            capturedTurnEndedHandler = handler;
-          }
-          return jest.fn(); // Return mock unsubscribe
-        });
+      turnEndCapture = testBed.captureSubscription(TURN_ENDED_ID);
       testBed.mocks.turnOrderService.clearCurrentRound.mockResolvedValue();
 
       // Set default resolution for the resolver
@@ -56,8 +45,6 @@ describeTurnManagerSuite(
         .mockImplementation(async () => {});
 
       await testBed.turnManager.start();
-
-      expect(capturedTurnEndedHandler).toBeInstanceOf(Function);
 
       testBed.mocks.logger.info.mockClear();
       testBed.mocks.logger.debug.mockClear();
@@ -76,7 +63,7 @@ describeTurnManagerSuite(
       if (stopSpy) {
         stopSpy.mockRestore();
       }
-      capturedTurnEndedHandler = null;
+      turnEndCapture.unsubscribe.mockClear();
       jest.useRealTimers();
     });
 
@@ -124,8 +111,8 @@ describeTurnManagerSuite(
       );
       expect(stopSpy).not.toHaveBeenCalled();
 
-      expect(capturedTurnEndedHandler).toBeInstanceOf(Function);
-      capturedTurnEndedHandler({
+      expect(turnEndCapture.handler).toBeInstanceOf(Function);
+      turnEndCapture.handler({
         type: TURN_ENDED_ID,
         payload: { entityId: playerActor.id, success: true },
       });
@@ -178,8 +165,8 @@ describeTurnManagerSuite(
       );
       expect(stopSpy).not.toHaveBeenCalled();
 
-      expect(capturedTurnEndedHandler).toBeInstanceOf(Function);
-      capturedTurnEndedHandler({
+      expect(turnEndCapture.handler).toBeInstanceOf(Function);
+      turnEndCapture.handler({
         type: TURN_ENDED_ID,
         payload: { entityId: aiActor.id, success: true },
       });
@@ -214,7 +201,6 @@ describeTurnManagerSuite(
     });
 
     test('Entity manager error: logs error, stops manager', async () => {
-      const entityError = new Error('Entity not found');
       testBed.mocks.turnOrderService.getNextEntity.mockResolvedValue(null);
 
       await testBed.turnManager.advanceTurn();

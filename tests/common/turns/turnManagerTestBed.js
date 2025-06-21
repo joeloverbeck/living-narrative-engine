@@ -117,6 +117,31 @@ export class TurnManagerTestBed extends BaseTestBed {
   }
 
   /**
+   * Sets up the dispatcher to capture subscriptions for the specified event.
+   *
+   * @param {string} eventId - Event identifier to capture.
+   * @returns {{ unsubscribe: jest.Mock, handler: (() => void)|null }} Captured
+   *   unsubscribe mock and subscribed handler once registration occurs.
+   */
+  captureSubscription(eventId) {
+    let captured = null;
+    const unsubscribe = jest.fn();
+    this.dispatcher.subscribe.mockImplementation((id, handler) => {
+      if (id === eventId) {
+        captured = handler;
+      }
+      return unsubscribe;
+    });
+
+    return {
+      get handler() {
+        return captured;
+      },
+      unsubscribe,
+    };
+  }
+
+  /**
    * Triggers an event on the internal dispatcher.
    *
    * @param {string} eventType - Event name.

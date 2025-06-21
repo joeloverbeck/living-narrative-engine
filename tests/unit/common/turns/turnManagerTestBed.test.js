@@ -91,6 +91,14 @@ describe('TurnManager Test Helpers: TurnManagerTestBed', () => {
     expect(testBed.captureHandler('evt')).toBe(cb);
   });
 
+  it('captureSubscription captures handler and returns unsubscribe', () => {
+    const capture = testBed.captureSubscription('evt');
+    const cb = jest.fn();
+    const result = testBed.dispatcher.subscribe('evt', cb);
+    expect(capture.handler).toBe(cb);
+    expect(result).toBe(capture.unsubscribe);
+  });
+
   it('advanceAndFlush runs timers after advancing', async () => {
     jest.useFakeTimers({ legacyFakeTimers: false });
     const bed = new TurnManagerTestBed({ TurnManagerClass: FakeManager });
