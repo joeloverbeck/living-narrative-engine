@@ -208,23 +208,6 @@ export function registerLoaders(container) {
   logger.debug(`Loaders Registration: Registered ${tokens.ModManifestLoader}.`);
   // === ADDED: MODLOADER-005 A END ===
 
-  // Register ModDependencyValidator as a singleton factory that returns the class itself
-  registrar.singletonFactory(
-    tokens.ModDependencyValidator,
-    () => ModDependencyValidator
-  );
-  logger.debug(`Loaders Registration: Registered ${tokens.ModDependencyValidator}.`);
-
-  // Register ModsLoader as a singleton factory
-  registrar.singletonFactory(
-    tokens.ModsLoader,
-    (c) => new ModsLoader({
-      modDependencyValidator: c.resolve(tokens.ModDependencyValidator),
-      // Add other dependencies as needed
-    })
-  );
-  logger.debug(`Loaders Registration: Registered ${tokens.ModsLoader}.`);
-
   // ActionLoader
   registrar.singletonFactory(
     tokens.ActionLoader,
