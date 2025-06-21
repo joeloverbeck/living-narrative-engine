@@ -10,7 +10,7 @@ import {
   SYSTEM_ERROR_OCCURRED_ID,
   TURN_PROCESSING_STARTED,
 } from '../../../src/constants/eventIds.js';
-import { createMockEntity } from '../../common/mockFactories.js';
+import { createAiActor } from '../../common/turns/testActors.js';
 import TurnManager from '../../../src/turns/turnManager.js';
 import RoundManager from '../../../src/turns/roundManager.js';
 
@@ -80,10 +80,7 @@ describeTurnManagerSuite(
 
     test('Successfully getting next entity: updates current actor, resolves and calls handler startTurn', async () => {
       // Arrange
-      const nextActor = createMockEntity('actor-next', {
-        isActor: true,
-        isPlayer: false,
-      }); // AI actor
+      const nextActor = createAiActor('actor-next'); // AI actor
       const entityType = 'ai';
       testBed.mocks.turnOrderService.getNextEntity.mockResolvedValue(nextActor);
 
@@ -154,10 +151,7 @@ describeTurnManagerSuite(
 
     test('getNextEntity returns null: logs error, stops manager', async () => {
       // Arrange
-      const mockActor = createMockEntity('actor1', {
-        isActor: true,
-        isPlayer: false,
-      });
+      const mockActor = createAiActor('actor1');
       testBed.setActiveEntities(mockActor); // Set up entities so RoundManager can start a new round
       testBed.mocks.turnOrderService.isEmpty.mockResolvedValue(false);
       testBed.mocks.turnOrderService.getNextEntity.mockResolvedValue(null);
@@ -228,7 +222,7 @@ describeTurnManagerSuite(
     test('Handler resolver throws: logs error, stops manager', async () => {
       // Arrange
       const resolveError = new Error('Handler resolution failed');
-      const mockActor = createMockEntity('actor1', { isActor: true });
+      const mockActor = createAiActor('actor1');
       testBed.mocks.turnOrderService.getNextEntity.mockResolvedValue(mockActor); // Return valid entity first
       testBed.mocks.turnHandlerResolver.resolveHandler.mockRejectedValue(
         resolveError
@@ -260,7 +254,7 @@ describeTurnManagerSuite(
     test('Handler startTurn throws: logs error, stops manager', async () => {
       // Arrange
       const startError = new Error('Handler start failed');
-      const mockActor = createMockEntity('actor1', { isActor: true });
+      const mockActor = createAiActor('actor1');
       const mockHandler = {
         startTurn: jest.fn().mockRejectedValue(startError),
         destroy: jest.fn().mockResolvedValue(undefined),
@@ -287,7 +281,7 @@ describeTurnManagerSuite(
     test('Dispatcher dispatch throws: logs error, stops manager', async () => {
       // Arrange
       const dispatchError = new Error('Dispatcher failure');
-      const mockActor = createMockEntity('actor1', { isActor: true });
+      const mockActor = createAiActor('actor1');
       testBed.mocks.turnOrderService.getNextEntity.mockResolvedValue(mockActor); // Return valid entity first
       testBed.mocks.dispatcher.dispatch.mockRejectedValue(dispatchError); // Then throw error
 
