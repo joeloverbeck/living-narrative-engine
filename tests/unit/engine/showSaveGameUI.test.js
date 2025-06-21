@@ -1,10 +1,8 @@
 // tests/engine/showSaveGameUI.test.js
 import { beforeEach, describe, expect, it } from '@jest/globals';
 import { tokens } from '../../../src/dependencyInjection/tokens.js';
-import {
-  createGameEngineTestBed,
-  describeEngineSuite,
-} from '../../common/engine/gameEngineTestBed.js';
+import { describeEngineSuite } from '../../common/engine/gameEngineTestBed.js';
+import { runUnavailableServiceTest } from '../../common/engine/gameEngineHelpers.js';
 import '../../common/engine/engineTestTypedefs.js';
 import {
   REQUEST_SHOW_SAVE_GAME_UI,
@@ -61,30 +59,30 @@ describeEngineSuite('GameEngine', (ctx) => {
       );
     });
 
-    it.each([
-      [
-        'GamePersistenceService',
-        tokens.GamePersistenceService,
-        'GameEngine.showSaveGameUI: GamePersistenceService is unavailable. Cannot show Save Game UI.',
-      ],
-    ])(
+    it.each(
+      runUnavailableServiceTest(
+        [
+          [
+            tokens.GamePersistenceService,
+            'GameEngine.showSaveGameUI: GamePersistenceService is unavailable. Cannot show Save Game UI.',
+          ],
+        ],
+        (bed, engine) => {
+          engine.showSaveGameUI();
+          expect(
+            bed.mocks.gamePersistenceService.isSavingAllowed
+          ).not.toHaveBeenCalled();
+          return [
+            bed.mocks.logger.error,
+            bed.mocks.safeEventDispatcher.dispatch,
+          ];
+        }
+      )
+    )(
       'should log error if %s is unavailable when showing save UI',
-      async (_name, token, expectedMsg) => {
-        const localBed = createGameEngineTestBed({ [token]: null });
-        const localGameEngine = localBed.engine;
-        localBed.resetMocks();
-
-        localGameEngine.showSaveGameUI();
-
-        expect(localBed.mocks.logger.error).toHaveBeenCalledWith(expectedMsg);
-        expect(
-          localBed.mocks.safeEventDispatcher.dispatch
-        ).not.toHaveBeenCalled();
-        expect(
-          localBed.mocks.gamePersistenceService.isSavingAllowed
-        ).not.toHaveBeenCalled();
-
-        await localBed.cleanup();
+      async (_token, fn) => {
+        expect.assertions(3);
+        await fn();
       }
     );
   });
