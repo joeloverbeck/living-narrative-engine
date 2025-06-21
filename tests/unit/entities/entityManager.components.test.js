@@ -36,10 +36,13 @@ describeEntityManagerSuite(
         // Arrange
         const { entityManager } = getBed();
         const { PRIMARY } = TestData.InstanceIDs;
-        getBed().createEntity('basic', {
-          instanceId: PRIMARY,
-        });
-        getBed().resetDispatchMock();
+        getBed().createEntity(
+          'basic',
+          {
+            instanceId: PRIMARY,
+          },
+          { resetDispatch: true }
+        );
 
         // Act
         entityManager.addComponent(
@@ -64,10 +67,13 @@ describeEntityManagerSuite(
         // Arrange
         const { entityManager, mocks } = getBed();
         const { PRIMARY } = TestData.InstanceIDs;
-        const entity = getBed().createEntity('basic', {
-          instanceId: PRIMARY,
-        });
-        getBed().resetDispatchMock();
+        const entity = getBed().createEntity(
+          'basic',
+          {
+            instanceId: PRIMARY,
+          },
+          { resetDispatch: true }
+        );
 
         // Act
         entityManager.addComponent(
@@ -121,9 +127,13 @@ describeEntityManagerSuite(
         const { PRIMARY } = TestData.InstanceIDs;
         const UPDATED_NAME_DATA = { name: 'Updated Name' };
 
-        const entity = getBed().createEntity('basic', {
-          instanceId: PRIMARY,
-        });
+        const entity = getBed().createEntity(
+          'basic',
+          {
+            instanceId: PRIMARY,
+          },
+          { resetDispatch: true }
+        );
         const originalNameData = entity.getComponentData(NAME_COMPONENT_ID);
         getBed().resetDispatchMock();
 
@@ -167,8 +177,11 @@ describeEntityManagerSuite(
         // Arrange
         const { entityManager, mocks } = getBed();
         const { PRIMARY } = TestData.InstanceIDs;
-        getBed().createEntity('basic', { instanceId: PRIMARY });
-        getBed().resetDispatchMock();
+        getBed().createEntity(
+          'basic',
+          { instanceId: PRIMARY },
+          { resetDispatch: true }
+        );
 
         const validationErrors = [{ message: 'Invalid data' }];
         mocks.validator.validate.mockReturnValue({
@@ -236,11 +249,13 @@ describeEntityManagerSuite(
         // Arrange
         const { entityManager, mocks } = getBed();
         const { PRIMARY } = TestData.InstanceIDs;
-        const entity = getBed().createEntity('basic', {
-          instanceId: PRIMARY,
-        });
-        // Clear dispatcher mock to ignore the ENTITY_CREATED event from setup.
-        getBed().resetDispatchMock();
+        const entity = getBed().createEntity(
+          'basic',
+          {
+            instanceId: PRIMARY,
+          },
+          { resetDispatch: true }
+        );
 
         // Mock the entity's own method to simulate an internal failure
         const addComponentSpy = jest
@@ -275,7 +290,7 @@ describeEntityManagerSuite(
         const { PRIMARY } = TestData.InstanceIDs;
 
         // Add component as an override
-        const entity = getBed().createEntity('basic', {
+        getBed().createEntity('basic', {
           instanceId: PRIMARY,
         });
         entityManager.addComponent(PRIMARY, NAME_COMPONENT_ID, {
@@ -300,9 +315,13 @@ describeEntityManagerSuite(
         const { NAME_COMPONENT_ID } = TestData.ComponentIDs;
         const { PRIMARY } = TestData.InstanceIDs;
         const overrideData = { name: 'ToBeRemoved' };
-        const entity = getBed().createEntity('basic', {
-          instanceId: PRIMARY,
-        });
+        const entity = getBed().createEntity(
+          'basic',
+          {
+            instanceId: PRIMARY,
+          },
+          { resetDispatch: true }
+        );
         entityManager.addComponent(PRIMARY, NAME_COMPONENT_ID, overrideData);
         getBed().resetDispatchMock();
 
@@ -327,9 +346,12 @@ describeEntityManagerSuite(
         const { entityManager, mocks } = getBed();
         const { NAME_COMPONENT_ID } = TestData.ComponentIDs;
         const { PRIMARY } = TestData.InstanceIDs;
-        getBed().createEntity('basic', { instanceId: PRIMARY });
+        getBed().createEntity(
+          'basic',
+          { instanceId: PRIMARY },
+          { resetDispatch: true }
+        );
         // NAME_COMPONENT_ID exists on definition, but not as an override
-        getBed().resetDispatchMock();
 
         // Act & Assert
         expect(() =>
