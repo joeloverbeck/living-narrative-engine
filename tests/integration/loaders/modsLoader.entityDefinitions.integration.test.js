@@ -24,6 +24,8 @@ import {
 
 // Mock phases for non-essential loading phases
 class MockSchemaPhase extends LoaderPhase {
+  constructor(logger) { super(); this.logger = logger; }
+  name = 'MockSchemaPhase';
   async execute(context) {
     // Mock schema phase that does nothing
     return context;
@@ -31,6 +33,8 @@ class MockSchemaPhase extends LoaderPhase {
 }
 
 class MockGameConfigPhase extends LoaderPhase {
+  constructor(logger) { super(); this.logger = logger; }
+  name = 'MockGameConfigPhase';
   async execute(context) {
     // Mock game config phase that does nothing
     return context;
@@ -38,21 +42,26 @@ class MockGameConfigPhase extends LoaderPhase {
 }
 
 class MockManifestPhase extends LoaderPhase {
+  constructor(logger) { super(); this.logger = logger; }
+  name = 'MockManifestPhase';
   async execute(context) {
     // Mock manifest phase that sets up the mod context
-    context.finalModOrder = ['isekai'];
-    context.totals = { entityDefinitions: 4, entityInstances: 0 };
-    // Populate manifests map as expected by ContentPhase
     const MOD_ID = 'isekai';
     const MODS_BASE_PATH = './data/mods';
     const manifestPath = path.join(MODS_BASE_PATH, MOD_ID, 'mod-manifest.json');
     const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
-    context.manifests = new Map([[MOD_ID, manifest]]);
-    return context;
+    return {
+      ...context,
+      finalModOrder: ['isekai'],
+      totals: { entityDefinitions: 4, entityInstances: 0 },
+      manifests: new Map([[MOD_ID, manifest]]),
+    };
   }
 }
 
 class MockWorldPhase extends LoaderPhase {
+  constructor(logger) { super(); this.logger = logger; }
+  name = 'MockWorldPhase';
   async execute(context) {
     // Mock world phase that does nothing
     return context;
@@ -60,6 +69,8 @@ class MockWorldPhase extends LoaderPhase {
 }
 
 class MockSummaryPhase extends LoaderPhase {
+  constructor(logger) { super(); this.logger = logger; }
+  name = 'MockSummaryPhase';
   async execute(context) {
     // Mock summary phase that does nothing
     return context;
@@ -72,9 +83,10 @@ describe('Integration: Entity Definitions and Instances Loader', () => {
   let logger;
 
   beforeAll(async () => {
+    // Ensure logger is defined first and used everywhere
+    logger = new ConsoleLogger('info');
     // Set up DI container and register all loaders as in production
     const container = new AppContainer();
-    logger = new ConsoleLogger('info');
     container.register(tokens.ILogger, logger);
     // Register mock validated event dispatcher
     container.register(tokens.IValidatedEventDispatcher, createMockValidatedEventDispatcherForIntegration());
@@ -82,13 +94,42 @@ describe('Integration: Entity Definitions and Instances Loader', () => {
     registerLoaders(container);
     // Register mock data fetcher AFTER loader registration to overwrite
     container.register(tokens.IDataFetcher, createMockDataFetcherForIntegration());
-    // Resolve registry and modsLoader from the container
+    // Resolve registry from the container
     registry = container.resolve(tokens.IDataRegistry);
+    
+    // Create test phases using the container's dependencies
+    const phases = [
+      new MockSchemaPhase(logger),
+      new MockGameConfigPhase(logger),
+      new MockManifestPhase(logger),
+      container.resolve(tokens.ContentPhase),
+      new MockWorldPhase(logger),
+      new MockSummaryPhase(logger),
+    ];
+    
+    // Create a custom session with test phases
+    const session = makeSession(phases);
+    
+    // Override the ModsLoader registration to use our custom session
+    container.register(tokens.ModsLoader, new ModsLoader({
+      logger,
+      cache: container.resolve(tokens.ILoadCache),
+      session,
+      registry,
+    }));
+    
     modsLoader = container.resolve(tokens.ModsLoader);
-
+    
     // Load the isekai mod
-    await modsLoader.loadMods('test-world', [MOD_ID]);
-
+    const result = await modsLoader.loadMods('test-world', [MOD_ID]);
+    
+    // Verify the returned LoadReport
+    expect(result).toEqual({
+      finalModOrder: ['isekai'],
+      totals: expect.any(Object),
+      incompatibilities: 0,
+    });
+    
     // DEBUG: Log all entity_definitions in the registry after loading
     const allEntities = registry.getAll('entityDefinitions');
     console.log('DEBUG: All entity_definitions in registry:', allEntities);
@@ -151,4 +192,20 @@ describe('Integration: Entity Definitions and Instances Loader', () => {
       }
     }
   });
-}); 
+});
+
+/**
+ *
+ * @param phases
+ */
+function makeSession(phases) {
+  return {
+    async run(ctx) {
+      let current = ctx;
+      for (const phase of phases) {
+        current = await phase.execute(current);
+      }
+      return current;
+    },
+  };
+} 

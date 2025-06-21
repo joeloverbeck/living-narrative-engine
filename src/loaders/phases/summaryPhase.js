@@ -19,20 +19,17 @@ import {
  */
 export default class SummaryPhase extends LoaderPhase {
   /**
-   * @description Creates a new SummaryPhase instance.
-   * @param {object} params - Configuration parameters.
-   * @param {ISummaryLogger} params.summaryLogger - The service responsible for formatting and logging the summary output.
-   * @param {ILogger} params.logger - The general logger service.
+   * @param {object} params
+   * @param {import('../../interfaces/coreServices.js').ISummaryLogger} params.summaryLogger
+   * @param {import('../../interfaces/coreServices.js').ILogger} params.logger
    */
   constructor({ summaryLogger, logger }) {
-    super();
-
+    super('summary');
     /**
      * @type {ISummaryLogger}
      * @private
      */
     this.summaryLogger = summaryLogger;
-
     /**
      * @type {ILogger}
      * @private
@@ -43,7 +40,7 @@ export default class SummaryPhase extends LoaderPhase {
   /**
    * @description Executes the summary logging phase.
    * @param {LoadContext} ctx - The load context containing all the data from previous phases.
-   * @returns {Promise<void>}
+   * @returns {Promise<LoadContext>}
    * @throws {ModsLoaderPhaseError} Throws a phase-specific error if the summary logging fails.
    * @async
    */
@@ -58,6 +55,9 @@ export default class SummaryPhase extends LoaderPhase {
         ctx.incompatibilities,
         ctx.totals
       );
+      
+      // Return frozen context (no modifications in this phase)
+      return Object.freeze({ ...ctx });
     } catch (e) {
       throw new ModsLoaderPhaseError(
         ModsLoaderErrorCode.SUMMARY,

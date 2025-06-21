@@ -9,13 +9,12 @@ import {
  */
 export default class ManifestPhase extends LoaderPhase {
   /**
-   * @description Creates a new ManifestPhase instance.
    * @param {object} params - Configuration parameters
    * @param {import('../../loaders/ModManifestProcessor.js').default} params.processor - Service for processing mod manifests
    * @param {import('../../interfaces/coreServices.js').ILogger} params.logger - Logger service
    */
   constructor({ processor, logger }) {
-    super();
+    super('manifest');
     this.processor = processor;
     this.logger = logger;
   }
@@ -23,7 +22,7 @@ export default class ManifestPhase extends LoaderPhase {
   /**
    * @description Executes the manifest processing phase.
    * @param {import('../LoadContext.js').LoadContext} ctx - The load context
-   * @returns {Promise<void>}
+   * @returns {Promise<import('../LoadContext.js').LoadContext>}
    * @throws {ModsLoaderPhaseError} When manifest processing fails
    */
   async execute(ctx) {
@@ -33,9 +32,16 @@ export default class ManifestPhase extends LoaderPhase {
         ctx.requestedMods,
         ctx.worldName
       );
-      ctx.finalModOrder = res.finalModOrder;
-      ctx.incompatibilities = res.incompatibilityCount;
-      ctx.manifests = res.loadedManifestsMap;
+      
+      // Create new frozen context with modifications
+      const next = {
+        ...ctx,
+        finalModOrder: res.finalModOrder,
+        incompatibilities: res.incompatibilityCount,
+        manifests: res.loadedManifestsMap,
+      };
+      
+      return Object.freeze(next);
     } catch (e) {
       throw new ModsLoaderPhaseError(
         ModsLoaderErrorCode.MANIFEST,

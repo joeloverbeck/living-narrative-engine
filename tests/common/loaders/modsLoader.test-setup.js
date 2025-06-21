@@ -85,26 +85,9 @@ export function createTestEnvironment() {
       m.mockModLoadOrderResolver.resolve.mockImplementation((ids) => ids);
 
       return new ModsLoader({
-        registry: m.mockRegistry,
         logger: m.mockLogger,
-        schemaLoader: m.mockSchemaLoader,
-        componentLoader: loaders.mockComponentLoader,
-        conditionLoader: loaders.mockConditionLoader,
-        ruleLoader: loaders.mockRuleLoader,
-        actionLoader: loaders.mockActionLoader,
-        eventLoader: loaders.mockEventLoader,
-        entityLoader: loaders.mockEntityLoader,
-        validator: m.mockValidator,
-        configuration: m.mockConfiguration,
-        gameConfigLoader: m.mockGameConfigLoader,
-        promptTextLoader: { loadPromptText: jest.fn() },
-        modManifestLoader: m.mockModManifestLoader,
-        validatedEventDispatcher: m.mockValidatedEventDispatcher,
-        modDependencyValidator: m.mockModDependencyValidator,
-        modVersionValidator: m.mockModVersionValidator,
-        modLoadOrderResolver: m.mockModLoadOrderResolver,
-        worldLoader: m.mockWorldLoader,
-        contentLoadersConfig: null,
+        cache: { clear: jest.fn(), snapshot: jest.fn(), restore: jest.fn() },
+        session: { run: jest.fn().mockResolvedValue({}) },
       });
     }
   );

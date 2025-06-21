@@ -9,13 +9,12 @@ import {
  */
 export default class GameConfigPhase extends LoaderPhase {
   /**
-   * @description Creates a new GameConfigPhase instance.
-   * @param {object} params - Configuration parameters
-   * @param {import('../../loaders/gameConfigLoader.js').default} params.gameConfigLoader - Service for loading game configuration
-   * @param {import('../../interfaces/coreServices.js').ILogger} params.logger - Logger service
+   * @param {object} params
+   * @param {import('../../loaders/gameConfigLoader.js').default} params.gameConfigLoader
+   * @param {import('../../interfaces/coreServices.js').ILogger} params.logger
    */
   constructor({ gameConfigLoader, logger }) {
-    super();
+    super('gameConfig');
     this.gameConfigLoader = gameConfigLoader;
     this.logger = logger;
   }
@@ -23,17 +22,25 @@ export default class GameConfigPhase extends LoaderPhase {
   /**
    * @description Executes the game configuration loading phase.
    * @param {import('../LoadContext.js').LoadContext} ctx - The load context
-   * @returns {Promise<void>}
+   * @returns {Promise<import('../LoadContext.js').LoadContext>}
    * @throws {ModsLoaderPhaseError} When game configuration loading fails
    */
   async execute(ctx) {
     this.logger.info('— GameConfigPhase starting —');
     try {
       const requestedMods = await this.gameConfigLoader.loadConfig();
-      ctx.requestedMods = requestedMods;
+      
       this.logger.debug(
         `GameConfigPhase: Loaded ${requestedMods.length} mods from game configuration: [${requestedMods.join(', ')}]`
       );
+      
+      // Create new frozen context with modifications
+      const next = {
+        ...ctx,
+        requestedMods,
+      };
+      
+      return Object.freeze(next);
     } catch (e) {
       throw new ModsLoaderPhaseError(
         ModsLoaderErrorCode.GAME_CONFIG,

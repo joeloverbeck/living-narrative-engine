@@ -32,6 +32,7 @@
 /** @typedef {import('../../modding/modLoadOrderResolver.js').default} ModLoadOrderResolver */
 /** @typedef {import('../../loaders/promptTextLoader.js').default} PromptTextLoader */
 /** @typedef {import('../../loaders/goalLoader.js').default} GoalLoader */
+/** @typedef {import('../../loaders/registryCacheAdapter.js').default} ILoadCache */
 
 // --- Core Service Imports ---
 import StaticConfiguration from '../../configuration/staticConfiguration.js';
@@ -77,6 +78,7 @@ import WorldLoadSummaryLogger from '../../loaders/WorldLoadSummaryLogger.js';
 // --- DI & Helper Imports ---
 import { tokens } from '../tokens.js';
 import { Registrar } from '../registrarHelpers.js';
+import { makeRegistryCache } from '../../loaders/registryCacheAdapter.js';
 
 /**
  * Registers core data infrastructure services, data loaders, and the phase-based mod loading system.
@@ -335,6 +337,12 @@ export function registerLoaders(container) {
   );
 
   // === Refactored ModsLoader Registration ===
+  // Register ILoadCache using the registry cache adapter
+  registrar.singletonFactory(tokens.ILoadCache, (c) => {
+    const registry = c.resolve(tokens.IDataRegistry);
+    return makeRegistryCache(registry);
+  });
+
   registrar.singletonFactory(tokens.ModsLoader, (c) => {
     const phases = [
       c.resolve(tokens.SchemaPhase),
@@ -344,11 +352,12 @@ export function registerLoaders(container) {
       c.resolve(tokens.WorldPhase),
       c.resolve(tokens.SummaryPhase),
     ];
-
-    return new ModsLoader({
+    const ModsLoadSession = require('../../loaders/ModsLoadSession.js').default;
+    return new (require('../../loaders/modsLoader.js').default)({
       logger: c.resolve(tokens.ILogger),
+      cache: c.resolve(tokens.ILoadCache),
+      session: new ModsLoadSession({ phases, cache: c.resolve(tokens.ILoadCache), logger: c.resolve(tokens.ILogger) }),
       registry: c.resolve(tokens.IDataRegistry),
-      phases: phases,
     });
   });
 

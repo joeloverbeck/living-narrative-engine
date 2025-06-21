@@ -12,20 +12,33 @@ const GAME_JSON_PATH = path.join(__dirname, '../../../data/game.json');
 const BACKUP_GAME_JSON_PATH = path.join(__dirname, '../../../data/game.json.bak');
 
 // Helper to read/restore game.json
+/**
+ *
+ */
 async function backupGameJson() {
   await fs.copyFile(GAME_JSON_PATH, BACKUP_GAME_JSON_PATH);
 }
+/**
+ *
+ */
 async function restoreGameJson() {
   await fs.copyFile(BACKUP_GAME_JSON_PATH, GAME_JSON_PATH);
   await fs.unlink(BACKUP_GAME_JSON_PATH);
 }
 
+/**
+ *
+ */
 async function writeCoreOnlyGameJson() {
   const coreOnly = { mods: ['core'] };
   await fs.writeFile(GAME_JSON_PATH, JSON.stringify(coreOnly, null, 2));
 }
 
 // Node-compatible fetch for local files
+/**
+ *
+ * @param identifier
+ */
 function nodeFileFetch(identifier) {
   const fs = require('fs/promises');
   const path = require('path');
@@ -126,7 +139,14 @@ describe('Integration: ModsLoader can load the core mod (real files)', () => {
     const modsLoader = container.resolve(tokens.ModsLoader);
     
     // Run the pipeline
-    await expect(modsLoader.loadMods('testworld')).resolves.toBeUndefined();
+    const result = await modsLoader.loadMods('testworld');
+    
+    // Verify the returned LoadReport
+    expect(result).toEqual({
+      finalModOrder: ['core'],
+      totals: expect.any(Object),
+      incompatibilities: 0,
+    });
     
     // Check the registry for the core mod manifest
     const registry = container.resolve(tokens.IDataRegistry);

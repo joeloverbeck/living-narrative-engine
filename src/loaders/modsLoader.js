@@ -11,8 +11,9 @@
 
 /* ── Implementation imports ─────────────────────────────────────────────── */
 import ModsLoaderError from '../errors/modsLoaderError.js';
-import { ModsLoaderPhaseError } from '../errors/modsLoaderPhaseError.js';
+import { ModsLoaderPhaseError, ModsLoaderErrorCode } from '../errors/modsLoaderPhaseError.js';
 import AbstractLoader from './abstractLoader.js';
+import { createLoadContext } from './LoadContext.js';
 
 /* ───────────────────────────────────────────────────────────────────────── */
 
@@ -27,93 +28,89 @@ import AbstractLoader from './abstractLoader.js';
 class ModsLoader extends AbstractLoader {
   /** @type {ILogger} */
   _logger;
-  /** @type {IDataRegistry} */
+  /** @type {import('../interfaces/loadContracts.js').ILoadCache} */
+  _cache;
+  /** @type {object} */
+  _session;
+  /** @type {import('../interfaces/coreServices.js').IDataRegistry} */
   _registry;
-  /** @type {LoaderPhase[]} */
-  _phases;
 
   /**
    * @param {object} dependencies
    * @param {ILogger} dependencies.logger
-   * @param {IDataRegistry} dependencies.registry
-   * @param {LoaderPhase[]} dependencies.phases - The ordered sequence of loading phases to execute.
+   * @param {import('../interfaces/loadContracts.js').ILoadCache} dependencies.cache
+   * @param {object} dependencies.session - Must have a run(ctx) method
+   * @param {import('../interfaces/coreServices.js').IDataRegistry} dependencies.registry
    */
-  constructor({ logger, registry, phases }) {
+  constructor({ logger, cache, session, registry }) {
     const depsToValidate = [
+      {
+        dependency: cache,
+        name: 'ILoadCache',
+        methods: ['clear', 'snapshot', 'restore'],
+      },
+      {
+        dependency: session,
+        name: 'IModsLoadSession',
+        methods: ['run'],
+      },
       {
         dependency: registry,
         name: 'IDataRegistry',
         methods: ['store', 'get', 'clear'],
       },
-      {
-        dependency: phases,
-        name: 'PhasesArray',
-        isArray: true,
-        methods: ['forEach', 'map'], // Check it's array-like and not empty
-        isNotEmpty: true,
-      },
     ];
-
     super(logger, depsToValidate);
-
     this._logger = logger;
+    this._cache = cache;
+    this._session = session;
     this._registry = registry;
-    this._phases = phases;
-
     this._logger.debug(
-      'ModsLoader: Instance created with phase-based architecture.'
+      'ModsLoader: Instance created with session-based architecture.'
     );
   }
 
   /**
-   * Load everything for a world by executing the configured phases.
+   * Load everything for a world by executing the configured phases via the session.
    *
    * @param {string} worldName - The name of the world to load.
    * @param {string[]} requestedModIds - An array of mod IDs to load.
-   * @returns {Promise<void>}
+   * @returns {Promise<import('../interfaces/loadContracts.js').LoadReport>} A report containing the final mod order, totals, and incompatibilities.
    */
   async loadMods(worldName, requestedModIds = []) {
     this._logger.debug(
       `ModsLoader: Starting load sequence for world '${worldName}'...`
     );
-
-    const context = /** @type {LoadContext} */ ({
-      worldName,
-      requestedMods: requestedModIds,
-      finalModOrder: [],
-      incompatibilities: 0,
-      totals: {},
-    });
-
+    const { createLoadContext } = await import('./LoadContext.js');
+    const context = createLoadContext({ worldName, requestedMods: requestedModIds, registry: this._registry });
+    this._cache.clear();
+    let success = false;
     try {
-      this._registry.clear();
       this._logger.debug('ModsLoader: Data registry cleared.');
-
-      for (const phase of this._phases) {
-        const phaseName = phase.constructor.name;
-        this._logger.debug(`Executing phase: ${phaseName}`);
-        await phase.execute(context);
-        this._logger.debug(`Phase ${phaseName} completed.`);
-      }
-
+      const finalContext = await this._session.run(context);
       this._logger.info(
         `ModsLoader: Load sequence for world '${worldName}' completed successfully.`
       );
+      success = true;
+      
+      return /** @type {import('../interfaces/loadContracts.js').LoadReport} */ ({
+        finalModOrder: finalContext.finalModOrder.slice(),
+        totals: Object.freeze({ ...finalContext.totals }),
+        incompatibilities: finalContext.incompatibilities,
+      });
     } catch (err) {
-      this._registry.clear();
-
       if (err instanceof ModsLoaderPhaseError) {
         this._logger.error(
           `ModsLoader: CRITICAL failure during phase '${err.phase}'. Code: [${err.code}]. Error: ${err.message}`,
           { error: err.cause ?? err }
         );
-        return Promise.reject(err);
+        throw err;
       }
-
-      const msg = `ModsLoader: CRITICAL load failure due to an unexpected error. Original error: ${err.message}`;
-      this._logger.error(msg, err);
-      return Promise.reject(
-        new ModsLoaderError(msg, 'unknown_loader_error', err)
+      // Re-throw other errors to let upstream handle them
+      throw err;
+    } finally {
+      this._logger.info(
+        `ModsLoader: Load sequence for world '${worldName}' ${success ? 'completed successfully' : 'failed'}.`
       );
     }
   }

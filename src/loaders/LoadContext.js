@@ -21,7 +21,7 @@ export function createLoadContext({ worldName, requestedMods = [], registry }) {
     totals: /** @type {TotalResultsSummary} */ ({}),
     incompatibilities: 0,
   };
-  return ctx;
+  return Object.freeze(ctx);
 }
 
 /**
@@ -32,4 +32,5 @@ export function createLoadContext({ worldName, requestedMods = [], registry }) {
  * @property {IDataRegistry} registry
  * @property {TotalResultsSummary} totals
  * @property {number} incompatibilities
+ * @property {import('../../../data/schemas/mod-manifest.schema.json').ModManifest[]} [manifests]
  */

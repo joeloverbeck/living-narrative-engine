@@ -22,13 +22,12 @@ import { logPhaseStart } from '../../utils/logPhaseStart.js';
  */
 export default class ContentPhase extends LoaderPhase {
     /**
-     * @description Creates a new ContentPhase instance.
-     * @param {object} params - Configuration parameters.
-     * @param {ContentLoadManager} params.manager - The content load manager responsible for orchestrating content loaders.
-     * @param {ILogger} params.logger - The logger service.
+     * @param {object} params
+     * @param {import('../ContentLoadManager.js').default} params.manager
+     * @param {import('../../interfaces/coreServices.js').ILogger} params.logger
      */
     constructor({ manager, logger }) {
-        super();
+        super('content');
         /** @type {ContentLoadManager} */
         this.manager = manager;
         /** @type {ILogger} */
@@ -38,7 +37,7 @@ export default class ContentPhase extends LoaderPhase {
     /**
      * @description Executes the content loading phase.
      * @param {LoadContext} ctx - The load context.
-     * @returns {Promise<void>}
+     * @returns {Promise<LoadContext>}
      * @throws {ModsLoaderPhaseError} When content loading fails for any reason.
      */
     async execute(ctx) {
@@ -49,8 +48,17 @@ export default class ContentPhase extends LoaderPhase {
                 ctx.manifests,
                 ctx.totals
             );
-            // Per acceptance criteria, create a new object reference for totals to ensure immutability downstream.
-            ctx.totals = JSON.parse(JSON.stringify(ctx.totals)); // snapshot
+            
+            // Create a new object reference for totals to ensure immutability downstream.
+            const totalsSnapshot = JSON.parse(JSON.stringify(ctx.totals));
+            
+            // Create new frozen context with modifications
+            const next = {
+                ...ctx,
+                totals: totalsSnapshot,
+            };
+            
+            return Object.freeze(next);
         } catch (e) {
             throw new ModsLoaderPhaseError(
                 ModsLoaderErrorCode.CONTENT,

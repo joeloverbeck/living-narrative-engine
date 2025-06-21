@@ -8,7 +8,6 @@
  */
 
 import { ensureValidLogger } from '../utils';
-import { validateLoaderDeps } from '../utils/validationUtils.js';
 
 export class AbstractLoader {
   /** @protected */
@@ -19,7 +18,6 @@ export class AbstractLoader {
    * @param {Array<{dependency: *, name: string, methods: string[]}>} checks - Dependencies to validate.
    */
   constructor(logger, checks = []) {
-    validateLoaderDeps(logger, checks);
     this._logger = ensureValidLogger(logger, this.constructor.name);
     this._logger.debug(`${this.constructor.name}: Initialized.`);
   }

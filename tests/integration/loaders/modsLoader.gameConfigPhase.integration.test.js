@@ -3,6 +3,7 @@ const GameConfigPhase = require('../../../src/loaders/phases/GameConfigPhase.js'
 const ManifestPhase = require('../../../src/loaders/phases/ManifestPhase.js').default;
 const { ModsLoaderPhaseError, ModsLoaderErrorCode } = require('../../../src/errors/modsLoaderPhaseError.js');
 const { createLoadContext } = require('../../../src/loaders/LoadContext.js');
+const { makeRegistryCache } = require('../../../src/loaders/registryCacheAdapter.js');
 
 // Minimal fake logger
 const fakeLogger = {
@@ -14,7 +15,7 @@ const fakeLogger = {
 
 // Minimal in-memory registry
 class FakeRegistry {
-  constructor() { this._store = new Map(); }
+  constructor() { this._store = new Map(); this.data = this._store; }
   store(ns, key, value) {
     if (!this._store.has(ns)) this._store.set(ns, new Map());
     this._store.get(ns).set(key, value);
@@ -42,11 +43,19 @@ describe('ModsLoader + GameConfigPhase integration', () => {
     fakeLogger.error.mockClear();
   });
 
+  /**
+   *
+   * @param config
+   */
   function makeGameConfigPhaseWithConfig(config) {
     fakeGameConfigLoader = { loadConfig: jest.fn().mockResolvedValue(config) };
     return new GameConfigPhase({ gameConfigLoader: fakeGameConfigLoader, logger: fakeLogger });
   }
 
+  /**
+   *
+   * @param error
+   */
   function makeGameConfigPhaseWithError(error) {
     fakeGameConfigLoader = { loadConfig: jest.fn().mockRejectedValue(error) };
     return new GameConfigPhase({ gameConfigLoader: fakeGameConfigLoader, logger: fakeLogger });
@@ -55,8 +64,32 @@ describe('ModsLoader + GameConfigPhase integration', () => {
   // Minimal manifest phase that just records the requestedMods
   class TestManifestPhase {
     async execute(ctx) {
-      ctx._manifestPhaseRequestedMods = ctx.requestedMods;
+      // Return new frozen context with the requestedMods recorded
+      const next = {
+        ...ctx,
+        _manifestPhaseRequestedMods: ctx.requestedMods,
+        finalModOrder: ctx.requestedMods, // Simulate processing
+        incompatibilities: 0,
+        manifests: new Map(),
+      };
+      return Object.freeze(next);
     }
+  }
+
+  /**
+   *
+   * @param phases
+   */
+  function makeSession(phases) {
+    return {
+      async run(ctx) {
+        let currentCtx = ctx;
+        for (const phase of phases) {
+          currentCtx = await phase.execute(currentCtx);
+        }
+        return currentCtx;
+      },
+    };
   }
 
   it('loads mods from game.json and sets them in context', async () => {
@@ -64,14 +97,17 @@ describe('ModsLoader + GameConfigPhase integration', () => {
     const gameConfigPhase = makeGameConfigPhaseWithConfig(mods);
     manifestPhase = new TestManifestPhase();
     phases = [gameConfigPhase, manifestPhase];
-    modsLoader = new ModsLoader({ logger: fakeLogger, registry, phases });
-    // Pass a shared context to all phases
-    const sharedContext = createLoadContext({ worldName: 'test', registry });
-    for (const phase of phases) {
-      await phase.execute(sharedContext);
-    }
-    expect(sharedContext.requestedMods).toEqual(mods);
+    modsLoader = new ModsLoader({ logger: fakeLogger, cache: makeRegistryCache(registry), session: makeSession(phases), registry });
+    const result = await modsLoader.loadMods('test');
+    // After loadMods, check the registry or other side effects as needed
     expect(fakeGameConfigLoader.loadConfig).toHaveBeenCalled();
+    
+    // Verify the returned LoadReport
+    expect(result).toEqual({
+      finalModOrder: ['core', 'modA', 'modB'],
+      totals: {},
+      incompatibilities: 0,
+    });
   });
 
   it('throws a ModsLoaderPhaseError if game.json is missing', async () => {
@@ -79,7 +115,7 @@ describe('ModsLoader + GameConfigPhase integration', () => {
     const gameConfigPhase = makeGameConfigPhaseWithError(error);
     manifestPhase = new TestManifestPhase();
     phases = [gameConfigPhase, manifestPhase];
-    modsLoader = new ModsLoader({ logger: fakeLogger, registry, phases });
+    modsLoader = new ModsLoader({ logger: fakeLogger, cache: makeRegistryCache(registry), session: makeSession(phases), registry });
     await expect(modsLoader.loadMods('test')).rejects.toThrow(ModsLoaderPhaseError);
     await expect(modsLoader.loadMods('test')).rejects.toHaveProperty('code', ModsLoaderErrorCode.GAME_CONFIG);
   });
@@ -89,7 +125,7 @@ describe('ModsLoader + GameConfigPhase integration', () => {
     const gameConfigPhase = makeGameConfigPhaseWithError(error);
     manifestPhase = new TestManifestPhase();
     phases = [gameConfigPhase, manifestPhase];
-    modsLoader = new ModsLoader({ logger: fakeLogger, registry, phases });
+    modsLoader = new ModsLoader({ logger: fakeLogger, cache: makeRegistryCache(registry), session: makeSession(phases), registry });
     await expect(modsLoader.loadMods('test')).rejects.toThrow(ModsLoaderPhaseError);
     await expect(modsLoader.loadMods('test')).rejects.toHaveProperty('code', ModsLoaderErrorCode.GAME_CONFIG);
   });
@@ -101,13 +137,28 @@ describe('ModsLoader + GameConfigPhase integration', () => {
     class RegistryManifestPhase {
       async execute(ctx) {
         ctx.requestedMods.forEach((mod) => registry.store('mod_manifests', mod, { id: mod }));
+        // Return new frozen context with processing results
+        const next = {
+          ...ctx,
+          finalModOrder: ctx.requestedMods,
+          incompatibilities: 0,
+          manifests: new Map(),
+        };
+        return Object.freeze(next);
       }
     }
     manifestPhase = new RegistryManifestPhase();
     phases = [gameConfigPhase, manifestPhase];
-    modsLoader = new ModsLoader({ logger: fakeLogger, registry, phases });
-    await modsLoader.loadMods('test');
+    modsLoader = new ModsLoader({ logger: fakeLogger, cache: makeRegistryCache(registry), session: makeSession(phases), registry });
+    const result = await modsLoader.loadMods('test');
     expect(registry.get('mod_manifests', 'core')).toEqual({ id: 'core' });
     expect(registry.get('mod_manifests', 'modA')).toEqual({ id: 'modA' });
+    
+    // Verify the returned LoadReport
+    expect(result).toEqual({
+      finalModOrder: ['core', 'modA'],
+      totals: {},
+      incompatibilities: 0,
+    });
   });
 }); 

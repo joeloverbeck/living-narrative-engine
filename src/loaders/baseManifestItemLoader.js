@@ -14,6 +14,7 @@
 import AbstractLoader from './abstractLoader.js';
 import { parseAndValidateId } from '../utils/idUtils.js';
 import { validateAgainstSchema } from '../utils/schemaValidationUtils.js';
+import { validateDependencies } from '../utils/validationUtils.js';
 
 // --- Add LoadItemsResult typedef here for clarity ---
 /**
@@ -100,7 +101,12 @@ export class BaseManifestItemLoader extends AbstractLoader {
     dataRegistry,
     logger
   ) {
-    super(logger, [
+    validateDependencies([
+      {
+        dependency: logger,
+        name: 'ILogger',
+        methods: ['info', 'warn', 'error', 'debug'],
+      },
       {
         dependency: config,
         name: 'IConfiguration',
@@ -126,7 +132,8 @@ export class BaseManifestItemLoader extends AbstractLoader {
         name: 'IDataRegistry',
         methods: ['store', 'get'],
       },
-    ]);
+    ], logger);
+    super(logger);
 
     if (typeof contentType !== 'string' || contentType.trim() === '') {
       const errorMsg = `BaseManifestItemLoader requires a non-empty string for 'contentType'. Received: ${contentType}`;

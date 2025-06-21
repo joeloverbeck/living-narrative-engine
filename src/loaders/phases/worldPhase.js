@@ -23,13 +23,12 @@ import { logPhaseStart } from '../../utils/logPhaseStart.js';
  */
 export default class WorldPhase extends LoaderPhase {
     /**
-     * @description Creates a new WorldPhase instance.
-     * @param {object} params - Configuration parameters.
-     * @param {WorldLoader} params.worldLoader - The loader responsible for processing world files.
-     * @param {ILogger} params.logger - The logger service.
+     * @param {object} params
+     * @param {import('../worldLoader.js').default} params.worldLoader
+     * @param {import('../../interfaces/coreServices.js').ILogger} params.logger
      */
     constructor({ worldLoader, logger }) {
-        super();
+        super('world');
         /**
          * @type {WorldLoader}
          * @private
@@ -45,7 +44,7 @@ export default class WorldPhase extends LoaderPhase {
     /**
      * @description Executes the world loading phase.
      * @param {LoadContext} ctx - The load context.
-     * @returns {Promise<void>}
+     * @returns {Promise<LoadContext>}
      * @throws {ModsLoaderPhaseError} When world loading fails.
      * @async
      */
@@ -57,6 +56,9 @@ export default class WorldPhase extends LoaderPhase {
                 ctx.manifests,
                 ctx.totals
             );
+            
+            // Return frozen context (no modifications in this phase)
+            return Object.freeze({ ...ctx });
         } catch (e) {
             throw new ModsLoaderPhaseError(
                 ModsLoaderErrorCode.WORLD,

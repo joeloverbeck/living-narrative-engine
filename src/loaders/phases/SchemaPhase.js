@@ -10,7 +10,6 @@ import ESSENTIAL_SCHEMA_TYPES from '../../constants/essentialSchemas.js';
  */
 export default class SchemaPhase extends LoaderPhase {
   /**
-   * @description Creates a new SchemaPhase instance.
    * @param {object} params - Configuration parameters
    * @param {import('../../interfaces/coreServices.js').ISchemaLoader} params.schemaLoader - Service for loading and compiling schemas
    * @param {import('../../interfaces/coreServices.js').IConfiguration} params.config - Configuration service for getting schema IDs
@@ -18,7 +17,7 @@ export default class SchemaPhase extends LoaderPhase {
    * @param {import('../../interfaces/coreServices.js').ILogger} params.logger - Logger service
    */
   constructor({ schemaLoader, config, validator, logger }) {
-    super();
+    super('schema');
     this.schemaLoader = schemaLoader;
     this.config = config;
     this.validator = validator;
@@ -28,7 +27,7 @@ export default class SchemaPhase extends LoaderPhase {
   /**
    * @description Executes the schema loading and verification phase.
    * @param {import('../LoadContext.js').LoadContext} ctx - The load context
-   * @returns {Promise<void>}
+   * @returns {Promise<import('../LoadContext.js').LoadContext>}
    * @throws {ModsLoaderPhaseError} When schema loading fails or essential schemas are missing
    */
   async execute(ctx) {
@@ -51,6 +50,9 @@ export default class SchemaPhase extends LoaderPhase {
       this.logger.debug(
         'SchemaPhase: All schemas loaded and essential schemas verified.'
       );
+      
+      // Return frozen context (no modifications in this phase)
+      return Object.freeze({ ...ctx });
     } catch (e) {
       throw new ModsLoaderPhaseError(
         ModsLoaderErrorCode.SCHEMA,

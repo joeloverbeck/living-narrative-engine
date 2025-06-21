@@ -54,6 +54,9 @@ describeTurnManagerSuite(
 
     // --- Dependency Validation Failure Cases ---
 
+    /**
+     *
+     */
     function createDeps() {
       const bed = new TurnManagerTestBed();
       return bed.mocks;
