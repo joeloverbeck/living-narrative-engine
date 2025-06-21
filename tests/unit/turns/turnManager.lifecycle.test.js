@@ -25,15 +25,13 @@ describeTurnManagerSuite('TurnManager - Lifecycle (Start/Stop)', (getBed) => {
 
     testBed.setupMockHandlerResolver();
 
-    advanceTurnSpy = jest
-      .spyOn(testBed.turnManager, 'advanceTurn')
-      .mockResolvedValue(undefined);
+    advanceTurnSpy = testBed.spyOnAdvanceTurn();
+    advanceTurnSpy.mockResolvedValue(undefined);
 
-    testBed.mocks.logger.info.mockClear(); // Clear constructor log
+    testBed.resetMocks();
   });
 
   afterEach(async () => {
-    advanceTurnSpy.mockRestore(); // Restore original advanceTurn
     jest.clearAllMocks(); // General cleanup
   });
 
@@ -66,7 +64,7 @@ describeTurnManagerSuite('TurnManager - Lifecycle (Start/Stop)', (getBed) => {
 
     it('should handle subscription failure gracefully (invalid return value)', async () => {
       testBed.mocks.dispatcher.subscribe.mockReturnValue(null);
-      const stopSpy = jest.spyOn(testBed.turnManager, 'stop');
+      const stopSpy = testBed.spyOnStop();
       await testBed.turnManager.start();
       expect(testBed.mocks.logger.error).toHaveBeenCalledWith(
         expect.stringContaining(
@@ -87,7 +85,6 @@ describeTurnManagerSuite('TurnManager - Lifecycle (Start/Stop)', (getBed) => {
         })
       );
       expect(stopSpy).toHaveBeenCalledTimes(1);
-      stopSpy.mockRestore();
     });
 
     it('should handle subscription failure gracefully (subscribe throws)', async () => {
@@ -95,7 +92,7 @@ describeTurnManagerSuite('TurnManager - Lifecycle (Start/Stop)', (getBed) => {
       testBed.mocks.dispatcher.subscribe.mockImplementation(() => {
         throw subscribeError;
       });
-      const stopSpy = jest.spyOn(testBed.turnManager, 'stop');
+      const stopSpy = testBed.spyOnStop();
       await testBed.turnManager.start();
       expect(testBed.mocks.logger.error).toHaveBeenCalledWith(
         expect.stringContaining(
@@ -114,18 +111,15 @@ describeTurnManagerSuite('TurnManager - Lifecycle (Start/Stop)', (getBed) => {
         })
       );
       expect(stopSpy).toHaveBeenCalledTimes(1);
-      stopSpy.mockRestore();
     });
 
     it('should handle advanceTurn failure gracefully', async () => {
       const advanceError = new Error('Turn advancement failed');
       advanceTurnSpy.mockRejectedValue(advanceError);
-      const stopSpy = jest.spyOn(testBed.turnManager, 'stop');
 
       await expect(testBed.turnManager.start()).rejects.toThrow(
         'Turn advancement failed'
       );
-      stopSpy.mockRestore();
     });
   });
 
