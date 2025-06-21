@@ -12,7 +12,10 @@ import {
   SYSTEM_ERROR_OCCURRED_ID,
 } from '../../../src/constants/eventIds.js';
 import { beforeEach, expect, jest, test, afterEach } from '@jest/globals';
-import { createDefaultActors } from '../../common/turns/testActors.js';
+import {
+  createDefaultActors,
+  createAiActor,
+} from '../../common/turns/testActors.js';
 import {
   createMockEntity,
   createMockTurnHandler,
@@ -37,7 +40,6 @@ describeTurnManagerSuite(
       testBed.mocks.turnOrderService.getNextEntity.mockResolvedValue(null);
       testBed.mocks.turnOrderService.startNewRound.mockResolvedValue();
       testBed.mocks.turnOrderService.clearCurrentRound.mockResolvedValue();
-
 
       ({ ai1, ai2, player } = createDefaultActors());
 
@@ -71,7 +73,6 @@ describeTurnManagerSuite(
       const entities = Array.from(testBed.entityManager.entities);
 
       // Entities have ACTOR_COMPONENT_ID component or not; not logged
-
 
       // Mock isEmpty to return true (queue is empty) before the first turn
       testBed.mocks.turnOrderService.isEmpty.mockResolvedValueOnce(true);
@@ -219,8 +220,8 @@ describeTurnManagerSuite(
       testBed.mocks.turnOrderService.clearCurrentRound.mockImplementation(
         () => {
           // Create fresh mock actors for the new round
-          const newActor1 = createMockEntity('actor1', { isActor: true });
-          const newActor2 = createMockEntity('actor2', { isActor: true });
+          const newActor1 = createAiActor('actor1');
+          const newActor2 = createAiActor('actor2');
           testBed.setActiveEntities(newActor1, newActor2);
           return Promise.resolve();
         }
@@ -241,7 +242,6 @@ describeTurnManagerSuite(
       let found = false;
       for (let i = 0; i < 50; i++) {
         if (testBed.turnManager.getCurrentActor()?.id === ai2.id) {
-
           found = true;
           break;
         }

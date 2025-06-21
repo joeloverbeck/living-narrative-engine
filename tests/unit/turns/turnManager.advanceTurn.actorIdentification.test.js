@@ -10,6 +10,10 @@ import {
 import { TURN_ENDED_ID } from '../../../src/constants/eventIds.js';
 import { PLAYER_COMPONENT_ID } from '../../../src/constants/componentIds.js';
 import { createMockEntity } from '../../common/mockFactories';
+import {
+  createAiActor,
+  createPlayerActor,
+} from '../../common/turns/testActors.js';
 
 // --- Test Suite ---
 
@@ -25,10 +29,7 @@ describeTurnManagerSuite(
 
       testBed.mocks.turnOrderService.isEmpty.mockResolvedValue(false);
       testBed.mocks.turnOrderService.getNextEntity.mockResolvedValue(
-        createMockEntity('initial-actor-for-start', {
-          isActor: true,
-          isPlayer: false,
-        })
+        createAiActor('initial-actor-for-start')
       );
 
       testBed.mocks.dispatcher.dispatch.mockClear().mockResolvedValue(true);
@@ -62,11 +63,8 @@ describeTurnManagerSuite(
     });
 
     test.each([
-      [
-        'player',
-        createMockEntity('player-1', { isActor: true, isPlayer: true }),
-      ],
-      ['ai', createMockEntity('ai-goblin', { isActor: true, isPlayer: false })],
+      ['player', createPlayerActor('player-1')],
+      ['ai', createAiActor('ai-goblin')],
     ])(
       'actor identified (%s) -> handler invoked and event dispatched',
       async (_, actor) => {
