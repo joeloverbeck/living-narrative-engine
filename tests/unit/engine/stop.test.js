@@ -5,7 +5,11 @@ import { describeEngineSuite } from '../../common/engine/gameEngineTestBed.js';
 import { runUnavailableServiceTest } from '../../common/engine/gameEngineHelpers.js';
 import '../../common/engine/engineTestTypedefs.js';
 import { ENGINE_STOPPED_UI } from '../../../src/constants/eventIds.js';
-import { expectEngineStatus } from '../../common/engine/dispatchTestUtils.js';
+import {
+  expectDispatchSequence,
+  buildStopDispatches,
+  expectEngineStatus,
+} from '../../common/engine/dispatchTestUtils.js';
 
 describeEngineSuite('GameEngine', (ctx) => {
   const MOCK_WORLD_NAME = 'TestWorld';
@@ -30,9 +34,9 @@ describeEngineSuite('GameEngine', (ctx) => {
       ).toHaveBeenCalledTimes(1);
       expect(ctx.bed.mocks.turnManager.stop).toHaveBeenCalledTimes(1);
 
-      expect(ctx.bed.mocks.safeEventDispatcher.dispatch).toHaveBeenCalledWith(
-        ENGINE_STOPPED_UI,
-        { inputDisabledMessage: 'Game stopped. Engine is inactive.' }
+      expectDispatchSequence(
+        ctx.bed.mocks.safeEventDispatcher.dispatch,
+        ...buildStopDispatches()
       );
 
       expectEngineStatus(ctx.engine, {
@@ -84,9 +88,9 @@ describeEngineSuite('GameEngine', (ctx) => {
           await engine.stop();
 
           expect(bed.mocks.logger.warn).toHaveBeenCalledWith(expectedMsg);
-          expect(bed.mocks.safeEventDispatcher.dispatch).toHaveBeenCalledWith(
-            ENGINE_STOPPED_UI,
-            { inputDisabledMessage: 'Game stopped. Engine is inactive.' }
+          expectDispatchSequence(
+            bed.mocks.safeEventDispatcher.dispatch,
+            ...buildStopDispatches()
           );
           expect(bed.mocks.turnManager.stop).toHaveBeenCalledTimes(1);
           const dummyDispatch = jest.fn();
