@@ -15,12 +15,38 @@ import {
   createMockSafeEventDispatcher,
   createMockInitializationService,
 } from '../mockFactories';
-import { buildEnvironment } from '../mockEnvironment.js';
+import { createTestEnvironmentBuilder } from '../mockEnvironment.js';
+const factoryMap = {
+  logger: createMockLogger,
+  entityManager: createMockEntityManager,
+  turnManager: createMockTurnManager,
+  gamePersistenceService: createMockGamePersistenceService,
+  playtimeTracker: createMockPlaytimeTracker,
+  safeEventDispatcher: createMockSafeEventDispatcher,
+  initializationService: createMockInitializationService,
+};
+
+const tokenMap = {
+  [tokens.ILogger]: 'logger',
+  [tokens.IEntityManager]: 'entityManager',
+  [tokens.ITurnManager]: 'turnManager',
+  [tokens.GamePersistenceService]: 'gamePersistenceService',
+  [tokens.PlaytimeTracker]: 'playtimeTracker',
+  [tokens.ISafeEventDispatcher]: 'safeEventDispatcher',
+  [tokens.IInitializationService]: 'initializationService',
+};
+
+const buildGameEngineEnv = createTestEnvironmentBuilder(
+  factoryMap,
+  tokenMap,
+  (container) => new GameEngine({ container })
+);
 
 /**
  * Creates a set of mocks and a container for GameEngine.
  *
  * @description Creates a fully mocked environment for GameEngine tests.
+ * @param {{[token: string]: any}} [overrides] - Optional DI token overrides.
  * @returns {{
  *   mockContainer: { resolve: jest.Mock },
  *   logger: ReturnType<typeof createMockLogger>,
@@ -32,49 +58,19 @@ import { buildEnvironment } from '../mockEnvironment.js';
  *   initializationService: ReturnType<typeof createMockInitializationService>,
  *   createGameEngine: () => GameEngine,
  *   cleanup: () => void,
- * }} Test environment utilities and mocks.
- * @param {{[token: string]: any}} [overrides] - Optional map of DI tokens to
- *   replacement values used instead of defaults.
+ * }}
+ *   Test environment utilities and mocks.
  */
 export function createTestEnvironment(overrides = {}) {
-  const factoryMap = {
-    logger: createMockLogger,
-    entityManager: createMockEntityManager,
-    turnManager: createMockTurnManager,
-    gamePersistenceService: createMockGamePersistenceService,
-    playtimeTracker: createMockPlaytimeTracker,
-    safeEventDispatcher: createMockSafeEventDispatcher,
-    initializationService: createMockInitializationService,
-  };
-
-  const tokenMap = {
-    [tokens.ILogger]: 'logger',
-    [tokens.IEntityManager]: 'entityManager',
-    [tokens.ITurnManager]: 'turnManager',
-    [tokens.GamePersistenceService]: 'gamePersistenceService',
-    [tokens.PlaytimeTracker]: 'playtimeTracker',
-    [tokens.ISafeEventDispatcher]: 'safeEventDispatcher',
-    [tokens.IInitializationService]: 'initializationService',
-  };
-
-  const {
-    mocks,
-    mockContainer,
-    instance: gameEngine,
-    cleanup,
-  } = buildEnvironment(
-    factoryMap,
-    tokenMap,
-    overrides,
-    (container) => new GameEngine({ container })
-  );
+  const { mocks, mockContainer, instance, cleanup } =
+    buildGameEngineEnv(overrides);
 
   const createGameEngine = () => new GameEngine({ container: mockContainer });
 
   return {
     mockContainer,
     ...mocks,
-    gameEngine,
+    gameEngine: instance,
     createGameEngine,
     cleanup,
   };
