@@ -5,18 +5,9 @@ import {
   createGameEngineTestBed,
   describeGameEngineSuite,
 } from '../../common/engine/gameEngineTestBed.js';
+import '../../common/engine/engineTestTypedefs.js';
 import { expectDispatchSequence } from '../../common/engine/dispatchTestUtils.js';
 import { ENGINE_OPERATION_FAILED_UI } from '../../../src/constants/eventIds.js';
-
-/** @typedef {import('../../../src/interfaces/coreServices.js').ILogger} ILogger */
-/** @typedef {import('../../../src/dependencyInjection/appContainer.js').default} AppContainer */
-/** @typedef {import('../../../src/interfaces/IEntityManager.js').IEntityManager} IEntityManager */
-/** @typedef {import('../../../src/turns/interfaces/ITurnManager.js').ITurnManager} ITurnManager */
-/** @typedef {import('../../../src/interfaces/IGamePersistenceService.js').IGamePersistenceService} IGamePersistenceService */
-/** @typedef {import('../../../src/interfaces/IPlaytimeTracker.js').default} IPlaytimeTracker */
-/** @typedef {import('../../../src/interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
-/** @typedef {import('../../../src/interfaces/IInitializationService.js').IInitializationService} IInitializationService */
-/** @typedef {import('../../../src/interfaces/ISaveLoadService.js').SaveGameStructure} SaveGameStructure */
 
 describeGameEngineSuite('GameEngine', (getBed) => {
   let testBed;

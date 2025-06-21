@@ -1,42 +1,16 @@
 // tests/engine/gameEngine.test.js
 
-import { describe, expect, it, jest } from '@jest/globals';
+import { describe, expect, it } from '@jest/globals';
 import GameEngine from '../../../src/engine/gameEngine.js';
 import { tokens } from '../../../src/dependencyInjection/tokens.js';
 import { describeGameEngineSuite } from '../../common/engine/gameEngineTestBed.js';
-import {
-  expectDispatchSequence,
-  buildSaveDispatches,
-  DEFAULT_ACTIVE_WORLD_FOR_SAVE,
-  expectEngineStatus,
-} from '../../common/engine/dispatchTestUtils.js';
-import {
-  // --- Import new UI Event IDs ---
-  ENGINE_INITIALIZING_UI,
-  ENGINE_READY_UI,
-  ENGINE_OPERATION_FAILED_UI,
-  ENGINE_STOPPED_UI,
-  REQUEST_SHOW_SAVE_GAME_UI,
-  REQUEST_SHOW_LOAD_GAME_UI,
-  CANNOT_SAVE_GAME_INFO,
-} from '../../../src/constants/eventIds.js';
-
-// --- JSDoc Type Imports for Mocks ---
-/** @typedef {import('../../../src/interfaces/coreServices.js').ILogger} ILogger */
-/** @typedef {import('../../../src/dependencyInjection/appContainer.js').default} AppContainer */
-/** @typedef {import('../../../src/interfaces/IEntityManager.js').IEntityManager} IEntityManager */
-/** @typedef {import('../../../src/turns/interfaces/ITurnManager.js').ITurnManager} ITurnManager */
-/** @typedef {import('../../../src/interfaces/IGamePersistenceService.js').IGamePersistenceService} IGamePersistenceService */
-/** @typedef {import('../../../src/interfaces/IPlaytimeTracker.js').default} IPlaytimeTracker */
-/** @typedef {import('../../../src/interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
-/** @typedef {import('../../../src/interfaces/IInitializationService.js').IInitializationService} IInitializationService */
-/** @typedef {import('../../../src/interfaces/ISaveLoadService.js').SaveGameStructure} SaveGameStructure */
+import '../../common/engine/engineTestTypedefs.js';
 
 describeGameEngineSuite('GameEngine', (getBed) => {
   describe('Constructor', () => {
     it('should instantiate and resolve all core services successfully', () => {
       const testBed = getBed();
-      const gameEngine = new GameEngine({
+      new GameEngine({
         container: testBed.env.mockContainer,
       }); // Instantiation for this test
       expect(testBed.env.mockContainer.resolve).toHaveBeenCalledWith(
