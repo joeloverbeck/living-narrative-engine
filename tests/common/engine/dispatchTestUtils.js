@@ -12,6 +12,7 @@ import {
   ENTITY_REMOVED_ID,
   COMPONENT_ADDED_ID,
   COMPONENT_REMOVED_ID,
+  ENGINE_STOPPED_UI,
 } from '../../../src/constants/eventIds.js';
 import { DEFAULT_ACTIVE_WORLD_FOR_SAVE } from '../constants.js';
 
@@ -72,6 +73,20 @@ export function buildSaveDispatches(saveName, filePath) {
   ]);
 
   return sequence;
+}
+
+/**
+ * Builds the dispatch sequence emitted when the engine stops.
+ *
+ * @returns {Array<[string, any]>} Dispatch call sequence for engine stop.
+ */
+export function buildStopDispatches() {
+  return [
+    [
+      ENGINE_STOPPED_UI,
+      { inputDisabledMessage: 'Game stopped. Engine is inactive.' },
+    ],
+  ];
 }
 
 /**
@@ -176,6 +191,7 @@ export { expectDispatchSequence as expectDispatchCalls };
 export default {
   expectDispatchSequence,
   buildSaveDispatches,
+  buildStopDispatches,
   expectEngineStatus,
   expectSingleDispatch,
   expectEntityCreatedDispatch,
