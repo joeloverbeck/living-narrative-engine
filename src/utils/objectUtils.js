@@ -1,10 +1,5 @@
 // src/utils/objectUtils.js
 
-import { PersistenceErrorCodes } from '../persistence/persistenceErrors.js';
-import {
-  createPersistenceFailure,
-  createPersistenceSuccess,
-} from './persistenceResultUtils.js';
 import { ensureValidLogger } from './loggerUtils.js';
 
 /**
@@ -86,95 +81,6 @@ export function safeResolvePath(obj, propertyPath, logger, contextInfo = '') {
     log.error(`Error resolving path "${propertyPath}"${info}`, error);
     return undefined;
   }
-}
-
-/**
- * Freezes an object to make it immutable.
- *
- * @description
- * Immutability ensures that value objects cannot be modified after creation,
- * which helps prevent unintended side-effects and makes state management
- * more predictable.
- * @template T
- * @param {T} o - The object to freeze.
- * @returns {Readonly<T>} The frozen object.
- */
-export function freeze(o) {
-  return Object.freeze(o);
-}
-
-/**
- * Creates a deep clone of a plain object or array using JSON
- * serialization.
- *
- * @description
- * Suitable for cloning simple data structures that do not contain
- * functions or circular references. Non-serializable values will be
- * dropped during cloning.
- * @template T
- * @param {T} value - The value to clone.
- * @returns {T} The cloned value or the original primitive.
- * @throws {Error} If the value cannot be stringified (e.g. circular structure).
- */
-export function deepClone(value) {
-  if (value === null || typeof value !== 'object') {
-    return value;
-  }
-
-  return JSON.parse(JSON.stringify(value));
-}
-
-/**
- * Safely deep clones an object and logs errors on failure.
- *
- * @description Wraps {@link deepClone} and returns a
- * {@link import('../persistence/persistenceErrors.js').PersistenceError} when
- * cloning fails.
- * @template T
- * @param {T} value - Value to clone.
- * @param {import('../interfaces/coreServices.js').ILogger} logger - Logger used
- *   for error reporting.
- * @returns {import('../persistence/persistenceTypes.js').PersistenceResult<T>}
- *   Clone result object.
- */
-export function safeDeepClone(value, logger) {
-  const log = ensureValidLogger(logger, 'ObjectUtils');
-  try {
-    /** @type {T} */
-    const cloned = deepClone(value);
-    return createPersistenceSuccess(cloned);
-  } catch (error) {
-    if (logger && typeof logger.error === 'function') {
-      logger.error('DeepClone failed:', error);
-    }
-    return createPersistenceFailure(
-      PersistenceErrorCodes.DEEP_CLONE_FAILED,
-      'Failed to deep clone object.'
-    );
-  }
-}
-
-/**
- * Deeply freezes an object and all its nested properties that are objects.
- * This makes the object and its content immutable.
- *
- * @template T
- * @param {T} object - The object to deep freeze.
- * @returns {Readonly<T>} The deeply frozen object.
- */
-export function deepFreeze(object) {
-  if (object && typeof object === 'object') {
-    // Freeze properties before freezing self
-    Object.keys(object).forEach((key) => {
-      const value = object[key];
-      // Recurse for nested objects
-      if (value && typeof value === 'object') {
-        deepFreeze(value);
-      }
-    });
-    Object.freeze(object);
-  }
-  return object;
 }
 
 // Add other generic object utilities here in the future if needed.

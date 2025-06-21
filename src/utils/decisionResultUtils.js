@@ -2,7 +2,7 @@
  * @module decisionResult
  */
 
-import { freeze } from './objectUtils.js';
+import { freeze } from './cloneUtils.js';
 
 /**
  * @typedef {object} DecisionResult

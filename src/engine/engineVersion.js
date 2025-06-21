@@ -2,7 +2,7 @@
 /* eslint-env browser */
 
 import semver from 'semver';
-import { freeze } from '../utils/objectUtils.js';
+import { freeze } from '../utils/cloneUtils.js';
 
 // NOTE: Keep this string in sync with package.json "version".
 const versionFromPackage = '0.0.1';

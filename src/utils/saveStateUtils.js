@@ -1,6 +1,6 @@
 // src/utils/saveStateUtils.js
 
-import { safeDeepClone } from './objectUtils.js';
+import { safeDeepClone } from './cloneUtils.js';
 import { PersistenceErrorCodes } from '../persistence/persistenceErrors.js';
 import {
   createPersistenceFailure,

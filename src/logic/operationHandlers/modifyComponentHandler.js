@@ -14,7 +14,7 @@ import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 
 import ComponentOperationHandler from './componentOperationHandler.js';
 import { assertParamsObject } from '../../utils/handlerUtils/paramsUtils.js';
-import { deepClone } from '../../utils/objectUtils.js';
+import { deepClone } from '../../utils/cloneUtils.js';
 
 /**
  * @typedef {object} EntityRefObject

@@ -19,7 +19,7 @@ import {
   DEFAULT_FALLBACK_CHARACTER_NAME,
   DEFAULT_FALLBACK_DESCRIPTION_RAW,
 } from '../../constants/textDefaults.js';
-import { deepClone } from '../../utils/objectUtils.js';
+import { deepClone } from '../../utils/cloneUtils.js';
 
 /** @typedef {import('../../entities/entity.js').default} Entity */
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */

@@ -1,4 +1,4 @@
-import { deepClone } from '../../../src/utils/objectUtils.js';
+import { deepClone } from '../../../src/utils/cloneUtils.js';
 import { describe, it, expect } from '@jest/globals';
 
 describe('deepClone', () => {
