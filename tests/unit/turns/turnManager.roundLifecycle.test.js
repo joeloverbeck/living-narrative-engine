@@ -5,10 +5,7 @@ import {
   describeTurnManagerSuite,
   flushPromisesAndTimers,
 } from '../../common/turns/turnManagerTestBed.js';
-import {
-  ACTOR_COMPONENT_ID,
-  PLAYER_COMPONENT_ID,
-} from '../../../src/constants/componentIds.js';
+import { ACTOR_COMPONENT_ID } from '../../../src/constants/componentIds.js';
 import {
   TURN_ENDED_ID,
   TURN_STARTED_ID,
@@ -16,7 +13,10 @@ import {
 } from '../../../src/constants/eventIds.js';
 import { beforeEach, expect, jest, test, afterEach } from '@jest/globals';
 import { createDefaultActors } from '../../common/turns/testActors.js';
-import { createMockEntity, createMockTurnHandler } from '../../common/mockFactories.js';
+import {
+  createMockEntity,
+  createMockTurnHandler,
+} from '../../common/mockFactories.js';
 
 // --- Test Suite ---
 
@@ -26,7 +26,7 @@ describeTurnManagerSuite(
     let testBed;
     let stopSpy;
 
-    let mockActor1, mockActor2, mockPlayerActor;
+    let ai1, ai2, player;
 
     beforeEach(() => {
       jest.useFakeTimers();
@@ -38,21 +38,29 @@ describeTurnManagerSuite(
       testBed.mocks.turnOrderService.startNewRound.mockResolvedValue();
       testBed.mocks.turnOrderService.clearCurrentRound.mockResolvedValue();
 
-      mockActor1 = createMockEntity('actor1', { isActor: true });
-      mockActor2 = createMockEntity('actor2', { isActor: true });
-      mockPlayerActor = createMockEntity('player1', { isActor: true, isPlayer: true });
+      ({ ai1, ai2, player } = createDefaultActors());
 
       // Configure handler resolver to return MockTurnHandler instances
-      testBed.mocks.turnHandlerResolver.resolveHandler.mockImplementation(async (actor) => {
-        const handler = createMockTurnHandler({ actor });
-        handler.startTurn = (currentActor) => {
-          const promise = Promise.resolve();
-          console.log('test override: startTurn called, returns Promise:', typeof promise.then === 'function');
-          return promise;
-        };
-        console.log('resolveHandler called for actor:', actor?.id, 'returning handler:', !!handler);
-        return handler;
-      });
+      testBed.mocks.turnHandlerResolver.resolveHandler.mockImplementation(
+        async (actor) => {
+          const handler = createMockTurnHandler({ actor });
+          handler.startTurn = (_currentActor) => {
+            const promise = Promise.resolve();
+            console.log(
+              'test override: startTurn called, returns Promise:',
+              typeof promise.then === 'function'
+            );
+            return promise;
+          };
+          console.log(
+            'resolveHandler called for actor:',
+            actor?.id,
+            'returning handler:',
+            !!handler
+          );
+          return handler;
+        }
+      );
 
       stopSpy = jest.spyOn(testBed.turnManager, 'stop');
 
@@ -68,11 +76,17 @@ describeTurnManagerSuite(
     });
 
     test('Starts a new round when queue is empty and active actors exist', async () => {
-      testBed.setActiveEntities(mockActor1, mockPlayerActor);
+      testBed.setActiveEntities(ai1, player);
 
       // Debug: print hasComponent for each entity
       const entities = Array.from(testBed.entityManager.entities);
-      console.log('Entities and isActor:', entities.map(e => ({ id: e.id, isActor: e.hasComponent(ACTOR_COMPONENT_ID) })));
+      console.log(
+        'Entities and isActor:',
+        entities.map((e) => ({
+          id: e.id,
+          isActor: e.hasComponent(ACTOR_COMPONENT_ID),
+        }))
+      );
 
       // Mock isEmpty to return true (queue is empty) before the first turn
       testBed.mocks.turnOrderService.isEmpty.mockResolvedValueOnce(true);
@@ -84,8 +98,8 @@ describeTurnManagerSuite(
       expect(testBed.entityManager.activeEntities.size).toBe(2);
       expect(testBed.mocks.turnOrderService.startNewRound).toHaveBeenCalledWith(
         expect.arrayContaining([
-          expect.objectContaining({ id: mockActor1.id }),
-          expect.objectContaining({ id: mockPlayerActor.id }),
+          expect.objectContaining({ id: ai1.id }),
+          expect.objectContaining({ id: player.id }),
         ]),
         'round-robin'
       );
@@ -119,43 +133,57 @@ describeTurnManagerSuite(
     });
 
     test('Advances to next actor when current turn ends successfully', async () => {
-      testBed.setActiveEntities(mockActor1, mockActor2);
+      testBed.setActiveEntities(ai1, ai2);
 
       // Debug: print references
       testBed.mocks.turnOrderService.getNextEntity.mockImplementation(() => {
-        const result = testBed.mocks.turnOrderService.getNextEntity.mock.calls.length === 1 ? mockActor1 : mockActor2;
+        const result =
+          testBed.mocks.turnOrderService.getNextEntity.mock.calls.length === 1
+            ? ai1
+            : ai2;
         const emActor = testBed.entityManager.activeEntities.get(result.id);
-        console.log('getNextEntity called, returning:', result?.id, 'entityManager ref === result:', emActor === result);
+        console.log(
+          'getNextEntity called, returning:',
+          result?.id,
+          'entityManager ref === result:',
+          emActor === result
+        );
         return Promise.resolve(result);
       });
 
       await testBed.turnManager.start();
       await flushPromisesAndTimers();
-      console.log('After start, current actor:', testBed.turnManager.getCurrentActor()?.id);
+      console.log(
+        'After start, current actor:',
+        testBed.turnManager.getCurrentActor()?.id
+      );
 
-      expect(testBed.turnManager.getCurrentActor()).toBe(mockActor1);
+      expect(testBed.turnManager.getCurrentActor()).toBe(ai1);
 
       // Simulate turn ending
       testBed.trigger(TURN_ENDED_ID, {
-        entityId: mockActor1.id,
+        entityId: ai1.id,
         success: true,
       });
       await flushPromisesAndTimers();
-      console.log('After turn end, current actor:', testBed.turnManager.getCurrentActor()?.id);
+      console.log(
+        'After turn end, current actor:',
+        testBed.turnManager.getCurrentActor()?.id
+      );
 
-      expect(testBed.turnManager.getCurrentActor()).toBe(mockActor2);
+      expect(testBed.turnManager.getCurrentActor()).toBe(ai2);
     });
 
     test('Correctly identifies actor types for event dispatching', async () => {
       // Use real timers for this test since turn advancement uses setTimeout
       jest.useRealTimers();
 
-      testBed.setActiveEntities(mockPlayerActor, mockActor1);
+      testBed.setActiveEntities(player, ai1);
 
       testBed.mocks.turnOrderService.isEmpty.mockResolvedValue(false);
       testBed.mocks.turnOrderService.getNextEntity
-        .mockResolvedValueOnce(mockPlayerActor)
-        .mockResolvedValueOnce(mockActor1);
+        .mockResolvedValueOnce(player)
+        .mockResolvedValueOnce(ai1);
 
       await testBed.turnManager.start();
       await new Promise((resolve) => setTimeout(resolve, 10)); // Wait for initial turn advancement
@@ -164,14 +192,14 @@ describeTurnManagerSuite(
       expect(testBed.mocks.dispatcher.dispatch).toHaveBeenCalledWith(
         TURN_STARTED_ID,
         {
-          entityId: mockPlayerActor.id,
+          entityId: player.id,
           entityType: 'player',
         }
       );
 
       // Simulate turn ending and advancing to AI actor
       testBed.trigger(TURN_ENDED_ID, {
-        entityId: mockPlayerActor.id,
+        entityId: player.id,
         success: true,
       });
       await new Promise((resolve) => setTimeout(resolve, 10)); // Wait for async turn advancement
@@ -181,7 +209,7 @@ describeTurnManagerSuite(
       expect(testBed.mocks.dispatcher.dispatch).toHaveBeenCalledWith(
         TURN_STARTED_ID,
         {
-          entityId: mockActor1.id,
+          entityId: ai1.id,
           entityType: 'ai',
         }
       );
@@ -190,13 +218,13 @@ describeTurnManagerSuite(
     test('Starts new round when queue becomes empty after turn ends', async () => {
       // Use real timers for this test since turn advancement uses setTimeout
       jest.useRealTimers();
-      
-      testBed.setActiveEntities(mockActor1, mockActor2);
+
+      testBed.setActiveEntities(ai1, ai2);
 
       // Set up mocks to simulate the queue state changes
       let isEmptyCallCount = 0;
       let getNextEntityCallCount = 0;
-      
+
       testBed.mocks.turnOrderService.isEmpty.mockImplementation(() => {
         isEmptyCallCount++;
         // First call: queue not empty (during initial turn advancement)
@@ -210,60 +238,68 @@ describeTurnManagerSuite(
         // First call: return first actor
         // Second call: return second actor
         if (getNextEntityCallCount === 1) {
-          return Promise.resolve(mockActor1);
+          return Promise.resolve(ai1);
         } else if (getNextEntityCallCount === 2) {
-          return Promise.resolve(mockActor2);
+          return Promise.resolve(ai2);
         }
         return Promise.resolve(null);
       });
 
       // Mock clearCurrentRound to repopulate activeEntities for the new round
-      testBed.mocks.turnOrderService.clearCurrentRound.mockImplementation(() => {
-        // Create fresh mock actors for the new round
-        const newActor1 = createMockEntity('actor1', { isActor: true });
-        const newActor2 = createMockEntity('actor2', { isActor: true });
-        testBed.setActiveEntities(newActor1, newActor2);
-        return Promise.resolve();
-      });
+      testBed.mocks.turnOrderService.clearCurrentRound.mockImplementation(
+        () => {
+          // Create fresh mock actors for the new round
+          const newActor1 = createMockEntity('actor1', { isActor: true });
+          const newActor2 = createMockEntity('actor2', { isActor: true });
+          testBed.setActiveEntities(newActor1, newActor2);
+          return Promise.resolve();
+        }
+      );
 
       await testBed.turnManager.start();
-      await new Promise(resolve => setTimeout(resolve, 10)); // Wait for initial turn advancement
+      await new Promise((resolve) => setTimeout(resolve, 10)); // Wait for initial turn advancement
 
       // Verify first actor is current
-      expect(testBed.turnManager.getCurrentActor()?.id).toBe(mockActor1.id);
+      expect(testBed.turnManager.getCurrentActor()?.id).toBe(ai1.id);
 
       // Simulate turn ending for actor1 (success: true)
-      testBed.trigger(TURN_ENDED_ID, { entityId: mockActor1.id, success: true });
-      await new Promise(resolve => setTimeout(resolve, 10)); // Wait for async turn advancement
+      testBed.trigger(TURN_ENDED_ID, { entityId: ai1.id, success: true });
+      await new Promise((resolve) => setTimeout(resolve, 10)); // Wait for async turn advancement
 
-      // Wait for TurnManager to advance to mockActor2
+      // Wait for TurnManager to advance to ai2
       let found = false;
       for (let i = 0; i < 50; i++) {
-        if (testBed.turnManager.getCurrentActor()?.id === mockActor2.id) { found = true; break; }
-        await new Promise(resolve => setTimeout(resolve, 5));
+        if (testBed.turnManager.getCurrentActor()?.id === ai2.id) {
+          found = true;
+          break;
+        }
+        await new Promise((resolve) => setTimeout(resolve, 5));
       }
       expect(found).toBe(true);
 
       // Simulate turn ending for actor2 (success: true)
-      testBed.trigger(TURN_ENDED_ID, { entityId: mockActor2.id, success: true });
-      await new Promise(resolve => setTimeout(resolve, 10)); // Wait for async turn advancement
+      testBed.trigger(TURN_ENDED_ID, { entityId: ai2.id, success: true });
+      await new Promise((resolve) => setTimeout(resolve, 10)); // Wait for async turn advancement
 
       // Wait for the TurnManager to process and start a new round
       let roundStarted = false;
       for (let i = 0; i < 50; i++) {
-        if (testBed.mocks.turnOrderService.startNewRound.mock.calls.length > 0) { roundStarted = true; break; }
-        await new Promise(resolve => setTimeout(resolve, 5));
+        if (
+          testBed.mocks.turnOrderService.startNewRound.mock.calls.length > 0
+        ) {
+          roundStarted = true;
+          break;
+        }
+        await new Promise((resolve) => setTimeout(resolve, 5));
       }
       expect(roundStarted).toBe(true);
     });
 
     test('Handles turn advancement errors gracefully', async () => {
-      testBed.setActiveEntities(mockActor1);
+      testBed.setActiveEntities(ai1);
 
       testBed.mocks.turnOrderService.isEmpty.mockResolvedValue(false);
-      testBed.mocks.turnOrderService.getNextEntity.mockResolvedValue(
-        mockActor1
-      );
+      testBed.mocks.turnOrderService.getNextEntity.mockResolvedValue(ai1);
       const advanceError = new Error('Turn advancement failed');
       testBed.mocks.turnHandlerResolver.resolveHandler.mockRejectedValue(
         advanceError
@@ -290,7 +326,7 @@ describeTurnManagerSuite(
     });
 
     test('Handles round start errors gracefully', async () => {
-      testBed.setActiveEntities(mockActor1);
+      testBed.setActiveEntities(ai1);
 
       testBed.mocks.turnOrderService.isEmpty.mockResolvedValue(true);
       const roundError = new Error('Round start failed');
