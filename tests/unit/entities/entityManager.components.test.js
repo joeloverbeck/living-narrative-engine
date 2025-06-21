@@ -15,10 +15,9 @@ import { EntityNotFoundError } from '../../../src/errors/entityNotFoundError.js'
 import { InvalidArgumentError } from '../../../src/errors/invalidArgumentError.js';
 import { ValidationError } from '../../../src/errors/validationError.js';
 import {
-  COMPONENT_ADDED_ID,
-  COMPONENT_REMOVED_ID,
-} from '../../../src/constants/eventIds.js';
-import { expectSingleDispatch } from '../../common/engine/dispatchTestUtils.js';
+  expectComponentAddedDispatch,
+  expectComponentRemovedDispatch,
+} from '../../common/engine/dispatchTestUtils.js';
 
 describeEntityManagerSuite(
   'EntityManager - Component Manipulation',
@@ -83,15 +82,12 @@ describeEntityManagerSuite(
         );
 
         // Assert
-        expectSingleDispatch(
+        expectComponentAddedDispatch(
           mocks.eventDispatcher.dispatch,
-          COMPONENT_ADDED_ID,
-          {
-            entity: entity,
-            componentTypeId: NEW_COMPONENT_ID,
-            componentData: NEW_COMPONENT_DATA,
-            oldComponentData: undefined,
-          }
+          entity,
+          NEW_COMPONENT_ID,
+          NEW_COMPONENT_DATA,
+          undefined
         );
       });
 
@@ -143,15 +139,12 @@ describeEntityManagerSuite(
         );
 
         // Assert
-        expectSingleDispatch(
+        expectComponentAddedDispatch(
           mocks.eventDispatcher.dispatch,
-          COMPONENT_ADDED_ID,
-          {
-            entity: entity,
-            componentTypeId: NAME_COMPONENT_ID,
-            componentData: UPDATED_NAME_DATA,
-            oldComponentData: originalNameData,
-          }
+          entity,
+          NAME_COMPONENT_ID,
+          UPDATED_NAME_DATA,
+          originalNameData
         );
       });
 
@@ -326,14 +319,11 @@ describeEntityManagerSuite(
         entityManager.removeComponent(PRIMARY, NAME_COMPONENT_ID);
 
         // Assert
-        expectSingleDispatch(
+        expectComponentRemovedDispatch(
           mocks.eventDispatcher.dispatch,
-          COMPONENT_REMOVED_ID,
-          {
-            entity: entity,
-            componentTypeId: NAME_COMPONENT_ID,
-            oldComponentData: overrideData,
-          }
+          entity,
+          NAME_COMPONENT_ID,
+          overrideData
         );
       });
 
