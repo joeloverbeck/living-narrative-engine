@@ -115,7 +115,7 @@ describe('ContentLoadManager.processMod', () => {
         contentKey: 'items',
         diskFolder: 'items',
         registryKey: 'items',
-        typeName: 'items',
+        registryKey: 'items',
       },
     ];
     const manager = new ContentLoadManager({

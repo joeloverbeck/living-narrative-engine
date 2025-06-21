@@ -331,7 +331,7 @@ describe('DefaultPathResolver', () => {
       resolver = new DefaultPathResolver(mockConfig);
     });
 
-    it('should return the correct path for valid modId, typeName, and filename', () => {
+    it('should return the correct path for valid modId, registryKey, and filename', () => {
       const modId = 'MyMod';
       const registryKey = 'items';
       const filename = 'special_item.json';

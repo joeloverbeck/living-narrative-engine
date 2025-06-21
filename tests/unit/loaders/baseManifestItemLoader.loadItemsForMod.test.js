@@ -8,7 +8,7 @@ import { BaseManifestItemLoader } from '../../../src/loaders/baseManifestItemLoa
 const createMockConfiguration = (overrides = {}) => ({
   getModsBasePath: jest.fn().mockReturnValue('./data/mods'),
   getContentTypeSchemaId: jest.fn(
-    (typeName) => `http://example.com/schemas/${typeName}.schema.json`
+    (registryKey) => `http://example.com/schemas/${registryKey}.schema.json`
   ),
   getSchemaBasePath: jest.fn().mockReturnValue('schemas'),
   getSchemaFiles: jest.fn().mockReturnValue([]),
@@ -16,17 +16,17 @@ const createMockConfiguration = (overrides = {}) => ({
   getBaseDataPath: jest.fn().mockReturnValue('./data'),
   getGameConfigFilename: jest.fn().mockReturnValue('game.json'),
   getModManifestFilename: jest.fn().mockReturnValue('mod.manifest.json'),
-  getContentBasePath: jest.fn((typeName) => `./data/${typeName}`),
+  getContentBasePath: jest.fn((registryKey) => `./data/${registryKey}`),
   ...overrides,
 });
 
 const createMockPathResolver = (overrides = {}) => ({
   resolveModContentPath: jest.fn(
-    (modId, typeName, filename) =>
-      `./data/mods/${modId}/${typeName}/${filename}`
+    (modId, registryKey, filename) =>
+      `./data/mods/${modId}/${registryKey}/${filename}`
   ),
   resolveContentPath: jest.fn(
-    (typeName, filename) => `./data/${typeName}/${filename}`
+    (registryKey, filename) => `./data/${registryKey}/${filename}`
   ),
   resolveSchemaPath: jest.fn((filename) => `./data/schemas/${filename}`),
   resolveModManifestPath: jest.fn(
@@ -102,7 +102,7 @@ class TestableLoader extends BaseManifestItemLoader {
     filename,
     resolvedPath,
     fetchedData,
-    typeName
+    registryKey
   ) {
     // Mock implementation required by the abstract class, needs to return the correct shape now
     // based on the JSDoc for _processFetchedItem. Assume no override for simplicity here.

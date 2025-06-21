@@ -25,11 +25,11 @@ const createMockConfiguration = (overrides = {}) => ({
 
 const createMockPathResolver = (overrides = {}) => ({
   resolveModContentPath: jest.fn(
-    (modId, typeName, filename) =>
-      `./data/mods/${modId}/${typeName}/${filename}`
+    (modId, registryKey, filename) =>
+      `./data/mods/${modId}/${registryKey}/${filename}`
   ),
   resolveContentPath: jest.fn(
-    (typeName, filename) => `./data/${typeName}/${filename}`
+    (registryKey, filename) => `./data/${registryKey}/${filename}`
   ),
   resolveSchemaPath: jest.fn((filename) => `./data/schemas/${filename}`),
   resolveModManifestPath: jest.fn(
@@ -157,7 +157,7 @@ describe('BaseManifestItemLoader _loadItemsInternal', () => {
   const manifest = { id: modId, content: {} }; // Basic manifest structure
   const contentKey = 'items';
   const diskFolder = 'items';
-  const typeName = 'items';
+  const registryKey = 'items';
 
   // Note: loader, mocks are set up in global beforeEach
   // _extractValidFilenames, _processFileWrapper are mocked by global beforeEach
@@ -181,7 +181,7 @@ describe('BaseManifestItemLoader _loadItemsInternal', () => {
       manifest,
       contentKey,
       diskFolder,
-      typeName
+      registryKey
     );
 
     // --- Assert ---
@@ -223,7 +223,7 @@ describe('BaseManifestItemLoader _loadItemsInternal', () => {
       manifest,
       contentKey,
       diskFolder,
-      typeName
+      registryKey
     );
 
     // --- Assert ---
@@ -242,13 +242,13 @@ describe('BaseManifestItemLoader _loadItemsInternal', () => {
       modId,
       'file1.json',
       diskFolder,
-      typeName
+      registryKey
     );
     expect(loader._processFileWrapper).toHaveBeenCalledWith(
       modId,
       'file2.json',
       diskFolder,
-      typeName
+      registryKey
     );
     expect(mockLogger.info).toHaveBeenCalledWith(
       `Mod [${modId}] - Processed 2/2 ${contentKey} items.`
@@ -267,7 +267,7 @@ describe('BaseManifestItemLoader _loadItemsInternal', () => {
     loader._extractValidFilenames.mockReturnValue(filenames);
     loader._processFileWrapper.mockImplementation(
       async (mId, fname, dFolder, tName) => {
-        expect(tName).toBe(typeName); // Add assertion for typeName within mock
+        expect(tName).toBe(registryKey); // Add assertion for registryKey within mock
         if (fname === 'file1.json')
           return { qualifiedId: qualifiedId1, didOverride: true }; // Simulate success with override
         if (fname === 'file2.json') throw failureError; // Simulate rejection
@@ -283,7 +283,7 @@ describe('BaseManifestItemLoader _loadItemsInternal', () => {
       manifest,
       contentKey,
       diskFolder,
-      typeName
+      registryKey
     );
 
     // --- Assert ---
@@ -302,19 +302,19 @@ describe('BaseManifestItemLoader _loadItemsInternal', () => {
       modId,
       'file1.json',
       diskFolder,
-      typeName
+      registryKey
     );
     expect(loader._processFileWrapper).toHaveBeenCalledWith(
       modId,
       'file2.json',
       diskFolder,
-      typeName
+      registryKey
     );
     expect(loader._processFileWrapper).toHaveBeenCalledWith(
       modId,
       'file3.json',
       diskFolder,
-      typeName
+      registryKey
     );
     // <<< CORRECTED: Updated expected log message to include overrides and failures
     expect(mockLogger.info).toHaveBeenCalledWith(
@@ -333,7 +333,7 @@ describe('BaseManifestItemLoader _loadItemsInternal', () => {
     loader._extractValidFilenames.mockReturnValue(filenames);
     loader._processFileWrapper.mockImplementation(
       async (mId, fname, dFolder, tName) => {
-        expect(tName).toBe(typeName);
+        expect(tName).toBe(registryKey);
         if (fname === 'file1.json') throw failureError1;
         if (fname === 'file2.json') throw failureError2;
         throw new Error(`Unexpected filename in mock: ${fname}`);
@@ -346,7 +346,7 @@ describe('BaseManifestItemLoader _loadItemsInternal', () => {
       manifest,
       contentKey,
       diskFolder,
-      typeName
+      registryKey
     );
 
     // --- Assert ---
@@ -365,13 +365,13 @@ describe('BaseManifestItemLoader _loadItemsInternal', () => {
       modId,
       'file1.json',
       diskFolder,
-      typeName
+      registryKey
     );
     expect(loader._processFileWrapper).toHaveBeenCalledWith(
       modId,
       'file2.json',
       diskFolder,
-      typeName
+      registryKey
     );
     // <<< CORRECTED: Updated expected log message
     expect(mockLogger.info).toHaveBeenCalledWith(

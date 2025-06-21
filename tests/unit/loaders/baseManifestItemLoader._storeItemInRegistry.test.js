@@ -24,11 +24,11 @@ const createMockConfiguration = (overrides = {}) => ({
 
 const createMockPathResolver = (overrides = {}) => ({
   resolveModContentPath: jest.fn(
-    (modId, typeName, filename) =>
-      `./data/mods/${modId}/${typeName}/${filename}`
+    (modId, registryKey, filename) =>
+      `./data/mods/${modId}/${registryKey}/${filename}`
   ),
   resolveContentPath: jest.fn(
-    (typeName, filename) => `./data/${typeName}/${filename}`
+    (registryKey, filename) => `./data/${registryKey}/${filename}`
   ),
   resolveSchemaPath: jest.fn((filename) => `./data/schemas/${filename}`),
   resolveModManifestPath: jest.fn(
@@ -96,7 +96,7 @@ class TestableLoader extends BaseManifestItemLoader {
     _filename,
     _resolvedPath,
     _fetchedData,
-    _typeName
+    _registryKey
   ) {
     return {
       id: _fetchedData?.id || 'dummyId',

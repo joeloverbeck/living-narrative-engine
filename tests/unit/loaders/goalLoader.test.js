@@ -58,7 +58,7 @@ describe('GoalLoader._processFetchedItem', () => {
 
     const data = { id: 'goal' };
     // FIX: Updated call to match the 5-argument signature of _processFetchedItem.
-    // The 'resolvedPath' and 'typeName' arguments are added.
+    // The 'resolvedPath' and 'registryKey' arguments are added.
     const result = await loader._processFetchedItem(
       'test',
       'goal.json',

@@ -10,12 +10,12 @@ import { BaseManifestItemLoader } from '../../../src/loaders/baseManifestItemLoa
 // --- Mock Service Factories ---
 const createMockConfiguration = (overrides = {}) => ({
   getModsBasePath: jest.fn().mockReturnValue('./data/mods'),
-  getContentTypeSchemaId: jest.fn((typeName) => {
-    if (typeName === 'actions')
+  getContentTypeSchemaId: jest.fn((registryKey) => {
+    if (registryKey === 'actions')
       return 'http://example.com/schemas/action.schema.json';
-    if (typeName === 'components')
+    if (registryKey === 'components')
       return 'http://example.com/schemas/component.schema.json';
-    return `http://example.com/schemas/${typeName}.schema.json`;
+    return `http://example.com/schemas/${registryKey}.schema.json`;
   }),
   getSchemaBasePath: jest.fn().mockReturnValue('./data/schemas'),
   getSchemaFiles: jest.fn().mockReturnValue([]),
@@ -23,7 +23,7 @@ const createMockConfiguration = (overrides = {}) => ({
   getBaseDataPath: jest.fn().mockReturnValue('./data'),
   getGameConfigFilename: jest.fn().mockReturnValue('game.json'),
   getModManifestFilename: jest.fn().mockReturnValue('mod.manifest.json'),
-  getContentBasePath: jest.fn((typeName) => `./data/${typeName}`),
+  getContentBasePath: jest.fn((registryKey) => `./data/${registryKey}`),
   getRuleBasePath: jest.fn().mockReturnValue('rules'),
   getRuleSchemaId: jest
     .fn()
@@ -33,11 +33,11 @@ const createMockConfiguration = (overrides = {}) => ({
 
 const createMockPathResolver = (overrides = {}) => ({
   resolveModContentPath: jest.fn(
-    (modId, typeName, filename) =>
-      `./data/mods/${modId}/${typeName}/${filename}`
+    (modId, registryKey, filename) =>
+      `./data/mods/${modId}/${registryKey}/${filename}`
   ),
   resolveContentPath: jest.fn(
-    (typeName, filename) => `./data/${typeName}/${filename}`
+    (registryKey, filename) => `./data/${registryKey}/${filename}`
   ),
   resolveSchemaPath: jest.fn((filename) => `./data/schemas/${filename}`),
   resolveModManifestPath: jest.fn(
