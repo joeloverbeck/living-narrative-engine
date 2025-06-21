@@ -12,36 +12,12 @@ import {
   SYSTEM_ERROR_OCCURRED_ID,
 } from '../../../src/constants/eventIds.js';
 import { beforeEach, expect, jest, test, afterEach } from '@jest/globals';
-import { createMockEntity } from '../../common/mockFactories.js';
+import {
+  createMockActor,
+  createMockTurnHandler,
+} from '../../common/mockFactories.js';
 
-// --- Mock Implementations (Keep as before) ---
-
-class MockEntity {
-  constructor(id, components = []) {
-    this.id = id || `entity-${Math.random().toString(36).substr(2, 9)}`;
-    this.name = id;
-    this.components = new Map(components.map((c) => [c.componentId || c, {}]));
-    this.hasComponent = jest.fn((componentId) =>
-      this.components.has(componentId)
-    );
-    this.getComponent = jest.fn((componentId) =>
-      this.components.get(componentId)
-    );
-  }
-}
-
-let mockHandlerInstances = new Map();
-
-class MockTurnHandler {
-  constructor(actor) {
-    this.actor = actor;
-    this.startTurn = jest.fn().mockResolvedValue(undefined);
-    this.destroy = jest.fn().mockResolvedValue(undefined);
-    this.signalNormalApparentTermination = jest.fn();
-    mockHandlerInstances.set(actor?.id, this); // Use actor?.id safely
-  }
-}
-
+// --- Test Setup Helpers ---
 // --- Test Suite ---
 
 describeTurnManagerSuite('TurnManager - Lifecycle (Start/Stop)', (getBed) => {
@@ -50,13 +26,13 @@ describeTurnManagerSuite('TurnManager - Lifecycle (Start/Stop)', (getBed) => {
 
   beforeEach(() => {
     jest.useRealTimers();
-    mockHandlerInstances.clear();
 
     testBed = getBed();
 
-    // Configure handler resolver to return MockTurnHandler instances
+    // Configure handler resolver to return mock turn handlers
     testBed.mocks.turnHandlerResolver.resolveHandler.mockImplementation(
-      async (actor) => new MockTurnHandler(actor)
+      async (actor) =>
+        createMockTurnHandler({ actor, includeSignalTermination: true })
     );
 
     // Default: Mock advanceTurn to isolate start/stop logic
@@ -215,19 +191,20 @@ describeTurnManagerSuite('TurnManager - Lifecycle (Start/Stop)', (getBed) => {
       advanceTurnSpy.mockRestore();
 
       // Set up the turn order service to return an entity
-      const mockActor = new MockEntity('actor1', [
-        { id: ACTOR_COMPONENT_ID, data: {} },
-      ]);
+      const mockActor = createMockActor('actor1', {
+        components: [ACTOR_COMPONENT_ID],
+      });
       testBed.setActiveEntities(mockActor);
       testBed.mocks.turnOrderService.isEmpty.mockResolvedValue(false);
       testBed.mocks.turnOrderService.getNextEntity.mockResolvedValue(mockActor);
 
       // Create a mock handler that will fail during destroy
       const destroyError = new Error('Failed to destroy handler');
-      const mockHandler = {
-        startTurn: jest.fn().mockResolvedValue(undefined),
-        destroy: jest.fn().mockRejectedValue(destroyError),
-      };
+      const mockHandler = createMockTurnHandler({
+        actor: mockActor,
+        failDestroy: true,
+      });
+      mockHandler.destroy.mockRejectedValue(destroyError);
 
       // Mock the turn handler resolver to return our failing handler
       testBed.mocks.turnHandlerResolver.resolveHandler.mockResolvedValue(
