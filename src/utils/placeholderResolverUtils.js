@@ -4,6 +4,7 @@
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 import { safeResolvePath } from './objectUtils.js';
 import { resolveEntityNameFallback } from './entityNameFallbackUtils.js';
+import { ensureValidLogger } from './loggerUtils.js';
 
 /**
  * Regex to find placeholders like {path.to.value} within a string.
@@ -42,7 +43,7 @@ export class PlaceholderResolver {
    * @param {ILogger} [logger] - An optional logger instance. If not provided, `console` will be used.
    */
   constructor(logger = console) {
-    this.#logger = logger;
+    this.#logger = ensureValidLogger(logger, 'PlaceholderResolver');
   }
 
   /**

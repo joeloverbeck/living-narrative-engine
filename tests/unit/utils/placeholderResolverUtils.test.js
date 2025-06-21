@@ -10,6 +10,7 @@ import {
 } from '@jest/globals';
 import { PlaceholderResolver } from '../../../src/utils/placeholderResolverUtils.js'; // Adjust path as needed
 import { createMockLogger } from '../testUtils.js'; // Adjust path as needed (assuming testUtils.js from previous adjustment)
+import * as loggerUtils from '../../../src/utils/loggerUtils.js';
 import { NAME_COMPONENT_ID } from '../../../src/constants/componentIds.js';
 
 describe('PlaceholderResolver', () => {
@@ -39,6 +40,32 @@ describe('PlaceholderResolver', () => {
       expect(resolverWithoutLogger).toBeInstanceOf(PlaceholderResolver);
       // To truly test console, one might spy on global.console.warn temporarily.
       // For now, this is an implicit check.
+    });
+
+    it('should call ensureValidLogger with the provided logger', () => {
+      const spy = jest.spyOn(loggerUtils, 'ensureValidLogger');
+      const logger = createMockLogger();
+       
+      new PlaceholderResolver(logger);
+      expect(spy).toHaveBeenCalledWith(logger, 'PlaceholderResolver');
+      spy.mockRestore();
+    });
+
+    it('should fall back to console when logger is invalid', () => {
+      const invalidLogger = { log: 123 };
+      const ensureSpy = jest.spyOn(loggerUtils, 'ensureValidLogger');
+      const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+      const resolverWithInvalid = new PlaceholderResolver(invalidLogger);
+      expect(resolverWithInvalid).toBeInstanceOf(PlaceholderResolver);
+      expect(ensureSpy).toHaveBeenCalledWith(
+        invalidLogger,
+        'PlaceholderResolver'
+      );
+      expect(warnSpy).toHaveBeenCalledTimes(1);
+      resolverWithInvalid.resolve('test {missing}', {});
+      expect(warnSpy).toHaveBeenCalledTimes(2);
+      warnSpy.mockRestore();
+      ensureSpy.mockRestore();
     });
   });
 
