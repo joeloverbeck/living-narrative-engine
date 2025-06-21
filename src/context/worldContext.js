@@ -75,11 +75,8 @@ class WorldContext extends IWorldContext {
         'WorldContext requires a valid ILogger instance with info, error, debug and warn methods.'
       );
     }
-    this.#safeEventDispatcher = resolveSafeDispatcher(
-      null,
-      safeEventDispatcher,
-      logger
-    );
+    this.#safeEventDispatcher =
+      safeEventDispatcher || resolveSafeDispatcher(null, logger);
     if (!this.#safeEventDispatcher) {
       logger.warn(
         'WorldContext: safeEventDispatcher resolution failed; some errors may not be dispatched.'

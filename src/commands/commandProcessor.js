@@ -32,11 +32,8 @@ class CommandProcessor extends ICommandProcessor {
 
     this.#logger = logger;
 
-    this.#safeEventDispatcher = resolveSafeDispatcher(
-      null,
-      safeEventDispatcher,
-      this.#logger
-    );
+    this.#safeEventDispatcher =
+      safeEventDispatcher || resolveSafeDispatcher(null, this.#logger);
     if (!this.#safeEventDispatcher) {
       console.warn(
         'CommandProcessor: safeEventDispatcher resolution failed; some events may not be dispatched.'

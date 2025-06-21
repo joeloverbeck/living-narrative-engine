@@ -26,11 +26,8 @@ export class BrowserStorageProvider extends IStorageProvider {
       throw new Error(errorMsg);
     }
     this.#logger = logger;
-    this.#safeEventDispatcher = resolveSafeDispatcher(
-      null,
-      safeEventDispatcher,
-      this.#logger
-    );
+    this.#safeEventDispatcher =
+      safeEventDispatcher || resolveSafeDispatcher(null, this.#logger);
     if (!this.#safeEventDispatcher) {
       console.warn(
         'BrowserStorageProvider: safeEventDispatcher resolution failed; some errors may go unreported.'

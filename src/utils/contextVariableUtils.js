@@ -59,7 +59,7 @@ export function writeContextVariable(
   logger
 ) {
   const log = getModuleLogger('contextVariableUtils', logger);
-  const safeDispatcher = resolveSafeDispatcher(execCtx, dispatcher, log);
+  const safeDispatcher = dispatcher || resolveSafeDispatcher(execCtx, log);
   const { valid, error, name } = _validateContextAndName(variableName, execCtx);
 
   if (!valid) {
@@ -109,7 +109,7 @@ export function tryWriteContextVariable(
   const log = getModuleLogger('contextVariableUtils', logger);
   const validation = _validateContextAndName(variableName, execCtx);
   if (!validation.valid) {
-    const safeDispatcher = resolveSafeDispatcher(execCtx, dispatcher, log);
+    const safeDispatcher = dispatcher || resolveSafeDispatcher(execCtx, log);
     if (safeDispatcher) {
       safeDispatchError(safeDispatcher, validation.error.message, {
         variableName,

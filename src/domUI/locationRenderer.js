@@ -99,11 +99,8 @@ export class LocationRenderer extends BoundDomRendererBase {
       },
     };
 
-    const resolvedDispatcher = resolveSafeDispatcher(
-      null,
-      safeEventDispatcher,
-      logger
-    );
+    const resolvedDispatcher =
+      safeEventDispatcher || resolveSafeDispatcher(null, logger);
     if (!resolvedDispatcher) {
       console.warn(
         '[LocationRenderer] safeEventDispatcher resolution failed; UI errors may not be reported.'
