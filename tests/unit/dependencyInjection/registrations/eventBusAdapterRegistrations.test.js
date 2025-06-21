@@ -23,6 +23,7 @@ import { registerEventBusAdapters } from '../../../../src/dependencyInjection/re
 // --- Concrete Class Imports for `instanceof` checks ---
 import { EventBusPromptAdapter } from '../../../../src/turns/adapters/eventBusPromptAdapter.js';
 import EventBusTurnEndAdapter from '../../../../src/turns/adapters/eventBusTurnEndAdapter.js';
+import { expectSingleton } from '../../../common/containerAssertions.js';
 
 describe('registerEventBusAdapters', () => {
   /** @type {AppContainer} */
@@ -122,12 +123,11 @@ describe('registerEventBusAdapters', () => {
       registerEventBusAdapters(freshContainer);
 
       // Assert
-      // 1. Resolves without error and is correct type
-      const instance = freshContainer.resolve(tokens.IPromptOutputPort);
-      expect(instance).toBeInstanceOf(EventBusPromptAdapter);
-
-      // 2. Is a singleton
-      expect(freshContainer.resolve(tokens.IPromptOutputPort)).toBe(instance);
+      expectSingleton(
+        freshContainer,
+        tokens.IPromptOutputPort,
+        EventBusPromptAdapter
+      );
     });
 
     test('should throw during resolution if dispatcher dependency is missing', () => {
@@ -166,9 +166,11 @@ describe('registerEventBusAdapters', () => {
       registerEventBusAdapters(freshContainer);
 
       // Assert
-      const instance = freshContainer.resolve(tokens.ITurnEndPort);
-      expect(instance).toBeInstanceOf(EventBusTurnEndAdapter);
-      expect(freshContainer.resolve(tokens.ITurnEndPort)).toBe(instance);
+      expectSingleton(
+        freshContainer,
+        tokens.ITurnEndPort,
+        EventBusTurnEndAdapter
+      );
     });
 
     test('should throw during resolution if both dispatcher dependencies are missing', () => {

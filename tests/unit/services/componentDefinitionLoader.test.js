@@ -1,4 +1,4 @@
-// tests/services/componentDefinitionLoader.test.js
+// tests/services/componentLoader.test.js
 // --- Imports ---
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import ComponentLoader from '../../../src/loaders/componentLoader.js';
@@ -29,14 +29,14 @@ const createMockConfiguration = (overrides = {}) => ({
   getModsBasePath: jest.fn(() => './data/mods'), // Provide a mock implementation/return value
   // --- FIX END ---
 
-  getContentBasePath: jest.fn((typeName) => `./data/mods/test-mod/${typeName}`), // This might be redundant now depending on how paths are constructed, but keep it for now if ComponentDefinitionLoader uses it directly.
-  getContentTypeSchemaId: jest.fn((typeName) => {
-    if (typeName === 'components') {
+  getContentBasePath: jest.fn((registryKey) => `./data/mods/test-mod/${registryKey}`), // This might be redundant now depending on how paths are constructed, but keep it for now if ComponentLoader uses it directly.
+  getContentTypeSchemaId: jest.fn((registryKey) => {
+    if (registryKey === 'components') {
       // Matches the schema provided in the ticket
       return 'http://example.com/schemas/component.schema.json';
     }
     // Default fallback for other types if needed in future tests
-    return `http://example.com/schemas/${typeName}.schema.json`;
+    return `http://example.com/schemas/${registryKey}.schema.json`;
   }),
   // Include other IConfiguration methods if needed by the loader, mocking their returns
   // Required by Base Class validation
@@ -60,14 +60,14 @@ const createMockConfiguration = (overrides = {}) => ({
  * @returns {import('../../../src/core/interfaces/coreServices.js').IPathResolver} Mocked path resolver service.
  */
 const createMockPathResolver = (overrides = {}) => ({
-  // Mock the method used by ComponentDefinitionLoader's #processSingleComponentFile
+  // Mock the method used by ComponentLoader's #processSingleComponentFile
   resolveModContentPath: jest.fn(
-    (modId, typeName, filename) =>
-      `./data/mods/${modId}/${typeName}/${filename}`
+    (modId, registryKey, filename) =>
+      `./data/mods/${modId}/${registryKey}/${filename}`
   ),
   // Include other IPathResolver methods if needed, mocking their returns
   resolveContentPath: jest.fn(
-    (typeName, filename) => `./data/${typeName}/${filename}`
+    (registryKey, filename) => `./data/${registryKey}/${filename}`
   ), // Example for non-mod paths if used elsewhere
   // Required by Base Class validation
   resolveSchemaPath: jest.fn(),
@@ -214,7 +214,7 @@ const createMockDataRegistry = (overrides = {}) => {
         ? JSON.parse(JSON.stringify(typeMap.get(id)))
         : undefined;
     }),
-    // getAll: Not directly used by ComponentDefinitionLoader, but can be mocked if needed
+    // getAll: Not directly used by ComponentLoader, but can be mocked if needed
     getAll: jest.fn((type) => {
       const typeMap = registryData.get(type);
       return typeMap
@@ -316,7 +316,7 @@ const createMockModManifest = (modId, componentFiles = []) => ({
 
 // --- Test Suite ---
 
-describe('ComponentDefinitionLoader Test Setup', () => {
+describe('ComponentLoader Test Setup', () => {
   // Declare variables for mock instances and the loader itself
   let mockConfig;
   let mockResolver;
@@ -324,7 +324,7 @@ describe('ComponentDefinitionLoader Test Setup', () => {
   let mockValidator;
   let mockRegistry;
   let mockLogger;
-  let loader; // Instance of ComponentDefinitionLoader
+  let loader; // Instance of ComponentLoader
 
   // Setup before each test
   beforeEach(() => {
@@ -351,7 +351,7 @@ describe('ComponentDefinitionLoader Test Setup', () => {
   });
 
   // --- Basic Setup Verification Test ---
-  it('should instantiate ComponentDefinitionLoader with all mock dependencies', () => {
+  it('should instantiate ComponentLoader with all mock dependencies', () => {
     expect(loader).toBeInstanceOf(ComponentLoader);
 
     // *CORRECTED: Check DEBUG logs from constructors*

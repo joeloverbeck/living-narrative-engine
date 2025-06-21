@@ -23,6 +23,7 @@ import {
   ENTITY_CREATED_ID,
   ENTITY_REMOVED_ID,
 } from '../../../src/constants/eventIds.js';
+
 import { expectSingleDispatch } from '../../common/engine/dispatchTestUtils.js';
 
 import { MapManager } from '../../../src/utils/mapManagerUtils.js';

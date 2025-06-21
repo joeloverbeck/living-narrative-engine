@@ -28,6 +28,7 @@ import { PrerequisiteEvaluationService } from '../../../../src/actions/validatio
 import { DomainContextCompatibilityChecker } from '../../../../src/validation/domainContextCompatibilityChecker.js';
 import { ActionValidationService } from '../../../../src/actions/validation/actionValidationService.js';
 import CommandProcessor from '../../../../src/commands/commandProcessor.js';
+import { expectSingleton } from '../../../common/containerAssertions.js';
 
 describe('registerCommandAndAction', () => {
   /** @type {AppContainer} */
@@ -152,13 +153,7 @@ describe('registerCommandAndAction', () => {
         registerCommandAndAction(container);
 
         // --- Assert ---
-
-        // 1. Check if the service can be resolved and is of the correct concrete type
-        const instance = container.resolve(token);
-        expect(instance).toBeInstanceOf(Class);
-
-        // 2. Check for singleton behavior (all are singletons or singleton factories)
-        expect(container.resolve(token)).toBe(instance);
+        expectSingleton(container, token, Class);
 
         // 3. Find the call to container.register for the specific token using the spy
         const registrationCall = registerSpy.mock.calls.find(

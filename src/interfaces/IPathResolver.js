@@ -2,7 +2,7 @@
 
 /**
  * @interface IPathResolver
- * Service that converts logical identifiers into concrete relative‐to‐project paths.
+ * @description Interface for resolving paths to various types of content.
  */
 export class IPathResolver {
   /**
@@ -14,12 +14,13 @@ export class IPathResolver {
   }
 
   /**
-   * @param typeName
+   * Resolves the path to a content file.
+   * @param registryKey
    * @param filename
    * @returns {string}
    */
-  resolveContentPath(typeName, filename) {
-    throw new Error('Not implemented');
+  resolveContentPath(registryKey, filename) {
+    throw new Error('Method not implemented.');
   }
 
   /** @returns {string} */
@@ -36,12 +37,13 @@ export class IPathResolver {
   }
 
   /**
+   * Resolves the path to a mod content file.
    * @param modId
-   * @param typeName
+   * @param registryKey
    * @param filename
    * @returns {string}
    */
-  resolveModContentPath(modId, typeName, filename) {
-    throw new Error('Not implemented');
+  resolveModContentPath(modId, registryKey, filename) {
+    throw new Error('Method not implemented.');
   }
 }

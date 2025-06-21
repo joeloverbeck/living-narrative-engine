@@ -23,6 +23,7 @@ import TurnHandlerResolver from '../../../../src/turns/services/turnHandlerResol
 import { ConcreteTurnStateFactory } from '../../../../src/turns/factories/concreteTurnStateFactory.js';
 import { ConcreteTurnContextFactory } from '../../../../src/turns/factories/concreteTurnContextFactory.js';
 import PromptCoordinator from '../../../../src/turns/prompting/promptCoordinator';
+import { expectSingleton } from '../../../common/containerAssertions.js';
 
 describe('registerTurnLifecycle', () => {
   let container;
@@ -167,18 +168,7 @@ describe('registerTurnLifecycle', () => {
     ({ token, Class, lifecycle, tags }) => {
       registerTurnLifecycle(container);
 
-      const instance = container.resolve(token);
-      expect(instance).toBeInstanceOf(Class);
-
-      const instance2 = container.resolve(token);
-      expect(instance2).toBeInstanceOf(Class);
-      if (lifecycle === 'transient') {
-        // eslint-disable-next-line jest/no-conditional-expect
-        expect(instance2).not.toBe(instance);
-      } else {
-        // eslint-disable-next-line jest/no-conditional-expect
-        expect(instance2).toBe(instance);
-      }
+      expectSingleton(container, token, Class);
 
       const call = registerSpy.mock.calls.find((c) => c[0] === token);
       expect(call).toBeDefined();

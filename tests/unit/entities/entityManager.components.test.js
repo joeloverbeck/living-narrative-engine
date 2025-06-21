@@ -20,6 +20,7 @@ import {
 } from '../../../src/constants/eventIds.js';
 import { expectSingleDispatch } from '../../common/engine/dispatchTestUtils.js';
 
+
 describeEntityManagerSuite(
   'EntityManager - Component Manipulation',
   (getBed) => {

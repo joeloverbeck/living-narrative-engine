@@ -149,28 +149,19 @@ class EntityDefinitionLoader extends BaseManifestItemLoader {
   }
 
   /**
-   * Processes a single fetched entity-like definition file's data **after**
-   * primary schema validation has been performed by the base class wrapper.
-   * This method handles entity-specific logic:
-   * 1. Extracts and validates the entity's `id`.
-   * 2. Performs runtime validation of `components` against their schemas.
-   * 3. Delegates storage to the base class helper, always using the 'entityDefinitions' category.
-   * 4. Returns an object containing the final, fully qualified entity ID and whether an overwrite occurred.
-   *
+   * Processes a single fetched entity definition file's data.
    * @override
    * @protected
-   * @async
-   * @param {string} modId - The ID of the mod owning the file.
-   * @param {string} filename - The original filename from the manifest.
-   * @param {string} resolvedPath - The fully resolved path to the file.
-   * @param {any} data - The raw data fetched from the file (already validated against the primary 'entity_definitions' schema).
-   * @param {string} typeName - The original content type name (e.g., 'items', 'locations') used for logging/context, but not for storage category.
-   * @returns {Promise<{qualifiedId: string, didOverride: boolean}>} An object containing the final registry key and overwrite status.
-   * @throws {Error} If entity-specific processing (ID extraction, component validation, storage) fails.
+   * @param {string} modId
+   * @param {string} filename
+   * @param {string} resolvedPath
+   * @param {any} data
+   * @param {string} registryKey - The original content type registry key (e.g., 'items', 'locations') used for logging/context, but not for storage category.
+   * @returns {Promise<{qualifiedId: string, didOverride: boolean}>}
    */
-  async _processFetchedItem(modId, filename, resolvedPath, data, typeName) {
+  async _processFetchedItem(modId, filename, resolvedPath, data, registryKey) {
     this._logger.debug(
-      `EntityLoader [${modId}]: Processing fetched item (post-primary validation): ${filename} (Original Type: ${typeName})`
+      `EntityLoader [${modId}]: Processing fetched item (post-primary validation): ${filename} (Original Type: ${registryKey})`
     );
 
     const { fullId: trimmedId, baseId: baseEntityId } = parseAndValidateId(
@@ -199,7 +190,7 @@ class EntityDefinitionLoader extends BaseManifestItemLoader {
     }
 
     this._logger.debug(
-      `EntityLoader [${modId}]: Delegating storage for original type '${typeName}' with base ID '${baseEntityId}' to base helper for file ${filename}. Storing under 'entityDefinitions' category.`
+      `EntityLoader [${modId}]: Delegating storage for original type '${registryKey}' with base ID '${baseEntityId}' to base helper for file ${filename}. Storing under 'entityDefinitions' category.`
     );
     const { qualifiedId, didOverride } = await processAndStoreItem(this, {
       data,
@@ -213,7 +204,7 @@ class EntityDefinitionLoader extends BaseManifestItemLoader {
     const finalRegistryKey = qualifiedId;
 
     this._logger.debug(
-      `EntityLoader [${modId}]: Successfully processed ${typeName} file '${filename}'. Returning final registry key: ${finalRegistryKey}, Overwrite: ${didOverride}`
+      `EntityLoader [${modId}]: Successfully processed ${registryKey} file '${filename}'. Returning final registry key: ${finalRegistryKey}, Overwrite: ${didOverride}`
     );
     return { qualifiedId, didOverride };
   }

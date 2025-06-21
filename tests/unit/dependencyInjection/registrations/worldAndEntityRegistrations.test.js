@@ -22,6 +22,7 @@ import { tokens } from '../../../../src/dependencyInjection/tokens.js';
 import WorldContext from '../../../../src/context/worldContext.js';
 import JsonLogicEvaluationService from '../../../../src/logic/jsonLogicEvaluationService.js';
 import { EntityDisplayDataProvider } from '../../../../src/entities/entityDisplayDataProvider.js';
+import { expectSingleton } from '../../../common/containerAssertions.js';
 // EntityManager is now registered by the SUT, so we might not need to import its class here unless for instanceof checks on IEntityManager resolution.
 // import EntityManager from '../../../src/entities/entityManager.js';
 
@@ -118,11 +119,7 @@ describe('registerWorldAndEntity', () => {
     ({ token, Class, lifecycle, deps }) => {
       registerWorldAndEntity(container);
 
-      // Resolution yields correct instance
-      const instance = container.resolve(token);
-      expect(instance).toBeInstanceOf(Class);
-      // Singleton behavior
-      expect(container.resolve(token)).toBe(instance);
+      expectSingleton(container, token, Class);
 
       // Registration metadata check (verifies how it was registered by the SUT)
       const registrationCall = registerSpy.mock.calls.find(

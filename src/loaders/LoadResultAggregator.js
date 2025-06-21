@@ -16,14 +16,14 @@
 
 /**
  * Structure to hold aggregated results for a single mod.
- * Maps typeName to {@link ContentTypeCounts}.
+ * Maps registryKey to {@link ContentTypeCounts}.
  *
  * @typedef {Record<string, ContentTypeCounts>} ModResultsSummary
  */
 
 /**
  * Structure to hold aggregated results across all mods.
- * Maps typeName to {@link ContentTypeCounts}.
+ * Maps registryKey to {@link ContentTypeCounts}.
  *
  * @typedef {Record<string, ContentTypeCounts>} TotalResultsSummary
  */
@@ -50,10 +50,10 @@ export class LoadResultAggregator {
    * Aggregates a loader result into the per-mod and total summaries.
    *
    * @param {LoadItemsResult|null|undefined} result - Loader result to aggregate.
-   * @param {string} typeName - Content type name.
+   * @param {string} registryKey - Content type registry key.
    * @returns {void}
    */
-  aggregate(result, typeName) {
+  aggregate(result, registryKey) {
     const res =
       result && typeof result.count === 'number'
         ? {
@@ -63,32 +63,32 @@ export class LoadResultAggregator {
           }
         : { count: 0, overrides: 0, errors: 0 };
 
-    this.modResults[typeName] = res;
+    this.modResults[registryKey] = res;
 
-    if (!this.#totalCounts[typeName]) {
-      this.#totalCounts[typeName] = { count: 0, overrides: 0, errors: 0 };
+    if (!this.#totalCounts[registryKey]) {
+      this.#totalCounts[registryKey] = { count: 0, overrides: 0, errors: 0 };
     }
-    this.#totalCounts[typeName].count += res.count;
-    this.#totalCounts[typeName].overrides += res.overrides;
-    this.#totalCounts[typeName].errors += res.errors;
+    this.#totalCounts[registryKey].count += res.count;
+    this.#totalCounts[registryKey].overrides += res.overrides;
+    this.#totalCounts[registryKey].errors += res.errors;
   }
 
   /**
    * Records a failure occurrence for a specific loader.
    *
-   * @param {string} typeName - Content type name for which a failure occurred.
+   * @param {string} registryKey - Content type registry key for which a failure occurred.
    * @returns {void}
    */
-  recordFailure(typeName) {
-    if (!this.modResults[typeName]) {
-      this.modResults[typeName] = { count: 0, overrides: 0, errors: 0 };
+  recordFailure(registryKey) {
+    if (!this.modResults[registryKey]) {
+      this.modResults[registryKey] = { count: 0, overrides: 0, errors: 0 };
     }
-    this.modResults[typeName].errors += 1;
+    this.modResults[registryKey].errors += 1;
 
-    if (!this.#totalCounts[typeName]) {
-      this.#totalCounts[typeName] = { count: 0, overrides: 0, errors: 0 };
+    if (!this.#totalCounts[registryKey]) {
+      this.#totalCounts[registryKey] = { count: 0, overrides: 0, errors: 0 };
     }
-    this.#totalCounts[typeName].errors += 1;
+    this.#totalCounts[registryKey].errors += 1;
   }
 }
 

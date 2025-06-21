@@ -132,7 +132,7 @@ describe('BaseManifestItemLoader.loadItemsForMod', () => {
   const TEST_MOD_ID = 'test-mod';
   const TEST_CONTENT_KEY = 'items';
   const TEST_CONTENT_DIR = 'items';
-  const TEST_TYPE_NAME = 'items'; // Use this for the constructor's contentType
+  const TEST_REGISTRY_KEY = 'test-type';
   const MOCK_MANIFEST = {
     id: TEST_MOD_ID,
     name: 'Test Mod',
@@ -154,7 +154,7 @@ describe('BaseManifestItemLoader.loadItemsForMod', () => {
     mockLogger = createMockLogger();
 
     testLoader = new TestableLoader(
-      TEST_TYPE_NAME,
+      TEST_REGISTRY_KEY,
       mockConfig,
       mockResolver,
       mockFetcher,
@@ -192,28 +192,24 @@ describe('BaseManifestItemLoader.loadItemsForMod', () => {
 
   // --- Input Validation Tests ---
   describe('Input Validation', () => {
-    // ***** CORRECTED TESTS for modId/modManifest: Expect ERROR log and return { count: 0, ... } *****
-    it('should return { count: 0, overrides: 0, errors: 0 } and log ERROR if modId is invalid', async () => {
-      const invalidModIds = [null, undefined, ''];
-      const expectedReturn = { count: 0, overrides: 0, errors: 0 }; // Expected object
-
-      for (const invalidId of invalidModIds) {
+    it('should throw TypeError and log error if modId is invalid', async () => {
+      const invalidIds = [null, undefined, ''];
+      for (const invalidId of invalidIds) {
         mockLogger.error.mockClear();
         loadItemsInternalSpy.mockClear();
 
-        // --- CORRECTED ASSERTION: Use .toEqual for object comparison ---
         await expect(
           testLoader.loadItemsForMod(
             invalidId,
             MOCK_MANIFEST,
             TEST_CONTENT_KEY,
             TEST_CONTENT_DIR,
-            TEST_TYPE_NAME
+            TEST_REGISTRY_KEY
           )
-        ).resolves.toEqual(expectedReturn); // Check resolves to the expected object
+        ).rejects.toThrow(TypeError);
 
         expect(mockLogger.error).toHaveBeenCalledWith(
-          `TestableLoader: Invalid 'modId' provided for loading ${TEST_TYPE_NAME}. Must be a non-empty string. Received: ${invalidId}`
+          `TestableLoader: Programming Error - Invalid 'modId' provided for loading content. Must be a non-empty string. Received: ${invalidId}`
         );
         expect(mockLogger.error).toHaveBeenCalledTimes(1);
         expect(mockLogger.warn).not.toHaveBeenCalled();
@@ -221,37 +217,32 @@ describe('BaseManifestItemLoader.loadItemsForMod', () => {
       }
     });
 
-    it('should return { count: 0, overrides: 0, errors: 0 } and log ERROR if modManifest is invalid', async () => {
+    it('should throw TypeError and log error if modManifest is invalid', async () => {
       const invalidManifests = [null, undefined, 'not-an-object', 123];
-      const expectedReturn = { count: 0, overrides: 0, errors: 0 }; // Expected object
-
       for (const invalidManifest of invalidManifests) {
         mockLogger.error.mockClear();
         loadItemsInternalSpy.mockClear();
 
-        // --- CORRECTED ASSERTION: Use .toEqual for object comparison ---
         await expect(
           testLoader.loadItemsForMod(
             TEST_MOD_ID,
             invalidManifest,
             TEST_CONTENT_KEY,
             TEST_CONTENT_DIR,
-            TEST_TYPE_NAME
+            TEST_REGISTRY_KEY
           )
-        ).resolves.toEqual(expectedReturn); // Check resolves to the expected object
+        ).rejects.toThrow(TypeError);
 
         expect(mockLogger.error).toHaveBeenCalledWith(
-          `TestableLoader: Invalid 'modManifest' provided for loading ${TEST_TYPE_NAME} for mod '${TEST_MOD_ID}'. Must be a non-null object. Received: ${typeof invalidManifest}`
+          `TestableLoader: Programming Error - Invalid 'modManifest' provided for loading content for mod '${TEST_MOD_ID}'. Must be a non-null object. Received: ${invalidManifest}`
         );
         expect(mockLogger.error).toHaveBeenCalledTimes(1);
         expect(mockLogger.warn).not.toHaveBeenCalled();
         expect(loadItemsInternalSpy).not.toHaveBeenCalled();
       }
     });
-    // ***** END CORRECTED TESTS *****
 
-    // ***** KEPT TESTS for contentKey/contentTypeDir/typeName: Expect TypeError *****
-    // These tests expect errors to be *thrown*, not resolved values, so they remain correct.
+    // ***** KEPT TESTS for contentKey/diskFolder/registryKey: Expect TypeError *****
     it('should throw TypeError and log error if contentKey is invalid', async () => {
       const invalidKeys = [null, undefined, ''];
       for (const invalidKey of invalidKeys) {
@@ -264,12 +255,12 @@ describe('BaseManifestItemLoader.loadItemsForMod', () => {
             MOCK_MANIFEST,
             invalidKey,
             TEST_CONTENT_DIR,
-            TEST_TYPE_NAME
+            TEST_REGISTRY_KEY
           )
         ).rejects.toThrow(TypeError);
 
         expect(mockLogger.error).toHaveBeenCalledWith(
-          `TestableLoader: Programming Error - Invalid 'contentKey' provided for loading ${TEST_TYPE_NAME} for mod '${TEST_MOD_ID}'. Must be a non-empty string. Received: ${invalidKey}`
+          `TestableLoader: Programming Error - Invalid 'contentKey' provided for loading ${TEST_REGISTRY_KEY} for mod '${TEST_MOD_ID}'. Must be a non-empty string. Received: ${invalidKey}`
         );
         expect(mockLogger.error).toHaveBeenCalledTimes(1);
         expect(mockLogger.warn).not.toHaveBeenCalled();
@@ -277,7 +268,7 @@ describe('BaseManifestItemLoader.loadItemsForMod', () => {
       }
     });
 
-    it('should throw TypeError and log error if contentTypeDir is invalid', async () => {
+    it('should throw TypeError and log error if diskFolder is invalid', async () => {
       const invalidDirs = [null, undefined, ''];
       for (const invalidDir of invalidDirs) {
         mockLogger.error.mockClear();
@@ -289,12 +280,12 @@ describe('BaseManifestItemLoader.loadItemsForMod', () => {
             MOCK_MANIFEST,
             TEST_CONTENT_KEY,
             invalidDir,
-            TEST_TYPE_NAME
+            TEST_REGISTRY_KEY
           )
         ).rejects.toThrow(TypeError);
 
         expect(mockLogger.error).toHaveBeenCalledWith(
-          `TestableLoader: Programming Error - Invalid 'contentTypeDir' provided for loading ${TEST_TYPE_NAME} for mod '${TEST_MOD_ID}'. Must be a non-empty string. Received: ${invalidDir}`
+          `TestableLoader: Programming Error - Invalid 'diskFolder' provided for loading ${TEST_REGISTRY_KEY} for mod '${TEST_MOD_ID}'. Must be a non-empty string. Received: ${invalidDir}`
         );
         expect(mockLogger.error).toHaveBeenCalledTimes(1);
         expect(mockLogger.warn).not.toHaveBeenCalled();
@@ -302,9 +293,9 @@ describe('BaseManifestItemLoader.loadItemsForMod', () => {
       }
     });
 
-    it('should throw TypeError and log error if typeName is invalid', async () => {
-      const invalidTypeNames = [null, undefined, ''];
-      for (const invalidTypeName of invalidTypeNames) {
+    it('should throw TypeError and log error if registryKey is invalid', async () => {
+      const invalidRegistryKeys = [null, undefined, ''];
+      for (const invalidRegistryKey of invalidRegistryKeys) {
         mockLogger.error.mockClear();
         loadItemsInternalSpy.mockClear();
 
@@ -314,12 +305,12 @@ describe('BaseManifestItemLoader.loadItemsForMod', () => {
             MOCK_MANIFEST,
             TEST_CONTENT_KEY,
             TEST_CONTENT_DIR,
-            invalidTypeName
+            invalidRegistryKey
           )
         ).rejects.toThrow(TypeError);
 
         expect(mockLogger.error).toHaveBeenCalledWith(
-          `TestableLoader: Programming Error - Invalid 'typeName' provided for loading content for mod '${TEST_MOD_ID}'. Must be a non-empty string. Received: ${invalidTypeName}`
+          `TestableLoader: Programming Error - Invalid 'registryKey' provided for loading content for mod '${TEST_MOD_ID}'. Must be a non-empty string. Received: ${invalidRegistryKey}`
         );
         expect(mockLogger.error).toHaveBeenCalledTimes(1);
         expect(mockLogger.warn).not.toHaveBeenCalled();
@@ -330,18 +321,18 @@ describe('BaseManifestItemLoader.loadItemsForMod', () => {
   });
 
   // --- Logging Test ---
-  it('should log the informational loading message with correct class name and typeName', async () => {
+  it('should log the informational loading message with correct class name and registryKey', async () => {
     await testLoader.loadItemsForMod(
       TEST_MOD_ID,
       MOCK_MANIFEST,
       TEST_CONTENT_KEY,
       TEST_CONTENT_DIR,
-      TEST_TYPE_NAME
+      TEST_REGISTRY_KEY
     );
 
     expect(mockLogger.info).toHaveBeenCalledTimes(1);
     expect(mockLogger.info).toHaveBeenCalledWith(
-      `TestableLoader: Loading ${TEST_TYPE_NAME} definitions for mod '${TEST_MOD_ID}'.`
+      `TestableLoader: Loading ${TEST_REGISTRY_KEY} definitions for mod '${TEST_MOD_ID}'.`
     );
     expect(mockLogger.warn).not.toHaveBeenCalled();
     expect(mockLogger.error).not.toHaveBeenCalled();
@@ -354,7 +345,7 @@ describe('BaseManifestItemLoader.loadItemsForMod', () => {
       MOCK_MANIFEST,
       TEST_CONTENT_KEY,
       TEST_CONTENT_DIR,
-      TEST_TYPE_NAME
+      TEST_REGISTRY_KEY
     );
 
     expect(loadItemsInternalSpy).toHaveBeenCalledTimes(1);
@@ -363,7 +354,7 @@ describe('BaseManifestItemLoader.loadItemsForMod', () => {
       MOCK_MANIFEST,
       TEST_CONTENT_KEY,
       TEST_CONTENT_DIR,
-      TEST_TYPE_NAME
+      TEST_REGISTRY_KEY
     );
   });
 
@@ -375,7 +366,7 @@ describe('BaseManifestItemLoader.loadItemsForMod', () => {
       MOCK_MANIFEST,
       TEST_CONTENT_KEY,
       TEST_CONTENT_DIR,
-      TEST_TYPE_NAME
+      TEST_REGISTRY_KEY
     );
 
     // --- CORRECTED ASSERTION: Expect the object ---
@@ -393,12 +384,12 @@ describe('BaseManifestItemLoader.loadItemsForMod', () => {
         MOCK_MANIFEST,
         TEST_CONTENT_KEY,
         TEST_CONTENT_DIR,
-        TEST_TYPE_NAME
+        TEST_REGISTRY_KEY
       )
     ).rejects.toThrow(internalError);
 
     expect(mockLogger.info).toHaveBeenCalledWith(
-      `TestableLoader: Loading ${TEST_TYPE_NAME} definitions for mod '${TEST_MOD_ID}'.`
+      `TestableLoader: Loading ${TEST_REGISTRY_KEY} definitions for mod '${TEST_MOD_ID}'.`
     );
     // No error expected to be logged *by loadItemsForMod* itself when propagating
     expect(mockLogger.error).not.toHaveBeenCalled();
@@ -413,7 +404,7 @@ describe('BaseManifestItemLoader.loadItemsForMod', () => {
       MOCK_MANIFEST,
       TEST_CONTENT_KEY,
       TEST_CONTENT_DIR,
-      TEST_TYPE_NAME
+      TEST_REGISTRY_KEY
     );
 
     // --- CORRECTED ASSERTION: Expect the zero object ---

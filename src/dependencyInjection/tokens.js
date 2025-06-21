@@ -50,7 +50,7 @@ import { freeze } from '../utils';
  * @property {DiToken} SchemaLoader - Token for the schema loading service.
  * @property {DiToken} ManifestLoader - Token for the manifest loading service (deprecated?).
  * @property {DiToken} RuleLoader - Token for the rule loading service.
- * @property {DiToken} ComponentDefinitionLoader - Token for loading component definitions.
+ * @property {DiToken} ComponentLoader - Token for loading component definitions.
  * @property {DiToken} ConditionLoader - Token for loading reusable condition definitions.
  * @property {DiToken} ActionLoader - Token for the action loading service.
  * @property {DiToken} EventLoader - Token for the event loading service.
@@ -185,7 +185,7 @@ export const tokens = freeze({
   // Loaders
   SchemaLoader: 'SchemaLoader',
   RuleLoader: 'RuleLoader',
-  ComponentDefinitionLoader: 'ComponentDefinitionLoader',
+  ComponentLoader: 'ComponentLoader',
   ConditionLoader: 'ConditionLoader',
   ActionLoader: 'ActionLoader',
   EventLoader: 'EventLoader',

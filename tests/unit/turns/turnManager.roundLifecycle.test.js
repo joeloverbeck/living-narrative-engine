@@ -35,11 +35,9 @@ describeTurnManagerSuite(
       jest.useFakeTimers();
       testBed = getBed();
 
-      // Set up default mocks for turn order service
+      testBed.initializeDefaultMocks();
       testBed.mocks.turnOrderService.isEmpty.mockResolvedValue(false);
       testBed.mocks.turnOrderService.getNextEntity.mockResolvedValue(null);
-      testBed.mocks.turnOrderService.startNewRound.mockResolvedValue();
-      testBed.mocks.turnOrderService.clearCurrentRound.mockResolvedValue();
 
       ({ ai1, ai2, player } = createDefaultActors());
 

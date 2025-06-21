@@ -249,12 +249,11 @@ describe('RuleLoader - Fetch Failure Handling (via loadItemsForMod)', () => {
       expect(mockLogger.error).toHaveBeenCalledWith(
         'Error processing file:', // Actual message
         expect.objectContaining({
-          // Check context object structure
           modId: modId,
-          filename: fileFail,
+          filename: 'ruleFail.json',
           path: resolvedPathFail,
-          typeName: RULE_TYPE_NAME, // Type name should be logged
-          error: fetchError.message, // Base class logs the message string here
+          registryKey: 'rules',
+          error: '404 Not Found',
         }),
         fetchError // Base class passes the full error object as the third argument
       );

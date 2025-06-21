@@ -1,4 +1,4 @@
-// src/tests/services/componentDefinitionLoader.registryStoreFailure.test.js
+// src/tests/services/componentLoader.registryStoreFailure.test.js
 
 // --- Imports ---
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
@@ -13,19 +13,18 @@ import ComponentLoader from '../../../src/loaders/componentLoader.js'; // Using 
  * @returns {import('../../../src/interfaces/coreServices.js').IConfiguration} Mocked configuration service.
  */
 const createMockConfiguration = (overrides = {}) => ({
-  getContentBasePath: jest.fn((typeName) => `./data/mods/test-mod/${typeName}`),
-  getContentTypeSchemaId: jest.fn((typeName) => {
-    if (typeName === 'components') {
+  getModsBasePath: jest.fn(() => './data/mods'),
+  getContentBasePath: jest.fn((registryKey) => `./data/mods/test-mod/${registryKey}`),
+  getContentTypeSchemaId: jest.fn((registryKey) => {
+    if (registryKey === 'components') {
       return 'http://example.com/schemas/component.schema.json';
     }
-    return `http://example.com/schemas/${typeName}.schema.json`;
+    return `http://example.com/schemas/${registryKey}.schema.json`;
   }),
   getSchemaBasePath: jest.fn().mockReturnValue('schemas'),
   getSchemaFiles: jest.fn().mockReturnValue([]),
-  getWorldBasePath: jest.fn().mockReturnValue('worlds'),
   getBaseDataPath: jest.fn().mockReturnValue('./data'),
   getGameConfigFilename: jest.fn().mockReturnValue('game.json'),
-  getModsBasePath: jest.fn().mockReturnValue('mods'),
   getModManifestFilename: jest.fn().mockReturnValue('mod.manifest.json'),
   getRuleBasePath: jest.fn().mockReturnValue('rules'),
   getRuleSchemaId: jest
@@ -42,11 +41,11 @@ const createMockConfiguration = (overrides = {}) => ({
  */
 const createMockPathResolver = (overrides = {}) => ({
   resolveModContentPath: jest.fn(
-    (modId, typeName, filename) =>
-      `./data/mods/${modId}/${typeName}/${filename}`
+    (modId, registryKey, filename) =>
+      `./data/mods/${modId}/${registryKey}/${filename}`
   ),
   resolveContentPath: jest.fn(
-    (typeName, filename) => `./data/${typeName}/${filename}`
+    (registryKey, filename) => `./data/${registryKey}/${filename}`
   ),
   resolveSchemaPath: jest.fn((filename) => `./data/schemas/${filename}`),
   resolveModManifestPath: jest.fn(
@@ -276,7 +275,7 @@ const createMockModManifest = (modId, componentFiles = []) => ({
 
 // --- Test Suite ---
 
-describe('ComponentDefinitionLoader (Sub-Ticket 6.9: Registry Storage Failure)', () => {
+describe('ComponentLoader (Sub-Ticket 6.9: Registry Storage Failure)', () => {
   // --- Declare Mocks & Loader ---
   let mockConfig;
   let mockResolver;
@@ -331,8 +330,8 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.9: Registry Storage Failure)',
     );
 
     // Configure Mocks
-    mockConfig.getContentTypeSchemaId.mockImplementation((typeName) =>
-      typeName === 'components' ? componentDefSchemaId : undefined
+    mockConfig.getContentTypeSchemaId.mockImplementation((registryKey) =>
+      registryKey === 'components' ? componentDefSchemaId : undefined
     );
     mockResolver.resolveModContentPath.mockImplementation((mId, type, fName) =>
       mId === modId && type === 'components' && fName === filename
@@ -377,8 +376,8 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.9: Registry Storage Failure)',
       modId, // 'storeFailMod'
       manifest, // The mock manifest
       'components', // contentKey
-      'components', // contentTypeDir
-      'components' // typeName
+      'components', // diskFolder
+      'components' // registryKey
     );
 
     // --- Verify: Promise Resolves & Result Object --- <<<< CORRECTED VERIFICATION
@@ -437,8 +436,8 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.9: Registry Storage Failure)',
       modId: modId,
       filename: filename,
       path: filePath,
-      typeName: 'components',
-      error: storageError.message, // Logs the error message string
+      registryKey: 'components',
+      error: storageError.message,
     });
     expect(mockLogger.error).toHaveBeenCalledWith(
       expectedWrapperErrorMessage,

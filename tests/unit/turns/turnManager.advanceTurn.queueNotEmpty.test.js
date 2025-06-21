@@ -42,25 +42,14 @@ describeTurnManagerSuite(
       // Made beforeEach async
       testBed = getBed();
 
-      // Reset mock state
-      testBed.mocks.turnOrderService.isEmpty
-        .mockReset()
-        .mockResolvedValue(false); // Default: Queue NOT empty
-      testBed.mocks.turnOrderService.getNextEntity
-        .mockReset()
-        .mockResolvedValue(null); // Default reset
-      testBed.mocks.turnOrderService.clearCurrentRound
-        .mockReset()
-        .mockResolvedValue();
-      testBed.mocks.dispatcher.dispatch.mockReset().mockResolvedValue(true);
+      testBed.initializeDefaultMocks();
+      testBed.mocks.turnOrderService.isEmpty.mockResolvedValue(false);
+      testBed.mocks.turnOrderService.getNextEntity.mockResolvedValue(null);
       testBed.mocks.dispatcher.subscribe.mockReset().mockReturnValue(jest.fn());
-
-      testBed.mocks.turnHandlerResolver.resolveHandler
-        .mockClear()
-        .mockResolvedValue({
-          startTurn: jest.fn().mockResolvedValue(undefined),
-          destroy: jest.fn().mockResolvedValue(undefined),
-        });
+      testBed.mocks.turnHandlerResolver.resolveHandler.mockResolvedValue({
+        startTurn: jest.fn().mockResolvedValue(undefined),
+        destroy: jest.fn().mockResolvedValue(undefined),
+      });
 
       // Spy on stop to verify calls and simulate unsubscribe
       stopSpy = jest

@@ -35,8 +35,8 @@ describe('ContentLoadManager.processMod', () => {
       {
         loader,
         contentKey: 'items',
-        contentTypeDir: 'items',
-        typeName: 'items',
+        diskFolder: 'items',
+        registryKey: 'items',
       },
     ];
     const manager = new ContentLoadManager({
@@ -71,8 +71,8 @@ describe('ContentLoadManager.processMod', () => {
       {
         loader,
         contentKey: 'items',
-        contentTypeDir: 'items',
-        typeName: 'items',
+        diskFolder: 'items',
+        registryKey: 'items',
       },
     ];
     const manager = new ContentLoadManager({
@@ -98,7 +98,7 @@ describe('ContentLoadManager.processMod', () => {
       'initialization:world_loader:content_load_failed',
       expect.objectContaining({
         modId: 'testMod',
-        typeName: 'items',
+        registryKey: 'items',
         error: 'boom',
         phase,
       }),
@@ -113,7 +113,8 @@ describe('ContentLoadManager.processMod', () => {
       {
         loader,
         contentKey: 'items',
-        contentTypeDir: 'items',
+        diskFolder: 'items',
+        registryKey: 'items',
         typeName: 'items',
       },
     ];

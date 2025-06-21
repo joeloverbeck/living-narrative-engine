@@ -125,6 +125,22 @@ export class TurnManagerTestBed extends FactoryTestBed {
   }
 
   /**
+   * @description Initializes common mock implementations used across many
+   *   test suites. All turn order service methods resolve successfully,
+   *   dispatcher.dispatch resolves to `true`, and a default handler resolver is
+   *   configured.
+   * @returns {void}
+   */
+  initializeDefaultMocks() {
+    this.mocks.turnOrderService.isEmpty.mockResolvedValue(true);
+    this.mocks.turnOrderService.getNextEntity.mockResolvedValue(null);
+    this.mocks.turnOrderService.startNewRound.mockResolvedValue();
+    this.mocks.turnOrderService.clearCurrentRound.mockResolvedValue();
+    this.mocks.dispatcher.dispatch.mockResolvedValue(true);
+    this.setupMockHandlerResolver();
+  }
+
+  /**
    * Retrieves the subscribed callback for the given event id.
    *
    * @param {string} eventId - Event identifier.
