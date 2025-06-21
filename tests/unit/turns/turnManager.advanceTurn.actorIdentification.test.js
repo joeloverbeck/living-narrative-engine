@@ -27,22 +27,16 @@ describeTurnManagerSuite(
     beforeEach(async () => {
       testBed = getBed();
 
+      testBed.initializeDefaultMocks();
       testBed.mocks.turnOrderService.isEmpty.mockResolvedValue(false);
       testBed.mocks.turnOrderService.getNextEntity.mockResolvedValue(
         createAiActor('initial-actor-for-start')
       );
-
-      testBed.mocks.dispatcher.dispatch.mockClear().mockResolvedValue(true);
       turnEndCapture = testBed.captureSubscription(TURN_ENDED_ID);
-      testBed.mocks.turnOrderService.clearCurrentRound.mockResolvedValue();
-
-      // Set default resolution for the resolver
-      testBed.mocks.turnHandlerResolver.resolveHandler
-        .mockClear()
-        .mockResolvedValue({
-          startTurn: jest.fn().mockResolvedValue(undefined),
-          destroy: jest.fn().mockResolvedValue(undefined),
-        });
+      testBed.mocks.turnHandlerResolver.resolveHandler.mockResolvedValue({
+        startTurn: jest.fn().mockResolvedValue(undefined),
+        destroy: jest.fn().mockResolvedValue(undefined),
+      });
 
       stopSpy = jest
         .spyOn(testBed.turnManager, 'stop')

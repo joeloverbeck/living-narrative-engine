@@ -20,19 +20,10 @@ describeTurnManagerSuite(
     beforeEach(() => {
       testBed = getBed();
 
-      // Reset mock state
+      testBed.initializeDefaultMocks();
       testBed.mocks.turnOrderService.isEmpty.mockReset();
-      testBed.mocks.turnOrderService.startNewRound
-        .mockReset()
-        .mockResolvedValue(undefined);
-      testBed.mocks.turnOrderService.clearCurrentRound
-        .mockReset()
-        .mockResolvedValue(undefined);
-      testBed.mocks.dispatcher.dispatch.mockReset().mockResolvedValue(true);
       testBed.mocks.dispatcher.subscribe.mockReset().mockReturnValue(jest.fn());
-      testBed.mocks.turnHandlerResolver.resolveHandler
-        .mockReset()
-        .mockResolvedValue(null);
+      testBed.mocks.turnHandlerResolver.resolveHandler.mockResolvedValue(null);
 
       // Define the spy here for the actual advanceTurn method
       advanceTurnSpy = jest.spyOn(testBed.turnManager, 'advanceTurn');

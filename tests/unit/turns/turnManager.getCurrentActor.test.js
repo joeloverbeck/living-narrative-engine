@@ -35,21 +35,15 @@ describeTurnManagerSuite('TurnManager', (getBed) => {
   let mockPlayerEntity;
   let mockAiEntity1;
 
-
   beforeEach(() => {
     testBed = getBed();
 
     ({ player: mockPlayerEntity, ai1: mockAiEntity1 } = createDefaultActors());
 
-    // Configure default mock behaviors
-    testBed.mocks.turnOrderService.isEmpty.mockResolvedValue(true);
-    testBed.mocks.turnOrderService.getNextEntity.mockResolvedValue(null);
-    testBed.mocks.turnOrderService.startNewRound.mockResolvedValue();
-    testBed.mocks.turnOrderService.clearCurrentRound.mockResolvedValue();
-    testBed.mocks.dispatcher.dispatch.mockReset().mockResolvedValue(true);
-    testBed.mocks.turnHandlerResolver.resolveHandler
-      .mockReset()
-      .mockResolvedValue(mockAiHandler);
+    testBed.initializeDefaultMocks();
+    testBed.mocks.turnHandlerResolver.resolveHandler.mockResolvedValue(
+      mockAiHandler
+    );
 
     // Clear handler mocks
     mockPlayerHandler.startTurn.mockClear().mockResolvedValue();
@@ -257,7 +251,6 @@ describeTurnManagerSuite('TurnManager', (getBed) => {
     });
 
     test('should handle entity manager errors gracefully', async () => {
-
       // --- Setup mocks ---
       testBed.mocks.turnOrderService.isEmpty.mockResolvedValue(false);
       // Simulate getNextEntity returning null to trigger the error condition
