@@ -11,18 +11,19 @@ import {
   TestData,
   TestBed,
 } from '../../common/entities/testBed.js';
-import { runInvalidEntityIdTests } from '../../common/entities/invalidInputHelpers.js';
+import {
+  runInvalidEntityIdTests,
+  runInvalidDefinitionIdTests,
+} from '../../common/entities/invalidInputHelpers.js';
 import Entity from '../../../src/entities/entity.js';
 import { DefinitionNotFoundError } from '../../../src/errors/definitionNotFoundError.js';
 import { EntityNotFoundError } from '../../../src/errors/entityNotFoundError.js';
 import { DuplicateEntityError } from '../../../src/errors/duplicateEntityError.js';
-import { InvalidArgumentError } from '../../../src/errors/invalidArgumentError.js';
 import {
   ENTITY_CREATED_ID,
   ENTITY_REMOVED_ID,
 } from '../../../src/constants/eventIds.js';
 import { expectDispatchSequence } from '../../common/engine/dispatchTestUtils.js';
-import EntityDefinition from '../../../src/entities/entityDefinition.js';
 import MapManager from '../../../src/utils/mapManagerUtils.js';
 
 describeEntityManagerSuite('EntityManager - Lifecycle', (getBed) => {
@@ -163,19 +164,9 @@ describeEntityManagerSuite('EntityManager - Lifecycle', (getBed) => {
       }).toThrow(DuplicateEntityError);
     });
 
-    it('should throw a TypeError if definitionId is not a non-empty string', () => {
-      // Arrange
-      const { entityManager } = getBed();
-
-      // Act & Assert
-      expect(() => entityManager.createEntityInstance(null)).toThrow(TypeError);
-      expect(() => entityManager.createEntityInstance(undefined)).toThrow(
-        TypeError
-      );
-      expect(() => entityManager.createEntityInstance('')).toThrow(TypeError);
-      expect(() => entityManager.createEntityInstance(123)).toThrow(TypeError);
-      expect(() => entityManager.createEntityInstance({})).toThrow(TypeError);
-    });
+    runInvalidDefinitionIdTests(getBed, (em, defId) =>
+      em.createEntityInstance(defId)
+    );
 
     it('should fetch and cache the EntityDefinition on first use', () => {
       // Arrange

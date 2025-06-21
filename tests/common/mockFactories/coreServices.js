@@ -213,4 +213,34 @@ export const createMockConfiguration = () => ({
   getGameConfigFilename: jest.fn(() => 'game.json'),
   getModsBasePath: jest.fn(() => 'mods'),
   getModManifestFilename: jest.fn(() => 'mod.manifest.json'),
+  getContentTypeDirectory: jest.fn(),
+  get: jest.fn(),
+});
+
+/**
+ * Creates a mock IPathResolver.
+ *
+ * @returns {object} Mock path resolver
+ */
+export const createMockPathResolver = () => ({
+  resolvePath: jest.fn((path) => path),
+  resolveModPath: jest.fn((modId) => `mods/${modId}`),
+  resolveModContentPath: jest.fn(
+    (modId, contentTypeDir, filename) =>
+      `mods/${modId}/${contentTypeDir}/${filename}`
+  ),
+  resolveModManifestPath: jest.fn((modId) => `mods/${modId}/mod.manifest.json`),
+  getModDirectory: jest.fn((modId) => `mods/${modId}`),
+  getManifestName: jest.fn(),
+});
+
+/**
+ * Creates a mock IDataFetcher.
+ *
+ * @returns {object} Mock data fetcher
+ */
+export const createMockDataFetcher = () => ({
+  fetch: jest.fn(),
+  fetchJson: jest.fn(),
+  fetchText: jest.fn(),
 });

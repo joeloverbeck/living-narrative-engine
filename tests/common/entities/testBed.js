@@ -21,8 +21,8 @@ import {
   createMockSafeEventDispatcher,
   createSimpleMockDataRegistry,
 } from '../mockFactories';
-import BaseTestBed from '../baseTestBed.js';
-import { describeSuite } from '../describeSuite.js';
+import FactoryTestBed from '../factoryTestBed.js';
+import { createDescribeTestBedSuite } from '../describeSuite.js';
 
 // --- Centralized Mocks (REMOVED) ---
 // Mock creation functions are now imported.
@@ -103,6 +103,7 @@ export const TestData = {
       [123, {}],
     ],
     invalidIds: [null, undefined, '', 123, {}, []],
+    invalidDefinitionIds: [null, undefined, '', 123, {}, []],
     serializedEntityShapes: [null, 'invalid', 42, [], { foo: 'bar' }],
     serializedInstanceIds: [null, undefined, '', 42],
   },
@@ -113,7 +114,7 @@ export const TestData = {
  * Creates mocks, instantiates the manager, and provides helper methods
  * to streamline test writing.
  */
-export class TestBed extends BaseTestBed {
+export class TestBed extends FactoryTestBed {
   /**
    * Collection of all mocks for easy access in tests.
    *
@@ -134,13 +135,12 @@ export class TestBed extends BaseTestBed {
    * @param {Function} [entityManagerOptions.idGenerator] - A mock ID generator function.
    */
   constructor(entityManagerOptions = {}) {
-    const { mocks } = BaseTestBed.fromFactories({
+    super({
       registry: createSimpleMockDataRegistry,
       validator: createMockSchemaValidator,
       logger: createMockLogger,
       eventDispatcher: createMockSafeEventDispatcher,
     });
-    super(mocks);
 
     this.entityManager = new EntityManager({
       registry: this.mocks.registry,
@@ -226,8 +226,6 @@ export class TestBed extends BaseTestBed {
  *   tests. It receives a callback that returns the active {@link TestBed}.
  * @returns {void}
  */
-export function describeEntityManagerSuite(title, suiteFn) {
-  describeSuite(title, TestBed, suiteFn);
-}
+export const describeEntityManagerSuite = createDescribeTestBedSuite(TestBed);
 
 export default TestBed;

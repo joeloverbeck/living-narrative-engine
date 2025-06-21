@@ -14,14 +14,47 @@ import {
   createMockPromptBuilder,
   createMockEntity,
 } from '../mockFactories';
-import BaseTestBed from '../baseTestBed.js';
+import FactoryTestBed from '../factoryTestBed.js';
 import { describeSuiteWithHooks } from '../describeSuite.js';
+import { beforeEach, afterEach } from '@jest/globals';
+
+/**
+ * @typedef {object} DependencySpecEntry
+ * @property {RegExp} error - Expected error when dependency is missing.
+ * @property {string[]} methods - Methods required on the dependency.
+ */
+
+/**
+ * @description Defines how {@link AIPromptPipeline} constructor dependencies
+ * should be validated within tests. Each property specifies the expected error
+ * regex and required method names for that dependency.
+ * @type {Object<string, DependencySpecEntry>}
+ */
+export const AIPromptPipelineDependencySpec = {
+  llmAdapter: {
+    error: /ILLMAdapter/,
+    methods: ['getAIDecision', 'getCurrentActiveLlmId'],
+  },
+  gameStateProvider: {
+    error: /IAIGameStateProvider/,
+    methods: ['buildGameState'],
+  },
+  promptContentProvider: {
+    error: /IAIPromptContentProvider/,
+    methods: ['getPromptData'],
+  },
+  promptBuilder: {
+    error: /IPromptBuilder/,
+    methods: ['build'],
+  },
+  logger: { error: /ILogger/, methods: ['info'] },
+};
 
 /**
  * @description Utility class for unit tests that need an AIPromptPipeline with common mocks.
  * @class
  */
-export class AIPromptPipelineTestBed extends BaseTestBed {
+export class AIPromptPipelineTestBed extends FactoryTestBed {
   /** @type {import('../../src/entities/entity.js').default} */
   defaultActor;
   /** @type {import('../../src/turns/interfaces/ITurnContext.js').ITurnContext} */
@@ -30,8 +63,7 @@ export class AIPromptPipelineTestBed extends BaseTestBed {
   defaultActions;
 
   constructor() {
-    super();
-    this.initializeFromFactories({
+    super({
       llmAdapter: createMockLLMAdapter,
       gameStateProvider: createMockAIGameStateProvider,
       promptContentProvider: createMockAIPromptContentProvider,
@@ -185,24 +217,73 @@ export class AIPromptPipelineTestBed extends BaseTestBed {
     );
     expect(this.promptBuilder.build).toHaveBeenCalledWith(_llmId, _promptData);
   }
+
+  /**
+   * Applies a mutation to the test bed's mocks and expects generation to fail.
+   *
+   * @description Applies a mutation to the mocks and verifies that
+   *   {@link AIPromptPipelineTestBed#generateDefault} rejects with the given
+   *   error.
+   * @param {(bed: this) => void} mutateFn - Function that mutates the test
+   *   bed's mocks before generation.
+   * @param {string|RegExp|Error} expectedError - Error expected from the
+   *   generation call.
+   * @returns {Promise<void>} Resolves when the assertion completes.
+   */
+  async expectGenerationFailure(mutateFn, expectedError) {
+    mutateFn(this);
+    await expect(this.generateDefault()).rejects.toThrow(expectedError);
+  }
 }
 
 /**
  * Defines a test suite with automatic {@link AIPromptPipelineTestBed} setup.
  *
  * @param {string} title - Suite title passed to `describe`.
- * @param {(getBed: () => AIPromptPipelineTestBed) => void} suiteFn - Callback
- *   containing the tests. Receives a getter for the active test bed.
+ * @param {(bed: AIPromptPipelineTestBed) => void} suiteFn - Callback
+ *   containing the tests. Receives the active test bed instance.
+ * @param overrides
  * @returns {void}
  */
-function describeAIPromptPipelineSuite(title, suiteFn) {
-  describeSuiteWithHooks(title, AIPromptPipelineTestBed, suiteFn, {
+export const describeAIPromptPipelineSuite = (title, suiteFn, overrides) => {
+  const baseOptions = {
     beforeEachHook(bed) {
       bed.setupMockSuccess();
     },
-  });
-}
+  };
+  const options = overrides ? { ...baseOptions, ...overrides } : baseOptions;
 
-export { describeAIPromptPipelineSuite };
+  describeSuiteWithHooks(
+    title,
+    AIPromptPipelineTestBed,
+    (getBed) => {
+      /** @type {AIPromptPipelineTestBed} */
+      let current;
+      const proxy = new Proxy(
+        {},
+        {
+          get(_t, prop) {
+            return current[prop];
+          },
+          set(_t, prop, value) {
+            current[prop] = value;
+            return true;
+          },
+        }
+      );
+
+      beforeEach(() => {
+        current = getBed();
+      });
+
+      afterEach(() => {
+        current = /** @type {any} */ (undefined);
+      });
+
+      suiteFn(proxy);
+    },
+    options
+  );
+};
 
 export default AIPromptPipelineTestBed;

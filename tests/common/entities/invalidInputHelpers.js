@@ -53,3 +53,25 @@ export function runInvalidEntityIdTests(getBed, method) {
     }
   );
 }
+
+/**
+ * Runs a parameterized test verifying how a method handles invalid definition IDs.
+ *
+ * @description Helper for methods that accept a definitionId and should throw
+ * InvalidArgumentError when called with invalid IDs.
+ * @param {() => import('./testBed.js').TestBed} getBed - Callback to retrieve
+ *   the active {@link TestBed} instance.
+ * @param {(em: import('../../../src/entities/entityManager.js').default, definitionId: *) => *} method
+ *   - Function that invokes the target EntityManager method.
+ * @returns {void}
+ */
+export function runInvalidDefinitionIdTests(getBed, method) {
+  it.each(TestData.InvalidValues.invalidDefinitionIds)(
+    'should throw InvalidArgumentError for invalid definitionId %p',
+    (invalidId) => {
+      const { entityManager, mocks } = getBed();
+      expect(() => method(entityManager, invalidId)).toThrow(InvalidArgumentError);
+      expect(mocks.logger.warn).toHaveBeenCalled();
+    }
+  );
+}

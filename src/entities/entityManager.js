@@ -366,9 +366,12 @@ class EntityManager extends IEntityManager {
         );
       } catch (err) {
         if (err && err.name === 'InvalidArgumentError') {
-          const msg = 'definitionId must be a non-empty string.';
-          this.#logger.error(msg);
-          throw new TypeError(msg);
+          const msg =
+            "EntityManager.createEntityInstance: invalid definitionId '" +
+            definitionId +
+            "'";
+          this.#logger.warn(msg);
+          throw new InvalidArgumentError(msg, 'definitionId', definitionId);
         }
         throw err;
       }
@@ -393,15 +396,7 @@ class EntityManager extends IEntityManager {
         wasReconstructed: false,
       });
       return entity;
-    } catch (err) {
-      // Patch error message to match legacy EntityManager for golden-master tests
-      if (
-        err instanceof TypeError &&
-        err.message.includes('definitionId must be a non-empty string.')
-      ) {
-        this.#logger.error('definitionId must be a non-empty string.');
-        throw new TypeError('definitionId must be a non-empty string.');
-      }
+    } catch (err) {      
       if (err instanceof Error && err.message.startsWith('Entity with ID')) {
         this.#logger.error(err.message);
         // Extract the entity ID from the error message and throw DuplicateEntityError
