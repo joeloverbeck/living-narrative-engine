@@ -163,6 +163,24 @@ export class TestBed extends FactoryTestBed {
   }
 
   /**
+   * Looks up test definitions by key and forwards them to
+   * {@link TestBed#setupDefinitions}.
+   *
+   * @param {...keyof typeof TestData.Definitions} keys - Definition keys.
+   * @returns {void}
+   */
+  setupTestDefinitions(...keys) {
+    const defs = keys.map((k) => {
+      const def = TestData.Definitions[k];
+      if (!def) {
+        throw new Error(`Unknown test definition key: ${k}`);
+      }
+      return def;
+    });
+    this.setupDefinitions(...defs);
+  }
+
+  /**
    * Clears mock implementations and resets entity manager state after base cleanup.
    *
    * @protected
@@ -217,6 +235,40 @@ export class TestBed extends FactoryTestBed {
   }
 
   /**
+   * Creates an entity instance using a definition key.
+   *
+   * @param {keyof typeof TestData.Definitions} key - Definition key.
+   * @param {object} [options] - Options forwarded to {@link TestBed#createEntity}.
+   * @param {object} [config] - Additional configuration options.
+   * @returns {import('../../../src/entities/entity.js').default} The created entity.
+   */
+  createEntityByKey(key, options = {}, config = {}) {
+    return this.createEntity(key, options, config);
+  }
+
+  /**
+   * Shortcut for creating the basic entity.
+   *
+   * @param {object} [options] - Options forwarded to {@link TestBed#createEntityByKey}.
+   * @param {object} [config] - Additional configuration options.
+   * @returns {import('../../../src/entities/entity.js').default} The created entity.
+   */
+  createBasicEntity(options = {}, config = {}) {
+    return this.createEntityByKey('basic', options, config);
+  }
+
+  /**
+   * Shortcut for creating the actor entity.
+   *
+   * @param {object} [options] - Options forwarded to {@link TestBed#createEntityByKey}.
+   * @param {object} [config] - Additional configuration options.
+   * @returns {import('../../../src/entities/entity.js').default} The created entity.
+   */
+  createActorEntity(options = {}, config = {}) {
+    return this.createEntityByKey('actor', options, config);
+  }
+
+  /**
    * Resets the dispatch mock on the internal event dispatcher.
    *
    * @returns {void}
@@ -237,5 +289,60 @@ export class TestBed extends FactoryTestBed {
  * @returns {void}
  */
 export const describeEntityManagerSuite = createDescribeTestBedSuite(TestBed);
+
+/**
+ * Configures the provided TestBed with definitions referenced by key.
+ *
+ * @param {TestBed} testBed - Test bed instance.
+ * @param {...keyof typeof TestData.Definitions} keys - Definition keys.
+ * @returns {void}
+ */
+export function setupTestDefinitions(testBed, ...keys) {
+  const definitions = keys.map((k) => {
+    const def = TestData.Definitions[k];
+    if (!def) {
+      throw new Error(`Unknown test definition key: ${k}`);
+    }
+    return def;
+  });
+  testBed.setupDefinitions(...definitions);
+}
+
+/**
+ * Creates an entity using a definition key via the given TestBed.
+ *
+ * @param {TestBed} testBed - Test bed instance.
+ * @param {keyof typeof TestData.Definitions} key - Definition key.
+ * @param {object} [options] - Options forwarded to createEntity.
+ * @param {object} [config] - Additional configuration options.
+ * @returns {import('../../../src/entities/entity.js').default} The created entity.
+ */
+export function createEntityByKey(testBed, key, options = {}, config = {}) {
+  return testBed.createEntityByKey(key, options, config);
+}
+
+/**
+ * Convenience wrapper for creating the basic entity.
+ *
+ * @param {TestBed} testBed - Test bed instance.
+ * @param {object} [options] - Options forwarded to createEntity.
+ * @param {object} [config] - Additional configuration options.
+ * @returns {import('../../../src/entities/entity.js').default} The created entity.
+ */
+export function createBasicEntity(testBed, options = {}, config = {}) {
+  return createEntityByKey(testBed, 'basic', options, config);
+}
+
+/**
+ * Convenience wrapper for creating the actor entity.
+ *
+ * @param {TestBed} testBed - Test bed instance.
+ * @param {object} [options] - Options forwarded to createEntity.
+ * @param {object} [config] - Additional configuration options.
+ * @returns {import('../../../src/entities/entity.js').default} The created entity.
+ */
+export function createActorEntity(testBed, options = {}, config = {}) {
+  return createEntityByKey(testBed, 'actor', options, config);
+}
 
 export default TestBed;
