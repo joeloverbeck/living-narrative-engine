@@ -17,6 +17,28 @@ const baseFactories = generateFactories({
 });
 
 /**
+ * Specification describing how each loader factory should behave.
+ *
+ * @type {Record<string, { method: string, value: any }>}
+ */
+const loaderSpecs = {
+  createMockContentLoader: {
+    method: 'loadItemsForMod',
+    value: { count: 0, overrides: 0, errors: 0 },
+  },
+  createMockSchemaLoader: {
+    method: 'loadAndCompileAllSchemas',
+    value: undefined,
+  },
+  createMockGameConfigLoader: { method: 'loadConfig', value: [] },
+  createMockModManifestLoader: {
+    method: 'loadRequestedManifests',
+    value: new Map(),
+  },
+  createMockWorldLoader: { method: 'loadWorlds', value: undefined },
+};
+
+/**
  * Wraps a mock factory and configures a method to resolve with a specified value.
  *
  * @param {Function} factory - Factory creating the mock object.
@@ -31,69 +53,29 @@ export function withResolvedValue(factory, method, value) {
 }
 
 /**
- * Creates a generic content loader mock.
+ * Builds a loader factory using a base factory and resolved value spec.
  *
- * @returns {{ loadItemsForMod: jest.Mock }} Loader mock
+ * @param {string} name - Key of the base factory in `baseFactories`.
+ * @param {string} method - Method to configure on the mock.
+ * @param {any} value - Value the method should resolve with.
+ * @returns {() => object} Loader factory.
  */
-export function createMockContentLoader() {
-  return withResolvedValue(
-    baseFactories.createMockContentLoader,
-    'loadItemsForMod',
-    { count: 0, overrides: 0, errors: 0 }
-  );
+function makeLoaderFactory(name, method, value) {
+  return () => withResolvedValue(baseFactories[name], method, value);
 }
 
-/**
- * Creates a mock SchemaLoader.
- *
- * @returns {{ loadAndCompileAllSchemas: jest.Mock }} Loader mock
- */
-export function createMockSchemaLoader() {
-  return withResolvedValue(
-    baseFactories.createMockSchemaLoader,
-    'loadAndCompileAllSchemas',
-    undefined
-  );
+const generated = {};
+for (const [name, { method, value }] of Object.entries(loaderSpecs)) {
+  generated[name] = makeLoaderFactory(name, method, value);
 }
 
-/**
- * Creates a mock GameConfigLoader.
- *
- * @returns {{ loadConfig: jest.Mock }} Loader mock
- */
-export function createMockGameConfigLoader() {
-  return withResolvedValue(
-    baseFactories.createMockGameConfigLoader,
-    'loadConfig',
-    []
-  );
-}
-
-/**
- * Creates a mock ModManifestLoader.
- *
- * @returns {{ loadRequestedManifests: jest.Mock }} Loader mock
- */
-export function createMockModManifestLoader() {
-  return withResolvedValue(
-    baseFactories.createMockModManifestLoader,
-    'loadRequestedManifests',
-    new Map()
-  );
-}
-
-/**
- * Creates a mock WorldLoader.
- *
- * @returns {{ loadWorlds: jest.Mock }} Loader mock
- */
-export function createMockWorldLoader() {
-  return withResolvedValue(
-    baseFactories.createMockWorldLoader,
-    'loadWorlds',
-    undefined
-  );
-}
+export const {
+  createMockContentLoader,
+  createMockSchemaLoader,
+  createMockGameConfigLoader,
+  createMockModManifestLoader,
+  createMockWorldLoader,
+} = generated;
 
 /**
  * Creates a mock ModDependencyValidator.
