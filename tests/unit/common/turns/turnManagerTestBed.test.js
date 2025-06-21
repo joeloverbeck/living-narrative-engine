@@ -132,6 +132,20 @@ describe('TurnManager Test Helpers: TurnManagerTestBed', () => {
     await bed.cleanup();
   });
 
+  it('startWithEntitiesAndFlush adds entities and flushes timers', async () => {
+    jest.useFakeTimers({ legacyFakeTimers: false });
+    const bed = new TurnManagerTestBed({ TurnManagerClass: FakeManager });
+    const entity = { id: 'x' };
+    const fn = jest.fn();
+    setTimeout(fn, 50);
+    await bed.startWithEntitiesAndFlush(entity);
+    expect(bed.turnManager.start).toHaveBeenCalled();
+    expect(bed.entityManager.activeEntities.get('x')).toBe(entity);
+    expect(fn).toHaveBeenCalled();
+    jest.useRealTimers();
+    await bed.cleanup();
+  });
+
   it('spy helpers restore spies during cleanup', async () => {
     const bed = new TurnManagerTestBed({ TurnManagerClass: RealManager });
     const stopSpy = bed.spyOnStop();
