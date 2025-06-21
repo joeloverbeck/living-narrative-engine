@@ -2,6 +2,7 @@
 
 import { NAME_COMPONENT_ID } from '../constants/componentIds.js';
 import { isValidEntity } from './entityValidationUtils.js';
+import { isNonBlankString } from './textUtils.js';
 
 /** @typedef {import('../entities/entity.js').default} Entity */
 /** @typedef {import('../interfaces/ILogger.js').ILogger} ILogger */
@@ -38,14 +39,14 @@ export function getEntityDisplayName(
   if (nameComponent) {
     if (
       typeof nameComponent.text === 'string' &&
-      nameComponent.text.trim() !== ''
+      isNonBlankString(nameComponent.text)
     ) {
       return nameComponent.text;
     }
 
     if (
       typeof nameComponent.value === 'string' &&
-      nameComponent.value.trim() !== ''
+      isNonBlankString(nameComponent.value)
     ) {
       logger?.debug(
         `getEntityDisplayName: Entity '${entity.id}' using legacy 'value' from '${NAME_COMPONENT_ID}' component.`
@@ -54,14 +55,14 @@ export function getEntityDisplayName(
     }
   }
 
-  if (typeof entity.name === 'string' && entity.name.trim() !== '') {
+  if (typeof entity.name === 'string' && isNonBlankString(entity.name)) {
     logger?.debug(
       `getEntityDisplayName: Entity '${entity.id}' using fallback 'entity.name' property ('${entity.name}') as '${NAME_COMPONENT_ID}' was not found or lacked 'text'/'value'.`
     );
     return entity.name;
   }
 
-  if (typeof entity.id === 'string' && entity.id.trim() !== '') {
+  if (typeof entity.id === 'string' && isNonBlankString(entity.id)) {
     logger?.warn(
       `getEntityDisplayName: Entity '${entity.id}' has no usable name from component or 'entity.name'. Falling back to entity ID.`
     );
