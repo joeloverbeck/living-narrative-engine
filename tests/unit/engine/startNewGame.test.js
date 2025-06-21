@@ -10,6 +10,7 @@ import {
   ENGINE_OPERATION_FAILED_UI,
   ENGINE_STOPPED_UI,
 } from '../../../src/constants/eventIds.js';
+import { expectEngineStatus } from '../../common/engine/dispatchTestUtils.js';
 
 describeEngineSuite('GameEngine', (ctx) => {
   const MOCK_WORLD_NAME = 'TestWorld';
@@ -49,10 +50,11 @@ describeEngineSuite('GameEngine', (ctx) => {
       );
       expect(ctx.bed.mocks.turnManager.start).toHaveBeenCalled();
 
-      const status = ctx.engine.getEngineStatus();
-      expect(status.isInitialized).toBe(true);
-      expect(status.isLoopRunning).toBe(true);
-      expect(status.activeWorld).toBe(MOCK_WORLD_NAME);
+      expectEngineStatus(ctx.engine, {
+        isInitialized: true,
+        isLoopRunning: true,
+        activeWorld: MOCK_WORLD_NAME,
+      });
     });
 
     it('should stop an existing game if already initialized, with correct event payloads from stop()', async () => {
@@ -84,8 +86,11 @@ describeEngineSuite('GameEngine', (ctx) => {
           message: 'Enter command...',
         }
       );
-      const status = ctx.engine.getEngineStatus();
-      expect(status.activeWorld).toBe(MOCK_WORLD_NAME);
+      expectEngineStatus(ctx.engine, {
+        isInitialized: true,
+        isLoopRunning: true,
+        activeWorld: MOCK_WORLD_NAME,
+      });
     });
 
     it('should handle InitializationService failure', async () => {
@@ -108,10 +113,11 @@ describeEngineSuite('GameEngine', (ctx) => {
           errorTitle: 'Initialization Error',
         }
       );
-      const status = ctx.engine.getEngineStatus();
-      expect(status.isInitialized).toBe(false);
-      expect(status.isLoopRunning).toBe(false);
-      expect(status.activeWorld).toBeNull();
+      expectEngineStatus(ctx.engine, {
+        isInitialized: false,
+        isLoopRunning: false,
+        activeWorld: null,
+      });
     });
 
     it('should handle general errors during start-up and dispatch failure event', async () => {
@@ -135,10 +141,11 @@ describeEngineSuite('GameEngine', (ctx) => {
           errorTitle: 'Initialization Error',
         }
       );
-      const status = ctx.engine.getEngineStatus();
-      expect(status.isInitialized).toBe(false); // Should be reset by _handleNewGameFailure
-      expect(status.isLoopRunning).toBe(false);
-      expect(status.activeWorld).toBeNull();
+      expectEngineStatus(ctx.engine, {
+        isInitialized: false, // Should be reset by _handleNewGameFailure
+        isLoopRunning: false,
+        activeWorld: null,
+      });
     });
   });
 });
