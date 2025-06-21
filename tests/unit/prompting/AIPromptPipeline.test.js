@@ -144,13 +144,7 @@ describeAIPromptPipelineSuite('AIPromptPipeline', (getBed) => {
     },
   ])('generatePrompt rejects when %s', async ({ mutate, error }) => {
     mutate();
-    await expect(
-      testBed.generate(
-        testBed.defaultActor,
-        testBed.defaultContext,
-        testBed.defaultActions
-      )
-    ).rejects.toThrow(error);
+    await expect(testBed.generateDefault()).rejects.toThrow(error);
   });
 
   test('availableActions are attached to DTO sent to getPromptData', async () => {

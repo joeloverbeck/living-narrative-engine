@@ -73,6 +73,19 @@ export class AIPromptPipelineTestBed extends BaseTestBed {
   }
 
   /**
+   * @description Convenience wrapper over {@link generate} using the default
+   * actor, context and actions provided by the test bed.
+   * @returns {Promise<string>} The generated prompt string.
+   */
+  async generateDefault() {
+    return this.generate(
+      this.defaultActor,
+      this.defaultContext,
+      this.defaultActions
+    );
+  }
+
+  /**
    * Returns the dependency object used to construct the pipeline.
    *
    * @returns {{
