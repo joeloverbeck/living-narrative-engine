@@ -119,7 +119,7 @@ class ModManifestLoader {
   /* ----------------------------------------------------------------------- */
 
   /**
-   * Fetches, validates (against mod.manifest.schema.json), and registers
+   * Fetches, validates (against mod-manifest.schema.json), and registers
    * every manifest listed in `requestedModIds`.
    *
    * @param  {string[]} requestedModIds

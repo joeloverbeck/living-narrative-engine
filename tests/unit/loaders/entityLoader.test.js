@@ -17,7 +17,7 @@ const createMockConfiguration = (overrides = {}) => ({
   getWorldBasePath: jest.fn().mockReturnValue('worlds'),
   getBaseDataPath: jest.fn().mockReturnValue('./data'),
   getGameConfigFilename: jest.fn().mockReturnValue('game.json'),
-  getModManifestFilename: jest.fn().mockReturnValue('mod.manifest.json'),
+  getModManifestFilename: jest.fn().mockReturnValue('mod-manifest.json'),
   getContentBasePath: jest.fn((registryKey) => `./data/${registryKey}`),
   getRuleBasePath: jest.fn().mockReturnValue('rules'),
   getRuleSchemaId: jest
@@ -42,7 +42,7 @@ const createMockPathResolver = (overrides = {}) => ({
     .mockImplementation((filename) => `./data/schemas/${filename}`),
   resolveModManifestPath: jest
     .fn()
-    .mockImplementation((modId) => `./data/mods/${modId}/mod.manifest.json`),
+    .mockImplementation((modId) => `./data/mods/${modId}/mod-manifest.json`),
   resolveGameConfigPath: jest.fn().mockImplementation(() => './data/game.json'),
   resolveRulePath: jest
     .fn()

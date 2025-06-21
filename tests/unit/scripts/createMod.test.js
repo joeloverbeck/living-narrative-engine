@@ -24,7 +24,7 @@ describe('createMod script', () => {
       env: { ...process.env, BASE_DATA_PATH: tempDir },
     });
     const modDir = path.join(tempDir, 'mods', modId);
-    const manifestPath = path.join(modDir, 'mod.manifest.json');
+    const manifestPath = path.join(modDir, 'mod-manifest.json');
     const stat = await fs.stat(manifestPath);
     expect(stat.isFile()).toBe(true);
     const data = JSON.parse(await fs.readFile(manifestPath, 'utf8'));

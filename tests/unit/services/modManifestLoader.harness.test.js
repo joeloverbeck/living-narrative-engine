@@ -1,6 +1,6 @@
 // tests/services/modManifestLoader.harness.test.js
 // -----------------------------------------------------------------------------
-// MODLOADER‑005 F — exhaustive branch & integration harness
+// MODLOADER‑005 — exhaustive branch & integration harness
 // -----------------------------------------------------------------------------
 // This file complements modManifestLoader.test.js by mopping‑up constructor/
 // edge branches *and* wiring a **real AjvSchemaValidator** to exercise true
@@ -19,7 +19,7 @@ import AjvSchemaValidator from '../../../src/validation/ajvSchemaValidator.js';
 const createMockConfiguration = (overrides = {}) => ({
   getContentTypeSchemaId: jest.fn((t) => {
     if (t === 'mod-manifest') {
-      return 'http://example.com/schemas/mod.manifest.schema.json';
+      return 'http://example.com/schemas/mod-manifest.schema.json';
     }
     return `http://example.com/schemas/${t}.schema.json`;
   }),
@@ -28,7 +28,7 @@ const createMockConfiguration = (overrides = {}) => ({
 
 const createMockPathResolver = (overrides = {}) => ({
   resolveModManifestPath: jest.fn(
-    (id) => `./data/mods/${id}/mod.manifest.json`
+    (id) => `./data/mods/${id}/mod-manifest.json`
   ),
   ...overrides,
 });
@@ -36,7 +36,7 @@ const createMockPathResolver = (overrides = {}) => ({
 // generic switchable fetcher
 const createMockFetcher = (idToResponse = {}, errorIds = []) => ({
   fetch: jest.fn((path) => {
-    const [, modId] = /mods\/(.*)\/mod\.manifest\.json/.exec(path) || [];
+    const [, modId] = /mods\/(.*)\/mod-manifest\.json/.exec(path) || [];
     if (errorIds.includes(modId))
       return Promise.reject(new Error(`Fail ${modId}`));
     if (modId in idToResponse) return Promise.resolve(idToResponse[modId]);
@@ -122,7 +122,7 @@ describe('ModManifestLoader — branch edges', () => {
     await expect(
       buildLoader(deps).loadRequestedManifests(['a', 'b'])
     ).rejects.toThrow(
-      "ModManifestLoader.loadRequestedManifests: Critical error - could not fetch manifest for requested mod 'a'. Path: ./data/mods/a/mod.manifest.json. Reason: Fail a"
+      "ModManifestLoader.loadRequestedManifests: Critical error - could not fetch manifest for requested mod 'a'. Path: ./data/mods/a/mod-manifest.json. Reason: Fail a"
     );
     expect(deps.registry.store).not.toHaveBeenCalled();
     expect(deps.logger.error).toHaveBeenCalledWith(
@@ -144,7 +144,7 @@ describe('ModManifestLoader — branch edges', () => {
 /* -------------------------------------------------------------------------- */
 
 describe('ModManifestLoader — integration (AjvSchemaValidator)', () => {
-  const MOD_SCHEMA_ID = 'http://example.com/schemas/mod.manifest.schema.json';
+  const MOD_SCHEMA_ID = 'http://example.com/schemas/mod-manifest.schema.json';
 
   // lean schema — enough for loader purposes
   const manifestSchema = {
@@ -188,7 +188,7 @@ describe('ModManifestLoader — integration (AjvSchemaValidator)', () => {
     await expect(
       loader.loadRequestedManifests(['good1', 'bad', 'good2'])
     ).rejects.toThrow(
-      "ModManifestLoader.loadRequestedManifests: Critical error - could not fetch manifest for requested mod 'bad'. Path: ./data/mods/bad/mod.manifest.json. Reason: Fail bad"
+      "ModManifestLoader.loadRequestedManifests: Critical error - could not fetch manifest for requested mod 'bad'. Path: ./data/mods/bad/mod-manifest.json. Reason: Fail bad"
     );
 
     expect(deps.registry.store).not.toHaveBeenCalled();

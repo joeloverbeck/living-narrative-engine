@@ -11,7 +11,7 @@ import { logPhaseStart } from '../../utils/logPhaseStart.js';
  * @typedef {import('../LoadContext.js').LoadContext} LoadContext
  * @typedef {import('../contentLoadManager.js').default} ContentLoadManager
  * @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger
- * @typedef {import('../../../data/schemas/mod.manifest.schema.json').ModManifest} ModManifest
+ * @typedef {import('../../../data/schemas/mod-manifest.schema.json').ModManifest} ModManifest
  */
 
 /**

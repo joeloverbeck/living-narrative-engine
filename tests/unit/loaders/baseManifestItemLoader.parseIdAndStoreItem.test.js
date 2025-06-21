@@ -14,7 +14,7 @@ const createMockConfiguration = (overrides = {}) => ({
   getSchemaFiles: jest.fn().mockReturnValue([]),
   getBaseDataPath: jest.fn().mockReturnValue('./data'),
   getGameConfigFilename: jest.fn().mockReturnValue('game.json'),
-  getModManifestFilename: jest.fn().mockReturnValue('mod.manifest.json'),
+  getModManifestFilename: jest.fn().mockReturnValue('mod-manifest.json'),
   getContentBasePath: jest.fn((t) => `./data/${t}`),
   ...overrides,
 });

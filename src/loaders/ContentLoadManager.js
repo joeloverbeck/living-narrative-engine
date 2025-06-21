@@ -9,7 +9,7 @@ import LoadResultAggregator from './LoadResultAggregator.js';
 
 /** @typedef {import('../events/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
-/** @typedef {import('../../data/schemas/mod.manifest.schema.json').ModManifest} ModManifest */
+/** @typedef {import('../../data/schemas/mod-manifest.schema.json').ModManifest} ModManifest */
 /** @typedef {import('./defaultLoaderConfig.js').LoaderConfigEntry} LoaderConfigEntry */
 
 /**

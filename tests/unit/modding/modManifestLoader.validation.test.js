@@ -16,14 +16,14 @@ const mockLogger = {
 const mockConfiguration = {
   getContentTypeSchemaId: jest.fn((type) => {
     if (type === 'mod-manifest') {
-      return 'http://example.com/schemas/mod.manifest.schema.json';
+      return 'http://example.com/schemas/mod-manifest.schema.json';
     }
     return undefined;
   }),
 };
 
 const mockPathResolver = {
-  resolveModManifestPath: jest.fn((modId) => `mods/${modId}/mod.manifest.json`),
+  resolveModManifestPath: jest.fn((modId) => `mods/${modId}/mod-manifest.json`),
 };
 
 const mockDataFetcher = {
@@ -72,7 +72,7 @@ describe('ModManifestLoader Schema Validation for "$schema" property', () => {
 
   // The manifest that caused the original error
   const manifestWithSchemaProp = {
-    $schema: 'http://example.com/schemas/mod.manifest.schema.json',
+    $schema: 'http://example.com/schemas/mod-manifest.schema.json',
     id: 'core',
     version: '1.0.0',
     name: 'core',
@@ -81,7 +81,7 @@ describe('ModManifestLoader Schema Validation for "$schema" property', () => {
 
   // The original schema that does NOT allow the "$schema" property
   const originalSchema = {
-    $id: 'http://example.com/schemas/mod.manifest.schema.json',
+    $id: 'http://example.com/schemas/mod-manifest.schema.json',
     type: 'object',
     additionalProperties: false,
     required: ['id', 'version', 'name'],
@@ -95,7 +95,7 @@ describe('ModManifestLoader Schema Validation for "$schema" property', () => {
 
   // The corrected schema that explicitly allows the "$schema" property
   const correctedSchema = {
-    $id: 'http://example.com/schemas/mod.manifest.schema.json',
+    $id: 'http://example.com/schemas/mod-manifest.schema.json',
     type: 'object',
     additionalProperties: false,
     required: ['id', 'version', 'name'],
@@ -119,7 +119,7 @@ describe('ModManifestLoader Schema Validation for "$schema" property', () => {
     // Arrange: Use the original, flawed schema
     schemaValidator.addSchema(
       originalSchema,
-      'http://example.com/schemas/mod.manifest.schema.json'
+      'http://example.com/schemas/mod-manifest.schema.json'
     );
 
     const loader = new ModManifestLoader(
@@ -151,7 +151,7 @@ describe('ModManifestLoader Schema Validation for "$schema" property', () => {
     // Arrange: Use the new, corrected schema
     schemaValidator.addSchema(
       correctedSchema,
-      'http://example.com/schemas/mod.manifest.schema.json'
+      'http://example.com/schemas/mod-manifest.schema.json'
     );
 
     const loader = new ModManifestLoader(

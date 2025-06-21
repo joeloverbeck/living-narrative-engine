@@ -34,7 +34,7 @@ const mockConfigurationInstance = () => ({
   getContentBasePath: jest.fn().mockReturnValue('content_type'),
   getRuleBasePath: jest.fn().mockReturnValue('rules'),
   getGameConfigFilename: jest.fn().mockReturnValue('game.json'),
-  getModManifestFilename: jest.fn().mockReturnValue('mod.manifest.json'),
+  getModManifestFilename: jest.fn().mockReturnValue('mod-manifest.json'),
   getModsBasePath: jest.fn().mockReturnValue('mods'),
   getSchemaFiles: jest.fn().mockReturnValue([]),
   getContentTypeSchemaId: jest.fn((registryKey) => {

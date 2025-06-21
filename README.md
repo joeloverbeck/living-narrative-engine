@@ -193,7 +193,7 @@ and registry purposes.
 
 ### Dependency Rules
 
-Dependencies are declared in the `mod.manifest.json` file within the `dependencies` array. Each entry specifies a
+Dependencies are declared in the `mod-manifest.json` file within the `dependencies` array. Each entry specifies a
 required `modId` and a `version` requirement (using Semantic Versioning ranges).
 
 **Rule D1: Missing Dependency**
@@ -204,7 +204,7 @@ required `modId` and a `version` requirement (using Semantic Versioning ranges).
 - **Reasoning:** The mod explicitly requires functionality or content from the missing dependency. Proceeding would
   likely lead to runtime errors.
 - **Example:**
-  - `ModA/mod.manifest.json`:
+  - `ModA/mod-manifest.json`:
     ```json
     {
       "id": "ModA",
@@ -224,7 +224,7 @@ required `modId` and a `version` requirement (using Semantic Versioning ranges).
   version (too old or potentially too new if explicitly restricted) can cause API incompatibilities or unexpected
   behavior.
 - **Example:**
-  - `ModB/mod.manifest.json`:
+  - `ModB/mod-manifest.json`:
     ```json
     {
       "id": "ModB",
@@ -233,7 +233,7 @@ required `modId` and a `version` requirement (using Semantic Versioning ranges).
     }
     ```
     (Requires CoreUtils >=1.3.0 and <2.0.0)
-  - `CoreUtils/mod.manifest.json`: `{ "id": "CoreUtils", "version": "1.2.5" }`
+  - `CoreUtils/mod-manifest.json`: `{ "id": "CoreUtils", "version": "1.2.5" }`
   - `game.json`: `{ "mods": ["CoreUtils", "ModB"] }`
   - **Outcome:** Loading halts. Error: "ModB" requires "CoreUtils" version "^1.3.0", but found "1.2.5".
 
@@ -244,13 +244,13 @@ required `modId` and a `version` requirement (using Semantic Versioning ranges).
 - **Severity:** **FATAL**
 - **Reasoning:** Circular dependencies create an unresolvable load order and often indicate a design flaw in the mods.
 - **Example:**
-  - `ModX/mod.manifest.json`: `{ "id": "ModX", "dependencies": [{ "modId": "ModY", "version": "1.0.0" }] }`
-  - `ModY/mod.manifest.json`: `{ "id": "ModY", "dependencies": [{ "modId": "ModX", "version": "1.0.0" }] }`
+  - `ModX/mod-manifest.json`: `{ "id": "ModX", "dependencies": [{ "modId": "ModY", "version": "1.0.0" }] }`
+  - `ModY/mod-manifest.json`: `{ "id": "ModY", "dependencies": [{ "modId": "ModX", "version": "1.0.0" }] }`
   - **Outcome:** Loading halts with an error detecting a circular dependency between "ModX" and "ModY".
 
 ### Conflict Rules
 
-Conflicts are declared in the `mod.manifest.json` file within the `conflicts` array. Each entry specifies a `modId` that
+Conflicts are declared in the `mod-manifest.json` file within the `conflicts` array. Each entry specifies a `modId` that
 this mod is known to be incompatible with. Version ranges _can_ be specified but are less common for conflicts.
 
 **Rule C1: Declared Conflict Present**
@@ -262,7 +262,7 @@ this mod is known to be incompatible with. Version ranges _can_ be specified but
   overriding the same critical data in incompatible ways, causing game-breaking bugs). Respecting this declaration
   prevents known unstable states.
 - **Example:**
-  - `AwesomeSwords/mod.manifest.json`:
+  - `AwesomeSwords/mod-manifest.json`:
     ```json
     {
       "id": "AwesomeSwords",
@@ -270,7 +270,7 @@ this mod is known to be incompatible with. Version ranges _can_ be specified but
       "conflicts": [{ "modId": "SuperSwords" }]
     }
     ```
-  - `SuperSwords/mod.manifest.json`: `{ "id": "SuperSwords", "version": "1.0.0" }`
+  - `SuperSwords/mod-manifest.json`: `{ "id": "SuperSwords", "version": "1.0.0" }`
   - `game.json`: `{ "mods": ["AwesomeSwords", "SuperSwords"] }`
   - **Outcome:** Loading halts. Error: Detected conflict between "AwesomeSwords" and "SuperSwords" as declared by
     "AwesomeSwords".
@@ -285,15 +285,15 @@ this mod is known to be incompatible with. Version ranges _can_ be specified but
   overrides or data corruption. The user must resolve the ambiguity by removing or renaming one of the sources. Note:
   This rule applies _before_ dependency/conflict checks based on the final list of loaded mods.
 - **Example:**
-  - Directory `./mods/MyMod/mod.manifest.json`: `{ "id": "MyMod", "version": "1.0.0" }`
-  - Directory `./mods/AnotherAttempt/mod.manifest.json`: `{ "id": "mymod", "version": "1.1.0" }`
+  - Directory `./mods/MyMod/mod-manifest.json`: `{ "id": "MyMod", "version": "1.0.0" }`
+  - Directory `./mods/AnotherAttempt/mod-manifest.json`: `{ "id": "mymod", "version": "1.1.0" }`
   - `game.json`: `{ "mods": ["MyMod", "AnotherAttempt"] }` (Assuming both directories correspond to these IDs)
   - **Outcome:** Loading halts. Error: Duplicate mod ID "mymod" found from sources "MyMod" and "AnotherAttempt".
 
 ### Engine Compatibility
 
 Mods can specify the range of engine versions they are compatible with using the `gameVersion` field in their
-`mod.manifest.json`.
+`mod-manifest.json`.
 
 - **Field:** `gameVersion`
 - **Format:** A string representing a Semantic Versioning (SemVer) range (e.g., `"^1.2.0"`, `">=1.0.0 <2.0.0"`,
@@ -317,7 +317,7 @@ Mods can specify the range of engine versions they are compatible with using the
 - **Reasoning:** The mod author expects specific engine features or behavior present only within the declared version
   range. Running outside this range risks runtime errors or incorrect functionality.
 - **Example:**
-  - `SomeMod/mod.manifest.json`:
+  - `SomeMod/mod-manifest.json`:
     ```json
     { "id": "SomeMod", "version": "1.0.0", "gameVersion": "^1.2.0" }
     ```
@@ -344,7 +344,7 @@ loaders/validators but are included here for completeness as fatal loading error
 
 ### Creating a New Mod
 
-To scaffold a new mod directory with a starter `mod.manifest.json` run:
+To scaffold a new mod directory with a starter `mod-manifest.json` run:
 
     npm run create-mod -- <modId>
 

@@ -15,7 +15,7 @@ const mockLogger = {
 const mockConfiguration = {
   getContentTypeSchemaId: jest.fn((type) => {
     if (type === 'mod-manifest') {
-      return 'http://example.com/schemas/mod.manifest.schema.json';
+      return 'http://example.com/schemas/mod-manifest.schema.json';
     }
     return undefined;
   }),
@@ -23,7 +23,7 @@ const mockConfiguration = {
 
 const mockPathResolver = {
   resolveModManifestPath: jest.fn(
-    (modId) => `data/mods/${modId}/mod.manifest.json`
+    (modId) => `data/mods/${modId}/mod-manifest.json`
   ),
 };
 
@@ -44,7 +44,7 @@ class MockSchemaValidator {
 
     // Pre-add a generic schema that should pass for the isekai manifest
     const genericModManifestSchema = {
-      $id: 'http://example.com/schemas/mod.manifest.schema.json',
+      $id: 'http://example.com/schemas/mod-manifest.schema.json',
       type: 'object',
       properties: {
         $schema: { type: 'string', format: 'uri' },
@@ -112,7 +112,7 @@ class MockSchemaValidator {
 
 // Corrected Isekai Mod Manifest Content
 const isekaiManifestContent = {
-  $schema: 'http://example.com/schemas/mod.manifest.schema.json',
+  $schema: 'http://example.com/schemas/mod-manifest.schema.json',
   id: 'isekai',
   version: '1.0.0',
   name: 'isekai',
@@ -147,11 +147,11 @@ describe('ModManifestLoader Isekai Content Validation', () => {
 
     // Reset mock implementations to their default for each test
     mockPathResolver.resolveModManifestPath.mockImplementation(
-      (modId) => `data/mods/${modId}/mod.manifest.json`
+      (modId) => `data/mods/${modId}/mod-manifest.json`
     );
     mockDataFetcher.fetch.mockImplementation(async (path) => {
       // Default fetch mock for most tests, overridden where necessary
-      if (path === 'data/mods/isekai/mod.manifest.json') {
+      if (path === 'data/mods/isekai/mod-manifest.json') {
         return Promise.resolve(
           JSON.parse(JSON.stringify(isekaiManifestContent))
         ); // Deep clone
@@ -200,7 +200,7 @@ describe('ModManifestLoader Isekai Content Validation', () => {
     // Assert
     // 1. Check if the fetch was called correctly
     expect(mockDataFetcher.fetch).toHaveBeenCalledWith(
-      'data/mods/isekai/mod.manifest.json'
+      'data/mods/isekai/mod-manifest.json'
     );
 
     // 2. Check the returned map
@@ -242,7 +242,7 @@ describe('ModManifestLoader Isekai Content Validation', () => {
   });
 
   test('should use resolved path from pathResolver for fetching', async () => {
-    const specificPath = 'custom/path/to/isekai/mod.manifest.json';
+    const specificPath = 'custom/path/to/isekai/mod-manifest.json';
     mockPathResolver.resolveModManifestPath.mockReturnValue(specificPath);
     mockDataFetcher.fetch.mockImplementation(async (path) => {
       // Need to re-mock for this specific path
@@ -286,7 +286,7 @@ describe('ModManifestLoader Isekai Content Validation', () => {
         "manifest ID 'not-isekai' does not match expected mod ID 'isekai'."
       ),
       // Corrected metadata object to match what is actually logged
-      { modId: 'isekai', path: 'data/mods/isekai/mod.manifest.json' }
+      { modId: 'isekai', path: 'data/mods/isekai/mod-manifest.json' }
     );
   });
 
@@ -299,7 +299,7 @@ describe('ModManifestLoader Isekai Content Validation', () => {
     await expect(
       modManifestLoader.loadRequestedManifests(['isekai'])
     ).rejects.toThrow(
-      "ModManifestLoader.loadRequestedManifests: Critical error - could not fetch manifest for requested mod 'isekai'. Path: data/mods/isekai/mod.manifest.json. Reason: Network Error"
+      "ModManifestLoader.loadRequestedManifests: Critical error - could not fetch manifest for requested mod 'isekai'. Path: data/mods/isekai/mod-manifest.json. Reason: Network Error"
     );
 
     // MODIFIED: Expect logger.error to have been called
@@ -310,7 +310,7 @@ describe('ModManifestLoader Isekai Content Validation', () => {
       ),
       {
         modId: 'isekai',
-        path: 'data/mods/isekai/mod.manifest.json',
+        path: 'data/mods/isekai/mod-manifest.json',
         reason: 'Network Error',
       }
     );
@@ -344,7 +344,7 @@ describe('ModManifestLoader Isekai Content Validation', () => {
       ),
       expect.objectContaining({
         modId: 'isekai',
-        schemaId: 'http://example.com/schemas/mod.manifest.schema.json',
+        schemaId: 'http://example.com/schemas/mod-manifest.schema.json',
       })
     );
   });

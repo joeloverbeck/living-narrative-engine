@@ -19,7 +19,7 @@ describe('DefaultPathResolver', () => {
   const MOCK_BASE_DATA_PATH = './data'; // Relative path matching StaticConfig
   const MOCK_GAME_CONFIG_FILENAME = 'game.json'; // Matching StaticConfig
   const MOCK_MODS_BASE = 'mods'; // <<< ADDED for MODLOADER-003
-  const MOCK_MOD_MANIFEST_FILENAME = 'mod.manifest.json'; // <<< ADDED for MODLOADER-003
+  const MOCK_MOD_MANIFEST_FILENAME = 'mod-manifest.json'; // <<< ADDED for MODLOADER-003
   const MOCK_CONTENT_BASE_FN = (registryKey) => registryKey; // Relative path matching StaticConfig
 
   beforeEach(() => {
@@ -382,19 +382,19 @@ describe('DefaultPathResolver.resolveModManifestPath', () => {
     getContentBasePath: (type) => type,
     getGameConfigFilename: () => 'game.json',
     getModsBasePath: () => 'mods',
-    getModManifestFilename: () => 'mod.manifest.json',
+    getModManifestFilename: () => 'mod-manifest.json',
   });
 
   it('resolves a normal mod ID correctly', () => {
     const resolver = new DefaultPathResolver(makeConfig());
     const result = resolver.resolveModManifestPath('TestMod');
-    expect(result).toBe('./data/mods/TestMod/mod.manifest.json');
+    expect(result).toBe('./data/mods/TestMod/mod-manifest.json');
   });
 
   it('strips accidental whitespace from mod ID', () => {
     const resolver = new DefaultPathResolver(makeConfig());
     const result = resolver.resolveModManifestPath('  Core ');
-    expect(result).toBe('./data/mods/Core/mod.manifest.json');
+    expect(result).toBe('./data/mods/Core/mod-manifest.json');
   });
 
   it('throws when modId is an empty string', () => {
@@ -420,6 +420,6 @@ describe('DefaultPathResolver.resolveModManifestPath', () => {
     };
     const resolver = new DefaultPathResolver(sloppyConfig);
     const result = resolver.resolveModManifestPath('Neat');
-    expect(result).toBe('./data/mods/Neat/mod.manifest.json');
+    expect(result).toBe('./data/mods/Neat/mod-manifest.json');
   });
 });

@@ -11,7 +11,7 @@ describe('ModManifestLoader Error Handling', () => {
   let modManifestLoader;
 
   const MOD_MANIFEST_SCHEMA_ID =
-    'http://example.com/schemas/mod.manifest.schema.json';
+    'http://example.com/schemas/mod-manifest.schema.json';
 
   beforeEach(() => {
     mockConfiguration = {
@@ -22,7 +22,7 @@ describe('ModManifestLoader Error Handling', () => {
     };
     mockPathResolver = {
       resolveModManifestPath: jest.fn(
-        (modId) => `path/to/${modId}/mod.manifest.json`
+        (modId) => `path/to/${modId}/mod-manifest.json`
       ),
     };
     mockDataFetcher = {
@@ -81,7 +81,7 @@ describe('ModManifestLoader Error Handling', () => {
     await expect(
       modManifestLoader.loadRequestedManifests(requestedModIds)
     ).rejects.toThrow(
-      "ModManifestLoader.loadRequestedManifests: Critical error - could not fetch manifest for requested mod 'modB_fails'. Path: path/to/modB_fails/mod.manifest.json. Reason: Network Error"
+      "ModManifestLoader.loadRequestedManifests: Critical error - could not fetch manifest for requested mod 'modB_fails'. Path: path/to/modB_fails/mod-manifest.json. Reason: Network Error"
     );
 
     expect(mockLogger.error).toHaveBeenCalledWith(
@@ -91,7 +91,7 @@ describe('ModManifestLoader Error Handling', () => {
       ),
       expect.objectContaining({
         modId: 'modB_fails',
-        path: 'path/to/modB_fails/mod.manifest.json',
+        path: 'path/to/modB_fails/mod-manifest.json',
         reason: 'Network Error',
       })
     );
@@ -133,13 +133,13 @@ describe('ModManifestLoader Error Handling', () => {
     await expect(
       modManifestLoader.loadRequestedManifests(requestedModIds)
     ).rejects.toThrow(
-      "ModManifestLoader.loadRequestedManifests: manifest 'path/to/modZ/mod.manifest.json' is missing an 'id' field."
+      "ModManifestLoader.loadRequestedManifests: manifest 'path/to/modZ/mod-manifest.json' is missing an 'id' field."
     );
 
     expect(mockLogger.error).toHaveBeenCalledWith(
       expect.stringContaining('MODLOADER_MANIFEST_MISSING_ID'),
       expect.stringContaining(
-        "manifest 'path/to/modZ/mod.manifest.json' is missing an 'id' field."
+        "manifest 'path/to/modZ/mod-manifest.json' is missing an 'id' field."
       ),
       expect.objectContaining({ modId: 'modZ' })
     );

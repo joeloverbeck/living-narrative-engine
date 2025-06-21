@@ -34,7 +34,7 @@ export default class ActiveModsManifestBuilder {
    * @returns {{modId: string, version: string}[]} List of mod identifiers and versions.
    */
   build() {
-    /** @type {import('../../data/schemas/mod.manifest.schema.json').ModManifest[]} */
+    /** @type {import('../../data/schemas/mod-manifest.schema.json').ModManifest[]} */
     const loadedManifestObjects = this.#dataRegistry.getAll('mod_manifests');
     let activeModsManifest = [];
     if (loadedManifestObjects && loadedManifestObjects.length > 0) {
