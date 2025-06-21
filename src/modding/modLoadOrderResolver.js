@@ -13,6 +13,7 @@ import { CORE_MOD_ID } from '../constants/core';
 
 /**
  * Adds a directed edge to the graph representation.
+ *
  * @param {Map<string, Set<string>>} edges - The adjacency list.
  * @param {string} from - The starting node.
  * @param {string} to - The ending node.
@@ -24,6 +25,7 @@ function addEdge(edges, from, to) {
 
 /**
  * Builds a dependency graph from a list of requested mods and all available manifests.
+ *
  * @param {string[]} requestedIds - The list of mod IDs requested by the user.
  * @param {Map<string, ModManifest>} manifestsMap - All available mod manifests.
  * @returns {{nodes: Set<string>, edges: Map<string, Set<string>>}} The graph.
@@ -96,6 +98,7 @@ function buildDependencyGraph(requestedIds, manifestsMap) {
 
 /**
  * Creates a minimal heap data structure for stable sorting.
+ *
  * @param {function(any): number} keyFn - Function to get the priority key of an item.
  */
 function createMinHeap(keyFn) {

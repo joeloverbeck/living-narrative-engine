@@ -69,6 +69,9 @@ describe('core_handle_go rule integration', () => {
   let testEnv;
   let events = [];
 
+  /**
+   *
+   */
   function setupListener() {
     events = [];
     testEnv.eventBus.subscribe('*', (event) => {

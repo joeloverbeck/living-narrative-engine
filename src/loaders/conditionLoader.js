@@ -57,6 +57,7 @@ class ConditionLoader extends BaseManifestItemLoader {
 
   /**
    * Processes a single fetched condition file's data.
+   *
    * @override
    * @protected
    * @param {string} modId

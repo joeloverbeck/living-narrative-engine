@@ -39,7 +39,7 @@ describe('InitializationService', () => {
       dispatch: jest.fn().mockResolvedValue(undefined),
     };
     mockModsLoader = {
-      loadWorld: jest.fn().mockResolvedValue(undefined),
+      loadMods: jest.fn().mockResolvedValue(undefined),
     };
     mockSystemInitializer = {
       initializeAll: jest.fn().mockResolvedValue(undefined),
@@ -184,7 +184,7 @@ describe('InitializationService', () => {
         tokens.DomUiFacade,
       ]);
 
-      expect(mockModsLoader.loadWorld).toHaveBeenCalledWith(MOCK_WORLD_NAME);
+      expect(mockModsLoader.loadMods).toHaveBeenCalledWith(MOCK_WORLD_NAME);
       expect(mockLlmAdapter.init).toHaveBeenCalledTimes(1);
       expect(mockSystemInitializer.initializeAll).toHaveBeenCalled();
       expect(mockWorldInitializer.initializeWorldEntities).toHaveBeenCalled();
@@ -304,14 +304,14 @@ describe('InitializationService', () => {
         error,
         { shouldCallAdapterInit: false }
       );
-      expect(mockModsLoader.loadWorld).not.toHaveBeenCalled();
+      expect(mockModsLoader.loadMods).not.toHaveBeenCalled();
       mockContainer.resolve = originalResolve; // Restore original mock
     });
 
-    it('should handle failure when modsLoader.loadWorld rejects', async () => {
+    it('should handle failure when modsLoader.loadMods rejects', async () => {
       const error = new Error('World loading failed');
       await testFailure(
-        () => mockModsLoader.loadWorld.mockRejectedValue(error),
+        () => mockModsLoader.loadMods.mockRejectedValue(error),
         error,
         { shouldCallAdapterInit: false }
       );
@@ -339,7 +339,7 @@ describe('InitializationService', () => {
           return undefined;
         });
       }, error); // Default shouldCallAdapterInit is true, which is correct here
-      expect(mockModsLoader.loadWorld).toHaveBeenCalled();
+      expect(mockModsLoader.loadMods).toHaveBeenCalled();
       expect(mockLlmAdapter.init).toHaveBeenCalled();
       expect(mockSystemInitializer.initializeAll).not.toHaveBeenCalled();
       mockContainer.resolve = originalResolve;
@@ -351,7 +351,7 @@ describe('InitializationService', () => {
         () => mockSystemInitializer.initializeAll.mockRejectedValue(error),
         error
       );
-      expect(mockModsLoader.loadWorld).toHaveBeenCalledWith(MOCK_WORLD_NAME);
+      expect(mockModsLoader.loadMods).toHaveBeenCalledWith(MOCK_WORLD_NAME);
       expect(mockLlmAdapter.init).toHaveBeenCalled();
       expect(
         mockWorldInitializer.initializeWorldEntities
@@ -379,7 +379,7 @@ describe('InitializationService', () => {
           return undefined;
         });
       }, error);
-      expect(mockModsLoader.loadWorld).toHaveBeenCalled();
+      expect(mockModsLoader.loadMods).toHaveBeenCalled();
       expect(mockLlmAdapter.init).toHaveBeenCalled();
       expect(mockSystemInitializer.initializeAll).toHaveBeenCalled();
       expect(
@@ -395,7 +395,7 @@ describe('InitializationService', () => {
       await testFailure(() => {
         mockWorldInitializer.initializeWorldEntities.mockReturnValue(false);
       }, expectedError);
-      expect(mockModsLoader.loadWorld).toHaveBeenCalled();
+      expect(mockModsLoader.loadMods).toHaveBeenCalled();
       expect(mockLlmAdapter.init).toHaveBeenCalled();
       expect(mockSystemInitializer.initializeAll).toHaveBeenCalled();
     });
@@ -407,7 +407,7 @@ describe('InitializationService', () => {
           throw error;
         });
       }, error);
-      expect(mockModsLoader.loadWorld).toHaveBeenCalled();
+      expect(mockModsLoader.loadMods).toHaveBeenCalled();
       expect(mockLlmAdapter.init).toHaveBeenCalled();
       expect(mockSystemInitializer.initializeAll).toHaveBeenCalled();
     });
@@ -416,7 +416,7 @@ describe('InitializationService', () => {
       const mainError = new Error('World loading failed');
       const dispatchError = new Error('Failed to dispatch UI event');
 
-      mockModsLoader.loadWorld.mockRejectedValue(mainError);
+      mockModsLoader.loadMods.mockRejectedValue(mainError);
       let dispatchCallCount = 0;
       mockValidatedEventDispatcher.dispatch.mockImplementation(
         async (eventName) => {

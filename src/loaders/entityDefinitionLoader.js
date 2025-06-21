@@ -150,6 +150,7 @@ class EntityDefinitionLoader extends BaseManifestItemLoader {
 
   /**
    * Processes a single fetched entity definition file's data.
+   *
    * @override
    * @protected
    * @param {string} modId

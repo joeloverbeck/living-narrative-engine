@@ -114,7 +114,7 @@ class InitializationService extends IInitializationService {
         this.#container.resolve(tokens.ModsLoader)
       );
       this.#logger.debug('ModsLoader resolved. Loading world data...');
-      await modsLoader.loadWorld(worldName); // Schemas are loaded by this point
+      await modsLoader.loadMods(worldName); // Schemas are loaded by this point
       this.#logger.debug(
         `InitializationService: World data loaded successfully for world: ${worldName}.`
       );

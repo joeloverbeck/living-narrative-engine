@@ -22,7 +22,7 @@ import AbstractLoader from './abstractLoader.js';
  * such as loading schemas, processing manifests, loading content, etc.
  *
  * @class ModsLoader
- * @extends {AbstractLoader}
+ * @augments {AbstractLoader}
  */
 class ModsLoader extends AbstractLoader {
   /** @type {ILogger} */
@@ -72,7 +72,7 @@ class ModsLoader extends AbstractLoader {
    * @param {string[]} requestedModIds - An array of mod IDs to load.
    * @returns {Promise<void>}
    */
-  async loadWorld(worldName, requestedModIds = []) {
+  async loadMods(worldName, requestedModIds = []) {
     this._logger.debug(
       `ModsLoader: Starting load sequence for world '${worldName}'...`
     );
@@ -104,7 +104,7 @@ class ModsLoader extends AbstractLoader {
 
       if (err instanceof ModsLoaderPhaseError) {
         this._logger.error(
-          `ModsLoader: CRITICAL failure during phase '${err.phaseName}'. Code: [${err.code}]. Error: ${err.message}`,
+          `ModsLoader: CRITICAL failure during phase '${err.phase}'. Code: [${err.code}]. Error: ${err.message}`,
           { error: err.cause ?? err }
         );
         return Promise.reject(err);
