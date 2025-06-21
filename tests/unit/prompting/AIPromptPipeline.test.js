@@ -6,25 +6,24 @@ import {
   AIPromptPipelineDependencySpec,
 } from '../../common/prompting/promptPipelineTestBed.js';
 import { buildMissingDependencyCases } from '../../common/constructorValidationHelpers.js';
+import { useTestBed } from '../../common/useTestBed.js';
 
 describeAIPromptPipelineSuite('AIPromptPipeline', (getBed) => {
-  let bed;
-  beforeEach(() => {
-    bed = getBed();
-  });
+  const get = useTestBed(getBed);
   describe('constructor validation', () => {
     const cases = buildMissingDependencyCases(
-      () => bed.getDependencies(),
+      () => get().getDependencies(),
       AIPromptPipelineDependencySpec
     );
     test.each(cases)('throws when %s', (_desc, mutate, regex) => {
-      const deps = bed.getDependencies();
+      const deps = get().getDependencies();
       mutate(deps);
       expect(() => new AIPromptPipeline(deps)).toThrow(regex);
     });
   });
 
   test('generatePrompt orchestrates dependencies and returns prompt', async () => {
+    const bed = get();
     const actor = bed.defaultActor;
     const context = bed.defaultContext;
     const actions = [...bed.defaultActions, { id: 'a1' }];
@@ -54,6 +53,7 @@ describeAIPromptPipelineSuite('AIPromptPipeline', (getBed) => {
       error: 'PromptBuilder returned an empty or invalid prompt.',
     },
   ])('generatePrompt rejects when %s', async ({ mutate, error }) => {
+    const bed = get();
     await bed.expectGenerationFailure(mutate, error);
   });
 });
