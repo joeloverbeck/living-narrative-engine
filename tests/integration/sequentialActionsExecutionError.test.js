@@ -22,6 +22,7 @@ import OperationInterpreter from '../../src/logic/operationInterpreter.js';
 import JsonLogicEvaluationService from '../../src/logic/jsonLogicEvaluationService.js';
 import SystemLogicInterpreter from '../../src/logic/systemLogicInterpreter.js';
 import ModifyComponentHandler from '../../src/logic/operationHandlers/modifyComponentHandler.js';
+import { createSimpleMockDataRegistry } from '../common/mockFactories.js';
 import {
   afterEach,
   beforeEach,
@@ -53,16 +54,6 @@ class SimpleEntityManager {
 
   getEntityInstance(id) {
     return { id };
-  }
-}
-
-class StubDataRegistry {
-  constructor(rules) {
-    this._rules = rules;
-  }
-
-  getAllSystemRules() {
-    return this._rules;
   }
 }
 
@@ -156,7 +147,10 @@ describe('Sequential Action Execution – Error Path', () => {
         },
       ],
     };
-    const dataRegistry = new StubDataRegistry([testRule]);
+    const rules = [testRule];
+    const dataRegistry = createSimpleMockDataRegistry();
+    dataRegistry.getAllSystemRules = jest.fn();
+    dataRegistry.getAllSystemRules.mockReturnValue(rules);
 
     /* Interpreter */
     sysInterpreter = new SystemLogicInterpreter({
