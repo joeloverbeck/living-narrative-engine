@@ -3,6 +3,7 @@
 import { getModuleLogger } from './loggerUtils.js';
 import { safeDispatchError } from './safeDispatchErrorUtils.js';
 import { resolveSafeDispatcher } from './dispatcherUtils.js';
+import { isNonBlankString } from './textUtils.js';
 
 /**
  * Validate that the context exists and the variable name is valid.
@@ -13,15 +14,10 @@ import { resolveSafeDispatcher } from './dispatcherUtils.js';
  * @private
  */
 function _validateContextAndName(variableName, execCtx) {
-  const trimmedName =
-    typeof variableName === 'string' ? variableName.trim() : '';
-
-  if (!trimmedName) {
+  if (!isNonBlankString(variableName)) {
     return {
       valid: false,
-      error: new Error(
-        'writeContextVariable: variableName must be a non-empty string.'
-      ),
+      error: new Error(`Invalid variableName: "${variableName}"`),
     };
   }
 
@@ -39,7 +35,7 @@ function _validateContextAndName(variableName, execCtx) {
     };
   }
 
-  return { valid: true, name: trimmedName };
+  return { valid: true, name: variableName };
 }
 
 /**
@@ -92,8 +88,8 @@ export function writeContextVariable(
 }
 
 /**
- * Wrapper around {@link writeContextVariable} that trims the variable name and validates
- * it before storage.
+ * Wrapper around {@link writeContextVariable} that validates the variable name
+ * before storage.
  *
  * @param {string|null|undefined} variableName - Target context variable name.
  * @param {*} value - Value to store.
@@ -110,10 +106,8 @@ export function tryWriteContextVariable(
   dispatcher,
   logger
 ) {
-  const trimmedName =
-    typeof variableName === 'string' ? variableName.trim() : '';
   const log = getModuleLogger('contextVariableUtils', logger);
-  const validation = _validateContextAndName(trimmedName, execCtx);
+  const validation = _validateContextAndName(variableName, execCtx);
   if (!validation.valid) {
     const safeDispatcher = resolveSafeDispatcher(execCtx, dispatcher, log);
     if (safeDispatcher) {
