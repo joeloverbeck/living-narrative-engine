@@ -9,7 +9,7 @@ import {
   TURN_STARTED_ID,
   SYSTEM_ERROR_OCCURRED_ID,
 } from '../../../src/constants/eventIds.js';
-import { beforeEach, expect, jest, test, afterEach } from '@jest/globals';
+import { beforeEach, expect, test } from '@jest/globals';
 import {
   createDefaultActors,
   createAiActor,
@@ -46,11 +46,6 @@ describeTurnManagerSuite(
       stopSpy = testBed.spyOnStop();
 
       testBed.resetMocks();
-    });
-
-    afterEach(async () => {
-      jest.clearAllMocks();
-      // Timer cleanup handled by BaseTestBed
     });
 
     test('Starts a new round when queue is empty and active actors exist', async () => {
