@@ -11,6 +11,7 @@ import {
   TURN_PROCESSING_STARTED,
 } from '../../../src/constants/eventIds.js';
 import { createAiActor } from '../../common/turns/testActors.js';
+import { createMockTurnHandler } from '../../common/mockFactories.js';
 import TurnManager from '../../../src/turns/turnManager.js';
 import RoundManager from '../../../src/turns/roundManager.js';
 
@@ -46,10 +47,9 @@ describeTurnManagerSuite(
       testBed.mocks.turnOrderService.isEmpty.mockResolvedValue(false);
       testBed.mocks.turnOrderService.getNextEntity.mockResolvedValue(null);
       testBed.mocks.dispatcher.subscribe.mockReset().mockReturnValue(jest.fn());
-      testBed.mocks.turnHandlerResolver.resolveHandler.mockResolvedValue({
-        startTurn: jest.fn().mockResolvedValue(undefined),
-        destroy: jest.fn().mockResolvedValue(undefined),
-      });
+      testBed.mocks.turnHandlerResolver.resolveHandler.mockResolvedValue(
+        createMockTurnHandler()
+      );
 
       // Spy on stop to verify calls and simulate unsubscribe
       stopSpy = jest
@@ -73,10 +73,7 @@ describeTurnManagerSuite(
       const entityType = 'ai';
       testBed.mocks.turnOrderService.getNextEntity.mockResolvedValue(nextActor);
 
-      const mockHandler = {
-        startTurn: jest.fn().mockResolvedValue(undefined),
-        destroy: jest.fn().mockResolvedValue(undefined),
-      };
+      const mockHandler = createMockTurnHandler({ actor: nextActor });
       testBed.mocks.turnHandlerResolver.resolveHandler.mockResolvedValue(
         mockHandler
       );
@@ -244,10 +241,8 @@ describeTurnManagerSuite(
       // Arrange
       const startError = new Error('Handler start failed');
       const mockActor = createAiActor('actor1');
-      const mockHandler = {
-        startTurn: jest.fn().mockRejectedValue(startError),
-        destroy: jest.fn().mockResolvedValue(undefined),
-      };
+      const mockHandler = createMockTurnHandler({ actor: mockActor });
+      mockHandler.startTurn.mockRejectedValue(startError);
       testBed.mocks.turnOrderService.getNextEntity.mockResolvedValue(mockActor); // Return valid entity first
       testBed.mocks.turnHandlerResolver.resolveHandler.mockResolvedValue(
         mockHandler
@@ -259,7 +254,7 @@ describeTurnManagerSuite(
 
       // Assert
       expect(testBed.mocks.logger.error).toHaveBeenCalledWith(
-        'Error during handler.startTurn() initiation for entity actor1 (Object): Handler start failed',
+        'Error during handler.startTurn() initiation for entity actor1 (MockTurnHandler): Handler start failed',
         startError
       );
 
