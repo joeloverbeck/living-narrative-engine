@@ -1,5 +1,6 @@
 export const ModsLoaderErrorCode = Object.freeze({
   SCHEMA: 'schema',
+  GAME_CONFIG: 'game_config',
   MANIFEST: 'manifest',
   CONTENT: 'content',
   WORLD: 'world',

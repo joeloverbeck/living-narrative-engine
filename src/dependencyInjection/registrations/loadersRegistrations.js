@@ -65,6 +65,7 @@ import FnLoadOrderResolverAdapter from '../../adapters/fnLoadOrderResolverAdapte
 
 // --- Phase Imports ---
 import SchemaPhase from '../../loaders/phases/SchemaPhase.js';
+import GameConfigPhase from '../../loaders/phases/GameConfigPhase.js';
 import ManifestPhase from '../../loaders/phases/ManifestPhase.js';
 import ContentPhase from '../../loaders/phases/contentPhase.js';
 import WorldPhase from '../../loaders/phases/worldPhase.js';
@@ -201,7 +202,73 @@ export function registerLoaders(container) {
       new ContentLoadManager({
         logger: c.resolve(tokens.ILogger),
         validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
-        contentLoadersConfig: null, // Will be generated from individual loaders
+        contentLoadersConfig: [
+          // Definition phase loaders
+          {
+            loader: c.resolve(tokens.ActionLoader),
+            contentKey: 'actions',
+            diskFolder: 'actions',
+            registryKey: 'actions',
+            phase: 'definitions'
+          },
+          {
+            loader: c.resolve(tokens.ComponentLoader),
+            contentKey: 'components',
+            diskFolder: 'components',
+            registryKey: 'components',
+            phase: 'definitions'
+          },
+          {
+            loader: c.resolve(tokens.ConditionLoader),
+            contentKey: 'conditions',
+            diskFolder: 'conditions',
+            registryKey: 'conditions',
+            phase: 'definitions'
+          },
+          {
+            loader: c.resolve(tokens.EntityLoader),
+            contentKey: 'entityDefinitions',
+            diskFolder: 'entities',
+            registryKey: 'entity_definitions',
+            phase: 'definitions'
+          },
+          {
+            loader: c.resolve(tokens.EventLoader),
+            contentKey: 'events',
+            diskFolder: 'events',
+            registryKey: 'events',
+            phase: 'definitions'
+          },
+          {
+            loader: c.resolve(tokens.MacroLoader),
+            contentKey: 'macros',
+            diskFolder: 'macros',
+            registryKey: 'macros',
+            phase: 'definitions'
+          },
+          {
+            loader: c.resolve(tokens.RuleLoader),
+            contentKey: 'rules',
+            diskFolder: 'rules',
+            registryKey: 'rules',
+            phase: 'definitions'
+          },
+          // Instance phase loaders
+          {
+            loader: c.resolve(tokens.EntityInstanceLoader),
+            contentKey: 'entityInstances',
+            diskFolder: 'instances',
+            registryKey: 'entity_instances',
+            phase: 'instances'
+          },
+          {
+            loader: c.resolve(tokens.GoalLoader),
+            contentKey: 'goals',
+            diskFolder: 'goals',
+            registryKey: 'goals',
+            phase: 'instances'
+          }
+        ],
       })
   );
 
@@ -218,6 +285,15 @@ export function registerLoaders(container) {
         schemaLoader: c.resolve(tokens.SchemaLoader),
         config: c.resolve(tokens.IConfiguration),
         validator: c.resolve(tokens.ISchemaValidator),
+        logger: c.resolve(tokens.ILogger),
+      })
+  );
+
+  registrar.singletonFactory(
+    tokens.GameConfigPhase,
+    (c) =>
+      new GameConfigPhase({
+        gameConfigLoader: c.resolve(tokens.GameConfigLoader),
         logger: c.resolve(tokens.ILogger),
       })
   );
@@ -262,6 +338,7 @@ export function registerLoaders(container) {
   registrar.singletonFactory(tokens.ModsLoader, (c) => {
     const phases = [
       c.resolve(tokens.SchemaPhase),
+      c.resolve(tokens.GameConfigPhase),
       c.resolve(tokens.ManifestPhase),
       c.resolve(tokens.ContentPhase),
       c.resolve(tokens.WorldPhase),

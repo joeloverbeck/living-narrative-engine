@@ -27,9 +27,8 @@ export default class WorldPhase extends LoaderPhase {
      * @param {object} params - Configuration parameters.
      * @param {WorldLoader} params.worldLoader - The loader responsible for processing world files.
      * @param {ILogger} params.logger - The logger service.
-     * @param {Map<string, ModManifest>} params.manifests - A map of all loaded and validated mod manifests.
      */
-    constructor({ worldLoader, logger, manifests }) {
+    constructor({ worldLoader, logger }) {
         super();
         /**
          * @type {WorldLoader}
@@ -41,11 +40,6 @@ export default class WorldPhase extends LoaderPhase {
          * @private
          */
         this.logger = logger;
-        /**
-         * @type {Map<string, ModManifest>}
-         * @private
-         */
-        this.manifests = manifests;
     }
 
     /**
@@ -60,7 +54,7 @@ export default class WorldPhase extends LoaderPhase {
         try {
             await this.worldLoader.loadWorlds(
                 ctx.finalModOrder,
-                this.manifests,
+                ctx.manifests,
                 ctx.totals
             );
         } catch (e) {

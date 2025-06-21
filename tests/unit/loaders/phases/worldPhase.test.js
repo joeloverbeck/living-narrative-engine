@@ -22,17 +22,16 @@ describe('WorldPhase', () => {
 
   it('should instantiate correctly and assign properties', () => {
     // Arrange & Act
-    worldPhase = new WorldPhase({ worldLoader, logger, manifests });
+    worldPhase = new WorldPhase({ worldLoader, logger });
 
     // Assert
     expect(worldPhase.worldLoader).toBe(worldLoader);
     expect(worldPhase.logger).toBe(logger);
-    expect(worldPhase.manifests).toBe(manifests);
   });
 
   describe('execute', () => {
     beforeEach(() => {
-      worldPhase = new WorldPhase({ worldLoader, logger, manifests });
+      worldPhase = new WorldPhase({ worldLoader, logger });
     });
 
     it('should successfully call worldLoader.loadWorlds with correct parameters', async () => {
@@ -41,6 +40,7 @@ describe('WorldPhase', () => {
         finalModOrder: ['core', 'modA'],
         totals: { components: 10, actions: 5 },
       };
+      ctx.manifests = manifests;
       worldLoader.loadWorlds.mockResolvedValue(undefined);
 
       // Act
@@ -50,7 +50,7 @@ describe('WorldPhase', () => {
       expect(logger.info).toHaveBeenCalledWith('— WorldPhase starting —');
       expect(worldLoader.loadWorlds).toHaveBeenCalledWith(
         ctx.finalModOrder,
-        manifests,
+        ctx.manifests,
         ctx.totals
       );
       expect(worldLoader.loadWorlds).toHaveBeenCalledTimes(1);
@@ -64,6 +64,7 @@ describe('WorldPhase', () => {
         finalModOrder: ['core'],
         totals: {},
       };
+      ctx.manifests = manifests;
 
       // Act & Assert
       await expect(worldPhase.execute(ctx)).rejects.toThrow(
@@ -82,6 +83,7 @@ describe('WorldPhase', () => {
         finalModOrder: ['core'],
         totals: {},
       };
+      ctx.manifests = manifests;
 
       // Act
       let caughtError;
