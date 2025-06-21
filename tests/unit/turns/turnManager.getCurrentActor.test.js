@@ -12,6 +12,11 @@ import {
 import { TURN_PROCESSING_STARTED } from '../../../src/constants/eventIds.js';
 import { beforeEach, expect, jest, test } from '@jest/globals';
 import { createMockEntity } from '../../common/mockFactories';
+import {
+  createDefaultActors,
+  createAiActor,
+  createPlayerActor,
+} from '../../common/turns/testActors.js';
 
 // Mock Turn Handlers - ADD startTurn and destroy
 const mockPlayerHandler = {
@@ -29,24 +34,12 @@ describeTurnManagerSuite('TurnManager', (getBed) => {
   let testBed;
   let mockPlayerEntity;
   let mockAiEntity1;
-  let mockAiEntity2;
+
 
   beforeEach(() => {
     testBed = getBed();
 
-    // Create fresh mock entities
-    mockPlayerEntity = createMockEntity('player-1', {
-      isActor: true,
-      isPlayer: true,
-    });
-    mockAiEntity1 = createMockEntity('ai-1', {
-      isActor: true,
-      isPlayer: false,
-    });
-    mockAiEntity2 = createMockEntity('ai-2', {
-      isActor: true,
-      isPlayer: false,
-    });
+    ({ player: mockPlayerEntity, ai1: mockAiEntity1 } = createDefaultActors());
 
     // Configure default mock behaviors
     testBed.mocks.turnOrderService.isEmpty.mockResolvedValue(true);
@@ -73,7 +66,7 @@ describeTurnManagerSuite('TurnManager', (getBed) => {
   });
 
   test('mock entities should behave as configured', () => {
-    expect(mockPlayerEntity.id).toBe('player-1');
+    expect(mockPlayerEntity.id).toBe('player1');
     expect(mockPlayerEntity.hasComponent(ACTOR_COMPONENT_ID)).toBe(true);
     expect(mockPlayerEntity.hasComponent(PLAYER_COMPONENT_ID)).toBe(true);
     expect(mockAiEntity1.hasComponent(PLAYER_COMPONENT_ID)).toBe(false);
@@ -85,7 +78,7 @@ describeTurnManagerSuite('TurnManager', (getBed) => {
     expect(Array.from(testBed.mocks.entityManager.entities)).toEqual(entities);
     expect(
       Array.from(testBed.mocks.entityManager.entities).find(
-        (e) => e.id === 'player-1'
+        (e) => e.id === 'player1'
       )
     ).toBe(mockPlayerEntity);
   });
@@ -97,10 +90,7 @@ describeTurnManagerSuite('TurnManager', (getBed) => {
     });
 
     test('should return the assigned actor after start and advanceTurn assigns one', async () => {
-      const mockActor = createMockEntity('actor-test', {
-        isActor: true,
-        isPlayer: false,
-      });
+      const mockActor = createAiActor('actor-test');
       const entityType = 'ai'; // Define expected type
 
       // --- Setup mocks for start() -> advanceTurn() path ---
@@ -127,10 +117,7 @@ describeTurnManagerSuite('TurnManager', (getBed) => {
     });
 
     test('should return null after stop() clears the current actor', async () => {
-      const mockActor = createMockEntity('actor-test', {
-        isActor: true,
-        isPlayer: false,
-      });
+      const mockActor = createAiActor('actor-test');
 
       // --- Setup mocks ---
       testBed.mocks.turnOrderService.isEmpty.mockResolvedValue(false);
@@ -151,14 +138,8 @@ describeTurnManagerSuite('TurnManager', (getBed) => {
     });
 
     test('should return the correct actor when multiple actors are in the queue', async () => {
-      const mockActor1 = createMockEntity('actor1', {
-        isActor: true,
-        isPlayer: false,
-      });
-      const mockActor2 = createMockEntity('actor2', {
-        isActor: true,
-        isPlayer: false,
-      });
+      const mockActor1 = createAiActor('actor1');
+      const mockActor2 = createAiActor('actor2');
 
       // --- Setup mocks for sequential actors ---
       testBed.mocks.turnOrderService.isEmpty.mockResolvedValue(false);
@@ -186,10 +167,7 @@ describeTurnManagerSuite('TurnManager', (getBed) => {
     });
 
     test('should return null when queue becomes empty', async () => {
-      const mockActor = createMockEntity('actor-test', {
-        isActor: true,
-        isPlayer: false,
-      });
+      const mockActor = createAiActor('actor-test');
 
       // --- Setup mocks ---
       testBed.mocks.turnOrderService.isEmpty.mockResolvedValue(false);
@@ -219,14 +197,8 @@ describeTurnManagerSuite('TurnManager', (getBed) => {
     });
 
     test('should handle player vs AI actor types correctly', async () => {
-      const mockPlayerActor = createMockEntity('player-actor', {
-        isActor: true,
-        isPlayer: true,
-      });
-      const mockAiActor = createMockEntity('ai-actor', {
-        isActor: true,
-        isPlayer: false,
-      });
+      const mockPlayerActor = createPlayerActor('player-actor');
+      const mockAiActor = createAiActor('ai-actor');
 
       // Test player actor
       testBed.mocks.turnOrderService.isEmpty.mockResolvedValue(false);
@@ -285,10 +257,6 @@ describeTurnManagerSuite('TurnManager', (getBed) => {
     });
 
     test('should handle entity manager errors gracefully', async () => {
-      const mockActor = createMockEntity('actor-test', {
-        isActor: true,
-        isPlayer: false,
-      });
 
       // --- Setup mocks ---
       testBed.mocks.turnOrderService.isEmpty.mockResolvedValue(false);
