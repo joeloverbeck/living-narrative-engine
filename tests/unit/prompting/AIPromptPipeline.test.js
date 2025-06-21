@@ -58,21 +58,11 @@ describeAIPromptPipelineSuite('AIPromptPipeline', (getBed) => {
       finalPrompt: 'FINAL',
     });
 
-    const prompt = await testBed.generate(actor, context, actions);
-
-    expect(prompt).toBe('FINAL');
-    expect(testBed.llmAdapter.getCurrentActiveLlmId).toHaveBeenCalledTimes(1);
-    expect(testBed.gameStateProvider.buildGameState).toHaveBeenCalledWith(
+    await testBed.expectSuccessfulGeneration({
       actor,
       context,
-      testBed.logger
-    );
-    expect(testBed.promptContentProvider.getPromptData).toHaveBeenCalledWith(
-      expect.objectContaining({ state: true, availableActions: actions }),
-      testBed.logger
-    );
-    expect(testBed.promptBuilder.build).toHaveBeenCalledWith('llm1', {
-      pd: true,
+      actions,
+      expectedPrompt: 'FINAL',
     });
   });
 

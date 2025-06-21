@@ -3,9 +3,9 @@
  * @see tests/common/prompting/promptPipelineTestBed.js
  */
 /* eslint-env jest */
-/* global beforeEach */
 
 import { AIPromptPipeline } from '../../../src/prompting/AIPromptPipeline.js';
+import { expect } from '@jest/globals';
 import {
   createMockLogger,
   createMockLLMAdapter,
@@ -41,6 +41,13 @@ export class AIPromptPipelineTestBed extends BaseTestBed {
     this.defaultActor = createMockEntity('actor');
     this.defaultContext = {};
     this.defaultActions = [];
+    /** @private */
+    this._successOptions = {
+      llmId: 'llm-id',
+      gameState: {},
+      promptData: {},
+      finalPrompt: 'PROMPT',
+    };
   }
 
   /**
@@ -73,8 +80,10 @@ export class AIPromptPipelineTestBed extends BaseTestBed {
   }
 
   /**
-   * @description Convenience wrapper over {@link generate} using the default
-   * actor, context and actions provided by the test bed.
+   * Convenience wrapper that delegates to the {@code generate} method using the
+   * default actor, context and actions provided by the test bed.
+   *
+   * @description Convenience wrapper over generate using default values.
    * @returns {Promise<string>} The generated prompt string.
    */
   async generateDefault() {
@@ -121,12 +130,47 @@ export class AIPromptPipelineTestBed extends BaseTestBed {
     promptData = {},
     finalPrompt = 'PROMPT',
   } = {}) {
+    this._successOptions = { llmId, gameState, promptData, finalPrompt };
     this.mocks.llmAdapter.getCurrentActiveLlmId.mockResolvedValue(llmId);
     this.mocks.gameStateProvider.buildGameState.mockResolvedValue(gameState);
     this.mocks.promptContentProvider.getPromptData.mockResolvedValue(
       promptData
     );
     this.mocks.promptBuilder.build.mockResolvedValue(finalPrompt);
+  }
+
+  /**
+   * Generates a prompt and verifies that all mocked dependencies were called
+   * with the values configured by setupMockSuccess.
+   *
+   * @param {object} params - Options for generation and assertions.
+   * @param {import('../../../src/entities/entity.js').default} params.actor - Actor for the prompt.
+   * @param {import('../../../src/turns/interfaces/ITurnContext.js').ITurnContext} params.context - Turn context.
+   * @param {import('../../../src/turns/dtos/actionComposite.js').ActionComposite[]} params.actions - Available actions.
+   * @param {string} params.expectedPrompt - Expected final prompt string.
+   * @returns {Promise<void>} Resolves when assertions pass.
+   */
+  async expectSuccessfulGeneration({
+    actor,
+    context,
+    actions,
+    expectedPrompt,
+  }) {
+    const prompt = await this.generate(actor, context, actions);
+    expect(prompt).toBe(expectedPrompt);
+
+    const { llmId, gameState, promptData } = this._successOptions;
+    expect(this.llmAdapter.getCurrentActiveLlmId).toHaveBeenCalledTimes(1);
+    expect(this.gameStateProvider.buildGameState).toHaveBeenCalledWith(
+      actor,
+      context,
+      this.logger
+    );
+    expect(this.promptContentProvider.getPromptData).toHaveBeenCalledWith(
+      expect.objectContaining({ ...gameState, availableActions: actions }),
+      this.logger
+    );
+    expect(this.promptBuilder.build).toHaveBeenCalledWith(llmId, promptData);
   }
 }
 
