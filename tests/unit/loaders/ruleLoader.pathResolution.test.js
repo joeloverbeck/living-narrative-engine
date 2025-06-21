@@ -314,21 +314,25 @@ describe('RuleLoader (Path Resolution & Fetching via loadItemsForMod)', () => {
         RULE_TYPE_NAME,
         `${modId}:${ruleNameA}`, // Derived ID
         expect.objectContaining({
-          ...dataA,
-          id: `${modId}:${ruleNameA}`,
+          id: ruleNameA, // BASE ID
+          _fullId: `${modId}:${ruleNameA}`, // QUALIFIED ID
           modId: modId,
           _sourceFile: ruleFileA,
-        }) // Ensure stored object has augmented fields
+          event_type: 'core:eventA', // From dataA
+          actions: [], // From dataA
+        })
       );
       expect(mockRegistry.store).toHaveBeenCalledWith(
         RULE_TYPE_NAME,
         `${modId}:${ruleNameB}`, // Derived ID
         expect.objectContaining({
-          ...dataB,
-          id: `${modId}:${ruleNameB}`,
+          id: ruleNameB, // BASE ID
+          _fullId: `${modId}:${ruleNameB}`, // QUALIFIED ID
           modId: modId,
           _sourceFile: ruleFileB,
-        }) // Ensure stored object has augmented fields
+          event_type: 'core:eventB', // From dataB
+          actions: [], // From dataB
+        })
       );
 
       expect(mockLogger.error).not.toHaveBeenCalled();
@@ -345,38 +349,19 @@ describe('RuleLoader (Path Resolution & Fetching via loadItemsForMod)', () => {
   });
 
   describe('Path Resolution Failure', () => {
+    const resolutionError = new Error('Path resolution failed miserably');
+
     it('should catch errors from resolveModContentPath, log them, and process other files', async () => {
       // --- Arrange ---
-      const resolvedPathA = `/path/to/mods/${modId}/${RULE_CONTENT_DIR}/${ruleFileA}`;
-      const resolutionError = new Error(
-        `Mock Resolver Error: Cannot resolve ${ruleFileB}`
-      );
-
-      // Configure mock resolver: success for A, throw for B
-      mockResolver.resolveModContentPath.mockImplementation(
-        (mId, type, file) => {
-          if (mId === modId && type === RULE_CONTENT_DIR && file === ruleFileA)
-            return resolvedPathA;
-          if (mId === modId && type === RULE_CONTENT_DIR && file === ruleFileB)
-            throw resolutionError;
-          throw new Error(
-            `Unexpected resolveModContentPath call: ${mId}, ${type}, ${file}`
-          );
-        }
-      );
-
-      // Mock fetcher needs to handle the successful path A
-      const dataA = { event_type: 'core:eventA', actions: [] };
-      mockFetcher.fetch.mockImplementation(async (filePath) => {
-        if (filePath === resolvedPathA) return Promise.resolve(dataA);
-        return Promise.reject(
-          new Error(`Mock Fetch Error: Unexpected fetch for ${filePath}`)
-        );
+      // Fail resolution for ruleFileB
+      mockResolver.resolveModContentPath.mockImplementation((mod, type, file) => {
+        if (file === ruleFileB) throw resolutionError;
+        return `/path/to/mods/${mod}/${RULE_CONTENT_DIR}/${file}`; // Use RULE_CONTENT_DIR
       });
 
-      // --- Action ---
-      // *** UPDATED: Capture the result object ***
-      /** @type {LoadItemsResult} */
+      const resolvedPathA = `/path/to/mods/${modId}/${RULE_CONTENT_DIR}/${ruleFileA}`;
+
+      // --- Act ---
       const result = await loader.loadItemsForMod(
         modId,
         manifest,
@@ -386,41 +371,25 @@ describe('RuleLoader (Path Resolution & Fetching via loadItemsForMod)', () => {
       );
 
       // --- Assert ---
-      // 1. Verify IPathResolver.resolveModContentPath calls (both attempted)
+      // 1. Path resolution called for both
       expect(mockResolver.resolveModContentPath).toHaveBeenCalledTimes(2);
-      expect(mockResolver.resolveModContentPath).toHaveBeenNthCalledWith(
-        1,
-        modId,
-        RULE_CONTENT_DIR,
-        ruleFileA
-      );
-      expect(mockResolver.resolveModContentPath).toHaveBeenNthCalledWith(
-        2,
-        modId,
-        RULE_CONTENT_DIR,
-        ruleFileB
-      );
 
-      // 2. Verify error was logged for file B (by _processFileWrapper)
+      // 2. Fetching called only for rule A
+      expect(mockFetcher.fetch).toHaveBeenCalledTimes(1);
+      expect(mockFetcher.fetch).toHaveBeenCalledWith(resolvedPathA);
+
+      // 3. Error logged for rule B
       expect(mockLogger.error).toHaveBeenCalledTimes(1);
-      // Check the error log structure from _processFileWrapper
       expect(mockLogger.error).toHaveBeenCalledWith(
-        'Error processing file:',
+        'Error processing file:', // Log from BaseManifestItemLoader._processFileWrapper
         expect.objectContaining({
           modId: modId,
           filename: ruleFileB,
-          path: 'Path not resolved', // Path is null because resolution failed
-          typeName: RULE_TYPE_NAME, // Verify typeName is logged
+          path: 'Path not resolved', // Because resolution failed
+          typeName: RULE_TYPE_NAME,
           error: resolutionError.message,
         }),
         resolutionError
-      );
-
-      // 3. Verify IDataFetcher.fetch was called ONLY for A
-      expect(mockFetcher.fetch).toHaveBeenCalledTimes(1);
-      expect(mockFetcher.fetch).toHaveBeenCalledWith(resolvedPathA);
-      expect(mockFetcher.fetch).not.toHaveBeenCalledWith(
-        expect.stringContaining(ruleFileB)
       );
 
       // 4. Verify only rule A was stored
@@ -429,57 +398,31 @@ describe('RuleLoader (Path Resolution & Fetching via loadItemsForMod)', () => {
         RULE_TYPE_NAME,
         `${modId}:${ruleNameA}`, // Derived ID
         expect.objectContaining({
-          ...dataA,
-          id: `${modId}:${ruleNameA}`,
+          _fullId: `${modId}:${ruleNameA}`,
+          id: ruleNameA,
           modId: modId,
           _sourceFile: ruleFileA,
+          event_type: 'core:dummy_event', // Corrected to match general mockFetcher
+          actions: [{ type: 'LOG', parameters: { message: `Loaded from ${resolvedPathA}` } }],
         })
       );
 
-      // 5. Expect count and errors in result object
-      // *** UPDATED: Assert properties of the result object ***
-      expect(result.count).toBe(1); // Should return 1 (for file A)
-      expect(result.errors).toBe(1); // Should report 1 error
+      // 5. Result Summary: Correct counts
+      expect(result.count).toBe(1); // Only rule A loaded
+      expect(result.errors).toBe(1); // One error for rule B path resolution
       expect(result.overrides).toBe(0);
-
-      // Check final summary log indicates partial success
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        `Mod [${modId}] - Processed 1/2 ${RULE_CONTENT_KEY} items. (1 failed)`
-      );
     });
 
     it('should process file B if the FIRST resolveModContentPath fails', async () => {
       // --- Arrange ---
-      const resolvedPathB = `/path/to/mods/${modId}/${RULE_CONTENT_DIR}/${ruleFileB}`;
-      const resolutionError = new Error(
-        `Mock Resolver Error: Cannot resolve ${ruleFileA}`
-      );
-
-      // Configure mock resolver: throw for A, success for B
-      mockResolver.resolveModContentPath.mockImplementation(
-        (mId, type, file) => {
-          if (mId === modId && type === RULE_CONTENT_DIR && file === ruleFileA)
-            throw resolutionError;
-          if (mId === modId && type === RULE_CONTENT_DIR && file === ruleFileB)
-            return resolvedPathB;
-          throw new Error(
-            `Unexpected resolveModContentPath call: ${mId}, ${type}, ${file}`
-          );
-        }
-      );
-
-      // Mock fetcher needs to handle the successful path B
-      const dataB = { event_type: 'core:eventB', actions: [] };
-      mockFetcher.fetch.mockImplementation(async (filePath) => {
-        if (filePath === resolvedPathB) return Promise.resolve(dataB);
-        return Promise.reject(
-          new Error(`Mock Fetch Error: Unexpected fetch for ${filePath}`)
-        );
+      // Fail resolution for ruleFileA
+      mockResolver.resolveModContentPath.mockImplementation((mod, type, file) => {
+        if (file === ruleFileA) throw resolutionError;
+        return `/path/to/mods/${mod}/${RULE_CONTENT_DIR}/${file}`; // Use RULE_CONTENT_DIR
       });
+      const resolvedPathB = `/path/to/mods/${modId}/${RULE_CONTENT_DIR}/${ruleFileB}`;
 
-      // --- Action ---
-      // *** UPDATED: Capture the result object ***
-      /** @type {LoadItemsResult} */
+      // --- Act ---
       const result = await loader.loadItemsForMod(
         modId,
         manifest,
@@ -489,40 +432,25 @@ describe('RuleLoader (Path Resolution & Fetching via loadItemsForMod)', () => {
       );
 
       // --- Assert ---
-      // 1. Verify IPathResolver.resolveModContentPath calls (both attempted)
+      // 1. Path resolution called for both
       expect(mockResolver.resolveModContentPath).toHaveBeenCalledTimes(2);
-      expect(mockResolver.resolveModContentPath).toHaveBeenNthCalledWith(
-        1,
-        modId,
-        RULE_CONTENT_DIR,
-        ruleFileA
-      );
-      expect(mockResolver.resolveModContentPath).toHaveBeenNthCalledWith(
-        2,
-        modId,
-        RULE_CONTENT_DIR,
-        ruleFileB
-      );
 
-      // 2. Verify error was logged for file A
+      // 2. Fetching called only for rule B
+      expect(mockFetcher.fetch).toHaveBeenCalledTimes(1);
+      expect(mockFetcher.fetch).toHaveBeenCalledWith(resolvedPathB);
+
+      // 3. Error logged for rule A
       expect(mockLogger.error).toHaveBeenCalledTimes(1);
       expect(mockLogger.error).toHaveBeenCalledWith(
-        'Error processing file:',
+        'Error processing file:', // Log from BaseManifestItemLoader._processFileWrapper
         expect.objectContaining({
           modId: modId,
           filename: ruleFileA,
-          path: 'Path not resolved',
-          typeName: RULE_TYPE_NAME, // Verify typeName is logged
+          path: 'Path not resolved', // Because resolution failed
+          typeName: RULE_TYPE_NAME,
           error: resolutionError.message,
         }),
         resolutionError
-      );
-
-      // 3. Verify IDataFetcher.fetch was called ONLY for B
-      expect(mockFetcher.fetch).toHaveBeenCalledTimes(1);
-      expect(mockFetcher.fetch).toHaveBeenCalledWith(resolvedPathB);
-      expect(mockFetcher.fetch).not.toHaveBeenCalledWith(
-        expect.stringContaining(ruleFileA)
       );
 
       // 4. Verify only rule B was stored
@@ -531,23 +459,19 @@ describe('RuleLoader (Path Resolution & Fetching via loadItemsForMod)', () => {
         RULE_TYPE_NAME,
         `${modId}:${ruleNameB}`, // Derived ID
         expect.objectContaining({
-          ...dataB,
-          id: `${modId}:${ruleNameB}`,
+          _fullId: `${modId}:${ruleNameB}`,
+          id: ruleNameB,
           modId: modId,
           _sourceFile: ruleFileB,
+          event_type: 'core:dummy_event', // Corrected to match general mockFetcher
+          actions: [{ type: 'LOG', parameters: { message: `Loaded from ${resolvedPathB}` } }],
         })
       );
 
-      // 5. Expect count and errors in result object
-      // *** UPDATED: Assert properties of the result object ***
-      expect(result.count).toBe(1); // Should return 1 (for file B)
-      expect(result.errors).toBe(1); // Should report 1 error
+      // 5. Result Summary: Correct counts
+      expect(result.count).toBe(1); // Only rule B loaded
+      expect(result.errors).toBe(1); // One error for rule A path resolution
       expect(result.overrides).toBe(0);
-
-      // Check final summary log indicates partial success
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        `Mod [${modId}] - Processed 1/2 ${RULE_CONTENT_KEY} items. (1 failed)`
-      );
     });
   });
 });

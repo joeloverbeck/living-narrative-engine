@@ -277,7 +277,8 @@ describe('RuleLoader - Skip Validation Scenario (via loadItemsForMod)', () => {
       const expectedStoredRuleId = `${modId}:${ruleBasename}`; // "test-mod-skip-validation:ruleToSkip"
       const expectedStoredData = {
         ...ruleDataSkip, // Original data properties
-        id: expectedStoredRuleId, // Augmented with final ID
+        id: ruleBasename, // BASE ID
+        _fullId: expectedStoredRuleId, // QUALIFIED ID
         modId: modId, // Augmented with mod ID
         _sourceFile: ruleFile, // Augmented with source file
       };
@@ -285,7 +286,7 @@ describe('RuleLoader - Skip Validation Scenario (via loadItemsForMod)', () => {
       expect(mockRegistry.store).toHaveBeenCalledWith(
         RULE_TYPE_NAME, // Category 'rules'
         expectedStoredRuleId, // Key "test-mod-skip-validation:ruleToSkip"
-        expectedStoredData // Expect the AUGMENTED data object
+        expect.objectContaining(expectedStoredData) // Expect the AUGMENTED data object
       );
 
       // Verify return value

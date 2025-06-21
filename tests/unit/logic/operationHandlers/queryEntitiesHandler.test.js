@@ -20,18 +20,28 @@ import { SYSTEM_ERROR_OCCURRED_ID } from '../../../../src/constants/eventIds.js'
  *
  * @returns {import('../../../../src/interfaces/IEntityManager.js').IEntityManager}
  */
-const makeMockEntityManager = () => ({
-  activeEntities: new Map(),
-  getEntitiesInLocation: jest.fn(),
-  hasComponent: jest.fn(),
-  getComponentData: jest.fn(),
-  // Add other methods from the interface as needed, even if not used, to better represent the mock.
-  getEntityInstance: jest.fn(),
-  createEntityInstance: jest.fn(),
-  getEntitiesWithComponent: jest.fn(),
-  addComponent: jest.fn(),
-  removeComponent: jest.fn(),
-});
+const makeMockEntityManager = () => {
+  const manager = {
+    activeEntities: new Map(),
+    getEntitiesInLocation: jest.fn(),
+    hasComponent: jest.fn(),
+    getComponentData: jest.fn(),
+    getEntityInstance: jest.fn(),
+    createEntityInstance: jest.fn(),
+    getEntitiesWithComponent: jest.fn(),
+    addComponent: jest.fn(),
+    removeComponent: jest.fn(),
+  };
+  Object.defineProperty(manager, 'entities', {
+    get() {
+      // Return an array of entity objects with id fields matching the keys in activeEntities
+      return Array.from(manager.activeEntities.keys()).map(id => ({ id }));
+    },
+    enumerable: true,
+    configurable: true,
+  });
+  return manager;
+};
 
 /**
  * Creates a mock ILogger.
@@ -318,7 +328,7 @@ describe('QueryEntitiesHandler', () => {
       expect(result.length).toBe(5);
       expect(result).toEqual(
         expect.arrayContaining(
-          Array.from(mockEntityManager.activeEntities.keys())
+          Array.from(mockEntityManager.entities).map(e => e.id)
         )
       );
     });

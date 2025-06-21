@@ -21,7 +21,7 @@
 /** @typedef {import('../../loaders/entityDefinitionLoader.js').default} EntityLoader */
 /** @typedef {import('../../loaders/entityInstanceLoader.js').default} EntityInstanceLoader */
 /** @typedef {import('../../loaders/worldLoader.js').default} WorldLoader */
-/** @typedef {import('../../modding/modLoader.js').default} ModsLoader */
+/** @typedef {import('../../loaders/modsLoader.js').default} ModsLoader */
 /** @typedef {import('../../configuration/staticConfiguration.js').default} StaticConfiguration */
 /** @typedef {import('../../pathing/defaultPathResolver.js').default} DefaultPathResolver */
 /** @typedef {import('../../validation/ajvSchemaValidator.js').default} AjvSchemaValidator */
@@ -31,6 +31,7 @@
 /** @typedef {import('../../modding/modVersionValidator.js').default} ModVersionValidator */
 /** @typedef {import('../../modding/modLoadOrderResolver.js').default} ModLoadOrderResolver */
 /** @typedef {import('../../loaders/promptTextLoader.js').default} PromptTextLoader */
+/** @typedef {import('../../loaders/goalLoader.js').default} GoalLoader */
 
 // --- Core Service Imports ---
 import StaticConfiguration from '../../configuration/staticConfiguration.js';
@@ -40,20 +41,21 @@ import InMemoryDataRegistry from '../../data/inMemoryDataRegistry.js';
 import WorkspaceDataFetcher from '../../data/workspaceDataFetcher.js';
 
 // --- Loader Imports ---
-import SchemaLoader from '../../loaders/schemaLoader.js';
-import RuleLoader from '../../loaders/ruleLoader.js';
+import ActionLoader from '../../loaders/actionLoader.js';
 import ComponentLoader from '../../loaders/componentLoader.js';
 import ConditionLoader from '../../loaders/conditionLoader.js';
-import GameConfigLoader from '../../loaders/gameConfigLoader.js';
-import ModManifestLoader from '../../modding/modManifestLoader.js';
-import ActionLoader from '../../loaders/actionLoader.js';
-import EventLoader from '../../loaders/eventLoader.js';
-import MacroLoader from '../../loaders/macroLoader.js';
 import EntityDefinitionLoader from '../../loaders/entityDefinitionLoader.js';
 import EntityInstanceLoader from '../../loaders/entityInstanceLoader.js';
-import WorldLoader from '../../loaders/worldLoader.js';
+import EventLoader from '../../loaders/eventLoader.js';
+import GameConfigLoader from '../../loaders/gameConfigLoader.js';
+import GoalLoader from '../../loaders/goalLoader.js';
+import MacroLoader from '../../loaders/macroLoader.js';
+import ModManifestLoader from '../../modding/modManifestLoader.js';
 import ModsLoader from '../../loaders/modsLoader.js';
 import PromptTextLoader from '../../loaders/promptTextLoader.js';
+import RuleLoader from '../../loaders/ruleLoader.js';
+import SchemaLoader from '../../loaders/schemaLoader.js';
+import WorldLoader from '../../loaders/worldLoader.js';
 
 // --- Modding Service Imports ---
 import ModDependencyValidator from '../../modding/modDependencyValidator.js';

@@ -3,6 +3,7 @@ import GamePersistenceService from '../../../src/persistence/gamePersistenceServ
 import GameStateCaptureService from '../../../src/persistence/gameStateCaptureService.js';
 import { CURRENT_ACTOR_COMPONENT_ID } from '../../../src/constants/componentIds.js';
 import { PersistenceErrorCodes } from '../../../src/persistence/persistenceErrors.js';
+import { createMockEntityManager } from '../../common/mockFactories.js';
 
 // Helpers to create minimal mocks
 const makeLogger = () => ({
@@ -34,11 +35,7 @@ describe('GamePersistenceService additional coverage', () => {
   beforeEach(() => {
     logger = makeLogger();
     saveLoadService = { saveManualGame: jest.fn(), loadGameData: jest.fn() };
-    entityManager = {
-      activeEntities: new Map(),
-      clearAll: jest.fn(),
-      reconstructEntity: jest.fn().mockReturnValue({}),
-    };
+    entityManager = createMockEntityManager();
     playtimeTracker = {
       getTotalPlaytime: jest.fn().mockReturnValue(42),
       setAccumulatedPlaytime: jest.fn(),

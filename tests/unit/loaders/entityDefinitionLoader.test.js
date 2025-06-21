@@ -49,6 +49,9 @@ describe('EntityDefinitionLoader', () => {
       error: jest.fn(),
     });
 
+    // Default mock for store to return false (no override)
+    mockDataRegistry.store.mockReturnValue(false);
+
     // The BaseManifestItemLoader constructor checks for a primary schema ID.
     // We must configure the mock to return a valid ID.
     mockConfig.getContentTypeSchemaId
@@ -76,7 +79,7 @@ describe('EntityDefinitionLoader', () => {
 
       const testEntityData = {
         $schema: 'http://example.com/schemas/entity-definition.schema.json',
-        id: 'core:goblin',
+        id: 'goblin',
         description: 'A standard goblin warrior, weak but numerous.',
         components: {
           'core:name': { name: 'Goblin' },
@@ -87,7 +90,8 @@ describe('EntityDefinitionLoader', () => {
 
       const expectedStoredData = {
         ...testEntityData,
-        id: 'core:goblin',
+        id: 'goblin',
+        _fullId: 'core:goblin',
         modId: modId,
         _sourceFile: filename,
       };
@@ -137,12 +141,6 @@ describe('EntityDefinitionLoader', () => {
         'entityDefinitions',
         'core:goblin',
         expectedStoredData
-      );
-
-      expect(mockDataRegistry.get).toHaveBeenCalledTimes(1);
-      expect(mockDataRegistry.get).toHaveBeenCalledWith(
-        'entityDefinitions',
-        'core:goblin'
       );
 
       expect(mockLogger.error).not.toHaveBeenCalled();

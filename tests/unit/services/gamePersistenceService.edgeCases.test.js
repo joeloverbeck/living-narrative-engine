@@ -12,6 +12,7 @@ import {
 } from '../../../src/constants/componentIds.js';
 import { CORE_MOD_ID } from '../../../src/constants/core.js';
 import { PersistenceErrorCodes } from '../../../src/persistence/persistenceErrors.js';
+import { createMockEntityManager } from '../../common/mockFactories.js';
 
 const makeLogger = () => ({
   info: jest.fn(),
@@ -42,11 +43,7 @@ describe('GamePersistenceService edge cases', () => {
   beforeEach(() => {
     logger = makeLogger();
     saveLoadService = { saveManualGame: jest.fn(), loadGameData: jest.fn() };
-    entityManager = {
-      activeEntities: new Map(),
-      clearAll: jest.fn(),
-      reconstructEntity: jest.fn().mockReturnValue({}),
-    };
+    entityManager = createMockEntityManager();
     playtimeTracker = {
       getTotalPlaytime: jest.fn().mockReturnValue(0),
       setAccumulatedPlaytime: jest.fn(),

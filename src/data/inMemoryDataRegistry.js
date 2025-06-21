@@ -45,25 +45,26 @@ class InMemoryDataRegistry {
    * @param {string} type - The category of data (e.g., 'entity_definitions', 'actions'). Must be a non-empty string.
    * @param {string} id - The unique identifier for the data object within its type. Must be a non-empty string.
    * @param {object} data - The data object to store. Must be a non-null object.
+   * @returns {boolean} Returns true if an item with the same id was overwritten, false otherwise.
    */
   store(type, id, data) {
     if (typeof type !== 'string' || type.trim() === '') {
       console.error(
         'InMemoryDataRegistry.store: Invalid or empty type provided.'
       );
-      return;
+      return false;
     }
     if (typeof id !== 'string' || id.trim() === '') {
       console.error(
         `InMemoryDataRegistry.store: Invalid or empty id provided for type '${type}'.`
       );
-      return;
+      return false;
     }
     if (typeof data !== 'object' || data === null) {
       console.error(
         `InMemoryDataRegistry.store: Invalid data provided for type '${type}', id '${id}'. Must be an object.`
       );
-      return;
+      return false;
     }
 
     if (!this.data.has(type)) {
@@ -71,12 +72,15 @@ class InMemoryDataRegistry {
       this.contentOrigins.set(type, new Map());
     }
     const typeMap = this.data.get(type);
+    const didOverride = typeMap.has(id); // Check before setting
     typeMap.set(id, data);
 
     const originMap = this.contentOrigins.get(type);
     if (originMap && typeof data.modId === 'string') {
       originMap.set(id, data.modId);
     }
+
+    return didOverride;
   }
 
   /**

@@ -63,6 +63,7 @@ export class SpatialIndexSynchronizer {
 
   /**
    * Handles the creation or reconstruction of a new entity.
+   *
    * @param {EntityCreatedPayload} payload
    */
   onEntityAdded({ entity }) {
@@ -77,6 +78,7 @@ export class SpatialIndexSynchronizer {
 
   /**
    * Handles the removal of an entity.
+   *
    * @param {EntityRemovedPayload} payload
    */
   onEntityRemoved({ entity }) {
@@ -93,6 +95,7 @@ export class SpatialIndexSynchronizer {
   /**
    * Handles changes to an entity's components, specifically looking for position changes.
    * This now correctly uses the old and new component data to update the index.
+   *
    * @param {ComponentAddedPayload | ComponentRemovedPayload} payload
    */
   onComponentChanged(payload) {

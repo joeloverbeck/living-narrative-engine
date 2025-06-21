@@ -68,6 +68,18 @@ export class IEntityManager {
   }
 
   /**
+   * Checks if an entity has a component override (instance-level component data).
+   * This excludes components that only exist on the definition.
+   *
+   * @param {string} instanceId - The ID (UUID) of the entity.
+   * @param {string} componentTypeId - The unique string ID of the component type.
+   * @returns {boolean} True if the entity has a component override, false otherwise.
+   */
+  hasComponentOverride(instanceId, componentTypeId) {
+    throw new Error('IEntityManager.hasComponentOverride not implemented.');
+  }
+
+  /**
    * Fetches all active entities that possess a specific component type.
    *
    * @param {string} componentTypeId - The unique string identifier for the component type.
@@ -127,5 +139,14 @@ export class IEntityManager {
    */
   findEntities(query) {
     throw new Error('IEntityManager.findEntities not implemented.');
+  }
+
+  /**
+   * Returns an iterator over all active entities (read-only).
+   *
+   * @returns {IterableIterator<Entity>}
+   */
+  get entities() {
+    throw new Error('IEntityManager.entities getter not implemented.');
   }
 }

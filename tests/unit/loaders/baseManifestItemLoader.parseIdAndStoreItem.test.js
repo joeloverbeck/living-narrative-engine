@@ -77,6 +77,7 @@ describe('BaseManifestItemLoader._parseIdAndStoreItem', () => {
     const fetcher = createMockDataFetcher();
     const validator = createMockSchemaValidator();
     mockRegistry = createMockDataRegistry();
+    mockRegistry.store.mockReturnValue(false);
     const logger = createMockLogger();
     loader = new TestableLoader(
       'test',
@@ -91,10 +92,9 @@ describe('BaseManifestItemLoader._parseIdAndStoreItem', () => {
   });
 
   it('parses ID and stores item, returning result', () => {
-    const data = { id: 'core:test' };
-    parseAndValidateId.mockReturnValue({ fullId: 'core:test', baseId: 'test' });
+    const data = { id: 'test' };
+    parseAndValidateId.mockReturnValue({ fullId: `${modId}:test`, baseId: 'test' });
     mockRegistry.get.mockReturnValue(undefined);
-    mockRegistry.store.mockReturnValue(undefined);
 
     const result = loader.publicParseAndStore(
       data,
@@ -115,7 +115,13 @@ describe('BaseManifestItemLoader._parseIdAndStoreItem', () => {
     expect(mockRegistry.store).toHaveBeenCalledWith(
       category,
       `${modId}:test`,
-      expect.any(Object)
+      expect.objectContaining({
+        ...data,
+        id: 'test',
+        _fullId: `${modId}:test`,
+        modId: modId,
+        _sourceFile: filename,
+      })
     );
     expect(result).toEqual({
       qualifiedId: `${modId}:test`,

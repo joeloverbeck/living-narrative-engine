@@ -1,3 +1,5 @@
+// tests/unit/loaders/modManifestProcessor.test.js
+
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import ModManifestProcessor from '../../../src/loaders/ModManifestProcessor.js';
 import ModDependencyError from '../../../src/errors/modDependencyError.js';
@@ -28,6 +30,7 @@ describe('ModManifestProcessor.processManifests', () => {
   let processor;
   /** @type {Map<string, any>} */
   let manifestMap;
+  const worldName = 'test-world'; // Define a world name for the tests
 
   beforeEach(() => {
     manifestMap = new Map([
@@ -53,12 +56,13 @@ describe('ModManifestProcessor.processManifests', () => {
   });
 
   it('processes manifests successfully', async () => {
-    const result = await processor.processManifests(['modA', 'modB']);
+    const requestedIds = ['modA', 'modB'];
+    const result = await processor.processManifests(requestedIds, worldName);
 
-    expect(manifestLoader.loadRequestedManifests).toHaveBeenCalledWith([
-      'modA',
-      'modB',
-    ]);
+    expect(manifestLoader.loadRequestedManifests).toHaveBeenCalledWith(
+      requestedIds,
+      worldName
+    );
     expect(modDependencyValidator.validate).toHaveBeenCalledWith(
       expect.any(Map),
       logger
@@ -100,7 +104,7 @@ describe('ModManifestProcessor.processManifests', () => {
       throw error;
     });
 
-    await expect(processor.processManifests(['modA', 'modB'])).rejects.toBe(
+    await expect(processor.processManifests(['modA', 'modB'], worldName)).rejects.toBe(
       error
     );
 

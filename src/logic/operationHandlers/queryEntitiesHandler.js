@@ -106,7 +106,7 @@ class QueryEntitiesHandler extends BaseOperationHandler {
     }
 
     // 2. Start with all active entities
-    let candidateIds = new Set(this.#entityManager.activeEntities.keys());
+    let candidateIds = new Set(Array.from(this.#entityManager.entities, e => e.id));
     log.debug(
       `QUERY_ENTITIES: Starting with ${candidateIds.size} total active entities.`
     );

@@ -8,7 +8,7 @@
  * Accepts strings like "name" or "namespace:name". Returns `null` if the
  * extraction fails due to invalid format or empty values.
  *
- * @param {string} fullId - The ID string to parse.
+* @param {string} fullId - The ID string to parse.
  * @returns {string|null} The base ID, or `null` if it cannot be derived.
  */
 export function extractBaseId(fullId) {
@@ -59,11 +59,7 @@ export function parseAndValidateId(
   const rawId = data?.[idProp];
 
   if (typeof rawId !== 'string' || rawId.trim() === '') {
-    logger.error(`Invalid or missing '${idProp}' in file '${filename}'.`, {
-      modId,
-      filename,
-      receivedId: rawId,
-    });
+    // DO NOT LOG HERE. The calling wrapper is responsible for catching and logging.
     throw new Error(
       `Invalid or missing '${idProp}' in ${filename} for mod '${modId}'.`
     );
@@ -80,10 +76,6 @@ export function parseAndValidateId(
       );
       return { fullId: trimmedId, baseId: trimmedId };
     }
-    logger.error(
-      `Could not extract base ID from '${trimmedId}' in file '${filename}'. Format requires 'name' or 'namespace:name' with non-empty parts.`,
-      { modId, filename, receivedId: trimmedId }
-    );
     throw new Error(
       `Could not extract base ID from '${trimmedId}' in ${filename}. Invalid format.`
     );

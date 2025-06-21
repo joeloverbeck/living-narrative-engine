@@ -84,14 +84,19 @@ describe('ModsLoader Integration Test Suite - Pre-Loop Error Handling (Refactore
 
     // Assert
     expect(caughtError).toBeInstanceOf(ModsLoaderError);
+    expect(caughtError.message).toContain('ModsLoader: CRITICAL load failure due to an unexpected error.');
+    expect(caughtError.message).toContain(simulatedError.message);
+    expect(caughtError.code).toBe('unknown_loader_error');
     expect(caughtError.cause).toBe(simulatedError);
 
     // Verify side effects
     expect(env.mockRegistry.clear).toHaveBeenCalledTimes(2); // Start + Catch
-    expect(env.mockLogger.error).toHaveBeenCalledTimes(1);
+    expect(env.mockLogger.error).toHaveBeenCalledTimes(1); // Only ModsLoader logs this specific error path
+
+    // Log from ModsLoader's final 'else' catch block for unexpected errors
     expect(env.mockLogger.error).toHaveBeenCalledWith(
-      expect.stringContaining('CRITICAL load failure'),
-      expect.objectContaining({ error: simulatedError })
+      `ModsLoader: CRITICAL load failure due to an unexpected error. Original error: ${simulatedError.message}`,
+      simulatedError // The original error object is passed as the second arg to the logger
     );
   });
 
@@ -106,7 +111,8 @@ describe('ModsLoader Integration Test Suite - Pre-Loop Error Handling (Refactore
       [modBId.toLowerCase(), modBManifest],
     ]);
 
-    env.mockGameConfigLoader.loadConfig.mockResolvedValue(requestedIds);
+    // Correctly mock gameConfigLoader to return the expected object structure
+    env.mockGameConfigLoader.loadConfig.mockResolvedValue({ mods: requestedIds, world: worldName });
     env.mockModManifestLoader.loadRequestedManifests.mockResolvedValue(
       cycleManifestMap
     );
@@ -133,11 +139,16 @@ describe('ModsLoader Integration Test Suite - Pre-Loop Error Handling (Refactore
 
     // Verify side effects
     expect(env.mockRegistry.clear).toHaveBeenCalledTimes(2); // Start + Catch
-    expect(env.mockLogger.error).toHaveBeenCalledTimes(1);
+    expect(env.mockLogger.error).toHaveBeenCalledTimes(1); // ModsLoader logs once for this specific error path
+
+    // Log from ModsLoader's catch block for ModDependencyError
+    // Assert that the logger was called with the correct message and a metadata object
+    // containing the full error instance.
     expect(env.mockLogger.error).toHaveBeenCalledWith(
-      expect.stringContaining('CRITICAL load failure'),
-      expect.objectContaining({ error: expectedError })
+      `ModsLoader: CRITICAL load failure due to mod dependencies. Error: ${caughtError.message}`,
+      { error: caughtError }
     );
+
     expect(env.mockedResolveOrder).toHaveBeenCalledWith(
       requestedIds,
       cycleManifestMap,

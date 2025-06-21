@@ -12,6 +12,8 @@ import {
 } from '../../common/entities/testBed.js';
 import { runInvalidIdPairTests } from '../../common/entities/invalidInputHelpers.js';
 import { EntityNotFoundError } from '../../../src/errors/entityNotFoundError.js';
+import { InvalidArgumentError } from '../../../src/errors/invalidArgumentError.js';
+import { ValidationError } from '../../../src/errors/validationError.js';
 import {
   COMPONENT_ADDED_ID,
   COMPONENT_REMOVED_ID,
@@ -30,7 +32,7 @@ describeEntityManagerSuite(
       const NEW_COMPONENT_ID = 'core:health';
       const NEW_COMPONENT_DATA = { current: 100, max: 100 };
 
-      it('should add a new component to an existing entity and return true', () => {
+      it('should add a new component to an existing entity', () => {
         // Arrange
         const { entityManager } = getBed();
         const { PRIMARY } = TestData.InstanceIDs;
@@ -40,14 +42,13 @@ describeEntityManagerSuite(
         getBed().resetDispatchMock();
 
         // Act
-        const result = entityManager.addComponent(
+        entityManager.addComponent(
           PRIMARY,
           NEW_COMPONENT_ID,
           NEW_COMPONENT_DATA
         );
 
         // Assert
-        expect(result).toBe(true);
         expect(entityManager.hasComponent(PRIMARY, NEW_COMPONENT_ID)).toBe(
           true
         );
@@ -89,7 +90,7 @@ describeEntityManagerSuite(
         ]);
       });
 
-      it('should update an existing component and return true', () => {
+      it('should update an existing component', () => {
         // Arrange
         const { entityManager } = getBed();
         const { NAME_COMPONENT_ID } = TestData.ComponentIDs;
@@ -99,14 +100,13 @@ describeEntityManagerSuite(
         getBed().createEntity('basic', { instanceId: PRIMARY });
 
         // Act
-        const result = entityManager.addComponent(
+        entityManager.addComponent(
           PRIMARY,
           NAME_COMPONENT_ID,
           UPDATED_NAME_DATA
         );
 
         // Assert
-        expect(result).toBe(true);
         const updatedData = entityManager.getComponentData(
           PRIMARY,
           NAME_COMPONENT_ID
@@ -163,7 +163,7 @@ describeEntityManagerSuite(
         ).toThrow(new EntityNotFoundError(GHOST));
       });
 
-      it('should throw an error if component validation fails', () => {
+      it('should throw ValidationError if component validation fails', () => {
         // Arrange
         const { entityManager, mocks } = getBed();
         const { PRIMARY } = TestData.InstanceIDs;
@@ -177,20 +177,17 @@ describeEntityManagerSuite(
         });
 
         // Act & Assert
-        const expectedDetails = JSON.stringify(validationErrors, null, 2);
         expect(() => {
           entityManager.addComponent(
             PRIMARY,
             NEW_COMPONENT_ID,
             NEW_COMPONENT_DATA
           );
-        }).toThrow(
-          `addComponent ${NEW_COMPONENT_ID} to entity ${PRIMARY} Errors:\n${expectedDetails}`
-        );
+        }).toThrow(ValidationError);
         expect(mocks.eventDispatcher.dispatch).not.toHaveBeenCalled();
       });
 
-      it('should correctly handle null componentData without throwing or validating', () => {
+      it('should throw InvalidArgumentError when componentData is null', () => {
         // Arrange
         const { entityManager, mocks } = getBed();
         const { NAME_COMPONENT_ID } = TestData.ComponentIDs;
@@ -200,11 +197,8 @@ describeEntityManagerSuite(
         // Act & Assert
         expect(() =>
           entityManager.addComponent(PRIMARY, NAME_COMPONENT_ID, null)
-        ).not.toThrow();
+        ).toThrow(InvalidArgumentError);
         expect(mocks.validator.validate).not.toHaveBeenCalled();
-        expect(
-          entityManager.getComponentData(PRIMARY, NAME_COMPONENT_ID)
-        ).toBeNull();
       });
 
       it.each(
@@ -212,7 +206,7 @@ describeEntityManagerSuite(
           (v) => v !== null && !Array.isArray(v)
         )
       )(
-        'should throw a descriptive error when componentData is %p',
+        'should throw InvalidArgumentError when componentData is %p',
         (value) => {
           // Arrange
           const { entityManager, mocks } = getBed();
@@ -220,12 +214,12 @@ describeEntityManagerSuite(
           const { PRIMARY } = TestData.InstanceIDs;
           getBed().createEntity('basic', { instanceId: PRIMARY });
           const receivedType = typeof value;
-          const expectedError = `EntityManager.addComponent: componentData for ${NAME_COMPONENT_ID} on ${PRIMARY} must be an object or null. Received: ${receivedType}`;
+          const expectedError = `EntityManager.addComponent: componentData for ${NAME_COMPONENT_ID} on ${PRIMARY} must be an object. Received: ${receivedType}`;
 
           // Act & Assert
           expect(() =>
             entityManager.addComponent(PRIMARY, NAME_COMPONENT_ID, value)
-          ).toThrow(expectedError);
+          ).toThrow(InvalidArgumentError);
           expect(mocks.logger.error).toHaveBeenCalledWith(expectedError, {
             componentTypeId: NAME_COMPONENT_ID,
             instanceId: PRIMARY,
@@ -237,11 +231,10 @@ describeEntityManagerSuite(
       runInvalidIdPairTests(
         getBed,
         (em, instanceId, componentTypeId) =>
-          em.addComponent(instanceId, componentTypeId, {}),
-        false
+          em.addComponent(instanceId, componentTypeId, {})
       );
 
-      it('should return false if the internal entity update fails', () => {
+      it('should throw an error if the internal entity update fails', () => {
         // Arrange
         const { entityManager, mocks } = getBed();
         const { PRIMARY } = TestData.InstanceIDs;
@@ -256,11 +249,10 @@ describeEntityManagerSuite(
           .spyOn(entity, 'addComponent')
           .mockReturnValue(false);
 
-        // Act
-        const result = entityManager.addComponent(PRIMARY, 'any:comp', {});
-
-        // Assert
-        expect(result).toBe(false);
+        // Act & Assert
+        expect(() => entityManager.addComponent(PRIMARY, 'any:comp', {})).toThrow(
+          "Failed to add component 'any:comp' to entity 'test-instance-01'. Internal entity update failed."
+        );
         expect(mocks.logger.warn).toHaveBeenCalledWith(
           expect.stringContaining('entity.addComponent returned false')
         );
@@ -276,7 +268,7 @@ describeEntityManagerSuite(
     //
     // ----------------------------------------------------------------------//
     describe('removeComponent', () => {
-      it('should remove an existing component override and return true', () => {
+      it('should remove an existing component override', () => {
         // Arrange
         const { entityManager } = getBed();
         const { NAME_COMPONENT_ID } = TestData.ComponentIDs;
@@ -294,13 +286,12 @@ describeEntityManagerSuite(
         ).toBe(true);
 
         // Act
-        const result = entityManager.removeComponent(
+        entityManager.removeComponent(
           PRIMARY,
           NAME_COMPONENT_ID
         );
 
         // Assert
-        expect(result).toBe(true);
         expect(
           entityManager.hasComponent(PRIMARY, NAME_COMPONENT_ID, true)
         ).toBe(false);
@@ -334,7 +325,7 @@ describeEntityManagerSuite(
         ]);
       });
 
-      it('should return false if component is not an override on the instance', () => {
+      it('should throw an error if component is not an override on the instance', () => {
         // Arrange
         const { entityManager, mocks } = getBed();
         const { NAME_COMPONENT_ID } = TestData.ComponentIDs;
@@ -343,14 +334,10 @@ describeEntityManagerSuite(
         // NAME_COMPONENT_ID exists on definition, but not as an override
         getBed().resetDispatchMock();
 
-        // Act
-        const result = entityManager.removeComponent(
-          PRIMARY,
-          NAME_COMPONENT_ID
+        // Act & Assert
+        expect(() => entityManager.removeComponent(PRIMARY, NAME_COMPONENT_ID)).toThrow(
+          "Component 'core:name' not found as an override on entity 'test-instance-01'. Nothing to remove at instance level."
         );
-
-        // Assert
-        expect(result).toBe(false);
         expect(mocks.eventDispatcher.dispatch).not.toHaveBeenCalled();
       });
 
@@ -369,8 +356,7 @@ describeEntityManagerSuite(
       runInvalidIdPairTests(
         getBed,
         (em, instanceId, componentTypeId) =>
-          em.removeComponent(instanceId, componentTypeId),
-        false
+          em.removeComponent(instanceId, componentTypeId)
       );
     });
 
@@ -400,11 +386,9 @@ describeEntityManagerSuite(
         const { entityManager } = getBed();
         const { NAME_COMPONENT_ID } = TestData.ComponentIDs;
         const { PRIMARY } = TestData.InstanceIDs;
-        const overrideData = { name: 'Overridden Name' };
-        getBed().createEntity('basic', {
-          instanceId: PRIMARY,
-          componentOverrides: { [NAME_COMPONENT_ID]: overrideData },
-        });
+        const overrideData = { name: 'Override' };
+        getBed().createEntity('basic', { instanceId: PRIMARY });
+        entityManager.addComponent(PRIMARY, NAME_COMPONENT_ID, overrideData);
 
         // Act
         const data = entityManager.getComponentData(PRIMARY, NAME_COMPONENT_ID);
@@ -430,10 +414,9 @@ describeEntityManagerSuite(
         // Arrange
         const { entityManager } = getBed();
         const { GHOST } = TestData.InstanceIDs;
-        const { NAME_COMPONENT_ID } = TestData.ComponentIDs;
 
         // Act
-        const data = entityManager.getComponentData(GHOST, NAME_COMPONENT_ID);
+        const data = entityManager.getComponentData(GHOST, 'any:component');
 
         // Assert
         expect(data).toBeUndefined();
@@ -442,8 +425,7 @@ describeEntityManagerSuite(
       runInvalidIdPairTests(
         getBed,
         (em, instanceId, componentTypeId) =>
-          em.getComponentData(instanceId, componentTypeId),
-        undefined
+          em.getComponentData(instanceId, componentTypeId)
       );
     });
 
@@ -460,55 +442,56 @@ describeEntityManagerSuite(
         const { PRIMARY } = TestData.InstanceIDs;
         getBed().createEntity('basic', { instanceId: PRIMARY });
 
-        // Act & Assert
-        expect(entityManager.hasComponent(PRIMARY, NAME_COMPONENT_ID)).toBe(
-          true
-        );
+        // Act
+        const result = entityManager.hasComponent(PRIMARY, NAME_COMPONENT_ID);
+
+        // Assert
+        expect(result).toBe(true);
       });
 
       it('should return true if the component is added as an override', () => {
         // Arrange
         const { entityManager } = getBed();
         const { PRIMARY } = TestData.InstanceIDs;
-        const NEW_COMPONENT_ID = 'core:health';
-        getBed().createEntity('basic', {
-          instanceId: PRIMARY,
-          componentOverrides: { [NEW_COMPONENT_ID]: { hp: 10 } },
-        });
+        getBed().createEntity('basic', { instanceId: PRIMARY });
 
-        // Act & Assert
-        expect(entityManager.hasComponent(PRIMARY, NEW_COMPONENT_ID)).toBe(
-          true
-        );
+        // Act
+        entityManager.addComponent(PRIMARY, 'new:component', { data: 'test' });
+        const result = entityManager.hasComponent(PRIMARY, 'new:component');
+
+        // Assert
+        expect(result).toBe(true);
       });
 
       it('should return false if the component does not exist', () => {
         // Arrange
         const { entityManager } = getBed();
-        const { PRIMARY } = TestData.InstanceIDs; // FIX: Was TestA
+        const { PRIMARY } = TestData.InstanceIDs;
         getBed().createEntity('basic', { instanceId: PRIMARY });
 
-        // Act & Assert
-        expect(entityManager.hasComponent(PRIMARY, 'non:existent')).toBe(false);
+        // Act
+        const result = entityManager.hasComponent(PRIMARY, 'non:existent');
+
+        // Assert
+        expect(result).toBe(false);
       });
 
       it('should return false for a non-existent entity instance', () => {
         // Arrange
         const { entityManager } = getBed();
         const { GHOST } = TestData.InstanceIDs;
-        const { NAME_COMPONENT_ID } = TestData.ComponentIDs;
 
-        // Act & Assert
-        expect(entityManager.hasComponent(GHOST, NAME_COMPONENT_ID)).toBe(
-          false
-        );
+        // Act
+        const result = entityManager.hasComponent(GHOST, 'any:component');
+
+        // Assert
+        expect(result).toBe(false);
       });
 
       runInvalidIdPairTests(
         getBed,
         (em, instanceId, componentTypeId) =>
-          em.hasComponent(instanceId, componentTypeId),
-        false
+          em.hasComponent(instanceId, componentTypeId)
       );
 
       describe('with checkOverrideOnly flag', () => {
@@ -519,10 +502,11 @@ describeEntityManagerSuite(
           const { PRIMARY } = TestData.InstanceIDs;
           getBed().createEntity('basic', { instanceId: PRIMARY });
 
-          // Act & Assert
-          expect(
-            entityManager.hasComponent(PRIMARY, NAME_COMPONENT_ID, true)
-          ).toBe(false);
+          // Act
+          const result = entityManager.hasComponent(PRIMARY, NAME_COMPONENT_ID, true);
+
+          // Assert
+          expect(result).toBe(false);
         });
 
         it('should return true if component is an override', () => {
@@ -530,16 +514,64 @@ describeEntityManagerSuite(
           const { entityManager } = getBed();
           const { NAME_COMPONENT_ID } = TestData.ComponentIDs;
           const { PRIMARY } = TestData.InstanceIDs;
-          getBed().createEntity('basic', {
-            instanceId: PRIMARY,
-            componentOverrides: { [NAME_COMPONENT_ID]: { name: 'Override' } },
-          });
+          getBed().createEntity('basic', { instanceId: PRIMARY });
+          entityManager.addComponent(PRIMARY, NAME_COMPONENT_ID, { name: 'Override' });
 
-          // Act & Assert
-          expect(
-            entityManager.hasComponent(PRIMARY, NAME_COMPONENT_ID, true)
-          ).toBe(true);
+          // Act
+          const result = entityManager.hasComponent(PRIMARY, NAME_COMPONENT_ID, true);
+
+          // Assert
+          expect(result).toBe(true);
         });
+      });
+
+      describe('hasComponentOverride', () => {
+        it('should return false if component is only on definition', () => {
+          // Arrange
+          const { entityManager } = getBed();
+          const { NAME_COMPONENT_ID } = TestData.ComponentIDs;
+          const { PRIMARY } = TestData.InstanceIDs;
+          getBed().createEntity('basic', { instanceId: PRIMARY });
+
+          // Act
+          const result = entityManager.hasComponentOverride(PRIMARY, NAME_COMPONENT_ID);
+
+          // Assert
+          expect(result).toBe(false);
+        });
+
+        it('should return true if component is an override', () => {
+          // Arrange
+          const { entityManager } = getBed();
+          const { NAME_COMPONENT_ID } = TestData.ComponentIDs;
+          const { PRIMARY } = TestData.InstanceIDs;
+          getBed().createEntity('basic', { instanceId: PRIMARY });
+          entityManager.addComponent(PRIMARY, NAME_COMPONENT_ID, { name: 'Override' });
+
+          // Act
+          const result = entityManager.hasComponentOverride(PRIMARY, NAME_COMPONENT_ID);
+
+          // Assert
+          expect(result).toBe(true);
+        });
+
+        it('should return false for a non-existent entity instance', () => {
+          // Arrange
+          const { entityManager } = getBed();
+          const { GHOST } = TestData.InstanceIDs;
+
+          // Act
+          const result = entityManager.hasComponentOverride(GHOST, 'any:component');
+
+          // Assert
+          expect(result).toBe(false);
+        });
+
+        runInvalidIdPairTests(
+          getBed,
+          (em, instanceId, componentTypeId) =>
+            em.hasComponentOverride(instanceId, componentTypeId)
+        );
       });
     });
   }

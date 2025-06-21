@@ -45,7 +45,7 @@ describe('custom error classes', () => {
   it('ModDependencyError and ModsLoaderError support causes', () => {
     const cause = new Error('root');
     const modErr = new ModDependencyError('mod', cause);
-    const worldErr = new ModsLoaderError('world', cause);
+    const worldErr = new ModsLoaderError('world', undefined, cause);
     expect(modErr.cause).toBe(cause);
     expect(worldErr.cause).toBe(cause);
   });

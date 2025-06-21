@@ -63,7 +63,6 @@ class SetVariableHandler {
 
   /**
    * @description Evaluate the value using JsonLogic if it is a non-empty object.
-   *
    * @param {*} value - The value to potentially evaluate.
    * @param {string} varName - The name of the variable for logging.
    * @param {BaseJsonLogicEvaluationContext} evaluationContext - The context for JsonLogic evaluation.
@@ -174,7 +173,6 @@ class SetVariableHandler {
 
   /**
    * @description Store the variable in executionContext.evaluationContext.context.
-   *
    * @param {string} name - Variable name.
    * @param {*} value - Value to store.
    * @param {OperationExecutionContext} execCtx - Execution context providing the variable store.

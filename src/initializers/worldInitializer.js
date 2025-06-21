@@ -253,7 +253,7 @@ class WorldInitializer {
           const locationId = _get(componentDataInstance, 'locationId');
           if (locationId) {
             // Ensure entity is added to spatial index if not already (e.g. by EntityManager upon creation with location)
-            // EntityManager._trackEntity should handle this now.
+            // EntityManager now handles entity tracking directly via MapManager.add.
             // Let's confirm if an explicit add here is still needed or if it's redundant.
             // For now, will keep the logging to see if it triggers.
             this.#logger.debug(

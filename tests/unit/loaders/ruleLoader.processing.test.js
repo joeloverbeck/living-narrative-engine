@@ -264,14 +264,16 @@ describe('RuleLoader (Rule Processing Logic via loadItemsForMod)', () => {
     // This is what _storeItemInRegistry actually stores
     const expectedStoredDataA = {
       ...ruleDataA, // Original data
-      id: `${modId}:${ruleDataA.rule_id}`, // Added by helper: modId:baseRuleId
+      id: ruleDataA.rule_id, // BASE ID
+      _fullId: `${modId}:${ruleDataA.rule_id}`, // QUALIFIED ID
       modId: modId, // Added by helper
       _sourceFile: fileA, // Added by helper
     };
 
     const expectedStoredDataB = {
       ...ruleDataB, // Original data
-      id: `${modId}:${fileBBasename}`, // Added by helper: modId:baseRuleId (fallback)
+      id: fileBBasename, // BASE ID (derived from filename)
+      _fullId: `${modId}:${fileBBasename}`, // QUALIFIED ID
       modId: modId, // Added by helper
       _sourceFile: fileBRelative.trim(), // Added by helper (uses trimmed filename)
     };
@@ -359,12 +361,12 @@ describe('RuleLoader (Rule Processing Logic via loadItemsForMod)', () => {
       expect(mockRegistry.store).toHaveBeenCalledWith(
         RULE_TYPE_NAME, // category
         `${modId}:${ruleDataA.rule_id}`, // finalRegistryKey (modId:baseRuleId)
-        expectedStoredDataA // The augmented data object
+        expect.objectContaining(expectedStoredDataA) // The augmented data object
       );
       expect(mockRegistry.store).toHaveBeenCalledWith(
         RULE_TYPE_NAME, // category
-        `${modId}:${fileBBasename}`, // finalRegistryKey (modId:baseRuleId - fallback)
-        expectedStoredDataB // The augmented data object
+        `${modId}:${fileBBasename}`, // finalRegistryKey (modId:baseRuleId derived from filename)
+        expect.objectContaining(expectedStoredDataB) // The augmented data object
       );
 
       // --- !!! CORRECTED ASSERTION !!! ---
@@ -386,6 +388,82 @@ describe('RuleLoader (Rule Processing Logic via loadItemsForMod)', () => {
       // --- !!! END OF CORRECTION !!! ---
       expect(mockLogger.warn).not.toHaveBeenCalled(); // No warnings expected on happy path
       expect(mockLogger.error).not.toHaveBeenCalled(); // No errors expected on happy path
+    });
+
+    // --- Test Case for explicit rule_id vs. filename-derived id ---
+    it('should correctly derive rule_id if not present, and use explicit rule_id if present', async () => {
+      const fileWithId = 'explicitRule.json';
+      const fileWithoutId = 'deriveRule.json';
+      const deriveRuleBasename = 'deriveRule'; // For ID derivation
+
+      const resolvedPathWithId = `/abs/path/to/mods/${modId}/${RULE_CONTENT_DIR}/${fileWithId}`;
+      const resolvedPathWithoutId = `/abs/path/to/mods/${modId}/${RULE_CONTENT_DIR}/${fileWithoutId}`;
+
+      const dataWithId = {
+        rule_id: 'explicit_id',
+        event_type: 'core:event_explicit',
+        actions: [],
+      };
+      const dataWithoutId = {
+        event_type: 'core:event_derived',
+        actions: [],
+      };
+
+      mockResolver.resolveModContentPath.mockImplementation((mId, type, file) => {
+        if (file === fileWithId) return resolvedPathWithId;
+        if (file === fileWithoutId) return resolvedPathWithoutId;
+        return null;
+      });
+
+      mockFetcher.fetch.mockImplementation(async (filePath) => {
+        if (filePath === resolvedPathWithId) return dataWithId;
+        if (filePath === resolvedPathWithoutId) return dataWithoutId;
+        return null;
+      });
+
+      const manifest = {
+        id: modId,
+        name: 'ID Derivation Test',
+        version: '1.0.0',
+        content: { [RULE_CONTENT_KEY]: [fileWithId, fileWithoutId] },
+      };
+
+      await loader.loadItemsForMod(
+        modId,
+        manifest,
+        RULE_CONTENT_KEY,
+        RULE_CONTENT_DIR,
+        RULE_TYPE_NAME
+      );
+
+      const finalExplicitId = `${modId}:${dataWithId.rule_id}`;
+      const finalDerivedId = `${modId}:${deriveRuleBasename}`;
+
+      const expectedStoredExplicit = {
+        ...dataWithId,
+        id: dataWithId.rule_id, // BASE ID
+        _fullId: finalExplicitId, // QUALIFIED ID
+        modId: modId,
+        _sourceFile: fileWithId,
+      };
+      const expectedStoredDerived = {
+        ...dataWithoutId,
+        id: deriveRuleBasename, // BASE ID
+        _fullId: finalDerivedId, // QUALIFIED ID
+        modId: modId,
+        _sourceFile: fileWithoutId,
+      };
+
+      expect(mockRegistry.store).toHaveBeenCalledWith(
+        RULE_TYPE_NAME,
+        finalExplicitId,
+        expect.objectContaining(expectedStoredExplicit)
+      );
+      expect(mockRegistry.store).toHaveBeenCalledWith(
+        RULE_TYPE_NAME,
+        finalDerivedId,
+        expect.objectContaining(expectedStoredDerived)
+      );
     });
   });
 

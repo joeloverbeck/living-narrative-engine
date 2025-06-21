@@ -362,12 +362,6 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.9: Registry Storage Failure)',
     });
     mockValidator.removeSchema.mockReturnValue(false); // Assume schema doesn't exist to be removed (not relevant here)
 
-    // Registry mocks
-    // Registry get uses the *final registry key*
-    mockRegistry.get.mockImplementation((type, id) =>
-      type === 'components' && id === finalRegistryKey ? undefined : undefined
-    );
-
     // Configure Store to Fail using the *final registry key*
     mockRegistry.store.mockImplementation((type, id) => {
       if (type === 'components' && id === finalRegistryKey) {
@@ -417,19 +411,15 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.9: Registry Storage Failure)',
       validDef.dataSchema,
       componentIdFromFile
     );
-    // Registry get uses final key
-    expect(mockRegistry.get).toHaveBeenCalledWith(
-      'components',
-      finalRegistryKey
-    );
 
     // --- Verify: Storage Attempt and Failure ---
     // Store uses final key
     const expectedStoredObject = {
       ...validDef,
-      id: finalRegistryKey, // ID in stored object is final key
+      id: baseComponentId, // ID in stored object is the base ID
       modId: modId,
       _sourceFile: filename,
+      _fullId: finalRegistryKey,
     };
     expect(mockRegistry.store).toHaveBeenCalledWith(
       'components',
@@ -438,38 +428,19 @@ describe('ComponentDefinitionLoader (Sub-Ticket 6.9: Registry Storage Failure)',
     );
 
     // --- Verify: Error Logs ---
-    expect(mockLogger.error).toHaveBeenCalledTimes(2); // Expect log from storeItemInRegistry + wrapper
+    // With the refactor, the error from storage is caught and logged by the wrapper
+    expect(mockLogger.error).toHaveBeenCalledTimes(1);
 
-    // ***** CORRECTED LOG CHECKING *****
-    // 1. Error logged by _storeItemInRegistry (Base Class)
-    // Uses 'ComponentLoader' as constructor name because 'this' is the ComponentLoader instance
-    const expectedStoreErrorMsg = `ComponentLoader [${modId}]: Failed to store components item with key '${finalRegistryKey}' from file '${filename}' in data registry.`;
-    const expectedStoreErrorDetails = expect.objectContaining({
-      category: 'components',
-      modId: modId,
-      baseItemId: baseComponentId, // Logs the base ID passed to it
-      finalRegistryKey: finalRegistryKey,
-      sourceFilename: filename, // Includes sourceFilename
-      error: storageError.message, // Logs the error message string
-    });
-    expect(mockLogger.error).toHaveBeenNthCalledWith(
-      1, // First call
-      expectedStoreErrorMsg, // Exact message
-      expectedStoreErrorDetails, // Details object structure
-      storageError // Original error object
-    );
-
-    // 2. Error logged by _processFileWrapper (Base Class)
+    // Verify the error logged by _processFileWrapper
     const expectedWrapperErrorMessage = `Error processing file:`;
     const expectedWrapperDetailsObject = expect.objectContaining({
       modId: modId,
       filename: filename,
       path: filePath,
-      typeName: 'components', // Includes typeName
+      typeName: 'components',
       error: storageError.message, // Logs the error message string
     });
-    expect(mockLogger.error).toHaveBeenNthCalledWith(
-      2, // Second call
+    expect(mockLogger.error).toHaveBeenCalledWith(
       expectedWrapperErrorMessage,
       expectedWrapperDetailsObject,
       storageError // Passes original error object

@@ -169,6 +169,7 @@ export const CANNOT_SAVE_GAME_INFO = 'core:ui_cannot_save_game_info';
 
 /**
  * Fired when a new entity instance is successfully created or reconstructed.
+ *
  * @type {string}
  */
 export const ENTITY_CREATED_ID = 'core:entity_created';
@@ -180,6 +181,7 @@ export const ENTITY_CREATED_ID = 'core:entity_created';
 
 /**
  * Fired just before an entity instance is removed from the EntityManager.
+ *
  * @type {string}
  */
 export const ENTITY_REMOVED_ID = 'core:entity_removed';
@@ -194,6 +196,7 @@ export const ENTITY_REMOVED_ID = 'core:entity_removed';
 
 /**
  * Fired when a component is successfully added to or updated on an entity instance.
+ *
  * @type {string}
  */
 export const COMPONENT_ADDED_ID = 'core:component_added';
@@ -207,6 +210,7 @@ export const COMPONENT_ADDED_ID = 'core:component_added';
 
 /**
  * Fired when a component override is successfully removed from an entity instance.
+ *
  * @type {string}
  */
 export const COMPONENT_REMOVED_ID = 'core:component_removed';

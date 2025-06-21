@@ -47,9 +47,9 @@ class SimpleEntityManager {
    * @param {Array<{id:string,components:object}>} entities - seed entities
    */
   constructor(entities) {
-    this.entities = new Map();
+    this._entitiesMap = new Map();
     for (const e of entities) {
-      this.entities.set(e.id, {
+      this._entitiesMap.set(e.id, {
         id: e.id,
         components: { ...e.components },
         getComponentData(type) {
@@ -60,7 +60,11 @@ class SimpleEntityManager {
         },
       });
     }
-    this.activeEntities = new Map(this.entities);
+    this.activeEntities = new Map(this._entitiesMap);
+  }
+
+  get entities() {
+    return this.activeEntities.values();
   }
 
   /**
@@ -70,7 +74,7 @@ class SimpleEntityManager {
    * @returns {object|undefined} entity object
    */
   getEntityInstance(id) {
-    return this.entities.get(id);
+    return this._entitiesMap.get(id);
   }
 
   /**
@@ -81,7 +85,7 @@ class SimpleEntityManager {
    * @returns {any} component data or null
    */
   getComponentData(id, type) {
-    return this.entities.get(id)?.components[type] ?? null;
+    return this._entitiesMap.get(id)?.components[type] ?? null;
   }
 
   /**
@@ -93,7 +97,7 @@ class SimpleEntityManager {
    */
   hasComponent(id, type) {
     return Object.prototype.hasOwnProperty.call(
-      this.entities.get(id)?.components || {},
+      this._entitiesMap.get(id)?.components || {},
       type
     );
   }
@@ -106,7 +110,7 @@ class SimpleEntityManager {
    * @param {object} data - component data
    */
   addComponent(id, type, data) {
-    const ent = this.entities.get(id);
+    const ent = this._entitiesMap.get(id);
     if (ent) {
       ent.components[type] = JSON.parse(JSON.stringify(data));
     }
@@ -119,7 +123,7 @@ class SimpleEntityManager {
    * @param {string} type - component type
    */
   removeComponent(id, type) {
-    const ent = this.entities.get(id);
+    const ent = this._entitiesMap.get(id);
     if (ent) {
       delete ent.components[type];
     }
@@ -133,7 +137,7 @@ class SimpleEntityManager {
    */
   getEntitiesInLocation(locationId) {
     const ids = new Set();
-    for (const [id, ent] of this.entities) {
+    for (const [id, ent] of this._entitiesMap) {
       const loc = ent.components[POSITION_COMPONENT_ID]?.locationId;
       if (loc === locationId) ids.add(id);
     }
@@ -148,7 +152,7 @@ class SimpleEntityManager {
    */
   getEntitiesWithComponent(componentType) {
     const result = [];
-    for (const ent of this.entities.values()) {
+    for (const ent of this._entitiesMap.values()) {
       if (Object.prototype.hasOwnProperty.call(ent.components, componentType)) {
         result.push(ent);
       }

@@ -59,13 +59,18 @@ export class ModManifestProcessor {
    * Loads, validates, and resolves manifests for the requested mod IDs.
    *
    * @param {string[]} requestedIds - IDs of mods requested by the game config.
+   * @param {string} worldName - The name of the world being loaded.
    * @returns {Promise<{loadedManifestsMap: Map<string, ModManifest>, finalOrder: string[], incompatibilityCount: number}>}
    * Object containing the loaded manifests, resolved order and incompatibility count.
    * @throws {ModDependencyError|Error} Propagates validation errors.
    */
-  async processManifests(requestedIds) {
+  async processManifests(requestedIds, worldName) {
     const loadedManifestsRaw =
-      await this.#modManifestLoader.loadRequestedManifests(requestedIds);
+      await this.#modManifestLoader.loadRequestedManifests(
+        requestedIds,
+        worldName
+      );
+
     const loadedManifestsMap = new Map();
     const manifestsForValidation = new Map();
     for (const [modId, manifestObj] of loadedManifestsRaw.entries()) {

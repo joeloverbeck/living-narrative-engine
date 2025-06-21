@@ -10,6 +10,7 @@ import {
   describeEntityManagerSuite,
   TestData,
 } from '../../common/entities/testBed.js';
+import { InvalidArgumentError } from '../../../src/errors/invalidArgumentError.js';
 
 describeEntityManagerSuite(
   'EntityManager - Queries and Accessors',
@@ -153,17 +154,14 @@ describeEntityManagerSuite(
       });
 
       it.each(TestData.InvalidValues.invalidIds)(
-        'should return an empty array for invalid componentTypeId %p',
+        'should throw InvalidArgumentError for invalid componentTypeId %p',
         (invalidId) => {
           // Arrange
           const { entityManager, mocks } = getBed();
           getBed().createEntity('basic');
 
-          // Act
-          const result = entityManager.getEntitiesWithComponent(invalidId);
-
-          // Assert
-          expect(result).toEqual([]);
+          // Act & Assert
+          expect(() => entityManager.getEntitiesWithComponent(invalidId)).toThrow(InvalidArgumentError);
           expect(mocks.logger.debug).toHaveBeenCalledWith(
             expect.stringContaining('Received invalid componentTypeId')
           );

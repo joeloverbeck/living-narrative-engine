@@ -1,10 +1,7 @@
 // src/tests/services/modLoadOrderResolver.test.js
 
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
-import {
-  buildDependencyGraph,
-  resolveOrder,
-} from '../../../src/modding/modLoadOrderResolver.js';
+import ModLoadOrderResolver from '../../../src/modding/modLoadOrderResolver.js';
 import ModDependencyError from '../../../src/errors/modDependencyError.js';
 import { CORE_MOD_ID } from '../../../src/constants/core';
 
@@ -65,7 +62,7 @@ const createEmptyManifestMap = () => new Map();
 /* Input validation & basic behaviour                                   */
 /* ==================================================================== */
 
-describe('modLoadOrderResolver – input validation', () => {
+describe('ModLoadOrderResolver – input validation', () => {
   let mockLogger;
 
   beforeEach(() => {
@@ -73,114 +70,66 @@ describe('modLoadOrderResolver – input validation', () => {
     jest.clearAllMocks();
   });
 
-  it('throws if requestedIds is null or undefined', () => {
-    const manifests = createEmptyManifestMap();
-    // @ts-expect-error – invalid input on purpose
-    expect(() => resolveOrder(null, manifests, mockLogger)).toThrow();
-    // @ts-expect-error – invalid input on purpose
-    expect(() => resolveOrder(undefined, manifests, mockLogger)).toThrow();
+  it('throws if logger is missing or invalid in constructor', () => {
+    // @ts-expect-error - testing invalid input
+    expect(() => new ModLoadOrderResolver(null)).toThrow(
+      'constructor requires a valid logger'
+    );
+    // @ts-expect-error - testing invalid input
+    expect(() => new ModLoadOrderResolver({ info: 'not a function' })).toThrow(
+      'constructor requires a valid logger'
+    );
   });
 
-  it('throws if requestedIds is not an array', () => {
+  it('throws if requestedIds is null or undefined on resolve', () => {
+    const resolver = new ModLoadOrderResolver(mockLogger);
     const manifests = createEmptyManifestMap();
     // @ts-expect-error – invalid input on purpose
-    expect(() => resolveOrder({}, manifests, mockLogger)).toThrow();
+    expect(() => resolver.resolve(null, manifests)).toThrow();
+    // @ts-expect-error – invalid input on purpose
+    expect(() => resolver.resolve(undefined, manifests)).toThrow();
   });
 
-  it('throws if manifestsMap is null, undefined, or not a Map', () => {
+  it('throws if requestedIds is not an array on resolve', () => {
+    const resolver = new ModLoadOrderResolver(mockLogger);
+    const manifests = createEmptyManifestMap();
+    // @ts-expect-error – invalid input on purpose
+    expect(() => resolver.resolve({}, manifests)).toThrow();
+  });
+
+  it('throws if manifestsMap is null, undefined, or not a Map on resolve', () => {
+    const resolver = new ModLoadOrderResolver(mockLogger);
     const requested = [];
     // @ts-expect-error
-    expect(() => resolveOrder(requested, null, mockLogger)).toThrow();
+    expect(() => resolver.resolve(requested, null)).toThrow();
     // @ts-expect-error
-    expect(() => resolveOrder(requested, {}, mockLogger)).toThrow();
-  });
-
-  it('throws if logger is missing required methods', () => {
-    const requested = [];
-    const manifests = createEmptyManifestMap();
-    // @ts-expect-error
-    expect(() =>
-      resolveOrder(requested, manifests, { info: 'notFn' })
-    ).toThrow();
+    expect(() => resolver.resolve(requested, {})).toThrow();
   });
 
   it('returns [] and logs when no mods are requested', () => {
+    const resolver = new ModLoadOrderResolver(mockLogger);
     const requested = [];
     const manifests = createEmptyManifestMap();
-    const result = resolveOrder(requested, manifests, mockLogger);
+    const result = resolver.resolve(requested, manifests);
     expect(result).toEqual([]);
     expect(mockLogger.debug).toHaveBeenCalledWith(
-      expect.stringContaining('Resolved load order')
+      expect.stringContaining('Resolved load order (0 mods)')
     );
   });
 });
 
-/* ==================================================================== */
-/* Ticket T‑2 – buildDependencyGraph acceptance‑criteria unit tests      */
-/* ==================================================================== */
-
-describe('buildDependencyGraph (Ticket T‑2)', () => {
-  it('required dependency produces an edge dep → mod', () => {
-    const requested = ['modA', 'modB'];
-    const manifests = new Map([
-      ['moda', makeManifest('modA')],
-      [
-        'modb',
-        makeManifest('modB', [
-          { id: 'modA', version: '^1.0.0', required: true },
-        ]),
-      ],
-    ]);
-    const graph = buildDependencyGraph(requested, manifests);
-    expect(graph.edges.get('modA')).toBeDefined();
-    expect(graph.edges.get('modA').has('modB')).toBe(true);
-  });
-
-  it('optional dependency NOT in requestedIds does NOT create an edge', () => {
-    const requested = ['modB'];
-    const manifests = new Map([
-      [
-        'modb',
-        makeManifest('modB', [
-          { id: 'modA', version: '^1.0.0', required: false },
-        ]),
-      ],
-    ]);
-    const graph = buildDependencyGraph(requested, manifests);
-    expect(graph.edges.get('modA')).toBeUndefined();
-  });
-
-  it('always adds implicit edge core → X for every non‑core requested mod', () => {
-    const requested = ['modX'];
-    const manifests = createEmptyManifestMap();
-    const graph = buildDependencyGraph(requested, manifests);
-    expect(graph.edges.get(CORE_MOD_ID)).toBeDefined();
-    expect(graph.edges.get(CORE_MOD_ID).has('modX')).toBe(true);
-  });
-
-  it('does NOT mutate the input requestedIds array or manifestsMap', () => {
-    const requested = ['modA', 'modB'];
-    const manifests = new Map([
-      ['moda', makeManifest('modA')],
-      ['modb', makeManifest('modB', [{ id: 'modA' }])],
-    ]);
-    const snapReq = deepSnapshot(requested);
-    const snapMan = deepSnapshot(manifests);
-    buildDependencyGraph(requested, manifests);
-    expect(deepSnapshot(requested)).toBe(snapReq);
-    expect(deepSnapshot(manifests)).toBe(snapMan);
-  });
-});
 
 /* ==================================================================== */
-/* Ticket T‑3 – resolveOrder acceptance‑criteria unit tests               */
+/* Core resolution logic tests                                          */
 /* ==================================================================== */
 
-describe('resolveOrder (Ticket T‑3)', () => {
+describe('ModLoadOrderResolver – resolution logic', () => {
   let mockLogger;
+  let resolver;
 
   beforeEach(() => {
     mockLogger = createMockLogger();
+    resolver = new ModLoadOrderResolver(mockLogger);
     jest.clearAllMocks();
   });
 
@@ -191,7 +140,7 @@ describe('resolveOrder (Ticket T‑3)', () => {
       ['b', makeManifest('B', [{ id: 'A', required: true }])],
       ['c', makeManifest('C')],
     ]);
-    const order = resolveOrder(requested, manifests, mockLogger);
+    const order = resolver.resolve(requested, manifests);
     expect(order).toEqual([CORE_MOD_ID, 'A', 'B', 'C']);
   });
 
@@ -201,14 +150,15 @@ describe('resolveOrder (Ticket T‑3)', () => {
       ['a', makeManifest('A', [{ id: 'B', required: true }])],
       ['b', makeManifest('B', [{ id: 'A', required: true }])],
     ]);
-    expect(() => resolveOrder(requested, manifests, mockLogger)).toThrow(
+    expect(() => resolver.resolve(requested, manifests)).toThrow(
       ModDependencyError
     );
     try {
-      resolveOrder(requested, manifests, mockLogger);
+      resolver.resolve(requested, manifests);
     } catch (e) {
       expect(e.message).toMatch(/A/);
       expect(e.message).toMatch(/B/);
+      expect(e.message).toContain('Cyclic dependency');
     }
   });
 
@@ -222,24 +172,50 @@ describe('resolveOrder (Ticket T‑3)', () => {
     });
 
     const start = Date.now();
-    const order = resolveOrder(requested, manifests, mockLogger);
+    const order = resolver.resolve(requested, manifests);
     const durationMs = Date.now() - start;
 
     expect(order.length).toBe(N + 1);
     // should finish well under a second on typical CI machines
     expect(durationMs).toBeLessThan(500);
   });
+
+  it('does NOT mutate the input requestedIds array or manifestsMap', () => {
+    const requested = ['modA', 'modB'];
+    const manifests = new Map([
+      ['moda', makeManifest('modA')],
+      ['modb', makeManifest('modB', [{ id: 'modA' }])],
+    ]);
+    const snapReq = deepSnapshot(requested);
+    const snapMan = deepSnapshot(manifests);
+    resolver.resolve(requested, manifests);
+    expect(deepSnapshot(requested)).toBe(snapReq);
+    expect(deepSnapshot(manifests)).toBe(snapMan);
+  });
+
+  it('does not include an unrequested optional dependency in the final order', () => {
+    const requested = ['modB'];
+    const manifests = new Map([
+      ['modb', makeManifest('modB', [{ id: 'modA', required: false }])],
+      ['moda', makeManifest('modA')],
+    ]);
+    const order = resolver.resolve(requested, manifests);
+    expect(order).toEqual([CORE_MOD_ID, 'modB']);
+  });
 });
 
+
 /* ==================================================================== */
-/* Ticket T-4 – adjustment-log unit tests                                */
+/* Adjustment logging tests                                             */
 /* ==================================================================== */
 
-describe('resolveOrder – adjustment-log (Ticket T-4)', () => {
+describe('ModLoadOrderResolver – adjustment logging', () => {
   let mockLogger;
+  let resolver;
 
   beforeEach(() => {
     mockLogger = createMockLogger();
+    resolver = new ModLoadOrderResolver(mockLogger);
     jest.clearAllMocks();
   });
 
@@ -250,7 +226,7 @@ describe('resolveOrder – adjustment-log (Ticket T-4)', () => {
       ['b', makeManifest('B', [{ id: 'A', required: true }])],
     ]);
 
-    resolveOrder(requested, manifests, mockLogger);
+    resolver.resolve(requested, manifests);
 
     const logged = mockLogger.debug.mock.calls.some(([msg]) =>
       msg.includes('Mod load order adjusted to satisfy dependencies.')
@@ -265,7 +241,7 @@ describe('resolveOrder – adjustment-log (Ticket T-4)', () => {
       ['b', makeManifest('B', [{ id: 'A', required: true }])],
     ]);
 
-    resolveOrder(requested, manifests, mockLogger);
+    resolver.resolve(requested, manifests);
 
     const logged = mockLogger.debug.mock.calls.some(([msg]) =>
       msg.includes('Mod load order adjusted to satisfy dependencies.')

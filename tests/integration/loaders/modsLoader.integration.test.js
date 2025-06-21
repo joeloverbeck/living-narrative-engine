@@ -94,7 +94,7 @@ describe('ModsLoader Integration Test Suite (TEST-LOADER-7.1)', () => {
 
     expect(env.mockGameConfigLoader.loadConfig).toHaveBeenCalledTimes(1);
     expect(processManifestsSpy).toHaveBeenCalledTimes(1);
-    expect(processManifestsSpy).toHaveBeenCalledWith([CORE_MOD_ID]);
+    expect(processManifestsSpy).toHaveBeenCalledWith([CORE_MOD_ID], worldName);
 
     expect(loadContentSpy).toHaveBeenCalledTimes(1);
     expect(loadContentSpy).toHaveBeenCalledWith(

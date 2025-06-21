@@ -24,6 +24,8 @@ import {
   TURN_PROCESSING_ENDED,
 } from '../constants/eventIds.js';
 import { ITurnManager } from './interfaces/ITurnManager.js';
+import RoundManager from './roundManager.js';
+import TurnCycle from './turnCycle.js';
 import { RealScheduler } from '../scheduling/index.js';
 import { safeDispatch } from '../utils/eventHelpers.js';
 import { logStart, logEnd, logError } from '../utils/logHelpers.js';
@@ -48,6 +50,10 @@ class TurnManager extends ITurnManager {
   #dispatcher;
   /** @type {ITurnHandlerResolver} */
   #turnHandlerResolver;
+  /** @type {RoundManager} */
+  #roundManager;
+  /** @type {TurnCycle} */
+  #turnCycle;
   /** @type {import('../scheduling').IScheduler} */
   #scheduler;
 
@@ -60,24 +66,6 @@ class TurnManager extends ITurnManager {
   /** @type { (() => void) | null } */
   #turnEndedUnsubscribe = null;
 
-  // --- NEW FIELDS ---
-  /**
-   * Tracks if at least one turn completed successfully within the current round.
-   * Reset to false when a new round starts.
-   *
-   * @type {boolean}
-   */
-  #roundHadSuccessfulTurn = false;
-  /**
-   * Tracks if a round is currently considered in progress (i.e., after startNewRound was called successfully).
-   * Reset to false when stopped or before starting the very first round.
-   *
-   * @type {boolean}
-   */
-  #roundInProgress = false;
-
-  // --- END NEW FIELDS ---
-
   /**
    * Creates an instance of TurnManager.
    *
@@ -87,6 +75,7 @@ class TurnManager extends ITurnManager {
    * @param {ILogger} options.logger - Logging service.
    * @param {IValidatedEventDispatcher} options.dispatcher - Service for dispatching events AND subscribing.
    * @param {ITurnHandlerResolver} options.turnHandlerResolver - Service to resolve the correct turn handler.
+   * @param {RoundManager} [options.roundManager] - Optional RoundManager instance for testing.
    * @param {import('../scheduling').IScheduler} [options.scheduler] - Scheduler implementation for timeouts.
    * @throws {Error} If any required dependency is missing or invalid.
    */
@@ -99,6 +88,7 @@ class TurnManager extends ITurnManager {
       logger,
       dispatcher,
       turnHandlerResolver,
+      roundManager,
       scheduler = new RealScheduler(),
     } = options || {};
     const className = this.constructor.name;
@@ -162,6 +152,8 @@ class TurnManager extends ITurnManager {
     this.#logger = logger;
     this.#dispatcher = dispatcher;
     this.#turnHandlerResolver = turnHandlerResolver;
+    this.#roundManager = roundManager || new RoundManager(turnOrderService, entityManager, logger);
+    this.#turnCycle = new TurnCycle(turnOrderService, logger);
     this.#scheduler = scheduler;
 
     // --- State Initialization (reset flags) ---
@@ -169,8 +161,6 @@ class TurnManager extends ITurnManager {
     this.#currentActor = null;
     this.#currentHandler = null;
     this.#turnEndedUnsubscribe = null;
-    this.#roundHadSuccessfulTurn = false; // Initialize new flag
-    this.#roundInProgress = false; // Initialize new flag
     // --- End State Initialization ---
 
     logStart(this.#logger, 'TurnManager initialized successfully.');
@@ -190,8 +180,7 @@ class TurnManager extends ITurnManager {
       return;
     }
     this.#isRunning = true;
-    this.#roundInProgress = false; // Reset on start
-    this.#roundHadSuccessfulTurn = false; // Reset on start
+    this.#roundManager.resetFlags(); // Reset round flags on start
     logStart(this.#logger, 'Turn Manager started.');
 
     this.#subscribeToTurnEnd(); // Subscribe when manager starts
@@ -237,8 +226,7 @@ class TurnManager extends ITurnManager {
     this.#currentHandler = null;
 
     try {
-      await this.#turnOrderService.clearCurrentRound();
-      this.#roundInProgress = false; // Reset round progress flag on stop/clear
+      await this.#turnCycle.clear();
       this.#logger.debug('Turn order service current round cleared.');
     } catch (error) {
       this.#logger.error(
@@ -298,15 +286,17 @@ class TurnManager extends ITurnManager {
     this.#currentHandler = null;
 
     try {
-      const isQueueEmpty = await this.#turnOrderService.isEmpty();
+      const nextEntity = await this.#turnCycle.nextActor();
 
-      if (isQueueEmpty) {
+      if (!nextEntity) {
+        // TurnCycle.nextActor() returns null only when the queue is empty
+        // (TurnCycle calls isEmpty() first, then getNextEntity() only if not empty)
         this.#logger.debug(
           'Turn queue is empty. Preparing for new round or stopping.'
         );
 
         // --- NEW CHECK: Stop if previous round had no success ---
-        if (this.#roundInProgress && !this.#roundHadSuccessfulTurn) {
+        if (this.#roundManager.inProgress && !this.#roundManager.hadSuccess) {
           const errorMsg =
             'No successful turns completed in the previous round. Stopping TurnManager.';
           this.#logger.error(errorMsg);
@@ -319,65 +309,32 @@ class TurnManager extends ITurnManager {
         }
         // --- END NEW CHECK ---
 
-        // --- Reset for new round ---
+        // --- Start new round using RoundManager ---
         this.#logger.debug('Attempting to start a new round.');
-        this.#roundHadSuccessfulTurn = false; // Reset success tracker *before* starting new round
-        // #roundInProgress will be set to true *after* startNewRound succeeds below
-        // --- End Reset ---
-
-        const allEntities = Array.from(
-          this.#entityManager.activeEntities.values()
-        );
-        const actors = allEntities.filter((e) =>
-          e.hasComponent(ACTOR_COMPONENT_ID)
-        );
-
-        if (actors.length === 0) {
-          const errorMsg =
-            'Cannot start a new round: No active entities with an Actor component found.';
-          this.#logger.error(errorMsg);
+        try {
+          await this.#roundManager.startRound();
+          this.#logger.debug(
+            'New round started, recursively calling advanceTurn() to process the first turn.'
+          );
+          await this.advanceTurn(); // Recursive call to process the first turn of the new round
+          return;
+        } catch (roundError) {
+          // Restore original error handling for test compatibility
+          this.#logger.error(
+            `CRITICAL Error during turn advancement logic (before handler initiation): ${roundError.message}`,
+            roundError
+          );
           await this.#dispatchSystemError(
             'System Error: No active actors found to start a round. Stopping game.',
-            errorMsg
+            roundError.message
           );
           await this.stop();
           return;
         }
-
-        const actorIds = actors.map((a) => a.id);
-        this.#logger.debug(
-          `Found ${actors.length} actors to start the round: ${actorIds.join(', ')}`
-        );
-        const strategy = 'round-robin'; // Or determine dynamically
-
-        // Start the new round in the service
-        await this.#turnOrderService.startNewRound(actors, strategy);
-        this.#roundInProgress = true; // Mark round as officially in progress *after* successful start
-        this.#logger.debug(
-          `Successfully started a new round with ${actors.length} actors using the '${strategy}' strategy.`
-        );
-
-        this.#logger.debug(
-          'New round started, recursively calling advanceTurn() to process the first turn.'
-        );
-        await this.advanceTurn(); // Recursive call to process the first turn of the new round
-        return;
+        // --- End Start new round ---
       } else {
         // Queue is not empty, process next turn
-        this.#logger.debug('Queue not empty, retrieving next entity.');
-        const nextEntity = await this.#turnOrderService.getNextEntity();
-
-        if (!nextEntity) {
-          const errorMsg =
-            'Turn order inconsistency: getNextEntity() returned null/undefined when queue was not empty.';
-          this.#logger.error(errorMsg);
-          await this.#dispatchSystemError(
-            'Internal Error: Turn order inconsistency detected. Stopping game.',
-            errorMsg
-          );
-          await this.stop();
-          return;
-        }
+        this.#logger.debug('Queue not empty, processing next entity.');
 
         this.#currentActor = nextEntity; // Set the new current actor
         const actorId = this.#currentActor.id;
@@ -644,7 +601,7 @@ class TurnManager extends ITurnManager {
       this.#logger.debug(
         `Marking round as having had a successful turn (actor: ${endedActorId}).`
       );
-      this.#roundHadSuccessfulTurn = true;
+      this.#roundManager.endTurn(true);
     }
 
     const currentActor = this.#currentActor;

@@ -14,6 +14,7 @@
  * @property {string} contentKey - Key within the manifest's `content` section.
  * @property {string} contentTypeDir - Directory name under the mod root.
  * @property {string} typeName - Registry key for the loaded content type.
+ * @property {'definitions' | 'instances'} phase - Loading phase for the content type.
  */
 
 /**
@@ -26,20 +27,22 @@
  */
 export function createContentLoadersConfig(loaderMap) {
   const meta = {
-    components: { contentKey: 'components', contentTypeDir: 'components' },
-    events: { contentKey: 'events', contentTypeDir: 'events' },
-    conditions: { contentKey: 'conditions', contentTypeDir: 'conditions' },
-    macros: { contentKey: 'macros', contentTypeDir: 'macros' },
-    actions: { contentKey: 'actions', contentTypeDir: 'actions' },
-    rules: { contentKey: 'rules', contentTypeDir: 'rules' },
-    goals: { contentKey: 'goals', contentTypeDir: 'goals' },
+    components: { contentKey: 'components', contentTypeDir: 'components', phase: 'definitions' },
+    events: { contentKey: 'events', contentTypeDir: 'events', phase: 'definitions' },
+    conditions: { contentKey: 'conditions', contentTypeDir: 'conditions', phase: 'definitions' },
+    macros: { contentKey: 'macros', contentTypeDir: 'macros', phase: 'definitions' },
+    actions: { contentKey: 'actions', contentTypeDir: 'actions', phase: 'definitions' },
+    rules: { contentKey: 'rules', contentTypeDir: 'rules', phase: 'definitions' },
+    goals: { contentKey: 'goals', contentTypeDir: 'goals', phase: 'definitions' },
     entityDefinitions: {
       contentKey: 'entityDefinitions',
       contentTypeDir: 'entities/definitions',
+      phase: 'definitions',
     },
     entityInstances: {
       contentKey: 'entityInstances',
       contentTypeDir: 'entities/instances',
+      phase: 'instances',
     },
   };
 
@@ -48,6 +51,7 @@ export function createContentLoadersConfig(loaderMap) {
     typeName,
     contentKey: meta[typeName].contentKey,
     contentTypeDir: meta[typeName].contentTypeDir,
+    phase: meta[typeName].phase,
   }));
 }
 

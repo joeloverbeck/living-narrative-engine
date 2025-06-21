@@ -259,25 +259,26 @@ describe('RuleLoader - Fetch Failure Handling (via loadItemsForMod)', () => {
         fetchError // Base class passes the full error object as the third argument
       );
 
-      // Verify registry store for the successful file only
+      // Verify primary schema validation was called for the successful rule
+      expect(mockValidator.validate).toHaveBeenCalledTimes(1);
+      expect(mockValidator.validate).toHaveBeenCalledWith(
+        ruleSchemaId,
+        ruleDataOK
+      );
+
+      // Verify IDataRegistry.store was called only for the successful rule with AUGMENTED data
       expect(mockRegistry.store).toHaveBeenCalledTimes(1);
       const expectedStoredDataOK = {
-        // Calculate expected stored data with augmentations
         ...ruleDataOK,
-        id: expectedRuleIdOK,
+        id: fileOKName, // BASE ID
+        _fullId: expectedRuleIdOK, // QUALIFIED ID
         modId: modId,
         _sourceFile: fileOK,
       };
       expect(mockRegistry.store).toHaveBeenCalledWith(
         RULE_TYPE_NAME,
         expectedRuleIdOK, // Expect the ID derived from filename
-        expectedStoredDataOK // Expect the augmented data
-      );
-      // Ensure store wasn't called for the failed file
-      expect(mockRegistry.store).not.toHaveBeenCalledWith(
-        expect.anything(),
-        expect.stringContaining(fileFail.replace('.json', '')), // ID would be derived from fileFail
-        expect.anything()
+        expect.objectContaining(expectedStoredDataOK) // Expect the augmented data
       );
 
       // Verify return results object

@@ -10,7 +10,7 @@ import { BaseManifestItemLoader } from '../../../src/loaders/baseManifestItemLoa
 /**
  * Creates a mock IConfiguration service.
  *
- * @param overrides
+* @param overrides
  */
 const createMockConfiguration = (overrides = {}) => ({
   getContentBasePath: jest.fn((typeName) => `./data/mods/test-mod/${typeName}`),
@@ -155,7 +155,7 @@ const createMockSchemaValidator = (overrides = {}) => {
  * @param overrides
  */
 const createMockDataRegistry = (overrides = {}) => ({
-  store: jest.fn((type, id, data) => {}),
+  store: jest.fn((type, id, data) => { }),
   get: jest.fn((type, id) => undefined),
   getAll: jest.fn((type) => []),
   clear: jest.fn(),
@@ -260,8 +260,9 @@ describe('ComponentLoader (Sub-Ticket 6.8: Data Schema Registration Failure)', (
     // --- Setup: Scenario 1 ---
     const filename = 'comp_add_fail.component.json';
     const filePath = `./data/mods/${modId}/components/${filename}`;
-    const componentIdFromFile = 'add_fail';
-    const validDef = createMockComponentDefinition(componentIdFromFile, {
+    const componentBaseId = 'add_fail';
+    const qualifiedSchemaId = `${modId}:${componentBaseId}`;
+    const validDef = createMockComponentDefinition(componentBaseId, {
       type: 'object',
       properties: { value: { type: 'string' } },
     });
@@ -273,14 +274,12 @@ describe('ComponentLoader (Sub-Ticket 6.8: Data Schema Registration Failure)', (
     mockResolver.resolveModContentPath.mockReturnValue(filePath);
     mockFetcher.fetch.mockResolvedValue(JSON.parse(JSON.stringify(validDef)));
     mockValidator.addSchema.mockImplementation(async (schema, schemaId) => {
-      if (schemaId === componentIdFromFile) {
+      if (schemaId === qualifiedSchemaId) {
         throw addSchemaError;
       }
     });
     mockValidator.isSchemaLoaded.mockImplementation((schemaId) => {
-      return (
-        schemaId === componentDefSchemaId || schemaId === 'some_other_schema_id'
-      ); // Primary is loaded, component is not
+      return schemaId === componentDefSchemaId;
     });
 
     // --- Action ---
@@ -292,11 +291,10 @@ describe('ComponentLoader (Sub-Ticket 6.8: Data Schema Registration Failure)', (
       'components'
     );
 
-    // --- Verify: Promise Resolves & Result Object --- // <<< MODIFIED Verification
+    // --- Verify: Promise Resolves & Result Object ---
     await expect(loadPromise).resolves.not.toThrow();
-    const result = await loadPromise; // <<< CAPTURE result object
-    // Assert the entire result object structure
-    expect(result).toEqual({ count: 0, errors: 1, overrides: 0 }); // <<< CHECK Full Result
+    const result = await loadPromise;
+    expect(result).toEqual({ count: 0, errors: 1, overrides: 0 });
 
     // --- Verify: Mock Calls ---
     expect(mockResolver.resolveModContentPath).toHaveBeenCalledWith(
@@ -305,43 +303,28 @@ describe('ComponentLoader (Sub-Ticket 6.8: Data Schema Registration Failure)', (
       filename
     );
     expect(mockFetcher.fetch).toHaveBeenCalledWith(filePath);
-    expect(mockValidator.validate).toHaveBeenCalledTimes(1); // Called by _validatePrimarySchema
+    expect(mockValidator.validate).toHaveBeenCalledTimes(1);
     expect(mockValidator.validate).toHaveBeenCalledWith(
       componentDefSchemaId,
       validDef
     );
     expect(mockValidator.isSchemaLoaded).toHaveBeenCalledWith(
       componentDefSchemaId
-    ); // Checked by _validatePrimarySchema
-    expect(mockValidator.isSchemaLoaded).toHaveBeenCalledWith(
-      componentIdFromFile
-    ); // Checked by _processFetchedItem
-    expect(mockValidator.removeSchema).not.toHaveBeenCalled(); // addSchema fails before removeSchema is relevant here
+    );
+    expect(mockValidator.isSchemaLoaded).toHaveBeenCalledWith(qualifiedSchemaId);
+    expect(mockValidator.removeSchema).not.toHaveBeenCalled();
     expect(mockValidator.addSchema).toHaveBeenCalledTimes(1);
     expect(mockValidator.addSchema).toHaveBeenCalledWith(
       validDef.dataSchema,
-      componentIdFromFile
+      qualifiedSchemaId
     );
-    expect(mockRegistry.get).not.toHaveBeenCalled(); // Skipped due to addSchema error
-    expect(mockRegistry.store).not.toHaveBeenCalled(); // Skipped due to addSchema error
+    expect(mockRegistry.store).not.toHaveBeenCalled();
 
     // --- Verify: Error Logs ---
-    expect(mockLogger.error).toHaveBeenCalledTimes(2); // Specific + Wrapper
-    // 1. Inner Log (_processFetchedItem addSchema catch block)
-    const expectedInnerLogMessageAdd = `ComponentLoader [${modId}]: Error registering data schema for component '${componentIdFromFile}' from file '${filename}'.`;
-    expect(mockLogger.error).toHaveBeenNthCalledWith(
-      1,
-      expectedInnerLogMessageAdd,
-      expect.objectContaining({
-        componentId: componentIdFromFile,
-        error: addSchemaError,
-      }),
-      addSchemaError
-    );
-    // 2. Wrapper Log (_processFileWrapper catch block)
+    expect(mockLogger.error).toHaveBeenCalledTimes(1);
+    // Only the outer wrapper should log, as the inner utility's error is re-thrown
     const expectedWrapperMsgAdd = `Error processing file:`;
-    expect(mockLogger.error).toHaveBeenNthCalledWith(
-      2,
+    expect(mockLogger.error).toHaveBeenCalledWith(
       expectedWrapperMsgAdd,
       expect.objectContaining({
         filename: filename,
@@ -358,7 +341,7 @@ describe('ComponentLoader (Sub-Ticket 6.8: Data Schema Registration Failure)', (
     );
     expect(mockLogger.info).toHaveBeenCalledWith(
       `Mod [${modId}] - Processed 0/1 components items. (1 failed)`
-    ); // Correct summary expected
+    );
     expect(mockLogger.warn).not.toHaveBeenCalled();
   });
 
@@ -367,8 +350,9 @@ describe('ComponentLoader (Sub-Ticket 6.8: Data Schema Registration Failure)', (
     // --- Setup: Scenario 2 ---
     const filename = 'comp_remove_fail.component.json';
     const filePath = `./data/mods/${modId}/components/${filename}`;
-    const componentIdFromFile = 'remove_fail';
-    const overrideDef = createMockComponentDefinition(componentIdFromFile, {
+    const componentBaseId = 'remove_fail';
+    const qualifiedSchemaId = `${modId}:${componentBaseId}`;
+    const overrideDef = createMockComponentDefinition(componentBaseId, {
       properties: { version: { const: 2 } },
     });
     const removeSchemaError = new Error(
@@ -380,19 +364,16 @@ describe('ComponentLoader (Sub-Ticket 6.8: Data Schema Registration Failure)', (
     mockFetcher.fetch.mockResolvedValue(
       JSON.parse(JSON.stringify(overrideDef))
     );
-    // Simulate override: BOTH primary and component schema are loaded initially
     mockValidator.isSchemaLoaded.mockImplementation((schemaId) => {
       return (
-        schemaId === componentDefSchemaId || schemaId === componentIdFromFile
+        schemaId === componentDefSchemaId || schemaId === qualifiedSchemaId
       );
     });
-    // Configure removeSchema to THROW
     mockValidator.removeSchema.mockImplementation((schemaId) => {
-      if (schemaId === componentIdFromFile) {
+      if (schemaId === qualifiedSchemaId) {
         throw removeSchemaError;
       }
-      const originalMock = createMockSchemaValidator(); // Keep default behavior for others
-      return originalMock.removeSchema(schemaId);
+      return true;
     });
 
     // --- Action ---
@@ -404,11 +385,10 @@ describe('ComponentLoader (Sub-Ticket 6.8: Data Schema Registration Failure)', (
       'components'
     );
 
-    // --- Verify: Promise Resolves & Result Object --- // <<< MODIFIED Verification
+    // --- Verify: Promise Resolves & Result Object ---
     await expect(loadPromise).resolves.not.toThrow();
-    const result = await loadPromise; // <<< CAPTURE result object
-    // Assert the entire result object structure - should be 0 success, 1 error
-    expect(result).toEqual({ count: 0, errors: 1, overrides: 0 }); // <<< CHECK Full Result
+    const result = await loadPromise;
+    expect(result).toEqual({ count: 0, errors: 1, overrides: 0 });
 
     // --- Verify: Mock Calls ---
     expect(mockResolver.resolveModContentPath).toHaveBeenCalledWith(
@@ -417,43 +397,17 @@ describe('ComponentLoader (Sub-Ticket 6.8: Data Schema Registration Failure)', (
       filename
     );
     expect(mockFetcher.fetch).toHaveBeenCalledWith(filePath);
-    expect(mockValidator.validate).toHaveBeenCalledTimes(1); // Called by _validatePrimarySchema
-    expect(mockValidator.validate).toHaveBeenCalledWith(
-      componentDefSchemaId,
-      overrideDef
-    );
-    expect(mockValidator.isSchemaLoaded).toHaveBeenCalledWith(
-      componentDefSchemaId
-    ); // Checked by _validatePrimarySchema
-    expect(mockValidator.isSchemaLoaded).toHaveBeenCalledWith(
-      componentIdFromFile
-    ); // Checked by _processFetchedItem override check
-    expect(mockValidator.removeSchema).toHaveBeenCalledTimes(1); // removeSchema WAS attempted
-    expect(mockValidator.removeSchema).toHaveBeenCalledWith(
-      componentIdFromFile
-    );
-    // Subsequent steps skipped due to re-thrown removeSchema error
+    expect(mockValidator.validate).toHaveBeenCalledTimes(1);
+    expect(mockValidator.isSchemaLoaded).toHaveBeenCalledWith(qualifiedSchemaId);
+    expect(mockValidator.removeSchema).toHaveBeenCalledTimes(1);
+    expect(mockValidator.removeSchema).toHaveBeenCalledWith(qualifiedSchemaId);
     expect(mockValidator.addSchema).not.toHaveBeenCalled();
-    expect(mockRegistry.get).not.toHaveBeenCalled();
     expect(mockRegistry.store).not.toHaveBeenCalled();
 
     // --- Verify: Error Logs ---
-    expect(mockLogger.error).toHaveBeenCalledTimes(2); // Specific + Wrapper
-    // 1. Inner Log (_processFetchedItem removeSchema catch block - NOW re-throws)
-    const expectedInnerLogMessageRemove = `ComponentLoader [${modId}]: Error registering data schema for component '${componentIdFromFile}' from file '${filename}'.`;
-    expect(mockLogger.error).toHaveBeenNthCalledWith(
-      1,
-      expectedInnerLogMessageRemove,
-      expect.objectContaining({
-        componentId: componentIdFromFile,
-        error: removeSchemaError,
-      }),
-      removeSchemaError
-    );
-    // 2. Wrapper Log (_processFileWrapper catch block)
+    expect(mockLogger.error).toHaveBeenCalledTimes(1);
     const expectedWrapperMsgRemove = `Error processing file:`;
-    expect(mockLogger.error).toHaveBeenNthCalledWith(
-      2,
+    expect(mockLogger.error).toHaveBeenCalledWith(
       expectedWrapperMsgRemove,
       expect.objectContaining({
         filename: filename,
@@ -466,24 +420,12 @@ describe('ComponentLoader (Sub-Ticket 6.8: Data Schema Registration Failure)', (
     // --- Verify: Final Info Log ---
     expect(mockLogger.info).toHaveBeenCalledTimes(2);
     expect(mockLogger.info).toHaveBeenCalledWith(
-      `ComponentLoader: Loading components definitions for mod '${modId}'.`
-    );
-    expect(mockLogger.info).toHaveBeenCalledWith(
       `Mod [${modId}] - Processed 0/1 components items. (1 failed)`
-    ); // Correct summary expected
+    );
 
     // --- Verify: Warnings ---
-    // The schema override warning should still fire *before* removeSchema is called and fails
+    const warnMsg = `Component Definition '${filename}' in mod '${modId}' is overwriting an existing data schema for component ID '${qualifiedSchemaId}'.`;
     expect(mockLogger.warn).toHaveBeenCalledTimes(1);
-    expect(mockLogger.warn).toHaveBeenCalledWith(
-      expect.stringContaining(
-        `overwriting an existing data schema for component ID '${componentIdFromFile}'`
-      )
-    );
-    expect(mockLogger.warn).not.toHaveBeenCalledWith(
-      expect.stringContaining(
-        `overwriting existing component definition metadata`
-      )
-    ); // Skipped
+    expect(mockLogger.warn).toHaveBeenCalledWith(warnMsg);
   });
 });

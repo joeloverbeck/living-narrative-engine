@@ -68,16 +68,13 @@ describeTurnManagerSuite(
       expect(testBed.mocks.dispatcher.subscribe).not.toHaveBeenCalled(); // subscribe happens in start()
     });
 
-    test('No active actors found: logs error, dispatches message, and stops', async () => {
-      // Arrange
-      const nonActorEntity = createMockEntity('nonActor1', {
-        isActor: false,
-        isPlayer: false,
-      });
-      testBed.setActiveEntities(nonActorEntity);
-      testBed.mocks.turnOrderService.isEmpty.mockResolvedValueOnce(true); // Queue is empty for the check inside advanceTurn
-      const expectedErrorMsg =
-        'Cannot start a new round: No active entities with an Actor component found.';
+  test('No active actors found: logs error, dispatches message, and stops', async () => {
+    // Arrange
+    const nonActorEntity = createMockEntity('nonActor1', { isActor: false, isPlayer: false });
+    testBed.setActiveEntities(nonActorEntity);
+    testBed.mocks.turnOrderService.isEmpty.mockResolvedValueOnce(true); // Queue is empty for TurnCycle.nextActor()
+    const expectedErrorMsg =
+      'Cannot start a new round: No active entities with an Actor component found.';
 
       // Act: Start the manager, which will call advanceTurn once.
       await testBed.turnManager.start(); // This calls advanceTurn.
@@ -86,12 +83,13 @@ describeTurnManagerSuite(
       expect(testBed.mocks.dispatcher.subscribe).toHaveBeenCalledTimes(1); // Ensure subscription happened in start()
       expect(advanceTurnSpy).toHaveBeenCalledTimes(1); // The call from start()
 
-      // Check logs from the advanceTurn call triggered by start()
-      expect(testBed.mocks.logger.debug).toHaveBeenCalledWith(
-        '▶️  TurnManager.advanceTurn() initiating...'
-      );
-      expect(testBed.mocks.turnOrderService.isEmpty).toHaveBeenCalledTimes(1); // Called once, no recursive call when no actors
-      expect(testBed.mocks.logger.error).toHaveBeenCalledWith(expectedErrorMsg); // Error logged
+    // Check logs from the advanceTurn call triggered by start()
+    expect(testBed.mocks.logger.debug).toHaveBeenCalledWith(
+      'TurnManager.advanceTurn() initiating...'
+    );
+    expect(testBed.mocks.turnOrderService.isEmpty).toHaveBeenCalledTimes(1); // Called once by TurnCycle.nextActor()
+    expect(testBed.mocks.turnOrderService.getNextEntity).toHaveBeenCalledTimes(0); // Not called when isEmpty returns true
+    expect(testBed.mocks.logger.error).toHaveBeenCalledWith(expectedErrorMsg); // Error logged
 
       // Check dispatch and stop from the advanceTurn call
       expect(testBed.mocks.dispatcher.dispatch).toHaveBeenCalledTimes(1);
@@ -153,10 +151,8 @@ describeTurnManagerSuite(
       });
       testBed.setActiveEntities(actor1, actor2);
 
-      testBed.mocks.turnOrderService.isEmpty.mockResolvedValueOnce(true); // Queue is empty
-      testBed.mocks.turnOrderService.getNextEntity.mockResolvedValueOnce(
-        actor1
-      ); // First actor in new round
+    testBed.mocks.turnOrderService.isEmpty.mockResolvedValueOnce(true); // Queue is empty for TurnCycle.nextActor()
+    testBed.mocks.turnOrderService.getNextEntity.mockResolvedValueOnce(actor1); // First actor in new round
 
       const mockHandler = {
         startTurn: jest.fn().mockResolvedValue(undefined),
@@ -169,36 +165,29 @@ describeTurnManagerSuite(
       // Act: Start the manager, which will call advanceTurn and start a new round
       await testBed.turnManager.start();
 
-      // Assert
-      expect(testBed.mocks.turnOrderService.isEmpty).toHaveBeenCalledTimes(2); // Called once initially, then again in recursive advanceTurn
-      expect(testBed.mocks.turnOrderService.startNewRound).toHaveBeenCalledWith(
-        expect.arrayContaining([actor1, actor2]),
-        'round-robin'
-      );
-      expect(testBed.mocks.logger.debug).toHaveBeenCalledWith(
-        'New round started, recursively calling advanceTurn() to process the first turn.'
-      );
+    // Assert
+    expect(testBed.mocks.turnOrderService.isEmpty).toHaveBeenCalledTimes(2); // Called once by TurnCycle.nextActor(), once by recursive advanceTurn
+    expect(testBed.mocks.turnOrderService.getNextEntity).toHaveBeenCalledTimes(1); // Called by recursive advanceTurn
+    expect(testBed.mocks.turnOrderService.startNewRound).toHaveBeenCalledWith(
+      expect.arrayContaining([actor1, actor2]),
+      'round-robin'
+    );
+    expect(testBed.mocks.logger.debug).toHaveBeenCalledWith(
+      'New round started, recursively calling advanceTurn() to process the first turn.'
+    );
 
-      // Verify the recursive advanceTurn call
-      expect(
-        testBed.mocks.turnOrderService.getNextEntity
-      ).toHaveBeenCalledTimes(1);
-      expect(
-        testBed.mocks.turnHandlerResolver.resolveHandler
-      ).toHaveBeenCalledWith(actor1);
-      expect(mockHandler.startTurn).toHaveBeenCalledWith(actor1);
-      expect(testBed.mocks.dispatcher.dispatch).toHaveBeenCalledWith(
-        'core:turn_started',
-        {
-          entityId: actor1.id,
-          entityType: 'ai',
-        }
-      );
-      expect(testBed.mocks.dispatcher.dispatch).toHaveBeenCalledWith(
-        TURN_PROCESSING_STARTED,
-        { entityId: actor1.id, actorType: 'ai' }
-      );
+    // Verify the recursive advanceTurn call
+    expect(testBed.mocks.turnHandlerResolver.resolveHandler).toHaveBeenCalledWith(actor1);
+    expect(mockHandler.startTurn).toHaveBeenCalledWith(actor1);
+    expect(testBed.mocks.dispatcher.dispatch).toHaveBeenCalledWith('core:turn_started', {
+      entityId: actor1.id,
+      entityType: 'ai',
     });
+    expect(testBed.mocks.dispatcher.dispatch).toHaveBeenCalledWith(
+      TURN_PROCESSING_STARTED,
+      { entityId: actor1.id, actorType: 'ai' }
+    );
+  });
 
     test('startNewRound throws error: logs error, dispatches message, and stops', async () => {
       // Arrange
@@ -243,10 +232,9 @@ describeTurnManagerSuite(
       });
       testBed.setActiveEntities(actor1);
 
-      testBed.mocks.turnOrderService.isEmpty.mockResolvedValueOnce(true);
-      testBed.mocks.turnOrderService.getNextEntity.mockRejectedValue(
-        new Error('Get next entity failed')
-      );
+    testBed.mocks.turnOrderService.isEmpty.mockResolvedValueOnce(true); // First call by TurnCycle.nextActor()
+    testBed.mocks.turnOrderService.isEmpty.mockResolvedValueOnce(false); // Second call by recursive advanceTurn
+    testBed.mocks.turnOrderService.getNextEntity.mockRejectedValue(new Error('Get next entity failed')); // Called by recursive advanceTurn
 
       // Act: Start the manager, which will call advanceTurn, start a new round, then fail
       await testBed.turnManager.start();
@@ -277,14 +265,11 @@ describeTurnManagerSuite(
       });
       testBed.setActiveEntities(actor1);
 
-      testBed.mocks.turnOrderService.isEmpty.mockResolvedValueOnce(true);
-      testBed.mocks.turnOrderService.getNextEntity.mockResolvedValueOnce(
-        actor1
-      );
-      const resolveError = new Error('Handler resolution failed');
-      testBed.mocks.turnHandlerResolver.resolveHandler.mockRejectedValue(
-        resolveError
-      );
+    testBed.mocks.turnOrderService.isEmpty.mockResolvedValueOnce(true); // First call by TurnCycle.nextActor()
+    testBed.mocks.turnOrderService.isEmpty.mockResolvedValueOnce(false); // Second call by recursive advanceTurn
+    testBed.mocks.turnOrderService.getNextEntity.mockResolvedValueOnce(actor1); // Called by recursive advanceTurn
+    const resolveError = new Error('Handler resolution failed');
+    testBed.mocks.turnHandlerResolver.resolveHandler.mockRejectedValue(resolveError);
 
       // Act: Start the manager, which will call advanceTurn, start a new round, then fail
       await testBed.turnManager.start();
