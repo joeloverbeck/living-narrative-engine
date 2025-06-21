@@ -25,7 +25,7 @@ describeEntityManagerSuite(
         // Arrange
         const { entityManager } = getBed();
         const { PRIMARY } = TestData.InstanceIDs;
-        const expectedEntity = getBed().createEntity('basic', {
+        const expectedEntity = getBed().createBasicEntity({
           instanceId: PRIMARY,
         });
 
@@ -89,7 +89,7 @@ describeEntityManagerSuite(
       it('should return an empty array if no entities have the specified component', () => {
         // Arrange
         const { entityManager } = getBed();
-        getBed().createEntity('basic', {
+        getBed().createBasicEntity({
           componentOverrides: { [COMPONENT_B]: { val: 1 } },
         });
 
@@ -103,15 +103,15 @@ describeEntityManagerSuite(
       it('should return only entities that have the specified component', () => {
         // Arrange
         const { entityManager } = getBed();
-        const entity1 = getBed().createEntity('basic', {
+        const entity1 = getBed().createBasicEntity({
           instanceId: 'instance-1',
           componentOverrides: { [COMPONENT_A]: { val: 1 } },
         });
-        const entity2 = getBed().createEntity('basic', {
+        const entity2 = getBed().createBasicEntity({
           instanceId: 'instance-2',
           componentOverrides: { [COMPONENT_B]: { val: 2 } },
         });
-        const entity3 = getBed().createEntity('basic', {
+        const entity3 = getBed().createBasicEntity({
           instanceId: 'instance-3',
           componentOverrides: {
             [COMPONENT_A]: { val: 3 },
@@ -134,12 +134,9 @@ describeEntityManagerSuite(
         // Arrange
         const { entityManager } = getBed();
         const { NAME_COMPONENT_ID } = TestData.ComponentIDs;
-        getBed().setupDefinitions(
-          TestData.Definitions.basic,
-          TestData.Definitions.actor
-        ); // basic has name, actor does not
+        getBed().setupTestDefinitions('basic', 'actor'); // basic has name, actor does not
 
-        const entityWithComponent = getBed().createEntity('basic');
+        const entityWithComponent = getBed().createBasicEntity();
         const entityWithoutComponent = getBed().createEntity('actor');
 
         // Act
@@ -158,7 +155,7 @@ describeEntityManagerSuite(
         (invalidId) => {
           // Arrange
           const { entityManager, mocks } = getBed();
-          getBed().createEntity('basic');
+          getBed().createBasicEntity();
 
           // Act & Assert
           expect(() =>
@@ -173,7 +170,7 @@ describeEntityManagerSuite(
       it('should return a new array, not a live reference', () => {
         // Arrange
         const { entityManager } = getBed();
-        const entity1 = getBed().createEntity('basic', {
+        const entity1 = getBed().createBasicEntity({
           componentOverrides: { [COMPONENT_A]: { val: 1 } },
         });
 
@@ -182,7 +179,7 @@ describeEntityManagerSuite(
         expect(results1).toHaveLength(1);
 
         // Modify the state by adding another entity with the component
-        const entity2 = getBed().createEntity('basic', {
+        const entity2 = getBed().createBasicEntity({
           componentOverrides: { [COMPONENT_A]: { val: 2 } },
         });
 
@@ -210,7 +207,7 @@ describeEntityManagerSuite(
 
       beforeEach(() => {
         const { entityManager } = getBed();
-        getBed().setupDefinitions(TestData.Definitions.basic);
+        getBed().setupTestDefinitions('basic');
 
         // entity1: has A
         entity1 = entityManager.createEntityInstance(
