@@ -1,13 +1,13 @@
 // src/tests/integration/sequentialActionExecution.integration.test.js
-/* eslint-disable jsdoc/require-returns */
-/* eslint-disable jsdoc/require-param-description */
-/* eslint-disable jsdoc/require-param-type */
+ 
+ 
+ 
 
 /**
  * Integration Test — Sub‑Ticket 3 (TICKET‑12.3)
  * ------------------------------------------------------------
  * Validates that a SystemRule containing multiple actions is
- * executed sequentially *in order* and that every action’s
+ * executed sequentially *in order* and that every action's
  * side‑effects take place.
  *
  *  • Action 1 – MODIFY_COMPONENT
@@ -37,6 +37,7 @@ import {
   createMockLogger,
 } from '../common/mockFactories.js';
 import { buildExecContext } from '../common/entities/index.js';
+import SimpleEntityManager from '../common/entities/simpleEntityManager.js';
 import {
   afterEach,
   beforeEach,
@@ -48,39 +49,6 @@ import {
 
 /** ---------- Simple stubs & helpers ------------------------------------------------ */
 
-/**
- * Bare‑bones in‑memory EntityManager satisfying the subset of the public API
- * required by ModifyComponentHandler *and* SystemLogicInterpreter’s
- * context‑assembly helpers.
- */
-class SimpleEntityManager {
-  constructor() {
-    /** @type {Map<string, Map<string, any>>} */
-    this.entities = new Map();
-  }
-
-  addComponent(entityId, componentType, data) {
-    if (!this.entities.has(entityId)) this.entities.set(entityId, new Map());
-    this.entities.get(entityId).set(componentType, data);
-  }
-
-  getComponentData(entityId, componentType) {
-    return this.entities.get(entityId)?.get(componentType);
-  }
-
-  hasComponent(entityId, componentType) {
-    return this.entities.get(entityId)?.has(componentType) ?? false;
-  }
-
-  /**
-   * Minimal stub for contextAssembler’s getEntityInstance()
-   *
-   * @param entityId
-   */
-  getEntityInstance(entityId) {
-    return { id: entityId };
-  }
-}
 /** Jest‑friendly logger stub capturing calls for optional debugging. */
 
 describe('Sequential Action Execution – Success Path', () => {

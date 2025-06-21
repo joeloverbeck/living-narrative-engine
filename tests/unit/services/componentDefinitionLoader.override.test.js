@@ -9,7 +9,9 @@ import { CORE_MOD_ID } from '../../../src/constants/core'; // Added base class i
 // [Mocks omitted for brevity - use the ones provided]
 const createMockConfiguration = (overrides = {}) => ({
   getModsBasePath: jest.fn(() => './data/mods'),
-  getContentBasePath: jest.fn((registryKey) => `./data/mods/test-mod/${registryKey}`),
+  getContentBasePath: jest.fn(
+    (registryKey) => `./data/mods/test-mod/${registryKey}`
+  ),
   getContentTypeSchemaId: jest.fn((registryKey) => {
     if (registryKey === 'components') {
       return 'http://example.com/schemas/component.schema.json';

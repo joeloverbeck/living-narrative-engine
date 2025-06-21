@@ -13,4 +13,4 @@
 
 /**
  * @typedef {Readonly<{finalModOrder:string[], totals:import('../loaders/LoadResultAggregator.js').TotalResultsSummary, incompatibilities:number}>} LoadReport
- */ 
+ */

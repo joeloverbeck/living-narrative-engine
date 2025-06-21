@@ -6,9 +6,13 @@
 export function createInMemoryCache() {
   let data = {};
   return {
-    clear: () => { data = {}; },
+    clear: () => {
+      data = {};
+    },
     snapshot: () => JSON.parse(JSON.stringify(data)),
-    restore: snap => { data = snap; },
+    restore: (snap) => {
+      data = snap;
+    },
     _data: () => data,
   };
-} 
+}

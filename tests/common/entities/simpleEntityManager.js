@@ -70,10 +70,12 @@ export default class SimpleEntityManager {
    * @returns {void}
    */
   addComponent(id, type, data) {
-    const ent = this.entities.get(id);
-    if (ent) {
-      ent.components[type] = deepClone(data);
+    let ent = this.entities.get(id);
+    if (!ent) {
+      ent = { id, components: {} };
+      this.entities.set(id, ent);
     }
+    ent.components[type] = deepClone(data);
   }
 
   /**

@@ -175,10 +175,12 @@ class DefaultPathResolver extends IPathResolver {
         'Invalid or empty filename provided to resolveModContentPath.'
       );
     }
-    
+
     // Split registryKey into path components to handle nested paths like 'entities/definitions'
-    const pathComponents = registryKey.split('/').filter(component => component.trim() !== '');
-    
+    const pathComponents = registryKey
+      .split('/')
+      .filter((component) => component.trim() !== '');
+
     return this.#join(
       this.#config.getBaseDataPath(),
       this.#config.getModsBasePath(),

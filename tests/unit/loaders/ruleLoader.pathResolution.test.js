@@ -38,7 +38,9 @@ const createMockConfiguration = (overrides = {}) => ({
     .fn()
     .mockReturnValue('http://example.com/schemas/rule.schema.json'),
   // --- Other potentially used methods (good practice to include) ---
-  getContentBasePath: jest.fn((registryKey) => `./data/mods/test-mod/${registryKey}`),
+  getContentBasePath: jest.fn(
+    (registryKey) => `./data/mods/test-mod/${registryKey}`
+  ),
   getSchemaBasePath: jest.fn().mockReturnValue('schemas'),
   getSchemaFiles: jest.fn().mockReturnValue([]),
   getWorldBasePath: jest.fn().mockReturnValue('worlds'),
@@ -223,7 +225,8 @@ describe('RuleLoader (Path Resolution & Fetching via loadItemsForMod)', () => {
     // Ensure rule schema ID is configured via the base class method access
     const ruleSchemaId = 'http://example.com/schemas/rule.schema.json';
     mockConfig.getContentTypeSchemaId.mockImplementation(
-      (registryKey) => (registryKey === RULE_TYPE_NAME ? ruleSchemaId : undefined) // Use constant
+      (registryKey) =>
+        registryKey === RULE_TYPE_NAME ? ruleSchemaId : undefined // Use constant
     );
     // RuleLoader might still call getRuleSchemaId directly, keep this mock
     mockConfig.getRuleSchemaId.mockReturnValue(ruleSchemaId);

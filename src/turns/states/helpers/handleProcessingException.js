@@ -68,7 +68,8 @@ export async function handleProcessingException(
           raw: `OriginalError: ${error.name} - ${error.message}`,
           stack: error.stack,
           timestamp: new Date().toISOString(),
-        }
+        },
+        logger
       );
     } catch (dispatchError) {
       logger.error(

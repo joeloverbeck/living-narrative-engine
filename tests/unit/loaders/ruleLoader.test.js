@@ -10,7 +10,10 @@ import {
   afterEach,
 } from '@jest/globals'; // Assuming Jest environment
 import RuleLoader from '../../../src/loaders/ruleLoader.js'; // Adjust path as necessary
-import { createMockPathResolver, createMockDataFetcher } from '../../common/mockFactories/index.js';
+import {
+  createMockPathResolver,
+  createMockDataFetcher,
+} from '../../common/mockFactories/index.js';
 // Import interfaces for JSDoc typing if desired
 // import { IConfiguration, IPathResolver, IDataFetcher, ISchemaValidator, IDataRegistry, ILogger } from '../../../interfaces/coreServices';
 
@@ -23,7 +26,9 @@ import { createMockPathResolver, createMockDataFetcher } from '../../common/mock
  * @returns {import('../../../src/interfaces/coreServices.js').IConfiguration} Mocked configuration service.
  */
 const createMockConfiguration = (overrides = {}) => ({
-  getContentBasePath: jest.fn((registryKey) => `./data/mods/test-mod/${registryKey}`),
+  getContentBasePath: jest.fn(
+    (registryKey) => `./data/mods/test-mod/${registryKey}`
+  ),
   // Updated to specifically handle 'rules' and return ruleSchemaId
   getContentTypeSchemaId: jest.fn((registryKey) => {
     if (registryKey === 'rules') {

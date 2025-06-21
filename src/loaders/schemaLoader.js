@@ -40,33 +40,36 @@ class SchemaLoader extends AbstractLoader {
    * @throws {Error} If any required dependency is not provided or invalid.
    */
   constructor(configuration, pathResolver, fetcher, validator, logger) {
-    validateDependencies([
-      {
-        dependency: logger,
-        name: 'ILogger',
-        methods: ['info', 'warn', 'error', 'debug'],
-      },
-      {
-        dependency: configuration,
-        name: 'IConfiguration',
-        methods: ['getSchemaFiles'],
-      },
-      {
-        dependency: pathResolver,
-        name: 'IPathResolver',
-        methods: ['resolveSchemaPath'],
-      },
-      {
-        dependency: fetcher,
-        name: 'IDataFetcher',
-        methods: ['fetch'],
-      },
-      {
-        dependency: validator,
-        name: 'ISchemaValidator',
-        methods: ['addSchema', 'isSchemaLoaded'],
-      },
-    ], logger);
+    validateDependencies(
+      [
+        {
+          dependency: logger,
+          name: 'ILogger',
+          methods: ['info', 'warn', 'error', 'debug'],
+        },
+        {
+          dependency: configuration,
+          name: 'IConfiguration',
+          methods: ['getSchemaFiles'],
+        },
+        {
+          dependency: pathResolver,
+          name: 'IPathResolver',
+          methods: ['resolveSchemaPath'],
+        },
+        {
+          dependency: fetcher,
+          name: 'IDataFetcher',
+          methods: ['fetch'],
+        },
+        {
+          dependency: validator,
+          name: 'ISchemaValidator',
+          methods: ['addSchema', 'isSchemaLoaded'],
+        },
+      ],
+      logger
+    );
     super(logger);
 
     this.#config = configuration;

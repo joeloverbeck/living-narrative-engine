@@ -91,12 +91,17 @@ export class LLMResponseProcessor extends ILLMResponseProcessor {
       parsed = await parseAndRepairJson(llmJsonResponse, this.#logger);
     } catch (err) {
       const errorMsg = `LLMResponseProcessor: JSON could not be parsed for actor ${actorId}: ${err.message}`;
-      safeDispatchError(this.#safeEventDispatcher, errorMsg, {
-        actorId,
-        rawResponse: llmJsonResponse,
-        error: err.message,
-        stack: err.stack,
-      });
+      safeDispatchError(
+        this.#safeEventDispatcher,
+        errorMsg,
+        {
+          actorId,
+          rawResponse: llmJsonResponse,
+          error: err.message,
+          stack: err.stack,
+        },
+        this.#logger
+      );
       throw new LLMProcessingError(errorMsg);
     }
 
@@ -108,10 +113,15 @@ export class LLMResponseProcessor extends ILLMResponseProcessor {
     const { isValid, errors } = validationResult;
     if (!isValid) {
       const errorMsg = `LLMResponseProcessor: schema invalid for actor ${actorId}`;
-      safeDispatchError(this.#safeEventDispatcher, errorMsg, {
-        errors,
-        parsed,
-      });
+      safeDispatchError(
+        this.#safeEventDispatcher,
+        errorMsg,
+        {
+          errors,
+          parsed,
+        },
+        this.#logger
+      );
       throw new LLMProcessingError(
         `LLM response JSON schema validation failed for actor ${actorId}.`,
         { validationErrors: errors }

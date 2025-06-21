@@ -11,7 +11,10 @@
 
 /* ── Implementation imports ─────────────────────────────────────────────── */
 import ModsLoaderError from '../errors/modsLoaderError.js';
-import { ModsLoaderPhaseError, ModsLoaderErrorCode } from '../errors/modsLoaderPhaseError.js';
+import {
+  ModsLoaderPhaseError,
+  ModsLoaderErrorCode,
+} from '../errors/modsLoaderPhaseError.js';
 import AbstractLoader from './abstractLoader.js';
 import { createLoadContext } from './LoadContext.js';
 
@@ -82,7 +85,11 @@ class ModsLoader extends AbstractLoader {
       `ModsLoader: Starting load sequence for world '${worldName}'...`
     );
     const { createLoadContext } = await import('./LoadContext.js');
-    const context = createLoadContext({ worldName, requestedMods: requestedModIds, registry: this._registry });
+    const context = createLoadContext({
+      worldName,
+      requestedMods: requestedModIds,
+      registry: this._registry,
+    });
     this._cache.clear();
     let success = false;
     try {
@@ -92,7 +99,7 @@ class ModsLoader extends AbstractLoader {
         `ModsLoader: Load sequence for world '${worldName}' completed successfully.`
       );
       success = true;
-      
+
       return /** @type {import('../interfaces/loadContracts.js').LoadReport} */ ({
         finalModOrder: finalContext.finalModOrder.slice(),
         totals: Object.freeze({ ...finalContext.totals }),

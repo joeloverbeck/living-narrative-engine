@@ -111,10 +111,15 @@ export default function validateModEngineVersions(
   // --- Acceptance: Throws only ModDependencyError on failure (for incompatibility) ---
   if (fatals.length) {
     const errorMessage = fatals.join('\n');
-    safeDispatchError(safeEventDispatcher, errorMessage, {
-      incompatibilities: fatals,
-      engineVersion: ENGINE_VERSION,
-    });
+    safeDispatchError(
+      safeEventDispatcher,
+      errorMessage,
+      {
+        incompatibilities: fatals,
+        engineVersion: ENGINE_VERSION,
+      },
+      logger
+    );
     throw new ModDependencyError(errorMessage);
   }
 

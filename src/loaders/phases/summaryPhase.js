@@ -55,7 +55,7 @@ export default class SummaryPhase extends LoaderPhase {
         ctx.incompatibilities,
         ctx.totals
       );
-      
+
       // Return frozen context (no modifications in this phase)
       return Object.freeze({ ...ctx });
     } catch (e) {

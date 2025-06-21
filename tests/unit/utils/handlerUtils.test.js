@@ -26,7 +26,8 @@ describe('assertParamsObject', () => {
     expect(safeDispatchError).toHaveBeenCalledWith(
       dispatcher,
       'TEST_OP: params missing or invalid.',
-      { params: undefined }
+      { params: undefined },
+      dispatcher
     );
   });
 

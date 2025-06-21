@@ -35,7 +35,9 @@ const createMockConfiguration = (overrides = {}) => ({
     return `http://example.com/schemas/${registryKey}.schema.json`;
   }),
   // --- Other potentially used methods (good practice to include) ---
-  getContentBasePath: jest.fn((registryKey) => `./data/mods/test-mod/${registryKey}`),
+  getContentBasePath: jest.fn(
+    (registryKey) => `./data/mods/test-mod/${registryKey}`
+  ),
   getSchemaBasePath: jest.fn().mockReturnValue('schemas'),
   getSchemaFiles: jest.fn().mockReturnValue([]),
   getWorldBasePath: jest.fn().mockReturnValue('worlds'),

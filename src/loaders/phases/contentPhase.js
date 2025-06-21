@@ -2,8 +2,8 @@
 
 import LoaderPhase from './LoaderPhase.js';
 import {
-    ModsLoaderPhaseError,
-    ModsLoaderErrorCode,
+  ModsLoaderPhaseError,
+  ModsLoaderErrorCode,
 } from '../../errors/modsLoaderPhaseError.js';
 import { logPhaseStart } from '../../utils/logPhaseStart.js';
 
@@ -21,51 +21,51 @@ import { logPhaseStart } from '../../utils/logPhaseStart.js';
  * @augments {LoaderPhase}
  */
 export default class ContentPhase extends LoaderPhase {
-    /**
-     * @param {object} params
-     * @param {import('../ContentLoadManager.js').default} params.manager
-     * @param {import('../../interfaces/coreServices.js').ILogger} params.logger
-     */
-    constructor({ manager, logger }) {
-        super('content');
-        /** @type {ContentLoadManager} */
-        this.manager = manager;
-        /** @type {ILogger} */
-        this.logger = logger;
-    }
+  /**
+   * @param {object} params
+   * @param {import('../ContentLoadManager.js').default} params.manager
+   * @param {import('../../interfaces/coreServices.js').ILogger} params.logger
+   */
+  constructor({ manager, logger }) {
+    super('content');
+    /** @type {ContentLoadManager} */
+    this.manager = manager;
+    /** @type {ILogger} */
+    this.logger = logger;
+  }
 
-    /**
-     * @description Executes the content loading phase.
-     * @param {LoadContext} ctx - The load context.
-     * @returns {Promise<LoadContext>}
-     * @throws {ModsLoaderPhaseError} When content loading fails for any reason.
-     */
-    async execute(ctx) {
-        logPhaseStart(this.logger, 'ContentPhase');
-        try {
-            await this.manager.loadContent(
-                ctx.finalModOrder,
-                ctx.manifests,
-                ctx.totals
-            );
-            
-            // Create a new object reference for totals to ensure immutability downstream.
-            const totalsSnapshot = JSON.parse(JSON.stringify(ctx.totals));
-            
-            // Create new frozen context with modifications
-            const next = {
-                ...ctx,
-                totals: totalsSnapshot,
-            };
-            
-            return Object.freeze(next);
-        } catch (e) {
-            throw new ModsLoaderPhaseError(
-                ModsLoaderErrorCode.CONTENT,
-                e.message,
-                'ContentPhase',
-                e
-            );
-        }
+  /**
+   * @description Executes the content loading phase.
+   * @param {LoadContext} ctx - The load context.
+   * @returns {Promise<LoadContext>}
+   * @throws {ModsLoaderPhaseError} When content loading fails for any reason.
+   */
+  async execute(ctx) {
+    logPhaseStart(this.logger, 'ContentPhase');
+    try {
+      await this.manager.loadContent(
+        ctx.finalModOrder,
+        ctx.manifests,
+        ctx.totals
+      );
+
+      // Create a new object reference for totals to ensure immutability downstream.
+      const totalsSnapshot = JSON.parse(JSON.stringify(ctx.totals));
+
+      // Create new frozen context with modifications
+      const next = {
+        ...ctx,
+        totals: totalsSnapshot,
+      };
+
+      return Object.freeze(next);
+    } catch (e) {
+      throw new ModsLoaderPhaseError(
+        ModsLoaderErrorCode.CONTENT,
+        e.message,
+        'ContentPhase',
+        e
+      );
     }
+  }
 }

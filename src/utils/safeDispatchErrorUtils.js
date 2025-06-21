@@ -6,6 +6,7 @@
  */
 
 /** @typedef {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
+/** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 
 import { SYSTEM_ERROR_OCCURRED_ID } from '../constants/systemEventIds.js';
 
@@ -31,17 +32,23 @@ export class InvalidDispatcherError extends Error {
  * @param {ISafeEventDispatcher} dispatcher - Dispatcher used to emit the event.
  * @param {string} message - Human readable error message.
  * @param {object} [details] - Additional structured details for debugging.
+ * @param {ILogger} [logger] - Optional logger for error logging.
  * @throws {InvalidDispatcherError} If the dispatcher is missing or invalid.
  * @returns {void}
  * @example
  * safeDispatchError(safeEventDispatcher, 'Invalid action', { id: 'bad-action' });
  */
-export function safeDispatchError(dispatcher, message, details = {}) {
+export function safeDispatchError(
+  dispatcher,
+  message,
+  details = {},
+  logger = console
+) {
   const hasDispatch = dispatcher && typeof dispatcher.dispatch === 'function';
   if (!hasDispatch) {
     const errorMsg =
       "Invalid or missing method 'dispatch' on dependency 'safeDispatchError: dispatcher'.";
-    console.error(errorMsg);
+    logger.error(errorMsg);
     throw new InvalidDispatcherError(errorMsg, {
       functionName: 'safeDispatchError',
     });

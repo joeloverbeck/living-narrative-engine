@@ -138,6 +138,8 @@ describe('ModManifestProcessor.processManifests', () => {
     const requestedIds = ['modA', 'modB'];
     const result = await processor.processManifests(requestedIds, worldName);
     expect(result.finalModOrder).toEqual(['modA', 'modB']);
-    expect(logger.debug).toHaveBeenCalledWith('StaticValidator.validate called');
+    expect(logger.debug).toHaveBeenCalledWith(
+      'StaticValidator.validate called'
+    );
   });
 });

@@ -27,45 +27,7 @@ import OperationRegistry from '../../src/logic/operationRegistry.js';
 import JsonLogicEvaluationService from '../../src/logic/jsonLogicEvaluationService.js';
 import ModifyComponentHandler from '../../src/logic/operationHandlers/modifyComponentHandler.js';
 import { createSimpleMockDataRegistry } from '../common/mockFactories.js';
-
-// -----------------------------------------------------------------------------
-//  Minimal in‑memory EntityManager stub – just enough for the handlers we use.
-// -----------------------------------------------------------------------------
-class SimpleEntityManager {
-  constructor() {
-    /** @type {Map<string, Map<string, any>>} */
-    this._entities = new Map();
-  }
-
-  /**
-   * Utility used only by the test harness
-   *
-   * @param id
-   */
-  _createEntity(id) {
-    if (!this._entities.has(id)) this._entities.set(id, new Map());
-  }
-
-  addComponent(entityId, componentType, data) {
-    this._createEntity(entityId);
-    this._entities
-      .get(entityId)
-      .set(componentType, JSON.parse(JSON.stringify(data)));
-  }
-
-  getComponentData(entityId, componentType) {
-    return this._entities.get(entityId)?.get(componentType);
-  }
-
-  hasComponent(entityId, componentType) {
-    return this._entities.get(entityId)?.has(componentType) ?? false;
-  }
-
-  // Not used but keeps the public surface familiar
-  getEntityInstance(id) {
-    return { id };
-  }
-}
+import SimpleEntityManager from '../common/entities/simpleEntityManager.js';
 
 // -----------------------------------------------------------------------------
 //  The Test -------------------------------------------------------------------

@@ -66,7 +66,8 @@ class DispatchSpeechHandler {
       safeDispatchError(
         this.#dispatcher,
         'DISPATCH_SPEECH: invalid parameters.',
-        { params }
+        { params },
+        logger
       );
       return;
     }
@@ -95,7 +96,8 @@ class DispatchSpeechHandler {
       safeDispatchError(
         this.#dispatcher,
         'DISPATCH_SPEECH: Error dispatching display_speech.',
-        { errorMessage: err.message, stack: err.stack }
+        { errorMessage: err.message, stack: err.stack },
+        logger
       );
     }
   }

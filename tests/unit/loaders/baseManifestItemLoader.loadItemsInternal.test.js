@@ -3,7 +3,10 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 // Adjust the import path as necessary
 import { BaseManifestItemLoader } from '../../../src/loaders/baseManifestItemLoader.js';
-import { createMockPathResolver, createMockDataFetcher } from '../../common/mockFactories/index.js';
+import {
+  createMockPathResolver,
+  createMockDataFetcher,
+} from '../../common/mockFactories/index.js';
 // Assume ValidationResult type is available or mock it if needed for type checking in tests
 // import { ValidationResult } from '../../../src/interfaces/validation.js'; // Example import
 

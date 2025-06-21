@@ -146,22 +146,21 @@ class WorldInitializer {
       this.#logger.error(
         'WorldInitializer (Pass 1): No entity definitions found. Game cannot start without entities.'
       );
-      
-      // Dispatch system error event with comprehensive payload
+
+      // Only allowed properties in details: statusCode, url, raw, stack, timestamp
       safeDispatchError(
         this.#validatedEventDispatcher,
         'No entity definitions found. The game cannot start without any entities in the world.',
         {
           statusCode: 500,
-          raw: 'No entity definitions available in game data repository',
+          raw: 'No entity definitions available in game data repository. Context: WorldInitializer._instantiateAllEntitiesFromDefinitions, entityDefinitionsCount: 0, repositoryMethod: getAllEntityDefinitions',
           timestamp: new Date().toISOString(),
-          context: 'WorldInitializer._instantiateAllEntitiesFromDefinitions',
-          entityDefinitionsCount: 0,
-          repositoryMethod: 'getAllEntityDefinitions'
         }
       );
-      
-      throw new Error('Game cannot start: No entity definitions found in the world data. Please ensure at least one entity is defined.');
+
+      throw new Error(
+        'Game cannot start: No entity definitions found in the world data. Please ensure at least one entity is defined.'
+      );
     }
 
     for (const entityDef of allEntityDefinitions) {

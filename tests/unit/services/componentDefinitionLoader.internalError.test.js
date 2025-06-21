@@ -7,7 +7,9 @@ import ComponentLoader from '../../../src/loaders/componentLoader.js'; // Adjust
 // --- Mock Service Factories ---
 const createMockConfiguration = (overrides = {}) => ({
   getModsBasePath: jest.fn(() => './data/mods'),
-  getContentBasePath: jest.fn((registryKey) => `./data/mods/test-mod/${registryKey}`),
+  getContentBasePath: jest.fn(
+    (registryKey) => `./data/mods/test-mod/${registryKey}`
+  ),
   getContentTypeSchemaId: jest.fn((registryKey) =>
     registryKey === 'components'
       ? 'http://example.com/schemas/component.schema.json'

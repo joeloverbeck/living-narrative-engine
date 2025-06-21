@@ -12,6 +12,4 @@ export {
   createMockAIPromptPipeline,
 } from './coreServices.js';
 
-export {
-  createMockContainerWithRegistration,
-} from './container.js';
+export { createMockContainerWithRegistration } from './container.js';

@@ -321,7 +321,8 @@ describe('TurnEndingState', () => {
       expect(safeDispatchError).toHaveBeenCalledWith(
         mockSafeEventDispatcher,
         `TurnEndingState: Failed notifying TurnEndPort for actor ${actorId}: ${notifyError.message}`,
-        expect.any(Object)
+        expect.any(Object),
+        mockContextSpecificLogger
       );
       expect(mockHandler.signalNormalApparentTermination).toHaveBeenCalled();
       expect(mockHandler._resetTurnStateAndResources).toHaveBeenCalled();
@@ -408,7 +409,8 @@ describe('TurnEndingState', () => {
         expect.stringContaining(
           `Failed forced transition to TurnIdleState during destroy for actor ${actorId}: ${transitionError.message}`
         ),
-        expect.any(Object)
+        expect.any(Object),
+        mockContextSpecificLogger
       );
     });
   });

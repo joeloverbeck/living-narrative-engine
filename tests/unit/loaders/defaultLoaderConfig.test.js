@@ -1,4 +1,7 @@
-import { createContentLoadersConfig, createDefaultContentLoadersConfig } from '../../../src/loaders/defaultLoaderConfig.js';
+import {
+  createContentLoadersConfig,
+  createDefaultContentLoadersConfig,
+} from '../../../src/loaders/defaultLoaderConfig.js';
 
 describe('defaultLoaderConfig', () => {
   it('createContentLoadersConfig returns correct structure', () => {
@@ -17,8 +20,20 @@ describe('defaultLoaderConfig', () => {
     const config = createContentLoadersConfig(loaderMap);
     expect(config).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ loader: stubLoader, registryKey: 'components', contentKey: 'components', diskFolder: 'components', phase: 'definitions' }),
-        expect.objectContaining({ loader: stubLoader, registryKey: 'entityInstances', contentKey: 'entityInstances', diskFolder: 'entities/instances', phase: 'instances' }),
+        expect.objectContaining({
+          loader: stubLoader,
+          registryKey: 'components',
+          contentKey: 'components',
+          diskFolder: 'components',
+          phase: 'definitions',
+        }),
+        expect.objectContaining({
+          loader: stubLoader,
+          registryKey: 'entityInstances',
+          contentKey: 'entityInstances',
+          diskFolder: 'entities/instances',
+          phase: 'instances',
+        }),
       ])
     );
     expect(config).toHaveLength(Object.keys(loaderMap).length);
@@ -40,10 +55,16 @@ describe('defaultLoaderConfig', () => {
     const config = createDefaultContentLoadersConfig(deps);
     expect(config).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ loader: stubLoader, registryKey: 'components' }),
-        expect.objectContaining({ loader: stubLoader, registryKey: 'entityInstances' }),
+        expect.objectContaining({
+          loader: stubLoader,
+          registryKey: 'components',
+        }),
+        expect.objectContaining({
+          loader: stubLoader,
+          registryKey: 'entityInstances',
+        }),
       ])
     );
     expect(config).toHaveLength(Object.keys(deps).length);
   });
-}); 
+});

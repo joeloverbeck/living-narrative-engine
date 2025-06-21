@@ -1,18 +1,32 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "http://example.com/schemas/world.schema.json",
-  "title": "World",
-  "description": "Defines the initial state of a game world by enumerating all entities that exist at the start.",
+  "title": "World Definition",
+  "description": "Defines a self-contained, instantiable game world, including its identity and initial entity population.",
   "type": "object",
   "properties": {
+    "id": {
+      "$ref": "common.schema.json#/definitions/namespacedId",
+      "description": "Required. The unique, namespaced ID for this world (e.g., 'core:main_campaign', 'my_mod:horde_arena')."
+    },
+    "name": {
+      "type": "string",
+      "description": "Required. The human-readable name of the world, used for display in UI menus.",
+      "minLength": 1
+    },
+    "description": {
+      "type": "string",
+      "description": "Optional. A brief, human-readable summary of the world."
+    },
     "instances": {
       "type": "array",
       "description": "A list of all entity instances to be created when the world is initialized.",
       "items": {
-        "$ref": "http://example.com/schemas/entity-instance.schema.json#"
+        "$ref": "entity-instance.schema.json#"
       },
       "minItems": 1
     }
   },
-  "required": ["instances"]
+  "required": ["id", "name", "instances"],
+  "additionalProperties": false
 }

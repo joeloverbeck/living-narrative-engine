@@ -32,7 +32,9 @@ import RuleLoader from '../../../src/loaders/ruleLoader.js'; // Adjust path as n
  * @returns {IConfiguration} Mocked configuration service.
  */
 const createMockConfiguration = (overrides = {}) => ({
-  getContentBasePath: jest.fn((registryKey) => `./data/mods/test-mod/${registryKey}`),
+  getContentBasePath: jest.fn(
+    (registryKey) => `./data/mods/test-mod/${registryKey}`
+  ),
   getContentTypeSchemaId: jest.fn((registryKey) => {
     if (registryKey === 'rules') {
       return 'http://example.com/schemas/rule.schema.json';
@@ -373,13 +375,15 @@ describe('RuleLoader (Manifest Input Handling via loadItemsForMod)', () => {
     it('should throw TypeError and log error if manifest is null', async () => {
       const expectedErrorMsg = `RuleLoader: Programming Error - Invalid 'modManifest' provided for loading content for mod '${modId}'. Must be a non-null object. Received: null`;
       // --- Assert ---
-      await expect(loader.loadItemsForMod(
-        modId,
-        null, // Invalid manifest
-        RULE_CONTENT_KEY,
-        RULE_CONTENT_DIR,
-        RULE_TYPE_NAME
-      )).rejects.toThrow(new TypeError(expectedErrorMsg));
+      await expect(
+        loader.loadItemsForMod(
+          modId,
+          null, // Invalid manifest
+          RULE_CONTENT_KEY,
+          RULE_CONTENT_DIR,
+          RULE_TYPE_NAME
+        )
+      ).rejects.toThrow(new TypeError(expectedErrorMsg));
       // Verify ERROR log occurred from base class
       expect(mockLogger.error).toHaveBeenCalledWith(expectedErrorMsg);
       // Verify other steps weren't reached

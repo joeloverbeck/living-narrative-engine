@@ -8,7 +8,10 @@ import { createMockLogger } from '../../common/mockFactories.js';
 import InMemoryDataRegistry from '../../../src/data/inMemoryDataRegistry.js';
 import ModsLoader from '../../../src/loaders/modsLoader.js';
 import LoaderPhase from '../../../src/loaders/phases/LoaderPhase.js';
-import { ModsLoaderPhaseError, ModsLoaderErrorCode } from '../../../src/errors/modsLoaderPhaseError.js';
+import {
+  ModsLoaderPhaseError,
+  ModsLoaderErrorCode,
+} from '../../../src/errors/modsLoaderPhaseError.js';
 import { makeRegistryCache } from '../../../src/loaders/registryCacheAdapter.js';
 import ModsLoadSession from '../../../src/loaders/ModsLoadSession.js';
 import ModsLoaderError from '../../../src/errors/modsLoaderError.js';
@@ -25,7 +28,13 @@ class MockPhase extends LoaderPhase {
    * @param {string} [options.errorMessage] - Error message if failing
    * @param {Array<string>} options.executionOrder - Array to track execution order
    */
-  constructor({ name, shouldFail = false, errorCode = 'unexpected', errorMessage = 'Mock phase failure', executionOrder }) {
+  constructor({
+    name,
+    shouldFail = false,
+    errorCode = 'unexpected',
+    errorMessage = 'Mock phase failure',
+    executionOrder,
+  }) {
     super();
     this.name = name;
     this.shouldFail = shouldFail;
@@ -35,7 +44,7 @@ class MockPhase extends LoaderPhase {
     this.execute = jest.fn().mockImplementation(async (context) => {
       // Track execution order
       this.executionOrder.push(this.name);
-      
+
       if (this.shouldFail) {
         throw new ModsLoaderPhaseError(
           this.errorCode,
@@ -43,9 +52,9 @@ class MockPhase extends LoaderPhase {
           this.name
         );
       }
-      
+
       // Simulate some work
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
     });
   }
 }
@@ -67,20 +76,23 @@ describe('Integration: ModsLoader Orchestrator Order and Error Propagation', () 
     it('should execute all phases in the correct order when all phases succeed', async () => {
       // Arrange: Create five mock phases that all succeed
       const phaseNames = ['Phase1', 'Phase2', 'Phase3', 'Phase4', 'Phase5'];
-      phases = phaseNames.map(name => 
-        new MockPhase({ 
-          name, 
-          shouldFail: false, 
-          executionOrder 
-        })
+      phases = phaseNames.map(
+        (name) =>
+          new MockPhase({
+            name,
+            shouldFail: false,
+            executionOrder,
+          })
       );
 
-      const session = { run: jest.fn().mockImplementation(async ctx => {
-        for (const phase of phases) {
-          await phase.execute(ctx);
-        }
-        return ctx;
-      }) };
+      const session = {
+        run: jest.fn().mockImplementation(async (ctx) => {
+          for (const phase of phases) {
+            await phase.execute(ctx);
+          }
+          return ctx;
+        }),
+      };
       const modsLoader = new ModsLoader({
         logger: mockLogger,
         cache: makeRegistryCache(dataRegistry),
@@ -93,40 +105,40 @@ describe('Integration: ModsLoader Orchestrator Order and Error Propagation', () 
 
       // Assert: All phases were executed in order
       expect(executionOrder).toEqual(phaseNames);
-      
+
       // Verify the returned LoadReport
       expect(result).toEqual({
         finalModOrder: [],
         totals: {},
         incompatibilities: 0,
       });
-      
+
       // Verify each phase's execute method was called exactly once
-      phases.forEach(phase => {
+      phases.forEach((phase) => {
         expect(phase.execute).toHaveBeenCalledTimes(1);
       });
 
       // Verify the context passed to each phase
-      phases.forEach(phase => {
+      phases.forEach((phase) => {
         const callArgs = phase.execute.mock.calls[0];
         expect(callArgs).toHaveLength(1);
-        
+
         const context = callArgs[0];
         expect(context).toMatchObject({
           worldName: 'test-world',
           requestedMods: ['mod1', 'mod2'],
           finalModOrder: [],
           incompatibilities: 0,
-          totals: {}
+          totals: {},
         });
       });
 
       // Verify success logging
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        'ModsLoader: Starting load sequence for world \'test-world\'...'
+        "ModsLoader: Starting load sequence for world 'test-world'..."
       );
       expect(mockLogger.info).toHaveBeenCalledWith(
-        'ModsLoader: Load sequence for world \'test-world\' completed successfully.'
+        "ModsLoader: Load sequence for world 'test-world' completed successfully."
       );
     });
   });
@@ -135,22 +147,25 @@ describe('Integration: ModsLoader Orchestrator Order and Error Propagation', () 
     it('should stop execution and propagate error when second phase fails', async () => {
       // Arrange: Create five phases with the second one configured to fail
       const phaseNames = ['Phase1', 'Phase2', 'Phase3', 'Phase4', 'Phase5'];
-      phases = phaseNames.map((name, index) => 
-        new MockPhase({ 
-          name, 
-          shouldFail: index === 1, // Second phase (index 1) fails
-          errorCode: 'manifest',
-          errorMessage: 'Manifest validation failed',
-          executionOrder 
-        })
+      phases = phaseNames.map(
+        (name, index) =>
+          new MockPhase({
+            name,
+            shouldFail: index === 1, // Second phase (index 1) fails
+            errorCode: 'manifest',
+            errorMessage: 'Manifest validation failed',
+            executionOrder,
+          })
       );
 
-      const session = { run: jest.fn().mockImplementation(async ctx => {
-        for (const phase of phases) {
-          await phase.execute(ctx);
-        }
-        return ctx;
-      }) };
+      const session = {
+        run: jest.fn().mockImplementation(async (ctx) => {
+          for (const phase of phases) {
+            await phase.execute(ctx);
+          }
+          return ctx;
+        }),
+      };
       const modsLoader = new ModsLoader({
         logger: mockLogger,
         cache: makeRegistryCache(dataRegistry),
@@ -159,19 +174,19 @@ describe('Integration: ModsLoader Orchestrator Order and Error Propagation', () 
       });
 
       // Act & Assert: Execute the loader and expect it to fail
-      await expect(modsLoader.loadMods('test-world', ['mod1']))
-        .rejects
-        .toThrow(ModsLoaderPhaseError);
+      await expect(modsLoader.loadMods('test-world', ['mod1'])).rejects.toThrow(
+        ModsLoaderPhaseError
+      );
 
       // Verify only the first two phases were executed
       expect(executionOrder).toEqual(['Phase1', 'Phase2']);
-      
+
       // Verify Phase1 was called once
       expect(phases[0].execute).toHaveBeenCalledTimes(1);
-      
+
       // Verify Phase2 was called once and failed
       expect(phases[1].execute).toHaveBeenCalledTimes(1);
-      
+
       // Verify phases 3-5 were never called
       expect(phases[2].execute).not.toHaveBeenCalled();
       expect(phases[3].execute).not.toHaveBeenCalled();
@@ -179,7 +194,7 @@ describe('Integration: ModsLoader Orchestrator Order and Error Propagation', () 
 
       // Verify error logging - note that the phase name comes from err.phase, not err.phaseName
       expect(mockLogger.error).toHaveBeenCalledWith(
-        'ModsLoader: CRITICAL failure during phase \'Phase2\'. Code: [manifest]. Error: Manifest validation failed',
+        "ModsLoader: CRITICAL failure during phase 'Phase2'. Code: [manifest]. Error: Manifest validation failed",
         { error: expect.any(ModsLoaderPhaseError) }
       );
     });
@@ -187,22 +202,25 @@ describe('Integration: ModsLoader Orchestrator Order and Error Propagation', () 
     it('should clear registry and propagate ModsLoaderPhaseError with correct properties', async () => {
       // Arrange: Create phases with second one failing
       const phaseNames = ['Phase1', 'Phase2', 'Phase3'];
-      phases = phaseNames.map((name, index) => 
-        new MockPhase({ 
-          name, 
-          shouldFail: index === 1,
-          errorCode: 'content',
-          errorMessage: 'Content loading failed',
-          executionOrder 
-        })
+      phases = phaseNames.map(
+        (name, index) =>
+          new MockPhase({
+            name,
+            shouldFail: index === 1,
+            errorCode: 'content',
+            errorMessage: 'Content loading failed',
+            executionOrder,
+          })
       );
 
-      const session = { run: jest.fn().mockImplementation(async ctx => {
-        for (const phase of phases) {
-          await phase.execute(ctx);
-        }
-        return ctx;
-      }) };
+      const session = {
+        run: jest.fn().mockImplementation(async (ctx) => {
+          for (const phase of phases) {
+            await phase.execute(ctx);
+          }
+          return ctx;
+        }),
+      };
       const modsLoader = new ModsLoader({
         logger: mockLogger,
         cache: makeRegistryCache(dataRegistry),
@@ -234,28 +252,30 @@ describe('Integration: ModsLoader Orchestrator Order and Error Propagation', () 
     it('should handle unexpected errors and re-throw them to upstream', async () => {
       // Arrange: Create a phase that throws an unexpected error
       phases = [
-        new MockPhase({ 
-          name: 'Phase1', 
-          shouldFail: false, 
-          executionOrder 
+        new MockPhase({
+          name: 'Phase1',
+          shouldFail: false,
+          executionOrder,
         }),
-        new MockPhase({ 
-          name: 'Phase2', 
-          shouldFail: false, 
-          executionOrder 
-        })
+        new MockPhase({
+          name: 'Phase2',
+          shouldFail: false,
+          executionOrder,
+        }),
       ];
 
       // Make the second phase throw an unexpected error
       const unexpectedError = new Error('Unexpected system error');
       phases[1].execute = jest.fn().mockRejectedValue(unexpectedError);
 
-      const session = { run: jest.fn().mockImplementation(async ctx => {
-        for (const phase of phases) {
-          await phase.execute(ctx);
-        }
-        return ctx;
-      }) };
+      const session = {
+        run: jest.fn().mockImplementation(async (ctx) => {
+          for (const phase of phases) {
+            await phase.execute(ctx);
+          }
+          return ctx;
+        }),
+      };
       const modsLoader = new ModsLoader({
         logger: mockLogger,
         cache: makeRegistryCache(dataRegistry),
@@ -264,14 +284,16 @@ describe('Integration: ModsLoader Orchestrator Order and Error Propagation', () 
       });
 
       // Act & Assert: Execute and expect original error to be re-thrown
-      await expect(modsLoader.loadMods('test-world', ['mod1']))
-        .rejects
-        .toThrow('Unexpected system error');
+      await expect(modsLoader.loadMods('test-world', ['mod1'])).rejects.toThrow(
+        'Unexpected system error'
+      );
 
       // Verify that no additional error logging occurred for unexpected errors
       // (since we're letting upstream handle them)
       expect(mockLogger.error).not.toHaveBeenCalledWith(
-        expect.stringContaining('CRITICAL load failure due to an unexpected error'),
+        expect.stringContaining(
+          'CRITICAL load failure due to an unexpected error'
+        ),
         expect.anything()
       );
 
@@ -290,12 +312,14 @@ describe('Integration: ModsLoader Orchestrator Order and Error Propagation', () 
       // Arrange: Create loader with empty phases array
       // Note: The current validation system doesn't handle isArray/isNotEmpty,
       // so this will likely pass validation but fail at runtime
-      const session = { run: jest.fn().mockImplementation(async ctx => {
-        for (const phase of phases) {
-          await phase.execute(ctx);
-        }
-        return ctx;
-      }) };
+      const session = {
+        run: jest.fn().mockImplementation(async (ctx) => {
+          for (const phase of phases) {
+            await phase.execute(ctx);
+          }
+          return ctx;
+        }),
+      };
       const modsLoader = new ModsLoader({
         logger: mockLogger,
         cache: makeRegistryCache(dataRegistry),
@@ -310,19 +334,21 @@ describe('Integration: ModsLoader Orchestrator Order and Error Propagation', () 
     it('should handle single phase execution', async () => {
       // Arrange: Single phase
       phases = [
-        new MockPhase({ 
-          name: 'SinglePhase', 
-          shouldFail: false, 
-          executionOrder 
-        })
+        new MockPhase({
+          name: 'SinglePhase',
+          shouldFail: false,
+          executionOrder,
+        }),
       ];
 
-      const session = { run: jest.fn().mockImplementation(async ctx => {
-        for (const phase of phases) {
-          await phase.execute(ctx);
-        }
-        return ctx;
-      }) };
+      const session = {
+        run: jest.fn().mockImplementation(async (ctx) => {
+          for (const phase of phases) {
+            await phase.execute(ctx);
+          }
+          return ctx;
+        }),
+      };
       const modsLoader = new ModsLoader({
         logger: mockLogger,
         cache: makeRegistryCache(dataRegistry),
@@ -336,7 +362,7 @@ describe('Integration: ModsLoader Orchestrator Order and Error Propagation', () 
       // Assert: Single phase executed
       expect(executionOrder).toEqual(['SinglePhase']);
       expect(phases[0].execute).toHaveBeenCalledTimes(1);
-      
+
       // Verify the returned LoadReport
       expect(result).toEqual({
         finalModOrder: [],
@@ -348,26 +374,28 @@ describe('Integration: ModsLoader Orchestrator Order and Error Propagation', () 
     it('should handle first phase failure', async () => {
       // Arrange: First phase fails
       phases = [
-        new MockPhase({ 
-          name: 'Phase1', 
+        new MockPhase({
+          name: 'Phase1',
           shouldFail: true,
           errorCode: 'schema',
           errorMessage: 'Schema validation failed',
-          executionOrder 
+          executionOrder,
         }),
-        new MockPhase({ 
-          name: 'Phase2', 
-          shouldFail: false, 
-          executionOrder 
-        })
+        new MockPhase({
+          name: 'Phase2',
+          shouldFail: false,
+          executionOrder,
+        }),
       ];
 
-      const session = { run: jest.fn().mockImplementation(async ctx => {
-        for (const phase of phases) {
-          await phase.execute(ctx);
-        }
-        return ctx;
-      }) };
+      const session = {
+        run: jest.fn().mockImplementation(async (ctx) => {
+          for (const phase of phases) {
+            await phase.execute(ctx);
+          }
+          return ctx;
+        }),
+      };
       const modsLoader = new ModsLoader({
         logger: mockLogger,
         cache: makeRegistryCache(dataRegistry),
@@ -376,13 +404,13 @@ describe('Integration: ModsLoader Orchestrator Order and Error Propagation', () 
       });
 
       // Act & Assert: Should fail immediately
-      await expect(modsLoader.loadMods('test-world', ['mod1']))
-        .rejects
-        .toThrow(ModsLoaderPhaseError);
+      await expect(modsLoader.loadMods('test-world', ['mod1'])).rejects.toThrow(
+        ModsLoaderPhaseError
+      );
 
       expect(executionOrder).toEqual(['Phase1']);
       expect(phases[0].execute).toHaveBeenCalledTimes(1);
       expect(phases[1].execute).not.toHaveBeenCalled();
     });
   });
-}); 
+});

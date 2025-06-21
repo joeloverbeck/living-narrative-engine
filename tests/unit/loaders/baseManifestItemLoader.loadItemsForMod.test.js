@@ -2,7 +2,10 @@
 
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import { BaseManifestItemLoader } from '../../../src/loaders/baseManifestItemLoader.js'; // Adjust path if necessary
-import { createMockPathResolver, createMockDataFetcher } from '../../common/mockFactories/index.js';
+import {
+  createMockPathResolver,
+  createMockDataFetcher,
+} from '../../common/mockFactories/index.js';
 
 // --- Mock Service Factories (Copied from actionLoader.test.js) ---
 

@@ -14,4 +14,4 @@ export function withValidatedDeps(Base, specFn) {
       validateDependencies(specFn(args), args.logger);
     }
   };
-} 
+}

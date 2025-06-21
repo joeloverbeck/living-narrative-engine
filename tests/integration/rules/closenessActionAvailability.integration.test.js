@@ -28,53 +28,7 @@ import {
   ACTOR_COMPONENT_ID,
 } from '../../../src/constants/componentIds.js';
 import { ATTEMPT_ACTION_ID } from '../../../src/constants/eventIds.js';
-
-class SimpleEntityManager {
-  constructor(entities) {
-    this.entities = new Map();
-    for (const e of entities) {
-      this.entities.set(e.id, {
-        id: e.id,
-        components: { ...e.components },
-        getComponentData(type) {
-          return this.components[type] ?? null;
-        },
-        hasComponent(type) {
-          return Object.prototype.hasOwnProperty.call(this.components, type);
-        },
-      });
-    }
-  }
-
-  getEntityInstance(id) {
-    return this.entities.get(id);
-  }
-
-  getComponentData(id, type) {
-    return this.entities.get(id)?.components[type] ?? null;
-  }
-
-  hasComponent(id, type) {
-    return Object.prototype.hasOwnProperty.call(
-      this.entities.get(id)?.components || {},
-      type
-    );
-  }
-
-  addComponent(id, type, data) {
-    const ent = this.entities.get(id);
-    if (ent) {
-      ent.components[type] = JSON.parse(JSON.stringify(data));
-    }
-  }
-
-  removeComponent(id, type) {
-    const ent = this.entities.get(id);
-    if (ent) {
-      delete ent.components[type];
-    }
-  }
-}
+import SimpleEntityManager from '../../common/entities/simpleEntityManager.js';
 
 /**
  *

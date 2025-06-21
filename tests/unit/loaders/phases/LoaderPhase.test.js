@@ -23,7 +23,9 @@ describe('LoaderPhase', () => {
       });
 
       // Act & Assert
-      await expect(phase.execute(ctx)).rejects.toThrow('execute() not implemented');
+      await expect(phase.execute(ctx)).rejects.toThrow(
+        'execute() not implemented'
+      );
     });
 
     it('should throw the same error for different context types', async () => {
@@ -41,8 +43,12 @@ describe('LoaderPhase', () => {
       });
 
       // Act & Assert
-      await expect(phase.execute(ctx1)).rejects.toThrow('execute() not implemented');
-      await expect(phase.execute(ctx2)).rejects.toThrow('execute() not implemented');
+      await expect(phase.execute(ctx1)).rejects.toThrow(
+        'execute() not implemented'
+      );
+      await expect(phase.execute(ctx2)).rejects.toThrow(
+        'execute() not implemented'
+      );
     });
 
     it('should throw the same error when called multiple times', async () => {
@@ -55,9 +61,15 @@ describe('LoaderPhase', () => {
       });
 
       // Act & Assert
-      await expect(phase.execute(ctx)).rejects.toThrow('execute() not implemented');
-      await expect(phase.execute(ctx)).rejects.toThrow('execute() not implemented');
-      await expect(phase.execute(ctx)).rejects.toThrow('execute() not implemented');
+      await expect(phase.execute(ctx)).rejects.toThrow(
+        'execute() not implemented'
+      );
+      await expect(phase.execute(ctx)).rejects.toThrow(
+        'execute() not implemented'
+      );
+      await expect(phase.execute(ctx)).rejects.toThrow(
+        'execute() not implemented'
+      );
     });
 
     it('should throw the same error with null context', async () => {
@@ -65,7 +77,9 @@ describe('LoaderPhase', () => {
       const phase = new LoaderPhase();
 
       // Act & Assert
-      await expect(phase.execute(null)).rejects.toThrow('execute() not implemented');
+      await expect(phase.execute(null)).rejects.toThrow(
+        'execute() not implemented'
+      );
     });
 
     it('should throw the same error with undefined context', async () => {
@@ -73,7 +87,9 @@ describe('LoaderPhase', () => {
       const phase = new LoaderPhase();
 
       // Act & Assert
-      await expect(phase.execute(undefined)).rejects.toThrow('execute() not implemented');
+      await expect(phase.execute(undefined)).rejects.toThrow(
+        'execute() not implemented'
+      );
     });
 
     it('should throw the same error with empty object context', async () => {
@@ -81,7 +97,9 @@ describe('LoaderPhase', () => {
       const phase = new LoaderPhase();
 
       // Act & Assert
-      await expect(phase.execute({})).rejects.toThrow('execute() not implemented');
+      await expect(phase.execute({})).rejects.toThrow(
+        'execute() not implemented'
+      );
     });
 
     it('should throw the same error with a direct object context (not using createLoadContext)', async () => {
@@ -92,7 +110,9 @@ describe('LoaderPhase', () => {
         requestedMods: [],
         registry: dummyRegistry,
       };
-      await expect(phase.execute(ctx)).rejects.toThrow('execute() not implemented');
+      await expect(phase.execute(ctx)).rejects.toThrow(
+        'execute() not implemented'
+      );
     });
   });
-}); 
+});

@@ -2,7 +2,11 @@
 
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import EntityDefinitionLoader from '../../../src/loaders/entityDefinitionLoader.js';
-import { createMockConfiguration, createMockPathResolver, createMockDataFetcher } from '../../common/mockFactories/index.js';
+import {
+  createMockConfiguration,
+  createMockPathResolver,
+  createMockDataFetcher,
+} from '../../common/mockFactories/index.js';
 import { BaseManifestItemLoader } from '../../../src/loaders/baseManifestItemLoader.js'; // Base class
 
 // --- Mock Service Factories ---

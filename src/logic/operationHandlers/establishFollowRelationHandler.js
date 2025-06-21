@@ -85,7 +85,8 @@ class EstablishFollowRelationHandler {
       safeDispatchError(
         this.#dispatcher,
         'ESTABLISH_FOLLOW_RELATION: Invalid "follower_id" parameter',
-        { params }
+        { params },
+        logger
       );
       return;
     }
@@ -93,7 +94,8 @@ class EstablishFollowRelationHandler {
       safeDispatchError(
         this.#dispatcher,
         'ESTABLISH_FOLLOW_RELATION: Invalid "leader_id" parameter',
-        { params }
+        { params },
+        logger
       );
       return;
     }
@@ -108,7 +110,8 @@ class EstablishFollowRelationHandler {
       safeDispatchError(
         this.#dispatcher,
         'ESTABLISH_FOLLOW_RELATION: Following would create a cycle',
-        { follower_id: fid, leader_id: lid }
+        { follower_id: fid, leader_id: lid },
+        logger
       );
       return;
     }
@@ -130,7 +133,8 @@ class EstablishFollowRelationHandler {
           stack: err.stack,
           follower_id: fid,
           leader_id: lid,
-        }
+        },
+        logger
       );
       return;
     }

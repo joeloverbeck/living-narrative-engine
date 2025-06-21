@@ -2,8 +2,14 @@
 // --- Imports ---
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import ComponentLoader from '../../../src/loaders/componentLoader.js';
-import { createMockPathResolver, createMockDataFetcher } from '../../common/mockFactories/index.js';
-import { createMockConfiguration, createMockLogger } from '../../common/mockFactories/index.js';
+import {
+  createMockPathResolver,
+  createMockDataFetcher,
+} from '../../common/mockFactories/index.js';
+import {
+  createMockConfiguration,
+  createMockLogger,
+} from '../../common/mockFactories/index.js';
 
 // --- Mock Service Factories ---
 // [Mocks omitted for brevity - assume they are the same as provided in the question]
@@ -19,8 +25,6 @@ import { createMockConfiguration, createMockLogger } from '../../common/mockFact
  * createMockModManifest
  */
 // --- Mock Service Factories (Copied from previous test files for self-containment) ---
-
-
 
 // --- Test Utility Functions ---
 // [Utility functions createMockComponentDefinition, createMockModManifest omitted for brevity]

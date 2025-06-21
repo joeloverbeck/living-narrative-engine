@@ -54,6 +54,7 @@
     "test:load-order": "jest --env=jsdom --silent=false --runInBand tests/integration/loaders/modsLoader.definitionFirst.test.js",
     "test:update": "jest --env=jsdom --updateSnapshot",
     "create-mod": "node scripts/createMod.mjs",
+    "fill-mod": "node scripts/updateManifest.js",
     "build": "esbuild src/main.js --bundle --outfile=dist/bundle.js --platform=browser --sourcemap && cpy index.html game.html dist && cpy css dist && cpy data dist && cpy config dist && cpy favicon.ico dist",
     "start": "npm run build && http-server dist -o",
     "start:all": "concurrently \"npm run start\" \"npm run start --prefix llm-proxy-server\"",

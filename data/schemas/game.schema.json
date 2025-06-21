@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "http://example.com/schemas/game.schema.json",
   "title": "Game Configuration",
-  "description": "Schema for the game configuration file (game.json), defining the required list of mods.",
+  "description": "Schema for the game configuration file (game.json), defining the required list of mods and the default starting world.",
   "type": "object",
   "properties": {
     "mods": {
@@ -13,6 +13,10 @@
         "type": "string"
       },
       "uniqueItems": true
+    },
+    "startWorld": {
+      "description": "Optional. The namespaced ID of the world to load by default if no other world is specified (e.g., via URL parameters).",
+      "type": "string"
     }
   },
   "required": ["mods"],

@@ -10,7 +10,10 @@ import {
 } from '@jest/globals';
 import EventLoader from '../../../src/loaders/eventLoader.js';
 import { BaseManifestItemLoader } from '../../../src/loaders/baseManifestItemLoader.js';
-import { createMockPathResolver, createMockDataFetcher } from '../../common/mockFactories/index.js';
+import {
+  createMockPathResolver,
+  createMockDataFetcher,
+} from '../../common/mockFactories/index.js';
 
 // --- Mock Service Factories ---
 const createMockConfiguration = (overrides = {}) => ({

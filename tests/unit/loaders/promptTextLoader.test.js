@@ -2,7 +2,10 @@
 
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import PromptTextLoader from '../../../src/loaders/promptTextLoader.js';
-import { createMockPathResolver, createMockDataFetcher } from '../../common/mockFactories/index.js';
+import {
+  createMockPathResolver,
+  createMockDataFetcher,
+} from '../../common/mockFactories/index.js';
 
 /** @typedef {import('../../../src/interfaces/coreServices.js').IConfiguration} IConfiguration */
 /** @typedef {import('../../../src/interfaces/coreServices.js').IPathResolver} IPathResolver */
@@ -54,7 +57,9 @@ let loader;
 beforeEach(() => {
   configuration = createMockConfiguration();
   pathResolver = createMockPathResolver();
-  dataFetcher = createMockDataFetcher({ '/path/prompts/corePromptText.json': { example: true } });
+  dataFetcher = createMockDataFetcher({
+    '/path/prompts/corePromptText.json': { example: true },
+  });
   schemaValidator = createMockSchemaValidator();
   dataRegistry = createMockDataRegistry();
   logger = createMockLogger();
@@ -95,9 +100,11 @@ describe('PromptTextLoader', () => {
 
   it('should use the correct schema ID from StaticConfiguration', async () => {
     // Arrange: Use the real StaticConfiguration to test the integration
-    const StaticConfiguration = (await import('../../../src/configuration/staticConfiguration.js')).default;
+    const StaticConfiguration = (
+      await import('../../../src/configuration/staticConfiguration.js')
+    ).default;
     const realConfig = new StaticConfiguration();
-    
+
     // Create a new loader with the real configuration
     const realConfigLoader = new PromptTextLoader({
       configuration: realConfig,

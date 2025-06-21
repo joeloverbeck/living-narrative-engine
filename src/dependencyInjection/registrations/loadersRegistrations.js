@@ -211,49 +211,49 @@ export function registerLoaders(container) {
             contentKey: 'actions',
             diskFolder: 'actions',
             registryKey: 'actions',
-            phase: 'definitions'
+            phase: 'definitions',
           },
           {
             loader: c.resolve(tokens.ComponentLoader),
             contentKey: 'components',
             diskFolder: 'components',
             registryKey: 'components',
-            phase: 'definitions'
+            phase: 'definitions',
           },
           {
             loader: c.resolve(tokens.ConditionLoader),
             contentKey: 'conditions',
             diskFolder: 'conditions',
             registryKey: 'conditions',
-            phase: 'definitions'
+            phase: 'definitions',
           },
           {
             loader: c.resolve(tokens.EntityLoader),
             contentKey: 'entityDefinitions',
             diskFolder: 'entities/definitions',
             registryKey: 'entity_definitions',
-            phase: 'definitions'
+            phase: 'definitions',
           },
           {
             loader: c.resolve(tokens.EventLoader),
             contentKey: 'events',
             diskFolder: 'events',
             registryKey: 'events',
-            phase: 'definitions'
+            phase: 'definitions',
           },
           {
             loader: c.resolve(tokens.MacroLoader),
             contentKey: 'macros',
             diskFolder: 'macros',
             registryKey: 'macros',
-            phase: 'definitions'
+            phase: 'definitions',
           },
           {
             loader: c.resolve(tokens.RuleLoader),
             contentKey: 'rules',
             diskFolder: 'rules',
             registryKey: 'rules',
-            phase: 'definitions'
+            phase: 'definitions',
           },
           // Instance phase loaders
           {
@@ -261,15 +261,15 @@ export function registerLoaders(container) {
             contentKey: 'entityInstances',
             diskFolder: 'entities/instances',
             registryKey: 'entity_instances',
-            phase: 'instances'
+            phase: 'instances',
           },
           {
             loader: c.resolve(tokens.GoalLoader),
             contentKey: 'goals',
             diskFolder: 'goals',
             registryKey: 'goals',
-            phase: 'instances'
-          }
+            phase: 'instances',
+          },
         ],
       })
   );
@@ -356,7 +356,11 @@ export function registerLoaders(container) {
     return new (require('../../loaders/modsLoader.js').default)({
       logger: c.resolve(tokens.ILogger),
       cache: c.resolve(tokens.ILoadCache),
-      session: new ModsLoadSession({ phases, cache: c.resolve(tokens.ILoadCache), logger: c.resolve(tokens.ILogger) }),
+      session: new ModsLoadSession({
+        phases,
+        cache: c.resolve(tokens.ILoadCache),
+        logger: c.resolve(tokens.ILogger),
+      }),
       registry: c.resolve(tokens.IDataRegistry),
     });
   });

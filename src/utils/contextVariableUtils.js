@@ -64,7 +64,7 @@ export function writeContextVariable(
 
   if (!valid) {
     if (safeDispatcher) {
-      safeDispatchError(safeDispatcher, error.message, { variableName });
+      safeDispatchError(safeDispatcher, error.message, { variableName }, log);
     }
     return { success: false, error };
   }
@@ -77,11 +77,16 @@ export function writeContextVariable(
       `writeContextVariable: Failed to write variable "${variableName}"`
     );
     if (safeDispatcher) {
-      safeDispatchError(safeDispatcher, err.message, {
-        variableName,
-        error: e.message,
-        stack: e.stack,
-      });
+      safeDispatchError(
+        safeDispatcher,
+        err.message,
+        {
+          variableName,
+          error: e.message,
+          stack: e.stack,
+        },
+        log
+      );
     }
     return { success: false, error: err };
   }
@@ -111,9 +116,14 @@ export function tryWriteContextVariable(
   if (!validation.valid) {
     const safeDispatcher = dispatcher || resolveSafeDispatcher(execCtx, log);
     if (safeDispatcher) {
-      safeDispatchError(safeDispatcher, validation.error.message, {
-        variableName,
-      });
+      safeDispatchError(
+        safeDispatcher,
+        validation.error.message,
+        {
+          variableName,
+        },
+        log
+      );
     }
     return { success: false, error: validation.error };
   }
