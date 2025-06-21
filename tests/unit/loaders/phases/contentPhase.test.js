@@ -2,7 +2,7 @@
 
 import { jest } from '@jest/globals';
 import ContentPhase from '../../../../src/loaders/phases/contentPhase.js';
-import LoaderPhase from '../../../../src/loaders/phases/loaderPhase.js';
+import LoaderPhase from '../../../../src/loaders/phases/LoaderPhase.js';
 import {
   ModsLoaderPhaseError,
   ModsLoaderErrorCode,

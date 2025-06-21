@@ -12,7 +12,7 @@
 import { resolvePath } from '../../utils/objectUtils.js';
 import { cloneDeep } from 'lodash';
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
-import { setContextValue } from '../../utils/contextVariableUtils.js';
+import { tryWriteContextVariable } from '../../utils/contextVariableUtils.js';
 import { assertParamsObject } from '../../utils/handlerUtils/indexUtils.js';
 import ComponentOperationHandler from './componentOperationHandler.js';
 
@@ -278,14 +278,14 @@ class ModifyArrayFieldHandler extends ComponentOperationHandler {
 
     // 6. Store Result if requested
     if (result_variable) {
-      const stored = setContextValue(
+      const res = tryWriteContextVariable(
         result_variable,
         result,
         executionContext,
         this.#dispatcher,
         log
       );
-      if (stored) {
+      if (res.success) {
         log.debug(
           `MODIFY_ARRAY_FIELD: Stored result in context variable '${result_variable}'.`
         );

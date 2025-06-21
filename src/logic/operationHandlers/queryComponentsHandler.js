@@ -10,7 +10,7 @@
 /** @typedef {import('../defs.js').ExecutionContext} ExecutionContext */
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 
-import { setContextValue } from '../../utils/contextVariableUtils.js';
+import { writeContextVariable } from '../../utils/contextVariableUtils.js';
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 import { assertParamsObject } from '../../utils/handlerUtils/paramsUtils.js';
 import ComponentOperationHandler from './componentOperationHandler.js';
@@ -145,7 +145,7 @@ class QueryComponentsHandler extends ComponentOperationHandler {
       }
 
       const valueToStore = result === undefined ? null : result;
-      setContextValue(
+      writeContextVariable(
         trimmedVar,
         valueToStore,
         executionContext,

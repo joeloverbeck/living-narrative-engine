@@ -1,6 +1,6 @@
 // src/loaders/phases/contentPhase.js
 
-import LoaderPhase from './loaderPhase.js';
+import LoaderPhase from './LoaderPhase.js';
 import {
   ModsLoaderPhaseError,
   ModsLoaderErrorCode,
@@ -17,7 +17,7 @@ import {
  * @description Phase responsible for delegating the loading of all mod content (components, actions, entities, etc.)
  * to the ContentLoadManager.
  * @class ContentPhase
- * @extends {LoaderPhase}
+ * @augments {LoaderPhase}
  */
 export default class ContentPhase extends LoaderPhase {
   /**

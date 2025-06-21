@@ -3,7 +3,7 @@
  * @see src/logic/operationHandlers/getTimestampHandler.js
  */
 
-import { setContextValue } from '../../utils/contextVariableUtils.js';
+import { tryWriteContextVariable } from '../../utils/contextVariableUtils.js';
 import { assertParamsObject } from '../../utils/handlerUtils/indexUtils.js';
 
 class GetTimestampHandler {
@@ -20,14 +20,14 @@ class GetTimestampHandler {
 
     const rv = params.result_variable.trim();
     const timestamp = new Date().toISOString();
-    const stored = setContextValue(
+    const result = tryWriteContextVariable(
       rv,
       timestamp,
       execCtx,
       undefined,
       this.#logger
     );
-    if (stored) {
+    if (result.success) {
       this.#logger.debug(`GET_TIMESTAMP → ${rv} = ${timestamp}`);
     }
   }

@@ -12,7 +12,7 @@
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 
 import { wouldCreateCycle } from '../../utils/followUtils.js';
-import { setContextValue } from '../../utils/contextVariableUtils.js';
+import { tryWriteContextVariable } from '../../utils/contextVariableUtils.js';
 import { assertParamsObject } from '../../utils/handlerUtils/indexUtils.js';
 
 /**
@@ -92,14 +92,14 @@ class CheckFollowCycleHandler {
     const cycleDetected = wouldCreateCycle(fid, lid, this.#entityManager);
     const result = { success: true, cycleDetected };
 
-    const stored = setContextValue(
+    const res = tryWriteContextVariable(
       result_variable,
       result,
       execCtx,
       this.#dispatcher,
       log
     );
-    if (stored) {
+    if (res.success) {
       log.debug(
         `CHECK_FOLLOW_CYCLE: Stored result in "${result_variable}": ${JSON.stringify(result)}`
       );

@@ -9,7 +9,7 @@
 
 import closenessCircleService from '../services/closenessCircleService.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../constants/eventIds.js';
-import { setContextValue } from '../../utils/contextVariableUtils.js';
+import { tryWriteContextVariable } from '../../utils/contextVariableUtils.js';
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 
 /**
@@ -134,7 +134,7 @@ class MergeClosenessCircleHandler {
     }
 
     if (typeof result_variable === 'string' && result_variable.trim()) {
-      setContextValue(
+      tryWriteContextVariable(
         result_variable.trim(),
         allMembers,
         execCtx,

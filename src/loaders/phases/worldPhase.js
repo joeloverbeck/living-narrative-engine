@@ -1,6 +1,6 @@
 // src/loaders/phases/worldPhase.js
 
-import LoaderPhase from './loaderPhase.js';
+import LoaderPhase from './LoaderPhase.js';
 import {
   ModsLoaderPhaseError,
   ModsLoaderErrorCode,
@@ -16,7 +16,7 @@ import {
 /**
  * @description Phase responsible for running the WorldLoader to process and instantiate world data from mods.
  * @class WorldPhase
- * @extends {LoaderPhase}
+ * @augments {LoaderPhase}
  * @module Loaders/Phases
  */
 export default class WorldPhase extends LoaderPhase {
