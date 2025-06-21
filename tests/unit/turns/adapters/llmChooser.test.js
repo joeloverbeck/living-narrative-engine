@@ -1,18 +1,16 @@
 import { jest, describe, test, expect } from '@jest/globals';
 import { LLMChooser } from '../../../../src/turns/adapters/llmChooser.js';
+import {
+  createMockLogger,
+  createMockAIPromptPipeline,
+} from '../../../common/mockFactories.js';
 
-const dummyLogger = {
-  debug: jest.fn(),
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-};
+const dummyLogger = createMockLogger();
 
 describe('LLMChooser', () => {
   test('forwards AbortSignal to llmAdapter', async () => {
-    const promptPipeline = {
-      generatePrompt: jest.fn().mockResolvedValue('PROMPT'),
-    };
+    const promptPipeline = createMockAIPromptPipeline();
+    promptPipeline.generatePrompt.mockResolvedValue('PROMPT');
     const llmAdapter = { getAIDecision: jest.fn().mockResolvedValue('{}') };
     const responseProcessor = {
       processResponse: jest.fn().mockResolvedValue({
@@ -42,9 +40,8 @@ describe('LLMChooser', () => {
   });
 
   test('returns {index, speech} shape', async () => {
-    const promptPipeline = {
-      generatePrompt: jest.fn().mockResolvedValue('PROMPT'),
-    };
+    const promptPipeline = createMockAIPromptPipeline();
+    promptPipeline.generatePrompt.mockResolvedValue('PROMPT');
     const llmAdapter = { getAIDecision: jest.fn().mockResolvedValue('{}') };
     const responseProcessor = {
       processResponse: jest.fn().mockResolvedValue({

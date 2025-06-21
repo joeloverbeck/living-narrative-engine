@@ -18,6 +18,10 @@ import {
   ACTOR_COMPONENT_ID,
   PLAYER_COMPONENT_ID,
 } from '../../src/constants/componentIds.js';
+import {
+  createMockLogger,
+  createMockAIPromptPipeline,
+} from '../common/mockFactories.js';
 
 // --- Test-Scoped Mocks & Stubs ----------------------------------------------
 class SimpleEntity {
@@ -58,14 +62,9 @@ describe('T-08: ActorTurnHandler Resolution and Startup', () => {
   let aiActor;
 
   beforeEach(() => {
-    logger = {
-      info: jest.fn(),
-      warn: jest.fn(),
-      error: jest.fn(),
-      debug: jest.fn(),
-    };
+    logger = createMockLogger();
     aiActor = new SimpleEntity(AI_ACTOR_ID, [ACTOR_COMPONENT_ID]);
-    mockAiPromptPipeline = { generatePrompt: jest.fn() };
+    mockAiPromptPipeline = createMockAIPromptPipeline();
 
     mockTurnState = {
       startTurn: jest.fn(),

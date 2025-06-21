@@ -15,6 +15,10 @@ import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 // --- System Under Test imports ---------------------------------------------
 // ⚠️ PATH‑TO – please fix to real locations in your project
 import { LLMChooser } from '../../src/turns/adapters/llmChooser.js';
+import {
+  createMockLogger,
+  createMockAIPromptPipeline,
+} from '../common/mockFactories.js';
 
 // ---------------------------------------------------------------------------
 // Lightweight helpers (no behaviour)
@@ -37,7 +41,8 @@ describe('LLMChooser.choose – metadata propagation', () => {
   beforeEach(() => {
     jest.clearAllMocks();
 
-    promptPipeline = { generatePrompt: jest.fn().mockResolvedValue('PROMPT') };
+    promptPipeline = createMockAIPromptPipeline();
+    promptPipeline.generatePrompt.mockResolvedValue('PROMPT');
     llmAdapter = { getAIDecision: jest.fn().mockResolvedValue('{"ok":1}') };
     responseProcessor = {
       processResponse: jest.fn().mockResolvedValue({
@@ -46,12 +51,7 @@ describe('LLMChooser.choose – metadata propagation', () => {
         extractedData: { thoughts: 'thinking', notes: ['n1', 'n2'] },
       }),
     };
-    logger = {
-      debug: jest.fn(),
-      info: jest.fn(),
-      warn: jest.fn(),
-      error: jest.fn(),
-    };
+    logger = createMockLogger();
 
     chooser = new LLMChooser({
       promptPipeline,
