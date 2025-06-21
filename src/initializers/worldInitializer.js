@@ -19,6 +19,10 @@ import _set from 'lodash/set.js';
 
 // --- Constant Imports ---
 import { POSITION_COMPONENT_ID } from '../constants/componentIds.js';
+import { SYSTEM_ERROR_OCCURRED_ID } from '../constants/systemEventIds.js';
+
+// --- Utility Imports ---
+import { safeDispatchError } from '../utils/safeDispatchErrorUtils.js';
 
 /**
  * Service responsible for instantiating entities defined
@@ -139,9 +143,25 @@ class WorldInitializer {
       this.#repository.getAllEntityDefinitions?.() || [];
 
     if (allEntityDefinitions.length === 0) {
-      this.#logger.warn(
-        'WorldInitializer (Pass 1): No entity definitions found. World may be empty of defined entities.'
+      this.#logger.error(
+        'WorldInitializer (Pass 1): No entity definitions found. Game cannot start without entities.'
       );
+      
+      // Dispatch system error event with comprehensive payload
+      safeDispatchError(
+        this.#validatedEventDispatcher,
+        'No entity definitions found. The game cannot start without any entities in the world.',
+        {
+          statusCode: 500,
+          raw: 'No entity definitions available in game data repository',
+          timestamp: new Date().toISOString(),
+          context: 'WorldInitializer._instantiateAllEntitiesFromDefinitions',
+          entityDefinitionsCount: 0,
+          repositoryMethod: 'getAllEntityDefinitions'
+        }
+      );
+      
+      throw new Error('Game cannot start: No entity definitions found in the world data. Please ensure at least one entity is defined.');
     }
 
     for (const entityDef of allEntityDefinitions) {
