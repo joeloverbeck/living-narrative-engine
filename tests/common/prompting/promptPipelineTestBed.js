@@ -18,6 +18,38 @@ import BaseTestBed from '../baseTestBed.js';
 import { describeSuiteWithHooks } from '../describeSuite.js';
 
 /**
+ * @typedef {object} DependencySpecEntry
+ * @property {RegExp} error - Expected error when dependency is missing.
+ * @property {string[]} methods - Methods required on the dependency.
+ */
+
+/**
+ * @description Defines how {@link AIPromptPipeline} constructor dependencies
+ * should be validated within tests. Each property specifies the expected error
+ * regex and required method names for that dependency.
+ * @type {Object<string, DependencySpecEntry>}
+ */
+export const AIPromptPipelineDependencySpec = {
+  llmAdapter: {
+    error: /ILLMAdapter/,
+    methods: ['getAIDecision', 'getCurrentActiveLlmId'],
+  },
+  gameStateProvider: {
+    error: /IAIGameStateProvider/,
+    methods: ['buildGameState'],
+  },
+  promptContentProvider: {
+    error: /IAIPromptContentProvider/,
+    methods: ['getPromptData'],
+  },
+  promptBuilder: {
+    error: /IPromptBuilder/,
+    methods: ['build'],
+  },
+  logger: { error: /ILogger/, methods: ['info'] },
+};
+
+/**
  * @description Utility class for unit tests that need an AIPromptPipeline with common mocks.
  * @class
  */
