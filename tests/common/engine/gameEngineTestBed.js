@@ -7,6 +7,7 @@
 
 import { createTestEnvironment } from './gameEngine.test-environment.js';
 import FactoryTestBed from '../factoryTestBed.js';
+import { TokenOverrideMixin } from '../tokenOverrideMixin.js';
 import { suppressConsoleError } from '../jestHelpers.js';
 import {
   createDescribeTestBedSuite,
@@ -18,17 +19,13 @@ import {
  * environment and exposes helpers for common test operations.
  * @class
  */
-export class GameEngineTestBed extends FactoryTestBed {
+export class GameEngineTestBed extends TokenOverrideMixin(FactoryTestBed) {
   /** @type {ReturnType<typeof createTestEnvironment>} */
   env;
   /** @type {import('../../../src/engine/gameEngine.js').default} */
   engine;
   /** @type {{ resolve: import('jest').Mock }} */
   container;
-  /** @type {Map<any, any>} */
-  #tokenOverrides = new Map();
-  /** @type {Function} */
-  #originalResolve;
   /**
    * @type {{
    *   logger: ReturnType<import('../mockFactories').createMockLogger>,
@@ -57,32 +54,11 @@ export class GameEngineTestBed extends FactoryTestBed {
       initializationService: () => env.initializationService,
     });
     this.container = env.mockContainer;
-    this.#originalResolve =
-      this.container.resolve.getMockImplementation?.() ??
-      this.container.resolve;
+    this._initTokenOverrides(env.mockContainer);
     const engine = env.createGameEngine();
     this.env = env;
     this.engine = engine;
   }
-
-  /**
-   * Temporarily overrides container token resolution.
-   *
-   * @param {any} token - Token to override.
-   * @param {any | (() => any)} value - Replacement value or function.
-   * @returns {void}
-   */
-  withTokenOverride(token, value) {
-    this.#tokenOverrides.set(token, value);
-    this.container.resolve.mockImplementation((tok) => {
-      if (this.#tokenOverrides.has(tok)) {
-        const override = this.#tokenOverrides.get(tok);
-        return typeof override === 'function' ? override() : override;
-      }
-      return this.#originalResolve(tok);
-    });
-  }
-
   /**
    * Initializes the engine using a default successful initialization result.
    *
@@ -154,8 +130,6 @@ export class GameEngineTestBed extends FactoryTestBed {
   async _afterCleanup() {
     await this.stop();
     this.env.cleanup();
-    this.container.resolve.mockImplementation(this.#originalResolve);
-    this.#tokenOverrides.clear();
     await super._afterCleanup();
   }
 }
