@@ -30,6 +30,8 @@ const StoppableMixin = createStoppableMixin('turnManager');
 export class TurnManagerTestBed extends StoppableMixin(FactoryTestBed) {
   /** @type {TurnManager} */
   turnManager;
+  /** @type {Array<import('@jest/globals').Mock>} */
+  #spies = [];
 
   constructor(overrides = {}) {
     super({
@@ -96,6 +98,38 @@ export class TurnManagerTestBed extends StoppableMixin(FactoryTestBed) {
     await this.turnManager.start();
     spy.mockRestore();
     this.resetMocks();
+  }
+
+  /**
+   * Starts the manager then flushes timers/promises.
+   *
+   * @returns {Promise<void>} Resolves once timers are flushed.
+   */
+  async startAndFlush() {
+    await this.turnManager.start();
+    await flushPromisesAndTimers();
+  }
+
+  /**
+   * Spies on {@link TurnManager.stop} and tracks for cleanup.
+   *
+   * @returns {import('@jest/globals').Mock} The spy instance.
+   */
+  spyOnStop() {
+    const spy = jest.spyOn(this.turnManager, 'stop');
+    this.#spies.push(spy);
+    return spy;
+  }
+
+  /**
+   * Spies on {@link TurnManager.advanceTurn} and tracks for cleanup.
+   *
+   * @returns {import('@jest/globals').Mock} The spy instance.
+   */
+  spyOnAdvanceTurn() {
+    const spy = jest.spyOn(this.turnManager, 'advanceTurn');
+    this.#spies.push(spy);
+    return spy;
   }
 
   /**
@@ -203,11 +237,18 @@ export class TurnManagerTestBed extends StoppableMixin(FactoryTestBed) {
   }
 
   /**
-   * Stops the TurnManager after base cleanup.
+   * Restores spies then stops the TurnManager via {@link StoppableMixin}.
    *
    * @protected
    * @returns {Promise<void>} Promise resolving when manager cleanup is complete.
    */
+  async _afterCleanup() {
+    for (const spy of this.#spies) {
+      spy.mockRestore();
+    }
+    this.#spies.length = 0;
+    await super._afterCleanup();
+  }
 }
 
 /**
@@ -230,8 +271,18 @@ export function createTurnManagerTestBed(overrides = {}) {
  *   creation.
  * @returns {void}
  */
-export const describeTurnManagerSuite =
-  createDescribeTestBedSuite(TurnManagerTestBed);
+export const describeTurnManagerSuite = createDescribeTestBedSuite(
+  TurnManagerTestBed,
+  {
+    beforeEachHook(bed) {
+      jest.useFakeTimers();
+      bed.initializeDefaultMocks();
+    },
+    afterEachHook() {
+      // Timers restored via BaseTestBed cleanup; spies handled by _afterCleanup
+    },
+  }
+);
 
 export default TurnManagerTestBed;
 export { flushPromisesAndTimers };
