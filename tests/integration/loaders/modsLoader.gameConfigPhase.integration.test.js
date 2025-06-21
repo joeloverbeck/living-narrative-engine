@@ -85,9 +85,16 @@ describe('ModsLoader + GameConfigPhase integration', () => {
     manifestPhase = new TestManifestPhase();
     phases = [gameConfigPhase, manifestPhase];
     modsLoader = new ModsLoader({ logger: fakeLogger, cache: makeRegistryCache(registry), session: makeSession(phases), registry });
-    await modsLoader.loadMods('test');
+    const result = await modsLoader.loadMods('test');
     // After loadMods, check the registry or other side effects as needed
     expect(fakeGameConfigLoader.loadConfig).toHaveBeenCalled();
+    
+    // Verify the returned LoadReport
+    expect(result).toEqual({
+      finalModOrder: [],
+      totals: {},
+      incompatibilities: 0,
+    });
   });
 
   it('throws a ModsLoaderPhaseError if game.json is missing', async () => {
@@ -122,8 +129,15 @@ describe('ModsLoader + GameConfigPhase integration', () => {
     manifestPhase = new RegistryManifestPhase();
     phases = [gameConfigPhase, manifestPhase];
     modsLoader = new ModsLoader({ logger: fakeLogger, cache: makeRegistryCache(registry), session: makeSession(phases), registry });
-    await modsLoader.loadMods('test');
+    const result = await modsLoader.loadMods('test');
     expect(registry.get('mod_manifests', 'core')).toEqual({ id: 'core' });
     expect(registry.get('mod_manifests', 'modA')).toEqual({ id: 'modA' });
+    
+    // Verify the returned LoadReport
+    expect(result).toEqual({
+      finalModOrder: [],
+      totals: {},
+      incompatibilities: 0,
+    });
   });
 }); 

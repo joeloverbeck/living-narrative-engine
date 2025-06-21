@@ -39,7 +39,11 @@ describe('InitializationService', () => {
       dispatch: jest.fn().mockResolvedValue(undefined), // Default success
     };
     mockModsLoader = {
-      loadMods: jest.fn().mockResolvedValue(undefined),
+      loadMods: jest.fn().mockResolvedValue({
+        finalModOrder: [],
+        totals: {},
+        incompatibilities: 0,
+      }),
     };
     mockSystemInitializer = {
       initializeAll: jest.fn().mockResolvedValue(undefined),

@@ -22,7 +22,11 @@ const mockEventDispatcher = {
 };
 
 const mockModsLoader = {
-  loadMods: jest.fn().mockResolvedValue(true),
+  loadMods: jest.fn().mockResolvedValue({
+    finalModOrder: [],
+    totals: {},
+    incompatibilities: 0,
+  }),
 };
 
 const mockSystemInitializer = {

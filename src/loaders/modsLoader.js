@@ -75,7 +75,7 @@ class ModsLoader extends AbstractLoader {
    *
    * @param {string} worldName - The name of the world to load.
    * @param {string[]} requestedModIds - An array of mod IDs to load.
-   * @returns {Promise<void>}
+   * @returns {Promise<import('../interfaces/loadContracts.js').LoadReport>} A report containing the final mod order, totals, and incompatibilities.
    */
   async loadMods(worldName, requestedModIds = []) {
     this._logger.debug(
@@ -90,6 +90,12 @@ class ModsLoader extends AbstractLoader {
       this._logger.info(
         `ModsLoader: Load sequence for world '${worldName}' completed successfully.`
       );
+      
+      return /** @type {import('../interfaces/loadContracts.js').LoadReport} */ ({
+        finalModOrder: context.finalModOrder.slice(),
+        totals: Object.freeze({ ...context.totals }),
+        incompatibilities: context.incompatibilities,
+      });
     } catch (err) {
       if (err instanceof ModsLoaderPhaseError) {
         this._logger.error(

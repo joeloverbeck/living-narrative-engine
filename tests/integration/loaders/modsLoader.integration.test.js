@@ -88,10 +88,17 @@ describe('Integration: ModsLoader Orchestrator Order and Error Propagation', () 
       });
 
       // Act: Execute the loader
-      await modsLoader.loadMods('test-world', ['mod1', 'mod2']);
+      const result = await modsLoader.loadMods('test-world', ['mod1', 'mod2']);
 
       // Assert: All phases were executed in order
       expect(executionOrder).toEqual(phaseNames);
+      
+      // Verify the returned LoadReport
+      expect(result).toEqual({
+        finalModOrder: [],
+        totals: {},
+        incompatibilities: 0,
+      });
       
       // Verify each phase's execute method was called exactly once
       phases.forEach(phase => {
@@ -315,11 +322,18 @@ describe('Integration: ModsLoader Orchestrator Order and Error Propagation', () 
       });
 
       // Act: Execute
-      await modsLoader.loadMods('test-world', []);
+      const result = await modsLoader.loadMods('test-world', []);
 
       // Assert: Single phase executed
       expect(executionOrder).toEqual(['SinglePhase']);
       expect(phases[0].execute).toHaveBeenCalledTimes(1);
+      
+      // Verify the returned LoadReport
+      expect(result).toEqual({
+        finalModOrder: [],
+        totals: {},
+        incompatibilities: 0,
+      });
     });
 
     it('should handle first phase failure', async () => {

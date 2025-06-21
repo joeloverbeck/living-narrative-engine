@@ -139,7 +139,14 @@ describe('Integration: ModsLoader can load the core mod (real files)', () => {
     const modsLoader = container.resolve(tokens.ModsLoader);
     
     // Run the pipeline
-    await expect(modsLoader.loadMods('testworld')).resolves.toBeUndefined();
+    const result = await modsLoader.loadMods('testworld');
+    
+    // Verify the returned LoadReport
+    expect(result).toEqual({
+      finalModOrder: ['core'],
+      totals: expect.any(Object),
+      incompatibilities: 0,
+    });
     
     // Check the registry for the core mod manifest
     const registry = container.resolve(tokens.IDataRegistry);

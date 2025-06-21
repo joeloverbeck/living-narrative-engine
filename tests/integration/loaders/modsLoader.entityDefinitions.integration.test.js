@@ -120,7 +120,15 @@ describe('Integration: Entity Definitions and Instances Loader', () => {
     modsLoader = container.resolve(tokens.ModsLoader);
     
     // Load the isekai mod
-    await modsLoader.loadMods('test-world', [MOD_ID]);
+    const result = await modsLoader.loadMods('test-world', [MOD_ID]);
+    
+    // Verify the returned LoadReport
+    expect(result).toEqual({
+      finalModOrder: ['isekai'],
+      totals: expect.any(Object),
+      incompatibilities: 0,
+    });
+    
     // DEBUG: Log all entity_definitions in the registry after loading
     const allEntities = registry.getAll('entityDefinitions');
     console.log('DEBUG: All entity_definitions in registry:', allEntities);
