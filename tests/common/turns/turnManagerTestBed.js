@@ -64,6 +64,32 @@ export class TurnManagerTestBed extends BaseTestBed {
   }
 
   /**
+   * Adds entities then starts the manager, clearing mock call history.
+   *
+   * @param {...{ id: string }} entities - Entities to register as active.
+   * @returns {Promise<void>} Resolves once the manager has started.
+   */
+  async startWithEntities(...entities) {
+    this.setActiveEntities(...entities);
+    await this.turnManager.start();
+    this.resetMocks();
+  }
+
+  /**
+   * Starts the manager but suppresses the initial advanceTurn call.
+   *
+   * @returns {Promise<void>} Resolves once the manager is running.
+   */
+  async startRunning() {
+    const spy = jest
+      .spyOn(this.turnManager, 'advanceTurn')
+      .mockImplementationOnce(async () => {});
+    await this.turnManager.start();
+    spy.mockRestore();
+    this.resetMocks();
+  }
+
+  /**
    * Populates the mocked entity manager's activeEntities map.
    *
    * @param {...{ id: string }} entities - Entities to add.
@@ -78,6 +104,19 @@ export class TurnManagerTestBed extends BaseTestBed {
   }
 
   /**
+   * Retrieves the subscribed callback for the given event id.
+   *
+   * @param {string} eventId - Event identifier.
+   * @returns {Function|undefined} Handler subscribed to the event.
+   */
+  captureHandler(eventId) {
+    const call = this.dispatcher.subscribe.mock.calls.find(
+      ([id]) => id === eventId
+    );
+    return call ? call[1] : undefined;
+  }
+
+  /**
    * Triggers an event on the internal dispatcher.
    *
    * @param {string} eventType - Event name.
@@ -86,6 +125,16 @@ export class TurnManagerTestBed extends BaseTestBed {
    */
   trigger(eventType, payload) {
     this.dispatcher._triggerEvent(eventType, { type: eventType, payload });
+  }
+
+  /**
+   * Calls advanceTurn then flushes timers/promises.
+   *
+   * @returns {Promise<void>} Resolves when all timers are flushed.
+   */
+  async advanceAndFlush() {
+    await this.turnManager.advanceTurn();
+    await flushPromisesAndTimers();
   }
 
   /**
