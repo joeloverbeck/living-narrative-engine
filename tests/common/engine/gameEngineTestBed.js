@@ -203,4 +203,38 @@ export function describeEngineSuite(title, suiteFn, overrides = {}) {
   );
 }
 
+/**
+ * Defines an engine suite that automatically initializes the engine before
+ * each test runs.
+ *
+ * @param {string} title - Suite title passed to `describe`.
+ * @param {(context: { bed: GameEngineTestBed, engine: import('../../../src/engine/gameEngine.js').default }) => void} suiteFn -
+ *   Callback containing the tests.
+ * @param {string} [world] - Name of the world used for initialization.
+ * @param {{[token: string]: any}} [overrides] - Optional DI overrides.
+ * @returns {void}
+ */
+export function describeInitializedEngineSuite(
+  title,
+  suiteFn,
+  world,
+  overrides
+) {
+  if (typeof world === 'object' && world !== null) {
+    overrides = world;
+    world = 'TestWorld';
+  }
+  world = world || 'TestWorld';
+  describeEngineSuite(
+    title,
+    (ctx) => {
+      beforeEach(async () => {
+        await ctx.bed.initAndReset(world);
+      });
+      suiteFn(ctx);
+    },
+    overrides
+  );
+}
+
 export default GameEngineTestBed;
