@@ -3,9 +3,10 @@
 
 import { afterEach, beforeEach, expect, test } from '@jest/globals';
 import {
-  describeTurnManagerSuite,
+  describeRunningTurnManagerSuite,
   flushPromisesAndTimers,
 } from '../../common/turns/turnManagerTestBed.js';
+import { expectSystemErrorDispatch } from '../../common/turns/turnManagerTestUtils.js';
 
 import { TURN_ENDED_ID } from '../../../src/constants/eventIds.js';
 import { PLAYER_COMPONENT_ID } from '../../../src/constants/componentIds.js';
@@ -18,12 +19,11 @@ import { createMockTurnHandler } from '../../common/mockFactories.js';
 
 // --- Test Suite ---
 
-describeTurnManagerSuite(
+describeRunningTurnManagerSuite(
   'TurnManager: advanceTurn() - Actor Identification & Handling (Queue Not Empty)',
   (getBed) => {
     let testBed;
     let stopSpy;
-    let turnEndCapture;
 
     beforeEach(async () => {
       testBed = getBed();
@@ -31,7 +31,6 @@ describeTurnManagerSuite(
       testBed.mocks.turnOrderService.getNextEntity.mockResolvedValue(
         createAiActor('initial-actor-for-start')
       );
-      turnEndCapture = testBed.captureSubscription(TURN_ENDED_ID);
       testBed.mocks.turnHandlerResolver.resolveHandler.mockResolvedValue(
         createMockTurnHandler()
       );
@@ -39,14 +38,11 @@ describeTurnManagerSuite(
       stopSpy = testBed.spyOnStop();
       stopSpy.mockImplementation(async () => {});
 
-      await testBed.startRunning();
-
       testBed.mocks.turnOrderService.isEmpty.mockResolvedValue(false);
       testBed.mocks.dispatcher.dispatch.mockResolvedValue(true);
     });
 
     afterEach(async () => {
-      turnEndCapture.unsubscribe.mockClear();
       // Timer cleanup handled by BaseTestBed
     });
 
@@ -66,7 +62,7 @@ describeTurnManagerSuite(
           mockHandler
         );
 
-        await testBed.turnManager.advanceTurn();
+        await testBed.advanceAndFlush();
 
         expect(testBed.mocks.turnOrderService.isEmpty).toHaveBeenCalledTimes(1);
         expect(
@@ -90,13 +86,13 @@ describeTurnManagerSuite(
         );
         expect(stopSpy).not.toHaveBeenCalled();
 
-        expect(turnEndCapture.handler).toBeInstanceOf(Function);
-        turnEndCapture.handler({
-          type: TURN_ENDED_ID,
-          payload: { entityId: actor.id, success: true },
+        testBed.trigger(TURN_ENDED_ID, {
+          entityId: actor.id,
+          success: true,
         });
 
         await flushPromisesAndTimers();
+
         expect(mockHandler.destroy).toHaveBeenCalledTimes(1);
 
         // Timer cleanup handled by BaseTestBed
@@ -136,6 +132,11 @@ describeTurnManagerSuite(
         'CRITICAL Error during turn advancement logic (before handler initiation): Cannot start a new round: No active entities with an Actor component found.',
         expect.any(Error)
       );
+      expectSystemErrorDispatch(
+        testBed.mocks.dispatcher.dispatch,
+        'System Error: No active actors found to start a round. Stopping game.',
+        'Cannot start a new round: No active entities with an Actor component found.'
+      );
       expect(stopSpy).toHaveBeenCalled();
     });
 
@@ -150,6 +151,11 @@ describeTurnManagerSuite(
       expect(testBed.mocks.logger.error).toHaveBeenCalledWith(
         'CRITICAL Error during turn advancement logic (before handler initiation): Handler resolution failed',
         resolveError
+      );
+      expectSystemErrorDispatch(
+        testBed.mocks.dispatcher.dispatch,
+        'System Error during turn advancement. Stopping game.',
+        resolveError.message
       );
       expect(stopSpy).toHaveBeenCalled();
     });
@@ -169,6 +175,11 @@ describeTurnManagerSuite(
           'Error during handler.startTurn() initiation for entity initial-actor-for-start (MockTurnHandler): Handler start failed'
         ),
         startError
+      );
+      expectSystemErrorDispatch(
+        testBed.mocks.dispatcher.dispatch,
+        'Error initiating turn for initial-actor-for-start.',
+        startError.message
       );
       expect(stopSpy).not.toHaveBeenCalled();
     });
