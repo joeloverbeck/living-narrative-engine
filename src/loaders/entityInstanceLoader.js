@@ -171,7 +171,7 @@ export class EntityInstanceLoader extends BaseManifestItemLoader {
     const { qualifiedId, didOverride } = this._parseIdAndStoreItem(
       data,
       'instanceId',
-      'entity_instances', // Store in a dedicated registry category
+      'entityInstances', // Store in a dedicated registry category
       modId,
       filename
     );

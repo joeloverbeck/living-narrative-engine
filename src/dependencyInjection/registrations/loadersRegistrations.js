@@ -260,7 +260,7 @@ export function registerLoaders(container) {
             loader: c.resolve(tokens.EntityInstanceLoader),
             contentKey: 'entities.instances',
             diskFolder: 'entities/instances',
-            registryKey: 'entity_instances',
+            registryKey: 'entityInstances',
             phase: 'instances',
           },
           {

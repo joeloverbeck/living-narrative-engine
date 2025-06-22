@@ -79,7 +79,7 @@ export function createContentLoadersConfig(loaderMap) {
       contentKey: 'entities.instances',
       diskFolder: 'entities/instances',
       phase: 'instances',
-      registryKey: 'entity_instances',
+      registryKey: 'entityInstances',
     },
   };
 
