@@ -128,7 +128,7 @@ export class ActionValidationService {
    * @param {ActionTargetContext} targetContext - The context of the action's target.
    * @returns {boolean} True if compatible, false otherwise.
    */
-  _checkDomainAndContext(actionDefinition, actorEntity, targetContext) {
+  _validateDomainAndContext(actionDefinition, actorEntity, targetContext) {
     const actionId = actionDefinition.id;
     const actorId = actorEntity.id;
     const expectedDomain = actionDefinition.target_domain || 'none';
@@ -179,8 +179,8 @@ export class ActionValidationService {
    * @param {string} actionId - The ID of the action being validated (for logging).
    * @returns {void}
    */
-  _verifyTargetEntityExistence(targetContext, actionId) {
-    // Refactor-AVS-4.1 Decision: Keep EntityManager dependency for _verifyTargetEntityExistence.
+  _ensureTargetExists(targetContext, actionId) {
+    // Refactor-AVS-4.1 Decision: Keep EntityManager dependency for _ensureTargetExists.
     // Reason: This check provides an early warning if a target entity ID resolved for validation
     // does not correspond to an active entity instance in the EntityManager.
     // While the PrerequisiteEvaluation flow (via ActionValidationContextBuilder) already handles
@@ -201,6 +201,10 @@ export class ActionValidationService {
         );
       }
     }
+    this.#logger.debug(
+      `Validation[${actionId}]: → STEP 2 PASSED (Entity Existence Checked).`
+    );
+    return true;
   }
 
   /**
@@ -241,7 +245,7 @@ export class ActionValidationService {
    * @param {ActionTargetContext} targetContext - The context of the action's target.
    * @returns {boolean} True if prerequisites pass or there are none.
    */
-  #processPrerequisites(actionDefinition, actorEntity, targetContext) {
+  _validatePrerequisites(actionDefinition, actorEntity, targetContext) {
     const actionId = actionDefinition.id;
     const prerequisites =
       this._collectAndValidatePrerequisites(actionDefinition);
@@ -324,7 +328,7 @@ export class ActionValidationService {
     try {
       // Step 1: Domain & Context Compatibility Check
       if (
-        !this._checkDomainAndContext(
+        !this._validateDomainAndContext(
           actionDefinition,
           actorEntity,
           targetContext
@@ -337,13 +341,12 @@ export class ActionValidationService {
       }
 
       // Step 2: Verify Target Entity Existence
-      this._verifyTargetEntityExistence(targetContext, actionId);
-      this.#logger.debug(
-        `Validation[${actionId}]: → STEP 2 PASSED (Entity Existence Checked).`
-      );
+      if (!this._ensureTargetExists(targetContext, actionId)) {
+        return false;
+      }
 
       // Steps 3 & 4: Process prerequisites
-      const prerequisitesPassed = this.#processPrerequisites(
+      const prerequisitesPassed = this._validatePrerequisites(
         actionDefinition,
         actorEntity,
         targetContext
