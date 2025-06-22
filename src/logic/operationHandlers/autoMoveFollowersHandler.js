@@ -93,56 +93,56 @@ class AutoMoveFollowersHandler extends BaseOperationHandler {
       return;
     }
 
-    const lid = leader_id.trim();
-    const dest = destination_id.trim();
+    const leaderId = leader_id.trim();
+    const destinationId = destination_id.trim();
 
-    const prevLoc =
+    const previousLocationId =
       executionContext?.event?.payload?.previousLocationId ?? null;
 
     const followersComponent = this.#entityManager.getComponentData(
-      lid,
+      leaderId,
       LEADING_COMPONENT_ID
     );
     const followerIds = Array.isArray(followersComponent?.followers)
       ? followersComponent.followers
       : [];
 
-    for (const fid of followerIds) {
+    for (const followerId of followerIds) {
       try {
         const pos = this.#entityManager.getComponentData(
-          fid,
+          followerId,
           POSITION_COMPONENT_ID
         );
-        if (prevLoc && pos?.locationId !== prevLoc) continue;
+        if (previousLocationId && pos?.locationId !== previousLocationId) continue;
 
         const originLoc = pos?.locationId ?? null;
 
         this.#moveHandler.execute(
-          { entity_ref: { entityId: fid }, target_location_id: dest },
+          { entity_ref: { entityId: followerId }, target_location_id: destinationId },
           executionContext
         );
 
         const followerName =
-          this.#entityManager.getComponentData(fid, NAME_COMPONENT_ID)?.text ||
-          fid;
+          this.#entityManager.getComponentData(followerId, NAME_COMPONENT_ID)?.text ||
+          followerId;
         const leaderName =
-          this.#entityManager.getComponentData(lid, NAME_COMPONENT_ID)?.text ||
-          lid;
+          this.#entityManager.getComponentData(leaderId, NAME_COMPONENT_ID)?.text ||
+          leaderId;
         const locationName =
-          this.#entityManager.getComponentData(dest, NAME_COMPONENT_ID)?.text ||
-          dest;
+          this.#entityManager.getComponentData(destinationId, NAME_COMPONENT_ID)?.text ||
+          destinationId;
         const message = `${followerName} follows ${leaderName} to ${locationName}.`;
 
         this.#dispatcher.dispatch('core:perceptible_event', {
           eventName: 'core:perceptible_event',
-          locationId: dest,
+          locationId: destinationId,
           descriptionText: message,
           timestamp: new Date().toISOString(),
           perceptionType: 'character_enter',
-          actorId: fid,
-          targetId: lid,
+          actorId: followerId,
+          targetId: leaderId,
           involvedEntities: [],
-          contextualData: { leaderId: lid, originLocationId: originLoc },
+          contextualData: { leaderId, originLocationId: originLoc },
         });
 
         this.#dispatcher.dispatch('core:display_successful_action_result', {
@@ -152,7 +152,7 @@ class AutoMoveFollowersHandler extends BaseOperationHandler {
         safeDispatchError(
           this.#dispatcher,
           'AUTO_MOVE_FOLLOWERS: Error moving follower',
-          { error: err.message, stack: err.stack, followerId: fid },
+          { error: err.message, stack: err.stack, followerId },
           logger
         );
       }

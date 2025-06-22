@@ -100,29 +100,29 @@ class EstablishFollowRelationHandler {
       return;
     }
 
-    const fid = follower_id.trim();
-    const lid = leader_id.trim();
+    const followerId = follower_id.trim();
+    const leaderId = leader_id.trim();
     this.#logger.debug(
-      `[EstablishFollowRelationHandler] establishing follow: follower=${fid}, leader=${lid}`
+      `[EstablishFollowRelationHandler] establishing follow: follower=${followerId}, leader=${leaderId}`
     );
 
-    if (wouldCreateCycle(fid, lid, this.#entityManager)) {
+    if (wouldCreateCycle(followerId, leaderId, this.#entityManager)) {
       safeDispatchError(
         this.#dispatcher,
         'ESTABLISH_FOLLOW_RELATION: Following would create a cycle',
-        { follower_id: fid, leader_id: lid },
+        { follower_id: followerId, leader_id: leaderId },
         logger
       );
       return;
     }
 
     const oldData = this.#entityManager.getComponentData(
-      fid,
+      followerId,
       FOLLOWING_COMPONENT_ID
     );
     try {
-      this.#entityManager.addComponent(fid, FOLLOWING_COMPONENT_ID, {
-        leaderId: lid,
+      this.#entityManager.addComponent(followerId, FOLLOWING_COMPONENT_ID, {
+        leaderId: leaderId,
       });
     } catch (err) {
       safeDispatchError(
@@ -131,16 +131,16 @@ class EstablishFollowRelationHandler {
         {
           error: err.message,
           stack: err.stack,
-          follower_id: fid,
-          leader_id: lid,
+          follower_id: followerId,
+          leader_id: leaderId,
         },
         logger
       );
       return;
     }
 
-    const leaderIds = [lid];
-    if (oldData?.leaderId && oldData.leaderId !== lid)
+    const leaderIds = [leaderId];
+    if (oldData?.leaderId && oldData.leaderId !== leaderId)
       leaderIds.push(oldData.leaderId);
     this.#rebuildHandler.execute({ leaderIds }, executionContext);
   }

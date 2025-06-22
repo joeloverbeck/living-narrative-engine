@@ -91,10 +91,10 @@ class RebuildLeaderListCacheHandler {
     const followers = this.#entityManager.getEntitiesWithComponent(FOLLOWING);
     for (const ent of followers) {
       const data = ent.getComponentData(FOLLOWING);
-      const lid = data?.leaderId;
-      if (isNonBlankString(lid)) {
-        if (!followerMap.has(lid)) followerMap.set(lid, []);
-        followerMap.get(lid).push(ent.id);
+      const leaderId = data?.leaderId;
+      if (isNonBlankString(leaderId)) {
+        if (!followerMap.has(leaderId)) followerMap.set(leaderId, []);
+        followerMap.get(leaderId).push(ent.id);
       }
     }
 
