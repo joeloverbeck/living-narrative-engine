@@ -6,6 +6,29 @@
 import { jest } from '@jest/globals';
 
 /**
+ * Resolves a token using override and base maps.
+ *
+ * @description Helper function for DI mocks that first checks the override map
+ *   before falling back to the base map.
+ * @param {string | symbol} token - Token to look up.
+ * @param {Record<string | symbol, any>} baseMap - Base token map.
+ * @param {Record<string | symbol, any>} overrideMap - Overrides for the base map.
+ * @returns {any} The mapped value for the token.
+ * @throws {Error} If the token is not found in either map.
+ */
+export function resolveFromMaps(token, baseMap, overrideMap) {
+  if (Object.prototype.hasOwnProperty.call(overrideMap, token)) {
+    return overrideMap[token];
+  }
+  if (Object.prototype.hasOwnProperty.call(baseMap, token)) {
+    return baseMap[token];
+  }
+  const tokenName =
+    typeof token === 'symbol' ? token.toString() : String(token);
+  throw new Error(`Mock container: Unmapped token: ${tokenName}`);
+}
+
+/**
  * Creates a minimal DI container mock.
  *
  * @param {Record<string | symbol, any>} mapping - Base token–to–mock map.
@@ -13,17 +36,7 @@ import { jest } from '@jest/globals';
  * @returns {{ resolve: jest.Mock }} Object with a jest.fn `resolve` method.
  */
 export const createMockContainer = (mapping, overrides = {}) => ({
-  resolve: jest.fn((token) => {
-    if (Object.prototype.hasOwnProperty.call(overrides, token)) {
-      return overrides[token];
-    }
-    if (Object.prototype.hasOwnProperty.call(mapping, token)) {
-      return mapping[token];
-    }
-    const tokenName =
-      typeof token === 'symbol' ? token.toString() : String(token);
-    throw new Error(`createMockContainer: Unmapped token: ${tokenName}`);
-  }),
+  resolve: jest.fn((token) => resolveFromMaps(token, mapping, overrides)),
 });
 
 /**
@@ -51,9 +64,16 @@ export const createMockContainerWithRegistration = () => {
       registrations.set(String(token), registration);
     }),
     resolve: jest.fn((token) => {
-      const registrationKey = String(token);
-      const registration = registrations.get(registrationKey);
-      if (!registration) {
+      let registration;
+      try {
+        registration = resolveFromMaps(
+          token,
+          Object.fromEntries(registrations),
+          {}
+        );
+      } catch {
+        const registrationKey =
+          typeof token === 'symbol' ? token.toString() : String(token);
         const registeredTokens = Array.from(registrations.keys())
           .map(String)
           .join(', ');
