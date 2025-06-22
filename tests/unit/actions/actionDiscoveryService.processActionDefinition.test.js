@@ -105,8 +105,8 @@ describe('ActionDiscoveryService - processActionDefinition', () => {
     const actions = await service.getValidActions(actor, context);
 
     expect(getEntityIdsForScopesFn).toHaveBeenCalledWith(
-      [null],
-      'unknown',
+      ['monster'],
+      context,
       expect.any(Object)
     );
     expect(actions).toEqual([
