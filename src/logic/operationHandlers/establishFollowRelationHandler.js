@@ -14,8 +14,9 @@ import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 import { FOLLOWING_COMPONENT_ID } from '../../constants/componentIds.js';
 import { wouldCreateCycle } from '../../utils/followUtils.js';
 import { assertParamsObject } from '../../utils/handlerUtils/indexUtils.js';
+import BaseOperationHandler from './baseOperationHandler.js';
 
-class EstablishFollowRelationHandler {
+class EstablishFollowRelationHandler extends BaseOperationHandler {
   /** @type {ILogger} */
   #logger;
   /** @type {EntityManager} */
@@ -38,37 +39,26 @@ class EstablishFollowRelationHandler {
     rebuildLeaderListCacheHandler,
     safeEventDispatcher,
   }) {
-    if (!logger || typeof logger.debug !== 'function') {
-      throw new Error(
-        'EstablishFollowRelationHandler requires a valid ILogger'
-      );
-    }
-    if (!entityManager || typeof entityManager.addComponent !== 'function') {
-      throw new Error(
-        'EstablishFollowRelationHandler requires a valid EntityManager'
-      );
-    }
-    if (
-      !rebuildLeaderListCacheHandler ||
-      typeof rebuildLeaderListCacheHandler.execute !== 'function'
-    ) {
-      throw new Error(
-        'EstablishFollowRelationHandler requires a valid RebuildLeaderListCacheHandler'
-      );
-    }
-    if (
-      !safeEventDispatcher ||
-      typeof safeEventDispatcher.dispatch !== 'function'
-    ) {
-      throw new Error(
-        'EstablishFollowRelationHandler requires a valid ISafeEventDispatcher'
-      );
-    }
+    super('EstablishFollowRelationHandler', {
+      logger: { value: logger },
+      entityManager: {
+        value: entityManager,
+        requiredMethods: ['addComponent', 'getComponentData'],
+      },
+      rebuildLeaderListCacheHandler: {
+        value: rebuildLeaderListCacheHandler,
+        requiredMethods: ['execute'],
+      },
+      safeEventDispatcher: {
+        value: safeEventDispatcher,
+        requiredMethods: ['dispatch'],
+      },
+    });
     this.#logger = logger;
     this.#entityManager = entityManager;
     this.#rebuildHandler = rebuildLeaderListCacheHandler;
     this.#dispatcher = safeEventDispatcher;
-    this.#logger.debug('[EstablishFollowRelationHandler] Initialized');
+    this.logger.debug('[EstablishFollowRelationHandler] Initialized');
   }
 
   /**

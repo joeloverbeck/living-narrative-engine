@@ -13,8 +13,9 @@ import { POSITION_COMPONENT_ID } from '../../constants/componentIds.js';
 import { resolveEntityId } from '../../utils/entityRefUtils.js';
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 import { assertParamsObject } from '../../utils/handlerUtils/paramsUtils.js';
+import BaseOperationHandler from './baseOperationHandler.js';
 
-class IfCoLocatedHandler {
+class IfCoLocatedHandler extends BaseOperationHandler {
   /** @type {ILogger} */
   #logger;
   /** @type {EntityManager} */
@@ -37,13 +38,12 @@ class IfCoLocatedHandler {
     operationInterpreter,
     safeEventDispatcher,
   }) {
-    if (!logger?.debug) throw new Error('IfCoLocatedHandler requires ILogger');
-    if (!entityManager?.getComponentData)
-      throw new Error('IfCoLocatedHandler requires EntityManager');
-    if (!operationInterpreter?.execute)
-      throw new Error('IfCoLocatedHandler requires OperationInterpreter');
-    if (!safeEventDispatcher?.dispatch)
-      throw new Error('IfCoLocatedHandler requires ISafeEventDispatcher');
+    super('IfCoLocatedHandler', {
+      logger: { value: logger },
+      entityManager: { value: entityManager, requiredMethods: ['getComponentData'] },
+      operationInterpreter: { value: operationInterpreter, requiredMethods: ['execute'] },
+      safeEventDispatcher: { value: safeEventDispatcher, requiredMethods: ['dispatch'] },
+    });
     this.#logger = logger;
     this.#entityManager = entityManager;
     this.#opInterpreter = operationInterpreter;
