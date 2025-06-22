@@ -32,11 +32,8 @@ describeRunningTurnManagerSuite(
         createMockTurnHandler()
       );
 
-      // Spy on stop to verify calls and simulate unsubscribe
-      stopSpy = testBed.spyOnStop();
-      stopSpy.mockImplementation(async () => {
-        testBed.mocks.logger.debug('Mocked instance.stop() called.');
-      });
+      // Setup stop spy for call verification and debug logging
+      stopSpy = testBed.setupDebugStopSpy();
 
       // Re-apply default isEmpty mock after resetting call history
       testBed.mocks.turnOrderService.isEmpty.mockResolvedValue(false);

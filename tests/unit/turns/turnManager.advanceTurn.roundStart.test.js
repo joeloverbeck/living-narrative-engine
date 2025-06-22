@@ -27,11 +27,8 @@ describeTurnManagerSuite(
       // Define the spy here for the actual advanceTurn method
       advanceTurnSpy = testBed.spyOnAdvanceTurn();
 
-      // Spy on stop - Keep the condition to ensure start was called.
-      stopSpy = testBed.spyOnStop();
-      stopSpy.mockImplementation(async () => {
-        testBed.mocks.logger.debug('Mocked instance.stop() called.');
-      });
+      // Spy on stop with debug logging for verification
+      stopSpy = testBed.setupDebugStopSpy();
 
       // Clear constructor/setup logs AFTER instantiation and spy setup
       testBed.resetMocks();
