@@ -1,9 +1,9 @@
 // tests/engine/showLoadGameUI.test.js
-import { beforeEach, describe, expect, it } from '@jest/globals';
+import { describe, expect, it } from '@jest/globals';
 import { tokens } from '../../../src/dependencyInjection/tokens.js';
 import { describeEngineSuite } from '../../common/engine/gameEngineTestBed.js';
 import { runUnavailableServiceSuite } from '../../common/engine/gameEngineHelpers.js';
-import { REQUEST_SHOW_LOAD_GAME_UI } from '../../../src/constants/eventIds.js';
+import { expectShowLoadGameUIDispatch } from '../../common/engine/dispatchTestUtils.js';
 
 describeEngineSuite('GameEngine', (ctx) => {
   describe('showLoadGameUI', () => {
@@ -13,13 +13,7 @@ describeEngineSuite('GameEngine', (ctx) => {
       expect(ctx.bed.mocks.logger.debug).toHaveBeenCalledWith(
         'GameEngine.showLoadGameUI: Dispatching request to show Load Game UI.'
       );
-      expect(ctx.bed.mocks.safeEventDispatcher.dispatch).toHaveBeenCalledWith(
-        REQUEST_SHOW_LOAD_GAME_UI,
-        {}
-      );
-      expect(ctx.bed.mocks.safeEventDispatcher.dispatch).toHaveBeenCalledTimes(
-        1
-      );
+      expectShowLoadGameUIDispatch(ctx.bed.mocks.safeEventDispatcher.dispatch);
     });
 
     runUnavailableServiceSuite(
