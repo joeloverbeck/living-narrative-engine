@@ -41,83 +41,66 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
   #getEntityDisplayNameFn;
 
   static DOMAIN_HANDLERS = {
-    none(...args) {
-      return ActionDiscoveryService.callHandler(
-        discoverSelfOrNone,
-        this,
-        ...args
+    /**
+     * @description Discover actions that target none or self.
+     * @param {import('../data/gameDataRepository.js').ActionDefinition} actionDef
+     * @param {Entity} actorEntity
+     * @param {object} formatterOptions
+     * @returns {import('../interfaces/IActionDiscoveryService.js').DiscoveredActionInfo[]}
+     */
+    none(actionDef, actorEntity, formatterOptions) {
+      return discoverSelfOrNone(
+        actionDef,
+        actorEntity,
+        formatterOptions,
+        this.#buildDiscoveredAction.bind(this)
       );
     },
-    self(...args) {
-      return ActionDiscoveryService.callHandler(
-        discoverSelfOrNone,
-        this,
-        ...args
+    /**
+     * @description Discover actions that target the actor entity itself.
+     * @param {import('../data/gameDataRepository.js').ActionDefinition} actionDef
+     * @param {Entity} actorEntity
+     * @param {object} formatterOptions
+     * @returns {import('../interfaces/IActionDiscoveryService.js').DiscoveredActionInfo[]}
+     */
+    self(actionDef, actorEntity, formatterOptions) {
+      return discoverSelfOrNone(
+        actionDef,
+        actorEntity,
+        formatterOptions,
+        this.#buildDiscoveredAction.bind(this)
       );
     },
-    direction(...args) {
-      return ActionDiscoveryService.callHandler(
-        discoverDirectionalActions,
-        this,
-        ...args
-      );
-    },
-  };
-
-  /**
-   * @description Wrapper that invokes the provided discovery handler with
-   *   parameters forwarded from DOMAIN_HANDLERS.
-   * @param {Function} handler - Discovery handler to invoke.
-   * @param {ActionDiscoveryService} svc - Service instance providing context.
-   * @param {...any} args - Arguments forwarded from DOMAIN_HANDLERS.
-   * @returns {import('../interfaces/IActionDiscoveryService.js').DiscoveredActionInfo[]}
-   *   Results from the handler.
-   */
-  static callHandler(handler, svc, ...args) {
-    const [
+    /**
+     * @description Discover actions that target a direction.
+     * @param {import('../data/gameDataRepository.js').ActionDefinition} actionDef
+     * @param {Entity} actorEntity
+     * @param {Entity|string|null} currentLocation
+     * @param {string} locIdForLog
+     * @param {object} formatterOptions
+     * @returns {import('../interfaces/IActionDiscoveryService.js').DiscoveredActionInfo[]}
+     */
+    direction(
       actionDef,
       actorEntity,
       currentLocation,
       locIdForLog,
-      domain,
-      context,
-      formatterOptions,
-    ] = args;
-
-    switch (handler) {
-      case discoverSelfOrNone:
-        return handler(
-          actionDef,
-          actorEntity,
-          formatterOptions,
-          svc.#buildDiscoveredAction.bind(svc)
-        );
-      case discoverDirectionalActions:
-        return handler(
-          actionDef,
-          actorEntity,
-          currentLocation,
-          locIdForLog,
-          formatterOptions,
-          svc.#buildDiscoveredAction.bind(svc),
-          svc.#entityManager,
-          svc.#safeEventDispatcher,
-          svc.#logger,
-          svc.#getAvailableExitsFn
-        );
-      default:
-        return discoverScopedEntityActions(
-          actionDef,
-          actorEntity,
-          domain,
-          context,
-          formatterOptions,
-          svc.#buildDiscoveredAction.bind(svc),
-          svc.#getEntityIdsForScopesFn,
-          svc.#logger
-        );
-    }
-  }
+      formatterOptions
+    ) {
+      return discoverDirectionalActions(
+        actionDef,
+        actorEntity,
+        currentLocation,
+        locIdForLog,
+        formatterOptions,
+        this.#buildDiscoveredAction.bind(this),
+        this.#entityManager,
+        this.#safeEventDispatcher,
+        this.#logger,
+        this.#getAvailableExitsFn
+      );
+    },
+  };
 
   /**
    * @param {object} deps
@@ -253,23 +236,36 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
   ) {
     const domain = actionDef.target_domain;
     try {
-      const handler =
-        this.constructor.DOMAIN_HANDLERS[domain] ||
-        ((...handlerArgs) =>
-          ActionDiscoveryService.callHandler(
-            discoverScopedEntityActions,
-            this,
-            ...handlerArgs
-          ));
-      return handler.call(
-        this,
+      const handlers = this.constructor.DOMAIN_HANDLERS;
+      if (domain === 'none' || domain === 'self') {
+        return handlers[domain].call(
+          this,
+          actionDef,
+          actorEntity,
+          formatterOptions
+        );
+      }
+
+      if (domain === 'direction') {
+        return handlers.direction.call(
+          this,
+          actionDef,
+          actorEntity,
+          currentLocation,
+          locIdForLog,
+          formatterOptions
+        );
+      }
+
+      return discoverScopedEntityActions(
         actionDef,
         actorEntity,
-        currentLocation,
-        locIdForLog,
         domain,
         context,
-        formatterOptions
+        formatterOptions,
+        this.#buildDiscoveredAction.bind(this),
+        this.#getEntityIdsForScopesFn,
+        this.#logger
       );
     } catch (err) {
       safeDispatchError(
