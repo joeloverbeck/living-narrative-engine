@@ -12,6 +12,7 @@ import {
   expectEntityRemovedDispatch,
   expectComponentAddedDispatch,
   expectComponentRemovedDispatch,
+  expectNoDispatch,
 } from './dispatchTestUtils.js';
 import { DEFAULT_ACTIVE_WORLD_FOR_SAVE } from '../constants.js';
 import {
@@ -70,6 +71,19 @@ describe('dispatchTestUtils', () => {
       const mock = jest.fn();
       mock('eventA', { a: 2 });
       expect(() => expectSingleDispatch(mock, 'eventA', { a: 1 })).toThrow();
+    });
+  });
+
+  describe('expectNoDispatch', () => {
+    it('passes when no calls were made', () => {
+      const mock = jest.fn();
+      expect(() => expectNoDispatch(mock)).not.toThrow();
+    });
+
+    it('throws when mock has calls', () => {
+      const mock = jest.fn();
+      mock('eventA', {});
+      expect(() => expectNoDispatch(mock)).toThrow();
     });
   });
 

@@ -4,6 +4,7 @@
  */
 
 import { expect, jest } from '@jest/globals';
+import { expectNoDispatch } from './dispatchTestUtils.js';
 import { GameEngineTestBed } from './gameEngineTestBed.js';
 import { DEFAULT_TEST_WORLD } from '../constants.js';
 import { createWithBed, createInitializedBed } from '../testBedHelpers.js';
@@ -78,7 +79,7 @@ export function runUnavailableServiceTest(cases, invokeFn) {
           expectedMessage
         );
         expect(loggerMock).toHaveBeenCalledWith(expectedMessage);
-        expect(dispatchMock).not.toHaveBeenCalled();
+        expectNoDispatch(dispatchMock);
       });
     },
   ]);
