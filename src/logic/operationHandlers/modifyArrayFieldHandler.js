@@ -16,6 +16,7 @@ import { tryWriteContextVariable } from '../../utils/contextVariableUtils.js';
 import { assertParamsObject } from '../../utils/handlerUtils/indexUtils.js';
 import ComponentOperationHandler from './componentOperationHandler.js';
 import { applyArrayModification } from '../utils/arrayModifyUtils.js';
+import { setByPath } from '../utils/objectPathUtils.js';
 
 /**
  * @class ModifyArrayFieldHandler
@@ -67,7 +68,7 @@ class ModifyArrayFieldHandler extends ComponentOperationHandler {
    * @param {string} field
    * @param {string} entityId
    * @param {ILogger} log
-   * @returns {*}
+   * @returns {{array: Array, result: *}|null} New array and result value
    * @private
    */
   #applyModification(mode, targetArray, value, field, entityId, log) {
@@ -92,36 +93,43 @@ class ModifyArrayFieldHandler extends ComponentOperationHandler {
     }
 
     let poppedItem;
-    if (mode === 'pop' && targetArray.length === 0) {
-      log.debug(
-        `MODIFY_ARRAY_FIELD: Attempted to 'pop' from an empty array on field '${field}'.`
-      );
-    } else if (mode === 'pop') {
-      poppedItem = targetArray[targetArray.length - 1];
-    }
+    let newArray = targetArray;
 
-    let modifiedArray = targetArray;
-
-    if (mode === 'push_unique') {
-      let exists = false;
-      if (typeof value !== 'object' || value === null) {
-        exists = targetArray.includes(value);
-      } else {
-        const valueAsJson = JSON.stringify(value);
-        exists = targetArray.some(
-          (item) => JSON.stringify(item) === valueAsJson
-        );
+    switch (mode) {
+      case 'push':
+        newArray = applyArrayModification(mode, targetArray, value, log);
+        break;
+      case 'push_unique': {
+        let exists = false;
+        if (typeof value !== 'object' || value === null) {
+          exists = targetArray.includes(value);
+        } else {
+          const valueAsJson = JSON.stringify(value);
+          exists = targetArray.some(
+            (item) => JSON.stringify(item) === valueAsJson
+          );
+        }
+        if (exists) {
+          log.debug(
+            `MODIFY_ARRAY_FIELD: Value for 'push_unique' already exists in array on field '${field}'.`
+          );
+        } else {
+          newArray = applyArrayModification(mode, targetArray, value, log);
+        }
+        break;
       }
-
-      if (exists) {
-        log.debug(
-          `MODIFY_ARRAY_FIELD: Value for 'push_unique' already exists in array on field '${field}'.`
-        );
-      } else {
-        modifiedArray = applyArrayModification(mode, targetArray, value, log);
-      }
-    } else {
-      if (mode === 'remove_by_value') {
+      case 'pop':
+        if (targetArray.length === 0) {
+          log.debug(
+            `MODIFY_ARRAY_FIELD: Attempted to 'pop' from an empty array on field '${field}'.`
+          );
+          poppedItem = undefined;
+        } else {
+          poppedItem = targetArray[targetArray.length - 1];
+          newArray = applyArrayModification('pop', targetArray, value, log);
+        }
+        break;
+      case 'remove_by_value': {
         let index;
         if (typeof value !== 'object' || value === null) {
           index = targetArray.indexOf(value);
@@ -131,29 +139,22 @@ class ModifyArrayFieldHandler extends ComponentOperationHandler {
             (item) => JSON.stringify(item) === valueAsJson
           );
         }
-
-        // call utility for consistency
-        applyArrayModification(mode, targetArray, value, log);
-
         if (index > -1) {
-          modifiedArray = [...targetArray];
-          modifiedArray.splice(index, 1);
+          newArray = [...targetArray];
+          newArray.splice(index, 1);
         } else {
           log.debug(
             `MODIFY_ARRAY_FIELD: Value for 'remove_by_value' not found in array on field '${field}'.`
           );
-          modifiedArray = targetArray;
         }
-      } else {
-        modifiedArray = applyArrayModification(mode, targetArray, value, log);
+        break;
       }
     }
 
-    if (modifiedArray !== targetArray) {
-      targetArray.splice(0, targetArray.length, ...modifiedArray);
-    }
-
-    return mode === 'pop' ? poppedItem : targetArray;
+    return {
+      array: newArray,
+      result: mode === 'pop' ? poppedItem : newArray,
+    };
   }
 
   /**
@@ -252,7 +253,7 @@ class ModifyArrayFieldHandler extends ComponentOperationHandler {
     const { data: clonedComponentData, array: targetArray } = fetched;
 
     // 4. Modify
-    const result = this.#applyModification(
+    const modification = this.#applyModification(
       mode,
       targetArray,
       value,
@@ -260,9 +261,12 @@ class ModifyArrayFieldHandler extends ComponentOperationHandler {
       entityId,
       log
     );
-    if (result === null) {
+    if (modification === null) {
       return;
     }
+
+    // 4b. Set new array immutably
+    setByPath(clonedComponentData, field, modification.array);
 
     // 5. Commit
     if (!this.#commitChanges(entityId, compType, clonedComponentData, log)) {
@@ -273,7 +277,7 @@ class ModifyArrayFieldHandler extends ComponentOperationHandler {
     if (result_variable) {
       const res = tryWriteContextVariable(
         result_variable,
-        result,
+        modification.result,
         executionContext,
         this.#dispatcher,
         log
