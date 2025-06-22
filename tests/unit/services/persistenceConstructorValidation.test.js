@@ -3,7 +3,9 @@ import GameStateCaptureService from '../../../src/persistence/gameStateCaptureSe
 import ManualSaveCoordinator from '../../../src/persistence/manualSaveCoordinator.js';
 import SaveLoadService from '../../../src/persistence/saveLoadService.js';
 import SaveFileRepository from '../../../src/persistence/saveFileRepository.js';
-import SaveFileParser from '../../../src/persistence/saveFileParser.js';
+import GameStateRestorer from '../../../src/persistence/gameStateRestorer.js';
+import GamePersistenceService from '../../../src/persistence/gamePersistenceService.js';
+import { BaseService } from '../../../src/utils/serviceBase.js';
 import {
   createMockLogger,
   createMockSaveValidationService,
@@ -76,5 +78,30 @@ describe('Persistence service constructor validation', () => {
           parser,
         })
     ).toThrow();
+  });
+
+  it('GameStateRestorer extends BaseService', () => {
+    const restorer = new GameStateRestorer({
+      logger: createMockLogger(),
+      entityManager: { clearAll: jest.fn(), reconstructEntity: jest.fn() },
+      playtimeTracker: { setAccumulatedPlaytime: jest.fn() },
+    });
+    expect(restorer).toBeInstanceOf(BaseService);
+  });
+
+  it('GamePersistenceService extends BaseService', () => {
+    const service = new GamePersistenceService({
+      logger: createMockLogger(),
+      saveLoadService: { saveManualGame: jest.fn(), loadGameData: jest.fn() },
+      entityManager: { clearAll: jest.fn(), reconstructEntity: jest.fn() },
+      playtimeTracker: {
+        getTotalPlaytime: jest.fn(),
+        setAccumulatedPlaytime: jest.fn(),
+      },
+      gameStateCaptureService: { captureCurrentGameState: jest.fn() },
+      manualSaveCoordinator: { saveGame: jest.fn() },
+      gameStateRestorer: { restoreGameState: jest.fn() },
+    });
+    expect(service).toBeInstanceOf(BaseService);
   });
 });

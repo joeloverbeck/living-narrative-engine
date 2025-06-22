@@ -1,6 +1,6 @@
 // src/persistence/gameStateRestorer.js
 
-import { setupService } from '../utils/serviceInitializerUtils.js';
+import { BaseService } from '../utils/serviceBase.js';
 import {
   createPersistenceFailure,
   createPersistenceSuccess,
@@ -22,7 +22,7 @@ import {
  *
  * @class GameStateRestorer
  */
-class GameStateRestorer {
+class GameStateRestorer extends BaseService {
   /** @type {ILogger} */
   #logger;
   /** @type {EntityManager} */
@@ -39,7 +39,8 @@ class GameStateRestorer {
    * @param {PlaytimeTracker} deps.playtimeTracker - Playtime tracker.
    */
   constructor({ logger, entityManager, playtimeTracker }) {
-    this.#logger = setupService('GameStateRestorer', logger, {
+    super();
+    this.#logger = this._init('GameStateRestorer', logger, {
       entityManager: {
         value: entityManager,
         requiredMethods: ['clearAll', 'reconstructEntity'],
