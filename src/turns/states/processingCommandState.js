@@ -9,6 +9,7 @@
  * @typedef {import('../interfaces/ITurnState.js').ITurnState} ITurnState_Interface
  * @typedef {import('../interfaces/ITurnDirectiveStrategy.js').ITurnDirectiveStrategy} ITurnDirectiveStrategy
  * @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher // For type hint
+ * @typedef {import('../interfaces/turnStateContextTypes.js').ProcessingCommandStateContext} ProcessingCommandStateContext
  */
 
 import { AbstractTurnState } from './abstractTurnState.js';
@@ -31,6 +32,33 @@ export class ProcessingCommandState extends AbstractTurnState {
   _processingGuard;
   #turnActionToProcess = null;
   #commandStringForLog = null;
+
+  /**
+   * @override
+   * @param {string} reason - Explanation for context validation failure.
+   * @param {BaseTurnHandler} [handler] - Handler used for fallback logging.
+   * @returns {Promise<ProcessingCommandStateContext|null>} The current context
+   *   cast to ProcessingCommandStateContext or null on failure.
+   */
+  async _ensureContext(reason, handler = this._handler) {
+    const ctx = await super._ensureContext(reason, handler);
+    if (!ctx) return null;
+    const required = [
+      'getActor',
+      'getLogger',
+      'getChosenAction',
+      'getSafeEventDispatcher',
+    ];
+    const missing = required.filter((m) => typeof ctx[m] !== 'function');
+    if (missing.length) {
+      getLogger(ctx, handler).error(
+        `${this.getStateName()}: ITurnContext missing required methods: ${missing.join(', ')}`
+      );
+      await this._resetToIdle(`missing-methods-${this.getStateName()}`);
+      return null;
+    }
+    return /** @type {ProcessingCommandStateContext} */ (ctx);
+  }
 
   /**
    * Creates an instance of ProcessingCommandState.

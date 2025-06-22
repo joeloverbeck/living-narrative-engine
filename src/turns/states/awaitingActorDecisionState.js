@@ -9,6 +9,11 @@ import { AbstractTurnState } from './abstractTurnState.js';
 import { ACTION_DECIDED_ID } from '../../constants/eventIds.js';
 import { getActorType } from '../../utils/actorTypeUtils.js';
 import { getLogger, getSafeEventDispatcher } from './helpers/contextUtils.js';
+
+/**
+ * @typedef {import('../interfaces/turnStateContextTypes.js').AwaitingActorDecisionStateContext} AwaitingActorDecisionStateContext
+ * @typedef {import('../handlers/baseTurnHandler.js').BaseTurnHandler} BaseTurnHandler
+ */
 import {
   assertValidActor,
   assertMatchingActor,
@@ -23,6 +28,43 @@ import {
  * ● All other errors cause the turn to end with an error.
  */
 export class AwaitingActorDecisionState extends AbstractTurnState {
+  /**
+   * Ensures the context provides required methods for this state.
+   *
+   * @override
+   * @param {string} reason - Explanation for context retrieval.
+   * @param {BaseTurnHandler} [handler] - Optional handler for logging fallback.
+   * @returns {Promise<AwaitingActorDecisionStateContext|null>} The context if
+   *   valid, otherwise null.
+   */
+  async _ensureContext(reason, handler = this._handler) {
+    const ctx = await super._ensureContext(reason, handler);
+    if (!ctx) return null;
+    const required = [
+      'getActor',
+      'getLogger',
+      'getStrategy',
+      'requestProcessingCommandStateTransition',
+      'endTurn',
+    ];
+    const missing = required.filter((m) => typeof ctx[m] !== 'function');
+    if (missing.length) {
+      getLogger(ctx, handler).error(
+        `${this.getStateName()}: ITurnContext missing required methods: ${missing.join(', ')}`
+      );
+      if (typeof ctx.endTurn === 'function') {
+        await ctx.endTurn(
+          new Error(
+            `${this.getStateName()}: ITurnContext missing required methods: ${missing.join(', ')}`
+          )
+        );
+      } else {
+        await this._resetToIdle(`missing-methods-${this.getStateName()}`);
+      }
+      return null;
+    }
+    return /** @type {AwaitingActorDecisionStateContext} */ (ctx);
+  }
   /**
    * @override
    */
@@ -127,12 +169,6 @@ export class AwaitingActorDecisionState extends AbstractTurnState {
     if (actorError) {
       logger.error(actorError);
       throw new Error(actorError);
-    }
-
-    if (typeof turnContext.getStrategy !== 'function') {
-      const msg = `${this.getStateName()}: turnContext.getStrategy() is not a function for actor ${actor.id}.`;
-      logger.error(msg);
-      throw new Error(msg);
     }
 
     const strategy = turnContext.getStrategy();
