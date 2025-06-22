@@ -4,7 +4,11 @@
  */
 
 import { expect } from '@jest/globals';
-import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/eventIds.js';
+import {
+  SYSTEM_ERROR_OCCURRED_ID,
+  TURN_ENDED_ID,
+} from '../../../src/constants/eventIds.js';
+import { flushPromisesAndTimers } from './turnManagerTestBed.js';
 
 /**
  * Asserts that a SYSTEM_ERROR_OCCURRED dispatch was made with the standard
@@ -28,4 +32,17 @@ export function expectSystemErrorDispatch(
       timestamp: expect.any(String),
     },
   });
+}
+
+/**
+ * Triggers {@link TURN_ENDED_ID} on the test bed and flushes pending timers.
+ *
+ * @param {import('./turnManagerTestBed.js').TurnManagerTestBed} bed - Test bed instance.
+ * @param {string} entityId - Identifier for the entity whose turn ended.
+ * @param {boolean} [success] - Whether the turn ended successfully.
+ * @returns {Promise<void>} Resolves once timers are flushed.
+ */
+export async function triggerTurnEndedAndFlush(bed, entityId, success = true) {
+  bed.trigger(TURN_ENDED_ID, { entityId, success });
+  await flushPromisesAndTimers();
 }
