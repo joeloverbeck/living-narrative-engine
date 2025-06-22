@@ -9,6 +9,20 @@ import { GameEngineTestBed } from './gameEngineTestBed.js';
 import { DEFAULT_TEST_WORLD } from '../constants.js';
 import { createWithBed, createInitializedBed } from '../testBedHelpers.js';
 
+const withBed = createWithBed(GameEngineTestBed, (b) => [b, b.engine]);
+const withInitialized = createInitializedBed(
+  GameEngineTestBed,
+  'initAndReset',
+  DEFAULT_TEST_WORLD,
+  (b) => [b, b.engine]
+);
+const withRunning = createInitializedBed(
+  GameEngineTestBed,
+  'startAndReset',
+  DEFAULT_TEST_WORLD,
+  (b) => [b, b.engine]
+);
+
 /**
  * Executes a callback with a temporary {@link GameEngineTestBed} instance.
  *
@@ -19,7 +33,6 @@ import { createWithBed, createInitializedBed } from '../testBedHelpers.js';
  * @returns {Promise<void>} Resolves when the callback completes.
  */
 export function withGameEngineBed(overrides = {}, testFn) {
-  const withBed = createWithBed(GameEngineTestBed, (b) => [b, b.engine]);
   return withBed(overrides, testFn);
 }
 
@@ -38,13 +51,7 @@ export function withGameEngineBed(overrides = {}, testFn) {
  * @returns {Promise<void>} Resolves when the callback completes.
  */
 export function withInitializedGameEngineBed(overrides, world, testFn) {
-  const withInitBed = createInitializedBed(
-    GameEngineTestBed,
-    'initAndReset',
-    DEFAULT_TEST_WORLD,
-    (b) => [b, b.engine]
-  );
-  return withInitBed(overrides, world, testFn);
+  return withInitialized(overrides, world, testFn);
 }
 
 /**
@@ -61,13 +68,7 @@ export function withInitializedGameEngineBed(overrides, world, testFn) {
  * @returns {Promise<void>} Resolves when the callback completes.
  */
 export function withRunningGameEngineBed(overrides, world, testFn) {
-  const withRunningBed = createInitializedBed(
-    GameEngineTestBed,
-    'startAndReset',
-    DEFAULT_TEST_WORLD,
-    (b) => [b, b.engine]
-  );
-  return withRunningBed(overrides, world, testFn);
+  return withRunning(overrides, world, testFn);
 }
 
 /**
