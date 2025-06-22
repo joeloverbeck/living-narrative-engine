@@ -14,13 +14,16 @@ describe('advancedArrayModify', () => {
     expect(nextArray).toEqual([1, 2]);
     expect(result).toEqual([1, 2]);
     expect(arr).toEqual([1]);
+    expect(nextArray).not.toBe(arr);
   });
 
   it('push_unique with object only adds when not present', () => {
     const obj = { a: 1 };
     const arr = [{ a: 1 }];
     const { nextArray } = advancedArrayModify('push_unique', arr, obj, logger);
-    expect(nextArray).toEqual(arr); // not added because deep equal
+    expect(nextArray).toEqual(arr);
+    expect(nextArray).not.toBe(arr); // returned array should be new
+    expect(arr).toEqual([{ a: 1 }]);
 
     const { nextArray: newArr } = advancedArrayModify(
       'push_unique',
@@ -29,6 +32,7 @@ describe('advancedArrayModify', () => {
       logger
     );
     expect(newArr).toEqual([...arr, { a: 2 }]);
+    expect(arr).toEqual([{ a: 1 }]);
   });
 
   it('pop returns popped item', () => {
@@ -36,6 +40,8 @@ describe('advancedArrayModify', () => {
     const { nextArray, result } = advancedArrayModify('pop', arr, null, logger);
     expect(nextArray).toEqual([1]);
     expect(result).toBe(2);
+    expect(arr).toEqual([1, 2]);
+    expect(nextArray).not.toBe(arr);
   });
 
   it('remove_by_value removes object by deep match', () => {
@@ -48,5 +54,20 @@ describe('advancedArrayModify', () => {
       logger
     );
     expect(nextArray).toEqual([{ id: 2 }]);
+    expect(arr).toEqual([{ id: 1 }, { id: 2 }]);
+    expect(nextArray).not.toBe(arr);
+  });
+
+  it('remove_by_value returns new array when value not found', () => {
+    const arr = [1, 2];
+    const { nextArray } = advancedArrayModify(
+      'remove_by_value',
+      arr,
+      3,
+      logger
+    );
+    expect(nextArray).toEqual([1, 2]);
+    expect(nextArray).not.toBe(arr);
+    expect(arr).toEqual([1, 2]);
   });
 });

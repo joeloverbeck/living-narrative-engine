@@ -68,7 +68,7 @@ class ModifyArrayFieldHandler extends ComponentOperationHandler {
    * @param {string} field
    * @param {string} entityId
    * @param {ILogger} log
-   * @returns {{nextArray: Array, result: *}|null}
+   * @returns {{nextArray: Array, result: *, modified: boolean}|null}
    * Returns a new array via `nextArray`; the original `targetArray` is never
    * mutated.
    * @private
@@ -100,20 +100,20 @@ class ModifyArrayFieldHandler extends ComponentOperationHandler {
       );
     }
 
-    const { nextArray, result } = advancedArrayModify(
+    const { nextArray, result, modified } = advancedArrayModify(
       mode,
       targetArray,
       value,
       log
     );
 
-    if (mode === 'push_unique' && nextArray === targetArray) {
+    if (mode === 'push_unique' && !modified) {
       log.debug(
         `MODIFY_ARRAY_FIELD: Value for 'push_unique' already exists in array on field '${field}'.`
       );
     }
 
-    if (mode === 'remove_by_value' && nextArray === targetArray) {
+    if (mode === 'remove_by_value' && !modified) {
       log.debug(
         `MODIFY_ARRAY_FIELD: Value for 'remove_by_value' not found in array on field '${field}'.`
       );
@@ -122,6 +122,7 @@ class ModifyArrayFieldHandler extends ComponentOperationHandler {
     return {
       nextArray,
       result,
+      modified,
     };
   }
 

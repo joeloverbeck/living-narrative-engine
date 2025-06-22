@@ -34,18 +34,18 @@ export function applyArrayModification(mode, array, value, logger) {
  * @param {any[]} array
  * @param {any} value
  * @param {import('../../interfaces/coreServices.js').ILogger} [logger]
- * @returns {{ nextArray: any[], result: any }}
+ * @returns {{ nextArray: any[], result: any, modified: boolean }}
  */
 export function advancedArrayModify(mode, array, value, logger) {
   if (!Array.isArray(array)) {
     logger?.error('advancedArrayModify: provided value is not an array');
-    return { nextArray: array, result: undefined };
+    return { nextArray: array, result: undefined, modified: false };
   }
 
   switch (mode) {
     case 'push': {
       const next = [...array, value];
-      return { nextArray: next, result: next };
+      return { nextArray: next, result: next, modified: true };
     }
     case 'push_unique': {
       let exists = false;
@@ -55,21 +55,22 @@ export function advancedArrayModify(mode, array, value, logger) {
         const valueJson = JSON.stringify(value);
         exists = array.some((item) => JSON.stringify(item) === valueJson);
       }
-      const next = exists ? array : [...array, value];
-      return { nextArray: next, result: next };
+      const next = exists ? [...array] : [...array, value];
+      return { nextArray: next, result: next, modified: !exists };
     }
     case 'pop': {
       const popped = array.length > 0 ? array[array.length - 1] : undefined;
       const next = array.slice(0, -1);
-      return { nextArray: next, result: popped };
+      return { nextArray: next, result: popped, modified: array.length > 0 };
     }
     case 'remove_by_value': {
-      let next = array;
+      let next = [...array];
+      let modified = false;
       if (typeof value !== 'object' || value === null) {
         const index = array.indexOf(value);
         if (index > -1) {
-          next = [...array];
-          next.splice(index, 1);
+          next = [...array.slice(0, index), ...array.slice(index + 1)];
+          modified = true;
         }
       } else {
         const valueJson = JSON.stringify(value);
@@ -77,14 +78,14 @@ export function advancedArrayModify(mode, array, value, logger) {
           (item) => JSON.stringify(item) === valueJson
         );
         if (index > -1) {
-          next = [...array];
-          next.splice(index, 1);
+          next = [...array.slice(0, index), ...array.slice(index + 1)];
+          modified = true;
         }
       }
-      return { nextArray: next, result: next };
+      return { nextArray: next, result: next, modified };
     }
     default:
       logger?.error(`Unknown mode: ${mode}`);
-      return { nextArray: array, result: undefined };
+      return { nextArray: [...array], result: undefined, modified: false };
   }
 }
