@@ -30,6 +30,7 @@ import DispatchEventHandler from '../../../src/logic/operationHandlers/dispatchE
 import DispatchPerceptibleEventHandler from '../../../src/logic/operationHandlers/dispatchPerceptibleEventHandler.js';
 import EndTurnHandler from '../../../src/logic/operationHandlers/endTurnHandler.js';
 import SetVariableHandler from '../../../src/logic/operationHandlers/setVariableHandler.js';
+import jsonLogicJs from 'json-logic-js';
 import RemoveFromClosenessCircleHandler from '../../../src/logic/operationHandlers/removeFromClosenessCircleHandler.js';
 import {
   NAME_COMPONENT_ID,
@@ -39,7 +40,9 @@ import { ATTEMPT_ACTION_ID } from '../../../src/constants/eventIds.js';
 import { buildABCDWorld } from '../fixtures/intimacyFixtures.js';
 import SimpleEntityManager from '../../common/entities/simpleEntityManager.js';
 
-const closenessCircleService = { repair: jest.fn((partners) => [...new Set(partners)].sort()) };
+const closenessCircleService = {
+  repair: jest.fn((partners) => [...new Set(partners)].sort()),
+};
 
 /**
  * Helper to (re)initialize the interpreter with the provided entities.
@@ -76,7 +79,7 @@ function init(entities) {
       logger,
       safeEventDispatcher: safeDispatcher,
     }),
-    SET_VARIABLE: new SetVariableHandler({ logger }),
+    SET_VARIABLE: new SetVariableHandler({ logger, jsonLogic: jsonLogicJs }),
     GET_TIMESTAMP: new GetTimestampHandler({ logger }),
     DISPATCH_PERCEPTIBLE_EVENT: new DispatchPerceptibleEventHandler({
       dispatcher: eventBus,

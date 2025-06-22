@@ -22,6 +22,7 @@ import {
   validateMacroExpansion,
 } from '../../../src/utils/macroUtils.js';
 import SetVariableHandler from '../../../src/logic/operationHandlers/setVariableHandler.js';
+import jsonLogic from 'json-logic-js';
 import SystemLogicInterpreter from '../../../src/logic/systemLogicInterpreter.js';
 import OperationInterpreter from '../../../src/logic/operationInterpreter.js';
 import OperationRegistry from '../../../src/logic/operationRegistry.js';
@@ -86,7 +87,7 @@ const createHandlers = (entityManager, eventBus, logger) => {
         dispatch: (...args) => eventBus.dispatch(...args),
       },
     }),
-    SET_VARIABLE: new SetVariableHandler({ logger }),
+    SET_VARIABLE: new SetVariableHandler({ logger, jsonLogic }),
     GET_TIMESTAMP: new GetTimestampHandler({ logger }),
     IF_CO_LOCATED_FACTORY: (operationInterpreter) =>
       new IfCoLocatedHandler({

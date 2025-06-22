@@ -86,25 +86,37 @@ describe('SetVariableHandler', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockLoggerInstance = createMockLogger();
-    handler = new SetVariableHandler({ logger: mockLoggerInstance });
+    handler = new SetVariableHandler({ logger: mockLoggerInstance, jsonLogic });
     mockLoggerInstance.debug.mockClear();
   });
 
   describe('Constructor', () => {
     test('throws if logger dependency is missing or invalid', () => {
-      expect(() => new SetVariableHandler({})).toThrow(/ILogger instance/);
-      expect(() => new SetVariableHandler({ logger: null })).toThrow(
+      expect(() => new SetVariableHandler({ jsonLogic })).toThrow(
+        /ILogger instance/
+      );
+      expect(() => new SetVariableHandler({ logger: null, jsonLogic })).toThrow(
         /ILogger instance/
       );
       expect(
-        () => new SetVariableHandler({ logger: { info: jest.fn() } })
+        () => new SetVariableHandler({ logger: { info: jest.fn() }, jsonLogic })
       ).toThrow(/ILogger instance/);
+    });
+
+    test('throws if jsonLogic dependency is missing or invalid', () => {
+      const freshLogger = createMockLogger();
+      expect(() => new SetVariableHandler({ logger: freshLogger })).toThrow(
+        /jsonLogic implementation/
+      );
+      expect(
+        () => new SetVariableHandler({ logger: freshLogger, jsonLogic: {} })
+      ).toThrow(/jsonLogic implementation/);
     });
 
     test('initializes successfully with a valid logger', () => {
       const freshLogger = createMockLogger();
       expect(
-        () => new SetVariableHandler({ logger: freshLogger })
+        () => new SetVariableHandler({ logger: freshLogger, jsonLogic })
       ).not.toThrow();
       expect(freshLogger.debug).toHaveBeenCalledWith(
         'SetVariableHandler initialized.'

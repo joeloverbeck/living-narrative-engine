@@ -17,6 +17,7 @@ import OperationInterpreter from '../../../src/logic/operationInterpreter.js';
 import OperationRegistry from '../../../src/logic/operationRegistry.js';
 import JsonLogicEvaluationService from '../../../src/logic/jsonLogicEvaluationService.js';
 import SetVariableHandler from '../../../src/logic/operationHandlers/setVariableHandler.js';
+import jsonLogicJs from 'json-logic-js';
 import MergeClosenessCircleHandler from '../../../src/logic/operationHandlers/mergeClosenessCircleHandler.js';
 import GetNameHandler from '../../../src/logic/operationHandlers/getNameHandler.js';
 import QueryComponentHandler from '../../../src/logic/operationHandlers/queryComponentHandler.js';
@@ -98,7 +99,9 @@ function init(entities) {
     }),
   };
 
-  const closenessCircleService = { merge: jest.fn((...arrays) => [...new Set(arrays.flat())]) };
+  const closenessCircleService = {
+    merge: jest.fn((...arrays) => [...new Set(arrays.flat())]),
+  };
 
   // Register all necessary handlers for the rule to run
   const handlers = {
@@ -107,7 +110,7 @@ function init(entities) {
       logger,
       safeEventDispatcher: safeDispatcher,
     }),
-    SET_VARIABLE: new SetVariableHandler({ logger }),
+    SET_VARIABLE: new SetVariableHandler({ logger, jsonLogic: jsonLogicJs }),
     MERGE_CLOSENESS_CIRCLE: new MergeClosenessCircleHandler({
       logger,
       entityManager,

@@ -8,8 +8,6 @@
 /** @typedef {import('../defs.js').OperationParams} OperationParams */
 // <<< Ensure JsonLogicEvaluationService is NOT imported or used >>>
 
-// <<< ADDED Import: jsonLogic directly >>>
-import jsonLogic from 'json-logic-js';
 import { assertParamsObject } from '../../utils/handlerUtils/paramsUtils.js';
 import { tryWriteContextVariable } from '../../utils/contextVariableUtils.js';
 
@@ -31,13 +29,14 @@ import { tryWriteContextVariable } from '../../utils/contextVariableUtils.js';
  * @class SetVariableHandler
  * Implements the OperationHandler interface for the "SET_VARIABLE" operation type.
  * Takes a variable name and a pre-resolved value. If the value is identified as
- * JsonLogic (a plain object), it evaluates it using `jsonLogic.apply` against the
+ * JsonLogic (a plain object), it evaluates it using `this.#jsonLogic.apply` against the
  * `executionContext.evaluationContext`. Otherwise, it uses the value directly.
  * Stores the final key-value pair in the `executionContext.evaluationContext.context` object.
  * @implements {OperationHandler}
  */
 class SetVariableHandler {
   #logger;
+  #jsonLogic;
 
   /**
    * Creates an instance of SetVariableHandler.
@@ -46,7 +45,7 @@ class SetVariableHandler {
    * @param {ILogger} dependencies.logger - The logging service instance.
    * @throws {Error} If dependencies are missing or invalid.
    */
-  constructor({ logger }) {
+  constructor({ logger, jsonLogic }) {
     if (
       !logger ||
       typeof logger.debug !== 'function' ||
@@ -57,7 +56,13 @@ class SetVariableHandler {
         'SetVariableHandler requires a valid ILogger instance with debug, info, warn, and error methods.'
       );
     }
+    if (!jsonLogic || typeof jsonLogic.apply !== 'function') {
+      throw new Error(
+        'SetVariableHandler requires a jsonLogic implementation with an apply method.'
+      );
+    }
     this.#logger = logger;
+    this.#jsonLogic = jsonLogic;
     this.#logger.debug('SetVariableHandler initialized.');
   }
 
@@ -86,7 +91,7 @@ class SetVariableHandler {
    */
   #performJsonLogicEvaluation(value, evaluationContext, varName) {
     try {
-      const result = jsonLogic.apply(value, evaluationContext);
+      const result = this.#jsonLogic.apply(value, evaluationContext);
       let evalResultString;
       try {
         evalResultString = JSON.stringify(result);
@@ -259,7 +264,7 @@ class SetVariableHandler {
   /**
    * Executes the SET_VARIABLE operation using pre-resolved parameters.
    * If the 'value' parameter is a plain object, it attempts to evaluate it as JsonLogic
-   * using `jsonLogic.apply` with `executionContext.evaluationContext` as the data source.
+   * using `this.#jsonLogic.apply` with `executionContext.evaluationContext` as the data source.
    * Otherwise, uses the value directly.
    * Sets or updates a variable in `executionContext.evaluationContext.context`.
    *

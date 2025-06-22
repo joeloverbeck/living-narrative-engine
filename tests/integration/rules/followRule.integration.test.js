@@ -35,6 +35,7 @@ import {
 } from '../../../src/constants/componentIds.js';
 import { ATTEMPT_ACTION_ID } from '../../../src/constants/eventIds.js';
 import SetVariableHandler from '../../../src/logic/operationHandlers/setVariableHandler.js';
+import jsonLogicJs from 'json-logic-js';
 import GetNameHandler from '../../../src/logic/operationHandlers/getNameHandler.js';
 
 class SimpleEntityManager {
@@ -164,7 +165,7 @@ describe('core_handle_follow rule integration', () => {
         logger,
         safeEventDispatcher: safeDispatcher,
       }),
-      SET_VARIABLE: new SetVariableHandler({ logger }),
+      SET_VARIABLE: new SetVariableHandler({ logger, jsonLogic: jsonLogicJs }),
     };
 
     for (const [type, handler] of Object.entries(handlers)) {

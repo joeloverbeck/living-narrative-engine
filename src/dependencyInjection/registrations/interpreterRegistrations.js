@@ -26,6 +26,7 @@ import QueryComponentHandler from '../../logic/operationHandlers/queryComponentH
 import QueryComponentsHandler from '../../logic/operationHandlers/queryComponentsHandler.js';
 import RemoveComponentHandler from '../../logic/operationHandlers/removeComponentHandler.js';
 import SetVariableHandler from '../../logic/operationHandlers/setVariableHandler.js';
+import jsonLogic from 'json-logic-js';
 import EndTurnHandler from '../../logic/operationHandlers/endTurnHandler.js';
 import SystemMoveEntityHandler from '../../logic/operationHandlers/systemMoveEntityHandler.js';
 import GetTimestampHandler from '../../logic/operationHandlers/getTimestampHandler.js';
@@ -158,7 +159,11 @@ export function registerInterpreters(container) {
     [
       tokens.SetVariableHandler,
       SetVariableHandler,
-      (c, Handler) => new Handler({ logger: c.resolve(tokens.ILogger) }),
+      (c, Handler) =>
+        new Handler({
+          logger: c.resolve(tokens.ILogger),
+          jsonLogic,
+        }),
     ],
     [
       tokens.EndTurnHandler,

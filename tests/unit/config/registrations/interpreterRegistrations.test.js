@@ -349,7 +349,10 @@ describe('registerInterpreters', () => {
     expect(handler).toBeDefined();
     expect(SetVariableHandler).toHaveBeenCalledTimes(1);
     expect(SetVariableHandler).toHaveBeenCalledWith(
-      expect.objectContaining({ logger: mockLogger })
+      expect.objectContaining({
+        logger: mockLogger,
+        jsonLogic: expect.anything(),
+      })
     );
   });
 }); // End describe

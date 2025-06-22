@@ -19,6 +19,7 @@ import { expandMacros } from '../../../src/utils/macroUtils.js';
 import QueryComponentHandler from '../../../src/logic/operationHandlers/queryComponentHandler.js';
 import GetTimestampHandler from '../../../src/logic/operationHandlers/getTimestampHandler.js';
 import SetVariableHandler from '../../../src/logic/operationHandlers/setVariableHandler.js';
+import jsonLogic from 'json-logic-js';
 import ResolveDirectionHandler from '../../../src/logic/operationHandlers/resolveDirectionHandler.js';
 import ModifyComponentHandler from '../../../src/logic/operationHandlers/modifyComponentHandler.js';
 import DispatchEventHandler from '../../../src/logic/operationHandlers/dispatchEventHandler.js';
@@ -120,7 +121,7 @@ describe('core_handle_go rule integration', () => {
             }
           ),
         GET_TIMESTAMP: new GetTimestampHandler({ logger }),
-        SET_VARIABLE: new SetVariableHandler({ logger }),
+        SET_VARIABLE: new SetVariableHandler({ logger, jsonLogic }),
         RESOLVE_DIRECTION: new ResolveDirectionHandler({
           worldContext,
           logger,

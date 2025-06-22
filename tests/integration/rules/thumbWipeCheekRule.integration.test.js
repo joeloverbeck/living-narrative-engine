@@ -27,6 +27,7 @@ import GetTimestampHandler from '../../../src/logic/operationHandlers/getTimesta
 import EndTurnHandler from '../../../src/logic/operationHandlers/endTurnHandler.js';
 import GetNameHandler from '../../../src/logic/operationHandlers/getNameHandler.js';
 import SetVariableHandler from '../../../src/logic/operationHandlers/setVariableHandler.js'; // Import the new handler
+import jsonLogicJs from 'json-logic-js';
 import { expandMacros } from '../../../src/utils/macroUtils.js';
 import {
   NAME_COMPONENT_ID,
@@ -83,7 +84,7 @@ function init(entities) {
       safeEventDispatcher: safeDispatcher,
     }),
     // Register the new handler needed by the updated rule
-    SET_VARIABLE: new SetVariableHandler({ logger }),
+    SET_VARIABLE: new SetVariableHandler({ logger, jsonLogic: jsonLogicJs }),
   };
 
   for (const [type, handler] of Object.entries(handlers)) {

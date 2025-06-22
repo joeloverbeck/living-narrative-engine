@@ -19,6 +19,7 @@ import OperationRegistry from '../../../src/logic/operationRegistry.js';
 import JsonLogicEvaluationService from '../../../src/logic/jsonLogicEvaluationService.js';
 import AddPerceptionLogEntryHandler from '../../../src/logic/operationHandlers/addPerceptionLogEntryHandler.js';
 import SetVariableHandler from '../../../src/logic/operationHandlers/setVariableHandler.js';
+import jsonLogicJs from 'json-logic-js';
 import {
   PERCEPTION_LOG_COMPONENT_ID,
   POSITION_COMPONENT_ID,
@@ -137,7 +138,7 @@ function init(entities) {
       entityManager,
       safeEventDispatcher: safeDispatcher,
     }),
-    SET_VARIABLE: new SetVariableHandler({ logger }),
+    SET_VARIABLE: new SetVariableHandler({ logger, jsonLogic: jsonLogicJs }),
   };
 
   for (const [type, handler] of Object.entries(handlers)) {
