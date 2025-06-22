@@ -82,49 +82,46 @@ describeEngineSuite('GameEngine', () => {
           expect(result).toEqual(saveResultData);
         });
 
-        it('should handle save failure from persistence service, dispatch UI events, and return failure result', async () => {
-          const saveFailureData = {
-            success: false,
-            error: 'Disk is critically full',
-          };
-          ctx.bed.mocks.gamePersistenceService.saveGame.mockResolvedValue(
-            saveFailureData
-          );
+        it.each([
+          [
+            'service returns failure',
+            { success: false, error: 'Disk is critically full' },
+          ],
+          ['service rejects', new Error('Network connection failed')],
+        ])(
+          'should handle %s, dispatch UI events, and return failure result',
+          async (_caseName, failureValue) => {
+            if (failureValue instanceof Error) {
+              ctx.bed.mocks.gamePersistenceService.saveGame.mockRejectedValue(
+                failureValue
+              );
+            } else {
+              ctx.bed.mocks.gamePersistenceService.saveGame.mockResolvedValue(
+                failureValue
+              );
+            }
 
-          const result = await ctx.engine.triggerManualSave(SAVE_NAME);
+            const result = await ctx.engine.triggerManualSave(SAVE_NAME);
 
-          expectDispatchSequence(
-            ctx.bed.mocks.safeEventDispatcher.dispatch,
-            ...buildSaveDispatches(SAVE_NAME)
-          );
+            expectDispatchSequence(
+              ctx.bed.mocks.safeEventDispatcher.dispatch,
+              ...buildSaveDispatches(SAVE_NAME)
+            );
 
-          expect(
-            ctx.bed.mocks.gamePersistenceService.saveGame
-          ).toHaveBeenCalledWith(SAVE_NAME, true, MOCK_ACTIVE_WORLD_FOR_SAVE);
-          expect(result).toEqual(saveFailureData);
-        });
+            expect(
+              ctx.bed.mocks.gamePersistenceService.saveGame
+            ).toHaveBeenCalledWith(SAVE_NAME, true, MOCK_ACTIVE_WORLD_FOR_SAVE);
 
-        it('should handle unexpected error during saveGame call, dispatch UI events, and return failure result', async () => {
-          const unexpectedError = new Error('Network connection failed');
-          ctx.bed.mocks.gamePersistenceService.saveGame.mockRejectedValue(
-            unexpectedError
-          );
-
-          const result = await ctx.engine.triggerManualSave(SAVE_NAME);
-
-          expectDispatchSequence(
-            ctx.bed.mocks.safeEventDispatcher.dispatch,
-            ...buildSaveDispatches(SAVE_NAME)
-          );
-
-          expect(
-            ctx.bed.mocks.gamePersistenceService.saveGame
-          ).toHaveBeenCalledWith(SAVE_NAME, true, MOCK_ACTIVE_WORLD_FOR_SAVE);
-          expect(result).toEqual({
-            success: false,
-            error: `Unexpected error during save: ${unexpectedError.message}`,
-          });
-        });
+            const expectedResult =
+              failureValue instanceof Error
+                ? {
+                    success: false,
+                    error: `Unexpected error during save: ${failureValue.message}`,
+                  }
+                : failureValue;
+            expect(result).toEqual(expectedResult);
+          }
+        );
       },
       MOCK_ACTIVE_WORLD_FOR_SAVE
     );
