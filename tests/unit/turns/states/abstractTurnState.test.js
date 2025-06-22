@@ -13,6 +13,9 @@ const makeLogger = () => ({
 const makeHandler = (logger = makeLogger(), dispatcher) => ({
   getLogger: jest.fn(() => logger),
   safeEventDispatcher: dispatcher,
+  getSafeEventDispatcher: jest.fn(function () {
+    return this.safeEventDispatcher;
+  }),
 });
 
 describe('AbstractTurnState._resolveLogger', () => {
@@ -102,6 +105,7 @@ describe('AbstractTurnState._getSafeEventDispatcher', () => {
     expect(result).toBe(dispatcher);
     expect(logger.warn).not.toHaveBeenCalled();
     expect(logger.error).not.toHaveBeenCalled();
+    expect(handler.getSafeEventDispatcher).not.toHaveBeenCalled();
   });
 
   test('warns once and falls back to handler dispatcher when context missing', () => {
@@ -113,6 +117,7 @@ describe('AbstractTurnState._getSafeEventDispatcher', () => {
     };
     const result = state._getSafeEventDispatcher(ctx, handler);
     expect(result).toBe(dispatcher);
+    expect(handler.getSafeEventDispatcher).toHaveBeenCalled();
     expect(logger.warn).toHaveBeenCalledTimes(1);
     expect(logger.warn.mock.calls[0][0]).toMatch(/Falling back/);
   });
@@ -128,6 +133,7 @@ describe('AbstractTurnState._getSafeEventDispatcher', () => {
     };
     const result = state._getSafeEventDispatcher(ctx, handler);
     expect(result).toBe(dispatcher);
+    expect(handler.getSafeEventDispatcher).toHaveBeenCalled();
     expect(logger.error).toHaveBeenCalledTimes(1);
     expect(logger.warn).toHaveBeenCalledTimes(1);
   });

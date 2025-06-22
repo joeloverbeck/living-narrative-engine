@@ -68,6 +68,54 @@ export class BaseTurnHandler {
     return this._currentTurnContext;
   }
 
+  /**
+   * Retrieves the current turn state.
+   *
+   * @returns {ITurnState|null} The active state instance or null.
+   */
+  getCurrentState() {
+    return this._currentState;
+  }
+
+  /**
+   * Resolves a SafeEventDispatcher for use by states.
+   * Attempts to use the active ITurnContext first, falling back
+   * to a `safeEventDispatcher` property on the handler if available.
+   *
+   * @returns {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher|null}
+   *   The dispatcher instance or null if unavailable.
+   */
+  getSafeEventDispatcher() {
+    if (
+      this._currentTurnContext &&
+      typeof this._currentTurnContext.getSafeEventDispatcher === 'function'
+    ) {
+      try {
+        const dispatcher = this._currentTurnContext.getSafeEventDispatcher();
+        if (dispatcher && typeof dispatcher.dispatch === 'function') {
+          return dispatcher;
+        }
+      } catch (err) {
+        this.getLogger().warn(
+          `${this.constructor.name}.getSafeEventDispatcher: ` +
+            `Error accessing dispatcher from TurnContext – ${err.message}`
+        );
+      }
+    }
+
+    if (
+      this.safeEventDispatcher &&
+      typeof this.safeEventDispatcher.dispatch === 'function'
+    ) {
+      return this.safeEventDispatcher;
+    }
+
+    this.getLogger().warn(
+      `${this.constructor.name}.getSafeEventDispatcher: dispatcher unavailable.`
+    );
+    return null;
+  }
+
   getCurrentActor() {
     if (this._currentTurnContext) {
       try {

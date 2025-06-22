@@ -56,6 +56,12 @@ beforeEach(() => {
     safeEventDispatcher: {
       dispatch: jest.fn().mockResolvedValue(undefined),
     },
+    getSafeEventDispatcher: jest.fn(function () {
+      return this.safeEventDispatcher;
+    }),
+    getCurrentState: jest.fn(function () {
+      return this._currentState;
+    }),
   };
 
   // Construct a fresh ProcessingCommandState with no initial commandString or turnAction
@@ -412,6 +418,7 @@ describe('ProcessingCommandState._getServiceFromContext – error branches', () 
         message: expect.stringContaining('Invalid turnCtx'),
       })
     );
+    expect(mockHandler.getSafeEventDispatcher).toHaveBeenCalled();
   });
 
   test('should log error when turnCtx lacks getLogger', async () => {
@@ -468,6 +475,7 @@ describe('ProcessingCommandState._getServiceFromContext – error branches', () 
         details: expect.any(Object),
       })
     );
+    expect(mockHandler.getSafeEventDispatcher).toHaveBeenCalled();
   });
 
   test('should catch service method returning null or undefined and dispatch SYSTEM_ERROR_OCCURRED_ID', async () => {

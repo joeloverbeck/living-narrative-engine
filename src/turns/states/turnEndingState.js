@@ -156,8 +156,8 @@ export class TurnEndingState extends AbstractTurnState {
 
     if (
       ctx?.requestIdleStateTransition &&
-      !handler._currentState?.isIdle?.() &&
-      handler._currentState !== this
+      !handler.getCurrentState()?.isIdle?.() &&
+      handler.getCurrentState() !== this
     ) {
       try {
         await ctx.requestIdleStateTransition();
