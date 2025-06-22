@@ -18,8 +18,8 @@ import {
   createMockModVersionValidator,
   createMockModLoadOrderResolver,
   createMockWorldLoader, // ← NEW import
+  createLoaderMocks,
 } from '../mockFactories';
-import { createLoaderMocks } from './modsLoader.test-utils.js';
 import { createTestEnvironmentBuilder } from '../mockEnvironment.js';
 
 /**
