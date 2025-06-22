@@ -383,7 +383,7 @@ export class SaveGameUI extends SlotModalBase {
    * @private
    * @returns {string | null} Error message if validation fails.
    */
-  #validateSavePreconditions() {
+  #validatePreconditions() {
     if (
       !this.selectedSlotData ||
       !this.elements.saveNameInputEl ||
@@ -520,6 +520,64 @@ export class SaveGameUI extends SlotModalBase {
   }
 
   /**
+   * Executes the save and handles result messaging.
+   *
+   * @param {string} currentSaveName - Name to use when saving.
+   * @private
+   * @async
+   * @returns {Promise<{success: boolean, message: string}>} Result information.
+   */
+  async #performSave(currentSaveName) {
+    let saveSucceeded = false;
+    let finalMessage = '';
+
+    try {
+      const { result, returnedIdentifier } =
+        await this.#executeSave(currentSaveName);
+
+      if (result && result.success) {
+        saveSucceeded = true;
+        finalMessage = `Game saved as "${currentSaveName}".`;
+        this.#reselectSavedSlot(returnedIdentifier, currentSaveName);
+      } else {
+        finalMessage = `Save failed: ${result?.error || 'An unknown error occurred while saving.'}`;
+        this.logger.error(`${this._logPrefix} Save failed: ${finalMessage}`);
+      }
+    } catch (error) {
+      const exceptionMsg =
+        error instanceof Error ? error.message : String(error);
+      finalMessage = `Save failed: ${exceptionMsg || 'An unexpected error occurred.'}`;
+      this.logger.error(
+        `${this._logPrefix} Exception during save operation:`,
+        error
+      );
+    }
+
+    return { success: saveSucceeded, message: finalMessage };
+  }
+
+  /**
+   * Finalizes the save operation by updating UI state and status messages.
+   *
+   * @param {boolean} success - Whether the save succeeded.
+   * @param {string} message - Message to display to the user.
+   * @private
+   * @returns {void}
+   */
+  #finalizeSave(success, message) {
+    this._setOperationInProgress(false);
+
+    if (message) {
+      this._displayStatusMessage(message, success ? 'success' : 'error');
+    } else if (!success) {
+      this._displayStatusMessage(
+        'An unspecified error occurred during the save operation.',
+        'error'
+      );
+    }
+  }
+
+  /**
    * @param selectedSlotElement
    * @param slotData
    * @private
@@ -567,7 +625,7 @@ export class SaveGameUI extends SlotModalBase {
    * @async
    */
   async _handleSave() {
-    const validationError = this.#validateSavePreconditions();
+    const validationError = this.#validatePreconditions();
     if (validationError) {
       this._displayStatusMessage(validationError, 'error');
       return;
@@ -585,44 +643,8 @@ export class SaveGameUI extends SlotModalBase {
       'info'
     );
 
-    let saveSucceeded = false;
-    let finalMessage = '';
-    let finalMessageType = 'info';
-
-    try {
-      const { result, returnedIdentifier } =
-        await this.#executeSave(currentSaveName);
-
-      if (result && result.success) {
-        saveSucceeded = true;
-        finalMessage = `Game saved as "${currentSaveName}".`;
-        finalMessageType = 'success';
-        this.#reselectSavedSlot(returnedIdentifier, currentSaveName);
-      } else {
-        finalMessage = `Save failed: ${result?.error || 'An unknown error occurred while saving.'}`;
-        finalMessageType = 'error';
-        this.logger.error(`${this._logPrefix} Save failed: ${finalMessage}`);
-      }
-    } catch (error) {
-      const exceptionMsg =
-        error instanceof Error ? error.message : String(error);
-      finalMessage = `Save failed: ${exceptionMsg || 'An unexpected error occurred.'}`;
-      finalMessageType = 'error';
-      this.logger.error(
-        `${this._logPrefix} Exception during save operation:`,
-        error
-      );
-    } finally {
-      this._setOperationInProgress(false);
-      if (finalMessage) {
-        this._displayStatusMessage(finalMessage, finalMessageType);
-      } else if (!saveSucceeded) {
-        this._displayStatusMessage(
-          'An unspecified error occurred during the save operation.',
-          'error'
-        );
-      }
-    }
+    const { success, message } = await this.#performSave(currentSaveName);
+    this.#finalizeSave(success, message);
   }
 
   /**
