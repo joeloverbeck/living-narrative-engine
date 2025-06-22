@@ -13,4 +13,6 @@ export {
   createMockAIPromptPipeline,
 } from './coreServices.js';
 
+export { createRuleTestDataRegistry } from './entities.js';
+
 export { createMockContainerWithRegistration } from './container.js';
