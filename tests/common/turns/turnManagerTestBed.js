@@ -331,16 +331,8 @@ export const describeRunningTurnManagerSuite = createDescribeTestBedSuite(
 export default TurnManagerTestBed;
 
 /**
- * Convenience export for {@link TurnManagerTestBed#startWithEntitiesAndFlush}.
- *
- * @param {TurnManagerTestBed} bed - Test bed instance.
- * @param {...{ id: string }} entities - Entities to register as active.
- * @returns {Promise<void>} Resolves once timers are flushed.
+ * Re-exports {@link flushPromisesAndTimers} for convenience in test suites.
  */
-export async function startWithEntitiesAndFlush(bed, ...entities) {
-  await bed.startWithEntitiesAndFlush(...entities);
-}
-
 export { flushPromisesAndTimers };
 
 /*
