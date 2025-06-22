@@ -8,9 +8,13 @@ import {
   ENGINE_INITIALIZING_UI,
   ENGINE_READY_UI,
   ENGINE_OPERATION_FAILED_UI,
-  ENGINE_STOPPED_UI,
 } from '../../../src/constants/eventIds.js';
-import { expectEngineStatus } from '../../common/engine/dispatchTestUtils.js';
+import {
+  expectDispatchSequence,
+  buildStopDispatches,
+  expectEngineStatus,
+} from '../../common/engine/dispatchTestUtils.js';
+import { DEFAULT_TEST_WORLD } from '../../common/constants.js';
 
 describeEngineSuite('GameEngine', (ctx) => {
   const MOCK_WORLD_NAME = 'TestWorld';
@@ -75,16 +79,18 @@ describeEngineSuite('GameEngine', (ctx) => {
         ctx.bed.mocks.playtimeTracker.endSessionAndAccumulate
       ).toHaveBeenCalledTimes(1);
       expect(ctx.bed.mocks.turnManager.stop).toHaveBeenCalledTimes(1);
-      expect(ctx.bed.mocks.safeEventDispatcher.dispatch).toHaveBeenCalledWith(
-        ENGINE_STOPPED_UI,
-        { inputDisabledMessage: 'Game stopped. Engine is inactive.' }
-      );
-      expect(ctx.bed.mocks.safeEventDispatcher.dispatch).toHaveBeenCalledWith(
-        ENGINE_READY_UI,
-        {
-          activeWorld: MOCK_WORLD_NAME,
-          message: 'Enter command...',
-        }
+      expectDispatchSequence(
+        ctx.bed.mocks.safeEventDispatcher.dispatch,
+        ...buildStopDispatches(),
+        [
+          ENGINE_INITIALIZING_UI,
+          { worldName: DEFAULT_TEST_WORLD },
+          { allowSchemaNotFound: true },
+        ],
+        [
+          ENGINE_READY_UI,
+          { activeWorld: DEFAULT_TEST_WORLD, message: 'Enter command...' },
+        ]
       );
       expectEngineStatus(ctx.engine, {
         isInitialized: true,
