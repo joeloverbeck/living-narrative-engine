@@ -5,8 +5,6 @@ import {
 } from '../utils/savePathUtils.js';
 import { isValidSaveString } from './saveInputValidators.js';
 import { validateSaveMetadataFields } from '../utils/saveMetadataUtils.js';
-import { MSG_FILE_READ_ERROR, MSG_EMPTY_FILE } from './persistenceMessages.js';
-import { PersistenceErrorCodes } from './persistenceErrors.js';
 import { readAndDeserialize as utilReadAndDeserialize } from '../utils/saveFileReadUtils.js';
 import { BaseService } from '../utils/serviceBase.js';
 
@@ -49,7 +47,7 @@ export default class SaveFileParser extends BaseService {
    * Reads, decompresses and deserializes a save file.
    *
    * @param {string} filePath - File path to read.
-   * @returns {Promise<import('./persistenceTypes.js').PersistenceResult<object>>}
+   * @returns {Promise<import('./persistenceTypes.js').PersistenceResult<import('../interfaces/ISaveLoadService.js').SaveGameStructure>>}
    *   Parsed object or failure info.
    * @private
    */
@@ -71,27 +69,6 @@ export default class SaveFileParser extends BaseService {
    */
   async readAndDeserialize(filePath) {
     return this.#deserializeAndDecompress(filePath);
-  }
-
-  /**
-   * Read, decompress and deserialize a save file.
-   *
-   * @param {string} filePath - File path of the save.
-   * @returns {Promise<import('../interfaces/ISaveLoadService.js').SaveGameStructure|null>} Parsed object or null on failure.
-   * @private
-   */
-  async #readAndDeserialize(filePath) {
-    const deserializationResult =
-      await this.#deserializeAndDecompress(filePath);
-    if (!deserializationResult.success) {
-      this.#logger.warn(
-        `Failed to deserialize ${filePath}: ${deserializationResult.error}. Flagging as corrupted for listing.`
-      );
-      return null;
-    }
-    return /** @type {import('../interfaces/ISaveLoadService.js').SaveGameStructure} */ (
-      deserializationResult.data
-    );
   }
 
   /**
@@ -161,9 +138,17 @@ export default class SaveFileParser extends BaseService {
     this.#logger.debug(`Processing file: ${filePath}`);
 
     try {
-      const saveObject = await this.#readAndDeserialize(filePath);
-      if (!saveObject)
+      const result = await this.readAndDeserialize(filePath);
+      if (!result.success || !result.data) {
+        this.#logger.warn(
+          `Failed to deserialize ${filePath}: ${result.error}. Flagging as corrupted for listing.`
+        );
         return this.#corruptedResult(filePath, fileName, ' (Corrupted)');
+      }
+      const saveObject =
+        /** @type {import('../interfaces/ISaveLoadService.js').SaveGameStructure} */ (
+          result.data
+        );
 
       if (!saveObject.metadata || typeof saveObject.metadata !== 'object') {
         this.#logger.warn(
