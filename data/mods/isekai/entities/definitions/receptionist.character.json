@@ -13,11 +13,6 @@
       "imagePath": "portraits/receptionist.jpg",
       "altText": "Fiona Emberfell, the receptionist at the adventurers' guild."
     },
-    "core:position": {
-      "locationId": "isekai:adventurers_guild",
-      "x": 0,
-      "y": 0
-    },
     "core:perception_log": {
       "maxEntries": 50,
       "logEntries": []

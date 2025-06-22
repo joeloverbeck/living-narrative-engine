@@ -10,11 +10,6 @@
     "core:description": {
       "text": "A shady-looking guy wearing a hood and a mask even indoors and in social circumstances."
     },
-    "core:position": {
-      "locationId": "isekai:adventurers_guild",
-      "x": 0,
-      "y": 0
-    },
     "core:perception_log": {
       "maxEntries": 50,
       "logEntries": []

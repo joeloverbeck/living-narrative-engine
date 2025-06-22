@@ -11,7 +11,7 @@
     "core:exits": [
       {
         "direction": "to the adventurers' guild",
-        "target": "isekai:adventurers_guild",
+        "target": "isekai:adventurers_guild_instance",
         "blocker": null
       }
     ]

@@ -9,11 +9,6 @@
     "core:description": {
       "text": "A woman in her mid-twenties. She stands with a focused stillness that can be mistaken for calm, but a keen observer might note the slight, constant tension in her shoulders and jaw. Her heavy plate armor, functional and well-maintained, bears the scuffs and dents of regular use rather than ceremonial polish; its order is one of readiness, not pristine display. The mace at her hip and the shield on her back are not adornments. While her features possess a clear, unadorned attractiveness, it's her gaze—direct, almost unnervingly steady, and intensely observant—that usually captures attention. There's a weariness there if you look long enough, but it's banked by a formidable resolve."
     },
-    "core:position": {
-      "locationId": "isekai:adventurers_guild",
-      "x": 0,
-      "y": 0
-    },
     "core:portrait": {
       "imagePath": "portraits/sidekick.png",
       "altText": "Linnea Cadogan, paladin."

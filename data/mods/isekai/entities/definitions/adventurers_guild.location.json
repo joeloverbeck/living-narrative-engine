@@ -15,7 +15,7 @@
     "core:exits": [
       {
         "direction": "out to town",
-        "target": "isekai:town",
+        "target": "isekai:town_instance",
         "blocker": null
       }
     ]

@@ -1,5 +1,12 @@
 {
   "$schema": "http://example.com/schemas/entity-instance.schema.json",
   "instanceId": "isekai:sidekick_instance",
-  "definitionId": "isekai:sidekick"
+  "definitionId": "isekai:sidekick",
+  "componentOverrides": {
+    "core:position": {
+      "locationId": "isekai:adventurers_guild",
+      "x": 0,
+      "y": 0
+    }
+  }
 }
