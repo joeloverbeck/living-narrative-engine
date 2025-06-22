@@ -15,7 +15,27 @@ import {
   createMockEntity,
 } from '../mockFactories';
 import FactoryTestBed from '../factoryTestBed.js';
+import { createServiceFactoryMixin } from '../serviceFactoryTestBedMixin.js';
 import { createTestBedHelpers } from '../createTestBedHelpers.js';
+
+const PipelineFactoryMixin = createServiceFactoryMixin(
+  {
+    llmAdapter: createMockLLMAdapter,
+    gameStateProvider: createMockAIGameStateProvider,
+    promptContentProvider: createMockAIPromptContentProvider,
+    promptBuilder: createMockPromptBuilder,
+    logger: createMockLogger,
+  },
+  (mocks) =>
+    new AIPromptPipeline({
+      llmAdapter: mocks.llmAdapter,
+      gameStateProvider: mocks.gameStateProvider,
+      promptContentProvider: mocks.promptContentProvider,
+      promptBuilder: mocks.promptBuilder,
+      logger: mocks.logger,
+    }),
+  'pipeline'
+);
 
 /**
  * @typedef {object} DependencySpecEntry
@@ -53,7 +73,9 @@ export const AIPromptPipelineDependencySpec = {
  * @description Utility class for unit tests that need an AIPromptPipeline with common mocks.
  * @class
  */
-export class AIPromptPipelineTestBed extends FactoryTestBed {
+export class AIPromptPipelineTestBed extends PipelineFactoryMixin(
+  FactoryTestBed
+) {
   /** @type {import('../../src/entities/entity.js').default} */
   defaultActor;
   /** @type {import('../../src/turns/interfaces/ITurnContext.js').ITurnContext} */
@@ -62,13 +84,7 @@ export class AIPromptPipelineTestBed extends FactoryTestBed {
   defaultActions;
 
   constructor() {
-    super({
-      llmAdapter: createMockLLMAdapter,
-      gameStateProvider: createMockAIGameStateProvider,
-      promptContentProvider: createMockAIPromptContentProvider,
-      promptBuilder: createMockPromptBuilder,
-      logger: createMockLogger,
-    });
+    super();
     this.defaultActor = createMockEntity('actor');
     this.defaultContext = {};
     this.defaultActions = [];
@@ -82,22 +98,6 @@ export class AIPromptPipelineTestBed extends FactoryTestBed {
   }
 
   /**
-   * Creates a new {@link AIPromptPipeline} instance using the internally
-   * constructed mocks.
-   *
-   * @returns {AIPromptPipeline} The pipeline under test.
-   */
-  createPipeline() {
-    return new AIPromptPipeline({
-      llmAdapter: this.mocks.llmAdapter,
-      gameStateProvider: this.mocks.gameStateProvider,
-      promptContentProvider: this.mocks.promptContentProvider,
-      promptBuilder: this.mocks.promptBuilder,
-      logger: this.mocks.logger,
-    });
-  }
-
-  /**
    * Convenience method that creates a pipeline and generates a prompt.
    *
    * @param {import('../../../src/entities/entity.js').default} actor - The actor requesting the prompt.
@@ -106,8 +106,7 @@ export class AIPromptPipelineTestBed extends FactoryTestBed {
    * @returns {Promise<string>} The generated prompt string.
    */
   async generate(actor, context, actions) {
-    const pipeline = this.createPipeline();
-    return pipeline.generatePrompt(actor, context, actions);
+    return this.pipeline.generatePrompt(actor, context, actions);
   }
 
   /**
@@ -137,13 +136,7 @@ export class AIPromptPipelineTestBed extends FactoryTestBed {
    * }} The dependency object.
    */
   getDependencies() {
-    return {
-      llmAdapter: this.mocks.llmAdapter,
-      gameStateProvider: this.mocks.gameStateProvider,
-      promptContentProvider: this.mocks.promptContentProvider,
-      promptBuilder: this.mocks.promptBuilder,
-      logger: this.mocks.logger,
-    };
+    return this.mocks;
   }
 
   /**
