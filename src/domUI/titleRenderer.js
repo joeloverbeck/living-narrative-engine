@@ -210,15 +210,25 @@ export class TitleRenderer extends RendererBase {
    * Handles 'initialization:initialization_service:failed'.
    *
    * @private
-   * @param {object} payload - Expected payload (e.g., { worldName?: string, error?: string, stack?: string }).
+   * @param {object} eventEnvelope - Event envelope with shape { type, payload }.
+   * @param {string} eventType - The name of the triggered event.
    */
-  #handleInitializationFailed(payload) {
+  #handleInitializationFailed(eventEnvelope, eventType) {
+    // Expect eventEnvelope to be { type, payload }
+    const payload = eventEnvelope?.payload;
+    this.logger.debug(`${this._logPrefix} Received initialization failed event with envelope:`, eventEnvelope);
+    this.logger.debug(`${this._logPrefix} Extracted payload:`, payload);
+    this.logger.debug(`${this._logPrefix} Event type:`, eventType);
+    this.logger.debug(`${this._logPrefix} Payload.error:`, payload?.error);
+    
     const title = `Initialization Failed${payload?.worldName ? ` (World: ${payload.worldName})` : ''}`;
     this.set(title);
     // Dispatch error event for UI display
+    const errorMessage = payload?.error || 'Unknown error occurred';
+    this.logger.debug(`${this._logPrefix} Using error message:`, errorMessage);
     safeDispatchError(
       this.validatedEventDispatcher,
-      `${this._logPrefix} Overall initialization failed. Error: ${payload?.error}`,
+      `${this._logPrefix} Overall initialization failed. Error: ${errorMessage}`,
       payload
     );
   }
@@ -240,9 +250,10 @@ export class TitleRenderer extends RendererBase {
     }
     const title = `${stepName} Failed`;
     this.set(title);
+    const errorMessage = payload?.error || 'Unknown error occurred';
     safeDispatchError(
       this.validatedEventDispatcher,
-      `${this._logPrefix} ${title}. Error: ${payload?.error}`,
+      `${this._logPrefix} ${title}. Error: ${errorMessage}`,
       payload
     );
   }
