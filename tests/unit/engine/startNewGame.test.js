@@ -1,4 +1,11 @@
 // tests/engine/startNewGame.test.js
+/* eslint jest/expect-expect: ["error", { "assertFunctionNames": [
+  "expect",
+  "expectStartSuccess",
+  "expectDispatchSequence",
+  "expectEngineRunning",
+  "expectEngineStopped"
+] }] */
 import { beforeEach, describe, expect, it } from '@jest/globals';
 import { describeEngineSuite } from '../../common/engine/gameEngineTestBed.js';
 
@@ -13,14 +20,22 @@ import {
 } from '../../common/engine/dispatchTestUtils.js';
 import { DEFAULT_TEST_WORLD } from '../../common/constants.js';
 
+/**
+ * Mocks a successful initialization sequence on the provided test bed.
+ *
+ * @param {import('../../common/engine/gameEngineTestBed.js').GameEngineTestBed} bed - Test bed instance.
+ * @returns {void}
+ */
+function mockInitSuccess(bed) {
+  bed.mocks.initializationService.runInitializationSequence.mockResolvedValue({
+    success: true,
+  });
+}
+
 describeEngineSuite('GameEngine', (ctx) => {
   describe('startNewGame', () => {
     beforeEach(() => {
-      ctx.bed.mocks.initializationService.runInitializationSequence.mockResolvedValue(
-        {
-          success: true,
-        }
-      );
+      mockInitSuccess(ctx.bed);
     });
 
     it('should successfully start a new game', async () => {
@@ -29,14 +44,7 @@ describeEngineSuite('GameEngine', (ctx) => {
     });
 
     it('should stop an existing game if already initialized, with correct event payloads from stop()', async () => {
-      ctx.bed.mocks.initializationService.runInitializationSequence.mockResolvedValueOnce(
-        { success: true }
-      );
       await ctx.bed.startAndReset('InitialWorld');
-
-      ctx.bed.mocks.initializationService.runInitializationSequence.mockResolvedValueOnce(
-        { success: true }
-      );
       await ctx.engine.startNewGame(DEFAULT_TEST_WORLD);
 
       expect(ctx.bed.mocks.logger.warn).toHaveBeenCalledWith(
@@ -78,11 +86,6 @@ describeEngineSuite('GameEngine', (ctx) => {
     });
 
     it('should handle general errors during start-up and dispatch failure event', async () => {
-      ctx.bed.mocks.initializationService.runInitializationSequence.mockResolvedValue(
-        {
-          success: true,
-        }
-      );
       const startupError = new Error('TurnManager failed to start');
       ctx.bed.mocks.playtimeTracker.startSession.mockImplementation(() => {}); // Make sure this doesn't throw
       ctx.bed.mocks.turnManager.start.mockRejectedValue(startupError); // TurnManager fails to start
