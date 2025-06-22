@@ -3,6 +3,7 @@
 import { SlotModalBase } from './slotModalBase.js';
 import { DomUtils } from '../utils/domUtils.js';
 import { formatSaveFileMetadata } from './helpers/slotDataFormatter.js';
+import { fetchAndFormatLoadSlots } from '../utils/loadSlotUtils.js';
 import { renderSlotItem } from './helpers/renderSlotItem.js';
 import { buildModalElementsConfig } from './helpers/buildModalElementsConfig.js';
 import createMessageElement from './helpers/createMessageElement.js';
@@ -217,32 +218,10 @@ class LoadGameUI extends SlotModalBase {
     this.logger.debug(`${this._logPrefix} Fetching load slots data...`);
     let displaySlots = [];
     try {
-      const manualSaves = await this.saveLoadService.listManualSaveSlots();
+      displaySlots = await fetchAndFormatLoadSlots(this.saveLoadService);
       this.logger.debug(
-        `${this._logPrefix} Fetched ${manualSaves.length} manual save slots.`
+        `${this._logPrefix} Fetched ${displaySlots.length} manual save slots.`
       );
-
-      // Sort by timestamp descending (newest first), corrupted at bottom
-      manualSaves.sort((a, b) => {
-        if (a.isCorrupted && !b.isCorrupted) return 1;
-        if (!a.isCorrupted && b.isCorrupted) return -1;
-        if (a.isCorrupted && b.isCorrupted) {
-          return (a.saveName || a.identifier).localeCompare(
-            b.saveName || b.identifier
-          );
-        }
-        try {
-          return (
-            new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
-          );
-        } catch {
-          return 0;
-        }
-      });
-      displaySlots = manualSaves.map((s) => ({
-        ...s,
-        slotItemMeta: formatSaveFileMetadata(s),
-      }));
     } catch (error) {
       this.logger.error(
         `${this._logPrefix} Error fetching or processing save slots data:`,
