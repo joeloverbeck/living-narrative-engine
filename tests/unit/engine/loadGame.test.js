@@ -1,5 +1,6 @@
 // tests/engine/loadGame.test.js
 import { beforeEach, describe, expect, it } from '@jest/globals';
+import { expectNoDispatch } from '../../common/engine/dispatchTestUtils.js';
 import { tokens } from '../../../src/dependencyInjection/tokens.js';
 import { describeEngineSuite } from '../../common/engine/gameEngineTestBed.js';
 import {
@@ -119,7 +120,7 @@ describeEngineSuite('GameEngine', (ctx) => {
         ],
         async (bed, engine, expectedMsg) => {
           const result = await engine.loadGame(SAVE_ID);
-          expect(bed.mocks.safeEventDispatcher.dispatch).not.toHaveBeenCalled();
+          expectNoDispatch(bed.mocks.safeEventDispatcher.dispatch);
           expect(result).toEqual({
             success: false,
             error: expectedMsg,

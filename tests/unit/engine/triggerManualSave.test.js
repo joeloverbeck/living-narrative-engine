@@ -13,6 +13,7 @@ import '../../common/engine/engineTestTypedefs.js';
 import {
   expectDispatchSequence,
   buildSaveDispatches,
+  expectNoDispatch,
 } from '../../common/engine/dispatchTestUtils.js';
 import { DEFAULT_ACTIVE_WORLD_FOR_SAVE } from '../../common/constants.js';
 
@@ -28,7 +29,7 @@ describeEngineSuite('GameEngine', () => {
         const expectedErrorMsg =
           'Game engine is not initialized. Cannot save game.';
 
-        expect(bed.mocks.safeEventDispatcher.dispatch).not.toHaveBeenCalled();
+        expectNoDispatch(bed.mocks.safeEventDispatcher.dispatch);
         expect(
           bed.mocks.gamePersistenceService.saveGame
         ).not.toHaveBeenCalled();
@@ -50,9 +51,7 @@ describeEngineSuite('GameEngine', () => {
             ],
             async (bed, engine) => {
               const result = await engine.triggerManualSave(SAVE_NAME);
-              expect(
-                bed.mocks.safeEventDispatcher.dispatch
-              ).not.toHaveBeenCalled();
+              expectNoDispatch(bed.mocks.safeEventDispatcher.dispatch);
               expect(result).toEqual({
                 success: false,
                 error:

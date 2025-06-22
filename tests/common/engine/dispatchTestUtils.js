@@ -229,6 +229,14 @@ export function expectComponentRemovedDispatch(
   });
 }
 
+/**
+ * Asserts that the dispatch function was never called.
+ *
+ * @param {import('@jest/globals').Mock} mock - Mocked dispatch function.
+ * @returns {void}
+ */
+export const expectNoDispatch = (mock) => expect(mock).not.toHaveBeenCalled();
+
 export { expectDispatchSequence as expectDispatchCalls };
 
 export default {
@@ -244,5 +252,6 @@ export default {
   expectEntityRemovedDispatch,
   expectComponentAddedDispatch,
   expectComponentRemovedDispatch,
+  expectNoDispatch,
   expectDispatchCalls: expectDispatchSequence,
 };
