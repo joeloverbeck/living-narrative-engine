@@ -78,18 +78,26 @@ describe('TurnManager Test Helpers: TurnManagerTestBed', () => {
     const bed = new TurnManagerTestBed({ TurnManagerClass: FakeManager });
     const e1 = { id: 'a' };
     bed.logger.info('pre');
+    const withResetSpy = jest.spyOn(bed, 'withReset');
     await bed.startWithEntities(e1);
     expect(bed.turnManager.start).toHaveBeenCalledTimes(1);
     expect(bed.entityManager.activeEntities.get('a')).toBe(e1);
     expect(bed.logger.info).toHaveBeenCalledTimes(0);
+    expect(withResetSpy).toHaveBeenCalledWith(expect.any(Function));
+    expect(withResetSpy).toHaveBeenCalledTimes(1);
+    withResetSpy.mockRestore();
     await bed.cleanup();
   });
 
   it('startRunning sets running without advancing', async () => {
     const bed = new TurnManagerTestBed({ TurnManagerClass: FakeManager });
+    const withResetSpy = jest.spyOn(bed, 'withReset');
     await bed.startRunning();
     expect(bed.turnManager.start).toHaveBeenCalledTimes(1);
     expect(bed.turnManager.advanceTurn).not.toHaveBeenCalled();
+    expect(withResetSpy).toHaveBeenCalledWith(expect.any(Function));
+    expect(withResetSpy).toHaveBeenCalledTimes(1);
+    withResetSpy.mockRestore();
     await bed.cleanup();
   });
 

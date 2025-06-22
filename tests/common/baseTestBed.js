@@ -5,6 +5,7 @@
 import { jest } from '@jest/globals';
 import { clearMockFunctions } from './jestHelpers.js';
 import { createMockEnvironment } from './mockEnvironment.js';
+import { runWithReset } from './testBedHelpers.js';
 
 /**
  * @description Base class that stores mocks and exposes a reset helper.
@@ -65,6 +66,16 @@ export class BaseTestBed {
    */
   resetMocks() {
     clearMockFunctions(...Object.values(this.mocks));
+  }
+
+  /**
+   * Executes a callback and resets mocks when finished.
+   *
+   * @param {(bed: this) => (Promise<void>|void)} fn - Callback executed with this test bed.
+   * @returns {Promise<void>} Resolves once the callback and reset logic complete.
+   */
+  async withReset(fn) {
+    await runWithReset(this, fn);
   }
 
   /**
