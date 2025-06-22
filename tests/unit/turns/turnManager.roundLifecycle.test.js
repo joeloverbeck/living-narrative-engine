@@ -14,11 +14,7 @@ import {
   TURN_STARTED_ID,
 } from '../../../src/constants/eventIds.js';
 import { beforeEach, expect, test } from '@jest/globals';
-import {
-  createDefaultActors,
-  createAiActor,
-} from '../../common/turns/testActors.js';
-import { createMockTurnHandler } from '../../common/mockFactories.js';
+import { createAiActor } from '../../common/turns/testActors.js';
 
 // --- Test Suite ---
 
@@ -32,23 +28,9 @@ describeRunningTurnManagerSuite(
 
     beforeEach(() => {
       testBed = getBed();
-      testBed.mocks.turnOrderService.isEmpty.mockResolvedValue(false);
-      testBed.mocks.turnOrderService.getNextEntity.mockResolvedValue(null);
-
-      ({ ai1, ai2, player } = createDefaultActors());
-
-      // Configure handler resolver to return MockTurnHandler instances
-      testBed.mocks.turnHandlerResolver.resolveHandler.mockImplementation(
-        async (actor) => {
-          const handler = createMockTurnHandler({ actor });
-          handler.startTurn = () => Promise.resolve();
-
-          return handler;
-        }
-      );
-
-      stopSpy = testBed.spyOnStop();
-
+      ({ ai1, ai2, player } = testBed.addDefaultActors());
+      testBed.setupHandlerForActor(ai1);
+      stopSpy = testBed.setupStopSpyNoOp();
       testBed.resetMocks();
     });
 
@@ -77,7 +59,8 @@ describeRunningTurnManagerSuite(
     });
 
     test('Fails to start a new round and stops if no active actors are found', async () => {
-      testBed.mocks.turnOrderService.isEmpty.mockResolvedValue(true);
+      testBed.setActiveEntities();
+      testBed.mockEmptyQueue();
 
       await testBed.advanceAndFlush();
 
@@ -94,8 +77,7 @@ describeRunningTurnManagerSuite(
 
     test('Advances to next actor when current turn ends successfully', async () => {
       testBed.setActiveEntities(ai1, ai2);
-
-      // Debug: print references
+      testBed.mockNextActor(ai1);
       testBed.mocks.turnOrderService.getNextEntity.mockImplementation(() => {
         const result =
           testBed.mocks.turnOrderService.getNextEntity.mock.calls.length === 1
@@ -221,8 +203,7 @@ describeRunningTurnManagerSuite(
     test('Handles turn advancement errors gracefully', async () => {
       testBed.setActiveEntities(ai1);
 
-      testBed.mocks.turnOrderService.isEmpty.mockResolvedValue(false);
-      testBed.mocks.turnOrderService.getNextEntity.mockResolvedValue(ai1);
+      testBed.mockNextActor(ai1);
       const advanceError = new Error('Turn advancement failed');
       testBed.mocks.turnHandlerResolver.resolveHandler.mockRejectedValue(
         advanceError
@@ -241,7 +222,7 @@ describeRunningTurnManagerSuite(
     test('Handles round start errors gracefully', async () => {
       testBed.setActiveEntities(ai1);
 
-      testBed.mocks.turnOrderService.isEmpty.mockResolvedValue(true);
+      testBed.mockEmptyQueue();
       const roundError = new Error('Round start failed');
       testBed.mocks.turnOrderService.startNewRound.mockRejectedValue(
         roundError
