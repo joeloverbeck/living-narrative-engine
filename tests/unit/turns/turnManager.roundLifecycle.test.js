@@ -1,7 +1,7 @@
 // src/tests/turns/turnManager.roundLifecycle.test.js
 // --- FILE START ---
 
-import { describeTurnManagerSuite } from '../../common/turns/turnManagerTestBed.js';
+import { describeRunningTurnManagerSuite } from '../../common/turns/turnManagerTestBed.js';
 import { flushPromisesAndTimers } from '../../common/jestHelpers.js';
 // import removed constant; not needed
 import {
@@ -18,7 +18,7 @@ import { createMockTurnHandler } from '../../common/mockFactories.js';
 
 // --- Test Suite ---
 
-describeTurnManagerSuite(
+describeRunningTurnManagerSuite(
   'TurnManager - Round Lifecycle and Turn Advancement',
   (getBed) => {
     let testBed;
@@ -48,6 +48,22 @@ describeTurnManagerSuite(
       testBed.resetMocks();
     });
 
+    /**
+     * Waits until the current actor matches the provided id.
+     *
+     * @param {string} id - Expected actor id.
+     * @returns {Promise<boolean>} Resolves true if actor found before timeout.
+     */
+    async function waitForCurrentActor(id) {
+      for (let i = 0; i < 50; i++) {
+        if (testBed.turnManager.getCurrentActor()?.id === id) {
+          return true;
+        }
+        await flushPromisesAndTimers();
+      }
+      return false;
+    }
+
     test('Starts a new round when queue is empty and active actors exist', async () => {
       testBed.setActiveEntities(ai1, player);
 
@@ -57,8 +73,7 @@ describeTurnManagerSuite(
       testBed.mocks.turnOrderService.isEmpty.mockResolvedValueOnce(true);
       testBed.mocks.turnOrderService.startNewRound.mockResolvedValue();
 
-      await testBed.turnManager.start();
-      await flushPromisesAndTimers();
+      await testBed.advanceAndFlush();
 
       expect(testBed.entityManager.activeEntities.size).toBe(2);
       expect(testBed.mocks.turnOrderService.startNewRound).toHaveBeenCalledWith(
@@ -76,8 +91,7 @@ describeTurnManagerSuite(
     test('Fails to start a new round and stops if no active actors are found', async () => {
       testBed.mocks.turnOrderService.isEmpty.mockResolvedValue(true);
 
-      await testBed.turnManager.start();
-      await flushPromisesAndTimers();
+      await testBed.advanceAndFlush();
 
       expect(testBed.mocks.logger.error).toHaveBeenCalledWith(
         'Cannot start a new round: No active entities with an Actor component found.'
@@ -109,8 +123,7 @@ describeTurnManagerSuite(
         return Promise.resolve(result);
       });
 
-      await testBed.turnManager.start();
-      await flushPromisesAndTimers();
+      await testBed.advanceAndFlush();
 
       expect(testBed.turnManager.getCurrentActor()).toBe(ai1);
 
@@ -132,8 +145,7 @@ describeTurnManagerSuite(
         .mockResolvedValueOnce(player)
         .mockResolvedValueOnce(ai1);
 
-      await testBed.turnManager.start();
-      await flushPromisesAndTimers();
+      await testBed.advanceAndFlush();
 
       // Check player actor event
       expect(testBed.mocks.dispatcher.dispatch).toHaveBeenCalledWith(
@@ -200,8 +212,7 @@ describeTurnManagerSuite(
         }
       );
 
-      await testBed.turnManager.start();
-      await flushPromisesAndTimers();
+      await testBed.advanceAndFlush();
 
       // Verify first actor is current
       expect(testBed.turnManager.getCurrentActor()?.id).toBe(ai1.id);
@@ -212,14 +223,7 @@ describeTurnManagerSuite(
       await flushPromisesAndTimers();
 
       // Wait for TurnManager to advance to ai2
-      let found = false;
-      for (let i = 0; i < 50; i++) {
-        if (testBed.turnManager.getCurrentActor()?.id === ai2.id) {
-          found = true;
-          break;
-        }
-        await flushPromisesAndTimers();
-      }
+      const found = await waitForCurrentActor(ai2.id);
       expect(found).toBe(true);
 
       // Simulate turn ending for actor2 (success: true)
@@ -251,8 +255,7 @@ describeTurnManagerSuite(
         advanceError
       );
 
-      await testBed.turnManager.start();
-      await flushPromisesAndTimers();
+      await testBed.advanceAndFlush();
 
       expect(testBed.mocks.dispatcher.dispatch).toHaveBeenCalledWith(
         SYSTEM_ERROR_OCCURRED_ID,
@@ -275,8 +278,7 @@ describeTurnManagerSuite(
         roundError
       );
 
-      await testBed.turnManager.start();
-      await flushPromisesAndTimers();
+      await testBed.advanceAndFlush();
 
       expect(testBed.mocks.dispatcher.dispatch.mock.calls).toEqual(
         expect.arrayContaining([
