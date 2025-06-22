@@ -21,10 +21,7 @@ import Entity from './entity.js';
 import EntityInstanceData from './entityInstanceData.js';
 import { MapManager } from '../utils/mapManagerUtils.js';
 import EntityFactory from './factories/entityFactory.js';
-import {
-  validationSucceeded,
-  formatValidationErrors,
-} from './utils/validationHelpers.js';
+import { validateAndClone as validateAndCloneUtil } from './utils/componentValidation.js';
 import {
   validateAddComponentParams as validateAddComponentParamsUtil,
   validateRemoveComponentParams as validateRemoveComponentParamsUtil,
@@ -69,8 +66,8 @@ import {
 /* Internal Utilities                                                         */
 
 /* -------------------------------------------------------------------------- */
-// validationSucceeded and formatValidationErrors imported from
-// ./utils/validationHelpers.js
+// validateAndCloneUtil imported from
+// ./utils/componentValidation.js
 
 // assertInterface removed; using validateDependency instead
 
@@ -242,15 +239,14 @@ class EntityManager extends IEntityManager {
    * @returns {object} The validated (and potentially cloned/modified by validator) data.
    */
   #validateAndClone(componentTypeId, data, errorContext) {
-    const clone = this.#cloner(data);
-    const result = this.#validator.validate(componentTypeId, clone);
-    if (!validationSucceeded(result)) {
-      const details = formatValidationErrors(result);
-      const msg = `${errorContext} Errors:\n${details}`;
-      this.#logger.error(msg);
-      throw new Error(msg);
-    }
-    return clone;
+    return validateAndCloneUtil(
+      componentTypeId,
+      data,
+      this.#validator,
+      this.#logger,
+      errorContext,
+      this.#cloner
+    );
   }
 
   /**
