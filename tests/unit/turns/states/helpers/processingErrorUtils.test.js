@@ -47,6 +47,15 @@ describe('processingErrorUtils', () => {
     expect(owner._isProcessing).toBe(false);
   });
 
+  test('ProcessingGuard.start and finishProcessing sequence toggles flag', () => {
+    const owner = { _isProcessing: false };
+    owner._processingGuard = new ProcessingGuard(owner);
+    owner._processingGuard.start();
+    expect(owner._isProcessing).toBe(true);
+    finishProcessing(owner);
+    expect(owner._isProcessing).toBe(false);
+  });
+
   test('resolveLogger uses context logger when available', () => {
     const logger = { debug: jest.fn() };
     const turnCtx = { getLogger: () => logger, getActor: () => ({ id: 'a1' }) };
