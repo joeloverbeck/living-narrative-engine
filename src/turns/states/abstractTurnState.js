@@ -66,11 +66,13 @@ export class AbstractTurnState extends ITurnState {
    */
   _getTurnContext() {
     if (!this._handler || typeof this._handler.getTurnContext !== 'function') {
-      const logger = console; // Fallback if handler or its logger is invalid
-      logger.error(
-        `${this.getStateName()}: _handler is invalid or missing getTurnContext method.`
-      );
-      return null;
+      const logger =
+        typeof this._handler?.getLogger === 'function'
+          ? this._handler.getLogger()
+          : console;
+      const errorMessage = `${this.getStateName()}: _handler is invalid or missing getTurnContext method.`;
+      logger.error(errorMessage);
+      throw new Error(errorMessage);
     }
     const turnCtx = this._handler.getTurnContext();
     if (!turnCtx) {
@@ -115,7 +117,14 @@ export class AbstractTurnState extends ITurnState {
    *   none is available.
    */
   async _ensureContext(reason, handler = this._handler) {
-    const ctx = this._getTurnContext();
+    let ctx;
+    try {
+      ctx = this._getTurnContext();
+    } catch (err) {
+      this._resolveLogger(null, handler).error(err.message);
+      await this._resetToIdle(reason);
+      return null;
+    }
     if (!ctx) {
       this._resolveLogger(null, handler).error(
         `${this.getStateName()}: No ITurnContext available. Resetting to idle.`
