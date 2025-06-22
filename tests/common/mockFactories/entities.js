@@ -97,9 +97,11 @@ export const createStatefulMockDataRegistry = () => {
 /**
  * Creates a mock IEntityManager.
  *
+ * @param root0
+ * @param root0.returnArray
  * @returns {jest.Mocked<import('../../../src/interfaces/IEntityManager.js').IEntityManager>} Mocked service
  */
-export const createMockEntityManager = () => {
+export function createMockEntityManager({ returnArray = false } = {}) {
   const activeEntities = new Map();
   return {
     activeEntities,
@@ -109,7 +111,11 @@ export const createMockEntityManager = () => {
     clearAll: jest.fn(() => {
       activeEntities.clear();
     }),
-    getActiveEntities: jest.fn(() => activeEntities),
+    getActiveEntities: jest.fn(() =>
+      returnArray
+        ? Array.from(activeEntities.values())
+        : activeEntities.values()
+    ),
     getEntityInstance: jest.fn((id) => activeEntities.get(id)),
     removeEntityInstance: jest.fn((id) => activeEntities.delete(id)),
     reconstructEntity: jest.fn((data) => {
@@ -118,7 +124,7 @@ export const createMockEntityManager = () => {
       return entity;
     }),
   };
-};
+}
 
 /**
  * Creates a simple mock entity with component checks.
