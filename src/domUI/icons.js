@@ -8,14 +8,60 @@
 /** @typedef {import('../interfaces/coreServices.js').IDataRegistry} IDataRegistry */
 
 /**
- * Sets the data registry used by {@link getIcon} to look up icon markup.
- *
- * @param {import('../interfaces/coreServices.js').IDataRegistry} registry - The
- * registry instance that stores UI icon definitions under the `ui-icons` type.
+ * @class IconRegistry
+ * @description Manages retrieval of SVG icons from a provided data registry.
  */
-export function setIconRegistry(registry) {
-  iconRegistry = registry;
+export class IconRegistry {
+  /** @private */
+  registry = null;
+
+  /**
+   * Sets the data registry used to look up icon markup.
+   *
+   * @param {import('../interfaces/coreServices.js').IDataRegistry|null} registry -
+   * The registry instance that stores UI icon definitions under the `ui-icons` type.
+   * @returns {void}
+   */
+  setRegistry(registry) {
+    this.registry = registry;
+  }
+
+  /**
+   * Retrieves SVG markup for a named icon.
+   *
+   * The function first attempts to obtain the icon from the configured
+   * {@link IDataRegistry} instance. If the lookup fails or no registry has been
+   * set, a built-in fallback icon is returned.
+   *
+   * @param {string} name - The icon name to retrieve.
+   * @returns {string} The SVG markup for the icon. Returns an empty string if no
+   * icon is found.
+   */
+  getIcon(name) {
+    if (this.registry && typeof this.registry.get === 'function') {
+      const custom = this.registry.get('ui-icons', name);
+      if (typeof custom === 'string') {
+        return custom;
+      }
+      if (
+        custom &&
+        typeof custom === 'object' &&
+        typeof custom.markup === 'string'
+      ) {
+        return custom.markup;
+      }
+    }
+
+    return DEFAULT_ICONS[name] || '';
+  }
 }
+
+/**
+ * A default singleton instance used by helper functions.
+ *
+ * @type {IconRegistry}
+ */
+export const defaultIconRegistry = new IconRegistry();
 
 /**
  * Retrieves SVG markup for a named icon.
@@ -38,28 +84,22 @@ const DEFAULT_ICONS = {
   notes: NOTES_SVG,
 };
 
-let iconRegistry = null;
-
 /**
- * Retrieves an icon by name, falling back to defaults.
+ * Delegates to {@link defaultIconRegistry} for icon retrieval.
  *
  * @param {string} name - Icon identifier.
  * @returns {string} SVG markup for the icon.
  */
 export function getIcon(name) {
-  if (iconRegistry && typeof iconRegistry.get === 'function') {
-    const custom = iconRegistry.get('ui-icons', name);
-    if (typeof custom === 'string') {
-      return custom;
-    }
-    if (
-      custom &&
-      typeof custom === 'object' &&
-      typeof custom.markup === 'string'
-    ) {
-      return custom.markup;
-    }
-  }
+  return defaultIconRegistry.getIcon(name);
+}
 
-  return DEFAULT_ICONS[name] || '';
+/**
+ * Delegates to {@link defaultIconRegistry} to set the registry.
+ *
+ * @param {import('../interfaces/coreServices.js').IDataRegistry|null} registry - Registry storing icons.
+ * @returns {void}
+ */
+export function setIconRegistry(registry) {
+  defaultIconRegistry.setRegistry(registry);
 }
