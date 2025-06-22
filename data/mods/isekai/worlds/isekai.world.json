@@ -15,12 +15,6 @@
     },
     {
       "instanceId": "isekai:ninja_instance"
-    },
-    {
-      "instanceId": "isekai:receptionist_instance"
-    },
-    {
-      "instanceId": "isekai:sidekick_instance"
     }
   ]
 }
