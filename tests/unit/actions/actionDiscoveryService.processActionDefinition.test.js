@@ -80,10 +80,11 @@ describe('ActionDiscoveryService - processActionDefinition', () => {
     const actor = { id: 'actor' };
     const context = {};
 
-    const actions = await service.getValidActions(actor, context);
+    const result = await service.getValidActions(actor, context);
 
-    expect(actions).toHaveLength(1);
-    expect(actions[0].id).toBe('ok');
+    expect(result.actions).toHaveLength(1);
+    expect(result.actions[0].id).toBe('ok');
+    expect(result.errors).toHaveLength(1);
     expect(safeDispatchError).toHaveBeenCalledTimes(1);
 
     ActionDiscoveryService.DOMAIN_HANDLERS.none = original;
@@ -102,14 +103,14 @@ describe('ActionDiscoveryService - processActionDefinition', () => {
     const actor = { id: 'actor' };
     const context = {};
 
-    const actions = await service.getValidActions(actor, context);
+    const result = await service.getValidActions(actor, context);
 
     expect(getEntityIdsForScopesFn).toHaveBeenCalledWith(
       ['monster'],
       context,
       expect.any(Object)
     );
-    expect(actions).toEqual([
+    expect(result.actions).toEqual([
       {
         id: 'attack',
         name: 'attack',

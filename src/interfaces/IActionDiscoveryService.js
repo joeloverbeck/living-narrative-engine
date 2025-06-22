@@ -14,6 +14,12 @@
  */
 
 /**
+ * @typedef {object} DiscoveredActionsResult
+ * @property {DiscoveredActionInfo[]} actions - Successfully discovered actions.
+ * @property {Error[]} errors - Errors encountered during discovery.
+ */
+
+/**
  * @interface IActionDiscoveryService
  * @description Defines the contract for discovering valid actions available to an entity in the current game state.
  */
@@ -23,7 +29,7 @@ export class IActionDiscoveryService {
    *
    * @param {Entity} actingEntity - The entity for whom to discover actions.
    * @param {ActionContext} context - The current context, including location and other relevant state.
-   * @returns {Promise<DiscoveredActionInfo[]>}
+   * @returns {Promise<DiscoveredActionsResult>}
    * @throws {Error}
    */
   async getValidActions(actingEntity, context) {

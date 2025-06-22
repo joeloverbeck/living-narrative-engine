@@ -45,7 +45,10 @@ describe('Guardrail – index overflow', () => {
       params: {},
       description: `desc-${i}`,
     }));
-    discoverySvc.getValidActions.mockResolvedValue(discovered);
+    discoverySvc.getValidActions.mockResolvedValue({
+      actions: discovered,
+      errors: [],
+    });
 
     const turnContext = { game: { worldId: 'world', turn: 1 } };
     const result = await provider.get(actor, turnContext, logger);

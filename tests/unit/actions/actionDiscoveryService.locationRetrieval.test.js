@@ -80,9 +80,9 @@ describe('ActionDiscoveryService – directional discovery', () => {
   };
 
   test('does not throw when currentLocation is undefined and discovers directional actions', async () => {
-    const actions = await service.getValidActions(actorEntity, context);
+    const result = await service.getValidActions(actorEntity, context);
 
-    const goNorth = actions.find((a) => a.id === 'core:go');
+    const goNorth = result.actions.find((a) => a.id === 'core:go');
     expect(goNorth).toBeDefined();
     expect(goNorth.command).toBe('go north');
 

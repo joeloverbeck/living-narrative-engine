@@ -66,7 +66,10 @@ describe('Integration – AvailableActionsProvider caching', () => {
 
   it('reuses cached actions within a single turn', async () => {
     const discovered = [{ id: 'core:wait', command: 'Wait', params: {} }];
-    discoverySvc.getValidActions.mockResolvedValue(discovered);
+    discoverySvc.getValidActions.mockResolvedValue({
+      actions: discovered,
+      errors: [],
+    });
 
     const first = await pipeline.buildChoices(actor, context);
     const second = await pipeline.buildChoices(actor, context);
@@ -76,9 +79,10 @@ describe('Integration – AvailableActionsProvider caching', () => {
   });
 
   it('clears cache when turn context changes', async () => {
-    discoverySvc.getValidActions.mockResolvedValue([
-      { id: 'core:wait', command: 'Wait', params: {} },
-    ]);
+    discoverySvc.getValidActions.mockResolvedValue({
+      actions: [{ id: 'core:wait', command: 'Wait', params: {} }],
+      errors: [],
+    });
 
     await pipeline.buildChoices(actor, context);
     const newContext = { game: { turn: 2 }, getActor: () => actor };

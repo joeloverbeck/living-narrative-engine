@@ -224,7 +224,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
    * @param {string} locIdForLog
    * @param {ActionContext} context
    * @param {object} formatterOptions
-   * @returns {import('../interfaces/IActionDiscoveryService.js').DiscoveredActionInfo[]}
+   * @returns {{actions: import('../interfaces/IActionDiscoveryService.js').DiscoveredActionInfo[], errors: Error[]}}
    */
   #processActionDefinition(
     actionDef,
@@ -237,17 +237,16 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
     const domain = actionDef.target_domain;
     try {
       const handlers = this.constructor.DOMAIN_HANDLERS;
+      let actions;
       if (domain === 'none' || domain === 'self') {
-        return handlers[domain].call(
+        actions = handlers[domain].call(
           this,
           actionDef,
           actorEntity,
           formatterOptions
         );
-      }
-
-      if (domain === 'direction') {
-        return handlers.direction.call(
+      } else if (domain === 'direction') {
+        actions = handlers.direction.call(
           this,
           actionDef,
           actorEntity,
@@ -255,32 +254,33 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
           locIdForLog,
           formatterOptions
         );
+      } else {
+        actions = discoverScopedEntityActions(
+          actionDef,
+          actorEntity,
+          domain,
+          context,
+          formatterOptions,
+          this.#buildDiscoveredAction.bind(this),
+          this.#getEntityIdsForScopesFn,
+          this.#logger
+        );
       }
-
-      return discoverScopedEntityActions(
-        actionDef,
-        actorEntity,
-        domain,
-        context,
-        formatterOptions,
-        this.#buildDiscoveredAction.bind(this),
-        this.#getEntityIdsForScopesFn,
-        this.#logger
-      );
+      return { actions, errors: [] };
     } catch (err) {
       safeDispatchError(
         this.#safeEventDispatcher,
         `ActionDiscoveryService: Error processing action ${actionDef.id} for actor ${actorEntity.id}.`,
         { error: err.message, stack: err.stack }
       );
-      return [];
+      return { actions: [], errors: [err] };
     }
   }
 
   /**
    * @param {Entity} actorEntity
    * @param {ActionContext} context
-   * @returns {Promise<import('../interfaces/IActionDiscoveryService.js').DiscoveredActionInfo[]>}
+   * @returns {Promise<import('../interfaces/IActionDiscoveryService.js').DiscoveredActionsResult>}
    */
   async getValidActions(actorEntity, context) {
     this.#logger.debug(
@@ -289,6 +289,8 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
     const allDefs = this.#gameDataRepository.getAllActionDefinitions();
     /** @type {import('../interfaces/IActionDiscoveryService.js').DiscoveredActionInfo[]} */
     const validActions = [];
+    /** @type {Error[]} */
+    const errors = [];
 
     const formatterOptions = {
       logger: this.#logger,
@@ -306,20 +308,22 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
 
     /* ── iterate over action definitions ─────────────────────────────────── */
     for (const actionDef of allDefs) {
-      const discovered = this.#processActionDefinition(
-        actionDef,
-        actorEntity,
-        currentLocation,
-        locIdForLog,
-        context,
-        formatterOptions
-      );
-      validActions.push(...discovered);
+      const { actions, errors: discoveredErrors } =
+        this.#processActionDefinition(
+          actionDef,
+          actorEntity,
+          currentLocation,
+          locIdForLog,
+          context,
+          formatterOptions
+        );
+      validActions.push(...actions);
+      errors.push(...discoveredErrors);
     }
 
     this.#logger.debug(
       `Finished action discovery for actor ${actorEntity.id}. Found ${validActions.length} actions.`
     );
-    return validActions;
+    return { actions: validActions, errors };
   }
 }
