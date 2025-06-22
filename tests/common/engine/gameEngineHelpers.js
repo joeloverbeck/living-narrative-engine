@@ -155,3 +155,18 @@ export function setupLoadGameSpies(engine) {
   const handleFailureSpy = jest.spyOn(engine, '_handleLoadFailure');
   return { prepareSpy, executeSpy, finalizeSpy, handleFailureSpy };
 }
+
+/**
+ * Mocks a successful initialization sequence on the provided test bed.
+ *
+ * @description Sets `initializationService.runInitializationSequence` to resolve
+ *   `{ success: true }`.
+ * @param {GameEngineTestBed} bed - Test bed containing the initialization service
+ *   mock.
+ * @returns {void}
+ */
+export function mockInitializationSuccess(bed) {
+  bed.mocks.initializationService.runInitializationSequence.mockResolvedValue({
+    success: true,
+  });
+}
