@@ -272,27 +272,27 @@ export class WorldLoader extends AbstractLoader {
     let unresolved = 0;
 
     for (const instance of worldData.instances) {
-      const { definitionId, instanceId } = instance;
-      if (!definitionId) {
+      const { instanceId } = instance;
+      if (!instanceId) {
         unresolved++;
         throw new ModsLoaderError(
-          `Instance '${instanceId || '(no instanceId)'}' in world file '${filename}' is missing a 'definitionId'.`,
-          'missing_definition_id_in_instance',
+          `Instance in world file '${filename}' is missing an 'instanceId'.`,
+          'missing_instance_id_in_world',
           { modId, filename, instance }
         );
       }
 
-      const definition = this._dataRegistry.get(
-        ENTITY_DEFINITIONS_KEY,
-        definitionId
+      const entityInstanceDef = this._dataRegistry.get(
+        'entityInstances',
+        instanceId
       );
 
-      if (!definition) {
+      if (!entityInstanceDef) {
         unresolved++;
         throw new ModsLoaderError(
-          `Unknown entity definitionId '${definitionId}' referenced by instance '${instanceId || '(unnamed)'}' in world '${filename}'.`,
-          'missing_definition',
-          { modId, filename, definitionId, instanceId }
+          `Unknown entity instanceId '${instanceId}' referenced in world '${filename}'.`,
+          'missing_entity_instance',
+          { modId, filename, instanceId }
         );
       }
       resolved++;

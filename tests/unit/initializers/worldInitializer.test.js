@@ -176,8 +176,7 @@ describe('WorldInitializer', () => {
         name: 'Test World',
         instances: [
           {
-            instanceId: 'test:hero_instance',
-            definitionId: 'test:hero'
+            instanceId: 'test:hero_instance'
           }
         ]
       };
@@ -226,8 +225,7 @@ describe('WorldInitializer', () => {
         name: 'Test World',
         instances: [
           {
-            instanceId: 'test:broken_instance',
-            definitionId: 'test:broken'
+            instanceId: 'test:broken_instance'
           }
         ]
       };
@@ -260,8 +258,7 @@ describe('WorldInitializer', () => {
           name: 'Test World',
           instances: [
             {
-              instanceId: 'test:location_instance',
-              definitionId: 'test:location'
+              instanceId: 'test:location_instance'
             }
           ]
         };
@@ -316,8 +313,7 @@ describe('WorldInitializer', () => {
           name: 'Test World',
           instances: [
             {
-              instanceId: 'test:problem_instance',
-              definitionId: 'test:problem'
+              instanceId: 'test:problem_instance'
             }
           ]
         };
@@ -373,8 +369,7 @@ describe('WorldInitializer', () => {
           name: 'Test World',
           instances: [
             {
-              instanceId: 'test:baditerator_instance',
-              definitionId: 'test:baditerator'
+              instanceId: 'test:baditerator_instance'
             }
           ]
         };
@@ -418,8 +413,7 @@ describe('WorldInitializer', () => {
           name: 'Test World',
           instances: [
             {
-              instanceId: 'test:noniter_instance',
-              definitionId: 'test:noniter'
+              instanceId: 'test:noniter_instance'
             }
           ]
         };
@@ -465,8 +459,7 @@ describe('WorldInitializer', () => {
           name: 'Test World',
           instances: [
             {
-              instanceId: 'test:spatialDummy_instance',
-              definitionId: 'test:spatialDummy'
+              instanceId: 'test:spatialDummy_instance'
             }
           ]
         };
@@ -516,8 +509,7 @@ describe('WorldInitializer', () => {
           name: 'Test World',
           instances: [
             {
-              instanceId: 'test:roomPos1_instance',
-              definitionId: 'test:roomPos1'
+              instanceId: 'test:roomPos1_instance'
             }
           ]
         };
@@ -569,8 +561,7 @@ describe('WorldInitializer', () => {
         name: 'Test World',
         instances: [
           {
-            instanceId: 'test:valid_instance',
-            definitionId: 'test:valid'
+            instanceId: 'test:valid_instance'
           },
           {
             // Invalid instance - missing instanceId
@@ -619,7 +610,7 @@ describe('WorldInitializer', () => {
       expect(mockEntityManager.createEntityInstance).toHaveBeenCalledTimes(2);
       expect(mockLogger.warn).toHaveBeenCalledWith(
         expect.stringContaining(
-          'WorldInitializer (Pass 1): Skipping invalid world instance (missing instanceId or definitionId):'
+          'WorldInitializer (Pass 1): Skipping invalid world instance (missing instanceId):'
         ),
         expect.any(Object)
       );
@@ -680,8 +671,7 @@ describe('WorldInitializer', () => {
         name: 'Test World',
         instances: [
           {
-            instanceId: 'test:eventTest_instance',
-            definitionId: 'test:eventTest'
+            instanceId: 'test:eventTest_instance'
           }
         ]
       };

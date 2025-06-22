@@ -5,28 +5,22 @@
   "description": "A self-contained game world encompassing the town, the Adventurers' Guild, and its inhabitants.",
   "instances": [
     {
-      "instanceId": "isekai:adventurers_guild_instance",
-      "definitionId": "isekai:adventurers_guild"
+      "instanceId": "isekai:adventurers_guild_instance"
     },
     {
-      "instanceId": "isekai:town_instance",
-      "definitionId": "isekai:town"
+      "instanceId": "isekai:town_instance"
     },
     {
-      "instanceId": "isekai:hero_instance",
-      "definitionId": "isekai:hero"
+      "instanceId": "isekai:hero_instance"
     },
     {
-      "instanceId": "isekai:ninja_instance",
-      "definitionId": "isekai:ninja"
+      "instanceId": "isekai:ninja_instance"
     },
     {
-      "instanceId": "isekai:receptionist_instance",
-      "definitionId": "isekai:receptionist"
+      "instanceId": "isekai:receptionist_instance"
     },
     {
-      "instanceId": "isekai:sidekick_instance",
-      "definitionId": "isekai:sidekick"
+      "instanceId": "isekai:sidekick_instance"
     }
   ]
 }
