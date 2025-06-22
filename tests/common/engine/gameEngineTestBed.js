@@ -121,8 +121,12 @@ export class GameEngineTestBed extends StoppableMixin(ContainerTestBed) {
 const engineSuiteHooks = (() => {
   let consoleSpy;
   return {
-    beforeEachHook() {
+    /**
+     * @param {GameEngineTestBed} bed
+     */
+    beforeEachHook(bed) {
       consoleSpy = suppressConsoleError();
+      bed.resetMocks();
     },
     afterEachHook() {
       consoleSpy.mockRestore();
