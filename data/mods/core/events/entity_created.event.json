@@ -8,11 +8,11 @@
     "required": ["instanceId", "definitionId", "wasReconstructed"],
     "properties": {
       "instanceId": {
-        "$ref": "../schemas/common.schema.json#/definitions/namespacedId",
+        "$ref": "http://example.com/schemas/common.schema.json#/definitions/namespacedId",
         "description": "The unique instance ID of the created entity."
       },
       "definitionId": {
-        "$ref": "../schemas/common.schema.json#/definitions/namespacedId",
+        "$ref": "http://example.com/schemas/common.schema.json#/definitions/namespacedId",
         "description": "The definition ID from which the entity was created."
       },
       "wasReconstructed": {

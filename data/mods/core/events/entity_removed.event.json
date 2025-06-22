@@ -8,7 +8,7 @@
     "required": ["instanceId"],
     "properties": {
       "instanceId": {
-        "$ref": "../schemas/common.schema.json#/definitions/namespacedId",
+        "$ref": "http://example.com/schemas/common.schema.json#/definitions/namespacedId",
         "description": "The unique instance ID of the entity being removed."
       }
     },
