@@ -18,6 +18,7 @@ import {
   describeSuiteWithHooks,
   createDescribeTestBedSuite,
 } from '../describeSuite.js';
+import { createTestBedHelpers } from '../createTestBedHelpers.js';
 import { flushPromisesAndTimers } from '../jestHelpers.js';
 import { runWithReset } from '../testBedHelpers.js';
 
@@ -271,32 +272,18 @@ export class TurnManagerTestBed extends StoppableMixin(FactoryTestBed) {
  * @param overrides
  * @returns {TurnManagerTestBed} Test bed instance.
  */
-export function createTurnManagerTestBed(overrides = {}) {
-  return new TurnManagerTestBed(overrides);
-}
-
-/**
- * Defines a test suite with automatic {@link TurnManagerTestBed} setup.
- *
- * @param {string} title - Suite title passed to `describe`.
- * @param {(getBed: () => TurnManagerTestBed) => void} suiteFn - Callback
- *   containing the tests. Receives a getter for the active test bed.
- * @param {Record<string, any>} [overrides] - Optional overrides for mock
- *   creation.
- * @returns {void}
- */
-export const describeTurnManagerSuite = createDescribeTestBedSuite(
-  TurnManagerTestBed,
-  {
-    beforeEachHook(bed) {
-      jest.useFakeTimers();
-      bed.initializeDefaultMocks();
-    },
-    afterEachHook() {
-      // Timers restored via BaseTestBed cleanup; spies handled by _afterCleanup
-    },
-  }
-);
+export const {
+  createBed: createTurnManagerTestBed,
+  describeSuite: describeTurnManagerSuite,
+} = createTestBedHelpers(TurnManagerTestBed, {
+  beforeEachHook(bed) {
+    jest.useFakeTimers();
+    bed.initializeDefaultMocks();
+  },
+  afterEachHook() {
+    // Timers restored via BaseTestBed cleanup; spies handled by _afterCleanup
+  },
+});
 
 /**
  * Defines a suite where {@link TurnManager} is started before each test.
