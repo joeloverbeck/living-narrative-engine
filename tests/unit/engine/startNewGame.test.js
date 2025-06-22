@@ -9,7 +9,8 @@ import {
   expectDispatchSequence,
   buildStopDispatches,
   buildStartDispatches,
-  expectEngineStatus,
+  expectEngineRunning,
+  expectEngineStopped,
 } from '../../common/engine/dispatchTestUtils.js';
 import { DEFAULT_TEST_WORLD } from '../../common/constants.js';
 
@@ -41,11 +42,7 @@ describeEngineSuite('GameEngine', (ctx) => {
       expect(ctx.bed.mocks.playtimeTracker.startSession).toHaveBeenCalled();
       expect(ctx.bed.mocks.turnManager.start).toHaveBeenCalled();
 
-      expectEngineStatus(ctx.engine, {
-        isInitialized: true,
-        isLoopRunning: true,
-        activeWorld: DEFAULT_TEST_WORLD,
-      });
+      expectEngineRunning(ctx.engine, DEFAULT_TEST_WORLD);
     });
 
     it('should stop an existing game if already initialized, with correct event payloads from stop()', async () => {
@@ -71,11 +68,7 @@ describeEngineSuite('GameEngine', (ctx) => {
         ...buildStopDispatches(),
         ...buildStartDispatches(DEFAULT_TEST_WORLD)
       );
-      expectEngineStatus(ctx.engine, {
-        isInitialized: true,
-        isLoopRunning: true,
-        activeWorld: DEFAULT_TEST_WORLD,
-      });
+      expectEngineRunning(ctx.engine, DEFAULT_TEST_WORLD);
     });
 
     it('should handle InitializationService failure', async () => {
@@ -98,11 +91,7 @@ describeEngineSuite('GameEngine', (ctx) => {
           errorTitle: 'Initialization Error',
         }
       );
-      expectEngineStatus(ctx.engine, {
-        isInitialized: false,
-        isLoopRunning: false,
-        activeWorld: null,
-      });
+      expectEngineStopped(ctx.engine);
     });
 
     it('should handle general errors during start-up and dispatch failure event', async () => {
@@ -126,11 +115,7 @@ describeEngineSuite('GameEngine', (ctx) => {
           errorTitle: 'Initialization Error',
         }
       );
-      expectEngineStatus(ctx.engine, {
-        isInitialized: false, // Should be reset by _handleNewGameFailure
-        isLoopRunning: false,
-        activeWorld: null,
-      });
+      expectEngineStopped(ctx.engine);
     });
   });
 });

@@ -8,7 +8,8 @@ import { ENGINE_STOPPED_UI } from '../../../src/constants/eventIds.js';
 import {
   expectDispatchSequence,
   buildStopDispatches,
-  expectEngineStatus,
+  expectEngineRunning,
+  expectEngineStopped,
 } from '../../common/engine/dispatchTestUtils.js';
 import { DEFAULT_TEST_WORLD } from '../../common/constants.js';
 
@@ -38,22 +39,14 @@ describeEngineSuite('GameEngine', (ctx) => {
         ...buildStopDispatches()
       );
 
-      expectEngineStatus(ctx.engine, {
-        isInitialized: false,
-        isLoopRunning: false,
-        activeWorld: null,
-      });
+      expectEngineStopped(ctx.engine);
 
       expect(ctx.bed.mocks.logger.warn).not.toHaveBeenCalled();
     });
 
     it('should do nothing and log if engine is already stopped', async () => {
       // ctx.engine is fresh, so not initialized
-      expectEngineStatus(ctx.engine, {
-        isInitialized: false,
-        isLoopRunning: false,
-        activeWorld: null,
-      });
+      expectEngineStopped(ctx.engine);
 
       ctx.bed.resetMocks();
 
@@ -78,11 +71,7 @@ describeEngineSuite('GameEngine', (ctx) => {
           ],
         ],
         async (bed, engine, expectedMsg) => {
-          expectEngineStatus(engine, {
-            isInitialized: true,
-            isLoopRunning: true,
-            activeWorld: DEFAULT_TEST_WORLD,
-          });
+          expectEngineRunning(engine, DEFAULT_TEST_WORLD);
 
           await engine.stop();
 
