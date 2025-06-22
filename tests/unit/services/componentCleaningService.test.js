@@ -83,4 +83,15 @@ describe('ComponentCleaningService', () => {
     const result = service.clean('dup:comp', {});
     expect(result).toEqual({ second: true });
   });
+
+  it('logs error and ignores invalid cleaner registrations', () => {
+    service.registerCleaner('bad:comp', null);
+
+    expect(logger.error).toHaveBeenCalledWith(
+      'ComponentCleaningService: Cleaner for bad:comp must be a function.'
+    );
+
+    const result = service.clean('bad:comp', { foo: 'bar' });
+    expect(result).toEqual({ foo: 'bar' });
+  });
 });
