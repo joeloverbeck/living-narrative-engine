@@ -40,37 +40,24 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
   #getAvailableExitsFn;
   #getEntityDisplayNameFn;
 
-  static DOMAIN_HANDLERS = {
+  static DOMAIN_HANDLERS;
+  static {
     /**
-     * @description Discover actions that target none or self.
+     * @description Discover actions that target none or the actor entity itself.
      * @param {import('../data/gameDataRepository.js').ActionDefinition} actionDef
      * @param {Entity} actorEntity
      * @param {object} formatterOptions
      * @returns {import('../interfaces/IActionDiscoveryService.js').DiscoveredActionInfo[]}
      */
-    none(actionDef, actorEntity, formatterOptions) {
+    function handleSelfOrNone(actionDef, actorEntity, formatterOptions) {
       return discoverSelfOrNone(
         actionDef,
         actorEntity,
         formatterOptions,
         this.#buildDiscoveredAction.bind(this)
       );
-    },
-    /**
-     * @description Discover actions that target the actor entity itself.
-     * @param {import('../data/gameDataRepository.js').ActionDefinition} actionDef
-     * @param {Entity} actorEntity
-     * @param {object} formatterOptions
-     * @returns {import('../interfaces/IActionDiscoveryService.js').DiscoveredActionInfo[]}
-     */
-    self(actionDef, actorEntity, formatterOptions) {
-      return discoverSelfOrNone(
-        actionDef,
-        actorEntity,
-        formatterOptions,
-        this.#buildDiscoveredAction.bind(this)
-      );
-    },
+    }
+
     /**
      * @description Discover actions that target a direction.
      * @param {import('../data/gameDataRepository.js').ActionDefinition} actionDef
@@ -80,7 +67,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
      * @param {object} formatterOptions
      * @returns {import('../interfaces/IActionDiscoveryService.js').DiscoveredActionInfo[]}
      */
-    direction(
+    function handleDirection(
       actionDef,
       actorEntity,
       currentLocation,
@@ -99,8 +86,14 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
         this.#logger,
         this.#getAvailableExitsFn
       );
-    },
-  };
+    }
+
+    this.DOMAIN_HANDLERS = {
+      none: handleSelfOrNone,
+      self: handleSelfOrNone,
+      direction: handleDirection,
+    };
+  }
 
   /**
    * @param {object} deps
