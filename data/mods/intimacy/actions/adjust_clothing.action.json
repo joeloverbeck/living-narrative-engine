@@ -4,7 +4,7 @@
   "commandVerb": "adjust-clothing",
   "name": "Adjust Clothing",
   "description": "Smooth their collar or adjust a displaced garment with possessive care.",
-  "target_domain": "environment",
+  "scope": "environment",
   "template": "adjust {target}'s clothing",
   "prerequisites": [
     {

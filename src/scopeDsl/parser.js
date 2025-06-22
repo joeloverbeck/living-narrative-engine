@@ -1,5 +1,5 @@
 /**
- * @fileoverview Scope‑DSL Parser — *stable version*
+ * @file Scope‑DSL Parser — *stable version*
  * @description Recursive‑descent parser for the Scope‑DSL that converts DSL strings into AST objects.
  *              All Jest tests included with the repository pass against this implementation.
  *
@@ -24,11 +24,11 @@
 //────────────────────────────────────────────────────────────────────────────
 // Type annotations (JSDoc – kept succinct for readability)
 //────────────────────────────────────────────────────────────────────────────
-/** @typedef {{type:'ScopeDef',name:string,expr:Object}} ScopeDef */
+/** @typedef {{type: 'ScopeDef', name: string, expr: object}} ScopeDef */
 /** @typedef {{type:'Source',kind:'actor'|'location'|'entities',param?:string|null}} Source */
-/** @typedef {{type:'Step',field:string|null,isArray:boolean,parent:Object}} Step */
-/** @typedef {{type:'Filter',logic:Object,parent:Object}} Filter */
-/** @typedef {{type:'Union',left:Object,right:Object}} Union */
+/** @typedef {{type: 'Step', field: string | null, isArray: boolean, parent: object}} Step */
+/** @typedef {{type: 'Filter', logic: object, parent: object}} Filter */
+/** @typedef {{type: 'Union', left: object, right: object}} Union */
 /** @typedef {{type:string,value:string,line:number,column:number}} Token */
 
 class ScopeSyntaxError extends Error {
@@ -83,6 +83,7 @@ class Tokenizer {
                 case '+': this.push('PLUS', '+'); break;
                 case '.': this.push('DOT', '.'); break;
                 case ':': this.push('COLON', ':'); break;
+                case '!': this.push('BANG', '!'); break;
                 case '"': this.readString(); continue; // consumes internally
                 default:
                     throw new ScopeSyntaxError(`Unexpected character: '${ch}'`, this.line, this.col, this.snippet());
@@ -150,7 +151,7 @@ class Parser {
         return { type: 'ScopeDef', name, expr };
     }
 
-    /** @returns {Object} */
+    /** @returns {object} */
     parseExpr() {
         const left = this.parseTerm();
         if (this.match('PLUS')) { this.advance(); const right = this.parseExpr(); return { type: 'Union', left, right }; }
@@ -196,7 +197,7 @@ class Parser {
             }
 
             /* ───── '[' … either bare array iteration or a filter ───── */
-            this.advance(); // we’re sitting just after '['
+            this.advance(); // we're sitting just after '['
 
             if (this.match('RBRACKET')) {
                 /* bare []  → does *NOT* count toward depth limit */
@@ -208,7 +209,7 @@ class Parser {
                 continue;
             }
 
-            /* otherwise it’s a filter: counts as an edge */
+            /* otherwise it's a filter: counts as an edge */
             depth++;
             if (depth > 4) this.error('Expression depth limit exceeded (max 4)');
 
@@ -293,9 +294,15 @@ class Parser {
     parseEntityReference() { return this.expect('IDENTIFIER', 'Expected entity reference').value; }
 
     parseComponentId() {
+        // Support optional leading '!'
+        let negate = false;
+        if (this.match('BANG')) {
+            this.advance();
+            negate = true;
+        }
         const first = this.expect('IDENTIFIER', 'Expected component identifier').value;
-        if (first.includes(':')) return first; // modern one‑token form
-        if (this.match('COLON')) { this.advance(); const second = this.expect('IDENTIFIER', 'Expected component name').value; return `${first}:${second}`; }
+        if (first.includes(':')) return negate ? '!' + first : first; // modern one‑token form
+        if (this.match('COLON')) { this.advance(); const second = this.expect('IDENTIFIER', 'Expected component name').value; return negate ? `!${first}:${second}` : `${first}:${second}`; }
         this.error('Expected colon in component ID');
     }
 
@@ -315,11 +322,20 @@ class Parser {
 //────────────────────────────────────────────────────────────────────────────
 // Convenience wrappers (public API)
 //────────────────────────────────────────────────────────────────────────────
+/**
+ *
+ * @param content
+ * @param name
+ */
 function parseScopeFile(content, name) {
     const p = new Parser(content.trim());
     return p.parseDef(name);
 }
 
+/**
+ *
+ * @param expr
+ */
 function parseInlineExpr(expr) {
     const p = new Parser(expr.trim());
     const e = p.parseExpr();

@@ -1,21 +1,15 @@
 {
   "$schema": "http://example.com/schemas/action.schema.json",
   "id": "core:stop_following",
-  "commandVerb": "unfollow",
+  "commandVerb": "stop-following",
   "name": "Stop Following",
-  "description": "Ends the companion relationship, causing your character to no longer follow your current leader.",
-  "target_domain": "none",
-  "template": "unfollow",
+  "description": "Stops following your current target and becomes independent again.",
+  "scope": "none",
+  "template": "stop following",
   "prerequisites": [
     {
       "logic": {
-        "condition_ref": "core:actor-is-not-rooted"
-      },
-      "failure_message": "You are rooted and cannot stop following."
-    },
-    {
-      "logic": {
-        "condition_ref": "core:actor-is-following"
+        "condition_ref": "core:actor-is-following-someone"
       },
       "failure_message": "You are not following anyone."
     }

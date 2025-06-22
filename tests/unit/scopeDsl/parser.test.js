@@ -1,5 +1,5 @@
 /**
- * @fileoverview Tests for Scope-DSL Parser
+ * @file Tests for Scope-DSL Parser
  * @description Unit tests for the recursive-descent parser
  */
 
@@ -328,6 +328,82 @@ describe('Scope-DSL Parser', () => {
         const result = parseInlineExpr('actor.a.b.c.d');
         expect(result.type).toBe('Step');
         expect(result.field).toBe('d');
+      });
+    });
+
+    describe('Entities source (positive/negative, chaining)', () => {
+      test('should parse positive component query', () => {
+        const result = parseInlineExpr('entities(core:item)');
+        expect(result).toEqual({
+          type: 'Source',
+          kind: 'entities',
+          param: 'core:item'
+        });
+      });
+      test('should parse negative component query', () => {
+        const result = parseInlineExpr('entities(!core:item)');
+        expect(result).toEqual({
+          type: 'Source',
+          kind: 'entities',
+          param: '!core:item'
+        });
+      });
+      test('should parse array iteration after entities()', () => {
+        const result = parseInlineExpr('entities(core:item)[]');
+        expect(result).toEqual({
+          type: 'Step',
+          field: null,
+          isArray: true,
+          parent: {
+            type: 'Source',
+            kind: 'entities',
+            param: 'core:item'
+          }
+        });
+      });
+      test('should parse filter after entities()[]', () => {
+        const result = parseInlineExpr('entities(core:item)[][{"==": [{"var": "entity.id"}, "item1"]}]');
+        expect(result).toEqual({
+          type: 'Filter',
+          logic: {
+            '==': [
+              { 'var': 'entity.id' },
+              'item1'
+            ]
+          },
+          parent: {
+            type: 'Step',
+            field: null,
+            isArray: true,
+            parent: {
+              type: 'Source',
+              kind: 'entities',
+              param: 'core:item'
+            }
+          }
+        });
+      });
+      test('should parse filter after entities(!core:item)[]', () => {
+        const result = parseInlineExpr('entities(!core:item)[][{"==": [{"var": "entity.id"}, "item1"]}]');
+        expect(result).toEqual({
+          type: 'Filter',
+          logic: {
+            '==': [
+              { 'var': 'entity.id' },
+              'item1'
+            ]
+          },
+          parent: {
+            type: 'Step',
+            field: null,
+            isArray: true,
+            parent: {
+              type: 'Source',
+              kind: 'entities',
+              param: '!core:item'
+            }
+          }
+        });
       });
     });
   });

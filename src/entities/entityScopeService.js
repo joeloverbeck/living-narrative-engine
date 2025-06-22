@@ -1,281 +1,18 @@
-// src/entities/entityScopeService.js
-
-import {
-  EQUIPMENT_COMPONENT_ID,
-  INVENTORY_COMPONENT_ID,
-  ITEM_COMPONENT_ID,
-  EXITS_COMPONENT_ID,
-  LEADING_COMPONENT_ID,
-} from '../constants/componentIds.js';
-import { isNonBlankString } from '../utils/textUtils.js';
-
-// --- JSDoc Type Imports ---
-/** @typedef {import('./entityManager.js').default} EntityManager */
-/** @typedef {import('./entity.js').default} Entity */
-/** @typedef {import('./entity.js').EntityId} EntityId */
-/** @typedef {import('../actions/actionTypes.js').ActionContext} ActionContext */
-/** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
-/** @typedef {import('../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
-/** @typedef {import('./locationQueryService.js').LocationQueryService} LocationQueryService */
-
-// --- REFACTOR START: Generic Scope Handler Factory ---
-
 /**
- * @private
- * @description A factory function that creates a scope handler for scopes that are
- * derived from a component on the acting entity.
- * @param {string} componentId - The ID of the component to look for.
- * @param logger
- * @param {(componentData: object) => (string[] | null | undefined)} idExtractor -
- * A function that takes the component's data and returns an array of entity IDs.
- * @param {string} scopeNameForLogging - The name of the scope for logging purposes.
- * @returns {(context: ActionContext) => Set<EntityId>} A function that serves as a scope handler.
+ * @file entityScopeService.js
+ * @description Service for resolving entity scopes using the Scope DSL engine.
  */
-function _createActorComponentScopeHandler(
-  componentId,
-  idExtractor,
-  scopeNameForLogging,
-  logger
-) {
-  /**
-   * @param {ActionContext} context - The action context.
-   * @returns {Set<EntityId>}
-   */
-  return (context) => {
-    const { actingEntity } = context;
-    if (!actingEntity) {
-      logger.warn(
-        `entityScopeService.${scopeNameForLogging}: Scope '${scopeNameForLogging}' requested but actingEntity is missing.`
-      );
-      return new Set();
-    }
 
-    if (!actingEntity.hasComponent(componentId)) {
-      logger.debug(
-        `entityScopeService.${scopeNameForLogging}: Acting entity '${actingEntity.id}' has no '${componentId}' component.`
-      );
-      return new Set();
-    }
-
-    const componentData = actingEntity.getComponentData(componentId);
-    if (!componentData) {
-      logger.debug(
-        `entityScopeService.${scopeNameForLogging}: Acting entity '${actingEntity.id}' has no '${componentId}' component.`
-      );
-      return new Set();
-    }
-
-    try {
-      const ids = idExtractor(componentData);
-      if (Array.isArray(ids)) {
-        return new Set(ids.filter((id) => id && typeof id === 'string'));
-      }
-      logger.warn(
-        `entityScopeService.${scopeNameForLogging}: Invalid data structure in '${componentId}' component.`
-      );
-      return new Set();
-    } catch (error) {
-      logger.error(
-        `entityScopeService.${scopeNameForLogging}: Error extracting IDs from '${componentId}' component:`,
-        error
-      );
-      return new Set();
-    }
-  };
-}
-
-// --- REFACTOR END ---
-
-// --- Internal Scope Handler Functions ---
-
-const _handleInventory = (logger) =>
-  _createActorComponentScopeHandler(
-    INVENTORY_COMPONENT_ID,
-    (data) => data.items || [],
-    'inventory',
-    logger
-  );
-
-const _handleEquipment = (logger) =>
-  _createActorComponentScopeHandler(
-    EQUIPMENT_COMPONENT_ID,
-    (data) => data.equipped || [],
-    'equipment',
-    logger
-  );
-
-const _handleFollowers = (logger) =>
-  _createActorComponentScopeHandler(
-    LEADING_COMPONENT_ID,
-    (data) => data.followers || [],
-    'followers',
-    logger
-  );
+import ScopeRegistry from '../scopeDsl/scopeRegistry.js';
+import ScopeEngine from '../scopeDsl/engine.js';
+import { parseInlineExpr } from '../scopeDsl/parser.js';
 
 /**
- * Retrieves entity IDs from the current location, excluding the player.
+ * Aggregates unique entity IDs from one or more specified scopes.
  *
+ * @param {string | string[]} scopes - A single scope name or an array of them.
  * @param {ActionContext} context - The action context.
- * @param logger
- * @returns {Set<EntityId>}
- * @private
- */
-function _handleLocation(context, logger) {
-  const { currentLocation, entityManager, actingEntity } = context;
-  const results = new Set();
-
-  if (!currentLocation) {
-    logger.warn(
-      "entityScopeService._handleLocation: Scope 'location' requested but currentLocation is null."
-    );
-    return results;
-  }
-  if (!entityManager) {
-    logger.error(
-      'entityScopeService._handleLocation: entityManager is missing in context. Cannot perform location lookup.'
-    );
-    return results;
-  }
-
-  const idsInLoc = entityManager.getEntitiesInLocation(currentLocation.id);
-
-  if (idsInLoc) {
-    for (const id of idsInLoc) {
-      if (actingEntity && id === actingEntity.id) {
-        continue;
-      }
-      results.add(id);
-    }
-  }
-  return results;
-}
-
-/**
- * Retrieves entity IDs from the current location that have an ItemComponent.
- *
- * @param {ActionContext} context - The action context.
- * @param logger
- * @returns {Set<EntityId>}
- * @private
- */
-function _handleLocationItems(context, logger) {
-  const { entityManager } = context;
-  if (!entityManager) {
-    logger.error(
-      'entityScopeService._handleLocationItems: entityManager is missing in context.'
-    );
-    return new Set();
-  }
-  const locationIds = _handleLocation(context, logger);
-  const itemIds = new Set();
-  for (const id of locationIds) {
-    const entity = entityManager.getEntityInstance(id);
-    if (entity?.hasComponent(ITEM_COMPONENT_ID)) {
-      itemIds.add(id);
-    }
-  }
-  return itemIds;
-}
-
-/**
- * Retrieves entity IDs from the current location that DO NOT have an ItemComponent.
- *
- * @param {ActionContext} context - The action context.
- * @param logger
- * @returns {Set<EntityId>}
- * @private
- */
-function _handleLocationNonItems(context, logger) {
-  const { entityManager } = context;
-  if (!entityManager) {
-    logger.error(
-      'entityScopeService._handleLocationNonItems: entityManager is missing in context.'
-    );
-    return new Set();
-  }
-  const locationIds = _handleLocation(context, logger);
-  const nonItemIds = new Set();
-  for (const id of locationIds) {
-    const entity = entityManager.getEntityInstance(id);
-    if (entity && !entity.hasComponent(ITEM_COMPONENT_ID)) {
-      nonItemIds.add(id);
-    }
-  }
-  return nonItemIds;
-}
-
-/**
- * Retrieves entity IDs from both inventory and location.
- *
- * @param {ActionContext} context - The action context.
- * @param logger
- * @returns {Set<EntityId>}
- * @private
- */
-function _handleNearby(context, logger) {
-  const inventoryIds = _handleInventory(logger)(context);
-  const locationIds = _handleLocation(context, logger);
-  return new Set([...inventoryIds, ...locationIds]);
-}
-
-/**
- * Retrieves entity IDs from nearby scopes including blockers in exits.
- *
- * @param {ActionContext} context - Current action context.
- * @param logger
- * @returns {Set<EntityId>}
- * @private
- */
-function _handleNearbyIncludingBlockers(context, logger) {
-  const aggregatedIds = _handleNearby(context, logger);
-  const { currentLocation, entityManager } = context;
-  if (!entityManager || !currentLocation) return aggregatedIds;
-
-  const exits = currentLocation.getComponentData(EXITS_COMPONENT_ID);
-  if (Array.isArray(exits)) {
-    for (const ex of exits) {
-      if (ex?.blocker && typeof ex.blocker === 'string') {
-        aggregatedIds.add(ex.blocker);
-      }
-    }
-  }
-  return aggregatedIds;
-}
-
-/**
- * Retrieves the entity ID of the actor itself.
- *
- * @param {ActionContext} context - The action context.
- * @param logger
- * @returns {Set<EntityId>}
- * @private
- */
-function _handleSelf(context, logger) {
-  const { actingEntity } = context;
-  if (!actingEntity || !actingEntity.id) {
-    logger.warn(
-      "entityScopeService._handleSelf: Scope 'self' requested but actingEntity or its ID is missing."
-    );
-    return new Set();
-  }
-  return new Set([actingEntity.id]);
-}
-
-// --- Strategy Map ---
-
-/**
- * @type {{[key: string]: (context: ActionContext) => Set<EntityId>}}
- * @private
- */
-
-// --- Public Aggregator Function ---
-
-/**
- * Aggregates unique entity IDs from one or more specified scopes or target domains.
- *
- * @param {string | string[] | TargetDomain | TargetDomain[]} scopes - A single scope name or an array of them.
- * @param {ActionContext} context - The action context.
- * @param logger
+ * @param {ILogger} logger - Logger instance.
  * @returns {Set<EntityId>} A single set of unique entity IDs.
  */
 function getEntityIdsForScopes(scopes, context, logger = console) {
@@ -283,7 +20,6 @@ function getEntityIdsForScopes(scopes, context, logger = console) {
   const aggregatedIds = new Set();
 
   if (!context || !context.entityManager) {
-    // FIX: Add the context object to the log call to provide more detail.
     logger.error(
       'getEntityIdsForScopes: Invalid or incomplete context provided. Cannot proceed.',
       { context }
@@ -291,39 +27,92 @@ function getEntityIdsForScopes(scopes, context, logger = console) {
     return aggregatedIds;
   }
 
-  const scopeHandlers = {
-    inventory: _handleInventory(logger),
-    equipment: _handleEquipment(logger),
-    followers: _handleFollowers(logger),
-    location: (ctx) => _handleLocation(ctx, logger),
-    location_items: (ctx) => _handleLocationItems(ctx, logger),
-    location_non_items: (ctx) => _handleLocationNonItems(ctx, logger),
-    nearby: (ctx) => _handleNearby(ctx, logger),
-    nearby_including_blockers: (ctx) =>
-      _handleNearbyIncludingBlockers(ctx, logger),
-    self: (ctx) => _handleSelf(ctx, logger),
-    environment: (ctx) => _handleLocation(ctx, logger),
-  };
-
   for (const scopeName of requestedScopes) {
-    const handler = scopeHandlers[scopeName];
-    if (handler) {
-      try {
-        const scopeIds = handler(context);
-        scopeIds.forEach((id) => aggregatedIds.add(id));
-      } catch (error) {
-        logger.error(
-          `getEntityIdsForScopes: Error executing handler for scope '${scopeName}':`,
-          error
-        );
+    try {
+      // Handle special scopes
+      if (scopeName === 'none') {
+        // 'none' means no targets needed, return empty set
+        continue;
       }
-    } else if (scopeName !== 'none' && scopeName !== 'direction') {
-      logger.warn(
-        `getEntityIdsForScopes: Unknown scope requested: '${scopeName}'. Skipping.`
+      
+      if (scopeName === 'direction') {
+        // 'direction' is handled differently (not as entity IDs)
+        continue;
+      }
+
+      // Resolve using the Scope DSL engine
+      const scopeIds = _resolveScopeWithDSL(scopeName, context, logger);
+      
+      if (scopeIds) {
+        scopeIds.forEach((id) => aggregatedIds.add(id));
+      }
+    } catch (error) {
+      logger.error(
+        `getEntityIdsForScopes: Error executing handler for scope '${scopeName}':`,
+        error
       );
     }
   }
   return aggregatedIds;
+}
+
+/**
+ * Resolves a scope using the Scope DSL engine
+ * 
+ * @param {string} scopeName - The scope name to resolve
+ * @param {ActionContext} context - The action context
+ * @param {ILogger} logger - Logger instance
+ * @returns {Set<string>} Set of entity IDs
+ * @private
+ */
+function _resolveScopeWithDSL(scopeName, context, logger) {
+  try {
+    // Get the scope definition from the registry
+    const scopeRegistry = ScopeRegistry.getInstance();
+    const scopeDefinition = scopeRegistry.getScope(scopeName);
+    
+    logger.debug(`Resolving scope '${scopeName}' with DSL`);
+    logger.debug(`Scope definition:`, scopeDefinition);
+    
+    if (!scopeDefinition) {
+      logger.warn(`Scope '${scopeName}' not found in registry`);
+      return new Set();
+    }
+
+    // Parse the DSL expression
+    const ast = parseInlineExpr(scopeDefinition.expr);
+    logger.debug(`Parsed AST:`, ast);
+    
+    // Create runtime context for the scope engine
+    const runtimeCtx = {
+      entityManager: context.entityManager,
+      spatialIndexManager: context.spatialIndexManager,
+      jsonLogicEval: context.jsonLogicEval,
+      logger: logger,
+      ...(context.location ? { location: context.location } : {})
+    };
+    
+    logger.debug(`Runtime context:`, runtimeCtx);
+
+    // Resolve using the scope engine
+    const scopeEngine = new ScopeEngine();
+    const actorId = context.actingEntity?.id;
+    
+    logger.debug(`Actor ID:`, actorId);
+    
+    if (!actorId) {
+      logger.error('Cannot resolve scope: actingEntity ID is missing');
+      return new Set();
+    }
+
+    const result = scopeEngine.resolve(ast, actorId, runtimeCtx);
+    logger.debug(`Scope engine result:`, result);
+    
+    return result;
+  } catch (error) {
+    logger.error(`Error resolving scope '${scopeName}' with DSL:`, error);
+    return new Set();
+  }
 }
 
 // --- Exports ---

@@ -1,12 +1,13 @@
 /**
- * @fileoverview Scope-DSL Engine
+ * @file Scope-DSL Engine
  * @description AST walker/query engine that resolves Scope-DSL expressions to sets of entity IDs
  */
 
 import ScopeDepthError from '../errors/scopeDepthError.js';
+import ScopeCycleError from '../errors/scopeCycleError.js';
 
 /**
- * @typedef {Object} RuntimeContext
+ * @typedef {object} RuntimeContext
  * @property {import('../interfaces/IEntityManager.js').IEntityManager} entityManager
  * @property {import('../interfaces/ISpatialIndexManager.js').ISpatialIndexManager} spatialIndexManager
  * @property {import('../logic/jsonLogicEvaluationService.js').default} jsonLogicEval
@@ -14,14 +15,14 @@ import ScopeDepthError from '../errors/scopeDepthError.js';
  */
 
 /**
- * @typedef {Object} AST
+ * @typedef {object} AST
  * @property {string} type - Node type
- * @property {Object} [parent] - Parent node
+ * @property {object} [parent] - Parent node
  * @property {string} [field] - Field name for Step nodes
  * @property {boolean} [isArray] - Whether this is an array iteration
- * @property {Object} [logic] - JSON Logic object for Filter nodes
- * @property {Object} [left] - Left expression for Union nodes
- * @property {Object} [right] - Right expression for Union nodes
+ * @property {object} [logic] - JSON Logic object for Filter nodes
+ * @property {object} [left] - Left expression for Union nodes
+ * @property {object} [right] - Right expression for Union nodes
  * @property {string} [kind] - Source kind for Source nodes
  * @property {string} [param] - Parameter for Source nodes
  */
@@ -30,6 +31,14 @@ import ScopeDepthError from '../errors/scopeDepthError.js';
  * Scope-DSL Engine that resolves AST expressions to sets of entity IDs
  */
 class ScopeEngine {
+    constructor() {
+        this.maxDepth = 4;
+    }
+
+    setMaxDepth(n) {
+        this.maxDepth = n;
+    }
+
     /**
      * Resolves a Scope-DSL AST to a set of entity IDs
      * 
@@ -37,10 +46,11 @@ class ScopeEngine {
      * @param {string} actorId - The ID of the acting entity
      * @param {RuntimeContext} runtimeCtx - Runtime context with services
      * @returns {Set<string>} Set of entity IDs
-     * @throws {ScopeDepthError} When expression depth exceeds 4
+     * @throws {ScopeDepthError} When expression depth exceeds maxDepth
+     * @throws {ScopeCycleError} When a cycle is detected
      */
     resolve(ast, actorId, runtimeCtx) {
-        return this.resolveNode(ast, actorId, runtimeCtx, 0);
+        return this.resolveNode(ast, actorId, runtimeCtx, 0, []);
     }
 
     /**
@@ -50,23 +60,33 @@ class ScopeEngine {
      * @param {string} actorId - The ID of the acting entity
      * @param {RuntimeContext} runtimeCtx - Runtime context
      * @param {number} depth - Current depth level
+     * @param {Array<string>} path - Path of visited node/edge keys
      * @returns {Set<string>} Set of entity IDs
      * @private
      */
-    resolveNode(node, actorId, runtimeCtx, depth) {
-        if (depth > 4) {
+    resolveNode(node, actorId, runtimeCtx, depth, path) {
+        if (depth > this.maxDepth) {
             throw new ScopeDepthError(
-                'Expression depth limit exceeded (max 4)',
+                `Expression depth limit exceeded (max ${this.maxDepth})`,
                 depth,
-                4
+                this.maxDepth
             );
         }
-
+        // Cycle detection: use node type, field, and param as key
+        const nodeKey = `${node.type}:${node.field || ''}:${node.param || ''}`;
+        if (path.includes(nodeKey)) {
+            const cyclePath = [...path, nodeKey];
+            throw new ScopeCycleError(
+                `Scope cycle detected: ${cyclePath.join(' -> ')}`,
+                cyclePath
+            );
+        }
+        const nextPath = [...path, nodeKey];
         switch (node.type) {
             case 'Source': return this.resolveSource(node, actorId, runtimeCtx);
-            case 'Step': return this.resolveStep(node, actorId, runtimeCtx, depth);
-            case 'Filter': return this.resolveFilter(node, actorId, runtimeCtx, depth);
-            case 'Union': return this.resolveUnion(node, actorId, runtimeCtx, depth);
+            case 'Step': return this.resolveStep(node, actorId, runtimeCtx, depth, nextPath);
+            case 'Filter': return this.resolveFilter(node, actorId, runtimeCtx, depth, nextPath);
+            case 'Union': return this.resolveUnion(node, actorId, runtimeCtx, depth, nextPath);
             default:
                 runtimeCtx.logger.error(`Unknown AST node type: ${node.type}`);
                 return new Set();
@@ -135,15 +155,22 @@ class ScopeEngine {
      * @param {string} actorId - Actor ID
      * @param {RuntimeContext} runtimeCtx - Runtime context
      * @param {number} depth - Current depth
+     * @param {Array<string>} path - Path of visited node/edge keys
      * @returns {Set<string>} Set of entity IDs
      * @private
      */
-    resolveStep(node, actorId, runtimeCtx, depth) {
-        // depth accounting: +1 for the step itself, +1 more if it is an array-iteration ([])
+    resolveStep(node, actorId, runtimeCtx, depth, path) {
+        // depth accounting: +1 for the step itself, +1 more if it is an array-iteration ([]) 
         const nextDepth = depth + 1 + (node.isArray ? 1 : 0);
-        const parentResult = this.resolveNode(node.parent, actorId, runtimeCtx, nextDepth);
+        const parentResult = this.resolveNode(node.parent, actorId, runtimeCtx, nextDepth, path);
 
         if (parentResult.size === 0) return new Set();
+
+        // Special case: array iteration after entities() or entities(!...)
+        if (node.field === null && node.isArray === true && node.parent && node.parent.type === 'Source' && node.parent.kind === 'entities') {
+            // parentResult is already the set of entity IDs
+            return new Set(parentResult);
+        }
 
         /* Special case: `.entities(componentId)` filter-step  */
         if (node.field === 'entities' && node.param) {
@@ -160,20 +187,25 @@ class ScopeEngine {
             return filtered;
         }
 
-        /* ───── default field / array handling (unchanged logic) ───── */
+        /* ───── default field / array handling (improved logic) ───── */
 
         const result = new Set();
 
-        for (const entityId of parentResult) {
+        // Chain the parent result through each step
+        for (const parentValue of parentResult) {
+            runtimeCtx.logger.debug('[ScopeEngine] resolveStep: entityOrObj:', parentValue, 'type:', typeof parentValue);
             let current;
 
-            if (node.field) {
-                /* component / property lookup (existing logic) */
-                const componentData = runtimeCtx.entityManager.getComponentData(entityId, `core:${node.field}`);
+            // If parent is Source, treat as component lookup; otherwise, property access
+            if (node.parent.type === 'Source') {
+                // Component lookup
+                const componentData = runtimeCtx.entityManager.getComponentData(parentValue, node.field);
+                runtimeCtx.logger.debug('[ScopeEngine] resolveStep: componentData for field', node.field, ':', componentData);
                 if (componentData && typeof componentData === 'object' && !Array.isArray(componentData)) {
                     current = componentData;
                 } else {
-                    const inventoryData = runtimeCtx.entityManager.getComponentData(entityId, 'core:inventory');
+                    // ... legacy inventory/items fallback ...
+                    const inventoryData = runtimeCtx.entityManager.getComponentData(parentValue, 'core:inventory');
                     if (inventoryData && node.field === 'items' && inventoryData.items) {
                         current = inventoryData.items;
                     } else {
@@ -181,19 +213,30 @@ class ScopeEngine {
                     }
                 }
             } else {
-                current = entityId; // bare [] case
+                // Property access on previous result
+                if (parentValue && typeof parentValue === 'object' && node.field in parentValue) {
+                    current = parentValue[node.field];
+                    runtimeCtx.logger.debug('[ScopeEngine] resolveStep: property access', node.field, ':', current);
+                } else {
+                    runtimeCtx.logger.debug('[ScopeEngine] resolveStep: property', node.field, 'not found in', parentValue);
+                    continue;
+                }
             }
 
             if (node.isArray) {
+                runtimeCtx.logger.debug('[ScopeEngine] resolveStep: isArray, current:', current, 'type:', typeof current);
                 if (Array.isArray(current)) {
-                    for (const item of current) if (typeof item === 'string') result.add(item);
+                    for (const item of current) {
+                        runtimeCtx.logger.debug('[ScopeEngine] resolveStep: array item:', item, 'type:', typeof item);
+                        if (typeof item === 'string') result.add(item);
+                    }
                 }
             } else {
+                runtimeCtx.logger.debug('[ScopeEngine] resolveStep: not isArray, current:', current, 'type:', typeof current);
                 if (typeof current === 'string') result.add(current);
-                else result.add(entityId);
+                else result.add(current);
             }
         }
-
         return result;
     }
 
@@ -205,32 +248,40 @@ class ScopeEngine {
      * @param {string} actorId - Actor ID
      * @param {RuntimeContext} runtimeCtx - Runtime context
      * @param {number} depth - Current depth
+     * @param {Array<string>} path - Path of visited node/edge keys
      * @returns {Set<string>} Set of entity IDs
      * @private
      */
-    resolveFilter(node, actorId, runtimeCtx, depth) {
-        const parentResult = this.resolveNode(node.parent, actorId, runtimeCtx, depth + 1);
+    resolveFilter(node, actorId, runtimeCtx, depth, path) {
+        runtimeCtx.logger.debug('[ScopeEngine] resolveFilter: starting with logic:', node.logic);
+        const parentResult = this.resolveNode(node.parent, actorId, runtimeCtx, depth + 1, path);
+        runtimeCtx.logger.debug('[ScopeEngine] resolveFilter: parentResult:', parentResult);
         if (parentResult.size === 0) {
+            runtimeCtx.logger.debug('[ScopeEngine] resolveFilter: parentResult is empty, returning empty set');
             return new Set();
         }
         const result = new Set();
         for (const entityId of parentResult) {
             try {
                 const entity = runtimeCtx.entityManager.getEntityInstance(entityId);
+                runtimeCtx.logger.debug('[ScopeEngine] resolveFilter: evaluating entity:', entityId, 'entity:', entity);
                 const context = {
                     entity: entity || { id: entityId },
-                    actor: { id: actorId }
+                    actor: { id: actorId },
+                    location: runtimeCtx.location || { id: 'unknown' }
                 };
+                runtimeCtx.logger.debug('[ScopeEngine] resolveFilter: context for evaluation:', context);
                 const filterResult = runtimeCtx.jsonLogicEval.evaluate(node.logic, context);
+                runtimeCtx.logger.debug('[ScopeEngine] resolveFilter: filterResult for entity', entityId, ':', filterResult);
                 if (filterResult) {
                     result.add(entityId);
+                    runtimeCtx.logger.debug('[ScopeEngine] resolveFilter: added entity', entityId, 'to result');
                 }
             } catch (error) {
-                if (runtimeCtx && runtimeCtx.logger && typeof runtimeCtx.logger.error === 'function') {
-                    runtimeCtx.logger.error(`Error evaluating filter for entity ${entityId}:`, error);
-                }
+                runtimeCtx.logger.error(`Error evaluating filter for entity ${entityId}:`, error);
             }
         }
+        runtimeCtx.logger.debug('[ScopeEngine] resolveFilter: final result:', result);
         return result;
     }
 
@@ -241,12 +292,13 @@ class ScopeEngine {
      * @param {string} actorId - Actor ID
      * @param {RuntimeContext} runtimeCtx - Runtime context
      * @param {number} depth - Current depth
+     * @param {Array<string>} path - Path of visited node/edge keys
      * @returns {Set<string>} Set of entity IDs
      * @private
      */
-    resolveUnion(node, actorId, runtimeCtx, depth) {
-        const leftResult = this.resolveNode(node.left, actorId, runtimeCtx, depth);
-        const rightResult = this.resolveNode(node.right, actorId, runtimeCtx, depth);
+    resolveUnion(node, actorId, runtimeCtx, depth, path) {
+        const leftResult = this.resolveNode(node.left, actorId, runtimeCtx, depth, path);
+        const rightResult = this.resolveNode(node.right, actorId, runtimeCtx, depth, path);
 
         return new Set([...leftResult, ...rightResult]);
     }

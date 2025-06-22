@@ -26,9 +26,21 @@
       "type": "string",
       "description": "Optional. Human-readable name or verb for the action (e.g., 'Eat', 'Attack', 'Go'). This is the primary display name for the action in UI elements like buttons and tooltips."
     },
+    "scope": {
+      "type": "string",
+      "description": "Required. DSL scope expression or scope name that defines where to look for potential targets for this action. Examples: 'actor.inventory.items[]', 'location.entities(core:item)[]', 'actor.followers[]', or a predefined scope name like 'nearby_items'.",
+      "examples": [
+        "actor.inventory.items[]",
+        "location.entities(core:item)[]",
+        "actor.followers[]",
+        "location.entities(core:npc)[][{\"!=\": [{\"var\": \"faction\"}, \"enemy\"]}]",
+        "nearby_items"
+      ]
+    },
     "target_domain": {
       "type": "string",
-      "description": "Required. Specifies where to look for potential targets for this action.",
+      "description": "Deprecated. Specifies where to look for potential targets for this action. Replaced by 'scope' property.",
+      "deprecated": true,
       "enum": [
         "none",
         "self",
@@ -70,7 +82,7 @@
     "description",
     "commandVerb",
     "name",
-    "target_domain",
+    "scope",
     "template"
   ],
   "additionalProperties": true,

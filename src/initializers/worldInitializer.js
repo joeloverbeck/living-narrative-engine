@@ -22,6 +22,7 @@ import { SYSTEM_ERROR_OCCURRED_ID } from '../constants/systemEventIds.js';
 
 // --- Utility Imports ---
 import { safeDispatchError } from '../utils/safeDispatchErrorUtils.js';
+import ScopeRegistry from '../scopeDsl/scopeRegistry.js';
 
 /**
  * Service responsible for instantiating entities defined
@@ -51,6 +52,33 @@ class WorldInitializer {
    */
   getWorldContext() {
     return this.#worldContext;
+  }
+
+  /**
+   * Initializes the ScopeRegistry with loaded scopes from the data registry.
+   * This should be called after mods are loaded but before world entities are initialized.
+   *
+   * @returns {Promise<void>}
+   */
+  async initializeScopeRegistry() {
+    this.#logger.debug('WorldInitializer: Initializing ScopeRegistry with loaded scopes...');
+    
+    try {
+      const scopeRegistry = ScopeRegistry.getInstance();
+      const loadedScopes = this.#repository.get('scopes') || {};
+      
+      scopeRegistry.initialize(loadedScopes);
+      
+      this.#logger.info(
+        `WorldInitializer: ScopeRegistry initialized with ${Object.keys(loadedScopes).length} scopes.`
+      );
+    } catch (error) {
+      this.#logger.error(
+        'WorldInitializer: Failed to initialize ScopeRegistry:',
+        error
+      );
+      // Don't throw - scope initialization failure shouldn't prevent world initialization
+    }
   }
 
   /**
@@ -400,6 +428,9 @@ class WorldInitializer {
     // Event 'initialization:world_initializer:started' could be dispatched here if needed.
 
     try {
+      // Initialize ScopeRegistry with loaded scopes
+      await this.initializeScopeRegistry();
+
       const { entities: instantiatedEntities } =
         await this.#_instantiateEntitiesFromWorld(worldName);
 

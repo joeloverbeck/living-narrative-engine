@@ -56,6 +56,7 @@ import ModsLoader from '../../loaders/modsLoader.js';
 import PromptTextLoader from '../../loaders/promptTextLoader.js';
 import RuleLoader from '../../loaders/ruleLoader.js';
 import SchemaLoader from '../../loaders/schemaLoader.js';
+import ScopeLoader from '../../loaders/scopeLoader.js';
 import WorldLoader from '../../loaders/worldLoader.js';
 
 // --- Modding Service Imports ---
@@ -150,6 +151,7 @@ export function registerLoaders(container) {
   registerLoader(tokens.EntityInstanceLoader, EntityInstanceLoader);
   registerLoader(tokens.WorldLoader, WorldLoader);
   registerLoader(tokens.GoalLoader, GoalLoader);
+  registerLoader(tokens.ScopeLoader, ScopeLoader);
   registerLoader(tokens.ModManifestLoader, ModManifestLoader);
 
   registrar.singletonFactory(
@@ -253,6 +255,13 @@ export function registerLoaders(container) {
             contentKey: 'rules',
             diskFolder: 'rules',
             registryKey: 'rules',
+            phase: 'definitions',
+          },
+          {
+            loader: c.resolve(tokens.ScopeLoader),
+            contentKey: 'scopes',
+            diskFolder: 'scopes',
+            registryKey: 'scopes',
             phase: 'definitions',
           },
           // Instance phase loaders

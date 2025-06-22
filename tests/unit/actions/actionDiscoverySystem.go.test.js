@@ -241,7 +241,7 @@ describe('ActionDiscoveryService - Go Action (Fixed State)', () => {
       id: 'core:wait',
       name: 'Wait',
       command: 'wait',
-      description: 'Passes your turn without performing any action.',
+      description: 'Wait for a moment, doing nothing.',
       params: {},
     };
     const goAction = {

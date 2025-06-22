@@ -69,6 +69,12 @@ export function createContentLoadersConfig(loaderMap) {
       phase: 'definitions',
       registryKey: 'goals',
     },
+    scopes: {
+      contentKey: 'scopes',
+      diskFolder: 'scopes',
+      phase: 'definitions',
+      registryKey: 'scopes',
+    },
     entityDefinitions: {
       contentKey: 'entities.definitions',
       diskFolder: 'entities/definitions',
@@ -104,6 +110,7 @@ export function createContentLoadersConfig(loaderMap) {
  * @param {BaseManifestItemLoaderInterface} deps.actionLoader - Action loader.
  * @param {BaseManifestItemLoaderInterface} deps.ruleLoader - Rule loader.
  * @param {BaseManifestItemLoaderInterface} deps.goalLoader - Goal loader.
+ * @param {BaseManifestItemLoaderInterface} deps.scopeLoader - Scope loader.
  * @param {BaseManifestItemLoaderInterface} deps.entityDefinitionLoader - Entity definition loader.
  * @param {BaseManifestItemLoaderInterface} deps.entityInstanceLoader - Entity instance loader.
  * @returns {LoaderConfigEntry[]} Array describing loader configuration.
@@ -116,6 +123,7 @@ export function createDefaultContentLoadersConfig({
   actionLoader,
   ruleLoader,
   goalLoader,
+  scopeLoader,
   entityDefinitionLoader,
   entityInstanceLoader,
 }) {
@@ -127,6 +135,7 @@ export function createDefaultContentLoadersConfig({
     actions: actionLoader,
     rules: ruleLoader,
     goals: goalLoader,
+    scopes: scopeLoader,
     entityDefinitions: entityDefinitionLoader,
     entityInstances: entityInstanceLoader,
   });

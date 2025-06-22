@@ -1,17 +1,17 @@
 {
   "$schema": "http://example.com/schemas/action.schema.json",
   "id": "intimacy:step_back",
-  "commandVerb": "stepback",
+  "commandVerb": "step-back",
   "name": "Step Back",
-  "description": "Step back from a moment of closeness, allowing free movement again.",
-  "target_domain": "none",
+  "description": "Step back from your current intimate partner, ending the closeness.",
+  "scope": "none",
   "template": "step back",
   "prerequisites": [
     {
       "logic": {
-        "condition_ref": "intimacy:actor-is-in-closeness"
+        "condition_ref": "intimacy:actor-has-closeness-partner"
       },
-      "failure_message": "You are not in a state of closeness to step back from."
+      "failure_message": "You are not close to anyone."
     }
   ]
 }

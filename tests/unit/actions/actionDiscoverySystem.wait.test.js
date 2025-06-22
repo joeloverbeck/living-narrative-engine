@@ -157,7 +157,7 @@ describe('ActionDiscoveryService - Wait Action Tests', () => {
         id: 'core:wait',
         name: 'Wait',
         command: 'wait',
-        description: 'Passes your turn without performing any action.',
+        description: 'Wait for a moment, doing nothing.',
         params: {},
       },
     ]);
@@ -239,7 +239,7 @@ describe('ActionDiscoveryService - Wait Action Tests', () => {
       id: 'other:action',
       commandVerb: 'other',
       name: 'Other',
-      target_domain: 'none',
+      scope: 'none',
       prerequisites: [],
       template: 'other',
     };
@@ -263,7 +263,7 @@ describe('ActionDiscoveryService - Wait Action Tests', () => {
         id: 'core:wait',
         name: 'Wait',
         command: 'wait',
-        description: 'Passes your turn without performing any action.',
+        description: 'Wait for a moment, doing nothing.',
         params: {},
       },
     ]);

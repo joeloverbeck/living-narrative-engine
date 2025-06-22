@@ -1,11 +1,36 @@
 /**
  * @file Test suite to ensure the context get the necessary data so down the line the scope can be processed.
- * @see tests/integration/scope.integration.test.js
+ * @description Integration test for the DSL-only scope system
  */
 
-import { describe, test, expect } from '@jest/globals';
+import { describe, test, expect, beforeEach, jest } from '@jest/globals';
 import { getEntityIdsForScopes } from '../../src/entities/entityScopeService.js';
 import { TurnContext } from '../../src/turns/context/turnContext.js';
+
+// Mock the Scope DSL dependencies
+jest.mock('../../src/scopeDsl/scopeRegistry.js', () => ({
+  __esModule: true,
+  default: {
+    getInstance: jest.fn()
+  },
+  ScopeRegistry: {
+    getInstance: jest.fn()
+  }
+}));
+
+jest.mock('../../src/scopeDsl/parser.js', () => ({
+  parseInlineExpr: jest.fn()
+}));
+
+jest.mock('../../src/scopeDsl/engine.js', () => ({
+  __esModule: true,
+  default: jest.fn()
+}));
+
+// Import the mocked modules
+import { ScopeRegistry } from '../../src/scopeDsl/scopeRegistry.js';
+import { parseInlineExpr } from '../../src/scopeDsl/parser.js';
+import ScopeEngine from '../../src/scopeDsl/engine.js';
 
 /* ---------------------------------------------------------------- *\
    Cheap stub implementations – just enough for the scope helpers.
@@ -26,9 +51,31 @@ const stubManager = (world = {}) => ({
 /* ---------------------------------------------------------------- */
 
 describe('entityScopeService integration', () => {
-  test('inventory + location scopes are discovered when TurnContext exposes entityManager', () => {
+  let mockScopeRegistryInstance;
+  let mockScopeEngine;
+
+  beforeEach(() => {
+    jest.resetAllMocks();
+
+    mockScopeRegistryInstance = {
+      getScope: jest.fn()
+    };
+    // Set both default and named exports for getInstance
+    const scopeRegistryModule = require('../../src/scopeDsl/scopeRegistry.js');
+    scopeRegistryModule.default.getInstance.mockReturnValue(mockScopeRegistryInstance);
+    scopeRegistryModule.ScopeRegistry.getInstance.mockReturnValue(mockScopeRegistryInstance);
+
+    mockScopeEngine = {
+      resolve: jest.fn()
+    };
+    ScopeEngine.mockImplementation(() => mockScopeEngine);
+    // Also set the default export for the constructor
+    const engineModule = require('../../src/scopeDsl/engine.js');
+    engineModule.default.mockImplementation(() => mockScopeEngine);
+  });
+
+  test('environment scope is resolved using DSL engine when TurnContext exposes entityManager', () => {
     // Arrange world
-    const swordId = 'item-sword';
     const ratId = 'npc-rat';
     const roomId = 'room-1';
     const playerId = 'pc-123';
@@ -37,16 +84,24 @@ describe('entityScopeService integration', () => {
       [roomId]: [playerId, ratId],
       __instances: {
         [playerId]: makeStubEntity(playerId, {
-          'core:inventory': { items: [swordId] },
           'core:position': { locationId: roomId },
         }),
-        [swordId]: makeStubEntity(swordId, { 'component:item': {} }),
-        [ratId]: makeStubEntity(ratId, {}),
+        [ratId]: makeStubEntity(ratId, {
+          'core:position': { locationId: roomId },
+        }),
         [roomId]: makeStubEntity(roomId, {}),
       },
     };
 
     const em = stubManager(world);
+
+    // Mock the scope definition and resolution
+    const mockAst = { type: 'environment' };
+    const environmentScope = { expr: 'entities(core:position)[{"and": [{"==": [{"var": "entity.components.core:position.locationId"}, {"var": "location.id"}]}, {"!=": [{"var": "entity.id"}, {"var": "actor.id"}]}]}]' };
+
+    mockScopeRegistryInstance.getScope.mockReturnValue(environmentScope);
+    parseInlineExpr.mockReturnValue(mockAst);
+    mockScopeEngine.resolve.mockReturnValue(new Set([ratId]));
 
     // Build a minimal TurnContext
     const ctx = new TurnContext({
@@ -54,17 +109,27 @@ describe('entityScopeService integration', () => {
       logger: console,
       strategy: { decideAction: async () => null }, // not used
       handlerInstance: { requestIdleStateTransition: () => Promise.resolve() },
-      onEndTurnCallback: () => {},
+      onEndTurnCallback: () => { },
       services: { entityManager: em },
     });
 
     // Act
-    const invSet = getEntityIdsForScopes('inventory', ctx, console);
-    const locationSet = getEntityIdsForScopes('location', ctx, console);
+    const environmentSet = getEntityIdsForScopes('environment', ctx, console);
 
     // Assert
-    expect(invSet.has(swordId)).toBe(true);
-    expect(locationSet.has(ratId)).toBe(true);
-    expect(locationSet.has(playerId)).toBe(false); // self filtered
+    expect(environmentSet.has(ratId)).toBe(true);
+    expect(environmentSet.has(playerId)).toBe(false); // self filtered
+    expect(mockScopeRegistryInstance.getScope).toHaveBeenCalledWith('environment');
+    expect(parseInlineExpr).toHaveBeenCalledWith(environmentScope.expr);
+    expect(mockScopeEngine.resolve).toHaveBeenCalledWith(
+      mockAst,
+      playerId,
+      {
+        entityManager: em,
+        spatialIndexManager: undefined,
+        jsonLogicEval: undefined,
+        logger: console
+      }
+    );
   });
 });

@@ -1,5 +1,5 @@
 /**
- * @fileoverview ScopeDepthError - thrown when scope expression depth limit is exceeded
+ * @file ScopeDepthError - thrown when scope expression depth limit is exceeded
  */
 
 /**

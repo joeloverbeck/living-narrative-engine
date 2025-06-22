@@ -1,6 +1,6 @@
 /**
  * @file This test suite tests the scope 'followers' of entityScopeService.
- * @see tests/entities/entityScopeService.followers.test.js
+ * @description Tests for the followers scope using the DSL engine
  */
 
 import {
@@ -11,175 +11,212 @@ import {
   afterEach,
   jest,
 } from '@jest/globals';
-import { getEntityIdsForScopes } from '../../../src/entities/entityScopeService.js'; // Adjust path as necessary
-import {
-  LEADING_COMPONENT_ID,
-  INVENTORY_COMPONENT_ID,
-} from '../../../src/constants/componentIds.js';
+import { getEntityIdsForScopes } from '../../../src/entities/entityScopeService.js';
 
-// --- Mocks & Setup ---
+// Mock the Scope DSL dependencies
+jest.mock('../../../src/scopeDsl/scopeRegistry.js', () => ({
+  __esModule: true,
+  default: {
+    getInstance: jest.fn()
+  },
+  ScopeRegistry: {
+    getInstance: jest.fn()
+  }
+}));
 
-// Mock Entity class or object structure
-const createMockEntity = (id, components = {}) => ({
-  id,
-  // Jest mock functions for component interactions
-  hasComponent: jest.fn((componentId) => componentId in components),
-  getComponentData: jest.fn((componentId) => components[componentId] || null),
-});
+jest.mock('../../../src/scopeDsl/parser.js', () => ({
+  parseInlineExpr: jest.fn()
+}));
 
-// Mock dependencies required by the ActionContext
-const mockEntityManager = {
-  // Not directly used by _handleFollowers, but good practice to mock
-  getEntityInstance: jest.fn(),
-};
+jest.mock('../../../src/scopeDsl/engine.js', () => ({
+  __esModule: true,
+  default: jest.fn()
+}));
+
+// Import the mocked modules
+import { ScopeRegistry } from '../../../src/scopeDsl/scopeRegistry.js';
+import { parseInlineExpr } from '../../../src/scopeDsl/parser.js';
+import ScopeEngine from '../../../src/scopeDsl/engine.js';
 
 describe('entityScopeService - "followers" scope', () => {
   let mockLogger;
+  let mockEntityManager;
+  let mockScopeRegistryInstance;
+  let mockScopeEngine;
 
   beforeEach(() => {
     jest.resetAllMocks();
+    
     mockLogger = {
       warn: jest.fn(),
       error: jest.fn(),
       info: jest.fn(),
       debug: jest.fn(),
     };
+
+    mockEntityManager = {
+      getEntityInstance: jest.fn(),
+      getEntitiesInLocation: jest.fn(),
+    };
+
+    mockScopeRegistryInstance = {
+      getScope: jest.fn()
+    };
+    const scopeRegistryModule = require('../../../src/scopeDsl/scopeRegistry.js');
+    scopeRegistryModule.default.getInstance.mockReturnValue(mockScopeRegistryInstance);
+    scopeRegistryModule.ScopeRegistry.getInstance.mockReturnValue(mockScopeRegistryInstance);
+
+    mockScopeEngine = {
+      resolve: jest.fn()
+    };
+    ScopeEngine.mockImplementation(() => mockScopeEngine);
+    // Also set the default export for the constructor
+    const engineModule = require('../../../src/scopeDsl/engine.js');
+    engineModule.default.mockImplementation(() => mockScopeEngine);
   });
 
   afterEach(() => {
     jest.clearAllMocks();
   });
 
-  // Test Case 1: Standard success case with followers
-  test('should return a set of follower IDs when the actor has a valid leading component', () => {
-    const leaderId = 'player:1';
+  test('should resolve followers scope using DSL engine', () => {
+    const mockAst = { type: 'followers' };
+    const mockScopeDefinition = { expr: 'actor.core:leading.followers[]' };
     const followerIds = ['npc:1', 'npc:2'];
-    const mockPlayer = createMockEntity(leaderId, {
-      [LEADING_COMPONENT_ID]: { followers: followerIds },
-    });
+    const expectedIds = new Set(followerIds);
+    
+    mockScopeRegistryInstance.getScope.mockReturnValue(mockScopeDefinition);
+    parseInlineExpr.mockReturnValue(mockAst);
+    mockScopeEngine.resolve.mockReturnValue(expectedIds);
 
-    // FIX: The context now uses 'actingEntity' as required by the service.
     const context = {
-      actingEntity: mockPlayer,
+      actingEntity: { id: 'player:1' },
       entityManager: mockEntityManager,
+      spatialIndexManager: {},
+      jsonLogicEval: {}
     };
 
     const result = getEntityIdsForScopes('followers', context, mockLogger);
-
-    expect(result).toBeInstanceOf(Set);
-    expect(result.size).toBe(2);
-    expect(result).toEqual(new Set(followerIds));
-    expect(mockPlayer.hasComponent).toHaveBeenCalledWith(LEADING_COMPONENT_ID);
-    expect(mockPlayer.getComponentData).toHaveBeenCalledWith(
-      LEADING_COMPONENT_ID
+    
+    expect(result).toEqual(expectedIds);
+    expect(mockScopeRegistryInstance.getScope).toHaveBeenCalledWith('followers');
+    expect(parseInlineExpr).toHaveBeenCalledWith('actor.core:leading.followers[]');
+    expect(mockScopeEngine.resolve).toHaveBeenCalledWith(
+      mockAst,
+      'player:1',
+      {
+        entityManager: mockEntityManager,
+        spatialIndexManager: {},
+        jsonLogicEval: {},
+        logger: mockLogger
+      }
     );
   });
 
-  // Test Case 2: Actor is a leader but has no followers
-  test('should return an empty set if the followers array is empty', () => {
-    const leaderId = 'player:1';
-    const mockPlayer = createMockEntity(leaderId, {
-      [LEADING_COMPONENT_ID]: { followers: [] },
+  test('should return empty set when followers scope not found in registry', () => {
+    mockScopeRegistryInstance.getScope.mockReturnValue(null);
+
+    const context = {
+      actingEntity: { id: 'player:1' },
+      entityManager: mockEntityManager
+    };
+
+    const result = getEntityIdsForScopes('followers', context, mockLogger);
+    
+    expect(result).toEqual(new Set());
+    expect(mockLogger.warn).toHaveBeenCalledWith("Scope 'followers' not found in registry");
+  });
+
+  test('should return empty set when actingEntity ID is missing', () => {
+    const mockScopeDefinition = { expr: 'actor.core:leading.followers[]' };
+    mockScopeRegistryInstance.getScope.mockReturnValue(mockScopeDefinition);
+
+    const context = {
+      actingEntity: { id: undefined }, // actingEntity exists but has no ID
+      entityManager: mockEntityManager
+    };
+
+    const result = getEntityIdsForScopes('followers', context, mockLogger);
+    
+    expect(result).toEqual(new Set());
+    expect(mockLogger.error).toHaveBeenCalledWith('Cannot resolve scope: actingEntity ID is missing');
+  });
+
+  test('should handle DSL parsing errors gracefully', () => {
+    const mockScopeDefinition = { expr: 'invalid followers expression' };
+    const parseError = new Error('Parse error');
+    
+    mockScopeRegistryInstance.getScope.mockReturnValue(mockScopeDefinition);
+    parseInlineExpr.mockImplementation(() => {
+      throw parseError;
     });
 
-    // FIX: The context now uses 'actingEntity'.
     const context = {
-      actingEntity: mockPlayer,
-      entityManager: mockEntityManager,
+      actingEntity: { id: 'player:1' },
+      entityManager: mockEntityManager
     };
 
     const result = getEntityIdsForScopes('followers', context, mockLogger);
-
-    expect(result).toBeInstanceOf(Set);
-    expect(result.size).toBe(0);
-  });
-
-  // Test Case 3: Actor does not have the leading component
-  test('should return an empty set if the actor is not a leader', () => {
-    const nonLeaderId = 'player:2';
-    // Entity without a 'core:leading' component
-    const mockPlayer = createMockEntity(nonLeaderId, {});
-
-    // FIX: The context now uses 'actingEntity'.
-    const context = {
-      actingEntity: mockPlayer,
-      entityManager: mockEntityManager,
-    };
-
-    const result = getEntityIdsForScopes('followers', context, mockLogger);
-
-    expect(result).toBeInstanceOf(Set);
-    expect(result.size).toBe(0);
-    // FIX: This check will now pass because the service finds the actingEntity.
-    expect(mockPlayer.hasComponent).toHaveBeenCalledWith(LEADING_COMPONENT_ID);
-    // getComponentData should not be called if hasComponent is false
-    expect(mockPlayer.getComponentData).not.toHaveBeenCalled();
-  });
-
-  // Test Case 4: Component data is malformed (missing 'followers' property)
-  test('should return an empty set and warn if component data is malformed', () => {
-    const leaderId = 'player:1';
-    // Malformed data: missing the 'followers' array property
-    const mockPlayer = createMockEntity(leaderId, {
-      [LEADING_COMPONENT_ID]: { not_followers: [] },
-    });
-
-    // FIX: The context now uses 'actingEntity'.
-    const context = {
-      actingEntity: mockPlayer,
-      entityManager: mockEntityManager,
-    };
-
-    const result = getEntityIdsForScopes('followers', context, mockLogger);
-
-    expect(result).toBeInstanceOf(Set);
-    expect(result.size).toBe(0);
-  });
-
-  // Test Case 5: Player entity is missing from the context
-  test('should return an empty set and warn if playerEntity is missing from context', () => {
-    // FIX: The context correctly reflects a missing actingEntity.
-    const context = {
-      actingEntity: null,
-      entityManager: mockEntityManager,
-    };
-
-    const result = getEntityIdsForScopes('followers', context, mockLogger);
-
-    expect(result).toBeInstanceOf(Set);
-    expect(result.size).toBe(0);
-    // FIX: Update the expected warning to check for "actingEntity".
-    expect(mockLogger.warn).toHaveBeenCalledWith(
-      "entityScopeService.followers: Scope 'followers' requested but actingEntity is missing."
+    
+    expect(result).toEqual(new Set());
+    expect(mockLogger.error).toHaveBeenCalledWith(
+      "Error resolving scope 'followers' with DSL:",
+      parseError
     );
   });
 
-  // Test Case 6: Integration with other scopes
-  test('should correctly aggregate follower IDs when requested with other scopes', () => {
-    const leaderId = 'player:1';
-    const followerIds = ['npc:1', 'npc:2'];
-    const inventoryItemId = 'item:sword';
-
-    const mockPlayer = createMockEntity(leaderId, {
-      [LEADING_COMPONENT_ID]: { followers: followerIds },
-      [INVENTORY_COMPONENT_ID]: { items: [inventoryItemId] },
+  test('should handle scope engine resolution errors gracefully', () => {
+    const mockAst = { type: 'followers' };
+    const mockScopeDefinition = { expr: 'actor.core:leading.followers[]' };
+    const resolveError = new Error('Resolution error');
+    
+    mockScopeRegistryInstance.getScope.mockReturnValue(mockScopeDefinition);
+    parseInlineExpr.mockReturnValue(mockAst);
+    mockScopeEngine.resolve.mockImplementation(() => {
+      throw resolveError;
     });
 
-    // FIX: The context now uses 'actingEntity'.
     const context = {
-      actingEntity: mockPlayer,
+      actingEntity: { id: 'player:1' },
       entityManager: mockEntityManager,
+      spatialIndexManager: {},
+      jsonLogicEval: {}
     };
 
-    const result = getEntityIdsForScopes(
-      ['followers', 'inventory'],
-      context,
-      mockLogger
+    const result = getEntityIdsForScopes('followers', context, mockLogger);
+    
+    expect(result).toEqual(new Set());
+    expect(mockLogger.error).toHaveBeenCalledWith(
+      "Error resolving scope 'followers' with DSL:",
+      resolveError
     );
+  });
 
-    expect(result).toBeInstanceOf(Set);
-    // FIX: This check will now pass as both scope handlers find the actingEntity.
-    expect(result.size).toBe(3);
+  test('should aggregate follower IDs when requested with other scopes', () => {
+    const mockAst = { type: 'test' };
+    const followersScope = { expr: 'actor.core:leading.followers[]' };
+    const inventoryScope = { expr: 'actor.inventory[]' };
+    
+    mockScopeRegistryInstance.getScope
+      .mockReturnValueOnce(followersScope)
+      .mockReturnValueOnce(inventoryScope);
+    
+    parseInlineExpr.mockReturnValue(mockAst);
+    mockScopeEngine.resolve
+      .mockReturnValueOnce(new Set(['npc:1', 'npc:2']))
+      .mockReturnValueOnce(new Set(['item:sword']));
+
+    const context = {
+      actingEntity: { id: 'player:1' },
+      entityManager: mockEntityManager,
+      spatialIndexManager: {},
+      jsonLogicEval: {}
+    };
+
+    const result = getEntityIdsForScopes(['followers', 'inventory'], context, mockLogger);
+    
     expect(result).toEqual(new Set(['npc:1', 'npc:2', 'item:sword']));
+    expect(mockScopeRegistryInstance.getScope).toHaveBeenCalledWith('followers');
+    expect(mockScopeRegistryInstance.getScope).toHaveBeenCalledWith('inventory');
   });
 });
