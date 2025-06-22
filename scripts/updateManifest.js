@@ -1,6 +1,5 @@
 // updateManifest.js (Version 3)
 /* eslint-env node */
-/* global process, __filename */
 //
 // Description:
 // A Node.js script to automatically scan the content directories of a mod
