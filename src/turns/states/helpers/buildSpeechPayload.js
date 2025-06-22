@@ -22,25 +22,35 @@ export function buildSpeechPayload(decisionMeta) {
     thoughts: thoughtsRaw,
     notes: notesRaw,
   } = decisionMeta || {};
+
   const speech = isNonBlankString(speechRaw) ? speechRaw.trim() : null;
   if (!speech) {
     return null;
   }
-  const payload = { speechContent: speech };
-  if (isNonBlankString(thoughtsRaw)) {
-    payload.thoughts = thoughtsRaw.trim();
-  }
+
+  const thoughts = isNonBlankString(thoughtsRaw)
+    ? thoughtsRaw.trim()
+    : undefined;
+
+  let notes;
   if (Array.isArray(notesRaw)) {
     const joined = notesRaw
       .map((n) => (isNonBlankString(n) ? n.trim() : ''))
       .filter(Boolean)
       .join('\n');
     if (joined) {
-      payload.notes = joined;
+      notes = joined;
     }
   } else if (isNonBlankString(notesRaw)) {
-    payload.notes = notesRaw.trim();
+    notes = notesRaw.trim();
   }
+
+  const payload = {
+    speechContent: speech,
+    ...(thoughts ? { thoughts } : {}),
+    ...(notes ? { notes } : {}),
+  };
+
   return payload;
 }
 
