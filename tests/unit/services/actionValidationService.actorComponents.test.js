@@ -598,4 +598,41 @@ describe('ActionValidationService: Orchestration Logic', () => {
     );
     expect(mockLogger.error).not.toHaveBeenCalled();
   });
+
+  it('invokes validation steps in order', () => {
+    const actor = createMockEntity('actor-order');
+    const target = createMockEntity('target-order');
+    mockEntityManager._addEntity(actor);
+    mockEntityManager._addEntity(target);
+    const actionDefinition = {
+      id: 'action:order',
+      target_domain: 'entity',
+      prerequisites: [],
+    };
+    const ctx = ActionTargetContext.forEntity('target-order');
+
+    const step1 = jest
+      .spyOn(actionValidationService, '_validateDomainAndContext')
+      .mockReturnValue(true);
+    const step2 = jest
+      .spyOn(actionValidationService, '_ensureTargetExists')
+      .mockReturnValue(true);
+    const step3 = jest
+      .spyOn(actionValidationService, '_validatePrerequisites')
+      .mockReturnValue(true);
+
+    const result = actionValidationService.isValid(
+      actionDefinition,
+      actor,
+      ctx
+    );
+
+    expect(result).toBe(true);
+    expect(step1).toHaveBeenCalledBefore(step2);
+    expect(step2).toHaveBeenCalledBefore(step3);
+
+    step1.mockRestore();
+    step2.mockRestore();
+    step3.mockRestore();
+  });
 });
