@@ -133,4 +133,58 @@ describe('persistNotes', () => {
       'Another Valid Note',
     ]);
   });
+
+  test('dispatches error when notes field is not an array', () => {
+    const action = { notes: 'oops' };
+
+    persistNotes(action, actor, logger, dispatcher);
+
+    expect(dispatcher.dispatch).toHaveBeenCalledWith(
+      SYSTEM_ERROR_OCCURRED_ID,
+      expect.objectContaining({
+        message:
+          "NotesPersistenceHook: 'notes' field is not an array; skipping merge",
+        details: { actorId: 'actor-1' },
+      })
+    );
+    expect(actor.addComponent).not.toHaveBeenCalled();
+  });
+
+  test('ignores invalid notes when none are valid', () => {
+    const action = { notes: ['', null] };
+
+    persistNotes(action, actor, logger, dispatcher);
+
+    expect(dispatcher.dispatch).toHaveBeenCalledTimes(2);
+    expect(actor.addComponent).not.toHaveBeenCalled();
+  });
+
+  test('updates component directly when addComponent is unavailable', () => {
+    delete actor.addComponent;
+    delete actor.getComponentData;
+    const action = { notes: ['direct update'] };
+
+    persistNotes(action, actor, logger, dispatcher);
+
+    expect(actor.components[NOTES_COMPONENT_ID]).toBeDefined();
+    expect(actor.components[NOTES_COMPONENT_ID].notes[0].text).toBe(
+      'direct update'
+    );
+  });
+
+  test('invalid note without dispatcher does nothing', () => {
+    const action = { notes: [null] };
+
+    persistNotes(action, actor, logger);
+
+    expect(actor.addComponent).not.toHaveBeenCalled();
+  });
+
+  test('returns silently when dispatcher missing for non-array notes', () => {
+    const action = { notes: 123 };
+
+    persistNotes(action, actor, logger);
+
+    expect(actor.addComponent).not.toHaveBeenCalled();
+  });
 });
