@@ -384,6 +384,9 @@ Explains how identifiers are namespaced and how reference resolution works acros
 **Action Macros ➜ docs/mods/macros.md**
 Define reusable action sequences and reference them within rules.
 
+**Persistence Overview ➜ docs/persistence/overview.md**
+Quick reference for save file repository and parser responsibilities.
+
 ### License
 
 This project is licensed under the Creative Commons Attribution-NonCommercial 4.0 International License.  

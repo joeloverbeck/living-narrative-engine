@@ -12,7 +12,10 @@ import { BaseService } from '../utils/serviceBase.js';
 
 /**
  * @class SaveFileParser
- * @description Reads save files from storage and extracts metadata.
+ * @description
+ *   Focuses exclusively on reading and parsing save files. It validates
+ *   metadata and deserializes save contents but performs no write or delete
+ *   operations itself.
  */
 export default class SaveFileParser extends BaseService {
   /** @type {import('../interfaces/coreServices.js').ILogger} */
@@ -23,7 +26,9 @@ export default class SaveFileParser extends BaseService {
   #serializer;
 
   /**
-   * @param {object} deps
+   * Creates a new SaveFileParser instance.
+   *
+   * @param {object} deps - Constructor dependencies.
    * @param {import('../interfaces/coreServices.js').ILogger} deps.logger - Logger instance.
    * @param {import('../interfaces/IStorageProvider.js').IStorageProvider} deps.storageProvider - Storage provider for file access.
    * @param {import('./gameStateSerializer.js').default} deps.serializer - Serializer for deserialization.
