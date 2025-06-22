@@ -143,10 +143,6 @@ class WorldInitializer {
     // Get the world data from the repository
     const worldData = this.#repository.getWorld(worldName);
     if (!worldData) {
-      this.#logger.error(
-        `WorldInitializer (Pass 1): World '${worldName}' not found in repository.`
-      );
-
       safeDispatchError(
         this.#validatedEventDispatcher,
         `World '${worldName}' not found. The game cannot start without a valid world.`,
@@ -163,10 +159,6 @@ class WorldInitializer {
     }
 
     if (!worldData.instances || !Array.isArray(worldData.instances) || worldData.instances.length === 0) {
-      this.#logger.error(
-        `WorldInitializer (Pass 1): World '${worldName}' has no instances defined. Game cannot start without entities.`
-      );
-
       safeDispatchError(
         this.#validatedEventDispatcher,
         `World '${worldName}' has no entities defined. The game cannot start without any entities in the world.`,
@@ -412,8 +404,14 @@ class WorldInitializer {
       typeof entity.addComponent !== 'function' ||
       typeof entity.getComponentData !== 'function'
     ) {
-      this.#logger.error(
-        `WorldInitializer (Pass 2 Processing): Entity ${entity?.id || 'Unknown ID'} is invalid or missing required component access methods. Skipping processing for this entity.`
+      safeDispatchError(
+        this.#validatedEventDispatcher,
+        `Invalid entity detected during world initialization. Entity ${entity?.id || 'Unknown ID'} is missing required component access methods.`,
+        {
+          statusCode: 500,
+          raw: `Entity validation failed. Context: WorldInitializer._processSingleEntityForPass2, entityId: ${entity?.id || 'Unknown ID'}`,
+          timestamp: new Date().toISOString(),
+        }
       );
       return false;
     }
@@ -506,9 +504,14 @@ class WorldInitializer {
           'CRITICAL error during component iteration'
         )
       ) {
-        this.#logger.error(
-          `WorldInitializer: CRITICAL ERROR during entity initialization or reference resolution for world '${worldName}':`,
-          error
+        safeDispatchError(
+          this.#validatedEventDispatcher,
+          `Critical error during world initialization for world '${worldName}'. The game cannot start properly.`,
+          {
+            statusCode: 500,
+            raw: `World initialization failed. Context: WorldInitializer.initializeWorldEntities, worldName: ${worldName}, error: ${error?.message || 'Unknown error'}`,
+            timestamp: new Date().toISOString(),
+          }
         );
       }
       // Event 'initialization:world_initializer:failed' could be dispatched here.

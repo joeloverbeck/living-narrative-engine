@@ -204,8 +204,9 @@ export class WorldLoader extends AbstractLoader {
             worldData
           );
 
-          this._logger.info(
-            `WorldLoader [${modId}]: Successfully loaded and registered world '${qualifiedWorldId}' from '${filename}'.`
+          this._logger.debug(
+            `WorldLoader: Registered world '${qualifiedWorldId}' from file '${filename}'.`,
+            { qualifiedWorldId, filename, modId }
           );
 
           filesProcessed++;
