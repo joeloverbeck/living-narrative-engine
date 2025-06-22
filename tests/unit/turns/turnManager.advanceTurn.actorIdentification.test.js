@@ -34,9 +34,7 @@ describeRunningTurnManagerSuite(
       testBed.mocks.turnOrderService.getNextEntity.mockResolvedValue(
         createAiActor('initial-actor-for-start')
       );
-      testBed.mocks.turnHandlerResolver.resolveHandler.mockResolvedValue(
-        createMockTurnHandler()
-      );
+      testBed.setupMockHandlerResolver();
 
       stopSpy = testBed.spyOnStop();
       stopSpy.mockImplementation(async () => {});
