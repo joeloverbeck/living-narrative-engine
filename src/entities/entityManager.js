@@ -16,10 +16,7 @@
 //  @since   0.3.0
 // -----------------------------------------------------------------------------
 
-import InMemoryEntityRepository from '../adapters/InMemoryEntityRepository.js';
-import UuidGenerator from '../adapters/UuidGenerator.js';
-import LodashCloner from '../adapters/LodashCloner.js';
-import DefaultComponentPolicy from '../adapters/DefaultComponentPolicy.js';
+import { createDefaultDeps } from './utils/createDefaultDeps.js';
 import Entity from './entity.js';
 import EntityInstanceData from './entityInstanceData.js';
 import { MapManager } from '../utils/mapManagerUtils.js';
@@ -132,7 +129,9 @@ class EntityManager extends IEntityManager {
 
   /**
    * @class
-   * @param {object} [deps] - Constructor dependencies.
+   * @param {object} [deps] - Constructor dependencies. Each dependency may be
+   *   provided as an instance or a zero-argument factory function. Any omitted
+   *   dependency will use the default from {@link createDefaultDeps}.
    * @param {IDataRegistry}        deps.registry - Data registry for definitions.
    * @param {IEntityRepository}    [deps.repository] - Repository for active entities.
    * @param {ISchemaValidator}     deps.validator - Schema validator instance.
@@ -145,15 +144,29 @@ class EntityManager extends IEntityManager {
    */
   constructor({
     registry,
-    repository = new InMemoryEntityRepository(),
+    repository,
     validator,
     logger,
     dispatcher,
-    idGenerator = UuidGenerator,
-    cloner = LodashCloner,
-    defaultPolicy = new DefaultComponentPolicy(),
+    idGenerator,
+    cloner,
+    defaultPolicy,
   } = {}) {
     super();
+
+    const defaults = createDefaultDeps();
+    const resolveDep = (dep, defaultDep) => {
+      if (dep === undefined || dep === null) return defaultDep;
+      if (typeof defaultDep !== 'function' && typeof dep === 'function') {
+        return dep();
+      }
+      return dep;
+    };
+
+    repository = resolveDep(repository, defaults.repository);
+    idGenerator = resolveDep(idGenerator, defaults.idGenerator);
+    cloner = resolveDep(cloner, defaults.cloner);
+    defaultPolicy = resolveDep(defaultPolicy, defaults.defaultPolicy);
 
     /* ---------- dependency checks ---------- */
     validateDependency(logger, 'ILogger', console, {
@@ -260,15 +273,6 @@ class EntityManager extends IEntityManager {
       return this.#definitionCache.get(definitionId);
     }
     const definition = this.#registry.getEntityDefinition(definitionId);
-    console.log(
-      '[DEBUG EntityManager] definition for',
-      definitionId,
-      'is',
-      definition,
-      'instanceof EntityDefinition?',
-      definition instanceof
-        (typeof EntityDefinition !== 'undefined' ? EntityDefinition : Object)
-    );
     if (definition) {
       this.#definitionCache.set(definitionId, definition);
       return definition;
