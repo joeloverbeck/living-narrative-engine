@@ -17,11 +17,11 @@ export {
  * execution context provides a logger, it takes precedence over the
  * handler's default logger.
  * @param {ILogger} defaultLogger - Default logger from the handler.
- * @param {import('../../logic/defs.js').ExecutionContext} [execCtx] - Optional execution context.
+ * @param {import('../../logic/defs.js').ExecutionContext} [executionContext] - Optional execution context.
  * @returns {ILogger} Logger instance for execution.
  */
-export function getExecLogger(defaultLogger, execCtx) {
-  return execCtx?.logger ?? defaultLogger;
+export function getExecLogger(defaultLogger, executionContext) {
+  return executionContext?.logger ?? defaultLogger;
 }
 
 // --- FILE END ---

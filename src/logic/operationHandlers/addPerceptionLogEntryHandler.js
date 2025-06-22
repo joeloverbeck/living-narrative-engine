@@ -43,10 +43,10 @@ class AddPerceptionLogEntryHandler extends BaseOperationHandler {
 
   /**
    * @param {AddPerceptionLogEntryParams} params
-   * @param {import('../defs.js').ExecutionContext} _ctx – Unused for now.
+   * @param {import('../defs.js').ExecutionContext} executionContext – Unused for now.
    */
-  execute(params, _ctx) {
-    const log = this.getLogger(_ctx);
+  execute(params, executionContext) {
+    const log = this.getLogger(executionContext);
 
     /* ── validation ─────────────────────────────────────────────── */
     if (
@@ -91,12 +91,12 @@ class AddPerceptionLogEntryHandler extends BaseOperationHandler {
       }
 
       /* pull current data; fall back to sane defaults */
-      const raw =
+      const currentComponent =
         this.#entityManager.getComponentData(id, PERCEPTION_LOG_COMPONENT_ID) ??
         {};
 
       /* normalise / repair corrupted shapes -------------------------------- */
-      let { maxEntries, logEntries } = raw;
+      let { maxEntries, logEntries } = currentComponent;
 
       if (!Array.isArray(logEntries)) {
         logEntries = []; // recover from bad type
@@ -106,19 +106,25 @@ class AddPerceptionLogEntryHandler extends BaseOperationHandler {
       }
 
       /* build next state ---------------------------------------------------- */
-      const next = {
+      const updatedComponent = {
         maxEntries,
         logEntries: [...logEntries, entry], // keep ORIGINAL reference
       };
 
       /* trim to size -------------------------------------------------------- */
-      if (next.logEntries.length > next.maxEntries) {
-        next.logEntries = next.logEntries.slice(-next.maxEntries);
+      if (updatedComponent.logEntries.length > updatedComponent.maxEntries) {
+        updatedComponent.logEntries = updatedComponent.logEntries.slice(
+          -updatedComponent.maxEntries
+        );
       }
 
       /* write back ---------------------------------------------------------- */
       try {
-        this.#entityManager.addComponent(id, PERCEPTION_LOG_COMPONENT_ID, next);
+        this.#entityManager.addComponent(
+          id,
+          PERCEPTION_LOG_COMPONENT_ID,
+          updatedComponent
+        );
         updated++;
       } catch (e) {
         safeDispatchError(

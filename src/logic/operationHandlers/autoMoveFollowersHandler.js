@@ -67,10 +67,10 @@ class AutoMoveFollowersHandler extends BaseOperationHandler {
    * Move followers from the leader's previous location to the destination.
    *
    * @param {AutoMoveFollowersParams} params
-   * @param {ExecutionContext} execCtx
+   * @param {ExecutionContext} executionContext
    */
-  execute(params, execCtx) {
-    const logger = execCtx?.logger ?? this.logger;
+  execute(params, executionContext) {
+    const logger = executionContext?.logger ?? this.logger;
     if (!assertParamsObject(params, logger, 'AUTO_MOVE_FOLLOWERS')) return;
 
     const { leader_id, destination_id } = params;
@@ -96,7 +96,8 @@ class AutoMoveFollowersHandler extends BaseOperationHandler {
     const lid = leader_id.trim();
     const dest = destination_id.trim();
 
-    const prevLoc = execCtx?.event?.payload?.previousLocationId ?? null;
+    const prevLoc =
+      executionContext?.event?.payload?.previousLocationId ?? null;
 
     const followersComponent = this.#entityManager.getComponentData(
       lid,
@@ -118,7 +119,7 @@ class AutoMoveFollowersHandler extends BaseOperationHandler {
 
         this.#moveHandler.execute(
           { entity_ref: { entityId: fid }, target_location_id: dest },
-          execCtx
+          executionContext
         );
 
         const followerName =

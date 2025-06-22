@@ -64,10 +64,10 @@ class ModifyComponentHandler extends ComponentOperationHandler {
    * Executes a MODIFY_COMPONENT operation (mode = "set" only).
    *
    * @param {ModifyComponentOperationParams|null|undefined} params
-   * @param {ExecutionContext} execCtx
+   * @param {ExecutionContext} executionContext
    */
-  execute(params, execCtx) {
-    const log = this.getLogger(execCtx);
+  execute(params, executionContext) {
+    const log = this.getLogger(executionContext);
 
     // ── validate base params ───────────────────────────────────────
     if (!assertParamsObject(params, log, 'MODIFY_COMPONENT')) {
@@ -101,7 +101,7 @@ class ModifyComponentHandler extends ComponentOperationHandler {
     }
 
     // ── resolve entity ─────────────────────────────────────────────
-    const entityId = this.resolveEntity(entity_ref, execCtx);
+    const entityId = this.resolveEntity(entity_ref, executionContext);
     if (!entityId) {
       log.warn('MODIFY_COMPONENT: could not resolve entity id.', {
         entity_ref,
@@ -126,10 +126,10 @@ class ModifyComponentHandler extends ComponentOperationHandler {
       return;
     }
 
-    const next = deepClone(current);
+    const updatedComponent = deepClone(current);
 
     // ── apply “set” mutation ───────────────────────────────────────
-    const ok = setByPath(next, field.trim(), value);
+    const ok = setByPath(updatedComponent, field.trim(), value);
     if (!ok) {
       log.warn(
         `MODIFY_COMPONENT: Failed to set path "${field}" on component "${compType}".`
@@ -142,7 +142,7 @@ class ModifyComponentHandler extends ComponentOperationHandler {
       const success = this.#entityManager.addComponent(
         entityId,
         compType,
-        next
+        updatedComponent
       );
       if (success) {
         log.debug(

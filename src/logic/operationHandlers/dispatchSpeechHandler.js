@@ -46,10 +46,10 @@ class DispatchSpeechHandler extends BaseOperationHandler {
    * Construct payload and dispatch {@link DISPLAY_SPEECH_ID}.
    *
    * @param {DispatchSpeechParams|null|undefined} params - Resolved parameters.
-   * @param {ExecutionContext} _ctx - Execution context (unused).
+   * @param {ExecutionContext} executionContext - Execution context (unused).
    */
-  execute(params, _ctx) {
-    const logger = this.getLogger(_ctx);
+  execute(params, executionContext) {
+    const logger = this.getLogger(executionContext);
     if (!assertParamsObject(params, logger, 'DISPATCH_SPEECH')) return;
 
     if (
