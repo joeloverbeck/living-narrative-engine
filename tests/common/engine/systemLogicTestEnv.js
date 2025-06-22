@@ -14,6 +14,7 @@ import {
   createMockLogger,
   createCapturingEventBus,
 } from '../mockFactories/index.js';
+import { createRuleTestDataRegistry } from '../mockFactories/entities.js';
 import { deepClone } from '../../../src/utils/cloneUtils.js';
 
 /**
@@ -125,18 +126,4 @@ export function createRuleTestEnvironment({
   };
 
   return env;
-}
-
-/**
- * Creates a mock data registry for testing.
- *
- * @param {Array<object>} rules - Rules to return from getAllSystemRules
- * @param {object} conditionDefinitions - Condition definitions to return from getConditionDefinition
- * @returns {object} Mock data registry
- */
-export function createMockDataRegistry(rules = [], conditionDefinitions = {}) {
-  return {
-    getAllSystemRules: jest.fn().mockReturnValue(rules),
-    getConditionDefinition: jest.fn((id) => conditionDefinitions[id]),
-  };
 }

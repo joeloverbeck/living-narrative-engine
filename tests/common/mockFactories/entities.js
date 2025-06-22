@@ -95,6 +95,35 @@ export const createStatefulMockDataRegistry = () => {
 };
 
 /**
+ * Creates a simple data registry for rule integration tests.
+ *
+ * @description Provides basic register/get APIs for storing rule records.
+ * @returns {{
+ *   register: (id: string, record: any) => void,
+ *   get: (id: string) => any,
+ *   getAll: () => any[],
+ *   clear: () => void
+ * }} In-memory registry instance.
+ */
+export function createRuleTestDataRegistry() {
+  const data = new Map();
+  return {
+    register(id, record) {
+      data.set(id, record);
+    },
+    get(id) {
+      return data.get(id);
+    },
+    getAll() {
+      return Array.from(data.values());
+    },
+    clear() {
+      data.clear();
+    },
+  };
+}
+
+/**
  * Creates a mock IEntityManager.
  *
  * @param root0
