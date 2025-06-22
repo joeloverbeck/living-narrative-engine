@@ -315,29 +315,10 @@ export class EntityDisplayDataProvider {
     let processedExits = [];
 
     if (exitsComponentData && Array.isArray(exitsComponentData)) {
-      processedExits = exitsComponentData
-        .map((exit) => {
-          if (typeof exit !== 'object' || exit === null) {
-            this.#logger.warn(
-              `${this._logPrefix} getLocationDetails: Invalid exit item in exits component for location '${locationEntityId}'. Skipping.`,
-              { exit }
-            );
-            return null;
-          }
-          const exitDescription = isNonBlankString(exit.direction)
-            ? exit.direction.trim()
-            : 'Unspecified Exit';
-          const exitTarget = isNonBlankString(exit.target)
-            ? exit.target.trim()
-            : undefined;
-
-          return {
-            description: exitDescription,
-            target: exitTarget,
-            id: exitTarget,
-          };
-        })
-        .filter((exit) => exit !== null);
+      processedExits = this._parseLocationExits(
+        exitsComponentData,
+        locationEntityId
+      );
     } else if (exitsComponentData) {
       this.#logger.warn(
         `${this._logPrefix} getLocationDetails: Exits component data for location '${locationEntityId}' is present but not an array.`,
@@ -411,6 +392,42 @@ export class EntityDisplayDataProvider {
       imagePath: fullPath,
       altText: altText,
     };
+  }
+
+  /**
+   * @description Validates and transforms raw exit data into ProcessedExit objects.
+   * @private
+   * @param {Array<*>} exitsComponentData - Raw exits component data.
+   * @param {NamespacedId | string} locationEntityId - ID of the location entity for logging context.
+   * @returns {ProcessedExit[]} Array of processed exits.
+   */
+  _parseLocationExits(exitsComponentData, locationEntityId) {
+    if (!Array.isArray(exitsComponentData)) {
+      return [];
+    }
+    return exitsComponentData
+      .map((exit) => {
+        if (typeof exit !== 'object' || exit === null) {
+          this.#logger.warn(
+            `${this._logPrefix} getLocationDetails: Invalid exit item in exits component for location '${locationEntityId}'. Skipping.`,
+            { exit }
+          );
+          return null;
+        }
+        const exitDescription = isNonBlankString(exit.direction)
+          ? exit.direction.trim()
+          : 'Unspecified Exit';
+        const exitTarget = isNonBlankString(exit.target)
+          ? exit.target.trim()
+          : undefined;
+
+        return {
+          description: exitDescription,
+          target: exitTarget,
+          id: exitTarget,
+        };
+      })
+      .filter((exit) => exit !== null);
   }
 
   /**
