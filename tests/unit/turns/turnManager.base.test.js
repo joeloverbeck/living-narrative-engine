@@ -1,40 +1,29 @@
 // src/tests/turns/turnManager.base.test.js
 // --- FILE START (Corrected) ---
 
-import { TurnManagerTestBed } from '../../common/turns/turnManagerTestBed.js';
+import { describeTurnManagerSuite } from '../../common/turns/turnManagerTestBed.js';
 import {
   ACTOR_COMPONENT_ID,
   PLAYER_COMPONENT_ID,
 } from '../../../src/constants/componentIds.js';
-import {
-  beforeEach,
-  describe,
-  expect,
-  jest,
-  test,
-  afterEach,
-} from '@jest/globals';
+import { beforeEach, expect, test } from '@jest/globals';
 import { createDefaultActors } from '../../common/turns/testActors.js';
 
-describe('TurnManager', () => {
+describeTurnManagerSuite('TurnManager', (getBed) => {
   let testBed;
   let mockPlayerEntity;
   let mockAiEntity1;
 
   beforeEach(() => {
-    testBed = new TurnManagerTestBed();
+    testBed = getBed();
 
     ({ player: mockPlayerEntity, ai1: mockAiEntity1 } = createDefaultActors());
   });
 
-  afterEach(() => testBed.cleanup());
-
   // --- Basic Sanity / Setup Tests ---
 
   test('should exist and be a class', () => {
-    // Re-instantiate to check constructor log specifically
-    jest.clearAllMocks(); // Clear previous beforeEach logs
-    const instance = new TurnManagerTestBed().turnManager;
+    const instance = testBed.turnManager;
 
     expect(instance).toBeDefined();
     expect(instance).toBeInstanceOf(testBed.turnManager.constructor);
