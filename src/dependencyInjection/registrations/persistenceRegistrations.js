@@ -27,6 +27,7 @@ import ComponentCleaningService, {
 import GamePersistenceService from '../../persistence/gamePersistenceService.js';
 import GameStateCaptureService from '../../persistence/gameStateCaptureService.js';
 import ManualSaveCoordinator from '../../persistence/manualSaveCoordinator.js';
+import GameStateRestorer from '../../persistence/gameStateRestorer.js';
 import SaveMetadataBuilder from '../../persistence/saveMetadataBuilder.js';
 import ActiveModsManifestBuilder from '../../persistence/activeModsManifestBuilder.js';
 // import ReferenceResolver from '../../initializers/services/referenceResolver.js'; // Removed - service is deprecated
@@ -143,6 +144,11 @@ export function registerPersistence(container) {
       playtimeTracker: c.resolve(tokens.PlaytimeTracker),
       gameStateCaptureService: c.resolve(tokens.GameStateCaptureService),
       manualSaveCoordinator: c.resolve(tokens.ManualSaveCoordinator),
+      gameStateRestorer: new GameStateRestorer({
+        logger: c.resolve(tokens.ILogger),
+        entityManager: c.resolve(tokens.IEntityManager),
+        playtimeTracker: c.resolve(tokens.PlaytimeTracker),
+      }),
     });
   });
   logger.debug(

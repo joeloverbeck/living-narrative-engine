@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import GamePersistenceService from '../../../src/persistence/gamePersistenceService.js';
 import GameStateCaptureService from '../../../src/persistence/gameStateCaptureService.js';
+import GameStateRestorer from '../../../src/persistence/gameStateRestorer.js';
 import ComponentCleaningService, {
   buildDefaultComponentCleaners,
 } from '../../../src/persistence/componentCleaningService.js';
@@ -37,6 +38,7 @@ describe('GamePersistenceService edge cases', () => {
   let safeEventDispatcher;
   let activeModsManifestBuilder;
   let manualSaveCoordinator;
+  let gameStateRestorer;
   let service;
   let captureService;
 
@@ -82,6 +84,11 @@ describe('GamePersistenceService edge cases', () => {
       activeModsManifestBuilder,
     });
     manualSaveCoordinator = { saveGame: jest.fn() };
+    gameStateRestorer = new GameStateRestorer({
+      logger,
+      entityManager,
+      playtimeTracker,
+    });
     service = new GamePersistenceService({
       logger,
       saveLoadService,
@@ -89,6 +96,7 @@ describe('GamePersistenceService edge cases', () => {
       playtimeTracker,
       gameStateCaptureService: captureService,
       manualSaveCoordinator,
+      gameStateRestorer,
     });
   });
 

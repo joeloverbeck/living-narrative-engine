@@ -14,6 +14,7 @@ import GameStateSerializer from '../../src/persistence/gameStateSerializer.js';
 import GamePersistenceService from '../../src/persistence/gamePersistenceService.js';
 import GameStateCaptureService from '../../src/persistence/gameStateCaptureService.js';
 import ManualSaveCoordinator from '../../src/persistence/manualSaveCoordinator.js';
+import GameStateRestorer from '../../src/persistence/gameStateRestorer.js';
 import ComponentCleaningService, {
   buildDefaultComponentCleaners,
 } from '../../src/persistence/componentCleaningService.js';
@@ -57,6 +58,7 @@ describe('Persistence round-trip', () => {
   let componentCleaningService;
   let metadataBuilder;
   let safeEventDispatcher;
+  let gameStateRestorer;
   let persistence;
   let entity;
   const saveName = 'RoundTripTest';
@@ -130,6 +132,11 @@ describe('Persistence round-trip', () => {
       metadataBuilder,
       activeModsManifestBuilder,
     });
+    gameStateRestorer = new GameStateRestorer({
+      logger,
+      entityManager,
+      playtimeTracker,
+    });
     const manualSaveCoordinator = new ManualSaveCoordinator({
       logger,
       gameStateCaptureService: captureService,
@@ -142,6 +149,7 @@ describe('Persistence round-trip', () => {
       playtimeTracker,
       gameStateCaptureService: captureService,
       manualSaveCoordinator,
+      gameStateRestorer,
     });
   });
 

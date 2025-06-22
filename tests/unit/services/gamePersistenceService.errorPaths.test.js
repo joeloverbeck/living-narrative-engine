@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import GamePersistenceService from '../../../src/persistence/gamePersistenceService.js';
 import GameStateCaptureService from '../../../src/persistence/gameStateCaptureService.js';
+import GameStateRestorer from '../../../src/persistence/gameStateRestorer.js';
 import ComponentCleaningService, {
   buildDefaultComponentCleaners,
 } from '../../../src/persistence/componentCleaningService.js';
@@ -29,6 +30,7 @@ describe('GamePersistenceService error paths', () => {
   let metadataBuilder;
   let activeModsManifestBuilder;
   let safeEventDispatcher;
+  let gameStateRestorer;
   let service;
   let captureService;
 
@@ -65,6 +67,11 @@ describe('GamePersistenceService error paths', () => {
       metadataBuilder,
       activeModsManifestBuilder,
     });
+    gameStateRestorer = new GameStateRestorer({
+      logger,
+      entityManager,
+      playtimeTracker,
+    });
     service = new GamePersistenceService({
       logger,
       saveLoadService,
@@ -72,6 +79,7 @@ describe('GamePersistenceService error paths', () => {
       playtimeTracker,
       gameStateCaptureService: captureService,
       manualSaveCoordinator: { saveGame: jest.fn() },
+      gameStateRestorer,
     });
   });
 
