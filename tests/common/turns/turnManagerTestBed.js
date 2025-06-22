@@ -295,6 +295,30 @@ export const describeTurnManagerSuite = createDescribeTestBedSuite(
   }
 );
 
+/**
+ * Defines a suite where {@link TurnManager} is started before each test.
+ *
+ * @param {string} title - Suite title passed to `describe`.
+ * @param {(getBed: () => TurnManagerTestBed) => void} suiteFn - Callback
+ *   containing the tests. Receives a getter for the active test bed.
+ * @param {Record<string, any>} [overrides] - Optional overrides for mock
+ *   creation.
+ * @returns {void}
+ */
+export const describeRunningTurnManagerSuite = createDescribeTestBedSuite(
+  TurnManagerTestBed,
+  {
+    async beforeEachHook(bed) {
+      jest.useFakeTimers();
+      bed.initializeDefaultMocks();
+      await bed.startRunning();
+    },
+    afterEachHook() {
+      /* timers restored in cleanup */
+    },
+  }
+);
+
 export default TurnManagerTestBed;
 
 /**
@@ -309,3 +333,11 @@ export async function startWithEntitiesAndFlush(bed, ...entities) {
 }
 
 export { flushPromisesAndTimers };
+
+/*
+Usage:
+  describeRunningTurnManagerSuite('My Suite', (getBed) => {
+    const bed = getBed();
+    // bed.turnManager is already running
+  });
+*/
