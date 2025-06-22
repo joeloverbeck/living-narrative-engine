@@ -3,10 +3,11 @@
 
 import { describeRunningTurnManagerSuite } from '../../common/turns/turnManagerTestBed.js';
 import { flushPromisesAndTimers } from '../../common/jestHelpers.js';
-import { waitForCurrentActor } from '../../common/turns/turnManagerTestUtils.js';
-// import removed constant; not needed
 import {
-  TURN_ENDED_ID,
+  waitForCurrentActor,
+  triggerTurnEndedAndFlush,
+} from '../../common/turns/turnManagerTestUtils.js';
+import {
   TURN_STARTED_ID,
   SYSTEM_ERROR_OCCURRED_ID,
 } from '../../../src/constants/eventIds.js';
@@ -113,11 +114,7 @@ describeRunningTurnManagerSuite(
       expect(testBed.turnManager.getCurrentActor()).toBe(ai1);
 
       // Simulate turn ending
-      testBed.trigger(TURN_ENDED_ID, {
-        entityId: ai1.id,
-        success: true,
-      });
-      await flushPromisesAndTimers();
+      await triggerTurnEndedAndFlush(testBed, ai1.id, true);
 
       expect(testBed.turnManager.getCurrentActor()).toBe(ai2);
     });
@@ -142,11 +139,7 @@ describeRunningTurnManagerSuite(
       );
 
       // Simulate turn ending and advancing to AI actor
-      testBed.trigger(TURN_ENDED_ID, {
-        entityId: player.id,
-        success: true,
-      });
-      await flushPromisesAndTimers();
+      await triggerTurnEndedAndFlush(testBed, player.id, true);
       await flushPromisesAndTimers();
 
       // Check AI actor event
@@ -203,18 +196,14 @@ describeRunningTurnManagerSuite(
       expect(testBed.turnManager.getCurrentActor()?.id).toBe(ai1.id);
 
       // Simulate turn ending for actor1 (success: true)
-      testBed.trigger(TURN_ENDED_ID, { entityId: ai1.id, success: true });
-
-      await flushPromisesAndTimers();
+      await triggerTurnEndedAndFlush(testBed, ai1.id, true);
 
       // Wait for TurnManager to advance to ai2
       const found = await waitForCurrentActor(testBed, ai2.id);
       expect(found).toBe(true);
 
       // Simulate turn ending for actor2 (success: true)
-      testBed.trigger(TURN_ENDED_ID, { entityId: ai2.id, success: true });
-
-      await flushPromisesAndTimers();
+      await triggerTurnEndedAndFlush(testBed, ai2.id, true);
 
       // Wait for the TurnManager to process and start a new round
       let roundStarted = false;
