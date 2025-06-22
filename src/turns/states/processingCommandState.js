@@ -16,7 +16,6 @@ import { AbstractTurnState } from './abstractTurnState.js';
 import { ENTITY_SPOKE_ID } from '../../constants/eventIds.js';
 import { processCommandInternal } from './helpers/processCommandInternal.js';
 import { getServiceFromContext } from './helpers/getServiceFromContext.js';
-import { handleProcessingException } from './helpers/handleProcessingException.js';
 import { ProcessingWorkflow } from './workflows/processingWorkflow.js';
 import { buildSpeechPayload } from './helpers/buildSpeechPayload.js';
 import { ProcessingGuard } from './helpers/processingGuard.js';
@@ -171,22 +170,6 @@ export class ProcessingCommandState extends AbstractTurnState {
       contextMethod,
       serviceLabel,
       actorIdForLog
-    );
-  }
-
-  /* eslint-disable-next-line no-unused-private-class-members */
-  async #handleProcessingException(
-    turnCtx,
-    error,
-    actorIdContext = 'UnknownActor',
-    shouldEndTurn = true
-  ) {
-    return handleProcessingException(
-      this,
-      turnCtx,
-      error,
-      actorIdContext,
-      shouldEndTurn
     );
   }
 

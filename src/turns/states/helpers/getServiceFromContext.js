@@ -7,7 +7,7 @@
  * @typedef {import('../../interfaces/ITurnContext.js').ITurnContext} ITurnContext
  */
 
-import { handleProcessingException } from './handleProcessingException.js';
+import { ProcessingExceptionHandler } from './processingExceptionHandler.js';
 import { safeDispatchError } from '../../../utils/safeDispatchErrorUtils.js';
 import { getLogger, getSafeEventDispatcher } from './contextUtils.js';
 import { finishProcessing } from './processingErrorUtils.js';
@@ -84,12 +84,8 @@ export async function getServiceFromContext(
       );
     }
     const serviceError = new Error(errorMsg);
-    await handleProcessingException(
-      state,
-      turnCtx,
-      serviceError,
-      actorIdForLog
-    );
+    const exceptionHandler = new ProcessingExceptionHandler(state);
+    await exceptionHandler.handle(turnCtx, serviceError, actorIdForLog);
     return null;
   }
 }

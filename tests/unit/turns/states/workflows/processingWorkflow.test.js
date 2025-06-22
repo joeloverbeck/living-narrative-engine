@@ -1,21 +1,7 @@
 import { describe, test, expect, jest, beforeEach } from '@jest/globals';
 import { ProcessingWorkflow } from '../../../../../src/turns/states/workflows/processingWorkflow.js';
 import { ProcessingGuard } from '../../../../../src/turns/states/helpers/processingGuard.js';
-import { handleProcessingException } from '../../../../../src/turns/states/helpers/handleProcessingException.js';
-
-jest.mock(
-  '../../../../../src/turns/states/helpers/handleProcessingException.js',
-  () => {
-    const fn = jest.fn(async (state) => {
-      if (state?._processingGuard) {
-        state._processingGuard.finish();
-      } else if (state) {
-        state._isProcessing = false;
-      }
-    });
-    return { __esModule: true, handleProcessingException: fn, default: fn };
-  }
-);
+import { ProcessingExceptionHandler } from '../../../../../src/turns/states/helpers/processingExceptionHandler.js';
 
 describe('ProcessingWorkflow.run', () => {
   let logger;
@@ -56,6 +42,11 @@ describe('ProcessingWorkflow.run', () => {
     workflow = new ProcessingWorkflow(state, 'cmd', null, (a) => {
       state.action = a;
     });
+    workflow._exceptionHandler = {
+      handle: jest.fn(async () => {
+        state._processingGuard.finish();
+      }),
+    };
   });
 
   test('processes action successfully', async () => {
@@ -73,7 +64,7 @@ describe('ProcessingWorkflow.run', () => {
       throw new Error('fail');
     });
     await workflow.run(handler, null);
-    expect(handleProcessingException).toHaveBeenCalled();
+    expect(workflow._exceptionHandler.handle).toHaveBeenCalled();
     expect(state._isProcessing).toBe(false);
   });
 

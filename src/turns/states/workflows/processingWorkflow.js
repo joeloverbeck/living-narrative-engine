@@ -4,7 +4,7 @@
  */
 
 import { AbstractTurnState } from '../abstractTurnState.js';
-import { handleProcessingException } from '../helpers/handleProcessingException.js';
+import { ProcessingExceptionHandler } from '../helpers/processingExceptionHandler.js';
 import { getLogger } from '../helpers/contextUtils.js';
 
 /**
@@ -23,6 +23,7 @@ export class ProcessingWorkflow {
     this._commandString = commandString;
     this._turnAction = initialAction;
     this._setAction = setAction;
+    this._exceptionHandler = new ProcessingExceptionHandler(state);
   }
 
   /**
@@ -91,8 +92,7 @@ export class ProcessingWorkflow {
       const noActorError = new Error(
         'No actor present at the start of command processing.'
       );
-      await handleProcessingException(
-        this._state,
+      await this._exceptionHandler.handle(
         turnCtx,
         noActorError,
         'NoActorOnEnter'
@@ -130,8 +130,7 @@ export class ProcessingWorkflow {
       } catch (e) {
         const errorMsg = `${this._state.getStateName()}: Error retrieving ITurnAction from context for actor ${actorId}: ${e.message}`;
         logger.error(errorMsg, e);
-        await handleProcessingException(
-          this._state,
+        await this._exceptionHandler.handle(
           turnCtx,
           new Error(errorMsg, { cause: e }),
           actorId
@@ -143,8 +142,7 @@ export class ProcessingWorkflow {
     if (!turnAction) {
       const errorMsg = `${this._state.getStateName()}: No ITurnAction available for actor ${actorId}. Cannot process command.`;
       logger.error(errorMsg);
-      await handleProcessingException(
-        this._state,
+      await this._exceptionHandler.handle(
         turnCtx,
         new Error(errorMsg),
         actorId
@@ -158,8 +156,7 @@ export class ProcessingWorkflow {
     ) {
       const errorMsg = `${this._state.getStateName()}: ITurnAction for actor ${actorId} is invalid: missing or empty actionDefinitionId.`;
       logger.error(errorMsg, { receivedAction: turnAction });
-      await handleProcessingException(
-        this._state,
+      await this._exceptionHandler.handle(
         turnCtx,
         new Error(errorMsg),
         actorId
@@ -216,8 +213,7 @@ export class ProcessingWorkflow {
       );
       const actorIdForHandler =
         currentTurnCtxForCatch?.getActor?.()?.id ?? actor.id;
-      await handleProcessingException(
-        this._state,
+      await this._exceptionHandler.handle(
         currentTurnCtxForCatch || turnCtx,
         error,
         actorIdForHandler
