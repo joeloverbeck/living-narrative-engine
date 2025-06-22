@@ -70,7 +70,7 @@ describe('GamePersistenceService edge cases', () => {
       }),
     };
     activeModsManifestBuilder = {
-      build: jest.fn(() => {
+      buildManifest: jest.fn(() => {
         logger.warn();
         return [];
       }),
@@ -109,7 +109,7 @@ describe('GamePersistenceService edge cases', () => {
         [CURRENT_ACTOR_COMPONENT_ID]: { active: true },
       });
       entityManager.activeEntities.set('e1', entity);
-      activeModsManifestBuilder.build.mockImplementation(() => {
+      activeModsManifestBuilder.buildManifest.mockImplementation(() => {
         logger.warn();
         return [{ modId: CORE_MOD_ID, version: 'unknown_fallback' }];
       });

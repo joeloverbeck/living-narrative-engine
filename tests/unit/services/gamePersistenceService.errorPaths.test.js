@@ -58,7 +58,9 @@ describe('GamePersistenceService error paths', () => {
         saveName: '',
       })),
     };
-    activeModsManifestBuilder = { build: jest.fn().mockReturnValue([]) };
+    activeModsManifestBuilder = {
+      buildManifest: jest.fn().mockReturnValue([]),
+    };
     captureService = new GameStateCaptureService({
       logger,
       entityManager,

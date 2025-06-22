@@ -67,7 +67,7 @@ class GameStateCaptureService extends BaseService {
       metadataBuilder: { value: metadataBuilder, requiredMethods: ['build'] },
       activeModsManifestBuilder: {
         value: activeModsManifestBuilder,
-        requiredMethods: ['build'],
+        requiredMethods: ['buildManifest'],
       },
     });
     this.#entityManager = entityManager;
@@ -167,7 +167,7 @@ class GameStateCaptureService extends BaseService {
       `GameStateCaptureService: Captured ${entitiesData.length} entities.`
     );
 
-    const activeModsManifest = this.#activeModsManifestBuilder.build();
+    const activeModsManifest = this.#activeModsManifestBuilder.buildManifest();
 
     const currentTotalPlaytime = this.#playtimeTracker.getTotalPlaytime();
     this.#logger.debug(

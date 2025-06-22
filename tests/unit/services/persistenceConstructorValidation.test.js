@@ -21,7 +21,7 @@ describe('Persistence service constructor validation', () => {
     const playtimeTracker = {}; // missing getTotalPlaytime
     const componentCleaningService = { clean: jest.fn() };
     const metadataBuilder = { build: jest.fn() };
-    const activeModsManifestBuilder = { build: jest.fn() };
+    const activeModsManifestBuilder = { buildManifest: jest.fn() };
     expect(
       () =>
         new GameStateCaptureService({

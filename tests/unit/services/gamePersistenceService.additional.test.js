@@ -55,7 +55,7 @@ describe('GamePersistenceService additional coverage', () => {
       }),
     };
     activeModsManifestBuilder = {
-      build: jest.fn(() => {
+      buildManifest: jest.fn(() => {
         logger.warn();
         return [];
       }),
@@ -106,7 +106,7 @@ describe('GamePersistenceService additional coverage', () => {
         [CURRENT_ACTOR_COMPONENT_ID]: { active: true },
       });
       entityManager.activeEntities.set('e1', entity);
-      activeModsManifestBuilder.build.mockReturnValue([
+      activeModsManifestBuilder.buildManifest.mockReturnValue([
         { modId: 'core', version: '1.0.0' },
       ]);
 
@@ -126,7 +126,7 @@ describe('GamePersistenceService additional coverage', () => {
     it('preserves primitive component data', () => {
       const entity = makeEntity('e2', 'core:item', { count: 7 });
       entityManager.activeEntities.set('e2', entity);
-      activeModsManifestBuilder.build.mockReturnValue([]);
+      activeModsManifestBuilder.buildManifest.mockReturnValue([]);
 
       const result = captureService.captureCurrentGameState('World');
       const overrides = result.gameState.entities[0].overrides;

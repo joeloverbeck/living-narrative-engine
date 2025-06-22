@@ -29,7 +29,9 @@ describe('GameStateCaptureService persistence tests', () => {
         playtimeSeconds: 123,
       })),
     };
-    activeModsManifestBuilder = { build: jest.fn().mockReturnValue([]) };
+    activeModsManifestBuilder = {
+      buildManifest: jest.fn().mockReturnValue([]),
+    };
     captureService = new GameStateCaptureService({
       logger,
       entityManager,
