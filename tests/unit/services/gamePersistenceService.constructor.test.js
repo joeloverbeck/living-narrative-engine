@@ -17,6 +17,7 @@ function makeDeps() {
     playtimeTracker: {},
     gameStateCaptureService: {},
     manualSaveCoordinator: {},
+    gameStateRestorer: { restoreGameState: jest.fn() },
   };
 }
 
@@ -28,6 +29,7 @@ describe('GamePersistenceService constructor validation', () => {
     'playtimeTracker',
     'gameStateCaptureService',
     'manualSaveCoordinator',
+    'gameStateRestorer',
   ];
 
   test.each(required)('throws if %s is missing', (prop) => {

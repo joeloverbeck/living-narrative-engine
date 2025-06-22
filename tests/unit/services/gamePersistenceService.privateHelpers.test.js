@@ -26,6 +26,12 @@ function makeService() {
   };
   const manualSaveCoordinator = { saveGame: jest.fn() };
 
+  const restorer = new GameStateRestorer({
+    logger,
+    entityManager,
+    playtimeTracker,
+  });
+
   const service = new GamePersistenceService({
     logger,
     saveLoadService,
@@ -33,11 +39,7 @@ function makeService() {
     playtimeTracker,
     gameStateCaptureService: captureService,
     manualSaveCoordinator,
-  });
-  const restorer = new GameStateRestorer({
-    logger,
-    entityManager,
-    playtimeTracker,
+    gameStateRestorer: restorer,
   });
 
   return {

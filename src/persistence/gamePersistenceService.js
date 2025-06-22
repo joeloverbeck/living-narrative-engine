@@ -25,7 +25,7 @@ import {
   normalizePersistenceFailure,
 } from '../utils/persistenceResultUtils.js';
 import { wrapPersistenceOperation } from '../utils/persistenceErrorUtils.js';
-import GameStateRestorer from './gameStateRestorer.js';
+/** @typedef {import('./gameStateRestorer.js').default} GameStateRestorer */
 
 /**
  * @class GamePersistenceService
@@ -35,9 +35,6 @@ import GameStateRestorer from './gameStateRestorer.js';
 class GamePersistenceService extends IGamePersistenceService {
   #logger;
   #saveLoadService;
-  #entityManager;
-  #playtimeTracker;
-  #gameStateCaptureService;
   #gameStateRestorer;
   #manualSaveCoordinator;
 
@@ -51,7 +48,7 @@ class GamePersistenceService extends IGamePersistenceService {
    * @param {PlaytimeTracker} dependencies.playtimeTracker - Playtime tracker.
    * @param {GameStateCaptureService} dependencies.gameStateCaptureService - Service capturing current game state.
    * @param {ManualSaveCoordinator} dependencies.manualSaveCoordinator - Coordinator for manual saves.
-   * @param {GameStateRestorer} [dependencies.gameStateRestorer] - Optional game state restorer.
+   * @param {GameStateRestorer} dependencies.gameStateRestorer - Game state restorer.
    */
   constructor({
     logger,
@@ -84,22 +81,15 @@ class GamePersistenceService extends IGamePersistenceService {
         value: manualSaveCoordinator,
         requiredMethods: ['saveGame'],
       },
-      gameStateRestorer: gameStateRestorer
-        ? { value: gameStateRestorer, requiredMethods: ['restoreGameState'] }
-        : undefined,
+      gameStateRestorer: {
+        value: gameStateRestorer,
+        requiredMethods: ['restoreGameState'],
+      },
     });
     this.#saveLoadService = saveLoadService;
-    this.#entityManager = entityManager;
-    this.#playtimeTracker = playtimeTracker;
-    this.#gameStateCaptureService = gameStateCaptureService;
+    // captureService dependencies validated via setupService
     this.#manualSaveCoordinator = manualSaveCoordinator;
-    this.#gameStateRestorer =
-      gameStateRestorer ||
-      new GameStateRestorer({
-        logger: this.#logger,
-        entityManager: this.#entityManager,
-        playtimeTracker: this.#playtimeTracker,
-      });
+    this.#gameStateRestorer = gameStateRestorer;
     this.#logger.debug('GamePersistenceService: Instance created.');
   }
 

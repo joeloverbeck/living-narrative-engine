@@ -12,7 +12,7 @@
         "description": "The full entity instance that received the component."
       },
       "componentTypeId": {
-         "$ref": "http://example.com/schemas/common.schema.json#/definitions/namespacedId",
+        "$ref": "http://example.com/schemas/common.schema.json#/definitions/namespacedId",
         "description": "The ID of the component that was added or updated."
       },
       "componentData": {
