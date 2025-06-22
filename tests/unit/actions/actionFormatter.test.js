@@ -81,6 +81,21 @@ describe('formatActionCommand', () => {
     expect(result).toBe('move north');
   });
 
+  it("returns template as-is for 'none' target type", () => {
+    const actionDef = { id: 'core:wait', template: 'wait' };
+    const context = { type: 'none' };
+
+    const result = formatActionCommand(
+      actionDef,
+      context,
+      entityManager,
+      { logger, safeEventDispatcher: dispatcher },
+      displayNameFn
+    );
+
+    expect(result).toBe('wait');
+  });
+
   it('returns null for missing action template', () => {
     const result = formatActionCommand(
       { id: 'bad' },
