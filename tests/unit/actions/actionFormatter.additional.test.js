@@ -1,5 +1,8 @@
 import { describe, it, beforeEach, expect, jest } from '@jest/globals';
-import { formatActionCommand } from '../../../src/actions/actionFormatter.js';
+import {
+  formatActionCommand,
+  targetFormatterMap,
+} from '../../../src/actions/actionFormatter.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/eventIds.js';
 
 const createMockLogger = () => ({
@@ -21,6 +24,16 @@ describe('formatActionCommand additional cases', () => {
     dispatcher = { dispatch: jest.fn() };
     displayNameFn = jest.fn();
     jest.clearAllMocks();
+  });
+
+  it('exports default target formatter map', () => {
+    expect(targetFormatterMap).toEqual(
+      expect.objectContaining({
+        entity: expect.any(Function),
+        direction: expect.any(Function),
+        none: expect.any(Function),
+      })
+    );
   });
 
   it('returns null when entity context lacks entityId', () => {
@@ -114,5 +127,26 @@ describe('formatActionCommand additional cases', () => {
         message: expect.stringContaining('placeholder substitution'),
       })
     );
+  });
+
+  it('allows overriding the target formatter map', () => {
+    const actionDef = { id: 'core:test', template: 'test {target}' };
+    const context = { type: 'entity', entityId: 'e1' };
+    const customMap = {
+      ...targetFormatterMap,
+      entity: jest.fn(() => 'test-value'),
+    };
+
+    const result = formatActionCommand(
+      actionDef,
+      context,
+      entityManager,
+      { logger, safeEventDispatcher: dispatcher },
+      displayNameFn,
+      customMap
+    );
+
+    expect(result).toBe('test-value');
+    expect(customMap.entity).toHaveBeenCalled();
   });
 });

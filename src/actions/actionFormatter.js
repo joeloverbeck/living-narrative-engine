@@ -16,6 +16,10 @@ import { safeDispatchError } from '../utils/safeDispatchErrorUtils.js';
 import { resolveSafeDispatcher } from '../utils/dispatcherUtils.js';
 
 /**
+ * @typedef {Object.<string, (command: string, context: ActionTargetContext, deps: object) => (string|null)>} TargetFormatterMap
+ */
+
+/**
  * @description Replaces the `{target}` placeholder using entity information.
  * @param {string} command - The command template string.
  * @param {ActionTargetContext} context - Target context with `entityId`.
@@ -100,6 +104,16 @@ function formatNoneTarget(command, _context, { actionId, logger, debug }) {
 }
 
 /**
+ * @description Default mapping of target types to formatter functions.
+ * @type {TargetFormatterMap}
+ */
+export const targetFormatterMap = {
+  entity: formatEntityTarget,
+  direction: formatDirectionTarget,
+  none: formatNoneTarget,
+};
+
+/**
  * Formats a validated action and target into a user-facing command string.
  *
  * @param {ActionDefinition} actionDefinition - The validated action's definition. Must not be null/undefined.
@@ -111,6 +125,7 @@ function formatNoneTarget(command, _context, { actionId, logger, debug }) {
  * @param {ISafeEventDispatcher} options.safeEventDispatcher - Dispatcher used for error events.
  * @param {(entity: Entity, fallback: string, logger?: ILogger) => string} [displayNameFn] -
  *  Function used to resolve entity display names.
+ * @param {TargetFormatterMap} [formatterMap] - Map of target types to formatter functions.
  * @returns {string | null} The formatted command string, or null if inputs are invalid.
  * @throws {Error} If critical dependencies (entityManager, displayNameFn) are missing or invalid during processing.
  */
@@ -119,7 +134,8 @@ export function formatActionCommand(
   targetContext,
   entityManager,
   options = {},
-  displayNameFn = getEntityDisplayName
+  displayNameFn = getEntityDisplayName,
+  formatterMap = targetFormatterMap
 ) {
   const { debug = false, logger = console, safeEventDispatcher } = options;
   const dispatcher = safeEventDispatcher || resolveSafeDispatcher(null, logger);
@@ -177,13 +193,7 @@ export function formatActionCommand(
 
   // --- 2. Placeholder Substitution based on Target Type ---
   try {
-    const targetFormatterMap = {
-      entity: formatEntityTarget,
-      direction: formatDirectionTarget,
-      none: formatNoneTarget,
-    };
-
-    const formatter = targetFormatterMap[contextType];
+    const formatter = formatterMap[contextType];
     if (formatter) {
       const newCommand = formatter(command, targetContext, {
         actionId: actionDefinition.id,
