@@ -4,6 +4,7 @@
 import { BaseManifestItemLoader } from './baseManifestItemLoader.js';
 import { expandMacros, validateMacroExpansion } from '../utils/macroUtils.js';
 import { deriveBaseRuleIdFromFilename } from '../utils/ruleIdUtils.js';
+import { isNonBlankString } from '../utils/textUtils.js';
 
 /**
  * @typedef {import('../interfaces/coreServices.js').IConfiguration} IConfiguration
@@ -74,7 +75,7 @@ class RuleLoader extends BaseManifestItemLoader {
     const ruleIdInData = data?.rule_id;
     let baseRuleId;
 
-    if (typeof ruleIdInData === 'string' && ruleIdInData.trim()) {
+    if (isNonBlankString(ruleIdInData)) {
       baseRuleId = ruleIdInData.trim();
       this._logger.debug(
         `RuleLoader [${modId}]: Using rule_id '${baseRuleId}' from data in ${filename}.`

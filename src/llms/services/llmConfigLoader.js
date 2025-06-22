@@ -7,6 +7,7 @@ import {
   formatAjvErrorToStandardizedError,
   formatSemanticErrorToStandardizedError,
 } from './llmConfigErrorFormatter.js';
+import { isNonBlankString } from '../../utils/textUtils.js';
 
 /**
  * @typedef {object} ILogger
@@ -315,10 +316,9 @@ export class LlmConfigLoader {
    * @returns {Promise<LLMRootConfiguration | LoadConfigsErrorResult>}
    */
   async loadConfigs(filePathValue) {
-    const currentPath =
-      typeof filePathValue === 'string' && filePathValue.trim() !== ''
-        ? filePathValue.trim()
-        : this.#defaultConfigPath;
+    const currentPath = isNonBlankString(filePathValue)
+      ? filePathValue.trim()
+      : this.#defaultConfigPath;
     try {
       const parsedResponse = await this.#_fetchConfigFile(currentPath);
 

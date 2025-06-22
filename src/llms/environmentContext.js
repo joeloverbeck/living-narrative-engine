@@ -13,6 +13,7 @@
 const DEFAULT_PROXY_SERVER_URL = 'http://localhost:3001/api/llm-request';
 const VALID_EXECUTION_ENVIRONMENTS = ['client', 'server', 'unknown'];
 import { initLogger } from '../utils/index.js';
+import { isNonBlankString } from '../utils/textUtils.js';
 
 /**
  * @description Checks if the provided object conforms to the EnvironmentContext interface.
@@ -152,7 +153,7 @@ export class EnvironmentContext {
    */
   #configureProxyUrl(url) {
     if (this.#executionEnvironment === 'client') {
-      if (url && typeof url === 'string' && url.trim() !== '') {
+      if (isNonBlankString(url)) {
         try {
           new URL(url.trim());
           this.#proxyServerUrl = url.trim();
@@ -178,7 +179,7 @@ export class EnvironmentContext {
         }
       }
     } else {
-      if (url && typeof url === 'string' && url.trim() !== '') {
+      if (isNonBlankString(url)) {
         try {
           new URL(url.trim());
           this.#proxyServerUrl = url.trim();

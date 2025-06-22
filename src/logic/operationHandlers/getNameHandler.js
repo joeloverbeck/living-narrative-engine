@@ -18,6 +18,7 @@ import { resolveEntityId } from '../../utils/entityRefUtils.js';
 import { tryWriteContextVariable } from '../../utils/contextVariableUtils.js';
 import { assertParamsObject } from '../../utils/handlerUtils/paramsUtils.js';
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
+import { isNonBlankString } from '../../utils/textUtils.js';
 import BaseOperationHandler from './baseOperationHandler.js';
 
 /**
@@ -76,7 +77,7 @@ class GetNameHandler extends BaseOperationHandler {
       );
       return;
     }
-    if (typeof result_variable !== 'string' || !result_variable.trim()) {
+    if (!isNonBlankString(result_variable)) {
       safeDispatchError(
         this.#dispatcher,
         'GET_NAME: "result_variable" must be a non-empty string.',
@@ -85,10 +86,9 @@ class GetNameHandler extends BaseOperationHandler {
       return;
     }
     const resultVar = result_variable.trim();
-    const fallback =
-      typeof default_value === 'string' && default_value.trim()
-        ? default_value.trim()
-        : DEFAULT_FALLBACK_CHARACTER_NAME;
+    const fallback = isNonBlankString(default_value)
+      ? default_value.trim()
+      : DEFAULT_FALLBACK_CHARACTER_NAME;
 
     const entityId = resolveEntityId(entity_ref, executionContext);
     if (!entityId) {
@@ -112,7 +112,7 @@ class GetNameHandler extends BaseOperationHandler {
         entityId,
         NAME_COMPONENT_ID
       );
-      if (comp && typeof comp.text === 'string' && comp.text.trim()) {
+      if (comp && isNonBlankString(comp.text)) {
         name = comp.text.trim();
       }
       log.debug(`GET_NAME: Resolved name for '${entityId}' -> '${name}'.`);

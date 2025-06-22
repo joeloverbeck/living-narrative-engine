@@ -15,6 +15,7 @@ import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 import ComponentOperationHandler from './componentOperationHandler.js';
 import { assertParamsObject } from '../../utils/handlerUtils/paramsUtils.js';
 import { deepClone } from '../../utils/cloneUtils.js';
+import { setByPath } from '../utils/objectPathUtils.js';
 
 /**
  * @typedef {object} EntityRefObject
@@ -37,21 +38,6 @@ import { deepClone } from '../../utils/cloneUtils.js';
  * @param path
  * @param value
  */
-function setByPath(root, path, value) {
-  const parts = path.split('.').filter(Boolean);
-  let cur = root;
-  for (let i = 0; i < parts.length; i++) {
-    const key = parts[i];
-    if (i === parts.length - 1) {
-      cur[key] = value;
-      return true;
-    }
-    if (cur[key] === null || cur[key] === undefined) cur[key] = {};
-    if (typeof cur[key] !== 'object') return false;
-    cur = cur[key];
-  }
-  return false;
-}
 
 // ── handler ───────────────────────────────────────────────────────────────────
 class ModifyComponentHandler extends ComponentOperationHandler {
