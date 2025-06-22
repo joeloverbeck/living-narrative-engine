@@ -17,10 +17,6 @@ import { ActionValidationService } from '../../../src/actions/validation/actionV
 import ConsoleLogger from '../../../src/logging/consoleLogger.js';
 import { formatActionCommand as formatActionCommandFn } from '../../../src/actions/actionFormatter.js';
 import { getEntityIdsForScopes as getEntityIdsForScopesFn } from '../../../src/entities/entityScopeService.js';
-import {
-  getAvailableExits,
-  getLocationIdForLog,
-} from '../../../src/utils/locationUtils.js';
 
 // --- Helper Mocks/Types ---
 import { ActionTargetContext } from '../../../src/models/actionTargetContext.js';
@@ -40,7 +36,6 @@ jest.mock('../../../src/actions/validation/actionValidationService.js');
 jest.mock('../../../src/logging/consoleLogger.js');
 jest.mock('../../../src/actions/actionFormatter.js');
 jest.mock('../../../src/entities/entityScopeService.js');
-jest.mock('../../../src/utils/locationUtils.js');
 
 describe('ActionDiscoveryService - Go Action (Fixed State)', () => {
   let actionDiscoveryService;
@@ -51,7 +46,6 @@ describe('ActionDiscoveryService - Go Action (Fixed State)', () => {
   let mockFormatActionCommandFn;
   let mockGetEntityIdsForScopesFn;
   let mockGetAvailableExits;
-  let mockGetLocationIdForLog;
   let availableExits;
   let mockSafeEventDispatcher;
 
@@ -122,8 +116,7 @@ describe('ActionDiscoveryService - Go Action (Fixed State)', () => {
 
     mockFormatActionCommandFn = formatActionCommandFn;
     mockGetEntityIdsForScopesFn = getEntityIdsForScopesFn;
-    mockGetAvailableExits = getAvailableExits;
-    mockGetLocationIdForLog = getLocationIdForLog;
+    mockGetAvailableExits = jest.fn();
     mockSafeEventDispatcher = { dispatch: jest.fn() };
 
     mockHeroEntity = createTestEntity(
@@ -179,9 +172,6 @@ describe('ActionDiscoveryService - Go Action (Fixed State)', () => {
       { direction: 'out to town', target: TOWN_DEFINITION_ID, blocker: null },
     ];
     mockGetAvailableExits.mockReturnValue(availableExits);
-    mockGetLocationIdForLog.mockImplementation((loc) =>
-      typeof loc === 'string' ? loc : (loc?.id ?? 'unknown')
-    );
 
     mockValidationService.isValid.mockImplementation(
       (actionDef, actor, targetContext) => {
@@ -234,6 +224,7 @@ describe('ActionDiscoveryService - Go Action (Fixed State)', () => {
       formatActionCommandFn: mockFormatActionCommandFn,
       getEntityIdsForScopesFn: mockGetEntityIdsForScopesFn,
       safeEventDispatcher: mockSafeEventDispatcher,
+      getAvailableExitsFn: mockGetAvailableExits,
     });
   });
 

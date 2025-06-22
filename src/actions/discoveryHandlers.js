@@ -53,6 +53,8 @@ export function discoverSelfOrNone(
  * @param {EntityManager} entityManager - Entity manager for exit discovery.
  * @param {ISafeEventDispatcher} safeEventDispatcher - Dispatcher for safe events.
  * @param {ILogger} logger - Logger for diagnostics.
+ * @param {function(Entity|string, EntityManager, ISafeEventDispatcher, ILogger): import('../utils/locationUtils.js').ExitData[]} [getAvailableExitsFn] -
+ *  Function to fetch available exits.
  * @returns {DiscoveredActionInfo[]}
  */
 export function discoverDirectionalActions(
@@ -64,7 +66,8 @@ export function discoverDirectionalActions(
   buildDiscoveredAction,
   entityManager,
   safeEventDispatcher,
-  logger
+  logger,
+  getAvailableExitsFn = getAvailableExits
 ) {
   if (!currentLocation) {
     logger.debug(
@@ -73,7 +76,7 @@ export function discoverDirectionalActions(
     return [];
   }
 
-  const exits = getAvailableExits(
+  const exits = getAvailableExitsFn(
     currentLocation,
     entityManager,
     safeEventDispatcher,
