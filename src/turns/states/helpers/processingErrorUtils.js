@@ -92,9 +92,3 @@ export function dispatchSystemError(
     );
   }
 }
-
-export default {
-  resetProcessingFlags,
-  resolveLogger,
-  dispatchSystemError,
-};

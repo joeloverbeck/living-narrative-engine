@@ -7,7 +7,7 @@
 /** @typedef {import('../defs.js').ExecutionContext} ExecutionContext */
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 
-import closenessCircleService from '../services/closenessCircleService.js';
+import { merge as mergeCircles } from '../services/closenessCircleService.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../constants/eventIds.js';
 import { tryWriteContextVariable } from '../../utils/contextVariableUtils.js';
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
@@ -117,7 +117,7 @@ class MergeClosenessCircleHandler {
       targetId,
       'intimacy:closeness'
     );
-    const allMembers = closenessCircleService.merge(
+    const allMembers = mergeCircles(
       [actorId, targetId],
       Array.isArray(actorComp?.partners) ? actorComp.partners : [],
       Array.isArray(targetComp?.partners) ? targetComp.partners : []

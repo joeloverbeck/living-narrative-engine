@@ -29,5 +29,3 @@ export function expectSystemErrorDispatch(
     },
   });
 }
-
-export default { expectSystemErrorDispatch };

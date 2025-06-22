@@ -75,8 +75,3 @@ export function describeConstructorValidation(Class, createDeps, spec) {
     });
   });
 }
-
-export default {
-  buildMissingDependencyCases,
-  describeConstructorValidation,
-};
