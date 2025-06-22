@@ -64,10 +64,10 @@ export default class SaveFileParser extends BaseService {
    * Reads, decompresses and deserializes a save file.
    *
    * @param {string} filePath - File path to read.
-   * @returns {Promise<import('./persistenceTypes.js').PersistenceResult<object>>}
-   *   Parsed object or failure info.
+   * @returns {Promise<import('./persistenceTypes.js').PersistenceResult<import('../interfaces/ISaveLoadService.js').SaveGameStructure>>}
+   *   Parsed save object or failure info.
    */
-  async readAndDeserialize(filePath) {
+  async readParsedSaveObject(filePath) {
     return this.#deserializeAndDecompress(filePath);
   }
 
@@ -138,7 +138,7 @@ export default class SaveFileParser extends BaseService {
     this.#logger.debug(`Processing file: ${filePath}`);
 
     try {
-      const result = await this.readAndDeserialize(filePath);
+      const result = await this.readParsedSaveObject(filePath);
       if (!result.success || !result.data) {
         this.#logger.warn(
           `Failed to deserialize ${filePath}: ${result.error}. Flagging as corrupted for listing.`
