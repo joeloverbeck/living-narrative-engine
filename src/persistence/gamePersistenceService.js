@@ -216,14 +216,24 @@ class GamePersistenceService extends IGamePersistenceService {
     const gameDataToRestore = /** @type {SaveGameStructure} */ (
       loadResult.data
     );
+
+    return this.#restoreAfterLoad(gameDataToRestore, saveIdentifier);
+  }
+
+  /**
+   * Handles restoration of game data after a successful load.
+   *
+   * @private
+   * @async
+   * @param {SaveGameStructure} gameDataToRestore - The loaded save data.
+   * @param {string} saveIdentifier - Identifier used for logging.
+   * @returns {Promise<import('./persistenceTypes.js').PersistenceResult<SaveGameStructure>>}
+   *   Result of the restoration process.
+   */
+  async #restoreAfterLoad(gameDataToRestore, saveIdentifier) {
     const restoreResult = await this.restoreGameState(gameDataToRestore);
 
-    if (restoreResult.success) {
-      this.#logger.debug(
-        `GamePersistenceService.loadAndRestoreGame: Game state restored successfully for ${saveIdentifier}.`
-      );
-      return createPersistenceSuccess(gameDataToRestore);
-    } else {
+    if (!restoreResult.success) {
       this.#logger.error(
         `GamePersistenceService.loadAndRestoreGame: Failed to restore game state for ${saveIdentifier}. Error: ${restoreResult.error}`
       );
@@ -233,6 +243,11 @@ class GamePersistenceService extends IGamePersistenceService {
         restoreResult.error || 'Failed to restore game state.'
       );
     }
+
+    this.#logger.debug(
+      `GamePersistenceService.loadAndRestoreGame: Game state restored successfully for ${saveIdentifier}.`
+    );
+    return createPersistenceSuccess(gameDataToRestore);
   }
 }
 
