@@ -6,6 +6,7 @@ import { flushPromisesAndTimers } from '../../common/jestHelpers.js';
 import {
   waitForCurrentActor,
   expectSystemErrorDispatch,
+  triggerTurnEndedAndFlush,
 } from '../../common/turns/turnManagerTestUtils.js';
 // import removed constant; not needed
 import {
@@ -137,11 +138,7 @@ describeRunningTurnManagerSuite(
       );
 
       // Simulate turn ending and advancing to AI actor
-      testBed.trigger(TURN_ENDED_ID, {
-        entityId: player.id,
-        success: true,
-      });
-      await flushPromisesAndTimers();
+      await triggerTurnEndedAndFlush(testBed, player.id);
       await flushPromisesAndTimers();
 
       // Check AI actor event
@@ -198,18 +195,14 @@ describeRunningTurnManagerSuite(
       expect(testBed.turnManager.getCurrentActor()?.id).toBe(ai1.id);
 
       // Simulate turn ending for actor1 (success: true)
-      testBed.trigger(TURN_ENDED_ID, { entityId: ai1.id, success: true });
-
-      await flushPromisesAndTimers();
+      await triggerTurnEndedAndFlush(testBed, ai1.id);
 
       // Wait for TurnManager to advance to ai2
       const found = await waitForCurrentActor(testBed, ai2.id);
       expect(found).toBe(true);
 
       // Simulate turn ending for actor2 (success: true)
-      testBed.trigger(TURN_ENDED_ID, { entityId: ai2.id, success: true });
-
-      await flushPromisesAndTimers();
+      await triggerTurnEndedAndFlush(testBed, ai2.id);
 
       // Wait for the TurnManager to process and start a new round
       let roundStarted = false;
