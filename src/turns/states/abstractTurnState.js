@@ -139,7 +139,7 @@ export class AbstractTurnState extends ITurnState {
 
   /**
    * Safely resolves a SafeEventDispatcher using the provided context or handler.
-   * Falls back to this._handler.safeEventDispatcher when necessary.
+   * Falls back to this._handler.getSafeEventDispatcher() when necessary.
    *
    * @protected
    * @param {ITurnContext | null} turnCtx - The current ITurnContext, if any.

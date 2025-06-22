@@ -51,7 +51,7 @@ export function getLogger(turnCtx, handler) {
 
 /**
  * Safely resolves a SafeEventDispatcher using the provided context or handler.
- * Falls back to handler.safeEventDispatcher when necessary.
+ * Falls back to handler.getSafeEventDispatcher() when necessary.
  *
  * @param {ITurnContext|null} turnCtx - The current ITurnContext, if any.
  * @param {BaseTurnHandler} [handler] - Optional handler fallback.
@@ -72,14 +72,21 @@ export function getSafeEventDispatcher(turnCtx, handler) {
     }
   }
 
-  if (
-    handler?.safeEventDispatcher &&
-    typeof handler.safeEventDispatcher.dispatch === 'function'
-  ) {
-    getLogger(turnCtx, handler).warn(
-      'ContextUtils.getSafeEventDispatcher: SafeEventDispatcher not found on ITurnContext. Falling back to handler.safeEventDispatcher.'
-    );
-    return handler.safeEventDispatcher;
+  if (handler && typeof handler.getSafeEventDispatcher === 'function') {
+    try {
+      const dispatcher = handler.getSafeEventDispatcher();
+      if (dispatcher && typeof dispatcher.dispatch === 'function') {
+        getLogger(turnCtx, handler).warn(
+          'ContextUtils.getSafeEventDispatcher: SafeEventDispatcher not found on ITurnContext. Falling back to handler.getSafeEventDispatcher().'
+        );
+        return dispatcher;
+      }
+    } catch (err) {
+      getLogger(turnCtx, handler).error(
+        `ContextUtils.getSafeEventDispatcher: Error calling handler.getSafeEventDispatcher(): ${err.message}`,
+        err
+      );
+    }
   }
 
   getLogger(turnCtx, handler).warn(

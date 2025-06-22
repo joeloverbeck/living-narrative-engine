@@ -90,6 +90,7 @@ const createMockBaseTurnHandler = (loggerInstance = mockSystemLogger) => {
     _currentTurnContext: null,
     _currentActor: null,
     _isDestroyed: false,
+    safeEventDispatcher: null,
 
     getLogger: jest.fn().mockReturnValue(loggerInstance),
     getTurnContext: jest.fn(() => handlerMock._currentTurnContext),
@@ -111,6 +112,12 @@ const createMockBaseTurnHandler = (loggerInstance = mockSystemLogger) => {
       if (!(handlerMock._currentState instanceof TurnIdleState)) {
         await handlerMock._transitionToState(new TurnIdleState(handlerMock));
       }
+    }),
+    getSafeEventDispatcher: jest.fn(function () {
+      return this.safeEventDispatcher;
+    }),
+    getCurrentState: jest.fn(function () {
+      return this._currentState;
     }),
 
     // Helpers for tests

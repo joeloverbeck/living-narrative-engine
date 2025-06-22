@@ -140,7 +140,7 @@ export async function processCommandInternal(
       `${state.getStateName()}: Actor ${actorId} - Directive strategy ${directiveStrategy.constructor.name} executed.`
     );
 
-    if (state._isProcessing && state._handler._currentState === state) {
+    if (state._isProcessing && state._handler.getCurrentState() === state) {
       logger.debug(
         `${state.getStateName()}: Directive strategy executed for ${actorId}, state remains ${state.getStateName()}. Processing complete for this state instance.`
       );
@@ -151,7 +151,7 @@ export async function processCommandInternal(
       }
     } else if (state._isProcessing) {
       logger.debug(
-        `${state.getStateName()}: Directive strategy executed for ${actorId}, but state changed from ${state.getStateName()} to ${state._handler._currentState?.getStateName() ?? 'Unknown'}. Processing considered complete for previous state instance.`
+        `${state.getStateName()}: Directive strategy executed for ${actorId}, but state changed from ${state.getStateName()} to ${state._handler.getCurrentState()?.getStateName() ?? 'Unknown'}. Processing considered complete for previous state instance.`
       );
       if (state._processingGuard) {
         state._processingGuard.finish();
@@ -176,7 +176,7 @@ export async function processCommandInternal(
       actorIdForHandler
     );
   } finally {
-    if (state._isProcessing && state._handler._currentState === state) {
+    if (state._isProcessing && state._handler.getCurrentState() === state) {
       const finalLogger =
         state._getTurnContext()?.getLogger() ?? turnCtx.getLogger();
       finalLogger.warn(
