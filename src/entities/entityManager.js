@@ -475,6 +475,7 @@ class EntityManager extends IEntityManager {
         instanceId: entity.id,
         definitionId: entity.definitionId,
         wasReconstructed: false,
+        entity,
       });
       return entity;
     } catch (err) {
@@ -520,6 +521,7 @@ class EntityManager extends IEntityManager {
         instanceId: entity.id,
         definitionId: entity.definitionId,
         wasReconstructed: true,
+        entity,
       });
       return entity;
     } catch (err) {
