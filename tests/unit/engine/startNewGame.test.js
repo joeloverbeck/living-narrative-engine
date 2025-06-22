@@ -2,7 +2,6 @@
 import { beforeEach, describe, expect, it } from '@jest/globals';
 import { tokens } from '../../../src/dependencyInjection/tokens.js';
 import { describeEngineSuite } from '../../common/engine/gameEngineTestBed.js';
-import '../../common/engine/engineTestTypedefs.js';
 
 import { ENGINE_OPERATION_FAILED_UI } from '../../../src/constants/eventIds.js';
 import {

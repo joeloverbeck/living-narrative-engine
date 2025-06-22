@@ -4,7 +4,6 @@ import { describe, expect, it } from '@jest/globals';
 import GameEngine from '../../../src/engine/gameEngine.js';
 import { tokens } from '../../../src/dependencyInjection/tokens.js';
 import { describeEngineSuite } from '../../common/engine/gameEngineTestBed.js';
-import '../../common/engine/engineTestTypedefs.js';
 
 describeEngineSuite('GameEngine', (ctx) => {
   describe('Constructor', () => {

@@ -3,7 +3,6 @@ import { describe, expect, it } from '@jest/globals';
 import { tokens } from '../../../src/dependencyInjection/tokens.js';
 import { describeInitializedEngineSuite } from '../../common/engine/gameEngineTestBed.js';
 import { runUnavailableServiceSuite } from '../../common/engine/gameEngineHelpers.js';
-import '../../common/engine/engineTestTypedefs.js';
 import {
   REQUEST_SHOW_SAVE_GAME_UI,
   CANNOT_SAVE_GAME_INFO,

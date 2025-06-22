@@ -6,7 +6,6 @@ import {
   withGameEngineBed,
   runUnavailableServiceSuite,
 } from '../../common/engine/gameEngineHelpers.js';
-import '../../common/engine/engineTestTypedefs.js';
 
 describe('GameEngine', () => {
   describe('_handleLoadFailure', () => {

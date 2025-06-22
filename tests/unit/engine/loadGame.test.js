@@ -7,7 +7,6 @@ import {
   runUnavailableServiceSuite,
   setupLoadGameSpies,
 } from '../../common/engine/gameEngineHelpers.js';
-import '../../common/engine/engineTestTypedefs.js';
 
 describeEngineSuite('GameEngine', (ctx) => {
   describe('loadGame', () => {
