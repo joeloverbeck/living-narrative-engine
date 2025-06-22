@@ -38,6 +38,7 @@ import {
 import { IEntityManager } from '../interfaces/IEntityManager.js';
 import { validateDependency } from '../utils/validationUtils.js';
 import { ensureValidLogger } from '../utils';
+import { isNonBlankString } from '../utils/textUtils.js';
 import { DefinitionNotFoundError } from '../errors/definitionNotFoundError.js';
 import { EntityNotFoundError } from '../errors/entityNotFoundError';
 import { InvalidArgumentError } from '../errors/invalidArgumentError.js';
@@ -338,6 +339,159 @@ class EntityManager extends IEntityManager {
     return null;
   }
 
+  /**
+   * Validate parameters for {@link addComponent}.
+   *
+   * @private
+   * @param {string} instanceId - Entity instance ID.
+   * @param {string} componentTypeId - Component type ID.
+   * @param {object} componentData - Raw component data.
+   * @throws {InvalidArgumentError} If parameters are invalid.
+   */
+  #validateAddComponentParams(instanceId, componentTypeId, componentData) {
+    try {
+      assertValidId(instanceId, 'EntityManager.addComponent', this.#logger);
+      assertNonBlankString(
+        componentTypeId,
+        'componentTypeId',
+        'EntityManager.addComponent',
+        this.#logger
+      );
+    } catch (error) {
+      this.#logger.warn(
+        `EntityManager.addComponent: Invalid parameters - instanceId: '${instanceId}', componentTypeId: '${componentTypeId}'`
+      );
+      throw new InvalidArgumentError(
+        `EntityManager.addComponent: Invalid parameters - instanceId: '${instanceId}', componentTypeId: '${componentTypeId}'`,
+        'instanceId/componentTypeId',
+        { instanceId, componentTypeId }
+      );
+    }
+
+    if (componentData === null) {
+      const errorMsg = `EntityManager.addComponent: componentData cannot be null for ${componentTypeId} on ${instanceId}`;
+      this.#logger.error(errorMsg, {
+        componentTypeId,
+        instanceId,
+      });
+      throw new InvalidArgumentError(errorMsg, 'componentData', componentData);
+    }
+
+    if (componentData !== undefined && typeof componentData !== 'object') {
+      const receivedType = typeof componentData;
+      const errorMsg = `EntityManager.addComponent: componentData for ${componentTypeId} on ${instanceId} must be an object. Received: ${receivedType}`;
+      this.#logger.error(errorMsg, {
+        componentTypeId,
+        instanceId,
+        receivedType,
+      });
+      throw new InvalidArgumentError(errorMsg, 'componentData', componentData);
+    }
+  }
+
+  /**
+   * Validate parameters for {@link removeComponent}.
+   *
+   * @private
+   * @param {string} instanceId - Entity instance ID.
+   * @param {string} componentTypeId - Component type ID.
+   * @throws {InvalidArgumentError} If parameters are invalid.
+   */
+  #validateRemoveComponentParams(instanceId, componentTypeId) {
+    try {
+      assertValidId(instanceId, 'EntityManager.removeComponent', this.#logger);
+      assertNonBlankString(
+        componentTypeId,
+        'componentTypeId',
+        'EntityManager.removeComponent',
+        this.#logger
+      );
+    } catch (error) {
+      this.#logger.warn(
+        `EntityManager.removeComponent: Invalid parameters - instanceId: '${instanceId}', componentTypeId: '${componentTypeId}'`
+      );
+      throw new InvalidArgumentError(
+        `EntityManager.removeComponent: Invalid parameters - instanceId: '${instanceId}', componentTypeId: '${componentTypeId}'`,
+        'instanceId/componentTypeId',
+        { instanceId, componentTypeId }
+      );
+    }
+  }
+
+  /**
+   * Validate serialized entity data prior to reconstruction.
+   *
+   * @private
+   * @param {object} serializedEntity - Serialized entity object.
+   * @throws {Error} If the data is malformed.
+   */
+  #validateReconstructEntityParams(serializedEntity) {
+    if (!serializedEntity || typeof serializedEntity !== 'object') {
+      const msg =
+        'EntityManager.reconstructEntity: serializedEntity data is missing or invalid.';
+      this.#logger.error(msg);
+      throw new Error(msg);
+    }
+    if (!isNonBlankString(serializedEntity.instanceId)) {
+      const msg =
+        'EntityManager.reconstructEntity: instanceId is missing or invalid in serialized data.';
+      this.#logger.error(msg);
+      throw new Error(msg);
+    }
+  }
+
+  /**
+   * Translate errors from {@link EntityFactory} to maintain legacy messages.
+   *
+   * @private
+   * @param {Error} err - Original error thrown by the factory.
+   * @throws {Error|DuplicateEntityError}
+   */
+  #translateFactoryError(err) {
+    if (
+      err instanceof Error &&
+      err.message.startsWith(
+        'EntityFactory.reconstruct: serializedEntity data is missing or invalid.'
+      )
+    ) {
+      const msg =
+        'EntityManager.reconstructEntity: serializedEntity data is missing or invalid.';
+      this.#logger.error(msg);
+      throw new Error(msg);
+    }
+    if (
+      err instanceof Error &&
+      err.message.startsWith(
+        'EntityFactory.reconstruct: instanceId is missing or invalid in serialized data.'
+      )
+    ) {
+      const msg =
+        'EntityManager.reconstructEntity: instanceId is missing or invalid in serialized data.';
+      this.#logger.error(msg);
+      throw new Error(msg);
+    }
+    if (
+      err instanceof Error &&
+      err.message.startsWith('EntityFactory.reconstruct: Entity with ID')
+    ) {
+      const match = err.message.match(
+        /EntityFactory\.reconstruct: (Entity with ID '.*? already exists\. Reconstruction aborted\.)/
+      );
+      if (match) {
+        const msg = `EntityManager.reconstructEntity: ${match[1]}`;
+        this.#logger.error(msg);
+        const entityMatch = match[1].match(
+          /Entity with ID '([^']+)' already exists/
+        );
+        if (entityMatch) {
+          throw new DuplicateEntityError(entityMatch[1], msg);
+        }
+        throw new DuplicateEntityError('unknown', msg);
+      }
+    }
+    throw err;
+  }
+
   /* ---------------------------------------------------------------------- */
   /* Entity Creation                                                         */
 
@@ -426,6 +580,7 @@ class EntityManager extends IEntityManager {
    * @throws {Error} If serializedEntity data is invalid.
    */
   reconstructEntity(serializedEntity) {
+    this.#validateReconstructEntityParams(serializedEntity);
     try {
       const entity = this.#factory.reconstruct(
         serializedEntity,
@@ -440,51 +595,7 @@ class EntityManager extends IEntityManager {
       });
       return entity;
     } catch (err) {
-      // Patch error message to match legacy EntityManager for golden-master tests
-      if (
-        err instanceof Error &&
-        err.message.startsWith(
-          'EntityFactory.reconstruct: serializedEntity data is missing or invalid.'
-        )
-      ) {
-        const msg =
-          'EntityManager.reconstructEntity: serializedEntity data is missing or invalid.';
-        this.#logger.error(msg);
-        throw new Error(msg);
-      }
-      if (
-        err instanceof Error &&
-        err.message.startsWith(
-          'EntityFactory.reconstruct: instanceId is missing or invalid in serialized data.'
-        )
-      ) {
-        const msg =
-          'EntityManager.reconstructEntity: instanceId is missing or invalid in serialized data.';
-        this.#logger.error(msg);
-        throw new Error(msg);
-      }
-      if (
-        err instanceof Error &&
-        err.message.startsWith('EntityFactory.reconstruct: Entity with ID')
-      ) {
-        // Patch to legacy error message and use DuplicateEntityError
-        const match = err.message.match(
-          /EntityFactory\.reconstruct: (Entity with ID '.*? already exists\. Reconstruction aborted\.)/
-        );
-        if (match) {
-          const msg = `EntityManager.reconstructEntity: ${match[1]}`;
-          this.#logger.error(msg);
-          // Extract the entity ID from the error message
-          const entityMatch = match[1].match(
-            /Entity with ID '([^']+)' already exists/
-          );
-          if (entityMatch) {
-            throw new DuplicateEntityError(entityMatch[1], msg);
-          }
-          throw new DuplicateEntityError('unknown', msg);
-        }
-      }
-      throw err;
+      this.#translateFactoryError(err);
     }
   }
 
@@ -504,46 +615,11 @@ class EntityManager extends IEntityManager {
    * @throws {ValidationError} If component data validation fails.
    */
   addComponent(instanceId, componentTypeId, componentData) {
-    try {
-      assertValidId(instanceId, 'EntityManager.addComponent', this.#logger);
-      assertNonBlankString(
-        componentTypeId,
-        'componentTypeId',
-        'EntityManager.addComponent',
-        this.#logger
-      );
-    } catch (error) {
-      this.#logger.warn(
-        `EntityManager.addComponent: Invalid parameters - instanceId: '${instanceId}', componentTypeId: '${componentTypeId}'`
-      );
-      throw new InvalidArgumentError(
-        `EntityManager.addComponent: Invalid parameters - instanceId: '${instanceId}', componentTypeId: '${componentTypeId}'`,
-        'instanceId/componentTypeId',
-        { instanceId, componentTypeId }
-      );
-    }
-
-    // Reject null componentData
-    if (componentData === null) {
-      const errorMsg = `EntityManager.addComponent: componentData cannot be null for ${componentTypeId} on ${instanceId}`;
-      this.#logger.error(errorMsg, {
-        componentTypeId,
-        instanceId,
-      });
-      throw new InvalidArgumentError(errorMsg, 'componentData', componentData);
-    }
-
-    // Unified check for componentData type, including undefined
-    if (componentData !== undefined && typeof componentData !== 'object') {
-      const receivedType = typeof componentData;
-      const errorMsg = `EntityManager.addComponent: componentData for ${componentTypeId} on ${instanceId} must be an object. Received: ${receivedType}`;
-      this.#logger.error(errorMsg, {
-        componentTypeId,
-        instanceId,
-        receivedType,
-      });
-      throw new InvalidArgumentError(errorMsg, 'componentData', componentData);
-    }
+    this.#validateAddComponentParams(
+      instanceId,
+      componentTypeId,
+      componentData
+    );
 
     const entity = this.#getEntityById(instanceId);
     if (!entity) {
@@ -611,24 +687,7 @@ class EntityManager extends IEntityManager {
    * @throws {Error} If component override does not exist or removal fails.
    */
   removeComponent(instanceId, componentTypeId) {
-    try {
-      assertValidId(instanceId, 'EntityManager.removeComponent', this.#logger);
-      assertNonBlankString(
-        componentTypeId,
-        'componentTypeId',
-        'EntityManager.removeComponent',
-        this.#logger
-      );
-    } catch (error) {
-      this.#logger.warn(
-        `EntityManager.removeComponent: Invalid parameters - instanceId: '${instanceId}', componentTypeId: '${componentTypeId}'`
-      );
-      throw new InvalidArgumentError(
-        `EntityManager.removeComponent: Invalid parameters - instanceId: '${instanceId}', componentTypeId: '${componentTypeId}'`,
-        'instanceId/componentTypeId',
-        { instanceId, componentTypeId }
-      );
-    }
+    this.#validateRemoveComponentParams(instanceId, componentTypeId);
 
     const entity = this.#getEntityById(instanceId);
     if (!entity) {
