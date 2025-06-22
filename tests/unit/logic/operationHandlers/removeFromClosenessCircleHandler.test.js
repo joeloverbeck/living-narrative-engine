@@ -45,15 +45,15 @@ describe('RemoveFromClosenessCircleHandler', () => {
     execCtx = { logger, evaluationContext: { context: {} } };
   });
 
-  test('validates parameters', () => {
-    handler.execute({}, execCtx);
+  test('validates parameters', async () => {
+    await handler.execute({}, execCtx);
     expect(dispatcher.dispatch).toHaveBeenCalledWith(
       SYSTEM_ERROR_OCCURRED_ID,
       expect.objectContaining({ message: expect.stringContaining('actor_id') })
     );
   });
 
-  test('removes actor from circle and unlocks movement', () => {
+  test('removes actor from circle and unlocks movement', async () => {
     store = {
       actor: {
         'intimacy:closeness': { partners: ['p1', 'p2'] },
@@ -76,7 +76,10 @@ describe('RemoveFromClosenessCircleHandler', () => {
     });
     execCtx = { logger, evaluationContext: { context: {} } };
 
-    handler.execute({ actor_id: 'actor', result_variable: 'remain' }, execCtx);
+    await handler.execute(
+      { actor_id: 'actor', result_variable: 'remain' },
+      execCtx
+    );
 
     expect(store.actor['intimacy:closeness']).toBeUndefined();
     expect(store.actor['core:movement']).toEqual({ locked: false });
@@ -85,7 +88,7 @@ describe('RemoveFromClosenessCircleHandler', () => {
     expect(execCtx.evaluationContext.context.remain).toEqual(['p1', 'p2']);
   });
 
-  test('removes partner component when last member', () => {
+  test('removes partner component when last member', async () => {
     store = {
       actor: { 'intimacy:closeness': { partners: ['p1'] } },
       p1: {
@@ -101,7 +104,7 @@ describe('RemoveFromClosenessCircleHandler', () => {
     });
     execCtx = { logger, evaluationContext: { context: {} } };
 
-    handler.execute({ actor_id: 'actor' }, execCtx);
+    await handler.execute({ actor_id: 'actor' }, execCtx);
 
     expect(store.actor['intimacy:closeness']).toBeUndefined();
     expect(store.p1['intimacy:closeness']).toBeUndefined();

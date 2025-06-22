@@ -58,13 +58,39 @@ class RemoveFromClosenessCircleHandler {
   /**
    * @param {{ actor_id: string, result_variable?: string } | null | undefined} params
    * @param {ExecutionContext} execCtx
-   * @returns {void}
    */
   execute(params, execCtx) {
+    const validated = this.#validateParams(params, execCtx);
+    if (!validated) return;
+    const { actorId, resultVar, logger } = validated;
+
+    const { partners, toUnlock } = this.#removePartners(actorId);
+    this.#unlockMovement(toUnlock);
+
+    if (resultVar) {
+      tryWriteContextVariable(
+        resultVar,
+        partners,
+        execCtx,
+        this.#dispatcher,
+        logger
+      );
+    }
+  }
+
+  /**
+   * Validate parameters for execute.
+   *
+   * @param {object} params
+   * @param {ExecutionContext} execCtx
+   * @returns {{ actorId:string, resultVar:string|null, logger:ILogger }|null}
+   * @private
+   */
+  #validateParams(params, execCtx) {
     const log = getExecLogger(this.#logger, execCtx);
 
     if (!assertParamsObject(params, log, 'REMOVE_FROM_CLOSENESS_CIRCLE')) {
-      return;
+      return null;
     }
     const { actor_id, result_variable } = params;
 
@@ -73,11 +99,25 @@ class RemoveFromClosenessCircleHandler {
         message: 'REMOVE_FROM_CLOSENESS_CIRCLE: Invalid "actor_id" parameter',
         details: { params },
       });
-      return;
+      return null;
     }
 
-    const actorId = actor_id.trim();
+    return {
+      actorId: actor_id.trim(),
+      resultVar:
+        typeof result_variable === 'string' ? result_variable.trim() : null,
+      logger: log,
+    };
+  }
 
+  /**
+   * Remove the actor from partner lists and gather unlock targets.
+   *
+   * @param {string} actorId
+   * @returns {{ partners:string[], toUnlock:string[] }}
+   * @private
+   */
+  #removePartners(actorId) {
     const closeness = this.#entityManager.getComponentData(
       actorId,
       'intimacy:closeness'
@@ -85,6 +125,7 @@ class RemoveFromClosenessCircleHandler {
     const partners = Array.isArray(closeness?.partners)
       ? [...closeness.partners]
       : [];
+    const toUnlock = [];
 
     for (const pid of partners) {
       const partnerData = this.#entityManager.getComponentData(
@@ -96,12 +137,7 @@ class RemoveFromClosenessCircleHandler {
       const repaired = ClosenessCircleService.repair(updated);
       if (repaired.length === 0) {
         this.#entityManager.removeComponent(pid, 'intimacy:closeness');
-        const move =
-          this.#entityManager.getComponentData(pid, 'core:movement') || {};
-        this.#entityManager.addComponent(pid, 'core:movement', {
-          ...move,
-          locked: false,
-        });
+        toUnlock.push(pid);
       } else {
         this.#entityManager.addComponent(pid, 'intimacy:closeness', {
           partners: repaired,
@@ -111,23 +147,27 @@ class RemoveFromClosenessCircleHandler {
 
     if (closeness) {
       this.#entityManager.removeComponent(actorId, 'intimacy:closeness');
+      toUnlock.push(actorId);
     }
 
-    const actorMove =
-      this.#entityManager.getComponentData(actorId, 'core:movement') || {};
-    this.#entityManager.addComponent(actorId, 'core:movement', {
-      ...actorMove,
-      locked: false,
-    });
+    return { partners, toUnlock };
+  }
 
-    if (result_variable) {
-      tryWriteContextVariable(
-        result_variable,
-        partners,
-        execCtx,
-        this.#dispatcher,
-        log
-      );
+  /**
+   * Unlock movement for the specified entities.
+   *
+   * @param {string[]} ids
+   * @returns {void}
+   * @private
+   */
+  #unlockMovement(ids) {
+    for (const id of ids) {
+      const move =
+        this.#entityManager.getComponentData(id, 'core:movement') || {};
+      this.#entityManager.addComponent(id, 'core:movement', {
+        ...move,
+        locked: false,
+      });
     }
   }
 }
