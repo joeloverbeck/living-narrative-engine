@@ -5,7 +5,7 @@
   "payloadSchema": {
     "description": "Defines the structure for the 'core:entity_created' event payload.",
     "type": "object",
-    "required": ["instanceId", "definitionId", "wasReconstructed"],
+    "required": ["instanceId", "definitionId", "wasReconstructed", "entity"],
     "properties": {
       "instanceId": {
         "$ref": "http://example.com/schemas/common.schema.json#/definitions/namespacedId",
@@ -18,6 +18,10 @@
       "wasReconstructed": {
         "type": "boolean",
         "description": "True if the entity was reconstructed from save data, false if it was newly created at runtime."
+      },
+      "entity": {
+        "type": "object",
+        "description": "The full entity instance that was created."
       }
     },
     "additionalProperties": false

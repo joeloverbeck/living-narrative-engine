@@ -187,6 +187,7 @@ export const expectEntityCreatedDispatch = createDispatchAsserter(
     instanceId: entity.id,
     definitionId: entity.definitionId,
     wasReconstructed,
+    entity,
   })
 );
 

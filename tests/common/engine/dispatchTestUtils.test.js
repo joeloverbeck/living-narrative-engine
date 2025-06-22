@@ -245,7 +245,7 @@ describe('dispatchTestUtils', () => {
     it('validates ENTITY_CREATED helper', () => {
       const mock = jest.fn();
       const entity = { id: 'e1', definitionId: 'def1' };
-      mock(ENTITY_CREATED_ID, { instanceId: 'e1', definitionId: 'def1', wasReconstructed: false });
+      mock(ENTITY_CREATED_ID, { instanceId: 'e1', definitionId: 'def1', wasReconstructed: false, entity });
 
       expect(() =>
         expectEntityCreatedDispatch(mock, entity, false)
@@ -255,7 +255,7 @@ describe('dispatchTestUtils', () => {
     it('throws on mismatched ENTITY_CREATED payload', () => {
       const mock = jest.fn();
       const entity = { id: 'e1', definitionId: 'def1' };
-      mock(ENTITY_CREATED_ID, { instanceId: 'e1', definitionId: 'def1', wasReconstructed: false });
+      mock(ENTITY_CREATED_ID, { instanceId: 'e1', definitionId: 'def1', wasReconstructed: false, entity });
 
       expect(() => expectEntityCreatedDispatch(mock, entity, true)).toThrow();
     });
