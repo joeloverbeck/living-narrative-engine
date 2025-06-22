@@ -33,12 +33,6 @@ import {
   assertValidId,
   assertNonBlankString,
 } from '../utils/parameterGuards.js';
-import {
-  ACTOR_COMPONENT_ID,
-  SHORT_TERM_MEMORY_COMPONENT_ID,
-  NOTES_COMPONENT_ID,
-  GOALS_COMPONENT_ID,
-} from '../constants/componentIds.js';
 import { IEntityManager } from '../interfaces/IEntityManager.js';
 import { validateDependency } from '../utils/validationUtils.js';
 import { ensureValidLogger } from '../utils';
@@ -240,51 +234,6 @@ class EntityManager extends IEntityManager {
       throw new Error(msg);
     }
     return clone;
-  }
-
-  /**
-   * Inject default components required by the engine (STM, notes, and goals).
-   * This method will now receive an Entity object and operate on its overrides if needed.
-   *
-   * @private
-   * @param {Entity} entity - The entity instance to modify.
-   */
-  #injectDefaultComponents(entity) {
-    if (entity.hasComponent(ACTOR_COMPONENT_ID)) {
-      const componentsToInject = [
-        {
-          id: SHORT_TERM_MEMORY_COMPONENT_ID,
-          data: { thoughts: [], maxEntries: 10 },
-          name: 'STM',
-        },
-        { id: NOTES_COMPONENT_ID, data: { notes: [] }, name: 'Notes' },
-        { id: GOALS_COMPONENT_ID, data: { goals: [] }, name: 'Goals' },
-      ];
-
-      for (const comp of componentsToInject) {
-        if (!entity.hasComponent(comp.id)) {
-          this.#logger.debug(
-            `Injecting ${comp.name} for ${entity.id} (def: ${entity.definitionId})`
-          );
-          try {
-            // Note: This does not and should not fire a COMPONENT_ADDED event,
-            // as this is part of the entity creation process, not a discrete runtime action.
-            const validatedData = this.#validateAndClone(
-              comp.id,
-              comp.data,
-              `Default ${comp.name} component injection for entity ${entity.id}`
-            );
-            entity.addComponent(comp.id, validatedData);
-          } catch (e) {
-            this.#logger.error(
-              `Failed to inject default component ${comp.id} for entity ${
-                entity.id
-              }: ${e.message}`
-            );
-          }
-        }
-      }
-    }
   }
 
   /**

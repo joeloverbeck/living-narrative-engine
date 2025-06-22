@@ -16,7 +16,6 @@
 //  @since   0.3.0
 // -----------------------------------------------------------------------------
 
-import { cloneDeep } from 'lodash';
 import Entity from '../entity.js';
 import EntityInstanceData from '../entityInstanceData.js';
 import { MapManager } from '../../utils/mapManagerUtils.js';
@@ -24,12 +23,7 @@ import {
   assertValidId,
   assertNonBlankString,
 } from '../../utils/parameterGuards.js';
-import {
-  ACTOR_COMPONENT_ID,
-  SHORT_TERM_MEMORY_COMPONENT_ID,
-  NOTES_COMPONENT_ID,
-  GOALS_COMPONENT_ID,
-} from '../../constants/componentIds.js';
+import { injectDefaultComponents } from '../utils/defaultComponentInjector.js';
 import { validateDependency } from '../../utils/validationUtils.js';
 import { ensureValidLogger } from '../../utils';
 import { DefinitionNotFoundError } from '../../errors/definitionNotFoundError.js';
@@ -137,51 +131,6 @@ class EntityFactory {
       throw new Error(msg);
     }
     return clone;
-  }
-
-  /**
-   * Inject default components required by the engine (STM, notes, and goals).
-   * This method will now receive an Entity object and operate on its overrides if needed.
-   *
-   * @private
-   * @param {Entity} entity - The entity instance to modify.
-   */
-  #injectDefaultComponents(entity) {
-    if (entity.hasComponent(ACTOR_COMPONENT_ID)) {
-      const componentsToInject = [
-        {
-          id: SHORT_TERM_MEMORY_COMPONENT_ID,
-          data: { thoughts: [], maxEntries: 10 },
-          name: 'STM',
-        },
-        { id: NOTES_COMPONENT_ID, data: { notes: [] }, name: 'Notes' },
-        { id: GOALS_COMPONENT_ID, data: { goals: [] }, name: 'Goals' },
-      ];
-
-      for (const comp of componentsToInject) {
-        if (!entity.hasComponent(comp.id)) {
-          this.#logger.debug(
-            `[EntityFactory] Injecting ${comp.name} for ${entity.id} (def: ${entity.definitionId})`
-          );
-          try {
-            // Note: This does not and should not fire a COMPONENT_ADDED event,
-            // as this is part of the entity creation process, not a discrete runtime action.
-            const validatedData = this.#validateAndClone(
-              comp.id,
-              comp.data,
-              `Default ${comp.name} component injection for entity ${entity.id}`
-            );
-            entity.addComponent(comp.id, validatedData);
-          } catch (e) {
-            this.#logger.error(
-              `[EntityFactory] Failed to inject default component ${comp.id} for entity ${
-                entity.id
-              }: ${e.message}`
-            );
-          }
-        }
-      }
-    }
   }
 
   /**
@@ -299,7 +248,11 @@ class EntityFactory {
     );
 
     // Apply default component policy before returning
-    this.#injectDefaultComponents(entity);
+    injectDefaultComponents(
+      entity,
+      this.#logger,
+      this.#validateAndClone.bind(this)
+    );
 
     this.#logger.info(
       `[EntityFactory] Entity instance '${actualInstanceId}' (def: '${definitionId}') created.`
@@ -422,7 +375,11 @@ class EntityFactory {
     );
 
     // Restore: inject default components for actor entities
-    this.#injectDefaultComponents(entity);
+    injectDefaultComponents(
+      entity,
+      this.#logger,
+      this.#validateAndClone.bind(this)
+    );
 
     this.#logger.info(
       `[EntityFactory] Entity instance '${instanceId}' (def: '${definitionId}') reconstructed.`
