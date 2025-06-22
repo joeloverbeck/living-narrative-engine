@@ -10,6 +10,7 @@ import {
 import { createMockEntity } from '../../common/mockFactories';
 import { createAiActor } from '../../common/turns/testActors.js';
 import { createMockTurnHandler } from '../../common/mockFactories.js';
+import { expectSystemErrorDispatch } from '../../common/turns/turnManagerTestUtils.js';
 
 describeTurnManagerSuite(
   'TurnManager: advanceTurn() - Round Start (Queue Empty)',
@@ -185,18 +186,10 @@ describeTurnManagerSuite(
       await testBed.turnManager.start();
 
       // Assert
-      expect(testBed.mocks.dispatcher.dispatch.mock.calls).toEqual(
-        expect.arrayContaining([
-          [
-            SYSTEM_ERROR_OCCURRED_ID,
-            expect.objectContaining({
-              message: expect.any(String),
-              details: expect.objectContaining({
-                error: roundError.message,
-              }),
-            }),
-          ],
-        ])
+      expectSystemErrorDispatch(
+        testBed.mocks.dispatcher.dispatch,
+        'System Error: No active actors found to start a round. Stopping game.',
+        roundError.message
       );
       expect(stopSpy).toHaveBeenCalledTimes(1);
     });
@@ -216,14 +209,10 @@ describeTurnManagerSuite(
       await testBed.turnManager.start();
 
       // Assert
-      expect(testBed.mocks.dispatcher.dispatch).toHaveBeenCalledWith(
-        SYSTEM_ERROR_OCCURRED_ID,
-        expect.objectContaining({
-          message: 'System Error during turn advancement',
-          details: {
-            error: expect.stringContaining('Get next entity failed'),
-          },
-        })
+      expectSystemErrorDispatch(
+        testBed.mocks.dispatcher.dispatch,
+        'System Error during turn advancement. Stopping game.',
+        'Get next entity failed'
       );
       expect(stopSpy).toHaveBeenCalledTimes(1);
     });
