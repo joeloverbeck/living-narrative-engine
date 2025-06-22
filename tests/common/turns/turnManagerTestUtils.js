@@ -4,7 +4,10 @@
  */
 
 import { expect } from '@jest/globals';
-import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/eventIds.js';
+import {
+  SYSTEM_ERROR_OCCURRED_ID,
+  TURN_ENDED_ID,
+} from '../../../src/constants/eventIds.js';
 import { flushPromisesAndTimers } from './turnManagerTestBed.js';
 
 /**
@@ -47,4 +50,17 @@ export async function waitForCurrentActor(bed, id, maxTicks = 50) {
     await flushPromisesAndTimers();
   }
   return false;
+}
+
+/**
+ * Triggers a TURN_ENDED event for the given actor and flushes pending timers.
+ *
+ * @param {import('./turnManagerTestBed.js').TurnManagerTestBed} bed - Test bed instance.
+ * @param {string} entityId - Actor entity id that ended the turn.
+ * @param {boolean} [success] - Whether the turn was successful.
+ * @returns {Promise<void>} Resolves when pending promises and timers are flushed.
+ */
+export async function triggerTurnEndedAndFlush(bed, entityId, success = true) {
+  bed.trigger(TURN_ENDED_ID, { entityId, success });
+  await flushPromisesAndTimers();
 }

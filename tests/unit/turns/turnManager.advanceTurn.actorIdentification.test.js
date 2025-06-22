@@ -2,16 +2,13 @@
 // --- FILE START (Corrected) ---
 
 import { afterEach, beforeEach, expect, test } from '@jest/globals';
+import { describeRunningTurnManagerSuite } from '../../common/turns/turnManagerTestBed.js';
 import {
-  describeRunningTurnManagerSuite,
-  flushPromisesAndTimers,
-} from '../../common/turns/turnManagerTestBed.js';
-import { expectSystemErrorDispatch } from '../../common/turns/turnManagerTestUtils.js';
+  expectSystemErrorDispatch,
+  triggerTurnEndedAndFlush,
+} from '../../common/turns/turnManagerTestUtils.js';
 
-import {
-  TURN_ENDED_ID,
-  SYSTEM_ERROR_OCCURRED_ID,
-} from '../../../src/constants/eventIds.js';
+import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/eventIds.js';
 import { PLAYER_COMPONENT_ID } from '../../../src/constants/componentIds.js';
 import { createMockEntity } from '../../common/mockFactories';
 import {
@@ -89,12 +86,7 @@ describeRunningTurnManagerSuite(
         );
         expect(stopSpy).not.toHaveBeenCalled();
 
-        testBed.trigger(TURN_ENDED_ID, {
-          entityId: actor.id,
-          success: true,
-        });
-
-        await flushPromisesAndTimers();
+        await triggerTurnEndedAndFlush(testBed, actor.id);
 
         expect(mockHandler.destroy).toHaveBeenCalledTimes(1);
 
