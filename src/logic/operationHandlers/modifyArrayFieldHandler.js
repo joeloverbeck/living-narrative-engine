@@ -15,6 +15,7 @@ import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 import { tryWriteContextVariable } from '../../utils/contextVariableUtils.js';
 import { assertParamsObject } from '../../utils/handlerUtils/indexUtils.js';
 import ComponentOperationHandler from './componentOperationHandler.js';
+import { applyArrayModification } from '../utils/arrayModifyUtils.js';
 
 /**
  * @class ModifyArrayFieldHandler
@@ -70,70 +71,57 @@ class ModifyArrayFieldHandler extends ComponentOperationHandler {
    * @private
    */
   #applyModification(mode, targetArray, value, field, entityId, log) {
-    let result = null;
     log.debug(
       `MODIFY_ARRAY_FIELD: Performing '${mode}' on field '${field}' for entity '${entityId}'.`
     );
-    switch (mode) {
-      case 'push':
-        if (value === undefined) {
-          log.warn(
-            `MODIFY_ARRAY_FIELD: 'push' mode requires a 'value' parameter.`
-          );
-          return null;
-        }
-        targetArray.push(value);
-        result = targetArray;
-        break;
 
-      case 'push_unique': {
-        if (value === undefined) {
-          log.warn(
-            `MODIFY_ARRAY_FIELD: 'push_unique' mode requires a 'value' parameter.`
-          );
-          return null;
-        }
+    const validModes = ['push', 'push_unique', 'pop', 'remove_by_value'];
+    if (!validModes.includes(mode)) {
+      log.warn(`MODIFY_ARRAY_FIELD: Unknown mode '${mode}'.`);
+      return null;
+    }
 
-        let exists = false;
-        if (typeof value !== 'object' || value === null) {
-          exists = targetArray.includes(value);
-        } else {
-          const valueAsJson = JSON.stringify(value);
-          exists = targetArray.some(
-            (item) => JSON.stringify(item) === valueAsJson
-          );
-        }
+    if (
+      value === undefined &&
+      (mode === 'push' || mode === 'push_unique' || mode === 'remove_by_value')
+    ) {
+      log.warn(
+        `MODIFY_ARRAY_FIELD: '${mode}' mode requires a 'value' parameter.`
+      );
+      return null;
+    }
 
-        if (!exists) {
-          targetArray.push(value);
-        } else {
-          log.debug(
-            `MODIFY_ARRAY_FIELD: Value for 'push_unique' already exists in array on field '${field}'.`
-          );
-        }
-        result = targetArray;
-        break;
+    let poppedItem;
+    if (mode === 'pop' && targetArray.length === 0) {
+      log.debug(
+        `MODIFY_ARRAY_FIELD: Attempted to 'pop' from an empty array on field '${field}'.`
+      );
+    } else if (mode === 'pop') {
+      poppedItem = targetArray[targetArray.length - 1];
+    }
+
+    let modifiedArray = targetArray;
+
+    if (mode === 'push_unique') {
+      let exists = false;
+      if (typeof value !== 'object' || value === null) {
+        exists = targetArray.includes(value);
+      } else {
+        const valueAsJson = JSON.stringify(value);
+        exists = targetArray.some(
+          (item) => JSON.stringify(item) === valueAsJson
+        );
       }
 
-      case 'pop':
-        if (targetArray.length > 0) {
-          result = targetArray.pop();
-        } else {
-          log.debug(
-            `MODIFY_ARRAY_FIELD: Attempted to 'pop' from an empty array on field '${field}'.`
-          );
-          result = undefined;
-        }
-        break;
-
-      case 'remove_by_value': {
-        if (value === undefined) {
-          log.warn(
-            `MODIFY_ARRAY_FIELD: 'remove_by_value' mode requires a 'value' parameter.`
-          );
-          return null;
-        }
-
+      if (exists) {
+        log.debug(
+          `MODIFY_ARRAY_FIELD: Value for 'push_unique' already exists in array on field '${field}'.`
+        );
+      } else {
+        modifiedArray = applyArrayModification(mode, targetArray, value, log);
+      }
+    } else {
+      if (mode === 'remove_by_value') {
         let index;
         if (typeof value !== 'object' || value === null) {
           index = targetArray.indexOf(value);
@@ -144,23 +132,28 @@ class ModifyArrayFieldHandler extends ComponentOperationHandler {
           );
         }
 
+        // call utility for consistency
+        applyArrayModification(mode, targetArray, value, log);
+
         if (index > -1) {
-          targetArray.splice(index, 1);
+          modifiedArray = [...targetArray];
+          modifiedArray.splice(index, 1);
         } else {
           log.debug(
             `MODIFY_ARRAY_FIELD: Value for 'remove_by_value' not found in array on field '${field}'.`
           );
+          modifiedArray = targetArray;
         }
-        result = targetArray;
-        break;
+      } else {
+        modifiedArray = applyArrayModification(mode, targetArray, value, log);
       }
-
-      default:
-        log.warn(`MODIFY_ARRAY_FIELD: Unknown mode '${mode}'.`);
-        return null;
     }
 
-    return result;
+    if (modifiedArray !== targetArray) {
+      targetArray.splice(0, targetArray.length, ...modifiedArray);
+    }
+
+    return mode === 'pop' ? poppedItem : targetArray;
   }
 
   /**
