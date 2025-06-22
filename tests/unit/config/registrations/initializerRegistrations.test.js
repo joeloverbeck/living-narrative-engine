@@ -112,7 +112,7 @@ describe('registerInitializers', () => {
       gameDataRepository: mockGameDataRepository,
       validatedEventDispatcher: mockValidatedEventDispatcher,
       logger: mockLogger,
-      spatialIndexManager: mockSpatialIndexManager,
+      // spatialIndexManager dependency removed - now handled by SpatialIndexSynchronizer
     });
   });
 
@@ -147,7 +147,7 @@ describe('registerInitializers', () => {
     expect(resolveSpy).toHaveBeenCalledWith(tokens.IWorldContext);
     expect(resolveSpy).toHaveBeenCalledWith(tokens.IGameDataRepository);
     expect(resolveSpy).toHaveBeenCalledWith(tokens.IValidatedEventDispatcher);
-    expect(resolveSpy).toHaveBeenCalledWith(tokens.ISpatialIndexManager);
+    // spatialIndexManager dependency removed - no longer resolved
     resolveSpy.mockRestore();
   });
 });

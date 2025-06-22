@@ -119,7 +119,7 @@ describe('WorldInitializer', () => {
   describe('constructor', () => {
     it('should instantiate successfully with all valid dependencies', () => {
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        'WorldInitializer: Instance created. Reference resolution step has been removed.'
+        'WorldInitializer: Instance created. Spatial index management is now handled by SpatialIndexSynchronizer through event listening.'
       );
     });
 
@@ -145,11 +145,7 @@ describe('WorldInitializer', () => {
         'WorldInitializer requires a ValidatedEventDispatcher.',
       ],
       ['ILogger', 'logger', 'WorldInitializer requires an ILogger.'],
-      [
-        'ISpatialIndexManager',
-        'spatialIndexManager',
-        'WorldInitializer requires an ISpatialIndexManager.',
-      ],
+      // spatialIndexManager dependency removed - no longer required
     ];
 
     it.each(constructorErrorTestCases)(
@@ -161,7 +157,7 @@ describe('WorldInitializer', () => {
           gameDataRepository: mockGameDataRepository,
           validatedEventDispatcher: mockValidatedEventDispatcher,
           logger: mockLogger,
-          spatialIndexManager: mockSpatialIndexManager,
+          // spatialIndexManager dependency removed - no longer required
         };
         delete deps[depsKey];
         expect(() => new WorldInitializer(deps)).toThrow(expectedErrorMessage);
@@ -302,7 +298,7 @@ describe('WorldInitializer', () => {
         );
         expect(mockLogger.debug).toHaveBeenCalledWith(
           expect.stringContaining(
-            "Entity test:location_instance has POSITION_COMPONENT_ID with locationId 'another-place'. Spatial index add/update is handled by EntityManager."
+            "Entity test:location_instance has POSITION_COMPONENT_ID with locationId 'another-place'. Spatial index management is handled by SpatialIndexSynchronizer."
           )
         );
       });
@@ -501,17 +497,17 @@ describe('WorldInitializer', () => {
 
         expect(mockLogger.debug).toHaveBeenCalledWith(
           expect.stringContaining(
-            'WorldInitializer (Pass 2): Completed entity processing. Processed 1 entities. Added 1 entities to spatial index.'
+            'WorldInitializer (Pass 2): Completed entity processing. Processed 1 entities. Successfully processed 1 entities.'
           )
         );
         expect(mockLogger.debug).toHaveBeenCalledWith(
           expect.stringContaining(
-            "Entity test:spatialDummy_instance has POSITION_COMPONENT_ID with locationId 'some-other-place'. Spatial index add/update is handled by EntityManager."
+            "Entity test:spatialDummy_instance has POSITION_COMPONENT_ID with locationId 'some-other-place'. Spatial index management is handled by SpatialIndexSynchronizer."
           )
         );
         expect(mockLogger.debug).toHaveBeenCalledWith(
           expect.stringContaining(
-            'WorldInitializer: World entity initialization and spatial indexing complete for world: test:world.'
+            'WorldInitializer: World entity initialization complete for world: test:world. Spatial index management is handled by SpatialIndexSynchronizer.'
           )
         );
       });
@@ -569,13 +565,13 @@ describe('WorldInitializer', () => {
         // This log comes from _resolveReferencesForEntityComponents's post-processing part
         expect(mockLogger.debug).toHaveBeenCalledWith(
           expect.stringContaining(
-            "WorldInitializer (Pass 2 Post-Processing): Entity test:roomPos1_instance has POSITION_COMPONENT_ID with locationId 'some-other-place'. Spatial index add/update is handled by EntityManager."
+            "WorldInitializer (Pass 2 Post-Processing): Entity test:roomPos1_instance has POSITION_COMPONENT_ID with locationId 'some-other-place'. Spatial index management is handled by SpatialIndexSynchronizer."
           )
         );
         // And check for the overall completion
         expect(mockLogger.debug).toHaveBeenCalledWith(
           expect.stringContaining(
-            'WorldInitializer: World entity initialization and spatial indexing complete for world: test:world.'
+            'WorldInitializer: World entity initialization complete for world: test:world. Spatial index management is handled by SpatialIndexSynchronizer.'
           )
         );
       });

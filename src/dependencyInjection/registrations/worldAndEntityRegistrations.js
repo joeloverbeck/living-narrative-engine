@@ -21,11 +21,13 @@ import { INITIALIZABLE } from '../tags.js';
 
 // --- Service Imports ---
 import EntityManager from '../../entities/entityManager.js';
+import { EntityManagerAdapter } from '../../entities/entityManagerAdapter.js';
 import WorldContext from '../../context/worldContext.js';
 import JsonLogicEvaluationService from '../../logic/jsonLogicEvaluationService.js';
 import * as closenessCircleService from '../../logic/services/closenessCircleService.js';
 import { EntityDisplayDataProvider } from '../../entities/entityDisplayDataProvider.js';
 import { SpatialIndexSynchronizer } from '../../entities/spatialIndexSynchronizer.js';
+import { LocationQueryService } from '../../entities/locationQueryService.js';
 
 /**
  * Registers world, entity, and context-related services.
@@ -40,7 +42,7 @@ export function registerWorldAndEntity(container) {
 
   // --- IEntityManager (EntityManager implementation) ---
   r.singletonFactory(tokens.IEntityManager, (c) => {
-    return new EntityManager({
+    const entityManager = new EntityManager({
       registry: /** @type {IDataRegistry} */ (c.resolve(tokens.IDataRegistry)),
       validator: /** @type {ISchemaValidator} */ (
         c.resolve(tokens.ISchemaValidator)
@@ -49,6 +51,15 @@ export function registerWorldAndEntity(container) {
       dispatcher: /** @type {ISafeEventDispatcher} */ (
         c.resolve(tokens.ISafeEventDispatcher)
       ),
+    });
+
+    const locationQueryService = /** @type {LocationQueryService} */ (
+      c.resolve(tokens.LocationQueryService)
+    );
+
+    return new EntityManagerAdapter({
+      entityManager,
+      locationQueryService,
     });
   });
   logger.debug(
@@ -119,6 +130,21 @@ export function registerWorldAndEntity(container) {
     `World and Entity Registration: Registered ${String(
       tokens.SpatialIndexSynchronizer
     )} tagged ${INITIALIZABLE.join(', ')}.`
+  );
+
+  // --- LocationQueryService ---
+  r.singletonFactory(tokens.LocationQueryService, (c) => {
+    return new LocationQueryService({
+      spatialIndexManager: /** @type {ISpatialIndexManager} */ (
+        c.resolve(tokens.ISpatialIndexManager)
+      ),
+      logger: /** @type {ILogger} */ (c.resolve(tokens.ILogger)),
+    });
+  });
+  logger.debug(
+    `World and Entity Registration: Registered ${String(
+      tokens.LocationQueryService
+    )}.`
   );
 
   logger.debug('World and Entity Registration: Completed.');
