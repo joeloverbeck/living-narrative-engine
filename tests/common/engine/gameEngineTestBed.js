@@ -44,16 +44,16 @@ export class GameEngineTestBed extends StoppableMixin(ContainerTestBed) {
   constructor(overrides = {}) {
     const env = createTestEnvironment(overrides);
     super(env.mockContainer, {
-      logger: env.logger,
-      entityManager: env.entityManager,
-      turnManager: env.turnManager,
-      gamePersistenceService: env.gamePersistenceService,
-      playtimeTracker: env.playtimeTracker,
-      safeEventDispatcher: env.safeEventDispatcher,
-      initializationService: env.initializationService,
+      logger: env.mocks.logger,
+      entityManager: env.mocks.entityManager,
+      turnManager: env.mocks.turnManager,
+      gamePersistenceService: env.mocks.gamePersistenceService,
+      playtimeTracker: env.mocks.playtimeTracker,
+      safeEventDispatcher: env.mocks.safeEventDispatcher,
+      initializationService: env.mocks.initializationService,
     });
     // Use the already created gameEngine instance if available to avoid double instantiation
-    const engine = env.gameEngine || env.createGameEngine();
+    const engine = env.instance || env.createInstance();
     this.env = env;
     this.engine = engine;
   }
@@ -64,9 +64,11 @@ export class GameEngineTestBed extends StoppableMixin(ContainerTestBed) {
    * @returns {Promise<void>} Promise resolving when the engine has started.
    */
   async init(world = DEFAULT_TEST_WORLD) {
-    this.env.initializationService.runInitializationSequence.mockResolvedValue({
-      success: true,
-    });
+    this.env.mocks.initializationService.runInitializationSequence.mockResolvedValue(
+      {
+        success: true,
+      }
+    );
     await this.engine.startNewGame(world);
   }
 
@@ -88,7 +90,7 @@ export class GameEngineTestBed extends StoppableMixin(ContainerTestBed) {
    * @returns {Promise<void>} Promise resolving when the engine has started.
    */
   async start(worldName, initResult = { success: true }) {
-    this.env.initializationService.runInitializationSequence.mockResolvedValue(
+    this.env.mocks.initializationService.runInitializationSequence.mockResolvedValue(
       initResult
     );
     await this.engine.startNewGame(worldName);
