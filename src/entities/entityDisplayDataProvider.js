@@ -108,6 +108,33 @@ export class EntityDisplayDataProvider {
   }
 
   /**
+   * @description Helper to run logic with a fetched entity if it exists.
+   * @private
+   * @param {NamespacedId | string} entityId - ID of the entity to fetch.
+   * @param {*} fallbackValue - Value to return when entity is missing or ID is invalid.
+   * @param {(entity: Entity) => *} callback - Function executed with the entity when found.
+   * @param {string} [notFoundMsg] - Optional debug message (without prefix) when entity not found.
+   * @returns {*} Result of callback or the fallback value.
+   */
+  #withEntity(entityId, fallbackValue, callback, notFoundMsg) {
+    const sentinel = Symbol('invalidId');
+    const entity = this.#fetchEntity(entityId, sentinel);
+
+    if (entity === sentinel) {
+      return fallbackValue;
+    }
+
+    if (!entity) {
+      if (notFoundMsg) {
+        this.#logger.debug(`${this._logPrefix} ${notFoundMsg}`);
+      }
+      return fallbackValue;
+    }
+
+    return callback(entity);
+  }
+
+  /**
    * Retrieves the display name of an entity.
    * Falls back to entity ID if the name component is missing, then to a default name.
    *
@@ -116,21 +143,12 @@ export class EntityDisplayDataProvider {
    * @returns {string} The entity's display name, its ID, or the default name.
    */
   getEntityName(entityId, defaultName = 'Unknown Entity') {
-    const sentinel = Symbol('invalidId');
-    const entity = this.#fetchEntity(entityId, sentinel);
-
-    if (entity === sentinel) {
-      return defaultName;
-    }
-
-    if (!entity) {
-      this.#logger.debug(
-        `${this._logPrefix} getEntityName: Entity with ID '${entityId}' not found. Returning default name.`
-      );
-      return defaultName;
-    }
-
-    return getEntityDisplayName(entity, defaultName, this.#logger);
+    return this.#withEntity(
+      entityId,
+      defaultName,
+      (entity) => getEntityDisplayName(entity, defaultName, this.#logger),
+      `getEntityName: Entity with ID '${entityId}' not found. Returning default name.`
+    );
   }
 
   /**
@@ -141,65 +159,58 @@ export class EntityDisplayDataProvider {
    * @returns {string | null} The full path to the portrait image (e.g., /data/mods/core/portraits/hero.png), or null if not found or invalid.
    */
   getEntityPortraitPath(entityId) {
-    const sentinel = Symbol('invalidId');
-    const entity = this.#fetchEntity(entityId, sentinel);
-
-    if (entity === sentinel) {
-      return null;
-    }
-
-    if (!entity) {
-      this.#logger.debug(
-        `${this._logPrefix} getEntityPortraitPath: Entity with ID '${entityId}' not found.`
-      );
-      return null;
-    }
-
-    const portraitComponent = entity.getComponentData(PORTRAIT_COMPONENT_ID);
-    if (
-      !portraitComponent ||
-      typeof portraitComponent.imagePath !== 'string' ||
-      !portraitComponent.imagePath.trim()
-    ) {
-      this.#logger.debug(
-        `${this._logPrefix} getEntityPortraitPath: Entity '${entityId}' has no valid PORTRAIT_COMPONENT_ID data or imagePath.`
-      );
-      return null;
-    }
-
-    const modId = extractModId(entity.definitionId);
-    if (!modId) {
-      if (typeof entity.definitionId !== 'string' || !entity.definitionId) {
-        this.#logger.warn(
-          `${this._logPrefix} getEntityPortraitPath: Invalid or missing definitionId. Expected string, got:`,
-          entity.definitionId
+    return this.#withEntity(
+      entityId,
+      null,
+      (entity) => {
+        const portraitComponent = entity.getComponentData(
+          PORTRAIT_COMPONENT_ID
         );
-      } else {
-        safeDispatchError(
-          this.#safeEventDispatcher,
-          `Entity definitionId '${entity.definitionId}' has invalid format. Expected format 'modId:entityName'.`,
-          {
-            raw: JSON.stringify({
-              definitionId: entity.definitionId,
-              expectedFormat: 'modId:entityName',
-              functionName: 'extractModId',
-            }),
-            stack: new Error().stack,
-          },
-          this.#logger
-        );
-      }
-      return null;
-    }
+        if (
+          !portraitComponent ||
+          typeof portraitComponent.imagePath !== 'string' ||
+          !portraitComponent.imagePath.trim()
+        ) {
+          this.#logger.debug(
+            `${this._logPrefix} getEntityPortraitPath: Entity '${entityId}' has no valid PORTRAIT_COMPONENT_ID data or imagePath.`
+          );
+          return null;
+        }
 
-    const imagePath = portraitComponent.imagePath.trim();
-    // This path construction assumes a specific mod structure.
-    // Consider making this more flexible or configurable if mods can have different asset structures.
-    const fullPath = `/data/mods/${modId}/${imagePath}`;
-    this.#logger.debug(
-      `${this._logPrefix} getEntityPortraitPath: Constructed portrait path for '${entityId}': ${fullPath}`
+        const modId = extractModId(entity.definitionId);
+        if (!modId) {
+          if (typeof entity.definitionId !== 'string' || !entity.definitionId) {
+            this.#logger.warn(
+              `${this._logPrefix} getEntityPortraitPath: Invalid or missing definitionId. Expected string, got:`,
+              entity.definitionId
+            );
+          } else {
+            safeDispatchError(
+              this.#safeEventDispatcher,
+              `Entity definitionId '${entity.definitionId}' has invalid format. Expected format 'modId:entityName'.`,
+              {
+                raw: JSON.stringify({
+                  definitionId: entity.definitionId,
+                  expectedFormat: 'modId:entityName',
+                  functionName: 'extractModId',
+                }),
+                stack: new Error().stack,
+              },
+              this.#logger
+            );
+          }
+          return null;
+        }
+
+        const imagePath = portraitComponent.imagePath.trim();
+        const fullPath = `/data/mods/${modId}/${imagePath}`;
+        this.#logger.debug(
+          `${this._logPrefix} getEntityPortraitPath: Constructed portrait path for '${entityId}': ${fullPath}`
+        );
+        return fullPath;
+      },
+      `getEntityPortraitPath: Entity with ID '${entityId}' not found.`
     );
-    return fullPath;
   }
 
   /**
@@ -210,31 +221,27 @@ export class EntityDisplayDataProvider {
    * @returns {string} The entity's description or the default description.
    */
   getEntityDescription(entityId, defaultDescription = '') {
-    const sentinel = Symbol('invalidId');
-    const entity = this.#fetchEntity(entityId, sentinel);
+    return this.#withEntity(
+      entityId,
+      defaultDescription,
+      (entity) => {
+        const descriptionComponent = entity.getComponentData(
+          DESCRIPTION_COMPONENT_ID
+        );
+        if (
+          descriptionComponent &&
+          typeof descriptionComponent.text === 'string'
+        ) {
+          return descriptionComponent.text;
+        }
 
-    if (entity === sentinel) {
-      return defaultDescription;
-    }
-
-    if (!entity) {
-      this.#logger.debug(
-        `${this._logPrefix} getEntityDescription: Entity with ID '${entityId}' not found. Returning default description.`
-      );
-      return defaultDescription;
-    }
-
-    const descriptionComponent = entity.getComponentData(
-      DESCRIPTION_COMPONENT_ID
+        this.#logger.debug(
+          `${this._logPrefix} getEntityDescription: Entity '${entityId}' found, but no valid DESCRIPTION_COMPONENT_ID data. Returning default description.`
+        );
+        return defaultDescription;
+      },
+      `getEntityDescription: Entity with ID '${entityId}' not found. Returning default description.`
     );
-    if (descriptionComponent && typeof descriptionComponent.text === 'string') {
-      return descriptionComponent.text;
-    }
-
-    this.#logger.debug(
-      `${this._logPrefix} getEntityDescription: Entity '${entityId}' found, but no valid DESCRIPTION_COMPONENT_ID data. Returning default description.`
-    );
-    return defaultDescription;
   }
 
   /**
@@ -244,42 +251,39 @@ export class EntityDisplayDataProvider {
    * @returns {NamespacedId | string | null} The location ID (which is an entity instance ID) or null if not found.
    */
   getEntityLocationId(entityId) {
-    const sentinel = Symbol('invalidId');
-    const entity = this.#fetchEntity(entityId, sentinel);
+    return this.#withEntity(
+      entityId,
+      null,
+      (entity) => {
+        this.#logger.debug(
+          `${this._logPrefix} getEntityLocationId: Found entity '${entityId}' with type: ${
+            entity.constructor?.name || 'unknown'
+          }, has getComponentData: ${typeof entity.getComponentData === 'function'}`
+        );
 
-    if (entity === sentinel) {
-      return null;
-    }
+        const positionComponent = entity.getComponentData(
+          POSITION_COMPONENT_ID
+        );
+        this.#logger.debug(
+          `${this._logPrefix} getEntityLocationId: Position component for '${entityId}':`,
+          positionComponent
+        );
 
-    if (!entity) {
-      this.#logger.debug(
-        `${this._logPrefix} getEntityLocationId: Entity with ID '${entityId}' not found.`
-      );
-      return null;
-    }
+        if (
+          positionComponent &&
+          typeof positionComponent.locationId === 'string' &&
+          positionComponent.locationId.trim()
+        ) {
+          return positionComponent.locationId;
+        }
 
-    this.#logger.debug(
-      `${this._logPrefix} getEntityLocationId: Found entity '${entityId}' with type: ${entity.constructor?.name || 'unknown'}, has getComponentData: ${typeof entity.getComponentData === 'function'}`
+        this.#logger.debug(
+          `${this._logPrefix} getEntityLocationId: Entity '${entityId}' found, but no valid POSITION_COMPONENT_ID data or locationId.`
+        );
+        return null;
+      },
+      `getEntityLocationId: Entity with ID '${entityId}' not found.`
     );
-
-    const positionComponent = entity.getComponentData(POSITION_COMPONENT_ID);
-    this.#logger.debug(
-      `${this._logPrefix} getEntityLocationId: Position component for '${entityId}':`,
-      positionComponent
-    );
-
-    if (
-      positionComponent &&
-      typeof positionComponent.locationId === 'string' &&
-      positionComponent.locationId.trim()
-    ) {
-      return positionComponent.locationId;
-    }
-
-    this.#logger.debug(
-      `${this._logPrefix} getEntityLocationId: Entity '${entityId}' found, but no valid POSITION_COMPONENT_ID data or locationId.`
-    );
-    return null;
   }
 
   /**
@@ -291,26 +295,17 @@ export class EntityDisplayDataProvider {
    * An object with character display information, or null if the entity is not found.
    */
   getCharacterDisplayInfo(entityId) {
-    const sentinel = Symbol('invalidId');
-    const entity = this.#fetchEntity(entityId, sentinel);
-
-    if (entity === sentinel) {
-      return null;
-    }
-
-    if (!entity) {
-      this.#logger.debug(
-        `${this._logPrefix} getCharacterDisplayInfo: Entity with ID '${entityId}' not found.`
-      );
-      return null;
-    }
-
-    return {
-      id: entity.id,
-      name: this.getEntityName(entityId, entity.id),
-      description: this.getEntityDescription(entityId),
-      portraitPath: this.getEntityPortraitPath(entityId),
-    };
+    return this.#withEntity(
+      entityId,
+      null,
+      (entity) => ({
+        id: entity.id,
+        name: this.getEntityName(entityId, entity.id),
+        description: this.getEntityDescription(entityId),
+        portraitPath: this.getEntityPortraitPath(entityId),
+      }),
+      `getCharacterDisplayInfo: Entity with ID '${entityId}' not found.`
+    );
   }
 
   /**
