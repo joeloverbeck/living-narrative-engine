@@ -12,6 +12,11 @@ import {
 import WorldInitializer from '../../../src/initializers/worldInitializer.js';
 import { POSITION_COMPONENT_ID } from '../../../src/constants/componentIds.js';
 import _isEqual from 'lodash/isEqual.js'; // For comparing complex objects in logs if needed
+import { safeDispatchError } from '../../../src/utils/safeDispatchErrorUtils.js';
+
+jest.mock('../../../src/utils/safeDispatchErrorUtils.js', () => ({
+  safeDispatchError: jest.fn(),
+}));
 
 describe('WorldInitializer', () => {
   let mockEntityManager;
@@ -627,8 +632,13 @@ describe('WorldInitializer', () => {
         'Game cannot start: World \'nonexistent:world\' not found in the world data. Please ensure the world is properly defined.'
       );
 
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        'WorldInitializer (Pass 1): World \'nonexistent:world\' not found in repository.'
+      expect(safeDispatchError).toHaveBeenCalledWith(
+        mockValidatedEventDispatcher,
+        `World 'nonexistent:world' not found. The game cannot start without a valid world.`,
+        expect.objectContaining({
+          statusCode: 500,
+          raw: expect.stringContaining("World 'nonexistent:world' not available in game data repository"),
+        })
       );
     });
 
@@ -645,8 +655,13 @@ describe('WorldInitializer', () => {
         'Game cannot start: World \'test:world\' has no entities defined. Please ensure at least one entity is defined in the world.'
       );
 
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        'WorldInitializer (Pass 1): World \'test:world\' has no instances defined. Game cannot start without entities.'
+      expect(safeDispatchError).toHaveBeenCalledWith(
+        mockValidatedEventDispatcher,
+        `World 'test:world' has no entities defined. The game cannot start without any entities in the world.`,
+        expect.objectContaining({
+          statusCode: 500,
+          raw: expect.stringContaining("World 'test:world' has no instances defined"),
+        })
       );
     });
   });
