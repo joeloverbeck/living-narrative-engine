@@ -3,6 +3,7 @@ import GameStateCaptureService from '../../../src/persistence/gameStateCaptureSe
 import ManualSaveCoordinator from '../../../src/persistence/manualSaveCoordinator.js';
 import SaveLoadService from '../../../src/persistence/saveLoadService.js';
 import SaveFileRepository from '../../../src/persistence/saveFileRepository.js';
+import SaveFileParser from '../../../src/persistence/saveFileParser.js';
 import {
   createMockLogger,
   createMockSaveValidationService,
@@ -66,8 +67,15 @@ describe('Persistence service constructor validation', () => {
   it('SaveFileRepository validates storage provider', () => {
     const logger = createMockLogger();
     const storageProvider = {}; // missing required methods
+    const parser = { parseManualSaveFile: jest.fn() };
     expect(
-      () => new SaveFileRepository({ logger, storageProvider, serializer })
+      () =>
+        new SaveFileRepository({
+          logger,
+          storageProvider,
+          serializer,
+          parser,
+        })
     ).toThrow();
   });
 });
