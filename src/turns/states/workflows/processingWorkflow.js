@@ -5,6 +5,7 @@
 
 import { AbstractTurnState } from '../abstractTurnState.js';
 import { handleProcessingException } from '../helpers/handleProcessingException.js';
+import { getLogger } from '../helpers/contextUtils.js';
 
 /**
  * @class ProcessingWorkflow
@@ -39,7 +40,7 @@ export class ProcessingWorkflow {
     if (!turnCtx) return;
 
     if (this._state._isProcessing) {
-      const logger = this._state._resolveLogger(turnCtx);
+      const logger = getLogger(turnCtx, this._state._handler);
       logger.warn(
         `${this._state.getStateName()}: enterState called while already processing. Actor: ${turnCtx?.getActor()?.id ?? 'N/A'}. Aborting re-entry.`
       );
@@ -72,7 +73,7 @@ export class ProcessingWorkflow {
    * @returns {Promise<import('../../../entities/entity.js').default|null>} Resolved actor or null.
    */
   async _validateContextAndActor(turnCtx) {
-    const logger = this._state._resolveLogger(turnCtx);
+    const logger = getLogger(turnCtx, this._state._handler);
     const actor = turnCtx.getActor();
     if (!actor) {
       const noActorError = new Error(
@@ -105,7 +106,7 @@ export class ProcessingWorkflow {
    * @returns {Promise<import('../../interfaces/IActorTurnStrategy.js').ITurnAction|null>} Resolved action or null.
    */
   async _resolveTurnAction(turnCtx, actor) {
-    const logger = this._state._resolveLogger(turnCtx);
+    const logger = getLogger(turnCtx, this._state._handler);
     let turnAction = this._turnAction;
     const actorId = actor.id;
     if (!turnAction) {
@@ -185,7 +186,7 @@ export class ProcessingWorkflow {
       const currentTurnCtxForCatch = this._state._getTurnContext() ?? turnCtx;
       const errorLogger =
         currentTurnCtxForCatch?.getLogger?.() ??
-        this._state._resolveLogger(turnCtx);
+        getLogger(turnCtx, this._state._handler);
       errorLogger.error(
         `${this._state.getStateName()}: Uncaught error from _processCommandInternal scope. Error: ${error.message}`,
         error

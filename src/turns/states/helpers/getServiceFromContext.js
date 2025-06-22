@@ -9,6 +9,7 @@
 
 import { handleProcessingException } from './handleProcessingException.js';
 import { safeDispatchError } from '../../../utils/safeDispatchErrorUtils.js';
+import { getLogger, getSafeEventDispatcher } from './contextUtils.js';
 
 /**
  * Safely obtains a service from the turn context.
@@ -27,8 +28,8 @@ export async function getServiceFromContext(
   serviceNameForLog,
   actorIdForLog
 ) {
-  const logger = state._resolveLogger(turnCtx);
-  const dispatcher = state._getSafeEventDispatcher(turnCtx);
+  const logger = getLogger(turnCtx, state._handler);
+  const dispatcher = getSafeEventDispatcher(turnCtx, state._handler);
 
   if (!turnCtx || typeof turnCtx.getLogger !== 'function') {
     const errorMsg = `${state.getStateName()}: Invalid turnCtx in _getServiceFromContext for ${serviceNameForLog}, actor ${actorIdForLog}.`;

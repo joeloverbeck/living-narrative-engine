@@ -14,6 +14,7 @@ import {
   resolveLogger,
   dispatchSystemError,
 } from './processingErrorUtils.js';
+import { getSafeEventDispatcher } from './contextUtils.js';
 
 /**
  * Handles exceptions that occur during command processing.
@@ -46,10 +47,7 @@ export async function handleProcessingException(
   );
 
   /** @type {ISafeEventDispatcher | null} */
-  const systemErrorDispatcher = state._getSafeEventDispatcher(
-    turnCtx,
-    state._handler
-  );
+  const systemErrorDispatcher = getSafeEventDispatcher(turnCtx, state._handler);
 
   dispatchSystemError(
     systemErrorDispatcher,

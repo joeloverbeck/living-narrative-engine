@@ -19,6 +19,7 @@ import { handleProcessingException } from './helpers/handleProcessingException.j
 import { ProcessingWorkflow } from './workflows/processingWorkflow.js';
 import { buildSpeechPayload } from './helpers/buildSpeechPayload.js';
 import { ProcessingGuard } from './helpers/processingGuard.js';
+import { getLogger } from './helpers/contextUtils.js';
 
 /**
  * @class ProcessingCommandState
@@ -45,7 +46,7 @@ export class ProcessingCommandState extends AbstractTurnState {
     this.#commandStringForLog =
       commandString || turnAction?.commandString || null;
 
-    const logger = this._resolveLogger(null);
+    const logger = getLogger(null, this._handler);
     logger.debug(
       `${this.getStateName()} constructed. Command string (arg): "${this.#commandStringForLog}". TurnAction ID (arg): ${turnAction ? `"${turnAction.actionDefinitionId}"` : 'null'}`
     );
@@ -76,7 +77,7 @@ export class ProcessingCommandState extends AbstractTurnState {
    * @returns {Promise<void>} Resolves when dispatch completes.
    */
   async _dispatchSpeech(turnCtx, actor, decisionMeta) {
-    const logger = this._resolveLogger(turnCtx);
+    const logger = getLogger(turnCtx, this._handler);
     const actorId = actor.id;
     const payloadBase = buildSpeechPayload(decisionMeta);
     const speechRaw = decisionMeta?.speech;
@@ -166,7 +167,7 @@ export class ProcessingCommandState extends AbstractTurnState {
     this._processingGuard.finish();
 
     const turnCtx = this._getTurnContext();
-    const logger = this._resolveLogger(turnCtx, handler);
+    const logger = getLogger(turnCtx, handler);
     const actorId = turnCtx?.getActor?.()?.id ?? 'N/A_on_exit';
 
     if (wasProcessing) {
@@ -183,7 +184,7 @@ export class ProcessingCommandState extends AbstractTurnState {
 
   async destroy(handler) {
     const turnCtx = this._getTurnContext(); // Get context before calling super, as super.destroy might clear it.
-    const logger = this._resolveLogger(turnCtx, handler);
+    const logger = getLogger(turnCtx, handler);
     const actorId = turnCtx?.getActor?.()?.id ?? 'N/A_at_destroy';
 
     logger.debug(
