@@ -99,24 +99,24 @@ class BreakFollowRelationHandler extends BaseOperationHandler {
       );
       return;
     }
-    const fid = follower_id.trim();
+    const followerId = follower_id.trim();
     const currentData = this.#entityManager.getComponentData(
-      fid,
+      followerId,
       FOLLOWING_COMPONENT_ID
     );
     if (!currentData) {
       this.logger.debug(
-        `[BreakFollowRelationHandler] ${fid} is not following anyone.`
+        `[BreakFollowRelationHandler] ${followerId} is not following anyone.`
       );
       return;
     }
     try {
-      this.#entityManager.removeComponent(fid, FOLLOWING_COMPONENT_ID);
+      this.#entityManager.removeComponent(followerId, FOLLOWING_COMPONENT_ID);
     } catch (err) {
       safeDispatchError(
         this.#dispatcher,
         'BREAK_FOLLOW_RELATION: Failed removing following component',
-        { error: err.message, stack: err.stack, follower_id: fid },
+        { error: err.message, stack: err.stack, follower_id: followerId },
         logger
       );
       return;

@@ -85,13 +85,13 @@ class CheckFollowCycleHandler extends BaseOperationHandler {
       return;
     }
 
-    const fid = follower_id.trim();
-    const lid = leader_id.trim();
+    const followerId = follower_id.trim();
+    const leaderId = leader_id.trim();
     log.debug(
-      `CHECK_FOLLOW_CYCLE: Checking cycle for follower=${fid}, leader=${lid}`
+      `CHECK_FOLLOW_CYCLE: Checking cycle for follower=${followerId}, leader=${leaderId}`
     );
 
-    const cycleDetected = wouldCreateCycle(fid, lid, this.#entityManager);
+    const cycleDetected = wouldCreateCycle(followerId, leaderId, this.#entityManager);
     const result = { success: true, cycleDetected };
 
     const res = tryWriteContextVariable(

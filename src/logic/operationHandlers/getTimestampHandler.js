@@ -18,17 +18,17 @@ class GetTimestampHandler extends BaseOperationHandler {
     const logger = this.getLogger(executionContext);
     if (!assertParamsObject(params, logger, 'GET_TIMESTAMP')) return;
 
-    const rv = params.result_variable.trim();
+    const resultVariable = params.result_variable.trim();
     const timestamp = new Date().toISOString();
     const result = tryWriteContextVariable(
-      rv,
+      resultVariable,
       timestamp,
       executionContext,
       undefined,
       logger
     );
     if (result.success) {
-      logger.debug(`GET_TIMESTAMP → ${rv} = ${timestamp}`);
+      logger.debug(`GET_TIMESTAMP → ${resultVariable} = ${timestamp}`);
     }
   }
 }
