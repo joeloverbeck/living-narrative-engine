@@ -8,6 +8,7 @@
 import { AbstractTurnState } from './abstractTurnState.js';
 import { ACTION_DECIDED_ID } from '../../constants/eventIds.js';
 import { getActorType } from '../../utils/actorTypeUtils.js';
+import { getLogger, getSafeEventDispatcher } from './helpers/contextUtils.js';
 
 /**
  * State in which the engine waits for the current actor’s turn-strategy to
@@ -203,7 +204,7 @@ export class AwaitingActorDecisionState extends AbstractTurnState {
       };
     }
 
-    const dispatcher = this._getSafeEventDispatcher(turnContext);
+    const dispatcher = getSafeEventDispatcher(turnContext, this._handler);
     const logger = turnContext.getLogger();
     if (dispatcher) {
       try {
@@ -225,7 +226,7 @@ export class AwaitingActorDecisionState extends AbstractTurnState {
   /* --------------------------------------------------------------------- */
   async exitState(handler, nextState) {
     await super.exitState(handler, nextState);
-    const logger = this._resolveLogger(this._getTurnContext());
+    const logger = getLogger(this._getTurnContext(), this._handler);
     logger.debug(
       `${this.getStateName()}: ExitState cleanup (if any) specific to AwaitingActorDecisionState complete.`
     );
@@ -258,7 +259,7 @@ export class AwaitingActorDecisionState extends AbstractTurnState {
   async handleTurnEndedEvent(handlerInstance, payload) {
     const handler = handlerInstance || this._handler;
     const turnContext = this._getTurnContext();
-    const logger = this._resolveLogger(turnContext, handler);
+    const logger = getLogger(turnContext, handler);
 
     if (!turnContext) {
       logger.warn(
@@ -291,7 +292,7 @@ export class AwaitingActorDecisionState extends AbstractTurnState {
   async destroy(handlerInstance) {
     const handler = handlerInstance || this._handler;
     const turnContext = handler?.getTurnContext?.();
-    const logger = this._resolveLogger(turnContext, handler);
+    const logger = getLogger(turnContext, handler);
     const actorInCtx = turnContext?.getActor();
 
     if (turnContext) {

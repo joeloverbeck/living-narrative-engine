@@ -14,6 +14,7 @@
 
 import { ITurnState } from '../interfaces/ITurnState.js';
 import { UNKNOWN_ACTOR_ID } from '../../constants/unknownIds.js';
+import { getLogger, getSafeEventDispatcher } from './helpers/contextUtils.js';
 
 /**
  * @class AbstractTurnState
@@ -133,36 +134,7 @@ export class AbstractTurnState extends ITurnState {
    * @returns {import('../../logging/consoleLogger.js').default | Console} The logger instance.
    */
   _resolveLogger(turnCtx, handler) {
-    try {
-      if (turnCtx && typeof turnCtx.getLogger === 'function') {
-        const logger = turnCtx.getLogger();
-        if (logger) {
-          return logger;
-        }
-      }
-    } catch (err) {
-      console.error(
-        `${this.getStateName()}: Error getting logger from turnCtx: ${err.message}`,
-        err
-      );
-    }
-
-    try {
-      const resolvedHandler = handler || this._handler;
-      if (resolvedHandler && typeof resolvedHandler.getLogger === 'function') {
-        const logger = resolvedHandler.getLogger();
-        if (logger) {
-          return logger;
-        }
-      }
-    } catch (err) {
-      console.error(
-        `${this.getStateName()}: Error getting logger from handler: ${err.message}`,
-        err
-      );
-    }
-
-    return console;
+    return getLogger(turnCtx, handler || this._handler);
   }
 
   /**
@@ -176,34 +148,7 @@ export class AbstractTurnState extends ITurnState {
    *   The resolved dispatcher or null if unavailable.
    */
   _getSafeEventDispatcher(turnCtx, handler = this._handler) {
-    if (turnCtx && typeof turnCtx.getSafeEventDispatcher === 'function') {
-      try {
-        const dispatcher = turnCtx.getSafeEventDispatcher();
-        if (dispatcher && typeof dispatcher.dispatch === 'function') {
-          return dispatcher;
-        }
-      } catch (err) {
-        this._resolveLogger(turnCtx, handler).error(
-          `${this.getStateName()}: Error calling turnCtx.getSafeEventDispatcher(): ${err.message}`,
-          err
-        );
-      }
-    }
-
-    if (
-      handler?.safeEventDispatcher &&
-      typeof handler.safeEventDispatcher.dispatch === 'function'
-    ) {
-      this._resolveLogger(turnCtx, handler).warn(
-        `${this.getStateName()}: SafeEventDispatcher not found on ITurnContext. Falling back to handler.safeEventDispatcher.`
-      );
-      return handler.safeEventDispatcher;
-    }
-
-    this._resolveLogger(turnCtx, handler).warn(
-      `${this.getStateName()}: SafeEventDispatcher unavailable.`
-    );
-    return null;
+    return getSafeEventDispatcher(turnCtx, handler);
   }
 
   // --- Interface Methods with Default Implementations ---
