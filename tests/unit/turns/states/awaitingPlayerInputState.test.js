@@ -296,7 +296,8 @@ describe('AwaitingActorDecisionState (PTH-REFACTOR-003.5.7)', () => {
         mockHandler,
         mockPreviousState
       );
-      const expectedErrorMsg = `AwaitingActorDecisionState: turnContext.getStrategy() is not a function for actor ${testActor.id}.`;
+      const expectedErrorMsg =
+        'AwaitingActorDecisionState: ITurnContext missing required methods: getStrategy';
       expect(mockLogger.error).toHaveBeenCalledWith(expectedErrorMsg);
       expect(mockTestTurnContext.endTurn).toHaveBeenCalledWith(
         expect.any(Error)
