@@ -38,60 +38,82 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
   #safeEventDispatcher;
 
   static DOMAIN_HANDLERS = {
-    none(
-      actionDef,
-      actorEntity,
-      _currentLocation,
-      _locIdForLog,
-      _domain,
-      _context,
-      formatterOptions
-    ) {
-      return discoverSelfOrNone(
-        actionDef,
-        actorEntity,
-        formatterOptions,
-        this.#buildDiscoveredAction.bind(this)
+    none(...args) {
+      return ActionDiscoveryService.callHandler(
+        discoverSelfOrNone,
+        this,
+        ...args
       );
     },
-    self(
-      actionDef,
-      actorEntity,
-      _currentLocation,
-      _locIdForLog,
-      _domain,
-      _context,
-      formatterOptions
-    ) {
-      return discoverSelfOrNone(
-        actionDef,
-        actorEntity,
-        formatterOptions,
-        this.#buildDiscoveredAction.bind(this)
+    self(...args) {
+      return ActionDiscoveryService.callHandler(
+        discoverSelfOrNone,
+        this,
+        ...args
       );
     },
-    direction(
+    direction(...args) {
+      return ActionDiscoveryService.callHandler(
+        discoverDirectionalActions,
+        this,
+        ...args
+      );
+    },
+  };
+
+  /**
+   * @description Wrapper that invokes the provided discovery handler with
+   *   parameters forwarded from DOMAIN_HANDLERS.
+   * @param {Function} handler - Discovery handler to invoke.
+   * @param {ActionDiscoveryService} svc - Service instance providing context.
+   * @param {...any} args - Arguments forwarded from DOMAIN_HANDLERS.
+   * @returns {import('../interfaces/IActionDiscoveryService.js').DiscoveredActionInfo[]}
+   *   Results from the handler.
+   */
+  static callHandler(handler, svc, ...args) {
+    const [
       actionDef,
       actorEntity,
       currentLocation,
       locIdForLog,
-      _domain,
-      _context,
-      formatterOptions
-    ) {
-      return discoverDirectionalActions(
-        actionDef,
-        actorEntity,
-        currentLocation,
-        locIdForLog,
-        formatterOptions,
-        this.#buildDiscoveredAction.bind(this),
-        this.#entityManager,
-        this.#safeEventDispatcher,
-        this.#logger
-      );
-    },
-  };
+      domain,
+      context,
+      formatterOptions,
+    ] = args;
+
+    switch (handler) {
+      case discoverSelfOrNone:
+        return handler(
+          actionDef,
+          actorEntity,
+          formatterOptions,
+          svc.#buildDiscoveredAction.bind(svc)
+        );
+      case discoverDirectionalActions:
+        return handler(
+          actionDef,
+          actorEntity,
+          currentLocation,
+          locIdForLog,
+          formatterOptions,
+          svc.#buildDiscoveredAction.bind(svc),
+          svc.#entityManager,
+          svc.#safeEventDispatcher,
+          svc.#logger
+        );
+      default:
+        return discoverScopedEntityActions(
+          actionDef,
+          actorEntity,
+          domain,
+          context,
+          formatterOptions,
+          svc.#buildDiscoveredAction.bind(svc),
+          svc.#getEntityIdsForScopesFn,
+          svc.#logger
+        );
+    }
+  }
 
   /**
    * @param {object} deps
@@ -214,26 +236,12 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
     try {
       const handler =
         this.constructor.DOMAIN_HANDLERS[domain] ||
-        function (
-          actionDefArg,
-          actorEntityArg,
-          _currentLocationArg,
-          _locIdForLogArg,
-          domainArg,
-          contextArg,
-          formatterOptionsArg
-        ) {
-          return discoverScopedEntityActions(
-            actionDefArg,
-            actorEntityArg,
-            domainArg,
-            contextArg,
-            formatterOptionsArg,
-            this.#buildDiscoveredAction.bind(this),
-            this.#getEntityIdsForScopesFn,
-            this.#logger
-          );
-        };
+        ((...handlerArgs) =>
+          ActionDiscoveryService.callHandler(
+            discoverScopedEntityActions,
+            this,
+            ...handlerArgs
+          ));
       return handler.call(
         this,
         actionDef,
