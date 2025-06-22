@@ -11,11 +11,14 @@ import {
   buildSaveDispatches,
   expectNoDispatch,
 } from '../../common/engine/dispatchTestUtils.js';
-import { DEFAULT_ACTIVE_WORLD_FOR_SAVE } from '../../common/constants.js';
+import {
+  DEFAULT_ACTIVE_WORLD_FOR_SAVE,
+  DEFAULT_SAVE_NAME,
+} from '../../common/constants.js';
 
 describeEngineSuite('GameEngine', (ctx) => {
   describe('triggerManualSave', () => {
-    const SAVE_NAME = 'MySaveFile';
+    const SAVE_NAME = DEFAULT_SAVE_NAME;
     const MOCK_ACTIVE_WORLD_FOR_SAVE = DEFAULT_ACTIVE_WORLD_FOR_SAVE;
 
     it('should dispatch error and not attempt save if engine is not initialized', async () => {
@@ -43,7 +46,10 @@ describeEngineSuite('GameEngine', (ctx) => {
           ],
           async (bed, engine) => {
             const result = await engine.triggerManualSave(SAVE_NAME);
+
+            // eslint-disable-next-line jest/no-standalone-expect
             expectNoDispatch(bed.mocks.safeEventDispatcher.dispatch);
+            // eslint-disable-next-line jest/no-standalone-expect
             expect(result).toEqual({
               success: false,
               error:

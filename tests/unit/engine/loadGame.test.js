@@ -7,10 +7,11 @@ import {
   runUnavailableServiceSuite,
   setupLoadGameSpies,
 } from '../../common/engine/gameEngineHelpers.js';
+import { DEFAULT_SAVE_ID } from '../../common/constants.js';
 
 describeEngineSuite('GameEngine', (ctx) => {
   describe('loadGame', () => {
-    const SAVE_ID = 'savegame-001.sav';
+    const SAVE_ID = DEFAULT_SAVE_ID;
     const mockSaveData = {
       metadata: { gameTitle: 'My Loaded Game Adventure' },
     };
@@ -191,7 +192,10 @@ describeEngineSuite('GameEngine', (ctx) => {
       ],
       async (bed, engine, expectedMsg) => {
         const result = await engine.loadGame(SAVE_ID);
+
+        // eslint-disable-next-line jest/no-standalone-expect
         expectNoDispatch(bed.mocks.safeEventDispatcher.dispatch);
+        // eslint-disable-next-line jest/no-standalone-expect
         expect(result).toEqual({
           success: false,
           error: expectedMsg,
