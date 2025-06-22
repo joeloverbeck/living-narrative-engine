@@ -87,8 +87,3 @@ export function getSafeEventDispatcher(turnCtx, handler) {
   );
   return null;
 }
-
-export default {
-  getLogger,
-  getSafeEventDispatcher,
-};

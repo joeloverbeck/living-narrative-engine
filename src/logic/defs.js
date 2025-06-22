@@ -6,7 +6,7 @@
 /** @typedef {import('../events/validatedEventDispatcher.js').default} ValidatedEventDispatcher */ // User confirmed preference
 /** @typedef {import('../entities/entity.js').default} Entity */
 /** @typedef {import('../data/gameDataRepository.js').default} GameDataRepository */ // <<< CORRECTED PATH based on provided service implementation
-/** @typedef {import('./services/closenessCircleService.js').default} ClosenessCircleService */
+/** @typedef {import('./services/closenessCircleService.js')} ClosenessCircleService */
 
 // --- Existing Type Definitions (Assuming these are up-to-date) ---
 /**

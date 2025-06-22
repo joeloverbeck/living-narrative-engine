@@ -52,4 +52,3 @@ export function persistThoughts(action, actorEntity, logger) {
 }
 
 // Convenience default export
-export default { processTurnAction: persistThoughts };

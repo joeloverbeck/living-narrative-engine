@@ -68,8 +68,4 @@ function repair(partners = []) {
   return uniquePartners.sort();
 }
 
-export default {
-  dedupe,
-  merge,
-  repair,
-};
+export { dedupe, merge, repair };

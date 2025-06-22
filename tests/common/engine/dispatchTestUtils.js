@@ -238,20 +238,3 @@ export function expectComponentRemovedDispatch(
 export const expectNoDispatch = (mock) => expect(mock).not.toHaveBeenCalled();
 
 export { expectDispatchSequence as expectDispatchCalls };
-
-export default {
-  expectDispatchSequence,
-  buildSaveDispatches,
-  buildStopDispatches,
-  buildStartDispatches,
-  expectEngineStatus,
-  expectEngineRunning,
-  expectEngineStopped,
-  expectSingleDispatch,
-  expectEntityCreatedDispatch,
-  expectEntityRemovedDispatch,
-  expectComponentAddedDispatch,
-  expectComponentRemovedDispatch,
-  expectNoDispatch,
-  expectDispatchCalls: expectDispatchSequence,
-};

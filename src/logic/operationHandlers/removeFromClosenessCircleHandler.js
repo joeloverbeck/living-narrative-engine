@@ -8,7 +8,7 @@
 /** @typedef {import('../defs.js').ExecutionContext} ExecutionContext */
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 
-import ClosenessCircleService from '../services/closenessCircleService.js';
+import { repair } from '../services/closenessCircleService.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../constants/eventIds.js';
 import {
   initHandlerLogger,
@@ -134,7 +134,7 @@ class RemoveFromClosenessCircleHandler {
       );
       if (!partnerData) continue;
       const updated = partnerData.partners.filter((p) => p !== actorId);
-      const repaired = ClosenessCircleService.repair(updated);
+      const repaired = repair(updated);
       if (repaired.length === 0) {
         this.#entityManager.removeComponent(pid, 'intimacy:closeness');
         toUnlock.push(pid);
