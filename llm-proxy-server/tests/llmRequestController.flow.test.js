@@ -115,6 +115,48 @@ describe('LlmRequestController flow', () => {
     );
   });
 
+  test('returns 500 when ApiKeyService gives no key or error', async () => {
+    apiKeyService.isApiKeyRequired.mockReturnValue(true);
+    apiKeyService.getApiKey.mockResolvedValue({
+      apiKey: null,
+      errorDetails: null,
+      source: 'env',
+    });
+    await controller.handleLlmRequest(req, res);
+    expect(sendProxyError).toHaveBeenCalledWith(
+      res,
+      500,
+      'internal_api_key_service_state_error',
+      expect.stringContaining('could not be obtained'),
+      expect.objectContaining({ llmId: 'llm1' }),
+      'llm1',
+      logger
+    );
+  });
+
+  test('succeeds when API key is required and retrieved', async () => {
+    apiKeyService.isApiKeyRequired.mockReturnValue(true);
+    apiKeyService.getApiKey.mockResolvedValue({
+      apiKey: 'abc',
+      errorDetails: null,
+      source: 'env',
+    });
+    llmRequestService.forwardRequest.mockResolvedValue({
+      success: true,
+      data: { ok: true },
+      statusCode: 200,
+      contentTypeIfSuccess: CONTENT_TYPE_JSON,
+    });
+    await controller.handleLlmRequest(req, res);
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(res.set).toHaveBeenCalledWith(
+      HTTP_HEADER_CONTENT_TYPE,
+      CONTENT_TYPE_JSON
+    );
+    expect(res.json).toHaveBeenCalledWith({ ok: true });
+    expect(sendProxyError).not.toHaveBeenCalled();
+  });
+
   test('sends successful response on happy path', async () => {
     apiKeyService.isApiKeyRequired.mockReturnValue(false);
     llmRequestService.forwardRequest.mockResolvedValue({
