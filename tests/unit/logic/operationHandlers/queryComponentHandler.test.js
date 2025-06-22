@@ -190,7 +190,7 @@ describe('QueryComponentHandler', () => {
       result_variable: 'targetPos',
     };
     const context = getMockContext();
-    mockEntityManager.getComponentData.mockReturnValue({ x: 1, y: 2 });
+    mockEntityManager.getComponentData.mockReturnValue({ locationId: 'test:location' });
     handler.execute(params, context);
     expect(mockEntityManager.getComponentData).toHaveBeenCalledWith(
       mockTargetId,

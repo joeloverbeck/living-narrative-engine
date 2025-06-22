@@ -367,7 +367,7 @@ describe('InMemoryDataRegistry', () => {
       const playerNoLocId = {
         id: 'playerNoLocId',
         name: 'Nowhere Hero',
-        components: { 'core:player': {}, 'core:position': { x: 0, y: 0 } },
+        components: { 'core:player': {}, 'core:position': {} },
       };
       registry.store('entityDefinitions', playerNoLocId.id, playerNoLocId);
       expect(registry.getStartingPlayerId()).toBe(playerNoLocId.id);

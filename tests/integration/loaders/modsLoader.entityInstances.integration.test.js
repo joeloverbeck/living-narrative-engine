@@ -251,7 +251,7 @@ describe('Integration: EntityInstance componentOverrides are respected during wo
     registry.store('entityDefinitions', 'mod:hero', new EntityDefinition('mod:hero', {
       components: {
         'core:name': { text: 'Hero' },
-        'core:position': { locationId: 'default:place', x: 1, y: 1 },
+        'core:position': { locationId: 'default:place' },
       },
     }));
     // Add an instance with an override
@@ -259,7 +259,7 @@ describe('Integration: EntityInstance componentOverrides are respected during wo
       instanceId: 'mod:hero_instance',
       definitionId: 'mod:hero',
       componentOverrides: {
-        'core:position': { locationId: 'special:place', x: 42, y: 99 },
+        'core:position': { locationId: 'special:place' },
       },
     });
     // Add a world referencing the instance
@@ -281,8 +281,6 @@ describe('Integration: EntityInstance componentOverrides are respected during wo
     const pos = entity.getComponentData('core:position');
     expect(pos).toBeTruthy();
     expect(pos.locationId).toBe('special:place');
-    expect(pos.x).toBe(42);
-    expect(pos.y).toBe(99);
   });
 });
 

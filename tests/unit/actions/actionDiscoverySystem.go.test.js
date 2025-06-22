@@ -81,7 +81,7 @@ describe('ActionDiscoveryService - Go Action (Fixed State)', () => {
     'core:actor': {},
     'core:player': {},
     'core:name': { text: 'Hero' },
-    [POSITION_COMPONENT_ID]: { locationId: GUILD_INSTANCE_ID, x: 0, y: 0 },
+    [POSITION_COMPONENT_ID]: { locationId: GUILD_INSTANCE_ID },
   };
   const adventurersGuildEntityDefinitionData = {
     id: GUILD_DEFINITION_ID,

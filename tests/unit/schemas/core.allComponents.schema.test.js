@@ -60,7 +60,7 @@ describe('JSON-Schema – core component data contracts', () => {
     'core:goals': { goals: [] },
     'core:perception_log': { logEntries: [], maxEntries: 5 },
     'core:portrait': { imagePath: 'image.png', altText: 'desc' },
-    'core:position': { locationId: 'core:room', x: 0, y: 0 },
+    'core:position': { locationId: 'core:room' },
     'core:short_term_memory': { thoughts: [], maxEntries: 5 },
     'core:speech_patterns': { patterns: ['hello'] },
     'core:exits': [],

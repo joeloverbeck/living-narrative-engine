@@ -109,7 +109,7 @@ describe('SpatialIndexSynchronizer', () => {
     it('should not add an entity if it has no locationId', () => {
       // Arrange
       synchronizer = initializeSynchronizer();
-      const entity = createMockEntity('entity-1', { x: 5, y: 10 });
+      const entity = createMockEntity('entity-1', {});
       const payload = { entity, wasReconstructed: false };
 
       // Act
@@ -140,7 +140,7 @@ describe('SpatialIndexSynchronizer', () => {
     it('should not attempt to remove an entity if it had no locationId', () => {
       // Arrange
       synchronizer = initializeSynchronizer();
-      const entity = createMockEntity('entity-1', { x: 5, y: 10 });
+      const entity = createMockEntity('entity-1', {});
       const payload = { entity };
 
       // Act
@@ -225,8 +225,8 @@ describe('SpatialIndexSynchronizer', () => {
       const payload = {
         entity,
         componentTypeId: POSITION_COMPONENT_ID,
-        componentData: { locationId: 'location-a', x: 2 },
-        oldComponentData: { locationId: 'location-a', x: 1 },
+        componentData: { locationId: 'location-a' },
+        oldComponentData: { locationId: 'location-a' },
       };
 
       // Act
