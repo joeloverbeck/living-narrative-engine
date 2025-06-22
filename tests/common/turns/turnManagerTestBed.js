@@ -12,10 +12,8 @@ import {
   createMockTurnHandler,
 } from '../mockFactories';
 import { createMockEntityManager } from '../mockFactories/entities.js';
-import { createStoppableMixin } from '../stoppableTestBedMixin.js';
 import { SpyTrackerMixin } from '../spyTrackerMixin.js';
 import { createServiceFactoryMixin } from '../serviceFactoryTestBedMixin.js';
-import BaseTestBed from '../baseTestBed.js';
 import { createDescribeTestBedSuite } from '../describeSuite.js';
 import { createTestBedHelpers } from '../createTestBedHelpers.js';
 import { flushPromisesAndTimers } from '../jestHelpers.js';
@@ -26,7 +24,6 @@ import { createDefaultActors } from './testActors.js';
  * dependencies and exposes helpers for common test operations.
  * @class
  */
-const StoppableMixin = createStoppableMixin('turnManager');
 
 const TurnManagerFactoryMixin = createServiceFactoryMixin(
   (overrides = {}) => ({
@@ -65,29 +62,11 @@ const TurnManagerFactoryMixin = createServiceFactoryMixin(
 );
 
 export class TurnManagerTestBed extends SpyTrackerMixin(
-  StoppableMixin(TurnManagerFactoryMixin())
+  TurnManagerFactoryMixin()
 ) {
   constructor(overrides = {}) {
     super(overrides);
     this.entityManager = this.mocks.entityManager;
-  }
-
-  /**
-   * Ensures the TurnManager is stopped exactly once during cleanup.
-   *
-   * @protected
-   * @override
-   * @returns {Promise<void>} Resolves when cleanup finishes.
-   */
-  async _afterCleanup() {
-    for (const spy of this._spies) {
-      spy.mockRestore();
-    }
-    this._spies.length = 0;
-    if (this.turnManager && typeof this.turnManager.stop === 'function') {
-      await this.turnManager.stop();
-    }
-    await BaseTestBed.prototype._afterCleanup.call(this);
   }
 
   /**
@@ -370,13 +349,6 @@ export class TurnManagerTestBed extends SpyTrackerMixin(
     await this.turnManager.advanceTurn();
     await flushPromisesAndTimers();
   }
-
-  /**
-   * Restores spies then stops the TurnManager via {@link StoppableMixin}.
-   *
-   * @protected
-   * @returns {Promise<void>} Promise resolving when manager cleanup is complete.
-   */
 }
 
 /**
