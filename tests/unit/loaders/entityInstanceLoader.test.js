@@ -114,7 +114,7 @@ describe('EntityInstanceLoader Integration Test Suite', () => {
 
     // 3. Item was stored in the registry
     expect(mockDataRegistry.store).toHaveBeenCalledWith(
-      'entity_instances', // Correct category
+      'entityInstances', // Correct category
       'test_mod:player_char', // Qualified ID as the key
       expect.objectContaining({
         // Properties from _storeItemInRegistry augmentation

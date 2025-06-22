@@ -148,7 +148,7 @@ describe('EntityInstanceLoader', () => {
       // 3. Assert IDataRegistry.store() was called once with the correct category, ID, and data.
       expect(mockDataRegistry.store).toHaveBeenCalledTimes(1);
       expect(mockDataRegistry.store).toHaveBeenCalledWith(
-        'entity_instances', // The category for instances
+        'entityInstances', // The category for instances
         'core:goblin_sentry_01',
         expectedStoredData
       );

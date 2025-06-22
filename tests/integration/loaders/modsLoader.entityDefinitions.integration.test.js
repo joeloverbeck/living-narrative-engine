@@ -160,6 +160,23 @@ describe('Integration: Entity Definitions and Instances Loader', () => {
     // DEBUG: Log all entity_definitions in the registry after loading
     const allEntities = registry.getAll('entityDefinitions');
     console.log('DEBUG: All entity_definitions in registry:', allEntities);
+
+    // Verify that entity instances are also loaded
+    const allInstances = registry.getAll('entityInstances');
+    expect(allInstances).toHaveLength(6);
+    expect(allInstances.map(i => i.instanceId)).toEqual(
+      expect.arrayContaining([
+        'isekai:adventurers_guild_instance',
+        'isekai:hero_instance',
+        'isekai:ninja_instance',
+        'isekai:receptionist_instance',
+        'isekai:sidekick_instance',
+        'isekai:town_instance',
+      ])
+    );
+
+    // Test individual instance retrieval
+    const instance = registry.get('entityInstances', 'isekai:adventurers_guild_instance');
   });
 
   const MOD_ID = 'isekai';
@@ -214,7 +231,7 @@ describe('Integration: Entity Definitions and Instances Loader', () => {
       console.log('DEBUG: Found entity instance files:', files);
 
       // DEBUG: Log all entity instances in registry
-      const allInstances = registry.getAll('entity_instances');
+      const allInstances = registry.getAll('entityInstances');
       console.log('DEBUG: All entity instances in registry:', allInstances);
 
       for (const file of files) {
@@ -228,7 +245,7 @@ describe('Integration: Entity Definitions and Instances Loader', () => {
           `DEBUG: Looking for entity instance with ID: ${instanceId}`
         );
 
-        const instance = registry.get('entity_instances', instanceId);
+        const instance = registry.get('entityInstances', instanceId);
         console.log(`DEBUG: Found instance:`, instance);
 
         expect(instance).toBeDefined();

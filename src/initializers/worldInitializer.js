@@ -125,57 +125,103 @@ class WorldInitializer {
   }
 
   /**
-   * Instantiates all entities from their definitions based on data from the repository. (Pass 1)
+   * Instantiates entities from the specified world's instances array. (Pass 1)
    * Dispatches 'worldinit:entity_instantiated' or 'worldinit:entity_instantiation_failed' events.
    *
+   * @param {string} worldName - The name of the world to instantiate entities from.
    * @returns {Promise<{entities: Entity[], count: number}>} An object containing the list of instantiated entities and their count.
    * @private
    */
-  async #_instantiateAllEntitiesFromDefinitions() {
+  async #_instantiateEntitiesFromWorld(worldName) {
     this.#logger.debug(
-      'WorldInitializer (Pass 1): Instantiating entities from definitions...'
+      `WorldInitializer (Pass 1): Instantiating entities from world: ${worldName}...`
     );
     let totalInstantiatedCount = 0;
     /** @type {Entity[]} */
     const instantiatedEntities = [];
 
-    const allEntityDefinitions =
-      this.#repository.getAllEntityDefinitions?.() || [];
-
-    if (allEntityDefinitions.length === 0) {
+    // Get the world data from the repository
+    const worldData = this.#repository.getWorld(worldName);
+    if (!worldData) {
       this.#logger.error(
-        'WorldInitializer (Pass 1): No entity definitions found. Game cannot start without entities.'
+        `WorldInitializer (Pass 1): World '${worldName}' not found in repository.`
       );
 
-      // Only allowed properties in details: statusCode, url, raw, stack, timestamp
       safeDispatchError(
         this.#validatedEventDispatcher,
-        'No entity definitions found. The game cannot start without any entities in the world.',
+        `World '${worldName}' not found. The game cannot start without a valid world.`,
         {
           statusCode: 500,
-          raw: 'No entity definitions available in game data repository. Context: WorldInitializer._instantiateAllEntitiesFromDefinitions, entityDefinitionsCount: 0, repositoryMethod: getAllEntityDefinitions',
+          raw: `World '${worldName}' not available in game data repository. Context: WorldInitializer._instantiateEntitiesFromWorld, worldName: ${worldName}, repositoryMethod: getWorld`,
           timestamp: new Date().toISOString(),
         }
       );
 
       throw new Error(
-        'Game cannot start: No entity definitions found in the world data. Please ensure at least one entity is defined.'
+        `Game cannot start: World '${worldName}' not found in the world data. Please ensure the world is properly defined.`
       );
     }
 
-    for (const entityDef of allEntityDefinitions) {
-      if (!entityDef || !entityDef.id) {
+    if (!worldData.instances || !Array.isArray(worldData.instances) || worldData.instances.length === 0) {
+      this.#logger.error(
+        `WorldInitializer (Pass 1): World '${worldName}' has no instances defined. Game cannot start without entities.`
+      );
+
+      safeDispatchError(
+        this.#validatedEventDispatcher,
+        `World '${worldName}' has no entities defined. The game cannot start without any entities in the world.`,
+        {
+          statusCode: 500,
+          raw: `World '${worldName}' has no instances defined. Context: WorldInitializer._instantiateEntitiesFromWorld, worldName: ${worldName}, instancesCount: 0`,
+          timestamp: new Date().toISOString(),
+        }
+      );
+
+      throw new Error(
+        `Game cannot start: World '${worldName}' has no entities defined. Please ensure at least one entity is defined in the world.`
+      );
+    }
+
+    this.#logger.debug(
+      `WorldInitializer (Pass 1): Found ${worldData.instances.length} instances in world '${worldName}'.`
+    );
+
+    for (const worldInstance of worldData.instances) {
+      if (!worldInstance || !worldInstance.instanceId || !worldInstance.definitionId) {
         this.#logger.warn(
-          'WorldInitializer (Pass 1): Skipping invalid entity definition (missing or empty id):',
-          entityDef
+          `WorldInitializer (Pass 1): Skipping invalid world instance (missing instanceId or definitionId):`,
+          worldInstance
         );
         continue;
       }
-      const definitionId = entityDef.id;
-      const instance = this.#entityManager.createEntityInstance(definitionId);
+
+      const { instanceId, definitionId, componentOverrides } = worldInstance;
+      
+      // Get the entity instance definition
+      const entityInstanceDef = this.#repository.getEntityInstanceDefinition(instanceId);
+      if (!entityInstanceDef) {
+        safeDispatchError(
+          this.#validatedEventDispatcher,
+          `Entity instance definition '${instanceId}' not found. World initialization cannot proceed without all required entity instances.`,
+          {
+            statusCode: 500,
+            raw: `Entity instance definition '${instanceId}' not found in repository. Context: WorldInitializer._instantiateEntitiesFromWorld, worldName: ${worldName}, instanceId: ${instanceId}, definitionId: ${definitionId}`,
+            timestamp: new Date().toISOString(),
+          }
+        );
+
+        throw new Error(
+          `World initialization failed: Entity instance definition '${instanceId}' not found. Please ensure all entity instances referenced in the world are properly defined.`
+        );
+      }
+
+      // Create the entity instance
+      const instance = this.#entityManager.createEntityInstance(definitionId, {
+        instanceId,
+        componentOverrides
+      });
 
       if (instance) {
-        // Changed from info to debug for less verbose default logging
         this.#logger.debug(
           `WorldInitializer (Pass 1): Instantiated entity ${instance.id} (from definition: ${instance.definitionId})`
         );
@@ -193,17 +239,17 @@ class WorldInitializer {
         );
       } else {
         this.#logger.warn(
-          `WorldInitializer (Pass 1): Failed to instantiate entity from definition: ${definitionId}.`
+          `WorldInitializer (Pass 1): Failed to instantiate entity from definition: ${definitionId} for instance: ${instanceId}.`
         );
         await this.#_dispatchWorldInitEvent(
           'worldinit:entity_instantiation_failed',
-          { definitionId: definitionId, reason: 'Initial World Load' },
-          `definition ${definitionId}`
+          { instanceId, definitionId, reason: 'Initial World Load' },
+          `instance ${instanceId}`
         );
       }
     }
     this.#logger.debug(
-      `WorldInitializer (Pass 1): Completed. Instantiated ${totalInstantiatedCount} total entities.`
+      `WorldInitializer (Pass 1): Completed. Instantiated ${totalInstantiatedCount} total entities from world '${worldName}'.`
     );
     return { entities: instantiatedEntities, count: totalInstantiatedCount };
   }
@@ -415,23 +461,24 @@ class WorldInitializer {
   }
 
   /**
-   * Instantiates initial world entities from definitions, resolves references (like location IDs),
+   * Instantiates initial world entities from the specified world's instances, resolves references (like location IDs),
    * and builds the spatial index.
    * Dispatches 'initialization:world_initializer:started/completed/failed' events.
    * Dispatches finer-grained 'worldinit:entity_instantiated' and 'worldinit:entity_instantiation_failed' events.
    *
+   * @param {string} worldName - The name of the world to initialize entities for.
    * @returns {Promise<boolean>} Resolves with true if successful.
    * @throws {Error} If a critical error occurs during initialization that should stop the process.
    */
-  async initializeWorldEntities() {
+  async initializeWorldEntities(worldName) {
     this.#logger.debug(
-      'WorldInitializer: Starting world entity initialization process...'
+      `WorldInitializer: Starting world entity initialization process for world: ${worldName}...`
     );
     // Event 'initialization:world_initializer:started' could be dispatched here if needed.
 
     try {
       const { entities: instantiatedEntities } =
-        await this.#_instantiateAllEntitiesFromDefinitions();
+        await this.#_instantiateEntitiesFromWorld(worldName);
 
       if (instantiatedEntities && instantiatedEntities.length > 0) {
         await this.#_resolveReferencesAndPopulateSpatialIndex(
@@ -444,7 +491,7 @@ class WorldInitializer {
       }
 
       this.#logger.debug(
-        'WorldInitializer: World entity initialization and spatial indexing complete.'
+        `WorldInitializer: World entity initialization and spatial indexing complete for world: ${worldName}.`
       );
       // Event 'initialization:world_initializer:completed' could be dispatched here.
       return true;
@@ -460,7 +507,7 @@ class WorldInitializer {
         )
       ) {
         this.#logger.error(
-          'WorldInitializer: CRITICAL ERROR during entity initialization or reference resolution:',
+          `WorldInitializer: CRITICAL ERROR during entity initialization or reference resolution for world '${worldName}':`,
           error
         );
       }
