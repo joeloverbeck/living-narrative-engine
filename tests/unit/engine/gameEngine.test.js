@@ -60,7 +60,7 @@ describeEngineSuite('GameEngine', (ctx) => {
         throw resolutionError;
       });
 
-      expect(() => testBed.env.createGameEngine()).toThrow(
+      expect(() => testBed.env.createInstance()).toThrow(
         `GameEngine: Failed to resolve core services. ${resolutionError.message}`
       );
 

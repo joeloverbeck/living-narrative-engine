@@ -50,26 +50,19 @@ const tokenMap = {
  *   playtimeTracker: ReturnType<typeof createMockPlaytimeTracker>,
  *   safeEventDispatcher: ReturnType<typeof createMockSafeEventDispatcher>,
  *   initializationService: ReturnType<typeof createMockInitializationService>,
- *   createGameEngine: () => GameEngine,
+ *   instance: GameEngine,
+ *   createInstance: () => GameEngine,
  *   cleanup: () => void,
  * }}
  *   Test environment utilities and mocks.
  */
 export function createTestEnvironment(overrides = {}) {
-  const { mocks, mockContainer, instance, cleanup } =
-    createServiceTestEnvironment(
-      factoryMap,
-      tokenMap,
-      (container) => new GameEngine({ container }),
-      overrides
-    );
-  const createGameEngine = () => new GameEngine({ container: mockContainer });
-
-  return {
-    mockContainer,
-    ...mocks,
-    gameEngine: instance,
-    createGameEngine,
-    cleanup,
-  };
+  const env = createServiceTestEnvironment(
+    factoryMap,
+    tokenMap,
+    (container) => new GameEngine({ container }),
+    undefined,
+    overrides
+  );
+  return env;
 }

@@ -139,15 +139,19 @@ export function createTestEnvironmentBuilder(factoryMap, tokenMap, createFn) {
  *   functions to create.
  * @param {Record<string | symbol, string | ((m: Record<string, any>) => any) | any>} tokenMap
  *   Map of DI tokens to mock keys, provider callbacks or constant values.
- * @param {(container: any, mocks: Record<string, any>) => any} [createFn]
- *   Function returning the system under test when provided the mock container
- *   and generated mocks.
+ * @param {(container: any, mocks: Record<string, any>) => any} buildFn
+ *   Factory that constructs the system under test when provided the mock
+ *   container and generated mocks.
+ * @param {(mocks: Record<string, any>, container: any) => void} [setupMocksFn]
+ *   Optional callback invoked before each service creation to allow adjustment
+ *   of mocks.
  * @param {Record<string | symbol, any>} [overrides] - Per-test DI token
  *   overrides.
  * @returns {{
  *   mocks: Record<string, any>,
  *   mockContainer: { resolve: jest.Mock },
  *   instance: any,
+ *   createInstance: () => any,
  *   cleanup: () => void,
  * }}
  *   Generated environment instance.
@@ -155,9 +159,29 @@ export function createTestEnvironmentBuilder(factoryMap, tokenMap, createFn) {
 export function createServiceTestEnvironment(
   factoryMap,
   tokenMap,
-  createFn,
+  buildFn,
+  setupMocksFn,
   overrides = {}
 ) {
-  const build = createTestEnvironmentBuilder(factoryMap, tokenMap, createFn);
-  return build(overrides);
+  const serviceBuilder = createTestEnvironmentBuilder(
+    factoryMap,
+    tokenMap,
+    (container, m) => {
+      if (typeof setupMocksFn === 'function') {
+        setupMocksFn(m, container);
+      }
+      return buildFn(container, m);
+    }
+  );
+
+  const { mocks, mockContainer, instance, cleanup } = serviceBuilder(overrides);
+
+  const createInstance = () => {
+    if (typeof setupMocksFn === 'function') {
+      setupMocksFn(mocks, mockContainer);
+    }
+    return buildFn(mockContainer, mocks);
+  };
+
+  return { mocks, mockContainer, instance, createInstance, cleanup };
 }
