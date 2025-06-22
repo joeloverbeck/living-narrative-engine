@@ -8,6 +8,7 @@ import {
   expectEngineStatus,
   expectEngineRunning,
   expectEngineStopped,
+  createDispatchAsserter,
   expectEntityCreatedDispatch,
   expectEntityRemovedDispatch,
   expectComponentAddedDispatch,
@@ -71,6 +72,24 @@ describe('dispatchTestUtils', () => {
       const mock = jest.fn();
       mock('eventA', { a: 2 });
       expect(() => expectSingleDispatch(mock, 'eventA', { a: 1 })).toThrow();
+    });
+  });
+
+  describe('createDispatchAsserter', () => {
+    it('creates an asserter that validates dispatch payloads', () => {
+      const mock = jest.fn();
+      const asserter = createDispatchAsserter('eventA', (a, b) => ({ a, b }));
+      mock('eventA', { a: 1, b: 2 });
+
+      expect(() => asserter(mock, 1, 2)).not.toThrow();
+    });
+
+    it('fails when dispatch does not match', () => {
+      const mock = jest.fn();
+      const asserter = createDispatchAsserter('eventA', (a) => ({ a }));
+      mock('eventA', { a: 1 });
+
+      expect(() => asserter(mock, 2)).toThrow();
     });
   });
 
