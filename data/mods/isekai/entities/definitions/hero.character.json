@@ -14,11 +14,6 @@
       "imagePath": "portraits/hero.png",
       "altText": "A valiant hero with a bright sword."
     },
-    "core:position": {
-      "locationId": "isekai:adventurers_guild",
-      "x": 0,
-      "y": 0
-    },
     "core:perception_log": {
       "maxEntries": 50,
       "logEntries": []

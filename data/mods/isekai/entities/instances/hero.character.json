@@ -1,5 +1,12 @@
 {
   "$schema": "http://example.com/schemas/entity-instance.schema.json",
   "instanceId": "isekai:hero_instance",
-  "definitionId": "isekai:hero"
+  "definitionId": "isekai:hero",
+  "componentOverrides": {
+    "core:position": {
+      "locationId": "isekai:adventurers_guild",
+      "x": 0,
+      "y": 0
+    }
+  }
 }

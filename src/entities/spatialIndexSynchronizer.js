@@ -66,7 +66,13 @@ export class SpatialIndexSynchronizer {
    *
    * @param {EntityCreatedPayload} payload
    */
-  onEntityAdded({ entity }) {
+  onEntityAdded(payload) {
+    const { entity } = payload;
+    if (!entity) return;
+    this.logger.debug(`SpatialIndexSynchronizer.onEntityAdded: Received payload with entity:`, entity);
+    this.logger.debug(`SpatialIndexSynchronizer.onEntityAdded: Entity type:`, typeof entity);
+    this.logger.debug(`SpatialIndexSynchronizer.onEntityAdded: Entity constructor:`, entity?.constructor?.name);
+    
     const position = entity.getComponentData(POSITION_COMPONENT_ID);
     if (position?.locationId) {
       this.spatialIndex.addEntity(entity.id, position.locationId);
@@ -81,7 +87,9 @@ export class SpatialIndexSynchronizer {
    *
    * @param {EntityRemovedPayload} payload
    */
-  onEntityRemoved({ entity }) {
+  onEntityRemoved(payload) {
+    const { entity } = payload;
+    if (!entity) return;
     const position = entity.getComponentData(POSITION_COMPONENT_ID);
     // We must remove the entity from its last known location
     if (position?.locationId) {

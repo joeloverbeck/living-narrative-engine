@@ -1,5 +1,12 @@
 {
   "$schema": "http://example.com/schemas/entity-instance.schema.json",
   "instanceId": "isekai:receptionist_instance",
-  "definitionId": "isekai:receptionist"
+  "definitionId": "isekai:receptionist",
+  "componentOverrides": {
+    "core:position": {
+      "locationId": "isekai:adventurers_guild",
+      "x": 0,
+      "y": 0
+    }
+  }
 }
