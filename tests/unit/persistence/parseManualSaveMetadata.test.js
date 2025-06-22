@@ -97,4 +97,19 @@ describe('SaveFileRepository.parseManualSaveMetadata', () => {
       isCorrupted: true,
     });
   });
+
+  it('flags invalid file names early', async () => {
+    const result = await repo.parseManualSaveMetadata('');
+
+    expect(result).toEqual({
+      metadata: {
+        identifier: manualSavePath(''),
+        saveName: ' (Invalid Name)',
+        timestamp: 'N/A',
+        playtimeSeconds: 0,
+      },
+      isCorrupted: true,
+    });
+    expect(logger.error).toHaveBeenCalled();
+  });
 });

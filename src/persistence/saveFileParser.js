@@ -3,6 +3,7 @@ import {
   getManualSavePath,
   manualSavePath,
 } from '../utils/savePathUtils.js';
+import { isValidSaveString } from './saveInputValidators.js';
 import { validateSaveMetadataFields } from '../utils/saveMetadataUtils.js';
 import { MSG_FILE_READ_ERROR, MSG_EMPTY_FILE } from './persistenceMessages.js';
 import { PersistenceErrorCodes } from './persistenceErrors.js';
@@ -142,7 +143,16 @@ export default class SaveFileParser extends BaseService {
    * @returns {Promise<import('./persistenceTypes.js').ParseSaveFileResult>} Parsed metadata result.
    */
   async parseManualSaveFile(fileName) {
-    const filePath = getManualSavePath(extractSaveName(fileName));
+    const isValidName = isValidSaveString(fileName);
+    const filePath = isValidName
+      ? getManualSavePath(extractSaveName(fileName))
+      : manualSavePath(String(fileName));
+
+    if (!isValidName) {
+      this.#logger.error(`Invalid manual save file name: ${fileName}`);
+      return this.#corruptedResult(filePath, fileName, ' (Invalid Name)');
+    }
+
     this.#logger.debug(`Processing file: ${filePath}`);
 
     try {
