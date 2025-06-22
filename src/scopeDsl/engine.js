@@ -139,11 +139,17 @@ class ScopeEngine {
      * @private
      */
     resolveStep(node, actorId, runtimeCtx, depth) {
-        // depth accounting: +1 for the step itself, +1 more if it is an array-iteration ([])
+        // depth accounting: +1 for the step itself, +1 more if it is an array-iteration ([]) 
         const nextDepth = depth + 1 + (node.isArray ? 1 : 0);
         const parentResult = this.resolveNode(node.parent, actorId, runtimeCtx, nextDepth);
 
         if (parentResult.size === 0) return new Set();
+
+        // Special case: array iteration after entities() or entities(!...)
+        if (node.field === null && node.isArray === true && node.parent && node.parent.type === 'Source' && node.parent.kind === 'entities') {
+            // parentResult is already the set of entity IDs
+            return new Set(parentResult);
+        }
 
         /* Special case: `.entities(componentId)` filter-step  */
         if (node.field === 'entities' && node.param) {

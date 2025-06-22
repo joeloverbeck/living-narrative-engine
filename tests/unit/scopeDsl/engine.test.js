@@ -384,5 +384,91 @@ describe('ScopeEngine', () => {
         expect(result.size).toBe(1001); // actor + 1000 entities
       });
     });
+
+    describe('Entities source (positive/negative, chaining)', () => {
+      test('entities(core:item)[] returns all entities with component', () => {
+        const ast = parseInlineExpr('entities(core:item)[]');
+        const actorId = 'actor123';
+        const entitiesWithComponent = [
+          { id: 'entity1' },
+          { id: 'entity2' },
+          { id: 'entity3' }
+        ];
+        mockEntityManager.getEntitiesWithComponent.mockReturnValue(entitiesWithComponent);
+        // For array iteration, the engine expects an array of IDs
+        // We'll simulate that by returning the array of IDs for the array step
+        mockEntityManager.getComponentData.mockImplementation((entityId, comp) => {
+          // Not used in this path
+          return undefined;
+        });
+        // The engine should iterate over the set of entity IDs
+        const result = engine.resolve(ast, actorId, mockRuntimeCtx);
+        expect(result).toEqual(new Set(['entity1', 'entity2', 'entity3']));
+      });
+      test('entities(!core:item)[] returns all entities without component', () => {
+        const ast = parseInlineExpr('entities(!core:item)[]');
+        const actorId = 'actor123';
+        const allEntities = [
+          { id: 'entity1' },
+          { id: 'entity2' },
+          { id: 'entity3' },
+          { id: 'entity4' }
+        ];
+        const entitiesWithComponent = [
+          { id: 'entity1' },
+          { id: 'entity3' }
+        ];
+        mockEntityManager.entities = allEntities;
+        mockEntityManager.getEntitiesWithComponent.mockReturnValue(entitiesWithComponent);
+        // The engine should return the IDs of entities without the component
+        // For array iteration, the engine expects an array of IDs
+        // We'll simulate that by returning the array of IDs for the array step
+        mockEntityManager.getComponentData.mockImplementation((entityId, comp) => {
+          // Not used in this path
+          return undefined;
+        });
+        // The engine should iterate over the set of entity IDs
+        // So the result should be ['entity2', 'entity4']
+        const result = engine.resolve(ast, actorId, mockRuntimeCtx);
+        expect(result).toEqual(new Set(['entity2', 'entity4']));
+      });
+      test('entities(core:item)[][filter] applies filter to entities with component', () => {
+        const ast = parseInlineExpr('entities(core:item)[][{"==": [{"var": "entity.id"}, "entity2"]}]');
+        const actorId = 'actor123';
+        const entitiesWithComponent = [
+          { id: 'entity1' },
+          { id: 'entity2' },
+          { id: 'entity3' }
+        ];
+        mockEntityManager.getEntitiesWithComponent.mockReturnValue(entitiesWithComponent);
+        mockEntityManager.getEntityInstance.mockImplementation((id) => ({ id }));
+        mockJsonLogicEval.evaluate
+          .mockReturnValueOnce(false)
+          .mockReturnValueOnce(true)
+          .mockReturnValueOnce(false);
+        const result = engine.resolve(ast, actorId, mockRuntimeCtx);
+        expect(result).toEqual(new Set(['entity2']));
+      });
+      test('entities(!core:item)[][filter] applies filter to entities without component', () => {
+        const ast = parseInlineExpr('entities(!core:item)[][{"==": [{"var": "entity.id"}, "entity4"]}]');
+        const actorId = 'actor123';
+        const allEntities = [
+          { id: 'entity1' },
+          { id: 'entity2' },
+          { id: 'entity3' },
+          { id: 'entity4' }
+        ];
+        const entitiesWithComponent = [
+          { id: 'entity1' },
+          { id: 'entity3' }
+        ];
+        mockEntityManager.entities = allEntities;
+        mockEntityManager.getEntitiesWithComponent.mockReturnValue(entitiesWithComponent);
+        mockEntityManager.getEntityInstance.mockImplementation((id) => ({ id }));
+        mockJsonLogicEval.evaluate.mockImplementation((logic, context) => context.entity.id === 'entity4');
+        const result = engine.resolve(ast, actorId, mockRuntimeCtx);
+        expect(result).toEqual(new Set(['entity4']));
+      });
+    });
   });
 }); 

@@ -83,6 +83,7 @@ class Tokenizer {
                 case '+': this.push('PLUS', '+'); break;
                 case '.': this.push('DOT', '.'); break;
                 case ':': this.push('COLON', ':'); break;
+                case '!': this.push('BANG', '!'); break;
                 case '"': this.readString(); continue; // consumes internally
                 default:
                     throw new ScopeSyntaxError(`Unexpected character: '${ch}'`, this.line, this.col, this.snippet());
@@ -196,7 +197,7 @@ class Parser {
             }
 
             /* ───── '[' … either bare array iteration or a filter ───── */
-            this.advance(); // we’re sitting just after '['
+            this.advance(); // we're sitting just after '['
 
             if (this.match('RBRACKET')) {
                 /* bare []  → does *NOT* count toward depth limit */
@@ -208,7 +209,7 @@ class Parser {
                 continue;
             }
 
-            /* otherwise it’s a filter: counts as an edge */
+            /* otherwise it's a filter: counts as an edge */
             depth++;
             if (depth > 4) this.error('Expression depth limit exceeded (max 4)');
 
@@ -293,9 +294,15 @@ class Parser {
     parseEntityReference() { return this.expect('IDENTIFIER', 'Expected entity reference').value; }
 
     parseComponentId() {
+        // Support optional leading '!'
+        let negate = false;
+        if (this.match('BANG')) {
+            this.advance();
+            negate = true;
+        }
         const first = this.expect('IDENTIFIER', 'Expected component identifier').value;
-        if (first.includes(':')) return first; // modern one‑token form
-        if (this.match('COLON')) { this.advance(); const second = this.expect('IDENTIFIER', 'Expected component name').value; return `${first}:${second}`; }
+        if (first.includes(':')) return negate ? '!' + first : first; // modern one‑token form
+        if (this.match('COLON')) { this.advance(); const second = this.expect('IDENTIFIER', 'Expected component name').value; return negate ? `!${first}:${second}` : `${first}:${second}`; }
         this.error('Expected colon in component ID');
     }
 
