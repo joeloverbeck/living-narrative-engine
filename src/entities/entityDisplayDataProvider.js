@@ -11,6 +11,7 @@ import { ensureValidLogger } from '../utils';
 import { getEntityDisplayName } from '../utils/entityUtils.js';
 import { isNonBlankString } from '../utils/textUtils.js';
 import { safeDispatchError } from '../utils/safeDispatchErrorUtils.js';
+import { extractModId } from '../utils/idUtils.js';
 
 /**
  * @typedef {import('../interfaces/IEntityManager.js').IEntityManager} IEntityManager
@@ -73,9 +74,14 @@ export class EntityDisplayDataProvider {
       requiredMethods: ['getEntityInstance'],
     });
 
-    validateDependency(safeEventDispatcher, 'safeEventDispatcher', effectiveLogger, {
-      requiredMethods: ['dispatch'],
-    });
+    validateDependency(
+      safeEventDispatcher,
+      'safeEventDispatcher',
+      effectiveLogger,
+      {
+        requiredMethods: ['dispatch'],
+      }
+    );
 
     this.#entityManager = entityManager;
     this.#logger = effectiveLogger;
@@ -161,11 +167,28 @@ export class EntityDisplayDataProvider {
       return null;
     }
 
-    const modId = this._getModIdFromDefinitionId(entity.definitionId);
+    const modId = extractModId(entity.definitionId);
     if (!modId) {
-      this.#logger.warn(
-        `${this._logPrefix} getEntityPortraitPath: Could not extract modId from definitionId '${entity.definitionId}' for entity '${entityId}'. Cannot construct portrait path.`
-      );
+      if (typeof entity.definitionId !== 'string' || !entity.definitionId) {
+        this.#logger.warn(
+          `${this._logPrefix} getEntityPortraitPath: Invalid or missing definitionId. Expected string, got:`,
+          entity.definitionId
+        );
+      } else {
+        safeDispatchError(
+          this.#safeEventDispatcher,
+          `Entity definitionId '${entity.definitionId}' has invalid format. Expected format 'modId:entityName'.`,
+          {
+            raw: JSON.stringify({
+              definitionId: entity.definitionId,
+              expectedFormat: 'modId:entityName',
+              functionName: 'extractModId',
+            }),
+            stack: new Error().stack,
+          },
+          this.#logger
+        );
+      }
       return null;
     }
 
@@ -244,7 +267,7 @@ export class EntityDisplayDataProvider {
       `${this._logPrefix} getEntityLocationId: Position component for '${entityId}':`,
       positionComponent
     );
-    
+
     if (
       positionComponent &&
       typeof positionComponent.locationId === 'string' &&
@@ -380,11 +403,28 @@ export class EntityDisplayDataProvider {
       return null;
     }
 
-    const modId = this._getModIdFromDefinitionId(entity.definitionId);
+    const modId = extractModId(entity.definitionId);
     if (!modId) {
-      this.#logger.warn(
-        `${this._logPrefix} getLocationPortraitData: Could not extract modId from definitionId '${entity.definitionId}' for location '${locationEntityId}'. Cannot construct portrait path.`
-      );
+      if (typeof entity.definitionId !== 'string' || !entity.definitionId) {
+        this.#logger.warn(
+          `${this._logPrefix} getLocationPortraitData: Invalid or missing definitionId. Expected string, got:`,
+          entity.definitionId
+        );
+      } else {
+        safeDispatchError(
+          this.#safeEventDispatcher,
+          `Entity definitionId '${entity.definitionId}' has invalid format. Expected format 'modId:entityName'.`,
+          {
+            raw: JSON.stringify({
+              definitionId: entity.definitionId,
+              expectedFormat: 'modId:entityName',
+              functionName: 'extractModId',
+            }),
+            stack: new Error().stack,
+          },
+          this.#logger
+        );
+      }
       return null;
     }
 
@@ -439,42 +479,5 @@ export class EntityDisplayDataProvider {
         };
       })
       .filter((exit) => exit !== null);
-  }
-
-  /**
-   * Extracts the mod ID from an entity's definitionId.
-   * For example, 'core:player' -> CORE_MOD_ID.
-   *
-   * @private
-   * @param {NamespacedId | string | undefined | null} definitionId - The definition ID of the entity (e.g., 'myMod:someEntity').
-   * @returns {string | null} The mod ID (namespace part) or null if invalid or not found.
-   */
-  _getModIdFromDefinitionId(definitionId) {
-    if (!definitionId || typeof definitionId !== 'string') {
-      this.#logger.warn(
-        `${this._logPrefix} _getModIdFromDefinitionId: Invalid or missing definitionId. Expected string, got:`,
-        definitionId
-      );
-      return null;
-    }
-    const parts = definitionId.split(':');
-    if (parts.length > 1 && parts[0] && parts[0].trim() !== '') {
-      return parts[0];
-    }
-    
-    safeDispatchError(
-      this.#safeEventDispatcher,
-      `Entity definitionId '${definitionId}' has invalid format. Expected format 'modId:entityName'.`,
-      {
-        raw: JSON.stringify({
-          definitionId,
-          expectedFormat: 'modId:entityName',
-          functionName: '_getModIdFromDefinitionId'
-        }),
-        stack: (new Error().stack)
-      },
-      this.#logger
-    );
-    return null;
   }
 }

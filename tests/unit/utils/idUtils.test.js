@@ -1,5 +1,8 @@
 import { describe, it, expect } from '@jest/globals';
-import { extractBaseIdFromFilename } from '../../../src/utils/idUtils.js';
+import {
+  extractBaseIdFromFilename,
+  extractModId,
+} from '../../../src/utils/idUtils.js';
 
 describe('extractBaseIdFromFilename', () => {
   it('strips directories and extension', () => {
@@ -22,5 +25,20 @@ describe('extractBaseIdFromFilename', () => {
     expect(extractBaseIdFromFilename('   ', ['.rule'])).toBe('');
     // @ts-ignore Testing invalid input type
     expect(extractBaseIdFromFilename(null, ['.rule'])).toBe('');
+  });
+});
+
+describe('extractModId', () => {
+  it('returns the namespace portion of a namespaced id', () => {
+    expect(extractModId('core:player')).toBe('core');
+    expect(extractModId('myMod:item:variant')).toBe('myMod');
+  });
+
+  it('returns undefined for missing or invalid ids', () => {
+    expect(extractModId('noColon')).toBeUndefined();
+    expect(extractModId(':startsWithColon')).toBeUndefined();
+    expect(extractModId('')).toBeUndefined();
+    // @ts-ignore invalid type
+    expect(extractModId(null)).toBeUndefined();
   });
 });

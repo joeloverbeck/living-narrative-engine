@@ -32,6 +32,24 @@ export function extractBaseId(fullId) {
 }
 
 /**
+ * @description Extracts the namespace or mod ID from a fully qualified ID.
+ * Similar to {@link module:EntityDefinition.modId} but usable independently.
+ * @param {string} fullId - ID in the format 'modId:entityName'.
+ * @returns {string|undefined} The mod ID, or `undefined` if none is present or invalid.
+ */
+export function extractModId(fullId) {
+  if (typeof fullId !== 'string') {
+    return undefined;
+  }
+  const trimmed = fullId.trim();
+  if (trimmed === '') {
+    return undefined;
+  }
+  const parts = trimmed.split(':');
+  return parts.length > 1 && parts[0] !== '' ? parts[0] : undefined;
+}
+
+/**
  * Parses and validates an ID property from a data object.
  * Ensures the ID exists and is a non-empty string, then attempts to
  * derive the base ID using {@link extractBaseId}.
