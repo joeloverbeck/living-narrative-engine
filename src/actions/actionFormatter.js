@@ -14,6 +14,7 @@
 import { getEntityDisplayName } from '../utils/entityUtils.js';
 import { safeDispatchError } from '../utils/safeDispatchErrorUtils.js';
 import { resolveSafeDispatcher } from '../utils/dispatcherUtils.js';
+import { TARGET_DOMAIN_NONE } from '../constants/targetDomains.js';
 
 /**
  * @typedef {Object.<string, (command: string, context: ActionTargetContext, deps: object) => (string|null)>} TargetFormatterMap
@@ -97,7 +98,7 @@ function formatNoneTarget(command, _context, { actionId, logger, debug }) {
   }
   if (command.includes('{target}') || command.includes('{direction}')) {
     logger.warn(
-      `formatActionCommand: Action ${actionId} has target_domain 'none' but template "${command}" contains placeholders.`
+      `formatActionCommand: Action ${actionId} has target_domain '${TARGET_DOMAIN_NONE}' but template "${command}" contains placeholders.`
     );
   }
   return command;

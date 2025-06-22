@@ -10,6 +10,11 @@
 
 import { ActionTargetContext } from '../models/actionTargetContext.js';
 import { getAvailableExits } from '../utils/locationUtils.js';
+import {
+  TARGET_DOMAIN_SELF,
+  TARGET_DOMAIN_NONE,
+  TARGET_DOMAIN_DIRECTION,
+} from '../constants/targetDomains.js';
 
 /**
  * @description Handles discovery for actions targeting 'self' or having no target.
@@ -27,7 +32,7 @@ export function discoverSelfOrNone(
   buildDiscoveredAction
 ) {
   const targetCtx =
-    actionDef.target_domain === 'self'
+    actionDef.target_domain === TARGET_DOMAIN_SELF
       ? ActionTargetContext.forEntity(actorEntity.id)
       : ActionTargetContext.noTarget();
 
