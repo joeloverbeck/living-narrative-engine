@@ -15,6 +15,7 @@ import { flushPromisesAndTimers } from '../../../common/turns/turnManagerTestBed
 
 // Use fake timers to control setTimeout/clearTimeout and advance time manually.
 jest.useFakeTimers();
+const TIMEOUT_MS = 10;
 
 // --- Module Mocks ---
 
@@ -143,7 +144,7 @@ describe('AwaitingExternalTurnEndState', () => {
       return mockUnsubscribeFn;
     });
 
-    state = new AwaitingExternalTurnEndState(mockHandler);
+    state = new AwaitingExternalTurnEndState(mockHandler, TIMEOUT_MS);
   });
 
   afterEach(() => {
@@ -198,9 +199,12 @@ describe('AwaitingExternalTurnEndState', () => {
         'actor-alpha'
       );
 
-      // 3. Sets a timeout. NODE_ENV is 'test', so it should be 3000ms.
+      // 3. Sets a timeout with the provided value.
       expect(setTimeoutSpy).toHaveBeenCalledTimes(1);
-      expect(setTimeoutSpy).toHaveBeenCalledWith(expect.any(Function), 3000);
+      expect(setTimeoutSpy).toHaveBeenCalledWith(
+        expect.any(Function),
+        TIMEOUT_MS
+      );
     });
 
     test.each([
@@ -353,8 +357,7 @@ describe('AwaitingExternalTurnEndState', () => {
       expect(mockEventDispatcher.dispatch).toHaveBeenCalledWith(
         SYSTEM_ERROR_OCCURRED_ID,
         {
-          message:
-            "No rule ended the turn for actor player-1 after action 'test-action'. The engine timed out after 3000 ms.",
+          message: `No rule ended the turn for actor player-1 after action 'test-action'. The engine timed out after ${TIMEOUT_MS} ms.`,
           details: {
             code: 'TURN_END_TIMEOUT',
             actorId: 'player-1',
@@ -368,7 +371,9 @@ describe('AwaitingExternalTurnEndState', () => {
       const endTurnError = mockTurnContext.endTurn.mock.calls[0][0];
       expect(endTurnError).toBeInstanceOf(Error);
       expect(endTurnError.code).toBe('TURN_END_TIMEOUT');
-      expect(endTurnError.message).toContain('timed out after 3000 ms');
+      expect(endTurnError.message).toContain(
+        `timed out after ${TIMEOUT_MS} ms`
+      );
     });
 
     test('should recover if endTurn throws an error during timeout handling', async () => {
