@@ -8,6 +8,7 @@ import eventIsTurnEnded from '../../../data/mods/core/conditions/event-is-turn_e
 import SetVariableHandler from '../../../src/logic/operationHandlers/setVariableHandler.js';
 import DispatchEventHandler from '../../../src/logic/operationHandlers/dispatchEventHandler.js';
 import RemoveComponentHandler from '../../../src/logic/operationHandlers/removeComponentHandler.js';
+import jsonLogic from 'json-logic-js';
 import { TURN_ENDED_ID } from '../../../src/constants/eventIds.js';
 import { createRuleTestEnvironment } from '../../common/engine/systemLogicTestEnv.js';
 import { SimpleEntityManager } from '../../common/entities/index.js';
@@ -28,11 +29,19 @@ import JsonLogicEvaluationService from '../../../src/logic/jsonLogicEvaluationSe
  * @param {object} entityManager - Entity manager instance
  * @param {object} eventBus - Event bus instance
  * @param {object} logger - Logger instance
+ * @param validatedEventDispatcher
+ * @param safeEventDispatcher
  * @returns {object} Handlers object
  */
-function createHandlers(entityManager, eventBus, logger, validatedEventDispatcher, safeEventDispatcher) {
+function createHandlers(
+  entityManager,
+  eventBus,
+  logger,
+  validatedEventDispatcher,
+  safeEventDispatcher
+) {
   return {
-    SET_VARIABLE: new SetVariableHandler({ logger }),
+    SET_VARIABLE: new SetVariableHandler({ logger, jsonLogic }),
     DISPATCH_EVENT: new DispatchEventHandler({ dispatcher: eventBus, logger }),
     REMOVE_COMPONENT: new RemoveComponentHandler({
       entityManager,
@@ -73,7 +82,13 @@ describe('core_handle_turn_ended rule integration', () => {
     });
     const entityManager = new SimpleEntityManager([]);
     const operationRegistry = new OperationRegistry({ logger: testLogger });
-    const handlers = createHandlers(entityManager, bus, testLogger, validatedEventDispatcher, safeEventDispatcher);
+    const handlers = createHandlers(
+      entityManager,
+      bus,
+      testLogger,
+      validatedEventDispatcher,
+      safeEventDispatcher
+    );
     for (const [type, handler] of Object.entries(handlers)) {
       operationRegistry.register(type, handler.execute.bind(handler));
     }
@@ -115,8 +130,16 @@ describe('core_handle_turn_ended rule integration', () => {
       reset: (newEntities = []) => {
         testEnv.cleanup();
         const newEntityManager = new SimpleEntityManager(newEntities);
-        const newHandlers = createHandlers(newEntityManager, bus, testLogger, validatedEventDispatcher, safeEventDispatcher);
-        const newOperationRegistry = new OperationRegistry({ logger: testLogger });
+        const newHandlers = createHandlers(
+          newEntityManager,
+          bus,
+          testLogger,
+          validatedEventDispatcher,
+          safeEventDispatcher
+        );
+        const newOperationRegistry = new OperationRegistry({
+          logger: testLogger,
+        });
         for (const [type, handler] of Object.entries(newHandlers)) {
           newOperationRegistry.register(type, handler.execute.bind(handler));
         }
@@ -166,7 +189,10 @@ describe('core_handle_turn_ended rule integration', () => {
       entityId: 'entity1',
     });
 
-    const currentActorComponent = testEnv.entityManager.getComponentData('entity1', 'core:current_actor');
+    const currentActorComponent = testEnv.entityManager.getComponentData(
+      'entity1',
+      'core:current_actor'
+    );
     expect(currentActorComponent).toBeNull();
   });
 });

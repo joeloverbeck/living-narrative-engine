@@ -8,6 +8,7 @@ import eventIsTurnStarted from '../../../data/mods/core/conditions/event-is-turn
 import SetVariableHandler from '../../../src/logic/operationHandlers/setVariableHandler.js';
 import DispatchEventHandler from '../../../src/logic/operationHandlers/dispatchEventHandler.js';
 import AddComponentHandler from '../../../src/logic/operationHandlers/addComponentHandler.js';
+import jsonLogic from 'json-logic-js';
 import { TURN_STARTED_ID } from '../../../src/constants/eventIds.js';
 import { createRuleTestEnvironment } from '../../common/engine/systemLogicTestEnv.js';
 
@@ -22,9 +23,13 @@ import { createRuleTestEnvironment } from '../../common/engine/systemLogicTestEn
 function createHandlers(entityManager, eventBus, logger) {
   const safeEventDispatcher = { dispatch: jest.fn() };
   return {
-    SET_VARIABLE: new SetVariableHandler({ logger }),
+    SET_VARIABLE: new SetVariableHandler({ logger, jsonLogic }),
     DISPATCH_EVENT: new DispatchEventHandler({ dispatcher: eventBus, logger }),
-    ADD_COMPONENT: new AddComponentHandler({ entityManager, logger, safeEventDispatcher }),
+    ADD_COMPONENT: new AddComponentHandler({
+      entityManager,
+      logger,
+      safeEventDispatcher,
+    }),
   };
 }
 
@@ -68,6 +73,8 @@ describe('core_handle_turn_started rule integration', () => {
     // The rule should add a core:current_actor component to the entity
     const entity = testEnv.entityManager.getEntityInstance('test-entity');
     expect(entity).toBeDefined();
-    expect(testEnv.entityManager.hasComponent('test-entity', 'core:current_actor')).toBe(true);
+    expect(
+      testEnv.entityManager.hasComponent('test-entity', 'core:current_actor')
+    ).toBe(true);
   });
 });

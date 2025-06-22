@@ -40,6 +40,7 @@ import OperationInterpreter from '../../../src/logic/operationInterpreter.js';
 import OperationRegistry from '../../../src/logic/operationRegistry.js';
 import JsonLogicEvaluationService from '../../../src/logic/jsonLogicEvaluationService.js';
 import { merge } from '../../../src/logic/services/closenessCircleService.js';
+import jsonLogic from 'json-logic-js';
 
 /**
  * Creates handlers needed for the get_close rule.
@@ -51,7 +52,13 @@ import { merge } from '../../../src/logic/services/closenessCircleService.js';
  * @param {object} safeEventDispatcher - Safe event dispatcher instance
  * @returns {object} Handlers object
  */
-function createHandlers(entityManager, eventBus, logger, validatedEventDispatcher, safeEventDispatcher) {
+function createHandlers(
+  entityManager,
+  eventBus,
+  logger,
+  validatedEventDispatcher,
+  safeEventDispatcher
+) {
   const closenessCircleService = { merge };
 
   return {
@@ -60,7 +67,7 @@ function createHandlers(entityManager, eventBus, logger, validatedEventDispatche
       logger,
       safeEventDispatcher: safeEventDispatcher,
     }),
-    SET_VARIABLE: new SetVariableHandler({ logger }),
+    SET_VARIABLE: new SetVariableHandler({ logger, jsonLogic }),
     MERGE_CLOSENESS_CIRCLE: new MergeClosenessCircleHandler({
       logger,
       entityManager,
@@ -106,7 +113,7 @@ describe('intimacy_handle_get_close rule integration', () => {
       ...getCloseRule,
       actions: expandMacros(getCloseRule.actions, macroRegistry, null),
     };
-    
+
     const dataRegistry = {
       getAllSystemRules: jest.fn().mockReturnValue([expandedRule]),
       getConditionDefinition: jest.fn((id) =>
@@ -157,7 +164,13 @@ describe('intimacy_handle_get_close rule integration', () => {
 
     // Create operation registry with our custom entity manager
     const operationRegistry = new OperationRegistry({ logger: testLogger });
-    const handlers = createHandlers(customEntityManager, bus, testLogger, validatedEventDispatcher, safeEventDispatcher);
+    const handlers = createHandlers(
+      customEntityManager,
+      bus,
+      testLogger,
+      validatedEventDispatcher,
+      safeEventDispatcher
+    );
     for (const [type, handler] of Object.entries(handlers)) {
       operationRegistry.register(type, handler.execute.bind(handler));
     }
@@ -180,16 +193,16 @@ describe('intimacy_handle_get_close rule integration', () => {
 
     // Create a simple event capture mechanism for testing
     const capturedEvents = [];
-    
+
     // Subscribe to the specific events we want to capture
     const eventsToCapture = [
       'core:perceptible_event',
-      'core:display_successful_action_result', 
+      'core:display_successful_action_result',
       'core:turn_ended',
-      'core:system_error_occurred'
+      'core:system_error_occurred',
     ];
-    
-    eventsToCapture.forEach(eventType => {
+
+    eventsToCapture.forEach((eventType) => {
       bus.subscribe(eventType, (event) => {
         capturedEvents.push({ eventType: event.type, payload: event.payload });
       });
@@ -212,10 +225,18 @@ describe('intimacy_handle_get_close rule integration', () => {
         testEnv.cleanup();
         // Create new entity manager with the new entities
         customEntityManager = new SimpleEntityManager(newEntities);
-        
+
         // Recreate handlers with the new entity manager
-        const newHandlers = createHandlers(customEntityManager, bus, testLogger, validatedEventDispatcher, safeEventDispatcher);
-        const newOperationRegistry = new OperationRegistry({ logger: testLogger });
+        const newHandlers = createHandlers(
+          customEntityManager,
+          bus,
+          testLogger,
+          validatedEventDispatcher,
+          safeEventDispatcher
+        );
+        const newOperationRegistry = new OperationRegistry({
+          logger: testLogger,
+        });
         for (const [type, handler] of Object.entries(newHandlers)) {
           newOperationRegistry.register(type, handler.execute.bind(handler));
         }
@@ -241,7 +262,7 @@ describe('intimacy_handle_get_close rule integration', () => {
         testEnv.operationInterpreter = newOperationInterpreter;
         testEnv.systemLogicInterpreter = newInterpreter;
         testEnv.entityManager = customEntityManager;
-        
+
         // Clear events
         capturedEvents.length = 0;
       },
@@ -299,10 +320,14 @@ describe('intimacy_handle_get_close rule integration', () => {
       targetId: 'b1',
     });
 
-    expect(testEnv.entityManager.getComponentData('a1', 'intimacy:closeness')).toEqual({
+    expect(
+      testEnv.entityManager.getComponentData('a1', 'intimacy:closeness')
+    ).toEqual({
       partners: ['b1'],
     });
-    expect(testEnv.entityManager.getComponentData('b1', 'intimacy:closeness')).toEqual({
+    expect(
+      testEnv.entityManager.getComponentData('b1', 'intimacy:closeness')
+    ).toEqual({
       partners: ['a1'],
     });
 
@@ -364,9 +389,7 @@ describe('intimacy_handle_get_close rule integration', () => {
       const partners = testEnv.entityManager
         .getComponentData(id, 'intimacy:closeness')
         .partners.sort();
-      expect(partners).toEqual(
-        expectedPartners.filter((p) => p !== id).sort()
-      );
+      expect(partners).toEqual(expectedPartners.filter((p) => p !== id).sort());
     }
 
     const types = testEnv.events.map((e) => e.eventType);
@@ -413,9 +436,7 @@ describe('intimacy_handle_get_close rule integration', () => {
       const partners = testEnv.entityManager
         .getComponentData(id, 'intimacy:closeness')
         .partners.sort();
-      expect(partners).toEqual(
-        expectedPartners.filter((p) => p !== id).sort()
-      );
+      expect(partners).toEqual(expectedPartners.filter((p) => p !== id).sort());
     }
 
     const types = testEnv.events.map((e) => e.eventType);

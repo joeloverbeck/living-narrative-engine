@@ -8,8 +8,6 @@
 /** @typedef {import('../defs.js').OperationParams} OperationParams */
 // <<< Ensure JsonLogicEvaluationService is NOT imported or used >>>
 
-// <<< ADDED Import: jsonLogic directly >>>
-import jsonLogic from 'json-logic-js';
 import { assertParamsObject } from '../../utils/handlerUtils/paramsUtils.js';
 import { tryWriteContextVariable } from '../../utils/contextVariableUtils.js';
 
@@ -38,15 +36,17 @@ import { tryWriteContextVariable } from '../../utils/contextVariableUtils.js';
  */
 class SetVariableHandler {
   #logger;
+  #jsonLogic;
 
   /**
    * Creates an instance of SetVariableHandler.
    *
    * @param {object} dependencies - Dependencies object.
    * @param {ILogger} dependencies.logger - The logging service instance.
+   * @param {object} dependencies.jsonLogic - Implementation of JsonLogic.
    * @throws {Error} If dependencies are missing or invalid.
    */
-  constructor({ logger }) {
+  constructor({ logger, jsonLogic }) {
     if (
       !logger ||
       typeof logger.debug !== 'function' ||
@@ -57,7 +57,13 @@ class SetVariableHandler {
         'SetVariableHandler requires a valid ILogger instance with debug, info, warn, and error methods.'
       );
     }
+    if (!jsonLogic || typeof jsonLogic.apply !== 'function') {
+      throw new Error(
+        'SetVariableHandler requires a jsonLogic instance with an apply method.'
+      );
+    }
     this.#logger = logger;
+    this.#jsonLogic = jsonLogic;
     this.#logger.debug('SetVariableHandler initialized.');
   }
 
@@ -86,7 +92,7 @@ class SetVariableHandler {
    */
   #performJsonLogicEvaluation(value, evaluationContext, varName) {
     try {
-      const result = jsonLogic.apply(value, evaluationContext);
+      const result = this.#jsonLogic.apply(value, evaluationContext);
       let evalResultString;
       try {
         evalResultString = JSON.stringify(result);

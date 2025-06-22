@@ -26,6 +26,7 @@ import DispatchPerceptibleEventHandler from '../../../src/logic/operationHandler
 import EndTurnHandler from '../../../src/logic/operationHandlers/endTurnHandler.js';
 import AddPerceptionLogEntryHandler from '../../../src/logic/operationHandlers/addPerceptionLogEntryHandler.js';
 import QueryComponentsHandler from '../../../src/logic/operationHandlers/queryComponentsHandler.js';
+import jsonLogic from 'json-logic-js';
 import {
   NAME_COMPONENT_ID,
   POSITION_COMPONENT_ID,
@@ -101,7 +102,13 @@ describe('core_handle_go rule integration', () => {
    * @param {object} safeEventDispatcher - Safe event dispatcher instance
    * @returns {object} Handlers object
    */
-  function createHandlers(entityManager, eventBus, logger, validatedEventDispatcher, safeEventDispatcher) {
+  function createHandlers(
+    entityManager,
+    eventBus,
+    logger,
+    validatedEventDispatcher,
+    safeEventDispatcher
+  ) {
     const worldContext = new SimpleWorldContext(entityManager, logger);
 
     return {
@@ -116,7 +123,7 @@ describe('core_handle_go rule integration', () => {
         safeEventDispatcher: safeEventDispatcher,
       }),
       GET_TIMESTAMP: new GetTimestampHandler({ logger }),
-      SET_VARIABLE: new SetVariableHandler({ logger }),
+      SET_VARIABLE: new SetVariableHandler({ logger, jsonLogic }),
       RESOLVE_DIRECTION: new ResolveDirectionHandler({
         worldContext,
         logger,
@@ -210,7 +217,13 @@ describe('core_handle_go rule integration', () => {
 
     // Create operation registry with our custom entity manager
     const operationRegistry = new OperationRegistry({ logger: testLogger });
-    const handlers = createHandlers(customEntityManager, bus, testLogger, validatedEventDispatcher, safeEventDispatcher);
+    const handlers = createHandlers(
+      customEntityManager,
+      bus,
+      testLogger,
+      validatedEventDispatcher,
+      safeEventDispatcher
+    );
     for (const [type, handler] of Object.entries(handlers)) {
       operationRegistry.register(type, handler.execute.bind(handler));
     }
@@ -248,10 +261,18 @@ describe('core_handle_go rule integration', () => {
         testEnv.cleanup();
         // Create new entity manager with the new entities
         customEntityManager = new SimpleEntityManager(newEntities);
-        
+
         // Recreate handlers with the new entity manager
-        const newHandlers = createHandlers(customEntityManager, bus, testLogger, validatedEventDispatcher, safeEventDispatcher);
-        const newOperationRegistry = new OperationRegistry({ logger: testLogger });
+        const newHandlers = createHandlers(
+          customEntityManager,
+          bus,
+          testLogger,
+          validatedEventDispatcher,
+          safeEventDispatcher
+        );
+        const newOperationRegistry = new OperationRegistry({
+          logger: testLogger,
+        });
         for (const [type, handler] of Object.entries(newHandlers)) {
           newOperationRegistry.register(type, handler.execute.bind(handler));
         }
@@ -277,7 +298,7 @@ describe('core_handle_go rule integration', () => {
         testEnv.operationInterpreter = newOperationInterpreter;
         testEnv.systemLogicInterpreter = newInterpreter;
         testEnv.entityManager = customEntityManager;
-        
+
         // Clear events
         events.length = 0;
       },

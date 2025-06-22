@@ -37,6 +37,7 @@ import {
 import { ATTEMPT_ACTION_ID } from '../../../src/constants/eventIds.js';
 import SetVariableHandler from '../../../src/logic/operationHandlers/setVariableHandler.js';
 import GetNameHandler from '../../../src/logic/operationHandlers/getNameHandler.js';
+import jsonLogic from 'json-logic-js';
 import { createRuleTestEnvironment } from '../../common/engine/systemLogicTestEnv.js';
 import RebuildLeaderListCacheHandler from '../../../src/logic/operationHandlers/rebuildLeaderListCacheHandler.js';
 import { createCapturingEventBus } from '../../common/mockFactories/index.js';
@@ -46,7 +47,11 @@ import ValidatedEventDispatcher from '../../../src/events/validatedEventDispatch
 import EventBus from '../../../src/events/eventBus.js';
 import AjvSchemaValidator from '../../../src/validation/ajvSchemaValidator.js';
 import ConsoleLogger from '../../../src/logging/consoleLogger.js';
-import { dedupe, merge, repair } from '../../../src/logic/services/closenessCircleService.js';
+import {
+  dedupe,
+  merge,
+  repair,
+} from '../../../src/logic/services/closenessCircleService.js';
 
 /**
  *
@@ -80,7 +85,13 @@ function makeStubRebuild(em) {
  * @param {object} safeEventDispatcher - Safe event dispatcher instance
  * @returns {object} Handlers object
  */
-function createHandlers(entityManager, eventBus, logger, validatedEventDispatcher, safeEventDispatcher) {
+function createHandlers(
+  entityManager,
+  eventBus,
+  logger,
+  validatedEventDispatcher,
+  safeEventDispatcher
+) {
   const rebuildLeaderListCacheHandler = new RebuildLeaderListCacheHandler({
     entityManager,
     logger,
@@ -124,7 +135,7 @@ function createHandlers(entityManager, eventBus, logger, validatedEventDispatche
       logger,
       safeEventDispatcher: safeEventDispatcher,
     }),
-    SET_VARIABLE: new SetVariableHandler({ logger }),
+    SET_VARIABLE: new SetVariableHandler({ logger, jsonLogic }),
   };
 }
 
@@ -193,7 +204,13 @@ describe('core_handle_follow rule integration', () => {
 
     // Create operation registry with our custom entity manager
     const operationRegistry = new OperationRegistry({ logger: testLogger });
-    const handlers = createHandlers(customEntityManager, bus, testLogger, validatedEventDispatcher, safeEventDispatcher);
+    const handlers = createHandlers(
+      customEntityManager,
+      bus,
+      testLogger,
+      validatedEventDispatcher,
+      safeEventDispatcher
+    );
     for (const [type, handler] of Object.entries(handlers)) {
       operationRegistry.register(type, handler.execute.bind(handler));
     }
@@ -216,16 +233,16 @@ describe('core_handle_follow rule integration', () => {
 
     // Create a simple event capture mechanism for testing
     const capturedEvents = [];
-    
+
     // Subscribe to the specific events we want to capture
     const eventsToCapture = [
       'core:perceptible_event',
-      'core:display_successful_action_result', 
+      'core:display_successful_action_result',
       'core:turn_ended',
-      'core:system_error_occurred'
+      'core:system_error_occurred',
     ];
-    
-    eventsToCapture.forEach(eventType => {
+
+    eventsToCapture.forEach((eventType) => {
       bus.subscribe(eventType, (event) => {
         capturedEvents.push({ eventType: event.type, payload: event.payload });
       });
@@ -248,10 +265,18 @@ describe('core_handle_follow rule integration', () => {
         testEnv.cleanup();
         // Create new entity manager with the new entities
         customEntityManager = new SimpleEntityManager(newEntities);
-        
+
         // Recreate handlers with the new entity manager
-        const newHandlers = createHandlers(customEntityManager, bus, testLogger, validatedEventDispatcher, safeEventDispatcher);
-        const newOperationRegistry = new OperationRegistry({ logger: testLogger });
+        const newHandlers = createHandlers(
+          customEntityManager,
+          bus,
+          testLogger,
+          validatedEventDispatcher,
+          safeEventDispatcher
+        );
+        const newOperationRegistry = new OperationRegistry({
+          logger: testLogger,
+        });
         for (const [type, handler] of Object.entries(newHandlers)) {
           newOperationRegistry.register(type, handler.execute.bind(handler));
         }
@@ -277,7 +302,7 @@ describe('core_handle_follow rule integration', () => {
         testEnv.operationInterpreter = newOperationInterpreter;
         testEnv.systemLogicInterpreter = newInterpreter;
         testEnv.entityManager = customEntityManager;
-        
+
         // Clear events
         capturedEvents.length = 0;
       },
@@ -381,7 +406,9 @@ describe('core_handle_follow rule integration', () => {
     ).toEqual({
       leaderId: 'l1',
     });
-    expect(testEnv.entityManager.getComponentData('l1', LEADING_COMPONENT_ID)).toEqual({
+    expect(
+      testEnv.entityManager.getComponentData('l1', LEADING_COMPONENT_ID)
+    ).toEqual({
       followers: ['f1'],
     });
     const types = testEnv.events.map((e) => e.eventType);
@@ -426,4 +453,3 @@ describe('core_handle_follow rule integration', () => {
     // modified when a follow cycle is detected.
   });
 });
-

@@ -28,6 +28,7 @@ import EndTurnHandler from '../../../src/logic/operationHandlers/endTurnHandler.
 import SetVariableHandler from '../../../src/logic/operationHandlers/setVariableHandler.js';
 import RemoveFromClosenessCircleHandler from '../../../src/logic/operationHandlers/removeFromClosenessCircleHandler.js';
 import AddPerceptionLogEntryHandler from '../../../src/logic/operationHandlers/addPerceptionLogEntryHandler.js';
+import jsonLogic from 'json-logic-js';
 import {
   NAME_COMPONENT_ID,
   POSITION_COMPONENT_ID,
@@ -58,7 +59,13 @@ const closenessCircleService = { repair };
  * @param {object} safeEventDispatcher - Safe event dispatcher instance
  * @returns {object} Handlers object
  */
-function createHandlers(entityManager, eventBus, logger, validatedEventDispatcher, safeEventDispatcher) {
+function createHandlers(
+  entityManager,
+  eventBus,
+  logger,
+  validatedEventDispatcher,
+  safeEventDispatcher
+) {
   return {
     QUERY_COMPONENT: new QueryComponentHandler({
       entityManager,
@@ -85,7 +92,7 @@ function createHandlers(entityManager, eventBus, logger, validatedEventDispatche
       logger,
       safeEventDispatcher: safeEventDispatcher,
     }),
-    SET_VARIABLE: new SetVariableHandler({ logger }),
+    SET_VARIABLE: new SetVariableHandler({ logger, jsonLogic }),
     GET_TIMESTAMP: new GetTimestampHandler({ logger }),
     DISPATCH_PERCEPTIBLE_EVENT: new DispatchPerceptibleEventHandler({
       dispatcher: eventBus,
@@ -117,10 +124,14 @@ describe('intimacy_handle_step_back rule integration', () => {
   beforeEach(() => {
     customEntityManager = new SimpleEntityManager([]);
     const macros = { 'core:logSuccessAndEndTurn': logSuccessMacro };
-    const expanded = expandMacros(stepBackRule.actions, {
-      get: (type, id) => (type === 'macros' ? macros[id] : undefined),
-    }, null);
-    
+    const expanded = expandMacros(
+      stepBackRule.actions,
+      {
+        get: (type, id) => (type === 'macros' ? macros[id] : undefined),
+      },
+      null
+    );
+
     const dataRegistry = {
       getAllSystemRules: jest
         .fn()
@@ -173,7 +184,13 @@ describe('intimacy_handle_step_back rule integration', () => {
 
     // Create operation registry with our custom entity manager
     const operationRegistry = new OperationRegistry({ logger: testLogger });
-    const handlers = createHandlers(customEntityManager, bus, testLogger, validatedEventDispatcher, safeEventDispatcher);
+    const handlers = createHandlers(
+      customEntityManager,
+      bus,
+      testLogger,
+      validatedEventDispatcher,
+      safeEventDispatcher
+    );
     for (const [type, handler] of Object.entries(handlers)) {
       operationRegistry.register(type, handler.execute.bind(handler));
     }
@@ -196,16 +213,16 @@ describe('intimacy_handle_step_back rule integration', () => {
 
     // Create a simple event capture mechanism for testing
     const capturedEvents = [];
-    
+
     // Subscribe to the specific events we want to capture
     const eventsToCapture = [
       'core:perceptible_event',
-      'core:display_successful_action_result', 
+      'core:display_successful_action_result',
       'core:turn_ended',
-      'core:system_error_occurred'
+      'core:system_error_occurred',
     ];
-    
-    eventsToCapture.forEach(eventType => {
+
+    eventsToCapture.forEach((eventType) => {
       bus.subscribe(eventType, (event) => {
         capturedEvents.push({ eventType: event.type, payload: event.payload });
       });
@@ -228,10 +245,18 @@ describe('intimacy_handle_step_back rule integration', () => {
         testEnv.cleanup();
         // Create new entity manager with the new entities
         customEntityManager = new SimpleEntityManager(newEntities);
-        
+
         // Recreate handlers with the new entity manager
-        const newHandlers = createHandlers(customEntityManager, bus, testLogger, validatedEventDispatcher, safeEventDispatcher);
-        const newOperationRegistry = new OperationRegistry({ logger: testLogger });
+        const newHandlers = createHandlers(
+          customEntityManager,
+          bus,
+          testLogger,
+          validatedEventDispatcher,
+          safeEventDispatcher
+        );
+        const newOperationRegistry = new OperationRegistry({
+          logger: testLogger,
+        });
         for (const [type, handler] of Object.entries(newHandlers)) {
           newOperationRegistry.register(type, handler.execute.bind(handler));
         }
@@ -257,7 +282,7 @@ describe('intimacy_handle_step_back rule integration', () => {
         testEnv.operationInterpreter = newOperationInterpreter;
         testEnv.systemLogicInterpreter = newInterpreter;
         testEnv.entityManager = customEntityManager;
-        
+
         // Clear events
         capturedEvents.length = 0;
       },
@@ -342,24 +367,37 @@ describe('intimacy_handle_step_back rule integration', () => {
       },
     ]);
 
-    testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, { actorId: 'a1', actionId: 'intimacy:step_back' });
+    testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      actorId: 'a1',
+      actionId: 'intimacy:step_back',
+    });
 
     expect(
       testEnv.entityManager.getComponentData('a1', 'intimacy:closeness')
     ).toBeNull();
-    expect(testEnv.entityManager.getComponentData('a1', 'core:movement')).toEqual({
+    expect(
+      testEnv.entityManager.getComponentData('a1', 'core:movement')
+    ).toEqual({
       locked: false,
     });
-    expect(testEnv.entityManager.getComponentData('b1', 'intimacy:closeness')).toEqual({
+    expect(
+      testEnv.entityManager.getComponentData('b1', 'intimacy:closeness')
+    ).toEqual({
       partners: ['c1'],
     });
-    expect(testEnv.entityManager.getComponentData('b1', 'core:movement')).toEqual({
+    expect(
+      testEnv.entityManager.getComponentData('b1', 'core:movement')
+    ).toEqual({
       locked: true,
     });
-    expect(testEnv.entityManager.getComponentData('c1', 'intimacy:closeness')).toEqual({
+    expect(
+      testEnv.entityManager.getComponentData('c1', 'intimacy:closeness')
+    ).toEqual({
       partners: ['b1'],
     });
-    expect(testEnv.entityManager.getComponentData('c1', 'core:movement')).toEqual({
+    expect(
+      testEnv.entityManager.getComponentData('c1', 'core:movement')
+    ).toEqual({
       locked: true,
     });
     const types = testEnv.events.map((e) => e.eventType);
@@ -393,18 +431,25 @@ describe('intimacy_handle_step_back rule integration', () => {
       },
     ]);
 
-    testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, { actorId: 'a1', actionId: 'intimacy:step_back' });
+    testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      actorId: 'a1',
+      actionId: 'intimacy:step_back',
+    });
 
     expect(
       testEnv.entityManager.getComponentData('a1', 'intimacy:closeness')
     ).toBeNull();
-    expect(testEnv.entityManager.getComponentData('a1', 'core:movement')).toEqual({
+    expect(
+      testEnv.entityManager.getComponentData('a1', 'core:movement')
+    ).toEqual({
       locked: false,
     });
     expect(
       testEnv.entityManager.getComponentData('b1', 'intimacy:closeness')
     ).toBeNull();
-    expect(testEnv.entityManager.getComponentData('b1', 'core:movement')).toEqual({
+    expect(
+      testEnv.entityManager.getComponentData('b1', 'core:movement')
+    ).toEqual({
       locked: false,
     });
     const types = testEnv.events.map((e) => e.eventType);
@@ -430,12 +475,17 @@ describe('intimacy_handle_step_back rule integration', () => {
     }
     testEnv.reset(entities);
 
-    testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, { actorId: 'a1', actionId: 'intimacy:step_back' });
+    testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      actorId: 'a1',
+      actionId: 'intimacy:step_back',
+    });
 
     expect(
       testEnv.entityManager.getComponentData('a1', 'intimacy:closeness')
     ).toBeNull();
-    expect(testEnv.entityManager.getComponentData('a1', 'core:movement')).toEqual({
+    expect(
+      testEnv.entityManager.getComponentData('a1', 'core:movement')
+    ).toEqual({
       locked: false,
     });
     for (const id of ['b1', 'c1', 'd1']) {
@@ -445,7 +495,9 @@ describe('intimacy_handle_step_back rule integration', () => {
       expect(partners).toEqual(
         ['b1', 'c1', 'd1'].filter((p) => p !== id).sort()
       );
-      expect(testEnv.entityManager.getComponentData(id, 'core:movement')).toEqual({
+      expect(
+        testEnv.entityManager.getComponentData(id, 'core:movement')
+      ).toEqual({
         locked: true,
       });
     }
