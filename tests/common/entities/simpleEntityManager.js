@@ -24,6 +24,8 @@ export default class SimpleEntityManager {
       const cloned = deepClone(e);
       this.entities.set(cloned.id, cloned);
     }
+    // Add activeEntities alias for compatibility
+    this.activeEntities = this.entities;
   }
 
   /**
@@ -33,7 +35,17 @@ export default class SimpleEntityManager {
    * @returns {object|undefined} The entity object or undefined if not found.
    */
   getEntityInstance(id) {
-    return this.entities.get(id);
+    const entity = this.entities.get(id);
+    if (!entity) {
+      return undefined;
+    }
+    
+    // Return an object that has a getComponentData method to satisfy isValidEntity
+    return {
+      id: entity.id,
+      components: entity.components,
+      getComponentData: (componentType) => entity.components[componentType] ?? null,
+    };
   }
 
   /**
@@ -90,5 +102,40 @@ export default class SimpleEntityManager {
     if (ent) {
       delete ent.components[type];
     }
+  }
+
+  /**
+   * Returns all entities that have the specified component.
+   *
+   * @param {string} componentType - Component type to filter by.
+   * @returns {Array<object>} Array of entity objects with the component.
+   */
+  getEntitiesWithComponent(componentType) {
+    const result = [];
+    for (const ent of this.entities.values()) {
+      if (Object.prototype.hasOwnProperty.call(ent.components, componentType)) {
+        result.push({
+          id: ent.id,
+          getComponentData: (type) => ent.components[type] ?? null,
+        });
+      }
+    }
+    return result;
+  }
+
+  /**
+   * Returns a set of entity IDs for entities in the specified location.
+   *
+   * @param {string} locationId - The location identifier.
+   * @returns {Set<string>} Set of entity IDs in the location.
+   */
+  getEntitiesInLocation(locationId) {
+    const POSITION_COMPONENT_ID = 'core:position';
+    const ids = new Set();
+    for (const [id, ent] of this.entities) {
+      const loc = ent.components[POSITION_COMPONENT_ID]?.locationId;
+      if (loc === locationId) ids.add(id);
+    }
+    return ids;
   }
 }

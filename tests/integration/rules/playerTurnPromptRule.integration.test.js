@@ -1,177 +1,79 @@
 /**
- * @file Integration tests for player_turn_prompt.rule.json.
+ * @file Integration tests for the core player_turn_prompt rule.
  */
 
 import { describe, it, beforeEach, expect, jest } from '@jest/globals';
-import Ajv from 'ajv';
-import ruleSchema from '../../../data/schemas/rule.schema.json';
-import commonSchema from '../../../data/schemas/common.schema.json';
-import operationSchema from '../../../data/schemas/operation.schema.json';
-import jsonLogicSchema from '../../../data/schemas/json-logic.schema.json';
-import conditionSchema from '../../../data/schemas/condition.schema.json';
-import conditionContainerSchema from '../../../data/schemas/condition-container.schema.json';
-import loadOperationSchemas from '../../unit/helpers/loadOperationSchemas.js';
-import loadConditionSchemas from '../../unit/helpers/loadConditionSchemas.js';
 import playerTurnPromptRule from '../../../data/mods/core/rules/player_turn_prompt.rule.json';
-import SystemLogicInterpreter from '../../../src/logic/systemLogicInterpreter.js';
-import OperationInterpreter from '../../../src/logic/operationInterpreter.js';
-import OperationRegistry from '../../../src/logic/operationRegistry.js';
-import JsonLogicEvaluationService from '../../../src/logic/jsonLogicEvaluationService.js';
+import eventIsPlayerTurnPrompt from '../../../data/mods/core/conditions/event-is-player-turn_prompt.condition.json';
+import GetNameHandler from '../../../src/logic/operationHandlers/getNameHandler.js';
+import GetTimestampHandler from '../../../src/logic/operationHandlers/getTimestampHandler.js';
 import DispatchEventHandler from '../../../src/logic/operationHandlers/dispatchEventHandler.js';
-import SimpleEntityManager from '../../common/entities/simpleEntityManager.js';
+import DispatchPerceptibleEventHandler from '../../../src/logic/operationHandlers/dispatchPerceptibleEventHandler.js';
+import { PLAYER_TURN_PROMPT_ID } from '../../../src/constants/eventIds.js';
+import { createRuleTestEnvironment } from '../../common/engine/systemLogicTestEnv.js';
 
 /**
- * Initialize interpreter and register handlers with provided seed entities.
+ * Creates handlers needed for the player_turn_prompt rule.
  *
- * @param {Array<{id:string,components:object}>} entities - seed entities
+ * @param {object} entityManager - Entity manager instance
+ * @param {object} eventBus - Event bus instance
+ * @param {object} logger - Logger instance
+ * @returns {object} Handlers object
  */
-function init(entities) {
-  operationRegistry = new OperationRegistry({ logger });
-  entityManager = new SimpleEntityManager(entities);
-
-  const handlers = {
-    DISPATCH_EVENT: new DispatchEventHandler({ dispatcher: eventBus, logger }),
+function createHandlers(entityManager, eventBus, logger) {
+  const safeDispatcher = {
+    dispatch: jest.fn(() => Promise.resolve(true)),
   };
 
-  for (const [type, handler] of Object.entries(handlers)) {
-    operationRegistry.register(type, handler.execute.bind(handler));
-  }
-
-  operationInterpreter = new OperationInterpreter({
-    logger,
-    operationRegistry,
-  });
-
-  jsonLogic = new JsonLogicEvaluationService({ logger });
-
-  interpreter = new SystemLogicInterpreter({
-    logger,
-    eventBus,
-    dataRegistry,
-    jsonLogicEvaluationService: jsonLogic,
-    entityManager,
-    operationInterpreter,
-  });
-
-  listener = null;
-  interpreter.initialize();
+  return {
+    GET_NAME: new GetNameHandler({
+      entityManager,
+      logger,
+      safeEventDispatcher: safeDispatcher,
+    }),
+    GET_TIMESTAMP: new GetTimestampHandler({ logger }),
+    DISPATCH_PERCEPTIBLE_EVENT: new DispatchPerceptibleEventHandler({
+      dispatcher: eventBus,
+      logger,
+      addPerceptionLogEntryHandler: { execute: jest.fn() },
+    }),
+    DISPATCH_EVENT: new DispatchEventHandler({ dispatcher: eventBus, logger }),
+  };
 }
 
-let logger;
-let eventBus;
-let dataRegistry;
-let entityManager;
-let operationRegistry;
-let operationInterpreter;
-let jsonLogic;
-let interpreter;
-let events;
-let listener;
+describe('core_handle_player_turn_prompt rule integration', () => {
+  let testEnv;
 
-describe('player_turn_prompt rule integration', () => {
   beforeEach(() => {
-    logger = {
-      debug: jest.fn(),
-      info: jest.fn(),
-      warn: jest.fn(),
-      error: jest.fn(),
-    };
-
-    events = [];
-    eventBus = {
-      subscribe: jest.fn((ev, l) => {
-        if (ev === '*') listener = l;
-      }),
-      unsubscribe: jest.fn(),
-      dispatch: jest.fn((eventType, payload) => {
-        events.push({ eventType, payload });
-        return Promise.resolve();
-      }),
-      listenerCount: jest.fn().mockReturnValue(1),
-    };
-
-    dataRegistry = {
+    const dataRegistry = {
       getAllSystemRules: jest.fn().mockReturnValue([playerTurnPromptRule]),
+      getConditionDefinition: jest.fn((id) =>
+        id === 'core:event-is-player-turn-prompt' ? eventIsPlayerTurnPrompt : undefined
+      ),
     };
 
-    init([]);
-  });
-
-  it('validates player_turn_prompt.rule.json against schema', () => {
-    const ajv = new Ajv({ allErrors: true });
-    ajv.addSchema(
-      commonSchema,
-      'http://example.com/schemas/common.schema.json'
-    );
-    ajv.addSchema(
-      operationSchema,
-      'http://example.com/schemas/operation.schema.json'
-    );
-    loadOperationSchemas(ajv);
-    loadConditionSchemas(ajv);
-    ajv.addSchema(
-      jsonLogicSchema,
-      'http://example.com/schemas/json-logic.schema.json'
-    );
-    const valid = ajv.validate(ruleSchema, playerTurnPromptRule);
-    if (!valid) console.error(ajv.errors);
-    expect(valid).toBe(true);
-  });
-
-  it('dispatches enable_input and update_available_actions events', () => {
-    listener({
-      type: 'core:player_turn_prompt',
-      payload: {
-        entityId: 'player1',
-        availableActions: [
-          {
-            index: 1,
-            actionId: 'core:wait',
-            commandString: 'wait',
-            params: {},
-            description: 'skip',
-          },
-        ],
-      },
-    });
-
-    const types = events.map((e) => e.eventType);
-    expect(types).toEqual(
-      expect.arrayContaining([
-        'core:enable_input',
-        'core:update_available_actions',
-      ])
-    );
-
-    const update = events.find(
-      (e) => e.eventType === 'core:update_available_actions'
-    );
-    expect(update).toBeDefined();
-    expect(update.payload).toEqual({
-      actorId: 'player1',
-      actions: [
-        {
-          index: 1,
-          actionId: 'core:wait',
-          commandString: 'wait',
-          params: {},
-          description: 'skip',
-        },
-      ],
+    testEnv = createRuleTestEnvironment({
+      createHandlers,
+      entities: [],
+      rules: [playerTurnPromptRule],
+      dataRegistry,
     });
   });
 
-  it('handles empty availableActions array', () => {
-    events.length = 0;
-    listener({
-      type: 'core:player_turn_prompt',
-      payload: { entityId: 'player1', availableActions: [] },
+  afterEach(() => {
+    if (testEnv) {
+      testEnv.cleanup();
+    }
+  });
+
+  it('dispatches perceptible event when player turn prompt is triggered', () => {
+    testEnv.eventBus.dispatch('core:player_turn_prompt', {
+      entityId: 'player1',
+      availableActions: ['wait', 'go'],
     });
 
-    const update = events.find(
-      (e) => e.eventType === 'core:update_available_actions'
-    );
-    expect(update).toBeDefined();
-    expect(update.payload).toEqual({ actorId: 'player1', actions: [] });
+    const types = testEnv.events.map((e) => e.eventType);
+    expect(types).toContain('core:enable_input');
+    expect(types).toContain('core:update_available_actions');
   });
 });

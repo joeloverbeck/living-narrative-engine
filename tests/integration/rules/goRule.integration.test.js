@@ -24,6 +24,8 @@ import ModifyComponentHandler from '../../../src/logic/operationHandlers/modifyC
 import DispatchEventHandler from '../../../src/logic/operationHandlers/dispatchEventHandler.js';
 import DispatchPerceptibleEventHandler from '../../../src/logic/operationHandlers/dispatchPerceptibleEventHandler.js';
 import EndTurnHandler from '../../../src/logic/operationHandlers/endTurnHandler.js';
+import AddPerceptionLogEntryHandler from '../../../src/logic/operationHandlers/addPerceptionLogEntryHandler.js';
+import QueryComponentsHandler from '../../../src/logic/operationHandlers/queryComponentsHandler.js';
 import {
   NAME_COMPONENT_ID,
   POSITION_COMPONENT_ID,
@@ -32,7 +34,16 @@ import {
 import { ATTEMPT_ACTION_ID } from '../../../src/constants/eventIds.js';
 import goAction from '../../../data/mods/core/actions/go.action.json';
 import { createJsonLogicContext } from '../../../src/logic/contextAssembler.js';
-import { createRuleTestEnvironment } from '../../common/engine/systemLogicTestEnv.js';
+import { SimpleEntityManager } from '../../common/entities/index.js';
+import { SafeEventDispatcher } from '../../../src/events/safeEventDispatcher.js';
+import ValidatedEventDispatcher from '../../../src/events/validatedEventDispatcher.js';
+import EventBus from '../../../src/events/eventBus.js';
+import AjvSchemaValidator from '../../../src/validation/ajvSchemaValidator.js';
+import ConsoleLogger from '../../../src/logging/consoleLogger.js';
+import SystemLogicInterpreter from '../../../src/logic/systemLogicInterpreter.js';
+import OperationInterpreter from '../../../src/logic/operationInterpreter.js';
+import OperationRegistry from '../../../src/logic/operationRegistry.js';
+import JsonLogicEvaluationService from '../../../src/logic/jsonLogicEvaluationService.js';
 
 /**
  * Very small world context implementation providing direction resolution.
@@ -67,6 +78,7 @@ class SimpleWorldContext {
 
 describe('core_handle_go rule integration', () => {
   let testEnv;
+  let customEntityManager;
   let events = [];
 
   /**
@@ -79,7 +91,63 @@ describe('core_handle_go rule integration', () => {
     });
   }
 
+  /**
+   * Creates handlers needed for the go rule.
+   *
+   * @param {object} entityManager - Entity manager instance
+   * @param {object} eventBus - Event bus instance
+   * @param {object} logger - Logger instance
+   * @param {object} validatedEventDispatcher - Validated event dispatcher instance
+   * @param {object} safeEventDispatcher - Safe event dispatcher instance
+   * @returns {object} Handlers object
+   */
+  function createHandlers(entityManager, eventBus, logger, validatedEventDispatcher, safeEventDispatcher) {
+    const worldContext = new SimpleWorldContext(entityManager, logger);
+
+    return {
+      QUERY_COMPONENT: new QueryComponentHandler({
+        entityManager,
+        logger,
+        safeEventDispatcher: safeEventDispatcher,
+      }),
+      QUERY_COMPONENTS: new QueryComponentsHandler({
+        entityManager,
+        logger,
+        safeEventDispatcher: safeEventDispatcher,
+      }),
+      GET_TIMESTAMP: new GetTimestampHandler({ logger }),
+      SET_VARIABLE: new SetVariableHandler({ logger }),
+      RESOLVE_DIRECTION: new ResolveDirectionHandler({
+        worldContext,
+        logger,
+      }),
+      MODIFY_COMPONENT: new ModifyComponentHandler({
+        entityManager,
+        logger,
+        safeEventDispatcher: safeEventDispatcher,
+      }),
+      DISPATCH_PERCEPTIBLE_EVENT: new DispatchPerceptibleEventHandler({
+        dispatcher: eventBus,
+        logger,
+        addPerceptionLogEntryHandler: new AddPerceptionLogEntryHandler({
+          entityManager,
+          logger,
+          safeEventDispatcher: safeEventDispatcher,
+        }),
+      }),
+      DISPATCH_EVENT: new DispatchEventHandler({
+        dispatcher: eventBus,
+        logger,
+      }),
+      END_TURN: new EndTurnHandler({
+        safeEventDispatcher: safeEventDispatcher,
+        logger,
+      }),
+    };
+  }
+
   beforeEach(() => {
+    customEntityManager = new SimpleEntityManager([]);
     const macroRegistry = {
       get: (type, id) =>
         type === 'macros'
@@ -89,7 +157,7 @@ describe('core_handle_go rule integration', () => {
 
     const expandedRule = {
       ...goRule,
-      actions: expandMacros(goRule.actions, macroRegistry),
+      actions: expandMacros(goRule.actions, macroRegistry, null),
     };
 
     const dataRegistry = {
@@ -97,64 +165,123 @@ describe('core_handle_go rule integration', () => {
       getConditionDefinition: jest.fn((id) =>
         id === 'core:event-is-action-go' ? eventIsActionGo : undefined
       ),
+      getEventDefinition: jest.fn((eventName) => {
+        // Return a basic event definition for common events
+        const commonEvents = {
+          'core:turn_ended': { payloadSchema: null },
+          'core:perceptible_event': { payloadSchema: null },
+          'core:display_successful_action_result': { payloadSchema: null },
+          'core:display_failed_action_result': { payloadSchema: null },
+          'core:entity_moved': { payloadSchema: null },
+          'core:system_error_occurred': { payloadSchema: null },
+        };
+        return commonEvents[eventName] || null;
+      }),
     };
 
-    // Create handlers with dependencies
-    const createHandlers = (entityManager, eventBus, logger) => {
-      const worldContext = new SimpleWorldContext(entityManager, logger);
+    // Use actual ConsoleLogger instead of mock
+    const testLogger = new ConsoleLogger('DEBUG');
 
-      return {
-        QUERY_COMPONENT: new QueryComponentHandler({
-          entityManager,
-          logger,
-          safeEventDispatcher: { dispatch: jest.fn().mockResolvedValue(true) },
-        }),
-        QUERY_COMPONENTS:
-          new (require('../../../src/logic/operationHandlers/queryComponentsHandler.js').default)(
-            {
-              entityManager,
-              logger,
-              safeEventDispatcher: {
-                dispatch: jest.fn().mockResolvedValue(true),
-              },
-            }
-          ),
-        GET_TIMESTAMP: new GetTimestampHandler({ logger }),
-        SET_VARIABLE: new SetVariableHandler({ logger }),
-        RESOLVE_DIRECTION: new ResolveDirectionHandler({
-          worldContext,
-          logger,
-        }),
-        MODIFY_COMPONENT: new ModifyComponentHandler({
-          entityManager,
-          logger,
-          safeEventDispatcher: { dispatch: jest.fn().mockResolvedValue(true) },
-        }),
-        DISPATCH_PERCEPTIBLE_EVENT: new DispatchPerceptibleEventHandler({
-          dispatcher: eventBus,
-          logger,
-          addPerceptionLogEntryHandler: { execute: jest.fn() },
-        }),
-        DISPATCH_EVENT: new DispatchEventHandler({
-          dispatcher: eventBus,
-          logger,
-        }),
-        END_TURN: new EndTurnHandler({
-          safeEventDispatcher: {
-            dispatch: (...args) => eventBus.dispatch(...args),
-          },
-          logger,
-        }),
-      };
-    };
+    // Use actual EventBus instead of mock
+    const bus = new EventBus();
 
-    // Create test environment
-    testEnv = createRuleTestEnvironment({
-      createHandlers,
-      entities: [],
-      rules: [expandedRule],
-      dataRegistry,
+    // Create actual schema validator
+    const schemaValidator = new AjvSchemaValidator(testLogger);
+
+    // Create actual ValidatedEventDispatcher
+    const validatedEventDispatcher = new ValidatedEventDispatcher({
+      eventBus: bus,
+      gameDataRepository: dataRegistry,
+      schemaValidator: schemaValidator,
+      logger: testLogger,
     });
+
+    // Create actual SafeEventDispatcher
+    const safeEventDispatcher = new SafeEventDispatcher({
+      validatedEventDispatcher: validatedEventDispatcher,
+      logger: testLogger,
+    });
+
+    // Create JSON logic evaluation service
+    const jsonLogic = new JsonLogicEvaluationService({
+      logger: testLogger,
+      gameDataRepository: dataRegistry,
+    });
+
+    // Create operation registry with our custom entity manager
+    const operationRegistry = new OperationRegistry({ logger: testLogger });
+    const handlers = createHandlers(customEntityManager, bus, testLogger, validatedEventDispatcher, safeEventDispatcher);
+    for (const [type, handler] of Object.entries(handlers)) {
+      operationRegistry.register(type, handler.execute.bind(handler));
+    }
+
+    const operationInterpreter = new OperationInterpreter({
+      logger: testLogger,
+      operationRegistry,
+    });
+
+    const interpreter = new SystemLogicInterpreter({
+      logger: testLogger,
+      eventBus: bus,
+      dataRegistry: dataRegistry,
+      jsonLogicEvaluationService: jsonLogic,
+      entityManager: customEntityManager,
+      operationInterpreter,
+    });
+
+    interpreter.initialize();
+
+    testEnv = {
+      eventBus: bus,
+      events: events,
+      operationRegistry,
+      operationInterpreter,
+      jsonLogic,
+      systemLogicInterpreter: interpreter,
+      entityManager: customEntityManager,
+      logger: testLogger,
+      dataRegistry,
+      cleanup: () => {
+        interpreter.shutdown();
+      },
+      reset: (newEntities = []) => {
+        testEnv.cleanup();
+        // Create new entity manager with the new entities
+        customEntityManager = new SimpleEntityManager(newEntities);
+        
+        // Recreate handlers with the new entity manager
+        const newHandlers = createHandlers(customEntityManager, bus, testLogger, validatedEventDispatcher, safeEventDispatcher);
+        const newOperationRegistry = new OperationRegistry({ logger: testLogger });
+        for (const [type, handler] of Object.entries(newHandlers)) {
+          newOperationRegistry.register(type, handler.execute.bind(handler));
+        }
+
+        const newOperationInterpreter = new OperationInterpreter({
+          logger: testLogger,
+          operationRegistry: newOperationRegistry,
+        });
+
+        const newInterpreter = new SystemLogicInterpreter({
+          logger: testLogger,
+          eventBus: bus,
+          dataRegistry: dataRegistry,
+          jsonLogicEvaluationService: jsonLogic,
+          entityManager: customEntityManager,
+          operationInterpreter: newOperationInterpreter,
+        });
+
+        newInterpreter.initialize();
+
+        // Update test environment
+        testEnv.operationRegistry = newOperationRegistry;
+        testEnv.operationInterpreter = newOperationInterpreter;
+        testEnv.systemLogicInterpreter = newInterpreter;
+        testEnv.entityManager = customEntityManager;
+        
+        // Clear events
+        events.length = 0;
+      },
+    };
 
     setupListener();
   });

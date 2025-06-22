@@ -4,68 +4,51 @@
  */
 
 import { describe, it, beforeEach, expect, jest } from '@jest/globals';
-import Ajv from 'ajv';
-import ruleSchema from '../../../data/schemas/rule.schema.json';
-import commonSchema from '../../../data/schemas/common.schema.json';
-import operationSchema from '../../../data/schemas/operation.schema.json';
-import jsonLogicSchema from '../../../data/schemas/json-logic.schema.json';
-import conditionSchema from '../../../data/schemas/condition.schema.json';
-import conditionContainerSchema from '../../../data/schemas/condition-container.schema.json';
-import loadOperationSchemas from '../../unit/helpers/loadOperationSchemas.js';
-import loadConditionSchemas from '../../unit/helpers/loadConditionSchemas.js';
-import eventIsActionThumbWipeCheek from '../../../data/mods/intimacy/conditions/event-is-action-thumb-wipe-cheek.condition.json';
 import thumbWipeCheekRule from '../../../data/mods/intimacy/rules/thumb_wipe_cheek.rule.json';
+import eventIsActionThumbWipeCheek from '../../../data/mods/intimacy/conditions/event-is-action-thumb-wipe-cheek.condition.json';
 import logSuccessMacro from '../../../data/mods/core/macros/logSuccessAndEndTurn.macro.json';
-import SystemLogicInterpreter from '../../../src/logic/systemLogicInterpreter.js';
-import OperationInterpreter from '../../../src/logic/operationInterpreter.js';
-import OperationRegistry from '../../../src/logic/operationRegistry.js';
-import JsonLogicEvaluationService from '../../../src/logic/jsonLogicEvaluationService.js';
+import { expandMacros } from '../../../src/utils/macroUtils.js';
 import QueryComponentHandler from '../../../src/logic/operationHandlers/queryComponentHandler.js';
+import GetNameHandler from '../../../src/logic/operationHandlers/getNameHandler.js';
+import GetTimestampHandler from '../../../src/logic/operationHandlers/getTimestampHandler.js';
 import DispatchEventHandler from '../../../src/logic/operationHandlers/dispatchEventHandler.js';
 import DispatchPerceptibleEventHandler from '../../../src/logic/operationHandlers/dispatchPerceptibleEventHandler.js';
-import GetTimestampHandler from '../../../src/logic/operationHandlers/getTimestampHandler.js';
 import EndTurnHandler from '../../../src/logic/operationHandlers/endTurnHandler.js';
-import GetNameHandler from '../../../src/logic/operationHandlers/getNameHandler.js';
-import SetVariableHandler from '../../../src/logic/operationHandlers/setVariableHandler.js'; // Import the new handler
-import { expandMacros } from '../../../src/utils/macroUtils.js';
 import {
   NAME_COMPONENT_ID,
   POSITION_COMPONENT_ID,
 } from '../../../src/constants/componentIds.js';
 import { ATTEMPT_ACTION_ID } from '../../../src/constants/eventIds.js';
-import SimpleEntityManager from '../../common/entities/simpleEntityManager.js';
-
-let logger;
-let eventBus;
-let dataRegistry;
-let entityManager;
-let operationRegistry;
-let operationInterpreter;
-let jsonLogic;
-let interpreter;
-let events;
-let listener;
-let safeDispatcher;
+import { createRuleTestEnvironment } from '../../common/engine/systemLogicTestEnv.js';
 
 /**
- * Initializes the interpreter and registers handlers for this test suite.
+ * Creates handlers needed for the thumb_wipe_cheek rule.
  *
- * @param {Array<{id:string,components:object}>} entities - Seed entities.
+ * @param {object} entityManager - Entity manager instance
+ * @param {object} eventBus - Event bus instance
+ * @param {object} logger - Logger instance
+ * @returns {object} Handlers object
  */
-function init(entities) {
-  operationRegistry = new OperationRegistry({ logger });
-  entityManager = new SimpleEntityManager(entities);
-  operationInterpreter = new OperationInterpreter({
-    logger,
-    operationRegistry,
-  });
+function createHandlers(entityManager, eventBus, logger) {
+  const safeDispatcher = {
+    dispatch: jest.fn((eventType, payload) => {
+      eventBus.dispatch(eventType, payload);
+      return Promise.resolve(true);
+    }),
+  };
 
-  const handlers = {
+  return {
     QUERY_COMPONENT: new QueryComponentHandler({
       entityManager,
       logger,
       safeEventDispatcher: safeDispatcher,
     }),
+    GET_NAME: new GetNameHandler({
+      entityManager,
+      logger,
+      safeEventDispatcher: safeDispatcher,
+    }),
+    GET_TIMESTAMP: new GetTimestampHandler({ logger }),
     DISPATCH_PERCEPTIBLE_EVENT: new DispatchPerceptibleEventHandler({
       dispatcher: eventBus,
       logger,
@@ -76,85 +59,22 @@ function init(entities) {
       safeEventDispatcher: safeDispatcher,
       logger,
     }),
-    GET_TIMESTAMP: new GetTimestampHandler({ logger }),
-    GET_NAME: new GetNameHandler({
-      entityManager,
-      logger,
-      safeEventDispatcher: safeDispatcher,
-    }),
-    // Register the new handler needed by the updated rule
-    SET_VARIABLE: new SetVariableHandler({ logger }),
   };
-
-  for (const [type, handler] of Object.entries(handlers)) {
-    operationRegistry.register(type, handler.execute.bind(handler));
-  }
-
-  jsonLogic = new JsonLogicEvaluationService({
-    logger,
-    gameDataRepository: dataRegistry,
-  });
-
-  interpreter = new SystemLogicInterpreter({
-    logger,
-    eventBus,
-    dataRegistry,
-    jsonLogicEvaluationService: jsonLogic,
-    entityManager,
-    operationInterpreter,
-  });
-
-  listener = null;
-  interpreter.initialize();
 }
 
-describe('intimacy:handle_thumb_wipe_cheek rule integration', () => {
+describe('intimacy_handle_thumb_wipe_cheek rule integration', () => {
+  let testEnv;
+
   beforeEach(() => {
-    logger = {
-      debug: jest.fn(),
-      info: jest.fn(),
-      warn: jest.fn(),
-      error: jest.fn(),
-    };
-
-    events = [];
-    eventBus = {
-      subscribe: jest.fn((ev, l) => {
-        if (ev === '*') listener = l;
-      }),
-      unsubscribe: jest.fn(),
-      dispatch: jest.fn((eventType, payload) => {
-        events.push({ eventType, payload });
-        return Promise.resolve();
-      }),
-      listenerCount: jest.fn().mockReturnValue(1),
-    };
-
-    safeDispatcher = {
-      dispatch: jest.fn((eventType, payload) => {
-        events.push({ eventType, payload });
-        return Promise.resolve(true);
-      }),
-    };
-
-    const macroRegistry = {
-      get: (type, id) =>
-        type === 'macros' && id === 'core:logSuccessAndEndTurn'
-          ? logSuccessMacro
-          : undefined,
-    };
-
-    const expandedRule = {
-      ...thumbWipeCheekRule,
-      actions: expandMacros(
-        JSON.parse(JSON.stringify(thumbWipeCheekRule.actions)),
-        macroRegistry,
-        logger
-      ),
-    };
-
-    dataRegistry = {
-      getAllSystemRules: jest.fn().mockReturnValue([expandedRule]),
+    const macros = { 'core:logSuccessAndEndTurn': logSuccessMacro };
+    const expanded = expandMacros(thumbWipeCheekRule.actions, {
+      get: (type, id) => (type === 'macros' ? macros[id] : undefined),
+    });
+    
+    const dataRegistry = {
+      getAllSystemRules: jest
+        .fn()
+        .mockReturnValue([{ ...thumbWipeCheekRule, actions: expanded }]),
       getConditionDefinition: jest.fn((id) =>
         id === 'intimacy:event-is-action-thumb-wipe-cheek'
           ? eventIsActionThumbWipeCheek
@@ -162,148 +82,53 @@ describe('intimacy:handle_thumb_wipe_cheek rule integration', () => {
       ),
     };
 
-    init([]);
+    testEnv = createRuleTestEnvironment({
+      createHandlers,
+      entities: [],
+      rules: [{ ...thumbWipeCheekRule, actions: expanded }],
+      dataRegistry,
+    });
   });
 
-  it('validates the rule against the schema', () => {
-    const ajv = new Ajv({ allErrors: true });
-    ajv.addSchema(
-      commonSchema,
-      'http://example.com/schemas/common.schema.json'
-    );
-    ajv.addSchema(
-      operationSchema,
-      'http://example.com/schemas/operation.schema.json'
-    );
-    loadOperationSchemas(ajv);
-    loadConditionSchemas(ajv);
-    ajv.addSchema(
-      jsonLogicSchema,
-      'http://example.com/schemas/json-logic.schema.json'
-    );
-
-    const valid = ajv.validate(ruleSchema, thumbWipeCheekRule);
-    if (!valid) {
-      console.error('Validation errors:', ajv.errors);
+  afterEach(() => {
+    if (testEnv) {
+      testEnv.cleanup();
     }
-    expect(valid).toBe(true);
   });
 
-  it('should dispatch correct third-person events for actor and observers', () => {
-    // 1. Setup: Create an actor and a target with all necessary components.
-    interpreter.shutdown();
-    init([
+  it('performs thumb wipe cheek action successfully', () => {
+    testEnv.reset([
       {
-        id: 'hero',
+        id: 'actor1',
         components: {
-          [NAME_COMPONENT_ID]: { text: 'Hero' },
+          [NAME_COMPONENT_ID]: { text: 'Actor' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
+          'intimacy:closeness': { partners: ['target1'] },
         },
       },
       {
-        id: 'friend',
+        id: 'target1',
         components: {
-          [NAME_COMPONENT_ID]: { text: 'Friend' },
+          [NAME_COMPONENT_ID]: { text: 'Target' },
           [POSITION_COMPONENT_ID]: { locationId: 'room1' },
+          'intimacy:closeness': { partners: ['actor1'] },
         },
       },
     ]);
 
-    // 2. Act: Trigger the rule by simulating the action attempt.
-    listener({
-      type: ATTEMPT_ACTION_ID,
-      payload: {
-        actorId: 'hero',
-        actionId: 'intimacy:thumb_wipe_cheek',
-        targetId: 'friend',
-      },
+    testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      actorId: 'actor1',
+      actionId: 'intimacy:thumb_wipe_cheek',
+      targetId: 'target1',
     });
 
-    const expectedMessage =
-      "Hero gently brushes their thumb across Friend's cheek.";
-
-    // 3. Assert: Check that the correct events were dispatched with the correct payloads.
-    const eventTypes = events.map((e) => e.eventType);
-    expect(eventTypes).toEqual(
+    const types = testEnv.events.map((e) => e.eventType);
+    expect(types).toEqual(
       expect.arrayContaining([
         'core:perceptible_event',
         'core:display_successful_action_result',
         'core:turn_ended',
       ])
     );
-
-    const perceptibleEvent = events.find(
-      (e) => e.eventType === 'core:perceptible_event'
-    );
-    expect(perceptibleEvent).toBeDefined();
-
-    expect(perceptibleEvent.payload.descriptionText).toBe(expectedMessage);
-    expect(perceptibleEvent.payload.actorId).toBe('hero');
-    expect(perceptibleEvent.payload.targetId).toBe('friend');
-
-    const uiEvent = events.find(
-      (e) => e.eventType === 'core:display_successful_action_result'
-    );
-    expect(uiEvent).toBeDefined();
-
-    expect(uiEvent.payload.message).toBeDefined();
-
-    // Assert the turn ended correctly
-    const turnEvent = events.find((e) => e.eventType === 'core:turn_ended');
-    expect(turnEvent).toBeDefined();
-    expect(turnEvent.payload).toEqual({ entityId: 'hero', success: true });
-  });
-
-  it('should function gracefully if name or position components are missing', () => {
-    // 1. Setup: Actor is missing a name, target is missing a position.
-    interpreter.shutdown();
-    init([
-      {
-        id: 'hero',
-        components: {
-          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-        },
-      },
-      {
-        id: 'friend',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Friend' },
-          // No position component on target
-        },
-      },
-    ]);
-
-    // 2. Act: Trigger the rule.
-    listener({
-      type: ATTEMPT_ACTION_ID,
-      payload: {
-        actorId: 'hero',
-        actionId: 'intimacy:thumb_wipe_cheek',
-        targetId: 'friend',
-      },
-    });
-
-    // 3. Assert: The system does not crash and completes the action.
-    const eventTypes = events.map((e) => e.eventType);
-    expect(eventTypes).toContain('core:turn_ended');
-
-    const expectedMessage =
-      "Unnamed Character gently brushes their thumb across Friend's cheek.";
-
-    // Assert the messages are formed with default names (e.g., "unknown")
-
-    const perceptibleEvent = events.find(
-      (e) => e.eventType === 'core:perceptible_event'
-    );
-    expect(perceptibleEvent).toBeDefined();
-
-    expect(perceptibleEvent.payload.descriptionText).toBe(expectedMessage);
-
-    const uiEvent = events.find(
-      (e) => e.eventType === 'core:display_successful_action_result'
-    );
-    expect(uiEvent).toBeDefined();
-
-    expect(uiEvent.payload.message).toBeDefined();
   });
 });

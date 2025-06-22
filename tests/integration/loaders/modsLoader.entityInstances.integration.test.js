@@ -200,6 +200,10 @@ describe('Integration: Entity Instances Loader and World Initialization', () => 
   });
 });
 
+/**
+ *
+ * @param phases
+ */
 function makeSession(phases) {
   return {
     async run(ctx) {

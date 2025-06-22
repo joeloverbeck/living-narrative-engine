@@ -1,0 +1,11 @@
+{
+  "$schema": "http://example.com/schemas/condition.schema.json",
+  "id": "core:event-is-follow-auto-move",
+  "description": "Checks if the triggering event is a 'core:follow_auto_move' event.",
+  "logic": {
+    "==": [
+      { "var": "event.type" },
+      "core:follow_auto_move"
+    ]
+  }
+} 

@@ -60,7 +60,7 @@ export class AwaitingExternalTurnEndState extends AbstractTurnState {
    * Creates an instance of AwaitingExternalTurnEndState.
    *
    * @param {BaseTurnHandler} handler - The handler managing the turn state.
-   * @param {number} [timeoutMs=TIMEOUT_MS] - Timeout duration for waiting.
+   * @param {number} [timeoutMs] - Timeout duration for waiting.
    */
   constructor(handler, timeoutMs = TIMEOUT_MS) {
     super(handler);

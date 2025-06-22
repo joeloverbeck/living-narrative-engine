@@ -41,6 +41,13 @@ import {
 } from '../../../src/constants/componentIds.js';
 import { ATTEMPT_ACTION_ID } from '../../../src/constants/eventIds.js';
 import { createRuleTestEnvironment } from '../../common/engine/systemLogicTestEnv.js';
+import AddPerceptionLogEntryHandler from '../../../src/logic/operationHandlers/addPerceptionLogEntryHandler.js';
+import { SafeEventDispatcher } from '../../../src/events/safeEventDispatcher.js';
+import ValidatedEventDispatcher from '../../../src/events/validatedEventDispatcher.js';
+import EventBus from '../../../src/events/eventBus.js';
+import AjvSchemaValidator from '../../../src/validation/ajvSchemaValidator.js';
+import ConsoleLogger from '../../../src/logging/consoleLogger.js';
+import { SimpleEntityManager } from '../../common/entities/index.js';
 
 console.log('DEBUG: Test started');
 console.log('DEBUG: Before describe');
@@ -63,15 +70,13 @@ const makeStubRebuild = (em) => ({
 });
 
 // Move createHandlers definition here so it is accessible in all tests
-const createHandlers = (entityManager, eventBus, logger) => {
+const createHandlers = (entityManager, eventBus, logger, validatedEventDispatcher, safeEventDispatcher) => {
   return {
     BREAK_FOLLOW_RELATION: new BreakFollowRelationHandler({
       entityManager,
       logger,
       rebuildLeaderListCacheHandler: makeStubRebuild(entityManager),
-      safeEventDispatcher: {
-        dispatch: (...args) => eventBus.dispatch(...args),
-      },
+      safeEventDispatcher: safeEventDispatcher,
     }),
     QUERY_COMPONENT: new QueryComponentHandler({
       entityManager: {
@@ -82,9 +87,7 @@ const createHandlers = (entityManager, eventBus, logger) => {
         },
       },
       logger,
-      safeEventDispatcher: {
-        dispatch: (...args) => eventBus.dispatch(...args),
-      },
+      safeEventDispatcher: safeEventDispatcher,
     }),
     SET_VARIABLE: new SetVariableHandler({ logger }),
     GET_TIMESTAMP: new GetTimestampHandler({ logger }),
@@ -93,23 +96,23 @@ const createHandlers = (entityManager, eventBus, logger) => {
         entityManager,
         operationInterpreter,
         logger,
-        safeEventDispatcher: {
-          dispatch: (...args) => eventBus.dispatch(...args),
-        },
+        safeEventDispatcher: safeEventDispatcher,
       }),
     DISPATCH_PERCEPTIBLE_EVENT: new DispatchPerceptibleEventHandler({
       dispatcher: { dispatch: (...args) => eventBus.dispatch(...args) },
       logger,
-      addPerceptionLogEntryHandler: { execute: jest.fn() },
+      addPerceptionLogEntryHandler: new AddPerceptionLogEntryHandler({
+        entityManager,
+        logger,
+        safeEventDispatcher: safeEventDispatcher,
+      }),
     }),
     DISPATCH_EVENT: new DispatchEventHandler({
       dispatcher: eventBus,
       logger,
     }),
     END_TURN: new EndTurnHandler({
-      safeEventDispatcher: {
-        dispatch: (...args) => eventBus.dispatch(...args),
-      },
+      safeEventDispatcher: safeEventDispatcher,
       logger,
     }),
   };
@@ -120,15 +123,6 @@ describe('stop_following rule integration', () => {
   let testEnv;
 
   beforeEach(() => {
-    const dataRegistry = {
-      getAllSystemRules: jest.fn().mockReturnValue([stopFollowingRule]),
-      getConditionDefinition: jest.fn((id) => {
-        if (id === 'core:event-is-action-stop-following')
-          return eventIsActionStopFollowing;
-        return undefined;
-      }),
-    };
-
     // Prepare macro registry for expandMacros
     const macroRegistry = {
       get: (type, id) => {
@@ -164,23 +158,153 @@ describe('stop_following rule integration', () => {
       actions: expandedActions,
     };
 
-    testEnv = createRuleTestEnvironment({
-      createHandlers: (entityManager, eventBus, logger) => {
-        const handlers = createHandlers(entityManager, eventBus, logger);
-        const { IF_CO_LOCATED_FACTORY, ...rest } = handlers;
-        return rest;
-      },
-      entities: [],
-      rules: [expandedRule],
-      dataRegistry: {
-        getAllSystemRules: jest.fn().mockReturnValue([expandedRule]),
-        getConditionDefinition: jest.fn((id) => {
-          if (id === 'core:event-is-action-stop-following')
-            return eventIsActionStopFollowing;
-          return undefined;
-        }),
-      },
+    const dataRegistry = {
+      getAllSystemRules: jest.fn().mockReturnValue([expandedRule]),
+      getConditionDefinition: jest.fn((id) => {
+        if (id === 'core:event-is-action-stop-following')
+          return eventIsActionStopFollowing;
+        return undefined;
+      }),
+      getEventDefinition: jest.fn((eventName) => {
+        // Return a basic event definition for common events
+        const commonEvents = {
+          'core:turn_ended': { payloadSchema: null },
+          'core:perceptible_event': { payloadSchema: null },
+          'core:display_successful_action_result': { payloadSchema: null },
+          'core:system_error_occurred': { payloadSchema: null },
+          'core:display_failed_action_result': { payloadSchema: null },
+        };
+        return commonEvents[eventName] || null;
+      }),
+    };
+
+    // Use actual ConsoleLogger instead of mock
+    const testLogger = new ConsoleLogger('DEBUG');
+
+    // Use actual EventBus instead of mock
+    const bus = new EventBus();
+
+    // Create actual schema validator
+    const schemaValidator = new AjvSchemaValidator(testLogger);
+
+    // Create actual ValidatedEventDispatcher
+    const validatedEventDispatcher = new ValidatedEventDispatcher({
+      eventBus: bus,
+      gameDataRepository: dataRegistry,
+      schemaValidator: schemaValidator,
+      logger: testLogger,
     });
+
+    // Create actual SafeEventDispatcher
+    const safeEventDispatcher = new SafeEventDispatcher({
+      validatedEventDispatcher: validatedEventDispatcher,
+      logger: testLogger,
+    });
+
+    // Create JSON logic evaluation service
+    const jsonLogic = new JsonLogicEvaluationService({
+      logger: testLogger,
+      gameDataRepository: dataRegistry,
+    });
+
+    // Create entity manager
+    const entityManager = new SimpleEntityManager([]);
+
+    // Create operation registry
+    const operationRegistry = new OperationRegistry({ logger: testLogger });
+    const handlers = createHandlers(entityManager, bus, testLogger, validatedEventDispatcher, safeEventDispatcher);
+    const { IF_CO_LOCATED_FACTORY, ...rest } = handlers;
+    for (const [type, handler] of Object.entries(rest)) {
+      operationRegistry.register(type, handler.execute.bind(handler));
+    }
+
+    const operationInterpreter = new OperationInterpreter({
+      logger: testLogger,
+      operationRegistry,
+    });
+
+    const interpreter = new SystemLogicInterpreter({
+      logger: testLogger,
+      eventBus: bus,
+      dataRegistry: dataRegistry,
+      jsonLogicEvaluationService: jsonLogic,
+      entityManager: entityManager,
+      operationInterpreter,
+    });
+
+    // Create a simple event capture mechanism for testing
+    const capturedEvents = [];
+    
+    // Subscribe to the specific events we want to capture
+    const eventsToCapture = [
+      'core:perceptible_event',
+      'core:display_successful_action_result', 
+      'core:turn_ended',
+      'core:system_error_occurred'
+    ];
+    
+    eventsToCapture.forEach(eventType => {
+      bus.subscribe(eventType, (event) => {
+        capturedEvents.push({ eventType: event.type, payload: event.payload });
+      });
+    });
+
+    interpreter.initialize();
+
+    testEnv = {
+      eventBus: bus,
+      events: capturedEvents,
+      operationRegistry,
+      operationInterpreter,
+      jsonLogic,
+      systemLogicInterpreter: interpreter,
+      entityManager: entityManager,
+      logger: testLogger,
+      dataRegistry,
+      validatedEventDispatcher,
+      safeEventDispatcher,
+      cleanup: () => {
+        interpreter.shutdown();
+      },
+      reset: (newEntities = []) => {
+        testEnv.cleanup();
+        // Create new entity manager with the new entities
+        const newEntityManager = new SimpleEntityManager(newEntities);
+        
+        // Recreate handlers with the new entity manager
+        const newHandlers = createHandlers(newEntityManager, bus, testLogger, validatedEventDispatcher, safeEventDispatcher);
+        const { IF_CO_LOCATED_FACTORY: newIfCoLocatedFactory, ...newRest } = newHandlers;
+        const newOperationRegistry = new OperationRegistry({ logger: testLogger });
+        for (const [type, handler] of Object.entries(newRest)) {
+          newOperationRegistry.register(type, handler.execute.bind(handler));
+        }
+
+        const newOperationInterpreter = new OperationInterpreter({
+          logger: testLogger,
+          operationRegistry: newOperationRegistry,
+        });
+
+        const newInterpreter = new SystemLogicInterpreter({
+          logger: testLogger,
+          eventBus: bus,
+          dataRegistry: dataRegistry,
+          jsonLogicEvaluationService: jsonLogic,
+          entityManager: newEntityManager,
+          operationInterpreter: newOperationInterpreter,
+        });
+
+        newInterpreter.initialize();
+
+        // Update test environment
+        testEnv.operationRegistry = newOperationRegistry;
+        testEnv.operationInterpreter = newOperationInterpreter;
+        testEnv.systemLogicInterpreter = newInterpreter;
+        testEnv.entityManager = newEntityManager;
+        
+        // Clear events
+        capturedEvents.length = 0;
+      },
+    };
 
     events = [];
     testEnv.eventBus.subscribe('*', (event) => {
@@ -195,7 +319,9 @@ describe('stop_following rule integration', () => {
     const ifCoLocatedHandler = createHandlers(
       testEnv.entityManager,
       testEnv.eventBus,
-      testEnv.logger
+      testEnv.logger,
+      testEnv.validatedEventDispatcher,
+      testEnv.safeEventDispatcher
     ).IF_CO_LOCATED_FACTORY(testEnv.operationInterpreter);
     testEnv.operationRegistry.register(
       'IF_CO_LOCATED',
@@ -286,7 +412,9 @@ describe('stop_following rule integration', () => {
     const ifCoLocatedHandler = createHandlers(
       testEnv.entityManager,
       testEnv.eventBus,
-      testEnv.logger
+      testEnv.logger,
+      testEnv.validatedEventDispatcher,
+      testEnv.safeEventDispatcher
     ).IF_CO_LOCATED_FACTORY(testEnv.operationInterpreter);
     testEnv.operationRegistry.register(
       'IF_CO_LOCATED',
@@ -297,7 +425,9 @@ describe('stop_following rule integration', () => {
     const dispatchEventHandler = createHandlers(
       testEnv.entityManager,
       testEnv.eventBus,
-      testEnv.logger
+      testEnv.logger,
+      testEnv.validatedEventDispatcher,
+      testEnv.safeEventDispatcher
     ).DISPATCH_EVENT;
     testEnv.operationRegistry.register(
       'DISPATCH_EVENT',
@@ -355,7 +485,9 @@ describe('stop_following rule integration', () => {
     const ifCoLocatedHandler = createHandlers(
       testEnv.entityManager,
       testEnv.eventBus,
-      testEnv.logger
+      testEnv.logger,
+      testEnv.validatedEventDispatcher,
+      testEnv.safeEventDispatcher
     ).IF_CO_LOCATED_FACTORY(testEnv.operationInterpreter);
     testEnv.operationRegistry.register(
       'IF_CO_LOCATED',
@@ -410,7 +542,9 @@ describe('stop_following rule integration', () => {
     const ifCoLocatedHandler = createHandlers(
       testEnv.entityManager,
       testEnv.eventBus,
-      testEnv.logger
+      testEnv.logger,
+      testEnv.validatedEventDispatcher,
+      testEnv.safeEventDispatcher
     ).IF_CO_LOCATED_FACTORY(testEnv.operationInterpreter);
     testEnv.operationRegistry.register(
       'IF_CO_LOCATED',

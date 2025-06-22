@@ -1,0 +1,13 @@
+{
+  "$schema": "http://example.com/schemas/condition.schema.json",
+  "id": "core:event-is-turn-started",
+  "description": "Checks if the triggering event is a 'core:turn_started' event.",
+  "logic": {
+    "==": [
+      {
+        "var": "event.type"
+      },
+      "core:turn_started"
+    ]
+  }
+} 

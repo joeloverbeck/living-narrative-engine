@@ -9,10 +9,6 @@ import thumbWipeCheekAction from '../../../data/mods/intimacy/actions/thumb_wipe
 import eventIsActionGetClose from '../../../data/mods/intimacy/conditions/event-is-action-get-close.condition.json';
 import logSuccessMacro from '../../../data/mods/core/macros/logSuccessAndEndTurn.macro.json';
 
-import SystemLogicInterpreter from '../../../src/logic/systemLogicInterpreter.js';
-import OperationInterpreter from '../../../src/logic/operationInterpreter.js';
-import OperationRegistry from '../../../src/logic/operationRegistry.js';
-import JsonLogicEvaluationService from '../../../src/logic/jsonLogicEvaluationService.js';
 import SetVariableHandler from '../../../src/logic/operationHandlers/setVariableHandler.js';
 import MergeClosenessCircleHandler from '../../../src/logic/operationHandlers/mergeClosenessCircleHandler.js';
 import GetNameHandler from '../../../src/logic/operationHandlers/getNameHandler.js';
@@ -28,150 +24,203 @@ import {
   ACTOR_COMPONENT_ID,
 } from '../../../src/constants/componentIds.js';
 import { ATTEMPT_ACTION_ID } from '../../../src/constants/eventIds.js';
-import SimpleEntityManager from '../../common/entities/simpleEntityManager.js';
+import { createRuleTestEnvironment } from '../../common/engine/systemLogicTestEnv.js';
+import { SimpleEntityManager } from '../../common/entities/index.js';
+import AddPerceptionLogEntryHandler from '../../../src/logic/operationHandlers/addPerceptionLogEntryHandler.js';
+import { SafeEventDispatcher } from '../../../src/events/safeEventDispatcher.js';
+import ValidatedEventDispatcher from '../../../src/events/validatedEventDispatcher.js';
+import EventBus from '../../../src/events/eventBus.js';
+import AjvSchemaValidator from '../../../src/validation/ajvSchemaValidator.js';
+import ConsoleLogger from '../../../src/logging/consoleLogger.js';
+import { merge, dedupe, repair } from '../../../src/logic/services/closenessCircleService.js';
+import OperationRegistry from '../../../src/logic/operationRegistry.js';
+import OperationInterpreter from '../../../src/logic/operationInterpreter.js';
+import SystemLogicInterpreter from '../../../src/logic/systemLogicInterpreter.js';
+import JsonLogicEvaluationService from '../../../src/logic/jsonLogicEvaluationService.js';
 
 /**
+ * Creates handlers needed for the get_close rule.
  *
- * @param entities
+ * @param {object} entityManager - Entity manager instance
+ * @param {object} eventBus - Event bus instance
+ * @param {object} logger - Logger instance
+ * @returns {object} Handlers object
  */
-function init(entities) {
-  operationRegistry = new OperationRegistry({ logger });
-  entityManager = new SimpleEntityManager(entities);
-
-  const safeDispatcher = {
-    dispatch: jest.fn(() => Promise.resolve(true)),
-  };
-
-  const closenessCircleService = { merge: jest.fn((...arrays) => [...new Set(arrays.flat())]) };
-
-  const handlers = {
+function createHandlers(entityManager, eventBus, logger, validatedEventDispatcher, safeEventDispatcher) {
+  const closenessCircleService = { merge, dedupe, repair };
+  return {
     QUERY_COMPONENT: new QueryComponentHandler({
       entityManager,
       logger,
-      safeEventDispatcher: safeDispatcher,
+      safeEventDispatcher: safeEventDispatcher,
     }),
     SET_VARIABLE: new SetVariableHandler({ logger }),
     MERGE_CLOSENESS_CIRCLE: new MergeClosenessCircleHandler({
       logger,
       entityManager,
-      safeEventDispatcher: safeDispatcher,
+      safeEventDispatcher: safeEventDispatcher,
       closenessCircleService,
     }),
     DISPATCH_PERCEPTIBLE_EVENT: new DispatchPerceptibleEventHandler({
       dispatcher: eventBus,
       logger,
-      addPerceptionLogEntryHandler: { execute: jest.fn() },
+      addPerceptionLogEntryHandler: new AddPerceptionLogEntryHandler({
+        entityManager,
+        logger,
+        safeEventDispatcher: safeEventDispatcher,
+      }),
     }),
     GET_NAME: new GetNameHandler({
       entityManager,
       logger,
-      safeEventDispatcher: safeDispatcher,
+      safeEventDispatcher: safeEventDispatcher,
     }),
     GET_TIMESTAMP: new GetTimestampHandler({ logger }),
     DISPATCH_EVENT: new DispatchEventHandler({ dispatcher: eventBus, logger }),
     END_TURN: new EndTurnHandler({
-      safeEventDispatcher: safeDispatcher,
+      safeEventDispatcher: safeEventDispatcher,
       logger,
     }),
   };
-
-  for (const [type, handler] of Object.entries(handlers)) {
-    operationRegistry.register(type, handler.execute.bind(handler));
-  }
-
-  operationInterpreter = new OperationInterpreter({
-    logger,
-    operationRegistry,
-  });
-
-  jsonLogic = new JsonLogicEvaluationService({
-    logger,
-    gameDataRepository: dataRegistry,
-  });
-
-  interpreter = new SystemLogicInterpreter({
-    logger,
-    eventBus,
-    dataRegistry,
-    jsonLogicEvaluationService: jsonLogic,
-    entityManager,
-    operationInterpreter,
-  });
-
-  listener = null;
-  interpreter.initialize();
-}
-
-let logger;
-let eventBus;
-let dataRegistry;
-let entityManager;
-let operationRegistry;
-let operationInterpreter;
-let jsonLogic;
-let interpreter;
-let listener;
-
-beforeEach(() => {
-  logger = {
-    debug: jest.fn(),
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
-  };
-
-  eventBus = {
-    subscribe: jest.fn((ev, l) => {
-      if (ev === '*') listener = l;
-    }),
-    unsubscribe: jest.fn(),
-    dispatch: jest.fn(() => Promise.resolve()),
-    listenerCount: jest.fn().mockReturnValue(1),
-  };
-
-  const macroRegistry = {
-    get: (type, id) =>
-      type === 'macros' && id === 'core:logSuccessAndEndTurn'
-        ? logSuccessMacro
-        : undefined,
-  };
-  const expandedRule = {
-    ...getCloseRule,
-    actions: expandMacros(getCloseRule.actions, macroRegistry, logger),
-  };
-  dataRegistry = {
-    getAllSystemRules: jest.fn().mockReturnValue([expandedRule]),
-    getConditionDefinition: jest.fn((id) =>
-      id === 'intimacy:event-is-action-get-close'
-        ? eventIsActionGetClose
-        : undefined
-    ),
-  };
-
-  init([]);
-});
-
-/**
- *
- * @param actorId
- * @param targetId
- */
-function prerequisitesMet(actorId, targetId) {
-  const closeness = entityManager.getComponentData(
-    actorId,
-    'intimacy:closeness'
-  );
-  return (
-    !!closeness &&
-    Array.isArray(closeness.partners) &&
-    closeness.partners.includes(targetId)
-  );
 }
 
 describe('closeness action availability chain', () => {
+  let testEnv;
+
+  beforeEach(() => {
+    const macroRegistry = {
+      get: (type, id) =>
+        type === 'macros' && id === 'core:logSuccessAndEndTurn'
+          ? logSuccessMacro
+          : undefined,
+    };
+    const expandedRule = {
+      ...getCloseRule,
+      actions: expandMacros(getCloseRule.actions, macroRegistry, testEnv?.logger),
+    };
+    const dataRegistry = {
+      getAllSystemRules: jest.fn().mockReturnValue([expandedRule]),
+      getConditionDefinition: jest.fn((id) =>
+        id === 'intimacy:event-is-action-get-close'
+          ? eventIsActionGetClose
+          : undefined
+      ),
+      getEventDefinition: jest.fn((eventName) => {
+        const commonEvents = {
+          'core:turn_ended': { payloadSchema: null },
+        };
+        return commonEvents[eventName] || null;
+      }),
+    };
+    const testLogger = new ConsoleLogger('DEBUG');
+    const bus = new EventBus();
+    const schemaValidator = new AjvSchemaValidator(testLogger);
+    const validatedEventDispatcher = new ValidatedEventDispatcher({
+      eventBus: bus,
+      gameDataRepository: dataRegistry,
+      schemaValidator: schemaValidator,
+      logger: testLogger,
+    });
+    const safeEventDispatcher = new SafeEventDispatcher({
+      validatedEventDispatcher: validatedEventDispatcher,
+      logger: testLogger,
+    });
+    const entityManager = new SimpleEntityManager([]);
+    const operationRegistry = new OperationRegistry({ logger: testLogger });
+    const handlers = createHandlers(entityManager, bus, testLogger, validatedEventDispatcher, safeEventDispatcher);
+    for (const [type, handler] of Object.entries(handlers)) {
+      operationRegistry.register(type, handler.execute.bind(handler));
+    }
+    const operationInterpreter = new OperationInterpreter({
+      logger: testLogger,
+      operationRegistry,
+    });
+    const jsonLogic = new JsonLogicEvaluationService({
+      logger: testLogger,
+      gameDataRepository: dataRegistry,
+    });
+    const interpreter = new SystemLogicInterpreter({
+      logger: testLogger,
+      eventBus: bus,
+      dataRegistry: dataRegistry,
+      jsonLogicEvaluationService: jsonLogic,
+      entityManager: entityManager,
+      operationInterpreter,
+    });
+    const capturedEvents = [];
+    bus.subscribe('core:turn_ended', (event) => {
+      capturedEvents.push({ eventType: event.type, payload: event.payload });
+    });
+    interpreter.initialize();
+    testEnv = {
+      eventBus: bus,
+      events: capturedEvents,
+      operationRegistry,
+      operationInterpreter,
+      systemLogicInterpreter: interpreter,
+      entityManager: entityManager,
+      logger: testLogger,
+      dataRegistry,
+      validatedEventDispatcher,
+      safeEventDispatcher,
+      cleanup: () => {
+        interpreter.shutdown();
+      },
+      reset: (newEntities = []) => {
+        testEnv.cleanup();
+        const newEntityManager = new SimpleEntityManager(newEntities);
+        const newHandlers = createHandlers(newEntityManager, bus, testLogger, validatedEventDispatcher, safeEventDispatcher);
+        const newOperationRegistry = new OperationRegistry({ logger: testLogger });
+        for (const [type, handler] of Object.entries(newHandlers)) {
+          newOperationRegistry.register(type, handler.execute.bind(handler));
+        }
+        const newOperationInterpreter = new OperationInterpreter({
+          logger: testLogger,
+          operationRegistry: newOperationRegistry,
+        });
+        const newInterpreter = new SystemLogicInterpreter({
+          logger: testLogger,
+          eventBus: bus,
+          dataRegistry: dataRegistry,
+          jsonLogicEvaluationService: jsonLogic,
+          entityManager: newEntityManager,
+          operationInterpreter: newOperationInterpreter,
+        });
+        newInterpreter.initialize();
+        testEnv.operationRegistry = newOperationRegistry;
+        testEnv.operationInterpreter = newOperationInterpreter;
+        testEnv.systemLogicInterpreter = newInterpreter;
+        testEnv.entityManager = newEntityManager;
+        capturedEvents.length = 0;
+      },
+    };
+  });
+
+  afterEach(() => {
+    if (testEnv) {
+      testEnv.cleanup();
+    }
+  });
+
+  /**
+   *
+   * @param actorId
+   * @param targetId
+   */
+  function prerequisitesMet(actorId, targetId) {
+    const closeness = testEnv.entityManager.getComponentData(
+      actorId,
+      'intimacy:closeness'
+    );
+    return (
+      !!closeness &&
+      Array.isArray(closeness.partners) &&
+      closeness.partners.includes(targetId)
+    );
+  }
+
   it('enables intimacy actions after get_close is executed', () => {
-    interpreter.shutdown();
-    init([
+    testEnv.reset([
       {
         id: 'a1',
         components: {
@@ -194,15 +243,30 @@ describe('closeness action availability chain', () => {
 
     expect(prerequisitesMet('a1', 't1')).toBe(false);
 
-    listener({
-      type: ATTEMPT_ACTION_ID,
-      payload: {
-        actorId: 'a1',
-        actionId: 'intimacy:get_close',
-        targetId: 't1',
-      },
+    testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      actorId: 'a1',
+      actionId: 'intimacy:get_close',
+      targetId: 't1',
     });
 
     expect(prerequisitesMet('a1', 't1')).toBe(true);
+    expect(prerequisitesMet('t1', 'a1')).toBe(true);
+
+    // Verify that the closeness circle was created correctly
+    const a1Closeness = testEnv.entityManager.getComponentData(
+      'a1',
+      'intimacy:closeness'
+    );
+    const t1Closeness = testEnv.entityManager.getComponentData(
+      't1',
+      'intimacy:closeness'
+    );
+
+    expect(a1Closeness).toEqual({ partners: ['t1'] });
+    expect(t1Closeness).toEqual({ partners: ['a1'] });
+
+    // Verify that the turn was ended
+    const types = testEnv.events.map((e) => e.eventType);
+    expect(types).toContain('core:turn_ended');
   });
 });

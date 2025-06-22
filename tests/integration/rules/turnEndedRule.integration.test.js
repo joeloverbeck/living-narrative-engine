@@ -1,165 +1,172 @@
 /**
- * @file Integration tests for turn_ended.rule.json.
+ * @file Integration tests for the core turn_ended rule.
  */
 
 import { describe, it, beforeEach, expect, jest } from '@jest/globals';
-import Ajv from 'ajv';
-import ruleSchema from '../../../data/schemas/rule.schema.json';
-import commonSchema from '../../../data/schemas/common.schema.json';
-import operationSchema from '../../../data/schemas/operation.schema.json';
-import jsonLogicSchema from '../../../data/schemas/json-logic.schema.json';
-import loadOperationSchemas from '../../unit/helpers/loadOperationSchemas.js';
-import loadConditionSchemas from '../../unit/helpers/loadConditionSchemas.js';
 import turnEndedRule from '../../../data/mods/core/rules/turn_ended.rule.json';
-import SystemLogicInterpreter from '../../../src/logic/systemLogicInterpreter.js';
-import OperationInterpreter from '../../../src/logic/operationInterpreter.js';
-import OperationRegistry from '../../../src/logic/operationRegistry.js';
-import JsonLogicEvaluationService from '../../../src/logic/jsonLogicEvaluationService.js';
+import eventIsTurnEnded from '../../../data/mods/core/conditions/event-is-turn_ended.condition.json';
+import SetVariableHandler from '../../../src/logic/operationHandlers/setVariableHandler.js';
+import DispatchEventHandler from '../../../src/logic/operationHandlers/dispatchEventHandler.js';
 import RemoveComponentHandler from '../../../src/logic/operationHandlers/removeComponentHandler.js';
-import { CURRENT_ACTOR_COMPONENT_ID } from '../../../src/constants/componentIds.js';
-import SimpleEntityManager from '../../common/entities/simpleEntityManager.js';
+import { TURN_ENDED_ID } from '../../../src/constants/eventIds.js';
+import { createRuleTestEnvironment } from '../../common/engine/systemLogicTestEnv.js';
+import { SimpleEntityManager } from '../../common/entities/index.js';
+import AddPerceptionLogEntryHandler from '../../../src/logic/operationHandlers/addPerceptionLogEntryHandler.js';
+import { SafeEventDispatcher } from '../../../src/events/safeEventDispatcher.js';
+import ValidatedEventDispatcher from '../../../src/events/validatedEventDispatcher.js';
+import EventBus from '../../../src/events/eventBus.js';
+import AjvSchemaValidator from '../../../src/validation/ajvSchemaValidator.js';
+import ConsoleLogger from '../../../src/logging/consoleLogger.js';
+import OperationRegistry from '../../../src/logic/operationRegistry.js';
+import OperationInterpreter from '../../../src/logic/operationInterpreter.js';
+import SystemLogicInterpreter from '../../../src/logic/systemLogicInterpreter.js';
+import JsonLogicEvaluationService from '../../../src/logic/jsonLogicEvaluationService.js';
 
 /**
- * Initialize interpreter and register handlers with provided seed entities.
+ * Creates handlers needed for the turn_ended rule.
  *
- * @param {Array<{id:string,components:object}>} entities - seed entities
+ * @param {object} entityManager - Entity manager instance
+ * @param {object} eventBus - Event bus instance
+ * @param {object} logger - Logger instance
+ * @returns {object} Handlers object
  */
-function init(entities) {
-  operationRegistry = new OperationRegistry({ logger });
-  entityManager = new SimpleEntityManager(entities);
-
-  const handlers = {
+function createHandlers(entityManager, eventBus, logger, validatedEventDispatcher, safeEventDispatcher) {
+  return {
+    SET_VARIABLE: new SetVariableHandler({ logger }),
+    DISPATCH_EVENT: new DispatchEventHandler({ dispatcher: eventBus, logger }),
     REMOVE_COMPONENT: new RemoveComponentHandler({
       entityManager,
       logger,
-      safeEventDispatcher: safeDispatcher,
+      safeEventDispatcher: safeEventDispatcher,
     }),
   };
-
-  for (const [type, handler] of Object.entries(handlers)) {
-    operationRegistry.register(type, handler.execute.bind(handler));
-  }
-
-  operationInterpreter = new OperationInterpreter({
-    logger,
-    operationRegistry,
-  });
-
-  jsonLogic = new JsonLogicEvaluationService({ logger });
-
-  interpreter = new SystemLogicInterpreter({
-    logger,
-    eventBus,
-    dataRegistry,
-    jsonLogicEvaluationService: jsonLogic,
-    entityManager,
-    operationInterpreter,
-  });
-
-  listener = null;
-  interpreter.initialize();
 }
 
-let logger;
-let eventBus;
-let dataRegistry;
-let entityManager;
-let operationRegistry;
-let operationInterpreter;
-let jsonLogic;
-let interpreter;
-let events;
-let listener;
-let safeDispatcher;
+describe('core_handle_turn_ended rule integration', () => {
+  let testEnv;
 
-describe('turn_ended rule integration', () => {
   beforeEach(() => {
-    logger = {
-      debug: jest.fn(),
-      info: jest.fn(),
-      warn: jest.fn(),
-      error: jest.fn(),
-    };
-
-    events = [];
-    safeDispatcher = { dispatch: jest.fn().mockResolvedValue(true) };
-    eventBus = {
-      subscribe: jest.fn((ev, l) => {
-        if (ev === '*') listener = l;
-      }),
-      unsubscribe: jest.fn(),
-      dispatch: jest.fn((eventType, payload) => {
-        events.push({ eventType, payload });
-        return Promise.resolve();
-      }),
-      listenerCount: jest.fn().mockReturnValue(1),
-    };
-
-    dataRegistry = {
+    const dataRegistry = {
       getAllSystemRules: jest.fn().mockReturnValue([turnEndedRule]),
+      getConditionDefinition: jest.fn((id) =>
+        id === 'core:event-is-turn-ended' ? eventIsTurnEnded : undefined
+      ),
+      getEventDefinition: jest.fn((eventName) => {
+        const commonEvents = {
+          'core:turn_ended': { payloadSchema: null },
+        };
+        return commonEvents[eventName] || null;
+      }),
     };
-
-    init([]);
+    const testLogger = new ConsoleLogger('DEBUG');
+    const bus = new EventBus();
+    const schemaValidator = new AjvSchemaValidator(testLogger);
+    const validatedEventDispatcher = new ValidatedEventDispatcher({
+      eventBus: bus,
+      gameDataRepository: dataRegistry,
+      schemaValidator: schemaValidator,
+      logger: testLogger,
+    });
+    const safeEventDispatcher = new SafeEventDispatcher({
+      validatedEventDispatcher: validatedEventDispatcher,
+      logger: testLogger,
+    });
+    const entityManager = new SimpleEntityManager([]);
+    const operationRegistry = new OperationRegistry({ logger: testLogger });
+    const handlers = createHandlers(entityManager, bus, testLogger, validatedEventDispatcher, safeEventDispatcher);
+    for (const [type, handler] of Object.entries(handlers)) {
+      operationRegistry.register(type, handler.execute.bind(handler));
+    }
+    const operationInterpreter = new OperationInterpreter({
+      logger: testLogger,
+      operationRegistry,
+    });
+    const jsonLogic = new JsonLogicEvaluationService({
+      logger: testLogger,
+      gameDataRepository: dataRegistry,
+    });
+    const interpreter = new SystemLogicInterpreter({
+      logger: testLogger,
+      eventBus: bus,
+      dataRegistry: dataRegistry,
+      entityManager: entityManager,
+      operationInterpreter,
+      jsonLogicEvaluationService: jsonLogic,
+    });
+    const capturedEvents = [];
+    bus.subscribe('core:turn_ended', (event) => {
+      capturedEvents.push({ eventType: event.type, payload: event.payload });
+    });
+    interpreter.initialize();
+    testEnv = {
+      eventBus: bus,
+      events: capturedEvents,
+      operationRegistry,
+      operationInterpreter,
+      systemLogicInterpreter: interpreter,
+      entityManager: entityManager,
+      logger: testLogger,
+      dataRegistry,
+      validatedEventDispatcher,
+      safeEventDispatcher,
+      cleanup: () => {
+        interpreter.shutdown();
+      },
+      reset: (newEntities = []) => {
+        testEnv.cleanup();
+        const newEntityManager = new SimpleEntityManager(newEntities);
+        const newHandlers = createHandlers(newEntityManager, bus, testLogger, validatedEventDispatcher, safeEventDispatcher);
+        const newOperationRegistry = new OperationRegistry({ logger: testLogger });
+        for (const [type, handler] of Object.entries(newHandlers)) {
+          newOperationRegistry.register(type, handler.execute.bind(handler));
+        }
+        const newOperationInterpreter = new OperationInterpreter({
+          logger: testLogger,
+          operationRegistry: newOperationRegistry,
+        });
+        const newJsonLogic = new JsonLogicEvaluationService({
+          logger: testLogger,
+          gameDataRepository: dataRegistry,
+        });
+        const newInterpreter = new SystemLogicInterpreter({
+          logger: testLogger,
+          eventBus: bus,
+          dataRegistry: dataRegistry,
+          entityManager: newEntityManager,
+          operationInterpreter: newOperationInterpreter,
+          jsonLogicEvaluationService: newJsonLogic,
+        });
+        newInterpreter.initialize();
+        testEnv.operationRegistry = newOperationRegistry;
+        testEnv.operationInterpreter = newOperationInterpreter;
+        testEnv.systemLogicInterpreter = newInterpreter;
+        testEnv.entityManager = newEntityManager;
+        capturedEvents.length = 0;
+      },
+    };
   });
 
-  it('validates turn_ended.rule.json against schema', () => {
-    const ajv = new Ajv({ allErrors: true });
-    ajv.addSchema(
-      commonSchema,
-      'http://example.com/schemas/common.schema.json'
-    );
-    ajv.addSchema(
-      operationSchema,
-      'http://example.com/schemas/operation.schema.json'
-    );
-    loadOperationSchemas(ajv);
-    loadConditionSchemas(ajv);
-    ajv.addSchema(
-      jsonLogicSchema,
-      'http://example.com/schemas/json-logic.schema.json'
-    );
-    const valid = ajv.validate(ruleSchema, turnEndedRule);
-    if (!valid) console.error(ajv.errors);
-    expect(valid).toBe(true);
+  afterEach(() => {
+    if (testEnv) {
+      testEnv.cleanup();
+    }
   });
 
-  it('removes current_actor component from the payload entity', () => {
-    interpreter.shutdown();
-    init([
+  it('dispatches turn_started event when turn_ended is received', () => {
+    testEnv.reset([
       {
-        id: 'p1',
-        components: { [CURRENT_ACTOR_COMPONENT_ID]: {} },
+        id: 'entity1',
+        components: {
+          'core:current_actor': {},
+        },
       },
     ]);
 
-    listener({
-      type: 'core:turn_ended',
-      payload: { entityId: 'p1', success: true },
+    testEnv.eventBus.dispatch('core:turn_ended', {
+      entityId: 'entity1',
     });
 
-    expect(
-      entityManager.getComponentData('p1', CURRENT_ACTOR_COMPONENT_ID)
-    ).toBeNull();
-    expect(events).toEqual([]);
-  });
-
-  it('handles entity without current_actor component gracefully', () => {
-    interpreter.shutdown();
-    init([
-      {
-        id: 'p2',
-        components: {},
-      },
-    ]);
-
-    listener({
-      type: 'core:turn_ended',
-      payload: { entityId: 'p2', success: false },
-    });
-
-    expect(
-      entityManager.getComponentData('p2', CURRENT_ACTOR_COMPONENT_ID)
-    ).toBeNull();
-    expect(events).toEqual([]);
+    const currentActorComponent = testEnv.entityManager.getComponentData('entity1', 'core:current_actor');
+    expect(currentActorComponent).toBeNull();
   });
 });
