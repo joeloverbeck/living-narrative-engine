@@ -2,6 +2,7 @@ import { describe, test, expect } from '@jest/globals';
 import {
   assertValidActor,
   assertMatchingActor,
+  validateContextMethods,
 } from '../../../../../src/turns/states/helpers/validationUtils.js';
 
 const makeActor = (id = 'a1') => ({ id });
@@ -26,5 +27,15 @@ describe('validationUtils', () => {
     expect(assertMatchingActor(expected, ctx, 'State')).toMatch(
       /does not match/
     );
+  });
+
+  test('validateContextMethods detects missing methods', () => {
+    const ctx = { a: () => {}, b: 1 };
+    expect(validateContextMethods(ctx, ['a', 'b', 'c'])).toEqual(['b', 'c']);
+  });
+
+  test('validateContextMethods returns empty array when all present', () => {
+    const ctx = { x() {} };
+    expect(validateContextMethods(ctx, ['x'])).toEqual([]);
   });
 });
