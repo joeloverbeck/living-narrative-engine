@@ -5,13 +5,15 @@
 /* eslint-env jest */
 /* global jest */
 
-import EventBus from '../../../src/events/eventBus.js';
 import OperationRegistry from '../../../src/logic/operationRegistry.js';
 import OperationInterpreter from '../../../src/logic/operationInterpreter.js';
 import JsonLogicEvaluationService from '../../../src/logic/jsonLogicEvaluationService.js';
 import SystemLogicInterpreter from '../../../src/logic/systemLogicInterpreter.js';
 import { SimpleEntityManager } from '../entities/index.js';
-import { createMockLogger } from '../mockFactories/index.js';
+import {
+  createMockLogger,
+  createCapturingEventBus,
+} from '../mockFactories/index.js';
 import { deepClone } from '../../../src/utils/cloneUtils.js';
 
 /**
@@ -23,6 +25,7 @@ import { deepClone } from '../../../src/utils/cloneUtils.js';
  * @param {Array<object>} options.rules - System rules to load
  * @param {object} options.logger - Logger instance (optional, creates mock if not provided)
  * @param {object} options.dataRegistry - Data registry (optional, creates mock if not provided)
+ * @param options.eventBus
  * @returns {object} Test environment with all components and cleanup function
  */
 export function createRuleTestEnvironment({
@@ -31,6 +34,7 @@ export function createRuleTestEnvironment({
   rules = [],
   logger = null,
   dataRegistry = null,
+  eventBus = null,
 }) {
   // Create logger if not provided
 
@@ -43,7 +47,7 @@ export function createRuleTestEnvironment({
   };
 
   // Create event bus
-  const eventBus = new EventBus();
+  const bus = eventBus || createCapturingEventBus();
 
   // Hold core components so they can be recreated on reset
   let entityManager;
@@ -67,7 +71,7 @@ export function createRuleTestEnvironment({
   function initializeEnv(entityList) {
     entityManager = new SimpleEntityManager(entityList);
     operationRegistry = new OperationRegistry({ logger: testLogger });
-    const handlers = createHandlers(entityManager, eventBus, testLogger);
+    const handlers = createHandlers(entityManager, bus, testLogger);
     for (const [type, handler] of Object.entries(handlers)) {
       operationRegistry.register(type, handler.execute.bind(handler));
     }
@@ -77,7 +81,7 @@ export function createRuleTestEnvironment({
     });
     interpreter = new SystemLogicInterpreter({
       logger: testLogger,
-      eventBus,
+      eventBus: bus,
       dataRegistry: testDataRegistry,
       jsonLogicEvaluationService: jsonLogic,
       entityManager,
@@ -96,7 +100,8 @@ export function createRuleTestEnvironment({
 
   // The environment object to return
   const env = {
-    eventBus,
+    eventBus: bus,
+    events: bus.events,
     operationRegistry: init.operationRegistry,
     operationInterpreter: init.operationInterpreter,
     jsonLogic,

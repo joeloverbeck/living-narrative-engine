@@ -9,6 +9,7 @@ export {
   createMockDataFetcher,
   createMockDataFetcherForIntegration,
   createMockValidatedEventDispatcherForIntegration,
+  createCapturingEventBus,
   createMockAIPromptPipeline,
 } from './coreServices.js';
 
