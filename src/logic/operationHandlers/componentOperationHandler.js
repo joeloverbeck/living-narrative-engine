@@ -27,12 +27,12 @@ class ComponentOperationHandler extends BaseOperationHandler {
    * Resolve an entity reference to an ID string.
    *
    * @param {'actor'|'target'|string|EntityRefObject} entityRef
-   * @param {ExecutionContext} execCtx
+   * @param {ExecutionContext} executionContext
    * @returns {string|null} The resolved ID or null if invalid.
    */
-  resolveEntity(entityRef, execCtx) {
+  resolveEntity(entityRef, executionContext) {
     if (!entityRef) return null;
-    return resolveEntityId(entityRef, execCtx);
+    return resolveEntityId(entityRef, executionContext);
   }
 
   /**

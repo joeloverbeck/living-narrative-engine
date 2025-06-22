@@ -9,7 +9,7 @@ import { SafeEventDispatcher } from '../events/safeEventDispatcher.js';
  * Instantiates and returns a dispatcher when the execution context contains a
  * validatedEventDispatcher. A custom dispatcher class can be provided for
  * testing. Construction failures result in `null`.
- * @param {import('../logic/defs.js').ExecutionContext} execCtx - Execution context.
+ * @param {import('../logic/defs.js').ExecutionContext} executionContext - Execution context.
  * @param {import('../interfaces/coreServices.js').ILogger} [logger] - Logger passed to the dispatcher.
  * @param {typeof SafeEventDispatcher} [DispatcherClass] -
  *   Class used to instantiate the dispatcher when needed.
@@ -17,14 +17,14 @@ import { SafeEventDispatcher } from '../events/safeEventDispatcher.js';
  *   The resolved dispatcher or `null` when unavailable.
  */
 export function resolveSafeDispatcher(
-  execCtx,
+  executionContext,
   logger,
   DispatcherClass = SafeEventDispatcher
 ) {
-  if (execCtx?.validatedEventDispatcher) {
+  if (executionContext?.validatedEventDispatcher) {
     try {
       return new DispatcherClass({
-        validatedEventDispatcher: execCtx.validatedEventDispatcher,
+        validatedEventDispatcher: executionContext.validatedEventDispatcher,
         logger,
       });
     } catch {

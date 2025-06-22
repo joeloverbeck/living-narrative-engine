@@ -49,10 +49,10 @@ class CheckFollowCycleHandler extends BaseOperationHandler {
 
   /**
    * @param {CheckFollowCycleParams} params
-   * @param {ExecutionContext} execCtx
+   * @param {ExecutionContext} executionContext
    */
-  execute(params, execCtx) {
-    const log = this.getLogger(execCtx);
+  execute(params, executionContext) {
+    const log = this.getLogger(executionContext);
     if (!assertParamsObject(params, log, 'CHECK_FOLLOW_CYCLE')) return;
 
     const { follower_id, leader_id, result_variable } = params;
@@ -97,7 +97,7 @@ class CheckFollowCycleHandler extends BaseOperationHandler {
     const res = tryWriteContextVariable(
       result_variable,
       result,
-      execCtx,
+      executionContext,
       this.#dispatcher,
       log
     );

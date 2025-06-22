@@ -168,13 +168,13 @@ class QueryEntitiesHandler extends BaseOperationHandler {
    * Validate and normalize execution parameters.
    *
    * @param {object} params - Raw parameters object.
-   * @param {ExecutionContext} execCtx - Current execution context.
+   * @param {ExecutionContext} executionContext - Current execution context.
    * @returns {{resultVariable:string, filters:object[], limit:number|undefined, logger:ILogger}|null}
    *   Normalized parameters or `null` when validation fails.
    * @private
    */
-  #validateParams(params, execCtx) {
-    const logger = this.getLogger(execCtx);
+  #validateParams(params, executionContext) {
+    const logger = this.getLogger(executionContext);
 
     if (!assertParamsObject(params, logger, 'QUERY_ENTITIES')) {
       return null;

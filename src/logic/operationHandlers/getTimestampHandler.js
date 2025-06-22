@@ -14,8 +14,8 @@ class GetTimestampHandler extends BaseOperationHandler {
     });
   }
 
-  execute(params, execCtx) {
-    const logger = this.getLogger(execCtx);
+  execute(params, executionContext) {
+    const logger = this.getLogger(executionContext);
     if (!assertParamsObject(params, logger, 'GET_TIMESTAMP')) return;
 
     const rv = params.result_variable.trim();
@@ -23,7 +23,7 @@ class GetTimestampHandler extends BaseOperationHandler {
     const result = tryWriteContextVariable(
       rv,
       timestamp,
-      execCtx,
+      executionContext,
       undefined,
       logger
     );

@@ -67,12 +67,12 @@ class BaseOperationHandler {
   /**
    * Retrieve the logger appropriate for a specific execution context.
    *
-   * @param {ExecutionContext} [execCtx] - Optional execution context which may
+   * @param {ExecutionContext} [executionContext] - Optional execution context which may
    *   provide a contextual logger.
    * @returns {ILogger} Logger instance for the current execution.
    */
-  getLogger(execCtx) {
-    return getExecLogger(this.#logger, execCtx);
+  getLogger(executionContext) {
+    return getExecLogger(this.#logger, executionContext);
   }
 }
 

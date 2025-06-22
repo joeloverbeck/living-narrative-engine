@@ -57,9 +57,9 @@ class SystemMoveEntityHandler {
    */
   async execute(params, executionContext) {
     const log = executionContext?.logger ?? this.#logger;
-    const opName = 'SYSTEM_MOVE_ENTITY'; // Use a constant for the name
+    const operationName = 'SYSTEM_MOVE_ENTITY'; // Use a constant for the name
 
-    if (!assertParamsObject(params, log, opName)) return;
+    if (!assertParamsObject(params, log, operationName)) return;
 
     // 1. Validate parameters
     const { entity_ref, target_location_id } = params;
@@ -71,7 +71,7 @@ class SystemMoveEntityHandler {
       !target_location_id
     ) {
       log.warn(
-        `${opName}: "entity_ref" and "target_location_id" are required.`
+        `${operationName}: "entity_ref" and "target_location_id" are required.`
       );
       return;
     }
@@ -79,7 +79,9 @@ class SystemMoveEntityHandler {
     // 2. Resolve the entity ID
     const entityId = resolveEntityId(entity_ref, executionContext);
     if (!entityId) {
-      log.warn(`${opName}: Could not resolve entity_ref.`, { entity_ref });
+      log.warn(`${operationName}: Could not resolve entity_ref.`, {
+        entity_ref,
+      });
       return;
     }
 
@@ -93,7 +95,7 @@ class SystemMoveEntityHandler {
       );
       if (!positionComponent) {
         log.warn(
-          `${opName}: Entity "${entityId}" has no 'core:position' component. Cannot move.`
+          `${operationName}: Entity "${entityId}" has no 'core:position' component. Cannot move.`
         );
         return;
       }
@@ -103,7 +105,7 @@ class SystemMoveEntityHandler {
       // Prevent moving if already there
       if (fromLocationId === target_location_id) {
         log.debug(
-          `${opName}: Entity "${entityId}" is already in location "${target_location_id}". No move needed.`
+          `${operationName}: Entity "${entityId}" is already in location "${target_location_id}". No move needed.`
         );
         return;
       }
@@ -118,13 +120,13 @@ class SystemMoveEntityHandler {
 
       if (!success) {
         log.warn(
-          `${opName}: EntityManager reported failure for addComponent on entity "${entityId}".`
+          `${operationName}: EntityManager reported failure for addComponent on entity "${entityId}".`
         );
         return;
       }
 
       log.debug(
-        `${opName}: Moved entity "${entityId}" from "${fromLocationId}" to "${target_location_id}".`
+        `${operationName}: Moved entity "${entityId}" from "${fromLocationId}" to "${target_location_id}".`
       );
 
       // 4. **Dispatch core:entity_moved with a compliant payload**
@@ -139,7 +141,7 @@ class SystemMoveEntityHandler {
     } catch (e) {
       safeDispatchError(
         this.#dispatcher,
-        `${opName}: Failed to move entity "${entityId}". Error: ${e.message}`,
+        `${operationName}: Failed to move entity "${entityId}". Error: ${e.message}`,
         {
           error: e.message,
           stack: e.stack,

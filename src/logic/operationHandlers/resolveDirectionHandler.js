@@ -21,8 +21,8 @@ class ResolveDirectionHandler extends BaseOperationHandler {
     this.#worldContext = worldContext;
   }
 
-  execute(params, execCtx) {
-    const logger = this.getLogger(execCtx);
+  execute(params, executionContext) {
+    const logger = this.getLogger(executionContext);
     if (!assertParamsObject(params, logger, 'RESOLVE_DIRECTION')) return;
 
     // Safely destructure params, providing a default empty object to avoid errors if params is null/undefined.
@@ -49,7 +49,7 @@ class ResolveDirectionHandler extends BaseOperationHandler {
     const res = tryWriteContextVariable(
       trimmedVar,
       target,
-      execCtx,
+      executionContext,
       undefined,
       logger
     );

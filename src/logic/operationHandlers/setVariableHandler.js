@@ -175,10 +175,10 @@ class SetVariableHandler {
    * @description Store the variable in executionContext.evaluationContext.context.
    * @param {string} name - Variable name.
    * @param {*} value - Value to store.
-   * @param {OperationExecutionContext} execCtx - Execution context providing the variable store.
+   * @param {OperationExecutionContext} executionContext - Execution context providing the variable store.
    * @private
    */
-  #storeVariable(name, value, execCtx) {
+  #storeVariable(name, value, executionContext) {
     const logger = this.#logger;
     let finalValueStringForLog;
     try {
@@ -198,7 +198,7 @@ class SetVariableHandler {
     const result = tryWriteContextVariable(
       name,
       value,
-      execCtx,
+      executionContext,
       undefined,
       logger
     );
