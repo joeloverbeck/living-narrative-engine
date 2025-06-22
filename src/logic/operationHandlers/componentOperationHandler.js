@@ -91,6 +91,24 @@ class ComponentOperationHandler extends BaseOperationHandler {
     }
     return trimmed;
   }
+
+  /**
+   * Validate entity reference and component type together.
+   *
+   * @param {'actor'|'target'|string|EntityRefObject} entityRef
+   * @param {*} componentType
+   * @param {ILogger} logger
+   * @param {string} [opName]
+   * @param {ExecutionContext} ctx
+   * @returns {{ entityId: string, type: string } | null}
+   */
+  validateEntityAndType(entityRef, componentType, logger, opName, ctx) {
+    const entityId = this.validateEntityRef(entityRef, logger, opName, ctx);
+    if (!entityId) return null;
+    const type = this.requireComponentType(componentType, logger, opName);
+    if (!type) return null;
+    return { entityId, type };
+  }
 }
 
 export default ComponentOperationHandler;
