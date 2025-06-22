@@ -524,7 +524,7 @@ describe('AwaitingActorDecisionState (PTH-REFACTOR-003.5.7)', () => {
       );
 
       expect(consoleErrorSpy).toHaveBeenCalledWith(
-        'AwaitingActorDecisionState: No ITurnContext available. Resetting to idle.'
+        'AwaitingActorDecisionState: _handler is invalid or missing getTurnContext method.'
       );
       expect(consoleErrorSpy).not.toHaveBeenCalledWith(
         expect.stringContaining('CRITICAL - No ITurnContext or handler methods')

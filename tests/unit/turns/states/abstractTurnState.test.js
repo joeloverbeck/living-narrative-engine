@@ -18,6 +18,12 @@ const makeHandler = (logger = makeLogger(), dispatcher) => ({
   }),
 });
 
+const makeInvalidHandler = (logger = makeLogger()) => ({
+  getLogger: jest.fn(() => logger),
+  resetStateAndResources: jest.fn(),
+  requestIdleStateTransition: jest.fn().mockResolvedValue(undefined),
+});
+
 describe('AbstractTurnState._resolveLogger', () => {
   let logger;
   let handler;
@@ -147,5 +153,37 @@ describe('AbstractTurnState._getSafeEventDispatcher', () => {
     expect(result).toBeNull();
     expect(logger.warn).toHaveBeenCalledTimes(1);
     expect(logger.warn.mock.calls[0][0]).toMatch(/unavailable/);
+  });
+});
+
+describe('AbstractTurnState._getTurnContext & _ensureContext', () => {
+  let logger;
+  let invalidHandler;
+  let state;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    logger = makeLogger();
+    invalidHandler = makeInvalidHandler(logger);
+    state = new TestState(invalidHandler);
+  });
+
+  test('_getTurnContext throws when handler lacks method', () => {
+    expect(() => state._getTurnContext()).toThrow(
+      'TestState: _handler is invalid or missing getTurnContext method.'
+    );
+    expect(logger.error).toHaveBeenCalledWith(
+      'TestState: _handler is invalid or missing getTurnContext method.'
+    );
+  });
+
+  test('_ensureContext logs error and resets to idle on missing method', async () => {
+    const ctx = await state._ensureContext('no-handler', invalidHandler);
+    expect(ctx).toBeNull();
+    expect(logger.error).toHaveBeenCalledWith(
+      'TestState: _handler is invalid or missing getTurnContext method.'
+    );
+    expect(invalidHandler.resetStateAndResources).toHaveBeenCalledTimes(1);
+    expect(invalidHandler.requestIdleStateTransition).toHaveBeenCalledTimes(1);
   });
 });
