@@ -33,6 +33,7 @@ import ActiveModsManifestBuilder from '../../persistence/activeModsManifestBuild
 import SaveLoadService from '../../persistence/saveLoadService.js';
 import GameStateSerializer from '../../persistence/gameStateSerializer.js';
 import SaveFileRepository from '../../persistence/saveFileRepository.js';
+import SaveFileParser from '../../persistence/saveFileParser.js';
 import { BrowserStorageProvider } from '../../storage/browserStorageProvider.js';
 
 /**
@@ -55,12 +56,19 @@ export function registerPersistence(container) {
   );
 
   r.singletonFactory(tokens.ISaveFileRepository, (c) => {
+    const logger = c.resolve(tokens.ILogger);
+    const storageProvider = c.resolve(tokens.IStorageProvider);
+    const serializer = new GameStateSerializer({ logger });
+    const parser = new SaveFileParser({
+      logger,
+      storageProvider,
+      serializer,
+    });
     return new SaveFileRepository({
-      logger: c.resolve(tokens.ILogger),
-      storageProvider: c.resolve(tokens.IStorageProvider),
-      serializer: new GameStateSerializer({
-        logger: c.resolve(tokens.ILogger),
-      }),
+      logger,
+      storageProvider,
+      serializer,
+      parser,
     });
   });
   logger.debug(

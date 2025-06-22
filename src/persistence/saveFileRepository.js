@@ -3,11 +3,7 @@
 import {
   FULL_MANUAL_SAVE_DIRECTORY_PATH,
   MANUAL_SAVE_PATTERN,
-  extractSaveName,
-  getManualSavePath,
-  manualSavePath,
 } from '../utils/savePathUtils.js';
-import { validateSaveMetadataFields } from '../utils/saveMetadataUtils.js';
 import { MSG_FILE_READ_ERROR, MSG_EMPTY_FILE } from './persistenceMessages.js';
 import { PersistenceErrorCodes } from './persistenceErrors.js';
 import {
@@ -31,14 +27,19 @@ export default class SaveFileRepository extends BaseService {
   #storageProvider;
   /** @type {import('./gameStateSerializer.js').default} */
   #serializer;
+  /** @type {import('./saveFileParser.js').default} */
+  #parser;
 
   /**
-   * @param {object} deps
+   * Creates a new SaveFileRepository.
+   *
+   * @param {object} deps - Constructor dependencies.
    * @param {import('../interfaces/coreServices.js').ILogger} deps.logger - Logger instance.
    * @param {import('../interfaces/IStorageProvider.js').IStorageProvider} deps.storageProvider - Storage provider.
    * @param {import('./gameStateSerializer.js').default} deps.serializer - Serializer used for reading/writing saves.
+   * @param {import('./saveFileParser.js').default} deps.parser - Parser utility.
    */
-  constructor({ logger, storageProvider, serializer }) {
+  constructor({ logger, storageProvider, serializer, parser }) {
     super();
     this.#serializer = serializer;
     this.#logger = this._init('SaveFileRepository', logger, {
@@ -52,8 +53,10 @@ export default class SaveFileRepository extends BaseService {
           'fileExists',
         ],
       },
+      parser: { value: parser, requiredMethods: ['parseManualSaveFile'] },
     });
     this.#storageProvider = storageProvider;
+    this.#parser = parser;
   }
 
   /**
@@ -165,7 +168,7 @@ export default class SaveFileRepository extends BaseService {
    * @returns {Promise<import('./persistenceTypes.js').ParseSaveFileResult>} Parsed metadata result.
    */
   async parseManualSaveMetadata(fileName) {
-    const result = await this.#parseManualSaveFile(fileName);
+    const result = await this.#parser.parseManualSaveFile(fileName);
 
     if (!result.isCorrupted) {
       this.#logger.debug(
@@ -191,6 +194,7 @@ export default class SaveFileRepository extends BaseService {
    *
    * @param {string} filePath - Path to the file.
    * @returns {Promise<import('./persistenceTypes.js').PersistenceResult<Uint8Array>>}
+   *   Result containing the file contents.
    */
   async #readSaveFile(filePath) {
     return wrapPersistenceOperation(this.#logger, async () => {
@@ -230,6 +234,7 @@ export default class SaveFileRepository extends BaseService {
    *
    * @param {string} filePath - File path to read.
    * @returns {Promise<import('./persistenceTypes.js').PersistenceResult<object>>}
+   *   Parsed save object result.
    */
   async #deserializeAndDecompress(filePath) {
     return wrapPersistenceOperation(this.#logger, async () => {
@@ -244,111 +249,6 @@ export default class SaveFileRepository extends BaseService {
 
       return createPersistenceSuccess(parseRes.data);
     });
-  }
-
-  /**
-   * Builds a result object for a corrupted save file.
-   *
-   * @param {string} filePath - Full path to the save file.
-   * @param {string} fileName - Name of the save file.
-   * @param {string} label - Suffix appended to the derived save name.
-   * @returns {import('./persistenceTypes.js').ParseSaveFileResult}
-   *   Result marked as corrupted.
-   */
-  #buildCorruptedMetadata(filePath, fileName, label) {
-    return {
-      metadata: {
-        identifier: filePath,
-        saveName: extractSaveName(fileName) + label,
-        timestamp: 'N/A',
-        playtimeSeconds: 0,
-      },
-      isCorrupted: true,
-    };
-  }
-
-  /**
-   * Read, decompress and deserialize a save file.
-   *
-   * @param {string} filePath - File path of the save.
-   * @returns {Promise<import('../interfaces/ISaveLoadService.js').SaveGameStructure|null>} Parsed object or null on failure.
-   */
-  async #readAndDeserialize(filePath) {
-    const deserializationResult =
-      await this.#deserializeAndDecompress(filePath);
-    if (!deserializationResult.success) {
-      this.#logger.warn(
-        `Failed to deserialize ${filePath}: ${deserializationResult.error}. Flagging as corrupted for listing.`
-      );
-      return null;
-    }
-    return /** @type {import('../interfaces/ISaveLoadService.js').SaveGameStructure} */ (
-      deserializationResult.data
-    );
-  }
-
-  /**
-   * Validate and extract metadata from a save object.
-   *
-   * @param {import('../interfaces/ISaveLoadService.js').SaveGameStructure} saveObject - Parsed save data.
-   * @param {string} fileName - Original file name.
-   * @returns {import('./persistenceTypes.js').ParseSaveFileResult} Parsed metadata result.
-   */
-  #extractMetadata(saveObject, fileName) {
-    const validated = validateSaveMetadataFields(
-      {
-        identifier: manualSavePath(fileName),
-        saveName: saveObject.metadata.saveName,
-        timestamp: saveObject.metadata.timestamp,
-        playtimeSeconds: saveObject.metadata.playtimeSeconds,
-      },
-      fileName,
-      this.#logger
-    );
-
-    const { isCorrupted = false, ...metadata } = validated;
-    return { metadata, isCorrupted };
-  }
-
-  /**
-   * Helper for returning a corrupted metadata result.
-   *
-   * @param {string} filePath - Full path to the save file.
-   * @param {string} fileName - Name of the save file.
-   * @param {string} reason - Suffix appended to the derived save name.
-   * @returns {import('./persistenceTypes.js').ParseSaveFileResult}
-   */
-  #corruptedResult(filePath, fileName, reason) {
-    return this.#buildCorruptedMetadata(filePath, fileName, reason);
-  }
-
-  /**
-   * Parses a manual save file and extracts metadata.
-   *
-   * @param {string} fileName - File name within manual saves directory.
-   * @returns {Promise<import('./persistenceTypes.js').PersistenceResult<import('../interfaces/ISaveLoadService.js').SaveFileMetadata>>}
-   */
-  async #parseManualSaveFile(fileName) {
-    const filePath = getManualSavePath(extractSaveName(fileName));
-    this.#logger.debug(`Processing file: ${filePath}`);
-
-    try {
-      const saveObject = await this.#readAndDeserialize(filePath);
-      if (!saveObject)
-        return this.#corruptedResult(filePath, fileName, ' (Corrupted)');
-
-      if (!saveObject.metadata || typeof saveObject.metadata !== 'object') {
-        this.#logger.warn(
-          `No metadata section found in ${filePath}. Flagging as corrupted for listing.`
-        );
-        return this.#corruptedResult(filePath, fileName, ' (No Metadata)');
-      }
-
-      return this.#extractMetadata(saveObject, fileName);
-    } catch (error) {
-      this.#logger.error(`Unexpected error parsing ${filePath}:`, error);
-      return this.#corruptedResult(filePath, fileName, ' (Corrupted)');
-    }
   }
 
   /**

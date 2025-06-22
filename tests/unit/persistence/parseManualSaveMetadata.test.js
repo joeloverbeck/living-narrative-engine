@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import SaveFileRepository from '../../../src/persistence/saveFileRepository.js';
+import SaveFileParser from '../../../src/persistence/saveFileParser.js';
 import { manualSavePath } from '../../../src/utils/savePathUtils.js';
 import { createMockLogger } from '../testUtils.js';
 
@@ -17,8 +18,14 @@ function makeDeps() {
     ensureDirectoryExists: jest.fn(),
   };
   const serializer = {};
-  const repo = new SaveFileRepository({ logger, storageProvider, serializer });
-  return { repo, logger, storageProvider, serializer };
+  const parser = new SaveFileParser({ logger, storageProvider, serializer });
+  const repo = new SaveFileRepository({
+    logger,
+    storageProvider,
+    serializer,
+    parser,
+  });
+  return { repo, logger, storageProvider, serializer, parser };
 }
 
 describe('SaveFileRepository.parseManualSaveMetadata', () => {
