@@ -166,20 +166,25 @@ class ScopeEngine {
             return filtered;
         }
 
-        /* ───── default field / array handling (unchanged logic) ───── */
+        /* ───── default field / array handling (improved logic) ───── */
 
         const result = new Set();
 
-        for (const entityId of parentResult) {
+        // Chain the parent result through each step
+        for (const parentValue of parentResult) {
+            runtimeCtx.logger.debug('[ScopeEngine] resolveStep: entityOrObj:', parentValue, 'type:', typeof parentValue);
             let current;
 
-            if (node.field) {
-                /* component / property lookup (existing logic) */
-                const componentData = runtimeCtx.entityManager.getComponentData(entityId, `core:${node.field}`);
+            // If parent is Source, treat as component lookup; otherwise, property access
+            if (node.parent.type === 'Source') {
+                // Component lookup
+                const componentData = runtimeCtx.entityManager.getComponentData(parentValue, node.field);
+                runtimeCtx.logger.debug('[ScopeEngine] resolveStep: componentData for field', node.field, ':', componentData);
                 if (componentData && typeof componentData === 'object' && !Array.isArray(componentData)) {
                     current = componentData;
                 } else {
-                    const inventoryData = runtimeCtx.entityManager.getComponentData(entityId, 'core:inventory');
+                    // ... legacy inventory/items fallback ...
+                    const inventoryData = runtimeCtx.entityManager.getComponentData(parentValue, 'core:inventory');
                     if (inventoryData && node.field === 'items' && inventoryData.items) {
                         current = inventoryData.items;
                     } else {
@@ -187,19 +192,30 @@ class ScopeEngine {
                     }
                 }
             } else {
-                current = entityId; // bare [] case
+                // Property access on previous result
+                if (parentValue && typeof parentValue === 'object' && node.field in parentValue) {
+                    current = parentValue[node.field];
+                    runtimeCtx.logger.debug('[ScopeEngine] resolveStep: property access', node.field, ':', current);
+                } else {
+                    runtimeCtx.logger.debug('[ScopeEngine] resolveStep: property', node.field, 'not found in', parentValue);
+                    continue;
+                }
             }
 
             if (node.isArray) {
+                runtimeCtx.logger.debug('[ScopeEngine] resolveStep: isArray, current:', current, 'type:', typeof current);
                 if (Array.isArray(current)) {
-                    for (const item of current) if (typeof item === 'string') result.add(item);
+                    for (const item of current) {
+                        runtimeCtx.logger.debug('[ScopeEngine] resolveStep: array item:', item, 'type:', typeof item);
+                        if (typeof item === 'string') result.add(item);
+                    }
                 }
             } else {
+                runtimeCtx.logger.debug('[ScopeEngine] resolveStep: not isArray, current:', current, 'type:', typeof current);
                 if (typeof current === 'string') result.add(current);
-                else result.add(entityId);
+                else result.add(current);
             }
         }
-
         return result;
     }
 
@@ -215,28 +231,35 @@ class ScopeEngine {
      * @private
      */
     resolveFilter(node, actorId, runtimeCtx, depth) {
+        runtimeCtx.logger.debug('[ScopeEngine] resolveFilter: starting with logic:', node.logic);
         const parentResult = this.resolveNode(node.parent, actorId, runtimeCtx, depth + 1);
+        runtimeCtx.logger.debug('[ScopeEngine] resolveFilter: parentResult:', parentResult);
         if (parentResult.size === 0) {
+            runtimeCtx.logger.debug('[ScopeEngine] resolveFilter: parentResult is empty, returning empty set');
             return new Set();
         }
         const result = new Set();
         for (const entityId of parentResult) {
             try {
                 const entity = runtimeCtx.entityManager.getEntityInstance(entityId);
+                runtimeCtx.logger.debug('[ScopeEngine] resolveFilter: evaluating entity:', entityId, 'entity:', entity);
                 const context = {
                     entity: entity || { id: entityId },
-                    actor: { id: actorId }
+                    actor: { id: actorId },
+                    location: runtimeCtx.location || { id: 'unknown' }
                 };
+                runtimeCtx.logger.debug('[ScopeEngine] resolveFilter: context for evaluation:', context);
                 const filterResult = runtimeCtx.jsonLogicEval.evaluate(node.logic, context);
+                runtimeCtx.logger.debug('[ScopeEngine] resolveFilter: filterResult for entity', entityId, ':', filterResult);
                 if (filterResult) {
                     result.add(entityId);
+                    runtimeCtx.logger.debug('[ScopeEngine] resolveFilter: added entity', entityId, 'to result');
                 }
             } catch (error) {
-                if (runtimeCtx && runtimeCtx.logger && typeof runtimeCtx.logger.error === 'function') {
-                    runtimeCtx.logger.error(`Error evaluating filter for entity ${entityId}:`, error);
-                }
+                runtimeCtx.logger.error(`Error evaluating filter for entity ${entityId}:`, error);
             }
         }
+        runtimeCtx.logger.debug('[ScopeEngine] resolveFilter: final result:', result);
         return result;
     }
 

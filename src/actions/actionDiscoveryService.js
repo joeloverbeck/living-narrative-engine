@@ -328,6 +328,12 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
    * @returns {Promise<import('../interfaces/IActionDiscoveryService.js').DiscoveredActionsResult>}
    */
   async getValidActions(actorEntity, context) {
+    // Handle null actorEntity gracefully
+    if (!actorEntity) {
+      this.#logger.debug('Actor entity is null; returning empty result.');
+      return { actions: [], errors: [] };
+    }
+
     this.#logger.debug(
       `Starting action discovery for actor: ${actorEntity.id}`
     );

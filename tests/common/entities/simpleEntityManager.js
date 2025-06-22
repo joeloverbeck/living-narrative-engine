@@ -20,8 +20,16 @@ export default class SimpleEntityManager {
   constructor(entities = []) {
     /** @type {Map<string, {id:string, components:Record<string, any>}>} */
     this.entities = new Map();
+    console.log('DEBUG: SimpleEntityManager constructor called with entities:', JSON.stringify(entities, null, 2));
     for (const e of entities) {
+      console.log('DEBUG: Processing entity:', e.id, 'with original components:', Object.keys(e.components || {}));
+      console.log('DEBUG: Original entity components:', JSON.stringify(e.components, null, 2));
+      
       const cloned = deepClone(e);
+      console.log('DEBUG: After deepClone - cloned entity components:', JSON.stringify(cloned.components, null, 2));
+      console.log('DEBUG: Cloned components keys:', Object.keys(cloned.components || {}));
+      
+      console.log('DEBUG: Storing entity:', e.id, 'with components:', Object.keys(cloned.components || {}));
       this.entities.set(cloned.id, cloned);
     }
     // Add activeEntities alias for compatibility

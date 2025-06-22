@@ -15,6 +15,10 @@ import { getEntityIdsForScopes } from '../../../src/entities/entityScopeService.
 
 // Mock the Scope DSL dependencies
 jest.mock('../../../src/scopeDsl/scopeRegistry.js', () => ({
+  __esModule: true,
+  default: {
+    getInstance: jest.fn()
+  },
   ScopeRegistry: {
     getInstance: jest.fn()
   }
@@ -25,13 +29,14 @@ jest.mock('../../../src/scopeDsl/parser.js', () => ({
 }));
 
 jest.mock('../../../src/scopeDsl/engine.js', () => ({
-  ScopeEngine: jest.fn()
+  __esModule: true,
+  default: jest.fn()
 }));
 
 // Import the mocked modules
 import { ScopeRegistry } from '../../../src/scopeDsl/scopeRegistry.js';
 import { parseInlineExpr } from '../../../src/scopeDsl/parser.js';
-import { ScopeEngine } from '../../../src/scopeDsl/engine.js';
+import ScopeEngine from '../../../src/scopeDsl/engine.js';
 
 describe('entityScopeService', () => {
   let mockLogger;
@@ -57,12 +62,18 @@ describe('entityScopeService', () => {
     mockScopeRegistryInstance = {
       getScope: jest.fn()
     };
-    ScopeRegistry.getInstance.mockReturnValue(mockScopeRegistryInstance);
+    // Set both default and named exports for getInstance
+    const scopeRegistryModule = require('../../../src/scopeDsl/scopeRegistry.js');
+    scopeRegistryModule.default.getInstance.mockReturnValue(mockScopeRegistryInstance);
+    scopeRegistryModule.ScopeRegistry.getInstance.mockReturnValue(mockScopeRegistryInstance);
 
     mockScopeEngine = {
       resolve: jest.fn()
     };
     ScopeEngine.mockImplementation(() => mockScopeEngine);
+    // Also set the default export for the constructor
+    const engineModule = require('../../../src/scopeDsl/engine.js');
+    engineModule.default.mockImplementation(() => mockScopeEngine);
   });
 
   afterEach(() => {
@@ -112,7 +123,7 @@ describe('entityScopeService', () => {
 
     test('should resolve scope using DSL engine when scope exists in registry', () => {
       const mockAst = { type: 'test' };
-      const mockScopeDefinition = { expr: 'actor.followers[]' };
+      const mockScopeDefinition = { expr: 'actor.core:leading.followers[]' };
       const expectedIds = new Set(['follower1', 'follower2']);
       
       mockScopeRegistryInstance.getScope.mockReturnValue(mockScopeDefinition);
@@ -130,7 +141,7 @@ describe('entityScopeService', () => {
       
       expect(result).toEqual(expectedIds);
       expect(mockScopeRegistryInstance.getScope).toHaveBeenCalledWith('followers');
-      expect(parseInlineExpr).toHaveBeenCalledWith('actor.followers[]');
+      expect(parseInlineExpr).toHaveBeenCalledWith('actor.core:leading.followers[]');
       expect(mockScopeEngine.resolve).toHaveBeenCalledWith(
         mockAst,
         'player',
@@ -158,7 +169,7 @@ describe('entityScopeService', () => {
     });
 
     test('should return empty set when actingEntity ID is missing', () => {
-      const mockScopeDefinition = { expr: 'actor.followers[]' };
+      const mockScopeDefinition = { expr: 'actor.core:leading.followers[]' };
       mockScopeRegistryInstance.getScope.mockReturnValue(mockScopeDefinition);
 
       const context = {
@@ -197,7 +208,7 @@ describe('entityScopeService', () => {
 
     test('should handle scope engine resolution errors gracefully', () => {
       const mockAst = { type: 'test' };
-      const mockScopeDefinition = { expr: 'actor.followers[]' };
+      const mockScopeDefinition = { expr: 'actor.core:leading.followers[]' };
       const resolveError = new Error('Resolution error');
       
       mockScopeRegistryInstance.getScope.mockReturnValue(mockScopeDefinition);
@@ -224,8 +235,8 @@ describe('entityScopeService', () => {
 
     test('should aggregate results from multiple scopes', () => {
       const mockAst = { type: 'test' };
-      const followersScope = { expr: 'actor.followers[]' };
-      const environmentScope = { expr: 'location.entities[]' };
+      const followersScope = { expr: 'actor.core:leading.followers[]' };
+      const environmentScope = { expr: 'entities(core:position)[{"and": [{"==": [{"var": "entity.components.core:position.locationId"}, {"var": "location.id"}]}, {"!=": [{"var": "entity.id"}, {"var": "actor.id"}]}]}]' };
       
       mockScopeRegistryInstance.getScope
         .mockReturnValueOnce(followersScope)
@@ -252,7 +263,7 @@ describe('entityScopeService', () => {
 
     test('should handle mixed valid and invalid scopes', () => {
       const mockAst = { type: 'test' };
-      const followersScope = { expr: 'actor.followers[]' };
+      const followersScope = { expr: 'actor.core:leading.followers[]' };
       
       mockScopeRegistryInstance.getScope
         .mockReturnValueOnce(followersScope)

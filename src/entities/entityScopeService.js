@@ -3,9 +3,9 @@
  * @description Service for resolving entity scopes using the Scope DSL engine.
  */
 
-import { ScopeRegistry } from '../scopeDsl/scopeRegistry.js';
+import ScopeRegistry from '../scopeDsl/scopeRegistry.js';
+import ScopeEngine from '../scopeDsl/engine.js';
 import { parseInlineExpr } from '../scopeDsl/parser.js';
-import { ScopeEngine } from '../scopeDsl/engine.js';
 
 /**
  * Aggregates unique entity IDs from one or more specified scopes.
@@ -71,6 +71,9 @@ function _resolveScopeWithDSL(scopeName, context, logger) {
     const scopeRegistry = ScopeRegistry.getInstance();
     const scopeDefinition = scopeRegistry.getScope(scopeName);
     
+    logger.debug(`Resolving scope '${scopeName}' with DSL`);
+    logger.debug(`Scope definition:`, scopeDefinition);
+    
     if (!scopeDefinition) {
       logger.warn(`Scope '${scopeName}' not found in registry`);
       return new Set();
@@ -78,25 +81,34 @@ function _resolveScopeWithDSL(scopeName, context, logger) {
 
     // Parse the DSL expression
     const ast = parseInlineExpr(scopeDefinition.expr);
+    logger.debug(`Parsed AST:`, ast);
     
     // Create runtime context for the scope engine
     const runtimeCtx = {
       entityManager: context.entityManager,
       spatialIndexManager: context.spatialIndexManager,
       jsonLogicEval: context.jsonLogicEval,
-      logger: logger
+      logger: logger,
+      ...(context.location ? { location: context.location } : {})
     };
+    
+    logger.debug(`Runtime context:`, runtimeCtx);
 
     // Resolve using the scope engine
     const scopeEngine = new ScopeEngine();
     const actorId = context.actingEntity?.id;
+    
+    logger.debug(`Actor ID:`, actorId);
     
     if (!actorId) {
       logger.error('Cannot resolve scope: actingEntity ID is missing');
       return new Set();
     }
 
-    return scopeEngine.resolve(ast, actorId, runtimeCtx);
+    const result = scopeEngine.resolve(ast, actorId, runtimeCtx);
+    logger.debug(`Scope engine result:`, result);
+    
+    return result;
   } catch (error) {
     logger.error(`Error resolving scope '${scopeName}' with DSL:`, error);
     return new Set();
