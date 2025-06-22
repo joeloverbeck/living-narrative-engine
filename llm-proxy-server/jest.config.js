@@ -4,7 +4,7 @@
  * @description Jest configuration for the llm-proxy-server sub-project.
  * @type {import('@jest/types').Config.InitialOptions}
  */
-export const jestConfig = {
+export default {
   // Explicitly set the test environment to 'node'.
   // This is Jest's default when it detects a Node.js project (e.g., no browser-specific globals).
   testEnvironment: 'node',
@@ -38,10 +38,10 @@ export const jestConfig = {
   // Adjust them as necessary for the llm-proxy-server.
   coverageThreshold: {
     global: {
-      branches: 0,
-      functions: 0,
-      lines: 0,
-      statements: 0,
+      branches: 78,
+      functions: 94,
+      lines: -55,
+      statements: 90,
     },
   },
   // --- END COVERAGE CONFIGURATION ---
