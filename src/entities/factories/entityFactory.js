@@ -33,6 +33,10 @@ import {
 import { validateDependency } from '../../utils/validationUtils.js';
 import { ensureValidLogger } from '../../utils';
 import { DefinitionNotFoundError } from '../../errors/definitionNotFoundError.js';
+import {
+  validationSucceeded,
+  formatValidationErrors,
+} from '../utils/validationHelpers.js';
 
 /* -------------------------------------------------------------------------- */
 /* Type-Hint Imports (JSDoc only – removed at runtime)                        */
@@ -49,35 +53,8 @@ import { DefinitionNotFoundError } from '../../errors/definitionNotFoundError.js
 /* Internal Utilities                                                         */
 /* -------------------------------------------------------------------------- */
 
-/**
- * Normalize any validator return shape to a simple `true | false`.
- *
- * Legacy validators may return `undefined`, `null`, or a bare boolean. Newer
- * validators should return `{ isValid: boolean, errors?: any }`.
- *
- * @private
- * @param {undefined|null|boolean|ValidationResult} rawResult
- * @returns {boolean}
- */
-function validationSucceeded(rawResult) {
-  if (rawResult === undefined || rawResult === null) return true;
-  if (typeof rawResult === 'boolean') return rawResult;
-  return !!rawResult.isValid;
-}
-
-/**
- * Convert a validation result into a readable string for logs.
- *
- * @private
- * @param {ValidationResult|boolean|undefined|null} rawResult
- * @returns {string}
- */
-function formatValidationErrors(rawResult) {
-  if (rawResult && typeof rawResult === 'object' && rawResult.errors) {
-    return JSON.stringify(rawResult.errors, null, 2);
-  }
-  return '(validator returned false)';
-}
+// validationSucceeded and formatValidationErrors imported from
+// ../utils/validationHelpers.js
 
 /* -------------------------------------------------------------------------- */
 /* EntityFactory Implementation                                               */
