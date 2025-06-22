@@ -9,10 +9,8 @@ import { createTestEnvironment } from './gameEngine.test-environment.js';
 import ContainerTestBed from '../containerTestBed.js';
 import { createStoppableMixin } from '../stoppableTestBedMixin.js';
 import { suppressConsoleError } from '../jestHelpers.js';
-import {
-  createDescribeTestBedSuite,
-  createDescribeServiceSuite,
-} from '../describeSuite.js';
+import { createDescribeServiceSuite } from '../describeSuite.js';
+import { createTestBedHelpers } from '../createTestBedHelpers.js';
 import { DEFAULT_TEST_WORLD } from '../constants.js';
 import { runWithReset } from '../testBedHelpers.js';
 
@@ -143,29 +141,10 @@ const engineSuiteHooks = (() => {
   };
 })();
 
-/**
- * Creates a new {@link GameEngineTestBed} instance.
- *
- * @param {{[token: string]: any}} [overrides] - Optional DI token overrides.
- * @returns {GameEngineTestBed} Test bed instance.
- */
-export function createGameEngineTestBed(overrides = {}) {
-  return new GameEngineTestBed(overrides);
-}
-
-/**
- * Defines a test suite with automatic {@link GameEngineTestBed} setup.
- *
- * @param {string} title - Suite title passed to `describe`.
- * @param {(getBed: () => GameEngineTestBed) => void} suiteFn - Callback
- *   containing the tests. Receives a getter for the active test bed.
- * @param {{[token: string]: any}} [overrides] - Optional DI overrides.
- * @returns {void}
- */
-export const describeGameEngineSuite = createDescribeTestBedSuite(
-  GameEngineTestBed,
-  engineSuiteHooks
-);
+export const {
+  createBed: createGameEngineTestBed,
+  describeSuite: describeGameEngineSuite,
+} = createTestBedHelpers(GameEngineTestBed, engineSuiteHooks);
 
 /**
  * Defines an engine-focused test suite providing `bed` and `engine` variables
