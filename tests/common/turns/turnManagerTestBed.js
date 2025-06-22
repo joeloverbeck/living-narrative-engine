@@ -14,6 +14,7 @@ import {
 import { createMockEntityManager } from '../mockFactories/entities.js';
 import FactoryTestBed from '../factoryTestBed.js';
 import { createStoppableMixin } from '../stoppableTestBedMixin.js';
+import { SpyTrackerMixin } from '../spyTrackerMixin.js';
 import {
   describeSuiteWithHooks,
   createDescribeTestBedSuite,
@@ -28,11 +29,11 @@ import { flushPromisesAndTimers } from '../jestHelpers.js';
  */
 const StoppableMixin = createStoppableMixin('turnManager');
 
-export class TurnManagerTestBed extends StoppableMixin(FactoryTestBed) {
+export class TurnManagerTestBed extends SpyTrackerMixin(
+  StoppableMixin(FactoryTestBed)
+) {
   /** @type {TurnManager} */
   turnManager;
-  /** @type {Array<import('@jest/globals').Mock>} */
-  #spies = [];
 
   constructor(overrides = {}) {
     super({
@@ -130,7 +131,7 @@ export class TurnManagerTestBed extends StoppableMixin(FactoryTestBed) {
    */
   spyOnStop() {
     const spy = jest.spyOn(this.turnManager, 'stop');
-    this.#spies.push(spy);
+    this.trackSpy(spy);
     return spy;
   }
 
@@ -162,7 +163,7 @@ export class TurnManagerTestBed extends StoppableMixin(FactoryTestBed) {
    */
   spyOnAdvanceTurn() {
     const spy = jest.spyOn(this.turnManager, 'advanceTurn');
-    this.#spies.push(spy);
+    this.trackSpy(spy);
     return spy;
   }
 
@@ -276,13 +277,6 @@ export class TurnManagerTestBed extends StoppableMixin(FactoryTestBed) {
    * @protected
    * @returns {Promise<void>} Promise resolving when manager cleanup is complete.
    */
-  async _afterCleanup() {
-    for (const spy of this.#spies) {
-      spy.mockRestore();
-    }
-    this.#spies.length = 0;
-    await super._afterCleanup();
-  }
 }
 
 /**
@@ -300,7 +294,7 @@ export const {
     bed.initializeDefaultMocks();
   },
   afterEachHook() {
-    // Timers restored via BaseTestBed cleanup; spies handled by _afterCleanup
+    // Timers restored via BaseTestBed cleanup; spies restored by SpyTrackerMixin
   },
 });
 
