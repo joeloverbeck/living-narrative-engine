@@ -62,13 +62,86 @@ class SetVariableHandler {
   }
 
   /**
-   * @description Evaluate the value using JsonLogic if it is a non-empty object.
+   * @description Determine if the provided value should be treated as JsonLogic.
+   * @param {*} value - The value to inspect.
+   * @returns {boolean} True if value is a non-empty plain object.
+   * @private
+   */
+  #shouldEvaluateAsLogic(value) {
+    return (
+      typeof value === 'object' &&
+      value !== null &&
+      !Array.isArray(value) &&
+      Object.keys(value).length > 0
+    );
+  }
+
+  /**
+   * @description Perform JsonLogic evaluation of a value.
+   * @param {object} value - JsonLogic rule to evaluate.
+   * @param {BaseJsonLogicEvaluationContext} evaluationContext - Data for evaluation.
+   * @param {string} varName - Variable name for logging.
+   * @returns {{ result: any, error: Error | null }} Evaluation result and potential error.
+   * @private
+   */
+  #performJsonLogicEvaluation(value, evaluationContext, varName) {
+    try {
+      const result = jsonLogic.apply(value, evaluationContext);
+      let evalResultString;
+      try {
+        evalResultString = JSON.stringify(result);
+      } catch {
+        evalResultString = String(result);
+      }
+      this.#logger.debug(
+        `SET_VARIABLE: JsonLogic evaluation successful for "${varName}". Result: ${evalResultString}`
+      );
+      return { result, error: null };
+    } catch (error) {
+      return { result: undefined, error };
+    }
+  }
+
+  /**
+   * @description Centralized error/warning logging for JsonLogic evaluation failures.
+   * @param {string} varName - Variable being assigned.
+   * @param {*} originalValue - Original value prior to evaluation.
+   * @param {boolean} evaluationThrewError - Whether evaluation threw an exception.
+   * @param {boolean} contextMissing - Whether evaluation context was missing.
+   * @private
+   */
+  #handleEvaluationError(
+    varName,
+    originalValue,
+    evaluationThrewError,
+    contextMissing
+  ) {
+    const logger = this.#logger;
+    const originalValueString = JSON.stringify(originalValue);
+
+    if (evaluationThrewError) {
+      logger.error(
+        `SET_VARIABLE: JsonLogic evaluation for variable "${varName}" failed with an error (see previous log). Assignment skipped. Original value: ${originalValueString}`
+      );
+    } else if (contextMissing) {
+      logger.error(
+        `SET_VARIABLE: JsonLogic evaluation attempt for variable "${varName}" failed or could not proceed (see previous log). Assignment skipped. Original value: ${originalValueString}`
+      );
+    } else {
+      logger.warn(
+        `SET_VARIABLE: JsonLogic evaluation resulted in 'undefined' for variable "${varName}". Assignment skipped. Original value: ${originalValueString}`
+      );
+    }
+  }
+
+  /**
+   * @description Evaluate the value using JsonLogic if applicable.
    * @param {*} value - The value to potentially evaluate.
-   * @param {string} varName - The name of the variable for logging.
-   * @param {BaseJsonLogicEvaluationContext} evaluationContext - The context for JsonLogic evaluation.
+   * @param {string} varName - The variable name for logging.
+   * @param {BaseJsonLogicEvaluationContext} evaluationContext - JsonLogic data context.
    * @param {OperationParams} params - Original operation params for error logs.
-   * @param {boolean} hasExecutionContext - Whether an executionContext object was supplied.
-   * @returns {{ success: boolean, value?: any }} The evaluation result. `success` will be false if assignment should be skipped.
+   * @param {boolean} hasExecutionContext - Whether an executionContext was supplied.
+   * @returns {{ success: boolean, value?: any }} Evaluation result; `success` is false if assignment should be skipped.
    * @private
    */
   #evaluateValue(
@@ -83,88 +156,59 @@ class SetVariableHandler {
     let evaluationOccurred = false;
     let evaluationThrewError = false;
 
-    const isObject =
-      typeof value === 'object' && value !== null && !Array.isArray(value);
-    if (isObject) {
-      if (Object.keys(value).length > 0) {
-        logger.debug(
-          `SET_VARIABLE: Value for "${varName}" is a non-empty object. Attempting JsonLogic evaluation using executionContext.evaluationContext as data source.`
+    if (this.#shouldEvaluateAsLogic(value)) {
+      logger.debug(
+        `SET_VARIABLE: Value for "${varName}" is a non-empty object. Attempting JsonLogic evaluation using executionContext.evaluationContext as data source.`
+      );
+      if (!evaluationContext) {
+        logger.error(
+          `SET_VARIABLE: Cannot evaluate JsonLogic value for variable "${varName}" because executionContext.evaluationContext is missing or invalid. Storing 'undefined'. Original value: ${JSON.stringify(value)}`,
+          { hasExecutionContext }
         );
-        if (!evaluationContext) {
+        finalValue = undefined;
+        evaluationOccurred = true;
+      } else {
+        const { result, error } = this.#performJsonLogicEvaluation(
+          value,
+          evaluationContext,
+          varName
+        );
+        evaluationOccurred = true;
+        if (error) {
+          evaluationThrewError = true;
           logger.error(
-            `SET_VARIABLE: Cannot evaluate JsonLogic value for variable "${varName}" because executionContext.evaluationContext is missing or invalid. Storing 'undefined'. Original value: ${JSON.stringify(value)}`,
-            { hasExecutionContext }
+            `SET_VARIABLE: Error evaluating JsonLogic value for variable "${varName}". Storing 'undefined'. Original value: ${JSON.stringify(value)}`,
+            {
+              errorMessage:
+                error instanceof Error ? error.message : String(error),
+            }
           );
           finalValue = undefined;
-          evaluationOccurred = true;
         } else {
-          try {
-            finalValue = jsonLogic.apply(value, evaluationContext);
-            evaluationOccurred = true;
-            let evalResultString;
-            try {
-              evalResultString = JSON.stringify(finalValue);
-            } catch {
-              evalResultString = String(finalValue);
-            }
-            logger.debug(
-              `SET_VARIABLE: JsonLogic evaluation successful for "${varName}". Result: ${evalResultString}`
-            );
-          } catch (evalError) {
-            evaluationThrewError = true;
-            logger.error(
-              `SET_VARIABLE: Error evaluating JsonLogic value for variable "${varName}". Storing 'undefined'. Original value: ${JSON.stringify(value)}`,
-              {
-                errorMessage:
-                  evalError instanceof Error
-                    ? evalError.message
-                    : String(evalError),
-              }
-            );
-            finalValue = undefined;
-            evaluationOccurred = true;
-          }
+          finalValue = result;
         }
-      } else {
-        logger.debug(
-          `SET_VARIABLE: Value for "${varName}" is an empty object {}. Using it directly.`
-        );
-        finalValue = value;
       }
+    } else if (
+      typeof value === 'object' &&
+      value !== null &&
+      !Array.isArray(value)
+    ) {
+      logger.debug(
+        `SET_VARIABLE: Value for "${varName}" is an empty object {}. Using it directly.`
+      );
     } else {
-      finalValue = value;
       logger.debug(
         `SET_VARIABLE: Value for "${varName}" is not a non-empty object. Using directly.`
       );
     }
 
     if (evaluationOccurred && finalValue === undefined) {
-      const originalValueString = JSON.stringify(params.value);
-      if (evaluationThrewError) {
-        logger.error(
-          `SET_VARIABLE: JsonLogic evaluation for variable "${varName}" failed with an error (see previous log). Assignment skipped. Original value: ${originalValueString}`
-        );
-      } else {
-        let priorEvalRelatedErrorLogged = evaluationThrewError;
-        if (
-          !evaluationContext &&
-          Object.keys(value).length > 0 &&
-          typeof value === 'object' &&
-          !Array.isArray(value)
-        ) {
-          priorEvalRelatedErrorLogged = true;
-        }
-
-        if (priorEvalRelatedErrorLogged) {
-          logger.error(
-            `SET_VARIABLE: JsonLogic evaluation attempt for variable "${varName}" failed or could not proceed (see previous log). Assignment skipped. Original value: ${originalValueString}`
-          );
-        } else {
-          logger.warn(
-            `SET_VARIABLE: JsonLogic evaluation resulted in 'undefined' for variable "${varName}". Assignment skipped. Original value: ${originalValueString}`
-          );
-        }
-      }
+      this.#handleEvaluationError(
+        varName,
+        params.value,
+        evaluationThrewError,
+        !evaluationContext && this.#shouldEvaluateAsLogic(value)
+      );
       return { success: false };
     }
 
