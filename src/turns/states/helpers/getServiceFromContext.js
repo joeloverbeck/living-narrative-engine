@@ -10,6 +10,7 @@
 import { handleProcessingException } from './handleProcessingException.js';
 import { safeDispatchError } from '../../../utils/safeDispatchErrorUtils.js';
 import { getLogger, getSafeEventDispatcher } from './contextUtils.js';
+import { finishProcessing } from './processingErrorUtils.js';
 
 /**
  * Safely obtains a service from the turn context.
@@ -48,11 +49,7 @@ export async function getServiceFromContext(
     logger.error(errorMsg);
 
     if (state._isProcessing) {
-      if (state._processingGuard) {
-        state._processingGuard.finish();
-      } else {
-        state._isProcessing = false;
-      }
+      finishProcessing(state);
     }
     return null;
   }
