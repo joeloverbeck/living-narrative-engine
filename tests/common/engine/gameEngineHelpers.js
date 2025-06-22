@@ -48,6 +48,29 @@ export function withInitializedGameEngineBed(overrides, world, testFn) {
 }
 
 /**
+ * Executes a callback with a running {@link GameEngineTestBed} instance.
+ *
+ * @description Creates a temporary test bed, starts the engine using
+ *   {@link GameEngineTestBed.startAndReset}, then runs the provided callback.
+ *   Cleanup always occurs after execution.
+ * @param {Record<string, any>} [overrides] - Optional dependency overrides.
+ * @param {string} [world] - Name of the world used for initialization.
+ * @param {(bed: GameEngineTestBed,
+ *   engine: import('../../../src/engine/gameEngine.js').default) =>
+ *   (Promise<void>|void)} testFn - Function invoked with the bed and engine.
+ * @returns {Promise<void>} Resolves when the callback completes.
+ */
+export function withRunningGameEngineBed(overrides, world, testFn) {
+  const withRunningBed = createInitializedBed(
+    GameEngineTestBed,
+    'startAndReset',
+    DEFAULT_TEST_WORLD,
+    (b) => [b, b.engine]
+  );
+  return withRunningBed(overrides, world, testFn);
+}
+
+/**
  * Builds test functions for scenarios where required services are unavailable.
  *
  * @description Generates `[token, testFn]` tuples for use with `it.each`. Each
