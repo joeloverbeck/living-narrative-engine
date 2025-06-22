@@ -26,7 +26,28 @@
       "type": "array",
       "description": "A list of all entity instances to be created when the world is initialized.",
       "items": {
-        "$ref": "entity-instance.schema.json#"
+        "type": "object",
+        "properties": {
+          "instanceId": {
+            "$ref": "common.schema.json#/definitions/namespacedId",
+            "description": "Required. The unique, namespaced identifier for this specific entity instance. Must match an entity instance file."
+          },
+          "componentOverrides": {
+            "type": "object",
+            "description": "Optional. Component overrides for this instance only.",
+            "propertyNames": {
+              "$ref": "common.schema.json#/definitions/namespacedId"
+            },
+            "additionalProperties": {
+              "oneOf": [
+                { "type": "object" },
+                { "type": "array" }
+              ]
+            }
+          }
+        },
+        "required": ["instanceId"],
+        "additionalProperties": false
       },
       "minItems": 1
     }

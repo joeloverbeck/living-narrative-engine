@@ -144,8 +144,7 @@ describe('WorldLoader Schema Validation', () => {
         name: 'Test World',
         instances: [
           {
-            id: 'test:instance',
-            definitionId: 'test:definition',
+            instanceId: 'test:instance',
             components: {},
           },
         ],
@@ -271,8 +270,7 @@ describe('WorldLoader Schema Validation', () => {
         name: 'Test World',
         instances: [
           {
-            id: 'test:instance',
-            definitionId: 'test:definition',
+            instanceId: 'test:instance',
             components: {},
           },
         ],

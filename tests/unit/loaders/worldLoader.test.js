@@ -119,8 +119,8 @@ describe('WorldLoader.loadWorlds', () => {
       id: 'test:world',
       name: 'Test World',
       instances: [
-        { definitionId: 'core:player' },
-        { definitionId: 'core:npc' },
+        { instanceId: 'core:player' },
+        { instanceId: 'core:npc' },
       ],
     };
     fetcher.fetch.mockResolvedValue(mockWorldData);

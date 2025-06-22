@@ -54,11 +54,9 @@ describe('AjvSchemaValidator World Schema Tests', () => {
         instances: [
           {
             instanceId: 'test:instance1',
-            definitionId: 'test:definition1',
           },
           {
             instanceId: 'test:instance2',
-            definitionId: 'test:definition2',
           },
         ],
       };

@@ -179,16 +179,15 @@ class WorldInitializer {
     );
 
     for (const worldInstance of worldData.instances) {
-      if (!worldInstance || !worldInstance.instanceId || !worldInstance.definitionId) {
+      if (!worldInstance || !worldInstance.instanceId) {
         this.#logger.warn(
-          `WorldInitializer (Pass 1): Skipping invalid world instance (missing instanceId or definitionId):`,
+          `WorldInitializer (Pass 1): Skipping invalid world instance (missing instanceId):`,
           worldInstance
         );
         continue;
       }
 
-      const { instanceId, definitionId, componentOverrides } = worldInstance;
-      
+      const { instanceId, componentOverrides } = worldInstance;
       // Get the entity instance definition
       const entityInstanceDef = this.#repository.getEntityInstanceDefinition(instanceId);
       if (!entityInstanceDef) {
@@ -197,7 +196,7 @@ class WorldInitializer {
           `Entity instance definition '${instanceId}' not found. World initialization cannot proceed without all required entity instances.`,
           {
             statusCode: 500,
-            raw: `Entity instance definition '${instanceId}' not found in repository. Context: WorldInitializer._instantiateEntitiesFromWorld, worldName: ${worldName}, instanceId: ${instanceId}, definitionId: ${definitionId}`,
+            raw: `Entity instance definition '${instanceId}' not found in repository. Context: WorldInitializer._instantiateEntitiesFromWorld, worldName: ${worldName}, instanceId: ${instanceId}`,
             timestamp: new Date().toISOString(),
           }
         );
@@ -205,6 +204,15 @@ class WorldInitializer {
         throw new Error(
           `World initialization failed: Entity instance definition '${instanceId}' not found. Please ensure all entity instances referenced in the world are properly defined.`
         );
+      }
+
+      // Get the definitionId from the entity instance definition
+      const definitionId = entityInstanceDef.definitionId;
+      if (!definitionId) {
+        this.#logger.warn(
+          `WorldInitializer (Pass 1): Entity instance definition '${instanceId}' is missing a definitionId. Skipping.`
+        );
+        continue;
       }
 
       // Create the entity instance
