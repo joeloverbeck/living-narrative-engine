@@ -4,7 +4,7 @@ import { expectNoDispatch } from '../../common/engine/dispatchTestUtils.js';
 import { tokens } from '../../../src/dependencyInjection/tokens.js';
 import { describeEngineSuite } from '../../common/engine/gameEngineTestBed.js';
 import {
-  runUnavailableServiceTest,
+  runUnavailableServiceSuite,
   setupLoadGameSpies,
 } from '../../common/engine/gameEngineHelpers.js';
 import '../../common/engine/engineTestTypedefs.js';
@@ -109,35 +109,27 @@ describeEngineSuite('GameEngine', (ctx) => {
       });
     });
 
-    it.each(
-      runUnavailableServiceTest(
+    runUnavailableServiceSuite(
+      [
         [
-          [
-            tokens.GamePersistenceService,
-            'GameEngine.loadGame: GamePersistenceService is not available. Cannot load game.',
-            { preInit: true },
-          ],
+          tokens.GamePersistenceService,
+          'GameEngine.loadGame: GamePersistenceService is not available. Cannot load game.',
+          { preInit: true },
         ],
-        async (bed, engine, expectedMsg) => {
-          const result = await engine.loadGame(SAVE_ID);
-          expectNoDispatch(bed.mocks.safeEventDispatcher.dispatch);
-          expect(result).toEqual({
-            success: false,
-            error: expectedMsg,
-            data: null,
-          });
-          return [
-            bed.mocks.logger.error,
-            bed.mocks.safeEventDispatcher.dispatch,
-          ];
-        }
-      )
+      ],
+      async (bed, engine, expectedMsg) => {
+        const result = await engine.loadGame(SAVE_ID);
+        expectNoDispatch(bed.mocks.safeEventDispatcher.dispatch);
+        expect(result).toEqual({
+          success: false,
+          error: expectedMsg,
+          data: null,
+        });
+        return [bed.mocks.logger.error, bed.mocks.safeEventDispatcher.dispatch];
+      },
+      2
     )(
-      'should handle %s unavailability (guard clause) and dispatch UI event directly',
-      async (_token, fn) => {
-        expect.assertions(4);
-        await fn();
-      }
+      'should handle %s unavailability (guard clause) and dispatch UI event directly'
     );
 
     it('should use _handleLoadFailure when _prepareForLoadGameSession throws an error', async () => {

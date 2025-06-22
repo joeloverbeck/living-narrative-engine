@@ -2,7 +2,7 @@
 import { describe, expect, it } from '@jest/globals';
 import { tokens } from '../../../src/dependencyInjection/tokens.js';
 import { describeInitializedEngineSuite } from '../../common/engine/gameEngineTestBed.js';
-import { runUnavailableServiceTest } from '../../common/engine/gameEngineHelpers.js';
+import { runUnavailableServiceSuite } from '../../common/engine/gameEngineHelpers.js';
 import '../../common/engine/engineTestTypedefs.js';
 import {
   REQUEST_SHOW_SAVE_GAME_UI,
@@ -55,32 +55,25 @@ describeInitializedEngineSuite(
         ).toHaveBeenCalledTimes(1);
       });
 
-      it.each(
-        runUnavailableServiceTest(
+      runUnavailableServiceSuite(
+        [
           [
-            [
-              tokens.GamePersistenceService,
-              'GameEngine.showSaveGameUI: GamePersistenceService is unavailable. Cannot show Save Game UI.',
-            ],
+            tokens.GamePersistenceService,
+            'GameEngine.showSaveGameUI: GamePersistenceService is unavailable. Cannot show Save Game UI.',
           ],
-          (bed, engine) => {
-            engine.showSaveGameUI();
-            expect(
-              bed.mocks.gamePersistenceService.isSavingAllowed
-            ).not.toHaveBeenCalled();
-            return [
-              bed.mocks.logger.error,
-              bed.mocks.safeEventDispatcher.dispatch,
-            ];
-          }
-        )
-      )(
-        'should log error if %s is unavailable when showing save UI',
-        async (_token, fn) => {
-          expect.assertions(3);
-          await fn();
-        }
-      );
+        ],
+        (bed, engine) => {
+          engine.showSaveGameUI();
+          expect(
+            bed.mocks.gamePersistenceService.isSavingAllowed
+          ).not.toHaveBeenCalled();
+          return [
+            bed.mocks.logger.error,
+            bed.mocks.safeEventDispatcher.dispatch,
+          ];
+        },
+        1
+      )('should log error if %s is unavailable when showing save UI');
     });
   },
   DEFAULT_TEST_WORLD
