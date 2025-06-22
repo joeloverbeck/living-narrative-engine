@@ -74,13 +74,26 @@ export class TurnManagerTestBed extends SpyTrackerMixin(
   }
 
   /**
+   * Runs a start callback inside {@link BaseTestBed#withReset}.
+   *
+   * @description Executes the provided start function within the standard
+   *   reset wrapper so that mocks are cleared before each start.
+   * @param {() => Promise<void>} startFn - Function containing start logic.
+   * @returns {Promise<void>} Resolves once the start function completes.
+   * @private
+   */
+  async #startInternal(startFn) {
+    await this.withReset(startFn);
+  }
+
+  /**
    * Adds entities then starts the manager, clearing mock call history.
    *
    * @param {...{ id: string }} entities - Entities to register as active.
    * @returns {Promise<void>} Resolves once the manager has started.
    */
   async startWithEntities(...entities) {
-    await this.withReset(async () => {
+    await this.#startInternal(async () => {
       this.setActiveEntities(...entities);
       await this.turnManager.start();
     });
@@ -92,7 +105,7 @@ export class TurnManagerTestBed extends SpyTrackerMixin(
    * @returns {Promise<void>} Resolves once the manager is running.
    */
   async startRunning() {
-    await this.withReset(async () => {
+    await this.#startInternal(async () => {
       const spy = jest
         .spyOn(this.turnManager, 'advanceTurn')
         .mockImplementationOnce(async () => {});
@@ -107,7 +120,9 @@ export class TurnManagerTestBed extends SpyTrackerMixin(
    * @returns {Promise<void>} Resolves once timers are flushed.
    */
   async startAndFlush() {
-    await this.turnManager.start();
+    await this.#startInternal(async () => {
+      await this.turnManager.start();
+    });
     await flushPromisesAndTimers();
   }
 
