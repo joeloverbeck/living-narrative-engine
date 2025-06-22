@@ -12,7 +12,7 @@
         "description": "The full entity instance from which the component was removed."
       },
       "componentTypeId": {
-        "$ref": "../../schemas/common.schema.json#/definitions/namespacedId",
+        "$ref": "http://example.com/schemas/common.schema.json#/definitions/namespacedId",
         "description": "The ID of the component that was removed."
       },
       "oldComponentData": {
