@@ -82,6 +82,24 @@ export class EntityDisplayDataProvider {
   }
 
   /**
+   * @description Fetches an entity instance, logging a warning if the provided
+   * ID is null or empty.
+   * @private
+   * @param {NamespacedId | string} entityId - The ID of the entity to fetch.
+   * @param {*} defaultReturn - Value to return when entityId is invalid.
+   * @returns {Entity | *} The fetched entity instance or the default value.
+   */
+  #fetchEntity(entityId, defaultReturn) {
+    if (!entityId) {
+      this.#logger.warn(
+        `${this._logPrefix} fetchEntity called with null or empty entityId.`
+      );
+      return defaultReturn;
+    }
+    return this.#entityManager.getEntityInstance(entityId);
+  }
+
+  /**
    * Retrieves the display name of an entity.
    * Falls back to entity ID if the name component is missing, then to a default name.
    *
@@ -90,14 +108,13 @@ export class EntityDisplayDataProvider {
    * @returns {string} The entity's display name, its ID, or the default name.
    */
   getEntityName(entityId, defaultName = 'Unknown Entity') {
-    if (!entityId) {
-      this.#logger.warn(
-        `${this._logPrefix} getEntityName called with null or empty entityId.`
-      );
+    const sentinel = Symbol('invalidId');
+    const entity = this.#fetchEntity(entityId, sentinel);
+
+    if (entity === sentinel) {
       return defaultName;
     }
 
-    const entity = this.#entityManager.getEntityInstance(entityId);
     if (!entity) {
       this.#logger.debug(
         `${this._logPrefix} getEntityName: Entity with ID '${entityId}' not found. Returning default name.`
@@ -116,14 +133,13 @@ export class EntityDisplayDataProvider {
    * @returns {string | null} The full path to the portrait image (e.g., /data/mods/core/portraits/hero.png), or null if not found or invalid.
    */
   getEntityPortraitPath(entityId) {
-    if (!entityId) {
-      this.#logger.warn(
-        `${this._logPrefix} getEntityPortraitPath called with null or empty entityId.`
-      );
+    const sentinel = Symbol('invalidId');
+    const entity = this.#fetchEntity(entityId, sentinel);
+
+    if (entity === sentinel) {
       return null;
     }
 
-    const entity = this.#entityManager.getEntityInstance(entityId);
     if (!entity) {
       this.#logger.debug(
         `${this._logPrefix} getEntityPortraitPath: Entity with ID '${entityId}' not found.`
@@ -169,14 +185,13 @@ export class EntityDisplayDataProvider {
    * @returns {string} The entity's description or the default description.
    */
   getEntityDescription(entityId, defaultDescription = '') {
-    if (!entityId) {
-      this.#logger.warn(
-        `${this._logPrefix} getEntityDescription called with null or empty entityId.`
-      );
+    const sentinel = Symbol('invalidId');
+    const entity = this.#fetchEntity(entityId, sentinel);
+
+    if (entity === sentinel) {
       return defaultDescription;
     }
 
-    const entity = this.#entityManager.getEntityInstance(entityId);
     if (!entity) {
       this.#logger.debug(
         `${this._logPrefix} getEntityDescription: Entity with ID '${entityId}' not found. Returning default description.`
@@ -204,14 +219,13 @@ export class EntityDisplayDataProvider {
    * @returns {NamespacedId | string | null} The location ID (which is an entity instance ID) or null if not found.
    */
   getEntityLocationId(entityId) {
-    if (!entityId) {
-      this.#logger.warn(
-        `${this._logPrefix} getEntityLocationId called with null or empty entityId.`
-      );
+    const sentinel = Symbol('invalidId');
+    const entity = this.#fetchEntity(entityId, sentinel);
+
+    if (entity === sentinel) {
       return null;
     }
 
-    const entity = this.#entityManager.getEntityInstance(entityId);
     if (!entity) {
       this.#logger.debug(
         `${this._logPrefix} getEntityLocationId: Entity with ID '${entityId}' not found.`
@@ -243,13 +257,13 @@ export class EntityDisplayDataProvider {
    * An object with character display information, or null if the entity is not found.
    */
   getCharacterDisplayInfo(entityId) {
-    if (!entityId) {
-      this.#logger.warn(
-        `${this._logPrefix} getCharacterDisplayInfo called with null or empty entityId.`
-      );
+    const sentinel = Symbol('invalidId');
+    const entity = this.#fetchEntity(entityId, sentinel);
+
+    if (entity === sentinel) {
       return null;
     }
-    const entity = this.#entityManager.getEntityInstance(entityId);
+
     if (!entity) {
       this.#logger.debug(
         `${this._logPrefix} getCharacterDisplayInfo: Entity with ID '${entityId}' not found.`
