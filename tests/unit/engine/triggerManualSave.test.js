@@ -23,7 +23,6 @@ describeEngineSuite('GameEngine', () => {
 
     it('should dispatch error and not attempt save if engine is not initialized', async () => {
       await withGameEngineBed({}, async (bed, engine) => {
-        bed.resetMocks();
         const result = await engine.triggerManualSave(SAVE_NAME);
         const expectedErrorMsg =
           'Game engine is not initialized. Cannot save game.';

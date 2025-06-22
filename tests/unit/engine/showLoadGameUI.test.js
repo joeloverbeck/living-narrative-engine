@@ -7,10 +7,6 @@ import { REQUEST_SHOW_LOAD_GAME_UI } from '../../../src/constants/eventIds.js';
 
 describeEngineSuite('GameEngine', (ctx) => {
   describe('showLoadGameUI', () => {
-    beforeEach(() => {
-      ctx.bed.resetMocks();
-    });
-
     it('should dispatch REQUEST_SHOW_LOAD_GAME_UI and log intent if persistence service is available', () => {
       ctx.engine.showLoadGameUI(); // Method is now sync
 

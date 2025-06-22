@@ -45,8 +45,6 @@ describeEngineSuite('GameEngine', (ctx) => {
       // ctx.engine is fresh, so not initialized
       expectEngineStopped(ctx.engine);
 
-      ctx.bed.resetMocks();
-
       await ctx.engine.stop();
 
       expect(

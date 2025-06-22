@@ -39,7 +39,6 @@ describeEngineSuite('GameEngine', (ctx) => {
           data: null,
         };
       });
-      ctx.bed.resetMocks();
     });
 
     it('should successfully orchestrate loading a game and call helpers in order', async () => {
