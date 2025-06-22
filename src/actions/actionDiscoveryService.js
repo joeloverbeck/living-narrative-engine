@@ -32,6 +32,48 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
   #logger;
   #safeEventDispatcher;
 
+  static DOMAIN_HANDLERS = {
+    none(
+      actionDef,
+      actorEntity,
+      _currentLocation,
+      _locIdForLog,
+      _domain,
+      _context,
+      formatterOptions
+    ) {
+      return this.#discoverSelfOrNone(actionDef, actorEntity, formatterOptions);
+    },
+    self(
+      actionDef,
+      actorEntity,
+      _currentLocation,
+      _locIdForLog,
+      _domain,
+      _context,
+      formatterOptions
+    ) {
+      return this.#discoverSelfOrNone(actionDef, actorEntity, formatterOptions);
+    },
+    direction(
+      actionDef,
+      actorEntity,
+      currentLocation,
+      locIdForLog,
+      _domain,
+      _context,
+      formatterOptions
+    ) {
+      return this.#discoverDirectionalActions(
+        actionDef,
+        actorEntity,
+        currentLocation,
+        locIdForLog,
+        formatterOptions
+      );
+    },
+  };
+
   /**
    * @param {object} deps
    * @param {GameDataRepository} deps.gameDataRepository
@@ -279,34 +321,19 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
     for (const actionDef of allDefs) {
       const domain = actionDef.target_domain;
       try {
-        let discovered = [];
-        switch (domain) {
-          case 'none':
-          case 'self':
-            discovered = this.#discoverSelfOrNone(
-              actionDef,
-              actorEntity,
-              formatterOptions
-            );
-            break;
-          case 'direction':
-            discovered = this.#discoverDirectionalActions(
-              actionDef,
-              actorEntity,
-              currentLocation,
-              locIdForLog,
-              formatterOptions
-            );
-            break;
-          default:
-            discovered = this.#discoverScopedEntityActions(
-              actionDef,
-              actorEntity,
-              domain,
-              context,
-              formatterOptions
-            );
-        }
+        const handler =
+          this.constructor.DOMAIN_HANDLERS[domain] ||
+          this.#discoverScopedEntityActions;
+        const discovered = handler.call(
+          this,
+          actionDef,
+          actorEntity,
+          currentLocation,
+          locIdForLog,
+          domain,
+          context,
+          formatterOptions
+        );
         validActions.push(...discovered);
       } catch (err) {
         safeDispatchError(
