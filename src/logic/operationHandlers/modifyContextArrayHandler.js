@@ -11,6 +11,7 @@ import { resolvePath } from '../../utils/objectUtils.js';
 import { tryWriteContextVariable } from '../../utils/contextVariableUtils.js';
 import { cloneDeep } from 'lodash';
 import { assertParamsObject } from '../../utils/handlerUtils/indexUtils.js';
+import { applyArrayModification } from '../utils/arrayModifyUtils.js';
 
 /**
  * Safely sets a value on a nested object using a dot-notation path.
@@ -144,69 +145,57 @@ class ModifyContextArrayHandler {
 
     let operationResult = null;
 
-    switch (mode) {
-      case 'push':
-        if (value === undefined) {
-          log.warn(`'push' mode requires a 'value' parameter.`);
-          return;
-        }
-        clonedArray.push(value);
-        operationResult = clonedArray;
-        break;
+    const validModes = ['push', 'push_unique', 'pop', 'remove_by_value'];
+    if (!validModes.includes(mode)) {
+      log.warn(`MODIFY_CONTEXT_ARRAY: Unknown mode '${mode}'.`);
+      return;
+    }
 
-      case 'push_unique': {
-        if (value === undefined) {
-          log.warn(`'push_unique' mode requires a 'value' parameter.`);
-          return;
-        }
-        let exists = false;
-        if (typeof value !== 'object' || value === null) {
-          exists = clonedArray.includes(value);
-        } else {
-          const valueAsJson = JSON.stringify(value);
-          exists = clonedArray.some(
-            (item) => JSON.stringify(item) === valueAsJson
-          );
-        }
-        if (!exists) {
-          clonedArray.push(value);
-        }
-        operationResult = clonedArray;
-        break;
+    if (
+      value === undefined &&
+      (mode === 'push' || mode === 'push_unique' || mode === 'remove_by_value')
+    ) {
+      log.warn(`'${mode}' mode requires a 'value' parameter.`);
+      return;
+    }
+
+    if (mode === 'push_unique') {
+      let exists = false;
+      if (typeof value !== 'object' || value === null) {
+        exists = clonedArray.includes(value);
+      } else {
+        const valueAsJson = JSON.stringify(value);
+        exists = clonedArray.some(
+          (item) => JSON.stringify(item) === valueAsJson
+        );
       }
-
-      case 'pop':
-        if (clonedArray.length > 0) {
-          operationResult = clonedArray.pop();
-        } else {
-          operationResult = undefined;
-        }
-        break;
-
-      case 'remove_by_value': {
-        if (value === undefined) {
-          log.warn(`'remove_by_value' mode requires a 'value' parameter.`);
-          return;
-        }
-        let index;
-        if (typeof value !== 'object' || value === null) {
-          index = clonedArray.indexOf(value);
-        } else {
-          const valueAsJson = JSON.stringify(value);
-          index = clonedArray.findIndex(
-            (item) => JSON.stringify(item) === valueAsJson
-          );
-        }
-        if (index > -1) {
-          clonedArray.splice(index, 1);
-        }
-        operationResult = clonedArray;
-        break;
+      if (!exists) {
+        clonedArray = applyArrayModification(mode, clonedArray, value, log);
       }
-
-      default:
-        log.warn(`MODIFY_CONTEXT_ARRAY: Unknown mode '${mode}'.`);
-        return;
+      operationResult = clonedArray;
+    } else if (mode === 'pop') {
+      const popped =
+        clonedArray.length > 0
+          ? clonedArray[clonedArray.length - 1]
+          : undefined;
+      clonedArray = applyArrayModification(mode, clonedArray, value, log);
+      operationResult = popped;
+    } else if (mode === 'remove_by_value') {
+      let target = value;
+      if (typeof value === 'object' && value !== null) {
+        const valueAsJson = JSON.stringify(value);
+        const found = clonedArray.find(
+          (item) => JSON.stringify(item) === valueAsJson
+        );
+        if (found) {
+          target = found;
+        }
+      }
+      clonedArray = applyArrayModification(mode, clonedArray, target, log);
+      operationResult = clonedArray;
+    } else {
+      clonedArray = applyArrayModification(mode, clonedArray, value, log);
+      operationResult = clonedArray;
     }
 
     // --- FIX: Set the modified clone back into the context ---
