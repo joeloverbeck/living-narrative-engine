@@ -4,6 +4,7 @@ import {
   expectSingleDispatch,
   buildSaveDispatches,
   buildStopDispatches,
+  buildStartDispatches,
   expectEngineStatus,
   expectEntityCreatedDispatch,
   expectEntityRemovedDispatch,
@@ -13,6 +14,7 @@ import {
 import { DEFAULT_ACTIVE_WORLD_FOR_SAVE } from '../constants.js';
 import {
   ENGINE_OPERATION_IN_PROGRESS_UI,
+  ENGINE_INITIALIZING_UI,
   ENGINE_READY_UI,
   GAME_SAVED_ID,
   ENTITY_CREATED_ID,
@@ -123,6 +125,25 @@ describe('dispatchTestUtils', () => {
           ENGINE_STOPPED_UI,
           { inputDisabledMessage: 'Game stopped. Engine is inactive.' },
         ],
+      ]);
+    });
+  });
+
+  describe('buildStartDispatches', () => {
+    it('returns initializing dispatch entry', () => {
+      const result = buildStartDispatches('NewWorld');
+      expect(result[0]).toEqual([
+        ENGINE_INITIALIZING_UI,
+        { worldName: 'NewWorld' },
+        { allowSchemaNotFound: true },
+      ]);
+    });
+
+    it('returns ready dispatch entry', () => {
+      const result = buildStartDispatches('NewWorld');
+      expect(result[1]).toEqual([
+        ENGINE_READY_UI,
+        { activeWorld: 'NewWorld', message: 'Enter command...' },
       ]);
     });
   });
