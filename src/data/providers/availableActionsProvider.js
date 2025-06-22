@@ -98,7 +98,7 @@ export class AvailableActionsProvider extends IAvailableActionsProvider {
         logger,
       };
 
-      const discoveredActions =
+      const { actions: discoveredActions } =
         await this.#actionDiscoveryService.getValidActions(actor, actionCtx);
 
       // Index the discovered actions to create the final, ordered list.

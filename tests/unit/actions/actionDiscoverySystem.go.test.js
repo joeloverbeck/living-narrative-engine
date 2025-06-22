@@ -229,13 +229,13 @@ describe('ActionDiscoveryService - Go Action (Fixed State)', () => {
   });
 
   it('should discover "go out to town" action when player is in adventurers guild and exit is available', async () => {
-    const validActions = await actionDiscoveryService.getValidActions(
+    const result = await actionDiscoveryService.getValidActions(
       mockHeroEntity,
       mockActionContext
     );
 
-    expect(validActions).toBeDefined();
-    expect(Array.isArray(validActions)).toBe(true);
+    expect(result.actions).toBeDefined();
+    expect(Array.isArray(result.actions)).toBe(true);
 
     const waitAction = {
       id: 'core:wait',
@@ -253,8 +253,8 @@ describe('ActionDiscoveryService - Go Action (Fixed State)', () => {
       params: { targetId: TOWN_DEFINITION_ID },
     };
 
-    expect(validActions).toContainEqual(waitAction);
-    expect(validActions).toContainEqual(goAction);
+    expect(result.actions).toContainEqual(waitAction);
+    expect(result.actions).toContainEqual(goAction);
 
     expect(mockGetAvailableExits).toHaveBeenCalledWith(
       mockAdventurersGuildLocation,

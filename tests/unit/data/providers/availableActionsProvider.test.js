@@ -114,9 +114,10 @@ describe('AvailableActionsProvider', () => {
           description: 'Wait a turn',
         },
       ];
-      actionDiscoveryService.getValidActions.mockResolvedValue(
-        discoveredActions
-      );
+      actionDiscoveryService.getValidActions.mockResolvedValue({
+        actions: discoveredActions,
+        errors: [],
+      });
       actionIndexer.index.mockReturnValue(indexedActions);
 
       // Act: Call the provider twice within the same turn context
@@ -138,9 +139,10 @@ describe('AvailableActionsProvider', () => {
       const discoveredActions = [
         { id: 'core:wait', command: 'wait command', description: 'desc' },
       ];
-      actionDiscoveryService.getValidActions.mockResolvedValue(
-        discoveredActions
-      );
+      actionDiscoveryService.getValidActions.mockResolvedValue({
+        actions: discoveredActions,
+        errors: [],
+      });
       // The indexing service will be called for each turn, returning a fresh list
       actionIndexer.index
         .mockReturnValueOnce([
@@ -197,9 +199,10 @@ describe('AvailableActionsProvider', () => {
           description: a.description,
         }));
 
-      actionDiscoveryService.getValidActions.mockResolvedValue(
-        discoveredActions
-      );
+      actionDiscoveryService.getValidActions.mockResolvedValue({
+        actions: discoveredActions,
+        errors: [],
+      });
       actionIndexer.index.mockReturnValue(cappedActions);
 
       // Act
@@ -252,9 +255,10 @@ describe('AvailableActionsProvider', () => {
           description: 'Wait a turn',
         },
       ];
-      actionDiscoveryService.getValidActions.mockResolvedValue(
-        duplicateDiscoveredActions
-      );
+      actionDiscoveryService.getValidActions.mockResolvedValue({
+        actions: duplicateDiscoveredActions,
+        errors: [],
+      });
       actionIndexer.index.mockReturnValue(dedupedIndexedActions);
 
       // Act
@@ -318,9 +322,10 @@ describe('AvailableActionsProvider', () => {
           description: a.description,
         }));
 
-      actionDiscoveryService.getValidActions.mockResolvedValue(
-        discoveredActions
-      );
+      actionDiscoveryService.getValidActions.mockResolvedValue({
+        actions: discoveredActions,
+        errors: [],
+      });
       actionIndexer.index.mockReturnValue(reducedActions);
 
       // Act

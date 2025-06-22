@@ -37,9 +37,10 @@ describe('Integration – Human and AI turn parity', () => {
     const logger = createLogger();
 
     const discoverySvc = {
-      getValidActions: jest
-        .fn()
-        .mockResolvedValue([{ id: 'core:wait', command: 'Wait', params: {} }]),
+      getValidActions: jest.fn().mockResolvedValue({
+        actions: [{ id: 'core:wait', command: 'Wait', params: {} }],
+        errors: [],
+      }),
     };
 
     const composite = {

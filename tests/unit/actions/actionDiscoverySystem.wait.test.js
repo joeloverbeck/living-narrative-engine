@@ -147,12 +147,12 @@ describe('ActionDiscoveryService - Wait Action Tests', () => {
   });
 
   it('should return structured action info [{id, name, command, description, params}] when core:wait is available and valid', async () => {
-    const validActions = await actionDiscoveryService.getValidActions(
+    const result = await actionDiscoveryService.getValidActions(
       mockActorEntity,
       mockActionContext
     );
 
-    expect(validActions).toEqual([
+    expect(result.actions).toEqual([
       {
         id: 'core:wait',
         name: 'Wait',
@@ -194,12 +194,12 @@ describe('ActionDiscoveryService - Wait Action Tests', () => {
   it('should return an empty array if core:wait action is deemed invalid by ActionValidationService', async () => {
     mockValidationService.isValid.mockReturnValue(false);
 
-    const validActions = await actionDiscoveryService.getValidActions(
+    const result = await actionDiscoveryService.getValidActions(
       mockActorEntity,
       mockActionContext
     );
 
-    expect(validActions).toEqual([]);
+    expect(result.actions).toEqual([]);
     expect(mockFormatActionCommandFn).not.toHaveBeenCalled();
 
     // Only start and finish logs
@@ -218,12 +218,12 @@ describe('ActionDiscoveryService - Wait Action Tests', () => {
   it('should return an empty array if core:wait action definition is not provided by GameDataRepository', async () => {
     mockGameDataRepo.getAllActionDefinitions.mockReturnValue([]);
 
-    const validActions = await actionDiscoveryService.getValidActions(
+    const result = await actionDiscoveryService.getValidActions(
       mockActorEntity,
       mockActionContext
     );
 
-    expect(validActions).toEqual([]);
+    expect(result.actions).toEqual([]);
     expect(mockValidationService.isValid).not.toHaveBeenCalled();
     expect(mockFormatActionCommandFn).not.toHaveBeenCalled();
 
@@ -253,12 +253,12 @@ describe('ActionDiscoveryService - Wait Action Tests', () => {
         actionDef.id === 'core:wait' && actor.id === ACTOR_INSTANCE_ID
     );
 
-    const validActions = await actionDiscoveryService.getValidActions(
+    const result = await actionDiscoveryService.getValidActions(
       mockActorEntity,
       mockActionContext
     );
 
-    expect(validActions).toEqual([
+    expect(result.actions).toEqual([
       {
         id: 'core:wait',
         name: 'Wait',

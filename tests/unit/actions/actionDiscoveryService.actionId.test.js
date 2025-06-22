@@ -46,10 +46,10 @@ describe('ActionDiscoveryService params exposure', () => {
   it('should include params.targetId for entity‐domain actions', async () => {
     const actor = { id: 'player1' };
     const context = { currentLocation: null };
-    const actions = await service.getValidActions(actor, context);
+    const result = await service.getValidActions(actor, context);
 
-    expect(actions).toHaveLength(1);
-    expect(actions[0]).toMatchObject({
+    expect(result.actions).toHaveLength(1);
+    expect(result.actions[0]).toMatchObject({
       id: 'core:attack',
       params: { targetId: 'rat123' },
     });
