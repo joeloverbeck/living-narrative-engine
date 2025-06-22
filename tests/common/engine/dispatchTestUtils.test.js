@@ -6,6 +6,8 @@ import {
   buildStopDispatches,
   buildStartDispatches,
   expectEngineStatus,
+  expectEngineRunning,
+  expectEngineStopped,
   expectEntityCreatedDispatch,
   expectEntityRemovedDispatch,
   expectComponentAddedDispatch,
@@ -157,6 +159,52 @@ describe('dispatchTestUtils', () => {
     it('throws when statuses differ', () => {
       const engine = { getEngineStatus: () => ({ ready: false }) };
       expect(() => expectEngineStatus(engine, { ready: true })).toThrow();
+    });
+  });
+
+  describe('expectEngineRunning and expectEngineStopped', () => {
+    it('validates running helper', () => {
+      const engine = {
+        getEngineStatus: () => ({
+          isInitialized: true,
+          isLoopRunning: true,
+          activeWorld: 'World',
+        }),
+      };
+      expect(() => expectEngineRunning(engine, 'World')).not.toThrow();
+    });
+
+    it('throws when running expectations fail', () => {
+      const engine = {
+        getEngineStatus: () => ({
+          isInitialized: false,
+          isLoopRunning: true,
+          activeWorld: 'World',
+        }),
+      };
+      expect(() => expectEngineRunning(engine, 'World')).toThrow();
+    });
+
+    it('validates stopped helper', () => {
+      const engine = {
+        getEngineStatus: () => ({
+          isInitialized: false,
+          isLoopRunning: false,
+          activeWorld: null,
+        }),
+      };
+      expect(() => expectEngineStopped(engine)).not.toThrow();
+    });
+
+    it('throws when stopped expectations fail', () => {
+      const engine = {
+        getEngineStatus: () => ({
+          isInitialized: true,
+          isLoopRunning: true,
+          activeWorld: 'World',
+        }),
+      };
+      expect(() => expectEngineStopped(engine)).toThrow();
     });
   });
 

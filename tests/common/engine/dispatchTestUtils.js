@@ -116,6 +116,35 @@ export function expectEngineStatus(engine, expectedStatus) {
 }
 
 /**
+ * Asserts that the engine is running with the provided world.
+ *
+ * @param {{ getEngineStatus: () => any }} engine - Engine instance with a
+ *   `getEngineStatus` method.
+ * @param {string} world - Expected active world name.
+ * @returns {void}
+ */
+export const expectEngineRunning = (engine, world) =>
+  expectEngineStatus(engine, {
+    isInitialized: true,
+    isLoopRunning: true,
+    activeWorld: world,
+  });
+
+/**
+ * Asserts that the engine is fully stopped.
+ *
+ * @param {{ getEngineStatus: () => any }} engine - Engine instance with a
+ *   `getEngineStatus` method.
+ * @returns {void}
+ */
+export const expectEngineStopped = (engine) =>
+  expectEngineStatus(engine, {
+    isInitialized: false,
+    isLoopRunning: false,
+    activeWorld: null,
+  });
+
+/**
  * Asserts a single dispatch call with the given id and payload.
  *
  * @param {import('@jest/globals').Mock} mock - Mocked dispatch function.
@@ -208,6 +237,8 @@ export default {
   buildStopDispatches,
   buildStartDispatches,
   expectEngineStatus,
+  expectEngineRunning,
+  expectEngineStopped,
   expectSingleDispatch,
   expectEntityCreatedDispatch,
   expectEntityRemovedDispatch,
