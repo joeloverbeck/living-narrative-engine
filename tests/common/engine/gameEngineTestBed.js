@@ -14,6 +14,7 @@ import {
   createDescribeServiceSuite,
 } from '../describeSuite.js';
 import { DEFAULT_TEST_WORLD } from '../constants.js';
+import { runWithReset } from '../testBedHelpers.js';
 
 /**
  * @description Utility class that instantiates {@link GameEngine} using a mocked
@@ -79,8 +80,7 @@ export class GameEngineTestBed extends StoppableMixin(ContainerTestBed) {
    * @returns {Promise<void>} Resolves once initialization completes.
    */
   async initAndReset(world = DEFAULT_TEST_WORLD) {
-    await this.init(world);
-    this.resetMocks();
+    await runWithReset(this, () => this.init(world));
   }
 
   /**
@@ -106,8 +106,7 @@ export class GameEngineTestBed extends StoppableMixin(ContainerTestBed) {
    * @returns {Promise<void>} Resolves when the game has started.
    */
   async startAndReset(world, result = { success: true }) {
-    await this.start(world, result);
-    this.resetMocks();
+    await runWithReset(this, () => this.start(world, result));
   }
 
   /**

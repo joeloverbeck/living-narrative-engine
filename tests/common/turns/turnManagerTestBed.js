@@ -19,6 +19,7 @@ import {
   createDescribeTestBedSuite,
 } from '../describeSuite.js';
 import { flushPromisesAndTimers } from '../jestHelpers.js';
+import { runWithReset } from '../testBedHelpers.js';
 
 /**
  * @description Utility class that instantiates {@link TurnManager} with mocked
@@ -81,9 +82,10 @@ export class TurnManagerTestBed extends StoppableMixin(FactoryTestBed) {
    * @returns {Promise<void>} Resolves once the manager has started.
    */
   async startWithEntities(...entities) {
-    this.setActiveEntities(...entities);
-    await this.turnManager.start();
-    this.resetMocks();
+    await runWithReset(this, async () => {
+      this.setActiveEntities(...entities);
+      await this.turnManager.start();
+    });
   }
 
   /**
@@ -92,12 +94,13 @@ export class TurnManagerTestBed extends StoppableMixin(FactoryTestBed) {
    * @returns {Promise<void>} Resolves once the manager is running.
    */
   async startRunning() {
-    const spy = jest
-      .spyOn(this.turnManager, 'advanceTurn')
-      .mockImplementationOnce(async () => {});
-    await this.turnManager.start();
-    spy.mockRestore();
-    this.resetMocks();
+    await runWithReset(this, async () => {
+      const spy = jest
+        .spyOn(this.turnManager, 'advanceTurn')
+        .mockImplementationOnce(async () => {});
+      await this.turnManager.start();
+      spy.mockRestore();
+    });
   }
 
   /**
