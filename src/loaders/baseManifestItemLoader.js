@@ -522,24 +522,30 @@ export class BaseManifestItemLoader extends AbstractLoader {
 
     // Check if dataToStore is a class instance (not a plain object)
     const isClassInstance = dataToStore.constructor !== Object;
+    const isEntityDefinition = category === 'entityDefinitions';
+    const isEntityInstance = category === 'entityInstances';
     
     let dataWithMetadata;
+    // Always use qualifiedId for id if EntityDefinition or entity instance
+    let finalId = baseItemId;
+    if (isEntityDefinition || isEntityInstance) {
+      finalId = qualifiedId;
+    }
+
     if (isClassInstance) {
-      // For class instances, add metadata as own properties to preserve class identity
       dataWithMetadata = dataToStore;
       Object.defineProperties(dataWithMetadata, {
         _modId: { value: modId, writable: false, enumerable: true },
         _sourceFile: { value: sourceFilename, writable: false, enumerable: true },
         _fullId: { value: qualifiedId, writable: false, enumerable: true },
-        id: { value: baseItemId, writable: false, enumerable: true }
+        id: { value: finalId, writable: false, enumerable: true }
       });
     } else {
-      // For plain objects, create a new object with all properties plus metadata
       dataWithMetadata = Object.assign({}, dataToStore, {
         _modId: modId,
         _sourceFile: sourceFilename,
         _fullId: qualifiedId,
-        id: baseItemId,
+        id: finalId,
       });
     }
 

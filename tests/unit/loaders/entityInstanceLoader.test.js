@@ -118,7 +118,7 @@ describe('EntityInstanceLoader Integration Test Suite', () => {
       'test_mod:player_char', // Qualified ID as the key
       expect.objectContaining({
         // Properties from _storeItemInRegistry augmentation
-        id: 'player_char', // Base ID
+        id: 'test_mod:player_char', // Full qualified ID
         _fullId: 'test_mod:player_char', // Qualified ID
         _modId: "test_mod",
         _sourceFile: INSTANCE_FILENAME,

@@ -44,14 +44,27 @@ export async function processAndStoreItem(loader, options) {
     parseOptions = {},
   } = options;
 
-  const { fullId, baseId } = parseAndValidateId(
-    data,
-    idProp,
-    modId,
-    filename,
-    loader._logger,
-    parseOptions
-  );
+  // Special handling for EntityDefinition instances - preserve their original id
+  const isEntityDefinition = data && data.constructor && data.constructor.name === 'EntityDefinition';
+  
+  let fullId, baseId;
+  if (isEntityDefinition) {
+    // For EntityDefinition instances, use the existing id as fullId and extract baseId
+    fullId = data[idProp];
+    baseId = fullId.split(':').slice(1).join(':') || fullId;
+  } else {
+    // For other data types, use the normal parsing
+    const parsed = parseAndValidateId(
+      data,
+      idProp,
+      modId,
+      filename,
+      loader._logger,
+      parseOptions
+    );
+    fullId = parsed.fullId;
+    baseId = parsed.baseId;
+  }
 
   if (
     schemaProp &&

@@ -187,35 +187,23 @@ class WorldInitializer {
         continue;
       }
 
-      const { instanceId, componentOverrides } = worldInstance;
+      const { instanceId } = worldInstance;
       // Get the entity instance definition
       const entityInstanceDef = this.#repository.getEntityInstanceDefinition(instanceId);
-      if (!entityInstanceDef) {
-        safeDispatchError(
-          this.#validatedEventDispatcher,
-          `Entity instance definition '${instanceId}' not found. World initialization cannot proceed without all required entity instances.`,
-          {
-            statusCode: 500,
-            raw: `Entity instance definition '${instanceId}' not found in repository. Context: WorldInitializer._instantiateEntitiesFromWorld, worldName: ${worldName}, instanceId: ${instanceId}`,
-            timestamp: new Date().toISOString(),
-          }
-        );
-
-        throw new Error(
-          `World initialization failed: Entity instance definition '${instanceId}' not found. Please ensure all entity instances referenced in the world are properly defined.`
-        );
-      }
-
+      const componentOverrides = entityInstanceDef?.componentOverrides;
       // Get the definitionId from the entity instance definition
-      const definitionId = entityInstanceDef.definitionId;
+      const definitionId = entityInstanceDef?.definitionId;
       if (!definitionId) {
         this.#logger.warn(
           `WorldInitializer (Pass 1): Entity instance definition '${instanceId}' is missing a definitionId. Skipping.`
         );
         continue;
       }
-
       // Create the entity instance
+      this.#logger.debug(
+        `WorldInitializer (Pass 1): Attempting to create entity instance '${instanceId}' from definition '${definitionId}' with overrides:`,
+        componentOverrides
+      );
       const instance = this.#entityManager.createEntityInstance(definitionId, {
         instanceId,
         componentOverrides
@@ -223,7 +211,7 @@ class WorldInitializer {
 
       if (instance) {
         this.#logger.debug(
-          `WorldInitializer (Pass 1): Instantiated entity ${instance.id} (from definition: ${instance.definitionId})`
+          `WorldInitializer (Pass 1): Successfully instantiated entity ${instance.id} (from definition: ${instance.definitionId})`
         );
         instantiatedEntities.push(instance);
         totalInstantiatedCount++;
@@ -238,8 +226,8 @@ class WorldInitializer {
           `entity ${instance.id}`
         );
       } else {
-        this.#logger.warn(
-          `WorldInitializer (Pass 1): Failed to instantiate entity from definition: ${definitionId} for instance: ${instanceId}.`
+        this.#logger.error(
+          `WorldInitializer (Pass 1): Failed to instantiate entity from definition: ${definitionId} for instance: ${instanceId}. createEntityInstance returned null/undefined.`
         );
         await this.#_dispatchWorldInitEvent(
           'worldinit:entity_instantiation_failed',

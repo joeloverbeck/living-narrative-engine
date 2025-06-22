@@ -460,6 +460,12 @@ class EntityManager extends IEntityManager {
       if (!definition) {
         throw new DefinitionNotFoundError(definitionId);
       }
+      
+      this.#logger.debug(
+        `EntityManager.createEntityInstance: Creating entity instance '${opts.instanceId || 'auto-generated'}' from definition '${definitionId}' with overrides:`,
+        opts.componentOverrides
+      );
+      
       const entity = this.#factory.create(
         definitionId,
         opts,
@@ -467,6 +473,11 @@ class EntityManager extends IEntityManager {
         this.#mapManager,
         definition
       );
+      
+      this.#logger.debug(
+        `EntityManager.createEntityInstance: Factory created entity with ID '${entity.id}' and definitionId '${entity.definitionId}'`
+      );
+      
       // Track the primary instance.
       this.#mapManager.add(entity.id, entity);
       this.#logger.debug(`Tracked entity ${entity.id}`);

@@ -10,6 +10,7 @@ import { validateDependency } from '../utils/validationUtils.js';
 import { ensureValidLogger } from '../utils';
 import { getEntityDisplayName } from '../utils/entityUtils.js';
 import { isNonBlankString } from '../utils/textUtils.js';
+import { safeDispatchError } from '../utils/safeDispatchErrorUtils.js';
 
 /**
  * @typedef {import('../interfaces/IEntityManager.js').IEntityManager} IEntityManager
@@ -37,17 +38,12 @@ import { isNonBlankString } from '../utils/textUtils.js';
  * and handling cases where entities or components are not found.
  */
 export class EntityDisplayDataProvider {
-  /**
-   * @private
-   * @type {IEntityManager}
-   */
+  /** @type {IEntityManager} */
   #entityManager;
-
-  /**
-   * @private
-   * @type {ILogger}
-   */
+  /** @type {ILogger} */
   #logger;
+  /** @type {ISafeEventDispatcher} */
+  #safeEventDispatcher;
 
   /**
    * @private
@@ -62,8 +58,9 @@ export class EntityDisplayDataProvider {
    * @param {object} dependencies - The dependencies for the service.
    * @param {IEntityManager} dependencies.entityManager - The entity manager instance.
    * @param {ILogger} dependencies.logger - The logger instance.
+   * @param {ISafeEventDispatcher} dependencies.safeEventDispatcher - The safe event dispatcher instance.
    */
-  constructor({ entityManager, logger }) {
+  constructor({ entityManager, logger, safeEventDispatcher }) {
     validateDependency(logger, 'logger', console, {
       requiredMethods: ['info', 'warn', 'error', 'debug'],
     });
@@ -76,8 +73,13 @@ export class EntityDisplayDataProvider {
       requiredMethods: ['getEntityInstance'],
     });
 
+    validateDependency(safeEventDispatcher, 'safeEventDispatcher', effectiveLogger, {
+      requiredMethods: ['dispatch'],
+    });
+
     this.#entityManager = entityManager;
     this.#logger = effectiveLogger;
+    this.#safeEventDispatcher = safeEventDispatcher;
     this.#logger.debug(`${this._logPrefix} Service instantiated.`);
   }
 
@@ -233,7 +235,16 @@ export class EntityDisplayDataProvider {
       return null;
     }
 
+    this.#logger.debug(
+      `${this._logPrefix} getEntityLocationId: Found entity '${entityId}' with type: ${entity.constructor?.name || 'unknown'}, has getComponentData: ${typeof entity.getComponentData === 'function'}`
+    );
+
     const positionComponent = entity.getComponentData(POSITION_COMPONENT_ID);
+    this.#logger.debug(
+      `${this._logPrefix} getEntityLocationId: Position component for '${entityId}':`,
+      positionComponent
+    );
+    
     if (
       positionComponent &&
       typeof positionComponent.locationId === 'string' &&
@@ -433,8 +444,19 @@ export class EntityDisplayDataProvider {
     if (parts.length > 1 && parts[0] && parts[0].trim() !== '') {
       return parts[0];
     }
-    this.#logger.warn(
-      `${this._logPrefix} _getModIdFromDefinitionId: Could not parse modId from definitionId '${definitionId}'. Expected format 'modId:entityName'.`
+    
+    safeDispatchError(
+      this.#safeEventDispatcher,
+      `Entity definitionId '${definitionId}' has invalid format. Expected format 'modId:entityName'.`,
+      {
+        raw: JSON.stringify({
+          definitionId,
+          expectedFormat: 'modId:entityName',
+          functionName: '_getModIdFromDefinitionId'
+        }),
+        stack: (new Error().stack)
+      },
+      this.#logger
     );
     return null;
   }

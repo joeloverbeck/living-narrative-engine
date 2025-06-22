@@ -240,12 +240,8 @@ class EntityFactory {
       entityDefinition,
       validatedOverrides
     );
-    // Pass logger and validator to Entity constructor
-    const entity = new Entity(
-      entityInstanceDataObject,
-      this.#logger,
-      this.#validator
-    );
+    // Create Entity with just the instance data
+    const entity = new Entity(entityInstanceDataObject);
 
     // Apply default component policy before returning
     injectDefaultComponents(
@@ -367,12 +363,8 @@ class EntityFactory {
       definitionToUse,
       validatedComponents
     );
-    // Pass logger and validator to Entity constructor
-    const entity = new Entity(
-      instanceDataForReconstruction,
-      this.#logger,
-      this.#validator
-    );
+    // Create Entity with just the instance data
+    const entity = new Entity(instanceDataForReconstruction);
 
     // Restore: inject default components for actor entities
     injectDefaultComponents(

@@ -14,6 +14,7 @@ import { CORE_MOD_ID } from '../../../src/constants/core';
 describe('EntityDisplayDataProvider', () => {
   let mockEntityManager;
   let mockLogger;
+  let mockSafeEventDispatcher;
   let service;
 
   beforeEach(() => {
@@ -26,9 +27,13 @@ describe('EntityDisplayDataProvider', () => {
       error: jest.fn(), // Added for constructor test
       info: jest.fn(), // Added for completeness
     };
+    mockSafeEventDispatcher = {
+      dispatch: jest.fn(),
+    };
     service = new EntityDisplayDataProvider({
       entityManager: mockEntityManager,
       logger: mockLogger,
+      safeEventDispatcher: mockSafeEventDispatcher,
     });
   });
 
@@ -36,13 +41,17 @@ describe('EntityDisplayDataProvider', () => {
   describe('Constructor', () => {
     it('should throw an error if entityManager is missing or invalid', () => {
       expect(
-        () => new EntityDisplayDataProvider({ logger: mockLogger })
+        () => new EntityDisplayDataProvider({ 
+          logger: mockLogger, 
+          safeEventDispatcher: mockSafeEventDispatcher 
+        })
       ).toThrow('Missing required dependency: entityManager.');
       expect(
         () =>
           new EntityDisplayDataProvider({
             entityManager: {},
             logger: mockLogger,
+            safeEventDispatcher: mockSafeEventDispatcher,
           })
       ).toThrow(
         "Invalid or missing method 'getEntityInstance' on dependency 'entityManager'."
@@ -52,15 +61,37 @@ describe('EntityDisplayDataProvider', () => {
     it('should throw an error if logger is missing or invalid', () => {
       expect(
         () =>
-          new EntityDisplayDataProvider({ entityManager: mockEntityManager })
+          new EntityDisplayDataProvider({ 
+            entityManager: mockEntityManager,
+            safeEventDispatcher: mockSafeEventDispatcher
+          })
       ).toThrow('Missing required dependency: logger.');
       expect(
         () =>
           new EntityDisplayDataProvider({
             entityManager: mockEntityManager,
             logger: {},
+            safeEventDispatcher: mockSafeEventDispatcher,
           })
       ).toThrow("Invalid or missing method 'info' on dependency 'logger'.");
+    });
+
+    it('should throw an error if safeEventDispatcher is missing or invalid', () => {
+      expect(
+        () =>
+          new EntityDisplayDataProvider({ 
+            entityManager: mockEntityManager,
+            logger: mockLogger
+          })
+      ).toThrow('Missing required dependency: safeEventDispatcher.');
+      expect(
+        () =>
+          new EntityDisplayDataProvider({
+            entityManager: mockEntityManager,
+            logger: mockLogger,
+            safeEventDispatcher: {},
+          })
+      ).toThrow("Invalid or missing method 'dispatch' on dependency 'safeEventDispatcher'.");
     });
 
     it('should instantiate successfully with valid dependencies', () => {
@@ -192,10 +223,19 @@ describe('EntityDisplayDataProvider', () => {
       };
       mockEntityManager.getEntityInstance.mockReturnValue(mockEntity);
       expect(service.getEntityPortraitPath('player1')).toBeNull();
-      expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining(
-          "Could not extract modId from definitionId 'invalidDefinitionId'"
-        )
+      expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
+        'core:system_error_occurred',
+        expect.objectContaining({
+          message: "Entity definitionId 'invalidDefinitionId' has invalid format. Expected format 'modId:entityName'.",
+          details: expect.objectContaining({
+            raw: JSON.stringify({
+              definitionId: 'invalidDefinitionId',
+              expectedFormat: 'modId:entityName',
+              functionName: '_getModIdFromDefinitionId'
+            }),
+            stack: expect.any(String)
+          })
+        })
       );
     });
 
@@ -507,16 +547,38 @@ describe('EntityDisplayDataProvider', () => {
 
     // ** FIX: Refactored assertions for this test case **
     it('should return null for invalid definitionId formats and log appropriately', () => {
-      // Test case 1: String, but no colon (logs "Could not parse...")
+      // Test case 1: String, but no colon (should crash the app)
       expect(service._getModIdFromDefinitionId('nodIdOnly')).toBeNull();
-      expect(mockLogger.warn).toHaveBeenLastCalledWith(
-        "[EntityDisplayDataProvider] _getModIdFromDefinitionId: Could not parse modId from definitionId 'nodIdOnly'. Expected format 'modId:entityName'."
+      expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
+        'core:system_error_occurred',
+        expect.objectContaining({
+          message: "Entity definitionId 'nodIdOnly' has invalid format. Expected format 'modId:entityName'.",
+          details: expect.objectContaining({
+            raw: JSON.stringify({
+              definitionId: 'nodIdOnly',
+              expectedFormat: 'modId:entityName',
+              functionName: '_getModIdFromDefinitionId'
+            }),
+            stack: expect.any(String)
+          })
+        })
       );
 
-      // Test case 2: String, colon present, but empty modId part (logs "Could not parse...")
+      // Test case 2: String, colon present, but empty modId part (should crash the app)
       expect(service._getModIdFromDefinitionId(':itemNoModId')).toBeNull();
-      expect(mockLogger.warn).toHaveBeenLastCalledWith(
-        "[EntityDisplayDataProvider] _getModIdFromDefinitionId: Could not parse modId from definitionId ':itemNoModId'. Expected format 'modId:entityName'."
+      expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
+        'core:system_error_occurred',
+        expect.objectContaining({
+          message: "Entity definitionId ':itemNoModId' has invalid format. Expected format 'modId:entityName'.",
+          details: expect.objectContaining({
+            raw: JSON.stringify({
+              definitionId: ':itemNoModId',
+              expectedFormat: 'modId:entityName',
+              functionName: '_getModIdFromDefinitionId'
+            }),
+            stack: expect.any(String)
+          })
+        })
       );
 
       // Test case 3: Empty string (logs "Invalid or missing..." with second arg '')

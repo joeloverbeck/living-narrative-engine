@@ -93,6 +93,9 @@ export function registerWorldAndEntity(container) {
         c.resolve(tokens.IEntityManager)
       ),
       logger: /** @type {ILogger} */ (c.resolve(tokens.ILogger)),
+      safeEventDispatcher: /** @type {ISafeEventDispatcher} */ (
+        c.resolve(tokens.ISafeEventDispatcher)
+      ),
     });
   });
   logger.debug(
