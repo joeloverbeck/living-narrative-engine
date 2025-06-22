@@ -136,6 +136,27 @@ export class TurnManagerTestBed extends StoppableMixin(FactoryTestBed) {
   }
 
   /**
+   * Spies on {@link TurnManager.stop} and logs when invoked.
+   *
+   * Calls {@link TurnManagerTestBed#spyOnStop} and overrides the spy
+   * implementation to emit a debug message. Useful for tests that need
+   * confirmation that stop was triggered without affecting flow.
+   *
+   * @example
+   * const stopSpy = bed.setupDebugStopSpy();
+   * await bed.turnManager.stop();
+   * expect(stopSpy).toHaveBeenCalled();
+   * @returns {import('@jest/globals').Mock} The spy instance.
+   */
+  setupDebugStopSpy() {
+    const spy = this.spyOnStop();
+    spy.mockImplementation(() => {
+      this.mocks.logger.debug('Mocked instance.stop() called.');
+    });
+    return spy;
+  }
+
+  /**
    * Spies on {@link TurnManager.advanceTurn} and tracks for cleanup.
    *
    * @returns {import('@jest/globals').Mock} The spy instance.
