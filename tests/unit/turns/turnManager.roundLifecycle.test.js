@@ -3,6 +3,7 @@
 
 import { describeRunningTurnManagerSuite } from '../../common/turns/turnManagerTestBed.js';
 import { flushPromisesAndTimers } from '../../common/jestHelpers.js';
+import { waitForCurrentActor } from '../../common/turns/turnManagerTestUtils.js';
 // import removed constant; not needed
 import {
   TURN_ENDED_ID,
@@ -47,22 +48,6 @@ describeRunningTurnManagerSuite(
 
       testBed.resetMocks();
     });
-
-    /**
-     * Waits until the current actor matches the provided id.
-     *
-     * @param {string} id - Expected actor id.
-     * @returns {Promise<boolean>} Resolves true if actor found before timeout.
-     */
-    async function waitForCurrentActor(id) {
-      for (let i = 0; i < 50; i++) {
-        if (testBed.turnManager.getCurrentActor()?.id === id) {
-          return true;
-        }
-        await flushPromisesAndTimers();
-      }
-      return false;
-    }
 
     test('Starts a new round when queue is empty and active actors exist', async () => {
       testBed.setActiveEntities(ai1, player);
@@ -223,7 +208,7 @@ describeRunningTurnManagerSuite(
       await flushPromisesAndTimers();
 
       // Wait for TurnManager to advance to ai2
-      const found = await waitForCurrentActor(ai2.id);
+      const found = await waitForCurrentActor(testBed, ai2.id);
       expect(found).toBe(true);
 
       // Simulate turn ending for actor2 (success: true)
