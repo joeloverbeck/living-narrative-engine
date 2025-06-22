@@ -19,6 +19,7 @@ import { handleProcessingException } from './helpers/handleProcessingException.j
 import { ProcessingWorkflow } from './workflows/processingWorkflow.js';
 import { buildSpeechPayload } from './helpers/buildSpeechPayload.js';
 import { ProcessingGuard } from './helpers/processingGuard.js';
+import { finishProcessing } from './helpers/processingErrorUtils.js';
 import { getLogger } from './helpers/contextUtils.js';
 
 /**
@@ -40,8 +41,8 @@ export class ProcessingCommandState extends AbstractTurnState {
    */
   constructor(handler, commandString, turnAction = null) {
     super(handler);
-    this._isProcessing = false;
     this._processingGuard = new ProcessingGuard(this);
+    finishProcessing(this);
     this.#turnActionToProcess = turnAction;
     this.#commandStringForLog =
       commandString || turnAction?.commandString || null;
@@ -164,7 +165,7 @@ export class ProcessingCommandState extends AbstractTurnState {
   async exitState(handler, nextState) {
     const wasProcessing = this._isProcessing;
     // Ensure processing flag is false on exit, regardless of how exit was triggered.
-    this._processingGuard.finish();
+    finishProcessing(this);
 
     const turnCtx = this._getTurnContext();
     const logger = getLogger(turnCtx, handler);
@@ -197,7 +198,7 @@ export class ProcessingCommandState extends AbstractTurnState {
         `${this.getStateName()}: Destroyed during active processing for actor ${actorId}.`
       );
     }
-    this._processingGuard.finish(); // Ensure flag is cleared.
+    finishProcessing(this); // Ensure flag is cleared.
 
     await super.destroy(handler); // Call super.destroy which handles its own logging.
     logger.debug(
