@@ -69,9 +69,15 @@ export class ITurnStateFactory {
    * @param {ITurnStateHost} handler
    * @param {string} commandString - The command string to be processed.
    * @param {ITurnAction} turnAction - The turn action associated with the command.
+   * @param {{ resolveStrategy(directive: string): ITurnDirectiveStrategy }} [directiveResolver]
    * @returns {ITurnState} The created processing command state.
    */
-  createProcessingCommandState(handler, commandString, turnAction) {
+  createProcessingCommandState(
+    handler,
+    commandString,
+    turnAction,
+    directiveResolver
+  ) {
     throw new Error(
       'ITurnStateFactory.createProcessingCommandState must be implemented by concrete classes.'
     );

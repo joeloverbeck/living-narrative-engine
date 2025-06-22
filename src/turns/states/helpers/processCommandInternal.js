@@ -9,7 +9,6 @@
  * @typedef {import('../../interfaces/IActorTurnStrategy.js').ITurnAction} ITurnAction
  */
 
-import TurnDirectiveStrategyResolver from '../../strategies/turnDirectiveStrategyResolver.js';
 import { getServiceFromContext } from './getServiceFromContext.js';
 import { ProcessingExceptionHandler } from './processingExceptionHandler.js';
 import { finishProcessing } from './processingErrorUtils.js';
@@ -151,7 +150,7 @@ export async function executeDirectiveStrategy(
   const actorId = activeTurnCtx.getActor()?.id ?? 'UnknownActor';
 
   const directiveStrategy =
-    TurnDirectiveStrategyResolver.resolveStrategy(directiveType);
+    state._directiveResolver.resolveStrategy(directiveType);
   if (!directiveStrategy) {
     const errorMsg = `${state.getStateName()}: Could not resolve ITurnDirectiveStrategy for directive '${directiveType}' (actor ${actorId}).`;
     logger.error(errorMsg);
