@@ -193,13 +193,10 @@ class EntityDefinitionLoader extends BaseManifestItemLoader {
 
     // Create EntityDefinition instance from the raw data
     const entityDefinition = new EntityDefinition(trimmedId, data);
-    console.log('[DEBUG Loader] Created EntityDefinition:', entityDefinition, 'instanceof EntityDefinition?', entityDefinition instanceof EntityDefinition);
 
     this._logger.debug(
       `EntityLoader [${modId}]: Created EntityDefinition instance for '${trimmedId}' from ${filename}. Delegating storage to base helper.`
     );
-    
-    console.log('[DEBUG Loader] About to store in registry:', entityDefinition, 'type:', typeof entityDefinition, 'constructor:', entityDefinition.constructor.name);
     
     const { qualifiedId, didOverride } = await processAndStoreItem(this, {
       data: entityDefinition, // Pass the EntityDefinition instance instead of raw data

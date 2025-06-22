@@ -134,7 +134,7 @@ describe('EntityDefinitionLoader', () => {
         'entityDefinitions',
         'core:goblin',
         expect.objectContaining({
-          id: 'goblin',
+          id: 'core:goblin',
           description: 'A standard goblin warrior, weak but numerous.',
           components: expect.objectContaining({
             'core:name': expect.any(Object),

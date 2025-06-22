@@ -209,7 +209,7 @@ describe('WorldInitializer', () => {
       );
       expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining(
-          'WorldInitializer (Pass 1): Instantiated entity test:hero_instance (from definition: test:hero)'
+          'WorldInitializer (Pass 1): Successfully instantiated entity test:hero_instance (from definition: test:hero)'
         )
       );
       expect(mockLogger.debug).toHaveBeenCalledWith(
@@ -241,8 +241,8 @@ describe('WorldInitializer', () => {
 
       await worldInitializer.initializeWorldEntities('test:world');
 
-      expect(mockLogger.warn).toHaveBeenCalledWith(
-        'WorldInitializer (Pass 1): Failed to instantiate entity from definition: test:broken for instance: test:broken_instance.'
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'WorldInitializer (Pass 1): Failed to instantiate entity from definition: test:broken for instance: test:broken_instance. createEntityInstance returned null/undefined.'
       );
       expect(mockLogger.debug).not.toHaveBeenCalledWith(
         expect.stringContaining(

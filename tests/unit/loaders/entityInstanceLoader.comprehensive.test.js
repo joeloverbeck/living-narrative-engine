@@ -97,7 +97,7 @@ describe('EntityInstanceLoader', () => {
       // _storeItemInRegistry adds these properties before storing.
       const expectedStoredData = {
         ...testInstanceData,
-        id: 'goblin_sentry_01',
+        id: 'core:goblin_sentry_01',
         _fullId: 'core:goblin_sentry_01',
         _modId: "core",
         _sourceFile: filename,

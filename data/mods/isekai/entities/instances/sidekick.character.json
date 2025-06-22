@@ -4,7 +4,7 @@
   "definitionId": "isekai:sidekick",
   "componentOverrides": {
     "core:position": {
-      "locationId": "isekai:adventurers_guild",
+      "locationId": "isekai:adventurers_guild_instance",
       "x": 0,
       "y": 0
     }

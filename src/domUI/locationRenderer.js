@@ -208,9 +208,26 @@ export class LocationRenderer extends BoundDomRendererBase {
         );
 
       if (!currentLocationInstanceId) {
-        this.logger.warn(
-          `${this._logPrefix} Entity '${currentActorEntityId}' has no valid position or locationId.`
-        );
+        // TEMPORARY DEBUG: Dump registry contents
+        if (this.dataRegistry && typeof this.dataRegistry.getAll === 'function') {
+          const allInstances = this.dataRegistry.getAll('entityInstances') || [];
+          const allDefs = this.dataRegistry.getAll('entityDefinitions') || [];
+          this.logger.error('[DEBUG] Registry entityInstances:', allInstances.map(e => ({id: e.id, instanceId: e.instanceId, definitionId: e.definitionId, componentOverrides: e.componentOverrides})));
+          this.logger.error('[DEBUG] Registry entityDefinitions:', allDefs.map(e => ({id: e.id, components: Object.keys(e.components)})));
+        } else {
+          this.logger.error('[DEBUG] dataRegistry or getAll not available');
+        }
+        // Convert warning to error that crashes the app
+        this.safeEventDispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
+          message: `Entity '${currentActorEntityId}' has no valid position or locationId.`,
+          details: {
+            raw: JSON.stringify({
+              entityId: currentActorEntityId,
+              functionName: 'handleTurnStarted'
+            }),
+            stack: (new Error().stack)
+          }
+        });
         this.#clearAllDisplaysOnErrorWithMessage(
           `Location for ${currentActorEntityId} is unknown.`
         );

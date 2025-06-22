@@ -49,15 +49,10 @@ class EntityInstanceData {
    * @throws {Error} If definition is not an instance of EntityDefinition.
    */
   constructor(instanceId, definition, initialOverrides = {}) {
-    console.log('[DEBUG EntityInstanceData] constructor called with:', { instanceId, definition, definitionType: typeof definition, definitionConstructor: definition?.constructor?.name });
-    console.log('[DEBUG EntityInstanceData] EntityDefinition import:', EntityDefinition, 'typeof EntityDefinition:', typeof EntityDefinition);
-    console.log('[DEBUG EntityInstanceData] instanceof check:', definition instanceof EntityDefinition);
-    
     if (typeof instanceId !== 'string' || !instanceId.trim()) {
       throw new Error('EntityInstanceData requires a valid string instanceId.');
     }
     if (!(definition instanceof EntityDefinition)) {
-      console.log('[DEBUG EntityInstanceData] instanceof check failed! definition:', definition);
       throw new Error(
         'EntityInstanceData requires a valid EntityDefinition object.'
       );
