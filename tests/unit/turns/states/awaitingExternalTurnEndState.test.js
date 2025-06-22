@@ -12,8 +12,8 @@ import { safeDispatchError } from '../../../../src/utils/safeDispatchErrorUtils.
 import { afterEach, beforeEach, describe, expect, it } from '@jest/globals';
 
 describe('AwaitingExternalTurnEndState – action propagation', () => {
-  // In the implementation TIMEOUT_MS is 3 000 ms when NODE_ENV === "test"
-  const TIMEOUT_MS = 3_000;
+  // Use a short timeout for faster tests
+  const TIMEOUT_MS = 10;
 
   let mockCtx;
   let mockSafeEventDispatcher; // Renamed for clarity
@@ -68,7 +68,7 @@ describe('AwaitingExternalTurnEndState – action propagation', () => {
     };
 
     /* ── state under test ──────────────────────────────────────────────── */
-    state = new AwaitingExternalTurnEndState(mockHandler);
+    state = new AwaitingExternalTurnEndState(mockHandler, TIMEOUT_MS);
   });
 
   afterEach(() => {

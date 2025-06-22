@@ -18,6 +18,8 @@ import {
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 import { getLogger, getSafeEventDispatcher } from './helpers/contextUtils.js';
 
+/** @typedef {import('../handlers/baseTurnHandler.js').BaseTurnHandler} BaseTurnHandler */
+
 /* global process */
 
 // ─── Config ────────────────────────────────────────────────────────────────────
@@ -31,14 +33,17 @@ const TIMEOUT_MS = IS_DEV ? 3_000 : 30_000;
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
 /**
+ * Builds the timeout error message and Error object.
  *
- * @param actorId
- * @param actionId
+ * @param {string} actorId - ID of the actor awaiting the turn end.
+ * @param {string} actionId - The action definition id.
+ * @param {number} timeoutMs - Timeout duration in milliseconds.
+ * @returns {{msg: string, err: Error}}
  */
-function buildTimeoutObjects(actorId, actionId) {
+function buildTimeoutObjects(actorId, actionId, timeoutMs = TIMEOUT_MS) {
   const msg =
     `No rule ended the turn for actor ${actorId} after action ` +
-    `'${actionId}'. The engine timed out after ${TIMEOUT_MS} ms.`;
+    `'${actionId}'. The engine timed out after ${timeoutMs} ms.`;
   const err = new Error(msg);
   err.code = 'TURN_END_TIMEOUT';
   return { msg, err };
@@ -49,6 +54,18 @@ export class AwaitingExternalTurnEndState extends AbstractTurnState {
   #timeoutId = null;
   #unsubscribeFn = undefined;
   #awaitingActionId = 'unknown-action';
+  #timeoutMs = TIMEOUT_MS;
+
+  /**
+   * Creates an instance of AwaitingExternalTurnEndState.
+   *
+   * @param {BaseTurnHandler} handler - The handler managing the turn state.
+   * @param {number} [timeoutMs=TIMEOUT_MS] - Timeout duration for waiting.
+   */
+  constructor(handler, timeoutMs = TIMEOUT_MS) {
+    super(handler);
+    this.#timeoutMs = timeoutMs;
+  }
 
   //─────────────────────────────────────────────────────────────────────────────
 
@@ -76,7 +93,10 @@ export class AwaitingExternalTurnEndState extends AbstractTurnState {
     ctx.setAwaitingExternalEvent(true, ctx.getActor().id);
 
     // set guard-rail
-    this.#timeoutId = setTimeout(() => this.#onTimeout(handler), TIMEOUT_MS);
+    this.#timeoutId = setTimeout(
+      () => this.#onTimeout(handler),
+      this.#timeoutMs
+    );
   }
 
   //─────────────────────────────────────────────────────────────────────────────
@@ -140,7 +160,8 @@ export class AwaitingExternalTurnEndState extends AbstractTurnState {
 
     const { msg, err } = buildTimeoutObjects(
       ctx.getActor().id,
-      this.#awaitingActionId
+      this.#awaitingActionId,
+      this.#timeoutMs
     );
 
     // 1) tell the UI / console
