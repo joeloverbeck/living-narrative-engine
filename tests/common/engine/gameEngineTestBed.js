@@ -117,16 +117,6 @@ export class GameEngineTestBed extends StoppableMixin(ContainerTestBed) {
       await this.engine.stop();
     }
   }
-
-  /**
-   * Stops the engine and cleans up the mock environment after base cleanup.
-   *
-   * @protected
-   * @returns {Promise<void>} Promise resolving when engine cleanup is complete.
-   */
-  async _afterCleanup() {
-    await super._afterCleanup();
-  }
 }
 
 const engineSuiteHooks = (() => {
