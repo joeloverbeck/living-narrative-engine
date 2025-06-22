@@ -84,7 +84,7 @@ describe('EntityManager Integration Tests', () => {
     );
 
     // 2. Populate the mock DataRegistry to simulate it being loaded
-    dataRegistry.store('entity_definitions', definitionId, goblinDefinition);
+    dataRegistry.store('entityDefinitions', definitionId, goblinDefinition);
 
     // 3. Define the instance-specific overrides
     const componentOverrides = {

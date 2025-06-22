@@ -32,6 +32,7 @@ const mockDataFetcher = {
 
 const mockSchemaValidator = {
   addSchema: jest.fn(),
+  addSchemas: jest.fn(),
   isSchemaLoaded: jest.fn(), // Add getValidator if constructor checks it (not used in loadAndCompileAllSchemas)
   getValidator: jest.fn(),
 };
@@ -96,6 +97,7 @@ describe('SchemaLoader', () => {
 
     // Default mock implementations
     mockSchemaValidator.addSchema.mockResolvedValue(undefined); // Assume success
+    mockSchemaValidator.addSchemas.mockResolvedValue(undefined); // Assume success for batch registration
     mockSchemaValidator.isSchemaLoaded.mockReturnValue(false); // Assume not loaded by default
     mockDataFetcher.fetch.mockImplementation(async (path) => {
       if (path === commonSchemaPath) return commonSchemaData;
@@ -140,6 +142,7 @@ describe('SchemaLoader', () => {
     expect(mockPathResolver.resolveSchemaPath).not.toHaveBeenCalled();
     expect(mockDataFetcher.fetch).not.toHaveBeenCalled();
     expect(mockSchemaValidator.addSchema).not.toHaveBeenCalled();
+    expect(mockSchemaValidator.addSchemas).not.toHaveBeenCalled();
 
     // Check logs (This test remains correct)
     expect(mockLogger.warn).toHaveBeenCalledWith(
@@ -182,42 +185,27 @@ describe('SchemaLoader', () => {
     ); // Called for both
     expect(mockDataFetcher.fetch).toHaveBeenCalledTimes(filesToLoad.length); // Called for both
 
-    // isSchemaLoaded is checked for *both* schemas before trying to add
-    expect(mockSchemaValidator.isSchemaLoaded).toHaveBeenCalledTimes(
-      filesToLoad.length
-    );
-    expect(mockSchemaValidator.isSchemaLoaded).toHaveBeenCalledWith(
-      commonSchemaId
-    );
-    expect(mockSchemaValidator.isSchemaLoaded).toHaveBeenCalledWith(
-      entityDefinitionSchemaId
-    );
+    // With batch registration, all schemas are loaded first, then registered in batch
+    // isSchemaLoaded is not called during the loading phase anymore
+    expect(mockSchemaValidator.isSchemaLoaded).not.toHaveBeenCalled();
 
-    // Only adds the one not already loaded (entitySchema)
-    expect(mockSchemaValidator.addSchema).toHaveBeenCalledTimes(1);
-    expect(mockSchemaValidator.addSchema).toHaveBeenCalledWith(
-      entityDefinitionSchemaData,
-      entityDefinitionSchemaId
-    );
-    expect(mockSchemaValidator.addSchema).not.toHaveBeenCalledWith(
+    // addSchemas is called once with all schemas (the validator handles duplicates internally)
+    expect(mockSchemaValidator.addSchemas).toHaveBeenCalledTimes(1);
+    expect(mockSchemaValidator.addSchemas).toHaveBeenCalledWith([
       commonSchemaData,
-      commonSchemaId
-    );
+      entityDefinitionSchemaData,
+    ]);
+    expect(mockSchemaValidator.addSchema).not.toHaveBeenCalled(); // Old method should not be called
 
     // Check logs - *** UPDATED Assertions ***
     // Check the initial processing log
     expect(mockLogger.debug).toHaveBeenCalledWith(
-      `SchemaLoader: Processing ${filesToLoad.length} schemas listed in configuration...`
+      `SchemaLoader: Processing ${filesToLoad.length} schemas listed in configuration (batch registration)...`
     );
 
-    // Check the debug log for skipping the loaded schema
+    // Check final success log message (all schemas were processed)
     expect(mockLogger.debug).toHaveBeenCalledWith(
-      `SchemaLoader: Schema '${commonSchemaId}' from ${commonSchemaFile} already loaded. Skipping addition.`
-    );
-
-    // Check final success log message (only 1 *new* schema was added)
-    expect(mockLogger.debug).toHaveBeenCalledWith(
-      expect.stringContaining('Schema processing complete. Added 1 new schemas')
+      `SchemaLoader: Batch schema registration complete. Added ${filesToLoad.length} schemas.`
     );
     // Ensure only expected logs were called
     expect(mockLogger.warn).not.toHaveBeenCalled();
@@ -255,20 +243,12 @@ describe('SchemaLoader', () => {
     expect(mockLogger.error).toHaveBeenCalledWith(
       `SchemaLoader: Schema file ${badSchemaFile} (at ${badSchemaPath}) is missing required '$id' property.`
     );
-    // Check the final error log from the Promise.all catch block
-    expect(mockLogger.error).toHaveBeenCalledWith(
-      expect.stringContaining(
-        'SchemaLoader: One or more configured schemas failed to load or process. Aborting.'
-      ),
-      expect.any(Error) // Check that the second argument is an error object
-    );
+    // The new implementation throws the error directly, so there's no additional error log
+    expect(mockLogger.error).toHaveBeenCalledTimes(1);
 
-    // Verify processing stopped (addSchema might be called for commonSchema before the error)
-    expect(mockSchemaValidator.addSchema).toHaveBeenCalledTimes(1); // Only commonSchema added before failure
-    expect(mockSchemaValidator.addSchema).toHaveBeenCalledWith(
-      commonSchemaData,
-      commonSchemaId
-    );
+    // Verify processing stopped - with batch registration, no schemas should be registered if there's an error
+    expect(mockSchemaValidator.addSchemas).not.toHaveBeenCalled();
+    expect(mockSchemaValidator.addSchema).not.toHaveBeenCalled();
   });
 
   // Optional: Test constructor dependency validation (These should still pass)

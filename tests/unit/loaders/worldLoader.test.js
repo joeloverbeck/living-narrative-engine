@@ -84,7 +84,6 @@ describe('WorldLoader.loadWorlds', () => {
     expect(logger.warn).toHaveBeenCalledWith(
       'WorldLoader [modA]: Manifest not found. Skipping world file search.'
     );
-    expect(registry.store).toHaveBeenCalledWith('worlds', 'main', []);
     expect(counts.worlds).toEqual({
       count: 0,
       overrides: 0,
@@ -102,7 +101,6 @@ describe('WorldLoader.loadWorlds', () => {
     expect(logger.debug).toHaveBeenCalledWith(
       'WorldLoader [modA]: No world files listed in manifest. Skipping.'
     );
-    expect(registry.store).toHaveBeenCalledWith('worlds', 'main', []);
     expect(counts.worlds).toEqual({
       count: 0,
       overrides: 0,
@@ -117,11 +115,15 @@ describe('WorldLoader.loadWorlds', () => {
     const manifests = new Map([
       ['moda', { content: { worlds: ['world1.json'] } }],
     ]);
-    const mockInstances = [
-      { definitionId: 'core:player' },
-      { definitionId: 'core:npc' },
-    ];
-    fetcher.fetch.mockResolvedValue({ instances: mockInstances });
+    const mockWorldData = {
+      id: 'test:world',
+      name: 'Test World',
+      instances: [
+        { definitionId: 'core:player' },
+        { definitionId: 'core:npc' },
+      ],
+    };
+    fetcher.fetch.mockResolvedValue(mockWorldData);
     // Mock that the entity definitions exist in the registry
     registry.get.mockReturnValue({ id: 'some-definition' });
 
@@ -135,8 +137,8 @@ describe('WorldLoader.loadWorlds', () => {
     expect(fetcher.fetch).toHaveBeenCalledWith('/mods/modA/worlds/world1.json');
     expect(registry.store).toHaveBeenCalledWith(
       'worlds',
-      'main',
-      mockInstances
+      'test:world',
+      mockWorldData
     );
     expect(counts.worlds).toEqual({
       count: 1,
@@ -160,10 +162,9 @@ describe('WorldLoader.loadWorlds', () => {
     const counts = {};
     await loader.loadWorlds(['modA'], manifests, counts);
     expect(logger.error).toHaveBeenCalledWith(
-      "WorldLoader [modA]: Failed to process world file 'bad.json'. Path: '/mods/modA/worlds/bad.json'",
-      expect.objectContaining({ error: 'fail' })
+      "WorldLoader [modA]: Failed to process world file 'bad.json'. Path: '/mods/modA/worlds/bad.json'. Error: fail",
+      { modId: 'modA', filename: 'bad.json', error: fetchError }
     );
-    expect(registry.store).toHaveBeenCalledWith('worlds', 'main', []);
     expect(counts.worlds).toEqual({
       count: 0,
       overrides: 0,

@@ -114,6 +114,24 @@ class SchemaLoader extends AbstractLoader {
       if (!this.#validator.isSchemaLoaded(schemaId)) {
         // --- Uses addSchema from ISchemaValidator ---
         await this.#validator.addSchema(schemaData, schemaId);
+
+        // Validate that the schema was loaded correctly and all $refs are resolvable
+        if (
+          this.#validator.validateSchemaRefs &&
+          typeof this.#validator.validateSchemaRefs === 'function'
+        ) {
+          const refsValid = this.#validator.validateSchemaRefs(schemaId);
+          if (!refsValid) {
+            this.#logger.warn(
+              `SchemaLoader: Schema '${schemaId}' loaded but has unresolved $refs. This may cause validation issues.`
+            );
+          } else {
+            this.#logger.debug(
+              `SchemaLoader: Schema '${schemaId}' loaded successfully with all $refs resolved.`
+            );
+          }
+        }
+
         // Successfully added
         return true;
       } else {
@@ -154,28 +172,117 @@ class SchemaLoader extends AbstractLoader {
     }
 
     this.#logger.debug(
-      `SchemaLoader: Processing ${schemaFiles.length} schemas listed in configuration...`
+      `SchemaLoader: Processing ${schemaFiles.length} schemas listed in configuration (batch registration)...`
     );
 
-    let loadedSchemaCount = 0;
-
-    try {
-      for (const filename of schemaFiles) {
-        const result = await this.#loadAndAddSingleSchema(filename);
-        if (result === true) {
-          loadedSchemaCount += 1;
-        }
+    // --- Phase 1: Load all schemas into memory ---
+    const loadedSchemas = [];
+    for (const filename of schemaFiles) {
+      const path = this.#resolver.resolveSchemaPath(filename);
+      let schemaData;
+      try {
+        schemaData = await this.#fetcher.fetch(path);
+      } catch (error) {
+        this.#logger.error(
+          `SchemaLoader: Failed to fetch schema file ${filename} at ${path}: ${error.message}`,
+          error
+        );
+        throw error;
       }
+      const schemaId = schemaData?.$id;
+      if (!schemaId) {
+        const errMsg = `Schema file ${filename} (at ${path}) is missing required '$id' property.`;
+        this.#logger.error(`SchemaLoader: ${errMsg}`);
+        throw new Error(errMsg);
+      }
+      loadedSchemas.push({ schemaId, schemaData, filename });
+    }
+
+    // --- Phase 2: Register all schemas with the validator in batch ---
+    try {
+      await this.#validator.addSchemas(loadedSchemas.map((s) => s.schemaData));
       this.#logger.debug(
-        `SchemaLoader: Schema processing complete. Added ${loadedSchemaCount} new schemas to the validator (others may have been skipped).`
+        `SchemaLoader: Batch schema registration complete. Added ${loadedSchemas.length} schemas.`
       );
     } catch (error) {
       this.#logger.error(
-        'SchemaLoader: One or more configured schemas failed to load or process. Aborting.',
+        `SchemaLoader: Failed to register schemas in batch: ${error.message}`,
         error
       );
       throw error;
     }
+
+    // --- Optionally validate $refs for all schemas ---
+    if (
+      this.#validator.validateSchemaRefs &&
+      typeof this.#validator.validateSchemaRefs === 'function'
+    ) {
+      for (const { schemaId } of loadedSchemas) {
+        const refsValid = this.#validator.validateSchemaRefs(schemaId);
+        if (!refsValid) {
+          this.#logger.warn(
+            `SchemaLoader: Schema '${schemaId}' loaded but has unresolved $refs. This may cause validation issues.`
+          );
+        } else {
+          this.#logger.debug(
+            `SchemaLoader: Schema '${schemaId}' loaded successfully with all $refs resolved.`
+          );
+        }
+      }
+    }
+
+    // Log a summary of loaded schemas for debugging
+    if (
+      this.#validator.getLoadedSchemaIds &&
+      typeof this.#validator.getLoadedSchemaIds === 'function'
+    ) {
+      const loadedIds = this.#validator.getLoadedSchemaIds();
+      this.#logger.info(
+        `SchemaLoader: Loaded ${loadedIds.length} schemas: ${loadedIds.join(', ')}`
+      );
+    }
+  }
+
+  /**
+   * Gets a summary of schema loading status for debugging purposes.
+   *
+   * @returns {object} Summary object with loaded schemas and any issues
+   */
+  getSchemaLoadingSummary() {
+    const summary = {
+      totalConfigured: this.#config.getSchemaFiles().length,
+      loadedSchemas: [],
+      issues: [],
+    };
+
+    if (
+      this.#validator.getLoadedSchemaIds &&
+      typeof this.#validator.getLoadedSchemaIds === 'function'
+    ) {
+      summary.loadedSchemas = this.#validator.getLoadedSchemaIds();
+    }
+
+    // Check for common issues
+    const criticalSchemas = [
+      'http://example.com/schemas/common.schema.json',
+      'http://example.com/schemas/world.schema.json',
+      'http://example.com/schemas/entity-instance.schema.json',
+    ];
+
+    for (const schemaId of criticalSchemas) {
+      if (!this.#validator.isSchemaLoaded(schemaId)) {
+        summary.issues.push(`Critical schema '${schemaId}' not loaded`);
+      } else if (
+        this.#validator.validateSchemaRefs &&
+        typeof this.#validator.validateSchemaRefs === 'function'
+      ) {
+        if (!this.#validator.validateSchemaRefs(schemaId)) {
+          summary.issues.push(`Schema '${schemaId}' has unresolved $refs`);
+        }
+      }
+    }
+
+    return summary;
   }
 }
 

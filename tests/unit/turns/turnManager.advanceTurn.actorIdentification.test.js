@@ -8,7 +8,10 @@ import {
 } from '../../common/turns/turnManagerTestBed.js';
 import { expectSystemErrorDispatch } from '../../common/turns/turnManagerTestUtils.js';
 
-import { TURN_ENDED_ID, SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/eventIds.js';
+import {
+  TURN_ENDED_ID,
+  SYSTEM_ERROR_OCCURRED_ID,
+} from '../../../src/constants/eventIds.js';
 import { PLAYER_COMPONENT_ID } from '../../../src/constants/componentIds.js';
 import { createMockEntity } from '../../common/mockFactories';
 import {
@@ -133,7 +136,9 @@ describeRunningTurnManagerSuite(
         expect.objectContaining({
           message: 'Critical error during turn advancement logic',
           details: {
-            error: expect.stringContaining('Cannot start a new round: No active entities with an Actor component found.'),
+            error: expect.stringContaining(
+              'Cannot start a new round: No active entities with an Actor component found.'
+            ),
           },
         })
       );

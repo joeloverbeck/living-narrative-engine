@@ -1,32 +1,32 @@
 {
-    "$schema": "http://example.com/schemas/world.schema.json",
-    "id": "isekai:world",
-    "name": "Isekai",
-    "description": "A self-contained game world encompassing the town, the Adventurers' Guild, and its inhabitants.",
-    "instances": [
-        {
-            "instanceId": "isekai:adventurers_guild_instance",
-            "definitionId": "isekai:adventurers_guild"
-        },
-        {
-            "instanceId": "isekai:town_instance",
-            "definitionId": "isekai:town"
-        },
-        {
-            "instanceId": "isekai:hero_instance",
-            "definitionId": "isekai:hero"
-        },
-        {
-            "instanceId": "isekai:ninja_instance",
-            "definitionId": "isekai:ninja"
-        },
-        {
-            "instanceId": "isekai:receptionist_instance",
-            "definitionId": "isekai:receptionist"
-        },
-        {
-            "instanceId": "isekai:sidekick_instance",
-            "definitionId": "isekai:sidekick"
-        }
-    ]
+  "$schema": "http://example.com/schemas/world.schema.json",
+  "id": "isekai:world",
+  "name": "Isekai",
+  "description": "A self-contained game world encompassing the town, the Adventurers' Guild, and its inhabitants.",
+  "instances": [
+    {
+      "instanceId": "isekai:adventurers_guild_instance",
+      "definitionId": "isekai:adventurers_guild"
+    },
+    {
+      "instanceId": "isekai:town_instance",
+      "definitionId": "isekai:town"
+    },
+    {
+      "instanceId": "isekai:hero_instance",
+      "definitionId": "isekai:hero"
+    },
+    {
+      "instanceId": "isekai:ninja_instance",
+      "definitionId": "isekai:ninja"
+    },
+    {
+      "instanceId": "isekai:receptionist_instance",
+      "definitionId": "isekai:receptionist"
+    },
+    {
+      "instanceId": "isekai:sidekick_instance",
+      "definitionId": "isekai:sidekick"
+    }
+  ]
 }

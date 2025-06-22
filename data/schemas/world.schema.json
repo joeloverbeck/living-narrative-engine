@@ -5,6 +5,10 @@
   "description": "Defines a self-contained, instantiable game world, including its identity and initial entity population.",
   "type": "object",
   "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "Optional. A URI reference to the schema for editor support."
+    },
     "id": {
       "$ref": "common.schema.json#/definitions/namespacedId",
       "description": "Required. The unique, namespaced ID for this world (e.g., 'core:main_campaign', 'my_mod:horde_arena')."

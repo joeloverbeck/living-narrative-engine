@@ -101,10 +101,22 @@ describe('Integration: Entity Definitions and Instances Loader', () => {
     );
     // Register and load AjvSchemaValidator with schemas
     const schemaValidator = new AjvSchemaValidator(logger);
-    await schemaValidator.addSchema(commonSchema, 'http://example.com/schemas/common.schema.json');
-    await schemaValidator.addSchema(modManifestSchema, 'http://example.com/schemas/mod-manifest.schema.json');
-    await schemaValidator.addSchema(entityDefinitionSchema, 'http://example.com/schemas/entity-definition.schema.json');
-    await schemaValidator.addSchema(entityInstanceSchema, 'http://example.com/schemas/entity-instance.schema.json');
+    await schemaValidator.addSchema(
+      commonSchema,
+      'http://example.com/schemas/common.schema.json'
+    );
+    await schemaValidator.addSchema(
+      modManifestSchema,
+      'http://example.com/schemas/mod-manifest.schema.json'
+    );
+    await schemaValidator.addSchema(
+      entityDefinitionSchema,
+      'http://example.com/schemas/entity-definition.schema.json'
+    );
+    await schemaValidator.addSchema(
+      entityInstanceSchema,
+      'http://example.com/schemas/entity-instance.schema.json'
+    );
     container.register(tokens.ISchemaValidator, schemaValidator);
     // Resolve registry from the container
     registry = container.resolve(tokens.IDataRegistry);
@@ -175,13 +187,17 @@ describe('Integration: Entity Definitions and Instances Loader', () => {
 
       const entity = registry.get('entityDefinitions', entityId);
       if (!entity) {
-        console.error(`DEBUG: Entity not found for file: ${file}, entityId: ${entityId}`);
+        console.error(
+          `DEBUG: Entity not found for file: ${file}, entityId: ${entityId}`
+        );
         const allEntities = registry.getAll('entityDefinitions');
         console.error('DEBUG: All entityDefinitions in registry:', allEntities);
       }
       expect(entity).toBeDefined();
       if (entity && entity._sourceFile !== file) {
-        console.error(`DEBUG: _sourceFile mismatch for entityId: ${entityId}. Expected: ${file}, Actual: ${entity._sourceFile}`);
+        console.error(
+          `DEBUG: _sourceFile mismatch for entityId: ${entityId}. Expected: ${file}, Actual: ${entity._sourceFile}`
+        );
       }
       expect(entity._sourceFile).toBe(file);
     }
@@ -193,26 +209,28 @@ describe('Integration: Entity Definitions and Instances Loader', () => {
       const files = fs
         .readdirSync(INSTANCES_DIR)
         .filter((f) => f.endsWith('.json'));
-      
+
       // DEBUG: Log what files we found
       console.log('DEBUG: Found entity instance files:', files);
-      
+
       // DEBUG: Log all entity instances in registry
       const allInstances = registry.getAll('entity_instances');
       console.log('DEBUG: All entity instances in registry:', allInstances);
-      
+
       for (const file of files) {
         // Read the entity instance file to get the correct instanceId
         const filePath = path.join(INSTANCES_DIR, file);
         const instanceData = JSON.parse(fs.readFileSync(filePath, 'utf8'));
         const instanceId = instanceData.instanceId;
-        
+
         // DEBUG: Log what we're looking for
-        console.log(`DEBUG: Looking for entity instance with ID: ${instanceId}`);
-        
+        console.log(
+          `DEBUG: Looking for entity instance with ID: ${instanceId}`
+        );
+
         const instance = registry.get('entity_instances', instanceId);
         console.log(`DEBUG: Found instance:`, instance);
-        
+
         expect(instance).toBeDefined();
         expect(instance._sourceFile).toBe(file);
       }

@@ -5,6 +5,10 @@
   "description": "Schema for the game configuration file (game.json), defining the required list of mods and the default starting world.",
   "type": "object",
   "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "Optional. A URI reference to the schema for editor support."
+    },
     "mods": {
       "description": "A list of unique mod identifiers to be loaded.",
       "type": "array",

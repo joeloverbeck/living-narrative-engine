@@ -22,6 +22,7 @@ const IGNORE_DIRS = new Set(['.git', '.idea', 'node_modules']);
 
 /**
  * Recursively scan a directory for JSON files, maintaining the relative path structure.
+ *
  * @param {string} basePath - The base path to scan from
  * @param {string} currentPath - The current directory being scanned
  * @returns {Promise<string[]>} Array of file paths relative to basePath
@@ -33,7 +34,7 @@ async function scanDirectoryRecursively(basePath, currentPath = '') {
 
   for (const entry of entries) {
     const entryPath = path.join(currentPath, entry.name);
-    
+
     if (entry.isDirectory()) {
       // Recursively scan subdirectories
       const subFiles = await scanDirectoryRecursively(basePath, entryPath);
@@ -101,7 +102,7 @@ async function main() {
       try {
         // Check if the directory exists
         const dirStat = await fs.stat(contentDirPath);
-        
+
         if (dirStat.isDirectory()) {
           // Special handling for "entities" directory with nested structure
           if (contentType === 'entities') {
@@ -109,46 +110,68 @@ async function main() {
             const entitiesDirPath = path.join(modPath, 'entities');
             const definitionsPath = path.join(entitiesDirPath, 'definitions');
             const instancesPath = path.join(entitiesDirPath, 'instances');
-            
+
             // Handle entityDefinitions
-            if (manifest.content.entityDefinitions && await fs.stat(definitionsPath).then(() => true).catch(() => false)) {
-              const definitionFiles = await scanDirectoryRecursively(definitionsPath);
+            if (
+              manifest.content.entityDefinitions &&
+              (await fs
+                .stat(definitionsPath)
+                .then(() => true)
+                .catch(() => false))
+            ) {
+              const definitionFiles =
+                await scanDirectoryRecursively(definitionsPath);
               manifest.content.entityDefinitions = definitionFiles.sort();
-              console.log(`  - Scanned "entityDefinitions": Found ${definitionFiles.length} file(s).`);
+              console.log(
+                `  - Scanned "entityDefinitions": Found ${definitionFiles.length} file(s).`
+              );
             }
-            
+
             // Handle entityInstances
-            if (manifest.content.entityInstances && await fs.stat(instancesPath).then(() => true).catch(() => false)) {
-              const instanceFiles = await scanDirectoryRecursively(instancesPath);
+            if (
+              manifest.content.entityInstances &&
+              (await fs
+                .stat(instancesPath)
+                .then(() => true)
+                .catch(() => false))
+            ) {
+              const instanceFiles =
+                await scanDirectoryRecursively(instancesPath);
               manifest.content.entityInstances = instanceFiles.sort();
-              console.log(`  - Scanned "entityInstances": Found ${instanceFiles.length} file(s).`);
+              console.log(
+                `  - Scanned "entityInstances": Found ${instanceFiles.length} file(s).`
+              );
             }
-            
+
             // Keep the entities directory empty since we've mapped its contents
             manifest.content.entities = [];
-            console.log(`  - Mapped "entities" directory contents to entityDefinitions and entityInstances.`);
+            console.log(
+              `  - Mapped "entities" directory contents to entityDefinitions and entityInstances.`
+            );
           } else {
             // Use recursive scanning to handle nested directories
             files = await scanDirectoryRecursively(contentDirPath);
-            
+
             console.log(
               `  - Scanned "${contentType}": Found ${files.length} file(s).`
             );
-            
+
             // If files were found in subdirectories, log the structure
             if (files.length > 0) {
               const subdirs = new Set();
-              files.forEach(file => {
+              files.forEach((file) => {
                 const dir = path.dirname(file);
                 if (dir !== '.') {
                   subdirs.add(dir);
                 }
               });
               if (subdirs.size > 0) {
-                console.log(`    Subdirectories found: ${Array.from(subdirs).join(', ')}`);
+                console.log(
+                  `    Subdirectories found: ${Array.from(subdirs).join(', ')}`
+                );
               }
             }
-            
+
             manifest.content[contentType] = files.sort();
           }
         }
@@ -186,4 +209,4 @@ async function main() {
   }
 }
 
-main(); 
+main();

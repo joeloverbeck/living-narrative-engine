@@ -119,8 +119,12 @@ export class ContentLoadManager {
       const manifest = /** @type {ModManifest | null} */ (
         manifests.get(modId.toLowerCase())
       );
-      this.#logger.debug(`ContentLoadManager: Looking up manifest for modId '${modId}' (lowercase: '${modId.toLowerCase()}'), found: ${!!manifest}`);
-      this.#logger.debug(`ContentLoadManager: Processing mod ${modId}, manifest found: ${!!manifest}`);
+      this.#logger.debug(
+        `ContentLoadManager: Looking up manifest for modId '${modId}' (lowercase: '${modId.toLowerCase()}'), found: ${!!manifest}`
+      );
+      this.#logger.debug(
+        `ContentLoadManager: Processing mod ${modId}, manifest found: ${!!manifest}`
+      );
       // Pass the filtered phaseLoaders to processMod
       try {
         results[modId] = await this.processMod(
@@ -198,7 +202,13 @@ export class ContentLoadManager {
         const { loader, contentKey, diskFolder, registryKey } = config;
         const manifestContent = manifest.content || {};
         // Support dot notation for nested content keys (e.g., 'entities.definitions')
-        const getNested = (obj, path) => path.split('.').reduce((o, k) => (o && o[k] !== undefined ? o[k] : undefined), obj);
+        const getNested = (obj, path) =>
+          path
+            .split('.')
+            .reduce(
+              (o, k) => (o && o[k] !== undefined ? o[k] : undefined),
+              obj
+            );
         const hasContentForLoader =
           Array.isArray(getNested(manifestContent, contentKey)) &&
           getNested(manifestContent, contentKey).length > 0;

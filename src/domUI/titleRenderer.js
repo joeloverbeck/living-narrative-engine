@@ -216,11 +216,14 @@ export class TitleRenderer extends RendererBase {
   #handleInitializationFailed(eventEnvelope, eventType) {
     // Expect eventEnvelope to be { type, payload }
     const payload = eventEnvelope?.payload;
-    this.logger.debug(`${this._logPrefix} Received initialization failed event with envelope:`, eventEnvelope);
+    this.logger.debug(
+      `${this._logPrefix} Received initialization failed event with envelope:`,
+      eventEnvelope
+    );
     this.logger.debug(`${this._logPrefix} Extracted payload:`, payload);
     this.logger.debug(`${this._logPrefix} Event type:`, eventType);
     this.logger.debug(`${this._logPrefix} Payload.error:`, payload?.error);
-    
+
     const title = `Initialization Failed${payload?.worldName ? ` (World: ${payload.worldName})` : ''}`;
     this.set(title);
     // Dispatch error event for UI display

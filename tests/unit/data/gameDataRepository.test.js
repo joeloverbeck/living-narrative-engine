@@ -16,6 +16,8 @@ const createLogger = () => ({
 const createRegistry = () => ({
   getStartingPlayerId: jest.fn(() => 'player1'),
   getStartingLocationId: jest.fn(() => 'location1'),
+  getWorldDefinition: jest.fn((id) => ({ id })),
+  getAllWorldDefinitions: jest.fn(() => [{ id: 'w1' }]),
   getActionDefinition: jest.fn((id) => ({ id })),
   getAllActionDefinitions: jest.fn(() => [{ id: 'a1' }]),
   getEntityDefinition: jest.fn((id) => ({ id })),
@@ -61,8 +63,15 @@ describe('GameDataRepository', () => {
     expect(() => new GameDataRepository({}, logger)).toThrow();
   });
 
-  test('getWorldName returns DEMO_WORLD', () => {
-    expect(repo.getWorldName()).toBe('DEMO_WORLD');
+  test('getWorld returns world definition', () => {
+    registry.getWorldDefinition.mockReturnValue({
+      id: 'test:world',
+      name: 'Test World',
+    });
+    expect(repo.getWorld('test:world')).toEqual({
+      id: 'test:world',
+      name: 'Test World',
+    });
   });
 
   test('delegates to registry for basic getters', () => {

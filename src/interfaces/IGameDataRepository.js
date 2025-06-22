@@ -6,6 +6,7 @@
  * @typedef {import('../../data/schemas/goal.schema.json').GoalDefinition} GoalDefinition
  * @typedef {import('../../data/schemas/entity-definition.schema.json').EntityDefinition} EntityDefinition
  * @typedef {import('../../data/schemas/entity-instance.schema.json').EntityInstance} EntityInstance
+ * @typedef {import('../../data/schemas/world.schema.json').WorldDefinition} WorldDefinition
  */
 
 /**
@@ -15,6 +16,25 @@
  * retrieving game data definitions like actions, conditions, and goals.
  */
 export class IGameDataRepository {
+  /**
+   * Retrieves a specific WorldDefinition by its ID.
+   *
+   * @param {string} worldId The fully qualified ID of the world (e.g., 'core:main_campaign').
+   * @returns {WorldDefinition | null} The world definition if found, otherwise null.
+   */
+  getWorld(worldId) {
+    throw new Error('IGameDataRepository.getWorld not implemented.');
+  }
+
+  /**
+   * Returns all WorldDefinition objects currently available.
+   *
+   * @returns {WorldDefinition[]} An array of all world definitions.
+   */
+  getAllWorlds() {
+    throw new Error('IGameDataRepository.getAllWorlds not implemented.');
+  }
+
   /**
    * Retrieves a specific ActionDefinition by its ID.
    *

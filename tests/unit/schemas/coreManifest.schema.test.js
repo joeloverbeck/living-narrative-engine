@@ -21,40 +21,40 @@ import commonSchema from '../../../data/schemas/common.schema.json';
 import coreManifest from '../../../data/mods/core/mod-manifest.json';
 
 describe('Schema Certification – Core Mod Manifest', () => {
-    /** @type {import('ajv').ValidateFunction} */
-    let validate;
+  /** @type {import('ajv').ValidateFunction} */
+  let validate;
 
-    beforeAll(() => {
-        const ajv = new Ajv({ allErrors: true });
-        addFormats(ajv); // For formats like 'uri'
+  beforeAll(() => {
+    const ajv = new Ajv({ allErrors: true });
+    addFormats(ajv); // For formats like 'uri'
 
-        // It's crucial to add all schemas that are referenced via '$ref'
-        // so that the validator can resolve them.
-        ajv.addSchema(
-            commonSchema,
-            'http://example.com/schemas/common.schema.json'
-        );
+    // It's crucial to add all schemas that are referenced via '$ref'
+    // so that the validator can resolve them.
+    ajv.addSchema(
+      commonSchema,
+      'http://example.com/schemas/common.schema.json'
+    );
 
-        // Compile the main schema we want to test against.
-        validate = ajv.compile(modManifestSchema);
-    });
+    // Compile the main schema we want to test against.
+    validate = ajv.compile(modManifestSchema);
+  });
 
-    /**
-     * This test ensures that the foundational 'core' mod manifest strictly
-     * adheres to the official schema. Any failure here indicates a critical
-     * issue that must be fixed before proceeding.
-     */
-    test('✓ core/mod-manifest.json must be valid', () => {
-        const isManifestValid = validate(coreManifest);
+  /**
+   * This test ensures that the foundational 'core' mod manifest strictly
+   * adheres to the official schema. Any failure here indicates a critical
+   * issue that must be fixed before proceeding.
+   */
+  test('✓ core/mod-manifest.json must be valid', () => {
+    const isManifestValid = validate(coreManifest);
 
-        // Provide detailed error output upon failure to simplify debugging.
-        if (!isManifestValid) {
-            console.error(
-                'CRITICAL: The core mod manifest failed schema validation. Errors:',
-                JSON.stringify(validate.errors, null, 2)
-            );
-        }
+    // Provide detailed error output upon failure to simplify debugging.
+    if (!isManifestValid) {
+      console.error(
+        'CRITICAL: The core mod manifest failed schema validation. Errors:',
+        JSON.stringify(validate.errors, null, 2)
+      );
+    }
 
-        expect(isManifestValid).toBe(true);
-    });
+    expect(isManifestValid).toBe(true);
+  });
 });

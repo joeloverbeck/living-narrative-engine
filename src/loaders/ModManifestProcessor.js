@@ -115,26 +115,27 @@ export class ModManifestProcessor {
 
     // Load any missing dependency manifests
     const missingMods = finalModOrder.filter(
-      modId => !loadedManifestsMap.has(modId.toLowerCase())
+      (modId) => !loadedManifestsMap.has(modId.toLowerCase())
     );
-    
+
     if (missingMods.length > 0) {
       this.#logger.debug(
         `ModsLoader: Loading ${missingMods.length} missing dependency manifests: [${missingMods.join(', ')}]`
       );
-      
-      const missingManifestsRaw = await this.#modManifestLoader.loadRequestedManifests(
-        missingMods,
-        worldName
-      );
-      
+
+      const missingManifestsRaw =
+        await this.#modManifestLoader.loadRequestedManifests(
+          missingMods,
+          worldName
+        );
+
       for (const [modId, manifestObj] of missingManifestsRaw.entries()) {
         const lowerCaseModId = modId.toLowerCase();
         this.#registry.store('mod_manifests', lowerCaseModId, manifestObj);
         manifestsForValidation.set(lowerCaseModId, manifestObj);
         loadedManifestsMap.set(lowerCaseModId, manifestObj);
       }
-      
+
       this.#logger.debug(
         `ModsLoader: Loaded ${missingManifestsRaw.size} additional dependency manifests.`
       );
