@@ -6,7 +6,7 @@
 import { expect, jest } from '@jest/globals';
 import { GameEngineTestBed } from './gameEngineTestBed.js';
 import { DEFAULT_TEST_WORLD } from '../constants.js';
-import { withTestBed } from '../testBedHelpers.js';
+import { createWithBed, createInitializedBed } from '../testBedHelpers.js';
 
 /**
  * Executes a callback with a temporary {@link GameEngineTestBed} instance.
@@ -17,10 +17,9 @@ import { withTestBed } from '../testBedHelpers.js';
  *   (Promise<void>|void)} testFn - Function invoked with the bed and engine.
  * @returns {Promise<void>} Resolves when the callback completes.
  */
-export async function withGameEngineBed(overrides = {}, testFn) {
-  await withTestBed(GameEngineTestBed, overrides, (bed) =>
-    testFn(bed, bed.engine)
-  );
+export function withGameEngineBed(overrides = {}, testFn) {
+  const withBed = createWithBed(GameEngineTestBed, (b) => [b, b.engine]);
+  return withBed(overrides, testFn);
 }
 
 /**
@@ -37,25 +36,14 @@ export async function withGameEngineBed(overrides = {}, testFn) {
  *   (Promise<void>|void)} testFn - Function invoked with the bed and engine.
  * @returns {Promise<void>} Resolves when the callback completes.
  */
-export async function withInitializedGameEngineBed(overrides, world, testFn) {
-  if (typeof overrides === 'function') {
-    testFn = overrides;
-    overrides = {};
-    world = DEFAULT_TEST_WORLD;
-  } else if (typeof world === 'function') {
-    testFn = world;
-    world = DEFAULT_TEST_WORLD;
-    overrides = overrides || {};
-  } else {
-    overrides = overrides || {};
-    world = world || DEFAULT_TEST_WORLD;
-  }
-  await withTestBed(
+export function withInitializedGameEngineBed(overrides, world, testFn) {
+  const withInitBed = createInitializedBed(
     GameEngineTestBed,
-    overrides,
-    (bed) => testFn(bed, bed.engine),
-    (bed) => bed.initAndReset(world)
+    'initAndReset',
+    DEFAULT_TEST_WORLD,
+    (b) => [b, b.engine]
   );
+  return withInitBed(overrides, world, testFn);
 }
 
 /**
