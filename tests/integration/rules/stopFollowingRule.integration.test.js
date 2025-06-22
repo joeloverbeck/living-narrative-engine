@@ -33,6 +33,7 @@ import DispatchEventHandler from '../../../src/logic/operationHandlers/dispatchE
 import DispatchPerceptibleEventHandler from '../../../src/logic/operationHandlers/dispatchPerceptibleEventHandler.js';
 import EndTurnHandler from '../../../src/logic/operationHandlers/endTurnHandler.js';
 import IfCoLocatedHandler from '../../../src/logic/operationHandlers/ifCoLocatedHandler.js';
+import jsonLogic from 'json-logic-js';
 import {
   FOLLOWING_COMPONENT_ID,
   LEADING_COMPONENT_ID,
@@ -70,7 +71,13 @@ const makeStubRebuild = (em) => ({
 });
 
 // Move createHandlers definition here so it is accessible in all tests
-const createHandlers = (entityManager, eventBus, logger, validatedEventDispatcher, safeEventDispatcher) => {
+const createHandlers = (
+  entityManager,
+  eventBus,
+  logger,
+  validatedEventDispatcher,
+  safeEventDispatcher
+) => {
   return {
     BREAK_FOLLOW_RELATION: new BreakFollowRelationHandler({
       entityManager,
@@ -89,7 +96,7 @@ const createHandlers = (entityManager, eventBus, logger, validatedEventDispatche
       logger,
       safeEventDispatcher: safeEventDispatcher,
     }),
-    SET_VARIABLE: new SetVariableHandler({ logger }),
+    SET_VARIABLE: new SetVariableHandler({ logger, jsonLogic }),
     GET_TIMESTAMP: new GetTimestampHandler({ logger }),
     IF_CO_LOCATED_FACTORY: (operationInterpreter) =>
       new IfCoLocatedHandler({
@@ -212,7 +219,13 @@ describe('stop_following rule integration', () => {
 
     // Create operation registry
     const operationRegistry = new OperationRegistry({ logger: testLogger });
-    const handlers = createHandlers(entityManager, bus, testLogger, validatedEventDispatcher, safeEventDispatcher);
+    const handlers = createHandlers(
+      entityManager,
+      bus,
+      testLogger,
+      validatedEventDispatcher,
+      safeEventDispatcher
+    );
     const { IF_CO_LOCATED_FACTORY, ...rest } = handlers;
     for (const [type, handler] of Object.entries(rest)) {
       operationRegistry.register(type, handler.execute.bind(handler));
@@ -234,16 +247,16 @@ describe('stop_following rule integration', () => {
 
     // Create a simple event capture mechanism for testing
     const capturedEvents = [];
-    
+
     // Subscribe to the specific events we want to capture
     const eventsToCapture = [
       'core:perceptible_event',
-      'core:display_successful_action_result', 
+      'core:display_successful_action_result',
       'core:turn_ended',
-      'core:system_error_occurred'
+      'core:system_error_occurred',
     ];
-    
-    eventsToCapture.forEach(eventType => {
+
+    eventsToCapture.forEach((eventType) => {
       bus.subscribe(eventType, (event) => {
         capturedEvents.push({ eventType: event.type, payload: event.payload });
       });
@@ -270,11 +283,20 @@ describe('stop_following rule integration', () => {
         testEnv.cleanup();
         // Create new entity manager with the new entities
         const newEntityManager = new SimpleEntityManager(newEntities);
-        
+
         // Recreate handlers with the new entity manager
-        const newHandlers = createHandlers(newEntityManager, bus, testLogger, validatedEventDispatcher, safeEventDispatcher);
-        const { IF_CO_LOCATED_FACTORY: newIfCoLocatedFactory, ...newRest } = newHandlers;
-        const newOperationRegistry = new OperationRegistry({ logger: testLogger });
+        const newHandlers = createHandlers(
+          newEntityManager,
+          bus,
+          testLogger,
+          validatedEventDispatcher,
+          safeEventDispatcher
+        );
+        const { IF_CO_LOCATED_FACTORY: newIfCoLocatedFactory, ...newRest } =
+          newHandlers;
+        const newOperationRegistry = new OperationRegistry({
+          logger: testLogger,
+        });
         for (const [type, handler] of Object.entries(newRest)) {
           newOperationRegistry.register(type, handler.execute.bind(handler));
         }
@@ -300,7 +322,7 @@ describe('stop_following rule integration', () => {
         testEnv.operationInterpreter = newOperationInterpreter;
         testEnv.systemLogicInterpreter = newInterpreter;
         testEnv.entityManager = newEntityManager;
-        
+
         // Clear events
         capturedEvents.length = 0;
       },

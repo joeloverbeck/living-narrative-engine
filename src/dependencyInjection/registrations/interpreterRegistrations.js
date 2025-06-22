@@ -45,6 +45,7 @@ import ModifyContextArrayHandler from '../../logic/operationHandlers/modifyConte
 import AutoMoveFollowersHandler from '../../logic/operationHandlers/autoMoveFollowersHandler.js';
 import MergeClosenessCircleHandler from '../../logic/operationHandlers/mergeClosenessCircleHandler.js';
 import RemoveFromClosenessCircleHandler from '../../logic/operationHandlers/removeFromClosenessCircleHandler.js';
+import jsonLogic from 'json-logic-js';
 
 /**
  * Registers all interpreter-layer services in the DI container.
@@ -158,7 +159,11 @@ export function registerInterpreters(container) {
     [
       tokens.SetVariableHandler,
       SetVariableHandler,
-      (c, Handler) => new Handler({ logger: c.resolve(tokens.ILogger) }),
+      (c, Handler) =>
+        new Handler({
+          logger: c.resolve(tokens.ILogger),
+          jsonLogic,
+        }),
     ],
     [
       tokens.EndTurnHandler,

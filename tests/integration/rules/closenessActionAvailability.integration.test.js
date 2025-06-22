@@ -18,6 +18,7 @@ import DispatchEventHandler from '../../../src/logic/operationHandlers/dispatchE
 import DispatchPerceptibleEventHandler from '../../../src/logic/operationHandlers/dispatchPerceptibleEventHandler.js';
 import EndTurnHandler from '../../../src/logic/operationHandlers/endTurnHandler.js';
 import { expandMacros } from '../../../src/utils/macroUtils.js';
+import jsonLogic from 'json-logic-js';
 import {
   NAME_COMPONENT_ID,
   POSITION_COMPONENT_ID,
@@ -32,7 +33,11 @@ import ValidatedEventDispatcher from '../../../src/events/validatedEventDispatch
 import EventBus from '../../../src/events/eventBus.js';
 import AjvSchemaValidator from '../../../src/validation/ajvSchemaValidator.js';
 import ConsoleLogger from '../../../src/logging/consoleLogger.js';
-import { merge, dedupe, repair } from '../../../src/logic/services/closenessCircleService.js';
+import {
+  merge,
+  dedupe,
+  repair,
+} from '../../../src/logic/services/closenessCircleService.js';
 import OperationRegistry from '../../../src/logic/operationRegistry.js';
 import OperationInterpreter from '../../../src/logic/operationInterpreter.js';
 import SystemLogicInterpreter from '../../../src/logic/systemLogicInterpreter.js';
@@ -44,9 +49,17 @@ import JsonLogicEvaluationService from '../../../src/logic/jsonLogicEvaluationSe
  * @param {object} entityManager - Entity manager instance
  * @param {object} eventBus - Event bus instance
  * @param {object} logger - Logger instance
+ * @param validatedEventDispatcher
+ * @param safeEventDispatcher
  * @returns {object} Handlers object
  */
-function createHandlers(entityManager, eventBus, logger, validatedEventDispatcher, safeEventDispatcher) {
+function createHandlers(
+  entityManager,
+  eventBus,
+  logger,
+  validatedEventDispatcher,
+  safeEventDispatcher
+) {
   const closenessCircleService = { merge, dedupe, repair };
   return {
     QUERY_COMPONENT: new QueryComponentHandler({
@@ -54,7 +67,7 @@ function createHandlers(entityManager, eventBus, logger, validatedEventDispatche
       logger,
       safeEventDispatcher: safeEventDispatcher,
     }),
-    SET_VARIABLE: new SetVariableHandler({ logger }),
+    SET_VARIABLE: new SetVariableHandler({ logger, jsonLogic }),
     MERGE_CLOSENESS_CIRCLE: new MergeClosenessCircleHandler({
       logger,
       entityManager,
@@ -96,7 +109,11 @@ describe('closeness action availability chain', () => {
     };
     const expandedRule = {
       ...getCloseRule,
-      actions: expandMacros(getCloseRule.actions, macroRegistry, testEnv?.logger),
+      actions: expandMacros(
+        getCloseRule.actions,
+        macroRegistry,
+        testEnv?.logger
+      ),
     };
     const dataRegistry = {
       getAllSystemRules: jest.fn().mockReturnValue([expandedRule]),
@@ -127,7 +144,13 @@ describe('closeness action availability chain', () => {
     });
     const entityManager = new SimpleEntityManager([]);
     const operationRegistry = new OperationRegistry({ logger: testLogger });
-    const handlers = createHandlers(entityManager, bus, testLogger, validatedEventDispatcher, safeEventDispatcher);
+    const handlers = createHandlers(
+      entityManager,
+      bus,
+      testLogger,
+      validatedEventDispatcher,
+      safeEventDispatcher
+    );
     for (const [type, handler] of Object.entries(handlers)) {
       operationRegistry.register(type, handler.execute.bind(handler));
     }
@@ -169,8 +192,16 @@ describe('closeness action availability chain', () => {
       reset: (newEntities = []) => {
         testEnv.cleanup();
         const newEntityManager = new SimpleEntityManager(newEntities);
-        const newHandlers = createHandlers(newEntityManager, bus, testLogger, validatedEventDispatcher, safeEventDispatcher);
-        const newOperationRegistry = new OperationRegistry({ logger: testLogger });
+        const newHandlers = createHandlers(
+          newEntityManager,
+          bus,
+          testLogger,
+          validatedEventDispatcher,
+          safeEventDispatcher
+        );
+        const newOperationRegistry = new OperationRegistry({
+          logger: testLogger,
+        });
         for (const [type, handler] of Object.entries(newHandlers)) {
           newOperationRegistry.register(type, handler.execute.bind(handler));
         }

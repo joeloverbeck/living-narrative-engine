@@ -19,6 +19,7 @@ import SystemLogicInterpreter from '../../../src/logic/systemLogicInterpreter.js
 import OperationInterpreter from '../../../src/logic/operationInterpreter.js';
 import OperationRegistry from '../../../src/logic/operationRegistry.js';
 import JsonLogicEvaluationService from '../../../src/logic/jsonLogicEvaluationService.js';
+import jsonLogic from 'json-logic-js';
 
 /**
  * Creates handlers needed for the log_perceptible_events rule.
@@ -30,15 +31,21 @@ import JsonLogicEvaluationService from '../../../src/logic/jsonLogicEvaluationSe
  * @param {object} safeEventDispatcher - Safe event dispatcher instance
  * @returns {object} Handlers object
  */
-function createHandlers(entityManager, eventBus, logger, validatedEventDispatcher, safeEventDispatcher) {
+function createHandlers(
+  entityManager,
+  eventBus,
+  logger,
+  validatedEventDispatcher,
+  safeEventDispatcher
+) {
   // Ensure entityManager has getEntitiesInLocation for AddPerceptionLogEntryHandler
   if (typeof entityManager.getEntitiesInLocation !== 'function') {
     entityManager.getEntitiesInLocation = () => [];
   }
-  
+
   return {
     GET_TIMESTAMP: new GetTimestampHandler({ logger }),
-    SET_VARIABLE: new SetVariableHandler({ logger }),
+    SET_VARIABLE: new SetVariableHandler({ logger, jsonLogic }),
     DISPATCH_EVENT: new DispatchEventHandler({ dispatcher: eventBus, logger }),
     ADD_PERCEPTION_LOG_ENTRY: new AddPerceptionLogEntryHandler({
       entityManager,
@@ -57,7 +64,9 @@ describe('core_handle_log_perceptible_events rule integration', () => {
     const dataRegistry = {
       getAllSystemRules: jest.fn().mockReturnValue([logPerceptibleEventsRule]),
       getConditionDefinition: jest.fn((id) =>
-        id === 'core:event-is-perceptible-event' ? eventIsPerceptibleEvent : undefined
+        id === 'core:event-is-perceptible-event'
+          ? eventIsPerceptibleEvent
+          : undefined
       ),
       getEventDefinition: jest.fn((eventName) => {
         // Return a basic event definition for common events
@@ -100,7 +109,13 @@ describe('core_handle_log_perceptible_events rule integration', () => {
 
     // Create operation registry with our custom entity manager
     const operationRegistry = new OperationRegistry({ logger: testLogger });
-    const handlers = createHandlers(customEntityManager, bus, testLogger, validatedEventDispatcher, safeEventDispatcher);
+    const handlers = createHandlers(
+      customEntityManager,
+      bus,
+      testLogger,
+      validatedEventDispatcher,
+      safeEventDispatcher
+    );
     for (const [type, handler] of Object.entries(handlers)) {
       operationRegistry.register(type, handler.execute.bind(handler));
     }
@@ -123,14 +138,14 @@ describe('core_handle_log_perceptible_events rule integration', () => {
 
     // Create a simple event capture mechanism for testing
     const capturedEvents = [];
-    
+
     // Subscribe to the specific events we want to capture
     const eventsToCapture = [
       'core:perception_log_entry',
-      'core:system_error_occurred'
+      'core:system_error_occurred',
     ];
-    
-    eventsToCapture.forEach(eventType => {
+
+    eventsToCapture.forEach((eventType) => {
       bus.subscribe(eventType, (event) => {
         capturedEvents.push({ eventType: event.type, payload: event.payload });
       });
@@ -153,10 +168,18 @@ describe('core_handle_log_perceptible_events rule integration', () => {
         testEnv.cleanup();
         // Create new entity manager with the new entities
         customEntityManager = new SimpleEntityManager(newEntities);
-        
+
         // Recreate handlers with the new entity manager
-        const newHandlers = createHandlers(customEntityManager, bus, testLogger, validatedEventDispatcher, safeEventDispatcher);
-        const newOperationRegistry = new OperationRegistry({ logger: testLogger });
+        const newHandlers = createHandlers(
+          customEntityManager,
+          bus,
+          testLogger,
+          validatedEventDispatcher,
+          safeEventDispatcher
+        );
+        const newOperationRegistry = new OperationRegistry({
+          logger: testLogger,
+        });
         for (const [type, handler] of Object.entries(newHandlers)) {
           newOperationRegistry.register(type, handler.execute.bind(handler));
         }
@@ -182,7 +205,7 @@ describe('core_handle_log_perceptible_events rule integration', () => {
         testEnv.operationInterpreter = newOperationInterpreter;
         testEnv.systemLogicInterpreter = newInterpreter;
         testEnv.entityManager = customEntityManager;
-        
+
         // Clear events
         capturedEvents.length = 0;
       },
@@ -217,8 +240,14 @@ describe('core_handle_log_perceptible_events rule integration', () => {
     });
 
     // Check the perception log for the entry
-    const log = testEnv.entityManager.getComponentData('actor1', 'core:perception_log');
-    const found = log && Array.isArray(log.logEntries) && log.logEntries.some(e => e.descriptionText === 'Something happened');
+    const log = testEnv.entityManager.getComponentData(
+      'actor1',
+      'core:perception_log'
+    );
+    const found =
+      log &&
+      Array.isArray(log.logEntries) &&
+      log.logEntries.some((e) => e.descriptionText === 'Something happened');
     expect(found).toBe(true);
   });
 });

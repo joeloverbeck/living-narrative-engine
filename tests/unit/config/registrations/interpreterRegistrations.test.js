@@ -46,6 +46,7 @@ import AddComponentHandler from '../../../../src/logic/operationHandlers/addComp
 import RemoveComponentHandler from '../../../../src/logic/operationHandlers/removeComponentHandler.js';
 import QueryComponentHandler from '../../../../src/logic/operationHandlers/queryComponentHandler.js';
 import SetVariableHandler from '../../../../src/logic/operationHandlers/setVariableHandler.js';
+import jsonLogic from 'json-logic-js';
 
 // --- Mock Implementations ---
 const mockLogger = {
@@ -349,7 +350,7 @@ describe('registerInterpreters', () => {
     expect(handler).toBeDefined();
     expect(SetVariableHandler).toHaveBeenCalledTimes(1);
     expect(SetVariableHandler).toHaveBeenCalledWith(
-      expect.objectContaining({ logger: mockLogger })
+      expect.objectContaining({ logger: mockLogger, jsonLogic })
     );
   });
 }); // End describe
