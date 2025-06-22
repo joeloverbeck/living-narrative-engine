@@ -5,6 +5,11 @@ const { ENTITY_CREATED_ID } = require('../../../src/constants/eventIds');
 const mockSpatialIndex = { addEntity: jest.fn() };
 const mockLogger = { debug: jest.fn(), error: jest.fn(), warn: jest.fn(), info: jest.fn() };
 
+/**
+ *
+ * @param id
+ * @param locationId
+ */
 function makeEntity(id, locationId) {
   return {
     id,

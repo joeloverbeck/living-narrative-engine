@@ -1,0 +1,11 @@
+{
+  "$schema": "http://example.com/schemas/condition.schema.json",
+  "id": "core:event-is-perceptible_event",
+  "description": "Checks if the triggering event is a 'core:perceptible_event' event.",
+  "logic": {
+    "==": [
+      { "var": "event.type" },
+      "core:perceptible_event"
+    ]
+  }
+} 

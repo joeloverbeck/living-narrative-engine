@@ -16,10 +16,6 @@ import eventIsActionStepBack from '../../../data/mods/intimacy/conditions/event-
 import stepBackRule from '../../../data/mods/intimacy/rules/step_back.rule.json';
 import logSuccessMacro from '../../../data/mods/core/macros/logSuccessAndEndTurn.macro.json';
 import { expandMacros } from '../../../src/utils/macroUtils.js';
-import SystemLogicInterpreter from '../../../src/logic/systemLogicInterpreter.js';
-import OperationInterpreter from '../../../src/logic/operationInterpreter.js';
-import OperationRegistry from '../../../src/logic/operationRegistry.js';
-import JsonLogicEvaluationService from '../../../src/logic/jsonLogicEvaluationService.js';
 import QueryComponentHandler from '../../../src/logic/operationHandlers/queryComponentHandler.js';
 import ModifyArrayFieldHandler from '../../../src/logic/operationHandlers/modifyArrayFieldHandler.js';
 import RemoveComponentHandler from '../../../src/logic/operationHandlers/removeComponentHandler.js';
@@ -31,143 +27,101 @@ import DispatchPerceptibleEventHandler from '../../../src/logic/operationHandler
 import EndTurnHandler from '../../../src/logic/operationHandlers/endTurnHandler.js';
 import SetVariableHandler from '../../../src/logic/operationHandlers/setVariableHandler.js';
 import RemoveFromClosenessCircleHandler from '../../../src/logic/operationHandlers/removeFromClosenessCircleHandler.js';
+import AddPerceptionLogEntryHandler from '../../../src/logic/operationHandlers/addPerceptionLogEntryHandler.js';
 import {
   NAME_COMPONENT_ID,
   POSITION_COMPONENT_ID,
 } from '../../../src/constants/componentIds.js';
 import { ATTEMPT_ACTION_ID } from '../../../src/constants/eventIds.js';
 import { buildABCDWorld } from '../fixtures/intimacyFixtures.js';
-import SimpleEntityManager from '../../common/entities/simpleEntityManager.js';
+import { SimpleEntityManager } from '../../common/entities/index.js';
+import { SafeEventDispatcher } from '../../../src/events/safeEventDispatcher.js';
+import ValidatedEventDispatcher from '../../../src/events/validatedEventDispatcher.js';
+import EventBus from '../../../src/events/eventBus.js';
+import AjvSchemaValidator from '../../../src/validation/ajvSchemaValidator.js';
+import ConsoleLogger from '../../../src/logging/consoleLogger.js';
+import SystemLogicInterpreter from '../../../src/logic/systemLogicInterpreter.js';
+import OperationInterpreter from '../../../src/logic/operationInterpreter.js';
+import OperationRegistry from '../../../src/logic/operationRegistry.js';
+import JsonLogicEvaluationService from '../../../src/logic/jsonLogicEvaluationService.js';
+import { repair } from '../../../src/logic/services/closenessCircleService.js';
 
-const closenessCircleService = { repair: jest.fn((partners) => [...new Set(partners)].sort()) };
+const closenessCircleService = { repair };
 
 /**
- * Helper to (re)initialize the interpreter with the provided entities.
+ * Creates handlers needed for the step_back rule.
  *
- * @param {Array<{id:string,components:object}>} entities - initial entities
+ * @param {object} entityManager - Entity manager instance
+ * @param {object} eventBus - Event bus instance
+ * @param {object} logger - Logger instance
+ * @param {object} validatedEventDispatcher - Validated event dispatcher instance
+ * @param {object} safeEventDispatcher - Safe event dispatcher instance
+ * @returns {object} Handlers object
  */
-function init(entities) {
-  operationRegistry = new OperationRegistry({ logger });
-  entityManager = new SimpleEntityManager(entities);
-
-  const handlers = {
+function createHandlers(entityManager, eventBus, logger, validatedEventDispatcher, safeEventDispatcher) {
+  return {
     QUERY_COMPONENT: new QueryComponentHandler({
       entityManager,
       logger,
-      safeEventDispatcher: safeDispatcher,
+      safeEventDispatcher: safeEventDispatcher,
     }),
     MODIFY_ARRAY_FIELD: new ModifyArrayFieldHandler({
       entityManager,
       logger,
-      safeEventDispatcher: safeDispatcher,
+      safeEventDispatcher: safeEventDispatcher,
     }),
     REMOVE_COMPONENT: new RemoveComponentHandler({
       entityManager,
       logger,
-      safeEventDispatcher: safeDispatcher,
+      safeEventDispatcher: safeEventDispatcher,
     }),
     MODIFY_COMPONENT: new ModifyComponentHandler({
       entityManager,
       logger,
-      safeEventDispatcher: safeDispatcher,
+      safeEventDispatcher: safeEventDispatcher,
     }),
     GET_NAME: new GetNameHandler({
       entityManager,
       logger,
-      safeEventDispatcher: safeDispatcher,
+      safeEventDispatcher: safeEventDispatcher,
     }),
     SET_VARIABLE: new SetVariableHandler({ logger }),
     GET_TIMESTAMP: new GetTimestampHandler({ logger }),
     DISPATCH_PERCEPTIBLE_EVENT: new DispatchPerceptibleEventHandler({
       dispatcher: eventBus,
       logger,
-      addPerceptionLogEntryHandler: { execute: jest.fn() },
+      addPerceptionLogEntryHandler: new AddPerceptionLogEntryHandler({
+        entityManager,
+        logger,
+        safeEventDispatcher: safeEventDispatcher,
+      }),
     }),
     DISPATCH_EVENT: new DispatchEventHandler({ dispatcher: eventBus, logger }),
     END_TURN: new EndTurnHandler({
-      safeEventDispatcher: safeDispatcher,
+      safeEventDispatcher: safeEventDispatcher,
       logger,
     }),
     REMOVE_FROM_CLOSENESS_CIRCLE: new RemoveFromClosenessCircleHandler({
       logger,
       entityManager,
-      safeEventDispatcher: safeDispatcher,
+      safeEventDispatcher: safeEventDispatcher,
       closenessCircleService,
     }),
   };
-
-  for (const [type, handler] of Object.entries(handlers)) {
-    operationRegistry.register(type, handler.execute.bind(handler));
-  }
-
-  operationInterpreter = new OperationInterpreter({
-    logger,
-    operationRegistry,
-  });
-
-  jsonLogic = new JsonLogicEvaluationService({
-    logger,
-    gameDataRepository: dataRegistry,
-  });
-
-  interpreter = new SystemLogicInterpreter({
-    logger,
-    eventBus,
-    dataRegistry,
-    jsonLogicEvaluationService: jsonLogic,
-    entityManager,
-    operationInterpreter,
-  });
-
-  listener = null;
-  interpreter.initialize();
 }
 
-let logger;
-let eventBus;
-let dataRegistry;
-let entityManager;
-let operationRegistry;
-let operationInterpreter;
-let jsonLogic;
-let interpreter;
-let events;
-let listener;
-let safeDispatcher;
-
 describe('intimacy_handle_step_back rule integration', () => {
+  let testEnv;
+  let customEntityManager;
+
   beforeEach(() => {
-    logger = {
-      debug: jest.fn(),
-      info: jest.fn(),
-      warn: jest.fn(),
-      error: jest.fn(),
-    };
-
-    events = [];
-    safeDispatcher = {
-      dispatch: jest.fn((eventType, payload) => {
-        events.push({ eventType, payload });
-        return Promise.resolve(true);
-      }),
-    };
-    eventBus = {
-      subscribe: jest.fn((ev, l) => {
-        if (ev === '*') listener = l;
-      }),
-      unsubscribe: jest.fn(),
-      dispatch: jest.fn((eventType, payload) => {
-        events.push({ eventType, payload });
-        return Promise.resolve();
-      }),
-      listenerCount: jest.fn().mockReturnValue(1),
-    };
-
+    customEntityManager = new SimpleEntityManager([]);
     const macros = { 'core:logSuccessAndEndTurn': logSuccessMacro };
     const expanded = expandMacros(stepBackRule.actions, {
       get: (type, id) => (type === 'macros' ? macros[id] : undefined),
-    });
-    dataRegistry = {
+    }, null);
+    
+    const dataRegistry = {
       getAllSystemRules: jest
         .fn()
         .mockReturnValue([{ ...stepBackRule, actions: expanded }]),
@@ -176,9 +130,144 @@ describe('intimacy_handle_step_back rule integration', () => {
           ? eventIsActionStepBack
           : undefined
       ),
+      getEventDefinition: jest.fn((eventName) => {
+        // Return a basic event definition for common events
+        const commonEvents = {
+          'core:turn_ended': { payloadSchema: null },
+          'core:perceptible_event': { payloadSchema: null },
+          'core:display_successful_action_result': { payloadSchema: null },
+          'core:system_error_occurred': { payloadSchema: null },
+        };
+        return commonEvents[eventName] || null;
+      }),
     };
 
-    init([]);
+    // Use actual ConsoleLogger instead of mock
+    const testLogger = new ConsoleLogger('DEBUG');
+
+    // Use actual EventBus instead of mock
+    const bus = new EventBus();
+
+    // Create actual schema validator
+    const schemaValidator = new AjvSchemaValidator(testLogger);
+
+    // Create actual ValidatedEventDispatcher
+    const validatedEventDispatcher = new ValidatedEventDispatcher({
+      eventBus: bus,
+      gameDataRepository: dataRegistry,
+      schemaValidator: schemaValidator,
+      logger: testLogger,
+    });
+
+    // Create actual SafeEventDispatcher
+    const safeEventDispatcher = new SafeEventDispatcher({
+      validatedEventDispatcher: validatedEventDispatcher,
+      logger: testLogger,
+    });
+
+    // Create JSON logic evaluation service
+    const jsonLogic = new JsonLogicEvaluationService({
+      logger: testLogger,
+      gameDataRepository: dataRegistry,
+    });
+
+    // Create operation registry with our custom entity manager
+    const operationRegistry = new OperationRegistry({ logger: testLogger });
+    const handlers = createHandlers(customEntityManager, bus, testLogger, validatedEventDispatcher, safeEventDispatcher);
+    for (const [type, handler] of Object.entries(handlers)) {
+      operationRegistry.register(type, handler.execute.bind(handler));
+    }
+
+    const operationInterpreter = new OperationInterpreter({
+      logger: testLogger,
+      operationRegistry,
+    });
+
+    const interpreter = new SystemLogicInterpreter({
+      logger: testLogger,
+      eventBus: bus,
+      dataRegistry: dataRegistry,
+      jsonLogicEvaluationService: jsonLogic,
+      entityManager: customEntityManager,
+      operationInterpreter,
+    });
+
+    interpreter.initialize();
+
+    // Create a simple event capture mechanism for testing
+    const capturedEvents = [];
+    
+    // Subscribe to the specific events we want to capture
+    const eventsToCapture = [
+      'core:perceptible_event',
+      'core:display_successful_action_result', 
+      'core:turn_ended',
+      'core:system_error_occurred'
+    ];
+    
+    eventsToCapture.forEach(eventType => {
+      bus.subscribe(eventType, (event) => {
+        capturedEvents.push({ eventType: event.type, payload: event.payload });
+      });
+    });
+
+    testEnv = {
+      eventBus: bus,
+      events: capturedEvents,
+      operationRegistry,
+      operationInterpreter,
+      jsonLogic,
+      systemLogicInterpreter: interpreter,
+      entityManager: customEntityManager,
+      logger: testLogger,
+      dataRegistry,
+      cleanup: () => {
+        interpreter.shutdown();
+      },
+      reset: (newEntities = []) => {
+        testEnv.cleanup();
+        // Create new entity manager with the new entities
+        customEntityManager = new SimpleEntityManager(newEntities);
+        
+        // Recreate handlers with the new entity manager
+        const newHandlers = createHandlers(customEntityManager, bus, testLogger, validatedEventDispatcher, safeEventDispatcher);
+        const newOperationRegistry = new OperationRegistry({ logger: testLogger });
+        for (const [type, handler] of Object.entries(newHandlers)) {
+          newOperationRegistry.register(type, handler.execute.bind(handler));
+        }
+
+        const newOperationInterpreter = new OperationInterpreter({
+          logger: testLogger,
+          operationRegistry: newOperationRegistry,
+        });
+
+        const newInterpreter = new SystemLogicInterpreter({
+          logger: testLogger,
+          eventBus: bus,
+          dataRegistry: dataRegistry,
+          jsonLogicEvaluationService: jsonLogic,
+          entityManager: customEntityManager,
+          operationInterpreter: newOperationInterpreter,
+        });
+
+        newInterpreter.initialize();
+
+        // Update test environment
+        testEnv.operationRegistry = newOperationRegistry;
+        testEnv.operationInterpreter = newOperationInterpreter;
+        testEnv.systemLogicInterpreter = newInterpreter;
+        testEnv.entityManager = customEntityManager;
+        
+        // Clear events
+        capturedEvents.length = 0;
+      },
+    };
+  });
+
+  afterEach(() => {
+    if (testEnv) {
+      testEnv.cleanup();
+    }
   });
 
   it('validates step_back.rule.json against schema', () => {
@@ -225,8 +314,7 @@ describe('intimacy_handle_step_back rule integration', () => {
   });
 
   it('actor leaves a triad leaving remaining pair intact', () => {
-    interpreter.shutdown();
-    init([
+    testEnv.reset([
       {
         id: 'a1',
         components: {
@@ -254,30 +342,27 @@ describe('intimacy_handle_step_back rule integration', () => {
       },
     ]);
 
-    listener({
-      type: ATTEMPT_ACTION_ID,
-      payload: { actorId: 'a1', actionId: 'intimacy:step_back' },
-    });
+    testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, { actorId: 'a1', actionId: 'intimacy:step_back' });
 
     expect(
-      entityManager.getComponentData('a1', 'intimacy:closeness')
+      testEnv.entityManager.getComponentData('a1', 'intimacy:closeness')
     ).toBeNull();
-    expect(entityManager.getComponentData('a1', 'core:movement')).toEqual({
+    expect(testEnv.entityManager.getComponentData('a1', 'core:movement')).toEqual({
       locked: false,
     });
-    expect(entityManager.getComponentData('b1', 'intimacy:closeness')).toEqual({
+    expect(testEnv.entityManager.getComponentData('b1', 'intimacy:closeness')).toEqual({
       partners: ['c1'],
     });
-    expect(entityManager.getComponentData('b1', 'core:movement')).toEqual({
+    expect(testEnv.entityManager.getComponentData('b1', 'core:movement')).toEqual({
       locked: true,
     });
-    expect(entityManager.getComponentData('c1', 'intimacy:closeness')).toEqual({
+    expect(testEnv.entityManager.getComponentData('c1', 'intimacy:closeness')).toEqual({
       partners: ['b1'],
     });
-    expect(entityManager.getComponentData('c1', 'core:movement')).toEqual({
+    expect(testEnv.entityManager.getComponentData('c1', 'core:movement')).toEqual({
       locked: true,
     });
-    const types = events.map((e) => e.eventType);
+    const types = testEnv.events.map((e) => e.eventType);
     expect(types).toEqual(
       expect.arrayContaining([
         'core:perceptible_event',
@@ -288,8 +373,7 @@ describe('intimacy_handle_step_back rule integration', () => {
   });
 
   it('actor stepping back from a pair frees the partner', () => {
-    interpreter.shutdown();
-    init([
+    testEnv.reset([
       {
         id: 'a1',
         components: {
@@ -309,24 +393,21 @@ describe('intimacy_handle_step_back rule integration', () => {
       },
     ]);
 
-    listener({
-      type: ATTEMPT_ACTION_ID,
-      payload: { actorId: 'a1', actionId: 'intimacy:step_back' },
-    });
+    testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, { actorId: 'a1', actionId: 'intimacy:step_back' });
 
     expect(
-      entityManager.getComponentData('a1', 'intimacy:closeness')
+      testEnv.entityManager.getComponentData('a1', 'intimacy:closeness')
     ).toBeNull();
-    expect(entityManager.getComponentData('a1', 'core:movement')).toEqual({
+    expect(testEnv.entityManager.getComponentData('a1', 'core:movement')).toEqual({
       locked: false,
     });
     expect(
-      entityManager.getComponentData('b1', 'intimacy:closeness')
+      testEnv.entityManager.getComponentData('b1', 'intimacy:closeness')
     ).toBeNull();
-    expect(entityManager.getComponentData('b1', 'core:movement')).toEqual({
+    expect(testEnv.entityManager.getComponentData('b1', 'core:movement')).toEqual({
       locked: false,
     });
-    const types = events.map((e) => e.eventType);
+    const types = testEnv.events.map((e) => e.eventType);
     expect(types).toEqual(
       expect.arrayContaining([
         'core:perceptible_event',
@@ -337,7 +418,6 @@ describe('intimacy_handle_step_back rule integration', () => {
   });
 
   it('actor leaves a poly circle leaving remaining triad intact', () => {
-    interpreter.shutdown();
     const entities = buildABCDWorld();
     // place all actors in same room and create a poly circle of four
     for (const id of ['a1', 'b1', 'c1', 'd1']) {
@@ -348,31 +428,28 @@ describe('intimacy_handle_step_back rule integration', () => {
       };
       ent.components['core:movement'].locked = true;
     }
-    init(entities);
+    testEnv.reset(entities);
 
-    listener({
-      type: ATTEMPT_ACTION_ID,
-      payload: { actorId: 'a1', actionId: 'intimacy:step_back' },
-    });
+    testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, { actorId: 'a1', actionId: 'intimacy:step_back' });
 
     expect(
-      entityManager.getComponentData('a1', 'intimacy:closeness')
+      testEnv.entityManager.getComponentData('a1', 'intimacy:closeness')
     ).toBeNull();
-    expect(entityManager.getComponentData('a1', 'core:movement')).toEqual({
+    expect(testEnv.entityManager.getComponentData('a1', 'core:movement')).toEqual({
       locked: false,
     });
     for (const id of ['b1', 'c1', 'd1']) {
-      const partners = entityManager
+      const partners = testEnv.entityManager
         .getComponentData(id, 'intimacy:closeness')
         .partners.sort();
       expect(partners).toEqual(
         ['b1', 'c1', 'd1'].filter((p) => p !== id).sort()
       );
-      expect(entityManager.getComponentData(id, 'core:movement')).toEqual({
+      expect(testEnv.entityManager.getComponentData(id, 'core:movement')).toEqual({
         locked: true,
       });
     }
-    const types = events.map((e) => e.eventType);
+    const types = testEnv.events.map((e) => e.eventType);
     expect(types).toEqual(
       expect.arrayContaining([
         'core:perceptible_event',

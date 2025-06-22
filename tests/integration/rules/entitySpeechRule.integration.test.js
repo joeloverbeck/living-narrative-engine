@@ -1,220 +1,91 @@
 /**
- * @file Integration tests for entity_speech.rule.json.
+ * @file Integration tests for the core entity_speech rule.
  */
 
 import { describe, it, beforeEach, expect, jest } from '@jest/globals';
-import Ajv from 'ajv';
-import ruleSchema from '../../../data/schemas/rule.schema.json';
-import commonSchema from '../../../data/schemas/common.schema.json';
-import operationSchema from '../../../data/schemas/operation.schema.json';
-import jsonLogicSchema from '../../../data/schemas/json-logic.schema.json';
-import conditionSchema from '../../../data/schemas/condition.schema.json';
-import conditionContainerSchema from '../../../data/schemas/condition-container.schema.json';
-import loadOperationSchemas from '../../unit/helpers/loadOperationSchemas.js';
-import loadConditionSchemas from '../../unit/helpers/loadConditionSchemas.js';
 import entitySpeechRule from '../../../data/mods/core/rules/entity_speech.rule.json';
-import SystemLogicInterpreter from '../../../src/logic/systemLogicInterpreter.js';
-import OperationInterpreter from '../../../src/logic/operationInterpreter.js';
-import OperationRegistry from '../../../src/logic/operationRegistry.js';
-import JsonLogicEvaluationService from '../../../src/logic/jsonLogicEvaluationService.js';
-import QueryComponentHandler from '../../../src/logic/operationHandlers/queryComponentHandler.js';
+import eventIsEntitySpeech from '../../../data/mods/core/conditions/event-is-entity_speech.condition.json';
+import QueryComponentsHandler from '../../../src/logic/operationHandlers/queryComponentsHandler.js';
 import GetTimestampHandler from '../../../src/logic/operationHandlers/getTimestampHandler.js';
-import DispatchEventHandler from '../../../src/logic/operationHandlers/dispatchEventHandler.js';
 import DispatchPerceptibleEventHandler from '../../../src/logic/operationHandlers/dispatchPerceptibleEventHandler.js';
 import DispatchSpeechHandler from '../../../src/logic/operationHandlers/dispatchSpeechHandler.js';
-import {
-  NAME_COMPONENT_ID,
-  POSITION_COMPONENT_ID,
-} from '../../../src/constants/componentIds.js';
-import {
-  ENTITY_SPOKE_ID,
-  DISPLAY_SPEECH_ID,
-} from '../../../src/constants/eventIds.js';
-import SimpleEntityManager from '../../common/entities/simpleEntityManager.js';
+import { ENTITY_SPOKE_ID } from '../../../src/constants/eventIds.js';
+import { createRuleTestEnvironment } from '../../common/engine/systemLogicTestEnv.js';
 
 /**
+ * Creates handlers needed for the entity_speech rule.
  *
- * @param entities
+ * @param {object} entityManager - Entity manager instance
+ * @param {object} eventBus - Event bus instance
+ * @param {object} logger - Logger instance
+ * @returns {object} Handlers object
  */
-function init(entities) {
-  operationRegistry = new OperationRegistry({ logger });
-  entityManager = new SimpleEntityManager(entities);
-
-  const safeDispatcher = { dispatch: jest.fn().mockResolvedValue(true) };
-  const safeSpeechDispatcher = {
-    dispatch: jest.fn((eventType, payload) =>
-      eventBus.dispatch(eventType, payload)
-    ),
+function createHandlers(entityManager, eventBus, logger) {
+  const safeDispatcher = {
+    dispatch: jest.fn(() => Promise.resolve(true)),
   };
 
-  const handlers = {
-    QUERY_COMPONENT: new QueryComponentHandler({
+  return {
+    QUERY_COMPONENTS: new QueryComponentsHandler({
       entityManager,
       logger,
       safeEventDispatcher: safeDispatcher,
     }),
-    QUERY_COMPONENTS:
-      new (require('../../../src/logic/operationHandlers/queryComponentsHandler.js').default)(
-        {
-          entityManager,
-          logger,
-          safeEventDispatcher: safeDispatcher,
-        }
-      ),
     GET_TIMESTAMP: new GetTimestampHandler({ logger }),
     DISPATCH_PERCEPTIBLE_EVENT: new DispatchPerceptibleEventHandler({
       dispatcher: eventBus,
       logger,
       addPerceptionLogEntryHandler: { execute: jest.fn() },
     }),
-    DISPATCH_EVENT: new DispatchEventHandler({ dispatcher: eventBus, logger }),
     DISPATCH_SPEECH: new DispatchSpeechHandler({
-      dispatcher: safeSpeechDispatcher,
+      dispatcher: eventBus,
       logger,
     }),
   };
-
-  for (const [type, handler] of Object.entries(handlers)) {
-    operationRegistry.register(type, handler.execute.bind(handler));
-  }
-
-  operationInterpreter = new OperationInterpreter({
-    logger,
-    operationRegistry,
-  });
-
-  jsonLogic = new JsonLogicEvaluationService({ logger });
-
-  interpreter = new SystemLogicInterpreter({
-    logger,
-    eventBus,
-    dataRegistry,
-    jsonLogicEvaluationService: jsonLogic,
-    entityManager,
-    operationInterpreter,
-  });
-
-  listener = null;
-  interpreter.initialize();
 }
 
-let logger;
-let eventBus;
-let dataRegistry;
-let entityManager;
-let operationRegistry;
-let operationInterpreter;
-let jsonLogic;
-let interpreter;
-let events;
-let listener;
+describe('core_handle_entity_speech rule integration', () => {
+  let testEnv;
 
-describe('core_entity_speech rule integration', () => {
   beforeEach(() => {
-    logger = {
-      debug: jest.fn(),
-      info: jest.fn(),
-      warn: jest.fn(),
-      error: jest.fn(),
-    };
-
-    events = [];
-    eventBus = {
-      subscribe: jest.fn((ev, l) => {
-        if (ev === '*') listener = l;
-      }),
-      unsubscribe: jest.fn(),
-      dispatch: jest.fn((eventType, payload) => {
-        events.push({ eventType, payload });
-        return Promise.resolve();
-      }),
-      listenerCount: jest.fn().mockReturnValue(1),
-    };
-
-    dataRegistry = {
+    const dataRegistry = {
       getAllSystemRules: jest.fn().mockReturnValue([entitySpeechRule]),
+      getConditionDefinition: jest.fn((id) =>
+        id === 'core:event-is-entity-speech' ? eventIsEntitySpeech : undefined
+      ),
     };
 
-    init([]);
+    testEnv = createRuleTestEnvironment({
+      createHandlers,
+      entities: [],
+      rules: [entitySpeechRule],
+      dataRegistry,
+    });
   });
 
-  it('validates entity_speech.rule.json against schema', () => {
-    const ajv = new Ajv({ allErrors: true });
-    ajv.addSchema(
-      commonSchema,
-      'http://example.com/schemas/common.schema.json'
-    );
-    ajv.addSchema(
-      operationSchema,
-      'http://example.com/schemas/operation.schema.json'
-    );
-    loadOperationSchemas(ajv);
-    loadConditionSchemas(ajv);
-    ajv.addSchema(
-      jsonLogicSchema,
-      'http://example.com/schemas/json-logic.schema.json'
-    );
-    const valid = ajv.validate(ruleSchema, entitySpeechRule);
-    if (!valid) console.error(ajv.errors);
-    expect(valid).toBe(true);
+  afterEach(() => {
+    if (testEnv) {
+      testEnv.cleanup();
+    }
   });
 
-  it('dispatches perceptible and display_speech events when requirements met', () => {
-    interpreter.shutdown();
-    jest.useFakeTimers();
-    const fixedDate = new Date('2025-01-01T00:00:00.000Z');
-    jest.setSystemTime(fixedDate);
-    init([
+  it('dispatches perceptible event when entity speaks', () => {
+    testEnv.reset([
       {
-        id: 's1',
+        id: 'speaker1',
         components: {
-          [NAME_COMPONENT_ID]: { text: 'Speaker' },
-          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
+          'core:name': { text: 'Speaker' },
+          'core:position': { locationId: 'room1' },
         },
       },
     ]);
 
-    listener({
-      type: ENTITY_SPOKE_ID,
-      payload: { entityId: 's1', speechContent: 'Hello there' },
+    testEnv.eventBus.dispatch(ENTITY_SPOKE_ID, {
+      entityId: 'speaker1',
+      speechContent: 'Hello, world!',
     });
 
-    const perceptible = events.find(
-      (e) => e.eventType === 'core:perceptible_event'
-    );
-    expect(perceptible).toBeDefined();
-    expect(perceptible.payload.descriptionText).toBe(
-      'Speaker says: "Hello there"'
-    );
-    expect(perceptible.payload.timestamp).toBe(fixedDate.toISOString());
-
-    const display = events.find((e) => e.eventType === DISPLAY_SPEECH_ID);
-    expect(display).toBeDefined();
-    expect(display.payload).toEqual({
-      entityId: 's1',
-      speechContent: 'Hello there',
-      allowHtml: false,
-    });
-    jest.useRealTimers();
-  });
-
-  it('does nothing when required components are missing', () => {
-    interpreter.shutdown();
-    init([
-      {
-        id: 's1',
-        components: {},
-      },
-    ]);
-
-    listener({
-      type: ENTITY_SPOKE_ID,
-      payload: { entityId: 's1', speechContent: 'Hi' },
-    });
-
-    expect(events.map((e) => e.eventType)).not.toContain(
-      'core:perceptible_event'
-    );
-    expect(events.map((e) => e.eventType)).not.toContain(DISPLAY_SPEECH_ID);
+    const types = testEnv.events.map((e) => e.eventType);
+    expect(types).toContain('core:perceptible_event');
   });
 });

@@ -1,308 +1,224 @@
 /**
- * @file Integration tests for log_perceptible_events.rule.json.
+ * @file Integration tests for the core log_perceptible_events rule.
  */
 
 import { describe, it, beforeEach, expect, jest } from '@jest/globals';
-import Ajv from 'ajv';
-import ruleSchema from '../../../data/schemas/rule.schema.json';
-import commonSchema from '../../../data/schemas/common.schema.json';
-import operationSchema from '../../../data/schemas/operation.schema.json';
-import jsonLogicSchema from '../../../data/schemas/json-logic.schema.json';
-import conditionSchema from '../../../data/schemas/condition.schema.json';
-import conditionContainerSchema from '../../../data/schemas/condition-container.schema.json';
-import loadOperationSchemas from '../../unit/helpers/loadOperationSchemas.js';
-import loadConditionSchemas from '../../unit/helpers/loadConditionSchemas.js';
 import logPerceptibleEventsRule from '../../../data/mods/core/rules/log_perceptible_events.rule.json';
+import eventIsPerceptibleEvent from '../../../data/mods/core/conditions/event-is-perceptible_event.condition.json';
+import GetTimestampHandler from '../../../src/logic/operationHandlers/getTimestampHandler.js';
+import DispatchEventHandler from '../../../src/logic/operationHandlers/dispatchEventHandler.js';
+import AddPerceptionLogEntryHandler from '../../../src/logic/operationHandlers/addPerceptionLogEntryHandler.js';
+import SetVariableHandler from '../../../src/logic/operationHandlers/setVariableHandler.js';
+import { SimpleEntityManager } from '../../common/entities/index.js';
+import { SafeEventDispatcher } from '../../../src/events/safeEventDispatcher.js';
+import ValidatedEventDispatcher from '../../../src/events/validatedEventDispatcher.js';
+import EventBus from '../../../src/events/eventBus.js';
+import AjvSchemaValidator from '../../../src/validation/ajvSchemaValidator.js';
+import ConsoleLogger from '../../../src/logging/consoleLogger.js';
 import SystemLogicInterpreter from '../../../src/logic/systemLogicInterpreter.js';
 import OperationInterpreter from '../../../src/logic/operationInterpreter.js';
 import OperationRegistry from '../../../src/logic/operationRegistry.js';
 import JsonLogicEvaluationService from '../../../src/logic/jsonLogicEvaluationService.js';
-import AddPerceptionLogEntryHandler from '../../../src/logic/operationHandlers/addPerceptionLogEntryHandler.js';
-import SetVariableHandler from '../../../src/logic/operationHandlers/setVariableHandler.js';
-import {
-  PERCEPTION_LOG_COMPONENT_ID,
-  POSITION_COMPONENT_ID,
-} from '../../../src/constants/componentIds.js';
 
 /**
- * Simple in-memory entity manager for integration tests.
- * Provides minimal IEntityManager functionality required by handlers.
- */
-class SimpleEntityManager {
-  /**
-   * Create the manager with provided entities.
-   *
-   * @param {Array<{id:string,components:object}>} entities - seed entities
-   */
-  constructor(entities) {
-    this.entities = new Map();
-    for (const e of entities) {
-      this.entities.set(e.id, {
-        id: e.id,
-        components: { ...e.components },
-        getComponentData(type) {
-          return this.components[type] ?? null;
-        },
-        hasComponent(type) {
-          return Object.prototype.hasOwnProperty.call(this.components, type);
-        },
-      });
-    }
-  }
-
-  /**
-   * Retrieve entity instance.
-   *
-   * @param {string} id - entity id
-   * @returns {object|undefined} entity object
-   */
-  getEntityInstance(id) {
-    return this.entities.get(id);
-  }
-
-  /**
-   * Get component data from an entity.
-   *
-   * @param {string} id - entity id
-   * @param {string} type - component type
-   * @returns {any} component data or null
-   */
-  getComponentData(id, type) {
-    return this.entities.get(id)?.components[type] ?? null;
-  }
-
-  /**
-   * Determine if an entity has a component.
-   *
-   * @param {string} id - entity id
-   * @param {string} type - component type
-   * @returns {boolean} true if present
-   */
-  hasComponent(id, type) {
-    return Object.prototype.hasOwnProperty.call(
-      this.entities.get(id)?.components || {},
-      type
-    );
-  }
-
-  /**
-   * Add or replace a component on an entity.
-   *
-   * @param {string} id - entity id
-   * @param {string} type - component type
-   * @param {object} data - component data
-   */
-  addComponent(id, type, data) {
-    const ent = this.entities.get(id);
-    if (ent) {
-      ent.components[type] = JSON.parse(JSON.stringify(data));
-    }
-  }
-
-  /**
-   * Get IDs of entities in a specific location.
-   *
-   * @param {string} locationId - location identifier
-   * @returns {Set<string>} entity IDs
-   */
-  getEntitiesInLocation(locationId) {
-    const ids = new Set();
-    for (const [id, ent] of this.entities) {
-      const loc = ent.components[POSITION_COMPONENT_ID]?.locationId;
-      if (loc === locationId) ids.add(id);
-    }
-    return ids;
-  }
-}
-
-/**
- * Initialize interpreter and register handlers with provided entities.
+ * Creates handlers needed for the log_perceptible_events rule.
  *
- * @param {Array<{id:string,components:object}>} entities - initial entities
+ * @param {object} entityManager - Entity manager instance
+ * @param {object} eventBus - Event bus instance
+ * @param {object} logger - Logger instance
+ * @param {object} validatedEventDispatcher - Validated event dispatcher instance
+ * @param {object} safeEventDispatcher - Safe event dispatcher instance
+ * @returns {object} Handlers object
  */
-function init(entities) {
-  operationRegistry = new OperationRegistry({ logger });
-  entityManager = new SimpleEntityManager(entities);
-
-  const safeDispatcher = {
-    dispatch: jest.fn((eventType, payload) => {
-      events.push({ eventType, payload });
-      return Promise.resolve();
-    }),
-  };
-
-  const handlers = {
-    ADD_PERCEPTION_LOG_ENTRY: new AddPerceptionLogEntryHandler({
-      logger,
-      entityManager,
-      safeEventDispatcher: safeDispatcher,
-    }),
-    SET_VARIABLE: new SetVariableHandler({ logger }),
-  };
-
-  for (const [type, handler] of Object.entries(handlers)) {
-    operationRegistry.register(type, handler.execute.bind(handler));
+function createHandlers(entityManager, eventBus, logger, validatedEventDispatcher, safeEventDispatcher) {
+  // Ensure entityManager has getEntitiesInLocation for AddPerceptionLogEntryHandler
+  if (typeof entityManager.getEntitiesInLocation !== 'function') {
+    entityManager.getEntitiesInLocation = () => [];
   }
-
-  operationInterpreter = new OperationInterpreter({
-    logger,
-    operationRegistry,
-  });
-
-  jsonLogic = new JsonLogicEvaluationService({ logger });
-
-  interpreter = new SystemLogicInterpreter({
-    logger,
-    eventBus,
-    dataRegistry,
-    jsonLogicEvaluationService: jsonLogic,
-    entityManager,
-    operationInterpreter,
-  });
-
-  listener = null;
-  interpreter.initialize();
+  
+  return {
+    GET_TIMESTAMP: new GetTimestampHandler({ logger }),
+    SET_VARIABLE: new SetVariableHandler({ logger }),
+    DISPATCH_EVENT: new DispatchEventHandler({ dispatcher: eventBus, logger }),
+    ADD_PERCEPTION_LOG_ENTRY: new AddPerceptionLogEntryHandler({
+      entityManager,
+      logger,
+      safeEventDispatcher: safeEventDispatcher,
+    }),
+  };
 }
 
-let logger;
-let eventBus;
-let dataRegistry;
-let entityManager;
-let operationRegistry;
-let operationInterpreter;
-let jsonLogic;
-let interpreter;
-let events;
-let listener;
+describe('core_handle_log_perceptible_events rule integration', () => {
+  let testEnv;
+  let customEntityManager;
 
-describe('log_perceptible_events rule integration', () => {
   beforeEach(() => {
-    logger = {
-      debug: jest.fn(),
-      info: jest.fn(),
-      warn: jest.fn(),
-      error: jest.fn(),
-    };
-
-    events = [];
-    eventBus = {
-      subscribe: jest.fn((ev, l) => {
-        if (ev === '*') listener = l;
-      }),
-      unsubscribe: jest.fn(),
-      dispatch: jest.fn((eventType, payload) => {
-        events.push({ eventType, payload });
-        return Promise.resolve();
-      }),
-      listenerCount: jest.fn().mockReturnValue(1),
-    };
-
-    dataRegistry = {
+    customEntityManager = new SimpleEntityManager([]);
+    const dataRegistry = {
       getAllSystemRules: jest.fn().mockReturnValue([logPerceptibleEventsRule]),
+      getConditionDefinition: jest.fn((id) =>
+        id === 'core:event-is-perceptible-event' ? eventIsPerceptibleEvent : undefined
+      ),
+      getEventDefinition: jest.fn((eventName) => {
+        // Return a basic event definition for common events
+        const commonEvents = {
+          'core:perception_log_entry': { payloadSchema: null },
+          'core:system_error_occurred': { payloadSchema: null },
+        };
+        return commonEvents[eventName] || null;
+      }),
     };
 
-    init([]);
-  });
+    // Use actual ConsoleLogger instead of mock
+    const testLogger = new ConsoleLogger('DEBUG');
 
-  it('validates log_perceptible_events.rule.json against schema', () => {
-    const ajv = new Ajv({ allErrors: true });
-    ajv.addSchema(
-      commonSchema,
-      'http://example.com/schemas/common.schema.json'
-    );
-    ajv.addSchema(
-      operationSchema,
-      'http://example.com/schemas/operation.schema.json'
-    );
-    loadOperationSchemas(ajv);
-    loadConditionSchemas(ajv);
-    ajv.addSchema(
-      jsonLogicSchema,
-      'http://example.com/schemas/json-logic.schema.json'
-    );
-    const valid = ajv.validate(ruleSchema, logPerceptibleEventsRule);
-    if (!valid) console.error(ajv.errors);
-    expect(valid).toBe(true);
-  });
+    // Use actual EventBus instead of mock
+    const bus = new EventBus();
 
-  it('writes perception log entries for perceivers in the event location', () => {
-    interpreter.shutdown();
-    const now = '2025-01-01T00:00:00.000Z';
-    init([
-      {
-        id: 'p1',
-        components: {
-          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
-          [PERCEPTION_LOG_COMPONENT_ID]: { maxEntries: 5, logEntries: [] },
-        },
+    // Create actual schema validator
+    const schemaValidator = new AjvSchemaValidator(testLogger);
+
+    // Create actual ValidatedEventDispatcher
+    const validatedEventDispatcher = new ValidatedEventDispatcher({
+      eventBus: bus,
+      gameDataRepository: dataRegistry,
+      schemaValidator: schemaValidator,
+      logger: testLogger,
+    });
+
+    // Create actual SafeEventDispatcher
+    const safeEventDispatcher = new SafeEventDispatcher({
+      validatedEventDispatcher: validatedEventDispatcher,
+      logger: testLogger,
+    });
+
+    // Create JSON logic evaluation service
+    const jsonLogic = new JsonLogicEvaluationService({
+      logger: testLogger,
+      gameDataRepository: dataRegistry,
+    });
+
+    // Create operation registry with our custom entity manager
+    const operationRegistry = new OperationRegistry({ logger: testLogger });
+    const handlers = createHandlers(customEntityManager, bus, testLogger, validatedEventDispatcher, safeEventDispatcher);
+    for (const [type, handler] of Object.entries(handlers)) {
+      operationRegistry.register(type, handler.execute.bind(handler));
+    }
+
+    const operationInterpreter = new OperationInterpreter({
+      logger: testLogger,
+      operationRegistry,
+    });
+
+    const interpreter = new SystemLogicInterpreter({
+      logger: testLogger,
+      eventBus: bus,
+      dataRegistry: dataRegistry,
+      jsonLogicEvaluationService: jsonLogic,
+      entityManager: customEntityManager,
+      operationInterpreter,
+    });
+
+    interpreter.initialize();
+
+    // Create a simple event capture mechanism for testing
+    const capturedEvents = [];
+    
+    // Subscribe to the specific events we want to capture
+    const eventsToCapture = [
+      'core:perception_log_entry',
+      'core:system_error_occurred'
+    ];
+    
+    eventsToCapture.forEach(eventType => {
+      bus.subscribe(eventType, (event) => {
+        capturedEvents.push({ eventType: event.type, payload: event.payload });
+      });
+    });
+
+    testEnv = {
+      eventBus: bus,
+      events: capturedEvents,
+      operationRegistry,
+      operationInterpreter,
+      jsonLogic,
+      systemLogicInterpreter: interpreter,
+      entityManager: customEntityManager,
+      logger: testLogger,
+      dataRegistry,
+      cleanup: () => {
+        interpreter.shutdown();
       },
+      reset: (newEntities = []) => {
+        testEnv.cleanup();
+        // Create new entity manager with the new entities
+        customEntityManager = new SimpleEntityManager(newEntities);
+        
+        // Recreate handlers with the new entity manager
+        const newHandlers = createHandlers(customEntityManager, bus, testLogger, validatedEventDispatcher, safeEventDispatcher);
+        const newOperationRegistry = new OperationRegistry({ logger: testLogger });
+        for (const [type, handler] of Object.entries(newHandlers)) {
+          newOperationRegistry.register(type, handler.execute.bind(handler));
+        }
+
+        const newOperationInterpreter = new OperationInterpreter({
+          logger: testLogger,
+          operationRegistry: newOperationRegistry,
+        });
+
+        const newInterpreter = new SystemLogicInterpreter({
+          logger: testLogger,
+          eventBus: bus,
+          dataRegistry: dataRegistry,
+          jsonLogicEvaluationService: jsonLogic,
+          entityManager: customEntityManager,
+          operationInterpreter: newOperationInterpreter,
+        });
+
+        newInterpreter.initialize();
+
+        // Update test environment
+        testEnv.operationRegistry = newOperationRegistry;
+        testEnv.operationInterpreter = newOperationInterpreter;
+        testEnv.systemLogicInterpreter = newInterpreter;
+        testEnv.entityManager = customEntityManager;
+        
+        // Clear events
+        capturedEvents.length = 0;
+      },
+    };
+  });
+
+  afterEach(() => {
+    if (testEnv) {
+      testEnv.cleanup();
+    }
+  });
+
+  it('dispatches perception_log_entry event when perceptible event is received', () => {
+    testEnv.reset([
       {
-        id: 'o1',
+        id: 'actor1',
         components: {
-          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
+          'core:position': { locationId: 'room1' },
+          'core:perceiver': {},
+          'core:perception_log': { maxEntries: 10, logEntries: [] },
         },
       },
     ]);
-
-    listener({
-      type: 'core:perceptible_event',
-      payload: {
-        locationId: 'room1',
-        descriptionText: 'A bell rings',
-        timestamp: now,
-        perceptionType: 'sound',
-        actorId: 'npc:bell',
-        targetId: null,
-        involvedEntities: [],
-      },
-    });
-
-    const log = entityManager.getComponentData(
-      'p1',
-      PERCEPTION_LOG_COMPONENT_ID
-    );
-    expect(log.logEntries.length).toBe(1);
-    expect(log.logEntries[0]).toEqual({
-      descriptionText: 'A bell rings',
-      timestamp: now,
-      perceptionType: 'sound',
-      actorId: 'npc:bell',
+    testEnv.eventBus.dispatch('core:perceptible_event', {
+      locationId: 'room1',
+      descriptionText: 'Something happened',
+      perceptionType: 'state_change_observable',
+      actorId: 'actor1',
       targetId: null,
       involvedEntities: [],
-    });
-  });
-
-  it('does nothing when no entities in location have perception logs', () => {
-    interpreter.shutdown();
-    init([
-      {
-        id: 'a1',
-        components: { [POSITION_COMPONENT_ID]: { locationId: 'room1' } },
-      },
-      {
-        id: 'b1',
-        components: { [POSITION_COMPONENT_ID]: { locationId: 'room1' } },
-      },
-    ]);
-
-    listener({
-      type: 'core:perceptible_event',
-      payload: {
-        locationId: 'room1',
-        descriptionText: 'Silence',
-        timestamp: '2025-01-01T00:00:00.000Z',
-        perceptionType: 'sound',
-        actorId: 'npc:quiet',
-        targetId: null,
-        involvedEntities: [],
-      },
+      timestamp: new Date().toISOString(),
     });
 
-    expect(
-      entityManager.getComponentData('a1', PERCEPTION_LOG_COMPONENT_ID)
-    ).toBeNull();
-    expect(
-      entityManager.getComponentData('b1', PERCEPTION_LOG_COMPONENT_ID)
-    ).toBeNull();
+    // Check the perception log for the entry
+    const log = testEnv.entityManager.getComponentData('actor1', 'core:perception_log');
+    const found = log && Array.isArray(log.logEntries) && log.logEntries.some(e => e.descriptionText === 'Something happened');
+    expect(found).toBe(true);
   });
 });

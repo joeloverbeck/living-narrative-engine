@@ -34,8 +34,8 @@ const makeMockEntityManager = () => {
   };
   Object.defineProperty(manager, 'entities', {
     get() {
-      // Return an array of entity objects with id fields matching the keys in activeEntities
-      return Array.from(manager.activeEntities.keys()).map((id) => ({ id }));
+      // Return a Map with entity IDs as keys, matching what QueryEntitiesHandler expects
+      return manager.activeEntities;
     },
     enumerable: true,
     configurable: true,
@@ -328,7 +328,7 @@ describe('QueryEntitiesHandler', () => {
       expect(result.length).toBe(5);
       expect(result).toEqual(
         expect.arrayContaining(
-          Array.from(mockEntityManager.entities).map((e) => e.id)
+          Array.from(mockEntityManager.entities.keys())
         )
       );
     });

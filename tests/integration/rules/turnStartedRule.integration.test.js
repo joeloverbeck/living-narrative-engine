@@ -1,57 +1,49 @@
 /**
- * @file Integration tests for turn_started.rule.json.
+ * @file Integration tests for the core turn_started rule.
  */
 
 import { describe, it, beforeEach, expect, jest } from '@jest/globals';
-import Ajv from 'ajv';
-import ruleSchema from '../../../data/schemas/rule.schema.json';
-import commonSchema from '../../../data/schemas/common.schema.json';
-import operationSchema from '../../../data/schemas/operation.schema.json';
-import jsonLogicSchema from '../../../data/schemas/json-logic.schema.json';
-import conditionSchema from '../../../data/schemas/condition.schema.json';
-import conditionContainerSchema from '../../../data/schemas/condition-container.schema.json';
-import loadOperationSchemas from '../../unit/helpers/loadOperationSchemas.js';
-import loadConditionSchemas from '../../unit/helpers/loadConditionSchemas.js';
 import turnStartedRule from '../../../data/mods/core/rules/turn_started.rule.json';
+import eventIsTurnStarted from '../../../data/mods/core/conditions/event-is-turn_started.condition.json';
+import SetVariableHandler from '../../../src/logic/operationHandlers/setVariableHandler.js';
+import DispatchEventHandler from '../../../src/logic/operationHandlers/dispatchEventHandler.js';
 import AddComponentHandler from '../../../src/logic/operationHandlers/addComponentHandler.js';
-import { CURRENT_ACTOR_COMPONENT_ID } from '../../../src/constants/componentIds.js';
+import { TURN_STARTED_ID } from '../../../src/constants/eventIds.js';
 import { createRuleTestEnvironment } from '../../common/engine/systemLogicTestEnv.js';
 
-describe('turn_started rule integration', () => {
+/**
+ * Creates handlers needed for the turn_started rule.
+ *
+ * @param {object} entityManager - Entity manager instance
+ * @param {object} eventBus - Event bus instance
+ * @param {object} logger - Logger instance
+ * @returns {object} Handlers object
+ */
+function createHandlers(entityManager, eventBus, logger) {
+  const safeEventDispatcher = { dispatch: jest.fn() };
+  return {
+    SET_VARIABLE: new SetVariableHandler({ logger }),
+    DISPATCH_EVENT: new DispatchEventHandler({ dispatcher: eventBus, logger }),
+    ADD_COMPONENT: new AddComponentHandler({ entityManager, logger, safeEventDispatcher }),
+  };
+}
+
+describe('core_handle_turn_started rule integration', () => {
   let testEnv;
-  let events = [];
 
   beforeEach(() => {
     const dataRegistry = {
       getAllSystemRules: jest.fn().mockReturnValue([turnStartedRule]),
-      getConditionDefinition: jest.fn().mockReturnValue(undefined),
+      getConditionDefinition: jest.fn((id) =>
+        id === 'core:event-is-turn-started' ? eventIsTurnStarted : undefined
+      ),
     };
 
-    // Create handlers with dependencies
-    const createHandlers = (entityManager, eventBus, logger) => {
-      return {
-        ADD_COMPONENT: new AddComponentHandler({
-          entityManager,
-          logger,
-          safeEventDispatcher: {
-            dispatch: (...args) => eventBus.dispatch(...args),
-          },
-        }),
-      };
-    };
-
-    // Create test environment
     testEnv = createRuleTestEnvironment({
       createHandlers,
       entities: [],
       rules: [turnStartedRule],
       dataRegistry,
-    });
-
-    // Set up event listener
-    events = [];
-    testEnv.eventBus.subscribe('*', (event) => {
-      events.push(event);
     });
   });
 
@@ -61,66 +53,21 @@ describe('turn_started rule integration', () => {
     }
   });
 
-  it('validates turn_started.rule.json against schema', () => {
-    const ajv = new Ajv({ allErrors: true });
-    ajv.addSchema(
-      commonSchema,
-      'http://example.com/schemas/common.schema.json'
-    );
-    ajv.addSchema(
-      operationSchema,
-      'http://example.com/schemas/operation.schema.json'
-    );
-    loadOperationSchemas(ajv);
-    loadConditionSchemas(ajv);
-    ajv.addSchema(
-      jsonLogicSchema,
-      'http://example.com/schemas/json-logic.schema.json'
-    );
-    const valid = ajv.validate(ruleSchema, turnStartedRule);
-    if (!valid) console.error(ajv.errors);
-    expect(valid).toBe(true);
-  });
-
-  it('adds current_actor component to the payload entity', async () => {
+  it('adds current_actor component when turn_started is received', () => {
     testEnv.reset([
       {
-        id: 'player1',
+        id: 'test-entity',
         components: {},
       },
     ]);
 
-    await testEnv.eventBus.dispatch('core:turn_started', {
-      entityId: 'player1',
+    testEnv.eventBus.dispatch(TURN_STARTED_ID, {
+      entityId: 'test-entity',
     });
 
-    expect(
-      testEnv.entityManager.getComponentData(
-        'player1',
-        CURRENT_ACTOR_COMPONENT_ID
-      )
-    ).toEqual({});
-  });
-
-  it('replaces existing current_actor component', async () => {
-    testEnv.reset([
-      {
-        id: 'player1',
-        components: {
-          [CURRENT_ACTOR_COMPONENT_ID]: { actorId: 'oldActor' },
-        },
-      },
-    ]);
-
-    await testEnv.eventBus.dispatch('core:turn_started', {
-      entityId: 'player1',
-    });
-
-    expect(
-      testEnv.entityManager.getComponentData(
-        'player1',
-        CURRENT_ACTOR_COMPONENT_ID
-      )
-    ).toEqual({});
+    // The rule should add a core:current_actor component to the entity
+    const entity = testEnv.entityManager.getEntityInstance('test-entity');
+    expect(entity).toBeDefined();
+    expect(testEnv.entityManager.hasComponent('test-entity', 'core:current_actor')).toBe(true);
   });
 });

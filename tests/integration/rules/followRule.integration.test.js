@@ -25,8 +25,9 @@ import DispatchEventHandler from '../../../src/logic/operationHandlers/dispatchE
 import DispatchPerceptibleEventHandler from '../../../src/logic/operationHandlers/dispatchPerceptibleEventHandler.js';
 import GetTimestampHandler from '../../../src/logic/operationHandlers/getTimestampHandler.js';
 import EndTurnHandler from '../../../src/logic/operationHandlers/endTurnHandler.js';
-import { expandMacros } from '../../../src/utils/macroUtils.js';
+import AddPerceptionLogEntryHandler from '../../../src/logic/operationHandlers/addPerceptionLogEntryHandler.js';
 import logSuccessAndEndTurn from '../../../data/mods/core/macros/logSuccessAndEndTurn.macro.json';
+import { expandMacros } from '../../../src/utils/macroUtils.js';
 import {
   FOLLOWING_COMPONENT_ID,
   LEADING_COMPONENT_ID,
@@ -36,46 +37,16 @@ import {
 import { ATTEMPT_ACTION_ID } from '../../../src/constants/eventIds.js';
 import SetVariableHandler from '../../../src/logic/operationHandlers/setVariableHandler.js';
 import GetNameHandler from '../../../src/logic/operationHandlers/getNameHandler.js';
-
-class SimpleEntityManager {
-  constructor(entities) {
-    this.entities = new Map();
-    for (const e of entities) {
-      this.entities.set(e.id, {
-        id: e.id,
-        components: { ...e.components },
-        getComponentData(type) {
-          return this.components[type] ?? null;
-        },
-        hasComponent(type) {
-          return Object.prototype.hasOwnProperty.call(this.components, type);
-        },
-      });
-    }
-  }
-
-  getEntityInstance(id) {
-    return this.entities.get(id);
-  }
-
-  getComponentData(id, type) {
-    return this.entities.get(id)?.components[type] ?? null;
-  }
-
-  hasComponent(id, type) {
-    return Object.prototype.hasOwnProperty.call(
-      this.entities.get(id)?.components || {},
-      type
-    );
-  }
-
-  addComponent(id, type, data) {
-    const ent = this.entities.get(id);
-    if (ent) {
-      ent.components[type] = JSON.parse(JSON.stringify(data));
-    }
-  }
-}
+import { createRuleTestEnvironment } from '../../common/engine/systemLogicTestEnv.js';
+import RebuildLeaderListCacheHandler from '../../../src/logic/operationHandlers/rebuildLeaderListCacheHandler.js';
+import { createCapturingEventBus } from '../../common/mockFactories/index.js';
+import { SimpleEntityManager } from '../../common/entities/index.js';
+import { SafeEventDispatcher } from '../../../src/events/safeEventDispatcher.js';
+import ValidatedEventDispatcher from '../../../src/events/validatedEventDispatcher.js';
+import EventBus from '../../../src/events/eventBus.js';
+import AjvSchemaValidator from '../../../src/validation/ajvSchemaValidator.js';
+import ConsoleLogger from '../../../src/logging/consoleLogger.js';
+import { dedupe, merge, repair } from '../../../src/logic/services/closenessCircleService.js';
 
 /**
  *
@@ -99,119 +70,70 @@ function makeStubRebuild(em) {
   };
 }
 
-describe('core_handle_follow rule integration', () => {
-  let logger;
-  let eventBus;
-  let dataRegistry;
-  let entityManager;
-  let operationRegistry;
-  let operationInterpreter;
-  let jsonLogic;
-  let interpreter;
-  let events;
-  let listener;
+/**
+ * Creates handlers needed for the follow rule.
+ *
+ * @param {object} entityManager - Entity manager instance
+ * @param {object} eventBus - Event bus instance
+ * @param {object} logger - Logger instance
+ * @param {object} validatedEventDispatcher - Validated event dispatcher instance
+ * @param {object} safeEventDispatcher - Safe event dispatcher instance
+ * @returns {object} Handlers object
+ */
+function createHandlers(entityManager, eventBus, logger, validatedEventDispatcher, safeEventDispatcher) {
+  const rebuildLeaderListCacheHandler = new RebuildLeaderListCacheHandler({
+    entityManager,
+    logger,
+    safeEventDispatcher: safeEventDispatcher,
+  });
 
-  /**
-   * Helper to (re)initialize the interpreter with a fresh entity manager and
-   * operation registry using the provided entities.
-   *
-   * @param {Array<{id:string,components:object}>} entities
-   */
-  function init(entities) {
-    operationRegistry = new OperationRegistry({ logger });
-    entityManager = new SimpleEntityManager(entities);
-
-    const safeDispatcher = {
-      dispatch: jest.fn((eventType, payload) => {
-        events.push({ eventType, payload });
-        return Promise.resolve();
-      }),
-    };
-
-    const handlers = {
-      CHECK_FOLLOW_CYCLE: new CheckFollowCycleHandler({
-        logger,
-        entityManager,
-        safeEventDispatcher: safeDispatcher,
-      }),
-      QUERY_COMPONENT: new QueryComponentHandler({
-        entityManager,
-        logger,
-        safeEventDispatcher: safeDispatcher,
-      }),
-      ESTABLISH_FOLLOW_RELATION: new EstablishFollowRelationHandler({
-        entityManager,
-        logger,
-        rebuildLeaderListCacheHandler: makeStubRebuild(entityManager),
-        safeEventDispatcher: safeDispatcher,
-      }),
-      DISPATCH_PERCEPTIBLE_EVENT: new DispatchPerceptibleEventHandler({
-        dispatcher: eventBus,
-        logger,
-        addPerceptionLogEntryHandler: { execute: jest.fn() },
-      }),
-      DISPATCH_EVENT: new DispatchEventHandler({
-        dispatcher: eventBus,
-        logger,
-      }),
-      END_TURN: new EndTurnHandler({
-        safeEventDispatcher: safeDispatcher,
-        logger,
-      }),
-      GET_TIMESTAMP: new GetTimestampHandler({ logger }),
-      GET_NAME: new GetNameHandler({
-        entityManager,
-        logger,
-        safeEventDispatcher: safeDispatcher,
-      }),
-      SET_VARIABLE: new SetVariableHandler({ logger }),
-    };
-
-    for (const [type, handler] of Object.entries(handlers)) {
-      operationRegistry.register(type, handler.execute.bind(handler));
-    }
-
-    operationInterpreter = new OperationInterpreter({
-      logger,
-      operationRegistry,
-    });
-
-    jsonLogic = new JsonLogicEvaluationService({ logger });
-
-    interpreter = new SystemLogicInterpreter({
-      logger,
-      eventBus,
-      dataRegistry,
-      jsonLogicEvaluationService: jsonLogic,
+  return {
+    QUERY_COMPONENT: new QueryComponentHandler({
       entityManager,
-      operationInterpreter,
-    });
+      logger,
+      safeEventDispatcher: safeEventDispatcher,
+    }),
+    GET_NAME: new GetNameHandler({
+      entityManager,
+      logger,
+      safeEventDispatcher: safeEventDispatcher,
+    }),
+    GET_TIMESTAMP: new GetTimestampHandler({ logger }),
+    DISPATCH_PERCEPTIBLE_EVENT: new DispatchPerceptibleEventHandler({
+      dispatcher: eventBus,
+      logger,
+      addPerceptionLogEntryHandler: new AddPerceptionLogEntryHandler({
+        entityManager,
+        logger,
+        safeEventDispatcher: safeEventDispatcher,
+      }),
+    }),
+    DISPATCH_EVENT: new DispatchEventHandler({ dispatcher: eventBus, logger }),
+    END_TURN: new EndTurnHandler({
+      safeEventDispatcher: safeEventDispatcher,
+      logger,
+    }),
+    ESTABLISH_FOLLOW_RELATION: new EstablishFollowRelationHandler({
+      entityManager,
+      logger,
+      safeEventDispatcher: safeEventDispatcher,
+      rebuildLeaderListCacheHandler,
+    }),
+    CHECK_FOLLOW_CYCLE: new CheckFollowCycleHandler({
+      entityManager,
+      logger,
+      safeEventDispatcher: safeEventDispatcher,
+    }),
+    SET_VARIABLE: new SetVariableHandler({ logger }),
+  };
+}
 
-    listener = null;
-    interpreter.initialize();
-  }
+describe('core_handle_follow rule integration', () => {
+  let testEnv;
+  let customEntityManager;
 
   beforeEach(() => {
-    logger = {
-      debug: jest.fn(),
-      info: jest.fn(),
-      warn: jest.fn(),
-      error: jest.fn(),
-    };
-
-    events = [];
-    eventBus = {
-      subscribe: jest.fn((ev, l) => {
-        if (ev === '*') listener = l;
-      }),
-      unsubscribe: jest.fn(),
-      dispatch: jest.fn((eventType, payload) => {
-        events.push({ eventType, payload });
-        return Promise.resolve();
-      }),
-      listenerCount: jest.fn().mockReturnValue(1),
-    };
-
+    customEntityManager = new SimpleEntityManager([]);
     const macroRegistry = {
       get: (type, id) =>
         type === 'macros' && id === 'core:logSuccessAndEndTurn'
@@ -220,17 +142,186 @@ describe('core_handle_follow rule integration', () => {
     };
     const expandedRule = {
       ...followRule,
-      condition: eventIsActionFollow.logic,
-      actions: expandMacros(
-        JSON.parse(JSON.stringify(followRule.actions)),
-        macroRegistry
-      ),
-    };
-    dataRegistry = {
-      getAllSystemRules: jest.fn().mockReturnValue([expandedRule]),
+      actions: expandMacros(followRule.actions, macroRegistry, null),
     };
 
-    init([]); // start with empty manager by default
+    const dataRegistry = {
+      getAllSystemRules: jest.fn().mockReturnValue([expandedRule]),
+      getConditionDefinition: jest.fn((id) =>
+        id === 'core:event-is-action-follow' ? eventIsActionFollow : undefined
+      ),
+      getEventDefinition: jest.fn((eventName) => {
+        // Return a basic event definition for common events
+        const commonEvents = {
+          'core:turn_ended': { payloadSchema: null },
+          'core:perceptible_event': { payloadSchema: null },
+          'core:display_successful_action_result': { payloadSchema: null },
+          'core:system_error_occurred': { payloadSchema: null },
+        };
+        return commonEvents[eventName] || null;
+      }),
+    };
+
+    // Use actual ConsoleLogger instead of mock
+    const testLogger = new ConsoleLogger('DEBUG');
+
+    // Use actual EventBus instead of mock
+    const bus = new EventBus();
+
+    // Create actual schema validator
+    const schemaValidator = new AjvSchemaValidator(testLogger);
+
+    // Create actual ValidatedEventDispatcher
+    const validatedEventDispatcher = new ValidatedEventDispatcher({
+      eventBus: bus,
+      gameDataRepository: dataRegistry,
+      schemaValidator: schemaValidator,
+      logger: testLogger,
+    });
+
+    // Create actual SafeEventDispatcher
+    const safeEventDispatcher = new SafeEventDispatcher({
+      validatedEventDispatcher: validatedEventDispatcher,
+      logger: testLogger,
+    });
+
+    // Create JSON logic evaluation service
+    const jsonLogic = new JsonLogicEvaluationService({
+      logger: testLogger,
+      gameDataRepository: dataRegistry,
+    });
+
+    // Create operation registry with our custom entity manager
+    const operationRegistry = new OperationRegistry({ logger: testLogger });
+    const handlers = createHandlers(customEntityManager, bus, testLogger, validatedEventDispatcher, safeEventDispatcher);
+    for (const [type, handler] of Object.entries(handlers)) {
+      operationRegistry.register(type, handler.execute.bind(handler));
+    }
+
+    const operationInterpreter = new OperationInterpreter({
+      logger: testLogger,
+      operationRegistry,
+    });
+
+    const interpreter = new SystemLogicInterpreter({
+      logger: testLogger,
+      eventBus: bus,
+      dataRegistry: dataRegistry,
+      jsonLogicEvaluationService: jsonLogic,
+      entityManager: customEntityManager,
+      operationInterpreter,
+    });
+
+    interpreter.initialize();
+
+    // Create a simple event capture mechanism for testing
+    const capturedEvents = [];
+    
+    // Subscribe to the specific events we want to capture
+    const eventsToCapture = [
+      'core:perceptible_event',
+      'core:display_successful_action_result', 
+      'core:turn_ended',
+      'core:system_error_occurred'
+    ];
+    
+    eventsToCapture.forEach(eventType => {
+      bus.subscribe(eventType, (event) => {
+        capturedEvents.push({ eventType: event.type, payload: event.payload });
+      });
+    });
+
+    testEnv = {
+      eventBus: bus,
+      events: capturedEvents,
+      operationRegistry,
+      operationInterpreter,
+      jsonLogic,
+      systemLogicInterpreter: interpreter,
+      entityManager: customEntityManager,
+      logger: testLogger,
+      dataRegistry,
+      cleanup: () => {
+        interpreter.shutdown();
+      },
+      reset: (newEntities = []) => {
+        testEnv.cleanup();
+        // Create new entity manager with the new entities
+        customEntityManager = new SimpleEntityManager(newEntities);
+        
+        // Recreate handlers with the new entity manager
+        const newHandlers = createHandlers(customEntityManager, bus, testLogger, validatedEventDispatcher, safeEventDispatcher);
+        const newOperationRegistry = new OperationRegistry({ logger: testLogger });
+        for (const [type, handler] of Object.entries(newHandlers)) {
+          newOperationRegistry.register(type, handler.execute.bind(handler));
+        }
+
+        const newOperationInterpreter = new OperationInterpreter({
+          logger: testLogger,
+          operationRegistry: newOperationRegistry,
+        });
+
+        const newInterpreter = new SystemLogicInterpreter({
+          logger: testLogger,
+          eventBus: bus,
+          dataRegistry: dataRegistry,
+          jsonLogicEvaluationService: jsonLogic,
+          entityManager: customEntityManager,
+          operationInterpreter: newOperationInterpreter,
+        });
+
+        newInterpreter.initialize();
+
+        // Update test environment
+        testEnv.operationRegistry = newOperationRegistry;
+        testEnv.operationInterpreter = newOperationInterpreter;
+        testEnv.systemLogicInterpreter = newInterpreter;
+        testEnv.entityManager = customEntityManager;
+        
+        // Clear events
+        capturedEvents.length = 0;
+      },
+    };
+  });
+
+  afterEach(() => {
+    if (testEnv) {
+      testEnv.cleanup();
+    }
+  });
+
+  it('performs follow action successfully', () => {
+    testEnv.reset([
+      {
+        id: 'f1',
+        components: {
+          [NAME_COMPONENT_ID]: { text: 'Follower' },
+          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
+        },
+      },
+      {
+        id: 'l1',
+        components: {
+          [NAME_COMPONENT_ID]: { text: 'Leader' },
+          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
+        },
+      },
+    ]);
+
+    testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      actorId: 'f1',
+      actionId: 'core:follow',
+      targetId: 'l1',
+    });
+
+    const types = testEnv.events.map((e) => e.eventType);
+    expect(types).toEqual(
+      expect.arrayContaining([
+        'core:perceptible_event',
+        'core:display_successful_action_result',
+        'core:turn_ended',
+      ])
+    );
   });
 
   it('validates follow.rule.json against schema', () => {
@@ -261,41 +352,50 @@ describe('core_handle_follow rule integration', () => {
     expect(valid).toBe(true);
   });
 
-  it('successful follow updates components and dispatches events', async () => {
-    interpreter.shutdown();
-    init([
+  it('successful follow updates components and dispatches events', () => {
+    testEnv.reset([
       {
         id: 'f1',
         components: {
           [NAME_COMPONENT_ID]: { text: 'Follower' },
-          [POSITION_COMPONENT_ID]: { locationId: 'locA' },
+          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
         },
       },
       {
         id: 'l1',
         components: {
           [NAME_COMPONENT_ID]: { text: 'Leader' },
-          [POSITION_COMPONENT_ID]: { locationId: 'locA' },
+          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
         },
       },
     ]);
-    await listener({
-      type: ATTEMPT_ACTION_ID,
-      payload: { actorId: 'f1', actionId: 'core:follow', targetId: 'l1' },
+
+    testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      actorId: 'f1',
+      actionId: 'core:follow',
+      targetId: 'l1',
     });
 
     expect(
-      entityManager.getComponentData('f1', FOLLOWING_COMPONENT_ID)
+      testEnv.entityManager.getComponentData('f1', FOLLOWING_COMPONENT_ID)
     ).toEqual({
       leaderId: 'l1',
     });
-    expect(entityManager.getComponentData('l1', LEADING_COMPONENT_ID)).toEqual({
+    expect(testEnv.entityManager.getComponentData('l1', LEADING_COMPONENT_ID)).toEqual({
       followers: ['f1'],
     });
+    const types = testEnv.events.map((e) => e.eventType);
+    expect(types).toEqual(
+      expect.arrayContaining([
+        'core:perceptible_event',
+        'core:display_successful_action_result',
+        'core:turn_ended',
+      ])
+    );
   });
 
   it('cycle detection branch dispatches error and no mutations', async () => {
-    entityManager = new SimpleEntityManager([
+    testEnv.reset([
       {
         id: 'f1',
         components: {
@@ -312,33 +412,18 @@ describe('core_handle_follow rule integration', () => {
         },
       },
     ]);
-    interpreter.shutdown();
-    init([
-      {
-        id: 'f1',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Follower' },
-          [POSITION_COMPONENT_ID]: { locationId: 'locA' },
-        },
-      },
-      {
-        id: 'l1',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Leader' },
-          [POSITION_COMPONENT_ID]: { locationId: 'locA' },
-          [FOLLOWING_COMPONENT_ID]: { leaderId: 'f1' },
-        },
-      },
-    ]);
-    await listener({
-      type: ATTEMPT_ACTION_ID,
-      payload: { actorId: 'f1', actionId: 'core:follow', targetId: 'l1' },
+
+    testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      actorId: 'f1',
+      actionId: 'core:follow',
+      targetId: 'l1',
     });
 
     expect(
-      entityManager.getComponentData('f1', FOLLOWING_COMPONENT_ID)
+      testEnv.entityManager.getComponentData('f1', FOLLOWING_COMPONENT_ID)
     ).toBeNull();
     // Errors are dispatched via the event dispatcher; ensure no components were
     // modified when a follow cycle is detected.
   });
 });
+

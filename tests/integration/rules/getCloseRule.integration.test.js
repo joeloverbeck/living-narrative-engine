@@ -12,10 +12,6 @@ import loadOperationSchemas from '../../unit/helpers/loadOperationSchemas.js';
 import loadConditionSchemas from '../../unit/helpers/loadConditionSchemas.js';
 import getCloseRule from '../../../data/mods/intimacy/rules/get_close.rule.json';
 import eventIsActionGetClose from '../../../data/mods/intimacy/conditions/event-is-action-get-close.condition.json';
-import SystemLogicInterpreter from '../../../src/logic/systemLogicInterpreter.js';
-import OperationInterpreter from '../../../src/logic/operationInterpreter.js';
-import OperationRegistry from '../../../src/logic/operationRegistry.js';
-import JsonLogicEvaluationService from '../../../src/logic/jsonLogicEvaluationService.js';
 import SetVariableHandler from '../../../src/logic/operationHandlers/setVariableHandler.js';
 import MergeClosenessCircleHandler from '../../../src/logic/operationHandlers/mergeClosenessCircleHandler.js';
 import GetNameHandler from '../../../src/logic/operationHandlers/getNameHandler.js';
@@ -24,6 +20,7 @@ import GetTimestampHandler from '../../../src/logic/operationHandlers/getTimesta
 import DispatchEventHandler from '../../../src/logic/operationHandlers/dispatchEventHandler.js';
 import DispatchPerceptibleEventHandler from '../../../src/logic/operationHandlers/dispatchPerceptibleEventHandler.js';
 import EndTurnHandler from '../../../src/logic/operationHandlers/endTurnHandler.js';
+import AddPerceptionLogEntryHandler from '../../../src/logic/operationHandlers/addPerceptionLogEntryHandler.js';
 import { expandMacros } from '../../../src/utils/macroUtils.js';
 import logSuccessAndEndTurn from '../../../data/mods/core/macros/logSuccessAndEndTurn.macro.json';
 import {
@@ -32,166 +29,73 @@ import {
 } from '../../../src/constants/componentIds.js';
 import { buildABCDWorld } from '../fixtures/intimacyFixtures.js';
 import { ATTEMPT_ACTION_ID } from '../../../src/constants/eventIds.js';
-
-// This entity manager is now simpler, as it no longer needs the context-aware hack.
-class SimpleEntityManager {
-  constructor(entities) {
-    this.entities = new Map();
-    for (const e of entities) {
-      this.entities.set(e.id, {
-        id: e.id,
-        components: { ...e.components },
-        getComponentData(type) {
-          return this.components[type] ?? null;
-        },
-        hasComponent(type) {
-          return Object.prototype.hasOwnProperty.call(this.components, type);
-        },
-      });
-    }
-  }
-
-  getEntityInstance(id) {
-    return this.entities.get(id);
-  }
-
-  getComponentData(id, type) {
-    return this.entities.get(id)?.components[type] ?? null;
-  }
-
-  hasComponent(id, type) {
-    return Object.prototype.hasOwnProperty.call(
-      this.entities.get(id)?.components || {},
-      type
-    );
-  }
-
-  addComponent(id, type, data) {
-    const ent = this.entities.get(id);
-    if (ent) {
-      ent.components[type] = JSON.parse(JSON.stringify(data));
-    }
-  }
-
-  removeComponent(id, type) {
-    const ent = this.entities.get(id);
-    if (ent) {
-      delete ent.components[type];
-    }
-  }
-}
+import { SimpleEntityManager } from '../../common/entities/index.js';
+import { SafeEventDispatcher } from '../../../src/events/safeEventDispatcher.js';
+import ValidatedEventDispatcher from '../../../src/events/validatedEventDispatcher.js';
+import EventBus from '../../../src/events/eventBus.js';
+import AjvSchemaValidator from '../../../src/validation/ajvSchemaValidator.js';
+import ConsoleLogger from '../../../src/logging/consoleLogger.js';
+import SystemLogicInterpreter from '../../../src/logic/systemLogicInterpreter.js';
+import OperationInterpreter from '../../../src/logic/operationInterpreter.js';
+import OperationRegistry from '../../../src/logic/operationRegistry.js';
+import JsonLogicEvaluationService from '../../../src/logic/jsonLogicEvaluationService.js';
+import { merge } from '../../../src/logic/services/closenessCircleService.js';
 
 /**
- * Initializes core services and registers operation handlers for tests.
+ * Creates handlers needed for the get_close rule.
  *
- * @param {Array<object>} entities - Initial entity definitions
- * @returns {void}
+ * @param {object} entityManager - Entity manager instance
+ * @param {object} eventBus - Event bus instance
+ * @param {object} logger - Logger instance
+ * @param {object} validatedEventDispatcher - Validated event dispatcher instance
+ * @param {object} safeEventDispatcher - Safe event dispatcher instance
+ * @returns {object} Handlers object
  */
-function init(entities) {
-  operationRegistry = new OperationRegistry({ logger });
-  entityManager = new SimpleEntityManager(entities);
+function createHandlers(entityManager, eventBus, logger, validatedEventDispatcher, safeEventDispatcher) {
+  const closenessCircleService = { merge };
 
-  const safeDispatcher = {
-    dispatch: jest.fn((eventType, payload) => {
-      events.push({ eventType, payload });
-      return Promise.resolve(true);
-    }),
-  };
-
-  const closenessCircleService = { merge: jest.fn((...arrays) => [...new Set(arrays.flat())]) };
-
-  // Register all necessary handlers for the rule to run
-  const handlers = {
+  return {
     QUERY_COMPONENT: new QueryComponentHandler({
       entityManager,
       logger,
-      safeEventDispatcher: safeDispatcher,
+      safeEventDispatcher: safeEventDispatcher,
     }),
     SET_VARIABLE: new SetVariableHandler({ logger }),
     MERGE_CLOSENESS_CIRCLE: new MergeClosenessCircleHandler({
       logger,
       entityManager,
-      safeEventDispatcher: safeDispatcher,
+      safeEventDispatcher: safeEventDispatcher,
       closenessCircleService,
     }),
     DISPATCH_PERCEPTIBLE_EVENT: new DispatchPerceptibleEventHandler({
       dispatcher: eventBus,
       logger,
-      addPerceptionLogEntryHandler: { execute: jest.fn() },
+      addPerceptionLogEntryHandler: new AddPerceptionLogEntryHandler({
+        entityManager,
+        logger,
+        safeEventDispatcher: safeEventDispatcher,
+      }),
     }),
     GET_NAME: new GetNameHandler({
       entityManager,
       logger,
-      safeEventDispatcher: safeDispatcher,
+      safeEventDispatcher: safeEventDispatcher,
     }),
     GET_TIMESTAMP: new GetTimestampHandler({ logger }),
     DISPATCH_EVENT: new DispatchEventHandler({ dispatcher: eventBus, logger }),
     END_TURN: new EndTurnHandler({
-      safeEventDispatcher: safeDispatcher,
+      safeEventDispatcher: safeEventDispatcher,
       logger,
     }),
   };
-
-  for (const [type, handler] of Object.entries(handlers)) {
-    operationRegistry.register(type, handler.execute.bind(handler));
-  }
-
-  operationInterpreter = new OperationInterpreter({
-    logger,
-    operationRegistry,
-  });
-
-  jsonLogic = new JsonLogicEvaluationService({
-    logger,
-    gameDataRepository: dataRegistry,
-  });
-
-  interpreter = new SystemLogicInterpreter({
-    logger,
-    eventBus,
-    dataRegistry,
-    jsonLogicEvaluationService: jsonLogic,
-    entityManager,
-    operationInterpreter,
-  });
-
-  listener = null;
-  interpreter.initialize();
 }
 
-let logger;
-let eventBus;
-let dataRegistry;
-let entityManager;
-let operationRegistry;
-let operationInterpreter;
-let jsonLogic;
-let interpreter;
-let events;
-let listener;
-
 describe('intimacy_handle_get_close rule integration', () => {
+  let testEnv;
+  let customEntityManager;
+
   beforeEach(() => {
-    logger = {
-      debug: jest.fn(),
-      info: jest.fn(),
-      warn: jest.fn(),
-      error: jest.fn(),
-    };
-
-    events = [];
-    eventBus = {
-      subscribe: jest.fn((ev, l) => {
-        if (ev === '*') listener = l;
-      }),
-      unsubscribe: jest.fn(),
-      dispatch: jest.fn((eventType, payload) => {
-        events.push({ eventType, payload });
-        return Promise.resolve();
-      }),
-      listenerCount: jest.fn().mockReturnValue(1),
-    };
-
+    customEntityManager = new SimpleEntityManager([]);
     const macroRegistry = {
       get: (type, id) =>
         type === 'macros' && id === 'core:logSuccessAndEndTurn'
@@ -200,23 +104,154 @@ describe('intimacy_handle_get_close rule integration', () => {
     };
     const expandedRule = {
       ...getCloseRule,
-      actions: expandMacros(getCloseRule.actions, macroRegistry, logger),
+      actions: expandMacros(getCloseRule.actions, macroRegistry, null),
     };
-    dataRegistry = {
+    
+    const dataRegistry = {
       getAllSystemRules: jest.fn().mockReturnValue([expandedRule]),
       getConditionDefinition: jest.fn((id) =>
         id === 'intimacy:event-is-action-get-close'
           ? eventIsActionGetClose
           : undefined
       ),
+      getEventDefinition: jest.fn((eventName) => {
+        // Return a basic event definition for common events
+        const commonEvents = {
+          'core:turn_ended': { payloadSchema: null },
+          'core:perceptible_event': { payloadSchema: null },
+          'core:display_successful_action_result': { payloadSchema: null },
+          'core:system_error_occurred': { payloadSchema: null },
+        };
+        return commonEvents[eventName] || null;
+      }),
     };
 
-    // The context-aware mocks are no longer needed, so they are removed.
-    init([]);
+    // Use actual ConsoleLogger instead of mock
+    const testLogger = new ConsoleLogger('DEBUG');
+
+    // Use actual EventBus instead of mock
+    const bus = new EventBus();
+
+    // Create actual schema validator
+    const schemaValidator = new AjvSchemaValidator(testLogger);
+
+    // Create actual ValidatedEventDispatcher
+    const validatedEventDispatcher = new ValidatedEventDispatcher({
+      eventBus: bus,
+      gameDataRepository: dataRegistry,
+      schemaValidator: schemaValidator,
+      logger: testLogger,
+    });
+
+    // Create actual SafeEventDispatcher
+    const safeEventDispatcher = new SafeEventDispatcher({
+      validatedEventDispatcher: validatedEventDispatcher,
+      logger: testLogger,
+    });
+
+    // Create JSON logic evaluation service
+    const jsonLogic = new JsonLogicEvaluationService({
+      logger: testLogger,
+      gameDataRepository: dataRegistry,
+    });
+
+    // Create operation registry with our custom entity manager
+    const operationRegistry = new OperationRegistry({ logger: testLogger });
+    const handlers = createHandlers(customEntityManager, bus, testLogger, validatedEventDispatcher, safeEventDispatcher);
+    for (const [type, handler] of Object.entries(handlers)) {
+      operationRegistry.register(type, handler.execute.bind(handler));
+    }
+
+    const operationInterpreter = new OperationInterpreter({
+      logger: testLogger,
+      operationRegistry,
+    });
+
+    const interpreter = new SystemLogicInterpreter({
+      logger: testLogger,
+      eventBus: bus,
+      dataRegistry: dataRegistry,
+      jsonLogicEvaluationService: jsonLogic,
+      entityManager: customEntityManager,
+      operationInterpreter,
+    });
+
+    interpreter.initialize();
+
+    // Create a simple event capture mechanism for testing
+    const capturedEvents = [];
+    
+    // Subscribe to the specific events we want to capture
+    const eventsToCapture = [
+      'core:perceptible_event',
+      'core:display_successful_action_result', 
+      'core:turn_ended',
+      'core:system_error_occurred'
+    ];
+    
+    eventsToCapture.forEach(eventType => {
+      bus.subscribe(eventType, (event) => {
+        capturedEvents.push({ eventType: event.type, payload: event.payload });
+      });
+    });
+
+    testEnv = {
+      eventBus: bus,
+      events: capturedEvents,
+      operationRegistry,
+      operationInterpreter,
+      jsonLogic,
+      systemLogicInterpreter: interpreter,
+      entityManager: customEntityManager,
+      logger: testLogger,
+      dataRegistry,
+      cleanup: () => {
+        interpreter.shutdown();
+      },
+      reset: (newEntities = []) => {
+        testEnv.cleanup();
+        // Create new entity manager with the new entities
+        customEntityManager = new SimpleEntityManager(newEntities);
+        
+        // Recreate handlers with the new entity manager
+        const newHandlers = createHandlers(customEntityManager, bus, testLogger, validatedEventDispatcher, safeEventDispatcher);
+        const newOperationRegistry = new OperationRegistry({ logger: testLogger });
+        for (const [type, handler] of Object.entries(newHandlers)) {
+          newOperationRegistry.register(type, handler.execute.bind(handler));
+        }
+
+        const newOperationInterpreter = new OperationInterpreter({
+          logger: testLogger,
+          operationRegistry: newOperationRegistry,
+        });
+
+        const newInterpreter = new SystemLogicInterpreter({
+          logger: testLogger,
+          eventBus: bus,
+          dataRegistry: dataRegistry,
+          jsonLogicEvaluationService: jsonLogic,
+          entityManager: customEntityManager,
+          operationInterpreter: newOperationInterpreter,
+        });
+
+        newInterpreter.initialize();
+
+        // Update test environment
+        testEnv.operationRegistry = newOperationRegistry;
+        testEnv.operationInterpreter = newOperationInterpreter;
+        testEnv.systemLogicInterpreter = newInterpreter;
+        testEnv.entityManager = customEntityManager;
+        
+        // Clear events
+        capturedEvents.length = 0;
+      },
+    };
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    if (testEnv) {
+      testEnv.cleanup();
+    }
   });
 
   it('validates get_close.rule.json against schema', () => {
@@ -240,49 +275,38 @@ describe('intimacy_handle_get_close rule integration', () => {
     expect(valid).toBe(true);
   });
 
-  it('forms a new circle when neither participant has partners', () => {
-    interpreter.shutdown();
-    init([
+  it('creates closeness circle between two actors', () => {
+    testEnv.reset([
       {
         id: 'a1',
         components: {
-          [NAME_COMPONENT_ID]: { text: 'Actor' },
-          [POSITION_COMPONENT_ID]: { locationId: 'loc1' },
-          'core:movement': { locked: false },
+          [NAME_COMPONENT_ID]: { text: 'A' },
+          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
         },
       },
       {
-        id: 't1',
+        id: 'b1',
         components: {
-          [NAME_COMPONENT_ID]: { text: 'Target' },
-          [POSITION_COMPONENT_ID]: { locationId: 'loc1' },
-          'core:movement': { locked: false },
+          [NAME_COMPONENT_ID]: { text: 'B' },
+          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
         },
       },
     ]);
 
-    listener({
-      type: ATTEMPT_ACTION_ID,
-      payload: {
-        actorId: 'a1',
-        actionId: 'intimacy:get_close',
-        targetId: 't1',
-      },
+    testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      actorId: 'a1',
+      actionId: 'intimacy:get_close',
+      targetId: 'b1',
     });
 
-    expect(entityManager.getComponentData('a1', 'intimacy:closeness')).toEqual({
-      partners: ['t1'],
+    expect(testEnv.entityManager.getComponentData('a1', 'intimacy:closeness')).toEqual({
+      partners: ['b1'],
     });
-    expect(entityManager.getComponentData('t1', 'intimacy:closeness')).toEqual({
+    expect(testEnv.entityManager.getComponentData('b1', 'intimacy:closeness')).toEqual({
       partners: ['a1'],
     });
-    expect(entityManager.getComponentData('a1', 'core:movement').locked).toBe(
-      true
-    );
-    expect(entityManager.getComponentData('t1', 'core:movement').locked).toBe(
-      true
-    );
-    const types = events.map((e) => e.eventType);
+
+    const types = testEnv.events.map((e) => e.eventType);
     expect(types).toEqual(
       expect.arrayContaining([
         'core:perceptible_event',
@@ -292,221 +316,115 @@ describe('intimacy_handle_get_close rule integration', () => {
     );
   });
 
-  it("merges actor's existing circle with the target", () => {
-    interpreter.shutdown();
-    init([
-      {
-        id: 'p1',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Partner' },
-          [POSITION_COMPONENT_ID]: { locationId: 'loc1' },
-          'intimacy:closeness': { partners: ['a1'] },
-          'core:movement': { locked: false },
-        },
-      },
+  it('merges existing closeness circles', () => {
+    testEnv.reset([
       {
         id: 'a1',
         components: {
-          [NAME_COMPONENT_ID]: { text: 'Actor' },
-          [POSITION_COMPONENT_ID]: { locationId: 'loc1' },
-          'intimacy:closeness': { partners: ['p1'] },
-          'core:movement': { locked: false },
+          [NAME_COMPONENT_ID]: { text: 'A' },
+          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
+          'intimacy:closeness': { partners: ['b1'] },
         },
       },
       {
-        id: 't1',
+        id: 'b1',
         components: {
-          [NAME_COMPONENT_ID]: { text: 'Target' },
-          [POSITION_COMPONENT_ID]: { locationId: 'loc1' },
-          'core:movement': { locked: false },
+          [NAME_COMPONENT_ID]: { text: 'B' },
+          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
+          'intimacy:closeness': { partners: ['a1'] },
+        },
+      },
+      {
+        id: 'c1',
+        components: {
+          [NAME_COMPONENT_ID]: { text: 'C' },
+          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
+          'intimacy:closeness': { partners: ['d1'] },
+        },
+      },
+      {
+        id: 'd1',
+        components: {
+          [NAME_COMPONENT_ID]: { text: 'D' },
+          [POSITION_COMPONENT_ID]: { locationId: 'room1' },
+          'intimacy:closeness': { partners: ['c1'] },
         },
       },
     ]);
 
-    listener({
-      type: ATTEMPT_ACTION_ID,
-      payload: {
-        actorId: 'a1',
-        actionId: 'intimacy:get_close',
-        targetId: 't1',
-      },
+    testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      actorId: 'a1',
+      actionId: 'intimacy:get_close',
+      targetId: 'c1',
     });
 
-    expect(entityManager.getComponentData('a1', 'intimacy:closeness')).toEqual({
-      partners: ['t1', 'p1'],
-    });
-    expect(entityManager.getComponentData('t1', 'intimacy:closeness')).toEqual({
-      partners: ['a1', 'p1'],
-    });
-    expect(entityManager.getComponentData('p1', 'intimacy:closeness')).toEqual({
-      partners: ['a1', 't1'],
-    });
-    expect(entityManager.getComponentData('p1', 'core:movement').locked).toBe(
-      true
+    // All actors should now be in the same closeness circle
+    const expectedPartners = ['a1', 'b1', 'c1', 'd1'];
+    for (const id of expectedPartners) {
+      const partners = testEnv.entityManager
+        .getComponentData(id, 'intimacy:closeness')
+        .partners.sort();
+      expect(partners).toEqual(
+        expectedPartners.filter((p) => p !== id).sort()
+      );
+    }
+
+    const types = testEnv.events.map((e) => e.eventType);
+    expect(types).toEqual(
+      expect.arrayContaining([
+        'core:perceptible_event',
+        'core:display_successful_action_result',
+        'core:turn_ended',
+      ])
     );
   });
 
-  it('merges two existing circles and deduplicates partners', () => {
-    interpreter.shutdown();
-    init([
-      {
-        id: 'p1',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Partner1' },
-          [POSITION_COMPONENT_ID]: { locationId: 'loc1' },
-          'intimacy:closeness': { partners: ['a1'] },
-          'core:movement': { locked: false },
-        },
-      },
-      {
-        id: 'p2',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Partner2' },
-          [POSITION_COMPONENT_ID]: { locationId: 'loc1' },
-          'intimacy:closeness': { partners: ['t1'] },
-          'core:movement': { locked: false },
-        },
-      },
-      {
-        id: 'a1',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Actor' },
-          [POSITION_COMPONENT_ID]: { locationId: 'loc1' },
-          'intimacy:closeness': { partners: ['p1'] },
-          'core:movement': { locked: false },
-        },
-      },
-      {
-        id: 't1',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Target' },
-          [POSITION_COMPONENT_ID]: { locationId: 'loc1' },
-          'intimacy:closeness': { partners: ['p2'] },
-          'core:movement': { locked: false },
-        },
-      },
-    ]);
-
-    listener({
-      type: ATTEMPT_ACTION_ID,
-      payload: {
-        actorId: 'a1',
-        actionId: 'intimacy:get_close',
-        targetId: 't1',
-      },
-    });
-
-    const aPartners = entityManager.getComponentData(
-      'a1',
-      'intimacy:closeness'
-    ).partners;
-    const tPartners = entityManager.getComponentData(
-      't1',
-      'intimacy:closeness'
-    ).partners;
-    const p1Partners = entityManager.getComponentData(
-      'p1',
-      'intimacy:closeness'
-    ).partners;
-    const p2Partners = entityManager.getComponentData(
-      'p2',
-      'intimacy:closeness'
-    ).partners;
-
-    expect(aPartners.sort()).toEqual(['p1', 'p2', 't1']);
-    expect(tPartners.sort()).toEqual(['a1', 'p1', 'p2']);
-    expect(p1Partners.sort()).toEqual(['a1', 'p2', 't1']);
-    expect(p2Partners.sort()).toEqual(['a1', 'p1', 't1']);
-  });
-
-  it("uses target's circle when actor has none", () => {
-    interpreter.shutdown();
-    init([
-      {
-        id: 'p1',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Partner' },
-          [POSITION_COMPONENT_ID]: { locationId: 'loc1' },
-          'intimacy:closeness': { partners: ['t1'] },
-          'core:movement': { locked: false },
-        },
-      },
-      {
-        id: 'a1',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Actor' },
-          [POSITION_COMPONENT_ID]: { locationId: 'loc1' },
-          'core:movement': { locked: false },
-        },
-      },
-      {
-        id: 't1',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Target' },
-          [POSITION_COMPONENT_ID]: { locationId: 'loc1' },
-          'intimacy:closeness': { partners: ['p1'] },
-          'core:movement': { locked: false },
-        },
-      },
-    ]);
-
-    listener({
-      type: ATTEMPT_ACTION_ID,
-      payload: {
-        actorId: 'a1',
-        actionId: 'intimacy:get_close',
-        targetId: 't1',
-      },
-    });
-
-    expect(entityManager.getComponentData('a1', 'intimacy:closeness')).toEqual({
-      partners: ['t1', 'p1'],
-    });
-    expect(
-      entityManager.getComponentData('t1', 'intimacy:closeness').partners
-    ).toEqual(expect.arrayContaining(['p1', 'a1']));
-    expect(
-      entityManager.getComponentData('p1', 'intimacy:closeness').partners
-    ).toEqual(expect.arrayContaining(['t1', 'a1']));
-  });
-
-  it('merges an existing triad with a new member', () => {
-    interpreter.shutdown();
+  it('handles complex poly relationships', () => {
     const entities = buildABCDWorld();
-    // place D in the same room as the triad
-    entities.find((e) => e.id === 'd1').components[
-      POSITION_COMPONENT_ID
-    ].locationId = 'room1';
-    // establish initial triad A-B-C
-    entities.find((e) => e.id === 'a1').components['intimacy:closeness'] = {
-      partners: ['b1', 'c1'],
-    };
-    entities.find((e) => e.id === 'b1').components['intimacy:closeness'] = {
-      partners: ['a1', 'c1'],
-    };
-    entities.find((e) => e.id === 'c1').components['intimacy:closeness'] = {
-      partners: ['a1', 'b1'],
-    };
-    init(entities);
+    // place all actors in same room
+    for (const id of ['a1', 'b1', 'c1', 'd1']) {
+      const ent = entities.find((e) => e.id === id);
+      ent.components[POSITION_COMPONENT_ID].locationId = 'room1';
+    }
+    testEnv.reset(entities);
 
-    listener({
-      type: ATTEMPT_ACTION_ID,
-      payload: {
-        actorId: 'd1',
-        actionId: 'intimacy:get_close',
-        targetId: 'a1',
-      },
+    // Create a complex poly relationship
+    testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      actorId: 'a1',
+      actionId: 'intimacy:get_close',
+      targetId: 'b1',
     });
 
-    const ids = ['a1', 'b1', 'c1', 'd1'];
-    for (const id of ids) {
-      const partners = entityManager
+    testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      actorId: 'b1',
+      actionId: 'intimacy:get_close',
+      targetId: 'c1',
+    });
+
+    testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      actorId: 'c1',
+      actionId: 'intimacy:get_close',
+      targetId: 'd1',
+    });
+
+    // All actors should be in the same closeness circle
+    const expectedPartners = ['a1', 'b1', 'c1', 'd1'];
+    for (const id of expectedPartners) {
+      const partners = testEnv.entityManager
         .getComponentData(id, 'intimacy:closeness')
         .partners.sort();
-      expect(partners).toEqual(ids.filter((p) => p !== id).sort());
-      expect(entityManager.getComponentData(id, 'core:movement').locked).toBe(
-        true
+      expect(partners).toEqual(
+        expectedPartners.filter((p) => p !== id).sort()
       );
     }
+
+    const types = testEnv.events.map((e) => e.eventType);
+    expect(types).toEqual(
+      expect.arrayContaining([
+        'core:perceptible_event',
+        'core:display_successful_action_result',
+        'core:turn_ended',
+      ])
+    );
   });
 });

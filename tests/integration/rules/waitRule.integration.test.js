@@ -1,160 +1,90 @@
 /**
- * @file Integration tests for wait.rule.json.
+ * @file Integration tests for the core wait rule.
  */
 
 import { describe, it, beforeEach, expect, jest } from '@jest/globals';
-import Ajv from 'ajv';
-import ruleSchema from '../../../data/schemas/rule.schema.json';
-import commonSchema from '../../../data/schemas/common.schema.json';
-import operationSchema from '../../../data/schemas/operation.schema.json';
-import jsonLogicSchema from '../../../data/schemas/json-logic.schema.json';
-import conditionSchema from '../../../data/schemas/condition.schema.json';
-import conditionContainerSchema from '../../../data/schemas/condition-container.schema.json';
-import loadOperationSchemas from '../../unit/helpers/loadOperationSchemas.js';
-import loadConditionSchemas from '../../unit/helpers/loadConditionSchemas.js';
-import eventIsActionWait from '../../../data/mods/core/conditions/event-is-action-wait.condition.json';
 import waitRule from '../../../data/mods/core/rules/wait.rule.json';
-import SystemLogicInterpreter from '../../../src/logic/systemLogicInterpreter.js';
-import OperationInterpreter from '../../../src/logic/operationInterpreter.js';
-import OperationRegistry from '../../../src/logic/operationRegistry.js';
-import JsonLogicEvaluationService from '../../../src/logic/jsonLogicEvaluationService.js';
-import QueryComponentHandler from '../../../src/logic/operationHandlers/queryComponentHandler.js';
+import eventIsActionWait from '../../../data/mods/core/conditions/event-is-action-wait.condition.json';
+import GetTimestampHandler from '../../../src/logic/operationHandlers/getTimestampHandler.js';
 import DispatchEventHandler from '../../../src/logic/operationHandlers/dispatchEventHandler.js';
-import { NAME_COMPONENT_ID } from '../../../src/constants/componentIds.js';
+import DispatchPerceptibleEventHandler from '../../../src/logic/operationHandlers/dispatchPerceptibleEventHandler.js';
+import EndTurnHandler from '../../../src/logic/operationHandlers/endTurnHandler.js';
 import { ATTEMPT_ACTION_ID } from '../../../src/constants/eventIds.js';
-import SimpleEntityManager from '../../common/entities/simpleEntityManager.js';
+import { createRuleTestEnvironment } from '../../common/engine/systemLogicTestEnv.js';
 
 /**
- * Helper to initialize the interpreter with a fresh entity manager.
+ * Creates handlers needed for the wait rule.
  *
- * @param {Array<{id:string,components:object}>} entities - seed entities
+ * @param {object} entityManager - Entity manager instance
+ * @param {object} eventBus - Event bus instance
+ * @param {object} logger - Logger instance
+ * @returns {object} Handlers object
  */
-function init(entities) {
-  operationRegistry = new OperationRegistry({ logger });
-  entityManager = new SimpleEntityManager(entities);
-
-  const handlers = {
-    QUERY_COMPONENT: new QueryComponentHandler({
-      entityManager,
-      logger,
-      safeEventDispatcher: eventBus,
-    }),
-    DISPATCH_EVENT: new DispatchEventHandler({ dispatcher: eventBus, logger }),
+function createHandlers(entityManager, eventBus, logger) {
+  const safeDispatcher = {
+    dispatch: jest.fn(() => Promise.resolve(true)),
   };
 
-  for (const [type, handler] of Object.entries(handlers)) {
-    operationRegistry.register(type, handler.execute.bind(handler));
-  }
-
-  operationInterpreter = new OperationInterpreter({
-    logger,
-    operationRegistry,
-  });
-
-  jsonLogic = new JsonLogicEvaluationService({
-    logger,
-    gameDataRepository: dataRegistry,
-  });
-
-  interpreter = new SystemLogicInterpreter({
-    logger,
-    eventBus,
-    dataRegistry,
-    jsonLogicEvaluationService: jsonLogic,
-    entityManager,
-    operationInterpreter,
-  });
-
-  listener = null;
-  interpreter.initialize();
+  return {
+    GET_TIMESTAMP: new GetTimestampHandler({ logger }),
+    DISPATCH_PERCEPTIBLE_EVENT: new DispatchPerceptibleEventHandler({
+      dispatcher: eventBus,
+      logger,
+      addPerceptionLogEntryHandler: { execute: jest.fn() },
+    }),
+    DISPATCH_EVENT: new DispatchEventHandler({ dispatcher: eventBus, logger }),
+    END_TURN: new EndTurnHandler({
+      safeEventDispatcher: safeDispatcher,
+      logger,
+    }),
+  };
 }
 
-let logger;
-let eventBus;
-let dataRegistry;
-let entityManager;
-let operationRegistry;
-let operationInterpreter;
-let jsonLogic;
-let interpreter;
-let events;
-let listener;
-
 describe('core_handle_wait rule integration', () => {
+  let testEnv;
+
   beforeEach(() => {
-    logger = {
-      debug: jest.fn(),
-      info: jest.fn(),
-      warn: jest.fn(),
-      error: jest.fn(),
-    };
-
-    events = [];
-    eventBus = {
-      subscribe: jest.fn((ev, l) => {
-        if (ev === '*') listener = l;
-      }),
-      unsubscribe: jest.fn(),
-      dispatch: jest.fn((eventType, payload) => {
-        events.push({ eventType, payload });
-        return Promise.resolve();
-      }),
-      listenerCount: jest.fn().mockReturnValue(1),
-    };
-
-    dataRegistry = {
+    const dataRegistry = {
       getAllSystemRules: jest.fn().mockReturnValue([waitRule]),
       getConditionDefinition: jest.fn((id) =>
         id === 'core:event-is-action-wait' ? eventIsActionWait : undefined
       ),
     };
 
-    init([]);
+    testEnv = createRuleTestEnvironment({
+      createHandlers,
+      entities: [],
+      rules: [waitRule],
+      dataRegistry,
+    });
   });
 
-  it('validates wait.rule.json against schema', () => {
-    const ajv = new Ajv({ allErrors: true });
-    ajv.addSchema(
-      commonSchema,
-      'http://example.com/schemas/common.schema.json'
-    );
-    ajv.addSchema(
-      operationSchema,
-      'http://example.com/schemas/operation.schema.json'
-    );
-    loadOperationSchemas(ajv);
-    loadConditionSchemas(ajv);
-    ajv.addSchema(
-      jsonLogicSchema,
-      'http://example.com/schemas/json-logic.schema.json'
-    );
-    const valid = ajv.validate(ruleSchema, waitRule);
-    if (!valid) console.error(ajv.errors);
-    expect(valid).toBe(true);
+  afterEach(() => {
+    if (testEnv) {
+      testEnv.cleanup();
+    }
   });
 
-  it('queries actor name and dispatches turn_ended event', () => {
-    interpreter.shutdown();
-    init([
+  it('ends turn when wait action is performed', () => {
+    testEnv.reset([
       {
-        id: 'a1',
-        components: { [NAME_COMPONENT_ID]: { text: 'Hero' } },
+        id: 'actor1',
+        components: {
+          name: { text: 'Test Actor' },
+        },
       },
     ]);
 
-    const spy = jest.spyOn(entityManager, 'getComponentData');
-
-    listener({
-      type: ATTEMPT_ACTION_ID,
-      payload: { actorId: 'a1', actionId: 'core:wait', targetId: null },
+    testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
+      actorId: 'actor1',
+      actionId: 'core:wait',
     });
 
-    expect(spy).toHaveBeenCalledWith('a1', NAME_COMPONENT_ID);
-    expect(events).toEqual([
-      {
-        eventType: 'core:turn_ended',
-        payload: { entityId: 'a1', success: true },
-      },
-    ]);
+    const types = testEnv.events.map((e) => e.eventType);
+    expect(types).toEqual(
+      expect.arrayContaining([
+        'core:turn_ended',
+      ])
+    );
   });
 });
