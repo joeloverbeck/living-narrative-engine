@@ -6,7 +6,6 @@ import {
   ITEM_COMPONENT_ID,
   EXITS_COMPONENT_ID,
   LEADING_COMPONENT_ID,
-  FOLLOWERS_COMPONENT_ID,
 } from '../constants/componentIds.js';
 import { isNonBlankString } from '../utils/textUtils.js';
 
