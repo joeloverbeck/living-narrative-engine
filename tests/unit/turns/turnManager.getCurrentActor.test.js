@@ -10,14 +10,11 @@ import {
   ACTOR_COMPONENT_ID,
   PLAYER_COMPONENT_ID,
 } from '../../../src/constants/componentIds.js';
-import {
-  TURN_PROCESSING_STARTED,
-  SYSTEM_ERROR_OCCURRED_ID,
-} from '../../../src/constants/eventIds.js';
+import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/eventIds.js';
+import { expectTurnStartedEvents } from '../../common/turns/turnManagerTestUtils.js';
 import { beforeEach, expect, test } from '@jest/globals';
 import { createMockEntity } from '../../common/mockFactories';
 import {
-  createDefaultActors,
   createAiActor,
   createPlayerActor,
 } from '../../common/turns/testActors.js';
@@ -35,7 +32,8 @@ describeTurnManagerSuite('TurnManager', (getBed) => {
   beforeEach(() => {
     testBed = getBed();
 
-    ({ player: mockPlayerEntity, ai1: mockAiEntity1 } = createDefaultActors());
+    ({ player: mockPlayerEntity, ai1: mockAiEntity1 } =
+      testBed.addDefaultActors());
     testBed.mocks.turnHandlerResolver.resolveHandler.mockResolvedValue(
       mockAiHandler
     );
@@ -103,9 +101,10 @@ describeTurnManagerSuite('TurnManager', (getBed) => {
         testBed.mocks.turnHandlerResolver.resolveHandler
       ).toHaveBeenCalledWith(mockActor);
       expect(mockAiHandler.startTurn).toHaveBeenCalledWith(mockActor);
-      expect(testBed.mocks.dispatcher.dispatch).toHaveBeenCalledWith(
-        TURN_PROCESSING_STARTED,
-        { entityId: mockActor.id, actorType: entityType }
+      expectTurnStartedEvents(
+        testBed.mocks.dispatcher.dispatch,
+        mockActor.id,
+        entityType
       );
     });
 
@@ -176,6 +175,7 @@ describeTurnManagerSuite('TurnManager', (getBed) => {
       // Simulate queue becoming empty
       testBed.mocks.turnOrderService.isEmpty.mockResolvedValue(true);
       testBed.mocks.turnOrderService.getNextEntity.mockResolvedValue(null);
+      testBed.setActiveEntities();
 
       // Simulate turn ending
       testBed.trigger('core:turn_ended', {
@@ -204,9 +204,10 @@ describeTurnManagerSuite('TurnManager', (getBed) => {
 
       await testBed.turnManager.start();
       expect(testBed.turnManager.getCurrentActor()).toBe(mockPlayerActor);
-      expect(testBed.mocks.dispatcher.dispatch).toHaveBeenCalledWith(
-        TURN_PROCESSING_STARTED,
-        { entityId: mockPlayerActor.id, actorType: 'player' }
+      expectTurnStartedEvents(
+        testBed.mocks.dispatcher.dispatch,
+        mockPlayerActor.id,
+        'player'
       );
 
       await testBed.turnManager.stop();
@@ -221,9 +222,10 @@ describeTurnManagerSuite('TurnManager', (getBed) => {
 
       await testBed.turnManager.start();
       expect(testBed.turnManager.getCurrentActor()).toBe(mockAiActor);
-      expect(testBed.mocks.dispatcher.dispatch).toHaveBeenCalledWith(
-        TURN_PROCESSING_STARTED,
-        { entityId: mockAiActor.id, actorType: 'ai' }
+      expectTurnStartedEvents(
+        testBed.mocks.dispatcher.dispatch,
+        mockAiActor.id,
+        'ai'
       );
     });
 
@@ -254,6 +256,7 @@ describeTurnManagerSuite('TurnManager', (getBed) => {
       testBed.mocks.turnOrderService.isEmpty.mockResolvedValue(false);
       // Simulate getNextEntity returning null to trigger the error condition
       testBed.mocks.turnOrderService.getNextEntity.mockResolvedValue(null);
+      testBed.setActiveEntities();
 
       // --- Execute ---
       await testBed.turnManager.start();
