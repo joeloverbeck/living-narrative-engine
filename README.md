@@ -18,6 +18,12 @@ adventure games and immersive simulations. The core philosophy is **extreme modd
 The long-term vision includes integrating AI agents (LLMs) to drive dynamic NPC interactions and behaviours, creating
 truly living narratives.
 
+### AI Narrative Director (Experimental)
+
+An upcoming feature introduces an AI-driven "Narrative Director" that can
+dynamically suggest plot twists and quest hooks based on the current game state.
+It communicates with the LLM proxy server to keep stories fresh and reactive.
+
 ## Memory Components
 
 We now have three distinct memory-related components attachable to any core:actor. Below is a concise reference:
