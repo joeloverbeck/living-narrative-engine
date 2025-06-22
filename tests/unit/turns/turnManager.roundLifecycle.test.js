@@ -3,12 +3,14 @@
 
 import { describeRunningTurnManagerSuite } from '../../common/turns/turnManagerTestBed.js';
 import { flushPromisesAndTimers } from '../../common/jestHelpers.js';
-import { waitForCurrentActor } from '../../common/turns/turnManagerTestUtils.js';
+import {
+  waitForCurrentActor,
+  expectSystemErrorDispatch,
+} from '../../common/turns/turnManagerTestUtils.js';
 // import removed constant; not needed
 import {
   TURN_ENDED_ID,
   TURN_STARTED_ID,
-  SYSTEM_ERROR_OCCURRED_ID,
 } from '../../../src/constants/eventIds.js';
 import { beforeEach, expect, test } from '@jest/globals';
 import {
@@ -81,17 +83,10 @@ describeRunningTurnManagerSuite(
       expect(testBed.mocks.logger.error).toHaveBeenCalledWith(
         'Cannot start a new round: No active entities with an Actor component found.'
       );
-      expect(testBed.mocks.dispatcher.dispatch).toHaveBeenCalledWith(
-        SYSTEM_ERROR_OCCURRED_ID,
-        {
-          message:
-            'System Error: No active actors found to start a round. Stopping game.',
-          details: {
-            raw: 'Cannot start a new round: No active entities with an Actor component found.',
-            stack: expect.any(String),
-            timestamp: expect.any(String),
-          },
-        }
+      expectSystemErrorDispatch(
+        testBed.mocks.dispatcher.dispatch,
+        'System Error: No active actors found to start a round. Stopping game.',
+        'Cannot start a new round: No active entities with an Actor component found.'
       );
       expect(stopSpy).toHaveBeenCalledTimes(1);
     });
@@ -242,14 +237,10 @@ describeRunningTurnManagerSuite(
 
       await testBed.advanceAndFlush();
 
-      expect(testBed.mocks.dispatcher.dispatch).toHaveBeenCalledWith(
-        SYSTEM_ERROR_OCCURRED_ID,
-        expect.objectContaining({
-          message: 'System Error during turn advancement',
-          details: {
-            error: advanceError.message,
-          },
-        })
+      expectSystemErrorDispatch(
+        testBed.mocks.dispatcher.dispatch,
+        'System Error during turn advancement. Stopping game.',
+        advanceError.message
       );
       expect(stopSpy).toHaveBeenCalledTimes(1);
     });
@@ -265,18 +256,10 @@ describeRunningTurnManagerSuite(
 
       await testBed.advanceAndFlush();
 
-      expect(testBed.mocks.dispatcher.dispatch.mock.calls).toEqual(
-        expect.arrayContaining([
-          [
-            SYSTEM_ERROR_OCCURRED_ID,
-            expect.objectContaining({
-              message: expect.any(String),
-              details: expect.objectContaining({
-                error: roundError.message,
-              }),
-            }),
-          ],
-        ])
+      expectSystemErrorDispatch(
+        testBed.mocks.dispatcher.dispatch,
+        'System Error: No active actors found to start a round. Stopping game.',
+        roundError.message
       );
       expect(stopSpy).toHaveBeenCalledTimes(1);
     });
