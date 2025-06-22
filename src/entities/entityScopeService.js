@@ -6,6 +6,7 @@ import {
   ITEM_COMPONENT_ID,
   EXITS_COMPONENT_ID,
   LEADING_COMPONENT_ID,
+  FOLLOWERS_COMPONENT_ID,
 } from '../constants/componentIds.js';
 import { isNonBlankString } from '../utils/textUtils.js';
 
@@ -14,6 +15,9 @@ import { isNonBlankString } from '../utils/textUtils.js';
 /** @typedef {import('./entity.js').default} Entity */
 /** @typedef {import('./entity.js').EntityId} EntityId */
 /** @typedef {import('../actions/actionTypes.js').ActionContext} ActionContext */
+/** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
+/** @typedef {import('../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
+/** @typedef {import('./locationQueryService.js').LocationQueryService} LocationQueryService */
 
 // --- REFACTOR START: Generic Scope Handler Factory ---
 
@@ -42,33 +46,42 @@ function _createActorComponentScopeHandler(
     const { actingEntity } = context;
     if (!actingEntity) {
       logger.warn(
-        `entityScopeService(#createActorComponentScopeHandler): Scope '${scopeNameForLogging}' requested but actingEntity is missing in context.`
+        `entityScopeService.${scopeNameForLogging}: Scope '${scopeNameForLogging}' requested but actingEntity is missing.`
       );
       return new Set();
     }
 
     if (!actingEntity.hasComponent(componentId)) {
-      // This is not necessarily an error, just means the scope is empty for this actor.
+      logger.debug(
+        `entityScopeService.${scopeNameForLogging}: Acting entity '${actingEntity.id}' has no '${componentId}' component.`
+      );
       return new Set();
     }
 
     const componentData = actingEntity.getComponentData(componentId);
     if (!componentData) {
-      logger.warn(
-        `entityScopeService(#createActorComponentScopeHandler): Component data for '${componentId}' on actor ${actingEntity.id} is missing or malformed.`
+      logger.debug(
+        `entityScopeService.${scopeNameForLogging}: Acting entity '${actingEntity.id}' has no '${componentId}' component.`
       );
       return new Set();
     }
 
-    const ids = idExtractor(componentData);
-    if (!Array.isArray(ids)) {
+    try {
+      const ids = idExtractor(componentData);
+      if (Array.isArray(ids)) {
+        return new Set(ids.filter((id) => id && typeof id === 'string'));
+      }
       logger.warn(
-        `entityScopeService(#createActorComponentScopeHandler): idExtractor for scope '${scopeNameForLogging}' did not return a valid array for actor ${actingEntity.id}.`
+        `entityScopeService.${scopeNameForLogging}: Invalid data structure in '${componentId}' component.`
+      );
+      return new Set();
+    } catch (error) {
+      logger.error(
+        `entityScopeService.${scopeNameForLogging}: Error extracting IDs from '${componentId}' component:`,
+        error
       );
       return new Set();
     }
-
-    return new Set(ids.filter((id) => isNonBlankString(id)));
   };
 }
 
@@ -79,7 +92,7 @@ function _createActorComponentScopeHandler(
 const _handleInventory = (logger) =>
   _createActorComponentScopeHandler(
     INVENTORY_COMPONENT_ID,
-    (data) => data.items,
+    (data) => data.items || [],
     'inventory',
     logger
   );
@@ -87,7 +100,7 @@ const _handleInventory = (logger) =>
 const _handleEquipment = (logger) =>
   _createActorComponentScopeHandler(
     EQUIPMENT_COMPONENT_ID,
-    (data) => (data && data.slots ? Object.values(data.slots) : []),
+    (data) => data.equipped || [],
     'equipment',
     logger
   );
@@ -95,7 +108,7 @@ const _handleEquipment = (logger) =>
 const _handleFollowers = (logger) =>
   _createActorComponentScopeHandler(
     LEADING_COMPONENT_ID,
-    (data) => data.followers,
+    (data) => data.followers || [],
     'followers',
     logger
   );

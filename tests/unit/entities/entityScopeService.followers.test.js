@@ -150,7 +150,7 @@ describe('entityScopeService - "followers" scope', () => {
     expect(result.size).toBe(0);
     // FIX: Update the expected warning to check for "actingEntity".
     expect(mockLogger.warn).toHaveBeenCalledWith(
-      "entityScopeService(#createActorComponentScopeHandler): Scope 'followers' requested but actingEntity is missing in context."
+      "entityScopeService.followers: Scope 'followers' requested but actingEntity is missing."
     );
   });
 

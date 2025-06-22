@@ -7,7 +7,6 @@
 /** @typedef {import('../events/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
 /** @typedef {import('../../data/schemas/entity-definition.schema.json').EntityDefinition} EntityDefinition */
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
-/** @typedef {import('../interfaces/coreServices.js').ISpatialIndexManager} ISpatialIndexManager */
 /** @typedef {import('../entities/entity.js').default} Entity */
 /** @typedef {import('../entities/entityDefinition.js').default} EntityDefinition */
 /** @typedef {import('../entities/entityInstance.js').default} EntityInstance */
@@ -29,6 +28,9 @@ import { safeDispatchError } from '../utils/safeDispatchErrorUtils.js';
  * in the world data, resolving their references (e.g., location IDs),
  * and building the spatial index. Runs after GameStateInitializer.
  * Dispatches events related to world entity initialization.
+ * 
+ * Note: Spatial index management is now handled automatically by SpatialIndexSynchronizer
+ * through event listening, so this service no longer directly manages the spatial index.
  */
 class WorldInitializer {
   /** @type {EntityManager} */
@@ -41,10 +43,6 @@ class WorldInitializer {
   #validatedEventDispatcher;
   /** @type {ILogger} */
   #logger;
-  /** @type {ISpatialIndexManager} */
-  #spatialIndexManager;
-  // /** @type {IReferenceResolver | ReferenceResolver} */
-  // #referenceResolver; // ReferenceResolver is being phased out - removed entirely
 
   /**
    * Exposes the provided world context for potential external use.
@@ -64,7 +62,6 @@ class WorldInitializer {
    * @param {GameDataRepository} dependencies.gameDataRepository
    * @param {ValidatedEventDispatcher} dependencies.validatedEventDispatcher
    * @param {ILogger} dependencies.logger
-   * @param {ISpatialIndexManager} dependencies.spatialIndexManager
    * @throws {Error} If any required dependency is missing or invalid.
    */
   constructor({
@@ -73,7 +70,6 @@ class WorldInitializer {
     gameDataRepository,
     validatedEventDispatcher,
     logger,
-    spatialIndexManager,
   }) {
     if (!entityManager)
       throw new Error('WorldInitializer requires an EntityManager.');
@@ -84,19 +80,15 @@ class WorldInitializer {
     if (!validatedEventDispatcher)
       throw new Error('WorldInitializer requires a ValidatedEventDispatcher.');
     if (!logger) throw new Error('WorldInitializer requires an ILogger.');
-    if (!spatialIndexManager)
-      throw new Error('WorldInitializer requires an ISpatialIndexManager.');
 
     this.#entityManager = entityManager;
     this.#worldContext = worldContext;
     this.#repository = gameDataRepository;
     this.#validatedEventDispatcher = validatedEventDispatcher;
     this.#logger = logger;
-    this.#spatialIndexManager = spatialIndexManager;
-    // this.#referenceResolver = referenceResolver; // No longer assigned - removed entirely
 
     this.#logger.debug(
-      'WorldInitializer: Instance created. Reference resolution step has been removed.'
+      'WorldInitializer: Instance created. Spatial index management is now handled by SpatialIndexSynchronizer through event listening.'
     );
   }
 
@@ -300,17 +292,12 @@ class WorldInitializer {
           );
         }
 
-        // Original location update logic - this should remain if still relevant
-        // This part seems to be for initializing spatial index based on PositionComponent, not related to resolveFields.
+        // Log position component information for debugging
         if (componentTypeId === POSITION_COMPONENT_ID) {
           const locationId = _get(componentDataInstance, 'locationId');
           if (locationId) {
-            // Ensure entity is added to spatial index if not already (e.g. by EntityManager upon creation with location)
-            // EntityManager now handles entity tracking directly via MapManager.add.
-            // Let's confirm if an explicit add here is still needed or if it's redundant.
-            // For now, will keep the logging to see if it triggers.
             this.#logger.debug(
-              `WorldInitializer (Pass 2 Post-Processing): Entity ${entity.id} has POSITION_COMPONENT_ID with locationId '${locationId}'. Spatial index add/update is handled by EntityManager.`
+              `WorldInitializer (Pass 2 Post-Processing): Entity ${entity.id} has POSITION_COMPONENT_ID with locationId '${locationId}'. Spatial index management is handled by SpatialIndexSynchronizer.`
             );
           } else {
             this.#logger.debug(
@@ -333,68 +320,11 @@ class WorldInitializer {
   }
 
   /**
-   * Adds a single entity to the spatial index if it has a valid position and location.
-   * Checks for the POSITION_COMPONENT_ID and uses its locationId.
-   *
-   * @param {Entity} entity - The entity to potentially add to the spatial index.
-   * @returns {boolean} True if the entity was added to the spatial index, false otherwise.
-   * @private
-   */
-  #_addEntityToSpatialIndex(entity) {
-    // Removed async
-    const positionComponentData = entity.getComponentData(
-      POSITION_COMPONENT_ID
-    );
-    // POSITION_COMPONENT_ID import is verified.
-
-    if (
-      positionComponentData &&
-      typeof positionComponentData.locationId === 'string' &&
-      positionComponentData.locationId.trim() !== ''
-    ) {
-      const locationIdForSpatialIndex = positionComponentData.locationId;
-
-      // Check if the location entity actually exists in the entity manager
-      const locationEntity = this.#entityManager.getEntityInstance(locationIdForSpatialIndex);
-      if (!locationEntity) {
-        safeDispatchError(
-          this.#validatedEventDispatcher,
-          `Entity ${entity.id} references a location '${locationIdForSpatialIndex}' that does not exist. The game cannot start with invalid location references.`,
-          {
-            statusCode: 500,
-            raw: `Location entity not found. Context: WorldInitializer._addEntityToSpatialIndex, entityId: ${entity.id}, locationId: ${locationIdForSpatialIndex}`,
-            timestamp: new Date().toISOString(),
-          }
-        );
-        return false;
-      }
-
-      // The spatial index should be able to handle being given an ID that exists as a full entity,
-      // as it's primarily a mapping of entity IDs to location IDs.
-      this.#spatialIndexManager.addEntity(entity.id, locationIdForSpatialIndex);
-      this.#logger.debug(
-        `WorldInitializer (Spatial Index): Added entity ${entity.id} to spatial index at location ${locationIdForSpatialIndex}.`
-      );
-      return true;
-    } else if (positionComponentData) {
-      this.#logger.debug(
-        `WorldInitializer (Spatial Index): Entity ${entity.id} has a position component but missing, malformed, or empty locationId after resolution. Not added to spatial index.`
-      );
-    } else {
-      this.#logger.debug(
-        `WorldInitializer (Spatial Index): Entity ${entity.id} has no position component. Not added to spatial index.`
-      );
-    }
-    return false;
-  }
-
-  /**
-   * Processes a single entity for reference resolution and spatial index population during Pass 2.
-   * This involves validating the entity, resolving its component references,
-   * and then attempting to add it to the spatial index.
+   * Processes a single entity for reference resolution during Pass 2.
+   * Spatial index management is now handled automatically by SpatialIndexSynchronizer.
    *
    * @param {Entity} entity - The entity to process.
-   * @returns {Promise<boolean>} True if the entity was successfully added to the spatial index, false otherwise.
+   * @returns {Promise<boolean>} True if the entity was successfully processed, false otherwise.
    * @private
    */
   async #_processSingleEntityForPass2(entity) {
@@ -418,49 +348,44 @@ class WorldInitializer {
 
     try {
       await this.#_resolveReferencesForEntityComponents(entity);
+      return true; // Successfully processed
     } catch (resolutionError) {
       // This catches the error re-thrown by #_resolveReferencesForEntityComponents
       this.#logger.warn(
-        `WorldInitializer (Pass 2 Processing): Entity ${entity.id} failed component reference resolution. Skipping spatial index addition. Error: ${resolutionError.message}`
+        `WorldInitializer (Pass 2 Processing): Entity ${entity.id} failed component reference resolution. Error: ${resolutionError.message}`
       );
-      return false; // Failed processing for this entity, not added to spatial index
+      return false; // Failed processing for this entity
     }
-
-    // Call the now synchronous method for spatial index addition
-    const wasAddedToSpatialIndex = this.#_addEntityToSpatialIndex(entity); // Removed await
-    return wasAddedToSpatialIndex;
   }
 
   /**
-   * Resolves component references and populates the spatial index for the given entities. (Pass 2)
-   * This method iterates through entities, resolving their component references using
-   * the ReferenceResolver service and then attempts to add them to the spatial index.
+   * Resolves component references for the given entities. (Pass 2)
+   * Spatial index population is now handled automatically by SpatialIndexSynchronizer.
    *
    * @param {Entity[]} instantiatedEntities - An array of entities instantiated in Pass 1.
    * @private
    */
-  async #_resolveReferencesAndPopulateSpatialIndex(instantiatedEntities) {
+  async #_resolveReferencesForEntities(instantiatedEntities) {
     this.#logger.debug(
-      'WorldInitializer (Pass 2): Resolving component references and populating spatial index for entities...'
+      'WorldInitializer (Pass 2): Resolving component references for entities...'
     );
-    let entitiesAddedToSpatialIndex = 0;
+    let entitiesProcessed = 0;
 
     for (const entity of instantiatedEntities) {
-      const wasSuccessfullyProcessedAndAdded =
-        await this.#_processSingleEntityForPass2(entity);
-      if (wasSuccessfullyProcessedAndAdded) {
-        entitiesAddedToSpatialIndex++;
+      const wasSuccessfullyProcessed = await this.#_processSingleEntityForPass2(entity);
+      if (wasSuccessfullyProcessed) {
+        entitiesProcessed++;
       }
     }
 
     this.#logger.debug(
-      `WorldInitializer (Pass 2): Completed entity processing. Processed ${instantiatedEntities.length} entities. Added ${entitiesAddedToSpatialIndex} entities to spatial index.`
+      `WorldInitializer (Pass 2): Completed entity processing. Processed ${instantiatedEntities.length} entities. Successfully processed ${entitiesProcessed} entities.`
     );
   }
 
   /**
-   * Instantiates initial world entities from the specified world's instances, resolves references (like location IDs),
-   * and builds the spatial index.
+   * Instantiates initial world entities from the specified world's instances and resolves references (like location IDs).
+   * Spatial index management is handled automatically by SpatialIndexSynchronizer through event listening.
    * Dispatches 'initialization:world_initializer:started/completed/failed' events.
    * Dispatches finer-grained 'worldinit:entity_instantiated' and 'worldinit:entity_instantiation_failed' events.
    *
@@ -479,9 +404,7 @@ class WorldInitializer {
         await this.#_instantiateEntitiesFromWorld(worldName);
 
       if (instantiatedEntities && instantiatedEntities.length > 0) {
-        await this.#_resolveReferencesAndPopulateSpatialIndex(
-          instantiatedEntities
-        );
+        await this.#_resolveReferencesForEntities(instantiatedEntities);
       } else {
         this.#logger.debug(
           'WorldInitializer (Pass 2): Skipped. No entities were instantiated in Pass 1.'
@@ -489,7 +412,7 @@ class WorldInitializer {
       }
 
       this.#logger.debug(
-        `WorldInitializer: World entity initialization and spatial indexing complete for world: ${worldName}.`
+        `WorldInitializer: World entity initialization complete for world: ${worldName}. Spatial index management is handled by SpatialIndexSynchronizer.`
       );
       // Event 'initialization:world_initializer:completed' could be dispatched here.
       return true;

@@ -25,13 +25,13 @@ export function registerInitializers(container) {
       gameDataRepository: c.resolve(tokens.IGameDataRepository),
       validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
       logger: c.resolve(tokens.ILogger),
-      spatialIndexManager: c.resolve(tokens.ISpatialIndexManager),
+      // spatialIndexManager dependency removed - now handled by SpatialIndexSynchronizer
       // referenceResolver: c.resolve(tokens.IReferenceResolver), // Removed - service is deprecated
     };
     return new WorldInitializer(dependencies);
   });
   log.debug(
-    `Initializer Registration: Registered ${tokens.WorldInitializer} (with VED and ISpatialIndexManager dependencies).`
+    `Initializer Registration: Registered ${tokens.WorldInitializer} (spatial index management now handled by SpatialIndexSynchronizer).`
   );
 
   // --- SystemInitializer (Ticket 15) ---
