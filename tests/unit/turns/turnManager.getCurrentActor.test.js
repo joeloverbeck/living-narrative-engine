@@ -10,7 +10,10 @@ import {
   ACTOR_COMPONENT_ID,
   PLAYER_COMPONENT_ID,
 } from '../../../src/constants/componentIds.js';
-import { TURN_PROCESSING_STARTED, SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/eventIds.js';
+import {
+  TURN_PROCESSING_STARTED,
+  SYSTEM_ERROR_OCCURRED_ID,
+} from '../../../src/constants/eventIds.js';
 import { beforeEach, expect, test } from '@jest/globals';
 import { createMockEntity } from '../../common/mockFactories';
 import {
@@ -264,7 +267,9 @@ describeTurnManagerSuite('TurnManager', (getBed) => {
             expect.objectContaining({
               message: expect.any(String),
               details: expect.objectContaining({
-                error: expect.stringContaining('Cannot start a new round: No active entities with an Actor component found.'),
+                error: expect.stringContaining(
+                  'Cannot start a new round: No active entities with an Actor component found.'
+                ),
               }),
             }),
           ],

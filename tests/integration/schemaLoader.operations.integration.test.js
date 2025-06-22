@@ -18,7 +18,7 @@ describe('Integration – SchemaLoader operations', () => {
       'operations/removeFromClosenessCircle.schema.json',
       'operations/mergeClosenessCircle.schema.json',
     ];
-    const files = config.getSchemaFiles().concat(extraOps);
+    const files = Array.from(new Set(config.getSchemaFiles().concat(extraOps)));
     config.getSchemaFiles = () => files;
 
     const fetcher = {

@@ -16,6 +16,7 @@ const mockDataFetcher = {
 };
 const mockSchemaValidator = {
   addSchema: jest.fn(),
+  addSchemas: jest.fn(),
   isSchemaLoaded: jest.fn(),
 };
 const mockLogger = {
@@ -162,27 +163,17 @@ describe('SchemaLoader - Error Handling', () => {
     expect(mockPathResolver.resolveSchemaPath).toHaveBeenCalledTimes(2);
     expect(mockDataFetcher.fetch).toHaveBeenCalledTimes(2);
 
-    // addSchema only called for the successful one(s) before failure
+    // With batch registration, no schemas should be registered if there's a fetch error
     console.log(
-      `[Fetch Error] Checking addSchema calls. Count: ${mockSchemaValidator.addSchema.mock.calls.length}`
+      `[Fetch Error] Checking addSchemas calls. Count: ${mockSchemaValidator.addSchemas.mock.calls.length}`
     );
-    expect(mockSchemaValidator.addSchema).toHaveBeenCalledWith(
-      commonSchemaData,
-      commonSchemaId
-    );
-    expect(mockSchemaValidator.addSchema).not.toHaveBeenCalledWith(
-      entityDefinitionSchemaData,
-      entityDefinitionSchemaId
-    );
+    expect(mockSchemaValidator.addSchemas).not.toHaveBeenCalled();
+    expect(mockSchemaValidator.addSchema).not.toHaveBeenCalled();
 
-    // Check logs
-    expect(mockLogger.error).toHaveBeenCalledTimes(2);
+    // Check logs - the new implementation throws the error directly
+    expect(mockLogger.error).toHaveBeenCalledTimes(1);
     expect(mockLogger.error).toHaveBeenCalledWith(
-      `SchemaLoader: Failed to load or process schema ${entityDefinitionSchemaFile} (ID: unknown, Path: ${entityDefinitionSchemaPath})`,
-      fetchError
-    );
-    expect(mockLogger.error).toHaveBeenCalledWith(
-      'SchemaLoader: One or more configured schemas failed to load or process. Aborting.',
+      `SchemaLoader: Failed to fetch schema file ${entityDefinitionSchemaFile} at ${entityDefinitionSchemaPath}: ${fetchError.message}`,
       fetchError
     );
     expect(mockLogger.info).not.toHaveBeenCalledWith(
@@ -230,28 +221,17 @@ describe('SchemaLoader - Error Handling', () => {
     expect(mockPathResolver.resolveSchemaPath).toHaveBeenCalledTimes(2);
     expect(mockDataFetcher.fetch).toHaveBeenCalledTimes(2);
 
-    // addSchema only called for the valid one
+    // With batch registration, no schemas should be registered if there's a missing $id error
     console.log(
-      `[Missing $id] Checking addSchema calls. Count: ${mockSchemaValidator.addSchema.mock.calls.length}`
+      `[Missing $id] Checking addSchemas calls. Count: ${mockSchemaValidator.addSchemas.mock.calls.length}`
     );
-    expect(mockSchemaValidator.addSchema).toHaveBeenCalledTimes(1);
-    expect(mockSchemaValidator.addSchema).toHaveBeenCalledWith(
-      commonSchemaData,
-      commonSchemaId
-    );
+    expect(mockSchemaValidator.addSchemas).not.toHaveBeenCalled();
+    expect(mockSchemaValidator.addSchema).not.toHaveBeenCalled();
 
-    // Check error logs
-    expect(mockLogger.error).toHaveBeenCalledTimes(3);
+    // Check error logs - the new implementation throws the error directly
+    expect(mockLogger.error).toHaveBeenCalledTimes(1);
     expect(mockLogger.error).toHaveBeenCalledWith(
       `SchemaLoader: ${expectedErrorMsg}`
-    );
-    expect(mockLogger.error).toHaveBeenCalledWith(
-      `SchemaLoader: Failed to load or process schema ${entityDefinitionSchemaFile} (ID: unknown, Path: ${entityDefinitionSchemaPath})`,
-      expect.objectContaining({ message: expectedErrorMsg })
-    );
-    expect(mockLogger.error).toHaveBeenCalledWith(
-      'SchemaLoader: One or more configured schemas failed to load or process. Aborting.',
-      expect.objectContaining({ message: expectedErrorMsg })
     );
     console.log('[Missing $id] Test checks complete.');
   });
@@ -260,29 +240,12 @@ describe('SchemaLoader - Error Handling', () => {
     console.log('Starting [addSchema Error] Test');
     // Arrange
     const addSchemaError = new Error('Invalid Schema Structure');
-    mockSchemaValidator.addSchema.mockImplementation(
-      async (schemaData, schemaId) => {
-        console.log(
-          `[addSchema Error] addSchema mock called for ID: ${schemaId}`
-        );
-        if (schemaId === commonSchemaId) {
-          console.log(
-            `[addSchema Error] addSchema resolving for ${commonSchemaId}`
-          );
-          return undefined;
-        }
-        if (schemaId === entityDefinitionSchemaId) {
-          console.log(
-            `[addSchema Error] addSchema throwing for ${entityDefinitionSchemaId}`
-          );
-          throw addSchemaError;
-        }
-        if (schemaId === entityInstanceSchemaId) {
-          return undefined;
-        }
-        return undefined;
-      }
-    );
+    mockSchemaValidator.addSchemas.mockImplementation(async (schemasArray) => {
+      console.log(
+        `[addSchema Error] addSchemas mock called with ${schemasArray.length} schemas`
+      );
+      throw addSchemaError;
+    });
     // Redundant isSchemaLoaded mock (covered by beforeEach), but ensures it's false
     mockSchemaValidator.isSchemaLoaded.mockReturnValue(false);
 
@@ -294,23 +257,24 @@ describe('SchemaLoader - Error Handling', () => {
     console.log('[addSchema Error] Rejection confirmed.');
 
     // Assertions
-    expect(mockPathResolver.resolveSchemaPath).toHaveBeenCalledTimes(2);
-    expect(mockDataFetcher.fetch).toHaveBeenCalledTimes(2);
+    expect(mockPathResolver.resolveSchemaPath).toHaveBeenCalledTimes(3);
+    expect(mockDataFetcher.fetch).toHaveBeenCalledTimes(3);
 
-    // addSchema attempted for all
+    // addSchemas attempted for all schemas in batch
     console.log(
-      `[addSchema Error] Checking addSchema calls. Count: ${mockSchemaValidator.addSchema.mock.calls.length}`
+      `[addSchema Error] Checking addSchemas calls. Count: ${mockSchemaValidator.addSchemas.mock.calls.length}`
     );
-    expect(mockSchemaValidator.addSchema).toHaveBeenCalledTimes(2);
+    expect(mockSchemaValidator.addSchemas).toHaveBeenCalledTimes(1);
+    expect(mockSchemaValidator.addSchemas).toHaveBeenCalledWith([
+      commonSchemaData,
+      entityDefinitionSchemaData,
+      entityInstanceSchemaData,
+    ]);
 
     // Check logs
-    expect(mockLogger.error).toHaveBeenCalledTimes(2);
+    expect(mockLogger.error).toHaveBeenCalledTimes(1);
     expect(mockLogger.error).toHaveBeenCalledWith(
-      `SchemaLoader: Failed to load or process schema ${entityDefinitionSchemaFile} (ID: ${entityDefinitionSchemaId}, Path: ${entityDefinitionSchemaPath})`,
-      addSchemaError
-    );
-    expect(mockLogger.error).toHaveBeenCalledWith(
-      'SchemaLoader: One or more configured schemas failed to load or process. Aborting.',
+      `SchemaLoader: Failed to register schemas in batch: ${addSchemaError.message}`,
       addSchemaError
     );
     expect(mockLogger.info).not.toHaveBeenCalledWith(

@@ -144,11 +144,9 @@ export async function parseAndRepairJson(jsonString, logger, dispatcher) {
   if (cleanedJsonString === null || cleanedJsonString.trim() === '') {
     const errorMessage = 'Cleaned JSON string is null or empty, cannot parse.';
     if (dispatcher) {
-      safeDispatchError(
-        dispatcher,
-        `parseAndRepairJson: ${errorMessage}`,
-        { originalInput: jsonString }
-      );
+      safeDispatchError(dispatcher, `parseAndRepairJson: ${errorMessage}`, {
+        originalInput: jsonString,
+      });
     } else {
       log.error(`parseAndRepairJson: ${errorMessage}`, {
         originalInput: jsonString,
@@ -204,25 +202,21 @@ export async function parseAndRepairJson(jsonString, logger, dispatcher) {
     } catch (repairAndParseError) {
       const errorMessage = `Failed to parse JSON even after repair attempt. Repair/Parse Error: ${repairAndParseError.message}`;
       if (dispatcher) {
-        safeDispatchError(
-          dispatcher,
-          `parseAndRepairJson: ${errorMessage}`,
-          {
-            originalInputLength: jsonString.length,
-            cleanedJsonStringLength: cleanedJsonString.length,
-            cleanedJsonPreview:
-              cleanedJsonString.substring(0, 100) +
-              (cleanedJsonString.length > 100 ? '...' : ''),
-            initialParseError: {
-              message: initialParseError.message,
-              name: initialParseError.name,
-            },
-            repairAndParseError: {
-              message: repairAndParseError.message,
-              name: repairAndParseError.name,
-            },
-          }
-        );
+        safeDispatchError(dispatcher, `parseAndRepairJson: ${errorMessage}`, {
+          originalInputLength: jsonString.length,
+          cleanedJsonStringLength: cleanedJsonString.length,
+          cleanedJsonPreview:
+            cleanedJsonString.substring(0, 100) +
+            (cleanedJsonString.length > 100 ? '...' : ''),
+          initialParseError: {
+            message: initialParseError.message,
+            name: initialParseError.name,
+          },
+          repairAndParseError: {
+            message: repairAndParseError.message,
+            name: repairAndParseError.name,
+          },
+        });
       } else {
         log.error(`parseAndRepairJson: ${errorMessage}`, {
           // [cite: 1, 1000]

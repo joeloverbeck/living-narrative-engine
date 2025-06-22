@@ -13,6 +13,8 @@ const createLogger = () => ({
 const createRegistry = () => ({
   getStartingPlayerId: jest.fn(() => 'player1'),
   getStartingLocationId: jest.fn(() => 'location1'),
+  getWorldDefinition: jest.fn((id) => ({ id })),
+  getAllWorldDefinitions: jest.fn(() => [{ id: 'w1' }]),
   getActionDefinition: jest.fn((id) => ({ id })),
   getAllActionDefinitions: jest.fn(() => [{ id: 'a1' }]),
   getEntityDefinition: jest.fn((id) => ({ id })),

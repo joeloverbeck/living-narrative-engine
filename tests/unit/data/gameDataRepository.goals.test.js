@@ -10,6 +10,8 @@ import { createMockLogger } from '../../common/mockFactories/index.js';
 const createMockRegistry = () => ({
   getStartingPlayerId: jest.fn(),
   getStartingLocationId: jest.fn(),
+  getWorldDefinition: jest.fn(),
+  getAllWorldDefinitions: jest.fn(),
   getActionDefinition: jest.fn(),
   getAllActionDefinitions: jest.fn(),
   getEntityDefinition: jest.fn(),

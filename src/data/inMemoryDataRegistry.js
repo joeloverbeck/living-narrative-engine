@@ -2,14 +2,12 @@
  * @file Provides an in-memory implementation for storing and retrieving
  * loaded game data definitions (like entities, actions, components, etc.), fulfilling the
  * IDataRegistry interface. It uses Maps for efficient lookups.
- * Starting player and location are dynamically discovered from loaded entity definitions.
  */
+
+/** @typedef {import('../interfaces/coreServices.js').IDataRegistry} IDataRegistry */
 
 /**
  * Implements the IDataRegistry interface using in-memory Maps for data storage.
- * This class acts as a central registry for loaded game definitions.
- * It dynamically discovers the starting player and location based on component data
- * within the registered entity definitions.
  *
  * @implements {IDataRegistry}
  */
@@ -19,19 +17,12 @@ class InMemoryDataRegistry {
    */
   constructor() {
     /**
-     * Internal storage for typed game data definitions.
-     * The outer Map's key is the data type (e.g., 'actions', 'entity_definitions', 'components').
-     * The inner Map's key is the specific item's ID, and the value is the data object.
-     *
      * @private
      * @type {Map<string, Map<string, object>>}
      */
     this.data = new Map();
 
     /**
-     * Tracks which mod supplied each content item.
-     * Maps a content type to a Map of item ID to the originating mod ID.
-     *
      * @private
      * @type {Map<string, Map<string, string>>}
      */
@@ -39,13 +30,10 @@ class InMemoryDataRegistry {
   }
 
   /**
-   * Stores a data object under a specific category (`type`) and unique identifier (`id`).
-   * If the type category doesn't exist, it's created. Overwrites existing data for the same type/id.
-   *
-   * @param {string} type - The category of data (e.g., 'entity_definitions', 'actions'). Must be a non-empty string.
-   * @param {string} id - The unique identifier for the data object within its type. Must be a non-empty string.
-   * @param {object} data - The data object to store. Must be a non-null object.
-   * @returns {boolean} Returns true if an item with the same id was overwritten, false otherwise.
+   * @param {string} type
+   * @param {string} id
+   * @param {object} data
+   * @returns {boolean}
    */
   store(type, id, data) {
     if (typeof type !== 'string' || type.trim() === '') {
@@ -72,7 +60,7 @@ class InMemoryDataRegistry {
       this.contentOrigins.set(type, new Map());
     }
     const typeMap = this.data.get(type);
-    const didOverride = typeMap.has(id); // Check before setting
+    const didOverride = typeMap.has(id);
     typeMap.set(id, data);
 
     const originMap = this.contentOrigins.get(type);
@@ -84,11 +72,9 @@ class InMemoryDataRegistry {
   }
 
   /**
-   * Retrieves a specific data object by its type and ID.
-   *
-   * @param {string} type - The category of data (e.g., 'entity_definitions').
-   * @param {string} id - The unique identifier of the data object.
-   * @returns {object | undefined} The data object if found, otherwise undefined.
+   * @param {string} type
+   * @param {string} id
+   * @returns {any | undefined}
    */
   get(type, id) {
     const typeMap = this.data.get(type);
@@ -96,11 +82,8 @@ class InMemoryDataRegistry {
   }
 
   /**
-   * Retrieves all data objects belonging to a specific type as an array.
-   *
-   * @param {string} type - The category of data (e.g., 'entity_definitions').
-   * @returns {object[]} An array of data objects for the given type. Returns an empty array
-   * if the type is unknown or has no data stored.
+   * @param {string} type
+   * @returns {any[]}
    */
   getAll(type) {
     const typeMap = this.data.get(type);
@@ -108,20 +91,24 @@ class InMemoryDataRegistry {
   }
 
   /**
-   * Retrieves all loaded system rule objects.
-   *
-   * @returns {object[]} An array containing all stored system rule objects.
+   * @returns {object[]}
    */
   getAllSystemRules() {
     return this.getAll('rules');
   }
 
-  // =======================================================
-  // --- Specific Definition Getter Methods (Verified against Interface) ---
-  // =======================================================
+  // --- Specific Definition Getters ---
+
+  getWorldDefinition(id) {
+    return this.get('worlds', id);
+  }
+
+  getAllWorldDefinitions() {
+    return this.getAll('worlds');
+  }
 
   getEntityDefinition(id) {
-    return this.get('entity_definitions', id);
+    return this.get('entityDefinitions', id); // Note: key is entityDefinitions
   }
 
   getActionDefinition(id) {
@@ -141,11 +128,11 @@ class InMemoryDataRegistry {
   }
 
   getEntityInstanceDefinition(id) {
-    return this.get('entity_instances', id);
+    return this.get('entityInstances', id); // Note: key is entityInstances
   }
 
   getAllEntityDefinitions() {
-    return this.getAll('entity_definitions');
+    return this.getAll('entityDefinitions');
   }
 
   getAllActionDefinitions() {
@@ -165,7 +152,7 @@ class InMemoryDataRegistry {
   }
 
   getAllEntityInstanceDefinitions() {
-    return this.getAll('entity_instances');
+    return this.getAll('entityInstances');
   }
 
   getGoalDefinition(id) {
@@ -177,11 +164,9 @@ class InMemoryDataRegistry {
   }
 
   /**
-   * Retrieves the mod ID that provided a specific content item.
-   *
-   * @param {string} type - The content type category.
-   * @param {string} id - The fully qualified ID of the content item.
-   * @returns {string | null} The mod ID if tracked, otherwise null.
+   * @param {string} type
+   * @param {string} id
+   * @returns {string | null}
    */
   getContentSource(type, id) {
     const typeMap = this.contentOrigins.get(type);
@@ -189,13 +174,10 @@ class InMemoryDataRegistry {
   }
 
   /**
-   * Lists all content IDs provided by a specific mod, grouped by content type.
-   *
-   * @param {string} modId - The mod identifier.
-   * @returns {Record<string, string[]>} Mapping of content type to array of IDs.
+   * @param {string} modId
+   * @returns {Record<string, string[]>}
    */
   listContentByMod(modId) {
-    /** @type {Record<string, string[]>} */
     const result = {};
     for (const [type, idMap] of this.contentOrigins.entries()) {
       for (const [id, source] of idMap.entries()) {
@@ -210,88 +192,33 @@ class InMemoryDataRegistry {
     return result;
   }
 
-  // =======================================================
-  // --- End Specific Definition Getter Methods ---
-  // =======================================================
-
-  /**
-   * Removes all stored typed data objects.
-   */
   clear() {
     this.data.clear();
     this.contentOrigins.clear();
   }
 
-  // ===============================================================================
-  // --- Dynamically Discovered Starting Player and Location ID Implementations ---
-  // ===============================================================================
+  // --- Dynamically Discovered Startup Info ---
 
-  /**
-   * Dynamically discovers the starting player ID by finding the first entity
-   * definition in the 'entity_definitions' type map that contains a 'core:player' component.
-   * The iteration order depends on the insertion order into the underlying Map.
-   *
-   * @returns {string | null} The ID of the first entity definition found with a
-   * 'core:player' component, or null if no such entity is found.
-   */
   getStartingPlayerId() {
-    const entityMap = this.data.get('entity_definitions');
-    if (!entityMap) {
-      console.warn(
-        "InMemoryDataRegistry.getStartingPlayerId: No 'entity_definitions' data found in registry."
-      );
-      return null;
-    }
-
-    for (const [id, definition] of entityMap.entries()) {
-      if (
-        definition &&
-        typeof definition === 'object' &&
-        definition.components &&
-        typeof definition.components['core:player'] === 'object'
-      ) {
-        return id;
+    const entityDefs = this.getAllEntityDefinitions();
+    for (const definition of entityDefs) {
+      if (definition?.components?.['core:player']) {
+        return definition.id;
       }
     }
     return null;
   }
 
-  /**
-   * Dynamically discovers the starting location ID.
-   * It first finds the starting player ID using `getStartingPlayerId()`.
-   * Then, it retrieves the player's entity definition and extracts the 'locationId'
-   * property from the 'core:position' component data within that definition.
-   *
-   * @returns {string | null} The 'locationId' string found in the starting player's
-   * position component data, or null if the player ID, definition, position component,
-   * or locationId property cannot be found.
-   */
   getStartingLocationId() {
     const playerId = this.getStartingPlayerId();
-    if (!playerId) {
-      return null;
-    }
+    if (!playerId) return null;
 
     const playerDef = this.getEntityDefinition(playerId);
-    if (!playerDef || typeof playerDef !== 'object') {
-      console.warn(
-        `InMemoryDataRegistry.getStartingLocationId: Could not retrieve definition for starting player ID: ${playerId}`
-      );
-      return null;
-    }
+    const locationId = playerDef?.components?.['core:position']?.locationId;
 
-    const positionComponent = playerDef.components?.['core:position'];
-    if (!positionComponent || typeof positionComponent !== 'object') {
+    if (typeof locationId !== 'string' || !locationId.trim()) {
       console.warn(
-        `InMemoryDataRegistry.getStartingLocationId: Starting player definition (${playerId}) does not have a 'core:position' component in its components.`
-      );
-      return null;
-    }
-
-    const locationId = positionComponent.locationId;
-    if (typeof locationId !== 'string' || locationId.trim() === '') {
-      console.warn(
-        `InMemoryDataRegistry.getStartingLocationId: Position component in starting player definition (${playerId}) does not have a valid 'locationId' property.`
+        `Starting player '${playerId}' has no valid locationId in core:position component.`
       );
       return null;
     }

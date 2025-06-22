@@ -38,31 +38,37 @@ describe('parseAndRepairJson', () => {
   // Test for invalid input types
   describe('Invalid Input Handling', () => {
     test('should throw TypeError for null input and dispatch error if dispatcher provided', async () => {
-      await expect(parseAndRepairJson(null, mockLogger, mockDispatcher)).rejects.toThrow(
-        TypeError("Input 'jsonString' must be a string.")
-      );
+      await expect(
+        parseAndRepairJson(null, mockLogger, mockDispatcher)
+      ).rejects.toThrow(TypeError("Input 'jsonString' must be a string."));
       expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
         expect.any(String),
         expect.objectContaining({
-          message: expect.stringContaining("Input 'jsonString' must be a string. Received type: object"),
+          message: expect.stringContaining(
+            "Input 'jsonString' must be a string. Received type: object"
+          ),
         })
       );
     });
 
     test('should throw TypeError for undefined input and dispatch error if dispatcher provided', async () => {
-      await expect(parseAndRepairJson(undefined, mockLogger, mockDispatcher)).rejects.toThrow(
-        TypeError("Input 'jsonString' must be a string.")
-      );
+      await expect(
+        parseAndRepairJson(undefined, mockLogger, mockDispatcher)
+      ).rejects.toThrow(TypeError("Input 'jsonString' must be a string."));
       expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
         expect.any(String),
         expect.objectContaining({
-          message: expect.stringContaining("Input 'jsonString' must be a string. Received type: undefined"),
+          message: expect.stringContaining(
+            "Input 'jsonString' must be a string. Received type: undefined"
+          ),
         })
       );
     });
 
     test('should throw JsonProcessingError for empty string input after cleaning and dispatch error if dispatcher provided', async () => {
-      await expect(parseAndRepairJson('', mockLogger, mockDispatcher)).rejects.toThrow(
+      await expect(
+        parseAndRepairJson('', mockLogger, mockDispatcher)
+      ).rejects.toThrow(
         new JsonProcessingError(
           'Cleaned JSON string is null or empty, cannot parse.',
           {
@@ -74,14 +80,18 @@ describe('parseAndRepairJson', () => {
       expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
         expect.any(String),
         expect.objectContaining({
-          message: expect.stringContaining('Cleaned JSON string is null or empty'),
+          message: expect.stringContaining(
+            'Cleaned JSON string is null or empty'
+          ),
           details: { originalInput: '' },
         })
       );
     });
 
     test('should throw JsonProcessingError for whitespace-only string input after cleaning and dispatch error if dispatcher provided', async () => {
-      await expect(parseAndRepairJson('   ', mockLogger, mockDispatcher)).rejects.toThrow(
+      await expect(
+        parseAndRepairJson('   ', mockLogger, mockDispatcher)
+      ).rejects.toThrow(
         new JsonProcessingError(
           'Cleaned JSON string is null or empty, cannot parse.',
           {
@@ -93,7 +103,9 @@ describe('parseAndRepairJson', () => {
       expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
         expect.any(String),
         expect.objectContaining({
-          message: expect.stringContaining('Cleaned JSON string is null or empty'),
+          message: expect.stringContaining(
+            'Cleaned JSON string is null or empty'
+          ),
           details: { originalInput: '   ' },
         })
       );

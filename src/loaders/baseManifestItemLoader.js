@@ -277,7 +277,10 @@ export class BaseManifestItemLoader extends AbstractLoader {
    */
   _extractValidFilenames(manifest, contentKey, modId) {
     // Support dot notation for nested content keys (e.g., 'entities.definitions')
-    const getNested = (obj, path) => path.split('.').reduce((o, k) => (o && o[k] !== undefined ? o[k] : undefined), obj);
+    const getNested = (obj, path) =>
+      path
+        .split('.')
+        .reduce((o, k) => (o && o[k] !== undefined ? o[k] : undefined), obj);
     const filenames = getNested(manifest?.content, contentKey);
     if (filenames === null || filenames === undefined) {
       this._logger.debug(

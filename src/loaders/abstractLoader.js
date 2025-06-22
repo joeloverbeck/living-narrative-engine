@@ -16,7 +16,8 @@ export class AbstractLoader {
   /**
    * @param {import('../interfaces/coreServices.js').ILogger} logger - Logger instance.
    */
-  constructor(logger) { // Removed the unused 'checks' parameter
+  constructor(logger) {
+    // Removed the unused 'checks' parameter
     this._logger = ensureValidLogger(logger, this.constructor.name);
     this._logger.debug(`${this.constructor.name}: Initialized.`);
   }

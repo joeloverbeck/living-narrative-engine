@@ -10,9 +10,7 @@
 /** @typedef {import('./LoadContext.js').LoadContext} LoadContext */
 
 /* ── Implementation imports ─────────────────────────────────────────────── */
-import {
-  ModsLoaderPhaseError,
-} from '../errors/modsLoaderPhaseError.js';
+import { ModsLoaderPhaseError } from '../errors/modsLoaderPhaseError.js';
 import AbstractLoader from './abstractLoader.js';
 import { createLoadContext } from './LoadContext.js';
 

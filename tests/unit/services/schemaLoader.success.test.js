@@ -114,6 +114,7 @@ describe('SchemaLoader Success Case', () => {
     };
     mockSchemaValidator = {
       addSchema: jest.fn(),
+      addSchemas: jest.fn(),
       isSchemaLoaded: jest.fn(),
       getValidator: jest.fn(),
     };
@@ -156,14 +157,19 @@ describe('SchemaLoader Success Case', () => {
     });
 
     // Configure STATEFUL Validator Mocks...
-    mockSchemaValidator.addSchema.mockImplementation(
-      async (schemaData, schemaId) => {
-        if (!schemaId)
-          throw new Error('Test Mock Error: addSchema called without schemaId');
-        addedSchemasDuringTest.add(schemaId);
-        // return undefined; // Jest mocks return undefined by default
+    mockSchemaValidator.addSchemas.mockImplementation(async (schemasArray) => {
+      if (!Array.isArray(schemasArray) || schemasArray.length === 0) {
+        throw new Error(
+          'Test Mock Error: addSchemas called with invalid input'
+        );
       }
-    );
+      // Add all schema IDs to the tracking set
+      schemasArray.forEach((schema) => {
+        if (schema && schema.$id) {
+          addedSchemasDuringTest.add(schema.$id);
+        }
+      });
+    });
     // isSchemaLoaded should return false for all schemas in this success test initially
     mockSchemaValidator.isSchemaLoaded.mockImplementation((id) =>
       addedSchemasDuringTest.has(id)
@@ -199,39 +205,43 @@ describe('SchemaLoader Success Case', () => {
     // getManifestSchemaId is NO LONGER CALLED during loadAndCompileAllSchemas
     expect(mockConfiguration.getManifestSchemaId).not.toHaveBeenCalled();
 
-    // Path resolution, fetch, and isSchemaLoaded are called for each file
+    // Path resolution and fetch are called for each file
     expect(mockPathResolver.resolveSchemaPath).toHaveBeenCalledTimes(
       loadedCount
     );
     expect(mockDataFetcher.fetch).toHaveBeenCalledTimes(loadedCount);
-    expect(mockSchemaValidator.isSchemaLoaded).toHaveBeenCalledTimes(
-      loadedCount
-    );
 
-    // addSchema is called for each file *because* isSchemaLoaded initially returns false for all
-    expect(mockSchemaValidator.addSchema).toHaveBeenCalledTimes(loadedCount);
+    // addSchemas is called once with all schemas in batch
+    expect(mockSchemaValidator.addSchemas).toHaveBeenCalledTimes(1);
+    expect(mockSchemaValidator.addSchema).not.toHaveBeenCalled(); // Old method should not be called
 
     // Verify each schema file path was resolved
     filesToLoadForTest.forEach((file) => {
       expect(mockPathResolver.resolveSchemaPath).toHaveBeenCalledWith(file);
     });
 
-    // Verify each schema was fetched and added (check arguments)
+    // Verify each schema was fetched
     for (const file of filesToLoadForTest) {
       const path = `./test/schemas/${file}`;
       const data = pathToDataMap[path];
-      const id = data?.$id;
       expect(mockDataFetcher.fetch).toHaveBeenCalledWith(path);
-      expect(mockSchemaValidator.isSchemaLoaded).toHaveBeenCalledWith(id); // Checked before adding
-      expect(mockSchemaValidator.addSchema).toHaveBeenCalledWith(data, id); // Added because isSchemaLoaded returned false
     }
+
+    // Verify addSchemas was called with the correct array of schema data
+    const expectedSchemaData = filesToLoadForTest.map((file) => {
+      const path = `./test/schemas/${file}`;
+      return pathToDataMap[path];
+    });
+    expect(mockSchemaValidator.addSchemas).toHaveBeenCalledWith(
+      expectedSchemaData
+    );
 
     // Check logs
     expect(mockLogger.debug).toHaveBeenCalledWith(
-      `SchemaLoader: Processing ${loadedCount} schemas listed in configuration...`
+      `SchemaLoader: Processing ${loadedCount} schemas listed in configuration (batch registration)...`
     );
     expect(mockLogger.debug).toHaveBeenCalledWith(
-      `SchemaLoader: Schema processing complete. Added ${loadedCount} new schemas to the validator (others may have been skipped).`
+      `SchemaLoader: Batch schema registration complete. Added ${loadedCount} schemas.`
     );
     expect(mockLogger.debug).toHaveBeenCalledTimes(2); // Start and End logs
     expect(mockLogger.warn).not.toHaveBeenCalled();

@@ -96,17 +96,17 @@ class StaticConfiguration {
   getSchemaFiles() {
     return [
       'common.schema.json',
+      'json-logic.schema.json',
+      'condition-container.schema.json',
       'action.schema.json',
       'action-result.schema.json',
       'component.schema.json',
       'condition.schema.json',
-      'condition-container.schema.json',
       'entity-definition.schema.json', // CORRECTED
       'entity-instance.schema.json', // CORRECTED
       'event.schema.json',
       'game.schema.json',
       'goal.schema.json',
-      'json-logic.schema.json',
       'mod-manifest.schema.json',
       'operation.schema.json',
       'rule.schema.json',
@@ -115,6 +115,7 @@ class StaticConfiguration {
       'macro.schema.json',
       'ui-icons.schema.json',
       'ui-labels.schema.json',
+      'world.schema.json',
       // Prepend the 'operations/' subdirectory to each operation schema file
       ...OPERATION_SCHEMA_FILES.map((file) => `operations/${file}`),
     ];

@@ -1,6 +1,6 @@
 // src/services/ajvSchemaValidator.js
 // -----------------------------------------------------------------------------
-// Implements ISchemaValidator via Ajv. Preloads both v1 and v2 “turn action” schemas.
+// Implements ISchemaValidator via Ajv. Preloads both v1 and v2 "turn action" schemas.
 // -----------------------------------------------------------------------------
 
 import Ajv from 'ajv';
@@ -45,7 +45,14 @@ class AjvSchemaValidator {
     this.#logger = logger;
 
     try {
-      this.#ajv = new Ajv({ allErrors: true, strictTypes: false });
+      this.#ajv = new Ajv({
+        allErrors: true,
+        strictTypes: false,
+        strict: false,
+        validateFormats: false,
+        allowUnionTypes: true,
+        verbose: true,
+      });
       addFormats(this.#ajv);
       this.#logger.debug(
         'AjvSchemaValidator: Ajv instance created and formats added.'
@@ -130,6 +137,19 @@ class AjvSchemaValidator {
       this.#logger.debug(
         `AjvSchemaValidator: Successfully added schema '${keyToRegister}'.`
       );
+
+      // Verify that the schema was added correctly and can be retrieved
+      const addedSchema = this.#ajv.getSchema(keyToRegister);
+      if (!addedSchema) {
+        this.#logger.warn(
+          `AjvSchemaValidator: Schema '${keyToRegister}' was added but cannot be retrieved. This may indicate a $ref resolution issue.`
+        );
+      } else {
+        this.#logger.debug(
+          `AjvSchemaValidator: Schema '${keyToRegister}' verified as retrievable.`
+        );
+      }
+
       return Promise.resolve();
     } catch (error) {
       this.#logger.error(
@@ -338,6 +358,132 @@ class AjvSchemaValidator {
       };
     }
     return validatorFunction(data);
+  }
+
+  /**
+   * Checks if all $refs in a schema are resolvable.
+   * This helps diagnose schema loading issues.
+   *
+   * @param {string} schemaId
+   * @returns {boolean}
+   */
+  validateSchemaRefs(schemaId) {
+    if (!this.#ajv) {
+      return false;
+    }
+
+    try {
+      const schema = this.#ajv.getSchema(schemaId);
+      if (!schema) {
+        this.#logger.warn(
+          `AjvSchemaValidator: Cannot validate refs for schema '${schemaId}' - schema not found.`
+        );
+        return false;
+      }
+
+      // Try to compile the schema to check for $ref resolution issues
+      const compiledSchema = this.#ajv.compile(schema.schema);
+      return true;
+    } catch (error) {
+      this.#logger.error(
+        `AjvSchemaValidator: Schema '${schemaId}' has unresolved $refs or other issues: ${error.message}`,
+        {
+          schemaId: schemaId,
+          error: error,
+        }
+      );
+      return false;
+    }
+  }
+
+  /**
+   * Gets a list of all loaded schema IDs for debugging purposes.
+   *
+   * @returns {string[]}
+   */
+  getLoadedSchemaIds() {
+    if (!this.#ajv) {
+      return [];
+    }
+
+    try {
+      // This is a bit of a hack since Ajv doesn't expose a direct method to get all schema IDs
+      // We'll try to get schemas we know should be loaded
+      const knownSchemaIds = [
+        'http://example.com/schemas/common.schema.json',
+        'http://example.com/schemas/world.schema.json',
+        'http://example.com/schemas/entity-instance.schema.json',
+        'http://example.com/schemas/entity-definition.schema.json',
+        'http://example.com/schemas/action.schema.json',
+        'http://example.com/schemas/component.schema.json',
+        'http://example.com/schemas/condition.schema.json',
+        'http://example.com/schemas/event.schema.json',
+        'http://example.com/schemas/rule.schema.json',
+        'http://example.com/schemas/game.schema.json',
+        'http://example.com/schemas/mod-manifest.schema.json',
+      ];
+
+      return knownSchemaIds.filter((id) => this.isSchemaLoaded(id));
+    } catch (error) {
+      this.#logger.error(
+        'AjvSchemaValidator: Error getting loaded schema IDs',
+        { error: error }
+      );
+      return [];
+    }
+  }
+
+  /**
+   * Adds multiple JSON schema objects to the validator instance at once.
+   *
+   * @param {object[]} schemasArray - Array of schema objects, each with a valid $id.
+   * @returns {Promise<void>}
+   */
+  async addSchemas(schemasArray) {
+    if (!this.#ajv) {
+      this.#logger.error(
+        'AjvSchemaValidator.addSchemas: Ajv instance not available.'
+      );
+      return Promise.reject(
+        new Error('AjvSchemaValidator: Ajv instance not available.')
+      );
+    }
+    if (!Array.isArray(schemasArray) || schemasArray.length === 0) {
+      const errMsg = 'addSchemas called with empty or non-array input.';
+      this.#logger.error(`AjvSchemaValidator.addSchemas: ${errMsg}`);
+      return Promise.reject(new Error(`AjvSchemaValidator: ${errMsg}`));
+    }
+    // Validate all schemas have $id
+    for (const schema of schemasArray) {
+      if (!schema || typeof schema !== 'object' || !schema.$id) {
+        const errMsg = 'All schemas must be objects with a valid $id.';
+        this.#logger.error(`AjvSchemaValidator.addSchemas: ${errMsg}`);
+        return Promise.reject(new Error(`AjvSchemaValidator: ${errMsg}`));
+      }
+    }
+    try {
+      this.#ajv.addSchema(schemasArray);
+      this.#logger.debug(
+        `AjvSchemaValidator: Successfully added ${schemasArray.length} schemas in batch.`
+      );
+      return Promise.resolve();
+    } catch (error) {
+      this.#logger.error(
+        `AjvSchemaValidator: Error adding schemas in batch: ${error.message}`,
+        { error }
+      );
+      if (error.errors) {
+        this.#logger.error(
+          'Ajv Validation Errors (during addSchemas):',
+          JSON.stringify(error.errors, null, 2)
+        );
+      }
+      const rejectionError =
+        error instanceof Error
+          ? error
+          : new Error(`Failed to add schemas in batch: ${String(error)}`);
+      return Promise.reject(rejectionError);
+    }
   }
 }
 

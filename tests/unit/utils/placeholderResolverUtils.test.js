@@ -45,7 +45,7 @@ describe('PlaceholderResolver', () => {
     it('should call ensureValidLogger with the provided logger', () => {
       const spy = jest.spyOn(loggerUtils, 'ensureValidLogger');
       const logger = createMockLogger();
-       
+
       new PlaceholderResolver(logger);
       expect(spy).toHaveBeenCalledWith(logger, 'PlaceholderResolver');
       spy.mockRestore();

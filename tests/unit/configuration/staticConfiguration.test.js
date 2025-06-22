@@ -29,6 +29,7 @@ describe('StaticConfiguration Validation Test', () => {
       'entityInstances', // The schema that was missing
       'llm-configs',
       'prompt-text', // Added to ensure prompt text validation works
+      'world', // Added to ensure world validation works
     ];
 
     // 3. Assert: Check that each essential type returns a valid schema ID.
@@ -60,6 +61,11 @@ describe('StaticConfiguration Validation Test', () => {
         expect(schemaId).toBe(
           'http://example.com/schemas/prompt-text.schema.json'
         );
+      }
+
+      // Focused assertion for world schema ID
+      if (registryKey === 'world') {
+        expect(schemaId).toBe('http://example.com/schemas/world.schema.json');
       }
 
       // Optional: Log on success for visibility during test runs
@@ -97,5 +103,16 @@ describe('StaticConfiguration Validation Test', () => {
 
     // 3. Assert
     expect(schemaFiles).toContain('prompt-text.schema.json');
+  });
+
+  it('should include world schema in the schema files list', () => {
+    // 1. Arrange
+    const configService = new StaticConfiguration();
+
+    // 2. Act
+    const schemaFiles = configService.getSchemaFiles();
+
+    // 3. Assert
+    expect(schemaFiles).toContain('world.schema.json');
   });
 });
