@@ -7,6 +7,7 @@ import { ENGINE_STOPPED_UI } from '../../../src/constants/eventIds.js';
 import {
   expectDispatchSequence,
   buildStopDispatches,
+  expectStopSuccess,
   expectEngineRunning,
   expectEngineStopped,
 } from '../../common/engine/dispatchTestUtils.js';
@@ -22,20 +23,7 @@ describeEngineSuite('GameEngine', (ctx) => {
       await ctx.bed.startAndReset(DEFAULT_TEST_WORLD);
 
       await ctx.engine.stop();
-
-      expect(
-        ctx.bed.mocks.playtimeTracker.endSessionAndAccumulate
-      ).toHaveBeenCalledTimes(1);
-      expect(ctx.bed.mocks.turnManager.stop).toHaveBeenCalledTimes(1);
-
-      expectDispatchSequence(
-        ctx.bed.mocks.safeEventDispatcher.dispatch,
-        ...buildStopDispatches()
-      );
-
-      expectEngineStopped(ctx.engine);
-
-      expect(ctx.bed.mocks.logger.warn).not.toHaveBeenCalled();
+      expectStopSuccess(ctx.bed, ctx.engine);
     });
 
     it('should do nothing and log if engine is already stopped', async () => {

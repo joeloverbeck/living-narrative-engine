@@ -15,6 +15,7 @@ import {
   COMPONENT_REMOVED_ID,
   ENGINE_STOPPED_UI,
 } from '../../../src/constants/eventIds.js';
+import { tokens } from '../../../src/dependencyInjection/tokens.js';
 import { DEFAULT_ACTIVE_WORLD_FOR_SAVE } from '../constants.js';
 
 /**
@@ -240,6 +241,54 @@ export const expectComponentRemovedDispatch = createDispatchAsserter(
     oldComponentData: oldData,
   })
 );
+
+/**
+ * Asserts that a new game started successfully.
+ *
+ * @description Ensures core services were invoked and the engine is running
+ * with the given world.
+ * @param {import('./gameEngineTestBed.js').GameEngineTestBed} bed - Test bed.
+ * @param {import('../../../src/engine/gameEngine.js').default} engine - Engine
+ *   instance.
+ * @param {string} world - World name.
+ * @returns {void}
+ */
+export function expectStartSuccess(bed, engine, world) {
+  expect(bed.mocks.entityManager.clearAll).toHaveBeenCalled();
+  expect(bed.mocks.playtimeTracker.reset).toHaveBeenCalled();
+  expect(bed.env.mockContainer.resolve).toHaveBeenCalledWith(
+    tokens.IInitializationService
+  );
+  expect(
+    bed.mocks.initializationService.runInitializationSequence
+  ).toHaveBeenCalledWith(world);
+  expect(bed.mocks.playtimeTracker.startSession).toHaveBeenCalled();
+  expect(bed.mocks.turnManager.start).toHaveBeenCalled();
+  expectDispatchSequence(
+    bed.mocks.safeEventDispatcher.dispatch,
+    buildStartDispatches(world)
+  );
+  expectEngineRunning(engine, world);
+}
+
+/**
+ * Asserts that stopping the engine succeeded without warnings.
+ *
+ * @param {import('./gameEngineTestBed.js').GameEngineTestBed} bed - Test bed.
+ * @param {import('../../../src/engine/gameEngine.js').default} engine - Engine
+ *   instance.
+ * @returns {void}
+ */
+export function expectStopSuccess(bed, engine) {
+  expect(bed.mocks.playtimeTracker.endSessionAndAccumulate).toHaveBeenCalled();
+  expect(bed.mocks.turnManager.stop).toHaveBeenCalled();
+  expectDispatchSequence(
+    bed.mocks.safeEventDispatcher.dispatch,
+    ...buildStopDispatches()
+  );
+  expectEngineStopped(engine);
+  expect(bed.mocks.logger.warn).not.toHaveBeenCalled();
+}
 
 /**
  * Asserts that the dispatch function was never called.
