@@ -21,6 +21,7 @@ import { buildSpeechPayload } from './helpers/buildSpeechPayload.js';
 import { ProcessingGuard } from './helpers/processingGuard.js';
 import { finishProcessing } from './helpers/processingErrorUtils.js';
 import { getLogger } from './helpers/contextUtils.js';
+import TurnDirectiveStrategyResolver from '../strategies/turnDirectiveStrategyResolver.js';
 
 /**
  * @class ProcessingCommandState
@@ -29,6 +30,7 @@ import { getLogger } from './helpers/contextUtils.js';
 export class ProcessingCommandState extends AbstractTurnState {
   _isProcessing = false;
   _processingGuard;
+  _directiveResolver = TurnDirectiveStrategyResolver;
   #turnActionToProcess = null;
   #commandStringForLog = null;
 
@@ -64,10 +66,17 @@ export class ProcessingCommandState extends AbstractTurnState {
    * @param {BaseTurnHandler} handler - The turn handler managing this state.
    * @param {string} [commandString]
    * @param {ITurnAction} [turnAction]
+   * @param {{ resolveStrategy(directive: string): ITurnDirectiveStrategy }} [directiveResolver]
    */
-  constructor(handler, commandString, turnAction = null) {
+  constructor(
+    handler,
+    commandString,
+    turnAction = null,
+    directiveResolver = TurnDirectiveStrategyResolver
+  ) {
     super(handler);
     this._processingGuard = new ProcessingGuard(this);
+    this._directiveResolver = directiveResolver;
     finishProcessing(this);
     this.#turnActionToProcess = turnAction;
     this.#commandStringForLog =
