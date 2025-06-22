@@ -33,32 +33,12 @@ export class ActionValidationContextBuilder {
    * @throws {Error} If dependencies are missing or invalid.
    */
   constructor({ entityManager, logger }) {
-    try {
-      this.#logger = setupService('ActionValidationContextBuilder', logger, {
-        entityManager: {
-          value: entityManager,
-          requiredMethods: ['getEntityInstance', 'getComponentData'],
-        },
-      });
-    } catch (e) {
-      const base = 'ActionValidationContextBuilder Constructor:';
-      if (e.message.includes('logger')) {
-        const errorMsg = `${base} CRITICAL - Invalid or missing ILogger instance. Error: ${e.message}`;
-        // eslint-disable-next-line no-console
-        console.error(errorMsg);
-        throw new Error(errorMsg);
-      }
-      // if logger failed we already threw above; otherwise log via console
-      // fallback if logger not available
-      const errMsg = `${base} Dependency validation failed for entityManager. Error: ${e.message}`;
-      if (this.#logger?.error) {
-        this.#logger.error(errMsg);
-      } else {
-        // eslint-disable-next-line no-console
-        console.error(errMsg);
-      }
-      throw e;
-    }
+    this.#logger = setupService('ActionValidationContextBuilder', logger, {
+      entityManager: {
+        value: entityManager,
+        requiredMethods: ['getEntityInstance', 'getComponentData'],
+      },
+    });
 
     this.#entityManager = entityManager;
   }

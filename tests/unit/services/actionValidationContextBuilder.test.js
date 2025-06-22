@@ -98,7 +98,7 @@ describe('ActionValidationContextBuilder', () => {
           entityManager: validEntityManager,
           logger: null,
         })
-    ).toThrow('Invalid or missing ILogger instance');
+    ).toThrow('Missing required dependency: logger.');
   });
 
   it('should successfully create an instance with valid dependencies', () => {
