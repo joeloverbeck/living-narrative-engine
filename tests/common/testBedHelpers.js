@@ -112,3 +112,24 @@ export function createInitializedBed(
 }
 
 export default withTestBed;
+
+/**
+ * Executes a function and automatically resets mocks on the provided bed.
+ *
+ * @description Runs the given `callback` in a `try/finally` block. If the
+ *   `bed` exposes a `resetMocks` method, it will be called in the `finally`
+ *   block after the callback completes.
+ * @param {{ resetMocks?: () => void }} bed - Test bed instance.
+ * @param {(bed: any) => (Promise<void>|void)} callback - Function executed with
+ *   the bed instance.
+ * @returns {Promise<void>} Resolves once the callback and reset logic finish.
+ */
+export async function runWithReset(bed, callback) {
+  try {
+    await callback(bed);
+  } finally {
+    if (typeof bed.resetMocks === 'function') {
+      bed.resetMocks();
+    }
+  }
+}
