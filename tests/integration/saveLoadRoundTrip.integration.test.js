@@ -125,7 +125,9 @@ describe('Persistence round-trip', () => {
     };
 
     const activeModsManifestBuilder = {
-      build: jest.fn().mockReturnValue([{ modId: 'core', version: '1.0.0' }]),
+      buildManifest: jest
+        .fn()
+        .mockReturnValue([{ modId: 'core', version: '1.0.0' }]),
     };
     const captureService = new GameStateCaptureService({
       logger,

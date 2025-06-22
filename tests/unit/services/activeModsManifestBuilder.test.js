@@ -23,7 +23,7 @@ describe('ActiveModsManifestBuilder', () => {
       { id: 'core', version: '1.0.0' },
       { id: 'mod2', version: '2.3.4' },
     ]);
-    const result = builder.build();
+    const result = builder.buildManifest();
     expect(result).toEqual([
       { modId: 'core', version: '1.0.0' },
       { modId: 'mod2', version: '2.3.4' },
@@ -33,7 +33,7 @@ describe('ActiveModsManifestBuilder', () => {
 
   it('falls back to core mod version when registry empty', () => {
     dataRegistry.getAll.mockReturnValue([]);
-    const result = builder.build();
+    const result = builder.buildManifest();
     expect(result).toEqual([
       { modId: CORE_MOD_ID, version: 'unknown_fallback' },
     ]);
@@ -44,13 +44,13 @@ describe('ActiveModsManifestBuilder', () => {
     dataRegistry.getAll.mockReturnValue([
       { id: CORE_MOD_ID, version: '2.0.0' },
     ]);
-    const result = builder.build();
+    const result = builder.buildManifest();
     expect(result).toEqual([{ modId: CORE_MOD_ID, version: '2.0.0' }]);
   });
 
   it('handles missing registry gracefully', () => {
     dataRegistry.getAll.mockReturnValue(undefined);
-    const result = builder.build();
+    const result = builder.buildManifest();
     expect(result).toEqual([
       { modId: CORE_MOD_ID, version: 'unknown_fallback' },
     ]);
@@ -63,7 +63,7 @@ describe('ActiveModsManifestBuilder', () => {
       find: () => ({ id: CORE_MOD_ID, version: '3.3.3' }),
     };
     dataRegistry.getAll.mockReturnValue(trickyList);
-    const result = builder.build();
+    const result = builder.buildManifest();
     expect(result).toEqual([{ modId: CORE_MOD_ID, version: '3.3.3' }]);
     expect(logger.debug).toHaveBeenCalled();
   });

@@ -33,7 +33,7 @@ describe('GameStateCaptureService additional coverage', () => {
       })),
     };
     activeModsManifestBuilder = {
-      build: jest.fn(() => [{ modId: 'core', version: '1.0.0' }]),
+      buildManifest: jest.fn(() => [{ modId: 'core', version: '1.0.0' }]),
     };
     service = new GameStateCaptureService({
       logger,
@@ -47,7 +47,7 @@ describe('GameStateCaptureService additional coverage', () => {
 
   it('delegates to ActiveModsManifestBuilder', () => {
     service.captureCurrentGameState('World');
-    expect(activeModsManifestBuilder.build).toHaveBeenCalled();
+    expect(activeModsManifestBuilder.buildManifest).toHaveBeenCalled();
   });
 
   it('passes playtime to metadata builder', () => {
