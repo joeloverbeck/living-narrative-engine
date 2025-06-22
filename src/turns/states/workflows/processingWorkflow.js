@@ -26,26 +26,26 @@ export class ProcessingWorkflow {
   }
 
   /**
-   * Runs the workflow.
-   *
+   * @description Acquire context and prepare the state for processing.
    * @param {import('../../handlers/baseTurnHandler.js').BaseTurnHandler} handler - Owning handler.
    * @param {import('../../interfaces/ITurnState.js').ITurnState|null} previousState - Previous state.
-   * @returns {Promise<void>} Resolves when complete.
+   * @returns {Promise<import('../../interfaces/ITurnContext.js').ITurnContext|null>} Context or null on failure.
    */
-  async run(handler, previousState) {
+  async _acquireContext(handler, previousState) {
     const turnCtx = await this._state._ensureContext(
       `critical-no-context-${this._state.getStateName()}`,
       handler
     );
-    if (!turnCtx) return;
+    if (!turnCtx) return null;
 
     if (this._state._isProcessing) {
       const logger = getLogger(turnCtx, this._state._handler);
       logger.warn(
         `${this._state.getStateName()}: enterState called while already processing. Actor: ${turnCtx?.getActor()?.id ?? 'N/A'}. Aborting re-entry.`
       );
-      return;
+      return null;
     }
+
     this._state._processingGuard.start();
 
     await AbstractTurnState.prototype.enterState.call(
@@ -54,16 +54,29 @@ export class ProcessingWorkflow {
       previousState
     );
 
-    const actor = await this._validateContextAndActor(turnCtx);
+    return turnCtx;
+  }
+
+  /**
+   * Runs the workflow.
+   *
+   * @param {import('../../handlers/baseTurnHandler.js').BaseTurnHandler} handler - Owning handler.
+   * @param {import('../../interfaces/ITurnState.js').ITurnState|null} previousState - Previous state.
+   * @returns {Promise<void>} Resolves when complete.
+   */
+  async run(handler, previousState) {
+    const turnCtx = await this._acquireContext(handler, previousState);
+    if (!turnCtx) return;
+
+    const actor = await this._validateActor(turnCtx);
     if (!actor) return;
 
-    const turnAction = await this._resolveTurnAction(turnCtx, actor);
+    const turnAction = await this._obtainTurnAction(turnCtx, actor);
     if (!turnAction) return;
 
-    const decisionMeta = turnCtx.getDecisionMeta?.() ?? {};
-    await this._state._dispatchSpeech(turnCtx, actor, decisionMeta);
+    await this._dispatchSpeechIfNeeded(turnCtx, actor);
 
-    await this._executeActionWorkflow(turnCtx, actor, turnAction);
+    await this._executeAction(turnCtx, actor, turnAction);
   }
 
   /**
@@ -72,7 +85,7 @@ export class ProcessingWorkflow {
    * @param {import('../../interfaces/ITurnContext.js').ITurnContext} turnCtx - Context.
    * @returns {Promise<import('../../../entities/entity.js').default|null>} Resolved actor or null.
    */
-  async _validateContextAndActor(turnCtx) {
+  async _validateActor(turnCtx) {
     const logger = getLogger(turnCtx, this._state._handler);
     const actor = turnCtx.getActor();
     if (!actor) {
@@ -105,7 +118,7 @@ export class ProcessingWorkflow {
    * @param {import('../../../entities/entity.js').default} actor - Actor.
    * @returns {Promise<import('../../interfaces/IActorTurnStrategy.js').ITurnAction|null>} Resolved action or null.
    */
-  async _resolveTurnAction(turnCtx, actor) {
+  async _obtainTurnAction(turnCtx, actor) {
     const logger = getLogger(turnCtx, this._state._handler);
     let turnAction = this._turnAction;
     const actorId = actor.id;
@@ -172,6 +185,17 @@ export class ProcessingWorkflow {
   }
 
   /**
+   * @description Dispatch speech event if present in metadata.
+   * @param {import('../../interfaces/ITurnContext.js').ITurnContext} turnCtx - Context.
+   * @param {import('../../../entities/entity.js').default} actor - Actor.
+   * @returns {Promise<void>} Resolves when dispatch completes.
+   */
+  async _dispatchSpeechIfNeeded(turnCtx, actor) {
+    const decisionMeta = turnCtx.getDecisionMeta?.() ?? {};
+    await this._state._dispatchSpeech(turnCtx, actor, decisionMeta);
+  }
+
+  /**
    * Processes the resolved action via the state's internal method.
    *
    * @param {import('../../interfaces/ITurnContext.js').ITurnContext} turnCtx - Context.
@@ -179,7 +203,7 @@ export class ProcessingWorkflow {
    * @param {import('../../interfaces/IActorTurnStrategy.js').ITurnAction} turnAction - Action to process.
    * @returns {Promise<void>} Resolves when processing completes.
    */
-  async _executeActionWorkflow(turnCtx, actor, turnAction) {
+  async _executeAction(turnCtx, actor, turnAction) {
     try {
       await this._state._processCommandInternal(turnCtx, actor, turnAction);
     } catch (error) {

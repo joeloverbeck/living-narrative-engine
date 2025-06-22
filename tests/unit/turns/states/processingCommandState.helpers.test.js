@@ -31,24 +31,40 @@ describe('ProcessingCommandState helpers', () => {
     workflow = new ProcessingWorkflow(state, null, null, () => {});
   });
 
-  test('_validateContextAndActor returns actor when valid', async () => {
+  test('_acquireContext returns context and starts processing', async () => {
+    const ctx = makeCtx({ id: 'a1' });
+    state._ensureContext = jest.fn(async () => ctx);
+    const result = await workflow._acquireContext(mockHandler, null);
+    expect(result).toBe(ctx);
+    expect(state._isProcessing).toBe(true);
+  });
+
+  test('_acquireContext returns null when already processing', async () => {
+    const ctx = makeCtx({ id: 'a1' });
+    state._ensureContext = jest.fn(async () => ctx);
+    state._isProcessing = true;
+    const result = await workflow._acquireContext(mockHandler, null);
+    expect(result).toBeNull();
+  });
+
+  test('_validateActor returns actor when valid', async () => {
     const actor = { id: 'a1' };
     const ctx = makeCtx(actor);
-    await expect(workflow._validateContextAndActor(ctx)).resolves.toBe(actor);
+    await expect(workflow._validateActor(ctx)).resolves.toBe(actor);
   });
 
-  test('_validateContextAndActor returns null when actor missing', async () => {
+  test('_validateActor returns null when actor missing', async () => {
     const ctx = makeCtx(null);
-    await expect(workflow._validateContextAndActor(ctx)).resolves.toBeNull();
+    await expect(workflow._validateActor(ctx)).resolves.toBeNull();
   });
 
-  test('_resolveTurnAction uses constructor action', async () => {
+  test('_obtainTurnAction uses constructor action', async () => {
     const actor = { id: 'a1' };
     const action = { actionDefinitionId: 'act' };
     state = new ProcessingCommandState(mockHandler, null, action);
     workflow = new ProcessingWorkflow(state, null, action, (a) => {});
     const ctx = makeCtx(actor);
-    await expect(workflow._resolveTurnAction(ctx, actor)).resolves.toBe(action);
+    await expect(workflow._obtainTurnAction(ctx, actor)).resolves.toBe(action);
   });
 
   test('_dispatchSpeech dispatches when speech present', async () => {
@@ -59,14 +75,24 @@ describe('ProcessingCommandState helpers', () => {
     expect(dispatcher.dispatch).toHaveBeenCalled();
   });
 
-  test('_executeActionWorkflow calls _processCommandInternal', async () => {
+  test('_dispatchSpeechIfNeeded forwards metadata', async () => {
+    const actor = { id: 'a1' };
+    const ctx = makeCtx(actor, { getDecisionMeta: () => ({ speech: 'hi' }) });
+    const spy = jest
+      .spyOn(state, '_dispatchSpeech')
+      .mockResolvedValue(undefined);
+    await workflow._dispatchSpeechIfNeeded(ctx, actor);
+    expect(spy).toHaveBeenCalledWith(ctx, actor, { speech: 'hi' });
+  });
+
+  test('_executeAction calls _processCommandInternal', async () => {
     const actor = { id: 'a1' };
     const ctx = makeCtx(actor);
     const action = { actionDefinitionId: 'act' };
     const spy = jest
       .spyOn(state, '_processCommandInternal')
       .mockResolvedValue(undefined);
-    await workflow._executeActionWorkflow(ctx, actor, action);
+    await workflow._executeAction(ctx, actor, action);
     expect(spy).toHaveBeenCalledWith(ctx, actor, action);
   });
 });
