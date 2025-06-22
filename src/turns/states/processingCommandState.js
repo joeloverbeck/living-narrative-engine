@@ -36,12 +36,11 @@ export class ProcessingCommandState extends AbstractTurnState {
   /**
    * @override
    * @param {string} reason - Explanation for context validation failure.
-   * @param {BaseTurnHandler} [handler] - Handler used for fallback logging.
    * @returns {Promise<ProcessingCommandStateContext|null>} The current context
    *   cast to ProcessingCommandStateContext or null on failure.
    */
-  async _ensureContext(reason, handler = this._handler) {
-    const ctx = await super._ensureContext(reason, handler);
+  async _ensureContext(reason) {
+    const ctx = await super._ensureContext(reason);
     if (!ctx) return null;
     const required = [
       'getActor',
@@ -51,7 +50,7 @@ export class ProcessingCommandState extends AbstractTurnState {
     ];
     const missing = required.filter((m) => typeof ctx[m] !== 'function');
     if (missing.length) {
-      getLogger(ctx, handler).error(
+      getLogger(ctx, this._handler).error(
         `${this.getStateName()}: ITurnContext missing required methods: ${missing.join(', ')}`
       );
       await this._resetToIdle(`missing-methods-${this.getStateName()}`);
@@ -175,6 +174,7 @@ export class ProcessingCommandState extends AbstractTurnState {
     );
   }
 
+  /* eslint-disable-next-line no-unused-private-class-members */
   async #handleProcessingException(
     turnCtx,
     error,

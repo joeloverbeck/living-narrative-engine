@@ -33,8 +33,7 @@ export class ProcessingWorkflow {
    */
   async _acquireContext(handler, previousState) {
     const turnCtx = await this._state._ensureContext(
-      `critical-no-context-${this._state.getStateName()}`,
-      handler
+      `critical-no-context-${this._state.getStateName()}`
     );
     if (!turnCtx) return null;
 
