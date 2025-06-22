@@ -2,10 +2,7 @@
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { tokens } from '../../../src/dependencyInjection/tokens.js';
 import { describeEngineSuite } from '../../common/engine/gameEngineTestBed.js';
-import {
-  runUnavailableServiceSuite,
-  withRunningGameEngineBed,
-} from '../../common/engine/gameEngineHelpers.js';
+import { runUnavailableServiceSuite } from '../../common/engine/gameEngineHelpers.js';
 import { ENGINE_STOPPED_UI } from '../../../src/constants/eventIds.js';
 import {
   expectDispatchSequence,
@@ -22,23 +19,23 @@ describeEngineSuite('GameEngine', (ctx) => {
     });
 
     it('should successfully stop a running game, with correct logging, events, and state changes', async () => {
-      await withRunningGameEngineBed({}, async (bed, engine) => {
-        await engine.stop();
+      await ctx.bed.startAndReset(DEFAULT_TEST_WORLD);
 
-        expect(
-          bed.mocks.playtimeTracker.endSessionAndAccumulate
-        ).toHaveBeenCalledTimes(1);
-        expect(bed.mocks.turnManager.stop).toHaveBeenCalledTimes(1);
+      await ctx.engine.stop();
 
-        expectDispatchSequence(
-          bed.mocks.safeEventDispatcher.dispatch,
-          ...buildStopDispatches()
-        );
+      expect(
+        ctx.bed.mocks.playtimeTracker.endSessionAndAccumulate
+      ).toHaveBeenCalledTimes(1);
+      expect(ctx.bed.mocks.turnManager.stop).toHaveBeenCalledTimes(1);
 
-        expectEngineStopped(engine);
+      expectDispatchSequence(
+        ctx.bed.mocks.safeEventDispatcher.dispatch,
+        ...buildStopDispatches()
+      );
 
-        expect(bed.mocks.logger.warn).not.toHaveBeenCalled();
-      });
+      expectEngineStopped(ctx.engine);
+
+      expect(ctx.bed.mocks.logger.warn).not.toHaveBeenCalled();
     });
 
     it('should do nothing and log if engine is already stopped', async () => {
