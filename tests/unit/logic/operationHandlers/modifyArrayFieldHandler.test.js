@@ -119,7 +119,7 @@ describe('ModifyArrayFieldHandler', () => {
     test('execute should return early and log a warning if entity_ref cannot be resolved', () => {
       handler.execute({ entity_ref: null }, mockExecutionContext);
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        'MODIFY_ARRAY_FIELD: Could not resolve entity_ref: null'
+        'MODIFY_ARRAY_FIELD: "entity_ref" parameter is required.'
       );
       expect(mockEntityManager.getComponentData).not.toHaveBeenCalled();
       expect(mockEntityManager.addComponent).not.toHaveBeenCalled();

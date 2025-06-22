@@ -80,11 +80,17 @@ class QueryComponentsHandler extends ComponentOperationHandler {
 
     const { entity_ref, pairs } = params;
 
-    if (!entity_ref) {
+    const entityId = this.validateEntityRef(
+      entity_ref,
+      logger,
+      'QueryComponentsHandler',
+      executionContext
+    );
+    if (!entityId) {
       safeDispatchError(
         this.#dispatcher,
-        'QueryComponentsHandler: Missing required "entity_ref" parameter.',
-        { params }
+        'QueryComponentsHandler: Could not resolve entity id from entity_ref.',
+        { entityRef: entity_ref }
       );
       return;
     }
@@ -97,20 +103,14 @@ class QueryComponentsHandler extends ComponentOperationHandler {
       return;
     }
 
-    const entityId = this.resolveEntity(entity_ref, executionContext);
-    if (!entityId) {
-      safeDispatchError(
-        this.#dispatcher,
-        'QueryComponentsHandler: Could not resolve entity id from entity_ref.',
-        { entityRef: entity_ref }
-      );
-      return;
-    }
-
     for (const pair of pairs) {
       if (!pair || typeof pair !== 'object') continue;
       const { component_type, result_variable } = pair;
-      const trimmedType = this.validateComponentType(component_type);
+      const trimmedType = this.requireComponentType(
+        component_type,
+        logger,
+        'QueryComponentsHandler'
+      );
       if (!trimmedType) {
         safeDispatchError(
           this.#dispatcher,

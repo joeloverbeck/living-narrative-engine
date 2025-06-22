@@ -194,18 +194,24 @@ class ModifyArrayFieldHandler extends ComponentOperationHandler {
     if (!assertParamsObject(params, log, 'MODIFY_ARRAY_FIELD')) {
       return;
     }
-    // 1. Resolve Entity ID
-    const entityId = this.resolveEntity(params.entity_ref, executionContext);
+    // 1. Resolve and validate entity reference
+    const entityId = this.validateEntityRef(
+      params.entity_ref,
+      log,
+      'MODIFY_ARRAY_FIELD',
+      executionContext
+    );
     if (!entityId) {
-      log.warn(
-        `MODIFY_ARRAY_FIELD: Could not resolve entity_ref: ${JSON.stringify(params.entity_ref)}`
-      );
       return;
     }
 
     // 2. Validate Parameters
     const { component_type, field, mode, result_variable, value } = params;
-    const compType = this.validateComponentType(component_type);
+    const compType = this.requireComponentType(
+      component_type,
+      log,
+      'MODIFY_ARRAY_FIELD'
+    );
     if (!compType || !field || !mode) {
       log.warn(
         `MODIFY_ARRAY_FIELD: Missing required parameters (component_type, field, or mode) for entity ${entityId}.`

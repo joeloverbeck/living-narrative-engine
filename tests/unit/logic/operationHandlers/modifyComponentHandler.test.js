@@ -250,7 +250,7 @@ describe('ModifyComponentHandler', () => {
       buildCtx()
     );
     expect(mockLogger.warn).toHaveBeenCalledWith(
-      expect.stringContaining('could not resolve entity id'),
+      expect.stringContaining('Could not resolve entity id'),
       expect.anything()
     );
     expect(mockEntityManager.getComponentData).not.toHaveBeenCalled();

@@ -192,7 +192,8 @@ describe('HasComponentHandler', () => {
       { component_type: 'c1', result_variable: 'v1' },
       executionContext
     );
-    expect(mockLogger.warn).toHaveBeenLastCalledWith(
+    expect(mockLogger.warn).toHaveBeenNthCalledWith(
+      2,
       'HAS_COMPONENT: "entity_ref" parameter is required.'
     );
 
@@ -202,7 +203,7 @@ describe('HasComponentHandler', () => {
       executionContext
     );
     expect(mockLogger.warn).toHaveBeenLastCalledWith(
-      'HAS_COMPONENT: "component_type" parameter must be a non-empty string.'
+      'HAS_COMPONENT: Invalid or missing "component_type" parameter (must be non-empty string).'
     );
 
     // Act & Assert for null result_variable
@@ -215,7 +216,7 @@ describe('HasComponentHandler', () => {
     );
 
     // Assert that core logic was never reached
-    expect(mockLogger.warn).toHaveBeenCalledTimes(4);
+    expect(mockLogger.warn).toHaveBeenCalledTimes(5);
     expect(mockEntityManager.hasComponent).not.toHaveBeenCalled();
   });
 

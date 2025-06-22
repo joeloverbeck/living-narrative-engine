@@ -87,15 +87,22 @@ class HasComponentHandler extends ComponentOperationHandler {
 
     const { entity_ref, component_type, result_variable } = params;
 
-    if (!entity_ref) {
-      log.warn('HAS_COMPONENT: "entity_ref" parameter is required.');
-      return;
+    // 2. Resolve and validate entity reference
+    const entityId = this.validateEntityRef(
+      entity_ref,
+      log,
+      'HAS_COMPONENT',
+      executionContext
+    );
+    if (!entityId) {
+      // Will warn and default result later
     }
-    const trimmedComponentType = this.validateComponentType(component_type);
+    const trimmedComponentType = this.requireComponentType(
+      component_type,
+      log,
+      'HAS_COMPONENT'
+    );
     if (!trimmedComponentType) {
-      log.warn(
-        'HAS_COMPONENT: "component_type" parameter must be a non-empty string.'
-      );
       return;
     }
     if (typeof result_variable !== 'string' || !result_variable.trim()) {
@@ -106,9 +113,6 @@ class HasComponentHandler extends ComponentOperationHandler {
     }
 
     const trimmedResultVar = result_variable.trim();
-
-    // 2. Resolve Entity ID
-    const entityId = this.resolveEntity(entity_ref, executionContext);
 
     // 3. Perform check and store result
     let result = false; // Default to false

@@ -76,19 +76,34 @@ class AddComponentHandler extends ComponentOperationHandler {
 
     const { entity_ref, component_type, value } = params;
 
-    if (!entity_ref) {
-      log.warn('ADD_COMPONENT: "entity_ref" parameter is required.');
+    // 2. Resolve and validate entity reference
+    const entityId = this.validateEntityRef(
+      entity_ref,
+      log,
+      'ADD_COMPONENT',
+      executionContext
+    );
+    if (!entityId) {
       return;
     }
 
-    const trimmedComponentType = this.validateComponentType(component_type);
+    // 3. Validate component type
+    const trimmedComponentType = this.requireComponentType(
+      component_type,
+      log,
+      'ADD_COMPONENT'
+    );
     if (!trimmedComponentType) {
+      return;
+    }
+
+    // 4. Validate value object
+    if (typeof value !== 'object' || value === null) {
       log.warn(
-        'ADD_COMPONENT: Invalid or missing "component_type" parameter (must be non-empty string).'
+        'ADD_COMPONENT: Invalid or missing "value" parameter (must be a non-null object).'
       );
       return;
     }
-    // Crucially, 'value' must be an object for addComponent
     if (typeof value !== 'object' || value === null) {
       log.warn(
         'ADD_COMPONENT: Invalid or missing "value" parameter (must be a non-null object).'
@@ -96,16 +111,7 @@ class AddComponentHandler extends ComponentOperationHandler {
       return;
     }
 
-    // 2. Resolve Entity ID
-    const entityId = this.resolveEntity(entity_ref, executionContext);
-    if (!entityId) {
-      log.warn(`ADD_COMPONENT: Could not resolve entity id from entity_ref.`, {
-        entity_ref,
-      });
-      return;
-    }
-
-    // 3. Execute Add Component
+    // 5. Execute Add Component
     try {
       // EntityManager.addComponent handles both adding new and replacing existing
       this.#entityManager.addComponent(entityId, trimmedComponentType, value);

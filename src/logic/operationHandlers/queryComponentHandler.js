@@ -71,15 +71,25 @@ class QueryComponentHandler extends ComponentOperationHandler {
     const { entity_ref, component_type, result_variable, missing_value } =
       params;
 
-    if (!entity_ref) {
+    const entityId = this.validateEntityRef(
+      entity_ref,
+      logger,
+      'QueryComponentHandler',
+      executionContext
+    );
+    if (!entityId) {
       safeDispatchError(
         this.#dispatcher,
-        'QueryComponentHandler: Missing required "entity_ref" parameter.',
-        { params }
+        'QueryComponentHandler: Could not resolve entity id from entity_ref.',
+        { entityRef: entity_ref }
       );
       return;
     }
-    const trimmedComponentType = this.validateComponentType(component_type);
+    const trimmedComponentType = this.requireComponentType(
+      component_type,
+      logger,
+      'QueryComponentHandler'
+    );
     if (!trimmedComponentType) {
       safeDispatchError(
         this.#dispatcher,
@@ -98,17 +108,6 @@ class QueryComponentHandler extends ComponentOperationHandler {
       return;
     }
     const trimmedResultVariable = result_variable.trim();
-
-    const entityId = this.resolveEntity(entity_ref, executionContext);
-    if (!entityId) {
-      safeDispatchError(
-        this.#dispatcher,
-        'QueryComponentHandler: Could not resolve entity id from entity_ref.',
-        { entityRef: entity_ref }
-      );
-
-      return;
-    }
 
     if (
       typeof entity_ref === 'string' &&

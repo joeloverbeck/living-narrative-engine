@@ -46,6 +46,51 @@ class ComponentOperationHandler extends BaseOperationHandler {
     const trimmed = type.trim();
     return trimmed ? trimmed : null;
   }
+
+  /**
+   * Validate the provided entity reference and resolve it to an ID.
+   *
+   * @param {'actor'|'target'|string|EntityRefObject} entityRef - Reference to resolve.
+   * @param {ILogger} log - Logger used for warnings.
+   * @param {string} [opName] - Optional operation name prefix for logging.
+   * @param {ExecutionContext} executionContext - Execution context for resolution.
+   * @returns {string|null} The resolved ID or null when invalid.
+   */
+  validateEntityRef(entityRef, log, opName, executionContext) {
+    const prefix = opName ? `${opName}: ` : '';
+    if (!entityRef) {
+      log.warn(`${prefix}"entity_ref" parameter is required.`);
+      return null;
+    }
+    const resolved = this.resolveEntity(entityRef, executionContext);
+    if (!resolved) {
+      log.warn(`${prefix}Could not resolve entity id from entity_ref.`, {
+        entity_ref: entityRef,
+      });
+      return null;
+    }
+    return resolved;
+  }
+
+  /**
+   * Require a valid component type string.
+   *
+   * @param {*} type - Raw component type.
+   * @param {ILogger} log - Logger used for warnings.
+   * @param {string} [opName] - Optional operation name prefix for logging.
+   * @returns {string|null} Trimmed component type or null if invalid.
+   */
+  requireComponentType(type, log, opName) {
+    const prefix = opName ? `${opName}: ` : '';
+    const trimmed = this.validateComponentType(type);
+    if (!trimmed) {
+      log.warn(
+        `${prefix}Invalid or missing "component_type" parameter (must be non-empty string).`
+      );
+      return null;
+    }
+    return trimmed;
+  }
 }
 
 export default ComponentOperationHandler;

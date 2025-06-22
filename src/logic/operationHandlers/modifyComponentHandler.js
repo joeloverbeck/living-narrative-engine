@@ -75,13 +75,24 @@ class ModifyComponentHandler extends ComponentOperationHandler {
     }
     const { entity_ref, component_type, field, mode = 'set', value } = params;
 
-    if (!entity_ref) {
-      log.warn('MODIFY_COMPONENT: "entity_ref" required.');
+    // ── resolve and validate entity reference ───────────────────────
+    const entityId = this.validateEntityRef(
+      entity_ref,
+      log,
+      'MODIFY_COMPONENT',
+      executionContext
+    );
+    if (!entityId) {
       return;
     }
-    const compType = this.validateComponentType(component_type);
+
+    // ── validate component type ─────────────────────────────────────
+    const compType = this.requireComponentType(
+      component_type,
+      log,
+      'MODIFY_COMPONENT'
+    );
     if (!compType) {
-      log.warn('MODIFY_COMPONENT: invalid "component_type".');
       return;
     }
     if (mode !== 'set') {
@@ -97,15 +108,6 @@ class ModifyComponentHandler extends ComponentOperationHandler {
       !field.trim()
     ) {
       log.warn('MODIFY_COMPONENT: "field" must be a non-empty string.');
-      return;
-    }
-
-    // ── resolve entity ─────────────────────────────────────────────
-    const entityId = this.resolveEntity(entity_ref, executionContext);
-    if (!entityId) {
-      log.warn('MODIFY_COMPONENT: could not resolve entity id.', {
-        entity_ref,
-      });
       return;
     }
 
