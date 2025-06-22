@@ -108,14 +108,11 @@ class ScopeEngine {
                 return new Set([actorId]);
 
             case 'location':
-                const targetId = node.param || actorId;
-                const locationData = runtimeCtx.entityManager.getComponentData(targetId, 'core:location');
-
-                if (!locationData || !locationData.locationId) {
-                    return new Set();
+                // Use the current location from runtime context
+                if (runtimeCtx.location && runtimeCtx.location.id) {
+                    return new Set([runtimeCtx.location.id]);
                 }
-
-                return runtimeCtx.entityManager.getEntitiesInLocation(locationData.locationId);
+                return new Set();
 
             case 'entities':
                 const componentId = node.param;
@@ -139,7 +136,7 @@ class ScopeEngine {
                 } else {
                     // Positive component query - entities WITH the component
                     const entities = runtimeCtx.entityManager.getEntitiesWithComponent(componentId);
-                    return new Set(entities.map(e => e.id));
+                    return new Set(entities.map(e => e.id).filter(id => typeof id === 'string'));
                 }
 
             default:
@@ -164,11 +161,13 @@ class ScopeEngine {
         const nextDepth = depth + 1 + (node.isArray ? 1 : 0);
         const parentResult = this.resolveNode(node.parent, actorId, runtimeCtx, nextDepth, path);
 
+        runtimeCtx.logger.debug('[ScopeEngine] resolveStep: current node field:', node.field, 'isArray:', node.isArray, 'node:', node);
+
         if (parentResult.size === 0) return new Set();
 
         // Special case: array iteration after entities() or entities(!...)
         if (node.field === null && node.isArray === true && node.parent && node.parent.type === 'Source' && node.parent.kind === 'entities') {
-            // parentResult is already the set of entity IDs
+            // The entities source already returns a set of string IDs, so just return it as-is
             return new Set(parentResult);
         }
 
@@ -201,7 +200,7 @@ class ScopeEngine {
                 // Component lookup
                 const componentData = runtimeCtx.entityManager.getComponentData(parentValue, node.field);
                 runtimeCtx.logger.debug('[ScopeEngine] resolveStep: componentData for field', node.field, ':', componentData);
-                if (componentData && typeof componentData === 'object' && !Array.isArray(componentData)) {
+                if (componentData && typeof componentData === 'object') {
                     current = componentData;
                 } else {
                     // ... legacy inventory/items fallback ...
@@ -228,13 +227,40 @@ class ScopeEngine {
                 if (Array.isArray(current)) {
                     for (const item of current) {
                         runtimeCtx.logger.debug('[ScopeEngine] resolveStep: array item:', item, 'type:', typeof item);
-                        if (typeof item === 'string') result.add(item);
+                        if (typeof item === 'string') {
+                            result.add(item);
+                        }
+                    }
+                } else if (typeof current === 'object' && current !== null) {
+                    // Handle object field access for array iteration
+                    // This is for cases like actor.core:inventory.items[] where current is the inventory object
+                    if (node.field && current[node.field] !== undefined) {
+                        const fieldValue = current[node.field];
+                        if (Array.isArray(fieldValue)) {
+                            for (const item of fieldValue) {
+                                runtimeCtx.logger.debug('[ScopeEngine] resolveStep: array item from object field:', item, 'type:', typeof item);
+                                if (typeof item === 'string') {
+                                    result.add(item);
+                                }
+                            }
+                        }
                     }
                 }
             } else {
                 runtimeCtx.logger.debug('[ScopeEngine] resolveStep: not isArray, current:', current, 'type:', typeof current);
-                if (typeof current === 'string') result.add(current);
-                else result.add(current);
+                if (typeof current === 'string') {
+                    result.add(current);
+                } else if (typeof current === 'object' && current !== null) {
+                    // For objects, we need to handle field access
+                    if (node.field && current[node.field] !== undefined) {
+                        // Handle object field access (e.g., exit.target)
+                        const fieldValue = current[node.field];
+                        if (typeof fieldValue === 'string') {
+                            result.add(fieldValue);
+                        }
+                    }
+                    // Don't add objects to the result - the engine only works with strings
+                }
             }
         }
         return result;

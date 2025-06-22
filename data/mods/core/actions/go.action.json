@@ -3,9 +3,9 @@
   "id": "core:go",
   "commandVerb": "go",
   "name": "Go",
-  "description": "Moves your character in the specified direction, if the way is clear.",
+  "description": "Moves your character to the specified location, if the way is clear.",
   "scope": "directions",
-  "template": "go {direction}",
+  "template": "go to {target}",
   "prerequisites": [
     {
       "logic": {

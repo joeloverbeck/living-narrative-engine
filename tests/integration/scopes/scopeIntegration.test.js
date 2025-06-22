@@ -482,7 +482,6 @@ describe('Scope Integration Tests', () => {
 
     describe('directions scope', () => {
         it('should resolve location exits for go action', async () => {
-            // Create entities with proper components
             const actorId = 'actor1';
             const room1Id = 'room1';
             const room2Id = 'room2';

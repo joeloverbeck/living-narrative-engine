@@ -1,1 +1,1 @@
-location.core:exits[] 
+location.core:exits[].target 

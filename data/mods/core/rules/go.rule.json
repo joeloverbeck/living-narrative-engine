@@ -1,7 +1,7 @@
 {
   "$schema": "http://example.com/schemas/rule.schema.json",
   "rule_id": "handle_go_action",
-  "comment": "Handles the 'core:go' action. It prioritizes a pre-resolved targetId from the event, but falls back to resolving a direction string if needed. It moves the actor, dispatches perceptible events, and ends the turn.",
+  "comment": "Handles the 'core:go' action. It uses the pre-resolved targetId from the event to move the actor, dispatches perceptible events, and ends the turn.",
   "event_type": "core:attempt_action",
   "condition": {
     "condition_ref": "core:event-is-action-go"
@@ -55,7 +55,7 @@
           },
           {
             "type": "SET_VARIABLE",
-            "comment": "Step 3.1: Initialize resolved target with pre-resolved targetId from the event payload, if it exists.",
+            "comment": "Use the pre-resolved targetId from the event payload.",
             "parameters": {
               "variable_name": "resolvedTargetLocationId",
               "value": "{event.payload.targetId}"
@@ -63,32 +63,7 @@
           },
           {
             "type": "IF",
-            "comment": "Step 3.2: If no pre-resolved target was found, fall back to resolving the direction string.",
-            "parameters": {
-              "condition": {
-                "==": [
-                  {
-                    "var": "context.resolvedTargetLocationId"
-                  },
-                  null
-                ]
-              },
-              "then_actions": [
-                {
-                  "type": "RESOLVE_DIRECTION",
-                  "comment": "Turn a direction string into a valid target location ID.",
-                  "parameters": {
-                    "current_location_id": "{context.actorPositionComponentPreMove.locationId}",
-                    "direction": "{event.payload.direction}",
-                    "result_variable": "resolvedTargetLocationId"
-                  }
-                }
-              ]
-            }
-          },
-          {
-            "type": "IF",
-            "comment": "Step 4: Check if a valid target location was found (either pre-resolved or via direction).",
+            "comment": "Step 3: Check if a valid target location was found.",
             "parameters": {
               "condition": {
                 "!=": [
@@ -143,7 +118,6 @@
                       "entityId": "{event.payload.actorId}",
                       "previousLocationId": "{context.actorPositionComponentPreMove.locationId}",
                       "currentLocationId": "{context.resolvedTargetLocationId}",
-                      "direction": "{event.payload.direction}",
                       "originalCommand": "{event.payload.originalInput}"
                     }
                   }
@@ -177,7 +151,7 @@
                   "parameters": {
                     "eventType": "core:display_failed_action_result",
                     "payload": {
-                      "message": "{context.actorNameComponent.text} tries to go {event.payload.direction}, but cannot find a path or the way is blocked."
+                      "message": "{context.actorNameComponent.text} tries to go to the specified location, but cannot find a path or the way is blocked."
                     }
                   }
                 },

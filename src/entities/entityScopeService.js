@@ -29,14 +29,9 @@ function getEntityIdsForScopes(scopes, context, logger = console) {
 
   for (const scopeName of requestedScopes) {
     try {
-      // Handle special scopes
+      // Handle special scope
       if (scopeName === 'none') {
         // 'none' means no targets needed, return empty set
-        continue;
-      }
-      
-      if (scopeName === 'direction') {
-        // 'direction' is handled differently (not as entity IDs)
         continue;
       }
 

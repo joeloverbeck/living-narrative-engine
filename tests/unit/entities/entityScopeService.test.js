@@ -108,10 +108,11 @@ describe('entityScopeService', () => {
     });
 
     test('should handle "direction" scope by returning empty set', () => {
-      const context = { entityManager: mockEntityManager };
+      const context = { actor: { id: 'actor1' }, entityManager: {} };
+      mockScopeRegistryInstance.getScope.mockReturnValue(undefined);
       const result = getEntityIdsForScopes('direction', context, mockLogger);
       expect(result).toEqual(new Set());
-      expect(mockScopeRegistryInstance.getScope).not.toHaveBeenCalled();
+      expect(mockScopeRegistryInstance.getScope).toHaveBeenCalledWith('direction');
     });
 
     test('should handle multiple scopes including special ones', () => {
