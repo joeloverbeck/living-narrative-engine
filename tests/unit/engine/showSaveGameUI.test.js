@@ -8,8 +8,7 @@ import {
   REQUEST_SHOW_SAVE_GAME_UI,
   CANNOT_SAVE_GAME_INFO,
 } from '../../../src/constants/eventIds.js';
-
-const MOCK_WORLD_NAME = 'TestWorld';
+import { DEFAULT_TEST_WORLD } from '../../common/constants.js';
 
 describeInitializedEngineSuite(
   'GameEngine',
@@ -84,5 +83,5 @@ describeInitializedEngineSuite(
       );
     });
   },
-  MOCK_WORLD_NAME
+  DEFAULT_TEST_WORLD
 );
