@@ -53,6 +53,8 @@ import ConsoleLogger from '../../../src/logging/consoleLogger.js';
  * @param {object} entityManager - Entity manager instance
  * @param {object} eventBus - Event bus instance
  * @param {object} logger - Logger instance
+ * @param validatedEventDispatcher
+ * @param safeEventDispatcher
  * @returns {object} Handlers object
  */
 function createHandlers(entityManager, eventBus, logger, validatedEventDispatcher, safeEventDispatcher) {

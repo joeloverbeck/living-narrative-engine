@@ -118,7 +118,7 @@ describe('core_handle_follow_auto_move rule integration', () => {
     const expandedActions = expandMacros(followAutoMoveRule.actions, macroRegistry, testEnv?.logger);
     const unexpanded = findUnexpandedMacros(expandedActions);
     if (unexpanded.length > 0) {
-      // eslint-disable-next-line no-console
+       
       console.error('Unexpanded macros found in follow_auto_move.rule.json:', unexpanded);
       throw new Error('Unexpanded macros remain after expansion!');
     }
