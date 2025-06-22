@@ -35,36 +35,39 @@ export default class ActiveModsManifestBuilder {
    */
   buildManifest() {
     /** @type {import('../../data/schemas/mod-manifest.schema.json').ModManifest[]} */
-    const loadedManifestObjects = this.#dataRegistry.getAll('mod_manifests');
-    let activeModsManifest = [];
-    if (loadedManifestObjects && loadedManifestObjects.length > 0) {
-      activeModsManifest = loadedManifestObjects.map((manifest) => ({
-        modId: manifest.id,
-        version: manifest.version,
-      }));
-      this.#logger.debug(
-        `${this.constructor.name}: Captured ${activeModsManifest.length} active mods from 'mod_manifests' type in registry.`
-      );
-    } else {
-      this.#logger.warn(
-        `${this.constructor.name}: No mod manifests found in registry under "mod_manifests" type. Mod manifest may be incomplete. Using fallback.`
-      );
-      const coreModManifest = loadedManifestObjects?.find(
-        (m) => m.id === CORE_MOD_ID
-      );
-      if (coreModManifest) {
-        activeModsManifest = [
-          { modId: CORE_MOD_ID, version: coreModManifest.version },
-        ];
-      } else {
-        activeModsManifest = [
-          { modId: CORE_MOD_ID, version: 'unknown_fallback' },
-        ];
-      }
-      this.#logger.debug(
-        `${this.constructor.name}: Used fallback for mod manifest.`
-      );
+    const manifests = this.#dataRegistry.getAll('mod_manifests') || [];
+    if (manifests.length === 0) {
+      return this.#buildFallbackManifest(manifests);
     }
+
+    const activeModsManifest = manifests.map((manifest) => ({
+      modId: manifest.id,
+      version: manifest.version,
+    }));
+    this.#logger.debug(
+      `${this.constructor.name}: Captured ${activeModsManifest.length} active mods from 'mod_manifests' type in registry.`
+    );
     return activeModsManifest;
+  }
+
+  /**
+   * @description Builds a fallback manifest when registry data is missing.
+   * @param {Array<{id: string, version: string}>} manifests
+   * @returns {{modId: string, version: string}[]}
+   */
+  #buildFallbackManifest(manifests) {
+    this.#logger.warn(
+      `${this.constructor.name}: No mod manifests found in registry under "mod_manifests" type. Mod manifest may be incomplete. Using fallback.`
+    );
+
+    const coreModManifest = manifests.find((m) => m.id === CORE_MOD_ID);
+    const fallbackManifest = coreModManifest
+      ? [{ modId: CORE_MOD_ID, version: coreModManifest.version }]
+      : [{ modId: CORE_MOD_ID, version: 'unknown_fallback' }];
+
+    this.#logger.debug(
+      `${this.constructor.name}: Used fallback for mod manifest.`
+    );
+    return fallbackManifest;
   }
 }
