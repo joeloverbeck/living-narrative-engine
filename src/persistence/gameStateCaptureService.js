@@ -160,9 +160,6 @@ class GameStateCaptureService extends BaseService {
     );
 
     const entitiesData = [];
-    // *** THE FIX IS HERE ***
-    // The entityManager in the test (and likely the real one) stores entities
-    // in a Map called 'activeEntities', not an array called 'entities'.
     for (const entity of this.#entityManager.activeEntities.values()) {
       entitiesData.push(this.#serializeEntity(entity));
     }
