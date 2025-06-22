@@ -5,10 +5,7 @@ import {
   describeEngineSuite,
   describeInitializedEngineSuite,
 } from '../../common/engine/gameEngineTestBed.js';
-import {
-  runUnavailableServiceSuite,
-  withGameEngineBed,
-} from '../../common/engine/gameEngineHelpers.js';
+import { runUnavailableServiceSuite } from '../../common/engine/gameEngineHelpers.js';
 import {
   expectDispatchSequence,
   buildSaveDispatches,
@@ -16,23 +13,21 @@ import {
 } from '../../common/engine/dispatchTestUtils.js';
 import { DEFAULT_ACTIVE_WORLD_FOR_SAVE } from '../../common/constants.js';
 
-describeEngineSuite('GameEngine', () => {
+describeEngineSuite('GameEngine', (ctx) => {
   describe('triggerManualSave', () => {
     const SAVE_NAME = 'MySaveFile';
     const MOCK_ACTIVE_WORLD_FOR_SAVE = DEFAULT_ACTIVE_WORLD_FOR_SAVE;
 
     it('should dispatch error and not attempt save if engine is not initialized', async () => {
-      await withGameEngineBed({}, async (bed, engine) => {
-        const result = await engine.triggerManualSave(SAVE_NAME);
-        const expectedErrorMsg =
-          'Game engine is not initialized. Cannot save game.';
+      const result = await ctx.engine.triggerManualSave(SAVE_NAME);
+      const expectedErrorMsg =
+        'Game engine is not initialized. Cannot save game.';
 
-        expectNoDispatch(bed.mocks.safeEventDispatcher.dispatch);
-        expect(
-          bed.mocks.gamePersistenceService.saveGame
-        ).not.toHaveBeenCalled();
-        expect(result).toEqual({ success: false, error: expectedErrorMsg });
-      });
+      expectNoDispatch(ctx.bed.mocks.safeEventDispatcher.dispatch);
+      expect(
+        ctx.bed.mocks.gamePersistenceService.saveGame
+      ).not.toHaveBeenCalled();
+      expect(result).toEqual({ success: false, error: expectedErrorMsg });
     });
 
     describeInitializedEngineSuite(
