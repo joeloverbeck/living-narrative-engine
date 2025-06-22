@@ -39,6 +39,44 @@ export function buildEntityTargetContext(entityId, entityManager, logger) {
 }
 
 /**
+ * @description Resolve exit and blocker information for a directional target.
+ * @param {string} actorId - ID of the actor performing the action.
+ * @param {string} direction - Direction keyword.
+ * @param {EntityManager} entityManager - Manager to access components.
+ * @param {ILogger} logger - Logger instance.
+ * @returns {{blocker: any, exitDetails: any}} Object containing blocker and exit details.
+ */
+export function resolveDirectionExit(
+  actorId,
+  direction,
+  entityManager,
+  logger
+) {
+  const actorPositionData = entityManager.getComponentData(
+    actorId,
+    POSITION_COMPONENT_ID
+  );
+  const actorLocationId = actorPositionData?.locationId;
+  let blocker = undefined;
+  let exitDetails = null;
+
+  if (actorLocationId) {
+    const matchedExit = getExitByDirection(
+      actorLocationId,
+      direction,
+      entityManager,
+      logger
+    );
+    if (matchedExit) {
+      exitDetails = matchedExit;
+      blocker = matchedExit.blocker ?? null;
+    }
+  }
+
+  return { blocker, exitDetails };
+}
+
+/**
  * @description Build the target portion when targeting a direction.
  * @param {string} actorId - ID of the actor performing the action.
  * @param {string} direction - Direction keyword.
@@ -53,33 +91,19 @@ export function buildDirectionContext(
   entityManager,
   logger
 ) {
-  const actorPositionData = entityManager.getComponentData(
+  const { blocker, exitDetails } = resolveDirectionExit(
     actorId,
-    POSITION_COMPONENT_ID
+    direction,
+    entityManager,
+    logger
   );
-  const actorLocationId = actorPositionData?.locationId;
-  let targetBlockerValue = undefined;
-  let targetExitDetailsValue = null;
-
-  if (actorLocationId) {
-    const matchedExit = getExitByDirection(
-      actorLocationId,
-      direction,
-      entityManager,
-      logger
-    );
-    if (matchedExit) {
-      targetExitDetailsValue = matchedExit;
-      targetBlockerValue = matchedExit.blocker ?? null;
-    }
-  }
 
   return {
     type: 'direction',
     id: null,
     direction,
     components: null,
-    blocker: targetBlockerValue,
-    exitDetails: targetExitDetailsValue,
+    blocker,
+    exitDetails,
   };
 }

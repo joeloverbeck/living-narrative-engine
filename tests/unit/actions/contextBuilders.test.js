@@ -3,6 +3,7 @@ import {
   buildActorContext,
   buildDirectionContext,
   buildEntityTargetContext,
+  resolveDirectionExit,
 } from '../../../src/actions/validation/contextBuilders.js';
 
 jest.mock('../../../src/logic/componentAccessor.js', () => ({
@@ -61,6 +62,70 @@ describe('contextBuilders', () => {
         mockEntityManager,
         mockLogger
       );
+    });
+  });
+
+  describe('resolveDirectionExit', () => {
+    it('returns exit details and blocker when found', () => {
+      mockEntityManager.getComponentData.mockReturnValue({
+        locationId: 'loc1',
+      });
+      const exitObj = { blocker: 'door', some: 'data' };
+      getExitByDirection.mockReturnValue(exitObj);
+      const result = resolveDirectionExit(
+        'actor1',
+        'north',
+        mockEntityManager,
+        mockLogger
+      );
+      expect(result).toEqual({ blocker: 'door', exitDetails: exitObj });
+      expect(getExitByDirection).toHaveBeenCalledWith(
+        'loc1',
+        'north',
+        mockEntityManager,
+        mockLogger
+      );
+    });
+
+    it('maps missing blocker to null', () => {
+      mockEntityManager.getComponentData.mockReturnValue({
+        locationId: 'loc1',
+      });
+      const exitObj = { some: 'data' };
+      getExitByDirection.mockReturnValue(exitObj);
+      const result = resolveDirectionExit(
+        'actor1',
+        'west',
+        mockEntityManager,
+        mockLogger
+      );
+      expect(result).toEqual({ blocker: null, exitDetails: exitObj });
+    });
+
+    it('returns undefined blocker when no exit', () => {
+      mockEntityManager.getComponentData.mockReturnValue({
+        locationId: 'loc1',
+      });
+      getExitByDirection.mockReturnValue(null);
+      const result = resolveDirectionExit(
+        'actor1',
+        'south',
+        mockEntityManager,
+        mockLogger
+      );
+      expect(result).toEqual({ blocker: undefined, exitDetails: null });
+    });
+
+    it('skips lookup when actor location missing', () => {
+      mockEntityManager.getComponentData.mockReturnValue(null);
+      const result = resolveDirectionExit(
+        'actor1',
+        'east',
+        mockEntityManager,
+        mockLogger
+      );
+      expect(getExitByDirection).not.toHaveBeenCalled();
+      expect(result).toEqual({ blocker: undefined, exitDetails: null });
     });
   });
 
