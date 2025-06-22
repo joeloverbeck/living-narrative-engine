@@ -12,8 +12,14 @@ import { assertValidId } from '../utils/parameterGuards.js';
  * @implements {ISpatialIndexManager}
  */
 class SpatialIndexManager extends MapManager {
-  constructor() {
+  /**
+   * @param {object} dependencies
+   * @param {import('../interfaces/coreServices.js').ILogger} dependencies.logger
+   */
+  constructor({ logger } = {}) {
     super();
+    /** @type {import('../interfaces/coreServices.js').ILogger} */
+    this.logger = logger || console;
     /**
      * The core spatial index.
      * Maps locationId (string) to a Set of entityIds (string) present in that location.
@@ -22,14 +28,14 @@ class SpatialIndexManager extends MapManager {
      * @type {Map<string, Set<string>>}
      */
     this.locationIndex = this.items; // Inherits `items` from MapManager
-    console.log('SpatialIndexManager initialized.');
+    this.logger.info('SpatialIndexManager initialized.');
   }
 
   /**
    * @override
    */
   onInvalidId(id, operation) {
-    console.warn(
+    this.logger.warn(
       `SpatialIndexManager.${operation}: Invalid id (${id}). Skipping.`
     );
   }
@@ -44,9 +50,9 @@ class SpatialIndexManager extends MapManager {
    */
   addEntity(entityId, locationId) {
     try {
-      assertValidId(entityId, 'SpatialIndexManager.addEntity', console);
+      assertValidId(entityId, 'SpatialIndexManager.addEntity', this.logger);
     } catch (error) {
-      console.warn(
+      this.logger.warn(
         `SpatialIndexManager.addEntity: Invalid entityId (${entityId}). Skipping.`
       );
       return;
@@ -54,7 +60,7 @@ class SpatialIndexManager extends MapManager {
 
     // Only proceed if locationId is a valid, non-empty string
     try {
-      assertValidId(locationId, 'SpatialIndexManager.addEntity', console);
+      assertValidId(locationId, 'SpatialIndexManager.addEntity', this.logger);
     } catch (error) {
       // console.debug(`SpatialIndexManager.addEntity: Invalid or null locationId (${locationId}) for entity ${entityId}. Skipping.`);
       return;
@@ -79,16 +85,20 @@ class SpatialIndexManager extends MapManager {
    */
   removeEntity(entityId, locationId) {
     try {
-      assertValidId(entityId, 'SpatialIndexManager.removeEntity', console);
+      assertValidId(entityId, 'SpatialIndexManager.removeEntity', this.logger);
     } catch (error) {
-      console.warn(
+      this.logger.warn(
         `SpatialIndexManager.removeEntity: Invalid entityId (${entityId}). Skipping.`
       );
       return;
     }
 
     try {
-      assertValidId(locationId, 'SpatialIndexManager.removeEntity', console);
+      assertValidId(
+        locationId,
+        'SpatialIndexManager.removeEntity',
+        this.logger
+      );
     } catch (error) {
       // console.debug(`SpatialIndexManager.removeEntity: Invalid or null locationId (${locationId}) for entity ${entityId}. Skipping.`);
       return;
@@ -116,10 +126,10 @@ class SpatialIndexManager extends MapManager {
       assertValidId(
         entityId,
         'SpatialIndexManager.updateEntityLocation',
-        console
+        this.logger
       );
     } catch (error) {
-      console.warn(
+      this.logger.warn(
         'SpatialIndexManager.updateEntityLocation: Invalid entityId. Skipping.'
       );
       return;
@@ -157,7 +167,7 @@ class SpatialIndexManager extends MapManager {
       assertValidId(
         locationId,
         'SpatialIndexManager.getEntitiesInLocation',
-        console
+        this.logger
       );
     } catch (error) {
       return new Set();
@@ -184,7 +194,7 @@ class SpatialIndexManager extends MapManager {
       !entityManager ||
       typeof entityManager.entities?.values !== 'function'
     ) {
-      console.error(
+      this.logger.error(
         'SpatialIndexManager.buildIndex: Invalid entityManager provided.'
       );
       return;
@@ -220,7 +230,7 @@ class SpatialIndexManager extends MapManager {
    */
   clearIndex() {
     this.clear(); // clear is from MapManager, acts on this.items (this.locationIndex)
-    console.log('SpatialIndexManager: Index cleared.');
+    this.logger.info('SpatialIndexManager: Index cleared.');
   }
 }
 

@@ -59,8 +59,8 @@ describe('entityScopeService integration', () => {
     });
 
     // Act
-    const invSet = getEntityIdsForScopes('inventory', ctx);
-    const locationSet = getEntityIdsForScopes('location', ctx);
+    const invSet = getEntityIdsForScopes('inventory', ctx, console);
+    const locationSet = getEntityIdsForScopes('location', ctx, console);
 
     // Assert
     expect(invSet.has(swordId)).toBe(true);

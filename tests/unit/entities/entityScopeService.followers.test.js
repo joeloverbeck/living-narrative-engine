@@ -34,18 +34,20 @@ const mockEntityManager = {
 };
 
 describe('entityScopeService - "followers" scope', () => {
-  let consoleWarnSpy;
+  let mockLogger;
 
   beforeEach(() => {
-    // Reset mocks to ensure test isolation
     jest.resetAllMocks();
-    // Spy on console.warn to check for warnings in failure cases
-    consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    mockLogger = {
+      warn: jest.fn(),
+      error: jest.fn(),
+      info: jest.fn(),
+      debug: jest.fn(),
+    };
   });
 
   afterEach(() => {
-    // Restore original console.warn behavior
-    consoleWarnSpy.mockRestore();
+    jest.clearAllMocks();
   });
 
   // Test Case 1: Standard success case with followers
@@ -62,7 +64,7 @@ describe('entityScopeService - "followers" scope', () => {
       entityManager: mockEntityManager,
     };
 
-    const result = getEntityIdsForScopes('followers', context);
+    const result = getEntityIdsForScopes('followers', context, mockLogger);
 
     expect(result).toBeInstanceOf(Set);
     expect(result.size).toBe(2);
@@ -86,7 +88,7 @@ describe('entityScopeService - "followers" scope', () => {
       entityManager: mockEntityManager,
     };
 
-    const result = getEntityIdsForScopes('followers', context);
+    const result = getEntityIdsForScopes('followers', context, mockLogger);
 
     expect(result).toBeInstanceOf(Set);
     expect(result.size).toBe(0);
@@ -104,7 +106,7 @@ describe('entityScopeService - "followers" scope', () => {
       entityManager: mockEntityManager,
     };
 
-    const result = getEntityIdsForScopes('followers', context);
+    const result = getEntityIdsForScopes('followers', context, mockLogger);
 
     expect(result).toBeInstanceOf(Set);
     expect(result.size).toBe(0);
@@ -128,7 +130,7 @@ describe('entityScopeService - "followers" scope', () => {
       entityManager: mockEntityManager,
     };
 
-    const result = getEntityIdsForScopes('followers', context);
+    const result = getEntityIdsForScopes('followers', context, mockLogger);
 
     expect(result).toBeInstanceOf(Set);
     expect(result.size).toBe(0);
@@ -142,12 +144,12 @@ describe('entityScopeService - "followers" scope', () => {
       entityManager: mockEntityManager,
     };
 
-    const result = getEntityIdsForScopes('followers', context);
+    const result = getEntityIdsForScopes('followers', context, mockLogger);
 
     expect(result).toBeInstanceOf(Set);
     expect(result.size).toBe(0);
     // FIX: Update the expected warning to check for "actingEntity".
-    expect(consoleWarnSpy).toHaveBeenCalledWith(
+    expect(mockLogger.warn).toHaveBeenCalledWith(
       "entityScopeService(#createActorComponentScopeHandler): Scope 'followers' requested but actingEntity is missing in context."
     );
   });
@@ -169,7 +171,11 @@ describe('entityScopeService - "followers" scope', () => {
       entityManager: mockEntityManager,
     };
 
-    const result = getEntityIdsForScopes(['followers', 'inventory'], context);
+    const result = getEntityIdsForScopes(
+      ['followers', 'inventory'],
+      context,
+      mockLogger
+    );
 
     expect(result).toBeInstanceOf(Set);
     // FIX: This check will now pass as both scope handlers find the actingEntity.

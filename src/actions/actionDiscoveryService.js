@@ -270,7 +270,8 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
     formatterOptions
   ) {
     const targetIds =
-      this.#getEntityIdsForScopesFn([domain], context) ?? new Set();
+      this.#getEntityIdsForScopesFn([domain], context, this.#logger) ??
+      new Set();
     /** @type {import('../interfaces/IActionDiscoveryService.js').DiscoveredActionInfo[]} */
     const discoveredActions = [];
 
