@@ -25,12 +25,7 @@ describeRunningTurnManagerSuite(
     beforeEach(() => {
       testBed = getBed();
 
-      testBed.mocks.turnOrderService.isEmpty.mockResolvedValue(false);
-      testBed.mocks.turnOrderService.getNextEntity.mockResolvedValue(null);
-      testBed.mocks.dispatcher.subscribe.mockReset().mockReturnValue(jest.fn());
-      testBed.mocks.turnHandlerResolver.resolveHandler.mockResolvedValue(
-        createMockTurnHandler()
-      );
+      testBed.setupMockHandlerResolver();
 
       // Setup stop spy for call verification and debug logging
       stopSpy = testBed.setupDebugStopSpy();
