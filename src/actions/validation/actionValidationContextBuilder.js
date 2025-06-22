@@ -119,27 +119,15 @@ export class ActionValidationContextBuilder {
     // --- 3. Build Target Context (handles different target types) ---
     let targetContextForEval = null;
 
-    if (targetContext.type === 'entity' && targetContext.entityId) {
-      const targetEntityInstance = this.#entityManager.getEntityInstance(
-        targetContext.entityId
+    if (targetContext.type === 'entity') {
+      targetContextForEval = this.#buildEntityTargetContextForEval(
+        actionDefinition,
+        targetContext
       );
-      if (targetEntityInstance) {
-        targetContextForEval = buildEntityTargetContext(
-          targetContext.entityId,
-          this.#entityManager,
-          this.#logger
-        );
-      } else {
-        this.#logger.warn(
-          `ActionValidationContextBuilder: Target entity '${targetContext.entityId}' not found for action '${actionDefinition.id}'. Context will have null target entity data.`
-        );
-      }
     } else if (targetContext.type === 'direction') {
-      targetContextForEval = buildDirectionContext(
+      targetContextForEval = this.#buildDirectionTargetContextForEval(
         actor.id,
-        targetContext.direction,
-        this.#entityManager,
-        this.#logger
+        targetContext
       );
     }
 
@@ -158,6 +146,51 @@ export class ActionValidationContextBuilder {
     };
 
     return finalContext;
+  }
+
+  /**
+   * Creates the evaluation target context when the target type is 'entity'.
+   *
+   * @param {ActionDefinition} actionDefinition - Definition of the attempted action.
+   * @param {ActionTargetContext} targetContext - Target context information.
+   * @returns {object|null} The constructed target context or null if entity not found.
+   * @private
+   */
+  #buildEntityTargetContextForEval(actionDefinition, targetContext) {
+    if (!targetContext.entityId) return null;
+
+    const targetEntityInstance = this.#entityManager.getEntityInstance(
+      targetContext.entityId
+    );
+    if (targetEntityInstance) {
+      return buildEntityTargetContext(
+        targetContext.entityId,
+        this.#entityManager,
+        this.#logger
+      );
+    }
+
+    this.#logger.warn(
+      `ActionValidationContextBuilder: Target entity '${targetContext.entityId}' not found for action '${actionDefinition.id}'. Context will have null target entity data.`
+    );
+    return null;
+  }
+
+  /**
+   * Creates the evaluation target context when the target type is 'direction'.
+   *
+   * @param {string} actorId - ID of the acting entity.
+   * @param {ActionTargetContext} targetContext - Target context information.
+   * @returns {object} The constructed target context for the direction.
+   * @private
+   */
+  #buildDirectionTargetContextForEval(actorId, targetContext) {
+    return buildDirectionContext(
+      actorId,
+      targetContext.direction,
+      this.#entityManager,
+      this.#logger
+    );
   }
 }
 
