@@ -30,6 +30,21 @@ function runInvalidCases(values, message, getBed, invoke) {
 }
 
 /**
+ * Generates a test function verifying that a method throws for invalid inputs.
+ *
+ * @description Factory used to create helpers for checking InvalidArgumentError
+ *   handling in EntityManager methods.
+ * @param {Array<*>|Array<Array<*>>} values - Invalid values passed to `it.each`.
+ * @param {string} message - Description used in the generated test.
+ * @returns {(getBed: () => import('./testBed.js').TestBed,
+ *   invoke: (em: import('../../../src/entities/entityManager.js').default,
+ *   ...args: any[]) => any) => void} Function executing the parameterized test.
+ */
+function createInvalidInputTest(values, message) {
+  return (getBed, invoke) => runInvalidCases(values, message, getBed, invoke);
+}
+
+/**
  * Runs a parameterized test verifying how a method handles invalid entity and
  * component ID pairs.
  *
@@ -42,12 +57,10 @@ function runInvalidCases(values, message, getBed, invoke) {
  * @returns {void}
  */
 export function runInvalidIdPairTests(getBed, invoke) {
-  runInvalidCases(
+  createInvalidInputTest(
     TestData.InvalidValues.invalidIdPairs,
-    'should throw InvalidArgumentError for invalid inputs',
-    getBed,
-    invoke
-  );
+    'should throw InvalidArgumentError for invalid inputs'
+  )(getBed, invoke);
 }
 
 /**
@@ -61,12 +74,10 @@ export function runInvalidIdPairTests(getBed, invoke) {
  * @returns {void}
  */
 export function runInvalidEntityIdTests(getBed, invoke) {
-  runInvalidCases(
+  createInvalidInputTest(
     TestData.InvalidValues.invalidIds,
-    'should throw InvalidArgumentError for invalid instanceId %p',
-    getBed,
-    invoke
-  );
+    'should throw InvalidArgumentError for invalid instanceId %p'
+  )(getBed, invoke);
 }
 
 /**
@@ -81,10 +92,8 @@ export function runInvalidEntityIdTests(getBed, invoke) {
  * @returns {void}
  */
 export function runInvalidDefinitionIdTests(getBed, invoke) {
-  runInvalidCases(
+  createInvalidInputTest(
     TestData.InvalidValues.invalidDefinitionIds,
-    'should throw InvalidArgumentError for invalid definitionId %p',
-    getBed,
-    invoke
-  );
+    'should throw InvalidArgumentError for invalid definitionId %p'
+  )(getBed, invoke);
 }
