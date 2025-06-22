@@ -94,45 +94,32 @@ export class PrerequisiteEvaluationService {
    * @throws {Error} If a condition reference cannot be found or if a circular reference is detected.
    */
   _resolveConditionReferences(logic, actionId, visited = new Set()) {
-    if (!logic || typeof logic !== 'object' || logic === null) {
-      return logic; // Not a resolvable object, return as-is
-    }
-
-    if (Array.isArray(logic)) {
-      return this.#resolveArrayReferences(logic, actionId, visited);
-    }
-
-    return this.#resolveObjectReferences(logic, actionId, visited);
+    return this.#resolveReferences(logic, actionId, visited);
   }
 
   /**
-   * Resolves condition references within an array of logic blocks.
+   * Recursively resolves condition references within logic objects or arrays.
    *
    * @private
-   * @param {any[]} logicArray - Array of logic blocks.
+   * @param {object | any} obj - The logic element to resolve.
    * @param {string} actionId - The ID of the action being validated.
    * @param {Set<string>} visited - Set of already visited condition IDs.
-   * @returns {any[]} The resolved array.
-   */
-  #resolveArrayReferences(logicArray, actionId, visited) {
-    return logicArray.map((item) =>
-      this._resolveConditionReferences(item, actionId, new Set(visited))
-    );
-  }
-
-  /**
-   * Resolves condition references within an object logic block.
-   *
-   * @private
-   * @param {object} logicObj - Logic object to resolve.
-   * @param {string} actionId - The ID of the action being validated.
-   * @param {Set<string>} visited - Set of already visited condition IDs.
-   * @returns {object | any} The resolved logic object.
+   * @returns {object | any} The resolved logic element.
    * @throws {Error} If a condition reference cannot be found.
    */
-  #resolveObjectReferences(logicObj, actionId, visited) {
-    if (Object.prototype.hasOwnProperty.call(logicObj, 'condition_ref')) {
-      const conditionId = logicObj.condition_ref;
+  #resolveReferences(obj, actionId, visited) {
+    if (!obj || typeof obj !== 'object' || obj === null) {
+      return obj;
+    }
+
+    if (Array.isArray(obj)) {
+      return obj.map((item) =>
+        this.#resolveReferences(item, actionId, new Set(visited))
+      );
+    }
+
+    if (Object.prototype.hasOwnProperty.call(obj, 'condition_ref')) {
+      const conditionId = obj.condition_ref;
       if (typeof conditionId !== 'string') {
         throw new Error(`Invalid condition_ref value: not a string.`);
       }
@@ -153,24 +140,18 @@ export class PrerequisiteEvaluationService {
         );
       }
 
-      return this._resolveConditionReferences(
+      return this.#resolveReferences(
         conditionDef.logic,
         actionId,
         new Set(visited)
       );
     }
 
-    const resolvedLogic = {};
-    for (const operator in logicObj) {
-      if (Object.prototype.hasOwnProperty.call(logicObj, operator)) {
-        resolvedLogic[operator] = this._resolveConditionReferences(
-          logicObj[operator],
-          actionId,
-          new Set(visited)
-        );
-      }
+    const resolved = {};
+    for (const [key, val] of Object.entries(obj)) {
+      resolved[key] = this.#resolveReferences(val, actionId, new Set(visited));
     }
-    return resolvedLogic;
+    return resolved;
   }
 
   /**
