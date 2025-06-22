@@ -10,6 +10,7 @@ import {
 } from '@jest/globals';
 import SaveLoadService from '../../src/persistence/saveLoadService.js';
 import SaveFileRepository from '../../src/persistence/saveFileRepository.js';
+import SaveFileParser from '../../src/persistence/saveFileParser.js';
 import GameStateSerializer from '../../src/persistence/gameStateSerializer.js';
 import GamePersistenceService from '../../src/persistence/gamePersistenceService.js';
 import GameStateCaptureService from '../../src/persistence/gameStateCaptureService.js';
@@ -68,10 +69,12 @@ describe('Persistence round-trip', () => {
     storageProvider = createMemoryStorageProvider();
     const saveValidationService = createMockSaveValidationService();
     const serializer = new GameStateSerializer({ logger, crypto: webcrypto });
+    const parser = new SaveFileParser({ logger, storageProvider, serializer });
     const saveFileRepository = new SaveFileRepository({
       logger,
       storageProvider,
       serializer,
+      parser,
     });
     saveLoadService = new SaveLoadService({
       logger,

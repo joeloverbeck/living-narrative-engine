@@ -8,6 +8,7 @@ import {
 } from '@jest/globals';
 import SaveLoadService from '../../../src/persistence/saveLoadService.js';
 import SaveFileRepository from '../../../src/persistence/saveFileRepository.js';
+import SaveFileParser from '../../../src/persistence/saveFileParser.js';
 import { encode } from '@msgpack/msgpack';
 import { PersistenceErrorCodes } from '../../../src/persistence/persistenceErrors.js';
 import pako from 'pako';
@@ -47,10 +48,12 @@ function makeDeps() {
     ensureDirectoryExists: jest.fn(),
   };
   const serializer = new GameStateSerializer({ logger, crypto: webcrypto });
+  const parser = new SaveFileParser({ logger, storageProvider, serializer });
   const saveFileRepository = new SaveFileRepository({
     logger,
     storageProvider,
     serializer,
+    parser,
   });
   const saveValidationService = new SaveValidationService({
     logger,

@@ -3,6 +3,7 @@ import GameStateSerializer from './gameStateSerializer.js';
 import SaveValidationService from './saveValidationService.js';
 import { getManualSavePath } from '../utils/savePathUtils.js';
 import SaveFileRepository from './saveFileRepository.js';
+import SaveFileParser from './saveFileParser.js';
 import { ISaveFileRepository } from '../interfaces/ISaveFileRepository.js';
 import { BaseService } from '../utils/serviceBase.js';
 import { prepareState } from './savePreparation.js';
@@ -303,6 +304,11 @@ class SaveLoadService extends BaseService {
     crypto = globalThis.crypto,
   }) {
     const serializer = new GameStateSerializer({ logger, crypto });
+    const parser = new SaveFileParser({
+      logger,
+      storageProvider,
+      serializer,
+    });
     const validationService = new SaveValidationService({
       logger,
       gameStateSerializer: serializer,
@@ -311,6 +317,7 @@ class SaveLoadService extends BaseService {
       logger,
       storageProvider,
       serializer,
+      parser,
     });
     return new SaveLoadService({
       logger,
