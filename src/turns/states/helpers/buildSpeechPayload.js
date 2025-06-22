@@ -8,6 +8,7 @@
  * @property {*} [thoughts] - Raw thoughts value.
  * @property {*} [notes] - Raw notes value.
  */
+import { isNonBlankString } from '../../../utils/textUtils.js';
 
 /**
  * Builds a sanitized payload from decision metadata for ENTITY_SPOKE_ID.
@@ -21,24 +22,23 @@ export function buildSpeechPayload(decisionMeta) {
     thoughts: thoughtsRaw,
     notes: notesRaw,
   } = decisionMeta || {};
-  const speech =
-    typeof speechRaw === 'string' && speechRaw.trim() ? speechRaw.trim() : null;
+  const speech = isNonBlankString(speechRaw) ? speechRaw.trim() : null;
   if (!speech) {
     return null;
   }
   const payload = { speechContent: speech };
-  if (typeof thoughtsRaw === 'string' && thoughtsRaw.trim()) {
+  if (isNonBlankString(thoughtsRaw)) {
     payload.thoughts = thoughtsRaw.trim();
   }
   if (Array.isArray(notesRaw)) {
     const joined = notesRaw
-      .map((n) => (typeof n === 'string' ? n.trim() : ''))
+      .map((n) => (isNonBlankString(n) ? n.trim() : ''))
       .filter(Boolean)
       .join('\n');
     if (joined) {
       payload.notes = joined;
     }
-  } else if (typeof notesRaw === 'string' && notesRaw.trim()) {
+  } else if (isNonBlankString(notesRaw)) {
     payload.notes = notesRaw.trim();
   }
   return payload;

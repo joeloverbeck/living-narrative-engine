@@ -92,7 +92,7 @@ class RebuildLeaderListCacheHandler {
     for (const ent of followers) {
       const data = ent.getComponentData(FOLLOWING);
       const lid = data?.leaderId;
-      if (typeof lid === 'string' && lid.trim()) {
+      if (isNonBlankString(lid)) {
         if (!followerMap.has(lid)) followerMap.set(lid, []);
         followerMap.get(lid).push(ent.id);
       }

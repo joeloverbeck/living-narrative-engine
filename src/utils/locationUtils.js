@@ -58,7 +58,8 @@ function _resolveLocationEntity(
 
   if (
     !locationEntityOrId ||
-    (typeof locationEntityOrId === 'string' && locationEntityOrId.trim() === '')
+    (typeof locationEntityOrId === 'string' &&
+      !isNonBlankString(locationEntityOrId))
   ) {
     log.debug('_resolveLocationEntity: locationEntityOrId is invalid.');
     return null;

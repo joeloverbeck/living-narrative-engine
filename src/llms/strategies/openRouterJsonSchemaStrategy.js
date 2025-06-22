@@ -3,6 +3,7 @@
 import { BaseOpenRouterStrategy } from './base/baseOpenRouterStrategy.js';
 import { LLMStrategyError } from '../errors/LLMStrategyError.js';
 import { OPENROUTER_GAME_AI_ACTION_SPEECH_SCHEMA } from '../constants/llmConstants.js'; // Still potentially used for tool_calls fallback logic's expected name
+import { isNonBlankString } from '../../utils/textUtils.js';
 
 /**
  * @typedef {import('../services/llmConfigLoader.js').LLMModelConfig} LLMModelConfig
@@ -120,7 +121,7 @@ export class OpenRouterJsonSchemaStrategy extends BaseOpenRouterStrategy {
     if (
       message.content &&
       typeof message.content === 'string' &&
-      message.content.trim() !== ''
+      isNonBlankString(message.content)
     ) {
       extractedJsonString = message.content.trim();
       this.logger.debug(
@@ -137,7 +138,8 @@ export class OpenRouterJsonSchemaStrategy extends BaseOpenRouterStrategy {
     } else {
       if (
         message.content === '' ||
-        (typeof message.content === 'string' && message.content.trim() === '')
+        (typeof message.content === 'string' &&
+          !isNonBlankString(message.content))
       ) {
         this.logger.warn(
           `${this.constructor.name} (${llmId}): message.content was an empty string. Will check tool_calls fallback.`,
@@ -184,7 +186,7 @@ export class OpenRouterJsonSchemaStrategy extends BaseOpenRouterStrategy {
         toolCall.function?.name === expectedToolNameForFallback &&
         toolCall.function?.arguments &&
         typeof toolCall.function.arguments === 'string' &&
-        toolCall.function.arguments.trim() !== ''
+        isNonBlankString(toolCall.function.arguments)
       ) {
         extractedJsonString = toolCall.function.arguments.trim();
         this.logger.debug(

@@ -19,6 +19,7 @@ import {
   DEFAULT_FALLBACK_CHARACTER_NAME,
   DEFAULT_FALLBACK_DESCRIPTION_RAW,
 } from '../../constants/textDefaults.js';
+import { isNonBlankString } from '../../utils/textUtils.js';
 import { deepClone } from '../../utils/cloneUtils.js';
 
 /** @typedef {import('../../entities/entity.js').default} Entity */
@@ -43,10 +44,9 @@ export class ActorStateProvider extends IActorStateProvider {
 
     const surface = (compId, fallback = '') => {
       const txt = actorState.components[compId]?.text;
-      actorState[compId] =
-        typeof txt === 'string' && txt.trim() !== ''
-          ? { text: txt.trim() }
-          : { text: fallback };
+      actorState[compId] = isNonBlankString(txt)
+        ? { text: txt.trim() }
+        : { text: fallback };
     };
 
     surface(NAME_COMPONENT_ID, DEFAULT_FALLBACK_CHARACTER_NAME);
@@ -61,7 +61,7 @@ export class ActorStateProvider extends IActorStateProvider {
       FEARS_COMPONENT_ID,
     ].forEach((id) => {
       const txt = actorState.components[id]?.text;
-      if (typeof txt === 'string' && txt.trim() !== '') {
+      if (isNonBlankString(txt)) {
         actorState[id] = { text: txt.trim() };
       }
     });
@@ -69,9 +69,7 @@ export class ActorStateProvider extends IActorStateProvider {
     if (actor.hasComponent(SPEECH_PATTERNS_COMPONENT_ID)) {
       const speechData = actorState.components[SPEECH_PATTERNS_COMPONENT_ID];
       const patterns = Array.isArray(speechData?.patterns)
-        ? speechData.patterns.filter(
-            (p) => typeof p === 'string' && p.trim() !== ''
-          )
+        ? speechData.patterns.filter((p) => isNonBlankString(p))
         : [];
       if (patterns.length) {
         actorState[SPEECH_PATTERNS_COMPONENT_ID] = { ...speechData, patterns };

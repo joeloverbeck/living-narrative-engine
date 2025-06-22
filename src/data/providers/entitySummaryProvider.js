@@ -12,6 +12,7 @@ import {
   DEFAULT_FALLBACK_DESCRIPTION_RAW,
   DEFAULT_COMPONENT_VALUE_NA,
 } from '../../constants/textDefaults.js';
+import { isNonBlankString } from '../../utils/textUtils.js';
 
 /** @typedef {import('../../entities/entity.js').default} Entity */
 /** @typedef {import('../../interfaces/IEntitySummaryProvider.js').EntitySummaryDTO} EntitySummaryDTO */
@@ -28,7 +29,7 @@ export class EntitySummaryProvider extends IEntitySummaryProvider {
     }
     const componentData = entity.getComponentData(componentId);
     const value = componentData?.[propertyPath];
-    if (typeof value === 'string' && value.trim() !== '') {
+    if (isNonBlankString(value)) {
       return value.trim();
     }
     return defaultValue;

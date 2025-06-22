@@ -12,33 +12,7 @@ import { tryWriteContextVariable } from '../../utils/contextVariableUtils.js';
 import { cloneDeep } from 'lodash';
 import { assertParamsObject } from '../../utils/handlerUtils/indexUtils.js';
 import { applyArrayModification } from '../utils/arrayModifyUtils.js';
-
-/**
- * Safely sets a value on a nested object using a dot-notation path.
- *
- * @param {object} obj The object to modify.
- * @param {string} path The dot-notation path (e.g., 'a.b.c').
- * @param {*} value The value to set at the path.
- */
-function setPath(obj, path, value) {
-  const pathParts = path.split('.');
-  let current = obj;
-  for (let i = 0; i < pathParts.length - 1; i++) {
-    const part = pathParts[i];
-    if (part === '__proto__' || part === 'constructor') {
-      throw new Error(`Unsafe property name detected: ${part}`);
-    }
-    if (current[part] === undefined || typeof current[part] !== 'object') {
-      current[part] = {};
-    }
-    current = current[part];
-  }
-  const lastPart = pathParts[pathParts.length - 1];
-  if (lastPart === '__proto__' || lastPart === 'constructor') {
-    throw new Error(`Unsafe property name detected: ${lastPart}`);
-  }
-  current[lastPart] = value;
-}
+import { setByPath } from '../utils/objectPathUtils.js';
 
 /**
  * @class ModifyContextArrayHandler
@@ -200,7 +174,7 @@ class ModifyContextArrayHandler {
 
     // --- FIX: Set the modified clone back into the context ---
     const finalArray = clonedArray;
-    setPath(contextObject, variable_path, finalArray);
+    setByPath(contextObject, variable_path, finalArray);
 
     // The result variable should get the popped item or the final state of the array
     const resultForStorage = mode === 'pop' ? operationResult : clonedArray;
