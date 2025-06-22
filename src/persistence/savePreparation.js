@@ -8,13 +8,13 @@ import { wrapPersistenceOperation } from '../utils/persistenceErrorUtils.js';
  * Deep clones and augments the provided game state for saving.
  *
  * @param {string} saveName - Name of the save slot.
- * @param {import('../interfaces/ISaveLoadService.js').SaveGameStructure} obj - Original game state object.
+ * @param {import('../interfaces/ISaveLoadService.js').SaveGameStructure} gameState - Original game state object.
  * @param {import('../interfaces/coreServices.js').ILogger} logger - Logger for error reporting.
  * @returns {import('./persistenceTypes.js').PersistenceResult<import('../interfaces/ISaveLoadService.js').SaveGameStructure>}
  *   Result containing the cloned object or error.
  */
-export function cloneAndPrepareState(saveName, obj, logger) {
-  const cloneResult = cloneValidatedState(obj, logger);
+export function cloneAndPrepareState(saveName, gameState, logger) {
+  const cloneResult = cloneValidatedState(gameState, logger);
   if (!cloneResult.success || !cloneResult.data) {
     return { success: false, error: cloneResult.error };
   }
