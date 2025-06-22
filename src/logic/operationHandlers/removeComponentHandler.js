@@ -88,25 +88,17 @@ class RemoveComponentHandler extends ComponentOperationHandler {
     const { entity_ref, component_type } = params;
 
     // 2. Resolve and validate entity reference
-    const entityId = this.validateEntityRef(
+    const validated = this.validateEntityAndType(
       entity_ref,
+      component_type,
       log,
       'REMOVE_COMPONENT',
       executionContext
     );
-    if (!entityId) {
+    if (!validated) {
       return;
     }
-
-    // 3. Validate component type
-    const trimmedComponentType = this.requireComponentType(
-      component_type,
-      log,
-      'REMOVE_COMPONENT'
-    );
-    if (!trimmedComponentType) {
-      return;
-    }
+    const { entityId, type: trimmedComponentType } = validated;
 
     // 3. Execute Remove Component
     try {

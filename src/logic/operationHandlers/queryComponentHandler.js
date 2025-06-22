@@ -71,33 +71,22 @@ class QueryComponentHandler extends ComponentOperationHandler {
     const { entity_ref, component_type, result_variable, missing_value } =
       params;
 
-    const entityId = this.validateEntityRef(
+    const validated = this.validateEntityAndType(
       entity_ref,
+      component_type,
       logger,
       'QueryComponentHandler',
       executionContext
     );
-    if (!entityId) {
+    if (!validated) {
       safeDispatchError(
         this.#dispatcher,
-        'QueryComponentHandler: Could not resolve entity id from entity_ref.',
-        { entityRef: entity_ref }
-      );
-      return;
-    }
-    const trimmedComponentType = this.requireComponentType(
-      component_type,
-      logger,
-      'QueryComponentHandler'
-    );
-    if (!trimmedComponentType) {
-      safeDispatchError(
-        this.#dispatcher,
-        'QueryComponentHandler: Missing or invalid required "component_type" parameter (must be non-empty string).',
+        'QueryComponentHandler: Could not resolve entity id from entity_ref or component_type.',
         { params }
       );
       return;
     }
+    const { entityId, type: trimmedComponentType } = validated;
 
     if (typeof result_variable !== 'string' || !result_variable.trim()) {
       safeDispatchError(

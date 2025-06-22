@@ -77,25 +77,17 @@ class AddComponentHandler extends ComponentOperationHandler {
     const { entity_ref, component_type, value } = params;
 
     // 2. Resolve and validate entity reference
-    const entityId = this.validateEntityRef(
+    const validated = this.validateEntityAndType(
       entity_ref,
+      component_type,
       log,
       'ADD_COMPONENT',
       executionContext
     );
-    if (!entityId) {
+    if (!validated) {
       return;
     }
-
-    // 3. Validate component type
-    const trimmedComponentType = this.requireComponentType(
-      component_type,
-      log,
-      'ADD_COMPONENT'
-    );
-    if (!trimmedComponentType) {
-      return;
-    }
+    const { entityId, type: trimmedComponentType } = validated;
 
     // 4. Validate value object
     if (!this.#validateValueObject(value, log)) {

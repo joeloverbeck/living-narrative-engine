@@ -75,26 +75,18 @@ class ModifyComponentHandler extends ComponentOperationHandler {
     }
     const { entity_ref, component_type, field, mode = 'set', value } = params;
 
-    // ── resolve and validate entity reference ───────────────────────
-    const entityId = this.validateEntityRef(
+    // ── validate entity and component type together ─────────────────
+    const validated = this.validateEntityAndType(
       entity_ref,
+      component_type,
       log,
       'MODIFY_COMPONENT',
       executionContext
     );
-    if (!entityId) {
+    if (!validated) {
       return;
     }
-
-    // ── validate component type ─────────────────────────────────────
-    const compType = this.requireComponentType(
-      component_type,
-      log,
-      'MODIFY_COMPONENT'
-    );
-    if (!compType) {
-      return;
-    }
+    const { entityId, type: compType } = validated;
     if (mode !== 'set') {
       log.warn(
         `MODIFY_COMPONENT: Unsupported mode "${mode}". Only "set" is allowed now.`

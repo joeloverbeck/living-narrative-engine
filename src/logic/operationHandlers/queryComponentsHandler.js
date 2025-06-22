@@ -80,20 +80,6 @@ class QueryComponentsHandler extends ComponentOperationHandler {
 
     const { entity_ref, pairs } = params;
 
-    const entityId = this.validateEntityRef(
-      entity_ref,
-      logger,
-      'QueryComponentsHandler',
-      executionContext
-    );
-    if (!entityId) {
-      safeDispatchError(
-        this.#dispatcher,
-        'QueryComponentsHandler: Could not resolve entity id from entity_ref.',
-        { entityRef: entity_ref }
-      );
-      return;
-    }
     if (!Array.isArray(pairs) || pairs.length === 0) {
       safeDispatchError(
         this.#dispatcher,
@@ -106,19 +92,22 @@ class QueryComponentsHandler extends ComponentOperationHandler {
     for (const pair of pairs) {
       if (!pair || typeof pair !== 'object') continue;
       const { component_type, result_variable } = pair;
-      const trimmedType = this.requireComponentType(
+      const validated = this.validateEntityAndType(
+        entity_ref,
         component_type,
         logger,
-        'QueryComponentsHandler'
+        'QueryComponentsHandler',
+        executionContext
       );
-      if (!trimmedType) {
+      if (!validated) {
         safeDispatchError(
           this.#dispatcher,
-          'QueryComponentsHandler: Invalid component_type in pair.',
+          'QueryComponentsHandler: Invalid entity_ref or component_type in pair.',
           { pair }
         );
         continue;
       }
+      const { entityId, type: trimmedType } = validated;
       if (
         !result_variable ||
         typeof result_variable !== 'string' ||
