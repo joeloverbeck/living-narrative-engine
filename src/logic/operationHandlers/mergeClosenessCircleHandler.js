@@ -51,30 +51,33 @@ class MergeClosenessCircleHandler {
   }
 
   /**
-   * Merge the actor and target circles and lock movement for all members.
+   * Validate parameters for execute.
    *
-   * @param {{ actor_id:string, target_id:string, result_variable?:string }} params - Operation parameters.
-   * @param {ExecutionContext} execCtx - Execution context.
+   * @param {object} params
+   * @param {ExecutionContext} execCtx
+   * @returns {{ actorId:string, targetId:string, resultVar:string|null, logger:ILogger }|null}
+   * @private
    */
-  execute(params, execCtx) {
+  #validateParams(params, execCtx) {
     const { actor_id, target_id, result_variable } = params || {};
     const log = execCtx?.logger ?? this.#logger;
-
     if (typeof actor_id !== 'string' || !actor_id.trim()) {
       safeDispatchError(
         this.#dispatcher,
         'MERGE_CLOSENESS_CIRCLE: invalid "actor_id"',
-        { params }
+        { params },
+        log
       );
-      return;
+      return null;
     }
     if (typeof target_id !== 'string' || !target_id.trim()) {
       safeDispatchError(
         this.#dispatcher,
         'MERGE_CLOSENESS_CIRCLE: invalid "target_id"',
-        { params }
+        { params },
+        log
       );
-      return;
+      return null;
     }
     if (
       result_variable !== undefined &&
@@ -83,14 +86,29 @@ class MergeClosenessCircleHandler {
       safeDispatchError(
         this.#dispatcher,
         'MERGE_CLOSENESS_CIRCLE: "result_variable" must be a non-empty string when provided.',
-        { params }
+        { params },
+        log
       );
-      return;
+      return null;
     }
+    return {
+      actorId: actor_id.trim(),
+      targetId: target_id.trim(),
+      resultVar:
+        typeof result_variable === 'string' ? result_variable.trim() : null,
+      logger: log,
+    };
+  }
 
-    const actorId = actor_id.trim();
-    const targetId = target_id.trim();
-
+  /**
+   * Update partner lists for merged circle.
+   *
+   * @param {string} actorId
+   * @param {string} targetId
+   * @returns {string[]}
+   * @private
+   */
+  #updatePartners(actorId, targetId) {
     const actorComp = this.#entityManager.getComponentData(
       actorId,
       'intimacy:closeness'
@@ -99,13 +117,11 @@ class MergeClosenessCircleHandler {
       targetId,
       'intimacy:closeness'
     );
-
     const allMembers = closenessCircleService.merge(
       [actorId, targetId],
       Array.isArray(actorComp?.partners) ? actorComp.partners : [],
       Array.isArray(targetComp?.partners) ? targetComp.partners : []
     );
-
     for (const id of allMembers) {
       const partners = allMembers.filter((p) => p !== id);
       try {
@@ -118,6 +134,19 @@ class MergeClosenessCircleHandler {
           details: { id, error: err.message, stack: err.stack },
         });
       }
+    }
+    return allMembers;
+  }
+
+  /**
+   * Lock movement for a list of entities.
+   *
+   * @param {string[]} memberIds
+   * @returns {void}
+   * @private
+   */
+  #lockMovement(memberIds) {
+    for (const id of memberIds) {
       try {
         const move =
           this.#entityManager.getComponentData(id, 'core:movement') || {};
@@ -132,19 +161,34 @@ class MergeClosenessCircleHandler {
         });
       }
     }
+  }
 
-    if (typeof result_variable === 'string' && result_variable.trim()) {
+  /**
+   * Merge the actor and target circles and lock movement for all members.
+   *
+   * @param {{ actor_id:string, target_id:string, result_variable?:string }} params - Operation parameters.
+   * @param {ExecutionContext} execCtx - Execution context.
+   */
+  execute(params, execCtx) {
+    const validated = this.#validateParams(params, execCtx);
+    if (!validated) return;
+    const { actorId, targetId, resultVar, logger } = validated;
+
+    const members = this.#updatePartners(actorId, targetId);
+    this.#lockMovement(members);
+
+    if (resultVar) {
       tryWriteContextVariable(
-        result_variable.trim(),
-        allMembers,
+        resultVar,
+        members,
         execCtx,
         this.#dispatcher,
-        log
+        logger
       );
     }
 
-    log.debug(
-      `[MergeClosenessCircleHandler] merged circle -> ${JSON.stringify(allMembers)}`
+    logger.debug(
+      `[MergeClosenessCircleHandler] merged circle -> ${JSON.stringify(members)}`
     );
   }
 }

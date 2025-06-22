@@ -33,13 +33,13 @@ describe('MergeClosenessCircleHandler', () => {
     jest.clearAllMocks();
   });
 
-  test('forms new circle and locks movement', () => {
+  test('forms new circle and locks movement', async () => {
     em.getComponentData
       .mockReturnValueOnce(null) // actor closeness
       .mockReturnValueOnce(null) // target closeness
       .mockReturnValue({ locked: false }); // movement
 
-    handler.execute({ actor_id: 'a1', target_id: 't1' }, execCtx);
+    await handler.execute({ actor_id: 'a1', target_id: 't1' }, execCtx);
 
     expect(em.addComponent).toHaveBeenCalledWith('a1', 'intimacy:closeness', {
       partners: ['t1'],
@@ -55,10 +55,10 @@ describe('MergeClosenessCircleHandler', () => {
     });
   });
 
-  test('stores result variable when provided', () => {
+  test('stores result variable when provided', async () => {
     em.getComponentData.mockReturnValue(null);
 
-    handler.execute(
+    await handler.execute(
       { actor_id: 'a', target_id: 'b', result_variable: 'affected' },
       execCtx
     );
@@ -69,8 +69,8 @@ describe('MergeClosenessCircleHandler', () => {
     ]);
   });
 
-  test('validates parameters', () => {
-    handler.execute({}, execCtx);
+  test('validates parameters', async () => {
+    await handler.execute({}, execCtx);
     expect(dispatcher.dispatch).toHaveBeenCalledWith(
       SYSTEM_ERROR_OCCURRED_ID,
       expect.objectContaining({ message: expect.stringContaining('actor_id') })
