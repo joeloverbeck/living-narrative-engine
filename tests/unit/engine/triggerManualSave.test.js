@@ -2,11 +2,13 @@
 import { describe, expect, it } from '@jest/globals';
 import { tokens } from '../../../src/dependencyInjection/tokens.js';
 import {
-  createGameEngineTestBed,
   describeEngineSuite,
   describeInitializedEngineSuite,
 } from '../../common/engine/gameEngineTestBed.js';
-import { runUnavailableServiceTest } from '../../common/engine/gameEngineHelpers.js';
+import {
+  runUnavailableServiceTest,
+  withGameEngineBed,
+} from '../../common/engine/gameEngineHelpers.js';
 import '../../common/engine/engineTestTypedefs.js';
 import {
   expectDispatchSequence,
@@ -20,22 +22,18 @@ describeEngineSuite('GameEngine', () => {
     const MOCK_ACTIVE_WORLD_FOR_SAVE = DEFAULT_ACTIVE_WORLD_FOR_SAVE;
 
     it('should dispatch error and not attempt save if engine is not initialized', async () => {
-      const localBed = createGameEngineTestBed();
-      const uninitializedGameEngine = localBed.engine;
-      localBed.resetMocks();
+      await withGameEngineBed({}, async (bed, engine) => {
+        bed.resetMocks();
+        const result = await engine.triggerManualSave(SAVE_NAME);
+        const expectedErrorMsg =
+          'Game engine is not initialized. Cannot save game.';
 
-      const result = await uninitializedGameEngine.triggerManualSave(SAVE_NAME);
-      const expectedErrorMsg =
-        'Game engine is not initialized. Cannot save game.';
-
-      expect(
-        localBed.mocks.safeEventDispatcher.dispatch
-      ).not.toHaveBeenCalled();
-      expect(
-        localBed.mocks.gamePersistenceService.saveGame
-      ).not.toHaveBeenCalled();
-      expect(result).toEqual({ success: false, error: expectedErrorMsg });
-      await localBed.cleanup();
+        expect(bed.mocks.safeEventDispatcher.dispatch).not.toHaveBeenCalled();
+        expect(
+          bed.mocks.gamePersistenceService.saveGame
+        ).not.toHaveBeenCalled();
+        expect(result).toEqual({ success: false, error: expectedErrorMsg });
+      });
     });
 
     describeInitializedEngineSuite(
