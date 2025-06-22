@@ -81,4 +81,124 @@ describe('DispatchPerceptibleEventHandler', () => {
       })
     );
   });
+
+  test('does not log when log_entry is false', () => {
+    const params = {
+      location_id: 'loc:2',
+      description_text: 'B leaves.',
+      perception_type: 'character_exit',
+      actor_id: 'npc:b',
+      log_entry: false,
+    };
+
+    handler.execute(params, {});
+
+    expect(dispatcher.dispatch).toHaveBeenCalledWith(
+      'core:perceptible_event',
+      expect.objectContaining({ actorId: 'npc:b' })
+    );
+    expect(logHandler.execute).not.toHaveBeenCalled();
+  });
+
+  test('errors when location_id is missing', () => {
+    handler.execute(
+      {
+        location_id: '',
+        description_text: 'desc',
+        perception_type: 'type',
+        actor_id: 'actor',
+      },
+      {}
+    );
+    expect(dispatcher.dispatch).toHaveBeenCalledWith(
+      SYSTEM_ERROR_OCCURRED_ID,
+      expect.objectContaining({
+        message: expect.stringContaining('location_id required'),
+      })
+    );
+    expect(logHandler.execute).not.toHaveBeenCalled();
+  });
+
+  test('errors when description_text is missing', () => {
+    handler.execute(
+      {
+        location_id: 'loc',
+        description_text: '',
+        perception_type: 'type',
+        actor_id: 'actor',
+      },
+      {}
+    );
+    expect(dispatcher.dispatch).toHaveBeenCalledWith(
+      SYSTEM_ERROR_OCCURRED_ID,
+      expect.objectContaining({
+        message: expect.stringContaining('description_text required'),
+      })
+    );
+  });
+
+  test('errors when perception_type is missing', () => {
+    handler.execute(
+      {
+        location_id: 'loc',
+        description_text: 'desc',
+        perception_type: '',
+        actor_id: 'actor',
+      },
+      {}
+    );
+    expect(dispatcher.dispatch).toHaveBeenCalledWith(
+      SYSTEM_ERROR_OCCURRED_ID,
+      expect.objectContaining({
+        message: expect.stringContaining('perception_type required'),
+      })
+    );
+  });
+
+  test('errors when actor_id is missing', () => {
+    handler.execute(
+      {
+        location_id: 'loc',
+        description_text: 'desc',
+        perception_type: 'type',
+        actor_id: '',
+      },
+      {}
+    );
+    expect(dispatcher.dispatch).toHaveBeenCalledWith(
+      SYSTEM_ERROR_OCCURRED_ID,
+      expect.objectContaining({
+        message: expect.stringContaining('actor_id required'),
+      })
+    );
+  });
+
+  test('constructor dependency checks', () => {
+    expect(
+      () =>
+        new DispatchPerceptibleEventHandler({
+          dispatcher: {},
+          logger,
+          addPerceptionLogEntryHandler: logHandler,
+        })
+    ).toThrow('ISafeEventDispatcher');
+
+    expect(
+      () =>
+        new DispatchPerceptibleEventHandler({
+          dispatcher,
+          logger: {},
+          addPerceptionLogEntryHandler: logHandler,
+        })
+    ).toThrow('ILogger');
+
+    expect(
+      () =>
+        new DispatchPerceptibleEventHandler({
+          dispatcher,
+          logger,
+          addPerceptionLogEntryHandler: {},
+        })
+    ).toThrow('AddPerceptionLogEntryHandler');
+  });
 });
