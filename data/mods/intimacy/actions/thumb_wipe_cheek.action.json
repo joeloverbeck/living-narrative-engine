@@ -2,10 +2,10 @@
   "$schema": "http://example.com/schemas/action.schema.json",
   "id": "intimacy:thumb_wipe_cheek",
   "commandVerb": "thumb-wipe-cheek",
-  "name": "Caress Cheek",
-  "description": "Brush your thumb across another's cheekbone in a soothing, intimate gesture.",
-  "target_domain": "environment",
-  "template": "wipe {target}'s cheek with thumb",
+  "name": "Thumb Wipe Cheek",
+  "description": "Gently wipe the target's cheek with your thumb.",
+  "scope": "environment",
+  "template": "wipe {target}'s cheek with your thumb",
   "prerequisites": [
     {
       "logic": {

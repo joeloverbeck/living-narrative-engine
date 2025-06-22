@@ -93,6 +93,16 @@
         "rules": {
           "$ref": "#/definitions/contentFileList"
         },
+        "scopes": {
+          "description": "Array of relative paths to .scope files included in this mod. Paths must not start with '/' or contain '..'.",
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^(?!/)(?!.*\\.\\.)[^\\s]+\\.scope$",
+            "description": "Relative path to a .scope definition file, e.g., 'scopes/inventory_items.scope'."
+          }
+        },
         "ui": {
           "$ref": "#/definitions/contentFileList"
         },

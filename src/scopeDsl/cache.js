@@ -1,5 +1,5 @@
 /**
- * @fileoverview Scope-DSL Cache
+ * @file Scope-DSL Cache
  * @description LRU cache for Scope-DSL resolution results
  */
 
@@ -14,6 +14,7 @@ class LRUCache {
 
     /**
      * Get a value from the cache
+     *
      * @param {string} key - Cache key
      * @returns {any} Cached value or undefined if not found
      */
@@ -31,6 +32,7 @@ class LRUCache {
 
     /**
      * Set a value in the cache
+     *
      * @param {string} key - Cache key
      * @param {any} value - Value to cache
      */
@@ -56,6 +58,7 @@ class LRUCache {
 
     /**
      * Get the current size of the cache
+     *
      * @returns {number} Number of entries in cache
      */
     size() {
@@ -74,6 +77,7 @@ class ScopeCache {
 
     /**
      * Generate a cache key from turn, actorId, and scopeName
+     *
      * @param {string} turn - Current turn identifier
      * @param {string} actorId - Actor ID
      * @param {string} scopeName - Scope name/expression
@@ -86,6 +90,7 @@ class ScopeCache {
 
     /**
      * Resolve a scope with caching
+     *
      * @param {string} scopeName - Scope name/expression
      * @param {string} actorId - Actor ID
      * @param {Function} resolveFn - Function to resolve the scope if not cached
@@ -112,6 +117,7 @@ class ScopeCache {
 
     /**
      * Start a new turn, clearing the cache
+     *
      * @param {string} turn - Turn identifier
      */
     newTurn(turn) {
@@ -121,7 +127,8 @@ class ScopeCache {
 
     /**
      * Get cache statistics for debugging
-     * @returns {Object} Cache statistics
+     *
+     * @returns {object} Cache statistics
      */
     getStats() {
         return {

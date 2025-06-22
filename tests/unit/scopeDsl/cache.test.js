@@ -1,5 +1,5 @@
 /**
- * @fileoverview Unit tests for Scope-DSL Cache
+ * @file Unit tests for Scope-DSL Cache
  * @description Tests for src/scopeDsl/cache.js - LRU cache for scope resolution
  */
 

@@ -1,6 +1,6 @@
 /**
  * @file This module covers the functionality of entityScopeService.js
- * @see tests/entities/entityScopeService.test.js
+ * @description Tests for the DSL-only scope resolution service
  */
 
 import {
@@ -11,367 +11,267 @@ import {
   afterEach,
   jest,
 } from '@jest/globals';
-// FIXED: Corrected the import path to match the project structure.
 import { getEntityIdsForScopes } from '../../../src/entities/entityScopeService.js';
-import {
-  EXITS_COMPONENT_ID,
-  INVENTORY_COMPONENT_ID,
-  ITEM_COMPONENT_ID,
-} from '../../../src/constants/componentIds.js';
 
-// --- Mocks & Setup ---
+// Mock the Scope DSL dependencies
+jest.mock('../../../src/scopeDsl/scopeRegistry.js', () => ({
+  ScopeRegistry: {
+    getInstance: jest.fn()
+  }
+}));
 
-/**
- * Creates a mock entity object for testing purposes.
- *
- * @param {string} id - The entity's ID.
- * @param {object} components - A map of component IDs to their data.
- * @returns {object} A mock entity.
- */
-const createMockEntity = (id, components = {}) => ({
-  id,
-  hasComponent: jest.fn((componentId) => componentId in components),
-  getComponentData: jest.fn((componentId) => components[componentId] || null),
-});
+jest.mock('../../../src/scopeDsl/parser.js', () => ({
+  parseInlineExpr: jest.fn()
+}));
+
+jest.mock('../../../src/scopeDsl/engine.js', () => ({
+  ScopeEngine: jest.fn()
+}));
+
+// Import the mocked modules
+import { ScopeRegistry } from '../../../src/scopeDsl/scopeRegistry.js';
+import { parseInlineExpr } from '../../../src/scopeDsl/parser.js';
+import { ScopeEngine } from '../../../src/scopeDsl/engine.js';
 
 describe('entityScopeService', () => {
   let mockLogger;
-  // FIXED: The mock entity manager will be fully reset before each test.
   let mockEntityManager;
+  let mockScopeRegistryInstance;
+  let mockScopeEngine;
 
   beforeEach(() => {
-    // Reset all mocks provided by Jest.
     jest.resetAllMocks();
-
-    // FIXED: Instantiate a fresh mock manager for each test to prevent state pollution.
-    mockEntityManager = {
-      entities: new Map(),
-      getEntityInstance: jest.fn((id) => mockEntityManager.entities.get(id)),
-      getEntitiesInLocation: jest.fn((locationId) => {
-        const ids = new Set();
-        mockEntityManager.entities.forEach((entity) => {
-          const posData = entity.getComponentData('core:position');
-          if (posData && posData.locationId === locationId) {
-            ids.add(entity.id);
-          }
-        });
-        return ids;
-      }),
-      addEntity(entity) {
-        this.entities.set(entity.id, entity);
-      },
-      clear() {
-        this.entities.clear();
-        this.getEntityInstance.mockClear();
-        this.getEntitiesInLocation.mockClear();
-      },
-    };
-
+    
     mockLogger = {
       warn: jest.fn(),
       error: jest.fn(),
       info: jest.fn(),
       debug: jest.fn(),
     };
+
+    mockEntityManager = {
+      getEntityInstance: jest.fn(),
+      getEntitiesInLocation: jest.fn(),
+    };
+
+    mockScopeRegistryInstance = {
+      getScope: jest.fn()
+    };
+    ScopeRegistry.getInstance.mockReturnValue(mockScopeRegistryInstance);
+
+    mockScopeEngine = {
+      resolve: jest.fn()
+    };
+    ScopeEngine.mockImplementation(() => mockScopeEngine);
   });
 
   afterEach(() => {
     jest.clearAllMocks();
   });
 
-  // --- Main Aggregator Function Tests ---
   describe('getEntityIdsForScopes', () => {
-    test('should return an empty set and log an error if context or entityManager is missing', () => {
-      expect(getEntityIdsForScopes('inventory', null, mockLogger)).toEqual(
-        new Set()
-      );
+    test('should return empty set if context is null', () => {
+      const result = getEntityIdsForScopes('followers', null, mockLogger);
+      expect(result).toEqual(new Set());
       expect(mockLogger.error).toHaveBeenCalledWith(
         'getEntityIdsForScopes: Invalid or incomplete context provided. Cannot proceed.',
         { context: null }
       );
+    });
 
-      mockLogger.error.mockClear();
-
-      expect(
-        getEntityIdsForScopes('inventory', { actingEntity: {} }, mockLogger)
-      ).toEqual(new Set());
+    test('should return empty set if entityManager is missing', () => {
+      const context = { actingEntity: { id: 'player' } };
+      const result = getEntityIdsForScopes('followers', context, mockLogger);
+      expect(result).toEqual(new Set());
       expect(mockLogger.error).toHaveBeenCalledWith(
         'getEntityIdsForScopes: Invalid or incomplete context provided. Cannot proceed.',
-        { context: { actingEntity: {} } }
+        { context }
       );
     });
 
-    test('should warn and skip unknown scopes, returning IDs from valid ones', () => {
-      const actingEntity = createMockEntity('player', {
-        [INVENTORY_COMPONENT_ID]: { items: ['item1'] },
-      });
-      const context = { actingEntity, entityManager: mockEntityManager };
-
-      const result = getEntityIdsForScopes(
-        ['inventory', 'unknown_scope'],
-        context,
-        mockLogger
-      );
-      expect(result).toEqual(new Set(['item1']));
-      expect(mockLogger.warn).toHaveBeenCalledWith(
-        "getEntityIdsForScopes: Unknown scope requested: 'unknown_scope'. Skipping."
-      );
-    });
-
-    test("should log and skip scopes 'none' and 'direction'", () => {
+    test('should handle "none" scope by returning empty set', () => {
       const context = { entityManager: mockEntityManager };
-      const result = getEntityIdsForScopes(
-        ['none', 'direction'],
-        context,
-        mockLogger
-      );
-
+      const result = getEntityIdsForScopes('none', context, mockLogger);
       expect(result).toEqual(new Set());
+      expect(mockScopeRegistryInstance.getScope).not.toHaveBeenCalled();
     });
 
-    test('should handle a single scope string', () => {
-      const actingEntity = createMockEntity('player', {
-        [INVENTORY_COMPONENT_ID]: { items: ['item1'] },
-      });
-      const context = { actingEntity, entityManager: mockEntityManager };
-
-      const result = getEntityIdsForScopes('inventory', context, mockLogger);
-      expect(result).toEqual(new Set(['item1']));
+    test('should handle "direction" scope by returning empty set', () => {
+      const context = { entityManager: mockEntityManager };
+      const result = getEntityIdsForScopes('direction', context, mockLogger);
+      expect(result).toEqual(new Set());
+      expect(mockScopeRegistryInstance.getScope).not.toHaveBeenCalled();
     });
 
-    test('should aggregate unique IDs from multiple scopes', () => {
-      const actingEntity = createMockEntity('player', {
-        [INVENTORY_COMPONENT_ID]: { items: ['item1', 'item2'] },
-      });
-      const context = { actingEntity, entityManager: mockEntityManager };
-      const result = getEntityIdsForScopes(
-        ['self', 'inventory'],
-        context,
-        mockLogger
-      );
-      expect(result).toEqual(new Set(['player', 'item1', 'item2']));
+    test('should handle multiple scopes including special ones', () => {
+      const context = { entityManager: mockEntityManager };
+      const result = getEntityIdsForScopes(['none', 'direction', 'followers'], context, mockLogger);
+      expect(result).toEqual(new Set());
+      expect(mockScopeRegistryInstance.getScope).toHaveBeenCalledWith('followers');
     });
 
-    test('should log an error and continue if a scope handler throws an exception', () => {
-      const testError = new Error('Test DB Error');
-      mockEntityManager.getEntitiesInLocation.mockImplementation(() => {
-        throw testError;
-      });
+    test('should resolve scope using DSL engine when scope exists in registry', () => {
+      const mockAst = { type: 'test' };
+      const mockScopeDefinition = { expr: 'actor.followers[]' };
+      const expectedIds = new Set(['follower1', 'follower2']);
+      
+      mockScopeRegistryInstance.getScope.mockReturnValue(mockScopeDefinition);
+      parseInlineExpr.mockReturnValue(mockAst);
+      mockScopeEngine.resolve.mockReturnValue(expectedIds);
 
-      const location = createMockEntity('loc1');
       const context = {
-        currentLocation: location,
+        actingEntity: { id: 'player' },
         entityManager: mockEntityManager,
+        spatialIndexManager: {},
+        jsonLogicEval: {}
       };
 
-      const result = getEntityIdsForScopes('location', context, mockLogger);
+      const result = getEntityIdsForScopes('followers', context, mockLogger);
+      
+      expect(result).toEqual(expectedIds);
+      expect(mockScopeRegistryInstance.getScope).toHaveBeenCalledWith('followers');
+      expect(parseInlineExpr).toHaveBeenCalledWith('actor.followers[]');
+      expect(mockScopeEngine.resolve).toHaveBeenCalledWith(
+        mockAst,
+        'player',
+        {
+          entityManager: mockEntityManager,
+          spatialIndexManager: {},
+          jsonLogicEval: {},
+          logger: mockLogger
+        }
+      );
+    });
+
+    test('should return empty set when scope not found in registry', () => {
+      mockScopeRegistryInstance.getScope.mockReturnValue(null);
+
+      const context = {
+        actingEntity: { id: 'player' },
+        entityManager: mockEntityManager
+      };
+
+      const result = getEntityIdsForScopes('unknown_scope', context, mockLogger);
+      
+      expect(result).toEqual(new Set());
+      expect(mockLogger.warn).toHaveBeenCalledWith("Scope 'unknown_scope' not found in registry");
+    });
+
+    test('should return empty set when actingEntity ID is missing', () => {
+      const mockScopeDefinition = { expr: 'actor.followers[]' };
+      mockScopeRegistryInstance.getScope.mockReturnValue(mockScopeDefinition);
+
+      const context = {
+        actingEntity: null,
+        entityManager: mockEntityManager
+      };
+
+      const result = getEntityIdsForScopes('followers', context, mockLogger);
+      
+      expect(result).toEqual(new Set());
+      expect(mockLogger.error).toHaveBeenCalledWith('Cannot resolve scope: actingEntity ID is missing');
+    });
+
+    test('should handle DSL parsing errors gracefully', () => {
+      const mockScopeDefinition = { expr: 'invalid expression' };
+      const parseError = new Error('Parse error');
+      
+      mockScopeRegistryInstance.getScope.mockReturnValue(mockScopeDefinition);
+      parseInlineExpr.mockImplementation(() => {
+        throw parseError;
+      });
+
+      const context = {
+        actingEntity: { id: 'player' },
+        entityManager: mockEntityManager
+      };
+
+      const result = getEntityIdsForScopes('followers', context, mockLogger);
+      
       expect(result).toEqual(new Set());
       expect(mockLogger.error).toHaveBeenCalledWith(
-        "getEntityIdsForScopes: Error executing handler for scope 'location':",
-        testError
+        "Error resolving scope 'followers' with DSL:",
+        parseError
       );
     });
-  });
 
-  // --- Individual Scope Handler Tests ---
-  describe('Scope: location & environment', () => {
-    let location, itemInLoc, npcInLoc;
-
-    beforeEach(() => {
-      location = createMockEntity('loc1');
-      itemInLoc = createMockEntity('itemInLoc', {
-        'core:position': { locationId: 'loc1' },
-      });
-      npcInLoc = createMockEntity('npcInLoc', {
-        'core:position': { locationId: 'loc1' },
+    test('should handle scope engine resolution errors gracefully', () => {
+      const mockAst = { type: 'test' };
+      const mockScopeDefinition = { expr: 'actor.followers[]' };
+      const resolveError = new Error('Resolution error');
+      
+      mockScopeRegistryInstance.getScope.mockReturnValue(mockScopeDefinition);
+      parseInlineExpr.mockReturnValue(mockAst);
+      mockScopeEngine.resolve.mockImplementation(() => {
+        throw resolveError;
       });
 
-      mockEntityManager.addEntity(itemInLoc);
-      mockEntityManager.addEntity(npcInLoc);
-    });
-
-    test('should return IDs of entities in the current location', () => {
       const context = {
-        currentLocation: location,
+        actingEntity: { id: 'player' },
         entityManager: mockEntityManager,
+        spatialIndexManager: {},
+        jsonLogicEval: {}
       };
-      const result = getEntityIdsForScopes('location', context, mockLogger);
-      expect(result).toEqual(new Set(['itemInLoc', 'npcInLoc']));
-    });
 
-    test('should return same result for "environment" scope', () => {
-      const context = {
-        currentLocation: location,
-        entityManager: mockEntityManager,
-      };
-      const result = getEntityIdsForScopes('environment', context, mockLogger);
-      expect(result).toEqual(new Set(['itemInLoc', 'npcInLoc']));
-    });
-
-    test('should exclude the actingEntity from the results', () => {
-      const actingEntity = createMockEntity('player', {
-        'core:position': { locationId: 'loc1' },
-      });
-      mockEntityManager.addEntity(actingEntity);
-      const context = {
-        actingEntity,
-        currentLocation: location,
-        entityManager: mockEntityManager,
-      };
-      const result = getEntityIdsForScopes('location', context, mockLogger);
-      expect(result).toEqual(new Set(['itemInLoc', 'npcInLoc']));
-      expect(result.has('player')).toBe(false);
-    });
-  });
-
-  describe('Scope: location_items', () => {
-    let location, itemInLoc, nonItemInLoc;
-    beforeEach(() => {
-      location = createMockEntity('loc1');
-      itemInLoc = createMockEntity('item1', {
-        [ITEM_COMPONENT_ID]: {},
-        'core:position': { locationId: 'loc1' },
-      });
-      nonItemInLoc = createMockEntity('npc1', {
-        'core:position': { locationId: 'loc1' },
-      });
-
-      mockEntityManager.addEntity(itemInLoc);
-      mockEntityManager.addEntity(nonItemInLoc);
-    });
-
-    test('should return only entities with ItemComponent from the location', () => {
-      const context = {
-        currentLocation: location,
-        entityManager: mockEntityManager,
-      };
-      const result = getEntityIdsForScopes(
-        'location_items',
-        context,
-        mockLogger
+      const result = getEntityIdsForScopes('followers', context, mockLogger);
+      
+      expect(result).toEqual(new Set());
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        "Error resolving scope 'followers' with DSL:",
+        resolveError
       );
-      expect(result).toEqual(new Set(['item1']));
     });
 
-    test('should warn if an entity from location cannot be found in manager', () => {
-      mockEntityManager.getEntitiesInLocation.mockReturnValueOnce(
-        new Set(['item1', 'nonexistent'])
-      );
-      const context = {
-        currentLocation: location,
-        entityManager: mockEntityManager,
-      };
-
-      const result = getEntityIdsForScopes(
-        'location_items',
-        context,
-        mockLogger
-      );
-      expect(result).toEqual(new Set(['item1']));
-    });
-  });
-
-  describe('Scope: location_non_items', () => {
-    let location, itemInLoc, nonItemInLoc;
-
-    beforeEach(() => {
-      location = createMockEntity('loc1');
-      itemInLoc = createMockEntity('item1', {
-        [ITEM_COMPONENT_ID]: {},
-        'core:position': { locationId: 'loc1' },
-      });
-      nonItemInLoc = createMockEntity('npc1', {
-        'core:position': { locationId: 'loc1' },
-      });
-      mockEntityManager.addEntity(itemInLoc);
-      mockEntityManager.addEntity(nonItemInLoc);
-    });
-
-    test('should return only entities without ItemComponent from the location', () => {
-      const context = {
-        currentLocation: location,
-        entityManager: mockEntityManager,
-      };
-      const result = getEntityIdsForScopes(
-        'location_non_items',
-        context,
-        mockLogger
-      );
-      expect(result).toEqual(new Set(['npc1']));
-    });
-
-    test('should warn if an entity from location cannot be found in manager', () => {
-      mockEntityManager.getEntitiesInLocation.mockReturnValueOnce(
-        new Set(['npc1', 'nonexistent'])
-      );
-      const context = {
-        currentLocation: location,
-        entityManager: mockEntityManager,
-      };
-
-      const result = getEntityIdsForScopes(
-        'location_non_items',
-        context,
-        mockLogger
-      );
-      expect(result).toEqual(new Set(['npc1']));
-    });
-  });
-
-  describe('Scope: nearby', () => {
-    test('should return a combination of inventory and location entities', () => {
-      const actingEntity = createMockEntity('player', {
-        [INVENTORY_COMPONENT_ID]: { items: ['inv_item'] },
-        'core:position': { locationId: 'loc1' },
-      });
-      const location = createMockEntity('loc1');
-      const locItem = createMockEntity('loc_item', {
-        'core:position': { locationId: 'loc1' },
-      });
-
-      mockEntityManager.addEntity(actingEntity);
-      mockEntityManager.addEntity(locItem);
+    test('should aggregate results from multiple scopes', () => {
+      const mockAst = { type: 'test' };
+      const followersScope = { expr: 'actor.followers[]' };
+      const environmentScope = { expr: 'location.entities[]' };
+      
+      mockScopeRegistryInstance.getScope
+        .mockReturnValueOnce(followersScope)
+        .mockReturnValueOnce(environmentScope);
+      
+      parseInlineExpr.mockReturnValue(mockAst);
+      mockScopeEngine.resolve
+        .mockReturnValueOnce(new Set(['follower1', 'follower2']))
+        .mockReturnValueOnce(new Set(['npc1', 'npc2']));
 
       const context = {
-        actingEntity,
-        currentLocation: location,
+        actingEntity: { id: 'player' },
         entityManager: mockEntityManager,
+        spatialIndexManager: {},
+        jsonLogicEval: {}
       };
-      const result = getEntityIdsForScopes('nearby', context, mockLogger);
 
-      expect(result).toEqual(new Set(['inv_item', 'loc_item']));
-    });
-  });
-
-  describe('Scope: nearby_including_blockers', () => {
-    let actingEntity, location, blockerEntity;
-
-    beforeEach(() => {
-      actingEntity = createMockEntity('player', {
-        [INVENTORY_COMPONENT_ID]: { items: ['inv_item'] },
-      });
-      location = createMockEntity('loc1', {
-        [EXITS_COMPONENT_ID]: [
-          { dir: 'north', to: 'loc2', blocker: 'boulder' },
-          { dir: 'south', to: 'loc3' },
-        ],
-      });
-      blockerEntity = createMockEntity('boulder');
+      const result = getEntityIdsForScopes(['followers', 'environment'], context, mockLogger);
+      
+      expect(result).toEqual(new Set(['follower1', 'follower2', 'npc1', 'npc2']));
+      expect(mockScopeRegistryInstance.getScope).toHaveBeenCalledWith('followers');
+      expect(mockScopeRegistryInstance.getScope).toHaveBeenCalledWith('environment');
     });
 
-    test('should include nearby items and exit blockers', () => {
-      mockEntityManager.addEntity(blockerEntity);
+    test('should handle mixed valid and invalid scopes', () => {
+      const mockAst = { type: 'test' };
+      const followersScope = { expr: 'actor.followers[]' };
+      
+      mockScopeRegistryInstance.getScope
+        .mockReturnValueOnce(followersScope)
+        .mockReturnValueOnce(null);
+      
+      parseInlineExpr.mockReturnValue(mockAst);
+      mockScopeEngine.resolve.mockReturnValue(new Set(['follower1']));
+
       const context = {
-        actingEntity,
-        currentLocation: location,
+        actingEntity: { id: 'player' },
         entityManager: mockEntityManager,
+        spatialIndexManager: {},
+        jsonLogicEval: {}
       };
-      const result = getEntityIdsForScopes(
-        'nearby_including_blockers',
-        context,
-        mockLogger
-      );
-      expect(result).toEqual(new Set(['inv_item', 'boulder']));
+
+      const result = getEntityIdsForScopes(['followers', 'invalid_scope'], context, mockLogger);
+      
+      expect(result).toEqual(new Set(['follower1']));
+      expect(mockLogger.warn).toHaveBeenCalledWith("Scope 'invalid_scope' not found in registry");
     });
   });
 });

@@ -4,7 +4,7 @@
   "commandVerb": "go",
   "name": "Go",
   "description": "Moves your character in the specified direction, if the way is clear.",
-  "target_domain": "direction",
+  "scope": "directions",
   "template": "go {direction}",
   "prerequisites": [
     {

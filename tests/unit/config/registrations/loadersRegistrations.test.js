@@ -179,7 +179,7 @@ describe('registerLoaders (with Mock DI Container)', () => {
     // Keep register mock history
   });
 
-  it('should register all 31 services/loaders (+ ILogger) as singletons', () => {
+  it('should register all 32 services/loaders (+ ILogger) as singletons', () => {
     // Arrange: Logger is already registered in beforeEach
 
     // Act: Register the loaders
@@ -209,6 +209,7 @@ describe('registerLoaders (with Mock DI Container)', () => {
       tokens.WorldLoader,
       tokens.EntityInstanceLoader,
       tokens.GoalLoader,
+      tokens.ScopeLoader,
       tokens.ModsLoader,
       // Phase-related services and processors
       tokens.ModLoadOrderResolver,
@@ -222,7 +223,7 @@ describe('registerLoaders (with Mock DI Container)', () => {
       tokens.WorldPhase,
       tokens.SummaryPhase,
     ];
-    const expectedRegistrationCount = expectedTokens.length; // This must be 31
+    const expectedRegistrationCount = expectedTokens.length; // This must be 32
 
     // Expect 1 (ILogger from beforeEach) + all from registerLoaders
     expect(mockContainer.register).toHaveBeenCalledTimes(

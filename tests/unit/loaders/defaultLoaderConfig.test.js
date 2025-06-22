@@ -14,6 +14,7 @@ describe('defaultLoaderConfig', () => {
       actions: stubLoader,
       rules: stubLoader,
       goals: stubLoader,
+      scopes: stubLoader,
       entityDefinitions: stubLoader,
       entityInstances: stubLoader,
     };
@@ -49,6 +50,7 @@ describe('defaultLoaderConfig', () => {
       actionLoader: stubLoader,
       ruleLoader: stubLoader,
       goalLoader: stubLoader,
+      scopeLoader: stubLoader,
       entityDefinitionLoader: stubLoader,
       entityInstanceLoader: stubLoader,
     };

@@ -1,5 +1,5 @@
 /**
- * @fileoverview Tests for Scope-DSL Parser
+ * @file Tests for Scope-DSL Parser
  * @description Unit tests for the recursive-descent parser
  */
 

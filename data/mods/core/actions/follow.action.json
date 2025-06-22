@@ -4,7 +4,7 @@
   "commandVerb": "follow",
   "name": "Follow",
   "description": "Commands your character to follow the specified target, becoming their companion and moving with them.",
-  "target_domain": "environment",
+  "scope": "environment",
   "template": "follow {target}",
   "prerequisites": [
     {

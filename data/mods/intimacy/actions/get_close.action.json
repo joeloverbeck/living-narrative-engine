@@ -1,17 +1,17 @@
 {
   "$schema": "http://example.com/schemas/action.schema.json",
   "id": "intimacy:get_close",
-  "commandVerb": "approach",
+  "commandVerb": "get-close",
   "name": "Get Close",
-  "description": "Initiate physical and emotional closeness with another character, locking you both in place as you focus on each other.",
-  "target_domain": "environment",
+  "description": "Move closer to the target, entering their personal space.",
+  "scope": "environment",
   "template": "get close to {target}",
   "prerequisites": [
     {
       "logic": {
-        "condition_ref": "intimacy:actor-and-target-can-get-close"
+        "condition_ref": "intimacy:target-is-actors-closeness-partner"
       },
-      "failure_message": "You cannot get close with that target right now."
+      "failure_message": "You can only get close to the person you are currently close to."
     }
   ]
 }

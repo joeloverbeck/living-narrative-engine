@@ -1,12 +1,12 @@
 /**
- * @fileoverview Scope-DSL Engine
+ * @file Scope-DSL Engine
  * @description AST walker/query engine that resolves Scope-DSL expressions to sets of entity IDs
  */
 
 import ScopeDepthError from '../errors/scopeDepthError.js';
 
 /**
- * @typedef {Object} RuntimeContext
+ * @typedef {object} RuntimeContext
  * @property {import('../interfaces/IEntityManager.js').IEntityManager} entityManager
  * @property {import('../interfaces/ISpatialIndexManager.js').ISpatialIndexManager} spatialIndexManager
  * @property {import('../logic/jsonLogicEvaluationService.js').default} jsonLogicEval
@@ -14,14 +14,14 @@ import ScopeDepthError from '../errors/scopeDepthError.js';
  */
 
 /**
- * @typedef {Object} AST
+ * @typedef {object} AST
  * @property {string} type - Node type
- * @property {Object} [parent] - Parent node
+ * @property {object} [parent] - Parent node
  * @property {string} [field] - Field name for Step nodes
  * @property {boolean} [isArray] - Whether this is an array iteration
- * @property {Object} [logic] - JSON Logic object for Filter nodes
- * @property {Object} [left] - Left expression for Union nodes
- * @property {Object} [right] - Right expression for Union nodes
+ * @property {object} [logic] - JSON Logic object for Filter nodes
+ * @property {object} [left] - Left expression for Union nodes
+ * @property {object} [right] - Right expression for Union nodes
  * @property {string} [kind] - Source kind for Source nodes
  * @property {string} [param] - Parameter for Source nodes
  */

@@ -4,7 +4,7 @@
   "commandVerb": "kiss-cheek",
   "name": "Kiss Cheek",
   "description": "Lean in and softly kiss the target on the cheek.",
-  "target_domain": "environment",
+  "scope": "environment",
   "template": "kiss {target}'s cheek",
   "prerequisites": [
     {

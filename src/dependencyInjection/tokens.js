@@ -58,6 +58,8 @@ import { freeze } from '../utils';
  * @property {DiToken} EntityLoader - Token for loading entity definitions.
  * @property {DiToken} EntityInstanceLoader - Token for loading entity instances from world files or saves.
  * @property {DiToken} WorldLoader - Token for orchestrating world data loading.
+ * @property {DiToken} GoalLoader - Token for the goal loading service.
+ * @property {DiToken} ScopeLoader - Token for the scope loading service.
  * @property {DiToken} ModsLoader - Token for orchestrating world data loading.
  * @property {DiToken} GameConfigLoader - Token for loading the main game configuration file.
  * @property {DiToken} PromptTextLoader - Token for loading the core prompt text used by the AI system.
@@ -196,6 +198,7 @@ export const tokens = freeze({
   EntityInstanceLoader: 'EntityInstanceLoader',
   WorldLoader: 'WorldLoader',
   GoalLoader: 'GoalLoader',
+  ScopeLoader: 'ScopeLoader',
   ModsLoader: 'ModsLoader',
   GameConfigLoader: 'GameConfigLoader',
   PromptTextLoader: 'PromptTextLoader',

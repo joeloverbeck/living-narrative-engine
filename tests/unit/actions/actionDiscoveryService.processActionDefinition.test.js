@@ -64,17 +64,17 @@ describe('ActionDiscoveryService - processActionDefinition', () => {
     const failingDef = {
       id: 'fail',
       commandVerb: 'fail',
-      target_domain: 'none',
+      scope: 'none',
     };
-    const okDef = { id: 'ok', commandVerb: 'wait', target_domain: 'none' };
+    const okDef = { id: 'ok', commandVerb: 'wait', scope: 'none' };
     gameDataRepo.getAllActionDefinitions.mockReturnValue([failingDef, okDef]);
-    const original = ActionDiscoveryService.DOMAIN_HANDLERS.none;
-    ActionDiscoveryService.DOMAIN_HANDLERS.none = jest.fn(function (...args) {
-      const [def] = args;
-      if (def.id === 'fail') {
+
+    // Simulate a handler error by making isValid throw for the failing action
+    actionValidationService.isValid = jest.fn((actionDef) => {
+      if (actionDef.id === 'fail') {
         throw new Error('boom');
       }
-      return original.apply(this, args);
+      return true;
     });
 
     const actor = { id: 'actor' };
@@ -86,15 +86,13 @@ describe('ActionDiscoveryService - processActionDefinition', () => {
     expect(result.actions[0].id).toBe('ok');
     expect(result.errors).toHaveLength(1);
     expect(safeDispatchError).toHaveBeenCalledTimes(1);
-
-    ActionDiscoveryService.DOMAIN_HANDLERS.none = original;
   });
 
-  it('falls back to scoped entity discovery when domain handler is missing', async () => {
+  it('falls back to scoped entity discovery when scope handler is missing', async () => {
     const def = {
       id: 'attack',
       commandVerb: 'attack',
-      target_domain: 'monster',
+      scope: 'monster',
     };
     gameDataRepo.getAllActionDefinitions.mockReturnValue([def]);
     getEntityIdsForScopesFn.mockReturnValue(new Set(['monster1']));

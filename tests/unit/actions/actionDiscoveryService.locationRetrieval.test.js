@@ -14,21 +14,21 @@ describe('ActionDiscoveryService – directional discovery', () => {
     error: jest.fn(),
   };
 
-  /** Simple “go” + “wait” defs – enough for the test */
+  /** Simple "go" + "wait" defs – enough for the test */
   const gameDataRepository = {
     getAllActionDefinitions: () => [
       {
         id: 'core:go',
         name: 'Go',
         commandVerb: 'go',
-        target_domain: 'direction',
+        scope: 'directions',
         description: 'Move to another location',
       },
       {
         id: 'core:wait',
         name: 'Wait',
         commandVerb: 'wait',
-        target_domain: 'none',
+        scope: 'none',
       },
     ],
   };
