@@ -1,5 +1,5 @@
 import { IGamePersistenceService } from '../interfaces/IGamePersistenceService.js';
-import { setupService } from '../utils/serviceInitializerUtils.js';
+import { BaseService } from '../utils/serviceBase.js';
 
 // --- JSDoc Type Imports ---
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
@@ -32,7 +32,7 @@ import { wrapPersistenceOperation } from '../utils/persistenceErrorUtils.js';
  * @description Handles capturing, saving, and restoring game state.
  * @implements {IGamePersistenceService}
  */
-class GamePersistenceService extends IGamePersistenceService {
+class GamePersistenceService extends BaseService {
   #logger;
   #saveLoadService;
   #gameStateRestorer;
@@ -60,7 +60,7 @@ class GamePersistenceService extends IGamePersistenceService {
     gameStateRestorer,
   }) {
     super();
-    this.#logger = setupService('GamePersistenceService', logger, {
+    this.#logger = this._init('GamePersistenceService', logger, {
       saveLoadService: {
         value: saveLoadService,
         requiredMethods: ['saveManualGame', 'loadGameData'],
@@ -87,7 +87,7 @@ class GamePersistenceService extends IGamePersistenceService {
       },
     });
     this.#saveLoadService = saveLoadService;
-    // captureService dependencies validated via setupService
+    // captureService dependencies validated via BaseService
     this.#manualSaveCoordinator = manualSaveCoordinator;
     this.#gameStateRestorer = gameStateRestorer;
     this.#logger.debug('GamePersistenceService: Instance created.');
