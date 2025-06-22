@@ -29,6 +29,7 @@ import TurnCycle from './turnCycle.js';
 import { RealScheduler } from '../scheduling/index.js';
 import { safeDispatch } from '../utils/eventHelpers.js';
 import { logStart, logEnd, logError } from '../utils/logHelpers.js';
+import { safeDispatchError } from '../utils/safeDispatchErrorUtils.js';
 
 /**
  * @class TurnManager
@@ -230,9 +231,10 @@ class TurnManager extends ITurnManager {
       await this.#turnCycle.clear();
       this.#logger.debug('Turn order service current round cleared.');
     } catch (error) {
-      this.#logger.error(
-        'Error calling turnOrderService.clearCurrentRound() during stop:',
-        error
+      safeDispatchError(
+        this.#dispatcher,
+        'Error clearing turn order service during stop',
+        { error: error.message }
       );
     }
     logEnd(this.#logger, 'Turn Manager stopped.');
@@ -324,9 +326,10 @@ class TurnManager extends ITurnManager {
           return;
         } catch (roundError) {
           // Restore original error handling for test compatibility
-          this.#logger.error(
-            `CRITICAL Error during turn advancement logic (before handler initiation): ${roundError.message}`,
-            roundError
+          safeDispatchError(
+            this.#dispatcher,
+            'Critical error during turn advancement logic',
+            { error: roundError.message }
           );
           await this.#dispatchSystemError(
             'System Error: No active actors found to start a round. Stopping game.',
@@ -420,7 +423,11 @@ class TurnManager extends ITurnManager {
         );
         handler.startTurn(this.#currentActor).catch((startTurnError) => {
           const errorMsg = `Error during handler.startTurn() initiation for entity ${actorId} (${handlerName}): ${startTurnError.message}`;
-          this.#logger.error(errorMsg, startTurnError);
+          safeDispatchError(
+            this.#dispatcher,
+            `Error initiating turn for ${actorId}`,
+            { error: startTurnError.message, handlerName }
+          );
           this.#dispatchSystemError(
             `Error initiating turn for ${actorId}.`,
             startTurnError
@@ -456,7 +463,11 @@ class TurnManager extends ITurnManager {
       }
     } catch (error) {
       const errorMsg = `CRITICAL Error during turn advancement logic (before handler initiation): ${error.message}`;
-      this.#logger.error(errorMsg, error);
+      safeDispatchError(
+        this.#dispatcher,
+        'System Error during turn advancement',
+        { error: error.message }
+      );
       await this.#dispatchSystemError(
         'System Error during turn advancement. Stopping game.',
         error
@@ -489,9 +500,10 @@ class TurnManager extends ITurnManager {
             this.#handleTurnEndedEvent(event);
           } catch (handlerError) {
             // This catch handles synchronous errors thrown directly by #handleTurnEndedEvent
-            this.#logger.error(
-              `Error processing ${TURN_ENDED_ID} event (setTimeout): ${handlerError.message}`,
-              handlerError
+            safeDispatchError(
+              this.#dispatcher,
+              'Error processing turn ended event',
+              { error: handlerError.message }
             );
             // Note: #dispatchSystemError is async
             this.#dispatchSystemError(
@@ -519,9 +531,10 @@ class TurnManager extends ITurnManager {
         );
       }
     } catch (error) {
-      this.#logger.error(
-        `CRITICAL: Failed to subscribe to ${TURN_ENDED_ID}. Turn advancement will likely fail. Error: ${error.message}`,
-        error
+      safeDispatchError(
+        this.#dispatcher,
+        `Failed to subscribe to ${TURN_ENDED_ID}. Turn advancement will likely fail.`,
+        { error: error.message }
       );
       this.#dispatchSystemError(
         `Failed to subscribe to ${TURN_ENDED_ID}. Game cannot proceed reliably.`,
@@ -552,9 +565,10 @@ class TurnManager extends ITurnManager {
       try {
         this.#turnEndedUnsubscribe();
       } catch (error) {
-        this.#logger.error(
-          `Error calling unsubscribe function for ${TURN_ENDED_ID}: ${error.message}`,
-          error
+        safeDispatchError(
+          this.#dispatcher,
+          `Error calling unsubscribe function for ${TURN_ENDED_ID}`,
+          { error: error.message }
         );
       } finally {
         this.#turnEndedUnsubscribe = null;
@@ -623,9 +637,10 @@ class TurnManager extends ITurnManager {
         actorType,
       })
       .catch((dispatchError) =>
-        this.#logger.error(
-          `Failed to dispatch ${TURN_PROCESSING_ENDED} for ${endedActorId}: ${dispatchError.message}`,
-          dispatchError
+        safeDispatchError(
+          this.#dispatcher,
+          `Failed to dispatch ${TURN_PROCESSING_ENDED} for ${endedActorId}`,
+          { error: dispatchError.message }
         )
       );
 
@@ -664,9 +679,10 @@ class TurnManager extends ITurnManager {
     this.#setTimeout(() => {
       // advanceTurn is async, so if we want to catch errors from it, we should.
       this.advanceTurn().catch((advanceTurnError) => {
-        this.#logger.error(
-          `Error during scheduled advanceTurn after turn end for ${endedActorId}: ${advanceTurnError.message}`,
-          advanceTurnError
+        safeDispatchError(
+          this.#dispatcher,
+          'Error during scheduled turn advancement',
+          { error: advanceTurnError.message, entityId: endedActorId }
         );
         // This is a critical failure in turn advancement, dispatch system error and stop.
         this.#dispatchSystemError(

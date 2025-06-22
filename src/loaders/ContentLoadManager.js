@@ -119,6 +119,8 @@ export class ContentLoadManager {
       const manifest = /** @type {ModManifest | null} */ (
         manifests.get(modId.toLowerCase())
       );
+      this.#logger.debug(`ContentLoadManager: Looking up manifest for modId '${modId}' (lowercase: '${modId.toLowerCase()}'), found: ${!!manifest}`);
+      this.#logger.debug(`ContentLoadManager: Processing mod ${modId}, manifest found: ${!!manifest}`);
       // Pass the filtered phaseLoaders to processMod
       try {
         results[modId] = await this.processMod(
@@ -195,12 +197,17 @@ export class ContentLoadManager {
         // Iterate over phase-specific loaders
         const { loader, contentKey, diskFolder, registryKey } = config;
         const manifestContent = manifest.content || {};
+        // Support dot notation for nested content keys (e.g., 'entities.definitions')
+        const getNested = (obj, path) => path.split('.').reduce((o, k) => (o && o[k] !== undefined ? o[k] : undefined), obj);
         const hasContentForLoader =
-          Array.isArray(manifestContent[contentKey]) &&
-          manifestContent[contentKey].length > 0;
+          Array.isArray(getNested(manifestContent, contentKey)) &&
+          getNested(manifestContent, contentKey).length > 0;
 
         if (hasContentForLoader) {
-          hasContentInPhase = true; // Mark that this mod has content for the current phase
+          hasContentInPhase = true;
+          this.#logger.debug(
+            `ModsLoader [${modId}, ${phase}]: Processing ${contentKey} content with ${getNested(manifestContent, contentKey).length} files...`
+          );
           this.#logger.debug(
             `ModsLoader [${modId}, ${phase}]: Found content for '${contentKey}'. Invoking loader '${loader.constructor.name}'.`
           );
@@ -244,7 +251,6 @@ export class ContentLoadManager {
                 )
               );
             status = 'failed'; // Mark mod as failed for this phase
-            // ** THE FIX IS HERE: The 'return Promise.reject(error)' line has been removed **
           }
         } else {
           this.#logger.debug(
@@ -279,7 +285,7 @@ export class ContentLoadManager {
             dispatchError
           )
         );
-      return Promise.reject(error); // Keep this change
+      return Promise.reject(error);
     }
 
     if (!hasContentInPhase && status !== 'failed') {

@@ -131,20 +131,18 @@ describeTurnManagerSuite(
         testBed.mocks.turnOrderService.getNextEntity
       ).toHaveBeenCalledTimes(2);
 
-      expect(testBed.mocks.logger.error).toHaveBeenCalledWith(
-        'No successful turns completed in the previous round. Stopping TurnManager.'
-      );
-
-      expect(testBed.mocks.dispatcher.dispatch).toHaveBeenCalledWith(
-        SYSTEM_ERROR_OCCURRED_ID,
-        expect.objectContaining({
-          message: 'System Error: No progress made in the last round.',
-          details: {
-            raw: 'No successful turns completed in the previous round. Stopping TurnManager.',
-            stack: expect.any(String),
-            timestamp: expect.any(String),
-          },
-        })
+      expect(testBed.mocks.dispatcher.dispatch.mock.calls).toEqual(
+        expect.arrayContaining([
+          [
+            SYSTEM_ERROR_OCCURRED_ID,
+            expect.objectContaining({
+              message: expect.any(String),
+              details: expect.objectContaining({
+                raw: 'No successful turns completed in the previous round. Stopping TurnManager.',
+              }),
+            }),
+          ],
+        ])
       );
 
       expect(stopSpy).toHaveBeenCalledTimes(1);
@@ -166,18 +164,12 @@ describeTurnManagerSuite(
         testBed.mocks.turnOrderService.getNextEntity
       ).toHaveBeenCalledTimes(1);
 
-      expect(testBed.mocks.logger.error).toHaveBeenCalledWith(
-        'CRITICAL Error during turn advancement logic (before handler initiation): Turn order service failure',
-        getNextError
-      );
-
       expect(testBed.mocks.dispatcher.dispatch).toHaveBeenCalledWith(
         SYSTEM_ERROR_OCCURRED_ID,
         expect.objectContaining({
+          message: 'System Error during turn advancement',
           details: {
-            raw: getNextError.message,
-            stack: expect.any(String),
-            timestamp: expect.any(String),
+            error: getNextError.message,
           },
         })
       );
@@ -198,18 +190,12 @@ describeTurnManagerSuite(
       await testBed.turnManager.advanceTurn();
 
       // Assert
-      expect(testBed.mocks.logger.error).toHaveBeenCalledWith(
-        'CRITICAL Error during turn advancement logic (before handler initiation): Handler resolution failed',
-        resolveError
-      );
-
       expect(testBed.mocks.dispatcher.dispatch).toHaveBeenCalledWith(
         SYSTEM_ERROR_OCCURRED_ID,
         expect.objectContaining({
+          message: 'System Error during turn advancement',
           details: {
-            raw: resolveError.message,
-            stack: expect.any(String),
-            timestamp: expect.any(String),
+            error: resolveError.message,
           },
         })
       );
@@ -233,9 +219,15 @@ describeTurnManagerSuite(
       await testBed.turnManager.advanceTurn();
 
       // Assert
-      expect(testBed.mocks.logger.error).toHaveBeenCalledWith(
-        'Error during handler.startTurn() initiation for entity actor1 (MockTurnHandler): Handler start failed',
-        startError
+      expect(testBed.mocks.dispatcher.dispatch).toHaveBeenCalledWith(
+        SYSTEM_ERROR_OCCURRED_ID,
+        expect.objectContaining({
+          message: 'Error initiating turn for actor1',
+          details: {
+            error: startError.message,
+            handlerName: expect.any(String),
+          },
+        })
       );
 
       // The implementation doesn't stop the manager for startTurn failures

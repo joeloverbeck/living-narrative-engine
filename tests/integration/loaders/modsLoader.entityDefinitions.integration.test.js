@@ -21,6 +21,11 @@ import {
   createMockDataFetcherForIntegration,
   createMockValidatedEventDispatcherForIntegration,
 } from '../../common/mockFactories/index.js';
+import ManifestPhase from '../../../src/loaders/phases/ManifestPhase.js';
+import modManifestSchema from '../../../data/schemas/mod-manifest.schema.json';
+import commonSchema from '../../../data/schemas/common.schema.json';
+import entityDefinitionSchema from '../../../data/schemas/entity-definition.schema.json';
+import entityInstanceSchema from '../../../data/schemas/entity-instance.schema.json';
 
 // Mock phases for non-essential loading phases
 class MockSchemaPhase extends LoaderPhase {
@@ -44,30 +49,6 @@ class MockGameConfigPhase extends LoaderPhase {
   async execute(context) {
     // Mock game config phase that does nothing
     return context;
-  }
-}
-
-class MockManifestPhase extends LoaderPhase {
-  constructor(logger) {
-    super();
-    this.logger = logger;
-  }
-  name = 'MockManifestPhase';
-  async execute(context) {
-    // Mock manifest phase that sets up the mod context
-    const MOD_ID = 'isekai';
-    const MODS_BASE_PATH = './data/mods';
-    const manifestPath = path.join(MODS_BASE_PATH, MOD_ID, 'mod-manifest.json');
-    const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
-    return {
-      ...context,
-      finalModOrder: ['isekai'],
-      totals: { 
-        entityDefinitions: manifest.content.entityDefinitions?.length || 0, 
-        entityInstances: manifest.content.entityInstances?.length || 0 
-      },
-      manifests: new Map([[MOD_ID, manifest]]),
-    };
   }
 }
 
@@ -118,6 +99,13 @@ describe('Integration: Entity Definitions and Instances Loader', () => {
       tokens.IDataFetcher,
       createMockDataFetcherForIntegration()
     );
+    // Register and load AjvSchemaValidator with schemas
+    const schemaValidator = new AjvSchemaValidator(logger);
+    await schemaValidator.addSchema(commonSchema, 'http://example.com/schemas/common.schema.json');
+    await schemaValidator.addSchema(modManifestSchema, 'http://example.com/schemas/mod-manifest.schema.json');
+    await schemaValidator.addSchema(entityDefinitionSchema, 'http://example.com/schemas/entity-definition.schema.json');
+    await schemaValidator.addSchema(entityInstanceSchema, 'http://example.com/schemas/entity-instance.schema.json');
+    container.register(tokens.ISchemaValidator, schemaValidator);
     // Resolve registry from the container
     registry = container.resolve(tokens.IDataRegistry);
 
@@ -125,7 +113,7 @@ describe('Integration: Entity Definitions and Instances Loader', () => {
     const phases = [
       new MockSchemaPhase(logger),
       new MockGameConfigPhase(logger),
-      new MockManifestPhase(logger),
+      container.resolve(tokens.ManifestPhase),
       container.resolve(tokens.ContentPhase),
       new MockWorldPhase(logger),
       new MockSummaryPhase(logger),
@@ -152,7 +140,7 @@ describe('Integration: Entity Definitions and Instances Loader', () => {
 
     // Verify the returned LoadReport
     expect(result).toEqual({
-      finalModOrder: ['isekai'],
+      finalModOrder: ['core', 'isekai'],
       totals: expect.any(Object),
       incompatibilities: 0,
     });
@@ -178,7 +166,7 @@ describe('Integration: Entity Definitions and Instances Loader', () => {
         'utf8'
       )
     );
-    const files = manifest.content.entityDefinitions || [];
+    const files = manifest.content.entities?.definitions || [];
     for (const file of files) {
       // Read the entity definition file to get the correct id
       const filePath = path.join(DEFINITIONS_DIR, file);
@@ -242,7 +230,7 @@ describe('Integration: Entity Definitions and Instances Loader', () => {
         'utf8'
       )
     );
-    const manifestFiles = new Set(manifest.content.entityDefinitions || []);
+    const manifestFiles = new Set(manifest.content.entities?.definitions || []);
 
     if (fs.existsSync(DEFINITIONS_DIR)) {
       const allFiles = fs

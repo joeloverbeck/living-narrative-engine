@@ -7,7 +7,7 @@ import {
   flushPromisesAndTimers,
 } from '../../common/turns/turnManagerTestBed.js';
 
-import { TURN_ENDED_ID } from '../../../src/constants/eventIds.js';
+import { TURN_ENDED_ID, SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/eventIds.js';
 import { PLAYER_COMPONENT_ID } from '../../../src/constants/componentIds.js';
 import { createMockEntity } from '../../common/mockFactories';
 import {
@@ -132,9 +132,14 @@ describeTurnManagerSuite(
 
       await testBed.turnManager.advanceTurn();
 
-      expect(testBed.mocks.logger.error).toHaveBeenCalledWith(
-        'CRITICAL Error during turn advancement logic (before handler initiation): Cannot start a new round: No active entities with an Actor component found.',
-        expect.any(Error)
+      expect(testBed.mocks.dispatcher.dispatch).toHaveBeenCalledWith(
+        SYSTEM_ERROR_OCCURRED_ID,
+        expect.objectContaining({
+          message: 'Critical error during turn advancement logic',
+          details: {
+            error: expect.stringContaining('Cannot start a new round: No active entities with an Actor component found.'),
+          },
+        })
       );
       expect(stopSpy).toHaveBeenCalled();
     });
@@ -147,9 +152,14 @@ describeTurnManagerSuite(
 
       await testBed.turnManager.advanceTurn();
 
-      expect(testBed.mocks.logger.error).toHaveBeenCalledWith(
-        'CRITICAL Error during turn advancement logic (before handler initiation): Handler resolution failed',
-        resolveError
+      expect(testBed.mocks.dispatcher.dispatch).toHaveBeenCalledWith(
+        SYSTEM_ERROR_OCCURRED_ID,
+        expect.objectContaining({
+          message: 'System Error during turn advancement',
+          details: {
+            error: resolveError.message,
+          },
+        })
       );
       expect(stopSpy).toHaveBeenCalled();
     });
@@ -164,11 +174,15 @@ describeTurnManagerSuite(
 
       await testBed.turnManager.advanceTurn();
 
-      expect(testBed.mocks.logger.error).toHaveBeenCalledWith(
-        expect.stringContaining(
-          'Error during handler.startTurn() initiation for entity initial-actor-for-start (MockTurnHandler): Handler start failed'
-        ),
-        startError
+      expect(testBed.mocks.dispatcher.dispatch).toHaveBeenCalledWith(
+        SYSTEM_ERROR_OCCURRED_ID,
+        expect.objectContaining({
+          message: 'Error initiating turn for initial-actor-for-start',
+          details: {
+            error: startError.message,
+            handlerName: expect.any(String),
+          },
+        })
       );
       expect(stopSpy).not.toHaveBeenCalled();
     });

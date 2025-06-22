@@ -65,6 +65,7 @@ export class ModManifestProcessor {
    * @throws {ModDependencyError|Error} Propagates validation errors.
    */
   async processManifests(requestedIds, worldName) {
+    // First, load the requested mod manifests
     const loadedManifestsRaw =
       await this.#modManifestLoader.loadRequestedManifests(
         requestedIds,
@@ -103,6 +104,7 @@ export class ModManifestProcessor {
       throw e;
     }
 
+    // Resolve the final mod order (this may include dependencies not yet loaded)
     const finalModOrder = this.#modLoadOrderResolver.resolve(
       requestedIds,
       manifestsForValidation
@@ -110,6 +112,34 @@ export class ModManifestProcessor {
     this.#logger.debug(
       `ModsLoader: Final mod order resolved: [${finalModOrder.join(', ')}]`
     );
+
+    // Load any missing dependency manifests
+    const missingMods = finalModOrder.filter(
+      modId => !loadedManifestsMap.has(modId.toLowerCase())
+    );
+    
+    if (missingMods.length > 0) {
+      this.#logger.debug(
+        `ModsLoader: Loading ${missingMods.length} missing dependency manifests: [${missingMods.join(', ')}]`
+      );
+      
+      const missingManifestsRaw = await this.#modManifestLoader.loadRequestedManifests(
+        missingMods,
+        worldName
+      );
+      
+      for (const [modId, manifestObj] of missingManifestsRaw.entries()) {
+        const lowerCaseModId = modId.toLowerCase();
+        this.#registry.store('mod_manifests', lowerCaseModId, manifestObj);
+        manifestsForValidation.set(lowerCaseModId, manifestObj);
+        loadedManifestsMap.set(lowerCaseModId, manifestObj);
+      }
+      
+      this.#logger.debug(
+        `ModsLoader: Loaded ${missingManifestsRaw.size} additional dependency manifests.`
+      );
+    }
+
     this.#registry.store('meta', 'final_mod_order', finalModOrder);
 
     return { loadedManifestsMap, finalModOrder, incompatibilityCount };

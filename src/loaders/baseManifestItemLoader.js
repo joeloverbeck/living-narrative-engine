@@ -276,7 +276,9 @@ export class BaseManifestItemLoader extends AbstractLoader {
    * @returns {string[]} An array of valid, non-empty filenames. Returns empty array if key is missing, not an array, or contains no valid filenames.
    */
   _extractValidFilenames(manifest, contentKey, modId) {
-    const filenames = manifest?.content?.[contentKey];
+    // Support dot notation for nested content keys (e.g., 'entities.definitions')
+    const getNested = (obj, path) => path.split('.').reduce((o, k) => (o && o[k] !== undefined ? o[k] : undefined), obj);
+    const filenames = getNested(manifest?.content, contentKey);
     if (filenames === null || filenames === undefined) {
       this._logger.debug(
         `Mod '${modId}': Content key '${contentKey}' not found or is null/undefined in manifest. Skipping.`

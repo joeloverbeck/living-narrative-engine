@@ -70,16 +70,16 @@ export function createContentLoadersConfig(loaderMap) {
       registryKey: 'goals',
     },
     entityDefinitions: {
-      contentKey: 'entityDefinitions',
+      contentKey: 'entities.definitions',
       diskFolder: 'entities/definitions',
       phase: 'definitions',
       registryKey: 'entityDefinitions',
     },
     entityInstances: {
-      contentKey: 'entityInstances',
+      contentKey: 'entities.instances',
       diskFolder: 'entities/instances',
       phase: 'instances',
-      registryKey: 'entityInstances',
+      registryKey: 'entity_instances',
     },
   };
 

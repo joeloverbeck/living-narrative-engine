@@ -1,6 +1,7 @@
 // src/utils/errorUtils.js
 
 import { getModuleLogger } from './loggerUtils.js';
+import { safeDispatchError } from './safeDispatchErrorUtils.js';
 
 /**
  * Sets an error message in a DOM element and makes it visible.
@@ -87,14 +88,23 @@ export function disableInput(el, placeholder, dom) {
  * @param {string} phase - The bootstrap phase during which the error occurred.
  * @param {string} consoleMessage - Message to log to the console.
  * @param {Error} [errorObject] - Optional error object for stack trace logging.
+ * @param {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} [dispatcher] - Optional dispatcher for error events.
  * @returns {void}
  * @private
  */
-function logStartupError(log, phase, consoleMessage, errorObject) {
-  log.error(
-    `[Bootstrapper Error - Phase: ${phase}] ${consoleMessage}`,
-    errorObject || ''
-  );
+function logStartupError(log, phase, consoleMessage, errorObject, dispatcher) {
+  if (dispatcher) {
+    safeDispatchError(
+      dispatcher,
+      `[Bootstrapper Error - Phase: ${phase}] ${consoleMessage}`,
+      { error: errorObject?.message || errorObject || '' }
+    );
+  } else {
+    log.error(
+      `[Bootstrapper Error - Phase: ${phase}] ${consoleMessage}`,
+      errorObject || ''
+    );
+  }
 }
 
 /**
@@ -107,6 +117,7 @@ function logStartupError(log, phase, consoleMessage, errorObject) {
  * @param {function(string): void} params.showAlert - Alert function to display messages.
  * @param {import('../interfaces/coreServices.js').ILogger} params.log - Logger instance.
  * @param {string} params.userMessage - Message to display to the user.
+ * @param {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} [params.dispatcher] - Optional dispatcher for error events.
  * @returns {{displayed: boolean}} Object indicating if the message was shown in the DOM.
  * @private
  */
@@ -117,15 +128,24 @@ function displayErrorMessage({
   showAlert,
   log,
   userMessage,
+  dispatcher,
 }) {
   let displayedInErrorDiv = false;
   try {
     displayedInErrorDiv = showErrorInElement(errorDiv, userMessage, dom);
   } catch (e) {
-    log.error(
-      'displayFatalStartupError: Failed to set textContent on errorDiv.',
-      e
-    );
+    if (dispatcher) {
+      safeDispatchError(
+        dispatcher,
+        'displayFatalStartupError: Failed to set textContent on errorDiv.',
+        { error: e?.message || e }
+      );
+    } else {
+      log.error(
+        'displayFatalStartupError: Failed to set textContent on errorDiv.',
+        e
+      );
+    }
   }
 
   if (!displayedInErrorDiv) {
@@ -138,10 +158,18 @@ function displayErrorMessage({
         displayedInErrorDiv = true;
       }
     } catch (e) {
-      log.error(
-        'displayFatalStartupError: Failed to create or append temporary error element.',
-        e
-      );
+      if (dispatcher) {
+        safeDispatchError(
+          dispatcher,
+          'displayFatalStartupError: Failed to create or append temporary error element.',
+          { error: e?.message || e }
+        );
+      } else {
+        log.error(
+          'displayFatalStartupError: Failed to create or append temporary error element.',
+          e
+        );
+      }
     }
   }
 
@@ -204,13 +232,15 @@ function updateElements({
  * @param {FatalErrorDetails} errorDetails - Details about the error.
  * @param {import('../interfaces/coreServices.js').ILogger} [logger] - Optional logger instance.
  * @param {import('../interfaces/DomAdapter.js').DomAdapter} domAdapter - DOM adapter for custom element creation and DOM updates.
+ * @param {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} [dispatcher] - Optional dispatcher for error events.
  * @returns {{displayed: boolean}} Whether the error was displayed in the DOM.
  */
 export function displayFatalStartupError(
   uiElements,
   errorDetails,
   logger,
-  domAdapter
+  domAdapter,
+  dispatcher
 ) {
   const log = getModuleLogger('errorUtils', logger);
   const { outputDiv, errorDiv, titleElement, inputElement } = uiElements;
@@ -225,7 +255,7 @@ export function displayFatalStartupError(
     phase = 'Unknown Phase',
   } = errorDetails;
 
-  logStartupError(log, phase, consoleMessage, errorObject);
+  logStartupError(log, phase, consoleMessage, errorObject, dispatcher);
 
   const { displayed } = displayErrorMessage({
     errorDiv,
@@ -234,6 +264,7 @@ export function displayFatalStartupError(
     showAlert,
     log,
     userMessage,
+    dispatcher,
   });
 
   updateElements({

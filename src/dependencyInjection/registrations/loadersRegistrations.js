@@ -229,7 +229,7 @@ export function registerLoaders(container) {
           },
           {
             loader: c.resolve(tokens.EntityLoader),
-            contentKey: 'entityDefinitions',
+            contentKey: 'entities.definitions',
             diskFolder: 'entities/definitions',
             registryKey: 'entity_definitions',
             phase: 'definitions',
@@ -258,7 +258,7 @@ export function registerLoaders(container) {
           // Instance phase loaders
           {
             loader: c.resolve(tokens.EntityInstanceLoader),
-            contentKey: 'entityInstances',
+            contentKey: 'entities.instances',
             diskFolder: 'entities/instances',
             registryKey: 'entity_instances',
             phase: 'instances',

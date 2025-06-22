@@ -16,7 +16,7 @@ describe('displayFatalStartupError', () => {
     jest.restoreAllMocks();
   });
 
-  it('displays message and updates provided elements', () => {
+  it('displays message and updates provided elements, and dispatches error if dispatcher is provided', () => {
     setDom(`
       <div id="outputDiv"></div>
       <div id="errorDiv"></div>
@@ -48,6 +48,7 @@ describe('displayFatalStartupError', () => {
       warn: jest.fn(),
       debug: jest.fn(),
     };
+    const dispatcher = { dispatch: jest.fn() };
 
     const result = displayFatalStartupError(
       uiElements,
@@ -60,14 +61,18 @@ describe('displayFatalStartupError', () => {
         phase: 'Test',
       },
       logger,
-      domAdapter
+      domAdapter,
+      dispatcher
     );
 
     expect(result).toEqual({ displayed: true });
 
-    expect(logger.error).toHaveBeenCalledWith(
-      '[errorUtils] [Bootstrapper Error - Phase: Test] Bad things',
-      expect.any(Error)
+    expect(dispatcher.dispatch).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({
+        message: expect.stringContaining('Bad things'),
+        details: expect.any(Object),
+      })
     );
     const errorDiv = uiElements.errorDiv;
     expect(errorDiv.textContent).toBe('Oops');
@@ -101,6 +106,7 @@ describe('displayFatalStartupError', () => {
       warn: jest.fn(),
       debug: jest.fn(),
     };
+    const dispatcher = { dispatch: jest.fn() };
 
     const result = displayFatalStartupError(
       uiElements,
@@ -109,7 +115,8 @@ describe('displayFatalStartupError', () => {
         consoleMessage: 'Bad',
       },
       logger,
-      domAdapter
+      domAdapter,
+      dispatcher
     );
 
     const tempEl = outputDiv.nextElementSibling;
@@ -143,6 +150,7 @@ describe('displayFatalStartupError', () => {
       warn: jest.fn(),
       debug: jest.fn(),
     };
+    const dispatcher = { dispatch: jest.fn() };
 
     const result = displayFatalStartupError(
       {},
@@ -151,7 +159,8 @@ describe('displayFatalStartupError', () => {
         consoleMessage: 'Bad',
       },
       logger,
-      domAdapter
+      domAdapter,
+      dispatcher
     );
 
     expect(alertSpy).toHaveBeenCalledWith('Oops');
