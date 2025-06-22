@@ -57,33 +57,7 @@ export class ActionValidationContextBuilder {
    */
   buildContext(actionDefinition, actor, targetContext) {
     // --- 1. Initial Argument Validation (with added logging to match tests) ---
-    if (!actionDefinition?.id) {
-      this.#logger.error(
-        'ActionValidationContextBuilder: Invalid actionDefinition provided (missing id).',
-        { actionDefinition }
-      );
-      throw new Error(
-        'ActionValidationContextBuilder requires a valid ActionDefinition.'
-      );
-    }
-    if (!actor?.id) {
-      this.#logger.error(
-        'ActionValidationContextBuilder: Invalid actor entity provided (missing id).',
-        { actor }
-      );
-      throw new Error(
-        'ActionValidationContextBuilder requires a valid actor Entity.'
-      );
-    }
-    if (!targetContext?.type) {
-      this.#logger.error(
-        'ActionValidationContextBuilder: Invalid targetContext provided (missing type).',
-        { targetContext }
-      );
-      throw new Error(
-        'ActionValidationContextBuilder requires a valid ActionTargetContext.'
-      );
-    }
+    this.#assertValidInputs(actionDefinition, actor, targetContext);
 
     this.#logger.debug(
       `ActionValidationContextBuilder: Building context for action '${actionDefinition.id}', actor '${actor.id}', target type '${targetContext.type}'.`
@@ -126,6 +100,47 @@ export class ActionValidationContextBuilder {
     };
 
     return finalContext;
+  }
+
+  /**
+   * Validates the required inputs for {@link buildContext}.
+   *
+   * @param {ActionDefinition} actionDefinition - The attempted action's definition.
+   * @param {Entity} actor - The entity performing the action.
+   * @param {ActionTargetContext} targetContext - Information about the action's target.
+   * @throws {Error} If any parameter is missing required data.
+   * @private
+   */
+  #assertValidInputs(actionDefinition, actor, targetContext) {
+    if (!actionDefinition?.id) {
+      this.#logger.error(
+        'ActionValidationContextBuilder: Invalid actionDefinition provided (missing id).',
+        { actionDefinition }
+      );
+      throw new Error(
+        'ActionValidationContextBuilder requires a valid ActionDefinition.'
+      );
+    }
+
+    if (!actor?.id) {
+      this.#logger.error(
+        'ActionValidationContextBuilder: Invalid actor entity provided (missing id).',
+        { actor }
+      );
+      throw new Error(
+        'ActionValidationContextBuilder requires a valid actor Entity.'
+      );
+    }
+
+    if (!targetContext?.type) {
+      this.#logger.error(
+        'ActionValidationContextBuilder: Invalid targetContext provided (missing type).',
+        { targetContext }
+      );
+      throw new Error(
+        'ActionValidationContextBuilder requires a valid ActionTargetContext.'
+      );
+    }
   }
 
   /**

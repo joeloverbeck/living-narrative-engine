@@ -402,6 +402,17 @@ describe('ActionValidationContextBuilder', () => {
           { targetContext: invalidTargetContext }
         );
       });
+
+      it('should prioritize actionDefinition validation when all inputs are missing', () => {
+        const action = () => builder.buildContext(null, null, null);
+        expect(action).toThrow(
+          'ActionValidationContextBuilder requires a valid ActionDefinition.'
+        );
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          expect.stringContaining('Invalid actionDefinition provided'),
+          { actionDefinition: null }
+        );
+      });
     });
   });
 });
