@@ -378,6 +378,148 @@ export class SaveGameUI extends SlotModalBase {
   }
 
   /**
+   * Validates the necessary conditions before saving.
+   *
+   * @private
+   * @returns {string | null} Error message if validation fails.
+   */
+  #validateSavePreconditions() {
+    if (
+      !this.selectedSlotData ||
+      !this.elements.saveNameInputEl ||
+      !this.gameEngine
+    ) {
+      this.logger.error(
+        `${this._logPrefix} Cannot save: missing selected slot, name input, or game engine.`
+      );
+      return 'Cannot save: Internal error. Please select a slot and enter a name.';
+    }
+
+    const currentSaveName = this.elements.saveNameInputEl.value.trim();
+    if (!currentSaveName) {
+      if (this.elements.saveNameInputEl) this.elements.saveNameInputEl.focus();
+      return 'Please enter a name for your save.';
+    }
+
+    if (this.selectedSlotData.isCorrupted) {
+      return 'Cannot save to a corrupted slot. Please choose another slot.';
+    }
+
+    return null;
+  }
+
+  /**
+   * Confirms overwriting an existing save slot.
+   *
+   * @param {string} currentSaveName - Proposed save name.
+   * @private
+   * @returns {boolean} `true` if the user confirms or no overwrite needed.
+   */
+  #confirmOverwrite(currentSaveName) {
+    if (!this.selectedSlotData || this.selectedSlotData.isEmpty) {
+      return true;
+    }
+
+    const originalSaveName =
+      this.selectedSlotData.saveName ||
+      `Slot ${this.selectedSlotData.slotId + 1}`;
+
+    if (
+      !window.confirm(
+        `Are you sure you want to overwrite the existing save "${originalSaveName}" with "${currentSaveName}"?`
+      )
+    ) {
+      this.logger.debug(
+        `${this._logPrefix} Save overwrite cancelled by user for slot ${this.selectedSlotData.slotId}.`
+      );
+      return false;
+    }
+
+    return true;
+  }
+
+  /**
+   * Executes the save operation via the game engine and refreshes slots.
+   *
+   * @param {string} currentSaveName - Name to use when saving.
+   * @private
+   * @async
+   * @returns {Promise<{result: any, returnedIdentifier: string | null}>}
+   */
+  async #executeSave(currentSaveName) {
+    this.logger.debug(
+      `${this._logPrefix} Calling gameEngine.triggerManualSave with name: "${currentSaveName}". Selected slot conceptual ID: ${this.selectedSlotData.slotId}, actual identifier if exists: ${this.selectedSlotData.identifier}`
+    );
+
+    const result = await this.gameEngine.triggerManualSave(
+      currentSaveName,
+      this.selectedSlotData.identifier
+    );
+
+    if (result && result.success) {
+      this.logger.debug(
+        `${this._logPrefix} Game saved successfully: ${result.message || `Saved as "${currentSaveName}"`}`
+      );
+      await this._populateSaveSlotsList();
+    }
+
+    const returnedIdentifier = result ? result.filePath : null;
+    if (result && result.success && !returnedIdentifier) {
+      this.logger.error(
+        `${this._logPrefix} Save operation succeeded but did not return a valid filePath/identifier. Result object:`,
+        result
+      );
+    }
+
+    return { result, returnedIdentifier };
+  }
+
+  /**
+   * Re-selects the slot corresponding to the newly saved game.
+   *
+   * @param {string | null} returnedIdentifier - Identifier returned from the save operation.
+   * @param {string} currentSaveName - Name used for the save.
+   * @private
+   */
+  #reselectSavedSlot(returnedIdentifier, currentSaveName) {
+    const newlySavedSlotData = this.currentSlotsDisplayData.find(
+      (s) =>
+        s.saveName === currentSaveName &&
+        s.identifier === returnedIdentifier &&
+        !s.isEmpty &&
+        !s.isCorrupted
+    );
+
+    if (newlySavedSlotData && this.elements.listContainerElement) {
+      const slotElement = /** @type {HTMLElement | null} */ (
+        this.elements.listContainerElement.querySelector(
+          `.save-slot[data-slot-id="${newlySavedSlotData.slotId}"]`
+        )
+      );
+      if (slotElement) {
+        this._onItemSelected(slotElement, newlySavedSlotData);
+      } else {
+        this.logger.warn(
+          `${this._logPrefix} Could not find DOM element for newly saved slot ID ${newlySavedSlotData.slotId} to re-select.`
+        );
+      }
+    } else {
+      this.logger.warn(
+        `${this._logPrefix} Could not find metadata for newly saved slot named "${currentSaveName}" to re-select. Searched with ID: ${String(returnedIdentifier)}.`
+      );
+      this.currentSlotsDisplayData.forEach((slot) => {
+        this.logger.debug(
+          `Available slot for re-select check - Name: ${slot.saveName}, ID: ${slot.identifier}`
+        );
+      });
+      this.selectedSlotData = null;
+      if (this.elements.saveNameInputEl)
+        this.elements.saveNameInputEl.value = '';
+      this._handleSaveNameInput();
+    }
+  }
+
+  /**
    * @param selectedSlotElement
    * @param slotData
    * @private
@@ -425,136 +567,43 @@ export class SaveGameUI extends SlotModalBase {
    * @async
    */
   async _handleSave() {
-    if (
-      !this.selectedSlotData ||
-      !this.elements.saveNameInputEl ||
-      !this.gameEngine
-    ) {
-      this.logger.error(
-        `${this._logPrefix} Cannot save: missing selected slot, name input, or game engine.`
-      );
-      this._displayStatusMessage(
-        'Cannot save: Internal error. Please select a slot and enter a name.',
-        'error'
-      );
+    const validationError = this.#validateSavePreconditions();
+    if (validationError) {
+      this._displayStatusMessage(validationError, 'error');
       return;
     }
 
     const currentSaveName = this.elements.saveNameInputEl.value.trim();
-    if (!currentSaveName) {
-      this._displayStatusMessage('Please enter a name for your save.', 'error');
-      this.elements.saveNameInputEl.focus();
-      return;
-    }
 
-    if (this.selectedSlotData.isCorrupted) {
-      this._displayStatusMessage(
-        'Cannot save to a corrupted slot. Please choose another slot.',
-        'error'
-      );
+    if (!this.#confirmOverwrite(currentSaveName)) {
       return;
-    }
-
-    if (!this.selectedSlotData.isEmpty) {
-      const originalSaveName =
-        this.selectedSlotData.saveName ||
-        `Slot ${this.selectedSlotData.slotId + 1}`;
-      if (
-        !window.confirm(
-          `Are you sure you want to overwrite the existing save "${originalSaveName}" with "${currentSaveName}"?`
-        )
-      ) {
-        this.logger.debug(
-          `${this._logPrefix} Save overwrite cancelled by user for slot ${this.selectedSlotData.slotId}.`
-        );
-        return;
-      }
     }
 
     this._setOperationInProgress(true);
     this._displayStatusMessage(
       `Saving game as "${currentSaveName}"...`,
       'info'
-    ); // Initial "Saving..." message
+    );
 
-    let saveSucceeded = false; // Flag to track save status
+    let saveSucceeded = false;
     let finalMessage = '';
     let finalMessageType = 'info';
 
     try {
-      this.logger.debug(
-        `${this._logPrefix} Calling gameEngine.triggerManualSave with name: "${currentSaveName}". Selected slot conceptual ID: ${this.selectedSlotData.slotId}, actual identifier if exists: ${this.selectedSlotData.identifier}`
-      );
-      const result = await this.gameEngine.triggerManualSave(
-        currentSaveName,
-        this.selectedSlotData.identifier
-      );
+      const { result, returnedIdentifier } =
+        await this.#executeSave(currentSaveName);
 
       if (result && result.success) {
-        // Don't display final success message yet. It will be cleared by _populateSaveSlotsList.
-        // Set flags to display it after list population.
         saveSucceeded = true;
         finalMessage = `Game saved as "${currentSaveName}".`;
         finalMessageType = 'success';
-        this.logger.debug(
-          `${this._logPrefix} Game saved successfully: ${result.message || `Saved as "${currentSaveName}"`}`
-        );
-
-        await this._populateSaveSlotsList(); // Refresh slots
-
-        const returnedIdentifier = result.filePath;
-        if (!returnedIdentifier) {
-          this.logger.error(
-            `${this._logPrefix} Save operation succeeded but did not return a valid filePath/identifier. Result object:`,
-            result
-          );
-          // If this happens, re-selection will fail, but the save itself was "successful" at engine level.
-          // Keep finalMessage as the game saved message, but re-selection might fail.
-        }
-
-        const newlySavedSlotData = this.currentSlotsDisplayData.find(
-          (s) =>
-            s.saveName === currentSaveName &&
-            s.identifier === returnedIdentifier &&
-            !s.isEmpty &&
-            !s.isCorrupted
-        );
-
-        if (newlySavedSlotData && this.elements.listContainerElement) {
-          const slotElement = /** @type {HTMLElement | null} */ (
-            this.elements.listContainerElement.querySelector(
-              `.save-slot[data-slot-id="${newlySavedSlotData.slotId}"]`
-            )
-          );
-          if (slotElement) {
-            this._onItemSelected(slotElement, newlySavedSlotData);
-          } else {
-            this.logger.warn(
-              `${this._logPrefix} Could not find DOM element for newly saved slot ID ${newlySavedSlotData.slotId} to re-select.`
-            );
-          }
-        } else {
-          this.logger.warn(
-            `${this._logPrefix} Could not find metadata for newly saved slot named "${currentSaveName}" to re-select. Searched with ID: ${String(returnedIdentifier)}.`
-          );
-          this.currentSlotsDisplayData.forEach((slot) => {
-            this.logger.debug(
-              `Available slot for re-select check - Name: ${slot.saveName}, ID: ${slot.identifier}`
-            );
-          });
-          this.selectedSlotData = null;
-          if (this.elements.saveNameInputEl)
-            this.elements.saveNameInputEl.value = '';
-          this._handleSaveNameInput();
-        }
+        this.#reselectSavedSlot(returnedIdentifier, currentSaveName);
       } else {
-        // Save operation failed (result.success is false)
         finalMessage = `Save failed: ${result?.error || 'An unknown error occurred while saving.'}`;
         finalMessageType = 'error';
         this.logger.error(`${this._logPrefix} Save failed: ${finalMessage}`);
       }
     } catch (error) {
-      // Exception during the save process
       const exceptionMsg =
         error instanceof Error ? error.message : String(error);
       finalMessage = `Save failed: ${exceptionMsg || 'An unexpected error occurred.'}`;
@@ -565,20 +614,14 @@ export class SaveGameUI extends SlotModalBase {
       );
     } finally {
       this._setOperationInProgress(false);
-      // Now display the final status message, after _populateSaveSlotsList might have cleared it
       if (finalMessage) {
         this._displayStatusMessage(finalMessage, finalMessageType);
       } else if (!saveSucceeded) {
-        // If finalMessage is empty and save didn't succeed (e.g. unexpected path), ensure some error.
         this._displayStatusMessage(
           'An unspecified error occurred during the save operation.',
           'error'
         );
       }
-      // If saveSucceeded and finalMessage is empty, it means success message was intended.
-      // This state implies we want the "Loading..." from _populateSaveSlotsList to be cleared,
-      // and the new state (selected slot, etc.) is the main feedback.
-      // However, for a save action, there should always be a clear "saved" or "failed" message.
     }
   }
 
