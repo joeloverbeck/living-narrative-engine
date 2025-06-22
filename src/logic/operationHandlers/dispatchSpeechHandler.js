@@ -52,10 +52,10 @@ class DispatchSpeechHandler {
    * Construct payload and dispatch {@link DISPLAY_SPEECH_ID}.
    *
    * @param {DispatchSpeechParams|null|undefined} params - Resolved parameters.
-   * @param {ExecutionContext} _ctx - Execution context (unused).
+   * @param {ExecutionContext} executionContext - Execution context (unused).
    */
-  execute(params, _ctx) {
-    const logger = _ctx?.logger ?? this.#logger;
+  execute(params, executionContext) {
+    const logger = executionContext?.logger ?? this.#logger;
     if (!assertParamsObject(params, logger, 'DISPATCH_SPEECH')) return;
 
     if (

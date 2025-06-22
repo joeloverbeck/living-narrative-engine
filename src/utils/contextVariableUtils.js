@@ -9,11 +9,11 @@ import { isNonBlankString } from './textUtils.js';
  * Validate that the context exists and the variable name is valid.
  *
  * @param {string} variableName Variable name to validate.
- * @param {import('../logic/defs.js').ExecutionContext} execCtx Execution context.
+ * @param {import('../logic/defs.js').ExecutionContext} executionContext Execution context.
  * @returns {{valid: boolean, error?: Error, name?: string}} Validation result.
  * @private
  */
-function _validateContextAndName(variableName, execCtx) {
+function _validateContextAndName(variableName, executionContext) {
   if (!isNonBlankString(variableName)) {
     return {
       valid: false,
@@ -22,9 +22,9 @@ function _validateContextAndName(variableName, execCtx) {
   }
 
   const hasContext =
-    execCtx?.evaluationContext &&
-    typeof execCtx.evaluationContext.context === 'object' &&
-    execCtx.evaluationContext.context !== null;
+    executionContext?.evaluationContext &&
+    typeof executionContext.evaluationContext.context === 'object' &&
+    executionContext.evaluationContext.context !== null;
 
   if (!hasContext) {
     return {
@@ -39,13 +39,13 @@ function _validateContextAndName(variableName, execCtx) {
 }
 
 /**
- * Safely stores a value into `execCtx.evaluationContext.context`. If the context
+ * Safely stores a value into `executionContext.evaluationContext.context`. If the context
  * is missing, an error is dispatched (or logged) and the function returns a
  * failure result.
  *
  * @param {string} variableName - Name of the variable to store.
  * @param {*} value - The value to store.
- * @param {import('../logic/defs.js').ExecutionContext} execCtx - Execution context.
+ * @param {import('../logic/defs.js').ExecutionContext} executionContext - Execution context.
  * @param {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} [dispatcher] -
  * Optional dispatcher for error events.
  * @param {import('../interfaces/coreServices.js').ILogger} [logger] - Optional logger used when no dispatcher is provided.
@@ -54,13 +54,17 @@ function _validateContextAndName(variableName, execCtx) {
 export function writeContextVariable(
   variableName,
   value,
-  execCtx,
+  executionContext,
   dispatcher,
   logger
 ) {
   const log = getModuleLogger('contextVariableUtils', logger);
-  const safeDispatcher = dispatcher || resolveSafeDispatcher(execCtx, log);
-  const { valid, error, name } = _validateContextAndName(variableName, execCtx);
+  const safeDispatcher =
+    dispatcher || resolveSafeDispatcher(executionContext, log);
+  const { valid, error, name } = _validateContextAndName(
+    variableName,
+    executionContext
+  );
 
   if (!valid) {
     if (safeDispatcher) {
@@ -70,7 +74,7 @@ export function writeContextVariable(
   }
 
   try {
-    execCtx.evaluationContext.context[name] = value;
+    executionContext.evaluationContext.context[name] = value;
     return { success: true };
   } catch (e) {
     const err = new Error(
@@ -98,7 +102,7 @@ export function writeContextVariable(
  *
  * @param {string|null|undefined} variableName - Target context variable name.
  * @param {*} value - Value to store.
- * @param {import('../logic/defs.js').ExecutionContext} execCtx - Execution context.
+ * @param {import('../logic/defs.js').ExecutionContext} executionContext - Execution context.
  * @param {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} [dispatcher]
  *   Optional dispatcher for error events.
  * @param {import('../interfaces/coreServices.js').ILogger} [logger] - Logger used when no dispatcher is provided.
@@ -107,14 +111,15 @@ export function writeContextVariable(
 export function tryWriteContextVariable(
   variableName,
   value,
-  execCtx,
+  executionContext,
   dispatcher,
   logger
 ) {
   const log = getModuleLogger('contextVariableUtils', logger);
-  const validation = _validateContextAndName(variableName, execCtx);
+  const validation = _validateContextAndName(variableName, executionContext);
   if (!validation.valid) {
-    const safeDispatcher = dispatcher || resolveSafeDispatcher(execCtx, log);
+    const safeDispatcher =
+      dispatcher || resolveSafeDispatcher(executionContext, log);
     if (safeDispatcher) {
       safeDispatchError(
         safeDispatcher,
@@ -131,7 +136,7 @@ export function tryWriteContextVariable(
   return writeContextVariable(
     validation.name,
     value,
-    execCtx,
+    executionContext,
     dispatcher,
     logger
   );

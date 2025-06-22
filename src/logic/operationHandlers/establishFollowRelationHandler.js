@@ -73,10 +73,10 @@ class EstablishFollowRelationHandler {
 
   /**
    * @param {{ follower_id: string, leader_id: string }} params
-   * @param {ExecutionContext} execCtx
+   * @param {ExecutionContext} executionContext
    */
-  execute(params, execCtx) {
-    const logger = execCtx?.logger ?? this.#logger;
+  execute(params, executionContext) {
+    const logger = executionContext?.logger ?? this.#logger;
     if (!assertParamsObject(params, logger, 'ESTABLISH_FOLLOW_RELATION'))
       return;
 
@@ -142,7 +142,7 @@ class EstablishFollowRelationHandler {
     const leaderIds = [lid];
     if (oldData?.leaderId && oldData.leaderId !== lid)
       leaderIds.push(oldData.leaderId);
-    this.#rebuildHandler.execute({ leaderIds }, execCtx);
+    this.#rebuildHandler.execute({ leaderIds }, executionContext);
   }
 }
 

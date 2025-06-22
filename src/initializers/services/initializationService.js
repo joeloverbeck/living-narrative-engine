@@ -204,7 +204,8 @@ class InitializationService extends IInitializationService {
       this.#logger.debug(
         'WorldInitializer resolved. Initializing world entities...'
       );
-      const worldInitSuccess = await worldInitializer.initializeWorldEntities(worldName);
+      const worldInitSuccess =
+        await worldInitializer.initializeWorldEntities(worldName);
       if (!worldInitSuccess) {
         throw new Error('World initialization failed via WorldInitializer.');
       }

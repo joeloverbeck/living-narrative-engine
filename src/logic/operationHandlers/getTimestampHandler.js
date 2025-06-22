@@ -14,8 +14,8 @@ class GetTimestampHandler {
     this.#logger = logger;
   }
 
-  execute(params, execCtx) {
-    const logger = execCtx?.logger ?? this.#logger;
+  execute(params, executionContext) {
+    const logger = executionContext?.logger ?? this.#logger;
     if (!assertParamsObject(params, logger, 'GET_TIMESTAMP')) return;
 
     const rv = params.result_variable.trim();
@@ -23,7 +23,7 @@ class GetTimestampHandler {
     const result = tryWriteContextVariable(
       rv,
       timestamp,
-      execCtx,
+      executionContext,
       undefined,
       this.#logger
     );

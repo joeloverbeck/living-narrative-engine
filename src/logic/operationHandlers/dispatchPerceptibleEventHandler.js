@@ -67,9 +67,9 @@ class DispatchPerceptibleEventHandler {
    * {@link AddPerceptionLogEntryHandler} to store the log entry for observers.
    *
    * @param {DispatchPerceptibleEventParams} params - Resolved parameters.
-   * @param {ExecutionContext} _ctx - Execution context (unused).
+   * @param {ExecutionContext} executionContext - Execution context (unused).
    */
-  execute(params, _ctx) {
+  execute(params, executionContext) {
     if (
       !assertParamsObject(
         params,

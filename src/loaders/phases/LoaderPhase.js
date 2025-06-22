@@ -8,9 +8,9 @@ export default class LoaderPhase {
     this.name = name;
   }
   /**
-   * @param {LoadContext} _ctx
+   * @param {LoadContext} executionContext
    */
-  async execute(_ctx) {
+  async execute(executionContext) {
     throw new Error('execute() not implemented');
   }
 }

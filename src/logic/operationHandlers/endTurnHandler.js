@@ -55,10 +55,10 @@ class EndTurnHandler {
    * Dispatch the core:turn_ended event.
    *
    * @param {EndTurnParameters} params - Resolved parameters.
-   * @param {ExecutionContext} _executionContext - Execution context (unused).
+   * @param {ExecutionContext} executionContext - Execution context (unused).
    */
-  execute(params, _executionContext) {
-    const logger = _executionContext?.logger ?? this.#logger;
+  execute(params, executionContext) {
+    const logger = executionContext?.logger ?? this.#logger;
     if (!assertParamsObject(params, logger, 'END_TURN')) return;
 
     if (typeof params.entityId !== 'string' || !params.entityId.trim()) {

@@ -60,10 +60,10 @@ class IfCoLocatedHandler {
 
   /**
    * @param {IfCoLocatedParams} params
-   * @param {ExecutionContext} execCtx
+   * @param {ExecutionContext} executionContext
    */
-  execute(params, execCtx) {
-    const log = execCtx?.logger ?? this.#logger;
+  execute(params, executionContext) {
+    const log = executionContext?.logger ?? this.#logger;
 
     if (!assertParamsObject(params, this.#dispatcher, 'IF_CO_LOCATED')) {
       return;
@@ -84,8 +84,8 @@ class IfCoLocatedHandler {
       return;
     }
 
-    const idA = resolveEntityId(entity_ref_a, execCtx);
-    const idB = resolveEntityId(entity_ref_b, execCtx);
+    const idA = resolveEntityId(entity_ref_a, executionContext);
+    const idB = resolveEntityId(entity_ref_b, executionContext);
 
     if (!idA || !idB) {
       log.debug(
@@ -124,7 +124,7 @@ class IfCoLocatedHandler {
       : [];
     for (const op of actions) {
       try {
-        this.#opInterpreter.execute(op, execCtx);
+        this.#opInterpreter.execute(op, executionContext);
       } catch (err) {
         safeDispatchError(
           this.#dispatcher,

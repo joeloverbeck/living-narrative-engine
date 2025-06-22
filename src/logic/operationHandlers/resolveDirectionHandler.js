@@ -19,8 +19,8 @@ class ResolveDirectionHandler {
     this.#logger = logger;
   }
 
-  execute(params, execCtx) {
-    const logger = execCtx?.logger ?? this.#logger;
+  execute(params, executionContext) {
+    const logger = executionContext?.logger ?? this.#logger;
     if (!assertParamsObject(params, logger, 'RESOLVE_DIRECTION')) return;
 
     // Safely destructure params, providing a default empty object to avoid errors if params is null/undefined.
@@ -47,7 +47,7 @@ class ResolveDirectionHandler {
     const res = tryWriteContextVariable(
       trimmedVar,
       target,
-      execCtx,
+      executionContext,
       undefined,
       this.#logger
     );

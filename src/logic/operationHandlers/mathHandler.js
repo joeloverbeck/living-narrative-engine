@@ -153,8 +153,8 @@ class MathHandler {
     if (operand && typeof operand === 'object') {
       if (Object.prototype.hasOwnProperty.call(operand, 'var')) {
         try {
-          const raw = jsonLogic.apply({ var: operand.var }, ctx);
-          const num = Number(raw);
+          const currentComponent = jsonLogic.apply({ var: operand.var }, ctx);
+          const num = Number(currentComponent);
           return Number.isNaN(num) ? NaN : num;
         } catch (e) {
           safeDispatchError(

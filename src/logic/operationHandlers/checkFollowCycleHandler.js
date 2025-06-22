@@ -50,9 +50,9 @@ class CheckFollowCycleHandler {
 
   /**
    * @param {CheckFollowCycleParams} params
-   * @param {ExecutionContext} execCtx
+   * @param {ExecutionContext} executionContext
    */
-  execute(params, execCtx) {
+  execute(params, executionContext) {
     const log = this.#logger;
     if (!assertParamsObject(params, log, 'CHECK_FOLLOW_CYCLE')) return;
 
@@ -98,7 +98,7 @@ class CheckFollowCycleHandler {
     const res = tryWriteContextVariable(
       result_variable,
       result,
-      execCtx,
+      executionContext,
       this.#dispatcher,
       log
     );

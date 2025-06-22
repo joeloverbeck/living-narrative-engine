@@ -83,10 +83,10 @@ class BreakFollowRelationHandler extends BaseOperationHandler {
 
   /**
    * @param {{ follower_id: string }} params
-   * @param {ExecutionContext} execCtx
+   * @param {ExecutionContext} executionContext
    */
-  execute(params, execCtx) {
-    const logger = this.getLogger(execCtx);
+  execute(params, executionContext) {
+    const logger = this.getLogger(executionContext);
     if (!assertParamsObject(params, logger, 'BREAK_FOLLOW_RELATION')) return;
 
     const { follower_id } = params;
@@ -124,7 +124,7 @@ class BreakFollowRelationHandler extends BaseOperationHandler {
     if (currentData.leaderId) {
       this.#rebuildHandler.execute(
         { leaderIds: [currentData.leaderId] },
-        execCtx
+        executionContext
       );
     }
   }

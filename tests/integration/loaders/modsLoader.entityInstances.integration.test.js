@@ -80,24 +80,47 @@ describe('Integration: Entity Instances Loader and World Initialization', () => 
   const MOD_ID = 'isekai';
   const MODS_BASE_PATH = './data/mods';
   const INSTANCES_DIR = path.join(MODS_BASE_PATH, MOD_ID, 'entities/instances');
-  const WORLD_FILE = path.join(MODS_BASE_PATH, MOD_ID, 'worlds/isekai.world.json');
+  const WORLD_FILE = path.join(
+    MODS_BASE_PATH,
+    MOD_ID,
+    'worlds/isekai.world.json'
+  );
 
   beforeAll(async () => {
     logger = new ConsoleLogger('info');
     container = new AppContainer();
     container.register(tokens.ILogger, logger);
-    validatedEventDispatcher = createMockValidatedEventDispatcherForIntegration();
-    container.register(tokens.IValidatedEventDispatcher, validatedEventDispatcher);
+    validatedEventDispatcher =
+      createMockValidatedEventDispatcherForIntegration();
+    container.register(
+      tokens.IValidatedEventDispatcher,
+      validatedEventDispatcher
+    );
     registerLoaders(container);
-    container.register(tokens.IDataFetcher, createMockDataFetcherForIntegration());
+    container.register(
+      tokens.IDataFetcher,
+      createMockDataFetcherForIntegration()
+    );
     const schemaValidator = new AjvSchemaValidator(logger);
-    await schemaValidator.addSchema(commonSchema, 'http://example.com/schemas/common.schema.json');
-    await schemaValidator.addSchema(modManifestSchema, 'http://example.com/schemas/mod-manifest.schema.json');
-    await schemaValidator.addSchema(entityDefinitionSchema, 'http://example.com/schemas/entity-definition.schema.json');
-    await schemaValidator.addSchema(entityInstanceSchema, 'http://example.com/schemas/entity-instance.schema.json');
+    await schemaValidator.addSchema(
+      commonSchema,
+      'http://example.com/schemas/common.schema.json'
+    );
+    await schemaValidator.addSchema(
+      modManifestSchema,
+      'http://example.com/schemas/mod-manifest.schema.json'
+    );
+    await schemaValidator.addSchema(
+      entityDefinitionSchema,
+      'http://example.com/schemas/entity-definition.schema.json'
+    );
+    await schemaValidator.addSchema(
+      entityInstanceSchema,
+      'http://example.com/schemas/entity-instance.schema.json'
+    );
     container.register(tokens.ISchemaValidator, schemaValidator);
     registry = container.resolve(tokens.IDataRegistry);
-    
+
     const phases = [
       new MockSchemaPhase(logger),
       new MockGameConfigPhase(logger),
@@ -133,14 +156,14 @@ describe('Integration: Entity Instances Loader and World Initialization', () => 
       )
     );
     const files = manifest.content.entities?.instances || [];
-    
+
     for (const file of files) {
       const filePath = path.join(INSTANCES_DIR, file);
       const instanceData = JSON.parse(fs.readFileSync(filePath, 'utf8'));
       const instanceId = instanceData.instanceId;
-      
+
       const instance = registry.get('entityInstances', instanceId);
-      
+
       expect(instance).toBeDefined();
       expect(instance.instanceId).toBe(instanceId);
     }
@@ -149,17 +172,24 @@ describe('Integration: Entity Instances Loader and World Initialization', () => 
   it('should allow WorldInitializer to instantiate all world instances when all are present', async () => {
     const worldData = JSON.parse(fs.readFileSync(WORLD_FILE, 'utf8'));
     const worldName = worldData.id;
-    
+
     // Create a mock repository with the required methods
     const mockRepository = {
       getWorld: jest.fn(() => worldData),
-      getEntityInstanceDefinition: jest.fn((instanceId) => registry.get('entityInstances', instanceId)),
+      getEntityInstanceDefinition: jest.fn((instanceId) =>
+        registry.get('entityInstances', instanceId)
+      ),
       getEntityDefinition: jest.fn(() => ({})),
       getComponentDefinition: jest.fn(() => ({})),
     };
-    
+
     const worldInitializer = new WorldInitializer({
-      entityManager: { createEntityInstance: jest.fn(() => ({ id: 'dummy', definitionId: 'dummyDef' })) },
+      entityManager: {
+        createEntityInstance: jest.fn(() => ({
+          id: 'dummy',
+          definitionId: 'dummyDef',
+        })),
+      },
       worldContext: {},
       gameDataRepository: mockRepository,
       validatedEventDispatcher,
@@ -175,31 +205,42 @@ describe('Integration: Entity Instances Loader and World Initialization', () => 
     const worldData = JSON.parse(fs.readFileSync(WORLD_FILE, 'utf8'));
     const worldName = worldData.id;
     const missingInstanceId = worldData.instances[0].instanceId;
-    
+
     // Create a mock repository that returns undefined for the missing instance
     const mockRepository = {
       getWorld: jest.fn(() => worldData),
-      getEntityInstanceDefinition: jest.fn((instanceId) => 
-        instanceId === missingInstanceId ? undefined : registry.get('entityInstances', instanceId)
+      getEntityInstanceDefinition: jest.fn((instanceId) =>
+        instanceId === missingInstanceId
+          ? undefined
+          : registry.get('entityInstances', instanceId)
       ),
       getEntityDefinition: jest.fn(() => ({})),
       getComponentDefinition: jest.fn(() => ({})),
     };
-    
+
     const worldInitializer = new WorldInitializer({
-      entityManager: { createEntityInstance: jest.fn(() => ({ id: 'dummy', definitionId: 'dummyDef' })) },
+      entityManager: {
+        createEntityInstance: jest.fn(() => ({
+          id: 'dummy',
+          definitionId: 'dummyDef',
+        })),
+      },
       worldContext: {},
       gameDataRepository: mockRepository,
       validatedEventDispatcher,
       logger,
       spatialIndexManager: { addEntity: jest.fn() },
     });
-    await expect(worldInitializer.initializeWorldEntities(worldName)).rejects.toThrow(
-      /not found/i
-    );
+    await expect(
+      worldInitializer.initializeWorldEntities(worldName)
+    ).rejects.toThrow(/not found/i);
   });
 });
 
+/**
+ *
+ * @param phases
+ */
 function makeSession(phases) {
   return {
     async run(ctx) {
@@ -210,4 +251,4 @@ function makeSession(phases) {
       return context;
     },
   };
-} 
+}

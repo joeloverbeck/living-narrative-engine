@@ -164,7 +164,7 @@ describe('Integration: Entity Definitions and Instances Loader', () => {
     // Verify that entity instances are also loaded
     const allInstances = registry.getAll('entityInstances');
     expect(allInstances).toHaveLength(6);
-    expect(allInstances.map(i => i.instanceId)).toEqual(
+    expect(allInstances.map((i) => i.instanceId)).toEqual(
       expect.arrayContaining([
         'isekai:adventurers_guild_instance',
         'isekai:hero_instance',
@@ -176,7 +176,10 @@ describe('Integration: Entity Definitions and Instances Loader', () => {
     );
 
     // Test individual instance retrieval
-    const instance = registry.get('entityInstances', 'isekai:adventurers_guild_instance');
+    const instance = registry.get(
+      'entityInstances',
+      'isekai:adventurers_guild_instance'
+    );
   });
 
   const MOD_ID = 'isekai';

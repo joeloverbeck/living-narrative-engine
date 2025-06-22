@@ -54,13 +54,13 @@ class MergeClosenessCircleHandler {
    * Validate parameters for execute.
    *
    * @param {object} params
-   * @param {ExecutionContext} execCtx
+   * @param {ExecutionContext} executionContext
    * @returns {{ actorId:string, targetId:string, resultVar:string|null, logger:ILogger }|null}
    * @private
    */
-  #validateParams(params, execCtx) {
+  #validateParams(params, executionContext) {
     const { actor_id, target_id, result_variable } = params || {};
-    const log = execCtx?.logger ?? this.#logger;
+    const log = executionContext?.logger ?? this.#logger;
     if (typeof actor_id !== 'string' || !actor_id.trim()) {
       safeDispatchError(
         this.#dispatcher,
@@ -167,10 +167,10 @@ class MergeClosenessCircleHandler {
    * Merge the actor and target circles and lock movement for all members.
    *
    * @param {{ actor_id:string, target_id:string, result_variable?:string }} params - Operation parameters.
-   * @param {ExecutionContext} execCtx - Execution context.
+   * @param {ExecutionContext} executionContext - Execution context.
    */
-  execute(params, execCtx) {
-    const validated = this.#validateParams(params, execCtx);
+  execute(params, executionContext) {
+    const validated = this.#validateParams(params, executionContext);
     if (!validated) return;
     const { actorId, targetId, resultVar, logger } = validated;
 
@@ -181,7 +181,7 @@ class MergeClosenessCircleHandler {
       tryWriteContextVariable(
         resultVar,
         members,
-        execCtx,
+        executionContext,
         this.#dispatcher,
         logger
       );

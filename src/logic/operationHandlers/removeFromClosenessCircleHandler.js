@@ -57,10 +57,10 @@ class RemoveFromClosenessCircleHandler {
 
   /**
    * @param {{ actor_id: string, result_variable?: string } | null | undefined} params
-   * @param {ExecutionContext} execCtx
+   * @param {ExecutionContext} executionContext
    */
-  execute(params, execCtx) {
-    const validated = this.#validateParams(params, execCtx);
+  execute(params, executionContext) {
+    const validated = this.#validateParams(params, executionContext);
     if (!validated) return;
     const { actorId, resultVar, logger } = validated;
 
@@ -71,7 +71,7 @@ class RemoveFromClosenessCircleHandler {
       tryWriteContextVariable(
         resultVar,
         partners,
-        execCtx,
+        executionContext,
         this.#dispatcher,
         logger
       );
@@ -82,12 +82,12 @@ class RemoveFromClosenessCircleHandler {
    * Validate parameters for execute.
    *
    * @param {object} params
-   * @param {ExecutionContext} execCtx
+   * @param {ExecutionContext} executionContext
    * @returns {{ actorId:string, resultVar:string|null, logger:ILogger }|null}
    * @private
    */
-  #validateParams(params, execCtx) {
-    const log = getExecLogger(this.#logger, execCtx);
+  #validateParams(params, executionContext) {
+    const log = getExecLogger(this.#logger, executionContext);
 
     if (!assertParamsObject(params, log, 'REMOVE_FROM_CLOSENESS_CIRCLE')) {
       return null;

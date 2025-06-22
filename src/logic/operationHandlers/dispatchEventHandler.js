@@ -50,9 +50,9 @@ class DispatchEventHandler {
    * Emit a new game-event using pre-resolved parameters.
    *
    * @param {DispatchEventParameters|null|undefined} params - Parameters with placeholders already resolved.
-   * @param {ExecutionContext} _executionContext - The context (used for services, not resolution here).
+   * @param {ExecutionContext} executionContext - The context (used for services, not resolution here).
    */
-  execute(params, _executionContext) {
+  execute(params, executionContext) {
     const logger = this.#logger; // Use the injected logger
     if (!assertParamsObject(params, logger, 'DISPATCH_EVENT')) return;
 

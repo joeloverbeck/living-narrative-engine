@@ -172,19 +172,21 @@ describe('WorldInitializer', () => {
         instances: [
           {
             instanceId: 'test:hero_instance',
-            definitionId: 'test:hero'
-          }
-        ]
+            definitionId: 'test:hero',
+          },
+        ],
       };
-      
+
       const entityInstanceDef = {
         instanceId: 'test:hero_instance',
-        definitionId: 'test:hero'
+        definitionId: 'test:hero',
       };
 
       mockGameDataRepository.getWorld.mockReturnValue(worldData);
-      mockGameDataRepository.getEntityInstanceDefinition.mockReturnValue(entityInstanceDef);
-      
+      mockGameDataRepository.getEntityInstanceDefinition.mockReturnValue(
+        entityInstanceDef
+      );
+
       const mockInstance1 = createMockEntityInstance(
         'test:hero_instance',
         'test:hero',
@@ -194,13 +196,17 @@ describe('WorldInitializer', () => {
 
       await worldInitializer.initializeWorldEntities('test:world');
 
-      expect(mockGameDataRepository.getWorld).toHaveBeenCalledWith('test:world');
-      expect(mockGameDataRepository.getEntityInstanceDefinition).toHaveBeenCalledWith('test:hero_instance');
+      expect(mockGameDataRepository.getWorld).toHaveBeenCalledWith(
+        'test:world'
+      );
+      expect(
+        mockGameDataRepository.getEntityInstanceDefinition
+      ).toHaveBeenCalledWith('test:hero_instance');
       expect(mockEntityManager.createEntityInstance).toHaveBeenCalledWith(
         'test:hero',
         {
           instanceId: 'test:hero_instance',
-          componentOverrides: undefined
+          componentOverrides: undefined,
         }
       );
       expect(mockLogger.debug).toHaveBeenCalledWith(
@@ -222,18 +228,20 @@ describe('WorldInitializer', () => {
         instances: [
           {
             instanceId: 'test:broken_instance',
-            definitionId: 'test:broken'
-          }
-        ]
+            definitionId: 'test:broken',
+          },
+        ],
       };
-      
+
       const entityInstanceDef = {
         instanceId: 'test:broken_instance',
-        definitionId: 'test:broken'
+        definitionId: 'test:broken',
       };
 
       mockGameDataRepository.getWorld.mockReturnValue(worldData);
-      mockGameDataRepository.getEntityInstanceDefinition.mockReturnValue(entityInstanceDef);
+      mockGameDataRepository.getEntityInstanceDefinition.mockReturnValue(
+        entityInstanceDef
+      );
       mockEntityManager.createEntityInstance.mockReturnValueOnce(null);
 
       await worldInitializer.initializeWorldEntities('test:world');
@@ -256,19 +264,21 @@ describe('WorldInitializer', () => {
           instances: [
             {
               instanceId: 'test:location_instance',
-              definitionId: 'test:location'
-            }
-          ]
+              definitionId: 'test:location',
+            },
+          ],
         };
-        
+
         const entityInstanceDef = {
           instanceId: 'test:location_instance',
-          definitionId: 'test:location'
+          definitionId: 'test:location',
         };
 
         mockGameDataRepository.getWorld.mockReturnValue(worldData);
-        mockGameDataRepository.getEntityInstanceDefinition.mockReturnValue(entityInstanceDef);
-        
+        mockGameDataRepository.getEntityInstanceDefinition.mockReturnValue(
+          entityInstanceDef
+        );
+
         const locationInstance = createMockEntityInstance(
           'test:location_instance',
           'test:location',
@@ -312,19 +322,21 @@ describe('WorldInitializer', () => {
           instances: [
             {
               instanceId: 'test:problem_instance',
-              definitionId: 'test:problem'
-            }
-          ]
+              definitionId: 'test:problem',
+            },
+          ],
         };
-        
+
         const entityInstanceDef = {
           instanceId: 'test:problem_instance',
-          definitionId: 'test:problem'
+          definitionId: 'test:problem',
         };
 
         mockGameDataRepository.getWorld.mockReturnValue(worldData);
-        mockGameDataRepository.getEntityInstanceDefinition.mockReturnValue(entityInstanceDef);
-        
+        mockGameDataRepository.getEntityInstanceDefinition.mockReturnValue(
+          entityInstanceDef
+        );
+
         const problematicInstance = createMockEntityInstance(
           'test:problem_instance',
           'test:problem',
@@ -369,19 +381,21 @@ describe('WorldInitializer', () => {
           instances: [
             {
               instanceId: 'test:baditerator_instance',
-              definitionId: 'test:baditerator'
-            }
-          ]
+              definitionId: 'test:baditerator',
+            },
+          ],
         };
-        
+
         const entityInstanceDef = {
           instanceId: 'test:baditerator_instance',
-          definitionId: 'test:baditerator'
+          definitionId: 'test:baditerator',
         };
 
         mockGameDataRepository.getWorld.mockReturnValue(worldData);
-        mockGameDataRepository.getEntityInstanceDefinition.mockReturnValue(entityInstanceDef);
-        
+        mockGameDataRepository.getEntityInstanceDefinition.mockReturnValue(
+          entityInstanceDef
+        );
+
         const mockInstance = createMockEntityInstance(
           'test:baditerator_instance',
           'test:baditerator'
@@ -414,19 +428,21 @@ describe('WorldInitializer', () => {
           instances: [
             {
               instanceId: 'test:noniter_instance',
-              definitionId: 'test:noniter'
-            }
-          ]
+              definitionId: 'test:noniter',
+            },
+          ],
         };
-        
+
         const entityInstanceDef = {
           instanceId: 'test:noniter_instance',
-          definitionId: 'test:noniter'
+          definitionId: 'test:noniter',
         };
 
         mockGameDataRepository.getWorld.mockReturnValue(worldData);
-        mockGameDataRepository.getEntityInstanceDefinition.mockReturnValue(entityInstanceDef);
-        
+        mockGameDataRepository.getEntityInstanceDefinition.mockReturnValue(
+          entityInstanceDef
+        );
+
         const nonIterableEntity = createMockEntityInstance(
           'test:noniter_instance',
           'test:noniter'
@@ -461,19 +477,21 @@ describe('WorldInitializer', () => {
           instances: [
             {
               instanceId: 'test:spatialDummy_instance',
-              definitionId: 'test:spatialDummy'
-            }
-          ]
+              definitionId: 'test:spatialDummy',
+            },
+          ],
         };
-        
+
         const entityInstanceDef = {
           instanceId: 'test:spatialDummy_instance',
-          definitionId: 'test:spatialDummy'
+          definitionId: 'test:spatialDummy',
         };
 
         mockGameDataRepository.getWorld.mockReturnValue(worldData);
-        mockGameDataRepository.getEntityInstanceDefinition.mockReturnValue(entityInstanceDef);
-        
+        mockGameDataRepository.getEntityInstanceDefinition.mockReturnValue(
+          entityInstanceDef
+        );
+
         // Mock entity instance creation
         const mockInstance = createMockEntityInstance(
           'test:spatialDummy_instance',
@@ -512,19 +530,21 @@ describe('WorldInitializer', () => {
           instances: [
             {
               instanceId: 'test:roomPos1_instance',
-              definitionId: 'test:roomPos1'
-            }
-          ]
+              definitionId: 'test:roomPos1',
+            },
+          ],
         };
-        
+
         const entityInstanceDef = {
           instanceId: 'test:roomPos1_instance',
-          definitionId: 'test:roomPos1'
+          definitionId: 'test:roomPos1',
         };
 
         mockGameDataRepository.getWorld.mockReturnValue(worldData);
-        mockGameDataRepository.getEntityInstanceDefinition.mockReturnValue(entityInstanceDef);
-        
+        mockGameDataRepository.getEntityInstanceDefinition.mockReturnValue(
+          entityInstanceDef
+        );
+
         const roomInstancePos1 = createMockEntityInstance(
           'test:roomPos1_instance',
           'test:roomPos1',
@@ -565,34 +585,34 @@ describe('WorldInitializer', () => {
         instances: [
           {
             instanceId: 'test:valid_instance',
-            definitionId: 'test:valid'
+            definitionId: 'test:valid',
           },
           {
             // Invalid instance - missing instanceId
-            definitionId: 'test:invalid'
+            definitionId: 'test:invalid',
           },
           {
             instanceId: 'test:another_valid_instance',
-            definitionId: 'test:another_valid'
-          }
-        ]
+            definitionId: 'test:another_valid',
+          },
+        ],
       };
-      
+
       const validInstanceDef1 = {
         instanceId: 'test:valid_instance',
-        definitionId: 'test:valid'
+        definitionId: 'test:valid',
       };
-      
+
       const validInstanceDef2 = {
         instanceId: 'test:another_valid_instance',
-        definitionId: 'test:another_valid'
+        definitionId: 'test:another_valid',
       };
 
       mockGameDataRepository.getWorld.mockReturnValue(worldData);
       mockGameDataRepository.getEntityInstanceDefinition
         .mockReturnValueOnce(validInstanceDef1)
         .mockReturnValueOnce(validInstanceDef2);
-      
+
       const mockInstance1 = createMockEntityInstance(
         'test:valid_instance',
         'test:valid',
@@ -603,7 +623,7 @@ describe('WorldInitializer', () => {
         'test:another_valid',
         {}
       );
-      
+
       mockEntityManager.createEntityInstance
         .mockReturnValueOnce(mockInstance1)
         .mockReturnValueOnce(mockInstance2);
@@ -623,12 +643,14 @@ describe('WorldInitializer', () => {
     it('should throw an error when world is not found', async () => {
       mockGameDataRepository.getWorld.mockReturnValue(null);
 
-      await expect(worldInitializer.initializeWorldEntities('nonexistent:world')).rejects.toThrow(
-        'Game cannot start: World \'nonexistent:world\' not found in the world data. Please ensure the world is properly defined.'
+      await expect(
+        worldInitializer.initializeWorldEntities('nonexistent:world')
+      ).rejects.toThrow(
+        "Game cannot start: World 'nonexistent:world' not found in the world data. Please ensure the world is properly defined."
       );
 
       expect(mockLogger.error).toHaveBeenCalledWith(
-        'WorldInitializer (Pass 1): World \'nonexistent:world\' not found in repository.'
+        "WorldInitializer (Pass 1): World 'nonexistent:world' not found in repository."
       );
     });
 
@@ -636,17 +658,19 @@ describe('WorldInitializer', () => {
       const worldData = {
         id: 'test:world',
         name: 'Test World',
-        instances: []
+        instances: [],
       };
 
       mockGameDataRepository.getWorld.mockReturnValue(worldData);
 
-      await expect(worldInitializer.initializeWorldEntities('test:world')).rejects.toThrow(
-        'Game cannot start: World \'test:world\' has no entities defined. Please ensure at least one entity is defined in the world.'
+      await expect(
+        worldInitializer.initializeWorldEntities('test:world')
+      ).rejects.toThrow(
+        "Game cannot start: World 'test:world' has no entities defined. Please ensure at least one entity is defined in the world."
       );
 
       expect(mockLogger.error).toHaveBeenCalledWith(
-        'WorldInitializer (Pass 1): World \'test:world\' has no instances defined. Game cannot start without entities.'
+        "WorldInitializer (Pass 1): World 'test:world' has no instances defined. Game cannot start without entities."
       );
     });
   });
@@ -666,19 +690,21 @@ describe('WorldInitializer', () => {
         instances: [
           {
             instanceId: 'test:eventTest_instance',
-            definitionId: 'test:eventTest'
-          }
-        ]
+            definitionId: 'test:eventTest',
+          },
+        ],
       };
-      
+
       const entityInstanceDef = {
         instanceId: 'test:eventTest_instance',
-        definitionId: 'test:eventTest'
+        definitionId: 'test:eventTest',
       };
 
       mockGameDataRepository.getWorld.mockReturnValue(worldData);
-      mockGameDataRepository.getEntityInstanceDefinition.mockReturnValue(entityInstanceDef);
-      
+      mockGameDataRepository.getEntityInstanceDefinition.mockReturnValue(
+        entityInstanceDef
+      );
+
       const mockInstance1 = createMockEntityInstance(
         'test:eventTest_instance',
         'test:eventTest'

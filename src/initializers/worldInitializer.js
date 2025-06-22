@@ -162,7 +162,11 @@ class WorldInitializer {
       );
     }
 
-    if (!worldData.instances || !Array.isArray(worldData.instances) || worldData.instances.length === 0) {
+    if (
+      !worldData.instances ||
+      !Array.isArray(worldData.instances) ||
+      worldData.instances.length === 0
+    ) {
       this.#logger.error(
         `WorldInitializer (Pass 1): World '${worldName}' has no instances defined. Game cannot start without entities.`
       );
@@ -187,7 +191,11 @@ class WorldInitializer {
     );
 
     for (const worldInstance of worldData.instances) {
-      if (!worldInstance || !worldInstance.instanceId || !worldInstance.definitionId) {
+      if (
+        !worldInstance ||
+        !worldInstance.instanceId ||
+        !worldInstance.definitionId
+      ) {
         this.#logger.warn(
           `WorldInitializer (Pass 1): Skipping invalid world instance (missing instanceId or definitionId):`,
           worldInstance
@@ -196,9 +204,10 @@ class WorldInitializer {
       }
 
       const { instanceId, definitionId, componentOverrides } = worldInstance;
-      
+
       // Get the entity instance definition
-      const entityInstanceDef = this.#repository.getEntityInstanceDefinition(instanceId);
+      const entityInstanceDef =
+        this.#repository.getEntityInstanceDefinition(instanceId);
       if (!entityInstanceDef) {
         safeDispatchError(
           this.#validatedEventDispatcher,
@@ -218,7 +227,7 @@ class WorldInitializer {
       // Create the entity instance
       const instance = this.#entityManager.createEntityInstance(definitionId, {
         instanceId,
-        componentOverrides
+        componentOverrides,
       });
 
       if (instance) {
