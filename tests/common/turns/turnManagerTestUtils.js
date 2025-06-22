@@ -7,6 +7,8 @@ import { expect } from '@jest/globals';
 import {
   SYSTEM_ERROR_OCCURRED_ID,
   TURN_ENDED_ID,
+  TURN_STARTED_ID,
+  TURN_PROCESSING_STARTED,
 } from '../../../src/constants/eventIds.js';
 import { flushPromisesAndTimers } from './turnManagerTestBed.js';
 
@@ -31,6 +33,27 @@ export function expectSystemErrorDispatch(
       stack: expect.any(String),
       timestamp: expect.any(String),
     },
+  });
+}
+
+/**
+ * Asserts that start-of-turn events were dispatched for the given actor.
+ *
+ * @description Asserts that dispatches were made for both the start of a turn
+ *   and the beginning of its processing lifecycle.
+ * @param {import('@jest/globals').Mock} dispatchMock - Mocked dispatch function.
+ * @param {string} actorId - ID of the actor whose turn started.
+ * @param {string} actorType - Type of the actor (e.g., "ai" or "player").
+ * @returns {void}
+ */
+export function expectTurnStartedEvents(dispatchMock, actorId, actorType) {
+  expect(dispatchMock).toHaveBeenCalledWith(TURN_STARTED_ID, {
+    entityId: actorId,
+    entityType: actorType,
+  });
+  expect(dispatchMock).toHaveBeenCalledWith(TURN_PROCESSING_STARTED, {
+    entityId: actorId,
+    actorType,
   });
 }
 
