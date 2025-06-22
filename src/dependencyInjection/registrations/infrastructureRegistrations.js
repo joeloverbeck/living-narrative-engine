@@ -68,7 +68,7 @@ export function registerInfrastructure(container) {
 
   container.register(
     tokens.ISpatialIndexManager,
-    () => new SpatialIndexManager(),
+    (c) => new SpatialIndexManager({ logger: c.resolve(tokens.ILogger) }),
     { lifecycle: 'singleton' }
   );
   log.debug(

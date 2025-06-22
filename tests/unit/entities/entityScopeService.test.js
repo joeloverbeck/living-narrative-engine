@@ -35,9 +35,7 @@ const createMockEntity = (id, components = {}) => ({
 });
 
 describe('entityScopeService', () => {
-  let consoleWarnSpy;
-  let consoleErrorSpy;
-  let consoleLogSpy;
+  let mockLogger;
   // FIXED: The mock entity manager will be fully reset before each test.
   let mockEntityManager;
 
@@ -69,34 +67,35 @@ describe('entityScopeService', () => {
       },
     };
 
-    // Set up spies for console output.
-    consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
-    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
-    consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    mockLogger = {
+      warn: jest.fn(),
+      error: jest.fn(),
+      info: jest.fn(),
+      debug: jest.fn(),
+    };
   });
 
   afterEach(() => {
-    // Restore console spies.
-    consoleWarnSpy.mockRestore();
-    consoleErrorSpy.mockRestore();
-    consoleLogSpy.mockRestore();
+    jest.clearAllMocks();
   });
 
   // --- Main Aggregator Function Tests ---
   describe('getEntityIdsForScopes', () => {
     test('should return an empty set and log an error if context or entityManager is missing', () => {
-      expect(getEntityIdsForScopes('inventory', null)).toEqual(new Set());
-      expect(consoleErrorSpy).toHaveBeenCalledWith(
+      expect(getEntityIdsForScopes('inventory', null, mockLogger)).toEqual(
+        new Set()
+      );
+      expect(mockLogger.error).toHaveBeenCalledWith(
         'getEntityIdsForScopes: Invalid or incomplete context provided. Cannot proceed.',
         { context: null }
       );
 
-      consoleErrorSpy.mockClear();
+      mockLogger.error.mockClear();
 
-      expect(getEntityIdsForScopes('inventory', { actingEntity: {} })).toEqual(
-        new Set()
-      );
-      expect(consoleErrorSpy).toHaveBeenCalledWith(
+      expect(
+        getEntityIdsForScopes('inventory', { actingEntity: {} }, mockLogger)
+      ).toEqual(new Set());
+      expect(mockLogger.error).toHaveBeenCalledWith(
         'getEntityIdsForScopes: Invalid or incomplete context provided. Cannot proceed.',
         { context: { actingEntity: {} } }
       );
@@ -110,17 +109,22 @@ describe('entityScopeService', () => {
 
       const result = getEntityIdsForScopes(
         ['inventory', 'unknown_scope'],
-        context
+        context,
+        mockLogger
       );
       expect(result).toEqual(new Set(['item1']));
-      expect(consoleWarnSpy).toHaveBeenCalledWith(
+      expect(mockLogger.warn).toHaveBeenCalledWith(
         "getEntityIdsForScopes: Unknown scope requested: 'unknown_scope'. Skipping."
       );
     });
 
     test("should log and skip scopes 'none' and 'direction'", () => {
       const context = { entityManager: mockEntityManager };
-      const result = getEntityIdsForScopes(['none', 'direction'], context);
+      const result = getEntityIdsForScopes(
+        ['none', 'direction'],
+        context,
+        mockLogger
+      );
 
       expect(result).toEqual(new Set());
     });
@@ -131,7 +135,7 @@ describe('entityScopeService', () => {
       });
       const context = { actingEntity, entityManager: mockEntityManager };
 
-      const result = getEntityIdsForScopes('inventory', context);
+      const result = getEntityIdsForScopes('inventory', context, mockLogger);
       expect(result).toEqual(new Set(['item1']));
     });
 
@@ -140,7 +144,11 @@ describe('entityScopeService', () => {
         [INVENTORY_COMPONENT_ID]: { items: ['item1', 'item2'] },
       });
       const context = { actingEntity, entityManager: mockEntityManager };
-      const result = getEntityIdsForScopes(['self', 'inventory'], context);
+      const result = getEntityIdsForScopes(
+        ['self', 'inventory'],
+        context,
+        mockLogger
+      );
       expect(result).toEqual(new Set(['player', 'item1', 'item2']));
     });
 
@@ -156,9 +164,9 @@ describe('entityScopeService', () => {
         entityManager: mockEntityManager,
       };
 
-      const result = getEntityIdsForScopes('location', context);
+      const result = getEntityIdsForScopes('location', context, mockLogger);
       expect(result).toEqual(new Set());
-      expect(consoleErrorSpy).toHaveBeenCalledWith(
+      expect(mockLogger.error).toHaveBeenCalledWith(
         "getEntityIdsForScopes: Error executing handler for scope 'location':",
         testError
       );
@@ -187,7 +195,7 @@ describe('entityScopeService', () => {
         currentLocation: location,
         entityManager: mockEntityManager,
       };
-      const result = getEntityIdsForScopes('location', context);
+      const result = getEntityIdsForScopes('location', context, mockLogger);
       expect(result).toEqual(new Set(['itemInLoc', 'npcInLoc']));
     });
 
@@ -196,7 +204,7 @@ describe('entityScopeService', () => {
         currentLocation: location,
         entityManager: mockEntityManager,
       };
-      const result = getEntityIdsForScopes('environment', context);
+      const result = getEntityIdsForScopes('environment', context, mockLogger);
       expect(result).toEqual(new Set(['itemInLoc', 'npcInLoc']));
     });
 
@@ -210,7 +218,7 @@ describe('entityScopeService', () => {
         currentLocation: location,
         entityManager: mockEntityManager,
       };
-      const result = getEntityIdsForScopes('location', context);
+      const result = getEntityIdsForScopes('location', context, mockLogger);
       expect(result).toEqual(new Set(['itemInLoc', 'npcInLoc']));
       expect(result.has('player')).toBe(false);
     });
@@ -237,7 +245,11 @@ describe('entityScopeService', () => {
         currentLocation: location,
         entityManager: mockEntityManager,
       };
-      const result = getEntityIdsForScopes('location_items', context);
+      const result = getEntityIdsForScopes(
+        'location_items',
+        context,
+        mockLogger
+      );
       expect(result).toEqual(new Set(['item1']));
     });
 
@@ -250,7 +262,11 @@ describe('entityScopeService', () => {
         entityManager: mockEntityManager,
       };
 
-      const result = getEntityIdsForScopes('location_items', context);
+      const result = getEntityIdsForScopes(
+        'location_items',
+        context,
+        mockLogger
+      );
       expect(result).toEqual(new Set(['item1']));
     });
   });
@@ -276,7 +292,11 @@ describe('entityScopeService', () => {
         currentLocation: location,
         entityManager: mockEntityManager,
       };
-      const result = getEntityIdsForScopes('location_non_items', context);
+      const result = getEntityIdsForScopes(
+        'location_non_items',
+        context,
+        mockLogger
+      );
       expect(result).toEqual(new Set(['npc1']));
     });
 
@@ -289,7 +309,11 @@ describe('entityScopeService', () => {
         entityManager: mockEntityManager,
       };
 
-      const result = getEntityIdsForScopes('location_non_items', context);
+      const result = getEntityIdsForScopes(
+        'location_non_items',
+        context,
+        mockLogger
+      );
       expect(result).toEqual(new Set(['npc1']));
     });
   });
@@ -313,7 +337,7 @@ describe('entityScopeService', () => {
         currentLocation: location,
         entityManager: mockEntityManager,
       };
-      const result = getEntityIdsForScopes('nearby', context);
+      const result = getEntityIdsForScopes('nearby', context, mockLogger);
 
       expect(result).toEqual(new Set(['inv_item', 'loc_item']));
     });
@@ -344,7 +368,8 @@ describe('entityScopeService', () => {
       };
       const result = getEntityIdsForScopes(
         'nearby_including_blockers',
-        context
+        context,
+        mockLogger
       );
       expect(result).toEqual(new Set(['inv_item', 'boulder']));
     });

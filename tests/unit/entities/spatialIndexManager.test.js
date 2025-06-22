@@ -9,21 +9,19 @@ import { createMockEntityManager } from '../../common/mockFactories.js';
 describe('SpatialIndexManager', () => {
   /** @type {SpatialIndexManager} */
   let spatialIndexManager;
-  let consoleWarnSpy;
-  let consoleErrorSpy;
-  let consoleLogSpy;
+  let mockLogger;
 
   beforeEach(() => {
-    // Restore any spied-on console methods before each test to prevent interference
     jest.restoreAllMocks();
-
-    // Set up spies BEFORE the code that might call them runs
-    consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
-    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
-    consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    mockLogger = {
+      info: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+      debug: jest.fn(),
+    };
 
     // Create a fresh instance for each test AFTER spies are ready
-    spatialIndexManager = new SpatialIndexManager();
+    spatialIndexManager = new SpatialIndexManager({ logger: mockLogger });
   });
 
   //------------------------------------------
@@ -34,8 +32,8 @@ describe('SpatialIndexManager', () => {
       expect(spatialIndexManager.locationIndex).toBeDefined();
       expect(spatialIndexManager.locationIndex).toBeInstanceOf(Map);
       expect(spatialIndexManager.locationIndex.size).toBe(0);
-      expect(consoleLogSpy).toHaveBeenCalledTimes(1);
-      expect(consoleLogSpy).toHaveBeenCalledWith(
+      expect(mockLogger.info).toHaveBeenCalledTimes(1);
+      expect(mockLogger.info).toHaveBeenCalledWith(
         'SpatialIndexManager initialized.'
       );
     });
@@ -91,31 +89,31 @@ describe('SpatialIndexManager', () => {
     it('should ignore adding if locationId is null', () => {
       spatialIndexManager.addEntity('entity1', null);
       expect(spatialIndexManager.locationIndex.size).toBe(0);
-      expect(consoleWarnSpy).not.toHaveBeenCalled();
+      expect(mockLogger.warn).not.toHaveBeenCalled();
     });
 
     it('should ignore adding if locationId is undefined', () => {
       spatialIndexManager.addEntity('entity1', undefined);
       expect(spatialIndexManager.locationIndex.size).toBe(0);
-      expect(consoleWarnSpy).not.toHaveBeenCalled();
+      expect(mockLogger.warn).not.toHaveBeenCalled();
     });
 
     it('should ignore adding if locationId is an empty string', () => {
       spatialIndexManager.addEntity('entity1', '');
       expect(spatialIndexManager.locationIndex.size).toBe(0);
-      expect(consoleWarnSpy).not.toHaveBeenCalled();
+      expect(mockLogger.warn).not.toHaveBeenCalled();
     });
 
     it('should ignore adding if locationId is a whitespace string', () => {
       spatialIndexManager.addEntity('entity1', '   ');
       expect(spatialIndexManager.locationIndex.size).toBe(0);
-      expect(consoleWarnSpy).not.toHaveBeenCalled();
+      expect(mockLogger.warn).not.toHaveBeenCalled();
     });
 
     it('should ignore adding and warn if entityId is invalid (null)', () => {
       spatialIndexManager.addEntity(null, 'locationA');
       expect(spatialIndexManager.locationIndex.size).toBe(0);
-      expect(consoleWarnSpy).toHaveBeenCalledWith(
+      expect(mockLogger.warn).toHaveBeenCalledWith(
         expect.stringContaining('Invalid entityId (null)')
       );
     });
@@ -123,7 +121,7 @@ describe('SpatialIndexManager', () => {
     it('should ignore adding and warn if entityId is invalid (empty string)', () => {
       spatialIndexManager.addEntity('', 'locationA');
       expect(spatialIndexManager.locationIndex.size).toBe(0);
-      expect(consoleWarnSpy).toHaveBeenCalledWith(
+      expect(mockLogger.warn).toHaveBeenCalledWith(
         expect.stringContaining('Invalid entityId ()')
       );
     });
@@ -131,7 +129,7 @@ describe('SpatialIndexManager', () => {
     it('should ignore adding and warn if entityId is invalid (whitespace string)', () => {
       spatialIndexManager.addEntity('   ', 'locationA');
       expect(spatialIndexManager.locationIndex.size).toBe(0);
-      expect(consoleWarnSpy).toHaveBeenCalledWith(
+      expect(mockLogger.warn).toHaveBeenCalledWith(
         expect.stringContaining('Invalid entityId (   )')
       );
     });
@@ -202,7 +200,7 @@ describe('SpatialIndexManager', () => {
       const originalSize = spatialIndexManager.locationIndex.size;
       spatialIndexManager.removeEntity(null, 'locationA');
       expect(spatialIndexManager.locationIndex.size).toBe(originalSize);
-      expect(consoleWarnSpy).toHaveBeenCalledWith(
+      expect(mockLogger.warn).toHaveBeenCalledWith(
         expect.stringContaining('Invalid entityId (null)')
       );
     });
@@ -211,7 +209,7 @@ describe('SpatialIndexManager', () => {
       const originalSize = spatialIndexManager.locationIndex.size;
       spatialIndexManager.removeEntity('', 'locationA');
       expect(spatialIndexManager.locationIndex.size).toBe(originalSize);
-      expect(consoleWarnSpy).toHaveBeenCalledWith(
+      expect(mockLogger.warn).toHaveBeenCalledWith(
         expect.stringContaining('Invalid entityId ()')
       );
     });
@@ -363,7 +361,7 @@ describe('SpatialIndexManager', () => {
       const originalSize = spatialIndexManager.locationIndex.size;
       spatialIndexManager.updateEntityLocation('', 'locationA', 'locationB');
       expect(spatialIndexManager.locationIndex.size).toBe(originalSize);
-      expect(consoleWarnSpy).toHaveBeenCalledWith(
+      expect(mockLogger.warn).toHaveBeenCalledWith(
         expect.stringContaining('Invalid entityId')
       );
     });
@@ -423,16 +421,12 @@ describe('SpatialIndexManager', () => {
   //------------------------------------------
   describe('buildIndex', () => {
     beforeEach(() => {
-      spatialIndexManager = new SpatialIndexManager();
+      spatialIndexManager = new SpatialIndexManager({ logger: mockLogger });
     });
 
     it('should correctly build the index using getComponentData', () => {
       const mockEntityManager = setupMockEntityManagerWithEntities(true);
-      // Debug: print the entities to verify setup
-      console.log(
-        'Entities in mockEntityManager:',
-        Array.from(mockEntityManager.entities)
-      );
+      // Debug: verify setup
       spatialIndexManager.buildIndex(mockEntityManager);
 
       expect(spatialIndexManager.locationIndex.size).toBe(2);
@@ -463,15 +457,15 @@ describe('SpatialIndexManager', () => {
       ).some((key) => key === null);
       expect(hasNullKey).toBe(false);
 
-      // Remove or update specific consoleLogSpy checks that are failing due to new detailed logging
+      // Remove or update specific mockLogger.info checks that are failing due to new detailed logging
       // For example, if it was checking for "Building index from active entities..."
       // This specific check might no longer be relevant or correct.
-      // expect(consoleLogSpy).toHaveBeenCalledWith(
+      // expect(mockLogger.info).toHaveBeenCalledWith(
       //   'SpatialIndexManager: Building index from active entities...'
       // );
       // If other specific logs from buildIndex are important, adjust their expectations.
       // For now, we are focusing on functional correctness.
-      expect(consoleWarnSpy).not.toHaveBeenCalled(); // Assuming no warnings for this valid case
+      expect(mockLogger.warn).not.toHaveBeenCalled(); // Assuming no warnings for this valid case
     });
 
     it('should clear the existing index before building', () => {
@@ -488,18 +482,18 @@ describe('SpatialIndexManager', () => {
       expect(spatialIndexManager.locationIndex.size).toBe(2); // From mockEntityManager
       expect(spatialIndexManager.locationIndex.has('locationA')).toBe(true);
       expect(spatialIndexManager.locationIndex.has('locationB')).toBe(true);
-      // consoleLogSpy assertions related to old messages can be removed or updated here as well.
+      // mockLogger.info assertions related to old messages can be removed or updated here as well.
     });
 
     it('should handle invalid EntityManager gracefully', () => {
       spatialIndexManager.buildIndex(null);
       expect(spatialIndexManager.locationIndex.size).toBe(0);
-      expect(consoleErrorSpy).toHaveBeenCalledWith(
+      expect(mockLogger.error).toHaveBeenCalledWith(
         // 'SpatialIndexManager.buildIndex: Invalid EntityManager or missing activeEntities iterable provided.'
         'SpatialIndexManager.buildIndex: Invalid entityManager provided.' // Updated message
       );
       // Check for the new specific log message related to clearing if needed, or remove if too fragile.
-      // expect(consoleLogSpy).toHaveBeenCalledWith(
+      // expect(mockLogger.info).toHaveBeenCalledWith(
       //   '[SpatialIndexManager.buildIndex] Index cleared.'
       // );
     });
@@ -517,24 +511,24 @@ describe('SpatialIndexManager', () => {
       spatialIndexManager.addEntity('entity1', 'locationA');
       spatialIndexManager.addEntity('entity2', 'locationB');
       expect(spatialIndexManager.locationIndex.size).toBe(2);
-      consoleLogSpy.mockClear(); // Clear constructor log
+      mockLogger.info.mockClear(); // Clear constructor log
 
       spatialIndexManager.clearIndex();
 
       expect(spatialIndexManager.locationIndex.size).toBe(0);
-      expect(consoleLogSpy).toHaveBeenCalledWith(
+      expect(mockLogger.info).toHaveBeenCalledWith(
         'SpatialIndexManager: Index cleared.'
       );
     });
 
     it('should work correctly on an already empty index', () => {
       expect(spatialIndexManager.locationIndex.size).toBe(0);
-      consoleLogSpy.mockClear(); // Clear constructor log
+      mockLogger.info.mockClear(); // Clear constructor log
 
       spatialIndexManager.clearIndex();
 
       expect(spatialIndexManager.locationIndex.size).toBe(0);
-      expect(consoleLogSpy).toHaveBeenCalledWith(
+      expect(mockLogger.info).toHaveBeenCalledWith(
         'SpatialIndexManager: Index cleared.'
       );
     });
