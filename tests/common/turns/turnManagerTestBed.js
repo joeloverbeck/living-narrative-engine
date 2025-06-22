@@ -15,12 +15,10 @@ import { createMockEntityManager } from '../mockFactories/entities.js';
 import FactoryTestBed from '../factoryTestBed.js';
 import { createStoppableMixin } from '../stoppableTestBedMixin.js';
 import { SpyTrackerMixin } from '../spyTrackerMixin.js';
-import {
-  describeSuiteWithHooks,
-  createDescribeTestBedSuite,
-} from '../describeSuite.js';
+import { createDescribeTestBedSuite } from '../describeSuite.js';
 import { createTestBedHelpers } from '../createTestBedHelpers.js';
 import { flushPromisesAndTimers } from '../jestHelpers.js';
+import { createDefaultActors } from './testActors.js';
 
 /**
  * @description Utility class that instantiates {@link TurnManager} with mocked
@@ -182,6 +180,76 @@ export class TurnManagerTestBed extends SpyTrackerMixin(
   }
 
   /**
+   * Adds a set of default actors to the mocked entity manager.
+   *
+   * @returns {{ ai1: object, ai2: object, player: object }}
+   *   Object containing the created actors.
+   */
+  addDefaultActors() {
+    const actors = createDefaultActors();
+    this.setActiveEntities(actors.ai1, actors.ai2, actors.player);
+    return actors;
+  }
+
+  /**
+   * Starts the manager with default actors and flushes pending tasks.
+   *
+   * @returns {Promise<{ ai1: object, ai2: object, player: object }>}
+   *   Promise resolving to the created actors once start completes.
+   */
+  async startWithDefaultActorsAndFlush() {
+    const actors = this.addDefaultActors();
+    await this.startAndFlush();
+    return actors;
+  }
+
+  /**
+   * Configures the turn order service to return the provided actor next.
+   *
+   * @param {object} actor - Actor entity to return.
+   * @returns {void}
+   */
+  mockNextActor(actor) {
+    this.mocks.turnOrderService.isEmpty.mockResolvedValue(false);
+    this.mocks.turnOrderService.getNextEntity.mockResolvedValue(actor);
+  }
+
+  /**
+   * Configures the turn order service to represent an empty queue.
+   *
+   * @returns {void}
+   */
+  mockEmptyQueue() {
+    this.mocks.turnOrderService.isEmpty.mockResolvedValue(true);
+    this.mocks.turnOrderService.getNextEntity.mockResolvedValue(null);
+  }
+
+  /**
+   * Creates a spy on {@link TurnManager.stop} that resolves without side
+   * effects.
+   *
+   * @returns {import('@jest/globals').Mock} The spy instance.
+   */
+  setupStopSpyNoOp() {
+    const spy = this.spyOnStop();
+    spy.mockResolvedValue();
+    return spy;
+  }
+
+  /**
+   * Sets up a mock turn handler for the provided actor.
+   *
+   * @param {object} actor - Actor entity for which to create the handler.
+   * @param {object} [options] - Additional handler options.
+   * @returns {ReturnType<typeof createMockTurnHandler>} The created handler.
+   */
+  setupHandlerForActor(actor, options = {}) {
+    const handler = createMockTurnHandler({ actor, ...options });
+    this.turnHandlerResolver.resolveHandler.mockResolvedValue(handler);
+    return handler;
+  }
+
+  /**
    * Configures the resolver to return a fresh mock handler for any actor.
    *
    * @param {boolean} [includeSignal] - Whether handlers include signalNormalApparentTermination.
@@ -197,10 +265,10 @@ export class TurnManagerTestBed extends SpyTrackerMixin(
   }
 
   /**
-   * @description Initializes common mock implementations used across many
-   *   test suites. All turn order service methods resolve successfully,
-   *   dispatcher.dispatch resolves to `true`, and a default handler resolver is
-   *   configured.
+   * Initializes common mock implementations used across many test suites. All
+   *   turn order service methods resolve successfully, dispatcher.dispatch
+   *   resolves to `true`, and a default handler resolver is configured.
+   *
    * @returns {void}
    */
   initializeDefaultMocks() {
