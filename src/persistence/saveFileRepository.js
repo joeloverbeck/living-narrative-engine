@@ -6,6 +6,7 @@ import {
 } from '../utils/savePathUtils.js';
 import SaveFileParser from './saveFileParser.js';
 import { PersistenceErrorCodes } from './persistenceErrors.js';
+import { StorageErrorCodes } from '../storage/storageErrors.js';
 import { createPersistenceFailure } from '../utils/persistenceResultUtils.js';
 import { wrapPersistenceOperation } from '../utils/persistenceErrorUtils.js';
 import { BaseService } from '../utils/serviceBase.js';
@@ -116,10 +117,7 @@ export default class SaveFileRepository extends BaseService {
         `Failed to write manual save to ${filePath}: ${writeResult.error}`
       );
       let userError = `Failed to save game: ${writeResult.error}`;
-      if (
-        writeResult.error &&
-        writeResult.error.toLowerCase().includes('disk full')
-      ) {
+      if (writeResult.code === StorageErrorCodes.DISK_FULL) {
         userError = 'Failed to save game: Not enough disk space.';
       }
       return createPersistenceFailure(
