@@ -484,6 +484,19 @@ describe('WorldInitializer', () => {
           mockInstance
         );
 
+        // Mock the location entity to exist so spatial index validation passes
+        const mockLocationEntity = createMockEntityInstance(
+          'some-other-place',
+          'test:location',
+          {}
+        );
+        mockEntityManager.getEntityInstance.mockImplementation((id) => {
+          if (id === 'some-other-place') {
+            return mockLocationEntity;
+          }
+          return id.startsWith('uuid-') ? mockLocationEntity : undefined;
+        });
+
         await worldInitializer.initializeWorldEntities('test:world');
 
         expect(mockLogger.debug).toHaveBeenCalledWith(
@@ -532,6 +545,19 @@ describe('WorldInitializer', () => {
         mockEntityManager.createEntityInstance.mockReturnValueOnce(
           roomInstancePos1
         );
+
+        // Mock the location entity to exist so spatial index validation passes
+        const mockLocationEntity = createMockEntityInstance(
+          'some-other-place',
+          'test:location',
+          {}
+        );
+        mockEntityManager.getEntityInstance.mockImplementation((id) => {
+          if (id === 'some-other-place') {
+            return mockLocationEntity;
+          }
+          return id.startsWith('uuid-') ? mockLocationEntity : undefined;
+        });
 
         // This mock is for getComponentDefinition in _resolveReferencesForEntityComponents
         mockGameDataRepository.getComponentDefinition.mockImplementation(

@@ -354,18 +354,22 @@ class WorldInitializer {
     ) {
       const locationIdForSpatialIndex = positionComponentData.locationId;
 
-      if (locationIdForSpatialIndex.includes(':')) {
-        this.#logger.warn(
-          `WorldInitializer (Spatial Index): Entity ${entity.id}'s position component locationId '${locationIdForSpatialIndex}' still appears to be an unresolved definitionId. Spatial index might be incorrect if this is not intended.`
+      // Check if the location entity actually exists in the entity manager
+      const locationEntity = this.#entityManager.getEntityInstance(locationIdForSpatialIndex);
+      if (!locationEntity) {
+        safeDispatchError(
+          this.#validatedEventDispatcher,
+          `Entity ${entity.id} references a location '${locationIdForSpatialIndex}' that does not exist. The game cannot start with invalid location references.`,
+          {
+            statusCode: 500,
+            raw: `Location entity not found. Context: WorldInitializer._addEntityToSpatialIndex, entityId: ${entity.id}, locationId: ${locationIdForSpatialIndex}`,
+            timestamp: new Date().toISOString(),
+          }
         );
+        return false;
       }
 
-      // Check if not an empty string after trim (already done by outer if, but good for clarity)
-      // const locationEntity = this.#entityManager.getEntityInstance(locationIdForSpatialIndex); // Not strictly needed to check if location *exists* before adding to spatial index, spatial index handles abstract locations.
-
-      // Original logic based on whether it *looks like* a def ID OR if instance is found.
-      // Simplified: The key is whether we have a string ID. The warning above handles the "looks like def ID" case.
-      // The spatial index should be able to handle being given an ID that might not (yet) exist as a full entity,
+      // The spatial index should be able to handle being given an ID that exists as a full entity,
       // as it's primarily a mapping of entity IDs to location IDs.
       this.#spatialIndexManager.addEntity(entity.id, locationIdForSpatialIndex);
       this.#logger.debug(
