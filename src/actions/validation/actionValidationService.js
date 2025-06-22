@@ -12,6 +12,10 @@
 import { ActionTargetContext } from '../../models/actionTargetContext.js';
 import { PrerequisiteEvaluationService } from './prerequisiteEvaluationService.js';
 import { setupService } from '../../utils/serviceInitializerUtils.js';
+import {
+  TARGET_DOMAIN_SELF,
+  TARGET_DOMAIN_NONE,
+} from '../../constants/targetDomains.js';
 // --- Refactor-AVS-3.4: Remove dependency ---
 // REMOVED: import { ActionValidationContextBuilder } from './actionValidationContextBuilder.js';
 // --- End Refactor-AVS-3.4 ---
@@ -131,7 +135,7 @@ export class ActionValidationService {
   _validateDomainAndContext(actionDefinition, actorEntity, targetContext) {
     const actionId = actionDefinition.id;
     const actorId = actorEntity.id;
-    const expectedDomain = actionDefinition.target_domain || 'none';
+    const expectedDomain = actionDefinition.target_domain || TARGET_DOMAIN_NONE;
     const contextType = targetContext.type;
 
     const isCompatible = this.#domainContextCompatibilityChecker.check(
@@ -140,9 +144,12 @@ export class ActionValidationService {
     );
 
     if (!isCompatible) {
-      if (contextType === 'none' && expectedDomain !== 'none') {
+      if (
+        contextType === TARGET_DOMAIN_NONE &&
+        expectedDomain !== TARGET_DOMAIN_NONE
+      ) {
         this.#logger.debug(
-          `Validation[${actionId}]: Domain/Context check PASSED (deferred): Initial check context is 'none' but domain '${expectedDomain}' requires a target. Checker result (${isCompatible}) ignored for this step.`
+          `Validation[${actionId}]: Domain/Context check PASSED (deferred): Initial check context is '${TARGET_DOMAIN_NONE}' but domain '${expectedDomain}' requires a target. Checker result (${isCompatible}) ignored for this step.`
         );
       } else {
         this.#logger.debug(
@@ -153,12 +160,12 @@ export class ActionValidationService {
     }
 
     if (
-      expectedDomain === 'self' &&
+      expectedDomain === TARGET_DOMAIN_SELF &&
       contextType === 'entity' &&
       targetContext.entityId !== actorId
     ) {
       this.#logger.debug(
-        `Validation[${actionId}]: ← STEP 1 FAILED ('self' target mismatch). Target entity '${targetContext.entityId}' !== Actor '${actorId}'.`
+        `Validation[${actionId}]: ← STEP 1 FAILED ('${TARGET_DOMAIN_SELF}' target mismatch). Target entity '${targetContext.entityId}' !== Actor '${actorId}'.`
       );
       return false;
     }
@@ -322,7 +329,7 @@ export class ActionValidationService {
     const actorId = actorEntity.id;
 
     this.#logger.debug(
-      `START Validation: action='${actionId}', actor='${actorId}', ctxType='${targetContext.type}', target='${targetContext.entityId ?? targetContext.direction ?? 'none'}'`
+      `START Validation: action='${actionId}', actor='${actorId}', ctxType='${targetContext.type}', target='${targetContext.entityId ?? targetContext.direction ?? TARGET_DOMAIN_NONE}'`
     );
 
     try {

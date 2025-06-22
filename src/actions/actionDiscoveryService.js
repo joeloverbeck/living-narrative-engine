@@ -18,6 +18,11 @@ import {
   getAvailableExits,
 } from '../utils/locationUtils.js';
 import {
+  TARGET_DOMAIN_SELF,
+  TARGET_DOMAIN_NONE,
+  TARGET_DOMAIN_DIRECTION,
+} from '../constants/targetDomains.js';
+import {
   discoverSelfOrNone,
   discoverDirectionalActions,
   discoverScopedEntityActions,
@@ -89,9 +94,9 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
     }
 
     this.DOMAIN_HANDLERS = {
-      none: handleSelfOrNone,
-      self: handleSelfOrNone,
-      direction: handleDirection,
+      [TARGET_DOMAIN_NONE]: handleSelfOrNone,
+      [TARGET_DOMAIN_SELF]: handleSelfOrNone,
+      [TARGET_DOMAIN_DIRECTION]: handleDirection,
     };
   }
 
@@ -231,15 +236,15 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
     try {
       const handlers = this.constructor.DOMAIN_HANDLERS;
       let actions;
-      if (domain === 'none' || domain === 'self') {
+      if (domain === TARGET_DOMAIN_NONE || domain === TARGET_DOMAIN_SELF) {
         actions = handlers[domain].call(
           this,
           actionDef,
           actorEntity,
           formatterOptions
         );
-      } else if (domain === 'direction') {
-        actions = handlers.direction.call(
+      } else if (domain === TARGET_DOMAIN_DIRECTION) {
+        actions = handlers[TARGET_DOMAIN_DIRECTION].call(
           this,
           actionDef,
           actorEntity,
