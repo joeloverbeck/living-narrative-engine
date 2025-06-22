@@ -9,6 +9,7 @@
 import { BaseManifestItemLoader } from './baseManifestItemLoader.js';
 import { processAndStoreItem } from './helpers/processAndStoreItem.js';
 import { parseAndValidateId } from '../utils/idUtils.js';
+import EntityDefinition from '../entities/entityDefinition.js';
 
 // --- JSDoc Imports for Type Hinting ---
 /** @typedef {import('../interfaces/coreServices.js').IConfiguration} IConfiguration */
@@ -190,11 +191,18 @@ class EntityDefinitionLoader extends BaseManifestItemLoader {
       );
     }
 
+    // Create EntityDefinition instance from the raw data
+    const entityDefinition = new EntityDefinition(trimmedId, data);
+    console.log('[DEBUG Loader] Created EntityDefinition:', entityDefinition, 'instanceof EntityDefinition?', entityDefinition instanceof EntityDefinition);
+
     this._logger.debug(
-      `EntityLoader [${modId}]: Delegating storage for original type '${registryKey}' with base ID '${baseEntityId}' to base helper for file ${filename}. Storing under 'entityDefinitions' category.`
+      `EntityLoader [${modId}]: Created EntityDefinition instance for '${trimmedId}' from ${filename}. Delegating storage to base helper.`
     );
+    
+    console.log('[DEBUG Loader] About to store in registry:', entityDefinition, 'type:', typeof entityDefinition, 'constructor:', entityDefinition.constructor.name);
+    
     const { qualifiedId, didOverride } = await processAndStoreItem(this, {
-      data,
+      data: entityDefinition, // Pass the EntityDefinition instance instead of raw data
       idProp: 'id',
       category: 'entityDefinitions',
       modId,

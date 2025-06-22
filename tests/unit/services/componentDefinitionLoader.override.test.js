@@ -371,7 +371,7 @@ describe('ComponentLoader (Sub-Ticket 6.3: Override Behavior)', () => {
     const expectedStoredCoreObject = {
       id: baseComponentId, // Base ID
       _fullId: coreQualifiedId, // Qualified ID
-      modId: CORE_MOD_ID,
+      _modId: CORE_MOD_ID,
       _sourceFile: sharedFilename,
       dataSchema: coreSharedPositionDef.dataSchema,
       description: coreSharedPositionDef.description,
@@ -382,7 +382,7 @@ describe('ComponentLoader (Sub-Ticket 6.3: Override Behavior)', () => {
     const expectedStoredFooObject = {
       id: baseComponentId, // Base ID
       _fullId: fooQualifiedId, // Qualified ID
-      modId: fooModId,
+      _modId: fooModId,
       _sourceFile: sharedFilename,
       dataSchema: fooSharedPositionDefFromFileData.dataSchema,
       description: fooSharedPositionDefFromFileData.description,
@@ -446,7 +446,7 @@ describe('ComponentLoader (Sub-Ticket 6.3: Override Behavior)', () => {
     expect(finalStoredItem).toBeDefined();
     expect(finalStoredItem.id).toBe(baseComponentId);
     expect(finalStoredItem._fullId).toBe(fooQualifiedId);
-    expect(finalStoredItem.modId).toBe(fooModId);
+    expect(finalStoredItem._modId).toBe(fooModId);
     expect(finalStoredItem.dataSchema).toEqual(
       fooSharedPositionDefFromFileData.dataSchema
     );
@@ -457,6 +457,6 @@ describe('ComponentLoader (Sub-Ticket 6.3: Override Behavior)', () => {
       coreQualifiedId
     );
     expect(coreItemShouldStillExist).toBeDefined();
-    expect(coreItemShouldStillExist.modId).toBe(CORE_MOD_ID);
+    expect(coreItemShouldStillExist._modId).toBe(CORE_MOD_ID);
   });
 });

@@ -273,7 +273,7 @@ describe('RuleLoader - Fetch Failure Handling (via loadItemsForMod)', () => {
         ...ruleDataOK,
         id: fileOKName, // BASE ID
         _fullId: expectedRuleIdOK, // QUALIFIED ID
-        modId: modId,
+        _modId: "test-mod-fetch-fail",
         _sourceFile: fileOK,
       };
       expect(mockRegistry.store).toHaveBeenCalledWith(

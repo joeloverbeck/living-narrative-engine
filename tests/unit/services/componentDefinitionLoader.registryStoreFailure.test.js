@@ -418,7 +418,7 @@ describe('ComponentLoader (Sub-Ticket 6.9: Registry Storage Failure)', () => {
     const expectedStoredObject = {
       ...validDef,
       id: baseComponentId, // ID in stored object is the base ID
-      modId: modId,
+      _modId: "storeFailMod",
       _sourceFile: filename,
       _fullId: finalRegistryKey,
     };

@@ -101,6 +101,7 @@ describe('MacroLoader (Happy Path - Core Mod)', () => {
         _fullId: 'core:logSuccessAndEndTurn',
         description: logSuccess.description,
         actions: logSuccess.actions,
+        _modId: "core",
       })
     );
     expect(mockRegistry.store).toHaveBeenCalledWith(
@@ -111,6 +112,7 @@ describe('MacroLoader (Happy Path - Core Mod)', () => {
         _fullId: 'core:logFailureAndEndTurn',
         description: logFailure.description,
         actions: logFailure.actions,
+        _modId: "core",
       })
     );
 

@@ -520,22 +520,13 @@ export class BaseManifestItemLoader extends AbstractLoader {
 
     const qualifiedId = `${modId}:${baseItemId}`;
 
-    // Ensure dataToStore has 'id' as the baseId, and add '_fullId', 'modId', '_sourceFile'
-    const dataWithMetadata = {
-      ...dataToStore, // dataToStore should have 'id' as the baseId from the file
-      modId: modId,
+    // Create a new object with all own properties of dataToStore plus metadata as own properties
+    const dataWithMetadata = Object.assign({}, dataToStore, {
+      _modId: modId,
       _sourceFile: sourceFilename,
-      _fullId: qualifiedId, // Add _fullId for the qualified ID
-      // The 'id' property from dataToStore (which is the baseId from the file) is preserved.
-    };
-
-    // Ensure the 'id' property in dataWithMetadata is indeed the baseId if it came from dataToStore.
-    // If dataToStore.id was different, this standardizes it. Or, if dataToStore had no id, it adds it.
-    // However, parseAndValidateId in the calling context (processAndStoreItem) already ensures data.id exists (or logs error).
-    // The main point is dataToStore.id (base) is preserved, and _fullId (qualified) is added.
-    // If dataToStore.id was already qualified, this could be an issue, but parseAndValidateId should give baseId.
-    // Forcing dataWithMetadata.id to be baseItemId ensures clarity.
-    dataWithMetadata.id = baseItemId;
+      _fullId: qualifiedId,
+      id: baseItemId,
+    });
 
     this._logger.debug(
       `${this.constructor.name} [${modId}]: Storing item in registry. Category: '${category}', Qualified ID: '${qualifiedId}', Base ID: '${baseItemId}', Filename: '${sourceFilename}'`
@@ -544,7 +535,7 @@ export class BaseManifestItemLoader extends AbstractLoader {
     const didOverride = this._dataRegistry.store(
       category,
       qualifiedId, // Store under the fully qualified ID
-      dataWithMetadata // Store the enhanced object
+      dataWithMetadata // Store the object with metadata as own properties
     );
 
     if (didOverride) {

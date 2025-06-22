@@ -121,7 +121,7 @@ describe('BaseManifestItemLoader._parseIdAndStoreItem', () => {
         ...data,
         id: 'test',
         _fullId: `${modId}:test`,
-        modId: modId,
+        _modId: "testMod",
         _sourceFile: filename,
       })
     );
