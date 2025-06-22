@@ -1,6 +1,5 @@
 // tests/engine/startNewGame.test.js
 import { beforeEach, describe, expect, it } from '@jest/globals';
-import { tokens } from '../../../src/dependencyInjection/tokens.js';
 import { describeEngineSuite } from '../../common/engine/gameEngineTestBed.js';
 
 import { ENGINE_OPERATION_FAILED_UI } from '../../../src/constants/eventIds.js';
@@ -8,6 +7,7 @@ import {
   expectDispatchSequence,
   buildStopDispatches,
   buildStartDispatches,
+  expectStartSuccess,
   expectEngineRunning,
   expectEngineStopped,
 } from '../../common/engine/dispatchTestUtils.js';
@@ -25,23 +25,7 @@ describeEngineSuite('GameEngine', (ctx) => {
 
     it('should successfully start a new game', async () => {
       await ctx.engine.startNewGame(DEFAULT_TEST_WORLD);
-
-      expectDispatchSequence(
-        ctx.bed.mocks.safeEventDispatcher.dispatch,
-        buildStartDispatches(DEFAULT_TEST_WORLD)
-      );
-      expect(ctx.bed.mocks.entityManager.clearAll).toHaveBeenCalled();
-      expect(ctx.bed.mocks.playtimeTracker.reset).toHaveBeenCalled();
-      expect(ctx.bed.env.mockContainer.resolve).toHaveBeenCalledWith(
-        tokens.IInitializationService
-      );
-      expect(
-        ctx.bed.mocks.initializationService.runInitializationSequence
-      ).toHaveBeenCalledWith(DEFAULT_TEST_WORLD);
-      expect(ctx.bed.mocks.playtimeTracker.startSession).toHaveBeenCalled();
-      expect(ctx.bed.mocks.turnManager.start).toHaveBeenCalled();
-
-      expectEngineRunning(ctx.engine, DEFAULT_TEST_WORLD);
+      expectStartSuccess(ctx.bed, ctx.engine, DEFAULT_TEST_WORLD);
     });
 
     it('should stop an existing game if already initialized, with correct event payloads from stop()', async () => {
