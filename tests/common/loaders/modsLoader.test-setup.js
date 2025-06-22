@@ -20,7 +20,7 @@ import {
   createMockWorldLoader, // ← NEW import
 } from '../mockFactories';
 import { createLoaderMocks } from './modsLoader.test-utils.js';
-import { createServiceTestEnvironment } from '../mockEnvironment.js';
+import { createTestEnvironmentBuilder } from '../mockEnvironment.js';
 
 /**
  * List of loader types used when generating mock loaders.
@@ -36,37 +36,25 @@ const loaderTypes = [
   'Entity',
 ];
 
-/**
- * Builds a fully mocked environment for ModsLoader tests.
- *
- * @description Creates and returns a collection of mock loaders and
- *   dependencies used by ModsLoader integration tests.
- * @returns {object} Test environment utilities and mocks.
- */
-export function createTestEnvironment() {
-  const factoryMap = {
-    mockRegistry: createStatefulMockDataRegistry,
-    mockLogger: createMockLogger,
-    mockSchemaLoader: createMockSchemaLoader,
-    mockValidator: createMockSchemaValidator,
-    mockConfiguration: createMockConfiguration,
-    mockGameConfigLoader: createMockGameConfigLoader,
-    mockModManifestLoader: createMockModManifestLoader,
-    mockValidatedEventDispatcher: createMockValidatedEventDispatcher,
-    mockModDependencyValidator: createMockModDependencyValidator,
-    mockModVersionValidator: createMockModVersionValidator,
-    mockModLoadOrderResolver: createMockModLoadOrderResolver,
-    mockWorldLoader: createMockWorldLoader,
-  };
+const factoryMap = {
+  mockRegistry: createStatefulMockDataRegistry,
+  mockLogger: createMockLogger,
+  mockSchemaLoader: createMockSchemaLoader,
+  mockValidator: createMockSchemaValidator,
+  mockConfiguration: createMockConfiguration,
+  mockGameConfigLoader: createMockGameConfigLoader,
+  mockModManifestLoader: createMockModManifestLoader,
+  mockValidatedEventDispatcher: createMockValidatedEventDispatcher,
+  mockModDependencyValidator: createMockModDependencyValidator,
+  mockModVersionValidator: createMockModVersionValidator,
+  mockModLoadOrderResolver: createMockModLoadOrderResolver,
+  mockWorldLoader: createMockWorldLoader,
+};
 
-  /* ── Content-loader mocks ───────────────────────────────────────────── */
-  const loaders = createLoaderMocks(loaderTypes);
-
-  const {
-    mocks,
-    instance: modsLoader,
-    cleanup,
-  } = createServiceTestEnvironment(factoryMap, {}, (mockContainer, m) => {
+const buildModsLoaderEnv = createTestEnvironmentBuilder(
+  factoryMap,
+  {},
+  (mockContainer, m) => {
     m.mockValidator.isSchemaLoaded.mockImplementation((id) =>
       [
         'schema:game',
@@ -90,7 +78,21 @@ export function createTestEnvironment() {
       cache: { clear: jest.fn(), snapshot: jest.fn(), restore: jest.fn() },
       session: { run: jest.fn().mockResolvedValue({}) },
     });
-  });
+  }
+);
+
+/**
+ * Builds a fully mocked environment for ModsLoader tests.
+ *
+ * @description Creates and returns a collection of mock loaders and
+ *   dependencies used by ModsLoader integration tests.
+ * @returns {object} Test environment utilities and mocks.
+ */
+export function createTestEnvironment() {
+  /* ── Content-loader mocks ───────────────────────────────────────────── */
+  const loaders = createLoaderMocks(loaderTypes);
+
+  const { mocks, instance: modsLoader, cleanup } = buildModsLoaderEnv();
 
   /* ── Return the assembled environment ──────────────────────────────── */
   return {
