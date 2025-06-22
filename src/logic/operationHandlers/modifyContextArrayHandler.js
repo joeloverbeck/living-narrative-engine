@@ -11,7 +11,7 @@ import { resolvePath } from '../../utils/objectUtils.js';
 import { tryWriteContextVariable } from '../../utils/contextVariableUtils.js';
 import { cloneDeep } from 'lodash';
 import { assertParamsObject } from '../../utils/handlerUtils/indexUtils.js';
-import { applyArrayModification } from '../utils/arrayModifyUtils.js';
+import { advancedArrayModify } from '../utils/arrayModifyUtils.js';
 import { setByPath } from '../utils/objectPathUtils.js';
 
 /**
@@ -117,8 +117,6 @@ class ModifyContextArrayHandler {
     }
     log.debug(debugMessage);
 
-    let operationResult = null;
-
     const validModes = ['push', 'push_unique', 'pop', 'remove_by_value'];
     if (!validModes.includes(mode)) {
       log.warn(`MODIFY_CONTEXT_ARRAY: Unknown mode '${mode}'.`);
@@ -133,44 +131,14 @@ class ModifyContextArrayHandler {
       return;
     }
 
-    if (mode === 'push_unique') {
-      let exists = false;
-      if (typeof value !== 'object' || value === null) {
-        exists = clonedArray.includes(value);
-      } else {
-        const valueAsJson = JSON.stringify(value);
-        exists = clonedArray.some(
-          (item) => JSON.stringify(item) === valueAsJson
-        );
-      }
-      if (!exists) {
-        clonedArray = applyArrayModification(mode, clonedArray, value, log);
-      }
-      operationResult = clonedArray;
-    } else if (mode === 'pop') {
-      const popped =
-        clonedArray.length > 0
-          ? clonedArray[clonedArray.length - 1]
-          : undefined;
-      clonedArray = applyArrayModification(mode, clonedArray, value, log);
-      operationResult = popped;
-    } else if (mode === 'remove_by_value') {
-      let target = value;
-      if (typeof value === 'object' && value !== null) {
-        const valueAsJson = JSON.stringify(value);
-        const found = clonedArray.find(
-          (item) => JSON.stringify(item) === valueAsJson
-        );
-        if (found) {
-          target = found;
-        }
-      }
-      clonedArray = applyArrayModification(mode, clonedArray, target, log);
-      operationResult = clonedArray;
-    } else {
-      clonedArray = applyArrayModification(mode, clonedArray, value, log);
-      operationResult = clonedArray;
-    }
+    const { nextArray, result } = advancedArrayModify(
+      mode,
+      clonedArray,
+      value,
+      log
+    );
+    clonedArray = nextArray;
+    const operationResult = result;
 
     // --- FIX: Set the modified clone back into the context ---
     const finalArray = clonedArray;
