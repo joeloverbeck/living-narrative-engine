@@ -1,5 +1,5 @@
 /**
- * @fileoverview Scope Registry
+ * @file Scope Registry
  * @description Manages scope definitions loaded from mods
  */
 
@@ -11,7 +11,8 @@ class ScopeRegistry {
 
   /**
    * Initialize the registry with scope definitions from the data registry
-   * @param {Object} scopeDefinitions - Map of scope definitions from the registry
+   *
+   * @param {object} scopeDefinitions - Map of scope definitions from the registry
    */
   initialize(scopeDefinitions = {}) {
     this._scopes.clear();
@@ -25,8 +26,9 @@ class ScopeRegistry {
 
   /**
    * Get a scope definition by name
+   *
    * @param {string} name - Scope name (can include mod prefix like 'core:inventory_items')
-   * @returns {Object|null} Scope definition or null if not found
+   * @returns {object | null} Scope definition or null if not found
    */
   getScope(name) {
     return this._scopes.get(name) || null;
@@ -34,6 +36,7 @@ class ScopeRegistry {
 
   /**
    * Check if a scope exists
+   *
    * @param {string} name - Scope name
    * @returns {boolean} True if scope exists
    */
@@ -43,6 +46,7 @@ class ScopeRegistry {
 
   /**
    * Get all scope names
+   *
    * @returns {string[]} Array of scope names
    */
   getAllScopeNames() {
@@ -51,7 +55,8 @@ class ScopeRegistry {
 
   /**
    * Get all scope definitions
-   * @returns {Map<string, Object>} Map of scope definitions
+   *
+   * @returns {Map<string, object>} Map of scope definitions
    */
   getAllScopes() {
     return new Map(this._scopes);
@@ -59,7 +64,8 @@ class ScopeRegistry {
 
   /**
    * Get statistics about the registry
-   * @returns {Object} Registry statistics
+   *
+   * @returns {object} Registry statistics
    */
   getStats() {
     return {
@@ -82,6 +88,7 @@ class ScopeRegistry {
 
   /**
    * Get the singleton instance
+   *
    * @returns {ScopeRegistry} Singleton instance
    */
   static getInstance() {

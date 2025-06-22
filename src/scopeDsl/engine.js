@@ -4,6 +4,7 @@
  */
 
 import ScopeDepthError from '../errors/scopeDepthError.js';
+import ScopeCycleError from '../errors/scopeCycleError.js';
 
 /**
  * @typedef {object} RuntimeContext
@@ -30,6 +31,14 @@ import ScopeDepthError from '../errors/scopeDepthError.js';
  * Scope-DSL Engine that resolves AST expressions to sets of entity IDs
  */
 class ScopeEngine {
+    constructor() {
+        this.maxDepth = 4;
+    }
+
+    setMaxDepth(n) {
+        this.maxDepth = n;
+    }
+
     /**
      * Resolves a Scope-DSL AST to a set of entity IDs
      * 
@@ -37,10 +46,11 @@ class ScopeEngine {
      * @param {string} actorId - The ID of the acting entity
      * @param {RuntimeContext} runtimeCtx - Runtime context with services
      * @returns {Set<string>} Set of entity IDs
-     * @throws {ScopeDepthError} When expression depth exceeds 4
+     * @throws {ScopeDepthError} When expression depth exceeds maxDepth
+     * @throws {ScopeCycleError} When a cycle is detected
      */
     resolve(ast, actorId, runtimeCtx) {
-        return this.resolveNode(ast, actorId, runtimeCtx, 0);
+        return this.resolveNode(ast, actorId, runtimeCtx, 0, []);
     }
 
     /**
@@ -50,23 +60,33 @@ class ScopeEngine {
      * @param {string} actorId - The ID of the acting entity
      * @param {RuntimeContext} runtimeCtx - Runtime context
      * @param {number} depth - Current depth level
+     * @param {Array<string>} path - Path of visited node/edge keys
      * @returns {Set<string>} Set of entity IDs
      * @private
      */
-    resolveNode(node, actorId, runtimeCtx, depth) {
-        if (depth > 4) {
+    resolveNode(node, actorId, runtimeCtx, depth, path) {
+        if (depth > this.maxDepth) {
             throw new ScopeDepthError(
-                'Expression depth limit exceeded (max 4)',
+                `Expression depth limit exceeded (max ${this.maxDepth})`,
                 depth,
-                4
+                this.maxDepth
             );
         }
-
+        // Cycle detection: use node type, field, and param as key
+        const nodeKey = `${node.type}:${node.field || ''}:${node.param || ''}`;
+        if (path.includes(nodeKey)) {
+            const cyclePath = [...path, nodeKey];
+            throw new ScopeCycleError(
+                `Scope cycle detected: ${cyclePath.join(' -> ')}`,
+                cyclePath
+            );
+        }
+        const nextPath = [...path, nodeKey];
         switch (node.type) {
             case 'Source': return this.resolveSource(node, actorId, runtimeCtx);
-            case 'Step': return this.resolveStep(node, actorId, runtimeCtx, depth);
-            case 'Filter': return this.resolveFilter(node, actorId, runtimeCtx, depth);
-            case 'Union': return this.resolveUnion(node, actorId, runtimeCtx, depth);
+            case 'Step': return this.resolveStep(node, actorId, runtimeCtx, depth, nextPath);
+            case 'Filter': return this.resolveFilter(node, actorId, runtimeCtx, depth, nextPath);
+            case 'Union': return this.resolveUnion(node, actorId, runtimeCtx, depth, nextPath);
             default:
                 runtimeCtx.logger.error(`Unknown AST node type: ${node.type}`);
                 return new Set();
@@ -135,13 +155,14 @@ class ScopeEngine {
      * @param {string} actorId - Actor ID
      * @param {RuntimeContext} runtimeCtx - Runtime context
      * @param {number} depth - Current depth
+     * @param {Array<string>} path - Path of visited node/edge keys
      * @returns {Set<string>} Set of entity IDs
      * @private
      */
-    resolveStep(node, actorId, runtimeCtx, depth) {
+    resolveStep(node, actorId, runtimeCtx, depth, path) {
         // depth accounting: +1 for the step itself, +1 more if it is an array-iteration ([]) 
         const nextDepth = depth + 1 + (node.isArray ? 1 : 0);
-        const parentResult = this.resolveNode(node.parent, actorId, runtimeCtx, nextDepth);
+        const parentResult = this.resolveNode(node.parent, actorId, runtimeCtx, nextDepth, path);
 
         if (parentResult.size === 0) return new Set();
 
@@ -227,12 +248,13 @@ class ScopeEngine {
      * @param {string} actorId - Actor ID
      * @param {RuntimeContext} runtimeCtx - Runtime context
      * @param {number} depth - Current depth
+     * @param {Array<string>} path - Path of visited node/edge keys
      * @returns {Set<string>} Set of entity IDs
      * @private
      */
-    resolveFilter(node, actorId, runtimeCtx, depth) {
+    resolveFilter(node, actorId, runtimeCtx, depth, path) {
         runtimeCtx.logger.debug('[ScopeEngine] resolveFilter: starting with logic:', node.logic);
-        const parentResult = this.resolveNode(node.parent, actorId, runtimeCtx, depth + 1);
+        const parentResult = this.resolveNode(node.parent, actorId, runtimeCtx, depth + 1, path);
         runtimeCtx.logger.debug('[ScopeEngine] resolveFilter: parentResult:', parentResult);
         if (parentResult.size === 0) {
             runtimeCtx.logger.debug('[ScopeEngine] resolveFilter: parentResult is empty, returning empty set');
@@ -270,12 +292,13 @@ class ScopeEngine {
      * @param {string} actorId - Actor ID
      * @param {RuntimeContext} runtimeCtx - Runtime context
      * @param {number} depth - Current depth
+     * @param {Array<string>} path - Path of visited node/edge keys
      * @returns {Set<string>} Set of entity IDs
      * @private
      */
-    resolveUnion(node, actorId, runtimeCtx, depth) {
-        const leftResult = this.resolveNode(node.left, actorId, runtimeCtx, depth);
-        const rightResult = this.resolveNode(node.right, actorId, runtimeCtx, depth);
+    resolveUnion(node, actorId, runtimeCtx, depth, path) {
+        const leftResult = this.resolveNode(node.left, actorId, runtimeCtx, depth, path);
+        const rightResult = this.resolveNode(node.right, actorId, runtimeCtx, depth, path);
 
         return new Set([...leftResult, ...rightResult]);
     }

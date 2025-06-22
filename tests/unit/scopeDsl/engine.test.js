@@ -6,6 +6,7 @@
 import ScopeEngine from '../../../src/scopeDsl/engine.js';
 import { parseInlineExpr } from '../../../src/scopeDsl/parser.js';
 import ScopeDepthError from '../../../src/errors/scopeDepthError.js';
+import ScopeCycleError from '../../../src/errors/scopeCycleError.js';
 
 // Mock dependencies
 const mockEntityManager = {
@@ -679,6 +680,43 @@ describe('ScopeEngine', () => {
         const result = engine.getComponentDataForField('entity1', 'inventory.items.weapons', mockRuntimeCtx);
         
         expect(result).toBeNull();
+      });
+    });
+
+    describe('Cycle detection', () => {
+      test('throws ScopeCycleError on direct self-loop', () => {
+        // AST node that references itself as parent
+        const ast = { type: 'Step', field: 'self', parent: null };
+        ast.parent = ast; // direct cycle
+        const actorId = 'actor123';
+        expect(() => {
+          engine.resolve(ast, actorId, mockRuntimeCtx);
+        }).toThrow(ScopeCycleError);
+      });
+
+      test('throws ScopeCycleError on indirect cycle', () => {
+        // AST: A -> B -> C -> A
+        const nodeA = { type: 'Step', field: 'A', parent: null };
+        const nodeB = { type: 'Step', field: 'B', parent: null };
+        const nodeC = { type: 'Step', field: 'C', parent: null };
+        nodeA.parent = nodeB;
+        nodeB.parent = nodeC;
+        nodeC.parent = nodeA; // cycle
+        const actorId = 'actor123';
+        expect(() => {
+          engine.resolve(nodeA, actorId, mockRuntimeCtx);
+        }).toThrow(ScopeCycleError);
+      });
+
+      test('does not throw on acyclic graph', () => {
+        // AST: A -> B -> C (no cycle)
+        const nodeC = { type: 'Step', field: 'C', parent: { type: 'Source', kind: 'actor' } };
+        const nodeB = { type: 'Step', field: 'B', parent: nodeC };
+        const nodeA = { type: 'Step', field: 'A', parent: nodeB };
+        const actorId = 'actor123';
+        expect(() => {
+          engine.resolve(nodeA, actorId, mockRuntimeCtx);
+        }).not.toThrow(ScopeCycleError);
       });
     });
   });

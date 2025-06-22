@@ -2,13 +2,14 @@ import { BaseManifestItemLoader } from './baseManifestItemLoader.js';
 import { parseInlineExpr } from '../scopeDsl/parser.js';
 
 /**
- * @fileoverview Scope Loader
+ * @file Scope Loader
  * @description Loads .scope files from mod directories and parses them into scope definitions
  */
 
 /**
  * Loads scope definitions from .scope files in mod directories
- * @extends {BaseManifestItemLoader}
+ *
+ * @augments {BaseManifestItemLoader}
  */
 export default class ScopeLoader extends BaseManifestItemLoader {
   constructor(
@@ -32,6 +33,7 @@ export default class ScopeLoader extends BaseManifestItemLoader {
 
   /**
    * Process a fetched scope file
+   *
    * @param {string} modId - Mod identifier
    * @param {string} filename - Name of the file
    * @param {string} resolvedPath - Resolved path to the file
@@ -65,9 +67,10 @@ export default class ScopeLoader extends BaseManifestItemLoader {
 
   /**
    * Parse a .scope file content into a scope definition
+   *
    * @param {string} content - Raw file content
    * @param {string} filePath - Path to the file for error reporting
-   * @returns {Object} Parsed scope definition
+   * @returns {object} Parsed scope definition
    */
   parseContent(content, filePath) {
     const lines = content.split('\n').map(line => line.trim()).filter(line => line && !line.startsWith('//'));
@@ -101,9 +104,10 @@ export default class ScopeLoader extends BaseManifestItemLoader {
 
   /**
    * Transform loaded scope definitions into the format expected by the registry
-   * @param {Object} parsedContent - Parsed scope definitions
+   *
+   * @param {object} parsedContent - Parsed scope definitions
    * @param {string} modId - Mod identifier
-   * @returns {Object} Transformed scope definitions
+   * @returns {object} Transformed scope definitions
    */
   transformContent(parsedContent, modId) {
     const transformed = {};

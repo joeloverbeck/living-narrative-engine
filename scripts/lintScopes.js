@@ -6,6 +6,7 @@ const { parseInlineExpr } = require('../src/scopeDsl/parser.js');
 
 /**
  * Recursively find all .scope files in the mods directory
+ *
  * @param {string} dir - Directory to search
  * @param {object} fs - fs/promises module
  * @param {object} path - path module
@@ -34,6 +35,7 @@ async function findScopeFiles(dir, fs = defaultFs, path = defaultPath) {
 
 /**
  * Parse a single scope file and return any errors
+ *
  * @param {string} filePath - Path to the .scope file
  * @param {object} fs - fs/promises module
  * @returns {Promise<{file: string, error: string} | null>} Error object or null if valid
@@ -59,6 +61,7 @@ async function validateScopeFile(filePath, fs = defaultFs) {
 
 /**
  * Main linting function
+ *
  * @param {string} modsDirArg - Optional mods directory
  * @param {object} fs - Optional fs/promises module
  * @param {object} path - Optional path module
