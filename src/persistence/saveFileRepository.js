@@ -8,7 +8,6 @@ import SaveFileParser from './saveFileParser.js';
 import { PersistenceErrorCodes } from './persistenceErrors.js';
 import { createPersistenceFailure } from '../utils/persistenceResultUtils.js';
 import { wrapPersistenceOperation } from '../utils/persistenceErrorUtils.js';
-import { readAndDeserialize as utilReadAndDeserialize } from '../utils/saveFileReadUtils.js';
 import { BaseService } from '../utils/serviceBase.js';
 
 // Precompile manual save file regex once for reuse
@@ -23,8 +22,6 @@ export default class SaveFileRepository extends BaseService {
   #logger;
   /** @type {import('../interfaces/IStorageProvider.js').IStorageProvider} */
   #storageProvider;
-  /** @type {import('./gameStateSerializer.js').default} */
-  #serializer;
   /** @type {SaveFileParser} */
   #parser;
 
@@ -35,9 +32,8 @@ export default class SaveFileRepository extends BaseService {
    * @param {import('./gameStateSerializer.js').default} deps.serializer - Serializer used for reading/writing saves.
    * @param {SaveFileParser} deps.parser - Parser for reading save metadata.
    */
-  constructor({ logger, storageProvider, serializer, parser }) {
+  constructor({ logger, storageProvider, parser }) {
     super();
-    this.#serializer = serializer;
     this.#logger = this._init('SaveFileRepository', logger, {
       storageProvider: {
         value: storageProvider,
@@ -49,7 +45,10 @@ export default class SaveFileRepository extends BaseService {
           'fileExists',
         ],
       },
-      parser: { value: parser, requiredMethods: ['parseManualSaveFile'] },
+      parser: {
+        value: parser,
+        requiredMethods: ['parseManualSaveFile', 'readAndDeserialize'],
+      },
     });
     this.#storageProvider = storageProvider;
     this.#parser = parser;
@@ -189,29 +188,7 @@ export default class SaveFileRepository extends BaseService {
    * @returns {Promise<import('./persistenceTypes.js').PersistenceResult<object>>} Deserialized save data.
    */
   async readSaveFile(filePath) {
-    return this.#deserializeAndDecompress(filePath);
-  }
-
-  /**
-   * Reads a file using the configured storage provider.
-   *
-   * @param {string} filePath - Path to the file.
-   * @returns {Promise<import('./persistenceTypes.js').PersistenceResult<Uint8Array>>}
-   */
-
-  /**
-   * Reads, decompresses and deserializes a save file.
-   *
-   * @param {string} filePath - File path to read.
-   * @returns {Promise<import('./persistenceTypes.js').PersistenceResult<object>>}
-   */
-  async #deserializeAndDecompress(filePath) {
-    return utilReadAndDeserialize(
-      this.#storageProvider,
-      this.#serializer,
-      this.#logger,
-      filePath
-    );
+    return this.#parser.readAndDeserialize(filePath);
   }
 
   /**

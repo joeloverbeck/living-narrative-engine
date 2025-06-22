@@ -73,7 +73,6 @@ describe('Persistence service constructor validation', () => {
         new SaveFileRepository({
           logger,
           storageProvider,
-          serializer,
           parser,
         })
     ).toThrow();

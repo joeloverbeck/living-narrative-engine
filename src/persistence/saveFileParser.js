@@ -57,6 +57,17 @@ export default class SaveFileParser extends BaseService {
   }
 
   /**
+   * Reads, decompresses and deserializes a save file.
+   *
+   * @param {string} filePath - File path to read.
+   * @returns {Promise<import('./persistenceTypes.js').PersistenceResult<object>>}
+   *   Parsed object or failure info.
+   */
+  async readAndDeserialize(filePath) {
+    return this.#deserializeAndDecompress(filePath);
+  }
+
+  /**
    * Read, decompress and deserialize a save file.
    *
    * @param {string} filePath - File path of the save.
