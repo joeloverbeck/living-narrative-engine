@@ -195,6 +195,40 @@ export class SlotModalBase extends BaseModalRenderer {
   }
 
   /**
+   * Core logic to populate the slots list.
+   *
+   * @protected
+   * @async
+   * @param {Function} dataFetcher - Async function returning slot data array.
+   * @param {Function} renderer - Function to render a slot item element.
+   * @param {Function} emptyMessageProvider - Function returning message for empty list.
+   * @param {string} loadingMessage - Message shown while loading.
+   * @returns {Promise<void>} Resolves when list population is complete.
+   */
+  async _populateSlots(
+    dataFetcher,
+    renderer,
+    emptyMessageProvider,
+    loadingMessage
+  ) {
+    this._setOperationInProgress(true);
+    this._displayStatusMessage(loadingMessage, 'info');
+
+    const data = await renderListCommon(
+      dataFetcher,
+      (item, index, list) => renderer(item, index, list),
+      emptyMessageProvider,
+      this.elements.listContainerElement,
+      this.logger,
+      this.domElementFactory
+    );
+    this.currentSlotsDisplayData = Array.isArray(data) ? data : [];
+
+    this._clearStatusMessage();
+    this._setOperationInProgress(false);
+  }
+
+  /**
    * Generic helper to populate the slots list.
    *
    * @protected
@@ -211,21 +245,12 @@ export class SlotModalBase extends BaseModalRenderer {
     getEmptyMessageFn,
     loadingMessage
   ) {
-    this._setOperationInProgress(true);
-    this._displayStatusMessage(loadingMessage, 'info');
-
-    const data = await renderListCommon(
+    await this._populateSlots(
       fetchDataFn,
-      (item, index, list) => renderItemFn(item, index, list),
+      renderItemFn,
       getEmptyMessageFn,
-      this.elements.listContainerElement,
-      this.logger,
-      this.domElementFactory
+      loadingMessage
     );
-    this.currentSlotsDisplayData = Array.isArray(data) ? data : [];
-
-    this._clearStatusMessage();
-    this._setOperationInProgress(false);
   }
 }
 
