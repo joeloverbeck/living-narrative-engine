@@ -16,6 +16,7 @@ import { tryWriteContextVariable } from '../../utils/contextVariableUtils.js';
 import { assertParamsObject } from '../../utils/handlerUtils/indexUtils.js';
 import ComponentOperationHandler from './componentOperationHandler.js';
 import { applyArrayModification } from '../utils/arrayModifyUtils.js';
+import { setByPath } from '../utils/objectPathUtils.js';
 
 /**
  * @class ModifyArrayFieldHandler
@@ -67,7 +68,9 @@ class ModifyArrayFieldHandler extends ComponentOperationHandler {
    * @param {string} field
    * @param {string} entityId
    * @param {ILogger} log
-   * @returns {*}
+   * @returns {{nextArray: Array, result: *}|null}
+   * Returns a new array via `nextArray`; the original `targetArray` is never
+   * mutated.
    * @private
    */
   #applyModification(mode, targetArray, value, field, entityId, log) {
@@ -149,11 +152,12 @@ class ModifyArrayFieldHandler extends ComponentOperationHandler {
       }
     }
 
-    if (modifiedArray !== targetArray) {
-      targetArray.splice(0, targetArray.length, ...modifiedArray);
-    }
+    const resultArray = modifiedArray;
 
-    return mode === 'pop' ? poppedItem : targetArray;
+    return {
+      nextArray: resultArray,
+      result: mode === 'pop' ? poppedItem : resultArray,
+    };
   }
 
   /**
@@ -252,7 +256,7 @@ class ModifyArrayFieldHandler extends ComponentOperationHandler {
     const { data: clonedComponentData, array: targetArray } = fetched;
 
     // 4. Modify
-    const result = this.#applyModification(
+    const modification = this.#applyModification(
       mode,
       targetArray,
       value,
@@ -260,9 +264,10 @@ class ModifyArrayFieldHandler extends ComponentOperationHandler {
       entityId,
       log
     );
-    if (result === null) {
+    if (!modification) {
       return;
     }
+    setByPath(clonedComponentData, field, modification.nextArray);
 
     // 5. Commit
     if (!this.#commitChanges(entityId, compType, clonedComponentData, log)) {
@@ -273,7 +278,7 @@ class ModifyArrayFieldHandler extends ComponentOperationHandler {
     if (result_variable) {
       const res = tryWriteContextVariable(
         result_variable,
-        result,
+        modification.result,
         executionContext,
         this.#dispatcher,
         log

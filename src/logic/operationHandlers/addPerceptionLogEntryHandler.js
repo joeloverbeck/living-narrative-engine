@@ -106,17 +106,11 @@ class AddPerceptionLogEntryHandler extends BaseOperationHandler {
       }
 
       /* build next state ---------------------------------------------------- */
+      const nextLogEntries = [...logEntries, entry].slice(-maxEntries);
       const updatedComponent = {
         maxEntries,
-        logEntries: [...logEntries, entry], // keep ORIGINAL reference
+        logEntries: nextLogEntries,
       };
-
-      /* trim to size -------------------------------------------------------- */
-      if (updatedComponent.logEntries.length > updatedComponent.maxEntries) {
-        updatedComponent.logEntries = updatedComponent.logEntries.slice(
-          -updatedComponent.maxEntries
-        );
-      }
 
       /* write back ---------------------------------------------------------- */
       try {
