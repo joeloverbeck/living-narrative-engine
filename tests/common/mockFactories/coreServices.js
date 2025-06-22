@@ -199,6 +199,41 @@ export const createMockValidatedEventBus = () => {
 };
 
 /**
+ * Creates an event bus that captures all dispatched events.
+ *
+ * @returns {object} Event bus with dispatch, subscribe, unsubscribe and `events` array.
+ */
+export const createCapturingEventBus = () => {
+  const handlers = {};
+  const events = [];
+  const bus = {
+    events,
+    dispatch: jest.fn(async (eventType, payload) => {
+      events.push({ eventType, payload });
+      const listeners = [
+        ...(handlers[eventType] || []),
+        ...(handlers['*'] || []),
+      ];
+      await Promise.all(
+        listeners.map(async (h) => {
+          await h({ type: eventType, payload });
+        })
+      );
+    }),
+    subscribe: jest.fn((eventType, handler) => {
+      if (!handlers[eventType]) {
+        handlers[eventType] = new Set();
+      }
+      handlers[eventType].add(handler);
+    }),
+    unsubscribe: jest.fn((eventType, handler) => {
+      handlers[eventType]?.delete(handler);
+    }),
+  };
+  return bus;
+};
+
+/**
  * Creates a mock AJV schema validator service.
  *
  * @param {object} [defaultValidationResult] - Default result.
