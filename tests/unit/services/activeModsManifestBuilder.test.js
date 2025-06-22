@@ -47,4 +47,24 @@ describe('ActiveModsManifestBuilder', () => {
     const result = builder.build();
     expect(result).toEqual([{ modId: CORE_MOD_ID, version: '2.0.0' }]);
   });
+
+  it('handles missing registry gracefully', () => {
+    dataRegistry.getAll.mockReturnValue(undefined);
+    const result = builder.build();
+    expect(result).toEqual([
+      { modId: CORE_MOD_ID, version: 'unknown_fallback' },
+    ]);
+    expect(logger.warn).toHaveBeenCalled();
+  });
+
+  it('uses core mod version when list length is 0 but find returns value', () => {
+    const trickyList = {
+      length: 0,
+      find: () => ({ id: CORE_MOD_ID, version: '3.3.3' }),
+    };
+    dataRegistry.getAll.mockReturnValue(trickyList);
+    const result = builder.build();
+    expect(result).toEqual([{ modId: CORE_MOD_ID, version: '3.3.3' }]);
+    expect(logger.debug).toHaveBeenCalled();
+  });
 });
