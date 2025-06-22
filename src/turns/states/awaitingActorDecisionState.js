@@ -9,6 +9,10 @@ import { AbstractTurnState } from './abstractTurnState.js';
 import { ACTION_DECIDED_ID } from '../../constants/eventIds.js';
 import { getActorType } from '../../utils/actorTypeUtils.js';
 import { getLogger, getSafeEventDispatcher } from './helpers/contextUtils.js';
+import {
+  assertValidActor,
+  assertMatchingActor,
+} from './helpers/validationUtils.js';
 
 /**
  * State in which the engine waits for the current actor’s turn-strategy to
@@ -94,7 +98,8 @@ export class AwaitingActorDecisionState extends AbstractTurnState {
   validateActor(turnContext) {
     const logger = turnContext.getLogger();
     const actor = turnContext.getActor();
-    if (!actor) {
+    const errorMsg = assertValidActor(actor, this.getStateName());
+    if (errorMsg) {
       logger.error(
         `${this.getStateName()}: No actor found in TurnContext. Ending turn.`
       );
@@ -118,6 +123,11 @@ export class AwaitingActorDecisionState extends AbstractTurnState {
    */
   retrieveStrategy(turnContext, actor) {
     const logger = turnContext.getLogger();
+    const actorError = assertValidActor(actor, this.getStateName());
+    if (actorError) {
+      logger.error(actorError);
+      throw new Error(actorError);
+    }
 
     if (typeof turnContext.getStrategy !== 'function') {
       const msg = `${this.getStateName()}: turnContext.getStrategy() is not a function for actor ${actor.id}.`;

@@ -14,6 +14,10 @@
 import { AbstractTurnState } from './abstractTurnState.js';
 import { UNKNOWN_ENTITY_ID } from '../../constants/unknownIds.js';
 import { getLogger } from './helpers/contextUtils.js';
+import {
+  assertValidActor,
+  assertMatchingActor,
+} from './helpers/validationUtils.js';
 
 /**
  * @class TurnIdleState
@@ -74,8 +78,8 @@ export class TurnIdleState extends AbstractTurnState {
    * @param {import('../../utils/loggerUtils.js').Logger} logger - Logger instance.
    */
   _validateActorEntity(handler, actorEntity, logger) {
-    if (!actorEntity || typeof actorEntity.id === 'undefined') {
-      const errorMsg = `${this.getStateName()}: startTurn called with invalid actorEntity.`;
+    const errorMsg = assertValidActor(actorEntity, this.getStateName());
+    if (errorMsg) {
       logger.error(errorMsg);
       handler.resetStateAndResources(`invalid-actor-${this.getStateName()}`);
       handler.requestIdleStateTransition();
@@ -110,8 +114,12 @@ export class TurnIdleState extends AbstractTurnState {
    */
   _validateActorMatch(handler, turnCtx, actorEntity, logger) {
     const contextActor = turnCtx.getActor();
-    if (!contextActor || contextActor.id !== actorEntity.id) {
-      const errorMsg = `${this.getStateName()}: Actor in ITurnContext ('${contextActor?.id}') does not match actor provided to state's startTurn ('${actorEntity.id}').`;
+    const errorMsg = assertMatchingActor(
+      actorEntity,
+      contextActor,
+      this.getStateName()
+    );
+    if (errorMsg) {
       logger.error(errorMsg);
       handler.resetStateAndResources(`actor-mismatch-${this.getStateName()}`);
       handler.requestIdleStateTransition();
