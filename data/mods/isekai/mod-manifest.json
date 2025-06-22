@@ -10,31 +10,32 @@
     "actions": [],
     "components": [],
     "conditions": [],
-    "entityDefinitions": [
-      "adventurers_guild.location.json",
-      "hero.character.json",
-      "ninja.character.json",
-      "receptionist.character.json",
-      "sidekick.character.json",
-      "town.location.json"
-    ],
-    "entityInstances": [
-      "adventurers_guild.location.json",
-      "hero.character.json",
-      "ninja.character.json",
-      "receptionist.character.json",
-      "sidekick.character.json",
-      "town.location.json"
-    ],
+    "entities": {
+      "definitions": [
+        "adventurers_guild.location.json",
+        "hero.character.json",
+        "ninja.character.json",
+        "receptionist.character.json",
+        "sidekick.character.json",
+        "town.location.json"
+      ],
+      "instances": [
+        "adventurers_guild.location.json",
+        "hero.character.json",
+        "ninja.character.json",
+        "receptionist.character.json",
+        "sidekick.character.json",
+        "town.location.json"
+      ]
+    },
     "events": [],
     "macros": [],
+    "portraits": [],
     "rules": [],
     "ui": [
       "icons.json",
       "labels.json"
     ],
-    "entities": [],
-    "portraits": [],
     "worlds": [
       "isekai.world.json"
     ]

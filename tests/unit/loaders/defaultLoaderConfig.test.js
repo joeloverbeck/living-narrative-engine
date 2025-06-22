@@ -29,8 +29,8 @@ describe('defaultLoaderConfig', () => {
         }),
         expect.objectContaining({
           loader: stubLoader,
-          registryKey: 'entityInstances',
-          contentKey: 'entityInstances',
+          registryKey: 'entity_instances',
+          contentKey: 'entities.instances',
           diskFolder: 'entities/instances',
           phase: 'instances',
         }),
@@ -61,7 +61,7 @@ describe('defaultLoaderConfig', () => {
         }),
         expect.objectContaining({
           loader: stubLoader,
-          registryKey: 'entityInstances',
+          registryKey: 'entity_instances',
         }),
       ])
     );

@@ -69,16 +69,26 @@
         "conditions": {
           "$ref": "#/definitions/contentFileList"
         },
-        "entityDefinitions": {
-          "$ref": "#/definitions/contentFileList"
-        },
-        "entityInstances": {
-          "$ref": "#/definitions/contentFileList"
+        "entities": {
+          "description": "Mapping of entity content types to lists of JSON files.",
+          "type": "object",
+          "properties": {
+            "definitions": {
+              "$ref": "#/definitions/contentFileList"
+            },
+            "instances": {
+              "$ref": "#/definitions/contentFileList"
+            }
+          },
+          "additionalProperties": false
         },
         "events": {
           "$ref": "#/definitions/contentFileList"
         },
         "macros": {
+          "$ref": "#/definitions/contentFileList"
+        },
+        "portraits": {
           "$ref": "#/definitions/contentFileList"
         },
         "rules": {
@@ -94,7 +104,11 @@
       "additionalProperties": false
     }
   },
-  "required": ["id", "version", "name"],
+  "required": [
+    "id",
+    "version",
+    "name"
+  ],
   "definitions": {
     "contentFileList": {
       "description": "Array of relative paths (using forward slashes '/') to .json definition files for a specific content type. Paths must not start with '/' or contain '..'.",
@@ -122,7 +136,10 @@
           "minLength": 1
         }
       },
-      "required": ["id", "version"]
+      "required": [
+        "id",
+        "version"
+      ]
     }
   }
 }

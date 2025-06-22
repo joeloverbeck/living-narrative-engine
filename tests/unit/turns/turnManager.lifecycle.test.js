@@ -62,11 +62,18 @@ describeTurnManagerSuite('TurnManager - Lifecycle (Start/Stop)', (getBed) => {
       testBed.mocks.dispatcher.subscribe.mockReturnValue(null);
       const stopSpy = testBed.spyOnStop();
       await testBed.turnManager.start();
-      expect(testBed.mocks.logger.error).toHaveBeenCalledWith(
-        expect.stringContaining(
-          `CRITICAL: Failed to subscribe to ${TURN_ENDED_ID}`
-        ),
-        expect.any(Error)
+      expect(testBed.mocks.dispatcher.dispatch).toHaveBeenCalledWith(
+        SYSTEM_ERROR_OCCURRED_ID,
+        expect.objectContaining({
+          message: expect.stringContaining(
+            `Failed to subscribe to ${TURN_ENDED_ID}. Turn advancement will likely fail.`
+          ),
+          details: {
+            error: expect.stringContaining(
+              'Subscription function did not return an unsubscribe callback'
+            ),
+          },
+        })
       );
       expect(testBed.mocks.dispatcher.dispatch).toHaveBeenCalledWith(
         SYSTEM_ERROR_OCCURRED_ID,
@@ -90,11 +97,16 @@ describeTurnManagerSuite('TurnManager - Lifecycle (Start/Stop)', (getBed) => {
       });
       const stopSpy = testBed.spyOnStop();
       await testBed.turnManager.start();
-      expect(testBed.mocks.logger.error).toHaveBeenCalledWith(
-        expect.stringContaining(
-          `CRITICAL: Failed to subscribe to ${TURN_ENDED_ID}`
-        ),
-        subscribeError
+      expect(testBed.mocks.dispatcher.dispatch).toHaveBeenCalledWith(
+        SYSTEM_ERROR_OCCURRED_ID,
+        expect.objectContaining({
+          message: expect.stringContaining(
+            `Failed to subscribe to ${TURN_ENDED_ID}. Turn advancement will likely fail.`
+          ),
+          details: {
+            error: subscribeError.message,
+          },
+        })
       );
       expect(testBed.mocks.dispatcher.dispatch).toHaveBeenCalledWith(
         SYSTEM_ERROR_OCCURRED_ID,
@@ -145,9 +157,14 @@ describeTurnManagerSuite('TurnManager - Lifecycle (Start/Stop)', (getBed) => {
       );
       testBed.mocks.logger.error.mockClear();
       await testBed.turnManager.stop();
-      expect(testBed.mocks.logger.error).toHaveBeenCalledWith(
-        'Error calling turnOrderService.clearCurrentRound() during stop:',
-        clearError
+      expect(testBed.mocks.dispatcher.dispatch).toHaveBeenCalledWith(
+        SYSTEM_ERROR_OCCURRED_ID,
+        expect.objectContaining({
+          message: 'Error clearing turn order service during stop',
+          details: {
+            error: clearError.message,
+          },
+        })
       );
     });
 

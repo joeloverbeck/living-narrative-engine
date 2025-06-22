@@ -40,6 +40,7 @@
     ],
     "conditions": [
       "actor-can-follow-target.condition.json",
+      "actor-has-name-and-position.condition.json",
       "actor-is-following.condition.json",
       "actor-is-leading.condition.json",
       "actor-is-not-null.condition.json",
@@ -49,6 +50,10 @@
       "event-is-action-go.condition.json",
       "event-is-action-stop-following.condition.json",
       "event-is-action-wait.condition.json",
+      "follow-cycle-detected.condition.json",
+      "followers-to-move-exist.condition.json",
+      "following-leader-is-event-entity.condition.json",
+      "resolved-target-location-null.condition.json",
       "target-is-actor.condition.json",
       "target-is-follower-of-actor.condition.json",
       "target-is-following-actor.condition.json",
@@ -56,14 +61,17 @@
       "target-is-in-same-location-as-actor.condition.json",
       "target-is-not-rooted.condition.json",
       "target-is-not-self.condition.json",
-      "way-is-not-blocked.condition.json",
-      "actor-has-name-and-position.condition.json"
+      "way-is-not-blocked.condition.json"
     ],
-    "entityDefinitions": [],
-    "entityInstances": [],
+    "entities": {
+      "definitions": [],
+      "instances": []
+    },
     "events": [
       "action_decided.event.json",
       "attempt_action.event.json",
+      "component_added.event.json",
+      "component_removed.event.json",
       "disable_input.event.json",
       "display_error.event.json",
       "display_failed_action_result.event.json",
@@ -71,7 +79,9 @@
       "display_successful_action_result.event.json",
       "display_warning.event.json",
       "enable_input.event.json",
+      "entity_created.event.json",
       "entity_moved.event.json",
+      "entity_removed.event.json",
       "entity_spoke.event.json",
       "perceptible_event.event.json",
       "player_turn_prompt.event.json",
@@ -79,19 +89,16 @@
       "set_title.event.json",
       "system_error_occurred.event.json",
       "system_warning_occurred.event.json",
-      "turn_processing_started.event.json",
-      "turn_processing_ended.event.json",
       "turn_ended.event.json",
+      "turn_processing_ended.event.json",
+      "turn_processing_started.event.json",
       "turn_started.event.json",
       "ui_operation_in_progress.event.json",
       "ui_ready.event.json",
       "ui_request_show_load_game.event.json",
       "ui_request_show_save_game.event.json",
       "ui_stopped.event.json",
-      "update_available_actions.event.json",
-      "entity_created.event.json",
-      "entity_removed.event.json",
-      "component_added.event.json"
+      "update_available_actions.event.json"
     ],
     "macros": [
       "autoMoveFollower.macro.json",
@@ -112,6 +119,9 @@
       "turn_started.rule.json",
       "wait.rule.json"
     ],
-    "ui": ["icons.json", "labels.json"]
+    "ui": [
+      "icons.json",
+      "labels.json"
+    ]
   }
 }

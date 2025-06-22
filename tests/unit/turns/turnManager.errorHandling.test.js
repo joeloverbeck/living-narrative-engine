@@ -46,10 +46,15 @@ describeTurnManagerSuite('TurnManager - Error Handling', (getBed) => {
     // Advance turn - this should trigger the error
     await testBed.turnManager.advanceTurn();
 
-    // Verify error was logged
-    expect(testBed.mocks.logger.error).toHaveBeenCalledWith(
-      'CRITICAL Error during turn advancement logic (before handler initiation): Simulated Handler Resolution Failure',
-      resolveError
+    // Verify safeDispatchError was called
+    expect(testBed.mocks.dispatcher.dispatch).toHaveBeenCalledWith(
+      SYSTEM_ERROR_OCCURRED_ID,
+      expect.objectContaining({
+        message: 'System Error during turn advancement',
+        details: {
+          error: resolveError.message,
+        },
+      })
     );
 
     // Verify system error event was dispatched
@@ -110,12 +115,16 @@ describeTurnManagerSuite('TurnManager - Error Handling', (getBed) => {
     // Advance turn - this should trigger the handler failure
     await testBed.turnManager.advanceTurn();
 
-    // Verify error was logged
-    expect(testBed.mocks.logger.error).toHaveBeenCalledWith(
-      expect.stringContaining(
-        'Error during handler.startTurn() initiation for entity actor1'
-      ),
-      expect.any(Error)
+    // Verify safeDispatchError was called
+    expect(testBed.mocks.dispatcher.dispatch).toHaveBeenCalledWith(
+      SYSTEM_ERROR_OCCURRED_ID,
+      expect.objectContaining({
+        message: 'Error initiating turn for actor1',
+        details: {
+          error: expect.any(String),
+          handlerName: expect.any(String),
+        },
+      })
     );
 
     // Verify system error event was dispatched
@@ -149,10 +158,15 @@ describeTurnManagerSuite('TurnManager - Error Handling', (getBed) => {
     // Act
     await testBed.turnManager.start();
 
-    // Verify error was logged
-    expect(testBed.mocks.logger.error).toHaveBeenCalledWith(
-      'CRITICAL Error during turn advancement logic (before handler initiation): Turn order service failure',
-      orderError
+    // Verify safeDispatchError was called
+    expect(testBed.mocks.dispatcher.dispatch).toHaveBeenCalledWith(
+      SYSTEM_ERROR_OCCURRED_ID,
+      expect.objectContaining({
+        message: 'System Error during turn advancement',
+        details: {
+          error: orderError.message,
+        },
+      })
     );
 
     // Verify system error event was dispatched

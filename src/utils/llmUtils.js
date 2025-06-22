@@ -9,6 +9,7 @@
 // Import the chosen JSON repair library
 import { repairJson } from '@toolsycc/json-repair';
 import { ensureValidLogger } from './loggerUtils.js';
+import { safeDispatchError } from './safeDispatchErrorUtils.js';
 
 /**
  * Custom error class for errors encountered during JSON processing,
@@ -116,17 +117,25 @@ export function cleanLLMJsonOutput(rawOutput) {
  * @async
  * @param {string} jsonString - The raw JSON string to parse and potentially repair.
  * @param {ILogger} [logger] - Optional logger instance for logging warnings and errors.
+ * @param {object} [dispatcher] - Optional dispatcher for error reporting.
  * @returns {Promise<object>} A promise that resolves with the parsed JavaScript object.
  * @throws {JsonProcessingError} If the input string is invalid, or if parsing fails even after repair attempts.
  * @throws {TypeError} If `jsonString` is not a string.
  */
-export async function parseAndRepairJson(jsonString, logger) {
+export async function parseAndRepairJson(jsonString, logger, dispatcher) {
   const log = ensureValidLogger(logger, 'LLMUtils');
   if (typeof jsonString !== 'string') {
     const errorMessage = "Input 'jsonString' must be a string.";
-    log.error(
-      `parseAndRepairJson: ${errorMessage} Received type: ${typeof jsonString}`
-    );
+    if (dispatcher) {
+      safeDispatchError(
+        dispatcher,
+        `parseAndRepairJson: ${errorMessage} Received type: ${typeof jsonString}`
+      );
+    } else {
+      log.error(
+        `parseAndRepairJson: ${errorMessage} Received type: ${typeof jsonString}`
+      );
+    }
     throw new TypeError(errorMessage);
   }
 
@@ -134,9 +143,17 @@ export async function parseAndRepairJson(jsonString, logger) {
 
   if (cleanedJsonString === null || cleanedJsonString.trim() === '') {
     const errorMessage = 'Cleaned JSON string is null or empty, cannot parse.';
-    log.error(`parseAndRepairJson: ${errorMessage}`, {
-      originalInput: jsonString,
-    });
+    if (dispatcher) {
+      safeDispatchError(
+        dispatcher,
+        `parseAndRepairJson: ${errorMessage}`,
+        { originalInput: jsonString }
+      );
+    } else {
+      log.error(`parseAndRepairJson: ${errorMessage}`, {
+        originalInput: jsonString,
+      });
+    }
     throw new JsonProcessingError(errorMessage, {
       stage: 'initial_clean',
       attemptedJsonString: jsonString,
@@ -186,22 +203,44 @@ export async function parseAndRepairJson(jsonString, logger) {
       return repairedObject;
     } catch (repairAndParseError) {
       const errorMessage = `Failed to parse JSON even after repair attempt. Repair/Parse Error: ${repairAndParseError.message}`;
-      log.error(`parseAndRepairJson: ${errorMessage}`, {
-        // [cite: 1, 1000]
-        originalInputLength: jsonString.length,
-        cleanedJsonStringLength: cleanedJsonString.length,
-        cleanedJsonPreview:
-          cleanedJsonString.substring(0, 100) +
-          (cleanedJsonString.length > 100 ? '...' : ''),
-        initialParseError: {
-          message: initialParseError.message,
-          name: initialParseError.name,
-        },
-        repairAndParseError: {
-          message: repairAndParseError.message,
-          name: repairAndParseError.name,
-        },
-      });
+      if (dispatcher) {
+        safeDispatchError(
+          dispatcher,
+          `parseAndRepairJson: ${errorMessage}`,
+          {
+            originalInputLength: jsonString.length,
+            cleanedJsonStringLength: cleanedJsonString.length,
+            cleanedJsonPreview:
+              cleanedJsonString.substring(0, 100) +
+              (cleanedJsonString.length > 100 ? '...' : ''),
+            initialParseError: {
+              message: initialParseError.message,
+              name: initialParseError.name,
+            },
+            repairAndParseError: {
+              message: repairAndParseError.message,
+              name: repairAndParseError.name,
+            },
+          }
+        );
+      } else {
+        log.error(`parseAndRepairJson: ${errorMessage}`, {
+          // [cite: 1, 1000]
+          originalInputLength: jsonString.length,
+          cleanedJsonStringLength: cleanedJsonString.length,
+          cleanedJsonPreview:
+            cleanedJsonString.substring(0, 100) +
+            (cleanedJsonString.length > 100 ? '...' : ''),
+          initialParseError: {
+            message: initialParseError.message,
+            name: initialParseError.name,
+          },
+          repairAndParseError: {
+            message: repairAndParseError.message,
+            name: repairAndParseError.name,
+          },
+        });
+      }
       throw new JsonProcessingError(errorMessage, {
         // [cite: 1, 1000]
         stage: 'final_parse_after_repair',

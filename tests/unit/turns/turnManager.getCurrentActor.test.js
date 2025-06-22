@@ -10,7 +10,7 @@ import {
   ACTOR_COMPONENT_ID,
   PLAYER_COMPONENT_ID,
 } from '../../../src/constants/componentIds.js';
-import { TURN_PROCESSING_STARTED } from '../../../src/constants/eventIds.js';
+import { TURN_PROCESSING_STARTED, SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/eventIds.js';
 import { beforeEach, expect, test } from '@jest/globals';
 import { createMockEntity } from '../../common/mockFactories';
 import {
@@ -257,9 +257,18 @@ describeTurnManagerSuite('TurnManager', (getBed) => {
 
       // --- Assert ---
       expect(testBed.turnManager.getCurrentActor()).toBeNull();
-      expect(testBed.mocks.logger.error).toHaveBeenCalledWith(
-        'CRITICAL Error during turn advancement logic (before handler initiation): Cannot start a new round: No active entities with an Actor component found.',
-        expect.any(Error)
+      expect(testBed.mocks.dispatcher.dispatch.mock.calls).toEqual(
+        expect.arrayContaining([
+          [
+            SYSTEM_ERROR_OCCURRED_ID,
+            expect.objectContaining({
+              message: expect.any(String),
+              details: expect.objectContaining({
+                error: expect.stringContaining('Cannot start a new round: No active entities with an Actor component found.'),
+              }),
+            }),
+          ],
+        ])
       );
     });
   });
