@@ -52,7 +52,7 @@ export default class SaveFileRepository extends BaseService {
       },
       parser: {
         value: parser,
-        requiredMethods: ['parseManualSaveFile', 'readAndDeserialize'],
+        requiredMethods: ['parseManualSaveFile', 'readParsedSaveObject'],
       },
     });
     this.#storageProvider = storageProvider;
@@ -187,10 +187,10 @@ export default class SaveFileRepository extends BaseService {
    * Reads and deserializes a manual save file.
    *
    * @param {string} filePath - Full path to the save file.
-   * @returns {Promise<import('./persistenceTypes.js').PersistenceResult<object>>} Deserialized save data.
+   * @returns {Promise<import('./persistenceTypes.js').PersistenceResult<import('../interfaces/ISaveLoadService.js').SaveGameStructure>>} Deserialized save data.
    */
   async readSaveFile(filePath) {
-    return this.#parser.readAndDeserialize(filePath);
+    return this.#parser.readParsedSaveObject(filePath);
   }
 
   /**
