@@ -19,23 +19,12 @@ import {
   expectEngineStopped,
 } from '../../common/engine/dispatchTestUtils.js';
 import { DEFAULT_TEST_WORLD } from '../../common/constants.js';
-
-/**
- * Mocks a successful initialization sequence on the provided test bed.
- *
- * @param {import('../../common/engine/gameEngineTestBed.js').GameEngineTestBed} bed - Test bed instance.
- * @returns {void}
- */
-function mockInitSuccess(bed) {
-  bed.mocks.initializationService.runInitializationSequence.mockResolvedValue({
-    success: true,
-  });
-}
+import { mockInitializationSuccess } from '../../common/engine/gameEngineHelpers.js';
 
 describeEngineSuite('GameEngine', (ctx) => {
   describe('startNewGame', () => {
     beforeEach(() => {
-      mockInitSuccess(ctx.bed);
+      mockInitializationSuccess(ctx.bed);
     });
 
     it('should successfully start a new game', async () => {
