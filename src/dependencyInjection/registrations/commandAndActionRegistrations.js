@@ -32,7 +32,6 @@ import CommandProcessor from '../../commands/commandProcessor.js';
 import { formatActionCommand } from '../../actions/actionFormatter.js';
 import { getEntityIdsForScopes } from '../../entities/entityScopeService.js';
 import { getActorLocation } from '../../utils/actorLocationUtils.js';
-import { getAvailableExits } from '../../utils/locationUtils.js';
 import { getEntityDisplayName } from '../../utils/entityUtils.js';
 
 /**
@@ -60,7 +59,6 @@ export function registerCommandAndAction(container) {
         getEntityIdsForScopesFn: getEntityIdsForScopes,
         safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
         getActorLocationFn: getActorLocation,
-        getAvailableExitsFn: getAvailableExits,
         getEntityDisplayNameFn: getEntityDisplayName,
       })
   );

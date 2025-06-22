@@ -15,12 +15,10 @@ import { ActionTargetContext } from '../models/actionTargetContext.js';
 import { IActionDiscoveryService } from '../interfaces/IActionDiscoveryService.js';
 import {
   getLocationIdForLog,
-  getAvailableExits,
 } from '../utils/locationUtils.js';
 import {
   TARGET_DOMAIN_SELF,
   TARGET_DOMAIN_NONE,
-  TARGET_DOMAIN_DIRECTION,
 } from '../constants/targetDomains.js';
 import { setupService } from '../utils/serviceInitializerUtils.js';
 import { getActorLocation } from '../utils/actorLocationUtils.js';
@@ -37,7 +35,6 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
   #logger;
   #safeEventDispatcher;
   #getActorLocationFn;
-  #getAvailableExitsFn;
   #getEntityDisplayNameFn;
 
   /**
@@ -50,7 +47,6 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
    * @param {getEntityIdsForScopesFn} deps.getEntityIdsForScopesFn
    * @param {ISafeEventDispatcher} deps.safeEventDispatcher
    * @param deps.getActorLocationFn
-   * @param deps.getAvailableExitsFn
    * @param deps.getEntityDisplayNameFn
    */
   constructor({
@@ -62,7 +58,6 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
     getEntityIdsForScopesFn,
     safeEventDispatcher,
     getActorLocationFn = getActorLocation,
-    getAvailableExitsFn = getAvailableExits,
     getEntityDisplayNameFn = getEntityDisplayName,
   }) {
     super();
@@ -89,7 +84,6 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
         requiredMethods: ['dispatch'],
       },
       getActorLocationFn: { value: getActorLocationFn, isFunction: true },
-      getAvailableExitsFn: { value: getAvailableExitsFn, isFunction: true },
       getEntityDisplayNameFn: {
         value: getEntityDisplayNameFn,
         isFunction: true,
@@ -103,7 +97,6 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
     this.#getEntityIdsForScopesFn = getEntityIdsForScopesFn;
     this.#safeEventDispatcher = safeEventDispatcher;
     this.#getActorLocationFn = getActorLocationFn;
-    this.#getAvailableExitsFn = getAvailableExitsFn;
     this.#getEntityDisplayNameFn = getEntityDisplayNameFn;
 
     this.#logger.debug('ActionDiscoveryService initialised.');
@@ -176,61 +169,6 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
   }
 
   /**
-   * @description Handles discovery for actions targeting a direction.
-   * @param {import('../data/gameDataRepository.js').ActionDefinition} actionDef
-   * @param {Entity} actorEntity
-   * @param {Entity|string|null} currentLocation
-   * @param {string} locIdForLog
-   * @param {object} formatterOptions
-   * @returns {import('../interfaces/IActionDiscoveryService.js').DiscoveredActionInfo[]}
-   */
-  #handleDirection(
-    actionDef,
-    actorEntity,
-    currentLocation,
-    locIdForLog,
-    formatterOptions
-  ) {
-    if (!currentLocation) {
-      this.#logger.debug(
-        `No location for actor ${actorEntity.id}; skipping direction-based actions.`
-      );
-      return [];
-    }
-
-    const exits = this.#getAvailableExitsFn(
-      currentLocation,
-      this.#entityManager,
-      this.#safeEventDispatcher,
-      this.#logger
-    );
-    this.#logger.debug(
-      `Found ${exits.length} available exits for location: ${locIdForLog} via getAvailableExits.`
-    );
-
-    /** @type {import('../interfaces/IActionDiscoveryService.js').DiscoveredActionInfo[]} */
-    const discoveredActions = [];
-
-    for (const exit of exits) {
-      const targetCtx = ActionTargetContext.forDirection(exit.direction);
-
-      const action = this.#buildDiscoveredAction(
-        actionDef,
-        actorEntity,
-        targetCtx,
-        formatterOptions,
-        { targetId: exit.target }
-      );
-
-      if (action) {
-        discoveredActions.push(action);
-      }
-    }
-
-    return discoveredActions;
-  }
-
-  /**
    * @description Handles discovery for actions targeting entities via scope domains.
    * @param {import('../data/gameDataRepository.js').ActionDefinition} actionDef
    * @param {Entity} actorEntity
@@ -294,14 +232,6 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
       let actions;
       if (scope === TARGET_DOMAIN_NONE || scope === TARGET_DOMAIN_SELF) {
         actions = this.#handleSelfOrNone(actionDef, actorEntity, formatterOptions);
-      } else if (scope === 'directions') {
-        actions = this.#handleDirection(
-          actionDef,
-          actorEntity,
-          currentLocation,
-          locIdForLog,
-          formatterOptions
-        );
       } else {
         actions = this.#handleScopedEntityActions(
           actionDef,
