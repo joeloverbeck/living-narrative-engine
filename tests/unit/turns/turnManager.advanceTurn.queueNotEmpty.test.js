@@ -3,19 +3,17 @@
 
 import { beforeEach, expect, jest, test } from '@jest/globals';
 import {
-  describeTurnManagerSuite,
+  describeRunningTurnManagerSuite,
   TurnManagerTestBed,
 } from '../../common/turns/turnManagerTestBed.js';
-import {
-  SYSTEM_ERROR_OCCURRED_ID,
-  TURN_PROCESSING_STARTED,
-} from '../../../src/constants/eventIds.js';
+import { TURN_PROCESSING_STARTED } from '../../../src/constants/eventIds.js';
+import { expectSystemErrorDispatch } from '../../common/turns/turnManagerTestUtils.js';
 import { createAiActor } from '../../common/turns/testActors.js';
 import { createMockTurnHandler } from '../../common/mockFactories.js';
 
 // --- Test Suite ---
 
-describeTurnManagerSuite(
+describeRunningTurnManagerSuite(
   'TurnManager: advanceTurn() - Turn Advancement (Queue Not Empty)',
   (getBed) => {
     let testBed;
@@ -38,11 +36,7 @@ describeTurnManagerSuite(
         testBed.mocks.logger.debug('Mocked instance.stop() called.');
       });
 
-      // Start manager without running advanceTurn
-      await testBed.startRunning();
-
-      // Re-apply default isEmpty mock after resetting call history
-      testBed.mocks.turnOrderService.isEmpty.mockResolvedValue(false);
+      // Suite already started the manager via describeRunningTurnManagerSuite
     });
 
     // --- Test Cases ---
@@ -135,16 +129,10 @@ describeTurnManagerSuite(
         'No successful turns completed in the previous round. Stopping TurnManager.'
       );
 
-      expect(testBed.mocks.dispatcher.dispatch).toHaveBeenCalledWith(
-        SYSTEM_ERROR_OCCURRED_ID,
-        expect.objectContaining({
-          message: 'System Error: No progress made in the last round.',
-          details: {
-            raw: 'No successful turns completed in the previous round. Stopping TurnManager.',
-            stack: expect.any(String),
-            timestamp: expect.any(String),
-          },
-        })
+      expectSystemErrorDispatch(
+        testBed.mocks.dispatcher.dispatch,
+        'System Error: No progress made in the last round.',
+        'No successful turns completed in the previous round. Stopping TurnManager.'
       );
 
       expect(stopSpy).toHaveBeenCalledTimes(1);
@@ -171,15 +159,10 @@ describeTurnManagerSuite(
         getNextError
       );
 
-      expect(testBed.mocks.dispatcher.dispatch).toHaveBeenCalledWith(
-        SYSTEM_ERROR_OCCURRED_ID,
-        expect.objectContaining({
-          details: {
-            raw: getNextError.message,
-            stack: expect.any(String),
-            timestamp: expect.any(String),
-          },
-        })
+      expectSystemErrorDispatch(
+        testBed.mocks.dispatcher.dispatch,
+        'System Error during turn advancement. Stopping game.',
+        getNextError.message
       );
 
       expect(stopSpy).toHaveBeenCalledTimes(1);
@@ -203,15 +186,10 @@ describeTurnManagerSuite(
         resolveError
       );
 
-      expect(testBed.mocks.dispatcher.dispatch).toHaveBeenCalledWith(
-        SYSTEM_ERROR_OCCURRED_ID,
-        expect.objectContaining({
-          details: {
-            raw: resolveError.message,
-            stack: expect.any(String),
-            timestamp: expect.any(String),
-          },
-        })
+      expectSystemErrorDispatch(
+        testBed.mocks.dispatcher.dispatch,
+        'System Error during turn advancement. Stopping game.',
+        resolveError.message
       );
 
       expect(stopSpy).toHaveBeenCalledTimes(1);
