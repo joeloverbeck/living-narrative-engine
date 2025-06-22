@@ -17,6 +17,18 @@ import { resolveSafeDispatcher } from '../utils/dispatcherUtils.js';
 import { TARGET_DOMAIN_NONE } from '../constants/targetDomains.js';
 
 /**
+ * @description Helper for reporting argument validation errors.
+ * @param {ISafeEventDispatcher} dispatcher - Dispatcher for error events.
+ * @param {string} message - Error message to send.
+ * @param {object} [detail] - Optional error detail payload.
+ * @returns {null} Always returns `null`.
+ */
+function reportValidationError(dispatcher, message, detail) {
+  safeDispatchError(dispatcher, message, detail);
+  return null;
+}
+
+/**
  * @typedef {Object.<string, (command: string, context: ActionTargetContext, deps: object) => (string|null)>} TargetFormatterMap
  */
 
@@ -148,20 +160,18 @@ export function formatActionCommand(
 
   // --- 1. Input Validation ---
   if (!actionDefinition || !actionDefinition.template) {
-    safeDispatchError(
+    return reportValidationError(
       dispatcher,
       'formatActionCommand: Invalid or missing actionDefinition or template.',
       { actionDefinition }
     );
-    return null;
   }
   if (!targetContext) {
-    safeDispatchError(
+    return reportValidationError(
       dispatcher,
       'formatActionCommand: Invalid or missing targetContext.',
       { targetContext }
     );
-    return null;
   }
   if (!entityManager || typeof entityManager.getEntityInstance !== 'function') {
     safeDispatchError(
