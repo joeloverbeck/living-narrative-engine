@@ -184,7 +184,8 @@ export function createDispatchAsserter(eventId, payloadBuilder) {
 export const expectEntityCreatedDispatch = createDispatchAsserter(
   ENTITY_CREATED_ID,
   (entity, wasReconstructed) => ({
-    entity,
+    instanceId: entity.id,
+    definitionId: entity.definitionId,
     wasReconstructed,
   })
 );

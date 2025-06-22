@@ -472,7 +472,8 @@ class EntityManager extends IEntityManager {
       this.#logger.debug(`Tracked entity ${entity.id}`);
       // Dispatch event after successful creation and setup
       this.#eventDispatcher.dispatch(ENTITY_CREATED_ID, {
-        entity,
+        instanceId: entity.id,
+        definitionId: entity.definitionId,
         wasReconstructed: false,
       });
       return entity;
@@ -516,7 +517,8 @@ class EntityManager extends IEntityManager {
       this.#mapManager.add(entity.id, entity);
       this.#logger.debug(`Tracked entity ${entity.id}`);
       this.#eventDispatcher.dispatch(ENTITY_CREATED_ID, {
-        entity,
+        instanceId: entity.id,
+        definitionId: entity.definitionId,
         wasReconstructed: true,
       });
       return entity;
