@@ -5,6 +5,7 @@
 
 import { expect } from '@jest/globals';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/eventIds.js';
+import { flushPromisesAndTimers } from './turnManagerTestBed.js';
 
 /**
  * Asserts that a SYSTEM_ERROR_OCCURRED dispatch was made with the standard
@@ -28,4 +29,22 @@ export function expectSystemErrorDispatch(
       timestamp: expect.any(String),
     },
   });
+}
+
+/**
+ * Waits until the current actor matches the given id.
+ *
+ * @param {import('./turnManagerTestBed.js').TurnManagerTestBed} bed - Test bed instance.
+ * @param {string} id - Expected actor id.
+ * @param {number} [maxTicks] - Maximum timer flush iterations.
+ * @returns {Promise<boolean>} Resolves true if actor found before timeout.
+ */
+export async function waitForCurrentActor(bed, id, maxTicks = 50) {
+  for (let i = 0; i < maxTicks; i++) {
+    if (bed.turnManager.getCurrentActor()?.id === id) {
+      return true;
+    }
+    await flushPromisesAndTimers();
+  }
+  return false;
 }
