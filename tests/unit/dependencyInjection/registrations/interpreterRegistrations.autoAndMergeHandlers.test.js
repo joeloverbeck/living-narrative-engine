@@ -53,6 +53,7 @@ describe('interpreterRegistrations', () => {
       registrar.instance(tokens.EventBus, mockEventBus);
       registrar.instance(tokens.IDataRegistry, mockDataRegistry);
 
+      container.register(tokens.ClosenessCircleService, { merge: jest.fn() });
       registerInterpreters(container);
 
       let autoHandler;
@@ -83,6 +84,7 @@ describe('interpreterRegistrations', () => {
       };
       registrar.instance(tokens.ILogger, mockLogger);
 
+      container.register(tokens.ClosenessCircleService, { merge: jest.fn() });
       registerInterpreters(container);
 
       const mockAutoMoveFollowersHandler = { execute: jest.fn() };

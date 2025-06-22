@@ -9,6 +9,12 @@ const makeLogger = () => ({
   error: jest.fn(),
 });
 const makeDispatcher = () => ({ dispatch: jest.fn() });
+const makeClosenessCircleService = () => ({
+  merge: jest.fn((...arrays) => {
+    const flattened = arrays.flat();
+    return [...new Set(flattened)];
+  }),
+});
 
 describe('MergeClosenessCircleHandler', () => {
   let logger;
@@ -16,10 +22,12 @@ describe('MergeClosenessCircleHandler', () => {
   let em;
   let handler;
   let execCtx;
+  let closenessCircleService;
 
   beforeEach(() => {
     logger = makeLogger();
     dispatcher = makeDispatcher();
+    closenessCircleService = makeClosenessCircleService();
     em = {
       getComponentData: jest.fn(() => ({ locked: false })),
       addComponent: jest.fn(),
@@ -28,6 +36,7 @@ describe('MergeClosenessCircleHandler', () => {
       logger,
       entityManager: em,
       safeEventDispatcher: dispatcher,
+      closenessCircleService,
     });
     execCtx = { logger, evaluationContext: { context: {} } };
     jest.clearAllMocks();

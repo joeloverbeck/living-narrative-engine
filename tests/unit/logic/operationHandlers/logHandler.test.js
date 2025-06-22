@@ -51,18 +51,18 @@ describe('LogHandler', () => {
     logHandler = new LogHandler({ logger: mockLogger });
   });
 
-  // --- Constructor Tests --- (Keep As Is)
+  // --- Constructor Tests --- (Updated for BaseOperationHandler)
   test('constructor should throw if logger is missing', () => {
     expect(() => new LogHandler({})).toThrow(
-      'LogHandler requires a valid ILogger instance with info, warn, error, and debug methods.'
+      "Invalid or missing method 'info' on dependency 'logger'."
     );
   });
   test('constructor should throw if logger is invalid (missing methods)', () => {
     expect(() => new LogHandler({ logger: { info: jest.fn() } })).toThrow(
-      'LogHandler requires a valid ILogger instance with info, warn, error, and debug methods.'
+      "Invalid or missing method 'warn' on dependency 'logger'."
     );
     expect(() => new LogHandler({ logger: 'not a logger' })).toThrow(
-      'LogHandler requires a valid ILogger instance with info, warn, error, and debug methods.'
+      "Invalid or missing method 'info' on dependency 'logger'."
     );
   });
   test('constructor should initialize successfully with valid logger', () => {

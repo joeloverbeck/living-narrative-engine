@@ -6,8 +6,8 @@
 /** @typedef {import('../defs.js').ExecutionContext} ExecutionContext */
 /** @typedef {import('../../events/safeEventDispatcher.js').SafeEventDispatcher} SafeEventDispatcher */
 
+import BaseOperationHandler from './baseOperationHandler.js';
 import { DISPLAY_SPEECH_ID } from '../../constants/eventIds.js';
-
 import { assertParamsObject } from '../../utils/handlerUtils/indexUtils.js';
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 
@@ -22,11 +22,9 @@ import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
  * @property {boolean=} allow_html    - Whether speech_content is HTML.
  */
 
-class DispatchSpeechHandler {
+class DispatchSpeechHandler extends BaseOperationHandler {
   /** @type {SafeEventDispatcher} */
   #dispatcher;
-  /** @type {ILogger} */
-  #logger;
 
   /**
    * @param {object} deps
@@ -34,18 +32,14 @@ class DispatchSpeechHandler {
    * @param {ILogger} deps.logger - Logger instance.
    */
   constructor({ dispatcher, logger }) {
-    if (!dispatcher || typeof dispatcher.dispatch !== 'function') {
-      throw new Error(
-        'DispatchSpeechHandler requires a dispatcher with a dispatch method.'
-      );
-    }
-    if (!logger || typeof logger.debug !== 'function') {
-      throw new Error(
-        'DispatchSpeechHandler requires a valid ILogger instance.'
-      );
-    }
+    super('DispatchSpeechHandler', {
+      logger: { value: logger },
+      dispatcher: {
+        value: dispatcher,
+        requiredMethods: ['dispatch'],
+      },
+    });
     this.#dispatcher = dispatcher;
-    this.#logger = logger;
   }
 
   /**
@@ -55,7 +49,7 @@ class DispatchSpeechHandler {
    * @param {ExecutionContext} _ctx - Execution context (unused).
    */
   execute(params, _ctx) {
-    const logger = _ctx?.logger ?? this.#logger;
+    const logger = this.getLogger(_ctx);
     if (!assertParamsObject(params, logger, 'DISPATCH_SPEECH')) return;
 
     if (
@@ -87,7 +81,7 @@ class DispatchSpeechHandler {
       payload.notes = params.notes;
     }
 
-    this.#logger.debug('DISPATCH_SPEECH: dispatching display_speech', {
+    logger.debug('DISPATCH_SPEECH: dispatching display_speech', {
       payload,
     });
     try {

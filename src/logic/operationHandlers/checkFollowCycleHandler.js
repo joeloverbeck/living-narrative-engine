@@ -9,8 +9,8 @@
 /** @typedef {import('../defs.js').ExecutionContext} ExecutionContext */
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 
+import BaseOperationHandler from './baseOperationHandler.js';
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
-
 import { wouldCreateCycle } from '../../utils/followUtils.js';
 import { tryWriteContextVariable } from '../../utils/contextVariableUtils.js';
 import { assertParamsObject } from '../../utils/handlerUtils/indexUtils.js';
@@ -22,30 +22,29 @@ import { assertParamsObject } from '../../utils/handlerUtils/indexUtils.js';
  * @property {string} result_variable   - Name of the context variable to write the result into.
  */
 
-class CheckFollowCycleHandler {
-  /** @type {ILogger} */
-  #logger;
+class CheckFollowCycleHandler extends BaseOperationHandler {
   /** @type {EntityManager} */
   #entityManager;
   /** @type {ISafeEventDispatcher} */
   #dispatcher;
 
   /**
-   * @param {{ logger: ILogger; entityManager: EntityManager }} deps
+   * @param {{ logger: ILogger; entityManager: EntityManager; safeEventDispatcher: ISafeEventDispatcher }} deps
    */
   constructor({ logger, entityManager, safeEventDispatcher }) {
-    if (!logger?.debug)
-      throw new Error('CheckFollowCycleHandler requires a valid ILogger');
-    if (!entityManager?.getEntityInstance)
-      throw new Error('CheckFollowCycleHandler requires a valid EntityManager');
-    if (!safeEventDispatcher?.dispatch)
-      throw new Error(
-        'CheckFollowCycleHandler requires a valid ISafeEventDispatcher'
-      );
-    this.#logger = logger;
+    super('CheckFollowCycleHandler', {
+      logger: { value: logger },
+      entityManager: {
+        value: entityManager,
+        requiredMethods: ['getEntityInstance'],
+      },
+      safeEventDispatcher: {
+        value: safeEventDispatcher,
+        requiredMethods: ['dispatch'],
+      },
+    });
     this.#entityManager = entityManager;
     this.#dispatcher = safeEventDispatcher;
-    this.#logger.debug('[CheckFollowCycleHandler] Initialized');
   }
 
   /**
@@ -53,7 +52,7 @@ class CheckFollowCycleHandler {
    * @param {ExecutionContext} execCtx
    */
   execute(params, execCtx) {
-    const log = this.#logger;
+    const log = this.getLogger(execCtx);
     if (!assertParamsObject(params, log, 'CHECK_FOLLOW_CYCLE')) return;
 
     const { follower_id, leader_id, result_variable } = params;

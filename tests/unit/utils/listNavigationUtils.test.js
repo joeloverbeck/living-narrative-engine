@@ -54,4 +54,102 @@ describe('setupRadioListNavigation', () => {
     trigger('Home', 2);
     expect(selectMock).toHaveBeenLastCalledWith(items[0], '0');
   });
+
+  it('navigates with ArrowLeft and ArrowRight', () => {
+    trigger('ArrowRight', 1);
+    expect(selectMock).toHaveBeenCalledWith(items[2], '2');
+    trigger('ArrowLeft', 2);
+    expect(selectMock).toHaveBeenLastCalledWith(items[1], '1');
+  });
+
+  it('ignores events when container is missing or target not matching', () => {
+    const noContainerHandler = setupRadioListNavigation(
+      null,
+      '.item',
+      'index',
+      selectMock
+    );
+    const event = new document.defaultView.KeyboardEvent('keydown', {
+      key: 'ArrowDown',
+    });
+    Object.defineProperty(event, 'target', {
+      value: container,
+      enumerable: true,
+    });
+    noContainerHandler(event);
+    expect(selectMock).not.toHaveBeenCalled();
+
+    const wrongTargetEvent = new document.defaultView.KeyboardEvent('keydown', {
+      key: 'ArrowDown',
+    });
+    Object.defineProperty(wrongTargetEvent, 'target', {
+      value: container,
+      enumerable: true,
+    });
+    handler(wrongTargetEvent);
+    expect(selectMock).not.toHaveBeenCalled();
+  });
+
+  it('handles events from matching elements outside the container', () => {
+    const externalItem = document.createElement('div');
+    externalItem.className = 'item';
+    externalItem.dataset.index = '99';
+    const event = new document.defaultView.KeyboardEvent('keydown', {
+      key: 'ArrowDown',
+    });
+    Object.defineProperty(event, 'target', {
+      value: externalItem,
+      enumerable: true,
+    });
+    handler(event);
+    expect(selectMock).toHaveBeenCalledWith(items[0], '0');
+  });
+
+  it('returns early for disabled items or no items', () => {
+    items[0].classList.add('disabled-interaction');
+    trigger('ArrowDown', 0);
+    expect(selectMock).not.toHaveBeenCalled();
+
+    const emptyDom = new JSDOM('<div id="c"></div>');
+    const emptyHandler = setupRadioListNavigation(
+      emptyDom.window.document.getElementById('c'),
+      '.item',
+      'index',
+      selectMock
+    );
+    const noItemEvent = new emptyDom.window.KeyboardEvent('keydown', {
+      key: 'ArrowDown',
+    });
+    Object.defineProperty(noItemEvent, 'target', {
+      value: emptyDom.window.document.getElementById('c'),
+      enumerable: true,
+    });
+    emptyHandler(noItemEvent);
+    expect(selectMock).not.toHaveBeenCalled();
+  });
+
+  it('does nothing for unsupported keys or same index', () => {
+    trigger('Enter', 0);
+    expect(selectMock).not.toHaveBeenCalled();
+
+    const singleDom = new JSDOM(
+      '<div class="item" data-index="0" tabindex="0"></div>'
+    );
+    const singleContainer = singleDom.window.document.body.firstElementChild;
+    const singleHandler = setupRadioListNavigation(
+      singleContainer,
+      '.item',
+      'index',
+      selectMock
+    );
+    const singleEvent = new singleDom.window.KeyboardEvent('keydown', {
+      key: 'ArrowUp',
+    });
+    Object.defineProperty(singleEvent, 'target', {
+      value: singleContainer,
+      enumerable: true,
+    });
+    singleHandler(singleEvent);
+    expect(selectMock).not.toHaveBeenCalled();
+  });
 });

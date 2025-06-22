@@ -224,6 +224,7 @@ export const tokens = freeze({
   GamePersistenceService: 'GamePersistenceService',
   EntityDisplayDataProvider: 'EntityDisplayDataProvider',
   AlertRouter: 'AlertRouter',
+  ClosenessCircleService: 'ClosenessCircleService',
 
   // Core Service Interfaces
   ISafeEventDispatcher: 'ISafeEventDispatcher',

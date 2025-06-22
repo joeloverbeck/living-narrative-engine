@@ -10,8 +10,10 @@ import RemoveFromClosenessCircleHandler from '../../../../src/logic/operationHan
 
 describe('interpreterRegistrations', () => {
   describe('RemoveFromClosenessCircleHandler Registration', () => {
-    it('resolves RemoveFromClosenessCircleHandler with dependencies', () => {
-      const container = new AppContainer();
+    let container;
+
+    beforeEach(() => {
+      container = new AppContainer();
       const registrar = new Registrar(container);
 
       const mockLogger = {
@@ -49,8 +51,13 @@ describe('interpreterRegistrations', () => {
       registrar.instance(tokens.EventBus, mockEventBus);
       registrar.instance(tokens.IDataRegistry, mockDataRegistry);
 
-      registerInterpreters(container);
+      // Register a mock closenessCircleService
+      container.register(tokens.ClosenessCircleService, { repair: jest.fn() });
 
+      registerInterpreters(container);
+    });
+
+    it('resolves RemoveFromClosenessCircleHandler with dependencies', () => {
       let handler;
       let resolutionError;
       try {

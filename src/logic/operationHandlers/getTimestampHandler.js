@@ -3,19 +3,19 @@
  * @see src/logic/operationHandlers/getTimestampHandler.js
  */
 
+import BaseOperationHandler from './baseOperationHandler.js';
 import { tryWriteContextVariable } from '../../utils/contextVariableUtils.js';
 import { assertParamsObject } from '../../utils/handlerUtils/indexUtils.js';
 
-class GetTimestampHandler {
-  #logger;
-
+class GetTimestampHandler extends BaseOperationHandler {
   constructor({ logger }) {
-    if (!logger?.info) throw new Error('…');
-    this.#logger = logger;
+    super('GetTimestampHandler', {
+      logger: { value: logger },
+    });
   }
 
   execute(params, execCtx) {
-    const logger = execCtx?.logger ?? this.#logger;
+    const logger = this.getLogger(execCtx);
     if (!assertParamsObject(params, logger, 'GET_TIMESTAMP')) return;
 
     const rv = params.result_variable.trim();
@@ -25,10 +25,10 @@ class GetTimestampHandler {
       timestamp,
       execCtx,
       undefined,
-      this.#logger
+      logger
     );
     if (result.success) {
-      this.#logger.debug(`GET_TIMESTAMP → ${rv} = ${timestamp}`);
+      logger.debug(`GET_TIMESTAMP → ${rv} = ${timestamp}`);
     }
   }
 }

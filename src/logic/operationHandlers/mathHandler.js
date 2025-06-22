@@ -3,6 +3,7 @@
  */
 
 import jsonLogic from 'json-logic-js';
+import BaseOperationHandler from './baseOperationHandler.js';
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 import { tryWriteContextVariable } from '../../utils/contextVariableUtils.js';
 import { assertParamsObject } from '../../utils/handlerUtils/paramsUtils.js';
@@ -22,9 +23,7 @@ import { assertParamsObject } from '../../utils/handlerUtils/paramsUtils.js';
  * @class MathHandler
  * @description Evaluates a recursive math expression and stores the numeric result in a context variable.
  */
-class MathHandler {
-  /** @type {ILogger} */
-  #logger;
+class MathHandler extends BaseOperationHandler {
   /** @type {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} */
   #dispatcher;
 
@@ -34,16 +33,13 @@ class MathHandler {
    * @param {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} deps.safeEventDispatcher - Dispatcher for error events.
    */
   constructor({ logger, safeEventDispatcher }) {
-    if (!logger || typeof logger.warn !== 'function') {
-      throw new Error('MathHandler requires a valid ILogger instance.');
-    }
-    if (
-      !safeEventDispatcher ||
-      typeof safeEventDispatcher.dispatch !== 'function'
-    ) {
-      throw new Error('MathHandler requires ISafeEventDispatcher.');
-    }
-    this.#logger = logger;
+    super('MathHandler', {
+      logger: { value: logger },
+      safeEventDispatcher: {
+        value: safeEventDispatcher,
+        requiredMethods: ['dispatch'],
+      },
+    });
     this.#dispatcher = safeEventDispatcher;
   }
 
@@ -54,7 +50,7 @@ class MathHandler {
    * @param {ExecutionContext} executionContext
    */
   execute(params, executionContext) {
-    const log = executionContext?.logger ?? this.#logger;
+    const log = this.getLogger(executionContext);
     if (!assertParamsObject(params, log, 'MATH')) {
       return;
     }
@@ -109,7 +105,7 @@ class MathHandler {
       Number.isNaN(left) ||
       Number.isNaN(right)
     ) {
-      this.#logger.warn('MATH: operands must resolve to numbers.', {
+      this.logger.warn('MATH: operands must resolve to numbers.', {
         left,
         right,
       });
@@ -124,18 +120,18 @@ class MathHandler {
         return left * right;
       case 'divide':
         if (right === 0) {
-          this.#logger.warn('MATH: Division by zero.');
+          this.logger.warn('MATH: Division by zero.');
           return NaN;
         }
         return left / right;
       case 'modulo':
         if (right === 0) {
-          this.#logger.warn('MATH: Modulo by zero.');
+          this.logger.warn('MATH: Modulo by zero.');
           return NaN;
         }
         return left % right;
       default:
-        this.#logger.warn(`MATH: Unknown operator '${operator}'.`);
+        this.logger.warn(`MATH: Unknown operator '${operator}'.`);
         return NaN;
     }
   }
@@ -169,7 +165,7 @@ class MathHandler {
         return this.#evaluate(operand, ctx);
       }
     }
-    this.#logger.warn('MATH: Invalid operand encountered.', { operand });
+    this.logger.warn('MATH: Invalid operand encountered.', { operand });
     return NaN;
   }
 }

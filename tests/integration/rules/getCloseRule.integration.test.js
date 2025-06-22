@@ -98,6 +98,8 @@ function init(entities) {
     }),
   };
 
+  const closenessCircleService = { merge: jest.fn((...arrays) => [...new Set(arrays.flat())]) };
+
   // Register all necessary handlers for the rule to run
   const handlers = {
     QUERY_COMPONENT: new QueryComponentHandler({
@@ -110,6 +112,7 @@ function init(entities) {
       logger,
       entityManager,
       safeEventDispatcher: safeDispatcher,
+      closenessCircleService,
     }),
     DISPATCH_PERCEPTIBLE_EVENT: new DispatchPerceptibleEventHandler({
       dispatcher: eventBus,

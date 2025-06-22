@@ -39,6 +39,8 @@ import { ATTEMPT_ACTION_ID } from '../../../src/constants/eventIds.js';
 import { buildABCDWorld } from '../fixtures/intimacyFixtures.js';
 import SimpleEntityManager from '../../common/entities/simpleEntityManager.js';
 
+const closenessCircleService = { repair: jest.fn((partners) => [...new Set(partners)].sort()) };
+
 /**
  * Helper to (re)initialize the interpreter with the provided entities.
  *
@@ -87,9 +89,10 @@ function init(entities) {
       logger,
     }),
     REMOVE_FROM_CLOSENESS_CIRCLE: new RemoveFromClosenessCircleHandler({
-      entityManager,
       logger,
+      entityManager,
       safeEventDispatcher: safeDispatcher,
+      closenessCircleService,
     }),
   };
 

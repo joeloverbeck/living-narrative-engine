@@ -6,6 +6,9 @@
 /** @typedef {import('../defs.js').ExecutionContext} ExecutionContext */
 /** @typedef {import('../defs.js').OperationParams} OperationParams */
 
+import BaseOperationHandler from './baseOperationHandler.js';
+import { assertParamsObject } from '../../utils/handlerUtils/indexUtils.js';
+
 /**
  * Parameters for the LOG operation.
  * Placeholders in `message` are assumed to be pre-resolved by OperationInterpreter.
@@ -17,11 +20,8 @@
 
 const VALID_LOG_LEVELS = ['info', 'warn', 'error', 'debug'];
 const DEFAULT_LOG_LEVEL = 'info';
-import { assertParamsObject } from '../../utils/handlerUtils/indexUtils.js';
 
-class LogHandler /* implements OperationHandler */ {
-  #logger;
-
+class LogHandler extends BaseOperationHandler /* implements OperationHandler */ {
   /**
    * Creates an instance of LogHandler.
    *
@@ -30,17 +30,12 @@ class LogHandler /* implements OperationHandler */ {
    * @throws {Error} If the logger is invalid or missing required methods.
    */
   constructor({ logger }) {
-    if (
-      !logger ||
-      typeof logger.warn !== 'function' ||
-      typeof logger.error !== 'function' ||
-      typeof logger.debug !== 'function'
-    ) {
-      throw new Error(
-        'LogHandler requires a valid ILogger instance with info, warn, error, and debug methods.'
-      );
-    }
-    this.#logger = logger;
+    super('LogHandler', {
+      logger: {
+        value: logger,
+        requiredMethods: ['info', 'warn', 'error', 'debug'],
+      },
+    });
   }
 
   /**
@@ -52,7 +47,7 @@ class LogHandler /* implements OperationHandler */ {
    * @returns {void}
    */
   execute(params, context) {
-    const logger = context?.logger ?? this.#logger;
+    const logger = this.getLogger(context);
     if (!assertParamsObject(params, logger, 'LOG')) return;
 
     // --- MODIFIED: Validate Parameters FIRST ---
@@ -74,7 +69,7 @@ class LogHandler /* implements OperationHandler */ {
     // Check if the string conversion resulted in an empty string *after* initial validation
     if (messageToLog === '') {
       // Log a warning but allow logging empty strings as per previous logic.
-      this.#logger.warn(
+      logger.warn(
         'LogHandler: "message" parameter resolved to an empty string.',
         { params }
       );
@@ -92,7 +87,7 @@ class LogHandler /* implements OperationHandler */ {
 
     if (level !== requestedLevel && typeof params?.level === 'string') {
       // Use optional chaining for safety
-      this.#logger.warn(
+      logger.warn(
         `LogHandler: Invalid log level "${params.level}" provided. Defaulting to "${DEFAULT_LOG_LEVEL}".`,
         { requestedLevel: params.level }
       );
@@ -101,8 +96,8 @@ class LogHandler /* implements OperationHandler */ {
     // Call Logger Method
     try {
       // --- CORRECTED LINE ---
-      // Directly call the method on this.#logger to preserve its 'this' context
-      this.#logger[level](messageToLog);
+      // Directly call the method on the logger to preserve its 'this' context
+      logger[level](messageToLog);
     } catch (logError) {
       const errorMsg = `LogHandler: Failed to write log message via ILogger instance (Level: ${level}). Check logger implementation.`;
       // Use console.error as the logger itself might be failing
