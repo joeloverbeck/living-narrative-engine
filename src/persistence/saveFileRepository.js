@@ -15,7 +15,10 @@ const manualSaveRegex = MANUAL_SAVE_PATTERN;
 
 /**
  * @class SaveFileRepository
- * @description Handles file system interactions for manual save files.
+ * @description
+ *   Acts as the single entry point for manual save storage operations. All
+ *   reads, writes, listings and deletions of save files are funneled through
+ *   this repository which delegates parsing logic to {@link SaveFileParser}.
  */
 export default class SaveFileRepository extends BaseService {
   /** @type {import('../interfaces/coreServices.js').ILogger} */
@@ -26,10 +29,11 @@ export default class SaveFileRepository extends BaseService {
   #parser;
 
   /**
-   * @param {object} deps
+   * Creates a new repository instance.
+   *
+   * @param {object} deps - Constructor dependencies.
    * @param {import('../interfaces/coreServices.js').ILogger} deps.logger - Logger instance.
    * @param {import('../interfaces/IStorageProvider.js').IStorageProvider} deps.storageProvider - Storage provider.
-   * @param {import('./gameStateSerializer.js').default} deps.serializer - Serializer used for reading/writing saves.
    * @param {SaveFileParser} deps.parser - Parser for reading save metadata.
    */
   constructor({ logger, storageProvider, parser }) {
