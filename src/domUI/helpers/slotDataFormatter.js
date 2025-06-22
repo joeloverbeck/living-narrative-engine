@@ -24,28 +24,28 @@ import { formatPlaytime, formatTimestamp } from '../../utils/textUtils.js';
  */
 export function formatSaveFileMetadata(metadata) {
   const name = metadata.saveName || metadata.identifier;
-  let timestamp = '';
-  if (
-    metadata.timestamp &&
-    metadata.timestamp !== 'N/A' &&
-    !metadata.isCorrupted
-  ) {
-    const formatted = formatTimestamp(metadata.timestamp);
-    timestamp = `Saved: ${formatted}`;
-  } else if (metadata.isCorrupted) {
-    timestamp = 'Timestamp: N/A';
+
+  if (metadata.isCorrupted) {
+    return {
+      name,
+      timestamp: 'Timestamp: N/A',
+      playtime: '',
+      isEmpty: false,
+      isCorrupted: true,
+    };
   }
 
-  const playtime = !metadata.isCorrupted
-    ? `Playtime: ${formatPlaytime(metadata.playtimeSeconds)}`
-    : '';
+  const timestamp =
+    metadata.timestamp && metadata.timestamp !== 'N/A'
+      ? `Saved: ${formatTimestamp(metadata.timestamp)}`
+      : '';
 
   return {
     name,
     timestamp,
-    playtime,
+    playtime: `Playtime: ${formatPlaytime(metadata.playtimeSeconds)}`,
     isEmpty: false,
-    isCorrupted: !!metadata.isCorrupted,
+    isCorrupted: false,
   };
 }
 

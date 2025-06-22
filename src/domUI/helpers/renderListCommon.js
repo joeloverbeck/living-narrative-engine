@@ -89,31 +89,32 @@ export async function renderListCommon(
       }
     }
     logger.debug('[renderListCommon] Empty list message displayed.');
-  } else {
-    let rendered = 0;
-    listData.forEach((item, index) => {
-      try {
-        const el = renderItem(item, index, listData);
-        if (el && el.nodeType === 1) {
-          container.appendChild(el);
-          rendered++;
-        } else if (el !== null) {
-          logger.warn(
-            '[renderListCommon] renderItem did not return an element.',
-            {
-              item,
-              returnedValue: el,
-            }
-          );
-        }
-      } catch (err) {
-        logger.error('[renderListCommon] Error in renderItem:', err, { item });
-      }
-    });
-    logger.debug(
-      `[renderListCommon] Rendered ${rendered} out of ${listData.length} items.`
-    );
+    return Array.isArray(listData) ? listData : null;
   }
+
+  let rendered = 0;
+  listData.forEach((item, index) => {
+    try {
+      const el = renderItem(item, index, listData);
+      if (el && el.nodeType === 1) {
+        container.appendChild(el);
+        rendered++;
+      } else if (el !== null) {
+        logger.warn(
+          '[renderListCommon] renderItem did not return an element.',
+          {
+            item,
+            returnedValue: el,
+          }
+        );
+      }
+    } catch (err) {
+      logger.error('[renderListCommon] Error in renderItem:', err, { item });
+    }
+  });
+  logger.debug(
+    `[renderListCommon] Rendered ${rendered} out of ${listData.length} items.`
+  );
 
   return listData;
 }
