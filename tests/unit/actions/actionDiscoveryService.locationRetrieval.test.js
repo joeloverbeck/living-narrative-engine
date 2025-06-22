@@ -5,6 +5,9 @@
 
 import { jest } from '@jest/globals';
 import { ActionDiscoveryService } from '../../../src/actions/actionDiscoveryService.js';
+import { getActorLocation } from '../../../src/utils/actorLocationUtils.js';
+import { getAvailableExits } from '../../../src/utils/locationUtils.js';
+import { getEntityDisplayName } from '../../../src/utils/entityUtils.js';
 
 describe('ActionDiscoveryService – directional discovery', () => {
   const logger = {
@@ -69,6 +72,9 @@ describe('ActionDiscoveryService – directional discovery', () => {
     formatActionCommandFn,
     getEntityIdsForScopesFn,
     safeEventDispatcher,
+    getActorLocationFn: getActorLocation,
+    getAvailableExitsFn: getAvailableExits,
+    getEntityDisplayNameFn: getEntityDisplayName,
   });
 
   /** Bare-bones actor / context objects */

@@ -36,6 +36,9 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
   #getEntityIdsForScopesFn;
   #logger;
   #safeEventDispatcher;
+  #getActorLocationFn;
+  #getAvailableExitsFn;
+  #getEntityDisplayNameFn;
 
   static DOMAIN_HANDLERS = {
     none(
@@ -88,7 +91,8 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
         this.#buildDiscoveredAction.bind(this),
         this.#entityManager,
         this.#safeEventDispatcher,
-        this.#logger
+        this.#logger,
+        this.#getAvailableExitsFn
       );
     },
   };
@@ -102,6 +106,12 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
    * @param {formatActionCommandFn} deps.formatActionCommandFn
    * @param {getEntityIdsForScopesFn} deps.getEntityIdsForScopesFn
    * @param {ISafeEventDispatcher} deps.safeEventDispatcher
+   * @param {function(string, EntityManager): (Entity|string|null)} [deps.getActorLocationFn]
+   *  Function to resolve an actor's location.
+   * @param {(loc: Entity|string, mgr: EntityManager, dispatcher: ISafeEventDispatcher, logger?: ILogger) => Array<object>} [deps.getAvailableExitsFn]
+   *  Function to list exits from a location.
+   * @param {(entity: Entity, fallback?: string, logger?: ILogger) => string} [deps.getEntityDisplayNameFn]
+   *  Function to resolve an entity's display name.
    */
   constructor({
     gameDataRepository,
@@ -111,6 +121,9 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
     formatActionCommandFn,
     getEntityIdsForScopesFn,
     safeEventDispatcher,
+    getActorLocationFn = getActorLocation,
+    getAvailableExitsFn = getAvailableExits,
+    getEntityDisplayNameFn = getEntityDisplayName,
   }) {
     super();
     this.#logger = setupService('ActionDiscoveryService', logger, {
@@ -135,6 +148,12 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
         value: safeEventDispatcher,
         requiredMethods: ['dispatch'],
       },
+      getActorLocationFn: { value: getActorLocationFn, isFunction: true },
+      getAvailableExitsFn: { value: getAvailableExitsFn, isFunction: true },
+      getEntityDisplayNameFn: {
+        value: getEntityDisplayNameFn,
+        isFunction: true,
+      },
     });
 
     this.#gameDataRepository = gameDataRepository;
@@ -143,6 +162,9 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
     this.#formatActionCommandFn = formatActionCommandFn;
     this.#getEntityIdsForScopesFn = getEntityIdsForScopesFn;
     this.#safeEventDispatcher = safeEventDispatcher;
+    this.#getActorLocationFn = getActorLocationFn;
+    this.#getAvailableExitsFn = getAvailableExitsFn;
+    this.#getEntityDisplayNameFn = getEntityDisplayNameFn;
 
     this.#logger.debug('ActionDiscoveryService initialised.');
   }
@@ -175,7 +197,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
       targetCtx,
       this.#entityManager,
       formatterOptions,
-      getEntityDisplayName
+      this.#getEntityDisplayNameFn
     );
 
     if (formattedCommand === null) {
@@ -274,7 +296,10 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
     };
 
     /* ── Resolve actor location via utility ───────── */
-    let currentLocation = getActorLocation(actorEntity.id, this.#entityManager);
+    let currentLocation = this.#getActorLocationFn(
+      actorEntity.id,
+      this.#entityManager
+    );
 
     const locIdForLog = getLocationIdForLog(currentLocation);
 

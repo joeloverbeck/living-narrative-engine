@@ -6,6 +6,9 @@ import coreWaitActionDefinition from '../../../data/mods/core/actions/wait.actio
 
 // --- System Under Test ---
 import { ActionDiscoveryService } from '../../../src/actions/actionDiscoveryService.js';
+import { getActorLocation } from '../../../src/utils/actorLocationUtils.js';
+import { getAvailableExits } from '../../../src/utils/locationUtils.js';
+import { getEntityDisplayName } from '../../../src/utils/entityUtils.js';
 
 // --- Core Dependencies to Mock ---
 import { GameDataRepository } from '../../../src/data/gameDataRepository.js';
@@ -143,6 +146,9 @@ describe('ActionDiscoveryService - Wait Action Tests', () => {
       formatActionCommandFn: mockFormatActionCommandFn,
       getEntityIdsForScopesFn: mockGetEntityIdsForScopesFn,
       safeEventDispatcher: mockSafeEventDispatcher,
+      getActorLocationFn: getActorLocation,
+      getAvailableExitsFn: getAvailableExits,
+      getEntityDisplayNameFn: getEntityDisplayName,
     });
   });
 

@@ -1,6 +1,9 @@
 import { jest, describe, beforeEach, expect } from '@jest/globals';
 
 import { ActionDiscoveryService } from '../../../src/actions/actionDiscoveryService.js';
+import { getActorLocation } from '../../../src/utils/actorLocationUtils.js';
+import { getAvailableExits } from '../../../src/utils/locationUtils.js';
+import { getEntityDisplayName } from '../../../src/utils/entityUtils.js';
 
 describe('ActionDiscoveryService params exposure', () => {
   const dummyActionDef = {
@@ -40,6 +43,9 @@ describe('ActionDiscoveryService params exposure', () => {
       getEntityIdsForScopesFn,
       logger,
       safeEventDispatcher,
+      getActorLocationFn: getActorLocation,
+      getAvailableExitsFn: getAvailableExits,
+      getEntityDisplayNameFn: getEntityDisplayName,
     });
   });
 

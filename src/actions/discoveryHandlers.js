@@ -9,7 +9,7 @@
 /** @typedef {import('../logging/consoleLogger.js').default} ILogger */
 
 import { ActionTargetContext } from '../models/actionTargetContext.js';
-import { getAvailableExits } from '../utils/locationUtils.js';
+import { getAvailableExits as defaultGetAvailableExits } from '../utils/locationUtils.js';
 
 /**
  * @description Handles discovery for actions targeting 'self' or having no target.
@@ -53,6 +53,8 @@ export function discoverSelfOrNone(
  * @param {EntityManager} entityManager - Entity manager for exit discovery.
  * @param {ISafeEventDispatcher} safeEventDispatcher - Dispatcher for safe events.
  * @param {ILogger} logger - Logger for diagnostics.
+ * @param {(location: Entity|string, mgr: EntityManager, dispatcher: ISafeEventDispatcher, logger?: ILogger) => Array<object>} [getAvailableExitsFn]
+ *  Function used to retrieve available exits from a location.
  * @returns {DiscoveredActionInfo[]}
  */
 export function discoverDirectionalActions(
@@ -64,7 +66,8 @@ export function discoverDirectionalActions(
   buildDiscoveredAction,
   entityManager,
   safeEventDispatcher,
-  logger
+  logger,
+  getAvailableExitsFn = defaultGetAvailableExits
 ) {
   if (!currentLocation) {
     logger.debug(
@@ -73,7 +76,7 @@ export function discoverDirectionalActions(
     return [];
   }
 
-  const exits = getAvailableExits(
+  const exits = getAvailableExitsFn(
     currentLocation,
     entityManager,
     safeEventDispatcher,

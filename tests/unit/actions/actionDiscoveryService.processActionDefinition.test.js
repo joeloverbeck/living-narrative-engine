@@ -8,6 +8,9 @@ import {
 } from '@jest/globals';
 import { ActionDiscoveryService } from '../../../src/actions/actionDiscoveryService.js';
 import { safeDispatchError } from '../../../src/utils/safeDispatchErrorUtils.js';
+import { getActorLocation } from '../../../src/utils/actorLocationUtils.js';
+import { getAvailableExits } from '../../../src/utils/locationUtils.js';
+import { getEntityDisplayName } from '../../../src/utils/entityUtils.js';
 
 jest.mock('../../../src/utils/safeDispatchErrorUtils.js');
 
@@ -53,6 +56,9 @@ describe('ActionDiscoveryService - processActionDefinition', () => {
       getEntityIdsForScopesFn,
       logger,
       safeEventDispatcher,
+      getActorLocationFn: getActorLocation,
+      getAvailableExitsFn: getAvailableExits,
+      getEntityDisplayNameFn: getEntityDisplayName,
     });
   });
 

@@ -21,6 +21,8 @@ import {
   getAvailableExits,
   getLocationIdForLog,
 } from '../../../src/utils/locationUtils.js';
+import { getActorLocation } from '../../../src/utils/actorLocationUtils.js';
+import { getEntityDisplayName } from '../../../src/utils/entityUtils.js';
 
 // --- Helper Mocks/Types ---
 import { ActionTargetContext } from '../../../src/models/actionTargetContext.js';
@@ -234,6 +236,9 @@ describe('ActionDiscoveryService - Go Action (Fixed State)', () => {
       formatActionCommandFn: mockFormatActionCommandFn,
       getEntityIdsForScopesFn: mockGetEntityIdsForScopesFn,
       safeEventDispatcher: mockSafeEventDispatcher,
+      getActorLocationFn: getActorLocation,
+      getAvailableExitsFn: getAvailableExits,
+      getEntityDisplayNameFn: getEntityDisplayName,
     });
   });
 
