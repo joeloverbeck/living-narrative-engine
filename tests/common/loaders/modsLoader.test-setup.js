@@ -21,20 +21,14 @@ import {
   createLoaderMocks,
 } from '../mockFactories';
 import { createTestEnvironmentBuilder } from '../mockEnvironment.js';
+import { DEFAULT_LOADER_TYPES } from './loaderConstants.js';
 
 /**
  * List of loader types used when generating mock loaders.
  *
  * @type {string[]}
  */
-const loaderTypes = [
-  'Action',
-  'Component',
-  'Condition',
-  'Event',
-  'Rule',
-  'Entity',
-];
+const loaderTypes = DEFAULT_LOADER_TYPES;
 
 const factoryMap = {
   mockRegistry: createStatefulMockDataRegistry,
