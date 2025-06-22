@@ -12,9 +12,10 @@ import {
   createMockTurnHandler,
 } from '../mockFactories';
 import { createMockEntityManager } from '../mockFactories/entities.js';
-import FactoryTestBed from '../factoryTestBed.js';
 import { createStoppableMixin } from '../stoppableTestBedMixin.js';
 import { SpyTrackerMixin } from '../spyTrackerMixin.js';
+import { createServiceFactoryMixin } from '../serviceFactoryTestBedMixin.js';
+import BaseTestBed from '../baseTestBed.js';
 import { createDescribeTestBedSuite } from '../describeSuite.js';
 import { createTestBedHelpers } from '../createTestBedHelpers.js';
 import { flushPromisesAndTimers } from '../jestHelpers.js';
@@ -27,50 +28,66 @@ import { createDefaultActors } from './testActors.js';
  */
 const StoppableMixin = createStoppableMixin('turnManager');
 
-export class TurnManagerTestBed extends SpyTrackerMixin(
-  StoppableMixin(FactoryTestBed)
-) {
-  /** @type {TurnManager} */
-  turnManager;
-
-  constructor(overrides = {}) {
-    super({
-      logger: () => overrides.logger ?? createMockLogger(),
-      entityManager: () => {
-        const em =
-          overrides.entityManager ??
-          createMockEntityManager({ returnArray: true });
-        em.getEntityInstance = jest.fn((id) => em.activeEntities.get(id));
-        return em;
+const TurnManagerFactoryMixin = createServiceFactoryMixin(
+  (overrides = {}) => ({
+    logger: () => overrides.logger ?? createMockLogger(),
+    entityManager: () => {
+      const em =
+        overrides.entityManager ??
+        createMockEntityManager({ returnArray: true });
+      em.getEntityInstance = jest.fn((id) => em.activeEntities.get(id));
+      return em;
+    },
+    turnOrderService: () =>
+      overrides.turnOrderService ?? {
+        isEmpty: jest.fn(),
+        getNextEntity: jest.fn(),
+        startNewRound: jest.fn(),
+        clearCurrentRound: jest.fn(),
       },
-      turnOrderService: () =>
-        overrides.turnOrderService ?? {
-          isEmpty: jest.fn(),
-          getNextEntity: jest.fn(),
-          startNewRound: jest.fn(),
-          clearCurrentRound: jest.fn(),
-        },
-      turnHandlerResolver: () =>
-        overrides.turnHandlerResolver ?? {
-          resolveHandler: jest.fn(),
-        },
-      dispatcher: () => overrides.dispatcher ?? createMockValidatedEventBus(),
+    turnHandlerResolver: () =>
+      overrides.turnHandlerResolver ?? { resolveHandler: jest.fn() },
+    dispatcher: () => overrides.dispatcher ?? createMockValidatedEventBus(),
+  }),
+  (mocks, overrides = {}) => {
+    const TMClass = overrides.TurnManagerClass ?? TurnManager;
+    const opts = overrides.turnManagerOptions ?? {};
+    return new TMClass({
+      turnOrderService: mocks.turnOrderService,
+      entityManager: mocks.entityManager,
+      logger: mocks.logger,
+      dispatcher: mocks.dispatcher,
+      turnHandlerResolver: mocks.turnHandlerResolver,
+      ...opts,
     });
+  },
+  'turnManager'
+);
 
-    const TurnManagerClass = overrides.TurnManagerClass ?? TurnManager;
-    const tmOptions = overrides.turnManagerOptions ?? {};
-
-    this.turnManager = new TurnManagerClass({
-      turnOrderService: this.turnOrderService,
-      entityManager: this.entityManager,
-      logger: this.logger,
-      dispatcher: this.dispatcher,
-      turnHandlerResolver: this.turnHandlerResolver,
-      ...tmOptions,
-    });
-
-    // Ensure entityManager is always the same reference
+export class TurnManagerTestBed extends SpyTrackerMixin(
+  StoppableMixin(TurnManagerFactoryMixin())
+) {
+  constructor(overrides = {}) {
+    super(overrides);
     this.entityManager = this.mocks.entityManager;
+  }
+
+  /**
+   * Ensures the TurnManager is stopped exactly once during cleanup.
+   *
+   * @protected
+   * @override
+   * @returns {Promise<void>} Resolves when cleanup finishes.
+   */
+  async _afterCleanup() {
+    for (const spy of this._spies) {
+      spy.mockRestore();
+    }
+    this._spies.length = 0;
+    if (this.turnManager && typeof this.turnManager.stop === 'function') {
+      await this.turnManager.stop();
+    }
+    await BaseTestBed.prototype._afterCleanup.call(this);
   }
 
   /**
