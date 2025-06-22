@@ -133,15 +133,15 @@ export class ProcessingCommandState extends AbstractTurnState {
 
   async _getServiceFromContext(
     turnCtx,
-    methodName,
-    serviceNameForLog,
+    contextMethod,
+    serviceLabel,
     actorIdForLog
   ) {
     return getServiceFromContext(
       this,
       turnCtx,
-      methodName,
-      serviceNameForLog,
+      contextMethod,
+      serviceLabel,
       actorIdForLog
     );
   }

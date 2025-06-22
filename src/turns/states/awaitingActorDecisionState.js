@@ -243,11 +243,11 @@ export class AwaitingActorDecisionState extends AbstractTurnState {
   }
 
   /* --------------------------------------------------------------------- */
-  async handleSubmittedCommand(handlerInstance, commandString, actorEntity) {
-    const handler = handlerInstance || this._handler;
+  async handleSubmittedCommand(handler, commandString, actorEntity) {
+    const activeHandler = handler || this._handler;
     const turnContext = await this._ensureContext(
       `no-context-submission-${this.getStateName()}`,
-      handler
+      activeHandler
     );
     if (!turnContext) return;
 
@@ -266,10 +266,10 @@ export class AwaitingActorDecisionState extends AbstractTurnState {
   }
 
   /* --------------------------------------------------------------------- */
-  async handleTurnEndedEvent(handlerInstance, payload) {
-    const handler = handlerInstance || this._handler;
+  async handleTurnEndedEvent(handler, payload) {
+    const activeHandler = handler || this._handler;
     const turnContext = this._getTurnContext();
-    const logger = getLogger(turnContext, handler);
+    const logger = getLogger(turnContext, activeHandler);
 
     if (!turnContext) {
       logger.warn(
@@ -277,7 +277,7 @@ export class AwaitingActorDecisionState extends AbstractTurnState {
           payload
         )}. Deferring to superclass.`
       );
-      return super.handleTurnEndedEvent(handler, payload);
+      return super.handleTurnEndedEvent(activeHandler, payload);
     }
 
     const ctxActor = turnContext.getActor();
@@ -294,15 +294,15 @@ export class AwaitingActorDecisionState extends AbstractTurnState {
           ctxActor?.id
         }. Deferring to superclass.`
       );
-      await super.handleTurnEndedEvent(handler, payload);
+      await super.handleTurnEndedEvent(activeHandler, payload);
     }
   }
 
   /* --------------------------------------------------------------------- */
-  async destroy(handlerInstance) {
-    const handler = handlerInstance || this._handler;
-    const turnContext = handler?.getTurnContext?.();
-    const logger = getLogger(turnContext, handler);
+  async destroy(handler) {
+    const activeHandler = handler || this._handler;
+    const turnContext = activeHandler?.getTurnContext?.();
+    const logger = getLogger(turnContext, activeHandler);
     const actorInCtx = turnContext?.getActor();
 
     if (turnContext) {
@@ -310,7 +310,7 @@ export class AwaitingActorDecisionState extends AbstractTurnState {
         logger.warn(
           `${this.getStateName()}: Handler destroyed. Actor ID from context: N/A_in_context. No specific turn to end via context if actor is missing.`
         );
-      } else if (handler._isDestroying || handler._isDestroyed) {
+      } else if (activeHandler._isDestroying || activeHandler._isDestroyed) {
         logger.debug(
           `${this.getStateName()}: Handler (actor ${actorInCtx.id}) is already being destroyed. Skipping turnContext.endTurn().`
         );
@@ -332,6 +332,6 @@ export class AwaitingActorDecisionState extends AbstractTurnState {
       );
     }
 
-    await super.destroy(handler);
+    await super.destroy(activeHandler);
   }
 }
