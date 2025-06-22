@@ -15,7 +15,7 @@ import {
   createMockSafeEventDispatcher,
   createMockInitializationService,
 } from '../mockFactories';
-import { createTestEnvironmentBuilder } from '../mockEnvironment.js';
+import { createServiceTestEnvironment } from '../mockEnvironment.js';
 const factoryMap = {
   logger: createMockLogger,
   entityManager: createMockEntityManager,
@@ -35,12 +35,6 @@ const tokenMap = {
   [tokens.ISafeEventDispatcher]: 'safeEventDispatcher',
   [tokens.IInitializationService]: 'initializationService',
 };
-
-const buildGameEngineEnv = createTestEnvironmentBuilder(
-  factoryMap,
-  tokenMap,
-  (container) => new GameEngine({ container })
-);
 
 /**
  * Creates a set of mocks and a container for GameEngine.
@@ -63,7 +57,12 @@ const buildGameEngineEnv = createTestEnvironmentBuilder(
  */
 export function createTestEnvironment(overrides = {}) {
   const { mocks, mockContainer, instance, cleanup } =
-    buildGameEngineEnv(overrides);
+    createServiceTestEnvironment(
+      factoryMap,
+      tokenMap,
+      (container) => new GameEngine({ container }),
+      overrides
+    );
   const createGameEngine = () => new GameEngine({ container: mockContainer });
 
   return {

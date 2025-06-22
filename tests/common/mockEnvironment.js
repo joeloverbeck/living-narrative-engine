@@ -133,7 +133,8 @@ export function createTestEnvironmentBuilder(factoryMap, tokenMap, createFn) {
  * Builds and immediately returns a test environment for a service.
  *
  * @description Convenience helper around {@link createTestEnvironmentBuilder}
- *   that invokes the returned builder with no overrides.
+ *   that invokes the returned builder. Overrides can be supplied to alter
+ *   token mappings per test.
  * @param {Record<string, () => any>} factoryMap - Map of mock factory
  *   functions to create.
  * @param {Record<string | symbol, string | ((m: Record<string, any>) => any) | any>} tokenMap
@@ -141,6 +142,8 @@ export function createTestEnvironmentBuilder(factoryMap, tokenMap, createFn) {
  * @param {(container: any, mocks: Record<string, any>) => any} [createFn]
  *   Function returning the system under test when provided the mock container
  *   and generated mocks.
+ * @param {Record<string | symbol, any>} [overrides] - Per-test DI token
+ *   overrides.
  * @returns {{
  *   mocks: Record<string, any>,
  *   mockContainer: { resolve: jest.Mock },
@@ -149,7 +152,12 @@ export function createTestEnvironmentBuilder(factoryMap, tokenMap, createFn) {
  * }}
  *   Generated environment instance.
  */
-export function createServiceTestEnvironment(factoryMap, tokenMap, createFn) {
+export function createServiceTestEnvironment(
+  factoryMap,
+  tokenMap,
+  createFn,
+  overrides = {}
+) {
   const build = createTestEnvironmentBuilder(factoryMap, tokenMap, createFn);
-  return build();
+  return build(overrides);
 }
