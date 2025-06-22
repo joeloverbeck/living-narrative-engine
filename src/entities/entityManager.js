@@ -372,7 +372,7 @@ class EntityManager extends IEntityManager {
    * @param {Error} err - Original error thrown by the factory.
    * @throws {Error|DuplicateEntityError}
    */
-  #translateFactoryError(err) {
+  #handleReconstructionError(err) {
     if (
       err instanceof Error &&
       err.message.startsWith(
@@ -382,7 +382,7 @@ class EntityManager extends IEntityManager {
       const msg =
         'EntityManager.reconstructEntity: serializedEntity data is missing or invalid.';
       this.#logger.error(msg);
-      throw new Error(msg);
+      return new Error(msg);
     }
     if (
       err instanceof Error &&
@@ -393,7 +393,7 @@ class EntityManager extends IEntityManager {
       const msg =
         'EntityManager.reconstructEntity: instanceId is missing or invalid in serialized data.';
       this.#logger.error(msg);
-      throw new Error(msg);
+      return new Error(msg);
     }
     if (
       err instanceof Error &&
@@ -409,12 +409,12 @@ class EntityManager extends IEntityManager {
           /Entity with ID '([^']+)' already exists/
         );
         if (entityMatch) {
-          throw new DuplicateEntityError(entityMatch[1], msg);
+          return new DuplicateEntityError(entityMatch[1], msg);
         }
-        throw new DuplicateEntityError('unknown', msg);
+        return new DuplicateEntityError('unknown', msg);
       }
     }
-    throw err;
+    return err instanceof Error ? err : new Error(String(err));
   }
 
   /* ---------------------------------------------------------------------- */
@@ -520,7 +520,7 @@ class EntityManager extends IEntityManager {
       });
       return entity;
     } catch (err) {
-      this.#translateFactoryError(err);
+      throw this.#handleReconstructionError(err);
     }
   }
 

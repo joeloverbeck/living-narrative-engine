@@ -299,6 +299,31 @@ describeEntityManagerSuite('EntityManager - Lifecycle', (getBed) => {
       );
     });
 
+    it('should map duplicate ID errors to legacy message', () => {
+      // Arrange
+      const { entityManager } = getBed();
+      const { PRIMARY } = TestData.InstanceIDs;
+      getBed().setupTestDefinitions('basic');
+
+      // Pre-create entity to trigger duplicate case
+      getBed().createBasicEntity({ instanceId: PRIMARY });
+
+      const serializedEntity = buildSerializedEntity(
+        PRIMARY,
+        TestData.DefinitionIDs.BASIC,
+        {}
+      );
+
+      // Act & Assert
+      const expectedMsg =
+        "EntityManager.reconstructEntity: Entity with ID '" +
+        PRIMARY +
+        "' already exists. Reconstruction aborted.";
+      expect(() => entityManager.reconstructEntity(serializedEntity)).toThrow(
+        expectedMsg
+      );
+    });
+
     it('should throw an error if a component fails validation', () => {
       // Arrange
       const { entityManager, mocks } = getBed();
