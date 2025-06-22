@@ -6,11 +6,7 @@ import {
 import { validateSaveMetadataFields } from '../utils/saveMetadataUtils.js';
 import { MSG_FILE_READ_ERROR, MSG_EMPTY_FILE } from './persistenceMessages.js';
 import { PersistenceErrorCodes } from './persistenceErrors.js';
-import {
-  createPersistenceFailure,
-  createPersistenceSuccess,
-} from '../utils/persistenceResultUtils.js';
-import { wrapPersistenceOperation } from '../utils/persistenceErrorUtils.js';
+import { readAndDeserialize as utilReadAndDeserialize } from '../utils/saveFileReadUtils.js';
 import { BaseService } from '../utils/serviceBase.js';
 
 /**
@@ -44,58 +40,6 @@ export default class SaveFileParser extends BaseService {
   }
 
   /**
-   * Helper to wrap persistence operations with logging.
-   *
-   * @param {() => Promise<any>} operationFn - Operation to execute.
-   * @returns {Promise<any>} Result of the wrapped operation.
-   * @private
-   */
-  #withLogging(operationFn) {
-    return wrapPersistenceOperation(this.#logger, operationFn);
-  }
-
-  /**
-   * Reads a file using the configured storage provider.
-   *
-   * @param {string} filePath - Path to the file.
-   * @returns {Promise<import('./persistenceTypes.js').PersistenceResult<Uint8Array>>}
-   *   Result containing file bytes or failure info.
-   * @private
-   */
-  async #readSaveFile(filePath) {
-    return this.#withLogging(async () => {
-      let fileContent;
-      try {
-        fileContent = await this.#storageProvider.readFile(filePath);
-      } catch (error) {
-        const userMsg = MSG_FILE_READ_ERROR;
-        this.#logger.error(`Error reading file ${filePath}:`, error);
-        return {
-          ...createPersistenceFailure(
-            PersistenceErrorCodes.FILE_READ_ERROR,
-            userMsg
-          ),
-          userFriendlyError: userMsg,
-        };
-      }
-
-      if (!fileContent || fileContent.byteLength === 0) {
-        const userMsg = MSG_EMPTY_FILE;
-        this.#logger.warn(`File is empty or could not be read: ${filePath}.`);
-        return {
-          ...createPersistenceFailure(
-            PersistenceErrorCodes.EMPTY_FILE,
-            userMsg
-          ),
-          userFriendlyError: userMsg,
-        };
-      }
-
-      return createPersistenceSuccess(fileContent);
-    });
-  }
-
-  /**
    * Reads, decompresses and deserializes a save file.
    *
    * @param {string} filePath - File path to read.
@@ -104,18 +48,12 @@ export default class SaveFileParser extends BaseService {
    * @private
    */
   async #deserializeAndDecompress(filePath) {
-    return this.#withLogging(async () => {
-      this.#logger.debug(
-        `Attempting to read and deserialize file: ${filePath}`
-      );
-      const readRes = await this.#readSaveFile(filePath);
-      if (!readRes.success) return readRes;
-
-      const parseRes = this.#serializer.decompressAndDeserialize(readRes.data);
-      if (!parseRes.success) return parseRes;
-
-      return createPersistenceSuccess(parseRes.data);
-    });
+    return utilReadAndDeserialize(
+      this.#storageProvider,
+      this.#serializer,
+      this.#logger,
+      filePath
+    );
   }
 
   /**
