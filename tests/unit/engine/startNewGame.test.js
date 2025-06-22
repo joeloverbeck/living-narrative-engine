@@ -4,14 +4,11 @@ import { tokens } from '../../../src/dependencyInjection/tokens.js';
 import { describeEngineSuite } from '../../common/engine/gameEngineTestBed.js';
 import '../../common/engine/engineTestTypedefs.js';
 
-import {
-  ENGINE_INITIALIZING_UI,
-  ENGINE_READY_UI,
-  ENGINE_OPERATION_FAILED_UI,
-} from '../../../src/constants/eventIds.js';
+import { ENGINE_OPERATION_FAILED_UI } from '../../../src/constants/eventIds.js';
 import {
   expectDispatchSequence,
   buildStopDispatches,
+  buildStartDispatches,
   expectEngineStatus,
 } from '../../common/engine/dispatchTestUtils.js';
 import { DEFAULT_TEST_WORLD } from '../../common/constants.js';
@@ -29,10 +26,9 @@ describeEngineSuite('GameEngine', (ctx) => {
     it('should successfully start a new game', async () => {
       await ctx.engine.startNewGame(DEFAULT_TEST_WORLD);
 
-      expect(ctx.bed.mocks.safeEventDispatcher.dispatch).toHaveBeenCalledWith(
-        ENGINE_INITIALIZING_UI,
-        { worldName: DEFAULT_TEST_WORLD },
-        { allowSchemaNotFound: true }
+      expectDispatchSequence(
+        ctx.bed.mocks.safeEventDispatcher.dispatch,
+        buildStartDispatches(DEFAULT_TEST_WORLD)
       );
       expect(ctx.bed.mocks.entityManager.clearAll).toHaveBeenCalled();
       expect(ctx.bed.mocks.playtimeTracker.reset).toHaveBeenCalled();
@@ -43,13 +39,6 @@ describeEngineSuite('GameEngine', (ctx) => {
         ctx.bed.mocks.initializationService.runInitializationSequence
       ).toHaveBeenCalledWith(DEFAULT_TEST_WORLD);
       expect(ctx.bed.mocks.playtimeTracker.startSession).toHaveBeenCalled();
-      expect(ctx.bed.mocks.safeEventDispatcher.dispatch).toHaveBeenCalledWith(
-        ENGINE_READY_UI,
-        {
-          activeWorld: DEFAULT_TEST_WORLD,
-          message: 'Enter command...',
-        }
-      );
       expect(ctx.bed.mocks.turnManager.start).toHaveBeenCalled();
 
       expectEngineStatus(ctx.engine, {
@@ -80,15 +69,7 @@ describeEngineSuite('GameEngine', (ctx) => {
       expectDispatchSequence(
         ctx.bed.mocks.safeEventDispatcher.dispatch,
         ...buildStopDispatches(),
-        [
-          ENGINE_INITIALIZING_UI,
-          { worldName: DEFAULT_TEST_WORLD },
-          { allowSchemaNotFound: true },
-        ],
-        [
-          ENGINE_READY_UI,
-          { activeWorld: DEFAULT_TEST_WORLD, message: 'Enter command...' },
-        ]
+        ...buildStartDispatches(DEFAULT_TEST_WORLD)
       );
       expectEngineStatus(ctx.engine, {
         isInitialized: true,

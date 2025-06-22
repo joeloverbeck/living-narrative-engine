@@ -6,6 +6,7 @@
 import { expect } from '@jest/globals';
 import {
   ENGINE_OPERATION_IN_PROGRESS_UI,
+  ENGINE_INITIALIZING_UI,
   ENGINE_READY_UI,
   GAME_SAVED_ID,
   ENTITY_CREATED_ID,
@@ -86,6 +87,19 @@ export function buildStopDispatches() {
       ENGINE_STOPPED_UI,
       { inputDisabledMessage: 'Game stopped. Engine is inactive.' },
     ],
+  ];
+}
+
+/**
+ * Builds the dispatch sequence emitted when starting a new game.
+ *
+ * @param {string} worldName - Name of the world being initialized.
+ * @returns {Array<[string, any]>} Dispatch call sequence for engine start.
+ */
+export function buildStartDispatches(worldName) {
+  return [
+    [ENGINE_INITIALIZING_UI, { worldName }, { allowSchemaNotFound: true }],
+    [ENGINE_READY_UI, { activeWorld: worldName, message: 'Enter command...' }],
   ];
 }
 
@@ -192,6 +206,7 @@ export default {
   expectDispatchSequence,
   buildSaveDispatches,
   buildStopDispatches,
+  buildStartDispatches,
   expectEngineStatus,
   expectSingleDispatch,
   expectEntityCreatedDispatch,
