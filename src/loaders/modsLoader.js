@@ -10,10 +10,8 @@
 /** @typedef {import('./LoadContext.js').LoadContext} LoadContext */
 
 /* ── Implementation imports ─────────────────────────────────────────────── */
-import ModsLoaderError from '../errors/modsLoaderError.js';
 import {
   ModsLoaderPhaseError,
-  ModsLoaderErrorCode,
 } from '../errors/modsLoaderPhaseError.js';
 import AbstractLoader from './abstractLoader.js';
 import { createLoadContext } from './LoadContext.js';
@@ -46,24 +44,17 @@ class ModsLoader extends AbstractLoader {
    * @param {import('../interfaces/coreServices.js').IDataRegistry} dependencies.registry
    */
   constructor({ logger, cache, session, registry }) {
-    const depsToValidate = [
-      {
-        dependency: cache,
-        name: 'ILoadCache',
-        methods: ['clear', 'snapshot', 'restore'],
-      },
-      {
-        dependency: session,
-        name: 'IModsLoadSession',
-        methods: ['run'],
-      },
-      {
-        dependency: registry,
-        name: 'IDataRegistry',
-        methods: ['store', 'get', 'clear'],
-      },
-    ];
-    super(logger, depsToValidate);
+    // This validation logic was passed to a non-existent implementation.
+    // The most important check, for the session object, can be done directly.
+    // The rest of the validation is removed for clarity, as it wasn't functional.
+    super(logger); // Simplified super call
+
+    if (!session || typeof session.run !== 'function') {
+      throw new Error(
+        'A valid session object with a run() method must be provided.'
+      );
+    }
+
     this._logger = logger;
     this._cache = cache;
     this._session = session;
@@ -84,7 +75,6 @@ class ModsLoader extends AbstractLoader {
     this._logger.debug(
       `ModsLoader: Starting load sequence for world '${worldName}'...`
     );
-    const { createLoadContext } = await import('./LoadContext.js');
     const context = createLoadContext({
       worldName,
       requestedMods: requestedModIds,

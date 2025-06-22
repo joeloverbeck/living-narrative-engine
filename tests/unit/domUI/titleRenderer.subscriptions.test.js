@@ -359,7 +359,8 @@ describe('TitleRenderer', () => {
 
     it('should handle "initialization:initialization_service:failed" event', () => {
       const payload = { error: 'Core failure', worldName: 'BrokenWorld' };
-      simulateEvent('initialization:initialization_service:failed', payload);
+      const eventEnvelope = { type: 'initialization:initialization_service:failed', payload };
+      simulateEvent('initialization:initialization_service:failed', eventEnvelope);
       expect(renderer.set).toHaveBeenCalledWith(
         'Initialization Failed (World: BrokenWorld)'
       );
@@ -367,6 +368,33 @@ describe('TitleRenderer', () => {
         SYSTEM_ERROR_OCCURRED_ID,
         expect.objectContaining({
           message: expect.stringContaining('Overall initialization failed'),
+        })
+      );
+    });
+
+    it('should handle "initialization:initialization_service:failed" event with undefined error', () => {
+      const payload = { worldName: 'BrokenWorld' }; // Missing error property
+      const eventEnvelope = { type: 'initialization:initialization_service:failed', payload };
+      simulateEvent('initialization:initialization_service:failed', eventEnvelope);
+      expect(renderer.set).toHaveBeenCalledWith(
+        'Initialization Failed (World: BrokenWorld)'
+      );
+      expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
+        SYSTEM_ERROR_OCCURRED_ID,
+        expect.objectContaining({
+          message: expect.stringContaining('Overall initialization failed. Error: Unknown error occurred'),
+        })
+      );
+    });
+
+    it('should handle "initialization:initialization_service:failed" event with null payload', () => {
+      const eventEnvelope = { type: 'initialization:initialization_service:failed', payload: null };
+      simulateEvent('initialization:initialization_service:failed', eventEnvelope);
+      expect(renderer.set).toHaveBeenCalledWith('Initialization Failed');
+      expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
+        SYSTEM_ERROR_OCCURRED_ID,
+        expect.objectContaining({
+          message: expect.stringContaining('Overall initialization failed. Error: Unknown error occurred'),
         })
       );
     });
@@ -431,6 +459,24 @@ describe('TitleRenderer', () => {
       };
       simulateEvent(SYSTEM_ERROR_OCCURRED_ID, payload);
       expect(renderer.set).toHaveBeenCalledWith('System Error');
+    });
+
+    it('should handle "initialization:initialization_service:failed" event with real error payload structure', () => {
+      // Simulate the exact payload structure from the real error
+      const payload = {
+        worldName: "demo",
+        error: "ModManifestLoader.loadRequestedManifests: manifest for 'isekai' failed schema validation. See log for Ajv error details.",
+        stack: "ModsLoaderPhaseError: ModManifestLoader.loadRequestedManifests: manifest for 'isekai' failed schema validation. See log for Ajv error details.\n    at ManifestPhase.execute (http://127.0.0.1:8080/bundle.js:21045:15)\n    at async ModsLoadSession.run (http://127.0.0.1:8080/bundle.js:9402:23)\n    at async ModsLoader.loadMods (http://127.0.0.1:8080/bundle.js:7436:34)\n    at async InitializationService.runInitializationSequence (http://127.0.0.1:8080/bundle.js:65269:28)\n    at async GameEngine._executeInitializationSequence (http://127.0.0.1:8080/bundle.js:66365:9)\n    at async GameEngine.startNewGame (http://127.0.0.1:8080/bundle.js:66483:28)\n    at async startGameStage (http://127.0.0.1:8080/bundle.js:67132:7)\n    at async beginGame (http://127.0.0.1:8080/bundle.js:67553:27)"
+      };
+      const eventEnvelope = { type: 'initialization:initialization_service:failed', payload };
+      simulateEvent('initialization:initialization_service:failed', eventEnvelope);
+      expect(renderer.set).toHaveBeenCalledWith('Initialization Failed (World: demo)');
+      expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
+        SYSTEM_ERROR_OCCURRED_ID,
+        expect.objectContaining({
+          message: expect.stringContaining('Overall initialization failed. Error: ModManifestLoader.loadRequestedManifests: manifest for \'isekai\' failed schema validation. See log for Ajv error details.'),
+        })
+      );
     });
   });
 
