@@ -28,6 +28,11 @@ import {
   validationSucceeded,
   formatValidationErrors,
 } from './utils/validationHelpers.js';
+import {
+  validateAddComponentParams as validateAddComponentParamsUtil,
+  validateRemoveComponentParams as validateRemoveComponentParamsUtil,
+  validateReconstructEntityParams as validateReconstructEntityParamsUtil,
+} from './utils/parameterValidators.js';
 import EntityQuery from '../query/EntityQuery.js';
 import {
   assertValidId,
@@ -36,7 +41,6 @@ import {
 import { IEntityManager } from '../interfaces/IEntityManager.js';
 import { validateDependency } from '../utils/validationUtils.js';
 import { ensureValidLogger } from '../utils';
-import { isNonBlankString } from '../utils/textUtils.js';
 import { DefinitionNotFoundError } from '../errors/definitionNotFoundError.js';
 import { EntityNotFoundError } from '../errors/entityNotFoundError';
 import { InvalidArgumentError } from '../errors/invalidArgumentError.js';
@@ -256,7 +260,15 @@ class EntityManager extends IEntityManager {
       return this.#definitionCache.get(definitionId);
     }
     const definition = this.#registry.getEntityDefinition(definitionId);
-    console.log('[DEBUG EntityManager] definition for', definitionId, 'is', definition, 'instanceof EntityDefinition?', definition instanceof (typeof EntityDefinition !== 'undefined' ? EntityDefinition : Object));
+    console.log(
+      '[DEBUG EntityManager] definition for',
+      definitionId,
+      'is',
+      definition,
+      'instanceof EntityDefinition?',
+      definition instanceof
+        (typeof EntityDefinition !== 'undefined' ? EntityDefinition : Object)
+    );
     if (definition) {
       this.#definitionCache.set(definitionId, definition);
       return definition;
@@ -275,44 +287,12 @@ class EntityManager extends IEntityManager {
    * @throws {InvalidArgumentError} If parameters are invalid.
    */
   #validateAddComponentParams(instanceId, componentTypeId, componentData) {
-    try {
-      assertValidId(instanceId, 'EntityManager.addComponent', this.#logger);
-      assertNonBlankString(
-        componentTypeId,
-        'componentTypeId',
-        'EntityManager.addComponent',
-        this.#logger
-      );
-    } catch (error) {
-      this.#logger.warn(
-        `EntityManager.addComponent: Invalid parameters - instanceId: '${instanceId}', componentTypeId: '${componentTypeId}'`
-      );
-      throw new InvalidArgumentError(
-        `EntityManager.addComponent: Invalid parameters - instanceId: '${instanceId}', componentTypeId: '${componentTypeId}'`,
-        'instanceId/componentTypeId',
-        { instanceId, componentTypeId }
-      );
-    }
-
-    if (componentData === null) {
-      const errorMsg = `EntityManager.addComponent: componentData cannot be null for ${componentTypeId} on ${instanceId}`;
-      this.#logger.error(errorMsg, {
-        componentTypeId,
-        instanceId,
-      });
-      throw new InvalidArgumentError(errorMsg, 'componentData', componentData);
-    }
-
-    if (componentData !== undefined && typeof componentData !== 'object') {
-      const receivedType = typeof componentData;
-      const errorMsg = `EntityManager.addComponent: componentData for ${componentTypeId} on ${instanceId} must be an object. Received: ${receivedType}`;
-      this.#logger.error(errorMsg, {
-        componentTypeId,
-        instanceId,
-        receivedType,
-      });
-      throw new InvalidArgumentError(errorMsg, 'componentData', componentData);
-    }
+    validateAddComponentParamsUtil(
+      instanceId,
+      componentTypeId,
+      componentData,
+      this.#logger
+    );
   }
 
   /**
@@ -324,24 +304,11 @@ class EntityManager extends IEntityManager {
    * @throws {InvalidArgumentError} If parameters are invalid.
    */
   #validateRemoveComponentParams(instanceId, componentTypeId) {
-    try {
-      assertValidId(instanceId, 'EntityManager.removeComponent', this.#logger);
-      assertNonBlankString(
-        componentTypeId,
-        'componentTypeId',
-        'EntityManager.removeComponent',
-        this.#logger
-      );
-    } catch (error) {
-      this.#logger.warn(
-        `EntityManager.removeComponent: Invalid parameters - instanceId: '${instanceId}', componentTypeId: '${componentTypeId}'`
-      );
-      throw new InvalidArgumentError(
-        `EntityManager.removeComponent: Invalid parameters - instanceId: '${instanceId}', componentTypeId: '${componentTypeId}'`,
-        'instanceId/componentTypeId',
-        { instanceId, componentTypeId }
-      );
-    }
+    validateRemoveComponentParamsUtil(
+      instanceId,
+      componentTypeId,
+      this.#logger
+    );
   }
 
   /**
@@ -352,18 +319,7 @@ class EntityManager extends IEntityManager {
    * @throws {Error} If the data is malformed.
    */
   #validateReconstructEntityParams(serializedEntity) {
-    if (!serializedEntity || typeof serializedEntity !== 'object') {
-      const msg =
-        'EntityManager.reconstructEntity: serializedEntity data is missing or invalid.';
-      this.#logger.error(msg);
-      throw new Error(msg);
-    }
-    if (!isNonBlankString(serializedEntity.instanceId)) {
-      const msg =
-        'EntityManager.reconstructEntity: instanceId is missing or invalid in serialized data.';
-      this.#logger.error(msg);
-      throw new Error(msg);
-    }
+    validateReconstructEntityParamsUtil(serializedEntity, this.#logger);
   }
 
   /**
@@ -460,12 +416,12 @@ class EntityManager extends IEntityManager {
       if (!definition) {
         throw new DefinitionNotFoundError(definitionId);
       }
-      
+
       this.#logger.debug(
         `EntityManager.createEntityInstance: Creating entity instance '${opts.instanceId || 'auto-generated'}' from definition '${definitionId}' with overrides:`,
         opts.componentOverrides
       );
-      
+
       const entity = this.#factory.create(
         definitionId,
         opts,
@@ -473,11 +429,11 @@ class EntityManager extends IEntityManager {
         this.#mapManager,
         definition
       );
-      
+
       this.#logger.debug(
         `EntityManager.createEntityInstance: Factory created entity with ID '${entity.id}' and definitionId '${entity.definitionId}'`
       );
-      
+
       // Track the primary instance.
       this.#mapManager.add(entity.id, entity);
       this.#logger.debug(`Tracked entity ${entity.id}`);
