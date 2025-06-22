@@ -27,10 +27,7 @@ import { injectDefaultComponents } from '../utils/defaultComponentInjector.js';
 import { validateDependency } from '../../utils/validationUtils.js';
 import { ensureValidLogger } from '../../utils';
 import { DefinitionNotFoundError } from '../../errors/definitionNotFoundError.js';
-import {
-  validationSucceeded,
-  formatValidationErrors,
-} from '../utils/validationHelpers.js';
+import { validateAndClone as validateAndCloneUtil } from '../utils/componentValidation.js';
 
 /* -------------------------------------------------------------------------- */
 /* Type-Hint Imports (JSDoc only – removed at runtime)                        */
@@ -47,8 +44,8 @@ import {
 /* Internal Utilities                                                         */
 /* -------------------------------------------------------------------------- */
 
-// validationSucceeded and formatValidationErrors imported from
-// ../utils/validationHelpers.js
+// validateAndCloneUtil imported from
+// ../utils/componentValidation.js
 
 /* -------------------------------------------------------------------------- */
 /* EntityFactory Implementation                                               */
@@ -122,15 +119,14 @@ class EntityFactory {
    * @returns {object} The validated (and potentially cloned/modified by validator) data.
    */
   #validateAndClone(componentTypeId, data, errorContext) {
-    const clone = this.#cloner(data);
-    const result = this.#validator.validate(componentTypeId, clone);
-    if (!validationSucceeded(result)) {
-      const details = formatValidationErrors(result);
-      const msg = `${errorContext} Errors:\n${details}`;
-      this.#logger.error(`[EntityFactory] ${msg}`);
-      throw new Error(msg);
-    }
-    return clone;
+    return validateAndCloneUtil(
+      componentTypeId,
+      data,
+      this.#validator,
+      this.#logger,
+      `[EntityFactory] ${errorContext}`,
+      this.#cloner
+    );
   }
 
   /**
