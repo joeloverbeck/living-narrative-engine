@@ -96,7 +96,7 @@ describe('RebuildLeaderListCacheHandler', () => {
             entityManager: mockEntityManager,
             safeEventDispatcher: makeMockDispatcher(),
           })
-      ).toThrow('RebuildLeaderListCacheHandler requires a valid ILogger.');
+      ).toThrow("Invalid or missing method 'info' on dependency 'logger'.");
       expect(
         () =>
           new RebuildLeaderListCacheHandler({
@@ -104,14 +104,14 @@ describe('RebuildLeaderListCacheHandler', () => {
             entityManager: mockEntityManager,
             safeEventDispatcher: makeMockDispatcher(),
           })
-      ).toThrow('RebuildLeaderListCacheHandler requires a valid ILogger.');
+      ).toThrow("Invalid or missing method 'info' on dependency 'logger'.");
     });
 
     test('should throw a TypeError if the entity manager dependency is missing or invalid', () => {
       expect(
         () => new RebuildLeaderListCacheHandler({ logger: mockLogger })
       ).toThrow(
-        'RebuildLeaderListCacheHandler requires a valid IEntityManager.'
+        'Missing required dependency: RebuildLeaderListCacheHandler: entityManager.'
       );
       expect(
         () =>
@@ -121,7 +121,7 @@ describe('RebuildLeaderListCacheHandler', () => {
             safeEventDispatcher: makeMockDispatcher(),
           })
       ).toThrow(
-        'RebuildLeaderListCacheHandler requires a valid IEntityManager.'
+        "Invalid or missing method 'getEntitiesWithComponent' on dependency 'RebuildLeaderListCacheHandler: entityManager'."
       );
     });
 
@@ -132,7 +132,9 @@ describe('RebuildLeaderListCacheHandler', () => {
             logger: mockLogger,
             entityManager: mockEntityManager,
           })
-      ).toThrow(/ISafeEventDispatcher/);
+      ).toThrow(
+        'Missing required dependency: RebuildLeaderListCacheHandler: safeEventDispatcher.'
+      );
       expect(
         () =>
           new RebuildLeaderListCacheHandler({
@@ -140,7 +142,9 @@ describe('RebuildLeaderListCacheHandler', () => {
             entityManager: mockEntityManager,
             safeEventDispatcher: {},
           })
-      ).toThrow(/ISafeEventDispatcher/);
+      ).toThrow(
+        "Invalid or missing method 'dispatch' on dependency 'RebuildLeaderListCacheHandler: safeEventDispatcher'."
+      );
     });
 
     test('should initialize successfully with valid dependencies', () => {
@@ -153,7 +157,7 @@ describe('RebuildLeaderListCacheHandler', () => {
           })
       ).not.toThrow();
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        '[RebuildLeaderListCacheHandler] Initialized.'
+        'RebuildLeaderListCacheHandler: [RebuildLeaderListCacheHandler] Initialized.'
       );
     });
   });

@@ -7,13 +7,14 @@ import { isNonBlankString } from '../../utils/textUtils.js';
 
 import { assertParamsObject } from '../../utils/handlerUtils/indexUtils.js';
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
+import BaseOperationHandler from './baseOperationHandler.js';
 
 /**
  * @class RebuildLeaderListCacheHandler
  * @description Handles the REBUILD_LEADER_LIST_CACHE operation by updating the
  *  'core:leading' component for a list of leader entities.
  */
-class RebuildLeaderListCacheHandler {
+class RebuildLeaderListCacheHandler extends BaseOperationHandler {
   #logger;
   #entityManager;
   #dispatcher;
@@ -25,38 +26,26 @@ class RebuildLeaderListCacheHandler {
    * @param {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} deps.safeEventDispatcher - Dispatcher for error events.
    */
   constructor({ logger, entityManager, safeEventDispatcher }) {
-    if (
-      !logger ||
-      typeof logger.debug !== 'function' ||
-      typeof logger.error !== 'function' ||
-      typeof logger.warn !== 'function'
-    ) {
-      throw new TypeError(
-        'RebuildLeaderListCacheHandler requires a valid ILogger.'
-      );
-    }
-    if (
-      !entityManager ||
-      typeof entityManager.getEntitiesWithComponent !== 'function' ||
-      typeof entityManager.getEntityInstance !== 'function' ||
-      typeof entityManager.addComponent !== 'function'
-    ) {
-      throw new TypeError(
-        'RebuildLeaderListCacheHandler requires a valid IEntityManager.'
-      );
-    }
-    if (
-      !safeEventDispatcher ||
-      typeof safeEventDispatcher.dispatch !== 'function'
-    ) {
-      throw new TypeError(
-        'RebuildLeaderListCacheHandler requires a valid ISafeEventDispatcher.'
-      );
-    }
+    super('RebuildLeaderListCacheHandler', {
+      logger: { value: logger },
+      entityManager: {
+        value: entityManager,
+        requiredMethods: [
+          'getEntitiesWithComponent',
+          'getEntityInstance',
+          'addComponent',
+          'removeComponent',
+        ],
+      },
+      safeEventDispatcher: {
+        value: safeEventDispatcher,
+        requiredMethods: ['dispatch'],
+      },
+    });
     this.#logger = logger;
     this.#entityManager = entityManager;
     this.#dispatcher = safeEventDispatcher;
-    this.#logger.debug('[RebuildLeaderListCacheHandler] Initialized.');
+    this.logger.debug('[RebuildLeaderListCacheHandler] Initialized.');
   }
 
   /**

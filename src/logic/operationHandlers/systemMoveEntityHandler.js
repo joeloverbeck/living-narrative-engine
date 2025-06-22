@@ -15,24 +15,25 @@ import { resolveEntityId } from '../../utils/entityRefUtils.js';
 import { assertParamsObject } from '../../utils/handlerUtils/indexUtils.js';
 
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
+import BaseOperationHandler from './baseOperationHandler.js';
 
-class SystemMoveEntityHandler {
+class SystemMoveEntityHandler extends BaseOperationHandler {
   /** @type {ILogger} */ #logger;
   /** @type {EntityManager} */ #entityManager;
   /** @type {ISafeEventDispatcher} */ #dispatcher;
 
   constructor({ entityManager, safeEventDispatcher, logger }) {
-    if (!logger?.debug)
-      throw new Error('SystemMoveEntityHandler requires ILogger');
-    if (
-      !entityManager ||
-      typeof entityManager.getComponentData !== 'function' ||
-      typeof entityManager.addComponent !== 'function'
-    ) {
-      throw new Error('SystemMoveEntityHandler requires EntityManager');
-    }
-    if (!safeEventDispatcher?.dispatch)
-      throw new Error('SystemMoveEntityHandler needs ISafeEventDispatcher');
+    super('SystemMoveEntityHandler', {
+      logger: { value: logger },
+      entityManager: {
+        value: entityManager,
+        requiredMethods: ['getComponentData', 'addComponent'],
+      },
+      safeEventDispatcher: {
+        value: safeEventDispatcher,
+        requiredMethods: ['dispatch'],
+      },
+    });
     this.#entityManager = entityManager;
     this.#dispatcher = safeEventDispatcher;
     this.#logger = logger;

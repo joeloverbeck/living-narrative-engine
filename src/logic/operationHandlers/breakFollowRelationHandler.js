@@ -36,30 +36,6 @@ class BreakFollowRelationHandler extends BaseOperationHandler {
     rebuildLeaderListCacheHandler,
     safeEventDispatcher,
   }) {
-    if (!logger || typeof logger.debug !== 'function') {
-      throw new Error('BreakFollowRelationHandler requires a valid ILogger');
-    }
-    if (!entityManager || typeof entityManager.removeComponent !== 'function') {
-      throw new Error(
-        'BreakFollowRelationHandler requires a valid EntityManager'
-      );
-    }
-    if (
-      !rebuildLeaderListCacheHandler ||
-      typeof rebuildLeaderListCacheHandler.execute !== 'function'
-    ) {
-      throw new Error(
-        'BreakFollowRelationHandler requires a valid RebuildLeaderListCacheHandler'
-      );
-    }
-    if (
-      !safeEventDispatcher ||
-      typeof safeEventDispatcher.dispatch !== 'function'
-    ) {
-      throw new Error(
-        'BreakFollowRelationHandler requires a valid ISafeEventDispatcher'
-      );
-    }
     super('BreakFollowRelationHandler', {
       logger: { value: logger },
       entityManager: {
