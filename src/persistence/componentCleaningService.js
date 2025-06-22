@@ -113,6 +113,10 @@ class ComponentCleaningService {
    * @returns {void}
    */
   registerCleaner(componentId, cleanerFn) {
+    if (typeof cleanerFn !== 'function') {
+      this.#logger.error(`Cleaner for ${componentId} must be a function.`);
+      return;
+    }
     if (this.#cleaners.has(componentId)) {
       this.#logger.warn(
         `Cleaner for component '${componentId}' already registered. Overwriting.`
