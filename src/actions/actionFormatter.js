@@ -16,6 +16,90 @@ import { safeDispatchError } from '../utils/safeDispatchErrorUtils.js';
 import { resolveSafeDispatcher } from '../utils/dispatcherUtils.js';
 
 /**
+ * @description Replaces the `{target}` placeholder using entity information.
+ * @param {string} command - The command template string.
+ * @param {ActionTargetContext} context - Target context with `entityId`.
+ * @param {{
+ *   actionId: string,
+ *   entityManager: EntityManager,
+ *   displayNameFn: (entity: Entity, fallback: string, logger?: ILogger) => string,
+ *   logger: ILogger,
+ *   debug: boolean
+ * }} deps - Supporting services and flags.
+ * @returns {string | null} The formatted command or null on failure.
+ */
+function formatEntityTarget(
+  command,
+  context,
+  { actionId, entityManager, displayNameFn, logger, debug }
+) {
+  const targetId = context.entityId;
+  if (!targetId) {
+    logger.warn(
+      `formatActionCommand: Target context type is 'entity' but entityId is missing for action ${actionId}. Template: "${command}"`
+    );
+    return null;
+  }
+
+  let targetName = targetId;
+  const targetEntity = entityManager.getEntityInstance(targetId);
+  if (targetEntity) {
+    targetName = displayNameFn(targetEntity, targetId, logger);
+    if (debug) {
+      logger.debug(
+        ` -> Found entity ${targetId}, display name: "${targetName}"`
+      );
+    }
+  } else {
+    logger.warn(
+      `formatActionCommand: Could not find entity instance for ID ${targetId} (action: ${actionId}). Using ID as fallback name.`
+    );
+  }
+
+  return command.replace('{target}', targetName);
+}
+
+/**
+ * @description Replaces the `{direction}` placeholder.
+ * @param {string} command - The command template string.
+ * @param {ActionTargetContext} context - Target context with `direction`.
+ * @param {{ actionId: string, logger: ILogger, debug: boolean }} deps - Logger and flags.
+ * @returns {string | null} The formatted command or null when direction is missing.
+ */
+function formatDirectionTarget(command, context, { actionId, logger, debug }) {
+  const direction = context.direction;
+  if (!direction) {
+    logger.warn(
+      `formatActionCommand: Target context type is 'direction' but direction string is missing for action ${actionId}. Template: "${command}"`
+    );
+    return null;
+  }
+  if (debug) {
+    logger.debug(` -> Using direction: "${direction}"`);
+  }
+  return command.replace('{direction}', direction);
+}
+
+/**
+ * @description Handles templates without a target.
+ * @param {string} command - The command template string.
+ * @param {ActionTargetContext} _context - Context of type `none` (unused).
+ * @param {{ actionId: string, logger: ILogger, debug: boolean }} deps - Logger and flags.
+ * @returns {string} The unmodified command string.
+ */
+function formatNoneTarget(command, _context, { actionId, logger, debug }) {
+  if (debug) {
+    logger.debug(' -> No target type, using template as is.');
+  }
+  if (command.includes('{target}') || command.includes('{direction}')) {
+    logger.warn(
+      `formatActionCommand: Action ${actionId} has target_domain 'none' but template "${command}" contains placeholders.`
+    );
+  }
+  return command;
+}
+
+/**
  * Formats a validated action and target into a user-facing command string.
  *
  * @param {ActionDefinition} actionDefinition - The validated action's definition. Must not be null/undefined.
@@ -93,78 +177,31 @@ export function formatActionCommand(
 
   // --- 2. Placeholder Substitution based on Target Type ---
   try {
-    switch (contextType) {
-      case 'entity': {
-        const targetId = targetContext.entityId;
-        if (!targetId) {
-          logger.warn(
-            `formatActionCommand: Target context type is 'entity' but entityId is missing for action ${actionDefinition.id}. Template: "${command}"`
-          );
-          // Decide how to handle this - return template as-is, or indicate error?
-          // Returning template as-is might be misleading if {target} exists.
-          // Returning null or throwing might be safer. Let's return null for now.
-          return null; // Indicate failure due to inconsistent context
-        }
+    const targetFormatterMap = {
+      entity: formatEntityTarget,
+      direction: formatDirectionTarget,
+      none: formatNoneTarget,
+    };
 
-        let targetName = targetId; // Default fallback is the ID itself
-        const targetEntity = entityManager.getEntityInstance(targetId);
+    const formatter = targetFormatterMap[contextType];
+    if (formatter) {
+      const newCommand = formatter(command, targetContext, {
+        actionId: actionDefinition.id,
+        entityManager,
+        displayNameFn,
+        logger,
+        debug,
+      });
 
-        if (targetEntity) {
-          // Use provided displayNameFn utility with ID as fallback and pass logger
-          targetName = displayNameFn(targetEntity, targetId, logger);
-          if (debug) {
-            logger.debug(
-              ` -> Found entity ${targetId}, display name: "${targetName}"`
-            );
-          }
-        } else {
-          // If entity instance lookup fails (shouldn't happen if context is truly validated, but good to check)
-          logger.warn(
-            `formatActionCommand: Could not find entity instance for ID ${targetId} (action: ${actionDefinition.id}). Using ID as fallback name.`
-          );
-          // targetName remains targetId (our fallback)
-        }
-
-        // Replace {target} placeholder
-        command = command.replace('{target}', targetName);
-        break;
+      if (newCommand === null) {
+        return null;
       }
 
-      case 'direction': {
-        const direction = targetContext.direction;
-        if (!direction) {
-          logger.warn(
-            `formatActionCommand: Target context type is 'direction' but direction string is missing for action ${actionDefinition.id}. Template: "${command}"`
-          );
-          return null; // Indicate failure
-        }
-        if (debug) {
-          logger.debug(` -> Using direction: "${direction}"`);
-        }
-        // Replace {direction} placeholder
-        command = command.replace('{direction}', direction);
-        break;
-      }
-
-      case 'none':
-        // No placeholders expected, use the template directly.
-        if (debug) {
-          logger.debug(' -> No target type, using template as is.');
-        }
-        // Optional check: Warn if template *unexpectedly* contains placeholders?
-        if (command.includes('{target}') || command.includes('{direction}')) {
-          logger.warn(
-            `formatActionCommand: Action ${actionDefinition.id} has target_domain 'none' but template "${command}" contains placeholders.`
-          );
-        }
-        break;
-
-      default:
-        logger.warn(
-          `formatActionCommand: Unknown targetContext type: ${contextType} for action ${actionDefinition.id}. Returning template unmodified.`
-        );
-        // Return template as-is for unknown types? Or null? Returning unmodified seems safer.
-        break;
+      command = newCommand;
+    } else {
+      logger.warn(
+        `formatActionCommand: Unknown targetContext type: ${contextType} for action ${actionDefinition.id}. Returning template unmodified.`
+      );
     }
   } catch (error) {
     safeDispatchError(
