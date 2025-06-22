@@ -178,7 +178,7 @@ describe('AbstractTurnState._getTurnContext & _ensureContext', () => {
   });
 
   test('_ensureContext logs error and resets to idle on missing method', async () => {
-    const ctx = await state._ensureContext('no-handler', invalidHandler);
+    const ctx = await state._ensureContext('no-handler');
     expect(ctx).toBeNull();
     expect(logger.error).toHaveBeenCalledWith(
       'TestState: _handler is invalid or missing getTurnContext method.'

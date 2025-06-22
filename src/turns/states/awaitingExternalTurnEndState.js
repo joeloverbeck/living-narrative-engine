@@ -72,7 +72,7 @@ export class AwaitingExternalTurnEndState extends AbstractTurnState {
   //─────────────────────────────────────────────────────────────────────────────
   async enterState(handler, prev) {
     await super.enterState(handler, prev);
-    const ctx = await this._ensureContext('enter-no-context', handler);
+    const ctx = await this._ensureContext('enter-no-context');
     if (!ctx) return;
 
     // remember actionId purely for clearer error text
@@ -93,10 +93,7 @@ export class AwaitingExternalTurnEndState extends AbstractTurnState {
     ctx.setAwaitingExternalEvent(true, ctx.getActor().id);
 
     // set guard-rail
-    this.#timeoutId = setTimeout(
-      () => this.#onTimeout(handler),
-      this.#timeoutMs
-    );
+    this.#timeoutId = setTimeout(() => this.#onTimeout(), this.#timeoutMs);
   }
 
   //─────────────────────────────────────────────────────────────────────────────
@@ -154,7 +151,7 @@ export class AwaitingExternalTurnEndState extends AbstractTurnState {
     }
   }
 
-  #onTimeout(handler) {
+  #onTimeout() {
     const ctx = this._getTurnContext();
     if (!ctx || !ctx.isAwaitingExternalEvent()) return; // already handled
 
@@ -165,7 +162,7 @@ export class AwaitingExternalTurnEndState extends AbstractTurnState {
     );
 
     // 1) tell the UI / console
-    const dispatcher = getSafeEventDispatcher(ctx, handler);
+    const dispatcher = getSafeEventDispatcher(ctx, this._handler);
     if (dispatcher) {
       safeDispatchError(
         dispatcher,
@@ -175,7 +172,7 @@ export class AwaitingExternalTurnEndState extends AbstractTurnState {
           actorId: ctx.getActor().id,
           actionId: this.#awaitingActionId,
         },
-        getLogger(ctx, handler)
+        getLogger(ctx, this._handler)
       );
     }
 
@@ -183,7 +180,7 @@ export class AwaitingExternalTurnEndState extends AbstractTurnState {
     try {
       ctx.endTurn(err);
     } catch (e) {
-      getLogger(ctx, handler).error(
+      getLogger(ctx, this._handler).error(
         `${this.getStateName()}: failed to end turn after timeout – ${e.message}`,
         e
       );

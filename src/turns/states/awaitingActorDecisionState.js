@@ -33,12 +33,11 @@ export class AwaitingActorDecisionState extends AbstractTurnState {
    *
    * @override
    * @param {string} reason - Explanation for context retrieval.
-   * @param {BaseTurnHandler} [handler] - Optional handler for logging fallback.
    * @returns {Promise<AwaitingActorDecisionStateContext|null>} The context if
    *   valid, otherwise null.
    */
-  async _ensureContext(reason, handler = this._handler) {
-    const ctx = await super._ensureContext(reason, handler);
+  async _ensureContext(reason) {
+    const ctx = await super._ensureContext(reason);
     if (!ctx) return null;
     const required = [
       'getActor',
@@ -49,7 +48,7 @@ export class AwaitingActorDecisionState extends AbstractTurnState {
     ];
     const missing = required.filter((m) => typeof ctx[m] !== 'function');
     if (missing.length) {
-      getLogger(ctx, handler).error(
+      getLogger(ctx, this._handler).error(
         `${this.getStateName()}: ITurnContext missing required methods: ${missing.join(', ')}`
       );
       if (typeof ctx.endTurn === 'function') {
@@ -72,8 +71,7 @@ export class AwaitingActorDecisionState extends AbstractTurnState {
     await super.enterState(handler, previousState);
 
     const turnContext = await this._ensureContext(
-      `critical-no-context-${this.getStateName()}`,
-      handler
+      `critical-no-context-${this.getStateName()}`
     );
     if (!turnContext) return;
 
@@ -282,8 +280,7 @@ export class AwaitingActorDecisionState extends AbstractTurnState {
   async handleSubmittedCommand(handler, commandString, actorEntity) {
     const activeHandler = handler || this._handler;
     const turnContext = await this._ensureContext(
-      `no-context-submission-${this.getStateName()}`,
-      activeHandler
+      `no-context-submission-${this.getStateName()}`
     );
     if (!turnContext) return;
 

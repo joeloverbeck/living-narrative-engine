@@ -111,22 +111,20 @@ export class AbstractTurnState extends ITurnState {
    * @protected
    * @async
    * @param {string} reason - Reason passed to the idle reset helper.
-   * @param {BaseTurnHandler} [handler] - Optional handler for
-   *   resolving a logger.
    * @returns {Promise<ITurnContext | null>} The current ITurnContext or null if
    *   none is available.
    */
-  async _ensureContext(reason, handler = this._handler) {
+  async _ensureContext(reason) {
     let ctx;
     try {
       ctx = this._getTurnContext();
     } catch (err) {
-      this._resolveLogger(null, handler).error(err.message);
+      this._resolveLogger(null, this._handler).error(err.message);
       await this._resetToIdle(reason);
       return null;
     }
     if (!ctx) {
-      this._resolveLogger(null, handler).error(
+      this._resolveLogger(null, this._handler).error(
         `${this.getStateName()}: No ITurnContext available. Resetting to idle.`
       );
       await this._resetToIdle(reason);
