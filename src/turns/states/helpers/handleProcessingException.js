@@ -8,9 +8,12 @@
  * @typedef {import('../../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher
  */
 
-import { SYSTEM_ERROR_OCCURRED_ID } from '../../../constants/eventIds.js';
-import { safeDispatchError } from '../../../utils/safeDispatchErrorUtils.js';
 import { TurnIdleState } from '../turnIdleState.js';
+import {
+  resetProcessingFlags,
+  resolveLogger,
+  dispatchSystemError,
+} from './processingErrorUtils.js';
 
 /**
  * Handles exceptions that occur during command processing.
@@ -29,24 +32,13 @@ export async function handleProcessingException(
   actorIdContext = 'UnknownActor',
   shouldEndTurn = true
 ) {
-  const wasProcessing = state._isProcessing;
-  if (state._processingGuard) {
-    state._processingGuard.finish();
-  } else {
-    state._isProcessing = false;
-  }
+  const wasProcessing = resetProcessingFlags(state);
 
-  let logger = console;
-  let currentActorIdForLog = actorIdContext;
-
-  if (turnCtx && typeof turnCtx.getLogger === 'function') {
-    logger = turnCtx.getLogger();
-    currentActorIdForLog = turnCtx.getActor?.()?.id ?? actorIdContext;
-  } else {
-    console.error(
-      `${state.getStateName()}: Critical error - turnCtx is invalid in #handleProcessingException. Using console for logging. Actor context for this error: ${currentActorIdForLog}`
-    );
-  }
+  const { logger, actorId: currentActorIdForLog } = resolveLogger(
+    state,
+    turnCtx,
+    actorIdContext
+  );
 
   logger.error(
     `${state.getStateName()}: Error during command processing for actor ${currentActorIdForLog} (wasProcessing: ${wasProcessing}): ${error.message}`,
@@ -59,29 +51,13 @@ export async function handleProcessingException(
     state._handler
   );
 
-  if (systemErrorDispatcher) {
-    try {
-      safeDispatchError(
-        systemErrorDispatcher,
-        `System error in ${state.getStateName()} for actor ${currentActorIdForLog}: ${error.message}`,
-        {
-          raw: `OriginalError: ${error.name} - ${error.message}`,
-          stack: error.stack,
-          timestamp: new Date().toISOString(),
-        },
-        logger
-      );
-    } catch (dispatchError) {
-      logger.error(
-        `${state.getStateName()}: Unexpected error dispatching SYSTEM_ERROR_OCCURRED_ID via SafeEventDispatcher for ${currentActorIdForLog}: ${dispatchError.message}`,
-        dispatchError
-      );
-    }
-  } else {
-    logger.warn(
-      `${state.getStateName()}: SafeEventDispatcher not available for actor ${currentActorIdForLog}. Cannot dispatch system error event.`
-    );
-  }
+  dispatchSystemError(
+    systemErrorDispatcher,
+    logger,
+    state.getStateName(),
+    currentActorIdForLog,
+    error
+  );
 
   if (shouldEndTurn) {
     if (turnCtx && typeof turnCtx.endTurn === 'function') {
