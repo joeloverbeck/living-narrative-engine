@@ -9,6 +9,23 @@ import { createComponentAccessor } from '../../logic/componentAccessor.js';
 import { createEntityContext } from '../../logic/contextAssembler.js';
 
 /**
+ * @description Create a base target context with default null fields.
+ * @param {'entity' | 'direction'} type - Target context type.
+ * @returns {{type: string, id: null, direction: null, components: null, blocker: null, exitDetails: null}}
+ *   Base target context object.
+ */
+export function createBaseTargetContext(type) {
+  return {
+    type,
+    id: null,
+    direction: null,
+    components: null,
+    blocker: null,
+    exitDetails: null,
+  };
+}
+
+/**
  * @description Build the actor portion of an action validation context.
  * @param {string} entityId - ID of the actor entity.
  * @param {EntityManager} entityManager - Manager to access components.
@@ -24,18 +41,14 @@ export function buildActorContext(entityId, entityManager, logger) {
  * @param {string} entityId - ID of the target entity.
  * @param {EntityManager} entityManager - Manager to access components.
  * @param {ILogger} logger - Logger instance.
- * @returns {{type: 'entity', id: string, direction: null, components: object, blocker: undefined, exitDetails: null}}
+ * @returns {{type: 'entity', id: string, direction: null, components: object, blocker: null, exitDetails: null}}
  *   Target context for an entity.
  */
 export function buildEntityTargetContext(entityId, entityManager, logger) {
-  return {
-    type: 'entity',
-    id: entityId,
-    direction: null,
-    components: createComponentAccessor(entityId, entityManager, logger),
-    blocker: undefined,
-    exitDetails: null,
-  };
+  const ctx = createBaseTargetContext('entity');
+  ctx.id = entityId;
+  ctx.components = createComponentAccessor(entityId, entityManager, logger);
+  return ctx;
 }
 
 /**
@@ -98,12 +111,9 @@ export function buildDirectionContext(
     logger
   );
 
-  return {
-    type: 'direction',
-    id: null,
-    direction,
-    components: null,
-    blocker,
-    exitDetails,
-  };
+  const ctx = createBaseTargetContext('direction');
+  ctx.direction = direction;
+  ctx.blocker = blocker;
+  ctx.exitDetails = exitDetails;
+  return ctx;
 }

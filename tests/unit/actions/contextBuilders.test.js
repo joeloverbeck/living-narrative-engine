@@ -54,7 +54,7 @@ describe('contextBuilders', () => {
         id: 'target1',
         direction: null,
         components: { accessorFor: 'target1' },
-        blocker: undefined,
+        blocker: null,
         exitDetails: null,
       });
       expect(createComponentAccessor).toHaveBeenCalledWith(
