@@ -8,36 +8,29 @@
 /** @typedef {import('../defs.js').ExecutionContext} ExecutionContext */
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 
-import { repair } from '../services/closenessCircleService.js';
+import BaseOperationHandler from './baseOperationHandler.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../constants/eventIds.js';
-import {
-  initHandlerLogger,
-  validateDeps,
-  getExecLogger,
-} from '../../utils/handlerUtils/serviceUtils.js';
-import { assertParamsObject } from '../../utils/handlerUtils/paramsUtils.js';
 import { tryWriteContextVariable } from '../../utils/contextVariableUtils.js';
+import { assertParamsObject } from '../../utils/handlerUtils/paramsUtils.js';
 
-class RemoveFromClosenessCircleHandler {
-  /** @type {ILogger} */
-  #logger;
+class RemoveFromClosenessCircleHandler extends BaseOperationHandler {
   /** @type {EntityManager} */
   #entityManager;
   /** @type {ISafeEventDispatcher} */
   #dispatcher;
+  /** @type {object} */
+  #closenessCircleService;
 
   /**
    * @param {object} deps
    * @param {ILogger} deps.logger
    * @param {EntityManager} deps.entityManager
    * @param {ISafeEventDispatcher} deps.safeEventDispatcher
+   * @param {object} deps.closenessCircleService
    */
-  constructor({ logger, entityManager, safeEventDispatcher }) {
-    this.#logger = initHandlerLogger(
-      'RemoveFromClosenessCircleHandler',
-      logger
-    );
-    validateDeps('RemoveFromClosenessCircleHandler', this.#logger, {
+  constructor({ logger, entityManager, safeEventDispatcher, closenessCircleService }) {
+    super('RemoveFromClosenessCircleHandler', {
+      logger: { value: logger },
       entityManager: {
         value: entityManager,
         requiredMethods: [
@@ -50,9 +43,14 @@ class RemoveFromClosenessCircleHandler {
         value: safeEventDispatcher,
         requiredMethods: ['dispatch'],
       },
+      closenessCircleService: {
+        value: closenessCircleService,
+        requiredMethods: ['repair'],
+      },
     });
     this.#entityManager = entityManager;
     this.#dispatcher = safeEventDispatcher;
+    this.#closenessCircleService = closenessCircleService;
   }
 
   /**
@@ -87,7 +85,7 @@ class RemoveFromClosenessCircleHandler {
    * @private
    */
   #validateParams(params, execCtx) {
-    const log = getExecLogger(this.#logger, execCtx);
+    const log = this.getLogger(execCtx);
 
     if (!assertParamsObject(params, log, 'REMOVE_FROM_CLOSENESS_CIRCLE')) {
       return null;
@@ -134,7 +132,7 @@ class RemoveFromClosenessCircleHandler {
       );
       if (!partnerData) continue;
       const updated = partnerData.partners.filter((p) => p !== actorId);
-      const repaired = repair(updated);
+      const repaired = this.#closenessCircleService.repair(updated);
       if (repaired.length === 0) {
         this.#entityManager.removeComponent(pid, 'intimacy:closeness');
         toUnlock.push(pid);

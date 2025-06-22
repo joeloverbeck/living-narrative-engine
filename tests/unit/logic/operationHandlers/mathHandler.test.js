@@ -5,6 +5,13 @@
 import { describe, beforeEach, test, expect, jest } from '@jest/globals';
 import MathHandler from '../../../../src/logic/operationHandlers/mathHandler.js';
 
+const makeLogger = () => ({
+  info: jest.fn(),
+  warn: jest.fn(),
+  error: jest.fn(),
+  debug: jest.fn(),
+});
+
 describe('MathHandler', () => {
   let handler;
   let logger;
@@ -12,11 +19,7 @@ describe('MathHandler', () => {
   let execCtx;
 
   beforeEach(() => {
-    logger = {
-      warn: jest.fn(),
-      error: jest.fn(),
-      debug: jest.fn(),
-    };
+    logger = makeLogger();
     safeEventDispatcher = { dispatch: jest.fn() };
     handler = new MathHandler({
       logger,

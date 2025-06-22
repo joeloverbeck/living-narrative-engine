@@ -11,6 +11,14 @@ const makeLogger = () => ({
 
 const makeDispatcher = () => ({ dispatch: jest.fn() });
 
+const makeClosenessCircleService = () => ({
+  repair: jest.fn((partners) => {
+    if (!Array.isArray(partners)) return [];
+    const uniquePartners = [...new Set(partners)];
+    return uniquePartners.sort();
+  }),
+});
+
 const makeEntityManager = (store) => ({
   getComponentData: jest.fn((id, type) => store[id]?.[type] ?? null),
   addComponent: jest.fn((id, type, data) => {
@@ -31,16 +39,19 @@ describe('RemoveFromClosenessCircleHandler', () => {
   let em;
   let handler;
   let execCtx;
+  let closenessCircleService;
 
   beforeEach(() => {
     logger = makeLogger();
     dispatcher = makeDispatcher();
+    closenessCircleService = makeClosenessCircleService();
     store = {};
     em = makeEntityManager(store);
     handler = new RemoveFromClosenessCircleHandler({
       logger,
       entityManager: em,
       safeEventDispatcher: dispatcher,
+      closenessCircleService,
     });
     execCtx = { logger, evaluationContext: { context: {} } };
   });
@@ -73,6 +84,7 @@ describe('RemoveFromClosenessCircleHandler', () => {
       logger,
       entityManager: em,
       safeEventDispatcher: dispatcher,
+      closenessCircleService,
     });
     execCtx = { logger, evaluationContext: { context: {} } };
 
@@ -101,6 +113,7 @@ describe('RemoveFromClosenessCircleHandler', () => {
       logger,
       entityManager: em,
       safeEventDispatcher: dispatcher,
+      closenessCircleService,
     });
     execCtx = { logger, evaluationContext: { context: {} } };
 

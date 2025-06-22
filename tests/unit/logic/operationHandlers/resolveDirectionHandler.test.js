@@ -74,7 +74,7 @@ describe('ResolveDirectionHandler', () => {
   describe('Constructor', () => {
     test('should throw an error if the worldContext dependency is missing', () => {
       expect(() => new ResolveDirectionHandler({ logger: mockLogger })).toThrow(
-        "ResolveDirectionHandler requires a valid IWorldContext with a 'getTargetLocationForDirection' method."
+        'Missing required dependency: ResolveDirectionHandler: worldContext.'
       );
     });
 
@@ -83,11 +83,11 @@ describe('ResolveDirectionHandler', () => {
       expect(
         () =>
           new ResolveDirectionHandler({
-            logger: mockLogger,
             worldContext: invalidContext,
+            logger: mockLogger,
           })
       ).toThrow(
-        "ResolveDirectionHandler requires a valid IWorldContext with a 'getTargetLocationForDirection' method."
+        "Invalid or missing method 'getTargetLocationForDirection' on dependency 'ResolveDirectionHandler: worldContext'."
       );
     });
 
@@ -118,12 +118,12 @@ describe('ResolveDirectionHandler', () => {
 
       if (params === null || params === undefined) {
         expect(mockLogger.warn).toHaveBeenCalledWith(
-          'RESOLVE_DIRECTION: params missing or invalid.',
+          'ResolveDirectionHandler: RESOLVE_DIRECTION: params missing or invalid.',
           { params }
         );
       } else {
         expect(mockLogger.warn).toHaveBeenCalledWith(
-          'RESOLVE_DIRECTION: Invalid or missing "result_variable" parameter. Operation aborted.'
+          'ResolveDirectionHandler: RESOLVE_DIRECTION: Invalid or missing "result_variable" parameter. Operation aborted.'
         );
       }
       expect(
@@ -224,7 +224,7 @@ describe('ResolveDirectionHandler', () => {
       // Assert
       expect(mockLogger.debug).toHaveBeenCalledTimes(1);
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        'RESOLVE_DIRECTION → next_loc = room_d'
+        'ResolveDirectionHandler: RESOLVE_DIRECTION → next_loc = room_d'
       );
     });
 
@@ -253,7 +253,7 @@ describe('ResolveDirectionHandler', () => {
         '  padded_var  '
       );
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        'RESOLVE_DIRECTION → padded_var = cellar'
+        'ResolveDirectionHandler: RESOLVE_DIRECTION → padded_var = cellar'
       );
     });
   });
@@ -276,7 +276,7 @@ describe('ResolveDirectionHandler', () => {
       // Assert
       expect(mockExecCtx.evaluationContext.context.found_room).toBeNull();
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        'RESOLVE_DIRECTION → found_room = null'
+        'ResolveDirectionHandler: RESOLVE_DIRECTION → found_room = null'
       );
     });
 
@@ -295,7 +295,7 @@ describe('ResolveDirectionHandler', () => {
       // Assert
       expect(mockExecCtx.evaluationContext.context.found_room).toBeUndefined();
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        'RESOLVE_DIRECTION → found_room = undefined'
+        'ResolveDirectionHandler: RESOLVE_DIRECTION → found_room = undefined'
       );
     });
   });

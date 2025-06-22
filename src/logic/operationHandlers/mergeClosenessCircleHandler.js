@@ -7,7 +7,7 @@
 /** @typedef {import('../defs.js').ExecutionContext} ExecutionContext */
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 
-import { merge as mergeCircles } from '../services/closenessCircleService.js';
+import BaseOperationHandler from './baseOperationHandler.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../constants/eventIds.js';
 import { tryWriteContextVariable } from '../../utils/contextVariableUtils.js';
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
@@ -16,38 +16,40 @@ import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
  * @class MergeClosenessCircleHandler
  * @description Handles the MERGE_CLOSENESS_CIRCLE operation.
  */
-class MergeClosenessCircleHandler {
-  /** @type {ILogger} */
-  #logger;
+class MergeClosenessCircleHandler extends BaseOperationHandler {
   /** @type {EntityManager} */
   #entityManager;
   /** @type {ISafeEventDispatcher} */
   #dispatcher;
+  /** @type {object} */
+  #closenessCircleService;
 
   /**
    * @param {object} deps - Constructor dependencies.
    * @param {ILogger} deps.logger - Logging service.
    * @param {EntityManager} deps.entityManager - Entity manager.
    * @param {ISafeEventDispatcher} deps.safeEventDispatcher - Error dispatcher.
+   * @param {object} deps.closenessCircleService - Closeness circle service.
    */
-  constructor({ logger, entityManager, safeEventDispatcher }) {
-    if (!logger?.debug) {
-      throw new Error('MergeClosenessCircleHandler requires a valid ILogger');
-    }
-    if (!entityManager?.getComponentData || !entityManager?.addComponent) {
-      throw new Error(
-        'MergeClosenessCircleHandler requires a valid EntityManager'
-      );
-    }
-    if (!safeEventDispatcher?.dispatch) {
-      throw new Error(
-        'MergeClosenessCircleHandler requires a valid ISafeEventDispatcher'
-      );
-    }
-    this.#logger = logger;
+  constructor({ logger, entityManager, safeEventDispatcher, closenessCircleService }) {
+    super('MergeClosenessCircleHandler', {
+      logger: { value: logger },
+      entityManager: {
+        value: entityManager,
+        requiredMethods: ['getComponentData', 'addComponent'],
+      },
+      safeEventDispatcher: {
+        value: safeEventDispatcher,
+        requiredMethods: ['dispatch'],
+      },
+      closenessCircleService: {
+        value: closenessCircleService,
+        requiredMethods: ['merge'],
+      },
+    });
     this.#entityManager = entityManager;
     this.#dispatcher = safeEventDispatcher;
-    this.#logger.debug('[MergeClosenessCircleHandler] Initialized');
+    this.#closenessCircleService = closenessCircleService;
   }
 
   /**
@@ -60,7 +62,7 @@ class MergeClosenessCircleHandler {
    */
   #validateParams(params, execCtx) {
     const { actor_id, target_id, result_variable } = params || {};
-    const log = execCtx?.logger ?? this.#logger;
+    const log = this.getLogger(execCtx);
     if (typeof actor_id !== 'string' || !actor_id.trim()) {
       safeDispatchError(
         this.#dispatcher,
@@ -117,7 +119,7 @@ class MergeClosenessCircleHandler {
       targetId,
       'intimacy:closeness'
     );
-    const allMembers = mergeCircles(
+    const allMembers = this.#closenessCircleService.merge(
       [actorId, targetId],
       Array.isArray(actorComp?.partners) ? actorComp.partners : [],
       Array.isArray(targetComp?.partners) ? targetComp.partners : []

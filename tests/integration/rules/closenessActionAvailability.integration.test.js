@@ -42,6 +42,8 @@ function init(entities) {
     dispatch: jest.fn(() => Promise.resolve(true)),
   };
 
+  const closenessCircleService = { merge: jest.fn((...arrays) => [...new Set(arrays.flat())]) };
+
   const handlers = {
     QUERY_COMPONENT: new QueryComponentHandler({
       entityManager,
@@ -53,6 +55,7 @@ function init(entities) {
       logger,
       entityManager,
       safeEventDispatcher: safeDispatcher,
+      closenessCircleService,
     }),
     DISPATCH_PERCEPTIBLE_EVENT: new DispatchPerceptibleEventHandler({
       dispatcher: eventBus,

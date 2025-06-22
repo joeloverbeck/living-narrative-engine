@@ -82,7 +82,7 @@ describe('DispatchSpeechHandler', () => {
   test('dispatches error event on invalid parameters', () => {
     handler.execute(null, {});
     expect(logger.warn).toHaveBeenCalledWith(
-      'DISPATCH_SPEECH: params missing or invalid.',
+      'DispatchSpeechHandler: DISPATCH_SPEECH: params missing or invalid.',
       { params: null }
     );
     expect(safeDispatcher.dispatch).not.toHaveBeenCalled();

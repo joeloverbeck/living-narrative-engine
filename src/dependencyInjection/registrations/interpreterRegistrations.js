@@ -340,6 +340,7 @@ export function registerInterpreters(container) {
           logger: c.resolve(tokens.ILogger),
           entityManager: c.resolve(tokens.IEntityManager),
           safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+          closenessCircleService: c.resolve(tokens.ClosenessCircleService),
         }),
     ],
     [
@@ -350,6 +351,7 @@ export function registerInterpreters(container) {
           logger: c.resolve(tokens.ILogger),
           entityManager: c.resolve(tokens.IEntityManager),
           safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+          closenessCircleService: c.resolve(tokens.ClosenessCircleService),
         }),
     ],
   ];

@@ -3,24 +3,26 @@
  * @see src/logic/operationHandlers/resolveDirectionHandler.js
  */
 
+import BaseOperationHandler from './baseOperationHandler.js';
 import { tryWriteContextVariable } from '../../utils/contextVariableUtils.js';
 import { assertParamsObject } from '../../utils/handlerUtils/indexUtils.js';
 
-class ResolveDirectionHandler {
+class ResolveDirectionHandler extends BaseOperationHandler {
   #worldContext;
-  #logger;
 
   constructor({ worldContext, logger }) {
-    if (typeof worldContext?.getTargetLocationForDirection !== 'function')
-      throw new Error(
-        "ResolveDirectionHandler requires a valid IWorldContext with a 'getTargetLocationForDirection' method."
-      );
+    super('ResolveDirectionHandler', {
+      logger: { value: logger },
+      worldContext: {
+        value: worldContext,
+        requiredMethods: ['getTargetLocationForDirection'],
+      },
+    });
     this.#worldContext = worldContext;
-    this.#logger = logger;
   }
 
   execute(params, execCtx) {
-    const logger = execCtx?.logger ?? this.#logger;
+    const logger = this.getLogger(execCtx);
     if (!assertParamsObject(params, logger, 'RESOLVE_DIRECTION')) return;
 
     // Safely destructure params, providing a default empty object to avoid errors if params is null/undefined.
@@ -32,7 +34,7 @@ class ResolveDirectionHandler {
       typeof result_variable !== 'string' ||
       !result_variable.trim()
     ) {
-      this.#logger.warn(
+      logger.warn(
         `RESOLVE_DIRECTION: Invalid or missing "result_variable" parameter. Operation aborted.`
       );
       return;
@@ -49,10 +51,10 @@ class ResolveDirectionHandler {
       target,
       execCtx,
       undefined,
-      this.#logger
+      logger
     );
     if (res.success) {
-      this.#logger.debug(`RESOLVE_DIRECTION → ${trimmedVar} = ${target}`);
+      logger.debug(`RESOLVE_DIRECTION → ${trimmedVar} = ${target}`);
     }
   }
 }

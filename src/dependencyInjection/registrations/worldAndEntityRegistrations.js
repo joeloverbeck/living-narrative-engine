@@ -23,6 +23,7 @@ import { INITIALIZABLE } from '../tags.js';
 import EntityManager from '../../entities/entityManager.js';
 import WorldContext from '../../context/worldContext.js';
 import JsonLogicEvaluationService from '../../logic/jsonLogicEvaluationService.js';
+import * as closenessCircleService from '../../logic/services/closenessCircleService.js';
 import { EntityDisplayDataProvider } from '../../entities/entityDisplayDataProvider.js';
 import { SpatialIndexSynchronizer } from '../../entities/spatialIndexSynchronizer.js';
 
@@ -76,6 +77,13 @@ export function registerWorldAndEntity(container) {
   logger.debug(
     `World and Entity Registration: Registered ${String(
       tokens.JsonLogicEvaluationService
+    )}.`
+  );
+
+  r.single(tokens.ClosenessCircleService, closenessCircleService, []);
+  logger.debug(
+    `World and Entity Registration: Registered ${String(
+      tokens.ClosenessCircleService
     )}.`
   );
 
