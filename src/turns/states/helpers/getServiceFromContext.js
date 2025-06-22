@@ -17,31 +17,31 @@ import { finishProcessing } from './processingErrorUtils.js';
  *
  * @param {ProcessingCommandStateLike} state - Owning state instance.
  * @param {ITurnContext} turnCtx - Current turn context.
- * @param {string} methodName - Method name on ITurnContext used to retrieve the service.
- * @param {string} serviceNameForLog - Label for logging when retrieval fails.
+ * @param {string} contextMethod - Method name on ITurnContext used to retrieve the service.
+ * @param {string} serviceLabel - Label for logging when retrieval fails.
  * @param {string} actorIdForLog - Actor ID for logging context.
  * @returns {Promise<*>} The requested service instance or `null` if unavailable.
  */
 export async function getServiceFromContext(
   state,
   turnCtx,
-  methodName,
-  serviceNameForLog,
+  contextMethod,
+  serviceLabel,
   actorIdForLog
 ) {
   const logger = getLogger(turnCtx, state._handler);
   const dispatcher = getSafeEventDispatcher(turnCtx, state._handler);
 
   if (!turnCtx || typeof turnCtx.getLogger !== 'function') {
-    const errorMsg = `${state.getStateName()}: Invalid turnCtx in _getServiceFromContext for ${serviceNameForLog}, actor ${actorIdForLog}.`;
+    const errorMsg = `${state.getStateName()}: Invalid turnCtx in _getServiceFromContext for ${serviceLabel}, actor ${actorIdForLog}.`;
     if (dispatcher) {
       safeDispatchError(
         dispatcher,
         errorMsg,
         {
           actorId: actorIdForLog,
-          service: serviceNameForLog,
-          method: methodName,
+          service: serviceLabel,
+          method: contextMethod,
         },
         logger
       );
@@ -54,20 +54,20 @@ export async function getServiceFromContext(
     return null;
   }
   try {
-    if (typeof turnCtx[methodName] !== 'function') {
+    if (typeof turnCtx[contextMethod] !== 'function') {
       throw new Error(
-        `Method turnCtx.${methodName}() does not exist or is not a function.`
+        `Method turnCtx.${contextMethod}() does not exist or is not a function.`
       );
     }
-    const service = turnCtx[methodName]();
+    const service = turnCtx[contextMethod]();
     if (!service) {
       throw new Error(
-        `Method turnCtx.${methodName}() returned null or undefined.`
+        `Method turnCtx.${contextMethod}() returned null or undefined.`
       );
     }
     return service;
   } catch (error) {
-    const errorMsg = `${state.getStateName()}: Failed to retrieve ${serviceNameForLog} for actor ${actorIdForLog}. Error: ${error.message}`;
+    const errorMsg = `${state.getStateName()}: Failed to retrieve ${serviceLabel} for actor ${actorIdForLog}. Error: ${error.message}`;
     logger.error(errorMsg, error);
     if (dispatcher) {
       safeDispatchError(
@@ -75,8 +75,8 @@ export async function getServiceFromContext(
         errorMsg,
         {
           actorId: actorIdForLog,
-          service: serviceNameForLog,
-          method: methodName,
+          service: serviceLabel,
+          method: contextMethod,
           error: error.message,
           stack: error.stack,
         },

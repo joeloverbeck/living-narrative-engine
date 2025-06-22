@@ -235,8 +235,8 @@ export async function processCommandInternal(
       commandResult
     );
   } catch (error) {
-    const errorHandlingCtx = state._getTurnContext() ?? turnCtx;
-    const actorIdForHandler = errorHandlingCtx?.getActor?.()?.id ?? actorId;
+    const ctxForError = state._getTurnContext() ?? turnCtx;
+    const actorIdForHandler = ctxForError?.getActor?.()?.id ?? actorId;
     const processingError =
       error instanceof Error
         ? error
@@ -246,7 +246,7 @@ export async function processCommandInternal(
     }
     await handleProcessingException(
       state,
-      errorHandlingCtx || turnCtx,
+      ctxForError || turnCtx,
       processingError,
       actorIdForHandler
     );
