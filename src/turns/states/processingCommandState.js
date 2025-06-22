@@ -21,6 +21,7 @@ import { buildSpeechPayload } from './helpers/buildSpeechPayload.js';
 import { ProcessingGuard } from './helpers/processingGuard.js';
 import { finishProcessing } from './helpers/processingErrorUtils.js';
 import { getLogger } from './helpers/contextUtils.js';
+import { validateContextMethods } from './helpers/validationUtils.js';
 import TurnDirectiveStrategyResolver from '../strategies/turnDirectiveStrategyResolver.js';
 
 /**
@@ -49,7 +50,7 @@ export class ProcessingCommandState extends AbstractTurnState {
       'getChosenAction',
       'getSafeEventDispatcher',
     ];
-    const missing = required.filter((m) => typeof ctx[m] !== 'function');
+    const missing = validateContextMethods(ctx, required);
     if (missing.length) {
       getLogger(ctx, this._handler).error(
         `${this.getStateName()}: ITurnContext missing required methods: ${missing.join(', ')}`

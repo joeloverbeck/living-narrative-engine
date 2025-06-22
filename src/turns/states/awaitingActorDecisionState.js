@@ -17,6 +17,7 @@ import { getLogger, getSafeEventDispatcher } from './helpers/contextUtils.js';
 import {
   assertValidActor,
   assertMatchingActor,
+  validateContextMethods,
 } from './helpers/validationUtils.js';
 
 /**
@@ -46,7 +47,7 @@ export class AwaitingActorDecisionState extends AbstractTurnState {
       'requestProcessingCommandStateTransition',
       'endTurn',
     ];
-    const missing = required.filter((m) => typeof ctx[m] !== 'function');
+    const missing = validateContextMethods(ctx, required);
     if (missing.length) {
       getLogger(ctx, this._handler).error(
         `${this.getStateName()}: ITurnContext missing required methods: ${missing.join(', ')}`
