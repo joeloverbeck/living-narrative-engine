@@ -22,7 +22,6 @@ function makeDeps() {
   const repo = new SaveFileRepository({
     logger,
     storageProvider,
-    serializer,
     parser,
   });
   return { repo, logger, storageProvider, serializer };

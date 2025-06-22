@@ -70,7 +70,6 @@ export function registerPersistence(container) {
     return new SaveFileRepository({
       logger,
       storageProvider,
-      serializer,
       parser,
     });
   });

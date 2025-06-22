@@ -52,7 +52,6 @@ function makeDeps() {
   const saveFileRepository = new SaveFileRepository({
     logger,
     storageProvider,
-    serializer,
     parser,
   });
   const saveValidationService = new SaveValidationService({

@@ -65,7 +65,6 @@ function makeDeps() {
   const saveFileRepository = new SaveFileRepository({
     logger,
     storageProvider,
-    serializer,
     parser,
   });
   return {

@@ -52,7 +52,6 @@ describe('SaveLoadService', () => {
     const saveFileRepository = new SaveFileRepository({
       logger,
       storageProvider,
-      serializer,
       parser,
     });
     service = new SaveLoadService({
