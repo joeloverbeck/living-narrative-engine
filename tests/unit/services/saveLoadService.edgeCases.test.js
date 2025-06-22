@@ -11,6 +11,7 @@ import SaveFileRepository from '../../../src/persistence/saveFileRepository.js';
 import SaveFileParser from '../../../src/persistence/saveFileParser.js';
 import { encode } from '@msgpack/msgpack';
 import { PersistenceErrorCodes } from '../../../src/persistence/persistenceErrors.js';
+import { StorageErrorCodes } from '../../../src/storage/storageErrors.js';
 import pako from 'pako';
 import { webcrypto } from 'crypto';
 import SaveValidationService from '../../../src/persistence/saveValidationService.js';
@@ -314,6 +315,7 @@ describe('SaveLoadService edge cases', () => {
       storageProvider.writeFileAtomically.mockResolvedValue({
         success: false,
         error: 'disk full',
+        code: StorageErrorCodes.DISK_FULL,
       });
       const obj = {
         metadata: {},

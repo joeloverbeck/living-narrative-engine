@@ -13,7 +13,11 @@ export class IStorageProvider {
    *
    * @param {string} filePath - The final path for the file.
    * @param {Uint8Array} data - The data to write.
-   * @returns {Promise<{success: boolean, error?: string}>}
+   * @returns {Promise<{
+   *   success: boolean,
+   *   error?: string,
+   *   code?: import('../storage/storageErrors.js').StorageErrorCodes
+   * }>}
    * @async
    */
   async writeFileAtomically(filePath, data) {

@@ -10,6 +10,7 @@ import SaveLoadService from '../../../src/persistence/saveLoadService.js';
 import SaveFileRepository from '../../../src/persistence/saveFileRepository.js';
 import SaveFileParser from '../../../src/persistence/saveFileParser.js';
 import GameStateSerializer from '../../../src/persistence/gameStateSerializer.js';
+import { StorageErrorCodes } from '../../../src/storage/storageErrors.js';
 import {
   MSG_FILE_READ_ERROR,
   MSG_EMPTY_FILE,
@@ -233,6 +234,7 @@ describe('SaveLoadService new private helper error paths', () => {
     storageProvider.writeFileAtomically.mockResolvedValue({
       success: false,
       error: 'disk full',
+      code: StorageErrorCodes.DISK_FULL,
     });
     const obj = {
       metadata: {},
