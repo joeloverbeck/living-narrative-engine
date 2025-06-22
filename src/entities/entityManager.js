@@ -256,6 +256,7 @@ class EntityManager extends IEntityManager {
       return this.#definitionCache.get(definitionId);
     }
     const definition = this.#registry.getEntityDefinition(definitionId);
+    console.log('[DEBUG EntityManager] definition for', definitionId, 'is', definition, 'instanceof EntityDefinition?', definition instanceof (typeof EntityDefinition !== 'undefined' ? EntityDefinition : Object));
     if (definition) {
       this.#definitionCache.set(definitionId, definition);
       return definition;

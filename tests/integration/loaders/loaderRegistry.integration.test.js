@@ -472,7 +472,7 @@ describe('Integration: Loaders, Registry State, and Overrides (REFACTOR-8.6)', (
         expect(retrievedItem).toBeDefined();
         expect(retrievedItem.id).toBe(expected.baseId);
         expect(retrievedItem._fullId).toBe(expected.key);
-        expect(retrievedItem.modId).toBe(expected.modId);
+        expect(retrievedItem._modId).toBe(expected.modId);
         expect(retrievedItem._sourceFile).toBe(expected.sourceFile);
       }
     });

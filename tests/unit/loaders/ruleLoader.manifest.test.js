@@ -336,7 +336,7 @@ describe('RuleLoader (Manifest Input Handling via loadItemsForMod)', () => {
           ...dataForRule1, // Original data
           id: ruleFile1Name, // BASE ID
           _fullId: `${modId}:${ruleFile1Name}`, // QUALIFIED ID
-          modId: modId, // Mod ID added
+          _modId: modId,
           _sourceFile: ruleFile1, // Source file added
         })
       );
@@ -348,7 +348,7 @@ describe('RuleLoader (Manifest Input Handling via loadItemsForMod)', () => {
           ...dataForRule2, // Original data
           id: ruleFile2Name, // BASE ID
           _fullId: `${modId}:${ruleFile2Name}`, // QUALIFIED ID
-          modId: modId, // Mod ID added
+          _modId: modId,
           _sourceFile: ruleFile2Relative.trim(), // Source file added
         })
       );
@@ -689,7 +689,7 @@ describe('RuleLoader (Manifest Input Handling via loadItemsForMod)', () => {
           ...dataForValidFile,
           id: validFileName, // BASE ID
           _fullId: `${modId}:${validFileName}`, // QUALIFIED ID
-          modId: modId,
+          _modId: modId,
           _sourceFile: validFile, // Corrected to use the full filename variable
         })
       );

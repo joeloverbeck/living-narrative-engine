@@ -180,7 +180,7 @@ describe('BaseManifestItemLoader._storeItemInRegistry', () => {
         expect.objectContaining({
           id: baseItemId,
           _fullId: finalRegistryKey,
-          modId: TEST_MOD_ID,
+          _modId: TEST_MOD_ID,
           _sourceFile: TEST_FILENAME,
           value: 'new',
         })
@@ -213,7 +213,7 @@ describe('BaseManifestItemLoader._storeItemInRegistry', () => {
         expect.objectContaining({
           id: baseItemId,
           _fullId: finalRegistryKey,
-          modId: TEST_MOD_ID,
+          _modId: TEST_MOD_ID,
           _sourceFile: TEST_FILENAME,
           value: 'new',
         })
@@ -250,7 +250,7 @@ describe('BaseManifestItemLoader._storeItemInRegistry', () => {
       const expectedStoredData = {
         id: baseItemId, // Base ID
         _fullId: finalRegistryKey, // Qualified ID
-        modId: TEST_MOD_ID,
+        _modId: TEST_MOD_ID,
         _sourceFile: TEST_FILENAME,
         description: 'Test',
         extra: true,
@@ -285,7 +285,7 @@ describe('BaseManifestItemLoader._storeItemInRegistry', () => {
       const expectedStoredData = {
         id: baseItemId, // Should be baseItemId, not 'originalConflictingId'
         _fullId: finalRegistryKey,
-        modId: TEST_MOD_ID,
+        _modId: TEST_MOD_ID,
         _sourceFile: TEST_FILENAME,
         description: 'Test',
         extra: true,

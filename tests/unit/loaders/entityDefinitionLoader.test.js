@@ -5,9 +5,8 @@
 
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { mock } from 'jest-mock-extended';
-
-// SUT (System Under Test)
 import EntityDefinitionLoader from '../../../src/loaders/entityDefinitionLoader.js';
+import EntityDefinition from '../../../src/entities/entityDefinition.js';
 
 // --- JSDoc Imports for Type Hinting ---
 /** @typedef {import('../../../src/interfaces/coreServices.js').IConfiguration} IConfiguration */
@@ -88,13 +87,7 @@ describe('EntityDefinitionLoader', () => {
         },
       };
 
-      const expectedStoredData = {
-        ...testEntityData,
-        id: 'goblin',
-        _fullId: 'core:goblin',
-        modId: modId,
-        _sourceFile: filename,
-      };
+      const expectedStoredData = new EntityDefinition('core:goblin', testEntityData);
 
       mockDataRegistry.get.mockReturnValue(undefined);
       mockSchemaValidator.isSchemaLoaded.mockReturnValue(true);
@@ -140,7 +133,18 @@ describe('EntityDefinitionLoader', () => {
       expect(mockDataRegistry.store).toHaveBeenCalledWith(
         'entityDefinitions',
         'core:goblin',
-        expectedStoredData
+        expect.objectContaining({
+          id: 'goblin',
+          description: 'A standard goblin warrior, weak but numerous.',
+          components: expect.objectContaining({
+            'core:name': expect.any(Object),
+            'core:health': expect.any(Object),
+            'core:actor': expect.any(Object),
+          }),
+          _fullId: 'core:goblin',
+          _sourceFile: filename,
+          _modId: modId,
+        })
       );
 
       expect(mockLogger.error).not.toHaveBeenCalled();
