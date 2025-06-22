@@ -295,6 +295,50 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
   }
 
   /**
+   * @description Processes a single action definition using the appropriate
+   * handler. Errors are safely dispatched and result in no actions returned.
+   * @param {import('../data/gameDataRepository.js').ActionDefinition} actionDef
+   * @param {Entity} actorEntity
+   * @param {Entity|string|null} currentLocation
+   * @param {string} locIdForLog
+   * @param {ActionContext} context
+   * @param {object} formatterOptions
+   * @returns {import('../interfaces/IActionDiscoveryService.js').DiscoveredActionInfo[]}
+   */
+  #processActionDefinition(
+    actionDef,
+    actorEntity,
+    currentLocation,
+    locIdForLog,
+    context,
+    formatterOptions
+  ) {
+    const domain = actionDef.target_domain;
+    try {
+      const handler =
+        this.constructor.DOMAIN_HANDLERS[domain] ||
+        this.#discoverScopedEntityActions;
+      return handler.call(
+        this,
+        actionDef,
+        actorEntity,
+        currentLocation,
+        locIdForLog,
+        domain,
+        context,
+        formatterOptions
+      );
+    } catch (err) {
+      safeDispatchError(
+        this.#safeEventDispatcher,
+        `ActionDiscoveryService: Error processing action ${actionDef.id} for actor ${actorEntity.id}.`,
+        { error: err.message, stack: err.stack }
+      );
+      return [];
+    }
+  }
+
+  /**
    * @param {Entity} actorEntity
    * @param {ActionContext} context
    * @returns {Promise<import('../interfaces/IActionDiscoveryService.js').DiscoveredActionInfo[]>}
@@ -320,29 +364,15 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
 
     /* ── iterate over action definitions ─────────────────────────────────── */
     for (const actionDef of allDefs) {
-      const domain = actionDef.target_domain;
-      try {
-        const handler =
-          this.constructor.DOMAIN_HANDLERS[domain] ||
-          this.#discoverScopedEntityActions;
-        const discovered = handler.call(
-          this,
-          actionDef,
-          actorEntity,
-          currentLocation,
-          locIdForLog,
-          domain,
-          context,
-          formatterOptions
-        );
-        validActions.push(...discovered);
-      } catch (err) {
-        safeDispatchError(
-          this.#safeEventDispatcher,
-          `ActionDiscoveryService: Error processing action ${actionDef.id} for actor ${actorEntity.id}.`,
-          { error: err.message, stack: err.stack }
-        );
-      }
+      const discovered = this.#processActionDefinition(
+        actionDef,
+        actorEntity,
+        currentLocation,
+        locIdForLog,
+        context,
+        formatterOptions
+      );
+      validActions.push(...discovered);
     }
 
     this.#logger.debug(
