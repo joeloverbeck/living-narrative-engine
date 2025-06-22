@@ -4,6 +4,7 @@ import { tokens } from '../../../src/dependencyInjection/tokens.js';
 import { describeEngineSuite } from '../../common/engine/gameEngineTestBed.js';
 import { runUnavailableServiceTest } from '../../common/engine/gameEngineHelpers.js';
 import '../../common/engine/engineTestTypedefs.js';
+import { DEFAULT_TEST_WORLD } from '../../common/constants.js';
 import { ENGINE_STOPPED_UI } from '../../../src/constants/eventIds.js';
 import {
   expectDispatchSequence,
@@ -12,8 +13,6 @@ import {
 } from '../../common/engine/dispatchTestUtils.js';
 
 describeEngineSuite('GameEngine', (ctx) => {
-  const MOCK_WORLD_NAME = 'TestWorld';
-
   describe('stop', () => {
     beforeEach(() => {
       // Ensure engine is fresh for each 'stop' test
@@ -25,7 +24,7 @@ describeEngineSuite('GameEngine', (ctx) => {
           success: true,
         }
       );
-      await ctx.bed.startAndReset(MOCK_WORLD_NAME); // Start the game first and clear mocks
+      await ctx.bed.startAndReset(DEFAULT_TEST_WORLD); // Start the game first and clear mocks
 
       await ctx.engine.stop();
 
@@ -82,7 +81,7 @@ describeEngineSuite('GameEngine', (ctx) => {
           expectEngineStatus(engine, {
             isInitialized: true,
             isLoopRunning: true,
-            activeWorld: MOCK_WORLD_NAME,
+            activeWorld: DEFAULT_TEST_WORLD,
           });
 
           await engine.stop();

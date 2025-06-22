@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it } from '@jest/globals';
 import { tokens } from '../../../src/dependencyInjection/tokens.js';
 import { describeEngineSuite } from '../../common/engine/gameEngineTestBed.js';
 import '../../common/engine/engineTestTypedefs.js';
+import { DEFAULT_TEST_WORLD } from '../../common/constants.js';
 
 import {
   ENGINE_INITIALIZING_UI,
@@ -13,8 +14,6 @@ import {
 import { expectEngineStatus } from '../../common/engine/dispatchTestUtils.js';
 
 describeEngineSuite('GameEngine', (ctx) => {
-  const MOCK_WORLD_NAME = 'TestWorld';
-
   describe('startNewGame', () => {
     beforeEach(() => {
       ctx.bed.mocks.initializationService.runInitializationSequence.mockResolvedValue(
@@ -25,11 +24,11 @@ describeEngineSuite('GameEngine', (ctx) => {
     });
 
     it('should successfully start a new game', async () => {
-      await ctx.engine.startNewGame(MOCK_WORLD_NAME);
+      await ctx.engine.startNewGame(DEFAULT_TEST_WORLD);
 
       expect(ctx.bed.mocks.safeEventDispatcher.dispatch).toHaveBeenCalledWith(
         ENGINE_INITIALIZING_UI,
-        { worldName: MOCK_WORLD_NAME },
+        { worldName: DEFAULT_TEST_WORLD },
         { allowSchemaNotFound: true }
       );
       expect(ctx.bed.mocks.entityManager.clearAll).toHaveBeenCalled();
@@ -39,12 +38,12 @@ describeEngineSuite('GameEngine', (ctx) => {
       );
       expect(
         ctx.bed.mocks.initializationService.runInitializationSequence
-      ).toHaveBeenCalledWith(MOCK_WORLD_NAME);
+      ).toHaveBeenCalledWith(DEFAULT_TEST_WORLD);
       expect(ctx.bed.mocks.playtimeTracker.startSession).toHaveBeenCalled();
       expect(ctx.bed.mocks.safeEventDispatcher.dispatch).toHaveBeenCalledWith(
         ENGINE_READY_UI,
         {
-          activeWorld: MOCK_WORLD_NAME,
+          activeWorld: DEFAULT_TEST_WORLD,
           message: 'Enter command...',
         }
       );
@@ -53,7 +52,7 @@ describeEngineSuite('GameEngine', (ctx) => {
       expectEngineStatus(ctx.engine, {
         isInitialized: true,
         isLoopRunning: true,
-        activeWorld: MOCK_WORLD_NAME,
+        activeWorld: DEFAULT_TEST_WORLD,
       });
     });
 
@@ -66,7 +65,7 @@ describeEngineSuite('GameEngine', (ctx) => {
       ctx.bed.mocks.initializationService.runInitializationSequence.mockResolvedValueOnce(
         { success: true }
       );
-      await ctx.engine.startNewGame(MOCK_WORLD_NAME);
+      await ctx.engine.startNewGame(DEFAULT_TEST_WORLD);
 
       expect(ctx.bed.mocks.logger.warn).toHaveBeenCalledWith(
         'GameEngine._prepareForNewGameSession: Engine already initialized. Stopping existing game before starting new.'
@@ -82,14 +81,14 @@ describeEngineSuite('GameEngine', (ctx) => {
       expect(ctx.bed.mocks.safeEventDispatcher.dispatch).toHaveBeenCalledWith(
         ENGINE_READY_UI,
         {
-          activeWorld: MOCK_WORLD_NAME,
+          activeWorld: DEFAULT_TEST_WORLD,
           message: 'Enter command...',
         }
       );
       expectEngineStatus(ctx.engine, {
         isInitialized: true,
         isLoopRunning: true,
-        activeWorld: MOCK_WORLD_NAME,
+        activeWorld: DEFAULT_TEST_WORLD,
       });
     });
 
@@ -102,7 +101,7 @@ describeEngineSuite('GameEngine', (ctx) => {
         }
       );
 
-      await expect(ctx.engine.startNewGame(MOCK_WORLD_NAME)).rejects.toThrow(
+      await expect(ctx.engine.startNewGame(DEFAULT_TEST_WORLD)).rejects.toThrow(
         initError
       );
 
@@ -130,7 +129,7 @@ describeEngineSuite('GameEngine', (ctx) => {
       ctx.bed.mocks.playtimeTracker.startSession.mockImplementation(() => {}); // Make sure this doesn't throw
       ctx.bed.mocks.turnManager.start.mockRejectedValue(startupError); // TurnManager fails to start
 
-      await expect(ctx.engine.startNewGame(MOCK_WORLD_NAME)).rejects.toThrow(
+      await expect(ctx.engine.startNewGame(DEFAULT_TEST_WORLD)).rejects.toThrow(
         startupError
       );
 

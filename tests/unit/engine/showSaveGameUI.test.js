@@ -4,12 +4,11 @@ import { tokens } from '../../../src/dependencyInjection/tokens.js';
 import { describeInitializedEngineSuite } from '../../common/engine/gameEngineTestBed.js';
 import { runUnavailableServiceTest } from '../../common/engine/gameEngineHelpers.js';
 import '../../common/engine/engineTestTypedefs.js';
+import { DEFAULT_TEST_WORLD } from '../../common/constants.js';
 import {
   REQUEST_SHOW_SAVE_GAME_UI,
   CANNOT_SAVE_GAME_INFO,
 } from '../../../src/constants/eventIds.js';
-
-const MOCK_WORLD_NAME = 'TestWorld';
 
 describeInitializedEngineSuite(
   'GameEngine',
@@ -84,5 +83,5 @@ describeInitializedEngineSuite(
       );
     });
   },
-  MOCK_WORLD_NAME
+  DEFAULT_TEST_WORLD
 );
