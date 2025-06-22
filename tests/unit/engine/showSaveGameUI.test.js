@@ -3,10 +3,8 @@ import { describe, expect, it } from '@jest/globals';
 import { tokens } from '../../../src/dependencyInjection/tokens.js';
 import { describeInitializedEngineSuite } from '../../common/engine/gameEngineTestBed.js';
 import { runUnavailableServiceSuite } from '../../common/engine/gameEngineHelpers.js';
-import {
-  REQUEST_SHOW_SAVE_GAME_UI,
-  CANNOT_SAVE_GAME_INFO,
-} from '../../../src/constants/eventIds.js';
+import { CANNOT_SAVE_GAME_INFO } from '../../../src/constants/eventIds.js';
+import { expectShowSaveGameUIDispatch } from '../../common/engine/dispatchTestUtils.js';
 import { DEFAULT_TEST_WORLD } from '../../common/constants.js';
 
 describeInitializedEngineSuite(
@@ -25,13 +23,9 @@ describeInitializedEngineSuite(
         expect(
           ctx.bed.mocks.gamePersistenceService.isSavingAllowed
         ).toHaveBeenCalledWith(true); // engine is initialized
-        expect(ctx.bed.mocks.safeEventDispatcher.dispatch).toHaveBeenCalledWith(
-          REQUEST_SHOW_SAVE_GAME_UI,
-          {}
-        );
-        expect(
+        expectShowSaveGameUIDispatch(
           ctx.bed.mocks.safeEventDispatcher.dispatch
-        ).toHaveBeenCalledTimes(1);
+        );
       });
 
       it('should dispatch CANNOT_SAVE_GAME_INFO if saving is not allowed and log reason', () => {
@@ -63,6 +57,7 @@ describeInitializedEngineSuite(
         ],
         (bed, engine) => {
           engine.showSaveGameUI();
+          // eslint-disable-next-line jest/no-standalone-expect
           expect(
             bed.mocks.gamePersistenceService.isSavingAllowed
           ).not.toHaveBeenCalled();

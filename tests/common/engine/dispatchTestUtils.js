@@ -14,6 +14,8 @@ import {
   COMPONENT_ADDED_ID,
   COMPONENT_REMOVED_ID,
   ENGINE_STOPPED_UI,
+  REQUEST_SHOW_LOAD_GAME_UI,
+  REQUEST_SHOW_SAVE_GAME_UI,
 } from '../../../src/constants/eventIds.js';
 import { tokens } from '../../../src/dependencyInjection/tokens.js';
 import { DEFAULT_ACTIVE_WORLD_FOR_SAVE } from '../constants.js';
@@ -240,6 +242,26 @@ export const expectComponentRemovedDispatch = createDispatchAsserter(
     componentTypeId,
     oldComponentData: oldData,
   })
+);
+
+/**
+ * @description Asserts that the engine dispatched a request to show the Load Game UI.
+ * @param {import('@jest/globals').Mock} mock - Mocked dispatch function.
+ * @returns {void}
+ */
+export const expectShowLoadGameUIDispatch = createDispatchAsserter(
+  REQUEST_SHOW_LOAD_GAME_UI,
+  () => ({})
+);
+
+/**
+ * @description Asserts that the engine dispatched a request to show the Save Game UI.
+ * @param {import('@jest/globals').Mock} mock - Mocked dispatch function.
+ * @returns {void}
+ */
+export const expectShowSaveGameUIDispatch = createDispatchAsserter(
+  REQUEST_SHOW_SAVE_GAME_UI,
+  () => ({})
 );
 
 /**
