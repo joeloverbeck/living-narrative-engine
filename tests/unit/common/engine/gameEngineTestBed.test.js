@@ -67,9 +67,12 @@ describe('GameEngine Test Helpers: GameEngineTestBed', () => {
   it('initAndReset runs init then clears mock history', async () => {
     const initSpy = jest.spyOn(testBed, 'init');
     const resetSpy = jest.spyOn(testBed, 'resetMocks');
+    const withResetSpy = jest.spyOn(testBed, 'withReset');
 
     await testBed.initAndReset('ResetWorld');
 
+    expect(withResetSpy).toHaveBeenCalledWith(expect.any(Function));
+    expect(withResetSpy).toHaveBeenCalledTimes(1);
     expect(initSpy).toHaveBeenCalledWith('ResetWorld');
     expect(engine.startNewGame).toHaveBeenCalledWith('ResetWorld');
     expect(resetSpy).toHaveBeenCalledTimes(1);
@@ -80,15 +83,19 @@ describe('GameEngine Test Helpers: GameEngineTestBed', () => {
 
     initSpy.mockRestore();
     resetSpy.mockRestore();
+    withResetSpy.mockRestore();
   });
 
   it('startAndReset calls start with result then clears mock history', async () => {
     const startSpy = jest.spyOn(testBed, 'start');
     const resetSpy = jest.spyOn(testBed, 'resetMocks');
+    const withResetSpy = jest.spyOn(testBed, 'withReset');
     const result = { success: false };
 
     await testBed.startAndReset('WorldName', result);
 
+    expect(withResetSpy).toHaveBeenCalledWith(expect.any(Function));
+    expect(withResetSpy).toHaveBeenCalledTimes(1);
     expect(startSpy).toHaveBeenCalledWith('WorldName', result);
     expect(engine.startNewGame).toHaveBeenCalledWith('WorldName');
     expect(resetSpy).toHaveBeenCalledTimes(1);
@@ -99,6 +106,7 @@ describe('GameEngine Test Helpers: GameEngineTestBed', () => {
 
     startSpy.mockRestore();
     resetSpy.mockRestore();
+    withResetSpy.mockRestore();
   });
 
   it('stop only stops engine when initialized', async () => {
