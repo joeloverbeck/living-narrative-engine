@@ -98,16 +98,7 @@ class AddComponentHandler extends ComponentOperationHandler {
     }
 
     // 4. Validate value object
-    if (typeof value !== 'object' || value === null) {
-      log.warn(
-        'ADD_COMPONENT: Invalid or missing "value" parameter (must be a non-null object).'
-      );
-      return;
-    }
-    if (typeof value !== 'object' || value === null) {
-      log.warn(
-        'ADD_COMPONENT: Invalid or missing "value" parameter (must be a non-null object).'
-      );
+    if (!this.#validateValueObject(value, log)) {
       return;
     }
 
@@ -129,6 +120,24 @@ class AddComponentHandler extends ComponentOperationHandler {
         },
       });
     }
+  }
+
+  /**
+   * Validate that the provided component value is a non-null object.
+   *
+   * @param {*} value - Raw component value parameter.
+   * @param {ILogger} logger - Logger used for warning output.
+   * @returns {boolean} `true` when valid, `false` otherwise.
+   * @private
+   */
+  #validateValueObject(value, logger) {
+    if (typeof value !== 'object' || value === null) {
+      logger.warn(
+        'ADD_COMPONENT: Invalid or missing "value" parameter (must be a non-null object).'
+      );
+      return false;
+    }
+    return true;
   }
 }
 
