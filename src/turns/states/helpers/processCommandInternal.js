@@ -12,6 +12,7 @@
 import TurnDirectiveStrategyResolver from '../../strategies/turnDirectiveStrategyResolver.js';
 import { getServiceFromContext } from './getServiceFromContext.js';
 import { handleProcessingException } from './handleProcessingException.js';
+import { finishProcessing } from './processingErrorUtils.js';
 
 /**
  * Executes the main command processing workflow.
@@ -144,20 +145,12 @@ export async function processCommandInternal(
       logger.debug(
         `${state.getStateName()}: Directive strategy executed for ${actorId}, state remains ${state.getStateName()}. Processing complete for this state instance.`
       );
-      if (state._processingGuard) {
-        state._processingGuard.finish();
-      } else {
-        state._isProcessing = false;
-      }
+      finishProcessing(state);
     } else if (state._isProcessing) {
       logger.debug(
         `${state.getStateName()}: Directive strategy executed for ${actorId}, but state changed from ${state.getStateName()} to ${state._handler.getCurrentState()?.getStateName() ?? 'Unknown'}. Processing considered complete for previous state instance.`
       );
-      if (state._processingGuard) {
-        state._processingGuard.finish();
-      } else {
-        state._isProcessing = false;
-      }
+      finishProcessing(state);
     }
   } catch (error) {
     const errorHandlingCtx = state._getTurnContext() ?? turnCtx;
@@ -182,11 +175,7 @@ export async function processCommandInternal(
       finalLogger.warn(
         `${state.getStateName()}: _isProcessing was unexpectedly true at the end of _processCommandInternal for ${actorId}. Forcing to false.`
       );
-      if (state._processingGuard) {
-        state._processingGuard.finish();
-      } else {
-        state._isProcessing = false;
-      }
+      finishProcessing(state);
     }
   }
 }

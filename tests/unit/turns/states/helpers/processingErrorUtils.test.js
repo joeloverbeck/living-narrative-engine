@@ -3,6 +3,7 @@ import {
   resetProcessingFlags,
   resolveLogger,
   dispatchSystemError,
+  finishProcessing,
 } from '../../../../../src/turns/states/helpers/processingErrorUtils.js';
 import { ProcessingGuard } from '../../../../../src/turns/states/helpers/processingGuard.js';
 import { safeDispatchError } from '../../../../../src/utils/safeDispatchErrorUtils.js';
@@ -28,6 +29,21 @@ describe('processingErrorUtils', () => {
     const owner = { _isProcessing: true };
     const was = resetProcessingFlags(owner);
     expect(was).toBe(true);
+    expect(owner._isProcessing).toBe(false);
+  });
+
+  test('finishProcessing uses guard when present', () => {
+    const owner = { _isProcessing: true };
+    owner._processingGuard = new ProcessingGuard(owner);
+    const spy = jest.spyOn(owner._processingGuard, 'finish');
+    finishProcessing(owner);
+    expect(spy).toHaveBeenCalled();
+    expect(owner._isProcessing).toBe(false);
+  });
+
+  test('finishProcessing toggles flag directly when guard missing', () => {
+    const owner = { _isProcessing: true };
+    finishProcessing(owner);
     expect(owner._isProcessing).toBe(false);
   });
 

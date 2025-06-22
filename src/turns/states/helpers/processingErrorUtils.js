@@ -19,12 +19,22 @@ import { safeDispatchError } from '../../../utils/safeDispatchErrorUtils.js';
  */
 export function resetProcessingFlags(state) {
   const wasProcessing = state._isProcessing;
+  finishProcessing(state);
+  return wasProcessing;
+}
+
+/**
+ * Marks processing as finished on the provided state.
+ *
+ * @param {ProcessingCommandStateLike} state - Owning state instance.
+ * @returns {void}
+ */
+export function finishProcessing(state) {
   if (state._processingGuard) {
     state._processingGuard.finish();
   } else {
     state._isProcessing = false;
   }
-  return wasProcessing;
 }
 
 /**
