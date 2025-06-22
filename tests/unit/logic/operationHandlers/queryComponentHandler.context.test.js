@@ -202,7 +202,7 @@ describe('QueryComponentHandler (Context Alignment Test Suite)', () => {
     expect(dispatcherMock.dispatch).toHaveBeenCalledWith(
       SYSTEM_ERROR_OCCURRED_ID,
       expect.objectContaining({
-        message: expect.stringContaining('Missing required "entity_ref"'),
+        message: expect.stringContaining('Could not resolve entity id'),
       })
     );
     expect(entityManagerMock.getComponentData).not.toHaveBeenCalled();

@@ -87,25 +87,24 @@ class RemoveComponentHandler extends ComponentOperationHandler {
     // Extract required parameters (value is not needed for remove)
     const { entity_ref, component_type } = params;
 
-    if (!entity_ref) {
-      log.warn('REMOVE_COMPONENT: "entity_ref" parameter is required.');
-      return;
-    }
-    const trimmedComponentType = this.validateComponentType(component_type);
-    if (!trimmedComponentType) {
-      log.warn(
-        'REMOVE_COMPONENT: Invalid or missing "component_type" parameter (must be non-empty string).'
-      );
+    // 2. Resolve and validate entity reference
+    const entityId = this.validateEntityRef(
+      entity_ref,
+      log,
+      'REMOVE_COMPONENT',
+      executionContext
+    );
+    if (!entityId) {
       return;
     }
 
-    // 2. Resolve Entity ID
-    const entityId = this.resolveEntity(entity_ref, executionContext);
-    if (!entityId) {
-      log.warn(
-        `REMOVE_COMPONENT: Could not resolve entity id from entity_ref.`,
-        { entity_ref }
-      );
+    // 3. Validate component type
+    const trimmedComponentType = this.requireComponentType(
+      component_type,
+      log,
+      'REMOVE_COMPONENT'
+    );
+    if (!trimmedComponentType) {
       return;
     }
 
