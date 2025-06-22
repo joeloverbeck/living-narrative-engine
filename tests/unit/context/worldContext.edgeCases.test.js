@@ -210,7 +210,7 @@ describe('WorldContext Edge Cases', () => {
       (entityId, componentTypeId) => {
         return entityId === 'player1' &&
           componentTypeId === POSITION_COMPONENT_ID
-          ? { x: 1, y: 1 }
+          ? {}
           : undefined; // No locationId
       }
     );
@@ -243,7 +243,7 @@ describe('WorldContext Edge Cases', () => {
     // Arrange
     const actor1 = createTestEntity('player1', 'dummy-def');
     const locationEntity = createTestEntity('loc1', 'dummy-def');
-    const positionData = { locationId: 'loc1', x: 0, y: 0 };
+    const positionData = { locationId: 'loc1' };
 
     mockEntityManagerInstance.getEntitiesWithComponent.mockImplementation(
       (componentTypeId) => {
@@ -286,7 +286,7 @@ describe('WorldContext Edge Cases', () => {
   test('getCurrentLocation() returns null and warns when location entity referenced by position does not exist', () => {
     // Arrange
     const actor1 = createTestEntity('player1', 'dummy-def');
-    const positionData = { locationId: 'nonexistent-loc', x: 0, y: 0 };
+    const positionData = { locationId: 'nonexistent-loc' };
 
     // Ensure only one actor is returned
     mockEntityManagerInstance.getEntitiesWithComponent.mockImplementation(

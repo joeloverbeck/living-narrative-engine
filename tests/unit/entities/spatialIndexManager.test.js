@@ -551,7 +551,7 @@ const setupMockEntityManagerWithEntities = (
       id: 'entity1',
       getComponentData: (componentTypeId) => {
         if (componentTypeId === POSITION_COMPONENT_ID) {
-          return { locationId: 'locationA', x: 1, y: 1 };
+          return { locationId: 'locationA' };
         }
         return undefined;
       },
@@ -562,7 +562,7 @@ const setupMockEntityManagerWithEntities = (
       id: 'entity2',
       getComponentData: (componentTypeId) => {
         if (componentTypeId === POSITION_COMPONENT_ID) {
-          return { locationId: 'locationB', x: 2, y: 2 };
+          return { locationId: 'locationB' };
         }
         return undefined;
       },
@@ -575,7 +575,7 @@ const setupMockEntityManagerWithEntities = (
       id: 'entity3InvalidLoc',
       getComponentData: (componentTypeId) => {
         if (componentTypeId === POSITION_COMPONENT_ID) {
-          return { locationId: '   ', x: 3, y: 3 }; // Invalid (whitespace)
+          return { locationId: '   ' }; // Invalid (whitespace)
         }
         return undefined;
       },
@@ -588,7 +588,7 @@ const setupMockEntityManagerWithEntities = (
       id: 'entity4NullLoc',
       getComponentData: (componentTypeId) => {
         if (componentTypeId === POSITION_COMPONENT_ID) {
-          return { locationId: null, x: 4, y: 4 };
+          return { locationId: null };
         }
         return undefined;
       },

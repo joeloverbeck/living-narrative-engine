@@ -60,7 +60,7 @@ export const TestData = {
     withPos: new EntityDefinition('test-def:with-pos', {
       description: 'A definition containing the position component',
       components: {
-        [POSITION_COMPONENT_ID]: { x: 0, y: 0, locationId: 'zone:a' },
+        [POSITION_COMPONENT_ID]: { locationId: 'zone:a' },
       },
     }),
   },
