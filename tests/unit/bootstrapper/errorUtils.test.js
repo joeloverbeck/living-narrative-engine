@@ -169,4 +169,107 @@ describe('displayFatalStartupError', () => {
     );
     expect(result).toEqual({ displayed: false });
   });
+
+  it('logs errors when showErrorInElement throws without dispatcher', () => {
+    setDom(`
+      <div id="outputDiv"></div>
+      <div id="errorDiv"></div>
+      <input id="inputEl" />
+      <h1 id="title"></h1>
+    `);
+    const uiElements = {
+      outputDiv: document.querySelector('#outputDiv'),
+      errorDiv: document.querySelector('#errorDiv'),
+      inputElement: document.querySelector('#inputEl'),
+      titleElement: document.querySelector('#title'),
+    };
+
+    const alertSpy = jest.fn();
+    const domAdapter = {
+      createElement: document.createElement.bind(document),
+      insertAfter: (ref, el) => ref.insertAdjacentElement('afterend', el),
+      setTextContent: (el, text) => {
+        if (el.id === 'errorDiv') {
+          throw new Error('fail');
+        }
+        el.textContent = text;
+      },
+      setStyle: (el, prop, val) => {
+        el.style[prop] = val;
+      },
+      alert: alertSpy,
+    };
+    const logger = {
+      error: jest.fn(),
+      info: jest.fn(),
+      warn: jest.fn(),
+      debug: jest.fn(),
+    };
+
+    const result = displayFatalStartupError(
+      uiElements,
+      {
+        userMessage: 'Oops',
+        consoleMessage: 'Startup failure',
+        phase: 'TestPhase',
+      },
+      logger,
+      domAdapter
+    );
+
+    expect(logger.error).toHaveBeenNthCalledWith(
+      1,
+      '[errorUtils] [Bootstrapper Error - Phase: TestPhase] Startup failure',
+      ''
+    );
+    expect(logger.error).toHaveBeenNthCalledWith(
+      2,
+      '[errorUtils] displayFatalStartupError: Failed to set textContent on errorDiv.',
+      expect.any(Error)
+    );
+    expect(alertSpy).not.toHaveBeenCalled();
+    expect(result).toEqual({ displayed: true });
+  });
+
+  it('dispatches error when temporary element creation fails', () => {
+    setDom('<div id="outputDiv"></div>');
+    const outputDiv = document.querySelector('#outputDiv');
+    const uiElements = { outputDiv };
+
+    const alertSpy = jest.fn();
+    const domAdapter = {
+      createElement: () => {
+        throw new Error('create fail');
+      },
+      insertAfter: jest.fn(),
+      setTextContent: jest.fn(),
+      setStyle: jest.fn(),
+      alert: alertSpy,
+    };
+    const logger = {
+      error: jest.fn(),
+      info: jest.fn(),
+      warn: jest.fn(),
+      debug: jest.fn(),
+    };
+    const dispatcher = { dispatch: jest.fn() };
+
+    const result = displayFatalStartupError(
+      uiElements,
+      {
+        userMessage: 'Oops',
+        consoleMessage: 'Bad',
+      },
+      logger,
+      domAdapter,
+      dispatcher
+    );
+
+    expect(dispatcher.dispatch).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({ details: { error: 'create fail' } })
+    );
+    expect(alertSpy).toHaveBeenCalledWith('Oops');
+    expect(result).toEqual({ displayed: false });
+  });
 });
