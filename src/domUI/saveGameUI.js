@@ -339,7 +339,7 @@ export class SaveGameUI extends SlotModalBase {
       return;
     }
 
-    await this.populateSlotsList(
+    await this._populateSlots(
       () => this._getSaveSlotsData(),
       (slotData, index) => this._renderSaveSlotItem(slotData, index),
       () => this._getEmptySaveSlotsMessage(),

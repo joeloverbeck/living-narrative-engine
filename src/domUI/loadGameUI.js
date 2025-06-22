@@ -329,7 +329,7 @@ class LoadGameUI extends SlotModalBase {
       return;
     }
 
-    await this.populateSlotsList(
+    await this._populateSlots(
       () => this._getLoadSlotsData(),
       (slotData, index) => this._renderLoadSlotItem(slotData, index),
       () => this._getEmptyLoadSlotsMessage(),
