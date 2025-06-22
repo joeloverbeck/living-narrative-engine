@@ -8,10 +8,10 @@ import { jest } from '@jest/globals';
 import TurnManager from '../../../src/turns/turnManager.js';
 import {
   createMockLogger,
-  createMockEntityManager,
   createMockValidatedEventBus,
   createMockTurnHandler,
 } from '../mockFactories';
+import { createMockEntityManager } from '../mockFactories/entities.js';
 import FactoryTestBed from '../factoryTestBed.js';
 import { createStoppableMixin } from '../stoppableTestBedMixin.js';
 import {
@@ -38,11 +38,10 @@ export class TurnManagerTestBed extends StoppableMixin(FactoryTestBed) {
     super({
       logger: () => overrides.logger ?? createMockLogger(),
       entityManager: () => {
-        const em = overrides.entityManager ?? createMockEntityManager();
+        const em =
+          overrides.entityManager ??
+          createMockEntityManager({ returnArray: true });
         em.getEntityInstance = jest.fn((id) => em.activeEntities.get(id));
-        em.getActiveEntities.mockImplementation(() =>
-          Array.from(em.activeEntities.values())
-        );
         return em;
       },
       turnOrderService: () =>
