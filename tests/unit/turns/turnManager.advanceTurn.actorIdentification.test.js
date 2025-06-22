@@ -6,6 +6,7 @@ import { describeRunningTurnManagerSuite } from '../../common/turns/turnManagerT
 import {
   expectSystemErrorDispatch,
   triggerTurnEndedAndFlush,
+  expectTurnStartedEvents,
 } from '../../common/turns/turnManagerTestUtils.js';
 
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/eventIds.js';
@@ -15,7 +16,6 @@ import {
   createAiActor,
   createPlayerActor,
 } from '../../common/turns/testActors.js';
-import { createMockTurnHandler } from '../../common/mockFactories.js';
 
 // --- Test Suite ---
 
@@ -27,17 +27,9 @@ describeRunningTurnManagerSuite(
 
     beforeEach(async () => {
       testBed = getBed();
-      testBed.mocks.turnOrderService.isEmpty.mockResolvedValue(false);
-      testBed.mocks.turnOrderService.getNextEntity.mockResolvedValue(
-        createAiActor('initial-actor-for-start')
-      );
+      testBed.mockNextActor(createAiActor('initial-actor-for-start'));
       testBed.setupMockHandlerResolver();
-
-      stopSpy = testBed.spyOnStop();
-      stopSpy.mockImplementation(async () => {});
-
-      testBed.mocks.turnOrderService.isEmpty.mockResolvedValue(false);
-      testBed.mocks.dispatcher.dispatch.mockResolvedValue(true);
+      stopSpy = testBed.setupStopSpyNoOp();
     });
 
     afterEach(async () => {
@@ -53,12 +45,9 @@ describeRunningTurnManagerSuite(
         const entityType = actor.hasComponent(PLAYER_COMPONENT_ID)
           ? 'player'
           : 'ai';
-        testBed.mocks.turnOrderService.getNextEntity.mockResolvedValue(actor);
+        testBed.mockNextActor(actor);
 
-        const mockHandler = createMockTurnHandler({ actor });
-        testBed.mocks.turnHandlerResolver.resolveHandler.mockResolvedValue(
-          mockHandler
-        );
+        const mockHandler = testBed.setupHandlerForActor(actor);
 
         await testBed.advanceAndFlush();
 
@@ -66,12 +55,10 @@ describeRunningTurnManagerSuite(
         expect(
           testBed.mocks.turnOrderService.getNextEntity
         ).toHaveBeenCalledTimes(1);
-        expect(testBed.mocks.dispatcher.dispatch).toHaveBeenCalledWith(
-          'core:turn_started',
-          {
-            entityId: actor.id,
-            entityType,
-          }
+        expectTurnStartedEvents(
+          testBed.mocks.dispatcher.dispatch,
+          actor.id,
+          entityType
         );
         expect(
           testBed.mocks.turnHandlerResolver.resolveHandler
@@ -97,7 +84,7 @@ describeRunningTurnManagerSuite(
         isActor: false,
         isPlayer: false,
       });
-      testBed.mocks.turnOrderService.getNextEntity.mockResolvedValue(nonActor);
+      testBed.mockNextActor(nonActor);
 
       await testBed.turnManager.advanceTurn();
 
@@ -167,11 +154,10 @@ describeRunningTurnManagerSuite(
 
     test('Handler startTurn error: logs error, stops manager', async () => {
       const startError = new Error('Handler start failed');
-      const mockHandler = createMockTurnHandler();
+      const actor = createAiActor('initial-actor-for-start');
+      testBed.mockNextActor(actor);
+      const mockHandler = testBed.setupHandlerForActor(actor);
       mockHandler.startTurn.mockRejectedValue(startError);
-      testBed.mocks.turnHandlerResolver.resolveHandler.mockResolvedValue(
-        mockHandler
-      );
 
       await testBed.turnManager.advanceTurn();
 
