@@ -23,6 +23,17 @@ describe('wrapPersistenceOperation', () => {
     expect(res.error.code).toBe(PersistenceErrorCodes.UNEXPECTED_ERROR);
     expect(res.error.message).toBe('boom');
   });
+
+  it('handles non-Error rejections', async () => {
+    const logger = { error: jest.fn() };
+    const res = await wrapPersistenceOperation(logger, async () => {
+      throw 'string err';
+    });
+    expect(logger.error).toHaveBeenCalled();
+    expect(res.success).toBe(false);
+    expect(res.error.code).toBe(PersistenceErrorCodes.UNEXPECTED_ERROR);
+    expect(res.error.message).toBe('string err');
+  });
 });
 
 describe('wrapSyncPersistenceOperation', () => {
