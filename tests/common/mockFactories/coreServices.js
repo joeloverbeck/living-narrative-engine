@@ -300,18 +300,39 @@ export const createMockPathResolver = (overrides = {}) => ({
 });
 
 /**
- * Creates a mock IDataFetcher.
+ * Creates a mock IDataFetcher. Can operate purely in-memory or read JSON files
+ * from disk when `fromDisk` is true.
  *
- * @param {object} [pathToResponse] - Map of path strings to successful response data (will be deep cloned).
- * @param {string[]} [errorPaths] - List of paths that should trigger a rejection.
- * @param {object} [overrides] - Optional overrides for mock methods.
+ * @param {object} [options]
+ * @param {boolean} [options.fromDisk] - Read data from disk instead of using in-memory mappings.
+ * @param {object} [options.pathToResponse] - Map of path strings to successful response data.
+ * @param {string[]} [options.errorPaths] - List of paths that should trigger a rejection.
+ * @param {object} [options.overrides] - Optional overrides for mock methods.
  * @returns {object} Mock data fetcher with helper methods
  */
-export const createMockDataFetcher = (
+export const createMockDataFetcher = ({
+  fromDisk = false,
   pathToResponse = {},
   errorPaths = [],
-  overrides = {}
-) => {
+  overrides = {},
+} = {}) => {
+  if (fromDisk) {
+    // eslint-disable-next-line no-undef
+    const fs = require('fs');
+    return {
+      fetch: jest.fn().mockImplementation(async (identifier) => {
+        if (identifier.endsWith('.json')) {
+          const filePath = identifier.replace(/^\.\//, '');
+          return JSON.parse(fs.readFileSync(filePath, 'utf8'));
+        }
+        throw new Error('Unsupported identifier: ' + identifier);
+      }),
+      fetchJson: jest.fn(),
+      fetchText: jest.fn(),
+      ...overrides,
+    };
+  }
+
   let fetchErrorMessage = '';
   const mockFetcher = {
     fetch: jest.fn(),
@@ -341,7 +362,8 @@ export const createMockDataFetcher = (
   };
 
   /**
-   * @description Updates the fetch mock implementation based on configured paths.
+   * Updates the fetch mock implementation based on configured paths.
+   *
    * @returns {void}
    */
   function setFetchImplementation() {
@@ -374,32 +396,6 @@ export const createMockDataFetcher = (
   setFetchImplementation();
 
   return mockFetcher;
-};
-
-/**
- * Creates a mock IDataFetcher that reads JSON files from disk for integration tests.
- * This is useful when you need to test with real file data but can't use fetch in Node/Jest.
- *
- * @returns {object} Mock data fetcher that reads from disk
- */
-export const createMockDataFetcherForIntegration = () => {
-  // eslint-disable-next-line no-undef
-  const fs = require('fs');
-  // eslint-disable-next-line no-undef, no-unused-vars
-  const path = require('path');
-
-  return {
-    fetch: jest.fn().mockImplementation(async (identifier) => {
-      if (identifier.endsWith('.json')) {
-        // Remove leading './' if present
-        const filePath = identifier.replace(/^\.\//, '');
-        return JSON.parse(fs.readFileSync(filePath, 'utf8'));
-      }
-      throw new Error('Unsupported identifier: ' + identifier);
-    }),
-    fetchJson: jest.fn(),
-    fetchText: jest.fn(),
-  };
 };
 
 /**

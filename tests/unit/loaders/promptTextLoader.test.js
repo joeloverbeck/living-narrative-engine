@@ -58,7 +58,9 @@ beforeEach(() => {
   configuration = createMockConfiguration();
   pathResolver = createMockPathResolver();
   dataFetcher = createMockDataFetcher({
-    '/path/prompts/corePromptText.json': { example: true },
+    pathToResponse: {
+      '/path/prompts/corePromptText.json': { example: true },
+    },
   });
   schemaValidator = createMockSchemaValidator();
   dataRegistry = createMockDataRegistry();

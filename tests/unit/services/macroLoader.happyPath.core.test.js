@@ -71,10 +71,12 @@ describe('MacroLoader (Happy Path - Core Mod)', () => {
         ),
       }),
       createMockDataFetcher({
-        [`./data/mods/${CORE_MOD_ID}/macros/logSuccessAndEndTurn.macro.json`]:
-          logSuccess,
-        [`./data/mods/${CORE_MOD_ID}/macros/logFailureAndEndTurn.macro.json`]:
-          logFailure,
+        pathToResponse: {
+          [`./data/mods/${CORE_MOD_ID}/macros/logSuccessAndEndTurn.macro.json`]:
+            logSuccess,
+          [`./data/mods/${CORE_MOD_ID}/macros/logFailureAndEndTurn.macro.json`]:
+            logFailure,
+        },
       }),
       createMockSchemaValidator(),
       mockRegistry,
@@ -101,7 +103,7 @@ describe('MacroLoader (Happy Path - Core Mod)', () => {
         _fullId: 'core:logSuccessAndEndTurn',
         description: logSuccess.description,
         actions: logSuccess.actions,
-        _modId: "core",
+        _modId: 'core',
       })
     );
     expect(mockRegistry.store).toHaveBeenCalledWith(
@@ -112,7 +114,7 @@ describe('MacroLoader (Happy Path - Core Mod)', () => {
         _fullId: 'core:logFailureAndEndTurn',
         description: logFailure.description,
         actions: logFailure.actions,
-        _modId: "core",
+        _modId: 'core',
       })
     );
 
@@ -126,7 +128,7 @@ describe('MacroLoader (Happy Path - Core Mod)', () => {
     const loader = new MacroLoader(
       realConfig,
       createMockPathResolver(),
-      createMockDataFetcher({}),
+      createMockDataFetcher(),
       createMockSchemaValidator(),
       mockRegistry,
       tempLogger

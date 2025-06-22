@@ -18,7 +18,7 @@ import { tokens } from '../../../src/dependencyInjection/tokens.js';
 import { registerLoaders } from '../../../src/dependencyInjection/registrations/loadersRegistrations.js';
 import ConsoleLogger from '../../../src/logging/consoleLogger.js';
 import {
-  createMockDataFetcherForIntegration,
+  createMockDataFetcher,
   createMockValidatedEventDispatcherForIntegration,
 } from '../../common/mockFactories/index.js';
 import ManifestPhase from '../../../src/loaders/phases/ManifestPhase.js';
@@ -96,24 +96,47 @@ describe('Integration: Entity Instances Loader and World Initialization', () => 
   const MOD_ID = 'isekai';
   const MODS_BASE_PATH = './data/mods';
   const INSTANCES_DIR = path.join(MODS_BASE_PATH, MOD_ID, 'entities/instances');
-  const WORLD_FILE = path.join(MODS_BASE_PATH, MOD_ID, 'worlds/isekai.world.json');
+  const WORLD_FILE = path.join(
+    MODS_BASE_PATH,
+    MOD_ID,
+    'worlds/isekai.world.json'
+  );
 
   beforeAll(async () => {
     logger = new ConsoleLogger('info');
     container = new AppContainer();
     container.register(tokens.ILogger, logger);
-    validatedEventDispatcher = createMockValidatedEventDispatcherForIntegration();
-    container.register(tokens.IValidatedEventDispatcher, validatedEventDispatcher);
+    validatedEventDispatcher =
+      createMockValidatedEventDispatcherForIntegration();
+    container.register(
+      tokens.IValidatedEventDispatcher,
+      validatedEventDispatcher
+    );
     registerLoaders(container);
-    container.register(tokens.IDataFetcher, createMockDataFetcherForIntegration());
+    container.register(
+      tokens.IDataFetcher,
+      createMockDataFetcher({ fromDisk: true })
+    );
     const schemaValidator = new AjvSchemaValidator(logger);
-    await schemaValidator.addSchema(commonSchema, 'http://example.com/schemas/common.schema.json');
-    await schemaValidator.addSchema(modManifestSchema, 'http://example.com/schemas/mod-manifest.schema.json');
-    await schemaValidator.addSchema(entityDefinitionSchema, 'http://example.com/schemas/entity-definition.schema.json');
-    await schemaValidator.addSchema(entityInstanceSchema, 'http://example.com/schemas/entity-instance.schema.json');
+    await schemaValidator.addSchema(
+      commonSchema,
+      'http://example.com/schemas/common.schema.json'
+    );
+    await schemaValidator.addSchema(
+      modManifestSchema,
+      'http://example.com/schemas/mod-manifest.schema.json'
+    );
+    await schemaValidator.addSchema(
+      entityDefinitionSchema,
+      'http://example.com/schemas/entity-definition.schema.json'
+    );
+    await schemaValidator.addSchema(
+      entityInstanceSchema,
+      'http://example.com/schemas/entity-instance.schema.json'
+    );
     container.register(tokens.ISchemaValidator, schemaValidator);
     registry = container.resolve(tokens.IDataRegistry);
-    
+
     const phases = [
       new MockSchemaPhase(logger),
       new MockGameConfigPhase(logger),
@@ -149,14 +172,14 @@ describe('Integration: Entity Instances Loader and World Initialization', () => 
       )
     );
     const files = manifest.content.entities?.instances || [];
-    
+
     for (const file of files) {
       const filePath = path.join(INSTANCES_DIR, file);
       const instanceData = JSON.parse(fs.readFileSync(filePath, 'utf8'));
       const instanceId = instanceData.instanceId;
-      
+
       const instance = registry.get('entityInstances', instanceId);
-      
+
       expect(instance).toBeDefined();
       expect(instance.instanceId).toBe(instanceId);
     }
@@ -165,23 +188,30 @@ describe('Integration: Entity Instances Loader and World Initialization', () => 
   it('should allow WorldInitializer to instantiate all world instances when all are present', async () => {
     const worldData = JSON.parse(fs.readFileSync(WORLD_FILE, 'utf8'));
     const worldName = worldData.id;
-    
+
     // Create a mock repository with the required methods
     const mockRepository = {
       getWorld: jest.fn(() => worldData),
-      getEntityInstanceDefinition: jest.fn((instanceId) => registry.get('entityInstances', instanceId)),
+      getEntityInstanceDefinition: jest.fn((instanceId) =>
+        registry.get('entityInstances', instanceId)
+      ),
       getEntityDefinition: jest.fn(() => ({})),
       getComponentDefinition: jest.fn(() => ({})),
     };
-    
+
     const repo = new GameDataRepository(registry, testLogger);
     const dispatcher = new ValidatedEventDispatcher({
       logger: testLogger,
       eventBus: mockEventBus,
       gameDataRepository: repo,
-      schemaValidator: { validate: () => ({ isValid: true }) }
+      schemaValidator: { validate: () => ({ isValid: true }) },
     });
-    const entityManager = new EntityManager({ registry, logger: testLogger, dispatcher, validator: { validate: () => ({ isValid: true }) } });
+    const entityManager = new EntityManager({
+      registry,
+      logger: testLogger,
+      dispatcher,
+      validator: { validate: () => ({ isValid: true }) },
+    });
     const worldInitializer = new WorldInitializer({
       entityManager,
       worldContext: {},
@@ -202,9 +232,14 @@ describe('Integration: Entity Instances Loader and World Initialization', () => 
       logger: testLogger,
       eventBus: mockEventBus,
       gameDataRepository: repo,
-      schemaValidator: { validate: () => ({ isValid: true }) }
+      schemaValidator: { validate: () => ({ isValid: true }) },
     });
-    const entityManager = new EntityManager({ registry, logger: testLogger, dispatcher, validator: { validate: () => ({ isValid: true }) } });
+    const entityManager = new EntityManager({
+      registry,
+      logger: testLogger,
+      dispatcher,
+      validator: { validate: () => ({ isValid: true }) },
+    });
     const worldInitializer = new WorldInitializer({
       entityManager,
       worldContext: {},
@@ -217,12 +252,12 @@ describe('Integration: Entity Instances Loader and World Initialization', () => 
     const worldName = 'test-world';
     registry.store('worlds', worldName, {
       id: worldName,
-      instances: [
-        { instanceId: 'isekai:adventurers_guild_instance' },
-      ],
+      instances: [{ instanceId: 'isekai:adventurers_guild_instance' }],
     });
     // Should not throw, but should log a warning and complete
-    await expect(worldInitializer.initializeWorldEntities(worldName)).resolves.toBe(true);
+    await expect(
+      worldInitializer.initializeWorldEntities(worldName)
+    ).resolves.toBe(true);
   });
 });
 
@@ -235,9 +270,14 @@ describe('Integration: EntityInstance componentOverrides are respected during wo
       logger: testLogger,
       eventBus: mockEventBus,
       gameDataRepository: repo,
-      schemaValidator: { validate: () => ({ isValid: true }) }
+      schemaValidator: { validate: () => ({ isValid: true }) },
     });
-    const entityManager = new EntityManager({ registry, logger: testLogger, dispatcher, validator: { validate: () => ({ isValid: true }) } });
+    const entityManager = new EntityManager({
+      registry,
+      logger: testLogger,
+      dispatcher,
+      validator: { validate: () => ({ isValid: true }) },
+    });
     const worldInitializer = new WorldInitializer({
       entityManager,
       worldContext: {},
@@ -248,12 +288,16 @@ describe('Integration: EntityInstance componentOverrides are respected during wo
     });
 
     // Add a definition
-    registry.store('entityDefinitions', 'mod:hero', new EntityDefinition('mod:hero', {
-      components: {
-        'core:name': { text: 'Hero' },
-        'core:position': { locationId: 'default:place' },
-      },
-    }));
+    registry.store(
+      'entityDefinitions',
+      'mod:hero',
+      new EntityDefinition('mod:hero', {
+        components: {
+          'core:name': { text: 'Hero' },
+          'core:position': { locationId: 'default:place' },
+        },
+      })
+    );
     // Add an instance with an override
     registry.store('entityInstances', 'mod:hero_instance', {
       instanceId: 'mod:hero_instance',
@@ -265,13 +309,12 @@ describe('Integration: EntityInstance componentOverrides are respected during wo
     // Add a world referencing the instance
     registry.store('worlds', 'mod:world', {
       id: 'mod:world',
-      instances: [
-        { instanceId: 'mod:hero_instance' }
-      ],
+      instances: [{ instanceId: 'mod:hero_instance' }],
     });
     // Add getWorld and getEntityInstanceDefinition to repo
     repo.getWorld = (id) => registry.get('worlds', id);
-    repo.getEntityInstanceDefinition = (id) => registry.get('entityInstances', id);
+    repo.getEntityInstanceDefinition = (id) =>
+      registry.get('entityInstances', id);
 
     // Run world initialization
     await worldInitializer.initializeWorldEntities('mod:world');
@@ -298,4 +341,4 @@ function makeSession(phases) {
       return context;
     },
   };
-} 
+}

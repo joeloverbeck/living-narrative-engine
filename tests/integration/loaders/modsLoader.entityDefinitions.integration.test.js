@@ -18,7 +18,7 @@ import { tokens } from '../../../src/dependencyInjection/tokens.js';
 import { registerLoaders } from '../../../src/dependencyInjection/registrations/loadersRegistrations.js';
 import ConsoleLogger from '../../../src/logging/consoleLogger.js';
 import {
-  createMockDataFetcherForIntegration,
+  createMockDataFetcher,
   createMockValidatedEventDispatcherForIntegration,
 } from '../../common/mockFactories/index.js';
 import ManifestPhase from '../../../src/loaders/phases/ManifestPhase.js';
@@ -97,7 +97,7 @@ describe('Integration: Entity Definitions and Instances Loader', () => {
     // Register mock data fetcher AFTER loader registration to overwrite
     container.register(
       tokens.IDataFetcher,
-      createMockDataFetcherForIntegration()
+      createMockDataFetcher({ fromDisk: true })
     );
     // Register and load AjvSchemaValidator with schemas
     const schemaValidator = new AjvSchemaValidator(logger);
@@ -164,7 +164,7 @@ describe('Integration: Entity Definitions and Instances Loader', () => {
     // Verify that entity instances are also loaded
     const allInstances = registry.getAll('entityInstances');
     expect(allInstances).toHaveLength(6);
-    expect(allInstances.map(i => i.instanceId)).toEqual(
+    expect(allInstances.map((i) => i.instanceId)).toEqual(
       expect.arrayContaining([
         'isekai:adventurers_guild_instance',
         'isekai:hero_instance',
@@ -176,7 +176,10 @@ describe('Integration: Entity Definitions and Instances Loader', () => {
     );
 
     // Test individual instance retrieval
-    const instance = registry.get('entityInstances', 'isekai:adventurers_guild_instance');
+    const instance = registry.get(
+      'entityInstances',
+      'isekai:adventurers_guild_instance'
+    );
   });
 
   const MOD_ID = 'isekai';
