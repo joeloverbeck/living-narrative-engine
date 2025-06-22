@@ -4,7 +4,7 @@ import { ENGINE_OPERATION_FAILED_UI } from '../../../src/constants/eventIds.js';
 import { tokens } from '../../../src/dependencyInjection/tokens.js';
 import {
   withGameEngineBed,
-  runUnavailableServiceTest,
+  runUnavailableServiceSuite,
 } from '../../common/engine/gameEngineHelpers.js';
 import '../../common/engine/engineTestTypedefs.js';
 
@@ -29,31 +29,25 @@ describe('GameEngine', () => {
       });
     });
 
-    it.each(
-      runUnavailableServiceTest(
+    runUnavailableServiceSuite(
+      [
         [
-          [
-            tokens.ISafeEventDispatcher,
-            'GameEngine._handleLoadFailure: ISafeEventDispatcher not available, cannot dispatch UI failure event.',
-          ],
+          tokens.ISafeEventDispatcher,
+          'GameEngine._handleLoadFailure: ISafeEventDispatcher not available, cannot dispatch UI failure event.',
         ],
-        async (bed, engine) => {
-          const err = new Error('oops');
-          const result = await engine._handleLoadFailure(err, 'save-002');
-          expect(result).toEqual({
-            success: false,
-            error: err.message,
-            data: null,
-          });
-          return [
-            bed.mocks.logger.error,
-            bed.mocks.safeEventDispatcher.dispatch,
-          ];
-        }
-      )
-    )('logs error if %s is unavailable', async (_token, fn) => {
-      expect.assertions(3);
-      await fn();
-    });
+      ],
+      async (bed, engine) => {
+        const err = new Error('oops');
+        const result = await engine._handleLoadFailure(err, 'save-002');
+        // eslint-disable-next-line jest/no-standalone-expect
+        expect(result).toEqual({
+          success: false,
+          error: err.message,
+          data: null,
+        });
+        return [bed.mocks.logger.error, bed.mocks.safeEventDispatcher.dispatch];
+      },
+      1
+    )('logs error if %s is unavailable');
   });
 });

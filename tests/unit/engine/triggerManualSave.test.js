@@ -6,7 +6,7 @@ import {
   describeInitializedEngineSuite,
 } from '../../common/engine/gameEngineTestBed.js';
 import {
-  runUnavailableServiceTest,
+  runUnavailableServiceSuite,
   withGameEngineBed,
 } from '../../common/engine/gameEngineHelpers.js';
 import '../../common/engine/engineTestTypedefs.js';
@@ -39,35 +39,33 @@ describeEngineSuite('GameEngine', () => {
     describeInitializedEngineSuite(
       'when engine is initialized',
       (ctx) => {
-        it.each(
-          runUnavailableServiceTest(
+        runUnavailableServiceSuite(
+          [
             [
-              [
-                tokens.GamePersistenceService,
-                'GameEngine.triggerManualSave: GamePersistenceService is not available. Cannot save game.',
-                { preInit: true },
-              ],
+              tokens.GamePersistenceService,
+              'GameEngine.triggerManualSave: GamePersistenceService is not available. Cannot save game.',
+              { preInit: true },
             ],
-            async (bed, engine) => {
-              const result = await engine.triggerManualSave(SAVE_NAME);
-              expect(
-                bed.mocks.safeEventDispatcher.dispatch
-              ).not.toHaveBeenCalled();
-              expect(result).toEqual({
-                success: false,
-                error:
-                  'GamePersistenceService is not available. Cannot save game.',
-              });
-              return [
-                bed.mocks.logger.error,
-                bed.mocks.safeEventDispatcher.dispatch,
-              ];
-            }
-          )
-        )('should dispatch error if %s is unavailable', async (_token, fn) => {
-          expect.assertions(4);
-          await fn();
-        });
+          ],
+          async (bed, engine) => {
+            const result = await engine.triggerManualSave(SAVE_NAME);
+            // eslint-disable-next-line jest/no-standalone-expect
+            expect(
+              bed.mocks.safeEventDispatcher.dispatch
+            ).not.toHaveBeenCalled();
+            // eslint-disable-next-line jest/no-standalone-expect
+            expect(result).toEqual({
+              success: false,
+              error:
+                'GamePersistenceService is not available. Cannot save game.',
+            });
+            return [
+              bed.mocks.logger.error,
+              bed.mocks.safeEventDispatcher.dispatch,
+            ];
+          },
+          2
+        )('should dispatch error if %s is unavailable');
 
         it('should successfully save, dispatch all UI events in order, and return success result', async () => {
           const saveResultData = { success: true, filePath: 'path/to/my.sav' };

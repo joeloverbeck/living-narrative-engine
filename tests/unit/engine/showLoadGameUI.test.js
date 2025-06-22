@@ -2,7 +2,7 @@
 import { beforeEach, describe, expect, it } from '@jest/globals';
 import { tokens } from '../../../src/dependencyInjection/tokens.js';
 import { describeEngineSuite } from '../../common/engine/gameEngineTestBed.js';
-import { runUnavailableServiceTest } from '../../common/engine/gameEngineHelpers.js';
+import { runUnavailableServiceSuite } from '../../common/engine/gameEngineHelpers.js';
 import '../../common/engine/engineTestTypedefs.js';
 import { REQUEST_SHOW_LOAD_GAME_UI } from '../../../src/constants/eventIds.js';
 
@@ -27,28 +27,17 @@ describeEngineSuite('GameEngine', (ctx) => {
       );
     });
 
-    it.each(
-      runUnavailableServiceTest(
+    runUnavailableServiceSuite(
+      [
         [
-          [
-            tokens.GamePersistenceService,
-            'GameEngine.showLoadGameUI: GamePersistenceService is unavailable. Cannot show Load Game UI.',
-          ],
+          tokens.GamePersistenceService,
+          'GameEngine.showLoadGameUI: GamePersistenceService is unavailable. Cannot show Load Game UI.',
         ],
-        (bed, engine) => {
-          engine.showLoadGameUI();
-          return [
-            bed.mocks.logger.error,
-            bed.mocks.safeEventDispatcher.dispatch,
-          ];
-        }
-      )
-    )(
-      'should log error if %s is unavailable when showing load UI',
-      async (_token, fn) => {
-        expect.assertions(2);
-        await fn();
+      ],
+      (bed, engine) => {
+        engine.showLoadGameUI();
+        return [bed.mocks.logger.error, bed.mocks.safeEventDispatcher.dispatch];
       }
-    );
+    )('should log error if %s is unavailable when showing load UI');
   });
 });

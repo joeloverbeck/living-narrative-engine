@@ -2,7 +2,7 @@
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { tokens } from '../../../src/dependencyInjection/tokens.js';
 import { describeEngineSuite } from '../../common/engine/gameEngineTestBed.js';
-import { runUnavailableServiceTest } from '../../common/engine/gameEngineHelpers.js';
+import { runUnavailableServiceSuite } from '../../common/engine/gameEngineHelpers.js';
 import '../../common/engine/engineTestTypedefs.js';
 import { ENGINE_STOPPED_UI } from '../../../src/constants/eventIds.js';
 import {
@@ -61,36 +61,35 @@ describeEngineSuite('GameEngine', (ctx) => {
       ).not.toHaveBeenCalledWith(ENGINE_STOPPED_UI, expect.anything());
     });
 
-    it.each(
-      runUnavailableServiceTest(
+    runUnavailableServiceSuite(
+      [
         [
-          [
-            tokens.PlaytimeTracker,
-            'GameEngine.stop: PlaytimeTracker service not available, cannot end session.',
-            { preInit: true },
-          ],
+          tokens.PlaytimeTracker,
+          'GameEngine.stop: PlaytimeTracker service not available, cannot end session.',
+          { preInit: true },
         ],
-        async (bed, engine, expectedMsg) => {
-          expectEngineRunning(engine, DEFAULT_TEST_WORLD);
+      ],
+      async (bed, engine, expectedMsg) => {
+         
+        expectEngineRunning(engine, DEFAULT_TEST_WORLD);
 
-          await engine.stop();
+        await engine.stop();
 
-          expect(bed.mocks.logger.warn).toHaveBeenCalledWith(expectedMsg);
-          expectDispatchSequence(
-            bed.mocks.safeEventDispatcher.dispatch,
-            ...buildStopDispatches()
-          );
-          expect(bed.mocks.turnManager.stop).toHaveBeenCalledTimes(1);
-          const dummyDispatch = jest.fn();
-          return [bed.mocks.logger.warn, dummyDispatch];
-        }
-      )
+        // eslint-disable-next-line jest/no-standalone-expect
+        expect(bed.mocks.logger.warn).toHaveBeenCalledWith(expectedMsg);
+         
+        expectDispatchSequence(
+          bed.mocks.safeEventDispatcher.dispatch,
+          ...buildStopDispatches()
+        );
+        // eslint-disable-next-line jest/no-standalone-expect
+        expect(bed.mocks.turnManager.stop).toHaveBeenCalledTimes(1);
+        const dummyDispatch = jest.fn();
+        return [bed.mocks.logger.warn, dummyDispatch];
+      },
+      4
     )(
-      'should log warning for %s if it is not available during stop, after a successful start',
-      async (_token, fn) => {
-        expect.assertions(6);
-        await fn();
-      }
+      'should log warning for %s if it is not available during stop, after a successful start'
     );
   });
 });

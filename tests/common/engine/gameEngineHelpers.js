@@ -3,7 +3,7 @@
  * @see tests/common/engine/gameEngineHelpers.js
  */
 
-import { expect, jest } from '@jest/globals';
+import { expect, jest, it } from '@jest/globals';
 import { GameEngineTestBed } from './gameEngineTestBed.js';
 import { DEFAULT_TEST_WORLD } from '../constants.js';
 import { createWithBed, createInitializedBed } from '../testBedHelpers.js';
@@ -82,6 +82,40 @@ export function runUnavailableServiceTest(cases, invokeFn) {
       });
     },
   ]);
+}
+
+/**
+ * Creates a suite of tests for unavailable service scenarios.
+ *
+ * @description Wraps {@link runUnavailableServiceTest} with `it.each` and
+ *   automatically sets the expected assertion count.
+ * @param {Array<[string, string, { preInit?: boolean }]>} cases - Table of
+ *   `[token, message, options]` tuples.
+ * @param {(bed: GameEngineTestBed,
+ *   engine: import('../../../src/engine/gameEngine.js').default,
+ *   expectedMessage: string) =>
+ *   Promise<[import('@jest/globals').Mock, import('@jest/globals').Mock]> |
+ *   [import('@jest/globals').Mock, import('@jest/globals').Mock]} invokeFn -
+ *   Callback executed for each test case.
+ * @param {number} [extraAssertions] - Additional assertions performed inside
+ *   `invokeFn`.
+ * @returns {(name: string, timeout?: number) => void} Jest test function.
+ */
+export function runUnavailableServiceSuite(
+  cases,
+  invokeFn,
+  extraAssertions = 0
+) {
+  const table = runUnavailableServiceTest(cases, invokeFn);
+  return (name, timeout) =>
+    it.each(table)(
+      name,
+      async (_token, fn) => {
+        expect.assertions(2 + extraAssertions);
+        await fn();
+      },
+      timeout
+    );
 }
 
 /**
