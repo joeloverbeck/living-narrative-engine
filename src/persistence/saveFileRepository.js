@@ -57,6 +57,17 @@ export default class SaveFileRepository extends BaseService {
   }
 
   /**
+   * Helper to wrap persistence operations with logging.
+   *
+   * @param {() => Promise<any>} operationFn - Operation to execute.
+   * @returns {Promise<any>} Result of the wrapped operation.
+   * @private
+   */
+  #withLogging(operationFn) {
+    return wrapPersistenceOperation(this.#logger, operationFn);
+  }
+
+  /**
    * Ensures the manual save directory exists if supported.
    *
    * @returns {Promise<import('./persistenceTypes.js').PersistenceResult<null>>} Result of directory creation.
@@ -193,7 +204,7 @@ export default class SaveFileRepository extends BaseService {
    * @returns {Promise<import('./persistenceTypes.js').PersistenceResult<Uint8Array>>}
    */
   async #readSaveFile(filePath) {
-    return wrapPersistenceOperation(this.#logger, async () => {
+    return this.#withLogging(async () => {
       let fileContent;
       try {
         fileContent = await this.#storageProvider.readFile(filePath);
@@ -232,7 +243,7 @@ export default class SaveFileRepository extends BaseService {
    * @returns {Promise<import('./persistenceTypes.js').PersistenceResult<object>>}
    */
   async #deserializeAndDecompress(filePath) {
-    return wrapPersistenceOperation(this.#logger, async () => {
+    return this.#withLogging(async () => {
       this.#logger.debug(
         `Attempting to read and deserialize file: ${filePath}`
       );
