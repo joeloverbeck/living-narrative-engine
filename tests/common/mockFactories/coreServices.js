@@ -169,47 +169,25 @@ export const createMockTurnHandler = ({
 };
 
 /**
- * Creates a mock event bus that records subscriptions and allows manual triggering.
+ * Creates a mock EventBus.
  *
- * @returns {object} Mock event bus with helper methods
+ * @description Provides basic dispatch, subscribe and unsubscribe
+ * methods used in tests. When `captureEvents` is true, dispatched
+ * events are recorded in an `events` array.
+ * @param {object} [options]
+ * @param {boolean} [options.captureEvents] - Whether to store
+ *   dispatched events.
+ * @returns {object} Event bus mock instance.
  */
-export const createMockValidatedEventBus = () => {
-  const handlers = {};
-  return {
-    dispatch: jest.fn().mockResolvedValue(undefined),
-    subscribe: jest.fn((eventName, handler) => {
-      if (!handlers[eventName]) {
-        handlers[eventName] = [];
-      }
-      handlers[eventName].push(handler);
-      return jest.fn(() => {
-        const index = handlers[eventName].indexOf(handler);
-        if (index > -1) {
-          handlers[eventName].splice(index, 1);
-        }
-      });
-    }),
-    _triggerEvent: (eventName, payload) => {
-      (handlers[eventName] || []).forEach((h) => h(payload));
-    },
-    _clearHandlers: () => {
-      Object.keys(handlers).forEach((k) => delete handlers[k]);
-    },
-  };
-};
-
-/**
- * Creates an event bus that captures all dispatched events.
- *
- * @returns {object} Event bus with dispatch, subscribe, unsubscribe and `events` array.
- */
-export const createCapturingEventBus = () => {
+export const createEventBusMock = ({ captureEvents = false } = {}) => {
   const handlers = {};
   const events = [];
+
   const bus = {
-    events,
     dispatch: jest.fn(async (eventType, payload) => {
-      events.push({ eventType, payload });
+      if (captureEvents) {
+        events.push({ eventType, payload });
+      }
       const listeners = [
         ...(handlers[eventType] || []),
         ...(handlers['*'] || []),
@@ -225,13 +203,37 @@ export const createCapturingEventBus = () => {
         handlers[eventType] = new Set();
       }
       handlers[eventType].add(handler);
+      return jest.fn(() => {
+        handlers[eventType]?.delete(handler);
+      });
     }),
     unsubscribe: jest.fn((eventType, handler) => {
       handlers[eventType]?.delete(handler);
     }),
+    _triggerEvent(eventType, payload) {
+      (handlers[eventType] || new Set()).forEach((h) => h(payload));
+    },
+    _clearHandlers() {
+      Object.keys(handlers).forEach((k) => delete handlers[k]);
+    },
   };
+
+  if (captureEvents) {
+    bus.events = events;
+  }
+
   return bus;
 };
+
+export const createMockValidatedEventBus = () => createEventBusMock();
+
+/**
+ * Creates an event bus that captures all dispatched events.
+ *
+ * @returns {object} Event bus with dispatch, subscribe, unsubscribe and `events` array.
+ */
+export const createCapturingEventBus = () =>
+  createEventBusMock({ captureEvents: true });
 
 /**
  * Creates a mock AJV schema validator service.
