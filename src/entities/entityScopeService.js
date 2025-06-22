@@ -1,5 +1,4 @@
 // src/entities/entityScopeService.js
- 
 
 import {
   EQUIPMENT_COMPONENT_ID,
