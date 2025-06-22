@@ -2,6 +2,7 @@
 import { test, expect } from '@jest/globals';
 import { AIPromptPipeline } from '../../../src/prompting/AIPromptPipeline.js';
 import {
+  createAIPromptPipelineBed,
   describeAIPromptPipelineSuite,
   AIPromptPipelineDependencySpec,
 } from '../../common/prompting/promptPipelineTestBed.js';
