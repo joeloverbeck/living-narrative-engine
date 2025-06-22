@@ -1,7 +1,7 @@
 import { describe, test, expect, jest } from '@jest/globals';
 import { ProcessingCommandState } from '../../../../src/turns/states/processingCommandState.js';
 import { ProcessingGuard } from '../../../../src/turns/states/helpers/processingGuard.js';
-import { handleProcessingException } from '../../../../src/turns/states/helpers/handleProcessingException.js';
+import { ProcessingExceptionHandler } from '../../../../src/turns/states/helpers/processingExceptionHandler.js';
 
 /** Simple logger mock */
 const mockLogger = { debug: jest.fn(), warn: jest.fn(), error: jest.fn() };
@@ -39,7 +39,8 @@ describe('ProcessingGuard', () => {
     const ctx = makeTurnCtx();
     const state = new ProcessingCommandState(handler, null, null);
     state._isProcessing = true;
-    await handleProcessingException(state, ctx, new Error('boom'), 'actor1');
+    const exceptionHandler = new ProcessingExceptionHandler(state);
+    await exceptionHandler.handle(ctx, new Error('boom'), 'actor1');
     expect(state._isProcessing).toBe(false);
   });
 });

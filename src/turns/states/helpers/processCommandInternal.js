@@ -11,7 +11,7 @@
 
 import TurnDirectiveStrategyResolver from '../../strategies/turnDirectiveStrategyResolver.js';
 import { getServiceFromContext } from './getServiceFromContext.js';
-import { handleProcessingException } from './handleProcessingException.js';
+import { ProcessingExceptionHandler } from './processingExceptionHandler.js';
 import { finishProcessing } from './processingErrorUtils.js';
 
 /**
@@ -67,8 +67,8 @@ export async function dispatchAction(state, turnCtx, actor, turnAction) {
       activeTurnCtx && typeof activeTurnCtx.getActor === 'function'
         ? activeTurnCtx
         : turnCtx;
-    await handleProcessingException(
-      state,
+    const exceptionHandler = new ProcessingExceptionHandler(state);
+    await exceptionHandler.handle(
       contextForException,
       new Error('Context invalid/changed after action dispatch.'),
       actorId,
@@ -155,12 +155,8 @@ export async function executeDirectiveStrategy(
   if (!directiveStrategy) {
     const errorMsg = `${state.getStateName()}: Could not resolve ITurnDirectiveStrategy for directive '${directiveType}' (actor ${actorId}).`;
     logger.error(errorMsg);
-    await handleProcessingException(
-      state,
-      activeTurnCtx,
-      new Error(errorMsg),
-      actorId
-    );
+    const exceptionHandler = new ProcessingExceptionHandler(state);
+    await exceptionHandler.handle(activeTurnCtx, new Error(errorMsg), actorId);
     return;
   }
 
@@ -244,8 +240,8 @@ export async function processCommandInternal(
     if (!(error instanceof Error) && error.stack) {
       processingError.stack = error.stack;
     }
-    await handleProcessingException(
-      state,
+    const exceptionHandler = new ProcessingExceptionHandler(state);
+    await exceptionHandler.handle(
       ctxForError || turnCtx,
       processingError,
       actorIdForHandler
