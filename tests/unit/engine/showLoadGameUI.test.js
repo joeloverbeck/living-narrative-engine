@@ -3,7 +3,6 @@ import { beforeEach, describe, expect, it } from '@jest/globals';
 import { tokens } from '../../../src/dependencyInjection/tokens.js';
 import { describeEngineSuite } from '../../common/engine/gameEngineTestBed.js';
 import { runUnavailableServiceSuite } from '../../common/engine/gameEngineHelpers.js';
-import '../../common/engine/engineTestTypedefs.js';
 import { REQUEST_SHOW_LOAD_GAME_UI } from '../../../src/constants/eventIds.js';
 
 describeEngineSuite('GameEngine', (ctx) => {

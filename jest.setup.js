@@ -31,3 +31,6 @@ if (typeof window !== 'undefined') {
 } else {
   console.log('jest.setup.js: Non-jsdom environment detected.');
 }
+
+// Provide shared typedefs for test suites
+require('./tests/common/engine/engineTestTypedefs.js');
