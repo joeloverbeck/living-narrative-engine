@@ -1,6 +1,6 @@
 /**
  * @file Test environment factory for GameEngine-related tests.
- * @see tests/common/engine/gameEngine.test-environment.js
+ * @see tests/common/engine/gameEngineEnvironment.js
  */
 
 import { jest } from '@jest/globals';
@@ -16,6 +16,7 @@ import {
   createMockInitializationService,
 } from '../mockFactories';
 import { createServiceTestEnvironment } from '../mockEnvironment.js';
+
 const factoryMap = {
   logger: createMockLogger,
   entityManager: createMockEntityManager,
@@ -56,7 +57,7 @@ const tokenMap = {
  * }}
  *   Test environment utilities and mocks.
  */
-export function createTestEnvironment(overrides = {}) {
+export function createEnvironment(overrides = {}) {
   const env = createServiceTestEnvironment(
     factoryMap,
     tokenMap,

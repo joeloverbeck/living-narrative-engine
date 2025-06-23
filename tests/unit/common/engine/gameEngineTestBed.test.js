@@ -10,10 +10,34 @@ import {
   describeEngineSuite,
   describeInitializedEngineSuite,
 } from '../../../common/engine/gameEngineTestBed.js';
+import { createEnvironment } from '../../../common/engine/gameEngineEnvironment.js';
 import GameEngine from '../../../../src/engine/gameEngine.js';
 import { tokens } from '../../../../src/dependencyInjection/tokens.js';
 
 jest.mock('../../../../src/engine/gameEngine.js');
+
+describe('createEnvironment', () => {
+  let engine;
+
+  beforeEach(() => {
+    engine = {};
+    GameEngine.mockImplementation(() => engine);
+  });
+
+  it('returns engine instance and mocks', () => {
+    const env = createEnvironment();
+    expect(env.instance).toBe(engine);
+    expect(env.mockContainer.resolve(tokens.ILogger)).toBe(env.mocks.logger);
+    env.cleanup();
+  });
+
+  it('applies token overrides', () => {
+    const custom = {};
+    const env = createEnvironment({ [tokens.PlaytimeTracker]: custom });
+    expect(env.mockContainer.resolve(tokens.PlaytimeTracker)).toBe(custom);
+    env.cleanup();
+  });
+});
 
 describe('GameEngine Test Helpers: GameEngineTestBed', () => {
   let testBed;
