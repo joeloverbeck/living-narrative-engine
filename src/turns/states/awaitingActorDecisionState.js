@@ -65,29 +65,34 @@ export class AwaitingActorDecisionState extends AbstractTurnState {
     }
     return /** @type {AwaitingActorDecisionStateContext} */ (ctx);
   }
+
   /**
-   * @override
+   * @description Validates and retrieves the actor and strategy from the context.
+   * @private
+   * @param {AwaitingActorDecisionStateContext} turnContext - The current turn context.
+   * @returns {Promise<{actor: Entity, strategy: import('../interfaces/IActorTurnStrategy.js').IActorTurnStrategy}|null>} The actor and strategy if valid, otherwise `null`.
    */
-  async enterState(handler, previousState) {
-    await super.enterState(handler, previousState);
-
-    const turnContext = await this._ensureContext(
-      `critical-no-context-${this.getStateName()}`
-    );
-    if (!turnContext) return;
-
-    const logger = turnContext.getLogger();
-
-    let actor;
-    let strategy;
+  async _getValidatedActorAndStrategy(turnContext) {
     try {
-      actor = this.validateActor(turnContext);
-      strategy = this.retrieveStrategy(turnContext, actor);
+      const actor = this.validateActor(turnContext);
+      const strategy = this.retrieveStrategy(turnContext, actor);
+      return { actor, strategy };
     } catch (validationError) {
       await turnContext.endTurn(validationError);
-      return;
+      return null;
     }
+  }
 
+  /**
+   * @description Handles strategy decision and state transition logic.
+   * @private
+   * @param {AwaitingActorDecisionStateContext} turnContext - Current turn context.
+   * @param {Entity} actor - Actor making the decision.
+   * @param {import('../interfaces/IActorTurnStrategy.js').IActorTurnStrategy} strategy - Strategy used for decision making.
+   * @returns {Promise<void>} Resolves when handling completes.
+   */
+  async _handleActionDecision(turnContext, actor, strategy) {
+    const logger = turnContext.getLogger();
     try {
       const { action, extractedData } = await this._decideAction(
         strategy,
@@ -128,6 +133,23 @@ export class AwaitingActorDecisionState extends AbstractTurnState {
         await turnContext.endTurn(new Error(errMsg, { cause: error }));
       }
     }
+  }
+  /**
+   * @override
+   */
+  async enterState(handler, previousState) {
+    await super.enterState(handler, previousState);
+
+    const turnContext = await this._ensureContext(
+      `critical-no-context-${this.getStateName()}`
+    );
+    if (!turnContext) return;
+
+    const validated = await this._getValidatedActorAndStrategy(turnContext);
+    if (!validated) return;
+
+    const { actor, strategy } = validated;
+    await this._handleActionDecision(turnContext, actor, strategy);
   }
 
   /**
