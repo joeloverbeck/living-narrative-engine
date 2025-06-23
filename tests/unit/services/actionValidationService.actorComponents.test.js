@@ -614,9 +614,7 @@ describe('ActionValidationService: Orchestration Logic', () => {
     const step1 = jest
       .spyOn(actionValidationService, '_validateDomainAndContext')
       .mockReturnValue(true);
-    const step2 = jest
-      .spyOn(actionValidationService, '_ensureTargetExists')
-      .mockReturnValue(true);
+    const step2 = jest.spyOn(actionValidationService, 'warnIfTargetMissing');
     const step3 = jest
       .spyOn(actionValidationService, '_validatePrerequisites')
       .mockReturnValue(true);
