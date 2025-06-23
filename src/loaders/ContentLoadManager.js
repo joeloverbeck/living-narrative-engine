@@ -20,17 +20,26 @@ export class ContentLoadManager {
   #logger;
   #validatedEventDispatcher;
   #contentLoadersConfig;
+  #aggregatorFactory;
 
   /**
    * @param {object} deps - Constructor dependencies.
    * @param {ILogger} deps.logger - Logging service.
    * @param {ValidatedEventDispatcher} deps.validatedEventDispatcher - Event dispatcher.
    * @param {Array<LoaderConfigEntry>} deps.contentLoadersConfig - Loader configuration.
+   * @param {(counts: TotalResultsSummary) => LoadResultAggregator} [deps.aggregatorFactory] -
+   * Factory for creating {@link LoadResultAggregator} instances.
    */
-  constructor({ logger, validatedEventDispatcher, contentLoadersConfig }) {
+  constructor({
+    logger,
+    validatedEventDispatcher,
+    contentLoadersConfig,
+    aggregatorFactory = (counts) => new LoadResultAggregator(counts),
+  }) {
     this.#logger = logger;
     this.#validatedEventDispatcher = validatedEventDispatcher;
     this.#contentLoadersConfig = contentLoadersConfig;
+    this.#aggregatorFactory = aggregatorFactory;
   }
 
   /**
@@ -166,7 +175,7 @@ export class ContentLoadManager {
     this.#logger.debug(
       `--- Loading content for mod: ${modId}, phase: ${phase} ---`
     );
-    const aggregator = new LoadResultAggregator(totalCounts);
+    const aggregator = this.#aggregatorFactory(totalCounts);
     let modDurationMs = 0;
     /** @type {'success' | 'skipped' | 'failed'} */
     let status = 'success'; // Assume success unless a loader fails or mod is skipped

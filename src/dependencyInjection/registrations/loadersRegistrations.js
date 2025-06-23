@@ -77,6 +77,7 @@ import SummaryPhase from '../../loaders/phases/summaryPhase.js';
 import ModManifestProcessor from '../../loaders/ModManifestProcessor.js';
 import ContentLoadManager from '../../loaders/ContentLoadManager.js';
 import WorldLoadSummaryLogger from '../../loaders/WorldLoadSummaryLogger.js';
+import LoadResultAggregator from '../../loaders/LoadResultAggregator.js';
 
 // --- DI & Helper Imports ---
 import { tokens } from '../tokens.js';
@@ -159,7 +160,7 @@ export function registerLoaders(container) {
   registerLoader(tokens.EntityInstanceLoader, EntityInstanceLoader);
   registerLoader(tokens.WorldLoader, WorldLoader);
   registerLoader(tokens.GoalLoader, GoalLoader);
-  
+
   // Register ScopeLoader with TextDataFetcher instead of regular IDataFetcher
   registrar.singletonFactory(
     tokens.ScopeLoader,
@@ -173,7 +174,7 @@ export function registerLoaders(container) {
         c.resolve(tokens.ILogger)
       )
   );
-  
+
   registerLoader(tokens.ModManifestLoader, ModManifestLoader);
 
   registrar.singletonFactory(
@@ -302,6 +303,7 @@ export function registerLoaders(container) {
             phase: 'instances',
           },
         ],
+        aggregatorFactory: (counts) => new LoadResultAggregator(counts),
       })
   );
 
