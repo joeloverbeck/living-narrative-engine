@@ -12,7 +12,7 @@
 /** @typedef {import('../defs.js').ExecutionContext} ExecutionContext */
 /** @typedef {import('./modifyComponentHandler.js').EntityRefObject} EntityRefObject */ // Reuse definition
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
-import { SYSTEM_ERROR_OCCURRED_ID } from '../../constants/eventIds.js';
+import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 import ComponentOperationHandler from './componentOperationHandler.js';
 import { assertParamsObject } from '../../utils/handlerUtils/paramsUtils.js';
 
@@ -103,14 +103,16 @@ class AddComponentHandler extends ComponentOperationHandler {
       );
     } catch (e) {
       const msg = `ADD_COMPONENT: Failed to add component "${trimmedComponentType}" to entity "${entityId}". Error: ${e.message}`;
-      this.#dispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
-        message: msg,
-        details: {
+      safeDispatchError(
+        this.#dispatcher,
+        msg,
+        {
           raw: e.message,
           stack: e.stack,
           timestamp: new Date().toISOString(),
         },
-      });
+        log
+      );
     }
   }
 
