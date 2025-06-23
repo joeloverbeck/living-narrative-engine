@@ -5,7 +5,7 @@
 /* eslint-env jest */
 /* global beforeEach, afterEach, describe */
 
-import { createTestEnvironment } from './gameEngine.test-environment.js';
+import { createEnvironment } from './gameEngineEnvironment.js';
 import ContainerTestBed from '../containerTestBed.js';
 import { createStoppableMixin } from '../stoppableTestBedMixin.js';
 import { suppressConsoleError } from '../jestHelpers.js';
@@ -21,7 +21,7 @@ import { DEFAULT_TEST_WORLD } from '../constants.js';
 const StoppableMixin = createStoppableMixin('engine');
 
 export class GameEngineTestBed extends StoppableMixin(ContainerTestBed) {
-  /** @type {ReturnType<typeof createTestEnvironment>} */
+  /** @type {ReturnType<typeof createEnvironment>} */
   env;
   /** @type {import('../../../src/engine/gameEngine.js').default} */
   engine;
@@ -42,7 +42,7 @@ export class GameEngineTestBed extends StoppableMixin(ContainerTestBed) {
    * @param {{[token: string]: any}} [overrides]
    */
   constructor(overrides = {}) {
-    const env = createTestEnvironment(overrides);
+    const env = createEnvironment(overrides);
     super(env.mockContainer, {
       logger: env.mocks.logger,
       entityManager: env.mocks.entityManager,
