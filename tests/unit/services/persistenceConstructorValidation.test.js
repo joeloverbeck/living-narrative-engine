@@ -5,6 +5,7 @@ import SaveLoadService from '../../../src/persistence/saveLoadService.js';
 import SaveFileRepository from '../../../src/persistence/saveFileRepository.js';
 import GameStateRestorer from '../../../src/persistence/gameStateRestorer.js';
 import GamePersistenceService from '../../../src/persistence/gamePersistenceService.js';
+import SaveFileParser from '../../../src/persistence/saveFileParser.js';
 import { BaseService } from '../../../src/utils/serviceBase.js';
 import {
   createMockLogger,
@@ -103,5 +104,29 @@ describe('Persistence service constructor validation', () => {
       gameStateRestorer: { restoreGameState: jest.fn() },
     });
     expect(service).toBeInstanceOf(BaseService);
+  });
+
+  it('SaveFileParser extends BaseService', () => {
+    const parser = new SaveFileParser({
+      logger: createMockLogger(),
+      storageProvider: { readFile: jest.fn() },
+      serializer: {},
+    });
+    expect(parser).toBeInstanceOf(BaseService);
+  });
+
+  it('SaveFileRepository extends BaseService', () => {
+    const logger = createMockLogger();
+    const storageProvider = {
+      writeFileAtomically: jest.fn(),
+      listFiles: jest.fn(),
+      readFile: jest.fn(),
+      deleteFile: jest.fn(),
+      fileExists: jest.fn(),
+      ensureDirectoryExists: jest.fn(),
+    };
+    const parser = new SaveFileParser({ logger, storageProvider, serializer });
+    const repo = new SaveFileRepository({ logger, storageProvider, parser });
+    expect(repo).toBeInstanceOf(BaseService);
   });
 });
