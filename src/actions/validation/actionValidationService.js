@@ -8,7 +8,6 @@
 /** @typedef {import('./prerequisiteEvaluationService.js').PrerequisiteEvaluationService} PrerequisiteEvaluationService */
 
 /** @typedef {import('../../models/actionTargetContext.js').ActionTargetContext} ActionTargetContext */
-import { PrerequisiteEvaluationService } from './prerequisiteEvaluationService.js';
 import { BaseService } from '../../utils/serviceBase.js';
 import { validateActionInputs } from './inputValidators.js';
 import {
