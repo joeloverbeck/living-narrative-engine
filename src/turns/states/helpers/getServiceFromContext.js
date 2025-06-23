@@ -13,6 +13,21 @@ import { getLogger, getSafeEventDispatcher } from './contextUtils.js';
 import { finishProcessing } from './processingErrorUtils.js';
 
 /**
+ * @class ServiceLookupError
+ * @augments Error
+ * @description Error thrown when a service cannot be retrieved from the turn context.
+ */
+export class ServiceLookupError extends Error {
+  /**
+   * @param {string} message - Error message describing the lookup failure.
+   */
+  constructor(message) {
+    super(message);
+    this.name = 'ServiceLookupError';
+  }
+}
+
+/**
  * Safely obtains a service from the turn context.
  *
  * @param {ProcessingCommandStateLike} state - Owning state instance.
@@ -20,7 +35,8 @@ import { finishProcessing } from './processingErrorUtils.js';
  * @param {string} contextMethod - Method name on ITurnContext used to retrieve the service.
  * @param {string} serviceLabel - Label for logging when retrieval fails.
  * @param {string} actorIdForLog - Actor ID for logging context.
- * @returns {Promise<*>} The requested service instance or `null` if unavailable.
+ * @returns {Promise<*>} The requested service instance.
+ * @throws {ServiceLookupError} When the service cannot be retrieved.
  */
 export async function getServiceFromContext(
   state,
@@ -51,7 +67,7 @@ export async function getServiceFromContext(
     if (state._isProcessing) {
       finishProcessing(state);
     }
-    return null;
+    throw new ServiceLookupError(errorMsg);
   }
   try {
     if (typeof turnCtx[contextMethod] !== 'function') {
@@ -86,7 +102,7 @@ export async function getServiceFromContext(
     const serviceError = new Error(errorMsg);
     const exceptionHandler = new ProcessingExceptionHandler(state);
     await exceptionHandler.handle(turnCtx, serviceError, actorIdForLog);
-    return null;
+    throw new ServiceLookupError(errorMsg);
   }
 }
 
