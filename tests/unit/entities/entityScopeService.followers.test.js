@@ -100,7 +100,7 @@ describe('entityScopeService - "followers" scope', () => {
       location: undefined,
     };
 
-    const result = getEntityIdsForScopes('followers', context, mockScopeRegistryInstance, mockLogger);
+    const result = getEntityIdsForScopes('followers', context, mockScopeRegistryInstance, mockLogger, mockScopeEngine);
 
     expect(result).toEqual(expectedIds);
     expect(mockScopeRegistryInstance.getScope).toHaveBeenCalledWith(
@@ -131,7 +131,7 @@ describe('entityScopeService - "followers" scope', () => {
       entityManager: mockEntityManager,
     };
 
-    const result = getEntityIdsForScopes('followers', context, mockScopeRegistryInstance, mockLogger);
+    const result = getEntityIdsForScopes('followers', context, mockScopeRegistryInstance, mockLogger, mockScopeEngine);
 
     expect(result).toEqual(new Set());
     expect(mockLogger.warn).toHaveBeenCalledWith(
@@ -148,7 +148,7 @@ describe('entityScopeService - "followers" scope', () => {
       entityManager: mockEntityManager,
     };
 
-    const result = getEntityIdsForScopes('followers', context, mockScopeRegistryInstance, mockLogger);
+    const result = getEntityIdsForScopes('followers', context, mockScopeRegistryInstance, mockLogger, mockScopeEngine);
 
     expect(result).toEqual(new Set());
     expect(mockLogger.error).toHaveBeenCalledWith(
@@ -170,7 +170,7 @@ describe('entityScopeService - "followers" scope', () => {
       entityManager: mockEntityManager,
     };
 
-    const result = getEntityIdsForScopes('followers', context, mockScopeRegistryInstance, mockLogger);
+    const result = getEntityIdsForScopes('followers', context, mockScopeRegistryInstance, mockLogger, mockScopeEngine);
 
     expect(result).toEqual(new Set());
     expect(mockLogger.error).toHaveBeenCalledWith(
@@ -197,7 +197,7 @@ describe('entityScopeService - "followers" scope', () => {
       jsonLogicEval: {},
     };
 
-    const result = getEntityIdsForScopes('followers', context, mockScopeRegistryInstance, mockLogger);
+    const result = getEntityIdsForScopes('followers', context, mockScopeRegistryInstance, mockLogger, mockScopeEngine);
 
     expect(result).toEqual(new Set());
     expect(mockLogger.error).toHaveBeenCalledWith(
@@ -231,7 +231,8 @@ describe('entityScopeService - "followers" scope', () => {
       ['followers', 'inventory'],
       context,
       mockScopeRegistryInstance,
-      mockLogger
+      mockLogger,
+      mockScopeEngine
     );
 
     expect(result).toEqual(new Set(['npc:1', 'npc:2', 'item:sword']));

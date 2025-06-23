@@ -5,6 +5,7 @@
 
 import ScopeDepthError from '../errors/scopeDepthError.js';
 import ScopeCycleError from '../errors/scopeCycleError.js';
+import { IScopeEngine } from '../interfaces/IScopeEngine.js';
 
 /**
  * @typedef {object} RuntimeContext
@@ -29,9 +30,11 @@ import ScopeCycleError from '../errors/scopeCycleError.js';
 
 /**
  * Scope-DSL Engine that resolves AST expressions to sets of entity IDs
+ * @implements {IScopeEngine}
  */
-class ScopeEngine {
+class ScopeEngine extends IScopeEngine {
   constructor() {
+    super(); // Call parent constructor
     this.maxDepth = 4;
   }
 

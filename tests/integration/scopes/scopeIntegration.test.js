@@ -64,6 +64,7 @@ describe('Scope Integration Tests', () => {
   let gameDataRepository;
   let actionValidationService;
   let safeEventDispatcher;
+  let getEntityIdsForScopesWithEngine;
 
   beforeEach(() => {
     logger = console; // Using console for visibility during testing
@@ -133,6 +134,11 @@ describe('Scope Integration Tests', () => {
       logger,
     });
 
+    // Create a wrapper function that includes the scopeEngine for integration testing
+    getEntityIdsForScopesWithEngine = (scopes, context, scopeRegistry, logger) => {
+      return getEntityIdsForScopes(scopes, context, scopeRegistry, logger, scopeEngine);
+    };
+
     // Create the ActionDiscoveryService with real dependencies
     actionDiscoveryService = new ActionDiscoveryService({
       gameDataRepository,
@@ -140,7 +146,7 @@ describe('Scope Integration Tests', () => {
       actionValidationService,
       logger,
       formatActionCommandFn: formatActionCommand,
-      getEntityIdsForScopesFn: getEntityIdsForScopes,
+      getEntityIdsForScopesFn: getEntityIdsForScopesWithEngine,
       safeEventDispatcher,
       scopeRegistry,
     });
@@ -204,7 +210,7 @@ describe('Scope Integration Tests', () => {
         actionValidationService,
         logger,
         formatActionCommandFn: formatActionCommand,
-        getEntityIdsForScopesFn: getEntityIdsForScopes,
+        getEntityIdsForScopesFn: getEntityIdsForScopesWithEngine,
         safeEventDispatcher,
         scopeRegistry,
       });
@@ -262,7 +268,7 @@ describe('Scope Integration Tests', () => {
         actionValidationService,
         logger,
         formatActionCommandFn: formatActionCommand,
-        getEntityIdsForScopesFn: getEntityIdsForScopes,
+        getEntityIdsForScopesFn: getEntityIdsForScopesWithEngine,
         safeEventDispatcher,
         scopeRegistry,
       });
@@ -340,7 +346,7 @@ describe('Scope Integration Tests', () => {
         actionValidationService,
         logger,
         formatActionCommandFn: formatActionCommand,
-        getEntityIdsForScopesFn: getEntityIdsForScopes,
+        getEntityIdsForScopesFn: getEntityIdsForScopesWithEngine,
         safeEventDispatcher,
         scopeRegistry,
       });
@@ -406,7 +412,7 @@ describe('Scope Integration Tests', () => {
         actionValidationService,
         logger,
         formatActionCommandFn: formatActionCommand,
-        getEntityIdsForScopesFn: getEntityIdsForScopes,
+        getEntityIdsForScopesFn: getEntityIdsForScopesWithEngine,
         safeEventDispatcher,
         scopeRegistry,
       });
@@ -468,7 +474,7 @@ describe('Scope Integration Tests', () => {
         actionValidationService,
         logger,
         formatActionCommandFn: formatActionCommand,
-        getEntityIdsForScopesFn: getEntityIdsForScopes,
+        getEntityIdsForScopesFn: getEntityIdsForScopesWithEngine,
         safeEventDispatcher,
         scopeRegistry,
       });
@@ -545,7 +551,7 @@ describe('Scope Integration Tests', () => {
         actionValidationService,
         logger,
         formatActionCommandFn: formatActionCommand,
-        getEntityIdsForScopesFn: getEntityIdsForScopes,
+        getEntityIdsForScopesFn: getEntityIdsForScopesWithEngine,
         safeEventDispatcher,
         scopeRegistry,
       });
@@ -604,7 +610,7 @@ describe('Scope Integration Tests', () => {
         actionValidationService,
         logger,
         formatActionCommandFn: formatActionCommand,
-        getEntityIdsForScopesFn: getEntityIdsForScopes,
+        getEntityIdsForScopesFn: getEntityIdsForScopesWithEngine,
         safeEventDispatcher,
         scopeRegistry,
       });
@@ -661,7 +667,7 @@ describe('Scope Integration Tests', () => {
         actionValidationService,
         logger,
         formatActionCommandFn: formatActionCommand,
-        getEntityIdsForScopesFn: getEntityIdsForScopes,
+        getEntityIdsForScopesFn: getEntityIdsForScopesWithEngine,
         safeEventDispatcher,
         scopeRegistry,
       });
@@ -707,7 +713,7 @@ describe('Scope Integration Tests', () => {
         actionValidationService,
         logger,
         formatActionCommandFn: formatActionCommand,
-        getEntityIdsForScopesFn: getEntityIdsForScopes,
+        getEntityIdsForScopesFn: getEntityIdsForScopesWithEngine,
         safeEventDispatcher,
         scopeRegistry,
       });
