@@ -15,6 +15,83 @@
  *
  * @implements {IDocumentContext}
  */
+/**
+ * Determines the most appropriate Document context to use based on a provided
+ * root element or the global environment.
+ *
+ * @description Detects a usable `Document` object by inspecting the supplied
+ * root value and the current global environment. Falls back to the global
+ * document when available. Logs an error if no valid context can be found.
+ * @param {HTMLElement | Document | null | undefined} [root] - Optional root
+ * element or document.
+ * @returns {Document | null} The detected document context or `null` if none is
+ * available.
+ */
+export function detectDocumentContext(root) {
+  let detected = null;
+  let contextFound = false;
+
+  const CurrentEnvDocument =
+    typeof globalThis !== 'undefined' && globalThis.Document
+      ? globalThis.Document
+      : typeof Document !== 'undefined'
+        ? Document
+        : undefined;
+
+  const CurrentEnvHTMLElement =
+    typeof globalThis !== 'undefined' && globalThis.HTMLElement
+      ? globalThis.HTMLElement
+      : typeof HTMLElement !== 'undefined'
+        ? HTMLElement
+        : undefined;
+
+  if (root) {
+    if (CurrentEnvDocument && root instanceof CurrentEnvDocument) {
+      detected = root;
+      contextFound = true;
+    } else if (
+      typeof root.querySelector === 'function' &&
+      typeof root.createElement === 'function'
+    ) {
+      detected = /** @type {Document} */ (root);
+      contextFound = true;
+    }
+  }
+
+  if (
+    !contextFound &&
+    CurrentEnvHTMLElement &&
+    root instanceof CurrentEnvHTMLElement &&
+    root.ownerDocument
+  ) {
+    detected = root.ownerDocument;
+    contextFound = true;
+  }
+
+  if (
+    !contextFound &&
+    typeof globalThis !== 'undefined' &&
+    typeof globalThis.document !== 'undefined'
+  ) {
+    if (
+      globalThis.document.querySelector &&
+      globalThis.document.createElement
+    ) {
+      detected = globalThis.document;
+      contextFound = true;
+    }
+  }
+
+  if (!contextFound) {
+    detected = null;
+    console.error(
+      '[DocumentContext] Construction failed: Could not determine a valid document context. Ensure a valid document object is passed or available globally when DocumentContext is instantiated.'
+    );
+  }
+
+  return detected;
+}
+
 class DocumentContext {
   /**
    * The document object (either global or from root's ownerDocument) used for DOM operations.
@@ -34,80 +111,7 @@ class DocumentContext {
    * If it's a valid HTMLElement, its ownerDocument will be used. Otherwise, it falls back to the global `document`.
    */
   constructor(root) {
-    let contextFound = false;
-
-    // Define the relevant constructors for the current environment dynamically AT INSTANTIATION TIME.
-    // This avoids issues with stale constructors captured at module load time in test environments.
-    const CurrentEnvDocument =
-      typeof globalThis !== 'undefined' && globalThis.Document
-        ? globalThis.Document
-        : typeof Document !== 'undefined'
-          ? Document
-          : undefined;
-
-    const CurrentEnvHTMLElement =
-      typeof globalThis !== 'undefined' && globalThis.HTMLElement
-        ? globalThis.HTMLElement
-        : typeof HTMLElement !== 'undefined'
-          ? HTMLElement
-          : undefined;
-
-    // 1. Check if the provided 'root' argument is itself a Document object (or behaves like one)
-    if (root) {
-      // Ensure root is not null/undefined before checks
-      if (CurrentEnvDocument && root instanceof CurrentEnvDocument) {
-        this.#docContext = root;
-        contextFound = true;
-      } else if (
-        typeof root.querySelector === 'function' &&
-        typeof root.createElement === 'function'
-      ) {
-        // Fallback check if 'root' quacks like a document, even if instanceof fails
-        // (can happen in some complex module/realm scenarios or if root is a proxy)
-        // This was the key to TestSpecificDocumentContext working.
-        this.#docContext = /** @type {Document} */ (root); // Cast if necessary, assuming it's document-like
-        contextFound = true;
-        if (!(CurrentEnvDocument && root instanceof CurrentEnvDocument)) {
-          // Log if instanceof failed but we're using it anyway based on duck-typing.
-          // console.warn('[DocumentContext] Constructor: Used `root` argument based on duck-typing as `instanceof Document` check failed. This might be unexpected.', { rootConstructorName: root.constructor?.name });
-        }
-      }
-    }
-
-    // 2. Try using the root element's ownerDocument if root is a valid HTMLElement and context not yet found
-    if (
-      !contextFound &&
-      CurrentEnvHTMLElement &&
-      root instanceof CurrentEnvHTMLElement &&
-      root.ownerDocument
-    ) {
-      this.#docContext = root.ownerDocument;
-      contextFound = true;
-    }
-
-    // 3. If no context yet from `root`, explicitly try using the global document
-    if (
-      !contextFound &&
-      typeof globalThis !== 'undefined' &&
-      typeof globalThis.document !== 'undefined'
-    ) {
-      // Ensure the global document itself is usable
-      if (
-        globalThis.document.querySelector &&
-        globalThis.document.createElement
-      ) {
-        this.#docContext = globalThis.document;
-        contextFound = true;
-      }
-    }
-
-    // 4. Set to null and log error if no valid context could be determined
-    if (!contextFound) {
-      this.#docContext = null;
-      console.error(
-        '[DocumentContext] Construction failed: Could not determine a valid document context. Ensure a valid document object is passed or available globally when DocumentContext is instantiated.'
-      );
-    }
+    this.#docContext = detectDocumentContext(root);
   }
 
   /**
