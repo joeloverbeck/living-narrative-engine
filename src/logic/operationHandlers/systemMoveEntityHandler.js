@@ -17,6 +17,8 @@ import { assertParamsObject } from '../../utils/handlerUtils/indexUtils.js';
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 import BaseOperationHandler from './baseOperationHandler.js';
 
+const OPERATION_ID = 'SYSTEM_MOVE_ENTITY';
+
 class SystemMoveEntityHandler extends BaseOperationHandler {
   /** @type {ILogger} */ #logger;
   /** @type {EntityManager} */ #entityManager;
@@ -40,6 +42,76 @@ class SystemMoveEntityHandler extends BaseOperationHandler {
   }
 
   /**
+   * Update the position component for an entity.
+   *
+   * @private
+   * @param {string} entityId - The entity to move.
+   * @param {string} targetId - Destination location ID.
+   * @param {ILogger} logger - Logger for diagnostic output.
+   * @returns {string|null} Previous location ID if moved, otherwise null.
+   */
+  #moveEntity(entityId, targetId, logger) {
+    const positionComponent = this.#entityManager.getComponentData(
+      entityId,
+      'core:position'
+    );
+    if (!positionComponent) {
+      logger.warn(
+        `${OPERATION_ID}: Entity "${entityId}" has no 'core:position' component. Cannot move.`
+      );
+      return null;
+    }
+
+    const fromLocationId = positionComponent.locationId;
+    if (fromLocationId === targetId) {
+      logger.debug(
+        `${OPERATION_ID}: Entity "${entityId}" is already in location "${targetId}". No move needed.`
+      );
+      return null;
+    }
+
+    const success = this.#entityManager.addComponent(
+      entityId,
+      'core:position',
+      {
+        locationId: targetId,
+      }
+    );
+
+    if (!success) {
+      logger.warn(
+        `${OPERATION_ID}: EntityManager reported failure for addComponent on entity "${entityId}".`
+      );
+      return null;
+    }
+
+    logger.debug(
+      `${OPERATION_ID}: Moved entity "${entityId}" from "${fromLocationId}" to "${targetId}".`
+    );
+    return fromLocationId;
+  }
+
+  /**
+   * Emit the core:entity_moved event.
+   *
+   * @private
+   * @param {string} entityId - The moved entity.
+   * @param {string} fromId - Previous location ID.
+   * @param {string} targetId - New location ID.
+   * @returns {Promise<void>} Resolves when dispatch completes.
+   */
+  async #emitMovedEvent(entityId, fromId, targetId) {
+    await this.#dispatcher.dispatch('core:entity_moved', {
+      eventName: 'core:entity_moved',
+      entityId,
+      previousLocationId: fromId,
+      currentLocationId: targetId,
+      direction: 'teleport',
+      originalCommand: 'system:follow',
+    });
+  }
+
+  /**
    * Resolves entity_ref -> entityId or null.
    *
    * @private
@@ -58,9 +130,8 @@ class SystemMoveEntityHandler extends BaseOperationHandler {
    */
   async execute(params, executionContext) {
     const log = executionContext?.logger ?? this.#logger;
-    const operationName = 'SYSTEM_MOVE_ENTITY'; // Use a constant for the name
 
-    if (!assertParamsObject(params, log, operationName)) return;
+    if (!assertParamsObject(params, log, OPERATION_ID)) return;
 
     // 1. Validate parameters
     const { entity_ref, target_location_id } = params;
@@ -72,7 +143,7 @@ class SystemMoveEntityHandler extends BaseOperationHandler {
       !target_location_id
     ) {
       log.warn(
-        `${operationName}: "entity_ref" and "target_location_id" are required.`
+        `${OPERATION_ID}: "entity_ref" and "target_location_id" are required.`
       );
       return;
     }
@@ -80,69 +151,26 @@ class SystemMoveEntityHandler extends BaseOperationHandler {
     // 2. Resolve the entity ID
     const entityId = resolveEntityId(entity_ref, executionContext);
     if (!entityId) {
-      log.warn(`${operationName}: Could not resolve entity_ref.`, {
+      log.warn(`${OPERATION_ID}: Could not resolve entity_ref.`, {
         entity_ref,
       });
       return;
     }
 
-    // 3. Perform the move using EntityManager
     let fromLocationId = null;
-
     try {
-      const positionComponent = this.#entityManager.getComponentData(
-        entityId,
-        'core:position'
-      );
-      if (!positionComponent) {
-        log.warn(
-          `${operationName}: Entity "${entityId}" has no 'core:position' component. Cannot move.`
+      fromLocationId = this.#moveEntity(entityId, target_location_id, log);
+      if (fromLocationId) {
+        await this.#emitMovedEvent(
+          entityId,
+          fromLocationId,
+          target_location_id
         );
-        return;
       }
-
-      fromLocationId = positionComponent.locationId;
-
-      // Prevent moving if already there
-      if (fromLocationId === target_location_id) {
-        log.debug(
-          `${operationName}: Entity "${entityId}" is already in location "${target_location_id}". No move needed.`
-        );
-        return;
-      }
-
-      // **CORRECTED**: Use EntityManager.addComponent to update the component.
-      // This correctly handles overwriting the component and updating the spatial index.
-      const success = this.#entityManager.addComponent(
-        entityId,
-        'core:position',
-        { locationId: target_location_id }
-      );
-
-      if (!success) {
-        log.warn(
-          `${operationName}: EntityManager reported failure for addComponent on entity "${entityId}".`
-        );
-        return;
-      }
-
-      log.debug(
-        `${operationName}: Moved entity "${entityId}" from "${fromLocationId}" to "${target_location_id}".`
-      );
-
-      // 4. **Dispatch core:entity_moved with a compliant payload**
-      await this.#dispatcher.dispatch('core:entity_moved', {
-        eventName: 'core:entity_moved',
-        entityId: entityId,
-        previousLocationId: fromLocationId,
-        currentLocationId: target_location_id,
-        direction: 'teleport', // A sensible default for non-directional moves
-        originalCommand: 'system:follow', // A sensible default for system-initiated actions
-      });
     } catch (e) {
       safeDispatchError(
         this.#dispatcher,
-        `${operationName}: Failed to move entity "${entityId}". Error: ${e.message}`,
+        `${OPERATION_ID}: Failed to move entity "${entityId}". Error: ${e.message}`,
         {
           error: e.message,
           stack: e.stack,
