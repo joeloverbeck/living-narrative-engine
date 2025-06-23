@@ -4,6 +4,7 @@ import { tokens } from '../../../src/dependencyInjection/tokens.js';
 import { describeEngineSuite } from '../../common/engine/gameEngineTestBed.js';
 import { runUnavailableServiceSuite } from '../../common/engine/gameEngineHelpers.js';
 import { expectShowLoadGameUIDispatch } from '../../common/engine/dispatchTestUtils.js';
+import { GAME_PERSISTENCE_LOAD_UI_UNAVAILABLE } from '../../common/engine/unavailableMessages.js';
 
 describeEngineSuite('GameEngine', (ctx) => {
   describe('showLoadGameUI', () => {
@@ -17,12 +18,7 @@ describeEngineSuite('GameEngine', (ctx) => {
     });
 
     runUnavailableServiceSuite(
-      [
-        [
-          tokens.GamePersistenceService,
-          'GameEngine.showLoadGameUI: GamePersistenceService is unavailable. Cannot show Load Game UI.',
-        ],
-      ],
+      [[tokens.GamePersistenceService, GAME_PERSISTENCE_LOAD_UI_UNAVAILABLE]],
       (bed, engine) => {
         engine.showLoadGameUI();
         return [bed.mocks.logger.error, bed.mocks.safeEventDispatcher.dispatch];

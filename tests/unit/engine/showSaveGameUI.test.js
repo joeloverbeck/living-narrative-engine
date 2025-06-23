@@ -6,6 +6,7 @@ import { runUnavailableServiceSuite } from '../../common/engine/gameEngineHelper
 import { CANNOT_SAVE_GAME_INFO } from '../../../src/constants/eventIds.js';
 import { expectShowSaveGameUIDispatch } from '../../common/engine/dispatchTestUtils.js';
 import { DEFAULT_TEST_WORLD } from '../../common/constants.js';
+import { GAME_PERSISTENCE_SAVE_UI_UNAVAILABLE } from '../../common/engine/unavailableMessages.js';
 
 describeInitializedEngineSuite(
   'GameEngine',
@@ -49,12 +50,7 @@ describeInitializedEngineSuite(
       });
 
       runUnavailableServiceSuite(
-        [
-          [
-            tokens.GamePersistenceService,
-            'GameEngine.showSaveGameUI: GamePersistenceService is unavailable. Cannot show Save Game UI.',
-          ],
-        ],
+        [[tokens.GamePersistenceService, GAME_PERSISTENCE_SAVE_UI_UNAVAILABLE]],
         (bed, engine) => {
           engine.showSaveGameUI();
           // eslint-disable-next-line jest/no-standalone-expect

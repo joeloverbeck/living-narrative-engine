@@ -11,6 +11,7 @@ import {
 } from '../../../common/engine/gameEngineHelpers.js';
 import { tokens } from '../../../../src/dependencyInjection/tokens.js';
 import * as bedModule from '../../../common/engine/gameEngineTestBed.js';
+import { GAME_PERSISTENCE_LOAD_UI_UNAVAILABLE } from '../../../common/engine/unavailableMessages.js';
 
 describe('withGameEngineBed', () => {
   it('creates bed, resets mocks, runs callback and cleans up', async () => {
@@ -105,10 +106,7 @@ describe('withRunningGameEngineBed', () => {
 describe('runUnavailableServiceTest', () => {
   it('generates executable test functions', async () => {
     const cases = [
-      [
-        tokens.GamePersistenceService,
-        'GameEngine.showLoadGameUI: GamePersistenceService is unavailable. Cannot show Load Game UI.',
-      ],
+      [tokens.GamePersistenceService, GAME_PERSISTENCE_LOAD_UI_UNAVAILABLE],
     ];
 
     const testCases = runUnavailableServiceTest(cases, (bed, engine) => {

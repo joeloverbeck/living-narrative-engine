@@ -15,6 +15,10 @@ import {
   DEFAULT_ACTIVE_WORLD_FOR_SAVE,
   DEFAULT_SAVE_NAME,
 } from '../../common/constants.js';
+import {
+  GAME_PERSISTENCE_TRIGGER_SAVE_UNAVAILABLE,
+  GAME_PERSISTENCE_SAVE_RESULT_UNAVAILABLE,
+} from '../../common/engine/unavailableMessages.js';
 
 describeEngineSuite('GameEngine', (ctx) => {
   describe('triggerManualSave', () => {
@@ -40,20 +44,18 @@ describeEngineSuite('GameEngine', (ctx) => {
           [
             [
               tokens.GamePersistenceService,
-              'GameEngine.triggerManualSave: GamePersistenceService is not available. Cannot save game.',
+              GAME_PERSISTENCE_TRIGGER_SAVE_UNAVAILABLE,
               { preInit: true },
             ],
           ],
           async (bed, engine) => {
             const result = await engine.triggerManualSave(SAVE_NAME);
 
-             
             expectNoDispatch(bed.mocks.safeEventDispatcher.dispatch);
             // eslint-disable-next-line jest/no-standalone-expect
             expect(result).toEqual({
               success: false,
-              error:
-                'GamePersistenceService is not available. Cannot save game.',
+              error: GAME_PERSISTENCE_SAVE_RESULT_UNAVAILABLE,
             });
             return [
               bed.mocks.logger.error,

@@ -15,6 +15,7 @@ import { tokens } from '../../../src/dependencyInjection/tokens.js';
 import { describeEngineSuite } from '../../common/engine/gameEngineTestBed.js';
 import { runUnavailableServiceSuite } from '../../common/engine/gameEngineHelpers.js';
 import { DEFAULT_SAVE_ID } from '../../common/constants.js';
+import { GAME_PERSISTENCE_LOAD_GAME_UNAVAILABLE } from '../../common/engine/unavailableMessages.js';
 
 describeEngineSuite('GameEngine', (ctx) => {
   describe('loadGame', () => {
@@ -182,14 +183,13 @@ describeEngineSuite('GameEngine', (ctx) => {
       [
         [
           tokens.GamePersistenceService,
-          'GameEngine.loadGame: GamePersistenceService is not available. Cannot load game.',
+          GAME_PERSISTENCE_LOAD_GAME_UNAVAILABLE,
           { preInit: true },
         ],
       ],
       async (bed, engine, expectedMsg) => {
         const result = await engine.loadGame(SAVE_ID);
 
-         
         expectNoDispatch(bed.mocks.safeEventDispatcher.dispatch);
         // eslint-disable-next-line jest/no-standalone-expect
         expect(result).toEqual({
