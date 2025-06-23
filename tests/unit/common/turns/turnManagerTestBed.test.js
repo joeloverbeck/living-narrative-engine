@@ -166,4 +166,20 @@ describe('TurnManager Test Helpers: TurnManagerTestBed', () => {
     expect(jest.isMockFunction(bed.turnManager.stop)).toBe(false);
     expect(jest.isMockFunction(bed.turnManager.advanceTurn)).toBe(false);
   });
+
+  it('mockActorSequence returns actors in order then null', async () => {
+    const actor1 = { id: 'a1' };
+    const actor2 = { id: 'a2' };
+    testBed.mockActorSequence(actor1, actor2);
+
+    await expect(testBed.mocks.turnOrderService.getNextEntity()).resolves.toBe(
+      actor1
+    );
+    await expect(testBed.mocks.turnOrderService.getNextEntity()).resolves.toBe(
+      actor2
+    );
+    await expect(
+      testBed.mocks.turnOrderService.getNextEntity()
+    ).resolves.toBeNull();
+  });
 });
