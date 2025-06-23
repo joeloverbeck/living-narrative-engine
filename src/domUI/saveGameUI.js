@@ -6,7 +6,10 @@ import {
   formatSaveFileMetadata,
   formatEmptySlot,
 } from './helpers/slotDataFormatter.js';
-import { renderSlotItem } from './helpers/renderSlotItem.js';
+import {
+  renderGenericSlotItem,
+  renderSlotItem,
+} from './helpers/renderSlotItem.js';
 import { buildModalElementsConfig } from './helpers/buildModalElementsConfig.js';
 import createMessageElement from './helpers/createMessageElement.js';
 
@@ -286,11 +289,12 @@ export class SaveGameUI extends SlotModalBase {
           )
         : formatSaveFileMetadata(slotData));
 
-    const slotDiv = renderSlotItem(
+    return renderGenericSlotItem(
       this.domElementFactory,
       'slotId',
       slotData.slotId,
       metadata,
+      itemIndex,
       (evt) => {
         this._onItemSelected(
           /** @type {HTMLElement} */ (evt.currentTarget),
@@ -298,10 +302,6 @@ export class SaveGameUI extends SlotModalBase {
         );
       }
     );
-    if (!slotDiv) return null;
-
-    slotDiv.setAttribute('tabindex', itemIndex === 0 ? '0' : '-1');
-    return slotDiv;
   }
 
   /**

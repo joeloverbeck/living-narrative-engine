@@ -38,7 +38,7 @@ describe('SaveGameUI', () => {
   let mockValidatedEventDispatcher;
   let mockGameEngine;
 
-  /** @type {jest.SpiedFunction<typeof renderSlotItemModule.renderSlotItem>} */
+  /** @type {jest.SpiedFunction<typeof renderSlotItemModule.renderGenericSlotItem>} */
   let renderSlotItemSpy;
 
   let mockSaveLoadService;
@@ -132,7 +132,10 @@ describe('SaveGameUI', () => {
       validatedEventDispatcher: mockValidatedEventDispatcher,
     });
     saveGameUI.init(mockGameEngine);
-    renderSlotItemSpy = jest.spyOn(renderSlotItemModule, 'renderSlotItem');
+    renderSlotItemSpy = jest.spyOn(
+      renderSlotItemModule,
+      'renderGenericSlotItem'
+    );
 
     jest.useFakeTimers();
   });

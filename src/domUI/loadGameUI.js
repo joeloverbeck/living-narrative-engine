@@ -4,7 +4,10 @@ import { SlotModalBase } from './slotModalBase.js';
 import { DomUtils } from '../utils/domUtils.js';
 import { formatSaveFileMetadata } from './helpers/slotDataFormatter.js';
 import { fetchAndFormatLoadSlots } from '../utils/loadSlotUtils.js';
-import { renderSlotItem } from './helpers/renderSlotItem.js';
+import {
+  renderGenericSlotItem,
+  renderSlotItem,
+} from './helpers/renderSlotItem.js';
 import { buildModalElementsConfig } from './helpers/buildModalElementsConfig.js';
 import createMessageElement from './helpers/createMessageElement.js';
 
@@ -252,11 +255,12 @@ class LoadGameUI extends SlotModalBase {
 
     const metadata = slotData.slotItemMeta || formatSaveFileMetadata(slotData);
 
-    const slotDiv = renderSlotItem(
+    return renderGenericSlotItem(
       this.domElementFactory,
       'slotIdentifier',
       slotData.identifier,
       metadata,
+      itemIndex,
       (evt) => {
         this._onItemSelected(
           /** @type {HTMLElement} */ (evt.currentTarget),
@@ -264,10 +268,6 @@ class LoadGameUI extends SlotModalBase {
         );
       }
     );
-    if (!slotDiv) return null;
-
-    slotDiv.setAttribute('tabindex', itemIndex === 0 ? '0' : '-1');
-    return slotDiv;
   }
 
   /**

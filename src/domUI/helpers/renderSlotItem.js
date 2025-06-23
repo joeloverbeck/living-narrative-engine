@@ -71,3 +71,35 @@ export function renderSlotItem(
 
   return slotDiv;
 }
+
+/**
+ * Wrapper that also sets tabindex and delegates to {@link renderSlotItem}.
+ *
+ * @param {DomElementFactory} domFactory - Factory used to create elements.
+ * @param {string} datasetKey - Name of the dataset property for identification.
+ * @param {string|number} datasetValue - Value for the dataset property.
+ * @param {SlotItemMetadata} metadata - Display metadata for the slot.
+ * @param {number} itemIndex - Index of the slot in its list.
+ * @param {(Event) => void} [onClick] - Optional click handler for the slot.
+ * @returns {HTMLElement | null} The constructed slot element or null on failure.
+ */
+export function renderGenericSlotItem(
+  domFactory,
+  datasetKey,
+  datasetValue,
+  metadata,
+  itemIndex,
+  onClick
+) {
+  const slotDiv = renderSlotItem(
+    domFactory,
+    datasetKey,
+    datasetValue,
+    metadata,
+    onClick
+  );
+  if (!slotDiv) return null;
+
+  slotDiv.setAttribute('tabindex', itemIndex === 0 ? '0' : '-1');
+  return slotDiv;
+}

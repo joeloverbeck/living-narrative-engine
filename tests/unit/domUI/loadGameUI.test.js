@@ -22,7 +22,7 @@ let domElementFactory;
 let mockVED;
 let mockSaveLoadService;
 let loadGameUI;
-/** @type {jest.SpiedFunction<typeof renderSlotItemModule.renderSlotItem>} */
+/** @type {jest.SpiedFunction<typeof renderSlotItemModule.renderGenericSlotItem>} */
 let renderSlotItemSpy;
 
 beforeEach(() => {
@@ -71,7 +71,7 @@ beforeEach(() => {
     saveLoadService: mockSaveLoadService,
     validatedEventDispatcher: mockVED,
   });
-  renderSlotItemSpy = jest.spyOn(renderSlotItemModule, 'renderSlotItem');
+  renderSlotItemSpy = jest.spyOn(renderSlotItemModule, 'renderGenericSlotItem');
 });
 
 afterEach(() => {
