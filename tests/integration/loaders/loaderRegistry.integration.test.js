@@ -1,7 +1,10 @@
 // Filename: src/tests/integration/loaderRegistry.integration.test.js
 
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
-import { createMockLogger } from '../../common/mockFactories.js';
+import {
+  createMockLogger,
+  createMockDataFetcher,
+} from '../../common/mockFactories.js';
 import ActionLoader from '../../../src/loaders/actionLoader.js';
 import ComponentLoader from '../../../src/loaders/componentLoader.js';
 import InMemoryDataRegistry from '../../../src/data/inMemoryDataRegistry.js';
@@ -46,22 +49,6 @@ const createMockPathResolver = (overrides = {}) => ({
   resolveGameConfigPath: jest.fn(() => './data/game.json'),
   resolveRulePath: jest.fn((filename) => `./data/system-rules/${filename}`),
   ...overrides,
-});
-
-const createMockDataFetcher = (pathToResponse = {}, errorPaths = []) => ({
-  fetch: jest.fn(async (path) => {
-    if (errorPaths.includes(path)) {
-      return Promise.reject(
-        new Error(`Mock Fetch Error: Failed to fetch ${path}`)
-      );
-    }
-    if (path in pathToResponse) {
-      return Promise.resolve(JSON.parse(JSON.stringify(pathToResponse[path])));
-    }
-    return Promise.reject(
-      new Error(`Mock Fetch Error: 404 Not Found for ${path}`)
-    );
-  }),
 });
 
 const createMockSchemaValidator = (overrides = {}) => {
@@ -210,7 +197,7 @@ describe('Integration: Loaders, Registry State, and Overrides (REFACTOR-8.6)', (
         [modBActionPath]: modBActionData,
         [modBComponentPath]: modBComponentData,
       };
-      mockFetcher = createMockDataFetcher(fetcherConfig);
+      mockFetcher = createMockDataFetcher({ pathToResponse: fetcherConfig });
       actionLoader._dataFetcher = mockFetcher;
       componentLoader._dataFetcher = mockFetcher;
     });
@@ -295,7 +282,7 @@ describe('Integration: Loaders, Registry State, and Overrides (REFACTOR-8.6)', (
         [overrideActionPathV1]: overrideActionDataV1,
         [overrideActionPathV2]: overrideActionDataV2,
       };
-      mockFetcher = createMockDataFetcher(fetcherConfig);
+      mockFetcher = createMockDataFetcher({ pathToResponse: fetcherConfig });
       actionLoader._dataFetcher = mockFetcher;
     });
 
@@ -365,7 +352,7 @@ describe('Integration: Loaders, Registry State, and Overrides (REFACTOR-8.6)', (
         [modCComponentPath]: modCComponentData,
         [modDActionPath]: modDActionData,
       };
-      mockFetcher = createMockDataFetcher(fetcherConfig);
+      mockFetcher = createMockDataFetcher({ pathToResponse: fetcherConfig });
       actionLoader._dataFetcher = mockFetcher;
       componentLoader._dataFetcher = mockFetcher;
     });
