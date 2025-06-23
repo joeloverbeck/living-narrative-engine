@@ -121,4 +121,66 @@ describe('GameDataRepository', () => {
       'GameDataRepository: listContentByMod not supported by registry'
     );
   });
+
+  describe('get', () => {
+    it('should return data from underlying registry when get method exists', () => {
+      const mockData = { scopes: { 'core:test': 'test' } };
+      registry.get.mockReturnValue(mockData);
+
+      const result = repo.get('scopes');
+
+      expect(result).toEqual(mockData);
+      expect(registry.get).toHaveBeenCalledWith('scopes');
+    });
+
+    it('should return undefined when underlying registry get method does not exist', () => {
+      delete registry.get;
+
+      const result = repo.get('scopes');
+
+      expect(result).toBeUndefined();
+      expect(logger.warn).toHaveBeenCalledWith(
+        'GameDataRepository: get method not supported by registry'
+      );
+    });
+
+    it('should return undefined and warn for invalid key types', () => {
+      const testCases = [null, undefined, '', '   ', 123, {}];
+
+      testCases.forEach((invalidKey) => {
+        jest.clearAllMocks();
+        const result = repo.get(invalidKey);
+
+        expect(result).toBeUndefined();
+        expect(logger.warn).toHaveBeenCalledWith(
+          `GameDataRepository: get called with invalid key: ${invalidKey}`
+        );
+        expect(registry.get).not.toHaveBeenCalled();
+      });
+    });
+
+    it('should handle empty strings and whitespace-only keys', () => {
+      ['', '   ', '\t', '\n'].forEach((emptyKey) => {
+        jest.clearAllMocks();
+        const result = repo.get(emptyKey);
+
+        expect(result).toBeUndefined();
+        expect(logger.warn).toHaveBeenCalledWith(
+          `GameDataRepository: get called with invalid key: ${emptyKey}`
+        );
+      });
+    });
+
+    it('should pass through registry response including null/undefined', () => {
+      [null, undefined, {}, [], 'test'].forEach((registryResponse) => {
+        jest.clearAllMocks();
+        registry.get.mockReturnValue(registryResponse);
+
+        const result = repo.get('valid-key');
+
+        expect(result).toBe(registryResponse);
+        expect(registry.get).toHaveBeenCalledWith('valid-key');
+      });
+    });
+  });
 });

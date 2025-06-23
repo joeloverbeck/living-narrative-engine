@@ -47,7 +47,6 @@
       "labels.json"
     ],
     "scopes": [
-      "test.scope"
     ]
   }
 }

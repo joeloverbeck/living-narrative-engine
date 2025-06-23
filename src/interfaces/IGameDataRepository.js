@@ -164,4 +164,15 @@ export class IGameDataRepository {
   listContentByMod(modId) {
     throw new Error('IGameDataRepository.listContentByMod not implemented.');
   }
+
+  /**
+   * Retrieves arbitrary data from the underlying registry by key.
+   * This provides access to data types not covered by specific getter methods.
+   *
+   * @param {string} key The data key to retrieve (e.g., 'scopes', 'prompts').
+   * @returns {any} The data associated with the key, or undefined if not found.
+   */
+  get(key) {
+    throw new Error('IGameDataRepository.get not implemented.');
+  }
 }
