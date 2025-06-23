@@ -44,7 +44,6 @@ class EntityInstanceData {
    * @param {string} instanceId - The unique runtime identifier for this instance.
    * @param {EntityDefinition} definition - The EntityDefinition this instance is based on.
    * @param {Record<string, object>} [initialOverrides] - Optional initial component overrides.
-   * @param {Record<string, object>} [initialOverrides] - Optional initial component overrides.
    * @throws {Error} If instanceId is not a valid string.
    * @throws {Error} If definition is not an instance of EntityDefinition.
    */
@@ -130,7 +129,7 @@ class EntityInstanceData {
       return false;
     }
 
-    if (this.overrides.hasOwnProperty(componentTypeId)) {
+    if (Object.prototype.hasOwnProperty.call(this.overrides, componentTypeId)) {
       delete this.overrides[componentTypeId];
       return true;
     }
@@ -151,7 +150,10 @@ class EntityInstanceData {
       return false;
     }
 
-    const overrideExists = this.overrides.hasOwnProperty(componentTypeId);
+    const overrideExists = Object.prototype.hasOwnProperty.call(
+      this.overrides,
+      componentTypeId
+    );
 
     if (checkOverrideOnly) {
       // For an override to count, it must exist and not be null.
