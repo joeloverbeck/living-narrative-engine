@@ -51,7 +51,11 @@ export class IStorageProvider {
    * Deletes a file.
    *
    * @param {string} filePath - The path to the file.
-   * @returns {Promise<{success: boolean, error?: string}>}
+   * @returns {Promise<{
+   *   success: boolean,
+   *   error?: string,
+   *   code?: import('../storage/storageErrors.js').StorageErrorCodes
+   * }>}
    * @async
    */
   async deleteFile(filePath) {
