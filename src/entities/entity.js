@@ -170,7 +170,7 @@ class Entity {
    * @returns {EntityInstanceData}
    */
   get instanceData() {
-    // This getter might be redundant
+    // Exposes underlying data for compatibility with old code
     return this.#data; // Use #data
   }
 }
