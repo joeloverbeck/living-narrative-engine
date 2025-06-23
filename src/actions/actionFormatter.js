@@ -15,6 +15,11 @@ import { getEntityDisplayName } from '../utils/entityUtils.js';
 import { safeDispatchError } from '../utils/safeDispatchErrorUtils.js';
 import { resolveSafeDispatcher } from '../utils/dispatcherUtils.js';
 import { TARGET_DOMAIN_NONE } from '../constants/targetDomains.js';
+import {
+  ENTITY as TARGET_TYPE_ENTITY,
+  DIRECTION as TARGET_TYPE_DIRECTION,
+  NONE as TARGET_TYPE_NONE,
+} from '../constants/actionTargetTypes.js';
 
 /**
  * @description Helper for reporting argument validation errors.
@@ -53,7 +58,7 @@ function formatEntityTarget(
   const targetId = context.entityId;
   if (!targetId) {
     logger.warn(
-      `formatActionCommand: Target context type is 'entity' but entityId is missing for action ${actionId}. Template: "${command}"`
+      `formatActionCommand: Target context type is '${TARGET_TYPE_ENTITY}' but entityId is missing for action ${actionId}. Template: "${command}"`
     );
     return null;
   }
@@ -87,7 +92,7 @@ function formatDirectionTarget(command, context, { actionId, logger, debug }) {
   const direction = context.direction;
   if (!direction) {
     logger.warn(
-      `formatActionCommand: Target context type is 'direction' but direction string is missing for action ${actionId}. Template: "${command}"`
+      `formatActionCommand: Target context type is '${TARGET_TYPE_DIRECTION}' but direction string is missing for action ${actionId}. Template: "${command}"`
     );
     return null;
   }
@@ -121,9 +126,9 @@ function formatNoneTarget(command, _context, { actionId, logger, debug }) {
  * @type {TargetFormatterMap}
  */
 export const targetFormatterMap = {
-  entity: formatEntityTarget,
-  direction: formatDirectionTarget,
-  none: formatNoneTarget,
+  [TARGET_TYPE_ENTITY]: formatEntityTarget,
+  [TARGET_TYPE_DIRECTION]: formatDirectionTarget,
+  [TARGET_TYPE_NONE]: formatNoneTarget,
 };
 
 /**

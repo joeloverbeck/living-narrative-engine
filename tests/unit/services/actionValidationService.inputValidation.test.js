@@ -5,6 +5,7 @@
  */
 import { ActionValidationService } from '../../../src/actions/validation/actionValidationService.js';
 import { ActionTargetContext } from '../../../src/models/actionTargetContext.js';
+import { ENTITY as TARGET_TYPE_ENTITY } from '../../../src/constants/actionTargetTypes.js';
 import {
   afterAll,
   beforeAll,
@@ -289,7 +290,10 @@ describe('ActionValidationService - Input Validation and Errors', () => {
     );
 
     // Check invalid targetContext structure (plain object, not an instance of ActionTargetContext)
-    const invalidContextObject = { type: 'entity', entityId: 'some-id' };
+    const invalidContextObject = {
+      type: TARGET_TYPE_ENTITY,
+      entityId: 'some-id',
+    };
     expect(() =>
       service.isValid(actionDef, mockActor, invalidContextObject)
     ).toThrow(expectedErrorMsg);

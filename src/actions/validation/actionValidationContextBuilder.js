@@ -12,6 +12,7 @@ import {
   buildEntityTargetContext,
 } from './contextBuilders.js';
 import { validateActionInputs } from './inputValidators.js';
+import { ENTITY as TARGET_TYPE_ENTITY } from '../../constants/actionTargetTypes.js';
 
 /**
  * @class ActionValidationContextBuilder
@@ -69,7 +70,7 @@ export class ActionValidationContextBuilder extends BaseService {
     // --- 3. Build Target Context (handles different target types) ---
     let targetContextForEval = null;
 
-    if (targetContext.type === 'entity') {
+    if (targetContext.type === TARGET_TYPE_ENTITY) {
       targetContextForEval = this.#buildEntityTargetContextForEval(
         actionDefinition,
         targetContext

@@ -15,6 +15,7 @@ import {
   TARGET_DOMAIN_SELF,
   TARGET_DOMAIN_NONE,
 } from '../../constants/targetDomains.js';
+import { ENTITY as TARGET_TYPE_ENTITY } from '../../constants/actionTargetTypes.js';
 // --- Refactor-AVS-3.4: Remove dependency ---
 // REMOVED: import { ActionValidationContextBuilder } from './actionValidationContextBuilder.js';
 // --- End Refactor-AVS-3.4 ---
@@ -170,7 +171,7 @@ export class ActionValidationService extends BaseService {
     // Specific check for 'self' domain which requires the target ID to match the actor ID.
     if (
       expectedDomain === TARGET_DOMAIN_SELF &&
-      targetContext.type === 'entity' &&
+      targetContext.type === TARGET_TYPE_ENTITY &&
       targetContext.entityId !== actorId
     ) {
       this.#logger.debug(
@@ -207,7 +208,7 @@ export class ActionValidationService extends BaseService {
     // dependency there or increasing orchestration complexity.
     // Keeping it here is deemed the most pragmatic approach for now, accepting the minimal
     // dependency overhead for the benefit of the early warning log message.
-    if (targetContext.type === 'entity') {
+    if (targetContext.type === TARGET_TYPE_ENTITY) {
       const targetEntity = this.#entityManager.getEntityInstance(
         targetContext.entityId
       );
