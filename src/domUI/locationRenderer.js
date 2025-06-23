@@ -363,6 +363,79 @@ export class LocationRenderer extends BoundDomRendererBase {
    *  PRIVATE - render any data list (exits, characters, etc.)
    * --------------------------------------------------------------------- */
   /**
+   * Renders a header element for a list section.
+   *
+   * @param {string} title - The heading text.
+   * @param {HTMLElement} targetElement - Element the heading is appended to.
+   * @returns {void}
+   */
+  _renderListHeader(title, targetElement) {
+    const heading =
+      this.domElementFactory.h4?.(undefined, `${title}:`) ??
+      this.documentContext.document.createTextNode(`${title}:`);
+    targetElement.appendChild(heading);
+  }
+
+  /**
+   * Renders a character list item including portrait and tooltip.
+   *
+   * @param {CharacterDisplayData|object} item - Character info to render.
+   * @param {HTMLElement} listElement - UL element to append the item to.
+   * @returns {void}
+   */
+  _renderCharacterListItem(item, listElement) {
+    const text = item && item.name ? String(item.name) : '(Invalid name)';
+    const li =
+      this.domElementFactory.li?.('list-item') ??
+      this.documentContext.document.createElement('li');
+    listElement.appendChild(li);
+
+    if (item.portraitPath) {
+      const img =
+        this.domElementFactory.img?.(
+          item.portraitPath,
+          `Portrait of ${text}`,
+          'character-portrait'
+        ) ?? this.documentContext.document.createElement('img');
+      if (!img.src) {
+        img.src = item.portraitPath;
+        img.alt = `Portrait of ${text}`;
+        img.className = 'character-portrait';
+      }
+      li.appendChild(img);
+    }
+
+    const nameSpan =
+      this.domElementFactory.span?.('character-name', text) ??
+      this.documentContext.document.createTextNode(text);
+    li.appendChild(nameSpan);
+
+    if (item.description?.trim()) {
+      const tooltip = this.#createCharacterTooltip(item.description);
+      li.appendChild(tooltip);
+      this._addDomListener(li, 'click', () =>
+        li.classList.toggle('tooltip-open')
+      );
+    }
+  }
+
+  /**
+   * Renders a basic list item.
+   *
+   * @param {string} itemText - Text for the list item.
+   * @param {HTMLElement} listElement - UL element to append the item to.
+   * @param {string} [itemClassName='list-item'] - CSS class for the list item.
+   * @returns {void}
+   */
+  _renderGenericListItem(itemText, listElement, itemClassName = 'list-item') {
+    const li =
+      this.domElementFactory.li?.(itemClassName) ??
+      this.documentContext.document.createElement('li');
+    if (!li.textContent) li.textContent = itemText;
+    listElement.appendChild(li);
+  }
+
+  /**
    * Renders a data list.  Heading is optional: we *skip* it for
    * Exits and Characters because the accordion summary already
    * names the section.
@@ -387,10 +460,7 @@ export class LocationRenderer extends BoundDomRendererBase {
     /** omit heading for "Exits"/"Characters" — summary tag is enough */
     const skipHeading = title === 'Exits' || title === 'Characters';
     if (!skipHeading) {
-      const heading =
-        this.domElementFactory.h4?.(undefined, `${title}:`) ??
-        this.documentContext.document.createTextNode(`${title}:`);
-      targetElement.appendChild(heading);
+      this._renderListHeader(title, targetElement);
     }
 
     /* empty state */
@@ -417,48 +487,11 @@ export class LocationRenderer extends BoundDomRendererBase {
           ? String(item[itemTextProperty])
           : `(Invalid ${itemTextProperty})`;
 
-      const li =
-        this.domElementFactory.li?.(itemClassName) ??
-        this.documentContext.document.createElement('li');
-      ul.appendChild(li);
-
-      // SPECIAL-CASE: Characters (portrait + tooltip) ----------------
       if (title === 'Characters' && item && typeof item === 'object') {
-        /* portrait */
-        if (item.portraitPath) {
-          const img =
-            this.domElementFactory.img?.(
-              item.portraitPath,
-              `Portrait of ${text}`,
-              'character-portrait'
-            ) ?? this.documentContext.document.createElement('img');
-          if (!img.src) {
-            img.src = item.portraitPath;
-            img.alt = `Portrait of ${text}`;
-            img.className = 'character-portrait';
-          }
-          li.appendChild(img);
-        }
-
-        /* name */
-        const nameSpan =
-          this.domElementFactory.span?.('character-name', text) ??
-          this.documentContext.document.createTextNode(text);
-        li.appendChild(nameSpan);
-
-        /* description → tooltip */
-        if (item.description?.trim()) {
-          const tooltip = this.#createCharacterTooltip(item.description);
-          li.appendChild(tooltip);
-          this._addDomListener(li, 'click', () =>
-            li.classList.toggle('tooltip-open')
-          );
-        }
-        return;
+        this._renderCharacterListItem(item, ul);
+      } else {
+        this._renderGenericListItem(text, ul, itemClassName);
       }
-
-      /* generic list item */
-      li.appendChild(this.documentContext.document.createTextNode(text));
     });
   }
 
