@@ -221,10 +221,13 @@ export default class SaveFileRepository extends BaseService {
       this.#logger.error(
         `Failed to delete manual save "${filePath}": ${deleteResult.error}`
       );
-      return createPersistenceFailure(
-        PersistenceErrorCodes.DELETE_FAILED,
-        deleteResult.error || 'Unknown delete error'
-      );
+      let code = PersistenceErrorCodes.DELETE_FAILED;
+      let userMsg = deleteResult.error || 'Unknown delete error';
+      if (deleteResult.code === StorageErrorCodes.FILE_NOT_FOUND) {
+        code = PersistenceErrorCodes.DELETE_FILE_NOT_FOUND;
+        userMsg = 'Cannot delete: Save file not found.';
+      }
+      return createPersistenceFailure(code, userMsg);
     });
   }
 }

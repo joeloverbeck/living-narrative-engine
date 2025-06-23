@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import SaveFileRepository from '../../../src/persistence/saveFileRepository.js';
 import SaveFileParser from '../../../src/persistence/saveFileParser.js';
 import { PersistenceErrorCodes } from '../../../src/persistence/persistenceErrors.js';
+import { StorageErrorCodes } from '../../../src/storage/storageErrors.js';
 import { createMockLogger } from '../testUtils.js';
 
 /**
@@ -71,6 +72,21 @@ describe('SaveFileRepository.deleteSaveFile', () => {
     expect(result.success).toBe(false);
     expect(result.error.code).toBe(PersistenceErrorCodes.DELETE_FAILED);
     expect(storageProvider.fileExists).toHaveBeenCalledWith('bad.sav');
+    expect(logger.error).toHaveBeenCalled();
+  });
+
+  it('maps FILE_NOT_FOUND code to DELETE_FILE_NOT_FOUND', async () => {
+    storageProvider.fileExists.mockResolvedValue(true);
+    storageProvider.deleteFile.mockResolvedValue({
+      success: false,
+      error: 'missing',
+      code: StorageErrorCodes.FILE_NOT_FOUND,
+    });
+
+    const result = await repo.deleteSaveFile('missing.sav');
+
+    expect(result.success).toBe(false);
+    expect(result.error.code).toBe(PersistenceErrorCodes.DELETE_FILE_NOT_FOUND);
     expect(logger.error).toHaveBeenCalled();
   });
 
