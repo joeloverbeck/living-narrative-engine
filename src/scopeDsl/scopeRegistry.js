@@ -27,11 +27,28 @@ class ScopeRegistry {
   /**
    * Get a scope definition by name
    *
-   * @param {string} name - Scope name (can include mod prefix like 'core:inventory_items')
+   * @param {string} name - Scope name (can include mod prefix like 'core:inventory_items' or be a base name like 'inventory_items')
    * @returns {object | null} Scope definition or null if not found
    */
   getScope(name) {
-    return this._scopes.get(name) || null;
+    // First try exact match (for backward compatibility and explicit namespaced lookups)
+    const exactMatch = this._scopes.get(name);
+    if (exactMatch) {
+      return exactMatch;
+    }
+
+    // If no exact match and name doesn't contain ':', try to find by base name
+    if (!name.includes(':')) {
+      // Look for any scope that has this base name (after the ':')
+      for (const [scopeName, scopeDef] of this._scopes.entries()) {
+        const baseName = scopeName.includes(':') ? scopeName.split(':')[1] : scopeName;
+        if (baseName === name) {
+          return scopeDef;
+        }
+      }
+    }
+
+    return null;
   }
 
   /**
