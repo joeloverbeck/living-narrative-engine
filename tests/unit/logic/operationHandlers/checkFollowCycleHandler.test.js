@@ -15,6 +15,7 @@ import CheckFollowCycleHandler from '../../../../src/logic/operationHandlers/che
 // Assuming the constant is exported from a known path
 import { FOLLOWING_COMPONENT_ID } from '../../../../src/constants/componentIds.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../../../src/constants/eventIds.js';
+import { LOGGER_INFO_METHOD_ERROR } from '../../../common/constants.js';
 
 /**
  * Creates a mock ILogger.
@@ -89,7 +90,7 @@ describe('CheckFollowCycleHandler', () => {
             entityManager: mockEntityManager,
             safeEventDispatcher: mockDispatcher,
           })
-      ).toThrow("Invalid or missing method 'info' on dependency 'logger'.");
+      ).toThrow(LOGGER_INFO_METHOD_ERROR);
       expect(
         () =>
           new CheckFollowCycleHandler({
@@ -97,7 +98,7 @@ describe('CheckFollowCycleHandler', () => {
             entityManager: mockEntityManager,
             safeEventDispatcher: mockDispatcher,
           })
-      ).toThrow("Invalid or missing method 'info' on dependency 'logger'.");
+      ).toThrow(LOGGER_INFO_METHOD_ERROR);
     });
 
     test('should throw an error if the entity manager dependency is missing or invalid', () => {

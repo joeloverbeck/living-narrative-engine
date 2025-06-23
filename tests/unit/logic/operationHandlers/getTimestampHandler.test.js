@@ -12,6 +12,7 @@ import {
   jest,
 } from '@jest/globals';
 import GetTimestampHandler from '../../../../src/logic/operationHandlers/getTimestampHandler.js';
+import { LOGGER_INFO_METHOD_ERROR } from '../../../common/constants.js';
 
 /**
  * Creates a mock ILogger.
@@ -53,11 +54,11 @@ describe('GetTimestampHandler', () => {
     test('should throw an error if the logger dependency is missing or invalid', () => {
       // Test with no logger
       expect(() => new GetTimestampHandler({})).toThrow(
-        "Invalid or missing method 'info' on dependency 'logger'."
+        LOGGER_INFO_METHOD_ERROR
       );
       // Test with a logger that doesn't have the required methods
       expect(() => new GetTimestampHandler({ logger: {} })).toThrow(
-        "Invalid or missing method 'info' on dependency 'logger'."
+        LOGGER_INFO_METHOD_ERROR
       );
     });
 

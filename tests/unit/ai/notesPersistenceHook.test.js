@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, jest, test } from '@jest/globals';
 import { persistNotes } from '../../../src/ai/notesPersistenceHook.js';
 import { NOTES_COMPONENT_ID } from '../../../src/constants/componentIds.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/eventIds.js';
+import { INVALID_NOTE_SKIPPED_MESSAGE } from '../../common/constants.js';
 
 const makeLogger = () => ({
   error: jest.fn(),
@@ -107,21 +108,21 @@ describe('persistNotes', () => {
     expect(dispatcher.dispatch).toHaveBeenCalledWith(
       SYSTEM_ERROR_OCCURRED_ID,
       expect.objectContaining({
-        message: 'NotesPersistenceHook: Invalid note skipped',
+        message: INVALID_NOTE_SKIPPED_MESSAGE,
         details: { note: '' },
       })
     );
     expect(dispatcher.dispatch).toHaveBeenCalledWith(
       SYSTEM_ERROR_OCCURRED_ID,
       expect.objectContaining({
-        message: 'NotesPersistenceHook: Invalid note skipped',
+        message: INVALID_NOTE_SKIPPED_MESSAGE,
         details: { note: 123 },
       })
     );
     expect(dispatcher.dispatch).toHaveBeenCalledWith(
       SYSTEM_ERROR_OCCURRED_ID,
       expect.objectContaining({
-        message: 'NotesPersistenceHook: Invalid note skipped',
+        message: INVALID_NOTE_SKIPPED_MESSAGE,
         details: { note: null },
       })
     );

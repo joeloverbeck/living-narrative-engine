@@ -3,6 +3,7 @@
 
 import { jest, describe, beforeEach, test, expect } from '@jest/globals';
 import { EnvironmentContext } from '../../../src/llms/environmentContext.js'; // Adjust path as needed
+import { LOGGER_INFO_METHOD_ERROR } from '../../common/constants.js';
 
 const DEFAULT_PROXY_SERVER_URL = 'http://localhost:3001/api/llm-request';
 
@@ -44,7 +45,7 @@ describe('EnvironmentContext', () => {
               logger: {},
               executionEnvironment: 'client',
             })
-        ).toThrow("Invalid or missing method 'info' on dependency 'logger'.");
+        ).toThrow(LOGGER_INFO_METHOD_ERROR);
       });
 
       ['warn', 'error', 'debug'].forEach((method) => {

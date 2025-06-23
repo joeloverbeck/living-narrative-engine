@@ -5,6 +5,7 @@
  */
 import { describe, expect, test, jest, beforeEach } from '@jest/globals';
 import OperationInterpreter from '../../../src/logic/operationInterpreter.js';
+import { LOGGER_INFO_METHOD_ERROR } from '../../common/constants.js';
 
 /**
  * -----------------------------------------------------------------------
@@ -131,7 +132,7 @@ describe('OperationInterpreter', () => {
           logger: {},
           operationRegistry: mockRegistry,
         })
-    ).toThrow("Invalid or missing method 'info' on dependency 'logger'.");
+    ).toThrow(LOGGER_INFO_METHOD_ERROR);
   });
 
   test('constructor should throw if registry is missing or invalid', () => {

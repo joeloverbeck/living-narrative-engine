@@ -15,7 +15,12 @@ import {
   expectComponentRemovedDispatch,
   expectNoDispatch,
 } from './dispatchTestUtils.js';
-import { DEFAULT_ACTIVE_WORLD_FOR_SAVE } from '../constants.js';
+import {
+  DEFAULT_ACTIVE_WORLD_FOR_SAVE,
+  ENGINE_READY_MESSAGE,
+  ENGINE_STOPPED_MESSAGE,
+  SAVE_OPERATION_FINISHED_MESSAGE,
+} from '../constants.js';
 import {
   ENGINE_OPERATION_IN_PROGRESS_UI,
   ENGINE_INITIALIZING_UI,
@@ -125,7 +130,7 @@ describe('dispatchTestUtils', () => {
           ENGINE_READY_UI,
           {
             activeWorld: DEFAULT_ACTIVE_WORLD_FOR_SAVE,
-            message: 'Save operation finished. Ready.',
+            message: SAVE_OPERATION_FINISHED_MESSAGE,
           },
         ],
       ]);
@@ -145,7 +150,7 @@ describe('dispatchTestUtils', () => {
           ENGINE_READY_UI,
           {
             activeWorld: DEFAULT_ACTIVE_WORLD_FOR_SAVE,
-            message: 'Save operation finished. Ready.',
+            message: SAVE_OPERATION_FINISHED_MESSAGE,
           },
         ],
       ]);
@@ -156,10 +161,7 @@ describe('dispatchTestUtils', () => {
     it('returns expected stop dispatch sequence', () => {
       const result = buildStopDispatches();
       expect(result).toEqual([
-        [
-          ENGINE_STOPPED_UI,
-          { inputDisabledMessage: 'Game stopped. Engine is inactive.' },
-        ],
+        [ENGINE_STOPPED_UI, { inputDisabledMessage: ENGINE_STOPPED_MESSAGE }],
       ]);
     });
   });
@@ -178,7 +180,7 @@ describe('dispatchTestUtils', () => {
       const result = buildStartDispatches('NewWorld');
       expect(result[1]).toEqual([
         ENGINE_READY_UI,
-        { activeWorld: 'NewWorld', message: 'Enter command...' },
+        { activeWorld: 'NewWorld', message: ENGINE_READY_MESSAGE },
       ]);
     });
   });
