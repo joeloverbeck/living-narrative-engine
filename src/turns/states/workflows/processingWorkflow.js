@@ -17,13 +17,21 @@ export class ProcessingWorkflow {
    * @param {string|null} commandString - Command string for logging.
    * @param {import('../../interfaces/IActorTurnStrategy.js').ITurnAction|null} initialAction - Constructor provided action.
    * @param {(action: import('../../interfaces/IActorTurnStrategy.js').ITurnAction|null) => void} setAction - Setter for the state's private action field.
+   * @param {ProcessingExceptionHandler} [exceptionHandler] - Optional handler to manage processing errors.
    */
-  constructor(state, commandString, initialAction, setAction) {
+  constructor(
+    state,
+    commandString,
+    initialAction,
+    setAction,
+    exceptionHandler = undefined
+  ) {
     this._state = state;
     this._commandString = commandString;
     this._turnAction = initialAction;
     this._setAction = setAction;
-    this._exceptionHandler = new ProcessingExceptionHandler(state);
+    this._exceptionHandler =
+      exceptionHandler || new ProcessingExceptionHandler(state);
   }
 
   /**
@@ -201,7 +209,12 @@ export class ProcessingWorkflow {
    */
   async _executeAction(turnCtx, actor, turnAction) {
     try {
-      await this._state._processCommandInternal(turnCtx, actor, turnAction);
+      await this._state._processCommandInternal(
+        turnCtx,
+        actor,
+        turnAction,
+        this._exceptionHandler
+      );
     } catch (error) {
       const currentTurnCtxForCatch = this._state._getTurnContext() ?? turnCtx;
       const errorLogger =
