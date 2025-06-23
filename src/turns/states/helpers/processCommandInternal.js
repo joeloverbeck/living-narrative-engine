@@ -19,14 +19,21 @@ import { finishProcessing } from './processingErrorUtils.js';
 /**
  * @description Uses {@link ProcessingExceptionHandler} to handle an error.
  * @param {ProcessingCommandStateLike} state - Owning state instance.
+ * @param exceptionHandler
  * @param {ITurnContext} turnCtx - Context for error handling.
  * @param {Error} error - Error to handle.
  * @param {string} actorId - Actor ID for logging.
  * @returns {Promise<void>} Resolves when handling completes.
  */
-async function handleProcessingException(state, turnCtx, error, actorId) {
-  const exceptionHandler = new ProcessingExceptionHandler(state);
-  await exceptionHandler.handle(turnCtx, error, actorId);
+async function handleProcessingException(
+  state,
+  exceptionHandler,
+  turnCtx,
+  error,
+  actorId
+) {
+  const handler = exceptionHandler || new ProcessingExceptionHandler(state);
+  await handler.handle(turnCtx, error, actorId);
 }
 
 /**
@@ -36,9 +43,16 @@ async function handleProcessingException(state, turnCtx, error, actorId) {
  * @param {ITurnContext} turnCtx - Current turn context.
  * @param {Entity} actor - Actor executing the command.
  * @param {ITurnAction} turnAction - Action to process.
+ * @param {ProcessingExceptionHandler} [exceptionHandler] - Handler for errors.
  * @returns {Promise<{activeTurnCtx: ITurnContext, commandResult: object}|null>} The active context and command result, or `null` on error.
  */
-export async function dispatchAction(state, turnCtx, actor, turnAction) {
+export async function dispatchAction(
+  state,
+  turnCtx,
+  actor,
+  turnAction,
+  exceptionHandler
+) {
   const logger = turnCtx.getLogger();
   const actorId = actor.id;
 
@@ -79,8 +93,7 @@ export async function dispatchAction(state, turnCtx, actor, turnAction) {
       activeTurnCtx && typeof activeTurnCtx.getActor === 'function'
         ? activeTurnCtx
         : turnCtx;
-    const exceptionHandler = new ProcessingExceptionHandler(state);
-    await exceptionHandler.handle(
+    await (exceptionHandler || new ProcessingExceptionHandler(state)).handle(
       contextForException,
       new Error('Context invalid/changed after action dispatch.'),
       actorId,
@@ -148,13 +161,15 @@ export async function interpretCommandResult(
  * @param {ITurnContext} activeTurnCtx - Active turn context after dispatch.
  * @param {string} directiveType - Directive to execute.
  * @param {object} result - Command result passed to the strategy.
+ * @param {ProcessingExceptionHandler} [exceptionHandler] - Handler for errors.
  * @returns {Promise<void>} Resolves when the strategy completes.
  */
 export async function executeDirectiveStrategy(
   state,
   activeTurnCtx,
   directiveType,
-  result
+  result,
+  exceptionHandler
 ) {
   const logger = activeTurnCtx.getLogger();
   const actorId = activeTurnCtx.getActor()?.id ?? 'UnknownActor';
@@ -164,8 +179,11 @@ export async function executeDirectiveStrategy(
   if (!directiveStrategy) {
     const errorMsg = `${state.getStateName()}: Could not resolve ITurnDirectiveStrategy for directive '${directiveType}' (actor ${actorId}).`;
     logger.error(errorMsg);
-    const exceptionHandler = new ProcessingExceptionHandler(state);
-    await exceptionHandler.handle(activeTurnCtx, new Error(errorMsg), actorId);
+    await (exceptionHandler || new ProcessingExceptionHandler(state)).handle(
+      activeTurnCtx,
+      new Error(errorMsg),
+      actorId
+    );
     return;
   }
 
@@ -198,13 +216,15 @@ export async function executeDirectiveStrategy(
  * @param {ITurnContext} turnCtx - Current turn context.
  * @param {Entity} actor - Actor executing the command.
  * @param {ITurnAction} turnAction - Action to process.
+ * @param {ProcessingExceptionHandler} [exceptionHandler] - Handler for errors.
  * @returns {Promise<void>} Resolves when processing completes.
  */
 export async function processCommandInternal(
   state,
   turnCtx,
   actor,
-  turnAction
+  turnAction,
+  exceptionHandler
 ) {
   const actorId = actor.id;
 
@@ -213,7 +233,8 @@ export async function processCommandInternal(
       state,
       turnCtx,
       actor,
-      turnAction
+      turnAction,
+      exceptionHandler
     );
     if (!dispatchResult) {
       return;
@@ -237,7 +258,8 @@ export async function processCommandInternal(
       state,
       activeTurnCtx,
       directiveType,
-      commandResult
+      commandResult,
+      exceptionHandler
     );
   } catch (error) {
     const ctxForError = state._getTurnContext() ?? turnCtx;
@@ -252,13 +274,13 @@ export async function processCommandInternal(
     if (error instanceof ServiceLookupError) {
       await handleProcessingException(
         state,
+        exceptionHandler,
         ctxForError || turnCtx,
         processingError,
         actorIdForHandler
       );
     } else {
-      const exceptionHandler = new ProcessingExceptionHandler(state);
-      await exceptionHandler.handle(
+      await (exceptionHandler || new ProcessingExceptionHandler(state)).handle(
         ctxForError || turnCtx,
         processingError,
         actorIdForHandler

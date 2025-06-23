@@ -312,7 +312,8 @@ describe('ProcessingCommandState', () => {
       expect(processCommandInternalSpy).toHaveBeenCalledWith(
         mockTurnContext,
         actor,
-        specificActionForThisTest
+        specificActionForThisTest,
+        processingState._exceptionHandler
       );
 
       await new Promise(process.nextTick);
@@ -367,7 +368,8 @@ describe('ProcessingCommandState', () => {
       expect(processInternalSpy).toHaveBeenCalledWith(
         mockTurnContext,
         actor,
-        constructorAction
+        constructorAction,
+        stateWithConstructorAction._exceptionHandler
       );
     });
 
@@ -391,8 +393,35 @@ describe('ProcessingCommandState', () => {
       expect(processInternalSpy).toHaveBeenCalledWith(
         mockTurnContext,
         actor,
-        contextAction
+        contextAction,
+        processingState._exceptionHandler
       );
+    });
+
+    it('should use an injected exception handler instance', async () => {
+      const customHandler = { handle: jest.fn().mockResolvedValue(undefined) };
+      const customState = new ProcessingCommandState(
+        mockHandler,
+        null,
+        null,
+        TurnDirectiveStrategyResolver,
+        customHandler
+      );
+      mockHandler._currentState = customState;
+      const chosen = { actionDefinitionId: 'custom', commandString: 'c' };
+      mockTurnContext.getChosenAction.mockReturnValueOnce(chosen);
+      const internalSpy = jest
+        .spyOn(customState, '_processCommandInternal')
+        .mockResolvedValue(undefined);
+
+      await customState.enterState(mockHandler, null);
+      expect(internalSpy).toHaveBeenCalledWith(
+        mockTurnContext,
+        actor,
+        chosen,
+        customState._exceptionHandler
+      );
+      expect(customState._exceptionHandler).toBe(customHandler);
     });
   });
 });

@@ -17,6 +17,7 @@ import { ENTITY_SPOKE_ID } from '../../constants/eventIds.js';
 import { processCommandInternal } from './helpers/processCommandInternal.js';
 import { getServiceFromContext } from './helpers/getServiceFromContext.js';
 import { ProcessingWorkflow } from './workflows/processingWorkflow.js';
+import { ProcessingExceptionHandler } from './helpers/processingExceptionHandler.js';
 import { buildSpeechPayload } from './helpers/buildSpeechPayload.js';
 import { ProcessingGuard } from './helpers/processingGuard.js';
 import { finishProcessing } from './helpers/processingErrorUtils.js';
@@ -32,6 +33,7 @@ export class ProcessingCommandState extends AbstractTurnState {
   _isProcessing = false;
   _processingGuard;
   _directiveResolver = TurnDirectiveStrategyResolver;
+  _exceptionHandler;
   #turnActionToProcess = null;
   #commandStringForLog = null;
 
@@ -68,16 +70,20 @@ export class ProcessingCommandState extends AbstractTurnState {
    * @param {string} [commandString]
    * @param {ITurnAction} [turnAction]
    * @param {{ resolveStrategy(directive: string): ITurnDirectiveStrategy }} [directiveResolver]
+   * @param exceptionHandler
    */
   constructor(
     handler,
     commandString,
     turnAction = null,
-    directiveResolver = TurnDirectiveStrategyResolver
+    directiveResolver = TurnDirectiveStrategyResolver,
+    exceptionHandler = undefined
   ) {
     super(handler);
     this._processingGuard = new ProcessingGuard(this);
     this._directiveResolver = directiveResolver;
+    this._exceptionHandler =
+      exceptionHandler || new ProcessingExceptionHandler(this);
     finishProcessing(this);
     this.#turnActionToProcess = turnAction;
     this.#commandStringForLog =
@@ -101,7 +107,8 @@ export class ProcessingCommandState extends AbstractTurnState {
       this.#turnActionToProcess,
       (a) => {
         this.#turnActionToProcess = a;
-      }
+      },
+      this._exceptionHandler
     );
     await workflow.run(handler, previousState);
   }
@@ -165,7 +172,13 @@ export class ProcessingCommandState extends AbstractTurnState {
   // _executeActionWorkflow logic moved to ProcessingWorkflow
 
   async _processCommandInternal(turnCtx, actor, turnAction) {
-    return processCommandInternal(this, turnCtx, actor, turnAction);
+    return processCommandInternal(
+      this,
+      turnCtx,
+      actor,
+      turnAction,
+      this._exceptionHandler
+    );
   }
 
   async _getServiceFromContext(

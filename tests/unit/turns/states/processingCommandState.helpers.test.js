@@ -93,6 +93,11 @@ describe('ProcessingCommandState helpers', () => {
       .spyOn(state, '_processCommandInternal')
       .mockResolvedValue(undefined);
     await workflow._executeAction(ctx, actor, action);
-    expect(spy).toHaveBeenCalledWith(ctx, actor, action);
+    expect(spy).toHaveBeenCalledWith(
+      ctx,
+      actor,
+      action,
+      workflow._exceptionHandler
+    );
   });
 });

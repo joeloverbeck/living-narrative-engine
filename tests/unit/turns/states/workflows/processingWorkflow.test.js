@@ -39,14 +39,20 @@ describe('ProcessingWorkflow.run', () => {
       }),
     };
     state._processingGuard = new ProcessingGuard(state);
-    workflow = new ProcessingWorkflow(state, 'cmd', null, (a) => {
-      state.action = a;
-    });
-    workflow._exceptionHandler = {
+    const customHandler = {
       handle: jest.fn(async () => {
         state._processingGuard.finish();
       }),
     };
+    workflow = new ProcessingWorkflow(
+      state,
+      'cmd',
+      null,
+      (a) => {
+        state.action = a;
+      },
+      customHandler
+    );
   });
 
   test('processes action successfully', async () => {
@@ -54,7 +60,8 @@ describe('ProcessingWorkflow.run', () => {
     expect(state._processCommandInternal).toHaveBeenCalledWith(
       ctx,
       { id: 'actor1' },
-      action
+      action,
+      workflow._exceptionHandler
     );
     expect(state._isProcessing).toBe(false);
   });
