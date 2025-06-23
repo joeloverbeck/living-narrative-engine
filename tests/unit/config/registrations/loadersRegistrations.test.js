@@ -48,7 +48,7 @@ import DefaultPathResolver from '../../../../src/pathing/defaultPathResolver.js'
 import AjvSchemaValidator from '../../../../src/validation/ajvSchemaValidator.js';
 import InMemoryDataRegistry from '../../../../src/data/inMemoryDataRegistry.js';
 import WorkspaceDataFetcher from '../../../../src/data/workspaceDataFetcher.js';
-import { createMockContainerWithRegistration } from '../../../common/mockFactories/index.js';
+import { MockContainer } from '../../../common/mockFactories/index.js';
 
 // --- Mock Implementations (Core Services) ---
 const mockLogger = {
@@ -141,12 +141,12 @@ const mockDataRegistry = {
 
 // --- Mock Custom DI Container ---
 describe('registerLoaders (with Mock DI Container)', () => {
-  /** @type {ReturnType<typeof createMockContainerWithRegistration>} */
+  /** @type {MockContainer} */
   let mockContainer;
 
   beforeEach(() => {
     jest.clearAllMocks();
-    mockContainer = createMockContainerWithRegistration();
+    mockContainer = new MockContainer();
 
     // Register the logger BEFORE calling the function under test
     // Use internalOptions here for the mock's logic

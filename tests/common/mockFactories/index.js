@@ -23,4 +23,4 @@ export { createLoaderMocks } from './loaders.js';
 
 export { createRuleTestDataRegistry } from './entities.js';
 
-export { createMockContainerWithRegistration } from './container.js';
+export { MockContainer } from './container.js';

@@ -21,7 +21,7 @@ import { registerInterpreters } from '../../../../src/dependencyInjection/regist
 
 // --- Dependencies ---
 import { tokens } from '../../../../src/dependencyInjection/tokens.js';
-import { createMockContainerWithRegistration } from '../../../common/mockFactories/index.js';
+import { MockContainer } from '../../../common/mockFactories/index.js';
 
 // --- Mock Modules ---
 jest.mock('../../../../src/logic/operationRegistry.js');
@@ -75,12 +75,12 @@ const mockvalidatedEventDispatcher = {
 const mockSafeEventDispatcher = { dispatch: jest.fn().mockResolvedValue(true) };
 
 describe('registerInterpreters', () => {
-  /** @type {ReturnType<typeof createMockContainerWithRegistration>} */
+  /** @type {MockContainer} */
   let mockContainer;
 
   beforeEach(() => {
     jest.clearAllMocks();
-    mockContainer = createMockContainerWithRegistration();
+    mockContainer = new MockContainer();
 
     // Pre-register core dependencies NEEDED by the interpreter factories
     // These are the services the factories themselves will resolve.
