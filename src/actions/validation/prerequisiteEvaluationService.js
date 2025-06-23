@@ -1,6 +1,6 @@
 // src/actions/validation/prerequisiteEvaluationService.js
 
-import { setupService } from '../../utils/serviceInitializerUtils.js';
+import { BaseService } from '../../utils/serviceBase.js';
 
 /* type-only imports */
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
@@ -14,11 +14,12 @@ import { setupService } from '../../utils/serviceInitializerUtils.js';
 
 /**
  * @class PrerequisiteEvaluationService
+ * @augments BaseService
  * @description Service dedicated to evaluating prerequisite rules (typically JsonLogic) for actions.
  * It resolves any `condition_ref` instances within the rules, builds the necessary evaluation context,
  * and then uses the JsonLogicEvaluationService to evaluate the final, resolved rules.
  */
-export class PrerequisiteEvaluationService {
+export class PrerequisiteEvaluationService extends BaseService {
   #logger;
   #jsonLogicEvaluationService;
   #actionValidationContextBuilder;
@@ -40,7 +41,8 @@ export class PrerequisiteEvaluationService {
     actionValidationContextBuilder,
     gameDataRepository, // ADDED
   }) {
-    this.#logger = setupService('PrerequisiteEvaluationService', logger, {
+    super();
+    this.#logger = this._init('PrerequisiteEvaluationService', logger, {
       jsonLogicEvaluationService: {
         value: jsonLogicEvaluationService,
         requiredMethods: ['evaluate'],

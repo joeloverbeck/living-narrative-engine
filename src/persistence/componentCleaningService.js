@@ -1,7 +1,7 @@
 // src/persistence/componentCleaningService.js
 
 import { safeDeepClone } from '../utils/cloneUtils.js';
-import { setupService } from '../utils/serviceInitializerUtils.js';
+import { BaseService } from '../utils/serviceBase.js';
 /** @typedef {import('../interfaces/IComponentCleaningService.js').IComponentCleaningService} IComponentCleaningService */
 import {
   NOTES_COMPONENT_ID,
@@ -62,10 +62,11 @@ export function buildDefaultComponentCleaners(logger) {
 
 /**
  * @class ComponentCleaningService
+ * @augments BaseService
  * @implements {IComponentCleaningService}
  * @description Provides registration and execution of component data cleaners.
  */
-class ComponentCleaningService {
+class ComponentCleaningService extends BaseService {
   /** @type {Map<string, (data: any) => any>} */
   #cleaners;
 
@@ -83,7 +84,8 @@ class ComponentCleaningService {
    * @param dependencies.safeEventDispatcher
    */
   constructor({ logger, safeEventDispatcher, defaultCleaners } = {}) {
-    this.#logger = setupService('ComponentCleaningService', logger, {
+    super();
+    this.#logger = this._init('ComponentCleaningService', logger, {
       safeEventDispatcher: {
         value: safeEventDispatcher,
         requiredMethods: ['dispatch'],
