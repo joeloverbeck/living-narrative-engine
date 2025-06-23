@@ -32,7 +32,7 @@ jest.mock('../../../src/utils/listNavigationUtils.js', () => ({
 }));
 
 jest.mock('../../../src/domUI/helpers/renderSlotItem.js', () => ({
-  renderSlotItem: jest.fn(),
+  renderGenericSlotItem: jest.fn(),
 }));
 
 jest.mock('../../../src/domUI/helpers/createMessageElement.js', () => ({
@@ -337,16 +337,18 @@ describe('LoadGameUI', () => {
 
     it('_renderLoadSlotItem should call renderSlotItem helper with correct params', () => {
       const mockDiv = mockDocument.createElement('div');
-      renderSlotItemModule.renderSlotItem.mockReturnValue(mockDiv);
+      mockDiv.setAttribute('tabindex', '0');
+      renderSlotItemModule.renderGenericSlotItem.mockReturnValue(mockDiv);
       instance = createInstance();
 
       const result = instance._renderLoadSlotItem(aGoodSlot, 0);
 
-      expect(renderSlotItemModule.renderSlotItem).toHaveBeenCalledWith(
+      expect(renderSlotItemModule.renderGenericSlotItem).toHaveBeenCalledWith(
         mockDomElementFactory,
         'slotIdentifier',
         aGoodSlot.identifier,
         expect.any(Object),
+        0,
         expect.any(Function)
       );
       expect(result).toBe(mockDiv);

@@ -4,7 +4,10 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import DocumentContext from '../../../../src/domUI/documentContext.js';
 import DomElementFactory from '../../../../src/domUI/domElementFactory.js';
-import { renderSlotItem } from '../../../../src/domUI/helpers/renderSlotItem.js';
+import {
+  renderGenericSlotItem,
+  renderSlotItem,
+} from '../../../../src/domUI/helpers/renderSlotItem.js';
 
 describe('renderSlotItem', () => {
   let factory;
@@ -44,5 +47,17 @@ describe('renderSlotItem', () => {
   it('returns null when factory is missing', () => {
     const res = renderSlotItem(null, 'id', '1', {}, undefined);
     expect(res).toBeNull();
+  });
+
+  it('sets tabindex correctly via renderGenericSlotItem', () => {
+    const slot = renderGenericSlotItem(
+      factory,
+      'slotId',
+      '1',
+      { name: 'Save1' },
+      0,
+      undefined
+    );
+    expect(slot?.getAttribute('tabindex')).toBe('0');
   });
 });
