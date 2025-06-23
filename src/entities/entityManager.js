@@ -26,6 +26,12 @@ import {
   validateAddComponentParams as validateAddComponentParamsUtil,
   validateRemoveComponentParams as validateRemoveComponentParamsUtil,
   validateReconstructEntityParams as validateReconstructEntityParamsUtil,
+  validateGetEntityInstanceParams as validateGetEntityInstanceParamsUtil,
+  validateGetComponentDataParams as validateGetComponentDataParamsUtil,
+  validateHasComponentParams as validateHasComponentParamsUtil,
+  validateHasComponentOverrideParams as validateHasComponentOverrideParamsUtil,
+  validateGetEntitiesWithComponentParams as validateGetEntitiesWithComponentParamsUtil,
+  validateRemoveEntityInstanceParams as validateRemoveEntityInstanceParamsUtil,
 } from './utils/parameterValidators.js';
 import EntityQuery from '../query/EntityQuery.js';
 import {
@@ -320,6 +326,83 @@ class EntityManager extends IEntityManager {
    */
   #validateReconstructEntityParams(serializedEntity) {
     validateReconstructEntityParamsUtil(serializedEntity, this.#logger);
+  }
+
+  /**
+   * Validate parameters for {@link getEntityInstance}.
+   *
+   * @private
+   * @param {string} instanceId - Entity instance ID.
+   * @throws {InvalidArgumentError} If parameters are invalid.
+   */
+  #validateGetEntityInstanceParams(instanceId) {
+    validateGetEntityInstanceParamsUtil(instanceId, this.#logger);
+  }
+
+  /**
+   * Validate parameters for {@link getComponentData}.
+   *
+   * @private
+   * @param {string} instanceId - Entity instance ID.
+   * @param {string} componentTypeId - Component type ID.
+   * @throws {InvalidArgumentError} If parameters are invalid.
+   */
+  #validateGetComponentDataParams(instanceId, componentTypeId) {
+    validateGetComponentDataParamsUtil(
+      instanceId,
+      componentTypeId,
+      this.#logger
+    );
+  }
+
+  /**
+   * Validate parameters for {@link hasComponent}.
+   *
+   * @private
+   * @param {string} instanceId - Entity instance ID.
+   * @param {string} componentTypeId - Component type ID.
+   * @throws {InvalidArgumentError} If parameters are invalid.
+   */
+  #validateHasComponentParams(instanceId, componentTypeId) {
+    validateHasComponentParamsUtil(instanceId, componentTypeId, this.#logger);
+  }
+
+  /**
+   * Validate parameters for {@link hasComponentOverride}.
+   *
+   * @private
+   * @param {string} instanceId - Entity instance ID.
+   * @param {string} componentTypeId - Component type ID.
+   * @throws {InvalidArgumentError} If parameters are invalid.
+   */
+  #validateHasComponentOverrideParams(instanceId, componentTypeId) {
+    validateHasComponentOverrideParamsUtil(
+      instanceId,
+      componentTypeId,
+      this.#logger
+    );
+  }
+
+  /**
+   * Validate parameters for {@link getEntitiesWithComponent}.
+   *
+   * @private
+   * @param {string} componentTypeId - Component type ID.
+   * @throws {InvalidArgumentError} If parameters are invalid.
+   */
+  #validateGetEntitiesWithComponentParams(componentTypeId) {
+    validateGetEntitiesWithComponentParamsUtil(componentTypeId, this.#logger);
+  }
+
+  /**
+   * Validate parameters for {@link removeEntityInstance}.
+   *
+   * @private
+   * @param {string} instanceId - Entity instance ID.
+   * @throws {InvalidArgumentError} If parameters are invalid.
+   */
+  #validateRemoveEntityInstanceParams(instanceId) {
+    validateRemoveEntityInstanceParamsUtil(instanceId, this.#logger);
   }
 
   /**
@@ -635,19 +718,16 @@ class EntityManager extends IEntityManager {
 
   /* ---------------------------------------------------------------------- */
 
+  /**
+   * Retrieve an entity instance by its ID.
+   *
+   * @param {string} instanceId - The ID of the entity instance.
+   * @returns {Entity|undefined} The entity if found, otherwise undefined.
+   * @throws {InvalidArgumentError} If the instanceId is invalid.
+   * @see #validateGetEntityInstanceParams
+   */
   getEntityInstance(instanceId) {
-    try {
-      assertValidId(
-        instanceId,
-        'EntityManager.getEntityInstance',
-        this.#logger
-      );
-    } catch (error) {
-      this.#logger.debug(
-        `EntityManager.getEntityInstance: Called with invalid ID format: '${instanceId}'. Returning undefined.`
-      );
-      return undefined;
-    }
+    this.#validateGetEntityInstanceParams(instanceId);
     const entity = this.#getEntityById(instanceId);
     if (!entity) {
       this.#logger.debug(
@@ -658,25 +738,17 @@ class EntityManager extends IEntityManager {
     return entity;
   }
 
+  /**
+   * Retrieve component data for a specific entity.
+   *
+   * @param {string} instanceId - Entity instance ID.
+   * @param {string} componentTypeId - Component type ID.
+   * @returns {object|undefined} Component data or undefined if not found.
+   * @throws {InvalidArgumentError} If parameters are invalid.
+   * @see #validateGetComponentDataParams
+   */
   getComponentData(instanceId, componentTypeId) {
-    try {
-      assertValidId(instanceId, 'EntityManager.getComponentData', this.#logger);
-      assertNonBlankString(
-        componentTypeId,
-        'componentTypeId',
-        'EntityManager.getComponentData',
-        this.#logger
-      );
-    } catch (error) {
-      this.#logger.warn(
-        `EntityManager.getComponentData: Invalid parameters - instanceId: '${instanceId}', componentTypeId: '${componentTypeId}'. Returning undefined.`
-      );
-      throw new InvalidArgumentError(
-        `EntityManager.getComponentData: Invalid parameters - instanceId: '${instanceId}', componentTypeId: '${componentTypeId}'`,
-        'instanceId/componentTypeId',
-        { instanceId, componentTypeId }
-      );
-    }
+    this.#validateGetComponentDataParams(instanceId, componentTypeId);
     const entity = this.#getEntityById(instanceId);
     if (!entity) {
       this.#logger.warn(
@@ -696,6 +768,7 @@ class EntityManager extends IEntityManager {
    * @param {boolean} [checkOverrideOnly] - If true, only check for component overrides, not definition components.
    * @returns {boolean} True if the entity has the component data, false otherwise.
    * @throws {InvalidArgumentError} If parameters are invalid.
+   * @see #validateHasComponentParams
    */
   hasComponent(instanceId, componentTypeId, checkOverrideOnly = false) {
     // Handle the deprecated 3-parameter call
@@ -708,24 +781,7 @@ class EntityManager extends IEntityManager {
       }
     }
 
-    try {
-      assertValidId(instanceId, 'EntityManager.hasComponent', this.#logger);
-      assertNonBlankString(
-        componentTypeId,
-        'componentTypeId',
-        'EntityManager.hasComponent',
-        this.#logger
-      );
-    } catch (error) {
-      this.#logger.warn(
-        `EntityManager.hasComponent: Invalid parameters - instanceId: '${instanceId}', componentTypeId: '${componentTypeId}'. Returning false.`
-      );
-      throw new InvalidArgumentError(
-        `EntityManager.hasComponent: Invalid parameters - instanceId: '${instanceId}', componentTypeId: '${componentTypeId}'`,
-        'instanceId/componentTypeId',
-        { instanceId, componentTypeId }
-      );
-    }
+    this.#validateHasComponentParams(instanceId, componentTypeId);
     const entity = this.#getEntityById(instanceId);
     return entity ? entity.hasComponent(componentTypeId, false) : false;
   }
@@ -738,30 +794,10 @@ class EntityManager extends IEntityManager {
    * @param {string} componentTypeId - The unique string ID of the component type.
    * @returns {boolean} True if the entity has a component override, false otherwise.
    * @throws {InvalidArgumentError} If parameters are invalid.
+   * @see #validateHasComponentOverrideParams
    */
   hasComponentOverride(instanceId, componentTypeId) {
-    try {
-      assertValidId(
-        instanceId,
-        'EntityManager.hasComponentOverride',
-        this.#logger
-      );
-      assertNonBlankString(
-        componentTypeId,
-        'componentTypeId',
-        'EntityManager.hasComponentOverride',
-        this.#logger
-      );
-    } catch (error) {
-      this.#logger.warn(
-        `EntityManager.hasComponentOverride: Invalid parameters - instanceId: '${instanceId}', componentTypeId: '${componentTypeId}'. Returning false.`
-      );
-      throw new InvalidArgumentError(
-        `EntityManager.hasComponentOverride: Invalid parameters - instanceId: '${instanceId}', componentTypeId: '${componentTypeId}'`,
-        'instanceId/componentTypeId',
-        { instanceId, componentTypeId }
-      );
-    }
+    this.#validateHasComponentOverrideParams(instanceId, componentTypeId);
     const entity = this.#getEntityById(instanceId);
     return entity ? entity.hasComponent(componentTypeId, true) : false;
   }
@@ -773,25 +809,10 @@ class EntityManager extends IEntityManager {
    * @param {*} componentTypeId
    * @returns {Entity[]} fresh array (never a live reference)
    * @throws {InvalidArgumentError} If componentTypeId is invalid.
+   * @see #validateGetEntitiesWithComponentParams
    */
   getEntitiesWithComponent(componentTypeId) {
-    try {
-      assertNonBlankString(
-        componentTypeId,
-        'componentTypeId',
-        'EntityManager.getEntitiesWithComponent',
-        this.#logger
-      );
-    } catch (error) {
-      this.#logger.debug(
-        `EntityManager.getEntitiesWithComponent: Received invalid componentTypeId ('${componentTypeId}'). Returning empty array.`
-      );
-      throw new InvalidArgumentError(
-        `EntityManager.getEntitiesWithComponent: Received invalid componentTypeId ('${componentTypeId}')`,
-        'componentTypeId',
-        componentTypeId
-      );
-    }
+    this.#validateGetEntitiesWithComponentParams(componentTypeId);
     const results = [];
     for (const entity of this.entities) {
       if (entity.hasComponent(componentTypeId)) {
@@ -832,24 +853,10 @@ class EntityManager extends IEntityManager {
    * @throws {EntityNotFoundError} If the entity is not found.
    * @throws {InvalidArgumentError} If the instanceId is invalid.
    * @throws {Error} If internal removal operation fails.
+   * @see #validateRemoveEntityInstanceParams
    */
   removeEntityInstance(instanceId) {
-    try {
-      assertValidId(
-        instanceId,
-        'EntityManager.removeEntityInstance',
-        this.#logger
-      );
-    } catch (error) {
-      this.#logger.warn(
-        `EntityManager.removeEntityInstance: Attempted to remove entity with invalid ID: '${instanceId}'`
-      );
-      throw new InvalidArgumentError(
-        `EntityManager.removeEntityInstance: Attempted to remove entity with invalid ID: '${instanceId}'`,
-        'instanceId',
-        instanceId
-      );
-    }
+    this.#validateRemoveEntityInstanceParams(instanceId);
 
     const entityToRemove = this.#getEntityById(instanceId);
     if (!entityToRemove) {

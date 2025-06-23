@@ -49,19 +49,14 @@ describeEntityManagerSuite(
       });
 
       it.each(TestData.InvalidValues.invalidIds)(
-        'should return undefined for an invalid ID type: %p',
+        'should throw InvalidArgumentError for invalid ID %p',
         (invalidId) => {
-          // Arrange
           const { entityManager, mocks } = getBed();
 
-          // Act
-          const result = entityManager.getEntityInstance(invalidId);
-
-          // Assert
-          expect(result).toBeUndefined();
-          expect(mocks.logger.debug).toHaveBeenCalledWith(
-            expect.stringContaining('Called with invalid ID format')
+          expect(() => entityManager.getEntityInstance(invalidId)).toThrow(
+            InvalidArgumentError
           );
+          expect(mocks.logger.warn).toHaveBeenCalled();
         }
       );
     });
@@ -161,7 +156,7 @@ describeEntityManagerSuite(
           expect(() =>
             entityManager.getEntitiesWithComponent(invalidId)
           ).toThrow(InvalidArgumentError);
-          expect(mocks.logger.debug).toHaveBeenCalledWith(
+          expect(mocks.logger.warn).toHaveBeenCalledWith(
             expect.stringContaining('Received invalid componentTypeId')
           );
         }
