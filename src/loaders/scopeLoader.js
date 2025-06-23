@@ -103,7 +103,7 @@ export default class ScopeLoader extends BaseManifestItemLoader {
       const fullScopeName = `${modId}:${scopeName}`;
       transformed[fullScopeName] = {
         name: fullScopeName,
-        dsl: dslExpression,
+        expr: dslExpression,
         modId: modId,
         source: 'file',
       };

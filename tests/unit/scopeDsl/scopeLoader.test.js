@@ -98,13 +98,13 @@ describe('ScopeLoader', () => {
       expect(result).toEqual({
         'core:inventory_items': {
           name: 'core:inventory_items',
-          dsl: 'actor.inventory.items[]',
+          expr: 'actor.inventory.items[]',
           modId: 'core',
           source: 'file',
         },
         'core:equipment_items': {
           name: 'core:equipment_items',
-          dsl: 'actor.equipment.equipped[]',
+          expr: 'actor.equipment.equipped[]',
           modId: 'core',
           source: 'file',
         },
@@ -119,7 +119,7 @@ describe('ScopeLoader', () => {
       expect(result).toEqual({
         'myMod:custom_scope': {
           name: 'myMod:custom_scope',
-          dsl: 'location.entities(core:Item)',
+          expr: 'location.entities(core:Item)',
           modId: 'myMod',
           source: 'file',
         },

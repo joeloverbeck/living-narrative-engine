@@ -109,16 +109,15 @@ function _resolveScopeWithDSL(scopeName, context, scopeRegistry, logger, scopeEn
       
       if (dispatcher) {
         // Dispatch as a hard error to crash the application
+        // Use only allowed properties according to the schema
+        const availableScopes = scopeRegistry.getAllScopeNames ? scopeRegistry.getAllScopeNames() : [];
+        const debugInfo = `scopeName: ${scopeName}, availableScopes: [${availableScopes.join(', ')}], context: actorId=${context.actingEntity?.id}, locationId=${context.location?.id || context.currentLocation?.id}`;
+        
         safeDispatchError(
           dispatcher,
           errorMessage,
           {
-            scopeName,
-            availableScopes: Object.keys(scopeRegistry._scopes || {}),
-            context: {
-              actorId: context.actingEntity?.id,
-              locationId: context.location?.id || context.currentLocation?.id
-            },
+            raw: debugInfo,
             timestamp: new Date().toISOString()
           },
           logger

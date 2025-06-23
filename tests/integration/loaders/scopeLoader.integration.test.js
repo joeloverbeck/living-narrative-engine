@@ -97,7 +97,7 @@ describe('ScopeLoader Integration Tests', () => {
         'core:directions',
         expect.objectContaining({
           name: 'core:directions',
-          dsl: 'location.core:exits[].target',
+          expr: 'location.core:exits[].target',
           modId: 'core',
           source: 'file',
         })
