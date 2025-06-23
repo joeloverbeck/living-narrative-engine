@@ -14,6 +14,7 @@ import * as ModLoadOrderResolver from '../../modding/modLoadOrderResolver.js';
 import { tokens } from '../tokens.js';
 import { Registrar } from '../registrarHelpers.js';
 import { ActionIndexingService } from '../../turns/services/actionIndexingService';
+import ScopeRegistry from '../../scopeDsl/scopeRegistry.js';
 
 /**
  * @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger
@@ -83,8 +84,8 @@ export function registerInfrastructure(container) {
     tokens.IGameDataRepository,
     (c) =>
       new GameDataRepository(
-        /** @type {IDataRegistry} */ (c.resolve(tokens.IDataRegistry)),
-        /** @type {ILogger} */ (c.resolve(tokens.ILogger))
+        /** @type {IDataRegistry} */(c.resolve(tokens.IDataRegistry)),
+        /** @type {ILogger} */(c.resolve(tokens.ILogger))
       ),
     { lifecycle: 'singleton' }
   );

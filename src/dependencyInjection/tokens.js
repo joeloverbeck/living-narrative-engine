@@ -97,6 +97,7 @@ import { freeze } from '../utils';
  * --- Core Service Interfaces ---
  * @property {DiToken} ISafeEventDispatcher - Token for the safe event dispatching utility interface.
  * @property {DiToken} IValidatedEventDispatcher - Token for dispatching validated events interface.
+ * @property {DiToken} IScopeRegistry - Token for the scope definitions registry interface.
  * @property {DiToken} IActionExecutor - Token for executing game actions interface.
  * @property {DiToken} IWorldContext - Token for managing the overall world context interface.
  * @property {DiToken} ICommandProcessor - Token for the command processing service interface.
@@ -208,7 +209,6 @@ export const tokens = freeze({
   ILoadCache: 'ILoadCache',
 
   // Core Services & Managers (Concrete Implementations - some may be deprecated for interface tokens)
-  ScopeRegistry: 'ScopeRegistry',
   GameDataRepository: 'GameDataRepository',
   EntityManager: 'EntityManager',
   SpatialIndexSynchronizer: 'SpatialIndexSynchronizer',
@@ -236,6 +236,8 @@ export const tokens = freeze({
   // Core Service Interfaces
   ISafeEventDispatcher: 'ISafeEventDispatcher',
   IValidatedEventDispatcher: 'IValidatedEventDispatcher',
+  IScopeRegistry: 'IScopeRegistry',
+  IActionExecutor: 'IActionExecutor',
   IWorldContext: 'IWorldContext',
   ICommandProcessor: 'ICommandProcessor',
   IActionDiscoveryService: 'IActionDiscoveryService',

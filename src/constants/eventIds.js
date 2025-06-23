@@ -217,3 +217,37 @@ export const COMPONENT_ADDED_ID = 'core:component_added';
  * @type {string}
  */
 export const COMPONENT_REMOVED_ID = 'core:component_removed';
+
+// --- WorldInitializer Event IDs ---
+
+/**
+ * @typedef {object} WorldInitEntityInstantiatedPayload
+ * @property {string} entityId - The ID of the entity that was instantiated.
+ * @property {string} instanceId - The instance ID used for instantiation.
+ * @property {string} definitionId - The definition ID used for instantiation.
+ * @property {string} worldName - The name of the world where the entity was instantiated.
+ * @property {string} reason - The reason for instantiation (e.g., "Initial World Load").
+ */
+
+/**
+ * Fired when an entity is successfully instantiated during world initialization.
+ *
+ * @type {string}
+ */
+export const WORLDINIT_ENTITY_INSTANTIATED_ID = 'worldinit:entity_instantiated';
+
+/**
+ * @typedef {object} WorldInitEntityInstantiationFailedPayload
+ * @property {string} instanceId - The instance ID that failed to instantiate.
+ * @property {string} definitionId - The definition ID that failed to instantiate.
+ * @property {string} worldName - The name of the world where instantiation failed.
+ * @property {string} error - The error message describing why instantiation failed.
+ * @property {string} reason - The reason for the instantiation attempt (e.g., "Initial World Load").
+ */
+
+/**
+ * Fired when an entity instantiation fails during world initialization.
+ *
+ * @type {string}
+ */
+export const WORLDINIT_ENTITY_INSTANTIATION_FAILED_ID = 'worldinit:entity_instantiation_failed';

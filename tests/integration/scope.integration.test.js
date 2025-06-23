@@ -127,7 +127,7 @@ describe('entityScopeService integration', () => {
     });
 
     // Act
-    const environmentSet = getEntityIdsForScopes('environment', ctx, logger);
+    const environmentSet = getEntityIdsForScopes('environment', ctx, mockScopeRegistryInstance, logger);
 
     // Assert
     expect(environmentSet.has(ratId)).toBe(true);

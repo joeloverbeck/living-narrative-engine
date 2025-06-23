@@ -250,17 +250,10 @@ class InitializationService extends IInitializationService {
       this.#logger.debug(
         'Resolving DomUiFacade to ensure UI components can be instantiated...'
       );
-      try {
-        this.#container.resolve(tokens.DomUiFacade);
-        this.#logger.debug(
-          'InitializationService: DomUiFacade resolved, UI components instantiated.'
-        );
-      } catch (uiResolveError) {
-        this.#logger.warn(
-          'InitializationService: Failed to resolve DomUiFacade. UI might not function correctly if it was expected.',
-          uiResolveError
-        );
-      }
+      this.#container.resolve(tokens.DomUiFacade);
+      this.#logger.debug(
+        'InitializationService: DomUiFacade resolved, UI components instantiated.'
+      );
 
       this.#logger.debug(
         `InitializationService: Initialization sequence for world '${worldName}' completed successfully (GameLoop resolution removed).`
@@ -271,16 +264,14 @@ class InitializationService extends IInitializationService {
         details: { message: `World '${worldName}' initialized.` },
       };
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
       this.#logger.error(
-        `InitializationService: CRITICAL ERROR during initialization sequence for world '${worldName}': ${errorMessage}`,
-        error
+        `CRITICAL ERROR during initialization sequence for world '${worldName}': ${error.message}`,
+        { errorMessage: error.message, errorName: error.name, errorStack: error.stack }
       );
 
       const failedPayload = {
         worldName,
-        error: errorMessage,
+        error: error.message,
         stack: error instanceof Error ? error.stack : undefined,
       };
       this.#validatedEventDispatcher
@@ -305,7 +296,7 @@ class InitializationService extends IInitializationService {
       try {
         await this.#validatedEventDispatcher.dispatch('ui:show_fatal_error', {
           title: 'Fatal Initialization Error',
-          message: `Initialization failed for world '${worldName}'. Reason: ${errorMessage}`,
+          message: `Initialization failed for world '${worldName}'. Reason: ${error.message}`,
           details: error instanceof Error ? error.stack : 'No stack available.',
         });
         await this.#validatedEventDispatcher.dispatch('core:disable_input', {
@@ -323,7 +314,7 @@ class InitializationService extends IInitializationService {
 
       return {
         success: false,
-        error: error instanceof Error ? error : new Error(errorMessage),
+        error: error instanceof Error ? error : new Error(error.message),
         details: { worldName },
       };
     }

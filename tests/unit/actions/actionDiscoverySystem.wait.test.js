@@ -47,6 +47,8 @@ describe('ActionDiscoveryService - Wait Action Tests', () => {
   let mockFormatActionCommandFn;
   /** @type {jest.MockedFunction<typeof getEntityIdsForScopesFn>} */
   let mockGetEntityIdsForScopesFn;
+  /** @type {jest.Mocked<import('../../../src/scopeDsl/scopeRegistry.js').default>} */
+  let mockScopeRegistry;
 
   const ACTOR_INSTANCE_ID = 'actor1-instance-wait';
   const LOCATION_INSTANCE_ID = 'location1-instance-wait';
@@ -94,6 +96,16 @@ describe('ActionDiscoveryService - Wait Action Tests', () => {
     mockFormatActionCommandFn = formatActionCommandFn;
     mockGetEntityIdsForScopesFn = getEntityIdsForScopesFn;
     mockSafeEventDispatcher = { dispatch: jest.fn() };
+    mockScopeRegistry = {
+      getScope: jest.fn(),
+      // Add other methods if needed by ActionDiscoveryService or its collaborators if not fully mocked
+      initialize: jest.fn(),
+      hasScope: jest.fn(),
+      getAllScopeNames: jest.fn(),
+      getAllScopes: jest.fn(),
+      getStats: jest.fn(),
+      clear: jest.fn(),
+    };
 
     mockActorEntity = createTestEntity(ACTOR_INSTANCE_ID, DUMMY_DEFINITION_ID);
     mockLocationEntity = createTestEntity(
@@ -143,6 +155,7 @@ describe('ActionDiscoveryService - Wait Action Tests', () => {
       formatActionCommandFn: mockFormatActionCommandFn,
       getEntityIdsForScopesFn: mockGetEntityIdsForScopesFn,
       safeEventDispatcher: mockSafeEventDispatcher,
+      scopeRegistry: mockScopeRegistry,
     });
   });
 

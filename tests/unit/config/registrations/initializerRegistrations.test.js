@@ -42,6 +42,7 @@ const mockWorldContext = { name: 'MockWorldContext' };
 const mockGameDataRepository = { name: 'MockGameDataRepository' };
 const mockValidatedEventDispatcher = { name: 'MockValidatedEventDispatcher' };
 const mockSpatialIndexManager = { name: 'MockSpatialIndexManager' };
+const mockScopeRegistry = { name: 'MockScopeRegistry' };
 
 describe('registerInitializers', () => {
   /** @type {ReturnType<typeof createMockContainerWithRegistration>} */
@@ -74,6 +75,9 @@ describe('registerInitializers', () => {
       mockSpatialIndexManager,
       { lifecycle: 'singleton' }
     );
+    mockContainer.register(tokens.IScopeRegistry, mockScopeRegistry, {
+      lifecycle: 'singleton',
+    });
 
     Object.values(mockLogger).forEach((fn) => fn.mockClear?.());
     if (WorldInitializer.mockClear) WorldInitializer.mockClear();
@@ -112,6 +116,7 @@ describe('registerInitializers', () => {
       gameDataRepository: mockGameDataRepository,
       validatedEventDispatcher: mockValidatedEventDispatcher,
       logger: mockLogger,
+      scopeRegistry: mockScopeRegistry,
       // spatialIndexManager dependency removed - now handled by SpatialIndexSynchronizer
     });
   });
@@ -147,6 +152,7 @@ describe('registerInitializers', () => {
     expect(resolveSpy).toHaveBeenCalledWith(tokens.IWorldContext);
     expect(resolveSpy).toHaveBeenCalledWith(tokens.IGameDataRepository);
     expect(resolveSpy).toHaveBeenCalledWith(tokens.IValidatedEventDispatcher);
+    expect(resolveSpy).toHaveBeenCalledWith(tokens.IScopeRegistry);
     // spatialIndexManager dependency removed - no longer resolved
     resolveSpy.mockRestore();
   });

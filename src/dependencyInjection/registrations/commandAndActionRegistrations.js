@@ -34,20 +34,33 @@ import { getEntityIdsForScopes } from '../../entities/entityScopeService.js';
 import { getActorLocation } from '../../utils/actorLocationUtils.js';
 import { getEntityDisplayName } from '../../utils/entityUtils.js';
 
+// --- Infrastructure Dependency ---
+import ScopeRegistry from '../../scopeDsl/scopeRegistry.js';
+
+
 /**
  * Registers command and action related services.
  *
  * @param {AppContainer} container - The DI container.
  */
 export function registerCommandAndAction(container) {
-  const r = new Registrar(container);
+  const registrar = new Registrar(container);
+  const c = container; // Shorthand
   /** @type {ILogger} */
   const logger = container.resolve(tokens.ILogger);
   logger.debug('Command and Action Registration: Starting...');
 
-  // --- Action Discovery & Validation ---
+  // --- Scope Registry ---
+  // Must be registered before ActionDiscoveryService
+  registrar.singletonFactory(tokens.IScopeRegistry, (c) => {
+    return new ScopeRegistry({
+      logger: c.resolve(tokens.ILogger),
+      safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+    });
+  });
 
-  r.tagged(INITIALIZABLE).singletonFactory(
+  // --- Action Discovery & Execution ---
+  registrar.tagged(INITIALIZABLE).singletonFactory(
     tokens.IActionDiscoveryService,
     (c) =>
       new ActionDiscoveryService({
@@ -58,6 +71,7 @@ export function registerCommandAndAction(container) {
         formatActionCommandFn: formatActionCommand,
         getEntityIdsForScopesFn: getEntityIdsForScopes,
         safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+        scopeRegistry: c.resolve(tokens.IScopeRegistry),
         getActorLocationFn: getActorLocation,
         getEntityDisplayNameFn: getEntityDisplayName,
       })
@@ -66,27 +80,27 @@ export function registerCommandAndAction(container) {
     `Command and Action Registration: Registered ${String(tokens.IActionDiscoveryService)}.`
   );
 
-  r.single(
+  registrar.single(
     tokens.ActionValidationContextBuilder,
     ActionValidationContextBuilder,
     [tokens.IEntityManager, tokens.ILogger]
   );
-  r.single(
+  registrar.single(
     tokens.PrerequisiteEvaluationService,
     PrerequisiteEvaluationService,
     [
       tokens.ILogger,
       tokens.JsonLogicEvaluationService,
       tokens.ActionValidationContextBuilder,
-      tokens.IGameDataRepository, // <<< CORRECTED: Changed to use the interface token
+      tokens.IGameDataRepository,
     ]
   );
-  r.single(
+  registrar.single(
     tokens.DomainContextCompatibilityChecker,
     DomainContextCompatibilityChecker,
     [tokens.ILogger]
   );
-  r.single(tokens.ActionValidationService, ActionValidationService, [
+  registrar.single(tokens.ActionValidationService, ActionValidationService, [
     tokens.IEntityManager,
     tokens.ILogger,
     tokens.DomainContextCompatibilityChecker,
@@ -98,7 +112,7 @@ export function registerCommandAndAction(container) {
 
   // --- Command Processing ---
 
-  r.singletonFactory(tokens.ICommandProcessor, (c) => {
+  registrar.singletonFactory(tokens.ICommandProcessor, (c) => {
     return new CommandProcessor({
       logger: c.resolve(tokens.ILogger),
       safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),

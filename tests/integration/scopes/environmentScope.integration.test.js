@@ -39,6 +39,7 @@ describe('Scope Integration Tests', () => {
   let logger;
   let actionDiscoveryService;
   let jsonLogicEval;
+  let scopeRegistry;
 
   beforeEach(() => {
     // Restore the mocked logger
@@ -50,7 +51,7 @@ describe('Scope Integration Tests', () => {
     };
 
     entityManager = new SimpleEntityManager([]);
-    const scopeRegistry = ScopeRegistry.getInstance();
+    scopeRegistry = new ScopeRegistry({ logger });
     scopeRegistry.clear();
 
     const environmentScopeContent = fs.readFileSync(
@@ -102,6 +103,7 @@ describe('Scope Integration Tests', () => {
       formatActionCommandFn: formatActionCommand,
       getEntityIdsForScopesFn: getEntityIdsForScopes,
       safeEventDispatcher,
+      scopeRegistry,
     });
   });
 
