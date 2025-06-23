@@ -45,8 +45,9 @@ export async function processAndStoreItem(loader, options) {
   } = options;
 
   // Special handling for EntityDefinition instances - preserve their original id
-  const isEntityDefinition = data && data.constructor && data.constructor.name === 'EntityDefinition';
-  
+  const isEntityDefinition =
+    data && data.constructor && data.constructor.name === 'EntityDefinition';
+
   let fullId, baseId;
   if (isEntityDefinition) {
     // For EntityDefinition instances, use the existing id as fullId and extract baseId

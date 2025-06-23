@@ -39,10 +39,7 @@
               "$ref": "common.schema.json#/definitions/namespacedId"
             },
             "additionalProperties": {
-              "oneOf": [
-                { "type": "object" },
-                { "type": "array" }
-              ]
+              "oneOf": [{ "type": "object" }, { "type": "array" }]
             }
           }
         },

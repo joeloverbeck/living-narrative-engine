@@ -229,7 +229,7 @@ describe('GoalLoader', () => {
           // The data object, enhanced with metadata
           id: goalData.id,
           _fullId: qualifiedId,
-          _modId: "test-mod-alpha",
+          _modId: 'test-mod-alpha',
           description: goalData.description,
         })
       );

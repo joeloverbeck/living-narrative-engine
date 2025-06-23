@@ -209,11 +209,29 @@ export class LocationRenderer extends BoundDomRendererBase {
 
       if (!currentLocationInstanceId) {
         // TEMPORARY DEBUG: Dump registry contents
-        if (this.dataRegistry && typeof this.dataRegistry.getAll === 'function') {
-          const allInstances = this.dataRegistry.getAll('entityInstances') || [];
+        if (
+          this.dataRegistry &&
+          typeof this.dataRegistry.getAll === 'function'
+        ) {
+          const allInstances =
+            this.dataRegistry.getAll('entityInstances') || [];
           const allDefs = this.dataRegistry.getAll('entityDefinitions') || [];
-          this.logger.error('[DEBUG] Registry entityInstances:', allInstances.map(e => ({id: e.id, instanceId: e.instanceId, definitionId: e.definitionId, componentOverrides: e.componentOverrides})));
-          this.logger.error('[DEBUG] Registry entityDefinitions:', allDefs.map(e => ({id: e.id, components: Object.keys(e.components)})));
+          this.logger.error(
+            '[DEBUG] Registry entityInstances:',
+            allInstances.map((e) => ({
+              id: e.id,
+              instanceId: e.instanceId,
+              definitionId: e.definitionId,
+              componentOverrides: e.componentOverrides,
+            }))
+          );
+          this.logger.error(
+            '[DEBUG] Registry entityDefinitions:',
+            allDefs.map((e) => ({
+              id: e.id,
+              components: Object.keys(e.components),
+            }))
+          );
         } else {
           this.logger.error('[DEBUG] dataRegistry or getAll not available');
         }
@@ -223,10 +241,10 @@ export class LocationRenderer extends BoundDomRendererBase {
           details: {
             raw: JSON.stringify({
               entityId: currentActorEntityId,
-              functionName: 'handleTurnStarted'
+              functionName: 'handleTurnStarted',
             }),
-            stack: (new Error().stack)
-          }
+            stack: new Error().stack,
+          },
         });
         this.#clearAllDisplaysOnErrorWithMessage(
           `Location for ${currentActorEntityId} is unknown.`

@@ -1,1 +1,1 @@
-location.core:exits[].target 
+directions := location.core:exits[].target

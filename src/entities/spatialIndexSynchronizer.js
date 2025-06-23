@@ -69,10 +69,19 @@ export class SpatialIndexSynchronizer {
   onEntityAdded(payload) {
     const { entity } = payload;
     if (!entity) return;
-    this.logger.debug(`SpatialIndexSynchronizer.onEntityAdded: Received payload with entity:`, entity);
-    this.logger.debug(`SpatialIndexSynchronizer.onEntityAdded: Entity type:`, typeof entity);
-    this.logger.debug(`SpatialIndexSynchronizer.onEntityAdded: Entity constructor:`, entity?.constructor?.name);
-    
+    this.logger.debug(
+      `SpatialIndexSynchronizer.onEntityAdded: Received payload with entity:`,
+      entity
+    );
+    this.logger.debug(
+      `SpatialIndexSynchronizer.onEntityAdded: Entity type:`,
+      typeof entity
+    );
+    this.logger.debug(
+      `SpatialIndexSynchronizer.onEntityAdded: Entity constructor:`,
+      entity?.constructor?.name
+    );
+
     const position = entity.getComponentData(POSITION_COMPONENT_ID);
     if (position?.locationId) {
       this.spatialIndex.addEntity(entity.id, position.locationId);

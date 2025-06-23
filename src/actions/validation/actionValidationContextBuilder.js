@@ -1,6 +1,3 @@
-// src/actions/validation/actionValidationContextBuilder.js
-// --- FILE START ---
-
 /* type-only imports */
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../entities/entityManager.js').default} EntityManager */
@@ -10,13 +7,13 @@
 /** @typedef {import('../../logic/defs.js').JsonLogicEvaluationContext} JsonLogicEvaluationContext */
 
 // --- FIX: Import necessary functions and constants ---
-
 import { setupService } from '../../utils/serviceInitializerUtils.js';
+// FIX: Remove buildDirectionContext as it's obsolete
 import {
   buildActorContext,
-  buildDirectionContext,
   buildEntityTargetContext,
 } from './contextBuilders.js';
+
 /**
  * @class ActionValidationContextBuilder
  * @description Service dedicated to constructing the data context object used
@@ -46,8 +43,6 @@ export class ActionValidationContextBuilder {
   /**
    * Builds the evaluation context object for a given action attempt.
    * This context provides data accessible to JsonLogic rules during validation.
-   * This implementation now uses a dynamic component accessor for actor and target
-   * entities, aligning with the pattern in `createJsonLogicContext`.
    *
    * @param {ActionDefinition} actionDefinition - The definition of the action being attempted.
    * @param {Entity} actor - The entity performing the action.
@@ -78,12 +73,9 @@ export class ActionValidationContextBuilder {
         actionDefinition,
         targetContext
       );
-    } else if (targetContext.type === 'direction') {
-      targetContextForEval = this.#buildDirectionTargetContextForEval(
-        actor.id,
-        targetContext
-      );
     }
+    // FIX: Removed 'direction' handling logic as it's obsolete
+    // else if (targetContext.type === 'direction') { ... }
 
     // --- 4. Assemble Final Context ---
     const finalContext = {
@@ -93,7 +85,7 @@ export class ActionValidationContextBuilder {
         id: actionDefinition.id,
       },
       // Add other top-level keys for consistency
-      event: null, // No event is being processed here
+      event: null,
       context: {},
       globals: {},
       entities: {},
@@ -171,22 +163,6 @@ export class ActionValidationContextBuilder {
     return null;
   }
 
-  /**
-   * Creates the evaluation target context when the target type is 'direction'.
-   *
-   * @param {string} actorId - ID of the acting entity.
-   * @param {ActionTargetContext} targetContext - Target context information.
-   * @returns {object} The constructed target context for the direction.
-   * @private
-   */
-  #buildDirectionTargetContextForEval(actorId, targetContext) {
-    return buildDirectionContext(
-      actorId,
-      targetContext.direction,
-      this.#entityManager,
-      this.#logger
-    );
-  }
+  // FIX: Removed the obsolete method for building direction context
+  // #buildDirectionTargetContextForEval(actorId, targetContext) { ... }
 }
-
-// --- FILE END ---

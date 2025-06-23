@@ -38,7 +38,9 @@ describe('EntityInstanceData', () => {
 
     it('should perform a deep clone of initial overrides', () => {
       // Arrange
-      const initialOverrides = { 'core:position': { locationId: 'test:location' } };
+      const initialOverrides = {
+        'core:position': { locationId: 'test:location' },
+      };
 
       // Act
       const instance = new EntityInstanceData(
@@ -57,7 +59,9 @@ describe('EntityInstanceData', () => {
 
   describe('removeComponentOverride(componentTypeId)', () => {
     let instance;
-    const positionComponent = { 'core:position': { locationId: 'test:location' } };
+    const positionComponent = {
+      'core:position': { locationId: 'test:location' },
+    };
     const inventoryComponent = { 'core:inventory': { items: ['item-a'] } };
 
     beforeEach(() => {

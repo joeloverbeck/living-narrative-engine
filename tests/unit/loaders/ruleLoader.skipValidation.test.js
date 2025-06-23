@@ -281,7 +281,7 @@ describe('RuleLoader - Skip Validation Scenario (via loadItemsForMod)', () => {
         ...ruleDataSkip, // Original data properties
         id: ruleBasename, // BASE ID
         _fullId: expectedStoredRuleId, // QUALIFIED ID
-        _modId: "test-mod-skip-validation",
+        _modId: 'test-mod-skip-validation',
         _sourceFile: ruleFile, // Augmented with source file
       };
 

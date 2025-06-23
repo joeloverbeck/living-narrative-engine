@@ -105,7 +105,10 @@ describe('ActionDiscoveryService - processActionDefinition', () => {
 
     expect(getEntityIdsForScopesFn).toHaveBeenCalledWith(
       ['monster'],
-      context,
+      expect.objectContaining({
+        currentLocation: null,
+        getActor: expect.any(Function),
+      }),
       expect.any(Object)
     );
     expect(result.actions).toEqual([

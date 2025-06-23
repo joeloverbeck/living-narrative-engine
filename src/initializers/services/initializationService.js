@@ -119,6 +119,13 @@ class InitializationService extends IInitializationService {
         `InitializationService: World data loaded successfully for world: ${worldName}. Load report: ${JSON.stringify(loadReport)}`
       );
 
+      this.#logger.debug('Initializing ScopeRegistry...');
+      const scopeRegistry = this.#container.resolve(tokens.IScopeRegistry);
+      const dataRegistry = this.#container.resolve(tokens.IDataRegistry);
+      const scopes = dataRegistry.get('scopes');
+      scopeRegistry.initialize(scopes);
+      this.#logger.debug('ScopeRegistry initialized.');
+
       // ***** START: Initialize ConfigurableLLMAdapter *****
       this.#logger.debug(
         'InitializationService: Attempting to initialize ConfigurableLLMAdapter...'
@@ -204,7 +211,8 @@ class InitializationService extends IInitializationService {
       this.#logger.debug(
         'WorldInitializer resolved. Initializing world entities...'
       );
-      const worldInitSuccess = await worldInitializer.initializeWorldEntities(worldName);
+      const worldInitSuccess =
+        await worldInitializer.initializeWorldEntities(worldName);
       if (!worldInitSuccess) {
         throw new Error('World initialization failed via WorldInitializer.');
       }

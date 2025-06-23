@@ -228,19 +228,16 @@ moddable nature.
 ## Committing Code and Pull Requests
 
 1. **Pre-Commit Checks**:
-
    - Format your code: `npm run format` (from root).
    - Lint\_ your code: `npm run lint` (from root) AND `cd llm-proxy-server && npm run lint`. Address new errors an
    - Run all tests: `npm run test` (from root) AND `cd llm-proxy-server && npm run test`. Ensure they all pass.
 
 2. **Commit Messages**:
-
    - Write clear, concise, and descriptive commit messages.
    - Follow conventional commit message formats if possible (e.g., `feat: add new targeting system`,
      `fix: resolve issue with item parsing`).
 
 3. **Pull Requests (PRs)**:
-
    - **Title Format**: `[Scope/Type] Short description of the change`
      - Examples: `[Fix] Resolve mod loading circular dependency bug`, `[Feat] Implement weather system component`,
        `[Docs] Update JSDoc for EntityService`

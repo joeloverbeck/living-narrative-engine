@@ -120,7 +120,7 @@ describe('EntityInstanceLoader Integration Test Suite', () => {
         // Properties from _storeItemInRegistry augmentation
         id: 'test_mod:player_char', // Full qualified ID
         _fullId: 'test_mod:player_char', // Qualified ID
-        _modId: "test_mod",
+        _modId: 'test_mod',
         _sourceFile: INSTANCE_FILENAME,
         // Original data from validInstanceData
         instanceId: validInstanceData.instanceId,

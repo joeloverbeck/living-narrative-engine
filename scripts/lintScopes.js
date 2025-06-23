@@ -2,7 +2,6 @@
 
 const defaultFs = require('fs/promises');
 const defaultPath = require('path');
-const { parseInlineExpr } = require('../src/scopeDsl/parser.js');
 
 /**
  * Recursively find all .scope files in the mods directory
@@ -38,23 +37,43 @@ async function findScopeFiles(dir, fs = defaultFs, path = defaultPath) {
  *
  * @param {string} filePath - Path to the .scope file
  * @param {object} fs - fs/promises module
+ * @param {object|null} injectedParser - For testing: an object with a parseScopeDefinitions function
  * @returns {Promise<{file: string, error: string} | null>} Error object or null if valid
  */
-async function validateScopeFile(filePath, fs = defaultFs) {
+async function validateScopeFile(
+  filePath,
+  fs = defaultFs,
+  injectedParser = null
+) {
   try {
+    // FIX: If a parser is injected (only during tests), use it. Otherwise, load the real one.
+    const { parseScopeDefinitions } =
+      injectedParser ||
+      (await (async () => {
+        const { pathToFileURL } = require('url');
+        const parserPath = defaultPath.resolve(
+          __dirname,
+          '..',
+          'src',
+          'scopeDsl',
+          'scopeDefinitionParser.js'
+        );
+        return import(pathToFileURL(parserPath));
+      })());
+
     const content = await fs.readFile(filePath, 'utf8');
     if (!content.trim()) {
       return {
         file: filePath,
-        error: 'Empty scope file'
+        error: 'Empty scope file',
       };
     }
-    parseInlineExpr(content.trim());
+    parseScopeDefinitions(content, filePath);
     return null;
   } catch (error) {
     return {
       file: filePath,
-      error: error.message
+      error: error.message,
     };
   }
 }
@@ -65,8 +84,14 @@ async function validateScopeFile(filePath, fs = defaultFs) {
  * @param {string} modsDirArg - Optional mods directory
  * @param {object} fs - Optional fs/promises module
  * @param {object} path - Optional path module
+ * @param {object|null} injectedParser - For testing: an object with a parseScopeDefinitions function
  */
-async function lintScopes(modsDirArg, fs = defaultFs, path = defaultPath) {
+async function lintScopes(
+  modsDirArg,
+  fs = defaultFs,
+  path = defaultPath,
+  injectedParser = null
+) {
   const modsDir = modsDirArg || path.join(__dirname, '..', 'data', 'mods');
   let validCount = 0;
   let errorCount = 0;
@@ -77,7 +102,8 @@ async function lintScopes(modsDirArg, fs = defaultFs, path = defaultPath) {
       process.exit(0);
     }
     for (const filePath of scopeFiles) {
-      const error = await validateScopeFile(filePath, fs);
+      // FIX: Pass the injected parser down to the validation function.
+      const error = await validateScopeFile(filePath, fs, injectedParser);
       if (error) {
         console.error(`❌ ${error.file}: ${error.error}`);
         errorCount++;
@@ -101,9 +127,10 @@ async function lintScopes(modsDirArg, fs = defaultFs, path = defaultPath) {
 module.exports = {
   findScopeFiles,
   validateScopeFile,
-  lintScopes
+  lintScopes,
 };
 
 if (require.main === module) {
+  // When run directly, injectedParser is null, so production behavior is unchanged.
   lintScopes();
-} 
+}

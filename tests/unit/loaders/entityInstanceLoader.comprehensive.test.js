@@ -99,7 +99,7 @@ describe('EntityInstanceLoader', () => {
         ...testInstanceData,
         id: 'core:goblin_sentry_01',
         _fullId: 'core:goblin_sentry_01',
-        _modId: "core",
+        _modId: 'core',
         _sourceFile: filename,
       };
 

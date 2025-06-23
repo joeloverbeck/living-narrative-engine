@@ -30,7 +30,6 @@ import EndTurnHandler from '../../logic/operationHandlers/endTurnHandler.js';
 import SystemMoveEntityHandler from '../../logic/operationHandlers/systemMoveEntityHandler.js';
 import GetTimestampHandler from '../../logic/operationHandlers/getTimestampHandler.js';
 import GetNameHandler from '../../logic/operationHandlers/getNameHandler.js';
-import ResolveDirectionHandler from '../../logic/operationHandlers/resolveDirectionHandler.js';
 import RebuildLeaderListCacheHandler from '../../logic/operationHandlers/rebuildLeaderListCacheHandler';
 import CheckFollowCycleHandler from '../../logic/operationHandlers/checkFollowCycleHandler';
 import EstablishFollowRelationHandler from '../../logic/operationHandlers/establishFollowRelationHandler.js';
@@ -197,15 +196,6 @@ export function registerInterpreters(container) {
           entityManager: c.resolve(tokens.IEntityManager),
           logger: c.resolve(tokens.ILogger),
           safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
-        }),
-    ],
-    [
-      tokens.ResolveDirectionHandler,
-      ResolveDirectionHandler,
-      (c, Handler) =>
-        new Handler({
-          worldContext: c.resolve(tokens.IWorldContext),
-          logger: c.resolve(tokens.ILogger),
         }),
     ],
     [

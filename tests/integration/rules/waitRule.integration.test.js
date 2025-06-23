@@ -81,10 +81,6 @@ describe('core_handle_wait rule integration', () => {
     });
 
     const types = testEnv.events.map((e) => e.eventType);
-    expect(types).toEqual(
-      expect.arrayContaining([
-        'core:turn_ended',
-      ])
-    );
+    expect(types).toEqual(expect.arrayContaining(['core:turn_ended']));
   });
 });

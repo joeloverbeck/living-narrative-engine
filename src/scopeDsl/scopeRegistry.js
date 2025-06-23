@@ -16,11 +16,11 @@ class ScopeRegistry {
    */
   initialize(scopeDefinitions = {}) {
     this._scopes.clear();
-    
+
     for (const [scopeName, scopeDef] of Object.entries(scopeDefinitions)) {
       this._scopes.set(scopeName, scopeDef);
     }
-    
+
     this._initialized = true;
   }
 
@@ -71,7 +71,7 @@ class ScopeRegistry {
     return {
       size: this._scopes.size,
       initialized: this._initialized,
-      scopeNames: this.getAllScopeNames()
+      scopeNames: this.getAllScopeNames(),
     };
   }
 
@@ -82,21 +82,6 @@ class ScopeRegistry {
     this._scopes.clear();
     this._initialized = false;
   }
-
-  // Singleton pattern
-  static _instance = null;
-
-  /**
-   * Get the singleton instance
-   *
-   * @returns {ScopeRegistry} Singleton instance
-   */
-  static getInstance() {
-    if (!ScopeRegistry._instance) {
-      ScopeRegistry._instance = new ScopeRegistry();
-    }
-    return ScopeRegistry._instance;
-  }
 }
 
-export default ScopeRegistry; 
+export default ScopeRegistry;

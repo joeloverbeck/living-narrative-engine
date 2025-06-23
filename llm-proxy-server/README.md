@@ -54,20 +54,17 @@ Create a `.env` file in the `llm-proxy-server/` directory by copying `.env.examp
 Then, edit the `.env` file with your specific configurations:
 
 - **`PROXY_PORT`**: The port on which the proxy server will listen.
-
   - Example: `PROXY_PORT=3001`
   - Defaults to `3001` if not set in `server.js`.
 
 - **`PROXY_ALLOWED_ORIGIN`**: Specifies the origins (e.g., where your main game application is served from) that are
   allowed to make requests to this proxy server (CORS configuration).
-
   - Example for a single origin: `PROXY_ALLOWED_ORIGIN=http://localhost:8080`
   - Example for multiple origins (comma-separated): `PROXY_ALLOWED_ORIGIN=http://localhost:8080,http://127.0.0.1:8080`
   - If not set, CORS will not be specifically configured, potentially blocking cross-origin requests.
 
 - **`LLM_CONFIG_PATH`**: The path to the `llm-configs.json` file that the proxy server will use. This path can be
   absolute or relative.
-
   - **New Default**: If this environment variable is not set, the proxy server will now attempt to load the
     configuration from `../config/llm-configs.json` (relative to the `llm-proxy-server/server.js` file). This means it
     expects the `llm-configs.json` to be in a `config` directory located one level above the `llm-proxy-server`
@@ -78,13 +75,11 @@ Then, edit the `.env` file with your specific configurations:
 
 - **`PROXY_PROJECT_ROOT_PATH_FOR_API_KEY_FILES`**: The absolute path on the proxy server's filesystem where API key
   _files_ are stored. This is used if an LLM configuration in `llm-configs.json` specifies an `apiKeyFileName`.
-
   - Example: `PROXY_PROJECT_ROOT_PATH_FOR_API_KEY_FILES=/secure/path/to/api_keys`
   - If not set, API key retrieval from files will not be possible.
 
 - **API Key Variables (e.g., `OPENROUTER_API_KEY_ENV_VAR_PLACEHOLDER`, `ANTHROPIC_API_KEY_ENV_VAR_PLACEHOLDER`)**: The
   proxy server needs access to the _actual_ API keys for the LLM providers it will forward requests to.
-
   - If an LLM configuration in the proxy's `llm-configs.json` specifies an `apiKeyEnvVar` (e.g., `"MY_PROVIDER_KEY"`),
     the proxy server will look for an environment variable named `MY_PROVIDER_KEY` in its own environment (i.e., in
     this `.env` file or system environment) to get the actual API key.

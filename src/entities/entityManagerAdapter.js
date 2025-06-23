@@ -71,7 +71,11 @@ export class EntityManagerAdapter {
   }
 
   addComponent(instanceId, componentTypeId, componentData) {
-    return this.entityManager.addComponent(instanceId, componentTypeId, componentData);
+    return this.entityManager.addComponent(
+      instanceId,
+      componentTypeId,
+      componentData
+    );
   }
 
   removeComponent(instanceId, componentTypeId) {
@@ -85,4 +89,4 @@ export class EntityManagerAdapter {
   get entities() {
     return this.entityManager.entities;
   }
-} 
+}

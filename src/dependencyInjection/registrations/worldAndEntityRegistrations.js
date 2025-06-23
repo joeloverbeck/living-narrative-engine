@@ -28,6 +28,7 @@ import * as closenessCircleService from '../../logic/services/closenessCircleSer
 import { EntityDisplayDataProvider } from '../../entities/entityDisplayDataProvider.js';
 import { SpatialIndexSynchronizer } from '../../entities/spatialIndexSynchronizer.js';
 import { LocationQueryService } from '../../entities/locationQueryService.js';
+import ScopeRegistry from '../../scopeDsl/scopeRegistry.js';
 
 /**
  * Registers world, entity, and context-related services.
@@ -144,6 +145,13 @@ export function registerWorldAndEntity(container) {
   logger.debug(
     `World and Entity Registration: Registered ${String(
       tokens.LocationQueryService
+    )}.`
+  );
+
+  r.single(tokens.IScopeRegistry, ScopeRegistry, []);
+  logger.debug(
+    `World and Entity Registration: Registered ${String(
+      tokens.IScopeRegistry
     )}.`
   );
 

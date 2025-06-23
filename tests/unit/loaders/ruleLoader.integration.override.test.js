@@ -270,7 +270,7 @@ describe('RuleLoader Integration (Rule Override via loadItemsForMod)', () => {
       ...baseRuleData,
       id: commonRuleIdInFile, // BASE ID
       _fullId: finalBaseRuleId, // QUALIFIED ID
-      _modId: "BaseMod",
+      _modId: 'BaseMod',
       _sourceFile: commonFileName,
     };
     const storedBaseRule = realRegistry.get(RULE_TYPE_NAME, finalBaseRuleId);
@@ -297,7 +297,7 @@ describe('RuleLoader Integration (Rule Override via loadItemsForMod)', () => {
       ...overrideRuleData,
       id: commonRuleIdInFile, // BASE ID
       _fullId: finalOverrideRuleId, // QUALIFIED ID
-      _modId: "OverrideMod",
+      _modId: 'OverrideMod',
       _sourceFile: commonFileName,
     };
     const storedOverrideRule = realRegistry.get(

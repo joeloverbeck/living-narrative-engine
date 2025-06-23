@@ -57,7 +57,13 @@ import ConsoleLogger from '../../../src/logging/consoleLogger.js';
  * @param safeEventDispatcher
  * @returns {object} Handlers object
  */
-function createHandlers(entityManager, eventBus, logger, validatedEventDispatcher, safeEventDispatcher) {
+function createHandlers(
+  entityManager,
+  eventBus,
+  logger,
+  validatedEventDispatcher,
+  safeEventDispatcher
+) {
   return {
     QUERY_COMPONENT: new QueryComponentHandler({
       entityManager,
@@ -116,7 +122,11 @@ describe('core_handle_dismiss rule integration', () => {
     };
     const expandedRule = {
       ...dismissRule,
-      actions: expandMacros(dismissRule.actions, macroRegistry, testEnv?.logger),
+      actions: expandMacros(
+        dismissRule.actions,
+        macroRegistry,
+        testEnv?.logger
+      ),
     };
 
     const dataRegistry = {
@@ -154,7 +164,13 @@ describe('core_handle_dismiss rule integration', () => {
     });
     const entityManager = new SimpleEntityManager([]);
     const operationRegistry = new OperationRegistry({ logger: testLogger });
-    const handlers = createHandlers(entityManager, bus, testLogger, validatedEventDispatcher, safeEventDispatcher);
+    const handlers = createHandlers(
+      entityManager,
+      bus,
+      testLogger,
+      validatedEventDispatcher,
+      safeEventDispatcher
+    );
     const { IF_CO_LOCATED_FACTORY, ...rest } = handlers;
     for (const [type, handler] of Object.entries(rest)) {
       operationRegistry.register(type, handler.execute.bind(handler));
@@ -178,7 +194,7 @@ describe('core_handle_dismiss rule integration', () => {
       'core:turn_ended',
       'core:system_error_occurred',
     ];
-    eventsToCapture.forEach(eventType => {
+    eventsToCapture.forEach((eventType) => {
       bus.subscribe(eventType, (event) => {
         capturedEvents.push({ eventType: event.type, payload: event.payload });
       });
@@ -202,9 +218,18 @@ describe('core_handle_dismiss rule integration', () => {
       reset: (newEntities = []) => {
         testEnv.cleanup();
         const newEntityManager = new SimpleEntityManager(newEntities);
-        const newHandlers = createHandlers(newEntityManager, bus, testLogger, validatedEventDispatcher, safeEventDispatcher);
-        const { IF_CO_LOCATED_FACTORY: newIfCoLocatedFactory, ...newRest } = newHandlers;
-        const newOperationRegistry = new OperationRegistry({ logger: testLogger });
+        const newHandlers = createHandlers(
+          newEntityManager,
+          bus,
+          testLogger,
+          validatedEventDispatcher,
+          safeEventDispatcher
+        );
+        const { IF_CO_LOCATED_FACTORY: newIfCoLocatedFactory, ...newRest } =
+          newHandlers;
+        const newOperationRegistry = new OperationRegistry({
+          logger: testLogger,
+        });
         for (const [type, handler] of Object.entries(newRest)) {
           newOperationRegistry.register(type, handler.execute.bind(handler));
         }

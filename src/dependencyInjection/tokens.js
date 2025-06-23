@@ -15,7 +15,7 @@ import { freeze } from '../utils';
  * @property {DiToken} IDataFetcher - Token for the data fetching service.
  * @property {DiToken} IConfiguration - Token for static configuration access.
  * @property {DiToken} IPathResolver - Token for resolving data paths.
- * @property {DiToken} ISchemaValidator - Token for validating data against schemas.
+ * @property {DiToken} ISchemaValidator - Token for a service that validates data against schemas.
  * @property {DiToken} IDataRegistry - Token for storing loaded game data.
  * @property {DiToken} ISpatialIndexManager - Token for managing the spatial index.
  * @property {DiToken} IReferenceResolver - Token for the reference resolution service.
@@ -68,6 +68,7 @@ import { freeze } from '../utils';
  * @property {DiToken} ILoadCache - Token for the load cache service.
  *
  * --- Core Services & Managers (Implementations - some will be replaced by Interface Tokens below) ---
+ * @property {DiToken} ScopeRegistry - Token for the scope definitions registry service.
  * @property {DiToken} GameDataRepository - Token for accessing registered game data (implementation).
  * @property {DiToken} EntityManager - Token for managing game entities and components (implementation).
  * @property {DiToken} SpatialIndexSynchronizer - Token for the service that keeps the spatial index in sync with entity events.
@@ -207,6 +208,7 @@ export const tokens = freeze({
   ILoadCache: 'ILoadCache',
 
   // Core Services & Managers (Concrete Implementations - some may be deprecated for interface tokens)
+  ScopeRegistry: 'ScopeRegistry',
   GameDataRepository: 'GameDataRepository',
   EntityManager: 'EntityManager',
   SpatialIndexSynchronizer: 'SpatialIndexSynchronizer',
@@ -338,7 +340,6 @@ export const tokens = freeze({
   SystemMoveEntityHandler: 'SystemMoveEntityHandler',
   GetTimestampHandler: 'GetTimestampHandler',
   GetNameHandler: 'GetNameHandler',
-  ResolveDirectionHandler: 'ResolveDirectionHandler',
   RebuildLeaderListCacheHandler: 'RebuildLeaderListCacheHandler',
   CheckFollowCycleHandler: 'CheckFollowCycleHandler',
   EstablishFollowRelationHandler: 'EstablishFollowRelationHandler',

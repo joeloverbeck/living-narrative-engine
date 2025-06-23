@@ -15,7 +15,10 @@ import loadConditionSchemas from '../../unit/helpers/loadConditionSchemas.js';
 import actorIsNotNull from '../../../data/mods/core/conditions/actor-is-not-null.condition.json';
 import followAutoMoveRule from '../../../data/mods/core/rules/follow_auto_move.rule.json';
 import autoMoveFollowerMacro from '../../../data/mods/core/macros/autoMoveFollower.macro.json';
-import { expandMacros, findUnexpandedMacros } from '../../../src/utils/macroUtils.js';
+import {
+  expandMacros,
+  findUnexpandedMacros,
+} from '../../../src/utils/macroUtils.js';
 import SystemLogicInterpreter from '../../../src/logic/systemLogicInterpreter.js';
 import OperationInterpreter from '../../../src/logic/operationInterpreter.js';
 import OperationRegistry from '../../../src/logic/operationRegistry.js';
@@ -57,7 +60,14 @@ import ConsoleLogger from '../../../src/logging/consoleLogger.js';
  * @param {object} safeEventDispatcher - SafeEventDispatcher instance
  * @returns {object} Handlers object
  */
-function createHandlers(entityManager, eventBus, logger, jsonLogicEvaluationService, validatedEventDispatcher, safeEventDispatcher) {
+function createHandlers(
+  entityManager,
+  eventBus,
+  logger,
+  jsonLogicEvaluationService,
+  validatedEventDispatcher,
+  safeEventDispatcher
+) {
   return {
     QUERY_COMPONENT: new QueryComponentHandler({
       entityManager,
@@ -115,11 +125,17 @@ describe('core_handle_follow_auto_move rule integration', () => {
           ? autoMoveFollowerMacro
           : undefined,
     };
-    const expandedActions = expandMacros(followAutoMoveRule.actions, macroRegistry, testEnv?.logger);
+    const expandedActions = expandMacros(
+      followAutoMoveRule.actions,
+      macroRegistry,
+      testEnv?.logger
+    );
     const unexpanded = findUnexpandedMacros(expandedActions);
     if (unexpanded.length > 0) {
-       
-      console.error('Unexpanded macros found in follow_auto_move.rule.json:', unexpanded);
+      console.error(
+        'Unexpanded macros found in follow_auto_move.rule.json:',
+        unexpanded
+      );
       throw new Error('Unexpanded macros remain after expansion!');
     }
     const expandedRule = {
@@ -175,7 +191,14 @@ describe('core_handle_follow_auto_move rule integration', () => {
 
     // Create operation registry with our custom entity manager
     const operationRegistry = new OperationRegistry({ logger: testLogger });
-    const handlers = createHandlers(customEntityManager, bus, testLogger, jsonLogic, validatedEventDispatcher, safeEventDispatcher);
+    const handlers = createHandlers(
+      customEntityManager,
+      bus,
+      testLogger,
+      jsonLogic,
+      validatedEventDispatcher,
+      safeEventDispatcher
+    );
     for (const [type, handler] of Object.entries(handlers)) {
       operationRegistry.register(type, handler.execute.bind(handler));
     }
@@ -196,16 +219,16 @@ describe('core_handle_follow_auto_move rule integration', () => {
 
     // Create a simple event capture mechanism for testing
     const capturedEvents = [];
-    
+
     // Subscribe to the specific events we want to capture
     const eventsToCapture = [
       'core:perceptible_event',
-      'core:display_successful_action_result', 
+      'core:display_successful_action_result',
       'core:turn_ended',
-      'core:system_error_occurred'
+      'core:system_error_occurred',
     ];
-    
-    eventsToCapture.forEach(eventType => {
+
+    eventsToCapture.forEach((eventType) => {
       bus.subscribe(eventType, (event) => {
         capturedEvents.push({ eventType: event.type, payload: event.payload });
       });
@@ -220,10 +243,19 @@ describe('core_handle_follow_auto_move rule integration', () => {
     }
 
     // Debug: Check if the interpreter was initialized properly
-    console.log('DEBUG: After initialize - rule cache size:', interpreter._ruleCache?.size);
-    console.log('DEBUG: After initialize - rule cache keys:', Array.from(interpreter._ruleCache?.keys() || []));
-    console.log('DEBUG: After initialize - dataRegistry.getAllSystemRules called:', dataRegistry.getAllSystemRules.mock?.calls?.length);
-    
+    console.log(
+      'DEBUG: After initialize - rule cache size:',
+      interpreter._ruleCache?.size
+    );
+    console.log(
+      'DEBUG: After initialize - rule cache keys:',
+      Array.from(interpreter._ruleCache?.keys() || [])
+    );
+    console.log(
+      'DEBUG: After initialize - dataRegistry.getAllSystemRules called:',
+      dataRegistry.getAllSystemRules.mock?.calls?.length
+    );
+
     // Debug: Check the rules being passed to the interpreter
     const rules = dataRegistry.getAllSystemRules();
     console.log('DEBUG: Rules passed to interpreter:', rules);
@@ -247,10 +279,19 @@ describe('core_handle_follow_auto_move rule integration', () => {
         testEnv.cleanup();
         // Create new entity manager with the new entities
         customEntityManager = new SimpleEntityManager(newEntities);
-        
+
         // Recreate handlers with the new entity manager
-        const newHandlers = createHandlers(customEntityManager, bus, testLogger, jsonLogic, validatedEventDispatcher, safeEventDispatcher);
-        const newOperationRegistry = new OperationRegistry({ logger: testLogger });
+        const newHandlers = createHandlers(
+          customEntityManager,
+          bus,
+          testLogger,
+          jsonLogic,
+          validatedEventDispatcher,
+          safeEventDispatcher
+        );
+        const newOperationRegistry = new OperationRegistry({
+          logger: testLogger,
+        });
         for (const [type, handler] of Object.entries(newHandlers)) {
           newOperationRegistry.register(type, handler.execute.bind(handler));
         }
@@ -276,7 +317,7 @@ describe('core_handle_follow_auto_move rule integration', () => {
         testEnv.operationInterpreter = newOperationInterpreter;
         testEnv.systemLogicInterpreter = newInterpreter;
         testEnv.entityManager = customEntityManager;
-        
+
         // Clear events
         capturedEvents.length = 0;
       },

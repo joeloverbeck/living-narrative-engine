@@ -1,167 +1,200 @@
-import { jest } from '@jest/globals';
+// tests/scopeDsl/scopeRegistry.spec.js
+
 import ScopeRegistry from '../../../src/scopeDsl/scopeRegistry.js';
 
 describe('ScopeRegistry', () => {
-  let registry;
+  /** @type {ScopeRegistry} */
+  let scopeRegistry;
+  /** @type {object} */
+  let mockScopeDefinitions;
 
+  // Arrange: Create a fresh registry and mock data before each test
   beforeEach(() => {
-    registry = new ScopeRegistry();
+    scopeRegistry = new ScopeRegistry();
+    mockScopeDefinitions = {
+      'core:all_characters': {
+        expr: 'entities() | filter(e -> e.hasComponent("c-character-sheet"))',
+        description: 'All entities with a character sheet.',
+      },
+      'core:nearby_items': {
+        expr: 'in_location(actor) | filter(e -> e.hasComponent("c-item"))',
+        description: 'All items in the same location as the actor.',
+      },
+      'mod:custom_scope': {
+        expr: 'location -> entities(Item)',
+        description: 'A custom scope from a mod.',
+      },
+    };
   });
 
-  describe('initialization', () => {
-    test('should initialize with scope definitions from registry', () => {
-      const mockScopeDefinitions = {
-        'core:inventory_items': {
-          name: 'core:inventory_items',
-          dsl: 'actor -> inventory.items[]',
-          modId: 'core',
-          source: 'file'
-        },
-        'core:equipment_items': {
-          name: 'core:equipment_items',
-          dsl: 'actor -> equipment.equipped[]',
-          modId: 'core',
-          source: 'file'
-        }
-      };
+  describe('constructor', () => {
+    it('should create an instance with an empty map of scopes and be uninitialized', () => {
+      // Assert
+      expect(scopeRegistry.getAllScopes()).toEqual(new Map());
+      expect(scopeRegistry.getStats().initialized).toBe(false);
+    });
+  });
 
-      registry.initialize(mockScopeDefinitions);
+  describe('initialize', () => {
+    it('should load scope definitions from an object into the registry', () => {
+      // Act
+      scopeRegistry.initialize({
+        'core:all_characters': mockScopeDefinitions['core:all_characters'],
+        'core:nearby_items': mockScopeDefinitions['core:nearby_items'],
+      });
 
-      expect(registry.getStats().size).toBe(2);
-      expect(registry.getStats().initialized).toBe(true);
-      expect(registry.hasScope('core:inventory_items')).toBe(true);
-      expect(registry.hasScope('core:equipment_items')).toBe(true);
+      // Assert
+      expect(scopeRegistry.getStats().size).toBe(2);
+      expect(scopeRegistry.getStats().initialized).toBe(true);
+      expect(scopeRegistry.hasScope('core:all_characters')).toBe(true);
+      expect(scopeRegistry.hasScope('core:nearby_items')).toBe(true);
     });
 
-    test('should handle empty scope definitions', () => {
-      registry.initialize({});
+    it('should handle empty or undefined scope definitions gracefully', () => {
+      // Act
+      scopeRegistry.initialize({});
 
-      expect(registry.getStats().size).toBe(0);
-      expect(registry.getStats().initialized).toBe(true);
+      // Assert
+      expect(scopeRegistry.getStats().size).toBe(0);
+      expect(scopeRegistry.getStats().initialized).toBe(true);
+
+      // Act again with undefined
+      scopeRegistry.initialize();
+      expect(scopeRegistry.getStats().size).toBe(0);
+      expect(scopeRegistry.getStats().initialized).toBe(true);
     });
 
-    test('should clear existing scopes on re-initialization', () => {
+    it('should clear any existing scopes on re-initialization', () => {
+      // Arrange: Initialize with one set of scopes
       const initialScopes = {
-        'core:test': { name: 'core:test', dsl: 'actor', modId: 'core', source: 'file' }
+        'initial:scope': { expr: 'entities()' },
       };
-      const newScopes = {
-        'core:new': { name: 'core:new', dsl: 'location', modId: 'core', source: 'file' }
-      };
+      scopeRegistry.initialize(initialScopes);
+      expect(scopeRegistry.hasScope('initial:scope')).toBe(true);
 
-      registry.initialize(initialScopes);
-      expect(registry.getStats().size).toBe(1);
+      // Act: Re-initialize with a new set of scopes
+      const newScopes = { 'new:scope': { expr: 'location' } };
+      scopeRegistry.initialize(newScopes);
 
-      registry.initialize(newScopes);
-      expect(registry.getStats().size).toBe(1);
-      expect(registry.hasScope('core:test')).toBe(false);
-      expect(registry.hasScope('core:new')).toBe(true);
+      // Assert
+      expect(scopeRegistry.getStats().size).toBe(1);
+      expect(scopeRegistry.hasScope('initial:scope')).toBe(false);
+      expect(scopeRegistry.hasScope('new:scope')).toBe(true);
     });
   });
 
   describe('scope access', () => {
     beforeEach(() => {
-      const mockScopeDefinitions = {
-        'core:inventory_items': {
-          name: 'core:inventory_items',
-          dsl: 'actor -> inventory.items[]',
-          modId: 'core',
-          source: 'file'
-        },
-        'mod:custom_scope': {
-          name: 'mod:custom_scope',
-          dsl: 'location -> entities(Item)',
-          modId: 'mod',
-          source: 'file'
-        }
-      };
-      registry.initialize(mockScopeDefinitions);
+      scopeRegistry.initialize(mockScopeDefinitions);
     });
 
-    test('should get scope by name', () => {
-      const scope = registry.getScope('core:inventory_items');
-      expect(scope).toEqual({
-        name: 'core:inventory_items',
-        dsl: 'actor -> inventory.items[]',
-        modId: 'core',
-        source: 'file'
-      });
+    it('should get a scope definition by its name', () => {
+      // Act
+      const scope = scopeRegistry.getScope('core:all_characters');
+
+      // Assert
+      expect(scope).toEqual(mockScopeDefinitions['core:all_characters']);
     });
 
-    test('should return null for non-existent scope', () => {
-      const scope = registry.getScope('non:existent');
+    it('should return null for a non-existent scope name', () => {
+      // Act
+      const scope = scopeRegistry.getScope('non:existent');
+
+      // Assert
       expect(scope).toBeNull();
     });
 
-    test('should check if scope exists', () => {
-      expect(registry.hasScope('core:inventory_items')).toBe(true);
-      expect(registry.hasScope('mod:custom_scope')).toBe(true);
-      expect(registry.hasScope('non:existent')).toBe(false);
+    it('should correctly check if a scope exists with hasScope()', () => {
+      // Assert
+      expect(scopeRegistry.hasScope('core:nearby_items')).toBe(true);
+      expect(scopeRegistry.hasScope('mod:custom_scope')).toBe(true);
+      expect(scopeRegistry.hasScope('non:existent')).toBe(false);
     });
 
-    test('should get all scope names', () => {
-      const names = registry.getAllScopeNames();
-      expect(names).toContain('core:inventory_items');
-      expect(names).toContain('mod:custom_scope');
-      expect(names).toHaveLength(2);
+    it('should get an array of all scope names', () => {
+      // Act
+      const names = scopeRegistry.getAllScopeNames();
+
+      // Assert
+      expect(names).toHaveLength(3);
+      expect(names).toEqual(
+        expect.arrayContaining([
+          'core:all_characters',
+          'core:nearby_items',
+          'mod:custom_scope',
+        ])
+      );
     });
 
-    test('should get all scopes', () => {
-      const scopes = registry.getAllScopes();
+    it('should get a map of all scopes', () => {
+      // Act
+      const scopes = scopeRegistry.getAllScopes();
+
+      // Assert
       expect(scopes).toBeInstanceOf(Map);
-      expect(scopes.size).toBe(2);
-      expect(scopes.get('core:inventory_items')).toBeDefined();
-      expect(scopes.get('mod:custom_scope')).toBeDefined();
+      expect(scopes.size).toBe(3);
+      expect(scopes.get('mod:custom_scope')).toEqual(
+        mockScopeDefinitions['mod:custom_scope']
+      );
+    });
+
+    it('should return a copy of the scopes map, not a reference', () => {
+      // Act
+      const scopesCopy = scopeRegistry.getAllScopes();
+      scopesCopy.delete('core:all_characters'); // Modify the copy
+
+      // Assert
+      expect(scopesCopy.has('core:all_characters')).toBe(false); // The copy is changed
+      expect(scopeRegistry.hasScope('core:all_characters')).toBe(true); // The original is untouched
     });
   });
 
   describe('statistics', () => {
-    test('should provide accurate statistics', () => {
-      const mockScopeDefinitions = {
-        'core:test1': { name: 'core:test1', dsl: 'actor', modId: 'core', source: 'file' },
-        'core:test2': { name: 'core:test2', dsl: 'location', modId: 'core', source: 'file' }
-      };
+    it('should provide accurate statistics for an initialized registry', () => {
+      // Arrange
+      scopeRegistry.initialize({
+        'core:test1': { expr: 'actor' },
+        'core:test2': { expr: 'location' },
+      });
 
-      registry.initialize(mockScopeDefinitions);
-      const stats = registry.getStats();
+      // Act
+      const stats = scopeRegistry.getStats();
 
+      // Assert
       expect(stats.size).toBe(2);
       expect(stats.initialized).toBe(true);
-      expect(stats.scopeNames).toContain('core:test1');
-      expect(stats.scopeNames).toContain('core:test2');
+      expect(stats.scopeNames).toEqual(
+        expect.arrayContaining(['core:test1', 'core:test2'])
+      );
+    });
+
+    it('should provide accurate statistics for a new, uninitialized registry', () => {
+      // Act
+      const stats = scopeRegistry.getStats();
+
+      // Assert
+      expect(stats).toEqual({
+        size: 0,
+        initialized: false,
+        scopeNames: [],
+      });
     });
   });
 
-  describe('clear functionality', () => {
-    test('should clear all scopes', () => {
-      const mockScopeDefinitions = {
-        'core:test': { name: 'core:test', dsl: 'actor', modId: 'core', source: 'file' }
-      };
+  describe('clear', () => {
+    it('should clear all scopes and reset the initialized flag', () => {
+      // Arrange
+      scopeRegistry.initialize(mockScopeDefinitions);
+      expect(scopeRegistry.getStats().size).toBe(3);
+      expect(scopeRegistry.getStats().initialized).toBe(true);
 
-      registry.initialize(mockScopeDefinitions);
-      expect(registry.getStats().size).toBe(1);
+      // Act
+      scopeRegistry.clear();
 
-      registry.clear();
-      expect(registry.getStats().size).toBe(0);
-      expect(registry.getStats().initialized).toBe(false);
+      // Assert
+      expect(scopeRegistry.getStats().size).toBe(0);
+      expect(scopeRegistry.getStats().initialized).toBe(false);
+      expect(scopeRegistry.getAllScopeNames()).toEqual([]);
     });
   });
-
-  describe('singleton pattern', () => {
-    test('should return the same instance', () => {
-      const instance1 = ScopeRegistry.getInstance();
-      const instance2 = ScopeRegistry.getInstance();
-      expect(instance1).toBe(instance2);
-    });
-
-    test('should maintain state across getInstance calls', () => {
-      const instance1 = ScopeRegistry.getInstance();
-      const mockScopeDefinitions = {
-        'core:test': { name: 'core:test', dsl: 'actor', modId: 'core', source: 'file' }
-      };
-      instance1.initialize(mockScopeDefinitions);
-
-      const instance2 = ScopeRegistry.getInstance();
-      expect(instance2.hasScope('core:test')).toBe(true);
-    });
-  });
-}); 
+});

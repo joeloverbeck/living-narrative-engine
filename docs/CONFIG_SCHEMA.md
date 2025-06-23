@@ -9,7 +9,6 @@ for External LLM Configuration File"[cite: 467, 468].
 The `llm-configs.json` file is a JSON object with the following top-level properties:
 
 - `defaultLlmId` (string, optional [cite: 459]):
-
   - **Purpose**: Specifies the `id` of the LLM configuration to be used by default if no other selection is actively
     made. [cite: 459] This ID must correspond to one of the keys in the `llms` object.
   - **Data Type**: `string`
@@ -43,7 +42,6 @@ Each individual LLM configuration object, nested within the `llms` dictionary, d
 setup. The following fields are based on Table 3[cite: 468]:
 
 - `id` (string, required):
-
   - **Purpose**: A unique identifier for this specific LLM configuration. [cite: 468] This ID is used internally to
     select and reference the configuration and must match the key used in the `llms` dictionary.
   - **Data Type**: `string`
@@ -51,7 +49,6 @@ setup. The following fields are based on Table 3[cite: 468]:
   - **Example**: `"openai-gpt-4o-toolcall"`[cite: 468], `"openrouter-claude3-haiku-jsonschema"`
 
 - `displayName` (string, required):
-
   - **Purpose**: A user-friendly name for this configuration, suitable for display in logs, debugging information, or
     potential future UI elements. [cite: 468]
   - **Data Type**: `string`
@@ -59,7 +56,6 @@ setup. The following fields are based on Table 3[cite: 468]:
   - **Example**: `"OpenAI GPT-4o (Tool Call)"`[cite: 468], `"Anthropic Claude 3 Haiku (OpenRouter JSON Schema)"`
 
 - `apiKeyEnvVar` (string, optional):
-
   - **Purpose**: Specifies the name of the environment variable that holds the API key for the LLM
     service. [cite: 468] This is primarily used for cloud-based services.
   - **Data Type**: `string`
@@ -70,7 +66,6 @@ setup. The following fields are based on Table 3[cite: 468]:
   - **Example**: `"OPENAI_API_KEY"`[cite: 468], `"OPENROUTER_API_KEY"`
 
 - `endpointUrl` (string, required):
-
   - **Purpose**: The base URL for the LLM's API endpoint. [cite: 468]
   - **Data Type**: `string`
   - **Required**: Yes.
@@ -80,7 +75,6 @@ setup. The following fields are based on Table 3[cite: 468]:
   - **Example (Llama.cpp server local)**: `"http://localhost:8080/v1/chat/completions"`
 
 - `modelIdentifier` (string, required):
-
   - **Purpose**: The specific model name or identifier as recognized by the API provider or service. [cite: 468]
   - **Data Type**: `string`
   - **Required**: Yes.
@@ -91,7 +85,6 @@ setup. The following fields are based on Table 3[cite: 468]:
     file served)
 
 - `apiType` (string, required):
-
   - **Purpose**: An enumerated string indicating the API family or specific type of the API. [cite: 468] This allows
     the ILLMAdapter to select the correct internal logic for request formatting, response parsing, and feature
     utilization.
@@ -109,7 +102,6 @@ setup. The following fields are based on Table 3[cite: 468]:
   - **Example**: `"openai"`[cite: 468], `"openrouter"`, `"ollama"`
 
 - `promptFrame` (object | string, optional):
-
   - **Purpose**: Defines a model-specific system prompt, template, or instructions for constructing the final prompt
     sent to the LLM. [cite: 468] This helps in tailoring the interaction to the nuances of different models.
   - **Data Type**: `object` or `string`
@@ -127,7 +119,6 @@ setup. The following fields are based on Table 3[cite: 468]:
     ```
 
 - `contextTokenLimit` (number, optional):
-
   - **Purpose**: Specifies the maximum number of tokens (input + output) that the model can handle in a single
     interaction. [cite: 468] Used for managing prompt length and avoiding errors.
   - **Data Type**: `number`
@@ -135,15 +126,12 @@ setup. The following fields are based on Table 3[cite: 468]:
   - **Example**: `128000` (for GPT-4o [cite: 468]), `8192` (for a local Llama3 via Ollama)
 
 - `jsonOutputStrategy` (object, required):
-
   - **Purpose**: An object that defines the method the ILLMAdapter should use to elicit structured JSON output (
     specifically `{'action': 'string', 'speech': 'string'}`) from the LLM. [cite: 468]
   - **Data Type**: `object`
   - **Required**: Yes. This object must contain at least the `method` field.
   - **Fields**:
-
     - `method` (string, required):
-
       - **Purpose**: An enumerated string specifying the JSON generation strategy to employ. [cite: 468]
       - **Data Type**: `string`
       - **Required**: Yes.
@@ -160,7 +148,6 @@ setup. The following fields are based on Table 3[cite: 468]:
       - **Example**: `"tool_calling"`[cite: 468], `"native_json_mode"`
 
     - `toolName` (string, optional):
-
       - **Purpose**: The name of the tool (or function) to be invoked if `method` is `"tool_calling"`. [cite: 468]
         This tool should be defined to accept `action` and `speech` parameters.
       - **Data Type**: `string`
@@ -206,7 +193,6 @@ setup. The following fields are based on Table 3[cite: 468]:
       ```
 
 - `defaultParameters` (object, optional):
-
   - **Purpose**: An object containing default parameters to be sent with each API request to the LLM, such as
     `temperature`, `max_tokens` (for output), `top_p`, etc. [cite: 468] These parameters are model-specific.
   - **Data Type**: `object`

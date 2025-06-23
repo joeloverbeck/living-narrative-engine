@@ -52,9 +52,13 @@ describe('GetTimestampHandler', () => {
   describe('Constructor', () => {
     test('should throw an error if the logger dependency is missing or invalid', () => {
       // Test with no logger
-      expect(() => new GetTimestampHandler({})).toThrow("Invalid or missing method 'info' on dependency 'logger'.");
+      expect(() => new GetTimestampHandler({})).toThrow(
+        "Invalid or missing method 'info' on dependency 'logger'."
+      );
       // Test with a logger that doesn't have the required methods
-      expect(() => new GetTimestampHandler({ logger: {} })).toThrow("Invalid or missing method 'info' on dependency 'logger'.");
+      expect(() => new GetTimestampHandler({ logger: {} })).toThrow(
+        "Invalid or missing method 'info' on dependency 'logger'."
+      );
     });
 
     test('should initialize successfully with a valid logger', () => {

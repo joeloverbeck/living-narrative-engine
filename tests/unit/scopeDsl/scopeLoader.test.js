@@ -1,41 +1,61 @@
 import { jest } from '@jest/globals';
 import ScopeLoader from '../../../src/loaders/scopeLoader.js';
 
-// Mock the parser
+// Mock the parser utility at the top level. This is hoisted by Jest.
+jest.mock('../../../src/scopeDsl/scopeDefinitionParser.js', () => ({
+  parseScopeDefinitions: jest.fn(),
+}));
+
+// Mock the lower-level parser for specific error simulation.
+// FIX: Corrected typo 'parseDslExpression' to 'parseDslExpression'
 jest.mock('../../../src/scopeDsl/parser.js', () => ({
-  parseInlineExpr: jest.fn()
+  parseDslExpression: jest.fn(),
 }));
 
 describe('ScopeLoader', () => {
   let loader;
-  let mockParseInlineExpr;
+  let mockParseScopeDefinitions;
+
+  // Get the REAL implementation of the parser utility once using requireActual.
+  const { parseScopeDefinitions: realParseScopeDefinitions } =
+    jest.requireActual('../../../src/scopeDsl/scopeDefinitionParser.js');
+
+  // Get the REAL implementation of the lower-level parser.
+  const { parseDslExpression: realParseDslExpression } = jest.requireActual(
+    '../../../src/scopeDsl/parser.js'
+  );
+
+  // Get the MOCKED function. This will be used to control mock behavior.
+  const { parseDslExpression } = require('../../../src/scopeDsl/parser.js');
 
   beforeEach(() => {
     jest.clearAllMocks();
-    mockParseInlineExpr = require('../../../src/scopeDsl/parser.js').parseInlineExpr;
-    
+    // Get the mock function from the mocked module for each test.
+    mockParseScopeDefinitions =
+      require('../../../src/scopeDsl/scopeDefinitionParser.js').parseScopeDefinitions;
+
     const mockDependencies = {
-      config: { 
+      config: {
         getModsBasePath: jest.fn(),
-        getContentTypeSchemaId: jest.fn()
+        getContentTypeSchemaId: jest.fn().mockReturnValue('scope.schema.json'),
       },
       pathResolver: { resolveModContentPath: jest.fn() },
       dataFetcher: { fetch: jest.fn() },
-      schemaValidator: { 
+      schemaValidator: {
         validate: jest.fn(),
         getValidator: jest.fn(),
-        isSchemaLoaded: jest.fn()
+        isSchemaLoaded: jest.fn(),
       },
-      dataRegistry: { 
+      dataRegistry: {
         store: jest.fn(),
-        get: jest.fn()
+        get: jest.fn(),
       },
-      logger: { 
-        debug: jest.fn(), 
+      logger: {
+        debug: jest.fn(),
         error: jest.fn(),
         info: jest.fn(),
-        warn: jest.fn()
-      }
+        warn: jest.fn(),
+      },
     };
 
     loader = new ScopeLoader(
@@ -48,139 +68,148 @@ describe('ScopeLoader', () => {
     );
   });
 
-  describe('parseContent', () => {
-    test('should parse valid scope definitions', () => {
-      const content = `
-        inventory_items := actor -> inventory.items[]
-        equipment_items := actor -> equipment.equipped[]
-        followers := actor -> followers[]
-      `;
+  // These are the unit tests that rely on the mocked implementation.
+  describe('parseContent (Unit)', () => {
+    test('should delegate parsing to scopeDefinitionParser utility', () => {
+      const content = `inventory_items := actor.inventory.items[]`;
+      const filePath = 'test.scope';
+      const expectedMap = new Map([
+        ['inventory_items', 'actor.inventory.items[]'],
+      ]);
 
-      mockParseInlineExpr.mockReturnValue({ type: 'valid' });
+      mockParseScopeDefinitions.mockReturnValue(expectedMap);
 
-      const result = loader.parseContent(content, 'test.scope');
+      const result = loader.parseContent(content, filePath);
 
-      expect(result).toEqual({
-        inventory_items: 'actor -> inventory.items[]',
-        equipment_items: 'actor -> equipment.equipped[]',
-        followers: 'actor -> followers[]'
-      });
-    });
-
-    test('should handle comments and empty lines', () => {
-      const content = `
-        // This is a comment
-        inventory_items := actor -> inventory.items[]
-        
-        // Another comment
-        equipment_items := actor -> equipment.equipped[]
-      `;
-
-      mockParseInlineExpr.mockReturnValue({ type: 'valid' });
-
-      const result = loader.parseContent(content, 'test.scope');
-
-      expect(result).toEqual({
-        inventory_items: 'actor -> inventory.items[]',
-        equipment_items: 'actor -> equipment.equipped[]'
-      });
-    });
-
-    test('should throw error for empty file', () => {
-      const content = `
-        // Only comments
-        // No actual content
-      `;
-
-      expect(() => {
-        loader.parseContent(content, 'test.scope');
-      }).toThrow('Empty scope file: test.scope');
-    });
-
-    test('should throw error for invalid format', () => {
-      const content = `
-        inventory_items = actor -> inventory.items[]
-        // Missing :=
-      `;
-
-      expect(() => {
-        loader.parseContent(content, 'test.scope');
-      }).toThrow('Invalid scope definition format in test.scope: "inventory_items = actor -> inventory.items[]". Expected "name := dsl_expression"');
-    });
-
-    test('should throw error for invalid DSL expression', () => {
-      const content = `
-        inventory_items := invalid dsl expression
-      `;
-
-      mockParseInlineExpr.mockImplementation(() => {
-        throw new Error('Invalid DSL');
-      });
-
-      expect(() => {
-        loader.parseContent(content, 'test.scope');
-      }).toThrow('Invalid DSL expression in test.scope for scope "inventory_items": Invalid DSL');
-    });
-
-    test('should validate DSL expressions', () => {
-      const content = `
-        inventory_items := actor -> inventory.items[]
-      `;
-
-      mockParseInlineExpr.mockReturnValue({ type: 'valid' });
-
-      loader.parseContent(content, 'test.scope');
-
-      expect(mockParseInlineExpr).toHaveBeenCalledWith('actor -> inventory.items[]');
+      expect(mockParseScopeDefinitions).toHaveBeenCalledWith(content, filePath);
+      expect(result).toBe(expectedMap);
     });
   });
 
-  describe('transformContent', () => {
+  describe('transformContent (Unit)', () => {
     test('should transform scope definitions with mod prefix', () => {
-      const parsedContent = {
-        inventory_items: 'actor -> inventory.items[]',
-        equipment_items: 'actor -> equipment.equipped[]'
-      };
+      const parsedContent = new Map([
+        ['inventory_items', 'actor.inventory.items[]'],
+        ['equipment_items', 'actor.equipment.equipped[]'],
+      ]);
 
       const result = loader.transformContent(parsedContent, 'core');
 
       expect(result).toEqual({
         'core:inventory_items': {
           name: 'core:inventory_items',
-          dsl: 'actor -> inventory.items[]',
+          dsl: 'actor.inventory.items[]',
           modId: 'core',
-          source: 'file'
+          source: 'file',
         },
         'core:equipment_items': {
           name: 'core:equipment_items',
-          dsl: 'actor -> equipment.equipped[]',
+          dsl: 'actor.equipment.equipped[]',
           modId: 'core',
-          source: 'file'
-        }
+          source: 'file',
+        },
       });
     });
 
     test('should handle custom mod IDs', () => {
-      const parsedContent = {
-        custom_scope: 'location -> entities(Item)'
-      };
-
+      const parsedContent = new Map([
+        ['custom_scope', 'location.entities(core:Item)'],
+      ]);
       const result = loader.transformContent(parsedContent, 'myMod');
-
       expect(result).toEqual({
         'myMod:custom_scope': {
           name: 'myMod:custom_scope',
-          dsl: 'location -> entities(Item)',
+          dsl: 'location.entities(core:Item)',
           modId: 'myMod',
-          source: 'file'
-        }
+          source: 'file',
+        },
       });
+    });
+
+    test('should handle an empty map of parsed content', () => {
+      const parsedContent = new Map();
+      const result = loader.transformContent(parsedContent, 'testMod');
+      expect(result).toEqual({});
+    });
+  });
+
+  // This suite tests the loader's interaction with the REAL parser utility.
+  describe('Integration with scopeDefinitionParser', () => {
+    // FIX: For this suite, set the mock's implementation to the real one.
+    beforeAll(() => {
+      mockParseScopeDefinitions.mockImplementation(realParseScopeDefinitions);
+      // We also need to use the real implementation for the lower-level parser,
+      // as the real scopeDefinitionParser depends on it.
+      parseDslExpression.mockImplementation(realParseDslExpression);
+    });
+
+    // FIX: After the suite, restore the mock to its original state (an empty jest.fn()).
+    afterAll(() => {
+      mockParseScopeDefinitions.mockRestore();
+      parseDslExpression.mockRestore();
+    });
+
+    test('should parse valid scope definitions', () => {
+      const content = `
+        inventory_items := actor.inventory.items[]
+        equipment_items := actor.equipment.equipped[]
+        followers := actor.followers[]
+      `;
+      // loader.parseContent now calls the real parser via the mock's implementation
+      const result = loader.parseContent(content, 'test.scope');
+      expect(Object.fromEntries(result)).toEqual({
+        inventory_items: 'actor.inventory.items[]',
+        equipment_items: 'actor.equipment.equipped[]',
+        followers: 'actor.followers[]',
+      });
+    });
+
+    test('should handle comments and empty lines', () => {
+      const content = `
+        // Comment
+        inventory_items := actor.inventory.items[]
+
+        equipment_items := actor.equipment.equipped[]
+      `;
+      const result = loader.parseContent(content, 'test.scope');
+      expect(Object.fromEntries(result)).toEqual({
+        inventory_items: 'actor.inventory.items[]',
+        equipment_items: 'actor.equipment.equipped[]',
+      });
+    });
+
+    test('should throw error for empty file', () => {
+      const content = `// Only comments`;
+      expect(() => {
+        loader.parseContent(content, 'test.scope');
+      }).toThrow('Scope file is empty or contains only comments: test.scope');
+    });
+
+    test('should throw error for invalid format', () => {
+      const content = `inventory_items = actor.inventory.items[]`;
+      expect(() => {
+        loader.parseContent(content, 'test.scope');
+      }).toThrow(
+        'Invalid scope definition format in test.scope: "inventory_items = actor.inventory.items[]". Expected "name := dsl_expression"'
+      );
+    });
+
+    test('should throw error for invalid DSL expression', () => {
+      const content = `inventory_items := invalid dsl expression`;
+
+      // The real parser will throw a ScopeSyntaxError, so we don't need to mock it
+      // to throw a generic error anymore. The beforeAll hook has already set it to the real implementation.
+      expect(() => {
+        loader.parseContent(content, 'test.scope');
+      }).toThrow(
+        'Invalid DSL expression in test.scope for scope "inventory_items":'
+      );
     });
   });
 
   describe('constructor', () => {
     test('should configure with correct content type', () => {
-      expect(loader._primarySchemaId).toBeDefined();
+      expect(loader._primarySchemaId).toBe('scope.schema.json');
     });
   });
-}); 
+});
