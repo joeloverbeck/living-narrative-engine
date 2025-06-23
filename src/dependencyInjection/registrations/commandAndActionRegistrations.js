@@ -34,6 +34,10 @@ import { getEntityIdsForScopes } from '../../entities/entityScopeService.js';
 import { getActorLocation } from '../../utils/actorLocationUtils.js';
 import { getEntityDisplayName } from '../../utils/entityUtils.js';
 
+// --- Infrastructure Dependency ---
+import ScopeRegistry from '../../scopeDsl/scopeRegistry.js';
+
+
 /**
  * Registers command and action related services.
  *
@@ -47,6 +51,13 @@ export function registerCommandAndAction(container) {
 
   // --- Action Discovery & Validation ---
 
+  // Ensure the core ScopeRegistry is available for action discovery
+  r.single(
+    tokens.ScopeRegistry,
+    ScopeRegistry,
+    [] // no constructor dependencies
+  );
+
   r.tagged(INITIALIZABLE).singletonFactory(
     tokens.IActionDiscoveryService,
     (c) =>
@@ -58,6 +69,7 @@ export function registerCommandAndAction(container) {
         formatActionCommandFn: formatActionCommand,
         getEntityIdsForScopesFn: getEntityIdsForScopes,
         safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+        scopeRegistry: c.resolve(tokens.ScopeRegistry),
         getActorLocationFn: getActorLocation,
         getEntityDisplayNameFn: getEntityDisplayName,
       })
@@ -78,7 +90,7 @@ export function registerCommandAndAction(container) {
       tokens.ILogger,
       tokens.JsonLogicEvaluationService,
       tokens.ActionValidationContextBuilder,
-      tokens.IGameDataRepository, // <<< CORRECTED: Changed to use the interface token
+      tokens.IGameDataRepository,
     ]
   );
   r.single(
