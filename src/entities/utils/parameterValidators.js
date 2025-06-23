@@ -123,4 +123,177 @@ export function validateReconstructEntityParams(serializedEntity, logger) {
   }
 }
 
+/**
+ * Validate parameters for {@link EntityManager#getEntityInstance}.
+ *
+ * @param {string} instanceId - Entity instance ID.
+ * @param {import('../../interfaces/coreServices.js').ILogger} logger - Logger for reporting issues.
+ * @throws {InvalidArgumentError} If parameters are invalid.
+ */
+export function validateGetEntityInstanceParams(instanceId, logger) {
+  try {
+    assertValidId(instanceId, 'EntityManager.getEntityInstance', logger);
+  } catch {
+    logger.warn(
+      `EntityManager.getEntityInstance: Invalid instanceId '${instanceId}'`
+    );
+    throw new InvalidArgumentError(
+      `EntityManager.getEntityInstance: Invalid instanceId '${instanceId}'`,
+      'instanceId',
+      instanceId
+    );
+  }
+}
+
+/**
+ * Validate parameters for {@link EntityManager#getComponentData}.
+ *
+ * @param {string} instanceId - Entity instance ID.
+ * @param {string} componentTypeId - Component type ID.
+ * @param {import('../../interfaces/coreServices.js').ILogger} logger - Logger for reporting issues.
+ * @throws {InvalidArgumentError} If parameters are invalid.
+ */
+export function validateGetComponentDataParams(
+  instanceId,
+  componentTypeId,
+  logger
+) {
+  try {
+    assertValidId(instanceId, 'EntityManager.getComponentData', logger);
+    assertNonBlankString(
+      componentTypeId,
+      'componentTypeId',
+      'EntityManager.getComponentData',
+      logger
+    );
+  } catch {
+    logger.warn(
+      `EntityManager.getComponentData: Invalid parameters - instanceId: '${instanceId}', componentTypeId: '${componentTypeId}'`
+    );
+    throw new InvalidArgumentError(
+      `EntityManager.getComponentData: Invalid parameters - instanceId: '${instanceId}', componentTypeId: '${componentTypeId}'`,
+      'instanceId/componentTypeId',
+      { instanceId, componentTypeId }
+    );
+  }
+}
+
+/**
+ * Validate parameters for {@link EntityManager#hasComponent}.
+ *
+ * @param {string} instanceId - Entity instance ID.
+ * @param {string} componentTypeId - Component type ID.
+ * @param {import('../../interfaces/coreServices.js').ILogger} logger - Logger for reporting issues.
+ * @throws {InvalidArgumentError} If parameters are invalid.
+ */
+export function validateHasComponentParams(
+  instanceId,
+  componentTypeId,
+  logger
+) {
+  try {
+    assertValidId(instanceId, 'EntityManager.hasComponent', logger);
+    assertNonBlankString(
+      componentTypeId,
+      'componentTypeId',
+      'EntityManager.hasComponent',
+      logger
+    );
+  } catch {
+    logger.warn(
+      `EntityManager.hasComponent: Invalid parameters - instanceId: '${instanceId}', componentTypeId: '${componentTypeId}'`
+    );
+    throw new InvalidArgumentError(
+      `EntityManager.hasComponent: Invalid parameters - instanceId: '${instanceId}', componentTypeId: '${componentTypeId}'`,
+      'instanceId/componentTypeId',
+      { instanceId, componentTypeId }
+    );
+  }
+}
+
+/**
+ * Validate parameters for {@link EntityManager#hasComponentOverride}.
+ *
+ * @param {string} instanceId - Entity instance ID.
+ * @param {string} componentTypeId - Component type ID.
+ * @param {import('../../interfaces/coreServices.js').ILogger} logger - Logger for reporting issues.
+ * @throws {InvalidArgumentError} If parameters are invalid.
+ */
+export function validateHasComponentOverrideParams(
+  instanceId,
+  componentTypeId,
+  logger
+) {
+  try {
+    assertValidId(instanceId, 'EntityManager.hasComponentOverride', logger);
+    assertNonBlankString(
+      componentTypeId,
+      'componentTypeId',
+      'EntityManager.hasComponentOverride',
+      logger
+    );
+  } catch {
+    logger.warn(
+      `EntityManager.hasComponentOverride: Invalid parameters - instanceId: '${instanceId}', componentTypeId: '${componentTypeId}'`
+    );
+    throw new InvalidArgumentError(
+      `EntityManager.hasComponentOverride: Invalid parameters - instanceId: '${instanceId}', componentTypeId: '${componentTypeId}'`,
+      'instanceId/componentTypeId',
+      { instanceId, componentTypeId }
+    );
+  }
+}
+
+/**
+ * Validate parameters for {@link EntityManager#getEntitiesWithComponent}.
+ *
+ * @param {string} componentTypeId - Component type ID.
+ * @param {import('../../interfaces/coreServices.js').ILogger} logger - Logger for reporting issues.
+ * @throws {InvalidArgumentError} If parameters are invalid.
+ */
+export function validateGetEntitiesWithComponentParams(
+  componentTypeId,
+  logger
+) {
+  try {
+    assertNonBlankString(
+      componentTypeId,
+      'componentTypeId',
+      'EntityManager.getEntitiesWithComponent',
+      logger
+    );
+  } catch {
+    logger.warn(
+      `EntityManager.getEntitiesWithComponent: Received invalid componentTypeId ('${componentTypeId}')`
+    );
+    throw new InvalidArgumentError(
+      `EntityManager.getEntitiesWithComponent: Received invalid componentTypeId ('${componentTypeId}')`,
+      'componentTypeId',
+      componentTypeId
+    );
+  }
+}
+
+/**
+ * Validate parameters for {@link EntityManager#removeEntityInstance}.
+ *
+ * @param {string} instanceId - Entity instance ID.
+ * @param {import('../../interfaces/coreServices.js').ILogger} logger - Logger for reporting issues.
+ * @throws {InvalidArgumentError} If parameters are invalid.
+ */
+export function validateRemoveEntityInstanceParams(instanceId, logger) {
+  try {
+    assertValidId(instanceId, 'EntityManager.removeEntityInstance', logger);
+  } catch {
+    logger.warn(
+      `EntityManager.removeEntityInstance: Attempted to remove entity with invalid ID: '${instanceId}'`
+    );
+    throw new InvalidArgumentError(
+      `EntityManager.removeEntityInstance: Attempted to remove entity with invalid ID: '${instanceId}'`,
+      'instanceId',
+      instanceId
+    );
+  }
+}
+
 // --- FILE END ---
