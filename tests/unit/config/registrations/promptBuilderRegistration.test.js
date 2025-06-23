@@ -15,7 +15,7 @@ import { describe, beforeEach, it, expect, jest } from '@jest/globals';
 // --- Dependencies for Registration ---
 import { tokens } from '../../../../src/dependencyInjection/tokens.js';
 import { Registrar } from '../../../../src/dependencyInjection/registrarHelpers.js';
-import { createMockContainerWithRegistration } from '../../../common/mockFactories/index.js';
+import { MockContainer } from '../../../common/mockFactories/index.js';
 
 // --- Classes to be Mocked ---
 // Mock concrete implementations that will be instantiated by factories or resolved.
@@ -94,6 +94,7 @@ const mockLogger = {
 };
 
 describe('IPromptBuilder Registration and Resolution', () => {
+  /** @type {MockContainer} */
   let mockContainer;
   let registrar;
 
@@ -142,7 +143,7 @@ describe('IPromptBuilder Registration and Resolution', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    mockContainer = createMockContainerWithRegistration();
+    mockContainer = new MockContainer();
     registrar = new Registrar(mockContainer);
 
     // Pre-register the mocked dependencies that IPromptBuilder's factory will resolve

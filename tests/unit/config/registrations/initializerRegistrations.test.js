@@ -20,7 +20,7 @@ import { registerInitializers } from '../../../../src/dependencyInjection/regist
 // --- Dependencies ---
 import { tokens } from '../../../../src/dependencyInjection/tokens.js';
 import { INITIALIZABLE } from '../../../../src/dependencyInjection/tags.js';
-import { createMockContainerWithRegistration } from '../../../common/mockFactories/index.js';
+import { MockContainer } from '../../../common/mockFactories/index.js';
 
 // --- MOCK the Modules (Classes being registered) ---
 jest.mock('../../../../src/initializers/worldInitializer.js');
@@ -45,12 +45,12 @@ const mockSpatialIndexManager = { name: 'MockSpatialIndexManager' };
 const mockScopeRegistry = { name: 'MockScopeRegistry' };
 
 describe('registerInitializers', () => {
-  /** @type {ReturnType<typeof createMockContainerWithRegistration>} */
+  /** @type {MockContainer} */
   let mockContainer;
 
   beforeEach(() => {
     jest.clearAllMocks();
-    mockContainer = createMockContainerWithRegistration();
+    mockContainer = new MockContainer();
 
     // Register all base dependencies that the factories might try to resolve
     mockContainer.register(tokens.ILogger, mockLogger, {

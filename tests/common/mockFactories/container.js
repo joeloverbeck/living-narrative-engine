@@ -40,118 +40,133 @@ export const createMockContainer = (mapping, overrides = {}) => ({
 });
 
 /**
- * Creates a sophisticated DI container mock with registration capabilities.
- * Used for testing registration functions that need to register and resolve services.
+ * Mock container with registration and resolution capabilities.
  *
- * @returns {{
- *   _registrations: Map,
- *   register: jest.Mock,
- *   resolve: jest.Mock,
- *   resolveByTag: jest.Mock
- * }} Container mock with registration and resolution capabilities.
+ * @class
  */
-export const createMockContainerWithRegistration = () => {
-  const registrations = new Map();
-  const container = {
-    _registrations: registrations,
-    register: jest.fn((token, factoryOrValue, options = {}) => {
-      if (!token) throw new Error('Mock Register Error: Token is required.');
-      const registration = {
-        factoryOrValue,
-        options: { ...options, tags: options.tags || [] },
-        instance: undefined,
-      };
-      registrations.set(String(token), registration);
-    }),
-    resolve: jest.fn((token) => {
-      const registrationKey =
-        typeof token === 'symbol' ? token.toString() : String(token);
+export class MockContainer {
+  constructor() {
+    this._registrations = new Map();
 
-      let registration;
-      try {
-        registration = resolveFromMaps(
-          token,
-          Object.fromEntries(registrations),
-          {}
-        );
-      } catch {
-        const registeredTokens = Array.from(registrations.keys())
-          .map(String)
-          .join(', ');
-        throw new Error(
-          `Mock Resolve Error: Token not registered: ${registrationKey}. Registered tokens are: [${registeredTokens}]`
-        );
-      }
+    // Wrap core methods with jest.fn to allow call assertions in tests
+    this.register = jest.fn(this._register.bind(this));
+    this.resolve = jest.fn(this._resolve.bind(this));
+    this.resolveByTag = jest.fn(this._resolveByTag.bind(this));
+  }
 
-      const { factoryOrValue, options } = registration;
+  /**
+   * Registers a token with a factory or value.
+   *
+   * @param {string|symbol} token - Token key to register.
+   * @param {any} factoryOrValue - Factory function or value to register.
+   * @param {object} [options] - Registration options.
+   * @returns {void}
+   */
+  _register(token, factoryOrValue, options = {}) {
+    if (!token) throw new Error('Mock Register Error: Token is required.');
+    const registration = {
+      factoryOrValue,
+      options: { ...options, tags: options.tags || [] },
+      instance: undefined,
+    };
+    this._registrations.set(String(token), registration);
+  }
 
-      if (
-        options?.lifecycle === 'singletonFactory' ||
-        options?.lifecycle === 'singleton'
-      ) {
-        if (registration.instance !== undefined) {
-          return registration.instance;
-        }
-        if (typeof factoryOrValue === 'function') {
-          try {
-            const isClass =
-              factoryOrValue.prototype &&
-              typeof factoryOrValue.prototype.constructor === 'function';
-            if (
-              isClass &&
-              options?.lifecycle === 'singleton' &&
-              !options?.isFactory
-            ) {
-              registration.instance = new factoryOrValue(container);
-            } else {
-              registration.instance = factoryOrValue(container);
-            }
-          } catch (e) {
-            throw new Error(
-              `Mock container: Error executing factory for ${registrationKey}: ${e.message}`
-            );
-          }
-          return registration.instance;
-        }
-        registration.instance = factoryOrValue;
+  /**
+   * Resolves a previously registered token.
+   *
+   * @param {string|symbol} token - Token to resolve.
+   * @returns {any} The resolved instance or value.
+   */
+  _resolve(token) {
+    const registrationKey =
+      typeof token === 'symbol' ? token.toString() : String(token);
+
+    if (!this._registrations.has(registrationKey)) {
+      const registeredTokens = Array.from(this._registrations.keys())
+        .map(String)
+        .join(', ');
+      throw new Error(
+        `Mock Resolve Error: Token not registered: ${registrationKey}. Registered tokens are: [${registeredTokens}]`
+      );
+    }
+
+    const registration = this._registrations.get(registrationKey);
+    const { factoryOrValue, options } = registration;
+
+    if (
+      options?.lifecycle === 'singletonFactory' ||
+      options?.lifecycle === 'singleton'
+    ) {
+      if (registration.instance !== undefined) {
         return registration.instance;
       }
-
       if (typeof factoryOrValue === 'function') {
         try {
           const isClass =
             factoryOrValue.prototype &&
             typeof factoryOrValue.prototype.constructor === 'function';
-          if (isClass && !options?.isFactory) {
-            return new factoryOrValue(container);
+          if (
+            isClass &&
+            options?.lifecycle === 'singleton' &&
+            !options?.isFactory
+          ) {
+            registration.instance = new factoryOrValue(this);
+          } else {
+            registration.instance = factoryOrValue(this);
           }
-          return factoryOrValue(container);
         } catch (e) {
           throw new Error(
-            `Mock container: Error executing transient factory for ${registrationKey}: ${e.message}`
+            `Mock container: Error executing factory for ${registrationKey}: ${e.message}`
+          );
+        }
+        return registration.instance;
+      }
+      registration.instance = factoryOrValue;
+      return registration.instance;
+    }
+
+    if (typeof factoryOrValue === 'function') {
+      try {
+        const isClass =
+          factoryOrValue.prototype &&
+          typeof factoryOrValue.prototype.constructor === 'function';
+        if (isClass && !options?.isFactory) {
+          return new factoryOrValue(this);
+        }
+        return factoryOrValue(this);
+      } catch (e) {
+        throw new Error(
+          `Mock container: Error executing transient factory for ${registrationKey}: ${e.message}`
+        );
+      }
+    }
+
+    return factoryOrValue;
+  }
+
+  /**
+   * Resolves all registrations matching the given tag.
+   *
+   * @param {string} tag - Tag identifier.
+   * @returns {Promise<any[]>} Array of resolved services.
+   */
+  async _resolveByTag(tag) {
+    const resolved = [];
+    this._registrations.forEach((reg, tokenKey) => {
+      if (reg.options?.tags?.includes(tag)) {
+        try {
+          resolved.push(this.resolve(tokenKey));
+        } catch (e) {
+          console.warn(
+            `Mock resolveByTag: Failed to resolve tagged token ${tokenKey}: ${e.message}`
           );
         }
       }
-      return factoryOrValue;
-    }),
-    resolveByTag: jest.fn(async (tag) => {
-      const resolved = [];
-      registrations.forEach((reg, tokenKey) => {
-        if (reg.options?.tags?.includes(tag)) {
-          try {
-            resolved.push(container.resolve(tokenKey));
-          } catch (e) {
-            console.warn(
-              `Mock resolveByTag: Failed to resolve tagged token ${tokenKey}: ${e.message}`
-            );
-          }
-        }
-      });
-      return resolved;
-    }),
-  };
-  return container;
-};
+    });
+    return resolved;
+  }
+}
 
 /**
  * Creates a simple in-memory storage provider used by persistence tests.
