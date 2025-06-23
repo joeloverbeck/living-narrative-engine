@@ -262,6 +262,25 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
   }
 
   /**
+   * @description Prepares a populated discovery context for the specified actor.
+   * @param {Entity} actorEntity
+   * @param {ActionContext} context
+   * @returns {ActionContext}
+   */
+  #prepareDiscoveryContext(actorEntity, context) {
+    const discoveryContext = { ...context };
+    if (!discoveryContext.getActor) {
+      discoveryContext.getActor = () => actorEntity;
+    }
+
+    discoveryContext.currentLocation =
+      context.currentLocation ??
+      this.#getActorLocationFn(actorEntity.id, this.#entityManager);
+
+    return discoveryContext;
+  }
+
+  /**
    * @param {Entity} actorEntity
    * @param {ActionContext} context
    * @returns {Promise<import('../interfaces/IActionDiscoveryService.js').DiscoveredActionsResult>}
@@ -288,16 +307,11 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
       safeEventDispatcher: this.#safeEventDispatcher,
     };
 
-    // Create a new context for this discovery operation, ensuring it's populated.
-    const discoveryContext = { ...context };
-    if (!discoveryContext.getActor) {
-      discoveryContext.getActor = () => actorEntity;
-    }
-
-    // Resolve location (if not already in context) and add it for scope resolution.
-    discoveryContext.currentLocation =
-      context.currentLocation ??
-      this.#getActorLocationFn(actorEntity.id, this.#entityManager);
+    // Prepare context for this discovery operation
+    const discoveryContext = this.#prepareDiscoveryContext(
+      actorEntity,
+      context
+    );
 
     /* ── iterate over action definitions ─────────────────────────────────── */
     for (const actionDef of allDefs) {
