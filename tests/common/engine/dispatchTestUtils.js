@@ -18,7 +18,12 @@ import {
   REQUEST_SHOW_SAVE_GAME_UI,
 } from '../../../src/constants/eventIds.js';
 import { tokens } from '../../../src/dependencyInjection/tokens.js';
-import { DEFAULT_ACTIVE_WORLD_FOR_SAVE } from '../constants.js';
+import {
+  DEFAULT_ACTIVE_WORLD_FOR_SAVE,
+  ENGINE_READY_MESSAGE,
+  ENGINE_STOPPED_MESSAGE,
+  SAVE_OPERATION_FINISHED_MESSAGE,
+} from '../constants.js';
 
 /**
  * Asserts that dispatch calls match the provided event sequence.
@@ -72,7 +77,7 @@ export function buildSaveDispatches(saveName, filePath) {
     ENGINE_READY_UI,
     {
       activeWorld: DEFAULT_ACTIVE_WORLD_FOR_SAVE,
-      message: 'Save operation finished. Ready.',
+      message: SAVE_OPERATION_FINISHED_MESSAGE,
     },
   ]);
 
@@ -86,10 +91,7 @@ export function buildSaveDispatches(saveName, filePath) {
  */
 export function buildStopDispatches() {
   return [
-    [
-      ENGINE_STOPPED_UI,
-      { inputDisabledMessage: 'Game stopped. Engine is inactive.' },
-    ],
+    [ENGINE_STOPPED_UI, { inputDisabledMessage: ENGINE_STOPPED_MESSAGE }],
   ];
 }
 
@@ -102,7 +104,10 @@ export function buildStopDispatches() {
 export function buildStartDispatches(worldName) {
   return [
     [ENGINE_INITIALIZING_UI, { worldName }, { allowSchemaNotFound: true }],
-    [ENGINE_READY_UI, { activeWorld: worldName, message: 'Enter command...' }],
+    [
+      ENGINE_READY_UI,
+      { activeWorld: worldName, message: ENGINE_READY_MESSAGE },
+    ],
   ];
 }
 

@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { TitleRenderer } from '../../../src/domUI'; // Corrected import path if needed
 import { RendererBase } from '../../../src/domUI';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/eventIds.js'; // Needed for checking super.dispose
+import { UNKNOWN_INIT_ERROR_MESSAGE } from '../../common/constants.js';
 
 // --- Mock Dependencies ---
 
@@ -394,9 +395,7 @@ describe('TitleRenderer', () => {
       expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
         SYSTEM_ERROR_OCCURRED_ID,
         expect.objectContaining({
-          message: expect.stringContaining(
-            'Overall initialization failed. Error: Unknown error occurred'
-          ),
+          message: expect.stringContaining(UNKNOWN_INIT_ERROR_MESSAGE),
         })
       );
     });
@@ -414,9 +413,7 @@ describe('TitleRenderer', () => {
       expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
         SYSTEM_ERROR_OCCURRED_ID,
         expect.objectContaining({
-          message: expect.stringContaining(
-            'Overall initialization failed. Error: Unknown error occurred'
-          ),
+          message: expect.stringContaining(UNKNOWN_INIT_ERROR_MESSAGE),
         })
       );
     });

@@ -14,7 +14,10 @@ import {
 import { tokens } from '../../../src/dependencyInjection/tokens.js';
 import { describeEngineSuite } from '../../common/engine/gameEngineTestBed.js';
 import { runUnavailableServiceSuite } from '../../common/engine/gameEngineHelpers.js';
-import { DEFAULT_SAVE_ID } from '../../common/constants.js';
+import {
+  DEFAULT_SAVE_ID,
+  ENGINE_READY_MESSAGE,
+} from '../../common/constants.js';
 import { GAME_PERSISTENCE_LOAD_GAME_UNAVAILABLE } from '../../common/engine/unavailableMessages.js';
 
 describeEngineSuite('GameEngine', (ctx) => {
@@ -55,7 +58,7 @@ describeEngineSuite('GameEngine', (ctx) => {
           ENGINE_READY_UI,
           {
             activeWorld: typedMockSaveData.metadata.gameTitle,
-            message: 'Enter command...',
+            message: ENGINE_READY_MESSAGE,
           },
         ]
       );
@@ -160,7 +163,7 @@ describeEngineSuite('GameEngine', (ctx) => {
           ENGINE_READY_UI,
           {
             activeWorld: typedMockSaveData.metadata.gameTitle,
-            message: 'Enter command...',
+            message: ENGINE_READY_MESSAGE,
           },
         ],
         [

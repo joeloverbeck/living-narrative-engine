@@ -10,6 +10,7 @@ import {
   EXITS_COMPONENT_ID,
 } from '../../../src/constants/componentIds.js';
 import { CORE_MOD_ID } from '../../../src/constants/core';
+import { LOGGER_INFO_METHOD_ERROR } from '../../common/constants.js';
 
 describe('EntityDisplayDataProvider', () => {
   let mockEntityManager;
@@ -74,7 +75,7 @@ describe('EntityDisplayDataProvider', () => {
             logger: {},
             safeEventDispatcher: mockSafeEventDispatcher,
           })
-      ).toThrow("Invalid or missing method 'info' on dependency 'logger'.");
+      ).toThrow(LOGGER_INFO_METHOD_ERROR);
     });
 
     it('should throw an error if safeEventDispatcher is missing or invalid', () => {

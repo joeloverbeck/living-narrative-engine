@@ -13,6 +13,7 @@ import {
 } from '@jest/globals';
 // Import ONLY createJsonLogicContext
 import { createJsonLogicContext } from '../../../src/logic/contextAssembler.js'; // Import the function under test
+import { LOGGER_INFO_METHOD_ERROR } from '../../common/constants.js';
 
 // --- JSDoc Imports for Type Hinting ---
 /** @typedef {import('../../../src/interfaces/coreServices.js').ILogger} ILogger */
@@ -579,7 +580,7 @@ describe('createJsonLogicContext (contextAssembler.js)', () => {
           mockEntityManager,
           { warn: jest.fn() }
         )
-      ).toThrow("Invalid or missing method 'info' on dependency 'logger'.");
+      ).toThrow(LOGGER_INFO_METHOD_ERROR);
     });
   });
 });

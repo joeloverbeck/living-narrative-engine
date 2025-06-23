@@ -4,6 +4,7 @@ import { jest, describe, beforeEach, test, expect } from '@jest/globals';
 import { LLMStrategyFactory } from '../../../src/llms/LLMStrategyFactory.js';
 import { ConfigurationError } from '../../../src/errors/configurationError';
 import { LLMStrategyFactoryError } from '../../../src/llms/errors/LLMStrategyFactoryError.js';
+import { LOGGER_INFO_METHOD_ERROR } from '../../common/constants.js';
 
 // Import concrete strategies to check instanceof and to mock their modules
 import { OpenRouterJsonSchemaStrategy } from '../../../src/llms/strategies/openRouterJsonSchemaStrategy.js';
@@ -93,7 +94,7 @@ describe('LLMStrategyFactory', () => {
         () => new LLMStrategyFactory({ httpClient, logger: undefined })
       ).toThrow('Missing required dependency: logger.');
       expect(() => new LLMStrategyFactory({ httpClient, logger: {} })).toThrow(
-        "Invalid or missing method 'info' on dependency 'logger'."
+        LOGGER_INFO_METHOD_ERROR
       );
       expect(
         () =>
@@ -101,7 +102,7 @@ describe('LLMStrategyFactory', () => {
             httpClient,
             logger: { info: 'not a function' },
           })
-      ).toThrow("Invalid or missing method 'info' on dependency 'logger'.");
+      ).toThrow(LOGGER_INFO_METHOD_ERROR);
     });
 
     test('should throw error if httpClient is invalid or missing', () => {

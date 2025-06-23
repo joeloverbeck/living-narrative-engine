@@ -8,6 +8,7 @@ import { describe, expect, test, jest, beforeEach } from '@jest/globals';
 // import LogHandler, { INTERPOLATION_FALLBACK } from '../../../logic/operationHandlers/logHandler.js';
 import LogHandler from '../../../../src/logic/operationHandlers/logHandler.js'; // Adjust path if needed
 const INTERPOLATION_FALLBACK = 'N/A'; // Define fallback if not exported from handler
+import { LOGGER_INFO_METHOD_ERROR } from '../../../common/constants.js';
 
 // --- JSDoc Imports ---
 /** @typedef {import('../../core/interfaces/coreServices.js').ILogger} ILogger */
@@ -53,16 +54,14 @@ describe('LogHandler', () => {
 
   // --- Constructor Tests --- (Updated for BaseOperationHandler)
   test('constructor should throw if logger is missing', () => {
-    expect(() => new LogHandler({})).toThrow(
-      "Invalid or missing method 'info' on dependency 'logger'."
-    );
+    expect(() => new LogHandler({})).toThrow(LOGGER_INFO_METHOD_ERROR);
   });
   test('constructor should throw if logger is invalid (missing methods)', () => {
     expect(() => new LogHandler({ logger: { info: jest.fn() } })).toThrow(
       "Invalid or missing method 'warn' on dependency 'logger'."
     );
     expect(() => new LogHandler({ logger: 'not a logger' })).toThrow(
-      "Invalid or missing method 'info' on dependency 'logger'."
+      LOGGER_INFO_METHOD_ERROR
     );
   });
   test('constructor should initialize successfully with valid logger', () => {

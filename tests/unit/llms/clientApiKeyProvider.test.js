@@ -6,6 +6,7 @@ import { ClientApiKeyProvider } from '../../../src/llms/clientApiKeyProvider.js'
 import * as EnvironmentModule from '../../../src/llms/environmentContext.js';
 const { EnvironmentContext } = EnvironmentModule;
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/eventIds.js';
+import { LOGGER_INFO_METHOD_ERROR } from '../../common/constants.js';
 
 /**
  * @typedef {import('../../src/llms/interfaces/ILogger.js').ILogger} ILogger
@@ -70,7 +71,7 @@ describe('ClientApiKeyProvider', () => {
         'Missing required dependency: logger.'
       );
       expect(() => new ClientApiKeyProvider({ logger: {} })).toThrow(
-        "Invalid or missing method 'info' on dependency 'logger'."
+        LOGGER_INFO_METHOD_ERROR
       );
     });
   });

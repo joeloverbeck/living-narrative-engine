@@ -9,6 +9,7 @@
 import { describe, expect, test, jest, beforeEach } from '@jest/globals';
 // Import ONLY createJsonLogicContext
 import { createJsonLogicContext } from '../../../src/logic/contextAssembler.js'; // Adjust path if necessary
+import { LOGGER_INFO_METHOD_ERROR } from '../../common/constants.js';
 // Import Entity type for creating mock entity structure
 import Entity from '../../../src/entities/entity.js'; // Adjust path if necessary
 
@@ -771,7 +772,7 @@ describe('Ticket 8: createJsonLogicContext (contextAssembler.js)', () => {
             error: jest.fn(),
           }
         )
-      ).toThrow("Invalid or missing method 'info' on dependency 'logger'.");
+      ).toThrow(LOGGER_INFO_METHOD_ERROR);
       expect(() =>
         createJsonLogicContext(
           baseEvent,
@@ -784,7 +785,7 @@ describe('Ticket 8: createJsonLogicContext (contextAssembler.js)', () => {
             error: jest.fn(),
           }
         )
-      ).toThrow("Invalid or missing method 'info' on dependency 'logger'.");
+      ).toThrow(LOGGER_INFO_METHOD_ERROR);
     });
   });
 });

@@ -13,6 +13,7 @@ import {
 } from '@jest/globals';
 import RebuildLeaderListCacheHandler from '../../../../src/logic/operationHandlers/rebuildLeaderListCacheHandler.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../../../src/constants/eventIds.js';
+import { LOGGER_INFO_METHOD_ERROR } from '../../../common/constants.js';
 
 // --- Constants ---
 const FOLLOWING_COMPONENT_ID = 'core:following';
@@ -96,7 +97,7 @@ describe('RebuildLeaderListCacheHandler', () => {
             entityManager: mockEntityManager,
             safeEventDispatcher: makeMockDispatcher(),
           })
-      ).toThrow("Invalid or missing method 'info' on dependency 'logger'.");
+      ).toThrow(LOGGER_INFO_METHOD_ERROR);
       expect(
         () =>
           new RebuildLeaderListCacheHandler({
@@ -104,7 +105,7 @@ describe('RebuildLeaderListCacheHandler', () => {
             entityManager: mockEntityManager,
             safeEventDispatcher: makeMockDispatcher(),
           })
-      ).toThrow("Invalid or missing method 'info' on dependency 'logger'.");
+      ).toThrow(LOGGER_INFO_METHOD_ERROR);
     });
 
     test('should throw a TypeError if the entity manager dependency is missing or invalid', () => {
