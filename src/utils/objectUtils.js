@@ -1,6 +1,7 @@
 // src/utils/objectUtils.js
 
 import { ensureValidLogger } from './loggerUtils.js';
+import { safeDispatchError } from './safeDispatchErrorUtils.js';
 
 /**
  * @file Utility functions for working with plain JavaScript objects.
@@ -69,16 +70,31 @@ export function resolvePath(obj, propertyPath) {
  * @param {import('../interfaces/coreServices.js').ILogger} [logger] - Logger for
  *   error reporting.
  * @param {string} [contextInfo] - Additional context included in log messages.
+ * @param {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} [dispatcher] - Dispatcher for system error events.
  * @returns {any | undefined} The resolved value or `undefined` when resolution
  *   fails.
  */
-export function safeResolvePath(obj, propertyPath, logger, contextInfo = '') {
+export function safeResolvePath(
+  obj,
+  propertyPath,
+  logger,
+  contextInfo = '',
+  dispatcher
+) {
   const log = ensureValidLogger(logger, 'ObjectUtils');
   try {
     return resolvePath(obj, propertyPath);
   } catch (error) {
     const info = contextInfo ? ` (${contextInfo})` : '';
-    log.error(`Error resolving path "${propertyPath}"${info}`, error);
+    const message = `Error resolving path "${propertyPath}"${info}`;
+    if (dispatcher) {
+      safeDispatchError(dispatcher, message, {
+        raw: error?.message || error,
+        stack: error?.stack,
+      });
+    } else {
+      log.error(message, error);
+    }
     return undefined;
   }
 }
