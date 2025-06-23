@@ -147,6 +147,30 @@ describe('ScopeRegistry', () => {
       expect(scopesCopy.has('core:all_characters')).toBe(false); // The copy is changed
       expect(scopeRegistry.hasScope('core:all_characters')).toBe(true); // The original is untouched
     });
+
+    it('should find scopes by base name when stored with namespaced names', () => {
+      // Assert: Can find by exact namespaced name
+      expect(scopeRegistry.getScope('core:all_characters')).toEqual(
+        mockScopeDefinitions['core:all_characters']
+      );
+      expect(scopeRegistry.getScope('mod:custom_scope')).toEqual(
+        mockScopeDefinitions['mod:custom_scope']
+      );
+
+      // Assert: Can find by base name (fallback mechanism)
+      expect(scopeRegistry.getScope('all_characters')).toEqual(
+        mockScopeDefinitions['core:all_characters']
+      );
+      expect(scopeRegistry.getScope('nearby_items')).toEqual(
+        mockScopeDefinitions['core:nearby_items']
+      );
+      expect(scopeRegistry.getScope('custom_scope')).toEqual(
+        mockScopeDefinitions['mod:custom_scope']
+      );
+
+      // Assert: Returns null for non-existent base names
+      expect(scopeRegistry.getScope('nonexistent')).toBeNull();
+    });
   });
 
   describe('statistics', () => {
