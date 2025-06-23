@@ -226,6 +226,21 @@ export class TurnManagerTestBed extends SpyTrackerMixin(
   }
 
   /**
+   * Configures the turn order service to return the provided actors
+   * sequentially for successive calls.
+   *
+   * @param {...object} actors - Actor entities to return in order.
+   * @returns {void}
+   */
+  mockActorSequence(...actors) {
+    this.mocks.turnOrderService.isEmpty.mockResolvedValue(false);
+    let index = 0;
+    this.mocks.turnOrderService.getNextEntity.mockImplementation(() =>
+      Promise.resolve(index < actors.length ? actors[index++] : null)
+    );
+  }
+
+  /**
    * Configures the turn order service to represent an empty queue.
    *
    * @returns {void}

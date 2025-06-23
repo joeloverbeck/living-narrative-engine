@@ -83,14 +83,7 @@ describeRunningTurnManagerSuite(
 
     test('Advances to next actor when current turn ends successfully', async () => {
       testBed.setActiveEntities(ai1, ai2);
-      testBed.mockNextActor(ai1);
-      testBed.mocks.turnOrderService.getNextEntity.mockImplementation(() => {
-        const result =
-          testBed.mocks.turnOrderService.getNextEntity.mock.calls.length === 1
-            ? ai1
-            : ai2;
-        return Promise.resolve(result);
-      });
+      testBed.mockActorSequence(ai1, ai2);
 
       await testBed.advanceAndFlush();
 
@@ -143,17 +136,11 @@ describeRunningTurnManagerSuite(
       beforeEach(async () => {
         testBed.setActiveEntities(ai1, ai2);
         let isEmptyCallCount = 0;
-        let getNextEntityCallCount = 0;
         testBed.mocks.turnOrderService.isEmpty.mockImplementation(() => {
           isEmptyCallCount++;
           return Promise.resolve(isEmptyCallCount >= 3);
         });
-        testBed.mocks.turnOrderService.getNextEntity.mockImplementation(() => {
-          getNextEntityCallCount++;
-          if (getNextEntityCallCount === 1) return Promise.resolve(ai1);
-          if (getNextEntityCallCount === 2) return Promise.resolve(ai2);
-          return Promise.resolve(null);
-        });
+        testBed.mockActorSequence(ai1, ai2, null);
         testBed.mocks.turnOrderService.clearCurrentRound.mockImplementation(
           () => {
             const newActor1 = createAiActor('actor1');
