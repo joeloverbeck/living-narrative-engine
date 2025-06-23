@@ -47,4 +47,20 @@ describe('SaveFileRepository.writeSaveFile', () => {
     expect(res.error.message).toMatch(/Not enough disk space/);
     expect(logger.error).toHaveBeenCalled();
   });
+
+  it('passes path and data to the storage provider on disk full', async () => {
+    const data = new Uint8Array([1, 2]);
+    storageProvider.writeFileAtomically.mockResolvedValue({
+      success: false,
+      error: 'disk full',
+      code: StorageErrorCodes.DISK_FULL,
+    });
+
+    await repo.writeSaveFile('save.sav', data);
+
+    expect(storageProvider.writeFileAtomically).toHaveBeenCalledWith(
+      'save.sav',
+      data
+    );
+  });
 });
