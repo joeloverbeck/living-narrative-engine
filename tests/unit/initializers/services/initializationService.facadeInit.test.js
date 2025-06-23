@@ -35,7 +35,7 @@ const mockSystemInitializer = {
 
 const mockWorldInitializer = {
   initializeWorldEntities: jest.fn().mockReturnValue(true),
-  buildSpatialIndex: jest.fn(),
+  // buildSpatialIndex: jest.fn(), // Obsolete, can be removed if not used by any test assertions
 };
 
 class MockDomUiFacade {
@@ -75,6 +75,20 @@ const mockConfigurationInstance = {
   }),
 };
 
+// Add new mocks for IDataRegistry and IScopeRegistry
+const mockDataRegistry = {
+  get: jest.fn().mockReturnValue({}), // Return empty scopes by default
+  set: jest.fn(),
+  getAll: jest.fn().mockReturnValue({}),
+  // ... other methods if needed by tests
+};
+
+const mockScopeRegistry = {
+  initialize: jest.fn(),
+  getScope: jest.fn(),
+  // ... other methods if needed by tests
+};
+
 let container;
 let initializationService;
 
@@ -110,6 +124,10 @@ beforeEach(() => {
     dispatch: jest.fn(),
   });
   container.register(tokens.IEntityManager, { getEntityInstance: jest.fn() });
+
+  // Register the new mocks
+  container.register(tokens.IDataRegistry, mockDataRegistry);
+  container.register(tokens.IScopeRegistry, mockScopeRegistry);
 
   initializationService = new InitializationService({
     container,
@@ -244,7 +262,11 @@ describe('InitializationService', () => {
       expect(result.error).toBe(testError);
       expect(mockLogger.error).toHaveBeenCalledWith(
         expect.stringContaining('CRITICAL ERROR'),
-        testError
+        expect.objectContaining({
+          errorMessage: testError.message,
+          errorName: testError.name,
+          errorStack: expect.any(String)
+        })
       );
     });
 
@@ -304,7 +326,11 @@ describe('InitializationService', () => {
       expect(result.error).toBe(testError);
       expect(mockLogger.error).toHaveBeenCalledWith(
         expect.stringContaining('CRITICAL ERROR'),
-        testError
+        expect.objectContaining({
+          errorMessage: testError.message,
+          errorName: testError.name,
+          errorStack: expect.any(String)
+        })
       );
     });
 
@@ -320,11 +346,15 @@ describe('InitializationService', () => {
       expect(result.error).toBe(testError);
       expect(mockLogger.error).toHaveBeenCalledWith(
         expect.stringContaining('CRITICAL ERROR'),
-        testError
+        expect.objectContaining({
+          errorMessage: testError.message,
+          errorName: testError.name,
+          errorStack: expect.any(String)
+        })
       );
     });
 
-    it('should log error but potentially succeed if DomUiFacade resolution fails (optional)', async () => {
+    it('should return failure and log error if DomUiFacade resolution fails (now critical)', async () => {
       const uiError = new Error('Failed to resolve UI Facade');
       const originalResolve = container.resolve;
       const resolveSpy = jest
@@ -342,17 +372,16 @@ describe('InitializationService', () => {
       const result =
         await initializationService.runInitializationSequence(testWorldName);
 
-      expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining(
-          'Failed to resolve DomUiFacade. UI might not function correctly if it was expected.'
-        ),
-        uiError
-      );
-      expect(result.success).toBe(true);
-      expect(mockLogger.error).not.toHaveBeenCalledWith(
+      expect(mockLogger.error).toHaveBeenCalledWith(
         expect.stringContaining('CRITICAL ERROR'),
-        expect.anything()
+        expect.objectContaining({
+          errorMessage: uiError.message,
+          errorName: uiError.name,
+          errorStack: expect.any(String)
+        })
       );
+      expect(result.success).toBe(false);
+      expect(result.error).toBe(uiError);
 
       resolveSpy.mockRestore();
     });

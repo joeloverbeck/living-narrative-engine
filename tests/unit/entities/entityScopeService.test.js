@@ -16,12 +16,10 @@ import { getEntityIdsForScopes } from '../../../src/entities/entityScopeService.
 // Mock the Scope DSL dependencies
 jest.mock('../../../src/scopeDsl/scopeRegistry.js', () => ({
   __esModule: true,
-  default: {
-    getInstance: jest.fn(),
-  },
-  ScopeRegistry: {
-    getInstance: jest.fn(),
-  },
+  ScopeRegistry: jest.fn().mockImplementation(() => ({
+    getScope: jest.fn(),
+    // Add other methods if ScopeRegistry instances are expected to have them
+  })),
 }));
 
 jest.mock('../../../src/scopeDsl/parser.js', () => ({
@@ -63,21 +61,21 @@ describe('entityScopeService', () => {
       getScope: jest.fn(),
     };
     // Set both default and named exports for getInstance
-    const scopeRegistryModule = require('../../../src/scopeDsl/scopeRegistry.js');
-    scopeRegistryModule.default.getInstance.mockReturnValue(
-      mockScopeRegistryInstance
-    );
-    scopeRegistryModule.ScopeRegistry.getInstance.mockReturnValue(
-      mockScopeRegistryInstance
-    );
+    // const scopeRegistryModule = require('../../../src/scopeDsl/scopeRegistry.js');
+    // scopeRegistryModule.default.getInstance.mockReturnValue(
+    //   mockScopeRegistryInstance
+    // );
+    // scopeRegistryModule.ScopeRegistry.getInstance.mockReturnValue(
+    //   mockScopeRegistryInstance
+    // );
 
     mockScopeEngine = {
       resolve: jest.fn(),
     };
     ScopeEngine.mockImplementation(() => mockScopeEngine);
     // Also set the default export for the constructor
-    const engineModule = require('../../../src/scopeDsl/engine.js');
-    engineModule.default.mockImplementation(() => mockScopeEngine);
+    // const engineModule = require('../../../src/scopeDsl/engine.js');
+    // engineModule.default.mockImplementation(() => mockScopeEngine);
   });
 
   afterEach(() => {
@@ -86,7 +84,7 @@ describe('entityScopeService', () => {
 
   describe('getEntityIdsForScopes', () => {
     test('should return empty set if context is null', () => {
-      const result = getEntityIdsForScopes('followers', null, mockLogger);
+      const result = getEntityIdsForScopes('followers', null, mockScopeRegistryInstance, mockLogger);
       expect(result).toEqual(new Set());
       expect(mockLogger.error).toHaveBeenCalledWith(
         'getEntityIdsForScopes: Invalid or incomplete context provided. Cannot proceed.',
@@ -96,7 +94,7 @@ describe('entityScopeService', () => {
 
     test('should return empty set if entityManager is missing', () => {
       const context = { actingEntity: { id: 'player' } };
-      const result = getEntityIdsForScopes('followers', context, mockLogger);
+      const result = getEntityIdsForScopes('followers', context, mockScopeRegistryInstance, mockLogger);
       expect(result).toEqual(new Set());
       expect(mockLogger.error).toHaveBeenCalledWith(
         'getEntityIdsForScopes: Invalid or incomplete context provided. Cannot proceed.',
@@ -106,7 +104,7 @@ describe('entityScopeService', () => {
 
     test('should handle "none" scope by returning empty set', () => {
       const context = { entityManager: mockEntityManager };
-      const result = getEntityIdsForScopes('none', context, mockLogger);
+      const result = getEntityIdsForScopes('none', context, mockScopeRegistryInstance, mockLogger);
       expect(result).toEqual(new Set());
       expect(mockScopeRegistryInstance.getScope).not.toHaveBeenCalled();
     });
@@ -114,7 +112,7 @@ describe('entityScopeService', () => {
     test('should handle "direction" scope by returning empty set', () => {
       const context = { actor: { id: 'actor1' }, entityManager: {} };
       mockScopeRegistryInstance.getScope.mockReturnValue({ expr: 'direction' });
-      const result = getEntityIdsForScopes('direction', context, mockLogger);
+      const result = getEntityIdsForScopes('direction', context, mockScopeRegistryInstance, mockLogger);
       expect(result).toEqual(new Set());
       expect(mockScopeRegistryInstance.getScope).toHaveBeenCalledWith(
         'direction'
@@ -136,6 +134,7 @@ describe('entityScopeService', () => {
       const result = getEntityIdsForScopes(
         ['none', 'direction', 'followers'],
         context,
+        mockScopeRegistryInstance,
         mockLogger
       );
 
@@ -170,7 +169,7 @@ describe('entityScopeService', () => {
         location: undefined,
       };
 
-      const result = getEntityIdsForScopes('followers', context, mockLogger);
+      const result = getEntityIdsForScopes('followers', context, mockScopeRegistryInstance, mockLogger);
 
       expect(result).toEqual(expectedIds);
       expect(mockScopeRegistryInstance.getScope).toHaveBeenCalledWith(
@@ -200,13 +199,7 @@ describe('entityScopeService', () => {
         actingEntity: { id: 'player' },
         entityManager: mockEntityManager,
       };
-
-      const result = getEntityIdsForScopes(
-        'unknown_scope',
-        context,
-        mockLogger
-      );
-
+      const result = getEntityIdsForScopes('unknown_scope', context, mockScopeRegistryInstance, mockLogger);
       expect(result).toEqual(new Set());
       expect(mockLogger.warn).toHaveBeenCalledWith(
         "Scope 'unknown_scope' not found or has no expression in registry"
@@ -216,14 +209,11 @@ describe('entityScopeService', () => {
     test('should return empty set when actingEntity is missing', () => {
       const mockScopeDefinition = { expr: 'actor.core:leading.followers[]' };
       mockScopeRegistryInstance.getScope.mockReturnValue(mockScopeDefinition);
-
+      // Context without actingEntity
       const context = {
-        actingEntity: null,
         entityManager: mockEntityManager,
       };
-
-      const result = getEntityIdsForScopes('followers', context, mockLogger);
-
+      const result = getEntityIdsForScopes('followers', context, mockScopeRegistryInstance, mockLogger);
       expect(result).toEqual(new Set());
       expect(mockLogger.error).toHaveBeenCalledWith(
         'Cannot resolve scope: actingEntity is missing'
@@ -231,21 +221,17 @@ describe('entityScopeService', () => {
     });
 
     test('should handle DSL parsing errors gracefully', () => {
-      const mockScopeDefinition = { expr: 'invalid expression' };
+      const mockScopeDefinition = { expr: 'invalid dsl' };
       const parseError = new Error('Parse error');
-
       mockScopeRegistryInstance.getScope.mockReturnValue(mockScopeDefinition);
       parseDslExpression.mockImplementation(() => {
         throw parseError;
       });
-
       const context = {
         actingEntity: { id: 'player' },
         entityManager: mockEntityManager,
       };
-
-      const result = getEntityIdsForScopes('followers', context, mockLogger);
-
+      const result = getEntityIdsForScopes('followers', context, mockScopeRegistryInstance, mockLogger);
       expect(result).toEqual(new Set());
       expect(mockLogger.error).toHaveBeenCalledWith(
         "Error resolving scope 'followers' with DSL:",
@@ -255,24 +241,20 @@ describe('entityScopeService', () => {
 
     test('should handle scope engine resolution errors gracefully', () => {
       const mockAst = { type: 'test' };
-      const mockScopeDefinition = { expr: 'actor.core:leading.followers[]' };
+      const mockScopeDefinition = { expr: 'valid dsl' };
       const resolveError = new Error('Resolution error');
-
       mockScopeRegistryInstance.getScope.mockReturnValue(mockScopeDefinition);
       parseDslExpression.mockReturnValue(mockAst);
       mockScopeEngine.resolve.mockImplementation(() => {
         throw resolveError;
       });
-
       const context = {
         actingEntity: { id: 'player' },
         entityManager: mockEntityManager,
         spatialIndexManager: {},
         jsonLogicEval: {},
       };
-
-      const result = getEntityIdsForScopes('followers', context, mockLogger);
-
+      const result = getEntityIdsForScopes('followers', context, mockScopeRegistryInstance, mockLogger);
       expect(result).toEqual(new Set());
       expect(mockLogger.error).toHaveBeenCalledWith(
         "Error resolving scope 'followers' with DSL:",
@@ -306,6 +288,7 @@ describe('entityScopeService', () => {
       const result = getEntityIdsForScopes(
         ['followers', 'environment'],
         context,
+        mockScopeRegistryInstance,
         mockLogger
       );
 
@@ -341,6 +324,7 @@ describe('entityScopeService', () => {
       const result = getEntityIdsForScopes(
         ['followers', 'invalid_scope'],
         context,
+        mockScopeRegistryInstance,
         mockLogger
       );
 

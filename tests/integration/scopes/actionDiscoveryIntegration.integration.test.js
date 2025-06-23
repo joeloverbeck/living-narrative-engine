@@ -61,7 +61,8 @@ describe('Scope Integration Tests', () => {
     // Use the improved SimpleEntityManager
     entityManager = new SimpleEntityManager([]);
 
-    scopeRegistry = ScopeRegistry.getInstance();
+    // scopeRegistry = ScopeRegistry.getInstance(); // Old way
+    scopeRegistry = new ScopeRegistry({ logger }); // New way
     scopeRegistry.clear();
 
     const followersScopeContent = fs.readFileSync(
@@ -144,6 +145,7 @@ describe('Scope Integration Tests', () => {
       formatActionCommandFn: formatActionCommand,
       getEntityIdsForScopesFn: getEntityIdsForScopes,
       safeEventDispatcher,
+      scopeRegistry,
     });
   });
 

@@ -31,6 +31,10 @@ describe('ActionDiscoveryService params exposure', () => {
       warn: jest.fn(),
     };
     const safeEventDispatcher = { dispatch: jest.fn() };
+    const mockScopeRegistry = {
+      getScope: jest.fn(),
+      // Add other methods if they are called, for now a basic mock
+    };
 
     service = new ActionDiscoveryService({
       gameDataRepository: gameDataRepo,
@@ -40,6 +44,7 @@ describe('ActionDiscoveryService params exposure', () => {
       getEntityIdsForScopesFn,
       logger,
       safeEventDispatcher,
+      scopeRegistry: mockScopeRegistry,
     });
   });
 

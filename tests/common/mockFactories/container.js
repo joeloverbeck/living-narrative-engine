@@ -64,6 +64,9 @@ export const createMockContainerWithRegistration = () => {
       registrations.set(String(token), registration);
     }),
     resolve: jest.fn((token) => {
+      const registrationKey =
+        typeof token === 'symbol' ? token.toString() : String(token);
+
       let registration;
       try {
         registration = resolveFromMaps(
@@ -72,8 +75,6 @@ export const createMockContainerWithRegistration = () => {
           {}
         );
       } catch {
-        const registrationKey =
-          typeof token === 'symbol' ? token.toString() : String(token);
         const registeredTokens = Array.from(registrations.keys())
           .map(String)
           .join(', ');

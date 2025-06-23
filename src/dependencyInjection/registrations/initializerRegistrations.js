@@ -25,7 +25,7 @@ export function registerInitializers(container) {
       gameDataRepository: c.resolve(tokens.IGameDataRepository),
       validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
       logger: c.resolve(tokens.ILogger),
-      scopeRegistry: c.resolve(tokens.ScopeRegistry),
+      scopeRegistry: c.resolve(tokens.IScopeRegistry),
     };
     return new WorldInitializer(dependencies);
   });

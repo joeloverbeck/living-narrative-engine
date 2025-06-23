@@ -16,12 +16,10 @@ import { getEntityIdsForScopes } from '../../../src/entities/entityScopeService.
 // Mock the Scope DSL dependencies
 jest.mock('../../../src/scopeDsl/scopeRegistry.js', () => ({
   __esModule: true,
-  default: {
-    getInstance: jest.fn(),
-  },
-  ScopeRegistry: {
-    getInstance: jest.fn(),
-  },
+  ScopeRegistry: jest.fn().mockImplementation(() => ({
+    getScope: jest.fn(),
+    // Add other methods if ScopeRegistry instances are expected to have them
+  })),
 }));
 
 jest.mock('../../../src/scopeDsl/parser.js', () => ({
@@ -62,13 +60,13 @@ describe('entityScopeService - "followers" scope', () => {
     mockScopeRegistryInstance = {
       getScope: jest.fn(),
     };
-    const scopeRegistryModule = require('../../../src/scopeDsl/scopeRegistry.js');
-    scopeRegistryModule.default.getInstance.mockReturnValue(
-      mockScopeRegistryInstance
-    );
-    scopeRegistryModule.ScopeRegistry.getInstance.mockReturnValue(
-      mockScopeRegistryInstance
-    );
+    // const scopeRegistryModule = require('../../../src/scopeDsl/scopeRegistry.js'); // REMOVE
+    // scopeRegistryModule.default.getInstance.mockReturnValue( // REMOVE
+    //   mockScopeRegistryInstance // REMOVE
+    // ); // REMOVE
+    // scopeRegistryModule.ScopeRegistry.getInstance.mockReturnValue( // REMOVE
+    //   mockScopeRegistryInstance // REMOVE
+    // ); // REMOVE
 
     mockScopeEngine = {
       resolve: jest.fn(),
@@ -102,7 +100,7 @@ describe('entityScopeService - "followers" scope', () => {
       location: undefined,
     };
 
-    const result = getEntityIdsForScopes('followers', context, mockLogger);
+    const result = getEntityIdsForScopes('followers', context, mockScopeRegistryInstance, mockLogger);
 
     expect(result).toEqual(expectedIds);
     expect(mockScopeRegistryInstance.getScope).toHaveBeenCalledWith(
@@ -133,7 +131,7 @@ describe('entityScopeService - "followers" scope', () => {
       entityManager: mockEntityManager,
     };
 
-    const result = getEntityIdsForScopes('followers', context, mockLogger);
+    const result = getEntityIdsForScopes('followers', context, mockScopeRegistryInstance, mockLogger);
 
     expect(result).toEqual(new Set());
     expect(mockLogger.warn).toHaveBeenCalledWith(
@@ -150,7 +148,7 @@ describe('entityScopeService - "followers" scope', () => {
       entityManager: mockEntityManager,
     };
 
-    const result = getEntityIdsForScopes('followers', context, mockLogger);
+    const result = getEntityIdsForScopes('followers', context, mockScopeRegistryInstance, mockLogger);
 
     expect(result).toEqual(new Set());
     expect(mockLogger.error).toHaveBeenCalledWith(
@@ -172,7 +170,7 @@ describe('entityScopeService - "followers" scope', () => {
       entityManager: mockEntityManager,
     };
 
-    const result = getEntityIdsForScopes('followers', context, mockLogger);
+    const result = getEntityIdsForScopes('followers', context, mockScopeRegistryInstance, mockLogger);
 
     expect(result).toEqual(new Set());
     expect(mockLogger.error).toHaveBeenCalledWith(
@@ -199,7 +197,7 @@ describe('entityScopeService - "followers" scope', () => {
       jsonLogicEval: {},
     };
 
-    const result = getEntityIdsForScopes('followers', context, mockLogger);
+    const result = getEntityIdsForScopes('followers', context, mockScopeRegistryInstance, mockLogger);
 
     expect(result).toEqual(new Set());
     expect(mockLogger.error).toHaveBeenCalledWith(
@@ -232,6 +230,7 @@ describe('entityScopeService - "followers" scope', () => {
     const result = getEntityIdsForScopes(
       ['followers', 'inventory'],
       context,
+      mockScopeRegistryInstance,
       mockLogger
     );
 

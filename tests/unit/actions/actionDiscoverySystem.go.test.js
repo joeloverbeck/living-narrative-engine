@@ -17,6 +17,7 @@ import { ActionValidationService } from '../../../src/actions/validation/actionV
 import ConsoleLogger from '../../../src/logging/consoleLogger.js';
 import { formatActionCommand } from '../../../src/actions/actionFormatter.js';
 import { getEntityIdsForScopes } from '../../../src/entities/entityScopeService.js';
+import ScopeRegistry from '../../../src/scopeDsl/scopeRegistry.js';
 
 // --- Helper Mocks/Types ---
 import { ActionTargetContext } from '../../../src/models/actionTargetContext.js';
@@ -36,6 +37,7 @@ jest.mock('../../../src/actions/validation/actionValidationService.js');
 jest.mock('../../../src/logging/consoleLogger.js');
 jest.mock('../../../src/actions/actionFormatter.js');
 jest.mock('../../../src/entities/entityScopeService.js');
+jest.mock('../../../src/scopeDsl/scopeRegistry.js');
 
 describe('ActionDiscoveryService - Go Action (Fixed State)', () => {
   let actionDiscoveryService;
@@ -44,6 +46,7 @@ describe('ActionDiscoveryService - Go Action (Fixed State)', () => {
   let mockValidationService;
   let mockLogger;
   let mockSafeEventDispatcher;
+  let mockScopeRegistry;
 
   // --- Mocks of imported functions ---
   // These are automatically mocked by jest.mock() at the top of the file
@@ -118,6 +121,7 @@ describe('ActionDiscoveryService - Go Action (Fixed State)', () => {
     mockLogger.error = jest.fn();
 
     mockSafeEventDispatcher = { dispatch: jest.fn() };
+    mockScopeRegistry = new ScopeRegistry();
 
     mockHeroEntity = createTestEntity(
       HERO_INSTANCE_ID,
@@ -193,6 +197,7 @@ describe('ActionDiscoveryService - Go Action (Fixed State)', () => {
       formatActionCommandFn: mockFormatActionCommandFn,
       getEntityIdsForScopesFn: mockGetEntityIdsForScopesFn,
       safeEventDispatcher: mockSafeEventDispatcher,
+      scopeRegistry: mockScopeRegistry,
     });
   });
 
@@ -229,10 +234,11 @@ describe('ActionDiscoveryService - Go Action (Fixed State)', () => {
     // The new system should have been called
     expect(mockGetEntityIdsForScopesFn).toHaveBeenCalledWith(
       ['directions'], // from core:go action definition
-      expect.any(Object),
+      expect.any(Object), // context, which includes entityManager, actingEntity, location, etc.
       // FIX: Expect any object that looks like a logger, not the specific mock instance.
-      // This is because the service creates a prefixed logger wrapper.
-      expect.objectContaining({
+      // The line above is now incorrect. We expect the mockScopeRegistry and then the mockLogger.
+      mockScopeRegistry, // scopeRegistry is the 3rd argument
+      expect.objectContaining({ // Expect an object with logger methods
         debug: expect.any(Function),
         info: expect.any(Function),
         warn: expect.any(Function),

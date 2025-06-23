@@ -70,7 +70,7 @@ describe('Scope Integration Tests', () => {
     entityManager = new SimpleEntityManager([]);
 
     // Use the real singleton and clear all scopes
-    scopeRegistry = ScopeRegistry.getInstance();
+    scopeRegistry = new ScopeRegistry({ logger });
     scopeRegistry.clear();
 
     // FIX: Use the parseScopeDefinitions utility to correctly extract expressions
@@ -142,6 +142,7 @@ describe('Scope Integration Tests', () => {
       formatActionCommandFn: formatActionCommand,
       getEntityIdsForScopesFn: getEntityIdsForScopes,
       safeEventDispatcher,
+      scopeRegistry,
     });
   });
 
@@ -205,6 +206,7 @@ describe('Scope Integration Tests', () => {
         formatActionCommandFn: formatActionCommand,
         getEntityIdsForScopesFn: getEntityIdsForScopes,
         safeEventDispatcher,
+        scopeRegistry,
       });
 
       const actorEntity = entityManager.getEntityInstance(actorId);
@@ -262,6 +264,7 @@ describe('Scope Integration Tests', () => {
         formatActionCommandFn: formatActionCommand,
         getEntityIdsForScopesFn: getEntityIdsForScopes,
         safeEventDispatcher,
+        scopeRegistry,
       });
 
       const actorEntity = entityManager.getEntityInstance(actorId);
@@ -339,6 +342,7 @@ describe('Scope Integration Tests', () => {
         formatActionCommandFn: formatActionCommand,
         getEntityIdsForScopesFn: getEntityIdsForScopes,
         safeEventDispatcher,
+        scopeRegistry,
       });
 
       const actorEntity = entityManager.getEntityInstance(actorId);
@@ -404,6 +408,7 @@ describe('Scope Integration Tests', () => {
         formatActionCommandFn: formatActionCommand,
         getEntityIdsForScopesFn: getEntityIdsForScopes,
         safeEventDispatcher,
+        scopeRegistry,
       });
 
       const actorEntity = entityManager.getEntityInstance(actorId);
@@ -465,6 +470,7 @@ describe('Scope Integration Tests', () => {
         formatActionCommandFn: formatActionCommand,
         getEntityIdsForScopesFn: getEntityIdsForScopes,
         safeEventDispatcher,
+        scopeRegistry,
       });
 
       const actorEntity = entityManager.getEntityInstance(actorId);
@@ -541,6 +547,7 @@ describe('Scope Integration Tests', () => {
         formatActionCommandFn: formatActionCommand,
         getEntityIdsForScopesFn: getEntityIdsForScopes,
         safeEventDispatcher,
+        scopeRegistry,
       });
 
       const actorEntity = entityManager.getEntityInstance(actorId);
@@ -599,6 +606,7 @@ describe('Scope Integration Tests', () => {
         formatActionCommandFn: formatActionCommand,
         getEntityIdsForScopesFn: getEntityIdsForScopes,
         safeEventDispatcher,
+        scopeRegistry,
       });
 
       const actorEntity = entityManager.getEntityInstance(actorId);
@@ -655,6 +663,7 @@ describe('Scope Integration Tests', () => {
         formatActionCommandFn: formatActionCommand,
         getEntityIdsForScopesFn: getEntityIdsForScopes,
         safeEventDispatcher,
+        scopeRegistry,
       });
 
       const context = {
@@ -700,6 +709,7 @@ describe('Scope Integration Tests', () => {
         formatActionCommandFn: formatActionCommand,
         getEntityIdsForScopesFn: getEntityIdsForScopes,
         safeEventDispatcher,
+        scopeRegistry,
       });
 
       const actorEntity = entityManager.getEntityInstance(actorId);

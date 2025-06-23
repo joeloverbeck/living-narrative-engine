@@ -148,7 +148,7 @@ describe('ScopeEngine', () => {
 
       test('edge can access property on filtered array of objects', () => {
         const ast = parseDslExpression(
-          'actor.core:exits[{"==": [{"var": "locked"}, false]}].target'
+          'actor.core:exits[][{"==": [{"var": "locked"}, false]}].target'
         );
 
         const exitsComponentData = [

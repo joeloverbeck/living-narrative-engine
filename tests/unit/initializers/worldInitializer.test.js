@@ -25,6 +25,7 @@ describe('WorldInitializer', () => {
   let mockValidatedEventDispatcher;
   let mockLogger;
   let mockSpatialIndexManager;
+  let mockScopeRegistry;
   let worldInitializer;
 
   const createMockEntityInstance = (
@@ -86,6 +87,7 @@ describe('WorldInitializer', () => {
       getComponentDefinition: jest.fn(),
       getWorld: jest.fn(),
       getEntityInstanceDefinition: jest.fn(),
+      get: jest.fn().mockReturnValue({ scopes: {} }), // Add the missing get method with default return
     };
     mockValidatedEventDispatcher = {
       dispatch: jest.fn().mockResolvedValue(undefined),
@@ -99,6 +101,11 @@ describe('WorldInitializer', () => {
     mockSpatialIndexManager = {
       addEntity: jest.fn(),
     };
+    mockScopeRegistry = {
+      initialize: jest.fn(),
+      getScope: jest.fn(),
+      clear: jest.fn(),
+    };
 
     worldInitializer = new WorldInitializer({
       entityManager: mockEntityManager,
@@ -106,7 +113,7 @@ describe('WorldInitializer', () => {
       gameDataRepository: mockGameDataRepository,
       validatedEventDispatcher: mockValidatedEventDispatcher,
       logger: mockLogger,
-      spatialIndexManager: mockSpatialIndexManager,
+      scopeRegistry: mockScopeRegistry,
     });
 
     mockGameDataRepository.getComponentDefinition.mockImplementation(
@@ -121,6 +128,7 @@ describe('WorldInitializer', () => {
       expect(mockLogger.debug).toHaveBeenCalledWith(
         'WorldInitializer: Instance created. Spatial index management is now handled by SpatialIndexSynchronizer through event listening.'
       );
+      expect(worldInitializer).toBeInstanceOf(WorldInitializer);
     });
 
     const constructorErrorTestCases = [
@@ -145,7 +153,7 @@ describe('WorldInitializer', () => {
         'WorldInitializer requires a ValidatedEventDispatcher.',
       ],
       ['ILogger', 'logger', 'WorldInitializer requires an ILogger.'],
-      // spatialIndexManager dependency removed - no longer required
+      ['ScopeRegistry', 'scopeRegistry', 'WorldInitializer requires a ScopeRegistry.'],
     ];
 
     it.each(constructorErrorTestCases)(
@@ -157,7 +165,7 @@ describe('WorldInitializer', () => {
           gameDataRepository: mockGameDataRepository,
           validatedEventDispatcher: mockValidatedEventDispatcher,
           logger: mockLogger,
-          // spatialIndexManager dependency removed - no longer required
+          scopeRegistry: mockScopeRegistry,
         };
         delete deps[depsKey];
         expect(() => new WorldInitializer(deps)).toThrow(expectedErrorMessage);
@@ -246,7 +254,7 @@ describe('WorldInitializer', () => {
       await worldInitializer.initializeWorldEntities('test:world');
 
       expect(mockLogger.error).toHaveBeenCalledWith(
-        'WorldInitializer (Pass 1): Failed to instantiate entity from definition: test:broken for instance: test:broken_instance. createEntityInstance returned null/undefined.'
+        'WorldInitializer (Pass 1): Failed to instantiate entity from definition: test:broken for instance: test:broken_instance. createEntityInstance returned null/undefined or threw an error.'
       );
       expect(mockLogger.debug).not.toHaveBeenCalledWith(
         expect.stringContaining(
@@ -525,7 +533,7 @@ describe('WorldInitializer', () => {
         );
         expect(mockLogger.debug).toHaveBeenCalledWith(
           expect.stringContaining(
-            'WorldInitializer: World entity initialization complete for world: test:world. Spatial index management is handled by SpatialIndexSynchronizer.'
+            'WorldInitializer: World entity initialization complete for world: test:world. Instantiated: 1, Failed: 0, Total Processed: 1. Spatial index management is handled by SpatialIndexSynchronizer.'
           )
         );
       });
@@ -591,7 +599,7 @@ describe('WorldInitializer', () => {
         // And check for the overall completion
         expect(mockLogger.debug).toHaveBeenCalledWith(
           expect.stringContaining(
-            'WorldInitializer: World entity initialization complete for world: test:world. Spatial index management is handled by SpatialIndexSynchronizer.'
+            'WorldInitializer: World entity initialization complete for world: test:world. Instantiated: 1, Failed: 0, Total Processed: 1. Spatial index management is handled by SpatialIndexSynchronizer.'
           )
         );
       });
@@ -679,7 +687,7 @@ describe('WorldInitializer', () => {
       );
     });
 
-    it('should throw an error when world has no instances defined', async () => {
+    it('should handle empty instances array gracefully', async () => {
       const worldData = {
         id: 'test:world',
         name: 'Test World',
@@ -688,21 +696,19 @@ describe('WorldInitializer', () => {
 
       mockGameDataRepository.getWorld.mockReturnValue(worldData);
 
-      await expect(
-        worldInitializer.initializeWorldEntities('test:world')
-      ).rejects.toThrow(
-        "Game cannot start: World 'test:world' has no entities defined. Please ensure at least one entity is defined in the world."
-      );
+      const result = await worldInitializer.initializeWorldEntities('test:world');
 
-      expect(safeDispatchError).toHaveBeenCalledWith(
-        mockValidatedEventDispatcher,
-        `World 'test:world' has no entities defined. The game cannot start without any entities in the world.`,
-        expect.objectContaining({
-          statusCode: 500,
-          raw: expect.stringContaining(
-            "World 'test:world' has no instances defined"
-          ),
-        })
+      expect(result).toEqual({
+        entities: [],
+        instantiatedCount: 0,
+        failedCount: 0,
+        totalProcessed: 0
+      });
+
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining(
+          'WorldInitializer: World entity initialization complete for world: test:world'
+        )
       );
     });
   });
@@ -750,6 +756,64 @@ describe('WorldInitializer', () => {
         ),
         expect.any(Error)
       );
+    });
+  });
+
+  describe('initializeScopeRegistry', () => {
+    it('should call scopeRegistry.initialize with scopes from repository', async () => {
+      const mockScopes = { 'core:testScope': 'actor' };
+      mockGameDataRepository.get = jest.fn().mockReturnValue(mockScopes);
+      worldInitializer = new WorldInitializer({
+        entityManager: mockEntityManager,
+        worldContext: mockWorldContext,
+        gameDataRepository: mockGameDataRepository,
+        validatedEventDispatcher: mockValidatedEventDispatcher,
+        logger: mockLogger,
+        scopeRegistry: mockScopeRegistry,
+      });
+
+      await worldInitializer.initializeScopeRegistry();
+
+      expect(mockLogger.debug).toHaveBeenCalledWith('WorldInitializer: Initializing ScopeRegistry with loaded scopes...');
+      expect(mockGameDataRepository.get).toHaveBeenCalledWith('scopes');
+      expect(mockScopeRegistry.initialize).toHaveBeenCalledWith(mockScopes);
+      expect(mockLogger.info).toHaveBeenCalledWith('WorldInitializer: ScopeRegistry initialized with 1 scopes.');
+    });
+
+    it('should log an error and not throw if scopeRegistry.initialize fails', async () => {
+      const initError = new Error('Initialization failed');
+      mockGameDataRepository.get = jest.fn().mockReturnValue({ 'core:testScope': 'actor' });
+      mockScopeRegistry.initialize.mockImplementationOnce(() => {
+        throw initError;
+      });
+      worldInitializer = new WorldInitializer({
+        entityManager: mockEntityManager,
+        worldContext: mockWorldContext,
+        gameDataRepository: mockGameDataRepository,
+        validatedEventDispatcher: mockValidatedEventDispatcher,
+        logger: mockLogger,
+        scopeRegistry: mockScopeRegistry,
+      });
+
+      await worldInitializer.initializeScopeRegistry();
+
+      expect(mockLogger.error).toHaveBeenCalledWith('WorldInitializer: Failed to initialize ScopeRegistry:', initError);
+    });
+
+    it('should handle case where no scopes are returned from repository', async () => {
+      mockGameDataRepository.get = jest.fn().mockReturnValue(null); // or undefined
+      worldInitializer = new WorldInitializer({
+        entityManager: mockEntityManager,
+        worldContext: mockWorldContext,
+        gameDataRepository: mockGameDataRepository,
+        validatedEventDispatcher: mockValidatedEventDispatcher,
+        logger: mockLogger,
+        scopeRegistry: mockScopeRegistry,
+      });
+      await worldInitializer.initializeScopeRegistry();
+
+      expect(mockScopeRegistry.initialize).toHaveBeenCalledWith({});
+      expect(mockLogger.info).toHaveBeenCalledWith('WorldInitializer: ScopeRegistry initialized with 0 scopes.');
     });
   });
 });

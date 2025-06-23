@@ -28,6 +28,8 @@ describe('ActionDiscoveryService - processActionDefinition', () => {
   let logger;
   /** @type {object} */
   let safeEventDispatcher;
+  /** @type {object} */
+  let mockScopeRegistry;
 
   beforeEach(() => {
     gameDataRepo = { getAllActionDefinitions: jest.fn() };
@@ -45,6 +47,9 @@ describe('ActionDiscoveryService - processActionDefinition', () => {
       error: jest.fn(),
     };
     safeEventDispatcher = { dispatch: jest.fn() };
+    mockScopeRegistry = {
+      getScope: jest.fn(),
+    };
     service = new ActionDiscoveryService({
       gameDataRepository: gameDataRepo,
       entityManager,
@@ -53,6 +58,7 @@ describe('ActionDiscoveryService - processActionDefinition', () => {
       getEntityIdsForScopesFn,
       logger,
       safeEventDispatcher,
+      scopeRegistry: mockScopeRegistry,
     });
   });
 
@@ -109,7 +115,13 @@ describe('ActionDiscoveryService - processActionDefinition', () => {
         currentLocation: null,
         getActor: expect.any(Function),
       }),
-      expect.any(Object)
+      mockScopeRegistry,
+      expect.objectContaining({
+        debug: expect.any(Function),
+        info: expect.any(Function),
+        warn: expect.any(Function),
+        error: expect.any(Function),
+      })
     );
     expect(result.actions).toEqual([
       {

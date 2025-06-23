@@ -5,5 +5,9 @@ alwaysApply: false
 ---
 # Test suites guidelines
 
-
-In this project, we only create tests using the Jest framework. If you're working on a test suite and you see the opportunity to refactor some testing code to reduce duplication, do so, but those separate modules must all be under the tests/ directory of root (in appropriate subdirectories if necessary.)
+-In this project, we only create tests using the Jest framework. If you're working on a test suite and you see the opportunity to refactor some testing code to reduce duplication, do so, but those separate modules must all be under the tests/ directory of root (in appropriate subdirectories if necessary.)
+-When you're tasked with fixing the failures in a test suite, always follow the following steps:
+ 1) Determine if the tests are still valid according to the logic in the SUT.
+ 2) Determine if the issue is with the SUT or the tests suite.
+ 3) If the issue is with the SUT, fix the bug, then ensure the corresponding test passes.
+ 4) If the issue is with the test suite, fix the test suite until the tests pass.

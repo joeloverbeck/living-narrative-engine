@@ -236,7 +236,7 @@ class ScopeEngine {
    * @param {RuntimeContext} runtimeCtx - Runtime context
    * @param {number} depth - Current depth
    * @param {Array<string>} path - Path of visited node/edge keys
-   * @returns {Set<string>} Set of entity IDs
+   * @returns {Set<string>} Set of entity IDs or objects
    * @private
    */
   resolveFilter(node, actorEntity, runtimeCtx, depth, path) {
@@ -250,13 +250,24 @@ class ScopeEngine {
     if (parentResult.size === 0) return new Set();
 
     const result = new Set();
-    for (const entityId of parentResult) {
+    for (const item of parentResult) {
       try {
-        const entity = runtimeCtx.entityManager.getEntityInstance(entityId);
-        // FIX: The 'actor' in the context must be the full entity object
-        // to match the documentation and allow access to actor.components, etc.
+        let entity;
+        
+        if (typeof item === 'string') {
+          // Item is an entity ID, get the entity instance
+          entity = runtimeCtx.entityManager.getEntityInstance(item);
+          entity = entity || { id: item };
+        } else if (item && typeof item === 'object') {
+          // Item is already an object (e.g., exit object from component data)
+          entity = item;
+        } else {
+          // Skip invalid items
+          continue;
+        }
+
         const context = {
-          entity: entity || { id: entityId },
+          entity: entity,
           actor: actorEntity, // Use the full actor entity
           location: runtimeCtx.location || { id: 'unknown' },
         };
@@ -266,11 +277,11 @@ class ScopeEngine {
           context
         );
         if (filterResult) {
-          result.add(entityId);
+          result.add(item); // Add the original item (ID or object)
         }
       } catch (error) {
         runtimeCtx.logger.error(
-          `Error evaluating filter for entity ${entityId}:`,
+          `Error evaluating filter for entity/object ${typeof item === 'string' ? item : JSON.stringify(item)}:`,
           error
         );
       }

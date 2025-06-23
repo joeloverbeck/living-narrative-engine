@@ -18,6 +18,7 @@ import _set from 'lodash/set.js';
 // --- Constant Imports ---
 import { POSITION_COMPONENT_ID } from '../constants/componentIds.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../constants/systemEventIds.js';
+import { WORLDINIT_ENTITY_INSTANTIATED_ID, WORLDINIT_ENTITY_INSTANTIATION_FAILED_ID } from '../constants/eventIds.js';
 
 // --- Utility Imports ---
 import { safeDispatchError } from '../utils/safeDispatchErrorUtils.js';
@@ -155,18 +156,18 @@ class WorldInitializer {
    * Dispatches 'worldinit:entity_instantiated' or 'worldinit:entity_instantiation_failed' events.
    *
    * @param {string} worldName - The name of the world to instantiate entities from.
-   * @returns {Promise<{entities: Entity[], count: number}>} An object containing the list of instantiated entities and their count.
+   * @returns {Promise<{entities: Entity[], instantiatedCount: number, failedCount: number, totalProcessed: number}>} An object containing the list of instantiated entities and counts.
    * @private
    */
   async #_instantiateEntitiesFromWorld(worldName) {
     this.#logger.debug(
       `WorldInitializer (Pass 1): Instantiating entities from world: ${worldName}...`
     );
-    let totalInstantiatedCount = 0;
+    let instantiatedCount = 0;
+    let failedCount = 0;
     /** @type {Entity[]} */
     const instantiatedEntities = [];
 
-    // Get the world data from the repository
     const worldData = this.#repository.getWorld(worldName);
     if (!worldData) {
       safeDispatchError(
@@ -178,7 +179,6 @@ class WorldInitializer {
           timestamp: new Date().toISOString(),
         }
       );
-
       throw new Error(
         `Game cannot start: World '${worldName}' not found in the world data. Please ensure the world is properly defined.`
       );
@@ -186,26 +186,20 @@ class WorldInitializer {
 
     if (
       !worldData.instances ||
-      !Array.isArray(worldData.instances) ||
-      worldData.instances.length === 0
+      !Array.isArray(worldData.instances)
+      // Allow zero instances for worlds that might be empty by design or during setup
     ) {
-      safeDispatchError(
-        this.#validatedEventDispatcher,
-        `World '${worldName}' has no entities defined. The game cannot start without any entities in the world.`,
-        {
-          statusCode: 500,
-          raw: `World '${worldName}' has no instances defined. Context: WorldInitializer._instantiateEntitiesFromWorld, worldName: ${worldName}, instancesCount: 0`,
-          timestamp: new Date().toISOString(),
-        }
+      this.#logger.warn(
+        `WorldInitializer (Pass 1): World '${worldName}' has no instances array or it's not an array. Proceeding with zero instances.`
       );
-
-      throw new Error(
-        `Game cannot start: World '${worldName}' has no entities defined. Please ensure at least one entity is defined in the world.`
-      );
+      // Even if instances array is missing/invalid, we consider it "processed" with 0 success/failures.
+      return { entities: [], instantiatedCount: 0, failedCount: 0, totalProcessed: 0 };
     }
+    
+    const totalProcessed = worldData.instances.length;
 
     this.#logger.debug(
-      `WorldInitializer (Pass 1): Found ${worldData.instances.length} instances in world '${worldName}'.`
+      `WorldInitializer (Pass 1): Found ${totalProcessed} instances in world '${worldName}'.`
     );
 
     for (const worldInstance of worldData.instances) {
@@ -214,63 +208,103 @@ class WorldInitializer {
           `WorldInitializer (Pass 1): Skipping invalid world instance (missing instanceId):`,
           worldInstance
         );
+        failedCount++;
         continue;
       }
 
       const { instanceId } = worldInstance;
-      // Get the entity instance definition
-      const entityInstanceDef =
-        this.#repository.getEntityInstanceDefinition(instanceId);
-      const componentOverrides = entityInstanceDef?.componentOverrides;
-      // Get the definitionId from the entity instance definition
-      const definitionId = entityInstanceDef?.definitionId;
+      
+      const entityInstanceDef = this.#repository.getEntityInstanceDefinition(instanceId);
+
+      if (!entityInstanceDef) {
+        const errorMessage = `Entity instance definition not found for instance ID: '${instanceId}'. Referenced in world '${worldName}'.`;
+        this.#logger.warn(`WorldInitializer (Pass 1): ${errorMessage} Skipping.`);
+        safeDispatchError(
+            this.#validatedEventDispatcher,
+            errorMessage,
+            {
+                statusCode: 404, // Not Found
+                raw: `Context: WorldInitializer._instantiateEntitiesFromWorld, instanceId: ${instanceId}, worldName: ${worldName}`,
+                type: 'MissingResource',
+                resourceType: 'EntityInstanceDefinition',
+                resourceId: instanceId,
+            }
+        );
+        failedCount++;
+        continue;
+      }
+
+      const definitionId = entityInstanceDef.definitionId;
       if (!definitionId) {
         this.#logger.warn(
           `WorldInitializer (Pass 1): Entity instance definition '${instanceId}' is missing a definitionId. Skipping.`
         );
+        failedCount++;
         continue;
       }
-      // Create the entity instance
+      
+      const componentOverrides = entityInstanceDef.componentOverrides;
+
       this.#logger.debug(
         `WorldInitializer (Pass 1): Attempting to create entity instance '${instanceId}' from definition '${definitionId}' with overrides:`,
         componentOverrides
       );
-      const instance = this.#entityManager.createEntityInstance(definitionId, {
-        instanceId,
-        componentOverrides,
-      });
+      
+      let instance = null;
+      try {
+        instance = this.#entityManager.createEntityInstance(definitionId, {
+            instanceId,
+            componentOverrides,
+        });
+      } catch (creationError) {
+          this.#logger.error(
+              `WorldInitializer (Pass 1): Error during createEntityInstance for instanceId '${instanceId}', definitionId '${definitionId}':`,
+              creationError
+          );
+          instance = null; // Ensure instance is null if creation threw
+      }
+
 
       if (instance) {
         this.#logger.debug(
           `WorldInitializer (Pass 1): Successfully instantiated entity ${instance.id} (from definition: ${instance.definitionId})`
         );
         instantiatedEntities.push(instance);
-        totalInstantiatedCount++;
+        instantiatedCount++;
 
         await this.#_dispatchWorldInitEvent(
-          'worldinit:entity_instantiated',
+          WORLDINIT_ENTITY_INSTANTIATED_ID,
           {
             entityId: instance.id,
+            instanceId: instance.instanceId, // Added for consistency
             definitionId: instance.definitionId,
+            worldName: worldName, // Added for context
             reason: 'Initial World Load',
           },
           `entity ${instance.id}`
         );
       } else {
         this.#logger.error(
-          `WorldInitializer (Pass 1): Failed to instantiate entity from definition: ${definitionId} for instance: ${instanceId}. createEntityInstance returned null/undefined.`
+          `WorldInitializer (Pass 1): Failed to instantiate entity from definition: ${definitionId} for instance: ${instanceId}. createEntityInstance returned null/undefined or threw an error.`
         );
+        failedCount++;
         await this.#_dispatchWorldInitEvent(
-          'worldinit:entity_instantiation_failed',
-          { instanceId, definitionId, reason: 'Initial World Load' },
+          WORLDINIT_ENTITY_INSTANTIATION_FAILED_ID,
+          { 
+            instanceId, 
+            definitionId, 
+            worldName: worldName, // Added for context
+            error: `Failed to create entity instance. EntityManager returned null/undefined or threw an error.`,
+            reason: 'Initial World Load' 
+          },
           `instance ${instanceId}`
         );
       }
     }
     this.#logger.debug(
-      `WorldInitializer (Pass 1): Completed. Instantiated ${totalInstantiatedCount} total entities from world '${worldName}'.`
+      `WorldInitializer (Pass 1): Completed. Instantiated ${instantiatedCount} entities, ${failedCount} failures out of ${totalProcessed} total instances for world '${worldName}'.`
     );
-    return { entities: instantiatedEntities, count: totalInstantiatedCount };
+    return { entities: instantiatedEntities, instantiatedCount, failedCount, totalProcessed };
   }
 
   /**
@@ -430,8 +464,8 @@ class WorldInitializer {
    * Dispatches finer-grained 'worldinit:entity_instantiated' and 'worldinit:entity_instantiation_failed' events.
    *
    * @param {string} worldName - The name of the world to initialize entities for.
-   * @returns {Promise<boolean>} Resolves with true if successful.
-   * @throws {Error} If a critical error occurs during initialization that should stop the process.
+   * @returns {Promise<{entities: Entity[], instantiatedCount: number, failedCount: number, totalProcessed: number}>} Resolves with an object containing instantiated entities and counts.
+   * @throws {Error} If a critical error occurs during initialization that should stop the process (e.g., world not found).
    */
   async initializeWorldEntities(worldName) {
     this.#logger.debug(
@@ -443,43 +477,44 @@ class WorldInitializer {
       // Initialize ScopeRegistry with loaded scopes
       await this.initializeScopeRegistry();
 
-      const { entities: instantiatedEntities } =
+      const instantiationResult =
         await this.#_instantiateEntitiesFromWorld(worldName);
 
-      if (instantiatedEntities && instantiatedEntities.length > 0) {
-        await this.#_resolveReferencesForEntities(instantiatedEntities);
+      if (instantiationResult.entities && instantiationResult.entities.length > 0) {
+        await this.#_resolveReferencesForEntities(instantiationResult.entities);
       } else {
         this.#logger.debug(
-          'WorldInitializer (Pass 2): Skipped. No entities were instantiated in Pass 1.'
+          'WorldInitializer (Pass 2): Skipped reference resolution. No entities were instantiated in Pass 1 or entities array was empty.'
         );
       }
 
       this.#logger.debug(
-        `WorldInitializer: World entity initialization complete for world: ${worldName}. Spatial index management is handled by SpatialIndexSynchronizer.`
+        `WorldInitializer: World entity initialization complete for world: ${worldName}. Instantiated: ${instantiationResult.instantiatedCount}, Failed: ${instantiationResult.failedCount}, Total Processed: ${instantiationResult.totalProcessed}. Spatial index management is handled by SpatialIndexSynchronizer.`
       );
       // Event 'initialization:world_initializer:completed' could be dispatched here.
-      return true;
+      return instantiationResult;
     } catch (error) {
-      // The check '!String(error?.message).includes("CRITICAL error during component iteration")'
-      // is kept, as per original code. However, as #_processSingleEntityForPass2 catches and handles
-      // that specific error without re-throwing it to this level, this condition might not be met
-      // for errors originating from component iteration in #_resolveReferencesForEntityComponents.
-      // It will catch other critical errors from the promise chain.
-      if (
-        !String(error?.message).includes(
-          'CRITICAL error during component iteration'
-        )
-      ) {
-        safeDispatchError(
-          this.#validatedEventDispatcher,
-          `Critical error during world initialization for world '${worldName}'. The game cannot start properly.`,
-          {
-            statusCode: 500,
-            raw: `World initialization failed. Context: WorldInitializer.initializeWorldEntities, worldName: ${worldName}, error: ${error?.message || 'Unknown error'}`,
-            timestamp: new Date().toISOString(),
-          }
-        );
-      }
+      // This catch block primarily handles critical errors like worldData not found
+      // from #_instantiateEntitiesFromWorld, or other unexpected errors.
+      // Individual entity instantiation failures are handled within #_instantiateEntitiesFromWorld
+      // and are reflected in the failedCount.
+      
+      // Log the error before re-throwing.
+      this.#logger.error(
+        `WorldInitializer: Critical error during entity initialization for world '${worldName}':`,
+        error
+      );
+
+      safeDispatchError(
+        this.#validatedEventDispatcher,
+        `Critical error during world initialization for world '${worldName}'. Initialization halted.`,
+        {
+          statusCode: 500,
+          raw: `World initialization failed. Context: WorldInitializer.initializeWorldEntities, worldName: ${worldName}, error: ${error?.message || 'Unknown error'}`,
+          timestamp: new Date().toISOString(),
+          error // Include the original error object if available
+        }
+      );
       // Event 'initialization:world_initializer:failed' could be dispatched here.
       throw error; // Always re-throw to indicate initialization failure.
     }
