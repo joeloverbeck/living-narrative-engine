@@ -300,16 +300,6 @@ export class LlmSelectionModal extends SlotModalBase {
   }
 
   /**
-   * Keyboard navigation handler for the LLM list.
-   *
-   * @param {KeyboardEvent} event - Key event to process.
-   * @private
-   */
-  _handleSlotNavigation(event) {
-    super._handleSlotNavigation(event);
-  }
-
-  /**
    * Orchestrates rendering the LLM list: fetches data, clears container,
    * renders items or empty message, and calls post-render hook.
    *
