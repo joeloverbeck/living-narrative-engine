@@ -3,10 +3,14 @@
 
 import { createComponentAccessor } from '../../logic/componentAccessor.js';
 import { createEntityContext } from '../../logic/contextAssembler.js';
+import {
+  ENTITY as TARGET_TYPE_ENTITY,
+  NONE as TARGET_TYPE_NONE,
+} from '../../constants/actionTargetTypes.js';
 
 /**
  * @description Create a base target context with default null fields.
- * @param {'entity' | 'none'} type - Target context type.
+ * @param {string} type - Target context type (use ActionTargetTypes constants).
  * @returns {{type: string, id: null, direction: null, components: null, blocker: null, exitDetails: null}}
  * Base target context object.
  */
@@ -39,11 +43,11 @@ export function buildActorContext(entityId, entityManager, logger) {
  * @param {string} entityId - ID of the target entity.
  * @param {EntityManager} entityManager - Manager to access components.
  * @param {ILogger} logger - Logger instance.
- * @returns {{type: 'entity', id: string, direction: null, components: object, blocker: null, exitDetails: null}}
+ * @returns {{type: string, id: string, direction: null, components: object, blocker: null, exitDetails: null}}
  * Target context for an entity.
  */
 export function buildEntityTargetContext(entityId, entityManager, logger) {
-  const ctx = createBaseTargetContext('entity');
+  const ctx = createBaseTargetContext(TARGET_TYPE_ENTITY);
   ctx.id = entityId;
   ctx.components = createComponentAccessor(entityId, entityManager, logger);
   return ctx;

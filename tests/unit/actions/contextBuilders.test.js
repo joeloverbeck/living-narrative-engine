@@ -1,10 +1,9 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import {
   buildActorContext,
-  buildDirectionContext,
   buildEntityTargetContext,
-  resolveDirectionExit,
 } from '../../../src/actions/validation/contextBuilders.js';
+import { ENTITY as TARGET_TYPE_ENTITY } from '../../../src/constants/actionTargetTypes.js';
 
 jest.mock('../../../src/logic/componentAccessor.js', () => ({
   createComponentAccessor: jest.fn((id) => ({ accessorFor: id })),
@@ -45,7 +44,7 @@ describe('contextBuilders', () => {
         mockLogger
       );
       expect(result).toEqual({
-        type: 'entity',
+        type: TARGET_TYPE_ENTITY,
         id: 'target1',
         direction: null,
         components: { accessorFor: 'target1' },

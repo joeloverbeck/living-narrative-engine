@@ -1,6 +1,11 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { formatActionCommand } from '../../../src/actions/actionFormatter.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/eventIds.js';
+import {
+  ENTITY as TARGET_TYPE_ENTITY,
+  DIRECTION as TARGET_TYPE_DIRECTION,
+  NONE as TARGET_TYPE_NONE,
+} from '../../../src/constants/actionTargetTypes.js';
 import { createMockLogger } from '../../common/mockFactories/index.js';
 
 describe('formatActionCommand', () => {
@@ -19,7 +24,7 @@ describe('formatActionCommand', () => {
 
   it('formats an entity target using the entity display name', () => {
     const actionDef = { id: 'core:inspect', template: 'inspect {target}' };
-    const context = { type: 'entity', entityId: 'e1' };
+    const context = { type: TARGET_TYPE_ENTITY, entityId: 'e1' };
     const mockEntity = { id: 'e1' };
     entityManager.getEntityInstance.mockReturnValue(mockEntity);
     displayNameFn.mockReturnValue('The Entity');
@@ -43,7 +48,7 @@ describe('formatActionCommand', () => {
 
   it('falls back to entity id when instance is missing', () => {
     const actionDef = { id: 'core:inspect', template: 'inspect {target}' };
-    const context = { type: 'entity', entityId: 'e1' };
+    const context = { type: TARGET_TYPE_ENTITY, entityId: 'e1' };
     entityManager.getEntityInstance.mockReturnValue(null);
 
     const result = formatActionCommand(
@@ -65,7 +70,7 @@ describe('formatActionCommand', () => {
 
   it('formats a direction target', () => {
     const actionDef = { id: 'core:move', template: 'move {direction}' };
-    const context = { type: 'direction', direction: 'north' };
+    const context = { type: TARGET_TYPE_DIRECTION, direction: 'north' };
 
     const result = formatActionCommand(
       actionDef,
@@ -83,7 +88,7 @@ describe('formatActionCommand', () => {
 
   it("returns template as-is for 'none' target type", () => {
     const actionDef = { id: 'core:wait', template: 'wait' };
-    const context = { type: 'none' };
+    const context = { type: TARGET_TYPE_NONE };
 
     const result = formatActionCommand(
       actionDef,
@@ -99,7 +104,7 @@ describe('formatActionCommand', () => {
   it('returns null for missing action template', () => {
     const result = formatActionCommand(
       { id: 'bad' },
-      { type: 'none' },
+      { type: TARGET_TYPE_NONE },
       entityManager,
       { logger, safeEventDispatcher: dispatcher },
       displayNameFn
@@ -118,7 +123,7 @@ describe('formatActionCommand', () => {
     expect(() =>
       formatActionCommand(
         { id: 'core:use', template: 'use {target}' },
-        { type: 'entity', entityId: 'e1' },
+        { type: TARGET_TYPE_ENTITY, entityId: 'e1' },
         {},
         { logger, safeEventDispatcher: dispatcher },
         displayNameFn

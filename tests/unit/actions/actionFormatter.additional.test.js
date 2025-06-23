@@ -4,6 +4,11 @@ import {
   targetFormatterMap,
 } from '../../../src/actions/actionFormatter.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/eventIds.js';
+import {
+  ENTITY as TARGET_TYPE_ENTITY,
+  DIRECTION as TARGET_TYPE_DIRECTION,
+  NONE as TARGET_TYPE_NONE,
+} from '../../../src/constants/actionTargetTypes.js';
 
 const createMockLogger = () => ({
   debug: jest.fn(),
@@ -38,7 +43,7 @@ describe('formatActionCommand additional cases', () => {
 
   it('returns null when entity context lacks entityId', () => {
     const actionDef = { id: 'core:use', template: 'use {target}' };
-    const context = { type: 'entity' };
+    const context = { type: TARGET_TYPE_ENTITY };
 
     const result = formatActionCommand(
       actionDef,
@@ -59,7 +64,7 @@ describe('formatActionCommand additional cases', () => {
 
   it('returns null when direction context lacks direction', () => {
     const actionDef = { id: 'core:move', template: 'move {direction}' };
-    const context = { type: 'direction' };
+    const context = { type: TARGET_TYPE_DIRECTION };
 
     const result = formatActionCommand(
       actionDef,
@@ -83,7 +88,7 @@ describe('formatActionCommand additional cases', () => {
       id: 'core:wait',
       template: 'wait {target} {direction}',
     };
-    const context = { type: 'none' };
+    const context = { type: TARGET_TYPE_NONE };
 
     const result = formatActionCommand(
       actionDef,
@@ -104,7 +109,7 @@ describe('formatActionCommand additional cases', () => {
 
   it('returns null and logs error if placeholder substitution throws', () => {
     const actionDef = { id: 'core:inspect', template: 'inspect {target}' };
-    const context = { type: 'entity', entityId: 'e1' };
+    const context = { type: TARGET_TYPE_ENTITY, entityId: 'e1' };
     entityManager.getEntityInstance.mockImplementation(() => {
       throw new Error('boom');
     });
@@ -131,7 +136,7 @@ describe('formatActionCommand additional cases', () => {
 
   it('allows overriding the target formatter map', () => {
     const actionDef = { id: 'core:test', template: 'test {target}' };
-    const context = { type: 'entity', entityId: 'e1' };
+    const context = { type: TARGET_TYPE_ENTITY, entityId: 'e1' };
     const customMap = {
       ...targetFormatterMap,
       entity: jest.fn(() => 'test-value'),
