@@ -33,3 +33,23 @@ export function suppressConsoleError() {
 export async function flushPromisesAndTimers() {
   await jest.runAllTimersAsync();
 }
+
+/**
+ * Waits for the provided asynchronous condition function to return true,
+ * flushing timers between checks.
+ *
+ * @param {() => (boolean|Promise<boolean>)} asyncFn - Condition function.
+ * @param {number} [maxTicks=50] - Maximum iterations to attempt.
+ * @returns {Promise<boolean>} Resolves true if the condition is met.
+ */
+export async function waitForCondition(asyncFn, maxTicks = 50) {
+  for (let i = 0; i < maxTicks; i++) {
+    // eslint-disable-next-line no-await-in-loop
+    if (await asyncFn()) {
+      return true;
+    }
+    // eslint-disable-next-line no-await-in-loop
+    await flushPromisesAndTimers();
+  }
+  return false;
+}
