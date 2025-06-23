@@ -18,6 +18,16 @@
  * Implementations should handle basic fetch errors (network, HTTP status) and potentially JSON parsing errors, logging them and throwing appropriate errors.
  */
 
+/**
+ * Interface for fetching raw text data from a source (e.g., file system, network).
+ *
+ * @typedef {object} ITextDataFetcher
+ * @property {(identifier: string) => Promise<string>} fetch
+ * Fetches text data identified by the given string (e.g., path, URL).
+ * The promise should resolve with the fetched data as a string.
+ * Implementations should handle basic fetch errors (network, HTTP status) and text parsing errors, logging them and throwing appropriate errors.
+ */
+
 // --- Schema Validation ---
 
 /**

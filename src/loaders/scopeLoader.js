@@ -40,7 +40,7 @@ export default class ScopeLoader extends BaseManifestItemLoader {
    * @param {string} resolvedPath - Resolved path to the file
    * @param {string} content - Raw file content
    * @param {string} registryKey - Registry key for storing
-   * @returns {Promise<void>}
+   * @returns {Promise<{qualifiedId: string, didOverride: boolean}>} Result object with qualified ID and override flag
    */
   async _processFetchedItem(
     modId,
@@ -54,15 +54,19 @@ export default class ScopeLoader extends BaseManifestItemLoader {
       const scopeDefinitions = this.parseContent(content, filename);
       const transformedScopes = this.transformContent(scopeDefinitions, modId);
 
+      let lastResult = null;
       for (const [scopeName, scopeDef] of Object.entries(transformedScopes)) {
-        this._storeItemInRegistry(
+        lastResult = this._storeItemInRegistry(
           registryKey,
           modId,
-          scopeName,
+          scopeName.split(':')[1], // Extract base name without mod prefix
           scopeDef,
           filename
         );
       }
+
+      // Return the last result, or a default if no scopes were processed
+      return lastResult || { qualifiedId: null, didOverride: false };
     } catch (error) {
       this._logger.error(
         `ScopeLoader: Failed to process scope file ${filename} for mod ${modId}: ${error.message}`,

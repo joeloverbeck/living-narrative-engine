@@ -13,6 +13,7 @@ import { freeze } from '../utils';
  * @property {DiToken} ILogger - Token for the core logging service.
  * @property {DiToken} EventBus - Token for the central event bus (legacy).
  * @property {DiToken} IDataFetcher - Token for the data fetching service.
+ * @property {DiToken} ITextDataFetcher - Token for the text data fetching service.
  * @property {DiToken} IConfiguration - Token for static configuration access.
  * @property {DiToken} IPathResolver - Token for resolving data paths.
  * @property {DiToken} ISchemaValidator - Token for a service that validates data against schemas.
@@ -156,6 +157,7 @@ export const tokens = freeze({
   ILogger: 'ILogger',
   EventBus: 'EventBus', // Legacy
   IDataFetcher: 'IDataFetcher',
+  ITextDataFetcher: 'ITextDataFetcher',
   IConfiguration: 'IConfiguration',
   IPathResolver: 'IPathResolver',
   ISchemaValidator: 'ISchemaValidator',

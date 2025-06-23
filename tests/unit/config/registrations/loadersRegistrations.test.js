@@ -9,6 +9,7 @@
 /** @typedef {import('../../../../src/interfaces/coreServices.js').ISchemaValidator} ISchemaValidator */
 /** @typedef {import('../../../../src/interfaces/coreServices.js').IDataRegistry} IDataRegistry */
 /** @typedef {import('../../../../src/interfaces/coreServices.js').IDataFetcher} IDataFetcher */
+/** @typedef {import('../../../../src/interfaces/coreServices.js').ITextDataFetcher} ITextDataFetcher */
 /** @typedef {import('../../../../src/loaders/schemaLoader.js').default} SchemaLoader */
 /** @typedef {import('../../../../src/loaders/ruleLoader.js').default} RuleLoader */
 /** @typedef {import('../../../../src/loaders/componentLoader.js').default} ComponentLoader */
@@ -179,7 +180,7 @@ describe('registerLoaders (with Mock DI Container)', () => {
     // Keep register mock history
   });
 
-  it('should register all 32 services/loaders (+ ILogger) as singletons', () => {
+  it('should register all 33 services/loaders (+ ILogger) as singletons', () => {
     // Arrange: Logger is already registered in beforeEach
 
     // Act: Register the loaders
@@ -193,6 +194,7 @@ describe('registerLoaders (with Mock DI Container)', () => {
       tokens.ISchemaValidator,
       tokens.IDataRegistry,
       tokens.IDataFetcher,
+      tokens.ITextDataFetcher,
       tokens.ILoadCache,
       // Specific Loaders
       tokens.SchemaLoader,
@@ -223,7 +225,7 @@ describe('registerLoaders (with Mock DI Container)', () => {
       tokens.WorldPhase,
       tokens.SummaryPhase,
     ];
-    const expectedRegistrationCount = expectedTokens.length; // This must be 32
+    const expectedRegistrationCount = expectedTokens.length; // This must be 33 now
 
     // Expect 1 (ILogger from beforeEach) + all from registerLoaders
     expect(mockContainer.register).toHaveBeenCalledTimes(

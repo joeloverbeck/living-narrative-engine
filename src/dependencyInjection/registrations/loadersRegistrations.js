@@ -33,6 +33,7 @@
 /** @typedef {import('../../loaders/promptTextLoader.js').default} PromptTextLoader */
 /** @typedef {import('../../loaders/goalLoader.js').default} GoalLoader */
 /** @typedef {import('../../loaders/registryCacheAdapter.js').default} ILoadCache */
+/** @typedef {import('../../data/textDataFetcher.js').default} TextDataFetcher */
 
 // --- Core Service Imports ---
 import StaticConfiguration from '../../configuration/staticConfiguration.js';
@@ -40,6 +41,7 @@ import DefaultPathResolver from '../../pathing/defaultPathResolver.js';
 import AjvSchemaValidator from '../../validation/ajvSchemaValidator.js';
 import InMemoryDataRegistry from '../../data/inMemoryDataRegistry.js';
 import WorkspaceDataFetcher from '../../data/workspaceDataFetcher.js';
+import TextDataFetcher from '../../data/textDataFetcher.js';
 
 // --- Loader Imports ---
 import ActionLoader from '../../loaders/actionLoader.js';
@@ -80,6 +82,7 @@ import WorldLoadSummaryLogger from '../../loaders/WorldLoadSummaryLogger.js';
 import { tokens } from '../tokens.js';
 import { Registrar } from '../registrarHelpers.js';
 import { makeRegistryCache } from '../../loaders/registryCacheAdapter.js';
+import { BaseManifestItemLoader } from '../../loaders/baseManifestItemLoader.js';
 
 /**
  * Registers core data infrastructure services, data loaders, and the phase-based mod loading system.
@@ -112,6 +115,11 @@ export function registerLoaders(container) {
   registrar.singletonFactory(
     tokens.IDataFetcher,
     () => new WorkspaceDataFetcher()
+  );
+
+  registrar.singletonFactory(
+    tokens.ITextDataFetcher,
+    () => new TextDataFetcher()
   );
 
   // === Individual Content & Data Loaders (unchanged) ===
@@ -151,7 +159,21 @@ export function registerLoaders(container) {
   registerLoader(tokens.EntityInstanceLoader, EntityInstanceLoader);
   registerLoader(tokens.WorldLoader, WorldLoader);
   registerLoader(tokens.GoalLoader, GoalLoader);
-  registerLoader(tokens.ScopeLoader, ScopeLoader);
+  
+  // Register ScopeLoader with TextDataFetcher instead of regular IDataFetcher
+  registrar.singletonFactory(
+    tokens.ScopeLoader,
+    (c) =>
+      new ScopeLoader(
+        c.resolve(tokens.IConfiguration),
+        c.resolve(tokens.IPathResolver),
+        c.resolve(tokens.ITextDataFetcher), // Use TextDataFetcher for scope files
+        c.resolve(tokens.ISchemaValidator),
+        c.resolve(tokens.IDataRegistry),
+        c.resolve(tokens.ILogger)
+      )
+  );
+  
   registerLoader(tokens.ModManifestLoader, ModManifestLoader);
 
   registrar.singletonFactory(
