@@ -31,25 +31,9 @@ export class TurnEndingState extends AbstractTurnState {
       handler
     );
 
+    this.#actorToEndId = this._resolveActorId(actorToEndId);
     if (!actorToEndId) {
-      const message =
-        'TurnEndingState Constructor: actorToEndId must be provided.';
-      if (dispatcher) {
-        safeDispatchError(
-          dispatcher,
-          message,
-          {
-            providedActorId: actorToEndId ?? null,
-          },
-          log
-        );
-      }
-      this.#actorToEndId = handler.getCurrentActor()?.id ?? UNKNOWN_ACTOR_ID;
-      log.warn(
-        `TurnEndingState Constructor: actorToEndId was missing, fell back to '${this.#actorToEndId}'.`
-      );
-    } else {
-      this.#actorToEndId = actorToEndId;
+      this._notifyMissingActorId(dispatcher, log, actorToEndId);
     }
 
     this.#turnError = turnError ?? null;
@@ -184,5 +168,48 @@ export class TurnEndingState extends AbstractTurnState {
   /* ────────────────────────────────────────────────────────────────── */
   isEnding() {
     return true;
+  }
+
+  //───────────────────────────────────────────────────────────────────────────
+  // Private utilities
+  //───────────────────────────────────────────────────────────────────────────
+
+  /**
+   * Resolves the actor ID to end the turn for.
+   *
+   * @param {string | null | undefined} actorToEndId - Actor id passed to the
+   *   constructor.
+   * @returns {string} The resolved actor id.
+   */
+  _resolveActorId(actorToEndId) {
+    return (
+      actorToEndId || this._handler?.getCurrentActor?.()?.id || UNKNOWN_ACTOR_ID
+    );
+  }
+
+  /**
+   * Dispatches and logs a warning when no actor id was provided.
+   *
+   * @param {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher|null} dispatcher
+   * @param {import('../../logging/consoleLogger.js').default | Console} log
+   * @param {string | null | undefined} providedId - The originally supplied id.
+   * @returns {void}
+   */
+  _notifyMissingActorId(dispatcher, log, providedId) {
+    const message =
+      'TurnEndingState Constructor: actorToEndId must be provided.';
+    if (dispatcher) {
+      safeDispatchError(
+        dispatcher,
+        message,
+        {
+          providedActorId: providedId ?? null,
+        },
+        log
+      );
+    }
+    log.warn(
+      `TurnEndingState Constructor: actorToEndId was missing, fell back to '${this.#actorToEndId}'.`
+    );
   }
 }
