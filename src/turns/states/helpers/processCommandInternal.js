@@ -46,7 +46,7 @@ async function handleProcessingException(
  * @param {ProcessingExceptionHandler} [exceptionHandler] - Handler for errors.
  * @returns {Promise<{activeTurnCtx: ITurnContext, commandResult: object}|null>} The active context and command result, or `null` on error.
  */
-export async function dispatchAction(
+async function _dispatchAction(
   state,
   turnCtx,
   actor,
@@ -127,7 +127,7 @@ export async function dispatchAction(
  * @param {object} commandResult - Result from {@link dispatchAction}.
  * @returns {Promise<{directiveType: string}|null>} The directive type or `null` on error.
  */
-export async function interpretCommandResult(
+async function _interpretCommandResult(
   state,
   activeTurnCtx,
   actorId,
@@ -164,7 +164,7 @@ export async function interpretCommandResult(
  * @param {ProcessingExceptionHandler} [exceptionHandler] - Handler for errors.
  * @returns {Promise<void>} Resolves when the strategy completes.
  */
-export async function executeDirectiveStrategy(
+async function _executeDirectiveStrategy(
   state,
   activeTurnCtx,
   directiveType,
@@ -229,7 +229,7 @@ export async function processCommandInternal(
   const actorId = actor.id;
 
   try {
-    const dispatchResult = await dispatchAction(
+    const dispatchResult = await _dispatchAction(
       state,
       turnCtx,
       actor,
@@ -242,7 +242,7 @@ export async function processCommandInternal(
 
     const { activeTurnCtx, commandResult } = dispatchResult;
 
-    const interpretation = await interpretCommandResult(
+    const interpretation = await _interpretCommandResult(
       state,
       activeTurnCtx,
       actorId,
@@ -254,7 +254,7 @@ export async function processCommandInternal(
 
     const { directiveType } = interpretation;
 
-    await executeDirectiveStrategy(
+    await _executeDirectiveStrategy(
       state,
       activeTurnCtx,
       directiveType,
