@@ -86,6 +86,16 @@ export class EntityManagerAdapter {
     return this.entityManager.findEntities(query);
   }
 
+  /**
+   * Clears all entities from the underlying EntityManager.
+   * Also clears any associated caches held by the EntityManager.
+   *
+   * @returns {void}
+   */
+  clearAll() {
+    this.entityManager.clearAll();
+  }
+
   get entities() {
     return this.entityManager.entities;
   }
