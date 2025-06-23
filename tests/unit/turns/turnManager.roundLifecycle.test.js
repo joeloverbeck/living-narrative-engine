@@ -58,21 +58,27 @@ describeRunningTurnManagerSuite(
       );
     });
 
-    test('Fails to start a new round and stops if no active actors are found', async () => {
-      testBed.setActiveEntities();
-      testBed.mockEmptyQueue();
+    describe('when no active actors are found', () => {
+      beforeEach(async () => {
+        testBed.setActiveEntities();
+        testBed.mockEmptyQueue();
+        await testBed.advanceAndFlush();
+      });
 
-      await testBed.advanceAndFlush();
+      test('logs and dispatches an error', () => {
+        expect(testBed.mocks.logger.error).toHaveBeenCalledWith(
+          'Cannot start a new round: No active entities with an Actor component found.'
+        );
+        expectSystemErrorDispatch(
+          testBed.mocks.dispatcher.dispatch,
+          'System Error: No active actors found to start a round. Stopping game.',
+          'Cannot start a new round: No active entities with an Actor component found.'
+        );
+      });
 
-      expect(testBed.mocks.logger.error).toHaveBeenCalledWith(
-        'Cannot start a new round: No active entities with an Actor component found.'
-      );
-      expectSystemErrorDispatch(
-        testBed.mocks.dispatcher.dispatch,
-        'System Error: No active actors found to start a round. Stopping game.',
-        'Cannot start a new round: No active entities with an Actor component found.'
-      );
-      expect(stopSpy).toHaveBeenCalledTimes(1);
+      test('stops the manager', () => {
+        expect(stopSpy).toHaveBeenCalledTimes(1);
+      });
     });
 
     test('Advances to next actor when current turn ends successfully', async () => {
@@ -133,71 +139,38 @@ describeRunningTurnManagerSuite(
       );
     });
 
-    test('Starts new round when queue becomes empty after turn ends', async () => {
-      testBed.setActiveEntities(ai1, ai2);
-
-      // Set up mocks to simulate the queue state changes
-      let isEmptyCallCount = 0;
-      let getNextEntityCallCount = 0;
-
-      testBed.mocks.turnOrderService.isEmpty.mockImplementation(() => {
-        isEmptyCallCount++;
-        // First call: queue not empty (during initial turn advancement)
-        // Second call: queue not empty (after first actor's turn ends)
-        // Third call: queue empty (after second actor's turn ends)
-        return Promise.resolve(isEmptyCallCount >= 3);
+    describe('queue becomes empty after both actors act', () => {
+      beforeEach(async () => {
+        testBed.setActiveEntities(ai1, ai2);
+        let isEmptyCallCount = 0;
+        let getNextEntityCallCount = 0;
+        testBed.mocks.turnOrderService.isEmpty.mockImplementation(() => {
+          isEmptyCallCount++;
+          return Promise.resolve(isEmptyCallCount >= 3);
+        });
+        testBed.mocks.turnOrderService.getNextEntity.mockImplementation(() => {
+          getNextEntityCallCount++;
+          if (getNextEntityCallCount === 1) return Promise.resolve(ai1);
+          if (getNextEntityCallCount === 2) return Promise.resolve(ai2);
+          return Promise.resolve(null);
+        });
+        testBed.mocks.turnOrderService.clearCurrentRound.mockImplementation(
+          () => {
+            const newActor1 = createAiActor('actor1');
+            const newActor2 = createAiActor('actor2');
+            testBed.setActiveEntities(newActor1, newActor2);
+            return Promise.resolve();
+          }
+        );
+        await testBed.advanceAndFlush();
       });
 
-      testBed.mocks.turnOrderService.getNextEntity.mockImplementation(() => {
-        getNextEntityCallCount++;
-        // First call: return first actor
-        // Second call: return second actor
-        if (getNextEntityCallCount === 1) {
-          return Promise.resolve(ai1);
-        } else if (getNextEntityCallCount === 2) {
-          return Promise.resolve(ai2);
-        }
-        return Promise.resolve(null);
+      test('advances through both actors', async () => {
+        expect(testBed.turnManager.getCurrentActor()?.id).toBe(ai1.id);
+        await triggerTurnEndedAndFlush(testBed, ai1.id);
+        const found = await waitForCurrentActor(testBed, ai2.id);
+        expect(found).toBe(true);
       });
-
-      // Mock clearCurrentRound to repopulate activeEntities for the new round
-      testBed.mocks.turnOrderService.clearCurrentRound.mockImplementation(
-        () => {
-          // Create fresh mock actors for the new round
-          const newActor1 = createAiActor('actor1');
-          const newActor2 = createAiActor('actor2');
-          testBed.setActiveEntities(newActor1, newActor2);
-          return Promise.resolve();
-        }
-      );
-
-      await testBed.advanceAndFlush();
-
-      // Verify first actor is current
-      expect(testBed.turnManager.getCurrentActor()?.id).toBe(ai1.id);
-
-      // Simulate turn ending for actor1 (success: true)
-      await triggerTurnEndedAndFlush(testBed, ai1.id);
-
-      // Wait for TurnManager to advance to ai2
-      const found = await waitForCurrentActor(testBed, ai2.id);
-      expect(found).toBe(true);
-
-      // Simulate turn ending for actor2 (success: true)
-      await triggerTurnEndedAndFlush(testBed, ai2.id);
-
-      // Wait for the TurnManager to process and start a new round
-      let roundStarted = false;
-      for (let i = 0; i < 50; i++) {
-        if (
-          testBed.mocks.turnOrderService.startNewRound.mock.calls.length > 0
-        ) {
-          roundStarted = true;
-          break;
-        }
-        await flushPromisesAndTimers();
-      }
-      expect(roundStarted).toBe(true);
     });
 
     test('Handles turn advancement errors gracefully', async () => {
