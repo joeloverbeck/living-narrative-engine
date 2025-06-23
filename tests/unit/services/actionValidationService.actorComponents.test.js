@@ -530,12 +530,12 @@ describe('ActionValidationService: Orchestration Logic', () => {
         actor,
         invalidTargetContext
       );
-    }).toThrow('Invalid ActionTargetContext');
+    }).toThrow('ActionValidationService.isValid: invalid ActionTargetContext');
 
     // Assert logging indicates the structural failure before the throw
     expect(mockLogger.error).toHaveBeenCalledWith(
       expect.stringContaining(
-        'Validation: STRUCTURAL ERROR: Invalid ActionTargetContext'
+        'Validation: STRUCTURAL ERROR: ActionValidationService.isValid: invalid ActionTargetContext'
       ),
       expect.any(Object) // Check that some context object was logged
     );

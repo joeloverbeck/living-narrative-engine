@@ -114,12 +114,27 @@ export class ActionValidationService extends BaseService {
    * @throws {Error} If any input is structurally invalid according to basic requirements.
    */
   _checkStructuralSanity(actionDefinition, actorEntity, targetContext) {
-    validateActionInputs(
-      actionDefinition,
-      actorEntity,
-      targetContext,
-      this.#logger
-    );
+    try {
+      validateActionInputs(
+        actionDefinition,
+        actorEntity,
+        targetContext,
+        this.#logger
+      );
+    } catch (err) {
+      let idInfo = '';
+      if (err.message === 'Invalid actionDefinition') {
+        idInfo = `(id: ${actionDefinition?.id})`;
+      } else if (err.message === 'Invalid actor entity') {
+        idInfo = `(id: ${actorEntity?.id})`;
+      } else if (err.message === 'Invalid ActionTargetContext') {
+        idInfo = `(type: ${targetContext?.type})`;
+      }
+      const msg = err.message
+        ? err.message.charAt(0).toLowerCase() + err.message.slice(1)
+        : 'invalid input';
+      throw new Error(`ActionValidationService.isValid: ${msg} ${idInfo}`);
+    }
   }
 
   /**

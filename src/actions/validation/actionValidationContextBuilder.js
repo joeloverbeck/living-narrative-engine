@@ -107,7 +107,29 @@ export class ActionValidationContextBuilder extends BaseService {
    * @private
    */
   #assertValidInputs(actionDefinition, actor, targetContext) {
-    validateActionInputs(actionDefinition, actor, targetContext, this.#logger);
+    try {
+      validateActionInputs(
+        actionDefinition,
+        actor,
+        targetContext,
+        this.#logger
+      );
+    } catch (err) {
+      let idInfo = '';
+      if (err.message === 'Invalid actionDefinition') {
+        idInfo = `(id: ${actionDefinition?.id})`;
+      } else if (err.message === 'Invalid actor entity') {
+        idInfo = `(id: ${actor?.id})`;
+      } else if (err.message === 'Invalid ActionTargetContext') {
+        idInfo = `(type: ${targetContext?.type})`;
+      }
+      const msg = err.message
+        ? err.message.charAt(0).toLowerCase() + err.message.slice(1)
+        : 'invalid input';
+      throw new Error(
+        `ActionValidationContextBuilder.buildContext: ${msg} ${idInfo}`
+      );
+    }
   }
 
   /**
