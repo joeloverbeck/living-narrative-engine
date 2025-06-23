@@ -113,24 +113,28 @@ class AutoMoveFollowersHandler extends BaseOperationHandler {
           followerId,
           POSITION_COMPONENT_ID
         );
-        if (previousLocationId && pos?.locationId !== previousLocationId) continue;
+        if (previousLocationId && pos?.locationId !== previousLocationId)
+          continue;
 
         const originLoc = pos?.locationId ?? null;
 
         this.#moveHandler.execute(
-          { entity_ref: { entityId: followerId }, target_location_id: destinationId },
+          {
+            entity_ref: { entityId: followerId },
+            target_location_id: destinationId,
+          },
           executionContext
         );
 
         const followerName =
-          this.#entityManager.getComponentData(followerId, NAME_COMPONENT_ID)?.text ||
-          followerId;
+          this.#entityManager.getComponentData(followerId, NAME_COMPONENT_ID)
+            ?.text || followerId;
         const leaderName =
-          this.#entityManager.getComponentData(leaderId, NAME_COMPONENT_ID)?.text ||
-          leaderId;
+          this.#entityManager.getComponentData(leaderId, NAME_COMPONENT_ID)
+            ?.text || leaderId;
         const locationName =
-          this.#entityManager.getComponentData(destinationId, NAME_COMPONENT_ID)?.text ||
-          destinationId;
+          this.#entityManager.getComponentData(destinationId, NAME_COMPONENT_ID)
+            ?.text || destinationId;
         const message = `${followerName} follows ${leaderName} to ${locationName}.`;
 
         this.#dispatcher.dispatch('core:perceptible_event', {

@@ -40,9 +40,18 @@ class IfCoLocatedHandler extends BaseOperationHandler {
   }) {
     super('IfCoLocatedHandler', {
       logger: { value: logger },
-      entityManager: { value: entityManager, requiredMethods: ['getComponentData'] },
-      operationInterpreter: { value: operationInterpreter, requiredMethods: ['execute'] },
-      safeEventDispatcher: { value: safeEventDispatcher, requiredMethods: ['dispatch'] },
+      entityManager: {
+        value: entityManager,
+        requiredMethods: ['getComponentData'],
+      },
+      operationInterpreter: {
+        value: operationInterpreter,
+        requiredMethods: ['execute'],
+      },
+      safeEventDispatcher: {
+        value: safeEventDispatcher,
+        requiredMethods: ['dispatch'],
+      },
     });
     this.#logger = logger;
     this.#entityManager = entityManager;

@@ -13,4 +13,4 @@ class ScopeCycleError extends Error {
   }
 }
 
-export default ScopeCycleError; 
+export default ScopeCycleError;

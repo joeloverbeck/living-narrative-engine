@@ -1,5 +1,3 @@
-// src/initializers/worldInitializer.js
-// --- FILE START ---
 // --- Type Imports ---
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */
 /** @typedef {import('../interfaces/IWorldContext.js').default} IWorldContext */
@@ -11,6 +9,7 @@
 /** @typedef {import('../entities/entityDefinition.js').default} EntityDefinition */
 /** @typedef {import('../entities/entityInstance.js').default} EntityInstance */
 /** @typedef {import('../interfaces/IDataRegistry.js').IDataRegistry} IDataRegistry */
+/** @typedef {import('../scopeDsl/scopeRegistry.js').default} ScopeRegistry */
 
 // --- Library Imports ---
 import _get from 'lodash/get.js';
@@ -22,14 +21,13 @@ import { SYSTEM_ERROR_OCCURRED_ID } from '../constants/systemEventIds.js';
 
 // --- Utility Imports ---
 import { safeDispatchError } from '../utils/safeDispatchErrorUtils.js';
-import ScopeRegistry from '../scopeDsl/scopeRegistry.js';
 
 /**
  * Service responsible for instantiating entities defined
  * in the world data, resolving their references (e.g., location IDs),
  * and building the spatial index. Runs after GameStateInitializer.
  * Dispatches events related to world entity initialization.
- * 
+ *
  * Note: Spatial index management is now handled automatically by SpatialIndexSynchronizer
  * through event listening, so this service no longer directly manages the spatial index.
  */
@@ -37,13 +35,15 @@ class WorldInitializer {
   /** @type {EntityManager} */
   #entityManager;
   /** @type {IWorldContext} */
-  #worldContext; // Note: Checked for usage, see review summary.
+  #worldContext;
   /** @type {GameDataRepository} */
   #repository;
   /** @type {ValidatedEventDispatcher} */
   #validatedEventDispatcher;
   /** @type {ILogger} */
   #logger;
+  /** @type {ScopeRegistry} */
+  #scopeRegistry;
 
   /**
    * Exposes the provided world context for potential external use.
@@ -61,14 +61,15 @@ class WorldInitializer {
    * @returns {Promise<void>}
    */
   async initializeScopeRegistry() {
-    this.#logger.debug('WorldInitializer: Initializing ScopeRegistry with loaded scopes...');
-    
+    this.#logger.debug(
+      'WorldInitializer: Initializing ScopeRegistry with loaded scopes...'
+    );
+
     try {
-      const scopeRegistry = ScopeRegistry.getInstance();
       const loadedScopes = this.#repository.get('scopes') || {};
-      
-      scopeRegistry.initialize(loadedScopes);
-      
+
+      this.#scopeRegistry.initialize(loadedScopes);
+
       this.#logger.info(
         `WorldInitializer: ScopeRegistry initialized with ${Object.keys(loadedScopes).length} scopes.`
       );
@@ -90,30 +91,35 @@ class WorldInitializer {
    * @param {GameDataRepository} dependencies.gameDataRepository
    * @param {ValidatedEventDispatcher} dependencies.validatedEventDispatcher
    * @param {ILogger} dependencies.logger
+   * @param {ScopeRegistry} dependencies.scopeRegistry
    * @throws {Error} If any required dependency is missing or invalid.
    */
   constructor({
-    entityManager,
-    worldContext,
-    gameDataRepository,
-    validatedEventDispatcher,
-    logger,
-  }) {
+                entityManager,
+                worldContext,
+                gameDataRepository,
+                validatedEventDispatcher,
+                logger,
+                scopeRegistry,
+              }) {
     if (!entityManager)
       throw new Error('WorldInitializer requires an EntityManager.');
     if (!worldContext)
-      throw new Error('WorldInitializer requires a WorldContext.'); // Dependency kept for now as per ticket instructions
+      throw new Error('WorldInitializer requires a WorldContext.');
     if (!gameDataRepository)
       throw new Error('WorldInitializer requires a GameDataRepository.');
     if (!validatedEventDispatcher)
       throw new Error('WorldInitializer requires a ValidatedEventDispatcher.');
     if (!logger) throw new Error('WorldInitializer requires an ILogger.');
+    if (!scopeRegistry)
+      throw new Error('WorldInitializer requires a ScopeRegistry.');
 
     this.#entityManager = entityManager;
     this.#worldContext = worldContext;
     this.#repository = gameDataRepository;
     this.#validatedEventDispatcher = validatedEventDispatcher;
     this.#logger = logger;
+    this.#scopeRegistry = scopeRegistry;
 
     this.#logger.debug(
       'WorldInitializer: Instance created. Spatial index management is now handled by SpatialIndexSynchronizer through event listening.'
@@ -178,7 +184,11 @@ class WorldInitializer {
       );
     }
 
-    if (!worldData.instances || !Array.isArray(worldData.instances) || worldData.instances.length === 0) {
+    if (
+      !worldData.instances ||
+      !Array.isArray(worldData.instances) ||
+      worldData.instances.length === 0
+    ) {
       safeDispatchError(
         this.#validatedEventDispatcher,
         `World '${worldName}' has no entities defined. The game cannot start without any entities in the world.`,
@@ -209,7 +219,8 @@ class WorldInitializer {
 
       const { instanceId } = worldInstance;
       // Get the entity instance definition
-      const entityInstanceDef = this.#repository.getEntityInstanceDefinition(instanceId);
+      const entityInstanceDef =
+        this.#repository.getEntityInstanceDefinition(instanceId);
       const componentOverrides = entityInstanceDef?.componentOverrides;
       // Get the definitionId from the entity instance definition
       const definitionId = entityInstanceDef?.definitionId;
@@ -226,7 +237,7 @@ class WorldInitializer {
       );
       const instance = this.#entityManager.createEntityInstance(definitionId, {
         instanceId,
-        componentOverrides
+        componentOverrides,
       });
 
       if (instance) {
@@ -400,7 +411,8 @@ class WorldInitializer {
     let entitiesProcessed = 0;
 
     for (const entity of instantiatedEntities) {
-      const wasSuccessfullyProcessed = await this.#_processSingleEntityForPass2(entity);
+      const wasSuccessfullyProcessed =
+        await this.#_processSingleEntityForPass2(entity);
       if (wasSuccessfullyProcessed) {
         entitiesProcessed++;
       }
@@ -475,4 +487,3 @@ class WorldInitializer {
 }
 
 export default WorldInitializer;
-// --- FILE END ---

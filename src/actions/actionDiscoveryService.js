@@ -1,4 +1,3 @@
-// src/actions/actionDiscoveryService.js
 // ────────────────────────────────────────────────────────────────────────────────
 // Type imports
 /** @typedef {import('../entities/entity.js').default} Entity */
@@ -10,12 +9,10 @@
 /** @typedef {import('./actionTypes.js').ActionContext} ActionContext */
 /** @typedef {import('../logging/consoleLogger.js').default} ILogger */
 /** @typedef {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
+/** @typedef {import('../scopeDsl/scopeRegistry.js').default} ScopeRegistry */
 
 import { ActionTargetContext } from '../models/actionTargetContext.js';
 import { IActionDiscoveryService } from '../interfaces/IActionDiscoveryService.js';
-import {
-  getLocationIdForLog,
-} from '../utils/locationUtils.js';
 import {
   TARGET_DOMAIN_SELF,
   TARGET_DOMAIN_NONE,
@@ -36,6 +33,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
   #safeEventDispatcher;
   #getActorLocationFn;
   #getEntityDisplayNameFn;
+  #scopeRegistry;
 
   /**
    * @param {object} deps
@@ -46,20 +44,22 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
    * @param {formatActionCommandFn} deps.formatActionCommandFn
    * @param {getEntityIdsForScopesFn} deps.getEntityIdsForScopesFn
    * @param {ISafeEventDispatcher} deps.safeEventDispatcher
-   * @param deps.getActorLocationFn
-   * @param deps.getEntityDisplayNameFn
+   * @param {ScopeRegistry}      deps.scopeRegistry
+   * @param {function}           deps.getActorLocationFn
+   * @param {function}           deps.getEntityDisplayNameFn
    */
   constructor({
-    gameDataRepository,
-    entityManager,
-    actionValidationService,
-    logger,
-    formatActionCommandFn,
-    getEntityIdsForScopesFn,
-    safeEventDispatcher,
-    getActorLocationFn = getActorLocation,
-    getEntityDisplayNameFn = getEntityDisplayName,
-  }) {
+                gameDataRepository,
+                entityManager,
+                actionValidationService,
+                logger,
+                formatActionCommandFn,
+                getEntityIdsForScopesFn,
+                safeEventDispatcher,
+                scopeRegistry,
+                getActorLocationFn = getActorLocation,
+                getEntityDisplayNameFn = getEntityDisplayName,
+              }) {
     super();
     this.#logger = setupService('ActionDiscoveryService', logger, {
       gameDataRepository: {
@@ -83,6 +83,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
         value: safeEventDispatcher,
         requiredMethods: ['dispatch'],
       },
+      scopeRegistry: { value: scopeRegistry, requiredMethods: ['getScope'] },
       getActorLocationFn: { value: getActorLocationFn, isFunction: true },
       getEntityDisplayNameFn: {
         value: getEntityDisplayNameFn,
@@ -96,6 +97,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
     this.#formatActionCommandFn = formatActionCommandFn;
     this.#getEntityIdsForScopesFn = getEntityIdsForScopesFn;
     this.#safeEventDispatcher = safeEventDispatcher;
+    this.#scopeRegistry = scopeRegistry;
     this.#getActorLocationFn = getActorLocationFn;
     this.#getEntityDisplayNameFn = getEntityDisplayNameFn;
 
@@ -185,7 +187,12 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
     formatterOptions
   ) {
     const targetIds =
-      this.#getEntityIdsForScopesFn([scope], context, this.#logger) ?? new Set();
+      this.#getEntityIdsForScopesFn(
+        [scope],
+        context,
+        this.#scopeRegistry,
+        this.#logger
+      ) ?? new Set();
     /** @type {import('../interfaces/IActionDiscoveryService.js').DiscoveredActionInfo[]} */
     const discoveredActions = [];
 
@@ -213,25 +220,20 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
    * handler. Errors are safely dispatched and result in no actions returned.
    * @param {import('../data/gameDataRepository.js').ActionDefinition} actionDef
    * @param {Entity} actorEntity
-   * @param {Entity|string|null} currentLocation
-   * @param {string} locIdForLog
    * @param {ActionContext} context
    * @param {object} formatterOptions
    * @returns {{actions: import('../interfaces/IActionDiscoveryService.js').DiscoveredActionInfo[], errors: Error[]}}
    */
-  #processActionDefinition(
-    actionDef,
-    actorEntity,
-    currentLocation,
-    locIdForLog,
-    context,
-    formatterOptions
-  ) {
+  #processActionDefinition(actionDef, actorEntity, context, formatterOptions) {
     const scope = actionDef.scope;
     try {
       let actions;
       if (scope === TARGET_DOMAIN_NONE || scope === TARGET_DOMAIN_SELF) {
-        actions = this.#handleSelfOrNone(actionDef, actorEntity, formatterOptions);
+        actions = this.#handleSelfOrNone(
+          actionDef,
+          actorEntity,
+          formatterOptions
+        );
       } else {
         actions = this.#handleScopedEntityActions(
           actionDef,
@@ -279,13 +281,16 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
       safeEventDispatcher: this.#safeEventDispatcher,
     };
 
-    /* ── Resolve actor location via utility ───────── */
-    let currentLocation = this.#getActorLocationFn(
-      actorEntity.id,
-      this.#entityManager
-    );
+    // Create a new context for this discovery operation, ensuring it's populated.
+    const discoveryContext = { ...context };
+    if (!discoveryContext.getActor) {
+      discoveryContext.getActor = () => actorEntity;
+    }
 
-    const locIdForLog = getLocationIdForLog(currentLocation);
+    // Resolve location (if not already in context) and add it for scope resolution.
+    discoveryContext.currentLocation =
+      context.currentLocation ??
+      this.#getActorLocationFn(actorEntity.id, this.#entityManager);
 
     /* ── iterate over action definitions ─────────────────────────────────── */
     for (const actionDef of allDefs) {
@@ -293,9 +298,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
         this.#processActionDefinition(
           actionDef,
           actorEntity,
-          currentLocation,
-          locIdForLog,
-          context,
+          discoveryContext,
           formatterOptions
         );
       validActions.push(...actions);

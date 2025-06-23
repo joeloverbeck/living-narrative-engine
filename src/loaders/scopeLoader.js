@@ -1,5 +1,6 @@
 import { BaseManifestItemLoader } from './baseManifestItemLoader.js';
-import { parseInlineExpr } from '../scopeDsl/parser.js';
+// Import the new common parser utility
+import { parseScopeDefinitions } from '../scopeDsl/scopeDefinitionParser.js';
 
 /**
  * @file Scope Loader
@@ -41,12 +42,18 @@ export default class ScopeLoader extends BaseManifestItemLoader {
    * @param {string} registryKey - Registry key for storing
    * @returns {Promise<void>}
    */
-  async _processFetchedItem(modId, filename, resolvedPath, content, registryKey) {
+  async _processFetchedItem(
+    modId,
+    filename,
+    resolvedPath,
+    content,
+    registryKey
+  ) {
     try {
+      // The parseContent method now delegates to our common utility.
       const scopeDefinitions = this.parseContent(content, filename);
       const transformedScopes = this.transformContent(scopeDefinitions, modId);
-      
-      // Store each scope definition in the registry
+
       for (const [scopeName, scopeDef] of Object.entries(transformedScopes)) {
         this._storeItemInRegistry(
           registryKey,
@@ -66,62 +73,38 @@ export default class ScopeLoader extends BaseManifestItemLoader {
   }
 
   /**
-   * Parse a .scope file content into a scope definition
+   * Parse a .scope file content by delegating to the common utility.
    *
    * @param {string} content - Raw file content
    * @param {string} filePath - Path to the file for error reporting
-   * @returns {object} Parsed scope definition
+   * @returns {Map<string, string>} A map of parsed scope definitions.
    */
   parseContent(content, filePath) {
-    const lines = content.split('\n').map(line => line.trim()).filter(line => line && !line.startsWith('//'));
-    
-    if (lines.length === 0) {
-      throw new Error(`Empty scope file: ${filePath}`);
-    }
-
-    const scopeDefinitions = {};
-    
-    for (const line of lines) {
-      const match = line.match(/^(\w+)\s*:=\s*(.+)$/);
-      if (!match) {
-        throw new Error(`Invalid scope definition format in ${filePath}: "${line}". Expected "name := dsl_expression"`);
-      }
-
-      const [, scopeName, dslExpression] = match;
-      
-      try {
-        // Validate the DSL expression by parsing it
-        parseInlineExpr(dslExpression.trim());
-        
-        scopeDefinitions[scopeName] = dslExpression.trim();
-      } catch (parseError) {
-        throw new Error(`Invalid DSL expression in ${filePath} for scope "${scopeName}": ${parseError.message}`);
-      }
-    }
-
-    return scopeDefinitions;
+    // The complex parsing logic is now gone, replaced by a single call.
+    return parseScopeDefinitions(content, filePath);
   }
 
   /**
    * Transform loaded scope definitions into the format expected by the registry
    *
-   * @param {object} parsedContent - Parsed scope definitions
+   * @param {Map<string, string>} parsedContent - Parsed scope definitions from our utility.
    * @param {string} modId - Mod identifier
    * @returns {object} Transformed scope definitions
    */
   transformContent(parsedContent, modId) {
     const transformed = {};
-    
-    for (const [scopeName, dslExpression] of Object.entries(parsedContent)) {
+
+    // Iterate over the Map from the parser utility
+    for (const [scopeName, dslExpression] of parsedContent.entries()) {
       const fullScopeName = `${modId}:${scopeName}`;
       transformed[fullScopeName] = {
         name: fullScopeName,
         dsl: dslExpression,
         modId: modId,
-        source: 'file'
+        source: 'file',
       };
     }
-    
+
     return transformed;
   }
-} 
+}

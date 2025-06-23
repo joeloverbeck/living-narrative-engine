@@ -1,24 +1,34 @@
 const EntityManager = require('../../../src/entities/entityManager').default;
 const Entity = require('../../../src/entities/entity').default;
-const EntityDefinition = require('../../../src/entities/entityDefinition').default;
+const EntityDefinition =
+  require('../../../src/entities/entityDefinition').default;
 const { ENTITY_CREATED_ID } = require('../../../src/constants/eventIds');
 
 // Minimal mock registry, logger, and validator
 const mockRegistry = {
   getEntityDefinition: jest.fn(),
 };
-const mockLogger = { debug: jest.fn(), error: jest.fn(), warn: jest.fn(), info: jest.fn() };
-const mockValidator = { validate: jest.fn().mockReturnValue({ isValid: true, errors: [] }) };
+const mockLogger = {
+  debug: jest.fn(),
+  error: jest.fn(),
+  warn: jest.fn(),
+  info: jest.fn(),
+};
+const mockValidator = {
+  validate: jest.fn().mockReturnValue({ isValid: true, errors: [] }),
+};
 
 // Minimal event dispatcher
 class TestEventDispatcher {
-  constructor() { this.listeners = {}; }
+  constructor() {
+    this.listeners = {};
+  }
   subscribe(eventId, fn) {
     this.listeners[eventId] = this.listeners[eventId] || [];
     this.listeners[eventId].push(fn);
   }
   dispatch(eventId, payload) {
-    (this.listeners[eventId] || []).forEach(fn => fn(payload));
+    (this.listeners[eventId] || []).forEach((fn) => fn(payload));
   }
 }
 
@@ -32,13 +42,10 @@ describe('EntityManager - core:entity_created event payload', () => {
       validator: mockValidator,
       dispatcher,
     });
-    const definition = new EntityDefinition(
-      'test:def',
-      {
-        description: 'Test entity',
-        components: { 'core:position': { locationId: 'loc1' } },
-      }
-    );
+    const definition = new EntityDefinition('test:def', {
+      description: 'Test entity',
+      components: { 'core:position': { locationId: 'loc1' } },
+    });
     mockRegistry.getEntityDefinition.mockReturnValue(definition);
 
     let receivedPayload = null;
@@ -57,7 +64,9 @@ describe('EntityManager - core:entity_created event payload', () => {
     expect(receivedPayload).toHaveProperty('wasReconstructed', false);
     expect(receivedPayload.entity).toBeInstanceOf(Entity);
     expect(receivedPayload.entity.id).toBe(entity.id);
-    expect(receivedPayload.entity.getComponentData('core:position')).toEqual({ locationId: 'loc1' });
+    expect(receivedPayload.entity.getComponentData('core:position')).toEqual({
+      locationId: 'loc1',
+    });
   });
 
   it('should allow a consumer to call getComponentData on the entity in the payload', () => {
@@ -69,13 +78,10 @@ describe('EntityManager - core:entity_created event payload', () => {
       validator: mockValidator,
       dispatcher,
     });
-    const definition = new EntityDefinition(
-      'test:def',
-      {
-        description: 'Test entity',
-        components: { 'core:position': { locationId: 'loc2' } },
-      }
-    );
+    const definition = new EntityDefinition('test:def', {
+      description: 'Test entity',
+      components: { 'core:position': { locationId: 'loc2' } },
+    });
     mockRegistry.getEntityDefinition.mockReturnValue(definition);
 
     let called = false;
@@ -90,4 +96,4 @@ describe('EntityManager - core:entity_created event payload', () => {
     entityManager.createEntityInstance('test:def');
     expect(called).toBe(true);
   });
-}); 
+});

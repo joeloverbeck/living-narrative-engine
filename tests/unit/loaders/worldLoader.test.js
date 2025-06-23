@@ -118,10 +118,7 @@ describe('WorldLoader.loadWorlds', () => {
     const mockWorldData = {
       id: 'test:world',
       name: 'Test World',
-      instances: [
-        { instanceId: 'core:player' },
-        { instanceId: 'core:npc' },
-      ],
+      instances: [{ instanceId: 'core:player' }, { instanceId: 'core:npc' }],
     };
     fetcher.fetch.mockResolvedValue(mockWorldData);
     // Mock that the entity definitions exist in the registry

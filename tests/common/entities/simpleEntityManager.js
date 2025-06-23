@@ -3,14 +3,14 @@
  * @see tests/common/entities/simpleEntityManager.js
  */
 
+import { deepClone } from '../../../src/utils';
+
 /**
  * Minimal EntityManager implementation providing only the methods
  * required by integration tests.
  *
  * @class
  */
-import { deepClone } from '../../../src/utils/cloneUtils.js';
-
 export default class SimpleEntityManager {
   /**
    * Creates a new instance pre-populated with the provided entities.
@@ -20,20 +20,22 @@ export default class SimpleEntityManager {
   constructor(entities = []) {
     /** @type {Map<string, {id:string, components:Record<string, any>}>} */
     this.entities = new Map();
-    console.log('DEBUG: SimpleEntityManager constructor called with entities:', JSON.stringify(entities, null, 2));
+    this.setEntities(entities);
+
+    // Add activeEntities alias for compatibility with older code
+    this.activeEntities = this.entities;
+  }
+
+  /**
+   * Clears all existing entities and populates the manager with a new set.
+   * @param {Array<{id:string, components:object}>} [entities] - The new entities.
+   */
+  setEntities(entities = []) {
+    this.entities.clear();
     for (const e of entities) {
-      console.log('DEBUG: Processing entity:', e.id, 'with original components:', Object.keys(e.components || {}));
-      console.log('DEBUG: Original entity components:', JSON.stringify(e.components, null, 2));
-      
       const cloned = deepClone(e);
-      console.log('DEBUG: After deepClone - cloned entity components:', JSON.stringify(cloned.components, null, 2));
-      console.log('DEBUG: Cloned components keys:', Object.keys(cloned.components || {}));
-      
-      console.log('DEBUG: Storing entity:', e.id, 'with components:', Object.keys(cloned.components || {}));
       this.entities.set(cloned.id, cloned);
     }
-    // Add activeEntities alias for compatibility
-    this.activeEntities = this.entities;
   }
 
   /**
@@ -47,12 +49,13 @@ export default class SimpleEntityManager {
     if (!entity) {
       return undefined;
     }
-    
+
     // Return an object that has a getComponentData method to satisfy isValidEntity
     return {
       id: entity.id,
       components: entity.components,
-      getComponentData: (componentType) => entity.components[componentType] ?? null,
+      getComponentData: (componentType) =>
+        entity.components[componentType] ?? null,
     };
   }
 

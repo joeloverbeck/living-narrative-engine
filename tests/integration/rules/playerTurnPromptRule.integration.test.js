@@ -48,7 +48,9 @@ describe('core_handle_player_turn_prompt rule integration', () => {
     const dataRegistry = {
       getAllSystemRules: jest.fn().mockReturnValue([playerTurnPromptRule]),
       getConditionDefinition: jest.fn((id) =>
-        id === 'core:event-is-player-turn-prompt' ? eventIsPlayerTurnPrompt : undefined
+        id === 'core:event-is-player-turn-prompt'
+          ? eventIsPlayerTurnPrompt
+          : undefined
       ),
     };
 

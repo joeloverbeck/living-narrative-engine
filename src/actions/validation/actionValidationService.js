@@ -1,5 +1,3 @@
-// src/actions/validation/actionValidationService.js
-
 /* type-only imports */
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../entities/entityManager.js').default} EntityManager */
@@ -37,10 +35,10 @@ export class ActionValidationService {
    * (including the necessary context building).
    *
    * @param {{
-   *   entityManager: EntityManager,
-   *   logger: ILogger,
-   *   domainContextCompatibilityChecker: DomainContextCompatibilityChecker,
-   *   prerequisiteEvaluationService: PrerequisiteEvaluationService
+   * entityManager: EntityManager,
+   * logger: ILogger,
+   * domainContextCompatibilityChecker: DomainContextCompatibilityChecker,
+   * prerequisiteEvaluationService: PrerequisiteEvaluationService
    * }} deps - The required service dependencies.
    * // ActionValidationContextBuilder dependency removed in previous refactor
    * @throws {Error} If dependencies are missing or invalid.
@@ -136,32 +134,25 @@ export class ActionValidationService {
     const actionId = actionDefinition.id;
     const actorId = actorEntity.id;
     const expectedDomain = actionDefinition.target_domain || TARGET_DOMAIN_NONE;
-    const contextType = targetContext.type;
 
     const isCompatible = this.#domainContextCompatibilityChecker.check(
       actionDefinition,
       targetContext
     );
 
+    // If the checker says it's not compatible, it fails, period.
+    // The obsolete "deferred" logic has been removed.
     if (!isCompatible) {
-      if (
-        contextType === TARGET_DOMAIN_NONE &&
-        expectedDomain !== TARGET_DOMAIN_NONE
-      ) {
-        this.#logger.debug(
-          `Validation[${actionId}]: Domain/Context check PASSED (deferred): Initial check context is '${TARGET_DOMAIN_NONE}' but domain '${expectedDomain}' requires a target. Checker result (${isCompatible}) ignored for this step.`
-        );
-      } else {
-        this.#logger.debug(
-          `Validation[${actionId}]: ← STEP 1 FAILED (domain/context compatibility checker returned false). Expected Domain: '${expectedDomain}', Actual Context Type: '${contextType}'.`
-        );
-        return false;
-      }
+      this.#logger.debug(
+        `Validation[${actionId}]: ← STEP 1 FAILED (domain/context compatibility checker returned false).`
+      );
+      return false;
     }
 
+    // Specific check for 'self' domain which requires the target ID to match the actor ID.
     if (
       expectedDomain === TARGET_DOMAIN_SELF &&
-      contextType === 'entity' &&
+      targetContext.type === 'entity' &&
       targetContext.entityId !== actorId
     ) {
       this.#logger.debug(
@@ -171,7 +162,7 @@ export class ActionValidationService {
     }
 
     this.#logger.debug(
-      `Validation[${actionId}]: → STEP 1 PASSED (Domain/Context Compatible or Deferred).`
+      `Validation[${actionId}]: → STEP 1 PASSED (Domain/Context Compatible).`
     );
     return true;
   }
@@ -329,7 +320,7 @@ export class ActionValidationService {
     const actorId = actorEntity.id;
 
     this.#logger.debug(
-      `START Validation: action='${actionId}', actor='${actorId}', ctxType='${targetContext.type}', target='${targetContext.entityId ?? targetContext.direction ?? TARGET_DOMAIN_NONE}'`
+      `START Validation: action='${actionId}', actor='${actorId}', ctxType='${targetContext.type}', target='${targetContext.entityId ?? TARGET_DOMAIN_NONE}'`
     );
 
     try {

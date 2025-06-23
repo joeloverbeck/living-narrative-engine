@@ -1,5 +1,3 @@
-// src/tests/services/actionValidationService.actorComponents.test.js
-
 /**
  * @jest-environment node
  */
@@ -193,10 +191,12 @@ describe('ActionValidationService: Orchestration Logic', () => {
     const actor = createMockEntity('actor1');
     const actionDefinition = {
       id: 'action:domainFail',
-      target_domain: 'entity',
+      target_domain: 'entity', // Requires an entity target
       prerequisites: [],
     };
-    const targetContext = ActionTargetContext.forDirection('north'); // Mismatched context
+    // FIX: Use a valid context type that creates a mismatch.
+    // 'noTarget' is a mismatch for a 'entity' domain.
+    const targetContext = ActionTargetContext.noTarget();
     mockDomainContextCompatibilityChecker.check.mockReturnValue(false); // Simulate failure
 
     // Act

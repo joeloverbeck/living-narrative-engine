@@ -77,14 +77,7 @@
       "description": "Required. Text template for generating the command string output, using placeholders like {target} or {direction} (e.g., 'eat {target}', 'go {direction}', 'wait')."
     }
   },
-  "required": [
-    "id",
-    "description",
-    "commandVerb",
-    "name",
-    "scope",
-    "template"
-  ],
+  "required": ["id", "description", "commandVerb", "name", "scope", "template"],
   "additionalProperties": true,
   "$comment": "Allows additional properties for future extensions like action costs or effects definitions. The 'dispatch_event' property has been removed."
 }

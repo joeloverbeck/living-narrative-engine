@@ -46,4 +46,4 @@ export class LocationQueryService {
       return new Set();
     }
   }
-} 
+}

@@ -107,11 +107,15 @@ describe('CheckFollowCycleHandler', () => {
             logger: mockLogger,
             safeEventDispatcher: mockDispatcher,
           })
-      ).toThrow('Missing required dependency: CheckFollowCycleHandler: entityManager.');
+      ).toThrow(
+        'Missing required dependency: CheckFollowCycleHandler: entityManager.'
+      );
       expect(
         () =>
           new CheckFollowCycleHandler({ logger: mockLogger, entityManager: {} })
-      ).toThrow("Invalid or missing method 'getEntityInstance' on dependency 'CheckFollowCycleHandler: entityManager'.");
+      ).toThrow(
+        "Invalid or missing method 'getEntityInstance' on dependency 'CheckFollowCycleHandler: entityManager'."
+      );
     });
 
     test('should throw an error if safeEventDispatcher dependency is missing or invalid', () => {
@@ -121,7 +125,9 @@ describe('CheckFollowCycleHandler', () => {
             logger: mockLogger,
             entityManager: mockEntityManager,
           })
-      ).toThrow('Missing required dependency: CheckFollowCycleHandler: safeEventDispatcher.');
+      ).toThrow(
+        'Missing required dependency: CheckFollowCycleHandler: safeEventDispatcher.'
+      );
       expect(
         () =>
           new CheckFollowCycleHandler({
@@ -129,7 +135,9 @@ describe('CheckFollowCycleHandler', () => {
             entityManager: mockEntityManager,
             safeEventDispatcher: {},
           })
-      ).toThrow("Invalid or missing method 'dispatch' on dependency 'CheckFollowCycleHandler: safeEventDispatcher'.");
+      ).toThrow(
+        "Invalid or missing method 'dispatch' on dependency 'CheckFollowCycleHandler: safeEventDispatcher'."
+      );
     });
 
     test('should initialize successfully with valid dependencies', () => {

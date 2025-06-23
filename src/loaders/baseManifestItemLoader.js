@@ -524,7 +524,7 @@ export class BaseManifestItemLoader extends AbstractLoader {
     const isClassInstance = dataToStore.constructor !== Object;
     const isEntityDefinition = category === 'entityDefinitions';
     const isEntityInstance = category === 'entityInstances';
-    
+
     let dataWithMetadata;
     // Always use qualifiedId for id if EntityDefinition or entity instance
     let finalId = baseItemId;
@@ -536,9 +536,13 @@ export class BaseManifestItemLoader extends AbstractLoader {
       dataWithMetadata = dataToStore;
       Object.defineProperties(dataWithMetadata, {
         _modId: { value: modId, writable: false, enumerable: true },
-        _sourceFile: { value: sourceFilename, writable: false, enumerable: true },
+        _sourceFile: {
+          value: sourceFilename,
+          writable: false,
+          enumerable: true,
+        },
         _fullId: { value: qualifiedId, writable: false, enumerable: true },
-        id: { value: finalId, writable: false, enumerable: true }
+        id: { value: finalId, writable: false, enumerable: true },
       });
     } else {
       dataWithMetadata = Object.assign({}, dataToStore, {

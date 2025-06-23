@@ -1,1 +1,1 @@
-actor.core:leading.followers[] 
+followers := actor.core:leading.followers[]

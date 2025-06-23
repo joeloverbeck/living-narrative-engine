@@ -69,7 +69,7 @@ describe('intimacy_handle_kiss_cheek rule integration', () => {
     const expanded = expandMacros(kissCheekRule.actions, {
       get: (type, id) => (type === 'macros' ? macros[id] : undefined),
     });
-    
+
     const dataRegistry = {
       getAllSystemRules: jest
         .fn()

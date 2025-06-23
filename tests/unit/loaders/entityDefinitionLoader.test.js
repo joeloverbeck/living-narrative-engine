@@ -87,7 +87,10 @@ describe('EntityDefinitionLoader', () => {
         },
       };
 
-      const expectedStoredData = new EntityDefinition('core:goblin', testEntityData);
+      const expectedStoredData = new EntityDefinition(
+        'core:goblin',
+        testEntityData
+      );
 
       mockDataRegistry.get.mockReturnValue(undefined);
       mockSchemaValidator.isSchemaLoaded.mockReturnValue(true);

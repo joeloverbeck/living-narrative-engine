@@ -3,9 +3,6 @@
   "id": "core:event-is-player-turn_prompt",
   "description": "Checks if the triggering event is a 'core:player_turn_prompt' event.",
   "logic": {
-    "==": [
-      { "var": "event.type" },
-      "core:player_turn_prompt"
-    ]
+    "==": [{ "var": "event.type" }, "core:player_turn_prompt"]
   }
-} 
+}

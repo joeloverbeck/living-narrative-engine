@@ -1,6 +1,3 @@
-// src/tests/services/actionValidationContextBuilder.test.js
-// --- FILE START ---
-
 /* eslint-disable jsdoc/check-tag-names */
 /** @jest-environment node */
 /* eslint-enable jsdoc/check-tag-names */
@@ -8,12 +5,13 @@ import { describe, expect, it, jest, beforeEach } from '@jest/globals';
 import { ActionValidationContextBuilder } from '../../../src/actions/validation/actionValidationContextBuilder.js';
 import { ActionTargetContext } from '../../../src/models/actionTargetContext.js';
 import { POSITION_COMPONENT_ID } from '../../../src/constants/componentIds.js';
-import { getExitByDirection } from '../../../src/utils/locationUtils.js';
 import { createComponentAccessor } from '../../../src/logic/componentAccessor.js';
 
-jest.mock('../../../src/utils/locationUtils.js', () => ({
-  getExitByDirection: jest.fn(),
-}));
+// NOTE: locationUtils is no longer a dependency of the context builder,
+// so its mock can be removed.
+// jest.mock('../../../src/utils/locationUtils.js', () => ({
+//   getExitByDirection: jest.fn(),
+// }));
 
 jest.mock('../../../src/logic/componentAccessor.js', () => ({
   createComponentAccessor: jest.fn((entityId, entityManager) => {
@@ -240,63 +238,8 @@ describe('ActionValidationContextBuilder', () => {
       });
     });
 
-    describe("Scenario 3: Target Type 'direction'", () => {
-      const direction = 'north';
-      const targetContext = ActionTargetContext.forDirection(direction);
-
-      beforeEach(() => {
-        mockEntityManager.getComponentData.mockImplementation(
-          (entityId, componentId) =>
-            entityId === actorId && componentId === POSITION_COMPONENT_ID
-              ? actorComponents[POSITION_COMPONENT_ID]
-              : undefined
-        );
-      });
-
-      it('should build the context correctly when no exit data is found', () => {
-        getExitByDirection.mockReturnValueOnce(null);
-        const context = builder.buildContext(
-          sampleActionDefinition,
-          mockActor,
-          targetContext
-        );
-
-        expect(context.target).toEqual({
-          type: 'direction',
-          id: null,
-          direction: direction,
-          components: null,
-          blocker: undefined,
-          exitDetails: null,
-        });
-      });
-
-      it('should build the context with resolved exitDetails and blocker for a found direction target', () => {
-        const mockExitObject = {
-          direction: 'to the crypt',
-          target: 'loc:crypt',
-          blocker: 'entity:heavy_door',
-        };
-        getExitByDirection.mockReturnValueOnce(mockExitObject);
-        const specificTargetContext =
-          ActionTargetContext.forDirection('to the crypt');
-
-        const context = builder.buildContext(
-          sampleActionDefinition,
-          mockActor,
-          specificTargetContext
-        );
-
-        expect(context.target).toEqual({
-          type: 'direction',
-          id: null,
-          direction: 'to the crypt',
-          components: null,
-          blocker: 'entity:heavy_door',
-          exitDetails: mockExitObject,
-        });
-      });
-    });
+    // FIX: Remove the entire obsolete 'direction' scenario
+    // describe("Scenario 3: Target Type 'direction'", () => { ... });
 
     describe("Scenario 4: Target Type 'none'", () => {
       const targetContext = ActionTargetContext.noTarget();
@@ -416,5 +359,3 @@ describe('ActionValidationContextBuilder', () => {
     });
   });
 });
-
-// --- FILE END ---

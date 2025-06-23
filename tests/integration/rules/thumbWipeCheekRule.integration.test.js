@@ -70,7 +70,7 @@ describe('intimacy_handle_thumb_wipe_cheek rule integration', () => {
     const expanded = expandMacros(thumbWipeCheekRule.actions, {
       get: (type, id) => (type === 'macros' ? macros[id] : undefined),
     });
-    
+
     const dataRegistry = {
       getAllSystemRules: jest
         .fn()

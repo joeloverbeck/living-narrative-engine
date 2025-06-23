@@ -21,4 +21,4 @@ class ScopeDepthError extends Error {
   }
 }
 
-export default ScopeDepthError; 
+export default ScopeDepthError;

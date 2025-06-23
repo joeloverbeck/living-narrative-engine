@@ -197,7 +197,7 @@ class EntityDefinitionLoader extends BaseManifestItemLoader {
     this._logger.debug(
       `EntityLoader [${modId}]: Created EntityDefinition instance for '${trimmedId}' from ${filename}. Delegating storage to base helper.`
     );
-    
+
     const { qualifiedId, didOverride } = await processAndStoreItem(this, {
       data: entityDefinition, // Pass the EntityDefinition instance instead of raw data
       idProp: 'id',

@@ -1,9 +1,16 @@
-const { SpatialIndexSynchronizer } = require('../../../src/entities/spatialIndexSynchronizer');
+const {
+  SpatialIndexSynchronizer,
+} = require('../../../src/entities/spatialIndexSynchronizer');
 const { ENTITY_CREATED_ID } = require('../../../src/constants/eventIds');
 
 // Mocks
 const mockSpatialIndex = { addEntity: jest.fn() };
-const mockLogger = { debug: jest.fn(), error: jest.fn(), warn: jest.fn(), info: jest.fn() };
+const mockLogger = {
+  debug: jest.fn(),
+  error: jest.fn(),
+  warn: jest.fn(),
+  info: jest.fn(),
+};
 
 /**
  *
@@ -77,4 +84,4 @@ describe('SpatialIndexSynchronizer - EventBus compatibility', () => {
     };
     expect(() => handler(eventObject.payload)).not.toThrow();
   });
-}); 
+});

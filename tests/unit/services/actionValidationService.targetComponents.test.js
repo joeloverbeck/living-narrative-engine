@@ -598,54 +598,6 @@ describe('ActionValidationService - Target/Prerequisite Checks', () => {
     );
   });
 
-  test('Success (Direction Target): Prerequisite checks run via PES (with direction target) and pass', () => {
-    const actionDef = {
-      id: 'test:target-direction-prereq-pass',
-      target_domain: 'direction',
-      template: 'go {direction}',
-      prerequisites: [{ logic: { '==': [{ var: 'actor.id' }, ACTOR_ID] } }],
-    };
-    const direction = 'north';
-    const context = ActionTargetContext.forDirection(direction);
-
-    // --- Configure Mock PES: Return true ---
-    mockPrerequisiteEvaluationServiceInstance.evaluate.mockReturnValueOnce(
-      true
-    );
-
-    // Act
-    const isValid = service.isValid(actionDef, mockActor, context);
-
-    // Assert
-    expect(isValid).toBe(true);
-    expect(domainContextCompatibilityChecker.check).toHaveBeenCalledWith(
-      actionDef,
-      context
-    );
-    expect(mockEntityManager.getEntityInstance).not.toHaveBeenCalledWith(
-      expect.not.stringContaining(ACTOR_ID)
-    ); // No entity lookup
-
-    // +++ Verify PES was called correctly with the NEW signature +++
-    expect(
-      mockPrerequisiteEvaluationServiceInstance.evaluate
-    ).toHaveBeenCalledTimes(1);
-    expect(
-      mockPrerequisiteEvaluationServiceInstance.evaluate
-    ).toHaveBeenCalledWith(
-      actionDef.prerequisites, // Prerequisites array
-      actionDef, // Action Definition object
-      mockActor, // Actor Entity object
-      context // Action Target Context object (.forDirection())
-    );
-    // --- Removed old JLES/incorrect PES signature assertions ---
-
-    expect(mockLogger.error).not.toHaveBeenCalled();
-    expect(mockLogger.debug).toHaveBeenCalledWith(
-      expect.stringContaining('STEP 4 PASSED')
-    ); // Updated step number
-  });
-
   test('Failure (Domain/Context Mismatch): target_domain="none" mismatches context.type="entity"', () => {
     mockTarget = createMockEntity(TARGET_ID, []);
     const actionDef = {

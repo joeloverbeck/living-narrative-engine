@@ -19,7 +19,6 @@ import { expandMacros } from '../../../src/utils/macroUtils.js';
 import QueryComponentHandler from '../../../src/logic/operationHandlers/queryComponentHandler.js';
 import GetTimestampHandler from '../../../src/logic/operationHandlers/getTimestampHandler.js';
 import SetVariableHandler from '../../../src/logic/operationHandlers/setVariableHandler.js';
-import ResolveDirectionHandler from '../../../src/logic/operationHandlers/resolveDirectionHandler.js';
 import ModifyComponentHandler from '../../../src/logic/operationHandlers/modifyComponentHandler.js';
 import DispatchEventHandler from '../../../src/logic/operationHandlers/dispatchEventHandler.js';
 import DispatchPerceptibleEventHandler from '../../../src/logic/operationHandlers/dispatchPerceptibleEventHandler.js';
@@ -46,37 +45,6 @@ import OperationInterpreter from '../../../src/logic/operationInterpreter.js';
 import OperationRegistry from '../../../src/logic/operationRegistry.js';
 import JsonLogicEvaluationService from '../../../src/logic/jsonLogicEvaluationService.js';
 
-/**
- * Very small world context implementation providing direction resolution.
- *
- * @class SimpleWorldContext
- */
-class SimpleWorldContext {
-  constructor(entityManager, logger) {
-    this.entityManager = entityManager;
-    this.logger = logger;
-  }
-
-  /**
-   * Resolve a direction string to a target location id.
-   *
-   * @param {object} params - query parameters
-   * @param {string} params.current_location_id - current location id
-   * @param {string} params.direction_taken - direction string
-   * @returns {string|null} resolved target location id or null
-   */
-  getTargetLocationForDirection({ current_location_id, direction_taken }) {
-    const exits = this.entityManager.getComponentData(
-      current_location_id,
-      EXITS_COMPONENT_ID
-    );
-    if (!Array.isArray(exits)) return null;
-    const found = exits.find((e) => e.direction === direction_taken);
-    if (!found || found.blocker) return null;
-    return this.entityManager.getEntityInstance(found.target)?.id ?? null;
-  }
-}
-
 describe('core_handle_go rule integration', () => {
   let testEnv;
   let customEntityManager;
@@ -98,7 +66,6 @@ describe('core_handle_go rule integration', () => {
    * @param {object} entityManager - Entity manager instance
    * @param {object} eventBus - Event bus instance
    * @param {object} logger - Logger instance
-   * @param {object} validatedEventDispatcher - Validated event dispatcher instance
    * @param {object} safeEventDispatcher - Safe event dispatcher instance
    * @returns {object} Handlers object
    */
@@ -106,11 +73,8 @@ describe('core_handle_go rule integration', () => {
     entityManager,
     eventBus,
     logger,
-    validatedEventDispatcher,
     safeEventDispatcher
   ) {
-    const worldContext = new SimpleWorldContext(entityManager, logger);
-
     return {
       QUERY_COMPONENT: new QueryComponentHandler({
         entityManager,
@@ -124,10 +88,6 @@ describe('core_handle_go rule integration', () => {
       }),
       GET_TIMESTAMP: new GetTimestampHandler({ logger }),
       SET_VARIABLE: new SetVariableHandler({ logger, jsonLogic }),
-      RESOLVE_DIRECTION: new ResolveDirectionHandler({
-        worldContext,
-        logger,
-      }),
       MODIFY_COMPONENT: new ModifyComponentHandler({
         entityManager,
         logger,
@@ -221,7 +181,6 @@ describe('core_handle_go rule integration', () => {
       customEntityManager,
       bus,
       testLogger,
-      validatedEventDispatcher,
       safeEventDispatcher
     );
     for (const [type, handler] of Object.entries(handlers)) {
@@ -267,7 +226,6 @@ describe('core_handle_go rule integration', () => {
           customEntityManager,
           bus,
           testLogger,
-          validatedEventDispatcher,
           safeEventDispatcher
         );
         const newOperationRegistry = new OperationRegistry({
@@ -354,7 +312,6 @@ describe('core_handle_go rule integration', () => {
     testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
       actorId: 'actor1',
       actionId: 'core:go',
-      direction: 'north',
       targetId: 'locB',
       originalInput: 'go north',
     });
@@ -371,44 +328,9 @@ describe('core_handle_go rule integration', () => {
     expect(types).toContain('core:turn_ended');
   });
 
-  it('moves actor using direction when targetId missing', () => {
-    testEnv.reset([
-      {
-        id: 'actor1',
-        components: {
-          [NAME_COMPONENT_ID]: { text: 'Hero' },
-          [POSITION_COMPONENT_ID]: { locationId: 'locA' },
-        },
-      },
-      { id: 'locA', components: { [NAME_COMPONENT_ID]: { text: 'Loc A' } } },
-      { id: 'locB', components: { [NAME_COMPONENT_ID]: { text: 'Loc B' } } },
-    ]);
-    setupListener();
-    testEnv.entityManager.addComponent('locA', EXITS_COMPONENT_ID, [
-      { direction: 'east', target: 'locB' },
-    ]);
+  // DELETED: The invalid test case 'moves actor using direction when targetId missing' was here.
 
-    testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
-      actorId: 'actor1',
-      actionId: 'core:go',
-      direction: 'east',
-      targetId: null,
-      originalInput: 'go east',
-    });
-
-    expect(
-      testEnv.entityManager.getComponentData('actor1', POSITION_COMPONENT_ID)
-    ).toEqual({
-      locationId: 'locB',
-    });
-    const types = events.map((e) => e.type);
-    expect(types).toContain('core:perceptible_event');
-    expect(types).toContain('core:entity_moved');
-    expect(types).toContain('core:display_successful_action_result');
-    expect(types).toContain('core:turn_ended');
-  });
-
-  it('fails when direction cannot be resolved', () => {
+  it('fails when targetId is missing', () => {
     testEnv.reset([
       {
         id: 'actor1',
@@ -425,7 +347,6 @@ describe('core_handle_go rule integration', () => {
     testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
       actorId: 'actor1',
       actionId: 'core:go',
-      direction: 'south',
       targetId: null,
       originalInput: 'go south',
     });
@@ -462,7 +383,6 @@ describe('core_handle_go rule integration', () => {
     testEnv.eventBus.dispatch(ATTEMPT_ACTION_ID, {
       actorId: 'actor1',
       actionId: 'core:go',
-      direction: 'north',
       targetId: 'locB',
       originalInput: 'go north',
     });

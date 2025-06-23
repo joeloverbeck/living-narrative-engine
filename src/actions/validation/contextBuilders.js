@@ -1,23 +1,23 @@
-// src/actions/validation/contextBuilders.js
-
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../entities/entityManager.js').default} EntityManager */
 
-import { POSITION_COMPONENT_ID } from '../../constants/componentIds.js';
-import { getExitByDirection } from '../../utils/locationUtils.js';
+// FIX: Removed obsolete imports
 import { createComponentAccessor } from '../../logic/componentAccessor.js';
 import { createEntityContext } from '../../logic/contextAssembler.js';
 
 /**
  * @description Create a base target context with default null fields.
- * @param {'entity' | 'direction'} type - Target context type.
+ * @param {'entity' | 'none'} type - Target context type.
  * @returns {{type: string, id: null, direction: null, components: null, blocker: null, exitDetails: null}}
- *   Base target context object.
+ * Base target context object.
  */
 export function createBaseTargetContext(type) {
+  // FIX: The base context no longer needs to accommodate a 'direction' type.
   return {
     type,
     id: null,
+    // These fields are now obsolete but kept as null for data structure consistency if anything still expects them.
+    // They will not be populated.
     direction: null,
     components: null,
     blocker: null,
@@ -42,78 +42,11 @@ export function buildActorContext(entityId, entityManager, logger) {
  * @param {EntityManager} entityManager - Manager to access components.
  * @param {ILogger} logger - Logger instance.
  * @returns {{type: 'entity', id: string, direction: null, components: object, blocker: null, exitDetails: null}}
- *   Target context for an entity.
+ * Target context for an entity.
  */
 export function buildEntityTargetContext(entityId, entityManager, logger) {
   const ctx = createBaseTargetContext('entity');
   ctx.id = entityId;
   ctx.components = createComponentAccessor(entityId, entityManager, logger);
-  return ctx;
-}
-
-/**
- * @description Resolve exit and blocker information for a directional target.
- * @param {string} actorId - ID of the actor performing the action.
- * @param {string} direction - Direction keyword.
- * @param {EntityManager} entityManager - Manager to access components.
- * @param {ILogger} logger - Logger instance.
- * @returns {{blocker: any, exitDetails: any}} Object containing blocker and exit details.
- */
-export function resolveDirectionExit(
-  actorId,
-  direction,
-  entityManager,
-  logger
-) {
-  const actorPositionData = entityManager.getComponentData(
-    actorId,
-    POSITION_COMPONENT_ID
-  );
-  const actorLocationId = actorPositionData?.locationId;
-  let blocker = undefined;
-  let exitDetails = null;
-
-  if (actorLocationId) {
-    const matchedExit = getExitByDirection(
-      actorLocationId,
-      direction,
-      entityManager,
-      logger
-    );
-    if (matchedExit) {
-      exitDetails = matchedExit;
-      blocker = matchedExit.blocker ?? null;
-    }
-  }
-
-  return { blocker, exitDetails };
-}
-
-/**
- * @description Build the target portion when targeting a direction.
- * @param {string} actorId - ID of the actor performing the action.
- * @param {string} direction - Direction keyword.
- * @param {EntityManager} entityManager - Manager to access components.
- * @param {ILogger} logger - Logger instance.
- * @returns {{type: 'direction', id: null, direction: string, components: null, blocker: any, exitDetails: any}}
- *   Target context for a direction.
- */
-export function buildDirectionContext(
-  actorId,
-  direction,
-  entityManager,
-  logger
-) {
-  const { blocker, exitDetails } = resolveDirectionExit(
-    actorId,
-    direction,
-    entityManager,
-    logger
-  );
-
-  const ctx = createBaseTargetContext('direction');
-  ctx.direction = direction;
-  ctx.blocker = blocker;
-  ctx.exitDetails = exitDetails;
   return ctx;
 }

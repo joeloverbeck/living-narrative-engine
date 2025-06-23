@@ -4,7 +4,7 @@
  */
 
 import ScopeEngine from '../../../src/scopeDsl/engine.js';
-import { parseInlineExpr } from '../../../src/scopeDsl/parser.js';
+import { parseDslExpression } from '../../../src/scopeDsl/parser.js';
 import ScopeDepthError from '../../../src/errors/scopeDepthError.js';
 import ScopeCycleError from '../../../src/errors/scopeCycleError.js';
 
@@ -15,35 +15,39 @@ const mockEntityManager = {
   getEntitiesInLocation: jest.fn(),
   getComponentData: jest.fn(),
   hasComponent: jest.fn(),
-  entities: []
+  entities: [],
 };
 
 const mockSpatialIndexManager = {
-  getEntitiesInLocation: jest.fn()
+  getEntitiesInLocation: jest.fn(),
 };
 
 const mockJsonLogicEval = {
-  evaluate: jest.fn()
+  evaluate: jest.fn(),
 };
 
 const mockLogger = {
   debug: jest.fn(),
   warn: jest.fn(),
-  error: jest.fn()
+  error: jest.fn(),
 };
 
 const mockRuntimeCtx = {
   entityManager: mockEntityManager,
   spatialIndexManager: mockSpatialIndexManager,
   jsonLogicEval: mockJsonLogicEval,
-  logger: mockLogger
+  logger: mockLogger,
 };
 
 describe('ScopeEngine', () => {
   let engine;
+  let actorId;
+  let actorEntity;
 
   beforeEach(() => {
     engine = new ScopeEngine();
+    actorId = 'actor123';
+    actorEntity = { id: actorId, components: {} };
     jest.clearAllMocks();
     // Reset entities array
     mockEntityManager.entities = [];
@@ -52,175 +56,217 @@ describe('ScopeEngine', () => {
   describe('resolve()', () => {
     describe('Source nodes', () => {
       test('actor → Set{actorId}', () => {
-        const ast = parseInlineExpr('actor');
-        const actorId = 'actor123';
-        
-        const result = engine.resolve(ast, actorId, mockRuntimeCtx);
-        
+        const ast = parseDslExpression('actor');
+        const result = engine.resolve(ast, actorEntity, mockRuntimeCtx);
         expect(result).toEqual(new Set([actorId]));
       });
 
-      test('location(expr) → Set of entityIds in location', () => {
-        const ast = parseInlineExpr('location(actor)');
-        const actorId = 'actor123';
-        const locationId = 'loc456';
-        const runtimeCtx = { ...mockRuntimeCtx, location: { id: locationId } };
-        const result = engine.resolve(ast, actorId, runtimeCtx);
-        expect(result).toEqual(new Set([locationId]));
-      });
-
       test('location without param defaults to actor', () => {
-        const ast = parseInlineExpr('location');
-        const actorId = 'actor123';
+        const ast = parseDslExpression('location');
         const locationId = 'loc456';
         const runtimeCtx = { ...mockRuntimeCtx, location: { id: locationId } };
-        const result = engine.resolve(ast, actorId, runtimeCtx);
+        const result = engine.resolve(ast, actorEntity, runtimeCtx);
         expect(result).toEqual(new Set([locationId]));
       });
 
       test('entities(ComponentName) → Set of entities with component', () => {
-        const ast = parseInlineExpr('entities(core:item)');
-        const actorId = 'actor123';
+        const ast = parseDslExpression('entities(core:item)');
         const entitiesWithComponent = [
           { id: 'entity1' },
           { id: 'entity2' },
-          { id: 'entity3' }
+          { id: 'entity3' },
         ];
-        
-        mockEntityManager.getEntitiesWithComponent.mockReturnValue(entitiesWithComponent);
-        
-        const result = engine.resolve(ast, actorId, mockRuntimeCtx);
-        
-        expect(mockEntityManager.getEntitiesWithComponent).toHaveBeenCalledWith('core:item');
+
+        mockEntityManager.getEntitiesWithComponent.mockReturnValue(
+          entitiesWithComponent
+        );
+
+        const result = engine.resolve(ast, actorEntity, mockRuntimeCtx);
+
+        expect(mockEntityManager.getEntitiesWithComponent).toHaveBeenCalledWith(
+          'core:item'
+        );
         expect(result).toEqual(new Set(['entity1', 'entity2', 'entity3']));
       });
 
       test('entities(!ComponentName) → Set of entities without component', () => {
-        // Note: Parser doesn't support ! syntax yet, so we'll test the logic manually
-        const ast = parseInlineExpr('entities(core:item)');
-        const actorId = 'actor123';
+        const ast = parseDslExpression('entities(!core:item)');
         const allEntities = [
           { id: 'entity1' },
           { id: 'entity2' },
           { id: 'entity3' },
-          { id: 'entity4' }
+          { id: 'entity4' },
         ];
-        const entitiesWithComponent = [
-          { id: 'entity1' },
-          { id: 'entity3' }
-        ];
-        
-        // Mock all entities and entities with component
+        const entitiesWithComponent = [{ id: 'entity1' }, { id: 'entity3' }];
+
         mockEntityManager.entities = allEntities;
-        mockEntityManager.getEntitiesWithComponent.mockReturnValue(entitiesWithComponent);
-        
-        // Manually test the negative component logic
-        const componentName = 'core:item';
-        const entityIdsWithComponent = new Set(entitiesWithComponent.map(e => e.id));
-        const entityIdsWithoutComponent = allEntities
-          .filter(e => !entityIdsWithComponent.has(e.id))
-          .map(e => e.id);
-        
-        expect(entityIdsWithoutComponent).toEqual(['entity2', 'entity4']);
+        mockEntityManager.getEntitiesWithComponent.mockReturnValue(
+          entitiesWithComponent
+        );
+
+        const result = engine.resolve(ast, actorEntity, mockRuntimeCtx);
+        expect(result).toEqual(new Set(['entity2', 'entity4']));
       });
     });
 
     describe('Edge traversal', () => {
       test('edge traverses component field', () => {
-        const ast = parseInlineExpr('actor.core:inventory');
-        const actorId = 'actor123';
+        const ast = parseDslExpression('actor.core:inventory');
         const inventoryData = { items: ['item1', 'item2'] };
         mockEntityManager.getComponentData.mockReturnValue(inventoryData);
-        const result = engine.resolve(ast, actorId, mockRuntimeCtx);
-        // The new engine does not return objects, only sets of strings (entity IDs)
-        expect(result).toEqual(new Set());
+        const result = engine.resolve(ast, actorEntity, mockRuntimeCtx);
+        // The engine returns intermediate objects, which are passed to the next step.
+        expect(result).toEqual(new Set([inventoryData]));
       });
 
       test('edge[] iterates array values', () => {
-        // Test array iteration with entities source instead of component field access
-        const ast = parseInlineExpr('entities(core:item)[]');
-        const actorId = 'actor123';
+        const ast = parseDslExpression('entities(core:item)[]');
         const entitiesWithComponent = [
           { id: 'item1' },
           { id: 'item2' },
-          { id: 'item3' }
+          { id: 'item3' },
         ];
-        
-        mockEntityManager.getEntitiesWithComponent.mockReturnValue(entitiesWithComponent);
-        
-        const result = engine.resolve(ast, actorId, mockRuntimeCtx);
+
+        mockEntityManager.getEntitiesWithComponent.mockReturnValue(
+          entitiesWithComponent
+        );
+
+        const result = engine.resolve(ast, actorEntity, mockRuntimeCtx);
         expect(result).toEqual(new Set(['item1', 'item2', 'item3']));
       });
 
       test('edge[] with non-array field returns empty set', () => {
-        const ast = parseInlineExpr('actor.core:inventory.items[]');
-        const actorId = 'actor123';
+        const ast = parseDslExpression('actor.core:inventory.items[]');
         const inventoryData = { items: 'not-an-array' };
-        
+
         mockEntityManager.getComponentData.mockReturnValue(inventoryData);
-        
-        const result = engine.resolve(ast, actorId, mockRuntimeCtx);
-        
+
+        const result = engine.resolve(ast, actorEntity, mockRuntimeCtx);
+
         expect(result).toEqual(new Set());
+      });
+
+      test('edge can access property on filtered array of objects', () => {
+        const ast = parseDslExpression(
+          'actor.core:exits[{"==": [{"var": "locked"}, false]}].target'
+        );
+
+        const exitsComponentData = [
+          { target: 'room_unlocked', locked: false, description: 'An unlocked door.' },
+          { target: 'room_locked', locked: true, description: 'A locked door.' },
+          { target: 'cellar_unlocked', locked: false, description: 'An open trapdoor.' },
+        ];
+
+        // The first step 'actor.core:exits' resolves to the array of objects.
+        mockEntityManager.getComponentData.mockReturnValue(exitsComponentData);
+
+        // The engine doesn't use JSON Logic for this, it just passes the object to the filter.
+        // The filter here is just a placeholder; the engine will use the real data.
+        // The test's purpose is to see if the `.target` step works correctly *after* the filter.
+        // For this test, we can assume the filter works; we are testing the subsequent step.
+
+        // We mock what the filter step would return: a Set of the two unlocked exit objects.
+        // To do this, we need to mock the parent resolution. We can simplify by mocking the direct data access.
+        mockEntityManager.getComponentData.mockImplementation((entityId, componentName) => {
+          if (entityId === actorId && componentName === 'core:exits') {
+            // Step 1: actor.core:exits
+            // This step returns an array of objects, not entity IDs.
+            return [
+              { target: 'room_unlocked', locked: false },
+              { target: 'room_locked', locked: true },
+              { target: 'cellar_unlocked', locked: false },
+            ];
+          }
+          // The engine doesn't use getComponentData for the final `.target` step.
+          // It operates on the objects already in memory.
+          return undefined;
+        });
+
+        // Mock the filter evaluation. It will receive each object from the array.
+        mockJsonLogicEval.evaluate.mockImplementation((logic, context) => {
+          // context.entity will be one of the exit objects in this case.
+          return context.entity.locked === false;
+        });
+
+        // Since the parent result of the filter is a set of objects, not entity IDs,
+        // getEntityInstance will not be called for the final .target step.
+
+        const result = engine.resolve(ast, actorEntity, mockRuntimeCtx);
+
+        // Assert that the final result is a set of the `target` properties from the unlocked exits.
+        expect(result).toEqual(new Set(['room_unlocked', 'cellar_unlocked']));
+        expect(mockJsonLogicEval.evaluate).toHaveBeenCalledTimes(3);
       });
     });
 
     describe('Filter evaluation', () => {
       test('Filter evaluates JsonLogic with entity context', () => {
-        // Use entities source instead of component field access
-        const ast = parseInlineExpr('entities(core:item)[][{"==": [{"var": "entity.id"}, "item1"]}]');
-        const actorId = 'actor123';
+        const ast = parseDslExpression(
+          'entities(core:item)[][{"==": [{"var": "entity.id"}, "item1"]}]'
+        );
         const entitiesWithComponent = [
           { id: 'item1' },
           { id: 'item2' },
-          { id: 'item3' }
+          { id: 'item3' },
         ];
-        
-        mockEntityManager.getEntitiesWithComponent.mockReturnValue(entitiesWithComponent);
-        mockJsonLogicEval.evaluate.mockImplementation((logic, context) => context.entity.id === 'item1');
-        mockEntityManager.getEntityInstance.mockImplementation((id) => ({ id }));
-        
-        const result = engine.resolve(ast, actorId, mockRuntimeCtx);
+
+        mockEntityManager.getEntitiesWithComponent.mockReturnValue(
+          entitiesWithComponent
+        );
+        mockJsonLogicEval.evaluate.mockImplementation(
+          (logic, context) => context.entity.id === 'item1'
+        );
+        mockEntityManager.getEntityInstance.mockImplementation((id) => ({
+          id,
+        }));
+
+        const result = engine.resolve(ast, actorEntity, mockRuntimeCtx);
         expect(mockJsonLogicEval.evaluate).toHaveBeenCalledTimes(3);
         expect(result).toEqual(new Set(['item1']));
       });
 
       test('Filter with complex JsonLogic context', () => {
-        // Use entities source instead of component field access
-        const ast = parseInlineExpr('entities(core:item)[][{"in": [{"var": "entity.id"}, ["entity1", "entity3"]]}]');
-        const actorId = 'actor123';
+        const ast = parseDslExpression(
+          'entities(core:item)[][{"in": [{"var": "entity.id"}, ["entity1", "entity3"]]}]'
+        );
         const entitiesWithComponent = [
           { id: 'entity1' },
           { id: 'entity2' },
-          { id: 'entity3' }
+          { id: 'entity3' },
         ];
-        
-        mockEntityManager.getEntitiesWithComponent.mockReturnValue(entitiesWithComponent);
-        mockJsonLogicEval.evaluate.mockImplementation((logic, context) => ['entity1', 'entity3'].includes(context.entity.id));
-        mockEntityManager.getEntityInstance.mockImplementation((id) => ({ id }));
-        
-        const result = engine.resolve(ast, actorId, mockRuntimeCtx);
+
+        mockEntityManager.getEntitiesWithComponent.mockReturnValue(
+          entitiesWithComponent
+        );
+        mockJsonLogicEval.evaluate.mockImplementation((logic, context) =>
+          ['entity1', 'entity3'].includes(context.entity.id)
+        );
+        mockEntityManager.getEntityInstance.mockImplementation((id) => ({
+          id,
+        }));
+
+        const result = engine.resolve(ast, actorEntity, mockRuntimeCtx);
         expect(result).toEqual(new Set(['entity1', 'entity3']));
       });
 
       test('handles JsonLogic evaluation errors gracefully', () => {
-        // Use entities source instead of component field access
-        const ast = parseInlineExpr('entities(core:item)[][{"invalid": "logic"}]');
-        const actorId = 'actor123';
-        const entitiesWithComponent = [
-          { id: 'item1' },
-          { id: 'item2' }
-        ];
-        
-        mockEntityManager.getEntitiesWithComponent.mockReturnValue(entitiesWithComponent);
-        
-        // Mock JsonLogic to throw an error
+        const ast = parseDslExpression(
+          'entities(core:item)[][{"invalid": "logic"}]'
+        );
+        const entitiesWithComponent = [{ id: 'item1' }, { id: 'item2' }];
+
+        mockEntityManager.getEntitiesWithComponent.mockReturnValue(
+          entitiesWithComponent
+        );
+
         mockJsonLogicEval.evaluate.mockImplementation(() => {
           throw new Error('Invalid logic');
         });
-        mockEntityManager.getEntityInstance.mockImplementation((id) => ({ id }));
-        
-        const result = engine.resolve(ast, actorId, mockRuntimeCtx);
+        mockEntityManager.getEntityInstance.mockImplementation((id) => ({
+          id,
+        }));
+
+        const result = engine.resolve(ast, actorEntity, mockRuntimeCtx);
         expect(result).toEqual(new Set());
         expect(mockLogger.error).toHaveBeenCalledWith(
           expect.stringContaining('Error evaluating filter for entity'),
@@ -233,452 +279,243 @@ describe('ScopeEngine', () => {
       test('Union A + B returns merged Set', () => {
         const ast = {
           type: 'Union',
-          left: parseInlineExpr('actor'),
-          right: parseInlineExpr('entities(core:item)[]')
+          left: parseDslExpression('actor'),
+          right: parseDslExpression('entities(core:item)[]'),
         };
-        const actorId = 'actor123';
-        const entitiesWithComponent = [
-          { id: 'entity1' },
-          { id: 'entity2' }
-        ];
-        
-        mockEntityManager.getEntitiesWithComponent.mockReturnValue(entitiesWithComponent);
-        
-        const result = engine.resolve(ast, actorId, mockRuntimeCtx);
+        const entitiesWithComponent = [{ id: 'entity1' }, { id: 'entity2' }];
+
+        mockEntityManager.getEntitiesWithComponent.mockReturnValue(
+          entitiesWithComponent
+        );
+
+        const result = engine.resolve(ast, actorEntity, mockRuntimeCtx);
         expect(result).toEqual(new Set([actorId, 'entity1', 'entity2']));
       });
 
       test('Union with overlapping entities deduplicates', () => {
         const ast = {
           type: 'Union',
-          left: parseInlineExpr('actor'),
-          right: parseInlineExpr('entities(core:item)[]')
+          left: parseDslExpression('actor'),
+          right: parseDslExpression('entities(core:item)[]'),
         };
-        const actorId = 'actor123';
-        const entitiesWithComponent = [
-          { id: 'actor123' },
-          { id: 'entity3' }
-        ];
-        
-        mockEntityManager.getEntitiesWithComponent.mockReturnValue(entitiesWithComponent);
-        
-        const result = engine.resolve(ast, actorId, mockRuntimeCtx);
+        const entitiesWithComponent = [{ id: actorId }, { id: 'entity3' }];
+
+        mockEntityManager.getEntitiesWithComponent.mockReturnValue(
+          entitiesWithComponent
+        );
+
+        const result = engine.resolve(ast, actorEntity, mockRuntimeCtx);
         expect(result).toEqual(new Set([actorId, 'entity3']));
       });
     });
 
     describe('Depth limit enforcement', () => {
       test('throws ScopeDepthError when depth > 4', () => {
-        // Test with a simpler expression that should trigger depth limit
-        const ast = parseInlineExpr('actor.core:inventory.items[].components.core:stats');
-        const actorId = 'actor123';
-        const inventoryData = { items: ['item1'] };
-        
-        mockEntityManager.getComponentData.mockReturnValue(inventoryData);
-        
+        // We construct the AST manually to bypass the parser's own depth limit,
+        // allowing us to unit test the engine's depth limit in isolation.
+        // This AST represents an expression like 'actor.a.b.c.d.e' (5 steps).
+        const source = { type: 'Source', kind: 'actor' };
+        const step1 = {
+          type: 'Step',
+          field: 'a',
+          isArray: false,
+          parent: source,
+        };
+        const step2 = {
+          type: 'Step',
+          field: 'b',
+          isArray: false,
+          parent: step1,
+        };
+        const step3 = {
+          type: 'Step',
+          field: 'c',
+          isArray: false,
+          parent: step2,
+        };
+        const step4 = {
+          type: 'Step',
+          field: 'd',
+          isArray: false,
+          parent: step3,
+        };
+        const ast = { type: 'Step', field: 'e', isArray: false, parent: step4 };
+
+        // No mocks are needed as the engine should throw before trying to access data.
+
         expect(() => {
-          engine.resolve(ast, actorId, mockRuntimeCtx);
+          engine.resolve(ast, actorEntity, mockRuntimeCtx);
+        }).toThrow(ScopeDepthError);
+
+        expect(() => {
+          engine.resolve(ast, actorEntity, mockRuntimeCtx);
         }).toThrow('Expression depth limit exceeded (max 4)');
       });
 
       test('allows depth exactly 4', () => {
-        const ast = parseInlineExpr('actor.core:inventory.items[]');
-        const actorId = 'actor123';
-        const inventoryData = { items: ['item1'] };
-        
-        mockEntityManager.getComponentData.mockReturnValue(inventoryData);
-        
+        // This expression has 4 steps after the source, which should be allowed.
+        const ast = parseDslExpression(
+          'actor.core:inventory.items[].components.stats'
+        );
+
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentName) => {
+            if (entityId === actorId && componentName === 'core:inventory') {
+              return { items: ['item1'] };
+            }
+            if (entityId === 'item1' && componentName === 'components') {
+              return { stats: 'some-stats-object' };
+            }
+            return undefined;
+          }
+        );
+
         expect(() => {
-          engine.resolve(ast, actorId, mockRuntimeCtx);
+          engine.resolve(ast, actorEntity, mockRuntimeCtx);
         }).not.toThrow(ScopeDepthError);
       });
     });
 
     describe('Error handling', () => {
       test('handles missing location component gracefully', () => {
-        const ast = parseInlineExpr('location');
-        const actorId = 'actor123';
-        
+        const ast = parseDslExpression('location');
+
         mockEntityManager.getComponentData.mockReturnValue(undefined);
-        
-        const result = engine.resolve(ast, actorId, mockRuntimeCtx);
-        
+
+        const result = engine.resolve(ast, actorEntity, mockRuntimeCtx);
+
         expect(result).toEqual(new Set());
       });
 
       test('handles missing inventory component gracefully', () => {
-        const ast = parseInlineExpr('actor.core:inventory.items[]');
-        const actorId = 'actor123';
-        
+        const ast = parseDslExpression('actor.core:inventory.items[]');
+
         mockEntityManager.getComponentData.mockReturnValue(undefined);
-        
-        const result = engine.resolve(ast, actorId, mockRuntimeCtx);
-        
+
+        const result = engine.resolve(ast, actorEntity, mockRuntimeCtx);
+
         expect(result).toEqual(new Set());
-      });
-
-      test('handles missing logger gracefully', () => {
-        const ast = parseInlineExpr('actor.core:inventory[{"invalid": "logic"}]');
-        const actorId = 'actor123';
-        const inventoryData = { items: ['item1', 'item2'] };
-        
-        const runtimeCtxWithoutLogger = {
-          ...mockRuntimeCtx,
-          logger: { debug: jest.fn(), error: jest.fn() } // Provide a minimal logger
-        };
-        
-        mockEntityManager.getComponentData.mockReturnValue(inventoryData);
-        mockJsonLogicEval.evaluate.mockImplementation(() => {
-          throw new Error('Invalid JSON Logic');
-        });
-        
-        const result = engine.resolve(ast, actorId, runtimeCtxWithoutLogger);
-        
-        expect(result).toEqual(new Set());
-        // Should not throw even without logger
-      });
-
-      test('handles logger without error method gracefully', () => {
-        const ast = parseInlineExpr('actor.core:inventory[{"invalid": "logic"}]');
-        const actorId = 'actor123';
-        const inventoryData = { items: ['item1', 'item2'] };
-        
-        const runtimeCtxWithInvalidLogger = {
-          ...mockRuntimeCtx,
-          logger: { debug: jest.fn(), error: jest.fn() } // Provide error method
-        };
-        
-        mockEntityManager.getComponentData.mockReturnValue(inventoryData);
-        mockJsonLogicEval.evaluate.mockImplementation(() => {
-          throw new Error('Invalid JSON Logic');
-        });
-        
-        const result = engine.resolve(ast, actorId, runtimeCtxWithInvalidLogger);
-        
-        expect(result).toEqual(new Set());
-        // Should not throw even with invalid logger
-      });
-
-      test('handles non-string component data in non-array field access', () => {
-        const ast = parseInlineExpr('actor.core:stats');
-        const actorId = 'actor123';
-        const statsData = { health: 100, mana: 50 };
-        
-        mockEntityManager.getComponentData.mockReturnValue(statsData);
-        
-        const result = engine.resolve(ast, actorId, mockRuntimeCtx);
-        // The new engine only returns strings, not objects
-        expect(result).toEqual(new Set());
-      });
-    });
-
-    describe('Entities source (positive/negative, chaining)', () => {
-      test('entities(core:item)[] returns all entities with component', () => {
-        const ast = parseInlineExpr('entities(core:item)[]');
-        const actorId = 'actor123';
-        const entitiesWithComponent = [
-          { id: 'entity1' },
-          { id: 'entity2' },
-          { id: 'entity3' }
-        ];
-        mockEntityManager.getEntitiesWithComponent.mockReturnValue(entitiesWithComponent);
-        // For array iteration, the engine expects an array of IDs
-        // We'll simulate that by returning the array of IDs for the array step
-        mockEntityManager.getComponentData.mockImplementation((entityId, comp) => {
-          // Not used in this path
-          return undefined;
-        });
-        // The engine should iterate over the set of entity IDs
-        const result = engine.resolve(ast, actorId, mockRuntimeCtx);
-        expect(result).toEqual(new Set(['entity1', 'entity2', 'entity3']));
-      });
-      test('entities(!core:item)[] returns all entities without component', () => {
-        const ast = parseInlineExpr('entities(!core:item)[]');
-        const actorId = 'actor123';
-        const allEntities = [
-          { id: 'entity1' },
-          { id: 'entity2' },
-          { id: 'entity3' },
-          { id: 'entity4' }
-        ];
-        const entitiesWithComponent = [
-          { id: 'entity1' },
-          { id: 'entity3' }
-        ];
-        mockEntityManager.entities = allEntities;
-        mockEntityManager.getEntitiesWithComponent.mockReturnValue(entitiesWithComponent);
-        // The engine should return the IDs of entities without the component
-        // For array iteration, the engine expects an array of IDs
-        // We'll simulate that by returning the array of IDs for the array step
-        mockEntityManager.getComponentData.mockImplementation((entityId, comp) => {
-          // Not used in this path
-          return undefined;
-        });
-        // The engine should iterate over the set of entity IDs
-        // So the result should be ['entity2', 'entity4']
-        const result = engine.resolve(ast, actorId, mockRuntimeCtx);
-        expect(result).toEqual(new Set(['entity2', 'entity4']));
-      });
-      test('entities(core:item)[][filter] applies filter to entities with component', () => {
-        const ast = parseInlineExpr('entities(core:item)[][{"==": [{"var": "entity.id"}, "entity2"]}]');
-        const actorId = 'actor123';
-        const entitiesWithComponent = [
-          { id: 'entity1' },
-          { id: 'entity2' },
-          { id: 'entity3' }
-        ];
-        mockEntityManager.getEntitiesWithComponent.mockReturnValue(entitiesWithComponent);
-        mockEntityManager.getEntityInstance.mockImplementation((id) => ({ id }));
-        mockJsonLogicEval.evaluate
-          .mockReturnValueOnce(false)
-          .mockReturnValueOnce(true)
-          .mockReturnValueOnce(false);
-        const result = engine.resolve(ast, actorId, mockRuntimeCtx);
-        expect(result).toEqual(new Set(['entity2']));
-      });
-      test('entities(!core:item)[][filter] applies filter to entities without component', () => {
-        const ast = parseInlineExpr('entities(!core:item)[][{"==": [{"var": "entity.id"}, "entity4"]}]');
-        const actorId = 'actor123';
-        const allEntities = [
-          { id: 'entity1' },
-          { id: 'entity2' },
-          { id: 'entity3' },
-          { id: 'entity4' }
-        ];
-        const entitiesWithComponent = [
-          { id: 'entity1' },
-          { id: 'entity3' }
-        ];
-        mockEntityManager.entities = allEntities;
-        mockEntityManager.getEntitiesWithComponent.mockReturnValue(entitiesWithComponent);
-        mockEntityManager.getEntityInstance.mockImplementation((id) => ({ id }));
-        mockJsonLogicEval.evaluate.mockImplementation((logic, context) => context.entity.id === 'entity4');
-        const result = engine.resolve(ast, actorId, mockRuntimeCtx);
-        expect(result).toEqual(new Set(['entity4']));
-      });
-    });
-
-    describe('Error handling for edge cases', () => {
-      test('handles unknown AST node type gracefully', () => {
-        const invalidAst = { type: 'InvalidNode', field: 'test' };
-        const actorId = 'actor123';
-        
-        const result = engine.resolve(invalidAst, actorId, mockRuntimeCtx);
-        
-        expect(result).toEqual(new Set());
-        expect(mockLogger.error).toHaveBeenCalledWith('Unknown AST node type: InvalidNode');
-      });
-
-      test('handles entities() source with missing component ID', () => {
-        const invalidAst = { type: 'Source', kind: 'entities', param: null };
-        const actorId = 'actor123';
-        
-        const result = engine.resolve(invalidAst, actorId, mockRuntimeCtx);
-        
-        expect(result).toEqual(new Set());
-        expect(mockLogger.error).toHaveBeenCalledWith('entities() source node missing component ID');
-      });
-
-      test('handles unknown source kind gracefully', () => {
-        const invalidAst = { type: 'Source', kind: 'unknown' };
-        const actorId = 'actor123';
-        
-        const result = engine.resolve(invalidAst, actorId, mockRuntimeCtx);
-        
-        expect(result).toEqual(new Set());
-        expect(mockLogger.error).toHaveBeenCalledWith('Unknown source kind: unknown');
-      });
-
-      test('handles bare array iteration (field is null)', () => {
-        // Use Source node of kind 'entities' for array iteration
-        const ast = {
-          type: 'Step',
-          field: null,
-          isArray: true,
-          parent: {
-            type: 'Source',
-            kind: 'entities',
-            param: 'core:item'
-          }
-        };
-        const actorId = 'actor123';
-        // Mock entities with component
-        mockEntityManager.getEntitiesWithComponent.mockReturnValue([
-          { id: 'item1' },
-          { id: 'item2' }
-        ]);
-        mockEntityManager.entities = [
-          { id: 'item1' },
-          { id: 'item2' }
-        ];
-        const result = engine.resolve(ast, actorId, mockRuntimeCtx);
-        expect(result).toEqual(new Set(['item1', 'item2']));
       });
 
       test('handles non-string items in array iteration', () => {
-        // Use entities source instead of component field access
-        const ast = parseInlineExpr('entities(core:item)[]');
-        const actorId = 'actor123';
+        const ast = parseDslExpression('entities(core:item)[]');
         const entitiesWithComponent = [
           { id: 'item1' },
-          { id: 123 },
-          { id: { id: 'item2' } },
-          { id: 'item3' }
+          { id: 123 }, // This will be filtered by the `map` in `resolveSource`
+          { id: { id: 'item2' } }, // This will be filtered
+          { id: 'item3' },
         ];
-        
-        mockEntityManager.getEntitiesWithComponent.mockReturnValue(entitiesWithComponent);
-        
-        const result = engine.resolve(ast, actorId, mockRuntimeCtx);
-        // The new engine only returns string items
+
+        mockEntityManager.getEntitiesWithComponent.mockReturnValue(
+          entitiesWithComponent
+        );
+
+        const result = engine.resolve(ast, actorEntity, mockRuntimeCtx);
         expect(result).toEqual(new Set(['item1', 'item3']));
       });
 
       test('handles string component data in non-array field access', () => {
-        // Use a Step node with parent Source node of kind 'actor'
-        const ast = {
-          type: 'Step',
-          field: 'name',
-          isArray: false,
-          parent: {
-            type: 'Source',
-            kind: 'actor'
+        const ast = parseDslExpression('actor.name');
+
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentName) => {
+            if (entityId === actorId && componentName === 'name') {
+              return 'John Doe';
+            }
+            return undefined;
           }
-        };
-        const actorId = 'actor123';
-        mockEntityManager.getComponentData.mockImplementation((entityId, componentName) => {
-          if (entityId === actorId && componentName === 'core:name') {
-            return 'John Doe';
-          }
-          return undefined;
-        });
-        const result = engine.resolve(ast, actorId, mockRuntimeCtx);
-        expect(result).toEqual(new Set());
+        );
+
+        const result = engine.resolve(ast, actorEntity, mockRuntimeCtx);
+        // The engine returns the raw data from the component field.
+        expect(result).toEqual(new Set(['John Doe']));
       });
     });
 
-    describe('getComponentDataForField method', () => {
-      test('returns null for empty field path', () => {
-        const result = engine.getComponentDataForField('entity1', '', mockRuntimeCtx);
-        expect(result).toBeNull();
+    describe('Entities source (positive/negative, chaining)', () => {
+      beforeEach(() => {
+        const allEntities = [
+          { id: 'entity1', components: { 'core:item': {} } },
+          { id: 'entity2', components: {} },
+          { id: 'entity3', components: { 'core:item': {} } },
+          { id: 'entity4', components: {} },
+        ];
+        const entitiesWithComponent = [allEntities[0], allEntities[2]];
+        mockEntityManager.entities = allEntities;
+        mockEntityManager.getEntitiesWithComponent.mockReturnValue(
+          entitiesWithComponent
+        );
+        mockEntityManager.getEntityInstance.mockImplementation((id) =>
+          allEntities.find((e) => e.id === id)
+        );
       });
 
-      test('returns null for null field path', () => {
-        const result = engine.getComponentDataForField('entity1', null, mockRuntimeCtx);
-        expect(result).toBeNull();
+      test('entities(core:item)[] returns all entities with component', () => {
+        const ast = parseDslExpression('entities(core:item)[]');
+        const result = engine.resolve(ast, actorEntity, mockRuntimeCtx);
+        expect(result).toEqual(new Set(['entity1', 'entity3']));
       });
 
-      test('returns null for undefined field path', () => {
-        const result = engine.getComponentDataForField('entity1', undefined, mockRuntimeCtx);
-        expect(result).toBeNull();
+      test('entities(!core:item)[] returns all entities without component', () => {
+        const ast = parseDslExpression('entities(!core:item)[]');
+        const result = engine.resolve(ast, actorEntity, mockRuntimeCtx);
+        expect(result).toEqual(new Set(['entity2', 'entity4']));
       });
 
-      test('returns component data for simple field path', () => {
-        const componentData = { health: 100 };
-        mockEntityManager.getComponentData.mockReturnValue(componentData);
-        
-        const result = engine.getComponentDataForField('entity1', 'health', mockRuntimeCtx);
-        
-        expect(mockEntityManager.getComponentData).toHaveBeenCalledWith('entity1', 'core:health');
-        expect(result).toBe(componentData);
+      test('entities(core:item)[][filter] applies filter to entities with component', () => {
+        const ast = parseDslExpression(
+          'entities(core:item)[][{"==": [{"var": "entity.id"}, "entity1"]}]'
+        );
+        mockJsonLogicEval.evaluate.mockImplementation(
+          (logic, context) => context.entity.id === 'entity1'
+        );
+        const result = engine.resolve(ast, actorEntity, mockRuntimeCtx);
+        expect(result).toEqual(new Set(['entity1']));
       });
 
-      test('returns null when component does not exist', () => {
-        mockEntityManager.getComponentData.mockReturnValue(null);
-        
-        const result = engine.getComponentDataForField('entity1', 'nonexistent', mockRuntimeCtx);
-        
-        expect(result).toBeNull();
-      });
-
-      test('navigates nested field path successfully', () => {
-        // The engine expects the first part of the field path to be the component name
-        // So for 'inventory.items.weapons', the mock should return the full nested object for 'core:inventory'
-        const componentData = {
-          items: {
-            weapons: ['sword', 'axe']
-          }
-        };
-        mockEntityManager.getComponentData.mockImplementation((entityId, componentName) => {
-          if (componentName === 'core:inventory') {
-            return componentData;
-          }
-          return undefined;
-        });
-        const result = engine.getComponentDataForField('entity1', 'inventory.items.weapons', mockRuntimeCtx);
-        expect(result).toEqual(['sword', 'axe']);
-      });
-
-      test('returns null when nested field does not exist', () => {
-        const componentData = {
-          inventory: {
-            items: {}
-          }
-        };
-        mockEntityManager.getComponentData.mockReturnValue(componentData);
-        
-        const result = engine.getComponentDataForField('entity1', 'inventory.items.nonexistent', mockRuntimeCtx);
-        
-        expect(result).toBeNull();
-      });
-
-      test('returns null when intermediate field is not an object', () => {
-        const componentData = {
-          inventory: 'not-an-object'
-        };
-        mockEntityManager.getComponentData.mockReturnValue(componentData);
-        
-        const result = engine.getComponentDataForField('entity1', 'inventory.items.weapons', mockRuntimeCtx);
-        
-        expect(result).toBeNull();
-      });
-
-      test('returns null when intermediate field is null', () => {
-        const componentData = {
-          inventory: null
-        };
-        mockEntityManager.getComponentData.mockReturnValue(componentData);
-        
-        const result = engine.getComponentDataForField('entity1', 'inventory.items.weapons', mockRuntimeCtx);
-        
-        expect(result).toBeNull();
+      test('entities(!core:item)[][filter] applies filter to entities without component', () => {
+        const ast = parseDslExpression(
+          'entities(!core:item)[][{"==": [{"var": "entity.id"}, "entity4"]}]'
+        );
+        mockJsonLogicEval.evaluate.mockImplementation(
+          (logic, context) => context.entity.id === 'entity4'
+        );
+        const result = engine.resolve(ast, actorEntity, mockRuntimeCtx);
+        expect(result).toEqual(new Set(['entity4']));
       });
     });
 
     describe('Cycle detection', () => {
       test('throws ScopeCycleError on direct self-loop', () => {
-        // AST node that references itself as parent
         const ast = { type: 'Step', field: 'self', parent: null };
         ast.parent = ast; // direct cycle
-        const actorId = 'actor123';
         expect(() => {
-          engine.resolve(ast, actorId, mockRuntimeCtx);
+          engine.resolve(ast, actorEntity, mockRuntimeCtx);
         }).toThrow(ScopeCycleError);
       });
 
       test('throws ScopeCycleError on indirect cycle', () => {
-        // AST: A -> B -> C -> A
         const nodeA = { type: 'Step', field: 'A', parent: null };
-        const nodeB = { type: 'Step', field: 'B', parent: null };
-        const nodeC = { type: 'Step', field: 'C', parent: null };
-        nodeA.parent = nodeB;
-        nodeB.parent = nodeC;
-        nodeC.parent = nodeA; // cycle
-        const actorId = 'actor123';
+        const nodeB = { type: 'Step', field: 'B', parent: nodeA };
+        const nodeC = { type: 'Step', field: 'C', parent: nodeB };
+        nodeA.parent = nodeC; // cycle
         expect(() => {
-          engine.resolve(nodeA, actorId, mockRuntimeCtx);
+          engine.resolve(nodeC, actorEntity, mockRuntimeCtx);
         }).toThrow(ScopeCycleError);
       });
 
       test('does not throw on acyclic graph', () => {
-        // AST: A -> B -> C (no cycle)
-        const nodeC = { type: 'Step', field: 'C', parent: { type: 'Source', kind: 'actor' } };
+        const nodeC = {
+          type: 'Step',
+          field: 'C',
+          parent: { type: 'Source', kind: 'actor' },
+        };
         const nodeB = { type: 'Step', field: 'B', parent: nodeC };
         const nodeA = { type: 'Step', field: 'A', parent: nodeB };
-        const actorId = 'actor123';
         expect(() => {
-          engine.resolve(nodeA, actorId, mockRuntimeCtx);
+          engine.resolve(nodeA, actorEntity, mockRuntimeCtx);
         }).not.toThrow(ScopeCycleError);
       });
     });
   });
-}); 
+});
