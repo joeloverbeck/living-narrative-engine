@@ -30,6 +30,7 @@ import { IScopeEngine } from '../interfaces/IScopeEngine.js';
 
 /**
  * Scope-DSL Engine that resolves AST expressions to sets of entity IDs
+ *
  * @implements {IScopeEngine}
  */
 class ScopeEngine extends IScopeEngine {
@@ -44,7 +45,8 @@ class ScopeEngine extends IScopeEngine {
 
   /**
    * Resolves a Scope-DSL AST to a set of entity IDs
-   * * @param {AST} ast - The parsed AST
+   *
+   * @param {AST} ast - The parsed AST
    * @param {object} actorEntity - The acting entity instance.
    * @param {RuntimeContext} runtimeCtx - Runtime context with services
    * @returns {Set<string>} Set of entity IDs
@@ -57,7 +59,8 @@ class ScopeEngine extends IScopeEngine {
 
   /**
    * Recursively resolves a node in the AST
-   * * @param {AST} node - The AST node to resolve
+   *
+   * @param {AST} node - The AST node to resolve
    * @param {object} actorEntity - The acting entity instance.
    * @param {RuntimeContext} runtimeCtx - Runtime context
    * @param {number} depth - Current depth level
@@ -112,7 +115,8 @@ class ScopeEngine extends IScopeEngine {
 
   /**
    * Resolves a Source node
-   * * @param {AST} node - Source node
+   *
+   * @param {AST} node - Source node
    * @param {object} actorEntity - The acting entity instance.
    * @param {RuntimeContext} runtimeCtx - Runtime context
    * @returns {Set<string>} Set of entity IDs
@@ -173,7 +177,8 @@ class ScopeEngine extends IScopeEngine {
 
   /**
    * Resolves a Step node (field access or array iteration)
-   * * @param {AST} node - Step node
+   *
+   * @param {AST} node - Step node
    * @param {object} actorEntity - The acting entity instance.
    * @param {RuntimeContext} runtimeCtx - Runtime context
    * @param {number} depth - Current depth
@@ -234,7 +239,8 @@ class ScopeEngine extends IScopeEngine {
 
   /**
    * Resolves a Filter node (JSON Logic evaluation)
-   * * @param {AST} node - Filter node
+   *
+   * @param {AST} node - Filter node
    * @param {object} actorEntity - The acting entity instance.
    * @param {RuntimeContext} runtimeCtx - Runtime context
    * @param {number} depth - Current depth
@@ -294,7 +300,8 @@ class ScopeEngine extends IScopeEngine {
 
   /**
    * Resolves a Union node (A + B)
-   * * @param {AST} node - Union node
+   *
+   * @param {AST} node - Union node
    * @param {object} actorEntity - The acting entity instance.
    * @param {RuntimeContext} runtimeCtx - Runtime context
    * @param {number} depth - Current depth

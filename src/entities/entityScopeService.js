@@ -78,6 +78,7 @@ function getEntityIdsForScopes(
 
 /**
  * Resolves a scope using the Scope DSL engine
+ *
  * @param {string} scopeName - The scope name to resolve
  * @param {ActionContext} context - The action context. This object from ActionDiscoveryService contains entityManager, actingEntity, location, and jsonLogicEval.
  * @param {ScopeRegistry} scopeRegistry - The scope registry instance.

@@ -17,41 +17,71 @@ import { ScopeDefinitionError } from './errors/scopeDefinitionError.js';
  * @throws {ScopeDefinitionError} If the file is empty, a line has an invalid format, or the DSL expression is invalid.
  */
 export function parseScopeDefinitions(content, filePath) {
-  const lines = content
+  // First, split into lines and filter out comments
+  const rawLines = content
     .split('\n')
     .map((line) => line.trim())
     .filter((line) => line && !line.startsWith('//'));
 
-  if (lines.length === 0) {
+  if (rawLines.length === 0) {
     throw new ScopeDefinitionError(
       'File is empty or contains only comments.',
       filePath
     );
   }
 
+  // Process lines to handle multi-line scope definitions
+  const processedLines = [];
+  let currentScope = null;
+
+  for (const line of rawLines) {
+    // Check if this line starts a new scope definition
+    const scopeMatch = line.match(/^(\w+)\s*:=\s*(.*)$/);
+    
+    if (scopeMatch) {
+      // If we were building a previous scope, finalize it
+      if (currentScope) {
+        processedLines.push(currentScope);
+      }
+      
+      // Start a new scope definition
+      const [, scopeName, expressionStart] = scopeMatch;
+      currentScope = {
+        name: scopeName,
+        expression: expressionStart,
+        line: line // Keep original line for error reporting
+      };
+    } else {
+      // This is a continuation line
+      if (!currentScope) {
+        throw new ScopeDefinitionError(
+          'Invalid line format. Expected "name := dsl_expression".',
+          filePath,
+          line
+        );
+      }
+      
+      // Append to the current scope's expression
+      currentScope.expression += ' ' + line;
+    }
+  }
+
+  // Don't forget the last scope if there is one
+  if (currentScope) {
+    processedLines.push(currentScope);
+  }
+
   const scopeDefinitions = new Map();
 
-  for (const line of lines) {
-    // This regex enforces the `name := expression` syntax.
-    const match = line.match(/^(\w+)\s*:=\s*(.+)$/);
-    if (!match) {
-      throw new ScopeDefinitionError(
-        'Invalid line format. Expected "name := dsl_expression".',
-        filePath,
-        line
-      );
-    }
-
-    const [, scopeName, dslExpression] = match;
-
+  for (const scope of processedLines) {
     try {
       // Validate the DSL expression by parsing it.
-      parseDslExpression(dslExpression.trim());
-      scopeDefinitions.set(scopeName, dslExpression.trim());
+      parseDslExpression(scope.expression.trim());
+      scopeDefinitions.set(scope.name, scope.expression.trim());
     } catch (parseError) {
       // Augment the parser's error with more context.
       throw new ScopeDefinitionError(
-        `Invalid DSL expression for scope "${scopeName}": ${parseError.message}`,
+        `Invalid DSL expression for scope "${scope.name}": ${parseError.message}`,
         filePath
       );
     }

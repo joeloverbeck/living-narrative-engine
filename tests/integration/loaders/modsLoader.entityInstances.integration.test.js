@@ -494,6 +494,7 @@ describe('Integration: EntityInstance componentOverrides are respected during wo
 
 /**
  * Helper function to create a session object for ModsLoader.
+ *
  * @param {LoaderPhase[]} phases - Array of loader phases.
  * @returns {{run: (function(object): Promise<object>)}} Session object.
  */

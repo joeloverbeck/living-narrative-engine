@@ -28,6 +28,7 @@ export default class SimpleEntityManager {
 
   /**
    * Clears all existing entities and populates the manager with a new set.
+   *
    * @param {Array<{id:string, components:object}>} [entities] - The new entities.
    */
   setEntities(entities = []) {
