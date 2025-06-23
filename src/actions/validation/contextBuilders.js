@@ -1,7 +1,6 @@
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../entities/entityManager.js').default} EntityManager */
 
-// FIX: Removed obsolete imports
 import { createComponentAccessor } from '../../logic/componentAccessor.js';
 import { createEntityContext } from '../../logic/contextAssembler.js';
 
@@ -12,7 +11,6 @@ import { createEntityContext } from '../../logic/contextAssembler.js';
  * Base target context object.
  */
 export function createBaseTargetContext(type) {
-  // FIX: The base context no longer needs to accommodate a 'direction' type.
   return {
     type,
     id: null,
