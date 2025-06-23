@@ -5,7 +5,7 @@ import { BaseService } from '../../utils/serviceBase.js';
 /* type-only imports */
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../logic/jsonLogicEvaluationService.js').default} JsonLogicEvaluationService */
-/** @typedef {import('../../data/gameDataRepository.js').GameDataRepository} GameDataRepository */ // ADDED
+/** @typedef {import('../../data/gameDataRepository.js').GameDataRepository} GameDataRepository */
 /** @typedef {import('../../logic/defs.js').JsonLogicEvaluationContext} JsonLogicEvaluationContext */
 /** @typedef {import('../../entities/entity.js').default} Entity */
 /** @typedef {import('../../../data/schemas/action.schema.json').ActionDefinition} ActionDefinition */
@@ -23,7 +23,7 @@ export class PrerequisiteEvaluationService extends BaseService {
   #logger;
   #jsonLogicEvaluationService;
   #actionValidationContextBuilder;
-  #gameDataRepository; // ADDED
+  #gameDataRepository;
 
   /**
    * Creates an instance of PrerequisiteEvaluationService.
@@ -39,7 +39,7 @@ export class PrerequisiteEvaluationService extends BaseService {
     logger,
     jsonLogicEvaluationService,
     actionValidationContextBuilder,
-    gameDataRepository, // ADDED
+    gameDataRepository,
   }) {
     super();
     this.#logger = this._init('PrerequisiteEvaluationService', logger, {
@@ -51,7 +51,6 @@ export class PrerequisiteEvaluationService extends BaseService {
         value: actionValidationContextBuilder,
         requiredMethods: ['buildContext'],
       },
-      // ADDED: Validate the new dependency
       gameDataRepository: {
         value: gameDataRepository,
         requiredMethods: ['getConditionDefinition'], // Assuming this method exists
@@ -60,7 +59,7 @@ export class PrerequisiteEvaluationService extends BaseService {
 
     this.#jsonLogicEvaluationService = jsonLogicEvaluationService;
     this.#actionValidationContextBuilder = actionValidationContextBuilder;
-    this.#gameDataRepository = gameDataRepository; // ADDED
+    this.#gameDataRepository = gameDataRepository;
 
     this.#logger.debug(
       'PrerequisiteEvaluationService initialised (with ActionValidationContextBuilder and GameDataRepository).'

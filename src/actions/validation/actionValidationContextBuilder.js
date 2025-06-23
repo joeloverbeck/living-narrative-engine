@@ -6,9 +6,7 @@
 /** @typedef {import('../../models/actionTargetContext.js').ActionTargetContext} ActionTargetContext */
 /** @typedef {import('../../logic/defs.js').JsonLogicEvaluationContext} JsonLogicEvaluationContext */
 
-// --- FIX: Import necessary functions and constants ---
 import { BaseService } from '../../utils/serviceBase.js';
-// FIX: Remove buildDirectionContext as it's obsolete
 import {
   buildActorContext,
   buildEntityTargetContext,
@@ -77,8 +75,6 @@ export class ActionValidationContextBuilder extends BaseService {
         targetContext
       );
     }
-    // FIX: Removed 'direction' handling logic as it's obsolete
-    // else if (targetContext.type === 'direction') { ... }
 
     // --- 4. Assemble Final Context ---
     const finalContext = {
@@ -137,7 +133,4 @@ export class ActionValidationContextBuilder extends BaseService {
     );
     return null;
   }
-
-  // FIX: Removed the obsolete method for building direction context
-  // #buildDirectionTargetContextForEval(actorId, targetContext) { ... }
 }
