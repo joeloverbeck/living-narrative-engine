@@ -10,7 +10,7 @@ import {
   TURN_STARTED_ID,
   TURN_PROCESSING_STARTED,
 } from '../../../src/constants/eventIds.js';
-import { flushPromisesAndTimers } from './turnManagerTestBed.js';
+import { flushPromisesAndTimers, waitForCondition } from '../jestHelpers.js';
 
 /**
  * Asserts that a SYSTEM_ERROR_OCCURRED dispatch was made with the standard
@@ -66,13 +66,10 @@ export function expectTurnStartedEvents(dispatchMock, actorId, actorType) {
  * @returns {Promise<boolean>} Resolves true if actor found before timeout.
  */
 export async function waitForCurrentActor(bed, id, maxTicks = 50) {
-  for (let i = 0; i < maxTicks; i++) {
-    if (bed.turnManager.getCurrentActor()?.id === id) {
-      return true;
-    }
-    await flushPromisesAndTimers();
-  }
-  return false;
+  return waitForCondition(
+    () => bed.turnManager.getCurrentActor()?.id === id,
+    maxTicks
+  );
 }
 
 /**
