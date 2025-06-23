@@ -22,7 +22,6 @@ import { buildSpeechPayload } from './helpers/buildSpeechPayload.js';
 import { ProcessingGuard } from './helpers/processingGuard.js';
 import { finishProcessing } from './helpers/processingErrorUtils.js';
 import { getLogger } from './helpers/contextUtils.js';
-import { validateContextMethods } from './helpers/validationUtils.js';
 import TurnDirectiveStrategyResolver from '../strategies/turnDirectiveStrategyResolver.js';
 
 /**
@@ -44,23 +43,16 @@ export class ProcessingCommandState extends AbstractTurnState {
    *   cast to ProcessingCommandStateContext or null on failure.
    */
   async _ensureContext(reason) {
-    const ctx = await super._ensureContext(reason);
-    if (!ctx) return null;
     const required = [
       'getActor',
       'getLogger',
       'getChosenAction',
       'getSafeEventDispatcher',
     ];
-    const missing = validateContextMethods(ctx, required);
-    if (missing.length) {
-      getLogger(ctx, this._handler).error(
-        `${this.getStateName()}: ITurnContext missing required methods: ${missing.join(', ')}`
-      );
-      await this._resetToIdle(`missing-methods-${this.getStateName()}`);
-      return null;
-    }
-    return /** @type {ProcessingCommandStateContext} */ (ctx);
+    const ctx = await this._ensureContextWithMethods(reason, required, {
+      endTurnOnFail: false,
+    });
+    return /** @type {ProcessingCommandStateContext | null} */ (ctx);
   }
 
   /**

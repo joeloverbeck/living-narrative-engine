@@ -15,6 +15,7 @@
 import { ITurnState } from '../interfaces/ITurnState.js';
 import { UNKNOWN_ACTOR_ID } from '../../constants/unknownIds.js';
 import { getLogger, getSafeEventDispatcher } from './helpers/contextUtils.js';
+import { validateContextMethods } from './helpers/validationUtils.js';
 
 /**
  * @class AbstractTurnState
@@ -130,6 +131,44 @@ export class AbstractTurnState extends ITurnState {
       await this._resetToIdle(reason);
       return null;
     }
+    return ctx;
+  }
+
+  /**
+   * Ensures the ITurnContext implements required methods.
+   *
+   * @protected
+   * @async
+   * @param {string} reason - Explanation for context retrieval.
+   * @param {string[]} requiredMethods - Methods expected on the context.
+   * @param {{ endTurnOnFail?: boolean }} [opts] - Options controlling failure behavior.
+   * @returns {Promise<ITurnContext|null>} The context if valid, otherwise null.
+   */
+  async _ensureContextWithMethods(
+    reason,
+    requiredMethods,
+    { endTurnOnFail = false } = {}
+  ) {
+    const ctx = await AbstractTurnState.prototype._ensureContext.call(
+      this,
+      reason
+    );
+    if (!ctx) return null;
+
+    const missing = validateContextMethods(ctx, requiredMethods);
+    if (missing.length) {
+      const logger = this._resolveLogger(ctx, this._handler);
+      const msg = `${this.getStateName()}: ITurnContext missing required methods: ${missing.join(', ')}`;
+      logger.error(msg);
+
+      if (endTurnOnFail && typeof ctx.endTurn === 'function') {
+        await ctx.endTurn(new Error(msg));
+      } else {
+        await this._resetToIdle(`missing-methods-${this.getStateName()}`);
+      }
+      return null;
+    }
+
     return ctx;
   }
 
