@@ -15,6 +15,8 @@ import AbstractLoader from './abstractLoader.js';
 import { parseAndValidateId } from '../utils/idUtils.js';
 import { validateAgainstSchema } from '../utils/schemaValidationUtils.js';
 import { validateDependencies } from '../utils/validationUtils.js';
+import { storeItemInRegistry } from './helpers/registryStoreUtils.js';
+import { extractValidFilenames } from './helpers/filenameUtils.js';
 
 // --- Add LoadItemsResult typedef here for clarity ---
 /**
@@ -276,44 +278,7 @@ export class BaseManifestItemLoader extends AbstractLoader {
    * @returns {string[]} An array of valid, non-empty filenames. Returns empty array if key is missing, not an array, or contains no valid filenames.
    */
   _extractValidFilenames(manifest, contentKey, modId) {
-    // Support dot notation for nested content keys (e.g., 'entities.definitions')
-    const getNested = (obj, path) =>
-      path
-        .split('.')
-        .reduce((o, k) => (o && o[k] !== undefined ? o[k] : undefined), obj);
-    const filenames = getNested(manifest?.content, contentKey);
-    if (filenames === null || filenames === undefined) {
-      this._logger.debug(
-        `Mod '${modId}': Content key '${contentKey}' not found or is null/undefined in manifest. Skipping.`
-      );
-      return [];
-    }
-    if (!Array.isArray(filenames)) {
-      this._logger.warn(
-        `Mod '${modId}': Expected an array for content key '${contentKey}' but found type '${typeof filenames}'. Skipping.`
-      );
-      return [];
-    }
-    const validFilenames = filenames
-      .filter((element) => {
-        if (typeof element !== 'string') {
-          this._logger.warn(
-            `Mod '${modId}': Invalid non-string entry found in '${contentKey}' list:`,
-            element
-          );
-          return false;
-        }
-        const trimmedElement = element.trim();
-        if (trimmedElement === '') {
-          this._logger.warn(
-            `Mod '${modId}': Empty string filename found in '${contentKey}' list after trimming. Skipping.`
-          );
-          return false;
-        }
-        return true;
-      })
-      .map((element) => element.trim());
-    return validFilenames;
+    return extractValidFilenames(manifest, contentKey, modId, this._logger);
   }
 
   /**
@@ -492,87 +457,16 @@ export class BaseManifestItemLoader extends AbstractLoader {
     dataToStore,
     sourceFilename
   ) {
-    if (!category || typeof category !== 'string') {
-      this._logger.error(
-        `${this.constructor.name} [_storeItemInRegistry]: Category must be a non-empty string. Received: ${category}`
-      );
-      // Potentially throw an error or return an indicator of failure
-      return { qualifiedId: null, didOverride: false, error: true };
-    }
-    if (!modId || typeof modId !== 'string') {
-      this._logger.error(
-        `${this.constructor.name} [_storeItemInRegistry]: ModId must be a non-empty string for category '${category}'. Received: ${modId}`
-      );
-      return { qualifiedId: null, didOverride: false, error: true };
-    }
-    if (!baseItemId || typeof baseItemId !== 'string') {
-      this._logger.error(
-        `${this.constructor.name} [_storeItemInRegistry]: BaseItemId must be a non-empty string for category '${category}', mod '${modId}'. Received: ${baseItemId}`
-      );
-      return { qualifiedId: null, didOverride: false, error: true };
-    }
-    if (!dataToStore || typeof dataToStore !== 'object') {
-      this._logger.error(
-        `${this.constructor.name} [_storeItemInRegistry]: Data for '${modId}:${baseItemId}' (category: ${category}) must be an object. Received: ${typeof dataToStore}`
-      );
-      return { qualifiedId: null, didOverride: false, error: true };
-    }
-
-    const qualifiedId = `${modId}:${baseItemId}`;
-
-    // Check if dataToStore is a class instance (not a plain object)
-    const isClassInstance = dataToStore.constructor !== Object;
-    const isEntityDefinition = category === 'entityDefinitions';
-    const isEntityInstance = category === 'entityInstances';
-
-    let dataWithMetadata;
-    // Always use qualifiedId for id if EntityDefinition or entity instance
-    let finalId = baseItemId;
-    if (isEntityDefinition || isEntityInstance) {
-      finalId = qualifiedId;
-    }
-
-    if (isClassInstance) {
-      dataWithMetadata = dataToStore;
-      Object.defineProperties(dataWithMetadata, {
-        _modId: { value: modId, writable: false, enumerable: true },
-        _sourceFile: {
-          value: sourceFilename,
-          writable: false,
-          enumerable: true,
-        },
-        _fullId: { value: qualifiedId, writable: false, enumerable: true },
-        id: { value: finalId, writable: false, enumerable: true },
-      });
-    } else {
-      dataWithMetadata = Object.assign({}, dataToStore, {
-        _modId: modId,
-        _sourceFile: sourceFilename,
-        _fullId: qualifiedId,
-        id: finalId,
-      });
-    }
-
-    this._logger.debug(
-      `${this.constructor.name} [${modId}]: Storing item in registry. Category: '${category}', Qualified ID: '${qualifiedId}', Base ID: '${baseItemId}', Filename: '${sourceFilename}'`
-    );
-
-    const didOverride = this._dataRegistry.store(
+    return storeItemInRegistry(
+      this._logger,
+      this._dataRegistry,
+      this.constructor.name,
       category,
-      qualifiedId, // Store under the fully qualified ID
-      dataWithMetadata // Store the object with metadata as own properties
+      modId,
+      baseItemId,
+      dataToStore,
+      sourceFilename
     );
-
-    if (didOverride) {
-      this._logger.warn(
-        `${this.constructor.name} [${modId}]: Item '${qualifiedId}' (Base: '${baseItemId}') in category '${category}' from file '${sourceFilename}' overwrote an existing entry.`
-      );
-    } else {
-      this._logger.debug(
-        `${this.constructor.name} [${modId}]: Item '${qualifiedId}' (Base: '${baseItemId}') stored successfully in category '${category}'.`
-      );
-    }
-    return { qualifiedId, didOverride };
   }
 
   /**
