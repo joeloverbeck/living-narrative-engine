@@ -9,7 +9,7 @@ import {
   renderSlotItem,
 } from './helpers/renderSlotItem.js';
 import { buildModalElementsConfig } from './helpers/buildModalElementsConfig.js';
-import createMessageElement from './helpers/createMessageElement.js';
+import createEmptySlotMessage from './helpers/createEmptySlotMessage.js';
 
 /**
  * @typedef {import('../engine/gameEngine.js').default} GameEngine
@@ -277,15 +277,10 @@ class LoadGameUI extends SlotModalBase {
    * @returns {string | HTMLElement} Element or text explaining no saves found.
    */
   _getEmptyLoadSlotsMessage() {
-    const message = 'No saved games found.';
-    if (this.domElementFactory) {
-      return createMessageElement(
-        this.domElementFactory,
-        'empty-slot-message',
-        message
-      );
-    }
-    return message;
+    return createEmptySlotMessage(
+      this.domElementFactory,
+      'No saved games found.'
+    );
   }
 
   /**
