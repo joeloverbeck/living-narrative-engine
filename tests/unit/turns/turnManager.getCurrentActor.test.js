@@ -1,15 +1,8 @@
 // src/tests/turns/turnManager.getCurrentActor.test.js
 // --- FILE START (Entire file content, Corrected) ---
 
-import {
-  TurnManagerTestBed,
-  describeTurnManagerSuite,
-} from '../../common/turns/turnManagerTestBed.js';
+import { describeTurnManagerSuite } from '../../common/turns/turnManagerTestBed.js';
 import { flushPromisesAndTimers } from '../../common/jestHelpers.js';
-import {
-  ACTOR_COMPONENT_ID,
-  PLAYER_COMPONENT_ID,
-} from '../../../src/constants/componentIds.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/eventIds.js';
 import { expectTurnStartedEvents } from '../../common/turns/turnManagerTestUtils.js';
 import { beforeEach, expect, test } from '@jest/globals';
@@ -26,14 +19,11 @@ const mockAiHandler = createMockTurnHandler();
 
 describeTurnManagerSuite('TurnManager', (getBed) => {
   let testBed;
-  let mockPlayerEntity;
-  let mockAiEntity1;
 
   beforeEach(() => {
     testBed = getBed();
 
-    ({ player: mockPlayerEntity, ai1: mockAiEntity1 } =
-      testBed.addDefaultActors());
+    testBed.addDefaultActors();
     testBed.mocks.turnHandlerResolver.resolveHandler.mockResolvedValue(
       mockAiHandler
     );
@@ -49,30 +39,7 @@ describeTurnManagerSuite('TurnManager', (getBed) => {
     // Timer cleanup handled by BaseTestBed
   });
 
-  // --- Basic Setup Tests ---
-  test('should exist and be a class', () => {
-    const instance = new TurnManagerTestBed().turnManager;
-    expect(instance).toBeDefined();
-    expect(instance).toBeInstanceOf(testBed.turnManager.constructor);
-  });
-
-  test('mock entities should behave as configured', () => {
-    expect(mockPlayerEntity.id).toBe('player1');
-    expect(mockPlayerEntity.hasComponent(ACTOR_COMPONENT_ID)).toBe(true);
-    expect(mockPlayerEntity.hasComponent(PLAYER_COMPONENT_ID)).toBe(true);
-    expect(mockAiEntity1.hasComponent(PLAYER_COMPONENT_ID)).toBe(false);
-  });
-
-  test('EntityManager mock allows setting active entities', () => {
-    const entities = [mockPlayerEntity, mockAiEntity1];
-    testBed.setActiveEntities(...entities);
-    expect(Array.from(testBed.mocks.entityManager.entities)).toEqual(entities);
-    expect(
-      Array.from(testBed.mocks.entityManager.entities).find(
-        (e) => e.id === 'player1'
-      )
-    ).toBe(mockPlayerEntity);
-  });
+  // Basic sanity tests are covered by tests/unit/turns/turnManager.base.test.js
 
   // --- Tests for getCurrentActor() ---
   describe('getCurrentActor()', () => {
