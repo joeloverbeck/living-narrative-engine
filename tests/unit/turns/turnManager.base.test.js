@@ -2,22 +2,13 @@
 // --- FILE START (Corrected) ---
 
 import { describeTurnManagerSuite } from '../../common/turns/turnManagerTestBed.js';
-import {
-  ACTOR_COMPONENT_ID,
-  PLAYER_COMPONENT_ID,
-} from '../../../src/constants/componentIds.js';
 import { beforeEach, expect, test } from '@jest/globals';
-import { createDefaultActors } from '../../common/turns/testActors.js';
 
 describeTurnManagerSuite('TurnManager', (getBed) => {
   let testBed;
-  let mockPlayerEntity;
-  let mockAiEntity1;
 
   beforeEach(() => {
     testBed = getBed();
-
-    ({ player: mockPlayerEntity, ai1: mockAiEntity1 } = createDefaultActors());
   });
 
   // --- Basic Sanity / Setup Tests ---
@@ -29,20 +20,7 @@ describeTurnManagerSuite('TurnManager', (getBed) => {
     expect(instance).toBeInstanceOf(testBed.turnManager.constructor);
   });
 
-  test('mock entities should behave as configured', () => {
-    // This tests the helper, doesn't directly involve TurnManager instance much
-    expect(mockPlayerEntity.id).toBe('player1');
-    expect(mockPlayerEntity.hasComponent(ACTOR_COMPONENT_ID)).toBe(true);
-    expect(mockPlayerEntity.hasComponent(PLAYER_COMPONENT_ID)).toBe(true);
-    expect(mockAiEntity1.hasComponent(PLAYER_COMPONENT_ID)).toBe(false);
-  });
-
-  test('EntityManager mock allows setting active entities', () => {
-    // This tests the mock helper, doesn't directly involve TurnManager instance much
-    const entities = [mockPlayerEntity, mockAiEntity1];
-    testBed.setActiveEntities(...entities);
-    expect(Array.from(testBed.mocks.entityManager.entities)).toEqual(entities);
-  });
+  // Further tests for start, stop, and other behaviors are covered in dedicated suites
 
   // Add more tests for start, stop, advanceTurn, etc. later
 });
