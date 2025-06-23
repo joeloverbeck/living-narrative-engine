@@ -42,13 +42,13 @@ export function assertMatchingActor(expectedActor, contextActor, stateName) {
 
 /**
  * @description Validates that the provided context exposes required methods.
- * @param {object|null} ctx - ITurnContext-like object to inspect.
+ * @param {object|null} turnContext - ITurnContext-like object to inspect.
  * @param {string[]} methods - Method names expected on the context.
  * @returns {string[]} Array of method names that are missing or not functions.
  */
-export function validateContextMethods(ctx, methods) {
-  if (!ctx) {
+export function validateContextMethods(turnContext, methods) {
+  if (!turnContext) {
     return [...methods];
   }
-  return methods.filter((m) => typeof ctx[m] !== 'function');
+  return methods.filter((m) => typeof turnContext[m] !== 'function');
 }
