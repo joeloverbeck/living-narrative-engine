@@ -343,8 +343,8 @@ describe('entityScopeService', () => {
       };
 
       mockScopeRegistryInstance.getScope.mockReturnValue(null);
-      // Mock the _scopes property for the availableScopes in the error payload
-      mockScopeRegistryInstance._scopes = { 'available_scope': { expr: 'test' } };
+      // Mock getAllScopeNames method to return available scopes
+      mockScopeRegistryInstance.getAllScopeNames = jest.fn().mockReturnValue(['available_scope']);
 
       const context = {
         actingEntity: { id: 'player' },
@@ -367,12 +367,7 @@ describe('entityScopeService', () => {
         {
           message: 'Missing scope definition: Scope \'missing_scope\' not found or has no expression in registry. This indicates a configuration error where an action references a scope that hasn\'t been loaded or registered.',
           details: {
-            scopeName: 'missing_scope',
-            availableScopes: ['available_scope'],
-            context: {
-              actorId: 'player',
-              locationId: 'room1'
-            },
+            raw: 'scopeName: missing_scope, availableScopes: [available_scope], context: actorId=player, locationId=room1',
             timestamp: expect.any(String)
           }
         }

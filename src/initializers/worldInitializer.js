@@ -12,11 +12,9 @@
 /** @typedef {import('../scopeDsl/scopeRegistry.js').default} ScopeRegistry */
 
 // --- Library Imports ---
-import _get from 'lodash/get.js';
 import _set from 'lodash/set.js';
 
 // --- Constant Imports ---
-import { POSITION_COMPONENT_ID } from '../constants/componentIds.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../constants/systemEventIds.js';
 import { WORLDINIT_ENTITY_INSTANTIATED_ID, WORLDINIT_ENTITY_INSTANTIATION_FAILED_ID } from '../constants/eventIds.js';
 
@@ -308,157 +306,7 @@ class WorldInitializer {
   }
 
   /**
-   * Resolves field references for all components of a single entity using the ReferenceResolver.
-   * Iterates through the entity's components and their 'resolveFields' specifications.
-   *
-   * @param {Entity} entity - The entity whose components need reference resolution.
-   * @private
-   * @throws {Error} If a critical error occurs during component iteration that should halt processing for this entity.
-   */
-  async #_resolveReferencesForEntityComponents(entity) {
-    this.#logger.debug(
-      `WorldInitializer (Pass 2 RefResolution): Processing entity ${entity.id}. This step is mostly a no-op as 'resolveFields' is deprecated.`
-    );
-
-    // The following logic is largely deprecated as componentDefinition.resolveFields is being removed.
-    // Kept for informational purposes during transition, but will not execute if resolveFields is absent.
-    const entriesIterable = entity.componentEntries;
-
-    if (
-      entriesIterable &&
-      typeof entriesIterable[Symbol.iterator] === 'function'
-    ) {
-      const iterator = entriesIterable[Symbol.iterator]();
-      if (!(iterator && typeof iterator.next === 'function')) {
-        this.#logger.warn(
-          `WorldInitializer (Pass 2 RefResolution): Entity ${entity.id} componentEntries[Symbol.iterator]() did not return a valid iterator. Skipping component processing for this entity.`
-        );
-        return;
-      }
-    } else {
-      this.#logger.warn(
-        `WorldInitializer (Pass 2 RefResolution): Entity ${entity.id} componentEntries IS NOT ITERABLE or is problematic. Value: ${String(entriesIterable)}. Skipping component processing for this entity.`
-      );
-      return;
-    }
-
-    try {
-      for (const [componentTypeId, componentDataInstance] of entriesIterable) {
-        const componentDefinition =
-          this.#repository.getComponentDefinition(componentTypeId);
-
-        if (
-          componentDefinition?.resolveFields &&
-          Array.isArray(componentDefinition.resolveFields) &&
-          componentDefinition.resolveFields.length > 0 // Only proceed if there are actual fields to resolve
-        ) {
-          this.#logger.warn(
-            `WorldInitializer (Pass 2 RefResolution): Entity ${entity.id}, component ${componentTypeId} still has 'resolveFields'. This is a DEPRECATED pattern.`
-          );
-          // The original loop for processing spec in resolveFields has been removed
-          // as ReferenceResolver no longer performs active resolution and resolveFields itself is deprecated.
-          // If any component *still* has resolveFields, it will be logged above, but no resolution attempt will be made here.
-        } else {
-          // This is the expected path for components following the updated schema (no resolveFields)
-          this.#logger.debug(
-            `WorldInitializer (Pass 2 RefResolution): Entity ${entity.id}, component ${componentTypeId} has no 'resolveFields' to process, or it is empty. (Expected)`
-          );
-        }
-
-        // Log position component information for debugging
-        if (componentTypeId === POSITION_COMPONENT_ID) {
-          const locationId = _get(componentDataInstance, 'locationId');
-          if (locationId) {
-            this.#logger.debug(
-              `WorldInitializer (Pass 2 Post-Processing): Entity ${entity.id} has POSITION_COMPONENT_ID with locationId '${locationId}'. Spatial index management is handled by SpatialIndexSynchronizer.`
-            );
-          } else {
-            this.#logger.debug(
-              `WorldInitializer (Pass 2 Post-Processing): Entity ${entity.id} has POSITION_COMPONENT_ID but no locationId found in its data.`
-            );
-          }
-        }
-      }
-    } catch (error) {
-      this.#logger.error(
-        `WorldInitializer (Pass 2 RefResolution): Error processing components for entity ${entity.id}:`,
-        error
-      );
-      // Decide if this error is critical enough to throw and halt further processing for this entity or all entities.
-      // For now, logging and continuing with the next entity or step.
-    }
-    this.#logger.debug(
-      `WorldInitializer (Pass 2 RefResolution): Finished processing components for entity ${entity.id}.`
-    );
-  }
-
-  /**
-   * Processes a single entity for reference resolution during Pass 2.
-   * Spatial index management is now handled automatically by SpatialIndexSynchronizer.
-   *
-   * @param {Entity} entity - The entity to process.
-   * @returns {Promise<boolean>} True if the entity was successfully processed, false otherwise.
-   * @private
-   */
-  async #_processSingleEntityForPass2(entity) {
-    if (
-      !entity ||
-      !entity.componentEntries ||
-      typeof entity.addComponent !== 'function' ||
-      typeof entity.getComponentData !== 'function'
-    ) {
-      safeDispatchError(
-        this.#validatedEventDispatcher,
-        `Invalid entity detected during world initialization. Entity ${entity?.id || 'Unknown ID'} is missing required component access methods.`,
-        {
-          statusCode: 500,
-          raw: `Entity validation failed. Context: WorldInitializer._processSingleEntityForPass2, entityId: ${entity?.id || 'Unknown ID'}`,
-          timestamp: new Date().toISOString(),
-        }
-      );
-      return false;
-    }
-
-    try {
-      await this.#_resolveReferencesForEntityComponents(entity);
-      return true; // Successfully processed
-    } catch (resolutionError) {
-      // This catches the error re-thrown by #_resolveReferencesForEntityComponents
-      this.#logger.warn(
-        `WorldInitializer (Pass 2 Processing): Entity ${entity.id} failed component reference resolution. Error: ${resolutionError.message}`
-      );
-      return false; // Failed processing for this entity
-    }
-  }
-
-  /**
-   * Resolves component references for the given entities. (Pass 2)
-   * Spatial index population is now handled automatically by SpatialIndexSynchronizer.
-   *
-   * @param {Entity[]} instantiatedEntities - An array of entities instantiated in Pass 1.
-   * @private
-   */
-  async #_resolveReferencesForEntities(instantiatedEntities) {
-    this.#logger.debug(
-      'WorldInitializer (Pass 2): Resolving component references for entities...'
-    );
-    let entitiesProcessed = 0;
-
-    for (const entity of instantiatedEntities) {
-      const wasSuccessfullyProcessed =
-        await this.#_processSingleEntityForPass2(entity);
-      if (wasSuccessfullyProcessed) {
-        entitiesProcessed++;
-      }
-    }
-
-    this.#logger.debug(
-      `WorldInitializer (Pass 2): Completed entity processing. Processed ${instantiatedEntities.length} entities. Successfully processed ${entitiesProcessed} entities.`
-    );
-  }
-
-  /**
-   * Instantiates initial world entities from the specified world's instances and resolves references (like location IDs).
+   * Instantiates initial world entities from the specified world's instances.
    * Spatial index management is handled automatically by SpatialIndexSynchronizer through event listening.
    * Dispatches 'initialization:world_initializer:started/completed/failed' events.
    * Dispatches finer-grained 'worldinit:entity_instantiated' and 'worldinit:entity_instantiation_failed' events.
@@ -474,19 +322,15 @@ class WorldInitializer {
     // Event 'initialization:world_initializer:started' could be dispatched here if needed.
 
     try {
-      // Initialize ScopeRegistry with loaded scopes
-      await this.initializeScopeRegistry();
+      // Note: ScopeRegistry initialization is now handled by InitializationService
+      // before this method is called, so we don't need to initialize it here
 
       const instantiationResult =
         await this.#_instantiateEntitiesFromWorld(worldName);
 
-      if (instantiationResult.entities && instantiationResult.entities.length > 0) {
-        await this.#_resolveReferencesForEntities(instantiationResult.entities);
-      } else {
-        this.#logger.debug(
-          'WorldInitializer (Pass 2): Skipped reference resolution. No entities were instantiated in Pass 1 or entities array was empty.'
-        );
-      }
+      // Pass 2 (reference resolution) has been removed as it's no longer needed
+      // with data-driven entity instances. Spatial index management is handled 
+      // automatically by SpatialIndexSynchronizer through event listening.
 
       this.#logger.debug(
         `WorldInitializer: World entity initialization complete for world: ${worldName}. Instantiated: ${instantiationResult.instantiatedCount}, Failed: ${instantiationResult.failedCount}, Total Processed: ${instantiationResult.totalProcessed}. Spatial index management is handled by SpatialIndexSynchronizer.`

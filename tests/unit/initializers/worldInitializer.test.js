@@ -222,11 +222,8 @@ describe('WorldInitializer', () => {
           'WorldInitializer (Pass 1): Successfully instantiated entity test:hero_instance (from definition: test:hero)'
         )
       );
-      expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining(
-          "Processing entity test:hero_instance. This step is mostly a no-op as 'resolveFields' is deprecated."
-        )
-      );
+      // Pass 2 reference resolution has been removed as it's no longer needed
+      // with data-driven entity instances
     });
 
     it('should handle failed entity instantiation in Pass 1', async () => {
@@ -256,224 +253,15 @@ describe('WorldInitializer', () => {
       expect(mockLogger.error).toHaveBeenCalledWith(
         'WorldInitializer (Pass 1): Failed to instantiate entity from definition: test:broken for instance: test:broken_instance. createEntityInstance returned null/undefined or threw an error.'
       );
-      expect(mockLogger.debug).not.toHaveBeenCalledWith(
-        expect.stringContaining(
-          'Processing entity test:broken. This step is mostly a no-op'
-        )
-      );
+      // Pass 2 reference resolution has been removed, so no related logs expected
     });
 
-    describe('Pass 2: Component Processing (No Reference Resolution)', () => {
-      it('should log that component processing is happening but no resolution for entities with components', async () => {
-        const worldData = {
-          id: 'test:world',
-          name: 'Test World',
-          instances: [
-            {
-              instanceId: 'test:location_instance',
-            },
-          ],
-        };
+    // Pass 2 (component reference resolution) has been removed as it's no longer needed
+    // with data-driven entity instances. Spatial index management is handled automatically
+    // by SpatialIndexSynchronizer through event listening.
 
-        const entityInstanceDef = {
-          instanceId: 'test:location_instance',
-          definitionId: 'test:location',
-        };
-
-        mockGameDataRepository.getWorld.mockReturnValue(worldData);
-        mockGameDataRepository.getEntityInstanceDefinition.mockReturnValue(
-          entityInstanceDef
-        );
-
-        const locationInstance = createMockEntityInstance(
-          'test:location_instance',
-          'test:location',
-          {
-            [POSITION_COMPONENT_ID]: { locationId: 'another-place' },
-          }
-        );
-        mockEntityManager.createEntityInstance.mockReturnValueOnce(
-          locationInstance
-        );
-
-        mockGameDataRepository.getComponentDefinition.mockImplementation(
-          (componentTypeId) => ({
-            id: componentTypeId,
-          })
-        );
-
-        await worldInitializer.initializeWorldEntities('test:world');
-
-        expect(mockLogger.debug).toHaveBeenCalledWith(
-          expect.stringContaining(
-            "Processing entity test:location_instance. This step is mostly a no-op as 'resolveFields' is deprecated."
-          )
-        );
-        expect(mockLogger.debug).toHaveBeenCalledWith(
-          expect.stringContaining(
-            "Entity test:location_instance, component core:position has no 'resolveFields' to process, or it is empty. (Expected)"
-          )
-        );
-        expect(mockLogger.debug).toHaveBeenCalledWith(
-          expect.stringContaining(
-            "Entity test:location_instance has POSITION_COMPONENT_ID with locationId 'another-place'. Spatial index management is handled by SpatialIndexSynchronizer."
-          )
-        );
-      });
-
-      it('should log a warning if a component definition surprisingly still has resolveFields', async () => {
-        const worldData = {
-          id: 'test:world',
-          name: 'Test World',
-          instances: [
-            {
-              instanceId: 'test:problem_instance',
-            },
-          ],
-        };
-
-        const entityInstanceDef = {
-          instanceId: 'test:problem_instance',
-          definitionId: 'test:problem',
-        };
-
-        mockGameDataRepository.getWorld.mockReturnValue(worldData);
-        mockGameDataRepository.getEntityInstanceDefinition.mockReturnValue(
-          entityInstanceDef
-        );
-
-        const problematicInstance = createMockEntityInstance(
-          'test:problem_instance',
-          'test:problem',
-          {
-            'custom:testcomponent': { someField: 'test:ref' },
-          }
-        );
-        mockEntityManager.createEntityInstance.mockReturnValueOnce(
-          problematicInstance
-        );
-
-        mockGameDataRepository.getComponentDefinition.mockImplementation(
-          (componentTypeId) => {
-            if (componentTypeId === 'custom:testcomponent') {
-              return {
-                id: componentTypeId,
-                resolveFields: [
-                  {
-                    dataPath: 'someField',
-                    resolutionStrategy: { type: 'direct' },
-                  },
-                ],
-              };
-            }
-            return { id: componentTypeId };
-          }
-        );
-
-        await worldInitializer.initializeWorldEntities('test:world');
-
-        expect(mockLogger.warn).toHaveBeenCalledWith(
-          expect.stringContaining(
-            "Entity test:problem_instance, component custom:testcomponent still has 'resolveFields'. This is a DEPRECATED pattern."
-          )
-        );
-      });
-
-      it('should log if entity componentEntries is not iterable in Pass 2', async () => {
-        const worldData = {
-          id: 'test:world',
-          name: 'Test World',
-          instances: [
-            {
-              instanceId: 'test:baditerator_instance',
-            },
-          ],
-        };
-
-        const entityInstanceDef = {
-          instanceId: 'test:baditerator_instance',
-          definitionId: 'test:baditerator',
-        };
-
-        mockGameDataRepository.getWorld.mockReturnValue(worldData);
-        mockGameDataRepository.getEntityInstanceDefinition.mockReturnValue(
-          entityInstanceDef
-        );
-
-        const mockInstance = createMockEntityInstance(
-          'test:baditerator_instance',
-          'test:baditerator'
-        );
-
-        Object.defineProperty(mockInstance, 'componentEntries', {
-          get: jest.fn(() => ({
-            [Symbol.iterator]: () => 'not an iterator',
-          })),
-          configurable: true,
-        });
-
-        mockEntityManager.createEntityInstance.mockReturnValueOnce(
-          mockInstance
-        );
-
-        await worldInitializer.initializeWorldEntities('test:world');
-
-        expect(mockLogger.warn).toHaveBeenCalledWith(
-          expect.stringContaining(
-            'Entity test:baditerator_instance componentEntries[Symbol.iterator]() did not return a valid iterator.'
-          )
-        );
-      });
-
-      it('should log if entity componentEntries itself is not iterable in Pass 2', async () => {
-        const worldData = {
-          id: 'test:world',
-          name: 'Test World',
-          instances: [
-            {
-              instanceId: 'test:noniter_instance',
-            },
-          ],
-        };
-
-        const entityInstanceDef = {
-          instanceId: 'test:noniter_instance',
-          definitionId: 'test:noniter',
-        };
-
-        mockGameDataRepository.getWorld.mockReturnValue(worldData);
-        mockGameDataRepository.getEntityInstanceDefinition.mockReturnValue(
-          entityInstanceDef
-        );
-
-        const nonIterableEntity = createMockEntityInstance(
-          'test:noniter_instance',
-          'test:noniter'
-        );
-        // Make componentEntries return an object that is not null/undefined but lacks Symbol.iterator
-        Object.defineProperty(nonIterableEntity, 'componentEntries', {
-          get: () => ({
-            description: 'I am an object, but not an iterator factory',
-          }),
-          configurable: true,
-        });
-
-        mockEntityManager.createEntityInstance.mockReturnValueOnce(
-          nonIterableEntity
-        );
-
-        await worldInitializer.initializeWorldEntities('test:world');
-
-        expect(mockLogger.warn).toHaveBeenCalledWith(
-          expect.stringContaining(
-            'WorldInitializer (Pass 2 RefResolution): Entity test:noniter_instance componentEntries IS NOT ITERABLE or is problematic. Value: [object Object]. Skipping component processing for this entity.'
-          )
-        );
-      });
-    });
-
-    describe('Pass 3: Build Spatial Index', () => {
-      it('should log completion of entity processing and spatial index additions (formerly Pass 3)', async () => {
+    describe('Spatial Index Management', () => {
+      it('should complete entity instantiation with spatial index handled by SpatialIndexSynchronizer', async () => {
         const worldData = {
           id: 'test:world',
           name: 'Test World',
@@ -521,16 +309,7 @@ describe('WorldInitializer', () => {
 
         await worldInitializer.initializeWorldEntities('test:world');
 
-        expect(mockLogger.debug).toHaveBeenCalledWith(
-          expect.stringContaining(
-            'WorldInitializer (Pass 2): Completed entity processing. Processed 1 entities. Successfully processed 1 entities.'
-          )
-        );
-        expect(mockLogger.debug).toHaveBeenCalledWith(
-          expect.stringContaining(
-            "Entity test:spatialDummy_instance has POSITION_COMPONENT_ID with locationId 'some-other-place'. Spatial index management is handled by SpatialIndexSynchronizer."
-          )
-        );
+        // Pass 2 reference resolution has been removed - no longer expect those logs
         expect(mockLogger.debug).toHaveBeenCalledWith(
           expect.stringContaining(
             'WorldInitializer: World entity initialization complete for world: test:world. Instantiated: 1, Failed: 0, Total Processed: 1. Spatial index management is handled by SpatialIndexSynchronizer.'
@@ -538,7 +317,7 @@ describe('WorldInitializer', () => {
         );
       });
 
-      it('Pass 2 - Post-Processing: EntityManager handles adding entities with position to spatial index', async () => {
+      it('EntityManager handles adding entities with position to spatial index via SpatialIndexSynchronizer', async () => {
         const worldData = {
           id: 'test:world',
           name: 'Test World',
@@ -583,19 +362,9 @@ describe('WorldInitializer', () => {
           return id.startsWith('uuid-') ? mockLocationEntity : undefined;
         });
 
-        // This mock is for getComponentDefinition in _resolveReferencesForEntityComponents
-        mockGameDataRepository.getComponentDefinition.mockImplementation(
-          (componentTypeId) => ({ id: componentTypeId })
-        );
-
         await worldInitializer.initializeWorldEntities('test:world');
 
-        // This log comes from _resolveReferencesForEntityComponents's post-processing part
-        expect(mockLogger.debug).toHaveBeenCalledWith(
-          expect.stringContaining(
-            "WorldInitializer (Pass 2 Post-Processing): Entity test:roomPos1_instance has POSITION_COMPONENT_ID with locationId 'some-other-place'. Spatial index management is handled by SpatialIndexSynchronizer."
-          )
-        );
+        // Pass 2 reference resolution has been removed - no longer expect those logs
         // And check for the overall completion
         expect(mockLogger.debug).toHaveBeenCalledWith(
           expect.stringContaining(
