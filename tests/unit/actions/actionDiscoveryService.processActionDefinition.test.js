@@ -121,6 +121,10 @@ describe('ActionDiscoveryService - processActionDefinition', () => {
         info: expect.any(Function),
         warn: expect.any(Function),
         error: expect.any(Function),
+      }),
+      undefined,
+      expect.objectContaining({
+        dispatch: expect.any(Function),
       })
     );
     expect(result.actions).toEqual([

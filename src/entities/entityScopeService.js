@@ -7,10 +7,12 @@
 /** @typedef {import('../models/actionContext.js').ActionContext} ActionContext */
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../interfaces/IScopeEngine.js').IScopeEngine} IScopeEngine */
+/** @typedef {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 /** @typedef {import('../entities/entity.js').default} Entity */
 /** @typedef {string} EntityId */
 
 import { parseDslExpression } from '../scopeDsl/parser.js';
+import { safeDispatchError } from '../utils/safeDispatchErrorUtils.js';
 
 /**
  * Aggregates unique entity IDs from one or more specified scopes.
@@ -20,6 +22,7 @@ import { parseDslExpression } from '../scopeDsl/parser.js';
  * @param {ScopeRegistry} scopeRegistry - The scope registry instance.
  * @param {ILogger} logger - Logger instance.
  * @param {IScopeEngine} scopeEngine - Scope engine instance.
+ * @param {ISafeEventDispatcher} [dispatcher] - Optional event dispatcher for error reporting.
  * @returns {Set<EntityId>} A single set of unique entity IDs.
  */
 function getEntityIdsForScopes(
@@ -27,7 +30,8 @@ function getEntityIdsForScopes(
   context,
   scopeRegistry,
   logger = console,
-  scopeEngine
+  scopeEngine,
+  dispatcher = null
 ) {
   const requestedScopes = Array.isArray(scopes) ? scopes : [scopes];
   const aggregatedIds = new Set();
@@ -60,7 +64,8 @@ function getEntityIdsForScopes(
         context,
         scopeRegistry,
         logger,
-        scopeEngine
+        scopeEngine,
+        dispatcher
       );
 
       if (scopeIds) {
@@ -84,10 +89,11 @@ function getEntityIdsForScopes(
  * @param {ScopeRegistry} scopeRegistry - The scope registry instance.
  * @param {ILogger} logger - Logger instance
  * @param {IScopeEngine} scopeEngine - Scope engine instance.
+ * @param {ISafeEventDispatcher} [dispatcher] - Optional event dispatcher for error reporting.
  * @returns {Set<string>} Set of entity IDs
  * @private
  */
-function _resolveScopeWithDSL(scopeName, context, scopeRegistry, logger, scopeEngine) {
+function _resolveScopeWithDSL(scopeName, context, scopeRegistry, logger, scopeEngine, dispatcher = null) {
   try {
     const scopeDefinition = scopeRegistry.getScope(scopeName);
 
@@ -99,9 +105,29 @@ function _resolveScopeWithDSL(scopeName, context, scopeRegistry, logger, scopeEn
       typeof scopeDefinition.expr !== 'string' ||
       !scopeDefinition.expr.trim()
     ) {
-      logger.warn(
-        `Scope '${scopeName}' not found or has no expression in registry`
-      );
+      const errorMessage = `Missing scope definition: Scope '${scopeName}' not found or has no expression in registry. This indicates a configuration error where an action references a scope that hasn't been loaded or registered.`;
+      
+      if (dispatcher) {
+        // Dispatch as a hard error to crash the application
+        safeDispatchError(
+          dispatcher,
+          errorMessage,
+          {
+            scopeName,
+            availableScopes: Object.keys(scopeRegistry._scopes || {}),
+            context: {
+              actorId: context.actingEntity?.id,
+              locationId: context.location?.id || context.currentLocation?.id
+            },
+            timestamp: new Date().toISOString()
+          },
+          logger
+        );
+      } else {
+        // Fallback to warning if no dispatcher available
+        logger.warn(errorMessage);
+      }
+      
       return new Set();
     }
 

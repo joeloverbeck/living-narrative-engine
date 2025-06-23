@@ -14,7 +14,9 @@
       "step_back.action.json",
       "thumb_wipe_cheek.action.json"
     ],
-    "components": ["closeness.component.json"],
+    "components": [
+      "closeness.component.json"
+    ],
     "conditions": [
       "actor-and-target-can-get-close.condition.json",
       "actor-is-in-closeness.condition.json",
@@ -23,9 +25,9 @@
       "event-is-action-kiss-cheek.condition.json",
       "event-is-action-step-back.condition.json",
       "event-is-action-thumb-wipe-cheek.condition.json",
+      "room-has-kissing-pair.condition.json",
       "target-is-actors-closeness-partner.condition.json",
-      "target-is-in-actors-closeness-partners-list.condition.json",
-      "room-has-kissing-pair.condition.json"
+      "target-is-in-actors-closeness-partners-list.condition.json"
     ],
     "entities": {
       "definitions": [],
@@ -36,11 +38,16 @@
     "rules": [
       "adjust_clothing.rule.json",
       "get_close.rule.json",
-      "intimacy_show_onlookers.rule.json",
       "kiss_cheek.rule.json",
       "step_back.rule.json",
       "thumb_wipe_cheek.rule.json"
     ],
-    "ui": ["icons.json", "labels.json"]
+    "ui": [
+      "icons.json",
+      "labels.json"
+    ],
+    "scopes": [
+      "test.scope"
+    ]
   }
 }

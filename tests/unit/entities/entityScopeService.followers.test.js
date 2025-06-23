@@ -135,7 +135,7 @@ describe('entityScopeService - "followers" scope', () => {
 
     expect(result).toEqual(new Set());
     expect(mockLogger.warn).toHaveBeenCalledWith(
-      "Scope 'followers' not found or has no expression in registry"
+      'Missing scope definition: Scope \'followers\' not found or has no expression in registry. This indicates a configuration error where an action references a scope that hasn\'t been loaded or registered.'
     );
   });
 

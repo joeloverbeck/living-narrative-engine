@@ -236,14 +236,17 @@ describe('ActionDiscoveryService - Go Action (Fixed State)', () => {
       ['directions'], // from core:go action definition
       expect.any(Object), // context, which includes entityManager, actingEntity, location, etc.
       // FIX: Expect any object that looks like a logger, not the specific mock instance.
-      // The line above is now incorrect. We expect the mockScopeRegistry and then the mockLogger.
-      mockScopeRegistry, // scopeRegistry is the 3rd argument
-      expect.objectContaining({ // Expect an object with logger methods
+      expect.any(Object), // scopeRegistry
+      expect.objectContaining({
         debug: expect.any(Function),
         info: expect.any(Function),
         warn: expect.any(Function),
         error: expect.any(Function),
-      })
+      }),
+      undefined, // scopeEngine parameter
+      expect.objectContaining({
+        dispatch: expect.any(Function),
+      }) // dispatcher parameter
     );
 
     // Assert that the validation and formatting functions were called with the correct, modern context

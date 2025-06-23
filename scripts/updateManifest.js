@@ -48,6 +48,34 @@ async function scanDirectoryRecursively(basePath, currentPath = '') {
 }
 
 /**
+ * Recursively scan a directory for scope files (.scope extension), maintaining the relative path structure.
+ *
+ * @param {string} basePath - The base path to scan from
+ * @param {string} currentPath - The current directory being scanned
+ * @returns {Promise<string[]>} Array of file paths relative to basePath
+ */
+async function scanScopeDirectoryRecursively(basePath, currentPath = '') {
+  const fullPath = path.join(basePath, currentPath);
+  const entries = await fs.readdir(fullPath, { withFileTypes: true });
+  const files = [];
+
+  for (const entry of entries) {
+    const entryPath = path.join(currentPath, entry.name);
+
+    if (entry.isDirectory()) {
+      // Recursively scan subdirectories
+      const subFiles = await scanScopeDirectoryRecursively(basePath, entryPath);
+      files.push(...subFiles);
+    } else if (entry.isFile() && entry.name.endsWith('.scope')) {
+      // Add the scope file with its relative path
+      files.push(entryPath);
+    }
+  }
+
+  return files;
+}
+
+/**
  * Main function to run the script logic.
  */
 async function main() {
@@ -147,6 +175,31 @@ async function main() {
             console.log(
               `  - Mapped "entities" directory contents to entityDefinitions and entityInstances.`
             );
+          } else if (contentType === 'scopes') {
+            // Special handling for "scopes" directory with .scope files
+            files = await scanScopeDirectoryRecursively(contentDirPath);
+
+            console.log(
+              `  - Scanned "${contentType}": Found ${files.length} .scope file(s).`
+            );
+
+            // If files were found in subdirectories, log the structure
+            if (files.length > 0) {
+              const subdirs = new Set();
+              files.forEach((file) => {
+                const dir = path.dirname(file);
+                if (dir !== '.') {
+                  subdirs.add(dir);
+                }
+              });
+              if (subdirs.size > 0) {
+                console.log(
+                  `    Subdirectories found: ${Array.from(subdirs).join(', ')}`
+                );
+              }
+            }
+
+            manifest.content[contentType] = files.sort();
           } else {
             // Use recursive scanning to handle nested directories
             files = await scanDirectoryRecursively(contentDirPath);

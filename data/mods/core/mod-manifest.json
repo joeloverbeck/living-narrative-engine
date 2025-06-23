@@ -50,6 +50,12 @@
       "event-is-action-go.condition.json",
       "event-is-action-stop-following.condition.json",
       "event-is-action-wait.condition.json",
+      "event-is-entity_speech.condition.json",
+      "event-is-follow-auto-move.condition.json",
+      "event-is-perceptible_event.condition.json",
+      "event-is-player-turn_prompt.condition.json",
+      "event-is-turn_ended.condition.json",
+      "event-is-turn_started.condition.json",
       "follow-cycle-detected.condition.json",
       "followers-to-move-exist.condition.json",
       "following-leader-is-event-entity.condition.json",
@@ -119,6 +125,14 @@
       "turn_started.rule.json",
       "wait.rule.json"
     ],
-    "ui": ["icons.json", "labels.json"]
+    "ui": [
+      "icons.json",
+      "labels.json"
+    ],
+    "scopes": [
+      "directions.scope",
+      "environment.scope",
+      "followers.scope"
+    ]
   }
 }
