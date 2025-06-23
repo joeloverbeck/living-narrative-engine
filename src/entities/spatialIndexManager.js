@@ -32,6 +32,34 @@ class SpatialIndexManager extends MapManager {
   }
 
   /**
+   * @description Validate an entity ID.
+   * @param {any} id - ID to validate.
+   * @returns {boolean} `true` if valid, otherwise `false`.
+   */
+  #isValidEntityId(id) {
+    try {
+      assertValidId(id, 'SpatialIndexManager.#isValidEntityId', this.logger);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * @description Validate a location ID.
+   * @param {any} id - Location ID to validate.
+   * @returns {boolean} `true` if valid, otherwise `false`.
+   */
+  #isValidLocationId(id) {
+    try {
+      assertValidId(id, 'SpatialIndexManager.#isValidLocationId', this.logger);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
    * @override
    */
   onInvalidId(id, operation) {
@@ -49,20 +77,14 @@ class SpatialIndexManager extends MapManager {
    * @param {string | null | undefined} locationId - The location ID where the entity is present. Should be a valid string to be indexed.
    */
   addEntity(entityId, locationId) {
-    try {
-      assertValidId(entityId, 'SpatialIndexManager.addEntity', this.logger);
-    } catch (error) {
+    if (!this.#isValidEntityId(entityId)) {
       this.logger.warn(
         `SpatialIndexManager.addEntity: Invalid entityId (${entityId}). Skipping.`
       );
       return;
     }
 
-    // Only proceed if locationId is a valid, non-empty string
-    try {
-      assertValidId(locationId, 'SpatialIndexManager.addEntity', this.logger);
-    } catch (error) {
-      // console.debug(`SpatialIndexManager.addEntity: Invalid or null locationId (${locationId}) for entity ${entityId}. Skipping.`);
+    if (!this.#isValidLocationId(locationId)) {
       return;
     }
 
@@ -84,23 +106,14 @@ class SpatialIndexManager extends MapManager {
    * @param {string | null | undefined} locationId - The location ID from which to remove the entity. Should typically be the entity's last valid location.
    */
   removeEntity(entityId, locationId) {
-    try {
-      assertValidId(entityId, 'SpatialIndexManager.removeEntity', this.logger);
-    } catch (error) {
+    if (!this.#isValidEntityId(entityId)) {
       this.logger.warn(
         `SpatialIndexManager.removeEntity: Invalid entityId (${entityId}). Skipping.`
       );
       return;
     }
 
-    try {
-      assertValidId(
-        locationId,
-        'SpatialIndexManager.removeEntity',
-        this.logger
-      );
-    } catch (error) {
-      // console.debug(`SpatialIndexManager.removeEntity: Invalid or null locationId (${locationId}) for entity ${entityId}. Skipping.`);
+    if (!this.#isValidLocationId(locationId)) {
       return;
     }
 
@@ -122,23 +135,17 @@ class SpatialIndexManager extends MapManager {
    * @param {string | null | undefined} newLocationId - The new location ID (can be null/undefined).
    */
   updateEntityLocation(entityId, oldLocationId, newLocationId) {
-    try {
-      assertValidId(
-        entityId,
-        'SpatialIndexManager.updateEntityLocation',
-        this.logger
-      );
-    } catch (error) {
+    if (!this.#isValidEntityId(entityId)) {
       this.logger.warn(
         'SpatialIndexManager.updateEntityLocation: Invalid entityId. Skipping.'
       );
       return;
     }
 
-    const effectiveOldLocationId = MapManager.isValidId(oldLocationId)
+    const effectiveOldLocationId = this.#isValidLocationId(oldLocationId)
       ? oldLocationId.trim()
       : null;
-    const effectiveNewLocationId = MapManager.isValidId(newLocationId)
+    const effectiveNewLocationId = this.#isValidLocationId(newLocationId)
       ? newLocationId.trim()
       : null;
 
@@ -163,13 +170,7 @@ class SpatialIndexManager extends MapManager {
    * @returns {Set<string>} A *copy* of the Set of entity IDs in the location, or an empty Set if the location is not indexed, empty, or the provided locationId is invalid/null.
    */
   getEntitiesInLocation(locationId) {
-    try {
-      assertValidId(
-        locationId,
-        'SpatialIndexManager.getEntitiesInLocation',
-        this.logger
-      );
-    } catch (error) {
+    if (!this.#isValidLocationId(locationId)) {
       return new Set();
     }
 
