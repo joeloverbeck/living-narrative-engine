@@ -232,7 +232,7 @@ export class PrerequisiteEvaluationService {
       return false;
     }
 
-    let pass = false;
+    let pass;
     try {
       const resolvedLogic = this._resolveConditionReferences(
         prereqObject.logic,
@@ -316,14 +316,15 @@ export class PrerequisiteEvaluationService {
 
     for (const [index, prereqObject] of prerequisites.entries()) {
       const ruleNumber = index + 1;
-      const passed = this._evaluatePrerequisite(
-        prereqObject,
-        ruleNumber,
-        prerequisites.length,
-        evalCtx,
-        actionId
-      );
-      if (!passed) {
+      if (
+        !this._evaluatePrerequisite(
+          prereqObject,
+          ruleNumber,
+          prerequisites.length,
+          evalCtx,
+          actionId
+        )
+      ) {
         return false;
       }
     }
