@@ -148,7 +148,7 @@ describe('entityScopeService', () => {
         'followers'
       );
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        "Scope 'direction' not found or has no expression in registry"
+        'Missing scope definition: Scope \'direction\' not found or has no expression in registry. This indicates a configuration error where an action references a scope that hasn\'t been loaded or registered.'
       );
     });
 
@@ -203,7 +203,7 @@ describe('entityScopeService', () => {
       const result = getEntityIdsForScopes('unknown_scope', context, mockScopeRegistryInstance, mockLogger, mockScopeEngine);
       expect(result).toEqual(new Set());
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        "Scope 'unknown_scope' not found or has no expression in registry"
+        'Missing scope definition: Scope \'unknown_scope\' not found or has no expression in registry. This indicates a configuration error where an action references a scope that hasn\'t been loaded or registered.'
       );
     });
 
@@ -333,7 +333,49 @@ describe('entityScopeService', () => {
 
       expect(result).toEqual(new Set(['follower1']));
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        "Scope 'invalid_scope' not found or has no expression in registry"
+        'Missing scope definition: Scope \'invalid_scope\' not found or has no expression in registry. This indicates a configuration error where an action references a scope that hasn\'t been loaded or registered.'
+      );
+    });
+
+    test('should dispatch error when scope not found and dispatcher is provided', () => {
+      const mockDispatcher = {
+        dispatch: jest.fn(),
+      };
+
+      mockScopeRegistryInstance.getScope.mockReturnValue(null);
+      // Mock the _scopes property for the availableScopes in the error payload
+      mockScopeRegistryInstance._scopes = { 'available_scope': { expr: 'test' } };
+
+      const context = {
+        actingEntity: { id: 'player' },
+        entityManager: mockEntityManager,
+        location: { id: 'room1' }
+      };
+
+      const result = getEntityIdsForScopes(
+        'missing_scope', 
+        context, 
+        mockScopeRegistryInstance, 
+        mockLogger, 
+        mockScopeEngine,
+        mockDispatcher
+      );
+
+      expect(result).toEqual(new Set());
+      expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
+        'core:system_error_occurred',
+        {
+          message: 'Missing scope definition: Scope \'missing_scope\' not found or has no expression in registry. This indicates a configuration error where an action references a scope that hasn\'t been loaded or registered.',
+          details: {
+            scopeName: 'missing_scope',
+            availableScopes: ['available_scope'],
+            context: {
+              actorId: 'player',
+              locationId: 'room1'
+            },
+            timestamp: expect.any(String)
+          }
+        }
       );
     });
   });

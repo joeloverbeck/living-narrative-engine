@@ -191,7 +191,9 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
         [scope],
         context,
         this.#scopeRegistry,
-        this.#logger
+        this.#logger,
+        undefined,
+        this.#safeEventDispatcher
       ) ?? new Set();
     /** @type {import('../interfaces/IActionDiscoveryService.js').DiscoveredActionInfo[]} */
     const discoveredActions = [];

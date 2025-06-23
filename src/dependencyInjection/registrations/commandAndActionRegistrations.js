@@ -64,9 +64,9 @@ export function registerCommandAndAction(container) {
     tokens.IActionDiscoveryService,
     (c) => {
       // Create a wrapper function that includes the scope engine for production use
-      const getEntityIdsForScopesWithEngine = (scopes, context, scopeRegistry, logger) => {
-        const scopeEngine = c.resolve(tokens.IScopeEngine);
-        return getEntityIdsForScopes(scopes, context, scopeRegistry, logger, scopeEngine);
+      const getEntityIdsForScopesWithEngine = (scopes, context, scopeRegistry, logger, scopeEngine, dispatcher) => {
+        const actualScopeEngine = scopeEngine || c.resolve(tokens.IScopeEngine);
+        return getEntityIdsForScopes(scopes, context, scopeRegistry, logger, actualScopeEngine, dispatcher);
       };
 
       return new ActionDiscoveryService({
