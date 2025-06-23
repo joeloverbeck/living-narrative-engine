@@ -342,9 +342,9 @@ export class PerceptionLogRenderer extends BaseListDisplayComponent {
    * @param {CoreTurnStartedEvent} event - The event object from VED.
    * @returns {void}
    */
-  '#handleTurnStarted'(event) {
+  _handleTurnStartedForTest(event) {
     this.logger.debug(
-      `${this._logPrefix} #handleTurnStarted received '${event.type}' event. Payload:`,
+      `${this._logPrefix} _handleTurnStartedForTest received '${event.type}' event. Payload:`,
       event.payload
     );
 
@@ -366,7 +366,7 @@ export class PerceptionLogRenderer extends BaseListDisplayComponent {
 
     this.refreshList().catch((error) => {
       this.logger.error(
-        `${this._logPrefix} Error during refreshList in #handleTurnStarted:`,
+        `${this._logPrefix} Error during refreshList in _handleTurnStartedForTest:`,
         error
       );
       if (this.elements.listContainerElement) {
@@ -389,7 +389,7 @@ export class PerceptionLogRenderer extends BaseListDisplayComponent {
    * @returns {void}
    */
   #handleTurnStarted(event) {
-    return this['#handleTurnStarted'](event);
+    return this._handleTurnStartedForTest(event);
   }
 
   /**

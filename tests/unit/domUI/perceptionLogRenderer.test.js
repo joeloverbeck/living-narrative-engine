@@ -369,7 +369,7 @@ describe('PerceptionLogRenderer', () => {
     });
   });
 
-  describe('#handleTurnStarted', () => {
+  describe('_handleTurnStartedForTest', () => {
     let renderer;
     const actorId = 'player:hero';
 
@@ -415,14 +415,14 @@ describe('PerceptionLogRenderer', () => {
       // However, turnStartedHandler is captured globally from the last `createRenderer` in `beforeEach`.
       // For this test, it's better to call the method directly or re-capture the handler.
       // Let's call the method directly on errorRenderer for clarity.
-      await errorRenderer['#handleTurnStarted']({
+      await errorRenderer._handleTurnStartedForTest({
         type: TURN_STARTED_ID,
         payload: { entityId: actorId },
       });
 
       expect(mockLogger.error).toHaveBeenCalledWith(
         expect.stringContaining(
-          `${CLASS_PREFIX} Error during refreshList in #handleTurnStarted`
+          `${CLASS_PREFIX} Error during refreshList in _handleTurnStartedForTest`
         ),
         expect.objectContaining({ message: 'Simulated refreshList failure' })
       );
