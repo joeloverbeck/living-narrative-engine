@@ -1,5 +1,6 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import ContentLoadManager from '../../../src/loaders/ContentLoadManager.js';
+import LoadResultAggregator from '../../../src/loaders/LoadResultAggregator.js';
 
 /** @typedef {import('../../../src/loaders/LoadResultAggregator.js').TotalResultsSummary} TotalResultsSummary */
 
@@ -43,6 +44,7 @@ describe('ContentLoadManager.processMod', () => {
       logger,
       validatedEventDispatcher: dispatcher,
       contentLoadersConfig: phaseLoadersConfig,
+      aggregatorFactory: (counts) => new LoadResultAggregator(counts),
     });
     /** @type {TotalResultsSummary} */ const totals = {};
     const phase = 'definitions';
@@ -79,6 +81,7 @@ describe('ContentLoadManager.processMod', () => {
       logger,
       validatedEventDispatcher: dispatcher,
       contentLoadersConfig: phaseLoadersConfig,
+      aggregatorFactory: (counts) => new LoadResultAggregator(counts),
     });
     const manifest = { content: { items: ['a.json'] } };
     /** @type {TotalResultsSummary} */ const totals = {};
@@ -122,6 +125,7 @@ describe('ContentLoadManager.processMod', () => {
       logger,
       validatedEventDispatcher: dispatcher,
       contentLoadersConfig: phaseLoadersConfig,
+      aggregatorFactory: (counts) => new LoadResultAggregator(counts),
     });
     const manifest = { content: { items: ['a.json'] } };
     /** @type {TotalResultsSummary} */ const totals = {};

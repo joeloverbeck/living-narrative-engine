@@ -1,5 +1,6 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import ContentLoadManager from '../../../src/loaders/ContentLoadManager.js';
+import LoadResultAggregator from '../../../src/loaders/LoadResultAggregator.js';
 
 /** @typedef {import('../../../src/loaders/LoadResultAggregator.js').TotalResultsSummary} TotalResultsSummary */
 
@@ -89,6 +90,7 @@ describe('ContentLoadManager.loadContent', () => {
           phase: 'definitions',
         },
       ],
+      aggregatorFactory: (counts) => new LoadResultAggregator(counts),
     });
 
     const finalModOrder = ['modA', 'modB'];
