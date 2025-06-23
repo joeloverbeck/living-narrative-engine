@@ -83,12 +83,12 @@ export function createTestEnvironment() {
   /* ── Content-loader mocks ───────────────────────────────────────────── */
   const loaders = createLoaderMocks(loaderTypes);
 
-  const env = createServiceTestEnvironment(
+  const env = createServiceTestEnvironment({
     factoryMap,
-    {},
-    serviceFactory,
-    adjustMocks
-  );
+    tokenMap: {},
+    build: serviceFactory,
+    setupMocks: adjustMocks,
+  });
 
   /* ── Return the assembled environment ──────────────────────────────── */
   return {

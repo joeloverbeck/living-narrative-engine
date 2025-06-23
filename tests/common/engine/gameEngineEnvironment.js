@@ -58,12 +58,11 @@ const tokenMap = {
  *   Test environment utilities and mocks.
  */
 export function createEnvironment(overrides = {}) {
-  const env = createServiceTestEnvironment(
+  const env = createServiceTestEnvironment({
     factoryMap,
     tokenMap,
-    (container) => new GameEngine({ container }),
-    undefined,
-    overrides
-  );
+    build: (container) => new GameEngine({ container }),
+    overrides,
+  });
   return env;
 }
