@@ -368,16 +368,6 @@ export class SaveGameUI extends SlotModalBase {
   }
 
   /**
-   * Keyboard navigation handler for the slot list.
-   *
-   * @param {KeyboardEvent} event - Key event to process.
-   * @private
-   */
-  _handleSlotNavigation(event) {
-    super._handleSlotNavigation(event);
-  }
-
-  /**
    * Validates the necessary conditions before saving.
    *
    * @private
