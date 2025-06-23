@@ -9,9 +9,9 @@
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 
 import BaseOperationHandler from './baseOperationHandler.js';
-import { SYSTEM_ERROR_OCCURRED_ID } from '../../constants/eventIds.js';
 import { tryWriteContextVariable } from '../../utils/contextVariableUtils.js';
 import { assertParamsObject } from '../../utils/handlerUtils/paramsUtils.js';
+import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 
 class RemoveFromClosenessCircleHandler extends BaseOperationHandler {
   /** @type {EntityManager} */
@@ -98,10 +98,12 @@ class RemoveFromClosenessCircleHandler extends BaseOperationHandler {
     const { actor_id, result_variable } = params;
 
     if (typeof actor_id !== 'string' || !actor_id.trim()) {
-      this.#dispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
-        message: 'REMOVE_FROM_CLOSENESS_CIRCLE: Invalid "actor_id" parameter',
-        details: { params },
-      });
+      safeDispatchError(
+        this.#dispatcher,
+        'REMOVE_FROM_CLOSENESS_CIRCLE: Invalid "actor_id" parameter',
+        { params },
+        this.logger
+      );
       return null;
     }
 

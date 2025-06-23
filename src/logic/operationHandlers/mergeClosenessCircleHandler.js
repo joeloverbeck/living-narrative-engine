@@ -8,7 +8,6 @@
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 
 import BaseOperationHandler from './baseOperationHandler.js';
-import { SYSTEM_ERROR_OCCURRED_ID } from '../../constants/eventIds.js';
 import { tryWriteContextVariable } from '../../utils/contextVariableUtils.js';
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 
@@ -136,10 +135,12 @@ class MergeClosenessCircleHandler extends BaseOperationHandler {
           partners,
         });
       } catch (err) {
-        this.#dispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
-          message: 'MERGE_CLOSENESS_CIRCLE: failed updating closeness',
-          details: { id, error: err.message, stack: err.stack },
-        });
+        safeDispatchError(
+          this.#dispatcher,
+          'MERGE_CLOSENESS_CIRCLE: failed updating closeness',
+          { id, error: err.message, stack: err.stack },
+          this.logger
+        );
       }
     }
     return allMembers;
@@ -162,10 +163,12 @@ class MergeClosenessCircleHandler extends BaseOperationHandler {
           locked: true,
         });
       } catch (err) {
-        this.#dispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
-          message: 'MERGE_CLOSENESS_CIRCLE: failed locking movement',
-          details: { id, error: err.message, stack: err.stack },
-        });
+        safeDispatchError(
+          this.#dispatcher,
+          'MERGE_CLOSENESS_CIRCLE: failed locking movement',
+          { id, error: err.message, stack: err.stack },
+          this.logger
+        );
       }
     }
   }
