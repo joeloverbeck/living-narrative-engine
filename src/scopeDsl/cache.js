@@ -72,6 +72,7 @@ class LRUCache {
 /**
  * Scope-DSL Cache that provides memoization for scope resolution
  * Acts as a caching wrapper around ScopeEngine with automatic cache invalidation
+ *
  * @implements {IScopeEngine}
  */
 class ScopeCache extends IScopeEngine {
@@ -118,6 +119,7 @@ class ScopeCache extends IScopeEngine {
 
   /**
    * Handle turn started event by clearing the cache
+   *
    * @param {object} payload - Event payload
    * @private
    */

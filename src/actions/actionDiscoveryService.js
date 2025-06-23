@@ -45,8 +45,8 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
    * @param {getEntityIdsForScopesFn} deps.getEntityIdsForScopesFn
    * @param {ISafeEventDispatcher} deps.safeEventDispatcher
    * @param {ScopeRegistry}      deps.scopeRegistry
-   * @param {function}           deps.getActorLocationFn
-   * @param {function}           deps.getEntityDisplayNameFn
+   * @param {Function}           deps.getActorLocationFn
+   * @param {Function}           deps.getEntityDisplayNameFn
    */
   constructor({
                 gameDataRepository,

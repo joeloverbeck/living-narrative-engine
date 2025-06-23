@@ -1,1 +1,7 @@
-environment := entities(core:position)[{"and": [ {"==": [{"var": "entity.components.core:position.locationId"}, {"var": "location.id"}]}, {"!=": [{"var": "entity.id"}, {"var": "actor.id"}]} ]}]
+environment := entities(core:position)[
+    {"and": [ 
+        {"==": [{"var": "entity.components.core:position.locationId"}, 
+        {"var": "location.id"}]}, 
+        {"!=": [{"var": "entity.id"}, {"var": "actor.id"}]} 
+        ]
+    }]

@@ -424,7 +424,7 @@ export class LocationRenderer extends BoundDomRendererBase {
    *
    * @param {string} itemText - Text for the list item.
    * @param {HTMLElement} listElement - UL element to append the item to.
-   * @param {string} [itemClassName='list-item'] - CSS class for the list item.
+   * @param {string} [itemClassName] - CSS class for the list item.
    * @returns {void}
    */
   _renderGenericListItem(itemText, listElement, itemClassName = 'list-item') {

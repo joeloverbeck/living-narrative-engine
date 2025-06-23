@@ -193,7 +193,7 @@ describeEngineSuite('GameEngine', (ctx) => {
       async (bed, engine, expectedMsg) => {
         const result = await engine.loadGame(SAVE_ID);
 
-        // eslint-disable-next-line jest/no-standalone-expect
+         
         expectNoDispatch(bed.mocks.safeEventDispatcher.dispatch);
         // eslint-disable-next-line jest/no-standalone-expect
         expect(result).toEqual({
