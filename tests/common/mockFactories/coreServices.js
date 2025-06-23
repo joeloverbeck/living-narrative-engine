@@ -43,19 +43,6 @@ export function generateFactories(specMap) {
 }
 
 const simpleFactories = {
-  createMockLogger: ['info', 'warn', 'error', 'debug'],
-  createMockTurnManager: ['start', 'stop', 'nextTurn'],
-  createMockTurnOrderService: [
-    'startNewRound',
-    'getNextEntity',
-    'peekNextEntity',
-    'addEntity',
-    'removeEntity',
-    'isEmpty',
-    'getCurrentOrder',
-    'clearCurrentRound',
-  ],
-  createMockTurnHandlerResolver: ['resolveHandler'],
   createMockGamePersistenceService: [
     'saveGame',
     'loadAndRestoreGame',
@@ -77,20 +64,11 @@ const simpleFactories = {
   createMockAIPromptContentProvider: ['getPromptData'],
   createMockPromptBuilder: ['build'],
   createMockAIPromptPipeline: ['generatePrompt'],
-  createMockSafeEventDispatcher: ['dispatch'],
-  createMockValidatedEventDispatcher: {
-    methods: ['dispatch'],
-    defaults: { dispatch: jest.fn().mockResolvedValue(undefined) },
-  },
 };
 
 const generatedFactories = generateFactories(simpleFactories);
 
 export const {
-  createMockLogger,
-  createMockTurnManager,
-  createMockTurnOrderService,
-  createMockTurnHandlerResolver,
   createMockGamePersistenceService,
   createMockPlaytimeTracker,
   createMockInitializationService,
@@ -98,8 +76,6 @@ export const {
   createMockAIGameStateProvider,
   createMockAIPromptContentProvider,
   createMockPromptBuilder,
-  createMockSafeEventDispatcher,
-  createMockValidatedEventDispatcher,
 } = generatedFactories;
 
 const baseCreateMockAIPromptPipeline =
@@ -112,128 +88,6 @@ export const createMockAIPromptPipeline = (defaultPrompt) => {
   }
   return pipeline;
 };
-
-/**
- * Creates a mock turn handler.
- *
- * @param {object} [options]
- * @param {import('../../src/entities/entity.js').default} [options.actor] - Associated actor.
- * @param {boolean} [options.failStart] - If true, startTurn throws an error.
- * @param {boolean} [options.failDestroy] - If true, destroy throws an error.
- * @param {boolean} [options.includeSignalTermination] - Add signalNormalApparentTermination fn.
- * @param options.name
- * @returns {{
- *   actor: any,
- *   startTurn: jest.Mock,
- *   destroy: jest.Mock,
- *   signalNormalApparentTermination?: jest.Mock
- * }} Mock turn handler.
- */
-export const createMockTurnHandler = ({
-  actor = null,
-  failStart = false,
-  failDestroy = false,
-  includeSignalTermination = false,
-  name = 'MockTurnHandler',
-} = {}) => {
-  const handler = {
-    actor,
-    startTurn: jest.fn().mockImplementation((currentActor) => {
-      const promise = failStart
-        ? Promise.reject(
-            new Error(
-              `Simulated startTurn failure for ${currentActor?.id || 'unknown actor'}`
-            )
-          )
-        : Promise.resolve();
-      console.log(
-        'createMockTurnHandler.startTurn called, returns Promise:',
-        typeof promise.then === 'function'
-      );
-      return promise;
-    }),
-    destroy: jest.fn().mockImplementation(() => {
-      if (failDestroy) {
-        return Promise.reject(new Error('Simulated destroy failure'));
-      }
-      return Promise.resolve();
-    }),
-  };
-  // Set constructor to a function with the correct name
-  const NamedConstructor = Function('return function ' + name + '(){}')();
-  handler.constructor = NamedConstructor;
-  if (includeSignalTermination) {
-    handler.signalNormalApparentTermination = jest.fn();
-  }
-  return handler;
-};
-
-/**
- * Creates a mock EventBus.
- *
- * @description Provides basic dispatch, subscribe and unsubscribe
- * methods used in tests. When `captureEvents` is true, dispatched
- * events are recorded in an `events` array.
- * @param {object} [options]
- * @param {boolean} [options.captureEvents] - Whether to store
- *   dispatched events.
- * @returns {object} Event bus mock instance.
- */
-export const createEventBusMock = ({ captureEvents = false } = {}) => {
-  const handlers = {};
-  const events = [];
-
-  const bus = {
-    dispatch: jest.fn(async (eventType, payload) => {
-      if (captureEvents) {
-        events.push({ eventType, payload });
-      }
-      const listeners = [
-        ...(handlers[eventType] || []),
-        ...(handlers['*'] || []),
-      ];
-      await Promise.all(
-        listeners.map(async (h) => {
-          await h({ type: eventType, payload });
-        })
-      );
-    }),
-    subscribe: jest.fn((eventType, handler) => {
-      if (!handlers[eventType]) {
-        handlers[eventType] = new Set();
-      }
-      handlers[eventType].add(handler);
-      return jest.fn(() => {
-        handlers[eventType]?.delete(handler);
-      });
-    }),
-    unsubscribe: jest.fn((eventType, handler) => {
-      handlers[eventType]?.delete(handler);
-    }),
-    _triggerEvent(eventType, payload) {
-      (handlers[eventType] || new Set()).forEach((h) => h(payload));
-    },
-    _clearHandlers() {
-      Object.keys(handlers).forEach((k) => delete handlers[k]);
-    },
-  };
-
-  if (captureEvents) {
-    bus.events = events;
-  }
-
-  return bus;
-};
-
-export const createMockValidatedEventBus = () => createEventBusMock();
-
-/**
- * Creates an event bus that captures all dispatched events.
- *
- * @returns {object} Event bus with dispatch, subscribe, unsubscribe and `events` array.
- */
-export const createCapturingEventBus = () =>
-  createEventBusMock({ captureEvents: true });
 
 /**
  * Creates a mock AJV schema validator service.
@@ -397,15 +251,3 @@ export const createMockDataFetcher = ({
 
   return mockFetcher;
 };
-
-/**
- * Creates a mock IValidatedEventDispatcher suitable for integration tests.
- * Provides no-op methods that don't interfere with the test flow.
- *
- * @returns {object} Mock validated event dispatcher for integration tests
- */
-export const createMockValidatedEventDispatcherForIntegration = () => ({
-  dispatch: jest.fn().mockResolvedValue(true),
-  subscribe: jest.fn().mockReturnValue(() => {}),
-  unsubscribe: jest.fn(),
-});
