@@ -7,9 +7,10 @@
 /** @typedef {import('../actionTypes.js').ActionAttemptPseudoEvent} ActionAttemptPseudoEvent */
 /** @typedef {import('./prerequisiteEvaluationService.js').PrerequisiteEvaluationService} PrerequisiteEvaluationService */
 
-import { ActionTargetContext } from '../../models/actionTargetContext.js';
+/** @typedef {import('../../models/actionTargetContext.js').ActionTargetContext} ActionTargetContext */
 import { PrerequisiteEvaluationService } from './prerequisiteEvaluationService.js';
 import { BaseService } from '../../utils/serviceBase.js';
+import { validateActionInputs } from './inputValidators.js';
 import {
   TARGET_DOMAIN_SELF,
   TARGET_DOMAIN_NONE,
@@ -113,17 +114,12 @@ export class ActionValidationService extends BaseService {
    * @throws {Error} If any input is structurally invalid according to basic requirements.
    */
   _checkStructuralSanity(actionDefinition, actorEntity, targetContext) {
-    // Extracted structural sanity checks
-    if (!actionDefinition?.id?.trim())
-      throw new Error(
-        'ActionValidationService.isValid: invalid actionDefinition'
-      );
-    if (!actorEntity?.id?.trim())
-      throw new Error('ActionValidationService.isValid: invalid actorEntity');
-    if (!(targetContext instanceof ActionTargetContext))
-      throw new Error(
-        'ActionValidationService.isValid: targetContext must be ActionTargetContext'
-      );
+    validateActionInputs(
+      actionDefinition,
+      actorEntity,
+      targetContext,
+      this.#logger
+    );
   }
 
   /**
