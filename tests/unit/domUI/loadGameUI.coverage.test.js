@@ -18,7 +18,7 @@ import DomElementFactory from '../../../src/domUI/domElementFactory.js';
 import * as listNavigationUtils from '../../../src/utils/listNavigationUtils.js';
 import { SlotModalBase } from '../../../src/domUI/slotModalBase.js';
 import * as renderSlotItemModule from '../../../src/domUI/helpers/renderSlotItem.js';
-import * as createMessageElementModule from '../../../src/domUI/helpers/createMessageElement.js';
+import * as createEmptySlotMessageModule from '../../../src/domUI/helpers/createEmptySlotMessage.js';
 
 // Mock dependencies
 jest.mock('../../../src/utils/domUtils.js', () => ({
@@ -35,7 +35,7 @@ jest.mock('../../../src/domUI/helpers/renderSlotItem.js', () => ({
   renderGenericSlotItem: jest.fn(),
 }));
 
-jest.mock('../../../src/domUI/helpers/createMessageElement.js', () => ({
+jest.mock('../../../src/domUI/helpers/createEmptySlotMessage.js', () => ({
   __esModule: true,
   default: jest.fn(),
 }));
@@ -271,18 +271,22 @@ describe('LoadGameUI', () => {
 
     it('_getEmptyLoadSlotsMessage should return a string if factory is missing', () => {
       instance.domElementFactory = null;
+      createEmptySlotMessageModule.default.mockImplementation((_f, msg) => msg);
       const message = instance._getEmptyLoadSlotsMessage();
       expect(message).toBe('No saved games found.');
+      expect(createEmptySlotMessageModule.default).toHaveBeenCalledWith(
+        null,
+        'No saved games found.'
+      );
     });
 
     it('_getEmptyLoadSlotsMessage should return an element if factory is present', () => {
-      const mockP = mockDocument.createElement('p');
-      createMessageElementModule.default.mockReturnValue(mockP);
+      const mockEl = mockDocument.createElement('p');
+      createEmptySlotMessageModule.default.mockReturnValue(mockEl);
       const messageElement = instance._getEmptyLoadSlotsMessage();
-      expect(messageElement).toBe(mockP);
-      expect(createMessageElementModule.default).toHaveBeenCalledWith(
+      expect(messageElement).toBe(mockEl);
+      expect(createEmptySlotMessageModule.default).toHaveBeenCalledWith(
         mockDomElementFactory,
-        'empty-slot-message',
         'No saved games found.'
       );
     });

@@ -11,7 +11,7 @@ import {
   renderSlotItem,
 } from './helpers/renderSlotItem.js';
 import { buildModalElementsConfig } from './helpers/buildModalElementsConfig.js';
-import createMessageElement from './helpers/createMessageElement.js';
+import createEmptySlotMessage from './helpers/createEmptySlotMessage.js';
 
 /**
  * @typedef {import('../engine/gameEngine.js').default} GameEngine
@@ -311,14 +311,10 @@ export class SaveGameUI extends SlotModalBase {
    * @returns {string | HTMLElement}
    */
   _getEmptySaveSlotsMessage() {
-    if (this.domElementFactory) {
-      return createMessageElement(
-        this.domElementFactory,
-        'empty-slot-message',
-        'No save slots available to display.'
-      );
-    }
-    return 'No save slots available to display.';
+    return createEmptySlotMessage(
+      this.domElementFactory,
+      'No save slots available to display.'
+    );
   }
 
   /**
