@@ -22,6 +22,7 @@ import {
   expectEngineStopped,
 } from '../../common/engine/dispatchTestUtils.js';
 import { DEFAULT_TEST_WORLD } from '../../common/constants.js';
+import { PLAYTIME_TRACKER_STOP_UNAVAILABLE } from '../../common/engine/unavailableMessages.js';
 
 describeEngineSuite('GameEngine', (ctx) => {
   describe('stop', () => {
@@ -41,7 +42,7 @@ describeEngineSuite('GameEngine', (ctx) => {
           [
             [
               tokens.PlaytimeTracker,
-              'GameEngine.stop: PlaytimeTracker service not available, cannot end session.',
+              PLAYTIME_TRACKER_STOP_UNAVAILABLE,
               { preInit: true },
             ],
           ],
