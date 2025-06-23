@@ -258,7 +258,9 @@ describe('ActionValidationContextBuilder', () => {
       it('should throw Error and log error for null actionDefinition', () => {
         const action = () =>
           builder.buildContext(null, mockActor, ActionTargetContext.noTarget());
-        expect(action).toThrow('Invalid actionDefinition');
+        expect(action).toThrow(
+          'ActionValidationContextBuilder.buildContext: invalid actionDefinition'
+        );
         expect(mockLogger.error).toHaveBeenCalledWith(
           expect.stringContaining('Invalid actionDefinition provided'),
           { actionDefinition: null }
@@ -273,7 +275,9 @@ describe('ActionValidationContextBuilder', () => {
             mockActor,
             ActionTargetContext.noTarget()
           );
-        expect(action).toThrow('Invalid actionDefinition');
+        expect(action).toThrow(
+          'ActionValidationContextBuilder.buildContext: invalid actionDefinition'
+        );
         expect(mockLogger.error).toHaveBeenCalledWith(
           expect.stringContaining('Invalid actionDefinition provided'),
           { actionDefinition: invalidActionDef }
@@ -287,7 +291,9 @@ describe('ActionValidationContextBuilder', () => {
             null,
             ActionTargetContext.noTarget()
           );
-        expect(action).toThrow('Invalid actor entity');
+        expect(action).toThrow(
+          'ActionValidationContextBuilder.buildContext: invalid actor entity'
+        );
         expect(mockLogger.error).toHaveBeenCalledWith(
           expect.stringContaining('Invalid actor entity provided'),
           { actor: null }
@@ -302,7 +308,9 @@ describe('ActionValidationContextBuilder', () => {
             invalidActor,
             ActionTargetContext.noTarget()
           );
-        expect(action).toThrow('Invalid actor entity');
+        expect(action).toThrow(
+          'ActionValidationContextBuilder.buildContext: invalid actor entity'
+        );
         expect(mockLogger.error).toHaveBeenCalledWith(
           expect.stringContaining('Invalid actor entity provided'),
           { actor: invalidActor }
@@ -312,7 +320,9 @@ describe('ActionValidationContextBuilder', () => {
       it('should throw Error and log error for null targetContext', () => {
         const action = () =>
           builder.buildContext(sampleActionDefinition, mockActor, null);
-        expect(action).toThrow('Invalid ActionTargetContext');
+        expect(action).toThrow(
+          'ActionValidationContextBuilder.buildContext: invalid ActionTargetContext'
+        );
         expect(mockLogger.error).toHaveBeenCalledWith(
           expect.stringContaining('Invalid targetContext provided'),
           { targetContext: null }
@@ -327,7 +337,9 @@ describe('ActionValidationContextBuilder', () => {
             mockActor,
             invalidTargetContext
           );
-        expect(action).toThrow('Invalid ActionTargetContext');
+        expect(action).toThrow(
+          'ActionValidationContextBuilder.buildContext: invalid ActionTargetContext'
+        );
         expect(mockLogger.error).toHaveBeenCalledWith(
           expect.stringContaining('Invalid targetContext provided'),
           { targetContext: invalidTargetContext }
@@ -336,7 +348,9 @@ describe('ActionValidationContextBuilder', () => {
 
       it('should prioritize actionDefinition validation when all inputs are missing', () => {
         const action = () => builder.buildContext(null, null, null);
-        expect(action).toThrow('Invalid actionDefinition');
+        expect(action).toThrow(
+          'ActionValidationContextBuilder.buildContext: invalid actionDefinition'
+        );
         expect(mockLogger.error).toHaveBeenCalledWith(
           expect.stringContaining('Invalid actionDefinition provided'),
           { actionDefinition: null }
