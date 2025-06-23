@@ -15,6 +15,7 @@ import {
 } from '../../../../src/constants/eventIds.js';
 import TurnDirective from '../../../../src/turns/constants/turnDirectives.js';
 import TurnDirectiveStrategyResolver from '../../../../src/turns/strategies/turnDirectiveStrategyResolver.js';
+import { ServiceLookupError } from '../../../../src/turns/states/helpers/getServiceFromContext.js';
 
 class MockActor {
   constructor(id = 'actorXYZ') {
@@ -399,15 +400,16 @@ describe('ProcessingCommandState.enterState – error branches', () => {
 });
 
 describe('ProcessingCommandState._getServiceFromContext – error branches', () => {
-  test('should return null and clear _isProcessing when turnCtx is null', async () => {
+  test('should throw ServiceLookupError and clear _isProcessing when turnCtx is null', async () => {
     processingState['_isProcessing'] = true;
-    const result = await processingState['_getServiceFromContext'](
-      null,
-      'getCommandProcessor',
-      'ICommandProcessor',
-      'actorZ'
-    );
-    expect(result).toBeNull();
+    await expect(
+      processingState['_getServiceFromContext'](
+        null,
+        'getCommandProcessor',
+        'ICommandProcessor',
+        'actorZ'
+      )
+    ).rejects.toThrow(ServiceLookupError);
     expect(processingState['_isProcessing']).toBe(false);
     expect(mockLogger.error).toHaveBeenCalledWith(
       expect.stringContaining('Invalid turnCtx in _getServiceFromContext')
@@ -425,14 +427,14 @@ describe('ProcessingCommandState._getServiceFromContext – error branches', () 
     processingState['_isProcessing'] = true;
     const dummyCtx = {};
 
-    const result = await processingState['_getServiceFromContext'](
-      dummyCtx,
-      'getCommandProcessor',
-      'ICommandProcessor',
-      'actorMissingLogger'
-    );
-
-    expect(result).toBeNull();
+    await expect(
+      processingState['_getServiceFromContext'](
+        dummyCtx,
+        'getCommandProcessor',
+        'ICommandProcessor',
+        'actorMissingLogger'
+      )
+    ).rejects.toThrow(ServiceLookupError);
     expect(processingState['_isProcessing']).toBe(false);
     expect(mockLogger.error).toHaveBeenCalledWith(
       expect.stringContaining('Invalid turnCtx in _getServiceFromContext')
@@ -445,7 +447,7 @@ describe('ProcessingCommandState._getServiceFromContext – error branches', () 
     );
   });
 
-  test('should catch missing method on turnCtx and dispatch SYSTEM_ERROR_OCCURRED_ID, then return null', async () => {
+  test('should catch missing method on turnCtx and dispatch SYSTEM_ERROR_OCCURRED_ID', async () => {
     processingState['_isProcessing'] = true;
     const actor = new MockActor('actorF');
     const mockTurnContext = {
@@ -456,13 +458,14 @@ describe('ProcessingCommandState._getServiceFromContext – error branches', () 
     const spyDispatch = mockHandler.safeEventDispatcher.dispatch;
     mockHandler.getTurnContext.mockReturnValue(mockTurnContext);
 
-    const result = await processingState['_getServiceFromContext'](
-      mockTurnContext,
-      'getCommandProcessor',
-      'ICommandProcessor',
-      actor.id
-    );
-    expect(result).toBeNull();
+    await expect(
+      processingState['_getServiceFromContext'](
+        mockTurnContext,
+        'getCommandProcessor',
+        'ICommandProcessor',
+        actor.id
+      )
+    ).rejects.toThrow(ServiceLookupError);
     // _isProcessing should be set to false
     expect(processingState['_isProcessing']).toBe(false);
     // SYSTEM_ERROR_OCCURRED_ID dispatched via handler.safeEventDispatcher
@@ -493,13 +496,14 @@ describe('ProcessingCommandState._getServiceFromContext – error branches', () 
     };
     mockHandler.getTurnContext.mockReturnValue(mockTurnContext);
 
-    const result = await processingState['_getServiceFromContext'](
-      mockTurnContext,
-      'getCommandProcessor',
-      'ICommandProcessor',
-      actor.id
-    );
-    expect(result).toBeNull();
+    await expect(
+      processingState['_getServiceFromContext'](
+        mockTurnContext,
+        'getCommandProcessor',
+        'ICommandProcessor',
+        actor.id
+      )
+    ).rejects.toThrow(ServiceLookupError);
     expect(processingState['_isProcessing']).toBe(false);
     const spyDispatch = mockEventDispatcher.dispatch;
     expect(spyDispatch).toHaveBeenCalledWith(

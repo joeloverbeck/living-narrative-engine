@@ -9,9 +9,25 @@
  * @typedef {import('../../interfaces/IActorTurnStrategy.js').ITurnAction} ITurnAction
  */
 
-import { getServiceFromContext } from './getServiceFromContext.js';
+import {
+  getServiceFromContext,
+  ServiceLookupError,
+} from './getServiceFromContext.js';
 import { ProcessingExceptionHandler } from './processingExceptionHandler.js';
 import { finishProcessing } from './processingErrorUtils.js';
+
+/**
+ * @description Uses {@link ProcessingExceptionHandler} to handle an error.
+ * @param {ProcessingCommandStateLike} state - Owning state instance.
+ * @param {ITurnContext} turnCtx - Context for error handling.
+ * @param {Error} error - Error to handle.
+ * @param {string} actorId - Actor ID for logging.
+ * @returns {Promise<void>} Resolves when handling completes.
+ */
+async function handleProcessingException(state, turnCtx, error, actorId) {
+  const exceptionHandler = new ProcessingExceptionHandler(state);
+  await exceptionHandler.handle(turnCtx, error, actorId);
+}
 
 /**
  * Dispatches the provided action via ICommandProcessor.
@@ -33,9 +49,6 @@ export async function dispatchAction(state, turnCtx, actor, turnAction) {
     'ICommandProcessor',
     actorId
   );
-  if (!commandProcessor) {
-    return null; // Error handled by getServiceFromContext
-  }
 
   logger.debug(
     `${state.getStateName()}: Invoking commandProcessor.dispatchAction() for actor ${actorId}, actionId: ${turnAction.actionDefinitionId}.`
@@ -114,9 +127,6 @@ export async function interpretCommandResult(
     'ICommandOutcomeInterpreter',
     actorId
   );
-  if (!outcomeInterpreter) {
-    return null; // Error handled by getServiceFromContext
-  }
 
   const directiveType = await outcomeInterpreter.interpret(
     commandResult,
@@ -239,12 +249,21 @@ export async function processCommandInternal(
     if (!(error instanceof Error) && error.stack) {
       processingError.stack = error.stack;
     }
-    const exceptionHandler = new ProcessingExceptionHandler(state);
-    await exceptionHandler.handle(
-      ctxForError || turnCtx,
-      processingError,
-      actorIdForHandler
-    );
+    if (error instanceof ServiceLookupError) {
+      await handleProcessingException(
+        state,
+        ctxForError || turnCtx,
+        processingError,
+        actorIdForHandler
+      );
+    } else {
+      const exceptionHandler = new ProcessingExceptionHandler(state);
+      await exceptionHandler.handle(
+        ctxForError || turnCtx,
+        processingError,
+        actorIdForHandler
+      );
+    }
   } finally {
     if (state._isProcessing && state._handler.getCurrentState() === state) {
       const finalLogger =
