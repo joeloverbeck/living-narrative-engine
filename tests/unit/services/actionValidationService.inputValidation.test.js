@@ -188,8 +188,7 @@ describe('ActionValidationService - Input Validation and Errors', () => {
   test('isValid throws Error if missing or invalid actionDefinition', () => {
     const context = ActionTargetContext.noTarget();
     // Error message comes from _checkStructuralSanity
-    const expectedErrorMsg =
-      'ActionValidationService.isValid: invalid actionDefinition';
+    const expectedErrorMsg = 'Invalid actionDefinition';
 
     // Test cases for invalid actionDefinition
     expect(() => service.isValid(null, mockActor, context)).toThrow(
@@ -231,8 +230,7 @@ describe('ActionValidationService - Input Validation and Errors', () => {
     };
     const context = ActionTargetContext.noTarget();
     // Error message comes from _checkStructuralSanity
-    const expectedErrorMsg =
-      'ActionValidationService.isValid: invalid actorEntity';
+    const expectedErrorMsg = 'Invalid actor entity';
 
     // Test cases for invalid actorEntity
     expect(() => service.isValid(actionDef, null, context)).toThrow(
@@ -277,8 +275,7 @@ describe('ActionValidationService - Input Validation and Errors', () => {
       template: 't',
     };
     // Error message comes from _checkStructuralSanity
-    const expectedErrorMsg =
-      'ActionValidationService.isValid: targetContext must be ActionTargetContext';
+    const expectedErrorMsg = 'Invalid ActionTargetContext';
 
     // Test cases for invalid targetContext
     expect(() => service.isValid(actionDef, mockActor, null)).toThrow(

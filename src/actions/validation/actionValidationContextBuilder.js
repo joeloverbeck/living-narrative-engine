@@ -13,6 +13,7 @@ import {
   buildActorContext,
   buildEntityTargetContext,
 } from './contextBuilders.js';
+import { validateActionInputs } from './inputValidators.js';
 
 /**
  * @class ActionValidationContextBuilder
@@ -106,35 +107,7 @@ export class ActionValidationContextBuilder extends BaseService {
    * @private
    */
   #assertValidInputs(actionDefinition, actor, targetContext) {
-    if (!actionDefinition?.id) {
-      this.#logger.error(
-        'ActionValidationContextBuilder: Invalid actionDefinition provided (missing id).',
-        { actionDefinition }
-      );
-      throw new Error(
-        'ActionValidationContextBuilder requires a valid ActionDefinition.'
-      );
-    }
-
-    if (!actor?.id) {
-      this.#logger.error(
-        'ActionValidationContextBuilder: Invalid actor entity provided (missing id).',
-        { actor }
-      );
-      throw new Error(
-        'ActionValidationContextBuilder requires a valid actor Entity.'
-      );
-    }
-
-    if (!targetContext?.type) {
-      this.#logger.error(
-        'ActionValidationContextBuilder: Invalid targetContext provided (missing type).',
-        { targetContext }
-      );
-      throw new Error(
-        'ActionValidationContextBuilder requires a valid ActionTargetContext.'
-      );
-    }
+    validateActionInputs(actionDefinition, actor, targetContext, this.#logger);
   }
 
   /**
