@@ -231,6 +231,63 @@ describe('displayFatalStartupError', () => {
     expect(result).toEqual({ displayed: true });
   });
 
+  it('dispatches error when updateElements fails with dispatcher', () => {
+    setDom(
+      `<div id="outputDiv"></div>
+       <div id="errorDiv"></div>
+       <input id="inputEl" />
+       <h1 id="title"></h1>`
+    );
+
+    const uiElements = {
+      outputDiv: document.querySelector('#outputDiv'),
+      errorDiv: document.querySelector('#errorDiv'),
+      inputElement: document.querySelector('#inputEl'),
+      titleElement: document.querySelector('#title'),
+    };
+
+    const domAdapter = {
+      createElement: document.createElement.bind(document),
+      insertAfter: (ref, el) => ref.insertAdjacentElement('afterend', el),
+      setTextContent: (el, text) => {
+        if (el === uiElements.titleElement) {
+          throw new Error('title fail');
+        }
+        el.textContent = text;
+      },
+      setStyle: (el, prop, val) => {
+        if (el === uiElements.inputElement) {
+          throw new Error('input fail');
+        }
+        el.style[prop] = val;
+      },
+      alert: jest.fn(),
+    };
+
+    const logger = {
+      error: jest.fn(),
+      info: jest.fn(),
+      warn: jest.fn(),
+      debug: jest.fn(),
+    };
+    const dispatcher = { dispatch: jest.fn() };
+
+    const result = displayFatalStartupError(
+      uiElements,
+      {
+        userMessage: 'Oops',
+        consoleMessage: 'Bad',
+        phase: 'phase',
+      },
+      logger,
+      domAdapter,
+      dispatcher
+    );
+
+    expect(dispatcher.dispatch).toHaveBeenCalled();
+    expect(result).toEqual({ displayed: true });
+  });
+
   it('dispatches error when temporary element creation fails', () => {
     setDom('<div id="outputDiv"></div>');
     const outputDiv = document.querySelector('#outputDiv');

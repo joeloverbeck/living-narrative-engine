@@ -193,6 +193,7 @@ function displayErrorMessage({
  * @param {string} params.inputPlaceholder - Placeholder text for the input element.
  * @param {import('../interfaces/coreServices.js').ILogger} params.log - Logger instance.
  * @param {import('../interfaces/DomAdapter.js').DomAdapter} params.dom - DOM adapter instance.
+ * @param {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} [params.dispatcher] - Optional dispatcher for error events.
  * @returns {void}
  * @private
  */
@@ -203,25 +204,38 @@ function updateElements({
   inputPlaceholder,
   log,
   dom,
+  dispatcher,
 }) {
   try {
     if (titleElement && titleElement instanceof HTMLElement) {
       dom.setTextContent(titleElement, pageTitle);
     }
   } catch (e) {
-    log.error(
-      'displayFatalStartupError: Failed to set textContent on titleElement.',
-      e
-    );
+    const msg =
+      'displayFatalStartupError: Failed to set textContent on titleElement.';
+    if (dispatcher) {
+      safeDispatchError(dispatcher, msg, {
+        raw: e?.message || e,
+        stack: e?.stack,
+      });
+    } else {
+      log.error(msg, e);
+    }
   }
 
   try {
     disableInput(inputElement, inputPlaceholder, dom);
   } catch (e) {
-    log.error(
-      'displayFatalStartupError: Failed to disable or set placeholder on inputElement.',
-      e
-    );
+    const msg =
+      'displayFatalStartupError: Failed to disable or set placeholder on inputElement.';
+    if (dispatcher) {
+      safeDispatchError(dispatcher, msg, {
+        raw: e?.message || e,
+        stack: e?.stack,
+      });
+    } else {
+      log.error(msg, e);
+    }
   }
 }
 
@@ -274,6 +288,7 @@ export function displayFatalStartupError(
     inputPlaceholder,
     log,
     dom,
+    dispatcher,
   });
 
   return { displayed };
