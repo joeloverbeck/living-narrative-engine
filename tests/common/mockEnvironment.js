@@ -88,19 +88,47 @@ export function buildTestEnvironment(factoryMap, tokenMap, overrides = {}) {
  * }}
  *   Mocks, container, optionally created instance and cleanup helper.
  */
-export function buildEnvironment(
-  factoryMap,
-  tokenMap,
-  overrides = {},
-  createFn
-) {
+/**
+ * Internal helper used by environment builders.
+ *
+ * @param {object} config - Configuration options.
+ * @param {Record<string, () => any>} config.factoryMap
+ * @param {Record<string | symbol, string | ((m: Record<string, any>) => any) | any>} config.tokenMap
+ * @param {Record<string | symbol, any>} [config.overrides]
+ * @param {(container: any, mocks: Record<string, any>) => any} [config.create]
+ * @returns {{
+ *   mocks: Record<string, any>,
+ *   mockContainer: { resolve: jest.Mock },
+ *   instance: any,
+ *   cleanup: () => void,
+ * }}
+ *   Generated environment pieces.
+ */
+function _buildEnvironment({ factoryMap, tokenMap, overrides = {}, create }) {
   const { mocks, mockContainer, cleanup } = buildTestEnvironment(
     factoryMap,
     tokenMap,
     overrides
   );
-  const instance = createFn ? createFn(mockContainer, mocks) : undefined;
+  const instance = create ? create(mockContainer, mocks) : undefined;
   return { mocks, mockContainer, instance, cleanup };
+}
+
+/**
+ *
+ * @param root0
+ * @param root0.factoryMap
+ * @param root0.tokenMap
+ * @param root0.overrides
+ * @param root0.create
+ */
+export function buildEnvironment({
+  factoryMap,
+  tokenMap,
+  overrides = {},
+  create,
+}) {
+  return _buildEnvironment({ factoryMap, tokenMap, overrides, create });
 }
 
 /**
@@ -109,11 +137,12 @@ export function buildEnvironment(
  * @description Partially applies {@link buildEnvironment} with the provided
  *   factory and token maps plus an optional creation function. The returned
  *   function accepts overrides passed through to {@link buildEnvironment}.
- * @param {Record<string, () => any>} factoryMap - Map of mock factory
+ * @param {object} config - Builder configuration.
+ * @param {Record<string, () => any>} config.factoryMap - Map of mock factory
  *   functions to create.
- * @param {Record<string | symbol, string | ((m: Record<string, any>) => any) | any>} tokenMap
+ * @param {Record<string | symbol, string | ((m: Record<string, any>) => any) | any>} config.tokenMap
  *   Map of DI tokens to mock keys, provider callbacks or constant values.
- * @param {(container: any, mocks: Record<string, any>) => any} [createFn]
+ * @param {(container: any, mocks: Record<string, any>) => any} [config.create]
  *   Function returning the system under test when provided the mock container
  *   and generated mocks.
  * @returns {(overrides?: Record<string | symbol, any>) => {
@@ -123,9 +152,9 @@ export function buildEnvironment(
  *   cleanup: () => void,
  * }} Function that builds the environment.
  */
-export function createTestEnvironmentBuilder(factoryMap, tokenMap, createFn) {
+export function createTestEnvironmentBuilder({ factoryMap, tokenMap, create }) {
   return function build(overrides = {}) {
-    return buildEnvironment(factoryMap, tokenMap, overrides, createFn);
+    return _buildEnvironment({ factoryMap, tokenMap, overrides, create });
   };
 }
 
@@ -135,17 +164,18 @@ export function createTestEnvironmentBuilder(factoryMap, tokenMap, createFn) {
  * @description Convenience helper around {@link createTestEnvironmentBuilder}
  *   that invokes the returned builder. Overrides can be supplied to alter
  *   token mappings per test.
- * @param {Record<string, () => any>} factoryMap - Map of mock factory
+ * @param {object} config - Configuration for building the environment.
+ * @param {Record<string, () => any>} config.factoryMap - Map of mock factory
  *   functions to create.
- * @param {Record<string | symbol, string | ((m: Record<string, any>) => any) | any>} tokenMap
+ * @param {Record<string | symbol, string | ((m: Record<string, any>) => any) | any>} config.tokenMap
  *   Map of DI tokens to mock keys, provider callbacks or constant values.
- * @param {(container: any, mocks: Record<string, any>) => any} buildFn
+ * @param {(container: any, mocks: Record<string, any>) => any} config.build
  *   Factory that constructs the system under test when provided the mock
  *   container and generated mocks.
- * @param {(mocks: Record<string, any>, container: any) => void} [setupMocksFn]
+ * @param {(mocks: Record<string, any>, container: any) => void} [config.setupMocks]
  *   Optional callback invoked before each service creation to allow adjustment
  *   of mocks.
- * @param {Record<string | symbol, any>} [overrides] - Per-test DI token
+ * @param {Record<string | symbol, any>} [config.overrides] - Per-test DI token
  *   overrides.
  * @returns {{
  *   mocks: Record<string, any>,
@@ -156,31 +186,30 @@ export function createTestEnvironmentBuilder(factoryMap, tokenMap, createFn) {
  * }}
  *   Generated environment instance.
  */
-export function createServiceTestEnvironment(
+export function createServiceTestEnvironment({
   factoryMap,
   tokenMap,
-  buildFn,
-  setupMocksFn,
-  overrides = {}
-) {
-  const serviceBuilder = createTestEnvironmentBuilder(
+  build,
+  setupMocks,
+  overrides = {},
+}) {
+  const { mocks, mockContainer, instance, cleanup } = _buildEnvironment({
     factoryMap,
     tokenMap,
-    (container, m) => {
-      if (typeof setupMocksFn === 'function') {
-        setupMocksFn(m, container);
+    overrides,
+    create: (container, m) => {
+      if (typeof setupMocks === 'function') {
+        setupMocks(m, container);
       }
-      return buildFn(container, m);
-    }
-  );
-
-  const { mocks, mockContainer, instance, cleanup } = serviceBuilder(overrides);
+      return build(container, m);
+    },
+  });
 
   const createInstance = () => {
-    if (typeof setupMocksFn === 'function') {
-      setupMocksFn(mocks, mockContainer);
+    if (typeof setupMocks === 'function') {
+      setupMocks(mocks, mockContainer);
     }
-    return buildFn(mockContainer, mocks);
+    return build(mockContainer, mocks);
   };
 
   return { mocks, mockContainer, instance, createInstance, cleanup };
