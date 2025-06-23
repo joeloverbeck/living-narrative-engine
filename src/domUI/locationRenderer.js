@@ -203,54 +203,8 @@ export class LocationRenderer extends BoundDomRendererBase {
 
     try {
       const currentLocationInstanceId =
-        this.entityDisplayDataProvider.getEntityLocationId(
-          currentActorEntityId
-        );
-
-      if (!currentLocationInstanceId) {
-        // TEMPORARY DEBUG: Dump registry contents
-        if (
-          this.dataRegistry &&
-          typeof this.dataRegistry.getAll === 'function'
-        ) {
-          const allInstances =
-            this.dataRegistry.getAll('entityInstances') || [];
-          const allDefs = this.dataRegistry.getAll('entityDefinitions') || [];
-          this.logger.error(
-            '[DEBUG] Registry entityInstances:',
-            allInstances.map((e) => ({
-              id: e.id,
-              instanceId: e.instanceId,
-              definitionId: e.definitionId,
-              componentOverrides: e.componentOverrides,
-            }))
-          );
-          this.logger.error(
-            '[DEBUG] Registry entityDefinitions:',
-            allDefs.map((e) => ({
-              id: e.id,
-              components: Object.keys(e.components),
-            }))
-          );
-        } else {
-          this.logger.error('[DEBUG] dataRegistry or getAll not available');
-        }
-        // Convert warning to error that crashes the app
-        this.safeEventDispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
-          message: `Entity '${currentActorEntityId}' has no valid position or locationId.`,
-          details: {
-            raw: JSON.stringify({
-              entityId: currentActorEntityId,
-              functionName: 'handleTurnStarted',
-            }),
-            stack: new Error().stack,
-          },
-        });
-        this.#clearAllDisplaysOnErrorWithMessage(
-          `Location for ${currentActorEntityId} is unknown.`
-        );
-        return;
-      }
+        this.#resolveLocationInstanceId(currentActorEntityId);
+      if (!currentLocationInstanceId) return;
 
       const locationDetails = this.entityDisplayDataProvider.getLocationDetails(
         currentLocationInstanceId
@@ -266,49 +220,21 @@ export class LocationRenderer extends BoundDomRendererBase {
         return;
       }
 
-      // NEW: Fetch location portrait data
       const portraitData =
         this.entityDisplayDataProvider.getLocationPortraitData(
           currentLocationInstanceId
         );
-      // portraitData is expected to be { imagePath: string, altText?: string } | null
 
-      const charactersInLocation = [];
-      const entityIdsInLocation = this.entityManager.getEntitiesInLocation(
-        currentLocationInstanceId
+      const charactersInLocation = this.#gatherLocationCharacters(
+        currentLocationInstanceId,
+        currentActorEntityId
       );
 
-      for (const entityIdInLoc of entityIdsInLocation) {
-        if (entityIdInLoc === currentActorEntityId) continue;
-        const entity = this.entityManager.getEntityInstance(entityIdInLoc);
-        if (entity && entity.hasComponent(ACTOR_COMPONENT_ID)) {
-          const characterInfo =
-            this.entityDisplayDataProvider.getCharacterDisplayInfo(
-              entityIdInLoc
-            );
-          if (characterInfo) {
-            charactersInLocation.push(characterInfo);
-          } else {
-            this.logger.warn(
-              `${this._logPrefix} Could not get display info for character '${entityIdInLoc}'.`
-            );
-          }
-        }
-      }
-      this.logger.debug(
-        `${this._logPrefix} Found ${charactersInLocation.length} other characters.`
+      const displayPayload = this.#buildLocationDisplayPayload(
+        locationDetails,
+        portraitData,
+        charactersInLocation
       );
-
-      const displayPayload = {
-        name: locationDetails.name,
-        description: locationDetails.description,
-        portraitPath: portraitData ? portraitData.imagePath : null,
-        portraitAltText: portraitData
-          ? portraitData.altText || `Image of ${locationDetails.name}`
-          : null,
-        exits: locationDetails.exits,
-        characters: charactersInLocation,
-      };
 
       this.render(displayPayload);
     } catch (error) {
@@ -320,6 +246,112 @@ export class LocationRenderer extends BoundDomRendererBase {
         'Error retrieving location details.'
       );
     }
+  }
+
+  /**
+   * Resolve the location instance ID for the given actor.
+   *
+   * @private
+   * @param {import('../interfaces/CommonTypes').NamespacedId} actorId - Actor entity ID.
+   * @returns {string|null} Instance ID or null if not found.
+   */
+  #resolveLocationInstanceId(actorId) {
+    const locId = this.entityDisplayDataProvider.getEntityLocationId(actorId);
+    if (!locId) {
+      if (this.dataRegistry && typeof this.dataRegistry.getAll === 'function') {
+        const allInstances = this.dataRegistry.getAll('entityInstances') || [];
+        const allDefs = this.dataRegistry.getAll('entityDefinitions') || [];
+        this.logger.error(
+          '[DEBUG] Registry entityInstances:',
+          allInstances.map((e) => ({
+            id: e.id,
+            instanceId: e.instanceId,
+            definitionId: e.definitionId,
+            componentOverrides: e.componentOverrides,
+          }))
+        );
+        this.logger.error(
+          '[DEBUG] Registry entityDefinitions:',
+          allDefs.map((e) => ({
+            id: e.id,
+            components: Object.keys(e.components),
+          }))
+        );
+      } else {
+        this.logger.error('[DEBUG] dataRegistry or getAll not available');
+      }
+      this.safeEventDispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
+        message: `Entity '${actorId}' has no valid position or locationId.`,
+        details: {
+          raw: JSON.stringify({
+            entityId: actorId,
+            functionName: 'handleTurnStarted',
+          }),
+          stack: new Error().stack,
+        },
+      });
+      this.#clearAllDisplaysOnErrorWithMessage(
+        `Location for ${actorId} is unknown.`
+      );
+      return null;
+    }
+    return locId;
+  }
+
+  /**
+   * Gather character display data for entities at a location.
+   *
+   * @private
+   * @param {string} locationInstanceId - Location instance identifier.
+   * @param {import('../interfaces/CommonTypes').NamespacedId} currentActorId - Actor initiating the turn.
+   * @returns {Array<CharacterDisplayData>} Array of character data.
+   */
+  #gatherLocationCharacters(locationInstanceId, currentActorId) {
+    const charactersInLocation = [];
+    const entityIdsInLocation =
+      this.entityManager.getEntitiesInLocation(locationInstanceId);
+
+    for (const entityIdInLoc of entityIdsInLocation) {
+      if (entityIdInLoc === currentActorId) continue;
+      const entity = this.entityManager.getEntityInstance(entityIdInLoc);
+      if (entity && entity.hasComponent(ACTOR_COMPONENT_ID)) {
+        const characterInfo =
+          this.entityDisplayDataProvider.getCharacterDisplayInfo(entityIdInLoc);
+        if (characterInfo) {
+          charactersInLocation.push(characterInfo);
+        } else {
+          this.logger.warn(
+            `${this._logPrefix} Could not get display info for character '${entityIdInLoc}'.`
+          );
+        }
+      }
+    }
+    this.logger.debug(
+      `${this._logPrefix} Found ${charactersInLocation.length} other characters.`
+    );
+    return charactersInLocation;
+  }
+
+  /**
+   * Build the payload for rendering a location.
+   *
+   * @private
+   * @param {object} locationDetails - Details object from the provider.
+   * @param {{imagePath:string, altText?:string}|null} portraitData - Optional portrait info.
+   * @param {Array<CharacterDisplayData>} characters - Characters present.
+   * @returns {LocationDisplayPayload} Structured display payload.
+   */
+  #buildLocationDisplayPayload(locationDetails, portraitData, characters) {
+    return {
+      name: locationDetails.name,
+      description: locationDetails.description,
+      portraitPath: portraitData ? portraitData.imagePath : null,
+      portraitAltText: portraitData
+        ? portraitData.altText || `Image of ${locationDetails.name}`
+        : null,
+      exits: locationDetails.exits,
+      characters,
+    };
   }
 
   #clearAllDisplaysOnErrorWithMessage(message) {

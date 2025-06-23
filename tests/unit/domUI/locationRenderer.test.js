@@ -24,13 +24,7 @@ jest.mock('../../../src/constants/componentIds.js', () => ({
   ACTOR_COMPONENT_ID: 'test:actor',
 }));
 
-import {
-  POSITION_COMPONENT_ID,
-  NAME_COMPONENT_ID,
-  DESCRIPTION_COMPONENT_ID,
-  EXITS_COMPONENT_ID,
-  ACTOR_COMPONENT_ID,
-} from '../../../src/constants/componentIds.js';
+import { ACTOR_COMPONENT_ID } from '../../../src/constants/componentIds.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/eventIds.js';
 
 /** @returns {import('../../../src/interfaces/ILogger.js').ILogger} */
@@ -174,11 +168,8 @@ describe('LocationRenderer', () => {
 
   const MOCK_PLAYER_ID = 'player:1';
   const MOCK_LOCATION_ID = 'instance:loc1';
-  const MOCK_LOCATION_DEF_ID = 'world:loc_def1';
   const MOCK_OTHER_ACTOR_ID = 'npc:guard';
   const MOCK_NON_ACTOR_ID = 'item:rock';
-
-  let mockLocationEntityInstance;
 
   beforeEach(() => {
     mockLogger = createMockLogger();
@@ -253,13 +244,6 @@ describe('LocationRenderer', () => {
         return jest.fn();
       }
     );
-
-    mockLocationEntityInstance = {
-      id: MOCK_LOCATION_ID,
-      definitionId: MOCK_LOCATION_DEF_ID,
-      getComponentData: jest.fn(),
-      hasComponent: jest.fn(),
-    };
 
     mockEntityDisplayDataProvider.getEntityLocationId.mockReturnValue(
       MOCK_LOCATION_ID
@@ -473,6 +457,28 @@ describe('LocationRenderer', () => {
       );
       expect(mockLocationPortraitImageElement.alt).toBe(portraitInfo.altText);
       expect(mockLocationPortraitVisualsElement.style.display).toBe('flex');
+    });
+
+    it('should default portrait alt text when none is provided', () => {
+      const portraitInfo = { imagePath: '/path/to/location.png' };
+      mockEntityDisplayDataProvider.getLocationPortraitData.mockReturnValue(
+        portraitInfo
+      );
+      mockEntityDisplayDataProvider.getLocationDetails.mockReturnValue({
+        name: 'Alt Text Test',
+        description: 'Testing default alt.',
+        exits: [],
+      });
+      jest.spyOn(renderer, 'render');
+
+      simulateTurnStarted();
+
+      expect(renderer.render).toHaveBeenCalledWith(
+        expect.objectContaining({ portraitAltText: 'Image of Alt Text Test' })
+      );
+      expect(mockLocationPortraitImageElement.alt).toBe(
+        'Image of Alt Text Test'
+      );
     });
 
     it('should hide portrait elements if EDDP returns no portrait data', () => {
@@ -832,6 +838,42 @@ describe('LocationRenderer', () => {
           mockEntityDisplayDataProvider.getCharacterDisplayInfo
         ).not.toHaveBeenCalledWith(nonActorId);
       });
+
+      it('should gather and render multiple characters', () => {
+        const npc1 = 'npc:1';
+        const npc2 = 'npc:2';
+        const char1 = {
+          id: npc1,
+          name: 'Guard A',
+          description: 'Standing watch.',
+          portraitPath: null,
+        };
+        const char2 = {
+          id: npc2,
+          name: 'Guard B',
+          description: 'Also watching.',
+          portraitPath: null,
+        };
+        mockEntityManager.getEntitiesInLocation.mockReturnValue(
+          new Set([MOCK_PLAYER_ID, npc1, npc2])
+        );
+        mockEntityManager.getEntityInstance.mockImplementation((id) => {
+          if (id === MOCK_PLAYER_ID) return { id, hasComponent: () => false };
+          return { id, hasComponent: (c) => c === ACTOR_COMPONENT_ID };
+        });
+        mockEntityDisplayDataProvider.getCharacterDisplayInfo.mockImplementation(
+          (id) => {
+            if (id === npc1) return char1;
+            if (id === npc2) return char2;
+            return null;
+          }
+        );
+        jest.spyOn(renderer, 'render');
+        simulateTurnStarted();
+        expect(renderer.render).toHaveBeenCalledWith(
+          expect.objectContaining({ characters: [char1, char2] })
+        );
+      });
     });
 
     it('should log an error if a display element (e.g., charactersDisplay) is not found during render', () => {
@@ -856,7 +898,7 @@ describe('LocationRenderer', () => {
       });
 
       // Re-instantiate renderer with the modified mockDocumentContext for this specific test
-      const testRenderer = new LocationRenderer({
+      new LocationRenderer({
         ...rendererDeps, // Spread existing deps
         documentContext: mockDocumentContext, // Override with the special mock
       });
