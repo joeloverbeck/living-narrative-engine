@@ -32,28 +32,28 @@ class ModifyArrayFieldHandler extends ComponentOperationHandler {
   /**
    * @description Fetch the component and target array to modify.
    * @param {string} entityId
-   * @param {string} compType
+   * @param {string} componentType
    * @param {string} field
-   * @param {ILogger} log
+   * @param {ILogger} logger
    * @returns {{data: object, array: Array}|null}
    * @private
    */
-  #fetchTargetArray(entityId, compType, field, log) {
+  #fetchTargetArray(entityId, componentType, field, logger) {
     const originalComponentData = this.#entityManager.getComponentData(
       entityId,
-      compType
+      componentType
     );
     if (!originalComponentData) {
-      log.warn(
-        `MODIFY_ARRAY_FIELD: Component '${compType}' not found on entity '${entityId}'.`
+      logger.warn(
+        `MODIFY_ARRAY_FIELD: Component '${componentType}' not found on entity '${entityId}'.`
       );
       return null;
     }
     const clonedComponentData = cloneDeep(originalComponentData);
     const targetArray = resolvePath(clonedComponentData, field);
     if (!Array.isArray(targetArray)) {
-      log.warn(
-        `MODIFY_ARRAY_FIELD: Field path '${field}' in component '${compType}' on entity '${entityId}' does not point to an array.`
+      logger.warn(
+        `MODIFY_ARRAY_FIELD: Field path '${field}' in component '${componentType}' on entity '${entityId}' does not point to an array.`
       );
       return null;
     }
@@ -67,20 +67,20 @@ class ModifyArrayFieldHandler extends ComponentOperationHandler {
    * @param {*} value
    * @param {string} field
    * @param {string} entityId
-   * @param {ILogger} log
+   * @param {ILogger} logger
    * @returns {{nextArray: Array, result: *, modified: boolean}|null}
    * Returns a new array via `nextArray`; the original `targetArray` is never
    * mutated.
    * @private
    */
-  #applyModification(mode, targetArray, value, field, entityId, log) {
-    log.debug(
+  #applyModification(mode, targetArray, value, field, entityId, logger) {
+    logger.debug(
       `MODIFY_ARRAY_FIELD: Performing '${mode}' on field '${field}' for entity '${entityId}'.`
     );
 
     const validModes = ['push', 'push_unique', 'pop', 'remove_by_value'];
     if (!validModes.includes(mode)) {
-      log.warn(`MODIFY_ARRAY_FIELD: Unknown mode '${mode}'.`);
+      logger.warn(`MODIFY_ARRAY_FIELD: Unknown mode '${mode}'.`);
       return null;
     }
 
@@ -88,14 +88,14 @@ class ModifyArrayFieldHandler extends ComponentOperationHandler {
       value === undefined &&
       (mode === 'push' || mode === 'push_unique' || mode === 'remove_by_value')
     ) {
-      log.warn(
+      logger.warn(
         `MODIFY_ARRAY_FIELD: '${mode}' mode requires a 'value' parameter.`
       );
       return null;
     }
 
     if (mode === 'pop' && targetArray.length === 0) {
-      log.debug(
+      logger.debug(
         `MODIFY_ARRAY_FIELD: Attempted to 'pop' from an empty array on field '${field}'.`
       );
     }
@@ -104,17 +104,17 @@ class ModifyArrayFieldHandler extends ComponentOperationHandler {
       mode,
       targetArray,
       value,
-      log
+      logger
     );
 
     if (mode === 'push_unique' && !modified) {
-      log.debug(
+      logger.debug(
         `MODIFY_ARRAY_FIELD: Value for 'push_unique' already exists in array on field '${field}'.`
       );
     }
 
     if (mode === 'remove_by_value' && !modified) {
-      log.debug(
+      logger.debug(
         `MODIFY_ARRAY_FIELD: Value for 'remove_by_value' not found in array on field '${field}'.`
       );
     }
@@ -129,17 +129,17 @@ class ModifyArrayFieldHandler extends ComponentOperationHandler {
   /**
    * @description Commit the modified component data back to the entity manager.
    * @param {string} entityId
-   * @param {string} compType
+   * @param {string} componentType
    * @param {object} data
-   * @param {ILogger} log
+   * @param {ILogger} logger
    * @returns {boolean}
    * @private
    */
-  #commitChanges(entityId, compType, data, log) {
+  #commitChanges(entityId, componentType, data, logger) {
     try {
-      this.#entityManager.addComponent(entityId, compType, data);
-      log.debug(
-        `MODIFY_ARRAY_FIELD: Successfully committed changes to component '${compType}' on entity '${entityId}'.`
+      this.#entityManager.addComponent(entityId, componentType, data);
+      logger.debug(
+        `MODIFY_ARRAY_FIELD: Successfully committed changes to component '${componentType}' on entity '${entityId}'.`
       );
       return true;
     } catch (error) {
@@ -149,7 +149,7 @@ class ModifyArrayFieldHandler extends ComponentOperationHandler {
         {
           error: error.message,
           entityId,
-          componentType: compType,
+          componentType: componentType,
         }
       );
       return false;
@@ -191,8 +191,8 @@ class ModifyArrayFieldHandler extends ComponentOperationHandler {
    * @param {ExecutionContext} executionContext - The current execution context.
    */
   execute(params, executionContext) {
-    const log = this.getLogger(executionContext);
-    if (!assertParamsObject(params, log, 'MODIFY_ARRAY_FIELD')) {
+    const logger = this.getLogger(executionContext);
+    if (!assertParamsObject(params, logger, 'MODIFY_ARRAY_FIELD')) {
       return;
     }
     const { entity_ref, component_type, field, mode, result_variable, value } =
@@ -200,23 +200,28 @@ class ModifyArrayFieldHandler extends ComponentOperationHandler {
     const validated = this.validateEntityAndType(
       entity_ref,
       component_type,
-      log,
+      logger,
       'MODIFY_ARRAY_FIELD',
       executionContext
     );
     if (!validated) {
       return;
     }
-    const { entityId, type: compType } = validated;
+    const { entityId, type: componentType } = validated;
     if (!field || !mode) {
-      log.warn(
+      logger.warn(
         `MODIFY_ARRAY_FIELD: Missing required parameters (component_type, field, or mode) for entity ${entityId}.`
       );
       return;
     }
 
     // 3. Fetch target array
-    const fetched = this.#fetchTargetArray(entityId, compType, field, log);
+    const fetched = this.#fetchTargetArray(
+      entityId,
+      componentType,
+      field,
+      logger
+    );
     if (!fetched) {
       return;
     }
@@ -229,7 +234,7 @@ class ModifyArrayFieldHandler extends ComponentOperationHandler {
       value,
       field,
       entityId,
-      log
+      logger
     );
     if (!modification) {
       return;
@@ -237,7 +242,9 @@ class ModifyArrayFieldHandler extends ComponentOperationHandler {
     setByPath(clonedComponentData, field, modification.nextArray);
 
     // 5. Commit
-    if (!this.#commitChanges(entityId, compType, clonedComponentData, log)) {
+    if (
+      !this.#commitChanges(entityId, componentType, clonedComponentData, logger)
+    ) {
       return;
     }
 
@@ -248,10 +255,10 @@ class ModifyArrayFieldHandler extends ComponentOperationHandler {
         modification.result,
         executionContext,
         this.#dispatcher,
-        log
+        logger
       );
       if (res.success) {
-        log.debug(
+        logger.debug(
           `MODIFY_ARRAY_FIELD: Stored result in context variable '${result_variable}'.`
         );
       }

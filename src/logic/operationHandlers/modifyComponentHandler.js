@@ -67,10 +67,10 @@ class ModifyComponentHandler extends ComponentOperationHandler {
    * @param {ExecutionContext} executionContext
    */
   execute(params, executionContext) {
-    const log = this.getLogger(executionContext);
+    const logger = this.getLogger(executionContext);
 
     // ── validate base params ───────────────────────────────────────
-    if (!assertParamsObject(params, log, 'MODIFY_COMPONENT')) {
+    if (!assertParamsObject(params, logger, 'MODIFY_COMPONENT')) {
       return;
     }
     const { entity_ref, component_type, field, mode = 'set', value } = params;
@@ -79,16 +79,16 @@ class ModifyComponentHandler extends ComponentOperationHandler {
     const validated = this.validateEntityAndType(
       entity_ref,
       component_type,
-      log,
+      logger,
       'MODIFY_COMPONENT',
       executionContext
     );
     if (!validated) {
       return;
     }
-    const { entityId, type: compType } = validated;
+    const { entityId, type: componentType } = validated;
     if (mode !== 'set') {
-      log.warn(
+      logger.warn(
         `MODIFY_COMPONENT: Unsupported mode "${mode}". Only "set" is allowed now.`
       );
       return;
@@ -99,23 +99,26 @@ class ModifyComponentHandler extends ComponentOperationHandler {
       typeof field !== 'string' ||
       !field.trim()
     ) {
-      log.warn('MODIFY_COMPONENT: "field" must be a non-empty string.');
+      logger.warn('MODIFY_COMPONENT: "field" must be a non-empty string.');
       return;
     }
 
     // ── fetch & clone component data ───────────────────────────────
-    // compType was validated earlier
-    const current = this.#entityManager.getComponentData(entityId, compType);
+    // componentType was validated earlier
+    const current = this.#entityManager.getComponentData(
+      entityId,
+      componentType
+    );
 
     if (current === undefined) {
-      log.warn(
-        `MODIFY_COMPONENT: Component "${compType}" not found on entity "${entityId}".`
+      logger.warn(
+        `MODIFY_COMPONENT: Component "${componentType}" not found on entity "${entityId}".`
       );
       return;
     }
     if (typeof current !== 'object' || current === null) {
-      log.warn(
-        `MODIFY_COMPONENT: Component "${compType}" on entity "${entityId}" is not an object.`
+      logger.warn(
+        `MODIFY_COMPONENT: Component "${componentType}" on entity "${entityId}" is not an object.`
       );
       return;
     }
@@ -125,8 +128,8 @@ class ModifyComponentHandler extends ComponentOperationHandler {
     // ── apply “set” mutation ───────────────────────────────────────
     const ok = setByPath(updatedComponent, field.trim(), value);
     if (!ok) {
-      log.warn(
-        `MODIFY_COMPONENT: Failed to set path "${field}" on component "${compType}".`
+      logger.warn(
+        `MODIFY_COMPONENT: Failed to set path "${field}" on component "${componentType}".`
       );
       return;
     }
@@ -135,16 +138,16 @@ class ModifyComponentHandler extends ComponentOperationHandler {
     try {
       const success = this.#entityManager.addComponent(
         entityId,
-        compType,
+        componentType,
         updatedComponent
       );
       if (success) {
-        log.debug(
-          `MODIFY_COMPONENT: Updated "${compType}" on "${entityId}" (field "${field}" set).`
+        logger.debug(
+          `MODIFY_COMPONENT: Updated "${componentType}" on "${entityId}" (field "${field}" set).`
         );
       } else {
-        log.warn(
-          `MODIFY_COMPONENT: EntityManager.addComponent reported an unexpected failure for component "${compType}" on entity "${entityId}".`
+        logger.warn(
+          `MODIFY_COMPONENT: EntityManager.addComponent reported an unexpected failure for component "${componentType}" on entity "${entityId}".`
         );
       }
     } catch (e) {
@@ -155,7 +158,7 @@ class ModifyComponentHandler extends ComponentOperationHandler {
           error: e.message,
           stack: e.stack,
           entityId,
-          componentType: compType,
+          componentType: componentType,
         }
       );
     }
