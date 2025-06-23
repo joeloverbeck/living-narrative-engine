@@ -13,3 +13,5 @@ alwaysApply: false
 -Never overwrite my .env files without first asking and confirming.
 
 -Run the corresponding tests after every complete modification in a file (I mean after each group of modifications). Ensuring that the failing tests are fixed as soon as possible is a priority. By corresponding tests I mean: if you're working on the root app, run "npm run test" from root. If you're working on files inside the "llm-proxy-server" subproject, navigate to that folder and run "npm run test" there.
+
+-When you're using commands in the terminal, you can't use '&&', as it's not a valid separator of instructions in this version of the terminal. You need to use PowerShell syntax.

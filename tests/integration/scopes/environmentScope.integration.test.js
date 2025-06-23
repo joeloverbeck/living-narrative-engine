@@ -18,6 +18,7 @@ import { getEntityIdsForScopes } from '../../../src/entities/entityScopeService.
 import { GameDataRepository } from '../../../src/data/gameDataRepository.js';
 import { SafeEventDispatcher } from '../../../src/events/safeEventDispatcher.js';
 import ScopeRegistry from '../../../src/scopeDsl/scopeRegistry.js';
+import ScopeEngine from '../../../src/scopeDsl/engine.js';
 import { parseScopeDefinitions } from '../../../src/scopeDsl/scopeDefinitionParser.js';
 import {
   POSITION_COMPONENT_ID,
@@ -40,6 +41,8 @@ describe('Scope Integration Tests', () => {
   let actionDiscoveryService;
   let jsonLogicEval;
   let scopeRegistry;
+  let scopeEngine;
+  let getEntityIdsForScopesWithEngine;
 
   beforeEach(() => {
     // Restore the mocked logger
@@ -70,6 +73,9 @@ describe('Scope Integration Tests', () => {
       environment: { expr: environmentDefs.get('environment') },
     });
 
+    // Create a real scope engine
+    scopeEngine = new ScopeEngine();
+
     jsonLogicEval = new JsonLogicEvaluationService({ logger });
     const registry = new InMemoryDataRegistry();
     registry.store('actions', followAction.id, followAction);
@@ -95,13 +101,18 @@ describe('Scope Integration Tests', () => {
       logger,
     });
 
+    // Create a wrapper function that includes the scopeEngine for integration testing
+    getEntityIdsForScopesWithEngine = (scopes, context, scopeRegistry, logger) => {
+      return getEntityIdsForScopes(scopes, context, scopeRegistry, logger, scopeEngine);
+    };
+
     actionDiscoveryService = new ActionDiscoveryService({
       gameDataRepository,
       entityManager,
       actionValidationService,
       logger,
       formatActionCommandFn: formatActionCommand,
-      getEntityIdsForScopesFn: getEntityIdsForScopes,
+      getEntityIdsForScopesFn: getEntityIdsForScopesWithEngine,
       safeEventDispatcher,
       scopeRegistry,
     });

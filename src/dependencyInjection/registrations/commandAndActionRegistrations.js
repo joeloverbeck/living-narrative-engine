@@ -62,19 +62,26 @@ export function registerCommandAndAction(container) {
   // --- Action Discovery & Execution ---
   registrar.tagged(INITIALIZABLE).singletonFactory(
     tokens.IActionDiscoveryService,
-    (c) =>
-      new ActionDiscoveryService({
+    (c) => {
+      // Create a wrapper function that includes the scope engine for production use
+      const getEntityIdsForScopesWithEngine = (scopes, context, scopeRegistry, logger) => {
+        const scopeEngine = c.resolve(tokens.IScopeEngine);
+        return getEntityIdsForScopes(scopes, context, scopeRegistry, logger, scopeEngine);
+      };
+
+      return new ActionDiscoveryService({
         gameDataRepository: c.resolve(tokens.IGameDataRepository),
         entityManager: c.resolve(tokens.IEntityManager),
         actionValidationService: c.resolve(tokens.ActionValidationService),
         logger: c.resolve(tokens.ILogger),
         formatActionCommandFn: formatActionCommand,
-        getEntityIdsForScopesFn: getEntityIdsForScopes,
+        getEntityIdsForScopesFn: getEntityIdsForScopesWithEngine,
         safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
         scopeRegistry: c.resolve(tokens.IScopeRegistry),
         getActorLocationFn: getActorLocation,
         getEntityDisplayNameFn: getEntityDisplayName,
-      })
+      });
+    }
   );
   logger.debug(
     `Command and Action Registration: Registered ${String(tokens.IActionDiscoveryService)}.`

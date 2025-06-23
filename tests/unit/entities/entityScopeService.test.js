@@ -135,7 +135,8 @@ describe('entityScopeService', () => {
         ['none', 'direction', 'followers'],
         context,
         mockScopeRegistryInstance,
-        mockLogger
+        mockLogger,
+        mockScopeEngine
       );
 
       // 'none' is skipped, 'direction' fails and logs a warning, 'followers' resolves
@@ -169,7 +170,7 @@ describe('entityScopeService', () => {
         location: undefined,
       };
 
-      const result = getEntityIdsForScopes('followers', context, mockScopeRegistryInstance, mockLogger);
+      const result = getEntityIdsForScopes('followers', context, mockScopeRegistryInstance, mockLogger, mockScopeEngine);
 
       expect(result).toEqual(expectedIds);
       expect(mockScopeRegistryInstance.getScope).toHaveBeenCalledWith(
@@ -199,7 +200,7 @@ describe('entityScopeService', () => {
         actingEntity: { id: 'player' },
         entityManager: mockEntityManager,
       };
-      const result = getEntityIdsForScopes('unknown_scope', context, mockScopeRegistryInstance, mockLogger);
+      const result = getEntityIdsForScopes('unknown_scope', context, mockScopeRegistryInstance, mockLogger, mockScopeEngine);
       expect(result).toEqual(new Set());
       expect(mockLogger.warn).toHaveBeenCalledWith(
         "Scope 'unknown_scope' not found or has no expression in registry"
@@ -213,7 +214,7 @@ describe('entityScopeService', () => {
       const context = {
         entityManager: mockEntityManager,
       };
-      const result = getEntityIdsForScopes('followers', context, mockScopeRegistryInstance, mockLogger);
+      const result = getEntityIdsForScopes('followers', context, mockScopeRegistryInstance, mockLogger, mockScopeEngine);
       expect(result).toEqual(new Set());
       expect(mockLogger.error).toHaveBeenCalledWith(
         'Cannot resolve scope: actingEntity is missing'
@@ -231,7 +232,7 @@ describe('entityScopeService', () => {
         actingEntity: { id: 'player' },
         entityManager: mockEntityManager,
       };
-      const result = getEntityIdsForScopes('followers', context, mockScopeRegistryInstance, mockLogger);
+      const result = getEntityIdsForScopes('followers', context, mockScopeRegistryInstance, mockLogger, mockScopeEngine);
       expect(result).toEqual(new Set());
       expect(mockLogger.error).toHaveBeenCalledWith(
         "Error resolving scope 'followers' with DSL:",
@@ -254,7 +255,7 @@ describe('entityScopeService', () => {
         spatialIndexManager: {},
         jsonLogicEval: {},
       };
-      const result = getEntityIdsForScopes('followers', context, mockScopeRegistryInstance, mockLogger);
+      const result = getEntityIdsForScopes('followers', context, mockScopeRegistryInstance, mockLogger, mockScopeEngine);
       expect(result).toEqual(new Set());
       expect(mockLogger.error).toHaveBeenCalledWith(
         "Error resolving scope 'followers' with DSL:",
@@ -289,7 +290,8 @@ describe('entityScopeService', () => {
         ['followers', 'environment'],
         context,
         mockScopeRegistryInstance,
-        mockLogger
+        mockLogger,
+        mockScopeEngine
       );
 
       expect(result).toEqual(
@@ -325,7 +327,8 @@ describe('entityScopeService', () => {
         ['followers', 'invalid_scope'],
         context,
         mockScopeRegistryInstance,
-        mockLogger
+        mockLogger,
+        mockScopeEngine
       );
 
       expect(result).toEqual(new Set(['follower1']));

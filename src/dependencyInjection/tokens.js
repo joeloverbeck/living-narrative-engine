@@ -237,6 +237,7 @@ export const tokens = freeze({
   ISafeEventDispatcher: 'ISafeEventDispatcher',
   IValidatedEventDispatcher: 'IValidatedEventDispatcher',
   IScopeRegistry: 'IScopeRegistry',
+  IScopeEngine: 'IScopeEngine',
   IActionExecutor: 'IActionExecutor',
   IWorldContext: 'IWorldContext',
   ICommandProcessor: 'ICommandProcessor',
@@ -375,4 +376,8 @@ export const tokens = freeze({
   ContentPhase: 'ContentPhase',
   WorldPhase: 'WorldPhase',
   SummaryPhase: 'SummaryPhase',
+
+  // Scope DSL Services
+  ScopeEngine: 'ScopeEngine',
+  ScopeCache: 'ScopeCache',
 });

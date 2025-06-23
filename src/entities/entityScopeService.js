@@ -6,10 +6,10 @@
 /** @typedef {import('../scopeDsl/scopeRegistry.js').default} ScopeRegistry */
 /** @typedef {import('../models/actionContext.js').ActionContext} ActionContext */
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
+/** @typedef {import('../interfaces/IScopeEngine.js').IScopeEngine} IScopeEngine */
 /** @typedef {import('../entities/entity.js').default} Entity */
 /** @typedef {string} EntityId */
 
-import ScopeEngine from '../scopeDsl/engine.js';
 import { parseDslExpression } from '../scopeDsl/parser.js';
 
 /**
@@ -19,13 +19,15 @@ import { parseDslExpression } from '../scopeDsl/parser.js';
  * @param {ActionContext} context - The action context.
  * @param {ScopeRegistry} scopeRegistry - The scope registry instance.
  * @param {ILogger} logger - Logger instance.
+ * @param {IScopeEngine} scopeEngine - Scope engine instance.
  * @returns {Set<EntityId>} A single set of unique entity IDs.
  */
 function getEntityIdsForScopes(
   scopes,
   context,
   scopeRegistry,
-  logger = console
+  logger = console,
+  scopeEngine
 ) {
   const requestedScopes = Array.isArray(scopes) ? scopes : [scopes];
   const aggregatedIds = new Set();
@@ -57,7 +59,8 @@ function getEntityIdsForScopes(
         scopeName,
         context,
         scopeRegistry,
-        logger
+        logger,
+        scopeEngine
       );
 
       if (scopeIds) {
@@ -79,10 +82,11 @@ function getEntityIdsForScopes(
  * @param {ActionContext} context - The action context. This object from ActionDiscoveryService contains entityManager, actingEntity, location, and jsonLogicEval.
  * @param {ScopeRegistry} scopeRegistry - The scope registry instance.
  * @param {ILogger} logger - Logger instance
+ * @param {IScopeEngine} scopeEngine - Scope engine instance.
  * @returns {Set<string>} Set of entity IDs
  * @private
  */
-function _resolveScopeWithDSL(scopeName, context, scopeRegistry, logger) {
+function _resolveScopeWithDSL(scopeName, context, scopeRegistry, logger, scopeEngine) {
   try {
     const scopeDefinition = scopeRegistry.getScope(scopeName);
 
@@ -118,7 +122,14 @@ function _resolveScopeWithDSL(scopeName, context, scopeRegistry, logger) {
 
     logger.debug(`Runtime context:`, runtimeCtx);
 
-    const scopeEngine = new ScopeEngine();
+    // Require scope engine to be provided
+    if (!scopeEngine) {
+      logger.error('Cannot resolve scope: scopeEngine is required but not provided');
+      return new Set();
+    }
+
+    /** @type {IScopeEngine} */
+    const engine = scopeEngine;
     const actorEntity = context.actingEntity;
 
     if (!actorEntity) {
@@ -127,7 +138,7 @@ function _resolveScopeWithDSL(scopeName, context, scopeRegistry, logger) {
     }
 
     // Pass the full actor entity to the engine, not just the ID.
-    const result = scopeEngine.resolve(ast, actorEntity, runtimeCtx);
+    const result = engine.resolve(ast, actorEntity, runtimeCtx);
     logger.debug(`Scope engine result:`, result);
 
     return result;
