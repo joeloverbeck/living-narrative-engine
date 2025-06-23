@@ -7,7 +7,7 @@
 /** @typedef {import('../../logic/defs.js').JsonLogicEvaluationContext} JsonLogicEvaluationContext */
 
 // --- FIX: Import necessary functions and constants ---
-import { setupService } from '../../utils/serviceInitializerUtils.js';
+import { BaseService } from '../../utils/serviceBase.js';
 // FIX: Remove buildDirectionContext as it's obsolete
 import {
   buildActorContext,
@@ -16,10 +16,11 @@ import {
 
 /**
  * @class ActionValidationContextBuilder
+ * @augments BaseService
  * @description Service dedicated to constructing the data context object used
  * for evaluating JsonLogic rules within the action validation process.
  */
-export class ActionValidationContextBuilder {
+export class ActionValidationContextBuilder extends BaseService {
   #entityManager;
   #logger;
 
@@ -30,7 +31,8 @@ export class ActionValidationContextBuilder {
    * @throws {Error} If dependencies are missing or invalid.
    */
   constructor({ entityManager, logger }) {
-    this.#logger = setupService('ActionValidationContextBuilder', logger, {
+    super();
+    this.#logger = this._init('ActionValidationContextBuilder', logger, {
       entityManager: {
         value: entityManager,
         requiredMethods: ['getEntityInstance', 'getComponentData'],

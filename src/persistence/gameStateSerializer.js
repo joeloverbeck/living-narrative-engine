@@ -3,6 +3,7 @@
 import { encode, decode } from '@msgpack/msgpack';
 import pako from 'pako';
 import { cloneValidatedState } from '../utils/saveStateUtils.js';
+import { BaseService } from '../utils/serviceBase.js';
 import {
   PersistenceError,
   PersistenceErrorCodes,
@@ -15,11 +16,12 @@ import { wrapSyncPersistenceOperation } from '../utils/persistenceErrorUtils.js'
 
 /**
  * @class GameStateSerializer
+ * @augments BaseService
  * @description Utility for converting game state objects to and from a
  * MessagePack + Gzip representation. Handles checksum generation using
  * the Web Crypto API.
  */
-class GameStateSerializer {
+class GameStateSerializer extends BaseService {
   /** @type {import('../interfaces/coreServices.js').ILogger} */
   #logger;
 
@@ -34,10 +36,8 @@ class GameStateSerializer {
    * @param {Crypto} [dependencies.crypto] - Web Crypto implementation.
    */
   constructor({ logger, crypto = globalThis.crypto }) {
-    if (!logger) {
-      throw new Error('GameStateSerializer requires a logger.');
-    }
-    this.#logger = logger;
+    super();
+    this.#logger = this._init('GameStateSerializer', logger);
     this.#crypto = crypto;
   }
 

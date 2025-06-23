@@ -1,7 +1,7 @@
 // src/persistence/activeModsManifestBuilder.js
 
 import { CORE_MOD_ID } from '../constants/core.js';
-import { setupService } from '../utils/serviceInitializerUtils.js';
+import { BaseService } from '../utils/serviceBase.js';
 
 /**
  * @typedef {import('../interfaces/coreServices.js').ILogger} ILogger
@@ -10,9 +10,10 @@ import { setupService } from '../utils/serviceInitializerUtils.js';
 
 /**
  * @class ActiveModsManifestBuilder
+ * @augments BaseService
  * @description Builds the active mods manifest for save files.
  */
-export default class ActiveModsManifestBuilder {
+export default class ActiveModsManifestBuilder extends BaseService {
   /** @type {ILogger} */
   #logger;
   /** @type {IDataRegistry} */
@@ -22,7 +23,8 @@ export default class ActiveModsManifestBuilder {
    * @param {{logger: ILogger, dataRegistry: IDataRegistry}} deps
    */
   constructor({ logger, dataRegistry }) {
-    this.#logger = setupService('ActiveModsManifestBuilder', logger, {
+    super();
+    this.#logger = this._init('ActiveModsManifestBuilder', logger, {
       dataRegistry: { value: dataRegistry, requiredMethods: ['getAll'] },
     });
     this.#dataRegistry = dataRegistry;

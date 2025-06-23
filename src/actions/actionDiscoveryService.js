@@ -23,6 +23,11 @@ import { safeDispatchError } from '../utils/safeDispatchErrorUtils.js';
 import { getEntityDisplayName } from '../utils/entityUtils.js';
 
 // ────────────────────────────────────────────────────────────────────────────────
+/**
+ * @class ActionDiscoveryService
+ * @augments IActionDiscoveryService
+ * @description Discovers valid actions for entities. Does not extend BaseService because it already inherits from IActionDiscoveryService.
+ */
 export class ActionDiscoveryService extends IActionDiscoveryService {
   #gameDataRepository;
   #entityManager;
@@ -49,17 +54,17 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
    * @param {Function}           deps.getEntityDisplayNameFn
    */
   constructor({
-                gameDataRepository,
-                entityManager,
-                actionValidationService,
-                logger,
-                formatActionCommandFn,
-                getEntityIdsForScopesFn,
-                safeEventDispatcher,
-                scopeRegistry,
-                getActorLocationFn = getActorLocation,
-                getEntityDisplayNameFn = getEntityDisplayName,
-              }) {
+    gameDataRepository,
+    entityManager,
+    actionValidationService,
+    logger,
+    formatActionCommandFn,
+    getEntityIdsForScopesFn,
+    safeEventDispatcher,
+    scopeRegistry,
+    getActorLocationFn = getActorLocation,
+    getEntityDisplayNameFn = getEntityDisplayName,
+  }) {
     super();
     this.#logger = setupService('ActionDiscoveryService', logger, {
       gameDataRepository: {
