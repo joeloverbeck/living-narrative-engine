@@ -89,7 +89,7 @@ export class GameDataRepository extends IGameDataRepository {
   }
 
   // ────────────────────────────────────────────────────────────────────────────
-  //  World & Startup Info
+  //  World & Startup Info
   // ────────────────────────────────────────────────────────────────────────────
 
   /**
@@ -120,7 +120,7 @@ export class GameDataRepository extends IGameDataRepository {
   }
 
   // ────────────────────────────────────────────────────────────────────────────
-  //  Action definitions
+  //  Action definitions
   // ────────────────────────────────────────────────────────────────────────────
 
   /** @returns {ActionDefinition[]} */
@@ -144,7 +144,7 @@ export class GameDataRepository extends IGameDataRepository {
   }
 
   // ────────────────────────────────────────────────────────────────────────────
-  //  Entity definitions
+  //  Entity definitions
   // ────────────────────────────────────────────────────────────────────────────
 
   /**
@@ -168,7 +168,7 @@ export class GameDataRepository extends IGameDataRepository {
   }
 
   // ────────────────────────────────────────────────────────────────────────────
-  //  Entity instances
+  //  Entity instances
   // ────────────────────────────────────────────────────────────────────────────
 
   /**
@@ -192,7 +192,7 @@ export class GameDataRepository extends IGameDataRepository {
   }
 
   // ────────────────────────────────────────────────────────────────────────────
-  //  Event definitions
+  //  Event definitions
   // ────────────────────────────────────────────────────────────────────────────
 
   /**
@@ -216,7 +216,7 @@ export class GameDataRepository extends IGameDataRepository {
   }
 
   // ────────────────────────────────────────────────────────────────────────────
-  //  Component definitions
+  //  Component definitions
   // ────────────────────────────────────────────────────────────────────────────
 
   /**
@@ -240,7 +240,7 @@ export class GameDataRepository extends IGameDataRepository {
   }
 
   // ────────────────────────────────────────────────────────────────────────────
-  //  Condition definitions
+  //  Condition definitions
   // ────────────────────────────────────────────────────────────────────────────
 
   /**
@@ -264,7 +264,7 @@ export class GameDataRepository extends IGameDataRepository {
   }
 
   // ────────────────────────────────────────────────────────────────────────────
-  //  Goal definitions
+  //  Goal definitions
   // ────────────────────────────────────────────────────────────────────────────
 
   /**
@@ -288,7 +288,7 @@ export class GameDataRepository extends IGameDataRepository {
   }
 
   // ────────────────────────────────────────────────────────────────────────────
-  //  Mod & Content Info
+  //  Mod & Content Info
   // ────────────────────────────────────────────────────────────────────────────
 
   /**
@@ -318,6 +318,35 @@ export class GameDataRepository extends IGameDataRepository {
       'GameDataRepository: listContentByMod not supported by registry'
     );
     return {};
+  }
+
+  // ────────────────────────────────────────────────────────────────────────────
+  //  Generic data access
+  // ────────────────────────────────────────────────────────────────────────────
+
+  /**
+   * Retrieves arbitrary data from the underlying registry by key.
+   * This provides access to data types not covered by specific getter methods.
+   *
+   * @param {string} key The data key to retrieve (e.g., 'scopes', 'prompts').
+   * @returns {any} The data associated with the key, or undefined if not found.
+   */
+  get(key) {
+    if (typeof key !== 'string' || !key.trim()) {
+      this.#logger.warn(
+        `GameDataRepository: get called with invalid key: ${key}`
+      );
+      return undefined;
+    }
+    
+    if (typeof this.#registry.get === 'function') {
+      return this.#registry.get(key);
+    }
+    
+    this.#logger.warn(
+      'GameDataRepository: get method not supported by registry'
+    );
+    return undefined;
   }
 }
 
