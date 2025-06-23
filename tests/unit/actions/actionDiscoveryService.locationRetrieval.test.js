@@ -73,6 +73,10 @@ describe('ActionDiscoveryService – scoped discovery', () => {
 
   const safeEventDispatcher = { dispatch: jest.fn() };
 
+  const scopeRegistry = {
+    getScope: jest.fn(),
+  };
+
   const service = new ActionDiscoveryService({
     gameDataRepository,
     entityManager,
@@ -81,6 +85,7 @@ describe('ActionDiscoveryService – scoped discovery', () => {
     formatActionCommandFn,
     getEntityIdsForScopesFn,
     safeEventDispatcher,
+    scopeRegistry,
   });
 
   /** Bare-bones actor / context objects */
