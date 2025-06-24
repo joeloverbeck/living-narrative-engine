@@ -47,10 +47,9 @@ export class ActionValidationContextBuilder extends BaseService {
   /**
    * Builds the evaluation context object for a given action attempt.
    * This context provides data accessible to JsonLogic rules during validation.
-   * 
+   *
    * Note: Target context has been removed as target filtering is now handled
-   * by the Scope DSL system. Prerequisites should only check actor conditions
-   * and global/contextual state.
+   * by the Scope DSL system. Prerequisites should only check actor conditions.
    *
    * @param {ActionDefinition} actionDefinition - The definition of the action being attempted.
    * @param {Entity} actor - The entity performing the action.
@@ -63,7 +62,7 @@ export class ActionValidationContextBuilder extends BaseService {
     this.#assertValidInputs(actionDefinition, actor, targetContext);
 
     this.#logger.debug(
-      `ActionValidationContextBuilder: Building context for action '${actionDefinition.id}', actor '${actor.id}'. Target context is not included in prerequisites as filtering is handled by Scope DSL.`
+      `ActionValidationContextBuilder: Building context for action '${actionDefinition.id}', actor '${actor.id}'. Only actor context is included as target filtering is handled by Scope DSL.`
     );
 
     // --- 2. Build Actor Context ---
@@ -73,18 +72,9 @@ export class ActionValidationContextBuilder extends BaseService {
       this.#logger
     );
 
-    // --- 3. Assemble Final Context (Target removed - handled by Scope DSL) ---
+    // --- 3. Assemble Final Context (Simplified - only actor needed for prerequisites) ---
     const finalContext = {
       actor: actorContext,
-      // target: removed - target filtering is now responsibility of Scope DSL
-      action: {
-        id: actionDefinition.id,
-      },
-      // Add other top-level keys for consistency with existing tests/expectations
-      event: null,
-      context: {},
-      globals: {},
-      entities: {},
     };
 
     return finalContext;
@@ -120,6 +110,6 @@ export class ActionValidationContextBuilder extends BaseService {
     }
   }
 
-  // #buildEntityTargetContextForEval method removed - target context no longer 
+  // #buildEntityTargetContextForEval method removed - target context no longer
   // needed in prerequisites as target filtering is handled by Scope DSL
 }

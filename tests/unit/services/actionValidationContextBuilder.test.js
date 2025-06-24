@@ -149,7 +149,8 @@ describe('ActionValidationContextBuilder', () => {
         // Target context removed - target filtering handled by Scope DSL
         expect(context.target).toBeUndefined();
 
-        expect(context.action).toEqual({ id: sampleActionDefinition.id });
+        // Action context removed - action information available elsewhere
+        expect(context.action).toBeUndefined();
 
         expect(createComponentAccessor).toHaveBeenCalledWith(
           actorId,

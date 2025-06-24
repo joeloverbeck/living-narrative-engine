@@ -43,7 +43,10 @@ const environmentScopeContent = fs.readFileSync(
   'utf8'
 );
 const directionsScopeContent = fs.readFileSync(
-  path.resolve(__dirname, '../../../data/mods/core/scopes/clear_directions.scope'),
+  path.resolve(
+    __dirname,
+    '../../../data/mods/core/scopes/clear_directions.scope'
+  ),
   'utf8'
 );
 
@@ -82,9 +85,9 @@ describe('Scope Integration Tests', () => {
       'environment.scope'
     );
     const directionDefs = parseScopeDefinitions(
-  directionsScopeContent,
-  'clear_directions.scope'
-);
+      directionsScopeContent,
+      'clear_directions.scope'
+    );
 
     // FIX: Initialize the registry with the *actual* expressions, not the file content,
     // and map the name from the file ('environments') to the name the action expects ('environment').

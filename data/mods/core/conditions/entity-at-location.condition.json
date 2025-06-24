@@ -1,15 +1,15 @@
 {
-    "$schema": "http://example.com/schemas/condition.schema.json",
-    "id": "core:entity-at-location",
-    "description": "True when the entity's current locationId matches the location under evaluation.",
-    "logic": {
-        "==": [
-            {
-                "var": "entity.components.core:position.locationId"
-            },
-            {
-                "var": "location.id"
-            }
-        ]
-    }
+  "$schema": "http://example.com/schemas/condition.schema.json",
+  "id": "core:entity-at-location",
+  "description": "True when the entity's current locationId matches the location under evaluation.",
+  "logic": {
+    "==": [
+      {
+        "var": "entity.components.core:position.locationId"
+      },
+      {
+        "var": "location.id"
+      }
+    ]
+  }
 }

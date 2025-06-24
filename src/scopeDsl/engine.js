@@ -319,7 +319,14 @@ class ScopeEngine extends IScopeEngine {
       // If the item is an array, iterate over its elements for filtering
       if (Array.isArray(item)) {
         for (const arrayElement of item) {
-          if (this._filterSingleItem(arrayElement, node.logic, actorEntity, runtimeCtx)) {
+          if (
+            this._filterSingleItem(
+              arrayElement,
+              node.logic,
+              actorEntity,
+              runtimeCtx
+            )
+          ) {
             result.add(arrayElement);
           }
         }
@@ -335,7 +342,7 @@ class ScopeEngine extends IScopeEngine {
 
   /**
    * Applies JSON Logic filter to a single item
-   * 
+   *
    * @param {*} item - Item to filter (entity ID, object, etc.)
    * @param {object} logic - JSON Logic expression
    * @param {object} actorEntity - The acting entity instance

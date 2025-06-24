@@ -17,14 +17,20 @@ export default function createTestAjv() {
 
   // Add core schemas
   ajv.addSchema(commonSchema, 'http://example.com/schemas/common.schema.json');
-  ajv.addSchema(operationSchema, 'http://example.com/schemas/operation.schema.json');
-  ajv.addSchema(jsonLogicSchema, 'http://example.com/schemas/json-logic.schema.json');
+  ajv.addSchema(
+    operationSchema,
+    'http://example.com/schemas/operation.schema.json'
+  );
+  ajv.addSchema(
+    jsonLogicSchema,
+    'http://example.com/schemas/json-logic.schema.json'
+  );
   ajv.addSchema(ruleSchema, 'http://example.com/schemas/rule.schema.json');
-  
+
   // Load operation and condition schemas using existing helpers
   // Note: loadConditionSchemas already adds condition.schema.json and condition-container.schema.json
   loadOperationSchemas(ajv);
   loadConditionSchemas(ajv);
 
   return ajv;
-} 
+}

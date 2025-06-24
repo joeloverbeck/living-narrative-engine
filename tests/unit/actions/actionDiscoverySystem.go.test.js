@@ -139,7 +139,9 @@ describe('ActionDiscoveryService - Go Action (Fixed State)', () => {
     mockScopeRegistry.getScope.mockImplementation((scopeName) => {
       if (scopeName === 'clear_directions') {
         // The service needs a valid expression to parse
-        return { expr: 'location.core:exits[{"!": {"var": "entity.blocker"}}].target' };
+        return {
+          expr: 'location.core:exits[{"!": {"var": "entity.blocker"}}].target',
+        };
       }
       return null;
     });

@@ -754,6 +754,25 @@ class EntityManager extends IEntityManager {
   }
 
   /**
+   * Returns a list of all component type IDs attached to a given entity.
+   * 
+   * @param {string} entityId The ID of the entity.
+   * @returns {string[]} An array of component ID strings.
+   * @throws {InvalidArgumentError} If the entityId is invalid.
+   */
+  getAllComponentTypesForEntity(entityId) {
+    this.#validateGetEntityInstanceParams(entityId);
+    const entity = this.#getEntityById(entityId);
+    if (!entity) {
+      this.#logger.debug(
+        `EntityManager.getAllComponentTypesForEntity: Entity not found with ID: '${entityId}'. Returning empty array.`
+      );
+      return [];
+    }
+    return entity.componentTypeIds;
+  }
+
+  /**
    * Clear all entities from the manager.
    * Also clears the entity definition cache.
    */
