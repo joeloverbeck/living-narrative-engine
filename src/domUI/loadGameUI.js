@@ -292,18 +292,7 @@ class LoadGameUI extends SlotModalBase {
    */
   async _populateLoadSlotsList() {
     this.logger.debug(`${this._logPrefix} Populating load slots list...`);
-    if (!this.elements.listContainerElement) {
-      this.logger.error(
-        `${this._logPrefix} List container element not found in this.elements.`
-      );
-      this._displayStatusMessage(
-        'Error: UI component for slots missing.',
-        'error'
-      );
-      return;
-    }
-
-    await this._populateSlots(
+    await this.populateSlotsList(
       () => this._getLoadSlotsData(),
       (slotData, index) => this._renderLoadSlotItem(slotData, index),
       () => this._getEmptyLoadSlotsMessage(),
