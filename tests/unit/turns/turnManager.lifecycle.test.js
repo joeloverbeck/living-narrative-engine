@@ -20,15 +20,8 @@ describeTurnManagerSuite('TurnManager - Lifecycle (Start/Stop)', (getBed) => {
 
   beforeEach(() => {
     // Timers reset via BaseTestBed cleanup
-
     testBed = getBed();
-
-    testBed.setupMockHandlerResolver();
-
-    advanceTurnSpy = testBed.spyOnAdvanceTurn();
-    advanceTurnSpy.mockResolvedValue(undefined);
-
-    testBed.resetMocks();
+    advanceTurnSpy = testBed.prepareRunningManager();
   });
 
   // --- start() Tests (Largely Unchanged) ---
