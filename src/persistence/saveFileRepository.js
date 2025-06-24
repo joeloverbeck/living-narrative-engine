@@ -60,13 +60,6 @@ export default class SaveFileRepository extends BaseService {
   }
 
   /**
-   * Helper to wrap persistence operations with logging.
-   *
-   * @param {() => Promise<any>} operationFn - Operation to execute.
-   * @returns {Promise<any>} Result of the wrapped operation.
-   * @private
-   */
-  /**
    * Ensures the manual save directory exists if supported.
    *
    * @returns {Promise<import('./persistenceTypes.js').PersistenceResult<null>>} Result of directory creation.
