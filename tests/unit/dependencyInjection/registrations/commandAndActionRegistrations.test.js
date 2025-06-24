@@ -73,6 +73,8 @@ describe('registerCommandAndAction', () => {
       tokens.ISafeEventDispatcher,
       () => mockSafeEventDispatcher
     );
+    container.register(tokens.IScopeRegistry, () => mockScopeRegistry);
+    container.register(tokens.IScopeEngine, () => mockScopeEngine);
   });
 
   afterEach(() => {

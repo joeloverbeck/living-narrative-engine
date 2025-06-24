@@ -27,6 +27,7 @@ import {
   NAME_COMPONENT_ID,
   EXITS_COMPONENT_ID,
 } from '../../../src/constants/componentIds.js';
+import { createMockScopeEngine } from '../../common/mockFactories/coreServices.js';
 import fs from 'fs';
 import path from 'path';
 import JsonLogicEvaluationService from '../../../src/logic/jsonLogicEvaluationService.js';
@@ -149,6 +150,7 @@ describe('Scope Integration Tests', () => {
       getEntityIdsForScopesFn: getEntityIdsForScopesWithEngine,
       safeEventDispatcher,
       scopeRegistry,
+      scopeEngine,
     });
   });
 
@@ -213,6 +215,7 @@ describe('Scope Integration Tests', () => {
         getEntityIdsForScopesFn: getEntityIdsForScopesWithEngine,
         safeEventDispatcher,
         scopeRegistry,
+        scopeEngine,
       });
 
       const actorEntity = entityManager.getEntityInstance(actorId);
@@ -271,6 +274,7 @@ describe('Scope Integration Tests', () => {
         getEntityIdsForScopesFn: getEntityIdsForScopesWithEngine,
         safeEventDispatcher,
         scopeRegistry,
+        scopeEngine,
       });
 
       const actorEntity = entityManager.getEntityInstance(actorId);
@@ -349,6 +353,7 @@ describe('Scope Integration Tests', () => {
         getEntityIdsForScopesFn: getEntityIdsForScopesWithEngine,
         safeEventDispatcher,
         scopeRegistry,
+        scopeEngine,
       });
 
       const actorEntity = entityManager.getEntityInstance(actorId);
@@ -415,6 +420,7 @@ describe('Scope Integration Tests', () => {
         getEntityIdsForScopesFn: getEntityIdsForScopesWithEngine,
         safeEventDispatcher,
         scopeRegistry,
+        scopeEngine,
       });
 
       const actorEntity = entityManager.getEntityInstance(actorId);
@@ -477,6 +483,7 @@ describe('Scope Integration Tests', () => {
         getEntityIdsForScopesFn: getEntityIdsForScopesWithEngine,
         safeEventDispatcher,
         scopeRegistry,
+        scopeEngine,
       });
 
       const actorEntity = entityManager.getEntityInstance(actorId);
@@ -554,6 +561,7 @@ describe('Scope Integration Tests', () => {
         getEntityIdsForScopesFn: getEntityIdsForScopesWithEngine,
         safeEventDispatcher,
         scopeRegistry,
+        scopeEngine,
       });
 
       const actorEntity = entityManager.getEntityInstance(actorId);
@@ -613,6 +621,7 @@ describe('Scope Integration Tests', () => {
         getEntityIdsForScopesFn: getEntityIdsForScopesWithEngine,
         safeEventDispatcher,
         scopeRegistry,
+        scopeEngine,
       });
 
       const actorEntity = entityManager.getEntityInstance(actorId);
@@ -670,6 +679,7 @@ describe('Scope Integration Tests', () => {
         getEntityIdsForScopesFn: getEntityIdsForScopesWithEngine,
         safeEventDispatcher,
         scopeRegistry,
+        scopeEngine,
       });
 
       const context = {
@@ -716,6 +726,7 @@ describe('Scope Integration Tests', () => {
         getEntityIdsForScopesFn: getEntityIdsForScopesWithEngine,
         safeEventDispatcher,
         scopeRegistry,
+        scopeEngine,
       });
 
       const actorEntity = entityManager.getEntityInstance(actorId);
