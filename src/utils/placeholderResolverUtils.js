@@ -24,6 +24,20 @@ export const PLACEHOLDER_FIND_REGEX = /{\s*([^}\s]+)\s*}/g;
 export const FULL_STRING_PLACEHOLDER_REGEX = /^{\s*([^}\s]+)\s*}$/;
 
 /**
+ * Parses a placeholder key and determines whether it is optional.
+ *
+ * @description Trims whitespace, removes a trailing `?` if present,
+ * and flags the key as optional when applicable.
+ * @param {string} key - Raw placeholder key.
+ * @returns {{ key: string, optional: boolean }} Parsed key and optional flag.
+ */
+export function parsePlaceholderKey(key) {
+  const trimmed = key.trim();
+  const optional = trimmed.endsWith('?');
+  return { key: optional ? trimmed.slice(0, -1) : trimmed, optional };
+}
+
+/**
  * @class PlaceholderResolver
  * @description A utility class dedicated to resolving placeholders in strings.
  * It replaces placeholders (e.g., `{key}`) with values from provided data objects.
@@ -260,13 +274,14 @@ export class PlaceholderResolver {
    * @returns {*} Resolved value or `undefined` if not found.
    */
   _resolveFromSources(path, sources) {
+    const { key, optional: _optional } = parsePlaceholderKey(path);
     for (const source of sources) {
       if (source && typeof source === 'object') {
-        const value = this.resolvePath(source, path);
+        const value = this.resolvePath(source, key);
         if (value !== undefined) {
           return value;
         } else {
-          const parts = path.split('.');
+          const parts = key.split('.');
           const last = parts.pop();
           const parentPath = parts.join('.');
           const parent =
@@ -296,11 +311,8 @@ export class PlaceholderResolver {
     const fullMatch = value.match(FULL_STRING_PLACEHOLDER_REGEX);
     const replaced = this.resolve(value, ...sources);
     if (fullMatch) {
-      let placeholderPath = fullMatch[1];
-      const isOptional = placeholderPath.endsWith('?');
-      if (isOptional) {
-        placeholderPath = placeholderPath.slice(0, -1);
-      }
+      const { key: placeholderPath, optional: isOptional } =
+        parsePlaceholderKey(fullMatch[1]);
       const resolved = this._resolveFromSources(placeholderPath, sources);
       if (resolved !== undefined) {
         this.#logger.debug(
@@ -317,12 +329,9 @@ export class PlaceholderResolver {
       let match;
       PLACEHOLDER_FIND_REGEX.lastIndex = 0;
       while ((match = PLACEHOLDER_FIND_REGEX.exec(value))) {
-        let placeholderPath = match[1];
         const placeholderSyntax = match[0];
-        const isOptional = placeholderPath.endsWith('?');
-        if (isOptional) {
-          placeholderPath = placeholderPath.slice(0, -1);
-        }
+        const { key: placeholderPath, optional: _isOptional } =
+          parsePlaceholderKey(match[1]);
         const resolved = this._resolveFromSources(placeholderPath, sources);
         if (resolved !== undefined) {
           const stringValue = resolved === null ? 'null' : String(resolved);
