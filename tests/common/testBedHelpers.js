@@ -78,8 +78,8 @@ export function createWithBed(TestBedCtor, mapFn) {
  *   method.
  * @param {(bed: InstanceType<T>) => any[]} mapFn - Maps the bed to callback
  *   arguments.
- * @returns {(overrides?: ConstructorParameters<T>[0], arg?: any,
- *   callback?: (...args: any[]) => (Promise<void>|void)) => Promise<void>} Helper
+ * @returns {(options: { overrides?: ConstructorParameters<T>[0], initArg?: any },
+ *   callback: (...args: any[]) => (Promise<void>|void)) => Promise<void>} Helper
  *   invoking {@link withTestBed} with initialization.
  */
 export function createInitializedBed(
@@ -88,25 +88,13 @@ export function createInitializedBed(
   defaultArg,
   mapFn
 ) {
-  return async function withInitializedBed(overrides, arg, callback) {
-    if (typeof overrides === 'function') {
-      callback = overrides;
-      overrides = {};
-      arg = defaultArg;
-    } else if (typeof arg === 'function') {
-      callback = arg;
-      arg = defaultArg;
-      overrides = overrides || {};
-    } else {
-      overrides = overrides || {};
-      arg = arg !== undefined ? arg : defaultArg;
-    }
-
+  return async function withInitializedBed(options = {}, callback) {
+    const { overrides = {}, initArg = defaultArg } = options;
     await withTestBed(
       TestBedCtor,
       overrides,
       (bed) => callback(...mapFn(bed)),
-      (bed) => bed[initMethod](arg)
+      (bed) => bed[initMethod](initArg)
     );
   };
 }
