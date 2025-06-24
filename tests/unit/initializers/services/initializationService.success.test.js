@@ -5,7 +5,6 @@ import {
   beforeEach,
   describe,
   expect,
-  it,
   jest,
   test,
 } from '@jest/globals';
@@ -103,6 +102,8 @@ describe('InitializationService', () => {
             return mockLogger;
           case tokens.LLMAdapter:
             return mockLlmAdapter;
+          case tokens.LlmConfigLoader:
+            return { loadConfigs: jest.fn() };
           case tokens.ISchemaValidator:
             return mockSchemaValidator;
           case tokens.IConfiguration:
@@ -153,6 +154,8 @@ describe('InitializationService', () => {
             return mockLogger;
           case tokens.LLMAdapter:
             return mockLlmAdapter;
+          case tokens.LlmConfigLoader:
+            return { loadConfigs: jest.fn() };
           case tokens.ISchemaValidator:
             return mockSchemaValidator;
           case tokens.IConfiguration:
@@ -208,9 +211,7 @@ describe('InitializationService', () => {
         tokens.IScopeRegistry,
         tokens.IDataRegistry, // For ScopeRegistry
         tokens.LLMAdapter,
-        tokens.ISchemaValidator, // by LlmConfigLoader
-        tokens.IConfiguration, // by LlmConfigLoader
-        tokens.ISafeEventDispatcher, // by LlmConfigLoader
+        tokens.LlmConfigLoader,
         tokens.SystemInitializer,
         tokens.WorldInitializer,
         tokens.ISafeEventDispatcher, // for AI Listeners

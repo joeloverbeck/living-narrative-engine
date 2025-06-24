@@ -62,6 +62,7 @@ import { PerceptionLogFormatter } from '../../formatting/perceptionLogFormatter.
 import { GameStateValidationServiceForPrompting } from '../../validation/gameStateValidationServiceForPrompting.js';
 import { HttpConfigurationProvider } from '../../configuration/httpConfigurationProvider.js';
 import { LLMConfigService } from '../../llms/llmConfigService.js';
+import { LlmConfigLoader } from '../../llms/services/llmConfigLoader.js';
 import { PlaceholderResolver } from '../../utils/placeholderResolverUtils.js';
 import { StandardElementAssembler } from '../../prompting/assembling/standardElementAssembler.js';
 import {
@@ -123,6 +124,20 @@ export function registerLlmInfrastructure(registrar, logger) {
     });
   });
   logger.debug(`AI Systems Registration: Registered ${tokens.IHttpClient}.`);
+
+  registrar.singletonFactory(
+    tokens.LlmConfigLoader,
+    (c) =>
+      new LlmConfigLoader({
+        logger: c.resolve(tokens.ILogger),
+        schemaValidator: c.resolve(tokens.ISchemaValidator),
+        configuration: c.resolve(tokens.IConfiguration),
+        safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+      })
+  );
+  logger.debug(
+    `AI Systems Registration: Registered ${tokens.LlmConfigLoader}.`
+  );
 
   registrar.singletonFactory(tokens.LLMAdapter, (c) => {
     logger.debug('AI Systems Registration: Starting LLM Adapter setup...');

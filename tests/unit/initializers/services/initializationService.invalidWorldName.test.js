@@ -4,7 +4,6 @@ import {
   beforeEach,
   describe,
   expect,
-  it,
   jest,
   test,
 } from '@jest/globals';
@@ -23,8 +22,6 @@ let mockSchemaValidator;
 let mockConfiguration;
 let mockDataRegistry;
 let mockScopeRegistry;
-
-const MOCK_WORLD_NAME = 'testWorld';
 
 describe('InitializationService', () => {
   beforeEach(() => {
@@ -99,6 +96,8 @@ describe('InitializationService', () => {
             return mockLogger;
           case tokens.LLMAdapter:
             return mockLlmAdapter;
+          case tokens.LlmConfigLoader:
+            return { loadConfigs: jest.fn() };
           case tokens.ISchemaValidator:
             return mockSchemaValidator;
           case tokens.IConfiguration:
@@ -151,6 +150,8 @@ describe('InitializationService', () => {
             return mockLogger;
           case tokens.LLMAdapter:
             return mockLlmAdapter;
+          case tokens.LlmConfigLoader:
+            return { loadConfigs: jest.fn() };
           case tokens.ISchemaValidator:
             return mockSchemaValidator;
           case tokens.IConfiguration:
