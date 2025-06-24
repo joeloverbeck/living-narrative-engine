@@ -211,6 +211,14 @@ export class SlotModalBase extends BaseModalRenderer {
     emptyMessageProvider,
     loadingMessage
   ) {
+    if (!this.elements.listContainerElement) {
+      this.logger.error(`${this._logPrefix} List container element not found.`);
+      this._displayStatusMessage(
+        'Error: UI component for slots missing.',
+        'error'
+      );
+      return;
+    }
     this._setOperationInProgress(true);
     this._displayStatusMessage(loadingMessage, 'info');
 
