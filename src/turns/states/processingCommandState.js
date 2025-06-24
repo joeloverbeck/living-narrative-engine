@@ -62,20 +62,26 @@ export class ProcessingCommandState extends AbstractTurnState {
    * @param {string} [commandString]
    * @param {ITurnAction} [turnAction]
    * @param {{ resolveStrategy(directive: string): ITurnDirectiveStrategy }} [directiveResolver]
-   * @param exceptionHandler
+   * @param {ProcessingExceptionHandler} [exceptionHandler] - Preconstructed handler.
+   * @param {new (state: ProcessingCommandState) => ProcessingGuard} [processingGuardFactory]
+   *   - Factory for creating a ProcessingGuard instance.
+   * @param {new (state: ProcessingCommandState) => ProcessingExceptionHandler} [exceptionHandlerFactory]
+   *   - Factory for creating a ProcessingExceptionHandler instance when one is not supplied.
    */
   constructor(
     handler,
     commandString,
     turnAction = null,
     directiveResolver = TurnDirectiveStrategyResolver,
-    exceptionHandler = undefined
+    exceptionHandler = undefined,
+    processingGuardFactory = ProcessingGuard,
+    exceptionHandlerFactory = ProcessingExceptionHandler
   ) {
     super(handler);
-    this._processingGuard = new ProcessingGuard(this);
+    this._processingGuard = new processingGuardFactory(this);
     this._directiveResolver = directiveResolver;
     this._exceptionHandler =
-      exceptionHandler || new ProcessingExceptionHandler(this);
+      exceptionHandler || new exceptionHandlerFactory(this);
     finishProcessing(this);
     this.#turnActionToProcess = turnAction;
     this.#commandStringForLog =
@@ -184,7 +190,8 @@ export class ProcessingCommandState extends AbstractTurnState {
       turnCtx,
       contextMethod,
       serviceLabel,
-      actorIdForLog
+      actorIdForLog,
+      this._exceptionHandler
     );
   }
 

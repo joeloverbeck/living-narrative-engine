@@ -2,7 +2,6 @@
 
 import {
   describe,
-  test,
   expect,
   jest,
   beforeEach,
@@ -12,10 +11,7 @@ import {
 import { ProcessingCommandState } from '../../../../src/turns/states/processingCommandState.js';
 import { TurnIdleState } from '../../../../src/turns/states/turnIdleState.js';
 import TurnDirectiveStrategyResolver from '../../../../src/turns/strategies/turnDirectiveStrategyResolver.js';
-import { SYSTEM_ERROR_OCCURRED_ID } from '../../../../src/constants/eventIds.js';
 import TurnDirective from '../../../../src/turns/constants/turnDirectives.js';
-import { AwaitingActorDecisionState } from '../../../../src/turns/states/awaitingActorDecisionState.js';
-import { AwaitingExternalTurnEndState } from '../../../../src/turns/states/awaitingExternalTurnEndState.js';
 
 // Mock Actor class (simplified)
 class MockActor {
@@ -398,14 +394,19 @@ describe('ProcessingCommandState', () => {
       );
     });
 
-    it('should use an injected exception handler instance', async () => {
+    it('should use injected factories for guard and exception handler', async () => {
       const customHandler = { handle: jest.fn().mockResolvedValue(undefined) };
+      const customGuard = { start: jest.fn(), finish: jest.fn() };
+      const guardFactory = jest.fn(() => customGuard);
+      const handlerFactory = jest.fn(() => customHandler);
       const customState = new ProcessingCommandState(
         mockHandler,
         null,
         null,
         TurnDirectiveStrategyResolver,
-        customHandler
+        undefined,
+        guardFactory,
+        handlerFactory
       );
       mockHandler._currentState = customState;
       const chosen = { actionDefinitionId: 'custom', commandString: 'c' };
@@ -422,6 +423,9 @@ describe('ProcessingCommandState', () => {
         customState._exceptionHandler
       );
       expect(customState._exceptionHandler).toBe(customHandler);
+      expect(customState._processingGuard).toBe(customGuard);
+      expect(guardFactory).toHaveBeenCalledWith(customState);
+      expect(handlerFactory).toHaveBeenCalledWith(customState);
     });
   });
 });

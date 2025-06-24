@@ -35,6 +35,7 @@ export class ServiceLookupError extends Error {
  * @param {string} contextMethod - Method name on ITurnContext used to retrieve the service.
  * @param {string} serviceLabel - Label for logging when retrieval fails.
  * @param {string} actorIdForLog - Actor ID for logging context.
+ * @param {ProcessingExceptionHandler} [exceptionHandler] - Handler for errors.
  * @returns {Promise<*>} The requested service instance.
  * @throws {ServiceLookupError} When the service cannot be retrieved.
  */
@@ -43,7 +44,8 @@ export async function getServiceFromContext(
   turnCtx,
   contextMethod,
   serviceLabel,
-  actorIdForLog
+  actorIdForLog,
+  exceptionHandler = state._exceptionHandler
 ) {
   const logger = getLogger(turnCtx, state._handler);
   const dispatcher = getSafeEventDispatcher(turnCtx, state._handler);
@@ -100,8 +102,8 @@ export async function getServiceFromContext(
       );
     }
     const serviceError = new Error(errorMsg);
-    const exceptionHandler = new ProcessingExceptionHandler(state);
-    await exceptionHandler.handle(turnCtx, serviceError, actorIdForLog);
+    const handler = exceptionHandler || new ProcessingExceptionHandler(state);
+    await handler.handle(turnCtx, serviceError, actorIdForLog);
     throw new ServiceLookupError(errorMsg);
   }
 }
