@@ -152,12 +152,12 @@ export class TurnManagerTestBed extends SpyTrackerMixin(
    * confirmation that stop was triggered without affecting flow.
    *
    * @example
-   * const stopSpy = bed.setupDebugStopSpy();
+   * const stopSpy = bed.spyOnStopWithDebug();
    * await bed.turnManager.stop();
    * expect(stopSpy).toHaveBeenCalled();
    * @returns {import('@jest/globals').Mock} The spy instance.
    */
-  setupDebugStopSpy() {
+  spyOnStopWithDebug() {
     const spy = this.spyOnStop();
     spy.mockImplementation(() => {
       this.mocks.logger.debug('Mocked instance.stop() called.');
@@ -256,7 +256,7 @@ export class TurnManagerTestBed extends SpyTrackerMixin(
    *
    * @returns {import('@jest/globals').Mock} The spy instance.
    */
-  setupStopSpyNoOp() {
+  spyOnStopNoOp() {
     const spy = this.spyOnStop();
     spy.mockResolvedValue();
     return spy;

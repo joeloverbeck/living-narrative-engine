@@ -25,7 +25,7 @@ describeTurnManagerSuite(
       testBed.mocks.turnHandlerResolver.resolveHandler.mockResolvedValue(null);
 
       // Spy on stop with debug logging for verification
-      stopSpy = testBed.setupDebugStopSpy();
+      stopSpy = testBed.spyOnStopWithDebug();
 
       // Clear constructor/setup logs AFTER instantiation and spy setup
       testBed.resetMocks();
