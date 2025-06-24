@@ -34,27 +34,35 @@ describe('withGameEngineBed', () => {
 describe('withInitializedGameEngineBed', () => {
   it('initializes engine, runs callback and cleans up', async () => {
     const calls = [];
-    await withInitializedGameEngineBed({ b: 2 }, 'World', (bed, engine) => {
-      calls.push('cb');
-      expect(bed).toBeInstanceOf(bedModule.GameEngineTestBed);
-      expect(engine).toBe(bed.engine);
-    });
+    await withInitializedGameEngineBed(
+      { overrides: { b: 2 }, initArg: 'World' },
+      (bed, engine) => {
+        calls.push('cb');
+        expect(bed).toBeInstanceOf(bedModule.GameEngineTestBed);
+        expect(engine).toBe(bed.engine);
+      }
+    );
     expect(calls).toEqual(['cb']);
   });
 
   it('uses defaults and cleans up on error', async () => {
     const error = new Error('oops');
     const testFn = jest.fn().mockRejectedValue(error);
-    await expect(withInitializedGameEngineBed(testFn)).rejects.toThrow('oops');
+    await expect(withInitializedGameEngineBed({}, testFn)).rejects.toThrow(
+      'oops'
+    );
   });
 
   it('passes initialized bed and engine to callback', async () => {
     const calls = [];
-    await withInitializedGameEngineBed({ c: 3 }, 'World', (bed, engine) => {
-      calls.push('cb');
-      expect(bed).toBeInstanceOf(bedModule.GameEngineTestBed);
-      expect(engine).toBe(bed.engine);
-    });
+    await withInitializedGameEngineBed(
+      { overrides: { c: 3 }, initArg: 'World' },
+      (bed, engine) => {
+        calls.push('cb');
+        expect(bed).toBeInstanceOf(bedModule.GameEngineTestBed);
+        expect(engine).toBe(bed.engine);
+      }
+    );
     expect(calls).toEqual(['cb']);
   });
 
@@ -63,34 +71,42 @@ describe('withInitializedGameEngineBed', () => {
     const testFn = jest.fn(() => {
       throw error;
     });
-    await expect(withInitializedGameEngineBed(testFn)).rejects.toThrow('fail');
+    await expect(withInitializedGameEngineBed({}, testFn)).rejects.toThrow(
+      'fail'
+    );
   });
 });
 
 describe('withRunningGameEngineBed', () => {
   it('starts engine, runs callback and cleans up', async () => {
     const calls = [];
-    await withRunningGameEngineBed({ d: 4 }, 'World', (bed, engine) => {
-      calls.push('cb');
-      expect(bed).toBeInstanceOf(bedModule.GameEngineTestBed);
-      expect(engine).toBe(bed.engine);
-    });
+    await withRunningGameEngineBed(
+      { overrides: { d: 4 }, initArg: 'World' },
+      (bed, engine) => {
+        calls.push('cb');
+        expect(bed).toBeInstanceOf(bedModule.GameEngineTestBed);
+        expect(engine).toBe(bed.engine);
+      }
+    );
     expect(calls).toEqual(['cb']);
   });
 
   it('uses defaults and cleans up on error', async () => {
     const error = new Error('oops');
     const testFn = jest.fn().mockRejectedValue(error);
-    await expect(withRunningGameEngineBed(testFn)).rejects.toThrow('oops');
+    await expect(withRunningGameEngineBed({}, testFn)).rejects.toThrow('oops');
   });
 
   it('passes running bed and engine to callback', async () => {
     const calls = [];
-    await withRunningGameEngineBed({ e: 5 }, 'World', (bed, engine) => {
-      calls.push('cb');
-      expect(bed).toBeInstanceOf(bedModule.GameEngineTestBed);
-      expect(engine).toBe(bed.engine);
-    });
+    await withRunningGameEngineBed(
+      { overrides: { e: 5 }, initArg: 'World' },
+      (bed, engine) => {
+        calls.push('cb');
+        expect(bed).toBeInstanceOf(bedModule.GameEngineTestBed);
+        expect(engine).toBe(bed.engine);
+      }
+    );
     expect(calls).toEqual(['cb']);
   });
 
@@ -99,7 +115,7 @@ describe('withRunningGameEngineBed', () => {
     const testFn = jest.fn(() => {
       throw error;
     });
-    await expect(withRunningGameEngineBed(testFn)).rejects.toThrow('fail');
+    await expect(withRunningGameEngineBed({}, testFn)).rejects.toThrow('fail');
   });
 });
 

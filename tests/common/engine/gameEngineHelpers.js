@@ -42,16 +42,15 @@ export function withGameEngineBed(overrides = {}, testFn) {
  * @description Creates a temporary test bed, initializes the underlying
  *   engine using {@link GameEngineTestBed.initAndReset}, then runs the provided
  *   callback. Cleanup always occurs after execution.
- * @param {Record<string, any>} [overrides] - Optional dependency overrides.
- * @param {string} [world] - Name of the world used for
- *   initialization.
+ * @param {{ overrides?: Record<string, any>, initArg?: string }} [options] -
+ *   Overrides and world used for initialization.
  * @param {(bed: GameEngineTestBed,
  *   engine: import('../../../src/engine/gameEngine.js').default) =>
  *   (Promise<void>|void)} testFn - Function invoked with the bed and engine.
  * @returns {Promise<void>} Resolves when the callback completes.
  */
-export function withInitializedGameEngineBed(overrides, world, testFn) {
-  return withInitialized(overrides, world, testFn);
+export function withInitializedGameEngineBed(options, testFn) {
+  return withInitialized(options, testFn);
 }
 
 /**
@@ -60,15 +59,15 @@ export function withInitializedGameEngineBed(overrides, world, testFn) {
  * @description Creates a temporary test bed, starts the engine using
  *   {@link GameEngineTestBed.startAndReset}, then runs the provided callback.
  *   Cleanup always occurs after execution.
- * @param {Record<string, any>} [overrides] - Optional dependency overrides.
- * @param {string} [world] - Name of the world used for initialization.
+ * @param {{ overrides?: Record<string, any>, initArg?: string }} [options] -
+ *   Overrides and world used for initialization.
  * @param {(bed: GameEngineTestBed,
  *   engine: import('../../../src/engine/gameEngine.js').default) =>
  *   (Promise<void>|void)} testFn - Function invoked with the bed and engine.
  * @returns {Promise<void>} Resolves when the callback completes.
  */
-export function withRunningGameEngineBed(overrides, world, testFn) {
-  return withRunning(overrides, world, testFn);
+export function withRunningGameEngineBed(options, testFn) {
+  return withRunning(options, testFn);
 }
 
 /**
