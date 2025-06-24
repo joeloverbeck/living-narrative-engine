@@ -5,7 +5,7 @@ import {
   describeEngineSuite,
   describeInitializedEngineSuite,
 } from '../../common/engine/gameEngineTestBed.js';
-import { runUnavailableServiceSuite } from '../../common/engine/gameEngineHelpers.js';
+import { generateServiceUnavailableTests } from '../../common/engine/gameEngineHelpers.js';
 import {
   expectDispatchSequence,
   buildSaveDispatches,
@@ -20,27 +20,27 @@ import {
   GAME_PERSISTENCE_SAVE_RESULT_UNAVAILABLE,
 } from '../../common/engine/unavailableMessages.js';
 
-describeEngineSuite('GameEngine', (ctx) => {
+describeEngineSuite('GameEngine', (context) => {
   describe('triggerManualSave', () => {
     const SAVE_NAME = DEFAULT_SAVE_NAME;
     const MOCK_ACTIVE_WORLD_FOR_SAVE = DEFAULT_ACTIVE_WORLD_FOR_SAVE;
 
     it('should dispatch error and not attempt save if engine is not initialized', async () => {
-      const result = await ctx.engine.triggerManualSave(SAVE_NAME);
+      const result = await context.engine.triggerManualSave(SAVE_NAME);
       const expectedErrorMsg =
         'Game engine is not initialized. Cannot save game.';
 
-      expectNoDispatch(ctx.bed.mocks.safeEventDispatcher.dispatch);
+      expectNoDispatch(context.bed.mocks.safeEventDispatcher.dispatch);
       expect(
-        ctx.bed.mocks.gamePersistenceService.saveGame
+        context.bed.mocks.gamePersistenceService.saveGame
       ).not.toHaveBeenCalled();
       expect(result).toEqual({ success: false, error: expectedErrorMsg });
     });
 
     describeInitializedEngineSuite(
       'when engine is initialized',
-      (ctx) => {
-        runUnavailableServiceSuite(
+      (context) => {
+        generateServiceUnavailableTests(
           [
             [
               tokens.GamePersistenceService,
@@ -67,19 +67,19 @@ describeEngineSuite('GameEngine', (ctx) => {
 
         it('should successfully save, dispatch all UI events in order, and return success result', async () => {
           const saveResultData = { success: true, filePath: 'path/to/my.sav' };
-          ctx.bed.mocks.gamePersistenceService.saveGame.mockResolvedValue(
+          context.bed.mocks.gamePersistenceService.saveGame.mockResolvedValue(
             saveResultData
           );
 
-          const result = await ctx.engine.triggerManualSave(SAVE_NAME);
+          const result = await context.engine.triggerManualSave(SAVE_NAME);
 
           expectDispatchSequence(
-            ctx.bed.mocks.safeEventDispatcher.dispatch,
+            context.bed.mocks.safeEventDispatcher.dispatch,
             ...buildSaveDispatches(SAVE_NAME, saveResultData.filePath)
           );
 
           expect(
-            ctx.bed.mocks.gamePersistenceService.saveGame
+            context.bed.mocks.gamePersistenceService.saveGame
           ).toHaveBeenCalledWith(SAVE_NAME, true, MOCK_ACTIVE_WORLD_FOR_SAVE);
           expect(result).toEqual(saveResultData);
         });
@@ -94,24 +94,24 @@ describeEngineSuite('GameEngine', (ctx) => {
           'should handle %s, dispatch UI events, and return failure result',
           async (_caseName, failureValue) => {
             if (failureValue instanceof Error) {
-              ctx.bed.mocks.gamePersistenceService.saveGame.mockRejectedValue(
+              context.bed.mocks.gamePersistenceService.saveGame.mockRejectedValue(
                 failureValue
               );
             } else {
-              ctx.bed.mocks.gamePersistenceService.saveGame.mockResolvedValue(
+              context.bed.mocks.gamePersistenceService.saveGame.mockResolvedValue(
                 failureValue
               );
             }
 
-            const result = await ctx.engine.triggerManualSave(SAVE_NAME);
+            const result = await context.engine.triggerManualSave(SAVE_NAME);
 
             expectDispatchSequence(
-              ctx.bed.mocks.safeEventDispatcher.dispatch,
+              context.bed.mocks.safeEventDispatcher.dispatch,
               ...buildSaveDispatches(SAVE_NAME)
             );
 
             expect(
-              ctx.bed.mocks.gamePersistenceService.saveGame
+              context.bed.mocks.gamePersistenceService.saveGame
             ).toHaveBeenCalledWith(SAVE_NAME, true, MOCK_ACTIVE_WORLD_FOR_SAVE);
 
             const expectedResult =

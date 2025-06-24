@@ -13,14 +13,14 @@ import {
 } from '../../../src/constants/eventIds.js';
 import { tokens } from '../../../src/dependencyInjection/tokens.js';
 import { describeEngineSuite } from '../../common/engine/gameEngineTestBed.js';
-import { runUnavailableServiceSuite } from '../../common/engine/gameEngineHelpers.js';
+import { generateServiceUnavailableTests } from '../../common/engine/gameEngineHelpers.js';
 import {
   DEFAULT_SAVE_ID,
   ENGINE_READY_MESSAGE,
 } from '../../common/constants.js';
 import { GAME_PERSISTENCE_LOAD_GAME_UNAVAILABLE } from '../../common/engine/unavailableMessages.js';
 
-describeEngineSuite('GameEngine', (ctx) => {
+describeEngineSuite('GameEngine', (context) => {
   describe('loadGame', () => {
     const SAVE_ID = DEFAULT_SAVE_ID;
     const mockSaveData = {
@@ -30,8 +30,8 @@ describeEngineSuite('GameEngine', (ctx) => {
     const typedMockSaveData = /** @type {SaveGameStructure} */ (mockSaveData);
 
     beforeEach(() => {
-      ctx.bed.resetMocks();
-      ctx.bed.mocks.gamePersistenceService.loadAndRestoreGame.mockResolvedValue(
+      context.bed.resetMocks();
+      context.bed.mocks.gamePersistenceService.loadAndRestoreGame.mockResolvedValue(
         {
           success: true,
           data: typedMockSaveData,
@@ -40,13 +40,13 @@ describeEngineSuite('GameEngine', (ctx) => {
     });
 
     it('should load and finalize a game successfully', async () => {
-      const result = await ctx.engine.loadGame(SAVE_ID);
+      const result = await context.engine.loadGame(SAVE_ID);
 
       expect(
-        ctx.bed.mocks.gamePersistenceService.loadAndRestoreGame
+        context.bed.mocks.gamePersistenceService.loadAndRestoreGame
       ).toHaveBeenCalledWith(SAVE_ID);
       expectDispatchSequence(
-        ctx.bed.mocks.safeEventDispatcher.dispatch,
+        context.bed.mocks.safeEventDispatcher.dispatch,
         [
           ENGINE_OPERATION_IN_PROGRESS_UI,
           {
@@ -62,16 +62,16 @@ describeEngineSuite('GameEngine', (ctx) => {
           },
         ]
       );
-      expect(ctx.bed.mocks.turnManager.start).toHaveBeenCalled();
+      expect(context.bed.mocks.turnManager.start).toHaveBeenCalled();
       expect(result).toEqual({ success: true, data: typedMockSaveData });
-      expectEngineRunning(ctx.engine, typedMockSaveData.metadata.gameTitle);
+      expectEngineRunning(context.engine, typedMockSaveData.metadata.gameTitle);
     });
 
     describe('when the persistence service reports failure', () => {
       const errorMsg = 'Restore operation failed';
 
       beforeEach(() => {
-        ctx.bed.mocks.gamePersistenceService.loadAndRestoreGame.mockResolvedValue(
+        context.bed.mocks.gamePersistenceService.loadAndRestoreGame.mockResolvedValue(
           {
             success: false,
             error: errorMsg,
@@ -81,13 +81,13 @@ describeEngineSuite('GameEngine', (ctx) => {
       });
 
       it('logs warning, dispatches failure UI and returns failure result', async () => {
-        const result = await ctx.engine.loadGame(SAVE_ID);
+        const result = await context.engine.loadGame(SAVE_ID);
 
-        expect(ctx.bed.mocks.logger.warn).toHaveBeenCalledWith(
+        expect(context.bed.mocks.logger.warn).toHaveBeenCalledWith(
           `GameEngine: Load/restore operation reported failure for "${SAVE_ID}".`
         );
         expectDispatchSequence(
-          ctx.bed.mocks.safeEventDispatcher.dispatch,
+          context.bed.mocks.safeEventDispatcher.dispatch,
           [
             ENGINE_OPERATION_IN_PROGRESS_UI,
             {
@@ -104,7 +104,7 @@ describeEngineSuite('GameEngine', (ctx) => {
           ]
         );
         expect(result).toEqual({ success: false, error: errorMsg, data: null });
-        expectEngineStopped(ctx.engine);
+        expectEngineStopped(context.engine);
       });
     });
 
@@ -112,20 +112,20 @@ describeEngineSuite('GameEngine', (ctx) => {
       const errorObj = new Error('Execute failed');
 
       beforeEach(() => {
-        ctx.bed.mocks.gamePersistenceService.loadAndRestoreGame.mockRejectedValue(
+        context.bed.mocks.gamePersistenceService.loadAndRestoreGame.mockRejectedValue(
           errorObj
         );
       });
 
       it('logs error, dispatches failure UI and returns failure result', async () => {
-        const result = await ctx.engine.loadGame(SAVE_ID);
+        const result = await context.engine.loadGame(SAVE_ID);
 
-        expect(ctx.bed.mocks.logger.error).toHaveBeenCalledWith(
+        expect(context.bed.mocks.logger.error).toHaveBeenCalledWith(
           `GameEngine: Overall catch in loadGame for identifier "${SAVE_ID}". Error: ${errorObj.message}`,
           errorObj
         );
         expectDispatchSequence(
-          ctx.bed.mocks.safeEventDispatcher.dispatch,
+          context.bed.mocks.safeEventDispatcher.dispatch,
           [
             ENGINE_OPERATION_IN_PROGRESS_UI,
             {
@@ -146,7 +146,7 @@ describeEngineSuite('GameEngine', (ctx) => {
           error: errorObj.message,
           data: null,
         });
-        expectEngineStopped(ctx.engine);
+        expectEngineStopped(context.engine);
       });
     });
 
@@ -154,18 +154,18 @@ describeEngineSuite('GameEngine', (ctx) => {
       const errorObj = new Error('Finalize failed');
 
       beforeEach(() => {
-        ctx.bed.mocks.turnManager.start.mockRejectedValue(errorObj);
+        context.bed.mocks.turnManager.start.mockRejectedValue(errorObj);
       });
 
       it('logs error, dispatches failure UI and returns failure result', async () => {
-        const result = await ctx.engine.loadGame(SAVE_ID);
+        const result = await context.engine.loadGame(SAVE_ID);
 
-        expect(ctx.bed.mocks.logger.error).toHaveBeenCalledWith(
+        expect(context.bed.mocks.logger.error).toHaveBeenCalledWith(
           `GameEngine: Overall catch in loadGame for identifier "${SAVE_ID}". Error: ${errorObj.message}`,
           errorObj
         );
         expectDispatchSequence(
-          ctx.bed.mocks.safeEventDispatcher.dispatch,
+          context.bed.mocks.safeEventDispatcher.dispatch,
           [
             ENGINE_OPERATION_IN_PROGRESS_UI,
             {
@@ -193,11 +193,11 @@ describeEngineSuite('GameEngine', (ctx) => {
           error: errorObj.message,
           data: null,
         });
-        expectEngineStopped(ctx.engine);
+        expectEngineStopped(context.engine);
       });
     });
 
-    runUnavailableServiceSuite(
+    generateServiceUnavailableTests(
       [
         [
           tokens.GamePersistenceService,

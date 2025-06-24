@@ -5,10 +5,10 @@ import GameEngine from '../../../src/engine/gameEngine.js';
 import { tokens } from '../../../src/dependencyInjection/tokens.js';
 import { describeEngineSuite } from '../../common/engine/gameEngineTestBed.js';
 
-describeEngineSuite('GameEngine', (ctx) => {
+describeEngineSuite('GameEngine', (context) => {
   describe('Constructor', () => {
     it('should instantiate and resolve all core services successfully', () => {
-      const testBed = ctx.bed;
+      const testBed = context.bed;
       new GameEngine({
         container: testBed.env.mockContainer,
       }); // Instantiation for this test
@@ -33,7 +33,7 @@ describeEngineSuite('GameEngine', (ctx) => {
     });
 
     it('should throw an error if ILogger cannot be resolved', () => {
-      const testBed = ctx.bed;
+      const testBed = context.bed;
       testBed.withTokenOverride(tokens.ILogger, () => {
         throw new Error('Logger failed to resolve');
       });
@@ -54,7 +54,7 @@ describeEngineSuite('GameEngine', (ctx) => {
       ['PlaytimeTracker', tokens.PlaytimeTracker],
       ['ISafeEventDispatcher', tokens.ISafeEventDispatcher],
     ])('should throw an error if %s cannot be resolved', (_, failingToken) => {
-      const testBed = ctx.bed;
+      const testBed = context.bed;
       const resolutionError = new Error(`${String(failingToken)} failed`);
       testBed.withTokenOverride(failingToken, () => {
         throw resolutionError;

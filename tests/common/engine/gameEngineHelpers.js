@@ -109,21 +109,33 @@ export function runUnavailableServiceTest(cases, invokeFn) {
 }
 
 /**
- * Generates a Jest `it.each` suite for unavailable service scenarios.
+ * Creates a helper for asserting behavior when a required service token cannot
+ * be resolved.
  *
- * @param {Array<[string, string, { preInit?: boolean }]>} cases - Array of test
- *   case tuples forwarded to {@link runUnavailableServiceTest}.
+ * @description Each generated test temporarily overrides one of the provided
+ *   DI tokens to `null`. Optionally the engine can be started first by passing
+ *   the `preInit` flag on the case tuple. The supplied `invokeFn` performs the
+ *   operation under test and must return the logger and dispatch mocks used for
+ *   assertions. `generateServiceUnavailableTests` verifies the expected log
+ *   output and that no dispatches occurred, then delegates to the returned
+ *   function to run any extra assertions.
+ * @param {Array<[string, string, { preInit?: boolean }]>} cases - List of
+ *   `[token, expectedMessage, options]` tuples describing the service token to
+ *   null out, the message that should be logged, and whether the engine should
+ *   be initialized beforehand.
  * @param {(bed: GameEngineTestBed,
  *   engine: import('../../../src/engine/gameEngine.js').default,
  *   expectedMessage: string) =>
  *   Promise<[import('@jest/globals').Mock, import('@jest/globals').Mock]> |
  *   [import('@jest/globals').Mock, import('@jest/globals').Mock]} invokeFn -
- *   Callback used by {@link runUnavailableServiceTest}.
- * @param {number} [extraAssertions] - Number of assertions performed inside
+ *   Function invoked during each test case. It should perform the call under
+ *   test and return the logger and dispatch mocks to validate.
+ * @param {number} [extraAssertions] - Additional assertions performed inside
  *   {@code invokeFn}.
- * @returns {(title: string) => void} Function executing the generated suite.
+ * @returns {(title: string) => void} Callback that runs the generated `it.each`
+ *   suite when provided a test title.
  */
-export function runUnavailableServiceSuite(
+export function generateServiceUnavailableTests(
   cases,
   invokeFn,
   extraAssertions = 0
