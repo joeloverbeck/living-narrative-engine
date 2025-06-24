@@ -43,7 +43,33 @@ export class LoadResultAggregator {
    * @param {TotalResultsSummary} totalCounts - Object storing totals across all mods.
    */
   constructor(totalCounts) {
-    this.#totalCounts = totalCounts;
+    // Clone the totals object to ensure immutability
+    this.#totalCounts = this.#cloneTotals(totalCounts);
+  }
+
+  /**
+   * Clones the totals object using structuredClone if available (Node ≥17),
+   * otherwise falls back to JSON.parse(JSON.stringify(...)).
+   * 
+   * @private
+   * @param {TotalResultsSummary} totals - The totals object to clone.
+   * @returns {TotalResultsSummary} A deep clone of the totals object.
+   */
+  #cloneTotals(totals) {
+    if (typeof structuredClone !== 'undefined') {
+      return structuredClone(totals);
+    } else {
+      return JSON.parse(JSON.stringify(totals));
+    }
+  }
+
+  /**
+   * Gets a copy of the current total counts.
+   * 
+   * @returns {TotalResultsSummary} A copy of the current total counts.
+   */
+  getTotalCounts() {
+    return this.#cloneTotals(this.#totalCounts);
   }
 
   /**

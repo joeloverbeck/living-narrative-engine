@@ -137,13 +137,17 @@ export class ContentLoadManager {
       );
       // Pass the filtered phaseLoaders to processMod
       try {
-        results[modId] = await this.processMod(
+        const result = await this.processMod(
           modId,
           manifest,
           totalCounts,
           phaseLoaders,
           phase
         );
+        results[modId] = result.status;
+        
+        // Merge the updated totals back into the main totals object
+        this.#mergeTotals(totalCounts, result.updatedTotals);
       } catch (error) {
         this.#logger.error(
           `ContentLoadManager: Error during processMod for ${modId}, phase ${phase}. Marking as failed and continuing with other mods in this phase.`,
@@ -162,6 +166,25 @@ export class ContentLoadManager {
   }
 
   /**
+   * Merges updated totals from an aggregator back into the main totals object.
+   * 
+   * @private
+   * @param {TotalResultsSummary} mainTotals - The main totals object to update.
+   * @param {TotalResultsSummary} updatedTotals - The updated totals from an aggregator.
+   * @returns {void}
+   */
+  #mergeTotals(mainTotals, updatedTotals) {
+    for (const [registryKey, counts] of Object.entries(updatedTotals)) {
+      if (!mainTotals[registryKey]) {
+        mainTotals[registryKey] = { count: 0, overrides: 0, errors: 0 };
+      }
+      mainTotals[registryKey].count = counts.count;
+      mainTotals[registryKey].overrides = counts.overrides;
+      mainTotals[registryKey].errors = counts.errors;
+    }
+  }
+
+  /**
    * Processes content for a single mod using specified loaders for a given phase.
    *
    * @private
@@ -170,7 +193,7 @@ export class ContentLoadManager {
    * @param {TotalResultsSummary} totalCounts - Aggregated totals object.
    * @param {Array<LoaderConfigEntry>} phaseLoaders - Loaders applicable for the current phase.
    * @param {'definitions' | 'instances'} phase - The current loading phase.
-   * @returns {Promise<'success' | 'skipped' | 'failed'>} Status of the load process for this mod in this phase.
+   * @returns {Promise<{status: 'success' | 'skipped' | 'failed', updatedTotals: TotalResultsSummary}>} Status and updated totals for this mod.
    */
   async processMod(modId, manifest, totalCounts, phaseLoaders, phase) {
     this.#logger.debug(
@@ -199,7 +222,7 @@ export class ContentLoadManager {
               dispatchError
             )
           );
-        return 'skipped'; // Return 'skipped' as status for this mod in this phase
+        return { status: 'skipped', updatedTotals: aggregator.getTotalCounts() }; // Return 'skipped' as status for this mod in this phase
       }
 
       this.#logger.debug(
@@ -333,7 +356,7 @@ export class ContentLoadManager {
     this.#logger.debug(
       `--- Finished loading content for mod: ${modId}, phase: ${phase} ---`
     );
-    return status;
+    return { status, updatedTotals: aggregator.getTotalCounts() };
   }
 }
 
