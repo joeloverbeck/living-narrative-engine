@@ -1,24 +1,8 @@
 import { getModuleLogger } from './loggerUtils.js';
+import { RetryManager } from './httpRetryManager.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../constants/eventIds.js';
 
 const RETRYABLE_HTTP_STATUS_CODES = [408, 429, 500, 502, 503, 504];
-
-/**
- * @description Calculates an exponential backoff delay with jitter for retry
- * attempts.
- * @param {number} currentAttempt The current attempt number starting at 1.
- * @param {number} baseDelayMs Base delay in milliseconds for the first retry.
- * @param {number} maxDelayMs Maximum delay allowed between retries.
- * @returns {number} Delay in milliseconds before the next retry.
- * @private
- */
-function _calculateRetryDelay(currentAttempt, baseDelayMs, maxDelayMs) {
-  const factor = Math.pow(2, currentAttempt - 1);
-  let delay = baseDelayMs * factor;
-  delay = Math.min(delay, maxDelayMs);
-  const jitter = (Math.random() * 0.4 - 0.2) * delay;
-  return Math.max(0, Math.floor(delay + jitter));
-}
 
 /**
  * @description Parse an error HTTP response body, returning both the parsed
@@ -95,7 +79,7 @@ async function _handleResponse(
         }
       }
       if (waitTimeMs === undefined) {
-        waitTimeMs = _calculateRetryDelay(
+        waitTimeMs = RetryManager.calculateRetryDelay(
           currentAttempt,
           baseDelayMs,
           maxDelayMs
@@ -145,35 +129,6 @@ async function _handleResponse(
  * @returns {Promise<{retried: boolean, isNetworkError: boolean}>} Whether a retry was performed and if the error was network-related.
  * @private
  */
-async function _handleNetworkError(
-  error,
-  currentAttempt,
-  url,
-  maxRetries,
-  baseDelayMs,
-  maxDelayMs,
-  logger
-) {
-  const isNetworkError =
-    error instanceof TypeError &&
-    (error.message.toLowerCase().includes('failed to fetch') ||
-      error.message.toLowerCase().includes('network request failed'));
-
-  if (isNetworkError && currentAttempt < maxRetries) {
-    const waitTimeMs = _calculateRetryDelay(
-      currentAttempt,
-      baseDelayMs,
-      maxDelayMs
-    );
-    logger.warn(
-      `fetchWithRetry: Attempt ${currentAttempt}/${maxRetries} for ${url} failed with network error: ${error.message}. Retrying in ${waitTimeMs}ms...`
-    );
-    await new Promise((resolve) => setTimeout(resolve, waitTimeMs));
-    return { retried: true, isNetworkError: true };
-  }
-
-  return { retried: false, isNetworkError };
-}
 
 /**
  * @description Perform a single fetch attempt and determine if a retry is needed.
@@ -189,70 +144,6 @@ async function _handleNetworkError(
  * @returns {Promise<{retry: boolean, data?: any}>} Result of the attempt.
  * @private
  */
-async function performFetchAttempt(
-  currentAttempt,
-  url,
-  options,
-  maxRetries,
-  baseDelayMs,
-  maxDelayMs,
-  safeEventDispatcher,
-  logger,
-  fetchFn
-) {
-  try {
-    logger.debug(
-      `Attempt ${currentAttempt}/${maxRetries} - Fetching ${options.method || 'GET'} ${url}`
-    );
-    const response = await fetchFn(url, options);
-    return _handleResponse(
-      response,
-      currentAttempt,
-      url,
-      maxRetries,
-      baseDelayMs,
-      maxDelayMs,
-      safeEventDispatcher,
-      logger
-    );
-  } catch (error) {
-    if (error.message.startsWith('API request to')) {
-      throw error;
-    }
-
-    const { retried, isNetworkError } = await _handleNetworkError(
-      error,
-      currentAttempt,
-      url,
-      maxRetries,
-      baseDelayMs,
-      maxDelayMs,
-      logger
-    );
-    if (retried) {
-      return { retry: true };
-    }
-
-    let finalErrorMessage;
-    if (isNetworkError) {
-      finalErrorMessage = `fetchWithRetry: Failed for ${url} after ${currentAttempt} attempt(s) due to persistent network error: ${error.message}`;
-    } else {
-      finalErrorMessage = `fetchWithRetry: Failed for ${url} after ${currentAttempt} attempt(s). Unexpected error: ${error.message}`;
-    }
-    await safeEventDispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
-      message: finalErrorMessage,
-      details: {
-        originalErrorName: error.name,
-        originalErrorMessage: error.message,
-        stack: error.stack,
-        status: error.status,
-      },
-    });
-    const finalError = new Error(finalErrorMessage);
-    finalError.status = error.status;
-    throw finalError;
-  }
-}
 
 /**
  * @async
@@ -289,28 +180,54 @@ export async function fetchWithRetry(
     `fetchWithRetry: Initiating request sequence for ${url} with maxRetries=${maxRetries}, baseDelayMs=${baseDelayMs}, maxDelayMs=${maxDelayMs}.`
   );
 
-  let attempt = 1;
-  while (attempt <= maxRetries) {
-    const { retry, data } = await performFetchAttempt(
-      attempt,
+  const retryManager = new RetryManager(
+    maxRetries,
+    baseDelayMs,
+    maxDelayMs,
+    moduleLogger
+  );
+
+  const attemptFn = async (currentAttempt) => {
+    moduleLogger.debug(
+      `Attempt ${currentAttempt}/${maxRetries} - Fetching ${options.method || 'GET'} ${url}`
+    );
+    return fetchFn(url, options);
+  };
+
+  const responseHandler = (response, currentAttempt) =>
+    _handleResponse(
+      response,
+      currentAttempt,
       url,
-      options,
       maxRetries,
       baseDelayMs,
       maxDelayMs,
       safeEventDispatcher,
-      moduleLogger,
-      fetchFn
+      moduleLogger
     );
 
-    if (!retry) {
-      return data;
+  try {
+    return await retryManager.perform(attemptFn, responseHandler);
+  } catch (error) {
+    const isNetworkError =
+      error instanceof TypeError &&
+      (error.message.toLowerCase().includes('failed to fetch') ||
+        error.message.toLowerCase().includes('network request failed'));
+    if (isNetworkError) {
+      const finalErrorMessage = `fetchWithRetry: Failed for ${url} after ${maxRetries} attempt(s) due to persistent network error: ${error.message}`;
+      await safeEventDispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
+        message: finalErrorMessage,
+        details: {
+          originalErrorName: error.name,
+          originalErrorMessage: error.message,
+          stack: error.stack,
+          status: error.status,
+        },
+      });
+      const finalError = new Error(finalErrorMessage);
+      finalError.status = error.status;
+      throw finalError;
     }
-
-    attempt += 1;
+    throw error;
   }
-
-  throw new Error(
-    `fetchWithRetry: Failed for ${url} after ${maxRetries} attempts with no successful response.`
-  );
 }
