@@ -42,6 +42,41 @@ class AddPerceptionLogEntryHandler extends BaseOperationHandler {
   }
 
   /**
+   * @description Validate parameters for {@link execute}.
+   * @param {AddPerceptionLogEntryParams|null|undefined} params - Raw params object.
+   * @param {import('../../interfaces/coreServices.js').ILogger} logger - Logger for diagnostics.
+   * @returns {{locationId:string, entry:object}|null} Normalized values or `null` when invalid.
+   * @private
+   */
+  #validateParams(params, logger) {
+    if (
+      !assertParamsObject(params, this.#dispatcher, 'ADD_PERCEPTION_LOG_ENTRY')
+    ) {
+      return null;
+    }
+    const { location_id, entry } = params;
+    if (typeof location_id !== 'string' || !location_id.trim()) {
+      safeDispatchError(
+        this.#dispatcher,
+        'ADD_PERCEPTION_LOG_ENTRY: location_id is required',
+        { location_id },
+        logger
+      );
+      return null;
+    }
+    if (!entry || typeof entry !== 'object') {
+      safeDispatchError(
+        this.#dispatcher,
+        'ADD_PERCEPTION_LOG_ENTRY: entry object is required',
+        { entry },
+        logger
+      );
+      return null;
+    }
+    return { locationId: location_id.trim(), entry };
+  }
+
+  /**
    * @param {AddPerceptionLogEntryParams} params
    * @param {import('../defs.js').ExecutionContext} executionContext – Unused for now.
    */
@@ -49,35 +84,16 @@ class AddPerceptionLogEntryHandler extends BaseOperationHandler {
     const log = this.getLogger(executionContext);
 
     /* ── validation ─────────────────────────────────────────────── */
-    if (
-      !assertParamsObject(params, this.#dispatcher, 'ADD_PERCEPTION_LOG_ENTRY')
-    ) {
-      return;
-    }
-    const { location_id, entry } = params;
-    if (typeof location_id !== 'string' || !location_id.trim()) {
-      safeDispatchError(
-        this.#dispatcher,
-        'ADD_PERCEPTION_LOG_ENTRY: location_id is required',
-        { location_id }
-      );
-      return;
-    }
-    if (!entry || typeof entry !== 'object') {
-      safeDispatchError(
-        this.#dispatcher,
-        'ADD_PERCEPTION_LOG_ENTRY: entry object is required',
-        { entry }
-      );
-      return;
-    }
+    const validated = this.#validateParams(params, log);
+    if (!validated) return;
+    const { locationId, entry } = validated;
 
     /* ── perceive who? ──────────────────────────────────────────── */
     const entityIds =
-      this.#entityManager.getEntitiesInLocation(location_id) ?? new Set();
+      this.#entityManager.getEntitiesInLocation(locationId) ?? new Set();
     if (entityIds.size === 0) {
       log.debug(
-        `ADD_PERCEPTION_LOG_ENTRY: No entities in location ${location_id}`
+        `ADD_PERCEPTION_LOG_ENTRY: No entities in location ${locationId}`
       );
       return;
     }
@@ -130,7 +146,7 @@ class AddPerceptionLogEntryHandler extends BaseOperationHandler {
     }
 
     log.debug(
-      `ADD_PERCEPTION_LOG_ENTRY: wrote entry to ${updated}/${entityIds.size} perceivers in ${location_id}`
+      `ADD_PERCEPTION_LOG_ENTRY: wrote entry to ${updated}/${entityIds.size} perceivers in ${locationId}`
     );
   }
 }
