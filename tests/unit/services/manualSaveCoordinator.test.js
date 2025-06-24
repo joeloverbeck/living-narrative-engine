@@ -23,21 +23,23 @@ describe('ManualSaveCoordinator', () => {
     });
   });
 
-  it('saveGame adds metadata and delegates to saveLoadService', async () => {
-    captureService.captureCurrentGameState.mockReturnValueOnce({});
+  it('saveGame delegates to saveLoadService without mutating state', async () => {
+    const capturedState = {};
+    captureService.captureCurrentGameState.mockReturnValueOnce(capturedState);
     await coordinator.saveGame('Slot', 'World');
     expect(captureService.captureCurrentGameState).toHaveBeenCalledWith(
       'World'
     );
-    expect(saveLoadService.saveManualGame).toHaveBeenCalledWith('Slot', {
-      metadata: { saveName: 'Slot' },
-    });
+    expect(saveLoadService.saveManualGame).toHaveBeenCalledWith(
+      'Slot',
+      capturedState
+    );
   });
 
   it('saveGame preserves existing state fields', async () => {
     await coordinator.saveGame('Slot', 'World');
     expect(saveLoadService.saveManualGame).toHaveBeenCalledWith('Slot', {
-      metadata: { saveName: 'Slot' },
+      metadata: {},
       gameState: {},
     });
   });

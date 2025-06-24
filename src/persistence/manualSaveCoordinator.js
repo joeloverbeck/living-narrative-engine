@@ -54,8 +54,6 @@ export default class ManualSaveCoordinator extends BaseService {
     this.#logger.debug(`ManualSaveCoordinator.saveGame: Saving "${saveName}".`);
     const state =
       this.#gameStateCaptureService.captureCurrentGameState(activeWorldName);
-    if (!state.metadata) state.metadata = {};
-    state.metadata.saveName = saveName;
     return this.#saveLoadService.saveManualGame(saveName, state);
   }
 }
