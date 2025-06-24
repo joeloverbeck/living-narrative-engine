@@ -123,7 +123,7 @@ class StaticConfiguration {
 
   /**
    * @param    {string} registryKey
-   * @returns  {string|undefined}
+   * @returns  {string|null|undefined}
    */
   getContentTypeSchemaId(registryKey) {
     const map = {
@@ -142,6 +142,9 @@ class StaticConfiguration {
       game: 'http://example.com/schemas/game.schema.json',
       world: 'http://example.com/schemas/world.schema.json',
       'prompt-text': 'http://example.com/schemas/prompt-text.schema.json',
+      // Scopes use a custom DSL format (.scope files) and are validated by the scope engine,
+      // not by JSON schema validation. Explicitly return null to indicate no schema validation.
+      scopes: null,
     };
     return map[registryKey];
   }

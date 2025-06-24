@@ -37,7 +37,7 @@ describe('ScopeLoader', () => {
     const mockDependencies = {
       config: {
         getModsBasePath: jest.fn(),
-        getContentTypeSchemaId: jest.fn().mockReturnValue('scope.schema.json'),
+        getContentTypeSchemaId: jest.fn().mockReturnValue(null),
       },
       pathResolver: { resolveModContentPath: jest.fn() },
       dataFetcher: { fetch: jest.fn() },
@@ -209,7 +209,7 @@ describe('ScopeLoader', () => {
 
   describe('constructor', () => {
     test('should configure with correct content type', () => {
-      expect(loader._primarySchemaId).toBe('scope.schema.json');
+      expect(loader._primarySchemaId).toBe(null);
     });
   });
 });
