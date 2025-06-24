@@ -160,6 +160,82 @@ class EntityFactory {
   }
 
   /**
+   * Validates component overrides before entity creation.
+   *
+   * @private
+   * @param {Record<string, object>} componentOverrides - Overrides to validate.
+   * @param {EntityDefinition} entityDefinition - Definition to check existing components.
+   * @param {string} instanceId - ID of the entity being created.
+   * @returns {Record<string, object>} Validated and cloned overrides.
+   */
+  #validateOverrides(componentOverrides, entityDefinition, instanceId) {
+    const validatedOverrides = {};
+    if (componentOverrides && typeof componentOverrides === 'object') {
+      for (const [compType, compData] of Object.entries(componentOverrides)) {
+        const errorContextPrefix = entityDefinition.hasComponent(compType)
+          ? 'Override for component'
+          : 'New component';
+        const errorContext = `${errorContextPrefix} ${compType} on entity ${instanceId}`;
+        validatedOverrides[compType] = this.#validateAndClone(
+          compType,
+          compData,
+          errorContext
+        );
+      }
+    }
+    return validatedOverrides;
+  }
+
+  /**
+   * Validates serialized components during reconstruction.
+   *
+   * @private
+   * @param {Record<string, object|null>} components - Serialized components to validate.
+   * @param {string} instanceId - ID of the entity being reconstructed.
+   * @param {string} definitionId - Definition ID for context in error messages.
+   * @returns {Record<string, object|null>} Validated components.
+   */
+  #validateSerializedComponents(components, instanceId, definitionId) {
+    const validatedComponents = {};
+    this.#logger.debug(
+      `[EntityFactory] [RECONSTRUCT_ENTITY_LOG] About to validate components for entity '${instanceId}'. Components to process: ${JSON.stringify(
+        components
+      )}`
+    );
+    if (components && typeof components === 'object') {
+      for (const [typeId, data] of Object.entries(components)) {
+        this.#logger.debug(
+          `[EntityFactory] [RECONSTRUCT_ENTITY_LOG] Validating component '${typeId}' for entity '${instanceId}'. Data: ${JSON.stringify(
+            data
+          )}`
+        );
+        if (data === null) {
+          validatedComponents[typeId] = null;
+        } else {
+          const validationResult = this.#validator.validate(
+            typeId,
+            data,
+            `Reconstruction component ${typeId} for entity ${instanceId} (definition ${definitionId})`
+          );
+          if (validationResult.isValid) {
+            validatedComponents[typeId] = JSON.parse(JSON.stringify(data));
+          } else {
+            const errorMsg = `Reconstruction component ${typeId} for entity ${instanceId} (definition ${definitionId}) Errors: ${JSON.stringify(
+              validationResult.errors
+            )}`;
+            this.#logger.error(`[EntityFactory] ${errorMsg}`);
+            throw new Error(errorMsg);
+          }
+        }
+      }
+    }
+    this.#logger.debug(
+      `[EntityFactory] [RECONSTRUCT_ENTITY_LOG] All components validated for entity '${instanceId}'.`
+    );
+    return validatedComponents;
+  }
+
+  /**
    * Create a new entity instance from a definition.
    *
    * @param {string} definitionId - The ID of the entity definition to use.
@@ -229,22 +305,11 @@ class EntityFactory {
       `[EntityFactory] Creating entity instance ${actualInstanceId} from definition ${definitionId}.`
     );
 
-    // Validate componentOverrides BEFORE creating EntityInstanceData
-    const validatedOverrides = {};
-    if (componentOverrides && typeof componentOverrides === 'object') {
-      for (const [compType, compData] of Object.entries(componentOverrides)) {
-        // This will throw if validation fails, halting creation.
-        const errorContextPrefix = entityDefinition.hasComponent(compType)
-          ? 'Override for component'
-          : 'New component';
-        const errorContext = `${errorContextPrefix} ${compType} on entity ${actualInstanceId}`;
-        validatedOverrides[compType] = this.#validateAndClone(
-          compType,
-          compData,
-          errorContext
-        );
-      }
-    }
+    const validatedOverrides = this.#validateOverrides(
+      componentOverrides,
+      entityDefinition,
+      actualInstanceId
+    );
 
     // Initialise Entity with its definition, a new instance ID, and validated overrides.
     const entityInstanceDataObject = new EntityInstanceData(
@@ -331,42 +396,10 @@ class EntityFactory {
       throw new DefinitionNotFoundError(definitionId);
     }
 
-    const validatedComponents = {};
-    this.#logger.debug(
-      `[EntityFactory] [RECONSTRUCT_ENTITY_LOG] About to validate components for entity '${instanceId}'. Components to process: ${JSON.stringify(
-        components
-      )}`
-    );
-    if (components && typeof components === 'object') {
-      for (const [typeId, data] of Object.entries(components)) {
-        this.#logger.debug(
-          `[EntityFactory] [RECONSTRUCT_ENTITY_LOG] Validating component '${typeId}' for entity '${instanceId}'. Data: ${JSON.stringify(
-            data
-          )}`
-        );
-        if (data === null) {
-          validatedComponents[typeId] = null;
-        } else {
-          const validationResult = this.#validator.validate(
-            typeId,
-            data,
-            `Reconstruction component ${typeId} for entity ${instanceId} (definition ${definitionId})`
-          );
-          if (validationResult.isValid) {
-            validatedComponents[typeId] = JSON.parse(JSON.stringify(data));
-          } else {
-            const errorMsg = `Reconstruction component ${typeId} for entity ${instanceId} (definition ${definitionId}) Errors: ${JSON.stringify(
-              validationResult.errors
-            )}`;
-            this.#logger.error(`[EntityFactory] ${errorMsg}`);
-            throw new Error(errorMsg);
-          }
-        }
-      }
-    }
-
-    this.#logger.debug(
-      `[EntityFactory] [RECONSTRUCT_ENTITY_LOG] All components validated for entity '${instanceId}'.`
+    const validatedComponents = this.#validateSerializedComponents(
+      components,
+      instanceId,
+      definitionId
     );
 
     // Create the entity

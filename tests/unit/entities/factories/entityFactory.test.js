@@ -234,6 +234,24 @@ describe('EntityFactory', () => {
       expect(entity.getComponentData('new:component').data).toBe('xyz');
     });
 
+    it('calls validator for each component override', () => {
+      const overrides = {
+        'core:name': { name: 'test' },
+        extra1: { a: 1 },
+        extra2: { b: 2 },
+      };
+
+      factory.create(
+        'test-def:basic',
+        { componentOverrides: overrides },
+        mocks.registry,
+        { has: () => false },
+        null
+      );
+
+      expect(mocks.validator.validate).toHaveBeenCalledTimes(3);
+    });
+
     it('should validate component overrides', () => {
       const overrides = { 'core:description': { text: 'Test' } };
       mocks.validator.validate.mockReturnValue({
@@ -446,6 +464,24 @@ describe('EntityFactory', () => {
       });
 
       expect(entity.getComponentData('core:description')).toBeNull();
+    });
+
+    it('calls validator for each serialized component', () => {
+      const serializedEntity = {
+        instanceId: 'call-count',
+        definitionId: 'test-def:basic',
+        components: {
+          'core:name': { name: 'n1' },
+          new1: { val: 1 },
+          new2: null,
+        },
+      };
+
+      factory.reconstruct(serializedEntity, mocks.registry, {
+        has: () => false,
+      });
+
+      expect(mocks.validator.validate).toHaveBeenCalledTimes(2);
     });
 
     it('should inject default components for actor entities during reconstruction', () => {
