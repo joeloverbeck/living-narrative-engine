@@ -7,7 +7,7 @@ jest.mock('../../../src/utils/cloneUtils.js', () => ({
   safeDeepClone: jest.fn(),
 }));
 
-const { cloneValidatedState, cloneAndValidateSaveState } = saveStateUtils;
+const { cloneValidatedState } = saveStateUtils;
 
 describe('saveStateUtils', () => {
   let logger;
@@ -49,15 +49,5 @@ describe('saveStateUtils', () => {
     expect(logger.error).toHaveBeenCalled();
     expect(result.success).toBe(false);
     expect(result.error.code).toBe(PersistenceErrorCodes.INVALID_GAME_STATE);
-  });
-
-  it('cloneAndValidateSaveState returns same result as cloneValidatedState', () => {
-    const obj = { gameState: {} };
-    cloneUtils.safeDeepClone.mockReturnValue({ success: true, data: obj });
-
-    const viaWrapper = cloneAndValidateSaveState(obj, logger);
-
-    expect(viaWrapper).toEqual({ success: true, data: obj });
-    expect(cloneUtils.safeDeepClone).toHaveBeenCalledWith(obj, logger);
   });
 });
