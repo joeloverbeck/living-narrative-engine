@@ -110,13 +110,23 @@ describe('UiAssetsLoader', () => {
     expect(result.errors).toBe(0);
   });
 
-  it('throws and warns on unknown filenames', async () => {
+  it('categorizes UI files correctly', () => {
+    const files = ['icons.json', 'labels.json', 'extra.txt'];
+    const result = loader.categorizeUiFilesForTest(files);
+
+    expect(result.iconFiles).toEqual(['icons.json']);
+    expect(result.labelFiles).toEqual(['labels.json']);
+    expect(result.unknownFiles).toEqual(['extra.txt']);
+  });
+
+  it('warns on unknown filenames without throwing', async () => {
     const manifest = { content: { ui: ['unknown.json'] } };
-    await expect(loader.loadUiAssetsForMod('ModX', manifest)).rejects.toThrow(
-      'Unknown UI asset file: unknown.json'
-    );
+    const result = await loader.loadUiAssetsForMod('ModX', manifest);
+
     expect(logger.warn).toHaveBeenCalledWith(
       'UiAssetsLoader [ModX]: Unknown file unknown.json'
     );
+    expect(result.count).toBe(0);
+    expect(result.errors).toBe(0);
   });
 });
