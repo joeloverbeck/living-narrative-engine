@@ -88,7 +88,7 @@ class QueryEntitiesHandler extends BaseOperationHandler {
     if (!validated) return;
     const { resultVariable, filters, limit, logger } = validated;
 
-    let candidateIds = new Set(Array.from(this.#entityManager.entities.keys()));
+    let candidateIds = new Set(this.#entityManager.entities.keys());
     logger.debug(
       `QUERY_ENTITIES: Starting with ${candidateIds.size} total active entities.`
     );
@@ -101,35 +101,36 @@ class QueryEntitiesHandler extends BaseOperationHandler {
         break;
       }
 
+      if (!filter || typeof filter !== 'object') {
+        logger.warn('QUERY_ENTITIES: Invalid filter object. Skipping.');
+        continue;
+      }
+
       const filterType = Object.keys(filter)[0];
       const filterValue = filter[filterType];
 
-      switch (filterType) {
-        case 'by_location':
-          candidateIds = this.#applyLocationFilter(
-            candidateIds,
-            filterValue,
-            logger
-          );
-          break;
-        case 'with_component':
-          candidateIds = this.#applyComponentFilter(
-            candidateIds,
-            filterValue,
-            logger
-          );
-          break;
-        case 'with_component_data':
-          candidateIds = this.#applyComponentDataFilter(
-            candidateIds,
-            filterValue,
-            logger
-          );
-          break;
-        default:
-          logger.warn(
-            `QUERY_ENTITIES: Encountered unknown filter type '${filterType}'. Skipping.`
-          );
+      if (filterType === 'by_location') {
+        candidateIds = this.#applyLocationFilter(
+          candidateIds,
+          filterValue,
+          logger
+        );
+      } else if (filterType === 'with_component') {
+        candidateIds = this.#applyComponentFilter(
+          candidateIds,
+          filterValue,
+          logger
+        );
+      } else if (filterType === 'with_component_data') {
+        candidateIds = this.#applyComponentDataFilter(
+          candidateIds,
+          filterValue,
+          logger
+        );
+      } else {
+        logger.warn(
+          `QUERY_ENTITIES: Encountered unknown filter type '${filterType}'. Skipping.`
+        );
       }
     }
 
