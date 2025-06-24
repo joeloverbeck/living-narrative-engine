@@ -52,18 +52,19 @@ describe('storeItemInRegistry', () => {
     expect(logger.warn).toHaveBeenCalled();
   });
 
-  it('returns error flag when category invalid', () => {
-    const result = storeItemInRegistry(
-      logger,
-      registry,
-      'TestLoader',
-      '',
-      'modA',
-      'id',
-      {},
-      'file.json'
-    );
-    expect(result.error).toBe(true);
+  it('throws TypeError when category invalid', () => {
+    expect(() =>
+      storeItemInRegistry(
+        logger,
+        registry,
+        'TestLoader',
+        '',
+        'modA',
+        'id',
+        {},
+        'file.json'
+      )
+    ).toThrow(TypeError);
     expect(registry.store).not.toHaveBeenCalled();
     expect(logger.error).toHaveBeenCalled();
   });

@@ -91,13 +91,7 @@ class TestableLoader extends BaseManifestItemLoader {
     );
   }
 
-  async _processFetchedItem(
-    _modId,
-    _filename,
-    _resolvedPath,
-    _fetchedData,
-    _registryKey
-  ) {
+  async _processFetchedItem(_modId, _filename, _resolvedPath, _fetchedData) {
     return {
       id: _fetchedData?.id || 'dummyId',
       didOverride: false,
@@ -422,7 +416,7 @@ describe('BaseManifestItemLoader._storeItemInRegistry', () => {
         "Data for 'testMod:validItem' (category: items) must be an object",
       ],
     ])(
-      'should log error and return error flag for invalid arguments: category="%s", modId="%s", baseItemId="%s", dataToStore="%s"',
+      'should log error and throw TypeError for invalid arguments: category="%s", modId="%s", baseItemId="%s", dataToStore="%s"',
       (
         category,
         modId,
@@ -431,23 +425,20 @@ describe('BaseManifestItemLoader._storeItemInRegistry', () => {
         filename,
         expectedLogPartial
       ) => {
-        const result = testLoader.publicStoreItemInRegistry(
-          category,
-          modId,
-          baseItemId,
-          dataToStore,
-          filename
-        );
+        expect(() =>
+          testLoader.publicStoreItemInRegistry(
+            category,
+            modId,
+            baseItemId,
+            dataToStore,
+            filename
+          )
+        ).toThrow(TypeError);
 
         expect(mockLogger.error).toHaveBeenCalledTimes(1);
         expect(mockLogger.error).toHaveBeenCalledWith(
           expect.stringContaining(expectedLogPartial)
         );
-        expect(result).toEqual({
-          qualifiedId: null,
-          didOverride: false,
-          error: true,
-        });
         expect(mockRegistry.store).not.toHaveBeenCalled(); // Should not attempt to store
       }
     );

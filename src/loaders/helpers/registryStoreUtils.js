@@ -16,7 +16,8 @@
  * @param {string} baseItemId - The item's unqualified ID.
  * @param {object} dataToStore - Data object to store.
  * @param {string} sourceFilename - Original filename for logging.
- * @returns {{qualifiedId: string|null, didOverride: boolean, error?: boolean}} Result info.
+ * @returns {{qualifiedId: string, didOverride: boolean}} Result info.
+ * @throws {TypeError} If any argument is of an unexpected type.
  */
 export function storeItemInRegistry(
   logger,
@@ -29,28 +30,24 @@ export function storeItemInRegistry(
   sourceFilename
 ) {
   if (!category || typeof category !== 'string') {
-    logger.error(
-      `${loaderName} [_storeItemInRegistry]: Category must be a non-empty string. Received: ${category}`
-    );
-    return { qualifiedId: null, didOverride: false, error: true };
+    const message = `${loaderName} [_storeItemInRegistry]: Category must be a non-empty string. Received: ${category}`;
+    logger.error(message);
+    throw new TypeError(message);
   }
   if (!modId || typeof modId !== 'string') {
-    logger.error(
-      `${loaderName} [_storeItemInRegistry]: ModId must be a non-empty string for category '${category}'. Received: ${modId}`
-    );
-    return { qualifiedId: null, didOverride: false, error: true };
+    const message = `${loaderName} [_storeItemInRegistry]: ModId must be a non-empty string for category '${category}'. Received: ${modId}`;
+    logger.error(message);
+    throw new TypeError(message);
   }
   if (!baseItemId || typeof baseItemId !== 'string') {
-    logger.error(
-      `${loaderName} [_storeItemInRegistry]: BaseItemId must be a non-empty string for category '${category}', mod '${modId}'. Received: ${baseItemId}`
-    );
-    return { qualifiedId: null, didOverride: false, error: true };
+    const message = `${loaderName} [_storeItemInRegistry]: BaseItemId must be a non-empty string for category '${category}', mod '${modId}'. Received: ${baseItemId}`;
+    logger.error(message);
+    throw new TypeError(message);
   }
   if (!dataToStore || typeof dataToStore !== 'object') {
-    logger.error(
-      `${loaderName} [_storeItemInRegistry]: Data for '${modId}:${baseItemId}' (category: ${category}) must be an object. Received: ${typeof dataToStore}`
-    );
-    return { qualifiedId: null, didOverride: false, error: true };
+    const message = `${loaderName} [_storeItemInRegistry]: Data for '${modId}:${baseItemId}' (category: ${category}) must be an object. Received: ${typeof dataToStore}`;
+    logger.error(message);
+    throw new TypeError(message);
   }
 
   const qualifiedId = `${modId}:${baseItemId}`;
