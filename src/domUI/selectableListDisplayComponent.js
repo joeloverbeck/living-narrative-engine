@@ -174,7 +174,7 @@ export class SelectableListDisplayComponent extends BaseListDisplayComponent {
    * @returns {void}
    */
   _onListRendered(listData, container) {
-    this.currentListData = Array.isArray(listData) ? listData : [];
+    this.currentListData = Array.isArray(listData) ? Array.from(listData) : [];
 
     // Create the handler for arrow key navigation. This is what the test expects on render.
     this._arrowKeyHandler = setupRadioListNavigation(

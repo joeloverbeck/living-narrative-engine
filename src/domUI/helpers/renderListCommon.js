@@ -89,7 +89,7 @@ export async function renderListCommon(
       }
     }
     logger.debug('[renderListCommon] Empty list message displayed.');
-    return Array.isArray(listData) ? listData : null;
+    return Array.isArray(listData) ? Array.from(listData) : null;
   }
 
   let rendered = 0;
@@ -116,7 +116,7 @@ export async function renderListCommon(
     `[renderListCommon] Rendered ${rendered} out of ${listData.length} items.`
   );
 
-  return listData;
+  return Array.from(listData);
 }
 
 export default renderListCommon;
