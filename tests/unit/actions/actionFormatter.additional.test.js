@@ -41,7 +41,7 @@ describe('formatActionCommand additional cases', () => {
     );
   });
 
-  it('returns null when entity context lacks entityId', () => {
+  it('returns error when entity context lacks entityId', () => {
     const actionDef = { id: 'core:use', template: 'use {target}' };
     const context = { type: TARGET_TYPE_ENTITY };
 
@@ -56,13 +56,13 @@ describe('formatActionCommand additional cases', () => {
       displayNameFn
     );
 
-    expect(result).toBeNull();
+    expect(result).toEqual({ ok: false, error: expect.any(String) });
     expect(logger.warn).toHaveBeenCalledWith(
       expect.stringContaining('entityId is missing')
     );
   });
 
-  it('returns null when direction context lacks direction', () => {
+  it('returns error when direction context lacks direction', () => {
     const actionDef = { id: 'core:move', template: 'move {direction}' };
     const context = { type: TARGET_TYPE_DIRECTION };
 
@@ -77,7 +77,7 @@ describe('formatActionCommand additional cases', () => {
       displayNameFn
     );
 
-    expect(result).toBeNull();
+    expect(result).toEqual({ ok: false, error: expect.any(String) });
     expect(logger.warn).toHaveBeenCalledWith(
       expect.stringContaining('direction string is missing')
     );
@@ -101,13 +101,13 @@ describe('formatActionCommand additional cases', () => {
       displayNameFn
     );
 
-    expect(result).toBe('wait {target} {direction}');
+    expect(result).toEqual({ ok: true, value: 'wait {target} {direction}' });
     expect(logger.warn).toHaveBeenCalledWith(
       expect.stringContaining('contains placeholders')
     );
   });
 
-  it('returns null and logs error if placeholder substitution throws', () => {
+  it('returns error and logs event if placeholder substitution throws', () => {
     const actionDef = { id: 'core:inspect', template: 'inspect {target}' };
     const context = { type: TARGET_TYPE_ENTITY, entityId: 'e1' };
     entityManager.getEntityInstance.mockImplementation(() => {
@@ -125,7 +125,7 @@ describe('formatActionCommand additional cases', () => {
       displayNameFn
     );
 
-    expect(result).toBeNull();
+    expect(result.ok).toBe(false);
     expect(dispatcher.dispatch).toHaveBeenCalledWith(
       SYSTEM_ERROR_OCCURRED_ID,
       expect.objectContaining({
@@ -151,7 +151,7 @@ describe('formatActionCommand additional cases', () => {
       customMap
     );
 
-    expect(result).toBe('test-value');
+    expect(result).toEqual({ ok: true, value: 'test-value' });
     expect(customMap.entity).toHaveBeenCalled();
   });
 });

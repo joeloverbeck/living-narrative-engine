@@ -38,7 +38,7 @@ describe('ActionDiscoveryService - processActionDefinition', () => {
       getComponentData: jest.fn().mockReturnValue(null),
     };
     actionValidationService = { isValid: () => true };
-    formatActionCommandFn = jest.fn(() => 'doit');
+    formatActionCommandFn = jest.fn(() => ({ ok: true, value: 'doit' }));
     getEntityIdsForScopesFn = jest.fn(() => new Set());
     logger = {
       debug: jest.fn(),
@@ -102,7 +102,10 @@ describe('ActionDiscoveryService - processActionDefinition', () => {
     };
     gameDataRepo.getAllActionDefinitions.mockReturnValue([def]);
     getEntityIdsForScopesFn.mockReturnValue(new Set(['monster1']));
-    formatActionCommandFn.mockReturnValue('attack monster1');
+    formatActionCommandFn.mockReturnValue({
+      ok: true,
+      value: 'attack monster1',
+    });
 
     const actor = { id: 'actor' };
     const context = {};

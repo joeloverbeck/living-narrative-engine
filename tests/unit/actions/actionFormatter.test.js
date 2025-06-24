@@ -41,7 +41,7 @@ describe('formatActionCommand', () => {
       displayNameFn
     );
 
-    expect(result).toBe('inspect The Entity');
+    expect(result).toEqual({ ok: true, value: 'inspect The Entity' });
     expect(displayNameFn).toHaveBeenCalledWith(mockEntity, 'e1', logger);
     expect(logger.debug).toHaveBeenCalled();
   });
@@ -62,7 +62,7 @@ describe('formatActionCommand', () => {
       displayNameFn
     );
 
-    expect(result).toBe('inspect e1');
+    expect(result).toEqual({ ok: true, value: 'inspect e1' });
     expect(logger.warn).toHaveBeenCalledWith(
       expect.stringContaining('Could not find entity instance for ID e1')
     );
@@ -83,7 +83,7 @@ describe('formatActionCommand', () => {
       displayNameFn
     );
 
-    expect(result).toBe('move north');
+    expect(result).toEqual({ ok: true, value: 'move north' });
   });
 
   it("returns template as-is for 'none' target type", () => {
@@ -98,10 +98,10 @@ describe('formatActionCommand', () => {
       displayNameFn
     );
 
-    expect(result).toBe('wait');
+    expect(result).toEqual({ ok: true, value: 'wait' });
   });
 
-  it('returns null for missing action template', () => {
+  it('returns error for missing action template', () => {
     const result = formatActionCommand(
       { id: 'bad' },
       { type: TARGET_TYPE_NONE },
@@ -109,7 +109,11 @@ describe('formatActionCommand', () => {
       { logger, safeEventDispatcher: dispatcher },
       displayNameFn
     );
-    expect(result).toBeNull();
+    expect(result).toEqual({
+      ok: false,
+      error:
+        'formatActionCommand: Invalid or missing actionDefinition or template.',
+    });
     expect(dispatcher.dispatch).toHaveBeenCalledWith(
       SYSTEM_ERROR_OCCURRED_ID,
       expect.objectContaining({
@@ -146,7 +150,7 @@ describe('formatActionCommand', () => {
       },
       displayNameFn
     );
-    expect(result).toBe('do it');
+    expect(result).toEqual({ ok: true, value: 'do it' });
     expect(logger.warn).toHaveBeenCalledWith(
       expect.stringContaining('Unknown targetContext type')
     );
