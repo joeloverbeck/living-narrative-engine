@@ -146,38 +146,22 @@ export const targetFormatterMap = {
 };
 
 /**
- * Formats a validated action and target into a user-facing command string.
- *
- * @param {ActionDefinition} actionDefinition - The validated action's definition. Must not be null/undefined.
- * @param {ActionTargetContext} targetContext - The validated target context. Must not be null/undefined.
- * @param {EntityManager} entityManager - The entity manager for lookups. Must not be null/undefined.
- * @param {object} [options] - Optional parameters.
- * @param {boolean} [options.debug] - If true, logs additional debug information.
- * @param {ILogger} [options.logger] - Logger instance used for diagnostic output. Defaults to console.
- * @param {ISafeEventDispatcher} options.safeEventDispatcher - Dispatcher used for error events.
- * @param {(entity: Entity, fallback: string, logger?: ILogger) => string} [displayNameFn] -
- *  Function used to resolve entity display names.
- * @param {TargetFormatterMap} [formatterMap] - Map of target types to formatter functions.
- * @returns {FormatActionCommandResult} Result object containing the formatted command or an error.
- * @throws {Error} If critical dependencies (entityManager, displayNameFn) are missing or invalid during processing.
+ * @description Validates inputs for {@link formatActionCommand}.
+ * @param {ActionDefinition} actionDefinition - Validated action definition.
+ * @param {ActionTargetContext} targetContext - Validated target context.
+ * @param {EntityManager} entityManager - Entity manager for lookups.
+ * @param {(entity: Entity, fallback: string, logger?: ILogger) => string} displayNameFn - Utility to resolve entity names.
+ * @param {ISafeEventDispatcher} dispatcher - Dispatcher used for error events.
+ * @returns {FormatActionError | null} An error result if validation fails, otherwise `null`.
+ * @throws {Error} If `entityManager` or `displayNameFn` are invalid.
  */
-export function formatActionCommand(
+function validateFormatInputs(
   actionDefinition,
   targetContext,
   entityManager,
-  options = {},
-  displayNameFn = getEntityDisplayName,
-  formatterMap = targetFormatterMap
+  displayNameFn,
+  dispatcher
 ) {
-  const { debug = false, logger = console, safeEventDispatcher } = options;
-  const dispatcher = safeEventDispatcher || resolveSafeDispatcher(null, logger);
-  if (!dispatcher) {
-    logger.warn(
-      'formatActionCommand: safeEventDispatcher resolution failed; error events may not be dispatched.'
-    );
-  }
-
-  // --- 1. Input Validation ---
   if (!actionDefinition || !actionDefinition.template) {
     return reportValidationError(
       dispatcher,
@@ -212,18 +196,35 @@ export function formatActionCommand(
     );
   }
 
-  let command = actionDefinition.template;
-  const contextType = targetContext.type;
+  return null;
+}
 
-  if (debug) {
-    logger.debug(
-      `Formatting command for action: ${actionDefinition.id}, template: "${command}", targetType: ${contextType}`
-    );
-  }
-
-  // --- 2. Placeholder Substitution based on Target Type ---
+/**
+ * @description Applies the appropriate target formatter and handles errors.
+ * @param {string} command - The command template string.
+ * @param {ActionDefinition} actionDefinition - The action definition.
+ * @param {ActionTargetContext} targetContext - Context describing the target.
+ * @param {TargetFormatterMap} formatterMap - Map of available formatter functions.
+ * @param {EntityManager} entityManager - Entity manager for lookups.
+ * @param {(entity: Entity, fallback: string, logger?: ILogger) => string} displayNameFn - Utility to resolve entity names.
+ * @param {ILogger} logger - Logger for diagnostic output.
+ * @param {boolean} debug - Debug flag.
+ * @param {ISafeEventDispatcher} dispatcher - Dispatcher used for error events.
+ * @returns {FormatActionCommandResult} The formatting result.
+ */
+function applyTargetFormatter(
+  command,
+  actionDefinition,
+  targetContext,
+  formatterMap,
+  entityManager,
+  displayNameFn,
+  logger,
+  debug,
+  dispatcher
+) {
   try {
-    const formatter = formatterMap[contextType];
+    const formatter = formatterMap[targetContext.type];
     if (formatter) {
       let newCommand = formatter(command, targetContext, {
         actionId: actionDefinition.id,
@@ -239,12 +240,13 @@ export function formatActionCommand(
         return newCommand;
       }
 
-      command = newCommand.value;
-    } else {
-      logger.warn(
-        `formatActionCommand: Unknown targetContext type: ${contextType} for action ${actionDefinition.id}. Returning template unmodified.`
-      );
+      return { ok: true, value: newCommand.value };
     }
+
+    logger.warn(
+      `formatActionCommand: Unknown targetContext type: ${targetContext.type} for action ${actionDefinition.id}. Returning template unmodified.`
+    );
+    return { ok: true, value: command };
   } catch (error) {
     safeDispatchError(
       dispatcher,
@@ -256,10 +258,93 @@ export function formatActionCommand(
       error: 'formatActionCommand: Error during placeholder substitution.',
     };
   }
+}
 
-  // --- 3. Return Formatted String ---
+/**
+ * @description Finalizes a formatted command result.
+ * @param {string} command - Command string to return.
+ * @param {ILogger} logger - Logger for debug output.
+ * @param {boolean} debug - If true, debug logging is enabled.
+ * @returns {FormatActionOk} Result with the formatted command.
+ */
+function finalizeCommand(command, logger, debug) {
   if (debug) {
     logger.debug(` <- Final formatted command: "${command}"`);
   }
   return { ok: true, value: command };
+}
+
+/**
+ * Formats a validated action and target into a user-facing command string.
+ *
+ * @param {ActionDefinition} actionDefinition - The validated action's definition. Must not be null/undefined.
+ * @param {ActionTargetContext} targetContext - The validated target context. Must not be null/undefined.
+ * @param {EntityManager} entityManager - The entity manager for lookups. Must not be null/undefined.
+ * @param {object} [options] - Optional parameters.
+ * @param {boolean} [options.debug] - If true, logs additional debug information.
+ * @param {ILogger} [options.logger] - Logger instance used for diagnostic output. Defaults to console.
+ * @param {ISafeEventDispatcher} options.safeEventDispatcher - Dispatcher used for error events.
+ * @param {(entity: Entity, fallback: string, logger?: ILogger) => string} [displayNameFn] -
+ *  Function used to resolve entity display names.
+ * @param {TargetFormatterMap} [formatterMap] - Map of target types to formatter functions.
+ * @returns {FormatActionCommandResult} Result object containing the formatted command or an error.
+ * @throws {Error} If critical dependencies (entityManager, displayNameFn) are missing or invalid during processing.
+ */
+export function formatActionCommand(
+  actionDefinition,
+  targetContext,
+  entityManager,
+  options = {},
+  displayNameFn = getEntityDisplayName,
+  formatterMap = targetFormatterMap
+) {
+  const { debug = false, logger = console, safeEventDispatcher } = options;
+  const dispatcher = safeEventDispatcher || resolveSafeDispatcher(null, logger);
+  if (!dispatcher) {
+    logger.warn(
+      'formatActionCommand: safeEventDispatcher resolution failed; error events may not be dispatched.'
+    );
+  }
+
+  // --- 1. Input Validation ---
+  const validationError = validateFormatInputs(
+    actionDefinition,
+    targetContext,
+    entityManager,
+    displayNameFn,
+    dispatcher
+  );
+  if (validationError) {
+    return validationError;
+  }
+
+  let command = actionDefinition.template;
+  const contextType = targetContext.type;
+
+  if (debug) {
+    logger.debug(
+      `Formatting command for action: ${actionDefinition.id}, template: "${command}", targetType: ${contextType}`
+    );
+  }
+
+  // --- 2. Placeholder Substitution based on Target Type ---
+  const formatResult = applyTargetFormatter(
+    command,
+    actionDefinition,
+    targetContext,
+    formatterMap,
+    entityManager,
+    displayNameFn,
+    logger,
+    debug,
+    dispatcher
+  );
+  if (!formatResult.ok) {
+    return formatResult;
+  }
+
+  command = formatResult.value;
+
+  // --- 3. Return Formatted String ---
+  return finalizeCommand(command, logger, debug);
 }
