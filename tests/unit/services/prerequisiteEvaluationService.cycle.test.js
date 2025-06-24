@@ -68,4 +68,19 @@ describe('PrerequisiteEvaluationService Circular Reference Detection', () => {
       "Circular reference detected in prerequisites for action 'testAction'. Path: A -> B -> C -> A"
     );
   });
+
+  test('should resolve identical condition_refs in separate branches without errors', () => {
+    mockGameDataRepository.getConditionDefinition.mockImplementation((id) => {
+      if (id === 'X') return { logic: { condition_ref: 'A' } };
+      if (id === 'Y') return { logic: { condition_ref: 'A' } };
+      if (id === 'A') return { logic: { '==': [1, 1] } };
+      return null;
+    });
+
+    const input = [{ condition_ref: 'X' }, { condition_ref: 'Y' }];
+
+    const result = service._resolveConditionReferences(input, 'testAction');
+
+    expect(result).toEqual([{ '==': [1, 1] }, { '==': [1, 1] }]);
+  });
 });

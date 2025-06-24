@@ -141,11 +141,13 @@ export class PrerequisiteEvaluationService extends BaseService {
         );
       }
 
-      return this.#resolveReferences(
+      const resolvedLogic = this.#resolveReferences(
         conditionDef.logic,
         actionId,
-        new Set(visited)
+        visited
       );
+      visited.delete(conditionId);
+      return resolvedLogic;
     }
 
     const resolved = {};
