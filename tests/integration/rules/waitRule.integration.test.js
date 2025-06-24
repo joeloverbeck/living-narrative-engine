@@ -83,4 +83,21 @@ describe('core_handle_wait rule integration', () => {
     const types = testEnv.events.map((e) => e.eventType);
     expect(types).toEqual(expect.arrayContaining(['core:turn_ended']));
   });
+
+  it('throws when a handler lacks an execute method', () => {
+    /**
+     *
+     */
+    function badHandlers() {
+      return { BAD_HANDLER: {} };
+    }
+
+    expect(() =>
+      createRuleTestEnvironment({
+        createHandlers: badHandlers,
+      })
+    ).toThrow(
+      'Handler for BAD_HANDLER must be an object with an execute() method'
+    );
+  });
 });

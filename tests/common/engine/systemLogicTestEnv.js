@@ -74,6 +74,11 @@ export function createRuleTestEnvironment({
     operationRegistry = new OperationRegistry({ logger: testLogger });
     const handlers = createHandlers(entityManager, bus, testLogger);
     for (const [type, handler] of Object.entries(handlers)) {
+      if (!handler || typeof handler.execute !== 'function') {
+        throw new Error(
+          `Handler for ${type} must be an object with an execute() method`
+        );
+      }
       operationRegistry.register(type, handler.execute.bind(handler));
     }
     operationInterpreter = new OperationInterpreter({
