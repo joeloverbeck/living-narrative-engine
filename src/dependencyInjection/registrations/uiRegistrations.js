@@ -49,26 +49,21 @@ import { EngineUIManager } from '../../domUI'; // Corrected import path if Engin
 /** @typedef {import('../../turns/interfaces/ILLMAdapter.js').ILLMAdapter} ILLMAdapter */
 
 /**
- * Registers UI-specific dependencies after the DomRenderer refactor.
- *
- * @export
- * @param {AppContainer} container - The application's DI container.
- * @param {object} uiElements - An object containing references to essential UI elements passed from bootstrap.
- * @param {HTMLElement} uiElements.outputDiv - The main output area element.
- * @param {HTMLInputElement} uiElements.inputElement - The user command input element.
- * @param {HTMLElement} uiElements.titleElement - The title display element.
- * @param {Document} uiElements.document - The global document object.
+ * @description Registers DOM references and core utilities.
+ * @param {Registrar} registrar - DI registrar.
+ * @param {object} uiElements - UI elements from the bootstrapper.
+ * @param {HTMLElement} uiElements.outputDiv - Output container.
+ * @param {HTMLInputElement} uiElements.inputElement - Input element.
+ * @param {HTMLElement} uiElements.titleElement - Title element.
+ * @param {Document} uiElements.document - The global document.
+ * @param {ILogger} logger - Logger instance.
+ * @returns {void}
  */
-export function registerUI(
-  container,
-  { outputDiv, inputElement, titleElement, document: doc }
+export function registerDomElements(
+  registrar,
+  { outputDiv, inputElement, titleElement, document: doc },
+  logger
 ) {
-  const registrar = new Registrar(container);
-  /** @type {ILogger} */
-  const logger = container.resolve(tokens.ILogger);
-  logger.debug('UI Registrations: Starting (Refactored DOM UI)...');
-
-  // --- 0. Register External Dependencies (DOM elements / document passed from bootstrap) ---
   registrar.instance(tokens.WindowDocument, doc);
   logger.debug('UI Registrations: Registered window.document instance.');
   registrar.instance(tokens.outputDiv, outputDiv);
@@ -78,7 +73,6 @@ export function registerUI(
   registrar.instance(tokens.titleElement, titleElement);
   logger.debug('UI Registrations: Registered titleElement instance.');
 
-  // --- 1. Register Core UI Utilities & Alerting Services ---
   registrar.singletonFactory(
     tokens.IDocumentContext,
     (c) => new DocumentContext(c.resolve(tokens.WindowDocument))
@@ -98,9 +92,15 @@ export function registerUI(
     tokens.ISafeEventDispatcher,
   ]);
   logger.debug(`UI Registrations: Registered ${tokens.AlertRouter}.`);
+}
 
-  // --- 2. Register Individual Renderers / Controllers / Services ---
-
+/**
+ * @description Registers renderer components.
+ * @param {Registrar} registrar - DI registrar.
+ * @param {ILogger} logger - Logger instance.
+ * @returns {void}
+ */
+export function registerRenderers(registrar, logger) {
   registrar.single(tokens.SpeechBubbleRenderer, SpeechBubbleRenderer, [
     tokens.ILogger,
     tokens.IDocumentContext,
@@ -122,18 +122,6 @@ export function registerUI(
       })
   );
   logger.debug(`UI Registrations: Registered ${tokens.TitleRenderer}.`);
-
-  registrar.singletonFactory(
-    tokens.InputStateController,
-    (c) =>
-      new InputStateController({
-        logger: c.resolve(tokens.ILogger),
-        documentContext: c.resolve(tokens.IDocumentContext),
-        safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
-        inputElement: c.resolve(tokens.inputElement),
-      })
-  );
-  logger.debug(`UI Registrations: Registered ${tokens.InputStateController}.`);
 
   registrar.singletonFactory(tokens.LocationRenderer, (c) => {
     const docContext = c.resolve(tokens.IDocumentContext);
@@ -159,27 +147,31 @@ export function registerUI(
     `UI Registrations: Registered ${tokens.LocationRenderer} with IEntityManager, IDataRegistry, and EntityDisplayDataProvider.`
   );
 
-  registrar.singletonFactory(tokens.ActionButtonsRenderer, (c) => {
-    return new ActionButtonsRenderer({
-      logger: c.resolve(tokens.ILogger),
-      documentContext: c.resolve(tokens.IDocumentContext),
-      validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
-      domElementFactory: c.resolve(tokens.DomElementFactory),
-      actionButtonsContainerSelector: '#action-buttons',
-      sendButtonSelector: '#player-confirm-turn-button',
-    });
-  });
+  registrar.singletonFactory(
+    tokens.ActionButtonsRenderer,
+    (c) =>
+      new ActionButtonsRenderer({
+        logger: c.resolve(tokens.ILogger),
+        documentContext: c.resolve(tokens.IDocumentContext),
+        validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
+        domElementFactory: c.resolve(tokens.DomElementFactory),
+        actionButtonsContainerSelector: '#action-buttons',
+        sendButtonSelector: '#player-confirm-turn-button',
+      })
+  );
   logger.debug(`UI Registrations: Registered ${tokens.ActionButtonsRenderer}.`);
 
-  registrar.singletonFactory(tokens.PerceptionLogRenderer, (c) => {
-    return new PerceptionLogRenderer({
-      logger: c.resolve(tokens.ILogger),
-      documentContext: c.resolve(tokens.IDocumentContext),
-      validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
-      domElementFactory: c.resolve(tokens.DomElementFactory),
-      entityManager: c.resolve(tokens.IEntityManager),
-    });
-  });
+  registrar.singletonFactory(
+    tokens.PerceptionLogRenderer,
+    (c) =>
+      new PerceptionLogRenderer({
+        logger: c.resolve(tokens.ILogger),
+        documentContext: c.resolve(tokens.IDocumentContext),
+        validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
+        domElementFactory: c.resolve(tokens.DomElementFactory),
+        entityManager: c.resolve(tokens.IEntityManager),
+      })
+  );
   logger.debug(`UI Registrations: Registered ${tokens.PerceptionLogRenderer}.`);
 
   registrar.singletonFactory(
@@ -237,26 +229,11 @@ export function registerUI(
   );
 
   registrar.singletonFactory(
-    tokens.ProcessingIndicatorController,
-    (c) =>
-      new ProcessingIndicatorController({
-        logger: c.resolve(tokens.ILogger),
-        documentContext: c.resolve(tokens.IDocumentContext),
-        safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
-        domElementFactory: c.resolve(tokens.DomElementFactory),
-      })
-  );
-  logger.debug(
-    `UI Registrations: Registered ${tokens.ProcessingIndicatorController}.`
-  );
-
-  registrar.singletonFactory(
     tokens.ChatAlertRenderer,
     (c) =>
       new ChatAlertRenderer({
         logger: c.resolve(tokens.ILogger),
         documentContext: c.resolve(tokens.IDocumentContext),
-        // **FIX**: Provide the ISafeEventDispatcher under the new expected key.
         safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
         domElementFactory: c.resolve(tokens.DomElementFactory),
         alertRouter: c.resolve(tokens.AlertRouter),
@@ -275,8 +252,49 @@ export function registerUI(
       })
   );
   logger.debug(`UI Registrations: Registered ${tokens.ActionResultRenderer}.`);
+}
 
-  // --- 3. Register Facade ---
+/**
+ * @description Registers controller components.
+ * @param {Registrar} registrar
+ * @param {ILogger} logger
+ * @returns {void}
+ */
+export function registerControllers(registrar, logger) {
+  registrar.singletonFactory(
+    tokens.InputStateController,
+    (c) =>
+      new InputStateController({
+        logger: c.resolve(tokens.ILogger),
+        documentContext: c.resolve(tokens.IDocumentContext),
+        safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+        inputElement: c.resolve(tokens.inputElement),
+      })
+  );
+  logger.debug(`UI Registrations: Registered ${tokens.InputStateController}.`);
+
+  registrar.singletonFactory(
+    tokens.ProcessingIndicatorController,
+    (c) =>
+      new ProcessingIndicatorController({
+        logger: c.resolve(tokens.ILogger),
+        documentContext: c.resolve(tokens.IDocumentContext),
+        safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+        domElementFactory: c.resolve(tokens.DomElementFactory),
+      })
+  );
+  logger.debug(
+    `UI Registrations: Registered ${tokens.ProcessingIndicatorController}.`
+  );
+}
+
+/**
+ * @description Registers the DomUiFacade and EngineUIManager.
+ * @param {Registrar} registrar - DI registrar.
+ * @param {ILogger} logger - Logger instance.
+ * @returns {void}
+ */
+export function registerFacadeAndManager(registrar, logger) {
   registrar.single(tokens.DomUiFacade, DomUiFacade, [
     tokens.ActionButtonsRenderer,
     tokens.ActionResultRenderer,
@@ -293,7 +311,6 @@ export function registerUI(
     `UI Registrations: Registered ${tokens.DomUiFacade} under its own token.`
   );
 
-  // --- 4. Register Engine UI Manager ---
   registrar.singletonFactory(
     tokens.EngineUIManager,
     (c) =>
@@ -304,20 +321,58 @@ export function registerUI(
       })
   );
   logger.debug(`UI Registrations: Registered ${tokens.EngineUIManager}.`);
+}
 
-  // --- 5. Legacy Input Handler (Dependency Updated) ---
+/**
+ * @description Registers the legacy input handler.
+ * @param {Registrar} registrar
+ * @param {ILogger} logger
+ * @returns {void}
+ */
+export function registerLegacyInputHandler(registrar, logger) {
   registrar.singletonFactory(
     tokens.IInputHandler,
     (c) =>
       new InputHandler(
         c.resolve(tokens.inputElement),
-        undefined, // textParser (presumably TextParserService)
+        undefined,
         c.resolve(tokens.IValidatedEventDispatcher)
       )
   );
   logger.debug(
     `UI Registrations: Registered ${tokens.IInputHandler} (legacy) with VED.`
   );
+}
+
+/**
+ * Registers UI-specific dependencies after the DomRenderer refactor.
+ *
+ * @export
+ * @param {AppContainer} container - The application's DI container.
+ * @param {object} uiElements - An object containing references to essential UI elements passed from bootstrap.
+ * @param {HTMLElement} uiElements.outputDiv - The main output area element.
+ * @param {HTMLInputElement} uiElements.inputElement - The user command input element.
+ * @param {HTMLElement} uiElements.titleElement - The title display element.
+ * @param {Document} uiElements.document - The global document object.
+ */
+export function registerUI(
+  container,
+  { outputDiv, inputElement, titleElement, document: doc }
+) {
+  const registrar = new Registrar(container);
+  /** @type {ILogger} */
+  const logger = container.resolve(tokens.ILogger);
+  logger.debug('UI Registrations: Starting (Refactored DOM UI)...');
+
+  registerDomElements(
+    registrar,
+    { outputDiv, inputElement, titleElement, document: doc },
+    logger
+  );
+  registerRenderers(registrar, logger);
+  registerControllers(registrar, logger);
+  registerFacadeAndManager(registrar, logger);
+  registerLegacyInputHandler(registrar, logger);
 
   // --- 6. Eagerly instantiate ChatAlertRenderer to ensure it subscribes to events on startup ---
   container.resolve(tokens.ChatAlertRenderer);
