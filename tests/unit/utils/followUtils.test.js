@@ -5,7 +5,11 @@
 
 import { beforeEach, describe, expect, test } from '@jest/globals';
 import { mock } from 'jest-mock-extended';
-import { wouldCreateCycle } from '../../../src/utils/followUtils.js';
+import {
+  wouldCreateCycle,
+  getLeaderId,
+  detectCycle,
+} from '../../../src/utils/followUtils.js';
 import { FOLLOWING_COMPONENT_ID } from '../../../src/constants/componentIds.js';
 
 /**
@@ -144,5 +148,90 @@ describe('wouldCreateCycle', () => {
     // This case might be prevented by action prerequisites, but the utility should handle it.
     mockEntities.set('A', createMockEntity('A'));
     expect(wouldCreateCycle('A', 'A', mockEntityManager)).toBe(true);
+  });
+});
+
+describe('getLeaderId', () => {
+  /** @type {IEntityManager} */
+  let mockEntityManager;
+  const mockEntities = new Map();
+
+  const createMockEntity = (id, followingId = null) => {
+    const mockEntity = mock();
+    mockEntity.id = id;
+    if (followingId) {
+      mockEntity.getComponentData
+        .calledWith(FOLLOWING_COMPONENT_ID)
+        .mockReturnValue({ leaderId: followingId });
+    } else {
+      mockEntity.getComponentData
+        .calledWith(FOLLOWING_COMPONENT_ID)
+        .mockReturnValue(null);
+    }
+    return mockEntity;
+  };
+
+  beforeEach(() => {
+    mockEntities.clear();
+    mockEntityManager = mock();
+    mockEntityManager.getEntityInstance.mockImplementation((id) =>
+      mockEntities.get(id)
+    );
+  });
+
+  test('returns leader id when entity is following another', () => {
+    mockEntities.set('A', createMockEntity('A', 'B'));
+    expect(getLeaderId('A', mockEntityManager)).toBe('B');
+  });
+
+  test('returns null when entity has no leader', () => {
+    mockEntities.set('A', createMockEntity('A'));
+    expect(getLeaderId('A', mockEntityManager)).toBeNull();
+  });
+
+  test('returns null for missing entity or invalid manager', () => {
+    expect(getLeaderId('missing', mockEntityManager)).toBeNull();
+    expect(getLeaderId('A', null)).toBeNull();
+  });
+});
+
+describe('detectCycle', () => {
+  /** @type {IEntityManager} */
+  let mockEntityManager;
+  const mockEntities = new Map();
+
+  const createMockEntity = (id, followingId = null) => {
+    const mockEntity = mock();
+    mockEntity.id = id;
+    if (followingId) {
+      mockEntity.getComponentData
+        .calledWith(FOLLOWING_COMPONENT_ID)
+        .mockReturnValue({ leaderId: followingId });
+    } else {
+      mockEntity.getComponentData
+        .calledWith(FOLLOWING_COMPONENT_ID)
+        .mockReturnValue(null);
+    }
+    return mockEntity;
+  };
+
+  beforeEach(() => {
+    mockEntities.clear();
+    mockEntityManager = mock();
+    mockEntityManager.getEntityInstance.mockImplementation((id) =>
+      mockEntities.get(id)
+    );
+  });
+
+  test('detects a simple cycle', () => {
+    mockEntities.set('A', createMockEntity('A', 'B'));
+    mockEntities.set('B', createMockEntity('B', 'A'));
+    expect(detectCycle('A', 'B', mockEntityManager)).toBe(true);
+  });
+
+  test('returns false when no cycle exists', () => {
+    mockEntities.set('A', createMockEntity('A', 'B'));
+    mockEntities.set('B', createMockEntity('B'));
+    expect(detectCycle('C', 'A', mockEntityManager)).toBe(false);
   });
 });

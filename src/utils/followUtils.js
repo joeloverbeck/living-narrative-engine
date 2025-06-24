@@ -12,6 +12,57 @@ import { isValidEntityManager } from './entityValidationUtils.js';
 import { resolveEntityInstance } from './componentAccessUtils.js';
 
 /**
+ * @description Retrieves the leader an entity is following.
+ * @param {string} entityId - ID of the entity whose leader is requested.
+ * @param {IEntityManager} entityManager - Manager used to resolve entities.
+ * @returns {string | null} The leader ID or `null` when not found.
+ */
+export function getLeaderId(entityId, entityManager) {
+  if (!entityId || !isValidEntityManager(entityManager)) {
+    return null;
+  }
+
+  const entity = resolveEntityInstance(entityId, entityManager);
+  if (!entity) {
+    return null;
+  }
+
+  const data = entity.getComponentData(FOLLOWING_COMPONENT_ID);
+  return data && data.leaderId ? data.leaderId : null;
+}
+
+/**
+ * @description Performs a DFS traversal to detect a follow cycle.
+ * @param {string} startId - The ID of the prospective follower.
+ * @param {string} targetId - The ID of the entity being followed.
+ * @param {IEntityManager} entityManager - Manager used to resolve entities.
+ * @returns {boolean} `true` if a cycle is detected, otherwise `false`.
+ */
+export function detectCycle(startId, targetId, entityManager) {
+  const visited = new Set();
+  let currentId = targetId;
+
+  while (currentId) {
+    if (currentId === startId) {
+      return true;
+    }
+
+    if (visited.has(currentId)) {
+      return false;
+    }
+    visited.add(currentId);
+
+    const leaderId = getLeaderId(currentId, entityManager);
+    if (!leaderId) {
+      return false;
+    }
+    currentId = leaderId;
+  }
+
+  return false;
+}
+
+/**
  * @description
  * Traverses the "follow graph" to determine if an entity attempting to follow another
  * would create a cycle. It performs a Depth-First Search (DFS) starting from the
@@ -44,39 +95,5 @@ export function wouldCreateCycle(
     return false;
   }
 
-  const visited = new Set();
-  let currentId = prospectiveLeaderId;
-
-  while (currentId) {
-    // 1. Cycle detected: The chain leads back to the original follower.
-    if (currentId === prospectiveFollowerId) {
-      return true;
-    }
-
-    // 2. An existing (but unrelated) cycle was found, or we've already checked this path.
-    if (visited.has(currentId)) {
-      return false; // Not a cycle involving our prospectiveFollower, but the path is broken/cyclic.
-    }
-    visited.add(currentId);
-
-    const currentEntity = resolveEntityInstance(currentId, entityManager);
-    if (!currentEntity) {
-      // The leader doesn't exist, so the chain is broken. No cycle.
-      return false;
-    }
-
-    const followingComponent = currentEntity.getComponentData(
-      FOLLOWING_COMPONENT_ID
-    );
-    if (!followingComponent || !followingComponent.leaderId) {
-      // The current entity in the chain isn't following anyone. End of the line. No cycle.
-      return false;
-    }
-
-    // 3. Move to the next link in the chain.
-    currentId = followingComponent.leaderId;
-  }
-
-  // 4. Reached the end of the chain without finding the prospective follower.
-  return false;
+  return detectCycle(prospectiveFollowerId, prospectiveLeaderId, entityManager);
 }
