@@ -45,14 +45,14 @@ import ScopeCache, { LRUCache } from '../../scopeDsl/cache.js';
  * @param container
  */
 export function registerInfrastructure(container) {
-  const r = new Registrar(container);
+  const registrar = new Registrar(container);
   /** @type {ILogger} */
   const log = container.resolve(tokens.ILogger);
 
   log.debug('Infrastructure Registration: starting…');
 
   // ─── Shared ActionIndexingService ─────────────────────────────
-  r.singletonFactory(
+  registrar.singletonFactory(
     tokens.ActionIndexingService,
     // ActionIndexingService needs { logger }
     (c) =>
@@ -64,7 +64,7 @@ export function registerInfrastructure(container) {
     `Infrastructure Registration: Registered ${String(tokens.ActionIndexingService)}.`
   );
 
-  r.single(tokens.EventBus, EventBus);
+  registrar.single(tokens.EventBus, EventBus);
   log.debug(
     `Infrastructure Registration: Registered ${String(tokens.EventBus)}.`
   );
@@ -115,7 +115,7 @@ export function registerInfrastructure(container) {
     `Infrastructure Registration: Registered ${String(tokens.IValidatedEventDispatcher)}.`
   );
 
-  r.singletonFactory(
+  registrar.singletonFactory(
     tokens.ISafeEventDispatcher,
     (c) =>
       new SafeEventDispatcher({
@@ -130,13 +130,13 @@ export function registerInfrastructure(container) {
   );
 
   // Scope DSL Engine
-  r.single(tokens.ScopeEngine, ScopeEngine);
+  registrar.single(tokens.ScopeEngine, ScopeEngine);
   log.debug(
     `Infrastructure Registration: Registered ${String(tokens.ScopeEngine)}.`
   );
 
   // Scope DSL Cache (wraps ScopeEngine with caching)
-  r.singletonFactory(
+  registrar.singletonFactory(
     tokens.ScopeCache,
     (c) =>
       new ScopeCache({

@@ -35,13 +35,13 @@ import { LocationQueryService } from '../../entities/locationQueryService.js';
  * @param {AppContainer} container - The DI container.
  */
 export function registerWorldAndEntity(container) {
-  const r = new Registrar(container);
+  const registrar = new Registrar(container);
   /** @type {ILogger} */
   const logger = container.resolve(tokens.ILogger);
   logger.debug('World and Entity Registration: Starting...');
 
   // --- IEntityManager (EntityManager implementation) ---
-  r.singletonFactory(tokens.IEntityManager, (c) => {
+  registrar.singletonFactory(tokens.IEntityManager, (c) => {
     const entityManager = new EntityManager({
       registry: /** @type {IDataRegistry} */ (c.resolve(tokens.IDataRegistry)),
       validator: /** @type {ISchemaValidator} */ (
@@ -66,7 +66,7 @@ export function registerWorldAndEntity(container) {
     `World and Entity Registration: Registered ${String(tokens.IEntityManager)}.`
   );
 
-  r.singletonFactory(
+  registrar.singletonFactory(
     tokens.IWorldContext,
     (c) =>
       new WorldContext(
@@ -81,24 +81,25 @@ export function registerWorldAndEntity(container) {
     `World and Entity Registration: Registered ${String(tokens.IWorldContext)}.`
   );
 
-  r.single(tokens.JsonLogicEvaluationService, JsonLogicEvaluationService, [
-    tokens.ILogger,
-    tokens.IGameDataRepository,
-  ]);
+  registrar.single(
+    tokens.JsonLogicEvaluationService,
+    JsonLogicEvaluationService,
+    [tokens.ILogger, tokens.IGameDataRepository]
+  );
   logger.debug(
     `World and Entity Registration: Registered ${String(
       tokens.JsonLogicEvaluationService
     )}.`
   );
 
-  r.single(tokens.ClosenessCircleService, closenessCircleService, []);
+  registrar.single(tokens.ClosenessCircleService, closenessCircleService, []);
   logger.debug(
     `World and Entity Registration: Registered ${String(
       tokens.ClosenessCircleService
     )}.`
   );
 
-  r.singletonFactory(tokens.EntityDisplayDataProvider, (c) => {
+  registrar.singletonFactory(tokens.EntityDisplayDataProvider, (c) => {
     return new EntityDisplayDataProvider({
       entityManager: /** @type {IEntityManager} */ (
         c.resolve(tokens.IEntityManager)
@@ -116,16 +117,15 @@ export function registerWorldAndEntity(container) {
   );
 
   // --- SpatialIndexSynchronizer ---
-  r.tagged(INITIALIZABLE).singletonFactory(
-    tokens.SpatialIndexSynchronizer,
-    (c) => {
+  registrar
+    .tagged(INITIALIZABLE)
+    .singletonFactory(tokens.SpatialIndexSynchronizer, (c) => {
       return new SpatialIndexSynchronizer({
         spatialIndexManager: c.resolve(tokens.ISpatialIndexManager),
         safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
         logger: c.resolve(tokens.ILogger),
       });
-    }
-  );
+    });
   logger.debug(
     `World and Entity Registration: Registered ${String(
       tokens.SpatialIndexSynchronizer
@@ -133,7 +133,7 @@ export function registerWorldAndEntity(container) {
   );
 
   // --- LocationQueryService ---
-  r.singletonFactory(tokens.LocationQueryService, (c) => {
+  registrar.singletonFactory(tokens.LocationQueryService, (c) => {
     return new LocationQueryService({
       spatialIndexManager: /** @type {ISpatialIndexManager} */ (
         c.resolve(tokens.ISpatialIndexManager)

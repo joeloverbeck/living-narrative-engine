@@ -43,12 +43,12 @@ import { BrowserStorageProvider } from '../../storage/browserStorageProvider.js'
  * @param {AppContainer} container - The DI container.
  */
 export function registerPersistence(container) {
-  const r = new Registrar(container);
+  const registrar = new Registrar(container);
   /** @type {ILogger} */
   const logger = container.resolve(tokens.ILogger);
   logger.debug('Persistence Registration: Starting...');
 
-  r.single(tokens.IStorageProvider, BrowserStorageProvider, [
+  registrar.single(tokens.IStorageProvider, BrowserStorageProvider, [
     tokens.ILogger,
     tokens.ISafeEventDispatcher,
   ]);
@@ -56,7 +56,7 @@ export function registerPersistence(container) {
     `Persistence Registration: Registered ${String(tokens.IStorageProvider)}.`
   );
 
-  r.singletonFactory(tokens.ISaveFileRepository, (c) => {
+  registrar.singletonFactory(tokens.ISaveFileRepository, (c) => {
     const logger = c.resolve(tokens.ILogger);
     const storageProvider = c.resolve(tokens.IStorageProvider);
     const serializer = new GameStateSerializer({
@@ -77,7 +77,7 @@ export function registerPersistence(container) {
     `Persistence Registration: Registered ${String(tokens.ISaveFileRepository)}.`
   );
 
-  r.singletonFactory(tokens.ISaveLoadService, (c) =>
+  registrar.singletonFactory(tokens.ISaveLoadService, (c) =>
     createSaveLoadService({
       logger: c.resolve(tokens.ILogger),
       storageProvider: c.resolve(tokens.IStorageProvider),
@@ -87,7 +87,7 @@ export function registerPersistence(container) {
     `Persistence Registration: Registered ${String(tokens.ISaveLoadService)}.`
   );
 
-  r.single(tokens.PlaytimeTracker, PlaytimeTracker, [
+  registrar.single(tokens.PlaytimeTracker, PlaytimeTracker, [
     tokens.ILogger,
     tokens.ISafeEventDispatcher,
   ]);
@@ -95,7 +95,7 @@ export function registerPersistence(container) {
     `Persistence Registration: Registered ${String(tokens.PlaytimeTracker)}.`
   );
 
-  r.singletonFactory(tokens.ComponentCleaningService, (c) => {
+  registrar.singletonFactory(tokens.ComponentCleaningService, (c) => {
     const logger = c.resolve(tokens.ILogger);
     return new ComponentCleaningService({
       logger,
@@ -107,20 +107,23 @@ export function registerPersistence(container) {
     `Persistence Registration: Registered ${String(tokens.ComponentCleaningService)}.`
   );
 
-  r.single(tokens.SaveMetadataBuilder, SaveMetadataBuilder, [tokens.ILogger]);
+  registrar.single(tokens.SaveMetadataBuilder, SaveMetadataBuilder, [
+    tokens.ILogger,
+  ]);
   logger.debug(
     `Persistence Registration: Registered ${String(tokens.SaveMetadataBuilder)}.`
   );
 
-  r.single(tokens.ActiveModsManifestBuilder, ActiveModsManifestBuilder, [
-    tokens.ILogger,
-    tokens.IDataRegistry,
-  ]);
+  registrar.single(
+    tokens.ActiveModsManifestBuilder,
+    ActiveModsManifestBuilder,
+    [tokens.ILogger, tokens.IDataRegistry]
+  );
   logger.debug(
     `Persistence Registration: Registered ${String(tokens.ActiveModsManifestBuilder)}.`
   );
 
-  r.singletonFactory(tokens.GameStateCaptureService, (c) => {
+  registrar.singletonFactory(tokens.GameStateCaptureService, (c) => {
     return new GameStateCaptureService({
       logger: c.resolve(tokens.ILogger),
       entityManager: c.resolve(tokens.IEntityManager),
@@ -134,7 +137,7 @@ export function registerPersistence(container) {
     `Persistence Registration: Registered ${String(tokens.GameStateCaptureService)}.`
   );
 
-  r.singletonFactory(tokens.ManualSaveCoordinator, (c) => {
+  registrar.singletonFactory(tokens.ManualSaveCoordinator, (c) => {
     return new ManualSaveCoordinator({
       logger: c.resolve(tokens.ILogger),
       gameStateCaptureService: c.resolve(tokens.GameStateCaptureService),
@@ -145,7 +148,7 @@ export function registerPersistence(container) {
     `Persistence Registration: Registered ${String(tokens.ManualSaveCoordinator)}.`
   );
 
-  r.singletonFactory(tokens.GamePersistenceService, (c) => {
+  registrar.singletonFactory(tokens.GamePersistenceService, (c) => {
     return new GamePersistenceService({
       logger: c.resolve(tokens.ILogger),
       saveLoadService: c.resolve(tokens.ISaveLoadService),
@@ -164,7 +167,7 @@ export function registerPersistence(container) {
     `Persistence Registration: Registered ${String(tokens.GamePersistenceService)}.`
   );
 
-  // r.singletonFactory(tokens.IReferenceResolver, (c) => { // Removed - service is deprecated
+  // registrar.singletonFactory(tokens.IReferenceResolver, (c) => { // Removed - service is deprecated
   //   return new ReferenceResolver({
   //     entityManager: c.resolve(tokens.IEntityManager),
   //     logger: c.resolve(tokens.ILogger),

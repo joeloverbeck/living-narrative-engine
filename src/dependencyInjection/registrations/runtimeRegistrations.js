@@ -28,7 +28,7 @@ import { Registrar } from '../registrarHelpers.js';
  * @param {AppContainer} container - The application's DI container.
  */
 export function registerRuntime(container) {
-  const r = new Registrar(container);
+  const registrar = new Registrar(container);
   /** @type {ILogger} */
   const log = container.resolve(tokens.ILogger); // Use explicit type
   log.debug('Runtime Registration: Starting...'); // <<< Moved log up
@@ -39,7 +39,7 @@ export function registerRuntime(container) {
   // elsewhere, likely within the main application bootstrapping process
   // or initialization service, *after* the container is configured.
   // ====================================================================
-  // r.singletonFactory(tokens.GameLoop, c => { ... }); // <<< ENTIRE BLOCK REMOVED
+  // registrar.singletonFactory(tokens.GameLoop, c => { ... }); // <<< ENTIRE BLOCK REMOVED
   // log.info(`Runtime Registration: Registered ${tokens.GameLoop} (Singleton).`); // <<< REMOVED
 
   // Note: Other runtime services like TurnManager, TurnHandlerResolver etc.
