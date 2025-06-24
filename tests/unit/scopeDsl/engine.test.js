@@ -103,6 +103,11 @@ describe('ScopeEngine', () => {
         mockEntityManager.getEntitiesWithComponent.mockReturnValue(
           entitiesWithComponent
         );
+        
+        // Mock hasComponent to return true for entity1 and entity3, false for entity2 and entity4
+        mockEntityManager.hasComponent.mockImplementation((entityId, componentName) => {
+          return componentName === 'core:item' && (entityId === 'entity1' || entityId === 'entity3');
+        });
 
         const result = engine.resolve(ast, actorEntity, mockRuntimeCtx);
         expect(result).toEqual(new Set(['entity2', 'entity4']));
@@ -249,7 +254,7 @@ describe('ScopeEngine', () => {
         expect(result).toEqual(new Set(['entity1', 'entity3']));
       });
 
-      test('handles JsonLogic evaluation errors gracefully', () => {
+      test('throws JsonLogic evaluation errors immediately (fail-fast)', () => {
         const ast = parseDslExpression(
           'entities(core:item)[][{"invalid": "logic"}]'
         );
@@ -266,12 +271,9 @@ describe('ScopeEngine', () => {
           id,
         }));
 
-        const result = engine.resolve(ast, actorEntity, mockRuntimeCtx);
-        expect(result).toEqual(new Set());
-        expect(mockLogger.error).toHaveBeenCalledWith(
-          expect.stringContaining('Error evaluating filter for entity'),
-          expect.any(Error)
-        );
+        expect(() => {
+          engine.resolve(ast, actorEntity, mockRuntimeCtx);
+        }).toThrow('Invalid logic');
       });
     });
 
@@ -448,6 +450,11 @@ describe('ScopeEngine', () => {
         mockEntityManager.getEntityInstance.mockImplementation((id) =>
           allEntities.find((e) => e.id === id)
         );
+        
+        // Mock hasComponent to return true for entity1 and entity3, false for entity2 and entity4
+        mockEntityManager.hasComponent.mockImplementation((entityId, componentName) => {
+          return componentName === 'core:item' && (entityId === 'entity1' || entityId === 'entity3');
+        });
       });
 
       test('entities(core:item)[] returns all entities with component', () => {

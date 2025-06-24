@@ -144,22 +144,26 @@ class ScopeEngine extends IScopeEngine {
         }
 
         if (componentId.startsWith('!')) {
-          // Negative component query - entities WITHOUT the component
+          // Optimized negative component query - single-pass approach
           const componentName = componentId.slice(1);
-          const entitiesWithComponent =
-            runtimeCtx.entityManager.getEntitiesWithComponent(componentName);
-          const allEntities = Array.from(
-            runtimeCtx.entityManager.entities.values()
-          );
+          const results = new Set();
+          // Assumes entityManager can provide all entities efficiently
+          const allEntities = runtimeCtx.entityManager.getEntities
+            ? runtimeCtx.entityManager.getEntities()
+            : Array.from(runtimeCtx.entityManager.entities.values());
 
-          const entityIdsWithComponent = new Set(
-            entitiesWithComponent.map((e) => e.id)
-          );
-          const entityIdsWithoutComponent = allEntities
-            .filter((e) => !entityIdsWithComponent.has(e.id))
-            .map((e) => e.id);
-
-          return new Set(entityIdsWithoutComponent);
+          for (const entity of allEntities) {
+            // Check if entity has the component using hasComponent method if available,
+            // otherwise fall back to checking the components property
+            const hasComponent = runtimeCtx.entityManager.hasComponent
+              ? runtimeCtx.entityManager.hasComponent(entity.id, componentName)
+              : entity.components && entity.components[componentName];
+            
+            if (!hasComponent) {
+              results.add(entity.id);
+            }
+          }
+          return results;
         } else {
           // Positive component query - entities WITH the component
           const entities =
@@ -198,47 +202,95 @@ class ScopeEngine extends IScopeEngine {
 
     if (parentResult.size === 0) return new Set();
 
-    // FIX: This block handles the `entities(...)[]` case. The parser creates a step
-    // with `field: null` which the original logic could not handle.
-    if (node.isArray && node.field === null) {
-      // The parentResult is already the set of items (entity IDs) to be returned.
-      // We just pass it through.
+    // Handle the special case for entities()[] pattern
+    if (this._isPassThroughArrayIteration(node)) {
       return parentResult;
     }
 
+    // Process field access or array iteration
+    return this._processFieldAccess(node, parentResult, runtimeCtx);
+  }
+
+  /**
+   * Checks if this is a pass-through array iteration (entities()[] case)
+   *
+   * @param {AST} node - Step node
+   * @returns {boolean} True if this is a pass-through case
+   * @private
+   */
+  _isPassThroughArrayIteration(node) {
+    return node.isArray && node.field === null;
+  }
+
+  /**
+   * Processes field access for each item in the parent result set
+   *
+   * @param {AST} node - Step node
+   * @param {Set} parentResult - Parent result set
+   * @param {RuntimeContext} runtimeCtx - Runtime context
+   * @returns {Set<string>} Set of resolved values
+   * @private
+   */
+  _processFieldAccess(node, parentResult, runtimeCtx) {
     const result = new Set();
+
     for (const parentValue of parentResult) {
-      let current;
-      if (typeof parentValue === 'string') {
-        current = runtimeCtx.entityManager.getComponentData(
-          parentValue,
-          node.field
-        );
-      } else if (parentValue && typeof parentValue === 'object') {
-        if (node.field in parentValue) {
-          current = parentValue[node.field];
-        } else {
-          continue;
-        }
-      } else {
+      const current = this._extractFieldValue(parentValue, node.field, runtimeCtx);
+      
+      if (current === null || current === undefined) {
         continue;
       }
 
       if (node.isArray) {
-        if (Array.isArray(current)) {
-          for (const item of current) {
-            if (item !== null && item !== undefined) result.add(item);
-          }
-        }
+        this._addArrayItems(current, result);
       } else {
-        if (current !== null && current !== undefined) result.add(current);
+        result.add(current);
       }
     }
+
     return result;
   }
 
   /**
+   * Extracts field value from a parent value (entity ID or object)
+   *
+   * @param {string|object} parentValue - Parent value to extract from
+   * @param {string} fieldName - Field name to extract
+   * @param {RuntimeContext} runtimeCtx - Runtime context
+   * @returns {*} Extracted field value
+   * @private
+   */
+  _extractFieldValue(parentValue, fieldName, runtimeCtx) {
+    if (typeof parentValue === 'string') {
+      // Parent value is an entity ID, get component data
+      return runtimeCtx.entityManager.getComponentData(parentValue, fieldName);
+    } else if (parentValue && typeof parentValue === 'object') {
+      // Parent value is an object, access property directly
+      return parentValue[fieldName];
+    }
+    return null;
+  }
+
+  /**
+   * Adds array items to the result set
+   *
+   * @param {*} arrayValue - Value that should be an array
+   * @param {Set} result - Result set to add items to
+   * @private
+   */
+  _addArrayItems(arrayValue, result) {
+    if (Array.isArray(arrayValue)) {
+      for (const item of arrayValue) {
+        if (item !== null && item !== undefined) {
+          result.add(item);
+        }
+      }
+    }
+  }
+
+  /**
    * Resolves a Filter node (JSON Logic evaluation)
+   * Adopts fail-fast approach - exceptions propagate instead of being swallowed
    *
    * @param {AST} node - Filter node
    * @param {object} actorEntity - The acting entity instance.
@@ -260,39 +312,33 @@ class ScopeEngine extends IScopeEngine {
 
     const result = new Set();
     for (const item of parentResult) {
-      try {
-        let entity;
-        
-        if (typeof item === 'string') {
-          // Item is an entity ID, get the entity instance
-          entity = runtimeCtx.entityManager.getEntityInstance(item);
-          entity = entity || { id: item };
-        } else if (item && typeof item === 'object') {
-          // Item is already an object (e.g., exit object from component data)
-          entity = item;
-        } else {
-          // Skip invalid items
-          continue;
-        }
+      let entity;
+      
+      if (typeof item === 'string') {
+        // Item is an entity ID, get the entity instance
+        entity = runtimeCtx.entityManager.getEntityInstance(item);
+        entity = entity || { id: item };
+      } else if (item && typeof item === 'object') {
+        // Item is already an object (e.g., exit object from component data)
+        entity = item;
+      } else {
+        // Skip invalid items
+        continue;
+      }
 
-        const context = {
-          entity: entity,
-          actor: actorEntity, // Use the full actor entity
-          location: runtimeCtx.location || { id: 'unknown' },
-        };
+      const context = {
+        entity: entity,
+        actor: actorEntity, // Use the full actor entity
+        location: runtimeCtx.location || { id: 'unknown' },
+      };
 
-        const filterResult = runtimeCtx.jsonLogicEval.evaluate(
-          node.logic,
-          context
-        );
-        if (filterResult) {
-          result.add(item); // Add the original item (ID or object)
-        }
-      } catch (error) {
-        runtimeCtx.logger.error(
-          `Error evaluating filter for entity/object ${typeof item === 'string' ? item : JSON.stringify(item)}:`,
-          error
-        );
+      // If this throws, it will now halt resolution, which is desired for fail-fast approach
+      const filterResult = runtimeCtx.jsonLogicEval.evaluate(
+        node.logic,
+        context
+      );
+      if (filterResult) {
+        result.add(item); // Add the original item (ID or object)
       }
     }
     return result;
