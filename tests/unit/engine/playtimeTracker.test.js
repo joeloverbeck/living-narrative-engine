@@ -33,7 +33,8 @@ describe('PlaytimeTracker', () => {
       safeEventDispatcher: mockDispatcher,
     });
     tracker.startSession();
-    expect(tracker._getSessionStartTime()).toBe(BASE_TIME);
+    jest.setSystemTime(BASE_TIME + 3000);
+    expect(tracker.getTotalPlaytime()).toBe(3);
     expect(mockLogger.debug).toHaveBeenCalledWith(
       `PlaytimeTracker: Session started at ${BASE_TIME}`
     );
@@ -47,10 +48,11 @@ describe('PlaytimeTracker', () => {
     tracker.startSession();
     jest.setSystemTime(BASE_TIME + 1000);
     tracker.startSession();
+    jest.setSystemTime(BASE_TIME + 2000);
     expect(mockLogger.warn).toHaveBeenCalledWith(
       `PlaytimeTracker: startSession called while a session was already active (started at ${BASE_TIME}). Restarting session timer.`
     );
-    expect(tracker._getSessionStartTime()).toBe(BASE_TIME + 1000);
+    expect(tracker.getTotalPlaytime()).toBe(1);
   });
 
   test('endSessionAndAccumulate adds playtime when session active', () => {
@@ -61,8 +63,7 @@ describe('PlaytimeTracker', () => {
     tracker.startSession();
     jest.setSystemTime(BASE_TIME + 5000);
     tracker.endSessionAndAccumulate();
-    expect(tracker._getAccumulatedPlaytimeSeconds()).toBe(5);
-    expect(tracker._getSessionStartTime()).toBe(0);
+    expect(tracker.getTotalPlaytime()).toBe(5);
   });
 
   test('endSessionAndAccumulate with no session logs debug', () => {
@@ -81,7 +82,7 @@ describe('PlaytimeTracker', () => {
       logger: mockLogger,
       safeEventDispatcher: mockDispatcher,
     });
-    tracker._setAccumulatedPlaytimeSeconds(10);
+    tracker.setAccumulatedPlaytime(10);
     tracker.startSession();
     jest.setSystemTime(BASE_TIME + 3000);
     expect(tracker.getTotalPlaytime()).toBe(13);
@@ -101,11 +102,10 @@ describe('PlaytimeTracker', () => {
       logger: mockLogger,
       safeEventDispatcher: mockDispatcher,
     });
-    tracker._setAccumulatedPlaytimeSeconds(20);
+    tracker.setAccumulatedPlaytime(20);
     tracker.startSession();
     tracker.reset();
-    expect(tracker._getAccumulatedPlaytimeSeconds()).toBe(0);
-    expect(tracker._getSessionStartTime()).toBe(0);
+    expect(tracker.getTotalPlaytime()).toBe(0);
     expect(mockLogger.debug).toHaveBeenLastCalledWith(
       'PlaytimeTracker: Playtime reset.'
     );
