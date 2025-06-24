@@ -514,6 +514,71 @@ export class LocationRenderer extends BoundDomRendererBase {
     return span;
   }
 
+  /**
+   * Render the location name heading.
+   *
+   * @param {LocationDisplayPayload} locationDto - Details for the current location.
+   * @returns {void}
+   */
+  renderName(locationDto) {
+    DomUtils.clearElement(this.elements.nameDisplay);
+    const h3Name = this.domElementFactory.h3(
+      undefined,
+      locationDto.name || DEFAULT_LOCATION_NAME
+    );
+    if (h3Name) {
+      this.elements.nameDisplay.appendChild(h3Name);
+    } else {
+      this.elements.nameDisplay.textContent =
+        locationDto.name || DEFAULT_LOCATION_NAME;
+    }
+  }
+
+  /**
+   * Render the location portrait section.
+   *
+   * @param {LocationDisplayPayload} locationDto - Details for the current location.
+   * @returns {void}
+   */
+  renderPortrait(locationDto) {
+    renderPortraitElements(
+      this.elements.locationPortraitImageElement,
+      this.elements.locationPortraitVisualsElement,
+      locationDto,
+      this.logger
+    );
+  }
+
+  /**
+   * Render the location description.
+   *
+   * @param {LocationDisplayPayload} locationDto - Details for the current location.
+   * @returns {void}
+   */
+  renderDescription(locationDto) {
+    DomUtils.clearElement(this.elements.descriptionDisplay);
+    const pDesc = this.domElementFactory.p(
+      undefined,
+      locationDto.description || DEFAULT_LOCATION_DESCRIPTION
+    );
+    if (pDesc) {
+      this.elements.descriptionDisplay.appendChild(pDesc);
+    } else {
+      this.elements.descriptionDisplay.textContent =
+        locationDto.description || DEFAULT_LOCATION_DESCRIPTION;
+    }
+  }
+
+  /**
+   * Render exits and characters lists.
+   *
+   * @param {LocationDisplayPayload} locationDto - Details for the current location.
+   * @returns {void}
+   */
+  renderLists(locationDto) {
+    renderLocationLists(this, locationDto);
+  }
+
   render(locationDto) {
     if (!this.baseContainerElement || !this.domElementFactory) {
       this.safeEventDispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
@@ -552,42 +617,10 @@ export class LocationRenderer extends BoundDomRendererBase {
       `${this._logPrefix} Rendering location: "${locationDto.name}".`
     );
 
-    // Name
-    DomUtils.clearElement(this.elements.nameDisplay);
-    const h3Name = this.domElementFactory.h3(
-      undefined,
-      locationDto.name || DEFAULT_LOCATION_NAME
-    );
-    if (h3Name) {
-      this.elements.nameDisplay.appendChild(h3Name);
-    } else {
-      this.elements.nameDisplay.textContent =
-        locationDto.name || DEFAULT_LOCATION_NAME;
-    }
-
-    // Location Portrait
-    renderPortraitElements(
-      this.elements.locationPortraitImageElement,
-      this.elements.locationPortraitVisualsElement,
-      locationDto,
-      this.logger
-    );
-
-    // Description
-    DomUtils.clearElement(this.elements.descriptionDisplay);
-    const pDesc = this.domElementFactory.p(
-      undefined,
-      locationDto.description || DEFAULT_LOCATION_DESCRIPTION
-    );
-    if (pDesc) {
-      this.elements.descriptionDisplay.appendChild(pDesc);
-    } else {
-      this.elements.descriptionDisplay.textContent =
-        locationDto.description || DEFAULT_LOCATION_DESCRIPTION;
-    }
-
-    // Exits and Characters
-    renderLocationLists(this, locationDto);
+    this.renderName(locationDto);
+    this.renderPortrait(locationDto);
+    this.renderDescription(locationDto);
+    this.renderLists(locationDto);
 
     this.logger.debug(
       `${this._logPrefix} Location "${locationDto.name}" display updated.`
