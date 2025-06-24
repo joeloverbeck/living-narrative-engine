@@ -7,6 +7,7 @@
  * import { fetchWithRetry, getModuleLogger } from '../utils/index.js';
  */
 export { fetchWithRetry } from './httpUtils.js';
+export { RetryManager } from './httpRetryManager.js';
 export * from './loggerUtils.js';
 export * from './logHelpers.js';
 export * from './objectUtils.js';
