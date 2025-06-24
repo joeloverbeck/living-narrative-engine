@@ -177,7 +177,7 @@ export class ActionValidationService extends BaseService {
    * @param {string} actionId - The ID of the action being validated (for logging).
    * @returns {void}
    */
-  warnIfTargetMissing(targetContext, actionId) {
+  #warnIfTargetMissing(targetContext, actionId) {
     if (targetContext.type === TARGET_TYPE_ENTITY) {
       const targetEntity = this.#entityManager.getEntityInstance(
         targetContext.entityId
@@ -327,7 +327,7 @@ export class ActionValidationService extends BaseService {
       }
 
       // Step 2: Verify Target Entity Existence
-      this.warnIfTargetMissing(targetContext, actionId);
+      this.#warnIfTargetMissing(targetContext, actionId);
 
       // Steps 3 & 4: Process prerequisites
       const prerequisitesPassed = this._validatePrerequisites(
