@@ -49,11 +49,11 @@ export class SpatialIndexSynchronizer {
     );
     safeEventDispatcher.subscribe(
       COMPONENT_ADDED_ID,
-      this.onComponentChanged.bind(this)
+      this.onPositionChanged.bind(this)
     );
     safeEventDispatcher.subscribe(
       COMPONENT_REMOVED_ID,
-      this.onComponentChanged.bind(this)
+      this.onPositionChanged.bind(this)
     );
 
     this.logger.debug(
@@ -115,7 +115,7 @@ export class SpatialIndexSynchronizer {
    *
    * @param {ComponentAddedPayload | ComponentRemovedPayload} payload
    */
-  onComponentChanged(payload) {
+  onPositionChanged(payload) {
     const { entity, componentTypeId, oldComponentData } = payload;
     // This handler only cares about the position component
     if (componentTypeId !== POSITION_COMPONENT_ID) {
