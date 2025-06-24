@@ -256,6 +256,19 @@ describe('PlaceholderResolver', () => {
       expect(mockLogger.warn).not.toHaveBeenCalled();
     });
 
+    it('should support optional placeholders with surrounding spaces', () => {
+      const str = 'Maybe {  missing.value?  }!';
+      const data = {};
+      expect(resolver.resolve(str, data)).toBe('Maybe !');
+      expect(mockLogger.warn).not.toHaveBeenCalled();
+    });
+
+    it('resolves optional placeholders with spaces when present', () => {
+      const str = 'Value: {  key?  }';
+      const data = { key: 'yes' };
+      expect(resolver.resolve(str, data)).toBe('Value: yes');
+    });
+
     it('should handle strings with only a placeholder', () => {
       const str = '{only_me}';
       const data = { only_me: 'just_value' };
@@ -351,6 +364,17 @@ describe('PlaceholderResolver', () => {
       expect(mockLogger.warn).toHaveBeenCalledWith(
         'PlaceholderResolver: Placeholder "{missing}" not found in provided data sources. Replacing with empty string.'
       );
+    });
+
+    it('resolves optional full-string placeholders with spaces', () => {
+      const res = resolver._handleFullString('{ key? }', [{ key: 'ok' }]);
+      expect(res).toEqual({ changed: true, value: 'ok' });
+    });
+
+    it('returns undefined without warning for optional full-string placeholders', () => {
+      const res = resolver._handleFullString('{ missing? }', [{}]);
+      expect(res).toEqual({ changed: true, value: undefined });
+      expect(mockLogger.warn).not.toHaveBeenCalled();
     });
 
     it('replaces embedded placeholders in a string', () => {
