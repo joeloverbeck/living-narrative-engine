@@ -151,33 +151,53 @@ export class TurnIdleState extends AbstractTurnState {
     }
   }
 
+  /**
+   * @description Logs a standardized warning when no active turn is present.
+   * @param {string} methodName - Name of the calling method.
+   * @param {string} actorId - ID of the actor involved.
+   * @returns {void}
+   */
+  _warnNoActiveTurn(methodName, actorId) {
+    const turnCtx = this._getTurnContext();
+    const logger = getLogger(turnCtx, this._handler);
+
+    const needsIdleNote =
+      methodName.startsWith('Command') ||
+      methodName.startsWith('handleTurnEndedEvent');
+
+    const message = `${this.getStateName()}: ${methodName}${actorId} but no turn is active${
+      needsIdleNote ? ' (handler is Idle).' : '.'
+    }`;
+    logger.warn(message);
+  }
+
   /** @override */
   async handleSubmittedCommand(handler, commandString, actorEntity) {
-    const turnCtx = this._getTurnContext();
-    const logger = getLogger(turnCtx, handler);
     const actorIdForLog = actorEntity?.id ?? UNKNOWN_ENTITY_ID;
-    const message = `${this.getStateName()}: Command ('${commandString}') submitted by ${actorIdForLog} but no turn is active (handler is Idle).`;
-    logger.warn(message);
+    this._warnNoActiveTurn(
+      `Command ('${commandString}') submitted by `,
+      actorIdForLog
+    );
     return super.handleSubmittedCommand(handler, commandString, actorEntity);
   }
 
   /** @override */
   async handleTurnEndedEvent(handler, payload) {
-    const turnCtx = this._getTurnContext();
-    const logger = getLogger(turnCtx, handler);
     const payloadActorId = payload?.entityId ?? UNKNOWN_ENTITY_ID;
-    const message = `${this.getStateName()}: handleTurnEndedEvent called (for ${payloadActorId}) but no turn is active (handler is Idle).`;
-    logger.warn(message);
+    this._warnNoActiveTurn(
+      'handleTurnEndedEvent called (for ',
+      `${payloadActorId})`
+    );
     return super.handleTurnEndedEvent(handler, payload);
   }
 
   /** @override */
   async processCommandResult(handler, actor, cmdProcResult, commandString) {
-    const turnCtx = this._getTurnContext();
-    const logger = getLogger(turnCtx, handler);
     const actorIdForLog = actor?.id ?? UNKNOWN_ENTITY_ID;
-    const message = `${this.getStateName()}: processCommandResult called (for ${actorIdForLog}) but no turn is active.`;
-    logger.warn(message);
+    this._warnNoActiveTurn(
+      'processCommandResult called (for ',
+      `${actorIdForLog})`
+    );
     return super.processCommandResult(
       handler,
       actor,
@@ -188,11 +208,8 @@ export class TurnIdleState extends AbstractTurnState {
 
   /** @override */
   async handleDirective(handler, actor, directive, cmdProcResult) {
-    const turnCtx = this._getTurnContext();
-    const logger = getLogger(turnCtx, handler);
     const actorIdForLog = actor?.id ?? UNKNOWN_ENTITY_ID;
-    const message = `${this.getStateName()}: handleDirective called (for ${actorIdForLog}) but no turn is active.`;
-    logger.warn(message);
+    this._warnNoActiveTurn('handleDirective called (for ', `${actorIdForLog})`);
     return super.handleDirective(handler, actor, directive, cmdProcResult);
   }
 
