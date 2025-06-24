@@ -266,7 +266,11 @@ class InitializationService extends IInitializationService {
     } catch (error) {
       this.#logger.error(
         `CRITICAL ERROR during initialization sequence for world '${worldName}': ${error.message}`,
-        { errorMessage: error.message, errorName: error.name, errorStack: error.stack }
+        {
+          errorMessage: error.message,
+          errorName: error.name,
+          errorStack: error.stack,
+        }
       );
 
       const failedPayload = {
