@@ -49,11 +49,11 @@ describe('TurnEndingState helper methods', () => {
     expect(safeDispatchError).toHaveBeenCalledWith(
       dispatcher,
       expect.any(String),
-      { providedActorId: null },
+      { providedActorId: null, fallbackActorId: 'h-actor' },
       logger
     );
     expect(logger.warn).toHaveBeenCalledWith(
-      expect.stringContaining('actorToEndId was missing')
+      expect.stringContaining('Actor ID was missing')
     );
   });
 
