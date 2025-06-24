@@ -67,119 +67,134 @@ describeEngineSuite('GameEngine', (ctx) => {
       expectEngineRunning(ctx.engine, typedMockSaveData.metadata.gameTitle);
     });
 
-    it('should handle failure reported by the persistence service', async () => {
+    describe('when the persistence service reports failure', () => {
       const errorMsg = 'Restore operation failed';
-      ctx.bed.mocks.gamePersistenceService.loadAndRestoreGame.mockResolvedValue(
-        {
-          success: false,
-          error: errorMsg,
-          data: null,
-        }
-      );
 
-      const result = await ctx.engine.loadGame(SAVE_ID);
+      beforeEach(() => {
+        ctx.bed.mocks.gamePersistenceService.loadAndRestoreGame.mockResolvedValue(
+          {
+            success: false,
+            error: errorMsg,
+            data: null,
+          }
+        );
+      });
 
-      expect(ctx.bed.mocks.logger.warn).toHaveBeenCalledWith(
-        `GameEngine: Load/restore operation reported failure for "${SAVE_ID}".`
-      );
-      expectDispatchSequence(
-        ctx.bed.mocks.safeEventDispatcher.dispatch,
-        [
-          ENGINE_OPERATION_IN_PROGRESS_UI,
-          {
-            titleMessage: `Loading ${SAVE_ID}...`,
-            inputDisabledMessage: `Loading game from ${SAVE_ID}...`,
-          },
-        ],
-        [
-          ENGINE_OPERATION_FAILED_UI,
-          {
-            errorMessage: `Failed to load game: ${errorMsg}`,
-            errorTitle: 'Load Failed',
-          },
-        ]
-      );
-      expect(result).toEqual({ success: false, error: errorMsg, data: null });
-      expectEngineStopped(ctx.engine);
+      it('logs warning, dispatches failure UI and returns failure result', async () => {
+        const result = await ctx.engine.loadGame(SAVE_ID);
+
+        expect(ctx.bed.mocks.logger.warn).toHaveBeenCalledWith(
+          `GameEngine: Load/restore operation reported failure for "${SAVE_ID}".`
+        );
+        expectDispatchSequence(
+          ctx.bed.mocks.safeEventDispatcher.dispatch,
+          [
+            ENGINE_OPERATION_IN_PROGRESS_UI,
+            {
+              titleMessage: `Loading ${SAVE_ID}...`,
+              inputDisabledMessage: `Loading game from ${SAVE_ID}...`,
+            },
+          ],
+          [
+            ENGINE_OPERATION_FAILED_UI,
+            {
+              errorMessage: `Failed to load game: ${errorMsg}`,
+              errorTitle: 'Load Failed',
+            },
+          ]
+        );
+        expect(result).toEqual({ success: false, error: errorMsg, data: null });
+        expectEngineStopped(ctx.engine);
+      });
     });
 
-    it('should handle errors thrown by the persistence service', async () => {
+    describe('when the persistence service throws an error', () => {
       const errorObj = new Error('Execute failed');
-      ctx.bed.mocks.gamePersistenceService.loadAndRestoreGame.mockRejectedValue(
-        errorObj
-      );
 
-      const result = await ctx.engine.loadGame(SAVE_ID);
-
-      expect(ctx.bed.mocks.logger.error).toHaveBeenCalledWith(
-        `GameEngine: Overall catch in loadGame for identifier "${SAVE_ID}". Error: ${errorObj.message}`,
-        errorObj
-      );
-      expectDispatchSequence(
-        ctx.bed.mocks.safeEventDispatcher.dispatch,
-        [
-          ENGINE_OPERATION_IN_PROGRESS_UI,
-          {
-            titleMessage: `Loading ${SAVE_ID}...`,
-            inputDisabledMessage: `Loading game from ${SAVE_ID}...`,
-          },
-        ],
-        [
-          ENGINE_OPERATION_FAILED_UI,
-          {
-            errorMessage: `Failed to load game: ${errorObj.message}`,
-            errorTitle: 'Load Failed',
-          },
-        ]
-      );
-      expect(result).toEqual({
-        success: false,
-        error: errorObj.message,
-        data: null,
+      beforeEach(() => {
+        ctx.bed.mocks.gamePersistenceService.loadAndRestoreGame.mockRejectedValue(
+          errorObj
+        );
       });
-      expectEngineStopped(ctx.engine);
+
+      it('logs error, dispatches failure UI and returns failure result', async () => {
+        const result = await ctx.engine.loadGame(SAVE_ID);
+
+        expect(ctx.bed.mocks.logger.error).toHaveBeenCalledWith(
+          `GameEngine: Overall catch in loadGame for identifier "${SAVE_ID}". Error: ${errorObj.message}`,
+          errorObj
+        );
+        expectDispatchSequence(
+          ctx.bed.mocks.safeEventDispatcher.dispatch,
+          [
+            ENGINE_OPERATION_IN_PROGRESS_UI,
+            {
+              titleMessage: `Loading ${SAVE_ID}...`,
+              inputDisabledMessage: `Loading game from ${SAVE_ID}...`,
+            },
+          ],
+          [
+            ENGINE_OPERATION_FAILED_UI,
+            {
+              errorMessage: `Failed to load game: ${errorObj.message}`,
+              errorTitle: 'Load Failed',
+            },
+          ]
+        );
+        expect(result).toEqual({
+          success: false,
+          error: errorObj.message,
+          data: null,
+        });
+        expectEngineStopped(ctx.engine);
+      });
     });
 
-    it('should handle errors during finalization', async () => {
+    describe('when finalization fails', () => {
       const errorObj = new Error('Finalize failed');
-      ctx.bed.mocks.turnManager.start.mockRejectedValue(errorObj);
 
-      const result = await ctx.engine.loadGame(SAVE_ID);
-
-      expect(ctx.bed.mocks.logger.error).toHaveBeenCalledWith(
-        `GameEngine: Overall catch in loadGame for identifier "${SAVE_ID}". Error: ${errorObj.message}`,
-        errorObj
-      );
-      expectDispatchSequence(
-        ctx.bed.mocks.safeEventDispatcher.dispatch,
-        [
-          ENGINE_OPERATION_IN_PROGRESS_UI,
-          {
-            titleMessage: `Loading ${SAVE_ID}...`,
-            inputDisabledMessage: `Loading game from ${SAVE_ID}...`,
-          },
-        ],
-        [
-          ENGINE_READY_UI,
-          {
-            activeWorld: typedMockSaveData.metadata.gameTitle,
-            message: ENGINE_READY_MESSAGE,
-          },
-        ],
-        [
-          ENGINE_OPERATION_FAILED_UI,
-          {
-            errorMessage: `Failed to load game: ${errorObj.message}`,
-            errorTitle: 'Load Failed',
-          },
-        ]
-      );
-      expect(result).toEqual({
-        success: false,
-        error: errorObj.message,
-        data: null,
+      beforeEach(() => {
+        ctx.bed.mocks.turnManager.start.mockRejectedValue(errorObj);
       });
-      expectEngineStopped(ctx.engine);
+
+      it('logs error, dispatches failure UI and returns failure result', async () => {
+        const result = await ctx.engine.loadGame(SAVE_ID);
+
+        expect(ctx.bed.mocks.logger.error).toHaveBeenCalledWith(
+          `GameEngine: Overall catch in loadGame for identifier "${SAVE_ID}". Error: ${errorObj.message}`,
+          errorObj
+        );
+        expectDispatchSequence(
+          ctx.bed.mocks.safeEventDispatcher.dispatch,
+          [
+            ENGINE_OPERATION_IN_PROGRESS_UI,
+            {
+              titleMessage: `Loading ${SAVE_ID}...`,
+              inputDisabledMessage: `Loading game from ${SAVE_ID}...`,
+            },
+          ],
+          [
+            ENGINE_READY_UI,
+            {
+              activeWorld: typedMockSaveData.metadata.gameTitle,
+              message: ENGINE_READY_MESSAGE,
+            },
+          ],
+          [
+            ENGINE_OPERATION_FAILED_UI,
+            {
+              errorMessage: `Failed to load game: ${errorObj.message}`,
+              errorTitle: 'Load Failed',
+            },
+          ]
+        );
+        expect(result).toEqual({
+          success: false,
+          error: errorObj.message,
+          data: null,
+        });
+        expectEngineStopped(ctx.engine);
+      });
     });
 
     runUnavailableServiceSuite(
