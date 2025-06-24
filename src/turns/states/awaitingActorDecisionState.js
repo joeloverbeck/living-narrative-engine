@@ -9,6 +9,7 @@ import { AbstractTurnState } from './abstractTurnState.js';
 import { ACTION_DECIDED_ID } from '../../constants/eventIds.js';
 import { getActorType } from '../../utils/actorTypeUtils.js';
 import { getLogger, getSafeEventDispatcher } from './helpers/contextUtils.js';
+import { ActionDecisionWorkflow } from './workflows/actionDecisionWorkflow.js';
 
 /**
  * @typedef {import('../interfaces/turnStateContextTypes.js').AwaitingActorDecisionStateContext} AwaitingActorDecisionStateContext
@@ -76,47 +77,13 @@ export class AwaitingActorDecisionState extends AbstractTurnState {
    * @returns {Promise<void>} Resolves when handling completes.
    */
   async _handleActionDecision(turnContext, actor, strategy) {
-    const logger = turnContext.getLogger();
-    try {
-      const { action, extractedData } = await this._decideAction(
-        strategy,
-        turnContext,
-        actor
-      );
-
-      if (!action || typeof action.actionDefinitionId !== 'string') {
-        const warnMsg = `${this.getStateName()}: Strategy for actor ${actor.id} returned an invalid or null ITurnAction (must have actionDefinitionId).`;
-        turnContext.getLogger().warn(warnMsg, { receivedAction: action });
-        await turnContext.endTurn(new Error(warnMsg));
-        return;
-      }
-
-      this._recordDecision(turnContext, action, extractedData);
-      await this._emitActionDecided(turnContext, actor, extractedData);
-
-      const cmdStr =
-        action.commandString && action.commandString.trim().length > 0
-          ? action.commandString
-          : action.actionDefinitionId;
-
-      turnContext
-        .getLogger()
-        .debug(
-          `${this.getStateName()}: Requesting transition to ProcessingCommandState for actor ${actor.id}.`
-        );
-      await turnContext.requestProcessingCommandStateTransition(cmdStr, action);
-    } catch (error) {
-      if (error?.name === 'AbortError') {
-        logger.debug(
-          `${this.getStateName()}: Action decision for actor ${actor.id} was cancelled (aborted). Ending turn gracefully.`
-        );
-        await turnContext.endTurn(null);
-      } else {
-        const errMsg = `${this.getStateName()}: Error during action decision, storage, or transition for actor ${actor.id}: ${error.message}`;
-        logger.error(errMsg, { originalError: error });
-        await turnContext.endTurn(new Error(errMsg, { cause: error }));
-      }
-    }
+    const workflow = new ActionDecisionWorkflow(
+      this,
+      turnContext,
+      actor,
+      strategy
+    );
+    await workflow.run();
   }
   /**
    * @override
