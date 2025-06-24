@@ -55,16 +55,27 @@ export class AwaitingExternalTurnEndState extends AbstractTurnState {
   #unsubscribeFn = undefined;
   #awaitingActionId = 'unknown-action';
   #timeoutMs = TIMEOUT_MS;
+  #setTimeoutFn = setTimeout;
+  #clearTimeoutFn = clearTimeout;
 
   /**
    * Creates an instance of AwaitingExternalTurnEndState.
    *
    * @param {BaseTurnHandler} handler - The handler managing the turn state.
    * @param {number} [timeoutMs] - Timeout duration for waiting.
+   * @param {Function} [setTimeoutFn] - Optional custom setTimeout.
+   * @param {Function} [clearTimeoutFn] - Optional custom clearTimeout.
    */
-  constructor(handler, timeoutMs = TIMEOUT_MS) {
+  constructor(
+    handler,
+    timeoutMs = TIMEOUT_MS,
+    setTimeoutFn = setTimeout,
+    clearTimeoutFn = clearTimeout
+  ) {
     super(handler);
     this.#timeoutMs = timeoutMs;
+    this.#setTimeoutFn = setTimeoutFn;
+    this.#clearTimeoutFn = clearTimeoutFn;
   }
 
   //─────────────────────────────────────────────────────────────────────────────
@@ -93,7 +104,10 @@ export class AwaitingExternalTurnEndState extends AbstractTurnState {
     ctx.setAwaitingExternalEvent(true, ctx.getActor().id);
 
     // set guard-rail
-    this.#timeoutId = setTimeout(() => this.#onTimeout(), this.#timeoutMs);
+    this.#timeoutId = this.#setTimeoutFn(
+      () => this.#onTimeout(),
+      this.#timeoutMs
+    );
   }
 
   //─────────────────────────────────────────────────────────────────────────────
@@ -135,7 +149,7 @@ export class AwaitingExternalTurnEndState extends AbstractTurnState {
   //─────────────────────────────────────────────────────────────────────────────
   #clearGuards(ctx) {
     if (this.#timeoutId) {
-      clearTimeout(this.#timeoutId);
+      this.#clearTimeoutFn(this.#timeoutId);
       this.#timeoutId = null;
     }
     if (this.#unsubscribeFn) {

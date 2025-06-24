@@ -144,7 +144,12 @@ describe('AwaitingExternalTurnEndState', () => {
       return mockUnsubscribeFn;
     });
 
-    state = new AwaitingExternalTurnEndState(mockHandler, TIMEOUT_MS);
+    state = new AwaitingExternalTurnEndState(
+      mockHandler,
+      TIMEOUT_MS,
+      global.setTimeout,
+      global.clearTimeout
+    );
   });
 
   afterEach(() => {

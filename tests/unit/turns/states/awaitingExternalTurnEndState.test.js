@@ -68,7 +68,12 @@ describe('AwaitingExternalTurnEndState – action propagation', () => {
     };
 
     /* ── state under test ──────────────────────────────────────────────── */
-    state = new AwaitingExternalTurnEndState(mockHandler, TIMEOUT_MS);
+    state = new AwaitingExternalTurnEndState(
+      mockHandler,
+      TIMEOUT_MS,
+      global.setTimeout,
+      global.clearTimeout
+    );
   });
 
   afterEach(() => {
