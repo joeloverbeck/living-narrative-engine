@@ -39,6 +39,25 @@ function _validateContextAndName(variableName, executionContext) {
 }
 
 /**
+ * Safely assign a key-value pair on the provided context object.
+ *
+ * @description Safely assigns a value to a key on the provided context object.
+ *   Any thrown error is caught and returned in the result structure.
+ * @param {object} context - Context object that will receive the new value.
+ * @param {string} key - Property name to set on the context.
+ * @param {*} value - Value to assign.
+ * @returns {{success: boolean, error?: Error}} Result of the assignment.
+ */
+export function setContextValue(context, key, value) {
+  try {
+    context[key] = value;
+    return { success: true };
+  } catch (e) {
+    return { success: false, error: e };
+  }
+}
+
+/**
  * Safely stores a value into `executionContext.evaluationContext.context`. If the context
  * is missing, an error is dispatched (or logged) and the function returns a
  * failure result.
@@ -78,27 +97,30 @@ export function writeContextVariable(
     return { success: false, error };
   }
 
-  try {
-    executionContext.evaluationContext.context[name] = value;
+  const { success, error: setError } = setContextValue(
+    executionContext.evaluationContext.context,
+    name,
+    value
+  );
+  if (success) {
     return { success: true };
-  } catch (e) {
-    const err = new Error(
-      `writeContextVariable: Failed to write variable "${variableName}"`
-    );
-    if (safeDispatcher) {
-      safeDispatchError(
-        safeDispatcher,
-        err.message,
-        {
-          variableName,
-          error: e.message,
-          stack: e.stack,
-        },
-        moduleLogger
-      );
-    }
-    return { success: false, error: err };
   }
+  const err = new Error(
+    `writeContextVariable: Failed to write variable "${variableName}"`
+  );
+  if (safeDispatcher) {
+    safeDispatchError(
+      safeDispatcher,
+      err.message,
+      {
+        variableName,
+        error: setError?.message,
+        stack: setError?.stack,
+      },
+      moduleLogger
+    );
+  }
+  return { success: false, error: err };
 }
 
 /**
