@@ -1,6 +1,14 @@
 // tests/unit/initializers/services/initializationService.llmAdapterInitRejection.test.js
 import InitializationService from '../../../../src/initializers/services/initializationService.js';
-import { afterEach, beforeEach, describe, expect, it, jest, test } from '@jest/globals';
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  jest,
+  test,
+} from '@jest/globals';
 import { tokens } from '../../../../src/dependencyInjection/tokens.js';
 
 // --- Mocks ---
@@ -70,8 +78,8 @@ describe('InitializationService', () => {
         return `http://example.com/schemas/${registryKey}.schema.json`;
       }),
       // Provide a basic mock for `get` if LlmConfigLoader or other parts need it directly
-      get: jest.fn(), 
-      getWorldSetting: jest.fn(), 
+      get: jest.fn(),
+      getWorldSetting: jest.fn(),
     };
     mockDataRegistry = {
       get: jest.fn().mockReturnValue({}),
@@ -87,19 +95,36 @@ describe('InitializationService', () => {
     mockContainer = {
       resolve: jest.fn((token) => {
         switch (token) {
-          case tokens.ModsLoader: return mockModsLoader;
-          case tokens.SystemInitializer: return mockSystemInitializer;
-          case tokens.WorldInitializer: return mockWorldInitializer;
-          case tokens.DomUiFacade: return mockDomUiFacade;
-          case tokens.ILogger: return mockLogger;
-          case tokens.LLMAdapter: return mockLlmAdapter;
-          case tokens.ISchemaValidator: return mockSchemaValidator;
-          case tokens.IConfiguration: return mockConfiguration;
-          case tokens.ISafeEventDispatcher: return { subscribe: jest.fn(), unsubscribe: jest.fn(), dispatch: jest.fn() };
-          case tokens.IEntityManager: return { getEntityInstance: jest.fn(), getEntities: jest.fn() };
-          case tokens.IDataRegistry: return mockDataRegistry;
-          case tokens.IScopeRegistry: return mockScopeRegistry;
-          default: return undefined;
+          case tokens.ModsLoader:
+            return mockModsLoader;
+          case tokens.SystemInitializer:
+            return mockSystemInitializer;
+          case tokens.WorldInitializer:
+            return mockWorldInitializer;
+          case tokens.DomUiFacade:
+            return mockDomUiFacade;
+          case tokens.ILogger:
+            return mockLogger;
+          case tokens.LLMAdapter:
+            return mockLlmAdapter;
+          case tokens.ISchemaValidator:
+            return mockSchemaValidator;
+          case tokens.IConfiguration:
+            return mockConfiguration;
+          case tokens.ISafeEventDispatcher:
+            return {
+              subscribe: jest.fn(),
+              unsubscribe: jest.fn(),
+              dispatch: jest.fn(),
+            };
+          case tokens.IEntityManager:
+            return { getEntityInstance: jest.fn(), getEntities: jest.fn() };
+          case tokens.IDataRegistry:
+            return mockDataRegistry;
+          case tokens.IScopeRegistry:
+            return mockScopeRegistry;
+          default:
+            return undefined;
         }
       }),
     };
@@ -113,7 +138,7 @@ describe('InitializationService', () => {
     let service;
 
     beforeEach(() => {
-      // For this specific test, we ensure the service is created, 
+      // For this specific test, we ensure the service is created,
       // and then the LLMAdapter specific mock behavior is set up within the test itself.
       service = new InitializationService({
         container: mockContainer,
@@ -133,27 +158,46 @@ describe('InitializationService', () => {
       // Dedicated mock resolve for this test to ensure full control and that subsequent operations get valid mocks
       mockContainer.resolve.mockImplementation((token) => {
         switch (token) {
-          case tokens.ILogger: return mockLogger;
-          case tokens.LLMAdapter: return mockLlmAdapter;
-          case tokens.ISchemaValidator: return mockSchemaValidator; // For LlmConfigLoader
-          case tokens.IConfiguration: return mockConfiguration;     // For LlmConfigLoader
-          case tokens.ISafeEventDispatcher: return { subscribe: jest.fn(), unsubscribe: jest.fn(), dispatch: jest.fn() }; // For LlmConfigLoader & AI Listeners
+          case tokens.ILogger:
+            return mockLogger;
+          case tokens.LLMAdapter:
+            return mockLlmAdapter;
+          case tokens.ISchemaValidator:
+            return mockSchemaValidator; // For LlmConfigLoader
+          case tokens.IConfiguration:
+            return mockConfiguration; // For LlmConfigLoader
+          case tokens.ISafeEventDispatcher:
+            return {
+              subscribe: jest.fn(),
+              unsubscribe: jest.fn(),
+              dispatch: jest.fn(),
+            }; // For LlmConfigLoader & AI Listeners
           // Mocks for services resolved *after* LLM init attempt
-          case tokens.ModsLoader: return mockModsLoader; 
-          case tokens.SystemInitializer: return mockSystemInitializer;
-          case tokens.WorldInitializer: return mockWorldInitializer;
-          case tokens.DomUiFacade: return mockDomUiFacade;
-          case tokens.IEntityManager: return { getEntityInstance: jest.fn(), getEntities: jest.fn() }; // For AI Listeners
-          case tokens.IDataRegistry: return mockDataRegistry; // For ScopeRegistry
-          case tokens.IScopeRegistry: return mockScopeRegistry;
+          case tokens.ModsLoader:
+            return mockModsLoader;
+          case tokens.SystemInitializer:
+            return mockSystemInitializer;
+          case tokens.WorldInitializer:
+            return mockWorldInitializer;
+          case tokens.DomUiFacade:
+            return mockDomUiFacade;
+          case tokens.IEntityManager:
+            return { getEntityInstance: jest.fn(), getEntities: jest.fn() }; // For AI Listeners
+          case tokens.IDataRegistry:
+            return mockDataRegistry; // For ScopeRegistry
+          case tokens.IScopeRegistry:
+            return mockScopeRegistry;
           default:
-            return undefined; 
+            return undefined;
         }
       });
-      
+
       // Ensure dataRegistry.get('scopes') returns something if scopeRegistry.initialize is reached post-LLM failure
       mockDataRegistry.get.mockImplementation((key) => {
-        if (key === 'scopes') return { /* some mock scope data */ }; 
+        if (key === 'scopes')
+          return {
+            /* some mock scope data */
+          };
         return {};
       });
 
@@ -166,26 +210,31 @@ describe('InitializationService', () => {
         ),
         expect.objectContaining({
           errorName: rejectionObject.name, // Based on restored detailed logging in InitializationService
-          errorObj: rejectionObject
+          errorObj: rejectionObject,
         })
       );
-      
+
       // Check that the sequence continued and other initializers were called
       expect(mockSystemInitializer.initializeAll).toHaveBeenCalled();
-      expect(mockWorldInitializer.initializeWorldEntities).toHaveBeenCalledWith(MOCK_WORLD_NAME);
-      
-      // The overall sequence should still be considered successful by the service itself, 
+      expect(mockWorldInitializer.initializeWorldEntities).toHaveBeenCalledWith(
+        MOCK_WORLD_NAME
+      );
+
+      // The overall sequence should still be considered successful by the service itself,
       // as the LLM init error is handled internally.
       expect(result.success).toBe(true);
       expect(result.error).toBeUndefined();
-      
+
       // Ensure the generic "CRITICAL ERROR during initialization sequence" was NOT logged for this specific case
-      const genericFailureLog = mockLogger.error.mock.calls.find(call =>
-        typeof call[0] === 'string' && 
-        call[0].startsWith('CRITICAL ERROR during initialization sequence for world') &&
-        call[1]?.message === rejectionObject.message 
+      const genericFailureLog = mockLogger.error.mock.calls.find(
+        (call) =>
+          typeof call[0] === 'string' &&
+          call[0].startsWith(
+            'CRITICAL ERROR during initialization sequence for world'
+          ) &&
+          call[1]?.message === rejectionObject.message
       );
       expect(genericFailureLog).toBeUndefined();
     });
   });
-}); 
+});

@@ -143,7 +143,9 @@ describe('Scope-DSL Parser', () => {
 
     describe('Unions', () => {
       test('should parse simple union', () => {
-        const result = parseDslExpression('actor.followers + location.inventory');
+        const result = parseDslExpression(
+          'actor.followers + location.inventory'
+        );
         expect(result).toEqual({
           type: 'Union',
           left: {

@@ -86,8 +86,8 @@ export function registerInfrastructure(container) {
     tokens.IGameDataRepository,
     (c) =>
       new GameDataRepository(
-        /** @type {IDataRegistry} */(c.resolve(tokens.IDataRegistry)),
-        /** @type {ILogger} */(c.resolve(tokens.ILogger))
+        /** @type {IDataRegistry} */ (c.resolve(tokens.IDataRegistry)),
+        /** @type {ILogger} */ (c.resolve(tokens.ILogger))
       ),
     { lifecycle: 'singleton' }
   );
@@ -138,23 +138,22 @@ export function registerInfrastructure(container) {
   // Scope DSL Cache (wraps ScopeEngine with caching)
   r.singletonFactory(
     tokens.ScopeCache,
-    (c) => new ScopeCache({
-      cache: new LRUCache(256),
-      scopeEngine: c.resolve(tokens.ScopeEngine),
-      safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
-      logger: c.resolve(tokens.ILogger)
-    })
+    (c) =>
+      new ScopeCache({
+        cache: new LRUCache(256),
+        scopeEngine: c.resolve(tokens.ScopeEngine),
+        safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+        logger: c.resolve(tokens.ILogger),
+      })
   );
   log.debug(
     `Infrastructure Registration: Registered ${String(tokens.ScopeCache)}.`
   );
 
   // Register ScopeCache as the preferred IScopeEngine implementation
-  container.register(
-    tokens.IScopeEngine,
-    (c) => c.resolve(tokens.ScopeCache),
-    { lifecycle: 'singleton' }
-  );
+  container.register(tokens.IScopeEngine, (c) => c.resolve(tokens.ScopeCache), {
+    lifecycle: 'singleton',
+  });
   log.debug(
     `Infrastructure Registration: Registered ${String(tokens.IScopeEngine)} -> ScopeCache.`
   );

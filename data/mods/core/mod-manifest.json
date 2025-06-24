@@ -125,14 +125,7 @@
       "turn_started.rule.json",
       "wait.rule.json"
     ],
-    "ui": [
-      "icons.json",
-      "labels.json"
-    ],
-    "scopes": [
-      "directions.scope",
-      "environment.scope",
-      "followers.scope"
-    ]
+    "ui": ["icons.json", "labels.json"],
+    "scopes": ["directions.scope", "environment.scope", "followers.scope"]
   }
 }

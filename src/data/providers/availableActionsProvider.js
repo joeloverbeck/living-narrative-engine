@@ -6,6 +6,7 @@
 import { IAvailableActionsProvider } from '../../interfaces/IAvailableActionsProvider.js';
 import { POSITION_COMPONENT_ID } from '../../constants/componentIds.js';
 import { MAX_AVAILABLE_ACTIONS_PER_TURN } from '../../constants/core.js';
+import { setupService } from '../../utils/serviceInitializerUtils.js';
 
 /** @typedef {import('../../entities/entity.js').default} Entity */
 /** @typedef {import('../../turns/interfaces/ITurnContext.js').ITurnContext} ITurnContext */
@@ -14,6 +15,7 @@ import { MAX_AVAILABLE_ACTIONS_PER_TURN } from '../../constants/core.js';
 /** @typedef {import('../../turns/ports/IActionIndexer.js').IActionIndexer} IActionIndexer */
 /** @typedef {import('../../interfaces/IActionDiscoveryService.js').IActionDiscoveryService} IActionDiscoveryService */
 /** @typedef {import('../../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
+/** @typedef {import('../../logic/jsonLogicEvaluationService.js').default} JsonLogicEvaluationService */
 
 /** @typedef {import('../../turns/dtos/AIGameStateDTO.js').AIAvailableActionDTO} AIAvailableActionDTO */
 
@@ -28,6 +30,8 @@ export class AvailableActionsProvider extends IAvailableActionsProvider {
   #actionDiscoveryService;
   #actionIndexer;
   #entityManager;
+  #jsonLogicEvalService;
+  #logger;
 
   // --- Turn-scoped Cache ---
   #lastTurnContext = null;
@@ -38,16 +42,43 @@ export class AvailableActionsProvider extends IAvailableActionsProvider {
    * @param {IActionDiscoveryService} dependencies.actionDiscoveryService
    * @param {IActionIndexer} dependencies.actionIndexingService
    * @param {IEntityManager} dependencies.entityManager
+   * @param {JsonLogicEvaluationService} dependencies.jsonLogicEvaluationService
+   * @param {ILogger} dependencies.logger
    */
   constructor({
     actionDiscoveryService,
     actionIndexingService: actionIndexer,
     entityManager,
+    jsonLogicEvaluationService,
+    logger,
   }) {
     super();
+
+    // FIX: Added validation for the jsonLogicEvaluationService
+    this.#logger = setupService('AvailableActionsProvider', logger, {
+      actionDiscoveryService: {
+        value: actionDiscoveryService,
+        requiredMethods: ['getValidActions'],
+      },
+      actionIndexer: { value: actionIndexer, requiredMethods: ['index'] },
+      entityManager: {
+        value: entityManager,
+        requiredMethods: ['getEntityInstance'],
+      },
+      jsonLogicEvaluationService: {
+        value: jsonLogicEvaluationService,
+        requiredMethods: ['evaluate'],
+      },
+    });
+
     this.#actionDiscoveryService = actionDiscoveryService;
     this.#actionIndexer = actionIndexer;
     this.#entityManager = entityManager;
+    this.#jsonLogicEvalService = jsonLogicEvaluationService;
+
+    this.#logger.debug(
+      'AvailableActionsProvider initialized and dependencies validated.'
+    );
   }
 
   /**
@@ -95,6 +126,7 @@ export class AvailableActionsProvider extends IAvailableActionsProvider {
         currentLocation: locationEntity,
         entityManager: this.#entityManager,
         worldContext: turnContext?.game ?? {},
+        jsonLogicEval: this.#jsonLogicEvalService,
         logger,
       };
 

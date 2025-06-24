@@ -41,7 +41,9 @@ class ScopeRegistry {
     if (!name.includes(':')) {
       // Look for any scope that has this base name (after the ':')
       for (const [scopeName, scopeDef] of this._scopes.entries()) {
-        const baseName = scopeName.includes(':') ? scopeName.split(':')[1] : scopeName;
+        const baseName = scopeName.includes(':')
+          ? scopeName.split(':')[1]
+          : scopeName;
         if (baseName === name) {
           return scopeDef;
         }

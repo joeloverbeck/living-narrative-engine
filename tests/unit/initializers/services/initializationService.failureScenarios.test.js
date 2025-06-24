@@ -1,6 +1,14 @@
 // tests/unit/initializers/services/initializationService.failureScenarios.test.js
 import InitializationService from '../../../../src/initializers/services/initializationService.js';
-import { afterEach, beforeEach, describe, expect, it, jest, test } from '@jest/globals';
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  jest,
+  test,
+} from '@jest/globals';
 import { tokens } from '../../../../src/dependencyInjection/tokens.js';
 
 // --- Mocks ---
@@ -82,19 +90,36 @@ describe('InitializationService', () => {
     mockContainer = {
       resolve: jest.fn((token) => {
         switch (token) {
-          case tokens.ModsLoader: return mockModsLoader;
-          case tokens.SystemInitializer: return mockSystemInitializer;
-          case tokens.WorldInitializer: return mockWorldInitializer;
-          case tokens.DomUiFacade: return mockDomUiFacade;
-          case tokens.ILogger: return mockLogger;
-          case tokens.LLMAdapter: return mockLlmAdapter;
-          case tokens.ISchemaValidator: return mockSchemaValidator;
-          case tokens.IConfiguration: return mockConfiguration;
-          case tokens.ISafeEventDispatcher: return { subscribe: jest.fn(), unsubscribe: jest.fn(), dispatch: jest.fn() };
-          case tokens.IEntityManager: return { getEntityInstance: jest.fn() };
-          case tokens.IDataRegistry: return mockDataRegistry;
-          case tokens.IScopeRegistry: return mockScopeRegistry;
-          default: return undefined;
+          case tokens.ModsLoader:
+            return mockModsLoader;
+          case tokens.SystemInitializer:
+            return mockSystemInitializer;
+          case tokens.WorldInitializer:
+            return mockWorldInitializer;
+          case tokens.DomUiFacade:
+            return mockDomUiFacade;
+          case tokens.ILogger:
+            return mockLogger;
+          case tokens.LLMAdapter:
+            return mockLlmAdapter;
+          case tokens.ISchemaValidator:
+            return mockSchemaValidator;
+          case tokens.IConfiguration:
+            return mockConfiguration;
+          case tokens.ISafeEventDispatcher:
+            return {
+              subscribe: jest.fn(),
+              unsubscribe: jest.fn(),
+              dispatch: jest.fn(),
+            };
+          case tokens.IEntityManager:
+            return { getEntityInstance: jest.fn() };
+          case tokens.IDataRegistry:
+            return mockDataRegistry;
+          case tokens.IScopeRegistry:
+            return mockScopeRegistry;
+          default:
+            return undefined;
         }
       }),
     };
@@ -107,27 +132,43 @@ describe('InitializationService', () => {
   describe('runInitializationSequence - Failure Scenarios', () => {
     let service;
     // resolveOrder is not typically asserted in failure tests but setup for consistency
-    let resolveOrder; 
+    let resolveOrder;
 
     beforeEach(() => {
       resolveOrder = [];
       // Set up a comprehensive default mock for container.resolve
       // Individual tests in it.each will override this mockImplementation for specific failure setups.
       mockContainer.resolve.mockImplementation((token) => {
-        resolveOrder.push(token); 
+        resolveOrder.push(token);
         switch (token) {
-          case tokens.ModsLoader: return mockModsLoader;
-          case tokens.SystemInitializer: return mockSystemInitializer;
-          case tokens.WorldInitializer: return mockWorldInitializer;
-          case tokens.DomUiFacade: return mockDomUiFacade;
-          case tokens.ILogger: return mockLogger;
-          case tokens.LLMAdapter: return mockLlmAdapter;
-          case tokens.ISchemaValidator: return mockSchemaValidator;
-          case tokens.IConfiguration: return mockConfiguration;
-          case tokens.ISafeEventDispatcher: return { subscribe: jest.fn(), unsubscribe: jest.fn(), dispatch: jest.fn() };
-          case tokens.IEntityManager: return { getEntityInstance: jest.fn() };
-          case tokens.IDataRegistry: return mockDataRegistry;
-          case tokens.IScopeRegistry: return mockScopeRegistry;
+          case tokens.ModsLoader:
+            return mockModsLoader;
+          case tokens.SystemInitializer:
+            return mockSystemInitializer;
+          case tokens.WorldInitializer:
+            return mockWorldInitializer;
+          case tokens.DomUiFacade:
+            return mockDomUiFacade;
+          case tokens.ILogger:
+            return mockLogger;
+          case tokens.LLMAdapter:
+            return mockLlmAdapter;
+          case tokens.ISchemaValidator:
+            return mockSchemaValidator;
+          case tokens.IConfiguration:
+            return mockConfiguration;
+          case tokens.ISafeEventDispatcher:
+            return {
+              subscribe: jest.fn(),
+              unsubscribe: jest.fn(),
+              dispatch: jest.fn(),
+            };
+          case tokens.IEntityManager:
+            return { getEntityInstance: jest.fn() };
+          case tokens.IDataRegistry:
+            return mockDataRegistry;
+          case tokens.IScopeRegistry:
+            return mockScopeRegistry;
           default:
             return undefined;
         }
@@ -141,10 +182,13 @@ describe('InitializationService', () => {
       });
       mockLlmAdapter.isInitialized.mockReturnValue(false);
       mockLlmAdapter.isOperational.mockReturnValue(false);
-      
+
       // Ensure dataRegistry.get('scopes') returns something for scopeRegistry.initialize if it's reached
       mockDataRegistry.get.mockImplementation((key) => {
-        if (key === 'scopes') return { /* some mock scope data */ }; 
+        if (key === 'scopes')
+          return {
+            /* some mock scope data */
+          };
         return {};
       });
 
@@ -171,7 +215,7 @@ describe('InitializationService', () => {
         expect.objectContaining({
           errorMessage: expectedError.message,
           errorName: expectedError.name,
-          errorStack: expect.any(String)
+          errorStack: expect.any(String),
         })
       );
       expect(result.success).toBe(false);
@@ -214,7 +258,7 @@ describe('InitializationService', () => {
       };
       const expectedError = new Error('Failed to resolve ModsLoader');
       const options = { shouldCallAdapterInit: false };
-      
+
       await testFailure(setupFailure, expectedError, options);
     });
 
@@ -226,7 +270,7 @@ describe('InitializationService', () => {
       };
       const expectedError = new Error('loadMods failed');
       const options = { shouldCallAdapterInit: false };
-      
+
       await testFailure(setupFailure, expectedError, options);
     });
 
@@ -240,18 +284,23 @@ describe('InitializationService', () => {
         mockContainer.resolve.mockImplementation((token) => {
           // resolveOrder.push(token); // Not strictly needed to track for this failure test
           switch (token) {
-            case tokens.ModsLoader: return mockModsLoader;
-            case tokens.IScopeRegistry: return mockScopeRegistry;
-            case tokens.IDataRegistry: return mockDataRegistry;
-            case tokens.ILogger: return mockLogger;
-            default: return undefined;
+            case tokens.ModsLoader:
+              return mockModsLoader;
+            case tokens.IScopeRegistry:
+              return mockScopeRegistry;
+            case tokens.IDataRegistry:
+              return mockDataRegistry;
+            case tokens.ILogger:
+              return mockLogger;
+            default:
+              return undefined;
           }
         });
         return error;
       };
       const expectedError = new Error('ScopeRegistry init failed');
       const options = { shouldCallAdapterInit: false }; // LLM init is after ScopeRegistry
-      
+
       await testFailure(setupFailure, expectedError, options);
     });
 
@@ -260,19 +309,36 @@ describe('InitializationService', () => {
         const error = new Error('Failed to resolve SystemInitializer');
         mockContainer.resolve.mockImplementation((token) => {
           switch (token) {
-            case tokens.ModsLoader: return mockModsLoader;
-            case tokens.IScopeRegistry: return mockScopeRegistry;
-            case tokens.IDataRegistry: return mockDataRegistry;
-            case tokens.LLMAdapter: return mockLlmAdapter;
-            case tokens.ISchemaValidator: return mockSchemaValidator;
-            case tokens.IConfiguration: return mockConfiguration;
-            case tokens.ISafeEventDispatcher: return { subscribe: jest.fn(), unsubscribe: jest.fn(), dispatch: jest.fn() }; 
-            case tokens.SystemInitializer: throw error;
-            case tokens.WorldInitializer: return mockWorldInitializer;
-            case tokens.DomUiFacade: return mockDomUiFacade;
-            case tokens.ILogger: return mockLogger;
-            case tokens.IEntityManager: return { getEntityInstance: jest.fn() };
-            default: return undefined;
+            case tokens.ModsLoader:
+              return mockModsLoader;
+            case tokens.IScopeRegistry:
+              return mockScopeRegistry;
+            case tokens.IDataRegistry:
+              return mockDataRegistry;
+            case tokens.LLMAdapter:
+              return mockLlmAdapter;
+            case tokens.ISchemaValidator:
+              return mockSchemaValidator;
+            case tokens.IConfiguration:
+              return mockConfiguration;
+            case tokens.ISafeEventDispatcher:
+              return {
+                subscribe: jest.fn(),
+                unsubscribe: jest.fn(),
+                dispatch: jest.fn(),
+              };
+            case tokens.SystemInitializer:
+              throw error;
+            case tokens.WorldInitializer:
+              return mockWorldInitializer;
+            case tokens.DomUiFacade:
+              return mockDomUiFacade;
+            case tokens.ILogger:
+              return mockLogger;
+            case tokens.IEntityManager:
+              return { getEntityInstance: jest.fn() };
+            default:
+              return undefined;
           }
         });
         return error;
@@ -280,7 +346,7 @@ describe('InitializationService', () => {
       const expectedError = new Error('Failed to resolve SystemInitializer');
       // shouldCallAdapterInit is true by default because LLM init precedes SystemInitializer resolve
       const options = { shouldCallAdapterInit: true };
-      
+
       await testFailure(setupFailure, expectedError, options);
     });
 
@@ -292,7 +358,7 @@ describe('InitializationService', () => {
       };
       const expectedError = new Error('initializeAll failed');
       const options = { shouldCallAdapterInit: true };
-      
+
       await testFailure(setupFailure, expectedError, options);
     });
 
@@ -301,38 +367,59 @@ describe('InitializationService', () => {
         const error = new Error('Failed to resolve WorldInitializer');
         mockContainer.resolve.mockImplementation((token) => {
           switch (token) {
-            case tokens.ModsLoader: return mockModsLoader;
-            case tokens.IScopeRegistry: return mockScopeRegistry;
-            case tokens.IDataRegistry: return mockDataRegistry;
-            case tokens.LLMAdapter: return mockLlmAdapter;
-            case tokens.ISchemaValidator: return mockSchemaValidator;
-            case tokens.IConfiguration: return mockConfiguration;
-            case tokens.ISafeEventDispatcher: return { subscribe: jest.fn(), unsubscribe: jest.fn(), dispatch: jest.fn() }; 
-            case tokens.SystemInitializer: return mockSystemInitializer;
-            case tokens.WorldInitializer: throw error;
-            case tokens.DomUiFacade: return mockDomUiFacade;
-            case tokens.ILogger: return mockLogger;
-            case tokens.IEntityManager: return { getEntityInstance: jest.fn() };
-            default: return undefined;
+            case tokens.ModsLoader:
+              return mockModsLoader;
+            case tokens.IScopeRegistry:
+              return mockScopeRegistry;
+            case tokens.IDataRegistry:
+              return mockDataRegistry;
+            case tokens.LLMAdapter:
+              return mockLlmAdapter;
+            case tokens.ISchemaValidator:
+              return mockSchemaValidator;
+            case tokens.IConfiguration:
+              return mockConfiguration;
+            case tokens.ISafeEventDispatcher:
+              return {
+                subscribe: jest.fn(),
+                unsubscribe: jest.fn(),
+                dispatch: jest.fn(),
+              };
+            case tokens.SystemInitializer:
+              return mockSystemInitializer;
+            case tokens.WorldInitializer:
+              throw error;
+            case tokens.DomUiFacade:
+              return mockDomUiFacade;
+            case tokens.ILogger:
+              return mockLogger;
+            case tokens.IEntityManager:
+              return { getEntityInstance: jest.fn() };
+            default:
+              return undefined;
           }
         });
         return error;
       };
       const expectedError = new Error('Failed to resolve WorldInitializer');
       const options = { shouldCallAdapterInit: true };
-      
+
       await testFailure(setupFailure, expectedError, options);
     });
 
     it('should handle failure when WorldInitializer.initializeWorldEntities returns false', async () => {
       const setupFailure = () => {
-        const error = new Error('World initialization failed via WorldInitializer.');
+        const error = new Error(
+          'World initialization failed via WorldInitializer.'
+        );
         mockWorldInitializer.initializeWorldEntities.mockReturnValue(false);
         return error;
       };
-      const expectedError = new Error('World initialization failed via WorldInitializer.');
+      const expectedError = new Error(
+        'World initialization failed via WorldInitializer.'
+      );
       const options = { shouldCallAdapterInit: true };
-      
+
       await testFailure(setupFailure, expectedError, options);
     });
 
@@ -341,27 +428,44 @@ describe('InitializationService', () => {
         const error = new Error('Failed to resolve DomUiFacade');
         mockContainer.resolve.mockImplementation((token) => {
           switch (token) {
-            case tokens.ModsLoader: return mockModsLoader;
-            case tokens.IScopeRegistry: return mockScopeRegistry;
-            case tokens.IDataRegistry: return mockDataRegistry;
-            case tokens.LLMAdapter: return mockLlmAdapter;
-            case tokens.ISchemaValidator: return mockSchemaValidator;
-            case tokens.IConfiguration: return mockConfiguration;
-            case tokens.ISafeEventDispatcher: return { subscribe: jest.fn(), unsubscribe: jest.fn(), dispatch: jest.fn() }; 
-            case tokens.SystemInitializer: return mockSystemInitializer;
-            case tokens.WorldInitializer: return mockWorldInitializer;
-            case tokens.DomUiFacade: throw error;
-            case tokens.ILogger: return mockLogger;
-            case tokens.IEntityManager: return { getEntityInstance: jest.fn() };
-            default: return undefined;
+            case tokens.ModsLoader:
+              return mockModsLoader;
+            case tokens.IScopeRegistry:
+              return mockScopeRegistry;
+            case tokens.IDataRegistry:
+              return mockDataRegistry;
+            case tokens.LLMAdapter:
+              return mockLlmAdapter;
+            case tokens.ISchemaValidator:
+              return mockSchemaValidator;
+            case tokens.IConfiguration:
+              return mockConfiguration;
+            case tokens.ISafeEventDispatcher:
+              return {
+                subscribe: jest.fn(),
+                unsubscribe: jest.fn(),
+                dispatch: jest.fn(),
+              };
+            case tokens.SystemInitializer:
+              return mockSystemInitializer;
+            case tokens.WorldInitializer:
+              return mockWorldInitializer;
+            case tokens.DomUiFacade:
+              throw error;
+            case tokens.ILogger:
+              return mockLogger;
+            case tokens.IEntityManager:
+              return { getEntityInstance: jest.fn() };
+            default:
+              return undefined;
           }
         });
         return error;
       };
       const expectedError = new Error('Failed to resolve DomUiFacade');
       const options = { shouldCallAdapterInit: true };
-      
+
       await testFailure(setupFailure, expectedError, options);
     });
   });
-}); 
+});

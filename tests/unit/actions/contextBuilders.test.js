@@ -5,6 +5,7 @@ import {
 } from '../../../src/actions/validation/contextBuilders.js';
 import { ENTITY as TARGET_TYPE_ENTITY } from '../../../src/constants/actionTargetTypes.js';
 
+// We mock the createComponentAccessor to isolate the context builders' logic.
 jest.mock('../../../src/logic/componentAccessor.js', () => ({
   createComponentAccessor: jest.fn((id) => ({ accessorFor: id })),
 }));
@@ -43,13 +44,13 @@ describe('contextBuilders', () => {
         mockEntityManager,
         mockLogger
       );
+
+      // FIX: The expectation is updated to match the new, leaner object structure.
+      // The obsolete `direction`, `blocker`, and `exitDetails` properties have been removed.
       expect(result).toEqual({
         type: TARGET_TYPE_ENTITY,
         id: 'target1',
-        direction: null,
         components: { accessorFor: 'target1' },
-        blocker: null,
-        exitDetails: null,
       });
       expect(createComponentAccessor).toHaveBeenCalledWith(
         'target1',

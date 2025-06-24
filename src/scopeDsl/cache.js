@@ -85,18 +85,23 @@ class ScopeCache extends IScopeEngine {
    */
   constructor({ cache, scopeEngine, safeEventDispatcher, logger }) {
     super(); // Call parent constructor
-    
+
     if (!cache) {
-      throw new Error("A cache instance must be provided.");
+      throw new Error('A cache instance must be provided.');
     }
     if (!scopeEngine || typeof scopeEngine.resolve !== 'function') {
-      throw new Error("A ScopeEngine instance with resolve method must be provided.");
+      throw new Error(
+        'A ScopeEngine instance with resolve method must be provided.'
+      );
     }
-    if (!safeEventDispatcher || typeof safeEventDispatcher.subscribe !== 'function') {
-      throw new Error("A SafeEventDispatcher instance must be provided.");
+    if (
+      !safeEventDispatcher ||
+      typeof safeEventDispatcher.subscribe !== 'function'
+    ) {
+      throw new Error('A SafeEventDispatcher instance must be provided.');
     }
     if (!logger || typeof logger.debug !== 'function') {
-      throw new Error("A logger instance must be provided.");
+      throw new Error('A logger instance must be provided.');
     }
 
     this.cache = cache;
@@ -111,9 +116,13 @@ class ScopeCache extends IScopeEngine {
     );
 
     if (this.unsubscribeFn) {
-      this.logger.debug('ScopeCache: Successfully subscribed to TURN_STARTED_ID events');
+      this.logger.debug(
+        'ScopeCache: Successfully subscribed to TURN_STARTED_ID events'
+      );
     } else {
-      this.logger.error('ScopeCache: Failed to subscribe to TURN_STARTED_ID events');
+      this.logger.error(
+        'ScopeCache: Failed to subscribe to TURN_STARTED_ID events'
+      );
     }
   }
 

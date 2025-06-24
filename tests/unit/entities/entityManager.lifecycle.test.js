@@ -426,7 +426,9 @@ describeEntityManagerSuite('EntityManager - Lifecycle', (getBed) => {
     it('should throw an error if EntityRepository fails internally', () => {
       // This is a tricky test for a defensive code path.
       // We need to spy on the EntityRepositoryAdapter's prototype BEFORE TestBed creates the EntityManager.
-      const { EntityRepositoryAdapter } = jest.requireActual('../../../src/entities/services/entityRepositoryAdapter.js');
+      const { EntityRepositoryAdapter } = jest.requireActual(
+        '../../../src/entities/services/entityRepositoryAdapter.js'
+      );
       const removeSpy = jest
         .spyOn(EntityRepositoryAdapter.prototype, 'remove')
         .mockImplementation(() => {

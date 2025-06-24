@@ -6,11 +6,13 @@ import { ScopeDslError } from './scopeDslError.js';
 export class ScopeDefinitionError extends ScopeDslError {
   constructor(message, filePath, lineContent = '') {
     let fullMessage;
-    
+
     // Handle different error types to match existing test expectations
     if (message === 'File is empty or contains only comments.') {
       fullMessage = `Scope file is empty or contains only comments: ${filePath}`;
-    } else if (message === 'Invalid line format. Expected "name := dsl_expression".') {
+    } else if (
+      message === 'Invalid line format. Expected "name := dsl_expression".'
+    ) {
       fullMessage = `Invalid scope definition format in ${filePath}: "${lineContent}". Expected "name := dsl_expression"`;
     } else if (message.includes('Invalid DSL expression for scope ')) {
       // The message format from parser is: "Invalid DSL expression for scope "scopeName": parseError.message"
@@ -29,9 +31,9 @@ export class ScopeDefinitionError extends ScopeDslError {
       // Default format for any other cases
       fullMessage = `Invalid scope definition in ${filePath}: ${message}${lineContent ? ` (at line "${lineContent}")` : ''}`;
     }
-    
+
     super(fullMessage);
     this.filePath = filePath;
     this.lineContent = lineContent;
   }
-} 
+}

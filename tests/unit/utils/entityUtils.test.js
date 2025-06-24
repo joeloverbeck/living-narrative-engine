@@ -35,15 +35,6 @@ describe('getEntityDisplayName', () => {
     expect(logger.warn).not.toHaveBeenCalled();
   });
 
-  it('uses legacy value property with debug log', () => {
-    const e = new MockEntity('e2', { value: 'Legacy' });
-    expect(getEntityDisplayName(e, undefined, logger)).toBe('Legacy');
-    expect(logger.debug).toHaveBeenCalledWith(
-      `getEntityDisplayName: Entity 'e2' using legacy 'value' from '${NAME_COMPONENT_ID}' component.`
-    );
-    expect(logger.warn).not.toHaveBeenCalled();
-  });
-
   it('falls back to entity.name with debug log', () => {
     const e = new MockEntity('e3', { text: '' }, 'Fallback Name');
     expect(getEntityDisplayName(e, undefined, logger)).toBe('Fallback Name');

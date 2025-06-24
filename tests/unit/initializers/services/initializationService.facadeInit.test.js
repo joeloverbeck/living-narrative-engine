@@ -266,7 +266,7 @@ describe('InitializationService', () => {
         expect.objectContaining({
           errorMessage: testError.message,
           errorName: testError.name,
-          errorStack: expect.any(String)
+          errorStack: expect.any(String),
         })
       );
     });
@@ -330,7 +330,7 @@ describe('InitializationService', () => {
         expect.objectContaining({
           errorMessage: testError.message,
           errorName: testError.name,
-          errorStack: expect.any(String)
+          errorStack: expect.any(String),
         })
       );
     });
@@ -350,7 +350,7 @@ describe('InitializationService', () => {
         expect.objectContaining({
           errorMessage: testError.message,
           errorName: testError.name,
-          errorStack: expect.any(String)
+          errorStack: expect.any(String),
         })
       );
     });
@@ -378,7 +378,7 @@ describe('InitializationService', () => {
         expect.objectContaining({
           errorMessage: uiError.message,
           errorName: uiError.name,
-          errorStack: expect.any(String)
+          errorStack: expect.any(String),
         })
       );
       expect(result.success).toBe(false);

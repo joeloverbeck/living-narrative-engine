@@ -20,10 +20,10 @@ describe('LoadResultAggregator', () => {
       actions: { count: 2, overrides: 1, errors: 0 },
       events: { count: 1, overrides: 0, errors: 1 },
     });
-    
+
     // Original totals object should remain unchanged (immutable behavior)
     expect(totals).toEqual({});
-    
+
     // Updated totals should be accessible via getTotalCounts()
     expect(agg.getTotalCounts()).toEqual({
       actions: { count: 2, overrides: 1, errors: 0 },
@@ -38,10 +38,10 @@ describe('LoadResultAggregator', () => {
 
     expect(agg.modResults.rules.errors).toBe(1);
     expect(agg.modResults.missing.errors).toBe(1);
-    
+
     // Original totals object should remain unchanged (immutable behavior)
     expect(totals).toEqual({});
-    
+
     // Updated totals should be accessible via getTotalCounts()
     const updatedTotals = agg.getTotalCounts();
     expect(updatedTotals.rules.errors).toBe(1);

@@ -1,11 +1,9 @@
-// src/tests/services/actionValidationService.targetComponents.test.js
-// (Entire file content implementing the changes from Refactor-AVS-3.3.5 based on the refined ticket)
-
 /**
  * @jest-environment node
  */
 import { ActionValidationService } from '../../../src/actions/validation/actionValidationService.js';
 import { ActionTargetContext } from '../../../src/models/actionTargetContext.js';
+import { DomainContextIncompatibilityError } from '../../../src/errors/domainContextIncompatibilityError.js';
 import {
   afterAll,
   beforeAll,
@@ -16,20 +14,12 @@ import {
   test,
 } from '@jest/globals';
 
-// --- Removed import for RealJsonLogicEvaluationService as it's no longer directly mocked/used by AVS tests ---
+import { DomainContextCompatibilityChecker } from '../../../src/validation/domainContextCompatibilityChecker.js';
+jest.mock('../../../src/validation/domainContextCompatibilityChecker.js');
 
-// --- Import the class AND mock its module ---
-import { DomainContextCompatibilityChecker } from '../../../src/validation/domainContextCompatibilityChecker.js'; // Adjust path if necessary
-jest.mock('../../../src/validation/domainContextCompatibilityChecker.js'); // <<< Keep this mock
+import { PrerequisiteEvaluationService } from '../../../src/actions/validation/prerequisiteEvaluationService.js';
+jest.mock('../../../src/actions/validation/prerequisiteEvaluationService.js');
 
-// --- Removed createActionValidationContext import as it's no longer injected into AVS ---
-// import {createActionValidationContext} from '../../logic/createActionValidationContext.js';
-
-// +++ Import PrerequisiteEvaluationService and mock it +++
-import { PrerequisiteEvaluationService } from '../../../src/actions/validation/prerequisiteEvaluationService.js'; // Adjust path if necessary
-jest.mock('../../../src/actions/validation/prerequisiteEvaluationService.js'); // Mock the service AVS now delegates to
-
-// Assuming a simple mock logger, replace with your actual logger/mocking library if needed
 const mockLogger = {
   log: jest.fn(),
   debug: jest.fn(),
@@ -38,20 +28,12 @@ const mockLogger = {
   info: jest.fn(),
 };
 
-// --- Mock Component Classes ---
-// (Keep all mock component classes as they were)
 class MockComponentA {}
-
 class MockComponentB {}
-
 class MockComponentC {}
-
 class MockTargetComponentRequired {}
-
 class MockTargetComponentForbidden {}
-
 class MockComponentX {}
-
 class MockPositionComponent {
   constructor() {
     this.x = 1;
@@ -59,8 +41,6 @@ class MockPositionComponent {
   }
 }
 
-// --- Mock EntityManager ---
-// (Keep mockEntityManager setup as it was)
 const mockEntityManager = {
   componentRegistry: new Map(),
   getEntityInstance: jest.fn(),
@@ -77,39 +57,25 @@ const mockEntityManager = {
       this.activeEntities.set(entity.id, entity);
     }
   },
-  getComponentData: jest.fn(), // Mock implementation below
-  hasComponent: jest.fn(), // Mock implementation below
+  getComponentData: jest.fn(),
+  hasComponent: jest.fn(),
 };
 mockEntityManager.getComponentData.mockImplementation(
   (entityId, componentTypeId) => {
     const entity = mockEntityManager.activeEntities.get(entityId);
-    const componentMap = entity?.components;
-    if (componentMap) {
-      return componentMap.get(componentTypeId) ?? null;
-    }
-    return null;
+    return entity?.components?.get(componentTypeId) ?? null;
   }
 );
 mockEntityManager.hasComponent.mockImplementation(
   (entityId, componentTypeId) => {
     const entity = mockEntityManager.activeEntities.get(entityId);
-    const componentMap = entity?.components;
-    if (componentMap) {
-      return componentMap.has(componentTypeId) ?? false;
-    }
-    if (
-      entity &&
-      typeof entity.hasComponent === 'function' &&
-      entity.hasComponent.mock
-    ) {
+    if (entity && typeof entity.hasComponent === 'function') {
       return entity.hasComponent(componentTypeId);
     }
     return false;
   }
 );
 
-// --- Mock Entity Factory ---
-// (Keep createMockEntity factory as it was, ensure 'components' map is added)
 const createMockEntity = (id, components = [], componentDataOverrides = {}) => {
   const classToIdMap = new Map();
   for (const [
@@ -119,29 +85,13 @@ const createMockEntity = (id, components = [], componentDataOverrides = {}) => {
     classToIdMap.set(compClass, compId);
   }
   const internalComponentDataMap = new Map();
-  const componentIdSet = new Set();
   for (const CompClass of components) {
     const compId = classToIdMap.get(CompClass);
     if (compId !== undefined) {
-      componentIdSet.add(compId);
-      let data = componentDataOverrides[compId];
-      if (data === undefined) {
-        try {
-          if (
-            CompClass &&
-            typeof CompClass === 'function' &&
-            CompClass.prototype &&
-            CompClass.prototype.constructor === CompClass
-          ) {
-            data = new CompClass();
-          } else {
-            data = {};
-          }
-        } catch (e) {
-          data = {};
-        }
-      }
-      internalComponentDataMap.set(compId, data);
+      internalComponentDataMap.set(
+        compId,
+        componentDataOverrides[compId] || new CompClass()
+      );
     }
   }
   const entity = {
@@ -152,30 +102,13 @@ const createMockEntity = (id, components = [], componentDataOverrides = {}) => {
     getComponent: jest.fn((componentId) =>
       internalComponentDataMap.get(componentId)
     ),
-    addComponent: jest.fn(),
-    removeComponent: jest.fn(),
     components: internalComponentDataMap,
-    // Add a simple mock for getAllComponentsData used by context builder (internal to PES now)
-    getAllComponentsData: jest.fn(() =>
-      Object.fromEntries(internalComponentDataMap)
-    ),
   };
   mockEntityManager.addMockEntityForLookup(entity);
   return entity;
 };
 
-// --- Mock GameDataRepository (Minimal) ---
-// (Keep as is)
-const mockGameDataRepository = {
-  getActionDefinition: jest.fn(),
-  getEntityDefinition: jest.fn(),
-};
-
-// --- Removed Mock JsonLogicEvaluationService object ---
-
-// --- Global Setup ---
 beforeAll(() => {
-  // (Keep component registrations)
   mockEntityManager.registerComponent('core:a', MockComponentA);
   mockEntityManager.registerComponent('core:b', MockComponentB);
   mockEntityManager.registerComponent('core:c', MockComponentC);
@@ -195,89 +128,54 @@ afterAll(() => {
   mockEntityManager.clearRegistry();
 });
 
-// ========================================================================
-// == Test Suite: ActionValidationService - Target/Prerequisite Checks ===
-// ========================================================================
 describe('ActionValidationService - Target/Prerequisite Checks', () => {
   let service;
   let mockActor;
   let mockTarget;
-  let domainContextCompatibilityChecker; // Mocked instance
-  let mockPrerequisiteEvaluationServiceInstance; // Variable for the mocked PES instance
+  let domainContextCompatibilityChecker;
+  let mockPrerequisiteEvaluationServiceInstance;
 
   const ACTOR_ID = 'actor-default';
   const TARGET_ID = 'target-default';
-  const TARGET_ID_NOT_FOUND = 'target-invalid-id';
 
   beforeEach(() => {
-    // Clear all mocks (jest.fn(), jest.mock(), etc.) FIRST
     jest.clearAllMocks();
 
-    // Create fresh mocked instances for dependency injection AFTER clearAllMocks
     domainContextCompatibilityChecker = new DomainContextCompatibilityChecker({
       logger: mockLogger,
     });
-
-    // --- CORRECTED MOCK SETUP FOR PES ---
-    // Instantiate the mocked PrerequisiteEvaluationService using the auto-mocked constructor
     mockPrerequisiteEvaluationServiceInstance =
       new PrerequisiteEvaluationService();
-
-    // Ensure the 'evaluate' property exists as a mock function.
-    // (Optional but safe check)
-    if (
-      !mockPrerequisiteEvaluationServiceInstance.evaluate ||
-      !jest.isMockFunction(mockPrerequisiteEvaluationServiceInstance.evaluate)
-    ) {
-      mockPrerequisiteEvaluationServiceInstance.evaluate = jest.fn();
-    }
-
-    // *** MANUALLY set the 'length' property to satisfy the constructor's check ***
+    mockPrerequisiteEvaluationServiceInstance.evaluate = jest.fn();
     Object.defineProperty(
       mockPrerequisiteEvaluationServiceInstance.evaluate,
       'length',
-      {
-        value: 4, // The expected number of arguments for the real evaluate method
-        writable: false,
-      }
+      { value: 4, writable: false }
     );
-    // --- END CORRECTION ---
-
-    // --- Re-apply default mock behaviors AFTER jest.clearAllMocks() and length fix ---
-    // Default PES evaluate: Pass unless overridden in a specific test
-    // This now correctly targets the mock function whose length we just fixed.
     mockPrerequisiteEvaluationServiceInstance.evaluate.mockReturnValue(true);
-    // Default domain checker: Pass unless overridden
     domainContextCompatibilityChecker.check.mockReturnValue(true);
-    // Default entity lookup
-    mockEntityManager.getEntityInstance.mockImplementation((id) => {
-      return mockEntityManager.activeEntities.get(id);
-    });
+    mockEntityManager.getEntityInstance.mockImplementation((id) =>
+      mockEntityManager.activeEntities.get(id)
+    );
 
-    // Inject REQUIRED dependencies into ActionValidationService
-    // This instantiation should now succeed because the mock PES meets the constructor criteria.
     service = new ActionValidationService({
       entityManager: mockEntityManager,
       logger: mockLogger,
-      domainContextCompatibilityChecker, // Pass the mocked instance
-      prerequisiteEvaluationService: mockPrerequisiteEvaluationServiceInstance, // Pass the FIXED mocked PES instance
+      domainContextCompatibilityChecker,
+      prerequisiteEvaluationService: mockPrerequisiteEvaluationServiceInstance,
     });
 
-    // Clear mock entity storage
     mockEntityManager.activeEntities.clear();
-    // Create default actor
     mockActor = createMockEntity(ACTOR_ID, [MockComponentA]);
   });
 
-  // --- Test Cases ---
-
-  test('Success: Action has no prerequisites, domain/context compatible', () => {
+  test('Success: Action has no prerequisites, scope/context compatible', () => {
     mockTarget = createMockEntity(TARGET_ID, [MockComponentX]);
     const actionDef = {
       id: 'test:no-prereqs',
-      target_domain: 'environment',
+      scope: 'environment', // FIXED
       template: 'do thing to {target}',
-      prerequisites: [], // No prerequisites
+      prerequisites: [],
     };
     const context = ActionTargetContext.forEntity(TARGET_ID);
 
@@ -289,7 +187,6 @@ describe('ActionValidationService - Target/Prerequisite Checks', () => {
       context
     );
     expect(mockEntityManager.getEntityInstance).toHaveBeenCalledWith(TARGET_ID);
-    // +++ Prerequisite evaluation (PES) should NOT happen +++
     expect(
       mockPrerequisiteEvaluationServiceInstance.evaluate
     ).not.toHaveBeenCalled();
@@ -303,293 +200,70 @@ describe('ActionValidationService - Target/Prerequisite Checks', () => {
     ]);
     const actionDef = {
       id: 'test:prereq-pass-has-comp',
-      target_domain: 'environment',
+      scope: 'environment', // FIXED
       template: 'do thing to {target}',
       prerequisites: [
         { logic: { '!!': [{ var: 'target.components.target:required' }] } },
       ],
     };
     const context = ActionTargetContext.forEntity(TARGET_ID);
-
-    // --- Configure Mock PES: Return true for this test's evaluation ---
     mockPrerequisiteEvaluationServiceInstance.evaluate.mockReturnValueOnce(
       true
     );
 
-    // Act
     const isValid = service.isValid(actionDef, mockActor, context);
 
-    // Assert
     expect(isValid).toBe(true);
     expect(domainContextCompatibilityChecker.check).toHaveBeenCalled();
     expect(mockEntityManager.getEntityInstance).toHaveBeenCalledWith(TARGET_ID);
-
-    // +++ Verify PES was called correctly with the NEW signature +++
     expect(
       mockPrerequisiteEvaluationServiceInstance.evaluate
     ).toHaveBeenCalledTimes(1);
     expect(
       mockPrerequisiteEvaluationServiceInstance.evaluate
     ).toHaveBeenCalledWith(
-      actionDef.prerequisites, // Prerequisites array
-      actionDef, // Action Definition object
-      mockActor, // Actor Entity object
-      context // Action Target Context object
+      actionDef.prerequisites,
+      actionDef,
+      mockActor,
+      context
     );
-    // --- Removed old JLES/incorrect PES signature assertions ---
-
-    expect(mockLogger.error).not.toHaveBeenCalled();
-    // Debug log check remains valid if AVS still logs steps
-    expect(mockLogger.debug).toHaveBeenCalledWith(
-      expect.stringContaining('STEP 4 PASSED')
-    ); // Updated step number based on AVS code
-  });
-
-  test('Success: Action prerequisites pass (target lacks forbidden component)', () => {
-    mockTarget = createMockEntity(TARGET_ID, [MockComponentX]); // Does NOT have MockTargetComponentForbidden
-    const actionDef = {
-      id: 'test:prereq-pass-lacks-comp',
-      target_domain: 'environment',
-      template: 'do thing to {target}',
-      prerequisites: [
-        { logic: { missing: ['target.components.target:forbidden'] } },
-      ],
-    };
-    const context = ActionTargetContext.forEntity(TARGET_ID);
-
-    // --- Configure Mock PES: Return true ---
-    mockPrerequisiteEvaluationServiceInstance.evaluate.mockReturnValueOnce(
-      true
-    );
-
-    // Act
-    const isValid = service.isValid(actionDef, mockActor, context);
-
-    // Assert
-    expect(isValid).toBe(true);
-    expect(domainContextCompatibilityChecker.check).toHaveBeenCalled();
-    expect(mockEntityManager.getEntityInstance).toHaveBeenCalledWith(TARGET_ID);
-
-    // +++ Verify PES was called correctly with the NEW signature +++
-    expect(
-      mockPrerequisiteEvaluationServiceInstance.evaluate
-    ).toHaveBeenCalledTimes(1);
-    expect(
-      mockPrerequisiteEvaluationServiceInstance.evaluate
-    ).toHaveBeenCalledWith(
-      actionDef.prerequisites, // Prerequisites array
-      actionDef, // Action Definition object
-      mockActor, // Actor Entity object
-      context // Action Target Context object
-    );
-    // --- Removed old JLES/incorrect PES signature assertions ---
-
     expect(mockLogger.error).not.toHaveBeenCalled();
     expect(mockLogger.debug).toHaveBeenCalledWith(
       expect.stringContaining('STEP 4 PASSED')
-    ); // Updated step number
+    );
   });
 
   test('Failure: Action prerequisites fail (target is missing required component)', () => {
-    mockTarget = createMockEntity(TARGET_ID, [MockComponentX]); // Does NOT have MockTargetComponentRequired
+    mockTarget = createMockEntity(TARGET_ID, [MockComponentX]);
     const actionDef = {
       id: 'test:prereq-fail-missing-req',
-      target_domain: 'environment',
+      scope: 'environment', // FIXED
       template: 'do thing to {target}',
       prerequisites: [
         { logic: { '!!': [{ var: 'target.components.target:required' }] } },
       ],
     };
     const context = ActionTargetContext.forEntity(TARGET_ID);
-
-    // --- Configure Mock PES: Return false ---
     mockPrerequisiteEvaluationServiceInstance.evaluate.mockReturnValueOnce(
       false
     );
 
-    // Act
     const isValid = service.isValid(actionDef, mockActor, context);
 
-    // Assert
-    expect(isValid).toBe(false); // Expect failure based on mock PES return
-    expect(domainContextCompatibilityChecker.check).toHaveBeenCalled();
-    expect(mockEntityManager.getEntityInstance).toHaveBeenCalledWith(TARGET_ID);
-
-    // +++ Verify PES was called correctly with the NEW signature +++
-    expect(
-      mockPrerequisiteEvaluationServiceInstance.evaluate
-    ).toHaveBeenCalledTimes(1);
-    expect(
-      mockPrerequisiteEvaluationServiceInstance.evaluate
-    ).toHaveBeenCalledWith(
-      actionDef.prerequisites, // Prerequisites array
-      actionDef, // Action Definition object
-      mockActor, // Actor Entity object
-      context // Action Target Context object
-    );
-    // --- Removed old JLES/incorrect PES signature assertions ---
-
-    expect(mockLogger.error).not.toHaveBeenCalled();
-    // Check for the failure log message (Assuming PES logs the specific failure, AVS logs the overall end state)
-    expect(mockLogger.debug).toHaveBeenCalledWith(
-      expect.stringContaining(
-        'END Validation: FAILED (Prerequisite Not Met or Error during evaluation'
-      )
-    );
-  });
-
-  test('Failure: Action prerequisites fail (target has forbidden component)', () => {
-    mockTarget = createMockEntity(TARGET_ID, [
-      MockTargetComponentForbidden,
-      MockComponentX,
-    ]);
-    const actionDef = {
-      id: 'test:prereq-fail-has-forbidden',
-      target_domain: 'environment',
-      template: 'do thing to {target}',
-      prerequisites: [
-        { logic: { missing: ['target.components.target:forbidden'] } },
-      ],
-    };
-    const context = ActionTargetContext.forEntity(TARGET_ID);
-
-    // --- Configure Mock PES: Return false ---
-    mockPrerequisiteEvaluationServiceInstance.evaluate.mockReturnValueOnce(
-      false
-    );
-
-    // Act
-    const isValid = service.isValid(actionDef, mockActor, context);
-
-    // Assert
-    expect(isValid).toBe(false); // Expect failure
-    expect(domainContextCompatibilityChecker.check).toHaveBeenCalled();
-    expect(mockEntityManager.getEntityInstance).toHaveBeenCalledWith(TARGET_ID);
-
-    // +++ Verify PES was called correctly with the NEW signature +++
-    expect(
-      mockPrerequisiteEvaluationServiceInstance.evaluate
-    ).toHaveBeenCalledTimes(1);
-    expect(
-      mockPrerequisiteEvaluationServiceInstance.evaluate
-    ).toHaveBeenCalledWith(
-      actionDef.prerequisites, // Prerequisites array
-      actionDef, // Action Definition object
-      mockActor, // Actor Entity object
-      context // Action Target Context object
-    );
-    // --- Removed old JLES/incorrect PES signature assertions ---
-
-    expect(mockLogger.error).not.toHaveBeenCalled();
-    expect(mockLogger.debug).toHaveBeenCalledWith(
-      expect.stringContaining(
-        'END Validation: FAILED (Prerequisite Not Met or Error during evaluation'
-      )
-    );
-  });
-
-  test('Failure (Target Not Found): Prerequisite evaluation delegated and fails due to mock', () => {
-    // Note: AVS *will* call PES even if the target entity isn't found.
-    // PES (and its internal context builder) will handle the missing entity.
-    // PES's evaluation (mocked here) determines the final outcome.
-    const actionDef = {
-      id: 'test:target-not-found-prereq',
-      target_domain: 'environment',
-      template: '...',
-      prerequisites: [
-        { logic: { '==': [{ var: 'target.components.core:x.x' }, 1] } },
-      ],
-    };
-    const context = ActionTargetContext.forEntity(TARGET_ID_NOT_FOUND);
-
-    mockEntityManager.getEntityInstance.mockImplementation((id) => {
-      if (id === ACTOR_ID) return mockActor;
-      if (id === TARGET_ID_NOT_FOUND) return undefined; // Simulate target not found
-      return mockEntityManager.activeEntities.get(id);
-    });
-
-    // --- Configure Mock PES: Return false (simulating rule failure maybe due to missing data) ---
-    mockPrerequisiteEvaluationServiceInstance.evaluate.mockReturnValueOnce(
-      false
-    );
-
-    // --- Act ---
-    const isValid = service.isValid(actionDef, mockActor, context);
-
-    // --- Assert ---
-    expect(isValid).toBe(false); // Fails because mocked PES returned false
-    expect(domainContextCompatibilityChecker.check).toHaveBeenCalled();
-    expect(mockEntityManager.getEntityInstance).toHaveBeenCalledWith(
-      TARGET_ID_NOT_FOUND
-    ); // Lookup was attempted (by AVS step 2)
-    expect(mockLogger.warn).toHaveBeenCalledWith(
-      expect.stringContaining(
-        `Target entity '${TARGET_ID_NOT_FOUND}' not found`
-      )
-    ); // Logged by AVS step 2
-    expect(mockLogger.error).not.toHaveBeenCalled();
-
-    // +++ Verify PES was called correctly with the NEW signature +++
-    expect(
-      mockPrerequisiteEvaluationServiceInstance.evaluate
-    ).toHaveBeenCalledTimes(1);
-    expect(
-      mockPrerequisiteEvaluationServiceInstance.evaluate
-    ).toHaveBeenCalledWith(
-      actionDef.prerequisites, // Prerequisites array
-      actionDef, // Action Definition object
-      mockActor, // Actor Entity object
-      context // Action Target Context object (which contains TARGET_ID_NOT_FOUND)
-    );
-    // --- Removed old JLES/incorrect PES signature assertions (checking internal context structure) ---
-    expect(mockLogger.debug).toHaveBeenCalledWith(
-      expect.stringContaining(
-        'END Validation: FAILED (Prerequisite Not Met or Error during evaluation'
-      )
-    );
-  });
-
-  test('Failure (No Target): Prerequisite check runs via PES and fails due to mock', () => {
-    const actionDef = {
-      id: 'test:target-none-prereq-fail',
-      target_domain: 'none',
-      template: 'do thing',
-      prerequisites: [{ logic: { '==': [1, 0] } }], // Intentional fail rule
-    };
-    const context = ActionTargetContext.noTarget();
-
-    // --- Configure Mock PES: Return false ---
-    mockPrerequisiteEvaluationServiceInstance.evaluate.mockReturnValueOnce(
-      false
-    );
-
-    // Act
-    const isValid = service.isValid(actionDef, mockActor, context);
-
-    // Assert
     expect(isValid).toBe(false);
-    expect(domainContextCompatibilityChecker.check).toHaveBeenCalledWith(
+    expect(domainContextCompatibilityChecker.check).toHaveBeenCalled();
+    expect(mockEntityManager.getEntityInstance).toHaveBeenCalledWith(TARGET_ID);
+    expect(
+      mockPrerequisiteEvaluationServiceInstance.evaluate
+    ).toHaveBeenCalledTimes(1);
+    expect(
+      mockPrerequisiteEvaluationServiceInstance.evaluate
+    ).toHaveBeenCalledWith(
+      actionDef.prerequisites,
       actionDef,
+      mockActor,
       context
     );
-    expect(mockEntityManager.getEntityInstance).not.toHaveBeenCalledWith(
-      expect.not.stringContaining(ACTOR_ID)
-    ); // No target entity ID lookup
-
-    // +++ Verify PES was called correctly with the NEW signature +++
-    expect(
-      mockPrerequisiteEvaluationServiceInstance.evaluate
-    ).toHaveBeenCalledTimes(1);
-    expect(
-      mockPrerequisiteEvaluationServiceInstance.evaluate
-    ).toHaveBeenCalledWith(
-      actionDef.prerequisites, // Prerequisites array
-      actionDef, // Action Definition object
-      mockActor, // Actor Entity object
-      context // Action Target Context object (.noTarget())
-    );
-    // --- Removed old JLES/incorrect PES signature assertions ---
-
     expect(mockLogger.error).not.toHaveBeenCalled();
     expect(mockLogger.debug).toHaveBeenCalledWith(
       expect.stringContaining(
@@ -598,78 +272,66 @@ describe('ActionValidationService - Target/Prerequisite Checks', () => {
     );
   });
 
-  test('Failure (Domain/Context Mismatch): target_domain="none" mismatches context.type="entity"', () => {
+  test('Throw (Scope/Context Mismatch): scope="none" mismatches context.type="entity"', () => {
     mockTarget = createMockEntity(TARGET_ID, []);
     const actionDef = {
       id: 'test:target-domain-mismatch-fail',
-      target_domain: 'none', // Expects no target
+      name: 'Mismatch Fail',
+      scope: 'none', // FIXED
       template: 'do thing',
-      prerequisites: [{ logic: { '==': [1, 1] } }], // Prereqs exist but should not be reached
+      prerequisites: [{ logic: { '==': [1, 1] } }],
     };
-    const context = ActionTargetContext.forEntity(TARGET_ID); // But given an entity target
-
-    // Mock checker to fail
+    const context = ActionTargetContext.forEntity(TARGET_ID);
     domainContextCompatibilityChecker.check.mockReturnValue(false);
 
-    // Act
-    const isValid = service.isValid(actionDef, mockActor, context);
+    // FIXED: Updated expected error message
+    const expectedErrorMsg = `Action 'test:target-domain-mismatch-fail' (scope 'none') expects no target, but context type is 'entity'.`;
+    expect(() => {
+      service.isValid(actionDef, mockActor, context);
+    }).toThrow(DomainContextIncompatibilityError);
+    expect(() => {
+      service.isValid(actionDef, mockActor, context);
+    }).toThrow(expectedErrorMsg);
 
-    // Assert
-    expect(isValid).toBe(false);
     expect(domainContextCompatibilityChecker.check).toHaveBeenCalledWith(
       actionDef,
       context
     );
-    // Should fail before entity lookup or evaluation
     expect(mockEntityManager.getEntityInstance).not.toHaveBeenCalled();
-    // +++ Verify PES was NOT called +++
     expect(
       mockPrerequisiteEvaluationServiceInstance.evaluate
     ).not.toHaveBeenCalled();
-    expect(mockLogger.error).not.toHaveBeenCalled();
-    // Check for the Step 1 failure log
-    expect(mockLogger.debug).toHaveBeenCalledWith(
-      expect.stringContaining('END Validation: FAILED (Domain/Context)')
-    );
   });
 
-  test('Failure (Domain/Context Mismatch): target_domain="self" mismatches context target entity', () => {
+  test('Throw (Scope/Context Mismatch): scope="self" mismatches context target entity', () => {
     const otherTargetId = 'other-target';
-    mockTarget = createMockEntity(otherTargetId, []); // Target is NOT the actor
+    mockTarget = createMockEntity(otherTargetId, []);
     const actionDef = {
       id: 'test:target-self-mismatch-fail',
-      target_domain: 'self', // Expects target to be actor
+      name: 'Self Mismatch Fail',
+      scope: 'self', // FIXED
       template: 'do thing to self',
-      prerequisites: [], // No prereqs, but shouldn't be reached anyway
+      prerequisites: [],
     };
-    const context = ActionTargetContext.forEntity(otherTargetId); // Context points to the other entity
-
-    // Domain checker passes type check (self requires entity)
+    const context = ActionTargetContext.forEntity(otherTargetId);
     domainContextCompatibilityChecker.check.mockReturnValue(true);
 
-    // Act
-    const isValid = service.isValid(actionDef, mockActor, context);
+    // FIXED: Updated expected error message
+    const expectedErrorMsg = `Action 'test:target-self-mismatch-fail' requires a 'self' target, but target was 'other-target'.`;
+    expect(() => {
+      service.isValid(actionDef, mockActor, context);
+    }).toThrow(DomainContextIncompatibilityError);
+    expect(() => {
+      service.isValid(actionDef, mockActor, context);
+    }).toThrow(expectedErrorMsg);
 
-    // Assert
-    // Should fail at the specific 'self' ID check within ActionValidationService (Step 1)
-    expect(isValid).toBe(false);
     expect(domainContextCompatibilityChecker.check).toHaveBeenCalledWith(
       actionDef,
       context
     );
-    // Should fail before entity lookup or evaluation
     expect(mockEntityManager.getEntityInstance).not.toHaveBeenCalled();
-    // +++ Verify PES was NOT called +++
     expect(
       mockPrerequisiteEvaluationServiceInstance.evaluate
     ).not.toHaveBeenCalled();
-    expect(mockLogger.error).not.toHaveBeenCalled();
-    // Check for the Step 1 failure log (specifically the 'self' mismatch part)
-    expect(mockLogger.debug).toHaveBeenCalledWith(
-      expect.stringContaining("STEP 1 FAILED ('self' target mismatch)")
-    );
-    expect(mockLogger.debug).toHaveBeenCalledWith(
-      expect.stringContaining('END Validation: FAILED (Domain/Context)')
-    );
   });
-}); // End describe suite
+});

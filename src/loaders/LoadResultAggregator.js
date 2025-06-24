@@ -50,7 +50,7 @@ export class LoadResultAggregator {
   /**
    * Clones the totals object using structuredClone if available (Node ≥17),
    * otherwise falls back to JSON.parse(JSON.stringify(...)).
-   * 
+   *
    * @private
    * @param {TotalResultsSummary} totals - The totals object to clone.
    * @returns {TotalResultsSummary} A deep clone of the totals object.
@@ -65,7 +65,7 @@ export class LoadResultAggregator {
 
   /**
    * Gets a copy of the current total counts.
-   * 
+   *
    * @returns {TotalResultsSummary} A copy of the current total counts.
    */
   getTotalCounts() {

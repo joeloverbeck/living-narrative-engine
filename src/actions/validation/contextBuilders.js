@@ -1,31 +1,11 @@
+// src/actions/validation/contextBuilders.js
+
+/* type-only imports */
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../entities/entityManager.js').default} EntityManager */
 
-import { createComponentAccessor } from '../../logic/componentAccessor.js';
 import { createEntityContext } from '../../logic/contextAssembler.js';
-import {
-  ENTITY as TARGET_TYPE_ENTITY,
-  NONE as TARGET_TYPE_NONE,
-} from '../../constants/actionTargetTypes.js';
-
-/**
- * @description Create a base target context with default null fields.
- * @param {string} type - Target context type (use ActionTargetTypes constants).
- * @returns {{type: string, id: null, direction: null, components: null, blocker: null, exitDetails: null}}
- * Base target context object.
- */
-export function createBaseTargetContext(type) {
-  return {
-    type,
-    id: null,
-    // These fields are now obsolete but kept as null for data structure consistency if anything still expects them.
-    // They will not be populated.
-    direction: null,
-    components: null,
-    blocker: null,
-    exitDetails: null,
-  };
-}
+import { ENTITY as TARGET_TYPE_ENTITY } from '../../constants/actionTargetTypes.js';
 
 /**
  * @description Build the actor portion of an action validation context.
@@ -35,20 +15,26 @@ export function createBaseTargetContext(type) {
  * @returns {{id: string, components: object}} Actor context object.
  */
 export function buildActorContext(entityId, entityManager, logger) {
+  // This function already delegates correctly and needs no changes.
   return createEntityContext(entityId, entityManager, logger);
 }
 
 /**
- * @description Build the target portion when targeting another entity.
+ * @description Build the target portion of the validation context when targeting an entity.
  * @param {string} entityId - ID of the target entity.
  * @param {EntityManager} entityManager - Manager to access components.
  * @param {ILogger} logger - Logger instance.
- * @returns {{type: string, id: string, direction: null, components: object, blocker: null, exitDetails: null}}
+ * @returns {{type: string, id: string, components: object}}
  * Target context for an entity.
  */
 export function buildEntityTargetContext(entityId, entityManager, logger) {
-  const ctx = createBaseTargetContext(TARGET_TYPE_ENTITY);
-  ctx.id = entityId;
-  ctx.components = createComponentAccessor(entityId, entityManager, logger);
-  return ctx;
+  // Create the core entity context which is { id, components }
+  const entityCtx = createEntityContext(entityId, entityManager, logger);
+
+  // Add the 'type' property required for the validation context.
+  return {
+    type: TARGET_TYPE_ENTITY,
+    id: entityCtx.id,
+    components: entityCtx.components,
+  };
 }

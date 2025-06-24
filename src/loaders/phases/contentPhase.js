@@ -72,7 +72,7 @@ export default class ContentPhase extends LoaderPhase {
   /**
    * Clones the totals object using structuredClone if available (Node ≥17),
    * otherwise falls back to JSON.parse(JSON.stringify(...)).
-   * 
+   *
    * @private
    * @param {import('../LoadContext.js').TotalResultsSummary} totals - The totals object to clone.
    * @returns {import('../LoadContext.js').TotalResultsSummary} A deep clone of the totals object.

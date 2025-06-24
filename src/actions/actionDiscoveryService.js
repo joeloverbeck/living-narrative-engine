@@ -4,7 +4,6 @@
 /** @typedef {import('../data/gameDataRepository.js').GameDataRepository} GameDataRepository */
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */
 /** @typedef {import('./validation/actionValidationService.js').ActionValidationService} ActionValidationService */
-/** @typedef {import('../entities/entityScopeService.js').getEntityIdsForScopes} getEntityIdsForScopesFn */
 /** @typedef {import('./actionFormatter.js').formatActionCommand} formatActionCommandFn */
 /** @typedef {import('./actionTypes.js').ActionContext} ActionContext */
 /** @typedef {import('../logging/consoleLogger.js').default} ILogger */
@@ -21,6 +20,8 @@ import { setupService } from '../utils/serviceInitializerUtils.js';
 import { getActorLocation } from '../utils/actorLocationUtils.js';
 import { safeDispatchError } from '../utils/safeDispatchErrorUtils.js';
 import { getEntityDisplayName } from '../utils/entityUtils.js';
+import { DomainContextIncompatibilityError } from '../errors/domainContextIncompatibilityError.js';
+import { parseDslExpression } from '../scopeDsl/parser.js';
 
 // ────────────────────────────────────────────────────────────────────────────────
 /**
@@ -33,7 +34,6 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
   #entityManager;
   #actionValidationService;
   #formatActionCommandFn;
-  #getEntityIdsForScopesFn;
   #logger;
   #safeEventDispatcher;
   #getActorLocationFn;
@@ -48,7 +48,6 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
    * @param {ActionValidationService} deps.actionValidationService
    * @param {ILogger}            deps.logger
    * @param {formatActionCommandFn} deps.formatActionCommandFn
-   * @param {getEntityIdsForScopesFn} deps.getEntityIdsForScopesFn
    * @param {ISafeEventDispatcher} deps.safeEventDispatcher
    * @param {ScopeRegistry}      deps.scopeRegistry
    * @param {import('../interfaces/IScopeEngine.js').IScopeEngine} deps.scopeEngine
@@ -61,7 +60,6 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
     actionValidationService,
     logger,
     formatActionCommandFn,
-    getEntityIdsForScopesFn,
     safeEventDispatcher,
     scopeRegistry,
     scopeEngine,
@@ -83,10 +81,6 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
         requiredMethods: ['isValid'],
       },
       formatActionCommandFn: { value: formatActionCommandFn, isFunction: true },
-      getEntityIdsForScopesFn: {
-        value: getEntityIdsForScopesFn,
-        isFunction: true,
-      },
       safeEventDispatcher: {
         value: safeEventDispatcher,
         requiredMethods: ['dispatch'],
@@ -104,7 +98,6 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
     this.#entityManager = entityManager;
     this.#actionValidationService = actionValidationService;
     this.#formatActionCommandFn = formatActionCommandFn;
-    this.#getEntityIdsForScopesFn = getEntityIdsForScopesFn;
     this.#safeEventDispatcher = safeEventDispatcher;
     this.#scopeRegistry = scopeRegistry;
     this.#scopeEngine = scopeEngine;
@@ -122,6 +115,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
    * @param {object} formatterOptions - Options for formatting the command string.
    * @param {object} params - Extra params to include in the result.
    * @returns {import('../interfaces/IActionDiscoveryService.js').DiscoveredActionInfo|null} The info object or null.
+   * @throws {DomainContextIncompatibilityError} Propagates error from validation service.
    */
   #buildDiscoveredAction(
     actionDef,
@@ -133,6 +127,8 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
     if (
       !this.#actionValidationService.isValid(actionDef, actorEntity, targetCtx)
     ) {
+      // This will now only be false for "normal" failures like prerequisites.
+      // Domain/context failures will throw an error, which is handled by #processActionDefinition.
       return null;
     }
 
@@ -185,7 +181,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
    * @description Handles discovery for actions targeting entities via scope domains.
    * @param {import('../data/gameDataRepository.js').ActionDefinition} actionDef
    * @param {Entity} actorEntity
-   * @param {string} scope - The scope name.
+   * @param {string} scopeName - The scope name.
    * @param {ActionContext} context - Current action context.
    * @param {object} formatterOptions - Formatter options.
    * @returns {import('../interfaces/IActionDiscoveryService.js').DiscoveredActionInfo[]}
@@ -193,19 +189,53 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
   #handleScopedEntityActions(
     actionDef,
     actorEntity,
-    scope,
+    scopeName,
     context,
     formatterOptions
   ) {
-    const targetIds =
-      this.#getEntityIdsForScopesFn(
-        [scope],
-        context,
-        this.#scopeRegistry,
-        this.#logger,
-        this.#scopeEngine,
-        this.#safeEventDispatcher
-      ) ?? new Set();
+    this.#logger.debug(`Resolving scope '${scopeName}' with DSL`);
+    const scopeDefinition = this.#scopeRegistry.getScope(scopeName);
+
+    if (
+      !scopeDefinition ||
+      typeof scopeDefinition.expr !== 'string' ||
+      !scopeDefinition.expr.trim()
+    ) {
+      const errorMessage = `Missing scope definition: Scope '${scopeName}' not found or has no expression in registry.`;
+      this.#logger.warn(errorMessage);
+      safeDispatchError(this.#safeEventDispatcher, errorMessage, { scopeName });
+      return [];
+    }
+
+    let targetIds;
+    try {
+      const ast = parseDslExpression(scopeDefinition.expr);
+
+      // The scope engine needs a specific 'runtime context', not the general 'action context'.
+      const runtimeCtx = {
+        entityManager: this.#entityManager,
+        // FIX: Defensively default jsonLogicEval to an empty object if not provided.
+        jsonLogicEval: context.jsonLogicEval || {},
+        logger: this.#logger,
+        actor: actorEntity,
+        location: context.currentLocation, // Use currentLocation prepared by #prepareDiscoveryContext
+      };
+
+      targetIds =
+        this.#scopeEngine.resolve(ast, actorEntity, runtimeCtx) ?? new Set();
+    } catch (error) {
+      this.#logger.error(
+        `Error resolving scope '${scopeName}' with DSL:`,
+        error
+      );
+      safeDispatchError(
+        this.#safeEventDispatcher,
+        `Error resolving scope '${scopeName}': ${error.message}`,
+        { error: error.message, stack: error.stack }
+      );
+      return [];
+    }
+
     /** @type {import('../interfaces/IActionDiscoveryService.js').DiscoveredActionInfo[]} */
     const discoveredActions = [];
 
@@ -258,11 +288,31 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
       }
       return { actions, errors: [] };
     } catch (err) {
-      safeDispatchError(
-        this.#safeEventDispatcher,
-        `ActionDiscoveryService: Error processing action ${actionDef.id} for actor ${actorEntity.id}.`,
-        { error: err.message, stack: err.stack }
-      );
+      if (err instanceof DomainContextIncompatibilityError) {
+        const detailsPayload = {
+          actionId: err.actionId,
+          actorId: err.actorId,
+          targetId: err.targetId,
+          expectedScope: err.expectedScope,
+          actualContextType: err.contextType,
+        };
+
+        safeDispatchError(
+          this.#safeEventDispatcher,
+          `Domain/Context Incompatibility: ${err.message}`,
+          {
+            raw: JSON.stringify(detailsPayload, null, 2),
+            stack: err.stack,
+            timestamp: new Date().toISOString(),
+          }
+        );
+      } else {
+        safeDispatchError(
+          this.#safeEventDispatcher,
+          `ActionDiscoveryService: Error processing action ${actionDef.id} for actor ${actorEntity.id}.`,
+          { error: err.message, stack: err.stack }
+        );
+      }
       return { actions: [], errors: [err] };
     }
   }

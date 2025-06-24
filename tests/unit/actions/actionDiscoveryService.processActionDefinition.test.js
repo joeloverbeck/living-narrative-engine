@@ -8,38 +8,35 @@ import {
 } from '@jest/globals';
 import { ActionDiscoveryService } from '../../../src/actions/actionDiscoveryService.js';
 import { safeDispatchError } from '../../../src/utils/safeDispatchErrorUtils.js';
+import { POSITION_COMPONENT_ID } from '../../../src/constants/componentIds.js';
 
+// We only mock this utility to verify it gets called on error.
 jest.mock('../../../src/utils/safeDispatchErrorUtils.js');
 
 describe('ActionDiscoveryService - processActionDefinition', () => {
-  /** @type {ActionDiscoveryService} */
   let service;
-  /** @type {object} */
   let gameDataRepo;
-  /** @type {object} */
   let entityManager;
-  /** @type {object} */
   let actionValidationService;
-  /** @type {jest.Mock} */
   let formatActionCommandFn;
-  /** @type {jest.Mock} */
-  let getEntityIdsForScopesFn;
-  /** @type {object} */
   let logger;
-  /** @type {object} */
   let safeEventDispatcher;
-  /** @type {object} */
   let mockScopeRegistry;
+  let mockScopeEngine;
 
   beforeEach(() => {
     gameDataRepo = { getAllActionDefinitions: jest.fn() };
     entityManager = {
-      getEntityInstance: jest.fn(),
+      // FIX: The mock location must be a more realistic entity object with methods.
+      getEntityInstance: jest.fn((id) =>
+        id === 'room1'
+          ? { id: 'room1', getComponentData: () => null } // Give it a getComponentData method
+          : null
+      ),
       getComponentData: jest.fn().mockReturnValue(null),
     };
     actionValidationService = { isValid: () => true };
     formatActionCommandFn = jest.fn(() => ({ ok: true, value: 'doit' }));
-    getEntityIdsForScopesFn = jest.fn(() => new Set());
     logger = {
       debug: jest.fn(),
       info: jest.fn(),
@@ -50,16 +47,15 @@ describe('ActionDiscoveryService - processActionDefinition', () => {
     mockScopeRegistry = {
       getScope: jest.fn(),
     };
-    const mockScopeEngine = {
+    mockScopeEngine = {
       resolve: jest.fn(() => new Set()),
-      setMaxDepth: jest.fn(),
     };
+
     service = new ActionDiscoveryService({
       gameDataRepository: gameDataRepo,
       entityManager,
       actionValidationService,
       formatActionCommandFn,
-      getEntityIdsForScopesFn,
       logger,
       safeEventDispatcher,
       scopeRegistry: mockScopeRegistry,
@@ -72,19 +68,12 @@ describe('ActionDiscoveryService - processActionDefinition', () => {
   });
 
   it('handles handler errors and continues processing', async () => {
-    const failingDef = {
-      id: 'fail',
-      commandVerb: 'fail',
-      scope: 'none',
-    };
+    const failingDef = { id: 'fail', commandVerb: 'fail', scope: 'none' };
     const okDef = { id: 'ok', commandVerb: 'wait', scope: 'none' };
     gameDataRepo.getAllActionDefinitions.mockReturnValue([failingDef, okDef]);
 
-    // Simulate a handler error by making isValid throw for the failing action
     actionValidationService.isValid = jest.fn((actionDef) => {
-      if (actionDef.id === 'fail') {
-        throw new Error('boom');
-      }
+      if (actionDef.id === 'fail') throw new Error('boom');
       return true;
     });
 
@@ -99,45 +88,46 @@ describe('ActionDiscoveryService - processActionDefinition', () => {
     expect(safeDispatchError).toHaveBeenCalledTimes(1);
   });
 
-  it('falls back to scoped entity discovery when scope handler is missing', async () => {
-    const def = {
-      id: 'attack',
-      commandVerb: 'attack',
-      scope: 'monster',
-    };
+  it('uses the scope registry and engine for scoped actions', async () => {
+    const def = { id: 'attack', commandVerb: 'attack', scope: 'monster' };
     gameDataRepo.getAllActionDefinitions.mockReturnValue([def]);
-    getEntityIdsForScopesFn.mockReturnValue(new Set(['monster1']));
+
+    mockScopeRegistry.getScope.mockReturnValue({
+      expr: 'location.inhabitants',
+    });
+    mockScopeEngine.resolve.mockReturnValue(new Set(['monster1']));
     formatActionCommandFn.mockReturnValue({
       ok: true,
       value: 'attack monster1',
     });
 
-    const actor = { id: 'actor' };
-    const context = {};
+    entityManager.getComponentData.mockImplementation(
+      (entityId, componentId) => {
+        if (entityId === 'actor' && componentId === POSITION_COMPONENT_ID) {
+          return { locationId: 'room1' };
+        }
+        return null;
+      }
+    );
+
+    const actor = { id: 'actor', getComponentData: () => null };
+    const context = { jsonLogicEval: {} };
 
     const result = await service.getValidActions(actor, context);
 
-    expect(getEntityIdsForScopesFn).toHaveBeenCalledWith(
-      ['monster'],
+    // Assert that the new dependencies were called correctly
+    expect(mockScopeRegistry.getScope).toHaveBeenCalledWith('monster');
+    // The call should now succeed.
+    expect(mockScopeEngine.resolve).toHaveBeenCalledWith(
+      expect.any(Object), // AST
+      actor,
       expect.objectContaining({
-        currentLocation: null,
-        getActor: expect.any(Function),
-      }),
-      mockScopeRegistry,
-      expect.objectContaining({
-        debug: expect.any(Function),
-        info: expect.any(Function),
-        warn: expect.any(Function),
-        error: expect.any(Function),
-      }),
-      expect.objectContaining({
-        resolve: expect.any(Function),
-        setMaxDepth: expect.any(Function),
-      }),
-      expect.objectContaining({
-        dispatch: expect.any(Function),
+        actor: actor,
+        location: { id: 'room1', getComponentData: expect.any(Function) }, // The location is now a valid object.
       })
     );
+
+    // Assert the final result is as expected
     expect(result.actions).toEqual([
       {
         id: 'attack',

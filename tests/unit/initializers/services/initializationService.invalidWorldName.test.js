@@ -1,5 +1,13 @@
 import InitializationService from '../../../../src/initializers/services/initializationService.js';
-import { afterEach, beforeEach, describe, expect, it, jest, test } from '@jest/globals';
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  jest,
+  test,
+} from '@jest/globals';
 import { tokens } from '../../../../src/dependencyInjection/tokens.js';
 
 // --- Mocks ---
@@ -121,36 +129,52 @@ describe('InitializationService', () => {
   describe('runInitializationSequence', () => {
     let service;
     // resolveOrder is not strictly needed for this specific test file, but kept for consistency with original structure
-    let resolveOrder; 
+    let resolveOrder;
 
     beforeEach(() => {
-      resolveOrder = []; 
+      resolveOrder = [];
       // This specific mockContainer.resolve is simplified as this test group doesn't hit the full sequence.
       // The outer beforeEach's mockContainer.resolve is sufficient for what might be called (e.g. ILogger).
       // However, to ensure `service` is created correctly and consistently:
       mockContainer.resolve.mockImplementation((token) => {
-        resolveOrder.push(token); 
+        resolveOrder.push(token);
         switch (token) {
-          case tokens.ModsLoader: return mockModsLoader;
-          case tokens.SystemInitializer: return mockSystemInitializer;
-          case tokens.WorldInitializer: return mockWorldInitializer;
-          case tokens.DomUiFacade: return mockDomUiFacade;
-          case tokens.ILogger: return mockLogger;
-          case tokens.LLMAdapter: return mockLlmAdapter;
-          case tokens.ISchemaValidator: return mockSchemaValidator;
-          case tokens.IConfiguration: return mockConfiguration;
-          case tokens.ISafeEventDispatcher: return { subscribe: jest.fn(), unsubscribe: jest.fn(), dispatch: jest.fn() };
-          case tokens.IEntityManager: return { getEntityInstance: jest.fn() };
-          case tokens.IDataRegistry: return mockDataRegistry;
-          case tokens.IScopeRegistry: return mockScopeRegistry;
+          case tokens.ModsLoader:
+            return mockModsLoader;
+          case tokens.SystemInitializer:
+            return mockSystemInitializer;
+          case tokens.WorldInitializer:
+            return mockWorldInitializer;
+          case tokens.DomUiFacade:
+            return mockDomUiFacade;
+          case tokens.ILogger:
+            return mockLogger;
+          case tokens.LLMAdapter:
+            return mockLlmAdapter;
+          case tokens.ISchemaValidator:
+            return mockSchemaValidator;
+          case tokens.IConfiguration:
+            return mockConfiguration;
+          case tokens.ISafeEventDispatcher:
+            return {
+              subscribe: jest.fn(),
+              unsubscribe: jest.fn(),
+              dispatch: jest.fn(),
+            };
+          case tokens.IEntityManager:
+            return { getEntityInstance: jest.fn() };
+          case tokens.IDataRegistry:
+            return mockDataRegistry;
+          case tokens.IScopeRegistry:
+            return mockScopeRegistry;
           default:
-            // For this test, if a token not listed above is resolved before the error, 
+            // For this test, if a token not listed above is resolved before the error,
             // it likely means the test logic or service logic has changed.
             // console.warn(`InvalidWorldName Test: Unhandled token ${String(token)}`);
             return undefined;
         }
       });
-      
+
       // Ensure LLM adapter mocks are consistent if service constructor relies on them
       mockLlmAdapter.init.mockImplementation(async () => {
         mockLlmAdapter.isInitialized.mockReturnValue(true);
@@ -187,10 +211,10 @@ describe('InitializationService', () => {
           .map((call) => call[0])
           // Filter out ILogger as it's called by the service constructor and then potentially again for the error.
           // We are interested if any *other* service resolution was attempted before the worldName check.
-          .filter((token) => token !== tokens.ILogger); 
+          .filter((token) => token !== tokens.ILogger);
         expect(relevantResolveCalls.length).toBe(0); // Should be 0 if error is caught early
         expect(mockValidatedEventDispatcher.dispatch).not.toHaveBeenCalled();
       }
     );
   });
-}); 
+});

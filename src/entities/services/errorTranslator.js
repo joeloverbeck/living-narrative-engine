@@ -27,7 +27,7 @@ export class ErrorTranslator {
     validateDependency(logger, 'ILogger', console, {
       requiredMethods: ['info', 'error', 'warn', 'debug'],
     });
-    
+
     this.#logger = ensureValidLogger(logger, 'ErrorTranslator');
     this.#logger.debug('ErrorTranslator initialized.');
   }
@@ -50,7 +50,7 @@ export class ErrorTranslator {
       this.#logger.error(msg);
       return new Error(msg);
     }
-    
+
     if (
       err instanceof Error &&
       err.message.startsWith(
@@ -62,7 +62,7 @@ export class ErrorTranslator {
       this.#logger.error(msg);
       return new Error(msg);
     }
-    
+
     if (
       err instanceof Error &&
       err.message.startsWith('EntityFactory.reconstruct: Entity with ID')
@@ -82,9 +82,9 @@ export class ErrorTranslator {
         return new DuplicateEntityError('unknown', msg);
       }
     }
-    
+
     return err instanceof Error ? err : new Error(String(err));
   }
 }
 
-export default ErrorTranslator; 
+export default ErrorTranslator;

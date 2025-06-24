@@ -11,12 +11,12 @@ import coreGoActionDefinition from '../../../data/mods/core/actions/go.action.js
 import coreWaitActionDefinition from '../../../data/mods/core/actions/wait.action.json';
 
 // --- Core Dependencies to Mock ---
+// NOTE: We are no longer using jest.mock() for these. We'll create manual mocks.
 import { GameDataRepository } from '../../../src/data/gameDataRepository.js';
 import EntityManager from '../../../src/entities/entityManager.js';
 import { ActionValidationService } from '../../../src/actions/validation/actionValidationService.js';
 import ConsoleLogger from '../../../src/logging/consoleLogger.js';
 import { formatActionCommand } from '../../../src/actions/actionFormatter.js';
-import { getEntityIdsForScopes } from '../../../src/entities/entityScopeService.js';
 import ScopeRegistry from '../../../src/scopeDsl/scopeRegistry.js';
 
 // --- Helper Mocks/Types ---
@@ -30,55 +30,48 @@ import {
   POSITION_COMPONENT_ID,
 } from '../../../src/constants/componentIds.js';
 
-// --- Mocking Dependencies ---
-jest.mock('../../../src/data/gameDataRepository.js');
-jest.mock('../../../src/entities/entityManager.js');
-jest.mock('../../../src/actions/validation/actionValidationService.js');
-jest.mock('../../../src/logging/consoleLogger.js');
-jest.mock('../../../src/actions/actionFormatter.js');
-jest.mock('../../../src/entities/entityScopeService.js');
-jest.mock('../../../src/scopeDsl/scopeRegistry.js');
+// --- Mocking Setup ---
+// We create manual mocks instead of using jest.mock() to have finer control.
+const mockGameDataRepo = {
+  getAllActionDefinitions: jest.fn(),
+};
+const mockEntityManager = {
+  getEntityInstance: jest.fn(),
+  getComponentData: jest.fn(),
+};
+const mockValidationService = {
+  isValid: jest.fn(),
+};
+const mockLogger = {
+  debug: jest.fn(),
+  info: jest.fn(),
+  warn: jest.fn(),
+  error: jest.fn(),
+};
+const mockSafeEventDispatcher = {
+  dispatch: jest.fn(),
+};
+const mockScopeRegistry = {
+  getScope: jest.fn(),
+};
+const mockScopeEngine = {
+  resolve: jest.fn(),
+};
+const mockFormatActionCommandFn = jest.fn();
 
 describe('ActionDiscoveryService - Go Action (Fixed State)', () => {
   let actionDiscoveryService;
-  let mockGameDataRepo;
-  let mockEntityManager;
-  let mockValidationService;
-  let mockLogger;
-  let mockSafeEventDispatcher;
-  let mockScopeRegistry;
-
-  // --- Mocks of imported functions ---
-  // These are automatically mocked by jest.mock() at the top of the file
-  const mockFormatActionCommandFn = formatActionCommand;
-  const mockGetEntityIdsForScopesFn = getEntityIdsForScopes;
-
-  const HERO_DEFINITION_ID = 'isekai:hero';
-  const GUILD_DEFINITION_ID = 'isekai:adventurers_guild';
-  const TOWN_DEFINITION_ID = 'isekai:town';
 
   const HERO_INSTANCE_ID = 'hero-instance-uuid-integration-1';
   const GUILD_INSTANCE_ID = 'guild-instance-uuid-integration-1';
   const TOWN_INSTANCE_ID = 'town-instance-uuid-integration-1';
 
-  // Helper function to create entity instances for testing
-  const createTestEntity = (
-    instanceId,
-    definitionId,
-    defComponents = {},
-    instanceOverrides = {}
-  ) => {
-    const definition = new EntityDefinition(definitionId, {
-      description: `Test Definition ${definitionId}`,
-      components: defComponents,
-    });
-    const instanceData = new EntityInstanceData(
-      instanceId,
-      definition,
-      instanceOverrides
-    );
-    return new Entity(instanceData);
-  };
+  // Helper function to create a simplified entity-like object for testing
+  const createTestEntity = (instanceId, components = {}) => ({
+    id: instanceId,
+    components: components,
+    getComponentData: (id) => components[id] || null,
+  });
 
   const heroEntityInitialComponents = {
     'core:actor': {},
@@ -87,20 +80,15 @@ describe('ActionDiscoveryService - Go Action (Fixed State)', () => {
     [POSITION_COMPONENT_ID]: { locationId: GUILD_INSTANCE_ID },
   };
 
-  // Note: core:go action definition uses `scope: "directions"`. This scope must resolve to a target.
-  const adventurersGuildEntityDefinitionData = {
-    id: GUILD_DEFINITION_ID,
-    components: {
-      'core:name': { text: "Adventurers' Guild" },
-      'core:description': { text: "The local adventurers' guild." },
-      [EXITS_COMPONENT_ID]: [
-        {
-          direction: 'out to town',
-          target: TOWN_INSTANCE_ID, // Exit target is now an instance ID
-          blocker: null,
-        },
-      ],
-    },
+  const adventurersGuildComponents = {
+    'core:name': { text: "Adventurers' Guild" },
+    'core:description': { text: "The local adventurers' guild." },
+    [EXITS_COMPONENT_ID]: [
+      {
+        direction: 'out to town',
+        target: TOWN_INSTANCE_ID,
+      },
+    ],
   };
 
   let mockHeroEntity;
@@ -109,41 +97,22 @@ describe('ActionDiscoveryService - Go Action (Fixed State)', () => {
   let mockActionContext;
 
   beforeEach(() => {
+    // Reset all manual mocks before each test
     jest.clearAllMocks();
-
-    mockGameDataRepo = new GameDataRepository();
-    mockEntityManager = new EntityManager();
-    mockValidationService = new ActionValidationService();
-    mockLogger = new ConsoleLogger();
-    mockLogger.debug = jest.fn();
-    mockLogger.info = jest.fn();
-    mockLogger.warn = jest.fn();
-    mockLogger.error = jest.fn();
-
-    mockSafeEventDispatcher = { dispatch: jest.fn() };
-    mockScopeRegistry = new ScopeRegistry();
 
     mockHeroEntity = createTestEntity(
       HERO_INSTANCE_ID,
-      HERO_DEFINITION_ID,
-      {},
       heroEntityInitialComponents
     );
-
     mockAdventurersGuildLocation = createTestEntity(
       GUILD_INSTANCE_ID,
-      GUILD_DEFINITION_ID,
-      {},
-      adventurersGuildEntityDefinitionData.components
+      adventurersGuildComponents
     );
+    mockTownLocation = createTestEntity(TOWN_INSTANCE_ID, {
+      'core:name': { text: 'The Town' },
+    });
 
-    mockTownLocation = createTestEntity(
-      TOWN_INSTANCE_ID,
-      TOWN_DEFINITION_ID,
-      { 'core:name': { text: 'The Town' } },
-      {}
-    );
-
+    // --- Configure Mocks for the Test Scenario ---
     mockGameDataRepo.getAllActionDefinitions.mockReturnValue([
       coreWaitActionDefinition,
       coreGoActionDefinition,
@@ -156,47 +125,46 @@ describe('ActionDiscoveryService - Go Action (Fixed State)', () => {
       return undefined;
     });
 
-    // The mock for getEntityIdsForScopes is now central to making this test work.
-    mockGetEntityIdsForScopesFn.mockImplementation((scopes, context) => {
-      if (scopes.includes('directions')) {
-        // Simulate that the scope resolver correctly found the target of the exit.
-        return new Set([TOWN_INSTANCE_ID]);
-      }
-      return new Set();
-    });
-
-    mockValidationService.isValid.mockReturnValue(true);
-
-    mockFormatActionCommandFn.mockImplementation(
-      (actionDef, targetContext, entityManager) => {
-        if (actionDef.id === 'core:wait') {
-          return { ok: true, value: 'wait' };
+    // Mock the location lookup via the position component
+    mockEntityManager.getComponentData.mockImplementation(
+      (entityId, compId) => {
+        if (entityId === HERO_INSTANCE_ID && compId === POSITION_COMPONENT_ID) {
+          return { locationId: GUILD_INSTANCE_ID };
         }
-        if (actionDef.id === 'core:go' && targetContext.type === 'entity') {
-          const targetEntity = entityManager.getEntityInstance(
-            targetContext.entityId
-          );
-          const targetName = targetEntity.getComponentData('core:name').text;
-          return {
-            ok: true,
-            value: actionDef.template.replace('{target}', targetName),
-          };
-        }
-        return { ok: false, error: 'invalid' };
+        return null;
       }
     );
 
+    // Mock the new dependencies: scopeRegistry and scopeEngine
+    mockScopeRegistry.getScope.mockImplementation((scopeName) => {
+      if (scopeName === 'directions') {
+        // The service needs a valid expression to parse
+        return { expr: 'location.core:exits[].target' };
+      }
+      return null;
+    });
+
+    mockScopeEngine.resolve.mockReturnValue(new Set([TOWN_INSTANCE_ID]));
+
+    mockValidationService.isValid.mockReturnValue(true);
+
+    mockFormatActionCommandFn.mockImplementation((actionDef, targetContext) => {
+      if (actionDef.id === 'core:wait') {
+        return { ok: true, value: 'wait' };
+      }
+      if (actionDef.id === 'core:go') {
+        // Simplified for test; real one uses getEntityDisplayName
+        return { ok: true, value: 'go to The Town' };
+      }
+      return { ok: false, error: 'invalid' };
+    });
+
     mockActionContext = {
-      // The service now populates this itself, but providing it is still good practice.
-      currentLocation: mockAdventurersGuildLocation,
+      // Provide jsonLogicEval as it's needed by the service's runtime context
+      jsonLogicEval: {},
       entityManager: mockEntityManager,
       gameDataRepository: mockGameDataRepo,
       logger: mockLogger,
-    };
-
-    const mockScopeEngine = {
-      resolve: jest.fn(() => new Set([TOWN_INSTANCE_ID])),
-      setMaxDepth: jest.fn(),
     };
 
     actionDiscoveryService = new ActionDiscoveryService({
@@ -205,7 +173,6 @@ describe('ActionDiscoveryService - Go Action (Fixed State)', () => {
       actionValidationService: mockValidationService,
       logger: mockLogger,
       formatActionCommandFn: mockFormatActionCommandFn,
-      getEntityIdsForScopesFn: mockGetEntityIdsForScopesFn,
       safeEventDispatcher: mockSafeEventDispatcher,
       scopeRegistry: mockScopeRegistry,
       scopeEngine: mockScopeEngine,
@@ -220,7 +187,6 @@ describe('ActionDiscoveryService - Go Action (Fixed State)', () => {
 
     expect(result.errors).toEqual([]);
     expect(result.actions).toBeDefined();
-    expect(Array.isArray(result.actions)).toBe(true);
 
     const waitAction = {
       id: 'core:wait',
@@ -238,32 +204,16 @@ describe('ActionDiscoveryService - Go Action (Fixed State)', () => {
       params: { targetId: TOWN_INSTANCE_ID },
     };
 
+    // --- Assertions ---
     expect(result.actions).toHaveLength(2);
     expect(result.actions).toContainEqual(waitAction);
     expect(result.actions).toContainEqual(goAction);
 
-    // The new system should have been called
-    expect(mockGetEntityIdsForScopesFn).toHaveBeenCalledWith(
-      ['directions'], // from core:go action definition
-      expect.any(Object), // context, which includes entityManager, actingEntity, location, etc.
-      // FIX: Expect any object that looks like a logger, not the specific mock instance.
-      expect.any(Object), // scopeRegistry
-      expect.objectContaining({
-        debug: expect.any(Function),
-        info: expect.any(Function),
-        warn: expect.any(Function),
-        error: expect.any(Function),
-      }),
-      expect.objectContaining({
-        resolve: expect.any(Function),
-        setMaxDepth: expect.any(Function),
-      }), // scopeEngine parameter
-      expect.objectContaining({
-        dispatch: expect.any(Function),
-      }) // dispatcher parameter
-    );
+    // Assert that the new dependencies were called
+    expect(mockScopeRegistry.getScope).toHaveBeenCalledWith('directions');
+    expect(mockScopeEngine.resolve).toHaveBeenCalled();
 
-    // Assert that the validation and formatting functions were called with the correct, modern context
+    // Assert that validation and formatting were called correctly for the GO action
     const expectedGoTargetContext =
       ActionTargetContext.forEntity(TOWN_INSTANCE_ID);
 
@@ -273,15 +223,12 @@ describe('ActionDiscoveryService - Go Action (Fixed State)', () => {
       expectedGoTargetContext
     );
 
-    // FIX: The call from ActionDiscoveryService only has 5 arguments. The 6th (formatterMap) is a default
-    // inside formatActionCommand and is not passed explicitly. The assertion must match the actual call.
     expect(mockFormatActionCommandFn).toHaveBeenCalledWith(
       coreGoActionDefinition,
       expectedGoTargetContext,
-      mockEntityManager,
+      expect.any(Object), // entityManager
       expect.any(Object), // formatterOptions
       expect.any(Function) // getEntityDisplayNameFn
-      // The 6th argument `expect.any(Object)` for formatterMap is removed.
     );
 
     expect(mockLogger.debug).toHaveBeenCalledWith(

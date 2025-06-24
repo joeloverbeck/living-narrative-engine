@@ -37,19 +37,19 @@ export function parseScopeDefinitions(content, filePath) {
   for (const line of rawLines) {
     // Check if this line starts a new scope definition
     const scopeMatch = line.match(/^(\w+)\s*:=\s*(.*)$/);
-    
+
     if (scopeMatch) {
       // If we were building a previous scope, finalize it
       if (currentScope) {
         processedLines.push(currentScope);
       }
-      
+
       // Start a new scope definition
       const [, scopeName, expressionStart] = scopeMatch;
       currentScope = {
         name: scopeName,
         expression: expressionStart,
-        line: line // Keep original line for error reporting
+        line: line, // Keep original line for error reporting
       };
     } else {
       // This is a continuation line
@@ -60,7 +60,7 @@ export function parseScopeDefinitions(content, filePath) {
           line
         );
       }
-      
+
       // Append to the current scope's expression
       currentScope.expression += ' ' + line;
     }

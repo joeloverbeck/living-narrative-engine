@@ -32,7 +32,10 @@ import GameDataRepository from '../../../src/data/gameDataRepository.js';
 import ValidatedEventDispatcher from '../../../src/events/validatedEventDispatcher.js';
 import EntityDefinition from '../../../src/entities/entityDefinition.js';
 import ScopeRegistry from '../../../src/scopeDsl/scopeRegistry.js';
-import { WORLDINIT_ENTITY_INSTANTIATED_ID, WORLDINIT_ENTITY_INSTANTIATION_FAILED_ID } from '../../../src/constants/eventIds.js';
+import {
+  WORLDINIT_ENTITY_INSTANTIATED_ID,
+  WORLDINIT_ENTITY_INSTANTIATION_FAILED_ID,
+} from '../../../src/constants/eventIds.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/systemEventIds.js';
 
 const testLogger = {
@@ -197,17 +200,22 @@ describe('Integration: Entity Instances Loader and World Initialization', () => 
       getEntityInstanceDefinition: jest.fn((instanceId) =>
         registry.get('entityInstances', instanceId)
       ),
-      getEntityDefinition: jest.fn((defId) => registry.get('entityDefinitions', defId) || new EntityDefinition(defId, { components: {} })),
+      getEntityDefinition: jest.fn(
+        (defId) =>
+          registry.get('entityDefinitions', defId) ||
+          new EntityDefinition(defId, { components: {} })
+      ),
       getComponentDefinition: jest.fn(() => ({})),
-      get: jest.fn().mockReturnValue({}) // For scopeRegistry.initialize
+      get: jest.fn().mockReturnValue({}), // For scopeRegistry.initialize
     };
 
-    const mockValidatedEventDispatcher = createMockValidatedEventDispatcherForIntegration();
+    const mockValidatedEventDispatcher =
+      createMockValidatedEventDispatcherForIntegration();
     const entityManager = new EntityManager({
       logger: testLogger,
       registry,
       dispatcher: mockValidatedEventDispatcher,
-      validator: { validate: () => ({ isValid: true }) }
+      validator: { validate: () => ({ isValid: true }) },
     });
     const mockWorldContext = {};
     const mockScopeRegistry = new ScopeRegistry({ logger: testLogger });
@@ -223,7 +231,9 @@ describe('Integration: Entity Instances Loader and World Initialization', () => 
 
     const result = await worldInitializer.initializeWorldEntities(worldName);
 
-    const expectedInstanceCount = worldData.instances.filter(inst => inst && inst.instanceId).length;
+    const expectedInstanceCount = worldData.instances.filter(
+      (inst) => inst && inst.instanceId
+    ).length;
     expect(result.instantiatedCount).toBe(expectedInstanceCount);
     expect(result.failedCount).toBe(0);
     expect(result.totalProcessed).toBe(worldData.instances.length);
@@ -237,7 +247,10 @@ describe('Integration: Entity Instances Loader and World Initialization', () => 
     const missingInstanceId = 'isekai:instance_with_missing_definition';
 
     const modifiedWorldData = JSON.parse(JSON.stringify(originalWorldData));
-    modifiedWorldData.instances.push({ instanceId: missingInstanceId, definitionId: 'core:character' });
+    modifiedWorldData.instances.push({
+      instanceId: missingInstanceId,
+      definitionId: 'core:character',
+    });
 
     const mockRepository = {
       getWorld: jest.fn(() => modifiedWorldData),
@@ -247,20 +260,28 @@ describe('Integration: Entity Instances Loader and World Initialization', () => 
         }
         return registry.get('entityInstances', instanceId);
       }),
-      getEntityDefinition: jest.fn((defId) => registry.get('entityDefinitions', defId) || new EntityDefinition(defId, { components: {} })),
+      getEntityDefinition: jest.fn(
+        (defId) =>
+          registry.get('entityDefinitions', defId) ||
+          new EntityDefinition(defId, { components: {} })
+      ),
       getComponentDefinition: jest.fn(() => ({})),
-      get: jest.fn().mockReturnValue({}) // For scopeRegistry.initialize
+      get: jest.fn().mockReturnValue({}), // For scopeRegistry.initialize
     };
 
-    const localMockValidatedEventDispatcher = createMockValidatedEventDispatcherForIntegration();
+    const localMockValidatedEventDispatcher =
+      createMockValidatedEventDispatcherForIntegration();
     const warnSpy = jest.spyOn(testLogger, 'warn');
-    const dispatchSpy = jest.spyOn(localMockValidatedEventDispatcher, 'dispatch');
+    const dispatchSpy = jest.spyOn(
+      localMockValidatedEventDispatcher,
+      'dispatch'
+    );
 
     const entityManager = new EntityManager({
       logger: testLogger,
       registry,
       dispatcher: localMockValidatedEventDispatcher,
-      validator: { validate: () => ({ isValid: true }) }
+      validator: { validate: () => ({ isValid: true }) },
     });
     const mockWorldContext = {};
     const mockScopeRegistry = new ScopeRegistry({ logger: testLogger });
@@ -273,20 +294,25 @@ describe('Integration: Entity Instances Loader and World Initialization', () => 
       logger: testLogger,
       scopeRegistry: mockScopeRegistry,
     });
-    
+
     const result = await worldInitializer.initializeWorldEntities(worldName);
 
     // Expected successful instances are those from the original world data that are valid
-    const originalInstanceEntries = JSON.parse(fs.readFileSync(WORLD_FILE, 'utf8')).instances || [];
-    const expectedSuccessfulInstances = originalInstanceEntries.filter(inst => inst && inst.instanceId).length;
-    
+    const originalInstanceEntries =
+      JSON.parse(fs.readFileSync(WORLD_FILE, 'utf8')).instances || [];
+    const expectedSuccessfulInstances = originalInstanceEntries.filter(
+      (inst) => inst && inst.instanceId
+    ).length;
+
     expect(result.instantiatedCount).toBe(expectedSuccessfulInstances);
     expect(result.entities.length).toBe(expectedSuccessfulInstances);
     expect(result.failedCount).toBe(1);
     expect(result.totalProcessed).toBe(modifiedWorldData.instances.length);
 
     expect(warnSpy).toHaveBeenCalledWith(
-      expect.stringContaining(`WorldInitializer (Pass 1): Entity instance definition not found for instance ID: '${missingInstanceId}'. Referenced in world '${worldName}'. Skipping.`)
+      expect.stringContaining(
+        `WorldInitializer (Pass 1): Entity instance definition not found for instance ID: '${missingInstanceId}'. Referenced in world '${worldName}'. Skipping.`
+      )
     );
 
     // Find the specific call for SYSTEM_ERROR_OCCURRED_ID
@@ -297,16 +323,18 @@ describe('Integration: Entity Instances Loader and World Initialization', () => 
     expect(systemErrorCall).toBeDefined(); // Ensure the event was dispatched
 
     if (systemErrorCall) {
-      expect(systemErrorCall[1]).toEqual(expect.objectContaining({
-        message: `Entity instance definition not found for instance ID: '${missingInstanceId}'. Referenced in world '${worldName}'.`,
-        details: expect.objectContaining({
+      expect(systemErrorCall[1]).toEqual(
+        expect.objectContaining({
+          message: `Entity instance definition not found for instance ID: '${missingInstanceId}'. Referenced in world '${worldName}'.`,
+          details: expect.objectContaining({
             statusCode: 404,
             raw: `Context: WorldInitializer._instantiateEntitiesFromWorld, instanceId: ${missingInstanceId}, worldName: ${worldName}`,
             type: 'MissingResource',
             resourceType: 'EntityInstanceDefinition',
             resourceId: missingInstanceId,
+          }),
         })
-      }));
+      );
       expect(systemErrorCall[2]).toBeUndefined(); // safeDispatchError doesn't pass a third arg by default
     }
 
@@ -335,7 +363,8 @@ describe('Integration: EntityInstance componentOverrides are respected during wo
     localContainer = new AppContainer();
     localContainer.register(tokens.ILogger, localLogger);
 
-    localMockValidatedEventDispatcher = createMockValidatedEventDispatcherForIntegration();
+    localMockValidatedEventDispatcher =
+      createMockValidatedEventDispatcherForIntegration();
     localContainer.register(
       tokens.IValidatedEventDispatcher,
       localMockValidatedEventDispatcher
@@ -370,7 +399,9 @@ describe('Integration: EntityInstance componentOverrides are respected during wo
 
     localRegistry = localContainer.resolve(tokens.IDataRegistry);
     if (!localRegistry) {
-      throw new Error("Failed to resolve localRegistry in componentOverrides beforeAll");
+      throw new Error(
+        'Failed to resolve localRegistry in componentOverrides beforeAll'
+      );
     }
 
     // Load the 'isekai' mod data into localRegistry
@@ -385,18 +416,23 @@ describe('Integration: EntityInstance componentOverrides are respected during wo
       new MockSummaryPhase(localLogger),
     ];
     const session = makeSession(phases); // makeSession must be accessible
-    
+
     const modsLoaderForTest = new ModsLoader({
       logger: localLogger,
       cache: localContainer.resolve(tokens.ILoadCache),
       session,
       registry: localRegistry,
     });
-    
+
     // Using a different worldId for this isolated load to avoid potential conflicts if any global state existed.
-    const loadResult = await modsLoaderForTest.loadMods('test-world-co', [MOD_ID_LOCAL]); 
+    const loadResult = await modsLoaderForTest.loadMods('test-world-co', [
+      MOD_ID_LOCAL,
+    ]);
     if (loadResult.incompatibilities > 0) {
-        console.warn("Component Overrides Test: Incompatibilities found during isolated mod load:", loadResult);
+      console.warn(
+        'Component Overrides Test: Incompatibilities found during isolated mod load:',
+        loadResult
+      );
     }
     // Verify that entity instances are loaded, e.g. for 'isekai:hero_override_pos'
     // const heroOverride = localRegistry.get('entityInstances', 'isekai:hero_override_pos');
@@ -407,10 +443,14 @@ describe('Integration: EntityInstance componentOverrides are respected during wo
 
   it('should create entities with per-instance core:position from componentOverrides', async () => {
     if (!localRegistry) {
-        throw new Error("localRegistry is undefined in componentOverrides test. Check nested beforeAll setup.");
+      throw new Error(
+        'localRegistry is undefined in componentOverrides test. Check nested beforeAll setup.'
+      );
     }
-     if (!localContainer) { 
-        throw new Error("localContainer is undefined in componentOverrides test. Check nested beforeAll setup.");
+    if (!localContainer) {
+      throw new Error(
+        'localContainer is undefined in componentOverrides test. Check nested beforeAll setup.'
+      );
     }
 
     const worldData = JSON.parse(fs.readFileSync(WORLD_FILE_LOCAL, 'utf8'));
@@ -419,25 +459,30 @@ describe('Integration: EntityInstance componentOverrides are respected during wo
     const mockRepository = {
       getWorld: jest.fn(() => worldData),
       getEntityInstanceDefinition: jest.fn((instanceId) =>
-        localRegistry.get('entityInstances', instanceId) 
+        localRegistry.get('entityInstances', instanceId)
       ),
       getEntityDefinition: jest.fn((defId) => {
-        const def = localRegistry.get('entityDefinitions', defId); 
+        const def = localRegistry.get('entityDefinitions', defId);
         if (def) return def;
         // Fallback for definitions not found in the 'isekai' mod but potentially referenced
-        return new EntityDefinition(defId, { components: { 'core:position': { locationId: 'default-definition-location' } } });
+        return new EntityDefinition(defId, {
+          components: {
+            'core:position': { locationId: 'default-definition-location' },
+          },
+        });
       }),
       getComponentDefinition: jest.fn(() => ({})), // Assuming component definitions are not the focus here
-      get: jest.fn().mockReturnValue({}) // For scopeRegistry.initialize
+      get: jest.fn().mockReturnValue({}), // For scopeRegistry.initialize
     };
 
     // Use a fresh mock dispatcher for this test if desired, or the one from beforeAll.
-    const currentTestDispatcher = createMockValidatedEventDispatcherForIntegration();
+    const currentTestDispatcher =
+      createMockValidatedEventDispatcherForIntegration();
     const entityManager = new EntityManager({
       logger: testLogger, // Can use global testLogger or localLogger
-      registry: localRegistry, 
+      registry: localRegistry,
       dispatcher: currentTestDispatcher,
-      validator: { validate: () => ({ isValid: true }) }
+      validator: { validate: () => ({ isValid: true }) },
     });
     const mockWorldContext = {};
     const mockScopeRegistry = new ScopeRegistry({ logger: testLogger }); // Or localLogger
@@ -450,10 +495,12 @@ describe('Integration: EntityInstance componentOverrides are respected during wo
       logger: testLogger, // Or localLogger
       scopeRegistry: mockScopeRegistry,
     });
-    
+
     const result = await worldInitializer.initializeWorldEntities(worldName);
-    
-    const expectedInstanceCount = worldData.instances.filter(inst => inst && inst.instanceId).length;
+
+    const expectedInstanceCount = worldData.instances.filter(
+      (inst) => inst && inst.instanceId
+    ).length;
     expect(result.instantiatedCount).toBe(expectedInstanceCount);
     expect(result.failedCount).toBe(0);
     expect(result.totalProcessed).toBe(worldData.instances.length);
@@ -465,24 +512,33 @@ describe('Integration: EntityInstance componentOverrides are respected during wo
 
       const sourceInstanceDef = localRegistry.get('entityInstances', entity.id); // From .instance.json
       expect(sourceInstanceDef).toBeDefined(); // Instance definition for ${entity.id} should exist in localRegistry.
-      
+
       const baseEntityDef = entity.instanceData.definition; // Actual base .definition.json used by the entity instance
       expect(baseEntityDef).toBeDefined(); // Base entity definition for ${entity.definitionId} (linked to instance ${entity.id}) should exist.
 
-      const hasOverridePosition = sourceInstanceDef.componentOverrides && sourceInstanceDef.componentOverrides['core:position'];
-      const hasBasePosition = baseEntityDef.components && baseEntityDef.components['core:position'];
+      const hasOverridePosition =
+        sourceInstanceDef.componentOverrides &&
+        sourceInstanceDef.componentOverrides['core:position'];
+      const hasBasePosition =
+        baseEntityDef.components && baseEntityDef.components['core:position'];
 
       if (hasOverridePosition) {
         // Entity should have core:position from its instance override
         expect(pos).toBeTruthy(); // Entity ${entity.id} (Def: ${entity.definitionId}) should have core:position from override.
-        if (pos) { // Type guard
-          expect(pos.locationId).toBe(sourceInstanceDef.componentOverrides['core:position'].locationId); // Entity ${entity.id} core:position.locationId from override should match.
+        if (pos) {
+          // Type guard
+          expect(pos.locationId).toBe(
+            sourceInstanceDef.componentOverrides['core:position'].locationId
+          ); // Entity ${entity.id} core:position.locationId from override should match.
         }
       } else if (hasBasePosition) {
         // Entity should have core:position from its base definition
         expect(pos).toBeTruthy(); // Entity ${entity.id} (Def: ${entity.definitionId}) should have core:position from base definition.
-        if (pos) { // Type guard
-          expect(pos.locationId).toBe(baseEntityDef.components['core:position'].locationId); // Entity ${entity.id} core:position.locationId from base definition should match.
+        if (pos) {
+          // Type guard
+          expect(pos.locationId).toBe(
+            baseEntityDef.components['core:position'].locationId
+          ); // Entity ${entity.id} core:position.locationId from base definition should match.
         }
       } else {
         // Entity is not expected to have core:position from override or base

@@ -1,6 +1,14 @@
 // tests/unit/initializers/services/initializationService.success.test.js
 import InitializationService from '../../../../src/initializers/services/initializationService.js';
-import { afterEach, beforeEach, describe, expect, it, jest, test } from '@jest/globals';
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  jest,
+  test,
+} from '@jest/globals';
 import { tokens } from '../../../../src/dependencyInjection/tokens.js';
 
 // --- Mocks ---
@@ -74,28 +82,45 @@ describe('InitializationService', () => {
       getAll: jest.fn().mockReturnValue([]), // Return empty array for scopes
     };
     mockScopeRegistry = {
-    initialize: jest.fn(),
-    getScope: jest.fn(),
-    getStats: jest.fn(() => ({ size: 0, initialized: true, scopeNames: [] })),
-  };
+      initialize: jest.fn(),
+      getScope: jest.fn(),
+      getStats: jest.fn(() => ({ size: 0, initialized: true, scopeNames: [] })),
+    };
 
     // General mockContainer setup for most tests, specific tests might override parts
     mockContainer = {
       resolve: jest.fn((token) => {
         switch (token) {
-          case tokens.ModsLoader: return mockModsLoader;
-          case tokens.SystemInitializer: return mockSystemInitializer;
-          case tokens.WorldInitializer: return mockWorldInitializer;
-          case tokens.DomUiFacade: return mockDomUiFacade;
-          case tokens.ILogger: return mockLogger;
-          case tokens.LLMAdapter: return mockLlmAdapter;
-          case tokens.ISchemaValidator: return mockSchemaValidator;
-          case tokens.IConfiguration: return mockConfiguration;
-          case tokens.ISafeEventDispatcher: return { subscribe: jest.fn(), unsubscribe: jest.fn(), dispatch: jest.fn() };
-          case tokens.IEntityManager: return { getEntityInstance: jest.fn() };
-          case tokens.IDataRegistry: return mockDataRegistry;
-          case tokens.IScopeRegistry: return mockScopeRegistry;
-          default: return undefined;
+          case tokens.ModsLoader:
+            return mockModsLoader;
+          case tokens.SystemInitializer:
+            return mockSystemInitializer;
+          case tokens.WorldInitializer:
+            return mockWorldInitializer;
+          case tokens.DomUiFacade:
+            return mockDomUiFacade;
+          case tokens.ILogger:
+            return mockLogger;
+          case tokens.LLMAdapter:
+            return mockLlmAdapter;
+          case tokens.ISchemaValidator:
+            return mockSchemaValidator;
+          case tokens.IConfiguration:
+            return mockConfiguration;
+          case tokens.ISafeEventDispatcher:
+            return {
+              subscribe: jest.fn(),
+              unsubscribe: jest.fn(),
+              dispatch: jest.fn(),
+            };
+          case tokens.IEntityManager:
+            return { getEntityInstance: jest.fn() };
+          case tokens.IDataRegistry:
+            return mockDataRegistry;
+          case tokens.IScopeRegistry:
+            return mockScopeRegistry;
+          default:
+            return undefined;
         }
       }),
     };
@@ -116,23 +141,39 @@ describe('InitializationService', () => {
       mockContainer.resolve.mockImplementation((token) => {
         resolveOrder.push(token);
         switch (token) {
-          case tokens.ModsLoader: return mockModsLoader;
-          case tokens.SystemInitializer: return mockSystemInitializer;
-          case tokens.WorldInitializer: return mockWorldInitializer;
-          case tokens.DomUiFacade: return mockDomUiFacade;
-          case tokens.ILogger: return mockLogger;
-          case tokens.LLMAdapter: return mockLlmAdapter;
-          case tokens.ISchemaValidator: return mockSchemaValidator;
-          case tokens.IConfiguration: return mockConfiguration;
-          case tokens.ISafeEventDispatcher: return { subscribe: jest.fn(), unsubscribe: jest.fn(), dispatch: jest.fn() };
-          case tokens.IEntityManager: return { getEntityInstance: jest.fn() };
-          case tokens.IDataRegistry: return mockDataRegistry;
-          case tokens.IScopeRegistry: return mockScopeRegistry;
+          case tokens.ModsLoader:
+            return mockModsLoader;
+          case tokens.SystemInitializer:
+            return mockSystemInitializer;
+          case tokens.WorldInitializer:
+            return mockWorldInitializer;
+          case tokens.DomUiFacade:
+            return mockDomUiFacade;
+          case tokens.ILogger:
+            return mockLogger;
+          case tokens.LLMAdapter:
+            return mockLlmAdapter;
+          case tokens.ISchemaValidator:
+            return mockSchemaValidator;
+          case tokens.IConfiguration:
+            return mockConfiguration;
+          case tokens.ISafeEventDispatcher:
+            return {
+              subscribe: jest.fn(),
+              unsubscribe: jest.fn(),
+              dispatch: jest.fn(),
+            };
+          case tokens.IEntityManager:
+            return { getEntityInstance: jest.fn() };
+          case tokens.IDataRegistry:
+            return mockDataRegistry;
+          case tokens.IScopeRegistry:
+            return mockScopeRegistry;
           default:
             return undefined;
         }
       });
-      
+
       // Reset specific adapter mocks for each run test
       mockLlmAdapter.init.mockImplementation(async () => {
         mockLlmAdapter.isInitialized.mockReturnValue(true);
@@ -180,7 +221,9 @@ describe('InitializationService', () => {
       expect(mockModsLoader.loadMods).toHaveBeenCalledWith(MOCK_WORLD_NAME);
       expect(mockLlmAdapter.init).toHaveBeenCalledTimes(1);
       expect(mockSystemInitializer.initializeAll).toHaveBeenCalled();
-      expect(mockWorldInitializer.initializeWorldEntities).toHaveBeenCalledWith(MOCK_WORLD_NAME);
+      expect(mockWorldInitializer.initializeWorldEntities).toHaveBeenCalledWith(
+        MOCK_WORLD_NAME
+      );
 
       expect(result.success).toBe(true);
       expect(result.error).toBeUndefined();
@@ -196,4 +239,4 @@ describe('InitializationService', () => {
       );
     });
   });
-}); 
+});

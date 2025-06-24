@@ -79,7 +79,8 @@ max_expression_depth = 4 ;
 - **Examples**:
   - `entities(core:item)[]` - functionally a pass-through, but prepares the set for filtering.
   - `entities(core:item)[][{"==":[...]}]]` - a common pattern to get all items, then iterate and filter them. The first `[]` is the iterator, the second `[...]` is the filter.
-  - 
+  -
+
 ## 4. Filter Syntax
 
 ### JSON Logic Filters

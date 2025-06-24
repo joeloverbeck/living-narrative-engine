@@ -15,23 +15,6 @@
 /** @typedef {import('../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher */ // Added for ActionContext
 
 /**
- * Represents the structured output of the command parser after refactoring.
- * This structure separates the command into verb (implied by actionId),
- * direct object, preposition, and indirect object, facilitating more
- * complex command handling compared to a simple list of targets.
- * This is the target output for the refactored parser and input for
- * downstream consumers.
- *
- * @typedef {object} ParsedCommand
- * @property {string | null} actionId - The unique identifier for the matched action (e.g., 'core:use', 'core:move'). Null if no action could be identified or parsing failed fundamentally.
- * @property {string | null} directObjectPhrase - The identified noun phrase acting as the direct object of the verb. For commands like 'move north', this would be 'north'. For 'take rusty key', this would be 'rusty key'. Null if no direct object is applicable or identified.
- * @property {string | null} preposition - The identified preposition (e.g., 'on', 'in', 'with', 'from', 'to') that links the direct object to the indirect object. Null if no preposition is present or applicable (e.g., single-object commands, commands with no objects).
- * @property {string | null} indirectObjectPhrase - The identified noun phrase acting as the indirect object of the verb, usually following a preposition. For 'put book on table', this would be 'table'. Null if no indirect object is applicable or identified.
- * @property {string} originalInput - The original, unmodified command string exactly as entered by the user. Useful for logging and debugging.
- * @property {string | null} error - An optional error message detailing specific parsing failures (e.g., "Ambiguous command", "Command structure unclear", "Verb requires a target"). Null if parsing was successful or no specific error condition was met.
- */
-
-/**
  * The context object provided to action operationHandlers and target resolvers.
  * It contains the structured command input (`parsedCommand`) and all necessary game state references
  * and dependencies (acting entity, location, managers, event dispatcher) required
@@ -40,7 +23,6 @@
  * @typedef {object} ActionContext
  * @property {Entity} actingEntity - The entity instance (player, NPC, etc.) performing the action.
  * @property {Entity | null} currentLocation - The entity instance representing the acting entity's current location. Can be null.
- * @property {ParsedCommand} [parsedCommand] - The structured output from the command parser. Optional for contexts like discovery or target resolution where full command might not be parsed yet.
  * @property {IGameDataRepository} gameDataRepository - Provides access to loaded game definition data. // <<< CHANGED
  * @property {IEntityManager} entityManager - The manager for creating and tracking entity instances. // <<< CHANGED
  * @property {{dispatch: (eventName: string, eventData: object) => Promise<boolean>}} eventBus - Shim for validated event dispatch.
@@ -65,7 +47,7 @@
  *
  * @typedef {object} ActionResult
  * @property {boolean} success - Indicates whether the action was successfully performed (even if the outcome was negative, e.g., missing an attack). Note: For operationHandlers focusing on intent validation (like `executeMove`, `executeUse`), success often indicates the *intent* was valid and the corresponding event was dispatched, not necessarily that the underlying action fully completed.
- * @property {ActionMessage[]} [messages] - An array of messages intended for internal logging or debugging. Player-facing messages are typically handled via dispatched events. **NOTE:** Usage varies; some operationHandlers still return messages. This might be refined later.
+ * @property {ActionMessage[]} [messages] - An array of messages intended for internal logging or debugging. Player-facing messages are typically handled via dispatched events.
  */
 
 // +++ TICKET 6: Add ActionAttemptPseudoEvent Typedef +++
