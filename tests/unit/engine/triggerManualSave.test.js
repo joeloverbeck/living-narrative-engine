@@ -66,7 +66,7 @@ describeEngineSuite('GameEngine', (context) => {
               bed.getSafeEventDispatcher().dispatch,
             ];
           },
-          2
+          { extraAssertions: 2 }
         )('should dispatch error if %s is unavailable');
 
         it('should successfully save, dispatch all UI events in order, and return success result', async () => {

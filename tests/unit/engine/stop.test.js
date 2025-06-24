@@ -62,7 +62,7 @@ describeEngineSuite('GameEngine', (context) => {
             const dummyDispatch = jest.fn();
             return [bed.getLogger().warn, dummyDispatch];
           },
-          4
+          { extraAssertions: 4 }
         )(
           'should log warning for %s if it is not available during stop, after a successful start'
         );

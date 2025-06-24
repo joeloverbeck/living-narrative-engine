@@ -217,7 +217,7 @@ describeEngineSuite('GameEngine', (context) => {
         });
         return [bed.getLogger().error, bed.getSafeEventDispatcher().dispatch];
       },
-      2
+      { extraAssertions: 2 }
     )(
       'should handle %s unavailability (guard clause) and dispatch UI event directly'
     );
