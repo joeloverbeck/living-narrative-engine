@@ -59,6 +59,7 @@ export class SaveGameUI extends SlotModalBase {
    * @param {DomElementFactory} deps.domElementFactory
    * @param {ISaveLoadService} deps.saveLoadService
    * @param {IValidatedEventDispatcher} deps.validatedEventDispatcher
+   * @param {IUserPrompt} deps.userPrompt
    */
   constructor({
     logger,
@@ -66,6 +67,7 @@ export class SaveGameUI extends SlotModalBase {
     domElementFactory,
     saveLoadService,
     validatedEventDispatcher,
+    userPrompt,
   }) {
     const elementsConfig = buildModalElementsConfig({
       modalElement: '#save-game-screen',
@@ -94,6 +96,13 @@ export class SaveGameUI extends SlotModalBase {
       );
     }
     this.saveLoadService = saveLoadService;
+
+    if (!userPrompt || typeof userPrompt.confirm !== 'function') {
+      throw new Error(
+        `${this._logPrefix} IUserPrompt dependency is missing or invalid.`
+      );
+    }
+    this.userPrompt = userPrompt;
 
     // Elements are now in this.elements, e.g., this.elements.saveNameInputEl
     // _bindUiElements is handled by BoundDomRendererBase
@@ -411,7 +420,7 @@ export class SaveGameUI extends SlotModalBase {
       `Slot ${this.selectedSlotData.slotId + 1}`;
 
     if (
-      !window.confirm(
+      !this.userPrompt.confirm(
         `Are you sure you want to overwrite the existing save "${originalSaveName}" with "${currentSaveName}"?`
       )
     ) {

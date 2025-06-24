@@ -28,6 +28,7 @@ export { ActionResultRenderer } from './actionResultRenderer.js';
 export { default as SaveGameUI } from './saveGameUI.js';
 export { default as LoadGameUI } from './loadGameUI.js';
 export { LlmSelectionModal } from './llmSelectionModal.js';
+export { default as WindowUserPrompt } from './windowUserPrompt.js';
 
 // Engine UI Management
 export * from './engineUIManager.js'; // Assuming this file exists and exports relevant items

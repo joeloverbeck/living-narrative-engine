@@ -37,6 +37,7 @@ describe('SaveGameUI', () => {
   let mockDomElementFactory;
   let mockValidatedEventDispatcher;
   let mockGameEngine;
+  let mockUserPrompt;
 
   /** @type {jest.SpiedFunction<typeof renderSlotItemModule.renderGenericSlotItem>} */
   let renderSlotItemSpy;
@@ -123,6 +124,7 @@ describe('SaveGameUI', () => {
 
     mockGameEngine = { triggerManualSave: jest.fn() };
     mockSaveLoadService = { listManualSaveSlots: jest.fn() };
+    mockUserPrompt = { confirm: jest.fn(() => true) };
 
     saveGameUI = new SaveGameUI({
       logger: mockLogger,
@@ -130,6 +132,7 @@ describe('SaveGameUI', () => {
       domElementFactory: mockDomElementFactory,
       saveLoadService: mockSaveLoadService,
       validatedEventDispatcher: mockValidatedEventDispatcher,
+      userPrompt: mockUserPrompt,
     });
     saveGameUI.init(mockGameEngine);
     renderSlotItemSpy = jest.spyOn(
@@ -400,7 +403,7 @@ describe('SaveGameUI', () => {
     });
 
     it('returns trimmed name when validation and confirmation pass', () => {
-      window.confirm = jest.fn(() => true);
+      mockUserPrompt.confirm.mockReturnValue(true);
       saveGameUI.selectedSlotData = {
         slotId: 0,
         isEmpty: false,
@@ -411,12 +414,12 @@ describe('SaveGameUI', () => {
 
       const result = saveGameUI._validateAndConfirmSave();
 
-      expect(window.confirm).toHaveBeenCalled();
+      expect(mockUserPrompt.confirm).toHaveBeenCalled();
       expect(result).toBe('New Name');
     });
 
     it('returns null if user cancels overwrite confirmation', () => {
-      window.confirm = jest.fn(() => false);
+      mockUserPrompt.confirm.mockReturnValue(false);
       saveGameUI.selectedSlotData = {
         slotId: 0,
         isEmpty: false,
@@ -427,7 +430,7 @@ describe('SaveGameUI', () => {
 
       const result = saveGameUI._validateAndConfirmSave();
 
-      expect(window.confirm).toHaveBeenCalled();
+      expect(mockUserPrompt.confirm).toHaveBeenCalled();
       expect(result).toBeNull();
     });
   });
