@@ -3,6 +3,8 @@ import {
   assertValidActor,
   assertMatchingActor,
   validateContextMethods,
+  validateActorInContext,
+  retrieveStrategyFromContext,
 } from '../../../../../src/turns/states/helpers/validationUtils.js';
 
 const makeActor = (id = 'a1') => ({ id });
@@ -37,5 +39,32 @@ describe('validationUtils', () => {
   test('validateContextMethods returns empty array when all present', () => {
     const ctx = { x() {} };
     expect(validateContextMethods(ctx, ['x'])).toEqual([]);
+  });
+
+  test('validateActorInContext returns actor from context', () => {
+    const actor = makeActor('a1');
+    const ctx = { getActor: () => actor };
+    expect(validateActorInContext(ctx, null, 'State')).toBe(actor);
+  });
+
+  test('validateActorInContext throws when context missing', () => {
+    expect(() => validateActorInContext(null, null, 'State')).toThrow(
+      /missing or invalid/
+    );
+  });
+
+  test('retrieveStrategyFromContext returns strategy', () => {
+    const actor = makeActor('a1');
+    const strategy = { decideAction: () => {} };
+    const ctx = { getStrategy: () => strategy };
+    expect(retrieveStrategyFromContext(ctx, actor, 'State')).toBe(strategy);
+  });
+
+  test('retrieveStrategyFromContext throws when strategy invalid', () => {
+    const actor = makeActor('a1');
+    const ctx = { getStrategy: () => null };
+    expect(() => retrieveStrategyFromContext(ctx, actor, 'State')).toThrow(
+      /No valid IActorTurnStrategy/
+    );
   });
 });
