@@ -116,7 +116,7 @@ describeTurnManagerSuite('TurnManager - Lifecycle (Start/Stop)', (getBed) => {
 
     it('should handle advanceTurn failure gracefully', async () => {
       const advanceError = new Error('Turn advancement failed');
-      advanceTurnSpy.mockRejectedValue(advanceError);
+      advanceTurnSpy = testBed.mockStartFailure(advanceError);
 
       await expect(testBed.turnManager.start()).rejects.toThrow(
         'Turn advancement failed'

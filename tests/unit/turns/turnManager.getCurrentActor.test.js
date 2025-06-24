@@ -140,8 +140,7 @@ describeTurnManagerSuite('TurnManager', (getBed) => {
       expect(testBed.turnManager.getCurrentActor()).toBe(mockActor);
 
       // Simulate queue becoming empty
-      testBed.mocks.turnOrderService.isEmpty.mockResolvedValue(true);
-      testBed.mocks.turnOrderService.getNextEntity.mockResolvedValue(null);
+      testBed.mockEmptyQueue();
       testBed.setActiveEntities();
 
       // Simulate turn ending

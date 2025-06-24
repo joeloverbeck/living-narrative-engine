@@ -261,6 +261,21 @@ export class TurnManagerTestBed extends EventCaptureMixin(
   }
 
   /**
+   * Configures {@link TurnManager.start} to fail by rejecting from
+   * {@link TurnManager.advanceTurn}.
+   *
+   * @param {Error} [error] - Optional error to reject with.
+   * @returns {import('@jest/globals').Mock} Spy on advanceTurn that rejects.
+   */
+  mockStartFailure(error = new Error('Start failure')) {
+    this.setupMockHandlerResolver();
+    const spy = this.spyOnAdvanceTurn();
+    spy.mockRejectedValue(error);
+    this.resetMocks();
+    return spy;
+  }
+
+  /**
    * Calls advanceTurn then flushes timers/promises.
    *
    * @returns {Promise<void>} Resolves when all timers are flushed.
