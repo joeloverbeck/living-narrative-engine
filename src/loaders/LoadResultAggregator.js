@@ -5,6 +5,8 @@
  * per mod and across all mods.
  */
 
+import { cloneTotals } from '../utils/cloneTotals.js';
+
 /**
  * Structure to hold aggregated results per content type.
  *
@@ -44,23 +46,7 @@ export class LoadResultAggregator {
    */
   constructor(totalCounts) {
     // Clone the totals object to ensure immutability
-    this.#totalCounts = this.#cloneTotals(totalCounts);
-  }
-
-  /**
-   * Clones the totals object using structuredClone if available (Node ≥17),
-   * otherwise falls back to JSON.parse(JSON.stringify(...)).
-   *
-   * @private
-   * @param {TotalResultsSummary} totals - The totals object to clone.
-   * @returns {TotalResultsSummary} A deep clone of the totals object.
-   */
-  #cloneTotals(totals) {
-    if (typeof structuredClone !== 'undefined') {
-      return structuredClone(totals);
-    } else {
-      return JSON.parse(JSON.stringify(totals));
-    }
+    this.#totalCounts = cloneTotals(totalCounts);
   }
 
   /**
@@ -69,7 +55,7 @@ export class LoadResultAggregator {
    * @returns {TotalResultsSummary} A copy of the current total counts.
    */
   getTotalCounts() {
-    return this.#cloneTotals(this.#totalCounts);
+    return cloneTotals(this.#totalCounts);
   }
 
   /**
