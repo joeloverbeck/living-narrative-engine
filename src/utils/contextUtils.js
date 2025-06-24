@@ -7,12 +7,6 @@ import { resolveEntityNameFallback } from './entityNameFallbackUtils.js';
 
 // Re-export for backward compatibility
 export { resolveEntityNameFallback };
-
-// Expose internals for testing purposes
-export const _extractContextPath = PlaceholderResolver.extractContextPath;
-export const _resolvePlaceholderPath =
-  PlaceholderResolver.resolvePlaceholderPath;
-
 // PLACEHOLDER_FIND_REGEX and FULL_STRING_PLACEHOLDER_REGEX are imported from
 // placeholderResolverUtils.js to keep placeholder matching logic consistent.
 
