@@ -80,8 +80,10 @@ class LoadGameUI extends SlotModalBase {
       elementsConfig,
       domElementFactory,
       datasetKey: DATASET_SLOT_IDENTIFIER,
-      confirmButtonKey: 'confirmLoadButtonEl',
-      deleteButtonKey: 'deleteSaveButtonEl',
+      buttonKeys: {
+        confirmKey: 'confirmLoadButtonEl',
+        deleteKey: 'deleteSaveButtonEl',
+      },
     });
     if (
       !saveLoadService ||

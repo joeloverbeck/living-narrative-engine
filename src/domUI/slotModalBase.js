@@ -18,6 +18,15 @@ import { DATASET_SLOT_ID } from '../constants/datasetKeys.js';
  */
 
 /**
+ * Configuration object specifying the element keys for confirm and delete buttons.
+ * Both properties are optional.
+ *
+ * @typedef {object} SlotActionButtonKeys
+ * @property {string} [confirmKey] - Key of the confirm button element.
+ * @property {string} [deleteKey] - Key of the delete button element.
+ */
+
+/**
  * @class SlotModalBase
  * @augments BaseModalRenderer
  * @abstract
@@ -69,15 +78,20 @@ export class SlotModalBase extends BaseModalRenderer {
    *
    * @param {object} deps - Constructor dependencies.
    * @param {string} deps.datasetKey - Dataset key storing slot identifiers.
-   * @param {string} [deps.confirmButtonKey] - Key for confirm button element.
-   * @param {string} [deps.deleteButtonKey] - Key for delete button element.
+   * @param {SlotActionButtonKeys} [deps.buttonKeys] - Optional configuration for action button element keys.
    * @param {...any} deps.rest - Remaining dependencies forwarded to BaseModalRenderer.
    */
-  constructor({ datasetKey, confirmButtonKey, deleteButtonKey, ...rest }) {
+  constructor({ datasetKey, buttonKeys = {}, ...rest }) {
     super(rest);
     this._datasetKey = datasetKey;
-    this._confirmButtonKey = confirmButtonKey;
-    this._deleteButtonKey = deleteButtonKey;
+    if (typeof buttonKeys !== 'object' || buttonKeys === null) {
+      throw new Error(
+        `${this._logPrefix} 'buttonKeys' must be an object when provided.`
+      );
+    }
+    const { confirmKey, deleteKey } = buttonKeys;
+    this._confirmButtonKey = confirmKey;
+    this._deleteButtonKey = deleteKey;
   }
 
   /**
