@@ -3,6 +3,7 @@ import jsonLogic from 'json-logic-js';
 import { validateServiceDeps } from '../utils/serviceInitializerUtils.js';
 import { BaseService } from '../utils/serviceBase.js';
 import { warnOnBracketPaths } from '../utils/jsonLogicUtils.js';
+import { resolveConditionRefs } from '../utils/conditionRefResolver.js';
 
 // --- JSDoc Imports for Type Hinting ---
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
@@ -63,42 +64,18 @@ class JsonLogicEvaluationService extends BaseService {
    * @returns {object | any} The fully resolved rule.
    */
   #resolveRule(rule) {
-    if (!rule || typeof rule !== 'object') {
-      return rule;
-    }
-
-    if (Array.isArray(rule)) {
-      return rule.map((item) => this.#resolveRule(item));
-    }
-
-    if ('condition_ref' in rule) {
-      const refId = rule.condition_ref;
-
-      const conditionDef =
-        this.#gameDataRepository.getConditionDefinition(refId);
-
-      if (!conditionDef) {
-        this.#logger.error(
-          `Condition reference "${refId}" not found in data registry.`
-        );
+    try {
+      return resolveConditionRefs(rule, this.#gameDataRepository, this.#logger);
+    } catch (err) {
+      if (
+        err.message.startsWith('Circular condition_ref detected') ||
+        err.message.startsWith('Could not resolve condition_ref')
+      ) {
+        this.#logger.error(err.message);
         return { '==': [true, false] };
       }
-
-      return this.#resolveRule(conditionDef.logic);
+      throw err;
     }
-
-    const resolvedRule = {};
-    for (const key in rule) {
-      if (Object.prototype.hasOwnProperty.call(rule, key)) {
-        const value = rule[key];
-        if (Array.isArray(value)) {
-          resolvedRule[key] = value.map((item) => this.#resolveRule(item));
-        } else {
-          resolvedRule[key] = this.#resolveRule(value);
-        }
-      }
-    }
-    return resolvedRule;
   }
 
   /**
