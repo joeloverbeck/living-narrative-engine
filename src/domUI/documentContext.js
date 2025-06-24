@@ -1,5 +1,4 @@
 // src/domUI/documentContext.js
-/* eslint-disable no-console */
 /**
  * @file Implements DocumentContext for abstracting DOM access.
  * Provides a consistent interface for querying and creating DOM elements,
@@ -7,6 +6,9 @@
  */
 
 /** @typedef {import('../interfaces/IDocumentContext.js').IDocumentContext} IDocumentContext */
+/** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
+
+import ConsoleLogger from '../logging/consoleLogger.js';
 
 /**
  * Provides a consistent way to access document querySelector and createElement,
@@ -27,7 +29,7 @@
  * @returns {Document | null} The detected document context or `null` if none is
  * available.
  */
-export function detectDocumentContext(root) {
+export function detectDocumentContext(root, logger = new ConsoleLogger()) {
   let detected = null;
   let contextFound = false;
 
@@ -84,7 +86,7 @@ export function detectDocumentContext(root) {
 
   if (!contextFound) {
     detected = null;
-    console.error(
+    logger.error(
       '[DocumentContext] Construction failed: Could not determine a valid document context. Ensure a valid document object is passed or available globally when DocumentContext is instantiated.'
     );
   }
@@ -102,6 +104,12 @@ class DocumentContext {
   #docContext = null;
 
   /**
+   * @private
+   * @type {ILogger}
+   */
+  #logger;
+
+  /**
    * Creates an instance of DocumentContext.
    * It determines the appropriate document object to use based on the presence of a root element
    * or the availability of `global.document`.
@@ -110,8 +118,9 @@ class DocumentContext {
    * @param {HTMLElement | Document | null | undefined} [root] - Optional root element or document. If it's a Document, it's used directly.
    * If it's a valid HTMLElement, its ownerDocument will be used. Otherwise, it falls back to the global `document`.
    */
-  constructor(root) {
-    this.#docContext = detectDocumentContext(root);
+  constructor(root, logger = new ConsoleLogger()) {
+    this.#logger = logger;
+    this.#docContext = detectDocumentContext(root, logger);
   }
 
   /**
@@ -125,7 +134,7 @@ class DocumentContext {
    */
   query(selector) {
     if (!this.#docContext) {
-      console.warn(
+      this.#logger.warn(
         `[DocumentContext] query('${selector}') attempted, but no document context is available.`
       );
       return null;
@@ -133,7 +142,7 @@ class DocumentContext {
     try {
       return this.#docContext.querySelector(selector);
     } catch (error) {
-      console.error(
+      this.#logger.error(
         `[DocumentContext] Error during query('${selector}'):`,
         error
       );
@@ -151,7 +160,7 @@ class DocumentContext {
    */
   create(tagName) {
     if (!this.#docContext) {
-      console.warn(
+      this.#logger.warn(
         `[DocumentContext] create('${tagName}') attempted, but no document context is available.`
       );
       return null;
@@ -159,7 +168,7 @@ class DocumentContext {
     try {
       return this.#docContext.createElement(tagName);
     } catch (error) {
-      console.error(
+      this.#logger.error(
         `[DocumentContext] Error during create('${tagName}'):`,
         error
       );
