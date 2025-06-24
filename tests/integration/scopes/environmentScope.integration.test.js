@@ -115,6 +115,7 @@ describe('Scope Integration Tests', () => {
       getEntityIdsForScopesFn: getEntityIdsForScopesWithEngine,
       safeEventDispatcher,
       scopeRegistry,
+      scopeEngine,
     });
   });
 

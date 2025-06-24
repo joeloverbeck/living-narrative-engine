@@ -35,6 +35,10 @@ describe('ActionDiscoveryService params exposure', () => {
       getScope: jest.fn(),
       // Add other methods if they are called, for now a basic mock
     };
+    const mockScopeEngine = {
+      resolve: jest.fn(() => new Set(['rat123'])),
+      setMaxDepth: jest.fn(),
+    };
 
     service = new ActionDiscoveryService({
       gameDataRepository: gameDataRepo,
@@ -45,6 +49,7 @@ describe('ActionDiscoveryService params exposure', () => {
       logger,
       safeEventDispatcher,
       scopeRegistry: mockScopeRegistry,
+      scopeEngine: mockScopeEngine,
     });
   });
 

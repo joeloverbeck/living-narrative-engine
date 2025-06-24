@@ -50,6 +50,10 @@ describe('ActionDiscoveryService - processActionDefinition', () => {
     mockScopeRegistry = {
       getScope: jest.fn(),
     };
+    const mockScopeEngine = {
+      resolve: jest.fn(() => new Set()),
+      setMaxDepth: jest.fn(),
+    };
     service = new ActionDiscoveryService({
       gameDataRepository: gameDataRepo,
       entityManager,
@@ -59,6 +63,7 @@ describe('ActionDiscoveryService - processActionDefinition', () => {
       logger,
       safeEventDispatcher,
       scopeRegistry: mockScopeRegistry,
+      scopeEngine: mockScopeEngine,
     });
   });
 
@@ -125,7 +130,10 @@ describe('ActionDiscoveryService - processActionDefinition', () => {
         warn: expect.any(Function),
         error: expect.any(Function),
       }),
-      undefined,
+      expect.objectContaining({
+        resolve: expect.any(Function),
+        setMaxDepth: expect.any(Function),
+      }),
       expect.objectContaining({
         dispatch: expect.any(Function),
       })

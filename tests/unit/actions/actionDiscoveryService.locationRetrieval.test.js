@@ -77,6 +77,11 @@ describe('ActionDiscoveryService – scoped discovery', () => {
     getScope: jest.fn(),
   };
 
+  const mockScopeEngine = {
+    resolve: jest.fn(() => new Set(['loc-2', 'loc-3'])),
+    setMaxDepth: jest.fn(),
+  };
+
   const service = new ActionDiscoveryService({
     gameDataRepository,
     entityManager,
@@ -86,6 +91,7 @@ describe('ActionDiscoveryService – scoped discovery', () => {
     getEntityIdsForScopesFn,
     safeEventDispatcher,
     scopeRegistry,
+    scopeEngine: mockScopeEngine,
   });
 
   /** Bare-bones actor / context objects */

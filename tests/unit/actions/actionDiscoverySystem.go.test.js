@@ -194,6 +194,11 @@ describe('ActionDiscoveryService - Go Action (Fixed State)', () => {
       logger: mockLogger,
     };
 
+    const mockScopeEngine = {
+      resolve: jest.fn(() => new Set([TOWN_INSTANCE_ID])),
+      setMaxDepth: jest.fn(),
+    };
+
     actionDiscoveryService = new ActionDiscoveryService({
       gameDataRepository: mockGameDataRepo,
       entityManager: mockEntityManager,
@@ -203,6 +208,7 @@ describe('ActionDiscoveryService - Go Action (Fixed State)', () => {
       getEntityIdsForScopesFn: mockGetEntityIdsForScopesFn,
       safeEventDispatcher: mockSafeEventDispatcher,
       scopeRegistry: mockScopeRegistry,
+      scopeEngine: mockScopeEngine,
     });
   });
 
@@ -248,7 +254,10 @@ describe('ActionDiscoveryService - Go Action (Fixed State)', () => {
         warn: expect.any(Function),
         error: expect.any(Function),
       }),
-      undefined, // scopeEngine parameter
+      expect.objectContaining({
+        resolve: expect.any(Function),
+        setMaxDepth: expect.any(Function),
+      }), // scopeEngine parameter
       expect.objectContaining({
         dispatch: expect.any(Function),
       }) // dispatcher parameter
