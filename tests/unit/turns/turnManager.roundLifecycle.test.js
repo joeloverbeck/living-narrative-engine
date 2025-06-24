@@ -4,7 +4,6 @@
 import { describeRunningTurnManagerSuite } from '../../common/turns/turnManagerTestBed.js';
 import { flushPromisesAndTimers } from '../../common/jestHelpers.js';
 import {
-  waitForCurrentActor,
   expectSystemErrorDispatch,
   triggerTurnEndedAndFlush,
 } from '../../common/turns/turnManagerTestUtils.js';
@@ -158,7 +157,7 @@ describeRunningTurnManagerSuite(
       test('advances through both actors', async () => {
         expect(testBed.turnManager.getCurrentActor()?.id).toBe(ai1.id);
         await triggerTurnEndedAndFlush(testBed, ai1.id);
-        const found = await waitForCurrentActor(testBed, ai2.id);
+        const found = await testBed.waitForCurrentActor(ai2.id);
         expect(found).toBe(true);
       });
     });

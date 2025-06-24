@@ -17,7 +17,8 @@ import { createServiceFactoryMixin } from '../serviceFactoryTestBedMixin.js';
 import { createDescribeTestBedSuite } from '../describeSuite.js';
 import { createTestBedHelpers } from '../createTestBedHelpers.js';
 import { flushPromisesAndTimers } from '../jestHelpers.js';
-import { createDefaultActors } from './testActors.js';
+import { EventCaptureMixin } from './eventCaptureMixin.js';
+import { EntitySetupMixin } from './entitySetupMixin.js';
 
 /**
  * @description Utility class that instantiates {@link TurnManager} with mocked
@@ -61,8 +62,8 @@ const TurnManagerFactoryMixin = createServiceFactoryMixin(
   'turnManager'
 );
 
-export class TurnManagerTestBed extends SpyTrackerMixin(
-  TurnManagerFactoryMixin()
+export class TurnManagerTestBed extends EventCaptureMixin(
+  EntitySetupMixin(SpyTrackerMixin(TurnManagerFactoryMixin()))
 ) {
   constructor(overrides = {}) {
     super(overrides);
@@ -177,32 +178,6 @@ export class TurnManagerTestBed extends SpyTrackerMixin(
   }
 
   /**
-   * Populates the mocked entity manager's activeEntities map.
-   *
-   * @param {...{ id: string }} entities - Entities to add.
-   * @returns {void}
-   */
-  setActiveEntities(...entities) {
-    const map = this.entityManager.activeEntities;
-    map.clear();
-    for (const e of entities) {
-      map.set(e.id, e);
-    }
-  }
-
-  /**
-   * Adds a set of default actors to the mocked entity manager.
-   *
-   * @returns {{ ai1: object, ai2: object, player: object }}
-   *   Object containing the created actors.
-   */
-  addDefaultActors() {
-    const actors = createDefaultActors();
-    this.setActiveEntities(actors.ai1, actors.ai2, actors.player);
-    return actors;
-  }
-
-  /**
    * Starts the manager with default actors and flushes pending tasks.
    *
    * @returns {Promise<{ ai1: object, ai2: object, player: object }>}
@@ -212,42 +187,6 @@ export class TurnManagerTestBed extends SpyTrackerMixin(
     const actors = this.addDefaultActors();
     await this.startAndFlush();
     return actors;
-  }
-
-  /**
-   * Configures the turn order service to return the provided actor next.
-   *
-   * @param {object} actor - Actor entity to return.
-   * @returns {void}
-   */
-  mockNextActor(actor) {
-    this.mocks.turnOrderService.isEmpty.mockResolvedValue(false);
-    this.mocks.turnOrderService.getNextEntity.mockResolvedValue(actor);
-  }
-
-  /**
-   * Configures the turn order service to return the provided actors
-   * sequentially for successive calls.
-   *
-   * @param {...object} actors - Actor entities to return in order.
-   * @returns {void}
-   */
-  mockActorSequence(...actors) {
-    this.mocks.turnOrderService.isEmpty.mockResolvedValue(false);
-    let index = 0;
-    this.mocks.turnOrderService.getNextEntity.mockImplementation(() =>
-      Promise.resolve(index < actors.length ? actors[index++] : null)
-    );
-  }
-
-  /**
-   * Configures the turn order service to represent an empty queue.
-   *
-   * @returns {void}
-   */
-  mockEmptyQueue() {
-    this.mocks.turnOrderService.isEmpty.mockResolvedValue(true);
-    this.mocks.turnOrderService.getNextEntity.mockResolvedValue(null);
   }
 
   /**
@@ -319,55 +258,6 @@ export class TurnManagerTestBed extends SpyTrackerMixin(
     spy.mockResolvedValue(undefined);
     this.resetMocks();
     return spy;
-  }
-
-  /**
-   * Retrieves the subscribed callback for the given event id.
-   *
-   * @param {string} eventId - Event identifier.
-   * @returns {Function|undefined} Handler subscribed to the event.
-   */
-  captureHandler(eventId) {
-    const call = this.dispatcher.subscribe.mock.calls.find(
-      ([id]) => id === eventId
-    );
-    return call ? call[1] : undefined;
-  }
-
-  /**
-   * Sets up the dispatcher to capture subscriptions for the specified event.
-   *
-   * @param {string} eventId - Event identifier to capture.
-   * @returns {{ unsubscribe: jest.Mock, handler: (() => void)|null }} Captured
-   *   unsubscribe mock and subscribed handler once registration occurs.
-   */
-  captureSubscription(eventId) {
-    let captured = null;
-    const unsubscribe = jest.fn();
-    this.dispatcher.subscribe.mockImplementation((id, handler) => {
-      if (id === eventId) {
-        captured = handler;
-      }
-      return unsubscribe;
-    });
-
-    return {
-      get handler() {
-        return captured;
-      },
-      unsubscribe,
-    };
-  }
-
-  /**
-   * Triggers an event on the internal dispatcher.
-   *
-   * @param {string} eventType - Event name.
-   * @param {object} payload - Event payload.
-   * @returns {void}
-   */
-  trigger(eventType, payload) {
-    this.dispatcher._triggerEvent(eventType, { type: eventType, payload });
   }
 
   /**
