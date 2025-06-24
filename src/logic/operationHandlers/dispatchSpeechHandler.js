@@ -9,6 +9,7 @@
 import BaseOperationHandler from './baseOperationHandler.js';
 import { DISPLAY_SPEECH_ID } from '../../constants/eventIds.js';
 import { assertParamsObject } from '../../utils/handlerUtils/indexUtils.js';
+import { validateStringParam } from '../../utils/handlerUtils/paramsUtils.js';
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 
 /**
@@ -52,23 +53,25 @@ class DispatchSpeechHandler extends BaseOperationHandler {
     const logger = this.getLogger(executionContext);
     if (!assertParamsObject(params, logger, 'DISPATCH_SPEECH')) return;
 
-    if (
-      typeof params.entity_id !== 'string' ||
-      !params.entity_id.trim() ||
-      typeof params.speech_content !== 'string'
-    ) {
-      safeDispatchError(
-        this.#dispatcher,
-        'DISPATCH_SPEECH: invalid parameters.',
-        { params },
-        logger
-      );
-      return;
-    }
+    const entityId = validateStringParam(
+      params.entity_id,
+      'entity_id',
+      logger,
+      this.#dispatcher
+    );
+    if (!entityId) return;
+
+    const speechContent = validateStringParam(
+      params.speech_content,
+      'speech_content',
+      logger,
+      this.#dispatcher
+    );
+    if (!speechContent) return;
 
     const payload = {
-      entityId: params.entity_id.trim(),
-      speechContent: params.speech_content,
+      entityId,
+      speechContent,
     };
 
     if (params.allow_html !== undefined) {

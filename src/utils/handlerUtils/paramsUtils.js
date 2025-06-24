@@ -29,4 +29,27 @@ export function assertParamsObject(params, logger, opName) {
   return false;
 }
 
+/**
+ * @description Validate that a parameter is a non-empty string.
+ * If validation passes, the trimmed string is returned. Otherwise
+ * an error is dispatched and `null` is returned.
+ * @param {*} value - The value to validate.
+ * @param {string} name - Parameter name for error messages.
+ * @param {import('../../interfaces/coreServices.js').ILogger} logger - Logger used for error reporting.
+ * @param {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} dispatcher - Dispatcher for error events.
+ * @returns {string|null} The trimmed string or `null` if invalid.
+ */
+export function validateStringParam(value, name, logger, dispatcher) {
+  if (typeof value === 'string' && value.trim()) {
+    return value.trim();
+  }
+  safeDispatchError(
+    dispatcher,
+    `Invalid "${name}" parameter`,
+    { [name]: value },
+    logger
+  );
+  return null;
+}
+
 // deprecated default export removed in favor of named exports only
