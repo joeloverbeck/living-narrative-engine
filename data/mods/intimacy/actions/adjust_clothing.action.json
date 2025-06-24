@@ -4,12 +4,12 @@
   "commandVerb": "adjust-clothing",
   "name": "Adjust Clothing",
   "description": "Smooth their collar or adjust a displaced garment with possessive care.",
-  "scope": "environment",
+  "scope": "close_actors",
   "template": "adjust {target}'s clothing",
   "prerequisites": [
     {
       "logic": {
-        "condition_ref": "intimacy:target-is-actors-closeness-partner"
+          "condition_ref": "intimacy:actor-is-in-closeness"
       },
       "failure_message": "You can only do that with the person you are currently close to."
     }

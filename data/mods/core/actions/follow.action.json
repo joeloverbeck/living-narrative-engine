@@ -4,7 +4,7 @@
   "commandVerb": "follow",
   "name": "Follow",
   "description": "Commands your character to follow the specified target, becoming their companion and moving with them.",
-  "scope": "environment",
+  "scope": "potential_leaders",
   "template": "follow {target}",
   "prerequisites": [
     {
@@ -15,7 +15,9 @@
     },
     {
       "logic": {
-        "condition_ref": "core:actor-can-follow-target"
+        "not": {
+          "condition_ref": "core:actor-is-following"
+        }
       },
       "failure_message": "You cannot follow that target right now."
     }

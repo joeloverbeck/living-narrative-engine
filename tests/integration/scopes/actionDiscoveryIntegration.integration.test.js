@@ -25,6 +25,7 @@ import {
   POSITION_COMPONENT_ID,
   NAME_COMPONENT_ID,
   EXITS_COMPONENT_ID,
+  ACTOR_COMPONENT_ID,
 } from '../../../src/constants/componentIds.js';
 import fs from 'fs';
 import path from 'path';
@@ -80,7 +81,14 @@ describe('Scope Integration Tests', () => {
     const directionsScopeContent = fs.readFileSync(
       path.resolve(
         __dirname,
-        '../../../data/mods/core/scopes/directions.scope'
+        '../../../data/mods/core/scopes/clear_directions.scope'
+      ),
+      'utf8'
+    );
+    const potentialLeadersScopeContent = fs.readFileSync(
+      path.resolve(
+        __dirname,
+        '../../../data/mods/core/scopes/potential_leaders.scope'
       ),
       'utf8'
     );
@@ -95,19 +103,24 @@ describe('Scope Integration Tests', () => {
     );
     const directionDefs = parseScopeDefinitions(
       directionsScopeContent,
-      'directions.scope'
+      'clear_directions.scope'
+    );
+    const potentialLeadersDefs = parseScopeDefinitions(
+      potentialLeadersScopeContent,
+      'potential_leaders.scope'
     );
 
     scopeRegistry.initialize({
       followers: { expr: followerDefs.get('followers') },
       environment: { expr: environmentDefs.get('environment') },
-      directions: { expr: directionDefs.get('directions') },
+      clear_directions: { expr: directionDefs.get('clear_directions') },
+      potential_leaders: { expr: potentialLeadersDefs.get('potential_leaders') },
     });
 
     // Create a real scope engine
     scopeEngine = new ScopeEngine();
 
-    jsonLogicEval = new JsonLogicEvaluationService({ logger });
+    // jsonLogicEval will be created after gameDataRepository
 
     const registry = new InMemoryDataRegistry();
     registry.store('actions', dismissAction.id, dismissAction);
@@ -115,7 +128,59 @@ describe('Scope Integration Tests', () => {
     registry.store('actions', goAction.id, goAction);
     registry.store('actions', waitAction.id, waitAction);
 
+    // Load required conditions for the potential_leaders scope
+    registry.store('conditions', 'core:entity-at-location', {
+      id: 'core:entity-at-location',
+      description: "True when the entity's current locationId matches the location under evaluation.",
+      logic: {
+        '==': [
+          { var: 'entity.components.core:position.locationId' },
+          { var: 'location.id' }
+        ]
+      }
+    });
+    registry.store('conditions', 'core:entity-is-not-actor', {
+      id: 'core:entity-is-not-actor',
+      description: 'True when the entity being evaluated is **not** the actor entity.',
+      logic: {
+        '!=': [
+          { var: 'entity.id' },
+          { var: 'actor.id' }
+        ]
+      }
+    });
+    registry.store('conditions', 'core:entity-has-actor-component', {
+      id: 'core:entity-has-actor-component',
+      description: "Checks that the entity has the 'core:actor' component.",
+      logic: {
+        '!!': { var: 'entity.components.core:actor' }
+      }
+    });
+    registry.store('conditions', 'core:entity-is-following-actor', {
+      id: 'core:entity-is-following-actor',
+      description: "Checks if the entity's 'following' component points to the actor's ID.",
+      logic: {
+        '==': [
+          { var: 'entity.components.core:following.leaderId' },
+          { var: 'actor.id' }
+        ]
+      }
+    });
+    
+    // Load condition required for the go action
+    registry.store('conditions', 'core:actor-is-not-rooted', {
+      id: 'core:actor-is-not-rooted',
+      description: "Checks if the actor is able to move (i.e., not rooted or movement-locked).",
+      logic: {
+        '==': [
+          { var: 'actor.components.core:movement.locked' },
+          false
+        ]
+      }
+    });
+
     gameDataRepository = new GameDataRepository(registry, logger);
+    jsonLogicEval = new JsonLogicEvaluationService({ logger, gameDataRepository });
 
     const domainContextCompatibilityChecker = { check: () => true };
 
@@ -174,6 +239,10 @@ describe('Scope Integration Tests', () => {
           id: followerId,
           components: { [NAME_COMPONENT_ID]: { text: 'Follower' } },
         },
+        {
+          id: 'room1',
+          components: { [NAME_COMPONENT_ID]: { text: 'Room 1' } },
+        },
       ];
 
       // Use setEntities to configure state for this specific test
@@ -183,6 +252,7 @@ describe('Scope Integration Tests', () => {
       const context = {
         entityManager,
         jsonLogicEval,
+        currentLocation: entityManager.getEntityInstance('room1'),
         actingEntity: actorEntity,
       };
       const result = await actionDiscoveryService.getValidActions(
@@ -200,7 +270,7 @@ describe('Scope Integration Tests', () => {
       expect(targetIds).toContain(followerId);
     });
 
-    it('should discover follow action with environment scope', async () => {
+    it('should discover follow action with potential_leaders scope', async () => {
       const actorId = 'actor1';
       const targetId = 'target1';
       const room1Id = 'room1';
@@ -218,6 +288,7 @@ describe('Scope Integration Tests', () => {
           components: {
             [NAME_COMPONENT_ID]: { text: 'Target' },
             [POSITION_COMPONENT_ID]: { locationId: room1Id },
+            [ACTOR_COMPONENT_ID]: {},
           },
         },
         {
@@ -232,7 +303,7 @@ describe('Scope Integration Tests', () => {
       const context = {
         entityManager,
         jsonLogicEval,
-        location: entityManager.getEntityInstance(room1Id),
+        currentLocation: entityManager.getEntityInstance(room1Id),
         actingEntity: actorEntity,
       };
       const result = await actionDiscoveryService.getValidActions(
@@ -250,7 +321,7 @@ describe('Scope Integration Tests', () => {
       expect(targetIds).toContain(targetId);
     });
 
-    it('should discover go action with directions scope', async () => {
+    it('should discover go action with clear_directions scope', async () => {
       const actorId = 'actor1';
       const room1Id = 'room1';
       const room2Id = 'room2';
@@ -260,6 +331,7 @@ describe('Scope Integration Tests', () => {
           components: {
             [NAME_COMPONENT_ID]: { text: 'Actor' },
             [POSITION_COMPONENT_ID]: { locationId: room1Id },
+            'core:movement': { locked: false },
           },
         },
         {
@@ -281,7 +353,7 @@ describe('Scope Integration Tests', () => {
       const context = {
         entityManager,
         jsonLogicEval,
-        location: entityManager.getEntityInstance(room1Id),
+        currentLocation: entityManager.getEntityInstance(room1Id),
         actingEntity: actorEntity,
       };
       const result = await actionDiscoveryService.getValidActions(
@@ -308,6 +380,7 @@ describe('Scope Integration Tests', () => {
           components: {
             [NAME_COMPONENT_ID]: { text: 'Actor' },
             [POSITION_COMPONENT_ID]: { locationId: room1Id },
+            'core:movement': { locked: false },
           },
         },
         {
@@ -322,7 +395,7 @@ describe('Scope Integration Tests', () => {
       const context = {
         entityManager,
         jsonLogicEval,
-        location: entityManager.getEntityInstance(room1Id),
+        currentLocation: entityManager.getEntityInstance(room1Id),
         actingEntity: actorEntity,
       };
       const result = await actionDiscoveryService.getValidActions(

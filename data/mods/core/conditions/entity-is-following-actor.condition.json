@@ -1,0 +1,16 @@
+{
+    "$schema": "http://example.com/schemas/condition.schema.json",
+    "id": "core:entity-is-following-actor",
+    "description": "Checks if the entity's 'following' component points to the actor's ID.",
+    "logic": {
+      "==": [
+        {
+          "var": "entity.components.core:following.leaderId"
+        },
+        {
+          "var": "actor.id"
+        }
+      ]
+    }
+  }
+  

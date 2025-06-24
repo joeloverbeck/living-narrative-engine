@@ -4,14 +4,7 @@
   "commandVerb": "thumb-wipe-cheek",
   "name": "Thumb Wipe Cheek",
   "description": "Gently wipe the target's cheek with your thumb.",
-  "scope": "environment",
+  "scope": "close_actors",
   "template": "wipe {target}'s cheek with your thumb",
-  "prerequisites": [
-    {
-      "logic": {
-        "condition_ref": "intimacy:target-is-actors-closeness-partner"
-      },
-      "failure_message": "You can only do that with the person you are currently close to."
-    }
-  ]
+  "prerequisites": []
 }

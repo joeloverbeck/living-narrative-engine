@@ -32,6 +32,7 @@ export class ActionValidationService extends BaseService {
 
   /**
    * Creates an instance of ActionValidationService.
+   *
    * @param {{
    * entityManager: EntityManager,
    * logger: ILogger,
@@ -84,6 +85,7 @@ export class ActionValidationService extends BaseService {
 
   /**
    * Performs initial structural sanity checks on the inputs for isValid.
+   *
    * @private
    * @param {ActionDefinition} actionDefinition
    * @param {Entity} actorEntity
@@ -184,6 +186,7 @@ export class ActionValidationService extends BaseService {
 
   /**
    * Checks if a target entity specified in the context exists.
+   *
    * @private
    * @param {ActionTargetContext} targetContext
    * @param {string} actionId
@@ -207,6 +210,7 @@ export class ActionValidationService extends BaseService {
 
   /**
    * Collects and validates the format of the prerequisites array from an action definition.
+   *
    * @private
    * @param {ActionDefinition} actionDefinition
    * @returns {object[]}
@@ -231,6 +235,7 @@ export class ActionValidationService extends BaseService {
 
   /**
    * Extracts prerequisite processing into a single step.
+   *
    * @private
    * @param {ActionDefinition} actionDefinition
    * @param {Entity} actorEntity
@@ -278,6 +283,7 @@ export class ActionValidationService extends BaseService {
 
   /**
    * Validates if an action can be performed by an actor on a target context.
+   *
    * @param {ActionDefinition} actionDefinition
    * @param {Entity} actorEntity
    * @param {ActionTargetContext} targetContext

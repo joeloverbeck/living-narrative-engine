@@ -11,7 +11,7 @@ import { deepClone } from '../../../src/utils/cloneUtils.js';
 export class MockDataFetcher {
   /**
    * @param {object} [options]
-   * @param {boolean} [options.fromDisk=false] Read data from disk instead.
+   * @param {boolean} [options.fromDisk] Read data from disk instead.
    * @param {Record<string, any>} [options.pathToResponse] Map of paths to data.
    * @param {string[]} [options.errorPaths] Paths that should reject on fetch.
    * @param {object} [options.overrides] Extra properties/mocks to assign.

@@ -137,9 +137,9 @@ describe('ActionDiscoveryService - Go Action (Fixed State)', () => {
 
     // Mock the new dependencies: scopeRegistry and scopeEngine
     mockScopeRegistry.getScope.mockImplementation((scopeName) => {
-      if (scopeName === 'directions') {
+      if (scopeName === 'clear_directions') {
         // The service needs a valid expression to parse
-        return { expr: 'location.core:exits[].target' };
+        return { expr: 'location.core:exits[{"!": {"var": "entity.blocker"}}].target' };
       }
       return null;
     });
@@ -210,7 +210,7 @@ describe('ActionDiscoveryService - Go Action (Fixed State)', () => {
     expect(result.actions).toContainEqual(goAction);
 
     // Assert that the new dependencies were called
-    expect(mockScopeRegistry.getScope).toHaveBeenCalledWith('directions');
+    expect(mockScopeRegistry.getScope).toHaveBeenCalledWith('clear_directions');
     expect(mockScopeEngine.resolve).toHaveBeenCalled();
 
     // Assert that validation and formatting were called correctly for the GO action

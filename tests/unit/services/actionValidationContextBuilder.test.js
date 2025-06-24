@@ -132,7 +132,7 @@ describe('ActionValidationContextBuilder', () => {
         );
       });
 
-      it('should build the context correctly', () => {
+      it('should build the context correctly (without target - handled by Scope DSL)', () => {
         const context = builder.buildContext(
           sampleActionDefinition,
           mockActor,
@@ -146,9 +146,8 @@ describe('ActionValidationContextBuilder', () => {
         // Test that the proxy works by accessing a component through it
         expect(context.actor.components.Stats).toEqual({ health: 10 });
 
-        expect(context.target.id).toBe(targetId);
-        expect(context.target.components).toBeInstanceOf(Object);
-        expect(context.target.components.Inventory).toEqual({ items: ['key'] });
+        // Target context removed - target filtering handled by Scope DSL
+        expect(context.target).toBeUndefined();
 
         expect(context.action).toEqual({ id: sampleActionDefinition.id });
 
@@ -162,19 +161,11 @@ describe('ActionValidationContextBuilder', () => {
             error: expect.any(Function),
           })
         );
-        expect(createComponentAccessor).toHaveBeenCalledWith(
-          targetId,
-          mockEntityManager,
-          expect.objectContaining({
-            debug: expect.any(Function),
-            info: expect.any(Function),
-            warn: expect.any(Function),
-            error: expect.any(Function),
-          })
-        );
+        // Target context no longer built for prerequisites
+        expect(createComponentAccessor).toHaveBeenCalledTimes(1);
       });
 
-      it('should handle target entity with no components gracefully', () => {
+      it('should handle target entity with no components gracefully (target context removed)', () => {
         mockEntityManager.getComponentData.mockImplementation(
           (id, componentId) => {
             if (id === actorId) return actorComponents[componentId];
@@ -188,10 +179,8 @@ describe('ActionValidationContextBuilder', () => {
           targetContext
         );
 
-        expect(context.target.id).toBe(targetId);
-        expect(context.target.components).toBeInstanceOf(Object);
-        // Accessing a component on the proxy should return null (or undefined, as per mock)
-        expect(context.target.components.any).toBeUndefined();
+        // Target context removed - target filtering handled by Scope DSL
+        expect(context.target).toBeUndefined();
       });
 
       it('should handle actor with no components gracefully', () => {
@@ -222,19 +211,17 @@ describe('ActionValidationContextBuilder', () => {
         mockEntityManager.getEntityInstance.mockReturnValue(null);
       });
 
-      it('should build the context with null target and log a warning', () => {
+      it('should build the context without target (no warning since target context removed)', () => {
         const context = builder.buildContext(
           sampleActionDefinition,
           mockActor,
           targetContext
         );
 
-        expect(context.target).toBeNull();
-        expect(mockLogger.warn).toHaveBeenCalledWith(
-          expect.stringContaining(
-            `Target entity '${missingTargetId}' not found`
-          )
-        );
+        // Target context removed - target filtering handled by Scope DSL
+        expect(context.target).toBeUndefined();
+        // Warning no longer logged since target context is not built
+        expect(mockLogger.warn).not.toHaveBeenCalled();
       });
     });
 
@@ -244,13 +231,14 @@ describe('ActionValidationContextBuilder', () => {
     describe("Scenario 4: Target Type 'none'", () => {
       const targetContext = ActionTargetContext.noTarget();
 
-      it('should build the context correctly for no target', () => {
+      it('should build the context correctly for no target (target context always undefined)', () => {
         const context = builder.buildContext(
           sampleActionDefinition,
           mockActor,
           targetContext
         );
-        expect(context.target).toBeNull();
+        // Target context removed - target filtering handled by Scope DSL
+        expect(context.target).toBeUndefined();
       });
     });
 

@@ -1,0 +1,9 @@
+potential_leaders := entities(core:position)[
+    {
+  "and": [
+    { "condition_ref": "core:entity-at-location" },
+    { "condition_ref": "core:entity-is-not-actor" },
+    { "condition_ref": "core:entity-has-actor-component" },
+    { "not": { "condition_ref": "core:entity-is-following-actor" } }
+  ]
+}]

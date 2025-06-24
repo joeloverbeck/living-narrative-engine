@@ -6,12 +6,5 @@
   "description": "Dismisses a follower from your service.",
   "scope": "followers",
   "template": "dismiss {target}",
-  "prerequisites": [
-    {
-      "logic": {
-        "condition_ref": "core:target-is-actors-follower"
-      },
-      "failure_message": "You can only dismiss your own followers."
-    }
-  ]
+  "prerequisites": []
 }

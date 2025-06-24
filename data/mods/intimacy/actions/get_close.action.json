@@ -4,12 +4,12 @@
   "commandVerb": "get-close",
   "name": "Get Close",
   "description": "Move closer to the target, entering their personal space.",
-  "scope": "environment",
+  "scope": "actors_in_location",
   "template": "get close to {target}",
   "prerequisites": [
     {
       "logic": {
-        "condition_ref": "intimacy:target-is-actors-closeness-partner"
+        "condition_ref": "core:actor-is-not-rooted"
       },
       "failure_message": "You can only get close to the person you are currently close to."
     }
