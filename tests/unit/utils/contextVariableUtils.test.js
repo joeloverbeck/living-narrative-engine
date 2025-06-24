@@ -61,6 +61,16 @@ describe('writeContextVariable', () => {
     );
     expect(logger.error).not.toHaveBeenCalled();
   });
+
+  test('invalid names do not mutate context', () => {
+    const ctx = { evaluationContext: { context: { foo: 1 } } };
+    const dispatcher = { dispatch: jest.fn() };
+    const logger = { error: jest.fn() };
+    const result = writeContextVariable('', 2, ctx, dispatcher, logger);
+
+    expect(result.success).toBe(false);
+    expect(ctx.evaluationContext.context).toEqual({ foo: 1 });
+  });
 });
 
 describe('tryWriteContextVariable', () => {
@@ -98,5 +108,13 @@ describe('tryWriteContextVariable', () => {
 
     expect(result).toEqual({ success: true });
     expect(ctx.evaluationContext.context).toHaveProperty(name, 42);
+  });
+
+  test('invalid names do not mutate context', () => {
+    const ctx = { evaluationContext: { context: { bar: 2 } } };
+    const result = tryWriteContextVariable('', 7, ctx);
+
+    expect(result.success).toBe(false);
+    expect(ctx.evaluationContext.context).toEqual({ bar: 2 });
   });
 });
