@@ -45,7 +45,7 @@ function createHandlers(
 
   return {
     GET_TIMESTAMP: new GetTimestampHandler({ logger }),
-    SET_VARIABLE: new SetVariableHandler({ logger, jsonLogic }),
+    SET_VARIABLE: new SetVariableHandler({ logger }),
     DISPATCH_EVENT: new DispatchEventHandler({ dispatcher: eventBus, logger }),
     ADD_PERCEPTION_LOG_ENTRY: new AddPerceptionLogEntryHandler({
       entityManager,

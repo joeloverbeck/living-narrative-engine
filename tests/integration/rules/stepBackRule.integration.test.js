@@ -92,7 +92,7 @@ function createHandlers(
       logger,
       safeEventDispatcher: safeEventDispatcher,
     }),
-    SET_VARIABLE: new SetVariableHandler({ logger, jsonLogic }),
+    SET_VARIABLE: new SetVariableHandler({ logger }),
     GET_TIMESTAMP: new GetTimestampHandler({ logger }),
     DISPATCH_PERCEPTIBLE_EVENT: new DispatchPerceptibleEventHandler({
       dispatcher: eventBus,

@@ -23,7 +23,7 @@ import { createRuleTestEnvironment } from '../../common/engine/systemLogicTestEn
 function createHandlers(entityManager, eventBus, logger) {
   const safeEventDispatcher = { dispatch: jest.fn() };
   return {
-    SET_VARIABLE: new SetVariableHandler({ logger, jsonLogic }),
+    SET_VARIABLE: new SetVariableHandler({ logger }),
     DISPATCH_EVENT: new DispatchEventHandler({ dispatcher: eventBus, logger }),
     ADD_COMPONENT: new AddComponentHandler({
       entityManager,
