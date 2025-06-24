@@ -31,7 +31,12 @@ describe('ContentLoadManager.processMod', () => {
   });
 
   it('returns "skipped" when manifest is missing and dispatches mod_load_failed', async () => {
-    const loader = new MockLoader({ count: 1, overrides: 0, errors: 0 });
+    const loader = new MockLoader({
+      count: 1,
+      overrides: 0,
+      errors: 0,
+      failures: [],
+    });
     const phaseLoadersConfig = [
       {
         loader,
@@ -111,7 +116,12 @@ describe('ContentLoadManager.processMod', () => {
   });
 
   it('returns "success" when all loaders succeed', async () => {
-    const loader = new MockLoader({ count: 1, overrides: 0, errors: 0 });
+    const loader = new MockLoader({
+      count: 1,
+      overrides: 0,
+      errors: 0,
+      failures: [],
+    });
     const phaseLoadersConfig = [
       {
         loader,

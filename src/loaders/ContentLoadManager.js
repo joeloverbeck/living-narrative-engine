@@ -261,6 +261,19 @@ export class ContentLoadManager {
             );
             if (result && typeof result.count === 'number') {
               aggregator.aggregate(result, registryKey);
+              if (
+                Array.isArray(result.failures) &&
+                result.failures.length > 0
+              ) {
+                for (const { file, error } of result.failures) {
+                  const msg = error?.message || String(error);
+                  this.#logger.error(
+                    `ModsLoader [${modId}, ${phase}]: ${registryKey} file '${file}' failed: ${msg}`,
+                    { modId, registryKey, phase, file, error: msg },
+                    error
+                  );
+                }
+              }
             } else {
               this.#logger.warn(
                 `ModsLoader [${modId}, ${phase}]: Loader for '${registryKey}' returned an unexpected result format. Assuming 0 counts.`,

@@ -165,7 +165,12 @@ describe('BaseManifestItemLoader _loadItemsInternal', () => {
     );
 
     // --- Assert ---
-    expect(result).toEqual({ count: 0, overrides: 0, errors: 0 }); // <<< CORRECTED: Expect the result object
+    expect(result).toEqual({
+      count: 0,
+      overrides: 0,
+      errors: 0,
+      failures: [],
+    }); // <<< CORRECTED: Expect the result object
     // Or check properties individually:
     // expect(result.count).toBe(0);
     // expect(result.overrides).toBe(0);
@@ -207,7 +212,12 @@ describe('BaseManifestItemLoader _loadItemsInternal', () => {
     );
 
     // --- Assert ---
-    expect(result).toEqual({ count: 2, overrides: 0, errors: 0 }); // <<< CORRECTED: Expect the result object
+    expect(result).toEqual({
+      count: 2,
+      overrides: 0,
+      errors: 0,
+      failures: [],
+    }); // <<< CORRECTED: Expect the result object
     // Or check properties individually:
     // expect(result.count).toBe(2);
     // expect(result.overrides).toBe(0);
@@ -267,7 +277,12 @@ describe('BaseManifestItemLoader _loadItemsInternal', () => {
     );
 
     // --- Assert ---
-    expect(result).toEqual({ count: 2, overrides: 1, errors: 1 }); // <<< CORRECTED: Expect the result object
+    expect(result).toEqual({
+      count: 2,
+      overrides: 1,
+      errors: 1,
+      failures: [{ file: 'file2.json', error: failureError }],
+    }); // <<< CORRECTED: Expect the result object
     // Or check properties individually:
     // expect(result.count).toBe(2); // file1 and file3 succeeded
     // expect(result.overrides).toBe(1); // file1 overwrote
@@ -330,7 +345,15 @@ describe('BaseManifestItemLoader _loadItemsInternal', () => {
     );
 
     // --- Assert ---
-    expect(result).toEqual({ count: 0, overrides: 0, errors: 2 }); // <<< CORRECTED: Expect the result object
+    expect(result).toEqual({
+      count: 0,
+      overrides: 0,
+      errors: 2,
+      failures: [
+        { file: 'file1.json', error: failureError1 },
+        { file: 'file2.json', error: failureError2 },
+      ],
+    }); // <<< CORRECTED: Expect the result object
     // Or check properties individually:
     // expect(result.count).toBe(0);
     // expect(result.overrides).toBe(0);

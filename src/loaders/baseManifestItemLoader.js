@@ -412,7 +412,7 @@ export class BaseManifestItemLoader extends AbstractLoader {
         `No valid ${contentKey} filenames found for mod ${modId}.`
       );
       // Return zero counts if no files to process
-      return { count: 0, overrides: 0, errors: 0 }; // <<< MODIFIED RETURN VALUE
+      return { count: 0, overrides: 0, errors: 0, failures: [] }; // <<< MODIFIED RETURN VALUE
     }
 
     this._logger.debug(
@@ -428,6 +428,7 @@ export class BaseManifestItemLoader extends AbstractLoader {
     let processedCount = 0;
     let overrideCount = 0; // <<< ADDED override counter
     let failedCount = 0;
+    const failures = [];
 
     settledResults.forEach((result, index) => {
       const currentFilename = filenames[index]; // Get filename for logging context
@@ -441,6 +442,7 @@ export class BaseManifestItemLoader extends AbstractLoader {
         // Debug log for success is already in _processFileWrapper
       } else {
         failedCount++;
+        failures.push({ file: currentFilename, error: result.reason });
         // Error logging is already handled comprehensively in _processFileWrapper
         // Only log a debug message here indicating which file failed in the batch
         this._logger.debug(
@@ -462,6 +464,7 @@ export class BaseManifestItemLoader extends AbstractLoader {
       count: processedCount,
       overrides: overrideCount,
       errors: failedCount,
+      failures,
     }; // <<< MODIFIED RETURN VALUE
   }
 

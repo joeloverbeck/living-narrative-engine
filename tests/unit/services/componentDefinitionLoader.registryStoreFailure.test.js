@@ -391,6 +391,12 @@ describe('ComponentLoader (Sub-Ticket 6.9: Registry Storage Failure)', () => {
       count: 0, // 0 items successfully processed
       errors: 1, // 1 error occurred (storage failed)
       overrides: 0, // 0 overrides occurred
+      failures: [
+        {
+          file: filename,
+          error: storageError,
+        },
+      ],
     });
 
     // --- Verify: Pre-Storage Steps Succeeded ---

@@ -25,7 +25,7 @@ class MockLoader {
           !manifest.content[this.contentKey] ||
           manifest.content[this.contentKey].length === 0
         ) {
-          return { count: 0, overrides: 0, errors: 0 };
+          return { count: 0, overrides: 0, errors: 0, failures: [] };
         }
 
         // It's the intended mod and has content for this loader
@@ -60,7 +60,7 @@ describe('ContentLoadManager.loadContent', () => {
 
   it('aggregates loader results across mods and dispatches on errors', async () => {
     const loaderA = new MockLoader(
-      { count: 1, overrides: 0, errors: 0 },
+      { count: 1, overrides: 0, errors: 0, failures: [] },
       'modA',
       'items'
     ); // Will succeed for modA
