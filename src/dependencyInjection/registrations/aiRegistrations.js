@@ -478,16 +478,16 @@ export function registerAITurnHandler(registrar, logger) {
  * @param {AppContainer} container - The DI container.
  */
 export function registerAI(container) {
-  const r = new Registrar(container);
+  const registrar = new Registrar(container);
   /** @type {ILogger} */
   const logger = container.resolve(tokens.ILogger);
   logger.debug('AI Systems Registration: Starting...');
 
-  registerLlmInfrastructure(r, logger);
-  registerPromptingEngine(r, logger);
-  registerAIGameStateProviders(r, logger);
-  registerAITurnPipeline(r, logger);
+  registerLlmInfrastructure(registrar, logger);
+  registerPromptingEngine(registrar, logger);
+  registerAIGameStateProviders(registrar, logger);
+  registerAITurnPipeline(registrar, logger);
   registerActorAwareStrategy(container);
-  registerAITurnHandler(r, logger);
+  registerAITurnHandler(registrar, logger);
   logger.debug('AI Systems Registration: All registrations complete.');
 }

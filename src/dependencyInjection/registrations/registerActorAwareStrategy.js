@@ -17,12 +17,12 @@ import { ActorAwareStrategyFactory } from '../../turns/factories/actorAwareStrat
  * @param {AppContainer} container - The DI container.
  */
 export function registerActorAwareStrategy(container) {
-  const r = new Registrar(container);
+  const registrar = new Registrar(container);
   const logger = container.resolve(tokens.ILogger);
   logger.debug('[registerActorAwareStrategy] Starting...');
 
   if (!container.isRegistered(tokens.TurnActionChoicePipeline)) {
-    r.singletonFactory(tokens.TurnActionChoicePipeline, (c) => {
+    registrar.singletonFactory(tokens.TurnActionChoicePipeline, (c) => {
       return new TurnActionChoicePipeline({
         availableActionsProvider: c.resolve(tokens.IAvailableActionsProvider),
         logger: c.resolve(tokens.ILogger),
@@ -34,7 +34,7 @@ export function registerActorAwareStrategy(container) {
   }
 
   if (!container.isRegistered(tokens.ITurnActionFactory)) {
-    r.singletonFactory(
+    registrar.singletonFactory(
       tokens.ITurnActionFactory,
       () => new TurnActionFactory()
     );
@@ -44,7 +44,7 @@ export function registerActorAwareStrategy(container) {
   }
 
   if (!container.isRegistered(tokens.TurnStrategyFactory)) {
-    r.singletonFactory(tokens.TurnStrategyFactory, (c) => {
+    registrar.singletonFactory(tokens.TurnStrategyFactory, (c) => {
       const opts = {
         providers: {
           human: c.resolve(tokens.IHumanDecisionProvider),
