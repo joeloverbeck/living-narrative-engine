@@ -538,4 +538,62 @@ describe('EntityDisplayDataProvider', () => {
       );
     });
   });
+
+  // getLocationPortraitData
+  describe('getLocationPortraitData', () => {
+    it('should return portrait data with alt text', () => {
+      const mockEntity = {
+        id: 'loc1',
+        definitionId: 'core:loc',
+        getComponentData: jest.fn().mockReturnValue({
+          imagePath: 'images/loc.png',
+          altText: 'Location Alt',
+        }),
+      };
+      mockEntityManager.getEntityInstance.mockReturnValue(mockEntity);
+
+      const result = service.getLocationPortraitData('loc1');
+
+      expect(result).toEqual({
+        imagePath: '/data/mods/core/images/loc.png',
+        altText: 'Location Alt',
+      });
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining(
+          "Constructed portrait path for location 'loc1': /data/mods/core/images/loc.png"
+        )
+      );
+    });
+
+    it('should return null if portrait component missing', () => {
+      const mockEntity = {
+        id: 'loc2',
+        definitionId: 'core:loc',
+        getComponentData: jest.fn().mockReturnValue(null),
+      };
+      mockEntityManager.getEntityInstance.mockReturnValue(mockEntity);
+      const result = service.getLocationPortraitData('loc2');
+      expect(result).toBeNull();
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining(
+          "Location entity 'loc2' has no valid PORTRAIT_COMPONENT_ID data or imagePath."
+        )
+      );
+    });
+
+    it('should return null if entity not found', () => {
+      mockEntityManager.getEntityInstance.mockReturnValue(null);
+      expect(service.getLocationPortraitData('missing')).toBeNull();
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining("Location entity with ID 'missing' not found.")
+      );
+    });
+
+    it('should return null if locationEntityId is null or empty', () => {
+      expect(service.getLocationPortraitData(null)).toBeNull();
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        expect.stringContaining('called with null or empty locationEntityId')
+      );
+    });
+  });
 });
