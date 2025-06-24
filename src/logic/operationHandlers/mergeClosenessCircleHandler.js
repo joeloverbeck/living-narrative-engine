@@ -10,6 +10,7 @@
 import BaseOperationHandler from './baseOperationHandler.js';
 import { tryWriteContextVariable } from '../../utils/contextVariableUtils.js';
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
+import { deepClone } from '../../utils/cloneUtils.js';
 
 /**
  * @class MergeClosenessCircleHandler
@@ -156,12 +157,17 @@ class MergeClosenessCircleHandler extends BaseOperationHandler {
   #lockMovement(memberIds) {
     for (const id of memberIds) {
       try {
-        const move =
-          this.#entityManager.getComponentData(id, 'core:movement') || {};
-        this.#entityManager.addComponent(id, 'core:movement', {
-          ...move,
-          locked: true,
-        });
+        const existing = this.#entityManager.getComponentData(
+          id,
+          'core:movement'
+        );
+        const move = existing
+          ? typeof structuredClone === 'function'
+            ? structuredClone(existing)
+            : deepClone(existing)
+          : {};
+        move.locked = true;
+        this.#entityManager.addComponent(id, 'core:movement', move);
       } catch (err) {
         safeDispatchError(
           this.#dispatcher,
