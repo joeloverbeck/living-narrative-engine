@@ -7,10 +7,6 @@
   "scope": "close_actors",
   "template": "kiss {target}'s cheek",
   "prerequisites": [
-    {
-      "logic": {
-      },
-      "failure_message": "You can only do that with the person you are currently close to."
-    }
+
   ]
 }

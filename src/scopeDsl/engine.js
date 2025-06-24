@@ -316,36 +316,56 @@ class ScopeEngine extends IScopeEngine {
 
     const result = new Set();
     for (const item of parentResult) {
-      let entity;
-
-      if (typeof item === 'string') {
-        // Item is an entity ID, get the entity instance
-        entity = runtimeCtx.entityManager.getEntityInstance(item);
-        entity = entity || { id: item };
-      } else if (item && typeof item === 'object') {
-        // Item is already an object (e.g., exit object from component data)
-        entity = item;
+      // If the item is an array, iterate over its elements for filtering
+      if (Array.isArray(item)) {
+        for (const arrayElement of item) {
+          if (this._filterSingleItem(arrayElement, node.logic, actorEntity, runtimeCtx)) {
+            result.add(arrayElement);
+          }
+        }
       } else {
-        // Skip invalid items
-        continue;
-      }
-
-      const context = {
-        entity: entity,
-        actor: actorEntity, // Use the full actor entity
-        location: runtimeCtx.location || { id: 'unknown' },
-      };
-
-      // If this throws, it will now halt resolution, which is desired for fail-fast approach
-      const filterResult = runtimeCtx.jsonLogicEval.evaluate(
-        node.logic,
-        context
-      );
-      if (filterResult) {
-        result.add(item); // Add the original item (ID or object)
+        // Handle single items (entity IDs or objects)
+        if (this._filterSingleItem(item, node.logic, actorEntity, runtimeCtx)) {
+          result.add(item);
+        }
       }
     }
     return result;
+  }
+
+  /**
+   * Applies JSON Logic filter to a single item
+   * 
+   * @param {*} item - Item to filter (entity ID, object, etc.)
+   * @param {object} logic - JSON Logic expression
+   * @param {object} actorEntity - The acting entity instance
+   * @param {RuntimeContext} runtimeCtx - Runtime context
+   * @returns {boolean} True if the item passes the filter
+   * @private
+   */
+  _filterSingleItem(item, logic, actorEntity, runtimeCtx) {
+    let entity;
+
+    if (typeof item === 'string') {
+      // Item is an entity ID, get the entity instance
+      entity = runtimeCtx.entityManager.getEntityInstance(item);
+      entity = entity || { id: item };
+    } else if (item && typeof item === 'object') {
+      // Item is already an object (e.g., exit object from component data)
+      entity = item;
+    } else {
+      // Skip invalid items
+      return false;
+    }
+
+    const context = {
+      entity: entity,
+      actor: actorEntity, // Use the full actor entity
+      location: runtimeCtx.location || { id: 'unknown' },
+    };
+
+    // If this throws, it will now halt resolution, which is desired for fail-fast approach
+    return runtimeCtx.jsonLogicEval.evaluate(logic, context);
   }
 
   /**

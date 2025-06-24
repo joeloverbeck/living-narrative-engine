@@ -1,1 +1,6 @@
-clear_directions := location.core:exits[].target
+clear_directions := location.core:exits[
+      {
+    // keep exits that have no blocker (null, undefined, or missing)
+    "!": { "var": "entity.blocker" }
+  }
+].target
