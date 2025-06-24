@@ -150,7 +150,24 @@ function _resolveScopeWithDSL(scopeName, context, scopeRegistry, logger, scopeEn
 
     // Require scope engine to be provided
     if (!scopeEngine) {
-      logger.error('Cannot resolve scope: scopeEngine is required but not provided');
+      const errorMessage = `Cannot resolve scope '${scopeName}': scopeEngine is required but not provided. This indicates a configuration error in the dependency injection setup.`;
+      logger.error(errorMessage);
+      
+      if (dispatcher) {
+        const availableScopes = scopeRegistry.getAllScopeNames ? scopeRegistry.getAllScopeNames() : [];
+        const debugInfo = `scopeName: ${scopeName}, availableScopes: [${availableScopes.join(', ')}], scopeEngine: ${scopeEngine}, context: actorId=${context.actingEntity?.id}, locationId=${context.location?.id || context.currentLocation?.id}`;
+        
+        safeDispatchError(
+          dispatcher,
+          errorMessage,
+          {
+            raw: debugInfo,
+            timestamp: new Date().toISOString()
+          },
+          logger
+        );
+      }
+      
       return new Set();
     }
 

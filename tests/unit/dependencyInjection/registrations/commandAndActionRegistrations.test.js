@@ -43,6 +43,8 @@ describe('registerCommandAndAction', () => {
   const mockWorldContext = mockDeep();
   const mockValidatedEventDispatcher = mockDeep();
   const mockSafeEventDispatcher = mockDeep();
+  const mockScopeRegistry = mockDeep();
+  const mockScopeEngine = mockDeep();
 
   beforeEach(() => {
     container = new AppContainer();
