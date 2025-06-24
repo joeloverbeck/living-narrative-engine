@@ -609,13 +609,12 @@ describe('ActionValidationService: Orchestration Logic', () => {
     };
     const ctx = ActionTargetContext.forEntity('target-order');
 
-    const step1 = jest
-      .spyOn(actionValidationService, '_validateDomainAndContext')
-      .mockReturnValue(true);
-    const step2 = jest.spyOn(actionValidationService, 'warnIfTargetMissing');
-    const step3 = jest
-      .spyOn(actionValidationService, '_validatePrerequisites')
-      .mockReturnValue(true);
+    const step1 = jest.spyOn(
+      actionValidationService,
+      '_validateDomainAndContext'
+    );
+    const step3 = jest.spyOn(actionValidationService, '_validatePrerequisites');
+    const debugSpy = jest.spyOn(mockLogger, 'debug');
 
     const result = actionValidationService.isValid(
       actionDefinition,
@@ -624,11 +623,15 @@ describe('ActionValidationService: Orchestration Logic', () => {
     );
 
     expect(result).toBe(true);
-    expect(step1).toHaveBeenCalledBefore(step2);
-    expect(step2).toHaveBeenCalledBefore(step3);
+    const debugCalls = debugSpy.mock.calls.map((call) => call[0]);
+    const step1Index = debugCalls.findIndex((m) => m.includes('STEP 1'));
+    const step2Index = debugCalls.findIndex((m) => m.includes('STEP 2'));
+    const step3Index = debugCalls.findIndex((m) => m.includes('STEP 3'));
+    expect(step1Index).toBeLessThan(step2Index);
+    expect(step2Index).toBeLessThan(step3Index);
 
     step1.mockRestore();
-    step2.mockRestore();
     step3.mockRestore();
+    debugSpy.mockRestore();
   });
 });
