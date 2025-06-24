@@ -4,8 +4,12 @@ import { AIPromptPipeline } from '../../../src/prompting/AIPromptPipeline.js';
 import {
   createAIPromptPipelineBed,
   describeAIPromptPipelineSuite,
-  AIPromptPipelineDependencySpec,
 } from '../../common/prompting/promptPipelineTestBed.js';
+import {
+  AIPromptPipelineDependencySpec,
+  expectSuccessfulGeneration,
+  expectGenerationFailure,
+} from '../../common/prompting/pipelineHelpers.js';
 import { describeConstructorValidation } from '../../common/constructorValidationHelpers.js';
 
 describeAIPromptPipelineSuite('AIPromptPipeline', (getBed) => {
@@ -24,7 +28,7 @@ describeAIPromptPipelineSuite('AIPromptPipeline', (getBed) => {
     const context = bed.defaultContext;
     const actions = [...bed.defaultActions, { id: 'a1' }];
 
-    await bed.expectSuccessfulGeneration({
+    await expectSuccessfulGeneration(bed, {
       actor,
       context,
       actions,
@@ -49,6 +53,6 @@ describeAIPromptPipelineSuite('AIPromptPipeline', (getBed) => {
       error: 'PromptBuilder returned an empty or invalid prompt.',
     },
   ])('generatePrompt rejects when %s', async ({ mutate, error }) => {
-    await bed.expectGenerationFailure(mutate, error);
+    await expectGenerationFailure(bed, mutate, error);
   });
 });
