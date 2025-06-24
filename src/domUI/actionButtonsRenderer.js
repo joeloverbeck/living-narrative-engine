@@ -6,6 +6,13 @@
 
 import { SelectableListDisplayComponent } from './selectableListDisplayComponent.js';
 import { PLAYER_TURN_SUBMITTED_ID } from '../constants/eventIds.js';
+import { DATASET_ACTION_INDEX } from '../constants/datasetKeys.js';
+
+/**
+ * Dataset key storing the index for rendered action buttons.
+ *
+ * @constant {string}
+ */
 
 /**
  * @typedef {import('../interfaces/ILogger').ILogger} ILogger
@@ -126,7 +133,7 @@ export class ActionButtonsRenderer extends SelectableListDisplayComponent {
     };
 
     super({
-      datasetKey: 'actionIndex',
+      datasetKey: DATASET_ACTION_INDEX,
       logger,
       documentContext,
       validatedEventDispatcher,
@@ -225,7 +232,10 @@ export class ActionButtonsRenderer extends SelectableListDisplayComponent {
 
     button.title = buttonTooltip;
     button.setAttribute('role', 'radio');
-    button.setAttribute('data-action-index', String(actionIndex));
+    button.setAttribute(
+      `data-${DATASET_ACTION_INDEX.replace(/([A-Z])/g, '-$1').toLowerCase()}`,
+      String(actionIndex)
+    );
 
     button.addEventListener('click', () => {
       if (this.#isDisposed) return;
@@ -327,8 +337,12 @@ export class ActionButtonsRenderer extends SelectableListDisplayComponent {
     }
 
     if (this.selectedAction) {
+      const attrName = DATASET_ACTION_INDEX.replace(
+        /([A-Z])/g,
+        '-$1'
+      ).toLowerCase();
       const selectedButton = container.querySelector(
-        `button.action-button[data-action-index="${this.selectedAction.index}"]`
+        `button.action-button[data-${attrName}="${this.selectedAction.index}"]`
       );
       this._selectItem(selectedButton, this.selectedAction);
     } else {

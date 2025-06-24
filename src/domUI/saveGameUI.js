@@ -12,6 +12,13 @@ import {
 } from './helpers/renderSlotItem.js';
 import { buildModalElementsConfig } from './helpers/buildModalElementsConfig.js';
 import createEmptySlotMessage from './helpers/createEmptySlotMessage.js';
+import { DATASET_SLOT_ID } from '../constants/datasetKeys.js';
+
+/**
+ * Dataset key storing the numeric slot ID on save slot elements.
+ *
+ * @constant {string}
+ */
 
 /**
  * @typedef {import('../engine/gameEngine.js').default} GameEngine
@@ -81,7 +88,7 @@ export class SaveGameUI extends SlotModalBase {
       validatedEventDispatcher,
       elementsConfig,
       domElementFactory,
-      datasetKey: 'slotId',
+      datasetKey: DATASET_SLOT_ID,
       confirmButtonKey: 'confirmSaveButtonEl',
     });
 
@@ -291,7 +298,7 @@ export class SaveGameUI extends SlotModalBase {
 
     return renderGenericSlotItem(
       this.domElementFactory,
-      'slotId',
+      DATASET_SLOT_ID,
       slotData.slotId,
       metadata,
       itemIndex,
