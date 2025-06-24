@@ -335,5 +335,40 @@ describe('PlaceholderResolver', () => {
       expect(result).toBe('foo Hero');
     });
   });
+
+  describe('_handleFullString and _replaceEmbedded', () => {
+    it('resolves a full placeholder and logs debug', () => {
+      const res = resolver._handleFullString('{name}', [{ name: 'Alice' }]);
+      expect(res).toEqual({ changed: true, value: 'Alice' });
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining(
+          'Resolved full string placeholder {name} to: Alice'
+        )
+      );
+    });
+
+    it('returns undefined and logs warning when full placeholder missing', () => {
+      const res = resolver._handleFullString('{missing}', [{}]);
+      expect(res).toEqual({ changed: true, value: undefined });
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'PlaceholderResolver: Placeholder "{missing}" not found in provided data sources. Replacing with empty string.'
+      );
+    });
+
+    it('replaces embedded placeholders in a string', () => {
+      const res = resolver._replaceEmbedded('Hello {name}', [{ name: 'Bob' }]);
+      expect(res).toEqual({ changed: true, value: 'Hello Bob' });
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining(
+          'Replaced embedded placeholder {name} with string: "Bob"'
+        )
+      );
+    });
+
+    it('returns unchanged when no placeholders present', () => {
+      const res = resolver._replaceEmbedded('Nothing here', [{}]);
+      expect(res).toEqual({ changed: false, value: 'Nothing here' });
+    });
+  });
 });
 // --- FILE END ---

@@ -300,38 +300,53 @@ export class PlaceholderResolver {
   }
 
   /**
-   * Handles string placeholder resolution.
+   * Handles cases where the entire string is a single placeholder.
    *
    * @private
-   * @param {string} value String potentially containing placeholders.
-   * @param {object[]} sources Resolution sources.
+   * @param {string} value - String potentially consisting solely of a placeholder.
+   * @param {object[]} sources - Resolution sources.
    * @returns {{changed: boolean, value: *}} Resulting value and change flag.
    */
-  _resolveString(value, sources) {
+  _handleFullString(value, sources) {
     const fullMatch = value.match(FULL_STRING_PLACEHOLDER_REGEX);
-    const replaced = this.resolve(value, ...sources);
-    if (fullMatch) {
-      const { key: placeholderPath, optional: isOptional } =
-        parsePlaceholderKey(fullMatch[1]);
-      const resolved = this._resolveFromSources(placeholderPath, sources);
-      if (resolved !== undefined) {
-        this.#logger.debug(
-          `Resolved full string placeholder {${placeholderPath}${isOptional ? '?' : ''}} to: ${
-            typeof resolved === 'object' ? JSON.stringify(resolved) : resolved
-          }`
-        );
-        return { changed: true, value: resolved };
-      }
-      return { changed: true, value: undefined };
+    if (!fullMatch) {
+      return { changed: false, value };
     }
 
+    // Trigger warning handling by attempting normal resolution first.
+    this.resolve(value, ...sources);
+
+    const { key: placeholderPath, optional: isOptional } = parsePlaceholderKey(
+      fullMatch[1]
+    );
+    const resolved = this._resolveFromSources(placeholderPath, sources);
+    if (resolved !== undefined) {
+      this.#logger.debug(
+        `Resolved full string placeholder {${placeholderPath}${isOptional ? '?' : ''}} to: ${
+          typeof resolved === 'object' ? JSON.stringify(resolved) : resolved
+        }`
+      );
+      return { changed: true, value: resolved };
+    }
+    return { changed: true, value: undefined };
+  }
+
+  /**
+   * Replaces embedded placeholders within a string.
+   *
+   * @private
+   * @param {string} value - String potentially containing embedded placeholders.
+   * @param {object[]} sources - Resolution sources.
+   * @returns {{changed: boolean, value: *}} Resulting value and change flag.
+   */
+  _replaceEmbedded(value, sources) {
+    const replaced = this.resolve(value, ...sources);
     if (replaced !== value) {
       let match;
       PLACEHOLDER_FIND_REGEX.lastIndex = 0;
       while ((match = PLACEHOLDER_FIND_REGEX.exec(value))) {
         const placeholderSyntax = match[0];
-        const { key: placeholderPath, optional: _isOptional } =
-          parsePlaceholderKey(match[1]);
+        const { key: placeholderPath } = parsePlaceholderKey(match[1]);
         const resolved = this._resolveFromSources(placeholderPath, sources);
         if (resolved !== undefined) {
           const stringValue = resolved === null ? 'null' : String(resolved);
@@ -342,8 +357,24 @@ export class PlaceholderResolver {
       }
       return { changed: true, value: replaced };
     }
-
     return { changed: false, value };
+  }
+
+  /**
+   * Handles string placeholder resolution.
+   *
+   * @private
+   * @param {string} value String potentially containing placeholders.
+   * @param {object[]} sources Resolution sources.
+   * @returns {{changed: boolean, value: *}} Resulting value and change flag.
+   */
+  _resolveString(value, sources) {
+    const fullResult = this._handleFullString(value, sources);
+    if (fullResult.changed) {
+      return fullResult;
+    }
+
+    return this._replaceEmbedded(value, sources);
   }
 
   /**
