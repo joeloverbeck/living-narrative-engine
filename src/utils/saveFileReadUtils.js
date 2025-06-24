@@ -30,10 +30,12 @@ export async function readSaveFile(storageProvider, logger, filePath) {
     } catch (error) {
       const userMsg = MSG_FILE_READ_ERROR;
       logger.error(`Error reading file ${filePath}:`, error);
+      const details = error?.code || error?.message;
+      const errMsg = details ? `${userMsg} (${details})` : userMsg;
       return {
         ...createPersistenceFailure(
           PersistenceErrorCodes.FILE_READ_ERROR,
-          userMsg
+          errMsg
         ),
         userFriendlyError: userMsg,
       };
