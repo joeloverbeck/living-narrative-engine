@@ -178,7 +178,6 @@ class InitializationService extends IInitializationService {
     this.#logger.debug(
       `InitializationService: Starting runInitializationSequence for world: ${worldName}.`
     );
-
     if (
       !worldName ||
       typeof worldName !== 'string' ||
@@ -190,196 +189,204 @@ class InitializationService extends IInitializationService {
       this.#logger.error(
         'InitializationService requires a valid non-empty worldName.'
       );
-      return { success: false, error: error };
+      return { success: false, error };
     }
 
     try {
-      this.#logger.debug('Loading world data via ModsLoader...');
-      const loadReport = await this.#modsLoader.loadMods(worldName); // Schemas are loaded by this point
-      this.#logger.debug(
-        `InitializationService: World data loaded successfully for world: ${worldName}. Load report: ${JSON.stringify(loadReport)}`
-      );
-
-      this.#logger.debug('Initializing ScopeRegistry...');
-      const scopes = this.#dataRegistry.getAll('scopes');
-
-      // Convert array of scope objects to a map by qualified ID
-      const scopeMap = {};
-      scopes.forEach((scope) => {
-        if (scope.id) {
-          scopeMap[scope.id] = scope;
-        }
-      });
-
-      this.#scopeRegistry.initialize(scopeMap);
-      this.#logger.debug('ScopeRegistry initialized.');
-
-      // ***** START: Initialize ConfigurableLLMAdapter *****
-      this.#logger.debug(
-        'InitializationService: Attempting to initialize ConfigurableLLMAdapter...'
-      );
-      try {
-        const llmAdapter = this.#llmAdapter;
-
-        if (!llmAdapter) {
-          this.#logger.error(
-            'InitializationService: Failed to resolve ILLMAdapter from container. Cannot initialize.'
-          );
-        } else if (typeof llmAdapter.init !== 'function') {
-          this.#logger.error(
-            'InitializationService: Resolved ILLMAdapter does not have an init method.'
-          );
-        } else if (
-          typeof llmAdapter.isInitialized === 'function' &&
-          llmAdapter.isInitialized()
-        ) {
-          this.#logger.debug(
-            'InitializationService: ConfigurableLLMAdapter already initialized. Skipping re-initialization.'
-          );
-        } else {
-          const llmConfigLoaderInstance = this.#llmConfigLoader;
-          this.#logger.debug(
-            'InitializationService: LlmConfigLoader resolved from container for adapter initialization.'
-          );
-          await llmAdapter.init({ llmConfigLoader: llmConfigLoaderInstance });
-
-          if (
-            typeof llmAdapter.isOperational === 'function' &&
-            llmAdapter.isOperational()
-          ) {
-            this.#logger.debug(
-              `InitializationService: ConfigurableLLMAdapter initialized successfully and is operational.`
-            );
-          } else {
-            this.#logger.warn(
-              `InitializationService: ConfigurableLLMAdapter.init() completed BUT THE ADAPTER IS NOT OPERATIONAL. Check adapter-specific logs (e.g., LlmConfigLoader errors).`
-            );
-          }
-        }
-      } catch (adapterInitError) {
-        this.#logger.error(
-          `InitializationService: CRITICAL error during ConfigurableLLMAdapter.init(): ${adapterInitError.message}`,
-          {
-            errorName: adapterInitError.name,
-            errorStack: adapterInitError.stack,
-            errorObj: adapterInitError,
-          }
-        );
-        // Note: This error is logged but does not currently stop the entire initialization sequence.
-        // The ILLMAdapter will be non-operational.
-      }
-      // ***** END: Initialize ConfigurableLLMAdapter *****
-
-      this.#logger.debug('Initializing tagged systems...');
-      await this.#systemInitializer.initializeAll();
-      this.#logger.debug(
-        'InitializationService: Tagged system initialization complete.'
-      );
-
-      this.#logger.debug('Initializing world entities...');
-      const worldInitSuccess =
-        await this.#worldInitializer.initializeWorldEntities(worldName);
-      if (!worldInitSuccess) {
-        throw new Error('World initialization failed via WorldInitializer.');
-      }
-      this.#logger.debug(
-        'InitializationService: Initial world entities instantiated and spatial index built.'
-      );
-
-      // Register AI persistence listeners
-      const dispatcher = this.#safeEventDispatcher;
-      const entityManager = /** @type {IEntityManager} */ (this.#entityManager);
-      const thoughtListener = new ThoughtPersistenceListener({
-        logger: this.#logger,
-        entityManager,
-      });
-      const notesListener = new NotesPersistenceListener({
-        logger: this.#logger,
-        entityManager,
-        dispatcher,
-      });
-      dispatcher.subscribe(
-        ACTION_DECIDED_ID,
-        thoughtListener.handleEvent.bind(thoughtListener)
-      );
-      dispatcher.subscribe(
-        ACTION_DECIDED_ID,
-        notesListener.handleEvent.bind(notesListener)
-      );
-      this.#logger.debug('Registered AI persistence listeners.');
+      await this.#loadMods(worldName);
+      await this.#initializeScopeRegistry();
+      await this.#initLlmAdapter();
+      await this.#initSystems();
+      await this.#initWorld(worldName);
+      this.#setupPersistenceListeners();
 
       this.#logger.debug(
         'Ensuring DomUiFacade is instantiated so UI components are ready...'
       );
-      if (!this.#domUiFacade) {
-        throw new Error('Failed to resolve DomUiFacade');
-      }
+      if (!this.#domUiFacade) throw new Error('Failed to resolve DomUiFacade');
       this.#logger.debug('DomUiFacade ready.');
-
       this.#logger.debug(
         `InitializationService: Initialization sequence for world '${worldName}' completed successfully (GameLoop resolution removed).`
       );
-
       return {
         success: true,
         details: { message: `World '${worldName}' initialized.` },
       };
     } catch (error) {
-      this.#logger.error(
-        `CRITICAL ERROR during initialization sequence for world '${worldName}': ${error.message}`,
-        {
-          errorMessage: error.message,
-          errorName: error.name,
-          errorStack: error.stack,
-        }
-      );
-
-      const failedPayload = {
-        worldName,
-        error: error.message,
-        stack: error instanceof Error ? error.stack : undefined,
-      };
-      this.#validatedEventDispatcher
-        .dispatch(INITIALIZATION_SERVICE_FAILED_ID, failedPayload, {
-          allowSchemaNotFound: true,
-        })
-        .then(() =>
-          this.#logger.debug(
-            `Dispatched ${INITIALIZATION_SERVICE_FAILED_ID} event.`,
-            failedPayload
-          )
-        )
-        .catch((e) =>
-          this.#logger.error(
-            `Failed to dispatch ${INITIALIZATION_SERVICE_FAILED_ID} event`,
-            e
-          )
-        );
-
-      try {
-        await this.#validatedEventDispatcher.dispatch(UI_SHOW_FATAL_ERROR_ID, {
-          title: 'Fatal Initialization Error',
-          message: `Initialization failed for world '${worldName}'. Reason: ${error.message}`,
-          details: error instanceof Error ? error.stack : 'No stack available.',
-        });
-        await this.#validatedEventDispatcher.dispatch('core:disable_input', {
-          message: 'Fatal error during initialization. Cannot continue.',
-        });
-        this.#logger.debug(
-          `InitializationService: Dispatched ${UI_SHOW_FATAL_ERROR_ID} and core:disable_input events.`
-        );
-      } catch (dispatchError) {
-        this.#logger.error(
-          `InitializationService: Failed to dispatch UI error events after initialization failure:`,
-          dispatchError
-        );
-      }
-
+      await this.#reportFatalError(error, worldName);
       return {
         success: false,
         error: error instanceof Error ? error : new Error(error.message),
         details: { worldName },
       };
+    }
+  }
+
+  async #loadMods(worldName) {
+    this.#logger.debug('Loading world data via ModsLoader...');
+    const loadReport = await this.#modsLoader.loadMods(worldName);
+    this.#logger.debug(
+      `InitializationService: World data loaded successfully for world: ${worldName}. Load report: ${JSON.stringify(loadReport)}`
+    );
+  }
+
+  async #initializeScopeRegistry() {
+    this.#logger.debug('Initializing ScopeRegistry...');
+    const scopes = this.#dataRegistry.getAll('scopes');
+    const scopeMap = {};
+    scopes.forEach((scope) => {
+      if (scope.id) {
+        scopeMap[scope.id] = scope;
+      }
+    });
+    this.#scopeRegistry.initialize(scopeMap);
+    this.#logger.debug('ScopeRegistry initialized.');
+  }
+
+  async #initLlmAdapter() {
+    this.#logger.debug(
+      'InitializationService: Attempting to initialize ConfigurableLLMAdapter...'
+    );
+    try {
+      const llmAdapter = this.#llmAdapter;
+      if (!llmAdapter) {
+        this.#logger.error(
+          'InitializationService: Failed to resolve ILLMAdapter from container. Cannot initialize.'
+        );
+      } else if (typeof llmAdapter.init !== 'function') {
+        this.#logger.error(
+          'InitializationService: Resolved ILLMAdapter does not have an init method.'
+        );
+      } else if (
+        typeof llmAdapter.isInitialized === 'function' &&
+        llmAdapter.isInitialized()
+      ) {
+        this.#logger.debug(
+          'InitializationService: ConfigurableLLMAdapter already initialized. Skipping re-initialization.'
+        );
+      } else {
+        const llmConfigLoaderInstance = this.#llmConfigLoader;
+        this.#logger.debug(
+          'InitializationService: LlmConfigLoader resolved from container for adapter initialization.'
+        );
+        await llmAdapter.init({ llmConfigLoader: llmConfigLoaderInstance });
+        if (
+          typeof llmAdapter.isOperational === 'function' &&
+          llmAdapter.isOperational()
+        ) {
+          this.#logger.debug(
+            `InitializationService: ConfigurableLLMAdapter initialized successfully and is operational.`
+          );
+        } else {
+          this.#logger.warn(
+            `InitializationService: ConfigurableLLMAdapter.init() completed BUT THE ADAPTER IS NOT OPERATIONAL. Check adapter-specific logs (e.g., LlmConfigLoader errors).`
+          );
+        }
+      }
+    } catch (adapterInitError) {
+      this.#logger.error(
+        `InitializationService: CRITICAL error during ConfigurableLLMAdapter.init(): ${adapterInitError.message}`,
+        {
+          errorName: adapterInitError.name,
+          errorStack: adapterInitError.stack,
+          errorObj: adapterInitError,
+        }
+      );
+    }
+  }
+
+  async #initSystems() {
+    this.#logger.debug('Initializing tagged systems...');
+    await this.#systemInitializer.initializeAll();
+    this.#logger.debug(
+      'InitializationService: Tagged system initialization complete.'
+    );
+  }
+
+  async #initWorld(worldName) {
+    this.#logger.debug('Initializing world entities...');
+    const worldInitSuccess =
+      await this.#worldInitializer.initializeWorldEntities(worldName);
+    if (!worldInitSuccess) {
+      throw new Error('World initialization failed via WorldInitializer.');
+    }
+    this.#logger.debug(
+      'InitializationService: Initial world entities instantiated and spatial index built.'
+    );
+  }
+
+  #setupPersistenceListeners() {
+    const dispatcher = this.#safeEventDispatcher;
+    const entityManager = /** @type {IEntityManager} */ (this.#entityManager);
+    const thoughtListener = new ThoughtPersistenceListener({
+      logger: this.#logger,
+      entityManager,
+    });
+    const notesListener = new NotesPersistenceListener({
+      logger: this.#logger,
+      entityManager,
+      dispatcher,
+    });
+    dispatcher.subscribe(
+      ACTION_DECIDED_ID,
+      thoughtListener.handleEvent.bind(thoughtListener)
+    );
+    dispatcher.subscribe(
+      ACTION_DECIDED_ID,
+      notesListener.handleEvent.bind(notesListener)
+    );
+    this.#logger.debug('Registered AI persistence listeners.');
+  }
+
+  async #reportFatalError(error, worldName) {
+    this.#logger.error(
+      `CRITICAL ERROR during initialization sequence for world '${worldName}': ${error.message}`,
+      {
+        errorMessage: error.message,
+        errorName: error.name,
+        errorStack: error.stack,
+      }
+    );
+
+    const failedPayload = {
+      worldName,
+      error: error.message,
+      stack: error instanceof Error ? error.stack : undefined,
+    };
+    this.#validatedEventDispatcher
+      .dispatch(INITIALIZATION_SERVICE_FAILED_ID, failedPayload, {
+        allowSchemaNotFound: true,
+      })
+      .then(() =>
+        this.#logger.debug(
+          `Dispatched ${INITIALIZATION_SERVICE_FAILED_ID} event.`,
+          failedPayload
+        )
+      )
+      .catch((e) =>
+        this.#logger.error(
+          `Failed to dispatch ${INITIALIZATION_SERVICE_FAILED_ID} event`,
+          e
+        )
+      );
+
+    try {
+      await this.#validatedEventDispatcher.dispatch(UI_SHOW_FATAL_ERROR_ID, {
+        title: 'Fatal Initialization Error',
+        message: `Initialization failed for world '${worldName}'. Reason: ${error.message}`,
+        details: error instanceof Error ? error.stack : 'No stack available.',
+      });
+      await this.#validatedEventDispatcher.dispatch('core:disable_input', {
+        message: 'Fatal error during initialization. Cannot continue.',
+      });
+      this.#logger.debug(
+        `InitializationService: Dispatched ${UI_SHOW_FATAL_ERROR_ID} and core:disable_input events.`
+      );
+    } catch (dispatchError) {
+      this.#logger.error(
+        `InitializationService: Failed to dispatch UI error events after initialization failure:`,
+        dispatchError
+      );
     }
   }
 }
