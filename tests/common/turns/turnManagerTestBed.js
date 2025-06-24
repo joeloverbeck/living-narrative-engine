@@ -307,6 +307,21 @@ export class TurnManagerTestBed extends SpyTrackerMixin(
   }
 
   /**
+   * Prepares the manager for {@link TurnManager.start} by mocking the handler
+   * resolver and stubbing {@link TurnManager.advanceTurn}.
+   *
+   * @returns {import('@jest/globals').Mock} Spy on advanceTurn used during
+   *   preparation.
+   */
+  prepareRunningManager() {
+    this.setupMockHandlerResolver();
+    const spy = this.spyOnAdvanceTurn();
+    spy.mockResolvedValue(undefined);
+    this.resetMocks();
+    return spy;
+  }
+
+  /**
    * Retrieves the subscribed callback for the given event id.
    *
    * @param {string} eventId - Event identifier.
