@@ -8,6 +8,22 @@
 /** @typedef {import('./LoadResultAggregator.js').TotalResultsSummary} TotalResultsSummary */
 
 /**
+ * Computes summed totals across all registry keys.
+ *
+ * @param {TotalResultsSummary} totals - Map of content type totals.
+ * @returns {{count: number, overrides: number, errors: number}} Grand totals.
+ */
+export function computeTotalsSummary(totals) {
+  const summary = { count: 0, overrides: 0, errors: 0 };
+  for (const counts of Object.values(totals)) {
+    summary.count += counts.count;
+    summary.overrides += counts.overrides;
+    summary.errors += counts.errors;
+  }
+  return summary;
+}
+
+/**
  * @description Utility for printing a formatted summary of the world load.
  * @class
  */
@@ -48,21 +64,10 @@ export class WorldLoadSummaryLogger {
         const details = `${counts.count} loaded, ${counts.overrides} overrides, ${counts.errors} errors`;
         logger.info(`     - ${paddedRegistryKey}: ${details}`);
       }
-      const grandTotalCount = Object.values(totals).reduce(
-        (sum, tc) => sum + tc.count,
-        0
-      );
-      const grandTotalOverrides = Object.values(totals).reduce(
-        (sum, tc) => sum + tc.overrides,
-        0
-      );
-      const grandTotalErrors = Object.values(totals).reduce(
-        (sum, tc) => sum + tc.errors,
-        0
-      );
+      const grandTotals = computeTotalsSummary(totals);
       logger.info(`     - ${''.padEnd(20, '-')}--------------------------`);
       logger.info(
-        `     - ${'TOTAL'.padEnd(20, ' ')}: C:${grandTotalCount}, O:${grandTotalOverrides}, E:${grandTotalErrors}`
+        `     - ${'TOTAL'.padEnd(20, ' ')}: C:${grandTotals.count}, O:${grandTotals.overrides}, E:${grandTotals.errors}`
       );
     } else {
       logger.info(
