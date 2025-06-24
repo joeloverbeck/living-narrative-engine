@@ -195,6 +195,7 @@ describe('registerLoaders (with Mock DI Container)', () => {
       tokens.IDataRegistry,
       tokens.IDataFetcher,
       tokens.ITextDataFetcher,
+      tokens.ProxyUrl,
       tokens.ILoadCache,
       // Specific Loaders
       tokens.SchemaLoader,
@@ -225,7 +226,7 @@ describe('registerLoaders (with Mock DI Container)', () => {
       tokens.WorldPhase,
       tokens.SummaryPhase,
     ];
-    const expectedRegistrationCount = expectedTokens.length; // This must be 33 now
+    const expectedRegistrationCount = expectedTokens.length; // Includes ProxyUrl
 
     // Expect 1 (ILogger from beforeEach) + all from registerLoaders
     expect(mockContainer.register).toHaveBeenCalledTimes(

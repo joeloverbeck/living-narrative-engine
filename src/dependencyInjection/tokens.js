@@ -26,6 +26,7 @@ import { freeze } from '../utils';
  * @property {DiToken} outputDiv - Token for the main output HTML element (legacy/direct access).
  * @property {DiToken} inputElement - Token for the command input HTML element (legacy/direct access).
  * @property {DiToken} titleElement - Token for the title HTML element (legacy/direct access).
+ * @property {DiToken} ProxyUrl - Token for the LLM proxy server URL.
  *
  * --- DOM UI Layer (Refactored) ---
  * @property {DiToken} IDocumentContext - Token for the DOM access abstraction service.
@@ -172,6 +173,7 @@ export const tokens = freeze({
   outputDiv: 'outputDiv', // Legacy/Direct access
   inputElement: 'inputElement', // Legacy/Direct access
   titleElement: 'titleElement', // Legacy/Direct access
+  ProxyUrl: 'ProxyUrl',
 
   // --- DOM UI Layer (Refactored) ---
   IDocumentContext: 'IDocumentContext',

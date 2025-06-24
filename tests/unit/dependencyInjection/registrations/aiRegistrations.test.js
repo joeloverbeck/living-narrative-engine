@@ -71,6 +71,8 @@ describe('AI registration helpers', () => {
     container = new AppContainer();
     registrar = new Registrar(container);
 
+    container.register(tokens.ProxyUrl, 'http://proxy.test');
+
     // Reset all mocks and spies before each test
     jest.restoreAllMocks();
     jest.clearAllMocks();
@@ -141,6 +143,7 @@ describe('AI registration helpers', () => {
     it('should register IHttpClient using IValidatedEventDispatcher as fallback', () => {
       const fallbackContainer = new AppContainer();
       fallbackContainer.register(tokens.ILogger, logger);
+      fallbackContainer.register(tokens.ProxyUrl, 'http://proxy.test');
       fallbackContainer.register(tokens.IValidatedEventDispatcher, {
         dispatch: jest.fn(),
       });
@@ -258,7 +261,7 @@ describe('AI registration helpers', () => {
 
     test.each(services)(
       'should register $token correctly',
-      ({ token, Class }) => {
+      ({ token }) => {
         registerAIGameStateProviders(registrar, logger);
         expect(container.isRegistered(token)).toBe(true);
       }
@@ -295,7 +298,7 @@ describe('AI registration helpers', () => {
 
     test.each(pipelineSingletonServices)(
       'should register $token correctly',
-      ({ token, Class }) => {
+      ({ token }) => {
         registerAITurnPipeline(registrar, logger);
         expect(container.isRegistered(token)).toBe(true);
       }
