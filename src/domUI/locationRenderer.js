@@ -14,6 +14,10 @@ import {
   // PORTRAIT_COMPONENT_ID might be implicitly used by EntityDisplayDataProvider
 } from '../constants/componentIds.js';
 
+import { buildLocationDisplayPayload } from './location/buildLocationDisplayPayload.js';
+import { renderPortraitElements } from './location/renderPortraitElements.js';
+import { renderLocationLists } from './location/renderLocationLists.js';
+
 /**
  * @typedef {import('../interfaces/ILogger').ILogger} ILogger
  * @typedef {import('../interfaces/IDocumentContext.js').IDocumentContext} IDocumentContext
@@ -34,15 +38,7 @@ import {
  */
 
 /**
- * Represents the data structure for displaying a location.
- *
- * @typedef {object} LocationDisplayPayload
- * @property {string} name - The name of the location.
- * @property {string} description - The textual description of the location.
- * @property {string | null} [portraitPath] - Optional path to the location's portrait image.
- * @property {string | null} [portraitAltText] - Optional alt text for the location's portrait.
- * @property {Array<import('../entities/entityDisplayDataProvider.js').ProcessedExit>} exits - List of exits from the location.
- * @property {Array<CharacterDisplayData>} characters - List of characters present in the location.
+ * @typedef {import('./location/buildLocationDisplayPayload.js').LocationDisplayPayload} LocationDisplayPayload
  */
 
 import {
@@ -230,7 +226,7 @@ export class LocationRenderer extends BoundDomRendererBase {
         currentActorEntityId
       );
 
-      const displayPayload = this.#buildLocationDisplayPayload(
+      const displayPayload = buildLocationDisplayPayload(
         locationDetails,
         portraitData,
         charactersInLocation
@@ -330,28 +326,6 @@ export class LocationRenderer extends BoundDomRendererBase {
       `${this._logPrefix} Found ${charactersInLocation.length} other characters.`
     );
     return charactersInLocation;
-  }
-
-  /**
-   * Build the payload for rendering a location.
-   *
-   * @private
-   * @param {object} locationDetails - Details object from the provider.
-   * @param {{imagePath:string, altText?:string}|null} portraitData - Optional portrait info.
-   * @param {Array<CharacterDisplayData>} characters - Characters present.
-   * @returns {LocationDisplayPayload} Structured display payload.
-   */
-  #buildLocationDisplayPayload(locationDetails, portraitData, characters) {
-    return {
-      name: locationDetails.name,
-      description: locationDetails.description,
-      portraitPath: portraitData ? portraitData.imagePath : null,
-      portraitAltText: portraitData
-        ? portraitData.altText || `Image of ${locationDetails.name}`
-        : null,
-      exits: locationDetails.exits,
-      characters,
-    };
   }
 
   #clearAllDisplaysOnErrorWithMessage(message) {
@@ -591,33 +565,13 @@ export class LocationRenderer extends BoundDomRendererBase {
         locationDto.name || DEFAULT_LOCATION_NAME;
     }
 
-    // NEW: Location Portrait
-    if (
-      locationDto.portraitPath &&
-      this.elements.locationPortraitImageElement &&
-      this.elements.locationPortraitVisualsElement
-    ) {
-      this.logger.debug(
-        `${this._logPrefix} Setting location portrait to ${locationDto.portraitPath}`
-      );
-      this.elements.locationPortraitImageElement.src = locationDto.portraitPath;
-      this.elements.locationPortraitImageElement.alt =
-        locationDto.portraitAltText ||
-        `Image of ${locationDto.name || 'location'}`;
-      this.elements.locationPortraitImageElement.style.display = 'block';
-      this.elements.locationPortraitVisualsElement.style.display = 'flex'; // Use flex as per CSS
-    } else if (
-      this.elements.locationPortraitVisualsElement &&
-      this.elements.locationPortraitImageElement
-    ) {
-      this.logger.debug(
-        `${this._logPrefix} No portrait path for location. Hiding portrait elements.`
-      );
-      this.elements.locationPortraitVisualsElement.style.display = 'none';
-      this.elements.locationPortraitImageElement.style.display = 'none';
-      this.elements.locationPortraitImageElement.src = '';
-      this.elements.locationPortraitImageElement.alt = '';
-    }
+    // Location Portrait
+    renderPortraitElements(
+      this.elements.locationPortraitImageElement,
+      this.elements.locationPortraitVisualsElement,
+      locationDto,
+      this.logger
+    );
 
     // Description
     DomUtils.clearElement(this.elements.descriptionDisplay);
@@ -633,20 +587,7 @@ export class LocationRenderer extends BoundDomRendererBase {
     }
 
     // Exits and Characters
-    this._renderList(
-      locationDto.exits,
-      this.elements.exitsDisplay,
-      'Exits',
-      'description',
-      '(None visible)'
-    );
-    this._renderList(
-      locationDto.characters,
-      this.elements.charactersDisplay,
-      'Characters',
-      'name',
-      '(None else here)'
-    );
+    renderLocationLists(this, locationDto);
 
     this.logger.debug(
       `${this._logPrefix} Location "${locationDto.name}" display updated.`
