@@ -424,34 +424,63 @@ export class BaseManifestItemLoader extends AbstractLoader {
     );
 
     const settledResults = await Promise.allSettled(processingPromises);
+    const { processedCount, overrideCount, failedCount, failures } =
+      this.#summarizeSettledResults(
+        settledResults,
+        filenames,
+        modId,
+        contentKey,
+        totalAttempted
+      );
 
+    return {
+      count: processedCount,
+      overrides: overrideCount,
+      errors: failedCount,
+      failures,
+    };
+  }
+
+  /**
+   * Aggregates results from Promise.allSettled and logs a summary.
+   *
+   * @private
+   * @param {PromiseSettledResult<{qualifiedId:string,didOverride:boolean}>[]} settledResults - Results.
+   * @param {string[]} filenames - Original filenames.
+   * @param {string} modId - Owning mod ID.
+   * @param {string} contentKey - Content key for logging.
+   * @param {number} totalAttempted - Total files attempted.
+   * @returns {{processedCount:number,overrideCount:number,failedCount:number,failures:{file:string,error:any}[]}}
+   *   Summary counts.
+   */
+  #summarizeSettledResults(
+    settledResults,
+    filenames,
+    modId,
+    contentKey,
+    totalAttempted
+  ) {
     let processedCount = 0;
-    let overrideCount = 0; // <<< ADDED override counter
+    let overrideCount = 0;
     let failedCount = 0;
     const failures = [];
 
     settledResults.forEach((result, index) => {
-      const currentFilename = filenames[index]; // Get filename for logging context
+      const currentFilename = filenames[index];
       if (result.status === 'fulfilled') {
         processedCount++;
-        // Check the didOverride flag from the result value
         if (result.value && result.value.didOverride === true) {
-          // <<< CHECK for override
           overrideCount++;
         }
-        // Debug log for success is already in _processFileWrapper
       } else {
         failedCount++;
         failures.push({ file: currentFilename, error: result.reason });
-        // Error logging is already handled comprehensively in _processFileWrapper
-        // Only log a debug message here indicating which file failed in the batch
         this._logger.debug(
           `[${modId}] Failure recorded for ${currentFilename} in batch processing. Reason logged previously.`
         );
       }
     });
 
-    // Log summary using the calculated counts
     const overrideMessage =
       overrideCount > 0 ? ` (${overrideCount} overrides)` : '';
     const failureMessage = failedCount > 0 ? ` (${failedCount} failed)` : '';
@@ -459,13 +488,7 @@ export class BaseManifestItemLoader extends AbstractLoader {
       `Mod [${modId}] - Processed ${processedCount}/${totalAttempted} ${contentKey} items.${overrideMessage}${failureMessage}`
     );
 
-    // Return the detailed result object
-    return {
-      count: processedCount,
-      overrides: overrideCount,
-      errors: failedCount,
-      failures,
-    }; // <<< MODIFIED RETURN VALUE
+    return { processedCount, overrideCount, failedCount, failures };
   }
 
   /**

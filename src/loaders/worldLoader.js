@@ -192,54 +192,24 @@ export class WorldLoader extends AbstractLoader {
         'worlds',
         filename
       );
-      this._logger.debug(
-        `WorldLoader [${modId}]: Processing world file '${filename}'.`
+      const worldData = await this.#loadWorldFile(
+        resolvedPath,
+        modId,
+        filename
       );
 
-      const worldData = await this._dataFetcher.fetch(resolvedPath);
-
-      validateAgainstSchema(
-        this._schemaValidator,
+      const { qualifiedWorldId, validation } = this.#validateWorldData(
+        worldData,
         worldSchemaId,
-        worldData,
-        this._logger,
-        {
-          failureMessage: `Schema validation failed for world '${filename}' in mod '${modId}'.`,
-          failureThrowMessage: `Schema validation failed for ${filename}.`,
-        }
+        modId,
+        filename
       );
 
-      let validation = { resolved: 0, unresolved: 0, instanceCount: 0 };
-      if (worldData.instances && Array.isArray(worldData.instances)) {
-        validation = this.#validateWorldInstances(worldData, modId, filename);
-        this._logger.debug(
-          `WorldLoader [${modId}]: Successfully validated ${validation.instanceCount} instances from '${filename}'.`
-        );
-      } else if (worldData.instances) {
-        this._logger.warn(
-          `WorldLoader [${modId}]: 'instances' field in '${filename}' is not an array. Skipping instance validation.`,
-          { modId, filename, actualType: typeof worldData.instances }
-        );
-      }
-
-      const { fullId: qualifiedWorldId } = parseAndValidateId(
-        worldData,
-        'id',
+      const didOverride = this.#storeWorldData(
         modId,
         filename,
-        this._logger,
-        { allowFallback: false }
-      );
-
-      const didOverride = this._dataRegistry.store(
-        WORLDS_REGISTRY_KEY,
         qualifiedWorldId,
         worldData
-      );
-
-      this._logger.debug(
-        `WorldLoader: Registered world '${qualifiedWorldId}' from file '${filename}'.`,
-        { qualifiedWorldId, filename, modId }
       );
 
       this.#updateTotals(totals, {
@@ -251,12 +221,6 @@ export class WorldLoader extends AbstractLoader {
         resolved: validation.resolved,
         unresolved: validation.unresolved,
       });
-
-      if (didOverride) {
-        this._logger.warn(
-          `World '${qualifiedWorldId}' from mod '${modId}' overwrote an existing world definition.`
-        );
-      }
     } catch (error) {
       this.#updateTotals(totals, { success: false });
       this._logger.error(
@@ -272,6 +236,100 @@ export class WorldLoader extends AbstractLoader {
         throw error;
       }
     }
+  }
+
+  /**
+   * Loads a world file from disk and returns its data.
+   *
+   * @private
+   * @async
+   * @param {string} resolvedPath - Fully resolved file path.
+   * @param {string} modId - Owning mod ID.
+   * @param {string} filename - World file name.
+   * @returns {Promise<any>} Loaded world data.
+   */
+  async #loadWorldFile(resolvedPath, modId, filename) {
+    this._logger.debug(
+      `WorldLoader [${modId}]: Processing world file '${filename}'.`
+    );
+    const worldData = await this._dataFetcher.fetch(resolvedPath);
+    return worldData;
+  }
+
+  /**
+   * Validates world data and its instances and returns the qualified ID.
+   *
+   * @private
+   * @param {any} worldData - Parsed world data.
+   * @param {string} worldSchemaId - Schema ID for validation.
+   * @param {string} modId - Owning mod ID.
+   * @param {string} filename - Source filename.
+   * @returns {{qualifiedWorldId:string, validation:{resolved:number,unresolved:number,instanceCount:number}}}
+   *   Validation info.
+   */
+  #validateWorldData(worldData, worldSchemaId, modId, filename) {
+    validateAgainstSchema(
+      this._schemaValidator,
+      worldSchemaId,
+      worldData,
+      this._logger,
+      {
+        failureMessage: `Schema validation failed for world '${filename}' in mod '${modId}'.`,
+        failureThrowMessage: `Schema validation failed for ${filename}.`,
+      }
+    );
+
+    let validation = { resolved: 0, unresolved: 0, instanceCount: 0 };
+    if (worldData.instances && Array.isArray(worldData.instances)) {
+      validation = this.#validateWorldInstances(worldData, modId, filename);
+      this._logger.debug(
+        `WorldLoader [${modId}]: Successfully validated ${validation.instanceCount} instances from '${filename}'.`
+      );
+    } else if (worldData.instances) {
+      this._logger.warn(
+        `WorldLoader [${modId}]: 'instances' field in '${filename}' is not an array. Skipping instance validation.`,
+        { modId, filename, actualType: typeof worldData.instances }
+      );
+    }
+
+    const { fullId: qualifiedWorldId } = parseAndValidateId(
+      worldData,
+      'id',
+      modId,
+      filename,
+      this._logger,
+      { allowFallback: false }
+    );
+
+    return { qualifiedWorldId, validation };
+  }
+
+  /**
+   * Stores validated world data in the registry.
+   *
+   * @private
+   * @param {string} modId - Owning mod ID.
+   * @param {string} filename - Source filename.
+   * @param {string} qualifiedWorldId - Qualified world ID.
+   * @param {any} worldData - World data object.
+   * @returns {boolean} Whether an overwrite occurred.
+   */
+  #storeWorldData(modId, filename, qualifiedWorldId, worldData) {
+    const didOverride = this._dataRegistry.store(
+      WORLDS_REGISTRY_KEY,
+      qualifiedWorldId,
+      worldData
+    );
+    this._logger.debug(
+      `WorldLoader: Registered world '${qualifiedWorldId}' from file '${filename}'.`,
+      { qualifiedWorldId, filename, modId }
+    );
+    if (didOverride) {
+      this._logger.warn(
+        `World '${qualifiedWorldId}' from mod '${modId}' overwrote an existing world definition.`
+      );
+    }
+    return didOverride;
   }
 
   /**
