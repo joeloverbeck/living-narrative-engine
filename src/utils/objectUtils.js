@@ -81,7 +81,7 @@ export function safeResolvePath(
   contextInfo = '',
   dispatcher
 ) {
-  const log = ensureValidLogger(logger, 'ObjectUtils');
+  const moduleLogger = ensureValidLogger(logger, 'ObjectUtils');
   try {
     return resolvePath(obj, propertyPath);
   } catch (error) {
@@ -93,7 +93,7 @@ export function safeResolvePath(
         stack: error?.stack,
       });
     } else {
-      log.error(message, error);
+      moduleLogger.error(message, error);
     }
     return undefined;
   }

@@ -40,17 +40,17 @@ export function buildRuleCache(rules, logger) {
 
     // detect `{ "==": [ { "var": "event.payload.actionId" }, "<CONST>" ] }`
     let constId = null;
-    const c = rule.condition;
+    const condition = rule.condition;
     if (
-      c &&
-      typeof c === 'object' &&
-      '==' in c &&
-      Array.isArray(c['==']) &&
-      c['=='].length === 2 &&
-      typeof c['=='][1] === 'string' &&
-      c['=='][0]?.var === 'event.payload.actionId'
+      condition &&
+      typeof condition === 'object' &&
+      '==' in condition &&
+      Array.isArray(condition['==']) &&
+      condition['=='].length === 2 &&
+      typeof condition['=='][1] === 'string' &&
+      condition['=='][0]?.var === 'event.payload.actionId'
     ) {
-      constId = c['=='][1];
+      constId = condition['=='][1];
     }
 
     if (rule.event_type === ATTEMPT_ACTION_ID && constId) {

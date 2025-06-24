@@ -25,10 +25,12 @@ import { isNonBlankString } from './textUtils.js';
  * @returns {any | null} The component data if available, otherwise `null`.
  */
 export function getComponentFromEntity(entity, componentId, logger) {
-  const log = getPrefixedLogger(logger, '[componentAccessUtils] ');
+  const moduleLogger = getPrefixedLogger(logger, '[componentAccessUtils] ');
 
   if (!isNonBlankString(componentId) || !isValidEntity(entity)) {
-    log.debug('getComponentFromEntity: invalid entity or componentId.');
+    moduleLogger.debug(
+      'getComponentFromEntity: invalid entity or componentId.'
+    );
     return null;
   }
 
@@ -36,7 +38,7 @@ export function getComponentFromEntity(entity, componentId, logger) {
     const data = entity.getComponentData(componentId);
     return data ?? null;
   } catch (error) {
-    log.debug(
+    moduleLogger.debug(
       'getComponentFromEntity: error retrieving component data.',
       error
     );
@@ -65,15 +67,19 @@ export function getComponentFromManager(
   entityManager,
   logger
 ) {
-  const log = getPrefixedLogger(logger, '[componentAccessUtils] ');
+  const moduleLogger = getPrefixedLogger(logger, '[componentAccessUtils] ');
 
   if (!isNonBlankString(entityId) || !isNonBlankString(componentId)) {
-    log.debug('getComponentFromManager: invalid entityId or componentId.');
+    moduleLogger.debug(
+      'getComponentFromManager: invalid entityId or componentId.'
+    );
     return null;
   }
 
   if (!isValidEntityManager(entityManager)) {
-    log.debug('getComponentFromManager: invalid entityManager provided.');
+    moduleLogger.debug(
+      'getComponentFromManager: invalid entityManager provided.'
+    );
     return null;
   }
 
@@ -81,7 +87,7 @@ export function getComponentFromManager(
     const data = entityManager.getComponentData(entityId, componentId);
     return data ?? null;
   } catch (error) {
-    log.debug(
+    moduleLogger.debug(
       `getComponentFromManager: error retrieving '${componentId}' for entity '${entityId}'.`,
       error
     );
@@ -103,7 +109,7 @@ export function getComponentFromManager(
  * @returns {Entity | null} The resolved entity instance or `null` when not found.
  */
 export function resolveEntityInstance(entityOrId, entityManager, logger) {
-  const log = getPrefixedLogger(logger, '[componentAccessUtils] ');
+  const moduleLogger = getPrefixedLogger(logger, '[componentAccessUtils] ');
 
   if (isValidEntity(entityOrId)) {
     return entityOrId;
@@ -111,7 +117,7 @@ export function resolveEntityInstance(entityOrId, entityManager, logger) {
 
   if (typeof entityOrId === 'string') {
     if (!isValidEntityManager(entityManager)) {
-      log.warn(
+      moduleLogger.warn(
         'resolveEntityInstance: invalid entityManager provided for ID lookup.'
       );
       return null;
@@ -122,7 +128,7 @@ export function resolveEntityInstance(entityOrId, entityManager, logger) {
       return resolved;
     }
 
-    log.debug(
+    moduleLogger.debug(
       `resolveEntityInstance: could not resolve entity for ID '${entityOrId}'.`
     );
     return null;

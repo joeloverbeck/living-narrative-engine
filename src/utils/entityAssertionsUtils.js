@@ -29,7 +29,7 @@ export function assertValidEntity(
   contextName = 'UnknownContext',
   safeEventDispatcher
 ) {
-  const log = getModuleLogger('EntityValidation', logger);
+  const moduleLogger = getModuleLogger('EntityValidation', logger);
   if (!entity || !isNonBlankString(entity.id)) {
     const errMsg = `${contextName}: entity is required and must have a valid id.`;
     const payload = {
@@ -39,7 +39,7 @@ export function assertValidEntity(
     if (safeEventDispatcher?.dispatch) {
       safeEventDispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, payload);
     } else {
-      log.warn(`${errMsg} - SafeEventDispatcher missing.`, { entity });
+      moduleLogger.warn(`${errMsg} - SafeEventDispatcher missing.`, { entity });
     }
     throw new Error(errMsg);
   }
