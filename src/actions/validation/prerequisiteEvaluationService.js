@@ -115,9 +115,9 @@ export class PrerequisiteEvaluationService extends BaseService {
     actionId,
     actorId
   ) {
-    let evalCtx;
+    let evaluationContext;
     try {
-      evalCtx = this.#actionValidationContextBuilder.buildContext(
+      evaluationContext = this.#actionValidationContextBuilder.buildContext(
         actionDefinition,
         actor,
         targetContext
@@ -127,7 +127,7 @@ export class PrerequisiteEvaluationService extends BaseService {
       );
       this.#logger.debug(
         `PrereqEval[${actionId}] Context:`,
-        JSON.stringify(evalCtx, null, 2)
+        JSON.stringify(evaluationContext, null, 2)
       );
     } catch (buildError) {
       this.#logger.error(
@@ -141,7 +141,7 @@ export class PrerequisiteEvaluationService extends BaseService {
       return null;
     }
 
-    return evalCtx;
+    return evaluationContext;
   }
 
   /**
@@ -151,7 +151,7 @@ export class PrerequisiteEvaluationService extends BaseService {
    * @param {object} prereqObject - The prerequisite object containing a logic rule.
    * @param {number} ruleNumber - The index (1-based) of the rule being evaluated.
    * @param {number} totalRules - Total number of prerequisite rules.
-   * @param {JsonLogicEvaluationContext} evalCtx - The context used for evaluation.
+   * @param {JsonLogicEvaluationContext} evaluationContext - The context used for evaluation.
    * @param {string} actionId - The ID of the action being evaluated.
    * @returns {boolean} True if the prerequisite passes, false otherwise.
    */
@@ -159,7 +159,7 @@ export class PrerequisiteEvaluationService extends BaseService {
     prereqObject,
     ruleNumber,
     totalRules,
-    evalCtx,
+    evaluationContext,
     actionId
   ) {
     if (
@@ -188,7 +188,10 @@ export class PrerequisiteEvaluationService extends BaseService {
         )}`
       );
 
-      pass = this.#jsonLogicEvaluationService.evaluate(resolvedLogic, evalCtx);
+      pass = this.#jsonLogicEvaluationService.evaluate(
+        resolvedLogic,
+        evaluationContext
+      );
     } catch (evalError) {
       this.#logger.error(
         `PrereqEval[${actionId}]: ← FAILED (Rule ${ruleNumber}/${totalRules}): Error during rule resolution or evaluation. Rule: ${JSON.stringify(
@@ -224,11 +227,11 @@ export class PrerequisiteEvaluationService extends BaseService {
    * @description Evaluates an array of prerequisite rules using the provided context.
    * @private
    * @param {object[]} prerequisites - The prerequisite rule objects.
-   * @param {JsonLogicEvaluationContext} evalCtx - Context for rule evaluation.
+   * @param {JsonLogicEvaluationContext} evaluationContext - Context for rule evaluation.
    * @param {string} actionId - The ID of the action being evaluated.
    * @returns {boolean} True if all rules pass, false if any fail.
    */
-  #evaluateRules(prerequisites, evalCtx, actionId) {
+  #evaluateRules(prerequisites, evaluationContext, actionId) {
     this.#logger.debug(
       `PrereqEval[${actionId}]: Evaluating ${prerequisites.length} prerequisite rule(s)...`
     );
@@ -240,7 +243,7 @@ export class PrerequisiteEvaluationService extends BaseService {
           prereqObject,
           ruleNumber,
           prerequisites.length,
-          evalCtx,
+          evaluationContext,
           actionId
         )
       ) {
@@ -275,17 +278,17 @@ export class PrerequisiteEvaluationService extends BaseService {
       return true;
     }
 
-    const evalCtx = this.#buildPrerequisiteContext(
+    const evaluationContext = this.#buildPrerequisiteContext(
       actionDefinition,
       actor,
       targetContext,
       actionId,
       actorId
     );
-    if (!evalCtx) {
+    if (!evaluationContext) {
       return false;
     }
 
-    return this.#evaluateRules(prerequisites, evalCtx, actionId);
+    return this.#evaluateRules(prerequisites, evaluationContext, actionId);
   }
 }
