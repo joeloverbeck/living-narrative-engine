@@ -45,10 +45,7 @@ import { EntityNotFoundError } from '../errors/entityNotFoundError';
 import { InvalidArgumentError } from '../errors/invalidArgumentError.js';
 import { DuplicateEntityError } from '../errors/duplicateEntityError.js';
 import { ValidationError } from '../errors/validationError.js';
-import {
-  ENTITY_CREATED_ID,
-  ENTITY_REMOVED_ID,
-} from '../constants/eventIds.js';
+import { ENTITY_CREATED_ID, ENTITY_REMOVED_ID } from '../constants/eventIds.js';
 
 /* -------------------------------------------------------------------------- */
 /* Type-Hint Imports (JSDoc only – removed at runtime)                        */
@@ -140,27 +137,40 @@ class EntityManager extends IEntityManager {
    *   dependency will use the default from {@link createDefaultDeps}.
    * @param {IDataRegistry}        deps.registry - Data registry for definitions.
    * @param {IEntityRepository}    [deps.repository] - Repository for active entities.
+   * @param {Function}             [deps.repositoryFactory] - Factory for the repository.
    * @param {ISchemaValidator}     deps.validator - Schema validator instance.
    * @param {ILogger}              deps.logger - Logger implementation.
    * @param {ISafeEventDispatcher} deps.dispatcher - Event dispatcher.
    * @param {IIdGenerator}         [deps.idGenerator] - ID generator function.
+   * @param {Function}             [deps.idGeneratorFactory] - Factory for the ID generator.
    * @param {IComponentCloner}     [deps.cloner] - Component deep cloner.
+   * @param {Function}             [deps.clonerFactory] - Factory for the cloner.
    * @param {IDefaultComponentPolicy} [deps.defaultPolicy] - Default component injection policy.
+   * @param {Function}             [deps.defaultPolicyFactory] - Factory for the default component policy.
    * @throws {Error} If any dependency is missing or malformed.
    */
   constructor({
     registry,
     repository,
+    repositoryFactory,
     validator,
     logger,
     dispatcher,
     idGenerator,
+    idGeneratorFactory,
     cloner,
+    clonerFactory,
     defaultPolicy,
+    defaultPolicyFactory,
   } = {}) {
     super();
 
-    const defaults = createDefaultDeps();
+    const defaults = createDefaultDeps({
+      repositoryFactory,
+      idGeneratorFactory,
+      clonerFactory,
+      defaultPolicyFactory,
+    });
     const resolveDep = (dep, defaultDep) => {
       if (dep === undefined || dep === null) return defaultDep;
       if (typeof defaultDep !== 'function' && typeof dep === 'function') {
@@ -254,8 +264,6 @@ class EntityManager extends IEntityManager {
     return this.#entityRepository.get(instanceId);
   }
 
-
-
   /**
    * Retrieves an entity definition from the registry or cache.
    *
@@ -283,8 +291,6 @@ class EntityManager extends IEntityManager {
     this.#logger.warn(`Definition not found in registry: ${definitionId}`);
     return null;
   }
-
-
 
   /**
    * Validate serialized entity data prior to reconstruction.
@@ -373,8 +379,6 @@ class EntityManager extends IEntityManager {
   #validateRemoveEntityInstanceParams(instanceId) {
     validateRemoveEntityInstanceParamsUtil(instanceId, this.#logger);
   }
-
-
 
   /* ---------------------------------------------------------------------- */
   /* Entity Creation                                                         */
@@ -514,7 +518,11 @@ class EntityManager extends IEntityManager {
    * @throws {ValidationError} If component data validation fails.
    */
   addComponent(instanceId, componentTypeId, componentData) {
-    this.#componentMutationService.addComponent(instanceId, componentTypeId, componentData);
+    this.#componentMutationService.addComponent(
+      instanceId,
+      componentTypeId,
+      componentData
+    );
   }
 
   /**

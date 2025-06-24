@@ -67,7 +67,7 @@ class EntityFactory {
   /** @type {Function} @private */
   #cloner;
   /** @type {object} @private */
-  #defaultPolicy;
+  #defaultPolicy; // eslint-disable-line no-unused-private-class-members
 
   /**
    * @class
