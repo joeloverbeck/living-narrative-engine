@@ -27,6 +27,20 @@ export class EntityManagerAdapter {
     this.entityManager = entityManager;
     /** @private */
     this.locationQueryService = locationQueryService;
+
+    return new Proxy(this, {
+      get(target, prop, receiver) {
+        if (Reflect.has(target, prop)) {
+          return Reflect.get(target, prop, receiver);
+        }
+
+        const value = target.entityManager[prop];
+        if (typeof value === 'function') {
+          return value.bind(target.entityManager);
+        }
+        return value;
+      },
+    });
   }
 
   /**
@@ -40,63 +54,5 @@ export class EntityManagerAdapter {
     return this.locationQueryService.getEntitiesInLocation(locationId);
   }
 
-  // Delegate all other IEntityManager methods to the wrapped entityManager
-
-  getEntityInstance(instanceId) {
-    return this.entityManager.getEntityInstance(instanceId);
-  }
-
-  createEntityInstance(definitionId, options = {}) {
-    return this.entityManager.createEntityInstance(definitionId, options);
-  }
-
-  reconstructEntity(serializedEntity) {
-    return this.entityManager.reconstructEntity(serializedEntity);
-  }
-
-  getComponentData(instanceId, componentTypeId) {
-    return this.entityManager.getComponentData(instanceId, componentTypeId);
-  }
-
-  hasComponent(instanceId, componentTypeId) {
-    return this.entityManager.hasComponent(instanceId, componentTypeId);
-  }
-
-  hasComponentOverride(instanceId, componentTypeId) {
-    return this.entityManager.hasComponentOverride(instanceId, componentTypeId);
-  }
-
-  getEntitiesWithComponent(componentTypeId) {
-    return this.entityManager.getEntitiesWithComponent(componentTypeId);
-  }
-
-  addComponent(instanceId, componentTypeId, componentData) {
-    return this.entityManager.addComponent(
-      instanceId,
-      componentTypeId,
-      componentData
-    );
-  }
-
-  removeComponent(instanceId, componentTypeId) {
-    return this.entityManager.removeComponent(instanceId, componentTypeId);
-  }
-
-  findEntities(query) {
-    return this.entityManager.findEntities(query);
-  }
-
-  /**
-   * Clears all entities from the underlying EntityManager.
-   * Also clears any associated caches held by the EntityManager.
-   *
-   * @returns {void}
-   */
-  clearAll() {
-    this.entityManager.clearAll();
-  }
-
-  get entities() {
-    return this.entityManager.entities;
-  }
+  // All other property accesses are delegated via Proxy
 }

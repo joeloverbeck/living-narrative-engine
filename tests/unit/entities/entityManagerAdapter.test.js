@@ -23,6 +23,36 @@ describe('EntityManagerAdapter', () => {
     expect(entityManager.clearAll).toHaveBeenCalled();
   });
 
+  it('forwards property access to the wrapped entity manager', () => {
+    const entityIterator = Symbol('iterator');
+    const entityManager = { entities: entityIterator };
+    const locationQueryService = { getEntitiesInLocation: jest.fn() };
+    const adapter = new EntityManagerAdapter({
+      entityManager,
+      locationQueryService,
+    });
+
+    expect(adapter.entities).toBe(entityIterator);
+  });
+
+  it('uses locationQueryService for getEntitiesInLocation', () => {
+    const entityManager = { clearAll: jest.fn() };
+    const locationQueryService = {
+      getEntitiesInLocation: jest.fn(() => new Set(['1'])),
+    };
+    const adapter = new EntityManagerAdapter({
+      entityManager,
+      locationQueryService,
+    });
+
+    const result = adapter.getEntitiesInLocation('loc1');
+
+    expect(locationQueryService.getEntitiesInLocation).toHaveBeenCalledWith(
+      'loc1'
+    );
+    expect(result).toEqual(new Set(['1']));
+  });
+
   it('is compatible with GameStateRestorer', () => {
     const entityManager = {
       clearAll: jest.fn(),
