@@ -15,9 +15,6 @@ import {
   TARGET_DOMAIN_NONE,
 } from '../../constants/targetDomains.js';
 import { ENTITY as TARGET_TYPE_ENTITY } from '../../constants/actionTargetTypes.js';
-// --- Refactor-AVS-3.4: Remove dependency ---
-// REMOVED: import { ActionValidationContextBuilder } from './actionValidationContextBuilder.js';
-// --- End Refactor-AVS-3.4 ---
 
 /**
  * @class ActionValidationService
@@ -30,9 +27,6 @@ export class ActionValidationService extends BaseService {
   /** @type {ILogger} */ #logger;
   /** @type {DomainContextCompatibilityChecker} */ #domainContextCompatibilityChecker;
   /** @type {PrerequisiteEvaluationService} */ #prerequisiteEvaluationService;
-  // --- Refactor-AVS-3.4: Remove dependency ---
-  // REMOVED: /** @type {ActionValidationContextBuilder} */ #actionValidationContextBuilder; // AC2: Field removed
-  // --- End Refactor-AVS-3.4 ---
 
   /**
    * Creates an instance of ActionValidationService.
@@ -55,9 +49,6 @@ export class ActionValidationService extends BaseService {
     logger,
     domainContextCompatibilityChecker,
     prerequisiteEvaluationService,
-    // --- Refactor-AVS-3.4: Remove dependency ---
-    // REMOVED: actionValidationContextBuilder, // AC1: Dependency removed from constructor destructuring
-    // --- End Refactor-AVS-3.4 ---
   }) {
     super();
     this.#logger = this._init('ActionValidationService', logger, {
@@ -90,9 +81,6 @@ export class ActionValidationService extends BaseService {
     // this.#logger is already set
     this.#domainContextCompatibilityChecker = domainContextCompatibilityChecker;
     this.#prerequisiteEvaluationService = prerequisiteEvaluationService;
-    // --- Refactor-AVS-3.4: Remove dependency ---
-    // REMOVED: this.#actionValidationContextBuilder = actionValidationContextBuilder; // AC2: Field assignment removed
-    // --- End Refactor-AVS-3.4 ---
 
     // Log message updated to reflect removed dependency implicitly
     this.#logger.debug(
@@ -196,17 +184,6 @@ export class ActionValidationService extends BaseService {
    * @returns {void}
    */
   warnIfTargetMissing(targetContext, actionId) {
-    // Refactor-AVS-4.1 Decision: Keep EntityManager dependency for warnIfTargetMissing.
-    // Reason: This check provides an early warning if a target entity ID resolved for validation
-    // does not correspond to an active entity instance in the EntityManager.
-    // While the PrerequisiteEvaluation flow (via ActionValidationContextBuilder) already handles
-    // non-existent target entities gracefully by providing a null `target.entity` in the evaluation context,
-    // this check remains as a low-cost, non-blocking informational step during validation.
-    // Removing it would eliminate the EM dependency from AVS but shift the warning log later in the process.
-    // Moving it (e.g., to TargetResolutionService or ActionExecutor) would require adding the EM
-    // dependency there or increasing orchestration complexity.
-    // Keeping it here is deemed the most pragmatic approach for now, accepting the minimal
-    // dependency overhead for the benefit of the early warning log message.
     if (targetContext.type === TARGET_TYPE_ENTITY) {
       const targetEntity = this.#entityManager.getEntityInstance(
         targetContext.entityId
