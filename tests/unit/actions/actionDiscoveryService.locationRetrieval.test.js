@@ -56,9 +56,9 @@ describe('ActionDiscoveryService – scoped discovery', () => {
 
   const formatActionCommandFn = (def, ctx) => {
     if (ctx.entityId) {
-      return `${def.commandVerb} ${ctx.entityId}`;
+      return { ok: true, value: `${def.commandVerb} ${ctx.entityId}` };
     }
-    return def.commandVerb;
+    return { ok: true, value: def.commandVerb };
   };
 
   const getEntityIdsForScopesFn = (scopes, context, logger) => {

@@ -124,9 +124,9 @@ describe('ActionDiscoveryService - Wait Action Tests', () => {
     );
     mockFormatActionCommandFn.mockImplementation((actionDef, targetContext) => {
       if (actionDef.id === 'core:wait' && targetContext.type === 'none') {
-        return actionDef.template;
+        return { ok: true, value: actionDef.template };
       }
-      return null;
+      return { ok: false, error: 'invalid' };
     });
     mockGetEntityIdsForScopesFn.mockReturnValue(new Set());
     mockEntityManager.getEntityInstance.mockImplementation((id) => {

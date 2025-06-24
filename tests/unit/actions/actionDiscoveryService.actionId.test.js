@@ -22,7 +22,7 @@ describe('ActionDiscoveryService params exposure', () => {
     const actionValidationService = {
       isValid: () => true,
     };
-    const formatActionCommandFn = () => 'attack rat123';
+    const formatActionCommandFn = () => ({ ok: true, value: 'attack rat123' });
     const getEntityIdsForScopesFn = () => new Set(['rat123']);
     const logger = {
       debug: jest.fn(),

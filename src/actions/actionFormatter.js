@@ -22,19 +22,35 @@ import {
 } from '../constants/actionTargetTypes.js';
 
 /**
+ * @typedef {object} FormatActionOk
+ * @property {true} ok - Indicates success.
+ * @property {string} value - The formatted command string.
+ */
+
+/**
+ * @typedef {object} FormatActionError
+ * @property {false} ok - Indicates failure.
+ * @property {string} error - The reason formatting failed.
+ */
+
+/**
+ * @typedef {FormatActionOk | FormatActionError} FormatActionCommandResult
+ */
+
+/**
  * @description Helper for reporting argument validation errors.
  * @param {ISafeEventDispatcher} dispatcher - Dispatcher for error events.
  * @param {string} message - Error message to send.
  * @param {object} [detail] - Optional error detail payload.
- * @returns {null} Always returns `null`.
+ * @returns {FormatActionError} Result object representing the failure.
  */
 function reportValidationError(dispatcher, message, detail) {
   safeDispatchError(dispatcher, message, detail);
-  return null;
+  return { ok: false, error: message };
 }
 
 /**
- * @typedef {Object.<string, (command: string, context: ActionTargetContext, deps: object) => (string|null)>} TargetFormatterMap
+ * @typedef {Object.<string, (command: string, context: ActionTargetContext, deps: object) => FormatActionCommandResult>} TargetFormatterMap
  */
 
 /**
@@ -48,7 +64,7 @@ function reportValidationError(dispatcher, message, detail) {
  *   logger: ILogger,
  *   debug: boolean
  * }} deps - Supporting services and flags.
- * @returns {string | null} The formatted command or null on failure.
+ * @returns {FormatActionCommandResult} The result of formatting.
  */
 function formatEntityTarget(
   command,
@@ -57,10 +73,9 @@ function formatEntityTarget(
 ) {
   const targetId = context.entityId;
   if (!targetId) {
-    logger.warn(
-      `formatActionCommand: Target context type is '${TARGET_TYPE_ENTITY}' but entityId is missing for action ${actionId}. Template: "${command}"`
-    );
-    return null;
+    const message = `formatActionCommand: Target context type is '${TARGET_TYPE_ENTITY}' but entityId is missing for action ${actionId}. Template: "${command}"`;
+    logger.warn(message);
+    return { ok: false, error: message };
   }
 
   let targetName = targetId;
@@ -78,7 +93,7 @@ function formatEntityTarget(
     );
   }
 
-  return command.replace('{target}', targetName);
+  return { ok: true, value: command.replace('{target}', targetName) };
 }
 
 /**
@@ -86,20 +101,19 @@ function formatEntityTarget(
  * @param {string} command - The command template string.
  * @param {ActionTargetContext} context - Target context with `direction`.
  * @param {{ actionId: string, logger: ILogger, debug: boolean }} deps - Logger and flags.
- * @returns {string | null} The formatted command or null when direction is missing.
+ * @returns {FormatActionCommandResult} The formatting result.
  */
 function formatDirectionTarget(command, context, { actionId, logger, debug }) {
   const direction = context.direction;
   if (!direction) {
-    logger.warn(
-      `formatActionCommand: Target context type is '${TARGET_TYPE_DIRECTION}' but direction string is missing for action ${actionId}. Template: "${command}"`
-    );
-    return null;
+    const message = `formatActionCommand: Target context type is '${TARGET_TYPE_DIRECTION}' but direction string is missing for action ${actionId}. Template: "${command}"`;
+    logger.warn(message);
+    return { ok: false, error: message };
   }
   if (debug) {
     logger.debug(` -> Using direction: "${direction}"`);
   }
-  return command.replace('{direction}', direction);
+  return { ok: true, value: command.replace('{direction}', direction) };
 }
 
 /**
@@ -107,7 +121,7 @@ function formatDirectionTarget(command, context, { actionId, logger, debug }) {
  * @param {string} command - The command template string.
  * @param {ActionTargetContext} _context - Context of type `none` (unused).
  * @param {{ actionId: string, logger: ILogger, debug: boolean }} deps - Logger and flags.
- * @returns {string} The unmodified command string.
+ * @returns {FormatActionCommandResult} The formatting result with the unchanged command.
  */
 function formatNoneTarget(command, _context, { actionId, logger, debug }) {
   if (debug) {
@@ -118,7 +132,7 @@ function formatNoneTarget(command, _context, { actionId, logger, debug }) {
       `formatActionCommand: Action ${actionId} has target_domain '${TARGET_DOMAIN_NONE}' but template "${command}" contains placeholders.`
     );
   }
-  return command;
+  return { ok: true, value: command };
 }
 
 /**
@@ -144,7 +158,7 @@ export const targetFormatterMap = {
  * @param {(entity: Entity, fallback: string, logger?: ILogger) => string} [displayNameFn] -
  *  Function used to resolve entity display names.
  * @param {TargetFormatterMap} [formatterMap] - Map of target types to formatter functions.
- * @returns {string | null} The formatted command string, or null if inputs are invalid.
+ * @returns {FormatActionCommandResult} Result object containing the formatted command or an error.
  * @throws {Error} If critical dependencies (entityManager, displayNameFn) are missing or invalid during processing.
  */
 export function formatActionCommand(
@@ -211,19 +225,21 @@ export function formatActionCommand(
   try {
     const formatter = formatterMap[contextType];
     if (formatter) {
-      const newCommand = formatter(command, targetContext, {
+      let newCommand = formatter(command, targetContext, {
         actionId: actionDefinition.id,
         entityManager,
         displayNameFn,
         logger,
         debug,
       });
-
-      if (newCommand === null) {
-        return null;
+      if (typeof newCommand === 'string') {
+        newCommand = { ok: true, value: newCommand };
+      }
+      if (!newCommand.ok) {
+        return newCommand;
       }
 
-      command = newCommand;
+      command = newCommand.value;
     } else {
       logger.warn(
         `formatActionCommand: Unknown targetContext type: ${contextType} for action ${actionDefinition.id}. Returning template unmodified.`
@@ -235,12 +251,15 @@ export function formatActionCommand(
       `formatActionCommand: Error during placeholder substitution for action ${actionDefinition.id}:`,
       { error: error.message, stack: error.stack }
     );
-    return null; // Return null on processing error
+    return {
+      ok: false,
+      error: 'formatActionCommand: Error during placeholder substitution.',
+    };
   }
 
   // --- 3. Return Formatted String ---
   if (debug) {
     logger.debug(` <- Final formatted command: "${command}"`);
   }
-  return command;
+  return { ok: true, value: command };
 }

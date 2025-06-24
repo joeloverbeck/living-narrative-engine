@@ -169,15 +169,20 @@ describe('ActionDiscoveryService - Go Action (Fixed State)', () => {
 
     mockFormatActionCommandFn.mockImplementation(
       (actionDef, targetContext, entityManager) => {
-        if (actionDef.id === 'core:wait') return 'wait';
+        if (actionDef.id === 'core:wait') {
+          return { ok: true, value: 'wait' };
+        }
         if (actionDef.id === 'core:go' && targetContext.type === 'entity') {
           const targetEntity = entityManager.getEntityInstance(
             targetContext.entityId
           );
           const targetName = targetEntity.getComponentData('core:name').text;
-          return actionDef.template.replace('{target}', targetName);
+          return {
+            ok: true,
+            value: actionDef.template.replace('{target}', targetName),
+          };
         }
-        return null;
+        return { ok: false, error: 'invalid' };
       }
     );
 

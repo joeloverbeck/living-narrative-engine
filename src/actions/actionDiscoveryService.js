@@ -131,17 +131,18 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
       return null;
     }
 
-    const formattedCommand = this.#formatActionCommandFn(
+    const formatResult = this.#formatActionCommandFn(
       actionDef,
       targetCtx,
       this.#entityManager,
       formatterOptions,
       this.#getEntityDisplayNameFn
     );
-
-    if (formattedCommand === null) {
+    if (!formatResult.ok) {
       return null;
     }
+
+    const formattedCommand = formatResult.value;
 
     return {
       id: actionDef.id,
