@@ -24,7 +24,8 @@ describeEngineSuite('GameEngine', (context) => {
       (bed, engine) => {
         engine.showLoadGameUI();
         return [bed.getLogger().error, bed.getSafeEventDispatcher().dispatch];
-      }
+      },
+      {}
     )('should log error if %s is unavailable when showing load UI');
   });
 });

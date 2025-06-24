@@ -59,7 +59,7 @@ describeInitializedEngineSuite(
           ).not.toHaveBeenCalled();
           return [bed.getLogger().error, bed.getSafeEventDispatcher().dispatch];
         },
-        1
+        { extraAssertions: 1 }
       )('should log error if %s is unavailable when showing save UI');
     });
   },

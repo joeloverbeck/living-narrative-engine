@@ -130,15 +130,16 @@ export function runUnavailableServiceTest(cases, invokeFn) {
  *   [import('@jest/globals').Mock, import('@jest/globals').Mock]} invokeFn -
  *   Function invoked during each test case. It should perform the call under
  *   test and return the logger and dispatch mocks to validate.
- * @param {number} [extraAssertions] - Additional assertions performed inside
- *   {@code invokeFn}.
+ * @param {{ extraAssertions?: number }} [options] - Additional options.
+ *   Use `extraAssertions` to specify the number of assertions performed
+ *   inside {@code invokeFn}.
  * @returns {(title: string) => void} Callback that runs the generated `it.each`
  *   suite when provided a test title.
  */
 export function generateServiceUnavailableTests(
   cases,
   invokeFn,
-  extraAssertions = 0
+  { extraAssertions = 0 } = {}
 ) {
   const eachFn = it.each(runUnavailableServiceTest(cases, invokeFn));
   return (title) =>
