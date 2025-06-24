@@ -23,6 +23,7 @@ describe('ActionDiscoveryService - processActionDefinition', () => {
   let safeEventDispatcher;
   let mockScopeRegistry;
   let mockScopeEngine;
+  let mockActionIndex;
 
   beforeEach(() => {
     gameDataRepo = { getAllActionDefinitions: jest.fn() };
@@ -51,6 +52,13 @@ describe('ActionDiscoveryService - processActionDefinition', () => {
       resolve: jest.fn(() => new Set()),
     };
 
+    // Set up dynamic actionIndex mock
+    mockActionIndex = {
+      getCandidateActions: jest.fn().mockImplementation(() => {
+        return gameDataRepo.getAllActionDefinitions();
+      })
+    };
+
     service = new ActionDiscoveryService({
       gameDataRepository: gameDataRepo,
       entityManager,
@@ -60,6 +68,7 @@ describe('ActionDiscoveryService - processActionDefinition', () => {
       safeEventDispatcher,
       scopeRegistry: mockScopeRegistry,
       scopeEngine: mockScopeEngine,
+      actionIndex: mockActionIndex,
     });
   });
 

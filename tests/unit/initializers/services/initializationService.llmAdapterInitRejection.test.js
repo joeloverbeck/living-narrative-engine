@@ -55,6 +55,8 @@ describe('InitializationService LLM adapter rejection', () => {
       safeEventDispatcher,
       entityManager,
       domUiFacade,
+      actionIndex: { buildIndex: jest.fn() },
+      gameDataRepository: { getAllActionDefinitions: jest.fn().mockReturnValue([]) },
     });
 
     const result = await svc.runInitializationSequence(WORLD);

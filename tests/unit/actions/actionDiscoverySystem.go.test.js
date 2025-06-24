@@ -95,6 +95,7 @@ describe('ActionDiscoveryService - Go Action (Fixed State)', () => {
   let mockAdventurersGuildLocation;
   let mockTownLocation;
   let mockActionContext;
+  let mockActionIndex;
 
   beforeEach(() => {
     // Reset all manual mocks before each test
@@ -169,6 +170,13 @@ describe('ActionDiscoveryService - Go Action (Fixed State)', () => {
       logger: mockLogger,
     };
 
+    // Set up dynamic actionIndex mock
+    mockActionIndex = {
+      getCandidateActions: jest.fn().mockImplementation(() => {
+        return mockGameDataRepo.getAllActionDefinitions();
+      })
+    };
+
     actionDiscoveryService = new ActionDiscoveryService({
       gameDataRepository: mockGameDataRepo,
       entityManager: mockEntityManager,
@@ -178,6 +186,7 @@ describe('ActionDiscoveryService - Go Action (Fixed State)', () => {
       safeEventDispatcher: mockSafeEventDispatcher,
       scopeRegistry: mockScopeRegistry,
       scopeEngine: mockScopeEngine,
+      actionIndex: mockActionIndex,
     });
   });
 
@@ -235,7 +244,7 @@ describe('ActionDiscoveryService - Go Action (Fixed State)', () => {
 
     expect(mockLogger.debug).toHaveBeenCalledWith(
       expect.stringContaining(
-        `Finished action discovery for actor ${HERO_INSTANCE_ID}. Found 2 actions.`
+        `Finished action discovery for actor ${HERO_INSTANCE_ID}. Found 2 actions from 2 candidates.`
       )
     );
   });

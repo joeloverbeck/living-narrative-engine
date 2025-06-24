@@ -3,7 +3,7 @@
  * @see tests/actions/actionDiscoveryService.locationRetrieval.test.js
  */
 
-import { jest, test, expect } from '@jest/globals';
+import { jest, test, expect, beforeEach } from '@jest/globals';
 import { ActionDiscoveryService } from '../../../src/actions/actionDiscoveryService.js';
 
 describe('ActionDiscoveryService – scoped discovery', () => {
@@ -75,10 +75,14 @@ describe('ActionDiscoveryService – scoped discovery', () => {
     actionValidationService,
     logger,
     formatActionCommandFn,
-    // getEntityIdsForScopesFn is no longer a dependency
     safeEventDispatcher,
     scopeRegistry,
     scopeEngine: mockScopeEngine,
+    actionIndex: {
+      getCandidateActions: jest.fn().mockImplementation(() => {
+        return gameDataRepository.getAllActionDefinitions();
+      })
+    },
   });
 
   /** Bare-bones actor / context objects */

@@ -48,6 +48,7 @@ describe('ActionDiscoveryService - Wait Action Tests', () => {
   let mockScopeRegistry;
   /** @type {jest.Mocked<import('../../../src/interfaces/IScopeEngine.js').IScopeEngine>} */
   let mockScopeEngine;
+  let mockActionIndex;
 
   const ACTOR_INSTANCE_ID = 'actor1-instance-wait';
   const LOCATION_INSTANCE_ID = 'location1-instance-wait';
@@ -146,6 +147,14 @@ describe('ActionDiscoveryService - Wait Action Tests', () => {
       },
     };
 
+    // Set up a dynamic mock for actionIndex that reflects what the GameDataRepository would return
+    mockActionIndex = {
+      getCandidateActions: jest.fn().mockImplementation(() => {
+        // Return the same actions that the GameDataRepository would return
+        return mockGameDataRepo.getAllActionDefinitions();
+      })
+    };
+
     actionDiscoveryService = new ActionDiscoveryService({
       gameDataRepository: mockGameDataRepo,
       entityManager: mockEntityManager,
@@ -155,6 +164,7 @@ describe('ActionDiscoveryService - Wait Action Tests', () => {
       safeEventDispatcher: mockSafeEventDispatcher,
       scopeRegistry: mockScopeRegistry,
       scopeEngine: mockScopeEngine,
+      actionIndex: mockActionIndex,
     });
   });
 
@@ -174,7 +184,9 @@ describe('ActionDiscoveryService - Wait Action Tests', () => {
       },
     ]);
 
-    expect(mockGameDataRepo.getAllActionDefinitions).toHaveBeenCalledTimes(1);
+    // ActionDiscoveryService now uses ActionIndex.getCandidateActions instead of GameDataRepository.getAllActionDefinitions
+    expect(mockActionIndex.getCandidateActions).toHaveBeenCalledTimes(1);
+    expect(mockActionIndex.getCandidateActions).toHaveBeenCalledWith(mockActorEntity);
     expect(mockValidationService.isValid).toHaveBeenCalledTimes(1);
     expect(mockValidationService.isValid).toHaveBeenCalledWith(
       coreWaitActionDefinition,
@@ -190,7 +202,7 @@ describe('ActionDiscoveryService - Wait Action Tests', () => {
       expect.any(Function)
     );
 
-    // Log messages: only start and finish
+    // Log messages now include candidate count information
     expect(mockLogger.debug).toHaveBeenCalledWith(
       expect.stringContaining(
         `Starting action discovery for actor: ${ACTOR_INSTANCE_ID}`
@@ -198,7 +210,7 @@ describe('ActionDiscoveryService - Wait Action Tests', () => {
     );
     expect(mockLogger.debug).toHaveBeenCalledWith(
       expect.stringContaining(
-        `Finished action discovery for actor ${ACTOR_INSTANCE_ID}. Found 1 actions.`
+        `Finished action discovery for actor ${ACTOR_INSTANCE_ID}. Found 1 actions from 1 candidates.`
       )
     );
   });
@@ -214,7 +226,7 @@ describe('ActionDiscoveryService - Wait Action Tests', () => {
     expect(result.actions).toEqual([]);
     expect(mockFormatActionCommandFn).not.toHaveBeenCalled();
 
-    // Only start and finish logs
+    // Only start and finish logs - updated to include candidate count
     expect(mockLogger.debug).toHaveBeenCalledWith(
       expect.stringContaining(
         `Starting action discovery for actor: ${ACTOR_INSTANCE_ID}`
@@ -222,7 +234,7 @@ describe('ActionDiscoveryService - Wait Action Tests', () => {
     );
     expect(mockLogger.debug).toHaveBeenCalledWith(
       expect.stringContaining(
-        `Finished action discovery for actor ${ACTOR_INSTANCE_ID}. Found 0 actions.`
+        `Finished action discovery for actor ${ACTOR_INSTANCE_ID}. Found 0 actions from 1 candidates.`
       )
     );
   });
@@ -241,7 +253,7 @@ describe('ActionDiscoveryService - Wait Action Tests', () => {
 
     expect(mockLogger.debug).toHaveBeenCalledWith(
       expect.stringContaining(
-        `Finished action discovery for actor ${ACTOR_INSTANCE_ID}. Found 0 actions.`
+        `Finished action discovery for actor ${ACTOR_INSTANCE_ID}. Found 0 actions from 0 candidates.`
       )
     );
   });

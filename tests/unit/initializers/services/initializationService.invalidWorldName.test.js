@@ -46,6 +46,8 @@ describe('InitializationService invalid world name handling', () => {
         safeEventDispatcher,
         entityManager,
         domUiFacade,
+        actionIndex: { buildIndex: jest.fn() },
+        gameDataRepository: { getAllActionDefinitions: jest.fn().mockReturnValue([]) },
       });
 
       const result = await service.runInitializationSequence(bad);

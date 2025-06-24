@@ -22,6 +22,7 @@ import { INITIALIZABLE } from '../tags.js';
 
 // --- Service Imports ---
 import { ActionDiscoveryService } from '../../actions/actionDiscoveryService.js';
+import { ActionIndex } from '../../actions/actionIndex.js';
 import { ActionValidationContextBuilder } from '../../actions/validation/actionValidationContextBuilder.js';
 import { PrerequisiteEvaluationService } from '../../actions/validation/prerequisiteEvaluationService.js';
 import { DomainContextCompatibilityChecker } from '../../validation/domainContextCompatibilityChecker.js';
@@ -57,6 +58,13 @@ export function registerCommandAndAction(container) {
     });
   });
 
+  // --- Action Index ---
+  // Must be registered before ActionDiscoveryService
+  registrar.single(tokens.ActionIndex, ActionIndex, [
+    tokens.ILogger,
+    tokens.IEntityManager,
+  ]);
+
   // --- Action Discovery & Execution ---
   registrar
     .tagged(INITIALIZABLE)
@@ -65,6 +73,7 @@ export function registerCommandAndAction(container) {
         gameDataRepository: c.resolve(tokens.IGameDataRepository),
         entityManager: c.resolve(tokens.IEntityManager),
         actionValidationService: c.resolve(tokens.ActionValidationService),
+        actionIndex: c.resolve(tokens.ActionIndex),
         logger: c.resolve(tokens.ILogger),
         formatActionCommandFn: formatActionCommand,
         safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),

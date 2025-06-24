@@ -3,6 +3,10 @@
 import AppContainer from '../../../../src/dependencyInjection/appContainer.js';
 import InitializationService from '../../../../src/initializers/services/initializationService.js'; // Adjust path if needed
 import { registerOrchestration } from '../../../../src/dependencyInjection/registrations/orchestrationRegistrations.js'; // Function under test (partially)
+import { registerCommandAndAction } from '../../../../src/dependencyInjection/registrations/commandAndActionRegistrations.js';
+import { registerWorldAndEntity } from '../../../../src/dependencyInjection/registrations/worldAndEntityRegistrations.js';
+import { registerInfrastructure } from '../../../../src/dependencyInjection/registrations/infrastructureRegistrations.js';
+import { registerLoaders } from '../../../../src/dependencyInjection/registrations/loadersRegistrations.js';
 import { tokens } from '../../../../src/dependencyInjection/tokens.js';
 import {
   beforeEach,
@@ -37,23 +41,34 @@ describe('InitializationService Integration with AppContainer', () => {
 
     // Reset mocks before each test (clears calls from previous tests)
     jest.clearAllMocks();
+  });
 
-    container.register(tokens.ILogger, () => mockLogger, {
-      lifecycle: 'singleton',
-    });
-    container.register(
-      tokens.IValidatedEventDispatcher,
-      () => mockValidatedEventDispatcher,
-      { lifecycle: 'singleton' }
-    );
+  afterEach(() => {
+    if (container) {
+      // Ensure container exists before trying to reset
+      container.reset(); // Clean up container registrations and instances
+    }
+  });
+
+  it('should resolve InitializationService without throwing "key undefined" error after fix', () => {
+    // --- Arrange ---
+    // Register basic dependencies first (needed by other registrations)
+    container.register(tokens.ILogger, () => mockLogger);
+    container.register(tokens.IConfiguration, () => ({}));
+    
+    // Register required dependencies
+    registerLoaders(container);
+    registerInfrastructure(container);
+    registerWorldAndEntity(container);
+    registerCommandAndAction(container);
+    
+    // Override specific services with mocks after registration
+    container.register(tokens.IValidatedEventDispatcher, () => mockValidatedEventDispatcher);
     container.register(tokens.ModsLoader, () => ({
       loadMods: jest.fn().mockResolvedValue({}),
     }));
     container.register(tokens.IScopeRegistry, () => ({
       initialize: jest.fn(),
-    }));
-    container.register(tokens.IDataRegistry, () => ({
-      getAll: jest.fn().mockReturnValue([]),
     }));
     container.register(tokens.LLMAdapter, () => ({
       init: jest.fn(),
@@ -74,17 +89,7 @@ describe('InitializationService Integration with AppContainer', () => {
     }));
     container.register(tokens.IEntityManager, () => ({}));
     container.register(tokens.DomUiFacade, () => ({}));
-  });
-
-  afterEach(() => {
-    if (container) {
-      // Ensure container exists before trying to reset
-      container.reset(); // Clean up container registrations and instances
-    }
-  });
-
-  it('should resolve InitializationService without throwing "key undefined" error after fix', () => {
-    // --- Arrange ---
+    
     // Run the registration function that defines the InitializationService factory.
     registerOrchestration(container);
 
@@ -102,6 +107,44 @@ describe('InitializationService Integration with AppContainer', () => {
 
   it('should inject and use the logger dependency during construction', () => {
     // --- Arrange ---
+    // Register basic dependencies first (needed by other registrations)
+    container.register(tokens.ILogger, () => mockLogger);
+    container.register(tokens.IConfiguration, () => ({}));
+    
+    // Register required dependencies
+    registerLoaders(container);
+    registerInfrastructure(container);
+    registerWorldAndEntity(container);
+    registerCommandAndAction(container);
+    
+    // Override specific services with mocks after registration
+    container.register(tokens.IValidatedEventDispatcher, () => mockValidatedEventDispatcher);
+    container.register(tokens.ModsLoader, () => ({
+      loadMods: jest.fn().mockResolvedValue({}),
+    }));
+    container.register(tokens.IScopeRegistry, () => ({
+      initialize: jest.fn(),
+    }));
+    container.register(tokens.LLMAdapter, () => ({
+      init: jest.fn(),
+      isInitialized: jest.fn(),
+      isOperational: jest.fn(),
+    }));
+    container.register(tokens.LlmConfigLoader, () => ({
+      loadConfigs: jest.fn(),
+    }));
+    container.register(tokens.SystemInitializer, () => ({
+      initializeAll: jest.fn(),
+    }));
+    container.register(tokens.WorldInitializer, () => ({
+      initializeWorldEntities: jest.fn().mockReturnValue(true),
+    }));
+    container.register(tokens.ISafeEventDispatcher, () => ({
+      subscribe: jest.fn(),
+    }));
+    container.register(tokens.IEntityManager, () => ({}));
+    container.register(tokens.DomUiFacade, () => ({}));
+    
     // Register the service using the orchestration logic. This will cause some logs.
     registerOrchestration(container);
 
