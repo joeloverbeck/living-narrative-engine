@@ -1,7 +1,10 @@
 /** @jest-environment node */
 
 import { describe, it, expect } from '@jest/globals';
-import { createMockDataFetcher } from '../../common/mockFactories/index.js';
+import {
+  createMockDataFetcher,
+  MockDataFetcher,
+} from '../../common/mockFactories/index.js';
 import fs from 'fs';
 
 describe('createMockDataFetcher (in-memory)', () => {
@@ -10,6 +13,7 @@ describe('createMockDataFetcher (in-memory)', () => {
     const fetcher = createMockDataFetcher({
       pathToResponse: { '/test/path': data },
     });
+    expect(fetcher).toBeInstanceOf(MockDataFetcher);
 
     const result1 = await fetcher.fetch('/test/path');
     expect(result1).toEqual(data);
