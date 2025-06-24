@@ -249,7 +249,8 @@ export class LocationRenderer extends BoundDomRendererBase {
    *
    * @private
    * @param {import('../interfaces/CommonTypes').NamespacedId} actorId - Actor entity ID.
-   * @returns {string|null} Instance ID or null if not found.
+   * @returns {string|null} Instance ID or null when the actor lacks a valid
+   * POSITION_COMPONENT or the entity cannot be located.
    */
   #resolveLocationInstanceId(actorId) {
     const locId = this.entityDisplayDataProvider.getEntityLocationId(actorId);

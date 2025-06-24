@@ -271,7 +271,8 @@ class EntityManager extends IEntityManager {
    *
    * @private
    * @param {string} definitionId - The ID of the entity definition.
-   * @returns {EntityDefinition|null} The entity definition or null if not found.
+   * @returns {EntityDefinition|null} The entity definition, or null when the
+   * definitionId is invalid or the definition is missing.
    */
   #getDefinition(definitionId) {
     try {
@@ -530,10 +531,11 @@ class EntityManager extends IEntityManager {
       err instanceof Error &&
       err.message.startsWith('EntityFactory.reconstruct: Entity with ID')
     ) {
-      const match = err.message.match(/Entity with ID '([^']+)' already exists/);
+      const match = err.message.match(
+        /Entity with ID '([^']+)' already exists/
+      );
       if (match) {
-        const msg =
-          `EntityManager.reconstructEntity: Entity with ID '${match[1]}' already exists. Reconstruction aborted.`;
+        const msg = `EntityManager.reconstructEntity: Entity with ID '${match[1]}' already exists. Reconstruction aborted.`;
         this.#logger.error(msg);
         return new DuplicateEntityError(match[1], msg);
       }

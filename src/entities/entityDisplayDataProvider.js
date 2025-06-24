@@ -12,6 +12,7 @@ import { getEntityDisplayName } from '../utils/entityUtils.js';
 import { isNonBlankString } from '../utils/textUtils.js';
 import { safeDispatchError } from '../utils/safeDispatchErrorUtils.js';
 import { extractModId } from '../utils/idUtils.js';
+import { InvalidEntityIdError } from '../errors/invalidEntityIdError.js';
 
 /**
  * @typedef {import('../interfaces/IEntityManager.js').IEntityManager} IEntityManager
@@ -94,15 +95,12 @@ export class EntityDisplayDataProvider {
    * ID is null or empty.
    * @private
    * @param {NamespacedId | string} entityId - The ID of the entity to fetch.
-   * @param {*} defaultReturn - Value to return when entityId is invalid.
-   * @returns {Entity | *} The fetched entity instance or the default value.
+   * @returns {Entity} The fetched entity instance.
+   * @throws {InvalidEntityIdError} If entityId is falsy.
    */
-  #fetchEntity(entityId, defaultReturn) {
+  #fetchEntity(entityId) {
     if (!entityId) {
-      this.#logger.warn(
-        `${this._logPrefix} fetchEntity called with null or empty entityId.`
-      );
-      return defaultReturn;
+      throw new InvalidEntityIdError(entityId);
     }
     return this.#entityManager.getEntityInstance(entityId);
   }
@@ -115,13 +113,20 @@ export class EntityDisplayDataProvider {
    * @param {(entity: Entity) => *} callback - Function executed with the entity when found.
    * @param {string} [notFoundMsg] - Optional debug message (without prefix) when entity not found.
    * @returns {*} Result of callback or the fallback value.
+   * Falsy entity IDs trigger {@link InvalidEntityIdError} and result in the fallback value.
    */
   #withEntity(entityId, fallbackValue, callback, notFoundMsg) {
-    const sentinel = Symbol('invalidId');
-    const entity = this.#fetchEntity(entityId, sentinel);
-
-    if (entity === sentinel) {
-      return fallbackValue;
+    let entity;
+    try {
+      entity = this.#fetchEntity(entityId);
+    } catch (error) {
+      if (error instanceof InvalidEntityIdError) {
+        this.#logger.warn(
+          `${this._logPrefix} fetchEntity called with null or empty entityId.`
+        );
+        return fallbackValue;
+      }
+      throw error;
     }
 
     if (!entity) {
@@ -221,7 +226,9 @@ export class EntityDisplayDataProvider {
    * Constructs the path using the mod ID derived from the entity's definitionId and the imagePath from its PORTRAIT_COMPONENT.
    *
    * @param {NamespacedId | string} entityId - The ID of the entity.
-   * @returns {string | null} The full path to the portrait image (e.g., /data/mods/core/portraits/hero.png), or null if not found or invalid.
+   * @returns {string | null} The full path to the portrait image
+   * (e.g., /data/mods/core/portraits/hero.png), or null when the entity
+   * is missing or lacks a valid PORTRAIT_COMPONENT.
    */
   getEntityPortraitPath(entityId) {
     return this.#withEntity(
@@ -270,7 +277,8 @@ export class EntityDisplayDataProvider {
    * Retrieves the location ID of an entity from its POSITION_COMPONENT.
    *
    * @param {NamespacedId | string} entityId - The ID of the entity.
-   * @returns {NamespacedId | string | null} The location ID (which is an entity instance ID) or null if not found.
+   * @returns {NamespacedId | string | null} The location ID (an entity instance ID)
+   * or null if the entity is missing or lacks a valid POSITION_COMPONENT.
    */
   getEntityLocationId(entityId) {
     return this.#withEntity(
@@ -314,7 +322,8 @@ export class EntityDisplayDataProvider {
    *
    * @param {NamespacedId | string} entityId - The ID of the character entity.
    * @returns {{ id: string, name: string, description: string, portraitPath: string | null } | null}
-   * An object with character display information, or null if the entity is not found.
+   * An object with character display information, or null when the entity is missing
+   * or required components are invalid.
    */
   getCharacterDisplayInfo(entityId) {
     return this.#withEntity(
@@ -336,7 +345,8 @@ export class EntityDisplayDataProvider {
    *
    * @param {NamespacedId | string} locationEntityId - The instance ID of the location entity.
    * @returns {{ name: string, description: string, exits: Array<ProcessedExit> } | null}
-   * An object with location details, or null if the location entity is not found.
+   * Object with location details, or null when the location entity is missing
+   * or required components are invalid.
    */
   getLocationDetails(locationEntityId) {
     if (!locationEntityId) {
@@ -390,7 +400,8 @@ export class EntityDisplayDataProvider {
    * A location entity must have a "core:portrait" component for this to return data.
    *
    * @param {NamespacedId | string} locationEntityId - The ID of the location entity.
-   * @returns {PortraitData | null} Portrait data { imagePath: string, altText: string | null } or null if not found/applicable.
+   * @returns {PortraitData | null} Portrait data { imagePath: string, altText: string | null }
+   * or null when the entity is missing or lacks a valid PORTRAIT_COMPONENT.
    */
   getLocationPortraitData(locationEntityId) {
     if (!locationEntityId) {

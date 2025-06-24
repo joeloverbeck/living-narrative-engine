@@ -173,7 +173,8 @@ export class GameDataRepository extends IGameDataRepository {
 
   /**
    * @param {string} id
-   * @returns {EntityInstance | null}
+   * @returns {EntityInstance | null} The instance definition, or null when the
+   * ID is invalid or no definition exists.
    */
   getEntityInstanceDefinition(id) {
     if (typeof id !== 'string' || !id.trim()) {
