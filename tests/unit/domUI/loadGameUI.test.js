@@ -21,6 +21,7 @@ let mockDocumentContext;
 let domElementFactory;
 let mockVED;
 let mockSaveLoadService;
+let mockUserPrompt;
 let loadGameUI;
 /** @type {jest.SpiedFunction<typeof renderSlotItemModule.renderGenericSlotItem>} */
 let renderSlotItemSpy;
@@ -63,6 +64,7 @@ beforeEach(() => {
     listManualSaveSlots: jest.fn(),
     deleteManualSave: jest.fn(),
   };
+  mockUserPrompt = { confirm: jest.fn(() => true) };
 
   loadGameUI = new LoadGameUI({
     logger: mockLogger,
@@ -70,6 +72,7 @@ beforeEach(() => {
     domElementFactory,
     saveLoadService: mockSaveLoadService,
     validatedEventDispatcher: mockVED,
+    userPrompt: mockUserPrompt,
   });
   renderSlotItemSpy = jest.spyOn(renderSlotItemModule, 'renderGenericSlotItem');
 });

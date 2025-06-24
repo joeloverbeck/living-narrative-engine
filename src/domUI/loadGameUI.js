@@ -48,6 +48,7 @@ class LoadGameUI extends SlotModalBase {
    * @param {DomElementFactory} deps.domElementFactory - Factory for DOM elements.
    * @param {ISaveLoadService} deps.saveLoadService - Service for loading/saving.
    * @param {IValidatedEventDispatcher} deps.validatedEventDispatcher - Event dispatcher instance.
+   * @param {IUserPrompt} deps.userPrompt - Utility for user confirmations.
    */
   constructor({
     logger,
@@ -55,6 +56,7 @@ class LoadGameUI extends SlotModalBase {
     domElementFactory,
     saveLoadService,
     validatedEventDispatcher,
+    userPrompt,
   }) {
     const elementsConfig = buildModalElementsConfig({
       modalElement: '#load-game-screen',
@@ -85,6 +87,13 @@ class LoadGameUI extends SlotModalBase {
     }
 
     this.saveLoadService = saveLoadService;
+
+    if (!userPrompt || typeof userPrompt.confirm !== 'function') {
+      throw new Error(
+        `${this._logPrefix} IUserPrompt dependency is missing or invalid.`
+      );
+    }
+    this.userPrompt = userPrompt;
 
     // _bindUiElements is handled by BoundDomRendererBase (via BaseModalRenderer)
 
@@ -489,7 +498,7 @@ class LoadGameUI extends SlotModalBase {
    */
   async _confirmDeletion(slotToDelete) {
     const confirmMsg = `Are you sure you want to delete the save "${slotToDelete.saveName}"? This action cannot be undone.`;
-    const confirmed = window.confirm(confirmMsg);
+    const confirmed = this.userPrompt.confirm(confirmMsg);
     if (!confirmed) {
       this.logger.debug(
         `${this._logPrefix} Delete operation cancelled by user for: ${slotToDelete.identifier}`

@@ -30,6 +30,7 @@ import { freeze } from '../utils';
  * --- DOM UI Layer (Refactored) ---
  * @property {DiToken} IDocumentContext - Token for the DOM access abstraction service.
  * @property {DiToken} DomElementFactory - Token for the utility creating DOM elements.
+ * @property {DiToken} IUserPrompt - Token for the user prompt abstraction.
  * @property {DiToken} SpeechBubbleRenderer - Token for the component rendering speech bubbles with portraits.
  * @property {DiToken} TitleRenderer - Token for the component rendering the main H1 title.
  * @property {DiToken} InputStateController - Token for the component controlling input field state.
@@ -174,6 +175,7 @@ export const tokens = freeze({
   // --- DOM UI Layer (Refactored) ---
   IDocumentContext: 'IDocumentContext',
   DomElementFactory: 'DomElementFactory',
+  IUserPrompt: 'IUserPrompt',
   SpeechBubbleRenderer: 'SpeechBubbleRenderer',
   TitleRenderer: 'TitleRenderer',
   InputStateController: 'InputStateController',

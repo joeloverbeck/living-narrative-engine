@@ -50,6 +50,7 @@ describe('LoadGameUI', () => {
   let mockSaveLoadService;
   let mockValidatedEventDispatcher;
   let mockGameEngine;
+  let mockUserPrompt;
   let instance;
 
   // DOM Elements
@@ -129,6 +130,7 @@ describe('LoadGameUI', () => {
     mockGameEngine = {
       loadGame: jest.fn().mockResolvedValue({ success: true }),
     };
+    mockUserPrompt = { confirm: jest.fn(() => true) };
   });
 
   afterEach(() => {
@@ -148,6 +150,7 @@ describe('LoadGameUI', () => {
       domElementFactory: mockDomElementFactory,
       saveLoadService: mockSaveLoadService,
       validatedEventDispatcher: mockValidatedEventDispatcher,
+      userPrompt: mockUserPrompt,
       ...depsOverrides,
     };
     return new LoadGameUI(deps);
@@ -380,8 +383,7 @@ describe('LoadGameUI', () => {
     beforeEach(() => {
       instance = createInstance();
       instance.init(mockGameEngine);
-      // Mock window.confirm using jest.spyOn for reliability
-      confirmSpy = jest.spyOn(window, 'confirm').mockReturnValue(true);
+      confirmSpy = jest.spyOn(mockUserPrompt, 'confirm').mockReturnValue(true);
 
       // Mock the base class's populateSlotsList to simplify testing interactions
       jest
@@ -392,7 +394,6 @@ describe('LoadGameUI', () => {
     });
 
     afterEach(() => {
-      // Restore the original implementation of window.confirm
       confirmSpy.mockRestore();
     });
 

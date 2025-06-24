@@ -28,6 +28,7 @@ import {
   ProcessingIndicatorController,
   ChatAlertRenderer,
   ActionResultRenderer,
+  WindowUserPrompt,
 } from '../../domUI/index.js';
 import SaveGameUI from '../../domUI/saveGameUI.js';
 import LoadGameUI from '../../domUI/loadGameUI.js';
@@ -89,6 +90,9 @@ export function registerUI(
     (c) => new DomElementFactory(c.resolve(tokens.IDocumentContext))
   );
   logger.debug(`UI Registrations: Registered ${tokens.DomElementFactory}.`);
+
+  registrar.singletonFactory(tokens.IUserPrompt, () => new WindowUserPrompt());
+  logger.debug(`UI Registrations: Registered ${tokens.IUserPrompt}.`);
 
   registrar.single(tokens.AlertRouter, AlertRouter, [
     tokens.ISafeEventDispatcher,
