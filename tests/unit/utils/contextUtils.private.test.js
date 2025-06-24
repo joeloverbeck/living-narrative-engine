@@ -1,8 +1,9 @@
 import { describe, expect, it, jest } from '@jest/globals';
-import {
-  _extractContextPath,
-  _resolvePlaceholderPath,
-} from '../../../src/utils/contextUtils.js';
+import { PlaceholderResolver } from '../../../src/utils/placeholderResolverUtils.js';
+const _extractContextPath =
+  PlaceholderResolver.extractContextPath.bind(PlaceholderResolver);
+const _resolvePlaceholderPath =
+  PlaceholderResolver.resolvePlaceholderPath.bind(PlaceholderResolver);
 import { safeResolvePath } from '../../../src/utils/objectUtils.js';
 import { resolveEntityNameFallback } from '../../../src/utils/entityNameFallbackUtils.js';
 
