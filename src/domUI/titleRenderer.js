@@ -1,7 +1,10 @@
 // src/dom-ui/titleRenderer.js
 import { RendererBase } from './rendererBase.js';
 import { safeDispatchError } from '../utils/safeDispatchErrorUtils.js';
-import { SYSTEM_ERROR_OCCURRED_ID } from '../constants/eventIds.js';
+import {
+  SYSTEM_ERROR_OCCURRED_ID,
+  INITIALIZATION_SERVICE_FAILED_ID,
+} from '../constants/eventIds.js';
 
 /**
  * @typedef {import('../interfaces/ILogger').ILogger} ILogger
@@ -80,7 +83,7 @@ export class TitleRenderer extends RendererBase {
       this.#handleInitializationCompleted.bind(this)
     );
     this._subscribe(
-      'initialization:initialization_service:failed',
+      INITIALIZATION_SERVICE_FAILED_ID,
       this.#handleInitializationFailed.bind(this)
     );
 

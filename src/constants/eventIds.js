@@ -161,6 +161,11 @@ export const REQUEST_SHOW_LOAD_GAME_UI = 'core:ui_request_show_load_game';
  */
 export const CANNOT_SAVE_GAME_INFO = 'core:ui_cannot_save_game_info';
 
+// --- Initialization & Error UI Event IDs ---
+export const INITIALIZATION_SERVICE_FAILED_ID =
+  'initialization:initialization_service:failed';
+export const UI_SHOW_FATAL_ERROR_ID = 'ui:show_fatal_error';
+
 // --- EntityManager Event IDs (Ticket 8) ---
 /** @typedef {import('../entities/entity.js').default} Entity */
 

@@ -16,7 +16,11 @@ import { tokens } from '../../dependencyInjection/tokens.js';
 import { LlmConfigLoader } from '../../llms/services/llmConfigLoader.js';
 import { ThoughtPersistenceListener } from '../../ai/thoughtPersistenceListener.js';
 import { NotesPersistenceListener } from '../../ai/notesPersistenceListener.js';
-import { ACTION_DECIDED_ID } from '../../constants/eventIds.js';
+import {
+  ACTION_DECIDED_ID,
+  INITIALIZATION_SERVICE_FAILED_ID,
+  UI_SHOW_FATAL_ERROR_ID,
+} from '../../constants/eventIds.js';
 
 /**
  * Service responsible for orchestrating the entire game initialization sequence.
@@ -288,26 +292,24 @@ class InitializationService extends IInitializationService {
         stack: error instanceof Error ? error.stack : undefined,
       };
       this.#validatedEventDispatcher
-        .dispatch(
-          'initialization:initialization_service:failed',
-          failedPayload,
-          { allowSchemaNotFound: true }
-        )
+        .dispatch(INITIALIZATION_SERVICE_FAILED_ID, failedPayload, {
+          allowSchemaNotFound: true,
+        })
         .then(() =>
           this.#logger.debug(
-            "Dispatched 'initialization:initialization_service:failed' event.",
+            `Dispatched ${INITIALIZATION_SERVICE_FAILED_ID} event.`,
             failedPayload
           )
         )
         .catch((e) =>
           this.#logger.error(
-            "Failed to dispatch 'initialization:initialization_service:failed' event",
+            `Failed to dispatch ${INITIALIZATION_SERVICE_FAILED_ID} event`,
             e
           )
         );
 
       try {
-        await this.#validatedEventDispatcher.dispatch('ui:show_fatal_error', {
+        await this.#validatedEventDispatcher.dispatch(UI_SHOW_FATAL_ERROR_ID, {
           title: 'Fatal Initialization Error',
           message: `Initialization failed for world '${worldName}'. Reason: ${error.message}`,
           details: error instanceof Error ? error.stack : 'No stack available.',
@@ -316,7 +318,7 @@ class InitializationService extends IInitializationService {
           message: 'Fatal error during initialization. Cannot continue.',
         });
         this.#logger.debug(
-          'InitializationService: Dispatched ui:show_fatal_error and core:disable_input events.'
+          `InitializationService: Dispatched ${UI_SHOW_FATAL_ERROR_ID} and core:disable_input events.`
         );
       } catch (dispatchError) {
         this.#logger.error(
