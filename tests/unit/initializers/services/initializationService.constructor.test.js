@@ -13,6 +13,8 @@ let worldInitializer;
 let safeEventDispatcher;
 let entityManager;
 let domUiFacade;
+let actionIndex;
+let gameDataRepository;
 
 beforeEach(() => {
   logger = { error: jest.fn(), debug: jest.fn() };
@@ -27,6 +29,8 @@ beforeEach(() => {
   safeEventDispatcher = { subscribe: jest.fn() };
   entityManager = {};
   domUiFacade = {};
+  actionIndex = { buildIndex: jest.fn() };
+  gameDataRepository = { getAllActionDefinitions: jest.fn(() => []) };
 });
 
 describe('InitializationService constructor', () => {
@@ -46,6 +50,8 @@ describe('InitializationService constructor', () => {
           safeEventDispatcher,
           entityManager,
           domUiFacade,
+          actionIndex,
+          gameDataRepository,
         })
     ).not.toThrow();
   });
@@ -65,6 +71,8 @@ describe('InitializationService constructor', () => {
           safeEventDispatcher,
           entityManager,
           domUiFacade,
+          actionIndex,
+          gameDataRepository,
         })
     ).toThrow(/logger/);
   });
@@ -84,6 +92,8 @@ describe('InitializationService constructor', () => {
           safeEventDispatcher,
           entityManager,
           domUiFacade,
+          actionIndex,
+          gameDataRepository,
         })
     ).toThrow(/validatedEventDispatcher/);
   });

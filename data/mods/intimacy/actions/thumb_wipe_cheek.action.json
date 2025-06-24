@@ -5,6 +5,14 @@
   "name": "Thumb Wipe Cheek",
   "description": "Gently wipe the target's cheek with your thumb.",
   "scope": "close_actors",
+  "required_components": {
+    "actor": [
+      "intimacy:closeness"
+    ],
+    "target": [
+      "core:actor"
+    ]
+  },
   "template": "wipe {target}'s cheek with your thumb",
   "prerequisites": []
 }

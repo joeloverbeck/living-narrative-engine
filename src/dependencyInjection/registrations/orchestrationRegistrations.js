@@ -47,6 +47,8 @@ export function registerOrchestration(container) {
     const safeEventDispatcher = c.resolve(tokens.ISafeEventDispatcher);
     const entityManager = c.resolve(tokens.IEntityManager);
     const domUiFacade = c.resolve(tokens.DomUiFacade);
+    const actionIndex = c.resolve(tokens.ActionIndex);
+    const gameDataRepository = c.resolve(tokens.IGameDataRepository);
 
     if (!initLogger)
       throw new Error(
@@ -81,6 +83,8 @@ export function registerOrchestration(container) {
       safeEventDispatcher,
       entityManager,
       domUiFacade,
+      actionIndex,
+      gameDataRepository,
     });
   });
   logger.debug(

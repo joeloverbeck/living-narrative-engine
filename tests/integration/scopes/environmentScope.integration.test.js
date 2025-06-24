@@ -166,6 +166,12 @@ describe('Scope Integration Tests', () => {
       safeEventDispatcher,
       scopeRegistry,
       scopeEngine,
+      actionIndex: {
+        getCandidateActions: jest.fn().mockImplementation((actorEntity) => {
+          // Return all action definitions for integration tests - this allows the full action discovery process to work
+          return gameDataRepository.getAllActionDefinitions();
+        })
+      },
     });
   });
 

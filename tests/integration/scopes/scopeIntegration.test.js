@@ -136,7 +136,16 @@ describe('Scope Integration Tests', () => {
     });
 
     // Create the ActionDiscoveryService with real dependencies
-    actionDiscoveryService = new ActionDiscoveryService({
+    actionDiscoveryService = createActionDiscoveryService();
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  // Helper function to create ActionDiscoveryService with proper dependencies
+  const createActionDiscoveryService = (overrides = {}) => {
+    return new ActionDiscoveryService({
       gameDataRepository,
       entityManager,
       actionValidationService,
@@ -145,12 +154,14 @@ describe('Scope Integration Tests', () => {
       safeEventDispatcher,
       scopeRegistry,
       scopeEngine,
+      actionIndex: {
+        getCandidateActions: jest.fn().mockImplementation((actorEntity) => {
+          return gameDataRepository.getAllActionDefinitions();
+        })
+      },
+      ...overrides,
     });
-  });
-
-  afterEach(() => {
-    jest.restoreAllMocks();
-  });
+  };
 
   describe('followers scope', () => {
     it('should resolve followers for dismiss action', async () => {
@@ -200,16 +211,7 @@ describe('Scope Integration Tests', () => {
         domainContextCompatibilityChecker: { check: () => true },
         prerequisiteEvaluationService: { evaluate: (a, b, c, d) => true },
       });
-      actionDiscoveryService = new ActionDiscoveryService({
-        gameDataRepository,
-        entityManager,
-        actionValidationService,
-        logger,
-        formatActionCommandFn: formatActionCommand,
-        safeEventDispatcher,
-        scopeRegistry,
-        scopeEngine,
-      });
+      actionDiscoveryService = createActionDiscoveryService();
 
       const actorEntity = entityManager.getEntityInstance(actorId);
       const context = {
@@ -258,16 +260,7 @@ describe('Scope Integration Tests', () => {
         domainContextCompatibilityChecker: { check: () => true },
         prerequisiteEvaluationService: { evaluate: (a, b, c, d) => true },
       });
-      actionDiscoveryService = new ActionDiscoveryService({
-        gameDataRepository,
-        entityManager,
-        actionValidationService,
-        logger,
-        formatActionCommandFn: formatActionCommand,
-        safeEventDispatcher,
-        scopeRegistry,
-        scopeEngine,
-      });
+      actionDiscoveryService = createActionDiscoveryService();
 
       const actorEntity = entityManager.getEntityInstance(actorId);
       const context = {
@@ -337,16 +330,7 @@ describe('Scope Integration Tests', () => {
         domainContextCompatibilityChecker: { check: () => true },
         prerequisiteEvaluationService: { evaluate: (a, b, c, d) => true },
       });
-      actionDiscoveryService = new ActionDiscoveryService({
-        gameDataRepository,
-        entityManager,
-        actionValidationService,
-        logger,
-        formatActionCommandFn: formatActionCommand,
-        safeEventDispatcher,
-        scopeRegistry,
-        scopeEngine,
-      });
+      actionDiscoveryService = createActionDiscoveryService();
 
       const actorEntity = entityManager.getEntityInstance(actorId);
       const context = {
@@ -403,16 +387,7 @@ describe('Scope Integration Tests', () => {
         domainContextCompatibilityChecker: { check: () => true },
         prerequisiteEvaluationService: { evaluate: (a, b, c, d) => true },
       });
-      actionDiscoveryService = new ActionDiscoveryService({
-        gameDataRepository,
-        entityManager,
-        actionValidationService,
-        logger,
-        formatActionCommandFn: formatActionCommand,
-        safeEventDispatcher,
-        scopeRegistry,
-        scopeEngine,
-      });
+      actionDiscoveryService = createActionDiscoveryService();
 
       const actorEntity = entityManager.getEntityInstance(actorId);
       const context = {
@@ -465,16 +440,7 @@ describe('Scope Integration Tests', () => {
         domainContextCompatibilityChecker: { check: () => true },
         prerequisiteEvaluationService: { evaluate: (a, b, c, d) => true },
       });
-      actionDiscoveryService = new ActionDiscoveryService({
-        gameDataRepository,
-        entityManager,
-        actionValidationService,
-        logger,
-        formatActionCommandFn: formatActionCommand,
-        safeEventDispatcher,
-        scopeRegistry,
-        scopeEngine,
-      });
+      actionDiscoveryService = createActionDiscoveryService();
 
       const actorEntity = entityManager.getEntityInstance(actorId);
       const context = {
@@ -543,16 +509,7 @@ describe('Scope Integration Tests', () => {
         domainContextCompatibilityChecker: { check: () => true },
         prerequisiteEvaluationService: { evaluate: (a, b, c, d) => true },
       });
-      actionDiscoveryService = new ActionDiscoveryService({
-        gameDataRepository,
-        entityManager,
-        actionValidationService,
-        logger,
-        formatActionCommandFn: formatActionCommand,
-        safeEventDispatcher,
-        scopeRegistry,
-        scopeEngine,
-      });
+      actionDiscoveryService = createActionDiscoveryService();
 
       const actorEntity = entityManager.getEntityInstance(actorId);
       const context = {
@@ -602,16 +559,7 @@ describe('Scope Integration Tests', () => {
         domainContextCompatibilityChecker: { check: () => true },
         prerequisiteEvaluationService: { evaluate: (a, b, c, d) => true },
       });
-      actionDiscoveryService = new ActionDiscoveryService({
-        gameDataRepository,
-        entityManager,
-        actionValidationService,
-        logger,
-        formatActionCommandFn: formatActionCommand,
-        safeEventDispatcher,
-        scopeRegistry,
-        scopeEngine,
-      });
+      actionDiscoveryService = createActionDiscoveryService();
 
       const actorEntity = entityManager.getEntityInstance(actorId);
       const context = {
@@ -659,16 +607,7 @@ describe('Scope Integration Tests', () => {
         domainContextCompatibilityChecker: { check: () => true },
         prerequisiteEvaluationService: { evaluate: (a, b, c, d) => true },
       });
-      actionDiscoveryService = new ActionDiscoveryService({
-        gameDataRepository,
-        entityManager,
-        actionValidationService,
-        logger,
-        formatActionCommandFn: formatActionCommand,
-        safeEventDispatcher,
-        scopeRegistry,
-        scopeEngine,
-      });
+      actionDiscoveryService = createActionDiscoveryService();
 
       const context = {
         entityManager,
@@ -705,16 +644,7 @@ describe('Scope Integration Tests', () => {
         domainContextCompatibilityChecker: { check: () => true },
         prerequisiteEvaluationService: { evaluate: (a, b, c, d) => true },
       });
-      actionDiscoveryService = new ActionDiscoveryService({
-        gameDataRepository,
-        entityManager,
-        actionValidationService,
-        logger,
-        formatActionCommandFn: formatActionCommand,
-        safeEventDispatcher,
-        scopeRegistry,
-        scopeEngine,
-      });
+      actionDiscoveryService = createActionDiscoveryService();
 
       const actorEntity = entityManager.getEntityInstance(actorId);
       const context = {

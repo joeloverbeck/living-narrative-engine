@@ -9,6 +9,7 @@
 /** @typedef {import('../logging/consoleLogger.js').default} ILogger */
 /** @typedef {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 /** @typedef {import('../scopeDsl/scopeRegistry.js').default} ScopeRegistry */
+/** @typedef {import('./actionIndex.js').ActionIndex} ActionIndex */
 
 import { ActionTargetContext } from '../models/actionTargetContext.js';
 import { IActionDiscoveryService } from '../interfaces/IActionDiscoveryService.js';
@@ -40,12 +41,14 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
   #getEntityDisplayNameFn;
   #scopeRegistry;
   #scopeEngine;
+  #actionIndex;
 
   /**
    * @param {object} deps
    * @param {GameDataRepository} deps.gameDataRepository
    * @param {EntityManager}      deps.entityManager
    * @param {ActionValidationService} deps.actionValidationService
+   * @param {ActionIndex}        deps.actionIndex
    * @param {ILogger}            deps.logger
    * @param {formatActionCommandFn} deps.formatActionCommandFn
    * @param {ISafeEventDispatcher} deps.safeEventDispatcher
@@ -58,6 +61,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
     gameDataRepository,
     entityManager,
     actionValidationService,
+    actionIndex,
     logger,
     formatActionCommandFn,
     safeEventDispatcher,
@@ -80,6 +84,10 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
         value: actionValidationService,
         requiredMethods: ['isValid'],
       },
+      actionIndex: {
+        value: actionIndex,
+        requiredMethods: ['getCandidateActions'],
+      },
       formatActionCommandFn: { value: formatActionCommandFn, isFunction: true },
       safeEventDispatcher: {
         value: safeEventDispatcher,
@@ -97,6 +105,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
     this.#gameDataRepository = gameDataRepository;
     this.#entityManager = entityManager;
     this.#actionValidationService = actionValidationService;
+    this.#actionIndex = actionIndex;
     this.#formatActionCommandFn = formatActionCommandFn;
     this.#safeEventDispatcher = safeEventDispatcher;
     this.#scopeRegistry = scopeRegistry;
@@ -351,7 +360,11 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
     this.#logger.debug(
       `Starting action discovery for actor: ${actorEntity.id}`
     );
-    const allDefs = this.#gameDataRepository.getAllActionDefinitions();
+
+    // ---- THIS IS THE KEY CHANGE ----
+    const candidateDefs = this.#actionIndex.getCandidateActions(actorEntity);
+    // --------------------------------
+
     /** @type {import('../interfaces/IActionDiscoveryService.js').DiscoveredActionInfo[]} */
     const validActions = [];
     /** @type {Error[]} */
@@ -369,8 +382,8 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
       context
     );
 
-    /* ── iterate over action definitions ─────────────────────────────────── */
-    for (const actionDef of allDefs) {
+    /* ── iterate over the SMALLER candidate list ────────────────────── */
+    for (const actionDef of candidateDefs) {
       const { actions, errors: discoveredErrors } =
         this.#processActionDefinition(
           actionDef,
@@ -383,7 +396,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
     }
 
     this.#logger.debug(
-      `Finished action discovery for actor ${actorEntity.id}. Found ${validActions.length} actions.`
+      `Finished action discovery for actor ${actorEntity.id}. Found ${validActions.length} actions from ${candidateDefs.length} candidates.`
     );
     return { actions: validActions, errors };
   }

@@ -9,6 +9,7 @@
 /** @typedef {import('../../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
 /** @typedef {import('../../loaders/llmConfigLoader.js').LlmConfigLoader} LlmConfigLoader */
 /** @typedef {import('../../events/safeEventDispatcher.js').default} ISafeEventDispatcher */
+/** @typedef {import('../../actions/actionIndex.js').ActionIndex} ActionIndex */
 
 // --- Interface Imports for JSDoc & `extends` ---
 /** @typedef {import('../../interfaces/IInitializationService.js').InitializationResult} InitializationResult */
@@ -39,6 +40,8 @@ class InitializationService extends IInitializationService {
   #safeEventDispatcher;
   #entityManager;
   #domUiFacade;
+  #actionIndex;
+  #gameDataRepository;
 
   /**
    * Creates a new InitializationService instance.
@@ -56,6 +59,8 @@ class InitializationService extends IInitializationService {
    * @param {ISafeEventDispatcher} dependencies.safeEventDispatcher - Event dispatcher for safe events.
    * @param {IEntityManager} dependencies.entityManager - Entity manager instance.
    * @param {import('../../domUI/domUiFacade.js').DomUiFacade} dependencies.domUiFacade - UI facade instance.
+   * @param {ActionIndex} dependencies.actionIndex - Action index for optimized action discovery.
+   * @param {import('../../interfaces/IGameDataRepository.js').IGameDataRepository} dependencies.gameDataRepository - Game data repository instance.
    */
   constructor({
     logger,
@@ -70,6 +75,8 @@ class InitializationService extends IInitializationService {
     safeEventDispatcher,
     entityManager,
     domUiFacade,
+    actionIndex,
+    gameDataRepository,
   }) {
     super();
 
@@ -149,6 +156,21 @@ class InitializationService extends IInitializationService {
         "InitializationService: Missing required dependency 'entityManager'."
       );
     }
+    if (!actionIndex || typeof actionIndex.buildIndex !== 'function') {
+      throw new Error(
+        "InitializationService: Missing or invalid required dependency 'actionIndex'."
+      );
+    }
+    if (!gameDataRepository || typeof gameDataRepository.getAllActionDefinitions !== 'function') {
+      throw new Error(
+        "InitializationService: Missing or invalid required dependency 'gameDataRepository'."
+      );
+    }
+    if (!domUiFacade) {
+      throw new Error(
+        "InitializationService requires a domUiFacade dependency"
+      );
+    }
 
     this.#validatedEventDispatcher = validatedEventDispatcher;
     this.#modsLoader = modsLoader;
@@ -161,6 +183,8 @@ class InitializationService extends IInitializationService {
     this.#safeEventDispatcher = safeEventDispatcher;
     this.#entityManager = entityManager;
     this.#domUiFacade = domUiFacade;
+    this.#actionIndex = actionIndex;
+    this.#gameDataRepository = gameDataRepository;
 
     this.#logger.debug(
       'InitializationService: Instance created successfully with dependencies.'
@@ -199,6 +223,12 @@ class InitializationService extends IInitializationService {
       this.#logger.debug(
         `InitializationService: World data loaded successfully for world: ${worldName}. Load report: ${JSON.stringify(loadReport)}`
       );
+
+      // Build ActionIndex with loaded action definitions
+      this.#logger.debug('Building ActionIndex with loaded action definitions...');
+      const allActionDefinitions = this.#gameDataRepository.getAllActionDefinitions();
+      this.#actionIndex.buildIndex(allActionDefinitions);
+      this.#logger.debug(`ActionIndex built with ${allActionDefinitions.length} action definitions.`);
 
       this.#logger.debug('Initializing ScopeRegistry...');
       const scopes = this.#dataRegistry.getAll('scopes');

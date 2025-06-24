@@ -15,6 +15,8 @@ let worldInitializer;
 let safeEventDispatcher;
 let entityManager;
 let domUiFacade;
+let actionIndex;
+let gameDataRepository;
 
 beforeEach(() => {
   logger = { error: jest.fn(), debug: jest.fn(), warn: jest.fn() };
@@ -41,6 +43,8 @@ beforeEach(() => {
   safeEventDispatcher = { subscribe: jest.fn() };
   entityManager = {};
   domUiFacade = {};
+  actionIndex = { buildIndex: jest.fn() };
+  gameDataRepository = { getAllActionDefinitions: jest.fn().mockReturnValue([]) };
 });
 
 describe('InitializationService success path', () => {
@@ -58,6 +62,8 @@ describe('InitializationService success path', () => {
       safeEventDispatcher,
       entityManager,
       domUiFacade,
+      actionIndex,
+      gameDataRepository,
     });
 
     const result = await service.runInitializationSequence(MOCK_WORLD);

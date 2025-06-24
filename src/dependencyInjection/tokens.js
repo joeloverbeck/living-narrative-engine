@@ -250,6 +250,7 @@ export const tokens = freeze({
   IWorldContext: 'IWorldContext',
   ICommandProcessor: 'ICommandProcessor',
   IActionDiscoveryService: 'IActionDiscoveryService',
+  ActionIndex: 'ActionIndex',
   IInputHandler: 'IInputHandler',
   ITurnOrderService: 'ITurnOrderService',
   ITurnManager: 'ITurnManager',

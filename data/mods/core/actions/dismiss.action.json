@@ -5,6 +5,14 @@
   "name": "Dismiss",
   "description": "Dismisses a follower from your service.",
   "scope": "followers",
+  "required_components": {
+    "actor": [
+      "core:leading"
+    ],
+    "target": [
+      "core:following"
+    ]
+  },
   "template": "dismiss {target}",
   "prerequisites": []
 }

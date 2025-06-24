@@ -48,6 +48,10 @@ describe('ActionDiscoveryService params exposure', () => {
     };
     const safeEventDispatcher = { dispatch: jest.fn() };
 
+    const mockActionIndex = {
+      getCandidateActions: jest.fn((actorEntity) => [dummyActionDef]),
+    };
+
     mockScopeRegistry = {
       getScope: jest.fn((scopeName) => {
         if (scopeName === 'enemies') {
@@ -67,6 +71,7 @@ describe('ActionDiscoveryService params exposure', () => {
       gameDataRepository: gameDataRepo,
       entityManager,
       actionValidationService,
+      actionIndex: mockActionIndex,
       formatActionCommandFn,
       logger,
       safeEventDispatcher,

@@ -36,24 +36,24 @@ beforeEach(() => {
 });
 
 describe('InitializationService DomUiFacade handling', () => {
-  it('throws when DomUiFacade is missing', async () => {
-    const svc = new InitializationService({
-      logger,
-      validatedEventDispatcher: dispatcher,
-      modsLoader,
-      scopeRegistry,
-      dataRegistry,
-      llmAdapter,
-      llmConfigLoader,
-      systemInitializer,
-      worldInitializer,
-      safeEventDispatcher,
-      entityManager,
-      domUiFacade: undefined,
-    });
-
-    const result = await svc.runInitializationSequence('w');
-    expect(result.success).toBe(false);
-    expect(result.error).toBeInstanceOf(Error);
+  it('throws when DomUiFacade is missing', () => {
+    expect(() => {
+      const svc = new InitializationService({
+        logger,
+        validatedEventDispatcher: dispatcher,
+        modsLoader,
+        scopeRegistry,
+        dataRegistry,
+        llmAdapter,
+        llmConfigLoader,
+        systemInitializer,
+        worldInitializer,
+        safeEventDispatcher,
+        entityManager,
+        actionIndex: { buildIndex: jest.fn() },
+        gameDataRepository: { getAllActionDefinitions: jest.fn().mockReturnValue([]) },
+        // domUiFacade: domUiFacade, // Intentionally omitted
+      });
+    }).toThrow('InitializationService requires a domUiFacade dependency');
   });
 });
