@@ -387,5 +387,104 @@ describe('SaveGameUI', () => {
       );
     });
   });
+
+  describe('_validateAndConfirmSave', () => {
+    it('returns null and displays error when preconditions fail', () => {
+      const statusSpy = jest.spyOn(saveGameUI, '_displayStatusMessage');
+      const result = saveGameUI._validateAndConfirmSave();
+      expect(result).toBeNull();
+      expect(statusSpy).toHaveBeenCalledWith(
+        'Cannot save: Internal error. Please select a slot and enter a name.',
+        'error'
+      );
+    });
+
+    it('returns trimmed name when validation and confirmation pass', () => {
+      window.confirm = jest.fn(() => true);
+      saveGameUI.selectedSlotData = {
+        slotId: 0,
+        isEmpty: false,
+        saveName: 'Old',
+        isCorrupted: false,
+      };
+      saveNameInputEl.value = '  New Name  ';
+
+      const result = saveGameUI._validateAndConfirmSave();
+
+      expect(window.confirm).toHaveBeenCalled();
+      expect(result).toBe('New Name');
+    });
+
+    it('returns null if user cancels overwrite confirmation', () => {
+      window.confirm = jest.fn(() => false);
+      saveGameUI.selectedSlotData = {
+        slotId: 0,
+        isEmpty: false,
+        saveName: 'Old',
+        isCorrupted: false,
+      };
+      saveNameInputEl.value = 'Cancel Me';
+
+      const result = saveGameUI._validateAndConfirmSave();
+
+      expect(window.confirm).toHaveBeenCalled();
+      expect(result).toBeNull();
+    });
+  });
+
+  describe('_executeAndFinalizeSave', () => {
+    it('shows progress and finalizes a successful save', async () => {
+      saveGameUI.selectedSlotData = {
+        slotId: 0,
+        isEmpty: true,
+        isCorrupted: false,
+      };
+      mockGameEngine.triggerManualSave.mockResolvedValue({
+        success: true,
+        message: 'ok',
+        filePath: 'path',
+      });
+      mockSaveLoadService.listManualSaveSlots.mockResolvedValueOnce([]);
+
+      const progressSpy = jest.spyOn(saveGameUI, '_setOperationInProgress');
+      const statusSpy = jest.spyOn(saveGameUI, '_displayStatusMessage');
+
+      await saveGameUI._executeAndFinalizeSave('TestSave');
+
+      expect(progressSpy).toHaveBeenNthCalledWith(1, true);
+      expect(statusSpy).toHaveBeenNthCalledWith(
+        1,
+        'Saving game as "TestSave"...',
+        'info'
+      );
+      expect(mockGameEngine.triggerManualSave).toHaveBeenCalledWith(
+        'TestSave',
+        undefined
+      );
+      expect(progressSpy).toHaveBeenLastCalledWith(false);
+      expect(statusSpy).toHaveBeenLastCalledWith(
+        'Game saved as "TestSave".',
+        'success'
+      );
+    });
+
+    it('finalizes with error message on failed save', async () => {
+      saveGameUI.selectedSlotData = {
+        slotId: 1,
+        isEmpty: true,
+        isCorrupted: false,
+      };
+      mockGameEngine.triggerManualSave.mockResolvedValue({
+        success: false,
+        error: 'oops',
+      });
+
+      const statusSpy = jest.spyOn(saveGameUI, '_displayStatusMessage');
+
+      await saveGameUI._executeAndFinalizeSave('BadSave');
+
+      expect(statusSpy).toHaveBeenLastCalledWith('Save failed: oops', 'error');
+    });
+  });
 });
 // --- FILE END ---
