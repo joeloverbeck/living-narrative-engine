@@ -59,7 +59,7 @@ export default class ScopeLoader extends BaseManifestItemLoader {
         lastResult = this._storeItemInRegistry(
           registryKey,
           modId,
-          scopeName.split(':')[1], // Extract base name without mod prefix
+          scopeName.split(':')[1], // Extract base name from qualified name
           scopeDef,
           filename
         );
