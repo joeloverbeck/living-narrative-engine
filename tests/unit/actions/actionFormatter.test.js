@@ -3,10 +3,9 @@ import { formatActionCommand } from '../../../src/actions/actionFormatter.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/eventIds.js';
 import {
   ENTITY as TARGET_TYPE_ENTITY,
-  DIRECTION as TARGET_TYPE_DIRECTION,
   NONE as TARGET_TYPE_NONE,
 } from '../../../src/constants/actionTargetTypes.js';
-import { createMockLogger } from '../../common/mockFactories/index.js';
+import { createMockLogger } from '../../common/mockFactories';
 
 describe('formatActionCommand', () => {
   let entityManager;
@@ -66,24 +65,6 @@ describe('formatActionCommand', () => {
     expect(logger.warn).toHaveBeenCalledWith(
       expect.stringContaining('Could not find entity instance for ID e1')
     );
-  });
-
-  it('formats a direction target', () => {
-    const actionDef = { id: 'core:move', template: 'move {direction}' };
-    const context = { type: TARGET_TYPE_DIRECTION, direction: 'north' };
-
-    const result = formatActionCommand(
-      actionDef,
-      context,
-      entityManager,
-      {
-        logger,
-        safeEventDispatcher: dispatcher,
-      },
-      displayNameFn
-    );
-
-    expect(result).toEqual({ ok: true, value: 'move north' });
   });
 
   it("returns template as-is for 'none' target type", () => {

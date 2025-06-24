@@ -15,7 +15,6 @@ import { SimpleEntityManager } from '../../common/entities/index.js';
 import { ActionDiscoveryService } from '../../../src/actions/actionDiscoveryService.js';
 import { ActionValidationService } from '../../../src/actions/validation/actionValidationService.js';
 import { formatActionCommand } from '../../../src/actions/actionFormatter.js';
-import { getEntityIdsForScopes } from '../../../src/entities/entityScopeService.js';
 import { GameDataRepository } from '../../../src/data/gameDataRepository.js';
 import { SafeEventDispatcher } from '../../../src/events/safeEventDispatcher.js';
 import ScopeRegistry from '../../../src/scopeDsl/scopeRegistry.js';
@@ -51,7 +50,6 @@ describe('Scope Integration Tests', () => {
   let gameDataRepository;
   let actionValidationService;
   let safeEventDispatcher;
-  let getEntityIdsForScopesWithEngine;
 
   beforeEach(() => {
     logger = {
@@ -143,18 +141,12 @@ describe('Scope Integration Tests', () => {
       logger,
     });
 
-    // Create a wrapper function that includes the scopeEngine for integration testing
-    getEntityIdsForScopesWithEngine = (scopes, context, scopeRegistry, logger) => {
-      return getEntityIdsForScopes(scopes, context, scopeRegistry, logger, scopeEngine);
-    };
-
     actionDiscoveryService = new ActionDiscoveryService({
       gameDataRepository,
       entityManager,
       actionValidationService,
       logger,
       formatActionCommandFn: formatActionCommand,
-      getEntityIdsForScopesFn: getEntityIdsForScopesWithEngine,
       safeEventDispatcher,
       scopeRegistry,
       scopeEngine,

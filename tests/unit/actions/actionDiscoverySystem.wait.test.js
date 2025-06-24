@@ -13,7 +13,6 @@ import EntityManager from '../../../src/entities/entityManager.js';
 import { ActionValidationService } from '../../../src/actions/validation/actionValidationService.js';
 import ConsoleLogger from '../../../src/logging/consoleLogger.js';
 import { formatActionCommand as formatActionCommandFn } from '../../../src/actions/actionFormatter.js';
-import { getEntityIdsForScopes as getEntityIdsForScopesFn } from '../../../src/entities/entityScopeService.js';
 import { createMockScopeEngine } from '../../common/mockFactories/coreServices.js';
 
 // --- Helper Mocks/Types ---
@@ -30,7 +29,6 @@ jest.mock('../../../src/entities/entityManager.js');
 jest.mock('../../../src/actions/validation/actionValidationService.js');
 jest.mock('../../../src/logging/consoleLogger.js');
 jest.mock('../../../src/actions/actionFormatter.js');
-jest.mock('../../../src/entities/entityScopeService.js');
 
 // --- Test Suite ---
 describe('ActionDiscoveryService - Wait Action Tests', () => {
@@ -46,8 +44,6 @@ describe('ActionDiscoveryService - Wait Action Tests', () => {
   let mockLogger;
   /** @type {jest.MockedFunction<typeof formatActionCommandFn>} */
   let mockFormatActionCommandFn;
-  /** @type {jest.MockedFunction<typeof getEntityIdsForScopesFn>} */
-  let mockGetEntityIdsForScopesFn;
   /** @type {jest.Mocked<import('../../../src/scopeDsl/scopeRegistry.js').default>} */
   let mockScopeRegistry;
   /** @type {jest.Mocked<import('../../../src/interfaces/IScopeEngine.js').IScopeEngine>} */
@@ -97,7 +93,6 @@ describe('ActionDiscoveryService - Wait Action Tests', () => {
     mockLogger.error = jest.fn();
 
     mockFormatActionCommandFn = formatActionCommandFn;
-    mockGetEntityIdsForScopesFn = getEntityIdsForScopesFn;
     mockSafeEventDispatcher = { dispatch: jest.fn() };
     mockScopeRegistry = {
       getScope: jest.fn(),
@@ -109,7 +104,7 @@ describe('ActionDiscoveryService - Wait Action Tests', () => {
       getStats: jest.fn(),
       clear: jest.fn(),
     };
-    
+
     mockScopeEngine = createMockScopeEngine();
 
     mockActorEntity = createTestEntity(ACTOR_INSTANCE_ID, DUMMY_DEFINITION_ID);
@@ -133,7 +128,6 @@ describe('ActionDiscoveryService - Wait Action Tests', () => {
       }
       return { ok: false, error: 'invalid' };
     });
-    mockGetEntityIdsForScopesFn.mockReturnValue(new Set());
     mockEntityManager.getEntityInstance.mockImplementation((id) => {
       if (id === ACTOR_INSTANCE_ID) return mockActorEntity;
       if (id === LOCATION_INSTANCE_ID) return mockLocationEntity;
@@ -158,7 +152,6 @@ describe('ActionDiscoveryService - Wait Action Tests', () => {
       actionValidationService: mockValidationService,
       logger: mockLogger,
       formatActionCommandFn: mockFormatActionCommandFn,
-      getEntityIdsForScopesFn: mockGetEntityIdsForScopesFn,
       safeEventDispatcher: mockSafeEventDispatcher,
       scopeRegistry: mockScopeRegistry,
       scopeEngine: mockScopeEngine,

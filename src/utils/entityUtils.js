@@ -43,16 +43,6 @@ export function getEntityDisplayName(
     ) {
       return nameComponent.text;
     }
-
-    if (
-      typeof nameComponent.value === 'string' &&
-      isNonBlankString(nameComponent.value)
-    ) {
-      logger?.debug(
-        `getEntityDisplayName: Entity '${entity.id}' using legacy 'value' from '${NAME_COMPONENT_ID}' component.`
-      );
-      return nameComponent.value;
-    }
   }
 
   if (typeof entity.name === 'string' && isNonBlankString(entity.name)) {

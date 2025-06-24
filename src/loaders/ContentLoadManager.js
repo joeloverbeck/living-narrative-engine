@@ -145,7 +145,7 @@ export class ContentLoadManager {
           phase
         );
         results[modId] = result.status;
-        
+
         // Merge the updated totals back into the main totals object
         this.#mergeTotals(totalCounts, result.updatedTotals);
       } catch (error) {
@@ -167,7 +167,7 @@ export class ContentLoadManager {
 
   /**
    * Merges updated totals from an aggregator back into the main totals object.
-   * 
+   *
    * @private
    * @param {TotalResultsSummary} mainTotals - The main totals object to update.
    * @param {TotalResultsSummary} updatedTotals - The updated totals from an aggregator.
@@ -222,7 +222,10 @@ export class ContentLoadManager {
               dispatchError
             )
           );
-        return { status: 'skipped', updatedTotals: aggregator.getTotalCounts() }; // Return 'skipped' as status for this mod in this phase
+        return {
+          status: 'skipped',
+          updatedTotals: aggregator.getTotalCounts(),
+        }; // Return 'skipped' as status for this mod in this phase
       }
 
       this.#logger.debug(

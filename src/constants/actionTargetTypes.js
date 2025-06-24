@@ -1,3 +1,4 @@
+// src/constants/actionTargetTypes.js
 /**
  * Defines identifiers for action target types.
  *
@@ -6,6 +7,5 @@
 
 export const ENTITY = 'entity';
 export const NONE = 'none';
-export const DIRECTION = 'direction';
 
-export default { ENTITY, NONE, DIRECTION };
+export default { ENTITY, NONE };

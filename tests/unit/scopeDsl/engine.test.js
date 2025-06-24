@@ -103,11 +103,16 @@ describe('ScopeEngine', () => {
         mockEntityManager.getEntitiesWithComponent.mockReturnValue(
           entitiesWithComponent
         );
-        
+
         // Mock hasComponent to return true for entity1 and entity3, false for entity2 and entity4
-        mockEntityManager.hasComponent.mockImplementation((entityId, componentName) => {
-          return componentName === 'core:item' && (entityId === 'entity1' || entityId === 'entity3');
-        });
+        mockEntityManager.hasComponent.mockImplementation(
+          (entityId, componentName) => {
+            return (
+              componentName === 'core:item' &&
+              (entityId === 'entity1' || entityId === 'entity3')
+            );
+          }
+        );
 
         const result = engine.resolve(ast, actorEntity, mockRuntimeCtx);
         expect(result).toEqual(new Set(['entity2', 'entity4']));
@@ -157,9 +162,21 @@ describe('ScopeEngine', () => {
         );
 
         const exitsComponentData = [
-          { target: 'room_unlocked', locked: false, description: 'An unlocked door.' },
-          { target: 'room_locked', locked: true, description: 'A locked door.' },
-          { target: 'cellar_unlocked', locked: false, description: 'An open trapdoor.' },
+          {
+            target: 'room_unlocked',
+            locked: false,
+            description: 'An unlocked door.',
+          },
+          {
+            target: 'room_locked',
+            locked: true,
+            description: 'A locked door.',
+          },
+          {
+            target: 'cellar_unlocked',
+            locked: false,
+            description: 'An open trapdoor.',
+          },
         ];
 
         // The first step 'actor.core:exits' resolves to the array of objects.
@@ -172,20 +189,22 @@ describe('ScopeEngine', () => {
 
         // We mock what the filter step would return: a Set of the two unlocked exit objects.
         // To do this, we need to mock the parent resolution. We can simplify by mocking the direct data access.
-        mockEntityManager.getComponentData.mockImplementation((entityId, componentName) => {
-          if (entityId === actorId && componentName === 'core:exits') {
-            // Step 1: actor.core:exits
-            // This step returns an array of objects, not entity IDs.
-            return [
-              { target: 'room_unlocked', locked: false },
-              { target: 'room_locked', locked: true },
-              { target: 'cellar_unlocked', locked: false },
-            ];
+        mockEntityManager.getComponentData.mockImplementation(
+          (entityId, componentName) => {
+            if (entityId === actorId && componentName === 'core:exits') {
+              // Step 1: actor.core:exits
+              // This step returns an array of objects, not entity IDs.
+              return [
+                { target: 'room_unlocked', locked: false },
+                { target: 'room_locked', locked: true },
+                { target: 'cellar_unlocked', locked: false },
+              ];
+            }
+            // The engine doesn't use getComponentData for the final `.target` step.
+            // It operates on the objects already in memory.
+            return undefined;
           }
-          // The engine doesn't use getComponentData for the final `.target` step.
-          // It operates on the objects already in memory.
-          return undefined;
-        });
+        );
 
         // Mock the filter evaluation. It will receive each object from the array.
         mockJsonLogicEval.evaluate.mockImplementation((logic, context) => {
@@ -450,11 +469,16 @@ describe('ScopeEngine', () => {
         mockEntityManager.getEntityInstance.mockImplementation((id) =>
           allEntities.find((e) => e.id === id)
         );
-        
+
         // Mock hasComponent to return true for entity1 and entity3, false for entity2 and entity4
-        mockEntityManager.hasComponent.mockImplementation((entityId, componentName) => {
-          return componentName === 'core:item' && (entityId === 'entity1' || entityId === 'entity3');
-        });
+        mockEntityManager.hasComponent.mockImplementation(
+          (entityId, componentName) => {
+            return (
+              componentName === 'core:item' &&
+              (entityId === 'entity1' || entityId === 'entity3')
+            );
+          }
+        );
       });
 
       test('entities(core:item)[] returns all entities with component', () => {

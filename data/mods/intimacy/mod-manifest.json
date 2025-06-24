@@ -14,9 +14,7 @@
       "step_back.action.json",
       "thumb_wipe_cheek.action.json"
     ],
-    "components": [
-      "closeness.component.json"
-    ],
+    "components": ["closeness.component.json"],
     "conditions": [
       "actor-and-target-can-get-close.condition.json",
       "actor-is-in-closeness.condition.json",
@@ -42,11 +40,7 @@
       "step_back.rule.json",
       "thumb_wipe_cheek.rule.json"
     ],
-    "ui": [
-      "icons.json",
-      "labels.json"
-    ],
-    "scopes": [
-    ]
+    "ui": ["icons.json", "labels.json"],
+    "scopes": []
   }
 }

@@ -15,19 +15,21 @@ describe('ScopeLoader Integration Tests', () => {
 
   beforeEach(() => {
     mockConfig = createMockConfiguration();
-    
+
     mockPathResolver = {
-      resolvePath: jest.fn((modId, diskFolder, filename) => 
-        `./data/mods/${modId}/${diskFolder}/${filename}`
+      resolvePath: jest.fn(
+        (modId, diskFolder, filename) =>
+          `./data/mods/${modId}/${diskFolder}/${filename}`
       ),
-      resolveModContentPath: jest.fn((modId, registryKey, filename) => 
-        `./data/mods/${modId}/scopes/${filename}`
+      resolveModContentPath: jest.fn(
+        (modId, registryKey, filename) =>
+          `./data/mods/${modId}/scopes/${filename}`
       ),
     };
 
     // Use the actual TextDataFetcher for integration testing
     mockDataFetcher = new TextDataFetcher();
-    
+
     mockSchemaValidator = {
       addSchema: jest.fn(),
       removeSchema: jest.fn(),
@@ -70,7 +72,7 @@ describe('ScopeLoader Integration Tests', () => {
 
     it('should successfully load a simple scope definition', async () => {
       const scopeContent = 'directions := location.core:exits[].target';
-      
+
       global.fetch.mockResolvedValue({
         ok: true,
         text: () => Promise.resolve(scopeContent),
@@ -111,7 +113,7 @@ describe('ScopeLoader Integration Tests', () => {
 
     it('should NOT try to parse scope content as JSON', async () => {
       const scopeContent = 'directions := location.core:exits[].target';
-      
+
       // Mock a response that would fail JSON parsing but should work for text
       global.fetch.mockResolvedValue({
         ok: true,
@@ -125,13 +127,15 @@ describe('ScopeLoader Integration Tests', () => {
       };
 
       // This should NOT throw a JSON parsing error
-      await expect(scopeLoader.loadItemsForMod(
-        'core',
-        manifest,
-        'scopes',
-        'scopes',
-        'scopes'
-      )).resolves.not.toThrow();
+      await expect(
+        scopeLoader.loadItemsForMod(
+          'core',
+          manifest,
+          'scopes',
+          'scopes',
+          'scopes'
+        )
+      ).resolves.not.toThrow();
     });
   });
-}); 
+});

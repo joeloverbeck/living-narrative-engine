@@ -6,7 +6,6 @@ import {
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/eventIds.js';
 import {
   ENTITY as TARGET_TYPE_ENTITY,
-  DIRECTION as TARGET_TYPE_DIRECTION,
   NONE as TARGET_TYPE_NONE,
 } from '../../../src/constants/actionTargetTypes.js';
 
@@ -35,7 +34,6 @@ describe('formatActionCommand additional cases', () => {
     expect(targetFormatterMap).toEqual(
       expect.objectContaining({
         entity: expect.any(Function),
-        direction: expect.any(Function),
         none: expect.any(Function),
       })
     );
@@ -62,35 +60,14 @@ describe('formatActionCommand additional cases', () => {
     );
   });
 
-  it('returns error when direction context lacks direction', () => {
-    const actionDef = { id: 'core:move', template: 'move {direction}' };
-    const context = { type: TARGET_TYPE_DIRECTION };
-
-    const result = formatActionCommand(
-      actionDef,
-      context,
-      entityManager,
-      {
-        logger,
-        safeEventDispatcher: dispatcher,
-      },
-      displayNameFn
-    );
-
-    expect(result).toEqual({ ok: false, error: expect.any(String) });
-    expect(logger.warn).toHaveBeenCalledWith(
-      expect.stringContaining('direction string is missing')
-    );
-  });
-
   it('warns when none domain template contains placeholders', () => {
     const actionDef = {
       id: 'core:wait',
-      template: 'wait {target} {direction}',
+      template: 'wait {target}',
     };
     const context = { type: TARGET_TYPE_NONE };
 
-    const result = formatActionCommand(
+    formatActionCommand(
       actionDef,
       context,
       entityManager,
@@ -101,7 +78,6 @@ describe('formatActionCommand additional cases', () => {
       displayNameFn
     );
 
-    expect(result).toEqual({ ok: true, value: 'wait {target} {direction}' });
     expect(logger.warn).toHaveBeenCalledWith(
       expect.stringContaining('contains placeholders')
     );
@@ -139,7 +115,7 @@ describe('formatActionCommand additional cases', () => {
     const context = { type: TARGET_TYPE_ENTITY, entityId: 'e1' };
     const customMap = {
       ...targetFormatterMap,
-      entity: jest.fn(() => 'test-value'),
+      entity: jest.fn(() => ({ ok: true, value: 'test-value' })),
     };
 
     const result = formatActionCommand(

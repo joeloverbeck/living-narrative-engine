@@ -58,7 +58,7 @@ class MockSafeEventDispatcher {
       this.listeners.set(eventName, []);
     }
     this.listeners.get(eventName).push(listener);
-    
+
     // Return unsubscribe function
     return () => {
       const listeners = this.listeners.get(eventName);
@@ -74,7 +74,7 @@ class MockSafeEventDispatcher {
   dispatch(eventName, payload) {
     const listeners = this.listeners.get(eventName);
     if (listeners) {
-      listeners.forEach(listener => listener(payload));
+      listeners.forEach((listener) => listener(payload));
     }
   }
 }
@@ -107,40 +107,53 @@ describe('ScopeCache', () => {
     mockScopeEngine = new MockScopeEngine();
     mockSafeEventDispatcher = new MockSafeEventDispatcher();
     mockLogger = new MockLogger();
-    
+
     cache = new ScopeCache({
       cache: mockCache,
       scopeEngine: mockScopeEngine,
       safeEventDispatcher: mockSafeEventDispatcher,
-      logger: mockLogger
+      logger: mockLogger,
     });
   });
 
   describe('constructor', () => {
     test('requires all dependencies to be provided', () => {
-      expect(() => new ScopeCache({})).toThrow('A cache instance must be provided.');
-      
-      expect(() => new ScopeCache({ cache: mockCache })).toThrow('A ScopeEngine instance with resolve method must be provided.');
-      
-      expect(() => new ScopeCache({ 
-        cache: mockCache, 
-        scopeEngine: mockScopeEngine 
-      })).toThrow('A SafeEventDispatcher instance must be provided.');
-      
-      expect(() => new ScopeCache({ 
-        cache: mockCache, 
-        scopeEngine: mockScopeEngine,
-        safeEventDispatcher: mockSafeEventDispatcher
-      })).toThrow('A logger instance must be provided.');
+      expect(() => new ScopeCache({})).toThrow(
+        'A cache instance must be provided.'
+      );
+
+      expect(() => new ScopeCache({ cache: mockCache })).toThrow(
+        'A ScopeEngine instance with resolve method must be provided.'
+      );
+
+      expect(
+        () =>
+          new ScopeCache({
+            cache: mockCache,
+            scopeEngine: mockScopeEngine,
+          })
+      ).toThrow('A SafeEventDispatcher instance must be provided.');
+
+      expect(
+        () =>
+          new ScopeCache({
+            cache: mockCache,
+            scopeEngine: mockScopeEngine,
+            safeEventDispatcher: mockSafeEventDispatcher,
+          })
+      ).toThrow('A logger instance must be provided.');
     });
 
     test('accepts valid dependencies', () => {
-      expect(() => new ScopeCache({
-        cache: mockCache,
-        scopeEngine: mockScopeEngine,
-        safeEventDispatcher: mockSafeEventDispatcher,
-        logger: mockLogger
-      })).not.toThrow();
+      expect(
+        () =>
+          new ScopeCache({
+            cache: mockCache,
+            scopeEngine: mockScopeEngine,
+            safeEventDispatcher: mockSafeEventDispatcher,
+            logger: mockLogger,
+          })
+      ).not.toThrow();
     });
 
     test('subscribes to TURN_STARTED_ID events', () => {
@@ -149,7 +162,9 @@ describe('ScopeCache', () => {
     });
 
     test('logs successful subscription', () => {
-      expect(mockLogger.debugCalls).toContain('ScopeCache: Successfully subscribed to TURN_STARTED_ID events');
+      expect(mockLogger.debugCalls).toContain(
+        'ScopeCache: Successfully subscribed to TURN_STARTED_ID events'
+      );
     });
   });
 
@@ -159,12 +174,16 @@ describe('ScopeCache', () => {
       const mockActorEntity = { id: 'actor123' };
       const mockRuntimeCtx = { entityManager: {} };
       const expectedResult = new Set(['entity1', 'entity2']);
-      
+
       mockScopeEngine.resolveFn.mockReturnValue(expectedResult);
 
       const result = cache.resolve(mockAst, mockActorEntity, mockRuntimeCtx);
 
-      expect(mockScopeEngine.resolveFn).toHaveBeenCalledWith(mockAst, mockActorEntity, mockRuntimeCtx);
+      expect(mockScopeEngine.resolveFn).toHaveBeenCalledWith(
+        mockAst,
+        mockActorEntity,
+        mockRuntimeCtx
+      );
       expect(result).toBe(expectedResult);
       expect(mockCache.size()).toBe(1);
     });
@@ -174,12 +193,12 @@ describe('ScopeCache', () => {
       const mockActorEntity = { id: 'actor123' };
       const mockRuntimeCtx = { entityManager: {} };
       const expectedResult = new Set(['entity1', 'entity2']);
-      
+
       mockScopeEngine.resolveFn.mockReturnValue(expectedResult);
 
       // First call
       const result1 = cache.resolve(mockAst, mockActorEntity, mockRuntimeCtx);
-      
+
       // Second call with same parameters
       const result2 = cache.resolve(mockAst, mockActorEntity, mockRuntimeCtx);
 
@@ -194,7 +213,7 @@ describe('ScopeCache', () => {
       const mockAst2 = { type: 'Source', kind: 'location' };
       const mockActorEntity = { id: 'actor123' };
       const mockRuntimeCtx = { entityManager: {} };
-      
+
       mockScopeEngine.resolveFn
         .mockReturnValueOnce(new Set(['entity1']))
         .mockReturnValueOnce(new Set(['entity2']));
@@ -211,7 +230,7 @@ describe('ScopeCache', () => {
       const mockActorEntity1 = { id: 'actor123' };
       const mockActorEntity2 = { id: 'actor456' };
       const mockRuntimeCtx = { entityManager: {} };
-      
+
       mockScopeEngine.resolveFn
         .mockReturnValueOnce(new Set(['entity1']))
         .mockReturnValueOnce(new Set(['entity2']));
@@ -229,7 +248,7 @@ describe('ScopeCache', () => {
       const mockAst = { type: 'Source', kind: 'actor' };
       const mockActorEntity = { id: 'actor123' };
       const mockRuntimeCtx = { entityManager: {} };
-      
+
       mockScopeEngine.resolveFn.mockReturnValue(new Set(['entity1']));
 
       // Add something to cache
@@ -237,18 +256,22 @@ describe('ScopeCache', () => {
       expect(mockCache.size()).toBe(1);
 
       // Dispatch turn started event
-      mockSafeEventDispatcher.dispatch(TURN_STARTED_ID, { entityId: 'actor123' });
+      mockSafeEventDispatcher.dispatch(TURN_STARTED_ID, {
+        entityId: 'actor123',
+      });
 
       // Cache should be cleared
       expect(mockCache.size()).toBe(0);
-      expect(mockLogger.debugCalls).toContain('ScopeCache: Turn started, clearing cache');
+      expect(mockLogger.debugCalls).toContain(
+        'ScopeCache: Turn started, clearing cache'
+      );
     });
 
     test('cache miss after turn started requires new resolution', () => {
       const mockAst = { type: 'Source', kind: 'actor' };
       const mockActorEntity = { id: 'actor123' };
       const mockRuntimeCtx = { entityManager: {} };
-      
+
       mockScopeEngine.resolveFn.mockReturnValue(new Set(['entity1']));
 
       // First call - cache miss
@@ -260,7 +283,9 @@ describe('ScopeCache', () => {
       expect(mockScopeEngine.resolveFn).toHaveBeenCalledTimes(1);
 
       // Turn started - clears cache
-      mockSafeEventDispatcher.dispatch(TURN_STARTED_ID, { entityId: 'actor123' });
+      mockSafeEventDispatcher.dispatch(TURN_STARTED_ID, {
+        entityId: 'actor123',
+      });
 
       // Third call - cache miss again
       cache.resolve(mockAst, mockActorEntity, mockRuntimeCtx);
@@ -271,9 +296,9 @@ describe('ScopeCache', () => {
   describe('setMaxDepth()', () => {
     test('delegates to wrapped ScopeEngine', () => {
       const spy = jest.spyOn(mockScopeEngine, 'setMaxDepth');
-      
+
       cache.setMaxDepth(10);
-      
+
       expect(spy).toHaveBeenCalledWith(10);
       expect(mockScopeEngine.maxDepth).toBe(10);
     });
@@ -296,9 +321,9 @@ describe('ScopeCache', () => {
         cache: lruCache,
         scopeEngine: mockScopeEngine,
         safeEventDispatcher: mockSafeEventDispatcher,
-        logger: mockLogger
+        logger: mockLogger,
       });
-      
+
       const stats = scopeCache.getStats();
 
       expect(stats).toEqual({
@@ -312,9 +337,9 @@ describe('ScopeCache', () => {
       const mockAst = { type: 'Source', kind: 'actor' };
       const mockActorEntity = { id: 'actor123' };
       const mockRuntimeCtx = { entityManager: {} };
-      
+
       mockScopeEngine.resolveFn.mockReturnValue(new Set(['entity1']));
-      
+
       cache.resolve(mockAst, mockActorEntity, mockRuntimeCtx);
 
       expect(cache.getStats().size).toBe(1);
@@ -324,13 +349,15 @@ describe('ScopeCache', () => {
   describe('dispose()', () => {
     test('unsubscribes from events', () => {
       const unsubscribeFn = jest.fn();
-      mockSafeEventDispatcher.subscribe = jest.fn().mockReturnValue(unsubscribeFn);
-      
+      mockSafeEventDispatcher.subscribe = jest
+        .fn()
+        .mockReturnValue(unsubscribeFn);
+
       const newCache = new ScopeCache({
         cache: mockCache,
         scopeEngine: mockScopeEngine,
         safeEventDispatcher: mockSafeEventDispatcher,
-        logger: mockLogger
+        logger: mockLogger,
       });
 
       newCache.dispose();
@@ -341,8 +368,10 @@ describe('ScopeCache', () => {
 
     test('logs successful unsubscription', () => {
       cache.dispose();
-      
-      expect(mockLogger.debugCalls).toContain('ScopeCache: Unsubscribed from TURN_STARTED_ID events');
+
+      expect(mockLogger.debugCalls).toContain(
+        'ScopeCache: Unsubscribed from TURN_STARTED_ID events'
+      );
     });
   });
 
@@ -353,12 +382,12 @@ describe('ScopeCache', () => {
         cache: lruCache,
         scopeEngine: mockScopeEngine,
         safeEventDispatcher: mockSafeEventDispatcher,
-        logger: mockLogger
+        logger: mockLogger,
       });
 
       const mockRuntimeCtx = { entityManager: {} };
       const mockActorEntity = { id: 'actor123' };
-      
+
       mockScopeEngine.resolveFn
         .mockReturnValueOnce(new Set(['entity1']))
         .mockReturnValueOnce(new Set(['entity2']))
@@ -366,16 +395,32 @@ describe('ScopeCache', () => {
         .mockReturnValueOnce(new Set(['entity1'])); // This should be called again due to eviction
 
       // Fill the cache
-      cachedScopeEngine.resolve({ type: 'Source', kind: 'actor' }, mockActorEntity, mockRuntimeCtx);
-      cachedScopeEngine.resolve({ type: 'Source', kind: 'location' }, mockActorEntity, mockRuntimeCtx);
+      cachedScopeEngine.resolve(
+        { type: 'Source', kind: 'actor' },
+        mockActorEntity,
+        mockRuntimeCtx
+      );
+      cachedScopeEngine.resolve(
+        { type: 'Source', kind: 'location' },
+        mockActorEntity,
+        mockRuntimeCtx
+      );
       expect(lruCache.size()).toBe(2);
 
       // Add one more entry - should evict the first one
-      cachedScopeEngine.resolve({ type: 'Source', kind: 'entities', param: 'core:item' }, mockActorEntity, mockRuntimeCtx);
+      cachedScopeEngine.resolve(
+        { type: 'Source', kind: 'entities', param: 'core:item' },
+        mockActorEntity,
+        mockRuntimeCtx
+      );
       expect(lruCache.size()).toBe(2); // Still at max size
 
       // The first entry should be evicted, so calling it again should hit the ScopeEngine
-      cachedScopeEngine.resolve({ type: 'Source', kind: 'actor' }, mockActorEntity, mockRuntimeCtx);
+      cachedScopeEngine.resolve(
+        { type: 'Source', kind: 'actor' },
+        mockActorEntity,
+        mockRuntimeCtx
+      );
       expect(mockScopeEngine.resolveFn).toHaveBeenCalledTimes(4); // Called again because evicted
     });
   });

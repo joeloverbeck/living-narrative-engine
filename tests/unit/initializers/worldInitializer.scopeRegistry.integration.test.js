@@ -107,13 +107,13 @@ describe('WorldInitializer - ScopeRegistry Integration', () => {
       // Simulate case where registry.get becomes unavailable after construction
       // This can happen if the registry implementation changes at runtime
       await worldInitializer.initializeScopeRegistry();
-      
+
       // Now modify the underlying registry to not have get method
       mockRegistry.get = undefined;
-      
+
       // Clear the scope registry for clean test
       scopeRegistry.clear();
-      
+
       await worldInitializer.initializeScopeRegistry();
 
       // Should log warning about missing get method
@@ -205,7 +205,9 @@ describe('WorldInitializer - ScopeRegistry Integration', () => {
 
       expect(() => {
         new GameDataRepository(registryWithoutGet, mockLogger);
-      }).toThrow('GameDataRepository requires a valid IDataRegistry with specific methods. Missing or invalid: get.');
+      }).toThrow(
+        'GameDataRepository requires a valid IDataRegistry with specific methods. Missing or invalid: get.'
+      );
     });
 
     it('should validate get method exists and is callable', () => {
@@ -213,4 +215,4 @@ describe('WorldInitializer - ScopeRegistry Integration', () => {
       expect(() => gameDataRepository.get('test')).not.toThrow();
     });
   });
-}); 
+});

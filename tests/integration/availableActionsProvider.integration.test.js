@@ -7,7 +7,7 @@ import { TurnActionChoicePipeline } from '../../src/turns/pipeline/turnActionCho
 /**
  * @class StubEntity
  * @description Minimal entity used for tests. Provides an ID and a
- *              getComponentData method returning a fake position component.
+ * getComponentData method returning a fake position component.
  */
 class StubEntity {
   /**
@@ -25,6 +25,11 @@ class StubEntity {
   }
 }
 
+// FIX: Added a mock for the json logic service, as it's a new required dependency.
+const mockJsonLogicService = () => ({
+  evaluate: jest.fn(),
+});
+
 describe('Integration – AvailableActionsProvider caching', () => {
   /** @type {import('../../src/interfaces/coreServices.js').ILogger} */
   let logger;
@@ -35,6 +40,7 @@ describe('Integration – AvailableActionsProvider caching', () => {
   let pipeline;
   let actor;
   let context;
+  let jsonLogicEvaluationService; // FIX: Added variable for the mock service.
 
   beforeEach(() => {
     logger = {
@@ -48,11 +54,16 @@ describe('Integration – AvailableActionsProvider caching', () => {
       new ActionIndexingService({ logger })
     );
     entityManager = { getEntityInstance: jest.fn().mockResolvedValue(null) };
+    jsonLogicEvaluationService = mockJsonLogicService(); // FIX: Instantiate the mock service.
 
+    // FIX: Added the missing `logger` and `jsonLogicEvaluationService` dependencies
+    // to the constructor call to align with the recent changes.
     provider = new AvailableActionsProvider({
       actionDiscoveryService: discoverySvc,
       actionIndexingService: indexingService,
       entityManager,
+      jsonLogicEvaluationService,
+      logger,
     });
 
     pipeline = new TurnActionChoicePipeline({

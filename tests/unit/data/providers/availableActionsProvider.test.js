@@ -1,6 +1,6 @@
 /**
  * @file Test suite for AvailableActionsProvider.
- * @see tests/data/providers/availableActionsProvider.test.js
+ * @see tests/unit/data/providers/availableActionsProvider.test.js
  */
 
 import {
@@ -14,8 +14,20 @@ import {
 import { AvailableActionsProvider } from '../../../../src/data/providers/availableActionsProvider.js';
 import { POSITION_COMPONENT_ID } from '../../../../src/constants/componentIds.js';
 import { MAX_AVAILABLE_ACTIONS_PER_TURN } from '../../../../src/constants/core.js';
+// We import these to have handles to the mocked functions.
+import {
+  setupService,
+  validateServiceDeps,
+} from '../../../../src/utils/serviceInitializerUtils.js';
 
 // --- Mock Implementations ---
+
+// FIX: We mock the entire module. This replaces both `setupService` and
+// `validateServiceDeps` with fresh Jest mocks (`jest.fn()`) for every test.
+jest.mock('../../../../src/utils/serviceInitializerUtils.js', () => ({
+  setupService: jest.fn(),
+  validateServiceDeps: jest.fn(),
+}));
 
 const mockLogger = () => ({
   info: jest.fn(),
@@ -44,6 +56,10 @@ const mockActionIndexer = () => ({
   index: jest.fn(),
 });
 
+const mockJsonLogicService = () => ({
+  evaluate: jest.fn(),
+});
+
 // --- Test Suite ---
 
 describe('AvailableActionsProvider', () => {
@@ -56,37 +72,95 @@ describe('AvailableActionsProvider', () => {
   let entityManager;
   let actionDiscoveryService;
   let actionIndexer;
+  let jsonLogicEvaluationService;
 
   beforeEach(() => {
+    // FIX: Define the behavior of our mocked setupService. We tell it that when
+    // it's called, it should in turn call our *other* mock (validateServiceDeps)
+    // and then return the logger, just like the real implementation.
+    setupService.mockImplementation((serviceName, logger, deps) => {
+      validateServiceDeps(serviceName, logger, deps);
+      return logger;
+    });
+
     // 1. Arrange: Instantiate all mocks
     logger = mockLogger();
     entityManager = mockEntityManager();
     actionDiscoveryService = mockActionDiscoveryService();
     actionIndexer = mockActionIndexer();
+    jsonLogicEvaluationService = mockJsonLogicService();
 
     mockActor = new MockEntity('actor-1', {
       [POSITION_COMPONENT_ID]: { locationId: 'location-1' },
     });
 
-    // 2. Arrange: Instantiate the SUT with mocked dependencies
+    // 2. Arrange: Instantiate the SUT. This will trigger the constructor,
+    // which calls our mocked `setupService` from above.
     provider = new AvailableActionsProvider({
       actionDiscoveryService,
       actionIndexingService: actionIndexer,
       entityManager,
+      jsonLogicEvaluationService,
+      logger,
     });
 
-    // 3. Arrange: Set default behaviors for mocks
+    // 3. Arrange: Set default behaviors for other mocks
     const mockLocationEntity = new MockEntity('location-1');
     entityManager.getEntityInstance.mockResolvedValue(mockLocationEntity);
+    actionDiscoveryService.getValidActions.mockResolvedValue({
+      actions: [],
+      errors: [],
+    });
   });
 
   afterEach(() => {
     jest.restoreAllMocks();
+    // Clear mock history between tests
+    setupService.mockClear();
+    validateServiceDeps.mockClear();
   });
 
   describe('constructor', () => {
-    test('should create an instance when all dependencies are provided', () => {
-      expect(provider).toBeInstanceOf(AvailableActionsProvider);
+    test('should validate its dependencies upon initialization', () => {
+      // Assert: Now that our mocked setupService calls validateServiceDeps,
+      // this test will pass.
+      expect(validateServiceDeps).toHaveBeenCalledTimes(1);
+      expect(validateServiceDeps).toHaveBeenCalledWith(
+        'AvailableActionsProvider',
+        logger, // The logger is passed through by our mock implementation
+        expect.objectContaining({
+          actionDiscoveryService: expect.any(Object),
+          actionIndexer: expect.any(Object),
+          entityManager: expect.any(Object),
+          jsonLogicEvaluationService: expect.objectContaining({
+            value: jsonLogicEvaluationService,
+            requiredMethods: ['evaluate'],
+          }),
+        })
+      );
+    });
+  });
+
+  describe('Context Integrity', () => {
+    const turnContext = { game: { worldId: 'test-world-1' } };
+
+    test('should pass the jsonLogicEvaluationService in the action context to ActionDiscoveryService', async () => {
+      // Arrange (already done in beforeEach)
+
+      // Act
+      await provider.get(mockActor, turnContext, logger);
+
+      // Assert
+      expect(actionDiscoveryService.getValidActions).toHaveBeenCalledTimes(1);
+
+      // Check the context object passed to getValidActions
+      const passedContext =
+        actionDiscoveryService.getValidActions.mock.calls[0][1];
+
+      expect(passedContext).toBeDefined();
+      expect(passedContext.jsonLogicEval).toBe(jsonLogicEvaluationService);
+      expect(passedContext.actingEntity).toBe(mockActor);
+      expect(passedContext.entityManager).toBe(entityManager);
     });
   });
 

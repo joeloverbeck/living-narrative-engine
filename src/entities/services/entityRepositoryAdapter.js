@@ -32,16 +32,16 @@ export class EntityRepositoryAdapter {
     validateDependency(logger, 'ILogger', console, {
       requiredMethods: ['info', 'error', 'warn', 'debug'],
     });
-    
+
     this.#logger = ensureValidLogger(logger, 'EntityRepositoryAdapter');
     this.#mapManager = new MapManager({ throwOnInvalidId: false });
-    
+
     this.#logger.debug('EntityRepositoryAdapter initialized.');
   }
 
   /**
    * Add an entity to the repository.
-   * 
+   *
    * @param {Entity} entity - Entity to add
    * @throws {DuplicateEntityError} If entity with same ID already exists
    */
@@ -51,14 +51,14 @@ export class EntityRepositoryAdapter {
       this.#logger.error(msg);
       throw new DuplicateEntityError(entity.id, msg);
     }
-    
+
     this.#mapManager.add(entity.id, entity);
     this.#logger.debug(`Entity '${entity.id}' added to repository.`);
   }
 
   /**
    * Get an entity by ID.
-   * 
+   *
    * @param {string} entityId - Entity ID to lookup
    * @returns {Entity|undefined} Entity if found, undefined otherwise
    */
@@ -68,7 +68,7 @@ export class EntityRepositoryAdapter {
 
   /**
    * Check if an entity exists in the repository.
-   * 
+   *
    * @param {string} entityId - Entity ID to check
    * @returns {boolean} True if entity exists
    */
@@ -78,7 +78,7 @@ export class EntityRepositoryAdapter {
 
   /**
    * Remove an entity from the repository.
-   * 
+   *
    * @param {string} entityId - Entity ID to remove
    * @returns {boolean} True if entity was removed, false if not found
    * @throws {EntityNotFoundError} If entity is not found
@@ -89,7 +89,7 @@ export class EntityRepositoryAdapter {
       this.#logger.error(msg);
       throw new EntityNotFoundError(entityId);
     }
-    
+
     const removed = this.#mapManager.remove(entityId);
     if (removed) {
       this.#logger.debug(`Entity '${entityId}' removed from repository.`);
@@ -107,7 +107,7 @@ export class EntityRepositoryAdapter {
 
   /**
    * Get an iterator over all entities in the repository.
-   * 
+   *
    * @returns {IterableIterator<Entity>} Iterator over all entities
    */
   entities() {
@@ -116,7 +116,7 @@ export class EntityRepositoryAdapter {
 
   /**
    * Get the count of entities in the repository.
-   * 
+   *
    * @returns {number} Number of entities
    */
   size() {
@@ -124,4 +124,4 @@ export class EntityRepositoryAdapter {
   }
 }
 
-export default EntityRepositoryAdapter; 
+export default EntityRepositoryAdapter;

@@ -17,7 +17,6 @@ import { resolveSafeDispatcher } from '../utils/dispatcherUtils.js';
 import { TARGET_DOMAIN_NONE } from '../constants/targetDomains.js';
 import {
   ENTITY as TARGET_TYPE_ENTITY,
-  DIRECTION as TARGET_TYPE_DIRECTION,
   NONE as TARGET_TYPE_NONE,
 } from '../constants/actionTargetTypes.js';
 
@@ -58,11 +57,11 @@ function reportValidationError(dispatcher, message, detail) {
  * @param {string} command - The command template string.
  * @param {ActionTargetContext} context - Target context with `entityId`.
  * @param {{
- *   actionId: string,
- *   entityManager: EntityManager,
- *   displayNameFn: (entity: Entity, fallback: string, logger?: ILogger) => string,
- *   logger: ILogger,
- *   debug: boolean
+ * actionId: string,
+ * entityManager: EntityManager,
+ * displayNameFn: (entity: Entity, fallback: string, logger?: ILogger) => string,
+ * logger: ILogger,
+ * debug: boolean
  * }} deps - Supporting services and flags.
  * @returns {FormatActionCommandResult} The result of formatting.
  */
@@ -97,26 +96,6 @@ function formatEntityTarget(
 }
 
 /**
- * @description Replaces the `{direction}` placeholder.
- * @param {string} command - The command template string.
- * @param {ActionTargetContext} context - Target context with `direction`.
- * @param {{ actionId: string, logger: ILogger, debug: boolean }} deps - Logger and flags.
- * @returns {FormatActionCommandResult} The formatting result.
- */
-function formatDirectionTarget(command, context, { actionId, logger, debug }) {
-  const direction = context.direction;
-  if (!direction) {
-    const message = `formatActionCommand: Target context type is '${TARGET_TYPE_DIRECTION}' but direction string is missing for action ${actionId}. Template: "${command}"`;
-    logger.warn(message);
-    return { ok: false, error: message };
-  }
-  if (debug) {
-    logger.debug(` -> Using direction: "${direction}"`);
-  }
-  return { ok: true, value: command.replace('{direction}', direction) };
-}
-
-/**
  * @description Handles templates without a target.
  * @param {string} command - The command template string.
  * @param {ActionTargetContext} _context - Context of type `none` (unused).
@@ -127,7 +106,7 @@ function formatNoneTarget(command, _context, { actionId, logger, debug }) {
   if (debug) {
     logger.debug(' -> No target type, using template as is.');
   }
-  if (command.includes('{target}') || command.includes('{direction}')) {
+  if (command.includes('{target}')) {
     logger.warn(
       `formatActionCommand: Action ${actionId} has target_domain '${TARGET_DOMAIN_NONE}' but template "${command}" contains placeholders.`
     );
@@ -141,7 +120,6 @@ function formatNoneTarget(command, _context, { actionId, logger, debug }) {
  */
 export const targetFormatterMap = {
   [TARGET_TYPE_ENTITY]: formatEntityTarget,
-  [TARGET_TYPE_DIRECTION]: formatDirectionTarget,
   [TARGET_TYPE_NONE]: formatNoneTarget,
 };
 
@@ -285,7 +263,7 @@ function finalizeCommand(command, logger, debug) {
  * @param {ILogger} [options.logger] - Logger instance used for diagnostic output. Defaults to console.
  * @param {ISafeEventDispatcher} options.safeEventDispatcher - Dispatcher used for error events.
  * @param {(entity: Entity, fallback: string, logger?: ILogger) => string} [displayNameFn] -
- *  Function used to resolve entity display names.
+ * Function used to resolve entity display names.
  * @param {TargetFormatterMap} [formatterMap] - Map of target types to formatter functions.
  * @returns {FormatActionCommandResult} Result object containing the formatted command or an error.
  * @throws {Error} If critical dependencies (entityManager, displayNameFn) are missing or invalid during processing.

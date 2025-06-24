@@ -338,11 +338,11 @@ export class GameDataRepository extends IGameDataRepository {
       );
       return undefined;
     }
-    
+
     if (typeof this.#registry.get === 'function') {
       return this.#registry.get(key);
     }
-    
+
     this.#logger.warn(
       'GameDataRepository: get method not supported by registry'
     );

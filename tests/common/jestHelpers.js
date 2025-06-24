@@ -44,11 +44,10 @@ export async function flushPromisesAndTimers() {
  */
 export async function waitForCondition(asyncFn, maxTicks = 50) {
   for (let i = 0; i < maxTicks; i++) {
-     
     if (await asyncFn()) {
       return true;
     }
-     
+
     await flushPromisesAndTimers();
   }
   return false;

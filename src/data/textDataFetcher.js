@@ -85,4 +85,4 @@ class TextDataFetcher {
 }
 
 // Export the class for use in other modules
-export default TextDataFetcher; 
+export default TextDataFetcher;

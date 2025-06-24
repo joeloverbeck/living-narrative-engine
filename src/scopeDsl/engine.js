@@ -158,7 +158,7 @@ class ScopeEngine extends IScopeEngine {
             const hasComponent = runtimeCtx.entityManager.hasComponent
               ? runtimeCtx.entityManager.hasComponent(entity.id, componentName)
               : entity.components && entity.components[componentName];
-            
+
             if (!hasComponent) {
               results.add(entity.id);
             }
@@ -235,8 +235,12 @@ class ScopeEngine extends IScopeEngine {
     const result = new Set();
 
     for (const parentValue of parentResult) {
-      const current = this._extractFieldValue(parentValue, node.field, runtimeCtx);
-      
+      const current = this._extractFieldValue(
+        parentValue,
+        node.field,
+        runtimeCtx
+      );
+
       if (current === null || current === undefined) {
         continue;
       }
@@ -313,7 +317,7 @@ class ScopeEngine extends IScopeEngine {
     const result = new Set();
     for (const item of parentResult) {
       let entity;
-      
+
       if (typeof item === 'string') {
         // Item is an entity ID, get the entity instance
         entity = runtimeCtx.entityManager.getEntityInstance(item);

@@ -32,4 +32,4 @@ export class IScopeEngine {
   }
 }
 
-export default IScopeEngine; 
+export default IScopeEngine;

@@ -30,13 +30,11 @@ import CommandProcessor from '../../commands/commandProcessor.js';
 
 // --- Helper Function Imports ---
 import { formatActionCommand } from '../../actions/actionFormatter.js';
-import { getEntityIdsForScopes } from '../../entities/entityScopeService.js';
 import { getActorLocation } from '../../utils/actorLocationUtils.js';
 import { getEntityDisplayName } from '../../utils/entityUtils.js';
 
 // --- Infrastructure Dependency ---
 import ScopeRegistry from '../../scopeDsl/scopeRegistry.js';
-
 
 /**
  * Registers command and action related services.
@@ -60,24 +58,22 @@ export function registerCommandAndAction(container) {
   });
 
   // --- Action Discovery & Execution ---
-  registrar.tagged(INITIALIZABLE).singletonFactory(
-    tokens.IActionDiscoveryService,
-    (c) => {
+  registrar
+    .tagged(INITIALIZABLE)
+    .singletonFactory(tokens.IActionDiscoveryService, (c) => {
       return new ActionDiscoveryService({
         gameDataRepository: c.resolve(tokens.IGameDataRepository),
         entityManager: c.resolve(tokens.IEntityManager),
         actionValidationService: c.resolve(tokens.ActionValidationService),
         logger: c.resolve(tokens.ILogger),
         formatActionCommandFn: formatActionCommand,
-        getEntityIdsForScopesFn: getEntityIdsForScopes,
         safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
         scopeRegistry: c.resolve(tokens.IScopeRegistry),
         scopeEngine: c.resolve(tokens.IScopeEngine),
         getActorLocationFn: getActorLocation,
         getEntityDisplayNameFn: getEntityDisplayName,
       });
-    }
-  );
+    });
   logger.debug(
     `Command and Action Registration: Registered ${String(tokens.IActionDiscoveryService)}.`
   );

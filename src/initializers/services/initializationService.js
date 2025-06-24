@@ -123,15 +123,15 @@ class InitializationService extends IInitializationService {
       const scopeRegistry = this.#container.resolve(tokens.IScopeRegistry);
       const dataRegistry = this.#container.resolve(tokens.IDataRegistry);
       const scopes = dataRegistry.getAll('scopes');
-      
+
       // Convert array of scope objects to a map by qualified ID
       const scopeMap = {};
-      scopes.forEach(scope => {
+      scopes.forEach((scope) => {
         if (scope.id) {
           scopeMap[scope.id] = scope;
         }
       });
-      
+
       scopeRegistry.initialize(scopeMap);
       this.#logger.debug('ScopeRegistry initialized.');
 
@@ -275,7 +275,11 @@ class InitializationService extends IInitializationService {
     } catch (error) {
       this.#logger.error(
         `CRITICAL ERROR during initialization sequence for world '${worldName}': ${error.message}`,
-        { errorMessage: error.message, errorName: error.name, errorStack: error.stack }
+        {
+          errorMessage: error.message,
+          errorName: error.name,
+          errorStack: error.stack,
+        }
       );
 
       const failedPayload = {

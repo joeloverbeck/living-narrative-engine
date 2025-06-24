@@ -312,6 +312,10 @@ export function registerAI(container) {
         actionDiscoveryService: c.resolve(tokens.IActionDiscoveryService),
         actionIndexingService: c.resolve(tokens.IActionIndexer),
         entityManager: c.resolve(tokens.IEntityManager),
+        logger: c.resolve(tokens.ILogger),
+        jsonLogicEvaluationService: c.resolve(
+          tokens.JsonLogicEvaluationService
+        ),
       })
   );
   r.singletonFactory(tokens.ILocationSummaryProvider, (c) => {

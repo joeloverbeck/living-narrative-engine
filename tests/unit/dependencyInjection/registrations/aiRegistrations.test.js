@@ -1,7 +1,7 @@
 /* eslint-env jest */
 /**
  * @file Tests for AI-related service registrations.
- * @see tests/dependencyInjection/registrations/aiRegistrations.test.js
+ * @see tests/unit/dependencyInjection/registrations/aiRegistrations.test.js
  */
 
 // --- Test Subject ---
@@ -41,8 +41,9 @@ import { AIPromptContentProvider } from '../../../../src/prompting/AIPromptConte
 import { LLMResponseProcessor } from '../../../../src/turns/services/LLMResponseProcessor.js';
 import { AIFallbackActionFactory } from '../../../../src/turns/services/AIFallbackActionFactory.js';
 import { AIPromptPipeline } from '../../../../src/prompting/AIPromptPipeline.js';
-import { createMockLogger } from '../../../common/mockFactories/index.js';
+import { createMockLogger } from '../../../common/mockFactories';
 import { expectSingleton } from '../../../common/containerAssertions.js';
+import { beforeEach, describe, expect, it } from '@jest/globals';
 
 // --- Mocks ---
 const logger = createMockLogger();
@@ -73,16 +74,29 @@ describe('registerAI', () => {
     container.register(tokens.IValidatedEventDispatcher, {
       dispatch: jest.fn(),
     });
-    container.register(tokens.IActionDiscoveryService, {});
-    container.register(tokens.IEntityManager, {});
+
+    // FIX: The mocks for these services must now include the methods that
+    // AvailableActionsProvider validates in its constructor.
+    container.register(tokens.IActionDiscoveryService, {
+      getValidActions: jest.fn(),
+    });
+    container.register(tokens.IEntityManager, {
+      getEntityInstance: jest.fn(),
+    });
+
     // The ActionIndexerAdapter constructor requires the real service shape.
+    // The validation for AvailableActionsProvider requires an `index` method
+    // on the IActionIndexer, which is provided by the adapter.
     container.register(tokens.ActionIndexingService, {
       indexActions: jest.fn(),
       resolve: jest.fn(),
       beginTurn: jest.fn(),
     });
 
-    // Final Fix: The initial state object must have a `startTurn` method to be considered valid.
+    container.register(tokens.JsonLogicEvaluationService, {
+      evaluate: jest.fn(),
+    });
+
     const mockInitialState = {
       startTurn: jest.fn(),
     };
@@ -125,6 +139,17 @@ describe('registerAI', () => {
         indexActions: jest.fn(),
         resolve: jest.fn(),
         beginTurn: jest.fn(),
+      });
+      // Provide the missing JsonLogicEvaluationService dependency for the fallback container as well
+      fallbackContainer.register(tokens.JsonLogicEvaluationService, {
+        evaluate: jest.fn(),
+      });
+      // Provide mocks with required methods for the fallback container
+      fallbackContainer.register(tokens.IActionDiscoveryService, {
+        getValidActions: jest.fn(),
+      });
+      fallbackContainer.register(tokens.IEntityManager, {
+        getEntityInstance: jest.fn(),
       });
 
       registerAI(fallbackContainer);

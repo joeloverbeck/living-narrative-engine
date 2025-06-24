@@ -4,7 +4,6 @@
  */
 
 import { describe, test, expect, beforeEach, jest } from '@jest/globals';
-import { getEntityIdsForScopes } from '../../src/entities/entityScopeService.js';
 import { TurnContext } from '../../src/turns/context/turnContext.js';
 import { NullConsole } from '../common/stubs/nullConsole.js';
 
@@ -55,6 +54,49 @@ describe('entityScopeService integration', () => {
   let mockScopeRegistryInstance;
   let mockScopeEngine;
   let logger;
+
+  // Helper to replicate the context preparation and scope resolution logic
+  const resolveScopeHelper = (
+    scopeName,
+    turnContext,
+    registry,
+    engine,
+    log
+  ) => {
+    // FIX: Use the public properties exposed by TurnContext
+    const actor = turnContext.actingEntity;
+    const entityManager = turnContext.entityManager;
+    const location = turnContext.currentLocation;
+
+    if (!actor || !entityManager) {
+      log.warn(
+        'resolveScopeHelper: Missing actor or entityManager in TurnContext.'
+      );
+      return new Set();
+    }
+
+    // Replicate logic to resolve the scope
+    const scopeDefinition = registry.getScope(scopeName);
+    if (!scopeDefinition || !scopeDefinition.expr) {
+      log.warn(
+        `resolveScopeHelper: Scope "${scopeName}" not found in registry.`
+      );
+      return new Set();
+    }
+
+    const ast = parseDslExpression(scopeDefinition.expr);
+
+    const runtimeCtx = {
+      entityManager: entityManager,
+      spatialIndexManager: undefined, // Not available on TurnContext
+      jsonLogicEval: undefined, // Not available on TurnContext
+      logger: log,
+      actor: actor,
+      location: location,
+    };
+
+    return engine.resolve(ast, actor, runtimeCtx);
+  };
 
   beforeEach(() => {
     jest.resetAllMocks();
@@ -123,11 +165,18 @@ describe('entityScopeService integration', () => {
       strategy: { decideAction: async () => null }, // not used
       handlerInstance: { requestIdleStateTransition: () => Promise.resolve() },
       onEndTurnCallback: () => {},
+      // FIX: The TurnContext constructor requires a `services` object.
       services: { entityManager: em },
     });
 
     // Act
-    const environmentSet = getEntityIdsForScopes('environment', ctx, mockScopeRegistryInstance, logger, mockScopeEngine);
+    const environmentSet = resolveScopeHelper(
+      'environment',
+      ctx,
+      mockScopeRegistryInstance,
+      mockScopeEngine,
+      logger
+    );
 
     // Assert
     expect(environmentSet.has(ratId)).toBe(true);

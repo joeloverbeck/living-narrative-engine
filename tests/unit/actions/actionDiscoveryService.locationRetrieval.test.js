@@ -3,7 +3,7 @@
  * @see tests/actions/actionDiscoveryService.locationRetrieval.test.js
  */
 
-import { jest } from '@jest/globals';
+import { jest, test, expect } from '@jest/globals';
 import { ActionDiscoveryService } from '../../../src/actions/actionDiscoveryService.js';
 
 describe('ActionDiscoveryService – scoped discovery', () => {
@@ -21,7 +21,7 @@ describe('ActionDiscoveryService – scoped discovery', () => {
         id: 'core:go',
         name: 'Go',
         commandVerb: 'go',
-        scope: 'directions',
+        scope: 'directions', // This scope name will be used to look up the definition
         description: 'Move to another location',
       },
       {
@@ -33,23 +33,12 @@ describe('ActionDiscoveryService – scoped discovery', () => {
     ],
   };
 
-  /** Minimal mock location entity exposing exits */
-  const locationEntity = {
-    id: 'loc-1',
-    getComponentData: (compId) =>
-      compId === 'core:exits'
-        ? [
-            { direction: 'north', target: 'loc-2' },
-            { direction: 'south', target: 'loc-3' },
-          ]
-        : null,
-  };
-
-  /** Stub EntityManager: position → loc-1, plus entity lookup */
+  /** Stub EntityManager that can find the actor's position */
   const entityManager = {
     getComponentData: (entityId, compId) =>
       compId === 'core:position' ? { locationId: 'loc-1' } : null,
-    getEntityInstance: (id) => (id === 'loc-1' ? locationEntity : null),
+    // The service now prepares a 'currentLocation' itself, so this mock can be simpler.
+    getEntityInstance: (id) => (id === 'loc-1' ? { id: 'loc-1' } : null),
   };
 
   const actionValidationService = { isValid: () => true };
@@ -61,34 +50,32 @@ describe('ActionDiscoveryService – scoped discovery', () => {
     return { ok: true, value: def.commandVerb };
   };
 
-  const getEntityIdsForScopesFn = (scopes, context, logger) => {
-    // This mock simulates the scope resolver finding targets.
-    if (scopes.includes('directions')) {
-      // In a real scenario, this would use the context to find the current
-      // location's exits. For this test, we simulate finding two targets.
-      return new Set(['loc-2', 'loc-3']);
-    }
-    return new Set();
-  };
-
   const safeEventDispatcher = { dispatch: jest.fn() };
 
+  // --- REFACTORED MOCKS to match the new service dependencies ---
+  // 1. Mock the scope registry to return a valid scope definition
   const scopeRegistry = {
-    getScope: jest.fn(),
+    getScope: jest.fn((scopeName) => {
+      if (scopeName === 'directions') {
+        return { expr: 'location.core:exits[].target' }; // A valid expression is needed for the parser
+      }
+      return null;
+    }),
   };
 
+  // 2. Mock the scope engine to return the desired set of IDs
   const mockScopeEngine = {
     resolve: jest.fn(() => new Set(['loc-2', 'loc-3'])),
-    setMaxDepth: jest.fn(),
   };
 
+  // --- INSTANTIATE THE SERVICE with the new, correct dependencies ---
   const service = new ActionDiscoveryService({
     gameDataRepository,
     entityManager,
     actionValidationService,
     logger,
     formatActionCommandFn,
-    getEntityIdsForScopesFn,
+    // getEntityIdsForScopesFn is no longer a dependency
     safeEventDispatcher,
     scopeRegistry,
     scopeEngine: mockScopeEngine,
@@ -97,8 +84,8 @@ describe('ActionDiscoveryService – scoped discovery', () => {
   /** Bare-bones actor / context objects */
   const actorEntity = { id: 'actor-1', getComponentData: () => null };
   const context = {
-    getActor: () => actorEntity,
-    getLogger: () => logger,
+    // The context passed in can be simpler now as the service prepares its own discovery context
+    jsonLogicEval: {}, // Provide a mock for jsonLogicEval if the scope requires it for filtering
   };
 
   test('discovers scoped actions based on scope resolution', async () => {

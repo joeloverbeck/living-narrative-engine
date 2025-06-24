@@ -57,16 +57,16 @@ data/mods/your-mod-name/scopes/
 
 ### Quick Reference
 
-| Pattern                                 | Meaning                                  | Example                                                      |
-| --------------------------------------- | ---------------------------------------- | ------------------------------------------------------------ |
-| `actor`                                 | The person doing the action              | `actor`                                                      |
-| `location`                              | Current room                             | `location`                                                   |
-| `entities(core:item)`                   | All items in the game                    | `entities(core:item)`                                        |
-| `entities(!core:item)`                  | All entities *without* the item component| `entities(!core:item)`                                       |
-| `component.field`                       | Access a field                           | `actor.core:inventory.items`                                 |
-| `component.field[]`                     | Iterate over array                       | `actor.core:inventory.items[]`                               |
-| `[{"==": [{"var": "field"}, "value"]}]` | Filter by equality                       | `[{"==": [{"var": "entity.id"}, "pet1"]}]`                   |
-| `scope1 + scope2`                       | Combine scopes (union)                   | `actor.core:inventory.items[] + entities(core:item)[...]`    |
+| Pattern                                 | Meaning                                   | Example                                                   |
+| --------------------------------------- | ----------------------------------------- | --------------------------------------------------------- |
+| `actor`                                 | The person doing the action               | `actor`                                                   |
+| `location`                              | Current room                              | `location`                                                |
+| `entities(core:item)`                   | All items in the game                     | `entities(core:item)`                                     |
+| `entities(!core:item)`                  | All entities _without_ the item component | `entities(!core:item)`                                    |
+| `component.field`                       | Access a field                            | `actor.core:inventory.items`                              |
+| `component.field[]`                     | Iterate over array                        | `actor.core:inventory.items[]`                            |
+| `[{"==": [{"var": "field"}, "value"]}]` | Filter by equality                        | `[{"==": [{"var": "entity.id"}, "pet1"]}]`                |
+| `scope1 + scope2`                       | Combine scopes (union)                    | `actor.core:inventory.items[] + entities(core:item)[...]` |
 
 For the complete grammar, see [Scope-DSL Specification](../scope-dsl.md).
 
@@ -145,6 +145,7 @@ This `[iterator][filter]` pattern is widespread when you need to select a subset
 ## Common Patterns
 
 ### 1. Items in Actor's Inventory
+
 Get all item entities from the actor's inventory component.
 
 ```
@@ -152,6 +153,7 @@ actor.core:inventory.items[]
 ```
 
 ### 2. Entities in Current Location
+
 Start with all entities that have a position, then filter them to the current location.
 
 ```
@@ -165,6 +167,7 @@ location.entities(core:item)[]
 ```
 
 ### 4. People in Current Location (excluding actor)
+
 Same as above, but add a second condition to the filter to exclude the actor.
 
 ```
@@ -175,6 +178,7 @@ entities(core:character)[][{"and": [
 ```
 
 ### 5. Combining Inventory and Location Items
+
 Get items from the actor's inventory and items on the ground in the current location.
 
 ```
@@ -182,6 +186,7 @@ actor.core:inventory.items[] + entities(core:item)[][{"==": [{"var": "entity.com
 ```
 
 ### 6. Filtering by a Component's Data
+
 Get all entities with a `core:weapon` component whose weapon type is "sword".
 
 ```

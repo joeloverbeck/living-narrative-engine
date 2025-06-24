@@ -250,4 +250,5 @@ export const WORLDINIT_ENTITY_INSTANTIATED_ID = 'worldinit:entity_instantiated';
  *
  * @type {string}
  */
-export const WORLDINIT_ENTITY_INSTANTIATION_FAILED_ID = 'worldinit:entity_instantiation_failed';
+export const WORLDINIT_ENTITY_INSTANTIATION_FAILED_ID =
+  'worldinit:entity_instantiation_failed';

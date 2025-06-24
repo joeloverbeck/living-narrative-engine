@@ -74,8 +74,10 @@ describe('WorldInitializer - Initialization Sequence', () => {
       };
 
       mockGameDataRepository.getWorld.mockReturnValue(worldData);
-      mockGameDataRepository.getEntityInstanceDefinition.mockReturnValue(entityInstanceDef);
-      
+      mockGameDataRepository.getEntityInstanceDefinition.mockReturnValue(
+        entityInstanceDef
+      );
+
       // Mock entity creation to return a simple mock entity
       const mockEntity = {
         id: 'test:entity_instance',
@@ -89,7 +91,10 @@ describe('WorldInitializer - Initialization Sequence', () => {
 
     it('should NOT call initializeScopeRegistry during initializeWorldEntities', async () => {
       // Spy on the initializeScopeRegistry method
-      const initializeScopeRegistrySpy = jest.spyOn(worldInitializer, 'initializeScopeRegistry');
+      const initializeScopeRegistrySpy = jest.spyOn(
+        worldInitializer,
+        'initializeScopeRegistry'
+      );
 
       await worldInitializer.initializeWorldEntities('test:world');
 
@@ -105,7 +110,7 @@ describe('WorldInitializer - Initialization Sequence', () => {
       expect(mockLogger.debug).toHaveBeenCalledWith(
         'WorldInitializer: Starting world entity initialization process for world: test:world...'
       );
-      
+
       // The key point: there should be no log about initializing scope registry
       expect(mockLogger.debug).not.toHaveBeenCalledWith(
         expect.stringContaining('Initializing ScopeRegistry')
@@ -113,7 +118,8 @@ describe('WorldInitializer - Initialization Sequence', () => {
     });
 
     it('should still successfully initialize entities without scope registry call', async () => {
-      const result = await worldInitializer.initializeWorldEntities('test:world');
+      const result =
+        await worldInitializer.initializeWorldEntities('test:world');
 
       // Verify that entity initialization still works properly
       expect(result.instantiatedCount).toBe(1);
@@ -132,8 +138,8 @@ describe('WorldInitializer - Initialization Sequence', () => {
   describe('initializeScopeRegistry standalone behavior', () => {
     it('should properly initialize scope registry when called directly', async () => {
       const mockScopes = {
-        'followers': { expr: 'actor.core:leading.followers[]', modId: 'core' },
-        'environment': { expr: 'entities(core:position)[...]', modId: 'core' },
+        followers: { expr: 'actor.core:leading.followers[]', modId: 'core' },
+        environment: { expr: 'entities(core:position)[...]', modId: 'core' },
       };
 
       mockGameDataRepository.get.mockReturnValue(mockScopes);
@@ -178,8 +184,10 @@ describe('WorldInitializer - Initialization Sequence', () => {
       };
 
       mockGameDataRepository.getWorld.mockReturnValue(worldData);
-      mockGameDataRepository.getEntityInstanceDefinition.mockReturnValue(entityInstanceDef);
-      
+      mockGameDataRepository.getEntityInstanceDefinition.mockReturnValue(
+        entityInstanceDef
+      );
+
       // Mock entity creation to return a simple mock entity
       const mockEntity = {
         id: 'test:entity_instance',
@@ -197,14 +205,14 @@ describe('WorldInitializer - Initialization Sequence', () => {
       // 2. InitializationService retrieves scopes from data registry and initializes ScopeRegistry
       // 3. InitializationService calls WorldInitializer.initializeWorldEntities()
       // 4. WorldInitializer.initializeWorldEntities() does NOT re-initialize scope registry
-      
+
       expect(true).toBe(true); // This test is for documentation purposes
     });
 
     it('should verify that scope registry is accessible during world initialization', async () => {
       // Even though we don't initialize the scope registry in initializeWorldEntities,
       // it should still be accessible (because InitializationService initialized it)
-      
+
       await worldInitializer.initializeWorldEntities('test:world');
 
       // The scope registry should be available for use, even though we didn't initialize it
@@ -232,8 +240,10 @@ describe('WorldInitializer - Initialization Sequence', () => {
       };
 
       mockGameDataRepository.getWorld.mockReturnValue(worldData);
-      mockGameDataRepository.getEntityInstanceDefinition.mockReturnValue(entityInstanceDef);
-      
+      mockGameDataRepository.getEntityInstanceDefinition.mockReturnValue(
+        entityInstanceDef
+      );
+
       // Mock entity creation to return a simple mock entity
       const mockEntity = {
         id: 'test:entity_instance',
@@ -247,9 +257,12 @@ describe('WorldInitializer - Initialization Sequence', () => {
 
     it('should prevent double initialization of scope registry', async () => {
       // This test ensures we don't accidentally re-introduce the double initialization bug
-      
-      const initializeScopeRegistrySpy = jest.spyOn(worldInitializer, 'initializeScopeRegistry');
-      
+
+      const initializeScopeRegistrySpy = jest.spyOn(
+        worldInitializer,
+        'initializeScopeRegistry'
+      );
+
       // Call both methods that could potentially initialize scope registry
       await worldInitializer.initializeScopeRegistry();
       await worldInitializer.initializeWorldEntities('test:world');
@@ -259,17 +272,20 @@ describe('WorldInitializer - Initialization Sequence', () => {
     });
 
     it('should maintain separation of concerns between scope and entity initialization', async () => {
-      const initializeScopeRegistrySpy = jest.spyOn(worldInitializer, 'initializeScopeRegistry');
-      
+      const initializeScopeRegistrySpy = jest.spyOn(
+        worldInitializer,
+        'initializeScopeRegistry'
+      );
+
       // Entity initialization should not trigger scope initialization
       await worldInitializer.initializeWorldEntities('test:world');
-      
+
       expect(initializeScopeRegistrySpy).not.toHaveBeenCalled();
-      
+
       // But scope initialization should still work independently
       await worldInitializer.initializeScopeRegistry();
-      
+
       expect(initializeScopeRegistrySpy).toHaveBeenCalledTimes(1);
     });
   });
-}); 
+});

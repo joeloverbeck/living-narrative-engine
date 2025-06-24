@@ -49,7 +49,13 @@ export class ComponentMutationService {
    * @param {ISafeEventDispatcher} deps.eventDispatcher - Event dispatcher
    * @param {IComponentCloner} deps.cloner - Component cloner
    */
-  constructor({ entityRepository, validator, logger, eventDispatcher, cloner }) {
+  constructor({
+    entityRepository,
+    validator,
+    logger,
+    eventDispatcher,
+    cloner,
+  }) {
     validateDependency(entityRepository, 'EntityRepositoryAdapter', console, {
       requiredMethods: ['get'],
     });
@@ -257,4 +263,4 @@ export class ComponentMutationService {
   }
 }
 
-export default ComponentMutationService; 
+export default ComponentMutationService;

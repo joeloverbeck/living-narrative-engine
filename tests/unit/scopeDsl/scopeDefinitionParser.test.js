@@ -83,8 +83,12 @@ describe('parseScopeDefinitions', () => {
       const actualExpression = result.get('environment');
       expect(actualExpression).toContain('entities(core:position)');
       expect(actualExpression).toContain('{"and": [');
-      expect(actualExpression).toContain('{"==": [{"var": "entity.components.core:position.locationId"}, {"var": "location.id"}]}');
-      expect(actualExpression).toContain('{"!=": [{"var": "entity.id"}, {"var": "actor.id"}]}');
+      expect(actualExpression).toContain(
+        '{"==": [{"var": "entity.components.core:position.locationId"}, {"var": "location.id"}]}'
+      );
+      expect(actualExpression).toContain(
+        '{"!=": [{"var": "entity.id"}, {"var": "actor.id"}]}'
+      );
     });
 
     it('should parse mixed single-line and multi-line scope definitions', () => {
@@ -111,7 +115,7 @@ describe('parseScopeDefinitions', () => {
       expect(result.size).toBe(3);
       expect(result.get('followers')).toBe('actor.core:leading.followers[]');
       expect(result.get('directions')).toBe('location.core:exits[].target');
-      
+
       const actualEnvironmentExpression = result.get('environment');
       expect(actualEnvironmentExpression).toContain('entities(core:position)');
       expect(actualEnvironmentExpression).toContain('{"and": [');
@@ -146,8 +150,12 @@ describe('parseScopeDefinitions', () => {
       const content = '';
       const filePath = 'empty.scope';
 
-      expect(() => parseScopeDefinitions(content, filePath)).toThrow(ScopeDefinitionError);
-      expect(() => parseScopeDefinitions(content, filePath)).toThrow('Scope file is empty or contains only comments');
+      expect(() => parseScopeDefinitions(content, filePath)).toThrow(
+        ScopeDefinitionError
+      );
+      expect(() => parseScopeDefinitions(content, filePath)).toThrow(
+        'Scope file is empty or contains only comments'
+      );
     });
 
     it('should throw error for file with only comments', () => {
@@ -157,8 +165,12 @@ describe('parseScopeDefinitions', () => {
       `;
       const filePath = 'comments-only.scope';
 
-      expect(() => parseScopeDefinitions(content, filePath)).toThrow(ScopeDefinitionError);
-      expect(() => parseScopeDefinitions(content, filePath)).toThrow('Scope file is empty or contains only comments');
+      expect(() => parseScopeDefinitions(content, filePath)).toThrow(
+        ScopeDefinitionError
+      );
+      expect(() => parseScopeDefinitions(content, filePath)).toThrow(
+        'Scope file is empty or contains only comments'
+      );
     });
 
     it('should throw error for invalid DSL expression', () => {
@@ -177,4 +189,4 @@ describe('parseScopeDefinitions', () => {
       }).not.toThrow();
     });
   });
-}); 
+});

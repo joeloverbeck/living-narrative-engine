@@ -5,10 +5,8 @@
  */
 
 /**
- * Service responsible for checking if an action's target domain is compatible
- * with the provided target context type. It enforces that actions expecting a
- * target receive an 'entity' context, and actions expecting no target receive
- * a 'none' context.
+ * Service responsible for checking if an action's scope implies a target requirement
+ * that is compatible with the provided target context type.
  * Extracted from ActionValidationService for SRP.
  */
 export class DomainContextCompatibilityChecker {
@@ -36,12 +34,12 @@ export class DomainContextCompatibilityChecker {
   }
 
   /**
-   * Checks if the target domain specified in an action definition is compatible
+   * Checks if the scope specified in an action definition is compatible
    * with the type of the provided target context.
    *
    * @param {ActionDefinition} actionDefinition - The action being validated.
    * @param {ActionTargetContext} targetContext - The context describing the action's target.
-   * @returns {boolean} True if the domain and context type are compatible, false otherwise.
+   * @returns {boolean} True if the scope and context type are compatible, false otherwise.
    */
   check(actionDefinition, targetContext) {
     if (!actionDefinition || !targetContext) {
@@ -52,8 +50,11 @@ export class DomainContextCompatibilityChecker {
     }
 
     const actionId = actionDefinition.id || 'UNKNOWN_ACTION';
-    // An action expects a target if its domain is anything other than 'none'.
-    const expectsTarget = (actionDefinition.target_domain || 'none') !== 'none';
+    // The `scope` property is now the sole source of truth.
+    const effectiveScope = actionDefinition.scope || 'none';
+
+    // An action expects a target if its scope is anything other than 'none' or 'self'.
+    const expectsTarget = effectiveScope !== 'none';
     const contextHasTarget = targetContext.type === 'entity';
 
     let isCompatible = true;
@@ -61,22 +62,20 @@ export class DomainContextCompatibilityChecker {
     if (expectsTarget && !contextHasTarget) {
       // Action requires a target, but the context doesn't provide an entity.
       this.#logger.debug(
-        `Validation failed (Domain/Context): Action '${actionId}' (domain '${actionDefinition.target_domain}') requires an entity target, but context type is '${targetContext.type}'.`
+        `Validation failed (Scope/Context): Action '${actionId}' (scope '${effectiveScope}') requires an entity target, but context type is '${targetContext.type}'.`
       );
       isCompatible = false;
     } else if (!expectsTarget && contextHasTarget) {
       // Action requires NO target, but the context provides an entity.
       this.#logger.debug(
-        `Validation failed (Domain/Context): Action '${actionId}' (domain 'none') expects no target, but context type is 'entity'.`
+        `Validation failed (Scope/Context): Action '${actionId}' (scope '${effectiveScope}') expects no target, but context type is 'entity'.`
       );
       isCompatible = false;
     }
 
     if (isCompatible) {
       this.#logger.debug(
-        `Domain/Context Check Passed: Action '${actionId}' (domain '${
-          actionDefinition.target_domain || 'none'
-        }') is compatible with context type '${targetContext.type}'.`
+        `Scope/Context Check Passed: Action '${actionId}' (scope '${effectiveScope}') is compatible with context type '${targetContext.type}'.`
       );
     }
 
