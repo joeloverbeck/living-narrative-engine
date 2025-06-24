@@ -12,7 +12,6 @@
 /** @typedef {import('../scopeDsl/scopeRegistry.js').default} ScopeRegistry */
 
 // --- Library Imports ---
-import _set from 'lodash/set.js';
 
 // --- Constant Imports ---
 import { SYSTEM_ERROR_OCCURRED_ID } from '../constants/systemEventIds.js';
@@ -255,7 +254,7 @@ class WorldInitializer {
         componentOverrides
       );
 
-      let instance = null;
+      let instance;
       try {
         instance = this.#entityManager.createEntityInstance(definitionId, {
           instanceId,
@@ -266,28 +265,9 @@ class WorldInitializer {
           `WorldInitializer (Pass 1): Error during createEntityInstance for instanceId '${instanceId}', definitionId '${definitionId}':`,
           creationError
         );
-        instance = null; // Ensure instance is null if creation threw
       }
 
-      if (instance) {
-        this.#logger.debug(
-          `WorldInitializer (Pass 1): Successfully instantiated entity ${instance.id} (from definition: ${instance.definitionId})`
-        );
-        instantiatedEntities.push(instance);
-        instantiatedCount++;
-
-        await this.#_dispatchWorldInitEvent(
-          WORLDINIT_ENTITY_INSTANTIATED_ID,
-          {
-            entityId: instance.id,
-            instanceId: instance.instanceId, // Added for consistency
-            definitionId: instance.definitionId,
-            worldName: worldName, // Added for context
-            reason: 'Initial World Load',
-          },
-          `entity ${instance.id}`
-        );
-      } else {
+      if (!instance) {
         this.#logger.error(
           `WorldInitializer (Pass 1): Failed to instantiate entity from definition: ${definitionId} for instance: ${instanceId}. createEntityInstance returned null/undefined or threw an error.`
         );
@@ -303,7 +283,26 @@ class WorldInitializer {
           },
           `instance ${instanceId}`
         );
+        continue;
       }
+
+      this.#logger.debug(
+        `WorldInitializer (Pass 1): Successfully instantiated entity ${instance.id} (from definition: ${instance.definitionId})`
+      );
+      instantiatedEntities.push(instance);
+      instantiatedCount++;
+
+      await this.#_dispatchWorldInitEvent(
+        WORLDINIT_ENTITY_INSTANTIATED_ID,
+        {
+          entityId: instance.id,
+          instanceId: instance.instanceId, // Added for consistency
+          definitionId: instance.definitionId,
+          worldName: worldName, // Added for context
+          reason: 'Initial World Load',
+        },
+        `entity ${instance.id}`
+      );
     }
     this.#logger.debug(
       `WorldInitializer (Pass 1): Completed. Instantiated ${instantiatedCount} entities, ${failedCount} failures out of ${totalProcessed} total instances for world '${worldName}'.`
