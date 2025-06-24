@@ -71,11 +71,13 @@ describe('InitializationService', () => {
     };
     mockDataRegistry = {
       get: jest.fn().mockReturnValue({}), // Default to empty object, specific tests can override
+      getAll: jest.fn().mockReturnValue([]), // Return empty array for scopes
     };
     mockScopeRegistry = {
-      initialize: jest.fn(),
-      getScope: jest.fn(),
-    };
+    initialize: jest.fn(),
+    getScope: jest.fn(),
+    getStats: jest.fn(() => ({ size: 0, initialized: true, scopeNames: [] })),
+  };
 
     // General mockContainer setup for most tests, specific tests might override parts
     mockContainer = {
@@ -140,10 +142,10 @@ describe('InitializationService', () => {
       mockLlmAdapter.isInitialized.mockReturnValue(false);
       mockLlmAdapter.isOperational.mockReturnValue(false);
 
-      // Ensure dataRegistry.get('scopes') returns something for scopeRegistry.initialize
-      mockDataRegistry.get.mockImplementation((key) => {
-        if (key === 'scopes') return { /* some mock scope data */ }; 
-        return {};
+      // Ensure dataRegistry.getAll('scopes') returns something for scopeRegistry.initialize
+      mockDataRegistry.getAll.mockImplementation((key) => {
+        if (key === 'scopes') return []; // Return empty array of scopes
+        return [];
       });
 
       service = new InitializationService({

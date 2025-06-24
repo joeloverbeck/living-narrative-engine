@@ -71,10 +71,12 @@ describe('InitializationService', () => {
     };
     mockDataRegistry = {
       get: jest.fn().mockReturnValue({}),
+      getAll: jest.fn().mockReturnValue([]), // Return empty array for scopes
     };
     mockScopeRegistry = {
       initialize: jest.fn(),
       getScope: jest.fn(),
+      getStats: jest.fn(() => ({ size: 0, initialized: true, scopeNames: [] })),
     };
 
     mockContainer = {

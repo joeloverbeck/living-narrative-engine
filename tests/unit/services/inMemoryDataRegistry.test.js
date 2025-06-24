@@ -111,9 +111,20 @@ describe('InMemoryDataRegistry', () => {
     describe('invalid input handling for store', () => {
       // Helper to check state after invalid store attempt
       const assertNotStored = (testRegistry, checkType, checkId) => {
-        expect(testRegistry.get(checkType, checkId)).toBeUndefined();
+        // Since our implementation now throws on invalid parameters, we need to handle that
+        // For valid type/id combinations, we expect undefined (not stored)
+        // For invalid type/id combinations, we expect an error
+        if (typeof checkType !== 'string' || checkType.trim() === '' || 
+            typeof checkId !== 'string' || checkId.trim() === '') {
+          // Invalid parameters should throw
+          expect(() => testRegistry.get(checkType, checkId)).toThrow();
+        } else {
+          // Valid parameters should return undefined if not stored
+          expect(testRegistry.get(checkType, checkId)).toBeUndefined();
+        }
+        
         // Also check that the type map wasn't inadvertently created if it didn't exist
-        if (checkType) {
+        if (checkType && typeof checkType === 'string' && checkType.trim() !== '') {
           // Ensure we check the actual map, not getAll which returns [] anyway
           const typeMap = testRegistry.data.get(checkType);
           expect(typeMap?.size ?? 0).toBe(0);
