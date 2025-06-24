@@ -119,33 +119,41 @@ export class ProcessingWorkflow {
   }
 
   /**
-   * Resolves the ITurnAction to process.
-   *
-   * @param {import('../../interfaces/ITurnContext.js').ITurnContext} turnCtx - Context.
-   * @param {import('../../../entities/entity.js').default} actor - Actor.
+   * @description Retrieves the ITurnAction from the current context.
+   * @private
+   * @param {import('../../interfaces/ITurnContext.js').ITurnContext} turnCtx - Context containing the action.
    * @returns {Promise<import('../../interfaces/IActorTurnStrategy.js').ITurnAction|null>} Resolved action or null.
    */
-  async _obtainTurnAction(turnCtx, actor) {
+  async _fetchActionFromContext(turnCtx) {
     const logger = getLogger(turnCtx, this._state._handler);
-    let turnAction = this._turnAction;
-    const actorId = actor.id;
-    if (!turnAction) {
-      logger.debug(
-        `${this._state.getStateName()}: No turnAction passed via constructor. Retrieving from turnContext.getChosenAction() for actor ${actorId}.`
+    const actorId = turnCtx.getActor()?.id ?? 'N/A';
+    logger.debug(
+      `${this._state.getStateName()}: No turnAction passed via constructor. Retrieving from turnContext.getChosenAction() for actor ${actorId}.`
+    );
+    try {
+      return turnCtx.getChosenAction();
+    } catch (e) {
+      const errorMsg = `${this._state.getStateName()}: Error retrieving ITurnAction from context for actor ${actorId}: ${e.message}`;
+      logger.error(errorMsg, e);
+      await this._exceptionHandler.handle(
+        turnCtx,
+        new Error(errorMsg, { cause: e }),
+        actorId
       );
-      try {
-        turnAction = turnCtx.getChosenAction();
-      } catch (e) {
-        const errorMsg = `${this._state.getStateName()}: Error retrieving ITurnAction from context for actor ${actorId}: ${e.message}`;
-        logger.error(errorMsg, e);
-        await this._exceptionHandler.handle(
-          turnCtx,
-          new Error(errorMsg, { cause: e }),
-          actorId
-        );
-        return null;
-      }
+      return null;
     }
+  }
+
+  /**
+   * @description Validates a resolved ITurnAction.
+   * @private
+   * @param {import('../../interfaces/IActorTurnStrategy.js').ITurnAction|null} turnAction - Action to validate.
+   * @param {string} actorId - Actor identifier for logging.
+   * @returns {Promise<boolean>} True if valid, otherwise false.
+   */
+  async _validateResolvedAction(turnAction, actorId) {
+    const turnCtx = this._state._getTurnContext();
+    const logger = getLogger(turnCtx, this._state._handler);
 
     if (!turnAction) {
       const errorMsg = `${this._state.getStateName()}: No ITurnAction available for actor ${actorId}. Cannot process command.`;
@@ -155,7 +163,7 @@ export class ProcessingWorkflow {
         new Error(errorMsg),
         actorId
       );
-      return null;
+      return false;
     }
 
     if (
@@ -169,9 +177,22 @@ export class ProcessingWorkflow {
         new Error(errorMsg),
         actorId
       );
-      return null;
+      return false;
     }
 
+    return true;
+  }
+
+  /**
+   * @description Logs details about the action being processed.
+   * @private
+   * @param {import('../../interfaces/IActorTurnStrategy.js').ITurnAction} turnAction - The action to log.
+   * @param {string} actorId - Actor identifier for logging.
+   * @returns {void}
+   */
+  _logActionDetails(turnAction, actorId) {
+    const turnCtx = this._state._getTurnContext();
+    const logger = getLogger(turnCtx, this._state._handler);
     const commandStringToLog =
       turnAction.commandString ||
       this._commandString ||
@@ -182,6 +203,28 @@ export class ProcessingWorkflow {
         `Params: ${JSON.stringify(turnAction.resolvedParameters || {})}. ` +
         `CommandString: "${commandStringToLog}".`
     );
+  }
+
+  /**
+   * Resolves the ITurnAction to process.
+   *
+   * @param {import('../../interfaces/ITurnContext.js').ITurnContext} turnCtx - Context.
+   * @param {import('../../../entities/entity.js').default} actor - Actor.
+   * @returns {Promise<import('../../interfaces/IActorTurnStrategy.js').ITurnAction|null>} Resolved action or null.
+   */
+  async _obtainTurnAction(turnCtx, actor) {
+    let turnAction = this._turnAction;
+    const actorId = actor.id;
+
+    if (!turnAction) {
+      turnAction = await this._fetchActionFromContext(turnCtx);
+    }
+
+    if (!(await this._validateResolvedAction(turnAction, actorId))) {
+      return null;
+    }
+
+    this._logActionDetails(turnAction, actorId);
 
     this._turnAction = turnAction;
     this._setAction(turnAction);
