@@ -91,7 +91,7 @@ export class SaveGameUI extends SlotModalBase {
       elementsConfig,
       domElementFactory,
       datasetKey: DATASET_SLOT_ID,
-      confirmButtonKey: 'confirmSaveButtonEl',
+      buttonKeys: { confirmKey: 'confirmSaveButtonEl' },
     });
 
     if (
