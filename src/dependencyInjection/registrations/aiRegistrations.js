@@ -145,7 +145,7 @@ export function registerLlmInfrastructure(registrar, logger) {
       logger,
       executionEnvironment: 'client',
       projectRootPath: null,
-      proxyServerUrl: globalThis.process?.env?.PROXY_URL || undefined,
+      proxyServerUrl: c.resolve(tokens.ProxyUrl),
     });
     const apiKeyProvider = new ClientApiKeyProvider({
       logger,

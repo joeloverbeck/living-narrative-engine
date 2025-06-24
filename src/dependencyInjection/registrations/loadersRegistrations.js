@@ -55,6 +55,7 @@ import GoalLoader from '../../loaders/goalLoader.js';
 import MacroLoader from '../../loaders/macroLoader.js';
 import ModManifestLoader from '../../modding/modManifestLoader.js';
 import ModsLoader from '../../loaders/modsLoader.js';
+import ModsLoadSession from '../../loaders/ModsLoadSession.js';
 import PromptTextLoader from '../../loaders/promptTextLoader.js';
 import RuleLoader from '../../loaders/ruleLoader.js';
 import SchemaLoader from '../../loaders/schemaLoader.js';
@@ -95,6 +96,9 @@ export function registerLoaders(container) {
   const registrar = new Registrar(container);
   const logger = container.resolve(tokens.ILogger);
   logger.debug('Loaders Registration: Starting...');
+
+  // Register proxy URL from environment variables (if provided)
+  registrar.value(tokens.ProxyUrl, globalThis.process?.env?.PROXY_URL);
 
   // === Core Infrastructure (unchanged) ===
   registrar.singletonFactory(
@@ -385,8 +389,7 @@ export function registerLoaders(container) {
       c.resolve(tokens.WorldPhase),
       c.resolve(tokens.SummaryPhase),
     ];
-    const ModsLoadSession = require('../../loaders/ModsLoadSession.js').default;
-    return new (require('../../loaders/modsLoader.js').default)({
+    return new ModsLoader({
       logger: c.resolve(tokens.ILogger),
       cache: c.resolve(tokens.ILoadCache),
       session: new ModsLoadSession({
