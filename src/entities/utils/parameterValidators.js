@@ -16,6 +16,35 @@ import { SerializedEntityError } from '../../errors/serializedEntityError.js';
 import { InvalidInstanceIdError } from '../../errors/invalidInstanceIdError.js';
 
 /**
+ * @description Internal helper to assert both instance and component IDs.
+ * @param {string} methodName Fully qualified method name for error context.
+ * @param {string} instanceId Entity instance ID.
+ * @param {string} componentTypeId Component type ID.
+ * @param {import('../../interfaces/coreServices.js').ILogger} logger Logger for reporting issues.
+ * @throws {InvalidArgumentError} When either ID is invalid.
+ * @returns {void}
+ * @private
+ */
+function _assertIds(methodName, instanceId, componentTypeId, logger) {
+  try {
+    assertValidId(instanceId, methodName, logger);
+    assertNonBlankString(
+      componentTypeId,
+      'componentTypeId',
+      methodName,
+      logger
+    );
+  } catch {
+    const msg = `${methodName}: Invalid parameters - instanceId: '${instanceId}', componentTypeId: '${componentTypeId}'`;
+    logger.warn(msg);
+    throw new InvalidArgumentError(msg, 'instanceId/componentTypeId', {
+      instanceId,
+      componentTypeId,
+    });
+  }
+}
+
+/**
  * Validate parameters for adding or updating a component.
  *
  * @param {string} instanceId - Entity instance ID.
@@ -30,24 +59,7 @@ export function validateAddComponentParams(
   componentData,
   logger
 ) {
-  try {
-    assertValidId(instanceId, 'EntityManager.addComponent', logger);
-    assertNonBlankString(
-      componentTypeId,
-      'componentTypeId',
-      'EntityManager.addComponent',
-      logger
-    );
-  } catch {
-    logger.warn(
-      `EntityManager.addComponent: Invalid parameters - instanceId: '${instanceId}', componentTypeId: '${componentTypeId}'`
-    );
-    throw new InvalidArgumentError(
-      `EntityManager.addComponent: Invalid parameters - instanceId: '${instanceId}', componentTypeId: '${componentTypeId}'`,
-      'instanceId/componentTypeId',
-      { instanceId, componentTypeId }
-    );
-  }
+  _assertIds('EntityManager.addComponent', instanceId, componentTypeId, logger);
 
   if (componentData === null) {
     const errorMsg = `EntityManager.addComponent: componentData cannot be null for ${componentTypeId} on ${instanceId}`;
@@ -83,24 +95,12 @@ export function validateRemoveComponentParams(
   componentTypeId,
   logger
 ) {
-  try {
-    assertValidId(instanceId, 'EntityManager.removeComponent', logger);
-    assertNonBlankString(
-      componentTypeId,
-      'componentTypeId',
-      'EntityManager.removeComponent',
-      logger
-    );
-  } catch {
-    logger.warn(
-      `EntityManager.removeComponent: Invalid parameters - instanceId: '${instanceId}', componentTypeId: '${componentTypeId}'`
-    );
-    throw new InvalidArgumentError(
-      `EntityManager.removeComponent: Invalid parameters - instanceId: '${instanceId}', componentTypeId: '${componentTypeId}'`,
-      'instanceId/componentTypeId',
-      { instanceId, componentTypeId }
-    );
-  }
+  _assertIds(
+    'EntityManager.removeComponent',
+    instanceId,
+    componentTypeId,
+    logger
+  );
 }
 
 /**
@@ -160,24 +160,12 @@ export function validateGetComponentDataParams(
   componentTypeId,
   logger
 ) {
-  try {
-    assertValidId(instanceId, 'EntityManager.getComponentData', logger);
-    assertNonBlankString(
-      componentTypeId,
-      'componentTypeId',
-      'EntityManager.getComponentData',
-      logger
-    );
-  } catch {
-    logger.warn(
-      `EntityManager.getComponentData: Invalid parameters - instanceId: '${instanceId}', componentTypeId: '${componentTypeId}'`
-    );
-    throw new InvalidArgumentError(
-      `EntityManager.getComponentData: Invalid parameters - instanceId: '${instanceId}', componentTypeId: '${componentTypeId}'`,
-      'instanceId/componentTypeId',
-      { instanceId, componentTypeId }
-    );
-  }
+  _assertIds(
+    'EntityManager.getComponentData',
+    instanceId,
+    componentTypeId,
+    logger
+  );
 }
 
 /**
@@ -193,24 +181,7 @@ export function validateHasComponentParams(
   componentTypeId,
   logger
 ) {
-  try {
-    assertValidId(instanceId, 'EntityManager.hasComponent', logger);
-    assertNonBlankString(
-      componentTypeId,
-      'componentTypeId',
-      'EntityManager.hasComponent',
-      logger
-    );
-  } catch {
-    logger.warn(
-      `EntityManager.hasComponent: Invalid parameters - instanceId: '${instanceId}', componentTypeId: '${componentTypeId}'`
-    );
-    throw new InvalidArgumentError(
-      `EntityManager.hasComponent: Invalid parameters - instanceId: '${instanceId}', componentTypeId: '${componentTypeId}'`,
-      'instanceId/componentTypeId',
-      { instanceId, componentTypeId }
-    );
-  }
+  _assertIds('EntityManager.hasComponent', instanceId, componentTypeId, logger);
 }
 
 /**
@@ -226,24 +197,12 @@ export function validateHasComponentOverrideParams(
   componentTypeId,
   logger
 ) {
-  try {
-    assertValidId(instanceId, 'EntityManager.hasComponentOverride', logger);
-    assertNonBlankString(
-      componentTypeId,
-      'componentTypeId',
-      'EntityManager.hasComponentOverride',
-      logger
-    );
-  } catch {
-    logger.warn(
-      `EntityManager.hasComponentOverride: Invalid parameters - instanceId: '${instanceId}', componentTypeId: '${componentTypeId}'`
-    );
-    throw new InvalidArgumentError(
-      `EntityManager.hasComponentOverride: Invalid parameters - instanceId: '${instanceId}', componentTypeId: '${componentTypeId}'`,
-      'instanceId/componentTypeId',
-      { instanceId, componentTypeId }
-    );
-  }
+  _assertIds(
+    'EntityManager.hasComponentOverride',
+    instanceId,
+    componentTypeId,
+    logger
+  );
 }
 
 /**
