@@ -12,7 +12,7 @@ import {
   describeEngineSuite,
   describeInitializedEngineSuite,
 } from '../../common/engine/gameEngineTestBed.js';
-import { runUnavailableServiceSuite } from '../../common/engine/gameEngineHelpers.js';
+import { generateServiceUnavailableTests } from '../../common/engine/gameEngineHelpers.js';
 import { ENGINE_STOPPED_UI } from '../../../src/constants/eventIds.js';
 import {
   expectDispatchSequence,
@@ -24,7 +24,7 @@ import {
 import { DEFAULT_TEST_WORLD } from '../../common/constants.js';
 import { PLAYTIME_TRACKER_STOP_UNAVAILABLE } from '../../common/engine/unavailableMessages.js';
 
-describeEngineSuite('GameEngine', (ctx) => {
+describeEngineSuite('GameEngine', (context) => {
   describe('stop', () => {
     beforeEach(() => {
       // Ensure engine is fresh for each 'stop' test
@@ -32,13 +32,13 @@ describeEngineSuite('GameEngine', (ctx) => {
 
     describeInitializedEngineSuite(
       'when engine is initialized',
-      (ctx) => {
+      (context) => {
         it('should successfully stop a running game, with correct logging, events, and state changes', async () => {
-          await ctx.engine.stop();
-          expectStopSuccess(ctx.bed, ctx.engine);
+          await context.engine.stop();
+          expectStopSuccess(context.bed, context.engine);
         });
 
-        runUnavailableServiceSuite(
+        generateServiceUnavailableTests(
           [
             [
               tokens.PlaytimeTracker,
@@ -71,17 +71,17 @@ describeEngineSuite('GameEngine', (ctx) => {
     );
 
     it('should do nothing and log if engine is already stopped', async () => {
-      // ctx.engine is fresh, so not initialized
-      expectEngineStopped(ctx.engine);
+      // context.engine is fresh, so not initialized
+      expectEngineStopped(context.engine);
 
-      await ctx.engine.stop();
+      await context.engine.stop();
 
       expect(
-        ctx.bed.mocks.playtimeTracker.endSessionAndAccumulate
+        context.bed.mocks.playtimeTracker.endSessionAndAccumulate
       ).not.toHaveBeenCalled();
-      expect(ctx.bed.mocks.turnManager.stop).not.toHaveBeenCalled();
+      expect(context.bed.mocks.turnManager.stop).not.toHaveBeenCalled();
       expect(
-        ctx.bed.mocks.safeEventDispatcher.dispatch
+        context.bed.mocks.safeEventDispatcher.dispatch
       ).not.toHaveBeenCalledWith(ENGINE_STOPPED_UI, expect.anything());
     });
   });
