@@ -24,17 +24,15 @@ describeRunningTurnManagerSuite(
     let testBed;
     let stopSpy;
 
-    let ai1, ai2, player;
-
     beforeEach(() => {
       testBed = getBed();
-      ({ ai1, ai2, player } = testBed.addDefaultActors());
-      testBed.setupHandlerForActor(ai1);
       stopSpy = testBed.spyOnStopNoOp();
       testBed.resetMocks();
     });
 
     test('Starts a new round when queue is empty and active actors exist', async () => {
+      const { ai1, player } = testBed.addDefaultActors();
+      testBed.setupHandlerForActor(ai1);
       testBed.setActiveEntities(ai1, player);
 
       // Debug: verify actor references
@@ -82,6 +80,7 @@ describeRunningTurnManagerSuite(
     });
 
     test('Advances to next actor when current turn ends successfully', async () => {
+      const { ai1, ai2 } = testBed.addDefaultActors();
       testBed.setActiveEntities(ai1, ai2);
       testBed.mockActorSequence(ai1, ai2);
 
@@ -100,6 +99,7 @@ describeRunningTurnManagerSuite(
     });
 
     test('Correctly identifies actor types for event dispatching', async () => {
+      const { ai1, player } = testBed.addDefaultActors();
       testBed.setActiveEntities(player, ai1);
 
       testBed.mocks.turnOrderService.isEmpty.mockResolvedValue(false);
@@ -133,7 +133,10 @@ describeRunningTurnManagerSuite(
     });
 
     describe('queue becomes empty after both actors act', () => {
+      let ai1, ai2;
+
       beforeEach(async () => {
+        ({ ai1, ai2 } = testBed.addDefaultActors());
         testBed.setActiveEntities(ai1, ai2);
         let isEmptyCallCount = 0;
         testBed.mocks.turnOrderService.isEmpty.mockImplementation(() => {
@@ -161,6 +164,7 @@ describeRunningTurnManagerSuite(
     });
 
     test('Handles turn advancement errors gracefully', async () => {
+      const { ai1 } = testBed.addDefaultActors();
       testBed.setActiveEntities(ai1);
 
       testBed.mockNextActor(ai1);
@@ -180,6 +184,7 @@ describeRunningTurnManagerSuite(
     });
 
     test('Handles round start errors gracefully', async () => {
+      const { ai1 } = testBed.addDefaultActors();
       testBed.setActiveEntities(ai1);
 
       testBed.mockEmptyQueue();
