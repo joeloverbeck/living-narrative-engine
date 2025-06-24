@@ -113,11 +113,4 @@ export class MockDataFetcher {
   }
 }
 
-/**
- * Factory helper returning a new {@link MockDataFetcher} instance.
- *
- * @param {object} [options] Constructor options passed through.
- * @returns {MockDataFetcher}
- */
-export const createMockDataFetcher = (options = {}) =>
-  new MockDataFetcher(options);
+export { createMockDataFetcher } from './coreServices.js';
