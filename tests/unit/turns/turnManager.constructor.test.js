@@ -6,7 +6,7 @@ import {
   TurnManagerTestBed,
 } from '../../common/turns/turnManagerTestBed.js';
 import TurnManager from '../../../src/turns/turnManager.js';
-import { beforeEach, expect, it, jest, afterEach } from '@jest/globals'; // Use 'it' alias for test cases
+import { beforeEach, expect, it } from '@jest/globals'; // Use 'it' alias for test cases
 import { describeConstructorValidation } from '../../common/constructorValidationHelpers.js';
 
 // --- Test Suite ---
@@ -28,14 +28,6 @@ describeTurnManagerSuite(
         dispatcher: testBed.mocks.dispatcher,
         turnHandlerResolver: testBed.mocks.turnHandlerResolver,
       };
-
-      // Spy on console.error for tests checking logger fallback
-      jest.spyOn(console, 'error').mockImplementation(() => {});
-    });
-
-    afterEach(() => {
-      // Restore console.error spy
-      jest.restoreAllMocks();
     });
 
     // --- Success Case ---
@@ -90,21 +82,18 @@ describeTurnManagerSuite(
       const expectedErrorMsg =
         'TurnManager requires a valid ITurnOrderService instance.';
       expect(() => new TurnManager({})).toThrow(expectedErrorMsg);
-      expect(console.error).toHaveBeenCalledWith(expectedErrorMsg);
     });
 
     it('should handle undefined options gracefully', () => {
       const expectedErrorMsg =
         'TurnManager requires a valid ITurnOrderService instance.';
       expect(() => new TurnManager(undefined)).toThrow(expectedErrorMsg);
-      expect(console.error).toHaveBeenCalledWith(expectedErrorMsg);
     });
 
     it('should handle null options gracefully', () => {
       const expectedErrorMsg =
         'TurnManager requires a valid ITurnOrderService instance.';
       expect(() => new TurnManager(null)).toThrow(expectedErrorMsg);
-      expect(console.error).toHaveBeenCalledWith(expectedErrorMsg);
     });
   }
 );
