@@ -13,6 +13,7 @@
 import { AbstractTurnState } from './abstractTurnState.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../constants/eventIds.js';
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
+import { reportMissingActorId } from './helpers/errorReportingUtils.js';
 import { UNKNOWN_ACTOR_ID } from '../../constants/unknownIds.js';
 import { getLogger, getSafeEventDispatcher } from './helpers/contextUtils.js';
 
@@ -196,20 +197,6 @@ export class TurnEndingState extends AbstractTurnState {
    * @returns {void}
    */
   _notifyMissingActorId(dispatcher, log, providedId) {
-    const message =
-      'TurnEndingState Constructor: actorToEndId must be provided.';
-    if (dispatcher) {
-      safeDispatchError(
-        dispatcher,
-        message,
-        {
-          providedActorId: providedId ?? null,
-        },
-        log
-      );
-    }
-    log.warn(
-      `TurnEndingState Constructor: actorToEndId was missing, fell back to '${this.#actorToEndId}'.`
-    );
+    reportMissingActorId(dispatcher, log, providedId, this.#actorToEndId);
   }
 }
