@@ -39,6 +39,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
   #getActorLocationFn;
   #getEntityDisplayNameFn;
   #scopeRegistry;
+  #scopeEngine;
 
   /**
    * @param {object} deps
@@ -50,6 +51,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
    * @param {getEntityIdsForScopesFn} deps.getEntityIdsForScopesFn
    * @param {ISafeEventDispatcher} deps.safeEventDispatcher
    * @param {ScopeRegistry}      deps.scopeRegistry
+   * @param {import('../interfaces/IScopeEngine.js').IScopeEngine} deps.scopeEngine
    * @param {Function}           deps.getActorLocationFn
    * @param {Function}           deps.getEntityDisplayNameFn
    */
@@ -62,6 +64,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
     getEntityIdsForScopesFn,
     safeEventDispatcher,
     scopeRegistry,
+    scopeEngine,
     getActorLocationFn = getActorLocation,
     getEntityDisplayNameFn = getEntityDisplayName,
   }) {
@@ -89,6 +92,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
         requiredMethods: ['dispatch'],
       },
       scopeRegistry: { value: scopeRegistry, requiredMethods: ['getScope'] },
+      scopeEngine: { value: scopeEngine, requiredMethods: ['resolve'] },
       getActorLocationFn: { value: getActorLocationFn, isFunction: true },
       getEntityDisplayNameFn: {
         value: getEntityDisplayNameFn,
@@ -103,6 +107,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
     this.#getEntityIdsForScopesFn = getEntityIdsForScopesFn;
     this.#safeEventDispatcher = safeEventDispatcher;
     this.#scopeRegistry = scopeRegistry;
+    this.#scopeEngine = scopeEngine;
     this.#getActorLocationFn = getActorLocationFn;
     this.#getEntityDisplayNameFn = getEntityDisplayNameFn;
 
@@ -198,7 +203,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
         context,
         this.#scopeRegistry,
         this.#logger,
-        undefined,
+        this.#scopeEngine,
         this.#safeEventDispatcher
       ) ?? new Set();
     /** @type {import('../interfaces/IActionDiscoveryService.js').DiscoveredActionInfo[]} */

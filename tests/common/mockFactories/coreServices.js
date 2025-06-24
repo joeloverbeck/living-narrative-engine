@@ -251,3 +251,15 @@ export const createMockDataFetcher = ({
 
   return mockFetcher;
 };
+
+/**
+ * Creates a mock IScopeEngine.
+ *
+ * @param {object} [overrides] - Optional overrides for mock methods.
+ * @returns {object} Mock scope engine
+ */
+export const createMockScopeEngine = (overrides = {}) => ({
+  resolve: jest.fn().mockReturnValue(new Set()),
+  setMaxDepth: jest.fn(),
+  ...overrides,
+});

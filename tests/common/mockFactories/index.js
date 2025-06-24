@@ -11,6 +11,7 @@ export * from './container.js';
 export {
   createMockPathResolver,
   createMockAIPromptPipeline,
+  createMockScopeEngine,
 } from './coreServices.js';
 
 export { createMockDataFetcher } from './dataFetcherMock.js';

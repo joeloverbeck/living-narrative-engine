@@ -14,6 +14,7 @@ import { ActionValidationService } from '../../../src/actions/validation/actionV
 import ConsoleLogger from '../../../src/logging/consoleLogger.js';
 import { formatActionCommand as formatActionCommandFn } from '../../../src/actions/actionFormatter.js';
 import { getEntityIdsForScopes as getEntityIdsForScopesFn } from '../../../src/entities/entityScopeService.js';
+import { createMockScopeEngine } from '../../common/mockFactories/coreServices.js';
 
 // --- Helper Mocks/Types ---
 import { ActionTargetContext } from '../../../src/models/actionTargetContext.js';
@@ -49,6 +50,8 @@ describe('ActionDiscoveryService - Wait Action Tests', () => {
   let mockGetEntityIdsForScopesFn;
   /** @type {jest.Mocked<import('../../../src/scopeDsl/scopeRegistry.js').default>} */
   let mockScopeRegistry;
+  /** @type {jest.Mocked<import('../../../src/interfaces/IScopeEngine.js').IScopeEngine>} */
+  let mockScopeEngine;
 
   const ACTOR_INSTANCE_ID = 'actor1-instance-wait';
   const LOCATION_INSTANCE_ID = 'location1-instance-wait';
@@ -106,6 +109,8 @@ describe('ActionDiscoveryService - Wait Action Tests', () => {
       getStats: jest.fn(),
       clear: jest.fn(),
     };
+    
+    mockScopeEngine = createMockScopeEngine();
 
     mockActorEntity = createTestEntity(ACTOR_INSTANCE_ID, DUMMY_DEFINITION_ID);
     mockLocationEntity = createTestEntity(
@@ -156,6 +161,7 @@ describe('ActionDiscoveryService - Wait Action Tests', () => {
       getEntityIdsForScopesFn: mockGetEntityIdsForScopesFn,
       safeEventDispatcher: mockSafeEventDispatcher,
       scopeRegistry: mockScopeRegistry,
+      scopeEngine: mockScopeEngine,
     });
   });
 
