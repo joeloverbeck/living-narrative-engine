@@ -37,7 +37,7 @@ describe('deepClone', () => {
 
   it('falls back to JSON methods when structuredClone is absent', () => {
     const original = global.structuredClone;
-     
+
     global.structuredClone = undefined;
 
     const obj = { a: { b: 3 } };

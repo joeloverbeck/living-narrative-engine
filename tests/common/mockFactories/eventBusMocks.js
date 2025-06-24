@@ -1,6 +1,10 @@
 import { jest } from '@jest/globals';
 import { createSimpleMock } from './coreServices.js';
-import { createEventBus, createMockValidatedEventBus, createCapturingEventBus } from './eventBus.js';
+import {
+  createEventBus,
+  createMockValidatedEventBus,
+  createCapturingEventBus,
+} from './eventBus.js';
 
 export const createMockSafeEventDispatcher = () =>
   createSimpleMock(['dispatch']);

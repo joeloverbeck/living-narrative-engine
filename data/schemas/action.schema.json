@@ -37,11 +37,7 @@
     "scope": {
       "type": "string",
       "description": "Required. The namescaped DSL scope that defines where to look for potential targets for this action. Notes: inline scopes in the DSL are not supported.",
-      "examples": [
-        "core:followers",
-        "core:environment",
-        "core:directions"
-      ]
+      "examples": ["core:followers", "core:environment", "core:directions"]
     },
     "required_components": {
       "type": "object",
@@ -69,9 +65,7 @@
       "description": "ACTOR/WORLD STATE VALIDATION. Checks conditions on the actor (e.g., has enough mana, not rooted) or the global game state. Target-specific filtering and validation should be handled exclusively by the 'scope' property's DSL expression.",
       "items": {
         "type": "object",
-        "required": [
-          "logic"
-        ],
+        "required": ["logic"],
         "properties": {
           "logic": {
             "$ref": "./condition-container.schema.json#",
@@ -91,14 +85,7 @@
       "description": "Required. Text template for generating the command string output, using placeholders like {target} (e.g., 'eat {target}', 'wait')."
     }
   },
-  "required": [
-    "id",
-    "description",
-    "commandVerb",
-    "name",
-    "scope",
-    "template"
-  ],
+  "required": ["id", "description", "commandVerb", "name", "scope", "template"],
   "additionalProperties": true,
   "$comment": "Allows additional properties for future extensions like action costs or effects definitions."
 }

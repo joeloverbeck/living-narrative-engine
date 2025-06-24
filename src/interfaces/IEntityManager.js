@@ -149,4 +149,14 @@ export class IEntityManager {
   get entities() {
     throw new Error('IEntityManager.entities getter not implemented.');
   }
+
+  /**
+   * Returns a list of all component type IDs attached to a given entity.
+   *
+   * @param {string} entityId The ID of the entity.
+   * @returns {string[]} An array of component ID strings.
+   */
+  getAllComponentTypesForEntity(entityId) {
+    throw new Error('IEntityManager.getAllComponentTypesForEntity not implemented.');
+  }
 }

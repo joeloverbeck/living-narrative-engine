@@ -68,4 +68,5 @@ export const createMockValidatedEventBus = () => createEventBus();
  *
  * @returns {object} Mock event bus with events array
  */
-export const createCapturingEventBus = () => createEventBus({ captureEvents: true }); 
+export const createCapturingEventBus = () =>
+  createEventBus({ captureEvents: true });

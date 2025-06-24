@@ -82,7 +82,9 @@ describe('Scope Integration Tests', () => {
 
     scopeRegistry.initialize({
       environment: { expr: environmentDefs.get('environment') },
-      potential_leaders: { expr: potentialLeadersDefs.get('potential_leaders') },
+      potential_leaders: {
+        expr: potentialLeadersDefs.get('potential_leaders'),
+      },
     });
 
     // Create a real scope engine
@@ -94,44 +96,47 @@ describe('Scope Integration Tests', () => {
     // Load required conditions for the potential_leaders scope
     registry.store('conditions', 'core:entity-at-location', {
       id: 'core:entity-at-location',
-      description: "True when the entity's current locationId matches the location under evaluation.",
+      description:
+        "True when the entity's current locationId matches the location under evaluation.",
       logic: {
         '==': [
           { var: 'entity.components.core:position.locationId' },
-          { var: 'location.id' }
-        ]
-      }
+          { var: 'location.id' },
+        ],
+      },
     });
     registry.store('conditions', 'core:entity-is-not-actor', {
       id: 'core:entity-is-not-actor',
-      description: 'True when the entity being evaluated is **not** the actor entity.',
+      description:
+        'True when the entity being evaluated is **not** the actor entity.',
       logic: {
-        '!=': [
-          { var: 'entity.id' },
-          { var: 'actor.id' }
-        ]
-      }
+        '!=': [{ var: 'entity.id' }, { var: 'actor.id' }],
+      },
     });
     registry.store('conditions', 'core:entity-has-actor-component', {
       id: 'core:entity-has-actor-component',
       description: "Checks that the entity has the 'core:actor' component.",
       logic: {
-        '!!': { var: 'entity.components.core:actor' }
-      }
+        '!!': { var: 'entity.components.core:actor' },
+      },
     });
     registry.store('conditions', 'core:entity-is-following-actor', {
       id: 'core:entity-is-following-actor',
-      description: "Checks if the entity's 'following' component points to the actor's ID.",
+      description:
+        "Checks if the entity's 'following' component points to the actor's ID.",
       logic: {
         '==': [
           { var: 'entity.components.core:following.leaderId' },
-          { var: 'actor.id' }
-        ]
-      }
+          { var: 'actor.id' },
+        ],
+      },
     });
 
     gameDataRepository = new GameDataRepository(registry, logger);
-    jsonLogicEval = new JsonLogicEvaluationService({ logger, gameDataRepository });
+    jsonLogicEval = new JsonLogicEvaluationService({
+      logger,
+      gameDataRepository,
+    });
     const domainContextCompatibilityChecker = { check: () => true };
     const prerequisiteEvaluationService = { evaluate: (a, b, c, d) => true };
     const validatedEventDispatcher = {

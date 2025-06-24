@@ -6,7 +6,5 @@
   "description": "Lean in and softly kiss the target on the cheek.",
   "scope": "close_actors",
   "template": "kiss {target}'s cheek",
-  "prerequisites": [
-
-  ]
+  "prerequisites": []
 }
