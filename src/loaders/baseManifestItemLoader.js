@@ -480,6 +480,7 @@ export class BaseManifestItemLoader extends AbstractLoader {
    * @param {object} dataToStore - The original data object fetched and validated for the item.
    * @param {string} sourceFilename - The original filename from which the data was loaded (for logging).
    * @returns {{qualifiedId: string, didOverride: boolean}} Object containing the fully qualified ID and override flag.
+   * @throws {TypeError} If arguments fail validation.
    * @throws {Error} Re-throws any error encountered during interaction with the data registry (`get` or `store`).
    */
   _storeItemInRegistry(
