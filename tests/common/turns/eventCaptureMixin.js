@@ -66,13 +66,17 @@ export function EventCaptureMixin(Base) {
      *
      * @param {string} id - Expected actor id.
      * @param {number} [maxTicks] - Maximum timer flush iterations.
-     * @returns {Promise<boolean>} Resolves true if actor found before timeout.
+     * @returns {Promise<void>} Resolves when actor found before timeout.
+     * @throws {Error} If the actor is not found before timeout.
      */
     async waitForCurrentActor(id, maxTicks = 50) {
-      return waitForCondition(
+      const found = await waitForCondition(
         () => this.turnManager.getCurrentActor()?.id === id,
         maxTicks
       );
+      if (!found) {
+        throw new Error(`Timed out waiting for actor ${id}`);
+      }
     }
   };
 }
