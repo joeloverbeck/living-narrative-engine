@@ -4,8 +4,14 @@
 import {
   cleanLLMJsonOutput,
   CONVERSATIONAL_PREFIXES,
+  initialParse,
+  repairAndParse,
+  JsonProcessingError,
 } from '../../../src/utils/llmUtils.js';
-import { describe, expect, test } from '@jest/globals'; // Adjust path as needed
+import { beforeEach, describe, expect, jest, test } from '@jest/globals'; // Adjust path as needed
+
+jest.mock('@toolsycc/json-repair');
+import { repairJson as mockRepairJson } from '@toolsycc/json-repair';
 
 describe('cleanLLMJsonOutput', () => {
   // Acceptance Criterion 1: Non-string input handling
@@ -292,6 +298,60 @@ describe('cleanLLMJsonOutput', () => {
         '{"key":"value"}'
       );
     });
+  });
+});
+
+describe('initialParse', () => {
+  let mockLogger;
+
+  beforeEach(() => {
+    mockLogger = {
+      debug: jest.fn(),
+      info: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+    };
+  });
+
+  test('parses valid JSON', () => {
+    expect(initialParse('{"a":1}', mockLogger)).toEqual({ a: 1 });
+  });
+
+  test('throws SyntaxError for invalid JSON', () => {
+    expect(() => initialParse('invalid', mockLogger)).toThrow(SyntaxError);
+  });
+});
+
+describe('repairAndParse', () => {
+  let mockLogger;
+
+  beforeEach(() => {
+    mockLogger = {
+      debug: jest.fn(),
+      info: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+    };
+    mockRepairJson.mockClear();
+  });
+
+  test('repairs and parses JSON', () => {
+    const cleaned = '{"a":1,}';
+    mockRepairJson.mockReturnValue('{"a":1}');
+    expect(repairAndParse(cleaned, mockLogger)).toEqual({ a: 1 });
+    expect(mockRepairJson).toHaveBeenCalledWith(cleaned);
+  });
+
+  test('throws JsonProcessingError when repair fails', () => {
+    const cleaned = '{"a":1,}';
+    const repairError = new Error('boom');
+    mockRepairJson.mockImplementation(() => {
+      throw repairError;
+    });
+
+    expect(() =>
+      repairAndParse(cleaned, mockLogger, undefined, new Error('bad'))
+    ).toThrow(JsonProcessingError);
   });
 });
 

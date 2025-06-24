@@ -111,6 +111,87 @@ export function cleanLLMJsonOutput(rawOutput) {
  */
 
 /**
+ * Attempts to parse a cleaned JSON string.
+ *
+ * @param {string} cleanedJsonString - The JSON string already processed by
+ * `cleanLLMJsonOutput`.
+ * @param {ILogger} log - Logger used for any debug output.
+ * @returns {object} The parsed JSON object.
+ * @throws {Error} Re-throws any `JSON.parse` error.
+ */
+export function initialParse(cleanedJsonString, log) {
+  try {
+    return JSON.parse(cleanedJsonString);
+  } catch (error) {
+    if (log && typeof log.debug === 'function') {
+      log.debug('initialParse: JSON.parse failed', { message: error.message });
+    }
+    throw error;
+  }
+}
+
+/**
+ * Attempts to repair a JSON string and then parse the result.
+ *
+ * @param {string} cleanedString - The cleaned JSON string to repair.
+ * @param {ILogger} log - Logger used for debug or error output.
+ * @param {object} [dispatcher] - Optional dispatcher for error reporting.
+ * @param {Error} initialError - The error thrown from `initialParse`.
+ * @returns {object} The repaired and parsed object.
+ * @throws {JsonProcessingError} If repair or parsing fails.
+ */
+export function repairAndParse(cleanedString, log, dispatcher, initialError) {
+  try {
+    const repairedString = repairJson(cleanedString);
+    const repairedObject = JSON.parse(repairedString);
+    log.debug('parseAndRepairJson: Successfully parsed JSON after repair.', {
+      cleanedLength: cleanedString.length,
+      repairedLength: repairedString.length,
+    });
+    return repairedObject;
+  } catch (repairAndParseError) {
+    const errorMessage = `Failed to parse JSON even after repair attempt. Repair/Parse Error: ${repairAndParseError.message}`;
+    if (dispatcher) {
+      safeDispatchError(dispatcher, `parseAndRepairJson: ${errorMessage}`, {
+        cleanedJsonStringLength: cleanedString.length,
+        cleanedJsonPreview:
+          cleanedString.substring(0, 100) +
+          (cleanedString.length > 100 ? '...' : ''),
+        initialParseError: {
+          message: initialError.message,
+          name: initialError.name,
+        },
+        repairAndParseError: {
+          message: repairAndParseError.message,
+          name: repairAndParseError.name,
+        },
+      });
+    } else {
+      log.error(`parseAndRepairJson: ${errorMessage}`, {
+        cleanedJsonStringLength: cleanedString.length,
+        cleanedJsonPreview:
+          cleanedString.substring(0, 100) +
+          (cleanedString.length > 100 ? '...' : ''),
+        initialParseError: {
+          message: initialError.message,
+          name: initialError.name,
+        },
+        repairAndParseError: {
+          message: repairAndParseError.message,
+          name: repairAndParseError.name,
+        },
+      });
+    }
+    throw new JsonProcessingError(errorMessage, {
+      stage: 'final_parse_after_repair',
+      originalError: repairAndParseError,
+      initialParseError: initialError,
+      attemptedJsonString: cleanedString,
+    });
+  }
+}
+
+/**
  * Parses a JSON string, attempting to repair it if initial parsing fails.
  * It first cleans the input string using `cleanLLMJsonOutput`.
  *
@@ -159,8 +240,7 @@ export async function parseAndRepairJson(jsonString, logger, dispatcher) {
   }
 
   try {
-    // Attempt initial parsing
-    const parsedObject = JSON.parse(cleanedJsonString); // [cite: 1, 997]
+    const parsedObject = initialParse(cleanedJsonString, log);
     log.debug(
       'parseAndRepairJson: Successfully parsed JSON on first attempt after cleaning.',
       {
@@ -173,7 +253,6 @@ export async function parseAndRepairJson(jsonString, logger, dispatcher) {
     log.warn(
       `parseAndRepairJson: Initial JSON.parse failed after cleaning. Attempting repair. Error: ${initialParseError.message}`,
       {
-        // [cite: 1, 998]
         originalInputLength: jsonString.length,
         cleanedJsonStringLength: cleanedJsonString.length,
         cleanedJsonPreview:
@@ -186,63 +265,12 @@ export async function parseAndRepairJson(jsonString, logger, dispatcher) {
       }
     );
 
-    try {
-      // Attempt repair using the chosen library
-      const repairedString = repairJson(cleanedJsonString); // [cite: 1, 999]
-
-      // Attempt to parse the repaired string
-      const repairedObject = JSON.parse(repairedString); // [cite: 1, 1000]
-      log.debug('parseAndRepairJson: Successfully parsed JSON after repair.', {
-        // [cite: 1, 1000]
-        originalInputLength: jsonString.length,
-        cleanedLength: cleanedJsonString.length,
-        repairedLength: repairedString.length,
-      });
-      return repairedObject;
-    } catch (repairAndParseError) {
-      const errorMessage = `Failed to parse JSON even after repair attempt. Repair/Parse Error: ${repairAndParseError.message}`;
-      if (dispatcher) {
-        safeDispatchError(dispatcher, `parseAndRepairJson: ${errorMessage}`, {
-          originalInputLength: jsonString.length,
-          cleanedJsonStringLength: cleanedJsonString.length,
-          cleanedJsonPreview:
-            cleanedJsonString.substring(0, 100) +
-            (cleanedJsonString.length > 100 ? '...' : ''),
-          initialParseError: {
-            message: initialParseError.message,
-            name: initialParseError.name,
-          },
-          repairAndParseError: {
-            message: repairAndParseError.message,
-            name: repairAndParseError.name,
-          },
-        });
-      } else {
-        log.error(`parseAndRepairJson: ${errorMessage}`, {
-          // [cite: 1, 1000]
-          originalInputLength: jsonString.length,
-          cleanedJsonStringLength: cleanedJsonString.length,
-          cleanedJsonPreview:
-            cleanedJsonString.substring(0, 100) +
-            (cleanedJsonString.length > 100 ? '...' : ''),
-          initialParseError: {
-            message: initialParseError.message,
-            name: initialParseError.name,
-          },
-          repairAndParseError: {
-            message: repairAndParseError.message,
-            name: repairAndParseError.name,
-          },
-        });
-      }
-      throw new JsonProcessingError(errorMessage, {
-        // [cite: 1, 1000]
-        stage: 'final_parse_after_repair',
-        originalError: repairAndParseError,
-        initialParseError, // include the first error as well for context
-        attemptedJsonString: cleanedJsonString, // The string fed to the repairer
-      });
-    }
+    return repairAndParse(
+      cleanedJsonString,
+      log,
+      dispatcher,
+      initialParseError
+    );
   }
 }
 
