@@ -79,20 +79,22 @@ class UiAssetsLoader extends AbstractLoader {
   }
 
   /**
-   * @description Loads icon definitions for a mod.
+   * @description Helper to load UI asset files like icons or labels.
+   * @protected
    * @param {string} modId - The mod identifier.
    * @param {ModManifest} manifest - The mod manifest.
+   * @param {{suffix:string, schemaKey:string, registryCat:string}} options - Parameters controlling file suffix, schema key and registry category.
    * @returns {Promise<{count:number, overrides:number, errors:number}>} Result summary.
    */
-  async loadIconsForMod(modId, manifest) {
+  async _loadAssetFiles(modId, manifest, { suffix, schemaKey, registryCat }) {
     const uiFiles = manifest?.content?.ui || [];
-    const iconsFiles = uiFiles.filter((f) => f.endsWith('icons.json'));
+    const targetFiles = uiFiles.filter((f) => f.endsWith(suffix));
 
     let count = 0;
     let overrides = 0;
     let errors = 0;
 
-    for (const filename of iconsFiles) {
+    for (const filename of targetFiles) {
       try {
         const path = this.#resolver.resolveModContentPath(
           modId,
@@ -100,16 +102,18 @@ class UiAssetsLoader extends AbstractLoader {
           filename
         );
         const data = await this.#fetcher.fetch(path);
-        const schemaId = this.#config.getContentTypeSchemaId('ui-icons');
+        const schemaId = this.#config.getContentTypeSchemaId(schemaKey);
         const res = this.#validator.validate(schemaId, data);
         if (!res.isValid) {
-          throw new Error('Icon schema validation failed');
+          throw new Error('Asset schema validation failed');
         }
-        for (const [name, svg] of Object.entries(data)) {
-          if (this.#registry.get('ui-icons', name) !== undefined) {
+        for (const [name, value] of Object.entries(data)) {
+          if (this.#registry.get(registryCat, name) !== undefined) {
             overrides++;
           }
-          this.#registry.store('ui-icons', name, { markup: svg });
+          const toStore =
+            registryCat === 'ui-icons' ? { markup: value } : value;
+          this.#registry.store(registryCat, name, toStore);
         }
         count++;
       } catch (e) {
@@ -124,48 +128,31 @@ class UiAssetsLoader extends AbstractLoader {
   }
 
   /**
+   * @description Loads icon definitions for a mod.
+   * @param {string} modId - The mod identifier.
+   * @param {ModManifest} manifest - The mod manifest.
+   * @returns {Promise<{count:number, overrides:number, errors:number}>} Result summary.
+   */
+  async loadIconsForMod(modId, manifest) {
+    return this._loadAssetFiles(modId, manifest, {
+      suffix: 'icons.json',
+      schemaKey: 'ui-icons',
+      registryCat: 'ui-icons',
+    });
+  }
+
+  /**
    * @description Loads label definitions for a mod.
    * @param {string} modId - The mod identifier.
    * @param {ModManifest} manifest - The mod manifest.
    * @returns {Promise<{count:number, overrides:number, errors:number}>} Result summary.
    */
   async loadLabelsForMod(modId, manifest) {
-    const uiFiles = manifest?.content?.ui || [];
-    const labelFiles = uiFiles.filter((f) => f.endsWith('labels.json'));
-
-    let count = 0;
-    let overrides = 0;
-    let errors = 0;
-
-    for (const filename of labelFiles) {
-      try {
-        const path = this.#resolver.resolveModContentPath(
-          modId,
-          'ui',
-          filename
-        );
-        const data = await this.#fetcher.fetch(path);
-        const schemaId = this.#config.getContentTypeSchemaId('ui-labels');
-        const res = this.#validator.validate(schemaId, data);
-        if (!res.isValid) {
-          throw new Error('Label schema validation failed');
-        }
-        for (const [name, value] of Object.entries(data)) {
-          if (this.#registry.get('ui-labels', name) !== undefined) {
-            overrides++;
-          }
-          this.#registry.store('ui-labels', name, value);
-        }
-        count++;
-      } catch (e) {
-        errors++;
-        this._logger.error(
-          `UiAssetsLoader [${modId}]: Failed to process ${filename}: ${e.message}`
-        );
-      }
-    }
-
-    return { count, overrides, errors };
+    return this._loadAssetFiles(modId, manifest, {
+      suffix: 'labels.json',
+      schemaKey: 'ui-labels',
+      registryCat: 'ui-labels',
+    });
   }
 
   /**
