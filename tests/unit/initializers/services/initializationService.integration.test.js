@@ -38,8 +38,6 @@ describe('InitializationService Integration with AppContainer', () => {
     // Reset mocks before each test (clears calls from previous tests)
     jest.clearAllMocks();
 
-    // --- Pre-register Dependencies ---
-    // InitializationService's factory *needs* these to be registered first.
     container.register(tokens.ILogger, () => mockLogger, {
       lifecycle: 'singleton',
     });
@@ -48,9 +46,34 @@ describe('InitializationService Integration with AppContainer', () => {
       () => mockValidatedEventDispatcher,
       { lifecycle: 'singleton' }
     );
-
-    // We *could* also mock and register GameLoop etc. if testing ShutdownService,
-    // but for this specific bug in InitializationService, only its direct dependencies are needed.
+    container.register(tokens.ModsLoader, () => ({
+      loadMods: jest.fn().mockResolvedValue({}),
+    }));
+    container.register(tokens.IScopeRegistry, () => ({
+      initialize: jest.fn(),
+    }));
+    container.register(tokens.IDataRegistry, () => ({
+      getAll: jest.fn().mockReturnValue([]),
+    }));
+    container.register(tokens.LLMAdapter, () => ({
+      init: jest.fn(),
+      isInitialized: jest.fn(),
+      isOperational: jest.fn(),
+    }));
+    container.register(tokens.LlmConfigLoader, () => ({
+      loadConfigs: jest.fn(),
+    }));
+    container.register(tokens.SystemInitializer, () => ({
+      initializeAll: jest.fn(),
+    }));
+    container.register(tokens.WorldInitializer, () => ({
+      initializeWorldEntities: jest.fn().mockReturnValue(true),
+    }));
+    container.register(tokens.ISafeEventDispatcher, () => ({
+      subscribe: jest.fn(),
+    }));
+    container.register(tokens.IEntityManager, () => ({}));
+    container.register(tokens.DomUiFacade, () => ({}));
   });
 
   afterEach(() => {
