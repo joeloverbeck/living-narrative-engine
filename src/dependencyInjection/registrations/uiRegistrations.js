@@ -31,6 +31,7 @@ import {
 } from '../../domUI/index.js';
 import SaveGameUI from '../../domUI/saveGameUI.js';
 import LoadGameUI from '../../domUI/loadGameUI.js';
+import BrowserUserPrompt from '../../domUI/browserUserPrompt.js';
 import { EngineUIManager } from '../../domUI'; // Corrected import path if EngineUIManager is also in domUI/index.js or directly from its file
 
 // --- JSDoc Imports ---
@@ -89,6 +90,9 @@ export function registerUI(
     (c) => new DomElementFactory(c.resolve(tokens.IDocumentContext))
   );
   logger.debug(`UI Registrations: Registered ${tokens.DomElementFactory}.`);
+
+  registrar.single(tokens.IUserPrompt, BrowserUserPrompt);
+  logger.debug(`UI Registrations: Registered ${tokens.IUserPrompt}.`);
 
   registrar.single(tokens.AlertRouter, AlertRouter, [
     tokens.ISafeEventDispatcher,
@@ -187,6 +191,7 @@ export function registerUI(
         domElementFactory: c.resolve(tokens.DomElementFactory),
         saveLoadService: c.resolve(tokens.ISaveLoadService),
         validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
+        userPrompt: c.resolve(tokens.IUserPrompt),
       })
   );
   logger.debug(`UI Registrations: Registered ${tokens.SaveGameUI}.`);
@@ -200,6 +205,7 @@ export function registerUI(
         domElementFactory: c.resolve(tokens.DomElementFactory),
         saveLoadService: c.resolve(tokens.ISaveLoadService),
         validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
+        userPrompt: c.resolve(tokens.IUserPrompt),
       })
   );
   logger.debug(`UI Registrations: Registered ${tokens.LoadGameUI}.`);
