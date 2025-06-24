@@ -1,11 +1,12 @@
-import { ISaveLoadService } from '../interfaces/ISaveLoadService.js';
 import GameStateSerializer from './gameStateSerializer.js';
 import SaveValidationService from './saveValidationService.js';
 import { getManualSavePath } from '../utils/savePathUtils.js';
 import SaveFileRepository from './saveFileRepository.js';
 import SaveFileParser from './saveFileParser.js';
-import { ISaveFileRepository } from '../interfaces/ISaveFileRepository.js';
 import { BaseService } from '../utils/serviceBase.js';
+
+/** @typedef {import('../interfaces/ISaveLoadService.js').ISaveLoadService} ISaveLoadService */
+/** @typedef {import('../interfaces/ISaveFileRepository.js').ISaveFileRepository} ISaveFileRepository */
 import { prepareState } from './savePreparation.js';
 import { PersistenceErrorCodes } from './persistenceErrors.js';
 import {
@@ -22,8 +23,6 @@ import { isValidSaveString } from './saveInputValidators.js';
 /** @typedef {import('../interfaces/ISaveLoadService.js').LoadGameResult} LoadGameResult */
 /** @typedef {import('../interfaces/ISaveLoadService.js').SaveGameStructure} SaveGameStructure */
 /** @typedef {import('./gameStateSerializer.js').default} GameStateSerializer */
-/** @typedef {import('../interfaces/ISaveFileRepository.js').ISaveFileRepository} ISaveFileRepository */
-
 // --- Constants ---
 // const MAX_MANUAL_SAVES = 10; // Not directly enforced by list/load, but by save UI/logic
 // Constants defining the manual save directory live in savePathUtils
