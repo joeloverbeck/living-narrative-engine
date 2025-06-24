@@ -11,7 +11,7 @@ import SystemLogicInterpreter from '../../src/logic/systemLogicInterpreter.js';
 import OperationInterpreter from '../../src/logic/operationInterpreter.js';
 import OperationRegistry from '../../src/logic/operationRegistry.js';
 import JsonLogicEvaluationService from '../../src/logic/jsonLogicEvaluationService.js';
-import SimpleEntityManager from '../common/entities/simpleEntityManager.js';
+import { SimpleEntityManager } from '../common/entities/index.js';
 
 const TEST_TIMESTAMP = '2099-01-01T00:00:00.000Z';
 

@@ -20,7 +20,15 @@
       "description": "Required. The single, canonical command verb associated with this action (e.g., 'go', 'take', 'look', 'use'). Used for UI generation and potentially mapping. Hyphenated and camelCase verbs are allowed, but spaces are not.",
       "minLength": 1,
       "pattern": "^[A-Za-z-]+$",
-      "examples": ["go", "take", "look", "inventory", "wait", "attack"]
+      "examples": [
+        "go",
+        "take",
+        "look",
+        "inventory",
+        "wait",
+        "attack",
+        "take-off"
+      ]
     },
     "name": {
       "type": "string",
@@ -28,36 +36,42 @@
     },
     "scope": {
       "type": "string",
-      "description": "Required. DSL scope expression or scope name that defines where to look for potential targets for this action. Examples: 'actor.inventory.items[]', 'location.entities(core:item)[]', 'actor.followers[]', or a predefined scope name like 'nearby_items'.",
+      "description": "Required. The namescaped DSL scope that defines where to look for potential targets for this action. Notes: inline scopes in the DSL are not supported.",
       "examples": [
-        "actor.inventory.items[]",
-        "location.entities(core:item)[]",
-        "actor.followers[]",
-        "location.entities(core:npc)[][{\"!=\": [{\"var\": \"faction\"}, \"enemy\"]}]",
-        "nearby_items"
+        "core:followers",
+        "core:environment",
+        "core:directions"
       ]
     },
-    "target_domain": {
-      "type": "string",
-      "description": "Deprecated. Specifies where to look for potential targets for this action. Replaced by 'scope' property.",
-      "deprecated": true,
-      "enum": [
-        "none",
-        "self",
-        "inventory",
-        "equipment",
-        "environment",
-        "direction",
-        "followers"
-      ]
+    "required_components": {
+      "type": "object",
+      "description": "HIGH-LEVEL PRE-FILTERING. Specifies component IDs required on the actor or target for this action to be considered for discovery. This is the primary mechanism used by the ActionIndex service for performance optimization.",
+      "properties": {
+        "actor": {
+          "type": "array",
+          "description": "A list of component IDs that the actor must possess for this action to be a candidate.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "target": {
+          "type": "array",
+          "description": "A list of component IDs that a potential target must possess. Used by the indexer to further refine action candidates.",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
     },
     "prerequisites": {
       "type": "array",
-      "description": "Optional. Defines all conditional requirements beyond basic target domain checks. It is an array of objects, each containing a 'logic' property (a standard JSON Logic object) and an optional 'failure_message'. These are evaluated by JsonLogicEvaluationService. The evaluation context includes 'actor' and 'target'. This field replaces the removed component requirement fields (actor_required_components, etc.).",
-      "$comment": "This 'prerequisites' array, using objects with a 'logic' key for JSON Logic, replaces the deprecated actor_required_components, actor_forbidden_components, target_required_components, and target_forbidden_components fields.",
+      "description": "ACTOR/WORLD STATE VALIDATION. Checks conditions on the actor (e.g., has enough mana, not rooted) or the global game state. Target-specific filtering and validation should be handled exclusively by the 'scope' property's DSL expression.",
       "items": {
         "type": "object",
-        "required": ["logic"],
+        "required": [
+          "logic"
+        ],
         "properties": {
           "logic": {
             "$ref": "./condition-container.schema.json#",
@@ -74,10 +88,17 @@
     },
     "template": {
       "type": "string",
-      "description": "Required. Text template for generating the command string output, using placeholders like {target} or {direction} (e.g., 'eat {target}', 'go {direction}', 'wait')."
+      "description": "Required. Text template for generating the command string output, using placeholders like {target} (e.g., 'eat {target}', 'wait')."
     }
   },
-  "required": ["id", "description", "commandVerb", "name", "scope", "template"],
+  "required": [
+    "id",
+    "description",
+    "commandVerb",
+    "name",
+    "scope",
+    "template"
+  ],
   "additionalProperties": true,
-  "$comment": "Allows additional properties for future extensions like action costs or effects definitions. The 'dispatch_event' property has been removed."
+  "$comment": "Allows additional properties for future extensions like action costs or effects definitions."
 }

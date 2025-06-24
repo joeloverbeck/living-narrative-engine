@@ -27,7 +27,7 @@ import {
   createMockLogger,
 } from '../common/mockFactories.js';
 import { buildExecContext } from '../common/entities/index.js';
-import SimpleEntityManager from '../common/entities/simpleEntityManager.js';
+import { SimpleEntityManager } from '../common/entities/index.js';
 import {
   afterEach,
   beforeEach,

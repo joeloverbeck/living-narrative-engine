@@ -27,7 +27,7 @@ import OperationRegistry from '../../src/logic/operationRegistry.js';
 import JsonLogicEvaluationService from '../../src/logic/jsonLogicEvaluationService.js';
 import ModifyComponentHandler from '../../src/logic/operationHandlers/modifyComponentHandler.js';
 import { createSimpleMockDataRegistry } from '../common/mockFactories.js';
-import SimpleEntityManager from '../common/entities/simpleEntityManager.js';
+import { SimpleEntityManager } from '../common/entities/index.js';
 
 // -----------------------------------------------------------------------------
 //  The Test -------------------------------------------------------------------
