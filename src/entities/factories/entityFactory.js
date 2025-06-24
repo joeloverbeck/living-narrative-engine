@@ -27,6 +27,8 @@ import { injectDefaultComponents } from '../utils/defaultComponentInjector.js';
 import { validateDependency } from '../../utils/validationUtils.js';
 import { ensureValidLogger } from '../../utils';
 import { DefinitionNotFoundError } from '../../errors/definitionNotFoundError.js';
+import { SerializedEntityError } from '../../errors/serializedEntityError.js';
+import { InvalidInstanceIdError } from '../../errors/invalidInstanceIdError.js';
 import { validateAndClone as validateAndCloneUtil } from '../utils/componentValidation.js';
 
 /* -------------------------------------------------------------------------- */
@@ -189,6 +191,20 @@ class EntityFactory {
       throw err;
     }
 
+    if (instanceId !== undefined && instanceId !== null) {
+      try {
+        assertValidId(instanceId, 'EntityFactory.create', this.#logger);
+      } catch (err) {
+        if (err && err.name === 'InvalidArgumentError') {
+          const msg =
+            'EntityFactory.create: instanceId is missing or invalid.';
+          this.#logger.error(`[EntityFactory] ${msg}`);
+          throw new InvalidInstanceIdError(instanceId, msg);
+        }
+        throw err;
+      }
+    }
+
     const entityDefinition =
       definition || this.#getDefinition(definitionId, registry);
     if (!entityDefinition) {
@@ -276,7 +292,7 @@ class EntityFactory {
       const msg =
         'EntityFactory.reconstruct: serializedEntity data is missing or invalid.';
       this.#logger.error(`[EntityFactory] ${msg}`);
-      throw new Error(msg);
+      throw new SerializedEntityError(msg);
     }
 
     const {
@@ -296,7 +312,7 @@ class EntityFactory {
         const msg =
           'EntityFactory.reconstruct: instanceId is missing or invalid in serialized data.';
         this.#logger.error(`[EntityFactory] ${msg}`);
-        throw new Error(msg);
+        throw new InvalidInstanceIdError(instanceId, msg);
       }
       throw err;
     }

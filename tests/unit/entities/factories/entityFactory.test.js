@@ -15,6 +15,8 @@ import EntityFactory from '../../../../src/entities/factories/entityFactory.js';
 import Entity from '../../../../src/entities/entity.js';
 import EntityDefinition from '../../../../src/entities/entityDefinition.js';
 import { DefinitionNotFoundError } from '../../../../src/errors/definitionNotFoundError.js';
+import { SerializedEntityError } from '../../../../src/errors/serializedEntityError.js';
+import { InvalidInstanceIdError } from '../../../../src/errors/invalidInstanceIdError.js';
 import {
   createMockLogger,
   createMockSchemaValidator,
@@ -354,15 +356,11 @@ describe('EntityFactory', () => {
     it('should throw error if serializedEntity is invalid', () => {
       expect(() => {
         factory.reconstruct(null, mocks.registry, { has: () => false });
-      }).toThrow(
-        'EntityFactory.reconstruct: serializedEntity data is missing or invalid.'
-      );
+      }).toThrow(SerializedEntityError);
 
       expect(() => {
         factory.reconstruct('invalid', mocks.registry, { has: () => false });
-      }).toThrow(
-        'EntityFactory.reconstruct: serializedEntity data is missing or invalid.'
-      );
+      }).toThrow(SerializedEntityError);
     });
 
     it('should throw error if instanceId is invalid', () => {
@@ -376,9 +374,7 @@ describe('EntityFactory', () => {
         factory.reconstruct(serializedEntity, mocks.registry, {
           has: () => false,
         });
-      }).toThrow(
-        'EntityFactory.reconstruct: instanceId is missing or invalid in serialized data.'
-      );
+      }).toThrow(InvalidInstanceIdError);
     });
 
     it('should throw error if entity with same ID already exists', () => {

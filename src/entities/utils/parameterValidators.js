@@ -12,6 +12,8 @@ import {
 } from '../../utils/parameterGuards.js';
 import { isNonBlankString } from '../../utils/textUtils.js';
 import { InvalidArgumentError } from '../../errors/invalidArgumentError.js';
+import { SerializedEntityError } from '../../errors/serializedEntityError.js';
+import { InvalidInstanceIdError } from '../../errors/invalidInstanceIdError.js';
 
 /**
  * Validate parameters for adding or updating a component.
@@ -113,13 +115,13 @@ export function validateReconstructEntityParams(serializedEntity, logger) {
     const msg =
       'EntityManager.reconstructEntity: serializedEntity data is missing or invalid.';
     logger.error(msg);
-    throw new Error(msg);
+    throw new SerializedEntityError(msg);
   }
   if (!isNonBlankString(serializedEntity.instanceId)) {
     const msg =
       'EntityManager.reconstructEntity: instanceId is missing or invalid in serialized data.';
     logger.error(msg);
-    throw new Error(msg);
+    throw new InvalidInstanceIdError(serializedEntity.instanceId, msg);
   }
 }
 
