@@ -177,7 +177,7 @@ export function setupLoadGameSpies(engine) {
  * @returns {void}
  */
 export function mockInitializationSuccess(bed) {
-  bed.mocks.initializationService.runInitializationSequence.mockResolvedValue({
+  bed.getInitializationService().runInitializationSequence.mockResolvedValue({
     success: true,
   });
 }

@@ -15,7 +15,9 @@ import { DEFAULT_TEST_WORLD } from '../constants.js';
 
 /**
  * @description Utility class that instantiates {@link GameEngine} using a mocked
- * environment and exposes helpers for common test operations.
+ * environment and exposes helpers for common test operations. Public getter
+ * methods expose commonly used service mocks while the underlying mock
+ * collection remains internal.
  * @class
  */
 const StoppableMixin = createStoppableMixin('engine');
@@ -56,6 +58,69 @@ export class GameEngineTestBed extends StoppableMixin(ContainerTestBed) {
     const engine = env.instance || env.createInstance();
     this.env = env;
     this.engine = engine;
+  }
+
+  /**
+   * Returns the logger mock.
+   *
+   * @returns {ReturnType<import('../mockFactories').createMockLogger>} Logger mock.
+   */
+  getLogger() {
+    return this.logger;
+  }
+
+  /**
+   * Returns the entity manager mock.
+   *
+   * @returns {ReturnType<import('../mockFactories').createMockEntityManager>} Entity manager mock.
+   */
+  getEntityManager() {
+    return this.entityManager;
+  }
+
+  /**
+   * Returns the turn manager mock.
+   *
+   * @returns {ReturnType<import('../mockFactories').createMockTurnManager>} Turn manager mock.
+   */
+  getTurnManager() {
+    return this.turnManager;
+  }
+
+  /**
+   * Returns the game persistence service mock.
+   *
+   * @returns {ReturnType<import('../mockFactories').createMockGamePersistenceService>} Persistence service mock.
+   */
+  getGamePersistenceService() {
+    return this.gamePersistenceService;
+  }
+
+  /**
+   * Returns the playtime tracker mock.
+   *
+   * @returns {ReturnType<import('../mockFactories').createMockPlaytimeTracker>} Playtime tracker mock.
+   */
+  getPlaytimeTracker() {
+    return this.playtimeTracker;
+  }
+
+  /**
+   * Returns the validated event dispatcher mock.
+   *
+   * @returns {ReturnType<import('../mockFactories').createMockSafeEventDispatcher>} Dispatcher mock.
+   */
+  getSafeEventDispatcher() {
+    return this.safeEventDispatcher;
+  }
+
+  /**
+   * Returns the initialization service mock.
+   *
+   * @returns {ReturnType<import('../mockFactories').createMockInitializationService>} Initialization service mock.
+   */
+  getInitializationService() {
+    return this.initializationService;
   }
   /**
    * Initializes the engine using a default successful initialization result.

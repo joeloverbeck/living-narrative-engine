@@ -24,6 +24,7 @@ export class BaseTestBed {
      * Collection of mocks used by the test bed.
      *
      * @type {Record<string, object>}
+     * @private
      */
     this.mocks = mocks;
 
