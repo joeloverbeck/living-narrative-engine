@@ -16,7 +16,7 @@ import { UNKNOWN_ENTITY_ID } from '../../constants/unknownIds.js';
 import { getLogger } from './helpers/contextUtils.js';
 import {
   assertValidActor,
-  assertMatchingActor,
+  validateActorInContext,
 } from './helpers/validationUtils.js';
 
 /**
@@ -95,7 +95,9 @@ export class TurnIdleState extends AbstractTurnState {
    * @param {import('../../utils/loggerUtils.js').Logger} logger - Logger instance.
    */
   _validateTurnContext(handler, turnCtx, actorIdForLog, logger) {
-    if (!turnCtx) {
+    try {
+      validateActorInContext(turnCtx, null, this.getStateName());
+    } catch (err) {
       const errorMsg = `${this.getStateName()}: ITurnContext is missing or invalid. Expected concrete handler to set it up. Actor: ${actorIdForLog}.`;
       logger.error(errorMsg);
       handler.resetStateAndResources(`missing-context-${this.getStateName()}`);
@@ -113,19 +115,15 @@ export class TurnIdleState extends AbstractTurnState {
    * @returns {Entity} The actor from context.
    */
   _validateActorMatch(handler, turnCtx, actorEntity, logger) {
-    const contextActor = turnCtx.getActor();
-    const errorMsg = assertMatchingActor(
-      actorEntity,
-      contextActor,
-      this.getStateName()
-    );
-    if (errorMsg) {
+    try {
+      return validateActorInContext(turnCtx, actorEntity, this.getStateName());
+    } catch (err) {
+      const errorMsg = err.message;
       logger.error(errorMsg);
       handler.resetStateAndResources(`actor-mismatch-${this.getStateName()}`);
       handler.requestIdleStateTransition();
-      throw new Error(errorMsg);
+      throw err;
     }
-    return contextActor;
   }
 
   /**
