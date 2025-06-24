@@ -1,5 +1,4 @@
 import EntityDefinition from '../../../src/entities/entityDefinition.js';
-import { deepFreeze } from '../../../src/utils/cloneUtils.js'; // Used by the class, not directly tested here unless necessary
 
 describe('EntityDefinition', () => {
   const validDefinitionData = {
@@ -109,6 +108,18 @@ describe('EntityDefinition', () => {
 
     const definition3 = new EntityDefinition('noPrefix', validDefinitionData);
     expect(definition3.modId).toBeUndefined(); // Or potentially 'noPrefix' if that's the desired behavior for single-token IDs
+
+    const definition4 = new EntityDefinition(
+      'foo:bar:baz',
+      validDefinitionData
+    );
+    expect(definition4.modId).toBe('foo');
+
+    const definition5 = new EntityDefinition(
+      ':startsWithColon',
+      validDefinitionData
+    );
+    expect(definition5.modId).toBeUndefined();
   });
 
   describe('getComponentSchema', () => {
