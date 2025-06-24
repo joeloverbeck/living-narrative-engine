@@ -14,7 +14,7 @@ export {
   createMockScopeEngine,
 } from './coreServices.js';
 
-export { createMockDataFetcher } from './dataFetcherMock.js';
+export { createMockDataFetcher, MockDataFetcher } from './dataFetcherMock.js';
 export {
   createMockValidatedEventDispatcherForIntegration,
   createCapturingEventBus,
