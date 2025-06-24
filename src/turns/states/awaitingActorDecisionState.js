@@ -316,24 +316,43 @@ export class AwaitingActorDecisionState extends AbstractTurnState {
     const logger = getLogger(turnContext, activeHandler);
     const actorInCtx = turnContext?.getActor();
 
+    await this._handleDestroyCleanup(
+      activeHandler,
+      turnContext,
+      logger,
+      actorInCtx
+    );
+    await super.destroy(activeHandler);
+  }
+
+  /**
+   * @description Handles cleanup when the handler is destroyed while this state is active.
+   * @private
+   * @param {BaseTurnHandler} handler - Active turn handler being destroyed.
+   * @param {?ITurnContext} turnContext - Current turn context.
+   * @param {import('../../utils/logger.js').Logger | Console} logger - Logger instance.
+   * @param {?Entity} actor - Actor retrieved from the context.
+   * @returns {Promise<void>} Resolves when cleanup completes.
+   */
+  async _handleDestroyCleanup(handler, turnContext, logger, actor) {
     if (turnContext) {
-      if (!actorInCtx) {
+      if (!actor) {
         logger.warn(
           `${this.getStateName()}: Handler destroyed. Actor ID from context: N/A_in_context. No specific turn to end via context if actor is missing.`
         );
-      } else if (activeHandler._isDestroying || activeHandler._isDestroyed) {
+      } else if (handler._isDestroying || handler._isDestroyed) {
         logger.debug(
-          `${this.getStateName()}: Handler (actor ${actorInCtx.id}) is already being destroyed. Skipping turnContext.endTurn().`
+          `${this.getStateName()}: Handler (actor ${actor.id}) is already being destroyed. Skipping turnContext.endTurn().`
         );
       } else {
         logger.debug(
           `${this.getStateName()}: Handler destroyed while state was active for actor ${
-            actorInCtx.id
+            actor.id
           }. Ending turn via turnContext (may trigger AbortError if prompt was active).`
         );
         await turnContext.endTurn(
           new Error(
-            `Turn handler destroyed while actor ${actorInCtx.id} was in ${this.getStateName()}.`
+            `Turn handler destroyed while actor ${actor.id} was in ${this.getStateName()}.`
           )
         );
       }
@@ -342,7 +361,5 @@ export class AwaitingActorDecisionState extends AbstractTurnState {
         `${this.getStateName()}: Handler destroyed. Actor ID from context: N/A_no_context. No specific turn to end via context if actor is missing.`
       );
     }
-
-    await super.destroy(activeHandler);
   }
 }
