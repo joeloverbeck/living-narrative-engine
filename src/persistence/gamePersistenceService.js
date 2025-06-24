@@ -1,5 +1,6 @@
-import { IGamePersistenceService } from '../interfaces/IGamePersistenceService.js';
 import { BaseService } from '../utils/serviceBase.js';
+
+/** @typedef {import('../interfaces/IGamePersistenceService.js').IGamePersistenceService} IGamePersistenceService */
 
 // --- JSDoc Type Imports ---
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
