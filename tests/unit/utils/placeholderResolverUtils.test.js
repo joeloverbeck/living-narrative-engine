@@ -8,10 +8,26 @@ import {
   beforeEach,
   afterEach,
 } from '@jest/globals';
-import { PlaceholderResolver } from '../../../src/utils/placeholderResolverUtils.js'; // Adjust path as needed
+import {
+  PlaceholderResolver,
+  parsePlaceholderKey,
+} from '../../../src/utils/placeholderResolverUtils.js'; // Adjust path as needed
 import { createMockLogger } from '../testUtils.js'; // Adjust path as needed (assuming testUtils.js from previous adjustment)
 import * as loggerUtils from '../../../src/utils/loggerUtils.js';
 import { NAME_COMPONENT_ID } from '../../../src/constants/componentIds.js';
+
+describe('parsePlaceholderKey', () => {
+  it('strips trailing ? and marks optional', () => {
+    expect(parsePlaceholderKey('key?')).toEqual({ key: 'key', optional: true });
+  });
+
+  it('trims whitespace and handles non-optional', () => {
+    expect(parsePlaceholderKey('  path.to.val  ')).toEqual({
+      key: 'path.to.val',
+      optional: false,
+    });
+  });
+});
 
 describe('PlaceholderResolver', () => {
   let mockLogger;
