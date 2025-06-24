@@ -3,6 +3,7 @@
  */
 
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
+import { resolvePath } from '../../utils/objectUtils.js';
 
 /**
  * Safely extracts and validates filenames from the manifest for a given content key.
@@ -14,11 +15,7 @@
  * @returns {string[]} Array of valid, trimmed filenames.
  */
 export function extractValidFilenames(manifest, contentKey, modId, logger) {
-  const getNested = (obj, path) =>
-    path
-      .split('.')
-      .reduce((o, k) => (o && o[k] !== undefined ? o[k] : undefined), obj);
-  const filenames = getNested(manifest?.content, contentKey);
+  const filenames = resolvePath(manifest?.content, contentKey);
   if (filenames === null || filenames === undefined) {
     logger.debug(
       `Mod '${modId}': Content key '${contentKey}' not found or is null/undefined in manifest. Skipping.`

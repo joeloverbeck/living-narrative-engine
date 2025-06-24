@@ -154,6 +154,19 @@ describe('BaseManifestItemLoader _extractValidFilenames', () => {
     expect(mockLogger.warn).not.toHaveBeenCalled();
   });
 
+  it('handles nested content keys using dot notation', () => {
+    const manifest = {
+      id: modId,
+      content: { nested: { [contentKey]: ['file.json'] } },
+    };
+    const result = loader._extractValidFilenames(
+      manifest,
+      `nested.${contentKey}`,
+      modId
+    );
+    expect(result).toEqual(['file.json']);
+  });
+
   it('should return empty array and log debug if manifest is null', () => {
     const manifest = null;
     const expected = [];

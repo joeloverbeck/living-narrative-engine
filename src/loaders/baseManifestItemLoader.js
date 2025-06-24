@@ -16,7 +16,7 @@ import { parseAndValidateId } from '../utils/idUtils.js';
 import { validateAgainstSchema } from '../utils/schemaValidationUtils.js';
 import { validateDependencies } from '../utils/validationUtils.js';
 import { storeItemInRegistry } from './helpers/registryStoreUtils.js';
-import { extractValidFilenames } from './helpers/filenameUtils.js';
+import { resolvePath } from '../utils/objectUtils.js';
 
 // --- Add LoadItemsResult typedef here for clarity ---
 /**
@@ -278,7 +278,39 @@ export class BaseManifestItemLoader extends AbstractLoader {
    * @returns {string[]} An array of valid, non-empty filenames. Returns empty array if key is missing, not an array, or contains no valid filenames.
    */
   _extractValidFilenames(manifest, contentKey, modId) {
-    return extractValidFilenames(manifest, contentKey, modId, this._logger);
+    const filenames = resolvePath(manifest?.content, contentKey);
+    if (filenames === null || filenames === undefined) {
+      this._logger.debug(
+        `Mod '${modId}': Content key '${contentKey}' not found or is null/undefined in manifest. Skipping.`
+      );
+      return [];
+    }
+    if (!Array.isArray(filenames)) {
+      this._logger.warn(
+        `Mod '${modId}': Expected an array for content key '${contentKey}' but found type '${typeof filenames}'. Skipping.`
+      );
+      return [];
+    }
+    const validFilenames = filenames
+      .filter((element) => {
+        if (typeof element !== 'string') {
+          this._logger.warn(
+            `Mod '${modId}': Invalid non-string entry found in '${contentKey}' list:`,
+            element
+          );
+          return false;
+        }
+        const trimmedElement = element.trim();
+        if (trimmedElement === '') {
+          this._logger.warn(
+            `Mod '${modId}': Empty string filename found in '${contentKey}' list after trimming. Skipping.`
+          );
+          return false;
+        }
+        return true;
+      })
+      .map((element) => element.trim());
+    return validFilenames;
   }
 
   /**

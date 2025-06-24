@@ -6,6 +6,7 @@
  */
 
 import LoadResultAggregator from './LoadResultAggregator.js';
+import { resolvePath } from '../utils/objectUtils.js';
 
 /** @typedef {import('../events/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
@@ -210,22 +211,14 @@ export class ContentLoadManager {
         // Iterate over phase-specific loaders
         const { loader, contentKey, diskFolder, registryKey } = config;
         const manifestContent = manifest.content || {};
-        // Support dot notation for nested content keys (e.g., 'entities.definitions')
-        const getNested = (obj, path) =>
-          path
-            .split('.')
-            .reduce(
-              (o, k) => (o && o[k] !== undefined ? o[k] : undefined),
-              obj
-            );
+        const contentList = resolvePath(manifestContent, contentKey);
         const hasContentForLoader =
-          Array.isArray(getNested(manifestContent, contentKey)) &&
-          getNested(manifestContent, contentKey).length > 0;
+          Array.isArray(contentList) && contentList.length > 0;
 
         if (hasContentForLoader) {
           hasContentInPhase = true;
           this.#logger.debug(
-            `ModsLoader [${modId}, ${phase}]: Processing ${contentKey} content with ${getNested(manifestContent, contentKey).length} files...`
+            `ModsLoader [${modId}, ${phase}]: Processing ${contentKey} content with ${contentList.length} files...`
           );
           this.#logger.debug(
             `ModsLoader [${modId}, ${phase}]: Found content for '${contentKey}'. Invoking loader '${loader.constructor.name}'.`
