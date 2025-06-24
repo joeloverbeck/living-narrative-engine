@@ -156,8 +156,7 @@ export class PrerequisiteEvaluationService extends BaseService {
   }
 
   /**
-   * Builds the evaluation context for prerequisite evaluation.
-   *
+   * @description Builds the evaluation context for prerequisite evaluation.
    * @private
    * @param {ActionDefinition} actionDefinition - The definition of the action being evaluated.
    * @param {Entity} actor - The entity performing the action.
@@ -166,7 +165,7 @@ export class PrerequisiteEvaluationService extends BaseService {
    * @param {string} actorId - The ID of the acting entity.
    * @returns {JsonLogicEvaluationContext | null} The built evaluation context, or null on failure.
    */
-  _buildEvaluationContext(
+  #buildPrerequisiteContext(
     actionDefinition,
     actor,
     targetContext,
@@ -279,38 +278,14 @@ export class PrerequisiteEvaluationService extends BaseService {
   }
 
   /**
-   * Evaluates an array of prerequisite rules for a given action context.
-   * It first builds the evaluation context, then resolves all `condition_ref`
-   * instances in the rules, and finally applies the JsonLogic rules.
-   *
-   * @param {object[]} prerequisites - The array of prerequisite rule objects.
-   * @param {ActionDefinition} actionDefinition - The definition of the action being evaluated.
-   * @param {Entity} actor - The entity performing the action.
-   * @param {ActionTargetContext} targetContext - The context of the action's target.
-   * @returns {boolean} True if all prerequisites pass, false otherwise.
+   * @description Evaluates an array of prerequisite rules using the provided context.
+   * @private
+   * @param {object[]} prerequisites - The prerequisite rule objects.
+   * @param {JsonLogicEvaluationContext} evalCtx - Context for rule evaluation.
+   * @param {string} actionId - The ID of the action being evaluated.
+   * @returns {boolean} True if all rules pass, false if any fail.
    */
-  evaluate(prerequisites, actionDefinition, actor, targetContext) {
-    const actionId = actionDefinition?.id ?? 'unknown_action';
-    const actorId = actor?.id ?? 'unknown_actor';
-
-    if (!prerequisites || prerequisites.length === 0) {
-      this.#logger.debug(
-        `PrereqEval[${actionId}]: → PASSED (No prerequisites to evaluate).`
-      );
-      return true;
-    }
-
-    const evalCtx = this._buildEvaluationContext(
-      actionDefinition,
-      actor,
-      targetContext,
-      actionId,
-      actorId
-    );
-    if (!evalCtx) {
-      return false;
-    }
-
+  #evaluateRules(prerequisites, evalCtx, actionId) {
     this.#logger.debug(
       `PrereqEval[${actionId}]: Evaluating ${prerequisites.length} prerequisite rule(s)...`
     );
@@ -334,5 +309,40 @@ export class PrerequisiteEvaluationService extends BaseService {
       `PrereqEval[${actionId}]: → PASSED (All ${prerequisites.length} prerequisite rules evaluated successfully).`
     );
     return true;
+  }
+
+  /**
+   * @description Orchestrates prerequisite evaluation by building context and evaluating rules.
+   * It first builds the evaluation context, then resolves all `condition_ref`
+   * instances in the rules, and finally applies the JsonLogic rules.
+   * @param {object[]} prerequisites - The array of prerequisite rule objects.
+   * @param {ActionDefinition} actionDefinition - The definition of the action being evaluated.
+   * @param {Entity} actor - The entity performing the action.
+   * @param {ActionTargetContext} targetContext - The context of the action's target.
+   * @returns {boolean} True if all prerequisites pass, false otherwise.
+   */
+  evaluate(prerequisites, actionDefinition, actor, targetContext) {
+    const actionId = actionDefinition?.id ?? 'unknown_action';
+    const actorId = actor?.id ?? 'unknown_actor';
+
+    if (!prerequisites || prerequisites.length === 0) {
+      this.#logger.debug(
+        `PrereqEval[${actionId}]: → PASSED (No prerequisites to evaluate).`
+      );
+      return true;
+    }
+
+    const evalCtx = this.#buildPrerequisiteContext(
+      actionDefinition,
+      actor,
+      targetContext,
+      actionId,
+      actorId
+    );
+    if (!evalCtx) {
+      return false;
+    }
+
+    return this.#evaluateRules(prerequisites, evalCtx, actionId);
   }
 }
