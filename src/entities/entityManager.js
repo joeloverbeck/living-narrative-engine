@@ -44,6 +44,8 @@ import { DefinitionNotFoundError } from '../errors/definitionNotFoundError.js';
 import { EntityNotFoundError } from '../errors/entityNotFoundError';
 import { InvalidArgumentError } from '../errors/invalidArgumentError.js';
 import { DuplicateEntityError } from '../errors/duplicateEntityError.js';
+import { SerializedEntityError } from '../errors/serializedEntityError.js';
+import { InvalidInstanceIdError } from '../errors/invalidInstanceIdError.js';
 import { ValidationError } from '../errors/validationError.js';
 import {
   ENTITY_CREATED_ID,
@@ -494,8 +496,46 @@ class EntityManager extends IEntityManager {
       });
       return entity;
     } catch (err) {
-      throw this.#errorTranslator.translateReconstructionError(err);
+      throw this.#handleReconstructionError(err);
     }
+  }
+
+  /**
+   * Handle reconstruction errors based on their types.
+   *
+   * @private
+   * @param {Error} err - Error thrown by the factory.
+   * @returns {Error} Translated error instance.
+   */
+  #handleReconstructionError(err) {
+    if (err instanceof SerializedEntityError) {
+      const msg =
+        'EntityManager.reconstructEntity: serializedEntity data is missing or invalid.';
+      this.#logger.error(msg);
+      return new SerializedEntityError(msg);
+    }
+
+    if (err instanceof InvalidInstanceIdError) {
+      const msg =
+        'EntityManager.reconstructEntity: instanceId is missing or invalid in serialized data.';
+      this.#logger.error(msg);
+      return new InvalidInstanceIdError(err.instanceId, msg);
+    }
+
+    if (
+      err instanceof Error &&
+      err.message.startsWith('EntityFactory.reconstruct: Entity with ID')
+    ) {
+      const match = err.message.match(/Entity with ID '([^']+)' already exists/);
+      if (match) {
+        const msg =
+          `EntityManager.reconstructEntity: Entity with ID '${match[1]}' already exists. Reconstruction aborted.`;
+        this.#logger.error(msg);
+        return new DuplicateEntityError(match[1], msg);
+      }
+    }
+
+    return err instanceof Error ? err : new Error(String(err));
   }
 
   /* ---------------------------------------------------------------------- */

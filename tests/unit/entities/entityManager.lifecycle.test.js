@@ -19,6 +19,8 @@ import Entity from '../../../src/entities/entity.js';
 import { DefinitionNotFoundError } from '../../../src/errors/definitionNotFoundError.js';
 import { EntityNotFoundError } from '../../../src/errors/entityNotFoundError.js';
 import { DuplicateEntityError } from '../../../src/errors/duplicateEntityError.js';
+import { SerializedEntityError } from '../../../src/errors/serializedEntityError.js';
+import { InvalidInstanceIdError } from '../../../src/errors/invalidInstanceIdError.js';
 import {
   expectEntityCreatedDispatch,
   expectEntityRemovedDispatch,
@@ -356,7 +358,7 @@ describeEntityManagerSuite('EntityManager - Lifecycle', (getBed) => {
       )('should throw an error if serializedEntity is %p', (value) => {
         const { entityManager } = getBed();
         expect(() => entityManager.reconstructEntity(value)).toThrow(
-          'EntityManager.reconstructEntity: serializedEntity data is missing or invalid.'
+          SerializedEntityError
         );
       });
 
@@ -372,7 +374,7 @@ describeEntityManagerSuite('EntityManager - Lifecycle', (getBed) => {
           {}
         );
         expect(() => entityManager.reconstructEntity(serializedEntity)).toThrow(
-          'EntityManager.reconstructEntity: instanceId is missing or invalid in serialized data.'
+          InvalidInstanceIdError
         );
       });
     });
