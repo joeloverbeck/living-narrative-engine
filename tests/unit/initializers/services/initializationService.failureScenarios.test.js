@@ -7,7 +7,6 @@ import {
   expect,
   it,
   jest,
-  test,
 } from '@jest/globals';
 import { tokens } from '../../../../src/dependencyInjection/tokens.js';
 
@@ -102,6 +101,8 @@ describe('InitializationService', () => {
             return mockLogger;
           case tokens.LLMAdapter:
             return mockLlmAdapter;
+          case tokens.LlmConfigLoader:
+            return { loadConfigs: jest.fn() };
           case tokens.ISchemaValidator:
             return mockSchemaValidator;
           case tokens.IConfiguration:
@@ -153,6 +154,8 @@ describe('InitializationService', () => {
             return mockLogger;
           case tokens.LLMAdapter:
             return mockLlmAdapter;
+          case tokens.LlmConfigLoader:
+            return { loadConfigs: jest.fn() };
           case tokens.ISchemaValidator:
             return mockSchemaValidator;
           case tokens.IConfiguration:
@@ -317,6 +320,8 @@ describe('InitializationService', () => {
               return mockDataRegistry;
             case tokens.LLMAdapter:
               return mockLlmAdapter;
+            case tokens.LlmConfigLoader:
+              return { loadConfigs: jest.fn() };
             case tokens.ISchemaValidator:
               return mockSchemaValidator;
             case tokens.IConfiguration:
@@ -375,6 +380,8 @@ describe('InitializationService', () => {
               return mockDataRegistry;
             case tokens.LLMAdapter:
               return mockLlmAdapter;
+            case tokens.LlmConfigLoader:
+              return { loadConfigs: jest.fn() };
             case tokens.ISchemaValidator:
               return mockSchemaValidator;
             case tokens.IConfiguration:
@@ -436,6 +443,8 @@ describe('InitializationService', () => {
               return mockDataRegistry;
             case tokens.LLMAdapter:
               return mockLlmAdapter;
+            case tokens.LlmConfigLoader:
+              return { loadConfigs: jest.fn() };
             case tokens.ISchemaValidator:
               return mockSchemaValidator;
             case tokens.IConfiguration:

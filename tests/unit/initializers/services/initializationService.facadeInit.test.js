@@ -129,6 +129,7 @@ beforeEach(() => {
   // Register the new mocks
   container.register(tokens.IDataRegistry, mockDataRegistry);
   container.register(tokens.IScopeRegistry, mockScopeRegistry);
+  container.register(tokens.LlmConfigLoader, { loadConfigs: jest.fn() });
 
   initializationService = new InitializationService({
     container,
