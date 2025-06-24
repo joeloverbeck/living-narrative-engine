@@ -6,6 +6,7 @@ import {
   ModsLoaderErrorCode,
 } from '../../errors/modsLoaderPhaseError.js';
 import { logPhaseStart } from '../../utils/logPhaseStart.js';
+import { cloneTotals } from '../../utils/cloneTotals.js';
 
 /**
  * @typedef {import('../LoadContext.js').LoadContext} LoadContext
@@ -50,7 +51,7 @@ export default class ContentPhase extends LoaderPhase {
       );
 
       // Create a new object reference for totals to ensure immutability downstream.
-      const totalsSnapshot = this.#cloneTotals(ctx.totals);
+      const totalsSnapshot = cloneTotals(ctx.totals);
 
       // Create new frozen context with modifications
       const next = {
@@ -66,22 +67,6 @@ export default class ContentPhase extends LoaderPhase {
         'ContentPhase',
         e
       );
-    }
-  }
-
-  /**
-   * Clones the totals object using structuredClone if available (Node ≥17),
-   * otherwise falls back to JSON.parse(JSON.stringify(...)).
-   *
-   * @private
-   * @param {import('../LoadContext.js').TotalResultsSummary} totals - The totals object to clone.
-   * @returns {import('../LoadContext.js').TotalResultsSummary} A deep clone of the totals object.
-   */
-  #cloneTotals(totals) {
-    if (typeof structuredClone !== 'undefined') {
-      return structuredClone(totals);
-    } else {
-      return JSON.parse(JSON.stringify(totals));
     }
   }
 }

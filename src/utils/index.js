@@ -12,3 +12,4 @@ export * from './loggerUtils.js';
 export * from './logHelpers.js';
 export * from './objectUtils.js';
 export * from './cloneUtils.js';
+export * from './cloneTotals.js';
