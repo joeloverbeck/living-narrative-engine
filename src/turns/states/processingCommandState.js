@@ -22,7 +22,8 @@ import { buildSpeechPayload } from './helpers/buildSpeechPayload.js';
 import { ProcessingGuard } from './helpers/processingGuard.js';
 import { finishProcessing } from './helpers/processingErrorUtils.js';
 import { getLogger } from './helpers/contextUtils.js';
-import TurnDirectiveStrategyResolver from '../strategies/turnDirectiveStrategyResolver.js';
+import turnDirectiveResolverAdapter from '../adapters/turnDirectiveResolverAdapter.js';
+import { ITurnDirectiveResolver } from '../interfaces/ITurnDirectiveResolver.js';
 
 /**
  * @class ProcessingCommandState
@@ -31,7 +32,8 @@ import TurnDirectiveStrategyResolver from '../strategies/turnDirectiveStrategyRe
 export class ProcessingCommandState extends AbstractTurnState {
   _isProcessing = false;
   _processingGuard;
-  _directiveResolver = TurnDirectiveStrategyResolver;
+  /** @type {ITurnDirectiveResolver} */
+  _directiveResolver = turnDirectiveResolverAdapter;
   _exceptionHandler;
   #turnActionToProcess = null;
   #commandStringForLog = null;
@@ -61,7 +63,7 @@ export class ProcessingCommandState extends AbstractTurnState {
    * @param {BaseTurnHandler} handler - The turn handler managing this state.
    * @param {string} [commandString]
    * @param {ITurnAction} [turnAction]
-   * @param {{ resolveStrategy(directive: string): ITurnDirectiveStrategy }} [directiveResolver]
+   * @param {ITurnDirectiveResolver} [directiveResolver]
    * @param {ProcessingExceptionHandler} [exceptionHandler] - Preconstructed handler.
    * @param {new (state: ProcessingCommandState) => ProcessingGuard} [processingGuardFactory]
    *   - Factory for creating a ProcessingGuard instance.
@@ -72,7 +74,7 @@ export class ProcessingCommandState extends AbstractTurnState {
     handler,
     commandString,
     turnAction = null,
-    directiveResolver = TurnDirectiveStrategyResolver,
+    directiveResolver = turnDirectiveResolverAdapter,
     exceptionHandler = undefined,
     processingGuardFactory = ProcessingGuard,
     exceptionHandlerFactory = ProcessingExceptionHandler
