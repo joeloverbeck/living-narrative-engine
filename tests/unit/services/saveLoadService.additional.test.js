@@ -8,6 +8,7 @@ import SaveFileParser from '../../../src/persistence/saveFileParser.js';
 import GameStateSerializer from '../../../src/persistence/gameStateSerializer.js';
 import { encode, decode } from '@msgpack/msgpack';
 import { PersistenceErrorCodes } from '../../../src/persistence/persistenceErrors.js';
+import { StorageErrorCodes } from '../../../src/storage/storageErrors.js';
 import pako from 'pako';
 import { webcrypto } from 'crypto';
 import { createMockSaveValidationService } from '../testUtils.js';
@@ -84,7 +85,9 @@ describe('SaveLoadService additional coverage', () => {
   });
 
   it('returns empty list when directory missing', async () => {
-    storageProvider.listFiles.mockRejectedValue(new Error('not found'));
+    const err = new Error('not found');
+    err.code = StorageErrorCodes.FILE_NOT_FOUND;
+    storageProvider.listFiles.mockRejectedValue(err);
     const result = await service.listManualSaveSlots();
     expect(result).toEqual({ success: true, data: [] });
     expect(logger.debug).toHaveBeenCalled();
