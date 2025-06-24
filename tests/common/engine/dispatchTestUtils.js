@@ -281,18 +281,18 @@ export const expectShowSaveGameUIDispatch = createDispatchAsserter(
  * @returns {void}
  */
 export function expectStartSuccess(bed, engine, world) {
-  expect(bed.mocks.entityManager.clearAll).toHaveBeenCalled();
-  expect(bed.mocks.playtimeTracker.reset).toHaveBeenCalled();
+  expect(bed.getEntityManager().clearAll).toHaveBeenCalled();
+  expect(bed.getPlaytimeTracker().reset).toHaveBeenCalled();
   expect(bed.env.mockContainer.resolve).toHaveBeenCalledWith(
     tokens.IInitializationService
   );
   expect(
-    bed.mocks.initializationService.runInitializationSequence
+    bed.getInitializationService().runInitializationSequence
   ).toHaveBeenCalledWith(world);
-  expect(bed.mocks.playtimeTracker.startSession).toHaveBeenCalled();
-  expect(bed.mocks.turnManager.start).toHaveBeenCalled();
+  expect(bed.getPlaytimeTracker().startSession).toHaveBeenCalled();
+  expect(bed.getTurnManager().start).toHaveBeenCalled();
   expectDispatchSequence(
-    bed.mocks.safeEventDispatcher.dispatch,
+    bed.getSafeEventDispatcher().dispatch,
     buildStartDispatches(world)
   );
   expectEngineRunning(engine, world);
@@ -307,14 +307,14 @@ export function expectStartSuccess(bed, engine, world) {
  * @returns {void}
  */
 export function expectStopSuccess(bed, engine) {
-  expect(bed.mocks.playtimeTracker.endSessionAndAccumulate).toHaveBeenCalled();
-  expect(bed.mocks.turnManager.stop).toHaveBeenCalled();
+  expect(bed.getPlaytimeTracker().endSessionAndAccumulate).toHaveBeenCalled();
+  expect(bed.getTurnManager().stop).toHaveBeenCalled();
   expectDispatchSequence(
-    bed.mocks.safeEventDispatcher.dispatch,
+    bed.getSafeEventDispatcher().dispatch,
     ...buildStopDispatches()
   );
   expectEngineStopped(engine);
-  expect(bed.mocks.logger.warn).not.toHaveBeenCalled();
+  expect(bed.getLogger().warn).not.toHaveBeenCalled();
 }
 
 /**

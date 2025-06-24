@@ -52,15 +52,15 @@ describeEngineSuite('GameEngine', (context) => {
             await engine.stop();
 
             // eslint-disable-next-line jest/no-standalone-expect
-            expect(bed.mocks.logger.warn).toHaveBeenCalledWith(expectedMsg);
+            expect(bed.getLogger().warn).toHaveBeenCalledWith(expectedMsg);
             expectDispatchSequence(
-              bed.mocks.safeEventDispatcher.dispatch,
+              bed.getSafeEventDispatcher().dispatch,
               ...buildStopDispatches()
             );
             // eslint-disable-next-line jest/no-standalone-expect
-            expect(bed.mocks.turnManager.stop).toHaveBeenCalledTimes(1);
+            expect(bed.getTurnManager().stop).toHaveBeenCalledTimes(1);
             const dummyDispatch = jest.fn();
-            return [bed.mocks.logger.warn, dummyDispatch];
+            return [bed.getLogger().warn, dummyDispatch];
           },
           4
         )(
@@ -77,11 +77,11 @@ describeEngineSuite('GameEngine', (context) => {
       await context.engine.stop();
 
       expect(
-        context.bed.mocks.playtimeTracker.endSessionAndAccumulate
+        context.bed.getPlaytimeTracker().endSessionAndAccumulate
       ).not.toHaveBeenCalled();
-      expect(context.bed.mocks.turnManager.stop).not.toHaveBeenCalled();
+      expect(context.bed.getTurnManager().stop).not.toHaveBeenCalled();
       expect(
-        context.bed.mocks.safeEventDispatcher.dispatch
+        context.bed.getSafeEventDispatcher().dispatch
       ).not.toHaveBeenCalledWith(ENGINE_STOPPED_UI, expect.anything());
     });
   });

@@ -31,22 +31,22 @@ describeEngineSuite('GameEngine', (context) => {
 
     beforeEach(() => {
       context.bed.resetMocks();
-      context.bed.mocks.gamePersistenceService.loadAndRestoreGame.mockResolvedValue(
-        {
+      context.bed
+        .getGamePersistenceService()
+        .loadAndRestoreGame.mockResolvedValue({
           success: true,
           data: typedMockSaveData,
-        }
-      );
+        });
     });
 
     it('should load and finalize a game successfully', async () => {
       const result = await context.engine.loadGame(SAVE_ID);
 
       expect(
-        context.bed.mocks.gamePersistenceService.loadAndRestoreGame
+        context.bed.getGamePersistenceService().loadAndRestoreGame
       ).toHaveBeenCalledWith(SAVE_ID);
       expectDispatchSequence(
-        context.bed.mocks.safeEventDispatcher.dispatch,
+        context.bed.getSafeEventDispatcher().dispatch,
         [
           ENGINE_OPERATION_IN_PROGRESS_UI,
           {
@@ -62,7 +62,7 @@ describeEngineSuite('GameEngine', (context) => {
           },
         ]
       );
-      expect(context.bed.mocks.turnManager.start).toHaveBeenCalled();
+      expect(context.bed.getTurnManager().start).toHaveBeenCalled();
       expect(result).toEqual({ success: true, data: typedMockSaveData });
       expectEngineRunning(context.engine, typedMockSaveData.metadata.gameTitle);
     });
@@ -71,23 +71,23 @@ describeEngineSuite('GameEngine', (context) => {
       const errorMsg = 'Restore operation failed';
 
       beforeEach(() => {
-        context.bed.mocks.gamePersistenceService.loadAndRestoreGame.mockResolvedValue(
-          {
+        context.bed
+          .getGamePersistenceService()
+          .loadAndRestoreGame.mockResolvedValue({
             success: false,
             error: errorMsg,
             data: null,
-          }
-        );
+          });
       });
 
       it('logs warning, dispatches failure UI and returns failure result', async () => {
         const result = await context.engine.loadGame(SAVE_ID);
 
-        expect(context.bed.mocks.logger.warn).toHaveBeenCalledWith(
+        expect(context.bed.getLogger().warn).toHaveBeenCalledWith(
           `GameEngine: Load/restore operation reported failure for "${SAVE_ID}".`
         );
         expectDispatchSequence(
-          context.bed.mocks.safeEventDispatcher.dispatch,
+          context.bed.getSafeEventDispatcher().dispatch,
           [
             ENGINE_OPERATION_IN_PROGRESS_UI,
             {
@@ -112,20 +112,20 @@ describeEngineSuite('GameEngine', (context) => {
       const errorObj = new Error('Execute failed');
 
       beforeEach(() => {
-        context.bed.mocks.gamePersistenceService.loadAndRestoreGame.mockRejectedValue(
-          errorObj
-        );
+        context.bed
+          .getGamePersistenceService()
+          .loadAndRestoreGame.mockRejectedValue(errorObj);
       });
 
       it('logs error, dispatches failure UI and returns failure result', async () => {
         const result = await context.engine.loadGame(SAVE_ID);
 
-        expect(context.bed.mocks.logger.error).toHaveBeenCalledWith(
+        expect(context.bed.getLogger().error).toHaveBeenCalledWith(
           `GameEngine: Overall catch in loadGame for identifier "${SAVE_ID}". Error: ${errorObj.message}`,
           errorObj
         );
         expectDispatchSequence(
-          context.bed.mocks.safeEventDispatcher.dispatch,
+          context.bed.getSafeEventDispatcher().dispatch,
           [
             ENGINE_OPERATION_IN_PROGRESS_UI,
             {
@@ -154,18 +154,18 @@ describeEngineSuite('GameEngine', (context) => {
       const errorObj = new Error('Finalize failed');
 
       beforeEach(() => {
-        context.bed.mocks.turnManager.start.mockRejectedValue(errorObj);
+        context.bed.getTurnManager().start.mockRejectedValue(errorObj);
       });
 
       it('logs error, dispatches failure UI and returns failure result', async () => {
         const result = await context.engine.loadGame(SAVE_ID);
 
-        expect(context.bed.mocks.logger.error).toHaveBeenCalledWith(
+        expect(context.bed.getLogger().error).toHaveBeenCalledWith(
           `GameEngine: Overall catch in loadGame for identifier "${SAVE_ID}". Error: ${errorObj.message}`,
           errorObj
         );
         expectDispatchSequence(
-          context.bed.mocks.safeEventDispatcher.dispatch,
+          context.bed.getSafeEventDispatcher().dispatch,
           [
             ENGINE_OPERATION_IN_PROGRESS_UI,
             {
@@ -208,14 +208,14 @@ describeEngineSuite('GameEngine', (context) => {
       async (bed, engine, expectedMsg) => {
         const result = await engine.loadGame(SAVE_ID);
 
-        expectNoDispatch(bed.mocks.safeEventDispatcher.dispatch);
+        expectNoDispatch(bed.getSafeEventDispatcher().dispatch);
         // eslint-disable-next-line jest/no-standalone-expect
         expect(result).toEqual({
           success: false,
           error: expectedMsg,
           data: null,
         });
-        return [bed.mocks.logger.error, bed.mocks.safeEventDispatcher.dispatch];
+        return [bed.getLogger().error, bed.getSafeEventDispatcher().dispatch];
       },
       2
     )(

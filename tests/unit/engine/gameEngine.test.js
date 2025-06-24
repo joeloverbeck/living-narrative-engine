@@ -64,7 +64,7 @@ describeEngineSuite('GameEngine', (context) => {
         `GameEngine: Failed to resolve core services. ${resolutionError.message}`
       );
 
-      expect(testBed.mocks.logger.error).toHaveBeenCalledWith(
+      expect(testBed.getLogger().error).toHaveBeenCalledWith(
         `GameEngine: CRITICAL - Failed to resolve one or more core services. Error: ${resolutionError.message}`,
         resolutionError
       );

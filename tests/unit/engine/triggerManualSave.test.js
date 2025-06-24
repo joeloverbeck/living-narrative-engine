@@ -34,9 +34,9 @@ describeEngineSuite('GameEngine', (context) => {
       const expectedErrorMsg =
         'Game engine is not initialized. Cannot save game.';
 
-      expectNoDispatch(context.bed.mocks.safeEventDispatcher.dispatch);
+      expectNoDispatch(context.bed.getSafeEventDispatcher().dispatch);
       expect(
-        context.bed.mocks.gamePersistenceService.saveGame
+        context.bed.getGamePersistenceService().saveGame
       ).not.toHaveBeenCalled();
       expect(result).toEqual({ success: false, error: expectedErrorMsg });
     });
@@ -55,15 +55,15 @@ describeEngineSuite('GameEngine', (context) => {
           async (bed, engine) => {
             const result = await engine.triggerManualSave(SAVE_NAME);
 
-            expectNoDispatch(bed.mocks.safeEventDispatcher.dispatch);
+            expectNoDispatch(bed.getSafeEventDispatcher().dispatch);
             // eslint-disable-next-line jest/no-standalone-expect
             expect(result).toEqual({
               success: false,
               error: GAME_PERSISTENCE_SAVE_RESULT_UNAVAILABLE,
             });
             return [
-              bed.mocks.logger.error,
-              bed.mocks.safeEventDispatcher.dispatch,
+              bed.getLogger().error,
+              bed.getSafeEventDispatcher().dispatch,
             ];
           },
           2
@@ -71,19 +71,19 @@ describeEngineSuite('GameEngine', (context) => {
 
         it('should successfully save, dispatch all UI events in order, and return success result', async () => {
           const saveResultData = { success: true, filePath: 'path/to/my.sav' };
-          context.bed.mocks.gamePersistenceService.saveGame.mockResolvedValue(
-            saveResultData
-          );
+          context.bed
+            .getGamePersistenceService()
+            .saveGame.mockResolvedValue(saveResultData);
 
           const result = await context.engine.triggerManualSave(SAVE_NAME);
 
           expectDispatchSequence(
-            context.bed.mocks.safeEventDispatcher.dispatch,
+            context.bed.getSafeEventDispatcher().dispatch,
             ...buildSaveDispatches(SAVE_NAME, saveResultData.filePath)
           );
 
           expect(
-            context.bed.mocks.gamePersistenceService.saveGame
+            context.bed.getGamePersistenceService().saveGame
           ).toHaveBeenCalledWith(SAVE_NAME, true, MOCK_ACTIVE_WORLD_FOR_SAVE);
           expect(result).toEqual(saveResultData);
         });
@@ -95,7 +95,7 @@ describeEngineSuite('GameEngine', (context) => {
             PersistenceErrorCodes.INVALID_SAVE_NAME,
             'Invalid save name provided. Please enter a valid name.'
           );
-          context.bed.mocks.gamePersistenceService.saveGame.mockResolvedValue({
+          context.bed.getGamePersistenceService().saveGame.mockResolvedValue({
             success: false,
             error,
           });
@@ -103,12 +103,12 @@ describeEngineSuite('GameEngine', (context) => {
           const result = await context.engine.triggerManualSave('');
 
           expectDispatchSequence(
-            context.bed.mocks.safeEventDispatcher.dispatch,
+            context.bed.getSafeEventDispatcher().dispatch,
             ...buildSaveDispatches('')
           );
 
           expect(
-            context.bed.mocks.gamePersistenceService.saveGame
+            context.bed.getGamePersistenceService().saveGame
           ).toHaveBeenCalledWith('', true, MOCK_ACTIVE_WORLD_FOR_SAVE);
           expect(result.success).toBe(false);
           expect(result.error).toBe(error);
@@ -124,24 +124,24 @@ describeEngineSuite('GameEngine', (context) => {
           'should handle %s, dispatch UI events, and return failure result',
           async (_caseName, failureValue) => {
             if (failureValue instanceof Error) {
-              context.bed.mocks.gamePersistenceService.saveGame.mockRejectedValue(
-                failureValue
-              );
+              context.bed
+                .getGamePersistenceService()
+                .saveGame.mockRejectedValue(failureValue);
             } else {
-              context.bed.mocks.gamePersistenceService.saveGame.mockResolvedValue(
-                failureValue
-              );
+              context.bed
+                .getGamePersistenceService()
+                .saveGame.mockResolvedValue(failureValue);
             }
 
             const result = await context.engine.triggerManualSave(SAVE_NAME);
 
             expectDispatchSequence(
-              context.bed.mocks.safeEventDispatcher.dispatch,
+              context.bed.getSafeEventDispatcher().dispatch,
               ...buildSaveDispatches(SAVE_NAME)
             );
 
             expect(
-              context.bed.mocks.gamePersistenceService.saveGame
+              context.bed.getGamePersistenceService().saveGame
             ).toHaveBeenCalledWith(SAVE_NAME, true, MOCK_ACTIVE_WORLD_FOR_SAVE);
 
             const expectedResult =

@@ -127,7 +127,7 @@ describe('runUnavailableServiceTest', () => {
 
     const testCases = runUnavailableServiceTest(cases, (bed, engine) => {
       engine.showLoadGameUI();
-      return [bed.mocks.logger.error, bed.mocks.safeEventDispatcher.dispatch];
+      return [bed.getLogger().error, bed.getSafeEventDispatcher().dispatch];
     });
 
     expect(Array.isArray(testCases)).toBe(true);

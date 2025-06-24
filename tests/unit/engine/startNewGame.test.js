@@ -36,15 +36,15 @@ describeEngineSuite('GameEngine', (context) => {
       await context.bed.startAndReset('InitialWorld');
       await context.engine.startNewGame(DEFAULT_TEST_WORLD);
 
-      expect(context.bed.mocks.logger.warn).toHaveBeenCalledWith(
+      expect(context.bed.getLogger().warn).toHaveBeenCalledWith(
         'GameEngine._prepareForNewGameSession: Engine already initialized. Stopping existing game before starting new.'
       );
       expect(
-        context.bed.mocks.playtimeTracker.endSessionAndAccumulate
+        context.bed.getPlaytimeTracker().endSessionAndAccumulate
       ).toHaveBeenCalledTimes(1);
-      expect(context.bed.mocks.turnManager.stop).toHaveBeenCalledTimes(1);
+      expect(context.bed.getTurnManager().stop).toHaveBeenCalledTimes(1);
       expectDispatchSequence(
-        context.bed.mocks.safeEventDispatcher.dispatch,
+        context.bed.getSafeEventDispatcher().dispatch,
         ...buildStopDispatches(),
         ...buildStartDispatches(DEFAULT_TEST_WORLD)
       );
@@ -53,19 +53,19 @@ describeEngineSuite('GameEngine', (context) => {
 
     it('should handle InitializationService failure', async () => {
       const initError = new Error('Initialization failed via service');
-      context.bed.mocks.initializationService.runInitializationSequence.mockResolvedValue(
-        {
+      context.bed
+        .getInitializationService()
+        .runInitializationSequence.mockResolvedValue({
           success: false,
           error: initError,
-        }
-      );
+        });
 
       await expect(
         context.engine.startNewGame(DEFAULT_TEST_WORLD)
       ).rejects.toThrow(initError);
 
       expect(
-        context.bed.mocks.safeEventDispatcher.dispatch
+        context.bed.getSafeEventDispatcher().dispatch
       ).toHaveBeenCalledWith(ENGINE_OPERATION_FAILED_UI, {
         errorMessage: `Failed to start new game: ${initError.message}`,
         errorTitle: 'Initialization Error',
@@ -75,17 +75,17 @@ describeEngineSuite('GameEngine', (context) => {
 
     it('should handle general errors during start-up and dispatch failure event', async () => {
       const startupError = new Error('TurnManager failed to start');
-      context.bed.mocks.playtimeTracker.startSession.mockImplementation(
-        () => {}
-      ); // Make sure this doesn't throw
-      context.bed.mocks.turnManager.start.mockRejectedValue(startupError); // TurnManager fails to start
+      context.bed
+        .getPlaytimeTracker()
+        .startSession.mockImplementation(() => {}); // Make sure this doesn't throw
+      context.bed.getTurnManager().start.mockRejectedValue(startupError); // TurnManager fails to start
 
       await expect(
         context.engine.startNewGame(DEFAULT_TEST_WORLD)
       ).rejects.toThrow(startupError);
 
       expect(
-        context.bed.mocks.safeEventDispatcher.dispatch
+        context.bed.getSafeEventDispatcher().dispatch
       ).toHaveBeenCalledWith(ENGINE_OPERATION_FAILED_UI, {
         errorMessage: `Failed to start new game: ${startupError.message}`, // Error from TurnManager
         errorTitle: 'Initialization Error',
@@ -102,19 +102,19 @@ describeEngineSuite('GameEngine', (context) => {
         // operation failed event.
         const expectedMessage =
           'InitializationService requires a valid non-empty worldName.';
-        context.bed.mocks.initializationService.runInitializationSequence.mockResolvedValue(
-          {
+        context.bed
+          .getInitializationService()
+          .runInitializationSequence.mockResolvedValue({
             success: false,
             error: new TypeError(expectedMessage),
-          }
-        );
+          });
 
         await expect(context.engine.startNewGame(badName)).rejects.toThrow(
           expectedMessage
         );
 
         expect(
-          context.bed.mocks.safeEventDispatcher.dispatch
+          context.bed.getSafeEventDispatcher().dispatch
         ).toHaveBeenCalledWith(ENGINE_OPERATION_FAILED_UI, {
           errorMessage: `Failed to start new game: ${expectedMessage}`,
           errorTitle: 'Initialization Error',

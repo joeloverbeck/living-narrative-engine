@@ -13,39 +13,39 @@ describeInitializedEngineSuite(
   (context) => {
     describe('showSaveGameUI', () => {
       it('should dispatch REQUEST_SHOW_SAVE_GAME_UI if saving is allowed and log intent', () => {
-        context.bed.mocks.gamePersistenceService.isSavingAllowed.mockReturnValue(
-          true
-        );
+        context.bed
+          .getGamePersistenceService()
+          .isSavingAllowed.mockReturnValue(true);
         context.engine.showSaveGameUI(); // Method is now sync
 
-        expect(context.bed.mocks.logger.debug).toHaveBeenCalledWith(
+        expect(context.bed.getLogger().debug).toHaveBeenCalledWith(
           'GameEngine.showSaveGameUI: Dispatching request to show Save Game UI.'
         );
         expect(
-          context.bed.mocks.gamePersistenceService.isSavingAllowed
+          context.bed.getGamePersistenceService().isSavingAllowed
         ).toHaveBeenCalledWith(true); // engine is initialized
         expectShowSaveGameUIDispatch(
-          context.bed.mocks.safeEventDispatcher.dispatch
+          context.bed.getSafeEventDispatcher().dispatch
         );
       });
 
       it('should dispatch CANNOT_SAVE_GAME_INFO if saving is not allowed and log reason', () => {
-        context.bed.mocks.gamePersistenceService.isSavingAllowed.mockReturnValue(
-          false
-        );
+        context.bed
+          .getGamePersistenceService()
+          .isSavingAllowed.mockReturnValue(false);
         context.engine.showSaveGameUI(); // Method is now sync
 
-        expect(context.bed.mocks.logger.warn).toHaveBeenCalledWith(
+        expect(context.bed.getLogger().warn).toHaveBeenCalledWith(
           'GameEngine.showSaveGameUI: Saving is not currently allowed.'
         );
         expect(
-          context.bed.mocks.gamePersistenceService.isSavingAllowed
+          context.bed.getGamePersistenceService().isSavingAllowed
         ).toHaveBeenCalledWith(true);
         expect(
-          context.bed.mocks.safeEventDispatcher.dispatch
+          context.bed.getSafeEventDispatcher().dispatch
         ).toHaveBeenCalledWith(CANNOT_SAVE_GAME_INFO);
         expect(
-          context.bed.mocks.safeEventDispatcher.dispatch
+          context.bed.getSafeEventDispatcher().dispatch
         ).toHaveBeenCalledTimes(1);
       });
 
@@ -55,12 +55,9 @@ describeInitializedEngineSuite(
           engine.showSaveGameUI();
           // eslint-disable-next-line jest/no-standalone-expect
           expect(
-            bed.mocks.gamePersistenceService.isSavingAllowed
+            bed.getGamePersistenceService().isSavingAllowed
           ).not.toHaveBeenCalled();
-          return [
-            bed.mocks.logger.error,
-            bed.mocks.safeEventDispatcher.dispatch,
-          ];
+          return [bed.getLogger().error, bed.getSafeEventDispatcher().dispatch];
         },
         1
       )('should log error if %s is unavailable when showing save UI');
