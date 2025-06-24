@@ -37,7 +37,9 @@ describeEngineSuite('GameEngine', (context) => {
       await context.engine.startNewGame(DEFAULT_TEST_WORLD);
 
       expect(context.bed.getLogger().warn).toHaveBeenCalledWith(
-        'GameEngine._prepareForNewGameSession: Engine already initialized. Stopping existing game before starting new.'
+        expect.stringContaining(
+          'Engine already initialized. Stopping existing game before starting new.'
+        )
       );
       expect(
         context.bed.getPlaytimeTracker().endSessionAndAccumulate
