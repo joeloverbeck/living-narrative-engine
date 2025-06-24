@@ -32,7 +32,7 @@ describe('resolveSafeDispatcher', () => {
     expect(result).toBeNull();
   });
 
-  test('uses injected DispatcherClass', () => {
+  test('uses injected dispatcher factory', () => {
     const validated = {
       dispatch: jest.fn(),
       subscribe: jest.fn(),
@@ -46,17 +46,17 @@ describe('resolveSafeDispatcher', () => {
       debug: jest.fn(),
     };
     const spy = jest.fn();
-    class DummyDispatcher {
-      constructor({ validatedEventDispatcher, logger }) {
-        spy(validatedEventDispatcher, logger);
-        this.validatedEventDispatcher = validatedEventDispatcher;
-        this.logger = logger;
-      }
-    }
+    const factory = ({ validatedEventDispatcher, logger }) => {
+      spy(validatedEventDispatcher, logger);
+      return {
+        validatedEventDispatcher,
+        logger,
+      };
+    };
 
-    const result = resolveSafeDispatcher(execCtx, logger, DummyDispatcher);
+    const result = resolveSafeDispatcher(execCtx, logger, factory);
 
-    expect(result).toBeInstanceOf(DummyDispatcher);
+    expect(result).toEqual({ validatedEventDispatcher: validated, logger });
     expect(spy).toHaveBeenCalledWith(validated, logger);
   });
 });
