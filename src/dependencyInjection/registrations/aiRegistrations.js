@@ -103,19 +103,14 @@ import { GoapDecisionProvider } from '../../turns/providers/goapDecisionProvider
 import { registerActorAwareStrategy } from './registerActorAwareStrategy.js';
 
 /**
- * Registers AI, LLM, and Prompting services.
+ * Registers LLM infrastructure and adapter services.
  *
- * @param {AppContainer} container - The DI container.
+ * @param {Registrar} registrar - The service registrar.
+ * @param {ILogger} logger - Logger instance for debug output.
+ * @returns {void}
  */
-export function registerAI(container) {
-  const r = new Registrar(container);
-  /** @type {ILogger} */
-  const logger = container.resolve(tokens.ILogger);
-  logger.debug('AI Systems Registration: Starting...');
-
-  // --- LLM INFRASTRUCTURE & ADAPTER ---
-
-  r.singletonFactory(tokens.IHttpClient, (c) => {
+export function registerLlmInfrastructure(registrar, logger) {
+  registrar.singletonFactory(tokens.IHttpClient, (c) => {
     let dispatcher = null;
     if (c.isRegistered(tokens.ISafeEventDispatcher)) {
       dispatcher = c.resolve(tokens.ISafeEventDispatcher);
@@ -124,12 +119,12 @@ export function registerAI(container) {
     }
     return new RetryHttpClient({
       logger: c.resolve(tokens.ILogger),
-      dispatcher: dispatcher,
+      dispatcher,
     });
   });
   logger.debug(`AI Systems Registration: Registered ${tokens.IHttpClient}.`);
 
-  r.singletonFactory(tokens.LLMAdapter, (c) => {
+  registrar.singletonFactory(tokens.LLMAdapter, (c) => {
     logger.debug('AI Systems Registration: Starting LLM Adapter setup...');
     const environmentContext = new EnvironmentContext({
       logger,
@@ -158,10 +153,17 @@ export function registerAI(container) {
   logger.debug(
     `AI Systems Registration: Registered ${tokens.LLMAdapter} factory.`
   );
+}
 
-  // --- PROMPTING ENGINE SERVICES ---
-
-  r.tagged(INITIALIZABLE).singletonFactory(
+/**
+ * Registers prompting engine related services.
+ *
+ * @param {Registrar} registrar - The service registrar.
+ * @param {ILogger} logger - Logger instance for debug output.
+ * @returns {void}
+ */
+export function registerPromptingEngine(registrar, logger) {
+  registrar.tagged(INITIALIZABLE).singletonFactory(
     tokens.IPromptStaticContentService,
     (c) =>
       new PromptStaticContentService({
@@ -169,11 +171,11 @@ export function registerAI(container) {
         promptTextLoader: c.resolve(tokens.PromptTextLoader),
       })
   );
-  r.singletonFactory(
+  registrar.singletonFactory(
     tokens.IPerceptionLogFormatter,
     (c) => new PerceptionLogFormatter({ logger: c.resolve(tokens.ILogger) })
   );
-  r.singletonFactory(
+  registrar.singletonFactory(
     tokens.IGameStateValidationServiceForPrompting,
     (c) =>
       new GameStateValidationServiceForPrompting({
@@ -181,7 +183,7 @@ export function registerAI(container) {
         safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
       })
   );
-  r.singletonFactory(
+  registrar.singletonFactory(
     tokens.IConfigurationProvider,
     (c) =>
       new HttpConfigurationProvider({
@@ -190,7 +192,7 @@ export function registerAI(container) {
       })
   );
 
-  r.singletonFactory(tokens.LLMConfigService, (c) => {
+  registrar.singletonFactory(tokens.LLMConfigService, (c) => {
     return new LLMConfigService({
       logger: c.resolve(tokens.ILogger),
       configurationProvider: c.resolve(tokens.IConfigurationProvider),
@@ -198,11 +200,11 @@ export function registerAI(container) {
     });
   });
 
-  r.singletonFactory(
+  registrar.singletonFactory(
     tokens.PlaceholderResolver,
     (c) => new PlaceholderResolver(c.resolve(tokens.ILogger))
   );
-  r.singletonFactory(
+  registrar.singletonFactory(
     tokens.StandardElementAssembler,
     (c) =>
       new StandardElementAssembler({
@@ -210,24 +212,24 @@ export function registerAI(container) {
         safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
       })
   );
-  r.singletonFactory(
+  registrar.singletonFactory(
     tokens.PerceptionLogAssembler,
     (c) => new PerceptionLogAssembler({ logger: c.resolve(tokens.ILogger) })
   );
-  r.singletonFactory(
+  registrar.singletonFactory(
     tokens.ThoughtsSectionAssembler,
     (c) => new ThoughtsSectionAssembler({ logger: c.resolve(tokens.ILogger) })
   );
-  r.singletonFactory(
+  registrar.singletonFactory(
     tokens.NotesSectionAssembler,
     (c) => new NotesSectionAssembler({ logger: c.resolve(tokens.ILogger) })
   );
-  r.singletonFactory(
+  registrar.singletonFactory(
     tokens.GoalsSectionAssembler,
     (c) => new GoalsSectionAssembler({ logger: c.resolve(tokens.ILogger) })
   );
 
-  r.singletonFactory(
+  registrar.singletonFactory(
     tokens.IndexedChoicesAssembler,
     (c) => new IndexedChoicesAssembler({ logger: c.resolve(tokens.ILogger) })
   );
@@ -235,11 +237,10 @@ export function registerAI(container) {
     `AI Systems Registration: Registered ${tokens.IndexedChoicesAssembler}.`
   );
 
-  r.singletonFactory(tokens.AssemblerRegistry, (c) => {
+  registrar.singletonFactory(tokens.AssemblerRegistry, (c) => {
     const registry = new AssemblerRegistry();
     const standardAssembler = c.resolve(tokens.StandardElementAssembler);
 
-    // List of keys that all use the StandardElementAssembler
     const standardElementKeys = [
       'task_definition',
       'character_persona',
@@ -252,7 +253,6 @@ export function registerAI(container) {
       'assistant_response_prefix',
     ];
 
-    // Register the single standard assembler instance for all applicable keys
     standardElementKeys.forEach((key) =>
       registry.register(key, standardAssembler)
     );
@@ -260,7 +260,6 @@ export function registerAI(container) {
       `AssemblerRegistry: Registered StandardElementAssembler for ${standardElementKeys.length} keys.`
     );
 
-    // Register all specialized assemblers
     registry.register(
       PERCEPTION_LOG_WRAPPER_KEY,
       c.resolve(tokens.PerceptionLogAssembler)
@@ -286,7 +285,7 @@ export function registerAI(container) {
     return registry;
   });
 
-  r.singletonFactory(tokens.IPromptBuilder, (c) => {
+  registrar.singletonFactory(tokens.IPromptBuilder, (c) => {
     return new PromptBuilder({
       logger: c.resolve(tokens.ILogger),
       llmConfigService: c.resolve(tokens.LLMConfigService),
@@ -298,14 +297,21 @@ export function registerAI(container) {
   logger.debug(
     `AI Systems Registration: Registered Prompting Engine services, including ${tokens.IPromptBuilder}.`
   );
+}
 
-  // --- AI GAME STATE PROVIDER SERVICES ---
-
-  r.single(tokens.IEntitySummaryProvider, EntitySummaryProvider);
-  r.single(tokens.IActorDataExtractor, ActorDataExtractor);
-  r.single(tokens.IActorStateProvider, ActorStateProvider);
-  r.single(tokens.IPerceptionLogProvider, PerceptionLogProvider);
-  r.singletonFactory(
+/**
+ * Registers AI game state provider services.
+ *
+ * @param {Registrar} registrar - The service registrar.
+ * @param {ILogger} logger - Logger instance for debug output.
+ * @returns {void}
+ */
+export function registerAIGameStateProviders(registrar, logger) {
+  registrar.single(tokens.IEntitySummaryProvider, EntitySummaryProvider);
+  registrar.single(tokens.IActorDataExtractor, ActorDataExtractor);
+  registrar.single(tokens.IActorStateProvider, ActorStateProvider);
+  registrar.single(tokens.IPerceptionLogProvider, PerceptionLogProvider);
+  registrar.singletonFactory(
     tokens.IAvailableActionsProvider,
     (c) =>
       new AvailableActionsProvider({
@@ -318,7 +324,7 @@ export function registerAI(container) {
         ),
       })
   );
-  r.singletonFactory(tokens.ILocationSummaryProvider, (c) => {
+  registrar.singletonFactory(tokens.ILocationSummaryProvider, (c) => {
     return new LocationSummaryProvider({
       entityManager: c.resolve(tokens.IEntityManager),
       summaryProvider: c.resolve(tokens.IEntitySummaryProvider),
@@ -326,7 +332,7 @@ export function registerAI(container) {
     });
   });
 
-  r.singletonFactory(tokens.IAIGameStateProvider, (c) => {
+  registrar.singletonFactory(tokens.IAIGameStateProvider, (c) => {
     return new AIGameStateProvider({
       actorStateProvider: c.resolve(tokens.IActorStateProvider),
       actorDataExtractor: c.resolve(tokens.IActorDataExtractor),
@@ -338,10 +344,17 @@ export function registerAI(container) {
   logger.debug(
     `AI Systems Registration: Registered AI Game State providers, including ${tokens.IAIGameStateProvider}.`
   );
+}
 
-  // --- AI TURN PIPELINE SERVICES ---
-
-  r.singletonFactory(tokens.IAIPromptContentProvider, (c) => {
+/**
+ * Registers the AI turn pipeline and decision providers.
+ *
+ * @param {Registrar} registrar - The service registrar.
+ * @param {ILogger} logger - Logger instance for debug output.
+ * @returns {void}
+ */
+export function registerAITurnPipeline(registrar, logger) {
+  registrar.singletonFactory(tokens.IAIPromptContentProvider, (c) => {
     return new AIPromptContentProvider({
       logger: c.resolve(tokens.ILogger),
       promptStaticContentService: c.resolve(tokens.IPromptStaticContentService),
@@ -351,27 +364,26 @@ export function registerAI(container) {
       ),
     });
   });
-  r.singletonFactory(
+  registrar.singletonFactory(
     tokens.ILLMResponseProcessor,
     (c) =>
       new LLMResponseProcessor({
         schemaValidator: c.resolve(tokens.ISchemaValidator),
-        logger: c.resolve(tokens.ILogger), // <-- INJECT LOGGER HERE
+        logger: c.resolve(tokens.ILogger),
         safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
       })
   );
-  r.singletonFactory(
+  registrar.singletonFactory(
     tokens.IAIFallbackActionFactory,
     (c) => new AIFallbackActionFactory({ logger: c.resolve(tokens.ILogger) })
   );
 
-  // ─── Indexer (shared singleton) ──────────────────────────────
-  r.singletonFactory(
+  registrar.singletonFactory(
     tokens.IActionIndexer,
     (c) => new ActionIndexerAdapter(c.resolve(tokens.ActionIndexingService))
   );
 
-  r.singletonFactory(tokens.IAIPromptPipeline, (c) => {
+  registrar.singletonFactory(tokens.IAIPromptPipeline, (c) => {
     return new AIPromptPipeline({
       llmAdapter: c.resolve(tokens.LLMAdapter),
       gameStateProvider: c.resolve(tokens.IAIGameStateProvider),
@@ -384,8 +396,7 @@ export function registerAI(container) {
     `AI Systems Registration: Registered AI Turn Pipeline services, including ${tokens.IAIPromptPipeline}.`
   );
 
-  // 2) LLM chooser
-  r.singletonFactory(
+  registrar.singletonFactory(
     tokens.ILLMChooser,
     (c) =>
       new LLMChooser({
@@ -396,7 +407,7 @@ export function registerAI(container) {
       })
   );
 
-  r.singletonFactory(
+  registrar.singletonFactory(
     tokens.ILLMDecisionProvider,
     (c) =>
       new LLMDecisionProvider({
@@ -409,7 +420,7 @@ export function registerAI(container) {
     `AI Systems Registration: Registered ${tokens.ILLMDecisionProvider}.`
   );
 
-  r.singletonFactory(
+  registrar.singletonFactory(
     tokens.IGoapDecisionProvider,
     (c) =>
       new GoapDecisionProvider({
@@ -420,12 +431,17 @@ export function registerAI(container) {
   logger.debug(
     `AI Systems Registration: Registered ${tokens.IGoapDecisionProvider}.`
   );
+}
 
-  registerActorAwareStrategy(container);
-
-  // --- AI TURN HANDLER (MODIFIED) ---
-
-  r.tagged(SHUTDOWNABLE).transientFactory(
+/**
+ * Registers the AI turn handler.
+ *
+ * @param {Registrar} registrar - The service registrar.
+ * @param {ILogger} logger - Logger instance for debug output.
+ * @returns {void}
+ */
+export function registerAITurnHandler(registrar, logger) {
+  registrar.tagged(SHUTDOWNABLE).transientFactory(
     tokens.ActorTurnHandler,
     (c) =>
       new ActorTurnHandler({
@@ -433,12 +449,30 @@ export function registerAI(container) {
         turnStateFactory: c.resolve(tokens.ITurnStateFactory),
         turnEndPort: c.resolve(tokens.ITurnEndPort),
         strategyFactory: c.resolve(tokens.TurnStrategyFactory),
-        turnContextBuilder: c.resolve(tokens.TurnContextBuilder), // <-- Added
+        turnContextBuilder: c.resolve(tokens.TurnContextBuilder),
       })
   );
   logger.debug(
     `AI Systems Registration: Registered refactored ${tokens.ActorTurnHandler}.`
   );
+}
 
+/**
+ * Registers AI, LLM, and Prompting services.
+ *
+ * @param {AppContainer} container - The DI container.
+ */
+export function registerAI(container) {
+  const r = new Registrar(container);
+  /** @type {ILogger} */
+  const logger = container.resolve(tokens.ILogger);
+  logger.debug('AI Systems Registration: Starting...');
+
+  registerLlmInfrastructure(r, logger);
+  registerPromptingEngine(r, logger);
+  registerAIGameStateProviders(r, logger);
+  registerAITurnPipeline(r, logger);
+  registerActorAwareStrategy(container);
+  registerAITurnHandler(r, logger);
   logger.debug('AI Systems Registration: All registrations complete.');
 }

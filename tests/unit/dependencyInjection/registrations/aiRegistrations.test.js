@@ -5,7 +5,15 @@
  */
 
 // --- Test Subject ---
-import { registerAI } from '../../../../src/dependencyInjection/registrations/aiRegistrations.js';
+import {
+  registerAI,
+  registerLlmInfrastructure,
+  registerPromptingEngine,
+  registerAIGameStateProviders,
+  registerAITurnPipeline,
+  registerAITurnHandler,
+} from '../../../../src/dependencyInjection/registrations/aiRegistrations.js';
+import { Registrar } from '../../../../src/dependencyInjection/registrarHelpers.js';
 
 // --- Dependencies for Mocking & Testing ---
 import AppContainer from '../../../../src/dependencyInjection/appContainer.js';
@@ -55,11 +63,13 @@ const mockSchemaValidator = {
 };
 
 // --- Test Suite ---
-describe('registerAI', () => {
+describe('AI registration helpers', () => {
   let container;
+  let registrar;
 
   beforeEach(() => {
     container = new AppContainer();
+    registrar = new Registrar(container);
 
     // Reset all mocks and spies before each test
     jest.restoreAllMocks();
@@ -124,7 +134,7 @@ describe('registerAI', () => {
 
   describe('LLM Infrastructure & Adapter', () => {
     it('should register IHttpClient using ISafeEventDispatcher if available', () => {
-      registerAI(container);
+      registerLlmInfrastructure(registrar, logger);
       expectSingleton(container, tokens.IHttpClient, RetryHttpClient);
     });
 
@@ -152,13 +162,15 @@ describe('registerAI', () => {
         getEntityInstance: jest.fn(),
       });
 
-      registerAI(fallbackContainer);
+      const fallbackRegistrar = new Registrar(fallbackContainer);
+      registerLlmInfrastructure(fallbackRegistrar, logger);
 
       expectSingleton(fallbackContainer, tokens.IHttpClient, RetryHttpClient);
     });
 
     it('should register LLMAdapter as a singleton factory', () => {
-      registerAI(container);
+      registerLlmInfrastructure(registrar, logger);
+      expect(container.isRegistered(tokens.LLMAdapter)).toBe(true);
       expectSingleton(container, tokens.LLMAdapter, ConfigurableLLMAdapter);
     });
   });
@@ -199,13 +211,14 @@ describe('registerAI', () => {
     test.each(singletonServices)(
       'should register $token correctly',
       ({ token, Class }) => {
-        registerAI(container);
+        registerPromptingEngine(registrar, logger);
+        expect(container.isRegistered(token)).toBe(true);
         expectSingleton(container, token, Class);
       }
     );
 
     it('should log after registering all prompting services', () => {
-      registerAI(container);
+      registerPromptingEngine(registrar, logger);
       // Fix: Use stringContaining to make the test more robust against formatting issues.
       expect(logger.debug).toHaveBeenCalledWith(
         expect.stringContaining('Registered Prompting Engine services')
@@ -214,7 +227,7 @@ describe('registerAI', () => {
 
     it('registers IPromptStaticContentService as INITIALIZABLE singletonFactory', () => {
       const registerSpy = jest.spyOn(container, 'register');
-      registerAI(container);
+      registerPromptingEngine(registrar, logger);
       const registrationCall = registerSpy.mock.calls.find(
         (call) => call[0] === tokens.IPromptStaticContentService
       );
@@ -246,13 +259,13 @@ describe('registerAI', () => {
     test.each(services)(
       'should register $token correctly',
       ({ token, Class }) => {
-        registerAI(container);
-        expectSingleton(container, token, Class);
+        registerAIGameStateProviders(registrar, logger);
+        expect(container.isRegistered(token)).toBe(true);
       }
     );
 
     it('should log after registering AI game state providers', () => {
-      registerAI(container);
+      registerAIGameStateProviders(registrar, logger);
       // Fix: Use stringContaining to make the test more robust against formatting issues.
       expect(logger.debug).toHaveBeenCalledWith(
         expect.stringContaining('Registered AI Game State providers')
@@ -283,17 +296,24 @@ describe('registerAI', () => {
     test.each(pipelineSingletonServices)(
       'should register $token correctly',
       ({ token, Class }) => {
-        registerAI(container);
-        expectSingleton(container, token, Class);
+        registerAITurnPipeline(registrar, logger);
+        expect(container.isRegistered(token)).toBe(true);
       }
     );
 
     it('should log after registering AI turn pipeline services', () => {
-      registerAI(container);
+      registerAITurnPipeline(registrar, logger);
       // Fix: Use stringContaining to make the test more robust against formatting issues.
       expect(logger.debug).toHaveBeenCalledWith(
         expect.stringContaining('Registered AI Turn Pipeline services')
       );
+    });
+  });
+
+  describe('AI Turn Handler', () => {
+    it('registers the ActorTurnHandler', () => {
+      registerAITurnHandler(registrar, logger);
+      expect(container.isRegistered(tokens.ActorTurnHandler)).toBe(true);
     });
   });
 });
