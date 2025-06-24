@@ -1,7 +1,6 @@
 // src/utils/errorUtils.js
 
-import { getModuleLogger } from './loggerUtils.js';
-import { safeDispatchError } from './safeDispatchErrorUtils.js';
+import { StartupErrorHandler } from './startupErrorHandler.js';
 
 /**
  * Sets an error message in a DOM element and makes it visible.
@@ -54,7 +53,7 @@ export function createTemporaryErrorElement(baseEl, msg, dom) {
  * @param {import('../interfaces/DomAdapter.js').DomAdapter} dom - DOM adapter instance.
  * @returns {boolean} True if the element was updated.
  */
-export function disableInput(el, placeholder, dom) {
+export function disableInput(el, placeholder) {
   if (!el || !(el instanceof HTMLInputElement)) {
     return false;
   }
@@ -82,165 +81,7 @@ export function disableInput(el, placeholder, dom) {
  */
 
 /**
- * Logs details about a fatal startup error.
- *
- * @param {import('../interfaces/coreServices.js').ILogger} log - Logger instance.
- * @param {string} phase - The bootstrap phase during which the error occurred.
- * @param {string} consoleMessage - Message to log to the console.
- * @param {Error} [errorObject] - Optional error object for stack trace logging.
- * @param {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} [dispatcher] - Optional dispatcher for error events.
- * @returns {void}
- * @private
- */
-function logStartupError(log, phase, consoleMessage, errorObject, dispatcher) {
-  if (dispatcher) {
-    safeDispatchError(
-      dispatcher,
-      `[Bootstrapper Error - Phase: ${phase}] ${consoleMessage}`,
-      { error: errorObject?.message || errorObject || '' }
-    );
-  } else {
-    log.error(
-      `[Bootstrapper Error - Phase: ${phase}] ${consoleMessage}`,
-      errorObject || ''
-    );
-  }
-}
-
-/**
- * Attempts to show an error message in the DOM or falls back to alert().
- *
- * @param {object} params - Parameters object.
- * @param {HTMLElement | null | undefined} params.errorDiv - Element for displaying errors.
- * @param {HTMLElement | null | undefined} params.outputDiv - Main output area element.
- * @param {import('../interfaces/DomAdapter.js').DomAdapter} params.dom - DOM adapter instance.
- * @param {function(string): void} params.showAlert - Alert function to display messages.
- * @param {import('../interfaces/coreServices.js').ILogger} params.log - Logger instance.
- * @param {string} params.userMessage - Message to display to the user.
- * @param {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} [params.dispatcher] - Optional dispatcher for error events.
- * @returns {{displayed: boolean}} Object indicating if the message was shown in the DOM.
- * @private
- */
-function displayErrorMessage({
-  errorDiv,
-  outputDiv,
-  dom,
-  showAlert,
-  log,
-  userMessage,
-  dispatcher,
-}) {
-  let displayedInErrorDiv = false;
-  try {
-    displayedInErrorDiv = showErrorInElement(errorDiv, userMessage, dom);
-  } catch (e) {
-    if (dispatcher) {
-      safeDispatchError(
-        dispatcher,
-        'displayFatalStartupError: Failed to set textContent on errorDiv.',
-        { error: e?.message || e }
-      );
-    } else {
-      log.error(
-        'displayFatalStartupError: Failed to set textContent on errorDiv.',
-        e
-      );
-    }
-  }
-
-  if (!displayedInErrorDiv) {
-    try {
-      const tmpEl = createTemporaryErrorElement(outputDiv, userMessage, dom);
-      if (tmpEl) {
-        log.info(
-          'displayFatalStartupError: Displayed error in a dynamically created element near outputDiv.'
-        );
-        displayedInErrorDiv = true;
-      }
-    } catch (e) {
-      if (dispatcher) {
-        safeDispatchError(
-          dispatcher,
-          'displayFatalStartupError: Failed to create or append temporary error element.',
-          { error: e?.message || e }
-        );
-      } else {
-        log.error(
-          'displayFatalStartupError: Failed to create or append temporary error element.',
-          e
-        );
-      }
-    }
-  }
-
-  if (!displayedInErrorDiv) {
-    showAlert(userMessage);
-    log.info(
-      'displayFatalStartupError: Displayed error using alert() as a fallback.'
-    );
-  }
-
-  return { displayed: displayedInErrorDiv };
-}
-
-/**
- * Updates the title and disables the input element when a fatal error occurs.
- *
- * @param {object} params - Parameters object.
- * @param {HTMLElement | null | undefined} params.titleElement - Page title element.
- * @param {HTMLInputElement | null | undefined} params.inputElement - Command input element.
- * @param {string} params.pageTitle - Text to set for the title element.
- * @param {string} params.inputPlaceholder - Placeholder text for the input element.
- * @param {import('../interfaces/coreServices.js').ILogger} params.log - Logger instance.
- * @param {import('../interfaces/DomAdapter.js').DomAdapter} params.dom - DOM adapter instance.
- * @param {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} [params.dispatcher] - Optional dispatcher for error events.
- * @returns {void}
- * @private
- */
-function updateElements({
-  titleElement,
-  inputElement,
-  pageTitle,
-  inputPlaceholder,
-  log,
-  dom,
-  dispatcher,
-}) {
-  try {
-    if (titleElement && titleElement instanceof HTMLElement) {
-      dom.setTextContent(titleElement, pageTitle);
-    }
-  } catch (e) {
-    const msg =
-      'displayFatalStartupError: Failed to set textContent on titleElement.';
-    if (dispatcher) {
-      safeDispatchError(dispatcher, msg, {
-        raw: e?.message || e,
-        stack: e?.stack,
-      });
-    } else {
-      log.error(msg, e);
-    }
-  }
-
-  try {
-    disableInput(inputElement, inputPlaceholder, dom);
-  } catch (e) {
-    const msg =
-      'displayFatalStartupError: Failed to disable or set placeholder on inputElement.';
-    if (dispatcher) {
-      safeDispatchError(dispatcher, msg, {
-        raw: e?.message || e,
-        stack: e?.stack,
-      });
-    } else {
-      log.error(msg, e);
-    }
-  }
-}
-
-/**
- * Displays a fatal startup error to the user, logs it to the console, and updates UI elements.
+ * Displays a fatal startup error to the user, logs it, and updates UI elements.
  *
  * @param {FatalErrorUIElements} uiElements - References to key UI elements.
  * @param {FatalErrorDetails} errorDetails - Details about the error.
@@ -256,40 +97,11 @@ export function displayFatalStartupError(
   domAdapter,
   dispatcher
 ) {
-  const moduleLogger = getModuleLogger('errorUtils', logger);
-  const { outputDiv, errorDiv, titleElement, inputElement } = uiElements;
-  const dom = domAdapter;
-  const showAlert = domAdapter.alert;
-  const {
-    userMessage,
-    consoleMessage,
-    errorObject,
-    pageTitle = 'Fatal Error!',
-    inputPlaceholder = 'Application failed to start.',
-    phase = 'Unknown Phase',
-  } = errorDetails;
-
-  logStartupError(moduleLogger, phase, consoleMessage, errorObject, dispatcher);
-
-  const { displayed } = displayErrorMessage({
-    errorDiv,
-    outputDiv,
-    dom,
-    showAlert,
-    log: moduleLogger,
-    userMessage,
+  const handler = new StartupErrorHandler(
+    logger,
+    domAdapter,
     dispatcher,
-  });
-
-  updateElements({
-    titleElement,
-    inputElement,
-    pageTitle,
-    inputPlaceholder,
-    log: moduleLogger,
-    dom,
-    dispatcher,
-  });
-
-  return { displayed };
+    'errorUtils'
+  );
+  return handler.displayFatalStartupError(uiElements, errorDetails);
 }
