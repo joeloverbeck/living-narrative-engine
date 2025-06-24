@@ -88,7 +88,6 @@ describe('SetVariableHandler', () => {
     mockLoggerInstance = createMockLogger();
     handler = new SetVariableHandler({
       logger: mockLoggerInstance,
-      jsonLogic,
     });
     mockLoggerInstance.debug.mockClear();
   });
@@ -100,14 +99,14 @@ describe('SetVariableHandler', () => {
         /ILogger instance/
       );
       expect(
-        () => new SetVariableHandler({ logger: { info: jest.fn() }, jsonLogic })
+        () => new SetVariableHandler({ logger: { info: jest.fn() } })
       ).toThrow(/ILogger instance/);
     });
 
     test('initializes successfully with a valid logger', () => {
       const freshLogger = createMockLogger();
       expect(
-        () => new SetVariableHandler({ logger: freshLogger, jsonLogic })
+        () => new SetVariableHandler({ logger: freshLogger })
       ).not.toThrow();
       expect(freshLogger.debug).toHaveBeenCalledWith(
         'SetVariableHandler initialized.'

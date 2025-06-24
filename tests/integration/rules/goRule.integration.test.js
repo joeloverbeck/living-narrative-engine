@@ -87,7 +87,7 @@ describe('core_handle_go rule integration', () => {
         safeEventDispatcher: safeEventDispatcher,
       }),
       GET_TIMESTAMP: new GetTimestampHandler({ logger }),
-      SET_VARIABLE: new SetVariableHandler({ logger, jsonLogic }),
+      SET_VARIABLE: new SetVariableHandler({ logger }),
       MODIFY_COMPONENT: new ModifyComponentHandler({
         entityManager,
         logger,

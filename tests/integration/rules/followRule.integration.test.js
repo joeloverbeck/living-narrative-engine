@@ -128,7 +128,7 @@ function createHandlers(
       logger,
       safeEventDispatcher: safeEventDispatcher,
     }),
-    SET_VARIABLE: new SetVariableHandler({ logger, jsonLogic }),
+    SET_VARIABLE: new SetVariableHandler({ logger }),
   };
 }
 

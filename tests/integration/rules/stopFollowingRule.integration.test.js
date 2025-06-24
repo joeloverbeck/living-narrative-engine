@@ -96,7 +96,7 @@ const createHandlers = (
       logger,
       safeEventDispatcher: safeEventDispatcher,
     }),
-    SET_VARIABLE: new SetVariableHandler({ logger, jsonLogic }),
+    SET_VARIABLE: new SetVariableHandler({ logger }),
     GET_TIMESTAMP: new GetTimestampHandler({ logger }),
     IF_CO_LOCATED_FACTORY: (operationInterpreter) =>
       new IfCoLocatedHandler({

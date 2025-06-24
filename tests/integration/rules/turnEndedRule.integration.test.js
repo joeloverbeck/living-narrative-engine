@@ -41,7 +41,7 @@ function createHandlers(
   safeEventDispatcher
 ) {
   return {
-    SET_VARIABLE: new SetVariableHandler({ logger, jsonLogic }),
+    SET_VARIABLE: new SetVariableHandler({ logger }),
     DISPATCH_EVENT: new DispatchEventHandler({ dispatcher: eventBus, logger }),
     REMOVE_COMPONENT: new RemoveComponentHandler({
       entityManager,

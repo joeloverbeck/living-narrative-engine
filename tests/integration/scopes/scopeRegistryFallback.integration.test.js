@@ -23,6 +23,7 @@ describe('Scope Registry Fallback Integration', () => {
 
   /**
    * Replicates the core scope resolution logic from ActionDiscoveryService for testing.
+   *
    * @param {string} scopeName - The name of the scope to resolve.
    * @param {object} context - The action context.
    * @param {ScopeRegistry} registry - The scope registry instance.
