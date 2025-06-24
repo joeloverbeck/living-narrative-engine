@@ -31,7 +31,7 @@ import GameStateRestorer from '../../persistence/gameStateRestorer.js';
 import SaveMetadataBuilder from '../../persistence/saveMetadataBuilder.js';
 import ActiveModsManifestBuilder from '../../persistence/activeModsManifestBuilder.js';
 // import ReferenceResolver from '../../initializers/services/referenceResolver.js'; // Removed - service is deprecated
-import SaveLoadService from '../../persistence/saveLoadService.js';
+import createSaveLoadService from '../../persistence/createSaveLoadService.js';
 import GameStateSerializer from '../../persistence/gameStateSerializer.js';
 import SaveFileRepository from '../../persistence/saveFileRepository.js';
 import SaveFileParser from '../../persistence/saveFileParser.js';
@@ -78,7 +78,7 @@ export function registerPersistence(container) {
   );
 
   r.singletonFactory(tokens.ISaveLoadService, (c) =>
-    SaveLoadService.createDefault({
+    createSaveLoadService({
       logger: c.resolve(tokens.ILogger),
       storageProvider: c.resolve(tokens.IStorageProvider),
     })

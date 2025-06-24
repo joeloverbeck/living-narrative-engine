@@ -288,44 +288,6 @@ class SaveLoadService extends BaseService {
 
     return this.#fileRepository.deleteSaveFile(saveIdentifier);
   }
-
-  /**
-   * Creates a SaveLoadService with default dependencies.
-   *
-   * @param {object} deps - Factory dependencies.
-   * @param {ILogger} deps.logger - Logger instance.
-   * @param {IStorageProvider} deps.storageProvider - Storage provider for files.
-   * @param {Crypto} [deps.crypto] - Optional Web Crypto implementation.
-   * @returns {SaveLoadService} Configured SaveLoadService instance.
-   */
-  static createDefault({
-    logger,
-    storageProvider,
-    crypto = globalThis.crypto,
-  }) {
-    const serializer = new GameStateSerializer({ logger, crypto });
-    const parser = new SaveFileParser({
-      logger,
-      storageProvider,
-      serializer,
-    });
-    const validationService = new SaveValidationService({
-      logger,
-      gameStateSerializer: serializer,
-    });
-    const repository = new SaveFileRepository({
-      logger,
-      storageProvider,
-      serializer,
-      parser,
-    });
-    return new SaveLoadService({
-      logger,
-      saveFileRepository: repository,
-      gameStateSerializer: serializer,
-      saveValidationService: validationService,
-    });
-  }
 }
 
 export default SaveLoadService;
