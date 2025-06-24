@@ -137,10 +137,7 @@ export default class SaveFileRepository extends BaseService {
       );
       return { success: true, data: files };
     } catch (listError) {
-      if (
-        listError.message &&
-        listError.message.toLowerCase().includes('not found')
-      ) {
+      if (listError.code === StorageErrorCodes.FILE_NOT_FOUND) {
         this.#logger.debug(
           `${FULL_MANUAL_SAVE_DIRECTORY_PATH} not found. Assuming no manual saves yet.`
         );

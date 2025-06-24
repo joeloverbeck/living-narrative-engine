@@ -2,6 +2,7 @@
 import { IStorageProvider } from '../interfaces/IStorageProvider.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../constants/eventIds.js';
 import { resolveSafeDispatcher } from '../utils/dispatcherUtils.js';
+import { StorageErrorCodes } from './storageErrors.js';
 
 /** @typedef {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 
@@ -328,9 +329,11 @@ export class BrowserStorageProvider extends IStorageProvider {
     } catch (error) {
       if (error.name === 'NotFoundError') {
         this.#logger.warn(
-          `BrowserStorageProvider: Directory not found for listing: "${directoryPath}". Returning empty list.`
+          `BrowserStorageProvider: Directory not found for listing: "${directoryPath}".`
         );
-        return [];
+        const err = new Error(`Directory not found: ${directoryPath}`);
+        err.code = StorageErrorCodes.FILE_NOT_FOUND;
+        throw err;
       }
       if (
         error.message &&
