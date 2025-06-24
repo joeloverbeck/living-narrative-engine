@@ -4,14 +4,7 @@
  */
 
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
-import Ajv from 'ajv';
 import ruleSchema from '../../../data/schemas/rule.schema.json';
-import commonSchema from '../../../data/schemas/common.schema.json';
-import operationSchema from '../../../data/schemas/operation.schema.json';
-import jsonLogicSchema from '../../../data/schemas/json-logic.schema.json';
-import conditionSchema from '../../../data/schemas/condition.schema.json';
-import conditionContainerSchema from '../../../data/schemas/condition-container.schema.json';
-import loadOperationSchemas from '../../unit/helpers/loadOperationSchemas.js';
 import followRule from '../../../data/mods/core/rules/follow.rule.json';
 import eventIsActionFollow from '../../../data/mods/core/conditions/event-is-action-follow.condition.json';
 import SystemLogicInterpreter from '../../../src/logic/systemLogicInterpreter.js';
@@ -350,28 +343,8 @@ describe('core_handle_follow rule integration', () => {
   });
 
   it('validates follow.rule.json against schema', () => {
-    const ajv = new Ajv({ allErrors: true });
-    ajv.addSchema(
-      commonSchema,
-      'http://example.com/schemas/common.schema.json'
-    );
-    ajv.addSchema(
-      operationSchema,
-      'http://example.com/schemas/operation.schema.json'
-    );
-    loadOperationSchemas(ajv);
-    ajv.addSchema(
-      jsonLogicSchema,
-      'http://example.com/schemas/json-logic.schema.json'
-    );
-    ajv.addSchema(
-      conditionContainerSchema,
-      'http://example.com/schemas/condition-container.schema.json'
-    );
-    ajv.addSchema(
-      conditionSchema,
-      'http://example.com/schemas/condition.schema.json'
-    );
+    const { createTestAjv } = require('../../common/index.js');
+    const ajv = createTestAjv();
     const valid = ajv.validate(ruleSchema, followRule);
     if (!valid) console.error(ajv.errors);
     expect(valid).toBe(true);
