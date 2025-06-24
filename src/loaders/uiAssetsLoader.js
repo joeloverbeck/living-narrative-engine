@@ -156,6 +156,44 @@ class UiAssetsLoader extends AbstractLoader {
   }
 
   /**
+   * @description Categorizes UI file names by type.
+   * @private
+   * @param {string[]} uiFiles - File names from the manifest.
+   * @returns {{iconFiles:string[], labelFiles:string[], unknownFiles:string[]}}
+   * Lists of files grouped by category.
+   */
+  #categorizeUiFiles(uiFiles) {
+    const iconFiles = [];
+    const labelFiles = [];
+    const unknownFiles = [];
+
+    for (const file of uiFiles) {
+      if (file.endsWith('icons.json')) {
+        iconFiles.push(file);
+      } else if (file.endsWith('labels.json')) {
+        labelFiles.push(file);
+      } else {
+        unknownFiles.push(file);
+      }
+    }
+
+    return { iconFiles, labelFiles, unknownFiles };
+  }
+
+  // --- Testing Utilities ---
+
+  /**
+   * Exposes {@link UiAssetsLoader.#categorizeUiFiles} for tests.
+   *
+   * @public
+   * @param {string[]} uiFiles
+   * @returns {{iconFiles:string[], labelFiles:string[], unknownFiles:string[]}}
+   */
+  categorizeUiFilesForTest(uiFiles) {
+    return this.#categorizeUiFiles(uiFiles);
+  }
+
+  /**
    * @description Loads all UI assets for a mod based on file names.
    * @param {string} modId - The mod identifier.
    * @param {ModManifest} manifest - The mod manifest.
@@ -163,43 +201,44 @@ class UiAssetsLoader extends AbstractLoader {
    */
   async loadUiAssetsForMod(modId, manifest) {
     const uiFiles = manifest?.content?.ui || [];
+    const { iconFiles, labelFiles, unknownFiles } =
+      this.#categorizeUiFiles(uiFiles);
     let count = 0;
     let overrides = 0;
     let errors = 0;
 
-    for (const filename of uiFiles) {
-      if (filename.endsWith('icons.json')) {
-        try {
-          const res = await this.loadIconsForMod(modId, {
-            content: { ui: [filename] },
-          });
-          count += res.count;
-          overrides += res.overrides;
-        } catch (e) {
-          errors++;
-          this._logger.error(
-            `UiAssetsLoader [${modId}]: Failed to process ${filename}: ${e.message}`
-          );
-        }
-      } else if (filename.endsWith('labels.json')) {
-        try {
-          const res = await this.loadLabelsForMod(modId, {
-            content: { ui: [filename] },
-          });
-          count += res.count;
-          overrides += res.overrides;
-        } catch (e) {
-          errors++;
-          this._logger.error(
-            `UiAssetsLoader [${modId}]: Failed to process ${filename}: ${e.message}`
-          );
-        }
-      } else {
-        this._logger.warn(
-          `UiAssetsLoader [${modId}]: Unknown file ${filename}`
+    for (const filename of iconFiles) {
+      try {
+        const res = await this.loadIconsForMod(modId, {
+          content: { ui: [filename] },
+        });
+        count += res.count;
+        overrides += res.overrides;
+      } catch (e) {
+        errors++;
+        this._logger.error(
+          `UiAssetsLoader [${modId}]: Failed to process ${filename}: ${e.message}`
         );
-        throw new Error(`Unknown UI asset file: ${filename}`);
       }
+    }
+
+    for (const filename of labelFiles) {
+      try {
+        const res = await this.loadLabelsForMod(modId, {
+          content: { ui: [filename] },
+        });
+        count += res.count;
+        overrides += res.overrides;
+      } catch (e) {
+        errors++;
+        this._logger.error(
+          `UiAssetsLoader [${modId}]: Failed to process ${filename}: ${e.message}`
+        );
+      }
+    }
+
+    for (const filename of unknownFiles) {
+      this._logger.warn(`UiAssetsLoader [${modId}]: Unknown file ${filename}`);
     }
 
     return { count, overrides, errors };
