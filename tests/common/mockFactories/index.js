@@ -7,6 +7,7 @@ export * from './dataFetcherMock.js';
 export * from './loaders.js';
 export * from './entities.js';
 export * from './container.js';
+export * from './memoryStorageProvider.js';
 
 // Explicit convenience exports
 export {
