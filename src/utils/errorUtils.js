@@ -256,7 +256,7 @@ export function displayFatalStartupError(
   domAdapter,
   dispatcher
 ) {
-  const log = getModuleLogger('errorUtils', logger);
+  const moduleLogger = getModuleLogger('errorUtils', logger);
   const { outputDiv, errorDiv, titleElement, inputElement } = uiElements;
   const dom = domAdapter;
   const showAlert = domAdapter.alert;
@@ -269,14 +269,14 @@ export function displayFatalStartupError(
     phase = 'Unknown Phase',
   } = errorDetails;
 
-  logStartupError(log, phase, consoleMessage, errorObject, dispatcher);
+  logStartupError(moduleLogger, phase, consoleMessage, errorObject, dispatcher);
 
   const { displayed } = displayErrorMessage({
     errorDiv,
     outputDiv,
     dom,
     showAlert,
-    log,
+    log: moduleLogger,
     userMessage,
     dispatcher,
   });
@@ -286,7 +286,7 @@ export function displayFatalStartupError(
     inputElement,
     pageTitle,
     inputPlaceholder,
-    log,
+    log: moduleLogger,
     dom,
     dispatcher,
   });

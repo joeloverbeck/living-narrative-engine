@@ -67,15 +67,13 @@ export function deepClone(value) {
  *   Clone result object.
  */
 export function safeDeepClone(value, logger) {
-  const log = ensureValidLogger(logger, 'CloneUtils');
+  const moduleLogger = ensureValidLogger(logger, 'CloneUtils');
   try {
     /** @type {T} */
     const cloned = deepClone(value);
     return createPersistenceSuccess(cloned);
   } catch (error) {
-    if (logger && typeof logger.error === 'function') {
-      logger.error('DeepClone failed:', error);
-    }
+    moduleLogger.error('DeepClone failed:', error);
     return createPersistenceFailure(
       PersistenceErrorCodes.DEEP_CLONE_FAILED,
       'Failed to deep clone object.'

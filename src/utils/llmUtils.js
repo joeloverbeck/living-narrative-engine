@@ -204,7 +204,7 @@ export function repairAndParse(cleanedString, log, dispatcher, initialError) {
  * @throws {TypeError} If `jsonString` is not a string.
  */
 export async function parseAndRepairJson(jsonString, logger, dispatcher) {
-  const log = ensureValidLogger(logger, 'LLMUtils');
+  const moduleLogger = ensureValidLogger(logger, 'LLMUtils');
   if (typeof jsonString !== 'string') {
     const errorMessage = "Input 'jsonString' must be a string.";
     if (dispatcher) {
@@ -213,7 +213,7 @@ export async function parseAndRepairJson(jsonString, logger, dispatcher) {
         `parseAndRepairJson: ${errorMessage} Received type: ${typeof jsonString}`
       );
     } else {
-      log.error(
+      moduleLogger.error(
         `parseAndRepairJson: ${errorMessage} Received type: ${typeof jsonString}`
       );
     }
@@ -229,7 +229,7 @@ export async function parseAndRepairJson(jsonString, logger, dispatcher) {
         originalInput: jsonString,
       });
     } else {
-      log.error(`parseAndRepairJson: ${errorMessage}`, {
+      moduleLogger.error(`parseAndRepairJson: ${errorMessage}`, {
         originalInput: jsonString,
       });
     }
@@ -240,8 +240,8 @@ export async function parseAndRepairJson(jsonString, logger, dispatcher) {
   }
 
   try {
-    const parsedObject = initialParse(cleanedJsonString, log);
-    log.debug(
+    const parsedObject = initialParse(cleanedJsonString, moduleLogger);
+    moduleLogger.debug(
       'parseAndRepairJson: Successfully parsed JSON on first attempt after cleaning.',
       {
         inputLength: jsonString.length,
@@ -250,7 +250,7 @@ export async function parseAndRepairJson(jsonString, logger, dispatcher) {
     );
     return parsedObject;
   } catch (initialParseError) {
-    log.warn(
+    moduleLogger.warn(
       `parseAndRepairJson: Initial JSON.parse failed after cleaning. Attempting repair. Error: ${initialParseError.message}`,
       {
         originalInputLength: jsonString.length,
@@ -267,7 +267,7 @@ export async function parseAndRepairJson(jsonString, logger, dispatcher) {
 
     return repairAndParse(
       cleanedJsonString,
-      log,
+      moduleLogger,
       dispatcher,
       initialParseError
     );

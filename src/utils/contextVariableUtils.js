@@ -58,9 +58,9 @@ export function writeContextVariable(
   dispatcher,
   logger
 ) {
-  const log = getModuleLogger('contextVariableUtils', logger);
+  const moduleLogger = getModuleLogger('contextVariableUtils', logger);
   const safeDispatcher =
-    dispatcher || resolveSafeDispatcher(executionContext, log);
+    dispatcher || resolveSafeDispatcher(executionContext, moduleLogger);
   const { valid, error, name } = _validateContextAndName(
     variableName,
     executionContext
@@ -68,7 +68,12 @@ export function writeContextVariable(
 
   if (!valid) {
     if (safeDispatcher) {
-      safeDispatchError(safeDispatcher, error.message, { variableName }, log);
+      safeDispatchError(
+        safeDispatcher,
+        error.message,
+        { variableName },
+        moduleLogger
+      );
     }
     return { success: false, error };
   }
@@ -89,7 +94,7 @@ export function writeContextVariable(
           error: e.message,
           stack: e.stack,
         },
-        log
+        moduleLogger
       );
     }
     return { success: false, error: err };
@@ -115,11 +120,11 @@ export function tryWriteContextVariable(
   dispatcher,
   logger
 ) {
-  const log = getModuleLogger('contextVariableUtils', logger);
+  const moduleLogger = getModuleLogger('contextVariableUtils', logger);
   const validation = _validateContextAndName(variableName, executionContext);
   if (!validation.valid) {
     const safeDispatcher =
-      dispatcher || resolveSafeDispatcher(executionContext, log);
+      dispatcher || resolveSafeDispatcher(executionContext, moduleLogger);
     if (safeDispatcher) {
       safeDispatchError(
         safeDispatcher,
@@ -127,7 +132,7 @@ export function tryWriteContextVariable(
         {
           variableName,
         },
-        log
+        moduleLogger
       );
     }
     return { success: false, error: validation.error };

@@ -23,9 +23,9 @@ export async function registerSchema(
   logger,
   warnMessage
 ) {
-  const log = ensureValidLogger(logger, 'SchemaUtils');
+  const moduleLogger = ensureValidLogger(logger, 'SchemaUtils');
   if (validator.isSchemaLoaded(schemaId)) {
-    log.warn(
+    moduleLogger.warn(
       warnMessage || `Schema '${schemaId}' already loaded. Overwriting.`
     );
     validator.removeSchema(schemaId);
@@ -56,7 +56,7 @@ export async function registerInlineSchema(
   logger,
   messages = {}
 ) {
-  const log = ensureValidLogger(logger, 'SchemaUtils');
+  const moduleLogger = ensureValidLogger(logger, 'SchemaUtils');
   const {
     warnMessage,
     successDebugMessage,
@@ -66,9 +66,15 @@ export async function registerInlineSchema(
   } = messages;
 
   try {
-    await registerSchema(validator, schema, schemaId, log, warnMessage);
+    await registerSchema(
+      validator,
+      schema,
+      schemaId,
+      moduleLogger,
+      warnMessage
+    );
     if (successDebugMessage) {
-      log.debug(successDebugMessage);
+      moduleLogger.debug(successDebugMessage);
     }
   } catch (error) {
     // Only log if a specific error message is provided by the caller.
@@ -83,7 +89,7 @@ export async function registerInlineSchema(
       if (!('error' in context)) {
         context.error = error?.message || error;
       }
-      log.error(errorLogMessage, context, error);
+      moduleLogger.error(errorLogMessage, context, error);
     }
     if (throwErrorMessage) {
       throw new Error(throwErrorMessage);

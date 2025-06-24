@@ -68,7 +68,7 @@ function _shouldRetry(status, attempt, maxRetries) {
  * @param {number} baseDelayMs Base delay in milliseconds for retries.
  * @param {number} maxDelayMs Maximum delay in milliseconds between retries.
  * @param {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} safeEventDispatcher Dispatcher for error events.
- * @param {import('../interfaces/coreServices.js').ILogger} log Logger for debug/warn messages.
+ * @param {import('../interfaces/coreServices.js').ILogger} logger Logger for debug/warn messages.
  * @returns {Promise<{retry: boolean, data?: any}>} Object describing whether a retry should occur and the parsed data when successful.
  * @throws {Error} When a non-retryable HTTP error is encountered.
  * @private
@@ -81,7 +81,7 @@ async function _handleResponse(
   baseDelayMs,
   maxDelayMs,
   safeEventDispatcher,
-  log
+  logger
 ) {
   if (!response.ok) {
     const { parsedBody, bodyText } = await _parseErrorResponse(response);
@@ -102,7 +102,7 @@ async function _handleResponse(
         );
       }
 
-      log.warn(
+      logger.warn(
         `Attempt ${currentAttempt}/${maxRetries} for ${url} failed with status ${response.status}. Retrying in ${waitTimeMs}ms... Error body preview: ${bodyText.substring(0, 100)}`
       );
       await new Promise((resolve) => setTimeout(resolve, waitTimeMs));
@@ -123,11 +123,11 @@ async function _handleResponse(
     throw err;
   }
 
-  log.debug(
+  logger.debug(
     `fetchWithRetry: Attempt ${currentAttempt}/${maxRetries} for ${url} - Request successful (status ${response.status}). Parsing JSON response.`
   );
   const responseData = await response.json();
-  log.debug(
+  logger.debug(
     `fetchWithRetry: Successfully fetched and parsed JSON from ${url} after ${currentAttempt} attempt(s).`
   );
   return { retry: false, data: responseData };
@@ -141,7 +141,7 @@ async function _handleResponse(
  * @param {number} maxRetries Maximum allowed retries.
  * @param {number} baseDelayMs Base delay in milliseconds for retries.
  * @param {number} maxDelayMs Maximum delay in milliseconds between retries.
- * @param {import('../interfaces/coreServices.js').ILogger} log Logger instance.
+ * @param {import('../interfaces/coreServices.js').ILogger} logger Logger instance.
  * @returns {Promise<{retried: boolean, isNetworkError: boolean}>} Whether a retry was performed and if the error was network-related.
  * @private
  */
@@ -152,7 +152,7 @@ async function _handleNetworkError(
   maxRetries,
   baseDelayMs,
   maxDelayMs,
-  log
+  logger
 ) {
   const isNetworkError =
     error instanceof TypeError &&
@@ -165,7 +165,7 @@ async function _handleNetworkError(
       baseDelayMs,
       maxDelayMs
     );
-    log.warn(
+    logger.warn(
       `fetchWithRetry: Attempt ${currentAttempt}/${maxRetries} for ${url} failed with network error: ${error.message}. Retrying in ${waitTimeMs}ms...`
     );
     await new Promise((resolve) => setTimeout(resolve, waitTimeMs));
@@ -184,7 +184,7 @@ async function _handleNetworkError(
  * @param {number} baseDelayMs Base delay in milliseconds for retries.
  * @param {number} maxDelayMs Maximum backoff delay in milliseconds.
  * @param {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} safeEventDispatcher Dispatcher for error events.
- * @param {import('../interfaces/coreServices.js').ILogger} log Logger instance.
+ * @param {import('../interfaces/coreServices.js').ILogger} logger Logger instance.
  * @param {typeof fetch} fetchFn Fetch implementation.
  * @returns {Promise<{retry: boolean, data?: any}>} Result of the attempt.
  * @private
@@ -197,11 +197,11 @@ async function performFetchAttempt(
   baseDelayMs,
   maxDelayMs,
   safeEventDispatcher,
-  log,
+  logger,
   fetchFn
 ) {
   try {
-    log.debug(
+    logger.debug(
       `Attempt ${currentAttempt}/${maxRetries} - Fetching ${options.method || 'GET'} ${url}`
     );
     const response = await fetchFn(url, options);
@@ -213,7 +213,7 @@ async function performFetchAttempt(
       baseDelayMs,
       maxDelayMs,
       safeEventDispatcher,
-      log
+      logger
     );
   } catch (error) {
     if (error.message.startsWith('API request to')) {
@@ -227,7 +227,7 @@ async function performFetchAttempt(
       maxRetries,
       baseDelayMs,
       maxDelayMs,
-      log
+      logger
     );
     if (retried) {
       return { retry: true };
@@ -283,9 +283,9 @@ export async function fetchWithRetry(
   logger,
   fetchFn = fetch
 ) {
-  const log = getModuleLogger('fetchWithRetry', logger);
+  const moduleLogger = getModuleLogger('fetchWithRetry', logger);
 
-  log.debug(
+  moduleLogger.debug(
     `fetchWithRetry: Initiating request sequence for ${url} with maxRetries=${maxRetries}, baseDelayMs=${baseDelayMs}, maxDelayMs=${maxDelayMs}.`
   );
 
@@ -299,7 +299,7 @@ export async function fetchWithRetry(
       baseDelayMs,
       maxDelayMs,
       safeEventDispatcher,
-      log,
+      moduleLogger,
       fetchFn
     );
 
