@@ -1,4 +1,5 @@
 import { deepFreeze } from '../utils/cloneUtils.js'; // Import directly to avoid circular dependency
+import { extractModId } from '../utils/idUtils.js';
 
 /**
  * Represents the immutable template/definition of an entity.
@@ -76,8 +77,7 @@ class EntityDefinition {
    * @returns {string | undefined} The mod ID, or undefined if the ID format is unexpected.
    */
   get modId() {
-    const parts = this.id.split(':');
-    return parts.length > 1 ? parts[0] : undefined;
+    return extractModId(this.id);
   }
 
   /**
