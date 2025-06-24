@@ -5,6 +5,7 @@
 import { safeResolvePath } from './objectUtils.js';
 import { resolveEntityNameFallback } from './entityNameFallbackUtils.js';
 import { ensureValidLogger } from './loggerUtils.js';
+import { parsePlaceholderKey } from './placeholderParsing.js';
 
 /**
  * Regex to find placeholders like {path.to.value} within a string.
@@ -22,20 +23,6 @@ export const PLACEHOLDER_FIND_REGEX = /{\s*([^}\s]+)\s*}/g;
  * @type {RegExp}
  */
 export const FULL_STRING_PLACEHOLDER_REGEX = /^{\s*([^}\s]+)\s*}$/;
-
-/**
- * Parses a placeholder key and determines whether it is optional.
- *
- * @description Trims whitespace, removes a trailing `?` if present,
- * and flags the key as optional when applicable.
- * @param {string} key - Raw placeholder key.
- * @returns {{ key: string, optional: boolean }} Parsed key and optional flag.
- */
-export function parsePlaceholderKey(key) {
-  const trimmed = key.trim();
-  const optional = trimmed.endsWith('?');
-  return { key: optional ? trimmed.slice(0, -1) : trimmed, optional };
-}
 
 /**
  * @class PlaceholderResolver
@@ -70,40 +57,6 @@ export class PlaceholderResolver {
    * @returns {{sources: object[], fallback: object}} Sources array and fallback
    *   object for {@link PlaceholderResolver#resolveStructure}.
    */
-  static buildResolutionSources(executionContext) {
-    const contextSource = {
-      context:
-        executionContext?.evaluationContext?.context &&
-        typeof executionContext.evaluationContext.context === 'object'
-          ? executionContext.evaluationContext.context
-          : {},
-    };
-
-    const fallback = {};
-    const actorName = resolveEntityNameFallback('actor.name', executionContext);
-    if (actorName !== undefined) {
-      fallback.actor = { name: actorName };
-    }
-    const targetName = resolveEntityNameFallback(
-      'target.name',
-      executionContext
-    );
-    if (targetName !== undefined) {
-      if (!fallback.target) fallback.target = {};
-      fallback.target.name = targetName;
-    }
-
-    const baseSource = { ...(executionContext ?? {}) };
-    delete baseSource.context;
-    const rootContextSource =
-      executionContext &&
-      Object.prototype.hasOwnProperty.call(executionContext, 'context')
-        ? { context: executionContext.context }
-        : {};
-    const sources = [rootContextSource, baseSource, contextSource];
-
-    return { sources, fallback };
-  }
 
   /**
    * Extracts the effective root and path when handling `context.` placeholders.

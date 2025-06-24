@@ -12,11 +12,13 @@ import {
   resolvePlaceholders,
 } from '../../../src/utils/contextUtils.js';
 import { PlaceholderResolver } from '../../../src/utils/placeholderResolverUtils.js';
+import { buildResolutionSources } from '../../../src/utils/placeholderSources.js';
 import { getEntityDisplayName } from '../../../src/utils/entityUtils.js';
 import { NAME_COMPONENT_ID } from '../../../src/constants/componentIds.js';
 
 // Mock dependencies
 jest.mock('../../../src/utils/placeholderResolverUtils.js');
+jest.mock('../../../src/utils/placeholderSources.js');
 jest.mock('../../../src/utils/entityUtils.js');
 
 const mockLogger = {
@@ -193,7 +195,7 @@ describe('contextUtils.js', () => {
         sources: [{ a: 1 }],
         fallback: { b: 2 },
       });
-      PlaceholderResolver.buildResolutionSources = mockBuildResolutionSources;
+      buildResolutionSources.mockImplementation(mockBuildResolutionSources);
     });
 
     test('should instantiate PlaceholderResolver with the provided logger', () => {

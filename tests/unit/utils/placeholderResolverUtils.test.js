@@ -8,10 +8,9 @@ import {
   beforeEach,
   afterEach,
 } from '@jest/globals';
-import {
-  PlaceholderResolver,
-  parsePlaceholderKey,
-} from '../../../src/utils/placeholderResolverUtils.js'; // Adjust path as needed
+import { PlaceholderResolver } from '../../../src/utils/placeholderResolverUtils.js';
+import { parsePlaceholderKey } from '../../../src/utils/placeholderParsing.js';
+import { buildResolutionSources } from '../../../src/utils/placeholderSources.js';
 import { createMockLogger } from '../testUtils.js'; // Adjust path as needed (assuming testUtils.js from previous adjustment)
 import * as loggerUtils from '../../../src/utils/loggerUtils.js';
 import { NAME_COMPONENT_ID } from '../../../src/constants/componentIds.js';
@@ -325,8 +324,7 @@ describe('PlaceholderResolver', () => {
         evaluationContext: { context: { val: 'foo' } },
         actor: { components: { [NAME_COMPONENT_ID]: { text: 'Hero' } } },
       };
-      const { sources, fallback } =
-        PlaceholderResolver.buildResolutionSources(executionContext);
+      const { sources, fallback } = buildResolutionSources(executionContext);
       const result = resolver.resolveStructure(
         '{context.val} {actor.name}',
         sources,
