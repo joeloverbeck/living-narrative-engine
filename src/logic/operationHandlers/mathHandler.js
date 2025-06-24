@@ -20,6 +20,92 @@ import { assertParamsObject } from '../../utils/handlerUtils/paramsUtils.js';
  */
 
 /**
+ * Resolve an operand value which may be a literal number, a variable reference
+ * or a nested expression.
+ *
+ * @description Exported for unit testing.
+ * @param {number|object} operand - Operand to resolve.
+ * @param {object} ctx - Evaluation context passed to json-logic.
+ * @param {ILogger} logger - Logger for warnings.
+ * @param {ISafeEventDispatcher} dispatcher - Dispatcher for error events.
+ * @returns {number} Resolved numeric value or `NaN` on failure.
+ */
+export function resolveOperand(operand, ctx, logger, dispatcher) {
+  if (typeof operand === 'number') return operand;
+  if (operand && typeof operand === 'object') {
+    if (Object.prototype.hasOwnProperty.call(operand, 'var')) {
+      try {
+        const raw = jsonLogic.apply({ var: operand.var }, ctx);
+        const num = Number(raw);
+        return Number.isNaN(num) ? NaN : num;
+      } catch (e) {
+        safeDispatchError(
+          dispatcher,
+          'MATH: Error resolving variable operand.',
+          { error: e.message, stack: e.stack }
+        );
+        return NaN;
+      }
+    }
+    if (operand.operator) {
+      return evaluateExpression(operand, ctx, logger, dispatcher);
+    }
+  }
+  logger.warn('MATH: Invalid operand encountered.', { operand });
+  return NaN;
+}
+
+/**
+ * Recursively evaluate a {@link MathExpression}.
+ *
+ * @description Exported for unit testing.
+ * @param {MathExpression} expr - Expression to evaluate.
+ * @param {object} ctx - Evaluation context used for variable resolution.
+ * @param {ILogger} logger - Logger for warnings.
+ * @param {ISafeEventDispatcher} dispatcher - Dispatcher for error events.
+ * @returns {number} The numeric result or `NaN` if evaluation fails.
+ */
+export function evaluateExpression(expr, ctx, logger, dispatcher) {
+  if (!expr || typeof expr !== 'object') return NaN;
+  const { operator, operands } = expr;
+  if (!Array.isArray(operands) || operands.length !== 2) return NaN;
+  const left = resolveOperand(operands[0], ctx, logger, dispatcher);
+  const right = resolveOperand(operands[1], ctx, logger, dispatcher);
+  if (
+    typeof left !== 'number' ||
+    typeof right !== 'number' ||
+    Number.isNaN(left) ||
+    Number.isNaN(right)
+  ) {
+    logger.warn('MATH: operands must resolve to numbers.', { left, right });
+    return NaN;
+  }
+  switch (operator) {
+    case 'add':
+      return left + right;
+    case 'subtract':
+      return left - right;
+    case 'multiply':
+      return left * right;
+    case 'divide':
+      if (right === 0) {
+        logger.warn('MATH: Division by zero.');
+        return NaN;
+      }
+      return left / right;
+    case 'modulo':
+      if (right === 0) {
+        logger.warn('MATH: Modulo by zero.');
+        return NaN;
+      }
+      return left % right;
+    default:
+      logger.warn(`MATH: Unknown operator '${operator}'.`);
+      return NaN;
+  }
+}
+
+/**
  * @class MathHandler
  * @description Evaluates a recursive math expression and stores the numeric result in a context variable.
  */
@@ -64,9 +150,11 @@ class MathHandler extends BaseOperationHandler {
       return;
     }
 
-    const value = this.#evaluate(
+    const value = evaluateExpression(
       expression,
-      executionContext.evaluationContext
+      executionContext.evaluationContext,
+      log,
+      this.#dispatcher
     );
     const finalNumber =
       typeof value === 'number' && !Number.isNaN(value) ? value : null;
@@ -85,89 +173,7 @@ class MathHandler extends BaseOperationHandler {
     }
   }
 
-  /**
-   * Recursively evaluate a MathExpression.
-   *
-   * @private
-   * @param {MathExpression} expr
-   * @param {object} ctx
-   * @returns {number}
-   */
-  #evaluate(expr, ctx) {
-    if (!expr || typeof expr !== 'object') return NaN;
-    const { operator, operands } = expr;
-    if (!Array.isArray(operands) || operands.length !== 2) return NaN;
-    const left = this.#resolveOperand(operands[0], ctx);
-    const right = this.#resolveOperand(operands[1], ctx);
-    if (
-      typeof left !== 'number' ||
-      typeof right !== 'number' ||
-      Number.isNaN(left) ||
-      Number.isNaN(right)
-    ) {
-      this.logger.warn('MATH: operands must resolve to numbers.', {
-        left,
-        right,
-      });
-      return NaN;
-    }
-    switch (operator) {
-      case 'add':
-        return left + right;
-      case 'subtract':
-        return left - right;
-      case 'multiply':
-        return left * right;
-      case 'divide':
-        if (right === 0) {
-          this.logger.warn('MATH: Division by zero.');
-          return NaN;
-        }
-        return left / right;
-      case 'modulo':
-        if (right === 0) {
-          this.logger.warn('MATH: Modulo by zero.');
-          return NaN;
-        }
-        return left % right;
-      default:
-        this.logger.warn(`MATH: Unknown operator '${operator}'.`);
-        return NaN;
-    }
-  }
-
-  /**
-   * Resolve an operand which may be a number, var reference or nested expression.
-   *
-   * @private
-   * @param {number|object} operand
-   * @param {object} ctx
-   * @returns {number}
-   */
-  #resolveOperand(operand, ctx) {
-    if (typeof operand === 'number') return operand;
-    if (operand && typeof operand === 'object') {
-      if (Object.prototype.hasOwnProperty.call(operand, 'var')) {
-        try {
-          const raw = jsonLogic.apply({ var: operand.var }, ctx);
-          const num = Number(raw);
-          return Number.isNaN(num) ? NaN : num;
-        } catch (e) {
-          safeDispatchError(
-            this.#dispatcher,
-            'MATH: Error resolving variable operand.',
-            { error: e.message, stack: e.stack }
-          );
-          return NaN;
-        }
-      }
-      if (operand.operator) {
-        return this.#evaluate(operand, ctx);
-      }
-    }
-    this.logger.warn('MATH: Invalid operand encountered.', { operand });
-    return NaN;
-  }
+  // Private evaluation helpers removed in favor of external functions.
 }
 
 export default MathHandler;
