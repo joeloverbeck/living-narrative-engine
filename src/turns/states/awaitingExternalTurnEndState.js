@@ -145,8 +145,11 @@ export class AwaitingExternalTurnEndState extends AbstractTurnState {
     if (ctx?.isAwaitingExternalEvent()) {
       try {
         ctx.setAwaitingExternalEvent(false, ctx.getActor().id);
-      } catch {
-        /* ignore */
+      } catch (err) {
+        getLogger(ctx, this._handler).warn(
+          `${this.getStateName()}: failed to clear awaitingExternalEvent flag – ${err.message}`,
+          err
+        );
       }
     }
   }
