@@ -181,7 +181,7 @@ describe('CheckFollowCycleHandler', () => {
         expect(mockDispatcher.dispatch).toHaveBeenCalledWith(
           SYSTEM_ERROR_OCCURRED_ID,
           expect.objectContaining({
-            message: `CHECK_FOLLOW_CYCLE: Invalid "${paramName}" parameter`,
+            message: `Invalid "${paramName}" parameter`,
           })
         );
         expect(mockExecutionContext.evaluationContext.context).toEqual({});

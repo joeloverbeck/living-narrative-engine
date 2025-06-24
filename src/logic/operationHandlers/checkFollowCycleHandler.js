@@ -13,7 +13,10 @@ import BaseOperationHandler from './baseOperationHandler.js';
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 import { wouldCreateCycle } from '../../utils/followUtils.js';
 import { tryWriteContextVariable } from '../../utils/contextVariableUtils.js';
-import { assertParamsObject } from '../../utils/handlerUtils/indexUtils.js';
+import {
+  assertParamsObject,
+  validateStringParam,
+} from '../../utils/handlerUtils/paramsUtils.js';
 
 /**
  * @typedef {object} CheckFollowCycleParams
@@ -57,36 +60,30 @@ class CheckFollowCycleHandler extends BaseOperationHandler {
 
     const { follower_id, leader_id, result_variable } = params;
 
-    if (typeof follower_id !== 'string' || !follower_id.trim()) {
-      safeDispatchError(
-        this.#dispatcher,
-        'CHECK_FOLLOW_CYCLE: Invalid "follower_id" parameter',
-        { params },
-        log
-      );
-      return;
-    }
-    if (typeof leader_id !== 'string' || !leader_id.trim()) {
-      safeDispatchError(
-        this.#dispatcher,
-        'CHECK_FOLLOW_CYCLE: Invalid "leader_id" parameter',
-        { params },
-        log
-      );
-      return;
-    }
-    if (typeof result_variable !== 'string' || !result_variable.trim()) {
-      safeDispatchError(
-        this.#dispatcher,
-        'CHECK_FOLLOW_CYCLE: Invalid "result_variable" parameter',
-        { params },
-        log
-      );
-      return;
-    }
+    const followerId = validateStringParam(
+      follower_id,
+      'follower_id',
+      log,
+      this.#dispatcher
+    );
+    if (!followerId) return;
 
-    const followerId = follower_id.trim();
-    const leaderId = leader_id.trim();
+    const leaderId = validateStringParam(
+      leader_id,
+      'leader_id',
+      log,
+      this.#dispatcher
+    );
+    if (!leaderId) return;
+
+    const resultVar = validateStringParam(
+      result_variable,
+      'result_variable',
+      log,
+      this.#dispatcher
+    );
+    if (!resultVar) return;
+
     log.debug(
       `CHECK_FOLLOW_CYCLE: Checking cycle for follower=${followerId}, leader=${leaderId}`
     );
@@ -99,7 +96,7 @@ class CheckFollowCycleHandler extends BaseOperationHandler {
     const result = { success: true, cycleDetected };
 
     const res = tryWriteContextVariable(
-      result_variable,
+      resultVar,
       result,
       executionContext,
       this.#dispatcher,
@@ -107,7 +104,7 @@ class CheckFollowCycleHandler extends BaseOperationHandler {
     );
     if (res.success) {
       log.debug(
-        `CHECK_FOLLOW_CYCLE: Stored result in "${result_variable}": ${JSON.stringify(result)}`
+        `CHECK_FOLLOW_CYCLE: Stored result in "${resultVar}": ${JSON.stringify(result)}`
       );
     }
   }
