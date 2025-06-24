@@ -20,8 +20,6 @@ let mockSystemInitializer;
 let mockWorldInitializer;
 let mockDomUiFacade;
 let mockLlmAdapter;
-let mockSchemaValidator;
-let mockConfiguration;
 let mockDataRegistry;
 let mockScopeRegistry;
 
@@ -63,20 +61,6 @@ describe('InitializationService', () => {
       isInitialized: jest.fn().mockReturnValue(false),
       isOperational: jest.fn().mockReturnValue(false),
     };
-    mockSchemaValidator = {
-      validate: jest.fn().mockReturnValue({ isValid: true, errors: null }),
-      addSchema: jest.fn(),
-      isSchemaLoaded: jest.fn().mockReturnValue(true),
-      getValidator: jest.fn(),
-    };
-    mockConfiguration = {
-      getContentTypeSchemaId: jest.fn((registryKey) => {
-        if (registryKey === 'llm-configs') {
-          return 'http://example.com/schemas/llm-configs.schema.json';
-        }
-        return `http://example.com/schemas/${registryKey}.schema.json`;
-      }),
-    };
     mockDataRegistry = {
       get: jest.fn().mockReturnValue({}), // Default to empty object, specific tests can override
       getAll: jest.fn().mockReturnValue([]), // Return empty array for scopes
@@ -103,15 +87,9 @@ describe('InitializationService', () => {
             return mockLogger;
           case tokens.LLMAdapter:
             return mockLlmAdapter;
-          case tokens.ISchemaValidator:
-            return mockSchemaValidator;
-          case tokens.IConfiguration:
-            return mockConfiguration;
-          case tokens.ISafeEventDispatcher:
+          case tokens.LlmConfigLoader:
             return {
-              subscribe: jest.fn(),
-              unsubscribe: jest.fn(),
-              dispatch: jest.fn(),
+              loadConfigs: jest.fn(),
             };
           case tokens.IEntityManager:
             return { getEntityInstance: jest.fn() };
@@ -153,10 +131,10 @@ describe('InitializationService', () => {
             return mockLogger;
           case tokens.LLMAdapter:
             return mockLlmAdapter;
-          case tokens.ISchemaValidator:
-            return mockSchemaValidator;
-          case tokens.IConfiguration:
-            return mockConfiguration;
+          case tokens.LlmConfigLoader:
+            return {
+              loadConfigs: jest.fn(),
+            };
           case tokens.ISafeEventDispatcher:
             return {
               subscribe: jest.fn(),
@@ -208,9 +186,7 @@ describe('InitializationService', () => {
         tokens.IScopeRegistry,
         tokens.IDataRegistry, // For ScopeRegistry
         tokens.LLMAdapter,
-        tokens.ISchemaValidator, // by LlmConfigLoader
-        tokens.IConfiguration, // by LlmConfigLoader
-        tokens.ISafeEventDispatcher, // by LlmConfigLoader
+        tokens.LlmConfigLoader,
         tokens.SystemInitializer,
         tokens.WorldInitializer,
         tokens.ISafeEventDispatcher, // for AI Listeners

@@ -124,6 +124,9 @@ beforeEach(() => {
     unsubscribe: jest.fn(),
     dispatch: jest.fn(),
   });
+  container.register(tokens.LlmConfigLoader, {
+    loadConfigs: jest.fn(),
+  });
   container.register(tokens.IEntityManager, { getEntityInstance: jest.fn() });
 
   // Register the new mocks

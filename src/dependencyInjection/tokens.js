@@ -205,6 +205,7 @@ export const tokens = freeze({
   ScopeLoader: 'ScopeLoader',
   ModsLoader: 'ModsLoader',
   GameConfigLoader: 'GameConfigLoader',
+  LlmConfigLoader: 'LlmConfigLoader',
   PromptTextLoader: 'PromptTextLoader',
   ModManifestLoader: 'ModManifestLoader',
   ModDependencyValidator: 'ModDependencyValidator',

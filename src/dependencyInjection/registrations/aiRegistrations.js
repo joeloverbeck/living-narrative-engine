@@ -62,6 +62,7 @@ import { PerceptionLogFormatter } from '../../formatting/perceptionLogFormatter.
 import { GameStateValidationServiceForPrompting } from '../../validation/gameStateValidationServiceForPrompting.js';
 import { HttpConfigurationProvider } from '../../configuration/httpConfigurationProvider.js';
 import { LLMConfigService } from '../../llms/llmConfigService.js';
+import { LlmConfigLoader } from '../../llms/services/llmConfigLoader.js';
 import { PlaceholderResolver } from '../../utils/placeholderResolverUtils.js';
 import { StandardElementAssembler } from '../../prompting/assembling/standardElementAssembler.js';
 import {
@@ -197,6 +198,17 @@ export function registerAI(container) {
       configSourceIdentifier: './config/llm-configs.json',
     });
   });
+
+  r.singletonFactory(
+    tokens.LlmConfigLoader,
+    (c) =>
+      new LlmConfigLoader({
+        logger: c.resolve(tokens.ILogger),
+        schemaValidator: c.resolve(tokens.ISchemaValidator),
+        configuration: c.resolve(tokens.IConfiguration),
+        safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+      })
+  );
 
   r.singletonFactory(
     tokens.PlaceholderResolver,

@@ -13,7 +13,6 @@
 /** @typedef {import('../../interfaces/IInitializationService.js').InitializationResult} InitializationResult */
 import { IInitializationService } from '../../interfaces/IInitializationService.js';
 import { tokens } from '../../dependencyInjection/tokens.js';
-import { LlmConfigLoader } from '../../llms/services/llmConfigLoader.js';
 import { ThoughtPersistenceListener } from '../../ai/thoughtPersistenceListener.js';
 import { NotesPersistenceListener } from '../../ai/notesPersistenceListener.js';
 import { ACTION_DECIDED_ID } from '../../constants/eventIds.js';
@@ -160,16 +159,11 @@ class InitializationService extends IInitializationService {
             'InitializationService: ConfigurableLLMAdapter already initialized. Skipping re-initialization.'
           );
         } else {
-          const llmConfigLoaderInstance = new LlmConfigLoader({
-            logger: this.#container.resolve(tokens.ILogger),
-            schemaValidator: this.#container.resolve(tokens.ISchemaValidator),
-            configuration: this.#container.resolve(tokens.IConfiguration),
-            safeEventDispatcher: this.#container.resolve(
-              tokens.ISafeEventDispatcher
-            ),
-          });
+          const llmConfigLoaderInstance = this.#container.resolve(
+            tokens.LlmConfigLoader
+          );
           this.#logger.debug(
-            'InitializationService: LlmConfigLoader instance created for adapter initialization.'
+            'InitializationService: LlmConfigLoader instance created for adapter initialization via DI.'
           );
 
           await llmAdapter.init({ llmConfigLoader: llmConfigLoaderInstance });
