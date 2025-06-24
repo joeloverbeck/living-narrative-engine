@@ -151,7 +151,7 @@ describe('SpatialIndexSynchronizer', () => {
     });
   });
 
-  describe('onComponentChanged (component:added/removed events)', () => {
+  describe('onPositionChanged (component:added/removed events)', () => {
     beforeEach(() => {
       synchronizer = initializeSynchronizer();
     });
