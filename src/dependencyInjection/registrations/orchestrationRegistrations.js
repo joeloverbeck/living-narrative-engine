@@ -35,11 +35,19 @@ export function registerOrchestration(container) {
     logger.debug(
       `Orchestration Registration: Factory creating ${tokens.IInitializationService}...`
     );
-    // Ensure all dependencies are resolved using the CORRECT tokens
     const initLogger = c.resolve(tokens.ILogger);
-    const initDispatcher = c.resolve(tokens.IValidatedEventDispatcher); // <<< CORRECTED TOKEN HERE
+    const initDispatcher = c.resolve(tokens.IValidatedEventDispatcher);
+    const modsLoader = c.resolve(tokens.ModsLoader);
+    const scopeRegistry = c.resolve(tokens.IScopeRegistry);
+    const dataRegistry = c.resolve(tokens.IDataRegistry);
+    const llmAdapter = c.resolve(tokens.LLMAdapter);
+    const llmConfigLoader = c.resolve(tokens.LlmConfigLoader);
+    const systemInitializer = c.resolve(tokens.SystemInitializer);
+    const worldInitializer = c.resolve(tokens.WorldInitializer);
+    const safeEventDispatcher = c.resolve(tokens.ISafeEventDispatcher);
+    const entityManager = c.resolve(tokens.IEntityManager);
+    const domUiFacade = c.resolve(tokens.DomUiFacade);
 
-    // Validate resolved dependencies before passing to constructor (optional but good practice)
     if (!initLogger)
       throw new Error(
         `InitializationService Factory: Failed to resolve dependency: ${tokens.ILogger}`
@@ -48,11 +56,31 @@ export function registerOrchestration(container) {
       throw new Error(
         `InitializationService Factory: Failed to resolve dependency: ${tokens.IValidatedEventDispatcher}`
       );
-
+    if (!modsLoader)
+      throw new Error(
+        `InitializationService Factory: Failed to resolve dependency: ${tokens.ModsLoader}`
+      );
+    if (!systemInitializer)
+      throw new Error(
+        `InitializationService Factory: Failed to resolve dependency: ${tokens.SystemInitializer}`
+      );
+    if (!worldInitializer)
+      throw new Error(
+        `InitializationService Factory: Failed to resolve dependency: ${tokens.WorldInitializer}`
+      );
     return new InitializationService({
-      container: c, // Pass the container itself
       logger: initLogger,
       validatedEventDispatcher: initDispatcher,
+      modsLoader,
+      scopeRegistry,
+      dataRegistry,
+      llmAdapter,
+      llmConfigLoader,
+      systemInitializer,
+      worldInitializer,
+      safeEventDispatcher,
+      entityManager,
+      domUiFacade,
     });
   });
   logger.debug(

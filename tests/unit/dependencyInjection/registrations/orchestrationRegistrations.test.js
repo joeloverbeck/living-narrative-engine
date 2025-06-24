@@ -43,6 +43,32 @@ describe('registerOrchestration', () => {
 
     container.register(tokens.ILogger, () => mockLogger);
     container.register(tokens.IValidatedEventDispatcher, () => mockDispatcher);
+    container.register(tokens.ModsLoader, () => ({ loadMods: jest.fn() }));
+    container.register(tokens.IScopeRegistry, () => ({
+      initialize: jest.fn(),
+    }));
+    container.register(tokens.IDataRegistry, () => ({
+      getAll: jest.fn().mockReturnValue([]),
+    }));
+    container.register(tokens.LLMAdapter, () => ({
+      init: jest.fn(),
+      isInitialized: jest.fn(),
+      isOperational: jest.fn(),
+    }));
+    container.register(tokens.LlmConfigLoader, () => ({
+      loadConfigs: jest.fn(),
+    }));
+    container.register(tokens.SystemInitializer, () => ({
+      initializeAll: jest.fn(),
+    }));
+    container.register(tokens.WorldInitializer, () => ({
+      initializeWorldEntities: jest.fn(),
+    }));
+    container.register(tokens.ISafeEventDispatcher, () => ({
+      subscribe: jest.fn(),
+    }));
+    container.register(tokens.IEntityManager, () => ({}));
+    container.register(tokens.DomUiFacade, () => ({}));
     container.register(tokens.GameLoop, () => mockGameLoop);
   });
 
@@ -85,6 +111,26 @@ describe('registerOrchestration', () => {
     const badContainer = new AppContainer();
     badContainer.register(tokens.ILogger, () => mockLogger);
     badContainer.register(tokens.IValidatedEventDispatcher, () => undefined);
+    badContainer.register(tokens.ModsLoader, () => ({ loadMods: jest.fn() }));
+    badContainer.register(tokens.IScopeRegistry, () => ({
+      initialize: jest.fn(),
+    }));
+    badContainer.register(tokens.IDataRegistry, () => ({ getAll: jest.fn() }));
+    badContainer.register(tokens.LLMAdapter, () => ({ init: jest.fn() }));
+    badContainer.register(tokens.LlmConfigLoader, () => ({
+      loadConfigs: jest.fn(),
+    }));
+    badContainer.register(tokens.SystemInitializer, () => ({
+      initializeAll: jest.fn(),
+    }));
+    badContainer.register(tokens.WorldInitializer, () => ({
+      initializeWorldEntities: jest.fn(),
+    }));
+    badContainer.register(tokens.ISafeEventDispatcher, () => ({
+      subscribe: jest.fn(),
+    }));
+    badContainer.register(tokens.IEntityManager, () => ({}));
+    badContainer.register(tokens.DomUiFacade, () => ({}));
     badContainer.register(tokens.GameLoop, () => mockGameLoop);
 
     registerOrchestration(badContainer);
@@ -101,6 +147,26 @@ describe('registerOrchestration', () => {
       tokens.IValidatedEventDispatcher,
       () => mockDispatcher
     );
+    badContainer.register(tokens.ModsLoader, () => ({ loadMods: jest.fn() }));
+    badContainer.register(tokens.IScopeRegistry, () => ({
+      initialize: jest.fn(),
+    }));
+    badContainer.register(tokens.IDataRegistry, () => ({ getAll: jest.fn() }));
+    badContainer.register(tokens.LLMAdapter, () => ({ init: jest.fn() }));
+    badContainer.register(tokens.LlmConfigLoader, () => ({
+      loadConfigs: jest.fn(),
+    }));
+    badContainer.register(tokens.SystemInitializer, () => ({
+      initializeAll: jest.fn(),
+    }));
+    badContainer.register(tokens.WorldInitializer, () => ({
+      initializeWorldEntities: jest.fn(),
+    }));
+    badContainer.register(tokens.ISafeEventDispatcher, () => ({
+      subscribe: jest.fn(),
+    }));
+    badContainer.register(tokens.IEntityManager, () => ({}));
+    badContainer.register(tokens.DomUiFacade, () => ({}));
     badContainer.register(tokens.GameLoop, () => undefined);
 
     registerOrchestration(badContainer);

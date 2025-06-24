@@ -1,18 +1,18 @@
 // src/initializers/services/initializationService.js
 
 // --- Type Imports ---
-/** @typedef {import('../../dependencyInjection/appContainer.js').default} AppContainer */
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../events/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
 /** @typedef {import('../../loaders/modsLoader.js').default} ModsLoader */
 /** @typedef {import('../systemInitializer.js').default} SystemInitializer */
 /** @typedef {import('../worldInitializer.js').default} WorldInitializer */
 /** @typedef {import('../../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
+/** @typedef {import('../../loaders/llmConfigLoader.js').LlmConfigLoader} LlmConfigLoader */
+/** @typedef {import('../../events/safeEventDispatcher.js').default} ISafeEventDispatcher */
 
 // --- Interface Imports for JSDoc & `extends` ---
 /** @typedef {import('../../interfaces/IInitializationService.js').InitializationResult} InitializationResult */
 import { IInitializationService } from '../../interfaces/IInitializationService.js';
-import { tokens } from '../../dependencyInjection/tokens.js';
 import { ThoughtPersistenceListener } from '../../ai/thoughtPersistenceListener.js';
 import { NotesPersistenceListener } from '../../ai/notesPersistenceListener.js';
 import {
@@ -27,27 +27,52 @@ import {
  * @implements {IInitializationService}
  */
 class InitializationService extends IInitializationService {
-  #container;
   #logger;
   #validatedEventDispatcher;
+  #modsLoader;
+  #scopeRegistry;
+  #dataRegistry;
+  #llmAdapter;
+  #llmConfigLoader;
+  #systemInitializer;
+  #worldInitializer;
+  #safeEventDispatcher;
+  #entityManager;
+  #domUiFacade;
 
   /**
    * Creates a new InitializationService instance.
    *
    * @param {object} dependencies - The required service dependencies.
-   * @param {AppContainer} dependencies.container - The application's dependency container.
    * @param {ILogger} dependencies.logger - The logging service.
    * @param {ValidatedEventDispatcher} dependencies.validatedEventDispatcher - The validated event dispatcher.
+   * @param {ModsLoader} dependencies.modsLoader - Loader for world data mods.
+   * @param {import('../../interfaces/IScopeRegistry.js').IScopeRegistry} dependencies.scopeRegistry - Registry of scopes.
+   * @param {import('../../data/dataRegistry.js').DataRegistry} dependencies.dataRegistry - Data registry instance.
+   * @param {import('../../turns/interfaces/ILLMAdapter.js').ILLMAdapter & {init?: Function, isInitialized?: Function, isOperational?: Function}} dependencies.llmAdapter - LLM adapter instance.
+   * @param {LlmConfigLoader} dependencies.llmConfigLoader - Loader for LLM configuration.
+   * @param {SystemInitializer} dependencies.systemInitializer - Initializes tagged systems.
+   * @param {WorldInitializer} dependencies.worldInitializer - Initializes the game world.
+   * @param {ISafeEventDispatcher} dependencies.safeEventDispatcher - Event dispatcher for safe events.
+   * @param {IEntityManager} dependencies.entityManager - Entity manager instance.
+   * @param {import('../../domUI/domUiFacade.js').DomUiFacade} dependencies.domUiFacade - UI facade instance.
    */
-  constructor({ container, logger, validatedEventDispatcher }) {
+  constructor({
+    logger,
+    validatedEventDispatcher,
+    modsLoader,
+    scopeRegistry,
+    dataRegistry,
+    llmAdapter,
+    llmConfigLoader,
+    systemInitializer,
+    worldInitializer,
+    safeEventDispatcher,
+    entityManager,
+    domUiFacade,
+  }) {
     super();
 
-    if (!container) {
-      const errorMsg =
-        "InitializationService: Missing required dependency 'container'.";
-      console.error(errorMsg);
-      throw new Error(errorMsg);
-    }
     if (
       !logger ||
       typeof logger.error !== 'function' ||
@@ -55,13 +80,6 @@ class InitializationService extends IInitializationService {
     ) {
       const errorMsg =
         "InitializationService: Missing or invalid required dependency 'logger'.";
-      console.error(errorMsg);
-      try {
-        // Attempt to use logger from container if direct one is bad, for this specific error only.
-        container.resolve(tokens.ILogger)?.error(errorMsg);
-      } catch (e) {
-        /* Ignore if container or logger resolution fails */
-      }
       throw new Error(errorMsg);
     }
     this.#logger = logger;
@@ -77,8 +95,72 @@ class InitializationService extends IInitializationService {
       throw new Error(errorMsg);
     }
 
-    this.#container = container;
+    if (!modsLoader || typeof modsLoader.loadMods !== 'function') {
+      throw new Error(
+        "InitializationService: Missing or invalid required dependency 'modsLoader'."
+      );
+    }
+    if (!scopeRegistry || typeof scopeRegistry.initialize !== 'function') {
+      throw new Error(
+        "InitializationService: Missing or invalid required dependency 'scopeRegistry'."
+      );
+    }
+    if (!dataRegistry || typeof dataRegistry.getAll !== 'function') {
+      throw new Error(
+        "InitializationService: Missing or invalid required dependency 'dataRegistry'."
+      );
+    }
+    if (!llmAdapter || typeof llmAdapter.init !== 'function') {
+      throw new Error(
+        "InitializationService: Missing or invalid required dependency 'llmAdapter'."
+      );
+    }
+    if (!llmConfigLoader || typeof llmConfigLoader.loadConfigs !== 'function') {
+      throw new Error(
+        "InitializationService: Missing or invalid required dependency 'llmConfigLoader'."
+      );
+    }
+    if (
+      !systemInitializer ||
+      typeof systemInitializer.initializeAll !== 'function'
+    ) {
+      throw new Error(
+        "InitializationService: Missing or invalid required dependency 'systemInitializer'."
+      );
+    }
+    if (
+      !worldInitializer ||
+      typeof worldInitializer.initializeWorldEntities !== 'function'
+    ) {
+      throw new Error(
+        "InitializationService: Missing or invalid required dependency 'worldInitializer'."
+      );
+    }
+    if (
+      !safeEventDispatcher ||
+      typeof safeEventDispatcher.subscribe !== 'function'
+    ) {
+      throw new Error(
+        "InitializationService: Missing or invalid required dependency 'safeEventDispatcher'."
+      );
+    }
+    if (!entityManager) {
+      throw new Error(
+        "InitializationService: Missing required dependency 'entityManager'."
+      );
+    }
+
     this.#validatedEventDispatcher = validatedEventDispatcher;
+    this.#modsLoader = modsLoader;
+    this.#scopeRegistry = scopeRegistry;
+    this.#dataRegistry = dataRegistry;
+    this.#llmAdapter = llmAdapter;
+    this.#llmConfigLoader = llmConfigLoader;
+    this.#systemInitializer = systemInitializer;
+    this.#worldInitializer = worldInitializer;
+    this.#safeEventDispatcher = safeEventDispatcher;
+    this.#entityManager = entityManager;
+    this.#domUiFacade = domUiFacade;
 
     this.#logger.debug(
       'InitializationService: Instance created successfully with dependencies.'
@@ -112,20 +194,14 @@ class InitializationService extends IInitializationService {
     }
 
     try {
-      this.#logger.debug('Resolving ModsLoader...');
-      const modsLoader = /** @type {ModsLoader} */ (
-        this.#container.resolve(tokens.ModsLoader)
-      );
-      this.#logger.debug('ModsLoader resolved. Loading world data...');
-      const loadReport = await modsLoader.loadMods(worldName); // Schemas are loaded by this point
+      this.#logger.debug('Loading world data via ModsLoader...');
+      const loadReport = await this.#modsLoader.loadMods(worldName); // Schemas are loaded by this point
       this.#logger.debug(
         `InitializationService: World data loaded successfully for world: ${worldName}. Load report: ${JSON.stringify(loadReport)}`
       );
 
       this.#logger.debug('Initializing ScopeRegistry...');
-      const scopeRegistry = this.#container.resolve(tokens.IScopeRegistry);
-      const dataRegistry = this.#container.resolve(tokens.IDataRegistry);
-      const scopes = dataRegistry.getAll('scopes');
+      const scopes = this.#dataRegistry.getAll('scopes');
 
       // Convert array of scope objects to a map by qualified ID
       const scopeMap = {};
@@ -135,7 +211,7 @@ class InitializationService extends IInitializationService {
         }
       });
 
-      scopeRegistry.initialize(scopeMap);
+      this.#scopeRegistry.initialize(scopeMap);
       this.#logger.debug('ScopeRegistry initialized.');
 
       // ***** START: Initialize ConfigurableLLMAdapter *****
@@ -143,9 +219,7 @@ class InitializationService extends IInitializationService {
         'InitializationService: Attempting to initialize ConfigurableLLMAdapter...'
       );
       try {
-        const llmAdapter =
-          /** @type {import('../../turns/interfaces/ILLMAdapter.js').ILLMAdapter & {init?: Function, isInitialized?: Function, isOperational?: Function}} */
-          (this.#container.resolve(tokens.LLMAdapter));
+        const llmAdapter = this.#llmAdapter;
 
         if (!llmAdapter) {
           this.#logger.error(
@@ -163,10 +237,7 @@ class InitializationService extends IInitializationService {
             'InitializationService: ConfigurableLLMAdapter already initialized. Skipping re-initialization.'
           );
         } else {
-          const llmConfigLoaderInstance =
-            /** @type {import('../../llms/services/llmConfigLoader.js').LlmConfigLoader} */ (
-              this.#container.resolve(tokens.LlmConfigLoader)
-            );
+          const llmConfigLoaderInstance = this.#llmConfigLoader;
           this.#logger.debug(
             'InitializationService: LlmConfigLoader resolved from container for adapter initialization.'
           );
@@ -199,27 +270,15 @@ class InitializationService extends IInitializationService {
       }
       // ***** END: Initialize ConfigurableLLMAdapter *****
 
-      this.#logger.debug('Resolving SystemInitializer...');
-      const systemInitializer = /** @type {SystemInitializer} */ (
-        this.#container.resolve(tokens.SystemInitializer)
-      );
-      this.#logger.debug(
-        'SystemInitializer resolved. Initializing tagged systems...'
-      );
-      await systemInitializer.initializeAll();
+      this.#logger.debug('Initializing tagged systems...');
+      await this.#systemInitializer.initializeAll();
       this.#logger.debug(
         'InitializationService: Tagged system initialization complete.'
       );
 
-      this.#logger.debug('Resolving WorldInitializer...');
-      const worldInitializer = /** @type {WorldInitializer} */ (
-        this.#container.resolve(tokens.WorldInitializer)
-      );
-      this.#logger.debug(
-        'WorldInitializer resolved. Initializing world entities...'
-      );
+      this.#logger.debug('Initializing world entities...');
       const worldInitSuccess =
-        await worldInitializer.initializeWorldEntities(worldName);
+        await this.#worldInitializer.initializeWorldEntities(worldName);
       if (!worldInitSuccess) {
         throw new Error('World initialization failed via WorldInitializer.');
       }
@@ -228,13 +287,8 @@ class InitializationService extends IInitializationService {
       );
 
       // Register AI persistence listeners
-      const dispatcher =
-        /** @type {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} */ (
-          this.#container.resolve(tokens.ISafeEventDispatcher)
-        );
-      const entityManager = /** @type {IEntityManager} */ (
-        this.#container.resolve(tokens.IEntityManager)
-      );
+      const dispatcher = this.#safeEventDispatcher;
+      const entityManager = /** @type {IEntityManager} */ (this.#entityManager);
       const thoughtListener = new ThoughtPersistenceListener({
         logger: this.#logger,
         entityManager,
@@ -255,12 +309,12 @@ class InitializationService extends IInitializationService {
       this.#logger.debug('Registered AI persistence listeners.');
 
       this.#logger.debug(
-        'Resolving DomUiFacade to ensure UI components can be instantiated...'
+        'Ensuring DomUiFacade is instantiated so UI components are ready...'
       );
-      this.#container.resolve(tokens.DomUiFacade);
-      this.#logger.debug(
-        'InitializationService: DomUiFacade resolved, UI components instantiated.'
-      );
+      if (!this.#domUiFacade) {
+        throw new Error('Failed to resolve DomUiFacade');
+      }
+      this.#logger.debug('DomUiFacade ready.');
 
       this.#logger.debug(
         `InitializationService: Initialization sequence for world '${worldName}' completed successfully (GameLoop resolution removed).`
