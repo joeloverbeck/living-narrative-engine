@@ -611,18 +611,43 @@ export class SaveGameUI extends SlotModalBase {
    * @async
    */
   async _handleSave() {
+    const currentSaveName = this._validateAndConfirmSave();
+    if (!currentSaveName) return;
+    await this._executeAndFinalizeSave(currentSaveName);
+  }
+
+  /**
+   * Validates preconditions and confirms overwrite if necessary.
+   *
+   * @private
+   * @returns {string | null} Cleaned save name or null if validation fails
+   * or user cancels.
+   */
+  _validateAndConfirmSave() {
     const validationError = this.#validatePreconditions();
     if (validationError) {
       this._displayStatusMessage(validationError, 'error');
-      return;
+      return null;
     }
 
     const currentSaveName = this.elements.saveNameInputEl.value.trim();
 
     if (!this.#confirmOverwrite(currentSaveName)) {
-      return;
+      return null;
     }
 
+    return currentSaveName;
+  }
+
+  /**
+   * Executes the save and finalizes UI updates.
+   *
+   * @private
+   * @async
+   * @param {string} currentSaveName - The validated save name.
+   * @returns {Promise<void>} Resolves when the operation completes.
+   */
+  async _executeAndFinalizeSave(currentSaveName) {
     this._setOperationInProgress(true);
     this._displayStatusMessage(
       `Saving game as "${currentSaveName}"...`,
