@@ -1,7 +1,7 @@
 environment := entities(core:position)[
-    {"and": [ 
-        {"==": [{"var": "entity.components.core:position.locationId"}, 
-        {"var": "location.id"}]}, 
-        {"!=": [{"var": "entity.id"}, {"var": "actor.id"}]} 
-        ]
-    }]
+    {
+  "and": [
+    { "condition_ref": "core:entity-at-location" },
+    { "condition_ref": "core:entity-is-not-actor" }
+  ]
+}]

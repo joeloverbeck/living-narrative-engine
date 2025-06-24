@@ -9,11 +9,12 @@
 import { BaseService } from '../../utils/serviceBase.js';
 import {
   buildActorContext,
-  buildEntityTargetContext,
+  // buildEntityTargetContext - removed as target context no longer needed
 } from './contextBuilders.js';
 import { validateActionInputs } from './inputValidators.js';
 import { formatValidationError } from './validationErrorUtils.js';
-import { ENTITY as TARGET_TYPE_ENTITY } from '../../constants/actionTargetTypes.js';
+// import { ENTITY as TARGET_TYPE_ENTITY } from '../../constants/actionTargetTypes.js';
+// Removed - no longer needed as target context is not built for prerequisites
 
 /**
  * @class ActionValidationContextBuilder
@@ -46,10 +47,14 @@ export class ActionValidationContextBuilder extends BaseService {
   /**
    * Builds the evaluation context object for a given action attempt.
    * This context provides data accessible to JsonLogic rules during validation.
+   * 
+   * Note: Target context has been removed as target filtering is now handled
+   * by the Scope DSL system. Prerequisites should only check actor conditions
+   * and global/contextual state.
    *
    * @param {ActionDefinition} actionDefinition - The definition of the action being attempted.
    * @param {Entity} actor - The entity performing the action.
-   * @param {ActionTargetContext} targetContext - The context of the action's target.
+   * @param {ActionTargetContext} targetContext - The context of the action's target (unused in context building).
    * @returns {JsonLogicEvaluationContext} The constructed context object.
    * @throws {Error} If `actionDefinition`, `actor`, or `targetContext` are invalid.
    */
@@ -58,7 +63,7 @@ export class ActionValidationContextBuilder extends BaseService {
     this.#assertValidInputs(actionDefinition, actor, targetContext);
 
     this.#logger.debug(
-      `ActionValidationContextBuilder: Building context for action '${actionDefinition.id}', actor '${actor.id}', target type '${targetContext.type}'.`
+      `ActionValidationContextBuilder: Building context for action '${actionDefinition.id}', actor '${actor.id}'. Target context is not included in prerequisites as filtering is handled by Scope DSL.`
     );
 
     // --- 2. Build Actor Context ---
@@ -68,24 +73,14 @@ export class ActionValidationContextBuilder extends BaseService {
       this.#logger
     );
 
-    // --- 3. Build Target Context (handles different target types) ---
-    let targetContextForEval = null;
-
-    if (targetContext.type === TARGET_TYPE_ENTITY) {
-      targetContextForEval = this.#buildEntityTargetContextForEval(
-        actionDefinition,
-        targetContext
-      );
-    }
-
-    // --- 4. Assemble Final Context ---
+    // --- 3. Assemble Final Context (Target removed - handled by Scope DSL) ---
     const finalContext = {
       actor: actorContext,
-      target: targetContextForEval,
+      // target: removed - target filtering is now responsibility of Scope DSL
       action: {
         id: actionDefinition.id,
       },
-      // Add other top-level keys for consistency
+      // Add other top-level keys for consistency with existing tests/expectations
       event: null,
       context: {},
       globals: {},
@@ -125,31 +120,6 @@ export class ActionValidationContextBuilder extends BaseService {
     }
   }
 
-  /**
-   * Creates the evaluation target context when the target type is 'entity'.
-   *
-   * @param {ActionDefinition} actionDefinition - Definition of the attempted action.
-   * @param {ActionTargetContext} targetContext - Target context information.
-   * @returns {object|null} The constructed target context or null if entity not found.
-   * @private
-   */
-  #buildEntityTargetContextForEval(actionDefinition, targetContext) {
-    if (!targetContext.entityId) return null;
-
-    const targetEntityInstance = this.#entityManager.getEntityInstance(
-      targetContext.entityId
-    );
-    if (targetEntityInstance) {
-      return buildEntityTargetContext(
-        targetContext.entityId,
-        this.#entityManager,
-        this.#logger
-      );
-    }
-
-    this.#logger.warn(
-      `ActionValidationContextBuilder: Target entity '${targetContext.entityId}' not found for action '${actionDefinition.id}'. Context will have null target entity data.`
-    );
-    return null;
-  }
+  // #buildEntityTargetContextForEval method removed - target context no longer 
+  // needed in prerequisites as target filtering is handled by Scope DSL
 }

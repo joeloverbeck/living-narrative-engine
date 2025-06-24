@@ -43,7 +43,7 @@ const environmentScopeContent = fs.readFileSync(
   'utf8'
 );
 const directionsScopeContent = fs.readFileSync(
-  path.resolve(__dirname, '../../../data/mods/core/scopes/directions.scope'),
+  path.resolve(__dirname, '../../../data/mods/core/scopes/clear_directions.scope'),
   'utf8'
 );
 
@@ -82,16 +82,16 @@ describe('Scope Integration Tests', () => {
       'environment.scope'
     );
     const directionDefs = parseScopeDefinitions(
-      directionsScopeContent,
-      'directions.scope'
-    );
+  directionsScopeContent,
+  'clear_directions.scope'
+);
 
     // FIX: Initialize the registry with the *actual* expressions, not the file content,
     // and map the name from the file ('environments') to the name the action expects ('environment').
     scopeRegistry.initialize({
       followers: { expr: followerDefs.get('followers') },
       environment: { expr: environmentDefs.get('environments') },
-      directions: { expr: directionDefs.get('directions') },
+      clear_directions: { expr: directionDefs.get('clear_directions') },
     });
 
     // Create a real scope engine
@@ -286,7 +286,7 @@ describe('Scope Integration Tests', () => {
     });
   });
 
-  describe('directions scope', () => {
+  describe('clear_directions scope', () => {
     it('should resolve location exits for go action', async () => {
       const actorId = 'actor1';
       const room1Id = 'room1';
@@ -299,6 +299,7 @@ describe('Scope Integration Tests', () => {
             [NAME_COMPONENT_ID]: { text: 'Actor' },
             [POSITION_COMPONENT_ID]: { locationId: room1Id },
             [LEADING_COMPONENT_ID]: { followers: [] },
+            'core:movement': { locked: false },
           },
         },
         {
@@ -348,7 +349,7 @@ describe('Scope Integration Tests', () => {
       const context = {
         entityManager,
         jsonLogicEval,
-        location: entityManager.getEntityInstance(room1Id),
+        currentLocation: entityManager.getEntityInstance(room1Id),
         actingEntity: actorEntity,
       };
 
@@ -413,7 +414,7 @@ describe('Scope Integration Tests', () => {
       const actorEntity = entityManager.getEntityInstance(actorId);
       const context = {
         entityManager,
-        location: entityManager.getEntityInstance(roomId),
+        currentLocation: entityManager.getEntityInstance(roomId),
         jsonLogicEval,
         actingEntity: actorEntity,
       };
@@ -476,7 +477,7 @@ describe('Scope Integration Tests', () => {
       const context = {
         entityManager,
         jsonLogicEval,
-        location: entityManager.getEntityInstance(room1Id),
+        currentLocation: entityManager.getEntityInstance(room1Id),
         actingEntity: actorEntity,
       };
       const result = await actionDiscoveryService.getValidActions(
@@ -492,7 +493,7 @@ describe('Scope Integration Tests', () => {
       expect(waitActions[0].params?.targetId).toBeUndefined();
     });
 
-    it('should handle "direction" scope (not entity IDs)', async () => {
+    it('should handle "clear_directions" scope (not entity IDs)', async () => {
       const actorId = 'actor1';
       const room1Id = 'room1';
       const room2Id = 'room2';
@@ -504,6 +505,7 @@ describe('Scope Integration Tests', () => {
             [NAME_COMPONENT_ID]: { text: 'Actor' },
             [POSITION_COMPONENT_ID]: { locationId: room1Id },
             [LEADING_COMPONENT_ID]: { followers: [] },
+            'core:movement': { locked: false },
           },
         },
         {
@@ -553,7 +555,7 @@ describe('Scope Integration Tests', () => {
       const context = {
         entityManager,
         jsonLogicEval,
-        location: entityManager.getEntityInstance(room1Id),
+        currentLocation: entityManager.getEntityInstance(room1Id),
         actingEntity: actorEntity,
       };
       const result = await actionDiscoveryService.getValidActions(
@@ -668,7 +670,7 @@ describe('Scope Integration Tests', () => {
       const context = {
         entityManager,
         jsonLogicEval,
-        location: entityManager.getEntityInstance(room1Id),
+        currentLocation: entityManager.getEntityInstance(room1Id),
       };
       // Don't set actingEntity - this should be handled gracefully
       const result = await actionDiscoveryService.getValidActions(

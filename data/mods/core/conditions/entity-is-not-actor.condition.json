@@ -1,0 +1,15 @@
+{
+    "$schema": "http://example.com/schemas/condition.schema.json",
+    "id": "core:entity-is-not-actor",
+    "description": "True when the entity being evaluated is **not** the actor entity.",
+    "logic": {
+        "!=": [
+            {
+                "var": "entity.id"
+            },
+            {
+                "var": "actor.id"
+            }
+        ]
+    }
+}

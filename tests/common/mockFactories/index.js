@@ -1,6 +1,7 @@
 export * from './coreServices.js';
 export * from './loggerMocks.js';
 export * from './eventBusMocks.js';
+export * from './eventBus.js';
 export * from './turnMocks.js';
 export * from './dataFetcherMock.js';
 export * from './loaders.js';
@@ -18,7 +19,10 @@ export { createMockDataFetcher, MockDataFetcher } from './dataFetcherMock.js';
 export {
   createMockValidatedEventDispatcherForIntegration,
   createCapturingEventBus,
+  createMockValidatedEventBus,
 } from './eventBusMocks.js';
+
+export { createEventBus } from './eventBus.js';
 
 export { createLoaderMocks } from './loaders.js';
 

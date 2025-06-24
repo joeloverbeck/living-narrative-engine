@@ -1,0 +1,10 @@
+{
+    "$schema": "http://example.com/schemas/condition.schema.json",
+    "id": "core:entity-has-actor-component",
+    "description": "Checks that the entity has the 'core:actor' component.",
+    "logic": {
+        "!!": {
+            "var": "entity.components.core:actor"
+        }
+    }
+}

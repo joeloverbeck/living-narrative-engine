@@ -5,6 +5,7 @@
 
 /**
  * Custom error for domain/context incompatibility. Carries detailed context about the validation failure.
+ *
  * @export
  */
 export class DomainContextIncompatibilityError extends Error {

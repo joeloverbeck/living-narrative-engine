@@ -9,7 +9,7 @@
   "prerequisites": [
     {
       "logic": {
-        "condition_ref": "core:actor-is-following-someone"
+        "condition_ref": "core:actor-is-following"
       },
       "failure_message": "You are not following anyone."
     }

@@ -22,6 +22,7 @@ import { parseScopeDefinitions } from '../../../src/scopeDsl/scopeDefinitionPars
 import {
   POSITION_COMPONENT_ID,
   NAME_COMPONENT_ID,
+  ACTOR_COMPONENT_ID,
 } from '../../../src/constants/componentIds.js';
 import fs from 'fs';
 import path from 'path';
@@ -41,6 +42,7 @@ describe('Scope Integration Tests', () => {
   let jsonLogicEval;
   let scopeRegistry;
   let scopeEngine;
+  let gameDataRepository;
 
   beforeEach(() => {
     // Restore the mocked logger
@@ -62,23 +64,74 @@ describe('Scope Integration Tests', () => {
       ),
       'utf8'
     );
+    const potentialLeadersScopeContent = fs.readFileSync(
+      path.resolve(
+        __dirname,
+        '../../../data/mods/core/scopes/potential_leaders.scope'
+      ),
+      'utf8'
+    );
     const environmentDefs = parseScopeDefinitions(
       environmentScopeContent,
       'environment.scope'
     );
+    const potentialLeadersDefs = parseScopeDefinitions(
+      potentialLeadersScopeContent,
+      'potential_leaders.scope'
+    );
 
     scopeRegistry.initialize({
       environment: { expr: environmentDefs.get('environment') },
+      potential_leaders: { expr: potentialLeadersDefs.get('potential_leaders') },
     });
 
     // Create a real scope engine
     scopeEngine = new ScopeEngine();
 
-    jsonLogicEval = new JsonLogicEvaluationService({ logger });
     const registry = new InMemoryDataRegistry();
     registry.store('actions', followAction.id, followAction);
 
-    const gameDataRepository = new GameDataRepository(registry, logger);
+    // Load required conditions for the potential_leaders scope
+    registry.store('conditions', 'core:entity-at-location', {
+      id: 'core:entity-at-location',
+      description: "True when the entity's current locationId matches the location under evaluation.",
+      logic: {
+        '==': [
+          { var: 'entity.components.core:position.locationId' },
+          { var: 'location.id' }
+        ]
+      }
+    });
+    registry.store('conditions', 'core:entity-is-not-actor', {
+      id: 'core:entity-is-not-actor',
+      description: 'True when the entity being evaluated is **not** the actor entity.',
+      logic: {
+        '!=': [
+          { var: 'entity.id' },
+          { var: 'actor.id' }
+        ]
+      }
+    });
+    registry.store('conditions', 'core:entity-has-actor-component', {
+      id: 'core:entity-has-actor-component',
+      description: "Checks that the entity has the 'core:actor' component.",
+      logic: {
+        '!!': { var: 'entity.components.core:actor' }
+      }
+    });
+    registry.store('conditions', 'core:entity-is-following-actor', {
+      id: 'core:entity-is-following-actor',
+      description: "Checks if the entity's 'following' component points to the actor's ID.",
+      logic: {
+        '==': [
+          { var: 'entity.components.core:following.leaderId' },
+          { var: 'actor.id' }
+        ]
+      }
+    });
+
+    gameDataRepository = new GameDataRepository(registry, logger);
+    jsonLogicEval = new JsonLogicEvaluationService({ logger, gameDataRepository });
     const domainContextCompatibilityChecker = { check: () => true };
     const prerequisiteEvaluationService = { evaluate: (a, b, c, d) => true };
     const validatedEventDispatcher = {
@@ -134,6 +187,7 @@ describe('Scope Integration Tests', () => {
           components: {
             [NAME_COMPONENT_ID]: { text: 'Target' },
             [POSITION_COMPONENT_ID]: { locationId: room1Id },
+            [ACTOR_COMPONENT_ID]: {},
           },
         },
         {
@@ -151,6 +205,7 @@ describe('Scope Integration Tests', () => {
         location: entityManager.getEntityInstance(room1Id),
         actingEntity: actorEntity,
       };
+
       const result = await actionDiscoveryService.getValidActions(
         actorEntity,
         context
@@ -220,6 +275,7 @@ describe('Scope Integration Tests', () => {
           components: {
             [NAME_COMPONENT_ID]: { text: 'Target' },
             [POSITION_COMPONENT_ID]: { locationId: room2Id },
+            [ACTOR_COMPONENT_ID]: {},
           },
         },
         {

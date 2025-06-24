@@ -1,0 +1,1 @@
+clear_directions := location.core:exits[].target

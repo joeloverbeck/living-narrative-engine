@@ -91,9 +91,13 @@ max_expression_depth = 4 ;
   - `entity`: The current entity being evaluated.
   - `actor`: The entity performing the action.
   - `location`: The location entity where the action is taking place.
+- **Condition References**: JSON Logic filters can reference condition definitions using `condition_ref`:
+  - `[{"condition_ref": "core:target-is-not-self"}]` - reference to a condition file.
+  - `[{"and": [{"condition_ref": "core:target-is-actor"}, {"!=": [{"var": "entity.id"}, {"var": "actor.id"}]}]}]` - combining condition references with inline logic.
 - **Examples**:
   - `[{"==": [{"var": "entity.components.core:item.type"}, "weapon"]}]` - only entities whose item type is "weapon".
   - `[{"!=": [{"var": "entity.id"}, {"var": "actor.id"}]}]` - exclude the actor from the results.
+  - `[{"condition_ref": "core:target-is-not-self"}]` - use a condition reference for filtering.
 
 ## 5. Union Operator
 
@@ -221,6 +225,25 @@ location.core:exits[{"==": [{"var": "locked"}, false]}].target
 
 **Equivalent to**: New scope for unlocked exits
 
+### Example 6: Using Condition References
+
+**Goal**: Get entities at location and that aren't the actor.
+
+```
+environment := entities(core:position)[
+    {
+  "and": [
+    { "condition_ref": "core:entity-at-location" },
+    { "condition_ref": "core:entity-is-not-actor" }
+  ]
+}]
+```
+
+**Explanation**:
+
+- `entities(core:position)`: Get all entities that have the `core:position` component.
+- `[{"and": [{ "condition_ref": "core:entity-at-location" },{"condition_ref": "core:entity-is-not-actor" }]}]`: Entities at the same context location, that aren't the actor.
+
 ## 9. Integration with Action Definitions
 
 The scope property in an action's definition (`.action.json` file) tells the engine which entities are potential targets. It should be referenced by name.
@@ -256,7 +279,7 @@ The action then refers to this scope by its name. The engine will automatically 
   "prerequisites": [
     {
       "logic": {
-        "condition_ref": "core:target-is-actors-follower"
+        "condition_ref": "core:target-is-follower-of-actor"
       },
       "failure_message": "You can only dismiss your own followers."
     }
