@@ -1,4 +1,15 @@
 /**
+ * @description List of supported modification modes for array operations.
+ * @type {Array<'push'|'push_unique'|'pop'|'remove_by_value'>}
+ */
+export const ARRAY_MODIFICATION_MODES = [
+  'push',
+  'push_unique',
+  'pop',
+  'remove_by_value',
+];
+
+/**
  * Applies an array modification operation.
  *
  * @description Utility to mutate an array according to the given mode. It returns
@@ -30,11 +41,11 @@ export function applyArrayModification(mode, array, value, logger) {
 /**
  * Advanced modification with deep comparison and result return.
  *
- * @param {'push'|'push_unique'|'pop'|'remove_by_value'} mode
- * @param {any[]} array
- * @param {any} value
- * @param {import('../../interfaces/coreServices.js').ILogger} [logger]
- * @returns {{ nextArray: any[], result: any, modified: boolean }}
+ * @param {'push'|'push_unique'|'pop'|'remove_by_value'} mode - Operation type.
+ * @param {any[]} array - Array to operate on.
+ * @param {any} value - Value used for push-like operations.
+ * @param {import('../../interfaces/coreServices.js').ILogger} [logger] - Logger for errors.
+ * @returns {{ nextArray: any[], result: any, modified: boolean }} The next array, result, and modification flag.
  */
 export function advancedArrayModify(mode, array, value, logger) {
   if (!Array.isArray(array)) {

@@ -15,7 +15,10 @@ import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 import { tryWriteContextVariable } from '../../utils/contextVariableUtils.js';
 import { assertParamsObject } from '../../utils/handlerUtils/indexUtils.js';
 import ComponentOperationHandler from './componentOperationHandler.js';
-import { advancedArrayModify } from '../utils/arrayModifyUtils.js';
+import {
+  advancedArrayModify,
+  ARRAY_MODIFICATION_MODES,
+} from '../utils/arrayModifyUtils.js';
 import { setByPath } from '../utils/objectPathUtils.js';
 
 /**
@@ -30,12 +33,13 @@ class ModifyArrayFieldHandler extends ComponentOperationHandler {
   #dispatcher;
 
   /**
-   * @description Fetch the component and target array to modify.
-   * @param {string} entityId
-   * @param {string} componentType
-   * @param {string} field
-   * @param {ILogger} logger
-   * @returns {{data: object, array: Array}|null}
+   * Fetch the component and target array to modify.
+   *
+   * @param {string} entityId - The entity identifier.
+   * @param {string} componentType - Component type name.
+   * @param {string} field - Dot path to the array field.
+   * @param {ILogger} logger - Logger for warnings.
+   * @returns {{data: object, array: Array}|null} The cloned data and target array.
    * @private
    */
   #fetchTargetArray(entityId, componentType, field, logger) {
@@ -61,14 +65,15 @@ class ModifyArrayFieldHandler extends ComponentOperationHandler {
   }
 
   /**
-   * @description Apply the requested modification to the array.
-   * @param {'push'|'push_unique'|'pop'|'remove_by_value'} mode
-   * @param {Array} targetArray
-   * @param {*} value
-   * @param {string} field
-   * @param {string} entityId
-   * @param {ILogger} logger
-   * @returns {{nextArray: Array, result: *, modified: boolean}|null}
+   * Apply the requested modification to the array.
+   *
+   * @param {'push'|'push_unique'|'pop'|'remove_by_value'} mode - Operation type.
+   * @param {Array} targetArray - The array to modify.
+   * @param {*} value - Value used for push-like modes.
+   * @param {string} field - Dot path to the array field.
+   * @param {string} entityId - The entity identifier.
+   * @param {ILogger} logger - Logger instance.
+   * @returns {{nextArray: Array, result: *, modified: boolean}|null} Modification outcome.
    * Returns a new array via `nextArray`; the original `targetArray` is never
    * mutated.
    * @private
@@ -78,8 +83,7 @@ class ModifyArrayFieldHandler extends ComponentOperationHandler {
       `MODIFY_ARRAY_FIELD: Performing '${mode}' on field '${field}' for entity '${entityId}'.`
     );
 
-    const validModes = ['push', 'push_unique', 'pop', 'remove_by_value'];
-    if (!validModes.includes(mode)) {
+    if (!ARRAY_MODIFICATION_MODES.includes(mode)) {
       logger.warn(`MODIFY_ARRAY_FIELD: Unknown mode '${mode}'.`);
       return null;
     }
@@ -127,12 +131,13 @@ class ModifyArrayFieldHandler extends ComponentOperationHandler {
   }
 
   /**
-   * @description Commit the modified component data back to the entity manager.
-   * @param {string} entityId
-   * @param {string} componentType
-   * @param {object} data
-   * @param {ILogger} logger
-   * @returns {boolean}
+   * Commit the modified component data back to the entity manager.
+   *
+   * @param {string} entityId - The entity identifier.
+   * @param {string} componentType - Component type name.
+   * @param {object} data - Modified component data.
+   * @param {ILogger} logger - Logger instance.
+   * @returns {boolean} True if commit succeeded.
    * @private
    */
   #commitChanges(entityId, componentType, data, logger) {
@@ -157,7 +162,9 @@ class ModifyArrayFieldHandler extends ComponentOperationHandler {
   }
 
   /**
-   * @param {object} deps
+   * Create a new ModifyArrayFieldHandler.
+   *
+   * @param {object} deps - The handler dependencies.
    * @param {IEntityManager} deps.entityManager - The entity management service.
    * @param {ILogger} deps.logger - The logging service.
    * @param {ISafeEventDispatcher} deps.safeEventDispatcher - Dispatcher for error events.
