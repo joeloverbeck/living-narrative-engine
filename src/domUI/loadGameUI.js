@@ -342,31 +342,9 @@ class LoadGameUI extends SlotModalBase {
    * @async
    */
   async _handleLoad() {
-    if (!this.selectedSlotData || this.selectedSlotData.isCorrupted) {
-      this.logger.warn(
-        `${this._logPrefix} Load attempt ignored: no slot selected, or slot corrupted.`
-      );
-      if (this.selectedSlotData?.isCorrupted) {
-        this._displayStatusMessage(
-          'Cannot load a corrupted save file. Please delete it or choose another.',
-          'error'
-        );
-      } else if (!this.selectedSlotData) {
-        this._displayStatusMessage(
-          'Please select a save slot to load.',
-          'error'
-        );
-      }
-      return;
-    }
-    if (!this.gameEngine) {
-      this.logger.error(
-        `${this._logPrefix} GameEngine not available. Cannot load game.`
-      );
-      this._displayStatusMessage(
-        'Cannot load: Game engine is not ready.',
-        'error'
-      );
+    const validationError = this._validateLoadPreconditions();
+    if (validationError) {
+      this._displayStatusMessage(validationError, 'error');
       return;
     }
 
@@ -380,26 +358,59 @@ class LoadGameUI extends SlotModalBase {
       'info'
     );
 
+    const { success, message } = await this._performLoad(slotToLoad);
+    this._finalizeLoad(success, message, slotToLoad);
+    // Note: _setOperationInProgress(false) is called in _finalizeLoad on failure, success path leads to hide().
+  }
+
+  /**
+   * Validates that a slot is selected and the game engine is ready.
+   *
+   * @private
+   * @returns {string | null} Error message if validation fails.
+   */
+  _validateLoadPreconditions() {
+    if (!this.selectedSlotData || this.selectedSlotData.isCorrupted) {
+      this.logger.warn(
+        `${this._logPrefix} Load attempt ignored: no slot selected, or slot corrupted.`
+      );
+      if (this.selectedSlotData?.isCorrupted) {
+        return 'Cannot load a corrupted save file. Please delete it or choose another.';
+      }
+      return 'Please select a save slot to load.';
+    }
+    if (!this.gameEngine) {
+      this.logger.error(
+        `${this._logPrefix} GameEngine not available. Cannot load game.`
+      );
+      return 'Cannot load: Game engine is not ready.';
+    }
+    return null;
+  }
+
+  /**
+   * Executes the load operation via the GameEngine.
+   *
+   * @private
+   * @async
+   * @param {LoadSlotDisplayData} slotToLoad - Slot data to load.
+   * @returns {Promise<{success: boolean, message: string}>} Result info.
+   */
+  async _performLoad(slotToLoad) {
     try {
       const result = await this.gameEngine.loadGame(slotToLoad.identifier);
       if (result && result.success) {
-        this._displayStatusMessage(
-          `Game "${slotToLoad.saveName}" loaded successfully. Resuming...`,
-          'success'
-        );
         this.logger.debug(
           `${this._logPrefix} Game loaded successfully from ${slotToLoad.identifier}`
         );
-        setTimeout(() => this.hide(), 1500);
-      } else {
-        const errorMsg =
-          result?.error || 'An unknown error occurred while loading the game.';
-        this._displayStatusMessage(`Load failed: ${errorMsg}`, 'error');
-        this.logger.error(
-          `${this._logPrefix} Failed to load game from ${slotToLoad.identifier}: ${errorMsg}`
-        );
-        this._setOperationInProgress(false); // Only if load fails, re-enable UI
+        return { success: true, message: '' };
       }
+      const errorMsg =
+        result?.error || 'An unknown error occurred while loading the game.';
+      this.logger.error(
+        `${this._logPrefix} Failed to load game from ${slotToLoad.identifier}: ${errorMsg}`
+      );
+      return { success: false, message: errorMsg };
     } catch (error) {
       const exceptionMsg =
         error instanceof Error ? error.message : String(error);
@@ -407,14 +418,30 @@ class LoadGameUI extends SlotModalBase {
         `${this._logPrefix} Exception during load operation for ${slotToLoad.identifier}:`,
         error
       );
-      this._displayStatusMessage(
-        `Load failed: ${exceptionMsg || 'An unexpected error occurred.'}`,
-        'error'
-      );
-      this._setOperationInProgress(false); // Re-enable UI on exception
+      return { success: false, message: exceptionMsg };
     }
-    // Note: _setOperationInProgress(false) is called in finally block by BaseModalRenderer if it's overridden to do so,
-    // or explicitly here on failure paths. Success path leads to hide().
+  }
+
+  /**
+   * Finalizes UI updates after a load attempt.
+   *
+   * @private
+   * @param {boolean} success - Whether the load succeeded.
+   * @param {string} message - Error message if any.
+   * @param {LoadSlotDisplayData} slotToLoad - Slot that was attempted to load.
+   * @returns {void}
+   */
+  _finalizeLoad(success, message, slotToLoad) {
+    if (success) {
+      this._displayStatusMessage(
+        `Game "${slotToLoad.saveName}" loaded successfully. Resuming...`,
+        'success'
+      );
+      setTimeout(() => this.hide(), 1500);
+    } else {
+      this._displayStatusMessage(`Load failed: ${message}`, 'error');
+      this._setOperationInProgress(false);
+    }
   }
 
   /**
@@ -436,17 +463,12 @@ class LoadGameUI extends SlotModalBase {
     }
 
     const slotToDelete = this.selectedSlotData;
-    const confirmMsg = `Are you sure you want to delete the save "${slotToDelete.saveName}"? This action cannot be undone.`;
-
-    if (!window.confirm(confirmMsg)) {
-      this.logger.debug(
-        `${this._logPrefix} Delete operation cancelled by user for: ${slotToDelete.identifier}`
-      );
+    if (!(await this._confirmDeletion(slotToDelete))) {
       return;
     }
 
     this.logger.debug(
-      `${this._logPrefix} User initiated delete for: ${slotToDelete.identifier} ("${slotToDelete.saveName}")`
+      `${this._logPrefix} User initiated delete for: ${slotToDelete.identifier}("${slotToDelete.saveName}")`
     );
     this._setOperationInProgress(true);
     this._displayStatusMessage(
@@ -454,52 +476,53 @@ class LoadGameUI extends SlotModalBase {
       'info'
     );
 
+    const result = await this._performDelete(slotToDelete);
+    await this._refreshAfterDelete(result, slotToDelete);
+  }
+
+  /**
+   * Asks the user to confirm a deletion action.
+   *
+   * @private
+   * @param {LoadSlotDisplayData} slotToDelete - Slot data targeted for deletion.
+   * @returns {Promise<boolean>} `true` if the user confirms.
+   */
+  async _confirmDeletion(slotToDelete) {
+    const confirmMsg = `Are you sure you want to delete the save "${slotToDelete.saveName}"? This action cannot be undone.`;
+    const confirmed = window.confirm(confirmMsg);
+    if (!confirmed) {
+      this.logger.debug(
+        `${this._logPrefix} Delete operation cancelled by user for: ${slotToDelete.identifier}`
+      );
+    }
+    return confirmed;
+  }
+
+  /**
+   * Performs the delete operation via the save/load service.
+   *
+   * @private
+   * @async
+   * @param {LoadSlotDisplayData} slotToDelete - Slot data targeted for deletion.
+   * @returns {Promise<{success: boolean, message: string}>} Result info.
+   */
+  async _performDelete(slotToDelete) {
     try {
       const result = await this.saveLoadService.deleteManualSave(
         slotToDelete.identifier
       );
       if (result && result.success) {
-        this._displayStatusMessage(
-          `Save "${slotToDelete.saveName}" deleted successfully.`,
-          'success'
-        );
         this.logger.debug(
           `${this._logPrefix} Save deleted successfully: ${slotToDelete.identifier}`
         );
-        this.selectedSlotData = null;
-        await this._populateLoadSlotsList(); // Refresh list
-
-        // After refreshing, update state and focus
-        this._setOperationInProgress(false);
-        const firstSlot =
-          this.elements.listContainerElement?.querySelector('.save-slot');
-        if (firstSlot) {
-          /** @type {HTMLElement} */ (firstSlot).focus();
-          const firstSlotIdentifier = /** @type {HTMLElement} */ (firstSlot)
-            .dataset.slotIdentifier;
-          const firstSlotData = this.currentSlotsDisplayData.find(
-            (s) => s.identifier === firstSlotIdentifier
-          );
-          if (firstSlotData) {
-            this._onItemSelected(
-              /** @type {HTMLElement} */ (firstSlot),
-              firstSlotData
-            );
-          } else {
-            this._onItemSelected(null, null);
-          }
-        } else {
-          this._onItemSelected(null, null);
-        }
-      } else {
-        const errorMsg =
-          result?.error || 'An unknown error occurred while deleting the save.';
-        this._displayStatusMessage(`Delete failed: ${errorMsg}`, 'error');
-        this.logger.error(
-          `${this._logPrefix} Failed to delete save ${slotToDelete.identifier}: ${errorMsg}`
-        );
-        this._setOperationInProgress(false);
+        return { success: true, message: '' };
       }
+      const errorMsg =
+        result?.error || 'An unknown error occurred while deleting the save.';
+      this.logger.error(
+        `${this._logPrefix} Failed to delete save ${slotToDelete.identifier}: ${errorMsg}`
+      );
+      return { success: false, message: errorMsg };
     } catch (error) {
       const exceptionMsg =
         error instanceof Error ? error.message : String(error);
@@ -507,10 +530,51 @@ class LoadGameUI extends SlotModalBase {
         `${this._logPrefix} Exception during delete operation for ${slotToDelete.identifier}:`,
         error
       );
+      return { success: false, message: exceptionMsg };
+    }
+  }
+
+  /**
+   * Refreshes the UI after a delete attempt and updates focus.
+   *
+   * @private
+   * @async
+   * @param {{success: boolean, message: string}} result - Outcome of deletion.
+   * @param {LoadSlotDisplayData} slotToDelete - Slot that was attempted to delete.
+   * @returns {Promise<void>} Resolves when refresh actions complete.
+   */
+  async _refreshAfterDelete(result, slotToDelete) {
+    if (result.success) {
       this._displayStatusMessage(
-        `Delete failed: ${exceptionMsg || 'An unexpected error occurred.'}`,
-        'error'
+        `Save "${slotToDelete.saveName}" deleted successfully.`,
+        'success'
       );
+      this.selectedSlotData = null;
+      await this._populateLoadSlotsList();
+
+      this._setOperationInProgress(false);
+      const firstSlot =
+        this.elements.listContainerElement?.querySelector('.save-slot');
+      if (firstSlot) {
+        /** @type {HTMLElement} */ (firstSlot).focus();
+        const firstSlotIdentifier = /** @type {HTMLElement} */ (firstSlot)
+          .dataset.slotIdentifier;
+        const firstSlotData = this.currentSlotsDisplayData.find(
+          (s) => s.identifier === firstSlotIdentifier
+        );
+        if (firstSlotData) {
+          this._onItemSelected(
+            /** @type {HTMLElement} */ (firstSlot),
+            firstSlotData
+          );
+        } else {
+          this._onItemSelected(null, null);
+        }
+      } else {
+        this._onItemSelected(null, null);
+      }
+    } else {
+      this._displayStatusMessage(`Delete failed: ${result.message}`, 'error');
       this._setOperationInProgress(false);
     }
   }
