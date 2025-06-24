@@ -92,5 +92,35 @@ describeEngineSuite('GameEngine', (context) => {
       });
       expectEngineStopped(context.engine);
     });
+
+    it.each([null, ''])(
+      'should reject invalid world names: %p',
+      async (badName) => {
+        // startNewGame relies on InitializationService to validate world names. A
+        // null or empty world should cause the service to return a TypeError and
+        // the engine should surface that failure while dispatching the standard
+        // operation failed event.
+        const expectedMessage =
+          'InitializationService requires a valid non-empty worldName.';
+        context.bed.mocks.initializationService.runInitializationSequence.mockResolvedValue(
+          {
+            success: false,
+            error: new TypeError(expectedMessage),
+          }
+        );
+
+        await expect(context.engine.startNewGame(badName)).rejects.toThrow(
+          expectedMessage
+        );
+
+        expect(
+          context.bed.mocks.safeEventDispatcher.dispatch
+        ).toHaveBeenCalledWith(ENGINE_OPERATION_FAILED_UI, {
+          errorMessage: `Failed to start new game: ${expectedMessage}`,
+          errorTitle: 'Initialization Error',
+        });
+        expectEngineStopped(context.engine);
+      }
+    );
   });
 });
