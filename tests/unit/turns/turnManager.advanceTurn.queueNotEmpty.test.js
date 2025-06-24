@@ -23,7 +23,7 @@ describeRunningTurnManagerSuite(
       testBed = getBed();
       testBed.mockNextActor(createAiActor('actor-next'));
       testBed.setupMockHandlerResolver();
-      stopSpy = testBed.setupStopSpyNoOp();
+      stopSpy = testBed.spyOnStopNoOp();
     });
 
     // --- Test Cases ---

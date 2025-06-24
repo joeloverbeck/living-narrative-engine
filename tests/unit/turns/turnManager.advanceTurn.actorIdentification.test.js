@@ -29,7 +29,7 @@ describeRunningTurnManagerSuite(
       testBed = getBed();
       testBed.mockNextActor(createAiActor('initial-actor-for-start'));
       testBed.setupMockHandlerResolver();
-      stopSpy = testBed.setupStopSpyNoOp();
+      stopSpy = testBed.spyOnStopNoOp();
     });
 
     afterEach(async () => {

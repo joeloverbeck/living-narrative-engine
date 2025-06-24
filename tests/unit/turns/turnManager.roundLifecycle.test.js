@@ -30,7 +30,7 @@ describeRunningTurnManagerSuite(
       testBed = getBed();
       ({ ai1, ai2, player } = testBed.addDefaultActors());
       testBed.setupHandlerForActor(ai1);
-      stopSpy = testBed.setupStopSpyNoOp();
+      stopSpy = testBed.spyOnStopNoOp();
       testBed.resetMocks();
     });
 

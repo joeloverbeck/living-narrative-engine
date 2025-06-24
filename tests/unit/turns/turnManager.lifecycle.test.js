@@ -53,7 +53,7 @@ describeTurnManagerSuite('TurnManager - Lifecycle (Start/Stop)', (getBed) => {
 
     it('should handle subscription failure gracefully (invalid return value)', async () => {
       testBed.mocks.dispatcher.subscribe.mockReturnValue(null);
-      const stopSpy = testBed.setupStopSpyNoOp();
+      const stopSpy = testBed.spyOnStopNoOp();
       await testBed.turnManager.start();
       expect(testBed.mocks.dispatcher.dispatch).toHaveBeenCalledWith(
         SYSTEM_ERROR_OCCURRED_ID,
@@ -88,7 +88,7 @@ describeTurnManagerSuite('TurnManager - Lifecycle (Start/Stop)', (getBed) => {
       testBed.mocks.dispatcher.subscribe.mockImplementation(() => {
         throw subscribeError;
       });
-      const stopSpy = testBed.setupStopSpyNoOp();
+      const stopSpy = testBed.spyOnStopNoOp();
       await testBed.turnManager.start();
       expect(testBed.mocks.dispatcher.dispatch).toHaveBeenCalledWith(
         SYSTEM_ERROR_OCCURRED_ID,
