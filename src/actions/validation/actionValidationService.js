@@ -10,6 +10,7 @@
 /** @typedef {import('../../models/actionTargetContext.js').ActionTargetContext} ActionTargetContext */
 import { BaseService } from '../../utils/serviceBase.js';
 import { validateActionInputs } from './inputValidators.js';
+import { formatValidationError } from './validationErrorUtils.js';
 import {
   TARGET_DOMAIN_SELF,
   TARGET_DOMAIN_NONE,
@@ -110,18 +111,11 @@ export class ActionValidationService extends BaseService {
         this.#logger
       );
     } catch (err) {
-      let idInfo = '';
-      if (err.message === 'Invalid actionDefinition') {
-        idInfo = `(id: ${actionDefinition?.id})`;
-      } else if (err.message === 'Invalid actor entity') {
-        idInfo = `(id: ${actorEntity?.id})`;
-      } else if (err.message === 'Invalid ActionTargetContext') {
-        idInfo = `(type: ${targetContext?.type})`;
-      }
-      const msg = err.message
-        ? err.message.charAt(0).toLowerCase() + err.message.slice(1)
-        : 'invalid input';
-      throw new Error(`ActionValidationService.isValid: ${msg} ${idInfo}`);
+      throw formatValidationError(err, 'ActionValidationService.isValid', {
+        actionId: actionDefinition?.id,
+        actorId: actorEntity?.id,
+        contextType: targetContext?.type,
+      });
     }
   }
 

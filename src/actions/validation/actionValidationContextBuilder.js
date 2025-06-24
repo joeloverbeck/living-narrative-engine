@@ -12,6 +12,7 @@ import {
   buildEntityTargetContext,
 } from './contextBuilders.js';
 import { validateActionInputs } from './inputValidators.js';
+import { formatValidationError } from './validationErrorUtils.js';
 import { ENTITY as TARGET_TYPE_ENTITY } from '../../constants/actionTargetTypes.js';
 
 /**
@@ -112,19 +113,14 @@ export class ActionValidationContextBuilder extends BaseService {
         this.#logger
       );
     } catch (err) {
-      let idInfo = '';
-      if (err.message === 'Invalid actionDefinition') {
-        idInfo = `(id: ${actionDefinition?.id})`;
-      } else if (err.message === 'Invalid actor entity') {
-        idInfo = `(id: ${actor?.id})`;
-      } else if (err.message === 'Invalid ActionTargetContext') {
-        idInfo = `(type: ${targetContext?.type})`;
-      }
-      const msg = err.message
-        ? err.message.charAt(0).toLowerCase() + err.message.slice(1)
-        : 'invalid input';
-      throw new Error(
-        `ActionValidationContextBuilder.buildContext: ${msg} ${idInfo}`
+      throw formatValidationError(
+        err,
+        'ActionValidationContextBuilder.buildContext',
+        {
+          actionId: actionDefinition?.id,
+          actorId: actor?.id,
+          contextType: targetContext?.type,
+        }
       );
     }
   }
