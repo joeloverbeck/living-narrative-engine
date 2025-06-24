@@ -137,7 +137,8 @@ class EntityFactory {
    * @private
    * @param {string} definitionId - The ID of the entity definition.
    * @param {IDataRegistry} registry - The data registry to fetch from.
-   * @returns {EntityDefinition|null} The entity definition or null if not found.
+   * @returns {EntityDefinition|null} The entity definition, or null when the
+   * ID is invalid or no definition exists.
    */
   #getDefinition(definitionId, registry) {
     try {
@@ -196,8 +197,7 @@ class EntityFactory {
         assertValidId(instanceId, 'EntityFactory.create', this.#logger);
       } catch (err) {
         if (err && err.name === 'InvalidArgumentError') {
-          const msg =
-            'EntityFactory.create: instanceId is missing or invalid.';
+          const msg = 'EntityFactory.create: instanceId is missing or invalid.';
           this.#logger.error(`[EntityFactory] ${msg}`);
           throw new InvalidInstanceIdError(instanceId, msg);
         }
