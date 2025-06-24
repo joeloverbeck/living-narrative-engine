@@ -12,6 +12,7 @@ import BaseOperationHandler from './baseOperationHandler.js';
 import { tryWriteContextVariable } from '../../utils/contextVariableUtils.js';
 import { assertParamsObject } from '../../utils/handlerUtils/paramsUtils.js';
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
+import { deepClone } from '../../utils/cloneUtils.js';
 
 class RemoveFromClosenessCircleHandler extends BaseOperationHandler {
   /** @type {EntityManager} */
@@ -167,12 +168,17 @@ class RemoveFromClosenessCircleHandler extends BaseOperationHandler {
    */
   #unlockMovement(ids) {
     for (const id of ids) {
-      const move =
-        this.#entityManager.getComponentData(id, 'core:movement') || {};
-      this.#entityManager.addComponent(id, 'core:movement', {
-        ...move,
-        locked: false,
-      });
+      const existing = this.#entityManager.getComponentData(
+        id,
+        'core:movement'
+      );
+      const move = existing
+        ? typeof structuredClone === 'function'
+          ? structuredClone(existing)
+          : deepClone(existing)
+        : {};
+      move.locked = false;
+      this.#entityManager.addComponent(id, 'core:movement', move);
     }
   }
 }
