@@ -165,4 +165,12 @@ describe('resolveEntityInstance', () => {
     };
     expect(resolveEntityInstance('missing', mgr)).toBeNull();
   });
+
+  it('logs debug for invalid value', () => {
+    const logger = createMockLogger();
+    expect(resolveEntityInstance(123, null, logger)).toBeNull();
+    expect(logger.debug).toHaveBeenCalledWith(
+      '[componentAccessUtils] resolveEntityInstance: provided value is not a valid entity.'
+    );
+  });
 });
