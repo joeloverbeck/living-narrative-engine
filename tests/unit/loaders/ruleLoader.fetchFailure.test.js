@@ -288,6 +288,7 @@ describe('RuleLoader - Fetch Failure Handling (via loadItemsForMod)', () => {
         count: 1, // Only one rule was successfully processed
         errors: 1, // One file failed to fetch/process
         overrides: 0, // No existing rules were overridden
+        failures: [{ file: fileFail, error: fetchError }],
       });
       // *** REMOVED old assertion: expect(count).toBe(1); ***
 

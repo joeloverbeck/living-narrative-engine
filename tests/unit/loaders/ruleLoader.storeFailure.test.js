@@ -353,7 +353,12 @@ describe('RuleLoader - Storage Failure Handling (via loadItemsForMod)', () => {
       );
 
       // Verify the return value object
-      expect(result).toEqual({ count: 1, errors: 1, overrides: 0 });
+      expect(result).toEqual({
+        count: 1,
+        errors: 1,
+        overrides: 0,
+        failures: [{ file: ruleFileFailStore, error: storageError }],
+      });
 
       // Verify summary and debug logging
       expect(mockLogger.info).toHaveBeenCalledWith(

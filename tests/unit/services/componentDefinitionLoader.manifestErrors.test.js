@@ -216,7 +216,12 @@ describe('ComponentLoader (Sub-Ticket 6.6: Manifest Handling Errors)', () => {
   // --- Shared Test Data ---
   const modId = 'manifestErrorMod';
   // <<< ADDED: Expected zero result object for cleaner tests >>>
-  const expectedZeroResult = { count: 0, errors: 0, overrides: 0 };
+  const expectedZeroResult = {
+    count: 0,
+    errors: 0,
+    overrides: 0,
+    failures: [],
+  };
 
   // --- Setup ---
   beforeEach(() => {

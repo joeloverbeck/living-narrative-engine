@@ -204,7 +204,12 @@ describe('GoalLoader', () => {
 
       // Assert
       // 1. Check final result summary
-      expect(result).toEqual({ count: 1, overrides: 0, errors: 0 });
+      expect(result).toEqual({
+        count: 1,
+        overrides: 0,
+        errors: 0,
+        failures: [],
+      });
 
       // 2. Verify dependencies were called correctly
       expect(mockPathResolver.resolveModContentPath).toHaveBeenCalledWith(

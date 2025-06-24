@@ -122,7 +122,12 @@ describe('BaseManifestItemLoader.loadItemsForMod', () => {
     },
   };
   // --- CORRECTED: Mock return value for successful load ---
-  const EXPECTED_LOAD_RESULT = { count: 5, overrides: 0, errors: 0 }; // Mock result object
+  const EXPECTED_LOAD_RESULT = {
+    count: 5,
+    overrides: 0,
+    errors: 0,
+    failures: [],
+  }; // Mock result object
 
   beforeEach(() => {
     // Create fresh mocks for each test
@@ -377,7 +382,7 @@ describe('BaseManifestItemLoader.loadItemsForMod', () => {
 
   // --- CORRECTED Return Value Test (Zero Case) ---
   it('should return { count: 0, ... } if _loadItemsInternal returns { count: 0, ... }', async () => {
-    const zeroResult = { count: 0, overrides: 0, errors: 0 };
+    const zeroResult = { count: 0, overrides: 0, errors: 0, failures: [] };
     loadItemsInternalSpy.mockResolvedValue(zeroResult); // Configure spy to return the zero object
     const result = await testLoader.loadItemsForMod(
       TEST_MOD_ID,

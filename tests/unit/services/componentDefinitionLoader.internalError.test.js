@@ -195,7 +195,15 @@ describe('ComponentLoader (Internal Definition Errors)', () => {
       'components'
     );
 
-    expect(result).toEqual({ count: 0, errors: 2, overrides: 0 });
+    expect(result).toEqual({
+      count: 0,
+      errors: 2,
+      overrides: 0,
+      failures: [
+        { file: filenameNullId, error: expect.any(Error) },
+        { file: filenameEmptyId, error: expect.any(Error) },
+      ],
+    });
     expect(mockRegistry.store).not.toHaveBeenCalled();
     expect(mockValidator.addSchema).not.toHaveBeenCalled();
     expect(mockLogger.error).toHaveBeenCalledTimes(2);
@@ -257,7 +265,15 @@ describe('ComponentLoader (Internal Definition Errors)', () => {
       'components'
     );
 
-    expect(result).toEqual({ count: 0, errors: 2, overrides: 0 });
+    expect(result).toEqual({
+      count: 0,
+      errors: 2,
+      overrides: 0,
+      failures: [
+        { file: filenameNullSchema, error: expect.any(Error) },
+        { file: filenameStringSchema, error: expect.any(Error) },
+      ],
+    });
     expect(mockRegistry.store).not.toHaveBeenCalled();
     expect(mockValidator.addSchema).not.toHaveBeenCalled();
     expect(mockLogger.error).toHaveBeenCalledTimes(2);

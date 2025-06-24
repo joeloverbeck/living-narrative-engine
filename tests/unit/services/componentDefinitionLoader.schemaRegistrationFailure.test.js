@@ -296,7 +296,12 @@ describe('ComponentLoader (Sub-Ticket 6.8: Data Schema Registration Failure)', (
     // --- Verify: Promise Resolves & Result Object ---
     await expect(loadPromise).resolves.not.toThrow();
     const result = await loadPromise;
-    expect(result).toEqual({ count: 0, errors: 1, overrides: 0 });
+    expect(result).toEqual({
+      count: 0,
+      errors: 1,
+      overrides: 0,
+      failures: [{ file: filename, error: expect.any(Error) }],
+    });
 
     // --- Verify: Mock Calls ---
     expect(mockResolver.resolveModContentPath).toHaveBeenCalledWith(
@@ -392,7 +397,12 @@ describe('ComponentLoader (Sub-Ticket 6.8: Data Schema Registration Failure)', (
     // --- Verify: Promise Resolves & Result Object ---
     await expect(loadPromise).resolves.not.toThrow();
     const result = await loadPromise;
-    expect(result).toEqual({ count: 0, errors: 1, overrides: 0 });
+    expect(result).toEqual({
+      count: 0,
+      errors: 1,
+      overrides: 0,
+      failures: [{ file: filename, error: expect.any(Error) }],
+    });
 
     // --- Verify: Mock Calls ---
     expect(mockResolver.resolveModContentPath).toHaveBeenCalledWith(

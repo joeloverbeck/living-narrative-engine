@@ -93,7 +93,12 @@ describe('MacroLoader (Happy Path - Core Mod)', () => {
       'macros'
     );
 
-    expect(result).toEqual({ count: 2, overrides: 0, errors: 0 });
+    expect(result).toEqual({
+      count: 2,
+      overrides: 0,
+      errors: 0,
+      failures: [],
+    });
 
     expect(mockRegistry.store).toHaveBeenCalledWith(
       'macros',

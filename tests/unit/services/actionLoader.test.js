@@ -165,7 +165,7 @@ beforeEach(() => {
 
     loadItemsInternalSpy = jest
       .spyOn(actionLoader, '_loadItemsInternal')
-      .mockResolvedValue({ count: 0, overrides: 0, errors: 0 });
+      .mockResolvedValue({ count: 0, overrides: 0, errors: 0, failures: [] });
     validatePrimarySchemaSpy = jest
       .spyOn(actionLoader, '_validatePrimarySchema')
       .mockReturnValue({ isValid: true, errors: null });
@@ -228,7 +228,12 @@ describe('ActionLoader', () => {
         );
         loadItemsInternalSpy = jest
           .spyOn(actionLoader, '_loadItemsInternal')
-          .mockResolvedValue({ count: 0, overrides: 0, errors: 0 });
+          .mockResolvedValue({
+            count: 0,
+            overrides: 0,
+            errors: 0,
+            failures: [],
+          });
         validatePrimarySchemaSpy = jest
           .spyOn(actionLoader, '_validatePrimarySchema')
           .mockReturnValue({ isValid: true, errors: null });

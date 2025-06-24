@@ -113,7 +113,12 @@ beforeEach(() => {
   jest.clearAllMocks();
   eventLoader._logger = mockLogger;
 
-  loadItemsInternalSpy.mockResolvedValue({ count: 0, overrides: 0, errors: 0 });
+  loadItemsInternalSpy.mockResolvedValue({
+    count: 0,
+    overrides: 0,
+    errors: 0,
+    failures: [],
+  });
   validatePrimarySchemaSpy.mockReturnValue({ isValid: true, errors: null });
   storeItemInRegistrySpy.mockImplementation((...args) =>
     realStoreItemInRegistry.apply(eventLoader, args)
