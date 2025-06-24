@@ -164,6 +164,19 @@ class GameStateSerializer extends BaseService {
   }
 
   /**
+   * Calculates the game state checksum and compresses the object.
+   *
+   * @param {object} obj - Save object to process.
+   * @returns {Promise<{compressedData: Uint8Array, finalSaveObject: object}>}
+   *   Compressed data and original object.
+   * @private
+   */
+  async #applyChecksumAndCompress(obj) {
+    await this.#applyChecksum(obj);
+    return this.#encodeAndCompress(obj);
+  }
+
+  /**
    * Serializes the game state to MessagePack and compresses it with Gzip.
    * Embeds a checksum of the gameState section.
    *
@@ -172,8 +185,7 @@ class GameStateSerializer extends BaseService {
    */
   async serializeAndCompress(gameStateObject) {
     const finalSaveObject = this.#cloneForSerialization(gameStateObject);
-    await this.#applyChecksum(finalSaveObject);
-    return this.#encodeAndCompress(finalSaveObject);
+    return this.#applyChecksumAndCompress(finalSaveObject);
   }
 
   /**
@@ -185,8 +197,7 @@ class GameStateSerializer extends BaseService {
    *   Compressed data and original object.
    */
   async compressPreparedState(saveObj) {
-    await this.#applyChecksum(saveObj);
-    return this.#encodeAndCompress(saveObj);
+    return this.#applyChecksumAndCompress(saveObj);
   }
 
   /**
