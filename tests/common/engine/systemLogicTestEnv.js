@@ -14,22 +14,38 @@ import {
   createMockLogger,
   createCapturingEventBus,
 } from '../mockFactories/index.js';
-import { createRuleTestDataRegistry } from '../mockFactories/entities.js';
 import { deepClone } from '../../../src/utils/cloneUtils.js';
 
 /**
- * Creates a complete test environment for system logic rule testing.
+ * Creates base services needed for rule engine tests.
  *
+ * @description Builds the fundamental components used by the rule test
+ * environment. This includes entity and operation managers along with the
+ * system logic interpreter.
  * @param {object} options - Configuration options
- * @param {Function} options.createHandlers - Function to create handlers with (entityManager, eventBus, logger) parameters
- * @param {Array<{id:string,components:object}>} options.entities - Initial entities
+ * @param {Function} options.createHandlers - Function to create handlers with
+ *   `(entityManager, eventBus, logger)` parameters
+ * @param {Array<{id:string,components:object}>} options.entities - Initial
+ *   entities to load
  * @param {Array<object>} options.rules - System rules to load
- * @param {object} options.logger - Logger instance (optional, creates mock if not provided)
- * @param {object} options.dataRegistry - Data registry (optional, creates mock if not provided)
- * @param options.eventBus
- * @returns {object} Test environment with all components and cleanup function
+ * @param {object} options.logger - Logger instance (optional)
+ * @param {object} options.dataRegistry - Data registry (optional)
+ * @param {object} options.eventBus - Event bus instance (optional)
+ * @returns {{
+ *   eventBus: import('../../../src/events/eventBus.js').default,
+ *   events: any[],
+ *   operationRegistry: OperationRegistry,
+ *   operationInterpreter: OperationInterpreter,
+ *   jsonLogic: JsonLogicEvaluationService,
+ *   systemLogicInterpreter: SystemLogicInterpreter,
+ *   entityManager: SimpleEntityManager,
+ *   logger: any,
+ *   dataRegistry: any,
+ *   cleanup: () => void,
+ *   initializeEnv: (entities: Array<{id:string,components:object}>) => any
+ * }} Base environment pieces used for tests.
  */
-export function createRuleTestEnvironment({
+export function createBaseRuleEnvironment({
   createHandlers,
   entities = [],
   rules = [],
@@ -37,37 +53,35 @@ export function createRuleTestEnvironment({
   dataRegistry = null,
   eventBus = null,
 }) {
-  // Create logger if not provided
-
   const testLogger = logger || createMockLogger();
-
-  // Create data registry if not provided
   const testDataRegistry = dataRegistry || {
     getAllSystemRules: jest.fn().mockReturnValue(rules),
     getConditionDefinition: jest.fn().mockReturnValue(undefined),
   };
 
-  // Create event bus
   const bus = eventBus || createCapturingEventBus();
 
-  // Hold core components so they can be recreated on reset
   let entityManager;
   let operationRegistry;
   let operationInterpreter;
   let interpreter;
 
-  // Create JSON logic evaluation service
   const jsonLogic = new JsonLogicEvaluationService({
     logger: testLogger,
     gameDataRepository: testDataRegistry,
   });
 
   /**
-   * Initializes core engine components.
+   * Initializes core engine components for the rule environment.
    *
    * @private
    * @param {Array<{id:string,components:object}>} entityList - Entities to load.
-   * @returns {object} Initialized environment pieces.
+   * @returns {{
+   *   entityManager: SimpleEntityManager,
+   *   operationRegistry: OperationRegistry,
+   *   operationInterpreter: OperationInterpreter,
+   *   systemLogicInterpreter: SystemLogicInterpreter
+   * }} Initialized services.
    */
   function initializeEnv(entityList) {
     entityManager = new SimpleEntityManager(entityList);
@@ -104,8 +118,7 @@ export function createRuleTestEnvironment({
 
   const init = initializeEnv(entities);
 
-  // The environment object to return
-  const env = {
+  return {
     eventBus: bus,
     events: bus.events,
     operationRegistry: init.operationRegistry,
@@ -118,17 +131,46 @@ export function createRuleTestEnvironment({
     cleanup: () => {
       interpreter.shutdown();
     },
-    reset: (newEntities = []) => {
-      env.cleanup();
-      // Deep clone entities and their components to avoid mutation issues
-      const clonedEntities = newEntities.map((e) => deepClone(e));
-      const newEnv = initializeEnv(clonedEntities);
-      env.entityManager = newEnv.entityManager;
-      env.operationRegistry = newEnv.operationRegistry;
-      env.operationInterpreter = newEnv.operationInterpreter;
-      env.systemLogicInterpreter = newEnv.systemLogicInterpreter;
-    },
+    initializeEnv,
   };
+}
 
+/**
+ * Resets an existing rule test environment.
+ *
+ * @description Shuts down the current interpreter and reinitializes core
+ * components using the provided entities.
+ * @param {ReturnType<typeof createBaseRuleEnvironment>} env - Environment to
+ *   reset
+ * @param {Array<{id:string,components:object}>} newEntities - Entities to load
+ *   after reset
+ */
+export function resetRuleEnvironment(env, newEntities = []) {
+  env.cleanup();
+  const clonedEntities = newEntities.map((e) => deepClone(e));
+  const newEnv = env.initializeEnv(clonedEntities);
+  env.entityManager = newEnv.entityManager;
+  env.operationRegistry = newEnv.operationRegistry;
+  env.operationInterpreter = newEnv.operationInterpreter;
+  env.systemLogicInterpreter = newEnv.systemLogicInterpreter;
+}
+
+/**
+ * Creates a complete test environment for system logic rule testing.
+ *
+ * @param {object} options - Configuration options
+ * @param {Function} options.createHandlers - Function to create handlers with (entityManager, eventBus, logger) parameters
+ * @param {Array<{id:string,components:object}>} options.entities - Initial entities
+ * @param {Array<object>} options.rules - System rules to load
+ * @param {object} options.logger - Logger instance (optional, creates mock if not provided)
+ * @param {object} options.dataRegistry - Data registry (optional, creates mock if not provided)
+ * @param {object} [options.eventBus] - Event bus instance to use
+ * @returns {object} Test environment with all components and cleanup function
+ */
+export function createRuleTestEnvironment(options) {
+  const env = createBaseRuleEnvironment(options);
+  env.reset = (newEntities = []) => {
+    resetRuleEnvironment(env, newEntities);
+  };
   return env;
 }
