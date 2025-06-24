@@ -12,19 +12,18 @@ const mockLogger = {
 /** @type {{dispatch: jest.Mock}} */
 let mockDispatcher;
 
-// Helper to fast-forward time in tests
-let nowSpy;
-let currentTime;
+// Helper constant for deterministic system time in tests
+const BASE_TIME = 1000000;
 
 beforeEach(() => {
   jest.clearAllMocks();
-  currentTime = 1000000;
-  nowSpy = jest.spyOn(Date, 'now').mockImplementation(() => currentTime);
+  jest.useFakeTimers();
+  jest.setSystemTime(BASE_TIME);
   mockDispatcher = { dispatch: jest.fn().mockResolvedValue(true) };
 });
 
 afterEach(() => {
-  nowSpy.mockRestore();
+  jest.useRealTimers();
 });
 
 describe('PlaytimeTracker', () => {
@@ -34,9 +33,9 @@ describe('PlaytimeTracker', () => {
       safeEventDispatcher: mockDispatcher,
     });
     tracker.startSession();
-    expect(tracker._getSessionStartTime()).toBe(currentTime);
+    expect(tracker._getSessionStartTime()).toBe(BASE_TIME);
     expect(mockLogger.debug).toHaveBeenCalledWith(
-      `PlaytimeTracker: Session started at ${currentTime}`
+      `PlaytimeTracker: Session started at ${BASE_TIME}`
     );
   });
 
@@ -46,12 +45,12 @@ describe('PlaytimeTracker', () => {
       safeEventDispatcher: mockDispatcher,
     });
     tracker.startSession();
-    currentTime += 1000;
+    jest.setSystemTime(BASE_TIME + 1000);
     tracker.startSession();
     expect(mockLogger.warn).toHaveBeenCalledWith(
-      `PlaytimeTracker: startSession called while a session was already active (started at ${currentTime - 1000}). Restarting session timer.`
+      `PlaytimeTracker: startSession called while a session was already active (started at ${BASE_TIME}). Restarting session timer.`
     );
-    expect(tracker._getSessionStartTime()).toBe(currentTime);
+    expect(tracker._getSessionStartTime()).toBe(BASE_TIME + 1000);
   });
 
   test('endSessionAndAccumulate adds playtime when session active', () => {
@@ -60,7 +59,7 @@ describe('PlaytimeTracker', () => {
       safeEventDispatcher: mockDispatcher,
     });
     tracker.startSession();
-    currentTime += 5000;
+    jest.setSystemTime(BASE_TIME + 5000);
     tracker.endSessionAndAccumulate();
     expect(tracker._getAccumulatedPlaytimeSeconds()).toBe(5);
     expect(tracker._getSessionStartTime()).toBe(0);
@@ -84,7 +83,7 @@ describe('PlaytimeTracker', () => {
     });
     tracker._setAccumulatedPlaytimeSeconds(10);
     tracker.startSession();
-    currentTime += 3000;
+    jest.setSystemTime(BASE_TIME + 3000);
     expect(tracker.getTotalPlaytime()).toBe(13);
   });
 
