@@ -132,9 +132,10 @@ describe('Entity Class', () => {
       expect(entity.getComponentData('non:existent')).toBeUndefined();
     });
 
-    it('should return null if the override is explicitly null', () => {
-      mockInstanceData.setComponentOverride('core:health', null);
-      expect(entity.getComponentData('core:health')).toBeNull();
+    it('should throw a TypeError if the override data is null', () => {
+      expect(() =>
+        mockInstanceData.setComponentOverride('core:health', null)
+      ).toThrow(TypeError);
     });
   });
 
@@ -263,19 +264,10 @@ describe('Entity Class', () => {
       expect(collectedData.length).toBe(3);
     });
 
-    it('should not yield data for components overridden to null', () => {
-      mockInstanceData.setComponentOverride('core:health', null); // Nullify
-      const collectedData = entity.allComponentData;
-
-      // Expected: 'core:name'
-      // 'core:health' should be absent from values, even if its key might appear in allComponentTypeIds
-      expect(
-        collectedData.some((data) => data && data.hasOwnProperty('current'))
-      ).toBe(false); // No health data
-      expect(
-        collectedData.find((data) => data && data.name === 'DefaultName')
-      ).toEqual({ name: 'DefaultName' });
-      expect(collectedData.length).toBe(1); // Only core:name
+    it('should throw a TypeError when setting a null override', () => {
+      expect(() =>
+        mockInstanceData.setComponentOverride('core:health', null)
+      ).toThrow(TypeError);
     });
   });
 
@@ -310,18 +302,10 @@ describe('Entity Class', () => {
       expect(collectedEntries.length).toBe(3);
     });
 
-    it('should not yield entries for components overridden to null', () => {
-      mockInstanceData.setComponentOverride('core:name', null);
-      const collectedEntries = entity.componentEntries;
-
-      expect(
-        collectedEntries.find(([id, _]) => id === 'core:name')
-      ).toBeUndefined();
-      expect(collectedEntries.length).toBe(1); // Only core:health
-      expect(collectedEntries[0]).toEqual([
-        'core:health',
-        { current: 100, max: 100 },
-      ]);
+    it('should throw a TypeError when overriding with null', () => {
+      expect(() =>
+        mockInstanceData.setComponentOverride('core:name', null)
+      ).toThrow(TypeError);
     });
   });
 

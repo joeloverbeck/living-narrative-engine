@@ -103,10 +103,11 @@ describe('EntityInstanceData', () => {
       expect(instanceData.getComponentData('non:existent')).toBeUndefined();
     });
 
-    it('should return null if override is explicitly null, even if component exists in definition', () => {
+    it('should throw a TypeError if override data is null', () => {
       const instanceData = new EntityInstanceData(validInstanceId, entityDef);
-      instanceData.setComponentOverride('core:health', null);
-      expect(instanceData.getComponentData('core:health')).toBeNull();
+      expect(() =>
+        instanceData.setComponentOverride('core:health', null)
+      ).toThrow(TypeError);
     });
 
     it('should return a clone, not the original override object, when override is an object', () => {
@@ -160,6 +161,13 @@ describe('EntityInstanceData', () => {
         'Invalid componentTypeId for setComponentOverride.'
       );
     });
+
+    it('should throw a TypeError if componentData is not an object', () => {
+      const instanceData = new EntityInstanceData(validInstanceId, entityDef);
+      expect(() =>
+        instanceData.setComponentOverride('core:health', 42)
+      ).toThrow(TypeError);
+    });
   });
 
   describe('removeComponentOverride', () => {
@@ -204,10 +212,11 @@ describe('EntityInstanceData', () => {
       expect(instanceData.hasComponent('non:existent')).toBe(false);
     });
 
-    it('should return true even if override is null (component is considered present but nullified)', () => {
+    it('should throw a TypeError when attempting to set a null override', () => {
       const instanceData = new EntityInstanceData(validInstanceId, entityDef);
-      instanceData.setComponentOverride('core:health', null);
-      expect(instanceData.hasComponent('core:health')).toBe(true);
+      expect(() =>
+        instanceData.setComponentOverride('core:health', null)
+      ).toThrow(TypeError);
     });
   });
 

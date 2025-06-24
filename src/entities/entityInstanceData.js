@@ -108,6 +108,9 @@ class EntityInstanceData {
     if (typeof componentTypeId !== 'string' || !componentTypeId.trim()) {
       throw new Error('Invalid componentTypeId for setComponentOverride.');
     }
+    if (typeof componentData !== 'object' || componentData === null) {
+      throw new TypeError('componentData must be a non-null object.');
+    }
     // Storing a clone to prevent external mutations of the provided data from affecting the instance.
     this.overrides[componentTypeId] = cloneDeep(componentData);
   }
