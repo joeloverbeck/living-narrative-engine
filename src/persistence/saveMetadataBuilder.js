@@ -7,6 +7,7 @@ import { ENGINE_VERSION } from '../engine/engineVersion.js';
  * @property {import('../interfaces/coreServices.js').ILogger} logger - Logger for warnings.
  * @property {string} [engineVersion] - Default engine version to use if none provided.
  * @property {string} [saveFormatVersion] - Version for the save format.
+ * @property {() => Date} [timeProvider] - Function returning the current time.
  */
 
 /**
@@ -20,14 +21,19 @@ export default class SaveMetadataBuilder {
   #engineVersion;
   /** @type {string} */
   #saveFormatVersion;
+  /** @type {() => Date} */
+  #timeProvider;
 
   /**
-   * @param {SaveMetadataBuilderDeps} deps
+   * Create a new SaveMetadataBuilder.
+   *
+   * @param {SaveMetadataBuilderDeps} deps - Constructor dependencies.
    */
   constructor({
     logger,
     engineVersion = ENGINE_VERSION,
     saveFormatVersion = '1.0.0',
+    timeProvider = () => new Date(),
   }) {
     if (!logger) {
       throw new Error('SaveMetadataBuilder requires a logger.');
@@ -35,6 +41,7 @@ export default class SaveMetadataBuilder {
     this.#logger = logger;
     this.#engineVersion = engineVersion;
     this.#saveFormatVersion = saveFormatVersion;
+    this.#timeProvider = timeProvider;
   }
 
   /**
@@ -56,7 +63,7 @@ export default class SaveMetadataBuilder {
       saveFormatVersion: this.#saveFormatVersion,
       engineVersion,
       gameTitle: title,
-      timestamp: new Date().toISOString(),
+      timestamp: this.#timeProvider().toISOString(),
       playtimeSeconds,
       saveName: '',
     };
