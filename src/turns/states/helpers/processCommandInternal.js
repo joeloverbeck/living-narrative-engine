@@ -75,7 +75,7 @@ async function _dispatchAction(
 
   if (!state._isProcessing) {
     logger.warn(
-      `${state.getStateName()}: Processing flag became false after commandProcessor.dispatchAction() for ${actorId}. Aborting further processing.`
+      `${state.getStateName()}: _isProcessing became false after dispatch for ${actorId}.`
     );
     return null;
   }
@@ -87,7 +87,7 @@ async function _dispatchAction(
     activeTurnCtx.getActor()?.id !== actorId
   ) {
     logger.warn(
-      `${state.getStateName()}: Context is invalid, has changed, or actor mismatch after commandProcessor.dispatchAction() for ${actorId}. Current context actor: ${activeTurnCtx?.getActor?.()?.id ?? 'N/A'}. Aborting further processing.`
+      `${state.getStateName()}: Context invalid or changed after dispatch for ${actorId}. Current context actor: ${activeTurnCtx?.getActor?.()?.id ?? 'N/A'}.`
     );
     const contextForException =
       activeTurnCtx && typeof activeTurnCtx.getActor === 'function'
@@ -196,17 +196,26 @@ async function _executeDirectiveStrategy(
     `${state.getStateName()}: Actor ${actorId} - Directive strategy ${directiveStrategy.constructor.name} executed.`
   );
 
-  if (state._isProcessing && state._handler.getCurrentState() === state) {
+  if (!state._isProcessing) {
     logger.debug(
-      `${state.getStateName()}: Directive strategy executed for ${actorId}, state remains ${state.getStateName()}. Processing complete for this state instance.`
+      `${state.getStateName()}: Processing flag false after directive strategy for ${actorId}.`
     );
-    finishProcessing(state);
-  } else if (state._isProcessing) {
-    logger.debug(
-      `${state.getStateName()}: Directive strategy executed for ${actorId}, but state changed from ${state.getStateName()} to ${state._handler.getCurrentState()?.getStateName() ?? 'Unknown'}. Processing considered complete for previous state instance.`
-    );
-    finishProcessing(state);
+    return;
   }
+
+  const currentState = state._handler.getCurrentState();
+  if (currentState !== state) {
+    logger.debug(
+      `${state.getStateName()}: Directive strategy executed for ${actorId}, state changed from ${state.getStateName()} to ${currentState?.getStateName() ?? 'Unknown'}.`
+    );
+    finishProcessing(state);
+    return;
+  }
+
+  logger.debug(
+    `${state.getStateName()}: Directive strategy executed for ${actorId}, state remains ${state.getStateName()}.`
+  );
+  finishProcessing(state);
 }
 
 /**
