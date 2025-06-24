@@ -11,7 +11,10 @@ import { resolvePath } from '../../utils/objectUtils.js';
 import { tryWriteContextVariable } from '../../utils/contextVariableUtils.js';
 import { cloneDeep } from 'lodash';
 import { assertParamsObject } from '../../utils/handlerUtils/indexUtils.js';
-import { advancedArrayModify } from '../utils/arrayModifyUtils.js';
+import {
+  advancedArrayModify,
+  ARRAY_MODIFICATION_MODES,
+} from '../utils/arrayModifyUtils.js';
 import { setByPath } from '../utils/objectPathUtils.js';
 
 /**
@@ -26,7 +29,9 @@ class ModifyContextArrayHandler {
   #dispatcher;
 
   /**
-   * @param {object} deps
+   * Construct a new ModifyContextArrayHandler.
+   *
+   * @param {object} deps - The dependencies for the handler.
    * @param {ILogger} deps.logger - The logging service.
    * @param {ISafeEventDispatcher} deps.safeEventDispatcher - Dispatcher for error events.
    */
@@ -111,14 +116,13 @@ class ModifyContextArrayHandler {
       try {
         // Attempt to stringify, but catch errors for complex objects or circular refs
         debugMessage += ` Value: ${JSON.stringify(value)}.`;
-      } catch (e) {
+      } catch {
         debugMessage += ` Value: [unable to stringify].`;
       }
     }
     log.debug(debugMessage);
 
-    const validModes = ['push', 'push_unique', 'pop', 'remove_by_value'];
-    if (!validModes.includes(mode)) {
+    if (!ARRAY_MODIFICATION_MODES.includes(mode)) {
       log.warn(`MODIFY_CONTEXT_ARRAY: Unknown mode '${mode}'.`);
       return;
     }
