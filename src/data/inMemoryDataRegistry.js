@@ -77,6 +77,13 @@ class InMemoryDataRegistry {
    * @returns {any | undefined}
    */
   get(type, id) {
+    if (typeof type !== 'string' || type.trim() === '') {
+      throw new Error('InMemoryDataRegistry.get: type parameter must be a non-empty string');
+    }
+    if (typeof id !== 'string' || id.trim() === '') {
+      throw new Error('InMemoryDataRegistry.get: id parameter must be a non-empty string');
+    }
+    
     const typeMap = this.data.get(type);
     return typeMap ? typeMap.get(id) : undefined;
   }
@@ -86,6 +93,10 @@ class InMemoryDataRegistry {
    * @returns {any[]}
    */
   getAll(type) {
+    if (typeof type !== 'string' || type.trim() === '') {
+      throw new Error('InMemoryDataRegistry.getAll: type parameter must be a non-empty string');
+    }
+    
     const typeMap = this.data.get(type);
     return typeMap ? Array.from(typeMap.values()) : [];
   }
@@ -169,6 +180,13 @@ class InMemoryDataRegistry {
    * @returns {string | null}
    */
   getContentSource(type, id) {
+    if (typeof type !== 'string' || type.trim() === '') {
+      throw new Error('InMemoryDataRegistry.getContentSource: type parameter must be a non-empty string');
+    }
+    if (typeof id !== 'string' || id.trim() === '') {
+      throw new Error('InMemoryDataRegistry.getContentSource: id parameter must be a non-empty string');
+    }
+    
     const typeMap = this.contentOrigins.get(type);
     return typeMap ? typeMap.get(id) || null : null;
   }

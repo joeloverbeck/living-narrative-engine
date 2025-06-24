@@ -79,13 +79,14 @@ const mockConfigurationInstance = {
 const mockDataRegistry = {
   get: jest.fn().mockReturnValue({}), // Return empty scopes by default
   set: jest.fn(),
-  getAll: jest.fn().mockReturnValue({}),
+  getAll: jest.fn().mockReturnValue([]), // Return empty array for scopes
   // ... other methods if needed by tests
 };
 
 const mockScopeRegistry = {
   initialize: jest.fn(),
   getScope: jest.fn(),
+  getStats: jest.fn(() => ({ size: 0, initialized: true, scopeNames: [] })),
   // ... other methods if needed by tests
 };
 

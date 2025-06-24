@@ -122,8 +122,17 @@ class InitializationService extends IInitializationService {
       this.#logger.debug('Initializing ScopeRegistry...');
       const scopeRegistry = this.#container.resolve(tokens.IScopeRegistry);
       const dataRegistry = this.#container.resolve(tokens.IDataRegistry);
-      const scopes = dataRegistry.get('scopes');
-      scopeRegistry.initialize(scopes);
+      const scopes = dataRegistry.getAll('scopes');
+      
+      // Convert array of scope objects to a map by qualified ID
+      const scopeMap = {};
+      scopes.forEach(scope => {
+        if (scope.id) {
+          scopeMap[scope.id] = scope;
+        }
+      });
+      
+      scopeRegistry.initialize(scopeMap);
       this.#logger.debug('ScopeRegistry initialized.');
 
       // ***** START: Initialize ConfigurableLLMAdapter *****

@@ -12,6 +12,8 @@ import { ActionTargetContext } from '../../models/actionTargetContext.js';
  * Any failures will be logged and an Error will be thrown.
  * @param {ActionDefinition} actionDef - Definition describing the attempted action.
  * @param {Entity} actor - The entity attempting the action.
+ * @param actorEntity
+ * @param actionDefinition
  * @param {ActionTargetContext} targetCtx - Context of the action's target.
  * @param {ILogger} logger - Logger used for reporting validation issues.
  * @throws {Error} If any input is missing required properties or has the wrong type.

@@ -95,10 +95,10 @@ describe('InMemoryDataRegistry', () => {
 
       expect(console.error).toHaveBeenCalledTimes(4);
       // Check that no data was actually stored for these invalid types
-      expect(registry.getAll('')).toEqual([]);
-      expect(registry.getAll(' ')).toEqual([]);
-      expect(registry.getAll(null)).toEqual([]); // Although invalid input, getAll might handle it gracefully or error depending on implementation
-      expect(registry.getAll(undefined)).toEqual([]);
+      expect(() => registry.getAll('')).toThrow('InMemoryDataRegistry.getAll: type parameter must be a non-empty string');
+      expect(() => registry.getAll(' ')).toThrow('InMemoryDataRegistry.getAll: type parameter must be a non-empty string');
+      expect(() => registry.getAll(null)).toThrow('InMemoryDataRegistry.getAll: type parameter must be a non-empty string');
+      expect(() => registry.getAll(undefined)).toThrow('InMemoryDataRegistry.getAll: type parameter must be a non-empty string');
     });
 
     it('should log an error and not store if ID is invalid', () => {
@@ -109,10 +109,10 @@ describe('InMemoryDataRegistry', () => {
       registry.store('validType', undefined, testData); // Undefined ID
 
       expect(console.error).toHaveBeenCalledTimes(4);
-      expect(registry.get('validType', '')).toBeUndefined();
-      expect(registry.get('validType', ' ')).toBeUndefined();
-      expect(registry.get('validType', null)).toBeUndefined();
-      expect(registry.get('validType', undefined)).toBeUndefined();
+      expect(() => registry.get('validType', '')).toThrow('InMemoryDataRegistry.get: id parameter must be a non-empty string');
+      expect(() => registry.get('validType', ' ')).toThrow('InMemoryDataRegistry.get: id parameter must be a non-empty string');
+      expect(() => registry.get('validType', null)).toThrow('InMemoryDataRegistry.get: id parameter must be a non-empty string');
+      expect(() => registry.get('validType', undefined)).toThrow('InMemoryDataRegistry.get: id parameter must be a non-empty string');
       expect(registry.getAll('validType')).toEqual([]); // Type might exist but no data stored under invalid IDs
     });
 

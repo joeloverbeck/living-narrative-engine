@@ -23,6 +23,7 @@ import ConsoleLogger from '../logging/consoleLogger.js';
  *
  * @description Detects a usable `Document` object by inspecting the supplied
  * root value and the current global environment. Falls back to the global
+ * @param logger
  * document when available. Logs an error if no valid context can be found.
  * @param {HTMLElement | Document | null | undefined} [root] - Optional root
  * element or document.
@@ -117,6 +118,7 @@ class DocumentContext {
    *
    * @param {HTMLElement | Document | null | undefined} [root] - Optional root element or document. If it's a Document, it's used directly.
    * If it's a valid HTMLElement, its ownerDocument will be used. Otherwise, it falls back to the global `document`.
+   * @param logger
    */
   constructor(root, logger = new ConsoleLogger()) {
     this.#logger = logger;

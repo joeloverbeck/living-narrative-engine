@@ -1,5 +1,6 @@
 /**
  * Defines identifiers for action target types.
+ *
  * @module ActionTargetTypes
  */
 
