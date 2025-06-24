@@ -13,12 +13,12 @@ import { INITIALIZABLE } from '../tags.js';
  * @param container
  */
 export function registerInitializers(container) {
-  const r = new Registrar(container);
+  const registrar = new Registrar(container);
   const log = container.resolve(tokens.ILogger); // For logging within this function
 
   // --- WorldInitializer (Ticket 15 & Current Ticket) ---
   // Updated to use factory for object dependency constructor
-  r.singletonFactory(tokens.WorldInitializer, (c) => {
+  registrar.singletonFactory(tokens.WorldInitializer, (c) => {
     const dependencies = {
       entityManager: c.resolve(tokens.IEntityManager),
       worldContext: c.resolve(tokens.IWorldContext),
@@ -35,7 +35,7 @@ export function registerInitializers(container) {
 
   // --- SystemInitializer (Ticket 15) ---
   // Updated to use factory for object dependency constructor
-  r.singletonFactory(tokens.SystemInitializer, (c) => {
+  registrar.singletonFactory(tokens.SystemInitializer, (c) => {
     const dependencies = {
       resolver: c, // Pass the container (AppContainer) as the resolver
       logger: c.resolve(tokens.ILogger),

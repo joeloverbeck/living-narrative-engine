@@ -65,7 +65,7 @@ describe('contextUtils private helpers', () => {
     });
 
     it('resolves path via safeResolvePath', () => {
-      safeResolvePath.mockReturnValue(42);
+      safeResolvePath.mockReturnValue({ value: 42, error: undefined });
       const exec = { actor: { id: 5 } };
       expect(_resolvePlaceholderPath('actor.id', exec, mockLogger)).toBe(42);
       expect(safeResolvePath).toHaveBeenCalledWith(
@@ -77,7 +77,10 @@ describe('contextUtils private helpers', () => {
     });
 
     it('uses resolveEntityNameFallback when safe resolution fails', () => {
-      safeResolvePath.mockReturnValue(undefined);
+      safeResolvePath.mockReturnValue({
+        value: undefined,
+        error: new Error('x'),
+      });
       resolveEntityNameFallback.mockReturnValue('Bob');
       const exec = { actor: { id: 'a1' } };
       expect(_resolvePlaceholderPath('actor.name', exec, mockLogger)).toBe(

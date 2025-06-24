@@ -125,13 +125,16 @@ export class PlaceholderResolver {
       return undefined;
     }
 
+    const { value, error } = safeResolvePath(
+      contextInfo.root,
+      contextInfo.path,
+      logger,
+      `resolvePlaceholderPath for "${placeholderPath}" at ${logPath}`
+    );
+
     const resolvedValue =
-      safeResolvePath(
-        contextInfo.root,
-        contextInfo.path,
-        logger,
-        `resolvePlaceholderPath for "${placeholderPath}" at ${logPath}`
-      ) ?? resolveEntityNameFallback(placeholderPath, executionContext, logger);
+      (error ? undefined : value) ??
+      resolveEntityNameFallback(placeholderPath, executionContext, logger);
 
     return resolvedValue;
   }
@@ -144,12 +147,13 @@ export class PlaceholderResolver {
    * @returns {any|undefined} Resolved value or undefined if not found.
    */
   resolvePath(obj, path) {
-    return safeResolvePath(
+    const { value } = safeResolvePath(
       obj,
       path,
       this.#logger,
       'PlaceholderResolver.resolvePath'
     );
+    return value;
   }
 
   /**

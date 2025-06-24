@@ -29,19 +29,19 @@ import { assertValidEntity } from '../../utils/entityAssertionsUtils.js';
  * @param {import('../appContainer.js').default} container
  */
 export function registerTurnLifecycle(container) {
-  const r = new Registrar(container);
+  const registrar = new Registrar(container);
   const logger = container.resolve(tokens.ILogger);
   logger.debug('Turn Lifecycle Registration: Starting...');
 
   // ───────────────────── Core singletons ─────────────────────
-  r.singletonFactory(
+  registrar.singletonFactory(
     tokens.ITurnOrderService,
     (c) => new TurnOrderService({ logger: c.resolve(tokens.ILogger) })
   );
-  r.single(tokens.ITurnStateFactory, ConcreteTurnStateFactory);
+  registrar.single(tokens.ITurnStateFactory, ConcreteTurnStateFactory);
 
   // ─────────────────── Turn-context factory ──────────────────
-  r.singletonFactory(
+  registrar.singletonFactory(
     tokens.ITurnContextFactory,
     (c) =>
       new ConcreteTurnContextFactory({
@@ -57,7 +57,7 @@ export function registerTurnLifecycle(container) {
   );
 
   // ────────────────── Prompt-layer services ──────────────────
-  r.singletonFactory(
+  registrar.singletonFactory(
     tokens.ActionContextBuilder,
     (c) =>
       new ActionContextBuilder({
@@ -68,7 +68,7 @@ export function registerTurnLifecycle(container) {
       })
   );
 
-  r.singletonFactory(
+  registrar.singletonFactory(
     tokens.IPlayerTurnEvents,
     (c) =>
       new ValidatedEventDispatcherAdapter({
@@ -76,7 +76,7 @@ export function registerTurnLifecycle(container) {
       })
   );
 
-  r.singletonFactory(
+  registrar.singletonFactory(
     tokens.IPromptCoordinator,
     (c) =>
       new PromptCoordinator({
@@ -90,7 +90,7 @@ export function registerTurnLifecycle(container) {
     'Turn Lifecycle Registration: Registered Turn services and factories.'
   );
 
-  r.transientFactory(
+  registrar.transientFactory(
     tokens.IHumanDecisionProvider,
     (c) =>
       new HumanDecisionProvider({
@@ -101,7 +101,7 @@ export function registerTurnLifecycle(container) {
   );
 
   // ──────────────────── Validation Utils ─────────────────────
-  r.singletonFactory(
+  registrar.singletonFactory(
     tokens.assertValidEntity,
     (c) => (entity, logger, contextName) =>
       assertValidEntity(
@@ -113,7 +113,7 @@ export function registerTurnLifecycle(container) {
   );
 
   // ───────────────── Turn Context Builder ────────────────────
-  r.transientFactory(
+  registrar.transientFactory(
     tokens.TurnContextBuilder,
     (c) =>
       new TurnContextBuilder({
@@ -124,7 +124,7 @@ export function registerTurnLifecycle(container) {
   );
 
   // ────────────────── Resolver & manager ──────────────────
-  r.singletonFactory(
+  registrar.singletonFactory(
     tokens.TurnHandlerResolver,
     (c) =>
       new TurnHandlerResolver({
@@ -147,7 +147,7 @@ export function registerTurnLifecycle(container) {
     `Turn Lifecycle Registration: Registered ${tokens.TurnHandlerResolver} with singleton resolution.`
   );
 
-  r.tagged(INITIALIZABLE).singletonFactory(
+  registrar.tagged(INITIALIZABLE).singletonFactory(
     tokens.ITurnManager,
     (c) =>
       new TurnManager({
@@ -165,7 +165,7 @@ export function registerTurnLifecycle(container) {
   );
 
   // ─────────────── ITurnContext façade (read-only) ───────────────
-  r.transientFactory(tokens.ITurnContext, (c) => {
+  registrar.transientFactory(tokens.ITurnContext, (c) => {
     const tm = c.resolve(tokens.ITurnManager);
     return tm?.getActiveTurnHandler?.()?.getTurnContext?.() ?? null;
   });

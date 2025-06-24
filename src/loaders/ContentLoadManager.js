@@ -22,6 +22,7 @@ export class ContentLoadManager {
   #validatedEventDispatcher;
   #contentLoadersConfig;
   #aggregatorFactory;
+  #timer;
 
   /**
    * @param {object} deps - Constructor dependencies.
@@ -29,18 +30,22 @@ export class ContentLoadManager {
    * @param {ValidatedEventDispatcher} deps.validatedEventDispatcher - Event dispatcher.
    * @param {Array<LoaderConfigEntry>} deps.contentLoadersConfig - Loader configuration.
    * @param {(counts: TotalResultsSummary) => LoadResultAggregator} [deps.aggregatorFactory] -
-   * Factory for creating {@link LoadResultAggregator} instances.
+   *   Factory for creating {@link LoadResultAggregator} instances.
+   * @param {() => number} [deps.timer] -
+   *   Optional function returning a high resolution timestamp.
    */
   constructor({
     logger,
     validatedEventDispatcher,
     contentLoadersConfig,
     aggregatorFactory = (counts) => new LoadResultAggregator(counts),
+    timer = () => performance.now(),
   }) {
     this.#logger = logger;
     this.#validatedEventDispatcher = validatedEventDispatcher;
     this.#contentLoadersConfig = contentLoadersConfig;
     this.#aggregatorFactory = aggregatorFactory;
+    this.#timer = timer;
   }
 
   /**
@@ -386,7 +391,7 @@ export class ContentLoadManager {
       this.#logger.debug(
         `ModsLoader [${modId}, ${phase}]: Manifest retrieved successfully. Processing content types...`
       );
-      const modStartTime = performance.now();
+      const modStartTime = this.#timer();
 
       const { hasContent, status: loaderStatus } = await this.#iterateLoaders(
         modId,
@@ -399,7 +404,7 @@ export class ContentLoadManager {
       hasContentInPhase = hasContent;
       status = loaderStatus;
 
-      const modEndTime = performance.now();
+      const modEndTime = this.#timer();
       modDurationMs = modEndTime - modStartTime;
       this.#logger.debug(
         `ModsLoader [${modId}, ${phase}]: Content loading loop took ${modDurationMs.toFixed(2)} ms.`

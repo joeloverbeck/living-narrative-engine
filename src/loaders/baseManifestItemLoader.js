@@ -17,6 +17,7 @@ import { validateAgainstSchema } from '../utils/schemaValidationUtils.js';
 import { validateDependencies } from '../utils/validationUtils.js';
 import { storeItemInRegistry } from './helpers/registryStoreUtils.js';
 import { extractValidFilenames } from './helpers/filenameUtils.js';
+import { summarizeSettledResults } from './helpers/resultsSummary.js';
 
 // --- Add LoadItemsResult typedef here for clarity ---
 /**
@@ -393,7 +394,8 @@ export class BaseManifestItemLoader extends AbstractLoader {
 
     const settledResults = await Promise.allSettled(processingPromises);
     const { processedCount, overrideCount, failedCount, failures } =
-      this.#summarizeSettledResults(
+      summarizeSettledResults(
+        this._logger,
         settledResults,
         filenames,
         modId,
@@ -409,55 +411,6 @@ export class BaseManifestItemLoader extends AbstractLoader {
     };
   }
 
-  /**
-   * Aggregates results from Promise.allSettled and logs a summary.
-   *
-   * @private
-   * @param {PromiseSettledResult<{qualifiedId:string,didOverride:boolean}>[]} settledResults - Results.
-   * @param {string[]} filenames - Original filenames.
-   * @param {string} modId - Owning mod ID.
-   * @param {string} contentKey - Content key for logging.
-   * @param {number} totalAttempted - Total files attempted.
-   * @returns {{processedCount:number,overrideCount:number,failedCount:number,failures:{file:string,error:any}[]}}
-   *   Summary counts.
-   */
-  #summarizeSettledResults(
-    settledResults,
-    filenames,
-    modId,
-    contentKey,
-    totalAttempted
-  ) {
-    let processedCount = 0;
-    let overrideCount = 0;
-    let failedCount = 0;
-    const failures = [];
-
-    settledResults.forEach((result, index) => {
-      const currentFilename = filenames[index];
-      if (result.status === 'fulfilled') {
-        processedCount++;
-        if (result.value && result.value.didOverride === true) {
-          overrideCount++;
-        }
-      } else {
-        failedCount++;
-        failures.push({ file: currentFilename, error: result.reason });
-        this._logger.debug(
-          `[${modId}] Failure recorded for ${currentFilename} in batch processing. Reason logged previously.`
-        );
-      }
-    });
-
-    const overrideMessage =
-      overrideCount > 0 ? ` (${overrideCount} overrides)` : '';
-    const failureMessage = failedCount > 0 ? ` (${failedCount} failed)` : '';
-    this._logger.info(
-      `Mod [${modId}] - Processed ${processedCount}/${totalAttempted} ${contentKey} items.${overrideMessage}${failureMessage}`
-    );
-
-    return { processedCount, overrideCount, failedCount, failures };
-  }
 
   /**
    * Centralized helper method for storing items in the registry with standardized key prefixing,

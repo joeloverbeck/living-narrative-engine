@@ -73,6 +73,84 @@ export class MockContainer {
   }
 
   /**
+   * Instantiates and caches a singleton registration.
+   *
+   * @param {string} registrationKey - Key for the registration.
+   * @param {{ factoryOrValue: any, options: object, instance: any }} registration - Registration details.
+   * @returns {any} The instantiated singleton value.
+   */
+  _instantiateSingleton(registrationKey, registration) {
+    const { factoryOrValue, options } = registration;
+
+    if (registration.instance !== undefined) {
+      return registration.instance;
+    }
+
+    if (typeof factoryOrValue === 'function') {
+      try {
+        const isClass =
+          factoryOrValue.prototype &&
+          typeof factoryOrValue.prototype.constructor === 'function';
+
+        if (
+          isClass &&
+          options?.lifecycle === 'singleton' &&
+          !options?.isFactory
+        ) {
+          registration.instance = new factoryOrValue(this);
+        } else {
+          registration.instance = factoryOrValue(this);
+        }
+      } catch (e) {
+        throw new Error(
+          `Mock container: Error executing factory for ${registrationKey}: ${e.message}`
+        );
+      }
+
+      return registration.instance;
+    }
+
+    registration.instance = factoryOrValue;
+    return registration.instance;
+  }
+
+  /**
+   * Instantiates a transient registration.
+   *
+   * @param {string} registrationKey - Key for the registration.
+   * @param {{ factoryOrValue: any, options: object }} registration - Registration details.
+   * @returns {any} The newly created instance or value.
+   */
+  _instantiateTransient(registrationKey, registration) {
+    const { factoryOrValue, options } = registration;
+
+    try {
+      const isClass =
+        factoryOrValue.prototype &&
+        typeof factoryOrValue.prototype.constructor === 'function';
+
+      if (isClass && !options?.isFactory) {
+        return new factoryOrValue(this);
+      }
+      return factoryOrValue(this);
+    } catch (e) {
+      throw new Error(
+        `Mock container: Error executing transient factory for ${registrationKey}: ${e.message}`
+      );
+    }
+  }
+
+  /**
+   * Returns the registered value as-is.
+   *
+   * @param {{ factoryOrValue: any }} registration - Registration details.
+   * @returns {any} The stored value.
+   */
+  _returnValue(registration) {
+    return registration.factoryOrValue;
+  }
+
+  /**
    * Resolves a previously registered token.
    *
    * @param {string|symbol} token - Token to resolve.
@@ -92,57 +170,19 @@ export class MockContainer {
     }
 
     const registration = this._registrations.get(registrationKey);
-    const { factoryOrValue, options } = registration;
 
     if (
-      options?.lifecycle === 'singletonFactory' ||
-      options?.lifecycle === 'singleton'
+      registration.options?.lifecycle === 'singletonFactory' ||
+      registration.options?.lifecycle === 'singleton'
     ) {
-      if (registration.instance !== undefined) {
-        return registration.instance;
-      }
-      if (typeof factoryOrValue === 'function') {
-        try {
-          const isClass =
-            factoryOrValue.prototype &&
-            typeof factoryOrValue.prototype.constructor === 'function';
-          if (
-            isClass &&
-            options?.lifecycle === 'singleton' &&
-            !options?.isFactory
-          ) {
-            registration.instance = new factoryOrValue(this);
-          } else {
-            registration.instance = factoryOrValue(this);
-          }
-        } catch (e) {
-          throw new Error(
-            `Mock container: Error executing factory for ${registrationKey}: ${e.message}`
-          );
-        }
-        return registration.instance;
-      }
-      registration.instance = factoryOrValue;
-      return registration.instance;
+      return this._instantiateSingleton(registrationKey, registration);
     }
 
-    if (typeof factoryOrValue === 'function') {
-      try {
-        const isClass =
-          factoryOrValue.prototype &&
-          typeof factoryOrValue.prototype.constructor === 'function';
-        if (isClass && !options?.isFactory) {
-          return new factoryOrValue(this);
-        }
-        return factoryOrValue(this);
-      } catch (e) {
-        throw new Error(
-          `Mock container: Error executing transient factory for ${registrationKey}: ${e.message}`
-        );
-      }
+    if (typeof registration.factoryOrValue === 'function') {
+      return this._instantiateTransient(registrationKey, registration);
     }
 
-    return factoryOrValue;
+    return this._returnValue(registration);
   }
 
   /**

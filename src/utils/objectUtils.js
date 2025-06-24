@@ -71,8 +71,9 @@ export function resolvePath(obj, propertyPath) {
  *   error reporting.
  * @param {string} [contextInfo] - Additional context included in log messages.
  * @param {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} [dispatcher] - Dispatcher for system error events.
- * @returns {any | undefined} The resolved value or `undefined` when resolution
- *   fails.
+ * @returns {{ value: any | undefined, error: any | undefined }} Result object
+ *   containing the resolved value or `undefined` when resolution fails, and the
+ *   caught error if an exception occurred.
  */
 export function safeResolvePath(
   obj,
@@ -83,7 +84,8 @@ export function safeResolvePath(
 ) {
   const moduleLogger = ensureValidLogger(logger, 'ObjectUtils');
   try {
-    return resolvePath(obj, propertyPath);
+    const value = resolvePath(obj, propertyPath);
+    return { value, error: undefined };
   } catch (error) {
     const info = contextInfo ? ` (${contextInfo})` : '';
     const message = `Error resolving path "${propertyPath}"${info}`;
@@ -95,7 +97,7 @@ export function safeResolvePath(
     } else {
       moduleLogger.error(message, error);
     }
-    return undefined;
+    return { value: undefined, error };
   }
 }
 

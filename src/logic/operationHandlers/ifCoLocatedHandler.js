@@ -16,8 +16,6 @@ import { assertParamsObject } from '../../utils/handlerUtils/paramsUtils.js';
 import BaseOperationHandler from './baseOperationHandler.js';
 
 class IfCoLocatedHandler extends BaseOperationHandler {
-  /** @type {ILogger} */
-  #logger;
   /** @type {EntityManager} */
   #entityManager;
   /** @type {OperationInterpreter} */
@@ -53,7 +51,6 @@ class IfCoLocatedHandler extends BaseOperationHandler {
         requiredMethods: ['dispatch'],
       },
     });
-    this.#logger = logger;
     this.#entityManager = entityManager;
     this.#opInterpreter = operationInterpreter;
     this.#dispatcher = safeEventDispatcher;
@@ -72,7 +69,7 @@ class IfCoLocatedHandler extends BaseOperationHandler {
    * @param {ExecutionContext} executionContext
    */
   execute(params, executionContext) {
-    const log = executionContext?.logger ?? this.#logger;
+    const log = this.getLogger(executionContext);
 
     if (!assertParamsObject(params, this.#dispatcher, 'IF_CO_LOCATED')) {
       return;
@@ -103,6 +100,22 @@ class IfCoLocatedHandler extends BaseOperationHandler {
       return;
     }
 
+    const same = this.#entitiesCoLocated(idA, idB, executionContext);
+
+    const actions = same ? then_actions : else_actions;
+    this.#runActions(actions, executionContext);
+  }
+
+  /**
+   * Determine if two entities share the same location.
+   *
+   * @private
+   * @param {string} idA - First entity ID.
+   * @param {string} idB - Second entity ID.
+   * @param {ExecutionContext} _executionContext - Current execution context.
+   * @returns {boolean} `true` if co-located, else `false`.
+   */
+  #entitiesCoLocated(idA, idB, _executionContext) {
     let same = false;
     try {
       const posA = this.#entityManager.getComponentData(
@@ -125,12 +138,19 @@ class IfCoLocatedHandler extends BaseOperationHandler {
       );
       same = false;
     }
+    return same;
+  }
 
-    const actions = Array.isArray(same ? then_actions : else_actions)
-      ? same
-        ? then_actions
-        : else_actions
-      : [];
+  /**
+   * Execute a list of operations using the interpreter.
+   *
+   * @private
+   * @param {import('../../data/schemas/operation.schema.json').Operation[]|*} actions - Operations to execute.
+   * @param {ExecutionContext} executionContext - Current execution context.
+   * @returns {void}
+   */
+  #runActions(actions, executionContext) {
+    if (!Array.isArray(actions)) return;
     for (const op of actions) {
       try {
         this.#opInterpreter.execute(op, executionContext);
