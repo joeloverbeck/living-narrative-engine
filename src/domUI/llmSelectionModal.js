@@ -4,6 +4,13 @@
 import { SlotModalBase } from './slotModalBase.js';
 import { createSelectableItem } from './helpers/createSelectableItem.js';
 import { buildModalElementsConfig } from './helpers/buildModalElementsConfig.js';
+import { DATASET_LLM_ID } from '../constants/datasetKeys.js';
+
+/**
+ * Dataset key storing the ID for LLM options.
+ *
+ * @constant {string}
+ */
 
 /**
  * @typedef {import('../interfaces/coreServices.js').ILogger} ILogger
@@ -76,7 +83,7 @@ export class LlmSelectionModal extends SlotModalBase {
       statusMessageElement: '#llm-selection-status-message',
     });
     super({
-      datasetKey: 'llmId',
+      datasetKey: DATASET_LLM_ID,
       logger,
       documentContext,
       validatedEventDispatcher,
@@ -351,7 +358,7 @@ export class LlmSelectionModal extends SlotModalBase {
    */
   async #handleLlmSelection(event) {
     const clickedItem = /** @type {HTMLElement} */ (event.currentTarget);
-    const selectedLlmId = clickedItem.dataset.llmId;
+    const selectedLlmId = clickedItem.dataset[DATASET_LLM_ID];
 
     if (!selectedLlmId) {
       this.logger.error(

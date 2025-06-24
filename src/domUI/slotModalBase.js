@@ -9,6 +9,13 @@ import { DomUtils } from '../utils/domUtils.js';
 import { setupRadioListNavigation } from '../utils/listNavigationUtils.js';
 import createMessageElement from './helpers/createMessageElement.js';
 import renderListCommon from './helpers/renderListCommon.js';
+import { DATASET_SLOT_ID } from '../constants/datasetKeys.js';
+
+/**
+ * Dataset key used to store the slot's numeric ID on DOM elements.
+ *
+ * @constant {string}
+ */
 
 /**
  * @class SlotModalBase
@@ -159,7 +166,7 @@ export class SlotModalBase extends BaseModalRenderer {
       this._datasetKey,
       (el, value) => {
         let slotData;
-        if (this._datasetKey === 'slotId') {
+        if (this._datasetKey === DATASET_SLOT_ID) {
           const slotId = parseInt(value || '-1', 10);
           slotData = this.currentSlotsDisplayData.find(
             (s) => s.slotId === slotId
@@ -180,7 +187,7 @@ export class SlotModalBase extends BaseModalRenderer {
       const target = /** @type {HTMLElement} */ (event.target);
       const value = target.dataset[this._datasetKey];
       let slotData;
-      if (this._datasetKey === 'slotId') {
+      if (this._datasetKey === DATASET_SLOT_ID) {
         const slotId = parseInt(value || '-1', 10);
         slotData = this.currentSlotsDisplayData.find(
           (s) => s.slotId === slotId

@@ -10,6 +10,13 @@ import {
 } from './helpers/renderSlotItem.js';
 import { buildModalElementsConfig } from './helpers/buildModalElementsConfig.js';
 import createEmptySlotMessage from './helpers/createEmptySlotMessage.js';
+import { DATASET_SLOT_IDENTIFIER } from '../constants/datasetKeys.js';
+
+/**
+ * Dataset key storing the unique string identifier on load slot elements.
+ *
+ * @constant {string}
+ */
 
 /**
  * @typedef {import('../engine/gameEngine.js').default} GameEngine
@@ -72,7 +79,7 @@ class LoadGameUI extends SlotModalBase {
       validatedEventDispatcher,
       elementsConfig,
       domElementFactory,
-      datasetKey: 'slotIdentifier',
+      datasetKey: DATASET_SLOT_IDENTIFIER,
       confirmButtonKey: 'confirmLoadButtonEl',
       deleteButtonKey: 'deleteSaveButtonEl',
     });
@@ -266,7 +273,7 @@ class LoadGameUI extends SlotModalBase {
 
     return renderGenericSlotItem(
       this.domElementFactory,
-      'slotIdentifier',
+      DATASET_SLOT_IDENTIFIER,
       slotData.identifier,
       metadata,
       itemIndex,
@@ -567,7 +574,7 @@ class LoadGameUI extends SlotModalBase {
       if (firstSlot) {
         /** @type {HTMLElement} */ (firstSlot).focus();
         const firstSlotIdentifier = /** @type {HTMLElement} */ (firstSlot)
-          .dataset.slotIdentifier;
+          .dataset[DATASET_SLOT_IDENTIFIER];
         const firstSlotData = this.currentSlotsDisplayData.find(
           (s) => s.identifier === firstSlotIdentifier
         );
