@@ -19,12 +19,11 @@
 import { createDefaultDeps } from './utils/createDefaultDeps.js';
 import Entity from './entity.js';
 import EntityInstanceData from './entityInstanceData.js';
-import { MapManager } from '../utils/mapManagerUtils.js';
 import EntityFactory from './factories/entityFactory.js';
-import { validateAndClone as validateAndCloneUtil } from './utils/componentValidation.js';
+import EntityRepositoryAdapter from './services/entityRepositoryAdapter.js';
+import ComponentMutationService from './services/componentMutationService.js';
+import ErrorTranslator from './services/errorTranslator.js';
 import {
-  validateAddComponentParams as validateAddComponentParamsUtil,
-  validateRemoveComponentParams as validateRemoveComponentParamsUtil,
   validateReconstructEntityParams as validateReconstructEntityParamsUtil,
   validateGetEntityInstanceParams as validateGetEntityInstanceParamsUtil,
   validateGetComponentDataParams as validateGetComponentDataParamsUtil,
@@ -49,8 +48,6 @@ import { ValidationError } from '../errors/validationError.js';
 import {
   ENTITY_CREATED_ID,
   ENTITY_REMOVED_ID,
-  COMPONENT_ADDED_ID,
-  COMPONENT_REMOVED_ID,
 } from '../constants/eventIds.js';
 
 /* -------------------------------------------------------------------------- */
@@ -111,8 +108,14 @@ class EntityManager extends IEntityManager {
   /** @type {IDefaultComponentPolicy} @private */
   #defaultPolicy; // eslint-disable-line no-unused-private-class-members
 
-  /** @type {MapManager} @private */
-  #mapManager;
+  /** @type {EntityRepositoryAdapter} @private */
+  #entityRepository;
+
+  /** @type {ComponentMutationService} @private */
+  #componentMutationService;
+
+  /** @type {ErrorTranslator} @private */
+  #errorTranslator;
 
   /** @type {Map<string, EntityDefinition>} @private */
   #definitionCache;
@@ -127,7 +130,7 @@ class EntityManager extends IEntityManager {
    * @returns {IterableIterator<Entity>} Iterator over all active entities
    */
   get entities() {
-    return this.#mapManager.values();
+    return this.#entityRepository.entities();
   }
 
   /**
@@ -209,7 +212,23 @@ class EntityManager extends IEntityManager {
     this.#cloner = cloner;
     this.#defaultPolicy = defaultPolicy;
 
-    this.#mapManager = new MapManager({ throwOnInvalidId: false });
+    // Initialize services
+    this.#entityRepository = new EntityRepositoryAdapter({
+      logger: this.#logger,
+    });
+
+    this.#componentMutationService = new ComponentMutationService({
+      entityRepository: this.#entityRepository,
+      validator: this.#validator,
+      logger: this.#logger,
+      eventDispatcher: this.#eventDispatcher,
+      cloner: this.#cloner,
+    });
+
+    this.#errorTranslator = new ErrorTranslator({
+      logger: this.#logger,
+    });
+
     this.#definitionCache = new Map();
 
     // Initialize the EntityFactory
@@ -232,28 +251,10 @@ class EntityManager extends IEntityManager {
    * @private
    */
   #getEntityById(instanceId) {
-    return this.#mapManager.get(instanceId);
+    return this.#entityRepository.get(instanceId);
   }
 
-  /**
-   * Validate component data and return a deep clone.
-   *
-   * @private
-   * @param {string} componentTypeId
-   * @param {object} data
-   * @param {string} errorContext
-   * @returns {object} The validated (and potentially cloned/modified by validator) data.
-   */
-  #validateAndClone(componentTypeId, data, errorContext) {
-    return validateAndCloneUtil(
-      componentTypeId,
-      data,
-      this.#validator,
-      this.#logger,
-      errorContext,
-      this.#cloner
-    );
-  }
+
 
   /**
    * Retrieves an entity definition from the registry or cache.
@@ -283,39 +284,7 @@ class EntityManager extends IEntityManager {
     return null;
   }
 
-  /**
-   * Validate parameters for {@link addComponent}.
-   *
-   * @private
-   * @param {string} instanceId - Entity instance ID.
-   * @param {string} componentTypeId - Component type ID.
-   * @param {object} componentData - Raw component data.
-   * @throws {InvalidArgumentError} If parameters are invalid.
-   */
-  #validateAddComponentParams(instanceId, componentTypeId, componentData) {
-    validateAddComponentParamsUtil(
-      instanceId,
-      componentTypeId,
-      componentData,
-      this.#logger
-    );
-  }
 
-  /**
-   * Validate parameters for {@link removeComponent}.
-   *
-   * @private
-   * @param {string} instanceId - Entity instance ID.
-   * @param {string} componentTypeId - Component type ID.
-   * @throws {InvalidArgumentError} If parameters are invalid.
-   */
-  #validateRemoveComponentParams(instanceId, componentTypeId) {
-    validateRemoveComponentParamsUtil(
-      instanceId,
-      componentTypeId,
-      this.#logger
-    );
-  }
 
   /**
    * Validate serialized entity data prior to reconstruction.
@@ -405,57 +374,7 @@ class EntityManager extends IEntityManager {
     validateRemoveEntityInstanceParamsUtil(instanceId, this.#logger);
   }
 
-  /**
-   * Translate errors from {@link EntityFactory} to maintain legacy messages.
-   *
-   * @private
-   * @param {Error} err - Original error thrown by the factory.
-   * @throws {Error|DuplicateEntityError}
-   */
-  #handleReconstructionError(err) {
-    if (
-      err instanceof Error &&
-      err.message.startsWith(
-        'EntityFactory.reconstruct: serializedEntity data is missing or invalid.'
-      )
-    ) {
-      const msg =
-        'EntityManager.reconstructEntity: serializedEntity data is missing or invalid.';
-      this.#logger.error(msg);
-      return new Error(msg);
-    }
-    if (
-      err instanceof Error &&
-      err.message.startsWith(
-        'EntityFactory.reconstruct: instanceId is missing or invalid in serialized data.'
-      )
-    ) {
-      const msg =
-        'EntityManager.reconstructEntity: instanceId is missing or invalid in serialized data.';
-      this.#logger.error(msg);
-      return new Error(msg);
-    }
-    if (
-      err instanceof Error &&
-      err.message.startsWith('EntityFactory.reconstruct: Entity with ID')
-    ) {
-      const match = err.message.match(
-        /EntityFactory\.reconstruct: (Entity with ID '.*? already exists\. Reconstruction aborted\.)/
-      );
-      if (match) {
-        const msg = `EntityManager.reconstructEntity: ${match[1]}`;
-        this.#logger.error(msg);
-        const entityMatch = match[1].match(
-          /Entity with ID '([^']+)' already exists/
-        );
-        if (entityMatch) {
-          return new DuplicateEntityError(entityMatch[1], msg);
-        }
-        return new DuplicateEntityError('unknown', msg);
-      }
-    }
-    return err instanceof Error ? err : new Error(String(err));
-  }
+
 
   /* ---------------------------------------------------------------------- */
   /* Entity Creation                                                         */
@@ -509,7 +428,7 @@ class EntityManager extends IEntityManager {
         definitionId,
         opts,
         this.#registry,
-        this.#mapManager,
+        this.#entityRepository,
         definition
       );
 
@@ -518,7 +437,7 @@ class EntityManager extends IEntityManager {
       );
 
       // Track the primary instance.
-      this.#mapManager.add(entity.id, entity);
+      this.#entityRepository.add(entity);
       this.#logger.debug(`Tracked entity ${entity.id}`);
       // Dispatch event after successful creation and setup
       this.#eventDispatcher.dispatch(ENTITY_CREATED_ID, {
@@ -563,9 +482,9 @@ class EntityManager extends IEntityManager {
       const entity = this.#factory.reconstruct(
         serializedEntity,
         this.#registry,
-        this.#mapManager
+        this.#entityRepository
       );
-      this.#mapManager.add(entity.id, entity);
+      this.#entityRepository.add(entity);
       this.#logger.debug(`Tracked entity ${entity.id}`);
       this.#eventDispatcher.dispatch(ENTITY_CREATED_ID, {
         instanceId: entity.id,
@@ -575,7 +494,7 @@ class EntityManager extends IEntityManager {
       });
       return entity;
     } catch (err) {
-      throw this.#handleReconstructionError(err);
+      throw this.#errorTranslator.translateReconstructionError(err);
     }
   }
 
@@ -595,66 +514,7 @@ class EntityManager extends IEntityManager {
    * @throws {ValidationError} If component data validation fails.
    */
   addComponent(instanceId, componentTypeId, componentData) {
-    this.#validateAddComponentParams(
-      instanceId,
-      componentTypeId,
-      componentData
-    );
-
-    const entity = this.#getEntityById(instanceId);
-    if (!entity) {
-      // UPDATED: Throw custom error
-      this.#logger.error(
-        `EntityManager.addComponent: Entity not found with ID: ${instanceId}`,
-        { instanceId, componentTypeId }
-      );
-      throw new EntityNotFoundError(instanceId);
-    }
-
-    // Capture the state of the component *before* the change.
-    const oldComponentData = entity.getComponentData(componentTypeId);
-
-    let validatedData;
-    if (componentData === undefined) {
-      validatedData = undefined;
-    } else {
-      try {
-        validatedData = this.#validateAndClone(
-          componentTypeId,
-          componentData,
-          `addComponent ${componentTypeId} to entity ${instanceId}`
-        );
-      } catch (error) {
-        // Convert generic validation errors to ValidationError
-        throw new ValidationError(
-          error.message,
-          componentTypeId,
-          error.validationErrors
-        );
-      }
-    }
-
-    const updateSucceeded = entity.addComponent(componentTypeId, validatedData);
-
-    if (!updateSucceeded) {
-      this.#logger.warn(
-        `EntityManager.addComponent: entity.addComponent returned false for '${componentTypeId}' on entity '${instanceId}'. This may indicate an internal issue.`
-      );
-      throw new Error(
-        `Failed to add component '${componentTypeId}' to entity '${instanceId}'. Internal entity update failed.`
-      );
-    }
-
-    this.#eventDispatcher.dispatch(COMPONENT_ADDED_ID, {
-      entity,
-      componentTypeId,
-      componentData: validatedData,
-      oldComponentData, // Include old data in the event
-    });
-
-    this.#logger.debug(
-      `Successfully added/updated component '${componentTypeId}' data on entity '${instanceId}'.`
-    );
+    this.#componentMutationService.addComponent(instanceId, componentTypeId, componentData);
   }
 
   /**
@@ -667,50 +527,7 @@ class EntityManager extends IEntityManager {
    * @throws {Error} If component override does not exist or removal fails.
    */
   removeComponent(instanceId, componentTypeId) {
-    this.#validateRemoveComponentParams(instanceId, componentTypeId);
-
-    const entity = this.#getEntityById(instanceId);
-    if (!entity) {
-      // UPDATED: Throw custom error
-      this.#logger.error(
-        `EntityManager.removeComponent: Entity not found with ID: '${instanceId}'. Cannot remove component '${componentTypeId}'.`
-      );
-      throw new EntityNotFoundError(instanceId);
-    }
-
-    // Check if the component to be removed exists as an override.
-    if (!entity.hasComponent(componentTypeId, true)) {
-      this.#logger.debug(
-        `EntityManager.removeComponent: Component '${componentTypeId}' not found as an override on entity '${instanceId}'. Nothing to remove at instance level.`
-      );
-      throw new Error(
-        `Component '${componentTypeId}' not found as an override on entity '${instanceId}'. Nothing to remove at instance level.`
-      );
-    }
-
-    // Capture the state of the component *before* it is removed.
-    const oldComponentData = entity.getComponentData(componentTypeId);
-
-    const successfullyRemovedOverride = entity.removeComponent(componentTypeId);
-
-    if (successfullyRemovedOverride) {
-      this.#eventDispatcher.dispatch(COMPONENT_REMOVED_ID, {
-        entity,
-        componentTypeId,
-        oldComponentData, // Include old data in the event
-      });
-
-      this.#logger.debug(
-        `EntityManager.removeComponent: Component override '${componentTypeId}' removed from entity '${instanceId}'.`
-      );
-    } else {
-      this.#logger.warn(
-        `EntityManager.removeComponent: entity.removeComponent('${componentTypeId}') returned false for entity '${instanceId}' when an override was expected and should have been removable. This may indicate an issue in Entity class logic.`
-      );
-      throw new Error(
-        `Failed to remove component '${componentTypeId}' from entity '${instanceId}'. Internal entity removal failed.`
-      );
-    }
+    this.#componentMutationService.removeComponent(instanceId, componentTypeId);
   }
 
   /* ---------------------------------------------------------------------- */
@@ -867,21 +684,21 @@ class EntityManager extends IEntityManager {
       throw new EntityNotFoundError(instanceId);
     }
 
-    const removed = this.#mapManager.remove(entityToRemove.id);
-    if (removed) {
+    try {
+      this.#entityRepository.remove(entityToRemove.id);
       this.#logger.info(
         `Entity instance ${entityToRemove.id} removed from EntityManager.`
       );
       this.#eventDispatcher.dispatch(ENTITY_REMOVED_ID, {
         entity: entityToRemove,
       });
-    } else {
+    } catch (error) {
       this.#logger.error(
-        `EntityManager.removeEntityInstance: MapManager.remove failed for already retrieved entity '${instanceId}'. This indicates a serious internal inconsistency.`
+        `EntityManager.removeEntityInstance: EntityRepository.remove failed for already retrieved entity '${instanceId}'. This indicates a serious internal inconsistency.`
       );
       // This path should ideally not be reachable if `getEntityById` succeeded, but throwing an error is safer.
       throw new Error(
-        `Internal error: Failed to remove entity '${instanceId}' from MapManager despite entity being found.`
+        `Internal error: Failed to remove entity '${instanceId}' from repository despite entity being found.`
       );
     }
   }
@@ -891,7 +708,7 @@ class EntityManager extends IEntityManager {
    * Also clears the entity definition cache.
    */
   clearAll() {
-    this.#mapManager.clear();
+    this.#entityRepository.clear();
     this.#logger.info('All entity instances removed from EntityManager.');
 
     this.#definitionCache.clear();

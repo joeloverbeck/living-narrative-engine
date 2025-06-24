@@ -24,7 +24,6 @@ import {
   expectEntityRemovedDispatch,
 } from '../../common/engine/dispatchTestUtils.js';
 
-import { MapManager } from '../../../src/utils/mapManagerUtils.js';
 import { buildSerializedEntity } from '../../common/entities/index.js';
 
 describeEntityManagerSuite('EntityManager - Lifecycle', (getBed) => {
@@ -424,26 +423,29 @@ describeEntityManagerSuite('EntityManager - Lifecycle', (getBed) => {
       em.removeEntityInstance(instanceId)
     );
 
-    it('should throw an error if MapManager fails internally', () => {
+    it('should throw an error if EntityRepository fails internally', () => {
       // This is a tricky test for a defensive code path.
-      // We need to spy on the MapManager's prototype BEFORE TestBed creates the EntityManager.
+      // We need to spy on the EntityRepositoryAdapter's prototype BEFORE TestBed creates the EntityManager.
+      const { EntityRepositoryAdapter } = jest.requireActual('../../../src/entities/services/entityRepositoryAdapter.js');
       const removeSpy = jest
-        .spyOn(MapManager.prototype, 'remove')
-        .mockReturnValue(false);
+        .spyOn(EntityRepositoryAdapter.prototype, 'remove')
+        .mockImplementation(() => {
+          throw new Error('Test repository failure');
+        });
 
       // Arrange
-      const localTestBed = new TestBed(); // Uses the spied-on MapManager
+      const localTestBed = new TestBed(); // Uses the spied-on EntityRepositoryAdapter
       const { entityManager, mocks } = localTestBed;
       const { PRIMARY } = TestData.InstanceIDs;
       localTestBed.createBasicEntity({ instanceId: PRIMARY });
 
       // Act & Assert
       expect(() => entityManager.removeEntityInstance(PRIMARY)).toThrow(
-        "Internal error: Failed to remove entity 'test-instance-01' from MapManager despite entity being found."
+        "Internal error: Failed to remove entity 'test-instance-01' from repository despite entity being found."
       );
       expect(mocks.logger.error).toHaveBeenCalledWith(
         expect.stringContaining(
-          'MapManager.remove failed for already retrieved entity'
+          'EntityRepository.remove failed for already retrieved entity'
         )
       );
 
