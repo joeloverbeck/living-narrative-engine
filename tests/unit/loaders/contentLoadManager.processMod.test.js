@@ -153,4 +153,45 @@ describe('ContentLoadManager.processMod', () => {
     expect(result.updatedTotals.items.count).toBe(1);
     expect(dispatcher.dispatch).not.toHaveBeenCalled();
   });
+
+  it('uses injected timer for duration measurement', async () => {
+    const loader = new MockLoader({
+      count: 0,
+      overrides: 0,
+      errors: 0,
+      failures: [],
+    });
+    const phaseLoadersConfig = [
+      {
+        loader,
+        contentKey: 'items',
+        diskFolder: 'items',
+        registryKey: 'items',
+      },
+    ];
+    const fakeTimer = jest.fn().mockReturnValueOnce(5).mockReturnValueOnce(20);
+    const manager = new ContentLoadManager({
+      logger,
+      validatedEventDispatcher: dispatcher,
+      contentLoadersConfig: phaseLoadersConfig,
+      aggregatorFactory: (counts) => new LoadResultAggregator(counts),
+      timer: fakeTimer,
+    });
+    const manifest = { content: { items: ['a.json'] } };
+    /** @type {TotalResultsSummary} */ const totals = {};
+    const phase = 'definitions';
+
+    await manager.processMod(
+      'testMod',
+      manifest,
+      totals,
+      phaseLoadersConfig,
+      phase
+    );
+
+    expect(fakeTimer).toHaveBeenCalledTimes(2);
+    expect(logger.debug).toHaveBeenCalledWith(
+      expect.stringContaining('Content loading loop took 15.00 ms.')
+    );
+  });
 });
