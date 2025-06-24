@@ -8,6 +8,13 @@ import {
   MSG_CHECKSUM_MISMATCH,
 } from './persistenceMessages.js';
 
+const REQUIRED_SECTIONS = [
+  'metadata',
+  'modManifest',
+  'gameState',
+  'integrityChecks',
+];
+
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('./gameStateSerializer.js').default} GameStateSerializer */
 /** @typedef {import('../interfaces/ISaveLoadService.js').SaveGameStructure} SaveGameStructure */
@@ -50,13 +57,7 @@ class SaveValidationService extends BaseService {
    * @returns {import('./persistenceTypes.js').PersistenceResult<null>} Result of validation.
    */
   validateStructure(obj, identifier) {
-    const requiredSections = [
-      'metadata',
-      'modManifest',
-      'gameState',
-      'integrityChecks',
-    ];
-    for (const section of requiredSections) {
+    for (const section of REQUIRED_SECTIONS) {
       if (
         !(section in obj) ||
         typeof obj[section] !== 'object' ||
