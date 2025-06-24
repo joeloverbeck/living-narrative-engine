@@ -1,9 +1,7 @@
 // src/tests/services/prerequisiteEvaluationService.cycle.test.js
 
 import { describe, test, expect, jest, beforeEach } from '@jest/globals';
-import { PrerequisiteEvaluationService } from '../../../src/actions/validation/prerequisiteEvaluationService.js';
-import JsonLogicEvaluationService from '../../../src/logic/jsonLogicEvaluationService.js';
-import { ActionValidationContextBuilder } from '../../../src/actions/validation/actionValidationContextBuilder.js';
+import { resolveConditionRefs } from '../../../src/utils/conditionRefResolver.js';
 
 jest.mock('../../../src/logic/jsonLogicEvaluationService.js', () => ({
   __esModule: true,
@@ -31,8 +29,6 @@ const mockLogger = {
 };
 
 describe('PrerequisiteEvaluationService Circular Reference Detection', () => {
-  /** @type {PrerequisiteEvaluationService} */
-  let service;
   /** @type {{getConditionDefinition: jest.Mock}} */
   let mockGameDataRepository;
 
@@ -41,17 +37,6 @@ describe('PrerequisiteEvaluationService Circular Reference Detection', () => {
     mockGameDataRepository = {
       getConditionDefinition: jest.fn(),
     };
-
-    service = new PrerequisiteEvaluationService({
-      logger: mockLogger,
-      jsonLogicEvaluationService: new JsonLogicEvaluationService({
-        logger: mockLogger,
-      }),
-      actionValidationContextBuilder: new ActionValidationContextBuilder({
-        logger: mockLogger,
-      }),
-      gameDataRepository: mockGameDataRepository,
-    });
   });
 
   test('should throw error with reference path when circular condition_ref detected', () => {
@@ -63,10 +48,12 @@ describe('PrerequisiteEvaluationService Circular Reference Detection', () => {
     });
 
     expect(() =>
-      service._resolveConditionReferences({ condition_ref: 'A' }, 'testAction')
-    ).toThrow(
-      "Circular reference detected in prerequisites for action 'testAction'. Path: A -> B -> C -> A"
-    );
+      resolveConditionRefs(
+        { condition_ref: 'A' },
+        mockGameDataRepository,
+        mockLogger
+      )
+    ).toThrow('Circular condition_ref detected. Path: A -> B -> C -> A');
   });
 
   test('should resolve identical condition_refs in separate branches without errors', () => {
@@ -79,7 +66,11 @@ describe('PrerequisiteEvaluationService Circular Reference Detection', () => {
 
     const input = [{ condition_ref: 'X' }, { condition_ref: 'Y' }];
 
-    const result = service._resolveConditionReferences(input, 'testAction');
+    const result = resolveConditionRefs(
+      input,
+      mockGameDataRepository,
+      mockLogger
+    );
 
     expect(result).toEqual([{ '==': [1, 1] }, { '==': [1, 1] }]);
   });

@@ -1,6 +1,7 @@
 // src/actions/validation/prerequisiteEvaluationService.js
 
 import { BaseService } from '../../utils/serviceBase.js';
+import { resolveConditionRefs } from '../../utils/conditionRefResolver.js';
 
 /* type-only imports */
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
@@ -67,23 +68,6 @@ export class PrerequisiteEvaluationService extends BaseService {
   }
 
   /**
-   * Checks for circular condition references and throws an error if detected.
-   *
-   * @private
-   * @param {string} conditionId - The referenced condition ID.
-   * @param {Set<string>} visited - Set of already visited condition IDs.
-   * @param {string} actionId - The ID of the action being validated.
-   * @throws {Error} If a circular reference is detected.
-   */
-  _checkCircularReference(conditionId, visited, actionId) {
-    if (visited.has(conditionId)) {
-      throw new Error(
-        `Circular reference detected in prerequisites for action '${actionId}'. Path: ${[...visited, conditionId].join(' -> ')}`
-      );
-    }
-  }
-
-  /**
    * Recursively traverses a JSON Logic rule and replaces all `condition_ref`
    * objects with the actual logic from the referenced condition definition.
    *
@@ -95,66 +79,23 @@ export class PrerequisiteEvaluationService extends BaseService {
    * @throws {Error} If a condition reference cannot be found or if a circular reference is detected.
    */
   _resolveConditionReferences(logic, actionId, visited = new Set()) {
-    return this.#resolveReferences(logic, actionId, visited);
-  }
-
-  /**
-   * Recursively resolves condition references within logic objects or arrays.
-   *
-   * @private
-   * @param {object | any} obj - The logic element to resolve.
-   * @param {string} actionId - The ID of the action being validated.
-   * @param {Set<string>} visited - Set of already visited condition IDs.
-   * @returns {object | any} The resolved logic element.
-   * @throws {Error} If a condition reference cannot be found.
-   */
-  #resolveReferences(obj, actionId, visited) {
-    if (!obj || typeof obj !== 'object' || obj === null) {
-      return obj;
-    }
-
-    if (Array.isArray(obj)) {
-      return obj.map((item) =>
-        this.#resolveReferences(item, actionId, new Set(visited))
-      );
-    }
-
-    if (Object.prototype.hasOwnProperty.call(obj, 'condition_ref')) {
-      const conditionId = obj.condition_ref;
-      if (typeof conditionId !== 'string') {
-        throw new Error(`Invalid condition_ref value: not a string.`);
-      }
-
-      this._checkCircularReference(conditionId, visited, actionId);
-      visited.add(conditionId);
-
-      this.#logger.debug(
-        `PrereqEval[${actionId}]: Resolving reference to '${conditionId}'...`
-      );
-
-      const conditionDef =
-        this.#gameDataRepository.getConditionDefinition(conditionId);
-
-      if (!conditionDef || !conditionDef.logic) {
-        throw new Error(
-          `Could not resolve condition_ref '${conditionId}'. Definition or its logic property not found.`
-        );
-      }
-
-      const resolvedLogic = this.#resolveReferences(
-        conditionDef.logic,
-        actionId,
+    try {
+      return resolveConditionRefs(
+        logic,
+        this.#gameDataRepository,
+        {
+          debug: (msg) => this.#logger.debug(`PrereqEval[${actionId}]: ${msg}`),
+        },
         visited
       );
-      visited.delete(conditionId);
-      return resolvedLogic;
+    } catch (err) {
+      if (err.message.startsWith('Circular condition_ref detected')) {
+        throw new Error(
+          `Circular reference detected in prerequisites for action '${actionId}'. ${err.message}`
+        );
+      }
+      throw err;
     }
-
-    const resolved = {};
-    for (const [key, val] of Object.entries(obj)) {
-      resolved[key] = this.#resolveReferences(val, actionId, new Set(visited));
-    }
-    return resolved;
   }
 
   /**
