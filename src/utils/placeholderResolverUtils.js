@@ -178,11 +178,8 @@ export class PlaceholderResolver {
     }
 
     return str.replace(PLACEHOLDER_FIND_REGEX, (match, placeholderKey) => {
-      let trimmedKey = placeholderKey.trim();
-      const isOptional = trimmedKey.endsWith('?');
-      if (isOptional) {
-        trimmedKey = trimmedKey.slice(0, -1);
-      }
+      const { key: trimmedKey, optional: isOptional } =
+        parsePlaceholderKey(placeholderKey);
       for (const dataSource of dataSources) {
         if (dataSource && typeof dataSource === 'object') {
           const value = this.resolvePath(dataSource, trimmedKey);
@@ -222,12 +219,13 @@ export class PlaceholderResolver {
    * Resolves a value from an array of source objects using a dotted path.
    *
    * @private
-   * @param {string} path - Dot separated lookup path.
+   * @param {{key: string, optional: boolean}} placeholderInfo - Parsed
+   *   placeholder key information.
    * @param {object[]} sources - Ordered list of source objects.
    * @returns {*} Resolved value or `undefined` if not found.
    */
-  _resolveFromSources(path, sources) {
-    const { key, optional: _optional } = parsePlaceholderKey(path);
+  _resolveFromSources(placeholderInfo, sources) {
+    const { key } = placeholderInfo;
     for (const source of sources) {
       if (source && typeof source === 'object') {
         const value = this.resolvePath(source, key);
@@ -269,10 +267,9 @@ export class PlaceholderResolver {
     // Trigger warning handling by attempting normal resolution first.
     this.resolve(value, ...sources);
 
-    const { key: placeholderPath, optional: isOptional } = parsePlaceholderKey(
-      fullMatch[1]
-    );
-    const resolved = this._resolveFromSources(placeholderPath, sources);
+    const placeholderInfo = parsePlaceholderKey(fullMatch[1]);
+    const resolved = this._resolveFromSources(placeholderInfo, sources);
+    const { key: placeholderPath, optional: isOptional } = placeholderInfo;
     if (resolved !== undefined) {
       this.#logger.debug(
         `Resolved full string placeholder {${placeholderPath}${isOptional ? '?' : ''}} to: ${
@@ -299,8 +296,9 @@ export class PlaceholderResolver {
       PLACEHOLDER_FIND_REGEX.lastIndex = 0;
       while ((match = PLACEHOLDER_FIND_REGEX.exec(value))) {
         const placeholderSyntax = match[0];
-        const { key: placeholderPath } = parsePlaceholderKey(match[1]);
-        const resolved = this._resolveFromSources(placeholderPath, sources);
+        const placeholderInfo = parsePlaceholderKey(match[1]);
+        const resolved = this._resolveFromSources(placeholderInfo, sources);
+        const { key: placeholderPath } = placeholderInfo;
         if (resolved !== undefined) {
           const stringValue = resolved === null ? 'null' : String(resolved);
           this.#logger.debug(
