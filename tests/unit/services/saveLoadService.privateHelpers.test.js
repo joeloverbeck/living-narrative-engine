@@ -17,6 +17,7 @@ import {
   MSG_DECOMPRESSION_FAILED,
   MSG_DESERIALIZATION_FAILED,
 } from '../../../src/persistence/persistenceMessages.js';
+import { PersistenceErrorCodes } from '../../../src/persistence/persistenceErrors.js';
 import pako from 'pako';
 import { webcrypto } from 'crypto';
 import { createMockSaveValidationService } from '../testUtils.js';
@@ -103,7 +104,8 @@ describe('SaveLoadService private helper error propagation', () => {
     /** @type {PersistenceResult<any>} */
     const res = await service.loadGameData('saves/manual_saves/test.sav');
     expect(res.success).toBe(false);
-    expect(res.error.message).toBe(MSG_FILE_READ_ERROR);
+    expect(res.error.message).toContain('read fail');
+    expect(res.error.code).toBe(PersistenceErrorCodes.FILE_READ_ERROR);
   });
 
   it('propagates empty file error', async () => {
