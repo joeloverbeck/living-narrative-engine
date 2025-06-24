@@ -7,7 +7,8 @@ describe('safeResolvePath', () => {
     const logger = createMockLogger();
     const dispatcher = { dispatch: jest.fn() };
     const result = safeResolvePath({}, null, logger, 'unit-test', dispatcher);
-    expect(result).toBeUndefined();
+    expect(result.value).toBeUndefined();
+    expect(result.error).toBeInstanceOf(Error);
     expect(dispatcher.dispatch).toHaveBeenCalledWith(
       expect.any(String),
       expect.objectContaining({ message: expect.stringContaining('unit-test') })
@@ -18,10 +19,18 @@ describe('safeResolvePath', () => {
   it('logs error when dispatcher not provided', () => {
     const logger = createMockLogger();
     const result = safeResolvePath({}, null, logger, 'unit-test');
-    expect(result).toBeUndefined();
+    expect(result.value).toBeUndefined();
+    expect(result.error).toBeInstanceOf(Error);
     expect(logger.error).toHaveBeenCalledWith(
       expect.stringContaining('unit-test'),
       expect.any(Error)
     );
+  });
+
+  it('returns value when resolution succeeds', () => {
+    const logger = createMockLogger();
+    const obj = { a: { b: 1 } };
+    const result = safeResolvePath(obj, 'a.b', logger);
+    expect(result).toEqual({ value: 1, error: undefined });
   });
 });
