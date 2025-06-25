@@ -160,6 +160,7 @@ describe('Scope Integration Tests', () => {
       formatActionCommandFn: formatActionCommand,
       safeEventDispatcher,
       targetResolutionService,
+      traceContextFactory: jest.fn(() => ({ addLog: jest.fn(), logs: [] })),
       actionIndex: {
         getCandidateActions: jest
           .fn()

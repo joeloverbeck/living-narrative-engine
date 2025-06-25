@@ -27,6 +27,7 @@ import { ActionIndex } from '../../actions/actionIndex.js';
 import { ActionValidationContextBuilder } from '../../actions/validation/actionValidationContextBuilder.js';
 import { PrerequisiteEvaluationService } from '../../actions/validation/prerequisiteEvaluationService.js';
 import CommandProcessor from '../../commands/commandProcessor.js';
+import { TraceContext as TraceContextImpl } from '../../actions/tracing/traceContext.js';
 
 // --- Helper Function Imports ---
 import { formatActionCommand } from '../../actions/actionFormatter.js';
@@ -76,6 +77,13 @@ export function registerCommandAndAction(container) {
     });
   });
 
+  // --- TraceContext Factory ---
+  // Register the factory that creates TraceContext instances
+  registrar.singletonFactory(tokens.TraceContextFactory, () => {
+    return () => new TraceContextImpl();
+  });
+  logger.debug('Command and Action Registration: Registered TraceContextFactory.');
+
   // --- Action Discovery & Execution ---
   registrar
     .tagged(INITIALIZABLE)
@@ -90,6 +98,7 @@ export function registerCommandAndAction(container) {
         formatActionCommandFn: formatActionCommand,
         safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
         targetResolutionService: c.resolve(tokens.ITargetResolutionService),
+        traceContextFactory: c.resolve(tokens.TraceContextFactory),
         getActorLocationFn: getActorLocation,
         getEntityDisplayNameFn: getEntityDisplayName,
       });

@@ -12,6 +12,7 @@
 /** @typedef {import('../scopeDsl/scopeRegistry.js').default} ScopeRegistry */
 /** @typedef {import('./actionIndex.js').ActionIndex} ActionIndex */
 /** @typedef {import('./tracing/traceContext.js').TraceContext} TraceContext */
+/** @typedef {import('./actionTypes.js').TraceContextFactory} TraceContextFactory */
 
 import { ActionTargetContext } from '../models/actionTargetContext.js';
 import { IActionDiscoveryService } from '../interfaces/IActionDiscoveryService.js';
@@ -23,7 +24,6 @@ import { setupService } from '../utils/serviceInitializerUtils.js';
 import { getActorLocation } from '../utils/actorLocationUtils.js';
 import { getEntityDisplayName } from '../utils/entityUtils.js';
 import { ITargetResolutionService } from '../interfaces/ITargetResolutionService.js';
-import { TraceContext as TraceContextImpl } from './tracing/traceContext.js';
 
 
 // ────────────────────────────────────────────────────────────────────────────────
@@ -42,6 +42,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
   #getEntityDisplayNameFn;
   #targetResolutionService;
   #actionIndex;
+  #traceContextFactory;
 
   /**
    * @param {object} deps
@@ -52,6 +53,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
    * @param {formatActionCommandFn} deps.formatActionCommandFn
    * @param {ISafeEventDispatcher} deps.safeEventDispatcher
    * @param {ITargetResolutionService} deps.targetResolutionService
+   * @param {TraceContextFactory} deps.traceContextFactory
    * @param {Function}           deps.getActorLocationFn
    * @param {Function}           deps.getEntityDisplayNameFn
    */
@@ -63,6 +65,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
                 formatActionCommandFn,
                 safeEventDispatcher,
                 targetResolutionService,
+                traceContextFactory,
                 getActorLocationFn = getActorLocation,
                 getEntityDisplayNameFn = getEntityDisplayName,
               }) {
@@ -85,6 +88,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
         requiredMethods: ['dispatch'],
       },
       targetResolutionService: { value: targetResolutionService, requiredMethods: ['resolveTargets'] },
+      traceContextFactory: { value: traceContextFactory, isFunction: true },
       getActorLocationFn: { value: getActorLocationFn, isFunction: true },
       getEntityDisplayNameFn: {
         value: getEntityDisplayNameFn,
@@ -98,6 +102,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
     this.#formatActionCommandFn = formatActionCommandFn;
     this.#safeEventDispatcher = safeEventDispatcher;
     this.#targetResolutionService = targetResolutionService;
+    this.#traceContextFactory = traceContextFactory;
     this.#getActorLocationFn = getActorLocationFn;
     this.#getEntityDisplayNameFn = getEntityDisplayNameFn;
 
@@ -160,7 +165,9 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
    */
   async getValidActions(actorEntity, context, options = {}) {
     const { trace: shouldTrace = false } = options;
-    const trace = shouldTrace ? new TraceContextImpl() : null;
+    
+    // Use the factory to create the trace object instead of 'new'
+    const trace = shouldTrace ? this.#traceContextFactory() : null;
     const source = 'ActionDiscoveryService.getValidActions';
 
     if (!actorEntity) {

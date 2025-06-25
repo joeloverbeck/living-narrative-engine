@@ -63,6 +63,7 @@ describe('ActionDiscoveryService - getValidActions', () => {
       logger,
       safeEventDispatcher,
       targetResolutionService: mockTargetResolutionService,
+      traceContextFactory: jest.fn(() => ({ addLog: jest.fn(), logs: [] })),
       actionIndex: mockActionIndex,
     });
   });

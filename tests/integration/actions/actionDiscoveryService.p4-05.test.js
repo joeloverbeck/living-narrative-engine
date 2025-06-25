@@ -62,6 +62,7 @@ describe('ADS-P4-05: Streamlined ActionDiscoveryService', () => {
       formatActionCommandFn: mockFormatActionCommandFn,
       safeEventDispatcher: mockEventDispatcher,
       targetResolutionService: mockTargetResolutionService,
+      traceContextFactory: jest.fn(() => ({ addLog: jest.fn(), logs: [] })),
       getActorLocationFn: mockGetActorLocationFn,
       getEntityDisplayNameFn: mockGetEntityDisplayNameFn,
     });

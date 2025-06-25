@@ -69,6 +69,7 @@ describe('ActionDiscoveryService params exposure', () => {
       logger,
       safeEventDispatcher,
       targetResolutionService: mockTargetResolutionService,
+      traceContextFactory: jest.fn(() => ({ addLog: jest.fn(), logs: [] })),
     });
   });
 
