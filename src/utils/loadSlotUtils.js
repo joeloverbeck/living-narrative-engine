@@ -6,6 +6,28 @@
 
 import { formatSaveFileMetadata } from '../domUI/helpers/slotDataFormatter.js';
 
+/**
+ * Comparator for sorting save slots by corruption state and timestamp.
+ *
+ * @param {SaveFileMetadata} a
+ * @param {SaveFileMetadata} b
+ * @returns {number}
+ */
+export function compareLoadSlots(a, b) {
+  if (a.isCorrupted && !b.isCorrupted) return 1;
+  if (!a.isCorrupted && b.isCorrupted) return -1;
+  if (a.isCorrupted && b.isCorrupted) {
+    return (a.saveName || a.identifier).localeCompare(
+      b.saveName || b.identifier
+    );
+  }
+  try {
+    return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
+  } catch {
+    return 0;
+  }
+}
+
 /** @typedef {import('../interfaces/ISaveLoadService.js').SaveFileMetadata} SaveFileMetadata */
 
 /**
@@ -26,20 +48,7 @@ import { formatSaveFileMetadata } from '../domUI/helpers/slotDataFormatter.js';
 export async function fetchAndFormatLoadSlots(saveLoadService) {
   const manualSaves = await saveLoadService.listManualSaveSlots();
 
-  manualSaves.sort((a, b) => {
-    if (a.isCorrupted && !b.isCorrupted) return 1;
-    if (!a.isCorrupted && b.isCorrupted) return -1;
-    if (a.isCorrupted && b.isCorrupted) {
-      return (a.saveName || a.identifier).localeCompare(
-        b.saveName || b.identifier
-      );
-    }
-    try {
-      return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
-    } catch {
-      return 0;
-    }
-  });
+  manualSaves.sort(compareLoadSlots);
 
   return manualSaves.map((slot) => ({
     ...slot,
