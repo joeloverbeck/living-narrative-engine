@@ -2,10 +2,8 @@
 // --- FILE START ---
 
 import * as path from 'node:path';
-import {
-  LOCAL_API_TYPES_REQUIRING_NO_PROXY_KEY,
-  DEFAULT_ENCODING_UTF8,
-} from './constants.js';
+import { LOCAL_API_TYPES_REQUIRING_NO_PROXY_KEY } from './constants.js';
+import { loadProxyLlmConfigs } from '../proxyLlmConfigLoader.js';
 
 /**
  * @typedef {import('../interfaces/IFileSystemReader.js').IFileSystemReader} IFileSystemReader
@@ -188,130 +186,40 @@ export class LlmConfigService {
     );
 
     try {
-      // Step 1: Read file content
-      let fileContent;
-      try {
-        fileContent = await this.#fileSystemReader.readFile(
-          this.#resolvedConfigPath,
-          DEFAULT_ENCODING_UTF8
-        );
-        this.#logger.debug(
-          `LlmConfigService: Successfully read file content from ${this.#resolvedConfigPath}. Length: ${fileContent.length}`
-        );
-      } catch (readError) {
+      const result = await loadProxyLlmConfigs(
+        this.#resolvedConfigPath,
+        this.#logger,
+        this.#fileSystemReader
+      );
+
+      if (result.error) {
         this._setInitializationError(
-          `Failed to read LLM configuration file`,
-          'config_load_file_read_error',
-          readError
-        );
-        return; // Stop initialization
-      }
-
-      // Step 2: Parse JSON
-      let parsedConfigs;
-      try {
-        parsedConfigs = JSON.parse(fileContent);
-        this.#logger.debug(
-          `LlmConfigService: Successfully parsed JSON content from ${this.#resolvedConfigPath}.`
-        );
-      } catch (parseError) {
-        this._setInitializationError(
-          `Failed to parse LLM configuration file as JSON`,
-          'config_load_json_parse_error',
-          parseError
-        );
-        return; // Stop initialization
-      }
-
-      // Step 3: Basic Validation
-      if (typeof parsedConfigs !== 'object' || parsedConfigs === null) {
-        this._setInitializationError(
-          'LLM configuration content is not a valid object',
-          'config_load_validation_not_object',
-          null,
-          { parsedContentType: typeof parsedConfigs }
-        );
-        return; // Stop initialization
-      }
-
-      if (
-        typeof parsedConfigs.configs !== 'object' ||
-        parsedConfigs.configs === null
-      ) {
-        // MODIFIED: Check for 'configs' which aligns with schema's main map
-        this._setInitializationError(
-          "LLM configuration content is missing the required 'configs' object property", // MODIFIED: Message reflects 'configs'
-          'config_load_validation_missing_configs_map', // MODIFIED: Stage reflects 'configs'
-          null,
-          { configsPropertyType: typeof parsedConfigs.configs } // MODIFIED: Detail reflects 'configs'
-        );
-        return; // Stop initialization
-      }
-      // Note: The JSDoc for LLMConfigurationFileForProxy uses 'llms', but the schema uses 'configs'.
-      // The original code in proxyLlmConfigLoader.js checks for 'parsedConfigs.llms'.
-      // This needs to be consistent. Assuming the schema `configs` is the target:
-      // proxyLlmConfigLoader should check `parsedConfigs.configs` and its JSDoc should use `configs`.
-      // Here, `LlmConfigService` should also expect `parsedConfigs.configs`.
-      // If `parsedConfigs.llms` was the intended property name in the JSON, the schema is wrong.
-      // Based on the prompt's `config/llm-configs.json`, the key is `configs`.
-      // So, `proxyLlmConfigLoader.js` also needs adjustment for this.
-      // And the JSDoc `LLMConfigurationFileForProxy` should use `configs`.
-
-      // Let's assume the provided JSON file structure is the source of truth for key names:
-      // { "defaultConfigId": "...", "configs": { ... } }
-      // Schema also uses "configs".
-      // proxyLlmConfigLoader.js currently validates `parsedConfigs.llms`. This is an error.
-      // LLMConfigurationFileForProxy JSDoc in proxyLlmConfigLoader.js uses `llms`. This is an error.
-
-      // Re-evaluating the previous step:
-      // The fix in proxyLlmConfigLoader.js was only for defaultLlmId -> defaultConfigId in JSDoc.
-      // It also needs to change the property name from 'llms' to 'configs' in its JSDoc and validation.
-      // And LlmConfigService should use 'configs'.
-
-      // For now, proceeding with the current code structure's use of 'llms' but acknowledging this discrepancy.
-      // The original file `config/llm-configs.json` provided uses "configs" as the key for the map.
-      // The `proxyLlmConfigLoader.js` file provided checks for `parsedConfigs.llms`.
-      // The `LlmConfigService.js` (this file) JSDoc `LLMConfigurationFileForProxy` refers to `llms`.
-      // This is a pre-existing inconsistency.
-      // I will correct LlmConfigService to use `defaultConfigId` as requested for this chunk.
-      // The `llms` vs `configs` discrepancy is a separate issue from the `defaultConfigId` one.
-      // The prompt asks for adaptations to fit the *new schema*. The new schema uses `configs`.
-      // The provided `llm-configs.json` also uses `configs`.
-      // Therefore, `proxyLlmConfigLoader.js`'s JSDoc and validation for `llms` is wrong and should be `configs`.
-      // And this file (`LlmConfigService.js`) should also work with `configs`.
-
-      // If `parsedConfigs.configs` is used (aligning with schema and provided JSON):
-      const llmMap = parsedConfigs.configs; // Using 'configs'
-      if (typeof llmMap !== 'object' || llmMap === null) {
-        this._setInitializationError(
-          "LLM configuration content is missing the required 'configs' object property or it's not an object",
-          'config_load_validation_missing_configs_map',
-          null,
-          { configsPropertyType: typeof llmMap }
+          result.message,
+          result.stage,
+          result.originalError,
+          { pathAttempted: result.pathAttempted }
         );
         return;
       }
 
-      // Success
-      this.#loadedLlmConfigs = /** @type {LLMConfigurationFileForProxy} */ (
-        parsedConfigs
-      );
+      this.#loadedLlmConfigs = Object.freeze({
+        ...result.llmConfigs,
+        configs: Object.freeze(result.llmConfigs.configs),
+      });
       this.#isProxyOperational = true;
-      this.#initializationError = null; // Clear any potential error state if successful
+      this.#initializationError = null;
 
-      const llmCount = Object.keys(this.#loadedLlmConfigs.configs).length; // Using 'configs'
-      const defaultId = this.#loadedLlmConfigs.defaultConfigId || 'Not set'; // CORRECTED
+      const llmCount = Object.keys(result.llmConfigs.configs).length;
+      const defaultId = result.llmConfigs.defaultConfigId || 'Not set';
       this.#logger.debug(
         `LlmConfigService: Initialization successful. Loaded ${llmCount} LLM configurations. Default LLM ID: ${defaultId}. Proxy is operational.`
       );
     } catch (unexpectedError) {
-      // This catch handles any other unforeseen errors during the try block.
       this._setInitializationError(
         `An unexpected error occurred during LLM configuration loading`,
         'config_load_unexpected_error',
         unexpectedError
       );
-      // this.#isProxyOperational = false; // Handled by _setInitializationError
     }
   }
 
