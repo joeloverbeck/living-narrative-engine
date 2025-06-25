@@ -23,9 +23,13 @@ describe('EntityManagerAdapter', () => {
     expect(entityManager.clearAll).toHaveBeenCalled();
   });
 
-  it('forwards property access to the wrapped entity manager', () => {
+  it('exposes the entities iterator from the wrapped entity manager', () => {
     const entityIterator = Symbol('iterator');
-    const entityManager = { entities: entityIterator };
+    const entityManager = {
+      get entities() {
+        return entityIterator;
+      },
+    };
     const locationQueryService = { getEntitiesInLocation: jest.fn() };
     const adapter = new EntityManagerAdapter({
       entityManager,
