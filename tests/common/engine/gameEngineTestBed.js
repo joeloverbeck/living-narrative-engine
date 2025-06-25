@@ -12,6 +12,7 @@ import { suppressConsoleError } from '../jestHelpers.js';
 import { createDescribeServiceSuite } from '../describeSuite.js';
 import { createTestBedHelpers } from '../createTestBedHelpers.js';
 import { DEFAULT_TEST_WORLD } from '../constants.js';
+import { EngineStartHelpersMixin } from './engineStartHelpersMixin.js';
 
 /**
  * @description Utility class that instantiates {@link GameEngine} using a mocked
@@ -22,7 +23,9 @@ import { DEFAULT_TEST_WORLD } from '../constants.js';
  */
 const StoppableMixin = createStoppableMixin('engine');
 
-export class GameEngineTestBed extends StoppableMixin(ContainerTestBed) {
+export class GameEngineTestBed extends EngineStartHelpersMixin(
+  StoppableMixin(ContainerTestBed)
+) {
   /** @type {ReturnType<typeof createEnvironment>} */
   env;
   /** @type {import('../../../src/engine/gameEngine.js').default} */
@@ -122,69 +125,7 @@ export class GameEngineTestBed extends StoppableMixin(ContainerTestBed) {
   getInitializationService() {
     return this.initializationService;
   }
-  /**
-   * Initializes the engine using a default successful initialization result.
-   *
-   * @param {string} [world] - World name to initialize.
-   * @returns {Promise<void>} Promise resolving when the engine has started.
-   */
-  async init(world = DEFAULT_TEST_WORLD) {
-    this.env.mocks.initializationService.runInitializationSequence.mockResolvedValue(
-      {
-        success: true,
-      }
-    );
-    await this.engine.startNewGame(world);
-  }
-
-  /**
-   * Initializes the engine then clears mock call history.
-   *
-   * @param {string} [world] - World name to initialize.
-   * @returns {Promise<void>} Resolves once initialization completes.
-   */
-  async initAndReset(world = DEFAULT_TEST_WORLD) {
-    await this.withReset(() => this.init(world));
-  }
-
-  /**
-   * Presets initialization results and starts a new game.
-   *
-   * @param {string} worldName - Name of the world to initialize.
-   * @param {import('../../src/interfaces/IInitializationService.js').InitializationResult} [initResult]
-   * @returns {Promise<void>} Promise resolving when the engine has started.
-   */
-  async start(worldName, initResult = { success: true }) {
-    this.env.mocks.initializationService.runInitializationSequence.mockResolvedValue(
-      initResult
-    );
-    await this.engine.startNewGame(worldName);
-  }
-
-  /**
-   * Starts a new game and immediately clears mock call history.
-   *
-   * @param {string} world - Name of the world to initialize.
-   * @param {import('../../src/interfaces/IInitializationService.js').InitializationResult} [result]
-   *   Initialization result returned by the service.
-   * @returns {Promise<void>} Resolves when the game has started.
-   */
-  async startAndReset(world, result = { success: true }) {
-    await this.withReset(() => this.start(world, result));
-  }
-
-  /**
-   * Stops the engine if it is initialized.
-   *
-   * @returns {Promise<void>} Promise resolving once stopped.
-   */
-  async stop() {
-    if (this.engine.getEngineStatus().isInitialized) {
-      await this.engine.stop();
-    }
-  }
 }
-
 const engineSuiteHooks = (() => {
   let consoleSpy;
   return {

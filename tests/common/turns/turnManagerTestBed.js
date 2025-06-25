@@ -19,6 +19,7 @@ import { createTestBedHelpers } from '../createTestBedHelpers.js';
 import { flushPromisesAndTimers } from '../jestHelpers.js';
 import { EventCaptureMixin } from './eventCaptureMixin.js';
 import { EntitySetupMixin } from './entitySetupMixin.js';
+import { StartHelpersMixin } from './startHelpersMixin.js';
 
 /**
  * @description Utility class that instantiates {@link TurnManager} with mocked
@@ -63,142 +64,13 @@ const TurnManagerFactoryMixin = createServiceFactoryMixin(
 );
 
 export class TurnManagerTestBed extends EventCaptureMixin(
-  EntitySetupMixin(SpyTrackerMixin(TurnManagerFactoryMixin()))
+  StartHelpersMixin(
+    EntitySetupMixin(SpyTrackerMixin(TurnManagerFactoryMixin()))
+  )
 ) {
   constructor(overrides = {}) {
     super(overrides);
     this.entityManager = this.mocks.entityManager;
-  }
-
-  /**
-   * Runs a start callback inside {@link BaseTestBed#withReset}.
-   *
-   * @description Executes the provided start function within the standard
-   *   reset wrapper so that mocks are cleared before each start.
-   * @param {() => Promise<void>} startFn - Function containing start logic.
-   * @returns {Promise<void>} Resolves once the start function completes.
-   * @private
-   */
-  async #startInternal(startFn) {
-    await this.withReset(startFn);
-  }
-
-  /**
-   * Adds entities then starts the manager, clearing mock call history.
-   *
-   * @param {...{ id: string }} entities - Entities to register as active.
-   * @returns {Promise<void>} Resolves once the manager has started.
-   */
-  async startWithEntities(...entities) {
-    await this.#startInternal(async () => {
-      this.setActiveEntities(...entities);
-      await this.turnManager.start();
-    });
-  }
-
-  /**
-   * Starts the manager but suppresses the initial advanceTurn call.
-   *
-   * @returns {Promise<void>} Resolves once the manager is running.
-   */
-  async startRunning() {
-    await this.#startInternal(async () => {
-      const spy = jest
-        .spyOn(this.turnManager, 'advanceTurn')
-        .mockImplementationOnce(async () => {});
-      await this.turnManager.start();
-      spy.mockRestore();
-    });
-  }
-
-  /**
-   * Starts the manager then flushes timers/promises.
-   *
-   * @returns {Promise<void>} Resolves once timers are flushed.
-   */
-  async startAndFlush() {
-    await this.#startInternal(async () => {
-      await this.turnManager.start();
-    });
-    await flushPromisesAndTimers();
-  }
-
-  /**
-   * Starts the manager with entities then flushes timers/promises.
-   *
-   * @param {...{ id: string }} entities - Entities to register as active.
-   * @returns {Promise<void>} Resolves once timers are flushed.
-   */
-  async startWithEntitiesAndFlush(...entities) {
-    await this.startWithEntities(...entities);
-    await flushPromisesAndTimers();
-  }
-
-  /**
-   * Spies on {@link TurnManager.stop} and tracks for cleanup.
-   *
-   * @returns {import('@jest/globals').Mock} The spy instance.
-   */
-  spyOnStop() {
-    const spy = jest.spyOn(this.turnManager, 'stop');
-    this.trackSpy(spy);
-    return spy;
-  }
-
-  /**
-   * Spies on {@link TurnManager.stop} and logs when invoked.
-   *
-   * Calls {@link TurnManagerTestBed#spyOnStop} and overrides the spy
-   * implementation to emit a debug message. Useful for tests that need
-   * confirmation that stop was triggered without affecting flow.
-   *
-   * @example
-   * const stopSpy = bed.spyOnStopWithDebug();
-   * await bed.turnManager.stop();
-   * expect(stopSpy).toHaveBeenCalled();
-   * @returns {import('@jest/globals').Mock} The spy instance.
-   */
-  spyOnStopWithDebug() {
-    const spy = this.spyOnStop();
-    spy.mockImplementation(() => {
-      this.mocks.logger.debug('Mocked instance.stop() called.');
-    });
-    return spy;
-  }
-
-  /**
-   * Spies on {@link TurnManager.advanceTurn} and tracks for cleanup.
-   *
-   * @returns {import('@jest/globals').Mock} The spy instance.
-   */
-  spyOnAdvanceTurn() {
-    const spy = jest.spyOn(this.turnManager, 'advanceTurn');
-    this.trackSpy(spy);
-    return spy;
-  }
-
-  /**
-   * Starts the manager with default actors and flushes pending tasks.
-   *
-   * @returns {Promise<{ ai1: object, ai2: object, player: object }>}
-   *   Promise resolving to the created actors once start completes.
-   */
-  async startWithDefaultActorsAndFlush() {
-    const actors = this.addDefaultActors();
-    await this.startAndFlush();
-    return actors;
-  }
-
-  /**
-   * Creates a spy on {@link TurnManager.stop} that resolves without side
-   * effects.
-   *
-   * @returns {import('@jest/globals').Mock} The spy instance.
-   */
-  spyOnStopNoOp() {
-    const spy = this.spyOnStop();
-    spy.mockResolvedValue();
-    return spy;
   }
 
   /**
@@ -243,46 +115,6 @@ export class TurnManagerTestBed extends EventCaptureMixin(
     this.mocks.turnOrderService.clearCurrentRound.mockResolvedValue();
     this.mocks.dispatcher.dispatch.mockResolvedValue(true);
     this.setupMockHandlerResolver();
-  }
-
-  /**
-   * Prepares the manager for {@link TurnManager.start} by mocking the handler
-   * resolver and stubbing {@link TurnManager.advanceTurn}.
-   *
-   * @returns {import('@jest/globals').Mock} Spy on advanceTurn used during
-   *   preparation.
-   */
-  prepareRunningManager() {
-    this.setupMockHandlerResolver();
-    const spy = this.spyOnAdvanceTurn();
-    spy.mockResolvedValue(undefined);
-    this.resetMocks();
-    return spy;
-  }
-
-  /**
-   * Configures {@link TurnManager.start} to fail by rejecting from
-   * {@link TurnManager.advanceTurn}.
-   *
-   * @param {Error} [error] - Optional error to reject with.
-   * @returns {import('@jest/globals').Mock} Spy on advanceTurn that rejects.
-   */
-  mockStartFailure(error = new Error('Start failure')) {
-    this.setupMockHandlerResolver();
-    const spy = this.spyOnAdvanceTurn();
-    spy.mockRejectedValue(error);
-    this.resetMocks();
-    return spy;
-  }
-
-  /**
-   * Calls advanceTurn then flushes timers/promises.
-   *
-   * @returns {Promise<void>} Resolves when all timers are flushed.
-   */
-  async advanceAndFlush() {
-    await this.turnManager.advanceTurn();
-    await flushPromisesAndTimers();
   }
 }
 
