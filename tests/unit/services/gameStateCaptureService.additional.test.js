@@ -1,6 +1,5 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import GameStateCaptureService from '../../../src/persistence/gameStateCaptureService.js';
-import { CURRENT_ACTOR_COMPONENT_ID } from '../../../src/constants/componentIds.js';
 import { createMockEntityManager } from '../../common/mockFactories.js';
 
 describe('GameStateCaptureService additional coverage', () => {
@@ -46,8 +45,11 @@ describe('GameStateCaptureService additional coverage', () => {
   });
 
   it('delegates to ActiveModsManifestBuilder', () => {
-    service.captureCurrentGameState('World');
+    const state = service.captureCurrentGameState('World');
     expect(activeModsManifestBuilder.buildManifest).toHaveBeenCalled();
+    expect(state.gameState.playerState).toBeUndefined();
+    expect(state.gameState.worldState).toBeUndefined();
+    expect(state.gameState.engineInternals).toBeUndefined();
   });
 
   it('passes playtime to metadata builder', () => {

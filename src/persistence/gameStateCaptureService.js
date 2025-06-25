@@ -186,9 +186,6 @@ class GameStateCaptureService extends BaseService {
       },
       gameState: {
         entities: entitiesData,
-        playerState: {},
-        worldState: {},
-        engineInternals: {},
       },
       integrityChecks: {
         gameStateChecksum: CHECKSUM_PENDING,

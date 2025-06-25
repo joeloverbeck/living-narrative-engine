@@ -78,6 +78,10 @@ describe('GameStateCaptureService persistence tests', () => {
     expect(result.metadata).toEqual({
       foo: 'bar',
     });
+
+    expect(result.gameState.playerState).toBeUndefined();
+    expect(result.gameState.worldState).toBeUndefined();
+    expect(result.gameState.engineInternals).toBeUndefined();
   });
 });
 // --- FILE END ---
