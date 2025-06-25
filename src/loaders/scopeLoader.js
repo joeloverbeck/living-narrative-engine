@@ -56,10 +56,12 @@ export default class ScopeLoader extends BaseManifestItemLoader {
 
       let lastResult = null;
       for (const [scopeName, scopeDef] of Object.entries(transformedScopes)) {
+        // Extract the base name from the fully qualified scope name
+        const baseName = scopeName.split(':', 2)[1];
         lastResult = this._storeItemInRegistry(
           registryKey,
           modId,
-          scopeName.split(':')[1], // Extract base name from qualified name
+          baseName, // Use base name, registryStoreUtils will prefix with modId
           scopeDef,
           filename
         );
@@ -100,9 +102,19 @@ export default class ScopeLoader extends BaseManifestItemLoader {
 
     // Iterate over the Map from the parser utility
     for (const [scopeName, dslExpression] of parsedContent.entries()) {
-      const fullScopeName = `${modId}:${scopeName}`;
-      transformed[fullScopeName] = {
-        name: fullScopeName,
+      // Validate that the scope name is properly namespaced
+      if (!scopeName.includes(':')) {
+        throw new Error(`Scope '${scopeName}' must be namespaced (e.g., '${modId}:${scopeName}'). Only 'none' and 'self' are allowed without namespace.`);
+      }
+
+      // Validate that the scope belongs to the correct mod
+      const [declaredModId, baseName] = scopeName.split(':', 2);
+      if (declaredModId !== modId) {
+        throw new Error(`Scope '${scopeName}' is declared in mod '${modId}' but claims to belong to mod '${declaredModId}'. Scope names must match the mod they're defined in.`);
+      }
+
+      transformed[scopeName] = {
+        name: scopeName,
         expr: dslExpression,
         modId: modId,
         source: 'file',

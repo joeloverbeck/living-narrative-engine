@@ -4,7 +4,7 @@
   "commandVerb": "go",
   "name": "Go",
   "description": "Moves your character to the specified location, if the way is clear.",
-  "scope": "clear_directions",
+  "scope": "core:clear_directions",
   "template": "go to {target}",
   "prerequisites": [
     {

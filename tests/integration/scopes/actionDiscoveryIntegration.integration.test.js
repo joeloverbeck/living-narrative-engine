@@ -107,11 +107,11 @@ describe('Scope Integration Tests', () => {
     );
 
     scopeRegistry.initialize({
-      followers: { expr: followerDefs.get('followers') },
-      environment: { expr: environmentDefs.get('environment') },
-      clear_directions: { expr: directionDefs.get('clear_directions') },
-      potential_leaders: {
-        expr: potentialLeadersDefs.get('potential_leaders'),
+      'core:followers': { expr: followerDefs.get('core:followers') },
+      'core:environment': { expr: environmentDefs.get('core:environment') },
+      'core:clear_directions': { expr: directionDefs.get('core:clear_directions') },
+      'core:potential_leaders': {
+        expr: potentialLeadersDefs.get('core:potential_leaders'),
       },
     });
 

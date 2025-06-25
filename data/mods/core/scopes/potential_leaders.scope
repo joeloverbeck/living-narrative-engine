@@ -1,4 +1,4 @@
-potential_leaders := entities(core:position)[
+core:potential_leaders := entities(core:position)[
     {
   "and": [
     { "condition_ref": "core:entity-at-location" },

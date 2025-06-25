@@ -93,9 +93,9 @@ describe('Scope Integration Tests', () => {
     );
 
     scopeRegistry.initialize({
-      followers: { expr: followerDefs.get('followers') },
-      environment: { expr: environmentDefs.get('environments') },
-      clear_directions: { expr: directionDefs.get('clear_directions') },
+      'core:followers': { expr: followerDefs.get('core:followers') },
+      'core:environment': { expr: environmentDefs.get('core:environment') },
+      'core:clear_directions': { expr: directionDefs.get('core:clear_directions') },
     });
 
     scopeEngine = new ScopeEngine();

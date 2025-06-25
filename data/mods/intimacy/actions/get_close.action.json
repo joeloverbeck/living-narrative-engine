@@ -4,7 +4,7 @@
   "commandVerb": "get-close",
   "name": "Get Close",
   "description": "Move closer to the target, entering their personal space.",
-  "scope": "actors_in_location",
+  "scope": "core:actors_in_location",
   "required_components": {
     "target": [
       "core:actor"

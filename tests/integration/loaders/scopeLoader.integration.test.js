@@ -71,7 +71,7 @@ describe('ScopeLoader Integration Tests', () => {
     });
 
     it('should successfully load a simple scope definition', async () => {
-      const scopeContent = 'directions := location.core:exits[].target';
+      const scopeContent = 'core:directions := location.core:exits[].target';
 
       global.fetch.mockResolvedValue({
         ok: true,
@@ -112,7 +112,7 @@ describe('ScopeLoader Integration Tests', () => {
     });
 
     it('should NOT try to parse scope content as JSON', async () => {
-      const scopeContent = 'directions := location.core:exits[].target';
+      const scopeContent = 'core:directions := location.core:exits[].target';
 
       // Mock a response that would fail JSON parsing but should work for text
       global.fetch.mockResolvedValue({

@@ -1,4 +1,4 @@
-environment := entities(core:position)[
+core:environment := entities(core:position)[
     {
   "and": [
     { "condition_ref": "core:entity-at-location" },

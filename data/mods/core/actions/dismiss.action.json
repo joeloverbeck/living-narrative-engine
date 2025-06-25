@@ -4,7 +4,7 @@
   "commandVerb": "dismiss",
   "name": "Dismiss",
   "description": "Dismisses a follower from your service.",
-  "scope": "followers",
+  "scope": "core:followers",
   "required_components": {
     "actor": [
       "core:leading"

@@ -1,1 +1,1 @@
-close_actors := actor.components.intimacy:closeness.partners[]
+intimacy:close_actors := actor.components.intimacy:closeness.partners[]

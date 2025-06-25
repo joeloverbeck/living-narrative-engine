@@ -106,7 +106,7 @@ describe('ActionDiscoveryService - Go Action (Fixed State)', () => {
     );
 
     mockTargetResolutionService.resolveTargets.mockImplementation(async (scopeName) => {
-      if (scopeName === 'clear_directions') {
+      if (scopeName === 'core:clear_directions') {
         return [{ type: 'entity', entityId: TOWN_INSTANCE_ID }];
       }
       if (scopeName === 'none') {
@@ -175,7 +175,7 @@ describe('ActionDiscoveryService - Go Action (Fixed State)', () => {
     expect(result.actions).toContainEqual(waitAction);
     expect(result.actions).toContainEqual(goAction);
 
-    expect(mockTargetResolutionService.resolveTargets).toHaveBeenCalledWith('clear_directions', mockHeroEntity, expect.anything(), null);
+    expect(mockTargetResolutionService.resolveTargets).toHaveBeenCalledWith('core:clear_directions', mockHeroEntity, expect.anything(), null);
     expect(mockTargetResolutionService.resolveTargets).toHaveBeenCalledWith('none', mockHeroEntity, expect.anything(), null);
 
     const expectedGoTargetContext =
