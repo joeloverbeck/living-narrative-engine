@@ -22,6 +22,7 @@ import {
 
 // --- Utility Imports ---
 import { safeDispatchError } from '../utils/safeDispatchErrorUtils.js';
+import { dispatchWithLogging } from '../utils/eventDispatchUtils.js';
 
 /**
  * Service responsible for instantiating entities defined
@@ -136,19 +137,14 @@ class WorldInitializer {
    * @private
    */
   async #_dispatchWorldInitEvent(eventName, payload, identifierForLog) {
-    try {
-      await this.#validatedEventDispatcher.dispatch(eventName, payload, {
-        allowSchemaNotFound: true,
-      });
-      this.#logger.debug(
-        `WorldInitializer (EventDispatch): Successfully dispatched '${eventName}' for ${identifierForLog}.`
-      );
-    } catch (e) {
-      this.#logger.error(
-        `WorldInitializer (EventDispatch): Failed dispatching '${eventName}' event for ${identifierForLog}. Error:`,
-        e
-      );
-    }
+    await dispatchWithLogging(
+      this.#validatedEventDispatcher,
+      eventName,
+      payload,
+      this.#logger,
+      identifierForLog,
+      { allowSchemaNotFound: true }
+    );
   }
 
   /**

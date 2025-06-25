@@ -9,6 +9,7 @@
 // Type imports for JSDoc
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../events/validatedEventDispatcher.js').default} ValidatedEventDispatcher */ // Corrected path
+import { dispatchWithLogging } from '../utils/eventDispatchUtils.js';
 
 /**
  * Service responsible for initializing essential systems of the application.
@@ -147,21 +148,14 @@ class SystemInitializer {
           error: initError?.message || 'Unknown error',
           stack: initError?.stack,
         };
-        this.#validatedEventDispatcher
-          .dispatch('system:initialization_failed', failurePayload, {
-            allowSchemaNotFound: true,
-          })
-          .then(() =>
-            this.#logger.debug(
-              `Dispatched 'system:initialization_failed' event for ${systemName}.`
-            )
-          )
-          .catch((e) =>
-            this.#logger.error(
-              `Failed to dispatch 'system:initialization_failed' event for ${systemName}.`,
-              e
-            )
-          );
+        dispatchWithLogging(
+          this.#validatedEventDispatcher,
+          'system:initialization_failed',
+          failurePayload,
+          this.#logger,
+          systemName,
+          { allowSchemaNotFound: true }
+        );
       }
     } else {
       if (system) {

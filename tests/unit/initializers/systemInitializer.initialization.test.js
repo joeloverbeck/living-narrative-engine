@@ -5,6 +5,7 @@ import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 // Adjust path as needed
 import SystemInitializer from '../../../src/initializers/systemInitializer.js';
 import { INITIALIZABLE } from '../../../src/dependencyInjection/tags.js'; // Corrected import path for tags
+import * as eventDispatchUtils from '../../../src/utils/eventDispatchUtils.js';
 
 // --- Type Imports for Mocks ---
 /** @typedef {import('../../src/interfaces/coreServices.js').ILogger} ILogger */
@@ -44,6 +45,7 @@ describe('SystemInitializer (Tag-Based)', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    jest.spyOn(eventDispatchUtils, 'dispatchWithLogging');
 
     // Mock ILogger
     mockLogger = {
@@ -342,6 +344,20 @@ describe('SystemInitializer (Tag-Based)', () => {
         ),
         initError
       );
+      expect(eventDispatchUtils.dispatchWithLogging).toHaveBeenCalledWith(
+        mockValidatedEventDispatcher,
+        'system:initialization_failed',
+        {
+          systemName: 'SystemFailInit',
+          error: initError.message,
+          stack: initError.stack,
+        },
+        mockLogger,
+        'SystemFailInit',
+        { allowSchemaNotFound: true }
+      );
+
+      // dispatch still uses the dispatcher under the hood
       expect(mockValidatedEventDispatcher.dispatch).toHaveBeenCalledWith(
         'system:initialization_failed',
         {
@@ -494,6 +510,34 @@ describe('SystemInitializer (Tag-Based)', () => {
       // Should only have the one error from mockSystemFailInit
       expect(mockLogger.error).toHaveBeenCalledTimes(1);
       expect(mockLogger.warn).not.toHaveBeenCalled(); // No other warnings expected here
+    });
+
+    it('logs an error when dispatching initialization_failed event fails', async () => {
+      mockResolver.resolveByTag.mockResolvedValue([mockSystemFailInit]);
+      const dispatchErr = new Error('DispatchFail');
+      mockValidatedEventDispatcher.dispatch.mockRejectedValueOnce(dispatchErr);
+
+      await systemInitializer.initializeAll();
+
+      expect(eventDispatchUtils.dispatchWithLogging).toHaveBeenCalledWith(
+        mockValidatedEventDispatcher,
+        'system:initialization_failed',
+        {
+          systemName: 'SystemFailInit',
+          error: initError.message,
+          stack: initError.stack,
+        },
+        mockLogger,
+        'SystemFailInit',
+        { allowSchemaNotFound: true }
+      );
+
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        expect.stringContaining(
+          "Failed dispatching 'system:initialization_failed' event for SystemFailInit"
+        ),
+        dispatchErr
+      );
     });
   });
 });
