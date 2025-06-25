@@ -20,7 +20,7 @@ import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
  */
 
 /**
- * @typedef {Object} DispatchEventOperationParams
+ * @typedef {object} DispatchEventOperationParams
  * @property {string} event_type - The namespaced identifier for the event type (e.g., "core:example").
  * @property {*} [event_payload] - Optional data to include with the event.
  */

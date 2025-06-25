@@ -10,10 +10,11 @@
 export class ITargetResolutionService {
   /**
    * Resolves a scope name and an actor context into a list of valid target contexts.
+   *
    * @param {string} scopeName - The scope to resolve (e.g., 'self', 'in_view', 'none').
    * @param {Entity} actorEntity - The entity performing the action.
    * @param {ActionContext} discoveryContext - The dynamic context for the resolution.
-   * @param {TraceContext} [trace=null] - Optional trace context for logging.
+   * @param {TraceContext} [trace] - Optional trace context for logging.
    * @returns {Promise<ActionTargetContext[]>} A list of valid target contexts.
    */
   async resolveTargets(scopeName, actorEntity, discoveryContext, trace = null) {

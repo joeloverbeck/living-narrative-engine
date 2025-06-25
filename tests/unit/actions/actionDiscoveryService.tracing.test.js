@@ -27,7 +27,6 @@ describe('ActionDiscoveryService Tracing', () => {
   const actionDefPrereq = { id: 'action1', name: 'With Prereqs', prerequisites: [{ op: 'test' }], scope: 'someScope' };
   const actionDefScope = { id: 'action2', name: 'With Scope', scope: 'someScope' };
   const actionDefSimple = { id: 'action3', name: 'Simple', scope: 'none' };
-  const validScopeExpr = { expr: 'location.entities(core:inanimate)' };
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -79,7 +78,7 @@ describe('ActionDiscoveryService Tracing', () => {
       expect(trace.addLog).toHaveBeenCalledWith(
         'info',
         `Starting action discovery for actor '${actorEntity.id}'.`,
-        'ActionDiscoveryService.getValidActions',
+        'getValidActions',
         { withTrace: true }
       );
     });
@@ -98,12 +97,12 @@ describe('ActionDiscoveryService Tracing', () => {
       expect(trace.addLog).toHaveBeenCalledWith(
         'step',
         `Processing candidate action: '${actionDefSimple.id}'`,
-        'ActionDiscoveryService.getValidActions'
+        'ActionDiscoveryService.#processCandidateAction'
       );
       expect(trace.addLog).toHaveBeenCalledWith(
         'step',
         `Processing candidate action: '${actionDefScope.id}'`,
-        'ActionDiscoveryService.getValidActions'
+        'ActionDiscoveryService.#processCandidateAction'
       );
     });
 
@@ -126,7 +125,7 @@ describe('ActionDiscoveryService Tracing', () => {
       expect(trace.addLog).toHaveBeenCalledWith(
         'success',
         `Action '${actionDefPrereq.id}' passed actor prerequisite check.`,
-        'ActionDiscoveryService.getValidActions'
+        'ActionDiscoveryService.#processCandidateAction'
       );
     });
 
@@ -139,7 +138,7 @@ describe('ActionDiscoveryService Tracing', () => {
       expect(trace.addLog).toHaveBeenCalledWith(
         'failure',
         `Action '${actionDefPrereq.id}' discarded due to failed actor prerequisites.`,
-        'ActionDiscoveryService.getValidActions'
+        'ActionDiscoveryService.#processCandidateAction'
       );
       // The rest of the processing for this action should be skipped
       expect(deps.targetResolutionService.resolveTargets).not.toHaveBeenCalled();
@@ -174,7 +173,10 @@ describe('ActionDiscoveryService Tracing', () => {
       expect(calls[4][1]).toContain('passed actor prerequisite check');
 
       // The trace logging has changed since we now delegate to the TargetResolutionService
-      expect(calls[5][1]).toContain("Finished discovery. Found 2 valid actions");
+      // Find the final log message in the calls array
+      const finalLogCall = calls.find(call => call[1].includes("Finished discovery"));
+      expect(finalLogCall).toBeDefined();
+      expect(finalLogCall[1]).toContain("Finished discovery. Found 2 valid actions");
     });
 
     it('should return the populated trace object in the result', async () => {

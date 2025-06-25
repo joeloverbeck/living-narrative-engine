@@ -59,7 +59,7 @@ class ScopeEngine extends IScopeEngine {
    * @param {AST} ast - The parsed AST
    * @param {object} actorEntity - The acting entity instance.
    * @param {RuntimeContext} runtimeCtx - Runtime context with services
-   * @param {TraceContext} [trace=null] - Optional trace context for logging.
+   * @param {TraceContext} [trace] - Optional trace context for logging.
    * @returns {Set<string>} Set of entity IDs
    * @throws {ScopeDepthError} When expression depth exceeds maxDepth
    * @throws {ScopeCycleError} When a cycle is detected
@@ -88,7 +88,7 @@ class ScopeEngine extends IScopeEngine {
    * @param {RuntimeContext} runtimeCtx - Runtime context
    * @param {number} depth - Current depth level
    * @param {Array<string>} path - Path of visited node/edge keys
-   * @param {TraceContext} [trace=null] - Optional trace context for logging.
+   * @param {TraceContext} [trace] - Optional trace context for logging.
    * @returns {Set<any>} Set of entity IDs or resolved objects
    * @private
    */
@@ -152,7 +152,7 @@ class ScopeEngine extends IScopeEngine {
    * @param {AST} node - Source node
    * @param {object} actorEntity - The acting entity instance.
    * @param {RuntimeContext} runtimeCtx - Runtime context
-   * @param {TraceContext} [trace=null] - Optional trace context for logging.
+   * @param {TraceContext} [trace] - Optional trace context for logging.
    * @returns {Set<string>} Set of entity IDs
    * @private
    */
@@ -238,7 +238,7 @@ class ScopeEngine extends IScopeEngine {
    * @param {RuntimeContext} runtimeCtx - Runtime context
    * @param {number} depth - Current depth
    * @param {Array<string>} path - Path of visited node/edge keys
-   * @param {TraceContext} [trace=null] - Optional trace context for logging.
+   * @param {TraceContext} [trace] - Optional trace context for logging.
    * @returns {Set<any>} Set of entity IDs or resolved objects
    * @private
    */
@@ -354,7 +354,7 @@ class ScopeEngine extends IScopeEngine {
    * @param {RuntimeContext} runtimeCtx - Runtime context
    * @param {number} depth - Current depth
    * @param {Array<string>} path - Path of visited node/edge keys
-   * @param {TraceContext} [trace=null] - Optional trace context for logging.
+   * @param {TraceContext} [trace] - Optional trace context for logging.
    * @returns {Set<any>} Set of entity IDs or objects
    * @private
    */
@@ -453,7 +453,7 @@ class ScopeEngine extends IScopeEngine {
    * @param {RuntimeContext} runtimeCtx - Runtime context
    * @param {number} depth - Current depth
    * @param {Array<string>} path - Path of visited node/edge keys
-   * @param {TraceContext} [trace=null] - Optional trace context for logging.
+   * @param {TraceContext} [trace] - Optional trace context for logging.
    * @returns {Set<any>} Set of entity IDs or resolved objects
    * @private
    */
