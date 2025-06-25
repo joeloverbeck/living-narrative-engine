@@ -17,6 +17,7 @@ import {
   assertParamsObject,
   validateStringParam,
 } from '../../utils/handlerUtils/paramsUtils.js';
+import { ensureEvaluationContext } from '../../utils/evaluationContextUtils.js';
 
 /**
  * @typedef {object} CheckFollowCycleParams
@@ -94,6 +95,10 @@ class CheckFollowCycleHandler extends BaseOperationHandler {
       this.#entityManager
     );
     const result = { success: true, cycleDetected };
+
+    if (!ensureEvaluationContext(executionContext, this.#dispatcher, log)) {
+      return;
+    }
 
     const res = tryWriteContextVariable(
       resultVar,
