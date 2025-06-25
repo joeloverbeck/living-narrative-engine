@@ -61,9 +61,10 @@ describe('SummaryPhase', () => {
   });
 
   // Test the primary success path (AC 1)
-  it('should successfully log the summary using the provided context', async () => {
-    // Act: Execute the phase.
-    await summaryPhase.execute(mockCtx);
+  it('should successfully log the summary using the provided context without mutating it', async () => {
+    Object.freeze(mockCtx);
+    Object.freeze(mockCtx.totals);
+    const result = await summaryPhase.execute(mockCtx);
 
     // Assert: Verify the correct methods were called with the correct arguments.
     expect(logger.info).toHaveBeenCalledWith('— SummaryPhase starting —');
@@ -76,6 +77,7 @@ describe('SummaryPhase', () => {
       mockCtx.incompatibilities,
       mockCtx.totals
     );
+    expect(result).not.toBe(mockCtx);
   });
 
   // Test the failure path (AC 2)
@@ -85,6 +87,8 @@ describe('SummaryPhase', () => {
     summaryLogger.logSummary.mockImplementation(() => {
       throw originalError;
     });
+    Object.freeze(mockCtx);
+    Object.freeze(mockCtx.totals);
 
     // Act & Assert: Expect the promise to reject and that the thrown error
     // has all the correct properties.

@@ -51,6 +51,8 @@ describe('ContentPhase', () => {
         totals: { actions: { count: 5, overrides: 0, errors: 0 } },
       };
       ctx.manifests = mockManifests;
+      Object.freeze(ctx);
+      Object.freeze(ctx.totals);
       const originalTotalsRef = ctx.totals;
 
       // Act
@@ -61,8 +63,9 @@ describe('ContentPhase', () => {
       expect(mockManager.loadContent).toHaveBeenCalledWith(
         ['core', 'modA'],
         ctx.manifests,
-        originalTotalsRef // manager receives the original object to mutate
+        expect.any(Object)
       );
+      expect(mockManager.loadContent.mock.calls[0][2]).not.toBe(originalTotalsRef);
 
       // Acceptance Criterion 1: Totals object reference changes after phase.
       expect(result.totals).not.toBe(originalTotalsRef);
@@ -70,6 +73,9 @@ describe('ContentPhase', () => {
         actions: { count: 5, overrides: 0, errors: 0 },
         components: { count: 10, overrides: 1, errors: 0 },
       });
+
+      // Original ctx should remain unchanged
+      expect(ctx.totals).toEqual({ actions: { count: 5, overrides: 0, errors: 0 } });
 
       // Verify the result is frozen
       expect(() => {
@@ -97,20 +103,15 @@ describe('ContentPhase', () => {
         totals: {},
       };
       ctx.manifests = mockManifests;
+      Object.freeze(ctx);
+      Object.freeze(ctx.totals);
 
-      // Act & Assert
-      await expect(phase.execute(ctx)).rejects.toThrow(ModsLoaderPhaseError);
-
-      try {
-        await phase.execute(ctx);
-      } catch (e) {
-        // Acceptance Criterion 2: Error code equals 'content' on failure.
-        expect(e).toBeInstanceOf(ModsLoaderPhaseError);
-        expect(e.code).toBe(ModsLoaderErrorCode.CONTENT);
-        expect(e.message).toBe(underlyingError.message);
-        expect(e.phase).toBe('ContentPhase');
-        expect(e.cause).toBe(underlyingError);
-      }
+      await expect(phase.execute(ctx)).rejects.toMatchObject({
+        code: ModsLoaderErrorCode.CONTENT,
+        message: underlyingError.message,
+        phase: 'ContentPhase',
+        cause: underlyingError,
+      });
     });
   });
 });

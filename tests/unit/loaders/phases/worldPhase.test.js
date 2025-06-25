@@ -1,6 +1,5 @@
 // tests/unit/loaders/phases/worldPhase.test.js
 
-import { jest } from '@jest/globals';
 import { mock } from 'jest-mock-extended';
 import WorldPhase from '../../../../src/loaders/phases/worldPhase.js';
 import {
@@ -34,26 +33,31 @@ describe('WorldPhase', () => {
       worldPhase = new WorldPhase({ worldLoader, logger });
     });
 
-    it('should successfully call worldLoader.loadWorlds with correct parameters', async () => {
+    it('should clone context before mutation and keep previous ctx untouched', async () => {
       // Arrange
       const ctx = {
         finalModOrder: ['core', 'modA'],
         totals: { components: 10, actions: 5 },
       };
       ctx.manifests = manifests;
+      Object.freeze(ctx);
+      Object.freeze(ctx.totals);
       worldLoader.loadWorlds.mockResolvedValue(undefined);
 
       // Act
-      await worldPhase.execute(ctx);
+      const result = await worldPhase.execute(ctx);
 
       // Assert
       expect(logger.info).toHaveBeenCalledWith('— WorldPhase starting —');
       expect(worldLoader.loadWorlds).toHaveBeenCalledWith(
         ctx.finalModOrder,
         ctx.manifests,
-        ctx.totals
+        expect.any(Object)
       );
       expect(worldLoader.loadWorlds).toHaveBeenCalledTimes(1);
+      expect(worldLoader.loadWorlds.mock.calls[0][2]).not.toBe(ctx.totals);
+      expect(result.totals).not.toBe(ctx.totals);
+      expect(ctx.totals).toEqual({ components: 10, actions: 5 });
     });
 
     it('should throw a ModsLoaderPhaseError when worldLoader.loadWorlds fails', async () => {
@@ -65,6 +69,8 @@ describe('WorldPhase', () => {
         totals: {},
       };
       ctx.manifests = manifests;
+      Object.freeze(ctx);
+      Object.freeze(ctx.totals);
 
       // Act & Assert
       await expect(worldPhase.execute(ctx)).rejects.toThrow(
@@ -84,6 +90,8 @@ describe('WorldPhase', () => {
         totals: {},
       };
       ctx.manifests = manifests;
+      Object.freeze(ctx);
+      Object.freeze(ctx.totals);
 
       // Act
       let caughtError;
