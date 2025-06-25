@@ -160,6 +160,8 @@ async function _handleResponse(
  * @param {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} safeEventDispatcher Dispatcher for SYSTEM_ERROR_OCCURRED_ID events.
  * @param {import('../interfaces/coreServices.js').ILogger} [logger] Optional logger instance.
  * @param {typeof fetch} [fetchFn] The fetch implementation to use.
+ * @param {import('../interfaces/IRetryManager.js').IRetryManager} [retryManager]
+ * Optional retry manager implementation.
  * @returns {Promise<any>} A promise that resolves with the parsed JSON response on success.
  * @throws {Error} Throws an error if all retries fail, a non-retryable HTTP error occurs,
  * or another unhandled error arises during fetching.
@@ -172,7 +174,8 @@ export async function fetchWithRetry(
   maxDelayMs,
   safeEventDispatcher,
   logger,
-  fetchFn = fetch
+  fetchFn = fetch,
+  retryManager
 ) {
   const moduleLogger = getModuleLogger('fetchWithRetry', logger);
 
@@ -180,12 +183,9 @@ export async function fetchWithRetry(
     `fetchWithRetry: Initiating request sequence for ${url} with maxRetries=${maxRetries}, baseDelayMs=${baseDelayMs}, maxDelayMs=${maxDelayMs}.`
   );
 
-  const retryManager = new RetryManager(
-    maxRetries,
-    baseDelayMs,
-    maxDelayMs,
-    moduleLogger
-  );
+  const effectiveManager =
+    retryManager ||
+    new RetryManager(maxRetries, baseDelayMs, maxDelayMs, moduleLogger);
 
   const attemptFn = async (currentAttempt) => {
     moduleLogger.debug(
@@ -207,7 +207,7 @@ export async function fetchWithRetry(
     );
 
   try {
-    return await retryManager.perform(attemptFn, responseHandler);
+    return await effectiveManager.perform(attemptFn, responseHandler);
   } catch (error) {
     const isNetworkError =
       error instanceof TypeError &&

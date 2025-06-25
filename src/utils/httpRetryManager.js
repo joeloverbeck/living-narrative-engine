@@ -1,12 +1,15 @@
 // src/utils/httpRetryManager.js
 import { getModuleLogger } from './loggerUtils.js';
 
+/** @typedef {import('../interfaces/IRetryManager.js').IRetryManager} IRetryManager */
+
 /**
  * @typedef {import('../interfaces/coreServices.js').ILogger} ILogger
  */
 
 /**
  * @class RetryManager
+ * @implements {IRetryManager}
  * @description Utility class for performing retry logic with exponential backoff.
  */
 export class RetryManager {
