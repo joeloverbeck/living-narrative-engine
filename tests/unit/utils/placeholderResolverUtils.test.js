@@ -9,7 +9,7 @@ import {
   afterEach,
 } from '@jest/globals';
 import { PlaceholderResolver } from '../../../src/utils/placeholderResolverUtils.js';
-import { parsePlaceholderKey } from '../../../src/utils/placeholderParsing.js';
+import { parsePlaceholderKey } from '../../../src/utils/placeholderPatterns.js';
 import { buildResolutionSources } from '../../../src/utils/placeholderSources.js';
 import { createMockLogger } from '../testUtils.js'; // Adjust path as needed (assuming testUtils.js from previous adjustment)
 import * as loggerUtils from '../../../src/utils/loggerUtils.js';

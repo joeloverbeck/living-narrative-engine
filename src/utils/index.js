@@ -13,3 +13,8 @@ export * from './logHelpers.js';
 export * from './objectUtils.js';
 export * from './cloneUtils.js';
 export * from './cloneTotals.js';
+export * from './placeholderPatterns.js';
+export * from './placeholderPathResolver.js';
+export { StructureResolver } from './structureResolver.js';
+export * from './jsonCleaning.js';
+export * from './jsonRepair.js';
