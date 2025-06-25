@@ -291,19 +291,33 @@ class GameEngine {
     return this.#persistenceCoordinator.loadGame(saveIdentifier);
   }
 
-  showSaveGameUI() {
+  /**
+   * Ensures the persistence service exists.
+   *
+   * @private
+   * @description Returns the game persistence service or throws if unavailable.
+   * @returns {IGamePersistenceService} The persistence service.
+   * @throws {Error} When the service is missing.
+   */
+  _ensurePersistenceService() {
     if (!this.#gamePersistenceService) {
+      throw new Error('GamePersistenceService is unavailable.');
+    }
+    return this.#gamePersistenceService;
+  }
+
+  showSaveGameUI() {
+    let persistenceService;
+    try {
+      persistenceService = this._ensurePersistenceService();
+    } catch {
       this.#logger.error(
         'GameEngine.showSaveGameUI: GamePersistenceService is unavailable. Cannot show Save Game UI.'
       );
       return;
     }
 
-    if (
-      this.#gamePersistenceService.isSavingAllowed(
-        this.#engineState.isInitialized
-      )
-    ) {
+    if (persistenceService.isSavingAllowed(this.#engineState.isInitialized)) {
       this.#logger.debug(
         'GameEngine.showSaveGameUI: Dispatching request to show Save Game UI.'
       );
@@ -317,7 +331,9 @@ class GameEngine {
   }
 
   showLoadGameUI() {
-    if (!this.#gamePersistenceService) {
+    try {
+      this._ensurePersistenceService();
+    } catch {
       this.#logger.error(
         'GameEngine.showLoadGameUI: GamePersistenceService is unavailable. Cannot show Load Game UI.'
       );
