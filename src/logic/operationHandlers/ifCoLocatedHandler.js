@@ -60,8 +60,8 @@ class IfCoLocatedHandler extends BaseOperationHandler {
    * @typedef {object} IfCoLocatedParams
    * @property {string|object} entity_ref_a
    * @property {string|object} entity_ref_b
-   * @property {import('../../data/schemas/operation.schema.json').Operation[]} [then_actions]
-   * @property {import('../../data/schemas/operation.schema.json').Operation[]} [else_actions]
+   * @property {import('../../../data/schemas/operation.schema.json').Operation[]} [then_actions]
+   * @property {import('../../../data/schemas/operation.schema.json').Operation[]} [else_actions]
    */
 
   /**
@@ -145,7 +145,7 @@ class IfCoLocatedHandler extends BaseOperationHandler {
    * Execute a list of operations using the interpreter.
    *
    * @private
-   * @param {import('../../data/schemas/operation.schema.json').Operation[]|*} actions - Operations to execute.
+   * @param {import('../../../data/schemas/operation.schema.json').Operation[]|*} actions - Operations to execute.
    * @param {ExecutionContext} executionContext - Current execution context.
    * @returns {void}
    */

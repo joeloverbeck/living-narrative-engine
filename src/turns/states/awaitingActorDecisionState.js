@@ -330,7 +330,7 @@ export class AwaitingActorDecisionState extends AbstractTurnState {
    * @private
    * @param {BaseTurnHandler} handler - Active turn handler being destroyed.
    * @param {?ITurnContext} turnContext - Current turn context.
-   * @param {import('../../utils/logger.js').Logger | Console} logger - Logger instance.
+   * @param {import('../../interfaces/coreServices.js').ILogger | Console} logger - Logger instance.
    * @param {?Entity} actor - Actor retrieved from the context.
    * @returns {Promise<void>} Resolves when cleanup completes.
    */

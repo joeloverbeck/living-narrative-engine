@@ -4,7 +4,7 @@
 /** @typedef {import('../data/gameDataRepository.js').ActionDefinition} ActionDefinition */
 /** @typedef {import('../entities/entity.js').default} Entity */
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */
-/** @typedef {import('./inspection/traceContext.js').TraceContext} TraceContext */
+/** @typedef {import('./tracing/traceContext.js').TraceContext} TraceContext */
 
 export class ActionIndex {
   /** @type {ILogger} */
@@ -54,24 +54,34 @@ export class ActionIndex {
    */
   buildIndex(allActionDefinitions) {
     if (!Array.isArray(allActionDefinitions)) {
-      this.#logger.warn('ActionIndex.buildIndex: allActionDefinitions must be an array. Skipping index build.');
+      this.#logger.warn(
+        'ActionIndex.buildIndex: allActionDefinitions must be an array. Skipping index build.'
+      );
       return;
     }
 
-    this.#logger.debug(`Building action index from ${allActionDefinitions.length} definitions...`);
+    this.#logger.debug(
+      `Building action index from ${allActionDefinitions.length} definitions...`
+    );
 
     this.#byActorComponent.clear();
     this.#noActorRequirement = [];
 
     for (const actionDef of allActionDefinitions) {
       if (!actionDef || typeof actionDef !== 'object') {
-        this.#logger.debug(`ActionIndex.buildIndex: Skipping invalid action definition: ${actionDef}`);
+        this.#logger.debug(
+          `ActionIndex.buildIndex: Skipping invalid action definition: ${actionDef}`
+        );
         continue;
       }
 
       const requiredActorComponents = actionDef.required_components?.actor;
 
-      if (requiredActorComponents && Array.isArray(requiredActorComponents) && requiredActorComponents.length > 0) {
+      if (
+        requiredActorComponents &&
+        Array.isArray(requiredActorComponents) &&
+        requiredActorComponents.length > 0
+      ) {
         for (const componentId of requiredActorComponents) {
           if (typeof componentId === 'string' && componentId.trim()) {
             if (!this.#byActorComponent.has(componentId)) {
@@ -85,7 +95,9 @@ export class ActionIndex {
       }
     }
 
-    this.#logger.debug(`Action index built. ${this.#byActorComponent.size} component-to-action maps created.`);
+    this.#logger.debug(
+      `Action index built. ${this.#byActorComponent.size} component-to-action maps created.`
+    );
   }
 
   /**
@@ -100,19 +112,28 @@ export class ActionIndex {
     const source = 'ActionIndex.getCandidateActions';
     if (!actorEntity || !actorEntity.id) return [];
 
-    const actorComponentTypes = this.#entityManager.getAllComponentTypesForEntity(actorEntity.id) || [];
-    trace?.addLog('data', `Actor '${actorEntity.id}' has components.`, source, { 
-      components: actorComponentTypes.length > 0 ? actorComponentTypes : [] 
+    const actorComponentTypes =
+      this.#entityManager.getAllComponentTypesForEntity(actorEntity.id) || [];
+    trace?.addLog('data', `Actor '${actorEntity.id}' has components.`, source, {
+      components: actorComponentTypes.length > 0 ? actorComponentTypes : [],
     });
 
     // Use a Set to automatically handle de-duplication.
     const candidateSet = new Set(this.#noActorRequirement);
-    trace?.addLog('info', `Added ${this.#noActorRequirement.length} actions with no actor component requirements.`, source);
+    trace?.addLog(
+      'info',
+      `Added ${this.#noActorRequirement.length} actions with no actor component requirements.`,
+      source
+    );
 
     for (const componentType of actorComponentTypes) {
       const actionsForComponent = this.#byActorComponent.get(componentType);
       if (actionsForComponent) {
-        trace?.addLog('info', `Found ${actionsForComponent.length} actions requiring component '${componentType}'.`, source);
+        trace?.addLog(
+          'info',
+          `Found ${actionsForComponent.length} actions requiring component '${componentType}'.`,
+          source
+        );
         for (const action of actionsForComponent) {
           candidateSet.add(action);
         }
@@ -120,9 +141,16 @@ export class ActionIndex {
     }
 
     const candidates = Array.from(candidateSet);
-    trace?.addLog('success', `Final candidate list contains ${candidates.length} unique actions.`, source, { actionIds: candidates.map(a => a.id) });
+    trace?.addLog(
+      'success',
+      `Final candidate list contains ${candidates.length} unique actions.`,
+      source,
+      { actionIds: candidates.map((a) => a.id) }
+    );
 
-    this.#logger.debug(`ActionIndex: Retrieved ${candidates.length} candidate actions for actor ${actorEntity.id}.`);
+    this.#logger.debug(
+      `ActionIndex: Retrieved ${candidates.length} candidate actions for actor ${actorEntity.id}.`
+    );
     return candidates;
   }
 }
