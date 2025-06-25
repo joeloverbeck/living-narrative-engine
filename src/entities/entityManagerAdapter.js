@@ -54,5 +54,14 @@ export class EntityManagerAdapter {
     return this.locationQueryService.getEntitiesInLocation(locationId);
   }
 
+  /**
+   * Delegates to the wrapped EntityManager to retrieve all active entity IDs.
+   *
+   * @returns {Iterable<string>} Iterable of entity instance IDs.
+   */
+  getEntityIds() {
+    return this.entityManager.getEntityIds();
+  }
+
   // All other property accesses are delegated via Proxy
 }

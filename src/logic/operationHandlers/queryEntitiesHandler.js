@@ -88,7 +88,7 @@ class QueryEntitiesHandler extends BaseOperationHandler {
     if (!validated) return;
     const { resultVariable, filters, limit, logger } = validated;
 
-    let candidateIds = new Set(this.#entityManager.entities.keys());
+    let candidateIds = new Set(this.#entityManager.getEntityIds());
     logger.debug(
       `QUERY_ENTITIES: Starting with ${candidateIds.size} total active entities.`
     );

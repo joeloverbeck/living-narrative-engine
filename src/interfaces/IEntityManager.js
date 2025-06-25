@@ -129,6 +129,15 @@ export class IEntityManager {
   }
 
   /**
+   * Returns an iterable of all active entity instance IDs.
+   *
+   * @returns {Iterable<string>} Iterable of entity instance IDs.
+   */
+  getEntityIds() {
+    throw new Error('IEntityManager.getEntityIds not implemented.');
+  }
+
+  /**
    * Finds all active entities that match a complex query.
    *
    * @param {object} query - The query definition.
@@ -157,6 +166,8 @@ export class IEntityManager {
    * @returns {string[]} An array of component ID strings.
    */
   getAllComponentTypesForEntity(entityId) {
-    throw new Error('IEntityManager.getAllComponentTypesForEntity not implemented.');
+    throw new Error(
+      'IEntityManager.getAllComponentTypesForEntity not implemented.'
+    );
   }
 }

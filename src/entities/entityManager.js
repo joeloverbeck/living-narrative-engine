@@ -114,7 +114,7 @@ class EntityManager extends IEntityManager {
   #componentMutationService;
 
   /** @type {ErrorTranslator} @private */
-  #errorTranslator;
+  #errorTranslator; // eslint-disable-line no-unused-private-class-members
 
   /** @type {Map<string, EntityDefinition>} @private */
   #definitionCache;
@@ -130,6 +130,15 @@ class EntityManager extends IEntityManager {
    */
   get entities() {
     return this.#entityRepository.entities();
+  }
+
+  /**
+   * Returns an array of all active entity IDs.
+   *
+   * @returns {string[]} Array of entity instance IDs.
+   */
+  getEntityIds() {
+    return Array.from(this.entities, (e) => e.id);
   }
 
   /**
