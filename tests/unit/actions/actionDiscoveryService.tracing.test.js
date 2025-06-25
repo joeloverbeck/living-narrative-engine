@@ -40,10 +40,9 @@ describe('ActionDiscoveryService Tracing', () => {
       logger: mock(),
       formatActionCommandFn: jest.fn(),
       safeEventDispatcher: mockDeep(),
-      scopeRegistry: {
-        getScope: jest.fn(),
+      targetResolutionService: {
+        resolveTargets: jest.fn(),
       },
-      scopeEngine: mock(),
       getActorLocationFn: jest.fn(),
       getEntityDisplayNameFn: jest.fn(),
     };
@@ -55,11 +54,15 @@ describe('ActionDiscoveryService Tracing', () => {
     deps.getActorLocationFn.mockReturnValue('location1');
     deps.actionIndex.getCandidateActions.mockReturnValue([]);
     deps.prerequisiteEvaluationService.evaluate.mockReturnValue(true);
-    deps.scopeRegistry.getScope.mockImplementation((scopeName) => {
-      if (scopeName === 'someScope') return validScopeExpr;
-      return undefined;
+    deps.targetResolutionService.resolveTargets.mockImplementation(async (scopeName) => {
+      if (scopeName === 'someScope') return [
+        { type: 'entity', entityId: 'target1' },
+        { type: 'entity', entityId: 'target2' }
+      ];
+      if (scopeName === 'none') return [{ type: 'none', entityId: null }];
+      if (scopeName === 'self') return [{ type: 'entity', entityId: actorEntity.id }];
+      return [];
     });
-    deps.scopeEngine.resolve.mockReturnValue(new Set(['target1', 'target2']));
     deps.formatActionCommandFn.mockReturnValue({ ok: true, value: 'do action' });
 
     service = new ActionDiscoveryService(deps);
@@ -138,15 +141,15 @@ describe('ActionDiscoveryService Tracing', () => {
         'ActionDiscoveryService.getValidActions'
       );
       // The rest of the processing for this action should be skipped
-      expect(deps.scopeEngine.resolve).not.toHaveBeenCalled();
+      expect(deps.targetResolutionService.resolveTargets).not.toHaveBeenCalled();
     });
 
     it('should pass the trace object to the scope resolution', async () => {
       deps.actionIndex.getCandidateActions.mockReturnValue([actionDefScope]);
       const { trace } = await service.getValidActions(actorEntity, context, { trace: true });
 
-      expect(deps.scopeEngine.resolve).toHaveBeenCalledWith(
-        expect.anything(), // The AST
+      expect(deps.targetResolutionService.resolveTargets).toHaveBeenCalledWith(
+        actionDefScope.scope,
         actorEntity,
         expect.anything(), // The runtime context
         trace // The trace object
@@ -169,9 +172,8 @@ describe('ActionDiscoveryService Tracing', () => {
       expect(calls[3][1]).toContain(`Processing candidate action: '${actionDefScope.id}'`);
       expect(calls[4][1]).toContain('passed actor prerequisite check');
 
-      // FIX: Account for the log inside #resolveScopeToIds and check the final log at the correct index.
-      expect(calls[5][1]).toContain("Resolving scope 'someScope' with DSL."); // Log from inside the helper
-      expect(calls[6][1]).toContain("resolved to 2 potential targets"); // Final log from getValidActions
+      // The trace logging has changed since we now delegate to the TargetResolutionService
+      expect(calls[5][1]).toContain("Finished discovery. Found 2 valid actions");
     });
 
     it('should return the populated trace object in the result', async () => {

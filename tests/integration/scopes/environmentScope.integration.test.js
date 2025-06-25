@@ -27,6 +27,7 @@ import fs from 'fs';
 import path from 'path';
 import JsonLogicEvaluationService from '../../../src/logic/jsonLogicEvaluationService.js';
 import InMemoryDataRegistry from '../../../src/data/inMemoryDataRegistry.js';
+import { TargetResolutionService } from '../../../src/actions/targetResolutionService.js';
 
 // Import actions
 import followAction from '../../../data/mods/core/actions/follow.action.json';
@@ -127,6 +128,14 @@ describe('Scope Integration Tests', () => {
       logger,
     });
 
+    const targetResolutionService = new TargetResolutionService({
+      scopeRegistry,
+      scopeEngine,
+      entityManager,
+      logger,
+      safeEventDispatcher,
+    });
+
     // FIX: Add the missing dependency to the constructor call
     actionDiscoveryService = new ActionDiscoveryService({
       gameDataRepository,
@@ -135,8 +144,7 @@ describe('Scope Integration Tests', () => {
       logger,
       formatActionCommandFn: formatActionCommand,
       safeEventDispatcher,
-      scopeRegistry,
-      scopeEngine,
+      targetResolutionService,
       actionIndex: {
         getCandidateActions: jest
           .fn()

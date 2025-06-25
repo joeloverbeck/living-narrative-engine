@@ -42,11 +42,8 @@ const mockLogger = {
 const mockSafeEventDispatcher = {
   dispatch: jest.fn(),
 };
-const mockScopeRegistry = {
-  getScope: jest.fn(),
-};
-const mockScopeEngine = {
-  resolve: jest.fn(),
+const mockTargetResolutionService = {
+  resolveTargets: jest.fn(),
 };
 const mockFormatActionCommandFn = jest.fn();
 
@@ -108,14 +105,15 @@ describe('ActionDiscoveryService - Go Action (Fixed State)', () => {
       }
     );
 
-    mockScopeRegistry.getScope.mockImplementation((scopeName) => {
+    mockTargetResolutionService.resolveTargets.mockImplementation(async (scopeName) => {
       if (scopeName === 'clear_directions') {
-        return { expr: 'location.exits[].target' };
+        return [{ type: 'entity', entityId: TOWN_INSTANCE_ID }];
       }
-      return null;
+      if (scopeName === 'none') {
+        return [{ type: 'none', entityId: null }];
+      }
+      return [];
     });
-
-    mockScopeEngine.resolve.mockReturnValue(new Set([TOWN_INSTANCE_ID]));
 
     // FIX: Default prerequisite checks to pass for this test
     mockPrereqService.evaluate.mockReturnValue(true);
@@ -132,7 +130,7 @@ describe('ActionDiscoveryService - Go Action (Fixed State)', () => {
         .mockImplementation(() => mockGameDataRepo.getAllActionDefinitions()),
     };
 
-    // FIX: Add the new prerequisiteEvaluationService dependency
+    // FIX: Add the new prerequisiteEvaluationService dependency and targetResolutionService
     actionDiscoveryService = new ActionDiscoveryService({
       gameDataRepository: mockGameDataRepo,
       entityManager: mockEntityManager,
@@ -141,8 +139,7 @@ describe('ActionDiscoveryService - Go Action (Fixed State)', () => {
       logger: mockLogger,
       formatActionCommandFn: mockFormatActionCommandFn,
       safeEventDispatcher: mockSafeEventDispatcher,
-      scopeRegistry: mockScopeRegistry,
-      scopeEngine: mockScopeEngine,
+      targetResolutionService: mockTargetResolutionService,
       actionIndex: mockActionIndex,
     });
   });
@@ -177,8 +174,8 @@ describe('ActionDiscoveryService - Go Action (Fixed State)', () => {
     expect(result.actions).toContainEqual(waitAction);
     expect(result.actions).toContainEqual(goAction);
 
-    expect(mockScopeRegistry.getScope).toHaveBeenCalledWith('clear_directions');
-    expect(mockScopeEngine.resolve).toHaveBeenCalled();
+    expect(mockTargetResolutionService.resolveTargets).toHaveBeenCalledWith('clear_directions', mockHeroEntity, expect.anything(), null);
+    expect(mockTargetResolutionService.resolveTargets).toHaveBeenCalledWith('none', mockHeroEntity, expect.anything(), null);
 
     const expectedGoTargetContext =
       ActionTargetContext.forEntity(TOWN_INSTANCE_ID);

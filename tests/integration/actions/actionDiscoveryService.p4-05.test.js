@@ -12,16 +12,15 @@ import {
 } from '../../../src/constants/targetDomains.js';
 import { PrerequisiteEvaluationService } from '../../../src/actions/validation/prerequisiteEvaluationService.js';
 import { ActionIndex } from '../../../src/actions/actionIndex.js';
-import { IScopeEngine } from '../../../src/interfaces/IScopeEngine.js';
-import ScopeRegistry from '../../../src/scopeDsl/scopeRegistry.js';
 import { IEntityManager } from '../../../src/interfaces/IEntityManager.js';
 
 // Mocks for all dependencies
 const mockActionIndex = mock(ActionIndex);
 const mockPrereqService = mock(PrerequisiteEvaluationService);
 const mockEntityManager = mock(IEntityManager);
-const mockScopeEngine = mock(IScopeEngine);
-const mockScopeRegistry = mock(ScopeRegistry);
+const mockTargetResolutionService = {
+  resolveTargets: jest.fn(),
+};
 const mockLogger = {
   debug: jest.fn(),
   info: jest.fn(),
@@ -45,14 +44,13 @@ describe('ADS-P4-05: Streamlined ActionDiscoveryService', () => {
     mockReset(mockActionIndex);
     mockReset(mockPrereqService);
     mockReset(mockEntityManager);
-    mockReset(mockScopeEngine);
-    mockReset(mockScopeRegistry);
     mockReset(mockEventDispatcher);
     // Clear mocks for jest.fn()
     Object.values(mockLogger).forEach((fn) => fn.mockClear());
     mockGetActorLocationFn.mockClear();
     mockGetEntityDisplayNameFn.mockClear();
     mockFormatActionCommandFn.mockClear();
+    mockTargetResolutionService.resolveTargets.mockClear();
 
     // Instantiate the service with mocked dependencies.
     service = new ActionDiscoveryService({
@@ -63,8 +61,7 @@ describe('ADS-P4-05: Streamlined ActionDiscoveryService', () => {
       logger: mockLogger,
       formatActionCommandFn: mockFormatActionCommandFn,
       safeEventDispatcher: mockEventDispatcher,
-      scopeRegistry: mockScopeRegistry,
-      scopeEngine: mockScopeEngine,
+      targetResolutionService: mockTargetResolutionService,
       getActorLocationFn: mockGetActorLocationFn,
       getEntityDisplayNameFn: mockGetEntityDisplayNameFn,
     });
@@ -107,8 +104,7 @@ describe('ADS-P4-05: Streamlined ActionDiscoveryService', () => {
         actorEntity,
         null // The new trace argument defaults to null
       );
-      expect(mockScopeEngine.resolve).not.toHaveBeenCalled();
-      expect(mockScopeRegistry.getScope).not.toHaveBeenCalled();
+      expect(mockTargetResolutionService.resolveTargets).not.toHaveBeenCalled();
     });
 
     test('should check prerequisites even for TARGET_DOMAIN_SELF actions before proceeding', async () => {
@@ -135,19 +131,17 @@ describe('ADS-P4-05: Streamlined ActionDiscoveryService', () => {
         prerequisites: [],
         scope: 'some_scope',
       };
-      const targetIds = new Set(['target1']);
       mockActionIndex.getCandidateActions.mockReturnValue([actionDef]);
-      mockScopeEngine.resolve.mockReturnValue(targetIds);
-      mockScopeRegistry.getScope.mockReturnValue({
-        expr: 'location.entities(core:inanimate)',
-      });
+      mockTargetResolutionService.resolveTargets.mockResolvedValue([
+        { type: 'entity', entityId: 'target1' }
+      ]);
 
       const { actions } = await service.getValidActions(actorEntity, {});
 
       expect(actions).toHaveLength(1);
       expect(actions[0].id).toBe(actionDef.id);
       expect(mockPrereqService.evaluate).not.toHaveBeenCalled();
-      expect(mockScopeEngine.resolve).toHaveBeenCalledTimes(1);
+      expect(mockTargetResolutionService.resolveTargets).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -161,13 +155,12 @@ describe('ADS-P4-05: Streamlined ActionDiscoveryService', () => {
         prerequisites: [{ condition: 'is_not_stunned' }],
         scope: 'enemies_in_reach',
       };
-      const targetIds = new Set(['goblin1', 'goblin2']);
       mockActionIndex.getCandidateActions.mockReturnValue([actionDef]);
       mockPrereqService.evaluate.mockReturnValue(true);
-      mockScopeEngine.resolve.mockReturnValue(targetIds);
-      mockScopeRegistry.getScope.mockReturnValue({
-        expr: 'location.entities(core:character)',
-      });
+      mockTargetResolutionService.resolveTargets.mockResolvedValue([
+        { type: 'entity', entityId: 'goblin1' },
+        { type: 'entity', entityId: 'goblin2' }
+      ]);
 
       const { actions } = await service.getValidActions(actorEntity, {});
 
@@ -176,7 +169,7 @@ describe('ADS-P4-05: Streamlined ActionDiscoveryService', () => {
         expect.arrayContaining(['goblin1', 'goblin2'])
       );
       expect(mockPrereqService.evaluate).toHaveBeenCalledTimes(1);
-      expect(mockScopeEngine.resolve).toHaveBeenCalledTimes(1);
+      expect(mockTargetResolutionService.resolveTargets).toHaveBeenCalledTimes(1);
 
       expect(mockFormatActionCommandFn).toHaveBeenCalledTimes(2);
       expect(mockFormatActionCommandFn).toHaveBeenCalledWith(
@@ -204,6 +197,9 @@ describe('ADS-P4-05: Streamlined ActionDiscoveryService', () => {
       };
       mockActionIndex.getCandidateActions.mockReturnValue([actionDef]);
       mockPrereqService.evaluate.mockReturnValue(true);
+      mockTargetResolutionService.resolveTargets.mockResolvedValue([
+        { type: 'entity', entityId: actorEntity.id }
+      ]);
 
       const { actions } = await service.getValidActions(actorEntity, {});
 
@@ -211,7 +207,7 @@ describe('ADS-P4-05: Streamlined ActionDiscoveryService', () => {
       expect(actions[0].id).toBe(actionDef.id);
       expect(actions[0].params.targetId).toBe(actorEntity.id);
       expect(mockPrereqService.evaluate).toHaveBeenCalledTimes(1);
-      expect(mockScopeEngine.resolve).not.toHaveBeenCalled();
+      expect(mockTargetResolutionService.resolveTargets).toHaveBeenCalledTimes(1);
       expect(mockFormatActionCommandFn).toHaveBeenCalledTimes(1);
       expect(mockFormatActionCommandFn).toHaveBeenCalledWith(
         actionDef,
@@ -231,6 +227,9 @@ describe('ADS-P4-05: Streamlined ActionDiscoveryService', () => {
       };
       mockActionIndex.getCandidateActions.mockReturnValue([actionDef]);
       mockPrereqService.evaluate.mockReturnValue(true);
+      mockTargetResolutionService.resolveTargets.mockResolvedValue([
+        { type: 'none', entityId: null }
+      ]);
 
       const { actions } = await service.getValidActions(actorEntity, {});
 
@@ -238,7 +237,7 @@ describe('ADS-P4-05: Streamlined ActionDiscoveryService', () => {
       expect(actions[0].id).toBe(actionDef.id);
       expect(actions[0].params.targetId).toBeNull();
       expect(mockPrereqService.evaluate).toHaveBeenCalledTimes(1);
-      expect(mockScopeEngine.resolve).not.toHaveBeenCalled();
+      expect(mockTargetResolutionService.resolveTargets).toHaveBeenCalledTimes(1);
       expect(mockFormatActionCommandFn).toHaveBeenCalledTimes(1);
       expect(mockFormatActionCommandFn).toHaveBeenCalledWith(
         actionDef,
@@ -256,19 +255,15 @@ describe('ADS-P4-05: Streamlined ActionDiscoveryService', () => {
         scope: 'friends',
         prerequisites: [{ condition: 'is_charismatic' }],
       };
-      const targetIds = new Set();
       mockActionIndex.getCandidateActions.mockReturnValue([actionDef]);
       mockPrereqService.evaluate.mockReturnValue(true);
-      mockScopeEngine.resolve.mockReturnValue(targetIds);
-      mockScopeRegistry.getScope.mockReturnValue({
-        expr: 'location.entities(core:character)',
-      });
+      mockTargetResolutionService.resolveTargets.mockResolvedValue([]);
 
       const { actions } = await service.getValidActions(actorEntity, {});
 
       expect(actions).toHaveLength(0);
       expect(mockPrereqService.evaluate).toHaveBeenCalledTimes(1);
-      expect(mockScopeEngine.resolve).toHaveBeenCalledTimes(1);
+      expect(mockTargetResolutionService.resolveTargets).toHaveBeenCalledTimes(1);
       expect(mockFormatActionCommandFn).not.toHaveBeenCalled();
     });
   });
