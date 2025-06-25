@@ -1,10 +1,6 @@
 import { describe, test, expect, beforeEach, jest } from '@jest/globals';
 import * as path from 'node:path';
-import { loadProxyLlmConfigs } from '../src/proxyLlmConfigLoader.js';
-
-jest.mock('../src/proxyLlmConfigLoader.js', () => ({
-  loadProxyLlmConfigs: jest.fn(),
-}));
+// Loader will be mocked via dependency injection
 
 let LlmConfigService;
 
@@ -33,16 +29,17 @@ describe('LlmConfigService', () => {
   let logger;
   let appConfig;
   let service;
+  let mockLoader;
 
   beforeEach(async () => {
     ({ LlmConfigService } = await import('../src/config/llmConfigService.js'));
     fsReader = createFsReader();
     logger = createLogger();
     appConfig = createAppConfig('/tmp/llm.json');
-    service = new LlmConfigService(fsReader, logger, appConfig);
+    mockLoader = jest.fn();
+    service = new LlmConfigService(fsReader, logger, appConfig, mockLoader);
     jest.clearAllMocks();
-    loadProxyLlmConfigs.mockReset();
-    loadProxyLlmConfigs.mockResolvedValue({
+    mockLoader.mockResolvedValue({
       error: false,
       llmConfigs: sampleConfig,
     });
@@ -63,11 +60,7 @@ describe('LlmConfigService', () => {
   test('successful initialization loads configs and marks operational', async () => {
     const resolvedPath = path.resolve('/tmp/llm.json');
     await service.initialize();
-    expect(loadProxyLlmConfigs).toHaveBeenCalledWith(
-      resolvedPath,
-      logger,
-      fsReader
-    );
+    expect(mockLoader).toHaveBeenCalledWith(resolvedPath, logger, fsReader);
     expect(service.isOperational()).toBe(true);
     expect(service.getInitializationErrorDetails()).toBeNull();
     expect(service.getLlmConfigs()).toEqual(sampleConfig);
@@ -92,7 +85,7 @@ describe('LlmConfigService', () => {
   });
 
   test('initialize handles loader error result', async () => {
-    loadProxyLlmConfigs.mockResolvedValue({
+    mockLoader.mockResolvedValue({
       error: true,
       message: 'boom',
       stage: 'bad',
