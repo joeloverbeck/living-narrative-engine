@@ -2,7 +2,6 @@
 
 import EventBus from '../../events/eventBus.js';
 import SpatialIndexManager from '../../entities/spatialIndexManager.js';
-// REMOVED: Unused loader imports
 // import ModsLoader from '../../loaders/modsLoader.js';
 // import PromptTextLoader from '../../loaders/promptTextLoader.js';
 import { GameDataRepository } from '../../data/gameDataRepository.js'; // Concrete class
@@ -78,10 +77,6 @@ export function registerInfrastructure(container) {
     `Infrastructure Registration: Registered ${String(tokens.ISpatialIndexManager)}.`
   );
 
-  // --- FIXED: Removed duplicate loader registrations ---
-  // `PromptTextLoader` is now correctly registered only in `loadersRegistrations.js`.
-  // `ModsLoader` is now correctly registered only in `loadersRegistrations.js`.
-
   container.register(
     tokens.IGameDataRepository,
     (c) =>
@@ -94,9 +89,6 @@ export function registerInfrastructure(container) {
   log.debug(
     `Infrastructure Registration: Registered ${String(tokens.IGameDataRepository)}.`
   );
-
-  // DELETED: Duplicate IEntityManager registration removed as per Ticket 8.
-  // The canonical registration is now in worldAndEntityRegistrations.js.
 
   container.register(
     tokens.IValidatedEventDispatcher,
