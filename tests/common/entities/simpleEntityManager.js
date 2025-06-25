@@ -136,6 +136,15 @@ export default class SimpleEntityManager {
   }
 
   /**
+   * Returns an array of all active entity IDs.
+   *
+   * @returns {string[]} Array of entity IDs.
+   */
+  getEntityIds() {
+    return Array.from(this.entities.keys());
+  }
+
+  /**
    * Returns a set of entity IDs for entities in the specified location.
    *
    * @param {string} locationId - The location identifier.

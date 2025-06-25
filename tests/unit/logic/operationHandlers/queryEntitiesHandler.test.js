@@ -31,6 +31,7 @@ const makeMockEntityManager = () => {
     getEntitiesWithComponent: jest.fn(),
     addComponent: jest.fn(),
     removeComponent: jest.fn(),
+    getEntityIds: jest.fn(() => Array.from(manager.activeEntities.keys())),
   };
   Object.defineProperty(manager, 'entities', {
     get() {
@@ -327,7 +328,7 @@ describe('QueryEntitiesHandler', () => {
         mockExecutionContext.evaluationContext.context.all_entities;
       expect(result.length).toBe(5);
       expect(result).toEqual(
-        expect.arrayContaining(Array.from(mockEntityManager.entities.keys()))
+        expect.arrayContaining(mockEntityManager.getEntityIds())
       );
     });
 

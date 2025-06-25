@@ -137,6 +137,7 @@ export function createMockEntityManager({ returnArray = false } = {}) {
     get entities() {
       return Array.from(activeEntities.values())[Symbol.iterator]();
     },
+    getEntityIds: jest.fn(() => Array.from(activeEntities.keys())),
     clearAll: jest.fn(() => {
       activeEntities.clear();
     }),

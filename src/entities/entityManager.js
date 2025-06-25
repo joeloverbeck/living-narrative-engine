@@ -133,6 +133,15 @@ class EntityManager extends IEntityManager {
   }
 
   /**
+   * Returns an array of all active entity IDs.
+   *
+   * @returns {string[]} Array of entity instance IDs.
+   */
+  getEntityIds() {
+    return Array.from(this.entities, (e) => e.id);
+  }
+
+  /**
    * @class
    * @param {object} [deps] - Constructor dependencies. Each dependency may be
    *   provided as an instance or a zero-argument factory function. Any omitted
