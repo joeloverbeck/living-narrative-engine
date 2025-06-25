@@ -70,7 +70,14 @@ export class TargetResolutionService extends ITargetResolutionService {
     return targetContexts;
   }
 
-  /** This entire method is moved from ActionDiscoveryService. */
+  /**
+   * This entire method is moved from ActionDiscoveryService.
+   *
+   * @param scopeName
+   * @param actorEntity
+   * @param discoveryContext
+   * @param trace
+   */
   #resolveScopeToIds(scopeName, actorEntity, discoveryContext, trace = null) {
     const source = 'TargetResolutionService.#resolveScopeToIds';
     trace?.addLog('info', `Resolving scope '${scopeName}' with DSL.`, source);
@@ -99,7 +106,15 @@ export class TargetResolutionService extends ITargetResolutionService {
     }
   }
 
-  /** Centralizes the logging and event dispatching for resolution failures. */
+  /**
+   * Centralizes the logging and event dispatching for resolution failures.
+   *
+   * @param message
+   * @param details
+   * @param trace
+   * @param source
+   * @param originalError
+   */
   #handleResolutionError(message, details, trace, source, originalError = null) {
     trace?.addLog('error', message, source, details);
     originalError ? this.#logger.error(message, originalError) : this.#logger.warn(message);

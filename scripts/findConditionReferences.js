@@ -26,6 +26,7 @@ const IGNORE_DIRS = new Set([
 
 /**
  * Recursively finds all files ending with specific strings in a directory, respecting an ignore list.
+ *
  * @param {string} dir - The directory to start searching from.
  * @param {string[]} targetEndings - An array of file endings to find (e.g., ['.js', '.ts', '.condition.json']).
  * @returns {Promise<string[]>} A promise that resolves to an array of full file paths.
@@ -60,6 +61,7 @@ async function findFilesByEnding(dir, targetEndings) {
 
 /**
  * Searches a single file for an identifier and returns the line numbers of any matches.
+ *
  * @param {string} filePath - The path to the file to search.
  * @param {string} identifier - The string identifier to search for.
  * @returns {Promise<number[]>} A promise that resolves to an array of line numbers where the identifier was found.

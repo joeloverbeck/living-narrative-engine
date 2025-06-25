@@ -150,7 +150,7 @@ export class PrerequisiteEvaluationService extends BaseService {
    * @param {number} totalRules - Total number of prerequisite rules.
    * @param {JsonLogicEvaluationContext} evaluationContext - The context used for evaluation.
    * @param {string} actionId - The ID of the action being evaluated.
-   * @param {TraceContext} [trace=null] - Optional tracing context.
+   * @param {TraceContext} [trace] - Optional tracing context.
    * @returns {boolean} True if the prerequisite passes, false otherwise.
    */
   _evaluatePrerequisite(
@@ -240,7 +240,7 @@ export class PrerequisiteEvaluationService extends BaseService {
    * @param {object[]} prerequisites - The prerequisite rule objects.
    * @param {JsonLogicEvaluationContext} evaluationContext - Context for rule evaluation.
    * @param {string} actionId - The ID of the action being evaluated.
-   * @param {TraceContext} [trace=null] - Optional tracing context.
+   * @param {TraceContext} [trace] - Optional tracing context.
    * @returns {boolean} True if all rules pass, false if any fail.
    */
   #evaluateRules(prerequisites, evaluationContext, actionId, trace = null) {
@@ -279,7 +279,7 @@ export class PrerequisiteEvaluationService extends BaseService {
    * @param {object[]} prerequisites - The array of prerequisite rule objects.
    * @param {ActionDefinition} actionDefinition - The definition of the action being evaluated.
    * @param {Entity} actor - The entity performing the action.
-   * @param {TraceContext} [trace=null] - Optional tracing context for detailed logging.
+   * @param {TraceContext} [trace] - Optional tracing context for detailed logging.
    * @returns {boolean} True if all prerequisites pass, false otherwise.
    */
   evaluate(prerequisites, actionDefinition, actor, trace = null) {

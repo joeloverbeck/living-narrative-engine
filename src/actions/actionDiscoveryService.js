@@ -40,8 +40,8 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
   #safeEventDispatcher;
   #getActorLocationFn;
   #getEntityDisplayNameFn;
-  #targetResolutionService;
   #actionIndex;
+  #targetResolutionService;
   #traceContextFactory;
 
   /**
@@ -59,7 +59,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
    */
   constructor({
                 entityManager,
-                prerequisiteEvaluationService, // New dependency for direct evaluation.
+                prerequisiteEvaluationService,
                 actionIndex,
                 logger,
                 formatActionCommandFn,
@@ -114,7 +114,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
    *
    * @param {import('../data/gameDataRepository.js').ActionDefinition} actionDef The action to check.
    * @param {Entity} actorEntity The entity performing the action.
-   * @param {TraceContext} [trace=null] The optional trace context for logging.
+   * @param {TraceContext} [trace] The optional trace context for logging.
    * @returns {boolean} True if the actor-state prerequisites pass.
    * @private
    */
@@ -130,8 +130,6 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
       trace // Pass trace down
     );
   }
-
-
 
   /**
    * @description Prepares a populated discovery context for the specified actor.
@@ -154,105 +152,133 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
   }
 
   /**
-   * Finds and validates all available actions for an actor.
-   * Can optionally trace the entire discovery process for debugging.
+   * The main public method is now a high-level orchestrator.
+   * It is simpler, with its complex inner logic delegated to helpers.
    *
    * @param {Entity} actorEntity The entity for whom to find actions.
-   * @param {ActionContext} context The current action context.
-   * @param {object} [options={}] Optional settings.
-   * @param {boolean} [options.trace=false] - If true, generates a detailed trace of the discovery process.
+   * @param {ActionContext} baseContext The current action context.
+   * @param {object} [options] Optional settings.
+   * @param {boolean} [options.trace] - If true, generates a detailed trace of the discovery process.
    * @returns {Promise<import('../interfaces/IActionDiscoveryService.js').DiscoveredActionsResult>}
    */
-  async getValidActions(actorEntity, context, options = {}) {
+  async getValidActions(actorEntity, baseContext, options = {}) {
     const { trace: shouldTrace = false } = options;
-    
-    // Use the factory to create the trace object instead of 'new'
     const trace = shouldTrace ? this.#traceContextFactory() : null;
-    const source = 'ActionDiscoveryService.getValidActions';
 
     if (!actorEntity) {
       this.#logger.debug('Actor entity is null; returning empty result.');
       return { actions: [], errors: [], trace: null };
     }
 
-    trace?.addLog('info', `Starting action discovery for actor '${actorEntity.id}'.`, source, { withTrace: shouldTrace });
+    trace?.addLog('info', `Starting action discovery for actor '${actorEntity.id}'.`, 'getValidActions', { withTrace: shouldTrace });
 
     const candidateDefs = this.#actionIndex.getCandidateActions(actorEntity, trace);
+    const actions = [];
+    const errors = [];
+    const discoveryContext = this.#prepareDiscoveryContext(actorEntity, baseContext);
+
+    for (const actionDef of candidateDefs) {
+      const result = await this.#processCandidateAction(
+        actionDef,
+        actorEntity,
+        discoveryContext,
+        trace
+      );
+      
+      if (result) {
+        actions.push(...result.actions);
+        errors.push(...result.errors);
+      }
+    }
+
+    this.#logger.debug(`Finished action discovery for actor ${actorEntity.id}. Found ${actions.length} actions from ${candidateDefs.length} candidates.`);
+    trace?.addLog('info', `Finished discovery. Found ${actions.length} valid actions.`, 'getValidActions');
+
+    return { actions, errors, trace };
+  }
+
+  /**
+   * NEW: Processes a single candidate action through the entire pipeline.
+   *
+   * @param {import('../data/gameDataRepository.js').ActionDefinition} actionDef
+   * @param {Entity} actorEntity
+   * @param {ActionContext} discoveryContext
+   * @param {TraceContext} trace
+   * @returns {Promise<{actions: import('../interfaces/IActionDiscoveryService.js').DiscoveredActionInfo[], errors: Error[]}|null>}
+   * @private
+   */
+  async #processCandidateAction(actionDef, actorEntity, discoveryContext, trace) {
+    const source = 'ActionDiscoveryService.#processCandidateAction';
+    trace?.addLog('step', `Processing candidate action: '${actionDef.id}'`, source);
+
+    // STEP 1: Check actor prerequisites
+    if (!this.#actorMeetsPrerequisites(actionDef, actorEntity, trace)) {
+      trace?.addLog('failure', `Action '${actionDef.id}' discarded due to failed actor prerequisites.`, source);
+      return null;
+    }
+    trace?.addLog('success', `Action '${actionDef.id}' passed actor prerequisite check.`, source);
+
+    // STEP 2: Resolve targets using the dedicated service
+    const targetContexts = await this.#targetResolutionService.resolveTargets(
+      actionDef.scope,
+      actorEntity,
+      discoveryContext,
+      trace
+    );
+
+    if (targetContexts.length === 0) {
+      this.#logger.debug(`Action '${actionDef.id}' resolved to 0 targets. Skipping.`);
+      return null;
+    }
+    trace?.addLog('info', `Scope for action '${actionDef.id}' resolved to ${targetContexts.length} targets.`, source, { targets: targetContexts.map(t => t.entityId) });
+
+    // STEP 3: Generate DiscoveredActionInfo for all valid targets
+    return this.#formatActionsForTargets(actionDef, targetContexts);
+  }
+
+  /**
+   * NEW: Formats an action for a given list of targets.
+   *
+   * @param {import('../data/gameDataRepository.js').ActionDefinition} actionDef
+   * @param {ActionTargetContext[]} targetContexts
+   * @returns {{actions: import('../interfaces/IActionDiscoveryService.js').DiscoveredActionInfo[], errors: Error[]}}
+   * @private
+   */
+  #formatActionsForTargets(actionDef, targetContexts) {
     const validActions = [];
     const errors = [];
-
     const formatterOptions = {
       logger: this.#logger,
       debug: true,
       safeEventDispatcher: this.#safeEventDispatcher,
     };
 
-    const discoveryContext = this.#prepareDiscoveryContext(actorEntity, context);
-
-    for (const actionDef of candidateDefs) {
-      trace?.addLog('step', `Processing candidate action: '${actionDef.id}'`, source);
-
-      // STEP 1: Check actor-only prerequisites ONCE per action.
-      if (!this.#actorMeetsPrerequisites(actionDef, actorEntity, trace)) {
-        trace?.addLog('failure', `Action '${actionDef.id}' discarded due to failed actor prerequisites.`, source);
-        this.#logger.debug(
-          `Actor '${actorEntity.id}' failed actor-only prerequisites for action '${actionDef.id}'. Skipping.`
-        );
-        continue;
-      }
-      trace?.addLog('success', `Action '${actionDef.id}' passed actor prerequisite check.`, source);
-
-
-      // STEP 2: Logic is now a simple, declarative call to the new service.
-      const targetContexts = await this.#targetResolutionService.resolveTargets(
-        actionDef.scope, 
-        actorEntity, 
-        discoveryContext, 
-        trace
+    for (const targetCtx of targetContexts) {
+      const formatResult = this.#formatActionCommandFn(
+        actionDef,
+        targetCtx,
+        this.#entityManager,
+        formatterOptions,
+        this.#getEntityDisplayNameFn
       );
 
-      if (targetContexts.length === 0) {
-        this.#logger.debug(
-          `Action '${actionDef.id}' resolved to 0 targets. Skipping.`
-        );
-        continue;
+      if (formatResult.ok) {
+        validActions.push({
+          id: actionDef.id,
+          name: actionDef.name || actionDef.commandVerb,
+          command: formatResult.value,
+          description: actionDef.description || '',
+          params: { targetId: targetCtx.entityId },
+        });
+      } else {
+        errors.push({
+          actionId: actionDef.id,
+          targetId: targetCtx.entityId,
+          error: formatResult.error,
+        });
+        this.#logger.warn(`Failed to format command for action '${actionDef.id}' with target '${targetCtx.entityId}'.`);
       }
-
-      // STEP 3: Generate DiscoveredActionInfo for all valid targets.
-      for (const targetCtx of targetContexts) {
-        const formatResult = this.#formatActionCommandFn(
-          actionDef,
-          targetCtx,
-          this.#entityManager,
-          formatterOptions,
-          this.#getEntityDisplayNameFn
-        );
-        if (formatResult.ok) {
-          validActions.push({
-            id: actionDef.id,
-            name: actionDef.name || actionDef.commandVerb,
-            command: formatResult.value,
-            description: actionDef.description || '',
-            params: { targetId: targetCtx.entityId },
-          });
-        } else {
-          errors.push({
-            actionId: actionDef.id,
-            targetId: targetCtx.entityId,
-            error: formatResult.error,
-          });
-          this.#logger.warn(
-            `Failed to format command for action '${actionDef.id}' with target '${targetCtx.entityId}'.`
-          );
-        }
-      }
-    } // --- End of loop over candidateDefs ---
-
-    this.#logger.debug(
-      `Finished action discovery for actor ${actorEntity.id}. Found ${validActions.length} actions from ${candidateDefs.length} candidates.`
-    );
-    trace?.addLog('info', `Finished discovery. Found ${validActions.length} valid actions.`, source);
-
-    return { actions: validActions, errors, trace };
+    }
+    return { actions: validActions, errors };
   }
 }

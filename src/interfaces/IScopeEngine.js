@@ -18,7 +18,7 @@ export class IScopeEngine {
    * @param {object} ast - The parsed AST
    * @param {object} actorEntity - The acting entity instance
    * @param {object} runtimeCtx - Runtime context with services
-   * @param {TraceContext} [trace=null] - Optional trace context for logging
+   * @param {TraceContext} [trace] - Optional trace context for logging
    * @returns {Set<string>} Set of entity IDs
    * @abstract
    */
