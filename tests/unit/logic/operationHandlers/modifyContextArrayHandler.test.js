@@ -1,6 +1,7 @@
 import ModifyContextArrayHandler from '../../../../src/logic/operationHandlers/modifyContextArrayHandler.js';
 // import { ExecutionContext } from '../../../src/logic/defs.js'; // ExecutionContext is a typedef, not a class
 import { cloneDeep } from 'lodash';
+import { SYSTEM_ERROR_OCCURRED_ID } from '../../../../src/constants/eventIds.js';
 
 describe('ModifyContextArrayHandler', () => {
   let handler;
@@ -106,19 +107,29 @@ describe('ModifyContextArrayHandler', () => {
       );
     });
 
-    it('should log a warning if executionContext or evaluationContext.context is missing', () => {
+    it('should dispatch error if evaluation context is missing', () => {
       handler.execute({ variable_path: 'myArray', mode: 'push', value: 4 }, {});
-      expect(mockLogger.warn).toHaveBeenCalledWith(
-        'MODIFY_CONTEXT_ARRAY: Cannot execute because the execution context is missing.'
+      expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
+        SYSTEM_ERROR_OCCURRED_ID,
+        expect.objectContaining({
+          message: expect.stringContaining(
+            'evaluationContext.context is missing'
+          ),
+        })
       );
-      mockLogger.warn.mockClear();
+      mockSafeEventDispatcher.dispatch.mockClear();
 
       handler.execute(
         { variable_path: 'myArray', mode: 'push', value: 4 },
         { evaluationContext: {} }
       );
-      expect(mockLogger.warn).toHaveBeenCalledWith(
-        'MODIFY_CONTEXT_ARRAY: Cannot execute because the execution context is missing.'
+      expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
+        SYSTEM_ERROR_OCCURRED_ID,
+        expect.objectContaining({
+          message: expect.stringContaining(
+            'evaluationContext.context is missing'
+          ),
+        })
       );
     });
 

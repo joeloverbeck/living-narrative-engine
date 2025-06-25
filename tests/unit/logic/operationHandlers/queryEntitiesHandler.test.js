@@ -392,8 +392,9 @@ describe('QueryEntitiesHandler', () => {
       expect(dispatcher.dispatch).toHaveBeenCalledWith(
         SYSTEM_ERROR_OCCURRED_ID,
         expect.objectContaining({
-          message: expect.stringContaining('Cannot store result'),
-          details: { resultVariable: 'x' },
+          message: expect.stringContaining(
+            'evaluationContext.context is missing'
+          ),
         })
       );
     });

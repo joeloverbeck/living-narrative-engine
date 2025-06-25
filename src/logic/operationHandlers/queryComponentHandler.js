@@ -8,6 +8,7 @@
 /** @typedef {import('../defs.js').OperationParams} OperationParams */
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 import { assertParamsObject } from '../../utils/handlerUtils/paramsUtils.js';
+import { ensureEvaluationContext } from '../../utils/evaluationContextUtils.js';
 import ComponentOperationHandler from './componentOperationHandler.js';
 
 /**
@@ -75,15 +76,7 @@ class QueryComponentHandler extends ComponentOperationHandler {
       return null;
     }
 
-    if (
-      !executionContext?.evaluationContext?.context ||
-      typeof executionContext.evaluationContext.context !== 'object'
-    ) {
-      safeDispatchError(
-        this.#dispatcher,
-        'QueryComponentHandler: executionContext.evaluationContext.context is missing or invalid. Cannot store result.',
-        { executionContext }
-      );
+    if (!ensureEvaluationContext(executionContext, this.#dispatcher, logger)) {
       return null;
     }
 
