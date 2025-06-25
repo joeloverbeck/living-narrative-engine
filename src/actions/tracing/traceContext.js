@@ -37,13 +37,19 @@ export class TraceContext {
    * @param {string} source The source of the log entry.
    * @param {object} [data] Raw data associated with the log entry.
    */
-  addLog(type, message, source, data = undefined) {
-    this.logs.push({
+  addLog(type, message, source, data = null) {
+    const logEntry = {
       type,
       message,
       source,
-      data,
       timestamp: Date.now(),
-    });
+    };
+    
+    // Only add data field if it's not null/undefined
+    if (data != null) {
+      logEntry.data = data;
+    }
+    
+    this.logs.push(logEntry);
   }
 }

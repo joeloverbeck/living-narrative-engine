@@ -101,7 +101,9 @@ export class ActionIndex {
     if (!actorEntity || !actorEntity.id) return [];
 
     const actorComponentTypes = this.#entityManager.getAllComponentTypesForEntity(actorEntity.id) || [];
-    trace?.addLog('data', `Actor '${actorEntity.id}' has components.`, source, { components: actorComponentTypes });
+    trace?.addLog('data', `Actor '${actorEntity.id}' has components.`, source, { 
+      components: actorComponentTypes.length > 0 ? actorComponentTypes : [] 
+    });
 
     // Use a Set to automatically handle de-duplication.
     const candidateSet = new Set(this.#noActorRequirement);
