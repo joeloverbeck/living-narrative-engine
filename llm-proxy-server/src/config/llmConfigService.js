@@ -69,6 +69,8 @@ export class LlmConfigService {
   #logger;
   /** @type {AppConfigService} */
   #appConfig;
+  /** @type {Function} */
+  #configLoader;
 
   /** @type {string} */
   #_defaultLlmConfigPath;
@@ -86,8 +88,14 @@ export class LlmConfigService {
    * @param {IFileSystemReader} fileSystemReader - An IFileSystemReader instance.
    * @param {ILogger} logger - An ILogger instance.
    * @param {AppConfigService} appConfig - An AppConfigService instance.
+   * @param {Function} [loader] - Loader function for LLM configs.
    */
-  constructor(fileSystemReader, logger, appConfig) {
+  constructor(
+    fileSystemReader,
+    logger,
+    appConfig,
+    loader = loadProxyLlmConfigs
+  ) {
     if (!fileSystemReader) {
       throw new Error('LlmConfigService: fileSystemReader is required.');
     }
@@ -101,6 +109,7 @@ export class LlmConfigService {
     this.#fileSystemReader = fileSystemReader;
     this.#logger = logger;
     this.#appConfig = appConfig;
+    this.#configLoader = loader;
 
     this.#_defaultLlmConfigPath = path.resolve(
       process.cwd(),
@@ -186,7 +195,7 @@ export class LlmConfigService {
     );
 
     try {
-      const result = await loadProxyLlmConfigs(
+      const result = await this.#configLoader(
         this.#resolvedConfigPath,
         this.#logger,
         this.#fileSystemReader
