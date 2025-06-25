@@ -39,9 +39,10 @@ export class PlaceholderResolver {
   /**
    * Initializes a new instance of the PlaceholderResolver.
    *
-   * @param {ILogger} [logger] - An optional logger instance. If not provided, `console` will be used.
+   * @param {ILogger} [logger] - Optional logger instance. When omitted, a
+   * console-based fallback is used.
    */
-  constructor(logger = console) {
+  constructor(logger) {
     this.#logger = ensureValidLogger(logger, 'PlaceholderResolver');
     const resolvePath = (obj, path) => {
       const { value } = safeResolvePath(
