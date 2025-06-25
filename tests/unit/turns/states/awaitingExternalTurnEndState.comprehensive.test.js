@@ -33,7 +33,7 @@ jest.mock('../../../../src/turns/states/turnIdleState.js', () => ({
 // --- Imports ---
 
 import { AwaitingExternalTurnEndState } from '../../../../src/turns/states/awaitingExternalTurnEndState.js';
-import { TurnIdleState } from '../../../../src/turns/states/turnIdleState.js'; // This resolves to our mock above.
+import '../../../../src/turns/states/turnIdleState.js';
 import {
   SYSTEM_ERROR_OCCURRED_ID,
   TURN_ENDED_ID,
@@ -44,7 +44,7 @@ import {
 /**
  * Creates a mock ILogger with jest.fn() for all methods.
  *
- * @returns {jest.Mocked<import('../../../../src/interfaces/coreServices.js').ILogger>}
+ * @returns {jest.Mocked<import('../../../../src/interfaces/coreServices.js').ILogger>} Mock logger
  */
 const makeMockLogger = () => ({
   info: jest.fn(),
@@ -56,7 +56,7 @@ const makeMockLogger = () => ({
 /**
  * Creates a mock SafeEventDispatcher.
  *
- * @returns {jest.Mocked<{subscribe: Function, dispatch: Function}>}
+ * @returns {jest.Mocked<{subscribe: Function, dispatch: Function}>} Mock dispatcher
  */
 const makeMockSafeEventDispatcher = () => ({
   subscribe: jest.fn(),
@@ -67,7 +67,7 @@ const makeMockSafeEventDispatcher = () => ({
  * Creates a mock ITurnContext.
  *
  * @param {string} [actorId] - The ID of the actor for this context.
- * @returns {jest.Mocked<any>} A fully mocked ITurnContext object.
+ * @returns {jest.Mocked<any>} Mock turn context
  */
 const makeMockTurnContext = (actorId = 'player1') => ({
   getActor: jest.fn().mockReturnValue({ id: actorId }),
@@ -85,7 +85,7 @@ const makeMockTurnContext = (actorId = 'player1') => ({
 /**
  * Creates a mock BaseTurnHandler.
  *
- * @returns {jest.Mocked<any>} A fully mocked BaseTurnHandler object.
+ * @returns {jest.Mocked<any>} Mock handler
  */
 const makeMockTurnHandler = () => ({
   _transitionToState: jest.fn(),
@@ -107,8 +107,6 @@ describe('AwaitingExternalTurnEndState', () => {
   let mockEventDispatcher;
   let state;
 
-  // Store the listener passed to dispatcher.subscribe to simulate events.
-  let turnEndedEventListener;
   // Store the unsubscribe function returned by dispatcher.subscribe.
   let mockUnsubscribeFn;
 
@@ -137,12 +135,7 @@ describe('AwaitingExternalTurnEndState', () => {
 
     // Setup the event dispatcher mock to capture the listener and return a mock unsubscribe function.
     mockUnsubscribeFn = jest.fn();
-    mockEventDispatcher.subscribe.mockImplementation((eventId, listener) => {
-      if (eventId === TURN_ENDED_ID) {
-        turnEndedEventListener = listener;
-      }
-      return mockUnsubscribeFn;
-    });
+    mockEventDispatcher.subscribe.mockImplementation(() => mockUnsubscribeFn);
 
     state = new AwaitingExternalTurnEndState(
       mockHandler,
@@ -407,13 +400,35 @@ describe('AwaitingExternalTurnEndState', () => {
       );
       expect(mockHandler.requestIdleStateTransition).toHaveBeenCalledTimes(1);
     });
+
+    test('should await endTurn when it rejects during timeout handling', async () => {
+      // Arrange
+      const endTurnFailure = new Error('Async endTurn failure');
+      mockTurnContext.endTurn.mockRejectedValue(endTurnFailure);
+
+      // Act
+      await flushPromisesAndTimers();
+
+      // Assert
+      expect(mockTurnContext.endTurn).toHaveBeenCalledTimes(1);
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        expect.stringContaining('failed to end turn after timeout'),
+        endTurnFailure
+      );
+      expect(mockHandler._resetTurnStateAndResources).toHaveBeenCalledWith(
+        'timeout-recovery'
+      );
+      expect(mockHandler.requestIdleStateTransition).toHaveBeenCalledTimes(1);
+    });
   });
 
   // --- Cleanup ---
   describe('Cleanup', () => {
     beforeEach(async () => {
       await state.enterState(mockHandler, null);
-      // Verify setup occurred.
+    });
+
+    test('should set up guards when entering the state', () => {
       expect(setTimeoutSpy).toHaveBeenCalledTimes(1);
       expect(mockEventDispatcher.subscribe).toHaveBeenCalledTimes(1);
       expect(mockTurnContext.setAwaitingExternalEvent).toHaveBeenCalledWith(

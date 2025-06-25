@@ -11,10 +11,7 @@
 
 import { AbstractTurnState } from './abstractTurnState.js';
 
-import {
-  TURN_ENDED_ID,
-  SYSTEM_ERROR_OCCURRED_ID,
-} from '../../constants/eventIds.js';
+import { TURN_ENDED_ID } from '../../constants/eventIds.js';
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 import { getLogger, getSafeEventDispatcher } from './helpers/contextUtils.js';
 
@@ -104,10 +101,9 @@ export class AwaitingExternalTurnEndState extends AbstractTurnState {
     ctx.setAwaitingExternalEvent(true, ctx.getActor().id);
 
     // set guard-rail
-    this.#timeoutId = this.#setTimeoutFn(
-      () => this.#onTimeout(),
-      this.#timeoutMs
-    );
+    this.#timeoutId = this.#setTimeoutFn(async () => {
+      await this.#onTimeout();
+    }, this.#timeoutMs);
   }
 
   //─────────────────────────────────────────────────────────────────────────────
@@ -168,7 +164,7 @@ export class AwaitingExternalTurnEndState extends AbstractTurnState {
     }
   }
 
-  #onTimeout() {
+  async #onTimeout() {
     const ctx = this._getTurnContext();
     if (!ctx || !ctx.isAwaitingExternalEvent()) return; // already handled
 
@@ -195,7 +191,7 @@ export class AwaitingExternalTurnEndState extends AbstractTurnState {
 
     // 2) close the turn
     try {
-      ctx.endTurn(err);
+      await ctx.endTurn(err);
     } catch (e) {
       getLogger(ctx, this._handler).error(
         `${this.getStateName()}: failed to end turn after timeout – ${e.message}`,
