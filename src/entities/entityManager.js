@@ -643,17 +643,17 @@ class EntityManager extends IEntityManager {
   }
 
   findEntities(queryObj) {
-    const q = new EntityQuery(queryObj);
+    const query = new EntityQuery(queryObj);
 
     // A query must have at least one positive condition.
-    if (!q.hasPositiveConditions()) {
+    if (!query.hasPositiveConditions()) {
       this.#logger.warn(
         'EntityManager.findEntities called with no "withAll" or "withAny" conditions. Returning empty array.'
       );
       return [];
     }
 
-    const results = [...this.entities].filter((e) => q.matches(e));
+    const results = [...this.entities].filter((e) => query.matches(e));
 
     this.#logger.debug(
       `EntityManager.findEntities found ${results.length} entities for query.`
