@@ -18,6 +18,8 @@ export * from '../utils/domUtils.js'; // Assuming DomUtils are exported like thi
 export * from './titleRenderer.js';
 export * from './inputStateController.js';
 export * from './locationRenderer.js';
+export { renderCharacterListItem } from './location/renderCharacterListItem.js';
+export { LocationDataService } from './location/locationDataService.js';
 export * from './actionButtonsRenderer.js';
 export * from './perceptionLogRenderer.js';
 export { SpeechBubbleRenderer } from './speechBubbleRenderer.js';
