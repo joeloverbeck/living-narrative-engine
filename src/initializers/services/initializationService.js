@@ -37,7 +37,7 @@ class InitializationService extends IInitializationService {
   #worldInitializer;
   #safeEventDispatcher;
   #entityManager;
-  #domUiFacade;
+  #domUiFacade; // eslint-disable-line no-unused-private-class-members
   #actionIndex;
   #gameDataRepository;
   #thoughtListener;
@@ -184,6 +184,7 @@ class InitializationService extends IInitializationService {
     if (!notesListener || typeof notesListener.handleEvent !== 'function') {
       throw new Error(
         "InitializationService: Missing or invalid required dependency 'notesListener'."
+
       );
     }
 
@@ -235,6 +236,7 @@ class InitializationService extends IInitializationService {
 
     try {
       await this.#loadMods(worldName);
+      await this.#validateContentDependencies(worldName);
       await this.#initializeScopeRegistry();
       await this.#initLlmAdapter();
       await this.#initSystems();
@@ -292,6 +294,94 @@ class InitializationService extends IInitializationService {
     const loadReport = await this.#modsLoader.loadMods(worldName);
     this.#logger.debug(
       `InitializationService: World data loaded successfully for world: ${worldName}. Load report: ${JSON.stringify(loadReport)}`
+    );
+  }
+
+  /**
+   * @description Performs sanity checks on loaded content to catch unresolved
+   * references early. It verifies that each entity instance references a loaded
+   * definition and that all instance IDs referenced in entity definitions exist
+   * and are included in the world's initial instance list.
+   * @param {string} worldName - Target world name for spawn checks.
+   * @returns {Promise<void>} Resolves when validation completes.
+   * @private
+   * @async
+   */
+  async #validateContentDependencies(worldName) {
+    this.#logger.debug(
+      'InitializationService: Validating content dependencies...'
+    );
+
+    if (
+      !this.#gameDataRepository ||
+      typeof this.#gameDataRepository.getAllEntityInstanceDefinitions !==
+        'function' ||
+      typeof this.#gameDataRepository.getAllEntityDefinitions !== 'function' ||
+      typeof this.#gameDataRepository.getWorld !== 'function'
+    ) {
+      this.#logger.warn(
+        'Content dependency validation skipped: gameDataRepository lacks required methods.'
+      );
+      return;
+    }
+
+    const instanceDefs =
+      this.#gameDataRepository.getAllEntityInstanceDefinitions();
+    const definitionIds = new Set(
+      this.#gameDataRepository.getAllEntityDefinitions().map((d) => d.id)
+    );
+
+    for (const inst of instanceDefs) {
+      if (!definitionIds.has(inst.definitionId)) {
+        this.#logger.error(
+          `Content Validation: Instance '${inst.instanceId}' references missing definition '${inst.definitionId}'.`
+        );
+      }
+    }
+
+    const instanceIdSet = new Set(instanceDefs.map((i) => i.instanceId));
+    const worldDef = this.#gameDataRepository.getWorld(worldName);
+    const worldSpawnSet = new Set();
+    if (worldDef && Array.isArray(worldDef.instances)) {
+      for (const { instanceId } of worldDef.instances) {
+        if (typeof instanceId === 'string') worldSpawnSet.add(instanceId);
+      }
+    }
+
+    const entityDefs = this.#gameDataRepository.getAllEntityDefinitions();
+    for (const def of entityDefs) {
+      const exits = def?.components?.['core:exits'];
+      if (Array.isArray(exits)) {
+        for (const exit of exits) {
+          const { target, blocker } = exit || {};
+          if (target) {
+            if (!instanceIdSet.has(target)) {
+              this.#logger.error(
+                `Content Validation: Exit target '${target}' in definition '${def.id}' has no corresponding instance data.`
+              );
+            } else if (!worldSpawnSet.has(target)) {
+              this.#logger.error(
+                `Content Validation: Exit target '${target}' in definition '${def.id}' is not spawned in world '${worldName}'.`
+              );
+            }
+          }
+          if (blocker) {
+            if (!instanceIdSet.has(blocker)) {
+              this.#logger.error(
+                `Content Validation: Exit blocker '${blocker}' in definition '${def.id}' has no corresponding instance data.`
+              );
+            } else if (!worldSpawnSet.has(blocker)) {
+              this.#logger.error(
+                `Content Validation: Exit blocker '${blocker}' in definition '${def.id}' is not spawned in world '${worldName}'.`
+              );
+            }
+          }
+        }
+      }
+    }
+
+    this.#logger.debug(
+      'InitializationService: Content dependency validation complete.'
     );
   }
 
