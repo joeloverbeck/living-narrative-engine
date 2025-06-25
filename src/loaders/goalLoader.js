@@ -17,6 +17,7 @@
  */
 
 import { BaseManifestItemLoader } from './baseManifestItemLoader.js';
+import { processAndStoreItem } from './helpers/processAndStoreItem.js';
 
 /**
  * @typedef {import('../interfaces/coreServices.js').IConfiguration}   IConfiguration
@@ -56,6 +57,7 @@ export default class GoalLoader extends BaseManifestItemLoader {
 
   /**
    * Processes a validated goal data object and stores it in the data registry.
+   * Delegates ID parsing and storage to {@link processAndStoreItem}.
    *
    * @protected
    * @override
@@ -67,15 +69,14 @@ export default class GoalLoader extends BaseManifestItemLoader {
    * @returns {Promise<{qualifiedId: string, didOverride: boolean}>} A promise resolving with the result.
    */
   async _processFetchedItem(modId, filename, resolvedPath, data, registryKey) {
-    // FIX: Updated method signature to match the base class abstract method.
     // schema validation already happened – just persist it
-    const { qualifiedId, didOverride } = this._parseIdAndStoreItem(
+    const { qualifiedId, didOverride } = await processAndStoreItem(this, {
       data,
-      'id',
-      'goals', // registry category
+      idProp: 'id',
+      category: 'goals',
       modId,
-      filename
-    );
+      filename,
+    });
 
     return { qualifiedId, didOverride };
   }
