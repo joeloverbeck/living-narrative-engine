@@ -30,8 +30,6 @@ export function registerEventBusAdapters(container) {
 
   // --- Register EventBusPromptAdapter ---
   registrar.singletonFactory(tokens.IPromptOutputPort, (c) => {
-    // --- FIX: Check for registration before resolving optional dependencies. ---
-    // This prevents c.resolve() from throwing an error if a dependency isn't registered.
     const safeDispatcher = /** @type {ISafeEventDispatcher | null} */ (
       resolveOptional(c, tokens.ISafeEventDispatcher)
     );
