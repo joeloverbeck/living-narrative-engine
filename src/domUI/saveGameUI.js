@@ -134,19 +134,8 @@ export class SaveGameUI extends SlotModalBase {
    * @private
    */
   _initModalEventListeners() {
-    if (this.elements.confirmSaveButtonEl) {
-      this._addDomListener(
-        this.elements.confirmSaveButtonEl,
-        'click',
-        this._handleSave.bind(this)
-      );
-    }
-    if (this.elements.modalElement) {
-      this._addDomListener(this.elements.modalElement, 'submit', (event) =>
-        event.preventDefault()
-      );
-    }
-    // Keyboard navigation is now handled by SlotModalBase
+    this._initCommonListeners(this._handleSave.bind(this));
+    // Keyboard navigation is handled by SlotModalBase
     if (this.elements.saveNameInputEl) {
       this._addDomListener(
         this.elements.saveNameInputEl,

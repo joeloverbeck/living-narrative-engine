@@ -216,6 +216,63 @@ export class SlotModalBase extends BaseModalRenderer {
   }
 
   /**
+   * Sets up common modal listeners for confirm actions and form submission.
+   *
+   * @protected
+   * @param {Function} confirmHandler - Handler for the confirm button click.
+   * @returns {void}
+   */
+  _initCommonListeners(confirmHandler) {
+    if (this._confirmButtonEl && typeof confirmHandler === 'function') {
+      this._addDomListener(this._confirmButtonEl, 'click', confirmHandler);
+    }
+
+    if (this.elements.modalElement) {
+      this._addDomListener(this.elements.modalElement, 'submit', (event) => {
+        event.preventDefault();
+      });
+    }
+  }
+
+  /**
+   * Validates that a slot has been selected.
+   *
+   * @protected
+   * @param {boolean} [requireUncorrupted] - Reject corrupted slots when true.
+   * @param {object} [messages] - Custom error messages.
+   * @param {string} [messages.noSelection] - Message when no slot is selected.
+   * @param {string} [messages.corrupted] - Message when slot is corrupted.
+   * @returns {string | null} Error message if invalid, otherwise null.
+   */
+  _validateSlotSelection(requireUncorrupted = false, messages = {}) {
+    const {
+      noSelection = 'Please select a save slot first.',
+      corrupted = 'Cannot use a corrupted save file.',
+    } = messages;
+
+    if (!this.selectedSlotData) {
+      this.logger.warn(
+        `${this._logPrefix} Action attempted without selecting a slot.`
+      );
+      return noSelection;
+    }
+
+    if (
+      requireUncorrupted &&
+      Object.prototype.hasOwnProperty.call(
+        this.selectedSlotData,
+        'isCorrupted'
+      ) &&
+      this.selectedSlotData.isCorrupted
+    ) {
+      this.logger.warn(`${this._logPrefix} Selected slot is corrupted.`);
+      return corrupted;
+    }
+
+    return null;
+  }
+
+  /**
    * Core logic to populate the slots list.
    *
    * @protected
