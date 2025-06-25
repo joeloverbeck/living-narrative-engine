@@ -1,5 +1,7 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import GameStateRestorer from '../../../src/persistence/gameStateRestorer.js';
+import { DefinitionNotFoundError } from '../../../src/errors/definitionNotFoundError.js';
+import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/systemEventIds.js';
 
 const makeLogger = () => ({
   info: jest.fn(),
@@ -49,5 +51,37 @@ describe('GameStateRestorer.restoreGameState', () => {
     });
     expect(ctx.playtimeTracker.setAccumulatedPlaytime).toHaveBeenCalledWith(50);
     expect(res.success).toBe(true);
+  });
+
+  it('dispatches system error and fails when definition is missing', async () => {
+    const dispatcher = { dispatch: jest.fn() };
+    ctx = {
+      ...ctx,
+      restorer: new GameStateRestorer({
+        logger: ctx.logger,
+        entityManager: ctx.entityManager,
+        playtimeTracker: ctx.playtimeTracker,
+        safeEventDispatcher: dispatcher,
+      }),
+    };
+    ctx.entityManager.reconstructEntity.mockImplementation(() => {
+      throw new DefinitionNotFoundError('missing:def');
+    });
+    const data = {
+      gameState: {
+        entities: [
+          { instanceId: 'e1', definitionId: 'missing:def', overrides: {} },
+        ],
+      },
+      metadata: {},
+    };
+    const res = await ctx.restorer.restoreGameState(data);
+    expect(res.success).toBe(false);
+    expect(dispatcher.dispatch).toHaveBeenCalledWith(
+      SYSTEM_ERROR_OCCURRED_ID,
+      expect.objectContaining({
+        message: expect.stringContaining('Definition'),
+      })
+    );
   });
 });
