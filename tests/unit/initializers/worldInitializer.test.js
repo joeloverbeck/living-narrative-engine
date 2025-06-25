@@ -497,6 +497,45 @@ describe('WorldInitializer', () => {
         )
       );
     });
+
+    it('should skip duplicate instanceIds', async () => {
+      const worldData = {
+        id: 'test:world',
+        name: 'Test World',
+        instances: [
+          { instanceId: 'test:dup_instance' },
+          { instanceId: 'test:dup_instance' },
+        ],
+      };
+
+      const entityInstanceDef = {
+        instanceId: 'test:dup_instance',
+        definitionId: 'test:dup',
+      };
+
+      mockGameDataRepository.getWorld.mockReturnValue(worldData);
+      mockGameDataRepository.getEntityInstanceDefinition.mockReturnValue(
+        entityInstanceDef
+      );
+
+      const mockInstance = createMockEntityInstance(
+        'test:dup_instance',
+        'test:dup',
+        {}
+      );
+      mockEntityManager.createEntityInstance.mockReturnValueOnce(mockInstance);
+
+      const result =
+        await worldInitializer.initializeWorldEntities('test:world');
+
+      expect(mockEntityManager.createEntityInstance).toHaveBeenCalledTimes(1);
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        "WorldInitializer: Duplicate instanceId 'test:dup_instance' encountered. Skipping duplicate."
+      );
+      expect(result.instantiatedCount).toBe(1);
+      expect(result.failedCount).toBe(0);
+      expect(result.totalProcessed).toBe(2);
+    });
   });
 
   // Test for _dispatchWorldInitEvent error handling
