@@ -1,0 +1,8 @@
+{
+  "$schema": "http://example.com/schemas/condition.schema.json",
+  "id": "core:exit-is-unblocked",
+  "description": "Checks if an exit object has the 'block' property nullified.",
+  "logic": {
+    "!": { "var": "entity.blocker" }
+  }
+}

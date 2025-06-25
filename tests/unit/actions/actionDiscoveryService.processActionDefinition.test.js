@@ -13,11 +13,12 @@ import { POSITION_COMPONENT_ID } from '../../../src/constants/componentIds.js';
 // We only mock this utility to verify it gets called on error.
 jest.mock('../../../src/utils/safeDispatchErrorUtils.js');
 
-describe('ActionDiscoveryService - processActionDefinition', () => {
+describe('ActionDiscoveryService - getValidActions', () => {
   let service;
   let gameDataRepo;
   let entityManager;
   let actionValidationService;
+  let mockPrerequisiteEvaluationService;
   let formatActionCommandFn;
   let logger;
   let safeEventDispatcher;
@@ -28,15 +29,17 @@ describe('ActionDiscoveryService - processActionDefinition', () => {
   beforeEach(() => {
     gameDataRepo = { getAllActionDefinitions: jest.fn() };
     entityManager = {
-      // FIX: The mock location must be a more realistic entity object with methods.
       getEntityInstance: jest.fn((id) =>
         id === 'room1'
-          ? { id: 'room1', getComponentData: () => null } // Give it a getComponentData method
+          ? { id: 'room1', getComponentData: () => null }
           : null
       ),
       getComponentData: jest.fn().mockReturnValue(null),
     };
     actionValidationService = { isValid: () => true };
+    mockPrerequisiteEvaluationService = {
+      evaluate: jest.fn().mockReturnValue(true),
+    };
     formatActionCommandFn = jest.fn(() => ({ ok: true, value: 'doit' }));
     logger = {
       debug: jest.fn(),
@@ -51,18 +54,15 @@ describe('ActionDiscoveryService - processActionDefinition', () => {
     mockScopeEngine = {
       resolve: jest.fn(() => new Set()),
     };
-
-    // Set up dynamic actionIndex mock
     mockActionIndex = {
-      getCandidateActions: jest.fn().mockImplementation(() => {
-        return gameDataRepo.getAllActionDefinitions();
-      })
+      getCandidateActions: jest.fn(),
     };
 
     service = new ActionDiscoveryService({
       gameDataRepository: gameDataRepo,
       entityManager,
       actionValidationService,
+      prerequisiteEvaluationService: mockPrerequisiteEvaluationService,
       formatActionCommandFn,
       logger,
       safeEventDispatcher,
@@ -76,15 +76,16 @@ describe('ActionDiscoveryService - processActionDefinition', () => {
     jest.resetAllMocks();
   });
 
-  it('handles handler errors and continues processing', async () => {
-    const failingDef = { id: 'fail', commandVerb: 'fail', scope: 'none' };
+  it('handles scope resolution errors and continues processing', async () => {
+    const failingDef = { id: 'fail', commandVerb: 'fail', scope: 'badScope' };
     const okDef = { id: 'ok', commandVerb: 'wait', scope: 'none' };
-    gameDataRepo.getAllActionDefinitions.mockReturnValue([failingDef, okDef]);
+    mockActionIndex.getCandidateActions.mockReturnValue([failingDef, okDef]);
 
-    actionValidationService.isValid = jest.fn((actionDef) => {
-      if (actionDef.id === 'fail') throw new Error('boom');
-      return true;
+    mockScopeEngine.resolve.mockImplementation(() => {
+      throw new Error('boom');
     });
+    // FIX: Provide a syntactically valid expression so the parser doesn't fail first.
+    mockScopeRegistry.getScope.mockReturnValue({ expr: 'location' });
 
     const actor = { id: 'actor' };
     const context = {};
@@ -93,13 +94,19 @@ describe('ActionDiscoveryService - processActionDefinition', () => {
 
     expect(result.actions).toHaveLength(1);
     expect(result.actions[0].id).toBe('ok');
-    expect(result.errors).toHaveLength(1);
-    expect(safeDispatchError).toHaveBeenCalledTimes(1);
+    expect(result.errors).toHaveLength(0);
+
+    // Verify the error was dispatched with the correct message from the thrown error.
+    expect(safeDispatchError).toHaveBeenCalledWith(
+      safeEventDispatcher,
+      "Error resolving scope 'badScope': boom",
+      { error: 'boom', stack: expect.any(String) }
+    );
   });
 
   it('uses the scope registry and engine for scoped actions', async () => {
     const def = { id: 'attack', commandVerb: 'attack', scope: 'monster' };
-    gameDataRepo.getAllActionDefinitions.mockReturnValue([def]);
+    mockActionIndex.getCandidateActions.mockReturnValue([def]);
 
     mockScopeRegistry.getScope.mockReturnValue({
       expr: 'location.inhabitants',
@@ -124,19 +131,16 @@ describe('ActionDiscoveryService - processActionDefinition', () => {
 
     const result = await service.getValidActions(actor, context);
 
-    // Assert that the new dependencies were called correctly
     expect(mockScopeRegistry.getScope).toHaveBeenCalledWith('monster');
-    // The call should now succeed.
     expect(mockScopeEngine.resolve).toHaveBeenCalledWith(
-      expect.any(Object), // AST
+      expect.any(Object),
       actor,
       expect.objectContaining({
         actor: actor,
-        location: { id: 'room1', getComponentData: expect.any(Function) }, // The location is now a valid object.
-      })
+        location: { id: 'room1', getComponentData: expect.any(Function) },
+      }),
+      null
     );
-
-    // Assert the final result is as expected
     expect(result.actions).toEqual([
       {
         id: 'attack',

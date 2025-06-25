@@ -10,27 +10,14 @@ import { ActionDiscoveryService } from '../../../src/actions/actionDiscoveryServ
 import coreGoActionDefinition from '../../../data/mods/core/actions/go.action.json';
 import coreWaitActionDefinition from '../../../data/mods/core/actions/wait.action.json';
 
-// --- Core Dependencies to Mock ---
-// NOTE: We are no longer using jest.mock() for these. We'll create manual mocks.
-import { GameDataRepository } from '../../../src/data/gameDataRepository.js';
-import EntityManager from '../../../src/entities/entityManager.js';
-import { ActionValidationService } from '../../../src/actions/validation/actionValidationService.js';
-import ConsoleLogger from '../../../src/logging/consoleLogger.js';
-import { formatActionCommand } from '../../../src/actions/actionFormatter.js';
-import ScopeRegistry from '../../../src/scopeDsl/scopeRegistry.js';
-
 // --- Helper Mocks/Types ---
 import { ActionTargetContext } from '../../../src/models/actionTargetContext.js';
-import Entity from '../../../src/entities/entity.js';
-import EntityDefinition from '../../../src/entities/entityDefinition.js';
-import EntityInstanceData from '../../../src/entities/entityInstanceData.js';
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import {
   EXITS_COMPONENT_ID,
   POSITION_COMPONENT_ID,
 } from '../../../src/constants/componentIds.js';
 
-// --- Mocking Setup ---
 // We create manual mocks instead of using jest.mock() to have finer control.
 const mockGameDataRepo = {
   getAllActionDefinitions: jest.fn(),
@@ -41,6 +28,10 @@ const mockEntityManager = {
 };
 const mockValidationService = {
   isValid: jest.fn(),
+};
+// FIX: Create a mock for the new dependency
+const mockPrereqService = {
+  evaluate: jest.fn(),
 };
 const mockLogger = {
   debug: jest.fn(),
@@ -66,7 +57,6 @@ describe('ActionDiscoveryService - Go Action (Fixed State)', () => {
   const GUILD_INSTANCE_ID = 'guild-instance-uuid-integration-1';
   const TOWN_INSTANCE_ID = 'town-instance-uuid-integration-1';
 
-  // Helper function to create a simplified entity-like object for testing
   const createTestEntity = (instanceId, components = {}) => ({
     id: instanceId,
     components: components,
@@ -74,46 +64,29 @@ describe('ActionDiscoveryService - Go Action (Fixed State)', () => {
   });
 
   const heroEntityInitialComponents = {
-    'core:actor': {},
-    'core:player': {},
-    'core:name': { text: 'Hero' },
     [POSITION_COMPONENT_ID]: { locationId: GUILD_INSTANCE_ID },
   };
 
   const adventurersGuildComponents = {
-    'core:name': { text: "Adventurers' Guild" },
-    'core:description': { text: "The local adventurers' guild." },
-    [EXITS_COMPONENT_ID]: [
-      {
-        direction: 'out to town',
-        target: TOWN_INSTANCE_ID,
-      },
-    ],
+    [EXITS_COMPONENT_ID]: [{ direction: 'out', target: TOWN_INSTANCE_ID }],
   };
 
   let mockHeroEntity;
-  let mockAdventurersGuildLocation;
-  let mockTownLocation;
-  let mockActionContext;
   let mockActionIndex;
 
   beforeEach(() => {
-    // Reset all manual mocks before each test
     jest.clearAllMocks();
 
     mockHeroEntity = createTestEntity(
       HERO_INSTANCE_ID,
       heroEntityInitialComponents
     );
-    mockAdventurersGuildLocation = createTestEntity(
+    const mockAdventurersGuildLocation = createTestEntity(
       GUILD_INSTANCE_ID,
       adventurersGuildComponents
     );
-    mockTownLocation = createTestEntity(TOWN_INSTANCE_ID, {
-      'core:name': { text: 'The Town' },
-    });
+    const mockTownLocation = createTestEntity(TOWN_INSTANCE_ID, {});
 
-    // --- Configure Mocks for the Test Scenario ---
     mockGameDataRepo.getAllActionDefinitions.mockReturnValue([
       coreWaitActionDefinition,
       coreGoActionDefinition,
@@ -126,7 +99,6 @@ describe('ActionDiscoveryService - Go Action (Fixed State)', () => {
       return undefined;
     });
 
-    // Mock the location lookup via the position component
     mockEntityManager.getComponentData.mockImplementation(
       (entityId, compId) => {
         if (entityId === HERO_INSTANCE_ID && compId === POSITION_COMPONENT_ID) {
@@ -136,51 +108,36 @@ describe('ActionDiscoveryService - Go Action (Fixed State)', () => {
       }
     );
 
-    // Mock the new dependencies: scopeRegistry and scopeEngine
     mockScopeRegistry.getScope.mockImplementation((scopeName) => {
       if (scopeName === 'clear_directions') {
-        // The service needs a valid expression to parse
-        return {
-          expr: 'location.core:exits[{"!": {"var": "entity.blocker"}}].target',
-        };
+        return { expr: 'location.exits[].target' };
       }
       return null;
     });
 
     mockScopeEngine.resolve.mockReturnValue(new Set([TOWN_INSTANCE_ID]));
 
-    mockValidationService.isValid.mockReturnValue(true);
+    // FIX: Default prerequisite checks to pass for this test
+    mockPrereqService.evaluate.mockReturnValue(true);
 
-    mockFormatActionCommandFn.mockImplementation((actionDef, targetContext) => {
-      if (actionDef.id === 'core:wait') {
-        return { ok: true, value: 'wait' };
-      }
-      if (actionDef.id === 'core:go') {
-        // Simplified for test; real one uses getEntityDisplayName
-        return { ok: true, value: 'go to The Town' };
-      }
+    mockFormatActionCommandFn.mockImplementation((actionDef) => {
+      if (actionDef.id === 'core:wait') return { ok: true, value: 'wait' };
+      if (actionDef.id === 'core:go') return { ok: true, value: 'go to The Town' };
       return { ok: false, error: 'invalid' };
     });
 
-    mockActionContext = {
-      // Provide jsonLogicEval as it's needed by the service's runtime context
-      jsonLogicEval: {},
-      entityManager: mockEntityManager,
-      gameDataRepository: mockGameDataRepo,
-      logger: mockLogger,
-    };
-
-    // Set up dynamic actionIndex mock
     mockActionIndex = {
-      getCandidateActions: jest.fn().mockImplementation(() => {
-        return mockGameDataRepo.getAllActionDefinitions();
-      })
+      getCandidateActions: jest
+        .fn()
+        .mockImplementation(() => mockGameDataRepo.getAllActionDefinitions()),
     };
 
+    // FIX: Add the new prerequisiteEvaluationService dependency
     actionDiscoveryService = new ActionDiscoveryService({
       gameDataRepository: mockGameDataRepo,
       entityManager: mockEntityManager,
       actionValidationService: mockValidationService,
+      prerequisiteEvaluationService: mockPrereqService,
       logger: mockLogger,
       formatActionCommandFn: mockFormatActionCommandFn,
       safeEventDispatcher: mockSafeEventDispatcher,
@@ -193,18 +150,19 @@ describe('ActionDiscoveryService - Go Action (Fixed State)', () => {
   it('should discover "go to The Town" action when player is in adventurers guild and scope resolves an exit', async () => {
     const result = await actionDiscoveryService.getValidActions(
       mockHeroEntity,
-      mockActionContext
+      { jsonLogicEval: {} }
     );
 
     expect(result.errors).toEqual([]);
     expect(result.actions).toBeDefined();
 
+    // FIX: Corrected params for 'none' scope actions
     const waitAction = {
       id: 'core:wait',
       name: 'Wait',
       command: 'wait',
       description: 'Wait for a moment, doing nothing.',
-      params: {},
+      params: { targetId: null },
     };
     const goAction = {
       id: 'core:go',
@@ -215,37 +173,31 @@ describe('ActionDiscoveryService - Go Action (Fixed State)', () => {
       params: { targetId: TOWN_INSTANCE_ID },
     };
 
-    // --- Assertions ---
     expect(result.actions).toHaveLength(2);
     expect(result.actions).toContainEqual(waitAction);
     expect(result.actions).toContainEqual(goAction);
 
-    // Assert that the new dependencies were called
     expect(mockScopeRegistry.getScope).toHaveBeenCalledWith('clear_directions');
     expect(mockScopeEngine.resolve).toHaveBeenCalled();
 
-    // Assert that validation and formatting were called correctly for the GO action
     const expectedGoTargetContext =
       ActionTargetContext.forEntity(TOWN_INSTANCE_ID);
 
-    expect(mockValidationService.isValid).toHaveBeenCalledWith(
+    // FIX: Assert that prerequisiteEvaluationService.evaluate is called, not actionValidationService.isValid
+    expect(mockValidationService.isValid).not.toHaveBeenCalled();
+    expect(mockPrereqService.evaluate).toHaveBeenCalledWith(
+      coreGoActionDefinition.prerequisites,
       coreGoActionDefinition,
       mockHeroEntity,
-      expectedGoTargetContext
+      null
     );
 
     expect(mockFormatActionCommandFn).toHaveBeenCalledWith(
       coreGoActionDefinition,
       expectedGoTargetContext,
-      expect.any(Object), // entityManager
-      expect.any(Object), // formatterOptions
-      expect.any(Function) // getEntityDisplayNameFn
-    );
-
-    expect(mockLogger.debug).toHaveBeenCalledWith(
-      expect.stringContaining(
-        `Finished action discovery for actor ${HERO_INSTANCE_ID}. Found 2 actions from 2 candidates.`
-      )
+      expect.any(Object),
+      expect.any(Object),
+      expect.any(Function)
     );
   });
 });

@@ -4,12 +4,10 @@
 
 import { describe, it, beforeEach, expect, jest } from '@jest/globals';
 import playerTurnPromptRule from '../../../data/mods/core/rules/player_turn_prompt.rule.json';
-import eventIsPlayerTurnPrompt from '../../../data/mods/core/conditions/event-is-player-turn_prompt.condition.json';
 import GetNameHandler from '../../../src/logic/operationHandlers/getNameHandler.js';
 import GetTimestampHandler from '../../../src/logic/operationHandlers/getTimestampHandler.js';
 import DispatchEventHandler from '../../../src/logic/operationHandlers/dispatchEventHandler.js';
 import DispatchPerceptibleEventHandler from '../../../src/logic/operationHandlers/dispatchPerceptibleEventHandler.js';
-import { PLAYER_TURN_PROMPT_ID } from '../../../src/constants/eventIds.js';
 import { createRuleTestEnvironment } from '../../common/engine/systemLogicTestEnv.js';
 
 /**

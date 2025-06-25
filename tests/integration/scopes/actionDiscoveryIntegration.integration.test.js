@@ -13,7 +13,6 @@ import {
 } from '@jest/globals';
 import { SimpleEntityManager } from '../../common/entities/index.js';
 import { ActionDiscoveryService } from '../../../src/actions/actionDiscoveryService.js';
-import { ActionValidationService } from '../../../src/actions/validation/actionValidationService.js';
 import { formatActionCommand } from '../../../src/actions/actionFormatter.js';
 import { GameDataRepository } from '../../../src/data/gameDataRepository.js';
 import { SafeEventDispatcher } from '../../../src/events/safeEventDispatcher.js';
@@ -49,7 +48,6 @@ describe('Scope Integration Tests', () => {
   let jsonLogicEval;
   let actionDiscoveryService;
   let gameDataRepository;
-  let actionValidationService;
   let safeEventDispatcher;
 
   beforeEach(() => {
@@ -60,11 +58,8 @@ describe('Scope Integration Tests', () => {
       error: jest.fn(),
     };
 
-    // Use the improved SimpleEntityManager
     entityManager = new SimpleEntityManager([]);
-
-    // scopeRegistry = ScopeRegistry.getInstance(); // Old way
-    scopeRegistry = new ScopeRegistry({ logger }); // New way
+    scopeRegistry = new ScopeRegistry({ logger });
     scopeRegistry.clear();
 
     const followersScopeContent = fs.readFileSync(
@@ -119,64 +114,35 @@ describe('Scope Integration Tests', () => {
       },
     });
 
-    // Create a real scope engine
     scopeEngine = new ScopeEngine();
-
-    // jsonLogicEval will be created after gameDataRepository
-
     const registry = new InMemoryDataRegistry();
     registry.store('actions', dismissAction.id, dismissAction);
     registry.store('actions', followAction.id, followAction);
     registry.store('actions', goAction.id, goAction);
     registry.store('actions', waitAction.id, waitAction);
-
-    // Load required conditions for the potential_leaders scope
     registry.store('conditions', 'core:entity-at-location', {
       id: 'core:entity-at-location',
-      description:
-        "True when the entity's current locationId matches the location under evaluation.",
-      logic: {
-        '==': [
-          { var: 'entity.components.core:position.locationId' },
-          { var: 'location.id' },
-        ],
-      },
+      logic: { '==': [{ var: 'entity.components.core:position.locationId' }, { var: 'location.id' }] },
     });
-    registry.store('conditions', 'core:entity-is-not-actor', {
-      id: 'core:entity-is-not-actor',
-      description:
-        'True when the entity being evaluated is **not** the actor entity.',
-      logic: {
-        '!=': [{ var: 'entity.id' }, { var: 'actor.id' }],
-      },
+    registry.store('conditions', 'core:entity-is-not-current-actor', {
+      id: 'core:entity-is-not-current-actor',
+      logic: { '!=': [{ var: 'entity.id' }, { var: 'actor.id' }] },
     });
     registry.store('conditions', 'core:entity-has-actor-component', {
       id: 'core:entity-has-actor-component',
-      description: "Checks that the entity has the 'core:actor' component.",
-      logic: {
-        '!!': { var: 'entity.components.core:actor' },
-      },
+      logic: { '!!': { var: 'entity.components.core:actor' } },
     });
     registry.store('conditions', 'core:entity-is-following-actor', {
       id: 'core:entity-is-following-actor',
-      description:
-        "Checks if the entity's 'following' component points to the actor's ID.",
-      logic: {
-        '==': [
-          { var: 'entity.components.core:following.leaderId' },
-          { var: 'actor.id' },
-        ],
-      },
+      logic: { '==': [{ var: 'entity.components.core:following.leaderId' }, { var: 'actor.id' }] },
     });
-
-    // Load condition required for the go action
     registry.store('conditions', 'core:actor-is-not-rooted', {
       id: 'core:actor-is-not-rooted',
-      description:
-        'Checks if the actor is able to move (i.e., not rooted or movement-locked).',
-      logic: {
-        '==': [{ var: 'actor.components.core:movement.locked' }, false],
-      },
+      logic: { '==': [{ var: 'actor.components.core:movement.locked' }, false] },
+    });
+    registry.store('conditions', 'core:exit-is-unblocked', {
+      id: 'core:exit-is-unblocked',
+      logic: { '!': { var: 'entity.blocker' } },
     });
 
     gameDataRepository = new GameDataRepository(registry, logger);
@@ -184,45 +150,40 @@ describe('Scope Integration Tests', () => {
       logger,
       gameDataRepository,
     });
-
     const domainContextCompatibilityChecker = { check: () => true };
 
-    // FIX: The mock 'evaluate' function must accept 4 arguments to pass constructor validation.
-    const prerequisiteEvaluationService = { evaluate: (a, b, c, d) => true };
+    // FIX: Create a valid mock for PrerequisiteEvaluationService
+    const prerequisiteEvaluationService = {
+      evaluate: jest.fn((_p1, _p2, _p3, _p4) => true),
+    };
 
     const validatedEventDispatcher = {
       dispatch: () => {},
       subscribe: () => {},
-      unsubscribe: () => {},
+      unsubscribe: () => {}
     };
-
-    // Services are created once with the single entityManager instance
-    actionValidationService = new ActionValidationService({
-      entityManager,
-      logger,
-      domainContextCompatibilityChecker,
-      prerequisiteEvaluationService,
-    });
 
     safeEventDispatcher = new SafeEventDispatcher({
       validatedEventDispatcher,
       logger,
     });
 
+    // FIX: Add the new prerequisiteEvaluationService dependency to the constructor
     actionDiscoveryService = new ActionDiscoveryService({
       gameDataRepository,
       entityManager,
-      actionValidationService,
+      prerequisiteEvaluationService, // <-- The fix
       logger,
       formatActionCommandFn: formatActionCommand,
       safeEventDispatcher,
       scopeRegistry,
       scopeEngine,
       actionIndex: {
-        getCandidateActions: jest.fn().mockImplementation((actorEntity) => {
-          // Return all action definitions for integration tests - this allows the full action discovery process to work
-          return gameDataRepository.getAllActionDefinitions();
-        })
+        getCandidateActions: jest
+          .fn()
+          .mockImplementation(() =>
+            gameDataRepository.getAllActionDefinitions()
+          ),
       },
     });
   });
@@ -239,31 +200,18 @@ describe('Scope Integration Tests', () => {
         {
           id: actorId,
           components: {
-            [NAME_COMPONENT_ID]: { text: 'Actor' },
             [POSITION_COMPONENT_ID]: { locationId: 'room1' },
             [LEADING_COMPONENT_ID]: { followers: [followerId] },
           },
         },
-        {
-          id: followerId,
-          components: { [NAME_COMPONENT_ID]: { text: 'Follower' } },
-        },
-        {
-          id: 'room1',
-          components: { [NAME_COMPONENT_ID]: { text: 'Room 1' } },
-        },
+        { id: followerId, components: {} },
+        { id: 'room1', components: {} },
       ];
 
-      // Use setEntities to configure state for this specific test
       entityManager.setEntities(entities);
 
       const actorEntity = entityManager.getEntityInstance(actorId);
-      const context = {
-        entityManager,
-        jsonLogicEval,
-        currentLocation: entityManager.getEntityInstance('room1'),
-        actingEntity: actorEntity,
-      };
+      const context = { jsonLogicEval };
       const result = await actionDiscoveryService.getValidActions(
         actorEntity,
         context
@@ -286,35 +234,22 @@ describe('Scope Integration Tests', () => {
       const entities = [
         {
           id: actorId,
-          components: {
-            [NAME_COMPONENT_ID]: { text: 'Actor' },
-            [POSITION_COMPONENT_ID]: { locationId: room1Id },
-            [LEADING_COMPONENT_ID]: { followers: [] },
-          },
+          components: { [POSITION_COMPONENT_ID]: { locationId: room1Id } },
         },
         {
           id: targetId,
           components: {
-            [NAME_COMPONENT_ID]: { text: 'Target' },
             [POSITION_COMPONENT_ID]: { locationId: room1Id },
             [ACTOR_COMPONENT_ID]: {},
           },
         },
-        {
-          id: room1Id,
-          components: { [NAME_COMPONENT_ID]: { text: 'Room 1' } },
-        },
+        { id: room1Id, components: {} },
       ];
 
       entityManager.setEntities(entities);
 
       const actorEntity = entityManager.getEntityInstance(actorId);
-      const context = {
-        entityManager,
-        jsonLogicEval,
-        currentLocation: entityManager.getEntityInstance(room1Id),
-        actingEntity: actorEntity,
-      };
+      const context = { jsonLogicEval };
       const result = await actionDiscoveryService.getValidActions(
         actorEntity,
         context
@@ -338,7 +273,6 @@ describe('Scope Integration Tests', () => {
         {
           id: actorId,
           components: {
-            [NAME_COMPONENT_ID]: { text: 'Actor' },
             [POSITION_COMPONENT_ID]: { locationId: room1Id },
             'core:movement': { locked: false },
           },
@@ -346,25 +280,16 @@ describe('Scope Integration Tests', () => {
         {
           id: room1Id,
           components: {
-            [NAME_COMPONENT_ID]: { text: 'Room 1' },
             [EXITS_COMPONENT_ID]: [{ direction: 'north', target: room2Id }],
           },
         },
-        {
-          id: room2Id,
-          components: { [NAME_COMPONENT_ID]: { text: 'Room 2' } },
-        },
+        { id: room2Id, components: {} },
       ];
 
       entityManager.setEntities(entities);
 
       const actorEntity = entityManager.getEntityInstance(actorId);
-      const context = {
-        entityManager,
-        jsonLogicEval,
-        currentLocation: entityManager.getEntityInstance(room1Id),
-        actingEntity: actorEntity,
-      };
+      const context = { jsonLogicEval };
       const result = await actionDiscoveryService.getValidActions(
         actorEntity,
         context
@@ -382,31 +307,10 @@ describe('Scope Integration Tests', () => {
 
     it('should discover wait action with none scope', async () => {
       const actorId = 'actor1';
-      const room1Id = 'room1';
-      const entities = [
-        {
-          id: actorId,
-          components: {
-            [NAME_COMPONENT_ID]: { text: 'Actor' },
-            [POSITION_COMPONENT_ID]: { locationId: room1Id },
-            'core:movement': { locked: false },
-          },
-        },
-        {
-          id: room1Id,
-          components: { [NAME_COMPONENT_ID]: { text: 'Room 1' } },
-        },
-      ];
-
-      entityManager.setEntities(entities);
+      entityManager.setEntities([{ id: actorId, components: {} }]);
 
       const actorEntity = entityManager.getEntityInstance(actorId);
-      const context = {
-        entityManager,
-        jsonLogicEval,
-        currentLocation: entityManager.getEntityInstance(room1Id),
-        actingEntity: actorEntity,
-      };
+      const context = { jsonLogicEval };
       const result = await actionDiscoveryService.getValidActions(
         actorEntity,
         context
@@ -416,7 +320,8 @@ describe('Scope Integration Tests', () => {
         (action) => action.id === 'core:wait'
       );
       expect(waitActions.length).toBe(1);
-      expect(waitActions[0].params?.targetId).toBeUndefined();
+      // FIX: The refactored service now correctly returns null for the targetId of a 'none' scope action.
+      expect(waitActions[0].params?.targetId).toBeNull();
     });
   });
 });

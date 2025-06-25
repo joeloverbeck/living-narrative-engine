@@ -4,7 +4,6 @@
 
 import { describe, it, beforeEach, expect, jest } from '@jest/globals';
 import logPerceptibleEventsRule from '../../../data/mods/core/rules/log_perceptible_events.rule.json';
-import eventIsPerceptibleEvent from '../../../data/mods/core/conditions/event-is-perceptible_event.condition.json';
 import GetTimestampHandler from '../../../src/logic/operationHandlers/getTimestampHandler.js';
 import DispatchEventHandler from '../../../src/logic/operationHandlers/dispatchEventHandler.js';
 import AddPerceptionLogEntryHandler from '../../../src/logic/operationHandlers/addPerceptionLogEntryHandler.js';
@@ -19,7 +18,6 @@ import SystemLogicInterpreter from '../../../src/logic/systemLogicInterpreter.js
 import OperationInterpreter from '../../../src/logic/operationInterpreter.js';
 import OperationRegistry from '../../../src/logic/operationRegistry.js';
 import JsonLogicEvaluationService from '../../../src/logic/jsonLogicEvaluationService.js';
-import jsonLogic from 'json-logic-js';
 
 /**
  * Creates handlers needed for the log_perceptible_events rule.

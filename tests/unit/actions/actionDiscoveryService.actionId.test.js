@@ -9,7 +9,7 @@ describe('ActionDiscoveryService params exposure', () => {
     name: 'Attack',
     commandVerb: 'attack',
     description: 'Attack target',
-    scope: 'enemies', // The action now needs a scope name
+    scope: 'enemies',
   };
 
   let service;
@@ -29,7 +29,6 @@ describe('ActionDiscoveryService params exposure', () => {
         return null;
       },
       getComponentData: (entityId, componentId) => {
-        // This mock needs to be specific to the actor to be realistic
         if (entityId === 'player1' && componentId === POSITION_COMPONENT_ID) {
           return { locationId: 'some-room' };
         }
@@ -38,6 +37,10 @@ describe('ActionDiscoveryService params exposure', () => {
     };
     const actionValidationService = {
       isValid: () => true,
+    };
+    // FIX: Add the new required dependency
+    const mockPrerequisiteEvaluationService = {
+      evaluate: jest.fn().mockReturnValue(true),
     };
     const formatActionCommandFn = () => ({ ok: true, value: 'attack rat123' });
     const logger = {
@@ -49,15 +52,12 @@ describe('ActionDiscoveryService params exposure', () => {
     const safeEventDispatcher = { dispatch: jest.fn() };
 
     const mockActionIndex = {
-      getCandidateActions: jest.fn((actorEntity) => [dummyActionDef]),
+      getCandidateActions: jest.fn(() => [dummyActionDef]),
     };
 
     mockScopeRegistry = {
       getScope: jest.fn((scopeName) => {
         if (scopeName === 'enemies') {
-          // FIX: The expression must be syntactically valid for the REAL parser.
-          // The pipe character '|' is not supported. A simple property chain is sufficient
-          // because the scopeEngine is mocked and won't execute this anyway.
           return { expr: 'location.inhabitants' };
         }
         return null;
@@ -71,6 +71,7 @@ describe('ActionDiscoveryService params exposure', () => {
       gameDataRepository: gameDataRepo,
       entityManager,
       actionValidationService,
+      prerequisiteEvaluationService: mockPrerequisiteEvaluationService, // <-- The fix
       actionIndex: mockActionIndex,
       formatActionCommandFn,
       logger,
@@ -84,12 +85,10 @@ describe('ActionDiscoveryService params exposure', () => {
     const actor = {
       id: 'player1',
       getComponentData: () => null,
-      // Add other methods to satisfy a potential `isValidEntity` check, making the mock more robust
       addComponent: jest.fn(),
       removeComponent: jest.fn(),
     };
     const context = {
-      // The context must provide a jsonLogicEval object for the scope engine's runtime context
       jsonLogicEval: {},
     };
     const result = await service.getValidActions(actor, context);

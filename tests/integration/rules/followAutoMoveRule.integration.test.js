@@ -3,15 +3,6 @@
  */
 
 import { describe, it, beforeEach, expect, jest } from '@jest/globals';
-import Ajv from 'ajv';
-import ruleSchema from '../../../data/schemas/rule.schema.json';
-import commonSchema from '../../../data/schemas/common.schema.json';
-import operationSchema from '../../../data/schemas/operation.schema.json';
-import jsonLogicSchema from '../../../data/schemas/json-logic.schema.json';
-import conditionSchema from '../../../data/schemas/condition.schema.json';
-import conditionContainerSchema from '../../../data/schemas/condition-container.schema.json';
-import loadOperationSchemas from '../../unit/helpers/loadOperationSchemas.js';
-import loadConditionSchemas from '../../unit/helpers/loadConditionSchemas.js';
 import actorIsNotNull from '../../../data/mods/core/conditions/actor-is-not-null.condition.json';
 import followAutoMoveRule from '../../../data/mods/core/rules/follow_auto_move.rule.json';
 import autoMoveFollowerMacro from '../../../data/mods/core/macros/autoMoveFollower.macro.json';
@@ -36,9 +27,6 @@ import {
   NAME_COMPONENT_ID,
   POSITION_COMPONENT_ID,
 } from '../../../src/constants/componentIds.js';
-import eventIsFollowAutoMove from '../../../data/mods/core/conditions/event-is-follow-auto-move.condition.json';
-import { ATTEMPT_ACTION_ID } from '../../../src/constants/eventIds.js';
-import { createRuleTestEnvironment } from '../../common/engine/systemLogicTestEnv.js';
 import GetNameHandler from '../../../src/logic/operationHandlers/getNameHandler.js';
 import EndTurnHandler from '../../../src/logic/operationHandlers/endTurnHandler.js';
 import { SimpleEntityManager } from '../../common/entities/index.js';

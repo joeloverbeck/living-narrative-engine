@@ -28,7 +28,7 @@ describe('formatValidationError', () => {
       contextType: 'none',
     });
     expect(err.message).toBe(
-      'Source.fn: invalid ActionTargetContext (type: none)'
+      'Source.fn: invalid ActionTargetContext'
     );
   });
 

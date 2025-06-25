@@ -1,4 +1,4 @@
-// src/tests/services/prerequisiteEvaluationService.test.js
+// tests/unit/services/prerequisiteEvaluationService.test.js
 
 import { beforeEach, describe, expect, jest, test } from '@jest/globals';
 
@@ -58,7 +58,6 @@ describe('PrerequisiteEvaluationService', () => {
   // Reusable mock objects
   let mockActionDefinition;
   let mockActor;
-  let mockTargetContext;
   let mockBuiltContext;
 
   beforeEach(() => {
@@ -80,11 +79,9 @@ describe('PrerequisiteEvaluationService', () => {
     // Define default mock inputs and builder output
     mockActionDefinition = { id: 'testActionGeneral' };
     mockActor = { id: 'actor1', getAllComponentsData: () => ({ health: 100 }) };
-    mockTargetContext = { type: 'none' };
+    // CORRECTED: The built context no longer contains target or action info.
     mockBuiltContext = {
       actor: { id: 'actor1', components: { health: 100 } },
-      target: { type: 'none', id: null, direction: null, entity: null },
-      action: { id: 'testActionGeneral' },
     };
 
     // Configure default mock behavior on the INSTANCE's method
@@ -107,11 +104,11 @@ describe('PrerequisiteEvaluationService', () => {
    */
   test('should return true and log debug message when prerequisites array is empty', () => {
     const prerequisites = [];
+    // CORRECTED: Removed mockTargetContext from the call
     const result = service.evaluate(
       prerequisites,
       mockActionDefinition,
-      mockActor,
-      mockTargetContext
+      mockActor
     );
 
     expect(result).toBe(true);
@@ -136,19 +133,19 @@ describe('PrerequisiteEvaluationService', () => {
     ];
     mockJsonLogicServiceInstance.evaluate.mockReturnValue(true);
 
+    // CORRECTED: Removed mockTargetContext from the call
     const result = service.evaluate(
       prerequisites,
       mockActionDefinition,
-      mockActor,
-      mockTargetContext
+      mockActor
     );
 
     expect(result).toBe(true);
     expect(mockBuilderInstance.buildContext).toHaveBeenCalledTimes(1);
+    // CORRECTED: Assert the call no longer includes mockTargetContext
     expect(mockBuilderInstance.buildContext).toHaveBeenCalledWith(
       mockActionDefinition,
-      mockActor,
-      mockTargetContext
+      mockActor
     );
     expect(mockJsonLogicServiceInstance.evaluate).toHaveBeenCalledTimes(
       prerequisites.length
@@ -177,19 +174,19 @@ describe('PrerequisiteEvaluationService', () => {
     const specificActionDef = { id: 'testActionFirstFail' };
     mockJsonLogicServiceInstance.evaluate.mockReturnValueOnce(false);
 
+    // CORRECTED: Removed mockTargetContext from the call
     const result = service.evaluate(
       prerequisites,
       specificActionDef,
-      mockActor,
-      mockTargetContext
+      mockActor
     );
 
     expect(result).toBe(false);
     expect(mockBuilderInstance.buildContext).toHaveBeenCalledTimes(1);
+    // CORRECTED: Assert the call no longer includes mockTargetContext
     expect(mockBuilderInstance.buildContext).toHaveBeenCalledWith(
       specificActionDef,
-      mockActor,
-      mockTargetContext
+      mockActor
     );
     expect(mockJsonLogicServiceInstance.evaluate).toHaveBeenCalledTimes(1);
     expect(mockJsonLogicServiceInstance.evaluate).toHaveBeenCalledWith(
@@ -211,19 +208,19 @@ describe('PrerequisiteEvaluationService', () => {
         throw builderError;
       });
 
+      // CORRECTED: Removed mockTargetContext from the call
       const result = service.evaluate(
         prerequisites,
         errorActionDef,
-        mockActor,
-        mockTargetContext
+        mockActor
       );
 
       expect(result).toBe(false);
       expect(mockBuilderInstance.buildContext).toHaveBeenCalledTimes(1);
+      // CORRECTED: Assert the call no longer includes mockTargetContext
       expect(mockBuilderInstance.buildContext).toHaveBeenCalledWith(
         errorActionDef,
-        mockActor,
-        mockTargetContext
+        mockActor
       );
       expect(mockLogger.error).toHaveBeenCalledTimes(1);
       expect(mockLogger.error).toHaveBeenCalledWith(
@@ -252,19 +249,19 @@ describe('PrerequisiteEvaluationService', () => {
       'should return false and log error if an item in prerequisites is a $description',
       ({ value }) => {
         const prerequisites = [value];
+        // CORRECTED: Removed mockTargetContext from the call
         const result = service.evaluate(
           prerequisites,
           invalidItemActionDef,
-          mockActor,
-          mockTargetContext
+          mockActor
         );
 
         expect(result).toBe(false);
         expect(mockBuilderInstance.buildContext).toHaveBeenCalledTimes(1);
+        // CORRECTED: Assert the call no longer includes mockTargetContext
         expect(mockBuilderInstance.buildContext).toHaveBeenCalledWith(
           invalidItemActionDef,
-          mockActor,
-          mockTargetContext
+          mockActor
         );
         expect(mockLogger.error).toHaveBeenCalledTimes(1);
         expect(mockLogger.error).toHaveBeenCalledWith(
@@ -291,19 +288,19 @@ describe('PrerequisiteEvaluationService', () => {
       { prereq: { logic: null }, description: "'logic' property is null" },
     ])('should return false and log error if $description', ({ prereq }) => {
       const prerequisites = [prereq];
+      // CORRECTED: Removed mockTargetContext from the call
       const result = service.evaluate(
         prerequisites,
         invalidLogicActionDef,
-        mockActor,
-        mockTargetContext
+        mockActor
       );
 
       expect(result).toBe(false);
       expect(mockBuilderInstance.buildContext).toHaveBeenCalledTimes(1);
+      // CORRECTED: Assert the call no longer includes mockTargetContext
       expect(mockBuilderInstance.buildContext).toHaveBeenCalledWith(
         invalidLogicActionDef,
-        mockActor,
-        mockTargetContext
+        mockActor
       );
       expect(mockLogger.error).toHaveBeenCalledTimes(1);
       expect(mockLogger.error).toHaveBeenCalledWith(
@@ -322,19 +319,19 @@ describe('PrerequisiteEvaluationService', () => {
       'should return false and log failure when $description',
       ({ prereq }) => {
         const prerequisites = [prereq];
+        // CORRECTED: Removed mockTargetContext from the call
         const result = service.evaluate(
           prerequisites,
           invalidLogicActionDef,
-          mockActor,
-          mockTargetContext
+          mockActor
         );
 
         expect(result).toBe(false);
         expect(mockBuilderInstance.buildContext).toHaveBeenCalledTimes(1);
+        // CORRECTED: Assert the call no longer includes mockTargetContext
         expect(mockBuilderInstance.buildContext).toHaveBeenCalledWith(
           invalidLogicActionDef,
-          mockActor,
-          mockTargetContext
+          mockActor
         );
         expect(mockLogger.error).not.toHaveBeenCalled();
         expect(mockLogger.debug).toHaveBeenCalledWith(
@@ -359,19 +356,19 @@ describe('PrerequisiteEvaluationService', () => {
       throw mockError;
     });
 
+    // CORRECTED: Removed mockTargetContext from the call
     const result = service.evaluate(
       prerequisites,
       jsonLogicErrorActionDef,
-      mockActor,
-      mockTargetContext
+      mockActor
     );
 
     expect(result).toBe(false);
     expect(mockBuilderInstance.buildContext).toHaveBeenCalledTimes(1);
+    // CORRECTED: Assert the call no longer includes mockTargetContext
     expect(mockBuilderInstance.buildContext).toHaveBeenCalledWith(
       jsonLogicErrorActionDef,
-      mockActor,
-      mockTargetContext
+      mockActor
     );
     expect(mockJsonLogicServiceInstance.evaluate).toHaveBeenCalledTimes(1);
     expect(mockJsonLogicServiceInstance.evaluate).toHaveBeenCalledWith(
@@ -441,6 +438,4 @@ describe('PrerequisiteEvaluationService', () => {
       { '==': [1, 1] },
     ]);
   });
-
-  /* --- Obsolete tests commented out --- */
-}); // End describe('PrerequisiteEvaluationService')
+});

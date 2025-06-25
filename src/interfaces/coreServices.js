@@ -1,5 +1,3 @@
-// src/interfaces/coreServices.js
-
 /**
  * @file Defines JSDoc typedefs for core service interfaces,
  * promoting dependency injection and loose coupling. These types define
@@ -118,6 +116,12 @@
  * Logs an error message.
  * @property {(message: string, ...args: any[]) => void} debug
  * Logs a debug message.
+ * @property {(label?: string) => void} [groupCollapsed]
+ * Starts a collapsed log group. Optional.
+ * @property {() => void} [groupEnd]
+ * Ends the current log group. Optional.
+ * @property {(data: any, columns?: readonly string[] | undefined) => void} [table]
+ * Displays tabular data. Optional.
  */
 
 // --- Configuration Access ---

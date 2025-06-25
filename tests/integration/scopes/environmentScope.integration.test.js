@@ -12,7 +12,6 @@ import {
 } from '@jest/globals';
 import { SimpleEntityManager } from '../../common/entities/index.js';
 import { ActionDiscoveryService } from '../../../src/actions/actionDiscoveryService.js';
-import { ActionValidationService } from '../../../src/actions/validation/actionValidationService.js';
 import { formatActionCommand } from '../../../src/actions/actionFormatter.js';
 import { GameDataRepository } from '../../../src/data/gameDataRepository.js';
 import { SafeEventDispatcher } from '../../../src/events/safeEventDispatcher.js';
@@ -45,7 +44,6 @@ describe('Scope Integration Tests', () => {
   let gameDataRepository;
 
   beforeEach(() => {
-    // Restore the mocked logger
     logger = {
       debug: jest.fn(),
       info: jest.fn(),
@@ -87,49 +85,25 @@ describe('Scope Integration Tests', () => {
       },
     });
 
-    // Create a real scope engine
     scopeEngine = new ScopeEngine();
 
     const registry = new InMemoryDataRegistry();
     registry.store('actions', followAction.id, followAction);
-
-    // Load required conditions for the potential_leaders scope
     registry.store('conditions', 'core:entity-at-location', {
       id: 'core:entity-at-location',
-      description:
-        "True when the entity's current locationId matches the location under evaluation.",
-      logic: {
-        '==': [
-          { var: 'entity.components.core:position.locationId' },
-          { var: 'location.id' },
-        ],
-      },
+      logic: { '==': [{ var: 'entity.components.core:position.locationId' }, { var: 'location.id' }] },
     });
-    registry.store('conditions', 'core:entity-is-not-actor', {
-      id: 'core:entity-is-not-actor',
-      description:
-        'True when the entity being evaluated is **not** the actor entity.',
-      logic: {
-        '!=': [{ var: 'entity.id' }, { var: 'actor.id' }],
-      },
+    registry.store('conditions', 'core:entity-is-not-current-actor', {
+      id: 'core:entity-is-not-current-actor',
+      logic: { '!=': [{ var: 'entity.id' }, { var: 'actor.id' }] },
     });
     registry.store('conditions', 'core:entity-has-actor-component', {
       id: 'core:entity-has-actor-component',
-      description: "Checks that the entity has the 'core:actor' component.",
-      logic: {
-        '!!': { var: 'entity.components.core:actor' },
-      },
+      logic: { '!!': { var: 'entity.components.core:actor' } },
     });
     registry.store('conditions', 'core:entity-is-following-actor', {
       id: 'core:entity-is-following-actor',
-      description:
-        "Checks if the entity's 'following' component points to the actor's ID.",
-      logic: {
-        '==': [
-          { var: 'entity.components.core:following.leaderId' },
-          { var: 'actor.id' },
-        ],
-      },
+      logic: { '==': [{ var: 'entity.components.core:following.leaderId' }, { var: 'actor.id' }] },
     });
 
     gameDataRepository = new GameDataRepository(registry, logger);
@@ -138,39 +112,37 @@ describe('Scope Integration Tests', () => {
       gameDataRepository,
     });
     const domainContextCompatibilityChecker = { check: () => true };
-    const prerequisiteEvaluationService = { evaluate: (a, b, c, d) => true };
+    // FIX: Ensure the mock has a function with the correct arity
+    const prerequisiteEvaluationService = {
+      evaluate: (_p1, _p2, _p3, _p4) => true,
+    };
     const validatedEventDispatcher = {
       dispatch: () => {},
       subscribe: () => {},
-      unsubscribe: () => {},
+      unsubscribe: () => {}
     };
-
-    const actionValidationService = new ActionValidationService({
-      entityManager,
-      logger,
-      domainContextCompatibilityChecker,
-      prerequisiteEvaluationService,
-    });
 
     const safeEventDispatcher = new SafeEventDispatcher({
       validatedEventDispatcher,
       logger,
     });
 
+    // FIX: Add the missing dependency to the constructor call
     actionDiscoveryService = new ActionDiscoveryService({
       gameDataRepository,
       entityManager,
-      actionValidationService,
+      prerequisiteEvaluationService, // <-- The fix
       logger,
       formatActionCommandFn: formatActionCommand,
       safeEventDispatcher,
       scopeRegistry,
       scopeEngine,
       actionIndex: {
-        getCandidateActions: jest.fn().mockImplementation((actorEntity) => {
-          // Return all action definitions for integration tests - this allows the full action discovery process to work
-          return gameDataRepository.getAllActionDefinitions();
-        })
+        getCandidateActions: jest
+          .fn()
+          .mockImplementation(() =>
+            gameDataRepository.getAllActionDefinitions()
+          ),
       },
     });
   });
@@ -188,34 +160,22 @@ describe('Scope Integration Tests', () => {
       const entities = [
         {
           id: actorId,
-          components: {
-            [NAME_COMPONENT_ID]: { text: 'Actor' },
-            [POSITION_COMPONENT_ID]: { locationId: room1Id },
-          },
+          components: { [POSITION_COMPONENT_ID]: { locationId: room1Id } },
         },
         {
           id: targetId,
           components: {
-            [NAME_COMPONENT_ID]: { text: 'Target' },
             [POSITION_COMPONENT_ID]: { locationId: room1Id },
             [ACTOR_COMPONENT_ID]: {},
           },
         },
-        {
-          id: room1Id,
-          components: { [NAME_COMPONENT_ID]: { text: 'Room 1' } },
-        },
+        { id: room1Id, components: {} },
       ];
 
       entityManager.setEntities(entities);
 
       const actorEntity = entityManager.getEntityInstance(actorId);
-      const context = {
-        entityManager,
-        jsonLogicEval,
-        location: entityManager.getEntityInstance(room1Id),
-        actingEntity: actorEntity,
-      };
+      const context = { jsonLogicEval };
 
       const result = await actionDiscoveryService.getValidActions(
         actorEntity,
@@ -236,26 +196,13 @@ describe('Scope Integration Tests', () => {
       const actorId = 'actor1';
       const roomId = 'room1';
 
-      const entities = [
-        {
-          id: actorId,
-          components: {
-            [NAME_COMPONENT_ID]: { text: 'Actor' },
-            [POSITION_COMPONENT_ID]: { locationId: roomId },
-          },
-        },
-        { id: roomId, components: { [NAME_COMPONENT_ID]: { text: 'Room 1' } } },
-      ];
-
-      entityManager.setEntities(entities);
+      entityManager.setEntities([
+        { id: actorId, components: { [POSITION_COMPONENT_ID]: { locationId: roomId } } },
+        { id: roomId, components: {} },
+      ]);
 
       const actorEntity = entityManager.getEntityInstance(actorId);
-      const context = {
-        entityManager,
-        jsonLogicEval,
-        location: entityManager.getEntityInstance(roomId),
-        actingEntity: actorEntity,
-      };
+      const context = { jsonLogicEval };
 
       const result = await actionDiscoveryService.getValidActions(
         actorEntity,
@@ -273,41 +220,21 @@ describe('Scope Integration Tests', () => {
       const room1Id = 'room1';
       const room2Id = 'room2';
 
-      const entities = [
-        {
-          id: actorId,
-          components: {
-            [NAME_COMPONENT_ID]: { text: 'Actor' },
-            [POSITION_COMPONENT_ID]: { locationId: room1Id },
-          },
-        },
+      entityManager.setEntities([
+        { id: actorId, components: { [POSITION_COMPONENT_ID]: { locationId: room1Id } } },
         {
           id: targetId,
           components: {
-            [NAME_COMPONENT_ID]: { text: 'Target' },
             [POSITION_COMPONENT_ID]: { locationId: room2Id },
             [ACTOR_COMPONENT_ID]: {},
           },
         },
-        {
-          id: room1Id,
-          components: { [NAME_COMPONENT_ID]: { text: 'Room 1' } },
-        },
-        {
-          id: room2Id,
-          components: { [NAME_COMPONENT_ID]: { text: 'Room 2' } },
-        },
-      ];
-
-      entityManager.setEntities(entities);
+        { id: room1Id, components: {} },
+        { id: room2Id, components: {} },
+      ]);
 
       const actorEntity = entityManager.getEntityInstance(actorId);
-      const context = {
-        entityManager,
-        jsonLogicEval,
-        location: entityManager.getEntityInstance(room1Id),
-        actingEntity: actorEntity,
-      };
+      const context = { jsonLogicEval };
 
       const result = await actionDiscoveryService.getValidActions(
         actorEntity,

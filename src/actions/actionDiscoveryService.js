@@ -1,15 +1,17 @@
+// src/actions/actionDiscoveryService.js
+
 // ────────────────────────────────────────────────────────────────────────────────
 // Type imports
 /** @typedef {import('../entities/entity.js').default} Entity */
-/** @typedef {import('../data/gameDataRepository.js').GameDataRepository} GameDataRepository */
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */
-/** @typedef {import('./validation/actionValidationService.js').ActionValidationService} ActionValidationService */
+/** @typedef {import('./validation/prerequisiteEvaluationService.js').PrerequisiteEvaluationService} PrerequisiteEvaluationService */
 /** @typedef {import('./actionFormatter.js').formatActionCommand} formatActionCommandFn */
 /** @typedef {import('./actionTypes.js').ActionContext} ActionContext */
 /** @typedef {import('../logging/consoleLogger.js').default} ILogger */
 /** @typedef {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 /** @typedef {import('../scopeDsl/scopeRegistry.js').default} ScopeRegistry */
 /** @typedef {import('./actionIndex.js').ActionIndex} ActionIndex */
+/** @typedef {import('./tracing/traceContext.js').TraceContext} TraceContext */
 
 import { ActionTargetContext } from '../models/actionTargetContext.js';
 import { IActionDiscoveryService } from '../interfaces/IActionDiscoveryService.js';
@@ -21,8 +23,9 @@ import { setupService } from '../utils/serviceInitializerUtils.js';
 import { getActorLocation } from '../utils/actorLocationUtils.js';
 import { safeDispatchError } from '../utils/safeDispatchErrorUtils.js';
 import { getEntityDisplayName } from '../utils/entityUtils.js';
-import { DomainContextIncompatibilityError } from '../errors/domainContextIncompatibilityError.js';
 import { parseDslExpression } from '../scopeDsl/parser.js';
+import { TraceContext as TraceContextImpl } from './tracing/traceContext.js';
+
 
 // ────────────────────────────────────────────────────────────────────────────────
 /**
@@ -31,9 +34,8 @@ import { parseDslExpression } from '../scopeDsl/parser.js';
  * @description Discovers valid actions for entities. Does not extend BaseService because it already inherits from IActionDiscoveryService.
  */
 export class ActionDiscoveryService extends IActionDiscoveryService {
-  #gameDataRepository;
   #entityManager;
-  #actionValidationService;
+  #prerequisiteEvaluationService;
   #formatActionCommandFn;
   #logger;
   #safeEventDispatcher;
@@ -45,9 +47,8 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
 
   /**
    * @param {object} deps
-   * @param {GameDataRepository} deps.gameDataRepository
    * @param {EntityManager}      deps.entityManager
-   * @param {ActionValidationService} deps.actionValidationService
+   * @param {PrerequisiteEvaluationService} deps.prerequisiteEvaluationService
    * @param {ActionIndex}        deps.actionIndex
    * @param {ILogger}            deps.logger
    * @param {formatActionCommandFn} deps.formatActionCommandFn
@@ -58,31 +59,25 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
    * @param {Function}           deps.getEntityDisplayNameFn
    */
   constructor({
-    gameDataRepository,
-    entityManager,
-    actionValidationService,
-    actionIndex,
-    logger,
-    formatActionCommandFn,
-    safeEventDispatcher,
-    scopeRegistry,
-    scopeEngine,
-    getActorLocationFn = getActorLocation,
-    getEntityDisplayNameFn = getEntityDisplayName,
-  }) {
+                entityManager,
+                prerequisiteEvaluationService, // New dependency for direct evaluation.
+                actionIndex,
+                logger,
+                formatActionCommandFn,
+                safeEventDispatcher,
+                scopeRegistry,
+                scopeEngine,
+                getActorLocationFn = getActorLocation,
+                getEntityDisplayNameFn = getEntityDisplayName,
+              }) {
     super();
     this.#logger = setupService('ActionDiscoveryService', logger, {
-      gameDataRepository: {
-        value: gameDataRepository,
-        requiredMethods: ['getAllActionDefinitions'],
-      },
       entityManager: {
         value: entityManager,
-        requiredMethods: ['getComponentData', 'getEntityInstance'],
       },
-      actionValidationService: {
-        value: actionValidationService,
-        requiredMethods: ['isValid'],
+      prerequisiteEvaluationService: {
+        value: prerequisiteEvaluationService,
+        requiredMethods: ['evaluate'],
       },
       actionIndex: {
         value: actionIndex,
@@ -102,9 +97,8 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
       },
     });
 
-    this.#gameDataRepository = gameDataRepository;
     this.#entityManager = entityManager;
-    this.#actionValidationService = actionValidationService;
+    this.#prerequisiteEvaluationService = prerequisiteEvaluationService;
     this.#actionIndex = actionIndex;
     this.#formatActionCommandFn = formatActionCommandFn;
     this.#safeEventDispatcher = safeEventDispatcher;
@@ -113,96 +107,44 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
     this.#getActorLocationFn = getActorLocationFn;
     this.#getEntityDisplayNameFn = getEntityDisplayNameFn;
 
-    this.#logger.debug('ActionDiscoveryService initialised.');
+    this.#logger.debug('ActionDiscoveryService initialised with streamlined logic.');
   }
 
   /**
-   * @description Builds a DiscoveredActionInfo object for a valid action.
-   * @param {import('../data/gameDataRepository.js').ActionDefinition} actionDef - The action definition.
-   * @param {Entity} actorEntity - The entity performing the action.
-   * @param {ActionTargetContext} targetCtx - The context of the action target.
-   * @param {object} formatterOptions - Options for formatting the command string.
-   * @param {object} params - Extra params to include in the result.
-   * @returns {import('../interfaces/IActionDiscoveryService.js').DiscoveredActionInfo|null} The info object or null.
-   * @throws {DomainContextIncompatibilityError} Propagates error from validation service.
+   * Checks if the actor meets the prerequisites for an action, in a target-agnostic context.
+   *
+   * @param {import('../data/gameDataRepository.js').ActionDefinition} actionDef The action to check.
+   * @param {Entity} actorEntity The entity performing the action.
+   * @param {TraceContext} [trace=null] The optional trace context for logging.
+   * @returns {boolean} True if the actor-state prerequisites pass.
+   * @private
    */
-  #buildDiscoveredAction(
-    actionDef,
-    actorEntity,
-    targetCtx,
-    formatterOptions,
-    params = {}
-  ) {
-    if (
-      !this.#actionValidationService.isValid(actionDef, actorEntity, targetCtx)
-    ) {
-      // This will now only be false for "normal" failures like prerequisites.
-      // Domain/context failures will throw an error, which is handled by #processActionDefinition.
-      return null;
+  #actorMeetsPrerequisites(actionDef, actorEntity, trace = null) {
+    if (!actionDef.prerequisites || actionDef.prerequisites.length === 0) {
+      return true; // No prerequisites to check.
     }
-
-    const formatResult = this.#formatActionCommandFn(
-      actionDef,
-      targetCtx,
-      this.#entityManager,
-      formatterOptions,
-      this.#getEntityDisplayNameFn
-    );
-    if (!formatResult.ok) {
-      return null;
-    }
-
-    const formattedCommand = formatResult.value;
-
-    return {
-      id: actionDef.id,
-      name: actionDef.name || actionDef.commandVerb,
-      command: formattedCommand,
-      description: actionDef.description || '',
-      params,
-    };
-  }
-
-  /**
-   * @description Handles discovery for actions targeting 'self' or having no target.
-   * @param {import('../data/gameDataRepository.js').ActionDefinition} actionDef
-   * @param {Entity} actorEntity
-   * @param {object} formatterOptions
-   * @returns {import('../interfaces/IActionDiscoveryService.js').DiscoveredActionInfo[]}
-   */
-  #handleSelfOrNone(actionDef, actorEntity, formatterOptions) {
-    const targetCtx =
-      actionDef.scope === TARGET_DOMAIN_SELF
-        ? ActionTargetContext.forEntity(actorEntity.id)
-        : ActionTargetContext.noTarget();
-
-    const action = this.#buildDiscoveredAction(
+    // Call to prerequisite evaluation is now simpler, as it no longer needs a target context.
+    return this.#prerequisiteEvaluationService.evaluate(
+      actionDef.prerequisites,
       actionDef,
       actorEntity,
-      targetCtx,
-      formatterOptions
+      trace // Pass trace down
     );
-
-    return [action].filter(Boolean);
   }
 
   /**
-   * @description Handles discovery for actions targeting entities via scope domains.
-   * @param {import('../data/gameDataRepository.js').ActionDefinition} actionDef
-   * @param {Entity} actorEntity
-   * @param {string} scopeName - The scope name.
-   * @param {ActionContext} context - Current action context.
-   * @param {object} formatterOptions - Formatter options.
-   * @returns {import('../interfaces/IActionDiscoveryService.js').DiscoveredActionInfo[]}
+   * Resolves a DSL scope expression to a set of entity IDs.
+   *
+   * @param {string} scopeName The name of the scope to resolve.
+   * @param {Entity} actorEntity The actor entity.
+   * @param {ActionContext} discoveryContext The context for discovery.
+   * @param {TraceContext} [trace=null] The optional trace context for logging.
+   * @returns {Set<string>} A set of target entity IDs.
+   * @private
    */
-  #handleScopedEntityActions(
-    actionDef,
-    actorEntity,
-    scopeName,
-    context,
-    formatterOptions
-  ) {
-    this.#logger.debug(`Resolving scope '${scopeName}' with DSL`);
+  #resolveScopeToIds(scopeName, actorEntity, discoveryContext, trace = null) {
+    const source = 'ActionDiscoveryService.#resolveScopeToIds';
+    trace?.addLog('info', `Resolving scope '${scopeName}' with DSL.`, source);
     const scopeDefinition = this.#scopeRegistry.getScope(scopeName);
 
     if (
@@ -211,28 +153,26 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
       !scopeDefinition.expr.trim()
     ) {
       const errorMessage = `Missing scope definition: Scope '${scopeName}' not found or has no expression in registry.`;
+      trace?.addLog('warn', errorMessage, source, { scopeName });
       this.#logger.warn(errorMessage);
       safeDispatchError(this.#safeEventDispatcher, errorMessage, { scopeName });
-      return [];
+      return new Set();
     }
 
-    let targetIds;
     try {
       const ast = parseDslExpression(scopeDefinition.expr);
 
-      // The scope engine needs a specific 'runtime context', not the general 'action context'.
       const runtimeCtx = {
         entityManager: this.#entityManager,
-        // FIX: Defensively default jsonLogicEval to an empty object if not provided.
-        jsonLogicEval: context.jsonLogicEval || {},
+        jsonLogicEval: discoveryContext.jsonLogicEval || {},
         logger: this.#logger,
         actor: actorEntity,
-        location: context.currentLocation, // Use currentLocation prepared by #prepareDiscoveryContext
+        location: discoveryContext.currentLocation,
       };
 
-      targetIds =
-        this.#scopeEngine.resolve(ast, actorEntity, runtimeCtx) ?? new Set();
+      return this.#scopeEngine.resolve(ast, actorEntity, runtimeCtx, trace) ?? new Set();
     } catch (error) {
+      trace?.addLog('error', `Error resolving scope '${scopeName}': ${error.message}`, source, { error: error.message, stack: error.stack });
       this.#logger.error(
         `Error resolving scope '${scopeName}' with DSL:`,
         error
@@ -242,87 +182,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
         `Error resolving scope '${scopeName}': ${error.message}`,
         { error: error.message, stack: error.stack }
       );
-      return [];
-    }
-
-    /** @type {import('../interfaces/IActionDiscoveryService.js').DiscoveredActionInfo[]} */
-    const discoveredActions = [];
-
-    for (const targetId of targetIds) {
-      const targetCtx = ActionTargetContext.forEntity(targetId);
-
-      const action = this.#buildDiscoveredAction(
-        actionDef,
-        actorEntity,
-        targetCtx,
-        formatterOptions,
-        { targetId }
-      );
-
-      if (action) {
-        discoveredActions.push(action);
-      }
-    }
-
-    return discoveredActions;
-  }
-
-  /**
-   * @description Processes a single action definition using the appropriate
-   * handler. Errors are safely dispatched and result in no actions returned.
-   * @param {import('../data/gameDataRepository.js').ActionDefinition} actionDef
-   * @param {Entity} actorEntity
-   * @param {ActionContext} context
-   * @param {object} formatterOptions
-   * @returns {{actions: import('../interfaces/IActionDiscoveryService.js').DiscoveredActionInfo[], errors: Error[]}}
-   */
-  #processActionDefinition(actionDef, actorEntity, context, formatterOptions) {
-    const scope = actionDef.scope;
-    try {
-      let actions;
-      if (scope === TARGET_DOMAIN_NONE || scope === TARGET_DOMAIN_SELF) {
-        actions = this.#handleSelfOrNone(
-          actionDef,
-          actorEntity,
-          formatterOptions
-        );
-      } else {
-        actions = this.#handleScopedEntityActions(
-          actionDef,
-          actorEntity,
-          scope,
-          context,
-          formatterOptions
-        );
-      }
-      return { actions, errors: [] };
-    } catch (err) {
-      if (err instanceof DomainContextIncompatibilityError) {
-        const detailsPayload = {
-          actionId: err.actionId,
-          actorId: err.actorId,
-          targetId: err.targetId,
-          expectedScope: err.expectedScope,
-          actualContextType: err.contextType,
-        };
-
-        safeDispatchError(
-          this.#safeEventDispatcher,
-          `Domain/Context Incompatibility: ${err.message}`,
-          {
-            raw: JSON.stringify(detailsPayload, null, 2),
-            stack: err.stack,
-            timestamp: new Date().toISOString(),
-          }
-        );
-      } else {
-        safeDispatchError(
-          this.#safeEventDispatcher,
-          `ActionDiscoveryService: Error processing action ${actionDef.id} for actor ${actorEntity.id}.`,
-          { error: err.message, stack: err.stack }
-        );
-      }
-      return { actions: [], errors: [err] };
+      return new Set();
     }
   }
 
@@ -331,6 +191,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
    * @param {Entity} actorEntity
    * @param {ActionContext} context
    * @returns {ActionContext}
+   * @private
    */
   #prepareDiscoveryContext(actorEntity, context) {
     const discoveryContext = { ...context };
@@ -346,28 +207,29 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
   }
 
   /**
-   * @param {Entity} actorEntity
-   * @param {ActionContext} context
+   * Finds and validates all available actions for an actor.
+   * Can optionally trace the entire discovery process for debugging.
+   *
+   * @param {Entity} actorEntity The entity for whom to find actions.
+   * @param {ActionContext} context The current action context.
+   * @param {object} [options={}] Optional settings.
+   * @param {boolean} [options.trace=false] - If true, generates a detailed trace of the discovery process.
    * @returns {Promise<import('../interfaces/IActionDiscoveryService.js').DiscoveredActionsResult>}
    */
-  async getValidActions(actorEntity, context) {
-    // Handle null actorEntity gracefully
+  async getValidActions(actorEntity, context, options = {}) {
+    const { trace: shouldTrace = false } = options;
+    const trace = shouldTrace ? new TraceContextImpl() : null;
+    const source = 'ActionDiscoveryService.getValidActions';
+
     if (!actorEntity) {
       this.#logger.debug('Actor entity is null; returning empty result.');
-      return { actions: [], errors: [] };
+      return { actions: [], errors: [], trace: null };
     }
 
-    this.#logger.debug(
-      `Starting action discovery for actor: ${actorEntity.id}`
-    );
+    trace?.addLog('info', `Starting action discovery for actor '${actorEntity.id}'.`, source, { withTrace: shouldTrace });
 
-    // ---- THIS IS THE KEY CHANGE ----
-    const candidateDefs = this.#actionIndex.getCandidateActions(actorEntity);
-    // --------------------------------
-
-    /** @type {import('../interfaces/IActionDiscoveryService.js').DiscoveredActionInfo[]} */
+    const candidateDefs = this.#actionIndex.getCandidateActions(actorEntity, trace);
     const validActions = [];
-    /** @type {Error[]} */
     const errors = [];
 
     const formatterOptions = {
@@ -376,28 +238,86 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
       safeEventDispatcher: this.#safeEventDispatcher,
     };
 
-    // Prepare context for this discovery operation
-    const discoveryContext = this.#prepareDiscoveryContext(
-      actorEntity,
-      context
-    );
+    const discoveryContext = this.#prepareDiscoveryContext(actorEntity, context);
 
-    /* ── iterate over the SMALLER candidate list ────────────────────── */
     for (const actionDef of candidateDefs) {
-      const { actions, errors: discoveredErrors } =
-        this.#processActionDefinition(
-          actionDef,
-          actorEntity,
-          discoveryContext,
-          formatterOptions
+      trace?.addLog('step', `Processing candidate action: '${actionDef.id}'`, source);
+
+      // STEP 1: Check actor-only prerequisites ONCE per action.
+      if (!this.#actorMeetsPrerequisites(actionDef, actorEntity, trace)) {
+        trace?.addLog('failure', `Action '${actionDef.id}' discarded due to failed actor prerequisites.`, source);
+        this.#logger.debug(
+          `Actor '${actorEntity.id}' failed actor-only prerequisites for action '${actionDef.id}'. Skipping.`
         );
-      validActions.push(...actions);
-      errors.push(...discoveredErrors);
-    }
+        continue;
+      }
+      trace?.addLog('success', `Action '${actionDef.id}' passed actor prerequisite check.`, source);
+
+
+      // STEP 2: If actor state is valid, resolve the scope to get all valid targets.
+      const scope = actionDef.scope;
+      let targetContexts = [];
+      let targetIds = new Set();
+
+      if (scope === TARGET_DOMAIN_NONE) {
+        targetContexts.push(ActionTargetContext.noTarget());
+        trace?.addLog('info', `Action '${actionDef.id}' has scope 'none'; skipping DSL resolution.`, source);
+      } else if (scope === TARGET_DOMAIN_SELF) {
+        targetIds.add(actorEntity.id);
+        targetContexts.push(ActionTargetContext.forEntity(actorEntity.id));
+        trace?.addLog('info', `Action '${actionDef.id}' has scope 'self'; target is actor.`, source, { targetIds: [actorEntity.id] });
+      } else {
+        // For DSL scopes, resolve to get all valid target IDs.
+        targetIds = this.#resolveScopeToIds(scope, actorEntity, discoveryContext, trace);
+        for (const targetId of targetIds) {
+          targetContexts.push(ActionTargetContext.forEntity(targetId));
+        }
+      }
+
+      trace?.addLog('info', `Scope for action '${actionDef.id}' resolved to ${targetIds.size} potential targets.`, source, { targetIds: Array.from(targetIds) });
+
+      if (targetContexts.length === 0) {
+        this.#logger.debug(
+          `Action '${actionDef.id}' resolved to 0 targets. Skipping.`
+        );
+        continue;
+      }
+
+      // STEP 3: Generate DiscoveredActionInfo for all valid targets.
+      for (const targetCtx of targetContexts) {
+        const formatResult = this.#formatActionCommandFn(
+          actionDef,
+          targetCtx,
+          this.#entityManager,
+          formatterOptions,
+          this.#getEntityDisplayNameFn
+        );
+        if (formatResult.ok) {
+          validActions.push({
+            id: actionDef.id,
+            name: actionDef.name || actionDef.commandVerb,
+            command: formatResult.value,
+            description: actionDef.description || '',
+            params: { targetId: targetCtx.entityId },
+          });
+        } else {
+          errors.push({
+            actionId: actionDef.id,
+            targetId: targetCtx.entityId,
+            error: formatResult.error,
+          });
+          this.#logger.warn(
+            `Failed to format command for action '${actionDef.id}' with target '${targetCtx.entityId}'.`
+          );
+        }
+      }
+    } // --- End of loop over candidateDefs ---
 
     this.#logger.debug(
       `Finished action discovery for actor ${actorEntity.id}. Found ${validActions.length} actions from ${candidateDefs.length} candidates.`
     );
-    return { actions: validActions, errors };
+    trace?.addLog('info', `Finished discovery. Found ${validActions.length} valid actions.`, source);
+
+    return { actions: validActions, errors, trace };
   }
 }

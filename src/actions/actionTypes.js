@@ -1,14 +1,12 @@
 // src/actions/actionTypes.js
 
 // Ensure necessary imports for type hinting (won't be executed at runtime)
-/** @typedef {import('../interfaces/IGameDataRepository.js').IGameDataRepository} IGameDataRepository */ // <<< CHANGED (path adjusted)
-/** @typedef {import('../interfaces/IEntityManager.js').IEntityManager} IEntityManager */ // <<< CHANGED (path adjusted)
+/** @typedef {import('../interfaces/IGameDataRepository.js').IGameDataRepository} IGameDataRepository */
+/** @typedef {import('../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
 /** @typedef {import('../entities/entity.js').default} Entity */
 /** @typedef {import('../events/eventBus.js').default} EventBus */ // Assuming EventBus might be an interface or a concrete type used directly
 /** @typedef {import('../constants/eventIds.js').ATTEMPT_ACTION_ID} ATTEMPT_ACTION_ID */
-// --- ADDED Import for ActionTargetContext ---
-/** @typedef {import('../models/actionTargetContext.js').ActionTargetContext} ActionTargetContext */
-// --- ADDED Import for ActionDefinition (used in ActionAttemptPseudoEvent) ---
+// --- REMOVED Import for ActionTargetContext as it's no longer used here ---
 /** @typedef {import('../interfaces/IGameDataRepository.js').ActionDefinition} ActionDefinition */
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */ // Added for ActionContext
 /** @typedef {import('../interfaces/IWorldContext.js').IWorldContext} IWorldContext */ // Added for ActionContext
@@ -23,8 +21,8 @@
  * @typedef {object} ActionContext
  * @property {Entity} actingEntity - The entity instance (player, NPC, etc.) performing the action.
  * @property {Entity | null} currentLocation - The entity instance representing the acting entity's current location. Can be null.
- * @property {IGameDataRepository} gameDataRepository - Provides access to loaded game definition data. // <<< CHANGED
- * @property {IEntityManager} entityManager - The manager for creating and tracking entity instances. // <<< CHANGED
+ * @property {IGameDataRepository} gameDataRepository - Provides access to loaded game definition data.
+ * @property {IEntityManager} entityManager - The manager for creating and tracking entity instances.
  * @property {{dispatch: (eventName: string, eventData: object) => Promise<boolean>}} eventBus - Shim for validated event dispatch.
  * @property {IValidatedEventDispatcher} validatedEventDispatcher - For dispatching validated events.
  * @property {ILogger} logger - The logger instance.
@@ -60,8 +58,7 @@
  * @property {ATTEMPT_ACTION_ID} eventType - Discriminator indicating the nature of this object.
  * @property {string} actionId - The ID of the action being attempted (e.g., 'core:move').
  * @property {string} actorId - The ID of the entity attempting the action.
- * @property {ActionTargetContext} targetContext - The resolved target context for this specific attempt.
- * @property {ActionDefinition} actionDefinition - The full definition of the action being attempted. // Added for more context
+ * @property {ActionDefinition} actionDefinition - The full definition of the action being attempted.
  */
 // +++ END TICKET 6 +++
 

@@ -4,11 +4,9 @@
 
 import { describe, it, beforeEach, expect, jest } from '@jest/globals';
 import turnStartedRule from '../../../data/mods/core/rules/turn_started.rule.json';
-import eventIsTurnStarted from '../../../data/mods/core/conditions/event-is-turn_started.condition.json';
 import SetVariableHandler from '../../../src/logic/operationHandlers/setVariableHandler.js';
 import DispatchEventHandler from '../../../src/logic/operationHandlers/dispatchEventHandler.js';
 import AddComponentHandler from '../../../src/logic/operationHandlers/addComponentHandler.js';
-import jsonLogic from 'json-logic-js';
 import { TURN_STARTED_ID } from '../../../src/constants/eventIds.js';
 import { createRuleTestEnvironment } from '../../common/engine/systemLogicTestEnv.js';
 

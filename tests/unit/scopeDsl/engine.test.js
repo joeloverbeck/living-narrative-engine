@@ -1,8 +1,11 @@
+// tests/unit/src/scopeDsl/engine.test.js
+
 /**
  * @file Unit tests for Scope-DSL Engine
  * @description Tests for src/scopeDsl/engine.js - AST walker/query engine
  */
 
+import { jest, describe, beforeEach, it, expect } from '@jest/globals';
 import ScopeEngine from '../../../src/scopeDsl/engine.js';
 import { parseDslExpression } from '../../../src/scopeDsl/parser.js';
 import ScopeDepthError from '../../../src/errors/scopeDepthError.js';
@@ -30,6 +33,11 @@ const mockLogger = {
   debug: jest.fn(),
   warn: jest.fn(),
   error: jest.fn(),
+};
+
+// Mock TraceContext for instrumentation tests
+const mockTraceContext = {
+  addLog: jest.fn(),
 };
 
 const mockRuntimeCtx = {
@@ -188,7 +196,7 @@ describe('ScopeEngine', () => {
         // For this test, we can assume the filter works; we are testing the subsequent step.
 
         // We mock what the filter step would return: a Set of the two unlocked exit objects.
-        // To do this, we need to mock the parent resolution. We can simplify by mocking the direct data access.
+        // To do this, we need to mock the direct data access.
         mockEntityManager.getComponentData.mockImplementation(
           (entityId, componentName) => {
             if (entityId === actorId && componentName === 'core:exits') {
@@ -547,6 +555,134 @@ describe('ScopeEngine', () => {
           engine.resolve(nodeA, actorEntity, mockRuntimeCtx);
         }).not.toThrow(ScopeCycleError);
       });
+    });
+  });
+
+  // New tests for tracing instrumentation
+  describe('Tracing Instrumentation', () => {
+    beforeEach(() => {
+      // Reset mocks before each test in this suite
+      mockTraceContext.addLog.mockClear();
+    });
+
+    test('resolve() should log start and end of resolution', () => {
+      const ast = parseDslExpression('actor');
+      engine.resolve(ast, actorEntity, mockRuntimeCtx, mockTraceContext);
+
+      // Check for start log
+      expect(mockTraceContext.addLog).toHaveBeenCalledWith(
+        'step',
+        'Starting scope resolution.',
+        'ScopeEngine',
+        { ast }
+      );
+
+      // Check for end log
+      expect(mockTraceContext.addLog).toHaveBeenCalledWith(
+        'success',
+        'Scope resolution finished. Found 1 target(s).',
+        'ScopeEngine',
+        { targets: [actorId] }
+      );
+    });
+
+    test('resolveSource() should log the result of resolving the source node', () => {
+      const ast = parseDslExpression('actor');
+      engine.resolve(ast, actorEntity, mockRuntimeCtx, mockTraceContext);
+
+      expect(mockTraceContext.addLog).toHaveBeenCalledWith(
+        'info',
+        "Resolved source 'actor'. Found 1 item(s).",
+        'ScopeEngine.resolveSource',
+        {
+          kind: 'actor',
+          param: undefined,
+          result: [actorId],
+        }
+      );
+    });
+
+    test('resolveFilter() should log before and after counts', () => {
+      const ast = parseDslExpression(
+        'entities(core:item)[][{"==": [{"var": "entity.id"}, "item1"]}]'
+      );
+      const logic = { '==': [{ var: 'entity.id' }, 'item1'] };
+      const entities = [{ id: 'item1' }, { id: 'item2' }];
+      mockEntityManager.getEntitiesWithComponent.mockReturnValue(entities);
+      mockJsonLogicEval.evaluate.mockImplementation(
+        (l, context) => context.entity.id === 'item1'
+      );
+      mockEntityManager.getEntityInstance.mockImplementation((id) => ({ id }));
+
+      engine.resolve(ast, actorEntity, mockRuntimeCtx, mockTraceContext);
+
+      // Check for "before" log
+      expect(mockTraceContext.addLog).toHaveBeenCalledWith(
+        'info',
+        'Applying filter to 2 items.',
+        'ScopeEngine.resolveFilter',
+        { logic }
+      );
+
+      // Check for "after" log
+      expect(mockTraceContext.addLog).toHaveBeenCalledWith(
+        'info',
+        'Filter application complete. 1 of 2 items passed.',
+        'ScopeEngine.resolveFilter'
+      );
+    });
+
+
+
+    test('should pass trace object through resolveStep and resolveUnion', () => {
+      // Union -> Step -> Filter
+      const ast = parseDslExpression(
+        'actor.exits[][{"==":[{"var":"locked"},false]}] + location'
+      );
+      const exitsData = [
+        { id: 'exit1', locked: false },
+        { id: 'exit2', locked: true },
+      ];
+      const logic = { '==': [{ var: 'locked' }, false] };
+
+      mockEntityManager.getComponentData.mockReturnValue(exitsData);
+      mockJsonLogicEval.evaluate.mockImplementation(
+        (l, context) => !context.entity.locked
+      );
+      // For the filter step, `item` is an object, not an entity ID
+      mockEntityManager.getEntityInstance.mockImplementation((id) =>
+        id === 'loc456' ? { id } : undefined
+      );
+
+      const runtimeCtxWithLocation = {
+        ...mockRuntimeCtx,
+        location: { id: 'loc456' },
+      };
+
+      engine.resolve(ast, actorEntity, runtimeCtxWithLocation, mockTraceContext);
+
+      // Verify that the filter inside the step was traced
+      expect(mockTraceContext.addLog).toHaveBeenCalledWith(
+        'info',
+        'Applying filter to 2 items.',
+        'ScopeEngine.resolveFilter',
+        { logic }
+      );
+      expect(mockTraceContext.addLog).toHaveBeenCalledWith(
+        'info',
+        'Filter application complete. 1 of 2 items passed.',
+        'ScopeEngine.resolveFilter'
+      );
+
+      // Verify the final result includes items from both sides of the union
+      const finalCall = mockTraceContext.addLog.mock.calls.find(
+        (call) => call[1] === 'Scope resolution finished. Found 2 target(s).'
+      );
+      expect(finalCall).not.toBeUndefined();
+      // The order in the set can vary, so we check the contents.
+      expect(new Set(finalCall[3].targets)).toEqual(
+        new Set([exitsData[0], 'loc456'])
+      );
     });
   });
 });

@@ -46,15 +46,14 @@ export class AvailableActionsProvider extends IAvailableActionsProvider {
    * @param {ILogger} dependencies.logger
    */
   constructor({
-    actionDiscoveryService,
-    actionIndexingService: actionIndexer,
-    entityManager,
-    jsonLogicEvaluationService,
-    logger,
-  }) {
+                actionDiscoveryService,
+                actionIndexingService: actionIndexer,
+                entityManager,
+                jsonLogicEvaluationService,
+                logger,
+              }) {
     super();
 
-    // FIX: Added validation for the jsonLogicEvaluationService
     this.#logger = setupService('AvailableActionsProvider', logger, {
       actionDiscoveryService: {
         value: actionDiscoveryService,
@@ -92,7 +91,6 @@ export class AvailableActionsProvider extends IAvailableActionsProvider {
    * @returns {Promise<ActionComposite[]>}
    */
   async get(actor, turnContext, logger) {
-    // If the turn context object changes, we assume it's a new turn and clear the cache.
     if (this.#lastTurnContext !== turnContext) {
       this.#lastTurnContext = turnContext;
       this.#cachedActions.clear();
@@ -101,7 +99,6 @@ export class AvailableActionsProvider extends IAvailableActionsProvider {
       );
     }
 
-    // Check the cache for the actor's actions first.
     const cacheKey = actor.id;
     if (this.#cachedActions.has(cacheKey)) {
       logger.debug(
@@ -130,8 +127,23 @@ export class AvailableActionsProvider extends IAvailableActionsProvider {
         logger,
       };
 
-      const { actions: discoveredActions } =
-        await this.#actionDiscoveryService.getValidActions(actor, actionCtx);
+      const { actions: discoveredActions, errors, trace } =
+        await this.#actionDiscoveryService.getValidActions(actor, actionCtx, { trace: true });
+
+      if (trace && logger.table && logger.groupCollapsed && logger.groupEnd) {
+        logger.debug(`[Action Discovery Trace for actor ${actor.id}]`);
+        logger.groupCollapsed(`Action Discovery Trace for ${actor.id}`);
+        logger.table(trace.logs);
+        logger.groupEnd();
+      }
+
+      // --- Log any formatting errors that occurred ---
+      if (errors && errors.length > 0) {
+        logger.warn(`Encountered ${errors.length} formatting error(s) during action discovery for actor ${actor.id}. These actions will not be available.`);
+        errors.forEach(err => {
+          logger.warn(`  - Action '${err.actionId}' (Target: ${err.targetId || 'N/A'}): ${err.error}`);
+        });
+      }
 
       // Index the discovered actions to create the final, ordered list.
       const indexedActions = this.#actionIndexer.index(
@@ -139,7 +151,6 @@ export class AvailableActionsProvider extends IAvailableActionsProvider {
         actor.id
       );
 
-      // When the indexing service caps the list, mirror its warning with richer context.
       const requestedCount = discoveredActions.length;
       const cappedCount = indexedActions.length;
 
@@ -152,7 +163,6 @@ export class AvailableActionsProvider extends IAvailableActionsProvider {
         );
       }
 
-      // Store the result in the cache before returning.
       this.#cachedActions.set(cacheKey, indexedActions);
 
       return indexedActions;
@@ -161,7 +171,6 @@ export class AvailableActionsProvider extends IAvailableActionsProvider {
         `AvailableActionsProvider: Error discovering/indexing actions for ${actor.id}: ${err.message}`,
         err
       );
-      // On error, return an empty list as a safeguard.
       return [];
     }
   }

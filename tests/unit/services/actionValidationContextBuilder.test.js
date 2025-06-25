@@ -306,35 +306,6 @@ describe('ActionValidationContextBuilder', () => {
         );
       });
 
-      it('should throw Error and log error for null targetContext', () => {
-        const action = () =>
-          builder.buildContext(sampleActionDefinition, mockActor, null);
-        expect(action).toThrow(
-          'ActionValidationContextBuilder.buildContext: invalid ActionTargetContext'
-        );
-        expect(mockLogger.error).toHaveBeenCalledWith(
-          expect.stringContaining('Invalid targetContext provided'),
-          { targetContext: null }
-        );
-      });
-
-      it('should throw Error and log error for targetContext without type', () => {
-        const invalidTargetContext = { entityId: 'some-id' };
-        const action = () =>
-          builder.buildContext(
-            sampleActionDefinition,
-            mockActor,
-            invalidTargetContext
-          );
-        expect(action).toThrow(
-          'ActionValidationContextBuilder.buildContext: invalid ActionTargetContext'
-        );
-        expect(mockLogger.error).toHaveBeenCalledWith(
-          expect.stringContaining('Invalid targetContext provided'),
-          { targetContext: invalidTargetContext }
-        );
-      });
-
       it('should prioritize actionDefinition validation when all inputs are missing', () => {
         const action = () => builder.buildContext(null, null, null);
         expect(action).toThrow(

@@ -8,8 +8,8 @@
  *
  * @param {Error} err - The original error.
  * @param {string} source - Label for the calling function.
- * @param {{actionId?: string, actorId?: string, contextType?: string}} ids
- *  Identifier info used in the message.
+ * @param {{actionId?: string, actorId?: string}} ids
+ * Identifier info used in the message. The `contextType` property is no longer used.
  * @returns {Error} A new Error instance with the formatted message.
  */
 export function formatValidationError(err, source, ids) {
@@ -18,9 +18,9 @@ export function formatValidationError(err, source, ids) {
     idInfo = `(id: ${ids.actionId})`;
   } else if (err.message === 'Invalid actor entity') {
     idInfo = `(id: ${ids.actorId})`;
-  } else if (err.message === 'Invalid ActionTargetContext') {
-    idInfo = `(type: ${ids.contextType})`;
   }
+  // Branch for 'Invalid ActionTargetContext' removed as it's no longer thrown.
+
   const msg = err.message
     ? err.message.charAt(0).toLowerCase() + err.message.slice(1)
     : 'invalid input';

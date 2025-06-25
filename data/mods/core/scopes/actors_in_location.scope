@@ -2,7 +2,7 @@ actors_in_location := entities(core:position)[
     {
   "and": [
     { "condition_ref": "core:entity-at-location" },
-    { "condition_ref": "core:entity-is-not-actor" },
+    { "condition_ref": "core:entity-is-not-current-actor" },
     { "condition_ref": "core:entity-has-actor-component" }
   ]
 }]

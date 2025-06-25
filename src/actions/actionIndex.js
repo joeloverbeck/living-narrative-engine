@@ -1,7 +1,10 @@
+// src/actions/actionIndex.js
+
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../data/gameDataRepository.js').ActionDefinition} ActionDefinition */
 /** @typedef {import('../entities/entity.js').default} Entity */
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */
+/** @typedef {import('./inspection/traceContext.js').TraceContext} TraceContext */
 
 export class ActionIndex {
   /** @type {ILogger} */
@@ -12,6 +15,7 @@ export class ActionIndex {
   /**
    * A map where keys are component IDs and values are arrays of ActionDefinitions
    * that require that component on the actor.
+   *
    * @type {Map<string, ActionDefinition[]>}
    */
   #byActorComponent = new Map();
@@ -19,12 +23,15 @@ export class ActionIndex {
   /**
    * An array of ActionDefinitions that have no specific actor component requirements.
    * These are always included as candidates.
+   *
    * @type {ActionDefinition[]}
    */
   #noActorRequirement = [];
 
   /**
-   * @param {{logger: ILogger, entityManager: EntityManager}} deps
+   * Instantiates ActionIndex.
+   *
+   * @param {{logger: ILogger, entityManager: EntityManager}} deps ActionIndex's dependencies.
    */
   constructor({ logger, entityManager }) {
     if (!logger) {
@@ -33,7 +40,7 @@ export class ActionIndex {
     if (!entityManager) {
       throw new Error('ActionIndex requires an entityManager dependency');
     }
-    
+
     this.#logger = logger;
     this.#entityManager = entityManager;
     this.#logger.debug('ActionIndex initialised.');
@@ -42,7 +49,8 @@ export class ActionIndex {
   /**
    * Builds the index from a list of all action definitions.
    * This should be called once at application startup.
-   * @param {ActionDefinition[]} allActionDefinitions
+   *
+   * @param {ActionDefinition[]} allActionDefinitions An array containing all action definition objects in the app.
    */
   buildIndex(allActionDefinitions) {
     if (!Array.isArray(allActionDefinitions)) {
@@ -51,7 +59,7 @@ export class ActionIndex {
     }
 
     this.#logger.debug(`Building action index from ${allActionDefinitions.length} definitions...`);
-    
+
     this.#byActorComponent.clear();
     this.#noActorRequirement = [];
 
@@ -83,28 +91,26 @@ export class ActionIndex {
   /**
    * Retrieves a pre-filtered list of candidate actions for a given actor
    * based on the components they possess.
-   * @param {Entity} actorEntity
+   *
+   * @param {Entity} actorEntity The entity that could perform an action.
+   * @param {TraceContext} [trace] The TraceContext object that contains the logs of the action discovery process.
    * @returns {ActionDefinition[]} A unique list of candidate action definitions.
    */
-  getCandidateActions(actorEntity) {
+  getCandidateActions(actorEntity, trace = null) {
+    const source = 'ActionIndex.getCandidateActions';
     if (!actorEntity || !actorEntity.id) return [];
 
-    // Assumes the prerequisite method from step 1 exists.
-    const actorComponentTypes = this.#entityManager.getAllComponentTypesForEntity(actorEntity.id);
-
-    // Handle null or undefined return values
-    if (!actorComponentTypes || !Array.isArray(actorComponentTypes)) {
-      this.#logger.debug(`ActionIndex: Retrieved ${this.#noActorRequirement.length} candidate actions for actor ${actorEntity.id}.`);
-      return [...this.#noActorRequirement];
-    }
+    const actorComponentTypes = this.#entityManager.getAllComponentTypesForEntity(actorEntity.id) || [];
+    trace?.addLog('data', `Actor '${actorEntity.id}' has components.`, source, { components: actorComponentTypes });
 
     // Use a Set to automatically handle de-duplication.
-    // An action requiring two components the actor has would otherwise be added twice.
     const candidateSet = new Set(this.#noActorRequirement);
+    trace?.addLog('info', `Added ${this.#noActorRequirement.length} actions with no actor component requirements.`, source);
 
     for (const componentType of actorComponentTypes) {
       const actionsForComponent = this.#byActorComponent.get(componentType);
       if (actionsForComponent) {
+        trace?.addLog('info', `Found ${actionsForComponent.length} actions requiring component '${componentType}'.`, source);
         for (const action of actionsForComponent) {
           candidateSet.add(action);
         }
@@ -112,7 +118,9 @@ export class ActionIndex {
     }
 
     const candidates = Array.from(candidateSet);
+    trace?.addLog('success', `Final candidate list contains ${candidates.length} unique actions.`, source, { actionIds: candidates.map(a => a.id) });
+
     this.#logger.debug(`ActionIndex: Retrieved ${candidates.length} candidate actions for actor ${actorEntity.id}.`);
     return candidates;
   }
-} 
+}

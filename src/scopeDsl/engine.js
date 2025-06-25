@@ -1,3 +1,5 @@
+// src/scopeDsl/engine.js
+
 /**
  * @file Scope-DSL Engine
  * @description AST walker/query engine that resolves Scope-DSL expressions to sets of entity IDs
@@ -8,11 +10,19 @@ import ScopeCycleError from '../errors/scopeCycleError.js';
 import { IScopeEngine } from '../interfaces/IScopeEngine.js';
 
 /**
+ * @typedef {import('../interfaces/IEntityManager.js').IEntityManager} IEntityManager
+ * @typedef {import('../interfaces/ISpatialIndexManager.js').ISpatialIndexManager} ISpatialIndexManager
+ * @typedef {import('../logic/jsonLogicEvaluationService.js').default} JsonLogicEval
+ * @typedef {import('../interfaces/coreServices.js').ILogger} ILogger
+ * @typedef {import('../actions/tracing/traceContext.js').TraceContext} TraceContext
+ */
+
+/**
  * @typedef {object} RuntimeContext
- * @property {import('../interfaces/IEntityManager.js').IEntityManager} entityManager
- * @property {import('../interfaces/ISpatialIndexManager.js').ISpatialIndexManager} spatialIndexManager
- * @property {import('../logic/jsonLogicEvaluationService.js').default} jsonLogicEval
- * @property {import('../interfaces/coreServices.js').ILogger} logger
+ * @property {IEntityManager} entityManager
+ * @property {ISpatialIndexManager} spatialIndexManager
+ * @property {JsonLogicEval} jsonLogicEval
+ * @property {ILogger} logger
  */
 
 /**
@@ -49,12 +59,25 @@ class ScopeEngine extends IScopeEngine {
    * @param {AST} ast - The parsed AST
    * @param {object} actorEntity - The acting entity instance.
    * @param {RuntimeContext} runtimeCtx - Runtime context with services
+   * @param {TraceContext} [trace=null] - Optional trace context for logging.
    * @returns {Set<string>} Set of entity IDs
    * @throws {ScopeDepthError} When expression depth exceeds maxDepth
    * @throws {ScopeCycleError} When a cycle is detected
    */
-  resolve(ast, actorEntity, runtimeCtx) {
-    return this.resolveNode(ast, actorEntity, runtimeCtx, 0, []);
+  resolve(ast, actorEntity, runtimeCtx, trace = null) {
+    const source = 'ScopeEngine';
+    trace?.addLog('step', 'Starting scope resolution.', source, { ast });
+
+    const result = this.resolveNode(ast, actorEntity, runtimeCtx, 0, [], trace);
+
+    const finalTargets = Array.from(result);
+    trace?.addLog(
+      'success',
+      `Scope resolution finished. Found ${result.size} target(s).`,
+      source,
+      { targets: finalTargets }
+    );
+    return result;
   }
 
   /**
@@ -65,10 +88,11 @@ class ScopeEngine extends IScopeEngine {
    * @param {RuntimeContext} runtimeCtx - Runtime context
    * @param {number} depth - Current depth level
    * @param {Array<string>} path - Path of visited node/edge keys
-   * @returns {Set<string>} Set of entity IDs
+   * @param {TraceContext} [trace=null] - Optional trace context for logging.
+   * @returns {Set<any>} Set of entity IDs or resolved objects
    * @private
    */
-  resolveNode(node, actorEntity, runtimeCtx, depth, path) {
+  resolveNode(node, actorEntity, runtimeCtx, depth, path, trace = null) {
     if (depth > this.maxDepth) {
       throw new ScopeDepthError(
         `Expression depth limit exceeded (max ${this.maxDepth})`,
@@ -88,16 +112,24 @@ class ScopeEngine extends IScopeEngine {
     const nextPath = [...path, nodeKey];
     switch (node.type) {
       case 'Source':
-        return this.resolveSource(node, actorEntity, runtimeCtx);
+        return this.resolveSource(node, actorEntity, runtimeCtx, trace);
       case 'Step':
-        return this.resolveStep(node, actorEntity, runtimeCtx, depth, nextPath);
+        return this.resolveStep(
+          node,
+          actorEntity,
+          runtimeCtx,
+          depth,
+          nextPath,
+          trace
+        );
       case 'Filter':
         return this.resolveFilter(
           node,
           actorEntity,
           runtimeCtx,
           depth,
-          nextPath
+          nextPath,
+          trace
         );
       case 'Union':
         return this.resolveUnion(
@@ -105,7 +137,8 @@ class ScopeEngine extends IScopeEngine {
           actorEntity,
           runtimeCtx,
           depth,
-          nextPath
+          nextPath,
+          trace
         );
       default:
         runtimeCtx.logger.error(`Unknown AST node type: ${node.type}`);
@@ -119,20 +152,23 @@ class ScopeEngine extends IScopeEngine {
    * @param {AST} node - Source node
    * @param {object} actorEntity - The acting entity instance.
    * @param {RuntimeContext} runtimeCtx - Runtime context
+   * @param {TraceContext} [trace=null] - Optional trace context for logging.
    * @returns {Set<string>} Set of entity IDs
    * @private
    */
-  resolveSource(node, actorEntity, runtimeCtx) {
+  resolveSource(node, actorEntity, runtimeCtx, trace = null) {
+    let result = new Set();
     switch (node.kind) {
       case 'actor':
-        return new Set([actorEntity.id]);
+        result = new Set([actorEntity.id]);
+        break;
 
       case 'location':
         // Use the current location from runtime context
         if (runtimeCtx.location && runtimeCtx.location.id) {
-          return new Set([runtimeCtx.location.id]);
+          result = new Set([runtimeCtx.location.id]);
         }
-        return new Set();
+        break;
 
       case 'entities':
         const componentId = node.param;
@@ -140,13 +176,14 @@ class ScopeEngine extends IScopeEngine {
           runtimeCtx.logger.error(
             'entities() source node missing component ID'
           );
-          return new Set();
+          result = new Set();
+          break;
         }
 
         if (componentId.startsWith('!')) {
           // Optimized negative component query - single-pass approach
           const componentName = componentId.slice(1);
-          const results = new Set();
+          const resultSet = new Set();
           // Assumes entityManager can provide all entities efficiently
           const allEntities = runtimeCtx.entityManager.getEntities
             ? runtimeCtx.entityManager.getEntities()
@@ -160,23 +197,37 @@ class ScopeEngine extends IScopeEngine {
               : entity.components && entity.components[componentName];
 
             if (!hasComponent) {
-              results.add(entity.id);
+              resultSet.add(entity.id);
             }
           }
-          return results;
+          result = resultSet;
         } else {
           // Positive component query - entities WITH the component
           const entities =
             runtimeCtx.entityManager.getEntitiesWithComponent(componentId);
-          return new Set(
+          result = new Set(
             entities.map((e) => e.id).filter((id) => typeof id === 'string')
           );
         }
+        break;
 
       default:
         runtimeCtx.logger.error(`Unknown source kind: ${node.kind}`);
-        return new Set();
+        result = new Set();
     }
+
+    const source = 'ScopeEngine.resolveSource';
+    trace?.addLog(
+      'info',
+      `Resolved source '${node.kind}'. Found ${result.size} item(s).`,
+      source,
+      {
+        kind: node.kind,
+        param: node.param,
+        result: Array.from(result),
+      }
+    );
+    return result;
   }
 
   /**
@@ -187,17 +238,19 @@ class ScopeEngine extends IScopeEngine {
    * @param {RuntimeContext} runtimeCtx - Runtime context
    * @param {number} depth - Current depth
    * @param {Array<string>} path - Path of visited node/edge keys
-   * @returns {Set<string>} Set of entity IDs
+   * @param {TraceContext} [trace=null] - Optional trace context for logging.
+   * @returns {Set<any>} Set of entity IDs or resolved objects
    * @private
    */
-  resolveStep(node, actorEntity, runtimeCtx, depth, path) {
+  resolveStep(node, actorEntity, runtimeCtx, depth, path, trace = null) {
     const nextDepth = depth + 1;
     const parentResult = this.resolveNode(
       node.parent,
       actorEntity,
       runtimeCtx,
       nextDepth,
-      path
+      path,
+      trace // Pass trace down
     );
 
     if (parentResult.size === 0) return new Set();
@@ -228,7 +281,7 @@ class ScopeEngine extends IScopeEngine {
    * @param {AST} node - Step node
    * @param {Set} parentResult - Parent result set
    * @param {RuntimeContext} runtimeCtx - Runtime context
-   * @returns {Set<string>} Set of resolved values
+   * @returns {Set<any>} Set of resolved values
    * @private
    */
   _processFieldAccess(node, parentResult, runtimeCtx) {
@@ -301,18 +354,30 @@ class ScopeEngine extends IScopeEngine {
    * @param {RuntimeContext} runtimeCtx - Runtime context
    * @param {number} depth - Current depth
    * @param {Array<string>} path - Path of visited node/edge keys
-   * @returns {Set<string>} Set of entity IDs or objects
+   * @param {TraceContext} [trace=null] - Optional trace context for logging.
+   * @returns {Set<any>} Set of entity IDs or objects
    * @private
    */
-  resolveFilter(node, actorEntity, runtimeCtx, depth, path) {
+  resolveFilter(node, actorEntity, runtimeCtx, depth, path, trace = null) {
     const parentResult = this.resolveNode(
       node.parent,
       actorEntity,
       runtimeCtx,
       depth + 1,
-      path
+      path,
+      trace // Pass trace down
     );
-    if (parentResult.size === 0) return new Set();
+
+    const source = 'ScopeEngine.resolveFilter';
+    const initialSize = parentResult.size;
+    trace?.addLog(
+      'info',
+      `Applying filter to ${initialSize} items.`,
+      source,
+      { logic: node.logic }
+    );
+
+    if (initialSize === 0) return new Set();
 
     const result = new Set();
     for (const item of parentResult) {
@@ -337,6 +402,11 @@ class ScopeEngine extends IScopeEngine {
         }
       }
     }
+    trace?.addLog(
+      'info',
+      `Filter application complete. ${result.size} of ${initialSize} items passed.`,
+      source
+    );
     return result;
   }
 
@@ -383,23 +453,26 @@ class ScopeEngine extends IScopeEngine {
    * @param {RuntimeContext} runtimeCtx - Runtime context
    * @param {number} depth - Current depth
    * @param {Array<string>} path - Path of visited node/edge keys
-   * @returns {Set<string>} Set of entity IDs
+   * @param {TraceContext} [trace=null] - Optional trace context for logging.
+   * @returns {Set<any>} Set of entity IDs or resolved objects
    * @private
    */
-  resolveUnion(node, actorEntity, runtimeCtx, depth, path) {
+  resolveUnion(node, actorEntity, runtimeCtx, depth, path, trace = null) {
     const leftResult = this.resolveNode(
       node.left,
       actorEntity,
       runtimeCtx,
       depth,
-      path
+      path,
+      trace // Pass trace down
     );
     const rightResult = this.resolveNode(
       node.right,
       actorEntity,
       runtimeCtx,
       depth,
-      path
+      path,
+      trace // Pass trace down
     );
     return new Set([...leftResult, ...rightResult]);
   }
