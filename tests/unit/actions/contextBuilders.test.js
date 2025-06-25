@@ -1,7 +1,6 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import {
   buildActorContext,
-  buildEntityTargetContext,
 } from '../../../src/actions/validation/contextBuilders.js';
 import { ENTITY as TARGET_TYPE_ENTITY } from '../../../src/constants/actionTargetTypes.js';
 
@@ -31,29 +30,6 @@ describe('contextBuilders', () => {
       });
       expect(createComponentAccessor).toHaveBeenCalledWith(
         'actor1',
-        mockEntityManager,
-        mockLogger
-      );
-    });
-  });
-
-  describe('buildEntityTargetContext', () => {
-    it('returns expected structure', () => {
-      const result = buildEntityTargetContext(
-        'target1',
-        mockEntityManager,
-        mockLogger
-      );
-
-      // FIX: The expectation is updated to match the new, leaner object structure.
-      // The obsolete `direction`, `blocker`, and `exitDetails` properties have been removed.
-      expect(result).toEqual({
-        type: TARGET_TYPE_ENTITY,
-        id: 'target1',
-        components: { accessorFor: 'target1' },
-      });
-      expect(createComponentAccessor).toHaveBeenCalledWith(
-        'target1',
         mockEntityManager,
         mockLogger
       );

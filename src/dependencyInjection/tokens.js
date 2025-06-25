@@ -224,8 +224,6 @@ export const tokens = freeze({
   JsonLogicEvaluationService: 'JsonLogicEvaluationService',
   ActionValidationContextBuilder: 'ActionValidationContextBuilder',
   PrerequisiteEvaluationService: 'PrerequisiteEvaluationService',
-  DomainContextCompatibilityChecker: 'DomainContextCompatibilityChecker',
-  ActionValidationService: 'ActionValidationService',
   TurnHandlerResolver: 'TurnHandlerResolver',
   ActorTurnHandler: 'ActorTurnHandler',
   PlaytimeTracker: 'PlaytimeTracker',

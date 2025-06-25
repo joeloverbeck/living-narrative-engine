@@ -18,9 +18,7 @@
       "closeness.component.json"
     ],
     "conditions": [
-      "actor-and-target-can-get-close.condition.json",
       "actor-is-in-closeness.condition.json",
-      "entity-is-in-actors-closeness-partners-list.condition.json",
       "event-is-action-adjust-clothing.condition.json",
       "event-is-action-get-close.condition.json",
       "event-is-action-kiss-cheek.condition.json",

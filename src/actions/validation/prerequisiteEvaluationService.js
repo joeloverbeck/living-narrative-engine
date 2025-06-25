@@ -10,8 +10,9 @@ import { resolveConditionRefs } from '../../utils/conditionRefResolver.js';
 /** @typedef {import('../../logic/defs.js').JsonLogicEvaluationContext} JsonLogicEvaluationContext */
 /** @typedef {import('../../entities/entity.js').default} Entity */
 /** @typedef {import('../../../data/schemas/action.schema.json').ActionDefinition} ActionDefinition */
-/** @typedef {import('../../models/actionTargetContext.js').ActionTargetContext} ActionTargetContext */
+// ActionTargetContext import removed as it's no longer used for prerequisite evaluation.
 /** @typedef {import('./actionValidationContextBuilder.js').ActionValidationContextBuilder} ActionValidationContextBuilder */
+/** @typedef {import('../tracing/traceContext.js').TraceContext} TraceContext */
 
 /**
  * @class PrerequisiteEvaluationService
@@ -37,11 +38,11 @@ export class PrerequisiteEvaluationService extends BaseService {
    * @throws {Error} If dependencies are missing or invalid.
    */
   constructor({
-    logger,
-    jsonLogicEvaluationService,
-    actionValidationContextBuilder,
-    gameDataRepository,
-  }) {
+                logger,
+                jsonLogicEvaluationService,
+                actionValidationContextBuilder,
+                gameDataRepository,
+              }) {
     super();
     this.#logger = this._init('PrerequisiteEvaluationService', logger, {
       jsonLogicEvaluationService: {
@@ -103,7 +104,6 @@ export class PrerequisiteEvaluationService extends BaseService {
    * @private
    * @param {ActionDefinition} actionDefinition - The definition of the action being evaluated.
    * @param {Entity} actor - The entity performing the action.
-   * @param {ActionTargetContext} targetContext - The context of the action's target.
    * @param {string} actionId - The ID of the action being evaluated.
    * @param {string} actorId - The ID of the acting entity.
    * @returns {JsonLogicEvaluationContext | null} The built evaluation context, or null on failure.
@@ -111,7 +111,6 @@ export class PrerequisiteEvaluationService extends BaseService {
   #buildPrerequisiteContext(
     actionDefinition,
     actor,
-    targetContext,
     actionId,
     actorId
   ) {
@@ -119,8 +118,7 @@ export class PrerequisiteEvaluationService extends BaseService {
     try {
       evaluationContext = this.#actionValidationContextBuilder.buildContext(
         actionDefinition,
-        actor,
-        targetContext
+        actor
       );
       this.#logger.debug(
         `PrereqEval[${actionId}]: Evaluation Context Built Successfully.`
@@ -134,7 +132,6 @@ export class PrerequisiteEvaluationService extends BaseService {
         `PrereqEval[${actionId}]: ← FAILED (Internal Error: Failed to build evaluation context). Error: ${buildError.message}`,
         {
           actorId: actorId,
-          targetContext: targetContext,
           stack: buildError.stack,
         }
       );
@@ -153,6 +150,7 @@ export class PrerequisiteEvaluationService extends BaseService {
    * @param {number} totalRules - Total number of prerequisite rules.
    * @param {JsonLogicEvaluationContext} evaluationContext - The context used for evaluation.
    * @param {string} actionId - The ID of the action being evaluated.
+   * @param {TraceContext} [trace=null] - Optional tracing context.
    * @returns {boolean} True if the prerequisite passes, false otherwise.
    */
   _evaluatePrerequisite(
@@ -160,8 +158,10 @@ export class PrerequisiteEvaluationService extends BaseService {
     ruleNumber,
     totalRules,
     evaluationContext,
-    actionId
+    actionId,
+    trace = null
   ) {
+    const source = 'PrerequisiteEvaluationService._evaluatePrerequisite';
     if (
       !prereqObject ||
       typeof prereqObject !== 'object' ||
@@ -177,10 +177,17 @@ export class PrerequisiteEvaluationService extends BaseService {
 
     let pass;
     try {
+      const originalLogic = prereqObject.logic;
+      trace?.addLog('info', `Evaluating rule.`, source, { logic: originalLogic });
+
       const resolvedLogic = this._resolveConditionReferences(
-        prereqObject.logic,
+        originalLogic,
         actionId
       );
+
+      if (JSON.stringify(originalLogic) !== JSON.stringify(resolvedLogic)) {
+        trace?.addLog('data', `Condition reference resolved.`, source, { resolvedLogic });
+      }
 
       this.#logger.debug(
         `PrereqEval[${actionId}]:   - Evaluating resolved rule ${ruleNumber}: ${JSON.stringify(
@@ -193,6 +200,7 @@ export class PrerequisiteEvaluationService extends BaseService {
         evaluationContext
       );
     } catch (evalError) {
+      trace?.addLog('error', `Error during rule evaluation: ${evalError.message}`, source, { error: evalError });
       this.#logger.error(
         `PrereqEval[${actionId}]: ← FAILED (Rule ${ruleNumber}/${totalRules}): Error during rule resolution or evaluation. Rule: ${JSON.stringify(
           prereqObject
@@ -204,6 +212,8 @@ export class PrerequisiteEvaluationService extends BaseService {
       );
       return false;
     }
+
+    trace?.addLog(pass ? 'success' : 'failure', `Rule evaluation result: ${pass}`, source, { result: pass });
 
     if (!pass) {
       this.#logger.debug(
@@ -224,14 +234,16 @@ export class PrerequisiteEvaluationService extends BaseService {
   }
 
   /**
-   * @description Evaluates an array of prerequisite rules using the provided context.
+   * Evaluates an array of prerequisite rules using the provided context.
+   *
    * @private
    * @param {object[]} prerequisites - The prerequisite rule objects.
    * @param {JsonLogicEvaluationContext} evaluationContext - Context for rule evaluation.
    * @param {string} actionId - The ID of the action being evaluated.
+   * @param {TraceContext} [trace=null] - Optional tracing context.
    * @returns {boolean} True if all rules pass, false if any fail.
    */
-  #evaluateRules(prerequisites, evaluationContext, actionId) {
+  #evaluateRules(prerequisites, evaluationContext, actionId, trace = null) {
     this.#logger.debug(
       `PrereqEval[${actionId}]: Evaluating ${prerequisites.length} prerequisite rule(s)...`
     );
@@ -244,9 +256,11 @@ export class PrerequisiteEvaluationService extends BaseService {
           ruleNumber,
           prerequisites.length,
           evaluationContext,
-          actionId
+          actionId,
+          trace
         )
       ) {
+        // Failure is already logged by _evaluatePrerequisite
         return false;
       }
     }
@@ -258,16 +272,18 @@ export class PrerequisiteEvaluationService extends BaseService {
   }
 
   /**
-   * @description Orchestrates prerequisite evaluation by building context and evaluating rules.
+   * Orchestrates prerequisite evaluation by building context and evaluating rules.
    * It first builds the evaluation context, then resolves all `condition_ref`
    * instances in the rules, and finally applies the JsonLogic rules.
+   *
    * @param {object[]} prerequisites - The array of prerequisite rule objects.
    * @param {ActionDefinition} actionDefinition - The definition of the action being evaluated.
    * @param {Entity} actor - The entity performing the action.
-   * @param {ActionTargetContext} targetContext - The context of the action's target.
+   * @param {TraceContext} [trace=null] - Optional tracing context for detailed logging.
    * @returns {boolean} True if all prerequisites pass, false otherwise.
    */
-  evaluate(prerequisites, actionDefinition, actor, targetContext) {
+  evaluate(prerequisites, actionDefinition, actor, trace = null) {
+    const source = 'PrerequisiteEvaluationService.evaluate';
     const actionId = actionDefinition?.id ?? 'unknown_action';
     const actorId = actor?.id ?? 'unknown_actor';
 
@@ -281,7 +297,6 @@ export class PrerequisiteEvaluationService extends BaseService {
     const evaluationContext = this.#buildPrerequisiteContext(
       actionDefinition,
       actor,
-      targetContext,
       actionId,
       actorId
     );
@@ -289,6 +304,8 @@ export class PrerequisiteEvaluationService extends BaseService {
       return false;
     }
 
-    return this.#evaluateRules(prerequisites, evaluationContext, actionId);
+    trace?.addLog('data', 'Built prerequisite evaluation context.', source, { context: evaluationContext });
+
+    return this.#evaluateRules(prerequisites, evaluationContext, actionId, trace);
   }
 }

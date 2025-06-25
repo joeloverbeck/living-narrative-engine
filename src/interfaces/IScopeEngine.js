@@ -1,3 +1,7 @@
+// src/interfaces/IScopeEngine.js
+
+/** @typedef {import('../actions/tracing/traceContext.js').TraceContext} TraceContext */
+
 /**
  * @file IScopeEngine.js
  * @description Interface for Scope DSL engines that resolve AST expressions to entity sets
@@ -14,10 +18,11 @@ export class IScopeEngine {
    * @param {object} ast - The parsed AST
    * @param {object} actorEntity - The acting entity instance
    * @param {object} runtimeCtx - Runtime context with services
+   * @param {TraceContext} [trace=null] - Optional trace context for logging
    * @returns {Set<string>} Set of entity IDs
    * @abstract
    */
-  resolve(ast, actorEntity, runtimeCtx) {
+  resolve(ast, actorEntity, runtimeCtx, trace = null) {
     throw new Error('IScopeEngine.resolve() must be implemented');
   }
 

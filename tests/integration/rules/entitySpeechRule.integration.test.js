@@ -4,7 +4,6 @@
 
 import { describe, it, beforeEach, expect, jest } from '@jest/globals';
 import entitySpeechRule from '../../../data/mods/core/rules/entity_speech.rule.json';
-import eventIsEntitySpeech from '../../../data/mods/core/conditions/event-is-entity_speech.condition.json';
 import QueryComponentsHandler from '../../../src/logic/operationHandlers/queryComponentsHandler.js';
 import GetTimestampHandler from '../../../src/logic/operationHandlers/getTimestampHandler.js';
 import DispatchPerceptibleEventHandler from '../../../src/logic/operationHandlers/dispatchPerceptibleEventHandler.js';
@@ -50,8 +49,8 @@ describe('core_handle_entity_speech rule integration', () => {
   beforeEach(() => {
     const dataRegistry = {
       getAllSystemRules: jest.fn().mockReturnValue([entitySpeechRule]),
-      getConditionDefinition: jest.fn((id) =>
-        id === 'core:event-is-entity-speech' ? eventIsEntitySpeech : undefined
+      getConditionDefinition: jest.fn(() =>
+        undefined
       ),
     };
 

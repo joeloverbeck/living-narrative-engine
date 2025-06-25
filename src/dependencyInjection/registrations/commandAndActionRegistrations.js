@@ -11,7 +11,7 @@
 /** @typedef {import('../../interfaces/IGameDataRepository.js').IGameDataRepository} IGameDataRepository */
 /** @typedef {import('../../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
 /** @typedef {import('../../interfaces/IActionDiscoveryService.js').IActionDiscoveryService} IActionDiscoveryService_Interface */
-/** @typedef {import('../../actions/validation/actionValidationService.js').ActionValidationService} ActionValidationService_Interface */
+/** @typedef {import('../../actions/validation/prerequisiteEvaluationService.js').PrerequisiteEvaluationService} PrerequisiteEvaluationService_Interface */
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 /** @typedef {import('../../interfaces/IWorldContext.js').IWorldContext} IWorldContext */
 
@@ -25,8 +25,6 @@ import { ActionDiscoveryService } from '../../actions/actionDiscoveryService.js'
 import { ActionIndex } from '../../actions/actionIndex.js';
 import { ActionValidationContextBuilder } from '../../actions/validation/actionValidationContextBuilder.js';
 import { PrerequisiteEvaluationService } from '../../actions/validation/prerequisiteEvaluationService.js';
-import { DomainContextCompatibilityChecker } from '../../validation/domainContextCompatibilityChecker.js';
-import { ActionValidationService } from '../../actions/validation/actionValidationService.js';
 import CommandProcessor from '../../commands/commandProcessor.js';
 
 // --- Helper Function Imports ---
@@ -70,9 +68,10 @@ export function registerCommandAndAction(container) {
     .tagged(INITIALIZABLE)
     .singletonFactory(tokens.IActionDiscoveryService, (c) => {
       return new ActionDiscoveryService({
-        gameDataRepository: c.resolve(tokens.IGameDataRepository),
         entityManager: c.resolve(tokens.IEntityManager),
-        actionValidationService: c.resolve(tokens.ActionValidationService),
+        prerequisiteEvaluationService: c.resolve(
+          tokens.PrerequisiteEvaluationService
+        ),
         actionIndex: c.resolve(tokens.ActionIndex),
         logger: c.resolve(tokens.ILogger),
         formatActionCommandFn: formatActionCommand,
@@ -102,17 +101,6 @@ export function registerCommandAndAction(container) {
       tokens.IGameDataRepository,
     ]
   );
-  registrar.single(
-    tokens.DomainContextCompatibilityChecker,
-    DomainContextCompatibilityChecker,
-    [tokens.ILogger]
-  );
-  registrar.single(tokens.ActionValidationService, ActionValidationService, [
-    tokens.IEntityManager,
-    tokens.ILogger,
-    tokens.DomainContextCompatibilityChecker,
-    tokens.PrerequisiteEvaluationService,
-  ]);
   logger.debug(
     `Command and Action Registration: Registered Action Validation services.`
   );

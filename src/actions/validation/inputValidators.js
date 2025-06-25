@@ -1,20 +1,20 @@
+// src/actions/validation/inputValidators.js
+
 /* type-only imports */
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../entities/entity.js').default} Entity */
 /** @typedef {import('../../../data/schemas/action.schema.json').ActionDefinition} ActionDefinition */
-/** @typedef {import('../../models/actionTargetContext.js').ActionTargetContext} ActionTargetContext */
+// ActionTargetContext import removed as it's no longer validated here.
 
-import { ActionTargetContext } from '../../models/actionTargetContext.js';
+// ActionTargetContext model import removed.
 
 /**
- * @description Validate the core inputs required when processing an action.
- * Ensures an action definition, actor entity, and target context are structurally sound.
+ * Validate the core inputs for prerequisite evaluation.
+ * Ensures an action definition and an actor entity are structurally sound.
  * Any failures will be logged and an Error will be thrown.
- * @param {ActionDefinition} actionDef - Definition describing the attempted action.
- * @param {Entity} actor - The entity attempting the action.
- * @param actorEntity
- * @param actionDefinition
- * @param {ActionTargetContext} targetCtx - Context of the action's target.
+ *
+ * @param {ActionDefinition} actionDefinition - Definition describing the attempted action.
+ * @param {Entity} actorEntity - The entity attempting the action.
  * @param {ILogger} logger - Logger used for reporting validation issues.
  * @throws {Error} If any input is missing required properties or has the wrong type.
  * @returns {void}
@@ -22,7 +22,6 @@ import { ActionTargetContext } from '../../models/actionTargetContext.js';
 export function validateActionInputs(
   actionDefinition,
   actorEntity,
-  targetCtx,
   logger
 ) {
   if (!actionDefinition?.id?.trim()) {
@@ -39,13 +38,5 @@ export function validateActionInputs(
     throw new Error('Invalid actor entity');
   }
 
-  if (!(targetCtx instanceof ActionTargetContext)) {
-    logger.error(
-      'Invalid targetContext provided (expected ActionTargetContext).',
-      {
-        targetContext: targetCtx,
-      }
-    );
-    throw new Error('Invalid ActionTargetContext');
-  }
+  // Validation for targetCtx has been removed, as prerequisites are now actor-only.
 }

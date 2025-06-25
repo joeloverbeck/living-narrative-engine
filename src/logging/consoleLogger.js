@@ -1,4 +1,3 @@
-// src/logging/consoleLogger.js
 /* eslint-disable no-console */
 
 /**
@@ -186,6 +185,38 @@ class ConsoleLogger {
   debug(message, ...args) {
     if (this.#currentLogLevel <= LogLevel.DEBUG) {
       console.debug(message, ...args);
+    }
+  }
+
+  /**
+   * Starts a collapsed logging group if the current log level allows DEBUG.
+   *
+   * @param {string} [label] - The label for the group.
+   */
+  groupCollapsed(label) {
+    if (this.#currentLogLevel <= LogLevel.DEBUG) {
+      console.groupCollapsed(label);
+    }
+  }
+
+  /**
+   * Ends the current logging group if the current log level allows DEBUG.
+   */
+  groupEnd() {
+    if (this.#currentLogLevel <= LogLevel.DEBUG) {
+      console.groupEnd();
+    }
+  }
+
+  /**
+   * Displays tabular data in the console if the current log level allows DEBUG.
+   *
+   * @param {any} data - The data to display in a table.
+   * @param {readonly string[] | undefined} [columns] - An array of strings representing the columns to include.
+   */
+  table(data, columns) {
+    if (this.#currentLogLevel <= LogLevel.DEBUG) {
+      console.table(data, columns);
     }
   }
 }

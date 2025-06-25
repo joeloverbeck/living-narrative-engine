@@ -234,7 +234,7 @@ environment := entities(core:position)[
     {
   "and": [
     { "condition_ref": "core:entity-at-location" },
-    { "condition_ref": "core:entity-is-not-actor" }
+    { "condition_ref": "core:entity-is-not-current-actor" }
   ]
 }]
 ```
@@ -242,7 +242,7 @@ environment := entities(core:position)[
 **Explanation**:
 
 - `entities(core:position)`: Get all entities that have the `core:position` component.
-- `[{"and": [{ "condition_ref": "core:entity-at-location" },{"condition_ref": "core:entity-is-not-actor" }]}]`: Entities at the same context location, that aren't the actor.
+- `[{"and": [{ "condition_ref": "core:entity-at-location" },{"condition_ref": "core:entity-is-not-current-actor" }]}]`: Entities at the same context location, that aren't the actor.
 
 ## 9. Integration with Action Definitions
 

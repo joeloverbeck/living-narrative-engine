@@ -1,20 +1,17 @@
+// src/actions/validation/actionValidationContextBuilder.js
+
 /* type-only imports */
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../entities/entityManager.js').default} EntityManager */
 /** @typedef {import('../../entities/entity.js').default} Entity */
 /** @typedef {import('../../../data/schemas/action.schema.json').ActionDefinition} ActionDefinition */
-/** @typedef {import('../../models/actionTargetContext.js').ActionTargetContext} ActionTargetContext */
+// ActionTargetContext import removed.
 /** @typedef {import('../../logic/defs.js').JsonLogicEvaluationContext} JsonLogicEvaluationContext */
 
 import { BaseService } from '../../utils/serviceBase.js';
-import {
-  buildActorContext,
-  // buildEntityTargetContext - removed as target context no longer needed
-} from './contextBuilders.js';
+import { buildActorContext } from './contextBuilders.js';
 import { validateActionInputs } from './inputValidators.js';
 import { formatValidationError } from './validationErrorUtils.js';
-// import { ENTITY as TARGET_TYPE_ENTITY } from '../../constants/actionTargetTypes.js';
-// Removed - no longer needed as target context is not built for prerequisites
 
 /**
  * @class ActionValidationContextBuilder
@@ -53,13 +50,12 @@ export class ActionValidationContextBuilder extends BaseService {
    *
    * @param {ActionDefinition} actionDefinition - The definition of the action being attempted.
    * @param {Entity} actor - The entity performing the action.
-   * @param {ActionTargetContext} targetContext - The context of the action's target (unused in context building).
    * @returns {JsonLogicEvaluationContext} The constructed context object.
-   * @throws {Error} If `actionDefinition`, `actor`, or `targetContext` are invalid.
+   * @throws {Error} If `actionDefinition` or `actor` are invalid.
    */
-  buildContext(actionDefinition, actor, targetContext) {
-    // --- 1. Initial Argument Validation (with added logging to match tests) ---
-    this.#assertValidInputs(actionDefinition, actor, targetContext);
+  buildContext(actionDefinition, actor) {
+    // --- 1. Initial Argument Validation ---
+    this.#assertValidInputs(actionDefinition, actor);
 
     this.#logger.debug(
       `ActionValidationContextBuilder: Building context for action '${actionDefinition.id}', actor '${actor.id}'. Only actor context is included as target filtering is handled by Scope DSL.`
@@ -85,16 +81,14 @@ export class ActionValidationContextBuilder extends BaseService {
    *
    * @param {ActionDefinition} actionDefinition - The attempted action's definition.
    * @param {Entity} actor - The entity performing the action.
-   * @param {ActionTargetContext} targetContext - Information about the action's target.
    * @throws {Error} If any parameter is missing required data.
    * @private
    */
-  #assertValidInputs(actionDefinition, actor, targetContext) {
+  #assertValidInputs(actionDefinition, actor) {
     try {
       validateActionInputs(
         actionDefinition,
         actor,
-        targetContext,
         this.#logger
       );
     } catch (err) {
@@ -104,12 +98,11 @@ export class ActionValidationContextBuilder extends BaseService {
         {
           actionId: actionDefinition?.id,
           actorId: actor?.id,
-          contextType: targetContext?.type,
         }
       );
     }
   }
 
-  // #buildEntityTargetContextForEval method removed - target context no longer
-  // needed in prerequisites as target filtering is handled by Scope DSL
+  // #buildEntityTargetContextForEval method has been removed as target context is no
+  // longer needed in prerequisites; target filtering is handled by the Scope DSL.
 }

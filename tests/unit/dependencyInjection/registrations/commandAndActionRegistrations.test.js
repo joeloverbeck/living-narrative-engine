@@ -25,8 +25,6 @@ import { INITIALIZABLE } from '../../../../src/dependencyInjection/tags.js';
 import { ActionDiscoveryService } from '../../../../src/actions/actionDiscoveryService.js';
 import { ActionValidationContextBuilder } from '../../../../src/actions/validation/actionValidationContextBuilder.js';
 import { PrerequisiteEvaluationService } from '../../../../src/actions/validation/prerequisiteEvaluationService.js';
-import { DomainContextCompatibilityChecker } from '../../../../src/validation/domainContextCompatibilityChecker.js';
-import { ActionValidationService } from '../../../../src/actions/validation/actionValidationService.js';
 import CommandProcessor from '../../../../src/commands/commandProcessor.js';
 import { expectSingleton } from '../../../common/containerAssertions.js';
 
@@ -127,18 +125,6 @@ describe('registerCommandAndAction', () => {
       {
         token: tokens.PrerequisiteEvaluationService,
         Class: PrerequisiteEvaluationService,
-        lifecycle: 'singleton',
-        tags: undefined,
-      },
-      {
-        token: tokens.DomainContextCompatibilityChecker,
-        Class: DomainContextCompatibilityChecker,
-        lifecycle: 'singleton',
-        tags: undefined,
-      },
-      {
-        token: tokens.ActionValidationService,
-        Class: ActionValidationService,
         lifecycle: 'singleton',
         tags: undefined,
       },

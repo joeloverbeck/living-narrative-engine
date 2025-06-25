@@ -4,15 +4,10 @@
 
 import { describe, it, beforeEach, expect, jest } from '@jest/globals';
 import turnEndedRule from '../../../data/mods/core/rules/turn_ended.rule.json';
-import eventIsTurnEnded from '../../../data/mods/core/conditions/event-is-turn_ended.condition.json';
 import SetVariableHandler from '../../../src/logic/operationHandlers/setVariableHandler.js';
 import DispatchEventHandler from '../../../src/logic/operationHandlers/dispatchEventHandler.js';
 import RemoveComponentHandler from '../../../src/logic/operationHandlers/removeComponentHandler.js';
-import jsonLogic from 'json-logic-js';
-import { TURN_ENDED_ID } from '../../../src/constants/eventIds.js';
-import { createRuleTestEnvironment } from '../../common/engine/systemLogicTestEnv.js';
 import { SimpleEntityManager } from '../../common/entities/index.js';
-import AddPerceptionLogEntryHandler from '../../../src/logic/operationHandlers/addPerceptionLogEntryHandler.js';
 import { SafeEventDispatcher } from '../../../src/events/safeEventDispatcher.js';
 import ValidatedEventDispatcher from '../../../src/events/validatedEventDispatcher.js';
 import EventBus from '../../../src/events/eventBus.js';
