@@ -14,7 +14,7 @@
 
 import { AbstractTurnState } from './abstractTurnState.js';
 import { ENTITY_SPOKE_ID } from '../../constants/eventIds.js';
-import { processCommandInternal } from './helpers/processCommandInternal.js';
+import { CommandProcessingWorkflow } from './helpers/commandProcessingWorkflow.js';
 import { getServiceFromContext } from './helpers/getServiceFromContext.js';
 import { ProcessingWorkflow } from './workflows/processingWorkflow.js';
 import { ProcessingExceptionHandler } from './helpers/processingExceptionHandler.js';
@@ -172,13 +172,11 @@ export class ProcessingCommandState extends AbstractTurnState {
   // _executeActionWorkflow logic moved to ProcessingWorkflow
 
   async _processCommandInternal(turnCtx, actor, turnAction) {
-    return processCommandInternal(
+    const workflow = new CommandProcessingWorkflow(
       this,
-      turnCtx,
-      actor,
-      turnAction,
       this._exceptionHandler
     );
+    await workflow.processCommand(turnCtx, actor, turnAction);
   }
 
   async _getServiceFromContext(
