@@ -194,6 +194,37 @@ class UiAssetsLoader extends AbstractLoader {
   }
 
   /**
+   * @description Helper to load a group of asset files using a loader function.
+   * @protected
+   * @param {string[]} files - File names to process.
+   * @param {{modId:string, loader:(id:string, manifest:ModManifest)=>Promise<{count:number, overrides:number, errors:number}>}} options
+   * Parameters including the mod id and loader to invoke.
+   * @returns {Promise<{count:number, overrides:number, errors:number}>}
+   * Aggregated result summary.
+   */
+  async loadAssetGroup(files, { modId, loader }) {
+    let count = 0;
+    let overrides = 0;
+    let errors = 0;
+
+    for (const filename of files) {
+      try {
+        const res = await loader(modId, { content: { ui: [filename] } });
+        count += res.count;
+        overrides += res.overrides;
+        errors += res.errors;
+      } catch (e) {
+        errors++;
+        this._logger.error(
+          `UiAssetsLoader [${modId}]: Failed to process ${filename}: ${e.message}`
+        );
+      }
+    }
+
+    return { count, overrides, errors };
+  }
+
+  /**
    * @description Loads all UI assets for a mod based on file names.
    * @param {string} modId - The mod identifier.
    * @param {ModManifest} manifest - The mod manifest.
@@ -203,39 +234,17 @@ class UiAssetsLoader extends AbstractLoader {
     const uiFiles = manifest?.content?.ui || [];
     const { iconFiles, labelFiles, unknownFiles } =
       this.#categorizeUiFiles(uiFiles);
-    let count = 0;
-    let overrides = 0;
-    let errors = 0;
-
-    for (const filename of iconFiles) {
-      try {
-        const res = await this.loadIconsForMod(modId, {
-          content: { ui: [filename] },
-        });
-        count += res.count;
-        overrides += res.overrides;
-      } catch (e) {
-        errors++;
-        this._logger.error(
-          `UiAssetsLoader [${modId}]: Failed to process ${filename}: ${e.message}`
-        );
-      }
-    }
-
-    for (const filename of labelFiles) {
-      try {
-        const res = await this.loadLabelsForMod(modId, {
-          content: { ui: [filename] },
-        });
-        count += res.count;
-        overrides += res.overrides;
-      } catch (e) {
-        errors++;
-        this._logger.error(
-          `UiAssetsLoader [${modId}]: Failed to process ${filename}: ${e.message}`
-        );
-      }
-    }
+    const iconRes = await this.loadAssetGroup(iconFiles, {
+      modId,
+      loader: this.loadIconsForMod.bind(this),
+    });
+    const labelRes = await this.loadAssetGroup(labelFiles, {
+      modId,
+      loader: this.loadLabelsForMod.bind(this),
+    });
+    const count = iconRes.count + labelRes.count;
+    const overrides = iconRes.overrides + labelRes.overrides;
+    const errors = iconRes.errors + labelRes.errors;
 
     for (const filename of unknownFiles) {
       this._logger.warn(`UiAssetsLoader [${modId}]: Unknown file ${filename}`);
