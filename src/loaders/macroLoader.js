@@ -1,6 +1,7 @@
 // src/loaders/macroLoader.js
 
 import { BaseManifestItemLoader } from './baseManifestItemLoader.js';
+import { processAndStoreItem } from './helpers/processAndStoreItem.js';
 
 /**
  * @typedef {import('../interfaces/coreServices.js').IConfiguration} IConfiguration
@@ -50,6 +51,7 @@ class MacroLoader extends BaseManifestItemLoader {
 
   /**
    * Processes a single macro definition file after validation.
+   * Utilizes {@link processAndStoreItem} for ID parsing and storage.
    *
    * @protected
    * @override
@@ -66,14 +68,14 @@ class MacroLoader extends BaseManifestItemLoader {
       `MacroLoader [${modId}]: Processing macro file ${filename} (${registryKey}).`
     );
 
-    const { qualifiedId, didOverride } = this._parseIdAndStoreItem(
+    const { qualifiedId, didOverride } = await processAndStoreItem(this, {
       data,
-      'id',
-      'macros',
+      idProp: 'id',
+      category: 'macros',
       modId,
       filename,
-      { allowFallback: true }
-    );
+      parseOptions: { allowFallback: true },
+    });
 
     return { qualifiedId, didOverride };
   }
