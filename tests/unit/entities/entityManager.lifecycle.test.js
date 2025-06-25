@@ -28,65 +28,71 @@ import {
 
 import { buildSerializedEntity } from '../../common/entities/index.js';
 
-describeEntityManagerSuite('EntityManager - Lifecycle', (getBed) => {
-  describe('constructor', () => {
-    it('should instantiate successfully via TestBed', () => {
-      // The beforeEach hook already does this. If it fails, the test will crash.
-      expect(getBed().entityManager).toBeInstanceOf(
-        getBed().entityManager.constructor
-      );
-    });
-
-    it.each([
-      ['registry', null],
-      ['validator', null],
-    ])(
-      'should throw an error if the %s is missing or invalid',
-      (depName, value) => {
-        const { registry, validator, logger, eventDispatcher } = getBed().mocks;
-        const EntityManager = getBed().entityManager.constructor;
-
-        expect(
-          () =>
-            new EntityManager({
-              registry: depName === 'registry' ? value : registry,
-              validator: depName === 'validator' ? value : validator,
-              logger,
-              dispatcher: eventDispatcher,
-            })
-        ).toThrow(
-          depName === 'registry'
-            ? 'Missing required dependency: IDataRegistry.'
-            : 'Missing required dependency: ISchemaValidator.'
+describeEntityManagerSuite(
+  'EntityManager - Constructor Validation',
+  (getBed) => {
+    describe('constructor', () => {
+      it('should instantiate successfully via TestBed', () => {
+        // The beforeEach hook already does this. If it fails, the test will crash.
+        expect(getBed().entityManager).toBeInstanceOf(
+          getBed().entityManager.constructor
         );
-      }
-    );
+      });
 
-    it('should use the injected idGenerator', () => {
-      const mockIdGenerator = jest.fn();
-      const localTestBed = new TestBed({ idGenerator: mockIdGenerator });
-      // This test simply checks if the generator is stored,
-      // createEntityInstance tests will check if it's *used*.
-      // We can't directly access the private field, so we rely on functional tests.
-      expect(localTestBed.entityManager).toBeDefined();
-    });
+      it.each([
+        ['registry', null],
+        ['validator', null],
+      ])(
+        'should throw an error if the %s is missing or invalid',
+        (depName, value) => {
+          const { registry, validator, logger, eventDispatcher } =
+            getBed().mocks;
+          const EntityManager = getBed().entityManager.constructor;
 
-    it('should default to a UUIDv4 generator if none is provided', () => {
-      // Arrange
-      const entity = getBed().createBasicEntity();
-
-      // Assert
-      // This is an indirect test. We can't check *which* function was used,
-      // but we can check that the output conforms to the expected default (UUIDv4).
-      expect(entity.id).toBeDefined();
-      expect(typeof entity.id).toBe('string');
-      // A simple regex to check for UUID v4 format.
-      expect(entity.id).toMatch(
-        /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+          expect(
+            () =>
+              new EntityManager({
+                registry: depName === 'registry' ? value : registry,
+                validator: depName === 'validator' ? value : validator,
+                logger,
+                dispatcher: eventDispatcher,
+              })
+          ).toThrow(
+            depName === 'registry'
+              ? 'Missing required dependency: IDataRegistry.'
+              : 'Missing required dependency: ISchemaValidator.'
+          );
+        }
       );
-    });
-  });
 
+      it('should use the injected idGenerator', () => {
+        const mockIdGenerator = jest.fn();
+        const localTestBed = new TestBed({ idGenerator: mockIdGenerator });
+        // This test simply checks if the generator is stored,
+        // createEntityInstance tests will check if it's *used*.
+        // We can't directly access the private field, so we rely on functional tests.
+        expect(localTestBed.entityManager).toBeDefined();
+      });
+
+      it('should default to a UUIDv4 generator if none is provided', () => {
+        // Arrange
+        const entity = getBed().createBasicEntity();
+
+        // Assert
+        // This is an indirect test. We can't check *which* function was used,
+        // but we can check that the output conforms to the expected default (UUIDv4).
+        expect(entity.id).toBeDefined();
+        expect(typeof entity.id).toBe('string');
+        // A simple regex to check for UUID v4 format.
+        expect(entity.id).toMatch(
+          /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+        );
+      });
+    });
+  }
+);
+
+describeEntityManagerSuite('EntityManager - createEntityInstance', (getBed) => {
   describe('createEntityInstance', () => {
     it('should create an entity with an ID from the injected generator if no instanceId is provided', () => {
       // Arrange
@@ -216,7 +222,9 @@ describeEntityManagerSuite('EntityManager - Lifecycle', (getBed) => {
       ).toThrow(/Validation failed/);
     });
   });
+});
 
+describeEntityManagerSuite('EntityManager - reconstructEntity', (getBed) => {
   describe('reconstructEntity', () => {
     it('should reconstruct an entity from serialized data', () => {
       // Arrange
@@ -379,7 +387,9 @@ describeEntityManagerSuite('EntityManager - Lifecycle', (getBed) => {
       });
     });
   });
+});
 
+describeEntityManagerSuite('EntityManager - removeEntityInstance', (getBed) => {
   describe('removeEntityInstance', () => {
     it('should remove an existing entity', () => {
       // Arrange
@@ -458,7 +468,9 @@ describeEntityManagerSuite('EntityManager - Lifecycle', (getBed) => {
       localTestBed.cleanup();
     });
   });
+});
 
+describeEntityManagerSuite('EntityManager - clearAll', (getBed) => {
   describe('clearAll', () => {
     it('should remove all active entities', () => {
       // Arrange
