@@ -148,7 +148,7 @@ describe('ScopeRegistry', () => {
       expect(scopeRegistry.hasScope('core:all_characters')).toBe(true); // The original is untouched
     });
 
-    it('should find scopes by base name when stored with namespaced names', () => {
+    it('should require namespaced scope names (no fallback)', () => {
       // Assert: Can find by exact namespaced name
       expect(scopeRegistry.getScope('core:all_characters')).toEqual(
         mockScopeDefinitions['core:all_characters']
@@ -157,19 +157,19 @@ describe('ScopeRegistry', () => {
         mockScopeDefinitions['mod:custom_scope']
       );
 
-      // Assert: Can find by base name (fallback mechanism)
-      expect(scopeRegistry.getScope('all_characters')).toEqual(
-        mockScopeDefinitions['core:all_characters']
+      // Assert: Should throw error for non-namespaced names (no fallback)
+      expect(() => scopeRegistry.getScope('all_characters')).toThrow(
+        "Scope names must be namespaced (e.g., 'core:all_characters'), but got: 'all_characters'. Only 'none' and 'self' are allowed without namespace."
       );
-      expect(scopeRegistry.getScope('nearby_items')).toEqual(
-        mockScopeDefinitions['core:nearby_items']
+      expect(() => scopeRegistry.getScope('nearby_items')).toThrow(
+        "Scope names must be namespaced (e.g., 'core:nearby_items'), but got: 'nearby_items'. Only 'none' and 'self' are allowed without namespace."
       );
-      expect(scopeRegistry.getScope('custom_scope')).toEqual(
-        mockScopeDefinitions['mod:custom_scope']
+      expect(() => scopeRegistry.getScope('custom_scope')).toThrow(
+        "Scope names must be namespaced (e.g., 'core:custom_scope'), but got: 'custom_scope'. Only 'none' and 'self' are allowed without namespace."
       );
 
-      // Assert: Returns null for non-existent base names
-      expect(scopeRegistry.getScope('nonexistent')).toBeNull();
+      // Assert: Returns null for non-existent namespaced names
+      expect(scopeRegistry.getScope('nonexistent:scope')).toBeNull();
     });
   });
 

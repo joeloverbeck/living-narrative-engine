@@ -27,30 +27,21 @@ class ScopeRegistry {
   /**
    * Get a scope definition by name
    *
-   * @param {string} name - Scope name (can include mod prefix like 'core:inventory_items' or be a base name like 'inventory_items')
+   * @param {string} name - Scope name (must be namespaced like 'core:inventory_items', except for special cases 'none' and 'self')
    * @returns {object | null} Scope definition or null if not found
    */
   getScope(name) {
-    // First try exact match (for backward compatibility and explicit namespaced lookups)
-    const exactMatch = this._scopes.get(name);
-    if (exactMatch) {
-      return exactMatch;
+    // Allow special cases that don't require namespacing
+    if (name === 'none' || name === 'self') {
+      return null; // These are handled by the target resolution service, not by registry
     }
 
-    // If no exact match and name doesn't contain ':', try to find by base name
+    // Only allow namespaced scope names (must contain ':')
     if (!name.includes(':')) {
-      // Look for any scope that has this base name (after the ':')
-      for (const [scopeName, scopeDef] of this._scopes.entries()) {
-        const baseName = scopeName.includes(':')
-          ? scopeName.split(':')[1]
-          : scopeName;
-        if (baseName === name) {
-          return scopeDef;
-        }
-      }
+      throw new Error(`Scope names must be namespaced (e.g., 'core:${name}'), but got: '${name}'. Only 'none' and 'self' are allowed without namespace.`);
     }
 
-    return null;
+    return this._scopes.get(name) || null;
   }
 
   /**

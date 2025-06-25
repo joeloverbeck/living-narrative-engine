@@ -80,9 +80,9 @@ describe('Scope Integration Tests', () => {
     );
 
     scopeRegistry.initialize({
-      environment: { expr: environmentDefs.get('environment') },
-      potential_leaders: {
-        expr: potentialLeadersDefs.get('potential_leaders'),
+      'core:environment': { expr: environmentDefs.get('core:environment') },
+      'core:potential_leaders': {
+        expr: potentialLeadersDefs.get('core:potential_leaders'),
       },
     });
 

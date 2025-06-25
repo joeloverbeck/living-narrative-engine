@@ -87,10 +87,10 @@ describe('ScopeLoader', () => {
   });
 
   describe('transformContent (Unit)', () => {
-    test('should transform scope definitions with mod prefix', () => {
+    test('should transform scope definitions that are already properly namespaced', () => {
       const parsedContent = new Map([
-        ['inventory_items', 'actor.inventory.items[]'],
-        ['equipment_items', 'actor.equipment.equipped[]'],
+        ['core:inventory_items', 'actor.inventory.items[]'],
+        ['core:equipment_items', 'actor.equipment.equipped[]'],
       ]);
 
       const result = loader.transformContent(parsedContent, 'core');
@@ -111,9 +111,9 @@ describe('ScopeLoader', () => {
       });
     });
 
-    test('should handle custom mod IDs', () => {
+    test('should handle custom mod IDs with properly namespaced scopes', () => {
       const parsedContent = new Map([
-        ['custom_scope', 'location.entities(core:Item)'],
+        ['myMod:custom_scope', 'location.entities(core:Item)'],
       ]);
       const result = loader.transformContent(parsedContent, 'myMod');
       expect(result).toEqual({
@@ -130,6 +130,26 @@ describe('ScopeLoader', () => {
       const parsedContent = new Map();
       const result = loader.transformContent(parsedContent, 'testMod');
       expect(result).toEqual({});
+    });
+
+    test('should reject non-namespaced scope names', () => {
+      const parsedContent = new Map([
+        ['inventory_items', 'actor.inventory.items[]'],
+      ]);
+      
+      expect(() => loader.transformContent(parsedContent, 'core')).toThrow(
+        "Scope 'inventory_items' must be namespaced (e.g., 'core:inventory_items'). Only 'none' and 'self' are allowed without namespace."
+      );
+    });
+
+    test('should reject scopes with wrong namespace', () => {
+      const parsedContent = new Map([
+        ['wrong:inventory_items', 'actor.inventory.items[]'],
+      ]);
+      
+      expect(() => loader.transformContent(parsedContent, 'core')).toThrow(
+        "Scope 'wrong:inventory_items' is declared in mod 'core' but claims to belong to mod 'wrong'. Scope names must match the mod they're defined in."
+      );
     });
   });
 
@@ -149,32 +169,32 @@ describe('ScopeLoader', () => {
       parseDslExpression.mockRestore();
     });
 
-    test('should parse valid scope definitions', () => {
+    test('should parse valid namespaced scope definitions', () => {
       const content = `
-        inventory_items := actor.inventory.items[]
-        equipment_items := actor.equipment.equipped[]
-        followers := actor.followers[]
+        core:inventory_items := actor.inventory.items[]
+        core:equipment_items := actor.equipment.equipped[]
+        core:followers := actor.followers[]
       `;
       // loader.parseContent now calls the real parser via the mock's implementation
       const result = loader.parseContent(content, 'test.scope');
       expect(Object.fromEntries(result)).toEqual({
-        inventory_items: 'actor.inventory.items[]',
-        equipment_items: 'actor.equipment.equipped[]',
-        followers: 'actor.followers[]',
+        'core:inventory_items': 'actor.inventory.items[]',
+        'core:equipment_items': 'actor.equipment.equipped[]',
+        'core:followers': 'actor.followers[]',
       });
     });
 
     test('should handle comments and empty lines', () => {
       const content = `
         // Comment
-        inventory_items := actor.inventory.items[]
+        core:inventory_items := actor.inventory.items[]
 
-        equipment_items := actor.equipment.equipped[]
+        core:equipment_items := actor.equipment.equipped[]
       `;
       const result = loader.parseContent(content, 'test.scope');
       expect(Object.fromEntries(result)).toEqual({
-        inventory_items: 'actor.inventory.items[]',
-        equipment_items: 'actor.equipment.equipped[]',
+        'core:inventory_items': 'actor.inventory.items[]',
+        'core:equipment_items': 'actor.equipment.equipped[]',
       });
     });
 
@@ -186,23 +206,23 @@ describe('ScopeLoader', () => {
     });
 
     test('should throw error for invalid format', () => {
-      const content = `inventory_items = actor.inventory.items[]`;
+      const content = `core:inventory_items = actor.inventory.items[]`;
       expect(() => {
         loader.parseContent(content, 'test.scope');
       }).toThrow(
-        'Invalid scope definition format in test.scope: "inventory_items = actor.inventory.items[]". Expected "name := dsl_expression"'
+        'Invalid scope definition format in test.scope: "core:inventory_items = actor.inventory.items[]". Expected "name := dsl_expression"'
       );
     });
 
     test('should throw error for invalid DSL expression', () => {
-      const content = `inventory_items := invalid dsl expression`;
+      const content = `core:inventory_items := invalid dsl expression`;
 
       // The real parser will throw a ScopeSyntaxError, so we don't need to mock it
       // to throw a generic error anymore. The beforeAll hook has already set it to the real implementation.
       expect(() => {
         loader.parseContent(content, 'test.scope');
       }).toThrow(
-        'Invalid DSL expression in test.scope for scope "inventory_items":'
+        'Invalid DSL expression in test.scope for scope "core:inventory_items":'
       );
     });
   });
