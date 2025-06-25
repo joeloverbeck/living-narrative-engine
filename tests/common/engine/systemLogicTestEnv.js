@@ -28,9 +28,15 @@ import { deepClone } from '../../../src/utils/cloneUtils.js';
  * @param {Array<{id:string,components:object}>} options.entities - Initial
  *   entities to load
  * @param {Array<object>} options.rules - System rules to load
- * @param {object} options.logger - Logger instance (optional)
- * @param {object} options.dataRegistry - Data registry (optional)
- * @param {object} options.eventBus - Event bus instance (optional)
+ * @param {object} [options.logger] - Logger instance to use
+ * @param {() => object} [options.createLogger] - Factory to create a logger if
+ *   none is provided
+ * @param {object} [options.dataRegistry] - Data registry instance to use
+ * @param {() => object} [options.createDataRegistry] - Factory to create a data
+ *   registry if none is provided
+ * @param {object} [options.eventBus] - Event bus instance to use
+ * @param {() => object} [options.createEventBus] - Factory to create an event
+ *   bus if none is provided
  * @returns {{
  *   eventBus: import('../../../src/events/eventBus.js').default,
  *   events: any[],
@@ -50,16 +56,29 @@ export function createBaseRuleEnvironment({
   entities = [],
   rules = [],
   logger = null,
+  createLogger = null,
   dataRegistry = null,
+  createDataRegistry = null,
   eventBus = null,
+  createEventBus = null,
 }) {
-  const testLogger = logger || createMockLogger();
-  const testDataRegistry = dataRegistry || {
-    getAllSystemRules: jest.fn().mockReturnValue(rules),
-    getConditionDefinition: jest.fn().mockReturnValue(undefined),
-  };
+  const testLogger =
+    logger ||
+    (typeof createLogger === 'function' ? createLogger() : createMockLogger());
+  const testDataRegistry =
+    dataRegistry ||
+    (typeof createDataRegistry === 'function'
+      ? createDataRegistry()
+      : {
+          getAllSystemRules: jest.fn().mockReturnValue(rules),
+          getConditionDefinition: jest.fn().mockReturnValue(undefined),
+        });
 
-  const bus = eventBus || createCapturingEventBus();
+  const bus =
+    eventBus ||
+    (typeof createEventBus === 'function'
+      ? createEventBus()
+      : createCapturingEventBus());
 
   let entityManager;
   let operationRegistry;
@@ -162,9 +181,12 @@ export function resetRuleEnvironment(env, newEntities = []) {
  * @param {Function} options.createHandlers - Function to create handlers with (entityManager, eventBus, logger) parameters
  * @param {Array<{id:string,components:object}>} options.entities - Initial entities
  * @param {Array<object>} options.rules - System rules to load
- * @param {object} options.logger - Logger instance (optional, creates mock if not provided)
- * @param {object} options.dataRegistry - Data registry (optional, creates mock if not provided)
+ * @param {object} [options.logger] - Logger instance to use
+ * @param {() => object} [options.createLogger] - Logger factory
+ * @param {object} [options.dataRegistry] - Data registry instance to use
+ * @param {() => object} [options.createDataRegistry] - Data registry factory
  * @param {object} [options.eventBus] - Event bus instance to use
+ * @param {() => object} [options.createEventBus] - Event bus factory
  * @returns {object} Test environment with all components and cleanup function
  */
 export function createRuleTestEnvironment(options) {
