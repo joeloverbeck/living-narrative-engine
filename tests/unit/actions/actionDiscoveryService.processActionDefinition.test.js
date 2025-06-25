@@ -22,8 +22,7 @@ describe('ActionDiscoveryService - getValidActions', () => {
   let formatActionCommandFn;
   let logger;
   let safeEventDispatcher;
-  let mockScopeRegistry;
-  let mockScopeEngine;
+  let mockTargetResolutionService;
   let mockActionIndex;
 
   beforeEach(() => {
@@ -48,11 +47,8 @@ describe('ActionDiscoveryService - getValidActions', () => {
       error: jest.fn(),
     };
     safeEventDispatcher = { dispatch: jest.fn() };
-    mockScopeRegistry = {
-      getScope: jest.fn(),
-    };
-    mockScopeEngine = {
-      resolve: jest.fn(() => new Set()),
+    mockTargetResolutionService = {
+      resolveTargets: jest.fn(),
     };
     mockActionIndex = {
       getCandidateActions: jest.fn(),
@@ -66,8 +62,7 @@ describe('ActionDiscoveryService - getValidActions', () => {
       formatActionCommandFn,
       logger,
       safeEventDispatcher,
-      scopeRegistry: mockScopeRegistry,
-      scopeEngine: mockScopeEngine,
+      targetResolutionService: mockTargetResolutionService,
       actionIndex: mockActionIndex,
     });
   });
@@ -81,11 +76,16 @@ describe('ActionDiscoveryService - getValidActions', () => {
     const okDef = { id: 'ok', commandVerb: 'wait', scope: 'none' };
     mockActionIndex.getCandidateActions.mockReturnValue([failingDef, okDef]);
 
-    mockScopeEngine.resolve.mockImplementation(() => {
-      throw new Error('boom');
+    mockTargetResolutionService.resolveTargets.mockImplementation(async (scopeName) => {
+      if (scopeName === 'badScope') {
+        // Return empty array instead of throwing - the real TargetResolutionService handles errors internally
+        return [];
+      }
+      if (scopeName === 'none') {
+        return [{ type: 'none', entityId: null }];
+      }
+      return [];
     });
-    // FIX: Provide a syntactically valid expression so the parser doesn't fail first.
-    mockScopeRegistry.getScope.mockReturnValue({ expr: 'location' });
 
     const actor = { id: 'actor' };
     const context = {};
@@ -96,22 +96,19 @@ describe('ActionDiscoveryService - getValidActions', () => {
     expect(result.actions[0].id).toBe('ok');
     expect(result.errors).toHaveLength(0);
 
-    // Verify the error was dispatched with the correct message from the thrown error.
-    expect(safeDispatchError).toHaveBeenCalledWith(
-      safeEventDispatcher,
-      "Error resolving scope 'badScope': boom",
-      { error: 'boom', stack: expect.any(String) }
-    );
+    // Note: With the new architecture, TargetResolutionService handles errors internally
+    // This test verifies that when scope resolution returns no targets, the service continues processing other actions
+    expect(mockTargetResolutionService.resolveTargets).toHaveBeenCalledWith('badScope', actor, expect.anything(), null);
+    expect(mockTargetResolutionService.resolveTargets).toHaveBeenCalledWith('none', actor, expect.anything(), null);
   });
 
-  it('uses the scope registry and engine for scoped actions', async () => {
+  it('uses the target resolution service for scoped actions', async () => {
     const def = { id: 'attack', commandVerb: 'attack', scope: 'monster' };
     mockActionIndex.getCandidateActions.mockReturnValue([def]);
 
-    mockScopeRegistry.getScope.mockReturnValue({
-      expr: 'location.inhabitants',
-    });
-    mockScopeEngine.resolve.mockReturnValue(new Set(['monster1']));
+    mockTargetResolutionService.resolveTargets.mockResolvedValue([
+      { type: 'entity', entityId: 'monster1' }
+    ]);
     formatActionCommandFn.mockReturnValue({
       ok: true,
       value: 'attack monster1',
@@ -131,13 +128,13 @@ describe('ActionDiscoveryService - getValidActions', () => {
 
     const result = await service.getValidActions(actor, context);
 
-    expect(mockScopeRegistry.getScope).toHaveBeenCalledWith('monster');
-    expect(mockScopeEngine.resolve).toHaveBeenCalledWith(
-      expect.any(Object),
+    expect(mockTargetResolutionService.resolveTargets).toHaveBeenCalledWith(
+      'monster',
       actor,
       expect.objectContaining({
-        actor: actor,
-        location: { id: 'room1', getComponentData: expect.any(Function) },
+        currentLocation: { id: 'room1', getComponentData: expect.any(Function) },
+        getActor: expect.any(Function),
+        jsonLogicEval: {}
       }),
       null
     );

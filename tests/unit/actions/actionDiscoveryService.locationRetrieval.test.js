@@ -52,17 +52,19 @@ describe('ActionDiscoveryService – scoped discovery', () => {
 
   const safeEventDispatcher = { dispatch: jest.fn() };
 
-  const scopeRegistry = {
-    getScope: jest.fn((scopeName) => {
+  const mockTargetResolutionService = {
+    resolveTargets: jest.fn().mockImplementation(async (scopeName) => {
       if (scopeName === 'directions') {
-        return { expr: 'location.exits[].target' };
+        return [
+          { type: 'entity', entityId: 'loc-2' },
+          { type: 'entity', entityId: 'loc-3' }
+        ];
       }
-      return null;
+      if (scopeName === 'none') {
+        return [{ type: 'none', entityId: null }];
+      }
+      return [];
     }),
-  };
-
-  const mockScopeEngine = {
-    resolve: jest.fn(() => new Set(['loc-2', 'loc-3'])),
   };
 
   const mockPrerequisiteEvaluationService = {
@@ -77,8 +79,7 @@ describe('ActionDiscoveryService – scoped discovery', () => {
     logger,
     formatActionCommandFn,
     safeEventDispatcher,
-    scopeRegistry,
-    scopeEngine: mockScopeEngine,
+    targetResolutionService: mockTargetResolutionService,
     actionIndex: {
       getCandidateActions: jest
         .fn()

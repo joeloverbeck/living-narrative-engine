@@ -107,6 +107,7 @@ import { freeze } from '../utils';
  * @property {DiToken} IWorldContext - Token for managing the overall world context interface.
  * @property {DiToken} ICommandProcessor - Token for the command processing service interface.
  * @property {DiToken} IActionDiscoveryService - Token for the action discovery system interface.
+ * @property {DiToken} ITargetResolutionService - Token for the target resolution service interface.
  * @property {DiToken} IInputHandler - Token for handling player input interface.
  * @property {DiToken} ITurnOrderService - Token for the turn order management service interface.
  * @property {DiToken} ITurnManager - Token for the turn management service interface.
@@ -250,6 +251,7 @@ export const tokens = freeze({
   IWorldContext: 'IWorldContext',
   ICommandProcessor: 'ICommandProcessor',
   IActionDiscoveryService: 'IActionDiscoveryService',
+  ITargetResolutionService: 'ITargetResolutionService',
   ActionIndex: 'ActionIndex',
   IInputHandler: 'IInputHandler',
   ITurnOrderService: 'ITurnOrderService',

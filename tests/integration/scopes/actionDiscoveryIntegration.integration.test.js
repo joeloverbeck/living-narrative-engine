@@ -30,6 +30,7 @@ import fs from 'fs';
 import path from 'path';
 import JsonLogicEvaluationService from '../../../src/logic/jsonLogicEvaluationService.js';
 import InMemoryDataRegistry from '../../../src/data/inMemoryDataRegistry.js';
+import { TargetResolutionService } from '../../../src/actions/targetResolutionService.js';
 
 // Import actions
 import dismissAction from '../../../data/mods/core/actions/dismiss.action.json';
@@ -168,6 +169,14 @@ describe('Scope Integration Tests', () => {
       logger,
     });
 
+    const targetResolutionService = new TargetResolutionService({
+      scopeRegistry,
+      scopeEngine,
+      entityManager,
+      logger,
+      safeEventDispatcher,
+    });
+
     // FIX: Add the new prerequisiteEvaluationService dependency to the constructor
     actionDiscoveryService = new ActionDiscoveryService({
       gameDataRepository,
@@ -176,8 +185,7 @@ describe('Scope Integration Tests', () => {
       logger,
       formatActionCommandFn: formatActionCommand,
       safeEventDispatcher,
-      scopeRegistry,
-      scopeEngine,
+      targetResolutionService,
       actionIndex: {
         getCandidateActions: jest
           .fn()

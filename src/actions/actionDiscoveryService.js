@@ -21,9 +21,8 @@ import {
 } from '../constants/targetDomains.js';
 import { setupService } from '../utils/serviceInitializerUtils.js';
 import { getActorLocation } from '../utils/actorLocationUtils.js';
-import { safeDispatchError } from '../utils/safeDispatchErrorUtils.js';
 import { getEntityDisplayName } from '../utils/entityUtils.js';
-import { parseDslExpression } from '../scopeDsl/parser.js';
+import { ITargetResolutionService } from '../interfaces/ITargetResolutionService.js';
 import { TraceContext as TraceContextImpl } from './tracing/traceContext.js';
 
 
@@ -41,8 +40,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
   #safeEventDispatcher;
   #getActorLocationFn;
   #getEntityDisplayNameFn;
-  #scopeRegistry;
-  #scopeEngine;
+  #targetResolutionService;
   #actionIndex;
 
   /**
@@ -53,8 +51,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
    * @param {ILogger}            deps.logger
    * @param {formatActionCommandFn} deps.formatActionCommandFn
    * @param {ISafeEventDispatcher} deps.safeEventDispatcher
-   * @param {ScopeRegistry}      deps.scopeRegistry
-   * @param {import('../interfaces/IScopeEngine.js').IScopeEngine} deps.scopeEngine
+   * @param {ITargetResolutionService} deps.targetResolutionService
    * @param {Function}           deps.getActorLocationFn
    * @param {Function}           deps.getEntityDisplayNameFn
    */
@@ -65,8 +62,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
                 logger,
                 formatActionCommandFn,
                 safeEventDispatcher,
-                scopeRegistry,
-                scopeEngine,
+                targetResolutionService,
                 getActorLocationFn = getActorLocation,
                 getEntityDisplayNameFn = getEntityDisplayName,
               }) {
@@ -88,8 +84,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
         value: safeEventDispatcher,
         requiredMethods: ['dispatch'],
       },
-      scopeRegistry: { value: scopeRegistry, requiredMethods: ['getScope'] },
-      scopeEngine: { value: scopeEngine, requiredMethods: ['resolve'] },
+      targetResolutionService: { value: targetResolutionService, requiredMethods: ['resolveTargets'] },
       getActorLocationFn: { value: getActorLocationFn, isFunction: true },
       getEntityDisplayNameFn: {
         value: getEntityDisplayNameFn,
@@ -102,8 +97,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
     this.#actionIndex = actionIndex;
     this.#formatActionCommandFn = formatActionCommandFn;
     this.#safeEventDispatcher = safeEventDispatcher;
-    this.#scopeRegistry = scopeRegistry;
-    this.#scopeEngine = scopeEngine;
+    this.#targetResolutionService = targetResolutionService;
     this.#getActorLocationFn = getActorLocationFn;
     this.#getEntityDisplayNameFn = getEntityDisplayNameFn;
 
@@ -132,59 +126,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
     );
   }
 
-  /**
-   * Resolves a DSL scope expression to a set of entity IDs.
-   *
-   * @param {string} scopeName The name of the scope to resolve.
-   * @param {Entity} actorEntity The actor entity.
-   * @param {ActionContext} discoveryContext The context for discovery.
-   * @param {TraceContext} [trace=null] The optional trace context for logging.
-   * @returns {Set<string>} A set of target entity IDs.
-   * @private
-   */
-  #resolveScopeToIds(scopeName, actorEntity, discoveryContext, trace = null) {
-    const source = 'ActionDiscoveryService.#resolveScopeToIds';
-    trace?.addLog('info', `Resolving scope '${scopeName}' with DSL.`, source);
-    const scopeDefinition = this.#scopeRegistry.getScope(scopeName);
 
-    if (
-      !scopeDefinition ||
-      typeof scopeDefinition.expr !== 'string' ||
-      !scopeDefinition.expr.trim()
-    ) {
-      const errorMessage = `Missing scope definition: Scope '${scopeName}' not found or has no expression in registry.`;
-      trace?.addLog('warn', errorMessage, source, { scopeName });
-      this.#logger.warn(errorMessage);
-      safeDispatchError(this.#safeEventDispatcher, errorMessage, { scopeName });
-      return new Set();
-    }
-
-    try {
-      const ast = parseDslExpression(scopeDefinition.expr);
-
-      const runtimeCtx = {
-        entityManager: this.#entityManager,
-        jsonLogicEval: discoveryContext.jsonLogicEval || {},
-        logger: this.#logger,
-        actor: actorEntity,
-        location: discoveryContext.currentLocation,
-      };
-
-      return this.#scopeEngine.resolve(ast, actorEntity, runtimeCtx, trace) ?? new Set();
-    } catch (error) {
-      trace?.addLog('error', `Error resolving scope '${scopeName}': ${error.message}`, source, { error: error.message, stack: error.stack });
-      this.#logger.error(
-        `Error resolving scope '${scopeName}' with DSL:`,
-        error
-      );
-      safeDispatchError(
-        this.#safeEventDispatcher,
-        `Error resolving scope '${scopeName}': ${error.message}`,
-        { error: error.message, stack: error.stack }
-      );
-      return new Set();
-    }
-  }
 
   /**
    * @description Prepares a populated discovery context for the specified actor.
@@ -254,27 +196,13 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
       trace?.addLog('success', `Action '${actionDef.id}' passed actor prerequisite check.`, source);
 
 
-      // STEP 2: If actor state is valid, resolve the scope to get all valid targets.
-      const scope = actionDef.scope;
-      let targetContexts = [];
-      let targetIds = new Set();
-
-      if (scope === TARGET_DOMAIN_NONE) {
-        targetContexts.push(ActionTargetContext.noTarget());
-        trace?.addLog('info', `Action '${actionDef.id}' has scope 'none'; skipping DSL resolution.`, source);
-      } else if (scope === TARGET_DOMAIN_SELF) {
-        targetIds.add(actorEntity.id);
-        targetContexts.push(ActionTargetContext.forEntity(actorEntity.id));
-        trace?.addLog('info', `Action '${actionDef.id}' has scope 'self'; target is actor.`, source, { targetIds: [actorEntity.id] });
-      } else {
-        // For DSL scopes, resolve to get all valid target IDs.
-        targetIds = this.#resolveScopeToIds(scope, actorEntity, discoveryContext, trace);
-        for (const targetId of targetIds) {
-          targetContexts.push(ActionTargetContext.forEntity(targetId));
-        }
-      }
-
-      trace?.addLog('info', `Scope for action '${actionDef.id}' resolved to ${targetIds.size} potential targets.`, source, { targetIds: Array.from(targetIds) });
+      // STEP 2: Logic is now a simple, declarative call to the new service.
+      const targetContexts = await this.#targetResolutionService.resolveTargets(
+        actionDef.scope, 
+        actorEntity, 
+        discoveryContext, 
+        trace
+      );
 
       if (targetContexts.length === 0) {
         this.#logger.debug(

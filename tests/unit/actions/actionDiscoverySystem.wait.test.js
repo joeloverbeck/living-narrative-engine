@@ -40,8 +40,6 @@ describe('ActionDiscoveryService - Wait Action Tests', () => {
   let mockPrereqService;
   let mockLogger;
   let mockFormatActionCommandFn;
-  let mockScopeRegistry;
-  let mockScopeEngine;
   let mockActionIndex;
 
   const ACTOR_INSTANCE_ID = 'actor1-instance-wait';
@@ -72,8 +70,13 @@ describe('ActionDiscoveryService - Wait Action Tests', () => {
 
     mockFormatActionCommandFn = formatActionCommandFn;
     const mockSafeEventDispatcher = { dispatch: jest.fn() };
-    mockScopeRegistry = { getScope: jest.fn() };
-    mockScopeEngine = createMockScopeEngine();
+    const mockTargetResolutionService = {
+      resolveTargets: jest.fn().mockImplementation(async (scopeName) => {
+        if (scopeName === 'none') return [{ type: 'none', entityId: null }];
+        if (scopeName === 'self') return [{ type: 'entity', entityId: mockActorEntity.id }];
+        return [];
+      })
+    };
 
     mockActorEntity = createTestEntity(ACTOR_INSTANCE_ID, DUMMY_DEFINITION_ID);
 
@@ -99,8 +102,7 @@ describe('ActionDiscoveryService - Wait Action Tests', () => {
       logger: mockLogger,
       formatActionCommandFn: mockFormatActionCommandFn,
       safeEventDispatcher: mockSafeEventDispatcher,
-      scopeRegistry: mockScopeRegistry,
-      scopeEngine: mockScopeEngine,
+      targetResolutionService: mockTargetResolutionService,
       actionIndex: mockActionIndex,
     });
   });

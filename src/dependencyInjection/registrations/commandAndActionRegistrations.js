@@ -22,6 +22,7 @@ import { INITIALIZABLE } from '../tags.js';
 
 // --- Service Imports ---
 import { ActionDiscoveryService } from '../../actions/actionDiscoveryService.js';
+import { TargetResolutionService } from '../../actions/targetResolutionService.js';
 import { ActionIndex } from '../../actions/actionIndex.js';
 import { ActionValidationContextBuilder } from '../../actions/validation/actionValidationContextBuilder.js';
 import { PrerequisiteEvaluationService } from '../../actions/validation/prerequisiteEvaluationService.js';
@@ -63,6 +64,18 @@ export function registerCommandAndAction(container) {
     tokens.IEntityManager,
   ]);
 
+  // --- Target Resolution Service ---
+  // Must be registered before ActionDiscoveryService
+  registrar.singletonFactory(tokens.ITargetResolutionService, c => {
+    return new TargetResolutionService({
+      scopeRegistry: c.resolve(tokens.IScopeRegistry),
+      scopeEngine: c.resolve(tokens.IScopeEngine),
+      entityManager: c.resolve(tokens.IEntityManager),
+      logger: c.resolve(tokens.ILogger),
+      safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher)
+    });
+  });
+
   // --- Action Discovery & Execution ---
   registrar
     .tagged(INITIALIZABLE)
@@ -76,8 +89,7 @@ export function registerCommandAndAction(container) {
         logger: c.resolve(tokens.ILogger),
         formatActionCommandFn: formatActionCommand,
         safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
-        scopeRegistry: c.resolve(tokens.IScopeRegistry),
-        scopeEngine: c.resolve(tokens.IScopeEngine),
+        targetResolutionService: c.resolve(tokens.ITargetResolutionService),
         getActorLocationFn: getActorLocation,
         getEntityDisplayNameFn: getEntityDisplayName,
       });

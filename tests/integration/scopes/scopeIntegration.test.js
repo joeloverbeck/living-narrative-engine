@@ -29,6 +29,7 @@ import fs from 'fs';
 import path from 'path';
 import JsonLogicEvaluationService from '../../../src/logic/jsonLogicEvaluationService.js';
 import InMemoryDataRegistry from '../../../src/data/inMemoryDataRegistry.js';
+import { TargetResolutionService } from '../../../src/actions/targetResolutionService.js';
 
 jest.unmock('../../../src/scopeDsl/scopeRegistry.js');
 
@@ -143,6 +144,14 @@ describe('Scope Integration Tests', () => {
   });
 
   const createActionDiscoveryService = (overrides = {}) => {
+    const targetResolutionService = new TargetResolutionService({
+      scopeRegistry,
+      scopeEngine,
+      entityManager,
+      logger,
+      safeEventDispatcher,
+    });
+    
     return new ActionDiscoveryService({
       gameDataRepository,
       entityManager,
@@ -150,8 +159,7 @@ describe('Scope Integration Tests', () => {
       logger,
       formatActionCommandFn: formatActionCommand,
       safeEventDispatcher,
-      scopeRegistry,
-      scopeEngine,
+      targetResolutionService,
       actionIndex: {
         getCandidateActions: jest
           .fn()

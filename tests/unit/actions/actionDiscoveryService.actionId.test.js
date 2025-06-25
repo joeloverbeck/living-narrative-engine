@@ -13,8 +13,6 @@ describe('ActionDiscoveryService params exposure', () => {
   };
 
   let service;
-  let mockScopeRegistry;
-  let mockScopeEngine;
 
   beforeEach(() => {
     const gameDataRepo = { getAllActionDefinitions: () => [dummyActionDef] };
@@ -55,16 +53,10 @@ describe('ActionDiscoveryService params exposure', () => {
       getCandidateActions: jest.fn(() => [dummyActionDef]),
     };
 
-    mockScopeRegistry = {
-      getScope: jest.fn((scopeName) => {
-        if (scopeName === 'enemies') {
-          return { expr: 'location.inhabitants' };
-        }
-        return null;
-      }),
-    };
-    mockScopeEngine = {
-      resolve: jest.fn(() => new Set(['rat123'])),
+    const mockTargetResolutionService = {
+      resolveTargets: jest.fn().mockResolvedValue([
+        { type: 'entity', entityId: 'rat123' }
+      ]),
     };
 
     service = new ActionDiscoveryService({
@@ -76,8 +68,7 @@ describe('ActionDiscoveryService params exposure', () => {
       formatActionCommandFn,
       logger,
       safeEventDispatcher,
-      scopeRegistry: mockScopeRegistry,
-      scopeEngine: mockScopeEngine,
+      targetResolutionService: mockTargetResolutionService,
     });
   });
 
