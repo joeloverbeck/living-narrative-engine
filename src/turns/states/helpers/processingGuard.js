@@ -1,6 +1,6 @@
 /**
  * @file processingGuard.js
- * @description Utility to manage the _isProcessing flag for ProcessingCommandState.
+ * @description Utility to manage the processing flag for ProcessingCommandState.
  */
 
 /**
@@ -9,7 +9,8 @@
  */
 export class ProcessingGuard {
   /**
-   * @param {{ _isProcessing: boolean }} owner - Object owning the flag.
+   * @param {{ _setProcessing: function(boolean): void }} owner -
+   *   Object owning the flag and exposing a setter.
    */
   constructor(owner) {
     this._owner = owner;
@@ -20,8 +21,8 @@ export class ProcessingGuard {
    * @returns {void}
    */
   start() {
-    if (this._owner) {
-      this._owner._isProcessing = true;
+    if (this._owner && typeof this._owner._setProcessing === 'function') {
+      this._owner._setProcessing(true);
     }
   }
 
@@ -30,8 +31,8 @@ export class ProcessingGuard {
    * @returns {void}
    */
   finish() {
-    if (this._owner) {
-      this._owner._isProcessing = false;
+    if (this._owner && typeof this._owner._setProcessing === 'function') {
+      this._owner._setProcessing(false);
     }
   }
 }

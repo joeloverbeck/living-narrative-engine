@@ -267,10 +267,10 @@ describe('ProcessingCommandState', () => {
           }
           if (
             processingState &&
-            processingState['_isProcessing'] &&
+            processingState.isProcessing &&
             oldState === processingState
           ) {
-            processingState['_isProcessing'] = false;
+            processingState.finishProcessing();
           }
           return Promise.resolve();
         }),
@@ -340,7 +340,7 @@ describe('ProcessingCommandState', () => {
       mockTurnContext.getActor.mockReturnValue(actor);
       mockTurnContext.isValid.mockReturnValue(true);
       mockTurnContext.getChosenAction.mockReturnValue(mockTurnAction);
-      processingState['_isProcessing'] = true;
+      processingState.startProcessing();
     });
 
     it('should correctly call commandProcessor.dispatchAction with actor and turnAction object', async () => {
@@ -403,7 +403,7 @@ describe('ProcessingCommandState', () => {
         expectedInterpreterPayloadSuccess
       );
       await new Promise(process.nextTick);
-      expect(processingState['_isProcessing']).toBe(false);
+      expect(processingState.isProcessing).toBe(false);
     });
 
     it('should handle failed command processing (CommandResult success:false) leading to END_TURN_FAILURE', async () => {
@@ -429,7 +429,7 @@ describe('ProcessingCommandState', () => {
         expectedInterpreterPayloadFailure
       );
       await new Promise(process.nextTick);
-      expect(processingState['_isProcessing']).toBe(false);
+      expect(processingState.isProcessing).toBe(false);
     });
 
     it('should handle RE_PROMPT directive and set _isProcessing to false due to transition', async () => {
@@ -454,7 +454,7 @@ describe('ProcessingCommandState', () => {
         AwaitingActorDecisionState,
         []
       );
-      expect(processingState['_isProcessing']).toBe(false);
+      expect(processingState.isProcessing).toBe(false);
     });
 
     it('should handle WAIT_FOR_EVENT directive and set _isProcessing to false due to transition', async () => {
@@ -479,7 +479,7 @@ describe('ProcessingCommandState', () => {
         AwaitingExternalTurnEndState,
         []
       );
-      expect(processingState['_isProcessing']).toBe(false);
+      expect(processingState.isProcessing).toBe(false);
     });
 
     it('should correctly manage _isProcessing flag if no transition occurs after strategy execution but turn ends', async () => {
@@ -496,7 +496,7 @@ describe('ProcessingCommandState', () => {
         nonTransitioningEndTurnStrategy
       );
 
-      processingState['_isProcessing'] = true;
+      processingState.startProcessing();
       await processingState['_processCommandInternal'](
         mockTurnContext,
         actor,
@@ -506,7 +506,7 @@ describe('ProcessingCommandState', () => {
       expect(nonTransitioningEndTurnStrategy.execute).toHaveBeenCalled();
       expect(mockTurnContext.requestTransition).not.toHaveBeenCalled();
       expect(mockTurnContext.endTurn).toHaveBeenCalledWith(null);
-      expect(processingState['_isProcessing']).toBe(false);
+      expect(processingState.isProcessing).toBe(false);
     });
 
     it('should process ITurnAction by calling dispatchAction, regardless of whether commandString is present', async () => {
@@ -552,7 +552,7 @@ describe('ProcessingCommandState', () => {
         expectedPayloadNoCommandStr
       );
       await new Promise(process.nextTick);
-      expect(processingState['_isProcessing']).toBe(false);
+      expect(processingState.isProcessing).toBe(false);
     });
   });
 
@@ -566,16 +566,16 @@ describe('ProcessingCommandState', () => {
     });
 
     it('should set _isProcessing to false and log exit', async () => {
-      processingState['_isProcessing'] = true; // Start as true
+      processingState.startProcessing(); // Start as true
       const nextState = new TurnIdleState(mockHandler);
       await processingState.exitState(mockHandler, nextState);
-      expect(processingState['_isProcessing']).toBe(false);
+      expect(processingState.isProcessing).toBe(false);
       // More robust check for the log message content
       const wasProcessingLog = mockLogger.debug.mock.calls.find((call) =>
         call[0].includes('Exiting for actor')
       );
       expect(wasProcessingLog[0]).toContain(
-        `Exiting for actor ${actor.getId()} while _isProcessing was true (now false). Transitioning to TurnIdleState.`
+        `Exiting for actor ${actor.getId()} while processing was true (now false). Transitioning to TurnIdleState.`
       );
     });
   });
@@ -598,9 +598,9 @@ describe('ProcessingCommandState', () => {
     });
 
     it('should set _isProcessing to false', async () => {
-      processingState['_isProcessing'] = true;
+      processingState.startProcessing();
       await processingState.destroy(mockHandler);
-      expect(processingState['_isProcessing']).toBe(false);
+      expect(processingState.isProcessing).toBe(false);
     });
 
     it('should log destruction and call super.destroy', async () => {

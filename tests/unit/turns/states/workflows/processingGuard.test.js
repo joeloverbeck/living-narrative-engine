@@ -21,21 +21,41 @@ const makeTurnCtx = () => ({
 
 describe('ProcessingGuard', () => {
   test('start and finish toggle flag on owner', () => {
-    const owner = { _isProcessing: false };
+    const owner = {
+      _flag: false,
+      _setProcessing(val) {
+        this._flag = val;
+      },
+      get isProcessing() {
+        return this._flag;
+      },
+    };
     const guard = new ProcessingGuard(owner);
     guard.start();
-    expect(owner._isProcessing).toBe(true);
+    expect(owner.isProcessing).toBe(true);
     guard.finish();
-    expect(owner._isProcessing).toBe(false);
+    expect(owner.isProcessing).toBe(false);
   });
 
   test('finish via handleProcessingException clears flag when processing interrupted', async () => {
     const handler = makeHandler();
     const ctx = makeTurnCtx();
     const state = new ProcessingCommandState(handler, null, null);
-    state._isProcessing = true;
+    state.startProcessing();
     const exceptionHandler = new ProcessingExceptionHandler(state);
     await exceptionHandler.handle(ctx, new Error('boom'), 'actor1');
-    expect(state._isProcessing).toBe(false);
+    expect(state.isProcessing).toBe(false);
+  });
+
+  test('private processing flag cannot be modified externally', () => {
+    const state = new ProcessingCommandState(makeHandler(), null, null);
+    expect('_isProcessing' in state).toBe(false);
+    state.startProcessing();
+    expect(state.isProcessing).toBe(true);
+    // Attempt to set nonexistent public property should not affect actual state
+    state._isProcessing = false;
+    expect(state.isProcessing).toBe(true);
+    state.finishProcessing();
+    expect(state.isProcessing).toBe(false);
   });
 });

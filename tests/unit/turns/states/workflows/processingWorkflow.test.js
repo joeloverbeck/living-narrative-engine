@@ -27,7 +27,13 @@ describe('ProcessingWorkflow.run', () => {
       getLogger: () => logger,
     };
     state = {
-      _isProcessing: false,
+      _flag: false,
+      _setProcessing(val) {
+        this._flag = val;
+      },
+      get isProcessing() {
+        return this._flag;
+      },
       _handler: handler,
       getStateName: () => 'ProcessingCommandState',
       _getTurnContext: jest.fn(() => ctx),
@@ -35,10 +41,16 @@ describe('ProcessingWorkflow.run', () => {
       _resolveLogger: jest.fn(() => logger),
       _dispatchSpeech: jest.fn().mockResolvedValue(undefined),
       _processCommandInternal: jest.fn(async () => {
-        state._processingGuard.finish();
+        state.finishProcessing();
       }),
     };
     state._processingGuard = new ProcessingGuard(state);
+    state.startProcessing = function () {
+      this._processingGuard.start();
+    };
+    state.finishProcessing = function () {
+      this._processingGuard.finish();
+    };
     const customHandler = {
       handle: jest.fn(async () => {
         state._processingGuard.finish();
@@ -63,7 +75,7 @@ describe('ProcessingWorkflow.run', () => {
       action,
       workflow._exceptionHandler
     );
-    expect(state._isProcessing).toBe(false);
+    expect(state.isProcessing).toBe(false);
   });
 
   test('handles errors from internal processing', async () => {
@@ -72,14 +84,14 @@ describe('ProcessingWorkflow.run', () => {
     });
     await workflow.run(handler, null);
     expect(workflow._exceptionHandler.handle).toHaveBeenCalled();
-    expect(state._isProcessing).toBe(false);
+    expect(state.isProcessing).toBe(false);
   });
 
   test('aborts when already processing', async () => {
-    state._isProcessing = true;
+    state.startProcessing();
     await workflow.run(handler, null);
     expect(state._processCommandInternal).not.toHaveBeenCalled();
     expect(logger.warn).toHaveBeenCalled();
-    expect(state._isProcessing).toBe(true);
+    expect(state.isProcessing).toBe(true);
   });
 });

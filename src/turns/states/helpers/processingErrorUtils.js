@@ -18,7 +18,7 @@ import { safeDispatchError } from '../../../utils/safeDispatchErrorUtils.js';
  * @returns {boolean} The previous _isProcessing value.
  */
 export function resetProcessingFlags(state) {
-  const wasProcessing = state._isProcessing;
+  const wasProcessing = state.isProcessing;
   finishProcessing(state);
   return wasProcessing;
 }
@@ -30,9 +30,14 @@ export function resetProcessingFlags(state) {
  * @returns {void}
  */
 export function finishProcessing(state) {
-  if (state._processingGuard) {
+  if (typeof state.finishProcessing === 'function') {
+    state.finishProcessing();
+  } else if (state._processingGuard) {
     state._processingGuard.finish();
+  } else if (typeof state._setProcessing === 'function') {
+    state._setProcessing(false);
   } else {
+    // fallback for legacy shapes
     state._isProcessing = false;
   }
 }

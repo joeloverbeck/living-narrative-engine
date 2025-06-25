@@ -46,7 +46,7 @@ export class ProcessingWorkflow {
     );
     if (!turnCtx) return null;
 
-    if (this._state._isProcessing) {
+    if (this._state.isProcessing) {
       const logger = getLogger(turnCtx, this._state._handler);
       logger.warn(
         `${this._state.getStateName()}: enterState called while already processing. Actor: ${turnCtx?.getActor()?.id ?? 'N/A'}. Aborting re-entry.`
@@ -54,7 +54,7 @@ export class ProcessingWorkflow {
       return null;
     }
 
-    this._state._processingGuard.start();
+    this._state.startProcessing();
 
     await AbstractTurnState.prototype.enterState.call(
       this._state,

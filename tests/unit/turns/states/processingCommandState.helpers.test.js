@@ -36,13 +36,13 @@ describe('ProcessingCommandState helpers', () => {
     state._ensureContext = jest.fn(async () => ctx);
     const result = await workflow._acquireContext(mockHandler, null);
     expect(result).toBe(ctx);
-    expect(state._isProcessing).toBe(true);
+    expect(state.isProcessing).toBe(true);
   });
 
   test('_acquireContext returns null when already processing', async () => {
     const ctx = makeCtx({ id: 'a1' });
     state._ensureContext = jest.fn(async () => ctx);
-    state._isProcessing = true;
+    state.startProcessing();
     const result = await workflow._acquireContext(mockHandler, null);
     expect(result).toBeNull();
   });

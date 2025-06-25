@@ -29,13 +29,46 @@ import { ITurnDirectiveResolver } from '../interfaces/ITurnDirectiveResolver.js'
  * @augments {AbstractTurnState}
  */
 export class ProcessingCommandState extends AbstractTurnState {
-  _isProcessing = false;
+  #isProcessing = false;
   _processingGuard;
   /** @type {ITurnDirectiveResolver} */
   _directiveResolver = turnDirectiveResolverAdapter;
   _exceptionHandler;
   #turnActionToProcess = null;
   #commandStringForLog = null;
+
+  /**
+   * @description Internal setter used by ProcessingGuard.
+   * @param {boolean} val - New processing state.
+   * @returns {void}
+   */
+  _setProcessing(val) {
+    this.#isProcessing = val;
+  }
+
+  /**
+   * @description Indicates whether the state is currently processing.
+   * @returns {boolean} True if processing.
+   */
+  get isProcessing() {
+    return this.#isProcessing;
+  }
+
+  /**
+   * @description Marks the start of command processing.
+   * @returns {void}
+   */
+  startProcessing() {
+    this._processingGuard.start();
+  }
+
+  /**
+   * @description Marks the end of command processing.
+   * @returns {void}
+   */
+  finishProcessing() {
+    this._processingGuard.finish();
+  }
 
   /**
    * @override
@@ -179,7 +212,7 @@ export class ProcessingCommandState extends AbstractTurnState {
   }
 
   async exitState(handler, nextState) {
-    const wasProcessing = this._isProcessing;
+    const wasProcessing = this.isProcessing;
     // Ensure processing flag is false on exit, regardless of how exit was triggered.
     finishProcessing(this);
 
@@ -189,7 +222,7 @@ export class ProcessingCommandState extends AbstractTurnState {
 
     if (wasProcessing) {
       logger.debug(
-        `${this.getStateName()}: Exiting for actor ${actorId} while _isProcessing was true (now false). Transitioning to ${nextState?.getStateName() ?? 'None'}.`
+        `${this.getStateName()}: Exiting for actor ${actorId} while processing was true (now false). Transitioning to ${nextState?.getStateName() ?? 'None'}.`
       );
     } else {
       logger.debug(
@@ -205,10 +238,10 @@ export class ProcessingCommandState extends AbstractTurnState {
     const actorId = turnCtx?.getActor?.()?.id ?? 'N/A_at_destroy';
 
     logger.debug(
-      `${this.getStateName()}: Destroying for actor: ${actorId}. Current _isProcessing: ${this._isProcessing}`
+      `${this.getStateName()}: Destroying for actor: ${actorId}. Current isProcessing: ${this.isProcessing}`
     );
 
-    if (this._isProcessing) {
+    if (this.isProcessing) {
       // This indicates an abnormal termination, like the handler itself being destroyed.
       logger.warn(
         `${this.getStateName()}: Destroyed during active processing for actor ${actorId}.`

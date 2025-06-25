@@ -65,9 +65,9 @@ export class CommandProcessingWorkflow {
       turnAction
     );
 
-    if (!this._state._isProcessing) {
+    if (!this._state.isProcessing) {
       logger.warn(
-        `${this._state.getStateName()}: _isProcessing became false after dispatch for ${actorId}.`
+        `${this._state.getStateName()}: processing flag became false after dispatch for ${actorId}.`
       );
       return null;
     }
@@ -176,7 +176,7 @@ export class CommandProcessingWorkflow {
       `${this._state.getStateName()}: Actor ${actorId} - Directive strategy ${directiveStrategy.constructor.name} executed.`
     );
 
-    if (!this._state._isProcessing) {
+    if (!this._state.isProcessing) {
       logger.debug(
         `${this._state.getStateName()}: Processing flag false after directive strategy for ${actorId}.`
       );
@@ -262,13 +262,13 @@ export class CommandProcessingWorkflow {
       }
     } finally {
       if (
-        this._state._isProcessing &&
+        this._state.isProcessing &&
         this._state._handler.getCurrentState() === this._state
       ) {
         const finalLogger =
           this._state._getTurnContext()?.getLogger() ?? turnCtx.getLogger();
         finalLogger.warn(
-          `${this._state.getStateName()}: _isProcessing was unexpectedly true at the end of _processCommandInternal for ${actorId}. Forcing to false.`
+          `${this._state.getStateName()}: isProcessing was unexpectedly true at the end of _processCommandInternal for ${actorId}. Forcing to false.`
         );
         finishProcessing(this._state);
       }
