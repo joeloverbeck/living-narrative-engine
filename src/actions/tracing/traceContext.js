@@ -44,12 +44,12 @@ export class TraceContext {
       source,
       timestamp: Date.now(),
     };
-    
+
     // Only add data field if it's not null/undefined
-    if (data != null) {
+    if (data !== null && data !== undefined) {
       logEntry.data = data;
     }
-    
+
     this.logs.push(logEntry);
   }
 }

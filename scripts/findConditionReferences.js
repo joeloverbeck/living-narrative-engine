@@ -42,7 +42,8 @@ async function findFilesByEnding(dir, targetEndings) {
           const subFiles = await findFilesByEnding(itemPath, targetEndings);
           foundFiles.push(...subFiles);
         }
-      } else { // It's a file, check if its name ends with any of the target strings
+      } else {
+        // It's a file, check if its name ends with any of the target strings
         for (const ending of targetEndings) {
           if (item.name.endsWith(ending)) {
             foundFiles.push(itemPath);
@@ -53,7 +54,9 @@ async function findFilesByEnding(dir, targetEndings) {
     }
   } catch (error) {
     if (error.code !== 'ENOENT') {
-      console.error(`⚠️  Warning: Could not read directory ${dir}: ${error.message}`);
+      console.error(
+        `⚠️  Warning: Could not read directory ${dir}: ${error.message}`
+      );
     }
   }
   return foundFiles;
@@ -72,7 +75,10 @@ async function searchFileForIdentifier(filePath, identifier) {
     const content = await fs.readFile(filePath, 'utf8');
     const lines = content.split('\n');
     // The identifier is escaped to handle any special regex characters it might contain.
-    const escapedIdentifier = identifier.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+    const escapedIdentifier = identifier.replace(
+      /[-/\\^$*+?.()|[\]{}]/g,
+      '\\$&'
+    );
     // This regex looks for the identifier, potentially preceded by a 'namespace:' and followed by a word boundary.
     const searchRegex = new RegExp(`(core:|intimacy:)?${escapedIdentifier}\\b`);
 
@@ -82,7 +88,9 @@ async function searchFileForIdentifier(filePath, identifier) {
       }
     }
   } catch (error) {
-    console.error(`⚠️  Warning: Could not read file ${filePath}: ${error.message}`);
+    console.error(
+      `⚠️  Warning: Could not read file ${filePath}: ${error.message}`
+    );
   }
   return matches;
 }
@@ -95,19 +103,22 @@ async function main() {
 
   // 1. Find all '.condition.json' files specifically within the mods directory
   console.log(`\nScanning for condition files...`);
-  const conditionFiles = await findFilesByEnding(
-    MODS_DIR,
-    [CONDITION_FILE_ENDING]
-  );
+  const conditionFiles = await findFilesByEnding(MODS_DIR, [
+    CONDITION_FILE_ENDING,
+  ]);
 
   if (conditionFiles.length === 0) {
-    console.log('\n✅ No *.condition.json files found. Please check the `MODS_DIR` path and file locations.');
+    console.log(
+      '\n✅ No *.condition.json files found. Please check the `MODS_DIR` path and file locations.'
+    );
     return;
   }
   console.log(`Found ${conditionFiles.length} condition file(s) to process.`);
 
   // 2. Find all files to search within (source code, json, and scope files)
-  console.log('\nScanning for files to search within (source code, json, scope)...');
+  console.log(
+    '\nScanning for files to search within (source code, json, scope)...'
+  );
   const filesToSearch = await findFilesByEnding(
     ROOT_DIR,
     SEARCH_TARGET_EXTENSIONS
@@ -116,7 +127,9 @@ async function main() {
 
   // 3. For each condition, search all other files for its identifier
   const allReferences = {};
-  const totalIdentifiers = conditionFiles.map(f => path.basename(f, CONDITION_FILE_ENDING));
+  const totalIdentifiers = conditionFiles.map((f) =>
+    path.basename(f, CONDITION_FILE_ENDING)
+  );
 
   for (const conditionFile of conditionFiles) {
     const identifier = path.basename(conditionFile, CONDITION_FILE_ENDING);
@@ -142,7 +155,9 @@ async function main() {
           lines: matchingLines,
         });
         // Log found references immediately
-        console.log(`  Found in ./${relativePath} on line(s): ${matchingLines.join(', ')}`);
+        console.log(
+          `  Found in ./${relativePath} on line(s): ${matchingLines.join(', ')}`
+        );
       }
     }
   }
@@ -151,13 +166,17 @@ async function main() {
   console.log('\n--- ✅ Search Complete ---');
   const referencedIdentifiers = Object.keys(allReferences);
 
-  console.log(`Found references for ${referencedIdentifiers.length} out of ${totalIdentifiers.length} total identifiers.`);
+  console.log(
+    `Found references for ${referencedIdentifiers.length} out of ${totalIdentifiers.length} total identifiers.`
+  );
 
-  const unreferenced = totalIdentifiers.filter(id => !referencedIdentifiers.includes(id));
+  const unreferenced = totalIdentifiers.filter(
+    (id) => !referencedIdentifiers.includes(id)
+  );
 
   if (unreferenced.length > 0) {
     console.log('\n--- ⚠️  Unreferenced Identifiers ---');
-    unreferenced.forEach(id => console.log(`  - ${id}`));
+    unreferenced.forEach((id) => console.log(`  - ${id}`));
   } else {
     console.log('\n✅ All identifiers appear to be referenced.');
   }

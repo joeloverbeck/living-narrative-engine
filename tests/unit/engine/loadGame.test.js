@@ -5,19 +5,14 @@ import {
   expectEngineRunning,
   expectEngineStopped,
   expectNoDispatch,
+  buildLoadSuccessDispatches,
+  buildLoadFailureDispatches,
+  buildLoadFinalizeFailureDispatches,
 } from '../../common/engine/dispatchTestUtils.js';
-import {
-  ENGINE_OPERATION_IN_PROGRESS_UI,
-  ENGINE_READY_UI,
-  ENGINE_OPERATION_FAILED_UI,
-} from '../../../src/constants/eventIds.js';
 import { tokens } from '../../../src/dependencyInjection/tokens.js';
 import { describeEngineSuite } from '../../common/engine/gameEngineTestBed.js';
 import { generateServiceUnavailableTests } from '../../common/engine/gameEngineHelpers.js';
-import {
-  DEFAULT_SAVE_ID,
-  ENGINE_READY_MESSAGE,
-} from '../../common/constants.js';
+import { DEFAULT_SAVE_ID } from '../../common/constants.js';
 import { GAME_PERSISTENCE_LOAD_GAME_UNAVAILABLE } from '../../common/engine/unavailableMessages.js';
 
 describeEngineSuite('GameEngine', (context) => {
@@ -47,20 +42,10 @@ describeEngineSuite('GameEngine', (context) => {
       ).toHaveBeenCalledWith(SAVE_ID);
       expectDispatchSequence(
         context.bed.getSafeEventDispatcher().dispatch,
-        [
-          ENGINE_OPERATION_IN_PROGRESS_UI,
-          {
-            titleMessage: `Loading ${SAVE_ID}...`,
-            inputDisabledMessage: `Loading game from ${SAVE_ID}...`,
-          },
-        ],
-        [
-          ENGINE_READY_UI,
-          {
-            activeWorld: typedMockSaveData.metadata.gameTitle,
-            message: ENGINE_READY_MESSAGE,
-          },
-        ]
+        ...buildLoadSuccessDispatches(
+          SAVE_ID,
+          typedMockSaveData.metadata.gameTitle
+        )
       );
       expect(context.bed.getTurnManager().start).toHaveBeenCalled();
       expect(result).toEqual({ success: true, data: typedMockSaveData });
@@ -88,20 +73,7 @@ describeEngineSuite('GameEngine', (context) => {
         );
         expectDispatchSequence(
           context.bed.getSafeEventDispatcher().dispatch,
-          [
-            ENGINE_OPERATION_IN_PROGRESS_UI,
-            {
-              titleMessage: `Loading ${SAVE_ID}...`,
-              inputDisabledMessage: `Loading game from ${SAVE_ID}...`,
-            },
-          ],
-          [
-            ENGINE_OPERATION_FAILED_UI,
-            {
-              errorMessage: `Failed to load game: ${errorMsg}`,
-              errorTitle: 'Load Failed',
-            },
-          ]
+          ...buildLoadFailureDispatches(SAVE_ID, errorMsg)
         );
         expect(result).toEqual({ success: false, error: errorMsg, data: null });
         expectEngineStopped(context.engine);
@@ -126,20 +98,7 @@ describeEngineSuite('GameEngine', (context) => {
         );
         expectDispatchSequence(
           context.bed.getSafeEventDispatcher().dispatch,
-          [
-            ENGINE_OPERATION_IN_PROGRESS_UI,
-            {
-              titleMessage: `Loading ${SAVE_ID}...`,
-              inputDisabledMessage: `Loading game from ${SAVE_ID}...`,
-            },
-          ],
-          [
-            ENGINE_OPERATION_FAILED_UI,
-            {
-              errorMessage: `Failed to load game: ${errorObj.message}`,
-              errorTitle: 'Load Failed',
-            },
-          ]
+          ...buildLoadFailureDispatches(SAVE_ID, errorObj.message)
         );
         expect(result).toEqual({
           success: false,
@@ -166,27 +125,11 @@ describeEngineSuite('GameEngine', (context) => {
         );
         expectDispatchSequence(
           context.bed.getSafeEventDispatcher().dispatch,
-          [
-            ENGINE_OPERATION_IN_PROGRESS_UI,
-            {
-              titleMessage: `Loading ${SAVE_ID}...`,
-              inputDisabledMessage: `Loading game from ${SAVE_ID}...`,
-            },
-          ],
-          [
-            ENGINE_READY_UI,
-            {
-              activeWorld: typedMockSaveData.metadata.gameTitle,
-              message: ENGINE_READY_MESSAGE,
-            },
-          ],
-          [
-            ENGINE_OPERATION_FAILED_UI,
-            {
-              errorMessage: `Failed to load game: ${errorObj.message}`,
-              errorTitle: 'Load Failed',
-            },
-          ]
+          ...buildLoadFinalizeFailureDispatches(
+            SAVE_ID,
+            typedMockSaveData.metadata.gameTitle,
+            errorObj.message
+          )
         );
         expect(result).toEqual({
           success: false,

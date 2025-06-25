@@ -4,7 +4,7 @@
 
 import { jest } from '@jest/globals';
 import { clearMockFunctions } from './jestHelpers.js';
-import { createMockEnvironment } from './mockEnvironment.js';
+import { createMockEnvironment } from './buildTestEnvironment.js';
 import { runWithReset } from './testBedHelpers.js';
 
 /**
