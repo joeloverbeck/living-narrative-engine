@@ -209,6 +209,7 @@ export function registerRenderers(registrar, logger) {
         domElementFactory: c.resolve(tokens.DomElementFactory),
         saveLoadService: c.resolve(tokens.ISaveLoadService),
         validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
+        userPrompt: c.resolve(tokens.IUserPrompt),
       })
   );
   logger.debug(`UI Registrations: Registered ${tokens.LoadGameUI}.`);
