@@ -127,7 +127,7 @@ describe('initializeGameEngineStage', () => {
     const result = await initializeGameEngineStage(container, logger, {
       createGameEngine: (opts) => GameEngine(opts),
     });
-    expect(GameEngine).toHaveBeenCalledWith({ container });
+    expect(GameEngine).toHaveBeenCalledWith({ container, logger });
     expect(result.success).toBe(true);
     expect(result.payload).toEqual({ mocked: true });
   });
@@ -155,7 +155,7 @@ describe('initializeGameEngineStage', () => {
       createGameEngine: factory,
     });
 
-    expect(factory).toHaveBeenCalledWith({ container });
+    expect(factory).toHaveBeenCalledWith({ container, logger });
     expect(result.success).toBe(true);
     expect(result.payload).toBe(engine);
   });

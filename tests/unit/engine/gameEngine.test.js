@@ -11,6 +11,7 @@ describeEngineSuite('GameEngine', (context) => {
       const testBed = context.bed;
       new GameEngine({
         container: testBed.env.mockContainer,
+        logger: testBed.env.mocks.logger,
       }); // Instantiation for this test
       expect(testBed.env.mockContainer.resolve).toHaveBeenCalledWith(
         tokens.ILogger
@@ -32,19 +33,11 @@ describeEngineSuite('GameEngine', (context) => {
       );
     });
 
-    it('should throw an error if ILogger cannot be resolved', () => {
+    it('should throw an error if logger is missing', () => {
       const testBed = context.bed;
-      testBed.withTokenOverride(tokens.ILogger, () => {
-        throw new Error('Logger failed to resolve');
-      });
-
       expect(
         () => new GameEngine({ container: testBed.env.mockContainer })
       ).toThrow('GameEngine requires a logger.');
-      expect(console.error).toHaveBeenCalledWith(
-        'GameEngine: CRITICAL - Logger not resolved.',
-        expect.any(Error)
-      );
     });
 
     it.each([
