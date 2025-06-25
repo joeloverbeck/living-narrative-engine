@@ -82,7 +82,7 @@ export class BaseTurnHandler {
    * Attempts to use the active ITurnContext first, falling back
    * to a `safeEventDispatcher` property on the handler if available.
    *
-   * @returns {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher|null}
+   * @returns {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher|null}
    *   The dispatcher instance or null if unavailable.
    */
   getSafeEventDispatcher() {

@@ -7,7 +7,7 @@
 /** @typedef {import('../systemInitializer.js').default} SystemInitializer */
 /** @typedef {import('../worldInitializer.js').default} WorldInitializer */
 /** @typedef {import('../../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
-/** @typedef {import('../../loaders/llmConfigLoader.js').LlmConfigLoader} LlmConfigLoader */
+/** @typedef {import('../../llms/services/llmConfigLoader.js').LlmConfigLoader} LlmConfigLoader */
 /** @typedef {import('../../events/safeEventDispatcher.js').default} ISafeEventDispatcher */
 /** @typedef {import('../../actions/actionIndex.js').ActionIndex} ActionIndex */
 
@@ -51,7 +51,7 @@ class InitializationService extends IInitializationService {
    * @param {ValidatedEventDispatcher} dependencies.validatedEventDispatcher - The validated event dispatcher.
    * @param {ModsLoader} dependencies.modsLoader - Loader for world data mods.
    * @param {import('../../interfaces/IScopeRegistry.js').IScopeRegistry} dependencies.scopeRegistry - Registry of scopes.
-   * @param {import('../../data/dataRegistry.js').DataRegistry} dependencies.dataRegistry - Data registry instance.
+   * @param {import('../../data/inMemoryDataRegistry.js').DataRegistry} dependencies.dataRegistry - Data registry instance.
    * @param {import('../../turns/interfaces/ILLMAdapter.js').ILLMAdapter & {init?: Function, isInitialized?: Function, isOperational?: Function}} dependencies.llmAdapter - LLM adapter instance.
    * @param {LlmConfigLoader} dependencies.llmConfigLoader - Loader for LLM configuration.
    * @param {SystemInitializer} dependencies.systemInitializer - Initializes tagged systems.

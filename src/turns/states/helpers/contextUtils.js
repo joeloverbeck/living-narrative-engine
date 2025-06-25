@@ -3,10 +3,10 @@
  */
 
 /**
- * @typedef {import('../handlers/baseTurnHandler.js').BaseTurnHandler} BaseTurnHandler
- * @typedef {import('../interfaces/ITurnContext.js').ITurnContext} ITurnContext
- * @typedef {import('../../logging/consoleLogger.js').default|Console} Logger
- * @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher
+ * @typedef {import('../../handlers/baseTurnHandler.js').BaseTurnHandler} BaseTurnHandler
+ * @typedef {import('../../interfaces/ITurnContext.js').ITurnContext} ITurnContext
+ * @typedef {import('../../../logging/consoleLogger.js').default|Console} Logger
+ * @typedef {import('../../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher
  */
 
 /**
