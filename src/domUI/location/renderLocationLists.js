@@ -6,8 +6,10 @@
 /**
  * @typedef {import('../../interfaces/ILogger.js').ILogger} ILogger
  * @typedef {import('./buildLocationDisplayPayload.js').LocationDisplayPayload} LocationDisplayPayload
- * @typedef {import('../locationRenderer.js').LocationRenderer} LocationRenderer
+ * @typedef {import('./typedefs.js').LocationRenderer} LocationRenderer
  */
+
+import './typedefs.js';
 
 /**
  * Uses the renderer's internal `_renderList` method to populate exits and

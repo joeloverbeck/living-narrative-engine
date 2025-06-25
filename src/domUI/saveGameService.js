@@ -6,8 +6,9 @@
 
 import { validateDependency } from '../utils/validationUtils.js';
 import { ensureValidLogger } from '../utils/index.js';
+import './saveGameTypedefs.js';
 
-/** @typedef {import('./saveGameUI.js').SlotDisplayData} SlotDisplayData */
+/** @typedef {import('./saveGameTypedefs.js').SlotDisplayData} SlotDisplayData */
 /** @typedef {import('../interfaces/ISaveService.js').ISaveService} ISaveService */
 /** @typedef {import('../interfaces/IUserPrompt.js').IUserPrompt} IUserPrompt */
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */

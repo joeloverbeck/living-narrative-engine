@@ -15,8 +15,8 @@ import {
   setupMenuButtonListenersStage,
   setupGlobalEventListenersStage,
   startGameStage,
+  initializeAuxiliaryServicesStage,
 } from './bootstrapper/stages/index.js';
-import { initializeAuxiliaryServicesStage } from './bootstrapper/stages/auxiliary';
 
 const ACTIVE_WORLD = 'isekai:world';
 
