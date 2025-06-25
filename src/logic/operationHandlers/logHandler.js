@@ -2,8 +2,9 @@
 
 // --- JSDoc Imports ---
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
-/** @typedef {import('../defs.js').OperationHandler} OperationHandler */
 /** @typedef {import('../defs.js').ExecutionContext} ExecutionContext */
+/** @typedef {import('../defs.js').BaseHandlerDeps} BaseHandlerDeps */
+/** @typedef {import('../defs.js').OperationHandler} OperationHandler */
 /** @typedef {import('../defs.js').OperationParams} OperationParams */
 
 import BaseOperationHandler from './baseOperationHandler.js';
@@ -21,12 +22,15 @@ import { assertParamsObject } from '../../utils/handlerUtils/indexUtils.js';
 const VALID_LOG_LEVELS = ['info', 'warn', 'error', 'debug'];
 const DEFAULT_LOG_LEVEL = 'info';
 
+/**
+ * @implements {OperationHandler}
+ */
 class LogHandler extends BaseOperationHandler /* implements OperationHandler */ {
   /**
    * Creates an instance of LogHandler.
    *
-   * @param {object} dependencies - The dependencies for the handler.
-   * @param {ILogger} dependencies.logger - The logger instance.
+   * @param {BaseHandlerDeps} deps - Dependencies object
+   * @param {ILogger} deps.logger - The logger instance.
    * @throws {Error} If the logger is invalid or missing required methods.
    */
   constructor({ logger }) {

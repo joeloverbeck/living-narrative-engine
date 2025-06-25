@@ -25,11 +25,17 @@ import ComponentOperationHandler from './componentOperationHandler.js';
 
 import { writeContextVariable } from '../../utils/contextVariableUtils.js';
 
+/**
+ * @implements {OperationHandler}
+ */
 class QueryComponentHandler extends ComponentOperationHandler {
   #entityManager;
   /** @type {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} */
   #dispatcher;
 
+  /**
+   * @param {EntityOperationDeps} deps - Dependencies object
+   */
   constructor({ entityManager, logger, safeEventDispatcher }) {
     super('QueryComponentHandler', {
       logger: { value: logger },

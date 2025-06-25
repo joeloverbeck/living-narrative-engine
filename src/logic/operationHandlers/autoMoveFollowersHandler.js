@@ -18,6 +18,9 @@ import SystemMoveEntityHandler from './systemMoveEntityHandler.js';
 import BaseOperationHandler from './baseOperationHandler.js';
 import { assertParamsObject } from '../../utils/handlerUtils/indexUtils.js';
 
+/**
+ * @implements {OperationHandler}
+ */
 class AutoMoveFollowersHandler extends BaseOperationHandler {
   /** @type {EntityManager} */ #entityManager;
   /** @type {ISafeEventDispatcher} */ #dispatcher;

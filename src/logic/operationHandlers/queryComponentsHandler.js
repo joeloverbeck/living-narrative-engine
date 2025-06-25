@@ -8,32 +8,32 @@
 /** @typedef {import('../../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../defs.js').ExecutionContext} ExecutionContext */
+/** @typedef {import('../defs.js').EntityOperationDeps} EntityOperationDeps */
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
+/** @typedef {import('./modifyComponentHandler.js').EntityRefObject} EntityRefObject */
 
 import { writeContextVariable } from '../../utils/contextVariableUtils.js';
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
-import { assertParamsObject } from '../../utils/handlerUtils/paramsUtils.js';
+import { assertParamsObject } from '../../utils/handlerUtils/indexUtils.js';
 import ComponentOperationHandler from './componentOperationHandler.js';
 
 /**
- * Parameters for the QUERY_COMPONENTS operation.
- *
- * @typedef {object} QueryComponentsParams
- * @property {'actor'|'target'|string|import('./modifyComponentHandler.js').EntityRefObject} entity_ref
- *   Reference to the entity from which to fetch components.
- * @property {Array<{component_type: string, result_variable: string}>} pairs
- *   Array of component/result variable pairs.
+ * @typedef {object} QueryComponentsOperationParams
+ * @property {'actor'|'target'|string|EntityRefObject} entity_ref - Reference to the target entity.
+ * @property {string[]} component_types - Array of component type IDs to query.
+ * @property {string} result_variable - Variable name in executionContext.evaluationContext.context.
+ * @property {*} [missing_value] - Optional value to store when a component is missing. Defaults to undefined.
  */
 
+/**
+ * @implements {OperationHandler}
+ */
 class QueryComponentsHandler extends ComponentOperationHandler {
   /** @type {IEntityManager} */ #entityManager;
   /** @type {ISafeEventDispatcher} */ #dispatcher;
 
   /**
-   * @param {object} deps
-   * @param {IEntityManager} deps.entityManager
-   * @param {ILogger} deps.logger
-   * @param {ISafeEventDispatcher} deps.safeEventDispatcher
+   * @param {EntityOperationDeps} deps - Dependencies object
    */
   constructor({ entityManager, logger, safeEventDispatcher }) {
     super('QueryComponentsHandler', {

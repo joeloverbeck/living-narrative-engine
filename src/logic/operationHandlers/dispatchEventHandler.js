@@ -4,7 +4,10 @@
 /** @typedef {import('../defs.js').ExecutionContext} ExecutionContext */ // ** Corrected type for 2nd arg **
 /** @typedef {import('../../events/eventBus.js').default} EventBus */
 /** @typedef {import('../../events/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
+/** @typedef {import('../defs.js').EventDispatchDeps} EventDispatchDeps */
+/** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 import { assertParamsObject } from '../../utils/handlerUtils/indexUtils.js';
+import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 
 // --- Handler Implementation ---
 /**
@@ -16,6 +19,15 @@ import { assertParamsObject } from '../../utils/handlerUtils/indexUtils.js';
  * @property {Record<string, any>=}  payload                  Optional payload object.
  */
 
+/**
+ * @typedef {Object} DispatchEventOperationParams
+ * @property {string} event_type - The namespaced identifier for the event type (e.g., "core:example").
+ * @property {*} [event_payload] - Optional data to include with the event.
+ */
+
+/**
+ * @implements {OperationHandler}
+ */
 class DispatchEventHandler {
   /** @type {ValidatedEventDispatcher | EventBus} */
   #dispatcher;

@@ -21,6 +21,9 @@ import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
  * @property {object=} error - Optional error information.
  */
 
+/**
+ * @implements {OperationHandler}
+ */
 class EndTurnHandler {
   /** @type {ISafeEventDispatcher} */
   #safeEventDispatcher;

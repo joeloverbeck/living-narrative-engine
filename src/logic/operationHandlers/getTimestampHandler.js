@@ -7,7 +7,13 @@ import BaseOperationHandler from './baseOperationHandler.js';
 import { tryWriteContextVariable } from '../../utils/contextVariableUtils.js';
 import { assertParamsObject } from '../../utils/handlerUtils/indexUtils.js';
 
+/**
+ * @implements {OperationHandler}
+ */
 class GetTimestampHandler extends BaseOperationHandler {
+  /**
+   * @param {BaseHandlerDeps} deps - Dependencies object
+   */
   constructor({ logger }) {
     super('GetTimestampHandler', {
       logger: { value: logger },
