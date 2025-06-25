@@ -125,13 +125,13 @@ class MergeClosenessCircleHandler extends BaseOperationHandler {
       targetId,
       'intimacy:closeness'
     );
-    const allMembers = this.#closenessCircleService.merge(
+    const mergedMemberIds = this.#closenessCircleService.merge(
       [actorId, targetId],
       Array.isArray(actorComp?.partners) ? actorComp.partners : [],
       Array.isArray(targetComp?.partners) ? targetComp.partners : []
     );
-    for (const id of allMembers) {
-      const partners = allMembers.filter((p) => p !== id);
+    for (const id of mergedMemberIds) {
+      const partners = mergedMemberIds.filter((p) => p !== id);
       try {
         this.#entityManager.addComponent(id, 'intimacy:closeness', {
           partners,
@@ -145,18 +145,18 @@ class MergeClosenessCircleHandler extends BaseOperationHandler {
         );
       }
     }
-    return allMembers;
+    return mergedMemberIds;
   }
 
   /**
    * Lock movement for a list of entities.
    *
-   * @param {string[]} memberIds
+   * @param {string[]} mergedMemberIds
    * @returns {void}
    * @private
    */
-  #lockMovement(memberIds) {
-    for (const id of memberIds) {
+  #lockMovement(mergedMemberIds) {
+    for (const id of mergedMemberIds) {
       try {
         updateMovementLock(this.#entityManager, id, true);
       } catch (err) {
@@ -181,8 +181,8 @@ class MergeClosenessCircleHandler extends BaseOperationHandler {
     if (!validated) return;
     const { actorId, targetId, resultVar, logger } = validated;
 
-    const members = this.#updatePartners(actorId, targetId);
-    this.#lockMovement(members);
+    const mergedMemberIds = this.#updatePartners(actorId, targetId);
+    this.#lockMovement(mergedMemberIds);
 
     if (resultVar) {
       if (
@@ -192,7 +192,7 @@ class MergeClosenessCircleHandler extends BaseOperationHandler {
       }
       tryWriteContextVariable(
         resultVar,
-        members,
+        mergedMemberIds,
         executionContext,
         this.#dispatcher,
         logger
@@ -200,7 +200,7 @@ class MergeClosenessCircleHandler extends BaseOperationHandler {
     }
 
     logger.debug(
-      `[MergeClosenessCircleHandler] merged circle -> ${JSON.stringify(members)}`
+      `[MergeClosenessCircleHandler] merged circle -> ${JSON.stringify(mergedMemberIds)}`
     );
   }
 }
