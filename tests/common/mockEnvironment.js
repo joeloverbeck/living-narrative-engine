@@ -2,8 +2,10 @@
  * @file Utility for creating a mock environment for tests.
  */
 
-import { jest } from '@jest/globals';
-import { createMockContainer } from './mockFactories';
+import {
+  createMockEnvironment,
+  buildTestEnvironment,
+} from './buildTestEnvironment.js';
 
 /**
  * Creates mocks using the provided factory functions.
@@ -15,21 +17,7 @@ import { createMockContainer } from './mockFactories';
  * @returns {{ mocks: Record<string, any>, cleanup: () => void }}
  *   Generated mocks and a cleanup method.
  */
-export function createMockEnvironment(factories) {
-  jest.clearAllMocks();
-
-  const mocks = {};
-  for (const [name, factory] of Object.entries(factories)) {
-    mocks[name] = factory();
-  }
-
-  const cleanup = () => {
-    jest.clearAllMocks();
-    jest.restoreAllMocks();
-  };
-
-  return { mocks, cleanup };
-}
+export { createMockEnvironment };
 
 /**
  * Builds a full test environment including a mock DI container.
@@ -46,24 +34,7 @@ export function createMockEnvironment(factories) {
  * @returns {{ mocks: Record<string, any>, mockContainer: { resolve: jest.Mock }, cleanup: () => void }}
  *   Mocks, container and cleanup helper.
  */
-export function buildTestEnvironment(factoryMap, tokenMap, overrides = {}) {
-  const { mocks, cleanup } = createMockEnvironment(factoryMap);
-
-  const mapping = {};
-  for (const [token, ref] of Object.entries(tokenMap)) {
-    if (typeof ref === 'string') {
-      mapping[token] = mocks[ref];
-    } else if (typeof ref === 'function') {
-      mapping[token] = ref(mocks);
-    } else {
-      mapping[token] = ref;
-    }
-  }
-
-  const mockContainer = createMockContainer(mapping, overrides);
-
-  return { mocks, mockContainer, cleanup };
-}
+export { buildTestEnvironment };
 
 /**
  * Builds and optionally instantiates a test environment.
