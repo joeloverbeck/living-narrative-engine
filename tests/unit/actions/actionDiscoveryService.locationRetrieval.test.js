@@ -80,6 +80,7 @@ describe('ActionDiscoveryService – scoped discovery', () => {
     formatActionCommandFn,
     safeEventDispatcher,
     targetResolutionService: mockTargetResolutionService,
+    traceContextFactory: jest.fn(() => ({ addLog: jest.fn(), logs: [] })),
     actionIndex: {
       getCandidateActions: jest
         .fn()

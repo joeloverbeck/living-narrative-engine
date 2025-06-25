@@ -62,6 +62,16 @@
  */
 // +++ END TICKET 6 +++
 
+/**
+ * @typedef {import('./tracing/traceContext.js').TraceContext} TraceContext
+ */
+
+/**
+ * @callback TraceContextFactory
+ * @description A factory function that creates and returns a new ITraceContext instance.
+ * @returns {TraceContext}
+ */
+
 // ---- Placeholder Export ----
 // This file primarily exists for JSDoc type definitions.
 // Exporting something makes it a valid module if needed elsewhere,

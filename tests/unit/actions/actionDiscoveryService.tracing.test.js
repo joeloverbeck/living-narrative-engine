@@ -43,6 +43,7 @@ describe('ActionDiscoveryService Tracing', () => {
       targetResolutionService: {
         resolveTargets: jest.fn(),
       },
+      traceContextFactory: jest.fn(() => new TraceContext()),
       getActorLocationFn: jest.fn(),
       getEntityDisplayNameFn: jest.fn(),
     };

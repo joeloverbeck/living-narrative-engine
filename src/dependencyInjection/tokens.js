@@ -391,4 +391,7 @@ export const tokens = freeze({
   // Scope DSL Services
   ScopeEngine: 'ScopeEngine',
   ScopeCache: 'ScopeCache',
+
+  // --- Factory Functions ---
+  TraceContextFactory: 'TraceContextFactory',
 });

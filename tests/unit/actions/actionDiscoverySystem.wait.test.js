@@ -103,6 +103,7 @@ describe('ActionDiscoveryService - Wait Action Tests', () => {
       formatActionCommandFn: mockFormatActionCommandFn,
       safeEventDispatcher: mockSafeEventDispatcher,
       targetResolutionService: mockTargetResolutionService,
+      traceContextFactory: jest.fn(() => ({ addLog: jest.fn(), logs: [] })),
       actionIndex: mockActionIndex,
     });
   });

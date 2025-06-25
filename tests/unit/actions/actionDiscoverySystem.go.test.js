@@ -140,6 +140,7 @@ describe('ActionDiscoveryService - Go Action (Fixed State)', () => {
       formatActionCommandFn: mockFormatActionCommandFn,
       safeEventDispatcher: mockSafeEventDispatcher,
       targetResolutionService: mockTargetResolutionService,
+      traceContextFactory: jest.fn(() => ({ addLog: jest.fn(), logs: [] })),
       actionIndex: mockActionIndex,
     });
   });
