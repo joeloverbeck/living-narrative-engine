@@ -14,8 +14,6 @@
 // --- Interface Imports for JSDoc & `extends` ---
 /** @typedef {import('../../interfaces/IInitializationService.js').InitializationResult} InitializationResult */
 import { IInitializationService } from '../../interfaces/IInitializationService.js';
-import { ThoughtPersistenceListener } from '../../ai/thoughtPersistenceListener.js';
-import { NotesPersistenceListener } from '../../ai/notesPersistenceListener.js';
 import {
   ACTION_DECIDED_ID,
   INITIALIZATION_SERVICE_FAILED_ID,
@@ -42,6 +40,8 @@ class InitializationService extends IInitializationService {
   #domUiFacade;
   #actionIndex;
   #gameDataRepository;
+  #thoughtListener;
+  #notesListener;
 
   /**
    * Creates a new InitializationService instance.
@@ -77,6 +77,8 @@ class InitializationService extends IInitializationService {
     domUiFacade,
     actionIndex,
     gameDataRepository,
+    thoughtListener,
+    notesListener,
   }) {
     super();
 
@@ -161,14 +163,27 @@ class InitializationService extends IInitializationService {
         "InitializationService: Missing or invalid required dependency 'actionIndex'."
       );
     }
-    if (!gameDataRepository || typeof gameDataRepository.getAllActionDefinitions !== 'function') {
+    if (
+      !gameDataRepository ||
+      typeof gameDataRepository.getAllActionDefinitions !== 'function'
+    ) {
       throw new Error(
         "InitializationService: Missing or invalid required dependency 'gameDataRepository'."
       );
     }
     if (!domUiFacade) {
       throw new Error(
-        "InitializationService requires a domUiFacade dependency"
+        'InitializationService requires a domUiFacade dependency'
+      );
+    }
+    if (!thoughtListener || typeof thoughtListener.handleEvent !== 'function') {
+      throw new Error(
+        "InitializationService: Missing or invalid required dependency 'thoughtListener'."
+      );
+    }
+    if (!notesListener || typeof notesListener.handleEvent !== 'function') {
+      throw new Error(
+        "InitializationService: Missing or invalid required dependency 'notesListener'."
       );
     }
 
@@ -185,6 +200,8 @@ class InitializationService extends IInitializationService {
     this.#domUiFacade = domUiFacade;
     this.#actionIndex = actionIndex;
     this.#gameDataRepository = gameDataRepository;
+    this.#thoughtListener = thoughtListener;
+    this.#notesListener = notesListener;
 
     this.#logger.debug(
       'InitializationService: Instance created successfully with dependencies.'
@@ -229,10 +246,15 @@ class InitializationService extends IInitializationService {
       );
 
       // Build ActionIndex with loaded action definitions
-      this.#logger.debug('Building ActionIndex with loaded action definitions...');
-      const allActionDefinitions = this.#gameDataRepository.getAllActionDefinitions();
+      this.#logger.debug(
+        'Building ActionIndex with loaded action definitions...'
+      );
+      const allActionDefinitions =
+        this.#gameDataRepository.getAllActionDefinitions();
       this.#actionIndex.buildIndex(allActionDefinitions);
-      this.#logger.debug(`ActionIndex built with ${allActionDefinitions.length} action definitions.`);
+      this.#logger.debug(
+        `ActionIndex built with ${allActionDefinitions.length} action definitions.`
+      );
 
       this.#logger.debug('Initializing ScopeRegistry...');
       const scopes = this.#dataRegistry.getAll('scopes');
@@ -360,23 +382,13 @@ class InitializationService extends IInitializationService {
 
   #setupPersistenceListeners() {
     const dispatcher = this.#safeEventDispatcher;
-    const entityManager = /** @type {IEntityManager} */ (this.#entityManager);
-    const thoughtListener = new ThoughtPersistenceListener({
-      logger: this.#logger,
-      entityManager,
-    });
-    const notesListener = new NotesPersistenceListener({
-      logger: this.#logger,
-      entityManager,
-      dispatcher,
-    });
     dispatcher.subscribe(
       ACTION_DECIDED_ID,
-      thoughtListener.handleEvent.bind(thoughtListener)
+      this.#thoughtListener.handleEvent.bind(this.#thoughtListener)
     );
     dispatcher.subscribe(
       ACTION_DECIDED_ID,
-      notesListener.handleEvent.bind(notesListener)
+      this.#notesListener.handleEvent.bind(this.#notesListener)
     );
     this.#logger.debug('Registered AI persistence listeners.');
   }

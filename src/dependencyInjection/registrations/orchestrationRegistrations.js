@@ -12,6 +12,8 @@
 // --- Service Imports ---
 import InitializationService from '../../initializers/services/initializationService.js'; // Adjusted path
 import ShutdownService from '../../shutdown/services/shutdownService.js'; // Adjusted path
+import { ThoughtPersistenceListener } from '../../ai/thoughtPersistenceListener.js';
+import { NotesPersistenceListener } from '../../ai/notesPersistenceListener.js';
 
 // --- DI & Helper Imports ---
 import { tokens } from '../tokens.js';
@@ -70,6 +72,15 @@ export function registerOrchestration(container) {
       throw new Error(
         `InitializationService Factory: Failed to resolve dependency: ${tokens.WorldInitializer}`
       );
+    const thoughtListener = new ThoughtPersistenceListener({
+      logger: initLogger,
+      entityManager,
+    });
+    const notesListener = new NotesPersistenceListener({
+      logger: initLogger,
+      entityManager,
+      dispatcher: safeEventDispatcher,
+    });
     return new InitializationService({
       logger: initLogger,
       validatedEventDispatcher: initDispatcher,
@@ -85,6 +96,8 @@ export function registerOrchestration(container) {
       domUiFacade,
       actionIndex,
       gameDataRepository,
+      thoughtListener,
+      notesListener,
     });
   });
   logger.debug(

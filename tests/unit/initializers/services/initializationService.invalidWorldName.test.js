@@ -13,6 +13,8 @@ let worldInitializer;
 let safeEventDispatcher;
 let entityManager;
 let domUiFacade;
+let thoughtListener;
+let notesListener;
 
 beforeEach(() => {
   logger = { error: jest.fn(), debug: jest.fn() };
@@ -27,6 +29,8 @@ beforeEach(() => {
   safeEventDispatcher = { subscribe: jest.fn() };
   entityManager = {};
   domUiFacade = {};
+  thoughtListener = { handleEvent: jest.fn() };
+  notesListener = { handleEvent: jest.fn() };
 });
 
 describe('InitializationService invalid world name handling', () => {
@@ -47,7 +51,11 @@ describe('InitializationService invalid world name handling', () => {
         entityManager,
         domUiFacade,
         actionIndex: { buildIndex: jest.fn() },
-        gameDataRepository: { getAllActionDefinitions: jest.fn().mockReturnValue([]) },
+        gameDataRepository: {
+          getAllActionDefinitions: jest.fn().mockReturnValue([]),
+        },
+        thoughtListener,
+        notesListener,
       });
 
       const result = await service.runInitializationSequence(bad);

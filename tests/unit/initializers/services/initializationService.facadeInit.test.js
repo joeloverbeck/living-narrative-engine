@@ -13,6 +13,8 @@ let worldInitializer;
 let safeEventDispatcher;
 let entityManager;
 let domUiFacade;
+let thoughtListener;
+let notesListener;
 
 beforeEach(() => {
   logger = { error: jest.fn(), debug: jest.fn(), warn: jest.fn() };
@@ -33,6 +35,8 @@ beforeEach(() => {
   safeEventDispatcher = { subscribe: jest.fn() };
   entityManager = {};
   domUiFacade = {};
+  thoughtListener = { handleEvent: jest.fn() };
+  notesListener = { handleEvent: jest.fn() };
 });
 
 describe('InitializationService DomUiFacade handling', () => {
@@ -51,7 +55,11 @@ describe('InitializationService DomUiFacade handling', () => {
         safeEventDispatcher,
         entityManager,
         actionIndex: { buildIndex: jest.fn() },
-        gameDataRepository: { getAllActionDefinitions: jest.fn().mockReturnValue([]) },
+        gameDataRepository: {
+          getAllActionDefinitions: jest.fn().mockReturnValue([]),
+        },
+        thoughtListener,
+        notesListener,
         // domUiFacade: domUiFacade, // Intentionally omitted
       });
     }).toThrow('InitializationService requires a domUiFacade dependency');

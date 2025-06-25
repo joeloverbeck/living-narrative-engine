@@ -17,6 +17,8 @@ let entityManager;
 let domUiFacade;
 let actionIndex;
 let gameDataRepository;
+let thoughtListener;
+let notesListener;
 
 beforeEach(() => {
   logger = { error: jest.fn(), debug: jest.fn(), warn: jest.fn() };
@@ -44,7 +46,11 @@ beforeEach(() => {
   entityManager = {};
   domUiFacade = {};
   actionIndex = { buildIndex: jest.fn() };
-  gameDataRepository = { getAllActionDefinitions: jest.fn().mockReturnValue([]) };
+  gameDataRepository = {
+    getAllActionDefinitions: jest.fn().mockReturnValue([]),
+  };
+  thoughtListener = { handleEvent: jest.fn() };
+  notesListener = { handleEvent: jest.fn() };
 });
 
 describe('InitializationService success path', () => {
@@ -64,6 +70,8 @@ describe('InitializationService success path', () => {
       domUiFacade,
       actionIndex,
       gameDataRepository,
+      thoughtListener,
+      notesListener,
     });
 
     const result = await service.runInitializationSequence(MOCK_WORLD);

@@ -15,6 +15,8 @@ let entityManager;
 let domUiFacade;
 let actionIndex;
 let gameDataRepository;
+let thoughtListener;
+let notesListener;
 
 beforeEach(() => {
   logger = { error: jest.fn(), debug: jest.fn() };
@@ -31,6 +33,8 @@ beforeEach(() => {
   domUiFacade = {};
   actionIndex = { buildIndex: jest.fn() };
   gameDataRepository = { getAllActionDefinitions: jest.fn(() => []) };
+  thoughtListener = { handleEvent: jest.fn() };
+  notesListener = { handleEvent: jest.fn() };
 });
 
 describe('InitializationService constructor', () => {
@@ -52,6 +56,8 @@ describe('InitializationService constructor', () => {
           domUiFacade,
           actionIndex,
           gameDataRepository,
+          thoughtListener,
+          notesListener,
         })
     ).not.toThrow();
   });
@@ -73,6 +79,8 @@ describe('InitializationService constructor', () => {
           domUiFacade,
           actionIndex,
           gameDataRepository,
+          thoughtListener,
+          notesListener,
         })
     ).toThrow(/logger/);
   });
@@ -94,6 +102,8 @@ describe('InitializationService constructor', () => {
           domUiFacade,
           actionIndex,
           gameDataRepository,
+          thoughtListener,
+          notesListener,
         })
     ).toThrow(/validatedEventDispatcher/);
   });
