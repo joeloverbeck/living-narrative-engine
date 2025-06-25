@@ -7,7 +7,7 @@ import {
   EXITS_COMPONENT_ID,
 } from '../constants/componentIds.js';
 import { validateDependency } from '../utils/validationUtils.js';
-import { ensureValidLogger } from '../utils';
+import { ensureValidLogger } from '../utils/loggerUtils.js';
 import { getEntityDisplayName } from '../utils/entityUtils.js';
 import { isNonBlankString } from '../utils/textUtils.js';
 import { safeDispatchError } from '../utils/safeDispatchErrorUtils.js';
