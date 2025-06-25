@@ -12,6 +12,7 @@ import BaseOperationHandler from './baseOperationHandler.js';
 import { tryWriteContextVariable } from '../../utils/contextVariableUtils.js';
 import { assertParamsObject } from '../../utils/handlerUtils/paramsUtils.js';
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
+import { ensureEvaluationContext } from '../../utils/evaluationContextUtils.js';
 import { updateMovementLock } from '../utils/movementUtils.js';
 
 class RemoveFromClosenessCircleHandler extends BaseOperationHandler {
@@ -72,6 +73,11 @@ class RemoveFromClosenessCircleHandler extends BaseOperationHandler {
     this.#unlockMovement(toUnlock);
 
     if (resultVar) {
+      if (
+        !ensureEvaluationContext(executionContext, this.#dispatcher, logger)
+      ) {
+        return;
+      }
       tryWriteContextVariable(
         resultVar,
         partners,

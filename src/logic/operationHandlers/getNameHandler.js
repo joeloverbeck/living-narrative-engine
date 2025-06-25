@@ -19,6 +19,7 @@ import { tryWriteContextVariable } from '../../utils/contextVariableUtils.js';
 import { assertParamsObject } from '../../utils/handlerUtils/paramsUtils.js';
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 import { isNonBlankString } from '../../utils/textUtils.js';
+import { ensureEvaluationContext } from '../../utils/evaluationContextUtils.js';
 import BaseOperationHandler from './baseOperationHandler.js';
 
 /**
@@ -83,6 +84,9 @@ class GetNameHandler extends BaseOperationHandler {
         'GET_NAME: "result_variable" must be a non-empty string.',
         { params }
       );
+      return;
+    }
+    if (!ensureEvaluationContext(executionContext, this.#dispatcher, log)) {
       return;
     }
     const resultVar = result_variable.trim();
