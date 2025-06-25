@@ -43,7 +43,8 @@ function _validateContextAndName(variableName, executionContext) {
  * Safely assign a key-value pair on the provided context object.
  *
  * @description Safely assigns a value to a key on the provided context object.
- *   Any thrown error is caught and returned in the result structure.
+ *   Any thrown error is caught and returned in the result structure. **This
+ *   function mutates the provided `context` object.**
  * @param {object} context - Context object that will receive the new value.
  * @param {string} key - Property name to set on the context.
  * @param {*} value - Value to assign.
@@ -54,6 +55,34 @@ export function setContextValue(context, key, value) {
     context[key] = value;
   });
   return success ? { success: true } : { success: false, error };
+}
+
+/**
+ * Creates a new context object with the specified key/value pair assigned.
+ *
+ * @description Immutable alternative to {@link setContextValue}. The original
+ *   `context` object is not modified.
+ * @param {object} context - Original context object.
+ * @param {string} key - Property name to set on the context.
+ * @param {*} value - Value to assign.
+ * @returns {{success: boolean, context?: object, error?: Error}} Result object
+ *   containing the new context when successful.
+ */
+export function withUpdatedContext(context, key, value) {
+  if (!context || typeof context !== 'object') {
+    return {
+      success: false,
+      error: new Error('withUpdatedContext: invalid context object'),
+    };
+  }
+
+  const { success, result, error } = safeCall(() => ({
+    ...context,
+    [key]: value,
+  }));
+  return success
+    ? { success: true, context: result }
+    : { success: false, error };
 }
 
 /**
