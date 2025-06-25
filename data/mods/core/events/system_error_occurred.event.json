@@ -1,7 +1,7 @@
 {
   "$schema": "http://example.com/schemas/component.schema.json",
   "id": "core:system_error_occurred",
-  "description": "Fired when a general system‐level error occurs that isn’t tied to a specific action failure.",
+  "description": "Fired when a general system‐level error occurs that isn't tied to a specific action failure.",
   "payloadSchema": {
     "title": "Core: System Error Occurred Event Payload",
     "description": "Defines the payload structure for the 'core:system_error_occurred' event, used for reporting general system‐level errors.",
@@ -35,6 +35,10 @@
             "type": "string",
             "format": "date-time",
             "description": "Optional. ISO 8601 timestamp of when the error occurred."
+          },
+          "scopeName": {
+            "type": "string",
+            "description": "Optional. Name of the scope that caused the error, if applicable."
           }
         },
         "additionalProperties": false

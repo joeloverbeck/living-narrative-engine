@@ -1,0 +1,9 @@
+---
+description: 
+globs: *.scope
+alwaysApply: false
+---
+# Scope files preferences
+
+
+Scope files are the definitions of scopes as used in the Scope DSL system. The modules of the scope DSL are in src/scopeDsl/ and subdirectories. You have the documentation for how to write and interpret the Scope DSL in docs/scope-dsl.md and docs/mods/creating-scopes.md.

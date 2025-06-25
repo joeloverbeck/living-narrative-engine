@@ -55,10 +55,11 @@ export function storeItemInRegistry(
   const isClassInstance = dataToStore.constructor !== Object;
   const isEntityDefinition = category === 'entityDefinitions';
   const isEntityInstance = category === 'entityInstances';
+  const isScope = category === 'scopes';
 
   let dataWithMetadata;
   let finalId = baseItemId;
-  if (isEntityDefinition || isEntityInstance) {
+  if (isEntityDefinition || isEntityInstance || isScope) {
     finalId = qualifiedId;
   }
 
