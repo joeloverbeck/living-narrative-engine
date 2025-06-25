@@ -82,7 +82,7 @@ class SystemInitializer {
    * @returns {Promise<Array<any>>} An array of resolved systems.
    * @throws {Error} If resolution fails critically.
    */
-  async _resolveSystems() {
+  async #resolveSystems() {
     let resolvedSystems = [];
     try {
       this.#logger.debug(
@@ -123,7 +123,7 @@ class SystemInitializer {
    * @param {any} system - The system object.
    * @returns {Promise<void>}
    */
-  async #_initializeSingleSystem(system) {
+  async #initializeSingleSystem(system) {
     const systemName = system?.constructor?.name ?? 'UnnamedSystem';
 
     if (system && typeof system.initialize === 'function') {
@@ -184,13 +184,13 @@ class SystemInitializer {
       `SystemInitializer: Starting initialization for systems tagged with '${this.#initializationTag}'...`
     );
 
-    const systemsToInitialize = await this._resolveSystems();
+    const systemsToInitialize = await this.#resolveSystems();
     this.#logger.debug(
       `SystemInitializer: Proceeding to initialize ${systemsToInitialize.length} resolved systems sequentially...`
     );
 
     for (const system of systemsToInitialize) {
-      await this.#_initializeSingleSystem(system); // Handles individual errors and events
+      await this.#initializeSingleSystem(system); // Handles individual errors and events
     }
 
     this.#logger.debug(
