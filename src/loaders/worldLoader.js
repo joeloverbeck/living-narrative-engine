@@ -147,9 +147,10 @@ export class WorldLoader extends AbstractLoader {
         continue;
       }
 
-      for (const filename of worldFiles) {
-        await this._processWorldFile(modId, filename, worldSchemaId, totals);
-      }
+      const filePromises = worldFiles.map((filename) =>
+        this._processWorldFile(modId, filename, worldSchemaId, totals)
+      );
+      await Promise.all(filePromises);
     }
 
     totalCounts.worlds = {

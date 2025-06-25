@@ -30,7 +30,6 @@ const mockLogger = {
 const commonSchemaFile = 'common.schema.json';
 const entityDefinitionSchemaFile = 'entity-definition.schema.json';
 const entityInstanceSchemaFile = 'entity-instance.schema.json';
-const manifestSchemaId = 'test://schemas/manifest'; // Needed for initial check bypass
 const commonSchemaPath = `./test/schemas/${commonSchemaFile}`;
 const entityDefinitionSchemaPath = `./test/schemas/${entityDefinitionSchemaFile}`;
 const entityInstanceSchemaPath = `./test/schemas/${entityInstanceSchemaFile}`;
@@ -160,8 +159,8 @@ describe('SchemaLoader - Error Handling', () => {
     console.log('[Fetch Error] Rejection confirmed.');
 
     // Assertions
-    expect(mockPathResolver.resolveSchemaPath).toHaveBeenCalledTimes(2);
-    expect(mockDataFetcher.fetch).toHaveBeenCalledTimes(2);
+    expect(mockPathResolver.resolveSchemaPath).toHaveBeenCalledTimes(3);
+    expect(mockDataFetcher.fetch).toHaveBeenCalledTimes(3);
 
     // With batch registration, no schemas should be registered if there's a fetch error
     console.log(
@@ -218,8 +217,8 @@ describe('SchemaLoader - Error Handling', () => {
     console.log('[Missing $id] Rejection confirmed.');
 
     // Assertions
-    expect(mockPathResolver.resolveSchemaPath).toHaveBeenCalledTimes(2);
-    expect(mockDataFetcher.fetch).toHaveBeenCalledTimes(2);
+    expect(mockPathResolver.resolveSchemaPath).toHaveBeenCalledTimes(3);
+    expect(mockDataFetcher.fetch).toHaveBeenCalledTimes(3);
 
     // With batch registration, no schemas should be registered if there's a missing $id error
     console.log(
