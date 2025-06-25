@@ -15,6 +15,8 @@ let worldInitializer;
 let safeEventDispatcher;
 let entityManager;
 let domUiFacade;
+let thoughtListener;
+let notesListener;
 
 beforeEach(() => {
   logger = { error: jest.fn(), debug: jest.fn(), warn: jest.fn() };
@@ -35,6 +37,8 @@ beforeEach(() => {
   safeEventDispatcher = { subscribe: jest.fn() };
   entityManager = {};
   domUiFacade = {};
+  thoughtListener = { handleEvent: jest.fn() };
+  notesListener = { handleEvent: jest.fn() };
 });
 
 describe('InitializationService LLM adapter rejection', () => {
@@ -56,7 +60,11 @@ describe('InitializationService LLM adapter rejection', () => {
       entityManager,
       domUiFacade,
       actionIndex: { buildIndex: jest.fn() },
-      gameDataRepository: { getAllActionDefinitions: jest.fn().mockReturnValue([]) },
+      gameDataRepository: {
+        getAllActionDefinitions: jest.fn().mockReturnValue([]),
+      },
+      thoughtListener,
+      notesListener,
     });
 
     const result = await svc.runInitializationSequence(WORLD);

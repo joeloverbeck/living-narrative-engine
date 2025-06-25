@@ -15,6 +15,8 @@ let worldInitializer;
 let safeEventDispatcher;
 let entityManager;
 let domUiFacade;
+let thoughtListener;
+let notesListener;
 
 beforeEach(() => {
   logger = { error: jest.fn(), debug: jest.fn() };
@@ -35,13 +37,17 @@ beforeEach(() => {
   safeEventDispatcher = { subscribe: jest.fn() };
   entityManager = {};
   domUiFacade = {};
+  thoughtListener = { handleEvent: jest.fn() };
+  notesListener = { handleEvent: jest.fn() };
 });
 
 describe('InitializationService failure scenarios', () => {
   const createService = (overrides = {}) => {
     const defaults = {
       logger: { error: jest.fn(), debug: jest.fn(), warn: jest.fn() },
-      validatedEventDispatcher: { dispatch: jest.fn().mockResolvedValue(undefined) },
+      validatedEventDispatcher: {
+        dispatch: jest.fn().mockResolvedValue(undefined),
+      },
       modsLoader: { loadMods: jest.fn() },
       scopeRegistry: { initialize: jest.fn() },
       dataRegistry: { getAll: jest.fn().mockReturnValue([]) },
@@ -53,7 +59,11 @@ describe('InitializationService failure scenarios', () => {
       entityManager: {},
       domUiFacade: {},
       actionIndex: { buildIndex: jest.fn() },
-      gameDataRepository: { getAllActionDefinitions: jest.fn().mockReturnValue([]) },
+      gameDataRepository: {
+        getAllActionDefinitions: jest.fn().mockReturnValue([]),
+      },
+      thoughtListener: { handleEvent: jest.fn() },
+      notesListener: { handleEvent: jest.fn() },
     };
     const deps = { ...defaults, ...overrides };
     return new InitializationService(deps);
@@ -62,7 +72,7 @@ describe('InitializationService failure scenarios', () => {
   it('fails when ModsLoader.loadMods rejects', async () => {
     const error = new Error('load');
     const svc = createService({
-      modsLoader: { loadMods: jest.fn().mockRejectedValueOnce(error) }
+      modsLoader: { loadMods: jest.fn().mockRejectedValueOnce(error) },
     });
     const result = await svc.runInitializationSequence(WORLD);
     expect(result.success).toBe(false);
@@ -72,7 +82,11 @@ describe('InitializationService failure scenarios', () => {
   it('fails when ScopeRegistry.initialize throws', async () => {
     const err = new Error('scope');
     const svc = createService({
-      scopeRegistry: { initialize: jest.fn().mockImplementation(() => { throw err; }) }
+      scopeRegistry: {
+        initialize: jest.fn().mockImplementation(() => {
+          throw err;
+        }),
+      },
     });
     const result = await svc.runInitializationSequence(WORLD);
     expect(result.success).toBe(false);
@@ -82,7 +96,9 @@ describe('InitializationService failure scenarios', () => {
   it('fails when SystemInitializer.initializeAll rejects', async () => {
     const err = new Error('sys');
     const svc = createService({
-      systemInitializer: { initializeAll: jest.fn().mockRejectedValueOnce(err) }
+      systemInitializer: {
+        initializeAll: jest.fn().mockRejectedValueOnce(err),
+      },
     });
     const result = await svc.runInitializationSequence(WORLD);
     expect(result.success).toBe(false);
@@ -91,7 +107,9 @@ describe('InitializationService failure scenarios', () => {
 
   it('fails when WorldInitializer reports failure', async () => {
     const svc = createService({
-      worldInitializer: { initializeWorldEntities: jest.fn().mockReturnValueOnce(false) }
+      worldInitializer: {
+        initializeWorldEntities: jest.fn().mockReturnValueOnce(false),
+      },
     });
     const result = await svc.runInitializationSequence(WORLD);
     expect(result.success).toBe(false);
