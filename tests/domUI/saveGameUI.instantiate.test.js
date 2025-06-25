@@ -1,5 +1,6 @@
 import { JSDOM } from 'jsdom';
 import SaveGameUI from '../../src/domUI/saveGameUI.js';
+import SaveGameService from '../../src/domUI/saveGameService.js';
 import DocumentContext from '../../src/domUI/documentContext.js';
 import DomElementFactory from '../../src/domUI/domElementFactory.js';
 import { describe, it, expect, jest } from '@jest/globals';
@@ -32,6 +33,10 @@ describe('SaveGameUI instantiation', () => {
       dispatch: jest.fn(),
     };
     const userPrompt = { confirm: jest.fn(() => true) };
+    const saveGameService = new SaveGameService({
+      logger: mockLogger,
+      userPrompt,
+    });
 
     const ui = new SaveGameUI({
       logger: mockLogger,
@@ -39,7 +44,7 @@ describe('SaveGameUI instantiation', () => {
       domElementFactory: factory,
       saveLoadService,
       validatedEventDispatcher: dispatcher,
-      userPrompt,
+      saveGameService,
     });
 
     expect(ui).toBeInstanceOf(SaveGameUI);
