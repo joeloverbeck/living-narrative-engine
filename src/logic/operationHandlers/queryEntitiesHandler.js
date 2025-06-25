@@ -12,6 +12,7 @@
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 import BaseOperationHandler from './baseOperationHandler.js';
 import { tryWriteContextVariable } from '../../utils/contextVariableUtils.js';
+import { ensureEvaluationContext } from '../../utils/evaluationContextUtils.js';
 import { assertParamsObject } from '../../utils/handlerUtils/indexUtils.js';
 
 /**
@@ -135,6 +136,10 @@ class QueryEntitiesHandler extends BaseOperationHandler {
       logger.debug(
         `QUERY_ENTITIES: Applied limit: ${limit}. Results reduced from ${originalCount} to ${finalIds.length}.`
       );
+    }
+
+    if (!ensureEvaluationContext(executionContext, this.#dispatcher, logger)) {
+      return;
     }
 
     const res = tryWriteContextVariable(

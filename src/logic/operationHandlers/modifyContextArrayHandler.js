@@ -11,6 +11,7 @@ import { resolvePath } from '../../utils/objectUtils.js';
 import { tryWriteContextVariable } from '../../utils/contextVariableUtils.js';
 import { cloneDeep } from 'lodash';
 import { assertParamsObject } from '../../utils/handlerUtils/indexUtils.js';
+import { ensureEvaluationContext } from '../../utils/evaluationContextUtils.js';
 import {
   advancedArrayModify,
   ARRAY_MODIFICATION_MODES,
@@ -77,11 +78,12 @@ class ModifyContextArrayHandler {
       return;
     }
 
-    const contextObject = executionContext?.evaluationContext?.context;
+    const contextObject = ensureEvaluationContext(
+      executionContext,
+      this.#dispatcher,
+      log
+    );
     if (!contextObject) {
-      log.warn(
-        'MODIFY_CONTEXT_ARRAY: Cannot execute because the execution context is missing.'
-      );
       return;
     }
 

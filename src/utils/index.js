@@ -18,3 +18,4 @@ export * from './placeholderPathResolver.js';
 export { StructureResolver } from './structureResolver.js';
 export * from './jsonCleaning.js';
 export * from './jsonRepair.js';
+export * from './evaluationContextUtils.js';

@@ -307,8 +307,7 @@ describe('SetVariableHandler', () => {
         // If invalidExecCtx is null/undefined, it won't. If it's an object, we ensure our handler's logger is used.
         handler.execute(validParams, invalidExecCtx);
         expect(mockLoggerInstance.error).toHaveBeenCalledWith(
-          'SET_VARIABLE: executionContext.evaluationContext.context is missing or invalid. Cannot store variable.',
-          expectedDetails
+          'ensureEvaluationContext: executionContext.evaluationContext.context is missing or invalid.'
         );
       }
     );
@@ -317,12 +316,7 @@ describe('SetVariableHandler', () => {
       const invalidExecCtx = 'not an object';
       handler.execute(validParams, invalidExecCtx);
       expect(mockLoggerInstance.error).toHaveBeenCalledWith(
-        'SET_VARIABLE: executionContext.evaluationContext.context is missing or invalid. Cannot store variable.',
-        {
-          hasExecutionContext: true,
-          hasEvaluationContext: false,
-          typeOfVariableStore: 'undefined',
-        }
+        'ensureEvaluationContext: executionContext.evaluationContext.context is missing or invalid.'
       );
     });
   });
@@ -556,12 +550,7 @@ describe('SetVariableHandler', () => {
 
       // Expect the initial validation error for the variable store
       expect(mockLoggerInstance.error).toHaveBeenCalledWith(
-        'SET_VARIABLE: executionContext.evaluationContext.context is missing or invalid. Cannot store variable.',
-        {
-          hasExecutionContext: true,
-          hasEvaluationContext: false,
-          typeOfVariableStore: 'undefined',
-        }
+        'ensureEvaluationContext: executionContext.evaluationContext.context is missing or invalid.'
       );
       // Ensure the more specific error about JsonLogic evaluation is NOT called because the first check returns.
       expect(mockLoggerInstance.error).not.toHaveBeenCalledWith(

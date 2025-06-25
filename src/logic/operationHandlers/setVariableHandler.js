@@ -11,6 +11,7 @@
 import { assertParamsObject } from '../../utils/handlerUtils/paramsUtils.js';
 import { tryWriteContextVariable } from '../../utils/contextVariableUtils.js';
 import { evaluateValue } from '../utils/jsonLogicVariableEvaluator.js';
+import { ensureEvaluationContext } from '../../utils/evaluationContextUtils.js';
 
 /**
  * Parameters expected by the SetVariableHandler#execute method.
@@ -146,19 +147,8 @@ class SetVariableHandler {
     }
 
     // --- 2. Validate target variable store within executionContext ---
-    // The variableStore is expected to be executionContext.evaluationContext.context
     const evaluationCtx = executionContext?.evaluationContext;
-    const variableStore = evaluationCtx?.context;
-
-    if (typeof variableStore !== 'object' || variableStore === null) {
-      logger.error(
-        'SET_VARIABLE: executionContext.evaluationContext.context is missing or invalid. Cannot store variable.',
-        {
-          hasExecutionContext: !!executionContext,
-          hasEvaluationContext: !!evaluationCtx,
-          typeOfVariableStore: typeof variableStore,
-        }
-      );
+    if (!ensureEvaluationContext(executionContext, undefined, logger)) {
       return;
     }
 
