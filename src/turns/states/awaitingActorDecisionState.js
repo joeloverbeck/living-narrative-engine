@@ -7,7 +7,7 @@
 
 import { AbstractTurnState } from './abstractTurnState.js';
 import { ACTION_DECIDED_ID } from '../../constants/eventIds.js';
-import { getActorType } from '../../utils/actorTypeUtils.js';
+import { determineActorType } from '../../utils/actorTypeUtils.js';
 import { getLogger, getSafeEventDispatcher } from './helpers/contextUtils.js';
 import { ActionDecisionWorkflow } from './workflows/actionDecisionWorkflow.js';
 
@@ -216,7 +216,7 @@ export class AwaitingActorDecisionState extends AbstractTurnState {
   async _emitActionDecided(turnContext, actor, extractedData) {
     const payload = {
       actorId: actor.id,
-      actorType: getActorType(actor),
+      actorType: determineActorType(actor),
     };
     if (extractedData) {
       payload.extractedData = {

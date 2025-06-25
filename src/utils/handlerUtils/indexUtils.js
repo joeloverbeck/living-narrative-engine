@@ -2,9 +2,14 @@ import { assertParamsObject } from './paramsUtils.js';
 import {
   initHandlerLogger,
   validateDeps,
-  getExecLogger,
+  resolveExecutionLogger,
 } from './serviceUtils.js';
 
-export { assertParamsObject, initHandlerLogger, validateDeps, getExecLogger };
+export {
+  assertParamsObject,
+  initHandlerLogger,
+  validateDeps,
+  resolveExecutionLogger,
+};
 
 // deprecated default export removed in favor of named exports only

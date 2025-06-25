@@ -18,9 +18,12 @@ export function extractContextPath(placeholderPath, executionContext) {
     return { path: placeholderPath, root: executionContext };
   }
 
-  const ctx = executionContext?.evaluationContext?.context;
-  if (ctx && typeof ctx === 'object') {
-    return { path: placeholderPath.substring('context.'.length), root: ctx };
+  const context = executionContext?.evaluationContext?.context;
+  if (context && typeof context === 'object') {
+    return {
+      path: placeholderPath.substring('context.'.length),
+      root: context,
+    };
   }
 
   return null;

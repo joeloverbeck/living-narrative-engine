@@ -3,13 +3,13 @@ import {
   assertParamsObject,
   initHandlerLogger,
   validateDeps,
-  getExecLogger,
+  resolveExecutionLogger,
 } from '../../../src/utils/handlerUtils/indexUtils.js';
 import { assertParamsObject as paramsAssert } from '../../../src/utils/handlerUtils/paramsUtils.js';
 import {
   initHandlerLogger as serviceInit,
   validateDeps as serviceValidate,
-  getExecLogger as serviceGetExec,
+  resolveExecutionLogger as serviceGetExec,
 } from '../../../src/utils/handlerUtils/serviceUtils.js';
 
 describe('handlerUtils/indexUtils exports', () => {
@@ -17,6 +17,6 @@ describe('handlerUtils/indexUtils exports', () => {
     expect(assertParamsObject).toBe(paramsAssert);
     expect(initHandlerLogger).toBe(serviceInit);
     expect(validateDeps).toBe(serviceValidate);
-    expect(getExecLogger).toBe(serviceGetExec);
+    expect(resolveExecutionLogger).toBe(serviceGetExec);
   });
 });
