@@ -191,7 +191,7 @@ class GameEngine {
 
     try {
       await this.#sessionManager.prepareForNewGameSession(worldName);
-      await this._resetCoreGameState();
+      this._resetCoreGameState();
 
       const initResult = await this._executeInitializationSequence(worldName);
 
