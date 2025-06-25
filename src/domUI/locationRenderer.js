@@ -17,6 +17,8 @@ import {
 import { buildLocationDisplayPayload } from './location/buildLocationDisplayPayload.js';
 import { renderPortraitElements } from './location/renderPortraitElements.js';
 import { renderLocationLists } from './location/renderLocationLists.js';
+import { renderCharacterListItem } from './location/renderCharacterListItem.js';
+import { LocationDataService } from './location/locationDataService.js';
 
 /**
  * @typedef {import('../interfaces/ILogger').ILogger} ILogger
@@ -58,6 +60,7 @@ export class LocationRenderer extends BoundDomRendererBase {
   entityManager;
   entityDisplayDataProvider;
   dataRegistry;
+  locationDataService;
   safeEventDispatcher;
 
   _EVENT_TYPE_SUBSCRIBED = 'core:turn_started';
@@ -161,6 +164,14 @@ export class LocationRenderer extends BoundDomRendererBase {
       this.baseContainerElement
     );
 
+    this.locationDataService = new LocationDataService({
+      logger,
+      entityManager: this.entityManager,
+      entityDisplayDataProvider: this.entityDisplayDataProvider,
+      dataRegistry: this.dataRegistry,
+      safeEventDispatcher: this.safeEventDispatcher,
+    });
+
     // Check for new portrait elements after super() and _bindElements() have run
     if (
       !this.elements.locationPortraitVisualsElement ||
@@ -199,8 +210,15 @@ export class LocationRenderer extends BoundDomRendererBase {
 
     try {
       const currentLocationInstanceId =
-        this.#resolveLocationInstanceId(currentActorEntityId);
-      if (!currentLocationInstanceId) return;
+        this.locationDataService.resolveLocationInstanceId(
+          currentActorEntityId
+        );
+      if (!currentLocationInstanceId) {
+        this.#clearAllDisplaysOnErrorWithMessage(
+          `Location for ${currentActorEntityId} is unknown.`
+        );
+        return;
+      }
 
       const locationDetails = this.entityDisplayDataProvider.getLocationDetails(
         currentLocationInstanceId
@@ -221,10 +239,11 @@ export class LocationRenderer extends BoundDomRendererBase {
           currentLocationInstanceId
         );
 
-      const charactersInLocation = this.#gatherLocationCharacters(
-        currentLocationInstanceId,
-        currentActorEntityId
-      );
+      const charactersInLocation =
+        this.locationDataService.gatherLocationCharacters(
+          currentLocationInstanceId,
+          currentActorEntityId
+        );
 
       const displayPayload = buildLocationDisplayPayload(
         locationDetails,
@@ -252,82 +271,6 @@ export class LocationRenderer extends BoundDomRendererBase {
    * @returns {string|null} Instance ID or null when the actor lacks a valid
    * POSITION_COMPONENT or the entity cannot be located.
    */
-  #resolveLocationInstanceId(actorId) {
-    const locId = this.entityDisplayDataProvider.getEntityLocationId(actorId);
-    if (!locId) {
-      if (this.dataRegistry && typeof this.dataRegistry.getAll === 'function') {
-        const allInstances = this.dataRegistry.getAll('entityInstances') || [];
-        const allDefs = this.dataRegistry.getAll('entityDefinitions') || [];
-        this.logger.error(
-          '[DEBUG] Registry entityInstances:',
-          allInstances.map((e) => ({
-            id: e.id,
-            instanceId: e.instanceId,
-            definitionId: e.definitionId,
-            componentOverrides: e.componentOverrides,
-          }))
-        );
-        this.logger.error(
-          '[DEBUG] Registry entityDefinitions:',
-          allDefs.map((e) => ({
-            id: e.id,
-            components: Object.keys(e.components),
-          }))
-        );
-      } else {
-        this.logger.error('[DEBUG] dataRegistry or getAll not available');
-      }
-      this.safeEventDispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
-        message: `Entity '${actorId}' has no valid position or locationId.`,
-        details: {
-          raw: JSON.stringify({
-            entityId: actorId,
-            functionName: 'handleTurnStarted',
-          }),
-          stack: new Error().stack,
-        },
-      });
-      this.#clearAllDisplaysOnErrorWithMessage(
-        `Location for ${actorId} is unknown.`
-      );
-      return null;
-    }
-    return locId;
-  }
-
-  /**
-   * Gather character display data for entities at a location.
-   *
-   * @private
-   * @param {string} locationInstanceId - Location instance identifier.
-   * @param {import('../interfaces/CommonTypes').NamespacedId} currentActorId - Actor initiating the turn.
-   * @returns {Array<CharacterDisplayData>} Array of character data.
-   */
-  #gatherLocationCharacters(locationInstanceId, currentActorId) {
-    const charactersInLocation = [];
-    const entityIdsInLocation =
-      this.entityManager.getEntitiesInLocation(locationInstanceId);
-
-    for (const entityIdInLoc of entityIdsInLocation) {
-      if (entityIdInLoc === currentActorId) continue;
-      const entity = this.entityManager.getEntityInstance(entityIdInLoc);
-      if (entity && entity.hasComponent(ACTOR_COMPONENT_ID)) {
-        const characterInfo =
-          this.entityDisplayDataProvider.getCharacterDisplayInfo(entityIdInLoc);
-        if (characterInfo) {
-          charactersInLocation.push(characterInfo);
-        } else {
-          this.logger.warn(
-            `${this._logPrefix} Could not get display info for character '${entityIdInLoc}'.`
-          );
-        }
-      }
-    }
-    this.logger.debug(
-      `${this._logPrefix} Found ${charactersInLocation.length} other characters.`
-    );
-    return charactersInLocation;
-  }
 
   #clearAllDisplaysOnErrorWithMessage(message) {
     const elementsAndDefaults = {
@@ -390,41 +333,6 @@ export class LocationRenderer extends BoundDomRendererBase {
    * @param {HTMLElement} listElement - UL element to append the item to.
    * @returns {void}
    */
-  _renderCharacterListItem(item, listElement) {
-    const text = item && item.name ? String(item.name) : '(Invalid name)';
-    const li =
-      this.domElementFactory.li?.('list-item') ??
-      this.documentContext.document.createElement('li');
-    listElement.appendChild(li);
-
-    if (item.portraitPath) {
-      const img =
-        this.domElementFactory.img?.(
-          item.portraitPath,
-          `Portrait of ${text}`,
-          'character-portrait'
-        ) ?? this.documentContext.document.createElement('img');
-      if (!img.src) {
-        img.src = item.portraitPath;
-        img.alt = `Portrait of ${text}`;
-        img.className = 'character-portrait';
-      }
-      li.appendChild(img);
-    }
-
-    const nameSpan =
-      this.domElementFactory.span?.('character-name', text) ??
-      this.documentContext.document.createTextNode(text);
-    li.appendChild(nameSpan);
-
-    if (item.description?.trim()) {
-      const tooltip = this.#createCharacterTooltip(item.description);
-      li.appendChild(tooltip);
-      this._addDomListener(li, 'click', () =>
-        li.classList.toggle('tooltip-open')
-      );
-    }
-  }
 
   /**
    * Renders a basic list item.
@@ -495,7 +403,13 @@ export class LocationRenderer extends BoundDomRendererBase {
           : `(Invalid ${itemTextProperty})`;
 
       if (title === 'Characters' && item && typeof item === 'object') {
-        this._renderCharacterListItem(item, ul);
+        renderCharacterListItem(
+          item,
+          ul,
+          this.domElementFactory,
+          this.documentContext,
+          this._addDomListener.bind(this)
+        );
       } else {
         this._renderGenericListItem(text, ul, itemClassName);
       }
@@ -505,15 +419,6 @@ export class LocationRenderer extends BoundDomRendererBase {
   /* ---------------------------------------------------------------------
    *  HELPER – builds the hidden tooltip block for character descriptions
    * ------------------------------------------------------------------- */
-  #createCharacterTooltip(text) {
-    const span =
-      this.domElementFactory.span?.('character-tooltip', text) ??
-      this.documentContext.document.createElement('span');
-
-    if (!span.textContent) span.textContent = text;
-    span.classList.add('character-tooltip');
-    return span;
-  }
 
   /**
    * Render the location name heading.
