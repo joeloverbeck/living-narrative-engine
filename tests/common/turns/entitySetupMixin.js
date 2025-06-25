@@ -20,6 +20,7 @@ export function EntitySetupMixin(Base) {
     setActiveEntities(...entities) {
       const map = this.entityManager.activeEntities;
       map.clear();
+      if (entities.length === 0) return;
       for (const e of entities) {
         map.set(e.id, e);
       }
@@ -54,6 +55,10 @@ export function EntitySetupMixin(Base) {
      * @returns {void}
      */
     mockActorSequence(...actors) {
+      if (actors.length === 0) {
+        this.mockEmptyQueue();
+        return;
+      }
       this.mocks.turnOrderService.isEmpty.mockResolvedValue(false);
       let index = 0;
       this.mocks.turnOrderService.getNextEntity.mockImplementation(() =>
