@@ -1,18 +1,15 @@
 // tests/initializers/worldInitializer.test.js
 // --- FILE START ---
 
-import {
-  afterEach,
-  beforeEach,
-  describe,
-  expect,
-  it,
-  jest,
-} from '@jest/globals';
+import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import WorldInitializer from '../../../src/initializers/worldInitializer.js';
 import { POSITION_COMPONENT_ID } from '../../../src/constants/componentIds.js';
-import _isEqual from 'lodash/isEqual.js'; // For comparing complex objects in logs if needed
+import {
+  WORLDINIT_ENTITY_INSTANTIATED_ID,
+  WORLDINIT_ENTITY_INSTANTIATION_FAILED_ID,
+} from '../../../src/constants/eventIds.js';
 import { safeDispatchError } from '../../../src/utils/safeDispatchErrorUtils.js';
+import * as eventDispatchUtils from '../../../src/utils/eventDispatchUtils.js';
 
 jest.mock('../../../src/utils/safeDispatchErrorUtils.js', () => ({
   safeDispatchError: jest.fn(),
@@ -24,7 +21,6 @@ describe('WorldInitializer', () => {
   let mockGameDataRepository;
   let mockValidatedEventDispatcher;
   let mockLogger;
-  let mockSpatialIndexManager;
   let mockScopeRegistry;
   let worldInitializer;
 
@@ -41,6 +37,7 @@ describe('WorldInitializer', () => {
 
     const mockInstanceBase = {
       id: instanceId,
+      instanceId,
       definitionId: definitionId,
       getComponentData: jest.fn((componentTypeId) => {
         const data = internalComponentsMap.get(componentTypeId);
@@ -76,6 +73,7 @@ describe('WorldInitializer', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    jest.spyOn(eventDispatchUtils, 'dispatchWithLogging');
 
     mockEntityManager = {
       createEntityInstance: jest.fn(),
@@ -97,9 +95,6 @@ describe('WorldInitializer', () => {
       warn: jest.fn(),
       error: jest.fn(),
       debug: jest.fn(),
-    };
-    mockSpatialIndexManager = {
-      addEntity: jest.fn(),
     };
     mockScopeRegistry = {
       initialize: jest.fn(),
@@ -226,6 +221,15 @@ describe('WorldInitializer', () => {
           'WorldInitializer (Pass 1): Successfully instantiated entity test:hero_instance (from definition: test:hero)'
         )
       );
+
+      expect(eventDispatchUtils.dispatchWithLogging).toHaveBeenCalledWith(
+        mockValidatedEventDispatcher,
+        WORLDINIT_ENTITY_INSTANTIATED_ID,
+        expect.objectContaining({ instanceId: 'test:hero_instance' }),
+        mockLogger,
+        'entity test:hero_instance',
+        { allowSchemaNotFound: true }
+      );
       // Pass 2 reference resolution has been removed as it's no longer needed
       // with data-driven entity instances
     });
@@ -256,6 +260,14 @@ describe('WorldInitializer', () => {
 
       expect(mockLogger.error).toHaveBeenCalledWith(
         'WorldInitializer (Pass 1): Failed to instantiate entity from definition: test:broken for instance: test:broken_instance. createEntityInstance returned null/undefined or threw an error.'
+      );
+      expect(eventDispatchUtils.dispatchWithLogging).toHaveBeenCalledWith(
+        mockValidatedEventDispatcher,
+        WORLDINIT_ENTITY_INSTANTIATION_FAILED_ID,
+        expect.objectContaining({ instanceId: 'test:broken_instance' }),
+        mockLogger,
+        'instance test:broken_instance',
+        { allowSchemaNotFound: true }
       );
       // Pass 2 reference resolution has been removed, so no related logs expected
     });
@@ -529,6 +541,14 @@ describe('WorldInitializer', () => {
           "Failed dispatching 'worldinit:entity_instantiated' event for entity test:eventTest_instance"
         ),
         expect.any(Error)
+      );
+      expect(eventDispatchUtils.dispatchWithLogging).toHaveBeenCalledWith(
+        mockValidatedEventDispatcher,
+        WORLDINIT_ENTITY_INSTANTIATED_ID,
+        expect.any(Object),
+        mockLogger,
+        'entity test:eventTest_instance',
+        { allowSchemaNotFound: true }
       );
     });
   });
