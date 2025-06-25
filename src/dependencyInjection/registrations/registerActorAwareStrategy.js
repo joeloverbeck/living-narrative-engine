@@ -6,7 +6,7 @@
 /** @typedef {import('../appContainer.js').default} AppContainer */
 
 import { tokens } from '../tokens.js';
-import { Registrar } from '../registrarHelpers.js';
+import { Registrar, resolveOptional } from '../registrarHelpers.js';
 import { TurnActionChoicePipeline } from '../../turns/pipeline/turnActionChoicePipeline.js';
 import { TurnActionFactory } from '../../turns/factories/turnActionFactory.js';
 import { ActorAwareStrategyFactory } from '../../turns/factories/actorAwareStrategyFactory.js';
@@ -57,8 +57,12 @@ export function registerActorAwareStrategy(container) {
         actorLookup: (id) =>
           c.resolve(tokens.IEntityManager).getEntityInstance(id),
       };
-      if (c.isRegistered(tokens.IAIFallbackActionFactory)) {
-        opts.fallbackFactory = c.resolve(tokens.IAIFallbackActionFactory);
+      const fallbackFactory = resolveOptional(
+        c,
+        tokens.IAIFallbackActionFactory
+      );
+      if (fallbackFactory) {
+        opts.fallbackFactory = fallbackFactory;
       }
       opts.providerResolver = (actor) => {
         const type = actor?.aiType ?? actor?.components?.ai?.type;

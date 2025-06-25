@@ -44,7 +44,7 @@
 
 // --- DI & Helper Imports ---
 import { tokens } from '../tokens.js';
-import { Registrar } from '../registrarHelpers.js';
+import { Registrar, resolveOptional } from '../registrarHelpers.js';
 
 // --- LLM Adapter Imports ---
 import { ConfigurableLLMAdapter } from '../../turns/adapters/configurableLLMAdapter.js';
@@ -112,12 +112,9 @@ import { registerActorAwareStrategy } from './registerActorAwareStrategy.js';
  */
 export function registerLlmInfrastructure(registrar, logger) {
   registrar.singletonFactory(tokens.IHttpClient, (c) => {
-    let dispatcher = null;
-    if (c.isRegistered(tokens.ISafeEventDispatcher)) {
-      dispatcher = c.resolve(tokens.ISafeEventDispatcher);
-    } else if (c.isRegistered(tokens.IValidatedEventDispatcher)) {
-      dispatcher = c.resolve(tokens.IValidatedEventDispatcher);
-    }
+    const dispatcher =
+      resolveOptional(c, tokens.ISafeEventDispatcher) ??
+      resolveOptional(c, tokens.IValidatedEventDispatcher);
     return new RetryHttpClient({
       logger: c.resolve(tokens.ILogger),
       dispatcher,

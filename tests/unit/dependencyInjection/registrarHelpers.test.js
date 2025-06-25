@@ -1,5 +1,8 @@
 import { describe, it, beforeEach, expect, jest } from '@jest/globals';
-import { Registrar } from '../../../src/dependencyInjection/registrarHelpers.js';
+import {
+  Registrar,
+  resolveOptional,
+} from '../../../src/dependencyInjection/registrarHelpers.js';
 
 /** @type {import('../../../src/dependencyInjection/appContainer.js').default} */
 let mockContainer;
@@ -76,5 +79,32 @@ describe('Registrar basic behaviors', () => {
     expect(() => registrar.transientFactory('tok', 1)).toThrow(
       'Registrar.transientFactory requires a function'
     );
+  });
+});
+
+describe('resolveOptional', () => {
+  /** @type {import('../../../src/dependencyInjection/appContainer.js').default} */
+  let mockResolveContainer;
+
+  beforeEach(() => {
+    mockResolveContainer = {
+      isRegistered: jest.fn(),
+      resolve: jest.fn(),
+    };
+  });
+
+  it('returns resolved instance when token registered', () => {
+    mockResolveContainer.isRegistered.mockReturnValue(true);
+    mockResolveContainer.resolve.mockReturnValue('value');
+    const result = resolveOptional(mockResolveContainer, 'tok');
+    expect(mockResolveContainer.resolve).toHaveBeenCalledWith('tok');
+    expect(result).toBe('value');
+  });
+
+  it('returns null when token not registered', () => {
+    mockResolveContainer.isRegistered.mockReturnValue(false);
+    const result = resolveOptional(mockResolveContainer, 'tok');
+    expect(mockResolveContainer.resolve).not.toHaveBeenCalled();
+    expect(result).toBeNull();
   });
 });

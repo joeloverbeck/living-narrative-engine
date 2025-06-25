@@ -10,7 +10,7 @@
 
 // --- DI & Helper Imports ---
 import { tokens } from '../tokens.js';
-import { Registrar } from '../registrarHelpers.js';
+import { Registrar, resolveOptional } from '../registrarHelpers.js';
 import { SHUTDOWNABLE as _SHUTDOWNABLE } from '../tags.js';
 
 // --- Adapter Imports ---
@@ -32,16 +32,13 @@ export function registerEventBusAdapters(container) {
   registrar.singletonFactory(tokens.IPromptOutputPort, (c) => {
     // --- FIX: Check for registration before resolving optional dependencies. ---
     // This prevents c.resolve() from throwing an error if a dependency isn't registered.
-    const safeDispatcher = c.isRegistered(tokens.ISafeEventDispatcher)
-      ? /** @type {ISafeEventDispatcher | null} */ (
-          c.resolve(tokens.ISafeEventDispatcher)
-        )
-      : null;
-    const validatedDispatcher = c.isRegistered(tokens.IValidatedEventDispatcher)
-      ? /** @type {IValidatedEventDispatcher | null} */ (
-          c.resolve(tokens.IValidatedEventDispatcher)
-        )
-      : null;
+    const safeDispatcher = /** @type {ISafeEventDispatcher | null} */ (
+      resolveOptional(c, tokens.ISafeEventDispatcher)
+    );
+    const validatedDispatcher =
+      /** @type {IValidatedEventDispatcher | null} */ (
+        resolveOptional(c, tokens.IValidatedEventDispatcher)
+      );
 
     if (!safeDispatcher && !validatedDispatcher) {
       logger.error(
@@ -62,11 +59,9 @@ export function registerEventBusAdapters(container) {
 
   // --- Register EventBusTurnEndAdapter ---
   registrar.singletonFactory(tokens.ITurnEndPort, (c) => {
-    const safeDispatcher = c.isRegistered(tokens.ISafeEventDispatcher)
-      ? /** @type {ISafeEventDispatcher} */ (
-          c.resolve(tokens.ISafeEventDispatcher)
-        )
-      : null;
+    const safeDispatcher = /** @type {ISafeEventDispatcher | null} */ (
+      resolveOptional(c, tokens.ISafeEventDispatcher)
+    );
 
     if (!safeDispatcher) {
       logger.error(
