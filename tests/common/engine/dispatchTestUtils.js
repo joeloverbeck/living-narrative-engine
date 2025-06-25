@@ -17,7 +17,6 @@ import {
   REQUEST_SHOW_LOAD_GAME_UI,
   REQUEST_SHOW_SAVE_GAME_UI,
 } from '../../../src/constants/eventIds.js';
-import { tokens } from '../../../src/dependencyInjection/tokens.js';
 import {
   DEFAULT_ACTIVE_WORLD_FOR_SAVE,
   ENGINE_READY_MESSAGE,
@@ -283,9 +282,6 @@ export const expectShowSaveGameUIDispatch = createDispatchAsserter(
 export function expectStartSuccess(bed, engine, world) {
   expect(bed.getEntityManager().clearAll).toHaveBeenCalled();
   expect(bed.getPlaytimeTracker().reset).toHaveBeenCalled();
-  expect(bed.env.mockContainer.resolve).toHaveBeenCalledWith(
-    tokens.IInitializationService
-  );
   expect(
     bed.getInitializationService().runInitializationSequence
   ).toHaveBeenCalledWith(world);

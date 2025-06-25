@@ -28,8 +28,6 @@ import PersistenceCoordinator from './persistenceCoordinator.js';
 /** @typedef {import('../interfaces/ISaveLoadService.js').SaveGameStructure} SaveGameStructure */
 
 class GameEngine {
-  /** @type {AppContainer} */
-  #container;
   /** @type {ILogger} */
   #logger;
   /** @type {IEntityManager} */
@@ -42,6 +40,8 @@ class GameEngine {
   #playtimeTracker;
   /** @type {ISafeEventDispatcher} */
   #safeEventDispatcher;
+  /** @type {IInitializationService} */
+  #initializationService;
 
   /** @type {EngineState} */
   #engineState;
@@ -51,7 +51,6 @@ class GameEngine {
   #persistenceCoordinator;
 
   constructor({ container }) {
-    this.#container = container;
     try {
       this.#logger = container.resolve(tokens.ILogger);
     } catch (e) {
@@ -70,6 +69,9 @@ class GameEngine {
       );
       this.#safeEventDispatcher = container.resolve(
         tokens.ISafeEventDispatcher
+      );
+      this.#initializationService = /** @type {IInitializationService} */ (
+        container.resolve(tokens.IInitializationService)
       );
     } catch (e) {
       this.#logger.error(
@@ -128,11 +130,9 @@ class GameEngine {
       { allowSchemaNotFound: true }
     );
 
+    const initializationService = this.#initializationService;
     this.#logger.debug(
-      'GameEngine._executeInitializationSequence: Resolving InitializationService...'
-    );
-    const initializationService = /** @type {IInitializationService} */ (
-      this.#container.resolve(tokens.IInitializationService)
+      'GameEngine._executeInitializationSequence: Using injected InitializationService.'
     );
 
     this.#logger.debug(
