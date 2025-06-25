@@ -30,20 +30,21 @@ const TIMEOUT_MS = IS_DEV ? 3_000 : 30_000;
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
 /**
- * Builds the timeout error message and Error object.
+ * Builds the timeout error message and `Error` object.
  *
  * @param {string} actorId - ID of the actor awaiting the turn end.
  * @param {string} actionId - The action definition id.
  * @param {number} timeoutMs - Timeout duration in milliseconds.
- * @returns {{msg: string, err: Error}}
+ *
+ * @returns {{message: string, error: Error}}
  */
-function buildTimeoutObjects(actorId, actionId, timeoutMs = TIMEOUT_MS) {
-  const msg =
+function createTimeoutError(actorId, actionId, timeoutMs = TIMEOUT_MS) {
+  const message =
     `No rule ended the turn for actor ${actorId} after action ` +
     `'${actionId}'. The engine timed out after ${timeoutMs} ms.`;
-  const err = new Error(msg);
-  err.code = 'TURN_END_TIMEOUT';
-  return { msg, err };
+  const error = new Error(message);
+  error.code = 'TURN_END_TIMEOUT';
+  return { message, error };
 }
 
 // ─── AwaitingExternalTurnEndState ──────────────────────────────────────────────
@@ -168,7 +169,7 @@ export class AwaitingExternalTurnEndState extends AbstractTurnState {
     const ctx = this._getTurnContext();
     if (!ctx || !ctx.isAwaitingExternalEvent()) return; // already handled
 
-    const { msg, err } = buildTimeoutObjects(
+    const { message, error } = createTimeoutError(
       ctx.getActor().id,
       this.#awaitingActionId,
       this.#timeoutMs
@@ -179,9 +180,9 @@ export class AwaitingExternalTurnEndState extends AbstractTurnState {
     if (dispatcher) {
       safeDispatchError(
         dispatcher,
-        msg,
+        message,
         {
-          code: err.code,
+          code: error.code,
           actorId: ctx.getActor().id,
           actionId: this.#awaitingActionId,
         },
@@ -191,7 +192,7 @@ export class AwaitingExternalTurnEndState extends AbstractTurnState {
 
     // 2) close the turn
     try {
-      await ctx.endTurn(err);
+      await ctx.endTurn(error);
     } catch (e) {
       getLogger(ctx, this._handler).error(
         `${this.getStateName()}: failed to end turn after timeout – ${e.message}`,
