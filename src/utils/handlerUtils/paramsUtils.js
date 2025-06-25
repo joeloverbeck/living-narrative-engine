@@ -1,6 +1,7 @@
 // src/utils/handlerUtils/paramsUtils.js
 
 import { safeDispatchError } from '../safeDispatchErrorUtils.js';
+import { isNonBlankString } from '../textUtils.js';
 
 /**
  * @description Ensures an operation handler received a valid parameters object.
@@ -40,7 +41,7 @@ export function assertParamsObject(params, logger, opName) {
  * @returns {string|null} The trimmed string or `null` if invalid.
  */
 export function validateStringParam(value, name, logger, dispatcher) {
-  if (typeof value === 'string' && value.trim()) {
+  if (isNonBlankString(value)) {
     return value.trim();
   }
   safeDispatchError(

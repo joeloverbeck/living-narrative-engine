@@ -11,6 +11,7 @@ import {
   isValidEntity,
 } from './entityValidationUtils.js';
 import { isNonBlankString } from './textUtils.js';
+import { safeCall } from './safeExecutionUtils.js';
 
 /** @typedef {import('../entities/entity.js').default} Entity */
 
@@ -34,16 +35,17 @@ export function getComponentFromEntity(entity, componentId, logger) {
     return null;
   }
 
-  try {
-    const data = entity.getComponentData(componentId);
-    return data ?? null;
-  } catch (error) {
-    moduleLogger.debug(
-      'getComponentFromEntity: error retrieving component data.',
-      error
-    );
-    return null;
+  const { success, result, error } = safeCall(() =>
+    entity.getComponentData(componentId)
+  );
+  if (success) {
+    return result ?? null;
   }
+  moduleLogger.debug(
+    'getComponentFromEntity: error retrieving component data.',
+    error
+  );
+  return null;
 }
 
 /** @typedef {import('../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
@@ -83,16 +85,17 @@ export function getComponentFromManager(
     return null;
   }
 
-  try {
-    const data = entityManager.getComponentData(entityId, componentId);
-    return data ?? null;
-  } catch (error) {
-    moduleLogger.debug(
-      `getComponentFromManager: error retrieving '${componentId}' for entity '${entityId}'.`,
-      error
-    );
-    return null;
+  const { success, result, error } = safeCall(() =>
+    entityManager.getComponentData(entityId, componentId)
+  );
+  if (success) {
+    return result ?? null;
   }
+  moduleLogger.debug(
+    `getComponentFromManager: error retrieving '${componentId}' for entity '${entityId}'.`,
+    error
+  );
+  return null;
 }
 
 /**
