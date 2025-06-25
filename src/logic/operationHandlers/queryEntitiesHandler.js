@@ -26,6 +26,8 @@ class QueryEntitiesHandler extends BaseOperationHandler {
   #jsonLogicEvaluationService;
   /** @type {ISafeEventDispatcher} */
   #dispatcher;
+  /** @type {Record<string, Function>} */
+  #filterMap;
 
   /**
    * Create a new QueryEntitiesHandler instance.
@@ -71,6 +73,11 @@ class QueryEntitiesHandler extends BaseOperationHandler {
     this.#entityManager = entityManager;
     this.#jsonLogicEvaluationService = jsonLogicEvaluationService;
     this.#dispatcher = safeEventDispatcher;
+    this.#filterMap = Object.freeze({
+      by_location: this.#applyLocationFilter.bind(this),
+      with_component: this.#applyComponentFilter.bind(this),
+      with_component_data: this.#applyComponentDataFilter.bind(this),
+    });
   }
 
   /**
@@ -93,6 +100,7 @@ class QueryEntitiesHandler extends BaseOperationHandler {
       `QUERY_ENTITIES: Starting with ${candidateIds.size} total active entities.`
     );
 
+    const FILTER_MAP = this.#filterMap;
     for (const filter of filters) {
       if (candidateIds.size === 0) {
         logger.debug(
@@ -109,24 +117,9 @@ class QueryEntitiesHandler extends BaseOperationHandler {
       const filterType = Object.keys(filter)[0];
       const filterValue = filter[filterType];
 
-      if (filterType === 'by_location') {
-        candidateIds = this.#applyLocationFilter(
-          candidateIds,
-          filterValue,
-          logger
-        );
-      } else if (filterType === 'with_component') {
-        candidateIds = this.#applyComponentFilter(
-          candidateIds,
-          filterValue,
-          logger
-        );
-      } else if (filterType === 'with_component_data') {
-        candidateIds = this.#applyComponentDataFilter(
-          candidateIds,
-          filterValue,
-          logger
-        );
+      const handler = FILTER_MAP[filterType];
+      if (handler) {
+        candidateIds = handler(candidateIds, filterValue, logger);
       } else {
         logger.warn(
           `QUERY_ENTITIES: Encountered unknown filter type '${filterType}'. Skipping.`
