@@ -150,23 +150,12 @@ class LoadGameUI extends SlotModalBase {
    */
   _initEventListeners() {
     // Close button listener is automatically added by BaseModalRenderer if 'closeButton' is in elementsConfig.
-    if (this.elements.confirmLoadButtonEl) {
-      this._addDomListener(
-        this.elements.confirmLoadButtonEl,
-        'click',
-        this._handleLoad.bind(this)
-      );
-    }
+    this._initCommonListeners(this._handleLoad.bind(this));
     if (this.elements.deleteSaveButtonEl) {
       this._addDomListener(
         this.elements.deleteSaveButtonEl,
         'click',
         this._handleDelete.bind(this)
-      );
-    }
-    if (this.elements.modalElement) {
-      this._addDomListener(this.elements.modalElement, 'submit', (event) =>
-        event.preventDefault()
       );
     }
     // Keyboard navigation is now handled by SlotModalBase
@@ -388,14 +377,13 @@ class LoadGameUI extends SlotModalBase {
    * @returns {string | null} Error message if validation fails.
    */
   _validateLoadPreconditions() {
-    if (!this.selectedSlotData || this.selectedSlotData.isCorrupted) {
-      this.logger.warn(
-        `${this._logPrefix} Load attempt ignored: no slot selected, or slot corrupted.`
-      );
-      if (this.selectedSlotData?.isCorrupted) {
-        return 'Cannot load a corrupted save file. Please delete it or choose another.';
-      }
-      return 'Please select a save slot to load.';
+    const selectionError = this._validateSlotSelection(true, {
+      noSelection: 'Please select a save slot to load.',
+      corrupted:
+        'Cannot load a corrupted save file. Please delete it or choose another.',
+    });
+    if (selectionError) {
+      return selectionError;
     }
     if (!this.loadService) {
       this.logger.error(
@@ -469,14 +457,11 @@ class LoadGameUI extends SlotModalBase {
    * @async
    */
   async _handleDelete() {
-    if (!this.selectedSlotData) {
-      this.logger.warn(
-        `${this._logPrefix} Delete attempt ignored: no slot selected.`
-      );
-      this._displayStatusMessage(
-        'Please select a save slot to delete.',
-        'error'
-      );
+    const selectionError = this._validateSlotSelection(false, {
+      noSelection: 'Please select a save slot to delete.',
+    });
+    if (selectionError) {
+      this._displayStatusMessage(selectionError, 'error');
       return;
     }
 
