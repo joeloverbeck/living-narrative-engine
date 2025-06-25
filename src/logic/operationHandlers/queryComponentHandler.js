@@ -46,16 +46,29 @@ class QueryComponentHandler extends ComponentOperationHandler {
     this.#dispatcher = safeEventDispatcher;
   }
 
-  execute(params, executionContext) {
-    const logger = this.getLogger(executionContext);
-
+  /**
+   * Validate parameters and context for {@link QueryComponentHandler#execute}.
+   *
+   * @param {QueryComponentOperationParams} params - Raw parameters object.
+   * @param {ExecutionContext} executionContext - Current execution context.
+   * @param {ILogger} logger - Logger for diagnostics.
+   * @returns {{
+   *   entityId:string,
+   *   componentType:string,
+   *   resultVar:string,
+   *   trimmedResultVar:string,
+   *   missingValue:*
+   * }|null}
+   *   Normalized values or `null` when validation fails.
+   * @private
+   */
+  #validateParams(params, executionContext, logger) {
     if (
       !assertParamsObject(params, this.#dispatcher, 'QueryComponentHandler')
     ) {
-      return;
+      return null;
     }
 
-    // This check correctly targets the nested context for variable storage, aligning with test structure.
     if (
       !executionContext?.evaluationContext?.context ||
       typeof executionContext.evaluationContext.context !== 'object'
@@ -65,7 +78,7 @@ class QueryComponentHandler extends ComponentOperationHandler {
         'QueryComponentHandler: executionContext.evaluationContext.context is missing or invalid. Cannot store result.',
         { executionContext }
       );
-      return;
+      return null;
     }
 
     const { entity_ref, component_type, result_variable, missing_value } =
@@ -84,7 +97,7 @@ class QueryComponentHandler extends ComponentOperationHandler {
         'QueryComponentHandler: Could not resolve entity id from entity_ref or component_type.',
         { params }
       );
-      return;
+      return null;
     }
     const { entityId, type: trimmedComponentType } = validated;
 
@@ -94,7 +107,7 @@ class QueryComponentHandler extends ComponentOperationHandler {
         'QueryComponentHandler: Missing or invalid required "result_variable" parameter (must be non-empty string).',
         { params }
       );
-      return;
+      return null;
     }
     const trimmedResultVariable = result_variable.trim();
 
@@ -109,21 +122,49 @@ class QueryComponentHandler extends ComponentOperationHandler {
       );
     }
 
+    return {
+      entityId,
+      componentType: trimmedComponentType,
+      resultVar: result_variable,
+      trimmedResultVar: trimmedResultVariable,
+      missingValue: missing_value,
+    };
+  }
+
+  /**
+   * Retrieve a component and store the result in context.
+   *
+   * @param {string} entityId - Entity identifier.
+   * @param {string} componentType - Component type to fetch.
+   * @param {string} resultVar - Context variable name for storage.
+   * @param trimmedResultVar
+   * @param {*} missingValue - Value to store when component is missing or on error.
+   * @param {ExecutionContext} executionContext - Current execution context.
+   * @param {ILogger} logger - Logger for diagnostics.
+   * @returns {void}
+   * @private
+   */
+  #fetchAndStoreComponent(
+    entityId,
+    componentType,
+    resultVar,
+    trimmedResultVar,
+    missingValue,
+    executionContext,
+    logger
+  ) {
     logger.debug(
-      `QueryComponentHandler: Attempting to query component "${trimmedComponentType}" from entity "${entityId}". Storing result in context variable "${trimmedResultVariable}".`
+      `QueryComponentHandler: Attempting to query component "${componentType}" from entity "${entityId}". Storing result in context variable "${trimmedResultVar}".`
     );
 
-    let result = undefined;
+    let result;
     try {
-      result = this.#entityManager.getComponentData(
-        entityId,
-        trimmedComponentType
-      );
+      result = this.#entityManager.getComponentData(entityId, componentType);
 
-      const valueToStore = result === undefined ? missing_value : result;
+      const valueToStore = result === undefined ? missingValue : result;
 
       writeContextVariable(
-        result_variable,
+        resultVar,
         valueToStore,
         executionContext,
         this.#dispatcher,
@@ -138,53 +179,83 @@ class QueryComponentHandler extends ComponentOperationHandler {
               ? JSON.stringify(result)
               : result;
         logger.debug(
-          `QueryComponentHandler: Successfully queried component "${trimmedComponentType}" from entity "${entityId}". Result stored in "${trimmedResultVariable}": ${resultString}`
+          `QueryComponentHandler: Successfully queried component "${componentType}" from entity "${entityId}". Result stored in "${trimmedResultVar}": ${resultString}`
         );
       } else {
         const missingString =
-          missing_value === null
+          missingValue === null
             ? 'null'
-            : missing_value === undefined
+            : missingValue === undefined
               ? 'undefined'
-              : typeof missing_value === 'object'
-                ? JSON.stringify(missing_value)
-                : missing_value;
+              : typeof missingValue === 'object'
+                ? JSON.stringify(missingValue)
+                : missingValue;
         logger.debug(
-          `QueryComponentHandler: Component "${trimmedComponentType}" not found on entity "${entityId}". Stored '${missingString}' in "${trimmedResultVariable}".`
+          `QueryComponentHandler: Component "${componentType}" not found on entity "${entityId}". Stored '${missingString}' in "${trimmedResultVar}".`
         );
       }
     } catch (error) {
       safeDispatchError(
         this.#dispatcher,
-        `QueryComponentHandler: Error during EntityManager.getComponentData for component "${trimmedComponentType}" on entity "${entityId}".`,
+        `QueryComponentHandler: Error during EntityManager.getComponentData for component "${componentType}" on entity "${entityId}".`,
         {
           error: error.message,
           stack: error.stack,
-          params: params,
+          params: {
+            entityId,
+            componentType,
+            resultVar,
+            trimmedResultVar,
+            missingValue,
+          },
           resolvedEntityId: entityId,
         }
       );
       const stored = writeContextVariable(
-        result_variable,
-        missing_value,
+        resultVar,
+        missingValue,
         executionContext,
         this.#dispatcher,
         logger
       );
       if (stored.success) {
         const missingString =
-          missing_value === null
+          missingValue === null
             ? 'null'
-            : missing_value === undefined
+            : missingValue === undefined
               ? 'undefined'
-              : typeof missing_value === 'object'
-                ? JSON.stringify(missing_value)
-                : missing_value;
+              : typeof missingValue === 'object'
+                ? JSON.stringify(missingValue)
+                : missingValue;
         logger.warn(
-          `QueryComponentHandler: Stored '${missingString}' in "${trimmedResultVariable}" due to EntityManager error.`
+          `QueryComponentHandler: Stored '${missingString}' in "${trimmedResultVar}" due to EntityManager error.`
         );
       }
     }
+  }
+
+  execute(params, executionContext) {
+    const logger = this.getLogger(executionContext);
+    const validated = this.#validateParams(params, executionContext, logger);
+    if (!validated) return;
+
+    const {
+      entityId,
+      componentType,
+      resultVar,
+      trimmedResultVar,
+      missingValue,
+    } = validated;
+
+    this.#fetchAndStoreComponent(
+      entityId,
+      componentType,
+      resultVar,
+      trimmedResultVar,
+      missingValue,
+      executionContext,
+      logger
+    );
   }
 }
 
