@@ -163,9 +163,16 @@ export class BaseManifestItemLoader extends AbstractLoader {
         `${this.constructor.name}: Primary schema ID for content type '${trimmedContentType}' found: '${this._primarySchemaId}'`
       );
     } else {
-      this._logger.warn(
-        `${this.constructor.name}: Primary schema ID for content type '${trimmedContentType}' not found in configuration. Primary validation might be skipped.`
-      );
+      if (trimmedContentType === 'scopes') {
+        // Scopes are plain text files and intentionally lack a JSON schema
+        this._logger.debug(
+          `${this.constructor.name}: No primary schema configured for content type 'scopes'; skipping schema linking.`
+        );
+      } else {
+        this._logger.warn(
+          `${this.constructor.name}: Primary schema ID for content type '${trimmedContentType}' not found in configuration. Primary validation might be skipped.`
+        );
+      }
       this._primarySchemaId = null;
     }
   }
@@ -410,7 +417,6 @@ export class BaseManifestItemLoader extends AbstractLoader {
       failures,
     };
   }
-
 
   /**
    * Centralized helper method for storing items in the registry with standardized key prefixing,
