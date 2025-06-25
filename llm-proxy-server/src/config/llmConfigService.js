@@ -43,9 +43,9 @@ import { loadProxyLlmConfigs } from '../proxyLlmConfigLoader.js';
 
 /**
  * @typedef {object} LLMConfigurationFileForProxy
- * @description Represents the structure of the parsed llm-configs.json file.
- * @property {string} [defaultConfigId] - The ID of the default LLM configuration.
- * @property {{[key: string]: LLMModelConfig}} configs - A dictionary of LLM configurations, keyed by their configId.
+ * @description Parsed structure of the proxy's llm-configs.json file.
+ * @property {string} [defaultConfigId] - ID of the configuration to use by default.
+ * @property {{[configId: string]: LLMModelConfig}} configs - Map of configuration objects keyed by ID.
  */
 
 /**
@@ -254,21 +254,20 @@ export class LlmConfigService {
    * @returns {LLMModelConfig | null} The LLM configuration, or null if not found or not loaded.
    */
   getLlmById(llmId) {
-    if (!this.#loadedLlmConfigs || !this.#loadedLlmConfigs.configs) {
-      // Using 'configs'
+    if (!this.#loadedLlmConfigs?.configs) {
       this.#logger.warn(
-        `LlmConfigService.getLlmById: Attempted to get LLM '${llmId}' but configurations are not loaded or 'configs' map is missing.`
+        `LlmConfigService.getLlmById: Attempted to get LLM '${llmId}' but configurations are not loaded.`
       );
       return null;
     }
-    const config = this.#loadedLlmConfigs.configs[llmId]; // Using 'configs'
-    if (!config) {
+    const cfg = this.#loadedLlmConfigs.configs[llmId];
+    if (!cfg) {
       this.#logger.warn(
         `LlmConfigService.getLlmById: LLM configuration for ID '${llmId}' not found.`
       );
       return null;
     }
-    return config;
+    return cfg;
   }
 
   /**
@@ -288,14 +287,9 @@ export class LlmConfigService {
    * @returns {StandardizedErrorObject | null} Error details, or null if initialization was successful.
    */
   getInitializationErrorDetails() {
-    if (this.#initializationError) {
-      // Return a structure that's safe for external use, omitting the direct originalError object.
-      // eslint-disable-next-line no-unused-vars
-      const { originalError: _unusedOriginalError, ...safeErrorDetails } =
-        this.#initializationError;
-      return safeErrorDetails;
-    }
-    return null;
+    if (!this.#initializationError) return null;
+    const { originalError: _unused, ...safe } = this.#initializationError;
+    return safe;
   }
 
   /**
@@ -304,12 +298,7 @@ export class LlmConfigService {
    * @returns {boolean} True if any cloud LLM is configured to use an API key file, false otherwise.
    */
   hasFileBasedApiKeys() {
-    if (
-      !this.#isProxyOperational ||
-      !this.#loadedLlmConfigs ||
-      !this.#loadedLlmConfigs.configs
-    ) {
-      // Using 'configs'
+    if (!this.#isProxyOperational || !this.#loadedLlmConfigs?.configs) {
       return false;
     }
 
