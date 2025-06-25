@@ -386,8 +386,16 @@ class WorldInitializer {
     const instantiatedEntities = [];
     let instantiatedCount = 0;
     let failedCount = 0;
+    const seenIds = new Set();
 
     for (const worldInstance of instances) {
+      if (seenIds.has(worldInstance.instanceId)) {
+        this.#logger.error(
+          `WorldInitializer: Duplicate instanceId '${worldInstance.instanceId}' encountered. Skipping duplicate.`
+        );
+        continue;
+      }
+      seenIds.add(worldInstance.instanceId);
       const { entity, success } = await this.#instantiateInstance(
         worldName,
         worldInstance
