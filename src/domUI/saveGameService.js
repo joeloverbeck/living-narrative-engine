@@ -8,7 +8,7 @@ import { validateDependency } from '../utils/validationUtils.js';
 import { ensureValidLogger } from '../utils/index.js';
 
 /** @typedef {import('./saveGameUI.js').SlotDisplayData} SlotDisplayData */
-/** @typedef {import('../engine/gameEngine.js').default} GameEngine */
+/** @typedef {import('../interfaces/ISaveService.js').ISaveService} ISaveService */
 /** @typedef {import('../interfaces/IUserPrompt.js').IUserPrompt} IUserPrompt */
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 
@@ -46,10 +46,10 @@ export default class SaveGameService {
    * @param {GameEngine | null} gameEngine - Game engine instance.
    * @returns {string | null} Error message if validation fails, otherwise null.
    */
-  validatePreconditions(selectedSlotData, saveName, gameEngine) {
-    if (!selectedSlotData || !gameEngine) {
+  validatePreconditions(selectedSlotData, saveName) {
+    if (!selectedSlotData) {
       this.#logger.error(
-        'SaveGameService.validatePreconditions: missing slot or game engine.'
+        'SaveGameService.validatePreconditions: missing slot.'
       );
       return 'Cannot save: Internal error. Please select a slot and enter a name.';
     }
@@ -96,17 +96,15 @@ export default class SaveGameService {
    * @param {SlotDisplayData} selectedSlotData - Slot being saved into.
    * @param {string} saveName - Name to use when saving.
    * @param {GameEngine} gameEngine - Game engine instance.
+   * @param saveService
    * @returns {Promise<{result: any, returnedIdentifier: string | null}>}
    *   Result from the engine and identifier, if provided.
    */
-  async executeSave(selectedSlotData, saveName, gameEngine) {
+  async executeSave(selectedSlotData, saveName, saveService) {
     this.#logger.debug(
       `SaveGameService: Triggering manual save "${saveName}" for slot ${selectedSlotData.slotId}. Identifier: ${selectedSlotData.identifier}`
     );
-    const result = await gameEngine.triggerManualSave(
-      saveName,
-      selectedSlotData.identifier
-    );
+    const result = await saveService.save(selectedSlotData.slotId, saveName);
     const returnedIdentifier = result ? result.filePath : null;
     if (result && result.success && !returnedIdentifier) {
       this.#logger.error(
@@ -123,10 +121,11 @@ export default class SaveGameService {
    * @param {SlotDisplayData} selectedSlotData - Slot being saved into.
    * @param {string} saveName - Name to use when saving.
    * @param {GameEngine} gameEngine - Game engine instance.
+   * @param saveService
    * @returns {Promise<{success: boolean, message: string, returnedIdentifier: string | null}>}
    *   Operation outcome details.
    */
-  async performSave(selectedSlotData, saveName, gameEngine) {
+  async performSave(selectedSlotData, saveName, saveService) {
     let saveSucceeded = false;
     let finalMessage = '';
     let returnedIdentifier = null;
@@ -135,7 +134,7 @@ export default class SaveGameService {
       const { result, returnedIdentifier: id } = await this.executeSave(
         selectedSlotData,
         saveName,
-        gameEngine
+        saveService
       );
       returnedIdentifier = id;
 

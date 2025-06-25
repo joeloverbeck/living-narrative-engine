@@ -41,7 +41,9 @@ import { freeze } from '../utils';
  * @property {DiToken} PerceptionLogRenderer - Token for the component rendering perception logs.
  * @property {DiToken} DomUiFacade - Token for the facade aggregating all UI components.
  * @property {DiToken} SaveGameService - Token for the service handling save operations.
+ * @property {DiToken} SaveService - Token for the adapter used to save games.
  * @property {DiToken} SaveGameUI - Token for the Save Game UI component.
+ * @property {DiToken} LoadService - Token for the adapter used to load games.
  * @property {DiToken} LoadGameUI - Token for the Load Game UI component.
  * @property {DiToken} LlmSelectionModal - Token for the LLM Selection Modal UI component.
  * @property {DiToken} EngineUIManager - Token for the service managing UI updates from GameEngine events.
@@ -189,7 +191,9 @@ export const tokens = freeze({
   PerceptionLogRenderer: 'PerceptionLogRenderer',
   DomUiFacade: 'DomUiFacade',
   SaveGameService: 'SaveGameService',
+  SaveService: 'SaveService',
   SaveGameUI: 'SaveGameUI',
+  LoadService: 'LoadService',
   LoadGameUI: 'LoadGameUI',
   LlmSelectionModal: 'LlmSelectionModal',
   EngineUIManager: 'EngineUIManager',

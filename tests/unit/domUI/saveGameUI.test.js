@@ -36,7 +36,7 @@ describe('SaveGameUI', () => {
   let mockDocumentContext;
   let mockDomElementFactory;
   let mockValidatedEventDispatcher;
-  let mockGameEngine;
+  let mockSaveService;
   let mockUserPrompt;
 
   /** @type {jest.SpiedFunction<typeof renderSlotItemModule.renderGenericSlotItem>} */
@@ -122,7 +122,7 @@ describe('SaveGameUI', () => {
       dispatch: jest.fn(),
     };
 
-    mockGameEngine = { triggerManualSave: jest.fn() };
+    mockSaveService = { save: jest.fn() };
     mockSaveLoadService = { listManualSaveSlots: jest.fn() };
     mockUserPrompt = { confirm: jest.fn(() => true) };
     const saveGameService = new SaveGameService({
@@ -138,7 +138,7 @@ describe('SaveGameUI', () => {
       validatedEventDispatcher: mockValidatedEventDispatcher,
       saveGameService,
     });
-    saveGameUI.init(mockGameEngine);
+    saveGameUI.init(mockSaveService);
     renderSlotItemSpy = jest.spyOn(
       renderSlotItemModule,
       'renderGenericSlotItem'
@@ -269,7 +269,7 @@ describe('SaveGameUI', () => {
           isCorrupted: false,
         },
       ]);
-      mockGameEngine.triggerManualSave.mockResolvedValue({
+      mockSaveService.save.mockResolvedValue({
         success: true,
         message: 'Game saved successfully!',
         filePath: newSaveFilePath,
@@ -303,13 +303,10 @@ describe('SaveGameUI', () => {
 
       confirmSaveButtonEl.click();
 
-      await awaitMockCall(mockGameEngine.triggerManualSave, 0);
+      await awaitMockCall(mockSaveService.save, 0);
       await awaitMockCall(mockSaveLoadService.listManualSaveSlots, 1);
 
-      expect(mockGameEngine.triggerManualSave).toHaveBeenCalledWith(
-        saveName,
-        undefined
-      );
+      expect(mockSaveService.save).toHaveBeenCalledWith(0, saveName);
       expect(mockSaveLoadService.listManualSaveSlots).toHaveBeenCalledTimes(2);
       expect(mockLogger.warn).not.toHaveBeenCalledWith(
         expect.stringContaining('Could not find metadata for newly saved slot')
@@ -348,7 +345,7 @@ describe('SaveGameUI', () => {
       const saveName = 'GameWithoutFilePath';
       mockSaveLoadService.listManualSaveSlots.mockResolvedValueOnce([]);
       mockSaveLoadService.listManualSaveSlots.mockResolvedValueOnce([]);
-      mockGameEngine.triggerManualSave.mockResolvedValue({
+      mockSaveService.save.mockResolvedValue({
         success: true,
         message: 'Saved but no path!',
         filePath: undefined,
@@ -378,7 +375,7 @@ describe('SaveGameUI', () => {
       );
       confirmSaveButtonEl.click();
 
-      await awaitMockCall(mockGameEngine.triggerManualSave, 0);
+      await awaitMockCall(mockSaveService.save, 0);
       await awaitMockCall(mockSaveLoadService.listManualSaveSlots, 1);
 
       expect(mockLogger.error).toHaveBeenCalledWith(
@@ -446,7 +443,7 @@ describe('SaveGameUI', () => {
         isEmpty: true,
         isCorrupted: false,
       };
-      mockGameEngine.triggerManualSave.mockResolvedValue({
+      mockSaveService.save.mockResolvedValue({
         success: true,
         message: 'ok',
         filePath: 'path',
@@ -464,10 +461,7 @@ describe('SaveGameUI', () => {
         'Saving game as "TestSave"...',
         'info'
       );
-      expect(mockGameEngine.triggerManualSave).toHaveBeenCalledWith(
-        'TestSave',
-        undefined
-      );
+      expect(mockSaveService.save).toHaveBeenCalledWith(0, 'TestSave');
       expect(progressSpy).toHaveBeenLastCalledWith(false);
       expect(statusSpy).toHaveBeenLastCalledWith(
         'Game saved as "TestSave".',
@@ -481,7 +475,7 @@ describe('SaveGameUI', () => {
         isEmpty: true,
         isCorrupted: false,
       };
-      mockGameEngine.triggerManualSave.mockResolvedValue({
+      mockSaveService.save.mockResolvedValue({
         success: false,
         error: 'oops',
       });

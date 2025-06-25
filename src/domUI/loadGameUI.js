@@ -19,7 +19,7 @@ import { DATASET_SLOT_IDENTIFIER } from '../constants/datasetKeys.js';
  */
 
 /**
- * @typedef {import('../engine/gameEngine.js').default} GameEngine
+ * @typedef {import('../interfaces/ILoadService.js').ILoadService} ILoadService
  * @typedef {import('../interfaces/coreServices.js').ILogger} ILogger
  * @typedef {import('../interfaces/IDocumentContext.js').IDocumentContext} IDocumentContext
  * @typedef {import('../domUI/domElementFactory.js').default} DomElementFactory
@@ -42,7 +42,7 @@ import { DATASET_SLOT_IDENTIFIER } from '../constants/datasetKeys.js';
  */
 class LoadGameUI extends SlotModalBase {
   saveLoadService;
-  gameEngine = null;
+  loadService = null;
 
   // isOperationInProgress is managed by BaseModalRenderer's _setOperationInProgress
 
@@ -112,21 +112,21 @@ class LoadGameUI extends SlotModalBase {
   }
 
   /**
-   * Initializes the LoadGameUI with the GameEngine instance and sets up event listeners.
+   * Initializes the LoadGameUI with the load service instance and sets up event listeners.
    *
-   * @param {GameEngine} gameEngineInstance - The main game engine instance.
+   * @param {ILoadService} loadServiceInstance - The service used for loading saves.
    */
-  init(gameEngineInstance) {
+  init(loadServiceInstance) {
     if (
-      !gameEngineInstance ||
-      typeof gameEngineInstance.loadGame !== 'function'
+      !loadServiceInstance ||
+      typeof loadServiceInstance.load !== 'function'
     ) {
       this.logger.error(
-        `${this._logPrefix} Invalid GameEngine instance provided during init. Load functionality will be broken.`
+        `${this._logPrefix} Invalid ILoadService instance provided during init. Load functionality will be broken.`
       );
       return;
     }
-    this.gameEngine = gameEngineInstance;
+    this.loadService = loadServiceInstance;
 
     // Core modal elements are checked by BaseModalRenderer constructor.
     // We only need to ensure this.elements exists before adding listeners.
@@ -397,9 +397,9 @@ class LoadGameUI extends SlotModalBase {
       }
       return 'Please select a save slot to load.';
     }
-    if (!this.gameEngine) {
+    if (!this.loadService) {
       this.logger.error(
-        `${this._logPrefix} GameEngine not available. Cannot load game.`
+        `${this._logPrefix} ILoadService not available. Cannot load game.`
       );
       return 'Cannot load: Game engine is not ready.';
     }
@@ -416,7 +416,7 @@ class LoadGameUI extends SlotModalBase {
    */
   async _performLoad(slotToLoad) {
     try {
-      const result = await this.gameEngine.loadGame(slotToLoad.identifier);
+      const result = await this.loadService.load(slotToLoad.identifier);
       if (result && result.success) {
         this.logger.debug(
           `${this._logPrefix} Game loaded successfully from ${slotToLoad.identifier}`
@@ -603,7 +603,7 @@ class LoadGameUI extends SlotModalBase {
   dispose() {
     this.logger.debug(`${this._logPrefix} Disposing LoadGameUI.`);
     super.dispose(); // Handles VED subscriptions, DOM listeners, and BoundDOMRenderer elements.
-    this.gameEngine = null;
+    this.loadService = null;
     this.selectedSlotData = null;
     this.currentSlotsDisplayData = [];
     this.logger.debug(`${this._logPrefix} LoadGameUI disposed.`);

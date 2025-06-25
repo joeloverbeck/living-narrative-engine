@@ -22,7 +22,7 @@ import SaveGameService from './saveGameService.js';
  */
 
 /**
- * @typedef {import('../engine/gameEngine.js').default} GameEngine
+ * @typedef {import('../interfaces/ISaveService.js').ISaveService} ISaveService
  * @typedef {import('../interfaces/coreServices.js').ILogger} ILogger
  * @typedef {import('../interfaces/IDocumentContext.js').IDocumentContext} IDocumentContext
  * @typedef {import('./domElementFactory.js').default} DomElementFactory
@@ -48,7 +48,7 @@ const MAX_SAVE_SLOTS = 10;
 export class SaveGameUI extends SlotModalBase {
   saveLoadService;
   saveGameService;
-  gameEngine = null;
+  saveService = null;
   // isSavingInProgress is managed by BaseModalRenderer's _setOperationInProgress
 
   /**
@@ -157,22 +157,22 @@ export class SaveGameUI extends SlotModalBase {
   }
 
   /**
-   * Initializes the SaveGameUI with the GameEngine instance.
+   * Initializes the SaveGameUI with the save service instance.
    *
-   * @param {GameEngine} gameEngineInstance - The main game engine instance.
+   * @param {ISaveService} saveServiceInstance - Service for saving games.
    */
-  init(gameEngineInstance) {
+  init(saveServiceInstance) {
     if (
-      !gameEngineInstance ||
-      typeof gameEngineInstance.triggerManualSave !== 'function'
+      !saveServiceInstance ||
+      typeof saveServiceInstance.save !== 'function'
     ) {
       this.logger.error(
-        `${this._logPrefix} Invalid GameEngine instance provided during init. Save functionality will be broken.`
+        `${this._logPrefix} Invalid ISaveService instance provided during init. Save functionality will be broken.`
       );
       return;
     }
-    this.gameEngine = gameEngineInstance;
-    this.logger.debug(`${this._logPrefix} GameEngine instance received.`);
+    this.saveService = saveServiceInstance;
+    this.logger.debug(`${this._logPrefix} ISaveService instance received.`);
   }
 
   /**
@@ -524,8 +524,7 @@ export class SaveGameUI extends SlotModalBase {
     const currentInput = this.elements.saveNameInputEl?.value || '';
     const validationError = this.saveGameService.validatePreconditions(
       this.selectedSlotData,
-      currentInput.trim(),
-      this.gameEngine
+      currentInput.trim()
     );
     if (validationError) {
       this._displayStatusMessage(validationError, 'error');
@@ -565,7 +564,7 @@ export class SaveGameUI extends SlotModalBase {
       await this.saveGameService.performSave(
         this.selectedSlotData,
         currentSaveName,
-        this.gameEngine
+        this.saveService
       );
 
     if (success) {
@@ -584,7 +583,7 @@ export class SaveGameUI extends SlotModalBase {
   dispose() {
     this.logger.debug(`${this._logPrefix} Disposing SaveGameUI.`);
     super.dispose(); // Handles VED subscriptions, DOM listeners, and BoundDOMRenderer elements.
-    this.gameEngine = null;
+    this.saveService = null;
     this.selectedSlotData = null;
     this.currentSlotsDisplayData = [];
     this.logger.debug(`${this._logPrefix} SaveGameUI disposed.`);

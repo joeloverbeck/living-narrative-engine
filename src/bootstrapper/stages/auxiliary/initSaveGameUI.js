@@ -1,6 +1,7 @@
 // src/bootstrapper/stages/auxiliary/initSaveGameUI.js
 
 import { resolveAndInitialize } from '../../helpers.js';
+import GameEngineSaveAdapter from '../../../adapters/GameEngineSaveAdapter.js';
 import './typedefs.js';
 
 /**
@@ -10,11 +11,12 @@ import './typedefs.js';
  * @returns {{success: boolean, error?: Error}}
  */
 export function initSaveGameUI({ container, gameEngine, logger, tokens }) {
+  const adapter = new GameEngineSaveAdapter(gameEngine);
   return resolveAndInitialize(
     container,
     tokens.SaveGameUI,
     'init',
     logger,
-    gameEngine
+    adapter
   );
 }

@@ -49,7 +49,7 @@ describe('LoadGameUI', () => {
   let mockDomElementFactory;
   let mockSaveLoadService;
   let mockValidatedEventDispatcher;
-  let mockGameEngine;
+  let mockLoadService;
   let mockUserPrompt;
   let instance;
 
@@ -127,8 +127,8 @@ describe('LoadGameUI', () => {
       subscribe: jest.fn(),
       dispatch: jest.fn(),
     };
-    mockGameEngine = {
-      loadGame: jest.fn().mockResolvedValue({ success: true }),
+    mockLoadService = {
+      load: jest.fn().mockResolvedValue({ success: true }),
     };
     mockUserPrompt = { confirm: jest.fn(() => true) };
   });
@@ -171,22 +171,22 @@ describe('LoadGameUI', () => {
       );
     });
 
-    it('init() should log an error if gameEngine is invalid', () => {
+    it('init() should log an error if loadService is invalid', () => {
       instance = createInstance();
       instance.init(null);
       expect(mockLogger.error).toHaveBeenCalledWith(
         expect.stringContaining(
-          'Invalid GameEngine instance provided during init.'
+          'Invalid ILoadService instance provided during init.'
         )
       );
     });
 
-    it('init() should log an error if gameEngine is missing loadGame method', () => {
+    it('init() should log an error if loadService is missing load method', () => {
       instance = createInstance();
       instance.init({}); // Missing loadGame
       expect(mockLogger.error).toHaveBeenCalledWith(
         expect.stringContaining(
-          'Invalid GameEngine instance provided during init.'
+          'Invalid ILoadService instance provided during init.'
         )
       );
     });
@@ -196,7 +196,7 @@ describe('LoadGameUI', () => {
       instance = createInstance();
       // Manually nullify the element post-construction for this test
       instance.elements.modalElement = null;
-      instance.init(mockGameEngine);
+      instance.init(mockLoadService);
       expect(mockLogger.error).toHaveBeenCalledWith(
         expect.stringContaining(
           'Core Load Game UI elements not bound by BaseModalRenderer'
@@ -207,8 +207,8 @@ describe('LoadGameUI', () => {
     it('init() should attach event listeners on success', () => {
       instance = createInstance();
       const spy = jest.spyOn(instance, '_addDomListener');
-      instance.init(mockGameEngine);
-      expect(instance.gameEngine).toBe(mockGameEngine);
+      instance.init(mockLoadService);
+      expect(instance.loadService).toBe(mockLoadService);
       // Confirm load, delete, and submit listeners are added
       expect(spy).toHaveBeenCalledWith(
         confirmLoadButton,
@@ -229,7 +229,7 @@ describe('LoadGameUI', () => {
 
     it('form submit should prevent default', () => {
       instance = createInstance();
-      instance.init(mockGameEngine);
+      instance.init(mockLoadService);
       const event = new mockWindow.Event('submit', { bubbles: true });
       const preventDefaultSpy = jest.spyOn(event, 'preventDefault');
       modalElement.dispatchEvent(event);
@@ -240,7 +240,7 @@ describe('LoadGameUI', () => {
   describe('UI Lifecycle & Display', () => {
     beforeEach(() => {
       instance = createInstance();
-      instance.init(mockGameEngine);
+      instance.init(mockLoadService);
       // Spy on private/protected methods
       jest.spyOn(instance, '_populateLoadSlotsList').mockResolvedValue();
     });
@@ -382,7 +382,7 @@ describe('LoadGameUI', () => {
 
     beforeEach(() => {
       instance = createInstance();
-      instance.init(mockGameEngine);
+      instance.init(mockLoadService);
       confirmSpy = jest.spyOn(mockUserPrompt, 'confirm').mockReturnValue(true);
 
       // Mock the base class's populateSlotsList to simplify testing interactions
@@ -414,7 +414,7 @@ describe('LoadGameUI', () => {
         'Please select a save slot to load.',
         'error'
       );
-      expect(mockGameEngine.loadGame).not.toHaveBeenCalled();
+      expect(mockLoadService.load).not.toHaveBeenCalled();
     });
 
     it('_handleLoad should show error if slot is corrupted', async () => {
@@ -427,9 +427,9 @@ describe('LoadGameUI', () => {
       );
     });
 
-    it('_handleLoad should show error if game engine is not ready', async () => {
+    it('_handleLoad should show error if load service is not ready', async () => {
       instance.selectedSlotData = aGoodSlot;
-      instance.gameEngine = null;
+      instance.loadService = null;
       const spy = jest.spyOn(instance, '_displayStatusMessage');
       await instance._handleLoad();
       expect(spy).toHaveBeenCalledWith(
@@ -440,7 +440,7 @@ describe('LoadGameUI', () => {
 
     it('_handleLoad should handle load failure from game engine', async () => {
       instance.selectedSlotData = aGoodSlot;
-      mockGameEngine.loadGame.mockResolvedValue({
+      mockLoadService.load.mockResolvedValue({
         success: false,
         error: 'Engine failed',
       });
@@ -457,7 +457,7 @@ describe('LoadGameUI', () => {
     it('_handleLoad should handle exception during load', async () => {
       instance.selectedSlotData = aGoodSlot;
       const error = new Error('Unexpected exception');
-      mockGameEngine.loadGame.mockRejectedValue(error);
+      mockLoadService.load.mockRejectedValue(error);
       const statusSpy = jest.spyOn(instance, '_displayStatusMessage');
       const progressSpy = jest.spyOn(instance, '_setOperationInProgress');
       await instance._handleLoad();
@@ -565,15 +565,15 @@ describe('LoadGameUI', () => {
   });
 
   describe('dispose()', () => {
-    it('should nullify gameEngine and clear data arrays', () => {
+    it('should nullify loadService and clear data arrays', () => {
       instance = createInstance();
-      instance.init(mockGameEngine);
+      instance.init(mockLoadService);
       instance.selectedSlotData = {};
       instance.currentSlotsDisplayData = [{}];
 
       instance.dispose();
 
-      expect(instance.gameEngine).toBeNull();
+      expect(instance.loadService).toBeNull();
       expect(instance.selectedSlotData).toBeNull();
       expect(instance.currentSlotsDisplayData).toEqual([]);
       expect(mockLogger.debug).toHaveBeenCalledWith(
