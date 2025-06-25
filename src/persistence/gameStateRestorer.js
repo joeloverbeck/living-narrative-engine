@@ -9,6 +9,8 @@ import {
   PersistenceError,
   PersistenceErrorCodes,
 } from './persistenceErrors.js';
+import { DefinitionNotFoundError } from '../errors/definitionNotFoundError.js';
+import { SYSTEM_ERROR_OCCURRED_ID } from '../constants/systemEventIds.js';
 
 /**
  * @typedef {import('../interfaces/coreServices.js').ILogger} ILogger
@@ -29,6 +31,8 @@ class GameStateRestorer extends BaseService {
   #entityManager;
   /** @type {PlaytimeTracker} */
   #playtimeTracker;
+  /** @type {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher | null} */
+  #safeEventDispatcher;
 
   /**
    * Creates a new GameStateRestorer instance.
@@ -37,8 +41,14 @@ class GameStateRestorer extends BaseService {
    * @param {ILogger} deps.logger - Logging service.
    * @param {EntityManager} deps.entityManager - Entity manager.
    * @param {PlaytimeTracker} deps.playtimeTracker - Playtime tracker.
+   * @param {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} [deps.safeEventDispatcher] - Dispatcher for SYSTEM_ERROR_OCCURRED_ID events.
    */
-  constructor({ logger, entityManager, playtimeTracker }) {
+  constructor({
+    logger,
+    entityManager,
+    playtimeTracker,
+    safeEventDispatcher = null,
+  }) {
     super();
     this.#logger = this._init('GameStateRestorer', logger, {
       entityManager: {
@@ -52,6 +62,7 @@ class GameStateRestorer extends BaseService {
     });
     this.#entityManager = entityManager;
     this.#playtimeTracker = playtimeTracker;
+    this.#safeEventDispatcher = safeEventDispatcher;
     this.#logger.debug('GameStateRestorer: Instance created.');
   }
 
@@ -60,13 +71,11 @@ class GameStateRestorer extends BaseService {
    *
    * @param {{instanceId: string, definitionId: string, overrides: Record<string, any>}} savedEntityData
    * Serialized entity data from the save file.
-   * @returns {void}
+   * @returns {object} Result of the reconstruction attempt.
    * @private
    */
   #restoreEntity(savedEntityData) {
     try {
-      // If savedEntityData.overrides is missing (undefined) or null, default to an empty object.
-      // This makes the restoration process more robust.
       const entityToReconstruct = {
         instanceId: savedEntityData.instanceId,
         definitionId: savedEntityData.definitionId,
@@ -81,11 +90,31 @@ class GameStateRestorer extends BaseService {
           `GameStateRestorer.restoreGameState: Failed to restore entity with instanceId: ${savedEntityData.instanceId} (Def: ${savedEntityData.definitionId}). reconstructEntity indicated failure.`
         );
       }
+      return createPersistenceSuccess(null);
     } catch (entityError) {
+      if (entityError instanceof DefinitionNotFoundError) {
+        const msg = `GameStateRestorer.restoreGameState: Definition '${savedEntityData.definitionId}' not found for instance '${savedEntityData.instanceId}'.`;
+        this.#logger.error(msg, entityError);
+        if (this.#safeEventDispatcher) {
+          this.#safeEventDispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, {
+            message: msg,
+            details: {
+              definitionId: savedEntityData.definitionId,
+              instanceId: savedEntityData.instanceId,
+              stack: entityError.stack,
+            },
+          });
+        }
+        return createPersistenceFailure(
+          PersistenceErrorCodes.UNEXPECTED_ERROR,
+          msg
+        );
+      }
       this.#logger.warn(
         `GameStateRestorer.restoreGameState: Error during reconstructEntity for instanceId: ${savedEntityData.instanceId}. Error: ${entityError.message}. Skipping.`,
         entityError
       );
+      return createPersistenceSuccess(null);
     }
   }
 
@@ -151,7 +180,7 @@ class GameStateRestorer extends BaseService {
    * Restores all serialized entities from save data.
    *
    * @param {any[]} entitiesArray - Array of serialized entity records.
-   * @returns {void}
+   * @returns {object} Result of the restoration step.
    * @private
    */
   #restoreEntities(entitiesArray) {
@@ -169,7 +198,10 @@ class GameStateRestorer extends BaseService {
         );
         continue;
       }
-      this.#restoreEntity(savedEntityData);
+      const result = this.#restoreEntity(savedEntityData);
+      if (!result.success) {
+        return result;
+      }
     }
     this.#logger.debug(
       'GameStateRestorer.restoreGameState: Entity restoration complete.'
@@ -210,7 +242,7 @@ class GameStateRestorer extends BaseService {
   /**
    * Finalizes the restore process. Currently just logs completion.
    *
-   * @returns {{success: true}}
+   * @returns {{success: true}} Indicates completion.
    * @private
    */
   #finalizeRestore() {
