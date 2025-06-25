@@ -20,13 +20,10 @@
 /**
  * @typedef {object} TurnContextServices
  * @property {IPromptCoordinator}             [promptCoordinator]
- * @property {ICommandProcessor}              [commandProcessor]
- * @property {ICommandOutcomeInterpreter}     [commandOutcomeInterpreter]
  * @property {ISafeEventDispatcher}           [safeEventDispatcher]
  * @property {ITurnEndPort}                   [turnEndPort]
  * @property {IEntityManager}                 [entityManager]
- * @property {IActionDiscoveryService}        [actionDiscoverySystem]
- * // …extend as needed
+ * // Removed unused services: commandProcessor, commandOutcomeInterpreter, actionDiscoverySystem
  */
 
 import { ITurnContext } from '../interfaces/ITurnContext.js';
@@ -138,17 +135,6 @@ export class TurnContext extends ITurnContext {
 
   getPlayerPromptService() {
     return this.#require('promptCoordinator', 'PlayerPromptService');
-  }
-
-  getCommandProcessor() {
-    return this.#require('commandProcessor', 'CommandProcessor');
-  }
-
-  getCommandOutcomeInterpreter() {
-    return this.#require(
-      'commandOutcomeInterpreter',
-      'CommandOutcomeInterpreter'
-    );
   }
 
   getSafeEventDispatcher() {

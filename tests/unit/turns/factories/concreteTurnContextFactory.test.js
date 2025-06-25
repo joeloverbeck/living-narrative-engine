@@ -15,11 +15,8 @@ jest.mock('../../../../src/turns/context/turnContext.js');
 const mockLogger = { debug: jest.fn(), error: jest.fn() };
 const mockGameWorldAccess = {};
 const mockTurnEndPort = {};
-const mockCommandProcessor = {};
-const mockCommandOutcomeInterpreter = {};
 const mockSafeEventDispatcher = {};
 const mockEntityManager = {};
-const mockActionDiscoverySystem = {};
 
 // --- Mock Arguments for the create() method ---
 const mockActor = { id: 'test-actor' };
@@ -38,11 +35,8 @@ describe('ConcreteTurnContextFactory', () => {
       logger: mockLogger,
       gameWorldAccess: mockGameWorldAccess,
       turnEndPort: mockTurnEndPort,
-      commandProcessor: mockCommandProcessor,
-      commandOutcomeInterpreter: mockCommandOutcomeInterpreter,
       safeEventDispatcher: mockSafeEventDispatcher,
       entityManager: mockEntityManager,
-      actionDiscoverySystem: mockActionDiscoverySystem,
     };
   });
 
@@ -63,12 +57,6 @@ describe('ConcreteTurnContextFactory', () => {
 
     // NOTE: In a real-world scenario, a test for each missing dependency would be added.
     // For brevity, only a few are shown here.
-    it('should throw an error if commandProcessor is not provided', () => {
-      delete factoryDependencies.commandProcessor;
-      expect(() => new ConcreteTurnContextFactory(factoryDependencies)).toThrow(
-        'ConcreteTurnContextFactory: commandProcessor is required.'
-      );
-    });
 
     it('should construct successfully when all dependencies are provided', () => {
       expect(
@@ -100,11 +88,8 @@ describe('ConcreteTurnContextFactory', () => {
       const expectedServicesForContext = {
         game: mockGameWorldAccess,
         turnEndPort: mockTurnEndPort,
-        commandProcessor: mockCommandProcessor,
-        commandOutcomeInterpreter: mockCommandOutcomeInterpreter,
         safeEventDispatcher: mockSafeEventDispatcher,
         entityManager: mockEntityManager,
-        actionDiscoverySystem: mockActionDiscoverySystem,
       };
 
       expect(TurnContext).toHaveBeenCalledWith({
