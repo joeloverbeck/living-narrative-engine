@@ -15,7 +15,6 @@
 import { AbstractTurnState } from './abstractTurnState.js';
 import { ENTITY_SPOKE_ID } from '../../constants/eventIds.js';
 import { CommandProcessingWorkflow } from './helpers/commandProcessingWorkflow.js';
-import { getServiceFromContext } from './helpers/getServiceFromContext.js';
 import { ProcessingWorkflow } from './workflows/processingWorkflow.js';
 import { ProcessingExceptionHandler } from './helpers/processingExceptionHandler.js';
 import { buildSpeechPayload } from './helpers/buildSpeechPayload.js';
@@ -179,21 +178,6 @@ export class ProcessingCommandState extends AbstractTurnState {
     await workflow.processCommand(turnCtx, actor, turnAction);
   }
 
-  async _getServiceFromContext(
-    turnCtx,
-    contextMethod,
-    serviceLabel,
-    actorIdForLog
-  ) {
-    return getServiceFromContext(
-      this,
-      turnCtx,
-      contextMethod,
-      serviceLabel,
-      actorIdForLog,
-      this._exceptionHandler
-    );
-  }
 
   async exitState(handler, nextState) {
     const wasProcessing = this._isProcessing;

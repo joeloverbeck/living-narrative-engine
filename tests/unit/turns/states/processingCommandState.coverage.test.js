@@ -15,7 +15,10 @@ import {
 } from '../../../../src/constants/eventIds.js';
 import TurnDirective from '../../../../src/turns/constants/turnDirectives.js';
 import TurnDirectiveStrategyResolver from '../../../../src/turns/strategies/turnDirectiveStrategyResolver.js';
-import { ServiceLookupError } from '../../../../src/turns/states/helpers/getServiceFromContext.js';
+import {
+  ServiceLookupError,
+  getServiceFromContext,
+} from '../../../../src/turns/states/helpers/getServiceFromContext.js';
 
 class MockActor {
   constructor(id = 'actorXYZ') {
@@ -399,11 +402,12 @@ describe('ProcessingCommandState.enterState – error branches', () => {
   });
 });
 
-describe('ProcessingCommandState._getServiceFromContext – error branches', () => {
+describe('getServiceFromContext helper – error branches', () => {
   test('should throw ServiceLookupError and clear _isProcessing when turnCtx is null', async () => {
     processingState['_isProcessing'] = true;
     await expect(
-      processingState['_getServiceFromContext'](
+      getServiceFromContext(
+        processingState,
         null,
         'getCommandProcessor',
         'ICommandProcessor',
@@ -428,7 +432,8 @@ describe('ProcessingCommandState._getServiceFromContext – error branches', () 
     const dummyCtx = {};
 
     await expect(
-      processingState['_getServiceFromContext'](
+      getServiceFromContext(
+        processingState,
         dummyCtx,
         'getCommandProcessor',
         'ICommandProcessor',
@@ -459,7 +464,8 @@ describe('ProcessingCommandState._getServiceFromContext – error branches', () 
     mockHandler.getTurnContext.mockReturnValue(mockTurnContext);
 
     await expect(
-      processingState['_getServiceFromContext'](
+      getServiceFromContext(
+        processingState,
         mockTurnContext,
         'getCommandProcessor',
         'ICommandProcessor',
@@ -497,7 +503,8 @@ describe('ProcessingCommandState._getServiceFromContext – error branches', () 
     mockHandler.getTurnContext.mockReturnValue(mockTurnContext);
 
     await expect(
-      processingState['_getServiceFromContext'](
+      getServiceFromContext(
+        processingState,
         mockTurnContext,
         'getCommandProcessor',
         'ICommandProcessor',
