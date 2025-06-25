@@ -2,7 +2,7 @@
 // --- FILE START ---
 
 import { JSDOM } from 'jsdom';
-import { SaveGameUI } from '../../../src/domUI'; // Adjust path if necessary
+import { SaveGameUI, SaveGameService } from '../../../src/domUI';
 import DomElementFactory from '../../../src/domUI/domElementFactory.js';
 import * as renderSlotItemModule from '../../../src/domUI/helpers/renderSlotItem.js';
 import {
@@ -125,6 +125,10 @@ describe('SaveGameUI', () => {
     mockGameEngine = { triggerManualSave: jest.fn() };
     mockSaveLoadService = { listManualSaveSlots: jest.fn() };
     mockUserPrompt = { confirm: jest.fn(() => true) };
+    const saveGameService = new SaveGameService({
+      logger: mockLogger,
+      userPrompt: mockUserPrompt,
+    });
 
     saveGameUI = new SaveGameUI({
       logger: mockLogger,
@@ -132,7 +136,7 @@ describe('SaveGameUI', () => {
       domElementFactory: mockDomElementFactory,
       saveLoadService: mockSaveLoadService,
       validatedEventDispatcher: mockValidatedEventDispatcher,
-      userPrompt: mockUserPrompt,
+      saveGameService,
     });
     saveGameUI.init(mockGameEngine);
     renderSlotItemSpy = jest.spyOn(
@@ -379,7 +383,7 @@ describe('SaveGameUI', () => {
 
       expect(mockLogger.error).toHaveBeenCalledWith(
         expect.stringContaining(
-          'Save operation succeeded but did not return a valid filePath/identifier'
+          'SaveGameService: Save operation succeeded but returned no filePath/identifier.'
         ),
         expect.any(Object)
       );

@@ -29,6 +29,7 @@ import {
   ChatAlertRenderer,
   ActionResultRenderer,
   WindowUserPrompt,
+  SaveGameService,
 } from '../../domUI/index.js';
 import SaveGameUI from '../../domUI/saveGameUI.js';
 import LoadGameUI from '../../domUI/loadGameUI.js';
@@ -45,6 +46,7 @@ import { EngineUIManager } from '../../domUI'; // Corrected import path if Engin
 /** @typedef {import('../../interfaces/coreServices.js').IDataRegistry} IDataRegistry */
 /** @typedef {import('../../interfaces/ISaveLoadService.js').ISaveLoadService} ISaveLoadService */
 /** @typedef {import('../../entities/entityDisplayDataProvider.js').EntityDisplayDataProvider} EntityDisplayDataProvider */
+/** @typedef {import('../../domUI/saveGameService.js').default} SaveGameService */
 
 /** @typedef {import('../../turns/interfaces/ILLMAdapter.js').ILLMAdapter} ILLMAdapter */
 
@@ -175,6 +177,16 @@ export function registerRenderers(registrar, logger) {
   logger.debug(`UI Registrations: Registered ${tokens.PerceptionLogRenderer}.`);
 
   registrar.singletonFactory(
+    tokens.SaveGameService,
+    (c) =>
+      new SaveGameService({
+        logger: c.resolve(tokens.ILogger),
+        userPrompt: c.resolve(tokens.IUserPrompt),
+      })
+  );
+  logger.debug(`UI Registrations: Registered ${tokens.SaveGameService}.`);
+
+  registrar.singletonFactory(
     tokens.SaveGameUI,
     (c) =>
       new SaveGameUI({
@@ -183,6 +195,7 @@ export function registerRenderers(registrar, logger) {
         domElementFactory: c.resolve(tokens.DomElementFactory),
         saveLoadService: c.resolve(tokens.ISaveLoadService),
         validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
+        saveGameService: c.resolve(tokens.SaveGameService),
       })
   );
   logger.debug(`UI Registrations: Registered ${tokens.SaveGameUI}.`);

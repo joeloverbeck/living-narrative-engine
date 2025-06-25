@@ -26,6 +26,7 @@ export { ActionResultRenderer } from './actionResultRenderer.js';
 
 // Modals & UI Components
 export { default as SaveGameUI } from './saveGameUI.js';
+export { default as SaveGameService } from './saveGameService.js';
 export { default as LoadGameUI } from './loadGameUI.js';
 export { LlmSelectionModal } from './llmSelectionModal.js';
 export { default as WindowUserPrompt } from './windowUserPrompt.js';
