@@ -34,8 +34,10 @@ export function freeze(o) {
  *
  * @description
  * Suitable for cloning simple data structures that do not contain
- * functions or circular references. Non-serializable values will be
- * dropped during cloning.
+ * functions or circular references. When `structuredClone` is not available
+ * and JSON serialization is used, function values are omitted and
+ * properties that cannot be stringified are silently dropped. Circular
+ * references will cause an error to be thrown.
  * @template T
  * @param {T} value - The value to clone.
  * @returns {T} The cloned value or the original primitive.

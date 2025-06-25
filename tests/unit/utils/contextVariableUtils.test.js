@@ -2,6 +2,7 @@ import { describe, test, expect, jest } from '@jest/globals';
 import {
   writeContextVariable,
   tryWriteContextVariable,
+  withUpdatedContext,
 } from '../../../src/utils/contextVariableUtils.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/eventIds.js';
 
@@ -116,5 +117,22 @@ describe('tryWriteContextVariable', () => {
 
     expect(result.success).toBe(false);
     expect(ctx.evaluationContext.context).toEqual({ bar: 2 });
+  });
+});
+
+describe('withUpdatedContext', () => {
+  test('returns new object with value set', () => {
+    const original = { foo: 1 };
+    const { success, context } = withUpdatedContext(original, 'bar', 2);
+    expect(success).toBe(true);
+    expect(context).toEqual({ foo: 1, bar: 2 });
+    expect(original).toEqual({ foo: 1 });
+  });
+
+  test('handles errors gracefully', () => {
+    const obj = null;
+    const { success, error } = withUpdatedContext(obj, 'x', 1);
+    expect(success).toBe(false);
+    expect(error).toBeInstanceOf(Error);
   });
 });

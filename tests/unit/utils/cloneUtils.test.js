@@ -48,4 +48,22 @@ describe('deepClone', () => {
 
     global.structuredClone = original;
   });
+
+  it('drops function properties when JSON fallback is used', () => {
+    const original = global.structuredClone;
+    global.structuredClone = undefined;
+
+    const obj = { a: 1, fn: () => 2 };
+    const clone = deepClone(obj);
+
+    expect(clone).toEqual({ a: 1 });
+
+    global.structuredClone = original;
+  });
+
+  it('throws on circular structures', () => {
+    const obj = {};
+    obj.self = obj;
+    expect(() => deepClone(obj)).toThrow();
+  });
 });
