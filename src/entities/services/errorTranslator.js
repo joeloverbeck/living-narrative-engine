@@ -5,7 +5,7 @@
  */
 
 import { validateDependency } from '../../utils/validationUtils.js';
-import { ensureValidLogger } from '../../utils/index.js';
+import { ensureValidLogger } from '../../utils/loggerUtils.js';
 import { DuplicateEntityError } from '../../errors/duplicateEntityError.js';
 
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */

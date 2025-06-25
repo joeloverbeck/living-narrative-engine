@@ -5,7 +5,7 @@
  */
 
 import { validateDependency } from '../../utils/validationUtils.js';
-import { ensureValidLogger } from '../../utils/index.js';
+import { ensureValidLogger } from '../../utils/loggerUtils.js';
 import { EntityNotFoundError } from '../../errors/entityNotFoundError.js';
 import { ValidationError } from '../../errors/validationError.js';
 import { validateAndClone as validateAndCloneUtil } from '../utils/componentValidation.js';

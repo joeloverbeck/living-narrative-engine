@@ -25,7 +25,7 @@ import {
 } from '../../utils/parameterGuards.js';
 import { injectDefaultComponents } from '../utils/defaultComponentInjector.js';
 import { validateDependency } from '../../utils/validationUtils.js';
-import { ensureValidLogger } from '../../utils';
+import { ensureValidLogger } from '../../utils/loggerUtils.js';
 import { DefinitionNotFoundError } from '../../errors/definitionNotFoundError.js';
 import { SerializedEntityError } from '../../errors/serializedEntityError.js';
 import { InvalidInstanceIdError } from '../../errors/invalidInstanceIdError.js';

@@ -39,7 +39,7 @@ import {
 } from '../utils/parameterGuards.js';
 import { IEntityManager } from '../interfaces/IEntityManager.js';
 import { validateDependency } from '../utils/validationUtils.js';
-import { ensureValidLogger } from '../utils';
+import { ensureValidLogger } from '../utils/loggerUtils.js';
 import { DefinitionNotFoundError } from '../errors/definitionNotFoundError.js';
 import { EntityNotFoundError } from '../errors/entityNotFoundError';
 import { InvalidArgumentError } from '../errors/invalidArgumentError.js';
