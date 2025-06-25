@@ -177,3 +177,15 @@ export class Registrar {
     return this.register(token, factoryFn, { lifecycle: 'transient' });
   }
 }
+
+/**
+ * Resolve an optional dependency from the DI container.
+ *
+ * @description Returns `null` if the token is not registered.
+ * @param {AppContainer} container - The container to resolve from.
+ * @param {DiToken} token - The dependency token to resolve.
+ * @returns {* | null} The resolved instance or `null`.
+ */
+export function resolveOptional(container, token) {
+  return container.isRegistered(token) ? container.resolve(token) : null;
+}
