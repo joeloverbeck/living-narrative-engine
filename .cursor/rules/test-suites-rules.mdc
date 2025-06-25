@@ -11,3 +11,8 @@ alwaysApply: false
  2) Determine if the issue is with the SUT or the tests suite.
  3) If the issue is with the SUT, fix the bug, then ensure the corresponding test passes.
  4) If the issue is with the test suite, fix the test suite until the tests pass.
+
+Guidelines to follow when creating test suites:
+- Unit tests must accurately simulate real system behavior.
+- Test mocks should match production interfaces exactly.
+- "Compatibility" tests should actually test compatibility.

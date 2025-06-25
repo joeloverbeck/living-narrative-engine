@@ -55,8 +55,8 @@ describe('SpatialIndexSynchronizer - EventBus compatibility', () => {
       },
     };
 
-    // Act
-    handler(eventObject.payload);
+    // Act - simulate real EventBus behavior (pass entire event object, not just payload)
+    handler(eventObject);
 
     // Assert
     expect(entity.getComponentData).toHaveBeenCalledWith('core:position');
@@ -82,6 +82,7 @@ describe('SpatialIndexSynchronizer - EventBus compatibility', () => {
         // entity missing
       },
     };
-    expect(() => handler(eventObject.payload)).not.toThrow();
+    // Pass entire event object, not just payload (like real EventBus does)
+    expect(() => handler(eventObject)).not.toThrow();
   });
 });
