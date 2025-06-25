@@ -16,6 +16,7 @@ import {
   ARRAY_MODIFICATION_MODES,
 } from '../utils/arrayModifyUtils.js';
 import { setByPath } from '../utils/objectPathUtils.js';
+import { ensureEvaluationContext } from '../../utils/evaluationContextUtils.js';
 
 /**
  * @class ModifyContextArrayHandler
@@ -77,11 +78,12 @@ class ModifyContextArrayHandler {
       return;
     }
 
-    const contextObject = executionContext?.evaluationContext?.context;
+    const contextObject = ensureEvaluationContext(
+      executionContext,
+      this.#dispatcher,
+      log
+    );
     if (!contextObject) {
-      log.warn(
-        'MODIFY_CONTEXT_ARRAY: Cannot execute because the execution context is missing.'
-      );
       return;
     }
 

@@ -24,6 +24,7 @@ import ComponentOperationHandler from './componentOperationHandler.js';
  */
 
 import { writeContextVariable } from '../../utils/contextVariableUtils.js';
+import { ensureEvaluationContext } from '../../utils/evaluationContextUtils.js';
 
 /**
  * @implements {OperationHandler}
@@ -75,15 +76,7 @@ class QueryComponentHandler extends ComponentOperationHandler {
       return null;
     }
 
-    if (
-      !executionContext?.evaluationContext?.context ||
-      typeof executionContext.evaluationContext.context !== 'object'
-    ) {
-      safeDispatchError(
-        this.#dispatcher,
-        'QueryComponentHandler: executionContext.evaluationContext.context is missing or invalid. Cannot store result.',
-        { executionContext }
-      );
+    if (!ensureEvaluationContext(executionContext, this.#dispatcher, logger)) {
       return null;
     }
 

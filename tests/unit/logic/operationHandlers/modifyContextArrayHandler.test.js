@@ -106,20 +106,16 @@ describe('ModifyContextArrayHandler', () => {
       );
     });
 
-    it('should log a warning if executionContext or evaluationContext.context is missing', () => {
+    it('should dispatch error if executionContext or evaluationContext.context is missing', () => {
       handler.execute({ variable_path: 'myArray', mode: 'push', value: 4 }, {});
-      expect(mockLogger.warn).toHaveBeenCalledWith(
-        'MODIFY_CONTEXT_ARRAY: Cannot execute because the execution context is missing.'
-      );
-      mockLogger.warn.mockClear();
+      expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalled();
+      mockSafeEventDispatcher.dispatch.mockClear();
 
       handler.execute(
         { variable_path: 'myArray', mode: 'push', value: 4 },
         { evaluationContext: {} }
       );
-      expect(mockLogger.warn).toHaveBeenCalledWith(
-        'MODIFY_CONTEXT_ARRAY: Cannot execute because the execution context is missing.'
-      );
+      expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalled();
     });
 
     describe('when variable_path resolution is problematic', () => {

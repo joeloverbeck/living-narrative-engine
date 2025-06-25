@@ -14,6 +14,7 @@
 
 import { writeContextVariable } from '../../utils/contextVariableUtils.js';
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
+import { ensureEvaluationContext } from '../../utils/evaluationContextUtils.js';
 import { assertParamsObject } from '../../utils/handlerUtils/indexUtils.js';
 import ComponentOperationHandler from './componentOperationHandler.js';
 
@@ -66,15 +67,7 @@ class QueryComponentsHandler extends ComponentOperationHandler {
       return;
     }
 
-    if (
-      !executionContext?.evaluationContext?.context ||
-      typeof executionContext.evaluationContext.context !== 'object'
-    ) {
-      safeDispatchError(
-        this.#dispatcher,
-        'QueryComponentsHandler: executionContext.evaluationContext.context is missing or invalid.',
-        { executionContext }
-      );
+    if (!ensureEvaluationContext(executionContext, this.#dispatcher, logger)) {
       return;
     }
 
