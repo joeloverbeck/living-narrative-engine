@@ -19,10 +19,6 @@ jest.mock('../../../src/bootstrapper/stages', () => ({
   setupMenuButtonListenersStage: (...args) => mockMenu(...args),
   setupGlobalEventListenersStage: (...args) => mockGlobal(...args),
   startGameStage: (...args) => mockStartGame(...args),
-}));
-
-jest.mock('../../../src/bootstrapper/stages/auxiliary', () => ({
-  __esModule: true,
   initializeAuxiliaryServicesStage: (...args) => mockInitAux(...args),
 }));
 

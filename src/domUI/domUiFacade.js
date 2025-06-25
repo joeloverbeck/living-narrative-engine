@@ -4,7 +4,7 @@
  */
 
 /** @typedef {import('./actionButtonsRenderer').ActionButtonsRenderer} ActionButtonsRenderer */
-/** @typedef {import('./locationRenderer').LocationRenderer} LocationRenderer */
+/** @typedef {import('./location/typedefs.js').LocationRenderer} LocationRenderer */
 /** @typedef {import('./titleRenderer').TitleRenderer} TitleRenderer */
 /** @typedef {import('./inputStateController').InputStateController} InputStateController */
 /** @typedef {import('./perceptionLogRenderer').PerceptionLogRenderer} PerceptionLogRenderer */
