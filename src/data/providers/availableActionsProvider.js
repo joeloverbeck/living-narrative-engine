@@ -15,7 +15,7 @@ import { setupService } from '../../utils/serviceInitializerUtils.js';
 /** @typedef {import('../../turns/ports/IActionIndexer.js').IActionIndexer} IActionIndexer */
 /** @typedef {import('../../interfaces/IActionDiscoveryService.js').IActionDiscoveryService} IActionDiscoveryService */
 /** @typedef {import('../../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
-/** @typedef {import('../../logic/jsonLogicEvaluationService.js').default} JsonLogicEvaluationService */
+
 
 /** @typedef {import('../../turns/dtos/AIGameStateDTO.js').AIAvailableActionDTO} AIAvailableActionDTO */
 
@@ -30,7 +30,6 @@ export class AvailableActionsProvider extends IAvailableActionsProvider {
   #actionDiscoveryService;
   #actionIndexer;
   #entityManager;
-  #jsonLogicEvalService;
   #logger;
 
   // --- Turn-scoped Cache ---
@@ -42,14 +41,12 @@ export class AvailableActionsProvider extends IAvailableActionsProvider {
    * @param {IActionDiscoveryService} dependencies.actionDiscoveryService
    * @param {IActionIndexer} dependencies.actionIndexingService
    * @param {IEntityManager} dependencies.entityManager
-   * @param {JsonLogicEvaluationService} dependencies.jsonLogicEvaluationService
    * @param {ILogger} dependencies.logger
    */
   constructor({
                 actionDiscoveryService,
                 actionIndexingService: actionIndexer,
                 entityManager,
-                jsonLogicEvaluationService,
                 logger,
               }) {
     super();
@@ -64,16 +61,11 @@ export class AvailableActionsProvider extends IAvailableActionsProvider {
         value: entityManager,
         requiredMethods: ['getEntityInstance'],
       },
-      jsonLogicEvaluationService: {
-        value: jsonLogicEvaluationService,
-        requiredMethods: ['evaluate'],
-      },
     });
 
     this.#actionDiscoveryService = actionDiscoveryService;
     this.#actionIndexer = actionIndexer;
     this.#entityManager = entityManager;
-    this.#jsonLogicEvalService = jsonLogicEvaluationService;
 
     this.#logger.debug(
       'AvailableActionsProvider initialized and dependencies validated.'
@@ -118,15 +110,13 @@ export class AvailableActionsProvider extends IAvailableActionsProvider {
           await this.#entityManager.getEntityInstance(locationId);
       }
 
+      // Assembling the context is now much simpler and no longer leaks dependencies.
       const actionCtx = {
-        actingEntity: actor,
         currentLocation: locationEntity,
-        entityManager: this.#entityManager,
         worldContext: turnContext?.game ?? {},
-        jsonLogicEval: this.#jsonLogicEvalService,
-        logger,
       };
 
+      // The method signature is the same, but the payload of actionCtx is different.
       const { actions: discoveredActions, errors, trace } =
         await this.#actionDiscoveryService.getValidActions(actor, actionCtx, { trace: true });
 

@@ -72,7 +72,6 @@ describe('AvailableActionsProvider', () => {
   let entityManager;
   let actionDiscoveryService;
   let actionIndexer;
-  let jsonLogicEvaluationService;
 
   beforeEach(() => {
     // FIX: Define the behavior of our mocked setupService. We tell it that when
@@ -88,7 +87,6 @@ describe('AvailableActionsProvider', () => {
     entityManager = mockEntityManager();
     actionDiscoveryService = mockActionDiscoveryService();
     actionIndexer = mockActionIndexer();
-    jsonLogicEvaluationService = mockJsonLogicService();
 
     mockActor = new MockEntity('actor-1', {
       [POSITION_COMPONENT_ID]: { locationId: 'location-1' },
@@ -100,7 +98,6 @@ describe('AvailableActionsProvider', () => {
       actionDiscoveryService,
       actionIndexingService: actionIndexer,
       entityManager,
-      jsonLogicEvaluationService,
       logger,
     });
 
@@ -132,10 +129,6 @@ describe('AvailableActionsProvider', () => {
           actionDiscoveryService: expect.any(Object),
           actionIndexer: expect.any(Object),
           entityManager: expect.any(Object),
-          jsonLogicEvaluationService: expect.objectContaining({
-            value: jsonLogicEvaluationService,
-            requiredMethods: ['evaluate'],
-          }),
         })
       );
     });
@@ -144,7 +137,7 @@ describe('AvailableActionsProvider', () => {
   describe('Context Integrity', () => {
     const turnContext = { game: { worldId: 'test-world-1' } };
 
-    test('should pass the jsonLogicEvaluationService in the action context to ActionDiscoveryService', async () => {
+    test('should pass a lean context with only dynamic state to ActionDiscoveryService', async () => {
       // Arrange (already done in beforeEach)
 
       // Act
@@ -158,9 +151,12 @@ describe('AvailableActionsProvider', () => {
         actionDiscoveryService.getValidActions.mock.calls[0][1];
 
       expect(passedContext).toBeDefined();
-      expect(passedContext.jsonLogicEval).toBe(jsonLogicEvaluationService);
-      expect(passedContext.actingEntity).toBe(mockActor);
-      expect(passedContext.entityManager).toBe(entityManager);
+      expect(passedContext.currentLocation).toBeDefined();
+      expect(passedContext.worldContext).toEqual(turnContext.game);
+      // Verify that service dependencies are NOT in the context (API improvement)
+      expect(passedContext.jsonLogicEval).toBeUndefined();
+      expect(passedContext.actingEntity).toBeUndefined();
+      expect(passedContext.entityManager).toBeUndefined();
     });
   });
 

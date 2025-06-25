@@ -28,11 +28,12 @@ export class IActionDiscoveryService {
    * Determines all valid actions that the specified entity can currently perform.
    *
    * @param {Entity} actingEntity - The entity for whom to discover actions.
-   * @param {ActionContext} context - The current context, including location and other relevant state.
+   * @param {ActionContext} context - The LEAN context, containing only dynamic state.
+   * @param {object} [options={}] Optional settings.
    * @returns {Promise<DiscoveredActionsResult>}
    * @throws {Error}
    */
-  async getValidActions(actingEntity, context) {
+  async getValidActions(actingEntity, context, options = {}) {
     throw new Error(
       'IActionDiscoveryService.getValidActions method not implemented.'
     );

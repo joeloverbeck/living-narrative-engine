@@ -73,7 +73,8 @@ export function registerCommandAndAction(container) {
       scopeEngine: c.resolve(tokens.IScopeEngine),
       entityManager: c.resolve(tokens.IEntityManager),
       logger: c.resolve(tokens.ILogger),
-      safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher)
+      safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+      jsonLogicEvaluationService: c.resolve(tokens.JsonLogicEvaluationService)
     });
   });
 

@@ -150,6 +150,7 @@ describe('Scope Integration Tests', () => {
       entityManager,
       logger,
       safeEventDispatcher,
+      jsonLogicEvaluationService: jsonLogicEval,
     });
     
     return new ActionDiscoveryService({
