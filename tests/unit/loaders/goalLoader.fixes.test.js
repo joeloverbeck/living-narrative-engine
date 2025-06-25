@@ -17,7 +17,11 @@ import {
 import { mock } from 'jest-mock-extended';
 
 // System Under Test (SUT)
+jest.mock('../../../src/loaders/helpers/processAndStoreItem.js', () => ({
+  processAndStoreItem: jest.fn(),
+}));
 import GoalLoader from '../../../src/loaders/goalLoader.js';
+import { processAndStoreItem } from '../../../src/loaders/helpers/processAndStoreItem.js';
 
 // Mocks for constructor dependencies
 const mockConfig = mock();
@@ -106,7 +110,7 @@ describe('GoalLoader', () => {
   });
 
   describe('_processFetchedItem', () => {
-    test('should call _parseIdAndStoreItem with correct parameters, proving correct argument handling', async () => {
+    test('should delegate to processAndStoreItem with correct parameters', async () => {
       // Arrange
       const loader = new GoalLoader(
         mockConfig,
@@ -117,13 +121,10 @@ describe('GoalLoader', () => {
         mockLogger
       );
 
-      // Spy on the internal method to check the arguments it receives.
-      const parseAndStoreSpy = jest
-        .spyOn(loader, '_parseIdAndStoreItem')
-        .mockReturnValue({
-          qualifiedId: 'test-mod:goal-1',
-          didOverride: false,
-        });
+      processAndStoreItem.mockResolvedValueOnce({
+        qualifiedId: 'test-mod:goal-1',
+        didOverride: false,
+      });
 
       const modId = 'test-mod';
       const filename = 'goal1.json';
@@ -142,12 +143,15 @@ describe('GoalLoader', () => {
 
       // Assert: This confirms the second bug fix. The method signature is correct,
       // and the `data` object is passed correctly, not the `resolvedPath` string.
-      expect(parseAndStoreSpy).toHaveBeenCalledWith(
-        goalData, // The actual data object
-        'id', // The id property
-        'goals', // The registry category
-        modId, // The mod ID
-        filename // The source filename
+      expect(processAndStoreItem).toHaveBeenCalledWith(
+        loader,
+        expect.objectContaining({
+          data: goalData,
+          idProp: 'id',
+          category: 'goals',
+          modId,
+          filename,
+        })
       );
     });
   });
@@ -178,6 +182,11 @@ describe('GoalLoader', () => {
       mockDataFetcher.fetch.mockResolvedValue(goalData);
       // Mock the registry's store method to check what it receives
       mockDataRegistry.store.mockReturnValue(false); // false = not an override
+
+      const actual = jest.requireActual(
+        '../../../src/loaders/helpers/processAndStoreItem.js'
+      );
+      processAndStoreItem.mockImplementation(actual.processAndStoreItem);
 
       const loader = new GoalLoader(
         mockConfig,

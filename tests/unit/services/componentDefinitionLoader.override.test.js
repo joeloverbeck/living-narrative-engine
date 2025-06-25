@@ -433,13 +433,12 @@ describe('ComponentLoader (Sub-Ticket 6.3: Override Behavior)', () => {
       expect.objectContaining(expectedStoredFooObject)
     );
 
-    // <<< MODIFICATION START >>>
-    // Verify logger warning for override
-    // The current loader implementation namespaces items by modId, so 'core:position'
-    // and 'foo:position' are distinct keys. No override occurs at the registry
-    // level, so no warning is logged. The test is corrected to reflect this.
-    expect(mockLogger.warn).not.toHaveBeenCalled();
-    // <<< MODIFICATION END >>>
+    // After refactor, schema registration logs a warning when an inline schema
+    // with the same ID is already loaded.
+    expect(mockLogger.warn).toHaveBeenCalledTimes(1);
+    expect(mockLogger.warn).toHaveBeenCalledWith(
+      `Component Definition '${sharedFilename}' in mod '${fooModId}' is overwriting an existing data schema for component ID 'shared:position'.`
+    );
 
     // Verify the final state in the registry (optional, but good for sanity)
     const finalStoredItem = mockRegistry.get(registryCategory, fooQualifiedId); // Foo's item should be there

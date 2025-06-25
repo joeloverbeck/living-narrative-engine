@@ -255,7 +255,10 @@ describe('Integration: Loaders, Registry State, and Overrides (REFACTOR-8.6)', (
       expect(actionB).toBeDefined();
       expect(componentB).toBeDefined();
 
-      expect(mockLogger.warn).not.toHaveBeenCalled();
+      expect(mockLogger.warn).toHaveBeenCalledTimes(1);
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        `Component Definition '${componentFilename}' in mod '${modBId}' is overwriting an existing data schema for component ID '${coolComponentBaseId}'.`
+      );
     });
   });
 

@@ -2,6 +2,7 @@
 
 import { BaseInlineSchemaLoader } from './baseInlineSchemaLoader.js';
 import { parseAndValidateId } from '../utils/idUtils.js';
+import { processAndStoreItem } from './helpers/processAndStoreItem.js';
 
 /** @typedef {import('../interfaces/coreServices.js').IConfiguration} IConfiguration */
 /** @typedef {import('../interfaces/coreServices.js').IPathResolver} IPathResolver */
@@ -36,7 +37,9 @@ class ComponentLoader extends BaseInlineSchemaLoader {
   }
 
   /**
-   * Processes a single fetched component definition file's data.
+   * Processes a single fetched component definition file's data and delegates
+   * ID parsing, schema registration, and storage to
+   * {@link processAndStoreItem}.
    *
    * @override
    * @protected
@@ -67,26 +70,18 @@ class ComponentLoader extends BaseInlineSchemaLoader {
       throw new Error(errorMsg);
     }
 
-    const qualifiedIdForSchema = `${modId}:${baseId}`;
-
-    try {
-      await this._registerItemSchema(data, 'dataSchema', qualifiedIdForSchema, {
-        warnMessage: `Component Definition '${filename}' in mod '${modId}' is overwriting an existing data schema for component ID '${qualifiedIdForSchema}'.`,
-        successDebugMessage: `ComponentLoader [${modId}]: Registered dataSchema for component ID '${qualifiedIdForSchema}' from file '${filename}'.`,
-      });
-    } catch (error) {
-      // Re-throw to ensure the base loader's wrapper catches the failure
-      // and correctly marks the item as having an error.
-      throw error;
-    }
-
-    const { qualifiedId, didOverride } = this._storeItemInRegistry(
-      'components',
-      modId,
-      baseId,
+    const { qualifiedId, didOverride } = await processAndStoreItem(this, {
       data,
-      filename
-    );
+      idProp: 'id',
+      category: 'components',
+      modId,
+      filename,
+      schemaProp: 'dataSchema',
+      schemaMessages: (fullId) => ({
+        warnMessage: `Component Definition '${filename}' in mod '${modId}' is overwriting an existing data schema for component ID '${fullId}'.`,
+        successDebugMessage: `ComponentLoader [${modId}]: Registered dataSchema for component ID '${fullId}' from file '${filename}'.`,
+      }),
+    });
 
     this._logger.debug(
       `ComponentLoader [${modId}]: Successfully processed component definition from ${filename}. Returning final registry key: ${qualifiedId}, Overwrite: ${didOverride}`

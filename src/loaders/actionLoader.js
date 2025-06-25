@@ -5,6 +5,7 @@
 
 // --- Base Class Import ---
 import { BaseManifestItemLoader } from './baseManifestItemLoader.js';
+import { processAndStoreItem } from './helpers/processAndStoreItem.js';
 
 /** @typedef {import('../interfaces/coreServices.js').IConfiguration} IConfiguration */
 /** @typedef {import('../interfaces/coreServices.js').IPathResolver} IPathResolver */
@@ -47,7 +48,8 @@ class ActionLoader extends BaseManifestItemLoader {
   }
 
   /**
-   * Processes a single fetched action file's data.
+   * Processes a single fetched action file's data by delegating ID parsing
+   * and registry storage to {@link processAndStoreItem}.
    *
    * @override
    * @protected
@@ -63,14 +65,14 @@ class ActionLoader extends BaseManifestItemLoader {
       `ActionLoader [${modId}]: Processing fetched item: ${filename} (Type: ${registryKey})`
     );
 
-    // Use the reliable base class helper to handle ID parsing and storage.
-    const { qualifiedId, didOverride } = this._parseIdAndStoreItem(
+    // Delegate parsing and storing to the shared helper.
+    const { qualifiedId, didOverride } = await processAndStoreItem(this, {
       data,
-      'id',
-      'actions',
+      idProp: 'id',
+      category: 'actions',
       modId,
-      filename
-    );
+      filename,
+    });
 
     this._logger.debug(
       `ActionLoader [${modId}]: Successfully processed action from ${filename}. Returning final registry key: ${qualifiedId}, Overwrite: ${didOverride}`
