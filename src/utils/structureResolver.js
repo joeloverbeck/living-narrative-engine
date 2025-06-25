@@ -100,8 +100,18 @@ export class StructureResolver {
     return undefined;
   }
 
+  /**
+   * @description Match a string that consists solely of a placeholder.
+   * @param {string} value
+   * @returns {RegExpMatchArray|null}
+   * @private
+   */
+  _getFullPlaceholderMatch(value) {
+    return value.match(FULL_STRING_PLACEHOLDER_REGEX);
+  }
+
   _handleFullString(value, sources) {
-    const fullMatch = value.match(FULL_STRING_PLACEHOLDER_REGEX);
+    const fullMatch = this._getFullPlaceholderMatch(value);
     if (!fullMatch) {
       return { changed: false, value };
     }
@@ -125,23 +135,34 @@ export class StructureResolver {
 
   _replaceEmbedded(value, sources) {
     const replaced = this.resolve(value, ...sources);
-    if (replaced !== value) {
-      let match;
-      PLACEHOLDER_FIND_REGEX.lastIndex = 0;
-      while ((match = PLACEHOLDER_FIND_REGEX.exec(value))) {
-        const placeholderSyntax = match[0];
-        const placeholderInfo = parsePlaceholderKey(match[1]);
-        const resolved = this._resolveFromSources(placeholderInfo, sources);
-        if (resolved !== undefined) {
-          const stringValue = resolved === null ? 'null' : String(resolved);
-          this.logger.debug(
-            `Replaced embedded placeholder ${placeholderSyntax} with string: "${stringValue}"`
-          );
-        }
-      }
-      return { changed: true, value: replaced };
+    if (replaced === value) {
+      return { changed: false, value };
     }
-    return { changed: false, value };
+
+    this._logEmbeddedReplacements(value, sources);
+    return { changed: true, value: replaced };
+  }
+
+  /**
+   * @description Log debug info for each embedded placeholder replaced.
+   * @param {string} value
+   * @param {object[]} sources
+   * @private
+   */
+  _logEmbeddedReplacements(value, sources) {
+    let match;
+    PLACEHOLDER_FIND_REGEX.lastIndex = 0;
+    while ((match = PLACEHOLDER_FIND_REGEX.exec(value))) {
+      const placeholderSyntax = match[0];
+      const placeholderInfo = parsePlaceholderKey(match[1]);
+      const resolved = this._resolveFromSources(placeholderInfo, sources);
+      if (resolved !== undefined) {
+        const stringValue = resolved === null ? 'null' : String(resolved);
+        this.logger.debug(
+          `Replaced embedded placeholder ${placeholderSyntax} with string: "${stringValue}"`
+        );
+      }
+    }
   }
 
   _resolveString(value, sources) {
@@ -168,23 +189,37 @@ export class StructureResolver {
     return { changed, value: changed ? resolvedArr : arr };
   }
 
+  /**
+   * @description Resolve a single object property while honoring skip keys.
+   * @param {object} obj
+   * @param {string} key
+   * @param {object[]} sources
+   * @param {Set<string>} [skipKeys]
+   * @returns {{value: *, changed: boolean}}
+   * @private
+   */
+  _resolveObjectEntry(obj, key, sources, skipKeys) {
+    if (skipKeys && skipKeys.has(key)) {
+      return { value: obj[key], changed: false };
+    }
+    return this._resolveValue(obj[key], sources);
+  }
+
   _resolveObject(obj, sources, skipKeys) {
     let changed = false;
     const result = {};
     for (const key in obj) {
       if (Object.prototype.hasOwnProperty.call(obj, key)) {
-        if (skipKeys && skipKeys.has(key)) {
-          result[key] = obj[key];
-        } else {
-          const { value: resolvedVal, changed: c } = this._resolveValue(
-            obj[key],
-            sources
-          );
-          if (c) {
-            changed = true;
-          }
-          result[key] = resolvedVal;
+        const { value: resolvedVal, changed: c } = this._resolveObjectEntry(
+          obj,
+          key,
+          sources,
+          skipKeys
+        );
+        if (c) {
+          changed = true;
         }
+        result[key] = resolvedVal;
       }
     }
     return { changed, value: changed ? result : obj };
