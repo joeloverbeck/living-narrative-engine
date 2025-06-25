@@ -194,23 +194,15 @@ class WorldInitializer {
   }
 
   /**
-   * Creates an entity instance from a world instance definition and dispatches events.
+   * Validates and retrieves the entity instance definition for a given instance.
    *
+   * @param {string} instanceId - The instance identifier.
    * @param {string} worldName - Name of the world currently being initialized.
-   * @param {object} worldInstance - Instance descriptor from the world file.
-   * @returns {Promise<{entity: Entity|null, success: boolean}>} Instantiation result.
+   * @returns {{definitionId: string, componentOverrides: object}|null} The
+   *   resolved definition data or null if validation fails.
    * @private
    */
-  async #instantiateInstance(worldName, worldInstance) {
-    if (!worldInstance || !worldInstance.instanceId) {
-      this.#logger.warn(
-        `WorldInitializer (Pass 1): Skipping invalid world instance (missing instanceId):`,
-        worldInstance
-      );
-      return { entity: null, success: false };
-    }
-
-    const { instanceId } = worldInstance;
+  #validateInstanceDefinition(instanceId, worldName) {
     const entityInstanceDef =
       this.#repository.getEntityInstanceDefinition(instanceId);
 
@@ -224,19 +216,30 @@ class WorldInitializer {
         resourceType: 'EntityInstanceDefinition',
         resourceId: instanceId,
       });
-      return { entity: null, success: false };
+      return null;
     }
 
-    const definitionId = entityInstanceDef.definitionId;
+    const { definitionId, componentOverrides } = entityInstanceDef;
     if (!definitionId) {
       this.#logger.warn(
         `WorldInitializer (Pass 1): Entity instance definition '${instanceId}' is missing a definitionId. Skipping.`
       );
-      return { entity: null, success: false };
+      return null;
     }
 
-    const componentOverrides = entityInstanceDef.componentOverrides;
+    return { definitionId, componentOverrides };
+  }
 
+  /**
+   * Creates an entity instance from a definition using the entity manager.
+   *
+   * @param {string} definitionId - The definition ID to instantiate from.
+   * @param {string} instanceId - The instance identifier for the new entity.
+   * @param {object} [componentOverrides] - Optional component overrides.
+   * @returns {Entity|null} The created entity instance or null on failure.
+   * @private
+   */
+  #createInstance(definitionId, instanceId, componentOverrides) {
     this.#logger.debug(
       `WorldInitializer (Pass 1): Attempting to create entity instance '${instanceId}' from definition '${definitionId}' with overrides:`,
       componentOverrides
@@ -255,7 +258,22 @@ class WorldInitializer {
       );
     }
 
-    if (!instance) {
+    return instance || null;
+  }
+
+  /**
+   * Dispatches instantiation success or failure events and returns the result.
+   *
+   * @param {{instanceId: string, id?: string, definitionId?: string}|Entity|null} instance - The created entity or a placeholder containing instanceId.
+   * @param {string} definitionId - The definition ID used for creation.
+   * @param {string} worldName - The world name for logging and event payloads.
+   * @returns {Promise<{entity: Entity|null, success: boolean}>} Result object.
+   * @private
+   */
+  async #dispatchInstantiationEvents(instance, definitionId, worldName) {
+    const instanceId = instance?.instanceId;
+
+    if (!instance || !instance.id) {
       this.#logger.error(
         `WorldInitializer (Pass 1): Failed to instantiate entity from definition: ${definitionId} for instance: ${instanceId}. createEntityInstance returned null/undefined or threw an error.`
       );
@@ -290,6 +308,45 @@ class WorldInitializer {
     );
 
     return { entity: instance, success: true };
+  }
+
+  /**
+   * Creates an entity instance from a world instance definition and dispatches events.
+   *
+   * @param {string} worldName - Name of the world currently being initialized.
+   * @param {object} worldInstance - Instance descriptor from the world file.
+   * @returns {Promise<{entity: Entity|null, success: boolean}>} Instantiation result.
+   * @private
+   */
+  async #instantiateInstance(worldName, worldInstance) {
+    if (!worldInstance || !worldInstance.instanceId) {
+      this.#logger.warn(
+        `WorldInitializer (Pass 1): Skipping invalid world instance (missing instanceId):`,
+        worldInstance
+      );
+      return { entity: null, success: false };
+    }
+
+    const { instanceId } = worldInstance;
+
+    const validation = this.#validateInstanceDefinition(instanceId, worldName);
+    if (!validation) {
+      return { entity: null, success: false };
+    }
+
+    const { definitionId, componentOverrides } = validation;
+
+    const instance = this.#createInstance(
+      definitionId,
+      instanceId,
+      componentOverrides
+    );
+
+    return await this.#dispatchInstantiationEvents(
+      instance || { instanceId },
+      definitionId,
+      worldName
+    );
   }
 
   /**
