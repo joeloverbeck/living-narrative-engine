@@ -76,16 +76,35 @@ export class MockDataFetcher {
    */
   #setFetchImplementation() {
     if (this.fromDisk) {
-      this.fetch.mockImplementation(async (identifier) => {
-        if (identifier.endsWith('.json')) {
-          const filePath = identifier.replace(/^\.\//, '');
-          return JSON.parse(fs.readFileSync(filePath, 'utf8'));
-        }
-        throw new Error('Unsupported identifier: ' + identifier);
-      });
-      return;
+      this.#setDiskFetchImplementation();
+    } else {
+      this.#setMemoryFetchImplementation();
     }
+  }
 
+  /**
+   * Sets up fetch to read JSON files from disk.
+   *
+   * @private
+   * @returns {void}
+   */
+  #setDiskFetchImplementation() {
+    this.fetch.mockImplementation(async (identifier) => {
+      if (identifier.endsWith('.json')) {
+        const filePath = identifier.replace(/^\.\//, '');
+        return JSON.parse(fs.readFileSync(filePath, 'utf8'));
+      }
+      throw new Error('Unsupported identifier: ' + identifier);
+    });
+  }
+
+  /**
+   * Sets up fetch to resolve data from memory mappings.
+   *
+   * @private
+   * @returns {void}
+   */
+  #setMemoryFetchImplementation() {
     this.fetch.mockImplementation(async (p) => {
       if (this.errorPaths.includes(p)) {
         const message =
