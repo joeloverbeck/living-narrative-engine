@@ -72,6 +72,7 @@ describe('InitializationService success path', () => {
       gameDataRepository,
       thoughtListener,
       notesListener,
+      spatialIndexManager: { buildIndex: jest.fn() },
     });
 
     const result = await service.runInitializationSequence(MOCK_WORLD);

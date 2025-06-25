@@ -65,6 +65,7 @@ describe('InitializationService LLM adapter rejection', () => {
       },
       thoughtListener,
       notesListener,
+      spatialIndexManager: { buildIndex: jest.fn() },
     });
 
     const result = await svc.runInitializationSequence(WORLD);

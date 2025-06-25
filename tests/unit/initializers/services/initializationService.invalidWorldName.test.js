@@ -56,6 +56,7 @@ describe('InitializationService invalid world name handling', () => {
         },
         thoughtListener,
         notesListener,
+        spatialIndexManager: { buildIndex: jest.fn() },
       });
 
       const result = await service.runInitializationSequence(bad);

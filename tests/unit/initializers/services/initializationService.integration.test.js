@@ -150,9 +150,12 @@ describe('InitializationService Integration with AppContainer', () => {
 
     // <<< --- ADDED: Clear mock history after arrangement --- >>>
     // Clear any calls made to the logger during registration setup.
+    mockLogger.debug.mockClear();
     mockLogger.info.mockClear();
+    mockLogger.warn.mockClear();
+    mockLogger.error.mockClear();
     // You could also clear other mockLogger methods if needed:
-    // mockLogger.debug.mockClear();
+    // mockLogger.info.mockClear();
     // mockLogger.warn.mockClear();
     // mockLogger.error.mockClear();
 
@@ -164,9 +167,13 @@ describe('InitializationService Integration with AppContainer', () => {
     // Verify the service is created
     expect(resolvedService).toBeInstanceOf(InitializationService);
 
-    // Verify that the constructor used the injected logger *exactly once* since mockClear()
-    // Based on: this.#logger.info('InitializationService: Instance created successfully with dependencies.');
-    expect(mockLogger.info).toHaveBeenCalledTimes(0);
+    // Verify that the constructor used the injected logger including our expected call
+    // Based on: this.#logger.debug('InitializationService: Instance created successfully with dependencies.');
+    expect(mockLogger.debug).toHaveBeenCalledWith(
+      'InitializationService: Instance created successfully with dependencies.'
+    );
+    // The integration test may have multiple debug calls from the full registration chain,
+    // so we just verify our specific call was made rather than counting total calls
 
     // Note: Directly testing the injection of #validatedEventDispatcher and #container
     // via the constructor is not straightforward without accessing private fields.

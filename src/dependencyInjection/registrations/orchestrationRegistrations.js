@@ -81,6 +81,7 @@ export function registerOrchestration(container) {
       entityManager,
       dispatcher: safeEventDispatcher,
     });
+    const spatialIndexManager = c.resolve(tokens.ISpatialIndexManager);
     return new InitializationService({
       logger: initLogger,
       validatedEventDispatcher: initDispatcher,
@@ -98,6 +99,7 @@ export function registerOrchestration(container) {
       gameDataRepository,
       thoughtListener,
       notesListener,
+      spatialIndexManager,
     });
   });
   logger.debug(

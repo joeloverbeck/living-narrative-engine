@@ -17,6 +17,7 @@ let actionIndex;
 let gameDataRepository;
 let thoughtListener;
 let notesListener;
+let spatialIndexManager;
 
 beforeEach(() => {
   logger = { error: jest.fn(), debug: jest.fn() };
@@ -35,6 +36,7 @@ beforeEach(() => {
   gameDataRepository = { getAllActionDefinitions: jest.fn(() => []) };
   thoughtListener = { handleEvent: jest.fn() };
   notesListener = { handleEvent: jest.fn() };
+  spatialIndexManager = { buildIndex: jest.fn() };
 });
 
 describe('InitializationService constructor', () => {
@@ -58,6 +60,7 @@ describe('InitializationService constructor', () => {
           gameDataRepository,
           thoughtListener,
           notesListener,
+          spatialIndexManager,
         })
     ).not.toThrow();
   });
@@ -81,6 +84,7 @@ describe('InitializationService constructor', () => {
           gameDataRepository,
           thoughtListener,
           notesListener,
+          spatialIndexManager,
         })
     ).toThrow(/logger/);
   });
@@ -104,6 +108,7 @@ describe('InitializationService constructor', () => {
           gameDataRepository,
           thoughtListener,
           notesListener,
+          spatialIndexManager,
         })
     ).toThrow(/validatedEventDispatcher/);
   });
