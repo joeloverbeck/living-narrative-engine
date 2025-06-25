@@ -1,4 +1,11 @@
 import { describe, test, expect, beforeEach, jest } from '@jest/globals';
+import * as path from 'node:path';
+import { loadProxyLlmConfigs } from '../src/proxyLlmConfigLoader.js';
+
+jest.mock('../src/proxyLlmConfigLoader.js', () => ({
+  loadProxyLlmConfigs: jest.fn(),
+}));
+
 let LlmConfigService;
 
 const createLogger = () => ({
@@ -9,7 +16,9 @@ const createLogger = () => ({
 });
 
 const createFsReader = () => ({ readFile: jest.fn() });
-const createAppConfig = (path) => ({ getLlmConfigPath: jest.fn(() => path) });
+const createAppConfig = (pathArg) => ({
+  getLlmConfigPath: jest.fn(() => pathArg),
+});
 
 const sampleConfig = {
   defaultConfigId: 'gpt4',
@@ -32,6 +41,11 @@ describe('LlmConfigService', () => {
     appConfig = createAppConfig('/tmp/llm.json');
     service = new LlmConfigService(fsReader, logger, appConfig);
     jest.clearAllMocks();
+    loadProxyLlmConfigs.mockReset();
+    loadProxyLlmConfigs.mockResolvedValue({
+      error: false,
+      llmConfigs: sampleConfig,
+    });
   });
 
   test('constructor validates dependencies', () => {
@@ -47,16 +61,19 @@ describe('LlmConfigService', () => {
   });
 
   test('successful initialization loads configs and marks operational', async () => {
-    fsReader.readFile.mockResolvedValue(JSON.stringify(sampleConfig));
+    const resolvedPath = path.resolve('/tmp/llm.json');
     await service.initialize();
-    expect(fsReader.readFile).toHaveBeenCalled();
+    expect(loadProxyLlmConfigs).toHaveBeenCalledWith(
+      resolvedPath,
+      logger,
+      fsReader
+    );
     expect(service.isOperational()).toBe(true);
     expect(service.getInitializationErrorDetails()).toBeNull();
     expect(service.getLlmConfigs()).toEqual(sampleConfig);
   });
 
   test('getLlmById returns configuration when loaded', async () => {
-    fsReader.readFile.mockResolvedValue(JSON.stringify(sampleConfig));
     await service.initialize();
     const cfg = service.getLlmById('gpt4');
     expect(cfg).toEqual(sampleConfig.configs.gpt4);
@@ -70,24 +87,23 @@ describe('LlmConfigService', () => {
   });
 
   test('hasFileBasedApiKeys detects cloud config with key file', async () => {
-    fsReader.readFile.mockResolvedValue(JSON.stringify(sampleConfig));
     await service.initialize();
     expect(service.hasFileBasedApiKeys()).toBe(true);
   });
 
-  test('initialize handles readFile error', async () => {
-    fsReader.readFile.mockRejectedValue(new Error('fail'));
-    await service.initialize();
-    const err = service.getInitializationErrorDetails();
-    expect(err.stage).toBe('config_load_file_read_error');
-    expect(service.isOperational()).toBe(false);
-  });
+  test('initialize handles loader error result', async () => {
+    loadProxyLlmConfigs.mockResolvedValue({
+      error: true,
+      message: 'boom',
+      stage: 'bad',
+      originalError: new Error('boom'),
+      pathAttempted: '/tmp/llm.json',
+    });
 
-  test('initialize handles JSON parse error', async () => {
-    fsReader.readFile.mockResolvedValue('{bad json');
     await service.initialize();
+
     const err = service.getInitializationErrorDetails();
-    expect(err.stage).toBe('config_load_json_parse_error');
+    expect(err.stage).toBe('bad');
     expect(service.isOperational()).toBe(false);
   });
 });
