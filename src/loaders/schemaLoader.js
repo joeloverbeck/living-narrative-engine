@@ -82,78 +82,8 @@ class SchemaLoader extends AbstractLoader {
   }
 
   /**
-   * Loads and adds a single schema file to the validator if it's not already loaded.
-   * Handles path resolution, data fetching, $id extraction/validation, and error logging.
-   *
-   * @private
-   * @param {string} filename - The name of the schema file to process (e.g., 'common.schema.json').
-   * @returns {Promise<boolean>} Resolves with `true` if the schema was newly added to the validator,
-   * `false` if the schema was already loaded and skipped.
-   * Rejects if an error occurs during fetching, validation, or adding the schema.
-   * @throws {Error} If fetching fails, the schema is missing '$id', or adding to the validator fails.
-   * The error will be logged and re-thrown.
-   */
-  async #loadAndAddSingleSchema(filename) {
-    // --- Uses resolveSchemaPath from IPathResolver ---
-    const path = this.#resolver.resolveSchemaPath(filename);
-    let schemaId = null; // Keep track of ID for error reporting
-
-    try {
-      // --- Uses fetch from IDataFetcher ---
-      const schemaData = await this.#fetcher.fetch(path);
-      schemaId = schemaData?.$id; // Extract the schema ID
-
-      // Validate that the schema has an ID
-      if (!schemaId) {
-        const errMsg = `Schema file ${filename} (at ${path}) is missing required '$id' property.`;
-        this.#logger.error(`SchemaLoader: ${errMsg}`);
-        throw new Error(errMsg);
-      }
-
-      // --- Uses isSchemaLoaded from ISchemaValidator ---
-      if (!this.#validator.isSchemaLoaded(schemaId)) {
-        // --- Uses addSchema from ISchemaValidator ---
-        await this.#validator.addSchema(schemaData, schemaId);
-
-        // Validate that the schema was loaded correctly and all $refs are resolvable
-        if (
-          this.#validator.validateSchemaRefs &&
-          typeof this.#validator.validateSchemaRefs === 'function'
-        ) {
-          const refsValid = this.#validator.validateSchemaRefs(schemaId);
-          if (!refsValid) {
-            this.#logger.warn(
-              `SchemaLoader: Schema '${schemaId}' loaded but has unresolved $refs. This may cause validation issues.`
-            );
-          } else {
-            this.#logger.debug(
-              `SchemaLoader: Schema '${schemaId}' loaded successfully with all $refs resolved.`
-            );
-          }
-        }
-
-        // Successfully added
-        return true;
-      } else {
-        this.#logger.debug(
-          `SchemaLoader: Schema '${schemaId}' from ${filename} already loaded. Skipping addition.`
-        );
-        // Skipped (successfully processed, but not added)
-        return false;
-      }
-    } catch (error) {
-      this.#logger.error(
-        `SchemaLoader: Failed to load or process schema ${filename} (ID: ${schemaId || 'unknown'}, Path: ${path})`,
-        error
-      );
-      throw error;
-    }
-  }
-
-  /**
    * Loads and compiles all JSON schemas listed in the configuration's `schemaFiles`
    * using the injected services (PathResolver, DataFetcher, SchemaValidator).
-   * It delegates the processing of each file to the #loadAndAddSingleSchema helper method.
    *
    * @returns {Promise<void>} Resolves when all configured schemas are successfully processed
    * (either loaded and added or skipped if already present), rejects if a critical error
@@ -176,27 +106,28 @@ class SchemaLoader extends AbstractLoader {
     );
 
     // --- Phase 1: Load all schemas into memory ---
-    const loadedSchemas = [];
-    for (const filename of schemaFiles) {
-      const path = this.#resolver.resolveSchemaPath(filename);
-      let schemaData;
-      try {
-        schemaData = await this.#fetcher.fetch(path);
-      } catch (error) {
-        this.#logger.error(
-          `SchemaLoader: Failed to fetch schema file ${filename} at ${path}: ${error.message}`,
-          error
-        );
-        throw error;
-      }
-      const schemaId = schemaData?.$id;
-      if (!schemaId) {
-        const errMsg = `Schema file ${filename} (at ${path}) is missing required '$id' property.`;
-        this.#logger.error(`SchemaLoader: ${errMsg}`);
-        throw new Error(errMsg);
-      }
-      loadedSchemas.push({ schemaId, schemaData, filename });
-    }
+    const loadedSchemas = await Promise.all(
+      schemaFiles.map(async (filename) => {
+        const path = this.#resolver.resolveSchemaPath(filename);
+        let schemaData;
+        try {
+          schemaData = await this.#fetcher.fetch(path);
+        } catch (error) {
+          this.#logger.error(
+            `SchemaLoader: Failed to fetch schema file ${filename} at ${path}: ${error.message}`,
+            error
+          );
+          throw error;
+        }
+        const schemaId = schemaData?.$id;
+        if (!schemaId) {
+          const errMsg = `Schema file ${filename} (at ${path}) is missing required '$id' property.`;
+          this.#logger.error(`SchemaLoader: ${errMsg}`);
+          throw new Error(errMsg);
+        }
+        return { schemaId, schemaData, filename };
+      })
+    );
 
     // --- Phase 2: Register all schemas with the validator in batch ---
     try {
