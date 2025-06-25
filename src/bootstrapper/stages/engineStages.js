@@ -29,7 +29,7 @@ export async function initializeGameEngineStage(
   let gameEngine;
   try {
     logger.debug('GameEngine Stage: Creating GameEngine instance...');
-    gameEngine = createGameEngine({ container });
+    gameEngine = createGameEngine({ container, logger });
     if (!gameEngine) {
       throw new Error('GameEngine constructor returned null or undefined.');
     }

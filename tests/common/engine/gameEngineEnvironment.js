@@ -61,7 +61,11 @@ export function createEnvironment(overrides = {}) {
   const env = createServiceTestEnvironment({
     factoryMap,
     tokenMap,
-    build: (container) => new GameEngine({ container }),
+    build: (container) =>
+      new GameEngine({
+        container,
+        logger: container.resolve(tokens.ILogger),
+      }),
     overrides,
   });
   return env;

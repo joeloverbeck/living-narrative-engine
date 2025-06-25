@@ -50,13 +50,11 @@ class GameEngine {
   /** @type {PersistenceCoordinator} */
   #persistenceCoordinator;
 
-  constructor({ container }) {
-    try {
-      this.#logger = container.resolve(tokens.ILogger);
-    } catch (e) {
-      console.error('GameEngine: CRITICAL - Logger not resolved.', e);
+  constructor({ container, logger }) {
+    if (!logger) {
       throw new Error('GameEngine requires a logger.');
     }
+    this.#logger = logger;
     this.#logger.debug('GameEngine: Constructor called.');
     try {
       this.#entityManager = container.resolve(tokens.IEntityManager);

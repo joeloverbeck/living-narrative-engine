@@ -73,7 +73,7 @@ export async function bootstrapApp() {
     currentPhaseForError = 'Game Engine Initialization';
     logger.debug(`main.js: Executing ${currentPhaseForError} stage...`);
     const engineResult = await initializeGameEngineStage(container, logger, {
-      createGameEngine: (opts) => new GameEngine(opts),
+      createGameEngine: (opts) => new GameEngine({ ...opts, logger }),
     });
     if (!engineResult.success) throw engineResult.error;
     gameEngine = engineResult.payload;

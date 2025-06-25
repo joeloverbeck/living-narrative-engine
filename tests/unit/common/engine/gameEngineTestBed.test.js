@@ -58,6 +58,7 @@ describe('GameEngine Test Helpers: GameEngineTestBed', () => {
     expect(GameEngine).toHaveBeenCalledTimes(1);
     expect(GameEngine).toHaveBeenCalledWith({
       container: testBed.env.mockContainer,
+      logger: testBed.env.mocks.logger,
     });
     expect(testBed.engine).toBe(engine);
     expect(testBed.getLogger()).toBe(testBed.env.mocks.logger);
