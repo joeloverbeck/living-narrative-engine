@@ -130,7 +130,7 @@ describe('WorldInitializer', () => {
       [
         'EntityManager',
         'entityManager',
-        'WorldInitializer requires an EntityManager.',
+        'WorldInitializer requires an IEntityManager with createEntityInstance().',
       ],
       [
         'WorldContext',
@@ -140,18 +140,18 @@ describe('WorldInitializer', () => {
       [
         'GameDataRepository',
         'gameDataRepository',
-        'WorldInitializer requires a GameDataRepository.',
+        'WorldInitializer requires an IGameDataRepository with getWorld(), getEntityInstanceDefinition(), and get().',
       ],
       [
         'ValidatedEventDispatcher',
         'validatedEventDispatcher',
-        'WorldInitializer requires a ValidatedEventDispatcher.',
+        'WorldInitializer requires a ValidatedEventDispatcher with dispatch().',
       ],
       ['ILogger', 'logger', 'WorldInitializer requires an ILogger.'],
       [
         'ScopeRegistry',
         'scopeRegistry',
-        'WorldInitializer requires a ScopeRegistry.',
+        'WorldInitializer requires an IScopeRegistry with initialize().',
       ],
     ];
 
