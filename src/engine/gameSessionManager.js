@@ -65,6 +65,30 @@ class GameSessionManager {
   }
 
   /**
+   * Stops any running session and resets core state, optionally dispatching a UI event.
+   *
+   * @description Shared preparation logic for start and load operations.
+   * @private
+   * @param {string | null} uiEventId - Event id to dispatch or {@code null}.
+   * @param {any} [payload] - Payload for the dispatched event.
+   * @returns {Promise<void>} Resolves when preparation completes.
+   */
+  async _prepareEngineForOperation(uiEventId, payload) {
+    if (this.#state.isInitialized || this.#state.isGameLoopRunning) {
+      await this.#stopFn();
+    }
+
+    await this.#resetCoreGameStateFn();
+
+    if (uiEventId) {
+      this.#logger.debug(
+        'GameSessionManager._prepareEngineForOperation: Dispatching UI event.'
+      );
+      await this.#safeEventDispatcher.dispatch(uiEventId, payload);
+    }
+  }
+
+  /**
    * Prepares for starting a new game session.
    *
    * @param {string} worldName - Name of the world to start.
@@ -75,8 +99,9 @@ class GameSessionManager {
       this.#logger.warn(
         'GameSessionManager.prepareForNewGameSession: Engine already initialized. Stopping existing game before starting new.'
       );
-      await this.#stopFn();
     }
+    await this._prepareEngineForOperation(null);
+
     this.#state.activeWorld = worldName;
     this.#logger.debug(
       `GameSessionManager: Preparing new game session for world "${worldName}"...`
@@ -152,16 +177,9 @@ class GameSessionManager {
       `GameSessionManager.prepareForLoadGameSession: Preparing to load game from identifier: ${saveIdentifier}`
     );
 
-    if (this.#state.isInitialized || this.#state.isGameLoopRunning) {
-      await this.#stopFn();
-    }
-    await this.#resetCoreGameStateFn();
-
-    this.#logger.debug(
-      'GameSessionManager.prepareForLoadGameSession: Dispatching UI event for load operation in progress.'
-    );
     const shortSaveName = saveIdentifier.split(/[/\\]/).pop() || saveIdentifier;
-    await this.#safeEventDispatcher.dispatch(ENGINE_OPERATION_IN_PROGRESS_UI, {
+
+    await this._prepareEngineForOperation(ENGINE_OPERATION_IN_PROGRESS_UI, {
       titleMessage: `Loading ${shortSaveName}...`,
       inputDisabledMessage: `Loading game from ${shortSaveName}...`,
     });
