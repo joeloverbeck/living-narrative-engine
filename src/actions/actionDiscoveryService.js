@@ -134,18 +134,18 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
   /**
    * @description Prepares a populated discovery context for the specified actor.
    * @param {Entity} actorEntity
-   * @param {ActionContext} context
+   * @param {ActionContext} baseContext
    * @returns {ActionContext}
    * @private
    */
-  #prepareDiscoveryContext(actorEntity, context) {
-    const discoveryContext = { ...context };
+  #prepareDiscoveryContext(actorEntity, baseContext) {
+    const discoveryContext = { ...baseContext };
     if (!discoveryContext.getActor) {
       discoveryContext.getActor = () => actorEntity;
     }
 
     discoveryContext.currentLocation =
-      context.currentLocation ??
+      baseContext.currentLocation ??
       this.#getActorLocationFn(actorEntity.id, this.#entityManager);
 
     return discoveryContext;
