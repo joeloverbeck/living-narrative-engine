@@ -258,19 +258,7 @@ class InitializationService extends IInitializationService {
         `ActionIndex built with ${allActionDefinitions.length} action definitions.`
       );
 
-      this.#logger.debug('Initializing ScopeRegistry...');
-      const scopes = this.#dataRegistry.getAll('scopes');
-
-      // Convert array of scope objects to a map by qualified ID
-      const scopeMap = {};
-      scopes.forEach((scope) => {
-        if (scope.id) {
-          scopeMap[scope.id] = scope;
-        }
-      });
-
-      this.#scopeRegistry.initialize(scopeMap);
-      this.#logger.debug('ScopeRegistry initialized.');
+      // ScopeRegistry was already initialized in #initializeScopeRegistry() above
 
       this.#logger.debug(
         `InitializationService: Initialization sequence for world '${worldName}' completed successfully (GameLoop resolution removed).`

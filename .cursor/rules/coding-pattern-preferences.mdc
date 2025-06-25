@@ -3,7 +3,7 @@ description:
 globs: *.js
 alwaysApply: false
 ---
-# Coding pattern preferenecs
+# Coding pattern preferences
 
 -If instead of correcting an existing module, you have to create one from zero (a function, a class, etc.), follow a Test-Driven Development approach: first create a test suite of the behavior and interface that the module should have, then run the tests and ensure that test suite fails, then carefully iterate upon the system under test until all the tests pass.
 -Avoid duplication of code whenever possible, which means checking for other areas of the codebase that might already have similar code and functionality.
@@ -11,6 +11,7 @@ alwaysApply: false
 -Keep the codebase very clean and organized. For all the Javascript files you are modifying, run "npm run lint" and the filepath, and ensure that the existing lint issues are fixed, even if they were previous to your modifications.
 -Don't mock data outside of test suites.
 -Never overwrite my .env files without first asking and confirming.
+-After you make a significant change in code, if you run the tests and nothing breaks, that means that no test was covering that behavior. You need to create a focused test suite to cover the behavior.
 
 -Run the corresponding tests after every complete modification in a file (I mean after each group of modifications). Ensuring that the failing tests are fixed as soon as possible is a priority. By corresponding tests I mean: if you're working on the root app, run "npm run test" from root. If you're working on files inside the "llm-proxy-server" subproject, navigate to that folder and run "npm run test" there.
 
