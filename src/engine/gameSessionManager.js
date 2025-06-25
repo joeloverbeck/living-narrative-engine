@@ -84,6 +84,48 @@ class GameSessionManager {
   }
 
   /**
+   * Performs common finalization steps when the game starts.
+   *
+   * @private
+   * @param {string} worldName - Name of the world being started.
+   * @returns {Promise<void>} Resolves when setup is complete.
+   */
+  async _finalizeGameStart(worldName) {
+    this.#state.isInitialized = true;
+    this.#state.isGameLoopRunning = true;
+
+    if (this.#playtimeTracker) {
+      this.#playtimeTracker.startSession();
+    } else {
+      this.#logger.warn(
+        'GameSessionManager._finalizeGameStart: PlaytimeTracker not available, cannot start session.'
+      );
+    }
+
+    this.#logger.debug(
+      'GameSessionManager._finalizeGameStart: Dispatching UI event for game ready.'
+    );
+    await this.#safeEventDispatcher.dispatch(ENGINE_READY_UI, {
+      activeWorld: worldName,
+      message: 'Enter command...',
+    });
+
+    this.#logger.debug(
+      'GameSessionManager._finalizeGameStart: Starting TurnManager...'
+    );
+    if (this.#turnManager) {
+      await this.#turnManager.start();
+    } else {
+      this.#logger.error(
+        'GameSessionManager._finalizeGameStart: TurnManager not available. Game cannot start turns.'
+      );
+      throw new Error(
+        'GameSessionManager critical error: TurnManager service is unavailable during game finalization.'
+      );
+    }
+  }
+
+  /**
    * Finalizes a successful new game start.
    *
    * @param {string} worldName - Initialized world name.
@@ -93,40 +135,7 @@ class GameSessionManager {
     this.#logger.debug(
       `GameSessionManager.finalizeNewGameSuccess: Initialization successful for world "${worldName}". Finalizing new game setup.`
     );
-
-    this.#state.isInitialized = true;
-    this.#state.isGameLoopRunning = true;
-
-    if (this.#playtimeTracker) {
-      this.#playtimeTracker.startSession();
-    } else {
-      this.#logger.warn(
-        'GameSessionManager.finalizeNewGameSuccess: PlaytimeTracker not available, cannot start session.'
-      );
-    }
-
-    this.#logger.debug(
-      'GameSessionManager.finalizeNewGameSuccess: Dispatching UI event for game ready.'
-    );
-    await this.#safeEventDispatcher.dispatch(ENGINE_READY_UI, {
-      activeWorld: this.#state.activeWorld,
-      message: 'Enter command...',
-    });
-
-    this.#logger.debug(
-      'GameSessionManager.finalizeNewGameSuccess: Starting TurnManager...'
-    );
-    if (this.#turnManager) {
-      await this.#turnManager.start();
-    } else {
-      this.#logger.error(
-        'GameSessionManager.finalizeNewGameSuccess: TurnManager not available. Game cannot start turns.'
-      );
-      throw new Error(
-        'GameSessionManager critical error: TurnManager service is unavailable during game finalization.'
-      );
-    }
-
+    await this._finalizeGameStart(worldName);
     this.#logger.debug(
       `GameSessionManager.finalizeNewGameSuccess: New game started and ready (World: ${this.#state.activeWorld}).`
     );
@@ -173,39 +182,7 @@ class GameSessionManager {
 
     this.#state.activeWorld =
       loadedSaveData.metadata?.gameTitle || 'Restored Game';
-    this.#state.isInitialized = true;
-    this.#state.isGameLoopRunning = true;
-
-    if (this.#playtimeTracker) {
-      this.#playtimeTracker.startSession();
-    } else {
-      this.#logger.warn(
-        'GameSessionManager.finalizeLoadSuccess: PlaytimeTracker not available, cannot start session for loaded game.'
-      );
-    }
-
-    this.#logger.debug(
-      'GameSessionManager.finalizeLoadSuccess: Dispatching UI event for game ready (after load).'
-    );
-    await this.#safeEventDispatcher.dispatch(ENGINE_READY_UI, {
-      activeWorld: this.#state.activeWorld,
-      message: 'Enter command...',
-    });
-
-    this.#logger.debug(
-      'GameSessionManager.finalizeLoadSuccess: Starting TurnManager for loaded game...'
-    );
-    if (this.#turnManager) {
-      await this.#turnManager.start();
-    } else {
-      this.#logger.error(
-        'GameSessionManager.finalizeLoadSuccess: TurnManager not available. Loaded game may not function correctly.'
-      );
-      throw new Error(
-        'GameSessionManager critical error: TurnManager service is unavailable during loaded game finalization.'
-      );
-    }
-
+    await this._finalizeGameStart(this.#state.activeWorld);
     this.#logger.debug(
       `GameSessionManager.finalizeLoadSuccess: Game loaded from "${saveIdentifier}" (World: ${this.#state.activeWorld}) and resumed.`
     );
