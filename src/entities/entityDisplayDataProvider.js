@@ -140,6 +140,27 @@ export class EntityDisplayDataProvider {
   }
 
   /**
+   * @description Constructs the resolved portrait path using the mod ID and image path.
+   * @private
+   * @param {string} modId - The identifier of the mod.
+   * @param {string} imagePath - Raw image path from the portrait component.
+   * @returns {string} The resolved portrait image path.
+   */
+  #buildPortraitPath(modId, imagePath) {
+    return `/data/mods/${modId}/${imagePath}`;
+  }
+
+  /**
+   * @description Normalizes alternative text for portrait images.
+   * @private
+   * @param {string | undefined} rawAltText - Alt text from the portrait component.
+   * @returns {string | null} Trimmed alt text or null if not provided.
+   */
+  #buildAltText(rawAltText) {
+    return isNonBlankString(rawAltText) ? rawAltText.trim() : null;
+  }
+
+  /**
    * @description Builds portrait path and alt text for an entity.
    * @private
    * @param {Entity} entity - The entity instance to read portrait data from.
@@ -166,36 +187,35 @@ export class EntityDisplayDataProvider {
       return null;
     }
 
+    if (typeof entity.definitionId !== 'string' || !entity.definitionId) {
+      this.#logger.warn(
+        `${this._logPrefix} ${contextMsg}: Invalid or missing definitionId. Expected string, got:`,
+        entity.definitionId
+      );
+      return null;
+    }
+
     const modId = extractModId(entity.definitionId);
     if (!modId) {
-      if (typeof entity.definitionId !== 'string' || !entity.definitionId) {
-        this.#logger.warn(
-          `${this._logPrefix} ${contextMsg}: Invalid or missing definitionId. Expected string, got:`,
-          entity.definitionId
-        );
-      } else {
-        safeDispatchError(
-          this.#safeEventDispatcher,
-          `Entity definitionId '${entity.definitionId}' has invalid format. Expected format 'modId:entityName'.`,
-          {
-            raw: JSON.stringify({
-              definitionId: entity.definitionId,
-              expectedFormat: 'modId:entityName',
-              functionName: 'extractModId',
-            }),
-            stack: new Error().stack,
-          },
-          this.#logger
-        );
-      }
+      safeDispatchError(
+        this.#safeEventDispatcher,
+        `Entity definitionId '${entity.definitionId}' has invalid format. Expected format 'modId:entityName'.`,
+        {
+          raw: JSON.stringify({
+            definitionId: entity.definitionId,
+            expectedFormat: 'modId:entityName',
+            functionName: 'extractModId',
+          }),
+          stack: new Error().stack,
+        },
+        this.#logger
+      );
       return null;
     }
 
     const imagePath = portraitComponent.imagePath.trim();
-    const fullPath = `/data/mods/${modId}/${imagePath}`;
-    const altText = isNonBlankString(portraitComponent.altText)
-      ? portraitComponent.altText.trim()
-      : null;
+    const fullPath = this.#buildPortraitPath(modId, imagePath);
+    const altText = this.#buildAltText(portraitComponent.altText);
 
     this.#logger.debug(
       `${this._logPrefix} ${contextMsg}: Constructed portrait path for ${successSubject}: ${fullPath}`
