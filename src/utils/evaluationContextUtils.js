@@ -26,9 +26,9 @@ import { safeDispatchError } from './safeDispatchErrorUtils.js';
 export function ensureEvaluationContext(executionContext, dispatcher, logger) {
   const log = ensureValidLogger(logger, 'ensureEvaluationContext');
 
-  const ctx = executionContext?.evaluationContext?.context;
-  if (ctx && typeof ctx === 'object') {
-    return ctx;
+  const context = executionContext?.evaluationContext?.context;
+  if (context && typeof context === 'object') {
+    return context;
   }
 
   const message =

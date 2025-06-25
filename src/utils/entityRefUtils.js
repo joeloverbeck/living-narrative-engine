@@ -20,11 +20,11 @@
  * Supports the special keywords 'actor' and 'target', plain ID strings,
  * or objects of the form `{ entityId: string }`.
  * @param {'actor'|'target'|string|EntityRefObject} ref - Reference to resolve.
- * @param {ExecutionContext} ctx - The current execution context providing actor/target.
+ * @param {ExecutionContext} executionContext - The current execution context providing actor/target.
  * @returns {string|null} The resolved entity ID, or `null` if it cannot be resolved.
  */
-export function resolveEntityId(ref, ctx) {
-  const ec = ctx?.evaluationContext ?? {};
+export function resolveEntityId(ref, executionContext) {
+  const ec = executionContext?.evaluationContext ?? {};
   if (typeof ref === 'string') {
     const trimmed = ref.trim();
     if (!trimmed) return null;

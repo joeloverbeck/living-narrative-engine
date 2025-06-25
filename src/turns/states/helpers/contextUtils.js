@@ -3,31 +3,31 @@
  */
 
 /**
- * @typedef {import('../handlers/baseTurnHandler.js').BaseTurnHandler} BaseTurnHandler
- * @typedef {import('../interfaces/ITurnContext.js').ITurnContext} ITurnContext
- * @typedef {import('../../logging/consoleLogger.js').default|Console} Logger
- * @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher
+ * @typedef {import('../../handlers/baseTurnHandler.js').BaseTurnHandler} BaseTurnHandler
+ * @typedef {import('../../interfaces/ITurnContext.js').ITurnContext} ITurnContext
+ * @typedef {import('../../../logging/consoleLogger.js').default|Console} Logger
+ * @typedef {import('../../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher
  */
 
 /**
  * Resolves a logger using the provided context or handler.
  * Falls back to the console when unavailable.
  *
- * @param {ITurnContext|null} turnCtx - The current ITurnContext, if any.
+ * @param {ITurnContext|null} turnContext - The current ITurnContext, if any.
  * @param {BaseTurnHandler} [handler] - Optional handler fallback.
  * @returns {Logger} The resolved logger instance.
  */
-export function getLogger(turnCtx, handler) {
+export function getLogger(turnContext, handler) {
   try {
-    if (turnCtx && typeof turnCtx.getLogger === 'function') {
-      const logger = turnCtx.getLogger();
+    if (turnContext && typeof turnContext.getLogger === 'function') {
+      const logger = turnContext.getLogger();
       if (logger) {
         return logger;
       }
     }
   } catch (err) {
     console.error(
-      `ContextUtils.getLogger: Error getting logger from turnCtx: ${err.message}`,
+      `ContextUtils.getLogger: Error getting logger from turnContext: ${err.message}`,
       err
     );
   }
@@ -53,20 +53,20 @@ export function getLogger(turnCtx, handler) {
  * Safely resolves a SafeEventDispatcher using the provided context or handler.
  * Falls back to handler.getSafeEventDispatcher() when necessary.
  *
- * @param {ITurnContext|null} turnCtx - The current ITurnContext, if any.
+ * @param {ITurnContext|null} turnContext - The current ITurnContext, if any.
  * @param {BaseTurnHandler} [handler] - Optional handler fallback.
  * @returns {ISafeEventDispatcher|null} The resolved dispatcher or null if unavailable.
  */
-export function getSafeEventDispatcher(turnCtx, handler) {
-  if (turnCtx && typeof turnCtx.getSafeEventDispatcher === 'function') {
+export function getSafeEventDispatcher(turnContext, handler) {
+  if (turnContext && typeof turnContext.getSafeEventDispatcher === 'function') {
     try {
-      const dispatcher = turnCtx.getSafeEventDispatcher();
+      const dispatcher = turnContext.getSafeEventDispatcher();
       if (dispatcher && typeof dispatcher.dispatch === 'function') {
         return dispatcher;
       }
     } catch (err) {
-      getLogger(turnCtx, handler).error(
-        `ContextUtils.getSafeEventDispatcher: Error calling turnCtx.getSafeEventDispatcher(): ${err.message}`,
+      getLogger(turnContext, handler).error(
+        `ContextUtils.getSafeEventDispatcher: Error calling turnContext.getSafeEventDispatcher(): ${err.message}`,
         err
       );
     }
@@ -76,20 +76,20 @@ export function getSafeEventDispatcher(turnCtx, handler) {
     try {
       const dispatcher = handler.getSafeEventDispatcher();
       if (dispatcher && typeof dispatcher.dispatch === 'function') {
-        getLogger(turnCtx, handler).warn(
+        getLogger(turnContext, handler).warn(
           'ContextUtils.getSafeEventDispatcher: SafeEventDispatcher not found on ITurnContext. Falling back to handler.getSafeEventDispatcher().'
         );
         return dispatcher;
       }
     } catch (err) {
-      getLogger(turnCtx, handler).error(
+      getLogger(turnContext, handler).error(
         `ContextUtils.getSafeEventDispatcher: Error calling handler.getSafeEventDispatcher(): ${err.message}`,
         err
       );
     }
   }
 
-  getLogger(turnCtx, handler).warn(
+  getLogger(turnContext, handler).warn(
     'ContextUtils.getSafeEventDispatcher: SafeEventDispatcher unavailable.'
   );
   return null;

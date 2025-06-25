@@ -7,7 +7,7 @@
 /** @typedef {import('../systemInitializer.js').default} SystemInitializer */
 /** @typedef {import('../worldInitializer.js').default} WorldInitializer */
 /** @typedef {import('../../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
-/** @typedef {import('../../loaders/llmConfigLoader.js').LlmConfigLoader} LlmConfigLoader */
+/** @typedef {import('../../llms/services/llmConfigLoader.js').LlmConfigLoader} LlmConfigLoader */
 /** @typedef {import('../../events/safeEventDispatcher.js').default} ISafeEventDispatcher */
 /** @typedef {import('../../actions/actionIndex.js').ActionIndex} ActionIndex */
 
@@ -45,21 +45,23 @@ class InitializationService extends IInitializationService {
   #spatialIndexManager;
 
   /**
+   * Creates a new InitializationService instance.
+   *
    * @param {object} deps
    * @param {ILogger} deps.logger
    * @param {IValidatedEventDispatcher} deps.validatedEventDispatcher
    * @param {ModsLoader} deps.modsLoader
-   * @param {ScopeRegistry} deps.scopeRegistry
-   * @param {DataRegistry} deps.dataRegistry
-   * @param {ILLMAdapter} deps.llmAdapter
-   * @param {LlmConfigLoader} deps.llmConfigLoader
-   * @param {SystemInitializer} deps.systemInitializer
-   * @param {WorldInitializer} deps.worldInitializer
-   * @param {ISafeEventDispatcher} deps.safeEventDispatcher
-   * @param {EntityManager} deps.entityManager
-   * @param {IDomUiFacade} deps.domUiFacade
-   * @param {ActionIndex} deps.actionIndex
-   * @param {GameDataRepository} deps.gameDataRepository
+   * @param {import('../../interfaces/IScopeRegistry.js').IScopeRegistry} dependencies.scopeRegistry - Registry of scopes.
+   * @param {import('../../data/inMemoryDataRegistry.js').DataRegistry} dependencies.dataRegistry - Data registry instance.
+   * @param {import('../../turns/interfaces/ILLMAdapter.js').ILLMAdapter & {init?: Function, isInitialized?: Function, isOperational?: Function}} dependencies.llmAdapter - LLM adapter instance.
+   * @param {LlmConfigLoader} dependencies.llmConfigLoader - Loader for LLM configuration.
+   * @param {SystemInitializer} dependencies.systemInitializer - Initializes tagged systems.
+   * @param {WorldInitializer} dependencies.worldInitializer - Initializes the game world.
+   * @param {ISafeEventDispatcher} dependencies.safeEventDispatcher - Event dispatcher for safe events.
+   * @param {IEntityManager} dependencies.entityManager - Entity manager instance.
+   * @param {import('../../domUI/domUiFacade.js').DomUiFacade} dependencies.domUiFacade - UI facade instance.
+   * @param {ActionIndex} dependencies.actionIndex - Action index for optimized action discovery.
+   * @param {import('../../interfaces/IGameDataRepository.js').IGameDataRepository} dependencies.gameDataRepository - Game data repository instance.
    * @param {ThoughtPersistenceListener} deps.thoughtListener
    * @param {NotesPersistenceListener} deps.notesListener
    * @param {ISpatialIndexManager} deps.spatialIndexManager

@@ -8,13 +8,13 @@
  *
  * @param {{prefix?: string, suffix?: string}|null|undefined} wrappers - Raw prefix/suffix.
  * @param {import('./placeholderResolverUtils.js').PlaceholderResolver} resolver - Placeholder resolver.
- * @param {object} ctx - Context for resolution.
+ * @param {object} context - Context for resolution.
  * @returns {{ prefix: string, suffix: string }} Resolved prefix & suffix.
  */
-export function resolveWrapper(wrappers, resolver, ctx) {
+export function resolveWrapper(wrappers, resolver, context) {
   const { prefix = '', suffix = '' } = wrappers || {};
   return {
-    prefix: resolver.resolve(prefix, ctx),
-    suffix: resolver.resolve(suffix, ctx),
+    prefix: resolver.resolve(prefix, context),
+    suffix: resolver.resolve(suffix, context),
   };
 }

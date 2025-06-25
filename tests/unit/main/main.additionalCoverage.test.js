@@ -32,14 +32,14 @@ jest.mock('../../../src/dependencyInjection/containerConfig.js', () => ({
   configureContainer: jest.fn(),
 }));
 
-describe('main.js bootstrap process', () => {
+describe('main.js additional branch coverage', () => {
   afterEach(() => {
     jest.resetModules();
     jest.clearAllMocks();
     document.body.innerHTML = '';
   });
 
-  it('runs all bootstrap stages in sequence on success', async () => {
+  it('falls back to default ui elements when DOM stage fails', async () => {
     window.history.pushState({}, '', '?start=false');
     document.body.innerHTML = `
       <div id="outputDiv"></div>
@@ -47,43 +47,25 @@ describe('main.js bootstrap process', () => {
       <input id="speech-input" />
       <h1>Title</h1>
     `;
-    const uiElements = {
-      outputDiv: document.querySelector('#outputDiv'),
-      errorDiv: document.querySelector('#error-output'),
-      inputElement: document.querySelector('#speech-input'),
-      titleElement: document.querySelector('h1'),
-      document,
-    };
-    const logger = { info: jest.fn(), error: jest.fn() };
+    const stageError = new Error('UI fail');
+    stageError.phase = 'UI Element Validation';
 
-    mockEnsure.mockResolvedValue({ success: true, payload: uiElements });
-    mockSetupDI.mockResolvedValue({ success: true, payload: {} });
-    mockResolveCore.mockResolvedValue({ success: true, payload: { logger } });
-    mockInitEngine.mockResolvedValue({ success: true, payload: {} });
-    mockInitAux.mockResolvedValue({ success: true });
-    mockMenu.mockResolvedValue({ success: true });
-    mockGlobal.mockResolvedValue({ success: true });
-    mockStartGame.mockResolvedValue({ success: true });
+    mockEnsure.mockResolvedValue({ success: false, error: stageError });
 
     let main;
     await jest.isolateModulesAsync(async () => {
       main = await import('../../../src/main.js');
     });
     await main.bootstrapApp();
-    await new Promise((resolve) => setTimeout(resolve, 0));
+    await new Promise((r) => setTimeout(r, 0));
 
-    expect(typeof main.beginGame).toBe('function');
-    expect(mockStartGame).toHaveBeenCalledTimes(0);
-
-    expect(mockEnsure.mock.invocationCallOrder[0]).toBeLessThan(
-      mockSetupDI.mock.invocationCallOrder[0]
-    );
-    expect(mockSetupDI.mock.invocationCallOrder[0]).toBeLessThan(
-      mockResolveCore.mock.invocationCallOrder[0]
-    );
+    expect(mockDisplayFatal).toHaveBeenCalledTimes(1);
+    const [elements, details] = mockDisplayFatal.mock.calls[0];
+    expect(elements.outputDiv).toBe(document.getElementById('outputDiv'));
+    expect(details.phase).toBe(stageError.phase);
   });
 
-  it('shows fatal error when a stage fails', async () => {
+  it('shows load UI when beginGame called with true', async () => {
     window.history.pushState({}, '', '?start=false');
     document.body.innerHTML = `<div id="outputDiv"></div>`;
     const uiElements = {
@@ -93,31 +75,32 @@ describe('main.js bootstrap process', () => {
       titleElement: null,
       document,
     };
-    const stageError = new Error('DI failed');
-    stageError.phase = 'DI Container Setup';
+    const logger = { info: jest.fn(), error: jest.fn(), debug: jest.fn() };
+    const showLoad = jest.fn();
 
     mockEnsure.mockResolvedValue({ success: true, payload: uiElements });
-    mockSetupDI.mockResolvedValue({ success: false, error: stageError });
-
-    let main;
-    await jest.isolateModulesAsync(async () => {
-      main = await import('../../../src/main.js');
+    mockSetupDI.mockResolvedValue({ success: true, payload: {} });
+    mockResolveCore.mockResolvedValue({ success: true, payload: { logger } });
+    mockInitEngine.mockResolvedValue({
+      success: true,
+      payload: { showLoadGameUI: showLoad },
     });
-    await main.bootstrapApp();
-    await new Promise((resolve) => setTimeout(resolve, 0));
+    mockInitAux.mockResolvedValue({ success: true });
+    mockMenu.mockResolvedValue({ success: true });
+    mockGlobal.mockResolvedValue({ success: true });
+    mockStartGame.mockResolvedValue({ success: true });
 
-    expect(mockSetupDI).toHaveBeenCalled();
-    expect(mockDisplayFatal).toHaveBeenCalledTimes(1);
-    const [elements, details, passedLogger] = mockDisplayFatal.mock.calls[0];
-    expect(elements.outputDiv).toBe(uiElements.outputDiv);
-    expect(details.errorObject).toBe(stageError);
-    expect(details.phase).toBe(stageError.phase);
-    expect(passedLogger).toBeNull();
-    expect(mockResolveCore).not.toHaveBeenCalled();
-    expect(mockStartGame).not.toHaveBeenCalled();
+    const main = await import('../../../src/main.js');
+    await main.bootstrapApp();
+    await new Promise((r) => setTimeout(r, 0));
+    await main.beginGame(true);
+    await new Promise((r) => setTimeout(r, 0));
+
+    expect(mockStartGame).toHaveBeenCalled();
+    expect(showLoad).toHaveBeenCalled();
   });
 
-  it('handles aggregated auxiliary service failures', async () => {
+  it('handles startGameStage failure gracefully', async () => {
     window.history.pushState({}, '', '?start=false');
     document.body.innerHTML = `<div id="outputDiv"></div>`;
     const uiElements = {
@@ -129,29 +112,26 @@ describe('main.js bootstrap process', () => {
     };
     const logger = { info: jest.fn(), error: jest.fn(), debug: jest.fn() };
 
-    const aggError = new Error('Aux fail');
-    aggError.phase = 'Auxiliary Services Initialization';
-    aggError.failures = [
-      { service: 'EngineUIManager', error: new Error('bad') },
-    ];
-
     mockEnsure.mockResolvedValue({ success: true, payload: uiElements });
     mockSetupDI.mockResolvedValue({ success: true, payload: {} });
     mockResolveCore.mockResolvedValue({ success: true, payload: { logger } });
     mockInitEngine.mockResolvedValue({ success: true, payload: {} });
-    mockInitAux.mockResolvedValue({ success: false, error: aggError });
-
-    let main;
-    await jest.isolateModulesAsync(async () => {
-      main = await import('../../../src/main.js');
+    mockInitAux.mockResolvedValue({ success: true });
+    mockMenu.mockResolvedValue({ success: true });
+    mockGlobal.mockResolvedValue({ success: true });
+    mockStartGame.mockResolvedValue({
+      success: false,
+      error: new Error('boom'),
     });
+
+    const main = await import('../../../src/main.js');
     await main.bootstrapApp();
+    await new Promise((r) => setTimeout(r, 0));
+    await expect(main.beginGame()).rejects.toThrow();
     await new Promise((r) => setTimeout(r, 0));
 
     expect(mockDisplayFatal).toHaveBeenCalledTimes(1);
-    const [, details, passedLogger] = mockDisplayFatal.mock.calls[0];
-    expect(details.errorObject).toBe(aggError);
-    expect(details.phase).toBe(aggError.phase);
-    expect(passedLogger).toBe(logger);
+    const [, details] = mockDisplayFatal.mock.calls[0];
+    expect(details.phase).toBe('Start Game');
   });
 });

@@ -7,21 +7,6 @@ import { expect, jest, it } from '@jest/globals';
 import { expectNoDispatch } from './dispatchTestUtils.js';
 import { GameEngineTestBed } from './gameEngineTestBed.js';
 import { DEFAULT_TEST_WORLD } from '../constants.js';
-import { createWithBed, createInitializedBed } from '../testBedHelpers.js';
-
-const withBed = createWithBed(GameEngineTestBed, (b) => [b, b.engine]);
-const withInitialized = createInitializedBed(
-  GameEngineTestBed,
-  'initAndReset',
-  DEFAULT_TEST_WORLD,
-  (b) => [b, b.engine]
-);
-const withRunning = createInitializedBed(
-  GameEngineTestBed,
-  'startAndReset',
-  DEFAULT_TEST_WORLD,
-  (b) => [b, b.engine]
-);
 
 /**
  * Executes a callback with a temporary {@link GameEngineTestBed} instance.
@@ -32,8 +17,20 @@ const withRunning = createInitializedBed(
  *   (Promise<void>|void)} testFn - Function invoked with the bed and engine.
  * @returns {Promise<void>} Resolves when the callback completes.
  */
-export function withGameEngineBed(overrides = {}, testFn) {
-  return withBed(overrides, testFn);
+export async function withGameEngineBed(overrides = {}, testFn) {
+  if (typeof overrides === 'function') {
+    testFn = overrides;
+    overrides = {};
+  }
+  const bed = new GameEngineTestBed(overrides);
+  if (typeof bed.resetMocks === 'function') {
+    bed.resetMocks();
+  }
+  try {
+    await testFn(bed, bed.engine);
+  } finally {
+    await bed.cleanup();
+  }
 }
 
 /**
@@ -49,8 +46,22 @@ export function withGameEngineBed(overrides = {}, testFn) {
  *   (Promise<void>|void)} testFn - Function invoked with the bed and engine.
  * @returns {Promise<void>} Resolves when the callback completes.
  */
-export function withInitializedGameEngineBed(options, testFn) {
-  return withInitialized(options, testFn);
+export async function withInitializedGameEngineBed(options = {}, testFn) {
+  if (typeof options === 'function') {
+    testFn = options;
+    options = {};
+  }
+  const { overrides = {}, initArg = DEFAULT_TEST_WORLD } = options;
+  const bed = new GameEngineTestBed(overrides);
+  await bed.initAndReset(initArg);
+  if (typeof bed.resetMocks === 'function') {
+    bed.resetMocks();
+  }
+  try {
+    await testFn(bed, bed.engine);
+  } finally {
+    await bed.cleanup();
+  }
 }
 
 /**
@@ -66,8 +77,22 @@ export function withInitializedGameEngineBed(options, testFn) {
  *   (Promise<void>|void)} testFn - Function invoked with the bed and engine.
  * @returns {Promise<void>} Resolves when the callback completes.
  */
-export function withRunningGameEngineBed(options, testFn) {
-  return withRunning(options, testFn);
+export async function withRunningGameEngineBed(options = {}, testFn) {
+  if (typeof options === 'function') {
+    testFn = options;
+    options = {};
+  }
+  const { overrides = {}, initArg = DEFAULT_TEST_WORLD } = options;
+  const bed = new GameEngineTestBed(overrides);
+  await bed.startAndReset(initArg);
+  if (typeof bed.resetMocks === 'function') {
+    bed.resetMocks();
+  }
+  try {
+    await testFn(bed, bed.engine);
+  } finally {
+    await bed.cleanup();
+  }
 }
 
 /**

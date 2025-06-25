@@ -26,17 +26,17 @@ import { ensureEvaluationContext } from '../../utils/evaluationContextUtils.js';
  *
  * @description Exported for unit testing.
  * @param {number|object} operand - Operand to resolve.
- * @param {object} ctx - Evaluation context passed to json-logic.
+ * @param {object} context - Evaluation context passed to json-logic.
  * @param {ILogger} logger - Logger for warnings.
  * @param {ISafeEventDispatcher} dispatcher - Dispatcher for error events.
  * @returns {number} Resolved numeric value or `NaN` on failure.
  */
-export function resolveOperand(operand, ctx, logger, dispatcher) {
+export function resolveOperand(operand, context, logger, dispatcher) {
   if (typeof operand === 'number') return operand;
   if (operand && typeof operand === 'object') {
     if (Object.prototype.hasOwnProperty.call(operand, 'var')) {
       try {
-        const raw = jsonLogic.apply({ var: operand.var }, ctx);
+        const raw = jsonLogic.apply({ var: operand.var }, context);
         const num = Number(raw);
         return Number.isNaN(num) ? NaN : num;
       } catch (e) {
@@ -49,7 +49,7 @@ export function resolveOperand(operand, ctx, logger, dispatcher) {
       }
     }
     if (operand.operator) {
-      return evaluateExpression(operand, ctx, logger, dispatcher);
+      return evaluateExpression(operand, context, logger, dispatcher);
     }
   }
   logger.warn('MATH: Invalid operand encountered.', { operand });
@@ -61,17 +61,17 @@ export function resolveOperand(operand, ctx, logger, dispatcher) {
  *
  * @description Exported for unit testing.
  * @param {MathExpression} expr - Expression to evaluate.
- * @param {object} ctx - Evaluation context used for variable resolution.
+ * @param {object} context - Evaluation context used for variable resolution.
  * @param {ILogger} logger - Logger for warnings.
  * @param {ISafeEventDispatcher} dispatcher - Dispatcher for error events.
  * @returns {number} The numeric result or `NaN` if evaluation fails.
  */
-export function evaluateExpression(expr, ctx, logger, dispatcher) {
+export function evaluateExpression(expr, context, logger, dispatcher) {
   if (!expr || typeof expr !== 'object') return NaN;
   const { operator, operands } = expr;
   if (!Array.isArray(operands) || operands.length !== 2) return NaN;
-  const left = resolveOperand(operands[0], ctx, logger, dispatcher);
-  const right = resolveOperand(operands[1], ctx, logger, dispatcher);
+  const left = resolveOperand(operands[0], context, logger, dispatcher);
+  const right = resolveOperand(operands[1], context, logger, dispatcher);
   if (
     typeof left !== 'number' ||
     typeof right !== 'number' ||

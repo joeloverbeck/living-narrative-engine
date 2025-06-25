@@ -5,6 +5,9 @@ import {
   buildSaveDispatches,
   buildStopDispatches,
   buildStartDispatches,
+  buildLoadSuccessDispatches,
+  buildLoadFailureDispatches,
+  buildLoadFinalizeFailureDispatches,
   expectEngineStatus,
   expectEngineRunning,
   expectEngineStopped,
@@ -31,6 +34,7 @@ import {
   COMPONENT_ADDED_ID,
   COMPONENT_REMOVED_ID,
   ENGINE_STOPPED_UI,
+  ENGINE_OPERATION_FAILED_UI,
 } from '../../../src/constants/eventIds.js';
 
 describe('dispatchTestUtils', () => {
@@ -181,6 +185,73 @@ describe('dispatchTestUtils', () => {
       expect(result[1]).toEqual([
         ENGINE_READY_UI,
         { activeWorld: 'NewWorld', message: ENGINE_READY_MESSAGE },
+      ]);
+    });
+  });
+
+  describe('load dispatch builders', () => {
+    it('builds success sequence', () => {
+      const result = buildLoadSuccessDispatches('Save1', 'World1');
+      expect(result).toEqual([
+        [
+          ENGINE_OPERATION_IN_PROGRESS_UI,
+          {
+            titleMessage: 'Loading Save1...',
+            inputDisabledMessage: 'Loading game from Save1...',
+          },
+        ],
+        [
+          ENGINE_READY_UI,
+          { activeWorld: 'World1', message: ENGINE_READY_MESSAGE },
+        ],
+      ]);
+    });
+
+    it('builds failure sequence', () => {
+      const result = buildLoadFailureDispatches('Save1', 'Oops');
+      expect(result).toEqual([
+        [
+          ENGINE_OPERATION_IN_PROGRESS_UI,
+          {
+            titleMessage: 'Loading Save1...',
+            inputDisabledMessage: 'Loading game from Save1...',
+          },
+        ],
+        [
+          ENGINE_OPERATION_FAILED_UI,
+          {
+            errorMessage: 'Failed to load game: Oops',
+            errorTitle: 'Load Failed',
+          },
+        ],
+      ]);
+    });
+
+    it('builds finalize-failure sequence', () => {
+      const result = buildLoadFinalizeFailureDispatches(
+        'Save1',
+        'World1',
+        'Bad'
+      );
+      expect(result).toEqual([
+        [
+          ENGINE_OPERATION_IN_PROGRESS_UI,
+          {
+            titleMessage: 'Loading Save1...',
+            inputDisabledMessage: 'Loading game from Save1...',
+          },
+        ],
+        [
+          ENGINE_READY_UI,
+          { activeWorld: 'World1', message: ENGINE_READY_MESSAGE },
+        ],
+        [
+          ENGINE_OPERATION_FAILED_UI,
+          {
+            errorMessage: 'Failed to load game: Bad',
+            errorTitle: 'Load Failed',
+          },
+        ],
       ]);
     });
   });

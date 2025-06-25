@@ -14,6 +14,6 @@
  * @param {object} actor - Actor entity or model to inspect.
  * @returns {string} `'ai'` if the actor is flagged as AI, otherwise `'human'`.
  */
-export function getActorType(actor) {
+export function determineActorType(actor) {
   return actor && actor.isAi === true ? 'ai' : 'human';
 }

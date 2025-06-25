@@ -14,6 +14,7 @@ import { buildModalElementsConfig } from './helpers/buildModalElementsConfig.js'
 import createEmptySlotMessage from './helpers/createEmptySlotMessage.js';
 import { DATASET_SLOT_ID } from '../constants/datasetKeys.js';
 import SaveGameService from './saveGameService.js';
+import './saveGameTypedefs.js';
 
 /**
  * Dataset key storing the numeric slot ID on save slot elements.
@@ -29,13 +30,6 @@ import SaveGameService from './saveGameService.js';
  * @typedef {import('../interfaces/ISaveLoadService.js').ISaveLoadService} ISaveLoadService
  * @typedef {import('../interfaces/ISaveLoadService.js').SaveFileMetadata} SaveFileMetadata
  * @typedef {import('../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher
- */
-
-/**
- * @typedef {SaveFileMetadata & {slotId: number, isEmpty?: false}} FilledSlotData
- * @typedef {{slotId: number, isEmpty: true, saveName?: string, timestamp?: string, playtimeSeconds?: number, isCorrupted?: false}} EmptySlotData
- * @typedef {{slotId: number, isEmpty: false, saveName?: string, timestamp?: string, playtimeSeconds?: number, isCorrupted: true, identifier?: string}} CorruptedSlotData
- * @typedef {FilledSlotData | EmptySlotData | CorruptedSlotData} SlotDisplayData
  */
 
 const MAX_SAVE_SLOTS = 10;

@@ -7,7 +7,7 @@
 
 import { AbstractTurnState } from './abstractTurnState.js';
 import { ACTION_DECIDED_ID } from '../../constants/eventIds.js';
-import { getActorType } from '../../utils/actorTypeUtils.js';
+import { determineActorType } from '../../utils/actorTypeUtils.js';
 import { getLogger, getSafeEventDispatcher } from './helpers/contextUtils.js';
 import { ActionDecisionWorkflow } from './workflows/actionDecisionWorkflow.js';
 
@@ -216,7 +216,7 @@ export class AwaitingActorDecisionState extends AbstractTurnState {
   async _emitActionDecided(turnContext, actor, extractedData) {
     const payload = {
       actorId: actor.id,
-      actorType: getActorType(actor),
+      actorType: determineActorType(actor),
     };
     if (extractedData) {
       payload.extractedData = {
@@ -330,7 +330,7 @@ export class AwaitingActorDecisionState extends AbstractTurnState {
    * @private
    * @param {BaseTurnHandler} handler - Active turn handler being destroyed.
    * @param {?ITurnContext} turnContext - Current turn context.
-   * @param {import('../../utils/logger.js').Logger | Console} logger - Logger instance.
+   * @param {import('../../interfaces/coreServices.js').ILogger | Console} logger - Logger instance.
    * @param {?Entity} actor - Actor retrieved from the context.
    * @returns {Promise<void>} Resolves when cleanup completes.
    */

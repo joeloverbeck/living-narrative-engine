@@ -20,7 +20,7 @@ export {
  * @param {import('../../logic/defs.js').ExecutionContext} [executionContext] - Optional execution context.
  * @returns {ILogger} Logger instance for execution.
  */
-export function getExecLogger(defaultLogger, executionContext) {
+export function resolveExecutionLogger(defaultLogger, executionContext) {
   return executionContext?.logger ?? defaultLogger;
 }
 

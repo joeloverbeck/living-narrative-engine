@@ -62,7 +62,7 @@ describe('AbstractTurnState._resolveLogger', () => {
     expect(result).toBe(logger);
     expect(consoleSpy).toHaveBeenCalledTimes(1);
     expect(consoleSpy.mock.calls[0][0]).toMatch(
-      /Error getting logger from turnCtx/
+      /Error getting logger from turnContext/
     );
     consoleSpy.mockRestore();
   });

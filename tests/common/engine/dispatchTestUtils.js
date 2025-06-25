@@ -14,6 +14,7 @@ import {
   COMPONENT_ADDED_ID,
   COMPONENT_REMOVED_ID,
   ENGINE_STOPPED_UI,
+  ENGINE_OPERATION_FAILED_UI,
   REQUEST_SHOW_LOAD_GAME_UI,
   REQUEST_SHOW_SAVE_GAME_UI,
 } from '../../../src/constants/eventIds.js';
@@ -106,6 +107,80 @@ export function buildStartDispatches(worldName) {
     [
       ENGINE_READY_UI,
       { activeWorld: worldName, message: ENGINE_READY_MESSAGE },
+    ],
+  ];
+}
+
+/**
+ * Builds the dispatch sequence for a successful game load.
+ *
+ * @param {string} saveId - Save identifier being loaded.
+ * @param {string} worldName - Game title from the save data.
+ * @returns {Array<[string, any]>} Dispatch sequence.
+ */
+export function buildLoadSuccessDispatches(saveId, worldName) {
+  return [
+    [
+      ENGINE_OPERATION_IN_PROGRESS_UI,
+      {
+        titleMessage: `Loading ${saveId}...`,
+        inputDisabledMessage: `Loading game from ${saveId}...`,
+      },
+    ],
+    [
+      ENGINE_READY_UI,
+      { activeWorld: worldName, message: ENGINE_READY_MESSAGE },
+    ],
+  ];
+}
+
+/**
+ * Builds the dispatch sequence for a failed game load.
+ *
+ * @param {string} saveId - Save identifier.
+ * @param {string} errorMsg - Failure message.
+ * @returns {Array<[string, any]>} Dispatch sequence.
+ */
+export function buildLoadFailureDispatches(saveId, errorMsg) {
+  return [
+    [
+      ENGINE_OPERATION_IN_PROGRESS_UI,
+      {
+        titleMessage: `Loading ${saveId}...`,
+        inputDisabledMessage: `Loading game from ${saveId}...`,
+      },
+    ],
+    [
+      ENGINE_OPERATION_FAILED_UI,
+      {
+        errorMessage: `Failed to load game: ${errorMsg}`,
+        errorTitle: 'Load Failed',
+      },
+    ],
+  ];
+}
+
+/**
+ * Builds the dispatch sequence when finalization fails after a load.
+ *
+ * @param {string} saveId - Save identifier.
+ * @param {string} worldName - Game title from the save data.
+ * @param {string} errorMsg - Failure message.
+ * @returns {Array<[string, any]>} Dispatch sequence.
+ */
+export function buildLoadFinalizeFailureDispatches(
+  saveId,
+  worldName,
+  errorMsg
+) {
+  return [
+    ...buildLoadSuccessDispatches(saveId, worldName),
+    [
+      ENGINE_OPERATION_FAILED_UI,
+      {
+        errorMessage: `Failed to load game: ${errorMsg}`,
+        errorTitle: 'Load Failed',
+      },
     ],
   ];
 }
