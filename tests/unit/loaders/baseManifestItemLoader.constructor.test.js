@@ -227,6 +227,33 @@ describe('BaseManifestItemLoader Constructor', () => {
     );
   });
 
+  it("should store null for _primarySchemaId and log debug when content type is 'scopes' and schema ID is missing", () => {
+    mockContentType = 'scopes';
+    mockConfig.getContentTypeSchemaId.mockReturnValue(undefined);
+
+    const testLoaderInstance = new BaseManifestItemLoader(
+      mockContentType,
+      mockConfig,
+      mockResolver,
+      mockFetcher,
+      mockValidator,
+      mockRegistry,
+      mockLogger
+    );
+
+    expect(testLoaderInstance._primarySchemaId).toBeNull();
+    expect(mockConfig.getContentTypeSchemaId).toHaveBeenCalledWith(
+      mockContentType
+    );
+    expect(mockLogger.warn).not.toHaveBeenCalled();
+    expect(mockLogger.debug).toHaveBeenCalledWith(
+      "BaseManifestItemLoader: No primary schema configured for content type 'scopes'; skipping schema linking."
+    );
+    expect(mockLogger.debug).toHaveBeenCalledWith(
+      `BaseManifestItemLoader: Initialized.`
+    );
+  });
+
   // --- ContentType Validation Failure Tests --- // <<< ADDED section
   describe('ContentType Validation', () => {
     it('should throw TypeError if contentType is null', () => {
