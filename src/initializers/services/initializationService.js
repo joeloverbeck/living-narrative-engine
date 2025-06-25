@@ -36,7 +36,7 @@ class InitializationService extends IInitializationService {
   #systemInitializer;
   #worldInitializer;
   #safeEventDispatcher;
-  #entityManager;
+  #entityManager; // eslint-disable-line no-unused-private-class-members
   #domUiFacade; // eslint-disable-line no-unused-private-class-members
   #actionIndex;
   #gameDataRepository;
@@ -119,16 +119,6 @@ class InitializationService extends IInitializationService {
         "InitializationService: Missing or invalid required dependency 'dataRegistry'."
       );
     }
-    if (!llmAdapter || typeof llmAdapter.init !== 'function') {
-      throw new Error(
-        "InitializationService: Missing or invalid required dependency 'llmAdapter'."
-      );
-    }
-    if (!llmConfigLoader || typeof llmConfigLoader.loadConfigs !== 'function') {
-      throw new Error(
-        "InitializationService: Missing or invalid required dependency 'llmConfigLoader'."
-      );
-    }
     if (
       !systemInitializer ||
       typeof systemInitializer.initializeAll !== 'function'
@@ -184,7 +174,6 @@ class InitializationService extends IInitializationService {
     if (!notesListener || typeof notesListener.handleEvent !== 'function') {
       throw new Error(
         "InitializationService: Missing or invalid required dependency 'notesListener'."
-
       );
     }
 
@@ -402,41 +391,62 @@ class InitializationService extends IInitializationService {
     this.#logger.debug(
       'InitializationService: Attempting to initialize ConfigurableLLMAdapter...'
     );
+
+    const adapter = this.#llmAdapter;
+
+    // Abort if adapter dependency is missing
+    if (!adapter) {
+      this.#logger.error(
+        'InitializationService: No ILLMAdapter provided. Skipping initialization.'
+      );
+      return;
+    }
+
+    // Abort if adapter lacks an init method
+    if (typeof adapter.init !== 'function') {
+      this.#logger.error(
+        'InitializationService: ILLMAdapter missing required init() method.'
+      );
+      return;
+    }
+
+    // Skip if adapter already initialized
+    if (
+      typeof adapter.isInitialized === 'function' &&
+      adapter.isInitialized()
+    ) {
+      this.#logger.debug(
+        'InitializationService: ConfigurableLLMAdapter already initialized. Skipping.'
+      );
+      return;
+    }
+
+    const configLoader = this.#llmConfigLoader;
+    if (!configLoader || typeof configLoader.loadConfigs !== 'function') {
+      this.#logger.error(
+        'InitializationService: LlmConfigLoader missing or invalid. Cannot initialize adapter.'
+      );
+      return;
+    }
+
+    this.#logger.debug(
+      'InitializationService: LlmConfigLoader resolved from container for adapter initialization.'
+    );
+
     try {
-      const llmAdapter = this.#llmAdapter;
-      if (!llmAdapter) {
-        this.#logger.error(
-          'InitializationService: Failed to resolve ILLMAdapter from container. Cannot initialize.'
-        );
-      } else if (typeof llmAdapter.init !== 'function') {
-        this.#logger.error(
-          'InitializationService: Resolved ILLMAdapter does not have an init method.'
-        );
-      } else if (
-        typeof llmAdapter.isInitialized === 'function' &&
-        llmAdapter.isInitialized()
+      await adapter.init({ llmConfigLoader: configLoader });
+
+      if (
+        typeof adapter.isOperational === 'function' &&
+        adapter.isOperational()
       ) {
         this.#logger.debug(
-          'InitializationService: ConfigurableLLMAdapter already initialized. Skipping re-initialization.'
+          'InitializationService: ConfigurableLLMAdapter initialized successfully and is operational.'
         );
       } else {
-        const llmConfigLoaderInstance = this.#llmConfigLoader;
-        this.#logger.debug(
-          'InitializationService: LlmConfigLoader resolved from container for adapter initialization.'
+        this.#logger.warn(
+          'InitializationService: ConfigurableLLMAdapter.init() completed but the adapter is not operational. Check adapter-specific logs (e.g., LlmConfigLoader errors).'
         );
-        await llmAdapter.init({ llmConfigLoader: llmConfigLoaderInstance });
-        if (
-          typeof llmAdapter.isOperational === 'function' &&
-          llmAdapter.isOperational()
-        ) {
-          this.#logger.debug(
-            `InitializationService: ConfigurableLLMAdapter initialized successfully and is operational.`
-          );
-        } else {
-          this.#logger.warn(
-            `InitializationService: ConfigurableLLMAdapter.init() completed BUT THE ADAPTER IS NOT OPERATIONAL. Check adapter-specific logs (e.g., LlmConfigLoader errors).`
-          );
-        }
       }
     } catch (adapterInitError) {
       this.#logger.error(
