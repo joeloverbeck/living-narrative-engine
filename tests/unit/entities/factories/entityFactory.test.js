@@ -137,6 +137,19 @@ describe('EntityFactory', () => {
       mocks.validator.validate.mockReturnValue({ isValid: true });
     });
 
+    it('should create an entity using only the definition with default components', () => {
+      const entity = factory.create(
+        'test-def:basic',
+        {},
+        mocks.registry,
+        { has: () => false },
+        null
+      );
+
+      expect(entity.getComponentData('core:name')).toEqual({ name: 'Basic' });
+      expect(entity.getComponentData('nonexistent')).toBeUndefined();
+    });
+
     it('should create an entity with generated ID when no instanceId provided', () => {
       const entity = factory.create(
         'test-def:basic',
@@ -232,6 +245,34 @@ describe('EntityFactory', () => {
       );
       expect(entity.hasComponent('new:component')).toBe(true);
       expect(entity.getComponentData('new:component').data).toBe('xyz');
+    });
+
+    it('should retain default values for components not overridden', () => {
+      const definition = new EntityDefinition('test-def:multi', {
+        description: 'Multi component',
+        components: {
+          'core:name': { name: 'DefaultName' },
+          'core:health': { current: 100, max: 100 },
+        },
+      });
+      mocks.registry.getEntityDefinition.mockReturnValue(definition);
+
+      const overrides = {
+        'core:health': { current: 50 },
+      };
+
+      const entity = factory.create(
+        'test-def:multi',
+        { componentOverrides: overrides },
+        mocks.registry,
+        { has: () => false },
+        null
+      );
+
+      expect(entity.getComponentData('core:health')).toEqual({ current: 50 });
+      expect(entity.getComponentData('core:name')).toEqual({
+        name: 'DefaultName',
+      });
     });
 
     it('calls validator for each component override', () => {
