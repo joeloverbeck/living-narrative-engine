@@ -66,7 +66,7 @@ export async function getServiceFromContext(
     }
     logger.error(errorMsg);
 
-    if (state._isProcessing) {
+    if (state.isProcessing) {
       finishProcessing(state);
     }
     throw new ServiceLookupError(errorMsg);

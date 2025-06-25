@@ -83,7 +83,7 @@ afterEach(() => {
 
 describe('ProcessingCommandState.enterState – error branches', () => {
   test('should warn and abort if _isProcessing is already true', async () => {
-    processingState['_isProcessing'] = true;
+    processingState.startProcessing();
 
     // Provide a dummy turn context so the code does not short-circuit earlier
     mockHandler.getTurnContext.mockReturnValue({
@@ -101,17 +101,17 @@ describe('ProcessingCommandState.enterState – error branches', () => {
       expect.stringContaining('enterState called while already processing')
     );
     // _isProcessing remains true
-    expect(processingState['_isProcessing']).toBe(true);
+    expect(processingState.isProcessing).toBe(true);
   });
 
   test('should reset and transition to TurnIdleState when turnCtx is null', async () => {
-    processingState['_isProcessing'] = false;
+    processingState.finishProcessing();
     mockHandler.getTurnContext.mockReturnValue(null);
 
     await processingState.enterState(mockHandler, null);
 
     // _isProcessing should be reset to false
-    expect(processingState['_isProcessing']).toBe(false);
+    expect(processingState.isProcessing).toBe(false);
 
     // Handler._resetTurnStateAndResources called with a key indicating critical-no-context
     expect(mockHandler._resetTurnStateAndResources).toHaveBeenCalledWith(
@@ -122,7 +122,7 @@ describe('ProcessingCommandState.enterState – error branches', () => {
   });
 
   test('should handle missing actor via handleProcessingException and dispatch SYSTEM_ERROR_OCCURRED_ID then endTurn', async () => {
-    processingState['_isProcessing'] = false;
+    processingState.finishProcessing();
 
     // Create a single eventDispatcher and spy on its dispatch
     const mockEventDispatcher = {
@@ -158,11 +158,11 @@ describe('ProcessingCommandState.enterState – error branches', () => {
     expect(spyEndTurn).toHaveBeenCalledWith(expect.any(Error));
 
     // Finally, _isProcessing cleared
-    expect(processingState['_isProcessing']).toBe(false);
+    expect(processingState.isProcessing).toBe(false);
   });
 
   test('should handle exception when getChosenAction throws', async () => {
-    processingState['_isProcessing'] = false;
+    processingState.finishProcessing();
     const actor = new MockActor('actorA');
 
     // Create a single eventDispatcher and spy on its dispatch
@@ -185,7 +185,7 @@ describe('ProcessingCommandState.enterState – error branches', () => {
     // Provide commandString override so it logs that branch
     const customState = new ProcessingCommandState(mockHandler, 'cmdStr', null);
     mockHandler._currentState = customState;
-    customState['_isProcessing'] = false;
+    customState.finishProcessing();
 
     const spyDispatch = mockEventDispatcher.dispatch;
     const spyEndTurn = mockTurnContext.endTurn;
@@ -202,11 +202,11 @@ describe('ProcessingCommandState.enterState – error branches', () => {
     );
     // And endTurn called
     expect(spyEndTurn).toHaveBeenCalledWith(expect.any(Error));
-    expect(customState['_isProcessing']).toBe(false);
+    expect(customState.isProcessing).toBe(false);
   });
 
   test('should handle missing turnAction (both constructor and getChosenAction return null)', async () => {
-    processingState['_isProcessing'] = false;
+    processingState.finishProcessing();
     const actor = new MockActor('actorB');
 
     // Create a single eventDispatcher and spy on its dispatch
@@ -239,11 +239,11 @@ describe('ProcessingCommandState.enterState – error branches', () => {
     );
     // endTurn should be invoked
     expect(spyEndTurn).toHaveBeenCalledWith(expect.any(Error));
-    expect(processingState['_isProcessing']).toBe(false);
+    expect(processingState.isProcessing).toBe(false);
   });
 
   test('should handle invalid actionDefinitionId (empty string) and trigger exception path', async () => {
-    processingState['_isProcessing'] = false;
+    processingState.finishProcessing();
     const actor = new MockActor('actorC');
     const badAction = { actionDefinitionId: '', commandString: 'someCmd' };
 
@@ -278,11 +278,11 @@ describe('ProcessingCommandState.enterState – error branches', () => {
       })
     );
     expect(spyEndTurn).toHaveBeenCalledWith(expect.any(Error));
-    expect(processingState['_isProcessing']).toBe(false);
+    expect(processingState.isProcessing).toBe(false);
   });
 
   test('should dispatch ENTITY_SPOKE_ID when turnAction.speech is non-empty string', async () => {
-    processingState['_isProcessing'] = false;
+    processingState.finishProcessing();
     const actor = new MockActor('actorD');
     const turnActionWithSpeech = {
       actionDefinitionId: 'actionSpeak',
@@ -325,7 +325,7 @@ describe('ProcessingCommandState.enterState – error branches', () => {
 
     // Re-create state so it picks up the overridden resolver
     const stateWithSpeech = new ProcessingCommandState(mockHandler, null, null);
-    stateWithSpeech['_isProcessing'] = false;
+    stateWithSpeech.finishProcessing();
     mockHandler._currentState = stateWithSpeech;
 
     const processInternalSpy = jest.spyOn(
@@ -349,7 +349,7 @@ describe('ProcessingCommandState.enterState – error branches', () => {
   });
 
   test('should include joined notes when decision meta contains notes array', async () => {
-    processingState['_isProcessing'] = false;
+    processingState.finishProcessing();
     const actor = new MockActor('actorE');
     const turnActionWithSpeech = {
       actionDefinitionId: 'actionSpeak',
@@ -386,7 +386,7 @@ describe('ProcessingCommandState.enterState – error branches', () => {
       });
 
     const stateWithNotes = new ProcessingCommandState(mockHandler, null, null);
-    stateWithNotes['_isProcessing'] = false;
+    stateWithNotes.finishProcessing();
     mockHandler._currentState = stateWithNotes;
 
     await stateWithNotes.enterState(mockHandler, null);
@@ -404,7 +404,7 @@ describe('ProcessingCommandState.enterState – error branches', () => {
 
 describe('ProcessingCommandState._getServiceFromContext – error branches', () => {
   test('should throw ServiceLookupError and clear _isProcessing when turnCtx is null', async () => {
-    processingState['_isProcessing'] = true;
+    processingState.startProcessing();
     await expect(
       getServiceFromContext(
         processingState,
@@ -414,7 +414,7 @@ describe('ProcessingCommandState._getServiceFromContext – error branches', () 
         'actorZ'
       )
     ).rejects.toThrow(ServiceLookupError);
-    expect(processingState['_isProcessing']).toBe(false);
+    expect(processingState.isProcessing).toBe(false);
     expect(mockLogger.error).toHaveBeenCalledWith(
       expect.stringContaining('Invalid turnCtx in _getServiceFromContext')
     );
@@ -428,7 +428,7 @@ describe('ProcessingCommandState._getServiceFromContext – error branches', () 
   });
 
   test('should log error when turnCtx lacks getLogger', async () => {
-    processingState['_isProcessing'] = true;
+    processingState.startProcessing();
     const dummyCtx = {};
 
     await expect(
@@ -440,7 +440,7 @@ describe('ProcessingCommandState._getServiceFromContext – error branches', () 
         'actorMissingLogger'
       )
     ).rejects.toThrow(ServiceLookupError);
-    expect(processingState['_isProcessing']).toBe(false);
+    expect(processingState.isProcessing).toBe(false);
     expect(mockLogger.error).toHaveBeenCalledWith(
       expect.stringContaining('Invalid turnCtx in _getServiceFromContext')
     );
@@ -453,7 +453,7 @@ describe('ProcessingCommandState._getServiceFromContext – error branches', () 
   });
 
   test('should catch missing method on turnCtx and dispatch SYSTEM_ERROR_OCCURRED_ID', async () => {
-    processingState['_isProcessing'] = true;
+    processingState.startProcessing();
     const actor = new MockActor('actorF');
     const mockTurnContext = {
       getLogger: () => mockLogger,
@@ -473,7 +473,7 @@ describe('ProcessingCommandState._getServiceFromContext – error branches', () 
       )
     ).rejects.toThrow(ServiceLookupError);
     // _isProcessing should be set to false
-    expect(processingState['_isProcessing']).toBe(false);
+    expect(processingState.isProcessing).toBe(false);
     // SYSTEM_ERROR_OCCURRED_ID dispatched via handler.safeEventDispatcher
     expect(spyDispatch).toHaveBeenCalledWith(
       SYSTEM_ERROR_OCCURRED_ID,
@@ -488,7 +488,7 @@ describe('ProcessingCommandState._getServiceFromContext – error branches', () 
   });
 
   test('should catch service method returning null or undefined and dispatch SYSTEM_ERROR_OCCURRED_ID', async () => {
-    processingState['_isProcessing'] = true;
+    processingState.startProcessing();
     const actor = new MockActor('actorG');
     // Create a single eventDispatcher on turnCtx
     const mockEventDispatcher = {
@@ -511,7 +511,7 @@ describe('ProcessingCommandState._getServiceFromContext – error branches', () 
         actor.id
       )
     ).rejects.toThrow(ServiceLookupError);
-    expect(processingState['_isProcessing']).toBe(false);
+    expect(processingState.isProcessing).toBe(false);
     const spyDispatch = mockEventDispatcher.dispatch;
     expect(spyDispatch).toHaveBeenCalledWith(
       SYSTEM_ERROR_OCCURRED_ID,

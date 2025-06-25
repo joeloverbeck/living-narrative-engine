@@ -16,44 +16,84 @@ describe('processingErrorUtils', () => {
   });
 
   test('resetProcessingFlags uses guard when present', () => {
-    const owner = { _isProcessing: true };
+    const owner = {
+      _flag: true,
+      _setProcessing(val) {
+        this._flag = val;
+      },
+      get isProcessing() {
+        return this._flag;
+      },
+    };
     owner._processingGuard = new ProcessingGuard(owner);
     const spy = jest.spyOn(owner._processingGuard, 'finish');
     const was = resetProcessingFlags(owner);
     expect(was).toBe(true);
     expect(spy).toHaveBeenCalled();
-    expect(owner._isProcessing).toBe(false);
+    expect(owner.isProcessing).toBe(false);
   });
 
   test('resetProcessingFlags toggles flag directly when guard missing', () => {
-    const owner = { _isProcessing: true };
+    const owner = {
+      _flag: true,
+      _setProcessing(val) {
+        this._flag = val;
+      },
+      get isProcessing() {
+        return this._flag;
+      },
+    };
     const was = resetProcessingFlags(owner);
     expect(was).toBe(true);
-    expect(owner._isProcessing).toBe(false);
+    expect(owner.isProcessing).toBe(false);
   });
 
   test('finishProcessing uses guard when present', () => {
-    const owner = { _isProcessing: true };
+    const owner = {
+      _flag: true,
+      _setProcessing(val) {
+        this._flag = val;
+      },
+      get isProcessing() {
+        return this._flag;
+      },
+    };
     owner._processingGuard = new ProcessingGuard(owner);
     const spy = jest.spyOn(owner._processingGuard, 'finish');
     finishProcessing(owner);
     expect(spy).toHaveBeenCalled();
-    expect(owner._isProcessing).toBe(false);
+    expect(owner.isProcessing).toBe(false);
   });
 
   test('finishProcessing toggles flag directly when guard missing', () => {
-    const owner = { _isProcessing: true };
+    const owner = {
+      _flag: true,
+      _setProcessing(val) {
+        this._flag = val;
+      },
+      get isProcessing() {
+        return this._flag;
+      },
+    };
     finishProcessing(owner);
-    expect(owner._isProcessing).toBe(false);
+    expect(owner.isProcessing).toBe(false);
   });
 
   test('ProcessingGuard.start and finishProcessing sequence toggles flag', () => {
-    const owner = { _isProcessing: false };
+    const owner = {
+      _flag: false,
+      _setProcessing(val) {
+        this._flag = val;
+      },
+      get isProcessing() {
+        return this._flag;
+      },
+    };
     owner._processingGuard = new ProcessingGuard(owner);
     owner._processingGuard.start();
-    expect(owner._isProcessing).toBe(true);
+    expect(owner.isProcessing).toBe(true);
     finishProcessing(owner);
-    expect(owner._isProcessing).toBe(false);
+    expect(owner.isProcessing).toBe(false);
   });
 
   test('resolveLogger uses context logger when available', () => {

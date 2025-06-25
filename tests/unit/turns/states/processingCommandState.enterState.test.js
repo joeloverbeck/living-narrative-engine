@@ -189,10 +189,10 @@ describe('ProcessingCommandState', () => {
           }
           if (
             processingState &&
-            processingState['_isProcessing'] &&
+            processingState.isProcessing &&
             oldState === processingState
           ) {
-            processingState['_isProcessing'] = false;
+            processingState.finishProcessing();
           }
           return Promise.resolve();
         }),
@@ -281,7 +281,7 @@ describe('ProcessingCommandState', () => {
         .spyOn(processingState, '_processCommandInternal')
         .mockImplementation(async () => {
           resolveProcessInternal();
-          processingState['_isProcessing'] = false;
+          processingState.finishProcessing();
           return Promise.resolve();
         });
 
@@ -313,7 +313,7 @@ describe('ProcessingCommandState', () => {
       );
 
       await new Promise(process.nextTick);
-      expect(processingState['_isProcessing']).toBe(false);
+      expect(processingState.isProcessing).toBe(false);
     }, 10000);
 
     it('should handle null turn context on entry and use handler reset', async () => {
@@ -330,7 +330,7 @@ describe('ProcessingCommandState', () => {
       );
       expect(mockHandler.requestIdleStateTransition).toHaveBeenCalled();
       expect(processCommandInternalSpy).not.toHaveBeenCalled();
-      expect(processingState['_isProcessing']).toBe(false);
+      expect(processingState.isProcessing).toBe(false);
     });
 
     it('should use constructor-passed ITurnAction if it exists, overriding context action', async () => {
