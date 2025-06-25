@@ -1,7 +1,7 @@
 // --- Type Imports ---
-/** @typedef {import('../entities/entityManager.js').default} EntityManager */
-/** @typedef {import('../interfaces/IWorldContext.js').default} IWorldContext */
-/** @typedef {import('../data/gameDataRepository.js').default} GameDataRepository */
+/** @typedef {import('../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
+/** @typedef {import('../interfaces/IWorldContext.js').IWorldContext} IWorldContext */
+/** @typedef {import('../interfaces/IGameDataRepository.js').IGameDataRepository} IGameDataRepository */
 /** @typedef {import('../events/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
 /** @typedef {import('../../data/schemas/entity-definition.schema.json').EntityDefinition} EntityDefinition */
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
@@ -9,7 +9,7 @@
 /** @typedef {import('../entities/entityDefinition.js').default} EntityDefinition */
 /** @typedef {import('../entities/entityInstance.js').default} EntityInstance */
 /** @typedef {import('../interfaces/IDataRegistry.js').IDataRegistry} IDataRegistry */
-/** @typedef {import('../scopeDsl/scopeRegistry.js').default} ScopeRegistry */
+/** @typedef {import('../interfaces/IScopeRegistry.js').IScopeRegistry} IScopeRegistry */
 
 // --- Library Imports ---
 
@@ -34,17 +34,17 @@ import { dispatchWithLogging } from '../utils/eventDispatchUtils.js';
  * through event listening, so this service no longer directly manages the spatial index.
  */
 class WorldInitializer {
-  /** @type {EntityManager} */
+  /** @type {IEntityManager} */
   #entityManager;
   /** @type {IWorldContext} */
   #worldContext;
-  /** @type {GameDataRepository} */
+  /** @type {IGameDataRepository} */
   #repository;
   /** @type {ValidatedEventDispatcher} */
   #validatedEventDispatcher;
   /** @type {ILogger} */
   #logger;
-  /** @type {ScopeRegistry} */
+  /** @type {IScopeRegistry} */
   #scopeRegistry;
 
   /**
@@ -88,12 +88,12 @@ class WorldInitializer {
    * Creates an instance of WorldInitializer.
    *
    * @param {object} dependencies
-   * @param {EntityManager} dependencies.entityManager
+   * @param {IEntityManager} dependencies.entityManager
    * @param {IWorldContext} dependencies.worldContext
-   * @param {GameDataRepository} dependencies.gameDataRepository
+   * @param {IGameDataRepository} dependencies.gameDataRepository
    * @param {ValidatedEventDispatcher} dependencies.validatedEventDispatcher
    * @param {ILogger} dependencies.logger
-   * @param {ScopeRegistry} dependencies.scopeRegistry
+   * @param {IScopeRegistry} dependencies.scopeRegistry
    * @throws {Error} If any required dependency is missing or invalid.
    */
   constructor({
@@ -104,17 +104,37 @@ class WorldInitializer {
     logger,
     scopeRegistry,
   }) {
-    if (!entityManager)
-      throw new Error('WorldInitializer requires an EntityManager.');
+    if (
+      !entityManager ||
+      typeof entityManager.createEntityInstance !== 'function'
+    )
+      throw new Error(
+        'WorldInitializer requires an IEntityManager with createEntityInstance().'
+      );
     if (!worldContext)
       throw new Error('WorldInitializer requires a WorldContext.');
-    if (!gameDataRepository)
-      throw new Error('WorldInitializer requires a GameDataRepository.');
-    if (!validatedEventDispatcher)
-      throw new Error('WorldInitializer requires a ValidatedEventDispatcher.');
-    if (!logger) throw new Error('WorldInitializer requires an ILogger.');
-    if (!scopeRegistry)
-      throw new Error('WorldInitializer requires a ScopeRegistry.');
+    if (
+      !gameDataRepository ||
+      typeof gameDataRepository.getWorld !== 'function' ||
+      typeof gameDataRepository.getEntityInstanceDefinition !== 'function' ||
+      typeof gameDataRepository.get !== 'function'
+    )
+      throw new Error(
+        'WorldInitializer requires an IGameDataRepository with getWorld(), getEntityInstanceDefinition(), and get().'
+      );
+    if (
+      !validatedEventDispatcher ||
+      typeof validatedEventDispatcher.dispatch !== 'function'
+    )
+      throw new Error(
+        'WorldInitializer requires a ValidatedEventDispatcher with dispatch().'
+      );
+    if (!logger || typeof logger.debug !== 'function')
+      throw new Error('WorldInitializer requires an ILogger.');
+    if (!scopeRegistry || typeof scopeRegistry.initialize !== 'function')
+      throw new Error(
+        'WorldInitializer requires an IScopeRegistry with initialize().'
+      );
 
     this.#entityManager = entityManager;
     this.#worldContext = worldContext;
