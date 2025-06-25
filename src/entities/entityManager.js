@@ -114,7 +114,7 @@ class EntityManager extends IEntityManager {
   #componentMutationService;
 
   /** @type {ErrorTranslator} @private */
-  #errorTranslator;
+  #errorTranslator; // eslint-disable-line no-unused-private-class-members
 
   /** @type {Map<string, EntityDefinition>} @private */
   #definitionCache;
@@ -149,6 +149,10 @@ class EntityManager extends IEntityManager {
    * @param {Function}             [deps.clonerFactory] - Factory for the cloner.
    * @param {IDefaultComponentPolicy} [deps.defaultPolicy] - Default component injection policy.
    * @param {Function}             [deps.defaultPolicyFactory] - Factory for the default component policy.
+   * @param {EntityRepositoryAdapter} [deps.entityRepository] - EntityRepositoryAdapter instance.
+   * @param {ComponentMutationService} [deps.componentMutationService] - ComponentMutationService instance.
+   * @param {ErrorTranslator} [deps.errorTranslator] - ErrorTranslator instance.
+   * @param {EntityFactory} [deps.entityFactory] - EntityFactory instance.
    * @throws {Error} If any dependency is missing or malformed.
    */
   constructor({
@@ -164,6 +168,10 @@ class EntityManager extends IEntityManager {
     clonerFactory,
     defaultPolicy,
     defaultPolicyFactory,
+    entityRepository,
+    componentMutationService,
+    errorTranslator,
+    entityFactory,
   } = {}) {
     super();
 
@@ -224,33 +232,44 @@ class EntityManager extends IEntityManager {
     this.#cloner = cloner;
     this.#defaultPolicy = defaultPolicy;
 
-    // Initialize services
-    this.#entityRepository = new EntityRepositoryAdapter({
-      logger: this.#logger,
-    });
-
-    this.#componentMutationService = new ComponentMutationService({
-      entityRepository: this.#entityRepository,
+    const serviceDefaults = {
+      entityRepository: new EntityRepositoryAdapter({
+        logger: this.#logger,
+      }),
+    };
+    serviceDefaults.componentMutationService = new ComponentMutationService({
+      entityRepository: serviceDefaults.entityRepository,
       validator: this.#validator,
       logger: this.#logger,
       eventDispatcher: this.#eventDispatcher,
       cloner: this.#cloner,
     });
-
-    this.#errorTranslator = new ErrorTranslator({
+    serviceDefaults.errorTranslator = new ErrorTranslator({
       logger: this.#logger,
     });
-
-    this.#definitionCache = new Map();
-
-    // Initialize the EntityFactory
-    this.#factory = new EntityFactory({
+    serviceDefaults.entityFactory = new EntityFactory({
       validator: this.#validator,
       logger: this.#logger,
       idGenerator: this.#idGenerator,
       cloner: this.#cloner,
       defaultPolicy: {}, // Default component policy
     });
+
+    this.#entityRepository = resolveDep(
+      entityRepository,
+      serviceDefaults.entityRepository
+    );
+    this.#componentMutationService = resolveDep(
+      componentMutationService,
+      serviceDefaults.componentMutationService
+    );
+    this.#errorTranslator = resolveDep(
+      errorTranslator,
+      serviceDefaults.errorTranslator
+    );
+    this.#factory = resolveDep(entityFactory, serviceDefaults.entityFactory);
+
+    this.#definitionCache = new Map();
 
     this.#logger.debug('EntityManager initialised.');
   }
