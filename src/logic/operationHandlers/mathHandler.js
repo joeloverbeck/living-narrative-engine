@@ -7,6 +7,7 @@ import BaseOperationHandler from './baseOperationHandler.js';
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 import { tryWriteContextVariable } from '../../utils/contextVariableUtils.js';
 import { assertParamsObject } from '../../utils/handlerUtils/paramsUtils.js';
+import { ensureEvaluationContext } from '../../utils/evaluationContextUtils.js';
 
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 
@@ -148,6 +149,10 @@ class MathHandler extends BaseOperationHandler {
     }
     if (!expression || typeof expression !== 'object') {
       log.warn('MATH: "expression" must be an object.');
+      return;
+    }
+
+    if (!ensureEvaluationContext(executionContext, this.#dispatcher, log)) {
       return;
     }
 

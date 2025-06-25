@@ -6,6 +6,7 @@
 import BaseOperationHandler from './baseOperationHandler.js';
 import { tryWriteContextVariable } from '../../utils/contextVariableUtils.js';
 import { assertParamsObject } from '../../utils/handlerUtils/indexUtils.js';
+import { ensureEvaluationContext } from '../../utils/evaluationContextUtils.js';
 
 /**
  * @implements {OperationHandler}
@@ -25,6 +26,9 @@ class GetTimestampHandler extends BaseOperationHandler {
     if (!assertParamsObject(params, logger, 'GET_TIMESTAMP')) return;
 
     const resultVariable = params.result_variable.trim();
+    if (!ensureEvaluationContext(executionContext, undefined, logger)) {
+      return;
+    }
     const timestamp = new Date().toISOString();
     const result = tryWriteContextVariable(
       resultVariable,

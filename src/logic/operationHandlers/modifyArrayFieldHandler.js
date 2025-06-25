@@ -15,6 +15,7 @@ import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 import { tryWriteContextVariable } from '../../utils/contextVariableUtils.js';
 import { assertParamsObject } from '../../utils/handlerUtils/indexUtils.js';
 import ComponentOperationHandler from './componentOperationHandler.js';
+import { ensureEvaluationContext } from '../../utils/evaluationContextUtils.js';
 import {
   advancedArrayModify,
   ARRAY_MODIFICATION_MODES,
@@ -257,6 +258,11 @@ class ModifyArrayFieldHandler extends ComponentOperationHandler {
 
     // 6. Store Result if requested
     if (result_variable) {
+      if (
+        !ensureEvaluationContext(executionContext, this.#dispatcher, logger)
+      ) {
+        return;
+      }
       const res = tryWriteContextVariable(
         result_variable,
         modification.result,
