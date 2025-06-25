@@ -44,20 +44,15 @@ export default class ContentPhase extends LoaderPhase {
   async execute(ctx) {
     logPhaseStart(this.logger, 'ContentPhase');
     try {
+      // Clone totals up-front so mutations do not affect the previous context
+      const nextTotals = cloneTotals(ctx.totals);
+      const next = { ...ctx, totals: nextTotals };
+
       await this.manager.loadContent(
-        ctx.finalModOrder,
-        ctx.manifests,
-        ctx.totals
+        next.finalModOrder,
+        next.manifests,
+        next.totals
       );
-
-      // Create a new object reference for totals to ensure immutability downstream.
-      const totalsSnapshot = cloneTotals(ctx.totals);
-
-      // Create new frozen context with modifications
-      const next = {
-        ...ctx,
-        totals: totalsSnapshot,
-      };
 
       return Object.freeze(next);
     } catch (e) {

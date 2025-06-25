@@ -67,7 +67,7 @@ describe('ManifestPhase', () => {
   });
 
   describe('execute', () => {
-    it('should successfully process manifests and update context', async () => {
+    it('should successfully process manifests and leave previous ctx unchanged', async () => {
       // Arrange
       const expectedResult = {
         finalModOrder: ['core', 'modA', 'modB'],
@@ -75,6 +75,9 @@ describe('ManifestPhase', () => {
         loadedManifestsMap: new Map([['core', { id: 'core' }]]),
       };
       mockProcessor.processManifests.mockResolvedValue(expectedResult);
+      Object.freeze(mockLoadContext);
+      Object.freeze(mockLoadContext.requestedMods);
+      Object.freeze(mockLoadContext.totals);
 
       // Act
       const result = await manifestPhase.execute(mockLoadContext);
@@ -95,6 +98,10 @@ describe('ManifestPhase', () => {
         expectedResult.incompatibilityCount
       );
       expect(result.manifests).toBe(expectedResult.loadedManifestsMap);
+
+      // Original context remains unchanged
+      expect(mockLoadContext.finalModOrder).toEqual([]);
+      expect(mockLoadContext.incompatibilities).toBe(0);
 
       // Verify the result is frozen
       expect(() => {

@@ -7,6 +7,7 @@ import {
   ModsLoaderErrorCode,
 } from '../../errors/modsLoaderPhaseError.js';
 import { logPhaseStart } from '../../utils/logPhaseStart.js';
+import { cloneTotals } from '../../utils/cloneTotals.js';
 
 /**
  * @typedef {import('../LoadContext.js').LoadContext} LoadContext
@@ -51,14 +52,18 @@ export default class WorldPhase extends LoaderPhase {
   async execute(ctx) {
     logPhaseStart(this.logger, 'WorldPhase');
     try {
+      // Clone totals up-front to avoid mutating prior context
+      const nextTotals = cloneTotals(ctx.totals);
+      const next = { ...ctx, totals: nextTotals };
+
       await this.worldLoader.loadWorlds(
-        ctx.finalModOrder,
-        ctx.manifests,
-        ctx.totals
+        next.finalModOrder,
+        next.manifests,
+        next.totals
       );
 
-      // Return frozen context (no modifications in this phase)
-      return Object.freeze({ ...ctx });
+      // Return frozen context (no modifications except totals)
+      return Object.freeze(next);
     } catch (e) {
       throw new ModsLoaderPhaseError(
         ModsLoaderErrorCode.WORLD,
