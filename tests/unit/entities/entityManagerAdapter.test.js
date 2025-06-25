@@ -74,6 +74,7 @@ describe('EntityManagerAdapter', () => {
       logger,
       entityManager: adapter,
       playtimeTracker,
+      safeEventDispatcher: { dispatch: jest.fn() },
     });
 
     expect(restorer).toBeInstanceOf(GameStateRestorer);

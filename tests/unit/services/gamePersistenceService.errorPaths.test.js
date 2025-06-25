@@ -73,6 +73,7 @@ describe('GamePersistenceService error paths', () => {
       logger,
       entityManager,
       playtimeTracker,
+      safeEventDispatcher,
     });
     service = new GamePersistenceService({
       logger,

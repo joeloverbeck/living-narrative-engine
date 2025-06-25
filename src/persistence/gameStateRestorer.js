@@ -9,6 +9,8 @@ import {
   PersistenceError,
   PersistenceErrorCodes,
 } from './persistenceErrors.js';
+import { safeDispatchError } from '../utils/safeDispatchErrorUtils.js';
+import { DefinitionNotFoundError } from '../errors/definitionNotFoundError.js';
 
 /**
  * @typedef {import('../interfaces/coreServices.js').ILogger} ILogger
@@ -29,6 +31,8 @@ class GameStateRestorer extends BaseService {
   #entityManager;
   /** @type {PlaytimeTracker} */
   #playtimeTracker;
+  /** @type {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} */
+  #safeEventDispatcher;
 
   /**
    * Creates a new GameStateRestorer instance.
@@ -37,8 +41,10 @@ class GameStateRestorer extends BaseService {
    * @param {ILogger} deps.logger - Logging service.
    * @param {EntityManager} deps.entityManager - Entity manager.
    * @param {PlaytimeTracker} deps.playtimeTracker - Playtime tracker.
+   * @param {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} deps.safeEventDispatcher
+   *  Dispatcher used for SYSTEM_ERROR_OCCURRED_ID events.
    */
-  constructor({ logger, entityManager, playtimeTracker }) {
+  constructor({ logger, entityManager, playtimeTracker, safeEventDispatcher }) {
     super();
     this.#logger = this._init('GameStateRestorer', logger, {
       entityManager: {
@@ -49,9 +55,14 @@ class GameStateRestorer extends BaseService {
         value: playtimeTracker,
         requiredMethods: ['setAccumulatedPlaytime'],
       },
+      safeEventDispatcher: {
+        value: safeEventDispatcher,
+        requiredMethods: ['dispatch'],
+      },
     });
     this.#entityManager = entityManager;
     this.#playtimeTracker = playtimeTracker;
+    this.#safeEventDispatcher = safeEventDispatcher;
     this.#logger.debug('GameStateRestorer: Instance created.');
   }
 
@@ -82,6 +93,19 @@ class GameStateRestorer extends BaseService {
         );
       }
     } catch (entityError) {
+      if (entityError instanceof DefinitionNotFoundError) {
+        safeDispatchError(
+          this.#safeEventDispatcher,
+          `GameStateRestorer.restoreGameState: Missing entity definition '${savedEntityData.definitionId}'.`,
+          {
+            instanceId: savedEntityData.instanceId,
+            definitionId: savedEntityData.definitionId,
+            stack: entityError.stack,
+          },
+          this.#logger
+        );
+        throw entityError;
+      }
       this.#logger.warn(
         `GameStateRestorer.restoreGameState: Error during reconstructEntity for instanceId: ${savedEntityData.instanceId}. Error: ${entityError.message}. Skipping.`,
         entityError
@@ -151,7 +175,7 @@ class GameStateRestorer extends BaseService {
    * Restores all serialized entities from save data.
    *
    * @param {any[]} entitiesArray - Array of serialized entity records.
-   * @returns {void}
+   * @returns {{success: boolean, error?: PersistenceError} | null}
    * @private
    */
   #restoreEntities(entitiesArray) {
@@ -162,14 +186,31 @@ class GameStateRestorer extends BaseService {
       );
       return createPersistenceSuccess(null);
     }
-    for (const savedEntityData of entitiesToRestore) {
-      if (!savedEntityData?.instanceId || !savedEntityData?.definitionId) {
-        this.#logger.warn(
-          `GameStateRestorer.restoreGameState: Invalid entity data in save (missing instanceId or definitionId). Skipping. Data: ${JSON.stringify(savedEntityData)}`
-        );
-        continue;
+    try {
+      for (const savedEntityData of entitiesToRestore) {
+        if (!savedEntityData?.instanceId || !savedEntityData?.definitionId) {
+          this.#logger.warn(
+            `GameStateRestorer.restoreGameState: Invalid entity data in save (missing instanceId or definitionId). Skipping. Data: ${JSON.stringify(savedEntityData)}`
+          );
+          continue;
+        }
+        this.#restoreEntity(savedEntityData);
       }
-      this.#restoreEntity(savedEntityData);
+    } catch (err) {
+      const errorMsg =
+        err instanceof DefinitionNotFoundError
+          ? `Missing entity definition during restore: ${err.definitionId}`
+          : err instanceof Error
+            ? err.message
+            : String(err);
+      this.#logger.error(
+        `GameStateRestorer.restoreGameState: ${errorMsg}`,
+        err instanceof Error ? err : undefined
+      );
+      return createPersistenceFailure(
+        PersistenceErrorCodes.UNEXPECTED_ERROR,
+        errorMsg
+      );
     }
     this.#logger.debug(
       'GameStateRestorer.restoreGameState: Entity restoration complete.'

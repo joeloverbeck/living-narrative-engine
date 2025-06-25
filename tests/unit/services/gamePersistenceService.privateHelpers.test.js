@@ -30,6 +30,7 @@ function makeService() {
     logger,
     entityManager,
     playtimeTracker,
+    safeEventDispatcher: { dispatch: jest.fn() },
   });
 
   const service = new GamePersistenceService({

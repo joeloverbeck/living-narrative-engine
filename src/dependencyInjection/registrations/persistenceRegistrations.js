@@ -160,6 +160,7 @@ export function registerPersistence(container) {
         logger: c.resolve(tokens.ILogger),
         entityManager: c.resolve(tokens.IEntityManager),
         playtimeTracker: c.resolve(tokens.PlaytimeTracker),
+        safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
       }),
     });
   });

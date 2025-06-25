@@ -86,6 +86,7 @@ describe('Persistence service constructor validation', () => {
       logger: createMockLogger(),
       entityManager: { clearAll: jest.fn(), reconstructEntity: jest.fn() },
       playtimeTracker: { setAccumulatedPlaytime: jest.fn() },
+      safeEventDispatcher: { dispatch: jest.fn() },
     });
     expect(restorer).toBeInstanceOf(BaseService);
   });

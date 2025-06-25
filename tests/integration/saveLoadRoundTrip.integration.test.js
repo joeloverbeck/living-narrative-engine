@@ -141,6 +141,7 @@ describe('Persistence round-trip', () => {
       logger,
       entityManager,
       playtimeTracker,
+      safeEventDispatcher: { dispatch: jest.fn() },
     });
     const manualSaveCoordinator = new ManualSaveCoordinator({
       logger,

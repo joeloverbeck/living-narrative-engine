@@ -89,6 +89,7 @@ describe('GamePersistenceService edge cases', () => {
       logger,
       entityManager,
       playtimeTracker,
+      safeEventDispatcher,
     });
     service = new GamePersistenceService({
       logger,
