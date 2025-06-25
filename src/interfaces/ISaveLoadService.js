@@ -23,9 +23,6 @@
  * @property {Array<{modId: string, version: string, checksum?: string}>} modManifest.activeMods - List of active mods with their IDs, versions, and optional checksums. [cite: 500, 943]
  * @property {object} gameState - The core payload containing the dynamic state of the game. [cite: 504, 948]
  * @property {Array<object>} gameState.entities - Array of entity instances. [cite: 505, 949]
- * @property {object} gameState.playerState - Global player-specific data. [cite: 508, 952]
- * @property {object} gameState.worldState - Global world data. [cite: 509, 953]
- * @property {object} gameState.engineInternals - Engine-specific state. [cite: 511, 954]
  * @property {object} integrityChecks - Contains data for verifying save file integrity. [cite: 514, 956]
  * @property {string} integrityChecks.gameStateChecksum - Checksum of the serialized gameState section. [cite: 515, 956]
  */
