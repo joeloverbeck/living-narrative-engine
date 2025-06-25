@@ -21,6 +21,7 @@ import { setByPath } from '../utils/objectPathUtils.js';
  * @class ModifyContextArrayHandler
  * @description Handles the 'MODIFY_CONTEXT_ARRAY' operation. It provides direct,
  * safe modification of an array stored as a context variable by operating on a clone.
+ * @implements {OperationHandler}
  */
 class ModifyContextArrayHandler {
   /** @type {ILogger} */

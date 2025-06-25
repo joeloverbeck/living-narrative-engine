@@ -18,6 +18,7 @@ import { assertParamsObject } from '../../utils/handlerUtils/indexUtils.js';
  * @class QueryEntitiesHandler
  * @description Handles the 'QUERY_ENTITIES' operation. It queries for entities based on a set of filters.
  * This implementation supports filtering by location and by component presence.
+ * @implements {OperationHandler}
  */
 class QueryEntitiesHandler extends BaseOperationHandler {
   /** @type {IEntityManager} */

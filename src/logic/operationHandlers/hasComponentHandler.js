@@ -29,6 +29,9 @@ import ComponentOperationHandler from './componentOperationHandler.js';
 // Handler implementation
 // -----------------------------------------------------------------------------
 
+/**
+ * @implements {OperationHandler}
+ */
 class HasComponentHandler extends ComponentOperationHandler {
   /** @type {IEntityManager} */
   #entityManager;
@@ -38,10 +41,7 @@ class HasComponentHandler extends ComponentOperationHandler {
   /**
    * Creates an instance of HasComponentHandler.
    *
-   * @param {object} dependencies - Dependencies object.
-   * @param {IEntityManager} dependencies.entityManager - The entity management service.
-   * @param {ILogger} dependencies.logger - The logging service instance.
-   * @param {ISafeEventDispatcher} dependencies.safeEventDispatcher - Dispatcher used for error events.
+   * @param {EntityOperationDeps} dependencies - Dependencies object.
    * @throws {Error} If required dependencies are missing or invalid.
    */
   constructor({ entityManager, logger, safeEventDispatcher }) {

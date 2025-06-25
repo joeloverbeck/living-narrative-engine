@@ -28,6 +28,9 @@ const EVENT_ID = 'core:perceptible_event';
  * @property {boolean=} log_entry           - If true, also log via AddPerceptionLogEntryHandler.
  */
 
+/**
+ * @implements {OperationHandler}
+ */
 class DispatchPerceptibleEventHandler {
   /** @type {ISafeEventDispatcher} */
   #dispatcher;

@@ -40,10 +40,16 @@ import { setByPath } from '../utils/objectPathUtils.js';
  */
 
 // ── handler ───────────────────────────────────────────────────────────────────
+/**
+ * @implements {OperationHandler}
+ */
 class ModifyComponentHandler extends ComponentOperationHandler {
   /** @type {EntityManager} */ #entityManager;
   /** @type {ISafeEventDispatcher} */ #dispatcher;
 
+  /**
+   * @param {EntityOperationDeps} deps - Dependencies object
+   */
   constructor({ entityManager, logger, safeEventDispatcher }) {
     super('ModifyComponentHandler', {
       logger: { value: logger },

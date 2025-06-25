@@ -108,6 +108,7 @@ export function evaluateExpression(expr, ctx, logger, dispatcher) {
 /**
  * @class MathHandler
  * @description Evaluates a recursive math expression and stores the numeric result in a context variable.
+ * @implements {OperationHandler}
  */
 class MathHandler extends BaseOperationHandler {
   /** @type {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} */

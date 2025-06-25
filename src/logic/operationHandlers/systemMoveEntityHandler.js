@@ -19,6 +19,9 @@ import BaseOperationHandler from './baseOperationHandler.js';
 
 const OPERATION_ID = 'SYSTEM_MOVE_ENTITY';
 
+/**
+ * @implements {OperationHandler}
+ */
 class SystemMoveEntityHandler extends BaseOperationHandler {
   /** @type {ILogger} */ #logger;
   /** @type {EntityManager} */ #entityManager;

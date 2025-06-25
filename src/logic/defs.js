@@ -7,6 +7,7 @@
 /** @typedef {import('../entities/entity.js').default} Entity */
 /** @typedef {import('../data/gameDataRepository.js').default} GameDataRepository */ // <<< CORRECTED PATH based on provided service implementation
 /** @typedef {import('./services/closenessCircleService.js')} ClosenessCircleService */
+/** @typedef {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 
 // --- Existing Type Definitions (Assuming these are up-to-date) ---
 /**
@@ -71,12 +72,54 @@
  */
 
 /**
- * @typedef {(params: OperationParams, context: ExecutionContext) => void | Promise<void>} OperationHandler
- * Defines the contract for a function responsible for executing the logic
- * associated with a specific operation type (e.g., 'MODIFY_COMPONENT', 'DISPATCH_EVENT', 'LOG').
- * Handlers receive the specific parameters for the operation instance and the
- * broader execution context containing core services and evaluation data.
- * Handlers can be synchronous (`void`) or asynchronous (`Promise<void>`).
+ * @typedef {object} OperationHandler
+ * Defines the interface contract for operation handler classes.
+ * Each handler must implement an execute method that processes operation parameters
+ * within the provided execution context.
+ * @property {function(OperationParams, ExecutionContext): void | Promise<void>} execute
+ * The main method that executes the operation logic. Receives the specific parameters
+ * for the operation instance and the broader execution context containing core
+ * services and evaluation data. Can be synchronous (void) or asynchronous (Promise<void>).
+ */
+
+// --- Common Dependency Type Definitions ---
+
+/**
+ * @typedef {object} BaseHandlerDeps
+ * Common dependencies required by most operation handlers.
+ * @property {ILogger} logger - The logging service instance.
+ */
+
+/**
+ * @typedef {object} EntityOperationDeps
+ * Dependencies for handlers that work with entities and components.
+ * @property {EntityManager} entityManager - The entity management service.
+ * @property {ILogger} logger - The logging service instance.
+ * @property {ISafeEventDispatcher} safeEventDispatcher - Safe event dispatcher for error handling.
+ */
+
+/**
+ * @typedef {object} EventDispatchDeps
+ * Dependencies for handlers that dispatch events.
+ * @property {ValidatedEventDispatcher} validatedEventDispatcher - The validated event dispatcher.
+ * @property {ILogger} logger - The logging service instance.
+ * @property {ISafeEventDispatcher} safeEventDispatcher - Safe event dispatcher for error handling.
+ */
+
+/**
+ * @typedef {object} ContextOperationDeps
+ * Dependencies for handlers that modify execution context variables.
+ * @property {ILogger} logger - The logging service instance.
+ * @property {ISafeEventDispatcher} safeEventDispatcher - Safe event dispatcher for error handling.
+ */
+
+/**
+ * @typedef {object} ClosenessCircleDeps
+ * Dependencies for handlers that work with closeness circles.
+ * @property {EntityManager} entityManager - The entity management service.
+ * @property {ClosenessCircleService} closenessCircleService - The closeness circle service.
+ * @property {ILogger} logger - The logging service instance.
+ * @property {ISafeEventDispatcher} safeEventDispatcher - Safe event dispatcher for error handling.
  */
 
 // Ensure this file doesn't export anything by default if it's just for type definitions
