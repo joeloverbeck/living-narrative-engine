@@ -69,7 +69,7 @@ describe('ScopeLoader', () => {
   });
 
   // These are the unit tests that rely on the mocked implementation.
-  describe('parseContent (Unit)', () => {
+  describe('parseScopeFile (Unit)', () => {
     test('should delegate parsing to scopeDefinitionParser utility', () => {
       const content = `inventory_items := actor.inventory.items[]`;
       const filePath = 'test.scope';
@@ -79,7 +79,7 @@ describe('ScopeLoader', () => {
 
       mockParseScopeDefinitions.mockReturnValue(expectedMap);
 
-      const result = loader.parseContent(content, filePath);
+      const result = loader.parseScopeFile(content, filePath);
 
       expect(mockParseScopeDefinitions).toHaveBeenCalledWith(content, filePath);
       expect(result).toBe(expectedMap);
@@ -155,8 +155,8 @@ describe('ScopeLoader', () => {
         equipment_items := actor.equipment.equipped[]
         followers := actor.followers[]
       `;
-      // loader.parseContent now calls the real parser via the mock's implementation
-      const result = loader.parseContent(content, 'test.scope');
+      // loader.parseScopeFile now calls the real parser via the mock's implementation
+      const result = loader.parseScopeFile(content, 'test.scope');
       expect(Object.fromEntries(result)).toEqual({
         inventory_items: 'actor.inventory.items[]',
         equipment_items: 'actor.equipment.equipped[]',
@@ -171,7 +171,7 @@ describe('ScopeLoader', () => {
 
         equipment_items := actor.equipment.equipped[]
       `;
-      const result = loader.parseContent(content, 'test.scope');
+      const result = loader.parseScopeFile(content, 'test.scope');
       expect(Object.fromEntries(result)).toEqual({
         inventory_items: 'actor.inventory.items[]',
         equipment_items: 'actor.equipment.equipped[]',
@@ -181,14 +181,14 @@ describe('ScopeLoader', () => {
     test('should throw error for empty file', () => {
       const content = `// Only comments`;
       expect(() => {
-        loader.parseContent(content, 'test.scope');
+        loader.parseScopeFile(content, 'test.scope');
       }).toThrow('Scope file is empty or contains only comments: test.scope');
     });
 
     test('should throw error for invalid format', () => {
       const content = `inventory_items = actor.inventory.items[]`;
       expect(() => {
-        loader.parseContent(content, 'test.scope');
+        loader.parseScopeFile(content, 'test.scope');
       }).toThrow(
         'Invalid scope definition format in test.scope: "inventory_items = actor.inventory.items[]". Expected "name := dsl_expression"'
       );
@@ -200,7 +200,7 @@ describe('ScopeLoader', () => {
       // The real parser will throw a ScopeSyntaxError, so we don't need to mock it
       // to throw a generic error anymore. The beforeAll hook has already set it to the real implementation.
       expect(() => {
-        loader.parseContent(content, 'test.scope');
+        loader.parseScopeFile(content, 'test.scope');
       }).toThrow(
         'Invalid DSL expression in test.scope for scope "inventory_items":'
       );
