@@ -4,6 +4,7 @@ import { getModuleLogger } from './loggerUtils.js';
 import { safeDispatchError } from './safeDispatchErrorUtils.js';
 import { resolveSafeDispatcher } from './dispatcherUtils.js';
 import { isNonBlankString } from './textUtils.js';
+import { safeCall } from './safeExecutionUtils.js';
 
 /**
  * Validate that the context exists and the variable name is valid.
@@ -49,12 +50,10 @@ function _validateContextAndName(variableName, executionContext) {
  * @returns {{success: boolean, error?: Error}} Result of the assignment.
  */
 export function setContextValue(context, key, value) {
-  try {
+  const { success, error } = safeCall(() => {
     context[key] = value;
-    return { success: true };
-  } catch (e) {
-    return { success: false, error: e };
-  }
+  });
+  return success ? { success: true } : { success: false, error };
 }
 
 /**

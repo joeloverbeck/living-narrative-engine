@@ -118,6 +118,4 @@ export function validateMacroExpansion(actions, registry, logger) {
  * @param {import('../interfaces/coreServices.js').ILogger} [logger] - Optional logger for warnings.
  * @returns {object[]} A new array with all macros expanded.
  */
-export function expandActionArray(actions, registry, logger) {
-  return _expandActions(actions, registry, logger);
-}
+export const expandActionArray = expandMacros;
