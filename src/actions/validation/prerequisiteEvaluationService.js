@@ -178,7 +178,7 @@ export class PrerequisiteEvaluationService extends BaseService {
     let pass;
     try {
       const originalLogic = prereqObject.logic;
-      trace?.addLog('info', `Evaluating rule.`, source, { logic: originalLogic });
+      trace?.addLog('info', `Evaluating rule.`, source, { logic: originalLogic || {} });
 
       const resolvedLogic = this._resolveConditionReferences(
         originalLogic,
@@ -186,7 +186,7 @@ export class PrerequisiteEvaluationService extends BaseService {
       );
 
       if (JSON.stringify(originalLogic) !== JSON.stringify(resolvedLogic)) {
-        trace?.addLog('data', `Condition reference resolved.`, source, { resolvedLogic });
+        trace?.addLog('data', `Condition reference resolved.`, source, { resolvedLogic: resolvedLogic || {} });
       }
 
       this.#logger.debug(
@@ -213,7 +213,7 @@ export class PrerequisiteEvaluationService extends BaseService {
       return false;
     }
 
-    trace?.addLog(pass ? 'success' : 'failure', `Rule evaluation result: ${pass}`, source, { result: pass });
+    trace?.addLog(pass ? 'success' : 'failure', `Rule evaluation result: ${pass}`, source, { result: Boolean(pass) });
 
     if (!pass) {
       this.#logger.debug(
@@ -304,7 +304,9 @@ export class PrerequisiteEvaluationService extends BaseService {
       return false;
     }
 
-    trace?.addLog('data', 'Built prerequisite evaluation context.', source, { context: evaluationContext });
+    trace?.addLog('data', 'Built prerequisite evaluation context.', source, { 
+      context: evaluationContext || {} 
+    });
 
     return this.#evaluateRules(prerequisites, evaluationContext, actionId, trace);
   }

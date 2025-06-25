@@ -172,8 +172,8 @@ export class BaseTurnHandler {
     if (turnContext) {
       if (this._currentActor?.id !== turnContext.getActor()?.id) {
         this.getLogger().debug(
-          `${this.constructor.name}._setCurrentTurnContextInternal: Aligning _currentActor ('${this._currentActor?.id}') with new TurnContext actor ('${
-            turnContext.getActor()?.id
+          `${this.constructor.name}._setCurrentTurnContextInternal: Aligning _currentActor ('${this._currentActor?.id || 'null'}') with new TurnContext actor ('${
+            turnContext.getActor()?.id || 'null'
           }').`
         );
         this._currentActor = turnContext.getActor();
