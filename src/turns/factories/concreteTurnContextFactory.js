@@ -15,11 +15,8 @@ import { TurnContext } from '../context/turnContext.js';
  * @typedef {import('../interfaces/ITurnContext.js').ITurnContext} ITurnContext
  * @typedef {import('../../interfaces/IWorldContext.js').IWorldContext} IWorldContext
  * @typedef {import('../ports/ITurnEndPort.js').ITurnEndPort} ITurnEndPort
- * @typedef {import('../../commands/interfaces/ICommandProcessor.js').ICommandProcessor} ICommandProcessor
- * @typedef {import('../../commands/interfaces/ICommandOutcomeInterpreter.js').ICommandOutcomeInterpreter} ICommandOutcomeInterpreter
  * @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher
  * @typedef {import('../../interfaces/IEntityManager.js').IEntityManager} IEntityManager
- * @typedef {import('../../interfaces/IActionDiscoveryService.js').IActionDiscoveryService} IActionDiscoveryService
  */
 
 /** @typedef {function(Error | null): void} OnEndTurnCallback */
@@ -40,16 +37,10 @@ export class ConcreteTurnContextFactory extends ITurnContextFactory {
   #gameWorldAccess;
   /** @type {ITurnEndPort} */
   #turnEndPort;
-  /** @type {ICommandProcessor} */
-  #commandProcessor;
-  /** @type {ICommandOutcomeInterpreter} */
-  #commandOutcomeInterpreter;
   /** @type {ISafeEventDispatcher} */
   #safeEventDispatcher;
   /** @type {IEntityManager} */
   #entityManager;
-  /** @type {IActionDiscoveryService} */
-  #actionDiscoverySystem;
 
   /**
    * Constructs the factory and caches all necessary dependencies.
@@ -58,21 +49,15 @@ export class ConcreteTurnContextFactory extends ITurnContextFactory {
    * @param {ILogger} dependencies.logger
    * @param {IWorldContext} dependencies.gameWorldAccess
    * @param {ITurnEndPort} dependencies.turnEndPort
-   * @param {ICommandProcessor} dependencies.commandProcessor
-   * @param {ICommandOutcomeInterpreter} dependencies.commandOutcomeInterpreter
    * @param {ISafeEventDispatcher} dependencies.safeEventDispatcher
    * @param {IEntityManager} dependencies.entityManager
-   * @param {IActionDiscoveryService} dependencies.actionDiscoverySystem
    */
   constructor({
     logger,
     gameWorldAccess,
     turnEndPort,
-    commandProcessor,
-    commandOutcomeInterpreter,
     safeEventDispatcher,
     entityManager,
-    actionDiscoverySystem,
   }) {
     super();
     if (!logger)
@@ -83,33 +68,18 @@ export class ConcreteTurnContextFactory extends ITurnContextFactory {
       );
     if (!turnEndPort)
       throw new Error('ConcreteTurnContextFactory: turnEndPort is required.');
-    if (!commandProcessor)
-      throw new Error(
-        'ConcreteTurnContextFactory: commandProcessor is required.'
-      );
-    if (!commandOutcomeInterpreter)
-      throw new Error(
-        'ConcreteTurnContextFactory: commandOutcomeInterpreter is required.'
-      );
     if (!safeEventDispatcher)
       throw new Error(
         'ConcreteTurnContextFactory: safeEventDispatcher is required.'
       );
     if (!entityManager)
       throw new Error('ConcreteTurnContextFactory: entityManager is required.');
-    if (!actionDiscoverySystem)
-      throw new Error(
-        'ConcreteTurnContextFactory: actionDiscoverySystem is required.'
-      );
 
     this.#logger = logger;
     this.#gameWorldAccess = gameWorldAccess;
     this.#turnEndPort = turnEndPort;
-    this.#commandProcessor = commandProcessor;
-    this.#commandOutcomeInterpreter = commandOutcomeInterpreter;
     this.#safeEventDispatcher = safeEventDispatcher;
     this.#entityManager = entityManager;
-    this.#actionDiscoverySystem = actionDiscoverySystem;
   }
 
   /**
@@ -133,15 +103,12 @@ export class ConcreteTurnContextFactory extends ITurnContextFactory {
     isAwaitingExternalEventProvider,
     onSetAwaitingExternalEventCallback,
   }) {
-    // The `services` object is now created internally from cached dependencies.
+    // The `services` object is now created internally from cached dependencies.  
     const servicesForContext = {
       game: this.#gameWorldAccess,
       turnEndPort: this.#turnEndPort,
-      commandProcessor: this.#commandProcessor,
-      commandOutcomeInterpreter: this.#commandOutcomeInterpreter,
       safeEventDispatcher: this.#safeEventDispatcher,
       entityManager: this.#entityManager,
-      actionDiscoverySystem: this.#actionDiscoverySystem,
     };
 
     return new TurnContext({

@@ -48,11 +48,8 @@ export function registerTurnLifecycle(container) {
         logger: c.resolve(tokens.ILogger),
         gameWorldAccess: c.resolve(tokens.IWorldContext),
         turnEndPort: c.resolve(tokens.ITurnEndPort),
-        commandProcessor: c.resolve(tokens.ICommandProcessor),
-        commandOutcomeInterpreter: c.resolve(tokens.ICommandOutcomeInterpreter),
         safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
         entityManager: c.resolve(tokens.IEntityManager),
-        actionDiscoverySystem: c.resolve(tokens.IActionDiscoveryService),
       })
   );
 

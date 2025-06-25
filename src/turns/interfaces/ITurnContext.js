@@ -2,8 +2,6 @@
  * @typedef {import('../../entities/entity.js').default} Entity
  * @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger
  * @typedef {import('../ports/ITurnEndPort.js').ITurnEndPort} ITurnEndPort
- * @typedef {import('../../commands/interfaces/ICommandProcessor.js').ICommandProcessor} ICommandProcessor
- * @typedef {import('../../commands/interfaces/ICommandOutcomeInterpreter.js').ICommandOutcomeInterpreter} ICommandOutcomeInterpreter
  * @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher
  */
 
@@ -56,38 +54,7 @@ export class ITurnContext {
     throw new Error("Method 'getLogger()' must be implemented.");
   }
 
-  /**
-   * Retrieves the player prompt service for interacting with a human player.
-   * Note: This might need generalization if non-player entities require analogous services.
-   *
-   * @returns {IPromptCoordinator} The player prompt service instance.
-   * @throws {Error} If the service is not available in the current context.
-   */
-  getPlayerPromptService() {
-    throw new Error("Method 'getPlayerPromptService()' must be implemented.");
-  }
 
-  /**
-   * Retrieves the CommandProcessor service.
-   *
-   * @returns {ICommandProcessor} The command processor instance.
-   * @throws {Error} If the service is not available in the current context.
-   */
-  getCommandProcessor() {
-    throw new Error("Method 'getCommandProcessor()' must be implemented.");
-  }
-
-  /**
-   * Retrieves the CommandOutcomeInterpreter service.
-   *
-   * @returns {ICommandOutcomeInterpreter} The command outcome interpreter instance.
-   * @throws {Error} If the service is not available in the current context.
-   */
-  getCommandOutcomeInterpreter() {
-    throw new Error(
-      "Method 'getCommandOutcomeInterpreter()' must be implemented."
-    );
-  }
 
   /**
    * Retrieves the SafeEventDispatcher service.
