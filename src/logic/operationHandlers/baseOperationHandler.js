@@ -11,7 +11,7 @@
 import {
   initHandlerLogger,
   validateDeps,
-  getExecLogger,
+  resolveExecutionLogger,
 } from '../../utils/handlerUtils/serviceUtils.js';
 
 /**
@@ -72,7 +72,7 @@ class BaseOperationHandler {
    * @returns {ILogger} Logger instance for the current execution.
    */
   getLogger(executionContext) {
-    return getExecLogger(this.#logger, executionContext);
+    return resolveExecutionLogger(this.#logger, executionContext);
   }
 }
 

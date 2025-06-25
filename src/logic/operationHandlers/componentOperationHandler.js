@@ -52,12 +52,12 @@ class ComponentOperationHandler extends BaseOperationHandler {
    *
    * @param {'actor'|'target'|string|EntityRefObject} entityRef - Reference to resolve.
    * @param {ILogger} log - Logger used for warnings.
-   * @param {string} [opName] - Optional operation name prefix for logging.
+   * @param {string} [operationName] - Optional operation name prefix for logging.
    * @param {ExecutionContext} executionContext - Execution context for resolution.
    * @returns {string|null} The resolved ID or null when invalid.
    */
-  validateEntityRef(entityRef, log, opName, executionContext) {
-    const prefix = opName ? `${opName}: ` : '';
+  validateEntityRef(entityRef, log, operationName, executionContext) {
+    const prefix = operationName ? `${operationName}: ` : '';
     if (!entityRef) {
       log.warn(`${prefix}"entity_ref" parameter is required.`);
       return null;
@@ -77,11 +77,11 @@ class ComponentOperationHandler extends BaseOperationHandler {
    *
    * @param {*} type - Raw component type.
    * @param {ILogger} log - Logger used for warnings.
-   * @param {string} [opName] - Optional operation name prefix for logging.
+   * @param {string} [operationName] - Optional operation name prefix for logging.
    * @returns {string|null} Trimmed component type or null if invalid.
    */
-  requireComponentType(type, log, opName) {
-    const prefix = opName ? `${opName}: ` : '';
+  requireComponentType(type, log, operationName) {
+    const prefix = operationName ? `${operationName}: ` : '';
     const trimmed = this.validateComponentType(type);
     if (!trimmed) {
       log.warn(
@@ -98,14 +98,23 @@ class ComponentOperationHandler extends BaseOperationHandler {
    * @param {'actor'|'target'|string|EntityRefObject} entityRef
    * @param {*} componentType
    * @param {ILogger} logger
-   * @param {string} [opName]
+   * @param {string} [operationName]
    * @param {ExecutionContext} ctx
    * @returns {{ entityId: string, type: string } | null}
    */
-  validateEntityAndType(entityRef, componentType, logger, opName, ctx) {
-    const entityId = this.validateEntityRef(entityRef, logger, opName, ctx);
+  validateEntityAndType(entityRef, componentType, logger, operationName, ctx) {
+    const entityId = this.validateEntityRef(
+      entityRef,
+      logger,
+      operationName,
+      ctx
+    );
     if (!entityId) return null;
-    const type = this.requireComponentType(componentType, logger, opName);
+    const type = this.requireComponentType(
+      componentType,
+      logger,
+      operationName
+    );
     if (!type) return null;
     return { entityId, type };
   }
