@@ -194,4 +194,71 @@ describe('ContentLoadManager.processMod', () => {
       expect.stringContaining('Content loading loop took 15.00 ms.')
     );
   });
+
+  it('logs dispatch errors when mod_load_failed dispatch rejects', async () => {
+    const phaseLoadersConfig = [];
+    dispatcher.dispatch.mockRejectedValueOnce(new Error('dispatch fail'));
+    const manager = new ContentLoadManager({
+      logger,
+      validatedEventDispatcher: dispatcher,
+      contentLoadersConfig: phaseLoadersConfig,
+      aggregatorFactory: (counts) => new LoadResultAggregator(counts),
+    });
+    /** @type {TotalResultsSummary} */ const totals = {};
+    const phase = 'definitions';
+
+    await manager.processMod(
+      'testMod',
+      null,
+      totals,
+      phaseLoadersConfig,
+      phase
+    );
+
+    expect(logger.error).toHaveBeenCalledWith(
+      expect.stringContaining(
+        'Failed dispatching mod_load_failed event for testMod'
+      ),
+      expect.any(Error)
+    );
+  });
+
+  it('dispatches mod_load_failed on unexpected errors', async () => {
+    const phaseLoadersConfig = [];
+    const failingTimer = () => {
+      throw new Error('timer fail');
+    };
+    dispatcher.dispatch.mockRejectedValueOnce(new Error('dispatch fail'));
+    const manager = new ContentLoadManager({
+      logger,
+      validatedEventDispatcher: dispatcher,
+      contentLoadersConfig: phaseLoadersConfig,
+      aggregatorFactory: (counts) => new LoadResultAggregator(counts),
+      timer: failingTimer,
+    });
+    /** @type {TotalResultsSummary} */ const totals = {};
+    const phase = 'definitions';
+
+    await expect(
+      manager.processMod(
+        'testMod',
+        { content: {} },
+        totals,
+        phaseLoadersConfig,
+        phase
+      )
+    ).rejects.toThrow('timer fail');
+
+    expect(dispatcher.dispatch).toHaveBeenCalledWith(
+      'initialization:world_loader:mod_load_failed',
+      expect.objectContaining({ modId: 'testMod' }),
+      expect.any(Object)
+    );
+    expect(logger.error).toHaveBeenCalledWith(
+      expect.stringContaining(
+        'Failed dispatching mod_load_failed event for testMod after unexpected error in phase definitions'
+      ),
+      expect.any(Error)
+    );
+  });
 });

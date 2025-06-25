@@ -208,18 +208,7 @@ export class ContentLoadManager {
     if (!manifest) {
       const reason = `Manifest not found in registry for mod ID '${modId}'. Skipping content load for phase ${phase}.`;
       this.#logger.error(`ModsLoader: ${reason}`);
-      await this.#validatedEventDispatcher
-        .dispatch(
-          'initialization:world_loader:mod_load_failed',
-          { modId, reason },
-          { allowSchemaNotFound: true }
-        )
-        .catch((dispatchError) =>
-          this.#logger.error(
-            `Failed dispatching mod_load_failed event for ${modId}: ${dispatchError.message}`,
-            dispatchError
-          )
-        );
+      await this.#recordModFailure(modId, reason);
       return {
         shouldSkip: true,
         result: {
@@ -244,7 +233,20 @@ export class ContentLoadManager {
    * @returns {Promise<{ hasContent: boolean; status: 'success' | 'failed' }>}
    *   Whether any content was processed and final status.
    */
-  async #iterateLoaders(modId, manifest, phaseLoaders, phase, aggregator) {
+  /**
+   * Runs each configured loader for a mod and aggregates their results.
+   *
+   * @private
+   * @async
+   * @param {string} modId - Mod identifier.
+   * @param {ModManifest} manifest - Manifest for the mod.
+   * @param {Array<LoaderConfigEntry>} phaseLoaders - Loaders for this phase.
+   * @param {'definitions' | 'instances'} phase - Current phase.
+   * @param {LoadResultAggregator} aggregator - Aggregator for counts.
+   * @returns {Promise<{ hasContent: boolean; status: 'success' | 'failed' }>}
+   *   Whether any content was processed and final status.
+   */
+  async #runLoadersForMod(modId, manifest, phaseLoaders, phase, aggregator) {
     let status = 'success';
     let hasContentInPhase = false;
     for (const config of phaseLoaders) {
@@ -323,6 +325,31 @@ export class ContentLoadManager {
   }
 
   /**
+   * Dispatches a mod failure event and logs any dispatch errors.
+   *
+   * @private
+   * @async
+   * @param {string} modId - Identifier of the failed mod.
+   * @param {string} reason - Explanation for the failure.
+   * @param {'definitions' | 'instances'} [phase] - Phase context for logging.
+   * @returns {Promise<void>} Resolves when the dispatch completes.
+   */
+  async #recordModFailure(modId, reason, phase) {
+    await this.#validatedEventDispatcher
+      .dispatch(
+        'initialization:world_loader:mod_load_failed',
+        { modId, reason },
+        { allowSchemaNotFound: true }
+      )
+      .catch((dispatchError) =>
+        this.#logger.error(
+          `Failed dispatching mod_load_failed event for ${modId}${phase ? ` after unexpected error in phase ${phase}` : ''}: ${dispatchError.message}`,
+          dispatchError
+        )
+      );
+  }
+
+  /**
    * Builds a debug summary message after all loaders for a mod have run.
    *
    * @private
@@ -393,7 +420,7 @@ export class ContentLoadManager {
       );
       const modStartTime = this.#timer();
 
-      const { hasContent, status: loaderStatus } = await this.#iterateLoaders(
+      const { hasContent, status: loaderStatus } = await this.#runLoadersForMod(
         modId,
         /** @type {ModManifest} */ (manifest),
         phaseLoaders,
@@ -415,21 +442,11 @@ export class ContentLoadManager {
         { modId, phase, error: error?.message },
         error
       );
-      await this.#validatedEventDispatcher
-        .dispatch(
-          'initialization:world_loader:mod_load_failed',
-          {
-            modId,
-            reason: `Unexpected error in phase ${phase}: ${error?.message}`,
-          },
-          { allowSchemaNotFound: true }
-        )
-        .catch((dispatchError) =>
-          this.#logger.error(
-            `Failed dispatching mod_load_failed event for ${modId} after unexpected error in phase ${phase}: ${dispatchError.message}`,
-            dispatchError
-          )
-        );
+      await this.#recordModFailure(
+        modId,
+        `Unexpected error in phase ${phase}: ${error?.message}`,
+        phase
+      );
       return Promise.reject(error);
     }
 
