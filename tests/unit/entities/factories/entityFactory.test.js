@@ -27,6 +27,7 @@ import {
   SHORT_TERM_MEMORY_COMPONENT_ID,
   NOTES_COMPONENT_ID,
   GOALS_COMPONENT_ID,
+  POSITION_COMPONENT_ID,
 } from '../../../../src/constants/componentIds.js';
 
 describe('EntityFactory', () => {
@@ -376,6 +377,24 @@ describe('EntityFactory', () => {
         entity.getComponentData(SHORT_TERM_MEMORY_COMPONENT_ID).maxEntries
       ).toBe(5);
     });
+
+    it('should create entity without core:position when definition omits it', () => {
+      const noPosDef = new EntityDefinition('test-def:nopos', {
+        description: 'Entity without position',
+        components: { 'core:name': { name: 'NoPos' } },
+      });
+      mocks.registry.getEntityDefinition.mockReturnValue(noPosDef);
+
+      const entity = factory.create(
+        'test-def:nopos',
+        {},
+        mocks.registry,
+        { has: () => false },
+        null
+      );
+
+      expect(entity.hasComponent(POSITION_COMPONENT_ID)).toBe(false);
+    });
   });
 
   describe('reconstruct', () => {
@@ -574,6 +593,26 @@ describe('EntityFactory', () => {
 
       expect(entity).toBeInstanceOf(Entity);
       expect(entity.id).toBe('test-id');
+    });
+
+    it('should reconstruct entity without core:position when missing', () => {
+      const noPosDef = new EntityDefinition('test-def:nopos', {
+        description: 'Entity without position',
+        components: { 'core:name': { name: 'NoPos' } },
+      });
+      mocks.registry.getEntityDefinition.mockReturnValue(noPosDef);
+
+      const serializedEntity = {
+        instanceId: 'nopos-id',
+        definitionId: 'test-def:nopos',
+        components: { 'core:name': { name: 'NoPos' } },
+      };
+
+      const entity = factory.reconstruct(serializedEntity, mocks.registry, {
+        has: () => false,
+      });
+
+      expect(entity.hasComponent(POSITION_COMPONENT_ID)).toBe(false);
     });
   });
 });

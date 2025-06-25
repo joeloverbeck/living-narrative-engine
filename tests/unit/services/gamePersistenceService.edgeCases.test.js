@@ -10,6 +10,7 @@ import {
   SHORT_TERM_MEMORY_COMPONENT_ID,
   PERCEPTION_LOG_COMPONENT_ID,
   CURRENT_ACTOR_COMPONENT_ID,
+  POSITION_COMPONENT_ID,
 } from '../../../src/constants/componentIds.js';
 import { CORE_MOD_ID } from '../../../src/constants/core.js';
 import { PersistenceErrorCodes } from '../../../src/persistence/persistenceErrors.js';
@@ -127,6 +128,15 @@ describe('GamePersistenceService edge cases', () => {
         { modId: CORE_MOD_ID, version: 'unknown_fallback' },
       ]);
       expect(logger.warn).toHaveBeenCalled();
+    });
+
+    it('captures entity with no core:position component without errors', () => {
+      const entity = makeEntity('door1', 'blocker:door', {});
+      entityManager.activeEntities.set('door1', entity);
+
+      const result = captureService.captureCurrentGameState('World');
+      const overrides = result.gameState.entities[0].overrides;
+      expect(overrides).not.toHaveProperty(POSITION_COMPONENT_ID);
     });
   });
 
