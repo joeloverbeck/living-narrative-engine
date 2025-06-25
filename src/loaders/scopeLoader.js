@@ -50,8 +50,8 @@ export default class ScopeLoader extends BaseManifestItemLoader {
     registryKey
   ) {
     try {
-      // The parseContent method now delegates to our common utility.
-      const scopeDefinitions = this.parseContent(content, filename);
+      // The parseScopeFile method delegates to our common utility.
+      const scopeDefinitions = this.parseScopeFile(content, filename);
       const transformedScopes = this.transformContent(scopeDefinitions, modId);
 
       let lastResult = null;
@@ -79,13 +79,13 @@ export default class ScopeLoader extends BaseManifestItemLoader {
   }
 
   /**
-   * Parse a .scope file content by delegating to the common utility.
+   * Parse a `.scope` file's contents by delegating to the common utility.
    *
    * @param {string} content - Raw file content
    * @param {string} filePath - Path to the file for error reporting
    * @returns {Map<string, string>} A map of parsed scope definitions.
    */
-  parseContent(content, filePath) {
+  parseScopeFile(content, filePath) {
     // The complex parsing logic is now gone, replaced by a single call.
     return parseScopeDefinitions(content, filePath);
   }
