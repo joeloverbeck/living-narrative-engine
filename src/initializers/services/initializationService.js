@@ -42,14 +42,15 @@ class InitializationService extends IInitializationService {
   #gameDataRepository;
   #thoughtListener;
   #notesListener;
+  #spatialIndexManager;
 
   /**
    * Creates a new InitializationService instance.
    *
-   * @param {object} dependencies - The required service dependencies.
-   * @param {ILogger} dependencies.logger - The logging service.
-   * @param {ValidatedEventDispatcher} dependencies.validatedEventDispatcher - The validated event dispatcher.
-   * @param {ModsLoader} dependencies.modsLoader - Loader for world data mods.
+   * @param {object} deps
+   * @param {ILogger} deps.logger
+   * @param {IValidatedEventDispatcher} deps.validatedEventDispatcher
+   * @param {ModsLoader} deps.modsLoader
    * @param {import('../../interfaces/IScopeRegistry.js').IScopeRegistry} dependencies.scopeRegistry - Registry of scopes.
    * @param {import('../../data/inMemoryDataRegistry.js').DataRegistry} dependencies.dataRegistry - Data registry instance.
    * @param {import('../../turns/interfaces/ILLMAdapter.js').ILLMAdapter & {init?: Function, isInitialized?: Function, isOperational?: Function}} dependencies.llmAdapter - LLM adapter instance.
@@ -61,6 +62,10 @@ class InitializationService extends IInitializationService {
    * @param {import('../../domUI/domUiFacade.js').DomUiFacade} dependencies.domUiFacade - UI facade instance.
    * @param {ActionIndex} dependencies.actionIndex - Action index for optimized action discovery.
    * @param {import('../../interfaces/IGameDataRepository.js').IGameDataRepository} dependencies.gameDataRepository - Game data repository instance.
+   * @param {ThoughtPersistenceListener} deps.thoughtListener
+   * @param {NotesPersistenceListener} deps.notesListener
+   * @param {ISpatialIndexManager} deps.spatialIndexManager
+   * @description Initializes the complete game system.
    */
   constructor({
     logger,
@@ -79,6 +84,7 @@ class InitializationService extends IInitializationService {
     gameDataRepository,
     thoughtListener,
     notesListener,
+    spatialIndexManager,
   }) {
     super();
 
@@ -91,6 +97,7 @@ class InitializationService extends IInitializationService {
         "InitializationService: Missing or invalid required dependency 'logger'.";
       throw new Error(errorMsg);
     }
+
     this.#logger = logger;
 
     // FIX: Check for the correct 'dispatch' method name
@@ -176,7 +183,11 @@ class InitializationService extends IInitializationService {
         "InitializationService: Missing or invalid required dependency 'notesListener'."
       );
     }
-
+    if (!spatialIndexManager || typeof spatialIndexManager.buildIndex !== 'function') {
+      throw new Error(
+        "InitializationService: Missing or invalid required dependency 'spatialIndexManager'."
+      );
+    }
     this.#validatedEventDispatcher = validatedEventDispatcher;
     this.#modsLoader = modsLoader;
     this.#scopeRegistry = scopeRegistry;
@@ -192,6 +203,7 @@ class InitializationService extends IInitializationService {
     this.#gameDataRepository = gameDataRepository;
     this.#thoughtListener = thoughtListener;
     this.#notesListener = notesListener;
+    this.#spatialIndexManager = spatialIndexManager;
 
     this.#logger.debug(
       'InitializationService: Instance created successfully with dependencies.'
@@ -463,6 +475,14 @@ class InitializationService extends IInitializationService {
     if (!worldInitSuccess) {
       throw new Error('World initialization failed via WorldInitializer.');
     }
+    
+    // FIX: Build spatial index from existing entities after world initialization
+    // This fixes the timing bug where SpatialIndexSynchronizer is connected after 
+    // entities are created, leaving the spatial index empty
+    this.#logger.debug('Building spatial index from existing entities...');
+    this.#spatialIndexManager.buildIndex(this.#entityManager);
+    this.#logger.debug('Spatial index built successfully.');
+    
     this.#logger.debug(
       'InitializationService: Initial world entities instantiated and spatial index built.'
     );

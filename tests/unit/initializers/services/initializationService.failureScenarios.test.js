@@ -64,6 +64,7 @@ describe('InitializationService failure scenarios', () => {
       },
       thoughtListener: { handleEvent: jest.fn() },
       notesListener: { handleEvent: jest.fn() },
+      spatialIndexManager: { buildIndex: jest.fn() },
     };
     const deps = { ...defaults, ...overrides };
     return new InitializationService(deps);

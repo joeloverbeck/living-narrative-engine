@@ -79,6 +79,9 @@ describe('registerOrchestration', () => {
     container.register(tokens.IGameDataRepository, () => ({
       getAllActionDefinitions: jest.fn().mockReturnValue([])
     }));
+    container.register(tokens.ISpatialIndexManager, () => ({
+      buildIndex: jest.fn()
+    }));
   });
 
   afterEach(() => {
@@ -150,6 +153,9 @@ describe('registerOrchestration', () => {
     badContainer.register(tokens.IGameDataRepository, () => ({
       getAllActionDefinitions: jest.fn().mockReturnValue([])
     }));
+    badContainer.register(tokens.ISpatialIndexManager, () => ({
+      buildIndex: jest.fn()
+    }));
 
     registerOrchestration(badContainer);
 
@@ -194,6 +200,9 @@ describe('registerOrchestration', () => {
     }));
     badContainer.register(tokens.IGameDataRepository, () => ({
       getAllActionDefinitions: jest.fn().mockReturnValue([])
+    }));
+    badContainer.register(tokens.ISpatialIndexManager, () => ({
+      buildIndex: jest.fn()
     }));
 
     registerOrchestration(badContainer);
