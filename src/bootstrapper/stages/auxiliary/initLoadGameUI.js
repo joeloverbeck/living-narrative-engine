@@ -1,6 +1,7 @@
 // src/bootstrapper/stages/auxiliary/initLoadGameUI.js
 
 import { resolveAndInitialize } from '../../helpers.js';
+import GameEngineLoadAdapter from '../../../adapters/GameEngineLoadAdapter.js';
 import './typedefs.js';
 
 /**
@@ -10,11 +11,12 @@ import './typedefs.js';
  * @returns {{success: boolean, error?: Error}}
  */
 export function initLoadGameUI({ container, gameEngine, logger, tokens }) {
+  const adapter = new GameEngineLoadAdapter(gameEngine);
   return resolveAndInitialize(
     container,
     tokens.LoadGameUI,
     'init',
     logger,
-    gameEngine
+    adapter
   );
 }
