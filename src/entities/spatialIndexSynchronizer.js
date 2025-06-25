@@ -64,9 +64,17 @@ export class SpatialIndexSynchronizer {
   /**
    * Handles the creation or reconstruction of a new entity.
    *
-   * @param {EntityCreatedPayload} payload
+   * @param {EntityCreatedPayload | {type: string, payload: EntityCreatedPayload}} eventOrPayload
    */
-  onEntityAdded(payload) {
+  onEntityAdded(eventOrPayload) {
+    // EventBus passes { type, payload }, but we need just the payload
+    // Handle both formats for robustness
+    const payload = eventOrPayload?.payload || eventOrPayload;
+    if (!payload || typeof payload !== 'object') {
+      this.logger.warn('SpatialIndexSynchronizer.onEntityAdded: Invalid payload received', eventOrPayload);
+      return;
+    }
+    
     const { entity } = payload;
     if (!entity) return;
     this.logger.debug(
@@ -94,9 +102,17 @@ export class SpatialIndexSynchronizer {
   /**
    * Handles the removal of an entity.
    *
-   * @param {EntityRemovedPayload} payload
+   * @param {EntityRemovedPayload | {type: string, payload: EntityRemovedPayload}} eventOrPayload
    */
-  onEntityRemoved(payload) {
+  onEntityRemoved(eventOrPayload) {
+    // EventBus passes { type, payload }, but we need just the payload
+    // Handle both formats for robustness
+    const payload = eventOrPayload?.payload || eventOrPayload;
+    if (!payload || typeof payload !== 'object') {
+      this.logger.warn('SpatialIndexSynchronizer.onEntityRemoved: Invalid payload received', eventOrPayload);
+      return;
+    }
+    
     const { entity } = payload;
     if (!entity) return;
     const position = entity.getComponentData(POSITION_COMPONENT_ID);
@@ -113,9 +129,17 @@ export class SpatialIndexSynchronizer {
    * Handles changes to an entity's components, specifically looking for position changes.
    * This now correctly uses the old and new component data to update the index.
    *
-   * @param {ComponentAddedPayload | ComponentRemovedPayload} payload
+   * @param {ComponentAddedPayload | ComponentRemovedPayload | {type: string, payload: ComponentAddedPayload | ComponentRemovedPayload}} eventOrPayload
    */
-  onPositionChanged(payload) {
+  onPositionChanged(eventOrPayload) {
+    // EventBus passes { type, payload }, but we need just the payload
+    // Handle both formats for robustness
+    const payload = eventOrPayload?.payload || eventOrPayload;
+    if (!payload || typeof payload !== 'object') {
+      this.logger.warn('SpatialIndexSynchronizer.onPositionChanged: Invalid payload received', eventOrPayload);
+      return;
+    }
+    
     const { entity, componentTypeId, oldComponentData } = payload;
     // This handler only cares about the position component
     if (componentTypeId !== POSITION_COMPONENT_ID) {

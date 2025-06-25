@@ -193,7 +193,8 @@ class SpatialIndexManager extends MapManager {
     this.clearIndex();
     if (
       !entityManager ||
-      typeof entityManager.entities?.values !== 'function'
+      !entityManager.entities ||
+      typeof entityManager.entities[Symbol.iterator] !== 'function'
     ) {
       this.logger.error(
         'SpatialIndexManager.buildIndex: Invalid entityManager provided.'

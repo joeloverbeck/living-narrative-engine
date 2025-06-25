@@ -95,9 +95,10 @@ describe('SpatialIndexSynchronizer', () => {
       synchronizer = initializeSynchronizer();
       const entity = createMockEntity('entity-1', { locationId: 'location-a' });
       const payload = { entity, wasReconstructed: false };
+      const eventObject = { type: ENTITY_CREATED_ID, payload };
 
-      // Act
-      handlers[ENTITY_CREATED_ID](payload);
+      // Act - simulate real EventBus behavior
+      handlers[ENTITY_CREATED_ID](eventObject);
 
       // Assert
       expect(mockSpatialIndexManager.addEntity).toHaveBeenCalledWith(
@@ -111,12 +112,47 @@ describe('SpatialIndexSynchronizer', () => {
       synchronizer = initializeSynchronizer();
       const entity = createMockEntity('entity-1', {});
       const payload = { entity, wasReconstructed: false };
+      const eventObject = { type: ENTITY_CREATED_ID, payload };
 
-      // Act
-      handlers[ENTITY_CREATED_ID](payload);
+      // Act - simulate real EventBus behavior
+      handlers[ENTITY_CREATED_ID](eventObject);
 
       // Assert
       expect(mockSpatialIndexManager.addEntity).not.toHaveBeenCalled();
+    });
+
+    it('should handle invalid payload gracefully and log warning', () => {
+      // Arrange
+      synchronizer = initializeSynchronizer();
+
+      // Act - pass invalid payload
+      handlers[ENTITY_CREATED_ID](null);
+      handlers[ENTITY_CREATED_ID](undefined);
+      handlers[ENTITY_CREATED_ID]('invalid');
+      handlers[ENTITY_CREATED_ID](123);
+
+      // Assert
+      expect(mockSpatialIndexManager.addEntity).not.toHaveBeenCalled();
+      expect(mockLogger.warn).toHaveBeenCalledTimes(4);
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'SpatialIndexSynchronizer.onEntityAdded: Invalid payload received',
+        null
+      );
+    });
+
+    it('should handle both EventBus format and direct payload format', () => {
+      // Arrange
+      synchronizer = initializeSynchronizer();
+      const entity = createMockEntity('entity-1', { locationId: 'location-a' });
+      const payload = { entity, wasReconstructed: false };
+
+      // Act - test both formats
+      handlers[ENTITY_CREATED_ID]({ type: ENTITY_CREATED_ID, payload }); // EventBus format
+      handlers[ENTITY_CREATED_ID](payload); // Direct payload format
+
+      // Assert
+      expect(mockSpatialIndexManager.addEntity).toHaveBeenCalledTimes(2);
+      expect(mockSpatialIndexManager.addEntity).toHaveBeenCalledWith('entity-1', 'location-a');
     });
   });
 
@@ -126,9 +162,10 @@ describe('SpatialIndexSynchronizer', () => {
       synchronizer = initializeSynchronizer();
       const entity = createMockEntity('entity-1', { locationId: 'location-a' });
       const payload = { entity };
+      const eventObject = { type: ENTITY_REMOVED_ID, payload };
 
-      // Act
-      handlers[ENTITY_REMOVED_ID](payload);
+      // Act - simulate real EventBus behavior
+      handlers[ENTITY_REMOVED_ID](eventObject);
 
       // Assert
       expect(mockSpatialIndexManager.removeEntity).toHaveBeenCalledWith(
@@ -142,9 +179,10 @@ describe('SpatialIndexSynchronizer', () => {
       synchronizer = initializeSynchronizer();
       const entity = createMockEntity('entity-1', {});
       const payload = { entity };
+      const eventObject = { type: ENTITY_REMOVED_ID, payload };
 
-      // Act
-      handlers[ENTITY_REMOVED_ID](payload);
+      // Act - simulate real EventBus behavior
+      handlers[ENTITY_REMOVED_ID](eventObject);
 
       // Assert
       expect(mockSpatialIndexManager.removeEntity).not.toHaveBeenCalled();
@@ -165,9 +203,10 @@ describe('SpatialIndexSynchronizer', () => {
         componentData: { locationId: 'location-b' },
         oldComponentData: { locationId: 'location-a' },
       };
+      const eventObject = { type: COMPONENT_ADDED_ID, payload };
 
-      // Act
-      handlers[COMPONENT_ADDED_ID](payload);
+      // Act - simulate real EventBus behavior
+      handlers[COMPONENT_ADDED_ID](eventObject);
 
       // Assert
       expect(mockSpatialIndexManager.updateEntityLocation).toHaveBeenCalledWith(
@@ -186,9 +225,10 @@ describe('SpatialIndexSynchronizer', () => {
         componentData: { locationId: 'new-dungeon' },
         oldComponentData: undefined, // It had no position component before
       };
+      const eventObject = { type: COMPONENT_ADDED_ID, payload };
 
-      // Act
-      handlers[COMPONENT_ADDED_ID](payload);
+      // Act - simulate real EventBus behavior
+      handlers[COMPONENT_ADDED_ID](eventObject);
 
       // Assert
       expect(mockSpatialIndexManager.updateEntityLocation).toHaveBeenCalledWith(
@@ -207,9 +247,10 @@ describe('SpatialIndexSynchronizer', () => {
         oldComponentData: { locationId: 'old-dungeon' },
         // componentData is absent for remove events
       };
+      const eventObject = { type: COMPONENT_REMOVED_ID, payload };
 
-      // Act
-      handlers[COMPONENT_REMOVED_ID](payload);
+      // Act - simulate real EventBus behavior
+      handlers[COMPONENT_REMOVED_ID](eventObject);
 
       // Assert
       expect(mockSpatialIndexManager.updateEntityLocation).toHaveBeenCalledWith(
@@ -228,9 +269,10 @@ describe('SpatialIndexSynchronizer', () => {
         componentData: { locationId: 'location-a' },
         oldComponentData: { locationId: 'location-a' },
       };
+      const eventObject = { type: COMPONENT_ADDED_ID, payload };
 
-      // Act
-      handlers[COMPONENT_ADDED_ID](payload);
+      // Act - simulate real EventBus behavior
+      handlers[COMPONENT_ADDED_ID](eventObject);
 
       // Assert
       expect(
@@ -247,9 +289,10 @@ describe('SpatialIndexSynchronizer', () => {
         componentData: { hp: 10 },
         oldComponentData: { hp: 20 },
       };
+      const eventObject = { type: COMPONENT_ADDED_ID, payload };
 
-      // Act
-      handlers[COMPONENT_ADDED_ID](payload);
+      // Act - simulate real EventBus behavior
+      handlers[COMPONENT_ADDED_ID](eventObject);
 
       // Assert
       expect(
