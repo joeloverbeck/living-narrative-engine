@@ -134,6 +134,7 @@ describe('Scope Integration Tests', () => {
       entityManager,
       logger,
       safeEventDispatcher,
+      jsonLogicEvaluationService: jsonLogicEval,
     });
 
     // FIX: Add the missing dependency to the constructor call

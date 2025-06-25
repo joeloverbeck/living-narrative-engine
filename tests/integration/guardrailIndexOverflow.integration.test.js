@@ -14,11 +14,6 @@ describe('Guardrail – index overflow', () => {
   let entityManager;
   let logger;
   let actor;
-  let jsonLogicEvaluationService;
-
-  const mockJsonLogicService = () => ({
-    evaluate: jest.fn(),
-  });
 
   beforeEach(() => {
     logger = {
@@ -29,7 +24,6 @@ describe('Guardrail – index overflow', () => {
     };
     discoverySvc = { getValidActions: jest.fn() };
     entityManager = { getEntityInstance: jest.fn().mockResolvedValue(null) };
-    jsonLogicEvaluationService = mockJsonLogicService(); // FIX: Instantiate the mock service.
 
     const indexingService = new ActionIndexerAdapter(
       new ActionIndexingService({ logger })
@@ -38,7 +32,6 @@ describe('Guardrail – index overflow', () => {
       actionDiscoveryService: discoverySvc,
       actionIndexingService: indexingService,
       entityManager,
-      jsonLogicEvaluationService,
       logger,
     });
     actor = {

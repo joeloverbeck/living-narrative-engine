@@ -25,10 +25,7 @@ class StubEntity {
   }
 }
 
-// FIX: Added a mock for the json logic service, as it's a new required dependency.
-const mockJsonLogicService = () => ({
-  evaluate: jest.fn(),
-});
+
 
 describe('Integration – AvailableActionsProvider caching', () => {
   /** @type {import('../../src/interfaces/coreServices.js').ILogger} */
@@ -40,8 +37,6 @@ describe('Integration – AvailableActionsProvider caching', () => {
   let pipeline;
   let actor;
   let context;
-  let jsonLogicEvaluationService; // FIX: Added variable for the mock service.
-
   beforeEach(() => {
     logger = {
       debug: jest.fn(),
@@ -54,15 +49,11 @@ describe('Integration – AvailableActionsProvider caching', () => {
       new ActionIndexingService({ logger })
     );
     entityManager = { getEntityInstance: jest.fn().mockResolvedValue(null) };
-    jsonLogicEvaluationService = mockJsonLogicService(); // FIX: Instantiate the mock service.
 
-    // FIX: Added the missing `logger` and `jsonLogicEvaluationService` dependencies
-    // to the constructor call to align with the recent changes.
     provider = new AvailableActionsProvider({
       actionDiscoveryService: discoverySvc,
       actionIndexingService: indexingService,
       entityManager,
-      jsonLogicEvaluationService,
       logger,
     });
 

@@ -8,6 +8,7 @@
 /** @typedef {import('../interfaces/IScopeEngine.js').IScopeEngine} IScopeEngine */
 /** @typedef {import('../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
 /** @typedef {import('./tracing/traceContext.js').TraceContext} TraceContext */
+/** @typedef {import('../logic/jsonLogicEvaluationService.js').default} JsonLogicEvaluationService */
 
 import { ITargetResolutionService } from '../interfaces/ITargetResolutionService.js';
 import { ActionTargetContext } from '../models/actionTargetContext.js';
@@ -22,6 +23,7 @@ export class TargetResolutionService extends ITargetResolutionService {
   #entityManager;
   #logger;
   #safeEventDispatcher;
+  #jsonLogicEvalService;
 
   /**
    * @param {object} deps
@@ -30,19 +32,22 @@ export class TargetResolutionService extends ITargetResolutionService {
    * @param {IEntityManager} deps.entityManager
    * @param {ILogger} deps.logger
    * @param {ISafeEventDispatcher} deps.safeEventDispatcher
+   * @param {JsonLogicEvaluationService} deps.jsonLogicEvaluationService
    */
-  constructor({ scopeRegistry, scopeEngine, entityManager, logger, safeEventDispatcher }) {
+  constructor({ scopeRegistry, scopeEngine, entityManager, logger, safeEventDispatcher, jsonLogicEvaluationService }) {
     super();
     this.#logger = setupService('TargetResolutionService', logger, {
       scopeRegistry: { value: scopeRegistry, requiredMethods: ['getScope'] },
       scopeEngine: { value: scopeEngine, requiredMethods: ['resolve'] },
       entityManager: { value: entityManager },
       safeEventDispatcher: { value: safeEventDispatcher, requiredMethods: ['dispatch'] },
+      jsonLogicEvaluationService: { value: jsonLogicEvaluationService, requiredMethods: ['evaluate'] },
     });
     this.#scopeRegistry = scopeRegistry;
     this.#scopeEngine = scopeEngine;
     this.#entityManager = entityManager;
     this.#safeEventDispatcher = safeEventDispatcher;
+    this.#jsonLogicEvalService = jsonLogicEvaluationService;
   }
 
   /** @override */
@@ -91,12 +96,14 @@ export class TargetResolutionService extends ITargetResolutionService {
 
     try {
       const ast = parseDslExpression(scopeDefinition.expr);
+
+      // The runtimeCtx now uses the service's own injected dependencies
       const runtimeCtx = {
-        entityManager: this.#entityManager,
-        jsonLogicEval: discoveryContext.jsonLogicEval || {},
-        logger: this.#logger,
+        entityManager: this.#entityManager, // Already an injected dependency
+        jsonLogicEval: this.#jsonLogicEvalService, // <-- USE INJECTED SERVICE
+        logger: this.#logger, // Already an injected dependency
         actor: actorEntity,
-        location: discoveryContext.currentLocation,
+        location: discoveryContext.currentLocation, // This comes from the lean context
       };
       return this.#scopeEngine.resolve(ast, actorEntity, runtimeCtx, trace) ?? new Set();
     } catch (error) {

@@ -13,21 +13,11 @@
 /** @typedef {import('../interfaces/IValidatedEventDispatcher.js').IValidatedEventDispatcher} IValidatedEventDispatcher */ // Added for ActionContext
 
 /**
- * The context object provided to action operationHandlers and target resolvers.
- * It contains the structured command input (`parsedCommand`) and all necessary game state references
- * and dependencies (acting entity, location, managers, event dispatcher) required
- * for the handler to perform its work. Handlers should rely *solely* on this context.
- *
  * @typedef {object} ActionContext
- * @property {Entity} actingEntity - The entity instance (player, NPC, etc.) performing the action.
- * @property {Entity | null} currentLocation - The entity instance representing the acting entity's current location. Can be null.
- * @property {IGameDataRepository} gameDataRepository - Provides access to loaded game definition data.
- * @property {IEntityManager} entityManager - The manager for creating and tracking entity instances.
- * @property {{dispatch: (eventName: string, eventData: object) => Promise<boolean>}} eventBus - Shim for validated event dispatch.
- * @property {IValidatedEventDispatcher} validatedEventDispatcher - For dispatching validated events.
- * @property {ILogger} logger - The logger instance.
- * @property {IWorldContext} worldContext - Provides access to world state information.
- * // Add other relevant state here if needed in the future (e.g., gameTime, weather)
+ * @description Contains dynamic, request-specific context for an action.
+ * @property {Entity | null} [currentLocation] - The actor's current location entity.
+ * @property {object} [worldContext] - The broader game or turn state.
+ * @property {function(): Entity} [getActor] - A function to retrieve the acting entity.
  */
 
 /**
