@@ -1,4 +1,5 @@
 import InitializationService from '../../../../src/initializers/services/initializationService.js';
+import { SystemInitializationError } from '../../../../src/errors/InitializationError.js';
 import { describe, it, expect, beforeEach } from '@jest/globals';
 
 let logger;
@@ -66,50 +67,50 @@ describe('InitializationService constructor', () => {
   });
 
   it('throws if logger is missing', () => {
-    expect(
-      () =>
-        new InitializationService({
-          validatedEventDispatcher: dispatcher,
-          modsLoader,
-          scopeRegistry,
-          dataRegistry,
-          llmAdapter,
-          llmConfigLoader,
-          systemInitializer,
-          worldInitializer,
-          safeEventDispatcher,
-          entityManager,
-          domUiFacade,
-          actionIndex,
-          gameDataRepository,
-          thoughtListener,
-          notesListener,
-          spatialIndexManager,
-        })
-    ).toThrow(/logger/);
+    const create = () =>
+      new InitializationService({
+        validatedEventDispatcher: dispatcher,
+        modsLoader,
+        scopeRegistry,
+        dataRegistry,
+        llmAdapter,
+        llmConfigLoader,
+        systemInitializer,
+        worldInitializer,
+        safeEventDispatcher,
+        entityManager,
+        domUiFacade,
+        actionIndex,
+        gameDataRepository,
+        thoughtListener,
+        notesListener,
+        spatialIndexManager,
+      });
+    expect(create).toThrow(SystemInitializationError);
+    expect(create).toThrow(/logger/);
   });
 
   it('throws if validatedEventDispatcher is missing', () => {
-    expect(
-      () =>
-        new InitializationService({
-          logger,
-          modsLoader,
-          scopeRegistry,
-          dataRegistry,
-          llmAdapter,
-          llmConfigLoader,
-          systemInitializer,
-          worldInitializer,
-          safeEventDispatcher,
-          entityManager,
-          domUiFacade,
-          actionIndex,
-          gameDataRepository,
-          thoughtListener,
-          notesListener,
-          spatialIndexManager,
-        })
-    ).toThrow(/validatedEventDispatcher/);
+    const createVD = () =>
+      new InitializationService({
+        logger,
+        modsLoader,
+        scopeRegistry,
+        dataRegistry,
+        llmAdapter,
+        llmConfigLoader,
+        systemInitializer,
+        worldInitializer,
+        safeEventDispatcher,
+        entityManager,
+        domUiFacade,
+        actionIndex,
+        gameDataRepository,
+        thoughtListener,
+        notesListener,
+        spatialIndexManager,
+      });
+    expect(createVD).toThrow(SystemInitializationError);
+    expect(createVD).toThrow(/validatedEventDispatcher/);
   });
 });

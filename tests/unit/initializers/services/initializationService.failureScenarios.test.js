@@ -1,4 +1,5 @@
 import InitializationService from '../../../../src/initializers/services/initializationService.js';
+import { WorldInitializationError } from '../../../../src/errors/InitializationError.js';
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 
 const WORLD = 'world';
@@ -114,6 +115,6 @@ describe('InitializationService failure scenarios', () => {
     });
     const result = await svc.runInitializationSequence(WORLD);
     expect(result.success).toBe(false);
-    expect(result.error).toBeInstanceOf(Error);
+    expect(result.error).toBeInstanceOf(WorldInitializationError);
   });
 });
