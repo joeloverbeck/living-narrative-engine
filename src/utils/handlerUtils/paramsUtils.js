@@ -44,12 +44,17 @@ export function validateStringParam(value, name, logger, dispatcher) {
   if (isNonBlankString(value)) {
     return value.trim();
   }
-  safeDispatchError(
-    dispatcher,
-    `Invalid "${name}" parameter`,
-    { [name]: value },
-    logger
-  );
+  const hasDispatcher = dispatcher && typeof dispatcher.dispatch === 'function';
+  if (hasDispatcher) {
+    safeDispatchError(
+      dispatcher,
+      `Invalid "${name}" parameter`,
+      { [name]: value },
+      logger
+    );
+  } else if (logger && typeof logger.warn === 'function') {
+    logger.warn(`Invalid "${name}" parameter`, { [name]: value });
+  }
   return null;
 }
 
