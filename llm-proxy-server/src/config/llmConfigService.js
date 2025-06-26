@@ -127,8 +127,9 @@ export class LlmConfigService {
    * @param {string} stage - The machine-readable stage of the error.
    * @param {Error | null} [originalError] - The original error object, if any.
    * @param {object} [additionalDetails] - Additional details to merge into the error's details property.
+   * @returns {StandardizedErrorObject} The created error object.
    */
-  _setInitializationError(
+  #recordInitializationError(
     message,
     stage,
     originalError = null,
@@ -173,12 +174,14 @@ export class LlmConfigService {
     };
 
     this.#logger.error(logMessage, logContext);
+
+    return this.#initializationError;
   }
 
   /**
    * Initializes the service by loading and validating the LLM configurations.
    * This method should be called once during application startup.
-   * @returns {Promise<void>}
+   * @returns {Promise<StandardizedErrorObject | void>} Resolves with an error object if initialization failed.
    */
   async initialize() {
     this.#logger.debug('LlmConfigService: Initialization started.');
@@ -202,13 +205,12 @@ export class LlmConfigService {
       );
 
       if (result.error) {
-        this._setInitializationError(
+        return this.#recordInitializationError(
           result.message,
           result.stage,
           result.originalError,
           { pathAttempted: result.pathAttempted }
         );
-        return;
       }
 
       const frozenConfigs = Object.freeze(
@@ -232,7 +234,7 @@ export class LlmConfigService {
         `LlmConfigService: Initialization successful. Loaded ${llmCount} LLM configurations. Default LLM ID: ${defaultId}. Proxy is operational.`
       );
     } catch (unexpectedError) {
-      this._setInitializationError(
+      return this.#recordInitializationError(
         `An unexpected error occurred during LLM configuration loading`,
         'config_load_unexpected_error',
         unexpectedError
@@ -291,7 +293,7 @@ export class LlmConfigService {
    * The returned object conforms to { message: string, stage: string, details: object }.
    * The `originalError` property from the internal error object is not directly exposed here
    * to avoid leaking potentially large or sensitive error objects to less controlled contexts.
-   * The error log within `_setInitializationError` handles logging necessary details from `originalError`.
+   * The error log within `#recordInitializationError` handles logging necessary details from `originalError`.
    * @returns {StandardizedErrorObject | null} Error details, or null if initialization was successful.
    */
   getInitializationErrorDetails() {

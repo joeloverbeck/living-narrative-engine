@@ -113,10 +113,30 @@ describe('LlmConfigService', () => {
       pathAttempted: '/tmp/llm.json',
     });
 
-    await service.initialize();
+    const returnedErr = await service.initialize();
 
     const err = service.getInitializationErrorDetails();
-    expect(err.stage).toBe('bad');
+    expect(err).toEqual({
+      message: 'boom',
+      stage: 'bad',
+      details: {
+        originalErrorMessage: 'boom',
+        pathAttempted: '/tmp/llm.json',
+      },
+    });
+    expect(returnedErr).toMatchObject({ stage: 'bad', message: 'boom' });
+    expect(returnedErr.originalError).toBeInstanceOf(Error);
+    expect(service.isOperational()).toBe(false);
+  });
+
+  test('initialize returns error when loader throws', async () => {
+    const thrown = new Error('explode');
+    mockLoader.mockRejectedValue(thrown);
+
+    const returnedErr = await service.initialize();
+
+    expect(returnedErr.stage).toBe('config_load_unexpected_error');
+    expect(returnedErr.originalError).toBe(thrown);
     expect(service.isOperational()).toBe(false);
   });
 });
