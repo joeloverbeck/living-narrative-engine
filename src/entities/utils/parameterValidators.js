@@ -34,13 +34,9 @@ function _assertIds(methodName, instanceId, componentTypeId, logger) {
       methodName,
       logger
     );
-  } catch {
-    const msg = `${methodName}: Invalid parameters - instanceId: '${instanceId}', componentTypeId: '${componentTypeId}'`;
-    logger.warn(msg);
-    throw new InvalidArgumentError(msg, 'instanceId/componentTypeId', {
-      instanceId,
-      componentTypeId,
-    });
+  } catch (err) {
+    logger.error(err);
+    throw new InvalidArgumentError(`Invalid ID: ${err.message}`);
   }
 }
 
