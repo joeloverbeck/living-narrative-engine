@@ -25,6 +25,52 @@ import {
   InitializationError,
 } from '../../errors/InitializationError.js';
 
+/*─────────────────────────────────────────────────────────────────────────*/
+/* Helper Functions                                                        */
+/*─────────────────────────────────────────────────────────────────────────*/
+
+/**
+ * Validates that a world name is a non-empty string.
+ *
+ * @param {string} worldName - Name of the world to validate.
+ * @param {ILogger} logger - Logger for reporting validation errors.
+ * @returns {void}
+ * @throws {TypeError} If the world name is missing or blank.
+ */
+export function validateWorldName(worldName, logger) {
+  const msg = 'InitializationService requires a valid non-empty worldName.';
+  if (!worldName || typeof worldName !== 'string' || worldName.trim() === '') {
+    logger?.error(msg);
+    throw new TypeError(msg);
+  }
+}
+
+/**
+ * Builds the ActionIndex from definitions provided by the repository.
+ *
+ * @param {ActionIndex} actionIndex - Index instance to populate.
+ * @param {import('../../interfaces/IGameDataRepository.js').IGameDataRepository} gameDataRepository - Repository supplying definitions.
+ * @param {ILogger} logger - Logger for debug output.
+ * @returns {void}
+ * @throws {Error} If required dependencies are missing.
+ */
+export function buildActionIndex(actionIndex, gameDataRepository, logger) {
+  if (
+    !gameDataRepository ||
+    typeof gameDataRepository.getAllActionDefinitions !== 'function'
+  ) {
+    throw new Error('buildActionIndex: invalid gameDataRepository dependency');
+  }
+  if (!actionIndex || typeof actionIndex.buildIndex !== 'function') {
+    throw new Error('buildActionIndex: invalid actionIndex dependency');
+  }
+
+  logger?.debug('Building ActionIndex with loaded action definitions...');
+  const defs = gameDataRepository.getAllActionDefinitions();
+  actionIndex.buildIndex(defs);
+  logger?.debug(`ActionIndex built with ${defs.length} action definitions.`);
+}
+
 /**
  * Service responsible for orchestrating the entire game initialization sequence.
  *
@@ -229,21 +275,8 @@ class InitializationService extends IInitializationService {
     this.#logger.debug(
       `InitializationService: Starting runInitializationSequence for world: ${worldName}.`
     );
-    if (
-      !worldName ||
-      typeof worldName !== 'string' ||
-      worldName.trim() === ''
-    ) {
-      const error = new TypeError(
-        'InitializationService requires a valid non-empty worldName.'
-      );
-      this.#logger.error(
-        'InitializationService requires a valid non-empty worldName.'
-      );
-      return { success: false, error };
-    }
-
     try {
+      validateWorldName(worldName, this.#logger);
       await this.#loadMods(worldName);
       await this.#validateContentDependencies(worldName);
       await this.#initializeScopeRegistry();
@@ -256,15 +289,10 @@ class InitializationService extends IInitializationService {
         'Ensuring DomUiFacade is instantiated so UI components are ready...'
       );
 
-      // Build ActionIndex with loaded action definitions
-      this.#logger.debug(
-        'Building ActionIndex with loaded action definitions...'
-      );
-      const allActionDefinitions =
-        this.#gameDataRepository.getAllActionDefinitions();
-      this.#actionIndex.buildIndex(allActionDefinitions);
-      this.#logger.debug(
-        `ActionIndex built with ${allActionDefinitions.length} action definitions.`
+      buildActionIndex(
+        this.#actionIndex,
+        this.#gameDataRepository,
+        this.#logger
       );
 
       // ScopeRegistry was already initialized in #initializeScopeRegistry() above
@@ -277,6 +305,13 @@ class InitializationService extends IInitializationService {
         details: { message: `World '${worldName}' initialized.` },
       };
     } catch (error) {
+      if (
+        error instanceof TypeError &&
+        error.message ===
+          'InitializationService requires a valid non-empty worldName.'
+      ) {
+        return { success: false, error };
+      }
       await this.#reportFatalError(error, worldName);
       return {
         success: false,
