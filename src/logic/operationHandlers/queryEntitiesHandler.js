@@ -71,11 +71,6 @@ class QueryEntitiesHandler extends BaseOperationHandler {
       },
     });
 
-    if (!entityManager?.activeEntities)
-      throw new Error(
-        "Dependency 'IEntityManager' is required and must expose 'activeEntities'."
-      );
-
     this.#entityManager = entityManager;
     this.#jsonLogicEvaluationService = jsonLogicEvaluationService;
     this.#dispatcher = safeEventDispatcher;

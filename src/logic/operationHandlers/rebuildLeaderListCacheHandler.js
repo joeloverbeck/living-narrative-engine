@@ -115,8 +115,10 @@ class RebuildLeaderListCacheHandler extends BaseOperationHandler {
       } catch (err) {
         safeDispatchError(
           this.#dispatcher,
-          `[RebuildLeaderListCacheHandler] Failed updating '${LEADING}' for '${leaderId}': ${err.message || err}`,
-          { stack: err.stack, leaderId }
+          `[RebuildLeaderListCacheHandler] Failed updating '${LEADING}' for leader '${leaderId}': ${
+            err.message || err
+          }`,
+          { stack: err.stack }
         );
       }
     }
