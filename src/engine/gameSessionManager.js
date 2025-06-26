@@ -33,6 +33,8 @@ class GameSessionManager {
   #stopFn;
   /** @type {() => Promise<void>} */
   #resetCoreGameStateFn;
+  /** @type {(worldName: string) => void} */
+  #startEngineFn;
 
   /**
    * Creates a new GameSessionManager instance.
@@ -45,6 +47,7 @@ class GameSessionManager {
    * @param {EngineState} deps.engineState - Engine state reference.
    * @param {() => Promise<void>} deps.stopFn - Function to stop the engine.
    * @param {() => Promise<void>} deps.resetCoreGameStateFn - Function to reset core state.
+   * @param {(worldName: string) => void} deps.startEngineFn - Function to set engine state started.
    */
   constructor({
     logger,
@@ -54,6 +57,7 @@ class GameSessionManager {
     engineState,
     stopFn,
     resetCoreGameStateFn,
+    startEngineFn,
   }) {
     this.#logger = logger;
     this.#turnManager = turnManager;
@@ -62,6 +66,7 @@ class GameSessionManager {
     this.#state = engineState;
     this.#stopFn = stopFn;
     this.#resetCoreGameStateFn = resetCoreGameStateFn;
+    this.#startEngineFn = startEngineFn;
   }
 
   /**
@@ -116,8 +121,7 @@ class GameSessionManager {
    * @returns {Promise<void>} Resolves when setup is complete.
    */
   async _finalizeGameStart(worldName) {
-    this.#state.isInitialized = true;
-    this.#state.isGameLoopRunning = true;
+    this.#startEngineFn(worldName);
 
     if (this.#playtimeTracker) {
       this.#playtimeTracker.startSession();
