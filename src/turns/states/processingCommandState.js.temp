@@ -21,7 +21,7 @@ import { ProcessingExceptionHandler } from './helpers/processingExceptionHandler
 import { buildSpeechPayload } from './helpers/buildSpeechPayload.js';
 import { ProcessingGuard } from './helpers/processingGuard.js';
 import { finishProcessing } from './helpers/processingErrorUtils.js';
-import { getLogger } from './helpers/contextUtils.js';
+import { getLogger, getSafeEventDispatcher } from './helpers/contextUtils.js';
 import turnDirectiveResolverAdapter from '../adapters/turnDirectiveResolverAdapter.js';
 import { ITurnDirectiveResolver } from '../interfaces/ITurnDirectiveResolver.js';
 
@@ -171,17 +171,13 @@ export class ProcessingCommandState extends AbstractTurnState {
       );
 
       try {
-        const eventDispatcher = turnCtx.getSafeEventDispatcher?.();
+        const eventDispatcher = getSafeEventDispatcher(turnCtx, this._handler);
         if (eventDispatcher) {
           const payload = { entityId: actorId, ...payloadBase };
           await eventDispatcher.dispatch(ENTITY_SPOKE_ID, payload);
           logger.debug(
             `${this.getStateName()}: Attempted dispatch of ${ENTITY_SPOKE_ID} for actor ${actorId} via TurnContext's SafeEventDispatcher.`,
             { payload }
-          );
-        } else {
-          logger.warn(
-            `${this.getStateName()}: Could not get SafeEventDispatcher from TurnContext. ${ENTITY_SPOKE_ID} event not dispatched for actor ${actorId}.`
           );
         }
       } catch (eventDispatchError) {
