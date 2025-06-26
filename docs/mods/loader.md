@@ -79,3 +79,9 @@ Reference them in the manifest using a `ui` content category:
 
 During loading, the UiLoader merges icon and label definitions from all mods. If multiple mods define the same key, the entry from the mod loaded last overrides earlier ones, following the same "last mod wins" rule used for other content.
 Files in the `ui/` folder that do not end with `icons.json` or `labels.json` are ignored and a warning is logged, allowing mods to ship extra files without breaking loading.
+
+## Adding New Loader Types
+
+All metadata describing how loaders map manifest keys to disk folders lives in
+`src/loaders/loaderMeta.js`. Update this `meta` map when introducing a new
+loader so that `createContentLoadersConfig` automatically incorporates it.

@@ -40,6 +40,21 @@ describe('defaultLoaderConfig', () => {
     expect(config).toHaveLength(Object.keys(loaderMap).length);
   });
 
+  it('createContentLoadersConfig handles minimal loader map', () => {
+    const stubLoader = {};
+    const loaderMap = { components: stubLoader };
+    const config = createContentLoadersConfig(loaderMap);
+    expect(config).toEqual([
+      {
+        loader: stubLoader,
+        registryKey: 'components',
+        contentKey: 'components',
+        diskFolder: 'components',
+        phase: 'definitions',
+      },
+    ]);
+  });
+
   it('createDefaultContentLoadersConfig returns correct array and calls createContentLoadersConfig', () => {
     const stubLoader = {};
     const deps = {
