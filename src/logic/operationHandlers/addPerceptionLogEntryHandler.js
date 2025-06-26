@@ -4,7 +4,10 @@
  */
 
 import { PERCEPTION_LOG_COMPONENT_ID } from '../../constants/componentIds.js';
-import { assertParamsObject } from '../../utils/handlerUtils/paramsUtils.js';
+import {
+  assertParamsObject,
+  requireNonBlankString,
+} from '../../utils/handlerUtils/paramsUtils.js';
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 import BaseOperationHandler from './baseOperationHandler.js';
 
@@ -55,13 +58,13 @@ class AddPerceptionLogEntryHandler extends BaseOperationHandler {
       return null;
     }
     const { location_id, entry } = params;
-    if (typeof location_id !== 'string' || !location_id.trim()) {
-      safeDispatchError(
-        this.#dispatcher,
-        'ADD_PERCEPTION_LOG_ENTRY: location_id is required',
-        { location_id },
-        logger
-      );
+    const locationId = requireNonBlankString(
+      location_id,
+      'location_id',
+      logger,
+      this.#dispatcher
+    );
+    if (!locationId) {
       return null;
     }
     if (!entry || typeof entry !== 'object') {
@@ -73,7 +76,7 @@ class AddPerceptionLogEntryHandler extends BaseOperationHandler {
       );
       return null;
     }
-    return { locationId: location_id.trim(), entry };
+    return { locationId, entry };
   }
 
   /**

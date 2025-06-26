@@ -9,7 +9,10 @@
 /** @typedef {import('../defs.js').ExecutionContext} ExecutionContext */
 /** @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 
-import { assertParamsObject } from '../../utils/handlerUtils/paramsUtils.js';
+import {
+  assertParamsObject,
+  requireNonBlankString,
+} from '../../utils/handlerUtils/paramsUtils.js';
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
 
 const EVENT_ID = 'core:perceptible_event';
@@ -95,50 +98,42 @@ class DispatchPerceptibleEventHandler {
       log_entry = false,
     } = params;
 
-    if (typeof location_id !== 'string' || !location_id.trim()) {
-      safeDispatchError(
-        this.#dispatcher,
-        'DISPATCH_PERCEPTIBLE_EVENT: location_id required',
-        { location_id },
-        this.#logger
-      );
-      return;
-    }
-    if (typeof description_text !== 'string' || !description_text.trim()) {
-      safeDispatchError(
-        this.#dispatcher,
-        'DISPATCH_PERCEPTIBLE_EVENT: description_text required',
-        { description_text },
-        this.#logger
-      );
-      return;
-    }
-    if (typeof perception_type !== 'string' || !perception_type.trim()) {
-      safeDispatchError(
-        this.#dispatcher,
-        'DISPATCH_PERCEPTIBLE_EVENT: perception_type required',
-        { perception_type },
-        this.#logger
-      );
-      return;
-    }
-    if (typeof actor_id !== 'string' || !actor_id.trim()) {
-      safeDispatchError(
-        this.#dispatcher,
-        'DISPATCH_PERCEPTIBLE_EVENT: actor_id required',
-        { actor_id },
-        this.#logger
-      );
-      return;
-    }
+    const locationId = requireNonBlankString(
+      location_id,
+      'location_id',
+      this.#logger,
+      this.#dispatcher
+    );
+    if (!locationId) return;
+    const descriptionText = requireNonBlankString(
+      description_text,
+      'description_text',
+      this.#logger,
+      this.#dispatcher
+    );
+    if (!descriptionText) return;
+    const perceptionType = requireNonBlankString(
+      perception_type,
+      'perception_type',
+      this.#logger,
+      this.#dispatcher
+    );
+    if (!perceptionType) return;
+    const actorId = requireNonBlankString(
+      actor_id,
+      'actor_id',
+      this.#logger,
+      this.#dispatcher
+    );
+    if (!actorId) return;
 
     const payload = {
       eventName: EVENT_ID,
-      locationId: location_id,
-      descriptionText: description_text,
+      locationId,
+      descriptionText,
       timestamp: new Date().toISOString(),
-      perceptionType: perception_type,
-      actorId: actor_id,
+      perceptionType,
+      actorId,
       targetId: target_id ?? null,
       involvedEntities: Array.isArray(involved_entities)
         ? involved_entities
@@ -156,18 +151,18 @@ class DispatchPerceptibleEventHandler {
 
     if (log_entry) {
       this.#logHandler.execute({
-        location_id,
+        location_id: locationId,
         entry: {
-          descriptionText: description_text,
+          descriptionText,
           timestamp: payload.timestamp,
-          perceptionType: perception_type,
-          actorId: actor_id,
+          perceptionType,
+          actorId,
           targetId: target_id ?? null,
           involvedEntities: Array.isArray(involved_entities)
             ? involved_entities
             : [],
         },
-        originating_actor_id: actor_id,
+        originating_actor_id: actorId,
       });
     }
   }

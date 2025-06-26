@@ -53,4 +53,28 @@ export function validateStringParam(value, name, logger, dispatcher) {
   return null;
 }
 
+/**
+ * @description Require a non-blank string parameter.
+ * Logs a warning or dispatches an error when invalid.
+ * @param {*} value - The value to validate.
+ * @param {string} name - Parameter name for diagnostics.
+ * @param {import('../../interfaces/coreServices.js').ILogger} logger - Logger for reporting.
+ * @param {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher=} dispatcher - Optional dispatcher for error events.
+ * @returns {string|null} Trimmed string or `null` when invalid.
+ */
+export function requireNonBlankString(value, name, logger, dispatcher) {
+  if (isNonBlankString(value)) {
+    return value.trim();
+  }
+  const message = `Invalid or missing "${name}" parameter`;
+  if (dispatcher && typeof dispatcher.dispatch === 'function') {
+    safeDispatchError(dispatcher, message, { [name]: value }, logger);
+  } else if (logger && typeof logger.warn === 'function') {
+    logger.warn(message, { [name]: value });
+  } else {
+    console.warn(message, { [name]: value });
+  }
+  return null;
+}
+
 // deprecated default export removed in favor of named exports only
