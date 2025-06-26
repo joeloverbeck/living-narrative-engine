@@ -43,10 +43,15 @@ export class TestBed extends FactoryTestBed {
   /**
    * Creates a new TestBed instance.
    *
-   * @param {object} [entityManagerOptions] - Optional options to pass to the EntityManager constructor.
-   * @param {Function} [entityManagerOptions.idGenerator] - A mock ID generator function.
+   * @param {object} [overrides] - Optional overrides.
+   * @param {object} [overrides.entityManagerOptions] - Options forwarded to the EntityManager constructor.
+   * @param {Function} [overrides.idGenerator] - Legacy shortcut for entityManagerOptions.idGenerator.
+   * @param {import('../../../src/ports/IEntityRepository.js').IEntityRepository} [overrides.entityManagerOptions.repository]
+   *   - Repository implementation used by the EntityManager.
    */
-  constructor(entityManagerOptions = {}) {
+  constructor(overrides = {}) {
+    const { entityManagerOptions = {}, ...legacyOptions } = overrides;
+    const emOptions = { ...legacyOptions, ...entityManagerOptions };
     super({
       registry: createSimpleMockDataRegistry,
       validator: createMockSchemaValidator,
@@ -59,7 +64,7 @@ export class TestBed extends FactoryTestBed {
       validator: this.mocks.validator,
       logger: this.mocks.logger,
       dispatcher: this.mocks.eventDispatcher,
-      ...entityManagerOptions,
+      ...emOptions,
     });
   }
 

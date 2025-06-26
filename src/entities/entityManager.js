@@ -684,6 +684,9 @@ class EntityManager extends IEntityManager {
 
     try {
       this.#entityRepository.remove(entityToRemove.id);
+      if (this.#repository && typeof this.#repository.remove === 'function') {
+        this.#repository.remove(entityToRemove.id);
+      }
       this.#logger.info(
         `Entity instance ${entityToRemove.id} removed from EntityManager.`
       );

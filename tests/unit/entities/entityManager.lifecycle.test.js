@@ -437,18 +437,21 @@ describeEntityManagerSuite('EntityManager - removeEntityInstance', (getBed) => {
 
     it('should throw an error if EntityRepository fails internally', () => {
       // This is a tricky test for a defensive code path.
-      // We need to spy on the EntityRepositoryAdapter's prototype BEFORE TestBed creates the EntityManager.
-      const { EntityRepositoryAdapter } = jest.requireActual(
-        '../../../src/entities/services/entityRepositoryAdapter.js'
-      );
-      const removeSpy = jest
-        .spyOn(EntityRepositoryAdapter.prototype, 'remove')
-        .mockImplementation(() => {
+      const stubRepo = {
+        add: jest.fn(),
+        get: jest.fn(),
+        has: jest.fn(() => true),
+        remove: jest.fn(() => {
           throw new Error('Test repository failure');
-        });
+        }),
+        clear: jest.fn(),
+        entities: jest.fn(() => [].values()),
+      };
 
       // Arrange
-      const localTestBed = new TestBed(); // Uses the spied-on EntityRepositoryAdapter
+      const localTestBed = new TestBed({
+        entityManagerOptions: { repository: stubRepo },
+      });
       const { entityManager, mocks } = localTestBed;
       const { PRIMARY } = TestData.InstanceIDs;
       localTestBed.createBasicEntity({ instanceId: PRIMARY });
@@ -462,9 +465,6 @@ describeEntityManagerSuite('EntityManager - removeEntityInstance', (getBed) => {
           'EntityRepository.remove failed for already retrieved entity'
         )
       );
-
-      // Clean up the spy
-      removeSpy.mockRestore();
       localTestBed.cleanup();
     });
   });
