@@ -44,10 +44,10 @@ export class GameEngineTestBed extends EngineStartHelpersMixin(
 
   /**
    * @description Constructs a new test bed with optional DI overrides.
-   * @param {{[token: string]: any}} [overrides]
+   * @param {{[token: string]: any}} [diOverrides]
    */
-  constructor(overrides = {}) {
-    const env = createEnvironment(overrides);
+  constructor(diOverrides = {}) {
+    const env = createEnvironment(diOverrides);
     super(env.mockContainer, {
       logger: env.logger,
       entityManager: env.entityManager,
@@ -154,7 +154,7 @@ export const {
  * @param {string} title - Suite title passed to `describe`.
  * @param {(context: { bed: GameEngineTestBed, engine: import('../../../src/engine/gameEngine.js').default }) => void} suiteFn -
  *   Callback containing the tests.
- * @param {{[token: string]: any}} [overrides] - Optional DI overrides.
+ * @param {{[token: string]: any}} [diOverrides] - Optional DI overrides.
  * @returns {void}
  */
 export const describeEngineSuite = createDescribeServiceSuite(
@@ -178,10 +178,10 @@ export function describeInitializedEngineSuite(
   title,
   suiteFn,
   world,
-  overrides
+  diOverrides
 ) {
   if (typeof world === 'object' && world !== null) {
-    overrides = world;
+    diOverrides = world;
     world = DEFAULT_TEST_WORLD;
   }
   world = world || DEFAULT_TEST_WORLD;
@@ -193,7 +193,7 @@ export function describeInitializedEngineSuite(
       });
       suiteFn(ctx);
     },
-    overrides
+    diOverrides
   );
 }
 

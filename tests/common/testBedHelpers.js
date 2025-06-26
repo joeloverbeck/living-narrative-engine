@@ -5,13 +5,13 @@
 /**
  * Executes a callback with a temporary test bed instance.
  *
- * @description Instantiates the provided `TestBedCtor` with optional overrides,
+ * @description Instantiates the provided `TestBedCtor` with optional bedOverrides,
  * optionally runs `initFn` against the bed, then runs `callback` inside a
  * `try/finally` block ensuring `cleanup` is always called. If the bed exposes a
  * `resetMocks` method it is invoked after initialization.
- * @template {new (overrides: any) => any} T
+ * @template {new (bedOverrides: any) => any} T
  * @param {T} TestBedCtor - Test bed constructor.
- * @param {ConstructorParameters<T>[0]} [overrides] - Optional overrides passed to
+ * @param {ConstructorParameters<T>[0]} [bedOverrides] - Optional overrides passed to
  *   the constructor.
  * @param {(bed: InstanceType<T>) => (Promise<void>|void)} callback - Function to
  *   execute with the bed.
@@ -21,11 +21,11 @@
  */
 export async function withTestBed(
   TestBedCtor,
-  overrides = {},
+  bedOverrides = {},
   callback,
   initFn
 ) {
-  const bed = new TestBedCtor(overrides);
+  const bed = new TestBedCtor(bedOverrides);
   if (initFn) {
     await initFn(bed);
   }
@@ -46,21 +46,23 @@ export async function withTestBed(
  *   the created bed instance to arguments expected by the callback. The mapping
  *   is performed via {@code mapFn}, allowing helpers to expose specific
  *   services from the bed.
- * @template {new (overrides: any) => any} T
+ * @template {new (bedOverrides: any) => any} T
  * @param {T} TestBedCtor - Constructor used to create the test bed.
  * @param {(bed: InstanceType<T>) => any[]} mapFn - Maps the bed to callback
  *   arguments.
- * @returns {(overrides: ConstructorParameters<T>[0],
+ * @returns {(bedOverrides: ConstructorParameters<T>[0],
  *   callback: (...args: any[]) => (Promise<void>|void)) => Promise<void>} Helper
  *   invoking {@link withTestBed}.
  */
 export function createWithBed(TestBedCtor, mapFn) {
-  return async function withBed(overrides = {}, callback) {
-    if (typeof overrides === 'function') {
-      callback = overrides;
-      overrides = {};
+  return async function withBed(bedOverrides = {}, callback) {
+    if (typeof bedOverrides === 'function') {
+      callback = bedOverrides;
+      bedOverrides = {};
     }
-    await withTestBed(TestBedCtor, overrides, (bed) => callback(...mapFn(bed)));
+    await withTestBed(TestBedCtor, bedOverrides, (bed) =>
+      callback(...mapFn(bed))
+    );
   };
 }
 
@@ -70,7 +72,7 @@ export function createWithBed(TestBedCtor, mapFn) {
  * @description Similar to {@link createWithBed} but automatically calls a
  *   specified initialization method on the bed. Optional parameters mirror those
  *   of the original helper, defaulting the initialization argument when omitted.
- * @template {new (overrides: any) => any} T
+ * @template {new (bedOverrides: any) => any} T
  * @param {T} TestBedCtor - Constructor used to create the test bed.
  * @param {keyof InstanceType<T>} initMethod - Name of the initialization method
  *   on the bed.
@@ -78,7 +80,7 @@ export function createWithBed(TestBedCtor, mapFn) {
  *   method.
  * @param {(bed: InstanceType<T>) => any[]} mapFn - Maps the bed to callback
  *   arguments.
- * @returns {(options: { overrides?: ConstructorParameters<T>[0], initArg?: any },
+ * @returns {(options: { bedOverrides?: ConstructorParameters<T>[0], initArg?: any },
  *   callback: (...args: any[]) => (Promise<void>|void)) => Promise<void>} Helper
  *   invoking {@link withTestBed} with initialization.
  */
@@ -89,10 +91,10 @@ export function createInitializedBed(
   mapFn
 ) {
   return async function withInitializedBed(options = {}, callback) {
-    const { overrides = {}, initArg = defaultArg } = options;
+    const { bedOverrides = {}, initArg = defaultArg } = options;
     await withTestBed(
       TestBedCtor,
-      overrides,
+      bedOverrides,
       (bed) => callback(...mapFn(bed)),
       (bed) => bed[initMethod](initArg)
     );
