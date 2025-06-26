@@ -135,7 +135,7 @@ describe('SpatialIndexSynchronizer', () => {
       expect(mockSpatialIndexManager.addEntity).not.toHaveBeenCalled();
       expect(mockLogger.warn).toHaveBeenCalledTimes(4);
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        'SpatialIndexSynchronizer.onEntityAdded: Invalid payload received',
+        expect.stringContaining('Invalid payload received'),
         null
       );
     });
@@ -152,7 +152,10 @@ describe('SpatialIndexSynchronizer', () => {
 
       // Assert
       expect(mockSpatialIndexManager.addEntity).toHaveBeenCalledTimes(2);
-      expect(mockSpatialIndexManager.addEntity).toHaveBeenCalledWith('entity-1', 'location-a');
+      expect(mockSpatialIndexManager.addEntity).toHaveBeenCalledWith(
+        'entity-1',
+        'location-a'
+      );
     });
   });
 

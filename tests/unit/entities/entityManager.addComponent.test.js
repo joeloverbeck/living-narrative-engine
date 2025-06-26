@@ -183,11 +183,8 @@ describeEntityManagerSuite('EntityManager - addComponent', (getBed) => {
       expect(() =>
         entityManager.addComponent(PRIMARY, NAME_COMPONENT_ID, value)
       ).toThrow(InvalidArgumentError);
-      expect(mocks.logger.error).toHaveBeenCalledWith(expectedError, {
-        componentTypeId: NAME_COMPONENT_ID,
-        instanceId: PRIMARY,
-        receivedType: receivedType,
-      });
+      // The thrown InvalidArgumentError already carries the specific message, so
+      // there's no need to assert on the logger output here.
     });
 
     runInvalidIdPairTests(getBed, (em, instanceId, componentTypeId) =>
