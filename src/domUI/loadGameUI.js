@@ -190,7 +190,7 @@ class LoadGameUI extends SlotModalBase {
     if (this.elements.listContainerElement) {
       DomUtils.clearElement(this.elements.listContainerElement);
     }
-    this.currentSlotsDisplayData = [];
+    this.clearSlotData();
     this.selectedSlotData = null;
     // Status message is cleared by BaseModalRenderer.show() -> _clearStatusMessage() on next show.
   }
@@ -240,7 +240,7 @@ class LoadGameUI extends SlotModalBase {
       this._displayStatusMessage('Error loading list of saved games.', 'error');
       return []; // Return empty on error
     }
-    this.currentSlotsDisplayData = displaySlots;
+    this.setSlotData(displaySlots);
     return this.currentSlotsDisplayData;
   }
 
@@ -590,7 +590,7 @@ class LoadGameUI extends SlotModalBase {
     super.dispose(); // Handles VED subscriptions, DOM listeners, and BoundDOMRenderer elements.
     this.loadService = null;
     this.selectedSlotData = null;
-    this.currentSlotsDisplayData = [];
+    this.clearSlotData();
     this.logger.debug(`${this._logPrefix} LoadGameUI disposed.`);
   }
 }

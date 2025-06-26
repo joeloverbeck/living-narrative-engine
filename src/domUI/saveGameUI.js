@@ -190,7 +190,7 @@ export class SaveGameUI extends SlotModalBase {
     if (this.elements.listContainerElement) {
       DomUtils.clearElement(this.elements.listContainerElement);
     }
-    this.currentSlotsDisplayData = [];
+    this.clearSlotData();
     this.selectedSlotData = null;
   }
 
@@ -272,7 +272,7 @@ export class SaveGameUI extends SlotModalBase {
       );
       return []; // Return empty on error to prevent further issues
     }
-    this.currentSlotsDisplayData = displaySlots.slice(0, MAX_SAVE_SLOTS);
+    this.setSlotData(displaySlots.slice(0, MAX_SAVE_SLOTS));
     return this.currentSlotsDisplayData;
   }
 
@@ -568,7 +568,7 @@ export class SaveGameUI extends SlotModalBase {
     super.dispose(); // Handles VED subscriptions, DOM listeners, and BoundDOMRenderer elements.
     this.saveService = null;
     this.selectedSlotData = null;
-    this.currentSlotsDisplayData = [];
+    this.clearSlotData();
     this.logger.debug(`${this._logPrefix} SaveGameUI disposed.`);
   }
 }

@@ -50,6 +50,25 @@ export class SlotModalBase extends BaseModalRenderer {
   currentSlotsDisplayData = [];
 
   /**
+   * Replaces the list of currently displayed slots.
+   *
+   * @param {object[]} list - Array of slot data objects.
+   * @returns {void}
+   */
+  setSlotData(list) {
+    this.currentSlotsDisplayData = Array.isArray(list) ? list : [];
+  }
+
+  /**
+   * Clears all slot data currently held in memory.
+   *
+   * @returns {void}
+   */
+  clearSlotData() {
+    this.currentSlotsDisplayData = [];
+  }
+
+  /**
    * Dataset key used on slot elements.
    *
    * @type {string}
@@ -308,7 +327,7 @@ export class SlotModalBase extends BaseModalRenderer {
       this.logger,
       this.domElementFactory
     );
-    this.currentSlotsDisplayData = Array.isArray(data) ? data : [];
+    this.setSlotData(Array.isArray(data) ? data : []);
 
     this._clearStatusMessage();
     this._setOperationInProgress(false);
