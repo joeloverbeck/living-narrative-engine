@@ -10,6 +10,7 @@ import {
 } from '@jest/globals';
 import { HttpConfigurationProvider } from '../../../src/configuration/httpConfigurationProvider.js'; // Adjust path as needed
 import { createMockLogger } from '../testUtils.js'; // Path updated as per your usage
+import { expectNoDispatch } from '../../common/engine/dispatchTestUtils.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/eventIds.js';
 
 describe('HttpConfigurationProvider', () => {
@@ -78,7 +79,7 @@ describe('HttpConfigurationProvider', () => {
       expect(mockLogger.debug).toHaveBeenCalledWith(
         `HttpConfigurationProvider: Successfully fetched and parsed configuration from ${url}.`
       );
-      expect(mockDispatcher.dispatch).not.toHaveBeenCalled();
+      expectNoDispatch(mockDispatcher.dispatch);
     });
 
     it('should throw an error and log if sourceUrl is invalid (empty string)', async () => {

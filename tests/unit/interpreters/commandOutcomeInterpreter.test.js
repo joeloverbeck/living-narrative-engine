@@ -3,6 +3,7 @@
 import CommandOutcomeInterpreter from '../../../src/commands/interpreters/commandOutcomeInterpreter.js';
 import TurnDirective from '../../../src/turns/constants/turnDirectives.js';
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
+import { expectNoDispatch } from '../../common/engine/dispatchTestUtils.js';
 
 // Mocks
 const mockLogger = {
@@ -97,7 +98,7 @@ describe('CommandOutcomeInterpreter', () => {
         mockTurnContext
       );
       expect(directive).toBe(TurnDirective.WAIT_FOR_EVENT);
-      expect(mockDispatcher.dispatch).not.toHaveBeenCalled();
+      expectNoDispatch(mockDispatcher.dispatch);
     });
   });
 });

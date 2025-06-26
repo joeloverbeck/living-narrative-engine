@@ -7,6 +7,7 @@ import { LLMResponseProcessor } from '../../../../src/turns/services/LLMResponse
 import { beforeEach, describe, expect, jest, test } from '@jest/globals';
 import { LLMProcessingError } from '../../../../src/turns/services/LLMResponseProcessor.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../../../src/constants/eventIds.js';
+import { expectNoDispatch } from '../../../common/engine/dispatchTestUtils.js';
 
 // --- Mocks & Helpers ---
 
@@ -69,7 +70,7 @@ describe('LLMResponseProcessor - notes data extraction', () => {
     expect(result.extractedData.notes).toEqual(notesFromLlm);
 
     // No errors should be logged for a valid response
-    expect(safeEventDispatcher.dispatch).not.toHaveBeenCalled();
+    expectNoDispatch(safeEventDispatcher.dispatch);
   });
 
   test('When "notes" key is absent, extractedData.notes is undefined', async () => {
@@ -86,7 +87,7 @@ describe('LLMResponseProcessor - notes data extraction', () => {
 
     expect(result.success).toBe(true);
     expect(result.extractedData.notes).toBeUndefined();
-    expect(safeEventDispatcher.dispatch).not.toHaveBeenCalled();
+    expectNoDispatch(safeEventDispatcher.dispatch);
   });
 
   test('When "notes" is not an array, it fails schema validation by throwing an error', async () => {

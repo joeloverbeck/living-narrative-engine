@@ -7,7 +7,10 @@ import { runInvalidIdPairTests } from '../../common/entities/index.js';
 import { EntityNotFoundError } from '../../../src/errors/entityNotFoundError.js';
 import { InvalidArgumentError } from '../../../src/errors/invalidArgumentError.js';
 import { ValidationError } from '../../../src/errors/validationError.js';
-import { expectComponentAddedDispatch } from '../../common/engine/dispatchTestUtils.js';
+import {
+  expectComponentAddedDispatch,
+  expectNoDispatch,
+} from '../../common/engine/dispatchTestUtils.js';
 
 describeEntityManagerSuite('EntityManager - addComponent', (getBed) => {
   // ----------------------------------------------------------------------//
@@ -149,7 +152,7 @@ describeEntityManagerSuite('EntityManager - addComponent', (getBed) => {
           NEW_COMPONENT_DATA
         );
       }).toThrow(ValidationError);
-      expect(mocks.eventDispatcher.dispatch).not.toHaveBeenCalled();
+      expectNoDispatch(mocks.eventDispatcher.dispatch);
     });
 
     it('should throw InvalidArgumentError when componentData is null', () => {
@@ -215,7 +218,7 @@ describeEntityManagerSuite('EntityManager - addComponent', (getBed) => {
       expect(mocks.logger.warn).toHaveBeenCalledWith(
         expect.stringContaining('entity.addComponent returned false')
       );
-      expect(mocks.eventDispatcher.dispatch).not.toHaveBeenCalled();
+      expectNoDispatch(mocks.eventDispatcher.dispatch);
 
       addComponentSpy.mockRestore();
     });

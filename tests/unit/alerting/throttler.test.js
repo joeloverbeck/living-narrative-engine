@@ -12,6 +12,7 @@ import {
   jest,
 } from '@jest/globals';
 import { Throttler } from '../../../src/alerting/throttler.js';
+import { expectNoDispatch } from '../../common/engine/dispatchTestUtils.js';
 
 // Create a mock dispatcher that conforms to the ISafeEventDispatcher interface for testing.
 const mockDispatcher = {
@@ -49,7 +50,7 @@ describe('Throttler', () => {
 
     // Assert
     expect(result).toBe(true);
-    expect(mockDispatcher.dispatch).not.toHaveBeenCalled();
+    expectNoDispatch(mockDispatcher.dispatch);
   });
 
   /**
@@ -68,7 +69,7 @@ describe('Throttler', () => {
     // Assert
     expect(result2).toBe(false);
     expect(result3).toBe(false);
-    expect(mockDispatcher.dispatch).not.toHaveBeenCalled();
+    expectNoDispatch(mockDispatcher.dispatch);
   });
 
   /**
@@ -136,7 +137,7 @@ describe('Throttler', () => {
     jest.advanceTimersByTime(throttleWindowMs);
 
     // Assert
-    expect(mockDispatcher.dispatch).not.toHaveBeenCalled();
+    expectNoDispatch(mockDispatcher.dispatch);
   });
 
   /**
@@ -150,18 +151,18 @@ describe('Throttler', () => {
     jest.advanceTimersByTime(throttleWindowMs);
 
     // Assert that no summary was dispatched for the first event
-    expect(mockDispatcher.dispatch).not.toHaveBeenCalled();
+    expectNoDispatch(mockDispatcher.dispatch);
 
     // Act: A "new" event with the same key arrives after the window
     const result = throttler.allow(key, payload);
 
     // Assert: It should be allowed again, and no dispatch should happen immediately
     expect(result).toBe(true);
-    expect(mockDispatcher.dispatch).not.toHaveBeenCalled();
+    expectNoDispatch(mockDispatcher.dispatch);
 
     // Act: Let the new timer run to completion to ensure no unexpected summary
     jest.advanceTimersByTime(throttleWindowMs);
-    expect(mockDispatcher.dispatch).not.toHaveBeenCalled();
+    expectNoDispatch(mockDispatcher.dispatch);
   });
 
   it('should handle multiple keys independently', () => {

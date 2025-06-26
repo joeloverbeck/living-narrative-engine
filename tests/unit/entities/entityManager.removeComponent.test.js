@@ -5,7 +5,10 @@ import {
 } from '../../common/entities/index.js';
 import { runInvalidIdPairTests } from '../../common/entities/index.js';
 import { EntityNotFoundError } from '../../../src/errors/entityNotFoundError.js';
-import { expectComponentRemovedDispatch } from '../../common/engine/dispatchTestUtils.js';
+import {
+  expectComponentRemovedDispatch,
+  expectNoDispatch,
+} from '../../common/engine/dispatchTestUtils.js';
 
 describeEntityManagerSuite('EntityManager - removeComponent', (getBed) => {
   describe('removeComponent', () => {
@@ -81,7 +84,7 @@ describeEntityManagerSuite('EntityManager - removeComponent', (getBed) => {
       ).toThrow(
         "Component 'core:name' not found as an override on entity 'test-instance-01'. Nothing to remove at instance level."
       );
-      expect(mocks.eventDispatcher.dispatch).not.toHaveBeenCalled();
+      expectNoDispatch(mocks.eventDispatcher.dispatch);
     });
 
     it('should throw EntityNotFoundError for a non-existent entity', () => {

@@ -13,6 +13,7 @@ import {
 } from '@jest/globals';
 import SystemMoveEntityHandler from '../../../../src/logic/operationHandlers/systemMoveEntityHandler.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../../../src/constants/eventIds.js';
+import { expectNoDispatch } from '../../../common/engine/dispatchTestUtils.js';
 
 // --- Mocks ---
 
@@ -105,7 +106,7 @@ describe('SystemMoveEntityHandler', () => {
         'SYSTEM_MOVE_ENTITY: "entity_ref" and "target_location_id" are required.'
       );
       expect(mockEntityManager.getComponentData).not.toHaveBeenCalled();
-      expect(mockSafeEventDispatcher.dispatch).not.toHaveBeenCalled();
+      expectNoDispatch(mockSafeEventDispatcher.dispatch);
     });
   });
 
@@ -270,7 +271,7 @@ describe('SystemMoveEntityHandler', () => {
         `SYSTEM_MOVE_ENTITY: Entity "${entityId}" is already in location "${fromLocationId}". No move needed.`
       );
       expect(mockEntityManager.addComponent).not.toHaveBeenCalled();
-      expect(mockSafeEventDispatcher.dispatch).not.toHaveBeenCalled();
+      expectNoDispatch(mockSafeEventDispatcher.dispatch);
     });
 
     test('should abort and warn if the entity has no core:position component', async () => {
@@ -285,7 +286,7 @@ describe('SystemMoveEntityHandler', () => {
         `SYSTEM_MOVE_ENTITY: Entity "${entityId}" has no 'core:position' component. Cannot move.`
       );
       expect(mockEntityManager.addComponent).not.toHaveBeenCalled();
-      expect(mockSafeEventDispatcher.dispatch).not.toHaveBeenCalled();
+      expectNoDispatch(mockSafeEventDispatcher.dispatch);
     });
 
     test('should abort and warn if addComponent reports failure', async () => {
@@ -302,7 +303,7 @@ describe('SystemMoveEntityHandler', () => {
       expect(execCtx.logger.warn).toHaveBeenCalledWith(
         `SYSTEM_MOVE_ENTITY: EntityManager reported failure for addComponent on entity "${entityId}".`
       );
-      expect(mockSafeEventDispatcher.dispatch).not.toHaveBeenCalled();
+      expectNoDispatch(mockSafeEventDispatcher.dispatch);
     });
   });
 

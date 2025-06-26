@@ -9,6 +9,7 @@ import {
   LLMProcessingError,
 } from '../../src/turns/services/LLMResponseProcessor.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../src/constants/eventIds.js';
+import { expectNoDispatch } from '../common/engine/dispatchTestUtils.js';
 
 // Mocked logger for capturing logs
 const makeLogger = () => ({
@@ -68,7 +69,7 @@ describe('LLMResponseProcessor', () => {
     expect(logger.debug).toHaveBeenCalledWith(
       `LLMResponseProcessor: Validated LLM output for actor ${actorId}. Chosen ID: 4`
     );
-    expect(safeEventDispatcher.dispatch).not.toHaveBeenCalled();
+    expectNoDispatch(safeEventDispatcher.dispatch);
   });
 
   test('should preserve chosenIndex as a number in the action object', async () => {

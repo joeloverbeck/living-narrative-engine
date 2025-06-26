@@ -7,6 +7,7 @@ import * as EnvironmentModule from '../../../src/llms/environmentContext.js';
 const { EnvironmentContext } = EnvironmentModule;
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/eventIds.js';
 import { LOGGER_INFO_METHOD_ERROR } from '../../common/constants.js';
+import { expectNoDispatch } from '../../common/engine/dispatchTestUtils.js';
 
 /**
  * @typedef {import('../../src/llms/interfaces/ILogger.js').ILogger} ILogger
@@ -324,7 +325,7 @@ describe('ClientApiKeyProvider', () => {
       llmConfig.apiType = undefined;
       const key = await provider.getKey(llmConfig, environmentContext);
       expect(key).toBeNull();
-      expect(dispatcher.dispatch).not.toHaveBeenCalled(); // No error for missing identifiers in this case
+      expectNoDispatch(dispatcher.dispatch); // No error for missing identifiers in this case
       expect(logger.debug).toHaveBeenCalledWith(
         'ClientApiKeyProvider.getKey (test-llm): LLM apiType is missing or not a string. Assuming non-cloud or misconfigured. Skipping key identifier checks.'
       );
@@ -335,7 +336,7 @@ describe('ClientApiKeyProvider', () => {
       llmConfig.apiType = 123; // Invalid type
       const key = await provider.getKey(llmConfig, environmentContext);
       expect(key).toBeNull();
-      expect(dispatcher.dispatch).not.toHaveBeenCalled();
+      expectNoDispatch(dispatcher.dispatch);
       expect(logger.debug).toHaveBeenCalledWith(
         'ClientApiKeyProvider.getKey (test-llm): LLM apiType is missing or not a string. Assuming non-cloud or misconfigured. Skipping key identifier checks.'
       );

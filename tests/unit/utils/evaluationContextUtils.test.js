@@ -1,6 +1,7 @@
 import { describe, test, expect, jest } from '@jest/globals';
 import { ensureEvaluationContext } from '../../../src/utils/evaluationContextUtils.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/eventIds.js';
+import { expectNoDispatch } from '../../common/engine/dispatchTestUtils.js';
 
 const makeLogger = () => ({
   info: jest.fn(),
@@ -20,7 +21,7 @@ describe('ensureEvaluationContext', () => {
     const result = ensureEvaluationContext(ctx, dispatcher, logger);
 
     expect(result).toBe(ctx.evaluationContext.context);
-    expect(dispatcher.dispatch).not.toHaveBeenCalled();
+    expectNoDispatch(dispatcher.dispatch);
   });
 
   test('dispatches error and returns null when context missing', () => {

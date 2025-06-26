@@ -15,6 +15,7 @@ import DomElementFactory from '../../../src/domUI/domElementFactory.js';
 import ConsoleLogger from '../../../src/logging/consoleLogger.js';
 import ValidatedEventDispatcher from '../../../src/events/validatedEventDispatcher.js';
 import { PLAYER_TURN_SUBMITTED_ID } from '../../../src/constants/eventIds.js';
+import { expectNoDispatch } from '../../common/engine/dispatchTestUtils.js';
 
 jest.mock('../../../src/logging/consoleLogger.js');
 jest.mock('../../../src/events/validatedEventDispatcher.js');
@@ -374,7 +375,7 @@ describe('ActionButtonsRenderer', () => {
       expect(commandInputElement.value).toBe('Test speech');
       expect(renderer.selectedAction).toEqual(actionToSubmit);
       expect(globalMockSendButton.disabled).toBe(false);
-      expect(spyDispatch).not.toHaveBeenCalled();
+      expectNoDispatch(spyDispatch);
     });
 
     it('should log error and not change UI state if dispatch throws an error', async () => {
@@ -402,7 +403,7 @@ describe('ActionButtonsRenderer', () => {
 
       await globalMockSendButton.click();
 
-      expect(mockVed.dispatch).not.toHaveBeenCalled();
+      expectNoDispatch(mockVed.dispatch);
       expect(mockLogger.warn).toHaveBeenCalledWith(
         `${CLASS_PREFIX} 'Confirm Action' clicked, but no action is selected.`
       );
@@ -423,7 +424,7 @@ describe('ActionButtonsRenderer', () => {
       expect(mockLogger.error).toHaveBeenCalledWith(
         `${CLASS_PREFIX} #handleSendAction called, but sendButtonElement is null.`
       );
-      expect(mockVed.dispatch).not.toHaveBeenCalled();
+      expectNoDispatch(mockVed.dispatch);
     });
   });
 });

@@ -13,6 +13,7 @@ import {
 import { createEnvironment } from '../../../common/engine/gameEngineEnvironment.js';
 import GameEngine from '../../../../src/engine/gameEngine.js';
 import { tokens } from '../../../../src/dependencyInjection/tokens.js';
+import { expectNoDispatch } from '../../../common/engine/dispatchTestUtils.js';
 
 jest.mock('../../../../src/engine/gameEngine.js');
 
@@ -209,7 +210,7 @@ describe('GameEngine Test Helpers: GameEngineTestBed', () => {
     expect(testBed.getTurnManager().start).not.toHaveBeenCalled();
     expect(testBed.getGamePersistenceService().saveGame).not.toHaveBeenCalled();
     expect(testBed.getPlaytimeTracker().startSession).not.toHaveBeenCalled();
-    expect(testBed.getSafeEventDispatcher().dispatch).not.toHaveBeenCalled();
+    expectNoDispatch(testBed.getSafeEventDispatcher().dispatch);
     expect(
       testBed.getInitializationService().runInitializationSequence
     ).not.toHaveBeenCalled();

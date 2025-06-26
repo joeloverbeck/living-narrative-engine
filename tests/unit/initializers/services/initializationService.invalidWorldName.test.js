@@ -1,5 +1,6 @@
 import InitializationService from '../../../../src/initializers/services/initializationService.js';
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
+import { expectNoDispatch } from '../../../common/engine/dispatchTestUtils.js';
 
 let logger;
 let dispatcher;
@@ -63,7 +64,7 @@ describe('InitializationService invalid world name handling', () => {
       expect(result.success).toBe(false);
       expect(result.error).toBeInstanceOf(TypeError);
       expect(modsLoader.loadMods).not.toHaveBeenCalled();
-      expect(dispatcher.dispatch).not.toHaveBeenCalled();
+      expectNoDispatch(dispatcher.dispatch);
     }
   );
 });

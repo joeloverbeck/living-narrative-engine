@@ -4,6 +4,7 @@ import ValidatedEventDispatcher from '../../../src/events/validatedEventDispatch
 // Mock implementations (can be simplified if only tracking calls)
 import EventBus from '../../../src/events/eventBus.js';
 import { beforeEach, describe, expect, jest, test } from '@jest/globals'; // We'll mock this module
+import { expectNoDispatch } from '../../common/engine/dispatchTestUtils.js';
 
 // --- Mocks Setup ---
 
@@ -213,7 +214,7 @@ describe('ValidatedEventDispatcher', () => {
         schemaId,
         payload
       );
-      expect(mockEventBus.dispatch).not.toHaveBeenCalled();
+      expectNoDispatch(mockEventBus.dispatch);
       expect(mockLogger.error).toHaveBeenCalledWith(
         expect.stringContaining(
           `Payload validation FAILED for event '${eventName}'. Dispatch SKIPPED. Errors: [/data]: should be number`
@@ -246,7 +247,7 @@ describe('ValidatedEventDispatcher', () => {
 
       // Assert
       expect(result).toBe(false);
-      expect(mockEventBus.dispatch).not.toHaveBeenCalled();
+      expectNoDispatch(mockEventBus.dispatch);
       expect(mockLogger.error).toHaveBeenCalledWith(
         expect.stringContaining(
           `Payload validation FAILED for event '${eventName}'. Dispatch SKIPPED. Errors: No details available`
@@ -387,7 +388,7 @@ describe('ValidatedEventDispatcher', () => {
       );
       expect(mockSchemaValidator.isSchemaLoaded).toHaveBeenCalledWith(schemaId);
       expect(mockSchemaValidator.validate).not.toHaveBeenCalled();
-      expect(mockEventBus.dispatch).not.toHaveBeenCalled();
+      expectNoDispatch(mockEventBus.dispatch);
       expect(mockLogger.error).toHaveBeenCalledWith(
         expect.stringContaining(
           `Unexpected error during payload validation process for event '${eventName}'`
@@ -423,7 +424,7 @@ describe('ValidatedEventDispatcher', () => {
         schemaId,
         payload
       );
-      expect(mockEventBus.dispatch).not.toHaveBeenCalled();
+      expectNoDispatch(mockEventBus.dispatch);
       expect(mockLogger.error).toHaveBeenCalledWith(
         expect.stringContaining(
           `Unexpected error during payload validation process for event '${eventName}'`
@@ -472,7 +473,7 @@ describe('ValidatedEventDispatcher', () => {
 
       // Assert
       expect(result).toBe(false); // <<<< CHECK SUT CODE IF THIS FAILS (receives true)
-      expect(mockEventBus.dispatch).not.toHaveBeenCalled();
+      expectNoDispatch(mockEventBus.dispatch);
       expect(loggedValidationError).toBe(true); // Ensure the mock's logic was hit
 
       // Check the subsequent process error log (logged by the catch block)

@@ -11,6 +11,7 @@ import {
   afterEach,
   jest,
 } from '@jest/globals';
+import { expectNoDispatch } from '../../common/engine/dispatchTestUtils.js';
 
 // Utility to create logger and dispatcher mocks
 const createLogger = () => ({
@@ -117,6 +118,6 @@ describe('RetryHttpClient event dispatching', () => {
 
     await client.request('https://ok.test', { method: 'GET' });
 
-    expect(dispatcher.dispatch).not.toHaveBeenCalled();
+    expectNoDispatch(dispatcher.dispatch);
   });
 });

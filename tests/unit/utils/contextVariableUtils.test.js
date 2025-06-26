@@ -5,6 +5,7 @@ import {
   withUpdatedContext,
 } from '../../../src/utils/contextVariableUtils.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/eventIds.js';
+import { expectNoDispatch } from '../../common/engine/dispatchTestUtils.js';
 
 describe('writeContextVariable', () => {
   test('stores value when context exists', () => {
@@ -19,7 +20,7 @@ describe('writeContextVariable', () => {
     const result = writeContextVariable('foo', 123, ctx, dispatcher, logger);
     expect(result).toEqual({ success: true });
     expect(ctx.evaluationContext.context.foo).toBe(123);
-    expect(dispatcher.dispatch).not.toHaveBeenCalled();
+    expectNoDispatch(dispatcher.dispatch);
   });
 
   test('dispatches error and returns failure when context missing', () => {

@@ -4,6 +4,7 @@ import { jest, describe, beforeEach, expect, test } from '@jest/globals';
 import { HumanDecisionProvider } from '../../../../src/turns/providers/humanDecisionProvider.js';
 import { ITurnDecisionProvider } from '../../../../src/turns/interfaces/ITurnDecisionProvider.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../../../src/constants/eventIds.js';
+import { expectNoDispatch } from '../../../common/engine/dispatchTestUtils.js';
 
 // Mock dependencies
 const mockPromptCoordinator = {
@@ -159,6 +160,6 @@ describe('HumanDecisionProvider', () => {
     await expect(
       decisionProvider.decide(mockActor, mockContext, mockActions)
     ).rejects.toThrow('Prompt failed!');
-    expect(mockDispatcher.dispatch).not.toHaveBeenCalled();
+    expectNoDispatch(mockDispatcher.dispatch);
   });
 });

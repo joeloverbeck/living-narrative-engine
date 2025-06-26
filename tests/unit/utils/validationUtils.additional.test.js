@@ -3,6 +3,7 @@ import * as validationUtils from '../../../src/utils/validationUtils.js';
 import { assertValidActionIndex } from '../../../src/utils/actionIndexUtils.js';
 const { validateDependency, validateDependencies } = validationUtils;
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/eventIds.js';
+import { expectNoDispatch } from '../../common/engine/dispatchTestUtils.js';
 
 // Tests for validateDependency and validateDependencies
 
@@ -100,6 +101,6 @@ describe('assertValidActionIndex', () => {
     expect(() =>
       assertValidActionIndex(2, 3, 'Prov', 'actor3', dispatcher, {})
     ).not.toThrow();
-    expect(dispatcher.dispatch).not.toHaveBeenCalled();
+    expectNoDispatch(dispatcher.dispatch);
   });
 });
