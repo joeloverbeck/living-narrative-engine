@@ -27,13 +27,15 @@ describeEntityManagerSuite(
   'Smoke › New Character › Short-Term Memory bootstrap',
   (getBed) => {
     test('EntityManager injects default short-term memory', () => {
-      const tb = getBed();
+      const testBed = getBed();
       const definition = new EntityDefinition('test:alice', {
         components: { [ACTOR_COMPONENT_ID]: {} },
       });
-      tb.setupDefinitions(definition);
+      testBed.setupDefinitions(definition);
 
-      const character = tb.entityManager.createEntityInstance(definition.id);
+      const character = testBed.entityManager.createEntityInstance(
+        definition.id
+      );
 
       expect(character).toBeDefined();
       expect(character.hasComponent(SHORT_TERM_MEMORY_COMPONENT_ID)).toBe(true);
