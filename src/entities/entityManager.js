@@ -492,12 +492,13 @@ class EntityManager extends IEntityManager {
    * @param {string} instanceId - The ID of the entity instance.
    * @param {string} componentTypeId - The unique ID of the component type.
    * @param {object} componentData - The data for the component.
+   * @returns {boolean} True if the component was added or updated successfully, false otherwise.
    * @throws {EntityNotFoundError} If entity not found.
    * @throws {InvalidArgumentError} If parameters are invalid.
    * @throws {ValidationError} If component data validation fails.
    */
   addComponent(instanceId, componentTypeId, componentData) {
-    this.#componentMutationService.addComponent(
+    return this.#componentMutationService.addComponent(
       instanceId,
       componentTypeId,
       componentData
