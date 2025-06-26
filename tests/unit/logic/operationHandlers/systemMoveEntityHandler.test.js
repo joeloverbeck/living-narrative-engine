@@ -240,10 +240,9 @@ describe('SystemMoveEntityHandler', () => {
         'core:entity_moved',
         {
           eventName: 'core:entity_moved',
-          entityId: entityId,
+          entityId,
           previousLocationId: fromLocationId,
           currentLocationId: toLocationId,
-          direction: 'teleport',
           originalCommand: 'system:follow',
         }
       );
@@ -303,6 +302,21 @@ describe('SystemMoveEntityHandler', () => {
       expect(execCtx.logger.warn).toHaveBeenCalledWith(
         `SYSTEM_MOVE_ENTITY: EntityManager reported failure for addComponent on entity "${entityId}".`
       );
+      expectNoDispatch(mockSafeEventDispatcher.dispatch);
+    });
+
+    it('should not move an entity if it has no position component', async () => {
+      // Arrange
+      mockEntityManager.getComponentData.mockReturnValue(null);
+
+      // Act
+      await handler.execute(params, execCtx);
+
+      // Assert
+      expect(execCtx.logger.warn).toHaveBeenCalledWith(
+        `SYSTEM_MOVE_ENTITY: Entity "${entityId}" has no 'core:position' component. Cannot move.`
+      );
+      expect(mockEntityManager.addComponent).not.toHaveBeenCalled();
       expectNoDispatch(mockSafeEventDispatcher.dispatch);
     });
   });

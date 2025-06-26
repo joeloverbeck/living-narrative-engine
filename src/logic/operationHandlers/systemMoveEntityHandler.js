@@ -109,7 +109,6 @@ class SystemMoveEntityHandler extends BaseOperationHandler {
       entityId,
       previousLocationId: fromId,
       currentLocationId: targetId,
-      direction: 'teleport',
       originalCommand: 'system:follow',
     });
   }
