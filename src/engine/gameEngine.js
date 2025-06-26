@@ -91,6 +91,7 @@ class GameEngine {
       engineState: this.#engineState,
       stopFn: this.stop.bind(this),
       resetCoreGameStateFn: this._resetCoreGameState.bind(this),
+      startEngineFn: this.#startEngine.bind(this),
     });
     this.#persistenceCoordinator = new PersistenceCoordinator({
       logger: this.#logger,
@@ -116,6 +117,33 @@ class GameEngine {
     this.#logger.debug(
       'GameEngine: Core game state (EntityManager, PlaytimeTracker) cleared/reset.'
     );
+  }
+
+  /**
+   * Marks the engine as fully started for the provided world.
+   *
+   * @private
+   * @description Sets all engine state flags to active values.
+   * @param {string} worldName - Name of the active world.
+   * @returns {void}
+   */
+  #startEngine(worldName) {
+    this.#engineState.isInitialized = true;
+    this.#engineState.isGameLoopRunning = true;
+    this.#engineState.activeWorld = worldName;
+  }
+
+  /**
+   * Resets all engine state flags to their defaults.
+   *
+   * @private
+   * @description Sets initialization, loop and world values to inactive.
+   * @returns {void}
+   */
+  #resetEngineState() {
+    this.#engineState.isInitialized = false;
+    this.#engineState.isGameLoopRunning = false;
+    this.#engineState.activeWorld = null;
   }
 
   async _executeInitializationSequence(worldName) {
@@ -169,7 +197,7 @@ class GameEngine {
       );
     }
 
-    this.#engineState.reset();
+    this.#resetEngineState();
   }
 
   async _handleNewGameFailure(error, worldName) {
@@ -234,7 +262,7 @@ class GameEngine {
     }
 
     this.#logger.debug('GameEngine.stop: Stopping game engine session...');
-    this.#engineState.isGameLoopRunning = false;
+    this.#resetEngineState();
 
     if (this.#playtimeTracker) {
       this.#playtimeTracker.endSessionAndAccumulate();
@@ -258,9 +286,6 @@ class GameEngine {
         'GameEngine.stop: TurnManager service not available, cannot stop.'
       );
     }
-
-    this.#engineState.isInitialized = false;
-    this.#engineState.activeWorld = null;
 
     this.#logger.debug(
       'GameEngine.stop: Engine fully stopped and state reset.'
