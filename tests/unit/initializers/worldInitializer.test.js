@@ -544,8 +544,8 @@ describe('WorldInitializer', () => {
     });
   });
 
-  // Test for _dispatchWorldInitEvent error handling
-  describe('_dispatchWorldInitEvent error handling', () => {
+  // Ensure dispatchWithLogging error handling works when event dispatch fails
+  describe('dispatchWithLogging error handling', () => {
     it('should log an error if event dispatching fails', async () => {
       const MOCK_ERROR_MESSAGE = 'Dispatch failed';
       mockValidatedEventDispatcher.dispatch.mockRejectedValueOnce(
