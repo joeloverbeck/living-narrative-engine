@@ -14,8 +14,13 @@ import { TurnEndingState } from '../../../../src/turns/states/turnEndingState.js
 import { AwaitingActorDecisionState } from '../../../../src/turns/states/awaitingActorDecisionState.js';
 import { ProcessingCommandState } from '../../../../src/turns/states/processingCommandState.js';
 import { AwaitingExternalTurnEndState } from '../../../../src/turns/states/awaitingExternalTurnEndState.js';
+import TurnDirectiveStrategyResolver from '../../../../src/turns/strategies/turnDirectiveStrategyResolver.js';
 
 // --- Mocks ---
+const mockCommandProcessor = {
+  dispatchAction: jest.fn(),
+  // Add any other methods of ICommandProcessor that might be called by ProcessingCommandState
+};
 
 // A mock logger to be returned by other mocks.
 const mockLogger = {
@@ -49,7 +54,7 @@ describe('ConcreteTurnStateFactory', () => {
 
   beforeEach(() => {
     // Create a new factory instance before each test to ensure isolation.
-    factory = new ConcreteTurnStateFactory();
+    factory = new ConcreteTurnStateFactory({ commandProcessor: mockCommandProcessor });
     // Clear any previous mock calls to avoid test cross-contamination.
     jest.clearAllMocks();
   });
@@ -143,11 +148,11 @@ describe('ConcreteTurnStateFactory', () => {
       const state = factory.createProcessingCommandState(
         mockHandler,
         commandString,
-        turnAction
+        turnAction,
+        TurnDirectiveStrategyResolver
       );
 
       // Assert: Verify the created instance is of the correct class.
-      // We do not assert private fields anymore.
       expect(state).toBeInstanceOf(ProcessingCommandState);
       expect(state._handler).toBe(mockHandler);
     });

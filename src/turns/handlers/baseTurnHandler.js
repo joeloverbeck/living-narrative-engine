@@ -14,6 +14,7 @@
  */
 
 import { ITurnStateHost } from '../interfaces/ITurnStateHost.js';
+import TurnDirectiveStrategyResolver from '../strategies/turnDirectiveStrategyResolver.js';
 
 /**
  * @abstract
@@ -603,13 +604,12 @@ export class BaseTurnHandler {
     this.getLogger().debug(
       `${this.constructor.name}: Received request to transition to ProcessingCommand state.`
     );
-    const commandProcessor = this._container.resolve('commandProcessor');
     await this._transitionToState(
       this._turnStateFactory.createProcessingCommandState(
         this,
-        commandProcessor,
         commandString,
-        turnAction
+        turnAction,
+        TurnDirectiveStrategyResolver
       )
     );
   }

@@ -459,6 +459,7 @@ export function registerAITurnHandler(registrar, logger) {
         turnEndPort: c.resolve(tokens.ITurnEndPort),
         strategyFactory: c.resolve(tokens.TurnStrategyFactory),
         turnContextBuilder: c.resolve(tokens.TurnContextBuilder),
+        container: c,
       })
   );
   logger.debug(
