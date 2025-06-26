@@ -16,6 +16,7 @@
 //  @since   0.3.0
 // -----------------------------------------------------------------------------
 
+import { getDefinition as lookupDefinition } from '../utils/definitionLookup.js';
 import Entity from '../entity.js';
 import EntityInstanceData from '../entityInstanceData.js';
 import { MapManager } from '../../utils/mapManagerUtils.js';
@@ -142,21 +143,10 @@ class EntityFactory {
    */
   #getDefinition(definitionId, registry) {
     try {
-      assertValidId(definitionId, 'EntityFactory.#getDefinition', this.#logger);
-    } catch (error) {
-      this.#logger.warn(
-        `[EntityFactory] #getDefinition called with invalid definitionId: '${definitionId}'`
-      );
+      return lookupDefinition(definitionId, registry, this.#logger);
+    } catch {
       return null;
     }
-    const definition = registry.getEntityDefinition(definitionId);
-    if (definition) {
-      return definition;
-    }
-    this.#logger.warn(
-      `[EntityFactory] Definition not found in registry: ${definitionId}`
-    );
-    return null;
   }
 
   /**
