@@ -35,7 +35,9 @@ export class ConcreteTurnStateFactory extends ITurnStateFactory {
   constructor({ commandProcessor, commandOutcomeInterpreter }) {
     super();
     if (!commandProcessor) {
-      throw new Error('ConcreteTurnStateFactory: commandProcessor is required.');
+      throw new Error(
+        'ConcreteTurnStateFactory: commandProcessor is required.'
+      );
     }
     if (!commandOutcomeInterpreter) {
       throw new Error(
@@ -70,8 +72,11 @@ export class ConcreteTurnStateFactory extends ITurnStateFactory {
   /**
    * @override
    */
-  createAwaitingInputState(handler) {
-    return new AwaitingActorDecisionState(handler);
+  createAwaitingInputState(handler, actionDecisionWorkflowFactory) {
+    return new AwaitingActorDecisionState(
+      handler,
+      actionDecisionWorkflowFactory
+    );
   }
 
   /**
@@ -85,7 +90,8 @@ export class ConcreteTurnStateFactory extends ITurnStateFactory {
     handler,
     commandString,
     turnAction,
-    directiveResolver
+    directiveResolver,
+    processingWorkflowFactory
   ) {
     return new ProcessingCommandState({
       handler,
@@ -94,6 +100,7 @@ export class ConcreteTurnStateFactory extends ITurnStateFactory {
       commandString,
       turnAction,
       directiveResolver,
+      processingWorkflowFactory,
     });
   }
 

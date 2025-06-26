@@ -10,6 +10,7 @@ const makeCtx = (opts = {}) => ({
   setChosenAction: jest.fn(),
   getSafeEventDispatcher: jest.fn(() => ({ dispatch: jest.fn() })),
   requestProcessingCommandStateTransition: jest.fn(),
+  endTurn: jest.fn(),
 });
 
 describe('AwaitingActorDecisionState helpers', () => {
@@ -59,5 +60,28 @@ describe('AwaitingActorDecisionState helpers', () => {
     ctx.getSafeEventDispatcher = () => dispatcher;
     await state._emitActionDecided(ctx, actor, null);
     expect(dispatcher.dispatch).toHaveBeenCalled();
+  });
+
+  test('constructor uses provided workflow factory in enterState', async () => {
+    const actor = { id: 'a2' };
+    const strategy = {
+      decideAction: jest.fn().mockResolvedValue({
+        action: {
+          actionDefinitionId: 'id',
+          commandString: 'cmd',
+          actorId: 'a2',
+        },
+      }),
+    };
+    const ctx = makeCtx({ actor, strategy });
+    const mockWorkflow = { run: jest.fn().mockResolvedValue(undefined) };
+    const factory = jest.fn(() => mockWorkflow);
+    const handler = { getLogger: () => logger, getTurnContext: () => ctx };
+    const customState = new AwaitingActorDecisionState(handler, factory);
+
+    await customState.enterState(handler, null);
+
+    expect(factory).toHaveBeenCalledWith(customState, ctx, actor, strategy);
+    expect(mockWorkflow.run).toHaveBeenCalled();
   });
 });
