@@ -139,4 +139,41 @@ describe('LlmConfigService', () => {
     expect(returnedErr.originalError).toBe(thrown);
     expect(service.isOperational()).toBe(false);
   });
+
+  test('initialize propagates loader error and disables service', async () => {
+    const loaderError = {
+      error: true,
+      message: 'nope',
+      stage: 'loader_stage',
+      originalError: new Error('nope'),
+      pathAttempted: '/tmp/llm.json',
+    };
+
+    mockLoader.mockResolvedValue(loaderError);
+
+    const returnedErr = await service.initialize();
+
+    expect(returnedErr).toMatchObject({
+      message: 'nope',
+      stage: 'loader_stage',
+    });
+    expect(returnedErr.originalError).toBe(loaderError.originalError);
+    expect(service.isOperational()).toBe(false);
+    expect(service.getLlmConfigs()).toBeNull();
+
+    const cfg = service.getLlmById('gpt4');
+    expect(cfg).toBeNull();
+    expect(logger.warn).toHaveBeenCalled();
+  });
+
+  test('loaded configurations are frozen', async () => {
+    await service.initialize();
+    const configs = service.getLlmConfigs();
+    expect(Object.isFrozen(configs)).toBe(true);
+    expect(Object.isFrozen(configs.configs.gpt4)).toBe(true);
+    expect(() => {
+      // In strict mode (default for ESM), modifying a frozen object throws
+      configs.configs.gpt4.newProp = 'fail';
+    }).toThrow();
+  });
 });
