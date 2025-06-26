@@ -47,6 +47,7 @@ import { DuplicateEntityError } from '../errors/duplicateEntityError.js';
 import { SerializedEntityError } from '../errors/serializedEntityError.js';
 import { InvalidInstanceIdError } from '../errors/invalidInstanceIdError.js';
 import { ValidationError } from '../errors/validationError.js';
+import { getDefinition as lookupDefinition } from './utils/definitionLookup.js';
 import { ENTITY_CREATED_ID, ENTITY_REMOVED_ID } from '../constants/eventIds.js';
 
 /* -------------------------------------------------------------------------- */
@@ -303,24 +304,20 @@ class EntityManager extends IEntityManager {
    * definitionId is invalid or the definition is missing.
    */
   #getDefinition(definitionId) {
-    try {
-      assertValidId(definitionId, 'EntityManager.#getDefinition', this.#logger);
-    } catch (error) {
-      this.#logger.warn(
-        `EntityManager.#getDefinition called with invalid definitionId: '${definitionId}'`
-      );
-      return null;
-    }
     if (this.#definitionCache.has(definitionId)) {
       return this.#definitionCache.get(definitionId);
     }
-    const definition = this.#registry.getEntityDefinition(definitionId);
-    if (definition) {
+    try {
+      const definition = lookupDefinition(
+        definitionId,
+        this.#registry,
+        this.#logger
+      );
       this.#definitionCache.set(definitionId, definition);
       return definition;
+    } catch {
+      return null;
     }
-    this.#logger.warn(`Definition not found in registry: ${definitionId}`);
-    return null;
   }
 
   /* ---------------------------------------------------------------------- */
