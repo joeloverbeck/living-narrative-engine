@@ -154,14 +154,24 @@ describe('GetTimestampHandler', () => {
       );
     });
 
-    test('should throw a TypeError if result_variable is missing from params', () => {
-      // Arrange
-      const params = {}; // Missing result_variable
-
-      // Act & Assert
-      expect(() => handler.execute(params, mockExecutionContext)).toThrow(
-        "Cannot read properties of undefined (reading 'trim')"
+    test('should warn and return if result_variable is missing', () => {
+      const params = {};
+      handler.execute(params, mockExecutionContext);
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'Invalid "result_variable" parameter',
+        { result_variable: undefined }
       );
+      expect(mockExecutionContext.evaluationContext.context).toEqual({});
+    });
+
+    test('should warn and return if result_variable is blank', () => {
+      const params = { result_variable: '   ' };
+      handler.execute(params, mockExecutionContext);
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        'Invalid "result_variable" parameter',
+        { result_variable: '   ' }
+      );
+      expect(mockExecutionContext.evaluationContext.context).toEqual({});
     });
 
     test('should handle a malformed execution context gracefully', () => {
