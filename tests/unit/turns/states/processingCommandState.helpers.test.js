@@ -88,7 +88,10 @@ describe('ProcessingCommandState helpers', () => {
 
   test('_obtainTurnAction uses constructor action', async () => {
     const actor = { id: 'a1' };
-    const specificAction = { actionDefinitionId: 'specificAct', commandString: 'specific command' };
+    const specificAction = {
+      actionDefinitionId: 'specificAct',
+      commandString: 'specific command',
+    };
     state = new ProcessingCommandState({
       handler: mockHandler,
       commandProcessor: mockCommandProcessor,
@@ -97,9 +100,11 @@ describe('ProcessingCommandState helpers', () => {
       turnAction: specificAction,
       directiveResolver: TurnDirectiveStrategyResolver,
     });
-    workflow = new ProcessingWorkflow(state, null, specificAction, (a) => {});
+    workflow = new ProcessingWorkflow(state, null, specificAction, () => {});
     const ctx = makeCtx(actor);
-    await expect(workflow._obtainTurnAction(ctx, actor)).resolves.toBe(specificAction);
+    await expect(workflow._obtainTurnAction(ctx, actor)).resolves.toBe(
+      specificAction
+    );
   });
 
   test('_dispatchSpeech dispatches when speech present', async () => {
@@ -108,6 +113,15 @@ describe('ProcessingCommandState helpers', () => {
     const ctx = makeCtx(actor, { getSafeEventDispatcher: () => dispatcher });
     await state._dispatchSpeech(ctx, actor, { speech: 'hi' });
     expect(dispatcher.dispatch).toHaveBeenCalled();
+  });
+
+  test('_dispatchSpeech warns when dispatcher missing', async () => {
+    const actor = { id: 'a1' };
+    const ctx = makeCtx(actor, { getSafeEventDispatcher: () => null });
+    await state._dispatchSpeech(ctx, actor, { speech: 'hi' });
+    expect(mockLogger.warn).toHaveBeenCalledWith(
+      expect.stringContaining('SafeEventDispatcher unavailable')
+    );
   });
 
   test('_dispatchSpeechIfNeeded forwards metadata', async () => {
