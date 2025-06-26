@@ -187,7 +187,7 @@ class GameEngine {
     this.#logger.debug(
       `GameEngine: startNewGame called for world "${worldName}".`
     );
-    let specificInitializationError = null;
+    let initError = null;
 
     try {
       await this.#sessionManager.prepareForNewGameSession(worldName);
@@ -201,7 +201,7 @@ class GameEngine {
         const initializationError =
           initResult.error ||
           new Error('Unknown failure from InitializationService.');
-        specificInitializationError = initializationError;
+        initError = initializationError;
         this.#logger.warn(
           `GameEngine: InitializationService reported failure for "${worldName}".`
         );
@@ -215,7 +215,7 @@ class GameEngine {
         `GameEngine: Overall catch in startNewGame for world "${worldName}". Error: ${caughtError.message || String(caughtError)}`,
         caughtError
       );
-      if (caughtError !== specificInitializationError) {
+      if (caughtError !== initError) {
         await this._handleNewGameFailure(caughtError, worldName);
       }
       throw caughtError;

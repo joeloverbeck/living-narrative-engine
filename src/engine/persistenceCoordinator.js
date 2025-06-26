@@ -95,15 +95,15 @@ class PersistenceCoordinator {
       );
       return { ...result, saveName };
     } catch (error) {
-      const caughtErrorMsg =
+      const errorMessage =
         error instanceof Error ? error.message : String(error);
       this.#logger.error(
-        `GameEngine.triggerManualSave: Unexpected error during save operation for "${saveName}". Error: ${caughtErrorMsg}`,
+        `GameEngine.triggerManualSave: Unexpected error during save operation for "${saveName}". Error: ${errorMessage}`,
         error
       );
       return {
         success: false,
-        error: `Unexpected error during save: ${caughtErrorMsg}`,
+        error: `Unexpected error during save: ${errorMessage}`,
         saveName,
       };
     }
