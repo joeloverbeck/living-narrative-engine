@@ -8,6 +8,7 @@ export * from './loaders.js';
 export * from './entities.js';
 export * from './container.js';
 export * from './memoryStorageProvider.js';
+export * from './actions.js';
 
 // Explicit convenience exports
 export {
