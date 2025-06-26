@@ -63,6 +63,95 @@ class PersistenceCoordinator {
   }
 
   /**
+   * Dispatches UI events indicating a save is in progress.
+   *
+   * @private
+   * @param {string} saveName - Name of the save being created.
+   * @returns {Promise<void>} Resolves when the event is dispatched.
+   */
+  async _dispatchSavingUI(saveName) {
+    this.#logger.debug(
+      `GameEngine.triggerManualSave: Dispatching ENGINE_OPERATION_IN_PROGRESS_UI for save: "${saveName}".`
+    );
+    await this.#dispatcher.dispatch(ENGINE_OPERATION_IN_PROGRESS_UI, {
+      titleMessage: 'Saving...',
+      inputDisabledMessage: `Saving game "${saveName}"...`,
+    });
+  }
+
+  /**
+   * Performs the actual save via the persistence service.
+   *
+   * @private
+   * @param {string} saveName - Save name.
+   * @returns {Promise<SaveResult & {saveName: string}>} Result from the persistence service.
+   */
+  async _performSave(saveName) {
+    try {
+      const result = await this.#persistenceService.saveGame(
+        saveName,
+        true,
+        this.#state.activeWorld
+      );
+      return { ...result, saveName };
+    } catch (error) {
+      const caughtErrorMsg =
+        error instanceof Error ? error.message : String(error);
+      this.#logger.error(
+        `GameEngine.triggerManualSave: Unexpected error during save operation for "${saveName}". Error: ${caughtErrorMsg}`,
+        error
+      );
+      return {
+        success: false,
+        error: `Unexpected error during save: ${caughtErrorMsg}`,
+        saveName,
+      };
+    }
+  }
+
+  /**
+   * Dispatches UI events corresponding to the save result and final ready state.
+   *
+   * @private
+   * @param {SaveResult & {saveName: string}} saveResult - Result of the save operation.
+   * @returns {Promise<void>} Resolves when UI updates have been dispatched.
+   */
+  async _dispatchSaveResult(saveResult) {
+    const { saveName } = saveResult;
+    if (saveResult.success) {
+      this.#logger.debug(
+        `GameEngine.triggerManualSave: Save successful. Name: "${saveName}", Path: ${saveResult.filePath || 'N/A'}`
+      );
+      await this.#dispatcher.dispatch(GAME_SAVED_ID, {
+        saveName,
+        path: saveResult.filePath,
+        type: 'manual',
+      });
+      this.#logger.debug(
+        `GameEngine.triggerManualSave: Dispatched GAME_SAVED_ID for "${saveName}".`
+      );
+      this.#logger.debug(
+        `GameEngine.triggerManualSave: Save successful. Name: "${saveName}".`
+      );
+    } else {
+      this.#logger.error(
+        `GameEngine.triggerManualSave: Save failed. Name: "${saveName}". Reported error: ${saveResult.error}`
+      );
+      this.#logger.debug(
+        `GameEngine.triggerManualSave: Save failed. Name: "${saveName}".`
+      );
+    }
+
+    this.#logger.debug(
+      `GameEngine.triggerManualSave: Dispatching ENGINE_READY_UI after save attempt for "${saveName}".`
+    );
+    await this.#dispatcher.dispatch(ENGINE_READY_UI, {
+      activeWorld: this.#state.activeWorld,
+      message: 'Save operation finished. Ready.',
+    });
+  }
+
+  /**
    * Triggers a manual save of the current game state.
    *
    * @param {string} saveName - Desired save name.
@@ -86,71 +175,14 @@ class PersistenceCoordinator {
       return { success: false, error: errorMsg };
     }
 
-    /** @type {SaveResult} */
-    let saveResult;
+    await this._dispatchSavingUI(saveName);
 
-    try {
-      this.#logger.debug(
-        `GameEngine.triggerManualSave: Dispatching ENGINE_OPERATION_IN_PROGRESS_UI for save: "${saveName}".`
-      );
-      await this.#dispatcher.dispatch(ENGINE_OPERATION_IN_PROGRESS_UI, {
-        titleMessage: 'Saving...',
-        inputDisabledMessage: `Saving game "${saveName}"...`,
-      });
+    const saveResultWithName = await this._performSave(saveName);
 
-      saveResult = await this.#persistenceService.saveGame(
-        saveName,
-        true,
-        this.#state.activeWorld
-      );
+    await this._dispatchSaveResult(saveResultWithName);
 
-      if (saveResult.success) {
-        this.#logger.debug(
-          `GameEngine.triggerManualSave: Save successful. Name: "${saveName}", Path: ${saveResult.filePath || 'N/A'}`
-        );
-
-        await this.#dispatcher.dispatch(GAME_SAVED_ID, {
-          saveName: saveName,
-          path: saveResult.filePath,
-          type: 'manual',
-        });
-        this.#logger.debug(
-          `GameEngine.triggerManualSave: Dispatched GAME_SAVED_ID for "${saveName}".`
-        );
-
-        this.#logger.debug(
-          `GameEngine.triggerManualSave: Save successful. Name: "${saveName}".`
-        );
-      } else {
-        this.#logger.error(
-          `GameEngine.triggerManualSave: Save failed. Name: "${saveName}". Reported error: ${saveResult.error}`
-        );
-        this.#logger.debug(
-          `GameEngine.triggerManualSave: Save failed. Name: "${saveName}".`
-        );
-      }
-    } catch (error) {
-      const caughtErrorMsg =
-        error instanceof Error ? error.message : String(error);
-      this.#logger.error(
-        `GameEngine.triggerManualSave: Unexpected error during save operation for "${saveName}". Error: ${caughtErrorMsg}`,
-        error
-      );
-
-      saveResult = {
-        success: false,
-        error: `Unexpected error during save: ${caughtErrorMsg}`,
-      };
-    } finally {
-      this.#logger.debug(
-        `GameEngine.triggerManualSave: Dispatching ENGINE_READY_UI after save attempt for "${saveName}".`
-      );
-      await this.#dispatcher.dispatch(ENGINE_READY_UI, {
-        activeWorld: this.#state.activeWorld,
-        message: 'Save operation finished. Ready.',
-      });
-    }
-    return saveResult;
+    const { saveName: _ignored, ...result } = saveResultWithName;
+    return result;
   }
 
   /**
