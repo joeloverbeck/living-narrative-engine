@@ -178,6 +178,29 @@ export class TestBed extends FactoryTestBed {
   }
 
   /**
+   * Convenience helper for creating an entity with initial component overrides.
+   *
+   * @description Creates a new entity instance from {@link TestData} with the
+   *   provided component overrides applied.
+   * @param {keyof typeof TestData.Definitions} defKey - Key of the test
+   *   definition to use.
+   * @param {Record<string, object>} overrides - Map of component IDs to override
+   *   data.
+   * @param {object} [options] - Options forwarded to
+   *   {@link EntityManager#createEntityInstance}.
+   * @param {object} [cfg] - Additional configuration options.
+   * @returns {import('../../../src/entities/entity.js').default} The created
+   *   entity instance.
+   */
+  createEntityWithOverride(defKey, overrides, options = {}, cfg = {}) {
+    return this.createEntity(
+      defKey,
+      { ...options, componentOverrides: overrides },
+      cfg
+    );
+  }
+
+  /**
    * Resets the dispatch mock on the internal event dispatcher.
    *
    * @returns {void}

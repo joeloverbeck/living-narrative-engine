@@ -25,10 +25,13 @@ describeEntityManagerSuite('EntityManager - hasComponent', (getBed) => {
       // Arrange
       const { entityManager } = getBed();
       const { PRIMARY } = TestData.InstanceIDs;
-      getBed().createBasicEntity({ instanceId: PRIMARY });
+      getBed().createEntityWithOverride(
+        'basic',
+        { 'new:component': { data: 'test' } },
+        { instanceId: PRIMARY }
+      );
 
       // Act
-      entityManager.addComponent(PRIMARY, 'new:component', { data: 'test' });
       const result = entityManager.hasComponent(PRIMARY, 'new:component');
 
       // Assert
@@ -88,10 +91,11 @@ describeEntityManagerSuite('EntityManager - hasComponent', (getBed) => {
         const { entityManager } = getBed();
         const { NAME_COMPONENT_ID } = TestData.ComponentIDs;
         const { PRIMARY } = TestData.InstanceIDs;
-        getBed().createBasicEntity({ instanceId: PRIMARY });
-        entityManager.addComponent(PRIMARY, NAME_COMPONENT_ID, {
-          name: 'Override',
-        });
+        getBed().createEntityWithOverride(
+          'basic',
+          { [NAME_COMPONENT_ID]: { name: 'Override' } },
+          { instanceId: PRIMARY }
+        );
 
         // Act
         const result = entityManager.hasComponent(
@@ -128,10 +132,11 @@ describeEntityManagerSuite('EntityManager - hasComponent', (getBed) => {
         const { entityManager } = getBed();
         const { NAME_COMPONENT_ID } = TestData.ComponentIDs;
         const { PRIMARY } = TestData.InstanceIDs;
-        getBed().createBasicEntity({ instanceId: PRIMARY });
-        entityManager.addComponent(PRIMARY, NAME_COMPONENT_ID, {
-          name: 'Override',
-        });
+        getBed().createEntityWithOverride(
+          'basic',
+          { [NAME_COMPONENT_ID]: { name: 'Override' } },
+          { instanceId: PRIMARY }
+        );
 
         // Act
         const result = entityManager.hasComponentOverride(

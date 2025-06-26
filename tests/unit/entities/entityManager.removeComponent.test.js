@@ -19,12 +19,11 @@ describeEntityManagerSuite('EntityManager - removeComponent', (getBed) => {
       const { PRIMARY } = TestData.InstanceIDs;
 
       // Add component as an override
-      getBed().createBasicEntity({
-        instanceId: PRIMARY,
-      });
-      entityManager.addComponent(PRIMARY, NAME_COMPONENT_ID, {
-        name: 'Override',
-      });
+      getBed().createEntityWithOverride(
+        'basic',
+        { [NAME_COMPONENT_ID]: { name: 'Override' } },
+        { instanceId: PRIMARY }
+      );
       expect(entityManager.hasComponent(PRIMARY, NAME_COMPONENT_ID, true)).toBe(
         true
       );
@@ -44,15 +43,12 @@ describeEntityManagerSuite('EntityManager - removeComponent', (getBed) => {
       const { NAME_COMPONENT_ID } = TestData.ComponentIDs;
       const { PRIMARY } = TestData.InstanceIDs;
       const overrideData = { name: 'ToBeRemoved' };
-      const entity = getBed().createEntity(
+      const entity = getBed().createEntityWithOverride(
         'basic',
-        {
-          instanceId: PRIMARY,
-        },
+        { [NAME_COMPONENT_ID]: overrideData },
+        { instanceId: PRIMARY },
         { resetDispatch: true }
       );
-      entityManager.addComponent(PRIMARY, NAME_COMPONENT_ID, overrideData);
-      getBed().resetDispatchMock();
 
       // Act
       entityManager.removeComponent(PRIMARY, NAME_COMPONENT_ID);
