@@ -57,10 +57,21 @@ function createInvalidInputTest(values, message) {
  * @returns {void}
  */
 export function runInvalidIdPairTests(getBed, invoke) {
-  createInvalidInputTest(
-    TestData.InvalidValues.invalidIdPairs,
-    'should throw InvalidArgumentError for invalid inputs'
-  )(getBed, invoke);
+  it.each(TestData.InvalidValues.invalidIdPairs)(
+    'should throw InvalidArgumentError for invalid inputs',
+    (instanceId, componentId) => {
+      const { entityManager, mocks } = getBed();
+      let error;
+      try {
+        invoke(entityManager, instanceId, componentId);
+      } catch (err) {
+        error = err;
+      }
+      expect(error).toBeInstanceOf(InvalidArgumentError);
+      expect(error.message).toContain('Invalid ID:');
+      expect(mocks.logger.error).toHaveBeenCalled();
+    }
+  );
 }
 
 /**
