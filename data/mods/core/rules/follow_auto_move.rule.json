@@ -8,66 +8,78 @@
   },
   "actions": [
     {
-      "type": "REBUILD_LEADER_LIST_CACHE",
-      "comment": "First, authoritatively rebuild the leader's follower list for other systems.",
-      "parameters": {
-        "leaderIds": ["{event.payload.entityId}"]
-      }
-    },
-    {
-      "type": "QUERY_ENTITIES",
-      "comment": "Step 1: Efficiently find all followers who were in the same starting location as the leader.",
-      "parameters": {
-        "result_variable": "followersToMove",
-        "filters": [
-          { "by_location": "{event.payload.previousLocationId}" },
-          {
-            "with_component_data": {
-              "component_type": "core:following",
-              "condition": {
-                "==": [{ "var": "leaderId" }, "{event.payload.entityId}"]
-              }
-            }
-          }
-        ]
-      }
-    },
-    {
       "type": "IF",
-      "comment": "Step 2: If any followers were found, proceed to move them.",
       "parameters": {
-        "condition": { ">": [{ "var": "context.followersToMove.length" }, 0] },
+        "condition": {
+          "!": {
+            "missing": "actor.components.core:leading"
+          }
+        },
         "then_actions": [
           {
-            "type": "QUERY_COMPONENT",
-            "comment": "Get the leader's name for event messages.",
+            "type": "REBUILD_LEADER_LIST_CACHE",
+            "comment": "First, authoritatively rebuild the leader's follower list for other systems.",
             "parameters": {
-              "entity_ref": "actor",
-              "component_type": "core:name",
-              "result_variable": "leaderName"
+              "leaderIds": ["{event.payload.entityId}"]
             }
           },
           {
-            "type": "QUERY_COMPONENT",
-            "comment": "Get the destination location's name for event messages.",
+            "type": "QUERY_ENTITIES",
+            "comment": "Step 1: Efficiently find all followers who were in the same starting location as the leader.",
             "parameters": {
-              "entity_ref": { "entityId": "{event.payload.currentLocationId}" },
-              "component_type": "core:name",
-              "result_variable": "newLocationName"
+              "result_variable": "followersToMove",
+              "filters": [
+                { "by_location": "{event.payload.previousLocationId}" },
+                {
+                  "with_component_data": {
+                    "component_type": "core:following",
+                    "condition": {
+                      "==": [{ "var": "leaderId" }, "{event.payload.entityId}"]
+                    }
+                  }
+                }
+              ]
             }
           },
           {
-            "type": "GET_TIMESTAMP",
-            "comment": "Get a single timestamp for all resulting perception logs.",
-            "parameters": { "result_variable": "nowIso" }
-          },
-          {
-            "type": "FOR_EACH",
-            "comment": "For each follower that needs to move, update their state and dispatch events.",
+            "type": "IF",
+            "comment": "Step 2: If any followers were found, proceed to move them.",
             "parameters": {
-              "collection": "context.followersToMove",
-              "item_variable": "followerId",
-              "actions": [{ "macro": "core:autoMoveFollower" }]
+              "condition": { ">": [{ "var": "context.followersToMove.length" }, 0] },
+              "then_actions": [
+                {
+                  "type": "QUERY_COMPONENT",
+                  "comment": "Get the leader's name for event messages.",
+                  "parameters": {
+                    "entity_ref": "actor",
+                    "component_type": "core:name",
+                    "result_variable": "leaderName"
+                  }
+                },
+                {
+                  "type": "QUERY_COMPONENT",
+                  "comment": "Get the destination location's name for event messages.",
+                  "parameters": {
+                    "entity_ref": { "entityId": "{event.payload.currentLocationId}" },
+                    "component_type": "core:name",
+                    "result_variable": "newLocationName"
+                  }
+                },
+                {
+                  "type": "GET_TIMESTAMP",
+                  "comment": "Get a single timestamp for all resulting perception logs.",
+                  "parameters": { "result_variable": "nowIso" }
+                },
+                {
+                  "type": "FOR_EACH",
+                  "comment": "For each follower that needs to move, update their state and dispatch events.",
+                  "parameters": {
+                    "collection": "context.followersToMove",
+                    "item_variable": "followerId",
+                    "actions": [{ "macro": "core:autoMoveFollower" }]
+                  }
+                }
+              ]
             }
           }
         ]

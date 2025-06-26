@@ -338,6 +338,10 @@ describe('core_handle_follow_auto_move rule integration', () => {
       },
     ]);
 
+    testEnv.entityManager.addComponent('actor1', LEADING_COMPONENT_ID, {
+      followers: ['target1'],
+    });
+
     testEnv.eventBus.dispatch('core:entity_moved', {
       entityId: 'actor1',
       previousLocationId: 'room1',
