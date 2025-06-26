@@ -20,7 +20,7 @@ import {
   createMockWorldLoader, // ← NEW import
   createLoaderMocks,
 } from '../mockFactories';
-import { createServiceTestEnvironment } from '../mockEnvironment.js';
+import { buildServiceEnvironment } from '../mockEnvironment.js'; // Changed import
 import { DEFAULT_LOADER_TYPES } from './loaderConstants.js';
 
 /**
@@ -45,6 +45,9 @@ const factoryMap = {
   mockWorldLoader: createMockWorldLoader,
 };
 
+// tokenMap is not used by ModsLoader constructor directly, but buildServiceEnvironment expects it.
+const tokenMap = {};
+
 const adjustMocks = (m) => {
   m.mockValidator.isSchemaLoaded.mockImplementation((id) =>
     [
@@ -65,13 +68,6 @@ const adjustMocks = (m) => {
   m.mockModLoadOrderResolver.resolve.mockImplementation((ids) => ids);
 };
 
-const serviceFactory = (mockContainer, m) =>
-  new ModsLoader({
-    logger: m.mockLogger,
-    cache: { clear: jest.fn(), snapshot: jest.fn(), restore: jest.fn() },
-    session: { run: jest.fn().mockResolvedValue({}) },
-  });
-
 /**
  * Builds a fully mocked environment for ModsLoader tests.
  *
@@ -83,19 +79,34 @@ export function createTestEnvironment() {
   /* ── Content-loader mocks ───────────────────────────────────────────── */
   const loaders = createLoaderMocks(loaderTypes);
 
-  const env = createServiceTestEnvironment({
+  // Adapter class for ModsLoader constructor
+  class ModsLoaderAdapter {
+    constructor({ mocks }) { // container is not directly used by ModsLoader constructor
+      return new ModsLoader({
+        logger: mocks.mockLogger,
+        cache: { clear: jest.fn(), snapshot: jest.fn(), restore: jest.fn() },
+        session: { run: jest.fn().mockResolvedValue({}) },
+      });
+    }
+  }
+
+  const env = buildServiceEnvironment(
     factoryMap,
-    tokenMap: {},
-    build: serviceFactory,
-    setupMocks: adjustMocks,
-  });
+    tokenMap, // Pass the empty tokenMap
+    ModsLoaderAdapter, // Use the adapter
+    {}, // No overrides in this specific setup
+    adjustMocks // Pass setupMocks function
+  );
 
   /* ── Return the assembled environment ──────────────────────────────── */
   return {
-    ...env,
-    ...loaders,
-    modsLoader: env.instance,
-    mockWorldLoader: env.mocks.mockWorldLoader, // ← exposed for assertions
+    ...env.mocks, // Spread all individual mocks from the factoryMap
+    mockContainer: env.mockContainer,
+    modsLoader: env.service, // This is the ModsLoader instance from buildServiceEnvironment
+    createInstance: env.createInstance, // To create new ModsLoader instances
+    cleanup: env.cleanup,
+    ...loaders, // Merge other loader mocks
+    mockWorldLoader: env.mocks.mockWorldLoader, // Ensure this points to the correct mock
     // Handy aliases for deeply nested jest fns
     mockedModDependencyValidator: env.mocks.mockModDependencyValidator.validate,
     mockedValidateModEngineVersions: env.mocks.mockModVersionValidator,

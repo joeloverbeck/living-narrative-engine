@@ -15,7 +15,7 @@ import {
   createMockSafeEventDispatcher,
   createMockInitializationService,
 } from '../mockFactories';
-import { createServiceTestEnvironment } from '../mockEnvironment.js';
+import { buildServiceEnvironment } from '../mockEnvironment.js';
 
 const factoryMap = {
   logger: createMockLogger,
@@ -43,7 +43,6 @@ const tokenMap = {
  * @description Creates a fully mocked environment for GameEngine tests.
  * @param {{[token: string]: any}} [overrides] - Optional DI token overrides.
  * @returns {{
- *   mockContainer: { resolve: jest.Mock },
  *   logger: ReturnType<typeof createMockLogger>,
  *   entityManager: ReturnType<typeof createMockEntityManager>,
  *   turnManager: ReturnType<typeof createMockTurnManager>,
@@ -51,6 +50,7 @@ const tokenMap = {
  *   playtimeTracker: ReturnType<typeof createMockPlaytimeTracker>,
  *   safeEventDispatcher: ReturnType<typeof createMockSafeEventDispatcher>,
  *   initializationService: ReturnType<typeof createMockInitializationService>,
+ *   mockContainer: { resolve: jest.Mock },
  *   instance: GameEngine,
  *   createInstance: () => GameEngine,
  *   cleanup: () => void,
@@ -58,15 +58,31 @@ const tokenMap = {
  *   Test environment utilities and mocks.
  */
 export function createEnvironment(overrides = {}) {
-  const env = createServiceTestEnvironment({
+  // Adapter class to match the constructor signature expected by buildServiceEnvironment
+  // and to correctly pass the logger mock to the GameEngine constructor.
+  class GameEngineAdapter {
+    constructor({ container, mocks }) {
+      return new GameEngine({
+        container,
+        logger: mocks.logger, // GameEngine constructor expects logger directly
+      });
+    }
+  }
+
+  const env = buildServiceEnvironment(
     factoryMap,
     tokenMap,
-    build: (container) =>
-      new GameEngine({
-        container,
-        logger: container.resolve(tokens.ILogger),
-      }),
-    overrides,
-  });
-  return env;
+    GameEngineAdapter, // Use the adapter
+    overrides
+  );
+
+  // The 'service' returned by buildServiceEnvironment is our GameEngine instance (via the adapter).
+  // The 'createInstance' from buildServiceEnvironment will also return a GameEngine instance.
+  return {
+    ...env.mocks, // Spread all individual mocks (logger, entityManager, etc.)
+    mockContainer: env.mockContainer,
+    instance: env.service,       // This is the GameEngine instance
+    createInstance: env.createInstance, // This will create new GameEngine instances
+    cleanup: env.cleanup,
+  };
 }

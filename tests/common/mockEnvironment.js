@@ -185,3 +185,31 @@ export function createServiceTestEnvironment({
 
   return { mocks, mockContainer, instance, createInstance, cleanup };
 }
+
+/**
+ * Builds a test environment for a specific service using its constructor.
+ *
+ * @param {Record<string, () => any>} factoryMap - Map of mock factory functions.
+ * @param {Record<string | symbol, string | ((m: Record<string, any>) => any) | any>} tokenMap - Map of DI tokens to mock keys or providers.
+ * @param {new (args: {container: any, mocks?: Record<string, any>}) => any} serviceCtor - Constructor for the service under test.
+ *   It is expected to accept an object with `container` and optionally `mocks`.
+ * @param {Record<string | symbol, any>} [overrides] - Optional per-test token overrides for the container.
+ * @param {(mocks: Record<string, any>, container: any) => void} [setupMocks] - Optional callback invoked before service creation to allow adjustment of mocks.
+ * @returns {{
+ *   mocks: Record<string, any>,
+ *   mockContainer: { resolve: jest.Mock },
+ *   service: any,
+ *   createInstance: () => any,
+ *   cleanup: () => void
+ * }} Generated environment with the service instance.
+ */
+export function buildServiceEnvironment(factoryMap, tokenMap, serviceCtor, overrides = {}, setupMocks) {
+  const { mocks, mockContainer, instance, cleanup, createInstance } = createServiceTestEnvironment({
+    factoryMap,
+    tokenMap,
+    build: (container, localMocks) => new serviceCtor({ container, mocks: localMocks }),
+    overrides,
+    setupMocks,
+  });
+  return { mocks, mockContainer, service: instance, cleanup, createInstance };
+}

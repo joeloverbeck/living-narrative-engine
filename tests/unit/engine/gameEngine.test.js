@@ -11,11 +11,9 @@ describeEngineSuite('GameEngine', (context) => {
       const testBed = context.bed;
       new GameEngine({
         container: testBed.env.mockContainer,
-        logger: testBed.env.mocks.logger,
+        logger: testBed.env.logger,
       }); // Instantiation for this test
-      expect(testBed.env.mockContainer.resolve).toHaveBeenCalledWith(
-        tokens.ILogger
-      );
+      // tokens.ILogger is directly injected by the test environment adapter, so GameEngine constructor doesn't resolve it via container.
       expect(testBed.env.mockContainer.resolve).toHaveBeenCalledWith(
         tokens.IEntityManager
       );

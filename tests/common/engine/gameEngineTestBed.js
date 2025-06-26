@@ -49,13 +49,13 @@ export class GameEngineTestBed extends EngineStartHelpersMixin(
   constructor(overrides = {}) {
     const env = createEnvironment(overrides);
     super(env.mockContainer, {
-      logger: env.mocks.logger,
-      entityManager: env.mocks.entityManager,
-      turnManager: env.mocks.turnManager,
-      gamePersistenceService: env.mocks.gamePersistenceService,
-      playtimeTracker: env.mocks.playtimeTracker,
-      safeEventDispatcher: env.mocks.safeEventDispatcher,
-      initializationService: env.mocks.initializationService,
+      logger: env.logger,
+      entityManager: env.entityManager,
+      turnManager: env.turnManager,
+      gamePersistenceService: env.gamePersistenceService,
+      playtimeTracker: env.playtimeTracker,
+      safeEventDispatcher: env.safeEventDispatcher,
+      initializationService: env.initializationService,
     });
     // Use the already created gameEngine instance if available to avoid double instantiation
     const engine = env.instance || env.createInstance();

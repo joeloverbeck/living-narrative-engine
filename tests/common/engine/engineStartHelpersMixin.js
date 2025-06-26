@@ -19,7 +19,7 @@ export function EngineStartHelpersMixin(Base) {
      * @returns {Promise<void>} Promise resolving when started.
      */
     async init(world = DEFAULT_TEST_WORLD) {
-      this.env.mocks.initializationService.runInitializationSequence.mockResolvedValue(
+      this.env.initializationService.runInitializationSequence.mockResolvedValue(
         {
           success: true,
         }
@@ -46,7 +46,7 @@ export function EngineStartHelpersMixin(Base) {
      * @returns {Promise<void>} Resolves when started.
      */
     async start(worldName, initResult = { success: true }) {
-      this.env.mocks.initializationService.runInitializationSequence.mockResolvedValue(
+      this.env.initializationService.runInitializationSequence.mockResolvedValue(
         initResult
       );
       await this.engine.startNewGame(worldName);
