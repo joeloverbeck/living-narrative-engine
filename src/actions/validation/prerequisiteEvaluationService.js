@@ -1,7 +1,7 @@
 // src/actions/validation/prerequisiteEvaluationService.js
 
 import { BaseService } from '../../utils/serviceBase.js';
-import { resolveConditionRefs } from '../../utils/conditionRefResolver.js';
+import { resolveReferences } from './conditionReferenceResolver.js';
 
 /* type-only imports */
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
@@ -81,7 +81,7 @@ export class PrerequisiteEvaluationService extends BaseService {
    */
   _resolveConditionReferences(logic, actionId, visited = new Set()) {
     try {
-      return resolveConditionRefs(
+      return resolveReferences(
         logic,
         this.#gameDataRepository,
         {
