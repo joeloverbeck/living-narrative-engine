@@ -23,6 +23,7 @@ import {
 // --- Utility Imports ---
 import { safeDispatchError } from '../utils/safeDispatchErrorUtils.js';
 import { dispatchWithLogging } from '../utils/eventDispatchUtils.js';
+import { WorldInitializationError } from '../errors/InitializationError.js';
 
 /**
  * Service responsible for instantiating entities defined
@@ -108,31 +109,35 @@ class WorldInitializer {
       !entityManager ||
       typeof entityManager.createEntityInstance !== 'function'
     )
-      throw new Error(
+      throw new WorldInitializationError(
         'WorldInitializer requires an IEntityManager with createEntityInstance().'
       );
     if (!worldContext)
-      throw new Error('WorldInitializer requires a WorldContext.');
+      throw new WorldInitializationError(
+        'WorldInitializer requires a WorldContext.'
+      );
     if (
       !gameDataRepository ||
       typeof gameDataRepository.getWorld !== 'function' ||
       typeof gameDataRepository.getEntityInstanceDefinition !== 'function' ||
       typeof gameDataRepository.get !== 'function'
     )
-      throw new Error(
+      throw new WorldInitializationError(
         'WorldInitializer requires an IGameDataRepository with getWorld(), getEntityInstanceDefinition(), and get().'
       );
     if (
       !validatedEventDispatcher ||
       typeof validatedEventDispatcher.dispatch !== 'function'
     )
-      throw new Error(
+      throw new WorldInitializationError(
         'WorldInitializer requires a ValidatedEventDispatcher with dispatch().'
       );
     if (!logger || typeof logger.debug !== 'function')
-      throw new Error('WorldInitializer requires an ILogger.');
+      throw new WorldInitializationError(
+        'WorldInitializer requires an ILogger.'
+      );
     if (!scopeRegistry || typeof scopeRegistry.initialize !== 'function')
-      throw new Error(
+      throw new WorldInitializationError(
         'WorldInitializer requires an IScopeRegistry with initialize().'
       );
 
@@ -186,7 +191,7 @@ class WorldInitializer {
           timestamp: new Date().toISOString(),
         }
       );
-      throw new Error(
+      throw new WorldInitializationError(
         `Game cannot start: World '${worldName}' not found in the world data. Please ensure the world is properly defined.`
       );
     }
@@ -493,7 +498,9 @@ class WorldInitializer {
         }
       );
       // Event 'initialization:world_initializer:failed' could be dispatched here.
-      throw error; // Always re-throw to indicate initialization failure.
+      throw error instanceof WorldInitializationError
+        ? error
+        : new WorldInitializationError(error.message, error); // Always re-throw to indicate initialization failure.
     }
   }
 }

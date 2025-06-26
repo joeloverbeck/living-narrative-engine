@@ -1,4 +1,5 @@
 import InitializationService from '../../../../src/initializers/services/initializationService.js';
+import { SystemInitializationError } from '../../../../src/errors/InitializationError.js';
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 
 let logger;
@@ -41,6 +42,28 @@ beforeEach(() => {
 
 describe('InitializationService DomUiFacade handling', () => {
   it('throws when DomUiFacade is missing', () => {
+    expect(() => {
+      const svc = new InitializationService({
+        logger,
+        validatedEventDispatcher: dispatcher,
+        modsLoader,
+        scopeRegistry,
+        dataRegistry,
+        llmAdapter,
+        llmConfigLoader,
+        systemInitializer,
+        worldInitializer,
+        safeEventDispatcher,
+        entityManager,
+        actionIndex: { buildIndex: jest.fn() },
+        gameDataRepository: {
+          getAllActionDefinitions: jest.fn().mockReturnValue([]),
+        },
+        thoughtListener,
+        notesListener,
+        // domUiFacade: domUiFacade, // Intentionally omitted
+      });
+    }).toThrow(SystemInitializationError);
     expect(() => {
       const svc = new InitializationService({
         logger,

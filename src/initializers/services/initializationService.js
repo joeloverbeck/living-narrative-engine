@@ -19,6 +19,11 @@ import {
   INITIALIZATION_SERVICE_FAILED_ID,
   UI_SHOW_FATAL_ERROR_ID,
 } from '../../constants/eventIds.js';
+import {
+  SystemInitializationError,
+  WorldInitializationError,
+  InitializationError,
+} from '../../errors/InitializationError.js';
 
 /**
  * Service responsible for orchestrating the entire game initialization sequence.
@@ -95,7 +100,7 @@ class InitializationService extends IInitializationService {
     ) {
       const errorMsg =
         "InitializationService: Missing or invalid required dependency 'logger'.";
-      throw new Error(errorMsg);
+      throw new SystemInitializationError(errorMsg);
     }
 
     this.#logger = logger;
@@ -108,21 +113,21 @@ class InitializationService extends IInitializationService {
       const errorMsg =
         "InitializationService: Missing or invalid required dependency 'validatedEventDispatcher'.";
       this.#logger.error(errorMsg);
-      throw new Error(errorMsg);
+      throw new SystemInitializationError(errorMsg);
     }
 
     if (!modsLoader || typeof modsLoader.loadMods !== 'function') {
-      throw new Error(
+      throw new SystemInitializationError(
         "InitializationService: Missing or invalid required dependency 'modsLoader'."
       );
     }
     if (!scopeRegistry || typeof scopeRegistry.initialize !== 'function') {
-      throw new Error(
+      throw new SystemInitializationError(
         "InitializationService: Missing or invalid required dependency 'scopeRegistry'."
       );
     }
     if (!dataRegistry || typeof dataRegistry.getAll !== 'function') {
-      throw new Error(
+      throw new SystemInitializationError(
         "InitializationService: Missing or invalid required dependency 'dataRegistry'."
       );
     }
@@ -130,7 +135,7 @@ class InitializationService extends IInitializationService {
       !systemInitializer ||
       typeof systemInitializer.initializeAll !== 'function'
     ) {
-      throw new Error(
+      throw new SystemInitializationError(
         "InitializationService: Missing or invalid required dependency 'systemInitializer'."
       );
     }
@@ -138,7 +143,7 @@ class InitializationService extends IInitializationService {
       !worldInitializer ||
       typeof worldInitializer.initializeWorldEntities !== 'function'
     ) {
-      throw new Error(
+      throw new SystemInitializationError(
         "InitializationService: Missing or invalid required dependency 'worldInitializer'."
       );
     }
@@ -146,17 +151,17 @@ class InitializationService extends IInitializationService {
       !safeEventDispatcher ||
       typeof safeEventDispatcher.subscribe !== 'function'
     ) {
-      throw new Error(
+      throw new SystemInitializationError(
         "InitializationService: Missing or invalid required dependency 'safeEventDispatcher'."
       );
     }
     if (!entityManager) {
-      throw new Error(
+      throw new SystemInitializationError(
         "InitializationService: Missing required dependency 'entityManager'."
       );
     }
     if (!actionIndex || typeof actionIndex.buildIndex !== 'function') {
-      throw new Error(
+      throw new SystemInitializationError(
         "InitializationService: Missing or invalid required dependency 'actionIndex'."
       );
     }
@@ -164,27 +169,30 @@ class InitializationService extends IInitializationService {
       !gameDataRepository ||
       typeof gameDataRepository.getAllActionDefinitions !== 'function'
     ) {
-      throw new Error(
+      throw new SystemInitializationError(
         "InitializationService: Missing or invalid required dependency 'gameDataRepository'."
       );
     }
     if (!domUiFacade) {
-      throw new Error(
+      throw new SystemInitializationError(
         'InitializationService requires a domUiFacade dependency'
       );
     }
     if (!thoughtListener || typeof thoughtListener.handleEvent !== 'function') {
-      throw new Error(
+      throw new SystemInitializationError(
         "InitializationService: Missing or invalid required dependency 'thoughtListener'."
       );
     }
     if (!notesListener || typeof notesListener.handleEvent !== 'function') {
-      throw new Error(
+      throw new SystemInitializationError(
         "InitializationService: Missing or invalid required dependency 'notesListener'."
       );
     }
-    if (!spatialIndexManager || typeof spatialIndexManager.buildIndex !== 'function') {
-      throw new Error(
+    if (
+      !spatialIndexManager ||
+      typeof spatialIndexManager.buildIndex !== 'function'
+    ) {
+      throw new SystemInitializationError(
         "InitializationService: Missing or invalid required dependency 'spatialIndexManager'."
       );
     }
@@ -272,7 +280,10 @@ class InitializationService extends IInitializationService {
       await this.#reportFatalError(error, worldName);
       return {
         success: false,
-        error: error instanceof Error ? error : new Error(error.message),
+        error:
+          error instanceof Error
+            ? error
+            : new SystemInitializationError(error.message),
         details: { worldName },
       };
     }
@@ -473,16 +484,18 @@ class InitializationService extends IInitializationService {
     const worldInitSuccess =
       await this.#worldInitializer.initializeWorldEntities(worldName);
     if (!worldInitSuccess) {
-      throw new Error('World initialization failed via WorldInitializer.');
+      throw new WorldInitializationError(
+        'World initialization failed via WorldInitializer.'
+      );
     }
-    
+
     // FIX: Build spatial index from existing entities after world initialization
-    // This fixes the timing bug where SpatialIndexSynchronizer is connected after 
+    // This fixes the timing bug where SpatialIndexSynchronizer is connected after
     // entities are created, leaving the spatial index empty
     this.#logger.debug('Building spatial index from existing entities...');
     this.#spatialIndexManager.buildIndex(this.#entityManager);
     this.#logger.debug('Spatial index built successfully.');
-    
+
     this.#logger.debug(
       'InitializationService: Initial world entities instantiated and spatial index built.'
     );

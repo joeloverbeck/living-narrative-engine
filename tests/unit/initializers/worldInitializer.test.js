@@ -8,6 +8,7 @@ import {
   WORLDINIT_ENTITY_INSTANTIATED_ID,
   WORLDINIT_ENTITY_INSTANTIATION_FAILED_ID,
 } from '../../../src/constants/eventIds.js';
+import { WorldInitializationError } from '../../../src/errors/InitializationError.js';
 import { safeDispatchError } from '../../../src/utils/safeDispatchErrorUtils.js';
 import * as eventDispatchUtils from '../../../src/utils/eventDispatchUtils.js';
 
@@ -167,7 +168,9 @@ describe('WorldInitializer', () => {
           scopeRegistry: mockScopeRegistry,
         };
         delete deps[depsKey];
-        expect(() => new WorldInitializer(deps)).toThrow(expectedErrorMessage);
+        const create = () => new WorldInitializer(deps);
+        expect(create).toThrow(WorldInitializationError);
+        expect(create).toThrow(expectedErrorMessage);
       }
     );
   });
@@ -454,6 +457,9 @@ describe('WorldInitializer', () => {
     it('should throw an error when world is not found', async () => {
       mockGameDataRepository.getWorld.mockReturnValue(null);
 
+      await expect(
+        worldInitializer.initializeWorldEntities('nonexistent:world')
+      ).rejects.toThrow(WorldInitializationError);
       await expect(
         worldInitializer.initializeWorldEntities('nonexistent:world')
       ).rejects.toThrow(
