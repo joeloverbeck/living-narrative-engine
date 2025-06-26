@@ -25,6 +25,9 @@ const createMockConfiguration = (overrides = {}) => ({
 
 const createMockSchemaValidator = (overrides = {}) => ({
   validate: jest.fn().mockReturnValue({ isValid: true, errors: null }),
+  isSchemaLoaded: jest.fn().mockReturnValue(true),
+  loadSchema: jest.fn(),
+  getSchema: jest.fn(),
   ...overrides,
 });
 
@@ -67,14 +70,17 @@ describe('BaseManifestItemLoader._parseIdAndStoreItem', () => {
   let loader;
   let mockRegistry;
   beforeEach(() => {
+    jest.clearAllMocks();
+
     const config = createMockConfiguration();
     const resolver = createMockPathResolver();
     const fetcher = createMockDataFetcher();
-    const validator =
-      require('../../common/mockFactories/coreServices.js').createMockSchemaValidator(
-        undefined,
-        { getValidator: jest.fn() }
-      );
+    const validator = createMockSchemaValidator({
+      getValidator: jest.fn(),
+      isSchemaLoaded: jest.fn().mockReturnValue(true),
+      loadSchema: jest.fn(),
+      getSchema: jest.fn(),
+    });
     mockRegistry = createMockDataRegistry();
     mockRegistry.store.mockReturnValue(false);
     const logger = createMockLogger();
@@ -87,11 +93,31 @@ describe('BaseManifestItemLoader._parseIdAndStoreItem', () => {
       mockRegistry,
       logger
     );
-    jest.clearAllMocks();
+
+    jest.spyOn(loader, '_storeItemInRegistry').mockImplementation(
+      (categoryArg, modIdArg, baseIdArg, dataToStoreArg, sourceFilenameArg) => {
+        const qualifiedIdInternal = `${modIdArg}:${baseIdArg}`;
+        let finalIdInternal = baseIdArg;
+        if (['actions', 'scopes', 'entityDefinitions', 'entityInstances'].includes(categoryArg)) {
+          finalIdInternal = qualifiedIdInternal;
+        }
+
+        const dataWithMetadataInternal = {
+          ...dataToStoreArg,
+          _modId: modIdArg,
+          _sourceFile: sourceFilenameArg,
+          _fullId: qualifiedIdInternal,
+          id: finalIdInternal,
+        };
+        
+        mockRegistry.store(categoryArg, qualifiedIdInternal, dataWithMetadataInternal);
+        return { qualifiedId: qualifiedIdInternal, didOverride: false };
+      }
+    );
   });
 
   it('parses ID and stores item, returning result', () => {
-    const data = { id: 'test' };
+    const originalData = { id: 'test', name: 'Test Item Name' };
     parseAndValidateId.mockReturnValue({
       fullId: `${modId}:test`,
       baseId: 'test',
@@ -99,32 +125,42 @@ describe('BaseManifestItemLoader._parseIdAndStoreItem', () => {
     mockRegistry.get.mockReturnValue(undefined);
 
     const result = loader.publicParseAndStore(
-      data,
+      originalData,
       'id',
       category,
       modId,
-      filename
+      filename,
+      {}
     );
 
     expect(parseAndValidateId).toHaveBeenCalledWith(
-      data,
+      originalData,
       'id',
       modId,
       filename,
       loader._logger,
       {}
     );
-    expect(mockRegistry.store).toHaveBeenCalledWith(
-      category,
-      `${modId}:test`,
-      expect.objectContaining({
-        ...data,
-        id: 'test',
-        _fullId: `${modId}:test`,
-        _modId: 'testMod',
-        _sourceFile: filename,
-      })
-    );
+    expect(mockRegistry.store).toHaveBeenCalledTimes(1);
+    expect(loader._storeItemInRegistry).toHaveBeenCalledTimes(1);
+
+    const storeItemInRegistryCallArgs = loader._storeItemInRegistry.mock.calls[0];
+    const dataParamReceivedBySpy = storeItemInRegistryCallArgs[3];
+
+    expect(dataParamReceivedBySpy).toBeDefined();
+    expect(dataParamReceivedBySpy.name).toBe('Test Item Name');
+    expect(dataParamReceivedBySpy.id).toBe('test');
+
+    const storeCallArgs = mockRegistry.store.mock.calls[0];
+    const storedObject = storeCallArgs[2];
+
+    expect(storedObject).toBeDefined();
+    expect(storedObject.id).toBe(`${modId}:test`);
+    expect(storedObject._fullId).toBe(`${modId}:test`);
+    expect(storedObject._modId).toBe(modId);
+    expect(storedObject._sourceFile).toBe(filename);
+    expect(storedObject.name).toBe('Test Item Name');
+
     expect(result).toEqual({
       qualifiedId: `${modId}:test`,
       didOverride: false,

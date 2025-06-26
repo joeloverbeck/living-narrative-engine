@@ -60,7 +60,7 @@ export function storeItemInRegistry(
 
   let dataWithMetadata;
   let finalId = baseItemId;
-  if (isEntityDefinition || isEntityInstance || isScope) {
+  if (isEntityDefinition || isEntityInstance || isScope || category === 'actions') {
     finalId = qualifiedId;
   }
 
