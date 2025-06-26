@@ -73,7 +73,7 @@ export class LlmConfigService {
   #configLoader;
 
   /** @type {string} */
-  #_defaultLlmConfigPath;
+  #defaultLlmConfigPath;
   /** @type {string | null} */
   #resolvedConfigPath = null;
   /** @type {LLMConfigurationFileForProxy | null} */
@@ -111,7 +111,7 @@ export class LlmConfigService {
     this.#appConfig = appConfig;
     this.#configLoader = loader;
 
-    this.#_defaultLlmConfigPath = path.resolve(
+    this.#defaultLlmConfigPath = path.resolve(
       process.cwd(),
       'config/llm-configs.json'
     );
@@ -188,7 +188,7 @@ export class LlmConfigService {
     this.#resolvedConfigPath =
       customPath && customPath.trim() !== ''
         ? path.resolve(customPath)
-        : this.#_defaultLlmConfigPath;
+        : this.#defaultLlmConfigPath;
 
     this.#logger.debug(
       `LlmConfigService: Attempting to load LLM configurations from: ${this.#resolvedConfigPath}`
