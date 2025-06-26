@@ -109,7 +109,7 @@ describe('BaseManifestItemLoader._parseIdAndStoreItem', () => {
           _fullId: qualifiedIdInternal,
           id: finalIdInternal,
         };
-        
+
         mockRegistry.store(categoryArg, qualifiedIdInternal, dataWithMetadataInternal);
         return { qualifiedId: qualifiedIdInternal, didOverride: false };
       }
@@ -162,8 +162,8 @@ describe('BaseManifestItemLoader._parseIdAndStoreItem', () => {
     expect(storedObject.name).toBe('Test Item Name');
 
     expect(result).toEqual({
-      qualifiedId: `${modId}:test`,
       didOverride: false,
+      qualifiedId: 'testMod:test',
     });
   });
 
