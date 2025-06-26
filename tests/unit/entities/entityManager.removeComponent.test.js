@@ -46,8 +46,7 @@ describeEntityManagerSuite('EntityManager - removeComponent', (getBed) => {
       const entity = getBed().createEntityWithOverride(
         'basic',
         { [NAME_COMPONENT_ID]: overrideData },
-        { instanceId: PRIMARY },
-        { resetDispatch: true }
+        { instanceId: PRIMARY, resetDispatch: true }
       );
 
       // Act
@@ -67,11 +66,10 @@ describeEntityManagerSuite('EntityManager - removeComponent', (getBed) => {
       const { entityManager, mocks } = getBed();
       const { NAME_COMPONENT_ID } = TestData.ComponentIDs;
       const { PRIMARY } = TestData.InstanceIDs;
-      getBed().createEntity(
-        'basic',
-        { instanceId: PRIMARY },
-        { resetDispatch: true }
-      );
+      getBed().createEntity('basic', {
+        instanceId: PRIMARY,
+        resetDispatch: true,
+      });
       // NAME_COMPONENT_ID exists on definition, but not as an override
 
       // Act & Assert
