@@ -35,7 +35,7 @@ describe('PerceptionLogRenderer', () => {
   let turnStartedHandler;
 
   const setInternalCurrentActorId = (rendererInstance, actorId) => {
-    rendererInstance['#currentActorId'] = actorId;
+    rendererInstance.setCurrentActorId(actorId);
   };
 
   beforeEach(() => {
@@ -386,7 +386,7 @@ describe('PerceptionLogRenderer', () => {
         type: TURN_STARTED_ID,
         payload: { entityId: actorId, entityType: 'player' },
       });
-      expect(renderer['#currentActorId']).toBe(actorId);
+      expect(renderer.getCurrentActorId()).toBe(actorId);
       expect(renderer.refreshList).toHaveBeenCalled();
     });
 
@@ -395,7 +395,7 @@ describe('PerceptionLogRenderer', () => {
         type: TURN_STARTED_ID,
         payload: { entityType: 'player' },
       });
-      expect(renderer['#currentActorId']).toBeNull();
+      expect(renderer.getCurrentActorId()).toBeNull();
       expect(renderer.refreshList).toHaveBeenCalled();
     });
 
@@ -463,7 +463,7 @@ describe('PerceptionLogRenderer', () => {
       renderer.dispose();
 
       expect(mockUnsubscribe).toHaveBeenCalledTimes(1);
-      expect(renderer['#currentActorId']).toBeNull();
+      expect(renderer.getCurrentActorId()).toBeNull();
       expect(renderer.elements).toEqual({});
     });
 
