@@ -478,9 +478,7 @@ describe('ProcessingCommandState._getServiceFromContext – error branches', () 
     expect(spyDispatch).toHaveBeenCalledWith(
       SYSTEM_ERROR_OCCURRED_ID,
       expect.objectContaining({
-        message: expect.stringContaining(
-          'Failed to retrieve ICommandProcessor'
-        ),
+        message: expect.stringContaining('Invalid turnCtx'),
         details: expect.any(Object),
       })
     );

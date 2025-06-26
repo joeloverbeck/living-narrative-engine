@@ -28,6 +28,76 @@ export class ServiceLookupError extends Error {
 }
 
 /**
+ * Validates that the turn context and specified method exist.
+ *
+ * @param {ITurnContext|null} turnCtx - Current turn context.
+ * @param {string} contextMethod - Name of method expected on the context.
+ * @returns {boolean} `true` when valid, otherwise `false`.
+ */
+export function validateContextForService(turnCtx, contextMethod) {
+  return Boolean(turnCtx) && typeof turnCtx[contextMethod] === 'function';
+}
+
+/**
+ * Reports a failure when retrieving a service from the context.
+ * Logs the error, dispatches a system event and optionally invokes the
+ * {@link ProcessingExceptionHandler}.
+ *
+ * @param {ProcessingCommandStateLike} state - Owning state instance.
+ * @param {ITurnContext|null} turnCtx - Current turn context.
+ * @param {string} contextMethod - Method name used for lookup.
+ * @param {string} serviceLabel - Human readable service label.
+ * @param {string} actorIdForLog - Actor ID for logging context.
+ * @param {string} errorMsg - Message describing the failure.
+ * @param {Error} [error] - Underlying error, if any.
+ * @param {boolean} [invokeHandler] - Whether to invoke the exception handler.
+ * @param {ProcessingExceptionHandler} [exceptionHandler] - Optional handler to use.
+ * @returns {Promise<void>} Resolves when reporting completes.
+ */
+export async function reportServiceLookupFailure(
+  state,
+  turnCtx,
+  contextMethod,
+  serviceLabel,
+  actorIdForLog,
+  errorMsg,
+  error,
+  invokeHandler = false,
+  exceptionHandler = state._exceptionHandler
+) {
+  const logger = getLogger(turnCtx, state._handler);
+  const dispatcher = getSafeEventDispatcher(turnCtx, state._handler);
+
+  if (error) {
+    logger.error(errorMsg, error);
+  } else {
+    logger.error(errorMsg);
+  }
+
+  if (dispatcher) {
+    safeDispatchError(
+      dispatcher,
+      errorMsg,
+      {
+        actorId: actorIdForLog,
+        service: serviceLabel,
+        method: contextMethod,
+        error: error?.message,
+        stack: error?.stack,
+      },
+      logger
+    );
+  }
+
+  if (invokeHandler) {
+    const handler = exceptionHandler || new ProcessingExceptionHandler(state);
+    await handler.handle(turnCtx, new Error(errorMsg), actorIdForLog);
+  } else if (state.isProcessing) {
+    finishProcessing(state);
+  }
+}
+
+/**
  * Safely obtains a service from the turn context.
  *
  * @param {ProcessingCommandStateLike} state - Owning state instance.
@@ -47,36 +117,20 @@ export async function getServiceFromContext(
   actorIdForLog,
   exceptionHandler = state._exceptionHandler
 ) {
-  const logger = getLogger(turnCtx, state._handler);
-  const dispatcher = getSafeEventDispatcher(turnCtx, state._handler);
-
-  if (!turnCtx || typeof turnCtx.getLogger !== 'function') {
+  if (!validateContextForService(turnCtx, contextMethod)) {
     const errorMsg = `${state.getStateName()}: Invalid turnCtx in _getServiceFromContext for ${serviceLabel}, actor ${actorIdForLog}.`;
-    if (dispatcher) {
-      safeDispatchError(
-        dispatcher,
-        errorMsg,
-        {
-          actorId: actorIdForLog,
-          service: serviceLabel,
-          method: contextMethod,
-        },
-        logger
-      );
-    }
-    logger.error(errorMsg);
-
-    if (state.isProcessing) {
-      finishProcessing(state);
-    }
+    await reportServiceLookupFailure(
+      state,
+      turnCtx,
+      contextMethod,
+      serviceLabel,
+      actorIdForLog,
+      errorMsg
+    );
     throw new ServiceLookupError(errorMsg);
   }
+
   try {
-    if (typeof turnCtx[contextMethod] !== 'function') {
-      throw new Error(
-        `Method turnCtx.${contextMethod}() does not exist or is not a function.`
-      );
-    }
     const service = turnCtx[contextMethod]();
     if (!service) {
       throw new Error(
@@ -85,25 +139,20 @@ export async function getServiceFromContext(
     }
     return service;
   } catch (error) {
-    const errorMsg = `${state.getStateName()}: Failed to retrieve ${serviceLabel} for actor ${actorIdForLog}. Error: ${error.message}`;
-    logger.error(errorMsg, error);
-    if (dispatcher) {
-      safeDispatchError(
-        dispatcher,
-        errorMsg,
-        {
-          actorId: actorIdForLog,
-          service: serviceLabel,
-          method: contextMethod,
-          error: error.message,
-          stack: error.stack,
-        },
-        logger
-      );
-    }
-    const serviceError = new Error(errorMsg);
-    const handler = exceptionHandler || new ProcessingExceptionHandler(state);
-    await handler.handle(turnCtx, serviceError, actorIdForLog);
+    const serviceError =
+      error instanceof Error ? error : new Error(String(error));
+    const errorMsg = `${state.getStateName()}: Failed to retrieve ${serviceLabel} for actor ${actorIdForLog}. Error: ${serviceError.message}`;
+    await reportServiceLookupFailure(
+      state,
+      turnCtx,
+      contextMethod,
+      serviceLabel,
+      actorIdForLog,
+      errorMsg,
+      serviceError,
+      true,
+      exceptionHandler
+    );
     throw new ServiceLookupError(errorMsg);
   }
 }
