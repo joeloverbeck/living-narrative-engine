@@ -138,7 +138,7 @@ describe('registerTurnLifecycle', () => {
     {
       token: tokens.ITurnStateFactory,
       Class: ConcreteTurnStateFactory,
-      lifecycle: 'singleton',
+      lifecycle: 'singletonFactory',
     },
     {
       token: tokens.ITurnContextFactory,

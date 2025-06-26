@@ -18,78 +18,20 @@ import { SCOPES_KEY } from '../constants/dataRegistryKeys.js';
  * @property {'definitions' | 'instances'} phase - Loading phase for the content type.
  */
 
+import { meta } from './loaderMeta.js';
+
+// All metadata describing loader configuration lives in loaderMeta.js so that
+// new loader types only need to update a single file.
 /**
  * Converts a map of loader instances into the structured configuration array
- * used by {@link ModsLoader} and {@link ContentLoadManager}.
+ * used by {@link ModsLoader} and {@link ContentLoadManager}. Loader metadata
+ * such as manifest keys and disk folders is sourced from {@link meta}.
  *
  * @param {Record<string, BaseManifestItemLoaderInterface>} loaderMap - Map of
  * registry key to loader instance.
  * @returns {LoaderConfigEntry[]} Array describing loader configuration.
  */
 export function createContentLoadersConfig(loaderMap) {
-  const meta = {
-    components: {
-      contentKey: 'components',
-      diskFolder: 'components',
-      phase: 'definitions',
-      registryKey: 'components',
-    },
-    events: {
-      contentKey: 'events',
-      diskFolder: 'events',
-      phase: 'definitions',
-      registryKey: 'events',
-    },
-    conditions: {
-      contentKey: 'conditions',
-      diskFolder: 'conditions',
-      phase: 'definitions',
-      registryKey: 'conditions',
-    },
-    macros: {
-      contentKey: 'macros',
-      diskFolder: 'macros',
-      phase: 'definitions',
-      registryKey: 'macros',
-    },
-    actions: {
-      contentKey: 'actions',
-      diskFolder: 'actions',
-      phase: 'definitions',
-      registryKey: 'actions',
-    },
-    rules: {
-      contentKey: 'rules',
-      diskFolder: 'rules',
-      phase: 'definitions',
-      registryKey: 'rules',
-    },
-    goals: {
-      contentKey: 'goals',
-      diskFolder: 'goals',
-      phase: 'definitions',
-      registryKey: 'goals',
-    },
-    scopes: {
-      contentKey: 'scopes',
-      diskFolder: 'scopes',
-      phase: 'definitions',
-      registryKey: SCOPES_KEY,
-    },
-    entityDefinitions: {
-      contentKey: 'entities.definitions',
-      diskFolder: 'entities/definitions',
-      phase: 'definitions',
-      registryKey: 'entityDefinitions',
-    },
-    entityInstances: {
-      contentKey: 'entities.instances',
-      diskFolder: 'entities/instances',
-      phase: 'instances',
-      registryKey: 'entityInstances',
-    },
-  };
-
   return Object.entries(loaderMap).map(([registryKey, loader]) => ({
     loader,
     registryKey: meta[registryKey].registryKey,

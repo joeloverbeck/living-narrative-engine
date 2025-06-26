@@ -234,7 +234,10 @@ describe('ProcessingCommandState', () => {
     TurnDirectiveStrategyResolver.resolveStrategy.mockReturnValue(
       mockTurnDirectiveStrategy
     );
-    processingState = new ProcessingCommandState(mockHandler, null, null);
+    processingState = new ProcessingCommandState({
+      handler: mockHandler,
+      commandProcessor: mockCommandProcessor,
+    });
     mockHandler._currentState = processingState;
 
     mockLogger.debug.mockClear();
@@ -339,11 +342,12 @@ describe('ProcessingCommandState', () => {
         commandString: 'from_constructor',
         resolvedParameters: { cons: 1 },
       };
-      const stateWithConstructorAction = new ProcessingCommandState(
-        mockHandler,
-        constructorAction.commandString,
-        constructorAction
-      );
+      const stateWithConstructorAction = new ProcessingCommandState({
+        handler: mockHandler,
+        commandProcessor: mockCommandProcessor,
+        commandString: constructorAction.commandString,
+        turnAction: constructorAction,
+      });
       mockHandler._currentState = stateWithConstructorAction;
 
       const processInternalSpy = jest
@@ -399,15 +403,14 @@ describe('ProcessingCommandState', () => {
       const customGuard = { start: jest.fn(), finish: jest.fn() };
       const guardFactory = jest.fn(() => customGuard);
       const handlerFactory = jest.fn(() => customHandler);
-      const customState = new ProcessingCommandState(
-        mockHandler,
-        null,
-        null,
-        TurnDirectiveStrategyResolver,
-        undefined,
-        guardFactory,
-        handlerFactory
-      );
+      const customState = new ProcessingCommandState({
+        handler: mockHandler,
+        commandProcessor: mockCommandProcessor,
+        directiveResolver: TurnDirectiveStrategyResolver,
+        exceptionHandler: undefined,
+        processingGuardFactory: guardFactory,
+        exceptionHandlerFactory: handlerFactory,
+      });
       mockHandler._currentState = customState;
       const chosen = { actionDefinitionId: 'custom', commandString: 'c' };
       mockTurnContext.getChosenAction.mockReturnValueOnce(chosen);

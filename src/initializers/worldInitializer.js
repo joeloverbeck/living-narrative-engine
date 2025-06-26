@@ -154,25 +154,6 @@ class WorldInitializer {
   }
 
   /**
-   * Helper method to dispatch world initialization related events with standardized error logging.
-   *
-   * @param {string} eventName - The name of the event.
-   * @param {object} payload - The event payload.
-   * @param {string} identifierForLog - An identifier (e.g., entity ID, definition ID) for logging purposes if dispatch fails.
-   * @private
-   */
-  async #_dispatchWorldInitEvent(eventName, payload, identifierForLog) {
-    await dispatchWithLogging(
-      this.#validatedEventDispatcher,
-      eventName,
-      payload,
-      this.#logger,
-      identifierForLog,
-      { allowSchemaNotFound: true }
-    );
-  }
-
-  /**
    * Loads world data and validates the presence of an instances array.
    *
    * @param {string} worldName - The world identifier.
@@ -302,7 +283,8 @@ class WorldInitializer {
       this.#logger.error(
         `WorldInitializer (Pass 1): Failed to instantiate entity from definition: ${definitionId} for instance: ${instanceId}. createEntityInstance returned null/undefined or threw an error.`
       );
-      await this.#_dispatchWorldInitEvent(
+      await dispatchWithLogging(
+        this.#validatedEventDispatcher,
         WORLDINIT_ENTITY_INSTANTIATION_FAILED_ID,
         {
           instanceId,
@@ -311,7 +293,9 @@ class WorldInitializer {
           error: `Failed to create entity instance. EntityManager returned null/undefined or threw an error.`,
           reason: 'Initial World Load',
         },
-        `instance ${instanceId}`
+        this.#logger,
+        `instance ${instanceId}`,
+        { allowSchemaNotFound: true }
       );
       return { entity: null, success: false };
     }
@@ -320,7 +304,8 @@ class WorldInitializer {
       `WorldInitializer (Pass 1): Successfully instantiated entity ${instance.id} (from definition: ${instance.definitionId})`
     );
 
-    await this.#_dispatchWorldInitEvent(
+    await dispatchWithLogging(
+      this.#validatedEventDispatcher,
       WORLDINIT_ENTITY_INSTANTIATED_ID,
       {
         entityId: instance.id,
@@ -329,7 +314,9 @@ class WorldInitializer {
         worldName: worldName,
         reason: 'Initial World Load',
       },
-      `entity ${instance.id}`
+      this.#logger,
+      `entity ${instance.id}`,
+      { allowSchemaNotFound: true }
     );
 
     return { entity: instance, success: true };

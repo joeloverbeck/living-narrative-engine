@@ -337,29 +337,60 @@ export class AwaitingActorDecisionState extends AbstractTurnState {
   async _handleDestroyCleanup(handler, turnContext, logger, actor) {
     if (turnContext) {
       if (!actor) {
-        logger.warn(
-          `${this.getStateName()}: Handler destroyed. Actor ID from context: N/A_in_context. No specific turn to end via context if actor is missing.`
-        );
+        this._handleNoActorOnDestroy(logger);
       } else if (handler._isDestroying || handler._isDestroyed) {
-        logger.debug(
-          `${this.getStateName()}: Handler (actor ${actor.id}) is already being destroyed. Skipping turnContext.endTurn().`
-        );
+        this._handleHandlerDestroying(logger, actor);
       } else {
-        logger.debug(
-          `${this.getStateName()}: Handler destroyed while state was active for actor ${
-            actor.id
-          }. Ending turn via turnContext (may trigger AbortError if prompt was active).`
-        );
-        await turnContext.endTurn(
-          new Error(
-            `Turn handler destroyed while actor ${actor.id} was in ${this.getStateName()}.`
-          )
-        );
+        await this._handleActiveActorOnDestroy(turnContext, logger, actor);
       }
     } else {
       logger.warn(
         `${this.getStateName()}: Handler destroyed. Actor ID from context: N/A_no_context. No specific turn to end via context if actor is missing.`
       );
     }
+  }
+
+  /**
+   * @description Logs warning when handler is destroyed and no actor exists in context.
+   * @private
+   * @param {import('../../interfaces/coreServices.js').ILogger | Console} logger - Logger instance.
+   */
+  _handleNoActorOnDestroy(logger) {
+    logger.warn(
+      `${this.getStateName()}: Handler destroyed. Actor ID from context: N/A_in_context. No specific turn to end via context if actor is missing.`
+    );
+  }
+
+  /**
+   * @description Logs debug message when handler is already destroying or destroyed.
+   * @private
+   * @param {import('../../interfaces/coreServices.js').ILogger | Console} logger - Logger instance.
+   * @param {Entity} actor - Actor retrieved from the context.
+   */
+  _handleHandlerDestroying(logger, actor) {
+    logger.debug(
+      `${this.getStateName()}: Handler (actor ${actor.id}) is already being destroyed. Skipping turnContext.endTurn().`
+    );
+  }
+
+  /**
+   * @description Ends the turn via context when handler is destroyed with an active actor.
+   * @private
+   * @param {ITurnContext} turnContext - Current turn context.
+   * @param {import('../../interfaces/coreServices.js').ILogger | Console} logger - Logger instance.
+   * @param {Entity} actor - Actor retrieved from the context.
+   * @returns {Promise<void>} Resolves when turn ending completes.
+   */
+  async _handleActiveActorOnDestroy(turnContext, logger, actor) {
+    logger.debug(
+      `${this.getStateName()}: Handler destroyed while state was active for actor ${
+        actor.id
+      }. Ending turn via turnContext (may trigger AbortError if prompt was active).`
+    );
+    await turnContext.endTurn(
+      new Error(
+        `Turn handler destroyed while actor ${actor.id} was in ${this.getStateName()}.`
+      )
+    );
   }
 }

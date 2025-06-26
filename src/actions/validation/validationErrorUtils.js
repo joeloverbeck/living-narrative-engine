@@ -12,11 +12,14 @@
  * Identifier info used in the message. The `contextType` property is no longer used.
  * @returns {Error} A new Error instance with the formatted message.
  */
+import { InvalidActionDefinitionError } from '../../errors/invalidActionDefinitionError.js';
+import { InvalidActorEntityError } from '../../errors/invalidActorEntityError.js';
+
 export function formatValidationError(err, source, ids) {
   let idInfo = '';
-  if (err.message === 'Invalid actionDefinition') {
+  if (err instanceof InvalidActionDefinitionError) {
     idInfo = `(id: ${ids.actionId})`;
-  } else if (err.message === 'Invalid actor entity') {
+  } else if (err instanceof InvalidActorEntityError) {
     idInfo = `(id: ${ids.actorId})`;
   }
   // Branch for 'Invalid ActionTargetContext' removed as it's no longer thrown.

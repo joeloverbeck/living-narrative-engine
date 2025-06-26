@@ -13,6 +13,7 @@ import TurnDirectiveStrategyResolver from '../strategies/turnDirectiveStrategyRe
  * @typedef {import('../handlers/baseTurnHandler.js').BaseTurnHandler} BaseTurnHandler
  * @typedef {import('../interfaces/IActorTurnStrategy.js').ITurnAction} ITurnAction
  * @typedef {import('../interfaces/ITurnState.js').ITurnState} ITurnState
+ * @typedef {import('../../interfaces/ICommandProcessor.js').ICommandProcessor} ICommandProcessor
  */
 
 /**
@@ -22,6 +23,20 @@ import TurnDirectiveStrategyResolver from '../strategies/turnDirectiveStrategyRe
  * Concrete factory for creating various turn state instances.
  */
 export class ConcreteTurnStateFactory extends ITurnStateFactory {
+  #commandProcessor;
+
+  /**
+   * @param {object} deps Dependencies
+   * @param {ICommandProcessor} deps.commandProcessor The command processor.
+   */
+  constructor({ commandProcessor }) {
+    super();
+    if (!commandProcessor) {
+      throw new Error('ConcreteTurnStateFactory: commandProcessor is required.');
+    }
+    this.#commandProcessor = commandProcessor;
+  }
+
   /**
    * @override
    */
@@ -55,19 +70,21 @@ export class ConcreteTurnStateFactory extends ITurnStateFactory {
    * @param {BaseTurnHandler} handler
    * @param {string} commandString
    * @param {ITurnAction} turnAction
+   * @param {Function} directiveResolver - Resolver for command directives.
    */
   createProcessingCommandState(
     handler,
     commandString,
     turnAction,
-    directiveResolver = TurnDirectiveStrategyResolver
+    directiveResolver
   ) {
-    return new ProcessingCommandState(
+    return new ProcessingCommandState({
       handler,
+      commandProcessor: this.#commandProcessor,
       commandString,
       turnAction,
-      directiveResolver
-    );
+      directiveResolver,
+    });
   }
 
   /**

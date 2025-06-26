@@ -25,13 +25,15 @@ Make sure to consult [CONTRIBUTING.md](CONTRIBUTING.md) for detailed setup and e
 ```bash
 # root app
 npm install
-npm run format && npm run lint   # keep style & quality
-npm run test                         # runs Jest
+npm run format
+npm run lint   # keep style & quality
+npm run test   # runs Jest
 
 # proxy server
 cd llm-proxy-server
 npm install
-npm run format && npm run lint
+npm run format
+npm run lint
 npm run test
 ```
 
@@ -73,9 +75,12 @@ For more details on the project structure and coding standards associated with t
 
 ### Agent Testing Workflow
 
-1. After code generation, run `npm run test` (root) and `cd llm-proxy-server && npm run test`.
+1. After code generation, run `npm run test` (root), then `cd llm-proxy-server` and `npm run test`.
 2. If any tests fail, diagnose the failure, attempt auto-fix via `npm run lint` (root and proxy), then re-run tests.
 3. If tests still fail, create a PR labeled “🚫 tests failing—needs human review” with logs included.
+4. New tests go in different directories inside the tests/ folder. If they're integration tests, they go inside tests/integration/.
+If they're unit tests, they go into tests/unit/. Of course, different subdirectories can be created inside those directories, for appropriate organization.
+Try to reuse the test helpers located in tests/common/ and subdirectories when writing tests.
 
 ---
 

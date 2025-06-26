@@ -7,6 +7,8 @@
 // ActionTargetContext import removed as it's no longer validated here.
 
 // ActionTargetContext model import removed.
+import { InvalidActionDefinitionError } from '../../errors/invalidActionDefinitionError.js';
+import { InvalidActorEntityError } from '../../errors/invalidActorEntityError.js';
 
 /**
  * Validate the core inputs for prerequisite evaluation.
@@ -19,23 +21,19 @@
  * @throws {Error} If any input is missing required properties or has the wrong type.
  * @returns {void}
  */
-export function validateActionInputs(
-  actionDefinition,
-  actorEntity,
-  logger
-) {
+export function validateActionInputs(actionDefinition, actorEntity, logger) {
   if (!actionDefinition?.id?.trim()) {
     logger.error('Invalid actionDefinition provided (missing id).', {
       actionDefinition,
     });
-    throw new Error('Invalid actionDefinition');
+    throw new InvalidActionDefinitionError();
   }
 
   if (!actorEntity?.id?.trim()) {
     logger.error('Invalid actor entity provided (missing id).', {
       actor: actorEntity,
     });
-    throw new Error('Invalid actor entity');
+    throw new InvalidActorEntityError();
   }
 
   // Validation for targetCtx has been removed, as prerequisites are now actor-only.

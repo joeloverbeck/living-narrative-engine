@@ -14,6 +14,7 @@
  */
 
 import { ITurnStateHost } from '../interfaces/ITurnStateHost.js';
+import TurnDirectiveStrategyResolver from '../strategies/turnDirectiveStrategyResolver.js';
 
 /**
  * @abstract
@@ -607,7 +608,8 @@ export class BaseTurnHandler {
       this._turnStateFactory.createProcessingCommandState(
         this,
         commandString,
-        turnAction
+        turnAction,
+        TurnDirectiveStrategyResolver
       )
     );
   }

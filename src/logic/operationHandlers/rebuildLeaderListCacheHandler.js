@@ -7,6 +7,10 @@ import { isNonBlankString } from '../../utils/textUtils.js';
 
 import { assertParamsObject } from '../../utils/handlerUtils/indexUtils.js';
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
+import {
+  FOLLOWING_COMPONENT_ID,
+  LEADING_COMPONENT_ID,
+} from '../../constants/componentIds.js';
 import BaseOperationHandler from './baseOperationHandler.js';
 
 /**
@@ -72,8 +76,8 @@ class RebuildLeaderListCacheHandler extends BaseOperationHandler {
       return;
     }
 
-    const FOLLOWING = 'core:following';
-    const LEADING = 'core:leading';
+    const FOLLOWING = FOLLOWING_COMPONENT_ID;
+    const LEADING = LEADING_COMPONENT_ID;
 
     // Build map: leaderId → [ followerIds ]
     const followerMap = new Map();
@@ -111,7 +115,7 @@ class RebuildLeaderListCacheHandler extends BaseOperationHandler {
       } catch (err) {
         safeDispatchError(
           this.#dispatcher,
-          `[RebuildLeaderListCacheHandler] Failed updating 'core:leading' for '${leaderId}': ${err.message || err}`,
+          `[RebuildLeaderListCacheHandler] Failed updating '${LEADING}' for '${leaderId}': ${err.message || err}`,
           { stack: err.stack, leaderId }
         );
       }
