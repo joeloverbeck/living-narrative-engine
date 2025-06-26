@@ -28,8 +28,11 @@ describeEntityManagerSuite('EntityManager - getComponentData', (getBed) => {
       const { NAME_COMPONENT_ID } = TestData.ComponentIDs;
       const { PRIMARY } = TestData.InstanceIDs;
       const overrideData = { name: 'Override' };
-      getBed().createBasicEntity({ instanceId: PRIMARY });
-      entityManager.addComponent(PRIMARY, NAME_COMPONENT_ID, overrideData);
+      getBed().createEntityWithOverride(
+        'basic',
+        { [NAME_COMPONENT_ID]: overrideData },
+        { instanceId: PRIMARY }
+      );
 
       // Act
       const data = entityManager.getComponentData(PRIMARY, NAME_COMPONENT_ID);
