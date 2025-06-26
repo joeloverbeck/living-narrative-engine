@@ -46,6 +46,12 @@ export class ProcessingCommandState extends AbstractTurnState {
   #commandProcessor;
   _commandOutcomeInterpreter;
   _processingWorkflow;
+  /**
+   * Factory for creating ProcessingWorkflow instances.
+   *
+   * @type {(state: ProcessingCommandState, commandString: string|null, action: ITurnAction|null, setAction: (a: ITurnAction|null) => void, handler: ProcessingExceptionHandler) => ProcessingWorkflow}
+   */
+  _processingWorkflowFactory;
 
   /**
    * @description Internal setter used by ProcessingGuard.
@@ -119,6 +125,7 @@ export class ProcessingCommandState extends AbstractTurnState {
    * @param {string} deps.commandString The raw command string to process.
    * @param {ITurnAction} deps.turnAction The structured turn action.
    * @param {Function} deps.directiveResolver Resolver for turn directives.
+   * @param {(state: ProcessingCommandState, commandString: string|null, action: ITurnAction|null, setAction: (a: ITurnAction|null) => void, handler: ProcessingExceptionHandler) => ProcessingWorkflow} [deps.processingWorkflowFactory] Factory for ProcessingWorkflow.
    */
   constructor({
     handler,
@@ -127,6 +134,14 @@ export class ProcessingCommandState extends AbstractTurnState {
     commandString,
     turnAction,
     directiveResolver = turnDirectiveResolverAdapter,
+    processingWorkflowFactory = (
+      state,
+      cmd,
+      action,
+      setAction,
+      exceptionHandler
+    ) =>
+      new ProcessingWorkflow(state, cmd, action, setAction, exceptionHandler),
   }) {
     super(handler);
 
@@ -155,12 +170,14 @@ export class ProcessingCommandState extends AbstractTurnState {
     this._exceptionHandler = new ProcessingExceptionHandler(this);
     finishProcessing(this);
 
+    this._processingWorkflowFactory = processingWorkflowFactory;
+
     // Workflow is instantiated here, pass arguments as a single object
     this._processingWorkflow = new CommandProcessingWorkflow({
       state: this,
       exceptionHandler: this._exceptionHandler,
       commandProcessor: this.#commandProcessor,
-      commandOutcomeInterpreter: this._commandOutcomeInterpreter 
+      commandOutcomeInterpreter: this._commandOutcomeInterpreter,
     });
 
     this._logConstruction();
@@ -187,7 +204,7 @@ export class ProcessingCommandState extends AbstractTurnState {
    * @param {ITurnState_Interface} [previousState]
    */
   async enterState(handler, previousState) {
-    const workflow = new ProcessingWorkflow(
+    const workflow = this._processingWorkflowFactory(
       this,
       this.#commandStringForLog,
       this.#turnActionToProcess,

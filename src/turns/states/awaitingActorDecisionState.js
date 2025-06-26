@@ -30,6 +30,27 @@ import {
  */
 export class AwaitingActorDecisionState extends AbstractTurnState {
   /**
+   * Factory function for creating ActionDecisionWorkflow instances.
+   *
+   * @type {(state: AwaitingActorDecisionState, ctx: AwaitingActorDecisionStateContext, actor: import('../../entities/entity.js').default, strategy: import('../interfaces/IActorTurnStrategy.js').IActorTurnStrategy) => ActionDecisionWorkflow}
+   */
+  _workflowFactory;
+
+  /**
+   * Creates an instance of AwaitingActorDecisionState.
+   *
+   * @param {BaseTurnHandler} handler - Owning handler instance.
+   * @param {(state: AwaitingActorDecisionState, ctx: AwaitingActorDecisionStateContext, actor: import('../../entities/entity.js').default, strategy: import('../interfaces/IActorTurnStrategy.js').IActorTurnStrategy) => ActionDecisionWorkflow} [workflowFactory] - Optional factory for creating the workflow.
+   */
+  constructor(
+    handler,
+    workflowFactory = (state, ctx, actor, strategy) =>
+      new ActionDecisionWorkflow(state, ctx, actor, strategy)
+  ) {
+    super(handler);
+    this._workflowFactory = workflowFactory;
+  }
+  /**
    * Ensures the context provides required methods for this state.
    *
    * @override
@@ -77,12 +98,7 @@ export class AwaitingActorDecisionState extends AbstractTurnState {
    * @returns {Promise<void>} Resolves when handling completes.
    */
   async _handleActionDecision(turnContext, actor, strategy) {
-    const workflow = new ActionDecisionWorkflow(
-      this,
-      turnContext,
-      actor,
-      strategy
-    );
+    const workflow = this._workflowFactory(this, turnContext, actor, strategy);
     await workflow.run();
   }
   /**

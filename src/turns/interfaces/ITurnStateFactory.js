@@ -57,7 +57,14 @@ export class ITurnStateFactory {
    * @param {ITurnStateHost} handler
    * @returns {ITurnState} The created awaiting player input state.
    */
-  createAwaitingInputState(handler) {
+  /**
+   * Creates an Awaiting Player Input state instance.
+   *
+   * @param {ITurnStateHost} handler - Handler owning the state machine.
+   * @param {(state: import('../states/awaitingActorDecisionState.js').AwaitingActorDecisionState, ctx: import('../interfaces/turnStateContextTypes.js').AwaitingActorDecisionStateContext, actor: import('../../entities/entity.js').default, strategy: import('../interfaces/IActorTurnStrategy.js').IActorTurnStrategy) => import('../states/workflows/actionDecisionWorkflow.js').ActionDecisionWorkflow} [actionDecisionWorkflowFactory] - Optional factory for ActionDecisionWorkflow.
+   * @returns {ITurnState} The created awaiting player input state.
+   */
+  createAwaitingInputState(handler, actionDecisionWorkflowFactory) {
     throw new Error(
       'ITurnStateFactory.createAwaitingInputState must be implemented by concrete classes.'
     );
@@ -73,11 +80,23 @@ export class ITurnStateFactory {
    * @returns {ProcessingCommandState} A new processing command state instance.
    * @abstract
    */
+  /**
+   * Creates an instance of the state responsible for processing a chosen command.
+   *
+   * @param {BaseTurnHandler} handler - The handler managing the state.
+   * @param {string} commandString - The command string to process.
+   * @param {ITurnAction} turnAction - The chosen turn action.
+   * @param {Function} directiveResolver - Resolver for command directives.
+   * @param {(state: import('../states/processingCommandState.js').ProcessingCommandState, commandString: string|null, action: ITurnAction|null, setAction: (a: ITurnAction|null) => void, handler: import('../states/helpers/processingExceptionHandler.js').ProcessingExceptionHandler) => import('../states/workflows/processingWorkflow.js').ProcessingWorkflow} [processingWorkflowFactory] - Optional factory for ProcessingWorkflow.
+   * @returns {ProcessingCommandState} A new processing command state instance.
+   * @abstract
+   */
   createProcessingCommandState(
     handler,
     commandString,
     turnAction,
-    directiveResolver
+    directiveResolver,
+    processingWorkflowFactory
   ) {
     throw new Error(
       'ITurnStateFactory.createProcessingCommandState must be implemented by concrete classes.'
