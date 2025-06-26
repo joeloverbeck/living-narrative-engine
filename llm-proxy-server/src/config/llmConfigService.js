@@ -60,7 +60,8 @@ import { loadProxyLlmConfigs } from '../proxyLlmConfigLoader.js';
  */
 
 /**
- *
+ * Service for loading and providing access to LLM configuration data.
+ * @implements {import('../interfaces/ILlmConfigService.js').ILlmConfigService}
  */
 export class LlmConfigService {
   /** @type {IFileSystemReader} */
