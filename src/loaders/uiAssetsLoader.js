@@ -84,7 +84,7 @@ class UiAssetsLoader extends AbstractLoader {
    * @param {string} modId - The mod identifier.
    * @param {ModManifest} manifest - The mod manifest.
    * @param {{suffix:string, schemaKey:string, registryCat:string}} options - Parameters controlling file suffix, schema key and registry category.
-   * @returns {Promise<{count:number, overrides:number, errors:number}>} Result summary.
+   * @returns {Promise<{count:number, overrides:number, errors:number, failures:{file:string,reason:string}[]}>} Result summary.
    */
   async _loadAssetFiles(modId, manifest, { suffix, schemaKey, registryCat }) {
     const uiFiles = manifest?.content?.ui || [];
@@ -93,45 +93,64 @@ class UiAssetsLoader extends AbstractLoader {
     let count = 0;
     let overrides = 0;
     let errors = 0;
+    const failures = [];
 
     for (const filename of targetFiles) {
+      const path = this.#resolver.resolveModContentPath(modId, 'ui', filename);
+
+      let data;
       try {
-        const path = this.#resolver.resolveModContentPath(
-          modId,
-          'ui',
-          filename
-        );
-        const data = await this.#fetcher.fetch(path);
-        const schemaId = this.#config.getContentTypeSchemaId(schemaKey);
-        const res = this.#validator.validate(schemaId, data);
-        if (!res.isValid) {
-          throw new Error('Asset schema validation failed');
-        }
-        for (const [name, value] of Object.entries(data)) {
-          if (this.#registry.get(registryCat, name) !== undefined) {
-            overrides++;
-          }
-          const toStore =
-            registryCat === 'ui-icons' ? { markup: value } : value;
-          this.#registry.store(registryCat, name, toStore);
-        }
-        count++;
+        data = await this.#fetcher.fetch(path);
       } catch (e) {
         errors++;
+        failures.push({ file: filename, reason: 'fetch' });
         this._logger.error(
-          `UiAssetsLoader [${modId}]: Failed to process ${filename}: ${e.message}`
+          `UiAssetsLoader [${modId}]: Failed to fetch ${filename}: ${e.message}`
         );
+        continue;
       }
+
+      const schemaId = this.#config.getContentTypeSchemaId(schemaKey);
+      let res;
+      try {
+        res = this.#validator.validate(schemaId, data);
+      } catch (e) {
+        errors++;
+        failures.push({ file: filename, reason: 'validation' });
+        this._logger.error(
+          `UiAssetsLoader [${modId}]: Failed to validate ${filename}: ${e.message}`
+        );
+        continue;
+      }
+
+      if (!res.isValid) {
+        errors++;
+        failures.push({ file: filename, reason: 'validation' });
+        this._logger.error(
+          `UiAssetsLoader [${modId}]: Failed to process ${filename}: Asset schema validation failed`
+        );
+        continue;
+      }
+
+      for (const [name, value] of Object.entries(data)) {
+        if (this.#registry.get(registryCat, name) !== undefined) {
+          overrides++;
+        }
+        const toStore = registryCat === 'ui-icons' ? { markup: value } : value;
+        this.#registry.store(registryCat, name, toStore);
+      }
+
+      count++;
     }
 
-    return { count, overrides, errors };
+    return { count, overrides, errors, failures };
   }
 
   /**
    * @description Loads icon definitions for a mod.
    * @param {string} modId - The mod identifier.
    * @param {ModManifest} manifest - The mod manifest.
-   * @returns {Promise<{count:number, overrides:number, errors:number}>} Result summary.
+   * @returns {Promise<{count:number, overrides:number, errors:number, failures:{file:string,reason:string}[]}>} Result summary.
    */
   async loadIconsForMod(modId, manifest) {
     return this._loadAssetFiles(modId, manifest, {
@@ -145,7 +164,7 @@ class UiAssetsLoader extends AbstractLoader {
    * @description Loads label definitions for a mod.
    * @param {string} modId - The mod identifier.
    * @param {ModManifest} manifest - The mod manifest.
-   * @returns {Promise<{count:number, overrides:number, errors:number}>} Result summary.
+   * @returns {Promise<{count:number, overrides:number, errors:number, failures:{file:string,reason:string}[]}>} Result summary.
    */
   async loadLabelsForMod(modId, manifest) {
     return this._loadAssetFiles(modId, manifest, {
@@ -197,15 +216,16 @@ class UiAssetsLoader extends AbstractLoader {
    * @description Helper to load a group of asset files using a loader function.
    * @protected
    * @param {string[]} files - File names to process.
-   * @param {{modId:string, loader:(id:string, manifest:ModManifest)=>Promise<{count:number, overrides:number, errors:number}>}} options
+   * @param {{modId:string, loader:(id:string, manifest:ModManifest)=>Promise<{count:number, overrides:number, errors:number, failures:{file:string,reason:string}[]}>}} options
    * Parameters including the mod id and loader to invoke.
-   * @returns {Promise<{count:number, overrides:number, errors:number}>}
+   * @returns {Promise<{count:number, overrides:number, errors:number, failures:{file:string,reason:string}[]}>}
    * Aggregated result summary.
    */
   async loadAssetGroup(files, { modId, loader }) {
     let count = 0;
     let overrides = 0;
     let errors = 0;
+    const failures = [];
 
     for (const filename of files) {
       try {
@@ -213,6 +233,9 @@ class UiAssetsLoader extends AbstractLoader {
         count += res.count;
         overrides += res.overrides;
         errors += res.errors;
+        if (Array.isArray(res.failures)) {
+          failures.push(...res.failures);
+        }
       } catch (e) {
         errors++;
         this._logger.error(
@@ -221,14 +244,14 @@ class UiAssetsLoader extends AbstractLoader {
       }
     }
 
-    return { count, overrides, errors };
+    return { count, overrides, errors, failures };
   }
 
   /**
    * @description Loads all UI assets for a mod based on file names.
    * @param {string} modId - The mod identifier.
    * @param {ModManifest} manifest - The mod manifest.
-   * @returns {Promise<{count:number, overrides:number, errors:number}>} Result summary.
+   * @returns {Promise<{count:number, overrides:number, errors:number, failures:{file:string,reason:string}[]}>} Result summary.
    */
   async loadUiAssetsForMod(modId, manifest) {
     const uiFiles = manifest?.content?.ui || [];
@@ -245,12 +268,16 @@ class UiAssetsLoader extends AbstractLoader {
     const count = iconRes.count + labelRes.count;
     const overrides = iconRes.overrides + labelRes.overrides;
     const errors = iconRes.errors + labelRes.errors;
+    const failures = [
+      ...(iconRes.failures || []),
+      ...(labelRes.failures || []),
+    ];
 
     for (const filename of unknownFiles) {
       this._logger.warn(`UiAssetsLoader [${modId}]: Unknown file ${filename}`);
     }
 
-    return { count, overrides, errors };
+    return { count, overrides, errors, failures };
   }
 }
 
