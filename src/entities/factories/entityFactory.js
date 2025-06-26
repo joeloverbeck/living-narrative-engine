@@ -350,14 +350,7 @@ class EntityFactory {
       throw new SerializedEntityError(msg);
     }
 
-    const {
-      instanceId,
-      definitionId,
-      components,
-      componentStates,
-      tags,
-      flags,
-    } = serializedEntity;
+    const { instanceId, definitionId, components } = serializedEntity;
 
     try {
       assertValidId(instanceId, 'EntityFactory.reconstruct', this.#logger);

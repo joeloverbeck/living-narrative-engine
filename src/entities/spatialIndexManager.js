@@ -32,17 +32,28 @@ class SpatialIndexManager extends MapManager {
   }
 
   /**
+   * @description Validate an ID using assertValidId.
+   * @private
+   * @param {any} id - ID to validate.
+   * @param {string} context - Context for error messages.
+   * @returns {boolean} `true` if valid, otherwise `false`.
+   */
+  #isValidId(id, context) {
+    try {
+      assertValidId(id, context, this.logger);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
    * @description Validate an entity ID.
    * @param {any} id - ID to validate.
    * @returns {boolean} `true` if valid, otherwise `false`.
    */
   #isValidEntityId(id) {
-    try {
-      assertValidId(id, 'SpatialIndexManager.#isValidEntityId', this.logger);
-      return true;
-    } catch {
-      return false;
-    }
+    return this.#isValidId(id, 'SpatialIndexManager.#isValidEntityId');
   }
 
   /**
@@ -51,12 +62,7 @@ class SpatialIndexManager extends MapManager {
    * @returns {boolean} `true` if valid, otherwise `false`.
    */
   #isValidLocationId(id) {
-    try {
-      assertValidId(id, 'SpatialIndexManager.#isValidLocationId', this.logger);
-      return true;
-    } catch {
-      return false;
-    }
+    return this.#isValidId(id, 'SpatialIndexManager.#isValidLocationId');
   }
 
   /**
