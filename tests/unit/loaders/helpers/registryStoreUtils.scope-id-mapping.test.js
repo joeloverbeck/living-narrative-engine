@@ -99,7 +99,7 @@ describe('registryStoreUtils - Scope ID Mapping', () => {
 
       // Verify all scopes were stored with their qualified IDs
       expect(mockRegistry.store).toHaveBeenCalledTimes(3);
-      
+
       // Check each specific call
       expect(mockRegistry.store).toHaveBeenNthCalledWith(
         1,
@@ -107,14 +107,14 @@ describe('registryStoreUtils - Scope ID Mapping', () => {
         'core:potential_leaders',
         expect.objectContaining({ id: 'core:potential_leaders' })
       );
-      
+
       expect(mockRegistry.store).toHaveBeenNthCalledWith(
         2,
         'scopes',
         'core:clear_directions',
         expect.objectContaining({ id: 'core:clear_directions' })
       );
-      
+
       expect(mockRegistry.store).toHaveBeenNthCalledWith(
         3,
         'scopes',
@@ -123,58 +123,58 @@ describe('registryStoreUtils - Scope ID Mapping', () => {
       );
     });
 
-         it('should differentiate scope ID behavior from other categories', () => {
-       const testCases = [
-         {
-           category: 'actions',
-           baseId: 'test_actions',
-           expectedId: 'test_actions', // base ID for actions
-         },
-         {
-           category: 'scopes',
-           baseId: 'test_scope',
-           expectedId: 'core:test_scope', // qualified ID for scopes
-         },
-         {
-           category: 'entityDefinitions',
-           baseId: 'test_entity',
-           expectedId: 'core:test_entity', // qualified ID for entity definitions
-         },
-         {
-           category: 'entityInstances',
-           baseId: 'test_instance',
-           expectedId: 'core:test_instance', // qualified ID for entity instances
-         },
-       ];
+    it('should differentiate scope ID behavior from other categories', () => {
+      const testCases = [
+        {
+          category: 'actions',
+          baseId: 'test_actions',
+          expectedId: 'test_actions', // base ID for actions
+        },
+        {
+          category: 'scopes',
+          baseId: 'test_scope',
+          expectedId: 'core:test_scope', // qualified ID for scopes
+        },
+        {
+          category: 'entityDefinitions',
+          baseId: 'test_entity',
+          expectedId: 'core:test_entity', // qualified ID for entity definitions
+        },
+        {
+          category: 'entityInstances',
+          baseId: 'test_instance',
+          expectedId: 'core:test_instance', // qualified ID for entity instances
+        },
+      ];
 
-       testCases.forEach(({ category, baseId, expectedId }) => {
-         mockRegistry.store.mockClear();
-         
-         const itemData = {
-           name: `core:${baseId}`,
-           someProperty: 'value',
-         };
+      testCases.forEach(({ category, baseId, expectedId }) => {
+        mockRegistry.store.mockClear();
 
-         storeItemInRegistry(
-           mockLogger,
-           mockRegistry,
-           'TestLoader',
-           category,
-           'core',
-           baseId,
-           itemData,
-           `${baseId}.json`
-         );
+        const itemData = {
+          name: `core:${baseId}`,
+          someProperty: 'value',
+        };
 
-         expect(mockRegistry.store).toHaveBeenCalledWith(
-           category,
-           `core:${baseId}`,
-           expect.objectContaining({
-             id: expectedId,
-           })
-         );
-       });
-     });
+        storeItemInRegistry(
+          mockLogger,
+          mockRegistry,
+          'TestLoader',
+          category,
+          'core',
+          baseId,
+          itemData,
+          `${baseId}.json`
+        );
+
+        expect(mockRegistry.store).toHaveBeenCalledWith(
+          category,
+          `core:${baseId}`,
+          expect.objectContaining({
+            id: expectedId,
+          })
+        );
+      });
+    });
   });
 
   describe('regression prevention', () => {
@@ -201,11 +201,11 @@ describe('registryStoreUtils - Scope ID Mapping', () => {
 
       // The stored object should have the qualified ID as its id property
       const storedObject = mockRegistry.store.mock.calls[0][2];
-      
+
       // This is the critical assertion that would have failed before the fix
       expect(storedObject.id).toBe('core:potential_leaders');
       expect(storedObject.id).not.toBe('potential_leaders'); // This was the bug
-      
+
       // Additional assertions to ensure the object is properly formed
       expect(storedObject).toMatchObject({
         id: 'core:potential_leaders',
@@ -219,4 +219,4 @@ describe('registryStoreUtils - Scope ID Mapping', () => {
       });
     });
   });
-}); 
+});

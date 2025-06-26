@@ -19,6 +19,7 @@ import {
   INITIALIZATION_SERVICE_FAILED_ID,
   UI_SHOW_FATAL_ERROR_ID,
 } from '../../constants/eventIds.js';
+import { SCOPES_KEY } from '../../constants/dataRegistryKeys.js';
 import {
   SystemInitializationError,
   WorldInitializationError,
@@ -87,7 +88,7 @@ class InitializationService extends IInitializationService {
   #systemInitializer;
   #worldInitializer;
   #safeEventDispatcher;
-  #entityManager; // eslint-disable-line no-unused-private-class-members
+  #entityManager;  
   #domUiFacade; // eslint-disable-line no-unused-private-class-members
   #actionIndex;
   #gameDataRepository;
@@ -422,7 +423,7 @@ class InitializationService extends IInitializationService {
 
   async #initializeScopeRegistry() {
     this.#logger.debug('Initializing ScopeRegistry...');
-    const scopes = this.#dataRegistry.getAll('scopes');
+    const scopes = this.#dataRegistry.getAll(SCOPES_KEY);
     const scopeMap = {};
     scopes.forEach((scope) => {
       if (scope.id) {

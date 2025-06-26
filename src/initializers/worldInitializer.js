@@ -14,11 +14,11 @@
 // --- Library Imports ---
 
 // --- Constant Imports ---
-import { SYSTEM_ERROR_OCCURRED_ID } from '../constants/systemEventIds.js';
 import {
   WORLDINIT_ENTITY_INSTANTIATED_ID,
   WORLDINIT_ENTITY_INSTANTIATION_FAILED_ID,
 } from '../constants/eventIds.js';
+import { SCOPES_KEY } from '../constants/dataRegistryKeys.js';
 
 // --- Utility Imports ---
 import { safeDispatchError } from '../utils/safeDispatchErrorUtils.js';
@@ -69,7 +69,7 @@ class WorldInitializer {
     );
 
     try {
-      const loadedScopes = this.#repository.get('scopes') || {};
+      const loadedScopes = this.#repository.get(SCOPES_KEY) || {};
 
       this.#scopeRegistry.initialize(loadedScopes);
 

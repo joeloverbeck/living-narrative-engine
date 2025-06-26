@@ -2,6 +2,7 @@
  * @jest-environment node
  */
 import { jest } from '@jest/globals';
+import { SCOPES_KEY } from '../../../src/constants/dataRegistryKeys.js';
 
 // We no longer need to mock the module file, as we are injecting the dependency.
 
@@ -36,7 +37,7 @@ describe('lintScopes', () => {
     test('should find all .scope files recursively', async () => {
       const dirs = {
         '/mock-mods': ['mod1'],
-        '/mock-mods/mod1': ['scopes'],
+        '/mock-mods/mod1': [SCOPES_KEY],
         '/mock-mods/mod1/scopes': ['inventory.scope'],
       };
       const files = {

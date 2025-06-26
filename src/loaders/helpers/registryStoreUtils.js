@@ -4,6 +4,7 @@
 
 /** @typedef {import('../../interfaces/coreServices.js').IDataRegistry} IDataRegistry */
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
+import { SCOPES_KEY } from '../../constants/dataRegistryKeys.js';
 
 /**
  * Stores an item in the registry, augmenting it with metadata and logging overrides.
@@ -55,7 +56,7 @@ export function storeItemInRegistry(
   const isClassInstance = dataToStore.constructor !== Object;
   const isEntityDefinition = category === 'entityDefinitions';
   const isEntityInstance = category === 'entityInstances';
-  const isScope = category === 'scopes';
+  const isScope = category === SCOPES_KEY;
 
   let dataWithMetadata;
   let finalId = baseItemId;

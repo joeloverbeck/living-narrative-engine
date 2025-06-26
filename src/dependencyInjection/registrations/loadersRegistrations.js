@@ -61,6 +61,7 @@ import RuleLoader from '../../loaders/ruleLoader.js';
 import SchemaLoader from '../../loaders/schemaLoader.js';
 import ScopeLoader from '../../loaders/scopeLoader.js';
 import WorldLoader from '../../loaders/worldLoader.js';
+import { SCOPES_KEY } from '../../constants/dataRegistryKeys.js';
 
 // --- Modding Service Imports ---
 import ModDependencyValidator from '../../modding/modDependencyValidator.js';
@@ -288,7 +289,7 @@ export function registerLoaders(container) {
             loader: c.resolve(tokens.ScopeLoader),
             contentKey: 'scopes',
             diskFolder: 'scopes',
-            registryKey: 'scopes',
+            registryKey: SCOPES_KEY,
             phase: 'definitions',
           },
           // Instance phase loaders

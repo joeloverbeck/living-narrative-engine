@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import WorldInitializer from '../../../src/initializers/worldInitializer.js';
+import { SCOPES_KEY } from '../../../src/constants/dataRegistryKeys.js';
 
 describe('WorldInitializer - Initialization Sequence', () => {
   let worldInitializer;
@@ -146,7 +147,7 @@ describe('WorldInitializer - Initialization Sequence', () => {
 
       await worldInitializer.initializeScopeRegistry();
 
-      expect(mockGameDataRepository.get).toHaveBeenCalledWith('scopes');
+      expect(mockGameDataRepository.get).toHaveBeenCalledWith(SCOPES_KEY);
       expect(mockScopeRegistry.initialize).toHaveBeenCalledWith(mockScopes);
       expect(mockLogger.info).toHaveBeenCalledWith(
         'WorldInitializer: ScopeRegistry initialized with 2 scopes.'

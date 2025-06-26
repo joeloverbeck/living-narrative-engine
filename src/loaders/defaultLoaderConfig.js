@@ -5,6 +5,7 @@
  */
 
 /** @typedef {import('../interfaces/coreServices.js').BaseManifestItemLoaderInterface} BaseManifestItemLoaderInterface */
+import { SCOPES_KEY } from '../constants/dataRegistryKeys.js';
 
 /**
  * Structure describing a content loader configuration entry.
