@@ -479,6 +479,17 @@ describe('WorldInitializer', () => {
       );
     });
 
+    it.each([[null], [undefined], [''], ['   ']])(
+      'should throw an error for invalid worldName %p',
+      async (badName) => {
+        await expect(
+          worldInitializer.initializeWorldEntities(badName)
+        ).rejects.toThrow(
+          'initializeWorldEntities requires a valid worldName string.'
+        );
+      }
+    );
+
     it('should handle empty instances array gracefully', async () => {
       const worldData = {
         id: 'test:world',
