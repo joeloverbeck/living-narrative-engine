@@ -10,8 +10,7 @@ import { validateDependency } from '../utils/validationUtils.js';
 import { ensureValidLogger } from '../utils/loggerUtils.js';
 import { getEntityDisplayName } from '../utils/entityUtils.js';
 import { isNonBlankString } from '../utils/textUtils.js';
-import { safeDispatchError } from '../utils/safeDispatchErrorUtils.js';
-import { extractModId } from '../utils/idUtils.js';
+import { buildPortraitInfo } from './utils/portraitUtils.js';
 import { InvalidEntityIdError } from '../errors/invalidEntityIdError.js';
 
 /**
@@ -140,91 +139,6 @@ export class EntityDisplayDataProvider {
   }
 
   /**
-   * @description Constructs the resolved portrait path using the mod ID and image path.
-   * @private
-   * @param {string} modId - The identifier of the mod.
-   * @param {string} imagePath - Raw image path from the portrait component.
-   * @returns {string} The resolved portrait image path.
-   */
-  #buildPortraitPath(modId, imagePath) {
-    return `/data/mods/${modId}/${imagePath}`;
-  }
-
-  /**
-   * @description Normalizes alternative text for portrait images.
-   * @private
-   * @param {string | undefined} rawAltText - Alt text from the portrait component.
-   * @returns {string | null} Trimmed alt text or null if not provided.
-   */
-  #buildAltText(rawAltText) {
-    return isNonBlankString(rawAltText) ? rawAltText.trim() : null;
-  }
-
-  /**
-   * @description Builds portrait path and alt text for an entity.
-   * @private
-   * @param {Entity} entity - The entity instance to read portrait data from.
-   * @param {string} contextMsg - The calling method name for log messages.
-   * @returns {{ path: string, altText: string | null } | null} Object with path
-   * and alt text, or null if portrait data is invalid.
-   */
-  #buildPortraitInfo(entity, contextMsg) {
-    const isLocation = contextMsg === 'getLocationPortraitData';
-    const label = isLocation ? 'Location entity' : 'Entity';
-    const successSubject = isLocation
-      ? `location '${entity.id}'`
-      : `'${entity.id}'`;
-
-    const portraitComponent = entity.getComponentData(PORTRAIT_COMPONENT_ID);
-    if (
-      !portraitComponent ||
-      typeof portraitComponent.imagePath !== 'string' ||
-      !portraitComponent.imagePath.trim()
-    ) {
-      this.#logger.debug(
-        `${this._logPrefix} ${contextMsg}: ${label} '${entity.id}' has no valid PORTRAIT_COMPONENT_ID data or imagePath.`
-      );
-      return null;
-    }
-
-    if (typeof entity.definitionId !== 'string' || !entity.definitionId) {
-      this.#logger.warn(
-        `${this._logPrefix} ${contextMsg}: Invalid or missing definitionId. Expected string, got:`,
-        entity.definitionId
-      );
-      return null;
-    }
-
-    const modId = extractModId(entity.definitionId);
-    if (!modId) {
-      safeDispatchError(
-        this.#safeEventDispatcher,
-        `Entity definitionId '${entity.definitionId}' has invalid format. Expected format 'modId:entityName'.`,
-        {
-          raw: JSON.stringify({
-            definitionId: entity.definitionId,
-            expectedFormat: 'modId:entityName',
-            functionName: 'extractModId',
-          }),
-          stack: new Error().stack,
-        },
-        this.#logger
-      );
-      return null;
-    }
-
-    const imagePath = portraitComponent.imagePath.trim();
-    const fullPath = this.#buildPortraitPath(modId, imagePath);
-    const altText = this.#buildAltText(portraitComponent.altText);
-
-    this.#logger.debug(
-      `${this._logPrefix} ${contextMsg}: Constructed portrait path for ${successSubject}: ${fullPath}`
-    );
-
-    return { path: fullPath, altText };
-  }
-
-  /**
    * Retrieves the display name of an entity.
    * Falls back to entity ID if the name component is missing, then to a default name.
    *
@@ -255,7 +169,13 @@ export class EntityDisplayDataProvider {
       entityId,
       null,
       (entity) => {
-        const info = this.#buildPortraitInfo(entity, 'getEntityPortraitPath');
+        const info = buildPortraitInfo(
+          entity,
+          'getEntityPortraitPath',
+          this.#logger,
+          this.#safeEventDispatcher,
+          this._logPrefix
+        );
         return info ? info.path : null;
       },
       `getEntityPortraitPath: Entity with ID '${entityId}' not found.`
@@ -435,7 +355,13 @@ export class EntityDisplayDataProvider {
       locationEntityId,
       null,
       (entity) => {
-        const info = this.#buildPortraitInfo(entity, 'getLocationPortraitData');
+        const info = buildPortraitInfo(
+          entity,
+          'getLocationPortraitData',
+          this.#logger,
+          this.#safeEventDispatcher,
+          this._logPrefix
+        );
         if (!info) return null;
         return { imagePath: info.path, altText: info.altText };
       },
