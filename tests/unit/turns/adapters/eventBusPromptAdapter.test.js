@@ -4,6 +4,7 @@
 import { EventBusPromptAdapter } from '../../../../src/turns/adapters/eventBusPromptAdapter.js';
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { PLAYER_TURN_PROMPT_ID } from '../../../../src/constants/eventIds';
+import { expectNoDispatch } from '../../../common/engine/dispatchTestUtils.js';
 
 // --- Mocks ---
 const mockSafeDispatcher = {
@@ -185,7 +186,7 @@ describe('EventBusPromptAdapter', () => {
       availableActions: actions,
       error: errorMsg,
     });
-    expect(mockSafeDispatcher.dispatch).not.toHaveBeenCalled(); // Ensure safe wasn't called
+    expectNoDispatch(mockSafeDispatcher.dispatch); // Ensure safe wasn't called
   });
 
   it('should resolve void even if dispatch returns false', async () => {

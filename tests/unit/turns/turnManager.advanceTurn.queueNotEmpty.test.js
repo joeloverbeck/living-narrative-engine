@@ -8,6 +8,7 @@ import {
 } from '../../common/turns/turnManagerTestBed.js';
 import { expectSystemErrorDispatch } from '../../common/turns/turnManagerTestUtils.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/eventIds.js';
+import { expectNoDispatch } from '../../common/engine/dispatchTestUtils.js';
 import { createAiActor } from '../../common/turns/testActors.js';
 import { expectTurnStartedEvents } from '../../common/turns/turnManagerTestUtils.js';
 
@@ -280,7 +281,7 @@ describeRunningTurnManagerSuite(
       expect(
         freshTestBed.mocks.turnHandlerResolver.resolveHandler
       ).not.toHaveBeenCalled();
-      expect(freshTestBed.mocks.dispatcher.dispatch).not.toHaveBeenCalled();
+      expectNoDispatch(freshTestBed.mocks.dispatcher.dispatch);
 
       // Clean up the fresh test bed
       await freshTestBed.cleanup();

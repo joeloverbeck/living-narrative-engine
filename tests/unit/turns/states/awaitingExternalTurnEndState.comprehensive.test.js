@@ -12,6 +12,7 @@ import {
   jest,
 } from '@jest/globals';
 import { flushPromisesAndTimers } from '../../../common/turns/turnManagerTestBed.js';
+import { expectNoDispatch } from '../../../common/engine/dispatchTestUtils.js';
 
 // Use fake timers to control setTimeout/clearTimeout and advance time manually.
 jest.useFakeTimers();
@@ -338,7 +339,7 @@ describe('AwaitingExternalTurnEndState', () => {
       await flushPromisesAndTimers();
 
       // Assert
-      expect(mockEventDispatcher.dispatch).not.toHaveBeenCalled();
+      expectNoDispatch(mockEventDispatcher.dispatch);
       expect(mockTurnContext.endTurn).not.toHaveBeenCalled();
     });
 

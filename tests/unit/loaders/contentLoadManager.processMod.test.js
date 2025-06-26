@@ -1,6 +1,7 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import ContentLoadManager from '../../../src/loaders/ContentLoadManager.js';
 import LoadResultAggregator from '../../../src/loaders/LoadResultAggregator.js';
+import { expectNoDispatch } from '../../common/engine/dispatchTestUtils.js';
 
 /** @typedef {import('../../../src/loaders/LoadResultAggregator.js').TotalResultsSummary} TotalResultsSummary */
 
@@ -151,7 +152,7 @@ describe('ContentLoadManager.processMod', () => {
 
     expect(result.status).toBe('success');
     expect(result.updatedTotals.items.count).toBe(1);
-    expect(dispatcher.dispatch).not.toHaveBeenCalled();
+    expectNoDispatch(dispatcher.dispatch);
   });
 
   it('uses injected timer for duration measurement', async () => {

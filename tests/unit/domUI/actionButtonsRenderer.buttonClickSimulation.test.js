@@ -16,6 +16,7 @@ import DomElementFactory from '../../../src/domUI/domElementFactory.js';
 import ConsoleLogger from '../../../src/logging/consoleLogger.js';
 import ValidatedEventDispatcher from '../../../src/events/validatedEventDispatcher.js';
 import { PLAYER_TURN_SUBMITTED_ID } from '../../../src/constants/eventIds';
+import { expectNoDispatch } from '../../common/engine/dispatchTestUtils.js';
 
 // Mock dependencies
 jest.mock('../../../src/logging/consoleLogger.js');
@@ -305,7 +306,7 @@ describe('ActionButtonsRenderer', () => {
       );
       expect(renderer.selectedAction).toEqual(actionToSelect);
       expect(renderer.elements.sendButtonElement.disabled).toBe(false);
-      expect(mockVed.dispatch).not.toHaveBeenCalled();
+      expectNoDispatch(mockVed.dispatch);
       expect(mockExamineButton.getAttribute('role')).toBe('radio');
       expect(mockExamineButton.getAttribute('data-action-index')).toBe('1');
     });
@@ -538,7 +539,7 @@ describe('ActionButtonsRenderer', () => {
       await mockActionButton.click(); // Click the action button itself
 
       expect(spy).toHaveBeenCalledWith(mockActionButton, action);
-      expect(mockVed.dispatch).not.toHaveBeenCalled();
+      expectNoDispatch(mockVed.dispatch);
       expect(renderer.selectedAction).toEqual(action);
       expect(renderer.elements.sendButtonElement.disabled).toBe(false);
     });

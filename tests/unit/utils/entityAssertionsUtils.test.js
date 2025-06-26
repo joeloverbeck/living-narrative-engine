@@ -1,6 +1,7 @@
 import { describe, test, expect, jest } from '@jest/globals';
 import { assertValidEntity } from '../../../src/utils/entityAssertionsUtils.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/eventIds.js';
+import { expectNoDispatch } from '../../common/engine/dispatchTestUtils.js';
 
 describe('assertValidEntity', () => {
   test('dispatches error and throws when actor invalid', () => {
@@ -47,7 +48,7 @@ describe('assertValidEntity', () => {
     expect(() =>
       assertValidEntity(actor, logger, 'Ctx', dispatcher)
     ).not.toThrow();
-    expect(dispatcher.dispatch).not.toHaveBeenCalled();
+    expectNoDispatch(dispatcher.dispatch);
     expect(logger.warn).not.toHaveBeenCalled();
   });
 });

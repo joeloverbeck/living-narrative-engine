@@ -4,6 +4,7 @@
  * @jest-environment node
  */
 import { describe, expect, test, jest, beforeEach } from '@jest/globals';
+import { expectNoDispatch } from '../../../common/engine/dispatchTestUtils.js';
 import DispatchEventHandler from '../../../../src/logic/operationHandlers/dispatchEventHandler.js'; // Adjust path as needed
 
 // --- JSDoc Imports ---
@@ -244,7 +245,7 @@ describe('DispatchEventHandler', () => {
       'DISPATCH_EVENT: params missing or invalid.',
       { params: null }
     );
-    expect(mockDispatcher.dispatch).not.toHaveBeenCalled();
+    expectNoDispatch(mockDispatcher.dispatch);
   });
 
   test('execute should log error and not dispatch if params is empty object', () => {
@@ -254,7 +255,7 @@ describe('DispatchEventHandler', () => {
       expect.stringContaining('Invalid or missing "eventType" parameter'),
       expect.anything()
     );
-    expect(mockDispatcher.dispatch).not.toHaveBeenCalled();
+    expectNoDispatch(mockDispatcher.dispatch);
   });
 
   test('execute should log error and not dispatch if eventType is missing', () => {
@@ -265,7 +266,7 @@ describe('DispatchEventHandler', () => {
       expect.stringContaining('Invalid or missing "eventType" parameter'),
       expect.anything()
     );
-    expect(mockDispatcher.dispatch).not.toHaveBeenCalled();
+    expectNoDispatch(mockDispatcher.dispatch);
   });
 
   test('execute should log error and not dispatch if eventType is not a string', () => {
@@ -276,7 +277,7 @@ describe('DispatchEventHandler', () => {
       expect.stringContaining('Invalid or missing "eventType" parameter'),
       expect.anything()
     );
-    expect(mockDispatcher.dispatch).not.toHaveBeenCalled();
+    expectNoDispatch(mockDispatcher.dispatch);
   });
 
   test('execute should log error and not dispatch if eventType is an empty or whitespace string', () => {
@@ -286,7 +287,7 @@ describe('DispatchEventHandler', () => {
       expect.stringContaining('Invalid or missing "eventType" parameter'),
       expect.anything()
     );
-    expect(mockDispatcher.dispatch).not.toHaveBeenCalled();
+    expectNoDispatch(mockDispatcher.dispatch);
     mockLogger.error.mockClear(); // Clear for next check
 
     handler.execute({ eventType: '   ', payload: {} }, mockEvaluationContext);
@@ -295,7 +296,7 @@ describe('DispatchEventHandler', () => {
       expect.stringContaining('Invalid or missing "eventType" parameter'),
       expect.anything()
     );
-    expect(mockDispatcher.dispatch).not.toHaveBeenCalled();
+    expectNoDispatch(mockDispatcher.dispatch);
   });
 
   // FIX: Corrected a faulty assertion in this test.
@@ -452,7 +453,7 @@ describe('DispatchEventHandler', () => {
     expect(mockEventBus.dispatch).toHaveBeenCalledTimes(1);
     expect(mockEventBus.dispatch).toHaveBeenCalledWith('BUS_EVENT', { id: 1 });
     expect(mockEventBus.listenerCount).toHaveBeenCalledWith('BUS_EVENT');
-    expect(mockDispatcher.dispatch).not.toHaveBeenCalled(); // Ensure default VED mock wasn't called
+    expectNoDispatch(mockDispatcher.dispatch); // Ensure default VED mock wasn't called
 
     expect(mockLogger.debug).toHaveBeenCalledWith(
       expect.stringContaining('Attempting to dispatch event "BUS_EVENT"'),

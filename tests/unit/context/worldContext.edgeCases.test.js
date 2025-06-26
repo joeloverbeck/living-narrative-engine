@@ -8,6 +8,7 @@ import {
   test,
   afterEach,
 } from '@jest/globals';
+import { expectNoDispatch } from '../../common/engine/dispatchTestUtils.js';
 
 // Define the mock object *first*
 const mockEntityManagerInstance = {
@@ -279,7 +280,7 @@ describe('WorldContext Edge Cases', () => {
     expect(mockEntityManagerInstance.getEntityInstance).toHaveBeenCalledWith(
       'loc1'
     );
-    expect(dispatcher.dispatch).not.toHaveBeenCalled();
+    expectNoDispatch(dispatcher.dispatch);
     expect(loggerWarnSpy).not.toHaveBeenCalled();
   });
 
@@ -321,7 +322,7 @@ describe('WorldContext Edge Cases', () => {
     expect(mockEntityManagerInstance.getEntityInstance).toHaveBeenCalledWith(
       'nonexistent-loc'
     );
-    expect(dispatcher.dispatch).not.toHaveBeenCalled(); // No error expected here
+    expectNoDispatch(dispatcher.dispatch); // No error expected here
     expect(loggerWarnSpy).toHaveBeenCalledTimes(1); // Warning expected
     // VVVVVV UPDATED LOG MESSAGE CHECK VVVVVV
     expect(loggerWarnSpy).toHaveBeenCalledWith(

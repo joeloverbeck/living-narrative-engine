@@ -11,6 +11,7 @@ import { createMockEntity } from '../../common/mockFactories';
 import { createAiActor } from '../../common/turns/testActors.js';
 import { createMockTurnHandler } from '../../common/mockFactories.js';
 import { expectSystemErrorDispatch } from '../../common/turns/turnManagerTestUtils.js';
+import { expectNoDispatch } from '../../common/engine/dispatchTestUtils.js';
 
 describeTurnManagerSuite(
   'TurnManager: advanceTurn() - Round Start (Queue Empty)',
@@ -45,7 +46,7 @@ describeTurnManagerSuite(
       );
       expect(testBed.mocks.turnOrderService.isEmpty).not.toHaveBeenCalled();
       expect(stopSpy).not.toHaveBeenCalled();
-      expect(testBed.mocks.dispatcher.dispatch).not.toHaveBeenCalled();
+      expectNoDispatch(testBed.mocks.dispatcher.dispatch);
       expect(testBed.mocks.dispatcher.subscribe).not.toHaveBeenCalled(); // subscribe happens in start()
     });
 

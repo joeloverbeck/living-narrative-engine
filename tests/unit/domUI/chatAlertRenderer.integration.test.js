@@ -15,6 +15,8 @@ import {
 // Class under test
 import { ChatAlertRenderer } from '../../../src/domUI';
 
+import { expectNoDispatch } from '../../common/engine/dispatchTestUtils.js';
+
 // Real implementation needed for creating elements within the test
 import DomElementFactory from '../../../src/domUI/domElementFactory.js';
 
@@ -125,7 +127,7 @@ describe('ChatAlertRenderer Throttling Integration', () => {
       expect(firstBubble.textContent).toContain('Connection timed out.');
 
       // The throttler should not have dispatched a summary event yet.
-      expect(mockSafeEventDispatcher.dispatch).not.toHaveBeenCalled();
+      expectNoDispatch(mockSafeEventDispatcher.dispatch);
 
       // --- Act: Advance time by 10 seconds to close the throttling window ---
       jest.advanceTimersByTime(10000);
@@ -184,7 +186,7 @@ describe('ChatAlertRenderer Throttling Integration', () => {
 
       // Advance time and assert that no summary is generated for either.
       jest.advanceTimersByTime(10000);
-      expect(mockSafeEventDispatcher.dispatch).not.toHaveBeenCalled();
+      expectNoDispatch(mockSafeEventDispatcher.dispatch);
       expect(chatPanel.children.length).toBe(2);
     });
   });
@@ -215,7 +217,7 @@ describe('ChatAlertRenderer Throttling Integration', () => {
 
       // --- Assert: Final State ---
       // The throttler's timer will fire, but since suppressedCount is 0, it must NOT dispatch an event.
-      expect(mockSafeEventDispatcher.dispatch).not.toHaveBeenCalled();
+      expectNoDispatch(mockSafeEventDispatcher.dispatch);
       // Therefore, the number of DOM elements must remain 1.
       expect(chatPanel.children.length).toBe(1);
     });

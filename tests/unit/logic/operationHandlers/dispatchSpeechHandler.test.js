@@ -7,6 +7,7 @@ import {
   DISPLAY_SPEECH_ID,
   SYSTEM_ERROR_OCCURRED_ID,
 } from '../../../../src/constants/eventIds.js';
+import { expectNoDispatch } from '../../../common/engine/dispatchTestUtils.js';
 
 const makeLogger = () => ({
   debug: jest.fn(),
@@ -85,7 +86,7 @@ describe('DispatchSpeechHandler', () => {
       'DispatchSpeechHandler: DISPATCH_SPEECH: params missing or invalid.',
       { params: null }
     );
-    expect(safeDispatcher.dispatch).not.toHaveBeenCalled();
+    expectNoDispatch(safeDispatcher.dispatch);
   });
 
   test('dispatches error event if underlying dispatch throws', () => {

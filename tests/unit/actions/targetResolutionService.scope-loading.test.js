@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { TargetResolutionService } from '../../../src/actions/targetResolutionService.js';
 import ScopeRegistry from '../../../src/scopeDsl/scopeRegistry.js';
+import { expectNoDispatch } from '../../common/engine/dispatchTestUtils.js';
 
 describe('TargetResolutionService - Scope Loading Issue', () => {
   let targetResolutionService;
@@ -59,7 +60,9 @@ describe('TargetResolutionService - Scope Loading Issue', () => {
       };
 
       mockScopeRegistry.getScope.mockReturnValue(mockScopeDefinition);
-      mockScopeEngine.resolve.mockReturnValue(new Set(['location1', 'location2']));
+      mockScopeEngine.resolve.mockReturnValue(
+        new Set(['location1', 'location2'])
+      );
 
       const mockActor = { id: 'hero', type: 'character' };
       const mockDiscoveryContext = { currentLocation: { id: 'room1' } };
@@ -70,9 +73,11 @@ describe('TargetResolutionService - Scope Loading Issue', () => {
         mockDiscoveryContext
       );
 
-      expect(mockScopeRegistry.getScope).toHaveBeenCalledWith('core:clear_directions');
+      expect(mockScopeRegistry.getScope).toHaveBeenCalledWith(
+        'core:clear_directions'
+      );
       expect(result).toHaveLength(2);
-      expect(mockSafeEventDispatcher.dispatch).not.toHaveBeenCalled();
+      expectNoDispatch(mockSafeEventDispatcher.dispatch);
     });
 
     it('should handle missing scope gracefully and dispatch error event', async () => {
@@ -88,7 +93,9 @@ describe('TargetResolutionService - Scope Loading Issue', () => {
         mockDiscoveryContext
       );
 
-      expect(mockScopeRegistry.getScope).toHaveBeenCalledWith('core:clear_directions');
+      expect(mockScopeRegistry.getScope).toHaveBeenCalledWith(
+        'core:clear_directions'
+      );
       expect(result).toHaveLength(0);
       expect(mockLogger.warn).toHaveBeenCalledWith(
         "TargetResolutionService: Missing scope definition: Scope 'core:clear_directions' not found or has no expression in registry."
@@ -96,7 +103,8 @@ describe('TargetResolutionService - Scope Loading Issue', () => {
       expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
         'core:system_error_occurred',
         {
-          message: "Missing scope definition: Scope 'core:clear_directions' not found or has no expression in registry.",
+          message:
+            "Missing scope definition: Scope 'core:clear_directions' not found or has no expression in registry.",
           details: { scopeName: 'core:clear_directions' },
         }
       );
@@ -152,7 +160,9 @@ describe('TargetResolutionService - Scope Loading Issue', () => {
       expect(mockSafeEventDispatcher.dispatch).toHaveBeenCalledWith(
         'core:system_error_occurred',
         expect.objectContaining({
-          message: expect.stringContaining("Error resolving scope 'core:clear_directions'"),
+          message: expect.stringContaining(
+            "Error resolving scope 'core:clear_directions'"
+          ),
           details: expect.objectContaining({
             error: expect.stringContaining('Unknown source node'),
           }),
@@ -164,7 +174,7 @@ describe('TargetResolutionService - Scope Loading Issue', () => {
   describe('Real ScopeRegistry integration', () => {
     it('should work with a real scope registry containing core:clear_directions', () => {
       const realScopeRegistry = new ScopeRegistry();
-      
+
       // Initialize with the expected scope definition
       realScopeRegistry.initialize({
         'core:clear_directions': {
@@ -178,15 +188,17 @@ describe('TargetResolutionService - Scope Loading Issue', () => {
       const scope = realScopeRegistry.getScope('core:clear_directions');
       expect(scope).toBeDefined();
       expect(scope.name).toBe('core:clear_directions');
-      expect(scope.expr).toBe('location.core:exits[{ "condition_ref": "core:exit-is-unblocked" }].target');
+      expect(scope.expr).toBe(
+        'location.core:exits[{ "condition_ref": "core:exit-is-unblocked" }].target'
+      );
     });
 
     it('should enforce namespaced scope names in real registry', () => {
       const realScopeRegistry = new ScopeRegistry();
-      
+
       expect(() => {
         realScopeRegistry.getScope('clear_directions'); // Non-namespaced
       }).toThrow('Scope names must be namespaced');
     });
   });
-}); 
+});
