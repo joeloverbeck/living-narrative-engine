@@ -108,6 +108,7 @@ describe('UiAssetsLoader', () => {
     expect(registry.store).toHaveBeenCalledWith('ui-labels', 'save', 'Save');
     expect(result.count).toBe(2);
     expect(result.errors).toBe(0);
+    expect(result.failures).toEqual([]);
   });
 
   it('categorizes UI files correctly', () => {
@@ -128,5 +129,6 @@ describe('UiAssetsLoader', () => {
     );
     expect(result.count).toBe(0);
     expect(result.errors).toBe(0);
+    expect(result.failures).toEqual([]);
   });
 });
