@@ -441,6 +441,11 @@ class WorldInitializer {
    * @throws {Error} If a critical error occurs during initialization that should stop the process (e.g., world not found).
    */
   async initializeWorldEntities(worldName) {
+    if (typeof worldName !== 'string' || !worldName.trim()) {
+      throw new Error(
+        'initializeWorldEntities requires a valid worldName string.'
+      );
+    }
     this.#logger.debug(
       `WorldInitializer: Starting world entity initialization process for world: ${worldName}...`
     );
