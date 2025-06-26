@@ -11,12 +11,5 @@
     ]
   },
   "template": "step back",
-  "prerequisites": [
-    {
-      "logic": {
-        "condition_ref": "intimacy:actor-has-closeness-partner"
-      },
-      "failure_message": "You are not close to anyone."
-    }
-  ]
+  "prerequisites": []
 }

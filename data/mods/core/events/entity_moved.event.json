@@ -10,7 +10,6 @@
       "entityId",
       "previousLocationId",
       "currentLocationId",
-      "direction",
       "originalCommand"
     ],
     "properties": {
@@ -30,16 +29,10 @@
         "$ref": "http://example.com/schemas/common.schema.json#/definitions/namespacedId",
         "description": "The ID of the location the entity is now in after the move."
       },
-      "direction": {
-        "oneOf": [
-          {
-            "type": "string"
-          },
-          {
-            "type": "null"
-          }
-        ],
-        "description": "The direction of the movement (e.g., 'north', 'west'), or null if the move was to a specific target location."
+      "movement_type": {
+        "type": "string",
+        "enum": ["natural", "teleport"],
+        "description": "The type of movement. 'natural' for player-initiated moves, 'teleport' for system-initiated moves like followers."
       },
       "originalCommand": {
         "type": "string",

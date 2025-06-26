@@ -24,15 +24,14 @@ describe('Schema – core:entity_moved payload', () => {
     validate = ajv.compile(eventDef.payloadSchema);
   });
 
-  /* ── VALID PAYLOADS ───────────────────────────────────────────────────── */
+  /* ── VALID PAYLOADS ──────────────────────────────────────────────────────── */
 
-  test('should validate a payload with a string direction', () => {
+  test('should validate a valid payload', () => {
     const payload = {
       eventName: 'core:entity_moved',
-      entityId: 'core:player',
-      previousLocationId: 'core:room_a',
-      currentLocationId: 'core:room_b',
-      direction: 'north',
+      entityId: 'some:entity',
+      previousLocationId: 'some:location',
+      currentLocationId: 'another:location',
       originalCommand: 'go north',
     };
     const ok = validate(payload);
@@ -40,59 +39,34 @@ describe('Schema – core:entity_moved payload', () => {
     expect(ok).toBe(true);
   });
 
-  test('should validate a payload with a null direction', () => {
-    const payload = {
-      eventName: 'core:entity_moved',
-      entityId: 'core:player',
-      previousLocationId: 'core:guild',
-      currentLocationId: 'core:town_square',
-      direction: null,
-      originalCommand: 'go to town square',
-    };
-    const ok = validate(payload);
-    if (!ok) console.error(validate.errors);
-    expect(ok).toBe(true);
-  });
-
-  /* ── INVALID PAYLOADS ─────────────────────────────────────────────────── */
-
-  test('should reject a payload with a missing direction', () => {
-    const payload = {
-      eventName: 'core:entity_moved',
-      entityId: 'core:player',
-      previousLocationId: 'core:room_a',
-      currentLocationId: 'core:room_b',
-      originalCommand: 'go north',
-    };
-    expect(validate(payload)).toBe(false);
-  });
+  /* ── INVALID PAYLOADS ───────────────────────────────────────────────────── */
 
   test.each([
-    ['number', 123],
-    ['object', { dir: 'north' }],
-    ['array', ['north']],
-    ['boolean', true],
-  ])('should reject a payload with a %s direction', (_type, value) => {
+    ['eventName'],
+    ['entityId'],
+    ['previousLocationId'],
+    ['currentLocationId'],
+    ['originalCommand'],
+  ])('should reject a payload with a missing property: %s', (missingProperty) => {
     const payload = {
       eventName: 'core:entity_moved',
-      entityId: 'core:player',
-      previousLocationId: 'core:room_a',
-      currentLocationId: 'core:room_b',
-      direction: value,
+      entityId: 'some:entity',
+      previousLocationId: 'some:location',
+      currentLocationId: 'another:location',
       originalCommand: 'go north',
     };
+    delete payload[missingProperty];
     expect(validate(payload)).toBe(false);
   });
 
-  test('should reject a payload with extra properties', () => {
+  test('should reject a payload with an extra property', () => {
     const payload = {
       eventName: 'core:entity_moved',
-      entityId: 'core:player',
-      previousLocationId: 'core:room_a',
-      currentLocationId: 'core:room_b',
-      direction: 'north',
+      entityId: 'some:entity',
+      previousLocationId: 'some:location',
+      currentLocationId: 'another:location',
       originalCommand: 'go north',
-      extraField: 'should not be here',
+      extra: 'property',
     };
     expect(validate(payload)).toBe(false);
   });
