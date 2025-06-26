@@ -1,9 +1,11 @@
 import { describe, test, expect } from '@jest/globals';
 import { formatValidationError } from '../../../../src/actions/validation/validationErrorUtils.js';
+import { InvalidActionDefinitionError } from '../../../../src/errors/invalidActionDefinitionError.js';
+import { InvalidActorEntityError } from '../../../../src/errors/invalidActorEntityError.js';
 
 /** Mock error cases used by validateActionInputs */
-const actionErr = new Error('Invalid actionDefinition');
-const actorErr = new Error('Invalid actor entity');
+const actionErr = new InvalidActionDefinitionError();
+const actorErr = new InvalidActorEntityError();
 const ctxErr = new Error('Invalid ActionTargetContext');
 const otherErr = new Error('Something else');
 
@@ -27,9 +29,7 @@ describe('formatValidationError', () => {
     const err = formatValidationError(ctxErr, 'Source.fn', {
       contextType: 'none',
     });
-    expect(err.message).toBe(
-      'Source.fn: invalid ActionTargetContext'
-    );
+    expect(err.message).toBe('Source.fn: invalid ActionTargetContext');
   });
 
   test('handles unknown error message gracefully', () => {
