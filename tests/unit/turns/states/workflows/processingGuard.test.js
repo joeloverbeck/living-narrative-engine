@@ -2,6 +2,7 @@ import { describe, test, expect, jest } from '@jest/globals';
 import { ProcessingCommandState } from '../../../../../src/turns/states/processingCommandState.js';
 import { ProcessingGuard } from '../../../../../src/turns/states/helpers/processingGuard.js';
 import { ProcessingExceptionHandler } from '../../../../../src/turns/states/helpers/processingExceptionHandler.js';
+import TurnDirectiveStrategyResolver from '../../../../../src/turns/strategies/turnDirectiveStrategyResolver.js';
 
 const mockLogger = { debug: jest.fn(), warn: jest.fn(), error: jest.fn() };
 const makeHandler = () => ({
@@ -19,7 +20,28 @@ const makeTurnCtx = () => ({
   endTurn: jest.fn().mockResolvedValue(undefined),
 });
 
+// Mock TurnDirectiveStrategyResolver for this test suite
+jest.mock('../../../../../src/turns/strategies/turnDirectiveStrategyResolver.js');
+
 describe('ProcessingGuard', () => {
+  let mockCommandProcessor;
+  let mockCommandOutcomeInterpreter;
+  let defaultTurnAction;
+  const defaultCommandString = 'guard test command';
+
+  // Setup common mocks for ProcessingCommandState constructor before each test if state is created in multiple tests
+  // For this file, ProcessingCommandState is created inside tests, so mocks are defined here for access.
+  mockCommandProcessor = {
+    dispatchAction: jest.fn(),
+  };
+  mockCommandOutcomeInterpreter = {
+    interpret: jest.fn(),
+  };
+  defaultTurnAction = {
+    actionDefinitionId: 'guardTestAction',
+    commandString: defaultCommandString,
+  };
+
   test('start and finish toggle flag on owner', () => {
     const owner = {
       _flag: false,
@@ -42,7 +64,11 @@ describe('ProcessingGuard', () => {
     const ctx = makeTurnCtx();
     const state = new ProcessingCommandState({
       handler,
-      commandProcessor: {},
+      commandProcessor: mockCommandProcessor,
+      commandOutcomeInterpreter: mockCommandOutcomeInterpreter,
+      commandString: defaultCommandString,
+      turnAction: defaultTurnAction,
+      directiveResolver: TurnDirectiveStrategyResolver,
     });
     state.startProcessing();
     const exceptionHandler = new ProcessingExceptionHandler(state);
@@ -53,7 +79,11 @@ describe('ProcessingGuard', () => {
   test('private processing flag cannot be modified externally', () => {
     const state = new ProcessingCommandState({
       handler: makeHandler(),
-      commandProcessor: {},
+      commandProcessor: mockCommandProcessor,
+      commandOutcomeInterpreter: mockCommandOutcomeInterpreter,
+      commandString: defaultCommandString,
+      turnAction: defaultTurnAction,
+      directiveResolver: TurnDirectiveStrategyResolver,
     });
     expect('_isProcessing' in state).toBe(false);
     state.startProcessing();

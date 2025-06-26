@@ -19,7 +19,10 @@ import TurnDirectiveStrategyResolver from '../../../../src/turns/strategies/turn
 // --- Mocks ---
 const mockCommandProcessor = {
   dispatchAction: jest.fn(),
-  // Add any other methods of ICommandProcessor that might be called by ProcessingCommandState
+};
+
+const mockCommandOutcomeInterpreter = {
+  interpret: jest.fn(),
 };
 
 // A mock logger to be returned by other mocks.
@@ -45,7 +48,6 @@ const mockTurnContext = {
 const mockHandler = {
   getTurnContext: jest.fn(() => mockTurnContext),
   getCurrentActor: jest.fn(),
-  // The `_resolveLogger` method is used internally by states.
   _resolveLogger: jest.fn(() => mockLogger),
 };
 
@@ -54,7 +56,10 @@ describe('ConcreteTurnStateFactory', () => {
 
   beforeEach(() => {
     // Create a new factory instance before each test to ensure isolation.
-    factory = new ConcreteTurnStateFactory({ commandProcessor: mockCommandProcessor });
+    factory = new ConcreteTurnStateFactory({ 
+      commandProcessor: mockCommandProcessor,
+      commandOutcomeInterpreter: mockCommandOutcomeInterpreter
+    });
     // Clear any previous mock calls to avoid test cross-contamination.
     jest.clearAllMocks();
   });

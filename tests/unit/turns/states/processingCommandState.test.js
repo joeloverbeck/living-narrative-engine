@@ -308,6 +308,10 @@ describe('ProcessingCommandState', () => {
     processingState = new ProcessingCommandState({
       handler: mockHandler,
       commandProcessor: mockCommandProcessor,
+      commandOutcomeInterpreter: mockCommandOutcomeInterpreter,
+      commandString,
+      turnAction: mockTurnAction,
+      directiveResolver: TurnDirectiveStrategyResolver.default,
     });
     mockHandler._currentState = processingState;
 

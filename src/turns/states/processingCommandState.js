@@ -11,6 +11,7 @@
  * @typedef {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher // For type hint
  * @typedef {import('../interfaces/turnStateContextTypes.js').ProcessingCommandStateContext} ProcessingCommandStateContext
  * @typedef {import('../../interfaces/ICommandProcessor.js').ICommandProcessor} ICommandProcessor
+ * @typedef {import('../../interfaces/ICommandOutcomeInterpreter.js').ICommandOutcomeInterpreter} ICommandOutcomeInterpreter
  */
 
 import { AbstractTurnState } from './abstractTurnState.js';
@@ -24,6 +25,10 @@ import { finishProcessing } from './helpers/processingErrorUtils.js';
 import { getLogger } from './helpers/contextUtils.js';
 import turnDirectiveResolverAdapter from '../adapters/turnDirectiveResolverAdapter.js';
 import { ITurnDirectiveResolver } from '../interfaces/ITurnDirectiveResolver.js';
+import {
+  validateTurnAction,
+  validateCommandString,
+} from './helpers/validationUtils.js';
 
 /**
  * @class ProcessingCommandState
@@ -39,6 +44,8 @@ export class ProcessingCommandState extends AbstractTurnState {
   #commandStringForLog = null;
   /** @type {ICommandProcessor} */
   #commandProcessor;
+  _commandOutcomeInterpreter;
+  _processingWorkflow;
 
   /**
    * @description Internal setter used by ProcessingGuard.
@@ -93,44 +100,84 @@ export class ProcessingCommandState extends AbstractTurnState {
   }
 
   /**
-   * Creates an instance of ProcessingCommandState.
-   *
-   * @param {object} deps - Dependencies for the state.
-   * @param {BaseTurnHandler} deps.handler - The turn handler managing this state.
-   * @param {ICommandProcessor} deps.commandProcessor - The command processor.
-   * @param {string} [deps.commandString]
-   * @param {ITurnAction} [deps.turnAction]
-   * @param {ITurnDirectiveResolver} [deps.directiveResolver]
-   * @param {ProcessingExceptionHandler} [deps.exceptionHandler] - Preconstructed handler.
-   * @param {new (state: ProcessingCommandState) => ProcessingGuard} [deps.processingGuardFactory]
-   *   - Factory for creating a ProcessingGuard instance.
-   * @param {new (state: ProcessingCommandState) => ProcessingExceptionHandler} [deps.exceptionHandlerFactory]
-   *   - Factory for creating a ProcessingExceptionHandler instance when one is not supplied.
+   * @private
+   * @param {string} message - The error message.
+   * @throws {Error}
+   */
+  _throwConstructionError(message) {
+    const logger = this._resolveLogger(null, this._handler); // Use _resolveLogger from AbstractTurnState
+    const fullMessage = `${this.getStateName()} Constructor: ${message}`;
+    logger.error(fullMessage);
+    throw new Error(fullMessage);
+  }
+
+  /**
+   * @param {object} deps Dependencies for the state.
+   * @param {ITurnStateHost} deps.handler The turn state host (typically an ActorTurnHandler).
+   * @param {ICommandProcessor} deps.commandProcessor Service to dispatch commands.
+   * @param {ICommandOutcomeInterpreter} deps.commandOutcomeInterpreter Service to interpret command results.
+   * @param {string} deps.commandString The raw command string to process.
+   * @param {ITurnAction} deps.turnAction The structured turn action.
+   * @param {Function} deps.directiveResolver Resolver for turn directives.
    */
   constructor({
     handler,
     commandProcessor,
+    commandOutcomeInterpreter,
     commandString,
-    turnAction = null,
+    turnAction,
     directiveResolver = turnDirectiveResolverAdapter,
-    exceptionHandler = undefined,
-    processingGuardFactory = ProcessingGuard,
-    exceptionHandlerFactory = ProcessingExceptionHandler,
   }) {
     super(handler);
-    this.#commandProcessor = commandProcessor;
-    this._processingGuard = new processingGuardFactory(this);
-    this._directiveResolver = directiveResolver;
-    this._exceptionHandler =
-      exceptionHandler || new exceptionHandlerFactory(this);
-    finishProcessing(this);
-    this.#turnActionToProcess = turnAction;
-    this.#commandStringForLog =
-      commandString || turnAction?.commandString || null;
 
-    const logger = getLogger(null, this._handler);
+    // Validate essential dependencies
+    if (!commandProcessor) {
+      this._throwConstructionError('commandProcessor is required');
+    }
+    if (!commandOutcomeInterpreter) {
+      this._throwConstructionError('commandOutcomeInterpreter is required');
+    }
+    validateCommandString(commandString, (msg) =>
+      this._throwConstructionError(msg)
+    );
+    validateTurnAction(turnAction, (msg) => this._throwConstructionError(msg));
+    if (!directiveResolver) {
+      this._throwConstructionError('directiveResolver is required');
+    }
+
+    this.#commandProcessor = commandProcessor;
+    this._commandOutcomeInterpreter = commandOutcomeInterpreter;
+    this.#commandStringForLog = commandString;
+    this.#turnActionToProcess = turnAction;
+    this._directiveResolver = directiveResolver;
+
+    this._processingGuard = new ProcessingGuard(this);
+    this._exceptionHandler = new ProcessingExceptionHandler(this);
+    finishProcessing(this);
+
+    // Workflow is instantiated here, pass arguments as a single object
+    this._processingWorkflow = new CommandProcessingWorkflow({
+      state: this,
+      exceptionHandler: this._exceptionHandler,
+      commandProcessor: this.#commandProcessor,
+      commandOutcomeInterpreter: this._commandOutcomeInterpreter 
+    });
+
+    this._logConstruction();
+  }
+
+  /**
+   * @private
+   * @description Logs information about the state's construction.
+   */
+  _logConstruction() {
+    const logger = this._resolveLogger(null, this._handler);
+    // Use #commandStringForLog and #turnActionToProcess which are set in the constructor
+    const commandStringForLog = this.#commandStringForLog;
+    const turnActionIdForLog = this.#turnActionToProcess?.actionDefinitionId;
+
     logger.debug(
-      `${this.getStateName()} constructed. Command string (arg): "${this.#commandStringForLog}". TurnAction ID (arg): ${turnAction ? `"${turnAction.actionDefinitionId}"` : 'null'}`
+      `${this.getStateName()} constructed. Command: "${commandStringForLog || 'N/A'}". Action ID: "${turnActionIdForLog || 'N/A'}".`
     );
   }
 
@@ -211,12 +258,8 @@ export class ProcessingCommandState extends AbstractTurnState {
   // _executeActionWorkflow logic moved to ProcessingWorkflow
 
   async _processCommandInternal(turnCtx, actor, turnAction) {
-    const workflow = new CommandProcessingWorkflow(
-      this,
-      this._exceptionHandler,
-      this.#commandProcessor
-    );
-    await workflow.processCommand(turnCtx, actor, turnAction);
+    // Use the member _processingWorkflow, which is already correctly configured.
+    await this._processingWorkflow.processCommand(turnCtx, actor, turnAction);
   }
 
   async exitState(handler, nextState) {

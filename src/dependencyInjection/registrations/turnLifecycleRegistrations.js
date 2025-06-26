@@ -40,7 +40,8 @@ export function registerTurnLifecycle(container) {
   );
   registrar.singletonFactory(tokens.ITurnStateFactory, 
     (c) => new ConcreteTurnStateFactory({
-      commandProcessor: c.resolve(tokens.ICommandProcessor)
+      commandProcessor: c.resolve(tokens.ICommandProcessor),
+      commandOutcomeInterpreter: c.resolve(tokens.ICommandOutcomeInterpreter)
     })
   );
 

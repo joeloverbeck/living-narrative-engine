@@ -1,5 +1,6 @@
 import { describe, test, expect, jest, beforeEach } from '@jest/globals';
 import { ProcessingCommandState } from '../../../../src/turns/states/processingCommandState.js';
+import TurnDirectiveStrategyResolver from '../../../../src/turns/strategies/turnDirectiveStrategyResolver.js';
 
 const makeLogger = () => ({
   debug: jest.fn(),
@@ -7,14 +8,20 @@ const makeLogger = () => ({
   error: jest.fn(),
 });
 
+jest.mock('../../../../src/turns/strategies/turnDirectiveStrategyResolver.js');
+
 describe('ProcessingCommandState._ensureContext', () => {
   let logger;
   let ctx;
   let handler;
   let commandProcessor;
+  let commandOutcomeInterpreter;
+  let turnAction;
+  const commandString = 'test ensure context';
   let state;
 
   beforeEach(() => {
+    jest.clearAllMocks();
     logger = makeLogger();
     ctx = {
       getLogger: () => logger,
@@ -28,11 +35,22 @@ describe('ProcessingCommandState._ensureContext', () => {
       requestIdleStateTransition: jest.fn().mockResolvedValue(undefined),
     };
     commandProcessor = {
-      processCommand: jest.fn(),
+      dispatchAction: jest.fn(),
+    };
+    commandOutcomeInterpreter = {
+      interpret: jest.fn(),
+    };
+    turnAction = {
+      actionDefinitionId: 'ensureContextAction',
+      commandString: commandString,
     };
     state = new ProcessingCommandState({
       handler: handler,
       commandProcessor: commandProcessor,
+      commandOutcomeInterpreter: commandOutcomeInterpreter,
+      commandString: commandString,
+      turnAction: turnAction,
+      directiveResolver: TurnDirectiveStrategyResolver,
     });
   });
 
