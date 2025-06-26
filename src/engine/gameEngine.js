@@ -21,7 +21,7 @@ import PersistenceCoordinator from './persistenceCoordinator.js';
 /** @typedef {import('../interfaces/IGamePersistenceService.js').IGamePersistenceService} IGamePersistenceService */
 /** @typedef {import('../interfaces/IGamePersistenceService.js').SaveResult} SaveResult */
 /** @typedef {import('../interfaces/IGamePersistenceService.js').LoadAndRestoreResult} LoadAndRestoreResult */
-/** @typedef {import('../interfaces/IPlaytimeTracker.js').default} IPlaytimeTracker */
+/** @typedef {import('../interfaces/IPlaytimeTracker.js').IPlaytimeTracker} IPlaytimeTracker */
 /** @typedef {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 /** @typedef {import('../interfaces/IInitializationService.js').IInitializationService} IInitializationService */
 /** @typedef {import('../interfaces/IInitializationService.js').InitializationResult} InitializationResult */

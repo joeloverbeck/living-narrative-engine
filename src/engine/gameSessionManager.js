@@ -8,7 +8,7 @@ import {
 /**
  * @typedef {import('./engineState.js').default} EngineState
  * @typedef {import('../turns/interfaces/ITurnManager.js').ITurnManager} ITurnManager
- * @typedef {import('../interfaces/IPlaytimeTracker.js').default} IPlaytimeTracker
+ * @typedef {import('../interfaces/IPlaytimeTracker.js').IPlaytimeTracker} IPlaytimeTracker
  * @typedef {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher
  * @typedef {import('../interfaces/coreServices.js').ILogger} ILogger
  */

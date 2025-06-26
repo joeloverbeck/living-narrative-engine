@@ -8,7 +8,7 @@
 // --- JSDoc Imports for Type Hinting ---
 /** @typedef {import('../appContainer.js').default} AppContainer */
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
-/** @typedef {import('../../interfaces/IPlaytimeTracker.js').default} IPlaytimeTracker */
+/** @typedef {import('../../interfaces/IPlaytimeTracker.js').IPlaytimeTracker} IPlaytimeTracker */
 /** @typedef {import('../../interfaces/ISaveLoadService.js').ISaveLoadService} ISaveLoadService_Interface */
 /** @typedef {import('../../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
 /** @typedef {import('../../interfaces/coreServices.js').IDataRegistry} IDataRegistry_Interface */

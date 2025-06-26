@@ -1,13 +1,13 @@
 // src/services/playtimeTracker.js
 
-import IPlaytimeTracker from '../interfaces/IPlaytimeTracker.js';
+import { IPlaytimeTracker } from '../interfaces/IPlaytimeTracker.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../constants/eventIds.js';
 import { ISafeEventDispatcher } from '../interfaces/ISafeEventDispatcher.js';
 import { resolveSafeDispatcher } from '../utils/dispatcherUtils.js';
 
 /**
  * @typedef {import('../interfaces/coreServices.js').ILogger} ILogger
- * @typedef {import('../interfaces/IPlaytimeTracker.js').default} IPlaytimeTracker
+ * @typedef {import('../interfaces/IPlaytimeTracker.js').IPlaytimeTracker} IPlaytimeTracker
  */
 
 /**

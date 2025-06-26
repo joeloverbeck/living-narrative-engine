@@ -4,7 +4,7 @@
  * @interface IPlaytimeTracker
  * Defines the contract for services that track game playtime.
  */
-class IPlaytimeTracker {
+export class IPlaytimeTracker {
   /**
    * Resets the playtime tracker, clearing accumulated playtime and ending any active session.
    *

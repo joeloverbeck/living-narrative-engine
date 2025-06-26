@@ -14,7 +14,7 @@
 
 /** @typedef {import('../../../src/interfaces/IGamePersistenceService.js').IGamePersistenceService} IGamePersistenceService */
 
-/** @typedef {import('../../../src/interfaces/IPlaytimeTracker.js').default} IPlaytimeTracker */
+/** @typedef {import('../../../src/interfaces/IPlaytimeTracker.js').IPlaytimeTracker} IPlaytimeTracker */
 
 /** @typedef {import('../../../src/interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
 
