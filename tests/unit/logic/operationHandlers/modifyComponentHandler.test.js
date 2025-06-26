@@ -394,4 +394,53 @@ describe('ModifyComponentHandler', () => {
       })
     );
   });
+
+  // ---------------------------------------------------------------------------
+  //  EntityManager.addComponent return value handling
+  // ---------------------------------------------------------------------------
+  test('logs a warning if addComponent returns a falsy value', () => {
+    const initialCompObj = { value: 10 };
+    mockEntityManager.getComponentData.mockReturnValue(initialCompObj);
+    mockEntityManager.addComponent.mockReturnValue(false); // Simulate failure
+
+    const params = {
+      entity_ref: 'actor',
+      component_type: 'game:stats',
+      field: 'value',
+      mode: 'set',
+      value: 20,
+    };
+    handler.execute(params, buildCtx());
+
+    expect(mockEntityManager.addComponent).toHaveBeenCalledWith(
+      actorId,
+      'game:stats',
+      { value: 20 }
+    );
+    expect(mockLogger.warn).toHaveBeenCalledWith(
+      `MODIFY_COMPONENT: EntityManager.addComponent reported an unexpected failure for component "game:stats" on entity "actor-1".`
+    );
+  });
+
+  test('does not log a warning if addComponent returns a truthy value', () => {
+    const initialCompObj = { value: 10 };
+    mockEntityManager.getComponentData.mockReturnValue(initialCompObj);
+    mockEntityManager.addComponent.mockReturnValue(true); // Simulate success
+
+    const params = {
+      entity_ref: 'actor',
+      component_type: 'game:stats',
+      field: 'value',
+      mode: 'set',
+      value: 20,
+    };
+    handler.execute(params, buildCtx());
+
+    expect(mockEntityManager.addComponent).toHaveBeenCalledWith(
+      actorId,
+      'game:stats',
+      { value: 20 }
+    );
+    expect(mockLogger.warn).not.toHaveBeenCalled();
+  });
 });

@@ -205,6 +205,8 @@ export class ComponentMutationService {
     this.#logger.debug(
       `Successfully added/updated component '${componentTypeId}' data on entity '${instanceId}'.`
     );
+
+    return true;
   }
 
   /**
