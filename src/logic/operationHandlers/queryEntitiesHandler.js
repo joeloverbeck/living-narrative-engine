@@ -15,6 +15,12 @@ import { tryWriteContextVariable } from '../../utils/contextVariableUtils.js';
 import { ensureEvaluationContext } from '../../utils/evaluationContextUtils.js';
 import { assertParamsObject } from '../../utils/handlerUtils/indexUtils.js';
 
+const FILTER_MAP = Object.freeze({
+  by_location: 'applyLocationFilter',
+  with_component: 'applyComponentFilter',
+  with_component_data: 'applyComponentDataFilter',
+});
+
 /**
  * @class QueryEntitiesHandler
  * @description Handles the 'QUERY_ENTITIES' operation. It queries for entities based on a set of filters.
@@ -28,8 +34,6 @@ class QueryEntitiesHandler extends BaseOperationHandler {
   #jsonLogicEvaluationService;
   /** @type {ISafeEventDispatcher} */
   #dispatcher;
-  /** @type {Record<string, Function>} */
-  #filterMap;
 
   /**
    * Create a new QueryEntitiesHandler instance.
@@ -75,11 +79,6 @@ class QueryEntitiesHandler extends BaseOperationHandler {
     this.#entityManager = entityManager;
     this.#jsonLogicEvaluationService = jsonLogicEvaluationService;
     this.#dispatcher = safeEventDispatcher;
-    this.#filterMap = Object.freeze({
-      by_location: this.#applyLocationFilter.bind(this),
-      with_component: this.#applyComponentFilter.bind(this),
-      with_component_data: this.#applyComponentDataFilter.bind(this),
-    });
   }
 
   /**
@@ -102,7 +101,6 @@ class QueryEntitiesHandler extends BaseOperationHandler {
       `QUERY_ENTITIES: Starting with ${candidateIds.size} total active entities.`
     );
 
-    const FILTER_MAP = this.#filterMap;
     for (const filter of filters) {
       if (candidateIds.size === 0) {
         logger.debug(
@@ -119,9 +117,9 @@ class QueryEntitiesHandler extends BaseOperationHandler {
       const filterType = Object.keys(filter)[0];
       const filterValue = filter[filterType];
 
-      const handler = FILTER_MAP[filterType];
-      if (handler) {
-        candidateIds = handler(candidateIds, filterValue, logger);
+      const methodName = FILTER_MAP[filterType];
+      if (methodName && typeof this[methodName] === 'function') {
+        candidateIds = this[methodName](candidateIds, filterValue, logger);
       } else {
         logger.warn(
           `QUERY_ENTITIES: Encountered unknown filter type '${filterType}'. Skipping.`
@@ -211,7 +209,7 @@ class QueryEntitiesHandler extends BaseOperationHandler {
    * @returns {Set<string>} Filtered candidate ids.
    * @private
    */
-  #applyLocationFilter(candidates, locationId, logger) {
+  applyLocationFilter(candidates, locationId, logger) {
     if (typeof locationId !== 'string' || !locationId) {
       logger.warn(
         "QUERY_ENTITIES: Invalid value for 'by_location' filter. Skipping."
@@ -240,7 +238,7 @@ class QueryEntitiesHandler extends BaseOperationHandler {
    * @returns {Set<string>} Filtered candidate ids.
    * @private
    */
-  #applyComponentFilter(candidates, componentType, logger) {
+  applyComponentFilter(candidates, componentType, logger) {
     if (typeof componentType !== 'string' || !componentType) {
       logger.warn(
         "QUERY_ENTITIES: Invalid value for 'with_component' filter. Skipping."
@@ -270,7 +268,7 @@ class QueryEntitiesHandler extends BaseOperationHandler {
    * @returns {Set<string>} Filtered candidate ids.
    * @private
    */
-  #applyComponentDataFilter(candidates, filter, logger) {
+  applyComponentDataFilter(candidates, filter, logger) {
     const { component_type, condition } = filter || {};
     if (typeof component_type !== 'string' || !component_type) {
       logger.warn(
