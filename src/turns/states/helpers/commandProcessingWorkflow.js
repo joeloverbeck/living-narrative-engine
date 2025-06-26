@@ -9,6 +9,8 @@
  * @typedef {import('../../interfaces/ITurnContext.js').ITurnContext} ITurnContext
  * @typedef {import('../../../entities/entity.js').default} Entity
  * @typedef {import('../../interfaces/IActorTurnStrategy.js').ITurnAction} ITurnAction
+ * @typedef {import('../../../../../interfaces/ICommandProcessor.js').ICommandProcessor} ICommandProcessor
+ * @typedef {import('../../../../../interfaces/ICommandOutcomeInterpreter.js').ICommandOutcomeInterpreter} ICommandOutcomeInterpreter
  */
 
 import {
@@ -23,17 +25,40 @@ import { finishProcessing } from './processingErrorUtils.js';
  * @description Handles command processing steps for a ProcessingCommandState.
  */
 export class CommandProcessingWorkflow {
+  _state;
+  _exceptionHandler;
+  _commandProcessor;
+  _commandOutcomeInterpreter;
+
   /**
    * Creates the workflow instance.
    *
    * @param {ProcessingCommandStateLike} state - Owning state instance.
    * @param {ProcessingExceptionHandler} [exceptionHandler] - Optional handler for errors.
+   * @param {ICommandProcessor} commandProcessor Injected command processor.
+   * @param {ICommandOutcomeInterpreter} commandOutcomeInterpreter Injected outcome interpreter.
    */
-  constructor(state, exceptionHandler = undefined, commandProcessor) {
+  constructor({ state, exceptionHandler, commandProcessor, commandOutcomeInterpreter }) {
     this._state = state;
-    this._exceptionHandler =
-      exceptionHandler || new ProcessingExceptionHandler(state);
     this._commandProcessor = commandProcessor;
+    this._commandOutcomeInterpreter = commandOutcomeInterpreter;
+
+    if (!this._commandProcessor) {
+      throw new Error(
+        'CommandProcessingWorkflow: commandProcessor is required.'
+      );
+    }
+    if (!this._commandOutcomeInterpreter) {
+      throw new Error(
+        'CommandProcessingWorkflow: commandOutcomeInterpreter is required.'
+      );
+    }
+
+    // If no specific exceptionHandler is provided, create a default one.
+    // Use the state's own robust logger resolution for the default handler.
+    this._exceptionHandler =
+      exceptionHandler || // If an exceptionHandler is passed, use it
+      new ProcessingExceptionHandler(this._state._resolveLogger(null, this._state._handler)); // Otherwise, create default using state's logger resolution
   }
 
   /**
@@ -121,13 +146,7 @@ export class CommandProcessingWorkflow {
    * @returns {Promise<{directiveType: string}|null>} The directive type or `null` on error.
    */
   async _interpretCommandResult(activeTurnCtx, actorId, commandResult) {
-    const outcomeInterpreter = await getServiceFromContext(
-      this._state,
-      activeTurnCtx,
-      'getCommandOutcomeInterpreter',
-      'ICommandOutcomeInterpreter',
-      actorId
-    );
+    const outcomeInterpreter = this._commandOutcomeInterpreter;
 
     const directiveType = await outcomeInterpreter.interpret(
       commandResult,

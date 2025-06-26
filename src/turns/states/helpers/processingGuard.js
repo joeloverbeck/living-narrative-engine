@@ -36,5 +36,3 @@ export class ProcessingGuard {
     }
   }
 }
-
-export default ProcessingGuard;

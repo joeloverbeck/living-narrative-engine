@@ -1,6 +1,7 @@
 import { describe, test, expect, jest, beforeEach } from '@jest/globals';
 import { ProcessingCommandState } from '../../../../src/turns/states/processingCommandState.js';
 import { ProcessingWorkflow } from '../../../../src/turns/states/workflows/processingWorkflow.js';
+import TurnDirectiveStrategyResolver from '../../../../src/turns/strategies/turnDirectiveStrategyResolver.js';
 
 const mockLogger = { debug: jest.fn(), warn: jest.fn(), error: jest.fn() };
 const mockHandler = {
@@ -14,6 +15,9 @@ const mockHandler = {
   _turnStateFactory: { createIdleState: jest.fn(() => ({})) },
 };
 
+// Mock TurnDirectiveStrategyResolver for this test suite
+jest.mock('../../../../src/turns/strategies/turnDirectiveStrategyResolver.js');
+
 const makeCtx = (actor, extra = {}) => ({
   getLogger: () => mockLogger,
   getActor: () => actor,
@@ -25,11 +29,32 @@ const makeCtx = (actor, extra = {}) => ({
 describe('ProcessingCommandState helpers', () => {
   let state;
   let workflow;
+  let mockCommandProcessor;
+  let mockCommandOutcomeInterpreter;
+  let defaultTurnAction;
+  const defaultCommandString = 'helper test command';
+
   beforeEach(() => {
     jest.clearAllMocks();
+
+    mockCommandProcessor = {
+      dispatchAction: jest.fn(),
+    };
+    mockCommandOutcomeInterpreter = {
+      interpret: jest.fn(),
+    };
+    defaultTurnAction = {
+      actionDefinitionId: 'helperTestAction',
+      commandString: defaultCommandString,
+    };
+
     state = new ProcessingCommandState({
       handler: mockHandler,
-      commandProcessor: {},
+      commandProcessor: mockCommandProcessor,
+      commandOutcomeInterpreter: mockCommandOutcomeInterpreter,
+      commandString: defaultCommandString,
+      turnAction: defaultTurnAction,
+      directiveResolver: TurnDirectiveStrategyResolver,
     });
     workflow = new ProcessingWorkflow(state, null, null, () => {});
   });
@@ -63,15 +88,18 @@ describe('ProcessingCommandState helpers', () => {
 
   test('_obtainTurnAction uses constructor action', async () => {
     const actor = { id: 'a1' };
-    const action = { actionDefinitionId: 'act' };
+    const specificAction = { actionDefinitionId: 'specificAct', commandString: 'specific command' };
     state = new ProcessingCommandState({
       handler: mockHandler,
-      commandProcessor: {},
-      turnAction: action,
+      commandProcessor: mockCommandProcessor,
+      commandOutcomeInterpreter: mockCommandOutcomeInterpreter,
+      commandString: specificAction.commandString,
+      turnAction: specificAction,
+      directiveResolver: TurnDirectiveStrategyResolver,
     });
-    workflow = new ProcessingWorkflow(state, null, action, (a) => {});
+    workflow = new ProcessingWorkflow(state, null, specificAction, (a) => {});
     const ctx = makeCtx(actor);
-    await expect(workflow._obtainTurnAction(ctx, actor)).resolves.toBe(action);
+    await expect(workflow._obtainTurnAction(ctx, actor)).resolves.toBe(specificAction);
   });
 
   test('_dispatchSpeech dispatches when speech present', async () => {

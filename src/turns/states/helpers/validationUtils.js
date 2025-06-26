@@ -119,3 +119,38 @@ export function retrieveStrategyFromContext(turnContext, actor, stateName) {
 
   return strategy;
 }
+
+/**
+ * Validates that a command string is a non-empty string.
+ *
+ * @param {any} commandString - The command string to validate.
+ * @param {(message: string) => void} onError - Callback to execute with an error message if validation fails.
+ * @returns {void}
+ */
+export function validateCommandString(commandString, onError) {
+  if (typeof commandString !== 'string' || commandString.trim() === '') {
+    onError('commandString must be a non-empty string.');
+  }
+}
+
+/**
+ * Validates that a turn action object is valid.
+ * Currently checks for the presence and type of actionDefinitionId.
+ *
+ * @param {any} turnAction - The turn action to validate.
+ * @param {(message: string) => void} onError - Callback to execute with an error message if validation fails.
+ * @returns {void}
+ */
+export function validateTurnAction(turnAction, onError) {
+  if (turnAction === null) {
+    return;
+  }
+  if (typeof turnAction !== 'object') {
+    onError('turnAction must be an object.');
+    return;
+  }
+  if (typeof turnAction.actionDefinitionId !== 'string' || turnAction.actionDefinitionId.trim() === '') {
+    onError('turnAction.actionDefinitionId must be a non-empty string.');
+  }
+  // Add other critical turnAction property checks here if necessary
+}

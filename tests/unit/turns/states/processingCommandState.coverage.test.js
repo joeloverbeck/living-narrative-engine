@@ -42,12 +42,27 @@ let processingState;
 let consoleErrorSpy;
 let consoleWarnSpy;
 let mockCommandProcessor;
+let mockCommandOutcomeInterpreter;
+let mockTurnAction;
+const defaultCommandString = 'test command';
+
+// Mock TurnDirectiveStrategyResolver for this test suite
+jest.mock('../../../../src/turns/strategies/turnDirectiveStrategyResolver.js');
 
 beforeEach(() => {
   jest.clearAllMocks();
 
   mockCommandProcessor = {
     dispatchAction: jest.fn(),
+  };
+
+  mockCommandOutcomeInterpreter = {
+    interpret: jest.fn(),
+  };
+
+  mockTurnAction = {
+    actionDefinitionId: 'defaultTestAction',
+    commandString: defaultCommandString,
   };
 
   // Handler starts with no active state
@@ -73,10 +88,14 @@ beforeEach(() => {
     }),
   };
 
-  // Construct a fresh ProcessingCommandState with no initial commandString or turnAction
+  // Construct a fresh ProcessingCommandState with all required parameters
   processingState = new ProcessingCommandState({
     handler: mockHandler,
     commandProcessor: mockCommandProcessor,
+    commandOutcomeInterpreter: mockCommandOutcomeInterpreter,
+    commandString: defaultCommandString,
+    turnAction: mockTurnAction,
+    directiveResolver: TurnDirectiveStrategyResolver.default,
   });
   mockHandler._currentState = processingState;
 
@@ -142,7 +161,7 @@ describe('ProcessingCommandState.enterState – error branches', () => {
       getActor: () => null,
       getSafeEventDispatcher: jest.fn(() => mockEventDispatcher),
       endTurn: jest.fn().mockResolvedValue(undefined),
-      getChosenAction: () => ({ actionDefinitionId: 'action1' }), // to skip “no turnAction” branch
+      getChosenAction: () => ({ actionDefinitionId: 'action1' }), // to skip "no turnAction" branch
       getDecisionMeta: () => null, // Provide mock to prevent crash
     };
     mockHandler.getTurnContext.mockReturnValue(mockTurnContext);
@@ -190,17 +209,24 @@ describe('ProcessingCommandState.enterState – error branches', () => {
     };
     mockHandler.getTurnContext.mockReturnValue(mockTurnContext);
 
-    // Provide commandString override so it logs that branch
+    // Ensure mockCommandOutcomeInterpreter, defaultTurnAction, and TurnDirectiveStrategyResolver 
+    // are available from the outer beforeEach scope.
     const customState = new ProcessingCommandState({
-      handler: mockHandler,
-      commandProcessor: mockCommandProcessor,
+      handler: mockHandler, 
+      commandProcessor: mockCommandProcessor, 
+      commandOutcomeInterpreter: mockCommandOutcomeInterpreter,
       commandString: 'cmdStr',
+      turnAction: null,
+      directiveResolver: TurnDirectiveStrategyResolver.default,
     });
     mockHandler._currentState = customState;
     customState.finishProcessing();
 
     const spyDispatch = mockEventDispatcher.dispatch;
     const spyEndTurn = mockTurnContext.endTurn;
+
+    // Ensure dispatchAction returns a valid structure even if not strictly used by this error path
+    mockCommandProcessor.dispatchAction.mockResolvedValue({ success: true, errorResult: null });
 
     await customState.enterState(mockHandler, null);
 
@@ -218,10 +244,9 @@ describe('ProcessingCommandState.enterState – error branches', () => {
   });
 
   test('should handle missing turnAction (both constructor and getChosenAction return null)', async () => {
-    processingState.finishProcessing();
+    // processingState.finishProcessing(); // Not needed for the new local state
     const actor = new MockActor('actorB');
 
-    // Create a single eventDispatcher and spy on its dispatch
     const mockEventDispatcher = {
       dispatch: jest.fn().mockResolvedValue(undefined),
     };
@@ -229,19 +254,33 @@ describe('ProcessingCommandState.enterState – error branches', () => {
     const mockTurnContext = {
       getLogger: () => mockLogger,
       getActor: () => actor,
-      getChosenAction: () => null,
+      getChosenAction: () => null, // This is key for the test
       getSafeEventDispatcher: jest.fn(() => mockEventDispatcher),
       endTurn: jest.fn().mockResolvedValue(undefined),
-      getDecisionMeta: () => null, // Provide mock to prevent crash
+      getDecisionMeta: () => null,
     };
     mockHandler.getTurnContext.mockReturnValue(mockTurnContext);
 
     const spyDispatch = mockEventDispatcher.dispatch;
     const spyEndTurn = mockTurnContext.endTurn;
 
-    await processingState.enterState(mockHandler, null);
+    // Create a local state specifically for this test, with turnAction: null
+    const stateForNullActionTest = new ProcessingCommandState({
+      handler: mockHandler,
+      commandProcessor: mockCommandProcessor,
+      commandOutcomeInterpreter: mockCommandOutcomeInterpreter,
+      commandString: defaultCommandString, // from beforeEach
+      turnAction: null, // Crucial for this test's logic
+      directiveResolver: TurnDirectiveStrategyResolver.default, // from beforeEach, corrected
+    });
+    // mockHandler._currentState = stateForNullActionTest; // Set if handler needs it for context
+    stateForNullActionTest.finishProcessing(); // Ensure it starts clean if it matters
 
-    // Should dispatch a system error about no ITurnAction available
+    mockCommandProcessor.dispatchAction.mockResolvedValue({ success: true, errorResult: null });
+
+    await stateForNullActionTest.enterState(mockHandler, null); // Call enterState on the local instance
+
+    // Assertions remain the same, but now implicitly test the local state's behavior
     expect(spyDispatch).toHaveBeenCalledWith(
       SYSTEM_ERROR_OCCURRED_ID,
       expect.objectContaining({
@@ -249,17 +288,15 @@ describe('ProcessingCommandState.enterState – error branches', () => {
         details: expect.any(Object),
       })
     );
-    // endTurn should be invoked
     expect(spyEndTurn).toHaveBeenCalledWith(expect.any(Error));
-    expect(processingState.isProcessing).toBe(false);
+    expect(stateForNullActionTest.isProcessing).toBe(false); // Check the local state instance
   });
 
   test('should handle invalid actionDefinitionId (empty string) and trigger exception path', async () => {
-    processingState.finishProcessing();
+    // processingState.finishProcessing(); // Not needed for the new local state
     const actor = new MockActor('actorC');
     const badAction = { actionDefinitionId: '', commandString: 'someCmd' };
 
-    // Create a single eventDispatcher and spy on its dispatch
     const mockEventDispatcher = {
       dispatch: jest.fn().mockResolvedValue(undefined),
     };
@@ -267,19 +304,32 @@ describe('ProcessingCommandState.enterState – error branches', () => {
     const mockTurnContext = {
       getLogger: () => mockLogger,
       getActor: () => actor,
-      getChosenAction: () => badAction,
+      getChosenAction: () => badAction, // This mock is key for the test logic
       getSafeEventDispatcher: jest.fn(() => mockEventDispatcher),
       endTurn: jest.fn().mockResolvedValue(undefined),
-      getDecisionMeta: () => null, // Provide mock to prevent crash
+      getDecisionMeta: () => null,
     };
     mockHandler.getTurnContext.mockReturnValue(mockTurnContext);
 
     const spyDispatch = mockEventDispatcher.dispatch;
     const spyEndTurn = mockTurnContext.endTurn;
 
-    await processingState.enterState(mockHandler, null);
+    // Create a local state specifically for this test
+    const stateForInvalidActionTest = new ProcessingCommandState({
+      handler: mockHandler,
+      commandProcessor: mockCommandProcessor,
+      commandOutcomeInterpreter: mockCommandOutcomeInterpreter,
+      commandString: badAction.commandString, // Use command string from badAction
+      turnAction: null, // Crucial: ensures getChosenAction is called
+      directiveResolver: TurnDirectiveStrategyResolver.default,
+    });
+    stateForInvalidActionTest.finishProcessing(); // Start clean
 
-    // SYSTEM_ERROR_OCCURRED_ID dispatched about invalid actionDefinitionId
+    mockCommandProcessor.dispatchAction.mockResolvedValue({ success: true, errorResult: null });
+
+    await stateForInvalidActionTest.enterState(mockHandler, null); // Call enterState on the local instance
+
+    // Assertions remain the same, but now implicitly test the local state's behavior
     expect(spyDispatch).toHaveBeenCalledWith(
       SYSTEM_ERROR_OCCURRED_ID,
       expect.objectContaining({
@@ -290,7 +340,7 @@ describe('ProcessingCommandState.enterState – error branches', () => {
       })
     );
     expect(spyEndTurn).toHaveBeenCalledWith(expect.any(Error));
-    expect(processingState.isProcessing).toBe(false);
+    expect(stateForInvalidActionTest.isProcessing).toBe(false); // Check the local state instance
   });
 
   test('should dispatch ENTITY_SPOKE_ID when turnAction.speech is non-empty string', async () => {
@@ -333,6 +383,10 @@ describe('ProcessingCommandState.enterState – error branches', () => {
     const stateWithSpeech = new ProcessingCommandState({
       handler: mockHandler,
       commandProcessor: mockCommandProcessor,
+      commandOutcomeInterpreter: mockCommandOutcomeInterpreter,
+      commandString: 'speakCmd',
+      turnAction: turnActionWithSpeech,
+      directiveResolver: TurnDirectiveStrategyResolver,
     });
     stateWithSpeech.finishProcessing();
     mockHandler._currentState = stateWithSpeech;
@@ -392,6 +446,10 @@ describe('ProcessingCommandState.enterState – error branches', () => {
     const stateWithNotes = new ProcessingCommandState({
       handler: mockHandler,
       commandProcessor: mockCommandProcessor,
+      commandOutcomeInterpreter: mockCommandOutcomeInterpreter,
+      commandString: 'speakCmd',
+      turnAction: turnActionWithSpeech,
+      directiveResolver: TurnDirectiveStrategyResolver,
     });
     stateWithNotes.finishProcessing();
     mockHandler._currentState = stateWithNotes;

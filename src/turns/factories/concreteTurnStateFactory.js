@@ -14,6 +14,7 @@ import TurnDirectiveStrategyResolver from '../strategies/turnDirectiveStrategyRe
  * @typedef {import('../interfaces/IActorTurnStrategy.js').ITurnAction} ITurnAction
  * @typedef {import('../interfaces/ITurnState.js').ITurnState} ITurnState
  * @typedef {import('../../interfaces/ICommandProcessor.js').ICommandProcessor} ICommandProcessor
+ * @typedef {import('../../interfaces/ICommandOutcomeInterpreter.js').ICommandOutcomeInterpreter} ICommandOutcomeInterpreter
  */
 
 /**
@@ -24,17 +25,25 @@ import TurnDirectiveStrategyResolver from '../strategies/turnDirectiveStrategyRe
  */
 export class ConcreteTurnStateFactory extends ITurnStateFactory {
   #commandProcessor;
+  #commandOutcomeInterpreter;
 
   /**
    * @param {object} deps Dependencies
    * @param {ICommandProcessor} deps.commandProcessor The command processor.
+   * @param {ICommandOutcomeInterpreter} deps.commandOutcomeInterpreter The command outcome interpreter.
    */
-  constructor({ commandProcessor }) {
+  constructor({ commandProcessor, commandOutcomeInterpreter }) {
     super();
     if (!commandProcessor) {
       throw new Error('ConcreteTurnStateFactory: commandProcessor is required.');
     }
+    if (!commandOutcomeInterpreter) {
+      throw new Error(
+        'ConcreteTurnStateFactory: commandOutcomeInterpreter is required.'
+      );
+    }
     this.#commandProcessor = commandProcessor;
+    this.#commandOutcomeInterpreter = commandOutcomeInterpreter;
   }
 
   /**
@@ -81,6 +90,7 @@ export class ConcreteTurnStateFactory extends ITurnStateFactory {
     return new ProcessingCommandState({
       handler,
       commandProcessor: this.#commandProcessor,
+      commandOutcomeInterpreter: this.#commandOutcomeInterpreter,
       commandString,
       turnAction,
       directiveResolver,
