@@ -30,6 +30,7 @@ import {
  * @typedef {object} FormatActionError
  * @property {false} ok - Indicates failure.
  * @property {string} error - The reason formatting failed.
+ * @property {string} [details] - Additional error details.
  */
 
 /**
@@ -236,7 +237,8 @@ function applyTargetFormatter(
     );
     return {
       ok: false,
-      error: 'formatActionCommand: Error during placeholder substitution.',
+      error: 'placeholder substitution failed',
+      details: error.message,
     };
   }
 }

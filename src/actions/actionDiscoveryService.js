@@ -25,7 +25,6 @@ import { getActorLocation } from '../utils/actorLocationUtils.js';
 import { getEntityDisplayName } from '../utils/entityUtils.js';
 import { ITargetResolutionService } from '../interfaces/ITargetResolutionService.js';
 
-
 // ────────────────────────────────────────────────────────────────────────────────
 /**
  * @class ActionDiscoveryService
@@ -58,17 +57,17 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
    * @param {Function}           deps.getEntityDisplayNameFn
    */
   constructor({
-                entityManager,
-                prerequisiteEvaluationService,
-                actionIndex,
-                logger,
-                formatActionCommandFn,
-                safeEventDispatcher,
-                targetResolutionService,
-                traceContextFactory,
-                getActorLocationFn = getActorLocation,
-                getEntityDisplayNameFn = getEntityDisplayName,
-              }) {
+    entityManager,
+    prerequisiteEvaluationService,
+    actionIndex,
+    logger,
+    formatActionCommandFn,
+    safeEventDispatcher,
+    targetResolutionService,
+    traceContextFactory,
+    getActorLocationFn = getActorLocation,
+    getEntityDisplayNameFn = getEntityDisplayName,
+  }) {
     super();
     this.#logger = setupService('ActionDiscoveryService', logger, {
       entityManager: {
@@ -87,7 +86,10 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
         value: safeEventDispatcher,
         requiredMethods: ['dispatch'],
       },
-      targetResolutionService: { value: targetResolutionService, requiredMethods: ['resolveTargets'] },
+      targetResolutionService: {
+        value: targetResolutionService,
+        requiredMethods: ['resolveTargets'],
+      },
       traceContextFactory: { value: traceContextFactory, isFunction: true },
       getActorLocationFn: { value: getActorLocationFn, isFunction: true },
       getEntityDisplayNameFn: {
@@ -106,7 +108,9 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
     this.#getActorLocationFn = getActorLocationFn;
     this.#getEntityDisplayNameFn = getEntityDisplayNameFn;
 
-    this.#logger.debug('ActionDiscoveryService initialised with streamlined logic.');
+    this.#logger.debug(
+      'ActionDiscoveryService initialised with streamlined logic.'
+    );
   }
 
   /**
@@ -170,12 +174,23 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
       return { actions: [], errors: [], trace: null };
     }
 
-    trace?.addLog('info', `Starting action discovery for actor '${actorEntity.id}'.`, 'getValidActions', { withTrace: shouldTrace });
+    trace?.addLog(
+      'info',
+      `Starting action discovery for actor '${actorEntity.id}'.`,
+      'getValidActions',
+      { withTrace: shouldTrace }
+    );
 
-    const candidateDefs = this.#actionIndex.getCandidateActions(actorEntity, trace);
+    const candidateDefs = this.#actionIndex.getCandidateActions(
+      actorEntity,
+      trace
+    );
     const actions = [];
     const errors = [];
-    const discoveryContext = this.#prepareDiscoveryContext(actorEntity, baseContext);
+    const discoveryContext = this.#prepareDiscoveryContext(
+      actorEntity,
+      baseContext
+    );
 
     for (const actionDef of candidateDefs) {
       const result = await this.#processCandidateAction(
@@ -184,15 +199,21 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
         discoveryContext,
         trace
       );
-      
+
       if (result) {
         actions.push(...result.actions);
         errors.push(...result.errors);
       }
     }
 
-    this.#logger.debug(`Finished action discovery for actor ${actorEntity.id}. Found ${actions.length} actions from ${candidateDefs.length} candidates.`);
-    trace?.addLog('info', `Finished discovery. Found ${actions.length} valid actions.`, 'getValidActions');
+    this.#logger.debug(
+      `Finished action discovery for actor ${actorEntity.id}. Found ${actions.length} actions from ${candidateDefs.length} candidates.`
+    );
+    trace?.addLog(
+      'info',
+      `Finished discovery. Found ${actions.length} valid actions.`,
+      'getValidActions'
+    );
 
     return { actions, errors, trace };
   }
@@ -207,16 +228,33 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
    * @returns {Promise<{actions: import('../interfaces/IActionDiscoveryService.js').DiscoveredActionInfo[], errors: Error[]}|null>}
    * @private
    */
-  async #processCandidateAction(actionDef, actorEntity, discoveryContext, trace) {
+  async #processCandidateAction(
+    actionDef,
+    actorEntity,
+    discoveryContext,
+    trace
+  ) {
     const source = 'ActionDiscoveryService.#processCandidateAction';
-    trace?.addLog('step', `Processing candidate action: '${actionDef.id}'`, source);
+    trace?.addLog(
+      'step',
+      `Processing candidate action: '${actionDef.id}'`,
+      source
+    );
 
     // STEP 1: Check actor prerequisites
     if (!this.#actorMeetsPrerequisites(actionDef, actorEntity, trace)) {
-      trace?.addLog('failure', `Action '${actionDef.id}' discarded due to failed actor prerequisites.`, source);
+      trace?.addLog(
+        'failure',
+        `Action '${actionDef.id}' discarded due to failed actor prerequisites.`,
+        source
+      );
       return null;
     }
-    trace?.addLog('success', `Action '${actionDef.id}' passed actor prerequisite check.`, source);
+    trace?.addLog(
+      'success',
+      `Action '${actionDef.id}' passed actor prerequisite check.`,
+      source
+    );
 
     // STEP 2: Resolve targets using the dedicated service
     const targetContexts = await this.#targetResolutionService.resolveTargets(
@@ -227,10 +265,17 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
     );
 
     if (targetContexts.length === 0) {
-      this.#logger.debug(`Action '${actionDef.id}' resolved to 0 targets. Skipping.`);
+      this.#logger.debug(
+        `Action '${actionDef.id}' resolved to 0 targets. Skipping.`
+      );
       return null;
     }
-    trace?.addLog('info', `Scope for action '${actionDef.id}' resolved to ${targetContexts.length} targets.`, source, { targets: targetContexts.map(t => t.entityId) });
+    trace?.addLog(
+      'info',
+      `Scope for action '${actionDef.id}' resolved to ${targetContexts.length} targets.`,
+      source,
+      { targets: targetContexts.map((t) => t.entityId) }
+    );
 
     // STEP 3: Generate DiscoveredActionInfo for all valid targets
     return this.#formatActionsForTargets(actionDef, targetContexts);
@@ -275,8 +320,11 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
           actionId: actionDef.id,
           targetId: targetCtx.entityId,
           error: formatResult.error,
+          details: formatResult.details,
         });
-        this.#logger.warn(`Failed to format command for action '${actionDef.id}' with target '${targetCtx.entityId}'.`);
+        this.#logger.warn(
+          `Failed to format command for action '${actionDef.id}' with target '${targetCtx.entityId}'.`
+        );
       }
     }
     return { actions: validActions, errors };

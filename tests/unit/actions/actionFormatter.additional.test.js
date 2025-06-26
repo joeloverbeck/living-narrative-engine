@@ -102,6 +102,7 @@ describe('formatActionCommand additional cases', () => {
     );
 
     expect(result.ok).toBe(false);
+    expect(result.details).toBe('boom');
     expect(dispatcher.dispatch).toHaveBeenCalledWith(
       SYSTEM_ERROR_OCCURRED_ID,
       expect.objectContaining({
