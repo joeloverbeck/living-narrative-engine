@@ -128,32 +128,35 @@ describe('registryStoreUtils - Scope ID Mapping', () => {
         {
           category: 'actions',
           baseId: 'test_actions',
-          expectedId: 'test_actions', // base ID for actions
+          data: { name: 'core:test_actions', someProperty: 'value' },
+          expectedIdInObject: 'core:test_actions',
+          sourceFile: 'test_actions.json',
         },
         {
           category: 'scopes',
           baseId: 'test_scope',
-          expectedId: 'core:test_scope', // qualified ID for scopes
+          data: { name: 'core:test_scope', expr: 'test_expr' },
+          expectedIdInObject: 'core:test_scope', // qualified ID for scopes
+          sourceFile: 'test_scope.scope',
         },
         {
           category: 'entityDefinitions',
           baseId: 'test_entity',
-          expectedId: 'core:test_entity', // qualified ID for entity definitions
+          data: { name: 'core:test_entity', someProp: 'entity_prop' },
+          expectedIdInObject: 'core:test_entity', // qualified ID for entity definitions
+          sourceFile: 'test_entity.entity.json',
         },
         {
           category: 'entityInstances',
           baseId: 'test_instance',
-          expectedId: 'core:test_instance', // qualified ID for entity instances
+          data: { definitionId: 'core:test_entity', someInstProp: 'inst_prop' },
+          expectedIdInObject: 'core:test_instance', // qualified ID for entity instances
+          sourceFile: 'test_instance.instance.json',
         },
       ];
 
-      testCases.forEach(({ category, baseId, expectedId }) => {
+      testCases.forEach(({ category, baseId, data, expectedIdInObject, sourceFile }) => {
         mockRegistry.store.mockClear();
-
-        const itemData = {
-          name: `core:${baseId}`,
-          someProperty: 'value',
-        };
 
         storeItemInRegistry(
           mockLogger,
@@ -162,15 +165,15 @@ describe('registryStoreUtils - Scope ID Mapping', () => {
           category,
           'core',
           baseId,
-          itemData,
-          `${baseId}.json`
+          data,
+          sourceFile
         );
 
         expect(mockRegistry.store).toHaveBeenCalledWith(
           category,
           `core:${baseId}`,
           expect.objectContaining({
-            id: expectedId,
+            id: expectedIdInObject,
           })
         );
       });

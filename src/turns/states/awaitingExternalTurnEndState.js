@@ -102,7 +102,7 @@ export class AwaitingExternalTurnEndState extends AbstractTurnState {
     ctx.setAwaitingExternalEvent(true, ctx.getActor().id);
 
     // set guard-rail
-    this.#timeoutId = this.#setTimeoutFn(async () => {
+    this.#timeoutId = this.#setTimeoutFn.call(null, async () => {
       await this.#onTimeout();
     }, this.#timeoutMs);
   }
@@ -146,7 +146,7 @@ export class AwaitingExternalTurnEndState extends AbstractTurnState {
   //─────────────────────────────────────────────────────────────────────────────
   #clearGuards(ctx) {
     if (this.#timeoutId) {
-      this.#clearTimeoutFn(this.#timeoutId);
+      this.#clearTimeoutFn.call(null, this.#timeoutId);
       this.#timeoutId = null;
     }
     if (this.#unsubscribeFn) {

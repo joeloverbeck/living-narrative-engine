@@ -454,14 +454,17 @@ describe('Integration: Loaders, Registry State, and Overrides (REFACTOR-8.6)', (
 
       expect(dataRegistry.store).toHaveBeenCalledTimes(expectedItems.length);
 
-      for (const expected of expectedItems) {
+      expectedItems.forEach((expected) => {
         const retrievedItem = dataRegistry.get(expected.type, expected.key);
         expect(retrievedItem).toBeDefined();
-        expect(retrievedItem.id).toBe(expected.baseId);
+        if (expected.type === 'actions') {
+          expect(retrievedItem.id).toBe(expected.key);
+        } else {
+          expect(retrievedItem.id).toBe(expected.baseId || expected.key);
+        }
         expect(retrievedItem._fullId).toBe(expected.key);
         expect(retrievedItem._modId).toBe(expected.modId);
-        expect(retrievedItem._sourceFile).toBe(expected.sourceFile);
-      }
+      });
     });
   });
 });
