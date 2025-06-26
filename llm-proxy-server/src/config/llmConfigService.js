@@ -211,9 +211,17 @@ export class LlmConfigService {
         return;
       }
 
+      const frozenConfigs = Object.freeze(
+        Object.fromEntries(
+          Object.entries(result.llmConfigs.configs).map(([id, cfg]) => [
+            id,
+            Object.freeze(cfg),
+          ])
+        )
+      );
       this.#loadedLlmConfigs = Object.freeze({
         ...result.llmConfigs,
-        configs: Object.freeze(result.llmConfigs.configs),
+        configs: frozenConfigs,
       });
       this.#isProxyOperational = true;
       this.#initializationError = null;
