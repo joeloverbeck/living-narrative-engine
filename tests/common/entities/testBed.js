@@ -111,13 +111,12 @@ export class TestBed extends FactoryTestBed {
    *   definition to use.
    * @param {object} [options] - Options forwarded to
    *   {@link EntityManager#createEntityInstance}.
-   * @param {object} [config] - Additional configuration options.
-   * @param {boolean} [config.resetDispatch] - If true, resets the event
+   * @param {boolean} [options.resetDispatch=false] - If true, resets the event
    *   dispatch mock after creation.
    * @returns {import('../../../src/entities/entity.js').default} The created
    *   entity instance.
    */
-  createEntity(defKey, options = {}, { resetDispatch = false } = {}) {
+  createEntity(defKey, { resetDispatch = false, ...options } = {}) {
     const definition = TestData.Definitions[defKey];
     if (!definition) {
       throw new Error(`Unknown test definition key: ${defKey}`);
@@ -151,14 +150,13 @@ export class TestBed extends FactoryTestBed {
    *
    * @param {object} [options] - Options forwarded to
    *   {@link EntityManager#createEntityInstance}.
-   * @param {object} [config] - Additional configuration options.
-   * @param {boolean} [config.resetDispatch] - If true, resets the event
+   * @param {boolean} [options.resetDispatch=false] - If true, resets the event
    *   dispatch mock after creation.
    * @returns {import('../../../src/entities/entity.js').default} The created
    *   entity instance.
    */
-  createBasicEntity(options = {}, config = {}) {
-    return this.createEntity('basic', options, config);
+  createBasicEntity(options = {}) {
+    return this.createEntity('basic', options);
   }
 
   /**
@@ -167,14 +165,13 @@ export class TestBed extends FactoryTestBed {
    *
    * @param {object} [options] - Options forwarded to
    *   {@link EntityManager#createEntityInstance}.
-   * @param {object} [config] - Additional configuration options.
-   * @param {boolean} [config.resetDispatch] - If true, resets the event
+   * @param {boolean} [options.resetDispatch=false] - If true, resets the event
    *   dispatch mock after creation.
    * @returns {import('../../../src/entities/entity.js').default} The created
    *   entity instance.
    */
-  createActorEntity(options = {}, config = {}) {
-    return this.createEntity('actor', options, config);
+  createActorEntity(options = {}) {
+    return this.createEntity('actor', options);
   }
 
   /**
@@ -188,16 +185,21 @@ export class TestBed extends FactoryTestBed {
    *   data.
    * @param {object} [options] - Options forwarded to
    *   {@link EntityManager#createEntityInstance}.
-   * @param {object} [cfg] - Additional configuration options.
+   * @param {boolean} [options.resetDispatch=false] - If true, resets the event
+   *   dispatch mock after creation.
    * @returns {import('../../../src/entities/entity.js').default} The created
    *   entity instance.
    */
-  createEntityWithOverride(defKey, overrides, options = {}, cfg = {}) {
-    return this.createEntity(
-      defKey,
-      { ...options, componentOverrides: overrides },
-      cfg
-    );
+  createEntityWithOverride(
+    defKey,
+    overrides,
+    { resetDispatch = false, ...options } = {}
+  ) {
+    return this.createEntity(defKey, {
+      ...options,
+      componentOverrides: overrides,
+      resetDispatch,
+    });
   }
 
   /**

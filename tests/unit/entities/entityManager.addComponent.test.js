@@ -22,13 +22,10 @@ describeEntityManagerSuite('EntityManager - addComponent', (getBed) => {
       // Arrange
       const { entityManager } = getBed();
       const { PRIMARY } = TestData.InstanceIDs;
-      getBed().createEntity(
-        'basic',
-        {
-          instanceId: PRIMARY,
-        },
-        { resetDispatch: true }
-      );
+      getBed().createEntity('basic', {
+        instanceId: PRIMARY,
+        resetDispatch: true,
+      });
 
       // Act
       entityManager.addComponent(PRIMARY, NEW_COMPONENT_ID, NEW_COMPONENT_DATA);
@@ -47,13 +44,10 @@ describeEntityManagerSuite('EntityManager - addComponent', (getBed) => {
       // Arrange
       const { entityManager, mocks } = getBed();
       const { PRIMARY } = TestData.InstanceIDs;
-      const entity = getBed().createEntity(
-        'basic',
-        {
-          instanceId: PRIMARY,
-        },
-        { resetDispatch: true }
-      );
+      const entity = getBed().createEntity('basic', {
+        instanceId: PRIMARY,
+        resetDispatch: true,
+      });
 
       // Act
       entityManager.addComponent(PRIMARY, NEW_COMPONENT_ID, NEW_COMPONENT_DATA);
@@ -95,13 +89,10 @@ describeEntityManagerSuite('EntityManager - addComponent', (getBed) => {
       const { PRIMARY } = TestData.InstanceIDs;
       const UPDATED_NAME_DATA = { name: 'Updated Name' };
 
-      const entity = getBed().createEntity(
-        'basic',
-        {
-          instanceId: PRIMARY,
-        },
-        { resetDispatch: true }
-      );
+      const entity = getBed().createEntity('basic', {
+        instanceId: PRIMARY,
+        resetDispatch: true,
+      });
       const originalNameData = entity.getComponentData(NAME_COMPONENT_ID);
 
       // Act
@@ -132,11 +123,10 @@ describeEntityManagerSuite('EntityManager - addComponent', (getBed) => {
       // Arrange
       const { entityManager, mocks } = getBed();
       const { PRIMARY } = TestData.InstanceIDs;
-      getBed().createEntity(
-        'basic',
-        { instanceId: PRIMARY },
-        { resetDispatch: true }
-      );
+      getBed().createEntity('basic', {
+        instanceId: PRIMARY,
+        resetDispatch: true,
+      });
 
       const validationErrors = [{ message: 'Invalid data' }];
       mocks.validator.validate.mockReturnValue({
@@ -175,12 +165,10 @@ describeEntityManagerSuite('EntityManager - addComponent', (getBed) => {
       )
     )('should throw InvalidArgumentError when componentData is %p', (value) => {
       // Arrange
-      const { entityManager, mocks } = getBed();
+      const { entityManager } = getBed();
       const { NAME_COMPONENT_ID } = TestData.ComponentIDs;
       const { PRIMARY } = TestData.InstanceIDs;
       getBed().createBasicEntity({ instanceId: PRIMARY });
-      const receivedType = typeof value;
-      const expectedError = `EntityManager.addComponent: componentData for ${NAME_COMPONENT_ID} on ${PRIMARY} must be an object. Received: ${receivedType}`;
 
       // Act & Assert
       expect(() =>
@@ -198,13 +186,10 @@ describeEntityManagerSuite('EntityManager - addComponent', (getBed) => {
       // Arrange
       const { entityManager, mocks } = getBed();
       const { PRIMARY } = TestData.InstanceIDs;
-      const entity = getBed().createEntity(
-        'basic',
-        {
-          instanceId: PRIMARY,
-        },
-        { resetDispatch: true }
-      );
+      const entity = getBed().createEntity('basic', {
+        instanceId: PRIMARY,
+        resetDispatch: true,
+      });
 
       // Mock the entity's own method to simulate an internal failure
       const addComponentSpy = jest

@@ -407,11 +407,7 @@ describeEntityManagerSuite('EntityManager - removeEntityInstance', (getBed) => {
     it('should dispatch an ENTITY_REMOVED event upon successful removal', () => {
       // Arrange
       const { entityManager, mocks } = getBed();
-      const entity = getBed().createEntity(
-        'basic',
-        {},
-        { resetDispatch: true }
-      );
+      const entity = getBed().createEntity('basic', { resetDispatch: true });
 
       // Act
       entityManager.removeEntityInstance(entity.id);
