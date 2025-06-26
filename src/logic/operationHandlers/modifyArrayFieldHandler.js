@@ -163,6 +163,93 @@ class ModifyArrayFieldHandler extends ComponentOperationHandler {
   }
 
   /**
+   * Validate parameters for {@link execute}.
+   *
+   * @param {object} params - Raw parameters object.
+   * @param {ILogger} logger - Logger instance for diagnostics.
+   * @param {ExecutionContext} executionContext - Current execution context.
+   * @returns {{
+   *   entityId:string,
+   *   componentType:string,
+   *   field:string,
+   *   mode:'push'|'push_unique'|'pop'|'remove_by_value',
+   *   resultVar:string|null,
+   *   value:*
+   * }|null} Normalized parameters or `null` when invalid.
+   * @private
+   */
+  #validateParams(params, logger, executionContext) {
+    if (!assertParamsObject(params, logger, 'MODIFY_ARRAY_FIELD')) {
+      return null;
+    }
+
+    const { entity_ref, component_type, field, mode, result_variable, value } =
+      params;
+
+    const validated = this.validateEntityAndType(
+      entity_ref,
+      component_type,
+      logger,
+      'MODIFY_ARRAY_FIELD',
+      executionContext
+    );
+    if (!validated) {
+      return null;
+    }
+
+    const { entityId, type: componentType } = validated;
+
+    if (
+      typeof field !== 'string' ||
+      !field.trim() ||
+      typeof mode !== 'string' ||
+      !mode.trim()
+    ) {
+      logger.warn(
+        `MODIFY_ARRAY_FIELD: Missing required parameters (component_type, field, or mode) for entity ${entityId}.`
+      );
+      return null;
+    }
+
+    const trimmedField = field.trim();
+
+    if (!ARRAY_MODIFICATION_MODES.includes(mode)) {
+      logger.warn(`MODIFY_ARRAY_FIELD: Unknown mode '${mode}'.`);
+      return null;
+    }
+
+    if (
+      value === undefined &&
+      (mode === 'push' || mode === 'push_unique' || mode === 'remove_by_value')
+    ) {
+      logger.warn(
+        `MODIFY_ARRAY_FIELD: '${mode}' mode requires a 'value' parameter.`
+      );
+      return null;
+    }
+
+    if (
+      result_variable !== undefined &&
+      (typeof result_variable !== 'string' || !result_variable.trim())
+    ) {
+      logger.warn(
+        'MODIFY_ARRAY_FIELD: "result_variable" must be a non-empty string when provided.'
+      );
+      return null;
+    }
+
+    return {
+      entityId,
+      componentType,
+      field: trimmedField,
+      mode,
+      resultVar:
+        typeof result_variable === 'string' ? result_variable.trim() : null,
+      value,
+    };
+  }
+
+  /**
    * Create a new ModifyArrayFieldHandler.
    *
    * @param {object} deps - The handler dependencies.
@@ -200,28 +287,12 @@ class ModifyArrayFieldHandler extends ComponentOperationHandler {
    */
   execute(params, executionContext) {
     const logger = this.getLogger(executionContext);
-    if (!assertParamsObject(params, logger, 'MODIFY_ARRAY_FIELD')) {
-      return;
-    }
-    const { entity_ref, component_type, field, mode, result_variable, value } =
-      params;
-    const validated = this.validateEntityAndType(
-      entity_ref,
-      component_type,
-      logger,
-      'MODIFY_ARRAY_FIELD',
-      executionContext
-    );
+    const validated = this.#validateParams(params, logger, executionContext);
     if (!validated) {
       return;
     }
-    const { entityId, type: componentType } = validated;
-    if (!field || !mode) {
-      logger.warn(
-        `MODIFY_ARRAY_FIELD: Missing required parameters (component_type, field, or mode) for entity ${entityId}.`
-      );
-      return;
-    }
+    const { entityId, componentType, field, mode, resultVar, value } =
+      validated;
 
     // 3. Fetch target array
     const fetched = this.#fetchTargetArray(
@@ -257,14 +328,14 @@ class ModifyArrayFieldHandler extends ComponentOperationHandler {
     }
 
     // 6. Store Result if requested
-    if (result_variable) {
+    if (resultVar) {
       if (
         !ensureEvaluationContext(executionContext, this.#dispatcher, logger)
       ) {
         return;
       }
       const res = tryWriteContextVariable(
-        result_variable,
+        resultVar,
         modification.result,
         executionContext,
         this.#dispatcher,
@@ -272,7 +343,7 @@ class ModifyArrayFieldHandler extends ComponentOperationHandler {
       );
       if (res.success) {
         logger.debug(
-          `MODIFY_ARRAY_FIELD: Stored result in context variable '${result_variable}'.`
+          `MODIFY_ARRAY_FIELD: Stored result in context variable '${resultVar}'.`
         );
       }
     }
