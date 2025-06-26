@@ -35,7 +35,7 @@ describe('withInitializedGameEngineBed', () => {
   it('initializes engine, runs callback and cleans up', async () => {
     const calls = [];
     await withInitializedGameEngineBed(
-      { overrides: { b: 2 }, initArg: 'World' },
+      { bedOverrides: { b: 2 }, initArg: 'World' },
       (bed, engine) => {
         calls.push('cb');
         expect(bed).toBeInstanceOf(bedModule.GameEngineTestBed);
@@ -56,7 +56,7 @@ describe('withInitializedGameEngineBed', () => {
   it('passes initialized bed and engine to callback', async () => {
     const calls = [];
     await withInitializedGameEngineBed(
-      { overrides: { c: 3 }, initArg: 'World' },
+      { bedOverrides: { c: 3 }, initArg: 'World' },
       (bed, engine) => {
         calls.push('cb');
         expect(bed).toBeInstanceOf(bedModule.GameEngineTestBed);
@@ -81,7 +81,7 @@ describe('withRunningGameEngineBed', () => {
   it('starts engine, runs callback and cleans up', async () => {
     const calls = [];
     await withRunningGameEngineBed(
-      { overrides: { d: 4 }, initArg: 'World' },
+      { bedOverrides: { d: 4 }, initArg: 'World' },
       (bed, engine) => {
         calls.push('cb');
         expect(bed).toBeInstanceOf(bedModule.GameEngineTestBed);
@@ -100,7 +100,7 @@ describe('withRunningGameEngineBed', () => {
   it('passes running bed and engine to callback', async () => {
     const calls = [];
     await withRunningGameEngineBed(
-      { overrides: { e: 5 }, initArg: 'World' },
+      { bedOverrides: { e: 5 }, initArg: 'World' },
       (bed, engine) => {
         calls.push('cb');
         expect(bed).toBeInstanceOf(bedModule.GameEngineTestBed);

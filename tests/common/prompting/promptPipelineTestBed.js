@@ -115,18 +115,19 @@ export class AIPromptPipelineTestBed extends PipelineFactoryMixin(
   /**
    * Sets up mock resolved values for a successful pipeline run.
    *
-   * @param {object} [options] - Configuration options.
-   * @param {string} [options.llmId] - LLM ID returned by the adapter.
-   * @param {object} [options.gameState] - Game state returned by the provider.
-   * @param {object} [options.promptData] - Prompt data returned by the content provider.
-   * @param {string} [options.finalPrompt] - Final prompt string returned by the builder.
+   * @param {object} [pipelineOptions] - Configuration options.
+   * @param {string} [pipelineOptions.llmId] - LLM ID returned by the adapter.
+   * @param {object} [pipelineOptions.gameState] - Game state returned by the provider.
+   * @param {object} [pipelineOptions.promptData] - Prompt data returned by the content provider.
+   * @param {string} [pipelineOptions.finalPrompt] - Final prompt string returned by the builder.
    */
-  setupMockSuccess({
-    llmId = 'llm-id',
-    gameState = {},
-    promptData = {},
-    finalPrompt = 'PROMPT',
-  } = {}) {
+  setupMockSuccess(pipelineOptions = {}) {
+    const {
+      llmId = 'llm-id',
+      gameState = {},
+      promptData = {},
+      finalPrompt = 'PROMPT',
+    } = pipelineOptions;
     this._successOptions = { llmId, gameState, promptData, finalPrompt };
     this.mocks.llmAdapter.getCurrentActiveLlmId.mockResolvedValue(llmId);
     this.mocks.gameStateProvider.buildGameState.mockResolvedValue(gameState);

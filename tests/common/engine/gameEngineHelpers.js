@@ -11,18 +11,18 @@ import { DEFAULT_TEST_WORLD } from '../constants.js';
 /**
  * Executes a callback with a temporary {@link GameEngineTestBed} instance.
  *
- * @param {Record<string, any>} [overrides] - Optional dependency overrides.
+ * @param {Record<string, any>} [bedOverrides] - Optional dependency overrides.
  * @param {(bed: import('./gameEngineTestBed.js').GameEngineTestBed,
  *   engine: import('../../../src/engine/gameEngine.js').default) =>
  *   (Promise<void>|void)} testFn - Function invoked with the bed and engine.
  * @returns {Promise<void>} Resolves when the callback completes.
  */
-export async function withGameEngineBed(overrides = {}, testFn) {
-  if (typeof overrides === 'function') {
-    testFn = overrides;
-    overrides = {};
+export async function withGameEngineBed(bedOverrides = {}, testFn) {
+  if (typeof bedOverrides === 'function') {
+    testFn = bedOverrides;
+    bedOverrides = {};
   }
-  const bed = new GameEngineTestBed(overrides);
+  const bed = new GameEngineTestBed(bedOverrides);
   if (typeof bed.resetMocks === 'function') {
     bed.resetMocks();
   }
@@ -39,20 +39,23 @@ export async function withGameEngineBed(overrides = {}, testFn) {
  * @description Creates a temporary test bed, initializes the underlying
  *   engine using {@link GameEngineTestBed.initAndReset}, then runs the provided
  *   callback. Cleanup always occurs after execution.
- * @param {{ overrides?: Record<string, any>, initArg?: string }} [options] -
+ * @param {{ bedOverrides?: Record<string, any>, initArg?: string }} [engineBedOptions] -
  *   Overrides and world used for initialization.
  * @param {(bed: GameEngineTestBed,
  *   engine: import('../../../src/engine/gameEngine.js').default) =>
  *   (Promise<void>|void)} testFn - Function invoked with the bed and engine.
  * @returns {Promise<void>} Resolves when the callback completes.
  */
-export async function withInitializedGameEngineBed(options = {}, testFn) {
-  if (typeof options === 'function') {
-    testFn = options;
-    options = {};
+export async function withInitializedGameEngineBed(
+  engineBedOptions = {},
+  testFn
+) {
+  if (typeof engineBedOptions === 'function') {
+    testFn = engineBedOptions;
+    engineBedOptions = {};
   }
-  const { overrides = {}, initArg = DEFAULT_TEST_WORLD } = options;
-  const bed = new GameEngineTestBed(overrides);
+  const { bedOverrides = {}, initArg = DEFAULT_TEST_WORLD } = engineBedOptions;
+  const bed = new GameEngineTestBed(bedOverrides);
   await bed.initAndReset(initArg);
   if (typeof bed.resetMocks === 'function') {
     bed.resetMocks();
@@ -70,20 +73,20 @@ export async function withInitializedGameEngineBed(options = {}, testFn) {
  * @description Creates a temporary test bed, starts the engine using
  *   {@link GameEngineTestBed.startAndReset}, then runs the provided callback.
  *   Cleanup always occurs after execution.
- * @param {{ overrides?: Record<string, any>, initArg?: string }} [options] -
+ * @param {{ bedOverrides?: Record<string, any>, initArg?: string }} [engineBedOptions] -
  *   Overrides and world used for initialization.
  * @param {(bed: GameEngineTestBed,
  *   engine: import('../../../src/engine/gameEngine.js').default) =>
  *   (Promise<void>|void)} testFn - Function invoked with the bed and engine.
  * @returns {Promise<void>} Resolves when the callback completes.
  */
-export async function withRunningGameEngineBed(options = {}, testFn) {
-  if (typeof options === 'function') {
-    testFn = options;
-    options = {};
+export async function withRunningGameEngineBed(engineBedOptions = {}, testFn) {
+  if (typeof engineBedOptions === 'function') {
+    testFn = engineBedOptions;
+    engineBedOptions = {};
   }
-  const { overrides = {}, initArg = DEFAULT_TEST_WORLD } = options;
-  const bed = new GameEngineTestBed(overrides);
+  const { bedOverrides = {}, initArg = DEFAULT_TEST_WORLD } = engineBedOptions;
+  const bed = new GameEngineTestBed(bedOverrides);
   await bed.startAndReset(initArg);
   if (typeof bed.resetMocks === 'function') {
     bed.resetMocks();
