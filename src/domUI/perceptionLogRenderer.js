@@ -128,7 +128,7 @@ export class PerceptionLogRenderer extends BaseListDisplayComponent {
    *
    * @returns {string | null} The ID of the actor whose perceptions are displayed.
    */
-  get '#currentActorId'() {
+  getCurrentActorId() {
     return this.#currentActorId;
   }
 
@@ -137,7 +137,7 @@ export class PerceptionLogRenderer extends BaseListDisplayComponent {
    *
    * @param {string | null} value - The actor ID to display logs for.
    */
-  set '#currentActorId'(value) {
+  setCurrentActorId(value) {
     this.#currentActorId = value;
   }
 
