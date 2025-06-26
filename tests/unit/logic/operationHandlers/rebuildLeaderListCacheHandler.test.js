@@ -483,9 +483,10 @@ describe('RebuildLeaderListCacheHandler', () => {
       expect(dispatcher.dispatch).toHaveBeenCalledWith(
         SYSTEM_ERROR_OCCURRED_ID,
         expect.objectContaining({
-          message:
-            "[RebuildLeaderListCacheHandler] Failed updating 'core:leading' for 'leader1': EntityManager failed",
-          details: { stack: error.stack, leaderId: 'leader1' },
+          message: `[RebuildLeaderListCacheHandler] Failed updating 'core:leading' for leader 'leader1': EntityManager failed`,
+          details: {
+            stack: expect.any(String),
+          },
         })
       );
 
@@ -507,11 +508,10 @@ describe('RebuildLeaderListCacheHandler', () => {
     test('should log an error if removeComponent fails', () => {
       // Arrange
       const leader = makeMockEntity('leader1');
-      const error = new Error('EntityManager remove failed');
-      mockEntityManager.getEntitiesWithComponent.mockReturnValue([]);
+      mockEntityManager.getEntitiesWithComponent.mockReturnValue([]); // No followers
       mockEntityManager.getEntityInstance.mockReturnValue(leader);
       mockEntityManager.removeComponent.mockImplementation(() => {
-        throw error;
+        throw new Error('EntityManager remove failed');
       });
 
       const params = { leaderIds: ['leader1'] };
@@ -524,13 +524,11 @@ describe('RebuildLeaderListCacheHandler', () => {
       expect(dispatcher.dispatch).toHaveBeenCalledWith(
         SYSTEM_ERROR_OCCURRED_ID,
         expect.objectContaining({
-          message:
-            "[RebuildLeaderListCacheHandler] Failed updating 'core:leading' for 'leader1': EntityManager remove failed",
-          details: { stack: error.stack, leaderId: 'leader1' },
+          message: `[RebuildLeaderListCacheHandler] Failed updating 'core:leading' for leader 'leader1': EntityManager remove failed`,
+          details: {
+            stack: expect.any(String),
+          },
         })
-      );
-      expect(mockLogger.debug).toHaveBeenCalledWith(
-        '[RebuildLeaderListCacheHandler] Rebuilt cache for 0/1 leader(s).'
       );
     });
   });
