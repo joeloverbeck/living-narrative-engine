@@ -64,13 +64,14 @@ export class ITurnStateFactory {
   }
 
   /**
-   * Creates a Processing Command state instance.
+   * Creates an instance of the state responsible for processing a chosen command.
    *
-   * @param {ITurnStateHost} handler
-   * @param {string} commandString - The command string to be processed.
-   * @param {ITurnAction} turnAction - The turn action associated with the command.
-   * @param {{ resolveStrategy(directive: string): ITurnDirectiveStrategy }} [directiveResolver]
-   * @returns {ITurnState} The created processing command state.
+   * @param {BaseTurnHandler} handler - The handler managing the state.
+   * @param {string} commandString - The command string to process.
+   * @param {ITurnAction} turnAction - The chosen turn action.
+   * @param {Function} directiveResolver - Resolver for command directives.
+   * @returns {ProcessingCommandState} A new processing command state instance.
+   * @abstract
    */
   createProcessingCommandState(
     handler,

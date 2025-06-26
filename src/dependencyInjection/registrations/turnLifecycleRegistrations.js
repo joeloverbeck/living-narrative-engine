@@ -2,7 +2,7 @@
 /**
  * Registers core turn-lifecycle systems (player-agnostic).
  * Ensures ActionIndexingService is always present so PromptCoordinator
- * can resolve integer choices even when the AI setup hasn’t been wired.
+ * can resolve integer choices even when the AI setup hasn't been wired.
  */
 
 import TurnManager from '../../turns/turnManager.js';
@@ -38,7 +38,11 @@ export function registerTurnLifecycle(container) {
     tokens.ITurnOrderService,
     (c) => new TurnOrderService({ logger: c.resolve(tokens.ILogger) })
   );
-  registrar.single(tokens.ITurnStateFactory, ConcreteTurnStateFactory);
+  registrar.singletonFactory(tokens.ITurnStateFactory, 
+    (c) => new ConcreteTurnStateFactory({
+      commandProcessor: c.resolve(tokens.ICommandProcessor)
+    })
+  );
 
   // ─────────────────── Turn-context factory ──────────────────
   registrar.singletonFactory(
