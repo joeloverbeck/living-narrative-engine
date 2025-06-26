@@ -108,10 +108,10 @@ class AutoMoveFollowersHandler extends BaseOperationHandler {
    * @param {string} destinationId - Target location.
    * @param {string|null} previousLocationId - Only move if follower is currently in this location.
    * @param {ExecutionContext} executionContext - Current execution context.
-   * @returns {void}
+   * @returns {Promise<void>} Resolves when dispatch completes.
    * @private
    */
-  #moveSingleFollower(
+  async #moveSingleFollower(
     followerId,
     leaderId,
     destinationId,
@@ -148,21 +148,61 @@ class AutoMoveFollowersHandler extends BaseOperationHandler {
           ?.text || destinationId;
       const message = `${followerName} follows ${leaderName} to ${locationName}.`;
 
-      this.#dispatcher.dispatch('core:perceptible_event', {
-        eventName: 'core:perceptible_event',
-        locationId: destinationId,
-        descriptionText: message,
-        timestamp: new Date().toISOString(),
-        perceptionType: 'character_enter',
-        actorId: followerId,
-        targetId: leaderId,
-        involvedEntities: [],
-        contextualData: { leaderId, originLocationId: originLoc },
-      });
+      const perceptibleResult = this.#dispatcher.dispatch(
+        'core:perceptible_event',
+        {
+          eventName: 'core:perceptible_event',
+          locationId: destinationId,
+          descriptionText: message,
+          timestamp: new Date().toISOString(),
+          perceptionType: 'character_enter',
+          actorId: followerId,
+          targetId: leaderId,
+          involvedEntities: [],
+          contextualData: { leaderId, originLocationId: originLoc },
+        }
+      );
 
-      this.#dispatcher.dispatch('core:display_successful_action_result', {
-        message,
-      });
+      if (perceptibleResult && typeof perceptibleResult.then === 'function') {
+        try {
+          await perceptibleResult;
+        } catch (dispatchErr) {
+          safeDispatchError(
+            this.#dispatcher,
+            'AUTO_MOVE_FOLLOWERS: Error moving follower',
+            {
+              error: dispatchErr.message,
+              stack: dispatchErr.stack,
+              followerId,
+            },
+            logger
+          );
+        }
+      }
+
+      const uiResult = this.#dispatcher.dispatch(
+        'core:display_successful_action_result',
+        {
+          message,
+        }
+      );
+
+      if (uiResult && typeof uiResult.then === 'function') {
+        try {
+          await uiResult;
+        } catch (dispatchErr) {
+          safeDispatchError(
+            this.#dispatcher,
+            'AUTO_MOVE_FOLLOWERS: Error moving follower',
+            {
+              error: dispatchErr.message,
+              stack: dispatchErr.stack,
+              followerId,
+            },
+            logger
+          );
+        }
+      }
     } catch (err) {
       safeDispatchError(
         this.#dispatcher,

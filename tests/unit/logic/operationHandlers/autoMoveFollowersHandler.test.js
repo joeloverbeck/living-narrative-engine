@@ -1,4 +1,12 @@
 import { describe, beforeEach, test, expect, jest } from '@jest/globals';
+import { safeDispatchError } from '../../../../src/utils/safeDispatchErrorUtils.js';
+
+jest.mock('../../../../src/utils/safeDispatchErrorUtils.js', () => ({
+  safeDispatchError: jest.fn((dispatcher, message, details) => {
+    dispatcher.dispatch('core:system_error_occurred', { message, details });
+  }),
+}));
+
 import AutoMoveFollowersHandler from '../../../../src/logic/operationHandlers/autoMoveFollowersHandler.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../../../src/constants/eventIds.js';
 import {
@@ -27,6 +35,7 @@ beforeEach(() => {
     warn: jest.fn(),
     error: jest.fn(),
   };
+  safeDispatchError.mockClear();
   handler = new AutoMoveFollowersHandler({
     logger,
     entityManager,
@@ -82,5 +91,65 @@ describe('AutoMoveFollowersHandler.execute', () => {
     expect(logger.debug).toHaveBeenCalledWith(
       expect.stringContaining('moved 1 follower')
     );
+  });
+
+  test('logs error when perceptible_event dispatch rejects', async () => {
+    entityManager.getComponentData.mockImplementation((id, comp) => {
+      if (id === 'leader' && comp === LEADING_COMPONENT_ID)
+        return { followers: ['f1'] };
+      if (id === 'f1' && comp === POSITION_COMPONENT_ID)
+        return { locationId: 'oldLoc' };
+      return null;
+    });
+
+    dispatcher.dispatch
+      .mockRejectedValueOnce(new Error('fail1'))
+      .mockResolvedValueOnce(true);
+
+    const ctx = {
+      logger,
+      event: { payload: { previousLocationId: 'oldLoc' } },
+    };
+
+    handler.execute({ leader_id: 'leader', destination_id: 'dest' }, ctx);
+    await new Promise((r) => setTimeout(r, 0));
+
+    expect(safeDispatchError).toHaveBeenCalledWith(
+      dispatcher,
+      'AUTO_MOVE_FOLLOWERS: Error moving follower',
+      expect.objectContaining({ error: 'fail1', followerId: 'f1' }),
+      logger
+    );
+    expect(safeDispatchError).toHaveBeenCalledTimes(1);
+  });
+
+  test('logs error when success message dispatch rejects', async () => {
+    entityManager.getComponentData.mockImplementation((id, comp) => {
+      if (id === 'leader' && comp === LEADING_COMPONENT_ID)
+        return { followers: ['f1'] };
+      if (id === 'f1' && comp === POSITION_COMPONENT_ID)
+        return { locationId: 'oldLoc' };
+      return null;
+    });
+
+    dispatcher.dispatch
+      .mockResolvedValueOnce(true)
+      .mockRejectedValueOnce(new Error('fail2'));
+
+    const ctx = {
+      logger,
+      event: { payload: { previousLocationId: 'oldLoc' } },
+    };
+
+    handler.execute({ leader_id: 'leader', destination_id: 'dest' }, ctx);
+    await new Promise((r) => setTimeout(r, 0));
+
+    expect(safeDispatchError).toHaveBeenCalledWith(
+      dispatcher,
+      'AUTO_MOVE_FOLLOWERS: Error moving follower',
+      expect.objectContaining({ error: 'fail2', followerId: 'f1' }),
+      logger
+    );
+    expect(safeDispatchError).toHaveBeenCalledTimes(1);
   });
 });
