@@ -27,7 +27,10 @@ describe('ProcessingCommandState helpers', () => {
   let workflow;
   beforeEach(() => {
     jest.clearAllMocks();
-    state = new ProcessingCommandState(mockHandler, null, null);
+    state = new ProcessingCommandState({
+      handler: mockHandler,
+      commandProcessor: {},
+    });
     workflow = new ProcessingWorkflow(state, null, null, () => {});
   });
 
@@ -61,7 +64,11 @@ describe('ProcessingCommandState helpers', () => {
   test('_obtainTurnAction uses constructor action', async () => {
     const actor = { id: 'a1' };
     const action = { actionDefinitionId: 'act' };
-    state = new ProcessingCommandState(mockHandler, null, action);
+    state = new ProcessingCommandState({
+      handler: mockHandler,
+      commandProcessor: {},
+      turnAction: action,
+    });
     workflow = new ProcessingWorkflow(state, null, action, (a) => {});
     const ctx = makeCtx(actor);
     await expect(workflow._obtainTurnAction(ctx, actor)).resolves.toBe(action);

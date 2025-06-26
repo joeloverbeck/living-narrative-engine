@@ -41,9 +41,14 @@ let mockHandler;
 let processingState;
 let consoleErrorSpy;
 let consoleWarnSpy;
+let mockCommandProcessor;
 
 beforeEach(() => {
   jest.clearAllMocks();
+
+  mockCommandProcessor = {
+    dispatchAction: jest.fn(),
+  };
 
   // Handler starts with no active state
   mockHandler = {
@@ -69,7 +74,10 @@ beforeEach(() => {
   };
 
   // Construct a fresh ProcessingCommandState with no initial commandString or turnAction
-  processingState = new ProcessingCommandState(mockHandler, null, null);
+  processingState = new ProcessingCommandState({
+    handler: mockHandler,
+    commandProcessor: mockCommandProcessor,
+  });
   mockHandler._currentState = processingState;
 
   consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
@@ -183,7 +191,11 @@ describe('ProcessingCommandState.enterState – error branches', () => {
     mockHandler.getTurnContext.mockReturnValue(mockTurnContext);
 
     // Provide commandString override so it logs that branch
-    const customState = new ProcessingCommandState(mockHandler, 'cmdStr', null);
+    const customState = new ProcessingCommandState({
+      handler: mockHandler,
+      commandProcessor: mockCommandProcessor,
+      commandString: 'cmdStr',
+    });
     mockHandler._currentState = customState;
     customState.finishProcessing();
 
@@ -306,14 +318,8 @@ describe('ProcessingCommandState.enterState – error branches', () => {
         thoughts: null,
         notes: [],
       }),
-      // Provide valid commandProcessor and interpreter so we get past that logic
-      getCommandProcessor: () => ({
-        dispatchAction: jest.fn().mockResolvedValue({ success: true }),
-      }),
-      getCommandOutcomeInterpreter: () => ({
-        interpret: jest.fn().mockReturnValue(TurnDirective.WAIT_FOR_EVENT),
-      }),
     };
+    mockCommandProcessor.dispatchAction.mockResolvedValue({ success: true });
     mockHandler.getTurnContext.mockReturnValue(mockTurnContext);
 
     // Mock the resolver so it returns a no-op strategy, preventing further execution
@@ -324,7 +330,10 @@ describe('ProcessingCommandState.enterState – error branches', () => {
       });
 
     // Re-create state so it picks up the overridden resolver
-    const stateWithSpeech = new ProcessingCommandState(mockHandler, null, null);
+    const stateWithSpeech = new ProcessingCommandState({
+      handler: mockHandler,
+      commandProcessor: mockCommandProcessor,
+    });
     stateWithSpeech.finishProcessing();
     mockHandler._currentState = stateWithSpeech;
 
@@ -370,13 +379,8 @@ describe('ProcessingCommandState.enterState – error branches', () => {
         thoughts: null,
         notes: ['first note', 'second note'],
       }),
-      getCommandProcessor: () => ({
-        dispatchAction: jest.fn().mockResolvedValue({ success: true }),
-      }),
-      getCommandOutcomeInterpreter: () => ({
-        interpret: jest.fn().mockReturnValue(TurnDirective.WAIT_FOR_EVENT),
-      }),
     };
+    mockCommandProcessor.dispatchAction.mockResolvedValue({ success: true });
     mockHandler.getTurnContext.mockReturnValue(mockTurnContext);
 
     jest
@@ -385,7 +389,10 @@ describe('ProcessingCommandState.enterState – error branches', () => {
         execute: jest.fn().mockResolvedValue(undefined),
       });
 
-    const stateWithNotes = new ProcessingCommandState(mockHandler, null, null);
+    const stateWithNotes = new ProcessingCommandState({
+      handler: mockHandler,
+      commandProcessor: mockCommandProcessor,
+    });
     stateWithNotes.finishProcessing();
     mockHandler._currentState = stateWithNotes;
 

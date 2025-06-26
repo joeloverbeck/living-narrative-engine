@@ -29,10 +29,11 @@ export class CommandProcessingWorkflow {
    * @param {ProcessingCommandStateLike} state - Owning state instance.
    * @param {ProcessingExceptionHandler} [exceptionHandler] - Optional handler for errors.
    */
-  constructor(state, exceptionHandler = undefined) {
+  constructor(state, exceptionHandler = undefined, commandProcessor) {
     this._state = state;
     this._exceptionHandler =
       exceptionHandler || new ProcessingExceptionHandler(state);
+    this._commandProcessor = commandProcessor;
   }
 
   /**
@@ -48,13 +49,13 @@ export class CommandProcessingWorkflow {
     const logger = turnCtx.getLogger();
     const actorId = actor.id;
 
-    const commandProcessor = await getServiceFromContext(
-      this._state,
-      turnCtx,
-      'getCommandProcessor',
-      'ICommandProcessor',
-      actorId
-    );
+    const commandProcessor = this._commandProcessor;
+
+    if (!commandProcessor) {
+      const error = new ServiceLookupError('ICommandProcessor could not be resolved from the constructor.');
+      await this._exceptionHandler.handle(turnCtx, error, actorId);
+      return null;
+    }
 
     logger.debug(
       `${this._state.getStateName()}: Invoking commandProcessor.dispatchAction() for actor ${actorId}, actionId: ${turnAction.actionDefinitionId}.`

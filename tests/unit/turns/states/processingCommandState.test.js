@@ -305,7 +305,10 @@ describe('ProcessingCommandState', () => {
     TurnDirectiveStrategyResolver.resolveStrategy.mockReturnValue(
       mockTurnDirectiveStrategy
     );
-    processingState = new ProcessingCommandState(mockHandler, null, null);
+    processingState = new ProcessingCommandState({
+      handler: mockHandler,
+      commandProcessor: mockCommandProcessor,
+    });
     mockHandler._currentState = processingState;
 
     consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});

@@ -11,6 +11,7 @@ describe('ProcessingCommandState._ensureContext', () => {
   let logger;
   let ctx;
   let handler;
+  let commandProcessor;
   let state;
 
   beforeEach(() => {
@@ -26,7 +27,13 @@ describe('ProcessingCommandState._ensureContext', () => {
       resetStateAndResources: jest.fn(),
       requestIdleStateTransition: jest.fn().mockResolvedValue(undefined),
     };
-    state = new ProcessingCommandState(handler, null, null);
+    commandProcessor = {
+      processCommand: jest.fn(),
+    };
+    state = new ProcessingCommandState({
+      handler: handler,
+      commandProcessor: commandProcessor,
+    });
   });
 
   test('resets to idle when required methods are missing', async () => {
