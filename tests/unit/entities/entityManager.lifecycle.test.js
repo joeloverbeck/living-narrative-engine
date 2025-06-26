@@ -67,11 +67,11 @@ describeEntityManagerSuite(
 
       it('should use the injected idGenerator', () => {
         const mockIdGenerator = jest.fn();
-        const localTestBed = new TestBed({ idGenerator: mockIdGenerator });
+        const testBed = new TestBed({ idGenerator: mockIdGenerator });
         // This test simply checks if the generator is stored,
         // createEntityInstance tests will check if it's *used*.
         // We can't directly access the private field, so we rely on functional tests.
-        expect(localTestBed.entityManager).toBeDefined();
+        expect(testBed.entityManager).toBeDefined();
       });
 
       it('should default to a UUIDv4 generator if none is provided', () => {
@@ -97,9 +97,9 @@ describeEntityManagerSuite('EntityManager - createEntityInstance', (getBed) => {
     it('should create an entity with an ID from the injected generator if no instanceId is provided', () => {
       // Arrange
       const mockIdGenerator = () => 'test-entity-id-123';
-      const localTestBed = new TestBed({ idGenerator: mockIdGenerator });
+      const testBed = new TestBed({ idGenerator: mockIdGenerator });
 
-      const entity = localTestBed.createBasicEntity();
+      const entity = testBed.createBasicEntity();
 
       // Assert
       expect(entity).toBeInstanceOf(Entity);
@@ -110,10 +110,10 @@ describeEntityManagerSuite('EntityManager - createEntityInstance', (getBed) => {
     it('should create an entity with a specific instanceId if provided, ignoring the generator', () => {
       // Arrange
       const mockIdGenerator = jest.fn(() => 'should-not-be-called');
-      const localTestBed = new TestBed({ idGenerator: mockIdGenerator });
+      const testBed = new TestBed({ idGenerator: mockIdGenerator });
       const { PRIMARY } = TestData.InstanceIDs;
 
-      const entity = localTestBed.createBasicEntity({
+      const entity = testBed.createBasicEntity({
         instanceId: PRIMARY,
       });
 
@@ -449,12 +449,12 @@ describeEntityManagerSuite('EntityManager - removeEntityInstance', (getBed) => {
       };
 
       // Arrange
-      const localTestBed = new TestBed({
+      const testBed = new TestBed({
         entityManagerOptions: { repository: stubRepo },
       });
-      const { entityManager, mocks } = localTestBed;
+      const { entityManager, mocks } = testBed;
       const { PRIMARY } = TestData.InstanceIDs;
-      localTestBed.createBasicEntity({ instanceId: PRIMARY });
+      testBed.createBasicEntity({ instanceId: PRIMARY });
 
       // Act & Assert
       expect(() => entityManager.removeEntityInstance(PRIMARY)).toThrow(
@@ -465,7 +465,7 @@ describeEntityManagerSuite('EntityManager - removeEntityInstance', (getBed) => {
           'EntityRepository.remove failed for already retrieved entity'
         )
       );
-      localTestBed.cleanup();
+      testBed.cleanup();
     });
   });
 });
