@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import WorldInitializer from '../../../src/initializers/worldInitializer.js';
 import { GameDataRepository } from '../../../src/data/gameDataRepository.js';
 import ScopeRegistry from '../../../src/scopeDsl/scopeRegistry.js';
+import { SCOPES_KEY } from '../../../src/constants/dataRegistryKeys.js';
 
 describe('WorldInitializer - ScopeRegistry Integration', () => {
   let worldInitializer;
@@ -85,7 +86,7 @@ describe('WorldInitializer - ScopeRegistry Integration', () => {
       await worldInitializer.initializeScopeRegistry();
 
       // Verify GameDataRepository.get was called
-      expect(mockRegistry.get).toHaveBeenCalledWith('scopes');
+      expect(mockRegistry.get).toHaveBeenCalledWith(SCOPES_KEY);
 
       // Verify ScopeRegistry was initialized with the correct data
       expect(scopeRegistry.getStats().initialized).toBe(true);

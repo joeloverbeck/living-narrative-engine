@@ -3,6 +3,7 @@
  */
 import { describe, test, expect, jest, beforeEach } from '@jest/globals';
 import { GameDataRepository } from '../../../src/data/gameDataRepository.js';
+import { SCOPES_KEY } from '../../../src/constants/dataRegistryKeys.js';
 
 // Helper to create a logger mock
 const createLogger = () => ({
@@ -127,16 +128,16 @@ describe('GameDataRepository', () => {
       const mockData = { scopes: { 'core:test': 'test' } };
       registry.get.mockReturnValue(mockData);
 
-      const result = repo.get('scopes');
+      const result = repo.get(SCOPES_KEY);
 
       expect(result).toEqual(mockData);
-      expect(registry.get).toHaveBeenCalledWith('scopes');
+      expect(registry.get).toHaveBeenCalledWith(SCOPES_KEY);
     });
 
     it('should return undefined when underlying registry get method does not exist', () => {
       delete registry.get;
 
-      const result = repo.get('scopes');
+      const result = repo.get(SCOPES_KEY);
 
       expect(result).toBeUndefined();
       expect(logger.warn).toHaveBeenCalledWith(

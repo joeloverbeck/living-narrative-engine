@@ -1,6 +1,7 @@
 import { BaseManifestItemLoader } from './baseManifestItemLoader.js';
 // Import the new common parser utility
 import { parseScopeDefinitions } from '../scopeDsl/scopeDefinitionParser.js';
+import { SCOPES_KEY } from '../constants/dataRegistryKeys.js';
 
 /**
  * @file Scope Loader
@@ -22,7 +23,7 @@ export default class ScopeLoader extends BaseManifestItemLoader {
     logger
   ) {
     super(
-      'scopes',
+      SCOPES_KEY,
       config,
       pathResolver,
       dataFetcher,
@@ -104,13 +105,17 @@ export default class ScopeLoader extends BaseManifestItemLoader {
     for (const [scopeName, dslExpression] of parsedContent.entries()) {
       // Validate that the scope name is properly namespaced
       if (!scopeName.includes(':')) {
-        throw new Error(`Scope '${scopeName}' must be namespaced (e.g., '${modId}:${scopeName}'). Only 'none' and 'self' are allowed without namespace.`);
+        throw new Error(
+          `Scope '${scopeName}' must be namespaced (e.g., '${modId}:${scopeName}'). Only 'none' and 'self' are allowed without namespace.`
+        );
       }
 
       // Validate that the scope belongs to the correct mod
       const [declaredModId, baseName] = scopeName.split(':', 2);
       if (declaredModId !== modId) {
-        throw new Error(`Scope '${scopeName}' is declared in mod '${modId}' but claims to belong to mod '${declaredModId}'. Scope names must match the mod they're defined in.`);
+        throw new Error(
+          `Scope '${scopeName}' is declared in mod '${modId}' but claims to belong to mod '${declaredModId}'. Scope names must match the mod they're defined in.`
+        );
       }
 
       transformed[scopeName] = {

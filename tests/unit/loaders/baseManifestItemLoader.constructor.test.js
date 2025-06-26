@@ -3,6 +3,7 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 // Adjust the import path as necessary
 import { BaseManifestItemLoader } from '../../../src/loaders/baseManifestItemLoader.js';
+import { SCOPES_KEY } from '../../../src/constants/dataRegistryKeys.js';
 import {
   createMockPathResolver,
   createMockDataFetcher,
@@ -228,7 +229,7 @@ describe('BaseManifestItemLoader Constructor', () => {
   });
 
   it("should store null for _primarySchemaId and log debug when content type is 'scopes' and schema ID is missing", () => {
-    mockContentType = 'scopes';
+    mockContentType = SCOPES_KEY;
     mockConfig.getContentTypeSchemaId.mockReturnValue(undefined);
 
     const testLoaderInstance = new BaseManifestItemLoader(

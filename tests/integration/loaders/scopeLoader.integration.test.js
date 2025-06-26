@@ -3,6 +3,7 @@
 import ScopeLoader from '../../../src/loaders/scopeLoader.js';
 import TextDataFetcher from '../../../src/data/textDataFetcher.js';
 import { createMockConfiguration } from '../../common/mockFactories/index.js';
+import { SCOPES_KEY } from '../../../src/constants/dataRegistryKeys.js';
 
 describe('ScopeLoader Integration Tests', () => {
   let scopeLoader;
@@ -87,15 +88,15 @@ describe('ScopeLoader Integration Tests', () => {
       const result = await scopeLoader.loadItemsForMod(
         'core',
         manifest,
-        'scopes',
-        'scopes',
-        'scopes'
+        SCOPES_KEY,
+        SCOPES_KEY,
+        SCOPES_KEY
       );
 
       expect(result.count).toBe(1);
       expect(result.errors).toBe(0);
       expect(mockDataRegistry.store).toHaveBeenCalledWith(
-        'scopes',
+        SCOPES_KEY,
         'core:directions',
         expect.objectContaining({
           name: 'core:directions',
@@ -131,9 +132,9 @@ describe('ScopeLoader Integration Tests', () => {
         scopeLoader.loadItemsForMod(
           'core',
           manifest,
-          'scopes',
-          'scopes',
-          'scopes'
+          SCOPES_KEY,
+          SCOPES_KEY,
+          SCOPES_KEY
         )
       ).resolves.not.toThrow();
     });

@@ -8,6 +8,7 @@ import {
   WORLDINIT_ENTITY_INSTANTIATED_ID,
   WORLDINIT_ENTITY_INSTANTIATION_FAILED_ID,
 } from '../../../src/constants/eventIds.js';
+import { SCOPES_KEY } from '../../../src/constants/dataRegistryKeys.js';
 import { WorldInitializationError } from '../../../src/errors/InitializationError.js';
 import { safeDispatchError } from '../../../src/utils/safeDispatchErrorUtils.js';
 import * as eventDispatchUtils from '../../../src/utils/eventDispatchUtils.js';
@@ -616,7 +617,7 @@ describe('WorldInitializer', () => {
       expect(mockLogger.debug).toHaveBeenCalledWith(
         'WorldInitializer: Initializing ScopeRegistry with loaded scopes...'
       );
-      expect(mockGameDataRepository.get).toHaveBeenCalledWith('scopes');
+      expect(mockGameDataRepository.get).toHaveBeenCalledWith(SCOPES_KEY);
       expect(mockScopeRegistry.initialize).toHaveBeenCalledWith(mockScopes);
       expect(mockLogger.info).toHaveBeenCalledWith(
         'WorldInitializer: ScopeRegistry initialized with 1 scopes.'

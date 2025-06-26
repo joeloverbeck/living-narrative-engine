@@ -5,6 +5,7 @@
  */
 
 /** @typedef {import('../interfaces/coreServices.js').BaseManifestItemLoaderInterface} BaseManifestItemLoaderInterface */
+import { SCOPES_KEY } from '../constants/dataRegistryKeys.js';
 
 /**
  * Structure describing a content loader configuration entry.
@@ -73,7 +74,7 @@ export function createContentLoadersConfig(loaderMap) {
       contentKey: 'scopes',
       diskFolder: 'scopes',
       phase: 'definitions',
-      registryKey: 'scopes',
+      registryKey: SCOPES_KEY,
     },
     entityDefinitions: {
       contentKey: 'entities.definitions',

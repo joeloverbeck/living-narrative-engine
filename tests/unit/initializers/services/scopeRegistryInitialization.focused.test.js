@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
+import { SCOPES_KEY } from '../../../../src/constants/dataRegistryKeys.js';
 
 describe('Scope Registry Initialization - Focused Test', () => {
   let mockLogger;
@@ -60,7 +61,7 @@ describe('Scope Registry Initialization - Focused Test', () => {
       mockDataRegistry.getAll.mockReturnValue(mockScopes);
 
       // Simulate the scope registry initialization logic
-      const scopes = mockDataRegistry.getAll('scopes');
+      const scopes = mockDataRegistry.getAll(SCOPES_KEY);
       const scopeMap = {};
       scopes.forEach((scope) => {
         if (scope.id) {
@@ -76,7 +77,7 @@ describe('Scope Registry Initialization - Focused Test', () => {
         'core:actors_in_location': mockScopes[2],
       });
 
-      expect(mockDataRegistry.getAll).toHaveBeenCalledWith('scopes');
+      expect(mockDataRegistry.getAll).toHaveBeenCalledWith(SCOPES_KEY);
     });
 
     it('should demonstrate the bug that was fixed', async () => {
@@ -103,7 +104,7 @@ describe('Scope Registry Initialization - Focused Test', () => {
       mockDataRegistry.getAll.mockReturnValue(mockScopesWithBug);
 
       // Simulate the scope registry initialization logic
-      const scopes = mockDataRegistry.getAll('scopes');
+      const scopes = mockDataRegistry.getAll(SCOPES_KEY);
       const scopeMap = {};
       scopes.forEach((scope) => {
         if (scope.id) {
@@ -114,8 +115,8 @@ describe('Scope Registry Initialization - Focused Test', () => {
 
       // With the bug, scope registry would be initialized with base IDs as keys
       expect(mockScopeRegistry.initialize).toHaveBeenCalledWith({
-        'potential_leaders': mockScopesWithBug[0], // Wrong - this causes the bug
-        'clear_directions': mockScopesWithBug[1],  // Wrong - this causes the bug
+        potential_leaders: mockScopesWithBug[0], // Wrong - this causes the bug
+        clear_directions: mockScopesWithBug[1], // Wrong - this causes the bug
       });
 
       // This demonstrates why TargetResolutionService couldn't find 'core:potential_leaders'
@@ -151,7 +152,7 @@ describe('Scope Registry Initialization - Focused Test', () => {
       mockDataRegistry.getAll.mockReturnValue(mockScopes);
 
       // Simulate the scope registry initialization logic
-      const scopes = mockDataRegistry.getAll('scopes');
+      const scopes = mockDataRegistry.getAll(SCOPES_KEY);
       const scopeMap = {};
       scopes.forEach((scope) => {
         if (scope.id) {
@@ -183,7 +184,7 @@ describe('Scope Registry Initialization - Focused Test', () => {
       mockDataRegistry.getAll.mockReturnValue(properlyFormattedScopes);
 
       // Simulate initialization
-      const scopes = mockDataRegistry.getAll('scopes');
+      const scopes = mockDataRegistry.getAll(SCOPES_KEY);
       const scopeMap = {};
       scopes.forEach((scope) => {
         if (scope.id) {
@@ -193,8 +194,10 @@ describe('Scope Registry Initialization - Focused Test', () => {
 
       // Critical assertion: the scope should be accessible by its qualified name
       expect(scopeMap['core:potential_leaders']).toBeDefined();
-      expect(scopeMap['core:potential_leaders']).toBe(properlyFormattedScopes[0]);
-      
+      expect(scopeMap['core:potential_leaders']).toBe(
+        properlyFormattedScopes[0]
+      );
+
       // Anti-regression: it should NOT be accessible by base name only
       expect(scopeMap['potential_leaders']).toBeUndefined();
 
@@ -217,7 +220,7 @@ describe('Scope Registry Initialization - Focused Test', () => {
         },
         {
           id: 'core:clear_directions',
-          name: 'core:clear_directions', 
+          name: 'core:clear_directions',
           expr: 'exits()',
           modId: 'core',
         },
@@ -232,7 +235,7 @@ describe('Scope Registry Initialization - Focused Test', () => {
       mockDataRegistry.getAll.mockReturnValue(allProblematicScopes);
 
       // Simulate initialization
-      const scopes = mockDataRegistry.getAll('scopes');
+      const scopes = mockDataRegistry.getAll(SCOPES_KEY);
       const scopeMap = {};
       scopes.forEach((scope) => {
         if (scope.id) {
@@ -260,4 +263,4 @@ describe('Scope Registry Initialization - Focused Test', () => {
       );
     });
   });
-}); 
+});
