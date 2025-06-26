@@ -131,7 +131,6 @@ export const targetFormatterMap = {
  * @param {(entity: Entity, fallback: string, logger?: ILogger) => string} displayNameFn - Utility to resolve entity names.
  * @param {ISafeEventDispatcher} dispatcher - Dispatcher used for error events.
  * @returns {FormatActionError | null} An error result if validation fails, otherwise `null`.
- * @throws {Error} If `entityManager` or `displayNameFn` are invalid.
  */
 function validateFormatInputs(
   actionDefinition,
@@ -160,18 +159,22 @@ function validateFormatInputs(
       'formatActionCommand: Invalid or missing entityManager.',
       { entityManager }
     );
-    throw new Error(
-      'formatActionCommand: entityManager parameter must be a valid EntityManager instance.'
-    );
+    return {
+      ok: false,
+      error:
+        'formatActionCommand: entityManager parameter must be a valid EntityManager instance.',
+    };
   }
   if (typeof displayNameFn !== 'function') {
     safeDispatchError(
       dispatcher,
       'formatActionCommand: getEntityDisplayName utility function is not available.'
     );
-    throw new Error(
-      'formatActionCommand: getEntityDisplayName parameter must be a function.'
-    );
+    return {
+      ok: false,
+      error:
+        'formatActionCommand: getEntityDisplayName parameter must be a function.',
+    };
   }
 
   return null;
@@ -266,7 +269,6 @@ function finalizeCommand(command, logger, debug) {
  * Function used to resolve entity display names.
  * @param {TargetFormatterMap} [formatterMap] - Map of target types to formatter functions.
  * @returns {FormatActionCommandResult} Result object containing the formatted command or an error.
- * @throws {Error} If critical dependencies (entityManager, displayNameFn) are missing or invalid during processing.
  */
 export function formatActionCommand(
   actionDefinition,

@@ -104,18 +104,19 @@ describe('formatActionCommand', () => {
     );
   });
 
-  it('throws when entityManager is invalid', () => {
-    expect(() =>
-      formatActionCommand(
-        { id: 'core:use', template: 'use {target}' },
-        { type: TARGET_TYPE_ENTITY, entityId: 'e1' },
-        {},
-        { logger, safeEventDispatcher: dispatcher },
-        displayNameFn
-      )
-    ).toThrow(
-      'formatActionCommand: entityManager parameter must be a valid EntityManager instance.'
+  it('returns error when entityManager is invalid', () => {
+    const result = formatActionCommand(
+      { id: 'core:use', template: 'use {target}' },
+      { type: TARGET_TYPE_ENTITY, entityId: 'e1' },
+      {},
+      { logger, safeEventDispatcher: dispatcher },
+      displayNameFn
     );
+    expect(result).toEqual({
+      ok: false,
+      error:
+        'formatActionCommand: entityManager parameter must be a valid EntityManager instance.',
+    });
   });
 
   it('warns on unknown target type', () => {
