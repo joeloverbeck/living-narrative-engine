@@ -43,7 +43,6 @@ describe('CommandProcessor.dispatchAction', () => {
         actorId: 'actor1',
         actionId: 'look',
         targetId: 't1',
-        direction: 'north',
         originalInput: 'look north',
       })
     );
@@ -133,5 +132,45 @@ describe('CommandProcessor.dispatchAction', () => {
         message: 'Internal error: Failed to initiate action.',
       })
     );
+  });
+});
+
+describe('CommandProcessor.dispatchAction payload specifics', () => {
+  let logger;
+  let safeEventDispatcher;
+  let processor;
+
+  beforeEach(() => {
+    logger = mkLogger();
+    safeEventDispatcher = { dispatch: jest.fn().mockResolvedValue(true) };
+    processor = new CommandProcessor({ logger, safeEventDispatcher });
+    jest.clearAllMocks();
+  });
+
+  it('AC5: does NOT include "direction" in the ATTEMPT_ACTION_ID payload even if present in resolvedParameters', async () => {
+    const actor = { id: 'actorTest' };
+    const turnAction = {
+      actionDefinitionId: 'testAction',
+      resolvedParameters: { targetId: 'target1', direction: 'shouldBeIgnored' },
+      commandString: 'testAction target1',
+    };
+
+    await processor.dispatchAction(actor, turnAction);
+
+    expect(safeEventDispatcher.dispatch).toHaveBeenCalledTimes(1);
+    expect(safeEventDispatcher.dispatch).toHaveBeenCalledWith(
+      ATTEMPT_ACTION_ID,
+      expect.objectContaining({
+        eventName: ATTEMPT_ACTION_ID,
+        actorId: 'actorTest',
+        actionId: 'testAction',
+        targetId: 'target1',
+        originalInput: 'testAction target1',
+      })
+    );
+
+    // Specifically check that 'direction' is not in the payload
+    const dispatchedPayload = safeEventDispatcher.dispatch.mock.calls[0][1];
+    expect(dispatchedPayload).not.toHaveProperty('direction');
   });
 });
