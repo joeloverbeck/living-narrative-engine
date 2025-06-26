@@ -84,6 +84,26 @@ describe('LlmConfigService', () => {
     expect(service.hasFileBasedApiKeys()).toBe(true);
   });
 
+  test('hasFileBasedApiKeys returns false when not initialized', () => {
+    expect(service.hasFileBasedApiKeys()).toBe(false);
+  });
+
+  test('hasFileBasedApiKeys ignores local configs with key files', async () => {
+    const localOnly = {
+      defaultConfigId: 'local',
+      configs: {
+        local: {
+          configId: 'local',
+          apiType: 'ollama',
+          apiKeyFileName: 'local.txt',
+        },
+      },
+    };
+    mockLoader.mockResolvedValue({ error: false, llmConfigs: localOnly });
+    await service.initialize();
+    expect(service.hasFileBasedApiKeys()).toBe(false);
+  });
+
   test('initialize handles loader error result', async () => {
     mockLoader.mockResolvedValue({
       error: true,

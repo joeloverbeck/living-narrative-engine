@@ -298,36 +298,15 @@ export class LlmConfigService {
    * @returns {boolean} True if any cloud LLM is configured to use an API key file, false otherwise.
    */
   hasFileBasedApiKeys() {
-    if (!this.#isProxyOperational || !this.#loadedLlmConfigs?.configs) {
+    if (!this.#isProxyOperational || !this.#loadedLlmConfigs) {
       return false;
     }
-
-    for (const llmId in this.#loadedLlmConfigs.configs) {
-      // Using 'configs'
-      // Ensure it's a direct property and not from the prototype chain
-      if (
-        Object.prototype.hasOwnProperty.call(
-          this.#loadedLlmConfigs.configs,
-          llmId
-        )
-      ) {
-        // Using 'configs'
-        const config = this.#loadedLlmConfigs.configs[llmId]; // Using 'configs'
-        const isCloudService =
-          config.apiType &&
-          !LOCAL_API_TYPES_REQUIRING_NO_PROXY_KEY.includes(
-            config.apiType.toLowerCase()
-          );
-        if (
-          isCloudService &&
-          config.apiKeyFileName &&
-          config.apiKeyFileName.trim() !== ''
-        ) {
-          return true;
-        }
-      }
-    }
-    return false;
+    return Object.values(this.#loadedLlmConfigs.configs).some((cfg) => {
+      const type = cfg.apiType?.toLowerCase();
+      const cloud =
+        type && !LOCAL_API_TYPES_REQUIRING_NO_PROXY_KEY.includes(type);
+      return cloud && cfg.apiKeyFileName?.trim();
+    });
   }
 }
 
