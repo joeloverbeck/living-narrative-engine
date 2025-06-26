@@ -28,7 +28,7 @@ describe('createEnvironment', () => {
   it('returns engine instance and mocks', () => {
     const env = createEnvironment();
     expect(env.instance).toBe(engine);
-    expect(env.mockContainer.resolve(tokens.ILogger)).toBe(env.mocks.logger);
+    expect(env.mockContainer.resolve(tokens.ILogger)).toBe(env.logger);
     env.cleanup();
   });
 
@@ -59,11 +59,11 @@ describe('GameEngine Test Helpers: GameEngineTestBed', () => {
     expect(GameEngine).toHaveBeenCalledTimes(1);
     expect(GameEngine).toHaveBeenCalledWith({
       container: testBed.env.mockContainer,
-      logger: testBed.env.mocks.logger,
+      logger: testBed.env.logger,
     });
     expect(testBed.engine).toBe(engine);
-    expect(testBed.getLogger()).toBe(testBed.env.mocks.logger);
-    expect(testBed.getTurnManager()).toBe(testBed.env.mocks.turnManager);
+    expect(testBed.getLogger()).toBe(testBed.env.logger);
+    expect(testBed.getTurnManager()).toBe(testBed.env.turnManager);
   });
 
   it('start presets initialization result and calls startNewGame', async () => {
@@ -72,7 +72,7 @@ describe('GameEngine Test Helpers: GameEngineTestBed', () => {
 
     expect(engine.startNewGame).toHaveBeenCalledWith('World');
     await expect(
-      testBed.env.mocks.initializationService.runInitializationSequence()
+      testBed.env.initializationService.runInitializationSequence()
     ).resolves.toEqual(initResult);
   });
 
@@ -81,7 +81,7 @@ describe('GameEngine Test Helpers: GameEngineTestBed', () => {
 
     expect(engine.startNewGame).toHaveBeenCalledWith('TestWorld');
     await expect(
-      testBed.env.mocks.initializationService.runInitializationSequence()
+      testBed.env.initializationService.runInitializationSequence()
     ).resolves.toEqual({ success: true });
   });
 
@@ -104,7 +104,7 @@ describe('GameEngine Test Helpers: GameEngineTestBed', () => {
     expect(resetSpy).toHaveBeenCalledTimes(1);
 
     await expect(
-      testBed.env.mocks.initializationService.runInitializationSequence()
+      testBed.env.initializationService.runInitializationSequence()
     ).resolves.toEqual({ success: true });
 
     initSpy.mockRestore();
@@ -127,7 +127,7 @@ describe('GameEngine Test Helpers: GameEngineTestBed', () => {
     expect(resetSpy).toHaveBeenCalledTimes(1);
 
     await expect(
-      testBed.env.mocks.initializationService.runInitializationSequence()
+      testBed.env.initializationService.runInitializationSequence()
     ).resolves.toEqual(result);
 
     startSpy.mockRestore();
