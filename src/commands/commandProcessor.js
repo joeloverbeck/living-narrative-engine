@@ -83,7 +83,6 @@ class CommandProcessor extends ICommandProcessor {
       actorId: actorId,
       actionId: actionDefinitionId,
       targetId: resolvedParameters?.targetId || null,
-      direction: resolvedParameters?.direction || null, // Handle potential direction parameter
       originalInput: commandString || actionDefinitionId,
       // Note: If other parameters from `resolvedParameters` need to be passed,
       // the ATTEMPT_ACTION_ID event schema and its handlers must support them.
