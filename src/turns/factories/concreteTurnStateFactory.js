@@ -58,16 +58,18 @@ export class ConcreteTurnStateFactory extends ITurnStateFactory {
    */
   createProcessingCommandState(
     handler,
+    commandProcessor,
     commandString,
     turnAction,
     directiveResolver = TurnDirectiveStrategyResolver
   ) {
-    return new ProcessingCommandState(
+    return new ProcessingCommandState({
       handler,
+      commandProcessor,
       commandString,
       turnAction,
-      directiveResolver
-    );
+      directiveResolver,
+    });
   }
 
   /**

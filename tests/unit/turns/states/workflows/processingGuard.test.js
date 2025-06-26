@@ -40,7 +40,10 @@ describe('ProcessingGuard', () => {
   test('finish via handleProcessingException clears flag when processing interrupted', async () => {
     const handler = makeHandler();
     const ctx = makeTurnCtx();
-    const state = new ProcessingCommandState(handler, null, null);
+    const state = new ProcessingCommandState({
+      handler,
+      commandProcessor: {},
+    });
     state.startProcessing();
     const exceptionHandler = new ProcessingExceptionHandler(state);
     await exceptionHandler.handle(ctx, new Error('boom'), 'actor1');
@@ -48,7 +51,10 @@ describe('ProcessingGuard', () => {
   });
 
   test('private processing flag cannot be modified externally', () => {
-    const state = new ProcessingCommandState(makeHandler(), null, null);
+    const state = new ProcessingCommandState({
+      handler: makeHandler(),
+      commandProcessor: {},
+    });
     expect('_isProcessing' in state).toBe(false);
     state.startProcessing();
     expect(state.isProcessing).toBe(true);
