@@ -1,120 +1,86 @@
-/**
- * @file Test suite to cover the location retrieval of ActionDiscoveryService.
- * @see tests/actions/actionDiscoveryService.locationRetrieval.test.js
- */
+import { beforeEach, expect, test, jest } from '@jest/globals';
+import { describeActionDiscoverySuite } from '../../common/actions/actionDiscoveryServiceTestBed.js';
 
-import { jest, test, expect } from '@jest/globals';
-import { ActionDiscoveryService } from '../../../src/actions/actionDiscoveryService.js';
-
-describe('ActionDiscoveryService – scoped discovery', () => {
-  const logger = {
-    debug: jest.fn(),
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
-  };
-
-  // FIX: Add prerequisites to the action definitions to ensure the evaluate method is called.
-  const gameDataRepository = {
-    getAllActionDefinitions: () => [
+describeActionDiscoverySuite(
+  'ActionDiscoveryService – scoped discovery',
+  (getBed) => {
+    const actionDefs = [
       {
         id: 'core:go',
         name: 'Go',
         commandVerb: 'go',
         scope: 'directions',
         description: 'Move to another location',
-        prerequisites: [{ logic: { "==": [1, 1] } }], // <-- The fix
+        prerequisites: [{ logic: { '==': [1, 1] } }],
       },
       {
         id: 'core:wait',
         name: 'Wait',
         commandVerb: 'wait',
         scope: 'none',
-        prerequisites: [{ logic: { "==": [1, 1] } }], // <-- The fix
+        prerequisites: [{ logic: { '==': [1, 1] } }],
       },
-    ],
-  };
+    ];
 
-  const entityManager = {
-    getComponentData: (entityId, compId) =>
-      compId === 'core:position' ? { locationId: 'loc-1' } : null,
-    getEntityInstance: (id) => (id === 'loc-1' ? { id: 'loc-1' } : null),
-  };
+    beforeEach(() => {
+      const bed = getBed();
+      bed.mocks.actionIndex.getCandidateActions.mockReturnValue(actionDefs);
+      bed.mocks.prerequisiteEvaluationService.evaluate.mockReturnValue(true);
+      bed.mocks.targetResolutionService.resolveTargets.mockImplementation(
+        async (scope) => {
+          if (scope === 'directions') {
+            return [
+              { type: 'entity', entityId: 'loc-2' },
+              { type: 'entity', entityId: 'loc-3' },
+            ];
+          }
+          if (scope === 'none') {
+            return [{ type: 'none', entityId: null }];
+          }
+          return [];
+        }
+      );
+      bed.mocks.formatActionCommandFn.mockImplementation((def, ctx) => {
+        return ctx.entityId
+          ? { ok: true, value: `${def.commandVerb} ${ctx.entityId}` }
+          : { ok: true, value: def.commandVerb };
+      });
+      bed.mocks.getActorLocationFn.mockReturnValue({
+        id: 'loc-1',
+        getComponentData: jest.fn(),
+      });
+    });
 
-  const actionValidationService = { isValid: () => true };
+    test('discovers scoped actions based on scope resolution', async () => {
+      const bed = getBed();
+      const actor = { id: 'actor-1' };
+      const context = { jsonLogicEval: {} };
 
-  const formatActionCommandFn = (def, ctx) => {
-    if (ctx.entityId) {
-      return { ok: true, value: `${def.commandVerb} ${ctx.entityId}` };
-    }
-    return { ok: true, value: def.commandVerb };
-  };
+      const result = await bed.service.getValidActions(actor, context);
 
-  const safeEventDispatcher = { dispatch: jest.fn() };
+      const goActions = result.actions.filter((a) => a.id === 'core:go');
+      expect(goActions).toHaveLength(2);
 
-  const mockTargetResolutionService = {
-    resolveTargets: jest.fn().mockImplementation(async (scopeName) => {
-      if (scopeName === 'directions') {
-        return [
-          { type: 'entity', entityId: 'loc-2' },
-          { type: 'entity', entityId: 'loc-3' }
-        ];
-      }
-      if (scopeName === 'none') {
-        return [{ type: 'none', entityId: null }];
-      }
-      return [];
-    }),
-  };
+      const target2Action = goActions.find(
+        (a) => a.params.targetId === 'loc-2'
+      );
+      expect(target2Action).toBeDefined();
+      expect(target2Action.command).toBe('go loc-2');
 
-  const mockPrerequisiteEvaluationService = {
-    evaluate: jest.fn().mockReturnValue(true),
-  };
+      const target3Action = goActions.find(
+        (a) => a.params.targetId === 'loc-3'
+      );
+      expect(target3Action).toBeDefined();
+      expect(target3Action.command).toBe('go loc-3');
 
-  const service = new ActionDiscoveryService({
-    gameDataRepository,
-    entityManager,
-    actionValidationService,
-    prerequisiteEvaluationService: mockPrerequisiteEvaluationService,
-    logger,
-    formatActionCommandFn,
-    safeEventDispatcher,
-    targetResolutionService: mockTargetResolutionService,
-    traceContextFactory: jest.fn(() => ({ addLog: jest.fn(), logs: [] })),
-    actionIndex: {
-      getCandidateActions: jest
-        .fn()
-        .mockImplementation(() =>
-          gameDataRepository.getAllActionDefinitions()
-        ),
-    },
-  });
+      const waitAction = result.actions.find((a) => a.id === 'core:wait');
+      expect(waitAction).toBeDefined();
+      expect(waitAction.command).toBe('wait');
 
-  const actorEntity = { id: 'actor-1', getComponentData: () => null };
-  const context = {
-    jsonLogicEval: {},
-  };
-
-  test('discovers scoped actions based on scope resolution', async () => {
-    const result = await service.getValidActions(actorEntity, context);
-
-    const goActions = result.actions.filter((a) => a.id === 'core:go');
-    expect(goActions).toHaveLength(2);
-
-    const target2Action = goActions.find((a) => a.params.targetId === 'loc-2');
-    expect(target2Action).toBeDefined();
-    expect(target2Action.command).toBe('go loc-2');
-
-    const target3Action = goActions.find((a) => a.params.targetId === 'loc-3');
-    expect(target3Action).toBeDefined();
-    expect(target3Action.command).toBe('go loc-3');
-
-    const waitAction = result.actions.find((a) => a.id === 'core:wait');
-    expect(waitAction).toBeDefined();
-    expect(waitAction.command).toBe('wait');
-
-    expect(logger.error).not.toHaveBeenCalled();
-    // Verify that the prerequisite service was called for both actions, now that they have prereqs.
-    expect(mockPrerequisiteEvaluationService.evaluate).toHaveBeenCalledTimes(2);
-  });
-});
+      expect(bed.mocks.logger.error).not.toHaveBeenCalled();
+      expect(
+        bed.mocks.prerequisiteEvaluationService.evaluate
+      ).toHaveBeenCalledTimes(2);
+    });
+  }
+);

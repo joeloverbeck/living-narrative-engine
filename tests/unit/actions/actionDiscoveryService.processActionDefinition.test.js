@@ -1,152 +1,102 @@
-import {
-  describe,
-  it,
-  beforeEach,
-  afterEach,
-  expect,
-  jest,
-} from '@jest/globals';
-import { ActionDiscoveryService } from '../../../src/actions/actionDiscoveryService.js';
+import { beforeEach, expect, it, jest } from '@jest/globals';
+import { describeActionDiscoverySuite } from '../../common/actions/actionDiscoveryServiceTestBed.js';
 import { safeDispatchError } from '../../../src/utils/safeDispatchErrorUtils.js';
-import { POSITION_COMPONENT_ID } from '../../../src/constants/componentIds.js';
 
-// We only mock this utility to verify it gets called on error.
 jest.mock('../../../src/utils/safeDispatchErrorUtils.js');
 
-describe('ActionDiscoveryService - getValidActions', () => {
-  let service;
-  let gameDataRepo;
-  let entityManager;
-  let actionValidationService;
-  let mockPrerequisiteEvaluationService;
-  let formatActionCommandFn;
-  let logger;
-  let safeEventDispatcher;
-  let mockTargetResolutionService;
-  let mockActionIndex;
-
-  beforeEach(() => {
-    gameDataRepo = { getAllActionDefinitions: jest.fn() };
-    entityManager = {
-      getEntityInstance: jest.fn((id) =>
-        id === 'room1'
-          ? { id: 'room1', getComponentData: () => null }
-          : null
-      ),
-      getComponentData: jest.fn().mockReturnValue(null),
-    };
-    actionValidationService = { isValid: () => true };
-    mockPrerequisiteEvaluationService = {
-      evaluate: jest.fn().mockReturnValue(true),
-    };
-    formatActionCommandFn = jest.fn(() => ({ ok: true, value: 'doit' }));
-    logger = {
-      debug: jest.fn(),
-      info: jest.fn(),
-      warn: jest.fn(),
-      error: jest.fn(),
-    };
-    safeEventDispatcher = { dispatch: jest.fn() };
-    mockTargetResolutionService = {
-      resolveTargets: jest.fn(),
-    };
-    mockActionIndex = {
-      getCandidateActions: jest.fn(),
-    };
-
-    service = new ActionDiscoveryService({
-      gameDataRepository: gameDataRepo,
-      entityManager,
-      actionValidationService,
-      prerequisiteEvaluationService: mockPrerequisiteEvaluationService,
-      formatActionCommandFn,
-      logger,
-      safeEventDispatcher,
-      targetResolutionService: mockTargetResolutionService,
-      traceContextFactory: jest.fn(() => ({ addLog: jest.fn(), logs: [] })),
-      actionIndex: mockActionIndex,
-    });
-  });
-
-  afterEach(() => {
-    jest.resetAllMocks();
-  });
-
-  it('handles scope resolution errors and continues processing', async () => {
-    const failingDef = { id: 'fail', commandVerb: 'fail', scope: 'badScope' };
-    const okDef = { id: 'ok', commandVerb: 'wait', scope: 'none' };
-    mockActionIndex.getCandidateActions.mockReturnValue([failingDef, okDef]);
-
-    mockTargetResolutionService.resolveTargets.mockImplementation(async (scopeName) => {
-      if (scopeName === 'badScope') {
-        // Return empty array instead of throwing - the real TargetResolutionService handles errors internally
-        return [];
-      }
-      if (scopeName === 'none') {
-        return [{ type: 'none', entityId: null }];
-      }
-      return [];
+describeActionDiscoverySuite(
+  'ActionDiscoveryService - getValidActions',
+  (getBed) => {
+    beforeEach(() => {
+      const bed = getBed();
+      bed.mocks.prerequisiteEvaluationService.evaluate.mockReturnValue(true);
+      bed.mocks.formatActionCommandFn.mockReturnValue({
+        ok: true,
+        value: 'doit',
+      });
+      bed.mocks.targetResolutionService.resolveTargets.mockResolvedValue([]);
+      bed.mocks.getActorLocationFn.mockReturnValue({
+        id: 'room1',
+        getComponentData: jest.fn(),
+      });
     });
 
-    const actor = { id: 'actor' };
-    const context = {};
+    it('handles scope resolution errors and continues processing', async () => {
+      const bed = getBed();
+      const failingDef = { id: 'fail', commandVerb: 'fail', scope: 'badScope' };
+      const okDef = { id: 'ok', commandVerb: 'wait', scope: 'none' };
 
-    const result = await service.getValidActions(actor, context);
-
-    expect(result.actions).toHaveLength(1);
-    expect(result.actions[0].id).toBe('ok');
-    expect(result.errors).toHaveLength(0);
-
-    // Note: With the new architecture, TargetResolutionService handles errors internally
-    // This test verifies that when scope resolution returns no targets, the service continues processing other actions
-    expect(mockTargetResolutionService.resolveTargets).toHaveBeenCalledWith('badScope', actor, expect.anything(), null);
-    expect(mockTargetResolutionService.resolveTargets).toHaveBeenCalledWith('none', actor, expect.anything(), null);
-  });
-
-  it('uses the target resolution service for scoped actions', async () => {
-    const def = { id: 'attack', commandVerb: 'attack', scope: 'monster' };
-    mockActionIndex.getCandidateActions.mockReturnValue([def]);
-
-    mockTargetResolutionService.resolveTargets.mockResolvedValue([
-      { type: 'entity', entityId: 'monster1' }
-    ]);
-    formatActionCommandFn.mockReturnValue({
-      ok: true,
-      value: 'attack monster1',
-    });
-
-    entityManager.getComponentData.mockImplementation(
-      (entityId, componentId) => {
-        if (entityId === 'actor' && componentId === POSITION_COMPONENT_ID) {
-          return { locationId: 'room1' };
+      bed.mocks.actionIndex.getCandidateActions.mockReturnValue([
+        failingDef,
+        okDef,
+      ]);
+      bed.mocks.targetResolutionService.resolveTargets.mockImplementation(
+        async (scope) => {
+          if (scope === 'badScope') return [];
+          if (scope === 'none') return [{ type: 'none', entityId: null }];
+          return [];
         }
-        return null;
-      }
-    );
+      );
 
-    const actor = { id: 'actor', getComponentData: () => null };
-    const context = { jsonLogicEval: {} };
+      const result = await bed.service.getValidActions({ id: 'actor' }, {});
 
-    const result = await service.getValidActions(actor, context);
+      expect(result.actions).toHaveLength(1);
+      expect(result.actions[0].id).toBe('ok');
+      expect(result.errors).toHaveLength(0);
+      expect(
+        bed.mocks.targetResolutionService.resolveTargets
+      ).toHaveBeenCalledWith(
+        'badScope',
+        { id: 'actor' },
+        expect.anything(),
+        null
+      );
+      expect(
+        bed.mocks.targetResolutionService.resolveTargets
+      ).toHaveBeenCalledWith('none', { id: 'actor' }, expect.anything(), null);
+    });
 
-    expect(mockTargetResolutionService.resolveTargets).toHaveBeenCalledWith(
-      'monster',
-      actor,
-      expect.objectContaining({
-        currentLocation: { id: 'room1', getComponentData: expect.any(Function) },
-        getActor: expect.any(Function),
-        jsonLogicEval: {}
-      }),
-      null
-    );
-    expect(result.actions).toEqual([
-      {
-        id: 'attack',
-        name: 'attack',
-        command: 'attack monster1',
-        description: '',
-        params: { targetId: 'monster1' },
-      },
-    ]);
-  });
-});
+    it('uses the target resolution service for scoped actions', async () => {
+      const bed = getBed();
+      const def = { id: 'attack', commandVerb: 'attack', scope: 'monster' };
+
+      bed.mocks.actionIndex.getCandidateActions.mockReturnValue([def]);
+      bed.mocks.targetResolutionService.resolveTargets.mockResolvedValue([
+        { type: 'entity', entityId: 'monster1' },
+      ]);
+      bed.mocks.formatActionCommandFn.mockReturnValue({
+        ok: true,
+        value: 'attack monster1',
+      });
+      const result = await bed.service.getValidActions(
+        { id: 'actor' },
+        { jsonLogicEval: {} }
+      );
+
+      expect(
+        bed.mocks.targetResolutionService.resolveTargets
+      ).toHaveBeenCalledWith(
+        'monster',
+        { id: 'actor' },
+        expect.objectContaining({
+          currentLocation: {
+            id: 'room1',
+            getComponentData: expect.any(Function),
+          },
+          getActor: expect.any(Function),
+          jsonLogicEval: {},
+        }),
+        null
+      );
+      expect(result.actions).toEqual([
+        {
+          id: 'attack',
+          name: 'attack',
+          command: 'attack monster1',
+          description: '',
+          params: { targetId: 'monster1' },
+        },
+      ]);
+    });
+  }
+);
