@@ -46,6 +46,21 @@ class CommandOutcomeInterpreter extends ICommandOutcomeInterpreter {
   }
 
   /**
+   * Report invalid input by dispatching an error event, logging, and throwing.
+   *
+   * @param {string} message - Human readable error message.
+   * @param {object} [details] - Structured diagnostic details.
+   * @returns {never} Throws an error; does not return.
+   * @throws {Error} Always throws with the provided message.
+   * @private
+   */
+  #reportInvalidInput(message, details) {
+    safeDispatchError(this.#dispatcher, message, details);
+    this.#logger.error(message, details);
+    throw new Error(message);
+  }
+
+  /**
    * Validate the provided turn context and return the actor id.
    *
    * @param {ITurnContext} turnContext - Current turn context.
@@ -56,33 +71,25 @@ class CommandOutcomeInterpreter extends ICommandOutcomeInterpreter {
   #validateTurnContext(turnContext) {
     if (!turnContext || typeof turnContext.getActor !== 'function') {
       const errorMsg = `CommandOutcomeInterpreter: Invalid turnContext provided.`;
-      this.#logger.error(errorMsg, { receivedContextType: typeof turnContext });
-      safeDispatchError(
-        this.#dispatcher,
-        'Invalid turn context received by CommandOutcomeInterpreter.',
-        {
-          raw: `turnContext was ${turnContext === null ? 'null' : typeof turnContext}. Expected ITurnContext object.`,
-          stack: new Error().stack,
-          timestamp: new Date().toISOString(),
-        }
-      );
-      throw new Error(errorMsg);
+      const details = {
+        raw: `turnContext was ${turnContext === null ? 'null' : typeof turnContext}. Expected ITurnContext object.`,
+        stack: new Error().stack,
+        timestamp: new Date().toISOString(),
+        receivedContextType: typeof turnContext,
+      };
+      this.#reportInvalidInput(errorMsg, details);
     }
 
     const actor = turnContext.getActor();
     if (!actor || !actor.id) {
       const errorMsg = `CommandOutcomeInterpreter: Could not retrieve a valid actor or actor ID from turnContext.`;
-      this.#logger.error(errorMsg, { actorInContext: actor });
-      safeDispatchError(
-        this.#dispatcher,
-        'Invalid actor in turn context for CommandOutcomeInterpreter.',
-        {
-          raw: `Actor object in context was ${JSON.stringify(actor)}.`,
-          stack: new Error().stack,
-          timestamp: new Date().toISOString(),
-        }
-      );
-      throw new Error(errorMsg);
+      const details = {
+        raw: `Actor object in context was ${JSON.stringify(actor)}.`,
+        stack: new Error().stack,
+        timestamp: new Date().toISOString(),
+        actorInContext: actor,
+      };
+      this.#reportInvalidInput(errorMsg, details);
     }
 
     return actor.id;
@@ -100,13 +107,13 @@ class CommandOutcomeInterpreter extends ICommandOutcomeInterpreter {
   #validateResult(result, actorId) {
     if (!result || typeof result.success !== 'boolean') {
       const baseErrorMsg = `CommandOutcomeInterpreter: Invalid CommandResult - 'success' boolean is missing. Actor: ${actorId}.`;
-      this.#logger.error(baseErrorMsg, { receivedResult: result });
-      safeDispatchError(this.#dispatcher, baseErrorMsg, {
+      const details = {
         raw: `Actor ${actorId}, Received Result: ${JSON.stringify(result)}`,
         stack: new Error().stack,
         timestamp: new Date().toISOString(),
-      });
-      throw new Error(baseErrorMsg);
+        receivedResult: result,
+      };
+      this.#reportInvalidInput(baseErrorMsg, details);
     }
   }
 
