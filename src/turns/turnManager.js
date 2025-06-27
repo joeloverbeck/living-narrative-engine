@@ -27,6 +27,7 @@ import {
 import { ITurnManager } from './interfaces/ITurnManager.js';
 import RoundManager from './roundManager.js';
 import TurnCycle from './turnCycle.js';
+import TurnEventSubscription from './turnEventSubscription.js';
 import { RealScheduler } from '../scheduling/index.js';
 import { safeDispatch } from '../utils/eventHelpers.js';
 import { logStart, logEnd, logError } from '../utils/logHelpers.js';
@@ -65,8 +66,8 @@ class TurnManager extends ITurnManager {
   #currentActor = null;
   /** @type {ITurnHandler | null} */
   #currentHandler = null;
-  /** @type { (() => void) | null } */
-  #turnEndedUnsubscribe = null;
+  /** @type {import('./turnEventSubscription.js').default} */
+  #eventSubscription;
 
   /**
    * Creates an instance of TurnManager.
@@ -158,12 +159,16 @@ class TurnManager extends ITurnManager {
       roundManager || new RoundManager(turnOrderService, entityManager, logger);
     this.#turnCycle = new TurnCycle(turnOrderService, logger);
     this.#scheduler = scheduler;
+    this.#eventSubscription = new TurnEventSubscription(
+      dispatcher,
+      logger,
+      scheduler
+    );
 
     // --- State Initialization (reset flags) ---
     this.#isRunning = false;
     this.#currentActor = null;
     this.#currentHandler = null;
-    this.#turnEndedUnsubscribe = null;
     // --- End State Initialization ---
 
     logStart(this.#logger, 'TurnManager initialized successfully.');
@@ -186,7 +191,21 @@ class TurnManager extends ITurnManager {
     this.#roundManager.resetFlags(); // Reset round flags on start
     logStart(this.#logger, 'Turn Manager started.');
 
-    this.#subscribeToTurnEnd(); // Subscribe when manager starts
+    try {
+      this.#eventSubscription.subscribe((ev) => this.#handleTurnEndedEvent(ev));
+    } catch (error) {
+      safeDispatchError(
+        this.#dispatcher,
+        `Failed to subscribe to ${TURN_ENDED_ID}. Turn advancement will likely fail.`,
+        { error: error.message }
+      );
+      await this.#dispatchSystemError(
+        `Failed to subscribe to ${TURN_ENDED_ID}. Game cannot proceed reliably.`,
+        error
+      );
+      await this.stop();
+      return;
+    }
     await this.advanceTurn();
   }
 
@@ -204,7 +223,7 @@ class TurnManager extends ITurnManager {
       return;
     }
     this.#isRunning = false;
-    this.#unsubscribeFromTurnEnd(); // Unsubscribe when manager stops
+    this.#eventSubscription.unsubscribe();
 
     if (
       this.#currentHandler &&
@@ -347,11 +366,13 @@ class TurnManager extends ITurnManager {
         this.#currentActor = nextEntity; // Set the new current actor
         const actorId = this.#currentActor.id;
         const isActor = this.#currentActor.hasComponent(ACTOR_COMPONENT_ID);
-        
+
         // Determine entity type using new player_type component
         let entityType = 'ai'; // default
         if (this.#currentActor.hasComponent(PLAYER_TYPE_COMPONENT_ID)) {
-          const playerTypeData = this.#currentActor.getComponentData(PLAYER_TYPE_COMPONENT_ID);
+          const playerTypeData = this.#currentActor.getComponentData(
+            PLAYER_TYPE_COMPONENT_ID
+          );
           entityType = playerTypeData?.type === 'human' ? 'player' : 'ai';
         } else if (this.#currentActor.hasComponent(PLAYER_COMPONENT_ID)) {
           // Fallback to old player component for backward compatibility
@@ -491,104 +512,6 @@ class TurnManager extends ITurnManager {
    *
    * @private
    */
-  #subscribeToTurnEnd() {
-    if (this.#turnEndedUnsubscribe) {
-      this.#logger.warn(
-        'Attempted to subscribe to turn end event, but already subscribed.'
-      );
-      return;
-    }
-    try {
-      this.#logger.debug(`Subscribing to '${TURN_ENDED_ID}' event.`);
-
-      const handlerCallback = (event) => {
-        // MODIFICATION: Use scheduler to schedule as a macrotask
-        this.#setTimeout(() => {
-          try {
-            // #handleTurnEndedEvent is not an async function itself,
-            // but it initiates async operations.
-            this.#handleTurnEndedEvent(event);
-          } catch (handlerError) {
-            // This catch handles synchronous errors thrown directly by #handleTurnEndedEvent
-            safeDispatchError(
-              this.#dispatcher,
-              'Error processing turn ended event',
-              { error: handlerError.message }
-            );
-            // Note: #dispatchSystemError is async
-            this.#dispatchSystemError(
-              'Error processing turn ended event (setTimeout).',
-              handlerError
-            ).catch((e) =>
-              logError(
-                this.#logger,
-                'Failed to dispatch system error after setTimeout event handler failure',
-                e
-              )
-            );
-          }
-        }, 0); // Delay of 0 ms, but schedules as a macrotask
-      };
-
-      this.#turnEndedUnsubscribe = this.#dispatcher.subscribe(
-        TURN_ENDED_ID,
-        handlerCallback
-      );
-      if (typeof this.#turnEndedUnsubscribe !== 'function') {
-        this.#turnEndedUnsubscribe = null;
-        throw new Error(
-          'Subscription function did not return an unsubscribe callback.'
-        );
-      }
-    } catch (error) {
-      safeDispatchError(
-        this.#dispatcher,
-        `Failed to subscribe to ${TURN_ENDED_ID}. Turn advancement will likely fail.`,
-        { error: error.message }
-      );
-      this.#dispatchSystemError(
-        `Failed to subscribe to ${TURN_ENDED_ID}. Game cannot proceed reliably.`,
-        error
-      ).catch((e) =>
-        logError(
-          this.#logger,
-          'Failed to dispatch system error after subscription failure',
-          e
-        )
-      );
-      this.stop().catch((e) =>
-        this.#logger.error(
-          `Error stopping manager after subscription failure: ${e.message}`
-        )
-      );
-    }
-  }
-
-  /**
-   * Unsubscribes from the turn ended event.
-   *
-   * @private
-   */
-  #unsubscribeFromTurnEnd() {
-    if (this.#turnEndedUnsubscribe) {
-      this.#logger.debug(`Unsubscribing from '${TURN_ENDED_ID}' event.`);
-      try {
-        this.#turnEndedUnsubscribe();
-      } catch (error) {
-        safeDispatchError(
-          this.#dispatcher,
-          `Error calling unsubscribe function for ${TURN_ENDED_ID}`,
-          { error: error.message }
-        );
-      } finally {
-        this.#turnEndedUnsubscribe = null;
-      }
-    } else {
-      this.#logger.debug(
-        'Attempted to unsubscribe from turn end event, but was not subscribed.'
-      );
-    }
-  }
 
   /**
    * Handles the received TURN_ENDED_ID event.
