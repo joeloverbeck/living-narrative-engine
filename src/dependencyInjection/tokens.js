@@ -100,6 +100,8 @@ import { freeze } from '../utils';
  * @property {DiToken} EntityDisplayDataProvider - Token for the service providing entity display data.
  * @property {DiToken} AlertRouter - Token for the service that routes alerts to the UI or console.
  * @property {DiToken} LocationQueryService - Token for the service providing location-based entity queries.
+ * @property {DiToken} GameSessionManager - Token for the game session manager.
+ * @property {DiToken} PersistenceCoordinator - Token coordinating persistence operations.
  *
  * --- Core Service Interfaces ---
  * @property {DiToken} ISafeEventDispatcher - Token for the safe event dispatching utility interface.
@@ -246,6 +248,8 @@ export const tokens = freeze({
   AlertRouter: 'AlertRouter',
   ClosenessCircleService: 'ClosenessCircleService',
   LocationQueryService: 'LocationQueryService',
+  GameSessionManager: 'GameSessionManager',
+  PersistenceCoordinator: 'PersistenceCoordinator',
 
   // Core Service Interfaces
   ISafeEventDispatcher: 'ISafeEventDispatcher',

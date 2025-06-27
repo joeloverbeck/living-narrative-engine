@@ -50,7 +50,21 @@ class GameEngine {
   /** @type {PersistenceCoordinator} */
   #persistenceCoordinator;
 
-  constructor({ container, logger }) {
+  /**
+   * Creates a new GameEngine instance.
+   *
+   * @param {object} deps - Constructor dependencies.
+   * @param {AppContainer} deps.container - DI container instance.
+   * @param {ILogger} deps.logger - Logger for engine events.
+   * @param {GameSessionManager} [deps.sessionManager] - Optional session manager.
+   * @param {PersistenceCoordinator} [deps.persistenceCoordinator] - Optional persistence coordinator.
+   */
+  constructor({
+    container,
+    logger,
+    sessionManager = null,
+    persistenceCoordinator = null,
+  }) {
     if (!logger) {
       throw new Error('GameEngine requires a logger.');
     }
@@ -83,24 +97,42 @@ class GameEngine {
     this.#logger.debug('GameEngine: Core services resolved.');
 
     this.#engineState = new EngineState();
-    this.#sessionManager = new GameSessionManager({
-      logger: this.#logger,
-      turnManager: this.#turnManager,
-      playtimeTracker: this.#playtimeTracker,
-      safeEventDispatcher: this.#safeEventDispatcher,
-      engineState: this.#engineState,
-      stopFn: this.stop.bind(this),
-      resetCoreGameStateFn: this._resetCoreGameState.bind(this),
-      startEngineFn: this.#startEngine.bind(this),
-    });
-    this.#persistenceCoordinator = new PersistenceCoordinator({
-      logger: this.#logger,
-      gamePersistenceService: this.#gamePersistenceService,
-      safeEventDispatcher: this.#safeEventDispatcher,
-      sessionManager: this.#sessionManager,
-      engineState: this.#engineState,
-      handleLoadFailure: this._handleLoadFailure.bind(this),
-    });
+
+    const shouldResolveSession =
+      !sessionManager &&
+      container.isRegistered &&
+      container.isRegistered(tokens.GameSessionManager);
+    this.#sessionManager =
+      sessionManager ||
+      (shouldResolveSession
+        ? container.resolve(tokens.GameSessionManager)
+        : new GameSessionManager({
+            logger: this.#logger,
+            turnManager: this.#turnManager,
+            playtimeTracker: this.#playtimeTracker,
+            safeEventDispatcher: this.#safeEventDispatcher,
+            engineState: this.#engineState,
+            stopFn: this.stop.bind(this),
+            resetCoreGameStateFn: this._resetCoreGameState.bind(this),
+            startEngineFn: this.#startEngine.bind(this),
+          }));
+
+    const shouldResolvePersist =
+      !persistenceCoordinator &&
+      container.isRegistered &&
+      container.isRegistered(tokens.PersistenceCoordinator);
+    this.#persistenceCoordinator =
+      persistenceCoordinator ||
+      (shouldResolvePersist
+        ? container.resolve(tokens.PersistenceCoordinator)
+        : new PersistenceCoordinator({
+            logger: this.#logger,
+            gamePersistenceService: this.#gamePersistenceService,
+            safeEventDispatcher: this.#safeEventDispatcher,
+            sessionManager: this.#sessionManager,
+            engineState: this.#engineState,
+            handleLoadFailure: this._handleLoadFailure.bind(this),
+          }));
   }
 
   _resetCoreGameState() {
