@@ -173,7 +173,7 @@ class WorldInitializer {
         `World '${worldName}' not found. The game cannot start without a valid world.`,
         {
           statusCode: 500,
-          raw: `World '${worldName}' not available in game data repository. Context: WorldInitializer._instantiateEntitiesFromWorld, worldName: ${worldName}, repositoryMethod: getWorld`,
+          raw: `World '${worldName}' not available in game data repository. Context: WorldInitializer.instantiateEntitiesFromWorld, worldName: ${worldName}, repositoryMethod: getWorld`,
           timestamp: new Date().toISOString(),
         }
       );
@@ -222,7 +222,7 @@ class WorldInitializer {
       this.#logger.warn(`WorldInitializer (Pass 1): ${errorMessage} Skipping.`);
       safeDispatchError(this.#validatedEventDispatcher, errorMessage, {
         statusCode: 404,
-        raw: `Context: WorldInitializer._instantiateEntitiesFromWorld, instanceId: ${instanceId}, worldName: ${worldName}`,
+        raw: `Context: WorldInitializer.instantiateEntitiesFromWorld, instanceId: ${instanceId}, worldName: ${worldName}`,
         type: 'MissingResource',
         resourceType: 'EntityInstanceDefinition',
         resourceId: instanceId,
@@ -433,7 +433,7 @@ class WorldInitializer {
    * @returns {Promise<{entities: Entity[], instantiatedCount: number, failedCount: number, totalProcessed: number}>} An object containing the list of instantiated entities and counts.
    * @private
    */
-  async #_instantiateEntitiesFromWorld(worldName) {
+  async #instantiateEntitiesFromWorld(worldName) {
     this.#logger.debug(
       `WorldInitializer (Pass 1): Instantiating entities from world: ${worldName}...`
     );
@@ -500,7 +500,7 @@ class WorldInitializer {
       // before this method is called, so we don't need to initialize it here
 
       const instantiationResult =
-        await this.#_instantiateEntitiesFromWorld(worldName);
+        await this.#instantiateEntitiesFromWorld(worldName);
 
       // Pass 2 (reference resolution) has been removed as it's no longer needed
       // with data-driven entity instances. Spatial index management is handled
@@ -513,8 +513,8 @@ class WorldInitializer {
       return instantiationResult;
     } catch (error) {
       // This catch block primarily handles critical errors like worldData not found
-      // from #_instantiateEntitiesFromWorld, or other unexpected errors.
-      // Individual entity instantiation failures are handled within #_instantiateEntitiesFromWorld
+      // from #instantiateEntitiesFromWorld, or other unexpected errors.
+      // Individual entity instantiation failures are handled within #instantiateEntitiesFromWorld
       // and are reflected in the failedCount.
 
       // Log the error before re-throwing.
