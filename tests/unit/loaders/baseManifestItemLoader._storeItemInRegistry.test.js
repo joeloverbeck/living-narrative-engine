@@ -2,6 +2,7 @@
 
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import { BaseManifestItemLoader } from '../../../src/loaders/baseManifestItemLoader.js'; // Adjust path if necessary
+import { DuplicateContentError } from '../../../src/errors/duplicateContentError.js';
 
 // --- Mock Service Factories (Minimal for this test suite) ---
 
@@ -190,33 +191,31 @@ describe('BaseManifestItemLoader._storeItemInRegistry', () => {
       );
     });
 
-    it('should log a warning if registry.store returns true (override)', () => {
-      mockRegistry.store.mockReturnValue(true); // Simulate item was overridden
+    it('should throw DuplicateContentError if item already exists', () => {
+      // Simulate that the item already exists
+      mockRegistry.get.mockReturnValue({ 
+        _modId: 'existing-mod',
+        id: baseItemId,
+        value: 'existing' 
+      });
 
-      testLoader.publicStoreItemInRegistry(
-        TEST_CATEGORY,
-        TEST_MOD_ID,
-        baseItemId,
-        data,
-        TEST_FILENAME
-      );
+      expect(() => {
+        testLoader.publicStoreItemInRegistry(
+          TEST_CATEGORY,
+          TEST_MOD_ID,
+          baseItemId,
+          data,
+          TEST_FILENAME
+        );
+      }).toThrow(DuplicateContentError);
 
-      expect(mockRegistry.store).toHaveBeenCalledWith(
-        TEST_CATEGORY,
-        finalRegistryKey,
-        expect.objectContaining({
-          id: baseItemId,
-          _fullId: finalRegistryKey,
-          _modId: TEST_MOD_ID,
-          _sourceFile: TEST_FILENAME,
-          value: 'new',
-        })
-      );
-      expect(mockLogger.warn).toHaveBeenCalledTimes(1);
-      expect(mockLogger.warn).toHaveBeenCalledWith(
-        `${loaderClassName} [${TEST_MOD_ID}]: Item '${finalRegistryKey}' (Base: '${baseItemId}') in category '${TEST_CATEGORY}' from file '${TEST_FILENAME}' overwrote an existing entry.`
-      );
-      // Debug for "Storing item..."
+      // Verify registry.store was NOT called since we threw an error
+      expect(mockRegistry.store).not.toHaveBeenCalled();
+      
+      // Verify no warning was logged
+      expect(mockLogger.warn).not.toHaveBeenCalled();
+      
+      // Debug for "Storing item..." should still be called
       expect(mockLogger.debug).toHaveBeenCalledTimes(1);
       expect(mockLogger.debug).toHaveBeenCalledWith(
         `${loaderClassName} [${TEST_MOD_ID}]: Storing item in registry. Category: '${TEST_CATEGORY}', Qualified ID: '${finalRegistryKey}', Base ID: '${baseItemId}', Filename: '${TEST_FILENAME}'`

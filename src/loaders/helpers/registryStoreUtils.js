@@ -5,6 +5,7 @@
 /** @typedef {import('../../interfaces/coreServices.js').IDataRegistry} IDataRegistry */
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 import { SCOPES_KEY } from '../../constants/dataRegistryKeys.js';
+import { DuplicateContentError } from '../../errors/duplicateContentError.js';
 
 /**
  * Stores an item in the registry, augmenting it with metadata and logging overrides.
@@ -85,17 +86,30 @@ export function storeItemInRegistry(
     `${loaderName} [${modId}]: Storing item in registry. Category: '${category}', Qualified ID: '${qualifiedId}', Base ID: '${baseItemId}', Filename: '${sourceFilename}'`
   );
 
-  const didOverride = registry.store(category, qualifiedId, dataWithMetadata);
-
-  if (didOverride) {
-    logger.warn(
-      `${loaderName} [${modId}]: Item '${qualifiedId}' (Base: '${baseItemId}') in category '${category}' from file '${sourceFilename}' overwrote an existing entry.`
-    );
-  } else {
-    logger.debug(
-      `${loaderName} [${modId}]: Item '${qualifiedId}' (Base: '${baseItemId}') stored successfully in category '${category}'.`
+  // Check if the item already exists
+  const existingItem = registry.get(category, qualifiedId);
+  if (existingItem) {
+    // Get the mod ID of the existing item
+    const existingModId = existingItem._modId || existingItem.modId || 'unknown';
+    
+    // Extract content type from category (remove trailing 's' if present)
+    const contentType = category.endsWith('s') ? category.slice(0, -1) : category;
+    
+    throw new DuplicateContentError(
+      contentType,
+      qualifiedId,
+      modId,
+      existingModId,
+      sourceFilename
     );
   }
+
+  // Store the item since no duplicate exists
+  const didOverride = registry.store(category, qualifiedId, dataWithMetadata);
+
+  logger.debug(
+    `${loaderName} [${modId}]: Item '${qualifiedId}' (Base: '${baseItemId}') stored successfully in category '${category}'.`
+  );
 
   return { qualifiedId, didOverride };
 }

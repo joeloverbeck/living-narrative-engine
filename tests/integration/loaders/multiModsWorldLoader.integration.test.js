@@ -179,7 +179,9 @@ describe('Multi-mod content loading and world validation', () => {
     const totals = {};
     await env.manager.loadContent(finalOrder, manifests, totals);
 
-    expect(env.logger.warn).toHaveBeenCalled();
+    // The duplicate instance should cause an error (not a warning)
+    expect(totals.entityInstances?.errors).toBe(1);
+    
     await env.worldLoader.loadWorlds(finalOrder, manifests, totals);
     expect(totals.worlds.errors).toBe(1);
   });

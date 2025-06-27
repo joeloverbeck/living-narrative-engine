@@ -6,3 +6,4 @@ export * from './invalidEntityIdError.js';
 export * from './InitializationError.js';
 export * from './invalidActionDefinitionError.js';
 export * from './invalidActorEntityError.js';
+export * from './duplicateContentError.js';
