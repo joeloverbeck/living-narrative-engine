@@ -25,6 +25,12 @@ class InputHandler extends IInputHandler {
   #document;
   /** @type {{ debug: Function, warn: Function, error: Function }} */
   #logger;
+  /** @type {Array<() => void>} */
+  #vedUnsubs = [];
+  /** @type {EventListener} */
+  #boundDocKeydown;
+  /** @type {EventListener} */
+  #boundFormSubmit;
 
   /**
    * Creates an instance of InputHandler.
@@ -106,14 +112,12 @@ class InputHandler extends IInputHandler {
    * @private
    */
   _bindEvents() {
-    this.#document.addEventListener(
-      'keydown',
-      this._handleInputKeyDown.bind(this)
-    );
+    this.#boundDocKeydown = this._handleInputKeyDown.bind(this);
+    this.#document.addEventListener('keydown', this.#boundDocKeydown);
+
     if (this.#inputElement.form) {
-      this.#inputElement.form.addEventListener('submit', (e) =>
-        e.preventDefault()
-      );
+      this.#boundFormSubmit = (e) => e.preventDefault();
+      this.#inputElement.form.addEventListener('submit', this.#boundFormSubmit);
     }
   }
 
@@ -123,8 +127,7 @@ class InputHandler extends IInputHandler {
    * @private
    */
   _subscribeToEvents() {
-    // Subscribe to enable event
-    this.#validatedEventDispatcher.subscribe(
+    const enableUnsub = this.#validatedEventDispatcher.subscribe(
       'core:enable_input',
       /** @param {SystemEventPayloads['core:enable_input']} _event - Ignored event payload */
       (_event) => {
@@ -132,14 +135,15 @@ class InputHandler extends IInputHandler {
       }
     );
 
-    // Subscribe to disable event
-    this.#validatedEventDispatcher.subscribe(
+    const disableUnsub = this.#validatedEventDispatcher.subscribe(
       'core:disable_input',
       /** @param {SystemEventPayloads['core:disable_input']} _event - Ignored event payload */
       (_event) => {
         this.disable();
       }
     );
+
+    this.#vedUnsubs.push(enableUnsub, disableUnsub);
     this.#logger.debug(
       "InputHandler: Subscribed to 'core:enable_input' and 'core:disable_input' events."
     );
@@ -206,6 +210,38 @@ class InputHandler extends IInputHandler {
    */
   clear() {
     this.#inputElement.value = '';
+  }
+
+  /**
+   * Cleans up VED subscriptions and DOM event listeners.
+   *
+   * @public
+   * @returns {void}
+   */
+  dispose() {
+    this.#vedUnsubs.forEach((unsub) => {
+      try {
+        unsub();
+      } catch (err) {
+        this.#logger.warn('InputHandler: Error during VED unsubscribe', err);
+      }
+    });
+    this.#vedUnsubs = [];
+
+    if (this.#boundDocKeydown) {
+      this.#document.removeEventListener('keydown', this.#boundDocKeydown);
+      this.#boundDocKeydown = undefined;
+    }
+
+    if (this.#inputElement.form && this.#boundFormSubmit) {
+      this.#inputElement.form.removeEventListener(
+        'submit',
+        this.#boundFormSubmit
+      );
+      this.#boundFormSubmit = undefined;
+    }
+
+    this.#logger.debug('InputHandler: Disposed.');
   }
 }
 

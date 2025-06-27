@@ -28,12 +28,16 @@ describe('InputHandler', () => {
       addEventListener: jest.fn((_, cb) => {
         docMock.cb = cb;
       }),
-      removeEventListener: jest.fn(),
+      removeEventListener: jest.fn((_, cb) => {
+        if (docMock.cb === cb) {
+          docMock.cb = undefined;
+        }
+      }),
     };
     logger = { debug: jest.fn(), warn: jest.fn(), error: jest.fn() };
     ved = new ValidatedEventDispatcher();
     ved.dispatch = jest.fn();
-    ved.subscribe = jest.fn(() => ({ unsubscribe: jest.fn() }));
+    ved.subscribe = jest.fn(() => jest.fn());
     callback = jest.fn();
     handler = new InputHandler(inputEl, callback, ved, {
       document: docMock,
@@ -155,5 +159,24 @@ describe('InputHandler', () => {
   test('enable focuses the input element', () => {
     handler.enable();
     expect(inputEl.focus).toHaveBeenCalled();
+  });
+
+  test('dispose removes listeners and prevents further callbacks', () => {
+    handler.enable();
+    const addedCb = docMock.cb;
+    handler.dispose();
+
+    inputEl.value = 'test';
+    if (docMock.cb) {
+      docMock.cb(new window.KeyboardEvent('keydown', { key: 'Enter' }));
+    }
+
+    expect(callback).not.toHaveBeenCalled();
+    expect(docMock.removeEventListener).toHaveBeenCalledWith(
+      'keydown',
+      addedCb
+    );
+    const unsub = ved.subscribe.mock.results[0].value;
+    expect(unsub).toHaveBeenCalled();
   });
 });
