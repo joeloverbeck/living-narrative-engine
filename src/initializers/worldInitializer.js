@@ -18,7 +18,7 @@ import {
   WORLDINIT_ENTITY_INSTANTIATED_ID,
   WORLDINIT_ENTITY_INSTANTIATION_FAILED_ID,
 } from '../constants/eventIds.js';
-import { SCOPES_KEY } from '../constants/dataRegistryKeys.js';
+import loadAndInitScopes from './services/scopeRegistryUtils.js';
 
 // --- Utility Imports ---
 import { safeDispatchError } from '../utils/safeDispatchErrorUtils.js';
@@ -69,25 +69,11 @@ class WorldInitializer {
    * @returns {Promise<void>}
    */
   async initializeScopeRegistry() {
-    this.#logger.debug(
-      'WorldInitializer: Initializing ScopeRegistry with loaded scopes...'
-    );
-
-    try {
-      const loadedScopes = this.#repository.get(SCOPES_KEY) || {};
-
-      this.#scopeRegistry.initialize(loadedScopes);
-
-      this.#logger.info(
-        `WorldInitializer: ScopeRegistry initialized with ${Object.keys(loadedScopes).length} scopes.`
-      );
-    } catch (error) {
-      this.#logger.error(
-        'WorldInitializer: Failed to initialize ScopeRegistry:',
-        error
-      );
-      // Don't throw - scope initialization failure shouldn't prevent world initialization
-    }
+    await loadAndInitScopes({
+      dataSource: this.#repository.get.bind(this.#repository),
+      scopeRegistry: this.#scopeRegistry,
+      logger: this.#logger,
+    });
   }
 
   /**

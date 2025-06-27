@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import WorldInitializer from '../../../src/initializers/worldInitializer.js';
 import { SCOPES_KEY } from '../../../src/constants/dataRegistryKeys.js';
+import * as scopeRegistryUtils from '../../../src/initializers/services/scopeRegistryUtils.js';
 
 describe('WorldInitializer - Initialization Sequence', () => {
   let worldInitializer;
@@ -91,10 +92,10 @@ describe('WorldInitializer - Initialization Sequence', () => {
     });
 
     it('should NOT call initializeScopeRegistry during initializeWorldEntities', async () => {
-      // Spy on the initializeScopeRegistry method
+      // Spy on the loadAndInitScopes helper
       const initializeScopeRegistrySpy = jest.spyOn(
-        worldInitializer,
-        'initializeScopeRegistry'
+        scopeRegistryUtils,
+        'default'
       );
 
       await worldInitializer.initializeWorldEntities('test:world');
@@ -145,23 +146,31 @@ describe('WorldInitializer - Initialization Sequence', () => {
 
       mockGameDataRepository.get.mockReturnValue(mockScopes);
 
-      await worldInitializer.initializeScopeRegistry();
+      await scopeRegistryUtils.default({
+        dataSource: mockGameDataRepository.get,
+        scopeRegistry: mockScopeRegistry,
+        logger: mockLogger,
+      });
 
       expect(mockGameDataRepository.get).toHaveBeenCalledWith(SCOPES_KEY);
       expect(mockScopeRegistry.initialize).toHaveBeenCalledWith(mockScopes);
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        'WorldInitializer: ScopeRegistry initialized with 2 scopes.'
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'ScopeRegistry initialized with 2 scopes.'
       );
     });
 
     it('should handle empty scopes gracefully when called directly', async () => {
       mockGameDataRepository.get.mockReturnValue({});
 
-      await worldInitializer.initializeScopeRegistry();
+      await scopeRegistryUtils.default({
+        dataSource: mockGameDataRepository.get,
+        scopeRegistry: mockScopeRegistry,
+        logger: mockLogger,
+      });
 
       expect(mockScopeRegistry.initialize).toHaveBeenCalledWith({});
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        'WorldInitializer: ScopeRegistry initialized with 0 scopes.'
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'ScopeRegistry initialized with 0 scopes.'
       );
     });
   });
@@ -260,12 +269,16 @@ describe('WorldInitializer - Initialization Sequence', () => {
       // This test ensures we don't accidentally re-introduce the double initialization bug
 
       const initializeScopeRegistrySpy = jest.spyOn(
-        worldInitializer,
-        'initializeScopeRegistry'
+        scopeRegistryUtils,
+        'default'
       );
 
       // Call both methods that could potentially initialize scope registry
-      await worldInitializer.initializeScopeRegistry();
+      await scopeRegistryUtils.default({
+        dataSource: mockGameDataRepository.get,
+        scopeRegistry: mockScopeRegistry,
+        logger: mockLogger,
+      });
       await worldInitializer.initializeWorldEntities('test:world');
 
       // initializeScopeRegistry should only be called once (the direct call)
@@ -274,8 +287,8 @@ describe('WorldInitializer - Initialization Sequence', () => {
 
     it('should maintain separation of concerns between scope and entity initialization', async () => {
       const initializeScopeRegistrySpy = jest.spyOn(
-        worldInitializer,
-        'initializeScopeRegistry'
+        scopeRegistryUtils,
+        'default'
       );
 
       // Entity initialization should not trigger scope initialization
@@ -284,7 +297,11 @@ describe('WorldInitializer - Initialization Sequence', () => {
       expect(initializeScopeRegistrySpy).not.toHaveBeenCalled();
 
       // But scope initialization should still work independently
-      await worldInitializer.initializeScopeRegistry();
+      await scopeRegistryUtils.default({
+        dataSource: mockGameDataRepository.get,
+        scopeRegistry: mockScopeRegistry,
+        logger: mockLogger,
+      });
 
       expect(initializeScopeRegistrySpy).toHaveBeenCalledTimes(1);
     });
