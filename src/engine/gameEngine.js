@@ -172,7 +172,7 @@ class GameEngine {
    * @private
    * @description Sets initialization, loop and world values to inactive.
    * @returns {void}
-  */
+   */
   #resetEngineState() {
     this.#engineState.reset();
   }
@@ -242,48 +242,92 @@ class GameEngine {
     );
   }
 
-  async startNewGame(worldName) {
+  /**
+   * Validates the world name parameter for startNewGame.
+   *
+   * @private
+   * @param {string} worldName - Name of the world to validate.
+   * @returns {void}
+   */
+  _validateWorldName(worldName) {
     assertNonBlankString(
       worldName,
       'worldName',
       'GameEngine.startNewGame',
-      this.#logger,
+      this.#logger
     );
+  }
+
+  /**
+   * Prepares the engine and runs the initialization sequence.
+   *
+   * @private
+   * @param {string} worldName - Name of the world being started.
+   * @returns {Promise<InitializationResult>} Result of initialization.
+   */
+  async _initializeNewGame(worldName) {
+    await this.#sessionManager.prepareForNewGameSession(worldName);
+    this._resetCoreGameState();
+    return this._executeInitializationSequence(worldName);
+  }
+
+  /**
+   * Finalizes a successful initialization run.
+   *
+   * @private
+   * @param {string} worldName - Name of the world being started.
+   * @returns {Promise<void>} Resolves when finalized.
+   */
+  async _finalizeInitializationSuccess(worldName) {
+    await this.#sessionManager.finalizeNewGameSuccess(worldName);
+  }
+
+  /**
+   * Handles initialization errors and ensures failure cleanup.
+   *
+   * @private
+   * @param {unknown} error - Error thrown during initialization.
+   * @param {Error|null} initError - InitializationService error if applicable.
+   * @param {string} worldName - Name of the world being started.
+   * @returns {Promise<never>} Always throws the processed error.
+   */
+  async _handleInitializationError(error, initError, worldName) {
+    const caughtError =
+      error instanceof Error ? error : new Error(String(error));
+    this.#logger.error(
+      `GameEngine: Overall catch in startNewGame for world "${worldName}". Error: ${caughtError.message || String(caughtError)}`,
+      caughtError
+    );
+    if (caughtError !== initError) {
+      await this._handleNewGameFailure(caughtError, worldName);
+    }
+    throw caughtError;
+  }
+
+  async startNewGame(worldName) {
+    this._validateWorldName(worldName);
     this.#logger.debug(
       `GameEngine: startNewGame called for world "${worldName}".`
     );
     let initError = null;
 
     try {
-      await this.#sessionManager.prepareForNewGameSession(worldName);
-      this._resetCoreGameState();
-
-      const initResult = await this._executeInitializationSequence(worldName);
+      const initResult = await this._initializeNewGame(worldName);
 
       if (initResult.success) {
-        await this.#sessionManager.finalizeNewGameSuccess(worldName);
+        await this._finalizeInitializationSuccess(worldName);
       } else {
-        const initializationError =
+        initError =
           initResult.error ||
           new Error('Unknown failure from InitializationService.');
-        initError = initializationError;
         this.#logger.warn(
           `GameEngine: InitializationService reported failure for "${worldName}".`
         );
-        await this._handleNewGameFailure(initializationError, worldName);
-        throw initializationError;
+        await this._handleNewGameFailure(initError, worldName);
+        throw initError;
       }
     } catch (error) {
-      const caughtError =
-        error instanceof Error ? error : new Error(String(error));
-      this.#logger.error(
-        `GameEngine: Overall catch in startNewGame for world "${worldName}". Error: ${caughtError.message || String(caughtError)}`,
-        caughtError
-      );
-      if (caughtError !== initError) {
-        await this._handleNewGameFailure(caughtError, worldName);
-      }
-      throw caughtError;
+      await this._handleInitializationError(error, initError, worldName);
     }
   }
 
@@ -354,7 +398,7 @@ class GameEngine {
       saveIdentifier,
       'saveIdentifier',
       'GameEngine.loadGame',
-      this.#logger,
+      this.#logger
     );
     return this.#persistenceCoordinator.loadGame(saveIdentifier);
   }
