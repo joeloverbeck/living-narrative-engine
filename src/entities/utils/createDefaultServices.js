@@ -9,12 +9,14 @@ import ComponentMutationService from '../services/componentMutationService.js';
 import ErrorTranslator from '../services/errorTranslator.js';
 import EntityFactory from '../factories/entityFactory.js';
 import DefinitionCache from '../services/definitionCache.js';
+import EntityLifecycleManager from '../services/entityLifecycleManager.js';
 
 /** @typedef {import('../services/entityRepositoryAdapter.js').EntityRepositoryAdapter} EntityRepositoryAdapter */
 /** @typedef {import('../services/componentMutationService.js').ComponentMutationService} ComponentMutationService */
 /** @typedef {import('../services/errorTranslator.js').ErrorTranslator} ErrorTranslator */
 /** @typedef {import('../factories/entityFactory.js').default} EntityFactory */
 /** @typedef {import('../services/definitionCache.js').DefinitionCache} DefinitionCache */
+/** @typedef {import('../services/entityLifecycleManager.js').EntityLifecycleManager} EntityLifecycleManager */
 
 /**
  * Assemble default service dependencies for {@link EntityManager}.
@@ -27,6 +29,7 @@ import DefinitionCache from '../services/definitionCache.js';
  * @param {import('../../ports/IIdGenerator.js').IIdGenerator} deps.idGenerator
  * @param {import('../../ports/IComponentCloner.js').IComponentCloner} deps.cloner
  * @param {import('../../ports/IDefaultComponentPolicy.js').IDefaultComponentPolicy} deps.defaultPolicy
+ * @param {import('../../ports/IEntityRepository.js').IEntityRepository} [deps.repository]
  * @returns {{
  *   entityRepository: EntityRepositoryAdapter,
  *   componentMutationService: ComponentMutationService,
@@ -43,6 +46,7 @@ export function createDefaultServices({
   idGenerator,
   cloner,
   defaultPolicy,
+  repository = null,
 }) {
   const entityRepository = new EntityRepositoryAdapter({ logger });
   const componentMutationService = new ComponentMutationService({
@@ -61,6 +65,16 @@ export function createDefaultServices({
     defaultPolicy,
   });
   const definitionCache = new DefinitionCache({ registry, logger });
+  const entityLifecycleManager = new EntityLifecycleManager({
+    registry,
+    logger,
+    eventDispatcher,
+    repository,
+    entityRepository,
+    factory: entityFactory,
+    errorTranslator,
+    definitionCache,
+  });
 
   return {
     entityRepository,
@@ -68,6 +82,7 @@ export function createDefaultServices({
     errorTranslator,
     entityFactory,
     definitionCache,
+    entityLifecycleManager,
   };
 }
 
