@@ -53,7 +53,12 @@ export class ProcessingExceptionHandler {
     await this.logAndDispatch(turnCtx, error, logger, actorId, wasProcessing);
 
     if (shouldEndTurn) {
-      await this.tryEndTurn(turnCtx, error, logger);
+      const handled = await this.tryEndTurn(turnCtx, error, logger);
+      if (!handled) {
+        logger.warn(
+          `${this._state.getStateName()}: Failed to end turn and handler reset was not performed for actor ${actorId}.`
+        );
+      }
     } else {
       logger.debug(
         `${this._state.getStateName()}: ProcessingExceptionHandler.handle called with shouldEndTurn=false for actor ${actorId}.`
@@ -93,22 +98,24 @@ export class ProcessingExceptionHandler {
    * @param {ITurnContext} turnCtx - Current turn context.
    * @param {Error} error - Original error.
    * @param {ILogger} logger - Logger instance.
-   * @param {string} actorId - Actor ID for logging.
-   * @returns {Promise<void>} Resolves when complete.
+   * @returns {Promise<boolean>} `true` if the turn was ended or a handler reset occurred.
    */
   async tryEndTurn(turnCtx, error, logger) {
+    let handled = false;
+
     if (turnCtx && typeof turnCtx.endTurn === 'function') {
       logger.debug(
         `${this._state.getStateName()}: Ending turn (no valid actor or error state) due to processing exception.`
       );
       try {
         await turnCtx.endTurn(error);
+        handled = true;
       } catch (endTurnError) {
         logger.error(
           `${this._state.getStateName()}: Error calling turnCtx.endTurn(): ${endTurnError.message}`,
           endTurnError
         );
-        await this.resetHandlerIfNeeded(
+        handled = await this.resetHandlerIfNeeded(
           logger,
           `exception-endTurn-failed-${this._state.getStateName()}`
         );
@@ -117,16 +124,18 @@ export class ProcessingExceptionHandler {
       logger.warn(
         `${this._state.getStateName()}: Cannot call turnCtx.endTurn(); ITurnContext or its endTurn method is unavailable.`
       );
-      const resetDone = await this.resetHandlerIfNeeded(
+      handled = await this.resetHandlerIfNeeded(
         logger,
         `exception-no-context-end-${this._state.getStateName()}`
       );
-      if (!resetDone) {
+      if (!handled) {
         logger.error(
           `${this._state.getStateName()}: CRITICAL - Cannot end turn OR reset handler. System may be unstable.`
         );
       }
     }
+
+    return handled;
   }
 
   /**
