@@ -94,6 +94,7 @@ describe('formatActionCommand', () => {
       ok: false,
       error:
         'formatActionCommand: Invalid or missing actionDefinition or template.',
+      details: { actionDefinition: { id: 'bad' } },
     });
     expect(dispatcher.dispatch).toHaveBeenCalledWith(
       SYSTEM_ERROR_OCCURRED_ID,
@@ -114,8 +115,8 @@ describe('formatActionCommand', () => {
     );
     expect(result).toEqual({
       ok: false,
-      error:
-        'formatActionCommand: entityManager parameter must be a valid EntityManager instance.',
+      error: 'formatActionCommand: Invalid or missing entityManager.',
+      details: { entityManager: {} },
     });
   });
 

@@ -55,4 +55,20 @@ export function safeDispatchError(dispatcher, message, details = {}, logger) {
   dispatcher.dispatch(SYSTEM_ERROR_OCCURRED_ID, { message, details });
 }
 
+/**
+ * @description Dispatches a validation error and returns a standardized result object.
+ * @param {ISafeEventDispatcher} dispatcher - Dispatcher used to emit the event.
+ * @param {string} message - Human readable error message.
+ * @param {object} [details] - Additional structured details for debugging.
+ * @param {ILogger} [logger] - Optional logger for error logging. When omitted, a
+ * console-based fallback is used.
+ * @returns {{ ok: false, error: string, details?: object }} Result object for validation failures.
+ */
+export function dispatchValidationError(dispatcher, message, details, logger) {
+  safeDispatchError(dispatcher, message, details, logger);
+  return details !== undefined
+    ? { ok: false, error: message, details }
+    : { ok: false, error: message };
+}
+
 // --- FILE END ---
