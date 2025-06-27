@@ -23,6 +23,8 @@ import EntityFactory from './factories/entityFactory.js';
 import EntityRepositoryAdapter from './services/entityRepositoryAdapter.js';
 import ComponentMutationService from './services/componentMutationService.js';
 import ErrorTranslator from './services/errorTranslator.js';
+import DefinitionCache from './services/definitionCache.js';
+import { createDefaultServices } from './utils/createDefaultServices.js';
 import {
   validateReconstructEntityParams as validateReconstructEntityParamsUtil,
   validateGetEntityInstanceParams as validateGetEntityInstanceParamsUtil,
@@ -44,10 +46,7 @@ import { DefinitionNotFoundError } from '../errors/definitionNotFoundError.js';
 import { EntityNotFoundError } from '../errors/entityNotFoundError';
 import { InvalidArgumentError } from '../errors/invalidArgumentError.js';
 import { DuplicateEntityError } from '../errors/duplicateEntityError.js';
-import { SerializedEntityError } from '../errors/serializedEntityError.js';
-import { InvalidInstanceIdError } from '../errors/invalidInstanceIdError.js';
 import { ValidationError } from '../errors/validationError.js';
-import { getDefinition as lookupDefinition } from './utils/definitionLookup.js';
 import { ENTITY_CREATED_ID, ENTITY_REMOVED_ID } from '../constants/eventIds.js';
 
 /* -------------------------------------------------------------------------- */
@@ -64,6 +63,7 @@ import { ENTITY_CREATED_ID, ENTITY_REMOVED_ID } from '../constants/eventIds.js';
 /** @typedef {import('../ports/IComponentCloner.js').IComponentCloner} IComponentCloner */
 /** @typedef {import('../ports/IIdGenerator.js').IIdGenerator} IIdGenerator */
 /** @typedef {import('../ports/IDefaultComponentPolicy.js').IDefaultComponentPolicy} IDefaultComponentPolicy */
+/** @typedef {import('./services/definitionCache.js').DefinitionCache} DefinitionCache */
 
 /* -------------------------------------------------------------------------- */
 /* Internal Utilities                                                         */
@@ -117,7 +117,7 @@ class EntityManager extends IEntityManager {
   /** @type {ErrorTranslator} @private */
   #errorTranslator; // eslint-disable-line no-unused-private-class-members
 
-  /** @type {Map<string, EntityDefinition>} @private */
+  /** @type {DefinitionCache} @private */
   #definitionCache;
 
   /** @type {EntityFactory} @private */
@@ -163,6 +163,7 @@ class EntityManager extends IEntityManager {
    * @param {ComponentMutationService} [deps.componentMutationService] - ComponentMutationService instance.
    * @param {ErrorTranslator} [deps.errorTranslator] - ErrorTranslator instance.
    * @param {EntityFactory} [deps.entityFactory] - EntityFactory instance.
+   * @param {DefinitionCache} [deps.definitionCache] - DefinitionCache instance.
    * @throws {Error} If any dependency is missing or malformed.
    */
   constructor({
@@ -182,6 +183,7 @@ class EntityManager extends IEntityManager {
     componentMutationService,
     errorTranslator,
     entityFactory,
+    definitionCache,
   } = {}) {
     super();
 
@@ -242,27 +244,14 @@ class EntityManager extends IEntityManager {
     this.#cloner = cloner;
     this.#defaultPolicy = defaultPolicy;
 
-    const serviceDefaults = {
-      entityRepository: new EntityRepositoryAdapter({
-        logger: this.#logger,
-      }),
-    };
-    serviceDefaults.componentMutationService = new ComponentMutationService({
-      entityRepository: serviceDefaults.entityRepository,
+    const serviceDefaults = createDefaultServices({
+      registry: this.#registry,
       validator: this.#validator,
       logger: this.#logger,
       eventDispatcher: this.#eventDispatcher,
-      cloner: this.#cloner,
-    });
-    serviceDefaults.errorTranslator = new ErrorTranslator({
-      logger: this.#logger,
-    });
-    serviceDefaults.entityFactory = new EntityFactory({
-      validator: this.#validator,
-      logger: this.#logger,
       idGenerator: this.#idGenerator,
       cloner: this.#cloner,
-      defaultPolicy: {}, // Default component policy
+      defaultPolicy: this.#defaultPolicy,
     });
 
     this.#entityRepository = resolveDep(
@@ -278,8 +267,10 @@ class EntityManager extends IEntityManager {
       serviceDefaults.errorTranslator
     );
     this.#factory = resolveDep(entityFactory, serviceDefaults.entityFactory);
-
-    this.#definitionCache = new Map();
+    this.#definitionCache = resolveDep(
+      definitionCache,
+      serviceDefaults.definitionCache
+    );
 
     this.#logger.debug('EntityManager initialised.');
   }
@@ -303,22 +294,6 @@ class EntityManager extends IEntityManager {
    * @returns {EntityDefinition|null} The entity definition, or null when the
    * definitionId is invalid or the definition is missing.
    */
-  #getDefinition(definitionId) {
-    if (this.#definitionCache.has(definitionId)) {
-      return this.#definitionCache.get(definitionId);
-    }
-    try {
-      const definition = lookupDefinition(
-        definitionId,
-        this.#registry,
-        this.#logger
-      );
-      this.#definitionCache.set(definitionId, definition);
-      return definition;
-    } catch {
-      return null;
-    }
-  }
 
   /* ---------------------------------------------------------------------- */
   /* Entity Creation                                                         */
@@ -358,7 +333,7 @@ class EntityManager extends IEntityManager {
         throw err;
       }
 
-      const definition = this.#getDefinition(definitionId);
+      const definition = this.#definitionCache.get(definitionId);
       if (!definition) {
         throw new DefinitionNotFoundError(definitionId);
       }
@@ -438,47 +413,8 @@ class EntityManager extends IEntityManager {
       });
       return entity;
     } catch (err) {
-      throw this.#handleReconstructionError(err);
+      throw this.#errorTranslator.translate(err);
     }
-  }
-
-  /**
-   * Handle reconstruction errors based on their types.
-   *
-   * @private
-   * @param {Error} err - Error thrown by the factory.
-   * @returns {Error} Translated error instance.
-   */
-  #handleReconstructionError(err) {
-    if (err instanceof SerializedEntityError) {
-      const msg =
-        'EntityManager.reconstructEntity: serializedEntity data is missing or invalid.';
-      this.#logger.error(msg);
-      return new SerializedEntityError(msg);
-    }
-
-    if (err instanceof InvalidInstanceIdError) {
-      const msg =
-        'EntityManager.reconstructEntity: instanceId is missing or invalid in serialized data.';
-      this.#logger.error(msg);
-      return new InvalidInstanceIdError(err.instanceId, msg);
-    }
-
-    if (
-      err instanceof Error &&
-      err.message.startsWith('EntityFactory.reconstruct: Entity with ID')
-    ) {
-      const match = err.message.match(
-        /Entity with ID '([^']+)' already exists/
-      );
-      if (match) {
-        const msg = `EntityManager.reconstructEntity: Entity with ID '${match[1]}' already exists. Reconstruction aborted.`;
-        this.#logger.error(msg);
-        return new DuplicateEntityError(match[1], msg);
-      }
-    }
-
-    return err instanceof Error ? err : new Error(String(err));
   }
 
   /* ---------------------------------------------------------------------- */
