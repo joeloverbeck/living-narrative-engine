@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { storeItemInRegistry } from '../../../../src/loaders/helpers/registryStoreUtils.js';
+import { DuplicateContentError } from '../../../../src/errors/duplicateContentError.js';
 
 describe('storeItemInRegistry', () => {
   let logger;
@@ -7,7 +8,10 @@ describe('storeItemInRegistry', () => {
 
   beforeEach(() => {
     logger = { debug: jest.fn(), warn: jest.fn(), error: jest.fn() };
-    registry = { store: jest.fn().mockReturnValue(false) };
+    registry = { 
+      store: jest.fn().mockReturnValue(false),
+      get: jest.fn().mockReturnValue(undefined)
+    };
   });
 
   it('stores data and returns info when no override', () => {
@@ -36,9 +40,10 @@ describe('storeItemInRegistry', () => {
     expect(logger.warn).not.toHaveBeenCalled();
   });
 
-  it('logs warning when override occurs', () => {
-    registry.store.mockReturnValue(true);
-    const result = storeItemInRegistry(
+  it('throws DuplicateContentError when item already exists', () => {
+    registry.get.mockReturnValue({ _modId: 'modB', value: 'existing' });
+    
+    expect(() => storeItemInRegistry(
       logger,
       registry,
       'TestLoader',
@@ -47,9 +52,10 @@ describe('storeItemInRegistry', () => {
       'item1',
       {},
       'file.json'
-    );
-    expect(result.didOverride).toBe(true);
-    expect(logger.warn).toHaveBeenCalled();
+    )).toThrow(DuplicateContentError);
+    
+    expect(registry.store).not.toHaveBeenCalled();
+    expect(logger.warn).not.toHaveBeenCalled();
   });
 
   it('throws TypeError when category invalid', () => {

@@ -14,6 +14,7 @@ describe('registryStoreUtils - Scope ID Mapping', () => {
 
     mockRegistry = {
       store: jest.fn().mockReturnValue(false), // false = no override
+      get: jest.fn().mockReturnValue(undefined), // no existing item
     };
   });
 

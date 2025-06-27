@@ -294,7 +294,9 @@ describe('ComponentLoader (Sub-Ticket 6.3: Override Behavior)', () => {
     });
     mockRegistry.get.mockImplementation((category, key) => {
       const catMap = internalRegistry.get(category);
-      return catMap ? JSON.parse(JSON.stringify(catMap.get(key))) : undefined;
+      if (!catMap) return undefined;
+      const value = catMap.get(key);
+      return value ? JSON.parse(JSON.stringify(value)) : undefined;
     });
 
     loader = new ComponentLoader(
@@ -355,7 +357,7 @@ describe('ComponentLoader (Sub-Ticket 6.3: Override Behavior)', () => {
   });
 
   // --- Test Case ---
-  it('should override component definition and schema from a later mod', async () => {
+  it('should allow different mods to define components with same base ID without conflict', async () => {
     // --- Arrange ---
     // Configure Fetcher for this specific test
     mockFetcher = createMockDataFetcher({

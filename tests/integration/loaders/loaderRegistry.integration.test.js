@@ -9,6 +9,7 @@ import ActionLoader from '../../../src/loaders/actionLoader.js';
 import ComponentLoader from '../../../src/loaders/componentLoader.js';
 import InMemoryDataRegistry from '../../../src/data/inMemoryDataRegistry.js';
 import { BaseManifestItemLoader } from '../../../src/loaders/baseManifestItemLoader.js';
+import { DuplicateContentError } from '../../../src/errors/duplicateContentError.js';
 
 // --- Mock Service Factories ---
 const createMockConfiguration = (overrides = {}) => ({
@@ -286,7 +287,8 @@ describe('Integration: Loaders, Registry State, and Overrides (REFACTOR-8.6)', (
       actionLoader._dataFetcher = mockFetcher;
     });
 
-    it('should log a warning when an item is stored with the same final key as an existing item', async () => {
+    it('should throw DuplicateContentError when attempting to store an item with the same final key', async () => {
+      // First item should be stored successfully
       await actionLoader._processFetchedItem(
         overrideModId,
         overrideActionFileV1,
@@ -298,23 +300,22 @@ describe('Integration: Loaders, Registry State, and Overrides (REFACTOR-8.6)', (
       expect(dataRegistry.get('actions', overrideFinalKey).description).toBe(
         'Version 1'
       );
-      mockLogger.warn.mockClear();
 
-      await actionLoader._processFetchedItem(
-        overrideModId,
-        overrideActionFileV2,
-        overrideActionPathV2,
-        overrideActionDataV2,
-        ACTION_TYPE_NAME
-      );
+      // Second item with same key should throw DuplicateContentError
+      await expect(
+        actionLoader._processFetchedItem(
+          overrideModId,
+          overrideActionFileV2,
+          overrideActionPathV2,
+          overrideActionDataV2,
+          ACTION_TYPE_NAME
+        )
+      ).rejects.toThrow(DuplicateContentError);
 
-      expect(mockLogger.warn).toHaveBeenCalledTimes(1);
-      const expectedWarnMsg = `${ActionLoader.name} [${overrideModId}]: Item '${overrideFinalKey}' (Base: '${overrideBaseId}') in category '${ACTION_TYPE_NAME}' from file '${overrideActionFileV2}' overwrote an existing entry.`;
-      expect(mockLogger.warn).toHaveBeenCalledWith(expectedWarnMsg);
-
+      // Verify the original item is still in the registry (not overwritten)
       const finalItem = dataRegistry.get('actions', overrideFinalKey);
       expect(finalItem).toBeDefined();
-      expect(finalItem.description).toBe('Version 2');
+      expect(finalItem.description).toBe('Version 1'); // Still version 1, not overwritten
     });
   });
 
