@@ -1,431 +1,60 @@
-// logs
-
-VED: Dispatching event 'core:component_added' via EventBus... 
-{entity: Entity, componentTypeId: 'core:current_actor', componentData: {…}, oldComponentData: undefined}
-consoleLogger.js:187 Successfully added/updated component 'core:current_actor' data on entity 'isekai:ninja_instance'.
-consoleLogger.js:187 SystemLogicInterpreter: ADD_COMPONENT: Successfully added/replaced component "core:current_actor" on entity "isekai:ninja_instance".
-consoleLogger.js:187 SystemLogicInterpreter: [Rule 'turn_started' - Action 1/1] Finished executing operation of type: ADD_COMPONENT
-consoleLogger.js:187 [renderListCommon] Fetched list data. Count: 2
-consoleLogger.js:187 [renderListCommon] Cleared list container.
-consoleLogger.js:187 [renderListCommon] Rendered 2 out of 2 items.
-consoleLogger.js:187 [PerceptionLogRenderer] _onListRendered called. Scrolling to bottom.
-consoleLogger.js:187 VED: Event 'core:component_added' dispatch successful.
-consoleLogger.js:187 VED: Event 'core:turn_started' dispatch successful.
-consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:component_added'.
+[InputStateController] Input enabled.
+consoleLogger.js:187 [InputStateController] Input placeholder set to: "Enter command..."
+consoleLogger.js:187 EngineUIManager: Handled core:ui_ready. UI set to ready state. Active world: isekai:world.
+consoleLogger.js:187 VED: Event 'core:ui_ready' dispatch successful.
+consoleLogger.js:187 SafeEventDispatcher: Successfully dispatched event 'core:ui_ready'.
+consoleLogger.js:187 GameSessionManager._finalizeGameStart: Starting TurnManager...
+consoleLogger.js:187 ▶️  Turn Manager started.
+consoleLogger.js:187 Subscribing to 'core:turn_ended' event.
+consoleLogger.js:187 VED: Delegating subscription for event "core:turn_ended" to EventBus.
+consoleLogger.js:187 ▶️  TurnManager.advanceTurn() initiating...
+turnManager.js:296 TurnManager.advanceTurn: nextActor = undefined
+consoleLogger.js:187 Turn queue is empty. Preparing for new round or stopping.
+consoleLogger.js:187 Attempting to start a new round.
+consoleLogger.js:187 RoundManager.startRound() initiating...
+roundManager.js:24 RoundManager.startRound: allEntities = (4) [{…}, {…}, {…}, {…}]
+consoleLogger.js:187 Found 2 actors to start the round: isekai:hero_instance, isekai:ninja_instance
+consoleLogger.js:187 TurnOrderService: Starting new round with strategy "round-robin".
+consoleLogger.js:187 TurnOrderService: Current round state cleared.
+consoleLogger.js:187 TurnOrderService: Initialized SimpleRoundRobinQueue.
+consoleLogger.js:187 TurnOrderService: Populated SimpleRoundRobinQueue with 2 entities.
+consoleLogger.js:187 TurnOrderService: New round successfully started with 2 active entities.
+consoleLogger.js:187 Successfully started a new round with 2 actors using the 'round-robin' strategy.
+consoleLogger.js:187 New round started, recursively calling advanceTurn() to process the first turn.
+consoleLogger.js:187 ▶️  TurnManager.advanceTurn() initiating...
+consoleLogger.js:187 TurnOrderService: Advancing turn to entity "isekai:hero_instance".
+turnManager.js:296 TurnManager.advanceTurn: nextActor = isekai:hero_instance
+consoleLogger.js:187 Queue not empty, processing next entity.
+consoleLogger.js:187 >>> Starting turn initiation for Entity: isekai:hero_instance (player) <<<
+consoleLogger.js:187 VED: Validating payload for event 'core:turn_started' against schema 'core:turn_started#payload'...
+consoleLogger.js:175 VED: Payload validation FAILED for event 'core:turn_started'. Dispatch SKIPPED. Errors: [root]: must NOT have additional properties {payload: {…}, errors: Array(1)}
+error @ consoleLogger.js:175
+dispatch @ validatedEventDispatcher.js:109
+safeDispatch @ eventHelpers.js:25
+advanceTurn @ turnManager.js:372
+await in advanceTurn
+advanceTurn @ turnManager.js:326
+await in advanceTurn
+start @ turnManager.js:190
+_finalizeGameStart @ gameSessionManager.js:146
+await in _finalizeGameStart
+finalizeNewGameSuccess @ gameSessionManager.js:167
+_finalizeInitializationSuccess @ gameEngine.js:282
+startNewGame @ gameEngine.js:318
+await in startNewGame
+startGameStage @ engineStages.js:87
+beginGame @ main.js:217
+(anonymous) @ game.html:326
+Promise.then
+(anonymous) @ game.html:323Understand this error
+consoleLogger.js:187 VED: Dispatch skipped for 'core:turn_started' due to validation failure (see error above).
 consoleLogger.js:187 VED: Validating payload for event 'core:turn_processing_started' against schema 'core:turn_processing_started#payload'...
 consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:turn_processing_started'.
-consoleLogger.js:187 VED: Dispatching event 'core:turn_processing_started' via EventBus... 
-{entityId: 'isekai:ninja_instance', actorType: 'player'}
+consoleLogger.js:187 VED: Dispatching event 'core:turn_processing_started' via EventBus... {entityId: 'isekai:hero_instance', actorType: 'player'}
+consoleLogger.js:187 [ProcessingIndicatorController] Showing processing indicator for type: ai-llm.
 consoleLogger.js:187 VED: Event 'core:turn_processing_started' dispatch successful.
-consoleLogger.js:187 Resolving turn handler for entity isekai:ninja_instance...
-consoleLogger.js:187 TurnHandlerResolver: Resolving handler for actor isekai:ninja_instance...
-consoleLogger.js:187 Match found for actor isekai:ninja_instance. Applying rule: 'Player'.
-consoleLogger.js:187 TurnHandlerResolver: Creating new PlayerHandler for actor isekai:ninja_instance.
-consoleLogger.js:187 ActorTurnHandler initial state set to: TurnIdleState. EnterState will be called on first transition or explicit start.
-consoleLogger.js:187 ActorTurnHandler initialised. Dependencies assigned. Initial state set.
-consoleLogger.js:187 Calling startTurn on ActorTurnHandler for entity isekai:ninja_instance
-turnManager.js:418 TurnManager: handler = 
-ActorTurnHandler {_logger: ConsoleLogger, #turnEndPort: EventBusTurnEndAdapter, #strategyFactory: ActorAwareStrategyFactory, #turnContextBuilder: TurnContextBuilder, #awaitState: _AwaitTurnEndState, …}
- handler.startTurn = function
-consoleLogger.js:187 ActorTurnHandler.startTurn called for actor isekai:ninja_instance.
-consoleLogger.js:187 ActorAwareStrategyFactory: Creating GenericTurnStrategy for isekai:ninja_instance using provider type human.
-consoleLogger.js:187 ActorTurnHandler: Instantiated turn strategy for actor isekai:ninja_instance via factory.
-consoleLogger.js:187 TurnContextBuilder: Building context for actor isekai:ninja_instance.
-consoleLogger.js:187 ActorTurnHandler._setCurrentTurnContextInternal: Setting turn context to object for actor isekai:ninja_instance.
-consoleLogger.js:187 ActorTurnHandler._setCurrentTurnContextInternal: Aligning _currentActor ('null') with new TurnContext actor ('isekai:ninja_instance').
-consoleLogger.js:187 ActorTurnHandler.startTurn: TurnContext created for actor isekai:ninja_instance via builder.
-consoleLogger.js:187 TurnIdleState: Received startTurn for actor isekai:ninja_instance.
-consoleLogger.js:187 TurnIdleState: ITurnContext confirmed for actor isekai:ninja_instance. Transitioning to AwaitingActorDecisionState.
-consoleLogger.js:187 ActorTurnHandler: Received request to transition to AwaitingInput state.
-consoleLogger.js:187 ActorTurnHandler: State Transition: TurnIdleState → AwaitingActorDecisionState
-consoleLogger.js:187 ActorTurnHandler.onExitState hook: Exiting TurnIdleState to AwaitingActorDecisionState
-consoleLogger.js:187 Turn initiation for isekai:ninja_instance started via ActorTurnHandler. TurnManager now WAITING for 'core:turn_ended' event.
-consoleLogger.js:187 TurnIdleState: Exiting. Actor: isekai:ninja_instance. Transitioning to AwaitingActorDecisionState.
-consoleLogger.js:187 ActorTurnHandler.onEnterState hook: Entering AwaitingActorDecisionState from TurnIdleState
-consoleLogger.js:187 AwaitingActorDecisionState: Entered. Actor: isekai:ninja_instance. Previous state: TurnIdleState.
-consoleLogger.js:187 AwaitingActorDecisionState: Actor isekai:ninja_instance. Attempting to retrieve turn strategy.
-consoleLogger.js:187 AwaitingActorDecisionState: Strategy GenericTurnStrategy obtained for actor isekai:ninja_instance. Requesting action decision.
-consoleLogger.js:187 [ChoicePipeline] Fetching actions for isekai:ninja_instance
-consoleLogger.js:187 New turn detected. Clearing AvailableActionsProvider cache.
-consoleLogger.js:187 [Cache Miss] Discovering actions for actor isekai:ninja_instance
-consoleLogger.js:187 ActionIndex: Retrieved 8 candidate actions for actor isekai:ninja_instance.
-consoleLogger.js:187 ActionValidationContextBuilder: ActionValidationContextBuilder: Building context for action 'core:follow', actor 'isekai:ninja_instance'. Only actor context is included as target filtering is handled by Scope DSL.
-consoleLogger.js:187 PrerequisiteEvaluationService: PrereqEval[core:follow]: Evaluation Context Built Successfully.
-consoleLogger.js:187 PrerequisiteEvaluationService: PrereqEval[core:follow] Context: {
-  "actor": {
-    "id": "isekai:ninja_instance",
-    "components": {}
-  }
-}
-consoleLogger.js:187 PrerequisiteEvaluationService: PrereqEval[core:follow]: Evaluating 2 prerequisite rule(s)...
-consoleLogger.js:187 PrerequisiteEvaluationService: PrereqEval[core:follow]: Resolving condition_ref 'core:actor-is-not-rooted'...
-consoleLogger.js:187 PrerequisiteEvaluationService: PrereqEval[core:follow]:   - Evaluating resolved rule 1: {"==":[{"var":"actor.components.core:movement.locked"},false]}
-consoleLogger.js:187 JsonLogicEvaluationService: Evaluating rule: {"==":[{"var":"actor.components.core:movement.locked"},false]}. Context keys: actor
-consoleLogger.js:187 JsonLogicEvaluationService: Rule evaluation raw result: false, Final boolean: false
-consoleLogger.js:187 PrerequisiteEvaluationService: PrereqEval[core:follow]: ← FAILED (Rule 1/2): Prerequisite check FAILED. Rule: {"logic":{"condition_ref":"core:actor-is-not-rooted"},"failure_message":"You are rooted and cannot move."}
-consoleLogger.js:187 PrerequisiteEvaluationService:    Reason: You are rooted and cannot move.
-consoleLogger.js:187 ActionValidationContextBuilder: ActionValidationContextBuilder: Building context for action 'core:go', actor 'isekai:ninja_instance'. Only actor context is included as target filtering is handled by Scope DSL.
-consoleLogger.js:187 PrerequisiteEvaluationService: PrereqEval[core:go]: Evaluation Context Built Successfully.
-consoleLogger.js:187 PrerequisiteEvaluationService: PrereqEval[core:go] Context: {
-  "actor": {
-    "id": "isekai:ninja_instance",
-    "components": {}
-  }
-}
-consoleLogger.js:187 PrerequisiteEvaluationService: PrereqEval[core:go]: Evaluating 1 prerequisite rule(s)...
-consoleLogger.js:187 PrerequisiteEvaluationService: PrereqEval[core:go]: Resolving condition_ref 'core:actor-is-not-rooted'...
-consoleLogger.js:187 PrerequisiteEvaluationService: PrereqEval[core:go]:   - Evaluating resolved rule 1: {"==":[{"var":"actor.components.core:movement.locked"},false]}
-consoleLogger.js:187 JsonLogicEvaluationService: Evaluating rule: {"==":[{"var":"actor.components.core:movement.locked"},false]}. Context keys: actor
-consoleLogger.js:187 JsonLogicEvaluationService: Rule evaluation raw result: false, Final boolean: false
-consoleLogger.js:187 PrerequisiteEvaluationService: PrereqEval[core:go]: ← FAILED (Rule 1/1): Prerequisite check FAILED. Rule: {"logic":{"condition_ref":"core:actor-is-not-rooted"},"failure_message":"You are rooted and cannot move."}
-consoleLogger.js:187 PrerequisiteEvaluationService:    Reason: You are rooted and cannot move.
-consoleLogger.js:187 ActionDiscoveryService: Formatting command for action: core:wait, template: "wait", targetType: none
-consoleLogger.js:187 ActionDiscoveryService:  -> No target type, using template as is.
-consoleLogger.js:187 ActionDiscoveryService:  <- Final formatted command: "wait"
-consoleLogger.js:187 ActionValidationContextBuilder: ActionValidationContextBuilder: Building context for action 'intimacy:get_close', actor 'isekai:ninja_instance'. Only actor context is included as target filtering is handled by Scope DSL.
-consoleLogger.js:187 PrerequisiteEvaluationService: PrereqEval[intimacy:get_close]: Evaluation Context Built Successfully.
-consoleLogger.js:187 PrerequisiteEvaluationService: PrereqEval[intimacy:get_close] Context: {
-  "actor": {
-    "id": "isekai:ninja_instance",
-    "components": {}
-  }
-}
-consoleLogger.js:187 PrerequisiteEvaluationService: PrereqEval[intimacy:get_close]: Evaluating 1 prerequisite rule(s)...
-consoleLogger.js:187 PrerequisiteEvaluationService: PrereqEval[intimacy:get_close]: Resolving condition_ref 'core:actor-is-not-rooted'...
-consoleLogger.js:187 PrerequisiteEvaluationService: PrereqEval[intimacy:get_close]:   - Evaluating resolved rule 1: {"==":[{"var":"actor.components.core:movement.locked"},false]}
-consoleLogger.js:187 JsonLogicEvaluationService: Evaluating rule: {"==":[{"var":"actor.components.core:movement.locked"},false]}. Context keys: actor
-consoleLogger.js:187 JsonLogicEvaluationService: Rule evaluation raw result: false, Final boolean: false
-consoleLogger.js:187 PrerequisiteEvaluationService: PrereqEval[intimacy:get_close]: ← FAILED (Rule 1/1): Prerequisite check FAILED. Rule: {"logic":{"condition_ref":"core:actor-is-not-rooted"},"failure_message":"You can only get close to the person you are currently close to."}
-consoleLogger.js:187 PrerequisiteEvaluationService:    Reason: You can only get close to the person you are currently close to.
-consoleLogger.js:187 ActionValidationContextBuilder: ActionValidationContextBuilder: Building context for action 'intimacy:adjust_clothing', actor 'isekai:ninja_instance'. Only actor context is included as target filtering is handled by Scope DSL.
-consoleLogger.js:187 PrerequisiteEvaluationService: PrereqEval[intimacy:adjust_clothing]: Evaluation Context Built Successfully.
-consoleLogger.js:187 PrerequisiteEvaluationService: PrereqEval[intimacy:adjust_clothing] Context: {
-  "actor": {
-    "id": "isekai:ninja_instance",
-    "components": {}
-  }
-}
-consoleLogger.js:187 PrerequisiteEvaluationService: PrereqEval[intimacy:adjust_clothing]: Evaluating 1 prerequisite rule(s)...
-consoleLogger.js:187 PrerequisiteEvaluationService: PrereqEval[intimacy:adjust_clothing]: Resolving condition_ref 'intimacy:actor-is-in-closeness'...
-consoleLogger.js:187 PrerequisiteEvaluationService: PrereqEval[intimacy:adjust_clothing]:   - Evaluating resolved rule 1: {"!!":{"var":"actor.components.intimacy:closeness"}}
-consoleLogger.js:187 JsonLogicEvaluationService: Evaluating rule: {"!!":{"var":"actor.components.intimacy:closeness"}}. Context keys: actor
-consoleLogger.js:187 JsonLogicEvaluationService: Rule evaluation raw result: true, Final boolean: true
-consoleLogger.js:187 PrerequisiteEvaluationService: PrereqEval[intimacy:adjust_clothing]:   - Prerequisite Rule 1/1 PASSED.
-consoleLogger.js:187 PrerequisiteEvaluationService: PrereqEval[intimacy:adjust_clothing]: → PASSED (All 1 prerequisite rules evaluated successfully).
-consoleLogger.js:187 ScopeCache: Cache miss for key: isekai:ninja_instance:{"type":"Step","field":"partners","isArray":true,"parent":{"type":"Step","field":"intimacy:closeness","isArray":false,"parent":{"type":"Step","field":"components","isArray":false,"parent":{"type":"Source","kind":"actor"}}}}, resolving...
-consoleLogger.js:187 ActionDiscoveryService: Action 'intimacy:adjust_clothing' resolved to 0 targets. Skipping.
-consoleLogger.js:187 ScopeCache: Cache hit for key: isekai:ninja_instance:{"type":"Step","field":"partners","isArray":true,"parent":{"type":"Step","field":"intimacy:closeness","isArray":false,"parent":{"type":"Step","field":"components","isArray":false,"parent":{"type":"Source","kind":"actor"}}}}
-consoleLogger.js:187 ActionDiscoveryService: Action 'intimacy:kiss_cheek' resolved to 0 targets. Skipping.
-consoleLogger.js:187 ActionDiscoveryService: Formatting command for action: intimacy:step_back, template: "step back", targetType: none
-consoleLogger.js:187 ActionDiscoveryService:  -> No target type, using template as is.
-consoleLogger.js:187 ActionDiscoveryService:  <- Final formatted command: "step back"
-consoleLogger.js:187 ScopeCache: Cache hit for key: isekai:ninja_instance:{"type":"Step","field":"partners","isArray":true,"parent":{"type":"Step","field":"intimacy:closeness","isArray":false,"parent":{"type":"Step","field":"components","isArray":false,"parent":{"type":"Source","kind":"actor"}}}}
-consoleLogger.js:187 ActionDiscoveryService: Action 'intimacy:thumb_wipe_cheek' resolved to 0 targets. Skipping.
-consoleLogger.js:187 ActionDiscoveryService: Finished action discovery for actor isekai:ninja_instance. Found 2 actions from 8 candidates.
-consoleLogger.js:187 [Action Discovery Trace for actor isekai:ninja_instance]
-consoleLogger.js:198 Action Discovery Trace for isekai:ninja_instance
-consoleLogger.js:219 
-(index)
-type
-message
-source
-timestamp
-data
-0	'info'	"Starting action discovery for actor 'isekai:ninja_instance'."	'getValidActions'	1751045811032	{…}
-1	'data'	"Actor 'isekai:ninja_instance' has components."	'ActionIndex.getCandidateActions'	1751045811032	{…}
-2	'info'	'Added 4 actions with no actor component requirements.'	'ActionIndex.getCandidateActions'	1751045811032	
-3	'info'	"Found 4 actions requiring component 'intimacy:closeness'."	'ActionIndex.getCandidateActions'	1751045811032	
-4	'success'	'Final candidate list contains 8 unique actions.'	'ActionIndex.getCandidateActions'	1751045811032	{…}
-5	'step'	"Processing candidate action: 'core:follow'"	'ActionDiscoveryService.#processCandidateAction'	1751045811032	
-6	'data'	'Built prerequisite evaluation context.'	'PrerequisiteEvaluationService.evaluate'	1751045811032	{…}
-7	'info'	'Evaluating rule.'	'PrerequisiteEvaluationService._evaluatePrerequisite'	1751045811032	{…}
-8	'data'	'Condition reference resolved.'	'PrerequisiteEvaluationService._evaluatePrerequisite'	1751045811032	{…}
-9	'failure'	'Rule evaluation result: false'	'PrerequisiteEvaluationService._evaluatePrerequisite'	1751045811032	{…}
-10	'failure'	"Action 'core:follow' discarded due to failed actor prerequisites."	'ActionDiscoveryService.#processCandidateAction'	1751045811032	
-11	'step'	"Processing candidate action: 'core:go'"	'ActionDiscoveryService.#processCandidateAction'	1751045811032	
-12	'data'	'Built prerequisite evaluation context.'	'PrerequisiteEvaluationService.evaluate'	1751045811032	{…}
-13	'info'	'Evaluating rule.'	'PrerequisiteEvaluationService._evaluatePrerequisite'	1751045811032	{…}
-14	'data'	'Condition reference resolved.'	'PrerequisiteEvaluationService._evaluatePrerequisite'	1751045811032	{…}
-15	'failure'	'Rule evaluation result: false'	'PrerequisiteEvaluationService._evaluatePrerequisite'	1751045811032	{…}
-16	'failure'	"Action 'core:go' discarded due to failed actor prerequisites."	'ActionDiscoveryService.#processCandidateAction'	1751045811032	
-17	'step'	"Processing candidate action: 'core:wait'"	'ActionDiscoveryService.#processCandidateAction'	1751045811032	
-18	'success'	"Action 'core:wait' passed actor prerequisite check."	'ActionDiscoveryService.#processCandidateAction'	1751045811032	
-19	'info'	"Resolving scope 'none'."	'TargetResolutionService.resolveTargets'	1751045811032	
-20	'info'	"Scope is 'none'; returning a single no-target context."	'TargetResolutionService.resolveTargets'	1751045811032	
-21	'info'	"Scope for action 'core:wait' resolved to 1 targets."	'ActionDiscoveryService.#processCandidateAction'	1751045811032	{…}
-22	'step'	"Processing candidate action: 'intimacy:get_close'"	'ActionDiscoveryService.#processCandidateAction'	1751045811032	
-23	'data'	'Built prerequisite evaluation context.'	'PrerequisiteEvaluationService.evaluate'	1751045811033	{…}
-24	'info'	'Evaluating rule.'	'PrerequisiteEvaluationService._evaluatePrerequisite'	1751045811033	{…}
-25	'data'	'Condition reference resolved.'	'PrerequisiteEvaluationService._evaluatePrerequisite'	1751045811033	{…}
-26	'failure'	'Rule evaluation result: false'	'PrerequisiteEvaluationService._evaluatePrerequisite'	1751045811033	{…}
-27	'failure'	"Action 'intimacy:get_close' discarded due to failed actor prerequisites."	'ActionDiscoveryService.#processCandidateAction'	1751045811033	
-28	'step'	"Processing candidate action: 'intimacy:adjust_clothing'"	'ActionDiscoveryService.#processCandidateAction'	1751045811033	
-29	'data'	'Built prerequisite evaluation context.'	'PrerequisiteEvaluationService.evaluate'	1751045811033	{…}
-30	'info'	'Evaluating rule.'	'PrerequisiteEvaluationService._evaluatePrerequisite'	1751045811033	{…}
-31	'data'	'Condition reference resolved.'	'PrerequisiteEvaluationService._evaluatePrerequisite'	1751045811033	{…}
-32	'success'	'Rule evaluation result: true'	'PrerequisiteEvaluationService._evaluatePrerequisite'	1751045811033	{…}
-33	'success'	"Action 'intimacy:adjust_clothing' passed actor prerequisite check."	'ActionDiscoveryService.#processCandidateAction'	1751045811033	
-34	'info'	"Resolving scope 'intimacy:close_actors'."	'TargetResolutionService.resolveTargets'	1751045811033	
-35	'info'	"Resolving scope 'intimacy:close_actors' with DSL."	'TargetResolutionService.#resolveScopeToIds'	1751045811033	
-36	'info'	"DSL scope 'intimacy:close_actors' resolved to 0 target(s)."	'TargetResolutionService.resolveTargets'	1751045811033	{…}
-37	'step'	"Processing candidate action: 'intimacy:kiss_cheek'"	'ActionDiscoveryService.#processCandidateAction'	1751045811033	
-38	'success'	"Action 'intimacy:kiss_cheek' passed actor prerequisite check."	'ActionDiscoveryService.#processCandidateAction'	1751045811033	
-39	'info'	"Resolving scope 'intimacy:close_actors'."	'TargetResolutionService.resolveTargets'	1751045811033	
-40	'info'	"Resolving scope 'intimacy:close_actors' with DSL."	'TargetResolutionService.#resolveScopeToIds'	1751045811033	
-41	'info'	"DSL scope 'intimacy:close_actors' resolved to 0 target(s)."	'TargetResolutionService.resolveTargets'	1751045811033	{…}
-42	'step'	"Processing candidate action: 'intimacy:step_back'"	'ActionDiscoveryService.#processCandidateAction'	1751045811033	
-43	'success'	"Action 'intimacy:step_back' passed actor prerequisite check."	'ActionDiscoveryService.#processCandidateAction'	1751045811033	
-44	'info'	"Resolving scope 'none'."	'TargetResolutionService.resolveTargets'	1751045811033	
-45	'info'	"Scope is 'none'; returning a single no-target context."	'TargetResolutionService.resolveTargets'	1751045811033	
-46	'info'	"Scope for action 'intimacy:step_back' resolved to 1 targets."	'ActionDiscoveryService.#processCandidateAction'	1751045811033	{…}
-47	'step'	"Processing candidate action: 'intimacy:thumb_wipe_cheek'"	'ActionDiscoveryService.#processCandidateAction'	1751045811033	
-48	'success'	"Action 'intimacy:thumb_wipe_cheek' passed actor prerequisite check."	'ActionDiscoveryService.#processCandidateAction'	1751045811033	
-49	'info'	"Resolving scope 'intimacy:close_actors'."	'TargetResolutionService.resolveTargets'	1751045811033	
-50	'info'	"Resolving scope 'intimacy:close_actors' with DSL."	'TargetResolutionService.#resolveScopeToIds'	1751045811033	
-51	'info'	"DSL scope 'intimacy:close_actors' resolved to 0 target(s)."	'TargetResolutionService.resolveTargets'	1751045811033	{…}
-52	'info'	'Finished discovery. Found 2 valid actions.'	'getValidActions'	1751045811034	
-Array(53)
-0
-: 
-{type: 'info', message: "Starting action discovery for actor 'isekai:ninja_instance'.", source: 'getValidActions', timestamp: 1751045811032, data: {…}}
-1
-: 
-{type: 'data', message: "Actor 'isekai:ninja_instance' has components.", source: 'ActionIndex.getCandidateActions', timestamp: 1751045811032, data: {…}}
-2
-: 
-{type: 'info', message: 'Added 4 actions with no actor component requirements.', source: 'ActionIndex.getCandidateActions', timestamp: 1751045811032}
-3
-: 
-{type: 'info', message: "Found 4 actions requiring component 'intimacy:closeness'.", source: 'ActionIndex.getCandidateActions', timestamp: 1751045811032}
-4
-: 
-{type: 'success', message: 'Final candidate list contains 8 unique actions.', source: 'ActionIndex.getCandidateActions', timestamp: 1751045811032, data: {…}}
-5
-: 
-{type: 'step', message: "Processing candidate action: 'core:follow'", source: 'ActionDiscoveryService.#processCandidateAction', timestamp: 1751045811032}
-6
-: 
-{type: 'data', message: 'Built prerequisite evaluation context.', source: 'PrerequisiteEvaluationService.evaluate', timestamp: 1751045811032, data: {…}}
-7
-: 
-{type: 'info', message: 'Evaluating rule.', source: 'PrerequisiteEvaluationService._evaluatePrerequisite', timestamp: 1751045811032, data: {…}}
-8
-: 
-{type: 'data', message: 'Condition reference resolved.', source: 'PrerequisiteEvaluationService._evaluatePrerequisite', timestamp: 1751045811032, data: {…}}
-9
-: 
-{type: 'failure', message: 'Rule evaluation result: false', source: 'PrerequisiteEvaluationService._evaluatePrerequisite', timestamp: 1751045811032, data: {…}}
-10
-: 
-{type: 'failure', message: "Action 'core:follow' discarded due to failed actor prerequisites.", source: 'ActionDiscoveryService.#processCandidateAction', timestamp: 1751045811032}
-11
-: 
-{type: 'step', message: "Processing candidate action: 'core:go'", source: 'ActionDiscoveryService.#processCandidateAction', timestamp: 1751045811032}
-12
-: 
-{type: 'data', message: 'Built prerequisite evaluation context.', source: 'PrerequisiteEvaluationService.evaluate', timestamp: 1751045811032, data: {…}}
-13
-: 
-{type: 'info', message: 'Evaluating rule.', source: 'PrerequisiteEvaluationService._evaluatePrerequisite', timestamp: 1751045811032, data: {…}}
-14
-: 
-{type: 'data', message: 'Condition reference resolved.', source: 'PrerequisiteEvaluationService._evaluatePrerequisite', timestamp: 1751045811032, data: {…}}
-15
-: 
-{type: 'failure', message: 'Rule evaluation result: false', source: 'PrerequisiteEvaluationService._evaluatePrerequisite', timestamp: 1751045811032, data: {…}}
-16
-: 
-{type: 'failure', message: "Action 'core:go' discarded due to failed actor prerequisites.", source: 'ActionDiscoveryService.#processCandidateAction', timestamp: 1751045811032}
-17
-: 
-{type: 'step', message: "Processing candidate action: 'core:wait'", source: 'ActionDiscoveryService.#processCandidateAction', timestamp: 1751045811032}
-18
-: 
-{type: 'success', message: "Action 'core:wait' passed actor prerequisite check.", source: 'ActionDiscoveryService.#processCandidateAction', timestamp: 1751045811032}
-19
-: 
-{type: 'info', message: "Resolving scope 'none'.", source: 'TargetResolutionService.resolveTargets', timestamp: 1751045811032}
-20
-: 
-{type: 'info', message: "Scope is 'none'; returning a single no-target context.", source: 'TargetResolutionService.resolveTargets', timestamp: 1751045811032}
-21
-: 
-{type: 'info', message: "Scope for action 'core:wait' resolved to 1 targets.", source: 'ActionDiscoveryService.#processCandidateAction', timestamp: 1751045811032, data: {…}}
-22
-: 
-{type: 'step', message: "Processing candidate action: 'intimacy:get_close'", source: 'ActionDiscoveryService.#processCandidateAction', timestamp: 1751045811032}
-23
-: 
-{type: 'data', message: 'Built prerequisite evaluation context.', source: 'PrerequisiteEvaluationService.evaluate', timestamp: 1751045811033, data: {…}}
-24
-: 
-{type: 'info', message: 'Evaluating rule.', source: 'PrerequisiteEvaluationService._evaluatePrerequisite', timestamp: 1751045811033, data: {…}}
-25
-: 
-{type: 'data', message: 'Condition reference resolved.', source: 'PrerequisiteEvaluationService._evaluatePrerequisite', timestamp: 1751045811033, data: {…}}
-26
-: 
-{type: 'failure', message: 'Rule evaluation result: false', source: 'PrerequisiteEvaluationService._evaluatePrerequisite', timestamp: 1751045811033, data: {…}}
-27
-: 
-{type: 'failure', message: "Action 'intimacy:get_close' discarded due to failed actor prerequisites.", source: 'ActionDiscoveryService.#processCandidateAction', timestamp: 1751045811033}
-28
-: 
-{type: 'step', message: "Processing candidate action: 'intimacy:adjust_clothing'", source: 'ActionDiscoveryService.#processCandidateAction', timestamp: 1751045811033}
-29
-: 
-{type: 'data', message: 'Built prerequisite evaluation context.', source: 'PrerequisiteEvaluationService.evaluate', timestamp: 1751045811033, data: {…}}
-30
-: 
-{type: 'info', message: 'Evaluating rule.', source: 'PrerequisiteEvaluationService._evaluatePrerequisite', timestamp: 1751045811033, data: {…}}
-31
-: 
-{type: 'data', message: 'Condition reference resolved.', source: 'PrerequisiteEvaluationService._evaluatePrerequisite', timestamp: 1751045811033, data: {…}}
-32
-: 
-{type: 'success', message: 'Rule evaluation result: true', source: 'PrerequisiteEvaluationService._evaluatePrerequisite', timestamp: 1751045811033, data: {…}}
-33
-: 
-{type: 'success', message: "Action 'intimacy:adjust_clothing' passed actor prerequisite check.", source: 'ActionDiscoveryService.#processCandidateAction', timestamp: 1751045811033}
-34
-: 
-{type: 'info', message: "Resolving scope 'intimacy:close_actors'.", source: 'TargetResolutionService.resolveTargets', timestamp: 1751045811033}
-35
-: 
-{type: 'info', message: "Resolving scope 'intimacy:close_actors' with DSL.", source: 'TargetResolutionService.#resolveScopeToIds', timestamp: 1751045811033}
-36
-: 
-{type: 'info', message: "DSL scope 'intimacy:close_actors' resolved to 0 target(s).", source: 'TargetResolutionService.resolveTargets', timestamp: 1751045811033, data: {…}}
-37
-: 
-{type: 'step', message: "Processing candidate action: 'intimacy:kiss_cheek'", source: 'ActionDiscoveryService.#processCandidateAction', timestamp: 1751045811033}
-38
-: 
-{type: 'success', message: "Action 'intimacy:kiss_cheek' passed actor prerequisite check.", source: 'ActionDiscoveryService.#processCandidateAction', timestamp: 1751045811033}
-39
-: 
-{type: 'info', message: "Resolving scope 'intimacy:close_actors'.", source: 'TargetResolutionService.resolveTargets', timestamp: 1751045811033}
-40
-: 
-{type: 'info', message: "Resolving scope 'intimacy:close_actors' with DSL.", source: 'TargetResolutionService.#resolveScopeToIds', timestamp: 1751045811033}
-41
-: 
-{type: 'info', message: "DSL scope 'intimacy:close_actors' resolved to 0 target(s).", source: 'TargetResolutionService.resolveTargets', timestamp: 1751045811033, data: {…}}
-42
-: 
-{type: 'step', message: "Processing candidate action: 'intimacy:step_back'", source: 'ActionDiscoveryService.#processCandidateAction', timestamp: 1751045811033}
-43
-: 
-{type: 'success', message: "Action 'intimacy:step_back' passed actor prerequisite check.", source: 'ActionDiscoveryService.#processCandidateAction', timestamp: 1751045811033}
-44
-: 
-{type: 'info', message: "Resolving scope 'none'.", source: 'TargetResolutionService.resolveTargets', timestamp: 1751045811033}
-45
-: 
-{type: 'info', message: "Scope is 'none'; returning a single no-target context.", source: 'TargetResolutionService.resolveTargets', timestamp: 1751045811033}
-46
-: 
-{type: 'info', message: "Scope for action 'intimacy:step_back' resolved to 1 targets.", source: 'ActionDiscoveryService.#processCandidateAction', timestamp: 1751045811033, data: {…}}
-47
-: 
-{type: 'step', message: "Processing candidate action: 'intimacy:thumb_wipe_cheek'", source: 'ActionDiscoveryService.#processCandidateAction', timestamp: 1751045811033}
-48
-: 
-{type: 'success', message: "Action 'intimacy:thumb_wipe_cheek' passed actor prerequisite check.", source: 'ActionDiscoveryService.#processCandidateAction', timestamp: 1751045811033}
-49
-: 
-{type: 'info', message: "Resolving scope 'intimacy:close_actors'.", source: 'TargetResolutionService.resolveTargets', timestamp: 1751045811033}
-50
-: 
-message
-: 
-"Resolving scope 'intimacy:close_actors' with DSL."
-source
-: 
-"TargetResolutionService.#resolveScopeToIds"
-timestamp
-: 
-1751045811033
-type
-: 
-"info"
-[[Prototype]]
-: 
-Object
-51
-: 
-data
-: 
-{targetIds: Array(0)}
-message
-: 
-"DSL scope 'intimacy:close_actors' resolved to 0 target(s)."
-source
-: 
-"TargetResolutionService.resolveTargets"
-timestamp
-: 
-1751045811033
-type
-: 
-"info"
-[[Prototype]]
-: 
-Object
-52
-: 
-message
-: 
-"Finished discovery. Found 2 valid actions."
-source
-: 
-"getValidActions"
-timestamp
-: 
-1751045811034
-type
-: 
-"info"
-[[Prototype]]
-: 
-Object
-length
-: 
-53
-[[Prototype]]
-: 
-Array(0)
-consoleLogger.js:187 ActionIndexingService: indexed 2 actions for isekai:ninja_instance
-consoleLogger.js:187 [ChoicePipeline] Actor isekai:ninja_instance: 2 choices ready
-consoleLogger.js:187 VED: Validating payload for event 'core:player_turn_prompt' against schema 'core:player_turn_prompt#payload'...
-consoleLogger.js:187 VED: Payload validation SUCCEEDED for event 'core:player_turn_prompt'.
-consoleLogger.js:187 VED: Dispatching event 'core:player_turn_prompt' via EventBus... 
-{entityId: 'isekai:ninja_instance', availableActions: Array(2)}
-consoleLogger.js:187 SystemLogicInterpreter: Received event: core:player_turn_prompt. Found 1 potential rule(s). 
-{payload: {…}}
-﻿
-
-// lifecycle monitor
-
-[19:36:26]
-Component added: core:current_actor on isekai:hero_instance
-[19:36:50]
-Component updated: core:perception_log on isekai:hero_instance
-[19:36:50]
-Component updated: core:perception_log on isekai:ninja_instance
-[19:36:51]
-Component added: intimacy:closeness on isekai:hero_instance
-[19:36:51]
-Component added: intimacy:closeness on isekai:ninja_instance
-[19:36:51]
-Component updated: core:movement on isekai:hero_instance
-[19:36:51]
-Component updated: core:movement on isekai:ninja_instance
-[19:36:51]
-Component updated: core:perception_log on isekai:hero_instance
-[19:36:51]
-Component updated: core:perception_log on isekai:ninja_instance
-[19:36:51]
-Component removed: core:current_actor from isekai:hero_instance
-[19:36:51]
-Component added: core:current_actor on isekai:ninja_instance
+consoleLogger.js:187 Resolving turn handler for entity isekai:hero_instance...
+consoleLogger.js:187 TurnHandlerResolver: Resolving handler for actor isekai:hero_instance...
+consoleLogger.js:187 Match found for actor isekai:hero_instance. Applying rule: 'Player'.
+consoleLogger.js:187 TurnHandlerResolver: Creating new PlayerHandler for actor isekai:hero_instance.
+consoleLogger.js:187 CommandProcessor: Instance created and dependencies validated.
