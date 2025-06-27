@@ -22,6 +22,7 @@ import {
   createMockSchemaValidator,
   createSimpleMockDataRegistry,
 } from '../../../common/mockFactories.js';
+import { expectErrorWithMessage } from '../../../common/entities/index.js';
 import {
   ACTOR_COMPONENT_ID,
   SHORT_TERM_MEMORY_COMPONENT_ID,
@@ -67,63 +68,78 @@ describe('EntityFactory', () => {
     });
 
     it('should throw an error if validator is missing', () => {
-      expect(() => {
-        new EntityFactory({
-          validator: null,
-          logger: mocks.logger,
-          idGenerator: mockIdGenerator,
-          cloner: mockCloner,
-          defaultPolicy: mockDefaultPolicy,
-        });
-      }).toThrow('Missing required dependency: ISchemaValidator.');
+      expectErrorWithMessage(
+        () =>
+          new EntityFactory({
+            validator: null,
+            logger: mocks.logger,
+            idGenerator: mockIdGenerator,
+            cloner: mockCloner,
+            defaultPolicy: mockDefaultPolicy,
+          }),
+        Error,
+        'Missing required dependency: ISchemaValidator.'
+      );
     });
 
     it('should throw an error if logger is missing', () => {
-      expect(() => {
-        new EntityFactory({
-          validator: mocks.validator,
-          logger: null,
-          idGenerator: mockIdGenerator,
-          cloner: mockCloner,
-          defaultPolicy: mockDefaultPolicy,
-        });
-      }).toThrow('Missing required dependency: ILogger.');
+      expectErrorWithMessage(
+        () =>
+          new EntityFactory({
+            validator: mocks.validator,
+            logger: null,
+            idGenerator: mockIdGenerator,
+            cloner: mockCloner,
+            defaultPolicy: mockDefaultPolicy,
+          }),
+        Error,
+        'Missing required dependency: ILogger.'
+      );
     });
 
     it('should throw an error if idGenerator is not a function', () => {
-      expect(() => {
-        new EntityFactory({
-          validator: mocks.validator,
-          logger: mocks.logger,
-          idGenerator: 'not-a-function',
-          cloner: mockCloner,
-          defaultPolicy: mockDefaultPolicy,
-        });
-      }).toThrow('idGenerator must be a function');
+      expectErrorWithMessage(
+        () =>
+          new EntityFactory({
+            validator: mocks.validator,
+            logger: mocks.logger,
+            idGenerator: 'not-a-function',
+            cloner: mockCloner,
+            defaultPolicy: mockDefaultPolicy,
+          }),
+        Error,
+        'idGenerator must be a function'
+      );
     });
 
     it('should throw an error if cloner is not a function', () => {
-      expect(() => {
-        new EntityFactory({
-          validator: mocks.validator,
-          logger: mocks.logger,
-          idGenerator: mockIdGenerator,
-          cloner: 'not-a-function',
-          defaultPolicy: mockDefaultPolicy,
-        });
-      }).toThrow('cloner must be a function');
+      expectErrorWithMessage(
+        () =>
+          new EntityFactory({
+            validator: mocks.validator,
+            logger: mocks.logger,
+            idGenerator: mockIdGenerator,
+            cloner: 'not-a-function',
+            defaultPolicy: mockDefaultPolicy,
+          }),
+        Error,
+        'cloner must be a function'
+      );
     });
 
     it('should throw an error if defaultPolicy is not an object', () => {
-      expect(() => {
-        new EntityFactory({
-          validator: mocks.validator,
-          logger: mocks.logger,
-          idGenerator: mockIdGenerator,
-          cloner: mockCloner,
-          defaultPolicy: 'not-an-object',
-        });
-      }).toThrow('defaultPolicy must be an object');
+      expectErrorWithMessage(
+        () =>
+          new EntityFactory({
+            validator: mocks.validator,
+            logger: mocks.logger,
+            idGenerator: mockIdGenerator,
+            cloner: mockCloner,
+            defaultPolicy: 'not-an-object',
+          }),
+        Error,
+        'defaultPolicy must be an object'
+      );
     });
   });
 
@@ -180,51 +196,62 @@ describe('EntityFactory', () => {
     });
 
     it('should throw TypeError if definitionId is not a string', () => {
-      expect(() => {
-        factory.create(null, {}, mocks.registry, { has: () => false }, null);
-      }).toThrow('definitionId must be a non-empty string.');
+      expectErrorWithMessage(
+        () =>
+          factory.create(null, {}, mocks.registry, { has: () => false }, null),
+        TypeError,
+        'definitionId must be a non-empty string.'
+      );
 
-      expect(() => {
-        factory.create(
-          undefined,
-          {},
-          mocks.registry,
-          { has: () => false },
-          null
-        );
-      }).toThrow('definitionId must be a non-empty string.');
+      expectErrorWithMessage(
+        () =>
+          factory.create(
+            undefined,
+            {},
+            mocks.registry,
+            { has: () => false },
+            null
+          ),
+        TypeError,
+        'definitionId must be a non-empty string.'
+      );
 
-      expect(() => {
-        factory.create(123, {}, mocks.registry, { has: () => false }, null);
-      }).toThrow('definitionId must be a non-empty string.');
+      expectErrorWithMessage(
+        () =>
+          factory.create(123, {}, mocks.registry, { has: () => false }, null),
+        TypeError,
+        'definitionId must be a non-empty string.'
+      );
     });
 
     it('should throw DefinitionNotFoundError if definition not found', () => {
       mocks.registry.getEntityDefinition.mockReturnValue(null);
 
-      expect(() => {
+      expect(() =>
         factory.create(
           'non-existent',
           {},
           mocks.registry,
           { has: () => false },
           null
-        );
-      }).toThrow(new DefinitionNotFoundError('non-existent'));
+        )
+      ).toThrow(new DefinitionNotFoundError('non-existent'));
     });
 
     it('should throw error if entity with same ID already exists', () => {
       const repository = { has: jest.fn(() => true) };
-
-      expect(() => {
-        factory.create(
-          'test-def:basic',
-          { instanceId: 'existing-id' },
-          mocks.registry,
-          repository,
-          null
-        );
-      }).toThrow("Entity with ID 'existing-id' already exists.");
+      expectErrorWithMessage(
+        () =>
+          factory.create(
+            'test-def:basic',
+            { instanceId: 'existing-id' },
+            mocks.registry,
+            repository,
+            null
+          ),
+        Error,
+        "Entity with ID 'existing-id' already exists."
+      );
     });
 
     it('should apply component overrides correctly', () => {
