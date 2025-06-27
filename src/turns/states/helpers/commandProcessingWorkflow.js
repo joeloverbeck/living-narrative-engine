@@ -86,7 +86,7 @@ export class CommandProcessingWorkflow {
       `${this._state.getStateName()}: Invoking commandProcessor.dispatchAction() for actor ${actorId}, actionId: ${turnAction.actionDefinitionId}.`
     );
 
-    const { success, errorResult } = await commandProcessor.dispatchAction(
+    const { success, errorResult: dispatchErrorDetails } = await commandProcessor.dispatchAction(
       actor,
       turnAction
     );
@@ -125,8 +125,8 @@ export class CommandProcessingWorkflow {
       turnEnded: !success,
       originalInput: turnAction.commandString || turnAction.actionDefinitionId,
       actionResult: { actionId: turnAction.actionDefinitionId },
-      error: success ? undefined : errorResult?.error,
-      internalError: success ? undefined : errorResult?.internalError,
+      error: success ? undefined : dispatchErrorDetails?.error,
+      internalError: success ? undefined : dispatchErrorDetails?.internalError,
     };
 
     logger.debug(
