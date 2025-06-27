@@ -1,5 +1,5 @@
-import { describe, test, expect, jest, beforeEach } from '@jest/globals';
-import { AwaitingActorDecisionState } from '../../../../src/turns/states/awaitingActorDecisionState.js';
+import { describe, test, expect, jest } from '@jest/globals';
+import { destroyCleanupStrategy } from '../../../../src/turns/states/helpers/destroyCleanupStrategy.js';
 
 const makeLogger = () => ({
   debug: jest.fn(),
@@ -7,46 +7,40 @@ const makeLogger = () => ({
   error: jest.fn(),
 });
 
-const makeContext = (actor = null, logger = makeLogger()) => ({
-  getLogger: () => logger,
-  getActor: () => actor,
+const makeContext = (logger = makeLogger()) => ({
   endTurn: jest.fn().mockResolvedValue(undefined),
+  getLogger: () => logger,
 });
 
-describe('AwaitingActorDecisionState destroy helpers', () => {
-  let logger;
-  let ctx;
-  let handler;
-  let state;
-
-  beforeEach(() => {
-    logger = makeLogger();
-    ctx = makeContext(null, logger);
-    handler = { _isDestroying: false, _isDestroyed: false };
-    state = new AwaitingActorDecisionState(handler);
-  });
-
-  test('logs warning when no actor in context', async () => {
-    await state._handleDestroyCleanup(handler, ctx, logger, null);
+describe('destroyCleanupStrategy helpers', () => {
+  test('noActor logs warning', () => {
+    const logger = makeLogger();
+    destroyCleanupStrategy.noActor(logger, 'TestState');
     expect(logger.warn).toHaveBeenCalledWith(
       expect.stringContaining('N/A_in_context')
     );
-    expect(ctx.endTurn).not.toHaveBeenCalled();
+    expect(logger.warn).toHaveBeenCalledWith(
+      expect.stringContaining('TestState')
+    );
   });
 
-  test('logs debug when handler already destroying', async () => {
-    handler._isDestroying = true;
+  test('handlerDestroying logs debug', () => {
+    const logger = makeLogger();
     const actor = { id: 'a1' };
-    await state._handleDestroyCleanup(handler, ctx, logger, actor);
+    destroyCleanupStrategy.handlerDestroying(logger, actor, 'TestState');
+    expect(logger.debug).toHaveBeenCalledWith(
+      expect.stringContaining(`actor ${actor.id}`)
+    );
     expect(logger.debug).toHaveBeenCalledWith(
       expect.stringContaining('already being destroyed')
     );
-    expect(ctx.endTurn).not.toHaveBeenCalled();
   });
 
-  test('ends turn when active actor present', async () => {
+  test('activeActor ends turn', async () => {
+    const logger = makeLogger();
     const actor = { id: 'a1' };
-    await state._handleDestroyCleanup(handler, ctx, logger, actor);
+    const ctx = makeContext(logger);
+    await destroyCleanupStrategy.activeActor(ctx, logger, actor, 'TestState');
     expect(logger.debug).toHaveBeenCalledWith(
       expect.stringContaining('Ending turn via turnContext')
     );
