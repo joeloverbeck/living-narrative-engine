@@ -209,11 +209,7 @@ describe('PrerequisiteEvaluationService', () => {
       });
 
       // CORRECTED: Removed mockTargetContext from the call
-      const result = service.evaluate(
-        prerequisites,
-        errorActionDef,
-        mockActor
-      );
+      const result = service.evaluate(prerequisites, errorActionDef, mockActor);
 
       expect(result).toBe(false);
       expect(mockBuilderInstance.buildContext).toHaveBeenCalledTimes(1);
@@ -437,5 +433,48 @@ describe('PrerequisiteEvaluationService', () => {
       { var: 'actor.components.health' },
       { '==': [1, 1] },
     ]);
+  });
+
+  describe('helper method coverage', () => {
+    test('_validatePrerequisiteRule should detect invalid items', () => {
+      const invalid = null;
+      const result = service._validatePrerequisiteRule(invalid, 1, 1, 'act');
+      expect(result).toBe(false);
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        expect.stringContaining('PrereqEval[act]')
+      );
+    });
+
+    test('_executeJsonLogic delegates to JsonLogicEvaluationService', () => {
+      const logic = { '==': [1, 1] };
+      service._executeJsonLogic(logic, mockBuiltContext);
+      expect(mockJsonLogicServiceInstance.evaluate).toHaveBeenCalledWith(
+        logic,
+        mockBuiltContext
+      );
+    });
+
+    test('_logPrerequisiteResult logs pass and fail correctly', () => {
+      mockLogger.debug.mockClear();
+      service._logPrerequisiteResult(true, {}, 1, 1, 'act');
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'PrerequisiteEvaluationService: PrereqEval[act]:   - Prerequisite Rule 1/1 PASSED.'
+      );
+
+      mockLogger.debug.mockClear();
+      service._logPrerequisiteResult(
+        false,
+        { failure_message: 'oops' },
+        2,
+        3,
+        'act2'
+      );
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'PrerequisiteEvaluationService: PrereqEval[act2]: ← FAILED (Rule 2/3): Prerequisite check FAILED. Rule: {"failure_message":"oops"}'
+      );
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'PrerequisiteEvaluationService:    Reason: oops'
+      );
+    });
   });
 });
