@@ -161,9 +161,7 @@ class GameEngine {
    * @returns {void}
    */
   #startEngine(worldName) {
-    this.#engineState.isInitialized = true;
-    this.#engineState.isGameLoopRunning = true;
-    this.#engineState.activeWorld = worldName;
+    this.#engineState.setStarted(worldName);
   }
 
   /**
