@@ -8,7 +8,7 @@ import { validateDependency } from '../../utils/validationUtils.js';
 import { ensureValidLogger } from '../../utils/loggerUtils.js';
 import { EntityNotFoundError } from '../../errors/entityNotFoundError.js';
 import { ValidationError } from '../../errors/validationError.js';
-import { validateAndClone as validateAndCloneUtil } from '../utils/componentValidation.js';
+import createValidateAndClone from '../utils/createValidateAndClone.js';
 import {
   validateAddComponentParams as validateAddComponentParamsUtil,
   validateRemoveComponentParams as validateRemoveComponentParamsUtil,
@@ -40,6 +40,8 @@ export class ComponentMutationService {
   #eventDispatcher;
   /** @type {IComponentCloner} @private */
   #cloner;
+  /** @type {(componentTypeId: string, data: object, context: string) => object} @private */
+  #validateAndClone;
 
   /**
    * @param {object} deps - Dependencies
@@ -77,28 +79,13 @@ export class ComponentMutationService {
     this.#logger = ensureValidLogger(logger, 'ComponentMutationService');
     this.#eventDispatcher = eventDispatcher;
     this.#cloner = cloner;
-
-    this.#logger.debug('ComponentMutationService initialized.');
-  }
-
-  /**
-   * Validate component data and return a deep clone.
-   *
-   * @private
-   * @param {string} componentTypeId
-   * @param {object} data
-   * @param {string} errorContext
-   * @returns {object} The validated (and potentially cloned/modified by validator) data.
-   */
-  #validateAndClone(componentTypeId, data, errorContext) {
-    return validateAndCloneUtil(
-      componentTypeId,
-      data,
+    this.#validateAndClone = createValidateAndClone(
       this.#validator,
       this.#logger,
-      errorContext,
       this.#cloner
     );
+
+    this.#logger.debug('ComponentMutationService initialized.');
   }
 
   /**

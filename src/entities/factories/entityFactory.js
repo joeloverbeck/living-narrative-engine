@@ -30,7 +30,7 @@ import { ensureValidLogger } from '../../utils/loggerUtils.js';
 import { DefinitionNotFoundError } from '../../errors/definitionNotFoundError.js';
 import { SerializedEntityError } from '../../errors/serializedEntityError.js';
 import { InvalidInstanceIdError } from '../../errors/invalidInstanceIdError.js';
-import { validateAndClone as validateAndCloneUtil } from '../utils/componentValidation.js';
+import createValidateAndClone from '../utils/createValidateAndClone.js';
 
 /* -------------------------------------------------------------------------- */
 /* Type-Hint Imports (JSDoc only – removed at runtime)                        */
@@ -47,8 +47,8 @@ import { validateAndClone as validateAndCloneUtil } from '../utils/componentVali
 /* Internal Utilities                                                         */
 /* -------------------------------------------------------------------------- */
 
-// validateAndCloneUtil imported from
-// ../utils/componentValidation.js
+// createValidateAndClone imported from
+// ../utils/createValidateAndClone.js
 
 /* -------------------------------------------------------------------------- */
 /* EntityFactory Implementation                                               */
@@ -71,6 +71,8 @@ class EntityFactory {
   #cloner;
   /** @type {object} @private */
   #defaultPolicy; // eslint-disable-line no-unused-private-class-members
+  /** @type {(componentTypeId: string, data: object, context: string) => object} @private */
+  #validateAndClone;
 
   /**
    * @class
@@ -108,28 +110,12 @@ class EntityFactory {
     this.#idGenerator = idGenerator;
     this.#cloner = cloner;
     this.#defaultPolicy = defaultPolicy;
-
-    this.#logger.debug('[EntityFactory] EntityFactory initialised.');
-  }
-
-  /**
-   * Validate component data and return a deep clone.
-   *
-   * @private
-   * @param {string} componentTypeId
-   * @param {object} data
-   * @param {string} errorContext
-   * @returns {object} The validated (and potentially cloned/modified by validator) data.
-   */
-  #validateAndClone(componentTypeId, data, errorContext) {
-    return validateAndCloneUtil(
-      componentTypeId,
-      data,
+    this.#validateAndClone = createValidateAndClone(
       this.#validator,
       this.#logger,
-      `[EntityFactory] ${errorContext}`,
       this.#cloner
     );
+    this.#logger.debug('[EntityFactory] EntityFactory initialised.');
   }
 
   /**
@@ -311,11 +297,7 @@ class EntityFactory {
     const entity = new Entity(entityInstanceDataObject);
 
     // Apply default component policy before returning
-    injectDefaultComponents(
-      entity,
-      this.#logger,
-      this.#validateAndClone.bind(this)
-    );
+    injectDefaultComponents(entity, this.#logger, this.#validateAndClone);
 
     this.#logger.info(
       `[EntityFactory] Entity instance '${actualInstanceId}' (def: '${definitionId}') created.`
@@ -395,11 +377,7 @@ class EntityFactory {
     const entity = new Entity(instanceDataForReconstruction);
 
     // Restore: inject default components for actor entities
-    injectDefaultComponents(
-      entity,
-      this.#logger,
-      this.#validateAndClone.bind(this)
-    );
+    injectDefaultComponents(entity, this.#logger, this.#validateAndClone);
 
     this.#logger.info(
       `[EntityFactory] Entity instance '${instanceId}' (def: '${definitionId}') reconstructed.`
