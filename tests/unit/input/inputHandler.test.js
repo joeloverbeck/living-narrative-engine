@@ -11,6 +11,34 @@ import ValidatedEventDispatcher from '../../../src/events/validatedEventDispatch
 
 jest.mock('../../../src/events/validatedEventDispatcher.js');
 
+/**
+ * Creates a stubbed document object for testing.
+ *
+ * @returns {{addEventListener: jest.Mock, removeEventListener: jest.Mock, cb?: Function}}
+ */
+function createDocMock() {
+  const doc = {
+    addEventListener: jest.fn((_, cb) => {
+      doc.cb = cb;
+    }),
+    removeEventListener: jest.fn((_, cb) => {
+      if (doc.cb === cb) {
+        doc.cb = undefined;
+      }
+    }),
+  };
+  return doc;
+}
+
+/**
+ * Creates a minimal logger mock.
+ *
+ * @returns {{debug: jest.Mock, warn: jest.Mock, error: jest.Mock}}
+ */
+function createLoggerMock() {
+  return { debug: jest.fn(), warn: jest.fn(), error: jest.fn() };
+}
+
 describe('InputHandler', () => {
   let dom;
   let inputEl;
@@ -24,17 +52,8 @@ describe('InputHandler', () => {
     dom = global.document;
     dom.body.innerHTML = '<form id="f"><input id="cmd" /></form>';
     inputEl = dom.getElementById('cmd');
-    docMock = {
-      addEventListener: jest.fn((_, cb) => {
-        docMock.cb = cb;
-      }),
-      removeEventListener: jest.fn((_, cb) => {
-        if (docMock.cb === cb) {
-          docMock.cb = undefined;
-        }
-      }),
-    };
-    logger = { debug: jest.fn(), warn: jest.fn(), error: jest.fn() };
+    docMock = createDocMock();
+    logger = createLoggerMock();
     ved = new ValidatedEventDispatcher();
     ved.dispatch = jest.fn();
     ved.subscribe = jest.fn(() => jest.fn());
@@ -67,10 +86,14 @@ describe('InputHandler', () => {
       document: docMock,
       logger,
     });
-    inputEl.value = 'cmd';
     h.enable();
+    inputEl.value = 'cmd';
     docMock.cb(new window.KeyboardEvent('keydown', { key: 'Enter' }));
     expect(warnSpy).toHaveBeenCalled();
+    expect(docMock.addEventListener).toHaveBeenCalledWith(
+      'keydown',
+      expect.any(Function)
+    );
   });
 
   test('constructor requires dispatcher with dispatch and subscribe', () => {
@@ -154,11 +177,22 @@ describe('InputHandler', () => {
     docMock.cb(new window.KeyboardEvent('keydown', { key: 'Enter' }));
     expect(callback).toHaveBeenCalledWith('go');
     expect(errorSpy).toHaveBeenCalled();
+    expect(docMock.addEventListener).toHaveBeenCalled();
   });
 
   test('enable focuses the input element', () => {
     handler.enable();
     expect(inputEl.focus).toHaveBeenCalled();
+  });
+
+  test('handles events from injected document', () => {
+    const globalSpy = jest.spyOn(dom, 'addEventListener');
+    handler.enable();
+    inputEl.value = 'hi';
+    docMock.cb(new window.KeyboardEvent('keydown', { key: 'Enter' }));
+    expect(globalSpy).not.toHaveBeenCalled();
+    expect(callback).toHaveBeenCalledWith('hi');
+    globalSpy.mockRestore();
   });
 
   test('dispose removes listeners and prevents further callbacks', () => {
@@ -176,6 +210,7 @@ describe('InputHandler', () => {
       'keydown',
       addedCb
     );
+    expect(docMock.cb).toBeUndefined();
     const unsub = ved.subscribe.mock.results[0].value;
     expect(unsub).toHaveBeenCalled();
   });
