@@ -20,7 +20,7 @@ describe('createCycleDetector', () => {
     it('should throw ScopeCycleError when entering a key that already exists in the stack', () => {
       detector.enter('scope1');
       detector.enter('scope2');
-      
+
       expect(() => {
         detector.enter('scope1');
       }).toThrow(ScopeCycleError);
@@ -30,20 +30,27 @@ describe('createCycleDetector', () => {
       detector.enter('scope1');
       detector.enter('scope2');
       detector.enter('scope3');
-      
+
       try {
         detector.enter('scope2');
         fail('Should have thrown ScopeCycleError');
       } catch (error) {
         expect(error).toBeInstanceOf(ScopeCycleError);
-        expect(error.message).toBe('Cycle: scope1 -> scope2 -> scope3 -> scope2');
-        expect(error.cyclePath).toEqual(['scope1', 'scope2', 'scope3', 'scope2']);
+        expect(error.message).toBe(
+          'Cycle: scope1 -> scope2 -> scope3 -> scope2'
+        );
+        expect(error.cyclePath).toEqual([
+          'scope1',
+          'scope2',
+          'scope3',
+          'scope2',
+        ]);
       }
     });
 
     it('should detect self-referencing cycles', () => {
       detector.enter('scope1');
-      
+
       expect(() => {
         detector.enter('scope1');
       }).toThrow(ScopeCycleError);
@@ -55,7 +62,7 @@ describe('createCycleDetector', () => {
       detector.enter('scope1');
       detector.enter('scope2');
       detector.leave();
-      
+
       // Should be able to enter scope2 again after leaving
       expect(() => {
         detector.enter('scope2');
@@ -66,10 +73,10 @@ describe('createCycleDetector', () => {
       detector.enter('scope1');
       detector.enter('scope2');
       detector.enter('scope3');
-      
+
       detector.leave(); // removes scope3
       detector.leave(); // removes scope2
-      
+
       // Should be able to enter scope2 and scope3 again
       expect(() => {
         detector.enter('scope2');
@@ -82,7 +89,7 @@ describe('createCycleDetector', () => {
       detector.enter('scope2');
       detector.leave();
       detector.leave();
-      
+
       // Stack is now empty, should be able to enter scope1 again
       expect(() => {
         detector.enter('scope1');
@@ -98,7 +105,7 @@ describe('createCycleDetector', () => {
       detector.enter('C');
       detector.enter('D');
       detector.leave(); // pop D
-      
+
       // Stack is now [A, C]
       expect(() => detector.enter('A')).toThrow(ScopeCycleError);
       expect(() => detector.enter('C')).toThrow(ScopeCycleError);
@@ -108,13 +115,13 @@ describe('createCycleDetector', () => {
     it('should maintain correct state after catching cycle errors', () => {
       detector.enter('scope1');
       detector.enter('scope2');
-      
+
       try {
         detector.enter('scope1');
       } catch (error) {
         // Ignore the error
       }
-      
+
       // Stack should still be [scope1, scope2]
       expect(() => detector.enter('scope3')).not.toThrow();
       expect(() => detector.enter('scope1')).toThrow(ScopeCycleError);

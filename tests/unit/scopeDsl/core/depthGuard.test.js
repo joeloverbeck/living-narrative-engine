@@ -5,7 +5,7 @@ describe('depthGuard', () => {
   describe('ensure', () => {
     it('does not throw when level is less than max', () => {
       const guard = createDepthGuard(4);
-      
+
       expect(() => guard.ensure(0)).not.toThrow();
       expect(() => guard.ensure(1)).not.toThrow();
       expect(() => guard.ensure(3)).not.toThrow();
@@ -13,19 +13,19 @@ describe('depthGuard', () => {
 
     it('does not throw when level equals max', () => {
       const guard = createDepthGuard(4);
-      
+
       expect(() => guard.ensure(4)).not.toThrow();
     });
 
     it('throws ScopeDepthError when level exceeds max', () => {
       const guard = createDepthGuard(4);
-      
+
       expect(() => guard.ensure(5)).toThrow(ScopeDepthError);
     });
 
     it('throws error with correct message and properties', () => {
       const guard = createDepthGuard(4);
-      
+
       try {
         guard.ensure(5);
         fail('Expected ScopeDepthError to be thrown');

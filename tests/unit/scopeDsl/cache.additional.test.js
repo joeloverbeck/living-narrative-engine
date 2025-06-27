@@ -4,7 +4,8 @@
  */
 
 import { jest, describe, beforeEach, it, expect } from '@jest/globals';
-import ScopeCache, { LRUCache } from '../../../src/scopeDsl/cache.js';
+import { LRUCache } from 'lru-cache';
+import ScopeCache from '../../../src/scopeDsl/cache.js';
 import { TURN_STARTED_ID } from '../../../src/constants/eventIds.js';
 
 describe('Scope-DSL Cache - Additional Coverage Tests', () => {
@@ -12,7 +13,7 @@ describe('Scope-DSL Cache - Additional Coverage Tests', () => {
     let cache;
 
     beforeEach(() => {
-      cache = new LRUCache(3); // Small cache for testing
+      cache = new LRUCache({ max: 3 }); // Small cache for testing
     });
 
     test('should handle cache miss', () => {
@@ -25,11 +26,11 @@ describe('Scope-DSL Cache - Additional Coverage Tests', () => {
       cache.set('key1', 'value1');
       cache.set('key2', 'value2');
       cache.set('key3', 'value3');
-      expect(cache.size()).toBe(3);
+      expect(cache.size).toBe(3);
 
       // Add one more item, should evict key1
       cache.set('key4', 'value4');
-      expect(cache.size()).toBe(3);
+      expect(cache.size).toBe(3);
       expect(cache.get('key1')).toBeUndefined();
       expect(cache.get('key2')).toBe('value2');
       expect(cache.get('key3')).toBe('value3');
@@ -43,7 +44,7 @@ describe('Scope-DSL Cache - Additional Coverage Tests', () => {
 
       // Update existing key
       cache.set('key2', 'updated_value2');
-      expect(cache.size()).toBe(3);
+      expect(cache.size).toBe(3);
       expect(cache.get('key2')).toBe('updated_value2');
     });
 
@@ -66,36 +67,41 @@ describe('Scope-DSL Cache - Additional Coverage Tests', () => {
     test('should clear all entries', () => {
       cache.set('key1', 'value1');
       cache.set('key2', 'value2');
-      expect(cache.size()).toBe(2);
+      expect(cache.size).toBe(2);
 
       cache.clear();
-      expect(cache.size()).toBe(0);
+      expect(cache.size).toBe(0);
       expect(cache.get('key1')).toBeUndefined();
       expect(cache.get('key2')).toBeUndefined();
     });
 
     test('should handle custom cache sizes', () => {
-      const smallCache = new LRUCache(1);
+      const smallCache = new LRUCache({ max: 1 });
       smallCache.set('key1', 'value1');
       smallCache.set('key2', 'value2'); // Should evict key1
 
-      expect(smallCache.size()).toBe(1);
+      expect(smallCache.size).toBe(1);
       expect(smallCache.get('key1')).toBeUndefined();
       expect(smallCache.get('key2')).toBe('value2');
     });
 
     test('should handle zero-sized cache', () => {
-      const zeroCache = new LRUCache(0);
-      zeroCache.set('key1', 'value1');
+      // npm lru-cache requires at least max: 1
+      const minCache = new LRUCache({ max: 1 });
+      minCache.set('key1', 'value1');
+      minCache.set('key2', 'value2'); // This should evict key1
 
-      // Zero-size cache still holds one item due to implementation
-      expect(zeroCache.size()).toBe(1);
-      expect(zeroCache.get('key1')).toBe('value1');
+      expect(minCache.size).toBe(1);
+      expect(minCache.get('key1')).toBeUndefined();
+      expect(minCache.get('key2')).toBe('value2');
     });
 
     test('should use default max size when not specified', () => {
-      const defaultCache = new LRUCache();
-      expect(defaultCache.maxSize).toBe(256);
+      // npm lru-cache requires explicit max option
+      expect(() => new LRUCache()).toThrow();
+      
+      const cacheWithMax = new LRUCache({ max: 256 });
+      expect(cacheWithMax.max).toBe(256);
     });
   });
 
@@ -489,8 +495,8 @@ describe('Scope-DSL Cache - Additional Coverage Tests', () => {
         get: jest.fn(),
         set: jest.fn(),
         clear: jest.fn(),
-        size: jest.fn().mockReturnValue(5),
-        maxSize: 100,
+        get size() { return 5; },
+        max: 100,
       };
 
       mockScopeEngine = {
@@ -525,8 +531,8 @@ describe('Scope-DSL Cache - Additional Coverage Tests', () => {
       });
     });
 
-    test('should handle cache without maxSize property', () => {
-      delete mockCache.maxSize;
+    test('should handle cache without max property', () => {
+      delete mockCache.max;
 
       const stats = cache.getStats();
 

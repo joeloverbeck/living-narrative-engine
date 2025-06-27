@@ -194,8 +194,8 @@ class ScopeCache extends IScopeEngine {
    */
   getStats() {
     return {
-      size: this.cache.size(),
-      maxSize: this.cache.maxSize || 'unknown',
+      size: this.cache.size,
+      maxSize: this.cache.max || 'unknown',
       subscribed: this.unsubscribeFn !== null,
     };
   }
@@ -213,4 +213,3 @@ class ScopeCache extends IScopeEngine {
 }
 
 export default ScopeCache;
-export { LRUCache };

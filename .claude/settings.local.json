@@ -11,7 +11,8 @@
       "Bash(./node_modules/.bin/eslint src/logic/operationHandlers/modifyContextArrayHandler.js)",
       "Bash(npm run format:*)",
       "Bash(rg:*)",
-      "Bash(mkdir:*)"
+      "Bash(mkdir:*)",
+      "Bash(sed:*)"
     ],
     "deny": []
   }
