@@ -6,6 +6,13 @@
 import { IInputHandler } from '../interfaces/IInputHandler.js';
 
 /**
+ * A reusable no-op function for default callbacks.
+ *
+ * @type {() => void}
+ */
+const NO_OP = () => {};
+
+/**
  * Handles user input from a specified HTML input element and global key presses.
  * It listens for the Enter key in the input field to submit commands,
  * listens globally for specific keys (like 'I' for inventory),
@@ -36,14 +43,14 @@ class InputHandler extends IInputHandler {
    * Creates an instance of InputHandler.
    *
    * @param {HTMLInputElement} inputElement - The HTML input element to manage for commands.
-   * @param {(command: string) => void} [onCommandCallback] - An *initial* command callback. Can be overridden later via setCommandCallback.
+   * @param {(command: string) => void} [onCommandCallback] - An *initial* command callback. Defaults to `NO_OP`. Can be overridden later via setCommandCallback.
    * @param {IValidatedEventDispatcher} validatedEventDispatcher - The application's validated event dispatcher instance. // Changed from EventBus
    * @param {{ document: Document, logger: { debug: Function, warn: Function, error: Function } }} options -
    *        Environment dependencies.
    */
   constructor(
     inputElement,
-    onCommandCallback = () => {},
+    onCommandCallback = NO_OP,
     validatedEventDispatcher,
     { document, logger } = {}
   ) {
@@ -82,7 +89,7 @@ class InputHandler extends IInputHandler {
       this.#logger.warn(
         'InputHandler: Invalid initial onCommandCallback provided, using default.'
       );
-      this.#onCommandCallback = () => {}; // Default to no-op function
+      this.#onCommandCallback = NO_OP; // Default to no-op function
     } else {
       this.#onCommandCallback = onCommandCallback; // Use the provided valid callback or the default
     }
