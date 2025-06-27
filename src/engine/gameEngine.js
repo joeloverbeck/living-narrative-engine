@@ -229,14 +229,48 @@ class GameEngine {
     this.#resetEngineState();
   }
 
-  async _handleNewGameFailure(error, worldName) {
+  /**
+   * Logs a failure, dispatches UI, and optionally returns a standardized result.
+   *
+   * @private
+   * @param {string} contextMessage - Context for the log entry.
+   * @param {unknown} error - Error or message to process.
+   * @param {string} title - Title for the failure UI event.
+   * @param {string} userPrefix - Prefix for the user-facing error message.
+   * @param {boolean} [returnResult] - Whether to return a failure object.
+   * @returns {Promise<void | {success: false, error: string, data: null}>} Resolves when complete or returns the failure result.
+   */
+  async _processOperationFailure(
+    contextMessage,
+    error,
+    title,
+    userPrefix,
+    returnResult = false
+  ) {
+    const normalizedError =
+      error instanceof Error ? error : new Error(String(error));
+
     this.#logger.error(
-      `GameEngine._handleNewGameFailure: Handling new game failure for world "${worldName}". Error: ${error.message}`,
-      error
+      `GameEngine.${contextMessage}: ${normalizedError.message}`,
+      normalizedError
     );
+
     await this._dispatchFailureAndReset(
-      `Failed to start new game: ${error.message}`,
-      'Initialization Error'
+      `${userPrefix}: ${normalizedError.message}`,
+      title
+    );
+
+    if (returnResult) {
+      return { success: false, error: normalizedError.message, data: null };
+    }
+  }
+
+  async _handleNewGameFailure(error, worldName) {
+    await this._processOperationFailure(
+      `_handleNewGameFailure: Handling new game failure for world "${worldName}"`,
+      error,
+      'Initialization Error',
+      'Failed to start new game'
     );
   }
 
@@ -372,19 +406,13 @@ class GameEngine {
   }
 
   async _handleLoadFailure(errorInfo, saveIdentifier) {
-    const errorMessageString =
-      errorInfo instanceof Error ? errorInfo.message : String(errorInfo);
-
-    this.#logger.error(
-      `GameEngine._handleLoadFailure: Handling game load failure for identifier "${saveIdentifier}". Error: ${errorMessageString}`,
-      errorInfo instanceof Error ? errorInfo : undefined
+    return this._processOperationFailure(
+      `_handleLoadFailure: Handling game load failure for identifier "${saveIdentifier}"`,
+      errorInfo,
+      'Load Failed',
+      'Failed to load game',
+      true
     );
-    await this._dispatchFailureAndReset(
-      `Failed to load game: ${errorMessageString}`,
-      'Load Failed'
-    );
-
-    return { success: false, error: errorMessageString, data: null };
   }
 
   async triggerManualSave(saveName) {
