@@ -24,17 +24,17 @@ describeEntityManagerSuite('EntityManager - removeComponent', (getBed) => {
         { [NAME_COMPONENT_ID]: { name: 'Override' } },
         { instanceId: PRIMARY }
       );
-      expect(entityManager.hasComponent(PRIMARY, NAME_COMPONENT_ID, true)).toBe(
-        true
-      );
+      expect(
+        entityManager.hasComponentOverride(PRIMARY, NAME_COMPONENT_ID)
+      ).toBe(true);
 
       // Act
       entityManager.removeComponent(PRIMARY, NAME_COMPONENT_ID);
 
       // Assert
-      expect(entityManager.hasComponent(PRIMARY, NAME_COMPONENT_ID, true)).toBe(
-        false
-      );
+      expect(
+        entityManager.hasComponentOverride(PRIMARY, NAME_COMPONENT_ID)
+      ).toBe(false);
     });
 
     it('should dispatch a COMPONENT_REMOVED event with the old data', () => {

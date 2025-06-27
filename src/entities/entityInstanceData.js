@@ -145,10 +145,21 @@ class EntityInstanceData {
    * A component explicitly overridden with `null` is considered not present for this instance via the override.
    *
    * @param {string} componentTypeId - The unique string identifier for the component type.
-   * @param {boolean} [checkOverrideOnly] - If true, only checks if a non-null override exists for this instance.
+   * @param {boolean} [checkOverrideOnly] - DEPRECATED. If true, only checks if
+   * a non-null override exists for this instance.
    * @returns {boolean} True if the instance has data for this component type under the specified condition.
    */
   hasComponent(componentTypeId, checkOverrideOnly = false) {
+    if (arguments.length === 2) {
+      // eslint-disable-next-line no-console
+      console.warn(
+        'EntityInstanceData.hasComponent: The checkOverrideOnly flag is deprecated. Use hasComponentOverride(componentTypeId) instead.'
+      );
+      if (checkOverrideOnly) {
+        return this.hasComponentOverride(componentTypeId);
+      }
+    }
+
     if (typeof componentTypeId !== 'string' || !componentTypeId.trim()) {
       return false;
     }
@@ -158,19 +169,33 @@ class EntityInstanceData {
       componentTypeId
     );
 
-    if (checkOverrideOnly) {
-      // For an override to count, it must exist and not be null.
-      return overrideExists && this.overrides[componentTypeId] !== null;
-    }
-
     if (overrideExists) {
-      // FIXED: If an override key exists, the component is considered present,
-      // even if its value is null. This aligns with the final test's expectation.
+      // If an override key exists, the component is considered present,
+      // even if its value is null. This aligns with legacy expectations.
       return true;
     }
 
     // If no override, presence is determined by the definition.
     return this.definition.hasComponent(componentTypeId);
+  }
+
+  /**
+   * Checks if this instance has a non-null component override for the
+   * specified type.
+   *
+   * @param {string} componentTypeId - The unique component type ID.
+   * @returns {boolean} True if an override exists and is not null.
+   */
+  hasComponentOverride(componentTypeId) {
+    if (typeof componentTypeId !== 'string' || !componentTypeId.trim()) {
+      return false;
+    }
+
+    const overrideExists = Object.prototype.hasOwnProperty.call(
+      this.overrides,
+      componentTypeId
+    );
+    return overrideExists && this.overrides[componentTypeId] !== null;
   }
 
   /**

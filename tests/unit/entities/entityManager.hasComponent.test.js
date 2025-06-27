@@ -69,10 +69,9 @@ describeEntityManagerSuite('EntityManager - hasComponent', (getBed) => {
         } else {
           getBed().createBasicEntity({ instanceId: PRIMARY });
         }
-        const result = entityManager.hasComponent(
+        const result = entityManager.hasComponentOverride(
           PRIMARY,
-          NAME_COMPONENT_ID,
-          true
+          NAME_COMPONENT_ID
         );
         expect(result).toBe(useOverride);
       });

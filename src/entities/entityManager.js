@@ -584,7 +584,7 @@ class EntityManager extends IEntityManager {
       this.#logger
     );
     const entity = this.#getEntityById(instanceId);
-    return entity ? entity.hasComponent(componentTypeId, true) : false;
+    return entity ? entity.hasComponentOverride(componentTypeId) : false;
   }
 
   /**
