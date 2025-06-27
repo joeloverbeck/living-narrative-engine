@@ -1,6 +1,12 @@
 import { beforeEach, expect, it, jest } from '@jest/globals';
 import { describeActionDiscoverySuite } from '../../common/actions/actionDiscoveryServiceTestBed.js';
-import { TraceContext } from '../../../src/actions/tracing/traceContext.js';
+import {
+  TraceContext,
+  TRACE_INFO,
+  TRACE_STEP,
+  TRACE_SUCCESS,
+  TRACE_FAILURE,
+} from '../../../src/actions/tracing/traceContext.js';
 
 jest.mock('../../../src/actions/tracing/traceContext.js', () => ({
   TraceContext: jest
@@ -66,7 +72,7 @@ describeActionDiscoverySuite(
 
         expect(TraceContext).toHaveBeenCalledTimes(1);
         expect(trace.addLog).toHaveBeenCalledWith(
-          'info',
+          TRACE_INFO,
           `Starting action discovery for actor '${actorEntity.id}'.`,
           'getValidActions',
           { withTrace: true }
@@ -101,12 +107,12 @@ describeActionDiscoverySuite(
         );
 
         expect(trace.addLog).toHaveBeenCalledWith(
-          'step',
+          TRACE_STEP,
           `Processing candidate action: '${actionDefSimple.id}'`,
           'ActionDiscoveryService.#processCandidateAction'
         );
         expect(trace.addLog).toHaveBeenCalledWith(
-          'step',
+          TRACE_STEP,
           `Processing candidate action: '${actionDefScope.id}'`,
           'ActionDiscoveryService.#processCandidateAction'
         );
@@ -145,7 +151,7 @@ describeActionDiscoverySuite(
         );
 
         expect(trace.addLog).toHaveBeenCalledWith(
-          'success',
+          TRACE_SUCCESS,
           `Action '${actionDefPrereq.id}' passed actor prerequisite check.`,
           'ActionDiscoveryService.#processCandidateAction'
         );
@@ -165,7 +171,7 @@ describeActionDiscoverySuite(
         );
 
         expect(trace.addLog).toHaveBeenCalledWith(
-          'failure',
+          TRACE_FAILURE,
           `Action '${actionDefPrereq.id}' discarded due to failed actor prerequisites.`,
           'ActionDiscoveryService.#processCandidateAction'
         );

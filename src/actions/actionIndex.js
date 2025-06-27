@@ -5,6 +5,11 @@
 /** @typedef {import('../entities/entity.js').default} Entity */
 /** @typedef {import('../entities/entityManager.js').default} EntityManager */
 /** @typedef {import('./tracing/traceContext.js').TraceContext} TraceContext */
+import {
+  TRACE_DATA,
+  TRACE_INFO,
+  TRACE_SUCCESS,
+} from './tracing/traceContext.js';
 
 export class ActionIndex {
   /** @type {ILogger} */
@@ -114,14 +119,19 @@ export class ActionIndex {
 
     const actorComponentTypes =
       this.#entityManager.getAllComponentTypesForEntity(actorEntity.id) || [];
-    trace?.addLog('data', `Actor '${actorEntity.id}' has components.`, source, {
-      components: actorComponentTypes.length > 0 ? actorComponentTypes : [],
-    });
+    trace?.addLog(
+      TRACE_DATA,
+      `Actor '${actorEntity.id}' has components.`,
+      source,
+      {
+        components: actorComponentTypes.length > 0 ? actorComponentTypes : [],
+      }
+    );
 
     // Use a Set to automatically handle de-duplication.
     const candidateSet = new Set(this.#noActorRequirement);
     trace?.addLog(
-      'info',
+      TRACE_INFO,
       `Added ${this.#noActorRequirement.length} actions with no actor component requirements.`,
       source
     );
@@ -130,7 +140,7 @@ export class ActionIndex {
       const actionsForComponent = this.#byActorComponent.get(componentType);
       if (actionsForComponent) {
         trace?.addLog(
-          'info',
+          TRACE_INFO,
           `Found ${actionsForComponent.length} actions requiring component '${componentType}'.`,
           source
         );
@@ -142,7 +152,7 @@ export class ActionIndex {
 
     const candidates = Array.from(candidateSet);
     trace?.addLog(
-      'success',
+      TRACE_SUCCESS,
       `Final candidate list contains ${candidates.length} unique actions.`,
       source,
       { actionIds: candidates.map((a) => a.id) }

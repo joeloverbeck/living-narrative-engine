@@ -24,6 +24,12 @@ import { setupService } from '../utils/serviceInitializerUtils.js';
 import { getActorLocation } from '../utils/actorLocationUtils.js';
 import { getEntityDisplayName } from '../utils/entityUtils.js';
 import { ITargetResolutionService } from '../interfaces/ITargetResolutionService.js';
+import {
+  TRACE_INFO,
+  TRACE_SUCCESS,
+  TRACE_FAILURE,
+  TRACE_STEP,
+} from './tracing/traceContext.js';
 
 // ────────────────────────────────────────────────────────────────────────────────
 /**
@@ -175,7 +181,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
     }
 
     trace?.addLog(
-      'info',
+      TRACE_INFO,
       `Starting action discovery for actor '${actorEntity.id}'.`,
       'getValidActions',
       { withTrace: shouldTrace }
@@ -223,7 +229,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
       `Finished action discovery for actor ${actorEntity.id}. Found ${actions.length} actions from ${candidateDefs.length} candidates.`
     );
     trace?.addLog(
-      'info',
+      TRACE_INFO,
       `Finished discovery. Found ${actions.length} valid actions.`,
       'getValidActions'
     );
@@ -249,7 +255,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
   ) {
     const source = 'ActionDiscoveryService.#processCandidateAction';
     trace?.addLog(
-      'step',
+      TRACE_STEP,
       `Processing candidate action: '${actionDef.id}'`,
       source
     );
@@ -257,14 +263,14 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
     // STEP 1: Check actor prerequisites
     if (!this.#actorMeetsPrerequisites(actionDef, actorEntity, trace)) {
       trace?.addLog(
-        'failure',
+        TRACE_FAILURE,
         `Action '${actionDef.id}' discarded due to failed actor prerequisites.`,
         source
       );
       return null;
     }
     trace?.addLog(
-      'success',
+      TRACE_SUCCESS,
       `Action '${actionDef.id}' passed actor prerequisite check.`,
       source
     );
@@ -284,7 +290,7 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
       return null;
     }
     trace?.addLog(
-      'info',
+      TRACE_INFO,
       `Scope for action '${actionDef.id}' resolved to ${targetContexts.length} targets.`,
       source,
       { targets: targetContexts.map((t) => t.entityId) }

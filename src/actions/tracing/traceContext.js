@@ -3,8 +3,22 @@
  * @see src/actions/tracing/traceContext.js
  */
 
+export const TRACE_INFO = 'info';
+export const TRACE_SUCCESS = 'success';
+export const TRACE_FAILURE = 'failure';
+export const TRACE_STEP = 'step';
+export const TRACE_ERROR = 'error';
+export const TRACE_DATA = 'data';
+
 /**
- * @typedef {'info' | 'success' | 'failure' | 'step' | 'error' | 'data'} LogEntryType
+ * @typedef {(
+ *   typeof TRACE_INFO |
+ *   typeof TRACE_SUCCESS |
+ *   typeof TRACE_FAILURE |
+ *   typeof TRACE_STEP |
+ *   typeof TRACE_ERROR |
+ *   typeof TRACE_DATA
+ * )} LogEntryType
  * 'step' - A major stage in the process.
  * 'data' - Logs a significant data structure (e.g., context, AST).
  */
