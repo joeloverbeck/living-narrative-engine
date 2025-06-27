@@ -19,6 +19,7 @@ let gameDataRepository;
 let thoughtListener;
 let notesListener;
 let spatialIndexManager;
+let contentDependencyValidator;
 
 beforeEach(() => {
   logger = { error: jest.fn(), debug: jest.fn() };
@@ -38,32 +39,37 @@ beforeEach(() => {
   thoughtListener = { handleEvent: jest.fn() };
   notesListener = { handleEvent: jest.fn() };
   spatialIndexManager = { buildIndex: jest.fn() };
+  contentDependencyValidator = {
+    validate: jest.fn().mockResolvedValue(undefined),
+  };
 });
 
 describe('InitializationService constructor', () => {
   it('creates instance with valid dependencies', () => {
-    expect(() =>
-      new InitializationService({
-        log: { logger },
-        events: { validatedEventDispatcher: dispatcher, safeEventDispatcher },
-        llm: { llmAdapter, llmConfigLoader },
-        persistence: {
-          entityManager,
-          domUiFacade,
-          actionIndex,
-          gameDataRepository,
-          thoughtListener,
-          notesListener,
-          spatialIndexManager,
-        },
-        coreSystems: {
-          modsLoader,
-          scopeRegistry,
-          dataRegistry,
-          systemInitializer,
-          worldInitializer,
-        },
-      })
+    expect(
+      () =>
+        new InitializationService({
+          log: { logger },
+          events: { validatedEventDispatcher: dispatcher, safeEventDispatcher },
+          llm: { llmAdapter, llmConfigLoader },
+          persistence: {
+            entityManager,
+            domUiFacade,
+            actionIndex,
+            gameDataRepository,
+            thoughtListener,
+            notesListener,
+            spatialIndexManager,
+          },
+          coreSystems: {
+            modsLoader,
+            scopeRegistry,
+            dataRegistry,
+            systemInitializer,
+            worldInitializer,
+            contentDependencyValidator,
+          },
+        })
     ).not.toThrow();
   });
 
@@ -87,6 +93,7 @@ describe('InitializationService constructor', () => {
           dataRegistry,
           systemInitializer,
           worldInitializer,
+          contentDependencyValidator,
         },
       });
     expect(create).toThrow(SystemInitializationError);
@@ -114,6 +121,7 @@ describe('InitializationService constructor', () => {
           dataRegistry,
           systemInitializer,
           worldInitializer,
+          contentDependencyValidator,
         },
       });
     expect(createVD).toThrow(SystemInitializationError);

@@ -59,6 +59,7 @@ class InitializationService extends IInitializationService {
   #thoughtListener;
   #notesListener;
   #spatialIndexManager;
+  #contentDependencyValidator;
 
   /**
    * Creates a new InitializationService instance.
@@ -82,6 +83,7 @@ class InitializationService extends IInitializationService {
    *   dataRegistry: import('../../data/inMemoryDataRegistry.js').DataRegistry,
    *   systemInitializer: SystemInitializer,
    *   worldInitializer: WorldInitializer,
+   *   contentDependencyValidator: import('./contentDependencyValidator.js').default,
    * }} config.coreSystems - Core engine systems.
    * @description Initializes the complete game system.
    */
@@ -110,6 +112,10 @@ class InitializationService extends IInitializationService {
       dataRegistry,
       systemInitializer,
       worldInitializer,
+      contentDependencyValidator = new ContentDependencyValidator({
+        gameDataRepository,
+        logger,
+      }),
     } = coreSystems;
     super();
 
@@ -206,6 +212,12 @@ class InitializationService extends IInitializationService {
       "InitializationService: Missing or invalid required dependency 'spatialIndexManager'.",
       SystemInitializationError
     );
+    assertFunction(
+      contentDependencyValidator,
+      'validate',
+      "InitializationService: Missing or invalid required dependency 'contentDependencyValidator'.",
+      SystemInitializationError
+    );
     this.#validatedEventDispatcher = validatedEventDispatcher;
     this.#modsLoader = modsLoader;
     this.#scopeRegistry = scopeRegistry;
@@ -222,6 +234,7 @@ class InitializationService extends IInitializationService {
     this.#thoughtListener = thoughtListener;
     this.#notesListener = notesListener;
     this.#spatialIndexManager = spatialIndexManager;
+    this.#contentDependencyValidator = contentDependencyValidator;
 
     this.#logger.debug(
       'InitializationService: Instance created successfully with dependencies.'
@@ -242,10 +255,7 @@ class InitializationService extends IInitializationService {
     try {
       validateWorldName(worldName, this.#logger);
       await this.#loadMods(worldName);
-      await new ContentDependencyValidator({
-        gameDataRepository: this.#gameDataRepository,
-        logger: this.#logger,
-      }).validate(worldName);
+      await this.#contentDependencyValidator.validate(worldName);
       await this.#initializeScopeRegistry();
       const llmReady = await this.#initLlmAdapter();
       if (llmReady === false) {
