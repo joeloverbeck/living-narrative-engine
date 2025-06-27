@@ -7,6 +7,7 @@ import { jest } from '@jest/globals';
 import {
   ACTOR_COMPONENT_ID,
   PLAYER_COMPONENT_ID,
+  PLAYER_TYPE_COMPONENT_ID,
 } from '../../../src/constants/componentIds.js';
 
 /**
@@ -160,20 +161,41 @@ export function createMockEntityManager({ returnArray = false } = {}) {
  * Creates a simple mock entity with component checks.
  *
  * @param {string} id - Unique entity ID.
- * @param {{isActor?: boolean, isPlayer?: boolean}} [options] - Component flags.
- * @returns {{id: string, hasComponent: jest.Mock}} Mock entity
+ * @param {{isActor?: boolean, isPlayer?: boolean, playerType?: string}} [options] - Component flags.
+ * @returns {{id: string, hasComponent: jest.Mock, getComponentData: jest.Mock, components: object}} Mock entity
  */
 export const createMockEntity = (
   id,
-  { isActor = false, isPlayer = false } = {}
-) => ({
-  id,
-  hasComponent: jest.fn((compId) => {
-    if (compId === ACTOR_COMPONENT_ID) return isActor;
-    if (compId === PLAYER_COMPONENT_ID) return isPlayer;
-    return false;
-  }),
-});
+  { isActor = false, isPlayer = false, playerType = null } = {}
+) => {
+  const components = {};
+  
+  if (isActor) {
+    components[ACTOR_COMPONENT_ID] = {};
+  }
+  
+  if (isPlayer) {
+    // Add legacy player component for backward compatibility
+    components[PLAYER_COMPONENT_ID] = {};
+    // Also add new player_type component
+    components[PLAYER_TYPE_COMPONENT_ID] = { type: 'human' };
+  } else if (playerType) {
+    // Add player_type component with specified type
+    components[PLAYER_TYPE_COMPONENT_ID] = { type: playerType };
+  }
+  
+  return {
+    id,
+    components,
+    hasComponent: jest.fn((compId) => {
+      if (compId === ACTOR_COMPONENT_ID) return isActor;
+      if (compId === PLAYER_COMPONENT_ID) return isPlayer;
+      if (compId === PLAYER_TYPE_COMPONENT_ID) return isPlayer || !!playerType;
+      return false;
+    }),
+    getComponentData: jest.fn((compId) => components[compId] || null),
+  };
+};
 
 /**
  * Creates a mock actor entity with component access helpers.
@@ -181,30 +203,42 @@ export const createMockEntity = (
  * @param {string} id - Actor ID.
  * @param {{
  *   isPlayer?: boolean,
+ *   playerType?: string,
  *   name?: string,
  *   components?: Array<string | { componentId: string, data?: any }>
  * }} [options] - Configuration options.
  * @returns {{
  *   id: string,
  *   name: string,
- *   components: Map<string, any>,
+ *   components: object,
  *   getComponent: jest.Mock,
- *   hasComponent: jest.Mock
+ *   hasComponent: jest.Mock,
+ *   getComponentData: jest.Mock
  * }} Mock actor entity.
  */
 export const createMockActor = (
   id,
-  { isPlayer = false, name = id, components = [] } = {}
+  { isPlayer = false, playerType = null, name = id, components = [] } = {}
 ) => {
-  const base = createMockEntity(id, { isActor: true, isPlayer });
-  const compMap = new Map(
-    components.map((c) => [c.componentId ?? c, c.data ?? {}])
-  );
+  const base = createMockEntity(id, { isActor: true, isPlayer, playerType });
+  
+  // Merge provided components with base components
+  const allComponents = { ...base.components };
+  components.forEach((c) => {
+    const componentId = c.componentId ?? c;
+    const data = c.data ?? {};
+    allComponents[componentId] = data;
+  });
+  
+  // Create Map for backward compatibility but also keep object format
+  const compMap = new Map(Object.entries(allComponents));
+  
   return {
     ...base,
     name,
-    components: compMap,
+    components: allComponents, // Keep as object for direct access
     getComponent: jest.fn((compId) => compMap.get(compId)),
+    getComponentData: base.getComponentData, // Already defined in base
   };
 };
 

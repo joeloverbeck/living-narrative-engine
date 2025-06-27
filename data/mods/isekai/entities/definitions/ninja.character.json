@@ -3,7 +3,9 @@
   "id": "isekai:ninja",
   "components": {
     "core:actor": {},
-    "core:player": {},
+    "core:player_type": {
+      "type": "human"
+    },
     "core:name": {
       "text": "Ninja Ninjason"
     },

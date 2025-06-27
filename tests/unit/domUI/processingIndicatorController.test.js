@@ -96,16 +96,45 @@ describe('ProcessingIndicatorController', () => {
     expect(indicator?.classList.contains('visible')).toBe(false);
   });
 
-  it('toggles indicator based on player input events', () => {
+  it('toggles indicator based on focus events for human players', () => {
     const inputEl = document.getElementById('speech-input');
     const indicator = document.querySelector('#processing-indicator');
 
-    inputEl.value = 'Hello';
-    inputEl.dispatchEvent(new window.Event('input', { bubbles: true }));
-    expect(indicator?.classList.contains('visible')).toBe(true);
+    // Get handlers for the events
+    const turnStartedHandler = getVedHandler(ved, 'core:turn_started');
+    const focusHandler = getVedHandler(ved, 'core:speech_input_gained_focus');
+    const blurHandler = getVedHandler(ved, 'core:speech_input_lost_focus');
 
-    inputEl.value = '';
-    inputEl.dispatchEvent(new window.Event('input', { bubbles: true }));
+    // First, simulate a human player turn starting
+    turnStartedHandler({
+      type: 'core:turn_started',
+      payload: {
+        entityId: 'player1',
+        entityType: 'player',
+        entity: {
+          id: 'player1',
+          components: {
+            'core:player_type': { type: 'human' }
+          },
+          hasComponent: (id) => id === 'core:player_type',
+          getComponentData: (id) => id === 'core:player_type' ? { type: 'human' } : null
+        }
+      }
+    });
+
+    // Trigger focus event
+    focusHandler({
+      type: 'core:speech_input_gained_focus',
+      payload: { timestamp: Date.now() }
+    });
+    expect(indicator?.classList.contains('visible')).toBe(true);
+    expect(indicator?.classList.contains('human')).toBe(true);
+
+    // Trigger blur event
+    blurHandler({
+      type: 'core:speech_input_lost_focus',
+      payload: { timestamp: Date.now() }
+    });
     expect(indicator?.classList.contains('visible')).toBe(false);
   });
 

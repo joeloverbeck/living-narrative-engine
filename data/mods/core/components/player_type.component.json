@@ -1,0 +1,18 @@
+{
+  "$schema": "http://example.com/schemas/component.schema.json",
+  "id": "core:player_type",
+  "description": "Indicates the type of player controlling this entity. Used to distinguish between human players and different types of AI players.",
+  "dataSchema": {
+    "type": "object",
+    "description": "Specifies the type of player controlling the entity.",
+    "properties": {
+      "type": {
+        "type": "string",
+        "description": "The type of player: 'human' for human-controlled players, 'llm' for LLM AI players, 'goap' for Goal-Oriented Action Planning AI players",
+        "enum": ["human", "llm", "goap"]
+      }
+    },
+    "required": ["type"],
+    "additionalProperties": false
+  }
+}

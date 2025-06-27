@@ -1,0 +1,15 @@
+{
+  "$schema": "http://example.com/schemas/event.schema.json",
+  "id": "core:speech_input_lost_focus",
+  "description": "Fired when the speech input element loses focus, indicating the human player has stopped typing.",
+  "payloadSchema": {
+    "type": "object",
+    "properties": {
+      "timestamp": {
+        "type": "number",
+        "description": "The timestamp when the input lost focus"
+      }
+    },
+    "additionalProperties": false
+  }
+}

@@ -101,7 +101,10 @@ describe('InputStateController', () => {
       expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining('Subscribed to VED events')
       );
-      expect(mockLogger.debug).toHaveBeenCalledTimes(5); // Adjusted from 4 to 5
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        expect.stringContaining('Added focus/blur listeners to input element')
+      );
+      expect(mockLogger.debug).toHaveBeenCalledTimes(8); // 8 debug calls total with focus/blur listeners
     });
 
     it('should throw error if inputElement is missing or null', () => {
@@ -641,7 +644,7 @@ describe('InputStateController', () => {
         expect.stringContaining('Unsubscribing 2 VED event subscriptions.')
       );
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining('Removing 1 DOM event listeners.')
+        expect.stringContaining('Removing 3 DOM event listeners.')
       );
       expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining(
@@ -672,7 +675,7 @@ describe('InputStateController', () => {
         expect.stringContaining('Unsubscribing 2 VED event subscriptions.')
       );
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        expect.stringContaining('Removing 1 DOM event listeners.')
+        expect.stringContaining('Removing 3 DOM event listeners.')
       );
       expect(mockLogger.debug).toHaveBeenCalledWith(
         expect.stringContaining(

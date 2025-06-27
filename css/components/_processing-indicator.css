@@ -16,10 +16,28 @@
   width: 8px;
   height: 8px;
   margin: 0 3px;
-  background-color: var(--secondary-text-color); /* Uses theme variable */
+  background-color: var(--secondary-text-color); /* Default, overridden by type classes */
   border-radius: 50%;
   opacity: 0.3; /* Start with some opacity for the animation base state */
   animation: processingDotsAnimation 1.4s infinite ease-in-out;
+}
+
+/* Human player typing indicator - warm orange/amber colors */
+.processing-indicator.human .dot {
+  background-color: #FF8C00; /* DarkOrange */
+  animation: humanTypingAnimation 0.8s infinite ease-in-out;
+}
+
+/* AI LLM thinking indicator - cool blue/cyan colors */
+.processing-indicator.ai-llm .dot {
+  background-color: #00CED1; /* DarkTurquoise */
+  animation: aiThinkingAnimation 1.6s infinite ease-in-out;
+}
+
+/* AI GOAP planning indicator - purple/magenta colors */
+.processing-indicator.ai-goap .dot {
+  background-color: #9370DB; /* MediumPurple */
+  animation: aiPlanningAnimation 2s infinite ease-in-out;
 }
 
 /* Stagger animation delays for the dots */
@@ -35,6 +53,25 @@
   animation-delay: 0.4s;
 }
 
+/* Human player stagger - faster */
+.processing-indicator.human .dot:nth-child(2) {
+  animation-delay: 0.1s;
+}
+
+.processing-indicator.human .dot:nth-child(3) {
+  animation-delay: 0.2s;
+}
+
+/* AI GOAP stagger - slower */
+.processing-indicator.ai-goap .dot:nth-child(2) {
+  animation-delay: 0.3s;
+}
+
+.processing-indicator.ai-goap .dot:nth-child(3) {
+  animation-delay: 0.6s;
+}
+
+/* Default animation */
 @keyframes processingDotsAnimation {
   0%,
   100% {
@@ -44,5 +81,46 @@
   50% {
     opacity: 1;
     transform: scale(1);
+  }
+}
+
+/* Human typing animation - bouncy and quick */
+@keyframes humanTypingAnimation {
+  0%,
+  100% {
+    opacity: 0.4;
+    transform: scale(0.8) translateY(0);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.2) translateY(-3px);
+  }
+}
+
+/* AI thinking animation - smooth wave */
+@keyframes aiThinkingAnimation {
+  0%,
+  100% {
+    opacity: 0.2;
+    transform: scale(0.6) rotate(0deg);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.1) rotate(180deg);
+  }
+}
+
+/* AI planning animation - pulsing with glow */
+@keyframes aiPlanningAnimation {
+  0%,
+  100% {
+    opacity: 0.3;
+    transform: scale(0.7);
+    box-shadow: 0 0 0 rgba(147, 112, 219, 0);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+    box-shadow: 0 0 10px rgba(147, 112, 219, 0.6);
   }
 }

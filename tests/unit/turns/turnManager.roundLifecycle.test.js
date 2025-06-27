@@ -114,6 +114,7 @@ describeRunningTurnManagerSuite(
         {
           entityId: player.id,
           entityType: 'player',
+          entity: expect.objectContaining({ id: player.id }),
         }
       );
 
@@ -127,6 +128,7 @@ describeRunningTurnManagerSuite(
         {
           entityId: ai1.id,
           entityType: 'ai',
+          entity: expect.objectContaining({ id: ai1.id }),
         }
       );
     });
