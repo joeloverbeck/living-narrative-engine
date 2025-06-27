@@ -3,13 +3,16 @@
 // --- Type Imports ---
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../../events/validatedEventDispatcher.js').default} ValidatedEventDispatcher */
-/** @typedef {import('../../loaders/modsLoader.js').default} ModsLoader */
+/** @typedef {import('../../interfaces/IModsLoader.js').IModsLoader} IModsLoader */
 /** @typedef {import('../systemInitializer.js').default} SystemInitializer */
 /** @typedef {import('../worldInitializer.js').default} WorldInitializer */
 /** @typedef {import('../../interfaces/IEntityManager.js').IEntityManager} IEntityManager */
 /** @typedef {import('../../llms/services/llmConfigLoader.js').LlmConfigLoader} LlmConfigLoader */
 /** @typedef {import('../../events/safeEventDispatcher.js').default} ISafeEventDispatcher */
 /** @typedef {import('../../actions/actionIndex.js').ActionIndex} ActionIndex */
+/** @typedef {import('../../interfaces/IThoughtListener.js').IThoughtListener} IThoughtListener */
+/** @typedef {import('../../interfaces/INotesListener.js').INotesListener} INotesListener */
+/** @typedef {import('../../interfaces/ISpatialIndexManager.js').ISpatialIndexManager} ISpatialIndexManager */
 
 // --- Interface Imports for JSDoc & `extends` ---
 /** @typedef {import('../../interfaces/IInitializationService.js').InitializationResult} InitializationResult */
@@ -58,7 +61,7 @@ class InitializationService extends IInitializationService {
    * @param {object} deps
    * @param {ILogger} deps.logger
    * @param {IValidatedEventDispatcher} deps.validatedEventDispatcher
-   * @param {ModsLoader} deps.modsLoader
+   * @param {IModsLoader} deps.modsLoader
    * @param {import('../../interfaces/IScopeRegistry.js').IScopeRegistry} dependencies.scopeRegistry - Registry of scopes.
    * @param {import('../../data/inMemoryDataRegistry.js').DataRegistry} dependencies.dataRegistry - Data registry instance.
    * @param {import('../../turns/interfaces/ILLMAdapter.js').ILLMAdapter & {init?: Function, isInitialized?: Function, isOperational?: Function}} dependencies.llmAdapter - LLM adapter instance.
@@ -70,8 +73,8 @@ class InitializationService extends IInitializationService {
    * @param {import('../../domUI/domUiFacade.js').DomUiFacade} dependencies.domUiFacade - UI facade instance.
    * @param {ActionIndex} dependencies.actionIndex - Action index for optimized action discovery.
    * @param {import('../../interfaces/IGameDataRepository.js').IGameDataRepository} dependencies.gameDataRepository - Game data repository instance.
-   * @param {ThoughtPersistenceListener} deps.thoughtListener
-   * @param {NotesPersistenceListener} deps.notesListener
+   * @param {IThoughtListener} deps.thoughtListener
+   * @param {INotesListener} deps.notesListener
    * @param {ISpatialIndexManager} deps.spatialIndexManager
    * @description Initializes the complete game system.
    */
