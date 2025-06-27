@@ -173,6 +173,8 @@ export const UI_SHOW_FATAL_ERROR_ID = 'ui:show_fatal_error';
  * @typedef {object} EntityCreatedPayload
  * @property {Entity} entity - The full entity instance that was created.
  * @property {boolean} wasReconstructed - True if the entity was reconstructed from save data.
+ * @property {string} instanceId - Unique ID for the created entity instance.
+ * @property {string} definitionId - Definition ID the entity was created from.
  */
 
 /**
