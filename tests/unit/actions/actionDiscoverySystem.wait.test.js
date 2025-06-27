@@ -11,10 +11,8 @@ import { describeActionDiscoverySuite } from '../../common/actions/actionDiscove
 // --- Core Dependencies to Mock ---
 
 // --- Helper Mocks/Types ---
-import Entity from '../../../src/entities/entity.js';
-import EntityDefinition from '../../../src/entities/entityDefinition.js';
-import EntityInstanceData from '../../../src/entities/entityInstanceData.js';
 import { beforeEach, expect, it } from '@jest/globals';
+import { createTestEntity } from '../../common/mockFactories/index.js';
 /** @typedef {import('../../../src/logging/consoleLogger.js').default} ILogger */
 
 // No explicit jest.mock calls needed; mocks are provided by the test bed
@@ -24,23 +22,13 @@ describeActionDiscoverySuite(
   'ActionDiscoveryService - Wait Action Tests',
   (getBed) => {
     const ACTOR_INSTANCE_ID = 'actor1-instance-wait';
-    const DUMMY_DEFINITION_ID = 'def:dummy-wait-test';
-
-    const createTestEntity = (instanceId, definitionId) => {
-      const definition = new EntityDefinition(definitionId, {});
-      const instanceData = new EntityInstanceData(instanceId, definition, {});
-      return new Entity(instanceData);
-    };
 
     let mockActorEntity;
 
     beforeEach(() => {
       const bed = getBed();
 
-      mockActorEntity = createTestEntity(
-        ACTOR_INSTANCE_ID,
-        DUMMY_DEFINITION_ID
-      );
+      mockActorEntity = createTestEntity(ACTOR_INSTANCE_ID);
 
       bed.mocks.prerequisiteEvaluationService.evaluate.mockReturnValue(true);
 

@@ -207,3 +207,19 @@ export const createMockActor = (
     getComponent: jest.fn((compId) => compMap.get(compId)),
   };
 };
+
+/**
+ * Creates a minimal test entity with component map access.
+ *
+ * @description Provides an object with `id`, `components` and
+ *   `getComponentData` for simple unit tests.
+ * @param {string} instanceId - Entity instance ID.
+ * @param {Record<string, any>} [components] - Components keyed by id.
+ * @returns {{id: string, components: Record<string, any>, getComponentData: (id: string) => any}}
+ *   Minimal entity stub.
+ */
+export const createTestEntity = (instanceId, components = {}) => ({
+  id: instanceId,
+  components,
+  getComponentData: (id) => components[id] ?? null,
+});
