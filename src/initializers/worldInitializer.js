@@ -382,6 +382,50 @@ class WorldInitializer {
   }
 
   /**
+   * Checks if a world instance has a duplicate instanceId and logs an error.
+   *
+   * @param {Set<string>} seenIds - Set of instanceIds already processed.
+   * @param {object} worldInstance - Instance descriptor from the world file.
+   * @returns {boolean} True if the instanceId is a duplicate.
+   * @private
+   */
+  #hasDuplicateInstanceId(seenIds, worldInstance) {
+    if (seenIds.has(worldInstance.instanceId)) {
+      this.#logger.error(
+        `WorldInitializer: Duplicate instanceId '${worldInstance.instanceId}' encountered. Skipping duplicate.`
+      );
+      return true;
+    }
+
+    seenIds.add(worldInstance.instanceId);
+    return false;
+  }
+
+  /**
+   * Processes a single world instance by attempting to create it and updating
+   * the instantiated entities list.
+   *
+   * @param {string} worldName - Name of the world currently being initialized.
+   * @param {object} worldInstance - Instance descriptor from the world file.
+   * @param {Entity[]} instantiatedEntities - Array collecting successfully created entities.
+   * @returns {Promise<{instantiated: number, failed: number}>} Counts resulting from processing the instance.
+   * @private
+   */
+  async #processInstance(worldName, worldInstance, instantiatedEntities) {
+    const { entity, success } = await this.#instantiateInstance(
+      worldName,
+      worldInstance
+    );
+
+    if (success && entity) {
+      instantiatedEntities.push(entity);
+      return { instantiated: 1, failed: 0 };
+    }
+
+    return { instantiated: 0, failed: 1 };
+  }
+
+  /**
    * Instantiates entities from the specified world's instances array. (Pass 1)
    * Dispatches 'worldinit:entity_instantiated' or 'worldinit:entity_instantiation_failed' events.
    *
@@ -406,23 +450,18 @@ class WorldInitializer {
     const seenIds = new Set();
 
     for (const worldInstance of instances) {
-      if (seenIds.has(worldInstance.instanceId)) {
-        this.#logger.error(
-          `WorldInitializer: Duplicate instanceId '${worldInstance.instanceId}' encountered. Skipping duplicate.`
-        );
+      if (this.#hasDuplicateInstanceId(seenIds, worldInstance)) {
         continue;
       }
-      seenIds.add(worldInstance.instanceId);
-      const { entity, success } = await this.#instantiateInstance(
+
+      const { instantiated, failed } = await this.#processInstance(
         worldName,
-        worldInstance
+        worldInstance,
+        instantiatedEntities
       );
-      if (success && entity) {
-        instantiatedEntities.push(entity);
-        instantiatedCount++;
-      } else {
-        failedCount++;
-      }
+
+      instantiatedCount += instantiated;
+      failedCount += failed;
     }
 
     const result = {
