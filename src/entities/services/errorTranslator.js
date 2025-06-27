@@ -93,6 +93,25 @@ export class ErrorTranslator {
       }
     }
 
+    if (err instanceof DuplicateEntityError) {
+      const msg = err.message.startsWith('EntityManager.')
+        ? err.message
+        : `EntityManager.createEntityInstance: ${err.message}`;
+      this.#logger.error(msg);
+      return new DuplicateEntityError(err.entityId, msg);
+    }
+
+    if (err instanceof Error && err.message.startsWith('Entity with ID')) {
+      const match = err.message.match(
+        /Entity with ID '([^']+)' already exists/
+      );
+      if (match) {
+        const msg = `EntityManager.createEntityInstance: Entity with ID '${match[1]}' already exists.`;
+        this.#logger.error(msg);
+        return new DuplicateEntityError(match[1], msg);
+      }
+    }
+
     return err instanceof Error ? err : new Error(String(err));
   }
 }
