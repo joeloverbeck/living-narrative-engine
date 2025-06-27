@@ -137,4 +137,19 @@ describe('formatActionCommand', () => {
       expect.stringContaining('Unknown targetContext type')
     );
   });
+
+  it('throws if logger is missing', () => {
+    const actionDef = { id: 'core:wait', template: 'wait' };
+    const context = { type: TARGET_TYPE_NONE };
+
+    expect(() =>
+      formatActionCommand(
+        actionDef,
+        context,
+        entityManager,
+        { safeEventDispatcher: dispatcher },
+        displayNameFn
+      )
+    ).toThrow('formatActionCommand: logger is required.');
+  });
 });

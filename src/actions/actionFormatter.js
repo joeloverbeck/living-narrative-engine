@@ -131,6 +131,7 @@ export const targetFormatterMap = {
  * @param {EntityManager} entityManager - Entity manager for lookups.
  * @param {(entity: Entity, fallback: string, logger?: ILogger) => string} displayNameFn - Utility to resolve entity names.
  * @param {ISafeEventDispatcher} dispatcher - Dispatcher used for error events.
+ * @param {ILogger} logger - Logger instance used for validation.
  * @returns {FormatActionError | null} An error result if validation fails, otherwise `null`.
  */
 function validateFormatInputs(
@@ -138,8 +139,12 @@ function validateFormatInputs(
   targetContext,
   entityManager,
   displayNameFn,
-  dispatcher
+  dispatcher,
+  logger
 ) {
+  if (!logger) {
+    throw new Error('formatActionCommand: logger is required.');
+  }
   if (!actionDefinition || !actionDefinition.template) {
     return reportValidationError(
       dispatcher,
@@ -265,7 +270,7 @@ function finalizeCommand(command, logger, debug) {
  * @param {EntityManager} entityManager - The entity manager for lookups. Must not be null/undefined.
  * @param {object} [options] - Optional parameters.
  * @param {boolean} [options.debug] - If true, logs additional debug information.
- * @param {ILogger} [options.logger] - Logger instance used for diagnostic output. Defaults to console.
+ * @param {ILogger} options.logger - Logger instance used for diagnostic output.
  * @param {ISafeEventDispatcher} options.safeEventDispatcher - Dispatcher used for error events.
  * @param {(entity: Entity, fallback: string, logger?: ILogger) => string} [displayNameFn] -
  * Function used to resolve entity display names.
@@ -280,7 +285,7 @@ export function formatActionCommand(
   displayNameFn = getEntityDisplayName,
   formatterMap = targetFormatterMap
 ) {
-  const { debug = false, logger = console, safeEventDispatcher } = options;
+  const { debug = false, logger, safeEventDispatcher } = options;
   const dispatcher = safeEventDispatcher || resolveSafeDispatcher(null, logger);
   if (!dispatcher) {
     logger.warn(
@@ -294,7 +299,8 @@ export function formatActionCommand(
     targetContext,
     entityManager,
     displayNameFn,
-    dispatcher
+    dispatcher,
+    logger
   );
   if (validationError) {
     return validationError;
