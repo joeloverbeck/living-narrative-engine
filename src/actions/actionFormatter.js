@@ -12,7 +12,10 @@
 
 // --- Dependency Imports ---
 import { getEntityDisplayName } from '../utils/entityUtils.js';
-import { safeDispatchError } from '../utils/safeDispatchErrorUtils.js';
+import {
+  safeDispatchError,
+  dispatchValidationError,
+} from '../utils/safeDispatchErrorUtils.js';
 import { resolveSafeDispatcher } from '../utils/dispatcherUtils.js';
 import { TARGET_DOMAIN_NONE } from '../constants/targetDomains.js';
 import {
@@ -36,18 +39,6 @@ import {
 /**
  * @typedef {FormatActionOk | FormatActionError} FormatActionCommandResult
  */
-
-/**
- * @description Helper for reporting argument validation errors.
- * @param {ISafeEventDispatcher} dispatcher - Dispatcher for error events.
- * @param {string} message - Error message to send.
- * @param {object} [detail] - Optional error detail payload.
- * @returns {FormatActionError} Result object representing the failure.
- */
-function reportValidationError(dispatcher, message, detail) {
-  safeDispatchError(dispatcher, message, detail);
-  return { ok: false, error: message };
-}
 
 /**
  * @typedef {Object.<string, (command: string, context: ActionTargetContext, deps: object) => FormatActionCommandResult>} TargetFormatterMap
@@ -146,41 +137,31 @@ function validateFormatInputs(
     throw new Error('formatActionCommand: logger is required.');
   }
   if (!actionDefinition || !actionDefinition.template) {
-    return reportValidationError(
+    return dispatchValidationError(
       dispatcher,
       'formatActionCommand: Invalid or missing actionDefinition or template.',
       { actionDefinition }
     );
   }
   if (!targetContext) {
-    return reportValidationError(
+    return dispatchValidationError(
       dispatcher,
       'formatActionCommand: Invalid or missing targetContext.',
       { targetContext }
     );
   }
   if (!entityManager || typeof entityManager.getEntityInstance !== 'function') {
-    safeDispatchError(
+    return dispatchValidationError(
       dispatcher,
       'formatActionCommand: Invalid or missing entityManager.',
       { entityManager }
     );
-    return {
-      ok: false,
-      error:
-        'formatActionCommand: entityManager parameter must be a valid EntityManager instance.',
-    };
   }
   if (typeof displayNameFn !== 'function') {
-    safeDispatchError(
+    return dispatchValidationError(
       dispatcher,
       'formatActionCommand: getEntityDisplayName utility function is not available.'
     );
-    return {
-      ok: false,
-      error:
-        'formatActionCommand: getEntityDisplayName parameter must be a function.',
-    };
   }
 
   return null;
