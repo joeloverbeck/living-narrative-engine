@@ -79,7 +79,6 @@ class InputHandler extends IInputHandler {
       'keydown',
       this._handleInputKeyDown.bind(this)
     );
-    document.addEventListener('keydown', this._handleGlobalKeyDown.bind(this));
     if (this.#inputElement.form) {
       this.#inputElement.form.addEventListener('submit', (e) =>
         e.preventDefault()
@@ -130,25 +129,6 @@ class InputHandler extends IInputHandler {
       }
     }
     // Other non-Enter key specific logic for this input could remain if any.
-  }
-
-  /**
-   * Handles keydown events globally on the document (for UI toggles, etc.).
-   *
-   * @param {KeyboardEvent} event
-   * @private
-   */
-  _handleGlobalKeyDown(event) {
-    // Avoid capturing 'i' if typed into the input field itself
-    /*if (event.key.toLowerCase() === 'i' && event.target !== this.#inputElement) {
-            event.preventDefault();
-            console.log("InputHandler: Detected 'I' key press. Dispatching ui:toggle_inventory.");
-            // Use the new dispatcher
-            this.#validatedEventDispatcher.dispatch('ui:toggle_inventory', {})
-                .catch(err => console.error("InputHandler: Failed to dispatch 'ui:toggle_inventory'", err));
-        }
-        */
-    // Add other global key operationHandlers here
   }
 
   /**

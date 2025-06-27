@@ -10,6 +10,7 @@
 import { tokens } from '../tokens.js';
 import { Registrar } from '../registrarHelpers.js';
 import InputHandler from '../../input/inputHandler.js'; // Legacy Input Handler (Updated Dependency)
+import GlobalKeyHandler from '../../input/globalKeyHandler.js';
 import AlertRouter from '../../alerting/alertRouter.js';
 
 // --- NEW DOM UI Component Imports ---
@@ -187,7 +188,9 @@ export function registerRenderers(registrar, logger) {
         domElementFactory: c.resolve(tokens.DomElementFactory),
       })
   );
-  logger.debug(`UI Registrations: Registered ${tokens.EntityLifecycleMonitor}.`);
+  logger.debug(
+    `UI Registrations: Registered ${tokens.EntityLifecycleMonitor}.`
+  );
 
   registrar.singletonFactory(
     tokens.SaveGameService,
@@ -301,6 +304,16 @@ export function registerControllers(registrar, logger) {
   logger.debug(`UI Registrations: Registered ${tokens.InputStateController}.`);
 
   registrar.singletonFactory(
+    tokens.GlobalKeyHandler,
+    (c) =>
+      new GlobalKeyHandler(
+        c.resolve(tokens.WindowDocument),
+        c.resolve(tokens.IValidatedEventDispatcher)
+      )
+  );
+  logger.debug(`UI Registrations: Registered ${tokens.GlobalKeyHandler}.`);
+
+  registrar.singletonFactory(
     tokens.ProcessingIndicatorController,
     (c) =>
       new ProcessingIndicatorController({
@@ -411,6 +424,11 @@ export function registerUI(
   container.resolve(tokens.ActionResultRenderer);
   logger.debug(
     `UI Registrations: Eagerly instantiated ${tokens.ActionResultRenderer}.`
+  );
+
+  container.resolve(tokens.GlobalKeyHandler);
+  logger.debug(
+    `UI Registrations: Eagerly instantiated ${tokens.GlobalKeyHandler}.`
   );
 
   logger.debug('UI Registrations: Complete.');
