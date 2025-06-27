@@ -16,24 +16,24 @@ import {
 import { expect, test } from '@jest/globals';
 import {
   describeEntityManagerSuite,
-  TestBed,
+  EntityManagerTestBed,
 } from '../../common/entities/index.js';
 
 /**
- * Uses {@link TestBed} to verify that the EntityManager injects the
+ * Uses {@link EntityManagerTestBed} to verify that the EntityManager injects the
  * `core:short_term_memory` component when missing from an actor definition.
  */
 describeEntityManagerSuite(
   'Smoke › New Character › Short-Term Memory bootstrap',
   (getBed) => {
     test('EntityManager injects default short-term memory', () => {
-      const testBed = getBed();
+      const bed = getBed();
       const definition = new EntityDefinition('test:alice', {
         components: { [ACTOR_COMPONENT_ID]: {} },
       });
-      testBed.setupDefinitions(definition);
+      bed.setupDefinitions(definition);
 
-      const character = testBed.entityManager.createEntityInstance(
+      const character = bed.entityManager.createEntityInstance(
         definition.id
       );
 

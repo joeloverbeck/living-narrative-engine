@@ -19,7 +19,7 @@ describeEntityManagerSuite('EntityManager - removeComponent', (getBed) => {
       const { PRIMARY } = TestData.InstanceIDs;
 
       // Add component as an override
-      getBed().createEntityWithOverride(
+      getBed().createEntityWithOverrides(
         'basic',
         { [NAME_COMPONENT_ID]: { name: 'Override' } },
         { instanceId: PRIMARY }
@@ -43,7 +43,7 @@ describeEntityManagerSuite('EntityManager - removeComponent', (getBed) => {
       const { NAME_COMPONENT_ID } = TestData.ComponentIDs;
       const { PRIMARY } = TestData.InstanceIDs;
       const overrideData = { name: 'ToBeRemoved' };
-      const entity = getBed().createEntityWithOverride(
+      const entity = getBed().createEntityWithOverrides(
         'basic',
         { [NAME_COMPONENT_ID]: overrideData },
         { instanceId: PRIMARY, resetDispatch: true }

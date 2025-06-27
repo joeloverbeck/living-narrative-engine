@@ -1,6 +1,6 @@
 import { describe, it, expect, jest } from '@jest/globals';
 import EntityFactory from '../../../src/entities/factories/entityFactory.js';
-import { TestBed, TestData } from '../../common/entities/index.js';
+import { EntityManagerTestBed, TestData } from '../../common/entities/index.js';
 import { buildSerializedEntity } from '../../common/entities/index.js';
 import { DuplicateEntityError } from '../../../src/errors/duplicateEntityError.js';
 import { SerializedEntityError } from '../../../src/errors/serializedEntityError.js';
@@ -31,26 +31,26 @@ describe('EntityManager - Factory Error Translation', () => {
   ];
 
   it.each(errorCases)('translates %s', (_, factoryErr, expected) => {
-    const testBed = new TestBed();
+    const bed = new EntityManagerTestBed();
     jest
       .spyOn(EntityFactory.prototype, 'reconstruct')
       .mockImplementation(() => {
         throw factoryErr;
       });
-    testBed.setupTestDefinitions('basic');
+    bed.setupTestDefinitions('basic');
     const serialized = buildSerializedEntity(
       TestData.InstanceIDs.PRIMARY,
       TestData.DefinitionIDs.BASIC,
       {}
     );
 
-    expect(() => testBed.entityManager.reconstructEntity(serialized)).toThrow(
+    expect(() => bed.entityManager.reconstructEntity(serialized)).toThrow(
       expected
     );
   });
 
   it('translates duplicate ID errors to DuplicateEntityError', () => {
-    const testBed = new TestBed();
+    const bed = new EntityManagerTestBed();
     const message =
       "EntityFactory.reconstruct: Entity with ID 'dup-1' already exists. Reconstruction aborted.";
     jest
@@ -58,14 +58,14 @@ describe('EntityManager - Factory Error Translation', () => {
       .mockImplementation(() => {
         throw new Error(message);
       });
-    testBed.setupTestDefinitions('basic');
+    bed.setupTestDefinitions('basic');
     const serialized = buildSerializedEntity(
       'dup-1',
       TestData.DefinitionIDs.BASIC,
       {}
     );
 
-    expect(() => testBed.entityManager.reconstructEntity(serialized)).toThrow(
+    expect(() => bed.entityManager.reconstructEntity(serialized)).toThrow(
       new DuplicateEntityError(
         'dup-1',
         "EntityManager.reconstructEntity: Entity with ID 'dup-1' already exists. Reconstruction aborted."

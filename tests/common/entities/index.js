@@ -1,6 +1,6 @@
 export { default as SimpleEntityManager } from './simpleEntityManager.js';
-export { default as TestBed } from './testBed.js';
-export * from './testBed.js';
+export { default as EntityManagerTestBed } from './entityManagerTestBed.js';
+export * from './entityManagerTestBed.js';
 export { TestData } from './testData.js';
 export * from './serializationUtils.js';
 export * from './execContext.js';

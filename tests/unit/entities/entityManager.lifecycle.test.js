@@ -1,7 +1,7 @@
 /**
  * @file This file consolidates all tests for the EntityManager's core lifecycle methods:
  * constructor, createEntityInstance, reconstructEntity, removeEntityInstance, and clearAll.
- * It exclusively uses the TestBed helper for setup to ensure consistency and reduce boilerplate.
+ * It exclusively uses the EntityManagerTestBed helper for setup to ensure consistency and reduce boilerplate.
  * @see src/entities/entityManager.js
  */
 
@@ -9,7 +9,7 @@ import { describe, it, expect, jest } from '@jest/globals';
 import {
   describeEntityManagerSuite,
   TestData,
-  TestBed,
+  EntityManagerTestBed,
 } from '../../common/entities/index.js';
 import {
   runInvalidEntityIdTests,
@@ -32,7 +32,7 @@ describeEntityManagerSuite(
   'EntityManager - Constructor Validation',
   (getBed) => {
     describe('constructor', () => {
-      it('should instantiate successfully via TestBed', () => {
+      it('should instantiate successfully via EntityManagerTestBed', () => {
         // The beforeEach hook already does this. If it fails, the test will crash.
         expect(getBed().entityManager).toBeInstanceOf(
           getBed().entityManager.constructor
@@ -67,11 +67,11 @@ describeEntityManagerSuite(
 
       it('should use the injected idGenerator', () => {
         const mockIdGenerator = jest.fn();
-        const testBed = new TestBed({ idGenerator: mockIdGenerator });
+        const bed = new EntityManagerTestBed({ idGenerator: mockIdGenerator });
         // This test simply checks if the generator is stored,
         // createEntityInstance tests will check if it's *used*.
         // We can't directly access the private field, so we rely on functional tests.
-        expect(testBed.entityManager).toBeDefined();
+        expect(bed.entityManager).toBeDefined();
       });
 
       it('should default to a UUIDv4 generator if none is provided', () => {
@@ -97,9 +97,9 @@ describeEntityManagerSuite('EntityManager - createEntityInstance', (getBed) => {
     it('should create an entity with an ID from the injected generator if no instanceId is provided', () => {
       // Arrange
       const mockIdGenerator = () => 'test-entity-id-123';
-      const testBed = new TestBed({ idGenerator: mockIdGenerator });
+      const bed = new EntityManagerTestBed({ idGenerator: mockIdGenerator });
 
-      const entity = testBed.createBasicEntity();
+      const entity = bed.createBasicEntity();
 
       // Assert
       expect(entity).toBeInstanceOf(Entity);
@@ -110,10 +110,10 @@ describeEntityManagerSuite('EntityManager - createEntityInstance', (getBed) => {
     it('should create an entity with a specific instanceId if provided, ignoring the generator', () => {
       // Arrange
       const mockIdGenerator = jest.fn(() => 'should-not-be-called');
-      const testBed = new TestBed({ idGenerator: mockIdGenerator });
+      const bed = new EntityManagerTestBed({ idGenerator: mockIdGenerator });
       const { PRIMARY } = TestData.InstanceIDs;
 
-      const entity = testBed.createBasicEntity({
+      const entity = bed.createBasicEntity({
         instanceId: PRIMARY,
       });
 
@@ -445,12 +445,12 @@ describeEntityManagerSuite('EntityManager - removeEntityInstance', (getBed) => {
       };
 
       // Arrange
-      const testBed = new TestBed({
+      const bed = new EntityManagerTestBed({
         entityManagerOptions: { repository: stubRepo },
       });
-      const { entityManager, mocks } = testBed;
+      const { entityManager, mocks } = bed;
       const { PRIMARY } = TestData.InstanceIDs;
-      testBed.createBasicEntity({ instanceId: PRIMARY });
+      bed.createBasicEntity({ instanceId: PRIMARY });
 
       // Act & Assert
       expect(() => entityManager.removeEntityInstance(PRIMARY)).toThrow(
@@ -461,7 +461,7 @@ describeEntityManagerSuite('EntityManager - removeEntityInstance', (getBed) => {
           'EntityRepository.remove failed for already retrieved entity'
         )
       );
-      testBed.cleanup();
+      bed.cleanup();
     });
   });
 });

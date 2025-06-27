@@ -1,7 +1,7 @@
 /**
  * @file This file consolidates all tests for the EntityManager's automatic injection
  * of default components for actor entities (e.g., goals, notes, stm).
- * It exclusively uses the TestBed helper for all setup to ensure consistency,
+ * It exclusively uses the EntityManagerTestBed helper for all setup to ensure consistency,
  * centralization, and reduce boilerplate.
  * @see src/entities/entityManager.js
  */
