@@ -9,6 +9,7 @@ import { createJsonLogicContext } from '../../../src/logic/contextAssembler.js';
 import Entity from '../../../src/entities/entity.js'; // Adjust path if needed
 import EntityDefinition from '../../../src/entities/entityDefinition.js'; // Added
 import EntityInstanceData from '../../../src/entities/entityInstanceData.js'; // Added
+import { createEntityInstance } from '../../common/entities/index.js';
 // No longer need direct import of jsonLogic here if only using service.evaluate
 
 // --- JSDoc Imports for Type Hinting ---
@@ -45,30 +46,6 @@ const mockEntityManager = {
   activeEntities: new Map(),
   // Add mocks for new EntityManager properties/methods if necessary for these tests
   _definitionCache: new Map(), // Mock internal for safety, though likely not directly used by these tests
-};
-
-// Helper to create mock entity instance for tests
-// Updated createMockEntity
-const createMockEntity = (
-  instanceId,
-  definitionId = 'test:dummydef',
-  initialComponents = {}
-) => {
-  // A generic definition used for mock entities in this test file
-  // Ensure the definitionId has a colon, or EntityDefinition.modId might be undefined.
-  const defIdToUse = definitionId.includes(':')
-    ? definitionId
-    : `test:${definitionId}`;
-  const genericDefinition = new EntityDefinition(defIdToUse, {
-    components: {},
-  }); // Base components can be passed if needed
-  const instanceData = new EntityInstanceData(
-    instanceId,
-    genericDefinition,
-    initialComponents
-  );
-  const entity = new Entity(instanceData);
-  return entity;
 };
 
 // --- Test Suite for Isolated Deep Path Evaluation ---
@@ -109,7 +86,7 @@ describe('JsonLogicEvaluationService - Isolated Deep Path E2E Test', () => {
       '==': [{ var: 'target.components.Inventory.items.0.id' }, 'item:key'],
     };
     const targetId = 'chest:1';
-    const mockTarget = createMockEntity(targetId);
+    const mockTarget = createEntityInstance({ instanceId: targetId });
     const inventoryComponentId = 'Inventory';
     /** @type {GameEvent} */
     const event = { type: 'INTERACT', payload: {} };

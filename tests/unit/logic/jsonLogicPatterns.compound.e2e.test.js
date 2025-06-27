@@ -9,6 +9,7 @@ import { createJsonLogicContext } from '../../../src/logic/contextAssembler.js';
 import Entity from '../../../src/entities/entity.js'; // Adjust path if needed for mock creation
 import EntityDefinition from '../../../src/entities/entityDefinition.js'; // Added
 import EntityInstanceData from '../../../src/entities/entityInstanceData.js'; // Added
+import { createEntityInstance } from '../../common/entities/index.js';
 
 // --- JSDoc Imports for Type Hinting ---
 /** @typedef {import('../../../src/interfaces/coreServices.js').ILogger} ILogger */ // Adjusted path
@@ -56,26 +57,6 @@ const mockEntityManager = {
 const DUMMY_DEFINITION_ID_FOR_MOCKS = 'def:mock-compound';
 
 // Helper to create mock entity instance for tests
-// Updated createMockEntity
-const createMockEntity = (
-  instanceId,
-  definitionId = DUMMY_DEFINITION_ID_FOR_MOCKS,
-  initialComponents = {}
-) => {
-  const defIdToUse = definitionId.includes(':')
-    ? definitionId
-    : `test:${definitionId}`;
-  const genericDefinition = new EntityDefinition(defIdToUse, {
-    components: {},
-  });
-  const instanceData = new EntityInstanceData(
-    instanceId,
-    genericDefinition,
-    initialComponents
-  );
-  const entity = new Entity(instanceData);
-  return entity;
-};
 
 // --- Test Suite ---
 
@@ -116,7 +97,7 @@ describe('TEST-109: Validate JSON-LOGIC-PATTERNS.MD - Compound Logic (Patterns 1
     };
     const targetId = 'door:1';
     const componentId = 'game:lockable';
-    const mockTarget = createMockEntity(targetId);
+    const mockTarget = createEntityInstance({ instanceId: targetId });
     const lockedState = { state: 'locked' };
     const unlockedState = { state: 'unlocked' };
 
@@ -277,9 +258,9 @@ describe('TEST-109: Validate JSON-LOGIC-PATTERNS.MD - Compound Logic (Patterns 1
     const actorKeyComp = 'game:quest_item_key';
     const targetLockComp = 'game:lockable';
 
-    const mockActor = createMockEntity(actorId);
-    const mockTargetDoor = createMockEntity(targetId);
-    const mockOtherDoor = createMockEntity(otherTargetId);
+    const mockActor = createEntityInstance({ instanceId: actorId });
+    const mockTargetDoor = createEntityInstance({ instanceId: targetId });
+    const mockOtherDoor = createEntityInstance({ instanceId: otherTargetId });
     const lockedState = { state: 'locked' };
     const unlockedState = { state: 'unlocked' };
 
@@ -548,7 +529,7 @@ describe('TEST-109: Validate JSON-LOGIC-PATTERNS.MD - Compound Logic (Patterns 1
     const actorId = 'core:player';
     const poisonComp = 'effect:poison';
     const diseaseComp = 'effect:disease';
-    const mockActor = createMockEntity(actorId);
+    const mockActor = createEntityInstance({ instanceId: actorId });
 
     test('should evaluate TRUE if actor has poison component ONLY', () => {
       // Arrange
@@ -707,7 +688,7 @@ describe('TEST-109: Validate JSON-LOGIC-PATTERNS.MD - Compound Logic (Patterns 1
     };
     const targetId = 'chest:1';
     const componentId = 'game:lockable';
-    const mockTarget = createMockEntity(targetId);
+    const mockTarget = createEntityInstance({ instanceId: targetId });
     const lockedState = { state: 'locked' };
     const unlockedState = { state: 'unlocked' };
     const jammedState = { state: 'jammed' };
@@ -856,7 +837,7 @@ describe('TEST-109: Validate JSON-LOGIC-PATTERNS.MD - Compound Logic (Patterns 1
     // Variables and states defined as in AC4...
     const targetId = 'chest:1';
     const componentId = 'game:lockable';
-    const mockTarget = createMockEntity(targetId);
+    const mockTarget = createEntityInstance({ instanceId: targetId });
     const lockedState = { state: 'locked' };
     const unlockedState = { state: 'unlocked' };
     const jammedState = { state: 'jammed' };
@@ -1004,7 +985,7 @@ describe('TEST-109: Validate JSON-LOGIC-PATTERNS.MD - Compound Logic (Patterns 1
     };
     const actorId = 'npc:mule';
     const componentId = 'status:burdened';
-    const mockActor = createMockEntity(actorId);
+    const mockActor = createEntityInstance({ instanceId: actorId });
     const componentData = { weightFactor: 1.5 };
 
     test('should evaluate TRUE when component is missing', () => {

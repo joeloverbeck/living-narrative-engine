@@ -9,6 +9,7 @@ import { createJsonLogicContext } from '../../../src/logic/contextAssembler.js';
 import Entity from '../../../src/entities/entity.js'; // Adjust path if needed for mock creation
 import EntityDefinition from '../../../src/entities/entityDefinition.js'; // Added
 import EntityInstanceData from '../../../src/entities/entityInstanceData.js'; // Added
+import { createEntityInstance } from '../../common/entities/index.js';
 
 // --- JSDoc Imports for Type Hinting ---
 /** @typedef {import('../../../src/interfaces/coreServices.js').ILogger} ILogger */ // Adjusted path
@@ -45,27 +46,6 @@ const mockEntityManager = {
 };
 
 const DUMMY_DEFINITION_ID_FOR_MOCKS = 'def:mock-json-logic';
-
-// Helper to create mock entity instance for tests
-const createMockEntity = (
-  instanceId,
-  definitionId = DUMMY_DEFINITION_ID_FOR_MOCKS,
-  initialComponents = {}
-) => {
-  const defIdToUse = definitionId.includes(':')
-    ? definitionId
-    : `test:${definitionId}`;
-  const genericDefinition = new EntityDefinition(defIdToUse, {
-    components: {},
-  });
-  const instanceData = new EntityInstanceData(
-    instanceId,
-    genericDefinition,
-    initialComponents
-  );
-  const entity = new Entity(instanceData);
-  return entity;
-};
 
 // --- Test Suite for JSON-LOGIC-USAGE.MD Claims ---
 
@@ -187,7 +167,7 @@ describe('TEST-104: Validate JSON-LOGIC-USAGE.MD Specific Claims (E2E)', () => {
   describe('AC3: Direct Actor ID Access', () => {
     const rule = { '==': [{ var: 'actor.id' }, 'actor-1'] };
     const actorId = 'actor-1';
-    const mockActor = createMockEntity(actorId);
+    const mockActor = createEntityInstance({ instanceId: actorId });
 
     test('should evaluate true when actor exists and ID matches', () => {
       // Arrange: Make EM find the actor
@@ -261,7 +241,7 @@ describe('TEST-104: Validate JSON-LOGIC-USAGE.MD Specific Claims (E2E)', () => {
   describe('AC4: Direct Target ID Access', () => {
     const rule = { '==': [{ var: 'target.id' }, 'target-1'] };
     const targetId = 'target-1';
-    const mockTarget = createMockEntity(targetId);
+    const mockTarget = createEntityInstance({ instanceId: targetId });
 
     test('should evaluate true when target exists and ID matches', () => {
       // Arrange: Make EM find the target
@@ -458,7 +438,7 @@ describe('TEST-104: Validate JSON-LOGIC-USAGE.MD Specific Claims (E2E)', () => {
     test('should evaluate false when actor exists', () => {
       // Arrange: Actor exists
       const actorId = 'actor-present';
-      const mockActor = createMockEntity(actorId);
+      const mockActor = createEntityInstance({ instanceId: actorId });
       mockEntityManager.getEntityInstance.mockImplementation((id) => {
         if (id === actorId) return mockActor;
         return undefined;

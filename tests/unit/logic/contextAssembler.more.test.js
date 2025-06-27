@@ -12,6 +12,7 @@ import { createJsonLogicContext } from '../../../src/logic/contextAssembler.js';
 import { LOGGER_INFO_METHOD_ERROR } from '../../common/constants.js';
 // Import Entity type for creating mock entity structure
 import Entity from '../../../src/entities/entity.js'; // Adjust path if necessary
+import { createEntityInstance } from '../../common/entities/index.js';
 
 // --- JSDoc Imports for Type Hinting ---
 /** @typedef {import('../../../src/interfaces/coreServices.js').ILogger} ILogger */
@@ -44,7 +45,6 @@ const mockEntityManager = {
  * @param {string | number} id - Identifier for the entity.
  * @returns {Partial<Entity>} A mock entity object with an ID.
  */
-const createMockEntity = (id) => ({ id: id });
 
 // --- Test Suite ---
 
@@ -64,8 +64,8 @@ describe('Ticket 8: createJsonLogicContext (contextAssembler.js)', () => {
     baseEvent = { type: 'DEFAULT_EVENT', payload: { value: 1 } };
     actorId = 'player-123';
     targetId = 'enemy-abc';
-    mockActorEntity = createMockEntity(actorId);
-    mockTargetEntity = createMockEntity(targetId);
+    mockActorEntity = createEntityInstance({ instanceId: actorId });
+    mockTargetEntity = createEntityInstance({ instanceId: targetId });
     mockEntityManager.getEntityInstance.mockReturnValue(undefined);
     mockEntityManager.getComponentData.mockReset();
     mockEntityManager.hasComponent.mockReset();

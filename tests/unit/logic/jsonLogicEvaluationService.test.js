@@ -20,6 +20,7 @@ import { createJsonLogicContext } from '../../../src/logic/contextAssembler.js';
 import Entity from '../../../src/entities/entity.js'; // Adjust path
 import EntityDefinition from '../../../src/entities/entityDefinition.js'; // Added
 import EntityInstanceData from '../../../src/entities/entityInstanceData.js'; // Added
+import { createEntityInstance } from '../../common/entities/index.js';
 
 // --- JSDoc Imports for Type Hinting ---
 /** @typedef {import('../../../src/interfaces/coreServices.js').ILogger} ILogger */
@@ -209,27 +210,7 @@ describe('JsonLogicEvaluationService', () => {
   // and that the context is built and used as expected.
   describe('evaluate() method (End-to-End with REAL jsonLogic.apply)', () => {
     // Helper to create simple mock entity instance for these tests
-    // Updated createMockEntity
     const DUMMY_DEFINITION_ID_FOR_MOCKS = 'def:mock-eval-service';
-    const createMockEntity = (
-      instanceId,
-      definitionId = DUMMY_DEFINITION_ID_FOR_MOCKS,
-      initialComponents = {}
-    ) => {
-      const defIdToUse = definitionId.includes(':')
-        ? definitionId
-        : `test:${definitionId}`;
-      const genericDefinition = new EntityDefinition(defIdToUse, {
-        components: {},
-      });
-      const instanceData = new EntityInstanceData(
-        instanceId,
-        genericDefinition,
-        initialComponents
-      );
-      const entity = new Entity(instanceData);
-      return entity;
-    };
 
     // --- Test cases using createJsonLogicContext and actual jsonLogic.apply ---
     // Example: Test with actor component access
@@ -242,7 +223,7 @@ describe('JsonLogicEvaluationService', () => {
       };
       /** @type {GameEvent} */
       const event = { type: 'CHECK_HEALTH', payload: {} };
-      const mockActor = createMockEntity(actorId); // Using the updated helper
+      const mockActor = createEntityInstance({ instanceId: actorId });
       const healthComponentData = { current: 100, max: 100 };
 
       // Setup EntityManager mocks for this specific test
@@ -312,7 +293,7 @@ describe('JsonLogicEvaluationService', () => {
       };
       /** @type {GameEvent} */
       const event = { type: 'INTERACT', payload: {} };
-      const mockTarget = createMockEntity(targetId); // Using updated helper
+      const mockTarget = createEntityInstance({ instanceId: targetId });
       const statusComponentData = { mood: 'happy', condition: 'normal' };
 
       mockEntityManager.getEntityInstance.mockImplementation((id) => {
@@ -376,8 +357,8 @@ describe('JsonLogicEvaluationService', () => {
         type: 'ATTACK',
         payload: { damage_type: 'fire' },
       };
-      const mockActor = createMockEntity(actorId); // Updated
-      const mockTarget = createMockEntity(targetId); // Updated
+      const mockActor = createEntityInstance({ instanceId: actorId });
+      const mockTarget = createEntityInstance({ instanceId: targetId });
 
       const actorInventoryData = { has_key: true, items: ['sword'] };
       const targetVulnerabilityData = { type: 'fire', level: 2 };
@@ -449,7 +430,7 @@ describe('JsonLogicEvaluationService', () => {
       // So `actor.id` is the standard.
       const rule = { '==': [{ var: 'actor.id' }, actorId] };
       const event = { type: 'ANY_EVENT', payload: {} };
-      const mockActor = createMockEntity(actorId); // Updated
+      const mockActor = createEntityInstance({ instanceId: actorId });
 
       mockEntityManager.getEntityInstance.mockImplementation((id) =>
         id === actorId ? mockActor : undefined

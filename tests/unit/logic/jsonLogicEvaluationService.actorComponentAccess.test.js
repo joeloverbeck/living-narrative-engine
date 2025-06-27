@@ -26,6 +26,7 @@ import { createJsonLogicContext } from '../../../src/logic/contextAssembler.js';
 import Entity from '../../../src/entities/entity.js'; // Adjust path as needed
 import EntityDefinition from '../../../src/entities/entityDefinition.js'; // Added
 import EntityInstanceData from '../../../src/entities/entityInstanceData.js'; // Added
+import { createEntityInstance } from '../../common/entities/index.js';
 
 // --- JSDoc Imports for Type Hinting ---
 /** @typedef {import('../../../src/interfaces/coreServices.js').ILogger} ILogger */ // Adjust path as needed
@@ -64,28 +65,6 @@ const mockEntityManager = {
 
 const DUMMY_DEFINITION_ID_FOR_MOCKS = 'def:mock-actor-access';
 
-// Helper to create a simple mock entity instance for testing
-// Updated createMockEntity
-const createMockEntity = (
-  instanceId,
-  definitionId = DUMMY_DEFINITION_ID_FOR_MOCKS,
-  initialComponents = {}
-) => {
-  const defIdToUse = definitionId.includes(':')
-    ? definitionId
-    : `test:${definitionId}`;
-  const genericDefinition = new EntityDefinition(defIdToUse, {
-    components: {},
-  });
-  const instanceData = new EntityInstanceData(
-    instanceId,
-    genericDefinition,
-    initialComponents
-  );
-  const entity = new Entity(instanceData);
-  return entity;
-};
-
 // Define a base event structure for context creation
 /** @type {GameEvent} */
 const baseEvent = { type: 'TEST_EVENT', payload: {} };
@@ -105,7 +84,7 @@ describe('JsonLogicEvaluationService - Actor Component Access Tests ([PARENT_ID]
   const namespacedComponentId = 'ns:stats';
   const missingComponentId = 'missingComp';
   const missingPropertyId = 'missingProp';
-  const mockActor = createMockEntity(actorId);
+  const mockActor = createEntityInstance({ instanceId: actorId });
 
   // --- Test Setup & Teardown ---
   beforeEach(() => {

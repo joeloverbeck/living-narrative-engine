@@ -9,6 +9,7 @@ import { createJsonLogicContext } from '../../../src/logic/contextAssembler.js';
 import Entity from '../../../src/entities/entity.js'; // Adjust path as needed
 import EntityDefinition from '../../../src/entities/entityDefinition.js'; // Added
 import EntityInstanceData from '../../../src/entities/entityInstanceData.js'; // Added
+import { createEntityInstance } from '../../common/entities/index.js';
 
 // --- JSDoc Imports for Type Hinting ---
 /** @typedef {import('../../../src/interfaces/coreServices.js').ILogger} ILogger */
@@ -48,28 +49,6 @@ const mockEntityManager = {
 
 const DUMMY_DEFINITION_ID_FOR_MOCKS = 'def:mock-legacy-quest';
 
-// Helper to create mock entity instance
-// Updated createMockEntity
-const createMockEntity = (
-  instanceId,
-  definitionId = DUMMY_DEFINITION_ID_FOR_MOCKS,
-  initialComponents = {}
-) => {
-  const defIdToUse = definitionId.includes(':')
-    ? definitionId
-    : `test:${definitionId}`;
-  const genericDefinition = new EntityDefinition(defIdToUse, {
-    components: {},
-  });
-  const instanceData = new EntityInstanceData(
-    instanceId,
-    genericDefinition,
-    initialComponents
-  );
-  const entity = new Entity(instanceData);
-  return entity;
-};
-
 // --- Test Suite ---
 
 describe('TEST-110: Validate JSON-LOGIC-PATTERNS.MD - Legacy Quest State (Pattern 15)', () => {
@@ -79,7 +58,7 @@ describe('TEST-110: Validate JSON-LOGIC-PATTERNS.MD - Legacy Quest State (Patter
   const baseEvent = { type: 'test_event', payload: {} };
   const actorId = 'player:1';
   const questLogComponentId = 'core:quest_log'; // Component ID from pattern example
-  const mockActor = createMockEntity(actorId);
+  const mockActor = createEntityInstance({ instanceId: actorId });
 
   beforeEach(() => {
     jest.clearAllMocks();

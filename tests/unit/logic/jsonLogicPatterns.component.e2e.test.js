@@ -9,6 +9,7 @@ import { createJsonLogicContext } from '../../../src/logic/contextAssembler.js';
 import Entity from '../../../src/entities/entity.js'; // Adjust path - Needed for mock setup
 import EntityDefinition from '../../../src/entities/entityDefinition.js'; // Added
 import EntityInstanceData from '../../../src/entities/entityInstanceData.js'; // Added
+import { createEntityInstance } from '../../common/entities/index.js';
 
 // --- JSDoc Imports for Type Hinting ---
 /** @typedef {import('../../../src/interfaces/coreServices.js').ILogger} ILogger */
@@ -56,26 +57,6 @@ const mockEntityManager = {
 const DUMMY_DEFINITION_ID_FOR_MOCKS = 'def:mock-component-patterns';
 
 // Helper to create mock entity instance for tests
-// Updated createMockEntity
-const createMockEntity = (
-  instanceId,
-  definitionId = DUMMY_DEFINITION_ID_FOR_MOCKS,
-  initialComponents = {}
-) => {
-  const defIdToUse = definitionId.includes(':')
-    ? definitionId
-    : `test:${definitionId}`;
-  const genericDefinition = new EntityDefinition(defIdToUse, {
-    components: {},
-  });
-  const instanceData = new EntityInstanceData(
-    instanceId,
-    genericDefinition,
-    initialComponents
-  );
-  const entity = new Entity(instanceData);
-  return entity;
-};
 
 // --- Test Suite ---
 
@@ -83,8 +64,8 @@ describe('JsonLogicEvaluationService - Component Patterns (TEST-105)', () => {
   let service;
   const actorId = 'testActor:p1';
   const targetId = 'testTarget:p1';
-  const mockActor = createMockEntity(actorId);
-  const mockTarget = createMockEntity(targetId);
+  const mockActor = createEntityInstance({ instanceId: actorId });
+  const mockTarget = createEntityInstance({ instanceId: targetId });
   const compAId = 'compA'; // Generic component for tests
   const compBId = 'compB'; // Another generic component
 
