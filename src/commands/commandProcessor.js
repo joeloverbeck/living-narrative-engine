@@ -153,7 +153,6 @@ class CommandProcessor extends ICommandProcessor {
       // then 'payload' variable must already contain it.
       // The VED error "must have required property 'eventName'" means the payload passed to VED
       // was missing it.
-      // The 'payload' constructed in #_dispatchActionAttempt *does* include eventName.
 
       const success = await this.#safeEventDispatcher.dispatch(
         eventName,
