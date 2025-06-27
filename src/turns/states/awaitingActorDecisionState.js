@@ -19,6 +19,7 @@ import { destroyCleanupStrategy } from './helpers/destroyCleanupStrategy.js';
 import {
   validateActorInContext,
   retrieveStrategyFromContext,
+  AWAITING_DECISION_CONTEXT_METHODS,
 } from './helpers/validationUtils.js';
 
 /**
@@ -60,16 +61,13 @@ export class AwaitingActorDecisionState extends AbstractTurnState {
    *   valid, otherwise null.
    */
   async _ensureContext(reason) {
-    const required = [
-      'getActor',
-      'getLogger',
-      'getStrategy',
-      'requestProcessingCommandStateTransition',
-      'endTurn',
-    ];
-    const ctx = await this._ensureContextWithMethods(reason, required, {
-      endTurnOnFail: true,
-    });
+    const ctx = await this._ensureContextWithMethods(
+      reason,
+      AWAITING_DECISION_CONTEXT_METHODS,
+      {
+        endTurnOnFail: true,
+      }
+    );
     return /** @type {AwaitingActorDecisionStateContext | null} */ (ctx);
   }
 

@@ -9,6 +9,33 @@
 import { UNKNOWN_ENTITY_ID } from '../../../constants/unknownIds.js';
 
 /**
+ * @description Method names required on an ITurnContext when used by the
+ * AwaitingActorDecisionState. The state relies on these methods to validate the
+ * actor, obtain its strategy and transition to the processing state.
+ * @type {string[]}
+ */
+export const AWAITING_DECISION_CONTEXT_METHODS = Object.freeze([
+  'getActor',
+  'getLogger',
+  'getStrategy',
+  'requestProcessingCommandStateTransition',
+  'endTurn',
+]);
+
+/**
+ * @description Method names required on an ITurnContext when used by the
+ * ProcessingCommandState. These methods allow the state to retrieve the actor
+ * and chosen action, obtain a logger and dispatch events safely.
+ * @type {string[]}
+ */
+export const PROCESSING_CONTEXT_METHODS = Object.freeze([
+  'getActor',
+  'getLogger',
+  'getChosenAction',
+  'getSafeEventDispatcher',
+]);
+
+/**
  * Ensures the provided actor is valid.
  *
  * @param {Entity} actor - Actor entity to validate.
