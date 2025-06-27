@@ -45,6 +45,16 @@ import {
  */
 
 /**
+ * @description Builds a standardized formatting error result.
+ * @param {string} message - Human readable error message.
+ * @param {object} [details] - Additional error details.
+ * @returns {FormatActionError} Result object describing the error.
+ */
+function buildFormatError(message, details) {
+  return { ok: false, error: message, ...(details && { details }) };
+}
+
+/**
  * @description Replaces the `{target}` placeholder using entity information.
  * @param {string} command - The command template string.
  * @param {ActionTargetContext} context - Target context with `entityId`.
@@ -154,31 +164,26 @@ function validateFormatInputs(
     throw new Error('formatActionCommand: logger is required.');
   }
   if (!actionDefinition || !actionDefinition.template) {
-    return dispatchValidationError(
-      dispatcher,
-      'formatActionCommand: Invalid or missing actionDefinition or template.',
-      { actionDefinition }
-    );
+    const msg =
+      'formatActionCommand: Invalid or missing actionDefinition or template.';
+    dispatchValidationError(dispatcher, msg, { actionDefinition }, logger);
+    return buildFormatError(msg, { actionDefinition });
   }
   if (!targetContext) {
-    return dispatchValidationError(
-      dispatcher,
-      'formatActionCommand: Invalid or missing targetContext.',
-      { targetContext }
-    );
+    const msg = 'formatActionCommand: Invalid or missing targetContext.';
+    dispatchValidationError(dispatcher, msg, { targetContext }, logger);
+    return buildFormatError(msg, { targetContext });
   }
   if (!entityManager || typeof entityManager.getEntityInstance !== 'function') {
-    return dispatchValidationError(
-      dispatcher,
-      'formatActionCommand: Invalid or missing entityManager.',
-      { entityManager }
-    );
+    const msg = 'formatActionCommand: Invalid or missing entityManager.';
+    dispatchValidationError(dispatcher, msg, { entityManager }, logger);
+    return buildFormatError(msg, { entityManager });
   }
   if (typeof displayNameFn !== 'function') {
-    return dispatchValidationError(
-      dispatcher,
-      'formatActionCommand: getEntityDisplayName utility function is not available.'
-    );
+    const msg =
+      'formatActionCommand: getEntityDisplayName utility function is not available.';
+    dispatchValidationError(dispatcher, msg, undefined, logger);
+    return buildFormatError(msg);
   }
 
   return null;
@@ -238,11 +243,7 @@ function applyTargetFormatter(
       `formatActionCommand: Error during placeholder substitution for action ${actionDefinition.id}:`,
       { error: error.message, stack: error.stack }
     );
-    return {
-      ok: false,
-      error: 'placeholder substitution failed',
-      details: error.message,
-    };
+    return buildFormatError('placeholder substitution failed', error.message);
   }
 }
 
