@@ -1,4 +1,5 @@
 import EntityDefinition from '../../../src/entities/entityDefinition.js';
+import { expectErrorWithMessage } from '../../common/entities/index.js';
 
 describe('EntityDefinition', () => {
   const validDefinitionData = {
@@ -22,28 +23,40 @@ describe('EntityDefinition', () => {
   });
 
   it('should throw an error if ID is invalid', () => {
-    expect(() => new EntityDefinition(null, validDefinitionData)).toThrow(
+    expectErrorWithMessage(
+      () => new EntityDefinition(null, validDefinitionData),
+      Error,
       'EntityDefinition requires a valid string id.'
     );
-    expect(() => new EntityDefinition('', validDefinitionData)).toThrow(
+    expectErrorWithMessage(
+      () => new EntityDefinition('', validDefinitionData),
+      Error,
       'EntityDefinition requires a valid string id.'
     );
-    expect(() => new EntityDefinition('  ', validDefinitionData)).toThrow(
+    expectErrorWithMessage(
+      () => new EntityDefinition('  ', validDefinitionData),
+      Error,
       'EntityDefinition requires a valid string id.'
     );
   });
 
   describe('definitionData and components handling', () => {
     it('should throw an error if definitionData itself is invalid', () => {
-      expect(() => new EntityDefinition(validDefinitionId, null)).toThrow(
+      expectErrorWithMessage(
+        () => new EntityDefinition(validDefinitionId, null),
+        Error,
         'EntityDefinition requires definitionData to be an object.'
       );
-      expect(() => new EntityDefinition(validDefinitionId, undefined)).toThrow(
+      expectErrorWithMessage(
+        () => new EntityDefinition(validDefinitionId, undefined),
+        Error,
         'EntityDefinition requires definitionData to be an object.'
       );
-      expect(
-        () => new EntityDefinition(validDefinitionId, 'not-an-object-at-all')
-      ).toThrow('EntityDefinition requires definitionData to be an object.');
+      expectErrorWithMessage(
+        () => new EntityDefinition(validDefinitionId, 'not-an-object-at-all'),
+        Error,
+        'EntityDefinition requires definitionData to be an object.'
+      );
     });
 
     it('should default to empty components if definitionData.components is missing', () => {

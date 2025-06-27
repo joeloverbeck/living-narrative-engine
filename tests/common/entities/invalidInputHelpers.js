@@ -3,6 +3,7 @@
  * @see tests/common/entities/invalidInputHelpers.js
  */
 /* eslint-env jest */
+/* global it, expect */
 
 import { TestData } from './index.js';
 import { InvalidArgumentError } from '../../../src/errors/invalidArgumentError.js';
@@ -107,4 +108,55 @@ export function runInvalidDefinitionIdTests(getBed, invoke) {
     TestData.InvalidValues.invalidDefinitionIds,
     'should throw InvalidArgumentError for invalid definitionId %p'
   )(getBed, invoke);
+}
+
+/**
+ * Asserts that invoking {@code fn} throws the expected error type and message.
+ *
+ * @param {Function} fn - Function expected to throw.
+ * @param {new (...args: any[]) => Error} ErrorClass - Expected error constructor.
+ * @param {string|RegExp} message - Message substring or regex expected in the error.
+ * @returns {void}
+ */
+export function expectErrorWithMessage(fn, ErrorClass, message) {
+  let error;
+  try {
+    fn();
+  } catch (err) {
+    error = err;
+  }
+  expect(error).toBeInstanceOf(ErrorClass);
+  if (message instanceof RegExp) {
+    expect(error.message).toMatch(message);
+  } else {
+    expect(error.message).toContain(message);
+  }
+}
+
+/**
+ * Asserts that the provided async function rejects with the expected error type
+ * and message.
+ *
+ * @param {Function} asyncFn - Async function expected to reject.
+ * @param {new (...args: any[]) => Error} ErrorClass - Expected error constructor.
+ * @param {string|RegExp} message - Expected error message substring or regex.
+ * @returns {Promise<void>}
+ */
+export async function expectAsyncErrorWithMessage(
+  asyncFn,
+  ErrorClass,
+  message
+) {
+  let error;
+  try {
+    await asyncFn();
+  } catch (err) {
+    error = err;
+  }
+  expect(error).toBeInstanceOf(ErrorClass);
+  if (message instanceof RegExp) {
+    expect(error.message).toMatch(message);
+  } else {
+    expect(error.message).toContain(message);
+  }
 }
