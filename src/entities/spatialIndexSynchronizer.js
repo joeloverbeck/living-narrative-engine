@@ -35,8 +35,8 @@ export class SpatialIndexSynchronizer {
    */
   /**
    * Initialize the synchronizer with required dependencies.
-   * @description Constructor for SpatialIndexSynchronizer.
    *
+   * @description Constructor for SpatialIndexSynchronizer.
    * @param {object} dependencies - Constructor dependencies.
    * @param {ISpatialIndexManager} dependencies.spatialIndexManager - Spatial index manager instance.
    * @param {ISafeEventDispatcher} dependencies.safeEventDispatcher - Event dispatcher.
@@ -72,8 +72,8 @@ export class SpatialIndexSynchronizer {
 
   /**
    * Normalize an event object or payload to just the payload.
-   * @description Normalize an event object or payload to just the payload.
    *
+   * @description Normalize an event object or payload to just the payload.
    * @private
    * @param {object|{payload: object}} eventOrPayload - Raw payload or event bus object.
    * @returns {object|null} The extracted payload, or null if invalid.
@@ -88,6 +88,7 @@ export class SpatialIndexSynchronizer {
 
   /**
    * Handle the creation or reconstruction of a new entity.
+   *
    * @description Handles the creation or reconstruction of a new entity.
    * @param {EntityCreatedPayload | {type: string, payload: EntityCreatedPayload}} eventOrPayload - Event object or raw payload.
    */
@@ -127,6 +128,7 @@ export class SpatialIndexSynchronizer {
 
   /**
    * Handle the removal of an entity.
+   *
    * @description Handles the removal of an entity.
    * @param {EntityRemovedPayload | {type: string, payload: EntityRemovedPayload}} eventOrPayload - Event object or raw payload.
    */
@@ -154,6 +156,7 @@ export class SpatialIndexSynchronizer {
 
   /**
    * Handle changes to an entity's components, updating the spatial index when position changes.
+   *
    * @description Handles changes to an entity's components, updating the spatial index when position changes.
    * @param {ComponentAddedPayload | ComponentRemovedPayload | {type: string, payload: ComponentAddedPayload | ComponentRemovedPayload}} eventOrPayload - Event object or raw payload.
    */

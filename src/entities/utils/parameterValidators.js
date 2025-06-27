@@ -18,6 +18,7 @@ import { InvalidInstanceIdError } from '../../errors/invalidInstanceIdError.js';
 /**
  * @description Internal helper to assert both instance and component IDs.
  * @param {string} methodName Fully qualified method name for error context.
+ * @param context
  * @param {string} instanceId Entity instance ID.
  * @param {string} componentTypeId Component type ID.
  * @param {import('../../interfaces/coreServices.js').ILogger} logger Logger for reporting issues.
@@ -42,7 +43,7 @@ function _assertIds(context, instanceId, componentTypeId, logger) {
  * @param {string} componentTypeId - Component type ID.
  * @param {object} componentData - Raw component data.
  * @param {import('../../interfaces/coreServices.js').ILogger} logger - Logger for reporting issues.
- * @param {string} [context='EntityManager.addComponent'] - Method context for error messages.
+ * @param {string} [context] - Method context for error messages.
  * @throws {InvalidArgumentError} If parameters are invalid.
  */
 export function validateAddComponentParams(
@@ -81,7 +82,7 @@ export function validateAddComponentParams(
  * @param {string} instanceId - Entity instance ID.
  * @param {string} componentTypeId - Component type ID.
  * @param {import('../../interfaces/coreServices.js').ILogger} logger - Logger for reporting issues.
- * @param {string} [context='EntityManager.removeComponent'] - Method context for error messages.
+ * @param {string} [context] - Method context for error messages.
  * @throws {InvalidArgumentError} If parameters are invalid.
  */
 export function validateRemoveComponentParams(
