@@ -18,6 +18,8 @@ import TurnDirective from '../../turns/constants/turnDirectives.js';
 // --- Interface Imports ---
 import { ICommandOutcomeInterpreter } from '../interfaces/ICommandOutcomeInterpreter.js';
 import { safeDispatchError } from '../../utils/safeDispatchErrorUtils.js';
+import { initLogger } from '../../utils/index.js';
+import { validateDependency } from '../../utils/validationUtils.js';
 
 /**
  * @class CommandOutcomeInterpreter
@@ -30,19 +32,13 @@ class CommandOutcomeInterpreter extends ICommandOutcomeInterpreter {
 
   constructor({ dispatcher, logger }) {
     super();
-    if (!logger || typeof logger.error !== 'function') {
-      console.error('CommandOutcomeInterpreter Constructor: Invalid logger.');
-      throw new Error('CommandOutcomeInterpreter: Invalid ILogger dependency.');
-    }
-    this.#logger = logger;
-    if (!dispatcher || typeof dispatcher.dispatch !== 'function') {
-      this.#logger.error(
-        'CommandOutcomeInterpreter Constructor: Invalid ISafeEventDispatcher.'
-      );
-      throw new Error(
-        'CommandOutcomeInterpreter: Invalid ISafeEventDispatcher dependency.'
-      );
-    }
+
+    this.#logger = initLogger('CommandOutcomeInterpreter', logger);
+
+    validateDependency(dispatcher, 'ISafeEventDispatcher', this.#logger, {
+      requiredMethods: ['dispatch'],
+    });
+
     this.#dispatcher = dispatcher;
     this.#logger.debug(
       'CommandOutcomeInterpreter: Instance created successfully.'

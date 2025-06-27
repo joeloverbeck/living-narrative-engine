@@ -7,6 +7,8 @@ import {
 } from '../constants/eventIds.js';
 import { ICommandProcessor } from './interfaces/ICommandProcessor.js';
 import { resolveSafeDispatcher } from '../utils/dispatcherUtils.js';
+import { initLogger } from '../utils/index.js';
+import { validateDependency } from '../utils/validationUtils.js';
 
 // --- Type Imports ---
 /** @typedef {import('../entities/entity.js').default} Entity */
@@ -28,14 +30,18 @@ class CommandProcessor extends ICommandProcessor {
   constructor(options) {
     super();
 
-    const { logger, safeEventDispatcher } = options || {};
+    const { logger, safeEventDispatcher: dispatcher } = options || {};
 
-    this.#logger = logger;
+    this.#logger = initLogger('CommandProcessor', logger);
+
+    validateDependency(dispatcher, 'ISafeEventDispatcher', this.#logger, {
+      requiredMethods: ['dispatch'],
+    });
 
     this.#safeEventDispatcher =
-      safeEventDispatcher || resolveSafeDispatcher(null, this.#logger);
+      dispatcher || resolveSafeDispatcher(null, this.#logger);
     if (!this.#safeEventDispatcher) {
-      console.warn(
+      this.#logger.warn(
         'CommandProcessor: safeEventDispatcher resolution failed; some events may not be dispatched.'
       );
     }

@@ -15,7 +15,12 @@ let turnContext;
 
 beforeEach(() => {
   jest.clearAllMocks();
-  logger = { debug: jest.fn(), error: jest.fn() };
+  logger = {
+    debug: jest.fn(),
+    info: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+  };
   dispatcher = { dispatch: jest.fn() };
   turnContext = {
     getActor: jest.fn(() => ({ id: 'actor-1' })),
@@ -27,17 +32,17 @@ describe('CommandOutcomeInterpreter additional branches', () => {
   it('throws when logger is invalid', () => {
     expect(
       () => new CommandOutcomeInterpreter({ dispatcher, logger: {} })
-    ).toThrow('CommandOutcomeInterpreter: Invalid ILogger dependency.');
+    ).toThrow("Invalid or missing method 'info' on dependency 'logger'.");
   });
 
   it('throws when dispatcher is invalid', () => {
     expect(
       () => new CommandOutcomeInterpreter({ dispatcher: {}, logger })
     ).toThrow(
-      'CommandOutcomeInterpreter: Invalid ISafeEventDispatcher dependency.'
+      "Invalid or missing method 'dispatch' on dependency 'ISafeEventDispatcher'."
     );
     expect(logger.error).toHaveBeenCalledWith(
-      'CommandOutcomeInterpreter Constructor: Invalid ISafeEventDispatcher.'
+      "Invalid or missing method 'dispatch' on dependency 'ISafeEventDispatcher'."
     );
   });
 
