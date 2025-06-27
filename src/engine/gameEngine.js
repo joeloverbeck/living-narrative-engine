@@ -212,6 +212,16 @@ class GameEngine {
   }
 
   async startNewGame(worldName) {
+    if (
+      !worldName ||
+      typeof worldName !== 'string' ||
+      worldName.trim() === ''
+    ) {
+      const errorMsg =
+        'GameEngine.startNewGame: worldName must be a non-empty string.';
+      this.#logger.error(errorMsg);
+      throw new TypeError(errorMsg);
+    }
     this.#logger.debug(
       `GameEngine: startNewGame called for world "${worldName}".`
     );
@@ -313,6 +323,16 @@ class GameEngine {
   }
 
   async loadGame(saveIdentifier) {
+    if (
+      !saveIdentifier ||
+      typeof saveIdentifier !== 'string' ||
+      saveIdentifier.trim() === ''
+    ) {
+      const errorMsg =
+        'GameEngine.loadGame: saveIdentifier must be a non-empty string.';
+      this.#logger.error(errorMsg);
+      throw new TypeError(errorMsg);
+    }
     return this.#persistenceCoordinator.loadGame(saveIdentifier);
   }
 

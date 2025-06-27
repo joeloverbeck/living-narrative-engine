@@ -164,5 +164,20 @@ describeEngineSuite('GameEngine', (context) => {
     )(
       'should handle %s unavailability (guard clause) and dispatch UI event directly'
     );
+
+    it.each([null, '', 0])(
+      'should reject invalid save identifiers: %p',
+      async (badId) => {
+        const expectedMessage =
+          'GameEngine.loadGame: saveIdentifier must be a non-empty string.';
+
+        await expect(context.engine.loadGame(badId)).rejects.toThrow(
+          expectedMessage
+        );
+        expect(context.bed.getLogger().error).toHaveBeenCalledWith(
+          expectedMessage
+        );
+      }
+    );
   });
 });
