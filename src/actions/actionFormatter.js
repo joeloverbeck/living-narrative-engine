@@ -107,7 +107,24 @@ function formatNoneTarget(command, _context, { actionId, logger, debug }) {
 }
 
 /**
- * @description Default mapping of target types to formatter functions.
+ * Default mapping of target types to formatter functions.
+ *
+ * Each formatter receives `(command, context, deps)` and should return a
+ * {@link FormatActionCommandResult} object or a plain string. Keys normally
+ * correspond to constants in {@link ../constants/actionTargetTypes.js}.
+ *
+ * Consumers may provide their own map as the final argument to
+ * {@link formatActionCommand} to customize how placeholders are resolved.
+ *
+ * Example:
+ * ```js
+ * const customMap = {
+ *   entity: myEntityFormatter,
+ *   none: formatNoneTarget,
+ * };
+ * formatActionCommand(def, ctx, manager, { logger }, getEntityDisplayName, customMap);
+ * ```
+ *
  * @type {TargetFormatterMap}
  */
 export const targetFormatterMap = {
