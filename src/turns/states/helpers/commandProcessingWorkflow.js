@@ -189,9 +189,9 @@ export class CommandProcessingWorkflow {
     const logger = activeTurnCtx.getLogger();
     const actorId = activeTurnCtx.getActor()?.id ?? 'UnknownActor';
 
-    const directiveStrategy =
+    const strategy =
       this._directiveStrategyResolver.resolveStrategy(directiveType);
-    if (!directiveStrategy) {
+    if (!strategy) {
       const errorMsg = `${this._state.getStateName()}: Could not resolve ITurnDirectiveStrategy for directive '${directiveType}' (actor ${actorId}).`;
       logger.error(errorMsg);
       await this._exceptionHandler.handle(
@@ -203,12 +203,12 @@ export class CommandProcessingWorkflow {
     }
 
     logger.debug(
-      `${this._state.getStateName()}: Actor ${actorId} - Resolved strategy ${directiveStrategy.constructor.name} for directive ${directiveType}.`
+      `${this._state.getStateName()}: Actor ${actorId} - Resolved strategy ${strategy.constructor.name} for directive ${directiveType}.`
     );
 
-    await directiveStrategy.execute(activeTurnCtx, directiveType, result);
+    await strategy.execute(activeTurnCtx, directiveType, result);
     logger.debug(
-      `${this._state.getStateName()}: Actor ${actorId} - Directive strategy ${directiveStrategy.constructor.name} executed.`
+      `${this._state.getStateName()}: Actor ${actorId} - Directive strategy ${strategy.constructor.name} executed.`
     );
 
     if (!this._state.isProcessing) {
