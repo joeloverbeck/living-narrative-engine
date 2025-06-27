@@ -4,6 +4,7 @@
  */
 
 import { cloneDeep } from 'lodash';
+import { freeze } from '../utils/cloneUtils.js';
 import EntityDefinition from './entityDefinition.js';
 
 /**
@@ -33,8 +34,10 @@ class EntityInstanceData {
    * A shallow map of component data that overrides or supplements the definition's components.
    * Keys are componentTypeIds, values are component data objects.
    * This map only stores data that is different from or not present in the definition.
+   * This property is frozen after construction and whenever overrides are
+   * updated. Treat it as immutable and avoid direct mutation.
    *
-   * @type {Record<string, object>}
+   * @type {Readonly<Record<string, object>>}
    */
   overrides;
 
@@ -59,8 +62,11 @@ class EntityInstanceData {
 
     this.instanceId = instanceId;
     this.definition = definition;
-    // Use cloneDeep for initialOverrides to ensure deep copy.
-    this.overrides = initialOverrides ? cloneDeep(initialOverrides) : {};
+    // Use cloneDeep for initialOverrides to ensure deep copy and freeze to
+    // discourage external mutation.
+    this.overrides = freeze(
+      initialOverrides ? cloneDeep(initialOverrides) : {}
+    );
   }
 
   /**
@@ -111,8 +117,12 @@ class EntityInstanceData {
     if (typeof componentData !== 'object' || componentData === null) {
       throw new TypeError('componentData must be a non-null object.');
     }
-    // Storing a clone to prevent external mutations of the provided data from affecting the instance.
-    this.overrides[componentTypeId] = cloneDeep(componentData);
+    // Replace overrides object to keep it immutable for external consumers.
+    const updated = {
+      ...this.overrides,
+      [componentTypeId]: cloneDeep(componentData),
+    };
+    this.overrides = freeze(updated);
   }
 
   /**
@@ -128,12 +138,14 @@ class EntityInstanceData {
     }
 
     if (typeof this.overrides !== 'object' || this.overrides === null) {
-      this.overrides = {};
+      this.overrides = freeze({});
       return false;
     }
 
     if (Object.prototype.hasOwnProperty.call(this.overrides, componentTypeId)) {
-      delete this.overrides[componentTypeId];
+      const updated = { ...this.overrides };
+      delete updated[componentTypeId];
+      this.overrides = freeze(updated);
       return true;
     }
     return false; // Key not found in overrides

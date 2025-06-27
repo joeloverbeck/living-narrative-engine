@@ -4,6 +4,9 @@ import { extractModId } from '../utils/idUtils.js';
 /**
  * Represents the immutable template/definition of an entity.
  * This object is intended to be shared by multiple EntityInstanceData objects.
+ * All component data is deeply frozen during construction. Consumers should
+ * treat instances of this class and their `components` property as
+ * read-only configuration objects.
  *
  * @module core/entities/entityDefinition
  */
