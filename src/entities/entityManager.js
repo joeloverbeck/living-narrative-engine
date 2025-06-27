@@ -404,17 +404,7 @@ class EntityManager extends IEntityManager {
       this.#dispatchEntityCreated(entity);
       return entity;
     } catch (err) {
-      if (err instanceof Error && err.message.startsWith('Entity with ID')) {
-        this.#logger.error(err.message);
-        const match = err.message.match(
-          /Entity with ID '([^']+)' already exists/
-        );
-        if (match) {
-          throw new DuplicateEntityError(match[1], err.message);
-        }
-        throw new DuplicateEntityError('unknown', err.message);
-      }
-      throw err;
+      throw this.#errorTranslator.translate(err);
     }
   }
 
