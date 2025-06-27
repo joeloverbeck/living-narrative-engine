@@ -21,6 +21,10 @@ class InputHandler extends IInputHandler {
   #validatedEventDispatcher;
   /** @type {boolean} */
   #isEnabled = false;
+  /** @type {Document} */
+  #document;
+  /** @type {{ debug: Function, warn: Function, error: Function }} */
+  #logger;
 
   /**
    * Creates an instance of InputHandler.
@@ -28,21 +32,48 @@ class InputHandler extends IInputHandler {
    * @param {HTMLInputElement} inputElement - The HTML input element to manage for commands.
    * @param {(command: string) => void} [onCommandCallback] - An *initial* command callback. Can be overridden later via setCommandCallback.
    * @param {IValidatedEventDispatcher} validatedEventDispatcher - The application's validated event dispatcher instance. // Changed from EventBus
+   * @param {{ document: Document, logger: { debug: Function, warn: Function, error: Function } }} options -
+   *        Environment dependencies.
    */
   constructor(
     inputElement,
     onCommandCallback = () => {},
-    validatedEventDispatcher
+    validatedEventDispatcher,
+    { document, logger } = {}
   ) {
     // Changed parameter name
     super();
+
+    if (
+      !document ||
+      typeof document.addEventListener !== 'function' ||
+      typeof document.removeEventListener !== 'function'
+    ) {
+      throw new Error(
+        'InputHandler requires a valid document with addEventListener and removeEventListener.'
+      );
+    }
+
+    if (
+      !logger ||
+      typeof logger.debug !== 'function' ||
+      typeof logger.warn !== 'function' ||
+      typeof logger.error !== 'function'
+    ) {
+      throw new Error(
+        'InputHandler requires a logger implementing debug, warn, and error.'
+      );
+    }
+
+    this.#document = document;
+    this.#logger = logger;
 
     if (!inputElement || !(inputElement instanceof HTMLInputElement)) {
       throw new Error('InputHandler requires a valid HTMLInputElement.');
     }
     // Validate the initial callback if provided, otherwise use the default no-op
     if (onCommandCallback && typeof onCommandCallback !== 'function') {
-      console.warn(
+      this.#logger.warn(
         'InputHandler: Invalid initial onCommandCallback provided, using default.'
       );
       this.#onCommandCallback = () => {}; // Default to no-op function
@@ -75,7 +106,7 @@ class InputHandler extends IInputHandler {
    * @private
    */
   _bindEvents() {
-    this.#inputElement.addEventListener(
+    this.#document.addEventListener(
       'keydown',
       this._handleInputKeyDown.bind(this)
     );
@@ -109,7 +140,7 @@ class InputHandler extends IInputHandler {
         this.disable();
       }
     );
-    console.log(
+    this.#logger.debug(
       "InputHandler: Subscribed to 'core:enable_input' and 'core:disable_input' events."
     );
   }
@@ -138,12 +169,12 @@ class InputHandler extends IInputHandler {
    */
   setCommandCallback(callbackFn) {
     if (typeof callbackFn !== 'function') {
-      console.error(
+      this.#logger.error(
         'InputHandler: Attempted to set invalid command callback. Callback must be a function.'
       );
       return; // Keep the existing callback if the new one is invalid
     }
-    console.log('InputHandler: Command callback updated.');
+    this.#logger.debug('InputHandler: Command callback updated.');
     this.#onCommandCallback = callbackFn;
   }
 

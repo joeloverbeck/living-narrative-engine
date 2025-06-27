@@ -12,50 +12,99 @@ import ValidatedEventDispatcher from '../../../src/events/validatedEventDispatch
 jest.mock('../../../src/events/validatedEventDispatcher.js');
 
 describe('InputHandler', () => {
-  let document;
+  let dom;
   let inputEl;
   let ved;
   let callback;
   let handler;
+  let docMock;
+  let logger;
 
   beforeEach(() => {
-    document = global.document;
-    document.body.innerHTML = '<form id="f"><input id="cmd" /></form>';
-    inputEl = document.getElementById('cmd');
+    dom = global.document;
+    dom.body.innerHTML = '<form id="f"><input id="cmd" /></form>';
+    inputEl = dom.getElementById('cmd');
+    docMock = {
+      addEventListener: jest.fn((_, cb) => {
+        docMock.cb = cb;
+      }),
+      removeEventListener: jest.fn(),
+    };
+    logger = { debug: jest.fn(), warn: jest.fn(), error: jest.fn() };
     ved = new ValidatedEventDispatcher();
     ved.dispatch = jest.fn();
     ved.subscribe = jest.fn(() => ({ unsubscribe: jest.fn() }));
     callback = jest.fn();
-    handler = new InputHandler(inputEl, callback, ved);
+    handler = new InputHandler(inputEl, callback, ved, {
+      document: docMock,
+      logger,
+    });
     jest.spyOn(inputEl, 'focus').mockImplementation(() => {});
   });
 
   afterEach(() => {
     jest.clearAllMocks();
-    document.body.innerHTML = '';
+    dom.body.innerHTML = '';
   });
 
   test('constructor requires HTMLInputElement', () => {
-    expect(() => new InputHandler(null, callback, ved)).toThrow(
-      'InputHandler requires a valid HTMLInputElement.'
-    );
+    expect(
+      () =>
+        new InputHandler(null, callback, ved, {
+          document: docMock,
+          logger,
+        })
+    ).toThrow('InputHandler requires a valid HTMLInputElement.');
   });
 
   test('constructor warns and defaults callback when invalid', () => {
-    const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
-    const h = new InputHandler(inputEl, 123, ved);
+    const warnSpy = jest.spyOn(logger, 'warn');
+    const h = new InputHandler(inputEl, 123, ved, {
+      document: docMock,
+      logger,
+    });
     inputEl.value = 'cmd';
     h.enable();
-    inputEl.dispatchEvent(
-      new window.KeyboardEvent('keydown', { key: 'Enter' })
-    );
+    docMock.cb(new window.KeyboardEvent('keydown', { key: 'Enter' }));
     expect(warnSpy).toHaveBeenCalled();
-    warnSpy.mockRestore();
   });
 
   test('constructor requires dispatcher with dispatch and subscribe', () => {
-    expect(() => new InputHandler(inputEl, callback, {})).toThrow(
+    expect(
+      () =>
+        new InputHandler(
+          inputEl,
+          callback,
+          {},
+          {
+            document: docMock,
+            logger,
+          }
+        )
+    ).toThrow(
       'InputHandler requires a valid IValidatedEventDispatcher instance.'
+    );
+  });
+
+  test('constructor validates document and logger', () => {
+    expect(
+      () =>
+        new InputHandler(inputEl, callback, ved, {
+          document: {},
+          logger,
+        })
+    ).toThrow(
+      'InputHandler requires a valid document with addEventListener and removeEventListener.'
+    );
+
+    expect(
+      () =>
+        new InputHandler(inputEl, callback, ved, {
+          document: docMock,
+          logger: {},
+        })
+    ).toThrow(
+      'InputHandler requires a logger implementing debug, warn, and error.'
     );
   });
 
@@ -73,18 +122,14 @@ describe('InputHandler', () => {
   test('dispatching enter when enabled invokes callback and clears input', () => {
     handler.enable();
     inputEl.value = 'look';
-    inputEl.dispatchEvent(
-      new window.KeyboardEvent('keydown', { key: 'Enter' })
-    );
+    docMock.cb(new window.KeyboardEvent('keydown', { key: 'Enter' }));
     expect(callback).toHaveBeenCalledWith('look');
     expect(inputEl.value).toBe('');
   });
 
   test('dispatching enter when disabled does not invoke callback', () => {
     inputEl.value = 'look';
-    inputEl.dispatchEvent(
-      new window.KeyboardEvent('keydown', { key: 'Enter' })
-    );
+    docMock.cb(new window.KeyboardEvent('keydown', { key: 'Enter' }));
     expect(callback).not.toHaveBeenCalled();
   });
 
@@ -93,23 +138,18 @@ describe('InputHandler', () => {
     handler.setCommandCallback(newCb);
     handler.enable();
     inputEl.value = 'go';
-    inputEl.dispatchEvent(
-      new window.KeyboardEvent('keydown', { key: 'Enter' })
-    );
+    docMock.cb(new window.KeyboardEvent('keydown', { key: 'Enter' }));
     expect(newCb).toHaveBeenCalledWith('go');
   });
 
   test('setCommandCallback rejects non-function', () => {
-    const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const errorSpy = jest.spyOn(logger, 'error');
     handler.setCommandCallback('bad');
     handler.enable();
     inputEl.value = 'go';
-    inputEl.dispatchEvent(
-      new window.KeyboardEvent('keydown', { key: 'Enter' })
-    );
+    docMock.cb(new window.KeyboardEvent('keydown', { key: 'Enter' }));
     expect(callback).toHaveBeenCalledWith('go');
     expect(errorSpy).toHaveBeenCalled();
-    errorSpy.mockRestore();
   });
 
   test('enable focuses the input element', () => {

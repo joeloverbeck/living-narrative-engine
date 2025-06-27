@@ -377,7 +377,11 @@ export function registerLegacyInputHandler(registrar, logger) {
       new InputHandler(
         c.resolve(tokens.inputElement),
         undefined,
-        c.resolve(tokens.IValidatedEventDispatcher)
+        c.resolve(tokens.IValidatedEventDispatcher),
+        {
+          document: c.resolve(tokens.WindowDocument),
+          logger: c.resolve(tokens.ILogger),
+        }
       )
   );
   logger.debug(
