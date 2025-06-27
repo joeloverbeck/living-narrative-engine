@@ -16,6 +16,7 @@ let entityManager;
 let domUiFacade;
 let thoughtListener;
 let notesListener;
+let contentDependencyValidator;
 
 beforeEach(() => {
   logger = { error: jest.fn(), debug: jest.fn() };
@@ -32,6 +33,9 @@ beforeEach(() => {
   domUiFacade = {};
   thoughtListener = { handleEvent: jest.fn() };
   notesListener = { handleEvent: jest.fn() };
+  contentDependencyValidator = {
+    validate: jest.fn().mockResolvedValue(undefined),
+  };
 });
 
 describe('InitializationService invalid world name handling', () => {
@@ -59,6 +63,7 @@ describe('InitializationService invalid world name handling', () => {
           dataRegistry,
           systemInitializer,
           worldInitializer,
+          contentDependencyValidator,
         },
       });
 

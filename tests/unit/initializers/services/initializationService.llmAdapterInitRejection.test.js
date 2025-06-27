@@ -18,6 +18,7 @@ let entityManager;
 let domUiFacade;
 let thoughtListener;
 let notesListener;
+let contentDependencyValidator;
 
 beforeEach(() => {
   logger = { error: jest.fn(), debug: jest.fn(), warn: jest.fn() };
@@ -40,6 +41,9 @@ beforeEach(() => {
   domUiFacade = {};
   thoughtListener = { handleEvent: jest.fn() };
   notesListener = { handleEvent: jest.fn() };
+  contentDependencyValidator = {
+    validate: jest.fn().mockResolvedValue(undefined),
+  };
 });
 
 describe('InitializationService LLM adapter rejection', () => {
@@ -68,6 +72,7 @@ describe('InitializationService LLM adapter rejection', () => {
         dataRegistry,
         systemInitializer,
         worldInitializer,
+        contentDependencyValidator,
       },
     });
 

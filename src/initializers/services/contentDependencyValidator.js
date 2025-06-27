@@ -8,7 +8,9 @@
  * entity instances reference existing definitions and that exit targets and
  * blockers correspond to spawned instances.
  */
-class ContentDependencyValidator {
+import IContentDependencyValidator from '../../interfaces/IContentDependencyValidator.js';
+
+class ContentDependencyValidator extends IContentDependencyValidator {
   /** @type {ILogger} */
   #logger;
   /** @type {IGameDataRepository} */
@@ -21,7 +23,8 @@ class ContentDependencyValidator {
    * @param {IGameDataRepository} deps.gameDataRepository - Repository providing entity and world data.
    * @param {ILogger} deps.logger - Logger for debug and error output.
    */
-  constructor({ gameDataRepository, logger }) {
+  constructor({ gameDataRepository, logger } = {}) {
+    super();
     this.#gameDataRepository = gameDataRepository;
     this.#logger = logger;
   }
