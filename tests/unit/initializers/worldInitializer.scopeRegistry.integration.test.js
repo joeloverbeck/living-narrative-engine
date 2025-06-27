@@ -3,6 +3,7 @@ import WorldInitializer from '../../../src/initializers/worldInitializer.js';
 import { GameDataRepository } from '../../../src/data/gameDataRepository.js';
 import ScopeRegistry from '../../../src/scopeDsl/scopeRegistry.js';
 import { SCOPES_KEY } from '../../../src/constants/dataRegistryKeys.js';
+import loadAndInitScopes from '../../../src/initializers/services/scopeRegistryUtils.js';
 
 describe('WorldInitializer - ScopeRegistry Integration', () => {
   let worldInitializer;
@@ -83,7 +84,11 @@ describe('WorldInitializer - ScopeRegistry Integration', () => {
       };
       mockRegistry.get.mockReturnValue(mockScopes);
 
-      await worldInitializer.initializeScopeRegistry();
+      await loadAndInitScopes({
+        dataSource: gameDataRepository.get.bind(gameDataRepository),
+        scopeRegistry,
+        logger: mockLogger,
+      });
 
       // Verify GameDataRepository.get was called
       expect(mockRegistry.get).toHaveBeenCalledWith(SCOPES_KEY);
@@ -97,17 +102,21 @@ describe('WorldInitializer - ScopeRegistry Integration', () => {
 
       // Verify logging
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        'WorldInitializer: Initializing ScopeRegistry with loaded scopes...'
+        'Initializing ScopeRegistry...'
       );
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        'WorldInitializer: ScopeRegistry initialized with 3 scopes.'
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'ScopeRegistry initialized with 3 scopes.'
       );
     });
 
     it('should handle missing get method gracefully', async () => {
       // Simulate case where registry.get becomes unavailable after construction
       // This can happen if the registry implementation changes at runtime
-      await worldInitializer.initializeScopeRegistry();
+      await loadAndInitScopes({
+        dataSource: gameDataRepository.get.bind(gameDataRepository),
+        scopeRegistry,
+        logger: mockLogger,
+      });
 
       // Now modify the underlying registry to not have get method
       mockRegistry.get = undefined;
@@ -115,7 +124,11 @@ describe('WorldInitializer - ScopeRegistry Integration', () => {
       // Clear the scope registry for clean test
       scopeRegistry.clear();
 
-      await worldInitializer.initializeScopeRegistry();
+      await loadAndInitScopes({
+        dataSource: gameDataRepository.get.bind(gameDataRepository),
+        scopeRegistry,
+        logger: mockLogger,
+      });
 
       // Should log warning about missing get method
       expect(mockLogger.warn).toHaveBeenCalledWith(
@@ -135,13 +148,17 @@ describe('WorldInitializer - ScopeRegistry Integration', () => {
         scopeRegistry.clear();
         mockRegistry.get.mockReturnValue(scopesValue);
 
-        await worldInitializer.initializeScopeRegistry();
+        await loadAndInitScopes({
+          dataSource: gameDataRepository.get.bind(gameDataRepository),
+          scopeRegistry,
+          logger: mockLogger,
+        });
 
         // Should initialize with empty object
         expect(scopeRegistry.getStats().initialized).toBe(true);
         expect(scopeRegistry.getStats().size).toBe(0);
-        expect(mockLogger.info).toHaveBeenCalledWith(
-          'WorldInitializer: ScopeRegistry initialized with 0 scopes.'
+        expect(mockLogger.debug).toHaveBeenCalledWith(
+          'ScopeRegistry initialized with 0 scopes.'
         );
 
         jest.clearAllMocks();
@@ -159,11 +176,15 @@ describe('WorldInitializer - ScopeRegistry Integration', () => {
         throw initError;
       });
 
-      await worldInitializer.initializeScopeRegistry();
+      await loadAndInitScopes({
+        dataSource: gameDataRepository.get.bind(gameDataRepository),
+        scopeRegistry,
+        logger: mockLogger,
+      });
 
       // Should log error and not throw
       expect(mockLogger.error).toHaveBeenCalledWith(
-        'WorldInitializer: Failed to initialize ScopeRegistry:',
+        'Failed to initialize ScopeRegistry:',
         initError
       );
 
@@ -174,12 +195,16 @@ describe('WorldInitializer - ScopeRegistry Integration', () => {
     it('should handle empty scopes object', async () => {
       mockRegistry.get.mockReturnValue({});
 
-      await worldInitializer.initializeScopeRegistry();
+      await loadAndInitScopes({
+        dataSource: gameDataRepository.get.bind(gameDataRepository),
+        scopeRegistry,
+        logger: mockLogger,
+      });
 
       expect(scopeRegistry.getStats().initialized).toBe(true);
       expect(scopeRegistry.getStats().size).toBe(0);
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        'WorldInitializer: ScopeRegistry initialized with 0 scopes.'
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'ScopeRegistry initialized with 0 scopes.'
       );
     });
 
@@ -189,11 +214,15 @@ describe('WorldInitializer - ScopeRegistry Integration', () => {
         throw registryError;
       });
 
-      await worldInitializer.initializeScopeRegistry();
+      await loadAndInitScopes({
+        dataSource: gameDataRepository.get.bind(gameDataRepository),
+        scopeRegistry,
+        logger: mockLogger,
+      });
 
       // Should catch the error and log it
       expect(mockLogger.error).toHaveBeenCalledWith(
-        'WorldInitializer: Failed to initialize ScopeRegistry:',
+        'Failed to initialize ScopeRegistry:',
         registryError
       );
     });

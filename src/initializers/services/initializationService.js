@@ -22,7 +22,7 @@ import {
   INITIALIZATION_SERVICE_FAILED_ID,
   UI_SHOW_FATAL_ERROR_ID,
 } from '../../constants/eventIds.js';
-import { SCOPES_KEY } from '../../constants/dataRegistryKeys.js';
+import loadAndInitScopes from './scopeRegistryUtils.js';
 import {
   SystemInitializationError,
   WorldInitializationError,
@@ -85,7 +85,13 @@ class InitializationService extends IInitializationService {
    * }} config.coreSystems - Core engine systems.
    * @description Initializes the complete game system.
    */
-  constructor({ log = {}, events = {}, llm = {}, persistence = {}, coreSystems = {} } = {}) {
+  constructor({
+    log = {},
+    events = {},
+    llm = {},
+    persistence = {},
+    coreSystems = {},
+  } = {}) {
     const { logger } = log;
     const { validatedEventDispatcher, safeEventDispatcher } = events;
     const { llmAdapter, llmConfigLoader } = llm;
@@ -98,7 +104,13 @@ class InitializationService extends IInitializationService {
       notesListener,
       spatialIndexManager,
     } = persistence;
-    const { modsLoader, scopeRegistry, dataRegistry, systemInitializer, worldInitializer } = coreSystems;
+    const {
+      modsLoader,
+      scopeRegistry,
+      dataRegistry,
+      systemInitializer,
+      worldInitializer,
+    } = coreSystems;
     super();
 
     assertMethods(
@@ -304,16 +316,11 @@ class InitializationService extends IInitializationService {
    */
 
   async #initializeScopeRegistry() {
-    this.#logger.debug('Initializing ScopeRegistry...');
-    const scopes = this.#dataRegistry.getAll(SCOPES_KEY);
-    const scopeMap = {};
-    scopes.forEach((scope) => {
-      if (scope.id) {
-        scopeMap[scope.id] = scope;
-      }
+    await loadAndInitScopes({
+      dataSource: this.#dataRegistry.getAll.bind(this.#dataRegistry),
+      scopeRegistry: this.#scopeRegistry,
+      logger: this.#logger,
     });
-    this.#scopeRegistry.initialize(scopeMap);
-    this.#logger.debug('ScopeRegistry initialized.');
   }
 
   /**
