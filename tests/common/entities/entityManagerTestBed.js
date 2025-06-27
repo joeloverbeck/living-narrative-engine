@@ -1,8 +1,8 @@
 /**
- * @file This module provides a centralized TestBed helper and standardized test data
+ * @file This module provides a centralized EntityManagerTestBed helper and standardized test data
  * for all EntityManager unit tests. It aims to reduce boilerplate, improve readability,
  * and make the test suite easier to maintain.
- * @see tests/common/entities/testBed.js
+ * @see tests/common/entities/entityManagerTestBed.js
  */
 
 import EntityManager from '../../../src/entities/entityManager.js';
@@ -26,7 +26,7 @@ import { createDescribeTestBedSuite } from '../describeSuite.js';
  * Creates mocks, instantiates the manager, and provides helper methods
  * to streamline test writing.
  */
-export class TestBed extends FactoryTestBed {
+export class EntityManagerTestBed extends FactoryTestBed {
   /**
    * Collection of all mocks for easy access in tests.
    *
@@ -41,7 +41,7 @@ export class TestBed extends FactoryTestBed {
   entityManager;
 
   /**
-   * Creates a new TestBed instance.
+   * Creates a new EntityManagerTestBed instance.
    *
    * @param {object} [overrides] - Optional overrides.
    * @param {object} [overrides.entityManagerOptions] - Options forwarded to the EntityManager constructor.
@@ -104,7 +104,7 @@ export class TestBed extends FactoryTestBed {
   /**
    * Creates a new entity instance from a definition stored in {@link TestData}.
    *
-   * Internally this configures the mock registry via {@link TestBed#setupDefinitions}
+   * Internally this configures the mock registry via {@link EntityManagerTestBed#setupDefinitions}
    * and then delegates to {@link EntityManager#createEntityInstance}.
    *
    * @param {keyof typeof TestData.Definitions} defKey - Key of the test
@@ -133,7 +133,7 @@ export class TestBed extends FactoryTestBed {
   }
 
   /**
-   * Convenience wrapper around {@link TestBed#setupDefinitions} for test
+   * Convenience wrapper around {@link EntityManagerTestBed#setupDefinitions} for test
    * definitions stored in {@link TestData}.
    *
    * @param {...keyof typeof TestData.Definitions} defKeys - Keys of test
@@ -190,7 +190,7 @@ export class TestBed extends FactoryTestBed {
    * @returns {import('../../../src/entities/entity.js').default} The created
    *   entity instance.
    */
-  createEntityWithOverride(
+  createEntityWithOverrides(
     defKey,
     overrides,
     { resetDispatch = false, ...options } = {}
@@ -213,15 +213,15 @@ export class TestBed extends FactoryTestBed {
 }
 
 /**
- * Creates a test suite for {@link EntityManager} utilizing {@link TestBed} for
+ * Creates a test suite for {@link EntityManager} utilizing {@link EntityManagerTestBed} for
  * setup and cleanup. The provided suite function receives a getter that
- * returns the current {@link TestBed} instance.
+ * returns the current {@link EntityManagerTestBed} instance.
  *
  * @param {string} title - Title of the suite passed to `describe`.
- * @param {(getTestBed: () => TestBed) => void} suiteFn - Function containing the
- *   tests. It receives a callback that returns the active {@link TestBed}.
+ * @param {(getTestBed: () => EntityManagerTestBed) => void} suiteFn - Function containing the
+ *   tests. It receives a callback that returns the active {@link EntityManagerTestBed}.
  * @returns {void}
  */
-export const describeEntityManagerSuite = createDescribeTestBedSuite(TestBed);
+export const describeEntityManagerSuite = createDescribeTestBedSuite(EntityManagerTestBed);
 
-export default TestBed;
+export default EntityManagerTestBed;

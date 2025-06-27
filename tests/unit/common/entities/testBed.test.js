@@ -5,7 +5,7 @@
 
 import { jest, describe, it, expect, beforeEach } from '@jest/globals';
 // Corrected the path to be relative to the test file's location as per the logs.
-import { TestBed, TestData } from '../../../common/entities/index.js';
+import { EntityManagerTestBed, TestData } from '../../../common/entities/index.js';
 import EntityManager from '../../../../src/entities/entityManager.js';
 import EntityDefinition from '../../../../src/entities/entityDefinition.js';
 import {
@@ -13,12 +13,12 @@ import {
   POSITION_COMPONENT_ID,
 } from '../../../../src/constants/componentIds.js';
 
-// We only need to mock EntityManager to verify that the TestBed instantiates it correctly.
+// We only need to mock EntityManager to verify that the EntityManagerTestBed instantiates it correctly.
 // EntityDefinition should NOT be mocked, as we need its real implementation to create
 // the test data objects that the system under test relies on.
 jest.mock('../../../../src/entities/entityManager.js');
 
-describe('EntityManager Test Helpers: TestBed & TestData', () => {
+describe('EntityManager Test Helpers: EntityManagerTestBed & TestData', () => {
   describe('TestData Export', () => {
     it('should export a TestData object with the correct structure', () => {
       expect(TestData).toBeDefined();
@@ -54,13 +54,13 @@ describe('EntityManager Test Helpers: TestBed & TestData', () => {
     });
   });
 
-  describe('TestBed Class', () => {
-    let testBed;
+  describe('EntityManagerTestBed Class', () => {
+    let bed;
 
     beforeEach(() => {
       // Clear any static mocks before each test
       jest.clearAllMocks();
-      testBed = new TestBed();
+      bed = new EntityManagerTestBed();
     });
 
     describe('Constructor & Initialization', () => {
@@ -69,21 +69,21 @@ describe('EntityManager Test Helpers: TestBed & TestData', () => {
         // FIX: The constructor now receives a 5th `options` argument, which is `{}` by default.
         // We update the test to expect this new argument.
         expect(EntityManager).toHaveBeenCalledWith({
-          registry: testBed.mocks.registry,
-          validator: testBed.mocks.validator,
-          logger: testBed.mocks.logger,
-          dispatcher: testBed.mocks.eventDispatcher,
+          registry: bed.mocks.registry,
+          validator: bed.mocks.validator,
+          logger: bed.mocks.logger,
+          dispatcher: bed.mocks.eventDispatcher,
         });
       });
 
       it('should provide a public property `entityManager` with the SUT instance', () => {
-        expect(testBed.entityManager).toBeDefined();
-        expect(testBed.entityManager).toBeInstanceOf(EntityManager);
+        expect(bed.entityManager).toBeDefined();
+        expect(bed.entityManager).toBeInstanceOf(EntityManager);
       });
 
       it('should provide a public `mocks` property containing all created mocks', () => {
-        expect(testBed.mocks).toBeDefined();
-        const mockKeys = Object.keys(testBed.mocks);
+        expect(bed.mocks).toBeDefined();
+        const mockKeys = Object.keys(bed.mocks);
         expect(mockKeys).toContain('registry');
         expect(mockKeys).toContain('validator');
         expect(mockKeys).toContain('logger');
@@ -92,28 +92,28 @@ describe('EntityManager Test Helpers: TestBed & TestData', () => {
 
       it('should initialize mocks with jest.fn() spies', () => {
         // Registry
-        expect(testBed.mocks.registry.getEntityDefinition).toBeDefined();
+        expect(bed.mocks.registry.getEntityDefinition).toBeDefined();
         expect(
-          jest.isMockFunction(testBed.mocks.registry.getEntityDefinition)
+          jest.isMockFunction(bed.mocks.registry.getEntityDefinition)
         ).toBe(true);
 
         // Validator
-        expect(testBed.mocks.validator.validate).toBeDefined();
-        expect(jest.isMockFunction(testBed.mocks.validator.validate)).toBe(
+        expect(bed.mocks.validator.validate).toBeDefined();
+        expect(jest.isMockFunction(bed.mocks.validator.validate)).toBe(
           true
         );
         // Check default implementation
-        expect(testBed.mocks.validator.validate()).toEqual({ isValid: true });
+        expect(bed.mocks.validator.validate()).toEqual({ isValid: true });
 
         // Logger
-        expect(jest.isMockFunction(testBed.mocks.logger.info)).toBe(true);
-        expect(jest.isMockFunction(testBed.mocks.logger.warn)).toBe(true);
-        expect(jest.isMockFunction(testBed.mocks.logger.error)).toBe(true);
-        expect(jest.isMockFunction(testBed.mocks.logger.debug)).toBe(true);
+        expect(jest.isMockFunction(bed.mocks.logger.info)).toBe(true);
+        expect(jest.isMockFunction(bed.mocks.logger.warn)).toBe(true);
+        expect(jest.isMockFunction(bed.mocks.logger.error)).toBe(true);
+        expect(jest.isMockFunction(bed.mocks.logger.debug)).toBe(true);
 
         // Event Dispatcher
         expect(
-          jest.isMockFunction(testBed.mocks.eventDispatcher.dispatch)
+          jest.isMockFunction(bed.mocks.eventDispatcher.dispatch)
         ).toBe(true);
       });
     });
@@ -121,9 +121,9 @@ describe('EntityManager Test Helpers: TestBed & TestData', () => {
     describe('setupDefinitions()', () => {
       it('should configure the mock registry to return specified definitions', () => {
         const { basic, actor } = TestData.Definitions;
-        testBed.setupDefinitions(basic, actor);
+        bed.setupDefinitions(basic, actor);
 
-        const registry = testBed.mocks.registry;
+        const registry = bed.mocks.registry;
         // With the fix, these assertions should now pass as `basic` and `actor` are real objects with an `id`.
         expect(registry.getEntityDefinition(TestData.DefinitionIDs.BASIC)).toBe(
           basic
@@ -135,9 +135,9 @@ describe('EntityManager Test Helpers: TestBed & TestData', () => {
 
       it('should make the mock registry return undefined for unspecified IDs', () => {
         const { basic } = TestData.Definitions;
-        testBed.setupDefinitions(basic);
+        bed.setupDefinitions(basic);
 
-        const registry = testBed.mocks.registry;
+        const registry = bed.mocks.registry;
         expect(registry.getEntityDefinition(TestData.DefinitionIDs.BASIC)).toBe(
           basic
         );
@@ -148,8 +148,8 @@ describe('EntityManager Test Helpers: TestBed & TestData', () => {
       });
 
       it('should handle being called with no definitions', () => {
-        testBed.setupDefinitions();
-        const registry = testBed.mocks.registry;
+        bed.setupDefinitions();
+        const registry = bed.mocks.registry;
         expect(
           registry.getEntityDefinition(TestData.DefinitionIDs.BASIC)
         ).toBeUndefined();
@@ -160,19 +160,19 @@ describe('EntityManager Test Helpers: TestBed & TestData', () => {
       it('should call clearAll() on its entityManager instance', async () => {
         // FIX: The entityManager instance from the mocked module already has mock methods.
         // We directly assert on that mock method.
-        const clearAllMethod = testBed.entityManager.clearAll;
+        const clearAllMethod = bed.entityManager.clearAll;
 
-        await testBed.cleanup();
+        await bed.cleanup();
 
         expect(clearAllMethod).toHaveBeenCalledTimes(1);
       });
 
       it('should clear all mocks via jest.clearAllMocks()', async () => {
-        const { logger } = testBed.mocks;
+        const { logger } = bed.mocks;
         logger.info('test call');
         expect(logger.info).toHaveBeenCalledTimes(1);
 
-        await testBed.cleanup();
+        await bed.cleanup();
 
         // jest.clearAllMocks() resets the counter.
         expect(logger.info).toHaveBeenCalledTimes(0);

@@ -14,8 +14,8 @@ import { InvalidArgumentError } from '../../../src/errors/invalidArgumentError.j
  *   repeating the same `it.each` logic.
  * @param {Array<*>|Array<Array<*>>} values - Invalid values to iterate over.
  * @param {string} message - Test description passed to `it.each`.
- * @param {() => import('./testBed.js').TestBed} getBed - Callback returning the
- *   active {@link TestBed} instance.
+ * @param {() => import('./entityManagerTestBed.js').EntityManagerTestBed} getBed - Callback returning the
+ *   active {@link EntityManagerTestBed} instance.
  * @param {(em: import('../../../src/entities/entityManager.js').default,
  *   ...args: any[]) => any} invoke - Function that calls the method under test
  *   using the provided EntityManager instance.
@@ -36,7 +36,7 @@ function runInvalidCases(values, message, getBed, invoke) {
  *   handling in EntityManager methods.
  * @param {Array<*>|Array<Array<*>>} values - Invalid values passed to `it.each`.
  * @param {string} message - Description used in the generated test.
- * @returns {(getBed: () => import('./testBed.js').TestBed,
+ * @returns {(getBed: () => import('./entityManagerTestBed.js').EntityManagerTestBed,
  *   invoke: (em: import('../../../src/entities/entityManager.js').default,
  *   ...args: any[]) => any) => void} Function executing the parameterized test.
  */
@@ -50,8 +50,8 @@ function createInvalidInputTest(values, message) {
  *
  * @description Helper for entity component methods like addComponent and
  * removeComponent that should throw InvalidArgumentError when called with invalid IDs.
- * @param {() => import('./testBed.js').TestBed} getBed - Callback to retrieve
- *   the active {@link TestBed} instance.
+ * @param {() => import('./entityManagerTestBed.js').EntityManagerTestBed} getBed - Callback to retrieve
+ *   the active {@link EntityManagerTestBed} instance.
  * @param {(em: import('../../../src/entities/entityManager.js').default, instanceId: *, componentId: *) => *} invoke
  *   - Function that invokes the target EntityManager method.
  * @returns {void}
@@ -78,8 +78,8 @@ export function runInvalidIdPairTests(getBed, invoke) {
  * Runs a parameterized test verifying how a method handles invalid entity IDs.
  *
  * @description Helper for entity methods like removeEntityInstance that should throw InvalidArgumentError when called with invalid IDs.
- * @param {() => import('./testBed.js').TestBed} getBed - Callback to retrieve
- *   the active {@link TestBed} instance.
+ * @param {() => import('./entityManagerTestBed.js').EntityManagerTestBed} getBed - Callback to retrieve
+ *   the active {@link EntityManagerTestBed} instance.
  * @param {(em: import('../../../src/entities/entityManager.js').default, instanceId: *) => *} invoke
  *   - Function that invokes the target EntityManager method.
  * @returns {void}
@@ -96,8 +96,8 @@ export function runInvalidEntityIdTests(getBed, invoke) {
  *
  * @description Helper for methods that accept a definitionId and should throw
  * InvalidArgumentError when called with invalid IDs.
- * @param {() => import('./testBed.js').TestBed} getBed - Callback to retrieve
- *   the active {@link TestBed} instance.
+ * @param {() => import('./entityManagerTestBed.js').EntityManagerTestBed} getBed - Callback to retrieve
+ *   the active {@link EntityManagerTestBed} instance.
  * @param {(em: import('../../../src/entities/entityManager.js').default, definitionId: *) => *} invoke
  *   - Function that invokes the target EntityManager method.
  * @returns {void}

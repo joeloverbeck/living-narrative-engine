@@ -1,7 +1,7 @@
 /**
  * @file This file consolidates all tests for the EntityManager's entity query and
  * accessor methods, such as getEntityInstance and getEntitiesWithComponent.
- * It exclusively uses the TestBed helper for all setup to ensure consistency and reduce boilerplate.
+ * It exclusively uses the EntityManagerTestBed helper for all setup to ensure consistency and reduce boilerplate.
  * @see tests/unit/entities/entityManager.queries.test.js
  */
 

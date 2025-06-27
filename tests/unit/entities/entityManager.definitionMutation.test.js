@@ -3,7 +3,7 @@
 import { test, expect } from '@jest/globals';
 import {
   describeEntityManagerSuite,
-  TestBed,
+  EntityManagerTestBed,
 } from '../../common/entities/index.js';
 import EntityDefinition from '../../../src/entities/entityDefinition.js';
 
@@ -11,20 +11,20 @@ describeEntityManagerSuite(
   'EntityManager.createEntityInstance does not mutate definitions',
   (getBed) => {
     test('components property remains unchanged when null', () => {
-      const testBed = getBed();
+      const bed = getBed();
       const definition = { id: 'test:nullComps', components: null };
       const regDef = new EntityDefinition(definition.id, {
         components: definition.components,
       });
-      testBed.setupDefinitions(regDef);
+      bed.setupDefinitions(regDef);
 
-      const entity = testBed.entityManager.createEntityInstance(definition.id);
+      const entity = bed.entityManager.createEntityInstance(definition.id);
       expect(entity).not.toBeNull();
       expect(definition.components).toBeNull();
     });
 
     test('components property remains unchanged when valid object', () => {
-      const testBed = getBed();
+      const bed = getBed();
       const definition = {
         id: 'test:validComps',
         components: { 'core:name': { value: 'A' } },
@@ -32,9 +32,9 @@ describeEntityManagerSuite(
       const regDef = new EntityDefinition(definition.id, {
         components: definition.components,
       });
-      testBed.setupDefinitions(regDef);
+      bed.setupDefinitions(regDef);
 
-      const entity = testBed.entityManager.createEntityInstance(definition.id);
+      const entity = bed.entityManager.createEntityInstance(definition.id);
       expect(entity).not.toBeNull();
       expect(definition.components).toEqual({ 'core:name': { value: 'A' } });
     });
