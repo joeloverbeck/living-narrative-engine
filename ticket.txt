@@ -1,0 +1,12 @@
+1. In `src/logic/operationHandlers/modifyArrayFieldHandler.js`, extract:
+
+   * `validateParams()` – return normalized params or `null`.
+   * `fetchTargetArray()` (existing) – keep.
+   * `applyModification()` (existing) – keep.
+   * `commitChanges()` (existing) – keep.
+   * Update `execute` to orchestrate these helpers with early returns.
+2. Repeat in `modifyContextArrayHandler.js`:
+
+   * Create `validateParams()` and `resolveArray()` helpers.
+   * Keep or refactor existing modification logic into reusable functions.
+3. Ensure all extracted helpers are private and covered by unit tests.

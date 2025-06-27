@@ -54,6 +54,91 @@ class ModifyContextArrayHandler {
   }
 
   /**
+   * Validate parameters for {@link execute}.
+   *
+   * @param {object} params - Raw parameters object.
+   * @param {ILogger} logger - Logger instance for diagnostics.
+   * @returns {{
+   *   variablePath: string,
+   *   mode: 'push'|'push_unique'|'pop'|'remove_by_value',
+   *   value: *,
+   *   resultVariable: string|null
+   * }|null} Normalized parameters or `null` when invalid.
+   * @private
+   */
+  #validateParams(params, logger) {
+    if (!assertParamsObject(params, logger, 'MODIFY_CONTEXT_ARRAY')) {
+      return null;
+    }
+
+    const { variable_path, mode, value, result_variable } = params;
+    
+    if (!variable_path || !mode) {
+      logger.warn(
+        'MODIFY_CONTEXT_ARRAY: Missing required parameters (variable_path, or mode).'
+      );
+      return null;
+    }
+
+    if (!ARRAY_MODIFICATION_MODES.includes(mode)) {
+      logger.warn(`MODIFY_CONTEXT_ARRAY: Unknown mode '${mode}'.`);
+      return null;
+    }
+
+    if (
+      value === undefined &&
+      (mode === 'push' || mode === 'push_unique' || mode === 'remove_by_value')
+    ) {
+      logger.warn(`'${mode}' mode requires a 'value' parameter.`);
+      return null;
+    }
+
+    return {
+      variablePath: variable_path,
+      mode,
+      value,
+      resultVariable: result_variable || null
+    };
+  }
+
+  /**
+   * Resolve the array from the context, handling initialization for push modes.
+   *
+   * @param {object} contextObject - The execution context object.
+   * @param {string} variablePath - Dot-separated path to the array variable.
+   * @param {string} mode - The operation mode.
+   * @param {ILogger} logger - Logger instance.
+   * @returns {Array|null} The cloned array or `null` if resolution fails.
+   * @private
+   */
+  #resolveArray(contextObject, variablePath, mode, logger) {
+    const resolvedValue = resolvePath(contextObject, variablePath);
+
+    if (Array.isArray(resolvedValue)) {
+      return cloneDeep(resolvedValue);
+    }
+
+    if (
+      resolvedValue === undefined &&
+      (mode === 'push' || mode === 'push_unique')
+    ) {
+      logger.debug(
+        `MODIFY_CONTEXT_ARRAY: Path '${variablePath}' does not exist. Initializing as empty array for mode '${mode}'.`
+      );
+      return [];
+    }
+
+    let message = `MODIFY_CONTEXT_ARRAY: Context variable path '${variablePath}' `;
+    if (resolvedValue === undefined) {
+      message += `does not exist, and mode '${mode}' does not support initialization from undefined.`;
+    } else {
+      message += `does not resolve to an array (found type: ${typeof resolvedValue}).`;
+    }
+    logger.warn(message);
+    return null;
+  }
+
+  /**
    * Executes the array modification operation on a context variable.
    *
    * @param {object} params - The parameters for the operation.
@@ -66,18 +151,15 @@ class ModifyContextArrayHandler {
   execute(params, executionContext) {
     const log = executionContext?.logger ?? this.#logger;
 
-    if (!assertParamsObject(params, log, 'MODIFY_CONTEXT_ARRAY')) {
+    // Validate parameters
+    const validated = this.#validateParams(params, log);
+    if (!validated) {
       return;
     }
 
-    const { variable_path, mode, value, result_variable } = params;
-    if (!variable_path || !mode) {
-      log.warn(
-        'MODIFY_CONTEXT_ARRAY: Missing required parameters (variable_path, or mode).'
-      );
-      return;
-    }
+    const { variablePath, mode, value, resultVariable } = validated;
 
+    // Ensure execution context exists
     const contextObject = ensureEvaluationContext(
       executionContext,
       this.#dispatcher,
@@ -87,31 +169,14 @@ class ModifyContextArrayHandler {
       return;
     }
 
-    const resolvedValue = resolvePath(contextObject, variable_path);
-    let clonedArray;
-
-    if (Array.isArray(resolvedValue)) {
-      clonedArray = cloneDeep(resolvedValue);
-    } else if (
-      resolvedValue === undefined &&
-      (mode === 'push' || mode === 'push_unique')
-    ) {
-      log.debug(
-        `MODIFY_CONTEXT_ARRAY: Path '${variable_path}' does not exist. Initializing as empty array for mode '${mode}'.`
-      );
-      clonedArray = [];
-    } else {
-      let message = `MODIFY_CONTEXT_ARRAY: Context variable path '${variable_path}' `;
-      if (resolvedValue === undefined) {
-        message += `does not exist, and mode '${mode}' does not support initialization from undefined.`;
-      } else {
-        message += `does not resolve to an array (found type: ${typeof resolvedValue}).`;
-      }
-      log.warn(message);
+    // Resolve the array
+    const clonedArray = this.#resolveArray(contextObject, variablePath, mode, log);
+    if (!clonedArray) {
       return;
     }
 
-    let debugMessage = `MODIFY_CONTEXT_ARRAY: Performing '${mode}' on context variable '${variable_path}'.`;
+    // Log the operation
+    let debugMessage = `MODIFY_CONTEXT_ARRAY: Performing '${mode}' on context variable '${variablePath}'.`;
     if (
       value !== undefined &&
       (mode === 'push' || mode === 'push_unique' || mode === 'remove_by_value')
@@ -125,38 +190,22 @@ class ModifyContextArrayHandler {
     }
     log.debug(debugMessage);
 
-    if (!ARRAY_MODIFICATION_MODES.includes(mode)) {
-      log.warn(`MODIFY_CONTEXT_ARRAY: Unknown mode '${mode}'.`);
-      return;
-    }
-
-    if (
-      value === undefined &&
-      (mode === 'push' || mode === 'push_unique' || mode === 'remove_by_value')
-    ) {
-      log.warn(`'${mode}' mode requires a 'value' parameter.`);
-      return;
-    }
-
+    // Apply the modification
     const { nextArray, result } = advancedArrayModify(
       mode,
       clonedArray,
       value,
       log
     );
-    clonedArray = nextArray;
-    const operationResult = result;
 
-    // --- FIX: Set the modified clone back into the context ---
-    const finalArray = clonedArray;
-    setByPath(contextObject, variable_path, finalArray);
+    // Set the modified array back into the context
+    setByPath(contextObject, variablePath, nextArray);
 
-    // The result variable should get the popped item or the final state of the array
-    const resultForStorage = mode === 'pop' ? operationResult : clonedArray;
-
-    if (result_variable) {
+    // Store result if requested
+    if (resultVariable) {
+      const resultForStorage = mode === 'pop' ? result : nextArray;
       tryWriteContextVariable(
-        result_variable,
+        resultVariable,
         resultForStorage,
         executionContext,
         this.#dispatcher,

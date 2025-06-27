@@ -7,7 +7,8 @@
       "Bash(npm run lint:*)",
       "Bash(grep:*)",
       "Bash(npm run test:*)",
-      "Bash(npx jest:*)"
+      "Bash(npx jest:*)",
+      "Bash(./node_modules/.bin/eslint src/logic/operationHandlers/modifyContextArrayHandler.js)"
     ],
     "deny": []
   }
