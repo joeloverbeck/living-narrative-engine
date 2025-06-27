@@ -30,6 +30,11 @@ import {
 } from '../../errors/InitializationError.js';
 import { validateWorldName, buildActionIndex } from './initHelpers.js';
 import ContentDependencyValidator from './contentDependencyValidator.js';
+import {
+  assertFunction,
+  assertMethods,
+  assertPresent,
+} from '../../utils/dependencyValidators.js';
 
 /**
  * Service responsible for orchestrating the entire game initialization sequence.
@@ -99,109 +104,99 @@ class InitializationService extends IInitializationService {
   }) {
     super();
 
-    if (
-      !logger ||
-      typeof logger.error !== 'function' ||
-      typeof logger.debug !== 'function'
-    ) {
-      const errorMsg =
-        "InitializationService: Missing or invalid required dependency 'logger'.";
-      throw new SystemInitializationError(errorMsg);
-    }
+    assertMethods(
+      logger,
+      ['error', 'debug'],
+      "InitializationService: Missing or invalid required dependency 'logger'.",
+      SystemInitializationError
+    );
 
     this.#logger = logger;
 
-    // FIX: Check for the correct 'dispatch' method name
-    if (
-      !validatedEventDispatcher ||
-      typeof validatedEventDispatcher.dispatch !== 'function'
-    ) {
-      const errorMsg =
-        "InitializationService: Missing or invalid required dependency 'validatedEventDispatcher'.";
-      this.#logger.error(errorMsg);
-      throw new SystemInitializationError(errorMsg);
-    }
+    assertFunction(
+      validatedEventDispatcher,
+      'dispatch',
+      "InitializationService: Missing or invalid required dependency 'validatedEventDispatcher'.",
+      SystemInitializationError,
+      this.#logger
+    );
 
-    if (!modsLoader || typeof modsLoader.loadMods !== 'function') {
-      throw new SystemInitializationError(
-        "InitializationService: Missing or invalid required dependency 'modsLoader'."
-      );
-    }
-    if (!scopeRegistry || typeof scopeRegistry.initialize !== 'function') {
-      throw new SystemInitializationError(
-        "InitializationService: Missing or invalid required dependency 'scopeRegistry'."
-      );
-    }
-    if (!dataRegistry || typeof dataRegistry.getAll !== 'function') {
-      throw new SystemInitializationError(
-        "InitializationService: Missing or invalid required dependency 'dataRegistry'."
-      );
-    }
-    if (
-      !systemInitializer ||
-      typeof systemInitializer.initializeAll !== 'function'
-    ) {
-      throw new SystemInitializationError(
-        "InitializationService: Missing or invalid required dependency 'systemInitializer'."
-      );
-    }
-    if (
-      !worldInitializer ||
-      typeof worldInitializer.initializeWorldEntities !== 'function'
-    ) {
-      throw new SystemInitializationError(
-        "InitializationService: Missing or invalid required dependency 'worldInitializer'."
-      );
-    }
-    if (
-      !safeEventDispatcher ||
-      typeof safeEventDispatcher.subscribe !== 'function'
-    ) {
-      throw new SystemInitializationError(
-        "InitializationService: Missing or invalid required dependency 'safeEventDispatcher'."
-      );
-    }
-    if (!entityManager) {
-      throw new SystemInitializationError(
-        "InitializationService: Missing required dependency 'entityManager'."
-      );
-    }
-    if (!actionIndex || typeof actionIndex.buildIndex !== 'function') {
-      throw new SystemInitializationError(
-        "InitializationService: Missing or invalid required dependency 'actionIndex'."
-      );
-    }
-    if (
-      !gameDataRepository ||
-      typeof gameDataRepository.getAllActionDefinitions !== 'function'
-    ) {
-      throw new SystemInitializationError(
-        "InitializationService: Missing or invalid required dependency 'gameDataRepository'."
-      );
-    }
-    if (!domUiFacade) {
-      throw new SystemInitializationError(
-        'InitializationService requires a domUiFacade dependency'
-      );
-    }
-    if (!thoughtListener || typeof thoughtListener.handleEvent !== 'function') {
-      throw new SystemInitializationError(
-        "InitializationService: Missing or invalid required dependency 'thoughtListener'."
-      );
-    }
-    if (!notesListener || typeof notesListener.handleEvent !== 'function') {
-      throw new SystemInitializationError(
-        "InitializationService: Missing or invalid required dependency 'notesListener'."
-      );
-    }
-    if (
-      !spatialIndexManager ||
-      typeof spatialIndexManager.buildIndex !== 'function'
-    ) {
-      throw new SystemInitializationError(
-        "InitializationService: Missing or invalid required dependency 'spatialIndexManager'."
-      );
-    }
+    assertFunction(
+      modsLoader,
+      'loadMods',
+      "InitializationService: Missing or invalid required dependency 'modsLoader'.",
+      SystemInitializationError
+    );
+    assertFunction(
+      scopeRegistry,
+      'initialize',
+      "InitializationService: Missing or invalid required dependency 'scopeRegistry'.",
+      SystemInitializationError
+    );
+    assertFunction(
+      dataRegistry,
+      'getAll',
+      "InitializationService: Missing or invalid required dependency 'dataRegistry'.",
+      SystemInitializationError
+    );
+    assertFunction(
+      systemInitializer,
+      'initializeAll',
+      "InitializationService: Missing or invalid required dependency 'systemInitializer'.",
+      SystemInitializationError
+    );
+    assertFunction(
+      worldInitializer,
+      'initializeWorldEntities',
+      "InitializationService: Missing or invalid required dependency 'worldInitializer'.",
+      SystemInitializationError
+    );
+    assertFunction(
+      safeEventDispatcher,
+      'subscribe',
+      "InitializationService: Missing or invalid required dependency 'safeEventDispatcher'.",
+      SystemInitializationError
+    );
+    assertPresent(
+      entityManager,
+      "InitializationService: Missing required dependency 'entityManager'.",
+      SystemInitializationError
+    );
+    assertFunction(
+      actionIndex,
+      'buildIndex',
+      "InitializationService: Missing or invalid required dependency 'actionIndex'.",
+      SystemInitializationError
+    );
+    assertFunction(
+      gameDataRepository,
+      'getAllActionDefinitions',
+      "InitializationService: Missing or invalid required dependency 'gameDataRepository'.",
+      SystemInitializationError
+    );
+    assertPresent(
+      domUiFacade,
+      'InitializationService requires a domUiFacade dependency',
+      SystemInitializationError
+    );
+    assertFunction(
+      thoughtListener,
+      'handleEvent',
+      "InitializationService: Missing or invalid required dependency 'thoughtListener'.",
+      SystemInitializationError
+    );
+    assertFunction(
+      notesListener,
+      'handleEvent',
+      "InitializationService: Missing or invalid required dependency 'notesListener'.",
+      SystemInitializationError
+    );
+    assertFunction(
+      spatialIndexManager,
+      'buildIndex',
+      "InitializationService: Missing or invalid required dependency 'spatialIndexManager'.",
+      SystemInitializationError
+    );
     this.#validatedEventDispatcher = validatedEventDispatcher;
     this.#modsLoader = modsLoader;
     this.#scopeRegistry = scopeRegistry;

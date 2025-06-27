@@ -24,6 +24,11 @@ import { SCOPES_KEY } from '../constants/dataRegistryKeys.js';
 import { safeDispatchError } from '../utils/safeDispatchErrorUtils.js';
 import { dispatchWithLogging } from '../utils/eventDispatchUtils.js';
 import { WorldInitializationError } from '../errors/InitializationError.js';
+import {
+  assertFunction,
+  assertPresent,
+  assertMethods,
+} from '../utils/dependencyValidators.js';
 
 /**
  * Service responsible for instantiating entities defined
@@ -105,41 +110,41 @@ class WorldInitializer {
     logger,
     scopeRegistry,
   }) {
-    if (
-      !entityManager ||
-      typeof entityManager.createEntityInstance !== 'function'
-    )
-      throw new WorldInitializationError(
-        'WorldInitializer requires an IEntityManager with createEntityInstance().'
-      );
-    if (!worldContext)
-      throw new WorldInitializationError(
-        'WorldInitializer requires a WorldContext.'
-      );
-    if (
-      !gameDataRepository ||
-      typeof gameDataRepository.getWorld !== 'function' ||
-      typeof gameDataRepository.getEntityInstanceDefinition !== 'function' ||
-      typeof gameDataRepository.get !== 'function'
-    )
-      throw new WorldInitializationError(
-        'WorldInitializer requires an IGameDataRepository with getWorld(), getEntityInstanceDefinition(), and get().'
-      );
-    if (
-      !validatedEventDispatcher ||
-      typeof validatedEventDispatcher.dispatch !== 'function'
-    )
-      throw new WorldInitializationError(
-        'WorldInitializer requires a ValidatedEventDispatcher with dispatch().'
-      );
-    if (!logger || typeof logger.debug !== 'function')
-      throw new WorldInitializationError(
-        'WorldInitializer requires an ILogger.'
-      );
-    if (!scopeRegistry || typeof scopeRegistry.initialize !== 'function')
-      throw new WorldInitializationError(
-        'WorldInitializer requires an IScopeRegistry with initialize().'
-      );
+    assertFunction(
+      entityManager,
+      'createEntityInstance',
+      'WorldInitializer requires an IEntityManager with createEntityInstance().',
+      WorldInitializationError
+    );
+    assertPresent(
+      worldContext,
+      'WorldInitializer requires a WorldContext.',
+      WorldInitializationError
+    );
+    assertMethods(
+      gameDataRepository,
+      ['getWorld', 'getEntityInstanceDefinition', 'get'],
+      'WorldInitializer requires an IGameDataRepository with getWorld(), getEntityInstanceDefinition(), and get().',
+      WorldInitializationError
+    );
+    assertFunction(
+      validatedEventDispatcher,
+      'dispatch',
+      'WorldInitializer requires a ValidatedEventDispatcher with dispatch().',
+      WorldInitializationError
+    );
+    assertFunction(
+      logger,
+      'debug',
+      'WorldInitializer requires an ILogger.',
+      WorldInitializationError
+    );
+    assertFunction(
+      scopeRegistry,
+      'initialize',
+      'WorldInitializer requires an IScopeRegistry with initialize().',
+      WorldInitializationError
+    );
 
     this.#entityManager = entityManager;
     this.#worldContext = worldContext;
