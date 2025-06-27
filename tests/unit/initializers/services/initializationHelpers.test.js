@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import {
   validateWorldName,
   buildActionIndex,
-} from '../../../../src/initializers/services/initializationService.js';
+} from '../../../../src/initializers/services/initHelpers.js';
 
 describe('InitializationService helper functions', () => {
   describe('validateWorldName', () => {
