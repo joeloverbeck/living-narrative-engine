@@ -26,9 +26,6 @@ export class TraceContext {
   /** @type {TraceLogEntry[]} */
   logs = [];
 
-  /** @type {any | null} */
-  result = null;
-
   /**
    * Adds a log entry to the trace.
    *
