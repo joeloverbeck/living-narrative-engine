@@ -381,27 +381,36 @@ export class EntityDisplayDataProvider {
       return [];
     }
     return exitsComponentData
-      .map((exit) => {
-        if (typeof exit !== 'object' || exit === null) {
-          this.#logger.warn(
-            `${this._logPrefix} getLocationDetails: Invalid exit item in exits component for location '${locationEntityId}'. Skipping.`,
-            { exit }
-          );
-          return null;
-        }
-        const exitDescription = isNonBlankString(exit.direction)
-          ? exit.direction.trim()
-          : 'Unspecified Exit';
-        const exitTarget = isNonBlankString(exit.target)
-          ? exit.target.trim()
-          : undefined;
-
-        return {
-          description: exitDescription,
-          target: exitTarget,
-          id: exitTarget,
-        };
-      })
+      .map((exit) => this.#normalizeExit(exit, locationEntityId))
       .filter((exit) => exit !== null);
+  }
+
+  /**
+   * @description Normalizes a single raw exit object.
+   * @private
+   * @param {*} exit - Raw exit data from component.
+   * @param {NamespacedId | string} locationEntityId - Location ID for logging context.
+   * @returns {ProcessedExit | null} Normalized exit or null if invalid.
+   */
+  #normalizeExit(exit, locationEntityId) {
+    if (typeof exit !== 'object' || exit === null) {
+      this.#logger.warn(
+        `${this._logPrefix} getLocationDetails: Invalid exit item in exits component for location '${locationEntityId}'. Skipping.`,
+        { exit }
+      );
+      return null;
+    }
+    const exitDescription = isNonBlankString(exit.direction)
+      ? exit.direction.trim()
+      : 'Unspecified Exit';
+    const exitTarget = isNonBlankString(exit.target)
+      ? exit.target.trim()
+      : undefined;
+
+    return {
+      description: exitDescription,
+      target: exitTarget,
+      id: exitTarget,
+    };
   }
 }

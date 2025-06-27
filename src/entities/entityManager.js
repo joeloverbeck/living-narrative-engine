@@ -102,11 +102,11 @@ class EntityManager extends IEntityManager {
   /** @type {function(): string} @private */
   #idGenerator;
   /** @type {IEntityRepository} @private */
-  #repository;  
+  #repository;
   /** @type {IComponentCloner} @private */
   #cloner;
   /** @type {IDefaultComponentPolicy} @private */
-  #defaultPolicy;  
+  #defaultPolicy;
 
   /** @type {EntityRepositoryAdapter} @private */
   #entityRepository;
@@ -115,7 +115,7 @@ class EntityManager extends IEntityManager {
   #componentMutationService;
 
   /** @type {ErrorTranslator} @private */
-  #errorTranslator;  
+  #errorTranslator;
 
   /** @type {DefinitionCache} @private */
   #definitionCache;
@@ -287,6 +287,76 @@ class EntityManager extends IEntityManager {
   }
 
   /**
+   * @description Validates parameters for {@link createEntityInstance}.
+   * @private
+   * @param {string} definitionId - The ID of the entity definition.
+   * @throws {InvalidArgumentError} If the definitionId is invalid.
+   */
+  #validateCreateEntityParams(definitionId) {
+    try {
+      assertValidId(
+        definitionId,
+        'EntityManager.createEntityInstance',
+        this.#logger
+      );
+    } catch (err) {
+      if (err && err.name === 'InvalidArgumentError') {
+        const msg = `EntityManager.createEntityInstance: invalid definitionId '${definitionId}'`;
+        this.#logger.warn(msg);
+        throw new InvalidArgumentError(msg, 'definitionId', definitionId);
+      }
+      throw err;
+    }
+  }
+
+  /**
+   * @description Retrieves an entity definition or throws.
+   * @private
+   * @param {string} definitionId - ID of the entity definition.
+   * @returns {EntityDefinition} The definition data.
+   * @throws {DefinitionNotFoundError} If the definition is missing.
+   */
+  #getDefinitionForCreate(definitionId) {
+    const definition = this.#definitionCache.get(definitionId);
+    if (!definition) {
+      throw new DefinitionNotFoundError(definitionId);
+    }
+    return definition;
+  }
+
+  /**
+   * @description Constructs a new entity instance using the factory.
+   * @private
+   * @param {string} definitionId - Definition ID.
+   * @param {object} opts - Creation options.
+   * @param {EntityDefinition} definition - Resolved definition object.
+   * @returns {Entity} Newly constructed entity.
+   */
+  #constructEntity(definitionId, opts, definition) {
+    return this.#factory.create(
+      definitionId,
+      opts,
+      this.#registry,
+      this.#entityRepository,
+      definition
+    );
+  }
+
+  /**
+   * @description Dispatches the ENTITY_CREATED event for a new entity.
+   * @private
+   * @param {Entity} entity - The newly created entity instance.
+   */
+  #dispatchEntityCreated(entity) {
+    this.#eventDispatcher.dispatch(ENTITY_CREATED_ID, {
+      instanceId: entity.id,
+      definitionId: entity.definitionId,
+      wasReconstructed: false,
+      entity,
+    });
+  }
+
+  /**
    * Retrieves an entity definition from the registry or cache.
    *
    * @private
@@ -314,62 +384,28 @@ class EntityManager extends IEntityManager {
    * @throws {ValidationError} If component data validation fails.
    */
   createEntityInstance(definitionId, opts = {}) {
+    this.#validateCreateEntityParams(definitionId);
+    const definition = this.#getDefinitionForCreate(definitionId);
+
+    this.#logger.debug(
+      `EntityManager.createEntityInstance: Creating entity instance '${opts.instanceId || 'auto-generated'}' from definition '${definitionId}' with overrides:`,
+      opts.componentOverrides
+    );
+
     try {
-      try {
-        assertValidId(
-          definitionId,
-          'EntityManager.createEntityInstance',
-          this.#logger
-        );
-      } catch (err) {
-        if (err && err.name === 'InvalidArgumentError') {
-          const msg =
-            "EntityManager.createEntityInstance: invalid definitionId '" +
-            definitionId +
-            "'";
-          this.#logger.warn(msg);
-          throw new InvalidArgumentError(msg, 'definitionId', definitionId);
-        }
-        throw err;
-      }
-
-      const definition = this.#definitionCache.get(definitionId);
-      if (!definition) {
-        throw new DefinitionNotFoundError(definitionId);
-      }
-
-      this.#logger.debug(
-        `EntityManager.createEntityInstance: Creating entity instance '${opts.instanceId || 'auto-generated'}' from definition '${definitionId}' with overrides:`,
-        opts.componentOverrides
-      );
-
-      const entity = this.#factory.create(
-        definitionId,
-        opts,
-        this.#registry,
-        this.#entityRepository,
-        definition
-      );
+      const entity = this.#constructEntity(definitionId, opts, definition);
 
       this.#logger.debug(
         `EntityManager.createEntityInstance: Factory created entity with ID '${entity.id}' and definitionId '${entity.definitionId}'`
       );
 
-      // Track the primary instance.
       this.#entityRepository.add(entity);
       this.#logger.debug(`Tracked entity ${entity.id}`);
-      // Dispatch event after successful creation and setup
-      this.#eventDispatcher.dispatch(ENTITY_CREATED_ID, {
-        instanceId: entity.id,
-        definitionId: entity.definitionId,
-        wasReconstructed: false,
-        entity,
-      });
+      this.#dispatchEntityCreated(entity);
       return entity;
     } catch (err) {
       if (err instanceof Error && err.message.startsWith('Entity with ID')) {
         this.#logger.error(err.message);
-        // Extract the entity ID from the error message and throw DuplicateEntityError
         const match = err.message.match(
           /Entity with ID '([^']+)' already exists/
         );
