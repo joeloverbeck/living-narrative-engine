@@ -85,7 +85,7 @@ describeEntityManagerSuite(
         // Arrange
         const { entityManager } = getBed();
         getBed().createBasicEntity({
-          componentOverrides: { [COMPONENT_B]: { val: 1 } },
+          overrides: { [COMPONENT_B]: { val: 1 } },
         });
 
         // Act
@@ -100,15 +100,15 @@ describeEntityManagerSuite(
         const { entityManager } = getBed();
         const entity1 = getBed().createBasicEntity({
           instanceId: 'instance-1',
-          componentOverrides: { [COMPONENT_A]: { val: 1 } },
+          overrides: { [COMPONENT_A]: { val: 1 } },
         });
         const entity2 = getBed().createBasicEntity({
           instanceId: 'instance-2',
-          componentOverrides: { [COMPONENT_B]: { val: 2 } },
+          overrides: { [COMPONENT_B]: { val: 2 } },
         });
         const entity3 = getBed().createBasicEntity({
           instanceId: 'instance-3',
-          componentOverrides: {
+          overrides: {
             [COMPONENT_A]: { val: 3 },
             [COMPONENT_B]: { val: 4 },
           },
@@ -166,7 +166,7 @@ describeEntityManagerSuite(
         // Arrange
         const { entityManager } = getBed();
         const entity1 = getBed().createBasicEntity({
-          componentOverrides: { [COMPONENT_A]: { val: 1 } },
+          overrides: { [COMPONENT_A]: { val: 1 } },
         });
 
         // Act
@@ -175,7 +175,7 @@ describeEntityManagerSuite(
 
         // Modify the state by adding another entity with the component
         const entity2 = getBed().createBasicEntity({
-          componentOverrides: { [COMPONENT_A]: { val: 2 } },
+          overrides: { [COMPONENT_A]: { val: 2 } },
         });
 
         const results2 = entityManager.getEntitiesWithComponent(COMPONENT_A);

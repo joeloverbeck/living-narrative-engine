@@ -25,7 +25,8 @@ describeEntityManagerSuite('EntityManager - hasComponent', (getBed) => {
       const { entityManager } = getBed();
       const { PRIMARY } = TestData.InstanceIDs;
       if (Object.keys(overrides).length) {
-        getBed().createEntityWithOverrides('basic', overrides, {
+        getBed().createEntityWithOverrides('basic', {
+          overrides,
           instanceId: PRIMARY,
         });
       } else {
@@ -61,11 +62,10 @@ describeEntityManagerSuite('EntityManager - hasComponent', (getBed) => {
         const { NAME_COMPONENT_ID } = TestData.ComponentIDs;
         const { PRIMARY } = TestData.InstanceIDs;
         if (useOverride) {
-          getBed().createEntityWithOverrides(
-            'basic',
-            { [NAME_COMPONENT_ID]: { name: 'Override' } },
-            { instanceId: PRIMARY }
-          );
+          getBed().createEntityWithOverrides('basic', {
+            overrides: { [NAME_COMPONENT_ID]: { name: 'Override' } },
+            instanceId: PRIMARY,
+          });
         } else {
           getBed().createBasicEntity({ instanceId: PRIMARY });
         }
@@ -86,11 +86,10 @@ describeEntityManagerSuite('EntityManager - hasComponent', (getBed) => {
         const { NAME_COMPONENT_ID } = TestData.ComponentIDs;
         const { PRIMARY } = TestData.InstanceIDs;
         if (useOverride) {
-          getBed().createEntityWithOverrides(
-            'basic',
-            { [NAME_COMPONENT_ID]: { name: 'Override' } },
-            { instanceId: PRIMARY }
-          );
+          getBed().createEntityWithOverrides('basic', {
+            overrides: { [NAME_COMPONENT_ID]: { name: 'Override' } },
+            instanceId: PRIMARY,
+          });
         } else {
           getBed().createBasicEntity({ instanceId: PRIMARY });
         }
