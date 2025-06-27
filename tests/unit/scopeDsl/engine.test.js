@@ -10,6 +10,7 @@ import ScopeEngine from '../../../src/scopeDsl/engine.js';
 import { parseDslExpression } from '../../../src/scopeDsl/parser.js';
 import ScopeDepthError from '../../../src/errors/scopeDepthError.js';
 import ScopeCycleError from '../../../src/errors/scopeCycleError.js';
+import { createMockSpatialIndexManager } from '../../common/mockFactories/index.js';
 
 // Mock dependencies
 const mockEntityManager = {
@@ -21,9 +22,7 @@ const mockEntityManager = {
   entities: [],
 };
 
-const mockSpatialIndexManager = {
-  getEntitiesInLocation: jest.fn(),
-};
+const mockSpatialIndexManager = createMockSpatialIndexManager();
 
 const mockJsonLogicEval = {
   evaluate: jest.fn(),

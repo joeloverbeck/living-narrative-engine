@@ -4,16 +4,9 @@
  */
 
 import Entity from '../../src/entities/entity.js';
-import EntityDefinition from '../../src/entities/entityDefinition.js';
+import { buildEntityDefinition } from '../common/entities/index.js';
 import EntityManagerIntegrationTestBed from '../common/entities/entityManagerIntegrationTestBed.js';
 
-// Mocks for constructor dependencies
-const mockSpatialIndexManager = {
-  addEntity: jest.fn(),
-  removeEntity: jest.fn(),
-  updateEntityLocation: jest.fn(),
-  clearIndex: jest.fn(),
-};
 
 describe('EntityManager Integration Tests', () => {
   let entityManager;
@@ -42,17 +35,13 @@ describe('EntityManager Integration Tests', () => {
     const instanceId = 'core:goblin_sentry';
 
     // 1. Create the base EntityDefinition for a goblin
-    const goblinDefinitionData = {
-      id: definitionId,
-      description: 'A standard goblin creature.',
-      components: {
+    const goblinDefinition = buildEntityDefinition(
+      definitionId,
+      {
         'core:name': { name: 'Goblin' },
         'core:health': { max: 15, current: 15 },
       },
-    };
-    const goblinDefinition = new EntityDefinition(
-      definitionId,
-      goblinDefinitionData
+      'A standard goblin creature.'
     );
 
     // 2. Populate the mock DataRegistry to simulate it being loaded
