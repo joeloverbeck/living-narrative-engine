@@ -5,6 +5,7 @@ import ComponentMutationService from '../../../../src/entities/services/componen
 import ErrorTranslator from '../../../../src/entities/services/errorTranslator.js';
 import EntityFactory from '../../../../src/entities/factories/entityFactory.js';
 import DefinitionCache from '../../../../src/entities/services/definitionCache.js';
+import EntityLifecycleManager from '../../../../src/entities/services/entityLifecycleManager.js';
 import {
   createSimpleMockDataRegistry,
   createMockSchemaValidator,
@@ -39,5 +40,8 @@ describe('createDefaultServices', () => {
     expect(services.errorTranslator).toBeInstanceOf(ErrorTranslator);
     expect(services.entityFactory).toBeInstanceOf(EntityFactory);
     expect(services.definitionCache).toBeInstanceOf(DefinitionCache);
+    expect(services.entityLifecycleManager).toBeInstanceOf(
+      EntityLifecycleManager
+    );
   });
 });

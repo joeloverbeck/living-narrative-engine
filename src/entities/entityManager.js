@@ -24,21 +24,17 @@ import EntityRepositoryAdapter from './services/entityRepositoryAdapter.js';
 import ComponentMutationService from './services/componentMutationService.js';
 import ErrorTranslator from './services/errorTranslator.js';
 import DefinitionCache from './services/definitionCache.js';
+import EntityLifecycleManager from './services/entityLifecycleManager.js';
 import { createDefaultServices } from './utils/createDefaultServices.js';
 import {
-  validateReconstructEntityParams as validateReconstructEntityParamsUtil,
   validateGetEntityInstanceParams as validateGetEntityInstanceParamsUtil,
   validateGetComponentDataParams as validateGetComponentDataParamsUtil,
   validateHasComponentParams as validateHasComponentParamsUtil,
   validateHasComponentOverrideParams as validateHasComponentOverrideParamsUtil,
   validateGetEntitiesWithComponentParams as validateGetEntitiesWithComponentParamsUtil,
-  validateRemoveEntityInstanceParams as validateRemoveEntityInstanceParamsUtil,
 } from './utils/parameterValidators.js';
 import EntityQuery from '../query/EntityQuery.js';
-import {
-  assertValidId,
-  assertNonBlankString,
-} from '../utils/parameterGuards.js';
+import { assertValidId } from '../utils/parameterGuards.js';
 import { IEntityManager } from '../interfaces/IEntityManager.js';
 import { validateDependency } from '../utils/validationUtils.js';
 import { ensureValidLogger } from '../utils/loggerUtils.js';
@@ -123,6 +119,9 @@ class EntityManager extends IEntityManager {
   /** @type {EntityFactory} @private */
   #factory;
 
+  /** @type {EntityLifecycleManager} @private */
+  #lifecycleManager;
+
   /**
    * Getter that returns an iterator over all active entities.
    * This provides read-only access to the entity collection.
@@ -163,6 +162,7 @@ class EntityManager extends IEntityManager {
    * @param {ComponentMutationService} [deps.componentMutationService] - ComponentMutationService instance.
    * @param {ErrorTranslator} [deps.errorTranslator] - ErrorTranslator instance.
    * @param {EntityFactory} [deps.entityFactory] - EntityFactory instance.
+   * @param deps.entityLifecycleManager
    * @param {DefinitionCache} [deps.definitionCache] - DefinitionCache instance.
    * @throws {Error} If any dependency is missing or malformed.
    */
@@ -184,6 +184,7 @@ class EntityManager extends IEntityManager {
     errorTranslator,
     entityFactory,
     definitionCache,
+    entityLifecycleManager,
   } = {}) {
     super();
 
@@ -252,6 +253,7 @@ class EntityManager extends IEntityManager {
       idGenerator: this.#idGenerator,
       cloner: this.#cloner,
       defaultPolicy: this.#defaultPolicy,
+      repository: this.#repository,
     });
 
     this.#entityRepository = resolveDep(
@@ -270,6 +272,10 @@ class EntityManager extends IEntityManager {
     this.#definitionCache = resolveDep(
       definitionCache,
       serviceDefaults.definitionCache
+    );
+    this.#lifecycleManager = resolveDep(
+      entityLifecycleManager,
+      serviceDefaults.entityLifecycleManager
     );
 
     this.#logger.debug('EntityManager initialised.');
@@ -384,28 +390,7 @@ class EntityManager extends IEntityManager {
    * @throws {ValidationError} If component data validation fails.
    */
   createEntityInstance(definitionId, opts = {}) {
-    this.#validateCreateEntityParams(definitionId);
-    const definition = this.#getDefinitionForCreate(definitionId);
-
-    this.#logger.debug(
-      `EntityManager.createEntityInstance: Creating entity instance '${opts.instanceId || 'auto-generated'}' from definition '${definitionId}' with overrides:`,
-      opts.componentOverrides
-    );
-
-    try {
-      const entity = this.#constructEntity(definitionId, opts, definition);
-
-      this.#logger.debug(
-        `EntityManager.createEntityInstance: Factory created entity with ID '${entity.id}' and definitionId '${entity.definitionId}'`
-      );
-
-      this.#entityRepository.add(entity);
-      this.#logger.debug(`Tracked entity ${entity.id}`);
-      this.#dispatchEntityCreated(entity);
-      return entity;
-    } catch (err) {
-      throw this.#errorTranslator.translate(err);
-    }
+    return this.#lifecycleManager.createEntityInstance(definitionId, opts);
   }
 
   /**
@@ -422,25 +407,7 @@ class EntityManager extends IEntityManager {
    * @throws {Error} If serializedEntity data is invalid.
    */
   reconstructEntity(serializedEntity) {
-    validateReconstructEntityParamsUtil(serializedEntity, this.#logger);
-    try {
-      const entity = this.#factory.reconstruct(
-        serializedEntity,
-        this.#registry,
-        this.#entityRepository
-      );
-      this.#entityRepository.add(entity);
-      this.#logger.debug(`Tracked entity ${entity.id}`);
-      this.#eventDispatcher.dispatch(ENTITY_CREATED_ID, {
-        instanceId: entity.id,
-        definitionId: entity.definitionId,
-        wasReconstructed: true,
-        entity,
-      });
-      return entity;
-    } catch (err) {
-      throw this.#errorTranslator.translate(err);
-    }
+    return this.#lifecycleManager.reconstructEntity(serializedEntity);
   }
 
   /* ---------------------------------------------------------------------- */
@@ -631,37 +598,7 @@ class EntityManager extends IEntityManager {
    * @see validateRemoveEntityInstanceParams
    */
   removeEntityInstance(instanceId) {
-    validateRemoveEntityInstanceParamsUtil(instanceId, this.#logger);
-
-    const entityToRemove = this.#getEntityById(instanceId);
-    if (!entityToRemove) {
-      // UPDATED: Throw custom error
-      this.#logger.error(
-        `EntityManager.removeEntityInstance: Attempted to remove non-existent entity instance '${instanceId}'.`
-      );
-      throw new EntityNotFoundError(instanceId);
-    }
-
-    try {
-      this.#entityRepository.remove(entityToRemove.id);
-      if (this.#repository && typeof this.#repository.remove === 'function') {
-        this.#repository.remove(entityToRemove.id);
-      }
-      this.#logger.info(
-        `Entity instance ${entityToRemove.id} removed from EntityManager.`
-      );
-      this.#eventDispatcher.dispatch(ENTITY_REMOVED_ID, {
-        entity: entityToRemove,
-      });
-    } catch (error) {
-      this.#logger.error(
-        `EntityManager.removeEntityInstance: EntityRepository.remove failed for already retrieved entity '${instanceId}'. This indicates a serious internal inconsistency.`
-      );
-      // This path should ideally not be reachable if `getEntityById` succeeded, but throwing an error is safer.
-      throw new Error(
-        `Internal error: Failed to remove entity '${instanceId}' from repository despite entity being found.`
-      );
-    }
+    return this.#lifecycleManager.removeEntityInstance(instanceId);
   }
 
   /**
