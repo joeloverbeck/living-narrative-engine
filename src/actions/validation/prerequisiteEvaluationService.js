@@ -2,6 +2,13 @@
 
 import { BaseService } from '../../utils/serviceBase.js';
 import { resolveReferences } from './conditionReferenceResolver.js';
+import {
+  TRACE_INFO,
+  TRACE_SUCCESS,
+  TRACE_FAILURE,
+  TRACE_ERROR,
+  TRACE_DATA,
+} from '../tracing/traceContext.js';
 
 /* type-only imports */
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
@@ -225,7 +232,7 @@ export class PrerequisiteEvaluationService extends BaseService {
     const source = 'PrerequisiteEvaluationService._evaluatePrerequisite';
     const originalLogic = prereqObject.logic;
 
-    trace?.addLog('info', 'Evaluating rule.', source, {
+    trace?.addLog(TRACE_INFO, 'Evaluating rule.', source, {
       logic: originalLogic || {},
     });
 
@@ -235,7 +242,7 @@ export class PrerequisiteEvaluationService extends BaseService {
     );
 
     if (JSON.stringify(originalLogic) !== JSON.stringify(resolvedLogic)) {
-      trace?.addLog('data', 'Condition reference resolved.', source, {
+      trace?.addLog(TRACE_DATA, 'Condition reference resolved.', source, {
         resolvedLogic: resolvedLogic || {},
       });
     }
@@ -249,7 +256,7 @@ export class PrerequisiteEvaluationService extends BaseService {
     const result = this._executeJsonLogic(resolvedLogic, evaluationContext);
 
     trace?.addLog(
-      result ? 'success' : 'failure',
+      result ? TRACE_SUCCESS : TRACE_FAILURE,
       `Rule evaluation result: ${result}`,
       source,
       { result: Boolean(result) }
@@ -300,7 +307,7 @@ export class PrerequisiteEvaluationService extends BaseService {
       );
     } catch (evalError) {
       trace?.addLog(
-        'error',
+        TRACE_ERROR,
         `Error during rule evaluation: ${evalError.message}`,
         source,
         { error: evalError }
@@ -397,9 +404,14 @@ export class PrerequisiteEvaluationService extends BaseService {
       return false;
     }
 
-    trace?.addLog('data', 'Built prerequisite evaluation context.', source, {
-      context: evaluationContext || {},
-    });
+    trace?.addLog(
+      TRACE_DATA,
+      'Built prerequisite evaluation context.',
+      source,
+      {
+        context: evaluationContext || {},
+      }
+    );
 
     return this.#evaluateRules(
       prerequisites,

@@ -1,5 +1,10 @@
 import { describe, it, expect } from '@jest/globals';
-import { TraceContext } from '../../../src/actions/tracing/traceContext.js';
+import {
+  TraceContext,
+  TRACE_INFO,
+  TRACE_ERROR,
+  TRACE_SUCCESS,
+} from '../../../src/actions/tracing/traceContext.js';
 
 describe('TraceContext', () => {
   it('initializes with empty logs', () => {
@@ -10,10 +15,10 @@ describe('TraceContext', () => {
   it('adds a log entry without data', () => {
     const trace = new TraceContext();
     const before = Date.now();
-    trace.addLog('info', 'hello', 'tester');
+    trace.addLog(TRACE_INFO, 'hello', 'tester');
     expect(trace.logs).toHaveLength(1);
     const entry = trace.logs[0];
-    expect(entry.type).toBe('info');
+    expect(entry.type).toBe(TRACE_INFO);
     expect(entry.message).toBe('hello');
     expect(entry.source).toBe('tester');
     expect(entry.timestamp).toBeGreaterThanOrEqual(before);
@@ -23,10 +28,10 @@ describe('TraceContext', () => {
   it('adds a log entry with data when provided', () => {
     const trace = new TraceContext();
     const data = { foo: 'bar' };
-    trace.addLog('error', 'oops', 'tester', data);
+    trace.addLog(TRACE_ERROR, 'oops', 'tester', data);
     expect(trace.logs).toHaveLength(1);
     expect(trace.logs[0]).toMatchObject({
-      type: 'error',
+      type: TRACE_ERROR,
       message: 'oops',
       source: 'tester',
       data,
@@ -35,8 +40,8 @@ describe('TraceContext', () => {
 
   it('preserves log order when multiple entries are added', () => {
     const trace = new TraceContext();
-    trace.addLog('info', 'first', 'src1');
-    trace.addLog('success', 'second', 'src2', { value: 42 });
+    trace.addLog(TRACE_INFO, 'first', 'src1');
+    trace.addLog(TRACE_SUCCESS, 'second', 'src2', { value: 42 });
     expect(trace.logs.map((l) => l.message)).toEqual(['first', 'second']);
   });
 });
