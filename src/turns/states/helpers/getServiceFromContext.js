@@ -19,10 +19,13 @@ import { finishProcessing } from './processingErrorUtils.js';
  */
 export class ServiceLookupError extends Error {
   /**
+   * Creates a new ServiceLookupError instance.
+   *
    * @param {string} message - Error message describing the lookup failure.
+   * @param {{ cause?: Error }} [options] - Optional error details.
    */
-  constructor(message) {
-    super(message);
+  constructor(message, options) {
+    super(message, options);
     this.name = 'ServiceLookupError';
   }
 }
@@ -69,7 +72,11 @@ export async function reportServiceLookupFailure(
   const dispatcher = getSafeEventDispatcher(turnCtx, state._handler);
 
   if (error) {
-    logger.error(errorMsg, error);
+    if (error.cause) {
+      logger.error(errorMsg, error, error.cause);
+    } else {
+      logger.error(errorMsg, error);
+    }
   } else {
     logger.error(errorMsg);
   }
@@ -84,6 +91,8 @@ export async function reportServiceLookupFailure(
         method: contextMethod,
         error: error?.message,
         stack: error?.stack,
+        cause: error?.cause?.message,
+        causeStack: error?.cause?.stack,
       },
       logger
     );
@@ -142,6 +151,9 @@ export async function getServiceFromContext(
     const serviceError =
       error instanceof Error ? error : new Error(String(error));
     const errorMsg = `${state.getStateName()}: Failed to retrieve ${serviceLabel} for actor ${actorIdForLog}. Error: ${serviceError.message}`;
+    const lookupError = new ServiceLookupError(errorMsg, {
+      cause: serviceError,
+    });
     await reportServiceLookupFailure(
       state,
       turnCtx,
@@ -149,11 +161,11 @@ export async function getServiceFromContext(
       serviceLabel,
       actorIdForLog,
       errorMsg,
-      serviceError,
+      lookupError,
       true,
       exceptionHandler
     );
-    throw new ServiceLookupError(errorMsg);
+    throw lookupError;
   }
 }
 
