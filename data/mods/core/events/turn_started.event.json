@@ -15,6 +15,11 @@
         "type": "string",
         "description": "Indicates whether the entity starting the turn is a player or an AI.",
         "enum": ["player", "ai"]
+      },
+      "entity": {
+        "type": "object",
+        "description": "The full entity object for additional context (e.g., determining player subtype).",
+        "additionalProperties": true
       }
     },
     "required": ["entityId", "entityType"],
