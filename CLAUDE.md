@@ -86,7 +86,7 @@ tests/
 
 ### Coding Patterns
 - **Test-Driven Development**: Write tests first for new modules
-- **Lint compliance**: Always run `npm run lint` after modifications
+- **Lint compliance**: Always run `npm run lint` regarding the modified files after modifications
 - **No production mocking**: Only mock in test files
 - **Check for duplicates**: Search for existing functionality before creating new code
 

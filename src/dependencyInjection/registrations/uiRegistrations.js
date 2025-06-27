@@ -30,6 +30,7 @@ import {
   ActionResultRenderer,
   WindowUserPrompt,
   SaveGameService,
+  EntityLifecycleMonitor,
 } from '../../domUI/index.js';
 import SaveGameUI from '../../domUI/saveGameUI.js';
 import LoadGameUI from '../../domUI/loadGameUI.js';
@@ -177,6 +178,18 @@ export function registerRenderers(registrar, logger) {
   logger.debug(`UI Registrations: Registered ${tokens.PerceptionLogRenderer}.`);
 
   registrar.singletonFactory(
+    tokens.EntityLifecycleMonitor,
+    (c) =>
+      new EntityLifecycleMonitor({
+        logger: c.resolve(tokens.ILogger),
+        documentContext: c.resolve(tokens.IDocumentContext),
+        validatedEventDispatcher: c.resolve(tokens.IValidatedEventDispatcher),
+        domElementFactory: c.resolve(tokens.DomElementFactory),
+      })
+  );
+  logger.debug(`UI Registrations: Registered ${tokens.EntityLifecycleMonitor}.`);
+
+  registrar.singletonFactory(
     tokens.SaveGameService,
     (c) =>
       new SaveGameService({
@@ -320,6 +333,7 @@ export function registerFacadeAndManager(registrar, logger) {
     tokens.SaveGameUI,
     tokens.LoadGameUI,
     tokens.LlmSelectionModal,
+    tokens.EntityLifecycleMonitor,
   ]);
   logger.debug(
     `UI Registrations: Registered ${tokens.DomUiFacade} under its own token.`

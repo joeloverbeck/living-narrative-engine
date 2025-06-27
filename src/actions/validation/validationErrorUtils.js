@@ -15,6 +15,12 @@
 import { InvalidActionDefinitionError } from '../../errors/invalidActionDefinitionError.js';
 import { InvalidActorEntityError } from '../../errors/invalidActorEntityError.js';
 
+/**
+ *
+ * @param err
+ * @param source
+ * @param ids
+ */
 export function formatValidationError(err, source, ids) {
   let idInfo = '';
   if (err instanceof InvalidActionDefinitionError) {

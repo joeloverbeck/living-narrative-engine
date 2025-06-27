@@ -102,11 +102,11 @@ class EntityManager extends IEntityManager {
   /** @type {function(): string} @private */
   #idGenerator;
   /** @type {IEntityRepository} @private */
-  #repository; // eslint-disable-line no-unused-private-class-members
+  #repository;  
   /** @type {IComponentCloner} @private */
   #cloner;
   /** @type {IDefaultComponentPolicy} @private */
-  #defaultPolicy; // eslint-disable-line no-unused-private-class-members
+  #defaultPolicy;  
 
   /** @type {EntityRepositoryAdapter} @private */
   #entityRepository;
@@ -115,7 +115,7 @@ class EntityManager extends IEntityManager {
   #componentMutationService;
 
   /** @type {ErrorTranslator} @private */
-  #errorTranslator; // eslint-disable-line no-unused-private-class-members
+  #errorTranslator;  
 
   /** @type {DefinitionCache} @private */
   #definitionCache;

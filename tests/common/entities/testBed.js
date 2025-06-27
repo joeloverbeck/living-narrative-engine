@@ -111,7 +111,7 @@ export class TestBed extends FactoryTestBed {
    *   definition to use.
    * @param {object} [options] - Options forwarded to
    *   {@link EntityManager#createEntityInstance}.
-   * @param {boolean} [options.resetDispatch=false] - If true, resets the event
+   * @param {boolean} [options.resetDispatch] - If true, resets the event
    *   dispatch mock after creation.
    * @returns {import('../../../src/entities/entity.js').default} The created
    *   entity instance.
@@ -150,7 +150,7 @@ export class TestBed extends FactoryTestBed {
    *
    * @param {object} [options] - Options forwarded to
    *   {@link EntityManager#createEntityInstance}.
-   * @param {boolean} [options.resetDispatch=false] - If true, resets the event
+   * @param {boolean} [options.resetDispatch] - If true, resets the event
    *   dispatch mock after creation.
    * @returns {import('../../../src/entities/entity.js').default} The created
    *   entity instance.
@@ -165,7 +165,7 @@ export class TestBed extends FactoryTestBed {
    *
    * @param {object} [options] - Options forwarded to
    *   {@link EntityManager#createEntityInstance}.
-   * @param {boolean} [options.resetDispatch=false] - If true, resets the event
+   * @param {boolean} [options.resetDispatch] - If true, resets the event
    *   dispatch mock after creation.
    * @returns {import('../../../src/entities/entity.js').default} The created
    *   entity instance.
@@ -185,7 +185,7 @@ export class TestBed extends FactoryTestBed {
    *   data.
    * @param {object} [options] - Options forwarded to
    *   {@link EntityManager#createEntityInstance}.
-   * @param {boolean} [options.resetDispatch=false] - If true, resets the event
+   * @param {boolean} [options.resetDispatch] - If true, resets the event
    *   dispatch mock after creation.
    * @returns {import('../../../src/entities/entity.js').default} The created
    *   entity instance.

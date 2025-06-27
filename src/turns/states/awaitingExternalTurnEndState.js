@@ -35,7 +35,6 @@ const TIMEOUT_MS = IS_DEV ? 3_000 : 30_000;
  * @param {string} actorId - ID of the actor awaiting the turn end.
  * @param {string} actionId - The action definition id.
  * @param {number} timeoutMs - Timeout duration in milliseconds.
- *
  * @returns {{message: string, error: Error}}
  */
 function createTimeoutError(actorId, actionId, timeoutMs = TIMEOUT_MS) {

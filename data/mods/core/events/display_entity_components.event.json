@@ -1,0 +1,25 @@
+{
+  "$schema": "http://example.com/schemas/event.schema.json",
+  "id": "core:display_entity_components",
+  "description": "Fired when entity component information should be displayed for debugging purposes. This event is used to show all components attached to a specific entity.",
+  "payloadSchema": {
+    "description": "Defines the structure for the 'core:display_entity_components' event payload.",
+    "type": "object",
+    "required": ["entityId", "components"],
+    "properties": {
+      "entityId": {
+        "$ref": "http://example.com/schemas/common.schema.json#/definitions/namespacedId",
+        "description": "The unique instance ID of the entity whose components are being displayed."
+      },
+      "components": {
+        "type": "object",
+        "description": "An object mapping component type IDs to their data.",
+        "additionalProperties": {
+          "description": "The component data for a specific component type.",
+          "type": ["object", "null"]
+        }
+      }
+    },
+    "additionalProperties": false
+  }
+}

@@ -29,7 +29,7 @@ export class IActionDiscoveryService {
    *
    * @param {Entity} actingEntity - The entity for whom to discover actions.
    * @param {ActionContext} baseContext - The base action context, which will be enriched.
-   * @param {object} [options={}] Optional settings.
+   * @param {object} [options] Optional settings.
    * @returns {Promise<DiscoveredActionsResult>}
    * @throws {Error}
    */

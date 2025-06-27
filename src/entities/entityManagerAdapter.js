@@ -35,6 +35,7 @@ export class EntityManagerAdapter extends IEntityManager {
 
   /**
    * Retrieves all entity instance IDs present in a specific location.
+   *
    * @param {string} id - The unique location ID.
    * @returns {Set<string>} Set of entity instance IDs in the location.
    */

@@ -5,6 +5,7 @@
 
 /**
  * Minimal interface for LocationRenderer used for documentation.
+ *
  * @typedef {object} LocationRenderer
  * @property {function(any[], HTMLElement, string, string, string, string=): void} _renderList
  * @property {{exitsDisplay: HTMLElement, charactersDisplay: HTMLElement}} elements
