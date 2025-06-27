@@ -17,6 +17,7 @@ import {
   EXITS_COMPONENT_ID,
   POSITION_COMPONENT_ID,
 } from '../../../src/constants/componentIds.js';
+import { createTestEntity } from '../../common/mockFactories/index.js';
 
 // We create manual mocks instead of using jest.mock() to have finer control.
 
@@ -26,12 +27,6 @@ describeActionDiscoverySuite(
     const HERO_INSTANCE_ID = 'hero-instance-uuid-integration-1';
     const GUILD_INSTANCE_ID = 'guild-instance-uuid-integration-1';
     const TOWN_INSTANCE_ID = 'town-instance-uuid-integration-1';
-
-    const createTestEntity = (instanceId, components = {}) => ({
-      id: instanceId,
-      components: components,
-      getComponentData: (id) => components[id] || null,
-    });
 
     const heroEntityInitialComponents = {
       [POSITION_COMPONENT_ID]: { locationId: GUILD_INSTANCE_ID },
