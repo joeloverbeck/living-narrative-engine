@@ -4,12 +4,10 @@ import {
   PORTRAIT_COMPONENT_ID,
   DESCRIPTION_COMPONENT_ID,
   POSITION_COMPONENT_ID,
-  EXITS_COMPONENT_ID,
 } from '../constants/componentIds.js';
 import { validateDependency } from '../utils/validationUtils.js';
 import { ensureValidLogger } from '../utils/loggerUtils.js';
 import { getEntityDisplayName } from '../utils/entityUtils.js';
-import { isNonBlankString } from '../utils/textUtils.js';
 import { buildPortraitInfo } from './utils/portraitUtils.js';
 import { InvalidEntityIdError } from '../errors/invalidEntityIdError.js';
 
@@ -18,19 +16,7 @@ import { InvalidEntityIdError } from '../errors/invalidEntityIdError.js';
  * @typedef {import('../interfaces/ILogger.js').ILogger} ILogger
  * @typedef {import('./entity.js').default} Entity
  * @typedef {import('../interfaces/CommonTypes.js').NamespacedId} NamespacedId
- */
-
-/**
- * @typedef {object} ProcessedExit
- * @property {string} description - The direction or description of the exit (e.g., "north", "a shimmering portal").
- * @property {NamespacedId | string | undefined} target - The identifier of the target location (instance ID or definition ID).
- * @property {NamespacedId | string | undefined} [id] - Alias for target, for compatibility.
- */
-
-/**
- * @typedef {object} PortraitData
- * @property {string} imagePath - The full, resolved path to the portrait image.
- * @property {string | null} altText - The alternative text for the image.
+ * @typedef {import('./services/locationDisplayService.js').LocationDisplayService} LocationDisplayService
  */
 
 /**
@@ -45,6 +31,8 @@ export class EntityDisplayDataProvider {
   #logger;
   /** @type {ISafeEventDispatcher} */
   #safeEventDispatcher;
+  /** @type {LocationDisplayService} */
+  #locationDisplayService;
 
   /**
    * @private
@@ -60,8 +48,14 @@ export class EntityDisplayDataProvider {
    * @param {IEntityManager} dependencies.entityManager - The entity manager instance.
    * @param {ILogger} dependencies.logger - The logger instance.
    * @param {ISafeEventDispatcher} dependencies.safeEventDispatcher - The safe event dispatcher instance.
+   * @param {LocationDisplayService} dependencies.locationDisplayService - Service for location display queries.
    */
-  constructor({ entityManager, logger, safeEventDispatcher }) {
+  constructor({
+    entityManager,
+    logger,
+    safeEventDispatcher,
+    locationDisplayService,
+  }) {
     validateDependency(logger, 'logger', console, {
       requiredMethods: ['info', 'warn', 'error', 'debug'],
     });
@@ -83,9 +77,19 @@ export class EntityDisplayDataProvider {
       }
     );
 
+    validateDependency(
+      locationDisplayService,
+      'locationDisplayService',
+      effectiveLogger,
+      {
+        requiredMethods: ['getLocationDetails', 'getLocationPortraitData'],
+      }
+    );
+
     this.#entityManager = entityManager;
     this.#logger = effectiveLogger;
     this.#safeEventDispatcher = safeEventDispatcher;
+    this.#locationDisplayService = locationDisplayService;
     this.#logger.debug(`${this._logPrefix} Service instantiated.`);
   }
 
@@ -281,57 +285,12 @@ export class EntityDisplayDataProvider {
 
   /**
    * Retrieves detailed display information for a location entity.
-   * This includes its name, description, and a processed list of exits.
    *
    * @param {NamespacedId | string} locationEntityId - The instance ID of the location entity.
-   * @returns {{ name: string, description: string, exits: Array<ProcessedExit> } | null}
-   * Object with location details, or null when the location entity is missing
-   * or required components are invalid.
+   * @returns {{ name: string, description: string, exits: Array<import('./services/locationDisplayService.js').ProcessedExit> } | null}
    */
   getLocationDetails(locationEntityId) {
-    if (!locationEntityId) {
-      this.#logger.warn(
-        `${this._logPrefix} getLocationDetails called with null or empty locationEntityId.`
-      );
-      return null;
-    }
-
-    const locationEntity =
-      this.#entityManager.getEntityInstance(locationEntityId);
-    if (!locationEntity) {
-      this.#logger.debug(
-        `${this._logPrefix} getLocationDetails: Location entity with ID '${locationEntityId}' not found.`
-      );
-      return null;
-    }
-
-    const name = this.getEntityName(locationEntityId, 'Unnamed Location');
-    const description = this.getEntityDescription(
-      locationEntityId,
-      'No description available.'
-    );
-
-    const exitsComponentData =
-      locationEntity.getComponentData(EXITS_COMPONENT_ID);
-    let processedExits = [];
-
-    if (exitsComponentData && Array.isArray(exitsComponentData)) {
-      processedExits = this._parseLocationExits(
-        exitsComponentData,
-        locationEntityId
-      );
-    } else if (exitsComponentData) {
-      this.#logger.warn(
-        `${this._logPrefix} getLocationDetails: Exits component data for location '${locationEntityId}' is present but not an array.`,
-        { exitsComponentData }
-      );
-    }
-
-    return {
-      name,
-      description,
-      exits: processedExits,
-    };
+    return this.#locationDisplayService.getLocationDetails(locationEntityId);
   }
 
   /**
@@ -340,77 +299,12 @@ export class EntityDisplayDataProvider {
    * A location entity must have a "core:portrait" component for this to return data.
    *
    * @param {NamespacedId | string} locationEntityId - The ID of the location entity.
-   * @returns {PortraitData | null} Portrait data { imagePath: string, altText: string | null }
+   * @returns {import('./services/locationDisplayService.js').PortraitData | null} Portrait data { imagePath: string, altText: string | null }
    * or null when the entity is missing or lacks a valid PORTRAIT_COMPONENT.
    */
   getLocationPortraitData(locationEntityId) {
-    if (!locationEntityId) {
-      this.#logger.warn(
-        `${this._logPrefix} getLocationPortraitData called with null or empty locationEntityId.`
-      );
-      return null;
-    }
-
-    return this.#withEntity(
-      locationEntityId,
-      null,
-      (entity) => {
-        const info = buildPortraitInfo(
-          entity,
-          'getLocationPortraitData',
-          this.#logger,
-          this.#safeEventDispatcher,
-          this._logPrefix
-        );
-        if (!info) return null;
-        return { imagePath: info.path, altText: info.altText };
-      },
-      `getLocationPortraitData: Location entity with ID '${locationEntityId}' not found.`
+    return this.#locationDisplayService.getLocationPortraitData(
+      locationEntityId
     );
-  }
-
-  /**
-   * @description Validates and transforms raw exit data into ProcessedExit objects.
-   * @private
-   * @param {Array<*>} exitsComponentData - Raw exits component data.
-   * @param {NamespacedId | string} locationEntityId - ID of the location entity for logging context.
-   * @returns {ProcessedExit[]} Array of processed exits.
-   */
-  _parseLocationExits(exitsComponentData, locationEntityId) {
-    if (!Array.isArray(exitsComponentData)) {
-      return [];
-    }
-    return exitsComponentData
-      .map((exit) => this.#normalizeExit(exit, locationEntityId))
-      .filter((exit) => exit !== null);
-  }
-
-  /**
-   * @description Normalizes a single raw exit object.
-   * @private
-   * @param {*} exit - Raw exit data from component.
-   * @param {NamespacedId | string} locationEntityId - Location ID for logging context.
-   * @returns {ProcessedExit | null} Normalized exit or null if invalid.
-   */
-  #normalizeExit(exit, locationEntityId) {
-    if (typeof exit !== 'object' || exit === null) {
-      this.#logger.warn(
-        `${this._logPrefix} getLocationDetails: Invalid exit item in exits component for location '${locationEntityId}'. Skipping.`,
-        { exit }
-      );
-      return null;
-    }
-    const exitDescription = isNonBlankString(exit.direction)
-      ? exit.direction.trim()
-      : 'Unspecified Exit';
-    const exitTarget = isNonBlankString(exit.target)
-      ? exit.target.trim()
-      : undefined;
-
-    return {
-      description: exitDescription,
-      target: exitTarget,
-      id: exitTarget,
-    };
   }
 }

@@ -28,6 +28,7 @@ import * as closenessCircleService from '../../logic/services/closenessCircleSer
 import { EntityDisplayDataProvider } from '../../entities/entityDisplayDataProvider.js';
 import { SpatialIndexSynchronizer } from '../../entities/spatialIndexSynchronizer.js';
 import { LocationQueryService } from '../../entities/locationQueryService.js';
+import LocationDisplayService from '../../entities/services/locationDisplayService.js';
 
 /**
  * Registers world, entity, and context-related services.
@@ -108,6 +109,7 @@ export function registerWorldAndEntity(container) {
       safeEventDispatcher: /** @type {ISafeEventDispatcher} */ (
         c.resolve(tokens.ISafeEventDispatcher)
       ),
+      locationDisplayService: c.resolve(tokens.LocationDisplayService),
     });
   });
   logger.debug(
@@ -144,6 +146,19 @@ export function registerWorldAndEntity(container) {
   logger.debug(
     `World and Entity Registration: Registered ${String(
       tokens.LocationQueryService
+    )}.`
+  );
+
+  registrar.singletonFactory(tokens.LocationDisplayService, (c) => {
+    return new LocationDisplayService({
+      entityManager: c.resolve(tokens.IEntityManager),
+      logger: c.resolve(tokens.ILogger),
+      safeEventDispatcher: c.resolve(tokens.ISafeEventDispatcher),
+    });
+  });
+  logger.debug(
+    `World and Entity Registration: Registered ${String(
+      tokens.LocationDisplayService
     )}.`
   );
 
