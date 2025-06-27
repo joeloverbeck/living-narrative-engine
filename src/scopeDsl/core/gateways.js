@@ -1,13 +1,13 @@
 /**
- * @typedef {Object} EntityGateway
- * @property {() => Object[]} getEntities
- * @property {(cid: string) => Object[]} getEntitiesWithComponent
+ * @typedef {object} EntityGateway
+ * @property {() => object[]} getEntities
+ * @property {(cid: string) => object[]} getEntitiesWithComponent
  * @property {(eid: string, cid: string) => boolean} hasComponent
  * @property {(eid: string, cid: string) => any} getComponentData
- * @property {(eid: string) => Object|null} getEntityInstance
+ * @property {(eid: string) => object | null} getEntityInstance
  */
 
 /**
- * @typedef {Object} LogicEvaluator
- * @property {(rule: Object, ctx: Object) => boolean} evaluate
+ * @typedef {object} LogicEvaluator
+ * @property {(rule: object, ctx: object) => boolean} evaluate
  */

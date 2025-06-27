@@ -508,7 +508,7 @@ class EntityManager extends IEntityManager {
 
     validateHasComponentParamsUtil(instanceId, componentTypeId, this.#logger);
     const entity = this.#getEntityById(instanceId);
-    return entity ? entity.hasComponent(componentTypeId, false) : false;
+    return entity ? entity.hasComponent(componentTypeId) : false;
   }
 
   /**
