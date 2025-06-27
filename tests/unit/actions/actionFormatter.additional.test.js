@@ -1,8 +1,6 @@
 import { describe, it, beforeEach, expect, jest } from '@jest/globals';
-import {
-  formatActionCommand,
-  targetFormatterMap,
-} from '../../../src/actions/actionFormatter.js';
+import { formatActionCommand } from '../../../src/actions/actionFormatter.js';
+import { targetFormatterMap } from '../../../src/actions/formatters/targetFormatters.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../../../src/constants/eventIds.js';
 import {
   ENTITY as TARGET_TYPE_ENTITY,
