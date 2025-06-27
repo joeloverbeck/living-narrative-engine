@@ -169,13 +169,14 @@ describeEngineSuite('GameEngine', (context) => {
       'should reject invalid save identifiers: %p',
       async (badId) => {
         const expectedMessage =
-          'GameEngine.loadGame: saveIdentifier must be a non-empty string.';
+          `GameEngine.loadGame: Invalid saveIdentifier '${badId}'. Expected non-blank string.`;
 
         await expect(context.engine.loadGame(badId)).rejects.toThrow(
           expectedMessage
         );
         expect(context.bed.getLogger().error).toHaveBeenCalledWith(
-          expectedMessage
+          expectedMessage,
+          expect.any(Object)
         );
       }
     );
