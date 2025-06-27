@@ -213,9 +213,9 @@ class GameEngine {
    * @param {string} title - Title for the failure UI event.
    * @returns {Promise<void>} Resolves when completed.
    */
-  async _resetOnFailure(errorMessage, title) {
+  async _dispatchFailureAndReset(errorMessage, title) {
     this.#logger.debug(
-      'GameEngine._resetOnFailure: Dispatching UI event for operation failed.'
+      'GameEngine._dispatchFailureAndReset: Dispatching UI event for operation failed.'
     );
     if (this.#safeEventDispatcher) {
       await this.#safeEventDispatcher.dispatch(ENGINE_OPERATION_FAILED_UI, {
@@ -224,7 +224,7 @@ class GameEngine {
       });
     } else {
       this.#logger.error(
-        'GameEngine._resetOnFailure: ISafeEventDispatcher not available, cannot dispatch UI failure event.'
+        'GameEngine._dispatchFailureAndReset: ISafeEventDispatcher not available, cannot dispatch UI failure event.'
       );
     }
 
@@ -236,7 +236,7 @@ class GameEngine {
       `GameEngine._handleNewGameFailure: Handling new game failure for world "${worldName}". Error: ${error.message}`,
       error
     );
-    await this._resetOnFailure(
+    await this._dispatchFailureAndReset(
       `Failed to start new game: ${error.message}`,
       'Initialization Error'
     );
@@ -381,7 +381,7 @@ class GameEngine {
       `GameEngine._handleLoadFailure: Handling game load failure for identifier "${saveIdentifier}". Error: ${errorMessageString}`,
       errorInfo instanceof Error ? errorInfo : undefined
     );
-    await this._resetOnFailure(
+    await this._dispatchFailureAndReset(
       `Failed to load game: ${errorMessageString}`,
       'Load Failed'
     );
