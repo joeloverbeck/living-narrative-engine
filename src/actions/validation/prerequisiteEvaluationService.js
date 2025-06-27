@@ -233,7 +233,7 @@ export class PrerequisiteEvaluationService extends BaseService {
       return false;
     }
 
-    let pass;
+    let rulePassed;
     try {
       const originalLogic = prereqObject.logic;
       trace?.addLog('info', `Evaluating rule.`, source, {
@@ -257,7 +257,7 @@ export class PrerequisiteEvaluationService extends BaseService {
         )}`
       );
 
-      pass = this._executeJsonLogic(resolvedLogic, evaluationContext);
+      rulePassed = this._executeJsonLogic(resolvedLogic, evaluationContext);
     } catch (evalError) {
       trace?.addLog(
         'error',
@@ -278,14 +278,14 @@ export class PrerequisiteEvaluationService extends BaseService {
     }
 
     trace?.addLog(
-      pass ? 'success' : 'failure',
-      `Rule evaluation result: ${pass}`,
+      rulePassed ? 'success' : 'failure',
+      `Rule evaluation result: ${rulePassed}`,
       source,
-      { result: Boolean(pass) }
+      { result: Boolean(rulePassed) }
     );
 
     return this._logPrerequisiteResult(
-      pass,
+      rulePassed,
       prereqObject,
       ruleNumber,
       totalRules,
