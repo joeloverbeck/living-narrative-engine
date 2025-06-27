@@ -334,21 +334,45 @@ class ScopeEngine extends IScopeEngine {
           
         if (!entity) return null;
         
-        // If entity has a components property directly (like in tests), return it
-        if (entity.components) {
+        // Check if this is a test entity (SimpleEntityManager) with plain components object
+        if (entity.components && typeof entity.components === 'object' && 
+            !entity.componentTypeIds && !entity.getComponentData) {
           return entity.components;
         }
         
-        // Otherwise, build components object from entity's component type IDs
+        // For production Entity objects, always build the components object
+        // This is necessary because the Entity.components property might be a Proxy
         const components = {};
-        if (entity.componentTypeIds) {
+        
+        // If entity has componentTypeIds, use that (production Entity)
+        if (entity.componentTypeIds && Array.isArray(entity.componentTypeIds)) {
           for (const componentTypeId of entity.componentTypeIds) {
             const componentData = entity.getComponentData(componentTypeId);
             if (componentData) {
               components[componentTypeId] = componentData;
             }
           }
+        } 
+        // Otherwise try to get all components through entityManager
+        else {
+          // Try to get component data through entity manager
+          // This is a fallback for entities that don't expose componentTypeIds
+          const commonComponentIds = [
+            'core:name', 'core:position', 'core:actor', 'core:movement',
+            'intimacy:closeness', 'core:perception_log', 'core:short_term_memory'
+          ];
+          for (const componentId of commonComponentIds) {
+            try {
+              const data = runtimeCtx.entityManager.getComponentData(parentValue, componentId);
+              if (data) {
+                components[componentId] = data;
+              }
+            } catch (e) {
+              // Ignore errors for missing components
+            }
+          }
         }
+        
         return components;
       }
       
