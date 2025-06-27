@@ -193,16 +193,29 @@ export class ActionDiscoveryService extends IActionDiscoveryService {
     );
 
     for (const actionDef of candidateDefs) {
-      const result = await this.#processCandidateAction(
-        actionDef,
-        actorEntity,
-        discoveryContext,
-        trace
-      );
+      try {
+        const result = await this.#processCandidateAction(
+          actionDef,
+          actorEntity,
+          discoveryContext,
+          trace
+        );
 
-      if (result) {
-        actions.push(...result.actions);
-        errors.push(...result.errors);
+        if (result) {
+          actions.push(...result.actions);
+          errors.push(...result.errors);
+        }
+      } catch (err) {
+        errors.push({
+          actionId: actionDef.id,
+          targetId:
+            err?.targetId ?? err?.target?.entityId ?? err?.entityId ?? null,
+          error: err,
+        });
+        this.#logger.error(
+          `Error processing candidate action '${actionDef.id}': ${err.message}`,
+          err
+        );
       }
     }
 
