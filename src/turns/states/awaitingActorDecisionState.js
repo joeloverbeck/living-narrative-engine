@@ -233,14 +233,14 @@ export class AwaitingActorDecisionState extends AbstractTurnState {
     const payload = {
       actorId: actor.id,
       actorType: determineActorType(actor),
+      ...(extractedData && {
+        extractedData: {
+          ...extractedData,
+          thoughts: extractedData.thoughts ?? '',
+          notes: extractedData.notes ?? [],
+        },
+      }),
     };
-    if (extractedData) {
-      payload.extractedData = {
-        ...extractedData,
-        thoughts: extractedData.thoughts ?? '',
-        notes: extractedData.notes ?? [],
-      };
-    }
 
     const dispatcher = getSafeEventDispatcher(turnContext, this._handler);
     const logger = turnContext.getLogger();
