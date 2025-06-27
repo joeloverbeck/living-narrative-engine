@@ -35,6 +35,7 @@ describe('Application Bootstrap Integration Test', () => {
         outputDiv: mockOutputDiv,
         inputElement: mockInputElement,
         titleElement: mockTitleElement,
+        document,
       });
     }).not.toThrow();
 
@@ -52,6 +53,7 @@ describe('Application Bootstrap Integration Test', () => {
       outputDiv: mockOutputDiv,
       inputElement: mockInputElement,
       titleElement: mockTitleElement,
+      document,
     });
 
     const allTokenKeys = Object.keys(tokens);
@@ -85,6 +87,7 @@ describe('Application Bootstrap Integration Test', () => {
       outputDiv: mockOutputDiv,
       inputElement: mockInputElement,
       titleElement: mockTitleElement,
+      document,
     });
 
     // --- Act & Assert ---
@@ -118,6 +121,7 @@ describe('Application Bootstrap Integration Test', () => {
       outputDiv: mockOutputDiv,
       inputElement: mockInputElement,
       titleElement: mockTitleElement, // Now passes the correct h1 element
+      document,
     });
 
     // Resolve the initializer *after* configuration

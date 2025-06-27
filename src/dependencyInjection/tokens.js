@@ -113,6 +113,7 @@ import { freeze } from '../utils';
  * @property {DiToken} IActionDiscoveryService - Token for the action discovery system interface.
  * @property {DiToken} ITargetResolutionService - Token for the target resolution service interface.
  * @property {DiToken} IInputHandler - Token for handling player input interface.
+ * @property {DiToken} GlobalKeyHandler - Token for listening to global keyboard events.
  * @property {DiToken} ITurnOrderService - Token for the turn order management service interface.
  * @property {DiToken} ITurnManager - Token for the turn management service interface.
  * @property {DiToken} ITurnContext - Token for accessing context specific to the current turn. // <<< ENSURED THIS IS PRESENT AND NOT COMMENTED
@@ -263,6 +264,7 @@ export const tokens = freeze({
   ITargetResolutionService: 'ITargetResolutionService',
   ActionIndex: 'ActionIndex',
   IInputHandler: 'IInputHandler',
+  GlobalKeyHandler: 'GlobalKeyHandler',
   ITurnOrderService: 'ITurnOrderService',
   ITurnManager: 'ITurnManager',
   ITurnContext: 'ITurnContext',
