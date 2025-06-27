@@ -3,39 +3,22 @@ const Entity = require('../../../src/entities/entity').default;
 const EntityDefinition =
   require('../../../src/entities/entityDefinition').default;
 const { ENTITY_CREATED_ID } = require('../../../src/constants/eventIds');
+const {
+  createSimpleMockDataRegistry,
+  createMockLogger,
+  createMockSchemaValidator,
+  createCapturingEventBus,
+} = require('../../common/mockFactories.js');
 
-// Minimal mock registry, logger, and validator
-const mockRegistry = {
-  getEntityDefinition: jest.fn(),
-};
-const mockLogger = {
-  debug: jest.fn(),
-  error: jest.fn(),
-  warn: jest.fn(),
-  info: jest.fn(),
-};
-const mockValidator = {
-  validate: jest.fn().mockReturnValue({ isValid: true, errors: [] }),
-};
+const mockRegistry = createSimpleMockDataRegistry();
+const mockLogger = createMockLogger();
+const mockValidator = createMockSchemaValidator();
 
-// Minimal event dispatcher
-class TestEventDispatcher {
-  constructor() {
-    this.listeners = {};
-  }
-  subscribe(eventId, fn) {
-    this.listeners[eventId] = this.listeners[eventId] || [];
-    this.listeners[eventId].push(fn);
-  }
-  dispatch(eventId, payload) {
-    (this.listeners[eventId] || []).forEach((fn) => fn(payload));
-  }
-}
+const createDispatcher = () => createCapturingEventBus();
 
 describe('EntityManager - core:entity_created event payload', () => {
   it('should include the entity object and all required fields in the event payload', () => {
-    // Arrange
-    const dispatcher = new TestEventDispatcher();
+    const dispatcher = createDispatcher();
     const entityManager = new EntityManager({
       registry: mockRegistry,
       logger: mockLogger,
@@ -48,16 +31,11 @@ describe('EntityManager - core:entity_created event payload', () => {
     });
     mockRegistry.getEntityDefinition.mockReturnValue(definition);
 
-    let receivedPayload = null;
-    dispatcher.subscribe(ENTITY_CREATED_ID, (payload) => {
-      receivedPayload = payload;
-    });
-
-    // Act
     const entity = entityManager.createEntityInstance('test:def');
+    const event = dispatcher.events[0];
 
-    // Assert
-    expect(receivedPayload).toBeTruthy();
+    expect(event).toBeTruthy();
+    const receivedPayload = event.payload;
     expect(receivedPayload).toHaveProperty('entity');
     expect(receivedPayload).toHaveProperty('instanceId', entity.id);
     expect(receivedPayload).toHaveProperty('definitionId', entity.definitionId);
@@ -70,8 +48,7 @@ describe('EntityManager - core:entity_created event payload', () => {
   });
 
   it('should allow a consumer to call getComponentData on the entity in the payload', () => {
-    // Arrange
-    const dispatcher = new TestEventDispatcher();
+    const dispatcher = createDispatcher();
     const entityManager = new EntityManager({
       registry: mockRegistry,
       logger: mockLogger,
@@ -84,16 +61,9 @@ describe('EntityManager - core:entity_created event payload', () => {
     });
     mockRegistry.getEntityDefinition.mockReturnValue(definition);
 
-    let called = false;
-    dispatcher.subscribe(ENTITY_CREATED_ID, (payload) => {
-      // Simulate SpatialIndexSynchronizer
-      const pos = payload.entity.getComponentData('core:position');
-      expect(pos).toEqual({ locationId: 'loc2' });
-      called = true;
-    });
-
-    // Act
     entityManager.createEntityInstance('test:def');
-    expect(called).toBe(true);
+    const event = dispatcher.events[0];
+    const pos = event.payload.entity.getComponentData('core:position');
+    expect(pos).toEqual({ locationId: 'loc2' });
   });
 });

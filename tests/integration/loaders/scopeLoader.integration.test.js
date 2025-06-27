@@ -2,7 +2,12 @@
 
 import ScopeLoader from '../../../src/loaders/scopeLoader.js';
 import TextDataFetcher from '../../../src/data/textDataFetcher.js';
-import { createMockConfiguration } from '../../common/mockFactories/index.js';
+import {
+  createMockConfiguration,
+  createMockSchemaValidator,
+  createSimpleMockDataRegistry,
+  createMockLogger,
+} from '../../common/mockFactories/index.js';
 import { SCOPES_KEY } from '../../../src/constants/dataRegistryKeys.js';
 
 describe('ScopeLoader Integration Tests', () => {
@@ -28,28 +33,15 @@ describe('ScopeLoader Integration Tests', () => {
       ),
     };
 
-    // Use the actual TextDataFetcher for integration testing
     mockDataFetcher = new TextDataFetcher();
 
-    mockSchemaValidator = {
-      addSchema: jest.fn(),
-      removeSchema: jest.fn(),
-      getValidator: jest.fn(),
-      isSchemaLoaded: jest.fn(() => true),
-      validate: jest.fn(() => ({ isValid: true, errors: null })),
-    };
+    mockSchemaValidator = createMockSchemaValidator();
+    mockSchemaValidator.isSchemaLoaded.mockReturnValue(true);
+    mockSchemaValidator.validate.mockReturnValue({ isValid: true, errors: null });
 
-    mockDataRegistry = {
-      store: jest.fn(),
-      get: jest.fn(() => undefined),
-    };
+    mockDataRegistry = createSimpleMockDataRegistry();
 
-    mockLogger = {
-      debug: jest.fn(),
-      info: jest.fn(),
-      warn: jest.fn(),
-      error: jest.fn(),
-    };
+    mockLogger = createMockLogger();
 
     scopeLoader = new ScopeLoader(
       mockConfig,
