@@ -65,9 +65,24 @@ export function registerActorAwareStrategy(container) {
         opts.fallbackFactory = fallbackFactory;
       }
       opts.providerResolver = (actor) => {
+        // Check new player_type component first
+        if (actor?.components?.['core:player_type']) {
+          const playerType = actor.components['core:player_type'].type;
+          return playerType; // 'human', 'llm', or 'goap'
+        }
+        
+        // Fallback to old detection methods
         const type = actor?.aiType ?? actor?.components?.ai?.type;
         if (typeof type === 'string') return type.toLowerCase();
-        return actor?.isAi === true ? 'llm' : 'human';
+        
+        // Legacy check for isAi property
+        if (actor?.isAi === true) return 'llm';
+        
+        // Legacy check for core:player component
+        if (actor?.components?.['core:player']) return 'human';
+        
+        // Default to LLM for actors without explicit type
+        return 'llm';
       };
       return new ActorAwareStrategyFactory(opts);
     });

@@ -3,6 +3,9 @@
   "id": "isekai:sidekick",
   "components": {
     "core:actor": {},
+    "core:player_type": {
+      "type": "llm"
+    },
     "core:name": {
       "text": "Linnea Cadogan"
     },

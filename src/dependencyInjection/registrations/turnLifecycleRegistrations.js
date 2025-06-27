@@ -19,6 +19,7 @@ import { Registrar } from '../registrarHelpers.js';
 import { INITIALIZABLE } from '../tags.js';
 import {
   PLAYER_COMPONENT_ID,
+  PLAYER_TYPE_COMPONENT_ID,
   ACTOR_COMPONENT_ID,
 } from '../../constants/componentIds.js';
 import { HumanDecisionProvider } from '../../turns/providers/humanDecisionProvider.js';
@@ -134,7 +135,15 @@ export function registerTurnLifecycle(container) {
         handlerRules: [
           {
             name: 'Player',
-            predicate: (actor) => actor.hasComponent(PLAYER_COMPONENT_ID),
+            predicate: (actor) => {
+              // Check new player_type component first
+              if (actor.hasComponent(PLAYER_TYPE_COMPONENT_ID)) {
+                const playerType = actor.getComponentData(PLAYER_TYPE_COMPONENT_ID);
+                return playerType?.type === 'human';
+              }
+              // Fallback to old player component for backward compatibility
+              return actor.hasComponent(PLAYER_COMPONENT_ID);
+            },
             factory: () => c.resolve(tokens.ActorTurnHandler),
           },
           {

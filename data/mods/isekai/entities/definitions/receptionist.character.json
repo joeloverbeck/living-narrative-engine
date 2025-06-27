@@ -3,6 +3,9 @@
   "id": "isekai:receptionist",
   "components": {
     "core:actor": {},
+    "core:player_type": {
+      "type": "llm"
+    },
     "core:name": {
       "text": "Fiona Emberfell"
     },

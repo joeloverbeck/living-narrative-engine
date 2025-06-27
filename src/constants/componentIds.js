@@ -4,7 +4,8 @@
 
 export const NAME_COMPONENT_ID = 'core:name';
 export const DESCRIPTION_COMPONENT_ID = 'core:description';
-export const PLAYER_COMPONENT_ID = 'core:player';
+export const PLAYER_COMPONENT_ID = 'core:player'; // Deprecated - use PLAYER_TYPE_COMPONENT_ID
+export const PLAYER_TYPE_COMPONENT_ID = 'core:player_type';
 export const ACTOR_COMPONENT_ID = 'core:actor';
 export const CURRENT_ACTOR_COMPONENT_ID = 'core:current_actor';
 export const POSITION_COMPONENT_ID = 'core:position';

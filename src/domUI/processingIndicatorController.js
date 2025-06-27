@@ -5,6 +5,7 @@ import {
   TURN_PROCESSING_STARTED,
   TURN_PROCESSING_ENDED,
   PLAYER_TURN_SUBMITTED_ID,
+  TURN_STARTED_ID,
   // TEXT_UI_DISPLAY_SPEECH_ID // Not directly used for hiding in this version
 } from '../constants/eventIds.js'; // Assuming these constants are correctly named and exported
 import { safeDispatchError } from '../utils/safeDispatchErrorUtils.js';
@@ -17,8 +18,8 @@ import { safeDispatchError } from '../utils/safeDispatchErrorUtils.js';
  */
 
 /**
- * @typedef {'ai' | 'player_input'} IndicatorType
- * Represents the type of processing the indicator is for.
+ * @typedef {'ai-llm' | 'ai-goap' | 'human'} IndicatorType
+ * Represents the type of player the indicator is for.
  */
 
 export class ProcessingIndicatorController extends BoundDomRendererBase {
@@ -49,6 +50,22 @@ export class ProcessingIndicatorController extends BoundDomRendererBase {
    * @type {ISafeEventDispatcher | null}
    */
   safeEventDispatcher = null;
+
+  /**
+   * The current player type for styling purposes.
+   *
+   * @private
+   * @type {IndicatorType | null}
+   */
+  #currentPlayerType = null;
+
+  /**
+   * Whether the current turn is for a human player.
+   *
+   * @private
+   * @type {boolean}
+   */
+  #isHumanTurn = false;
 
   /**
    * Creates a controller for rendering processing indicators.
@@ -173,35 +190,61 @@ export class ProcessingIndicatorController extends BoundDomRendererBase {
    * @private
    */
   #subscribeToEvents() {
-    // Generic Turn Processing Indicator
-    this._subscribe(TURN_PROCESSING_STARTED, () => this.#showIndicator('ai'));
+    // Track turn started to know player type
+    this._subscribe(TURN_STARTED_ID, (event) => {
+      const payload = event.payload;
+      this.#currentPlayerType = this.#determinePlayerType(payload);
+      this.#isHumanTurn = this.#currentPlayerType === 'human';
+      this.logger.debug(
+        `${this._logPrefix} Turn started for ${this.#currentPlayerType} player.`
+      );
+    });
+
+    // Generic Turn Processing Indicator for AI players
+    this._subscribe(TURN_PROCESSING_STARTED, () => {
+      if (!this.#isHumanTurn) {
+        this.#showIndicator(this.#currentPlayerType || 'ai-llm');
+      }
+    });
     this.logger.debug(
       `${this._logPrefix} Subscribed to ${TURN_PROCESSING_STARTED}.`
     );
 
-    this._subscribe(TURN_PROCESSING_ENDED, () => this.#hideIndicator('ai'));
+    this._subscribe(TURN_PROCESSING_ENDED, () => {
+      if (!this.#isHumanTurn) {
+        this.#hideIndicator(this.#currentPlayerType || 'ai-llm');
+      }
+    });
     this.logger.debug(
       `${this._logPrefix} Subscribed to ${TURN_PROCESSING_ENDED}.`
     );
 
-    // Player Composing Indicator (Optional Extension)
-    if (this.#speechInputElement) {
-      this._addDomListener(this.#speechInputElement, 'input', (event) => {
-        const target = /** @type {HTMLInputElement} */ (event.target);
-        if (target.value.trim() !== '') {
-          this.#showIndicator('player_input');
-        } else {
-          this.#hideIndicator('player_input');
-        }
-      });
-      this.logger.debug(
-        `${this._logPrefix} Added 'input' listener to speech input element for player indicator.`
-      );
-    }
+    // Focus-based indicator for human players
+    this._subscribe('core:speech_input_gained_focus', () => {
+      if (this.#isHumanTurn) {
+        this.#showIndicator('human');
+      }
+    });
+    this.logger.debug(
+      `${this._logPrefix} Subscribed to core:speech_input_gained_focus.`
+    );
+
+    this._subscribe('core:speech_input_lost_focus', () => {
+      if (this.#isHumanTurn) {
+        this.#hideIndicator('human');
+      }
+    });
+    this.logger.debug(
+      `${this._logPrefix} Subscribed to core:speech_input_lost_focus.`
+    );
 
     this._subscribe(
       PLAYER_TURN_SUBMITTED_ID,
-      () => this.#hideIndicator('player_input') // Hide player input indicator on submit
+      () => {
+        if (this.#isHumanTurn) {
+          this.#hideIndicator('human');
+        }
+      }
     );
     this.logger.debug(
       `${this._logPrefix} Subscribed to ${PLAYER_TURN_SUBMITTED_ID} for hiding player indicator.`
@@ -209,20 +252,52 @@ export class ProcessingIndicatorController extends BoundDomRendererBase {
   }
 
   /**
-   * Shows the processing indicator.
+   * Determines the player type from turn started event payload.
    *
-   * @param {IndicatorType} _type - The type of processing causing the indicator to show.
+   * @param {any} payload - The turn started event payload
+   * @returns {IndicatorType}
    * @private
    */
-  #showIndicator(_type) {
+  #determinePlayerType(payload) {
+    // Check if the entity has player_type component
+    if (payload?.entity?.components?.['core:player_type']) {
+      const playerType = payload.entity.components['core:player_type'].type;
+      if (playerType === 'human') return 'human';
+      if (playerType === 'goap') return 'ai-goap';
+      return 'ai-llm'; // Default to LLM for other AI types
+    }
+    
+    // Fallback to old detection method for backward compatibility
+    if (payload?.entityType === 'player') {
+      return 'human';
+    }
+    
+    return 'ai-llm'; // Default to AI LLM
+  }
+
+  /**
+   * Shows the processing indicator.
+   *
+   * @param {IndicatorType} type - The type of processing causing the indicator to show.
+   * @private
+   */
+  #showIndicator(type) {
     if (this.#indicatorElement) {
-      // TODO: Potentially update aria-label based on type if needed for player indicator
-      // if (type === 'player_input') {
-      // this.#indicatorElement.setAttribute('aria-label', 'Player is typing...');
-      // } else {
-      // this.#indicatorElement.setAttribute('aria-label', 'Processing turn');
-      // }
-      // this.logger.debug(`${this._logPrefix} Showing processing indicator for type: ${type}.`);
+      // Remove all type classes first
+      this.#indicatorElement.classList.remove('human', 'ai-llm', 'ai-goap');
+      
+      // Add the appropriate type class
+      this.#indicatorElement.classList.add(type);
+      
+      // Update aria-label based on type
+      const ariaLabels = {
+        'human': 'Typing...',
+        'ai-llm': 'AI thinking...',
+        'ai-goap': 'AI planning...'
+      };
+      this.#indicatorElement.setAttribute('aria-label', ariaLabels[type] || 'Processing...');
+      
+      this.logger.debug(`${this._logPrefix} Showing processing indicator for type: ${type}.`);
       this.#indicatorElement.classList.add('visible');
 
       // Scroll #outputDiv to bottom so indicator is visible if content is long

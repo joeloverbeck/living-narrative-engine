@@ -50,6 +50,7 @@ export function expectTurnStartedEvents(dispatchMock, actorId, actorType) {
   expect(dispatchMock).toHaveBeenCalledWith(TURN_STARTED_ID, {
     entityId: actorId,
     entityType: actorType,
+    entity: expect.any(Object), // Entity object is now included
   });
   expect(dispatchMock).toHaveBeenCalledWith(TURN_PROCESSING_STARTED, {
     entityId: actorId,

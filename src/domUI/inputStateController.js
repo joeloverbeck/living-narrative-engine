@@ -81,6 +81,9 @@ export class InputStateController extends RendererBase {
 
     // Subscribe to events that affect the input state
     this.#subscribeToEvents();
+    
+    // Add focus/blur listeners to dispatch events
+    this.#addFocusListeners();
   }
 
   /**
@@ -205,6 +208,35 @@ export class InputStateController extends RendererBase {
         `${this._logPrefix} Input placeholder set to: "${placeholder}"`
       );
     }
+  }
+
+  /**
+   * Adds focus and blur event listeners to dispatch custom events.
+   *
+   * @private
+   */
+  #addFocusListeners() {
+    this._addDomListener(this.#inputElement, 'focus', () => {
+      this.logger.debug(
+        `${this._logPrefix} Input element gained focus, dispatching event.`
+      );
+      this.validatedEventDispatcher.dispatch('core:speech_input_gained_focus', {
+        timestamp: Date.now()
+      });
+    });
+
+    this._addDomListener(this.#inputElement, 'blur', () => {
+      this.logger.debug(
+        `${this._logPrefix} Input element lost focus, dispatching event.`
+      );
+      this.validatedEventDispatcher.dispatch('core:speech_input_lost_focus', {
+        timestamp: Date.now()
+      });
+    });
+
+    this.logger.debug(
+      `${this._logPrefix} Added focus/blur listeners to input element.`
+    );
   }
 
   /**

@@ -16,6 +16,7 @@
 import {
   ACTOR_COMPONENT_ID,
   PLAYER_COMPONENT_ID,
+  PLAYER_TYPE_COMPONENT_ID,
 } from '../constants/componentIds.js';
 import {
   TURN_ENDED_ID,
@@ -345,9 +346,17 @@ class TurnManager extends ITurnManager {
 
         this.#currentActor = nextEntity; // Set the new current actor
         const actorId = this.#currentActor.id;
-        const isPlayer = this.#currentActor.hasComponent(PLAYER_COMPONENT_ID);
         const isActor = this.#currentActor.hasComponent(ACTOR_COMPONENT_ID);
-        const entityType = isPlayer ? 'player' : 'ai';
+        
+        // Determine entity type using new player_type component
+        let entityType = 'ai'; // default
+        if (this.#currentActor.hasComponent(PLAYER_TYPE_COMPONENT_ID)) {
+          const playerTypeData = this.#currentActor.getComponentData(PLAYER_TYPE_COMPONENT_ID);
+          entityType = playerTypeData?.type === 'human' ? 'player' : 'ai';
+        } else if (this.#currentActor.hasComponent(PLAYER_COMPONENT_ID)) {
+          // Fallback to old player component for backward compatibility
+          entityType = 'player';
+        }
 
         if (!isActor) {
           this.#logger.warn(
@@ -366,6 +375,7 @@ class TurnManager extends ITurnManager {
           {
             entityId: actorId,
             entityType: entityType,
+            entity: this.#currentActor, // Include full entity for component access
           },
           this.#logger
         );
