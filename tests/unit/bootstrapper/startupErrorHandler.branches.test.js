@@ -111,3 +111,78 @@ describe('StartupErrorHandler additional branches', () => {
     expect(result).toEqual({ displayed: true });
   });
 });
+it('logs when temporary element creation fails without dispatcher', () => {
+  setDom('<div id="outputDiv"></div>');
+  const uiElements = { outputDiv: document.querySelector('#outputDiv') };
+  const domAdapter = {
+    createElement: () => {
+      throw new Error('create fail');
+    },
+    insertAfter: jest.fn(),
+    setTextContent: jest.fn(),
+    setStyle: jest.fn(),
+    alert: jest.fn(),
+  };
+  const logger = {
+    error: jest.fn(),
+    info: jest.fn(),
+    warn: jest.fn(),
+    debug: jest.fn(),
+  };
+  const handler = new StartupErrorHandler(logger, domAdapter, null);
+  const result = handler.displayFatalStartupError(uiElements, {
+    userMessage: 'Oops',
+    consoleMessage: 'Bad',
+  });
+  expect(logger.error).toHaveBeenCalledWith(
+    '[errorUtils] displayFatalStartupError: Failed to create or append temporary error element.',
+    expect.any(Error)
+  );
+  expect(domAdapter.alert).toHaveBeenCalledWith('Oops');
+  expect(result).toEqual({ displayed: false });
+});
+
+it('logs when titleElement update fails without dispatcher', () => {
+  setDom(`
+    <div id="outputDiv"></div>
+    <div id="errorDiv"></div>
+    <input id="inputEl" />
+    <h1 id="title"></h1>
+  `);
+  const uiElements = {
+    outputDiv: document.querySelector('#outputDiv'),
+    errorDiv: document.querySelector('#errorDiv'),
+    inputElement: document.querySelector('#inputEl'),
+    titleElement: document.querySelector('#title'),
+  };
+  const domAdapter = {
+    createElement: document.createElement.bind(document),
+    insertAfter: (ref, el) => ref.insertAdjacentElement('afterend', el),
+    setTextContent: (el, text) => {
+      if (el.id === 'title') {
+        throw new Error('title fail');
+      }
+      el.textContent = text;
+    },
+    setStyle: (el, prop, val) => {
+      el.style[prop] = val;
+    },
+    alert: jest.fn(),
+  };
+  const logger = {
+    error: jest.fn(),
+    info: jest.fn(),
+    warn: jest.fn(),
+    debug: jest.fn(),
+  };
+  const handler = new StartupErrorHandler(logger, domAdapter, null);
+  const result = handler.displayFatalStartupError(uiElements, {
+    userMessage: 'Oops',
+    consoleMessage: 'Bad',
+  });
+  expect(logger.error).toHaveBeenCalledWith(
+    '[errorUtils] displayFatalStartupError: Failed to set textContent on titleElement.',
+    expect.any(Error)
+  );
+  expect(result).toEqual({ displayed: true });
+});
