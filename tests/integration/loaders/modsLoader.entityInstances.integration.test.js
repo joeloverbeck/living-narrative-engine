@@ -328,7 +328,7 @@ describe('Integration: Entity Instances Loader and World Initialization', () => 
           message: `Entity instance definition not found for instance ID: '${missingInstanceId}'. Referenced in world '${worldName}'.`,
           details: expect.objectContaining({
             statusCode: 404,
-            raw: `Context: WorldInitializer._instantiateEntitiesFromWorld, instanceId: ${missingInstanceId}, worldName: ${worldName}`,
+            raw: `Context: WorldInitializer.instantiateEntitiesFromWorld, instanceId: ${missingInstanceId}, worldName: ${worldName}`,
             type: 'MissingResource',
             resourceType: 'EntityInstanceDefinition',
             resourceId: missingInstanceId,
