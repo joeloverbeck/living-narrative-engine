@@ -1,4 +1,5 @@
 import InitializationService from '../../../../src/initializers/services/initializationService.js';
+import { UI_SHOW_FATAL_ERROR_ID } from '../../../../src/constants/eventIds.js';
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 
 const WORLD = 'world';
@@ -42,7 +43,7 @@ beforeEach(() => {
 });
 
 describe('InitializationService LLM adapter rejection', () => {
-  it('continues when llmAdapter.init rejects', async () => {
+  it('fails when llmAdapter.init rejects', async () => {
     const error = new Error('adapter');
     llmAdapter.init.mockRejectedValueOnce(error);
 
@@ -73,6 +74,10 @@ describe('InitializationService LLM adapter rejection', () => {
       `InitializationService: CRITICAL error during ConfigurableLLMAdapter.init(): ${error.message}`,
       expect.objectContaining({ errorName: error.name })
     );
-    expect(result.success).toBe(true);
+    expect(dispatcher.dispatch).toHaveBeenCalledWith(
+      UI_SHOW_FATAL_ERROR_ID,
+      expect.any(Object)
+    );
+    expect(result.success).toBe(false);
   });
 });
