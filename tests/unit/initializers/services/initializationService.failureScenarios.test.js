@@ -45,36 +45,47 @@ beforeEach(() => {
 describe('InitializationService failure scenarios', () => {
   const createService = (overrides = {}) => {
     const defaults = {
-      logger: { error: jest.fn(), debug: jest.fn(), warn: jest.fn() },
-      validatedEventDispatcher: {
-        dispatch: jest.fn().mockResolvedValue(undefined),
+      log: { logger: { error: jest.fn(), debug: jest.fn(), warn: jest.fn() } },
+      events: {
+        validatedEventDispatcher: {
+          dispatch: jest.fn().mockResolvedValue(undefined),
+        },
+        safeEventDispatcher: { subscribe: jest.fn() },
       },
-      modsLoader: { loadMods: jest.fn() },
-      scopeRegistry: { initialize: jest.fn() },
-      dataRegistry: { getAll: jest.fn().mockReturnValue([]) },
-      llmAdapter: { init: jest.fn() },
-      llmConfigLoader: { loadConfigs: jest.fn() },
-      systemInitializer: { initializeAll: jest.fn() },
-      worldInitializer: { initializeWorldEntities: jest.fn() },
-      safeEventDispatcher: { subscribe: jest.fn() },
-      entityManager: {},
-      domUiFacade: {},
-      actionIndex: { buildIndex: jest.fn() },
-      gameDataRepository: {
-        getAllActionDefinitions: jest.fn().mockReturnValue([]),
+      coreSystems: {
+        modsLoader: { loadMods: jest.fn() },
+        scopeRegistry: { initialize: jest.fn() },
+        dataRegistry: { getAll: jest.fn().mockReturnValue([]) },
+        systemInitializer: { initializeAll: jest.fn() },
+        worldInitializer: { initializeWorldEntities: jest.fn() },
       },
-      thoughtListener: { handleEvent: jest.fn() },
-      notesListener: { handleEvent: jest.fn() },
-      spatialIndexManager: { buildIndex: jest.fn() },
+      llm: { llmAdapter: { init: jest.fn() }, llmConfigLoader: { loadConfigs: jest.fn() } },
+      persistence: {
+        entityManager: {},
+        domUiFacade: {},
+        actionIndex: { buildIndex: jest.fn() },
+        gameDataRepository: {
+          getAllActionDefinitions: jest.fn().mockReturnValue([]),
+        },
+        thoughtListener: { handleEvent: jest.fn() },
+        notesListener: { handleEvent: jest.fn() },
+        spatialIndexManager: { buildIndex: jest.fn() },
+      },
     };
-    const deps = { ...defaults, ...overrides };
+    const deps = {
+      log: { ...(defaults.log || {}), ...(overrides.log || {}) },
+      events: { ...(defaults.events || {}), ...(overrides.events || {}) },
+      llm: { ...(defaults.llm || {}), ...(overrides.llm || {}) },
+      persistence: { ...(defaults.persistence || {}), ...(overrides.persistence || {}) },
+      coreSystems: { ...(defaults.coreSystems || {}), ...(overrides.coreSystems || {}) },
+    };
     return new InitializationService(deps);
   };
 
   it('fails when ModsLoader.loadMods rejects', async () => {
     const error = new Error('load');
     const svc = createService({
-      modsLoader: { loadMods: jest.fn().mockRejectedValueOnce(error) },
+      coreSystems: { modsLoader: { loadMods: jest.fn().mockRejectedValueOnce(error) } },
     });
     const result = await svc.runInitializationSequence(WORLD);
     expect(result.success).toBe(false);
@@ -84,10 +95,12 @@ describe('InitializationService failure scenarios', () => {
   it('fails when ScopeRegistry.initialize throws', async () => {
     const err = new Error('scope');
     const svc = createService({
-      scopeRegistry: {
-        initialize: jest.fn().mockImplementation(() => {
-          throw err;
-        }),
+      coreSystems: {
+        scopeRegistry: {
+          initialize: jest.fn().mockImplementation(() => {
+            throw err;
+          }),
+        },
       },
     });
     const result = await svc.runInitializationSequence(WORLD);
@@ -98,8 +111,10 @@ describe('InitializationService failure scenarios', () => {
   it('fails when SystemInitializer.initializeAll rejects', async () => {
     const err = new Error('sys');
     const svc = createService({
-      systemInitializer: {
-        initializeAll: jest.fn().mockRejectedValueOnce(err),
+      coreSystems: {
+        systemInitializer: {
+          initializeAll: jest.fn().mockRejectedValueOnce(err),
+        },
       },
     });
     const result = await svc.runInitializationSequence(WORLD);
@@ -109,8 +124,10 @@ describe('InitializationService failure scenarios', () => {
 
   it('fails when WorldInitializer reports failure', async () => {
     const svc = createService({
-      worldInitializer: {
-        initializeWorldEntities: jest.fn().mockReturnValueOnce(false),
+      coreSystems: {
+        worldInitializer: {
+          initializeWorldEntities: jest.fn().mockReturnValueOnce(false),
+        },
       },
     });
     const result = await svc.runInitializationSequence(WORLD);

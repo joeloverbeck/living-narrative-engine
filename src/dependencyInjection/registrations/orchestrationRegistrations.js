@@ -83,23 +83,25 @@ export function registerOrchestration(container) {
     });
     const spatialIndexManager = c.resolve(tokens.ISpatialIndexManager);
     return new InitializationService({
-      logger: initLogger,
-      validatedEventDispatcher: initDispatcher,
-      modsLoader,
-      scopeRegistry,
-      dataRegistry,
-      llmAdapter,
-      llmConfigLoader,
-      systemInitializer,
-      worldInitializer,
-      safeEventDispatcher,
-      entityManager,
-      domUiFacade,
-      actionIndex,
-      gameDataRepository,
-      thoughtListener,
-      notesListener,
-      spatialIndexManager,
+      log: { logger: initLogger },
+      events: { validatedEventDispatcher: initDispatcher, safeEventDispatcher },
+      llm: { llmAdapter, llmConfigLoader },
+      persistence: {
+        entityManager,
+        domUiFacade,
+        actionIndex,
+        gameDataRepository,
+        thoughtListener,
+        notesListener,
+        spatialIndexManager,
+      },
+      coreSystems: {
+        modsLoader,
+        scopeRegistry,
+        dataRegistry,
+        systemInitializer,
+        worldInitializer,
+      },
     });
   });
   logger.debug(

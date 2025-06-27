@@ -42,19 +42,12 @@ beforeEach(() => {
 
 describe('InitializationService constructor', () => {
   it('creates instance with valid dependencies', () => {
-    expect(
-      () =>
-        new InitializationService({
-          logger,
-          validatedEventDispatcher: dispatcher,
-          modsLoader,
-          scopeRegistry,
-          dataRegistry,
-          llmAdapter,
-          llmConfigLoader,
-          systemInitializer,
-          worldInitializer,
-          safeEventDispatcher,
+    expect(() =>
+      new InitializationService({
+        log: { logger },
+        events: { validatedEventDispatcher: dispatcher, safeEventDispatcher },
+        llm: { llmAdapter, llmConfigLoader },
+        persistence: {
           entityManager,
           domUiFacade,
           actionIndex,
@@ -62,29 +55,39 @@ describe('InitializationService constructor', () => {
           thoughtListener,
           notesListener,
           spatialIndexManager,
-        })
+        },
+        coreSystems: {
+          modsLoader,
+          scopeRegistry,
+          dataRegistry,
+          systemInitializer,
+          worldInitializer,
+        },
+      })
     ).not.toThrow();
   });
 
   it('throws if logger is missing', () => {
     const create = () =>
       new InitializationService({
-        validatedEventDispatcher: dispatcher,
-        modsLoader,
-        scopeRegistry,
-        dataRegistry,
-        llmAdapter,
-        llmConfigLoader,
-        systemInitializer,
-        worldInitializer,
-        safeEventDispatcher,
-        entityManager,
-        domUiFacade,
-        actionIndex,
-        gameDataRepository,
-        thoughtListener,
-        notesListener,
-        spatialIndexManager,
+        events: { validatedEventDispatcher: dispatcher, safeEventDispatcher },
+        llm: { llmAdapter, llmConfigLoader },
+        persistence: {
+          entityManager,
+          domUiFacade,
+          actionIndex,
+          gameDataRepository,
+          thoughtListener,
+          notesListener,
+          spatialIndexManager,
+        },
+        coreSystems: {
+          modsLoader,
+          scopeRegistry,
+          dataRegistry,
+          systemInitializer,
+          worldInitializer,
+        },
       });
     expect(create).toThrow(SystemInitializationError);
     expect(create).toThrow(/logger/);
@@ -93,22 +96,25 @@ describe('InitializationService constructor', () => {
   it('throws if validatedEventDispatcher is missing', () => {
     const createVD = () =>
       new InitializationService({
-        logger,
-        modsLoader,
-        scopeRegistry,
-        dataRegistry,
-        llmAdapter,
-        llmConfigLoader,
-        systemInitializer,
-        worldInitializer,
-        safeEventDispatcher,
-        entityManager,
-        domUiFacade,
-        actionIndex,
-        gameDataRepository,
-        thoughtListener,
-        notesListener,
-        spatialIndexManager,
+        log: { logger },
+        events: { safeEventDispatcher },
+        llm: { llmAdapter, llmConfigLoader },
+        persistence: {
+          entityManager,
+          domUiFacade,
+          actionIndex,
+          gameDataRepository,
+          thoughtListener,
+          notesListener,
+          spatialIndexManager,
+        },
+        coreSystems: {
+          modsLoader,
+          scopeRegistry,
+          dataRegistry,
+          systemInitializer,
+          worldInitializer,
+        },
       });
     expect(createVD).toThrow(SystemInitializationError);
     expect(createVD).toThrow(/validatedEventDispatcher/);
