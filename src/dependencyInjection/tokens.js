@@ -201,6 +201,7 @@ export const tokens = freeze({
   ProcessingIndicatorController: 'ProcessingIndicatorController',
   ChatAlertRenderer: 'ChatAlertRenderer',
   ActionResultRenderer: 'ActionResultRenderer',
+  EntityLifecycleMonitor: 'EntityLifecycleMonitor',
 
   // Loaders
   SchemaLoader: 'SchemaLoader',

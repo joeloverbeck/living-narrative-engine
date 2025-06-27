@@ -172,6 +172,7 @@ export const describeEngineSuite = createDescribeServiceSuite(
  *   Callback containing the tests.
  * @param {string} [world] - Name of the world used for initialization.
  * @param {{[token: string]: any}} [overrides] - Optional DI overrides.
+ * @param diOverrides
  * @returns {void}
  */
 export function describeInitializedEngineSuite(

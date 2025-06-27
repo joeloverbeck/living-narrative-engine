@@ -62,6 +62,7 @@
       "attempt_action.event.json",
       "component_added.event.json",
       "component_removed.event.json",
+      "display_entity_components.event.json",
       "disable_input.event.json",
       "display_error.event.json",
       "display_failed_action_result.event.json",

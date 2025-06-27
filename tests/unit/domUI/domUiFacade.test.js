@@ -28,6 +28,10 @@ const mockActionResultRenderer = { dispose: jest.fn() }; // Added mock for actio
 const mockSaveGameUI = { show: jest.fn(), dispose: jest.fn() };
 const mockLoadGameUI = { show: jest.fn(), dispose: jest.fn() };
 const mockLlmSelectionModal = { show: jest.fn(), dispose: jest.fn() };
+const mockEntityLifecycleMonitor = { 
+  clearEvents: jest.fn(), 
+  dispose: jest.fn() 
+};
 
 describe('DomUiFacade', () => {
   let validDeps;
@@ -46,6 +50,7 @@ describe('DomUiFacade', () => {
       saveGameUI: mockSaveGameUI,
       loadGameUI: mockLoadGameUI,
       llmSelectionModal: mockLlmSelectionModal,
+      entityLifecycleMonitor: mockEntityLifecycleMonitor,
     };
   });
 
@@ -136,6 +141,14 @@ describe('DomUiFacade', () => {
     );
   });
 
+  it('should throw an error if entityLifecycleMonitor is missing', () => {
+    const deps = { ...validDeps };
+    delete deps.entityLifecycleMonitor;
+    expect(() => new DomUiFacade(deps)).toThrow(
+      'DomUiFacade: Missing or invalid entityLifecycleMonitor dependency.'
+    );
+  });
+
   /* ---------- getters ---------- */
   it('should provide a getter for actionButtonsRenderer', () => {
     const facade = new DomUiFacade(validDeps);
@@ -188,6 +201,11 @@ describe('DomUiFacade', () => {
     expect(facade.llmSelectionModal).toBe(mockLlmSelectionModal);
   });
 
+  it('should provide a getter for entityLifecycleMonitor', () => {
+    const facade = new DomUiFacade(validDeps);
+    expect(facade.entityLifecycleMonitor).toBe(mockEntityLifecycleMonitor);
+  });
+
   /* ---------- dispose ---------- */
   it('should call dispose on all underlying renderers if they have a dispose method', () => {
     const facade = new DomUiFacade(validDeps);
@@ -203,6 +221,7 @@ describe('DomUiFacade', () => {
     expect(mockSaveGameUI.dispose).toHaveBeenCalledTimes(1);
     expect(mockLoadGameUI.dispose).toHaveBeenCalledTimes(1);
     expect(mockLlmSelectionModal.dispose).toHaveBeenCalledTimes(1);
+    expect(mockEntityLifecycleMonitor.dispose).toHaveBeenCalledTimes(1);
   });
 
   it('should not throw if a renderer lacks a dispose method', () => {
@@ -212,6 +231,7 @@ describe('DomUiFacade', () => {
       speechBubbleRenderer: { renderSpeech: jest.fn() }, // no dispose
       actionResultRenderer: {}, // no dispose
       saveGameUI: { show: jest.fn() }, // no dispose
+      entityLifecycleMonitor: { clearEvents: jest.fn() }, // no dispose
     };
 
     const facade = new DomUiFacade(incompleteDeps);
@@ -229,5 +249,6 @@ describe('DomUiFacade', () => {
     expect(mockActionButtonsRenderer.dispose).not.toHaveBeenCalled();
     expect(mockSpeechBubbleRenderer.dispose).not.toHaveBeenCalled();
     expect(mockSaveGameUI.dispose).not.toHaveBeenCalled();
+    expect(mockEntityLifecycleMonitor.dispose).not.toHaveBeenCalled();
   });
 });

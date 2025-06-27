@@ -12,8 +12,8 @@
 /** @typedef {import('./loadGameUI').default} LoadGameUI */
 /** @typedef {import('./llmSelectionModal').LlmSelectionModal} LlmSelectionModal */
 /** @typedef {import('./speechBubbleRenderer').SpeechBubbleRenderer} SpeechBubbleRenderer */
-
 /** @typedef {import('./actionResultRenderer.js').ActionResultRenderer} ActionResultRenderer */
+/** @typedef {import('./entityLifecycleMonitor.js').EntityLifecycleMonitor} EntityLifecycleMonitor */
 
 /**
  * Provides a single point of access to the various UI rendering/controller components.
@@ -32,6 +32,7 @@ export class DomUiFacade {
   #llmSelectionModal;
   #speechBubbleRenderer;
   #actionResultRenderer;
+  #entityLifecycleMonitor;
 
   /**
    * Creates an instance of DomUiFacade.
@@ -47,6 +48,7 @@ export class DomUiFacade {
    * @param {SaveGameUI} deps.saveGameUI - The Save Game UI component.
    * @param {LoadGameUI} deps.loadGameUI - The Load Game UI component.
    * @param {LlmSelectionModal} deps.llmSelectionModal - The LLM Selection Modal component.
+   * @param {EntityLifecycleMonitor} deps.entityLifecycleMonitor - The Entity Lifecycle Monitor component.
    * @throws {Error} If any required dependency is missing or invalid.
    */
   constructor({
@@ -60,6 +62,7 @@ export class DomUiFacade {
     saveGameUI,
     loadGameUI,
     llmSelectionModal,
+    entityLifecycleMonitor,
   }) {
     // Basic validation to ensure all renderers are provided
     if (
@@ -110,6 +113,13 @@ export class DomUiFacade {
       throw new Error(
         'DomUiFacade: Missing or invalid llmSelectionModal dependency.'
       );
+    if (
+      !entityLifecycleMonitor ||
+      typeof entityLifecycleMonitor.clearEvents !== 'function'
+    )
+      throw new Error(
+        'DomUiFacade: Missing or invalid entityLifecycleMonitor dependency.'
+      );
 
     this.#actionButtonsRenderer = actionButtonsRenderer;
     this.#locationRenderer = locationRenderer;
@@ -121,6 +131,7 @@ export class DomUiFacade {
     this.#saveGameUI = saveGameUI;
     this.#loadGameUI = loadGameUI;
     this.#llmSelectionModal = llmSelectionModal;
+    this.#entityLifecycleMonitor = entityLifecycleMonitor;
   }
 
   /**
@@ -214,6 +225,15 @@ export class DomUiFacade {
   }
 
   /**
+   * Provides the EntityLifecycleMonitor instance.
+   *
+   * @returns {EntityLifecycleMonitor} Monitor for entity lifecycle events.
+   */
+  get entityLifecycleMonitor() {
+    return this.#entityLifecycleMonitor;
+  }
+
+  /**
    * Optional: Dispose method to potentially call dispose on all managed renderers.
    * Useful if the facade's lifecycle manages the renderers' lifecycle.
    */
@@ -228,5 +248,6 @@ export class DomUiFacade {
     this.#saveGameUI?.dispose?.();
     this.#loadGameUI?.dispose?.();
     this.#llmSelectionModal?.dispose?.();
+    this.#entityLifecycleMonitor?.dispose?.();
   }
 }
