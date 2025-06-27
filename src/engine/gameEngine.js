@@ -12,6 +12,7 @@ import {
 import EngineState from './engineState.js';
 import GameSessionManager from './gameSessionManager.js';
 import PersistenceCoordinator from './persistenceCoordinator.js';
+import { assertNonBlankString } from '../utils/parameterGuards.js';
 
 // --- JSDoc Type Imports ---
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
@@ -171,11 +172,9 @@ class GameEngine {
    * @private
    * @description Sets initialization, loop and world values to inactive.
    * @returns {void}
-   */
+  */
   #resetEngineState() {
-    this.#engineState.isInitialized = false;
-    this.#engineState.isGameLoopRunning = false;
-    this.#engineState.activeWorld = null;
+    this.#engineState.reset();
   }
 
   async _executeInitializationSequence(worldName) {
@@ -244,16 +243,12 @@ class GameEngine {
   }
 
   async startNewGame(worldName) {
-    if (
-      !worldName ||
-      typeof worldName !== 'string' ||
-      worldName.trim() === ''
-    ) {
-      const errorMsg =
-        'GameEngine.startNewGame: worldName must be a non-empty string.';
-      this.#logger.error(errorMsg);
-      throw new TypeError(errorMsg);
-    }
+    assertNonBlankString(
+      worldName,
+      'worldName',
+      'GameEngine.startNewGame',
+      this.#logger,
+    );
     this.#logger.debug(
       `GameEngine: startNewGame called for world "${worldName}".`
     );
@@ -355,16 +350,12 @@ class GameEngine {
   }
 
   async loadGame(saveIdentifier) {
-    if (
-      !saveIdentifier ||
-      typeof saveIdentifier !== 'string' ||
-      saveIdentifier.trim() === ''
-    ) {
-      const errorMsg =
-        'GameEngine.loadGame: saveIdentifier must be a non-empty string.';
-      this.#logger.error(errorMsg);
-      throw new TypeError(errorMsg);
-    }
+    assertNonBlankString(
+      saveIdentifier,
+      'saveIdentifier',
+      'GameEngine.loadGame',
+      this.#logger,
+    );
     return this.#persistenceCoordinator.loadGame(saveIdentifier);
   }
 

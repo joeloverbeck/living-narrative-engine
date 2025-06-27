@@ -99,14 +99,15 @@ describeEngineSuite('GameEngine', (context) => {
       'should reject invalid world names: %p',
       async (badName) => {
         const expectedMessage =
-          'GameEngine.startNewGame: worldName must be a non-empty string.';
+          `GameEngine.startNewGame: Invalid worldName '${badName}'. Expected non-blank string.`;
 
         await expect(context.engine.startNewGame(badName)).rejects.toThrow(
           expectedMessage
         );
 
         expect(context.bed.getLogger().error).toHaveBeenCalledWith(
-          expectedMessage
+          expectedMessage,
+          expect.any(Object)
         );
         expectEngineStopped(context.engine);
       }
