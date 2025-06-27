@@ -26,6 +26,7 @@ import {
   InitializationError,
 } from '../../errors/InitializationError.js';
 import { validateWorldName, buildActionIndex } from './initHelpers.js';
+import ContentDependencyValidator from './contentDependencyValidator.js';
 
 /**
  * Service responsible for orchestrating the entire game initialization sequence.
@@ -234,7 +235,10 @@ class InitializationService extends IInitializationService {
     try {
       validateWorldName(worldName, this.#logger);
       await this.#loadMods(worldName);
-      await this.#validateContentDependencies(worldName);
+      await new ContentDependencyValidator({
+        gameDataRepository: this.#gameDataRepository,
+        logger: this.#logger,
+      }).validate(worldName);
       await this.#initializeScopeRegistry();
       await this.#initLlmAdapter();
       await this.#initSystems();
@@ -298,83 +302,6 @@ class InitializationService extends IInitializationService {
    * @private
    * @async
    */
-  async #validateContentDependencies(worldName) {
-    this.#logger.debug(
-      'InitializationService: Validating content dependencies...'
-    );
-
-    if (
-      !this.#gameDataRepository ||
-      typeof this.#gameDataRepository.getAllEntityInstanceDefinitions !==
-        'function' ||
-      typeof this.#gameDataRepository.getAllEntityDefinitions !== 'function' ||
-      typeof this.#gameDataRepository.getWorld !== 'function'
-    ) {
-      this.#logger.warn(
-        'Content dependency validation skipped: gameDataRepository lacks required methods.'
-      );
-      return;
-    }
-
-    const instanceDefs =
-      this.#gameDataRepository.getAllEntityInstanceDefinitions();
-    const definitionIds = new Set(
-      this.#gameDataRepository.getAllEntityDefinitions().map((d) => d.id)
-    );
-
-    for (const inst of instanceDefs) {
-      if (!definitionIds.has(inst.definitionId)) {
-        this.#logger.error(
-          `Content Validation: Instance '${inst.instanceId}' references missing definition '${inst.definitionId}'.`
-        );
-      }
-    }
-
-    const instanceIdSet = new Set(instanceDefs.map((i) => i.instanceId));
-    const worldDef = this.#gameDataRepository.getWorld(worldName);
-    const worldSpawnSet = new Set();
-    if (worldDef && Array.isArray(worldDef.instances)) {
-      for (const { instanceId } of worldDef.instances) {
-        if (typeof instanceId === 'string') worldSpawnSet.add(instanceId);
-      }
-    }
-
-    const entityDefs = this.#gameDataRepository.getAllEntityDefinitions();
-    for (const def of entityDefs) {
-      const exits = def?.components?.['core:exits'];
-      if (Array.isArray(exits)) {
-        for (const exit of exits) {
-          const { target, blocker } = exit || {};
-          if (target) {
-            if (!instanceIdSet.has(target)) {
-              this.#logger.error(
-                `Content Validation: Exit target '${target}' in definition '${def.id}' has no corresponding instance data.`
-              );
-            } else if (!worldSpawnSet.has(target)) {
-              this.#logger.error(
-                `Content Validation: Exit target '${target}' in definition '${def.id}' is not spawned in world '${worldName}'.`
-              );
-            }
-          }
-          if (blocker) {
-            if (!instanceIdSet.has(blocker)) {
-              this.#logger.error(
-                `Content Validation: Exit blocker '${blocker}' in definition '${def.id}' has no corresponding instance data.`
-              );
-            } else if (!worldSpawnSet.has(blocker)) {
-              this.#logger.error(
-                `Content Validation: Exit blocker '${blocker}' in definition '${def.id}' is not spawned in world '${worldName}'.`
-              );
-            }
-          }
-        }
-      }
-    }
-
-    this.#logger.debug(
-      'InitializationService: Content dependency validation complete.'
-    );
-  }
 
   async #initializeScopeRegistry() {
     this.#logger.debug('Initializing ScopeRegistry...');
