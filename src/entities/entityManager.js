@@ -97,8 +97,6 @@ class EntityManager extends IEntityManager {
   #eventDispatcher;
   /** @type {function(): string} @private */
   #idGenerator;
-  /** @type {IEntityRepository} @private */
-  #repository;
   /** @type {IComponentCloner} @private */
   #cloner;
   /** @type {IDefaultComponentPolicy} @private */
@@ -147,8 +145,6 @@ class EntityManager extends IEntityManager {
    *   provided as an instance or a zero-argument factory function. Any omitted
    *   dependency will use the default from {@link createDefaultDeps}.
    * @param {IDataRegistry}        deps.registry - Data registry for definitions.
-   * @param {IEntityRepository}    [deps.repository] - Repository for active entities.
-   * @param {Function}             [deps.repositoryFactory] - Factory for the repository.
    * @param {ISchemaValidator}     deps.validator - Schema validator instance.
    * @param {ILogger}              deps.logger - Logger implementation.
    * @param {ISafeEventDispatcher} deps.dispatcher - Event dispatcher.
@@ -168,8 +164,6 @@ class EntityManager extends IEntityManager {
    */
   constructor({
     registry,
-    repository,
-    repositoryFactory,
     validator,
     logger,
     dispatcher,
@@ -189,7 +183,6 @@ class EntityManager extends IEntityManager {
     super();
 
     const defaults = createDefaultDeps({
-      repositoryFactory,
       idGeneratorFactory,
       clonerFactory,
       defaultPolicyFactory,
@@ -202,7 +195,6 @@ class EntityManager extends IEntityManager {
       return dep;
     };
 
-    repository = resolveDep(repository, defaults.repository);
     idGenerator = resolveDep(idGenerator, defaults.idGenerator);
     cloner = resolveDep(cloner, defaults.cloner);
     defaultPolicy = resolveDep(defaultPolicy, defaults.defaultPolicy);
@@ -215,9 +207,6 @@ class EntityManager extends IEntityManager {
 
     validateDependency(registry, 'IDataRegistry', this.#logger, {
       requiredMethods: ['getEntityDefinition'],
-    });
-    validateDependency(repository, 'IEntityRepository', this.#logger, {
-      requiredMethods: ['add', 'get', 'has', 'remove', 'clear', 'entities'],
     });
     validateDependency(validator, 'ISchemaValidator', this.#logger, {
       requiredMethods: ['validate'],
@@ -237,7 +226,6 @@ class EntityManager extends IEntityManager {
     });
 
     this.#registry = registry;
-    this.#repository = repository;
     this.#validator = validator;
     this.#logger = ensureValidLogger(logger, 'EntityManager');
     this.#eventDispatcher = dispatcher;
@@ -253,7 +241,6 @@ class EntityManager extends IEntityManager {
       idGenerator: this.#idGenerator,
       cloner: this.#cloner,
       defaultPolicy: this.#defaultPolicy,
-      repository: this.#repository,
     });
 
     this.#entityRepository = resolveDep(
