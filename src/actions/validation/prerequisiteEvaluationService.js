@@ -213,6 +213,52 @@ export class PrerequisiteEvaluationService extends BaseService {
   }
 
   /**
+   * @description Resolves any condition references and evaluates the resulting logic.
+   * @private
+   * @param {object} prereqObject - The prerequisite containing a logic rule.
+   * @param {string} actionId - Identifier of the action being evaluated.
+   * @param {JsonLogicEvaluationContext} evaluationContext - Context for evaluation.
+   * @param {TraceContext} [trace] - Optional tracing context.
+   * @returns {boolean} Result of evaluating the rule.
+   */
+  #resolveAndEvaluate(prereqObject, actionId, evaluationContext, trace) {
+    const source = 'PrerequisiteEvaluationService._evaluatePrerequisite';
+    const originalLogic = prereqObject.logic;
+
+    trace?.addLog('info', 'Evaluating rule.', source, {
+      logic: originalLogic || {},
+    });
+
+    const resolvedLogic = this._resolveConditionReferences(
+      originalLogic,
+      actionId
+    );
+
+    if (JSON.stringify(originalLogic) !== JSON.stringify(resolvedLogic)) {
+      trace?.addLog('data', 'Condition reference resolved.', source, {
+        resolvedLogic: resolvedLogic || {},
+      });
+    }
+
+    this.#logger.debug(
+      `${this.#logPrefix(actionId)}:   - Evaluating resolved rule: ${JSON.stringify(
+        resolvedLogic
+      )}`
+    );
+
+    const result = this._executeJsonLogic(resolvedLogic, evaluationContext);
+
+    trace?.addLog(
+      result ? 'success' : 'failure',
+      `Rule evaluation result: ${result}`,
+      source,
+      { result: Boolean(result) }
+    );
+
+    return result;
+  }
+
+  /**
    * Validates and evaluates a single prerequisite rule.
    *
    * @private
@@ -246,29 +292,12 @@ export class PrerequisiteEvaluationService extends BaseService {
 
     let rulePassed;
     try {
-      const originalLogic = prereqObject.logic;
-      trace?.addLog('info', `Evaluating rule.`, source, {
-        logic: originalLogic || {},
-      });
-
-      const resolvedLogic = this._resolveConditionReferences(
-        originalLogic,
-        actionId
+      rulePassed = this.#resolveAndEvaluate(
+        prereqObject,
+        actionId,
+        evaluationContext,
+        trace
       );
-
-      if (JSON.stringify(originalLogic) !== JSON.stringify(resolvedLogic)) {
-        trace?.addLog('data', `Condition reference resolved.`, source, {
-          resolvedLogic: resolvedLogic || {},
-        });
-      }
-
-      this.#logger.debug(
-        `${this.#logPrefix(actionId)}:   - Evaluating resolved rule ${ruleNumber}: ${JSON.stringify(
-          resolvedLogic
-        )}`
-      );
-
-      rulePassed = this._executeJsonLogic(resolvedLogic, evaluationContext);
     } catch (evalError) {
       trace?.addLog(
         'error',
@@ -287,13 +316,6 @@ export class PrerequisiteEvaluationService extends BaseService {
       );
       return false;
     }
-
-    trace?.addLog(
-      rulePassed ? 'success' : 'failure',
-      `Rule evaluation result: ${rulePassed}`,
-      source,
-      { result: Boolean(rulePassed) }
-    );
 
     return this._logPrerequisiteResult(
       rulePassed,
