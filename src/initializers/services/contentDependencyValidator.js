@@ -56,13 +56,7 @@ class ContentDependencyValidator {
       this.#gameDataRepository.getAllEntityDefinitions().map((d) => d.id)
     );
 
-    for (const inst of instanceDefs) {
-      if (!definitionIds.has(inst.definitionId)) {
-        this.#logger?.error(
-          `Content Validation: Instance '${inst.instanceId}' references missing definition '${inst.definitionId}'.`
-        );
-      }
-    }
+    this.#validateInstanceDefinitions(instanceDefs, definitionIds);
 
     const instanceIdSet = new Set(instanceDefs.map((i) => i.instanceId));
     const worldDef = this.#gameDataRepository.getWorld(worldName);
@@ -74,6 +68,39 @@ class ContentDependencyValidator {
     }
 
     const entityDefs = this.#gameDataRepository.getAllEntityDefinitions();
+    this.#validateExits(entityDefs, instanceIdSet, worldSpawnSet, worldName);
+
+    this.#logger?.debug(
+      'ContentDependencyValidator: Content dependency validation complete.'
+    );
+  }
+
+  /**
+   * @description Checks that each instance references an existing definition.
+   * @param {Array<{instanceId: string, definitionId: string}>} instanceDefs -
+   *   All entity instance definitions.
+   * @param {Set<string>} definitionIds - Set of available definition IDs.
+   * @returns {void}
+   */
+  #validateInstanceDefinitions(instanceDefs, definitionIds) {
+    for (const inst of instanceDefs) {
+      if (!definitionIds.has(inst.definitionId)) {
+        this.#logger?.error(
+          `Content Validation: Instance '${inst.instanceId}' references missing definition '${inst.definitionId}'.`
+        );
+      }
+    }
+  }
+
+  /**
+   * @description Validates exit targets and blockers against spawned instances.
+   * @param {Array<object>} entityDefs - All entity definitions.
+   * @param {Set<string>} instanceIdSet - All instance IDs across the game.
+   * @param {Set<string>} worldSpawnSet - Instances spawned in the current world.
+   * @param {string} worldName - Name of the world being validated.
+   * @returns {void}
+   */
+  #validateExits(entityDefs, instanceIdSet, worldSpawnSet, worldName) {
     for (const def of entityDefs) {
       const exits = def?.components?.['core:exits'];
       if (Array.isArray(exits)) {
@@ -104,10 +131,6 @@ class ContentDependencyValidator {
         }
       }
     }
-
-    this.#logger?.debug(
-      'ContentDependencyValidator: Content dependency validation complete.'
-    );
   }
 }
 
