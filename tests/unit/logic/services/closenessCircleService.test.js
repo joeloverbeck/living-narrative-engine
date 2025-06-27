@@ -84,6 +84,12 @@ describe('ClosenessCircleService', () => {
     test('should handle an array with one element', () => {
       expect(repair(['a'])).toEqual(['a']);
     });
+
+    test('should return an empty array for non-array inputs', () => {
+      expect(repair(null)).toEqual([]);
+      expect(repair(undefined)).toEqual([]);
+      expect(repair({})).toEqual([]);
+    });
   });
 
   describe('Usage Scenarios', () => {
