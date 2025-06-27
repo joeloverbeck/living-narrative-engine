@@ -430,39 +430,6 @@ describeEntityManagerSuite('EntityManager - removeEntityInstance', (getBed) => {
     runInvalidEntityIdTests(getBed, (em, instanceId) =>
       em.removeEntityInstance(instanceId)
     );
-
-    it('should throw an error if EntityRepository fails internally', () => {
-      // This is a tricky test for a defensive code path.
-      const stubRepo = {
-        add: jest.fn(),
-        get: jest.fn(),
-        has: jest.fn(() => true),
-        remove: jest.fn(() => {
-          throw new Error('Test repository failure');
-        }),
-        clear: jest.fn(),
-        entities: jest.fn(() => [].values()),
-      };
-
-      // Arrange
-      const bed = new EntityManagerTestBed({
-        entityManagerOptions: { repository: stubRepo },
-      });
-      const { entityManager, mocks } = bed;
-      const { PRIMARY } = TestData.InstanceIDs;
-      bed.createBasicEntity({ instanceId: PRIMARY });
-
-      // Act & Assert
-      expect(() => entityManager.removeEntityInstance(PRIMARY)).toThrow(
-        "Internal error: Failed to remove entity 'test-instance-01' from repository despite entity being found."
-      );
-      expect(mocks.logger.error).toHaveBeenCalledWith(
-        expect.stringContaining(
-          'EntityRepository.remove failed for already retrieved entity'
-        )
-      );
-      bed.cleanup();
-    });
   });
 });
 

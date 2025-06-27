@@ -9,6 +9,7 @@ import {
   WORLDINIT_ENTITY_INSTANTIATION_FAILED_ID,
 } from '../../../src/constants/eventIds.js';
 import { SCOPES_KEY } from '../../../src/constants/dataRegistryKeys.js';
+import loadAndInitScopes from '../../../src/initializers/services/scopeRegistryUtils.js';
 import { WorldInitializationError } from '../../../src/errors/InitializationError.js';
 import { safeDispatchError } from '../../../src/utils/safeDispatchErrorUtils.js';
 import * as eventDispatchUtils from '../../../src/utils/eventDispatchUtils.js';
@@ -614,24 +615,20 @@ describe('WorldInitializer', () => {
     it('should call scopeRegistry.initialize with scopes from repository', async () => {
       const mockScopes = { 'core:testScope': 'actor' };
       mockGameDataRepository.get = jest.fn().mockReturnValue(mockScopes);
-      worldInitializer = new WorldInitializer({
-        entityManager: mockEntityManager,
-        worldContext: mockWorldContext,
-        gameDataRepository: mockGameDataRepository,
-        validatedEventDispatcher: mockValidatedEventDispatcher,
-        logger: mockLogger,
+
+      await loadAndInitScopes({
+        dataSource: mockGameDataRepository.get,
         scopeRegistry: mockScopeRegistry,
+        logger: mockLogger,
       });
 
-      await worldInitializer.initializeScopeRegistry();
-
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        'WorldInitializer: Initializing ScopeRegistry with loaded scopes...'
+        'Initializing ScopeRegistry...'
       );
       expect(mockGameDataRepository.get).toHaveBeenCalledWith(SCOPES_KEY);
       expect(mockScopeRegistry.initialize).toHaveBeenCalledWith(mockScopes);
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        'WorldInitializer: ScopeRegistry initialized with 1 scopes.'
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'ScopeRegistry initialized with 1 scopes.'
       );
     });
 
@@ -643,38 +640,31 @@ describe('WorldInitializer', () => {
       mockScopeRegistry.initialize.mockImplementationOnce(() => {
         throw initError;
       });
-      worldInitializer = new WorldInitializer({
-        entityManager: mockEntityManager,
-        worldContext: mockWorldContext,
-        gameDataRepository: mockGameDataRepository,
-        validatedEventDispatcher: mockValidatedEventDispatcher,
-        logger: mockLogger,
+
+      await loadAndInitScopes({
+        dataSource: mockGameDataRepository.get,
         scopeRegistry: mockScopeRegistry,
+        logger: mockLogger,
       });
 
-      await worldInitializer.initializeScopeRegistry();
-
       expect(mockLogger.error).toHaveBeenCalledWith(
-        'WorldInitializer: Failed to initialize ScopeRegistry:',
+        'Failed to initialize ScopeRegistry:',
         initError
       );
     });
 
     it('should handle case where no scopes are returned from repository', async () => {
-      mockGameDataRepository.get = jest.fn().mockReturnValue(null); // or undefined
-      worldInitializer = new WorldInitializer({
-        entityManager: mockEntityManager,
-        worldContext: mockWorldContext,
-        gameDataRepository: mockGameDataRepository,
-        validatedEventDispatcher: mockValidatedEventDispatcher,
-        logger: mockLogger,
+      mockGameDataRepository.get = jest.fn().mockReturnValue(null);
+
+      await loadAndInitScopes({
+        dataSource: mockGameDataRepository.get,
         scopeRegistry: mockScopeRegistry,
+        logger: mockLogger,
       });
-      await worldInitializer.initializeScopeRegistry();
 
       expect(mockScopeRegistry.initialize).toHaveBeenCalledWith({});
-      expect(mockLogger.info).toHaveBeenCalledWith(
-        'WorldInitializer: ScopeRegistry initialized with 0 scopes.'
+      expect(mockLogger.debug).toHaveBeenCalledWith(
+        'ScopeRegistry initialized with 0 scopes.'
       );
     });
   });

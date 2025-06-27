@@ -46,8 +46,6 @@ export class EntityManagerTestBed extends FactoryTestBed {
    * @param {object} [overrides] - Optional overrides.
    * @param {object} [overrides.entityManagerOptions] - Options forwarded to the EntityManager constructor.
    * @param {Function} [overrides.idGenerator] - Legacy shortcut for entityManagerOptions.idGenerator.
-   * @param {import('../../../src/ports/IEntityRepository.js').IEntityRepository} [overrides.entityManagerOptions.repository]
-   *   - Repository implementation used by the EntityManager.
    */
   constructor(overrides = {}) {
     const { entityManagerOptions = {}, ...legacyOptions } = overrides;

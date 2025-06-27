@@ -3,6 +3,7 @@
 /** @typedef {import('../../types/commandResult.js').CommandResult} CommandResult */
 // Or a more specific shared type
 /** @typedef {import('../../turns/constants/turnDirectives.js').default} TurnDirective */
+/** @typedef {import('../../turns/interfaces/ITurnContext.js').ITurnContext} ITurnContext */
 
 /**
  * @interface ICommandOutcomeInterpreter
@@ -13,12 +14,12 @@ export class ICommandOutcomeInterpreter {
    * Interprets a CommandResult and returns the appropriate TurnDirective.
    *
    * @async
-   * @param {CommandResult} result - The result object from command processing.
-   * @param {string} actorId - The unique ID of the entity whose command result is being interpreted.
-   * @returns {Promise<TurnDirective | string>} A promise resolving to a TurnDirective enum value (string).
-   * @throws {Error} If actorId is invalid or result object is malformed.
+   * @param {CommandResult} _result - The result object from command processing.
+   * @param {ITurnContext} _turnContext - The active turn context for the actor whose result is being interpreted.
+   * @returns {Promise<TurnDirective>} A promise resolving to a TurnDirective enum value.
+   * @throws {Error} If turnContext or result object is malformed.
    */
-  async interpret(result, actorId) {
+  async interpret(_result, _turnContext) {
     throw new Error(
       'ICommandOutcomeInterpreter.interpret method not implemented.'
     );

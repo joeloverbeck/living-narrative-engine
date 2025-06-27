@@ -28,6 +28,7 @@ import { ITurnDirectiveResolver } from '../interfaces/ITurnDirectiveResolver.js'
 import {
   validateTurnAction,
   validateCommandString,
+  PROCESSING_CONTEXT_METHODS,
 } from './helpers/validationUtils.js';
 
 /**
@@ -103,15 +104,13 @@ export class ProcessingCommandState extends AbstractTurnState {
    *   cast to ProcessingCommandStateContext or null on failure.
    */
   async _ensureContext(reason) {
-    const required = [
-      'getActor',
-      'getLogger',
-      'getChosenAction',
-      'getSafeEventDispatcher',
-    ];
-    const ctx = await this._ensureContextWithMethods(reason, required, {
-      endTurnOnFail: false,
-    });
+    const ctx = await this._ensureContextWithMethods(
+      reason,
+      PROCESSING_CONTEXT_METHODS,
+      {
+        endTurnOnFail: false,
+      }
+    );
     return /** @type {ProcessingCommandStateContext | null} */ (ctx);
   }
 

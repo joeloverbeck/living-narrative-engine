@@ -7,7 +7,12 @@
 
 import { jest, describe, beforeEach, it, expect } from '@jest/globals';
 import { ActionIndex } from '../../../src/actions/actionIndex.js';
-import { TraceContext } from '../../../src/actions/tracing/traceContext.js';
+import {
+  TraceContext,
+  TRACE_DATA,
+  TRACE_INFO,
+  TRACE_SUCCESS,
+} from '../../../src/actions/tracing/traceContext.js';
 import { mock } from 'jest-mock-extended';
 
 // Mock the TraceContext to spy on its methods
@@ -112,7 +117,7 @@ describe('ActionIndex', () => {
         actionIndex.getCandidateActions(actorEntity, trace);
 
         expect(trace.addLog).toHaveBeenCalledWith(
-          'data',
+          TRACE_DATA,
           `Actor '${actorEntity.id}' has components.`,
           source,
           { components: components }
@@ -125,7 +130,7 @@ describe('ActionIndex', () => {
         actionIndex.getCandidateActions(actorEntity, trace);
 
         expect(trace.addLog).toHaveBeenCalledWith(
-          'info',
+          TRACE_INFO,
           'Added 1 actions with no actor component requirements.',
           source
         );
@@ -140,7 +145,7 @@ describe('ActionIndex', () => {
 
         // action2 and action4 require componentA
         expect(trace.addLog).toHaveBeenCalledWith(
-          'info',
+          TRACE_INFO,
           `Found 2 actions requiring component 'componentA'.`,
           source
         );
@@ -169,7 +174,7 @@ describe('ActionIndex', () => {
         const candidateIds = candidates.map((a) => a.id);
 
         expect(trace.addLog).toHaveBeenCalledWith(
-          'success',
+          TRACE_SUCCESS,
           `Final candidate list contains ${candidates.length} unique actions.`,
           source,
           { actionIds: candidateIds }
@@ -189,16 +194,16 @@ describe('ActionIndex', () => {
 
         const calls = trace.addLog.mock.calls;
         expect(calls).toHaveLength(4);
-        expect(calls[0][0]).toBe('data'); // components
+        expect(calls[0][0]).toBe(TRACE_DATA); // components
         expect(calls[0][1]).toContain('has components');
 
-        expect(calls[1][0]).toBe('info'); // no requirement
+        expect(calls[1][0]).toBe(TRACE_INFO); // no requirement
         expect(calls[1][1]).toContain('no actor component requirements');
 
-        expect(calls[2][0]).toBe('info'); // componentB actions
+        expect(calls[2][0]).toBe(TRACE_INFO); // componentB actions
         expect(calls[2][1]).toContain("requiring component 'componentB'");
 
-        expect(calls[3][0]).toBe('success'); // final list
+        expect(calls[3][0]).toBe(TRACE_SUCCESS); // final list
         expect(calls[3][1]).toContain('Final candidate list');
       });
     });

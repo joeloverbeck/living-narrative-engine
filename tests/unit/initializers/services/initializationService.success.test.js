@@ -19,6 +19,7 @@ let actionIndex;
 let gameDataRepository;
 let thoughtListener;
 let notesListener;
+let contentDependencyValidator;
 
 beforeEach(() => {
   logger = { error: jest.fn(), debug: jest.fn(), warn: jest.fn() };
@@ -51,6 +52,9 @@ beforeEach(() => {
   };
   thoughtListener = { handleEvent: jest.fn() };
   notesListener = { handleEvent: jest.fn() };
+  contentDependencyValidator = {
+    validate: jest.fn().mockResolvedValue(undefined),
+  };
 });
 
 describe('InitializationService success path', () => {
@@ -74,6 +78,7 @@ describe('InitializationService success path', () => {
         dataRegistry,
         systemInitializer,
         worldInitializer,
+        contentDependencyValidator,
       },
     });
 

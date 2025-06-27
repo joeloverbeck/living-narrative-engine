@@ -16,6 +16,7 @@ let entityManager;
 let domUiFacade;
 let thoughtListener;
 let notesListener;
+let contentDependencyValidator;
 
 beforeEach(() => {
   logger = { error: jest.fn(), debug: jest.fn(), warn: jest.fn() };
@@ -38,6 +39,9 @@ beforeEach(() => {
   domUiFacade = {};
   thoughtListener = { handleEvent: jest.fn() };
   notesListener = { handleEvent: jest.fn() };
+  contentDependencyValidator = {
+    validate: jest.fn().mockResolvedValue(undefined),
+  };
 });
 
 describe('InitializationService DomUiFacade handling', () => {
@@ -63,6 +67,7 @@ describe('InitializationService DomUiFacade handling', () => {
           dataRegistry,
           systemInitializer,
           worldInitializer,
+          contentDependencyValidator,
           // spatialIndexManager intentionally missing for this test
         },
       });
@@ -88,6 +93,7 @@ describe('InitializationService DomUiFacade handling', () => {
           dataRegistry,
           systemInitializer,
           worldInitializer,
+          contentDependencyValidator,
         },
       });
     }).toThrow('InitializationService requires a domUiFacade dependency');

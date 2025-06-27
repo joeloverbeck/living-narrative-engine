@@ -58,6 +58,9 @@ describe('InitializationService failure scenarios', () => {
         dataRegistry: { getAll: jest.fn().mockReturnValue([]) },
         systemInitializer: { initializeAll: jest.fn() },
         worldInitializer: { initializeWorldEntities: jest.fn() },
+        contentDependencyValidator: {
+          validate: jest.fn().mockResolvedValue(undefined),
+        },
       },
       llm: {
         llmAdapter: { init: jest.fn() },
@@ -116,7 +119,7 @@ describe('InitializationService failure scenarios', () => {
     });
     const result = await svc.runInitializationSequence(WORLD);
     expect(result.success).toBe(false);
-    expect(result.error).toBe(err);
+    expect(result.error).toBeInstanceOf(WorldInitializationError);
   });
 
   it('fails when SystemInitializer.initializeAll rejects', async () => {

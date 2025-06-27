@@ -2,6 +2,13 @@
 
 import { jest, describe, beforeEach, expect, it } from '@jest/globals';
 import { PrerequisiteEvaluationService } from '../../../../src/actions/validation/prerequisiteEvaluationService.js';
+import {
+  TRACE_INFO,
+  TRACE_SUCCESS,
+  TRACE_FAILURE,
+  TRACE_ERROR,
+  TRACE_DATA,
+} from '../../../../src/actions/tracing/traceContext.js';
 import { mock } from 'jest-mock-extended';
 
 // Mock dependencies
@@ -121,7 +128,7 @@ describe('PrerequisiteEvaluationService › with Tracing', () => {
       );
 
       expect(mockTraceContext.addLog).toHaveBeenCalledWith(
-        'data',
+        TRACE_DATA,
         'Built prerequisite evaluation context.',
         sourceEvaluate,
         { context: mockEvaluationContext }
@@ -141,7 +148,7 @@ describe('PrerequisiteEvaluationService › with Tracing', () => {
       );
 
       expect(mockTraceContext.addLog).toHaveBeenCalledWith(
-        'info',
+        TRACE_INFO,
         'Evaluating rule.',
         sourceEvaluatePrerequisite,
         { logic: prerequisites[0].logic }
@@ -161,7 +168,7 @@ describe('PrerequisiteEvaluationService › with Tracing', () => {
       );
 
       expect(mockTraceContext.addLog).toHaveBeenCalledWith(
-        'success',
+        TRACE_SUCCESS,
         'Rule evaluation result: true',
         sourceEvaluatePrerequisite,
         { result: true }
@@ -182,7 +189,7 @@ describe('PrerequisiteEvaluationService › with Tracing', () => {
 
       expect(result).toBe(false);
       expect(mockTraceContext.addLog).toHaveBeenCalledWith(
-        'failure',
+        TRACE_FAILURE,
         'Rule evaluation result: false',
         sourceEvaluatePrerequisite,
         { result: false }
@@ -205,7 +212,7 @@ describe('PrerequisiteEvaluationService › with Tracing', () => {
 
       // Log original
       expect(mockTraceContext.addLog).toHaveBeenCalledWith(
-        'info',
+        TRACE_INFO,
         'Evaluating rule.',
         sourceEvaluatePrerequisite,
         { logic: originalLogic }
@@ -213,7 +220,7 @@ describe('PrerequisiteEvaluationService › with Tracing', () => {
 
       // Log resolved
       expect(mockTraceContext.addLog).toHaveBeenCalledWith(
-        'data',
+        TRACE_DATA,
         'Condition reference resolved.',
         sourceEvaluatePrerequisite,
         { resolvedLogic: resolvedLogic }
@@ -263,7 +270,7 @@ describe('PrerequisiteEvaluationService › with Tracing', () => {
 
       expect(result).toBe(false);
       expect(mockTraceContext.addLog).toHaveBeenCalledWith(
-        'error',
+        TRACE_ERROR,
         `Error during rule evaluation: ${evalError.message}`,
         sourceEvaluatePrerequisite,
         { error: evalError }

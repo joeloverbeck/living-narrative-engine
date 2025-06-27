@@ -19,6 +19,7 @@ import {
 import { parseDslExpression } from '../scopeDsl/parser.js';
 import { setupService } from '../utils/serviceInitializerUtils.js';
 import { SYSTEM_ERROR_OCCURRED_ID } from '../constants/systemEventIds.js';
+import { TRACE_INFO, TRACE_ERROR } from './tracing/traceContext.js';
 
 export class TargetResolutionService extends ITargetResolutionService {
   #scopeRegistry;
@@ -69,11 +70,11 @@ export class TargetResolutionService extends ITargetResolutionService {
   /** @override */
   async resolveTargets(scopeName, actorEntity, discoveryContext, trace = null) {
     const source = 'TargetResolutionService.resolveTargets';
-    trace?.addLog('info', `Resolving scope '${scopeName}'.`, source);
+    trace?.addLog(TRACE_INFO, `Resolving scope '${scopeName}'.`, source);
 
     if (scopeName === TARGET_DOMAIN_NONE) {
       trace?.addLog(
-        'info',
+        TRACE_INFO,
         `Scope is 'none'; returning a single no-target context.`,
         source
       );
@@ -82,7 +83,7 @@ export class TargetResolutionService extends ITargetResolutionService {
 
     if (scopeName === TARGET_DOMAIN_SELF) {
       trace?.addLog(
-        'info',
+        TRACE_INFO,
         `Scope is 'self'; returning the actor as the target.`,
         source
       );
@@ -97,7 +98,7 @@ export class TargetResolutionService extends ITargetResolutionService {
     );
 
     trace?.addLog(
-      'info',
+      TRACE_INFO,
       `DSL scope '${scopeName}' resolved to ${targetIds.size} target(s).`,
       source,
       { targetIds: Array.from(targetIds) }
@@ -119,7 +120,11 @@ export class TargetResolutionService extends ITargetResolutionService {
    */
   #resolveScopeToIds(scopeName, actorEntity, discoveryContext, trace = null) {
     const source = 'TargetResolutionService.#resolveScopeToIds';
-    trace?.addLog('info', `Resolving scope '${scopeName}' with DSL.`, source);
+    trace?.addLog(
+      TRACE_INFO,
+      `Resolving scope '${scopeName}' with DSL.`,
+      source
+    );
     const scopeDefinition = this.#scopeRegistry.getScope(scopeName);
 
     if (
@@ -176,7 +181,7 @@ export class TargetResolutionService extends ITargetResolutionService {
     source,
     originalError = null
   ) {
-    trace?.addLog('error', message, source, details);
+    trace?.addLog(TRACE_ERROR, message, source, details);
     originalError
       ? this.#logger.error(message, originalError)
       : this.#logger.warn(message);

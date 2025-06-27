@@ -19,6 +19,7 @@ let gameDataRepository;
 let thoughtListener;
 let notesListener;
 let spatialIndexManager;
+let contentDependencyValidator;
 
 beforeEach(() => {
   logger = { error: jest.fn(), debug: jest.fn() };
@@ -38,6 +39,9 @@ beforeEach(() => {
   thoughtListener = { handleEvent: jest.fn() };
   notesListener = { handleEvent: jest.fn() };
   spatialIndexManager = { buildIndex: jest.fn() };
+  contentDependencyValidator = {
+    validate: jest.fn().mockResolvedValue(undefined),
+  };
 });
 
 describe('InitializationService constructor', () => {
@@ -63,6 +67,7 @@ describe('InitializationService constructor', () => {
             dataRegistry,
             systemInitializer,
             worldInitializer,
+            contentDependencyValidator,
           },
         })
     ).not.toThrow();
@@ -88,6 +93,7 @@ describe('InitializationService constructor', () => {
           dataRegistry,
           systemInitializer,
           worldInitializer,
+          contentDependencyValidator,
         },
       });
     expect(create).toThrow(SystemInitializationError);
@@ -115,6 +121,7 @@ describe('InitializationService constructor', () => {
           dataRegistry,
           systemInitializer,
           worldInitializer,
+          contentDependencyValidator,
         },
       });
     expect(createVD).toThrow(SystemInitializationError);

@@ -11,6 +11,7 @@
 /** @typedef {import('../../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../interfaces/ICommandOutcomeInterpreter.js').ICommandOutcomeInterpreter} ICommandOutcomeInterpreterType */
 /** @typedef {import('../../turns/interfaces/ITurnContext.js').ITurnContext} ITurnContext */
+/** @typedef {import('../../types/commandResult.js').CommandResult} CommandResult */
 /** @typedef {import('../../entities/entity.js').default} Entity */
 
 // --- Constant Imports ---
@@ -139,6 +140,14 @@ class CommandOutcomeInterpreter extends ICommandOutcomeInterpreter {
     return processedActionId;
   }
 
+  /**
+   * Interpret a command processor result to decide the next turn directive.
+   *
+   * @override
+   * @param {CommandResult} result - Result from the command processor.
+   * @param {ITurnContext} turnContext - Current turn context for the actor.
+   * @returns {Promise<TurnDirective>} The resolved turn directive.
+   */
   async interpret(result, turnContext) {
     const actorId = this.#validateTurnContext(turnContext);
     const originalInput = result.originalInput || '';

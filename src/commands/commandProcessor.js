@@ -16,6 +16,7 @@ import { validateDependency } from '../utils/validationUtils.js';
 /** @typedef {import('../turns/interfaces/IActorTurnStrategy.js').ITurnAction} ITurnAction */
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher} ISafeEventDispatcher */
+/** @typedef {import('../types/commandResult.js').CommandResult} CommandResult */
 
 /**
  * @description Processes raw command strings from actors.
@@ -77,7 +78,7 @@ class CommandProcessor extends ICommandProcessor {
       await this.#dispatchSystemError(userMsg, internalMsg);
       return {
         success: false,
-        errorResult: this.#_createFailureResult(userMsg, internalMsg),
+        errorResult: this.#createFailureResult(userMsg, internalMsg),
       };
     }
 
@@ -118,7 +119,7 @@ class CommandProcessor extends ICommandProcessor {
         )}`
       );
 
-      const failureResult = this.#_createFailureResult(userMsg, internalMsg);
+      const failureResult = this.#createFailureResult(userMsg, internalMsg);
       failureResult.originalInput = commandString;
       failureResult.actionResult = { actionId: actionDefinitionId };
       return { success: false, errorResult: failureResult };
@@ -127,7 +128,7 @@ class CommandProcessor extends ICommandProcessor {
 
   // --- Private Helper Methods ---
 
-  #_createFailureResult(userError, internalError, turnEnded = true) {
+  #createFailureResult(userError, internalError, turnEnded = true) {
     const result = {
       success: false,
       turnEnded: turnEnded,
