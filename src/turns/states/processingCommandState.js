@@ -54,6 +54,16 @@ export class ProcessingCommandState extends AbstractTurnState {
   _processingWorkflowFactory;
 
   /**
+   * @description Updates the turn action to process.
+   * @private
+   * @param {ITurnAction|null} action - Action to process.
+   * @returns {void}
+   */
+  _setTurnAction(action) {
+    this.#turnActionToProcess = action;
+  }
+
+  /**
    * @description Internal setter used by ProcessingGuard.
    * @param {boolean} val - New processing state.
    * @returns {void}
@@ -163,7 +173,7 @@ export class ProcessingCommandState extends AbstractTurnState {
     this.#commandProcessor = commandProcessor;
     this._commandOutcomeInterpreter = commandOutcomeInterpreter;
     this.#commandStringForLog = commandString;
-    this.#turnActionToProcess = turnAction;
+    this._setTurnAction(turnAction);
     this._directiveResolver = directiveResolver;
 
     this._processingGuard = new ProcessingGuard(this);
@@ -210,7 +220,7 @@ export class ProcessingCommandState extends AbstractTurnState {
       this.#commandStringForLog,
       this.#turnActionToProcess,
       (a) => {
-        this.#turnActionToProcess = a;
+        this._setTurnAction(a);
       },
       this._exceptionHandler
     );
