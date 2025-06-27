@@ -10,7 +10,7 @@
  */
 
 /**
- * Resolves a logger using the provided context or handler.
+ * Retrieves a logger from the given turn context or handler.
  * Falls back to the console when unavailable.
  *
  * @param {ITurnContext|null} turnContext - The current ITurnContext, if any.
@@ -50,8 +50,8 @@ export function getLogger(turnContext, handler) {
 }
 
 /**
- * Safely resolves a SafeEventDispatcher using the provided context or handler.
- * Falls back to handler.getSafeEventDispatcher() when necessary.
+ * Retrieves a SafeEventDispatcher from the given context or handler.
+ * Falls back to `handler.getSafeEventDispatcher()` when necessary.
  *
  * @param {ITurnContext|null} turnContext - The current ITurnContext, if any.
  * @param {BaseTurnHandler} [handler] - Optional handler fallback.
@@ -104,9 +104,12 @@ export function getSafeEventDispatcher(turnContext, handler) {
  * @param {BaseTurnHandler} [handler] - Optional handler fallback.
  * @returns {Logger} The resolved logger.
  */
-export function resolveLogger(turnContext, handler) {
-  return getLogger(turnContext, handler);
-}
+/**
+ * Backwards compatible alias for {@link getLogger}.
+ *
+ * @deprecated Use {@link getLogger} instead.
+ */
+export const resolveLogger = getLogger;
 
 /**
  * Safely resolves a SafeEventDispatcher using the provided context or handler.
@@ -117,6 +120,9 @@ export function resolveLogger(turnContext, handler) {
  * @param {BaseTurnHandler} [handler] - Optional handler fallback.
  * @returns {ISafeEventDispatcher|null} The resolved dispatcher or null.
  */
-export function resolveSafeDispatcher(turnContext, handler) {
-  return getSafeEventDispatcher(turnContext, handler);
-}
+/**
+ * Backwards compatible alias for {@link getSafeEventDispatcher}.
+ *
+ * @deprecated Use {@link getSafeEventDispatcher} instead.
+ */
+export const resolveSafeDispatcher = getSafeEventDispatcher;

@@ -1,8 +1,8 @@
 import { describe, test, expect, jest, beforeEach } from '@jest/globals';
 import { AbstractTurnState } from '../../../../src/turns/states/abstractTurnState.js';
 import {
-  resolveLogger,
-  resolveSafeDispatcher,
+  getLogger,
+  getSafeEventDispatcher,
 } from '../../../../src/turns/states/helpers/contextUtils.js';
 
 class TestState extends AbstractTurnState {}
@@ -28,7 +28,7 @@ const makeInvalidHandler = (logger = makeLogger()) => ({
   requestIdleStateTransition: jest.fn().mockResolvedValue(undefined),
 });
 
-describe('resolveLogger helper', () => {
+describe('getLogger helper', () => {
   let logger;
   let handler;
 
@@ -44,7 +44,7 @@ describe('resolveLogger helper', () => {
     const consoleSpy = jest
       .spyOn(console, 'error')
       .mockImplementation(() => {});
-    const result = resolveLogger(ctx, handler);
+    const result = getLogger(ctx, handler);
     expect(result).toBe(ctxLogger);
     expect(ctx.getLogger).toHaveBeenCalled();
     expect(consoleSpy).not.toHaveBeenCalled();
@@ -60,7 +60,7 @@ describe('resolveLogger helper', () => {
     const consoleSpy = jest
       .spyOn(console, 'error')
       .mockImplementation(() => {});
-    const result = resolveLogger(ctx, handler);
+    const result = getLogger(ctx, handler);
     expect(result).toBe(logger);
     expect(consoleSpy).toHaveBeenCalledTimes(1);
     expect(consoleSpy.mock.calls[0][0]).toMatch(
@@ -81,7 +81,7 @@ describe('resolveLogger helper', () => {
     const consoleSpy = jest
       .spyOn(console, 'error')
       .mockImplementation(() => {});
-    const result = resolveLogger(ctx, handler);
+    const result = getLogger(ctx, handler);
     expect(result).toBe(console);
     expect(consoleSpy).toHaveBeenCalledTimes(2);
     expect(consoleSpy.mock.calls[1][0]).toMatch(
@@ -91,7 +91,7 @@ describe('resolveLogger helper', () => {
   });
 });
 
-describe('resolveSafeDispatcher helper', () => {
+describe('getSafeEventDispatcher helper', () => {
   let logger;
   let handler;
 
@@ -107,7 +107,7 @@ describe('resolveSafeDispatcher helper', () => {
       getLogger: jest.fn(() => logger),
       getSafeEventDispatcher: jest.fn(() => dispatcher),
     };
-    const result = resolveSafeDispatcher(ctx, handler);
+    const result = getSafeEventDispatcher(ctx, handler);
     expect(result).toBe(dispatcher);
     expect(logger.warn).not.toHaveBeenCalled();
     expect(logger.error).not.toHaveBeenCalled();
@@ -121,7 +121,7 @@ describe('resolveSafeDispatcher helper', () => {
       getLogger: jest.fn(() => logger),
       getSafeEventDispatcher: jest.fn(() => null),
     };
-    const result = resolveSafeDispatcher(ctx, handler);
+    const result = getSafeEventDispatcher(ctx, handler);
     expect(result).toBe(dispatcher);
     expect(handler.getSafeEventDispatcher).toHaveBeenCalled();
     expect(logger.warn).toHaveBeenCalledTimes(1);
@@ -137,7 +137,7 @@ describe('resolveSafeDispatcher helper', () => {
         throw new Error('boom');
       }),
     };
-    const result = resolveSafeDispatcher(ctx, handler);
+    const result = getSafeEventDispatcher(ctx, handler);
     expect(result).toBe(dispatcher);
     expect(handler.getSafeEventDispatcher).toHaveBeenCalled();
     expect(logger.error).toHaveBeenCalledTimes(1);
@@ -149,7 +149,7 @@ describe('resolveSafeDispatcher helper', () => {
       getLogger: jest.fn(() => logger),
       getSafeEventDispatcher: jest.fn(() => null),
     };
-    const result = resolveSafeDispatcher(ctx, handler);
+    const result = getSafeEventDispatcher(ctx, handler);
     expect(result).toBeNull();
     expect(logger.warn).toHaveBeenCalledTimes(1);
     expect(logger.warn.mock.calls[0][0]).toMatch(/unavailable/);
