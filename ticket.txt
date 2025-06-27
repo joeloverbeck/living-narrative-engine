@@ -1,27 +1,25 @@
-T-06 LRU Cache Implementation
-Replace old cache with side-effect-free version.
+T-08 Explicit Runtime Gateways
+Goal – Formalise runtime dependencies.
 
 Files
 
-scopeDsl/cache/lruCache.js
+scopeDsl/core/gateways.js (exports plain JSDoc typedefs)
 
-tests/cache/lruCache.test.js
+Update every resolver later to consume them.
 
-Implementation (per plan):
+/**
 
-export default function createLruCache(max=256){
-const map = new Map();
-function get(k){ if(!map.has(k)) return null;
-const v=map.get(k); map.delete(k); map.set(k,v); return v; }
-function set(k,v){ if(map.has(k)) map.delete(k);
-else if(map.size>=max) map.delete(map.keys().next().value);
-map.set(k,v);}
-return { get, set, clear: () => map.clear(), get size(){ return map.size; } };
-}
-Tests
+@typedef {Object} EntityGateway
+@Property {() => Object[]} getEntities
+@Property {(cid:string)=>Object[]} getEntitiesWithComponent
+@Property {(eid:string,cid:string)=>boolean} hasComponent
+@Property {(eid:string,cid:string)=>any} getComponentData
+@Property {(eid:string)=>Object|null} getEntityInstance
+*/
+/**
 
-Put >max items, oldest evicted.
-
-Hit moves key to MRU.
-
-size getter accurate.
+@typedef {Object} LogicEvaluator
+@Property {(rule:Object, ctx:Object)=>boolean} evaluate
+*/
+Acceptance
+Typedefs exist; nothing else changes yet.
