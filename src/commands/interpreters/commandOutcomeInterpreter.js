@@ -146,7 +146,7 @@ class CommandOutcomeInterpreter extends ICommandOutcomeInterpreter {
    * @override
    * @param {CommandResult} result - Result from the command processor.
    * @param {ITurnContext} turnContext - Current turn context for the actor.
-   * @returns {Promise<TurnDirective | string>} The resolved turn directive.
+   * @returns {Promise<TurnDirective>} The resolved turn directive.
    */
   async interpret(result, turnContext) {
     const actorId = this.#validateTurnContext(turnContext);
