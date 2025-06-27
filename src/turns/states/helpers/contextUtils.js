@@ -94,3 +94,29 @@ export function getSafeEventDispatcher(turnContext, handler) {
   );
   return null;
 }
+
+/**
+ * Resolves a logger using the provided context or handler.
+ *
+ * @description Wrapper matching the previous `_resolveLogger` method on
+ * `AbstractTurnState`.
+ * @param {ITurnContext|null} turnContext - The ITurnContext instance.
+ * @param {BaseTurnHandler} [handler] - Optional handler fallback.
+ * @returns {Logger} The resolved logger.
+ */
+export function resolveLogger(turnContext, handler) {
+  return getLogger(turnContext, handler);
+}
+
+/**
+ * Safely resolves a SafeEventDispatcher using the provided context or handler.
+ *
+ * @description Mirrors the old `_getSafeEventDispatcher` method from
+ * `AbstractTurnState`.
+ * @param {ITurnContext|null} turnContext - The ITurnContext instance.
+ * @param {BaseTurnHandler} [handler] - Optional handler fallback.
+ * @returns {ISafeEventDispatcher|null} The resolved dispatcher or null.
+ */
+export function resolveSafeDispatcher(turnContext, handler) {
+  return getSafeEventDispatcher(turnContext, handler);
+}

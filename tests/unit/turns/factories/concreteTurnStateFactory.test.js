@@ -48,7 +48,6 @@ const mockTurnContext = {
 const mockHandler = {
   getTurnContext: jest.fn(() => mockTurnContext),
   getCurrentActor: jest.fn(),
-  _resolveLogger: jest.fn(() => mockLogger),
 };
 
 describe('ConcreteTurnStateFactory', () => {
@@ -56,9 +55,9 @@ describe('ConcreteTurnStateFactory', () => {
 
   beforeEach(() => {
     // Create a new factory instance before each test to ensure isolation.
-    factory = new ConcreteTurnStateFactory({ 
+    factory = new ConcreteTurnStateFactory({
       commandProcessor: mockCommandProcessor,
-      commandOutcomeInterpreter: mockCommandOutcomeInterpreter
+      commandOutcomeInterpreter: mockCommandOutcomeInterpreter,
     });
     // Clear any previous mock calls to avoid test cross-contamination.
     jest.clearAllMocks();

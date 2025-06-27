@@ -1,7 +1,6 @@
 import { describe, test, expect, jest, beforeEach } from '@jest/globals';
 import { ProcessingWorkflow } from '../../../../../src/turns/states/workflows/processingWorkflow.js';
 import { ProcessingGuard } from '../../../../../src/turns/states/helpers/processingGuard.js';
-import { ProcessingExceptionHandler } from '../../../../../src/turns/states/helpers/processingExceptionHandler.js';
 
 describe('ProcessingWorkflow.run', () => {
   let logger;
@@ -38,7 +37,6 @@ describe('ProcessingWorkflow.run', () => {
       getStateName: () => 'ProcessingCommandState',
       _getTurnContext: jest.fn(() => ctx),
       _ensureContext: jest.fn(async () => ctx),
-      _resolveLogger: jest.fn(() => logger),
       _dispatchSpeech: jest.fn().mockResolvedValue(undefined),
       _processCommandInternal: jest.fn(async () => {
         state.finishProcessing();

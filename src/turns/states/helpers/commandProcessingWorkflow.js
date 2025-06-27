@@ -19,6 +19,7 @@ import {
 } from './getServiceFromContext.js';
 import { ProcessingExceptionHandler } from './processingExceptionHandler.js';
 import { finishProcessing } from './processingErrorUtils.js';
+import { resolveLogger } from './contextUtils.js';
 
 /**
  * @class CommandProcessingWorkflow
@@ -38,7 +39,12 @@ export class CommandProcessingWorkflow {
    * @param {ICommandProcessor} commandProcessor Injected command processor.
    * @param {ICommandOutcomeInterpreter} commandOutcomeInterpreter Injected outcome interpreter.
    */
-  constructor({ state, exceptionHandler, commandProcessor, commandOutcomeInterpreter }) {
+  constructor({
+    state,
+    exceptionHandler,
+    commandProcessor,
+    commandOutcomeInterpreter,
+  }) {
     this._state = state;
     this._commandProcessor = commandProcessor;
     this._commandOutcomeInterpreter = commandOutcomeInterpreter;
@@ -57,8 +63,8 @@ export class CommandProcessingWorkflow {
     // If no specific exceptionHandler is provided, create a default one.
     // Use the state's own robust logger resolution for the default handler.
     this._exceptionHandler =
-      exceptionHandler || // If an exceptionHandler is passed, use it
-      new ProcessingExceptionHandler(this._state._resolveLogger(null, this._state._handler)); // Otherwise, create default using state's logger resolution
+      exceptionHandler ||
+      new ProcessingExceptionHandler(resolveLogger(null, this._state._handler));
   }
 
   /**
@@ -77,7 +83,9 @@ export class CommandProcessingWorkflow {
     const commandProcessor = this._commandProcessor;
 
     if (!commandProcessor) {
-      const error = new ServiceLookupError('ICommandProcessor could not be resolved from the constructor.');
+      const error = new ServiceLookupError(
+        'ICommandProcessor could not be resolved from the constructor.'
+      );
       await this._exceptionHandler.handle(turnCtx, error, actorId);
       return null;
     }
@@ -86,10 +94,8 @@ export class CommandProcessingWorkflow {
       `${this._state.getStateName()}: Invoking commandProcessor.dispatchAction() for actor ${actorId}, actionId: ${turnAction.actionDefinitionId}.`
     );
 
-    const { success, errorResult: dispatchErrorDetails } = await commandProcessor.dispatchAction(
-      actor,
-      turnAction
-    );
+    const { success, errorResult: dispatchErrorDetails } =
+      await commandProcessor.dispatchAction(actor, turnAction);
 
     if (!this._state.isProcessing) {
       logger.warn(

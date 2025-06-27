@@ -14,7 +14,12 @@
 
 import { ITurnState } from '../interfaces/ITurnState.js';
 import { UNKNOWN_ACTOR_ID } from '../../constants/unknownIds.js';
-import { getLogger, getSafeEventDispatcher } from './helpers/contextUtils.js';
+import {
+  getLogger,
+  getSafeEventDispatcher,
+  resolveLogger,
+  resolveSafeDispatcher,
+} from './helpers/contextUtils.js';
 import { validateContextMethods } from './helpers/validationUtils.js';
 
 /**
@@ -120,12 +125,12 @@ export class AbstractTurnState extends ITurnState {
     try {
       ctx = this._getTurnContext();
     } catch (err) {
-      this._resolveLogger(null, this._handler).error(err.message);
+      resolveLogger(null, this._handler).error(err.message);
       await this._resetToIdle(reason);
       return null;
     }
     if (!ctx) {
-      this._resolveLogger(null, this._handler).error(
+      resolveLogger(null, this._handler).error(
         `${this.getStateName()}: No ITurnContext available. Resetting to idle.`
       );
       await this._resetToIdle(reason);
@@ -157,7 +162,7 @@ export class AbstractTurnState extends ITurnState {
 
     const missing = validateContextMethods(ctx, requiredMethods);
     if (missing.length) {
-      const logger = this._resolveLogger(ctx, this._handler);
+      const logger = resolveLogger(ctx, this._handler);
       const msg = `${this.getStateName()}: ITurnContext missing required methods: ${missing.join(', ')}`;
       logger.error(msg);
 
@@ -172,37 +177,12 @@ export class AbstractTurnState extends ITurnState {
     return ctx;
   }
 
-  /* Resolves a logger using the provided context or handler.
-   *
-   * @protected
-   * @param {ITurnContext | null} turnCtx - The current ITurnContext, if any.
-   * @param {BaseTurnHandler} [handler] - Optional handler override.
-   * @returns {import('../../logging/consoleLogger.js').default | Console} The logger instance.
-   */
-  _resolveLogger(turnCtx, handler) {
-    return getLogger(turnCtx, handler || this._handler);
-  }
-
-  /**
-   * Safely resolves a SafeEventDispatcher using the provided context or handler.
-   * Falls back to this._handler.getSafeEventDispatcher() when necessary.
-   *
-   * @protected
-   * @param {ITurnContext | null} turnCtx - The current ITurnContext, if any.
-   * @param {BaseTurnHandler} [handler] - Optional handler override.
-   * @returns {import('../../interfaces/ISafeEventDispatcher.js').ISafeEventDispatcher|null}
-   *   The resolved dispatcher or null if unavailable.
-   */
-  _getSafeEventDispatcher(turnCtx, handler = this._handler) {
-    return getSafeEventDispatcher(turnCtx, handler);
-  }
-
   // --- Interface Methods with Default Implementations ---
 
   /** @override */
   async enterState(handler, previousState) {
     const turnCtx = this._getTurnContext();
-    const logger = this._resolveLogger(turnCtx, handler);
+    const logger = resolveLogger(turnCtx, handler);
 
     let actorIdForLog = 'N/A';
     if (turnCtx && typeof turnCtx.getActor === 'function') {
@@ -224,7 +204,7 @@ export class AbstractTurnState extends ITurnState {
   /** @override */
   async exitState(handler, nextState) {
     const turnCtx = this._getTurnContext();
-    const logger = this._resolveLogger(turnCtx, handler);
+    const logger = resolveLogger(turnCtx, handler);
 
     let actorIdForLog = 'N/A';
     if (turnCtx && typeof turnCtx.getActor === 'function') {
@@ -246,7 +226,7 @@ export class AbstractTurnState extends ITurnState {
   /** @override */
   async startTurn(handler, actorEntity) {
     const turnCtx = this._getTurnContext();
-    const logger = this._resolveLogger(turnCtx, handler);
+    const logger = resolveLogger(turnCtx, handler);
     const actorIdForLog = actorEntity?.id ?? UNKNOWN_ACTOR_ID;
     const warningMessage = `Method 'startTurn(actorId: ${actorIdForLog})' called on state ${this.getStateName()} where it is not expected or handled.`;
     logger.warn(warningMessage);
@@ -258,7 +238,7 @@ export class AbstractTurnState extends ITurnState {
   /** @override */
   async handleSubmittedCommand(handler, commandString, actorEntity) {
     const turnCtx = this._getTurnContext();
-    const logger = this._resolveLogger(turnCtx, handler);
+    const logger = resolveLogger(turnCtx, handler);
     const contextActorId = turnCtx?.getActor()?.id ?? 'NO_CONTEXT_ACTOR';
     const errorMessage = `Method 'handleSubmittedCommand(command: "${commandString}", entity: ${actorEntity?.id}, contextActor: ${contextActorId})' must be implemented by concrete state ${this.getStateName()}.`;
     logger.error(errorMessage);
@@ -268,7 +248,7 @@ export class AbstractTurnState extends ITurnState {
   /** @override */
   async handleTurnEndedEvent(handler, payload) {
     const turnCtx = this._getTurnContext();
-    const logger = this._resolveLogger(turnCtx, handler);
+    const logger = resolveLogger(turnCtx, handler);
     const warningMessage = `Method 'handleTurnEndedEvent(payloadActorId: ${payload?.entityId})' called on state ${this.getStateName()} where it might not be expected or handled. Current context actor: ${turnCtx?.getActor()?.id ?? 'N/A'}.`;
     logger.warn(warningMessage);
   }
@@ -276,7 +256,7 @@ export class AbstractTurnState extends ITurnState {
   /** @override */
   async processCommandResult(handler, actor, cmdProcResult, commandString) {
     const turnCtx = this._getTurnContext(); // Actor should come from turnCtx
-    const logger = this._resolveLogger(turnCtx, handler);
+    const logger = resolveLogger(turnCtx, handler);
     const contextActor = turnCtx?.getActor();
     if (actor.id !== contextActor?.id) {
       logger.warn(
@@ -291,7 +271,7 @@ export class AbstractTurnState extends ITurnState {
   /** @override */
   async handleDirective(handler, actor, directive, cmdProcResult) {
     const turnCtx = this._getTurnContext(); // Actor should come from turnCtx
-    const logger = this._resolveLogger(turnCtx, handler);
+    const logger = resolveLogger(turnCtx, handler);
     const contextActor = turnCtx?.getActor();
     if (actor.id !== contextActor?.id) {
       logger.warn(

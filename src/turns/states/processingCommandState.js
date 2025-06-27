@@ -22,7 +22,11 @@ import { ProcessingExceptionHandler } from './helpers/processingExceptionHandler
 import { buildSpeechPayload } from './helpers/buildSpeechPayload.js';
 import { ProcessingGuard } from './helpers/processingGuard.js';
 import { finishProcessing } from './helpers/processingErrorUtils.js';
-import { getLogger, getSafeEventDispatcher } from './helpers/contextUtils.js';
+import {
+  getLogger,
+  getSafeEventDispatcher,
+  resolveLogger,
+} from './helpers/contextUtils.js';
 import turnDirectiveResolverAdapter from '../adapters/turnDirectiveResolverAdapter.js';
 import { ITurnDirectiveResolver } from '../interfaces/ITurnDirectiveResolver.js';
 import {
@@ -111,7 +115,7 @@ export class ProcessingCommandState extends AbstractTurnState {
    * @throws {Error}
    */
   _throwConstructionError(message) {
-    const logger = this._resolveLogger(null, this._handler); // Use _resolveLogger from AbstractTurnState
+    const logger = resolveLogger(null, this._handler);
     const fullMessage = `${this.getStateName()} Constructor: ${message}`;
     logger.error(fullMessage);
     throw new Error(fullMessage);
@@ -188,7 +192,7 @@ export class ProcessingCommandState extends AbstractTurnState {
    * @description Logs information about the state's construction.
    */
   _logConstruction() {
-    const logger = this._resolveLogger(null, this._handler);
+    const logger = resolveLogger(null, this._handler);
     // Use #commandStringForLog and #turnActionToProcess which are set in the constructor
     const commandStringForLog = this.#commandStringForLog;
     const turnActionIdForLog = this.#turnActionToProcess?.actionDefinitionId;
