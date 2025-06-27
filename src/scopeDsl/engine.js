@@ -323,7 +323,36 @@ class ScopeEngine extends IScopeEngine {
    */
   _extractFieldValue(parentValue, fieldName, runtimeCtx) {
     if (typeof parentValue === 'string') {
-      // Parent value is an entity ID, get component data
+      // Parent value is an entity ID
+      
+      // Special handling for 'components' field to build components object
+      if (fieldName === 'components') {
+        // Try to get the entity instance
+        const entity = runtimeCtx.entityManager.getEntity ? 
+          runtimeCtx.entityManager.getEntity(parentValue) :
+          runtimeCtx.entityManager.getEntityInstance(parentValue);
+          
+        if (!entity) return null;
+        
+        // If entity has a components property directly (like in tests), return it
+        if (entity.components) {
+          return entity.components;
+        }
+        
+        // Otherwise, build components object from entity's component type IDs
+        const components = {};
+        if (entity.componentTypeIds) {
+          for (const componentTypeId of entity.componentTypeIds) {
+            const componentData = entity.getComponentData(componentTypeId);
+            if (componentData) {
+              components[componentTypeId] = componentData;
+            }
+          }
+        }
+        return components;
+      }
+      
+      // Normal component data access
       return runtimeCtx.entityManager.getComponentData(parentValue, fieldName);
     } else if (parentValue && typeof parentValue === 'object') {
       // Parent value is an object, access property directly
