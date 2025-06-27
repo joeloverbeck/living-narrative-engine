@@ -111,21 +111,24 @@ export class EntityManagerTestBed extends FactoryTestBed {
    *   definition to use.
    * @param {object} [options] - Options forwarded to
    *   {@link EntityManager#createEntityInstance}.
+   * @param {Record<string, object>} [options.overrides] - Component data
+   *   overrides applied during creation.
+   * @param {string} [options.instanceId] - Specific instance ID to use.
    * @param {boolean} [options.resetDispatch] - If true, resets the event
    *   dispatch mock after creation.
    * @returns {import('../../../src/entities/entity.js').default} The created
    *   entity instance.
    */
-  createEntity(defKey, { resetDispatch = false, ...options } = {}) {
+  createEntity(defKey, { overrides, instanceId, resetDispatch = false } = {}) {
     const definition = TestData.Definitions[defKey];
     if (!definition) {
       throw new Error(`Unknown test definition key: ${defKey}`);
     }
     this.setupDefinitions(definition);
-    const entity = this.entityManager.createEntityInstance(
-      definition.id,
-      options
-    );
+    const entity = this.entityManager.createEntityInstance(definition.id, {
+      instanceId,
+      componentOverrides: overrides,
+    });
     if (resetDispatch) {
       this.resetDispatchMock();
     }
@@ -181,10 +184,11 @@ export class EntityManagerTestBed extends FactoryTestBed {
    *   provided component overrides applied.
    * @param {keyof typeof TestData.Definitions} defKey - Key of the test
    *   definition to use.
-   * @param {Record<string, object>} overrides - Map of component IDs to override
-   *   data.
    * @param {object} [options] - Options forwarded to
    *   {@link EntityManager#createEntityInstance}.
+   * @param {Record<string, object>} [options.overrides] - Component overrides
+   *   applied during creation.
+   * @param {string} [options.instanceId] - Specific instance ID to use.
    * @param {boolean} [options.resetDispatch] - If true, resets the event
    *   dispatch mock after creation.
    * @returns {import('../../../src/entities/entity.js').default} The created
@@ -192,12 +196,11 @@ export class EntityManagerTestBed extends FactoryTestBed {
    */
   createEntityWithOverrides(
     defKey,
-    overrides,
-    { resetDispatch = false, ...options } = {}
+    { overrides = {}, instanceId, resetDispatch = false } = {}
   ) {
     return this.createEntity(defKey, {
-      ...options,
-      componentOverrides: overrides,
+      overrides,
+      instanceId,
       resetDispatch,
     });
   }
@@ -222,6 +225,7 @@ export class EntityManagerTestBed extends FactoryTestBed {
  *   tests. It receives a callback that returns the active {@link EntityManagerTestBed}.
  * @returns {void}
  */
-export const describeEntityManagerSuite = createDescribeTestBedSuite(EntityManagerTestBed);
+export const describeEntityManagerSuite =
+  createDescribeTestBedSuite(EntityManagerTestBed);
 
 export default EntityManagerTestBed;

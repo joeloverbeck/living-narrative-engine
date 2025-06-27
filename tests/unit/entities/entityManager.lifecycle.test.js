@@ -191,7 +191,7 @@ describeEntityManagerSuite('EntityManager - createEntityInstance', (getBed) => {
 
       // Act
       const entity = getBed().createBasicEntity({
-        componentOverrides: overrides,
+        overrides,
       });
 
       // Assert
