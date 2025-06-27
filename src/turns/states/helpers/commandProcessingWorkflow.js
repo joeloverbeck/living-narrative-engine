@@ -20,7 +20,7 @@ import {
 } from './getServiceFromContext.js';
 import { ProcessingExceptionHandler } from './processingExceptionHandler.js';
 import { finishProcessing } from './processingErrorUtils.js';
-import { resolveLogger } from './contextUtils.js';
+import { getLogger } from './contextUtils.js';
 
 /**
  * @class CommandProcessingWorkflow
@@ -73,7 +73,7 @@ export class CommandProcessingWorkflow {
     // Use the state's own robust logger resolution for the default handler.
     this._exceptionHandler =
       exceptionHandler ||
-      new ProcessingExceptionHandler(resolveLogger(null, this._state._handler));
+      new ProcessingExceptionHandler(getLogger(null, this._state._handler));
   }
 
   /**
