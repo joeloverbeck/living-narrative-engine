@@ -10,6 +10,10 @@
 /** @typedef {import('../interfaces/coreServices.js').ILogger} ILogger */
 /** @typedef {import('../events/validatedEventDispatcher.js').default} ValidatedEventDispatcher */ // Corrected path
 import { dispatchWithLogging } from '../utils/eventDispatchUtils.js';
+import {
+  assertFunction,
+  assertPresent,
+} from '../utils/dependencyValidators.js';
 
 /**
  * Service responsible for initializing essential systems of the application.
@@ -41,20 +45,17 @@ class SystemInitializer {
     validatedEventDispatcher,
     initializationTag,
   }) {
-    // Simplified validation for brevity, assume checks pass
-    if (!resolver || typeof resolver.resolveByTag !== 'function')
-      throw new Error(
-        "SystemInitializer requires a valid IServiceResolver with 'resolveByTag'."
-      );
-    if (!logger)
-      throw new Error('SystemInitializer requires an ILogger instance.');
-    if (
-      !validatedEventDispatcher ||
-      typeof validatedEventDispatcher.dispatch !== 'function'
-    )
-      throw new Error(
-        'SystemInitializer requires a valid ValidatedEventDispatcher.'
-      );
+    assertFunction(
+      resolver,
+      'resolveByTag',
+      "SystemInitializer requires a valid IServiceResolver with 'resolveByTag'."
+    );
+    assertPresent(logger, 'SystemInitializer requires an ILogger instance.');
+    assertFunction(
+      validatedEventDispatcher,
+      'dispatch',
+      'SystemInitializer requires a valid ValidatedEventDispatcher.'
+    );
     if (
       !initializationTag ||
       typeof initializationTag !== 'string' ||
