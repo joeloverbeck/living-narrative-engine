@@ -1,27 +1,7 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
-import {
-  validateWorldName,
-  buildActionIndex,
-} from '../../../../src/initializers/services/initHelpers.js';
+import { buildActionIndex } from '../../../../src/initializers/services/initHelpers.js';
 
 describe('InitializationService helper functions', () => {
-  describe('validateWorldName', () => {
-    let logger;
-    beforeEach(() => {
-      logger = { error: jest.fn() };
-    });
-
-    it('does nothing for a valid name', () => {
-      expect(() => validateWorldName('world', logger)).not.toThrow();
-      expect(logger.error).not.toHaveBeenCalled();
-    });
-
-    it.each([[null], [undefined], [''], ['   ']])('throws for %p', (bad) => {
-      expect(() => validateWorldName(bad, logger)).toThrow(TypeError);
-      expect(logger.error).toHaveBeenCalled();
-    });
-  });
-
   describe('buildActionIndex', () => {
     let logger;
     let repo;

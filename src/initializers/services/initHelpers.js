@@ -4,22 +4,6 @@
 /** @typedef {import('../../actions/actionIndex.js').ActionIndex} ActionIndex */
 
 /**
- * Validates that a world name is a non-empty string.
- *
- * @param {string} worldName - Name of the world to validate.
- * @param {ILogger} logger - Logger for reporting validation errors.
- * @returns {void}
- * @throws {TypeError} If the world name is missing or blank.
- */
-export function validateWorldName(worldName, logger) {
-  const msg = 'InitializationService requires a valid non-empty worldName.';
-  if (!worldName || typeof worldName !== 'string' || worldName.trim() === '') {
-    logger?.error(msg);
-    throw new TypeError(msg);
-  }
-}
-
-/**
  * Builds the ActionIndex from definitions provided by the repository.
  *
  * @param {ActionIndex} actionIndex - Index instance to populate.

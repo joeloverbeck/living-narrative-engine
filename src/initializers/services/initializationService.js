@@ -28,7 +28,9 @@ import {
   WorldInitializationError,
   InitializationError,
 } from '../../errors/InitializationError.js';
-import { validateWorldName, buildActionIndex } from './initHelpers.js';
+import { buildActionIndex } from './initHelpers.js';
+import { assertNonBlankString } from '../../utils/parameterGuards.js';
+import { InvalidArgumentError } from '../../errors/invalidArgumentError.js';
 import ContentDependencyValidator from './contentDependencyValidator.js';
 import {
   assertFunction,
@@ -253,7 +255,12 @@ class InitializationService extends IInitializationService {
       `InitializationService: Starting runInitializationSequence for world: ${worldName}.`
     );
     try {
-      validateWorldName(worldName, this.#logger);
+      assertNonBlankString(
+        worldName,
+        'worldName',
+        'InitializationService',
+        this.#logger
+      );
       await this.#loadMods(worldName);
       await this.#contentDependencyValidator.validate(worldName);
       await this.#initializeScopeRegistry();
@@ -287,11 +294,7 @@ class InitializationService extends IInitializationService {
         details: { message: `World '${worldName}' initialized.` },
       };
     } catch (error) {
-      if (
-        error instanceof TypeError &&
-        error.message ===
-          'InitializationService requires a valid non-empty worldName.'
-      ) {
+      if (error instanceof InvalidArgumentError) {
         return { success: false, error };
       }
       await this.#reportFatalError(error, worldName);
