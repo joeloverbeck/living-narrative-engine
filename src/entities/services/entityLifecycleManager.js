@@ -41,8 +41,6 @@ export class EntityLifecycleManager {
   #logger;
   /** @type {ISafeEventDispatcher} @private */
   #eventDispatcher;
-  /** @type {IEntityRepository|null} @private */
-  #repository;
   /** @type {EntityRepositoryAdapter} @private */
   #entityRepository;
   /** @type {EntityFactory} @private */
@@ -57,7 +55,6 @@ export class EntityLifecycleManager {
    * @param {IDataRegistry} deps.registry - Data registry for definitions.
    * @param {ILogger} deps.logger - Logger instance.
    * @param {ISafeEventDispatcher} deps.eventDispatcher - Event dispatcher.
-   * @param {IEntityRepository} [deps.repository] - Optional backing repository.
    * @param {EntityRepositoryAdapter} deps.entityRepository - Internal entity repository.
    * @param {EntityFactory} deps.factory - EntityFactory instance.
    * @param {ErrorTranslator} deps.errorTranslator - Error translator.
@@ -67,7 +64,6 @@ export class EntityLifecycleManager {
     registry,
     logger,
     eventDispatcher,
-    repository = null,
     entityRepository,
     factory,
     errorTranslator,
@@ -89,11 +85,6 @@ export class EntityLifecycleManager {
         requiredMethods: ['add', 'get', 'has', 'remove', 'clear', 'entities'],
       }
     );
-    if (repository) {
-      validateDependency(repository, 'IEntityRepository', this.#logger, {
-        requiredMethods: ['add', 'get', 'has', 'remove', 'clear', 'entities'],
-      });
-    }
     validateDependency(eventDispatcher, 'ISafeEventDispatcher', this.#logger, {
       requiredMethods: ['dispatch'],
     });
@@ -108,7 +99,6 @@ export class EntityLifecycleManager {
     });
 
     this.#registry = registry;
-    this.#repository = repository;
     this.#eventDispatcher = eventDispatcher;
     this.#entityRepository = entityRepository;
     this.#factory = factory;
@@ -278,9 +268,6 @@ export class EntityLifecycleManager {
 
     try {
       this.#entityRepository.remove(entityToRemove.id);
-      if (this.#repository && typeof this.#repository.remove === 'function') {
-        this.#repository.remove(entityToRemove.id);
-      }
       this.#logger.info(
         `Entity instance ${entityToRemove.id} removed from EntityManager.`
       );
@@ -292,7 +279,7 @@ export class EntityLifecycleManager {
         `EntityManager.removeEntityInstance: EntityRepository.remove failed for already retrieved entity '${instanceId}'. This indicates a serious internal inconsistency.`
       );
       throw new Error(
-        `Internal error: Failed to remove entity '${instanceId}' from repository despite entity being found.`
+        `Internal error: Failed to remove entity '${instanceId}' from entity repository despite entity being found.`
       );
     }
   }

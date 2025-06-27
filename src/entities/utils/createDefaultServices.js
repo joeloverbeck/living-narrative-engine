@@ -29,7 +29,6 @@ import EntityLifecycleManager from '../services/entityLifecycleManager.js';
  * @param {import('../../ports/IIdGenerator.js').IIdGenerator} deps.idGenerator
  * @param {import('../../ports/IComponentCloner.js').IComponentCloner} deps.cloner
  * @param {import('../../ports/IDefaultComponentPolicy.js').IDefaultComponentPolicy} deps.defaultPolicy
- * @param {import('../../ports/IEntityRepository.js').IEntityRepository} [deps.repository]
  * @returns {{
  *   entityRepository: EntityRepositoryAdapter,
  *   componentMutationService: ComponentMutationService,
@@ -46,7 +45,6 @@ export function createDefaultServices({
   idGenerator,
   cloner,
   defaultPolicy,
-  repository = null,
 }) {
   const entityRepository = new EntityRepositoryAdapter({ logger });
   const componentMutationService = new ComponentMutationService({
@@ -69,7 +67,6 @@ export function createDefaultServices({
     registry,
     logger,
     eventDispatcher,
-    repository,
     entityRepository,
     factory: entityFactory,
     errorTranslator,
