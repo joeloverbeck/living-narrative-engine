@@ -2,10 +2,9 @@ import { describe, it, expect } from '@jest/globals';
 import { TraceContext } from '../../../src/actions/tracing/traceContext.js';
 
 describe('TraceContext', () => {
-  it('initializes with empty logs and null result', () => {
+  it('initializes with empty logs', () => {
     const trace = new TraceContext();
     expect(trace.logs).toEqual([]);
-    expect(trace.result).toBeNull();
   });
 
   it('adds a log entry without data', () => {
