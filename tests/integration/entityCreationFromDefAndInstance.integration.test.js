@@ -3,27 +3,11 @@
  * @see tests/integration/entityCreationFromDefAndInstance.integration.test.js
  */
 
-import EntityManager from '../../src/entities/entityManager.js';
 import Entity from '../../src/entities/entity.js';
 import EntityDefinition from '../../src/entities/entityDefinition.js';
-import InMemoryDataRegistry from '../../src/data/inMemoryDataRegistry.js';
+import EntityManagerIntegrationTestBed from '../common/entities/entityManagerIntegrationTestBed.js';
 
 // Mocks for constructor dependencies
-const mockLogger = {
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-  debug: jest.fn(),
-};
-
-const mockSchemaValidator = {
-  validate: jest.fn().mockReturnValue({ isValid: true }),
-  addSchema: jest.fn(),
-  removeSchema: jest.fn(),
-  getValidator: jest.fn(),
-  isSchemaLoaded: jest.fn(),
-};
-
 const mockSpatialIndexManager = {
   addEntity: jest.fn(),
   removeEntity: jest.fn(),
@@ -31,31 +15,19 @@ const mockSpatialIndexManager = {
   clearIndex: jest.fn(),
 };
 
-const createMockSafeEventDispatcher = () => ({
-  dispatch: jest.fn(),
-});
-
 describe('EntityManager Integration Tests', () => {
   let entityManager;
   let dataRegistry;
-  let mockEventDispatcher;
+  let bed;
 
   beforeEach(() => {
-    // Reset mocks before each test
-    jest.clearAllMocks();
+    bed = new EntityManagerIntegrationTestBed();
+    ({ entityManager } = bed);
+    dataRegistry = bed.registry;
+  });
 
-    // Use a real InMemoryDataRegistry to simulate a post-load state
-    dataRegistry = new InMemoryDataRegistry();
-
-    mockEventDispatcher = createMockSafeEventDispatcher();
-
-    // Instantiate EntityManager with real registry and mocked services
-    entityManager = new EntityManager({
-      registry: dataRegistry,
-      validator: mockSchemaValidator,
-      logger: mockLogger,
-      dispatcher: mockEventDispatcher,
-    });
+  afterEach(async () => {
+    await bed.cleanup();
   });
 
   /**
