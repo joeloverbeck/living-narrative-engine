@@ -4,7 +4,7 @@
  */
 
 /**
- * @typedef {import('../../entities/entityDisplayDataProvider.js').ProcessedExit} ProcessedExit
+ * @typedef {import('../../entities/services/locationDisplayService.js').ProcessedExit} ProcessedExit
  * @typedef {import('../../entities/entityDisplayDataProvider.js').CharacterDisplayInfo} CharacterDisplayData
  */
 
